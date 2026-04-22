@@ -1,33 +1,29 @@
 "use client";
 
+import { memo } from "react";
+import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
+import { useViewport } from "@/components/school/classes/forum/conversation/context/use-viewport";
 import { JumpBar } from "@/components/school/classes/forum/conversation/jump-bar";
-import { useConversation } from "@/components/school/classes/forum/conversation/provider";
 import { ForumConversationTranscript } from "@/components/school/classes/forum/conversation/transcript";
-import { ForumConversationTranscriptPlaceholder } from "@/components/school/classes/forum/conversation/transcript/rows";
 
-/** Renders the transcript viewport and contextual jump actions. */
-export function ForumConversationViewport() {
-  const forum = useConversation((state) => state.forum);
-  const hasPendingLatestPosts = useConversation(
+/** Renders the live transcript viewport with one simple latest button. */
+export const ForumConversationViewport = memo(() => {
+  const forum = useData((state) => state.forum);
+  const hasPendingLatestPosts = useViewport(
     (state) => state.hasPendingLatestPosts
   );
-  const isAtBottom = useConversation((state) => state.isAtBottom);
-  const isAtLatestEdge = useConversation((state) => state.isAtLatestEdge);
-  const isInitialLoading = useConversation((state) => state.isInitialLoading);
-  const canGoBack = useConversation((state) => state.canGoBack);
+  const isAtBottom = useViewport((state) => state.isAtBottom);
+  const shouldShowJumpBar = hasPendingLatestPosts || !isAtBottom;
 
-  if (isInitialLoading || !forum) {
-    return <ForumConversationTranscriptPlaceholder />;
+  if (!forum) {
+    return null;
   }
-
-  const showJumpLatest =
-    hasPendingLatestPosts || !(isAtLatestEdge && isAtBottom);
-  const showJumpBack = canGoBack && showJumpLatest;
 
   return (
     <>
       <ForumConversationTranscript />
-      <JumpBar showBack={showJumpBack} showLatest={showJumpLatest} />
+      {shouldShowJumpBar ? <JumpBar /> : null}
     </>
   );
-}
+});
+ForumConversationViewport.displayName = "ForumConversationViewport";

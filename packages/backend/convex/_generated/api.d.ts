@@ -63,11 +63,8 @@ import type * as classes_forums_mutations_posts from "../classes/forums/mutation
 import type * as classes_forums_mutations_reactions from "../classes/forums/mutations/reactions.js";
 import type * as classes_forums_mutations_readState from "../classes/forums/mutations/readState.js";
 import type * as classes_forums_mutations_uploads from "../classes/forums/mutations/uploads.js";
-import type * as classes_forums_queries_around from "../classes/forums/queries/around.js";
-import type * as classes_forums_queries_feed from "../classes/forums/queries/feed.js";
 import type * as classes_forums_queries_forums from "../classes/forums/queries/forums.js";
-import type * as classes_forums_queries_newer from "../classes/forums/queries/newer.js";
-import type * as classes_forums_queries_older from "../classes/forums/queries/older.js";
+import type * as classes_forums_queries_pages from "../classes/forums/queries/pages.js";
 import type * as classes_forums_utils_access from "../classes/forums/utils/access.js";
 import type * as classes_forums_utils_attachments from "../classes/forums/utils/attachments.js";
 import type * as classes_forums_utils_constants from "../classes/forums/utils/constants.js";
@@ -78,7 +75,6 @@ import type * as classes_forums_utils_reactions from "../classes/forums/utils/re
 import type * as classes_forums_utils_readBoundary from "../classes/forums/utils/readBoundary.js";
 import type * as classes_forums_utils_readStateWrite from "../classes/forums/utils/readStateWrite.js";
 import type * as classes_forums_utils_unreadCounts from "../classes/forums/utils/unreadCounts.js";
-import type * as classes_forums_utils_windowing from "../classes/forums/utils/windowing.js";
 import type * as classes_forums_validators from "../classes/forums/validators.js";
 import type * as classes_materials_mutations from "../classes/materials/mutations.js";
 import type * as classes_materials_queries from "../classes/materials/queries.js";
@@ -337,11 +333,8 @@ declare const fullApi: ApiFromModules<{
   "classes/forums/mutations/reactions": typeof classes_forums_mutations_reactions;
   "classes/forums/mutations/readState": typeof classes_forums_mutations_readState;
   "classes/forums/mutations/uploads": typeof classes_forums_mutations_uploads;
-  "classes/forums/queries/around": typeof classes_forums_queries_around;
-  "classes/forums/queries/feed": typeof classes_forums_queries_feed;
   "classes/forums/queries/forums": typeof classes_forums_queries_forums;
-  "classes/forums/queries/newer": typeof classes_forums_queries_newer;
-  "classes/forums/queries/older": typeof classes_forums_queries_older;
+  "classes/forums/queries/pages": typeof classes_forums_queries_pages;
   "classes/forums/utils/access": typeof classes_forums_utils_access;
   "classes/forums/utils/attachments": typeof classes_forums_utils_attachments;
   "classes/forums/utils/constants": typeof classes_forums_utils_constants;
@@ -352,7 +345,6 @@ declare const fullApi: ApiFromModules<{
   "classes/forums/utils/readBoundary": typeof classes_forums_utils_readBoundary;
   "classes/forums/utils/readStateWrite": typeof classes_forums_utils_readStateWrite;
   "classes/forums/utils/unreadCounts": typeof classes_forums_utils_unreadCounts;
-  "classes/forums/utils/windowing": typeof classes_forums_utils_windowing;
   "classes/forums/validators": typeof classes_forums_validators;
   "classes/materials/mutations": typeof classes_materials_mutations;
   "classes/materials/queries": typeof classes_materials_queries;

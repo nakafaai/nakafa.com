@@ -23,29 +23,28 @@ import { useTranslations } from "next-intl";
 import {
   Activity,
   type ComponentRef,
+  memo,
   useCallback,
   useEffect,
   useRef,
 } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
-import { useForum } from "@/components/school/classes/forum/conversation/context/use-forum";
+import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
+import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
+import { useViewport } from "@/components/school/classes/forum/conversation/context/use-viewport";
 import { AttachmentPreviews } from "@/components/school/classes/forum/conversation/input/attachment-previews";
 import { InputAttachments } from "@/components/school/classes/forum/conversation/input/attachments-trigger";
 import { EmojiButton } from "@/components/school/classes/forum/conversation/input/emoji-button";
 import { ReplyIndicator } from "@/components/school/classes/forum/conversation/input/reply-indicator";
-import { useConversation } from "@/components/school/classes/forum/conversation/provider";
 
 /** Handles forum post submission, uploads, and reply cleanup for the transcript. */
-export function ForumPostInput() {
+export const ForumPostInput = memo(() => {
   const t = useTranslations("School.Classes");
-  const replyTo = useForum((state) => state.replyTo);
-  const setReplyTo = useForum((state) => state.setReplyTo);
-  const acknowledgeUnreadCue = useConversation(
-    (state) => state.acknowledgeUnreadCue
-  );
-  const scrollToLatest = useConversation((state) => state.scrollToLatest);
-  const forumId = useConversation((state) => state.forumId);
+  const replyTo = useSession((state) => state.replyTo);
+  const setReplyTo = useSession((state) => state.setReplyTo);
+  const scrollToLatest = useViewport((state) => state.scrollToLatest);
+  const forumId = useData((state) => state.forumId);
   const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
   const generateUploadUrl = useMutation(
     api.classes.forums.mutations.uploads.generateUploadUrl
@@ -151,7 +150,6 @@ export function ForumPostInput() {
           parentId: replyTo?.postId,
         });
 
-        acknowledgeUnreadCue();
         form.reset();
         clearFiles();
         setReplyTo(null);
@@ -292,4 +290,5 @@ export function ForumPostInput() {
       </form.Field>
     </form>
   );
-}
+});
+ForumPostInput.displayName = "ForumPostInput";

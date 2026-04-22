@@ -6,13 +6,13 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
-import { useForum } from "@/components/school/classes/forum/conversation/context/use-forum";
+import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
 
 /** Renders the active reply target bar above the forum input. */
 export const ReplyIndicator = memo(() => {
   const t = useTranslations("Common");
-  const replyTo = useForum((state) => state.replyTo);
-  const setReplyTo = useForum((state) => state.setReplyTo);
+  const replyTo = useSession((state) => state.replyTo);
+  const setReplyTo = useSession((state) => state.setReplyTo);
 
   if (!replyTo) {
     return null;

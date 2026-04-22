@@ -3,8 +3,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { memo } from "react";
 import { ForumPostConversation } from "@/components/school/classes/forum/conversation";
-import { useForum } from "@/components/school/classes/forum/conversation/context/use-forum";
-import type { Forum } from "@/components/school/classes/forum/conversation/types";
+import type { Forum } from "@/components/school/classes/forum/conversation/data/entities";
 import { useUser } from "@/lib/context/use-user";
 
 export const SchoolClassesForumPanelContent = memo(
@@ -16,9 +15,6 @@ export const SchoolClassesForumPanelContent = memo(
     forumId: Id<"schoolClassForums">;
   }) => {
     const user = useUser((state) => state.user);
-    const conversationSessionVersion = useForum(
-      (state) => state.conversationSessionVersions[forumId] ?? 0
-    );
 
     if (!user) {
       return null;
@@ -29,7 +25,7 @@ export const SchoolClassesForumPanelContent = memo(
         currentUserId={user.appUser._id}
         forum={forum}
         forumId={forumId}
-        key={`${forumId}:${conversationSessionVersion}`}
+        key={forumId}
       />
     );
   }

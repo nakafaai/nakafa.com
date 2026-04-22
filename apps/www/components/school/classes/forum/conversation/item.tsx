@@ -8,13 +8,13 @@ import { cn } from "@repo/design-system/lib/utils";
 import { format } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, memo } from "react";
-import { useForum } from "@/components/school/classes/forum/conversation/context/use-forum";
+import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
+import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 import { PostItemActions } from "@/components/school/classes/forum/conversation/item/actions";
 import { PostAttachments } from "@/components/school/classes/forum/conversation/item/attachments";
 import { PostReactions } from "@/components/school/classes/forum/conversation/item/reactions";
 import { PostReplyIndicator } from "@/components/school/classes/forum/conversation/item/reply-indicator";
-import type { ForumPost } from "@/components/school/classes/forum/conversation/models";
-import { useConversation } from "@/components/school/classes/forum/conversation/provider";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
@@ -23,18 +23,16 @@ export const ForumPostItem = memo(
   ({
     post,
     isFirstInGroup,
-    isJumpHighlighted,
     showContinuationTime,
   }: {
     post: ForumPost;
     isFirstInGroup: boolean;
-    isJumpHighlighted: boolean;
     showContinuationTime: boolean;
   }) => {
     const t = useTranslations("Common");
     const locale = useLocale();
-    const currentUserId = useConversation((state) => state.currentUserId);
-    const replyTo = useForum((state) => state.replyTo);
+    const currentUserId = useData((state) => state.currentUserId);
+    const replyTo = useSession((state) => state.replyTo);
     const userName = post.user?.name ?? t("anonymous");
     const userImage = post.user?.image ?? "";
     const isReplyTo = replyTo?.postId === post._id;
@@ -45,8 +43,7 @@ export const ForumPostItem = memo(
         className={cn(
           "group relative flex items-start gap-3 border-l-2 border-l-transparent px-4 py-1 transition-colors ease-out hover:bg-accent/20",
           isReplyToMe === true && "border-primary bg-primary/10",
-          isReplyTo === true && "border-secondary bg-secondary/10",
-          isJumpHighlighted === true && "border-secondary bg-secondary/10"
+          isReplyTo === true && "border-secondary bg-secondary/10"
         )}
         id={post._id}
       >

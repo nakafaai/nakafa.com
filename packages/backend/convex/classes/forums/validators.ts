@@ -66,30 +66,6 @@ export const paginatedForumFeedValidator = paginationResultValidator(
   forumFeedPostValidator
 );
 
-/** One centered forum window around a target post. */
-export const forumPostsAroundResultValidator = v.object({
-  hasMoreAfter: v.boolean(),
-  hasMoreBefore: v.boolean(),
-  newestPostId: vv.id("schoolClassForumPosts"),
-  oldestPostId: vv.id("schoolClassForumPosts"),
-  posts: v.array(forumPostWithMetadataValidator),
-  targetIndex: v.number(),
-});
-
-/** Older detached forum history window above a boundary post. */
-export const forumPostsOlderResultValidator = v.object({
-  hasMore: v.boolean(),
-  oldestPostId: nullable(vv.id("schoolClassForumPosts")),
-  posts: v.array(forumPostWithMetadataValidator),
-});
-
-/** Newer detached forum history window below a boundary post. */
-export const forumPostsNewerResultValidator = v.object({
-  hasMore: v.boolean(),
-  newestPostId: nullable(vv.id("schoolClassForumPosts")),
-  posts: v.array(forumPostWithMetadataValidator),
-});
-
 /** Mutation result for toggling a reaction on a forum or forum post. */
 export const forumReactionToggleResultValidator = v.object({
   added: v.boolean(),

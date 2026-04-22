@@ -3,7 +3,7 @@
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { getTagIcon } from "@/components/school/classes/_data/tag";
-import type { Forum } from "@/components/school/classes/forum/conversation/types";
+import type { Forum } from "@/components/school/classes/forum/conversation/data/entities";
 
 /** Render the active forum title row in the class detail panel header. */
 export function SchoolClassesForumPanelInfo({

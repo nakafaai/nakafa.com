@@ -8,7 +8,7 @@ import { useQuery } from "convex/react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { SchoolClassesDetailPanel } from "@/components/school/classes/detail-panel";
-import { useForum } from "@/components/school/classes/forum/conversation/context/use-forum";
+import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
 import { SchoolClassesForumPanelContent } from "@/components/school/classes/forum/panel-content";
 import { SchoolClassesForumPanelError } from "@/components/school/classes/forum/panel-error";
 import { SchoolClassesForumPanelInfo } from "@/components/school/classes/forum/panel-info";
@@ -26,22 +26,16 @@ export function SchoolClassesForumPanel({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { id, slug } = useParams<{ id: string; slug: string }>();
-  const clearTransientConversationState = useForum(
-    (state) => state.clearTransientConversationState
-  );
-  const restartConversationSession = useForum(
-    (state) => state.restartConversationSession
-  );
+  const setReplyTo = useSession((state) => state.setReplyTo);
   const forum = useQuery(api.classes.forums.queries.forums.getForum, {
     forumId,
   });
   const search = searchParams.toString();
   const closeHref = `/school/${slug}/classes/${id}/forum${search ? `?${search}` : ""}`;
 
-  /** Clears transient reply and jump state before returning to the forum list. */
+  /** Clears reply state before returning to the forum list. */
   function handleClose() {
-    clearTransientConversationState();
-    restartConversationSession(forumId);
+    setReplyTo(null);
     router.replace(closeHref);
   }
 

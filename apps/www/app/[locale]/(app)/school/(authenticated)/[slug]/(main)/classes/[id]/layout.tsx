@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
-import { ForumContextProvider } from "@/components/school/classes/forum/conversation/context/use-forum";
+import { SessionProvider } from "@/components/school/classes/forum/conversation/context/use-session";
 import { SchoolClassesHeaderInfo } from "@/components/school/classes/info";
 import { SchoolClassesJoinForm } from "@/components/school/classes/join-form";
 import { SchoolClassesTabs } from "@/components/school/classes/tabs";
@@ -77,13 +77,13 @@ async function ClassRouteBoundary({
 
   return (
     <ClassContextProvider value={value}>
-      <ForumContextProvider classId={classId} key={classId}>
+      <SessionProvider key={classId}>
         <SchoolClassesWorkspaceShell panel={panel}>
           <SchoolClassesHeaderInfo />
           <SchoolClassesTabs />
           {children}
         </SchoolClassesWorkspaceShell>
-      </ForumContextProvider>
+      </SessionProvider>
     </ClassContextProvider>
   );
 }

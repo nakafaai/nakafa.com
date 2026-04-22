@@ -21,7 +21,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { Activity, useTransition } from "react";
 import { getTagIcon } from "@/components/school/classes/_data/tag";
-import { useForum } from "@/components/school/classes/forum/conversation/context/use-forum";
+import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
 import { useClass } from "@/lib/context/use-class";
 import { searchParsers } from "@/lib/nuqs/search";
 import { getLocale } from "@/lib/utils/date";
@@ -50,25 +50,18 @@ export function SchoolClassesForumList() {
   const searchParams = useSearchParams();
 
   const classId = useClass((state) => state.class._id);
-  const clearTransientConversationState = useForum(
-    (state) => state.clearTransientConversationState
-  );
-  const restartConversationSession = useForum(
-    (state) => state.restartConversationSession
-  );
+  const setReplyTo = useSession((state) => state.setReplyTo);
   const [{ q }] = useQueryStates(searchParsers);
 
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
 
-  /** Clears transient reply and jump state before forum route navigation. */
+  /** Clears transient reply state before forum route navigation. */
   function handleForumNavigate(nextForumId: Id<"schoolClassForums">) {
-    clearTransientConversationState();
-
-    if (!(routeParams.forumId && routeParams.forumId !== nextForumId)) {
+    if (routeParams.forumId === nextForumId) {
       return;
     }
 
-    restartConversationSession(routeParams.forumId);
+    setReplyTo(null);
   }
 
   const { results, status, loadMore } = usePaginatedQuery(

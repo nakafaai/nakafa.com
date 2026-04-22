@@ -4,15 +4,21 @@ import { enrichForumPosts } from "@repo/backend/convex/classes/forums/utils/post
 import { paginatedForumFeedValidator } from "@repo/backend/convex/classes/forums/validators";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { paginationOptsValidator } from "convex/server";
+import schema from "@repo/backend/convex/schema";
+import { v } from "convex/values";
+import { paginator } from "convex-helpers/server/pagination";
+
+const DEFAULT_FORUM_PAGE_SIZE = 25;
 
 /**
- * Get the latest forum posts page annotated for the current user.
+ * Get one reactive forum page pinned by cursor boundaries.
  */
-export const getForumPosts = query({
+export const getForumPostsPage = query({
   args: {
+    cursor: v.union(v.string(), v.null()),
+    endCursor: v.optional(v.string()),
     forumId: vv.id("schoolClassForums"),
-    paginationOpts: paginationOptsValidator,
+    numItems: v.optional(v.number()),
   },
   returns: paginatedForumFeedValidator,
   handler: async (ctx, args) => {
@@ -21,13 +27,17 @@ export const getForumPosts = query({
     await loadForumWithAccess(ctx, args.forumId, currentUserId);
 
     const [postsPage, readState] = await Promise.all([
-      ctx.db
+      paginator(ctx.db, schema)
         .query("schoolClassForumPosts")
         .withIndex("by_forumId_and_sequence", (q) =>
           q.eq("forumId", args.forumId)
         )
         .order("desc")
-        .paginate(args.paginationOpts),
+        .paginate({
+          cursor: args.cursor,
+          endCursor: args.endCursor,
+          numItems: args.numItems ?? DEFAULT_FORUM_PAGE_SIZE,
+        }),
       ctx.db
         .query("schoolClassForumReadStates")
         .withIndex("by_forumId_and_userId", (q) =>

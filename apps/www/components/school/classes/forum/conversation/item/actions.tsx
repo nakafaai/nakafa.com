@@ -24,8 +24,8 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { memo, useTransition } from "react";
-import { useForum } from "@/components/school/classes/forum/conversation/context/use-forum";
-import type { ForumPost } from "@/components/school/classes/forum/conversation/models";
+import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
+import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 
 /**
  * Keeps post-level quick actions grouped together so reply and reaction updates
@@ -33,7 +33,7 @@ import type { ForumPost } from "@/components/school/classes/forum/conversation/m
  */
 export const PostItemActions = memo(({ post }: { post: ForumPost }) => {
   const t = useTranslations("Common");
-  const setReplyTo = useForum((state) => state.setReplyTo);
+  const setReplyTo = useSession((state) => state.setReplyTo);
   const [isReactionPickerOpen, reactionPicker] = useDisclosure(false);
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
