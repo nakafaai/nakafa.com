@@ -66,12 +66,17 @@ export function useConversationUnreadCue({
     seededCueRef.current = initialCue;
   }
 
-  const unreadCue = seededCueRef.current
-    ? ({
-        ...seededCueRef.current,
-        status: isAcknowledged ? "history" : "new",
-      } satisfies ConversationUnreadCue)
-    : null;
+  const seededCue = seededCueRef.current;
+  const unreadCue = useMemo(() => {
+    if (!seededCue) {
+      return null;
+    }
+
+    return {
+      ...seededCue,
+      status: isAcknowledged ? "history" : "new",
+    } satisfies ConversationUnreadCue;
+  }, [isAcknowledged, seededCue]);
 
   /** Keeps the separator row but turns it into "you left off here". */
   const acknowledgeUnreadCue = useCallback(() => {

@@ -186,6 +186,46 @@ describe("conversation/data/unread", () => {
     harness.cleanup();
   });
 
+  it("keeps the unread cue reference stable until its status changes", () => {
+    const harness = createHarness();
+    const posts = [
+      createPost({ isUnread: true, postId: "post_1", sequence: 1 }),
+      createPost({ isUnread: true, postId: "post_2", sequence: 2 }),
+    ];
+
+    harness.render({
+      isPending: false,
+      posts,
+    });
+    const newCue = harness.getLatest().unreadCue;
+
+    harness.render({
+      isPending: false,
+      posts,
+    });
+    expect(harness.getLatest().unreadCue).toBe(newCue);
+
+    act(() => {
+      harness.getLatest().acknowledgeUnreadCue();
+    });
+    const historyCue = harness.getLatest().unreadCue;
+
+    expect(historyCue).not.toBe(newCue);
+    expect(historyCue).toEqual({
+      count: 2,
+      postId: "post_1",
+      status: "history",
+    });
+
+    harness.render({
+      isPending: false,
+      posts,
+    });
+    expect(harness.getLatest().unreadCue).toBe(historyCue);
+
+    harness.cleanup();
+  });
+
   it("ignores acknowledge calls when no unread cue was ever seeded", () => {
     const harness = createHarness();
 
