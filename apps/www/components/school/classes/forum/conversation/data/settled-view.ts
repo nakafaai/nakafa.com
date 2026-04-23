@@ -16,10 +16,12 @@ type ConversationGeometryHandle = Pick<
   | "viewportSize"
 >;
 
+/** Clamps one row index into the currently rendered transcript range. */
 function clampConversationIndex(index: number, itemCount: number) {
   return Math.max(0, Math.min(itemCount - 1, index));
 }
 
+/** Returns the post id for post rows and ignores structural rows. */
 function getConversationPostId(row: ConversationRow | undefined) {
   if (row?.type !== "post") {
     return null;
@@ -28,10 +30,12 @@ function getConversationPostId(row: ConversationRow | undefined) {
   return row.post._id;
 }
 
+/** Returns the absolute offset of the viewport center line. */
 function getConversationViewportCenter(handle: ConversationGeometryHandle) {
   return handle.scrollOffset + handle.viewportSize / 2;
 }
 
+/** Returns one row's absolute start offset from the virtualizer cache. */
 function getConversationRowStart(
   handle: ConversationGeometryHandle,
   index: number
@@ -39,6 +43,7 @@ function getConversationRowStart(
   return handle.getItemOffset(index);
 }
 
+/** Returns one row's absolute end offset from the virtualizer cache. */
 function getConversationRowEnd(
   handle: ConversationGeometryHandle,
   index: number
@@ -46,6 +51,7 @@ function getConversationRowEnd(
   return getConversationRowStart(handle, index) + handle.getItemSize(index);
 }
 
+/** Returns one row's absolute center offset from the virtualizer cache. */
 function getConversationRowCenter(
   handle: ConversationGeometryHandle,
   index: number
@@ -57,6 +63,7 @@ function getConversationRowCenter(
   );
 }
 
+/** Returns whether one row intersects the current viewport. */
 function isConversationRowVisible({
   handle,
   index,
@@ -72,6 +79,7 @@ function isConversationRowVisible({
   return rowEnd > viewportStart && rowStart < viewportEnd;
 }
 
+/** Returns the nearest visible index bounds for the current viewport. */
 function getVisibleConversationIndexRange({
   handle,
   itemCount,
@@ -102,6 +110,7 @@ function getVisibleConversationIndexRange({
   };
 }
 
+/** Looks up the rendered row index for one post id. */
 function getConversationPostTargetIndex({
   rowIndexByPostId,
   postId,
@@ -112,6 +121,7 @@ function getConversationPostTargetIndex({
   return rowIndexByPostId.get(postId);
 }
 
+/** Returns how far one row is from the viewport center line. */
 function getConversationDistanceToViewportCenter({
   handle,
   index,

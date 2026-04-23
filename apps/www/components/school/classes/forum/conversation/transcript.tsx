@@ -105,6 +105,7 @@ export const ForumConversationTranscript = memo(() => {
 });
 ForumConversationTranscript.displayName = "ForumConversationTranscript";
 
+/** Owns the stateful virtual transcript for one hydrated forum session. */
 const HydratedTranscript = memo(
   ({
     forumId,
@@ -221,6 +222,7 @@ const HydratedTranscript = memo(
     const shouldShowJumpBar =
       hasOverflow && (canGoBack || !(isAtBottom || hasPendingLatestPlacement));
 
+    /** Stores pending semantic placement and mirrors latest placement into UI state. */
     const setPendingPlacement = useCallback(
       (placement: PendingPlacement | null) => {
         pendingPlacementRef.current = placement;
@@ -355,6 +357,7 @@ const HydratedTranscript = memo(
       { delay: 160, flushOnUnmount: true }
     );
 
+    /** Captures a restorable scroll snapshot from current or last known metrics. */
     persistCurrentScrollSnapshotRef.current = () => {
       const handle = virtualizerRef.current;
       const cache = handle?.cache ?? lastScrollCacheRef.current;
@@ -382,6 +385,7 @@ const HydratedTranscript = memo(
       );
     };
 
+    /** Sends one pending semantic placement to the active scroll controller. */
     const scrollToPendingPlacement = useCallback(
       ({ align, behavior, view }: PendingPlacement) => {
         if (view.kind === "bottom") {
@@ -540,6 +544,7 @@ const HydratedTranscript = memo(
       setPendingPlacement,
     ]);
 
+    /** Synchronizes viewport state after Virtua reports scroll movement. */
     const handleScroll = useCallback(() => {
       syncViewport();
       clearReachedPendingPlacement();
@@ -555,9 +560,12 @@ const HydratedTranscript = memo(
     }, [acknowledgeUnreadCue, goToLatest, goToPost, registerControls]);
 
     useEffect(() => {
+      /** Saves the latest snapshot before the browser hides or unloads the page. */
       const saveCurrentScrollSnapshot = () => {
         persistCurrentScrollSnapshotRef.current?.();
       };
+
+      /** Handles browsers that fire visibility before page lifecycle unload. */
       const handleVisibilityChange = () => {
         if (document.visibilityState !== "hidden") {
           return;
