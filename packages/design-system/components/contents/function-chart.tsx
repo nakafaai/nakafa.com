@@ -54,7 +54,7 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
   } satisfies ChartConfig;
 
   return (
-    <Card>
+    <Card className="content-auto-lg">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -84,7 +84,7 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
             />
             <ChartTooltip
               content={({ active, payload }) => {
-                if (!!active && !!payload && payload.length > 0) {
+                if (active && payload && payload.length > 0) {
                   const xValue = payload[0].payload.x;
                   const yValue = payload[0].payload.y;
 

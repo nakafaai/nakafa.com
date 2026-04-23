@@ -59,7 +59,7 @@ export function GrowthChart({ lang = "en" }: Props) {
   } satisfies ChartConfig;
 
   return (
-    <Card>
+    <Card className="content-auto-lg">
       <CardHeader>
         <CardTitle>{t.title}</CardTitle>
         <CardDescription>{t.description}</CardDescription>

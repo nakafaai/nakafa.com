@@ -5,10 +5,8 @@ import { getLatestScaleVersionForTryout } from "@repo/backend/convex/irt/scales/
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import {
-  getActiveTryoutSubscriptionForUserProduct,
-  resolveActiveTryoutEventEntitlements,
-} from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { resolveActiveTryoutEventEntitlements } from "@repo/backend/convex/tryoutAccess/helpers/entitlements";
+import { getActiveTryoutSubscriptionForUserProduct } from "@repo/backend/convex/tryoutAccess/helpers/subscriptions";
 import {
   requireActiveTryoutAttemptAfterExpirySync,
   requireOwnedTryoutAttempt,

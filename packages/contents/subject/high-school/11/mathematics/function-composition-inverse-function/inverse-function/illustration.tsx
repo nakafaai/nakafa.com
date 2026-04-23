@@ -27,7 +27,7 @@ export function FunctionIllustration({
   content,
 }: Props) {
   return (
-    <Card>
+    <Card className="content-auto-lg">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

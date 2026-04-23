@@ -24,7 +24,11 @@ export function ExerciseArticle({
   const articleId = `exercise-${id}`;
 
   return (
-    <article aria-labelledby={`exercise-${id}-title`} id={articleId}>
+    <article
+      aria-labelledby={`exercise-${id}-title`}
+      className="content-auto-lg"
+      id={articleId}
+    >
       <div className="flex items-center gap-4">
         <a
           className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"

@@ -220,7 +220,7 @@ export function BacterialGrowth({
   );
 
   return (
-    <Card>
+    <Card className="content-auto-lg">
       <CardHeader>
         <CardTitle>{labels.title}</CardTitle>
         <CardDescription>

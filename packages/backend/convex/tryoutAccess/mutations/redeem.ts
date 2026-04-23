@@ -1,12 +1,12 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
+import { syncTryoutAccessGrantEntitlements } from "@repo/backend/convex/tryoutAccess/helpers/entitlements";
+import { getTryoutAccessEventByCode } from "@repo/backend/convex/tryoutAccess/helpers/events";
 import {
   getTryoutAccessCampaignRedeemStatus,
-  getTryoutAccessEventByCode,
   getTryoutAccessGrantEndsAt,
-  syncTryoutAccessGrantEntitlements,
-} from "@repo/backend/convex/tryoutAccess/helpers/access";
+} from "@repo/backend/convex/tryoutAccess/helpers/status";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { ConvexError, v } from "convex/values";
 

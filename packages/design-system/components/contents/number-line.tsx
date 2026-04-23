@@ -107,7 +107,7 @@ export function NumberLine({
   });
 
   return (
-    <Card>
+    <Card className="content-auto-md">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

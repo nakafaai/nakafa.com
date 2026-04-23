@@ -237,7 +237,7 @@ export default function TableChairsAnimation({
   }, [deferredTableCount]);
 
   return (
-    <Card>
+    <Card className="content-auto-lg">
       <CardHeader>
         <CardTitle>{labels.title}</CardTitle>
         <CardDescription>

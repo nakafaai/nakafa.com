@@ -16,7 +16,7 @@ export function MermaidMdx({ chart, className }: Props) {
   return (
     <div
       className={cn(
-        "my-4 w-full divide-y overflow-hidden rounded-xl border shadow-sm",
+        "my-4 w-full divide-y overflow-hidden rounded-xl border shadow-sm content-auto-lg",
         className
       )}
     >

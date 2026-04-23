@@ -230,6 +230,22 @@
   font-size: 15px;
 }
 
+/* Keep offscreen learn content out of layout and paint until it is near view. */
+@utility content-auto-sm {
+  contain-intrinsic-size: auto 10rem;
+  content-visibility: auto;
+}
+
+@utility content-auto-md {
+  contain-intrinsic-size: auto 24rem;
+  content-visibility: auto;
+}
+
+@utility content-auto-lg {
+  contain-intrinsic-size: auto 40rem;
+  content-visibility: auto;
+}
+
 @layer utilities {
   /* Style scrollbar for webkit browsers (Chrome, Safari, etc) */
   ::-webkit-scrollbar {

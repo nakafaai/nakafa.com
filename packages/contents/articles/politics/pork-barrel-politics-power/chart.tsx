@@ -87,7 +87,7 @@ export function BudgetChart({
   } satisfies ChartConfig;
 
   return (
-    <Card>
+    <Card className="content-auto-lg">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>Kemenkeu RI, 2024a.</CardDescription>
@@ -179,7 +179,7 @@ export function FundChart({
   } satisfies ChartConfig;
 
   return (
-    <Card>
+    <Card className="content-auto-lg">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -343,7 +343,7 @@ export function ElectabilityChart({
   footnote,
 }: Props) {
   return (
-    <Card>
+    <Card className="content-auto-lg">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

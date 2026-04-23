@@ -1,10 +1,8 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import {
-  getTryoutAccessCampaignRedeemStatus,
-  syncTryoutAccessGrantStatus,
-} from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { syncTryoutAccessGrantStatus } from "@repo/backend/convex/tryoutAccess/helpers/entitlements";
+import { getTryoutAccessCampaignRedeemStatus } from "@repo/backend/convex/tryoutAccess/helpers/status";
 import { finalizeCompetitionCampaignResultsIfNeeded } from "@repo/backend/convex/tryoutAccess/mutations/internal/competition";
 import { v } from "convex/values";
 

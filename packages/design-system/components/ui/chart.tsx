@@ -189,7 +189,7 @@ function ChartTooltipContent({
               )}
               key={item.dataKey}
             >
-              {!!formatter && item?.value !== undefined && !!item.name ? (
+              {formatter && item?.value !== undefined && item.name ? (
                 formatter(item.value, item.name, item, index, item.payload)
               ) : (
                 <>
@@ -283,7 +283,7 @@ function ChartLegendContent({
             )}
             key={item.value}
           >
-            {!!itemConfig?.icon && !hideIcon ? (
+            {itemConfig?.icon && !hideIcon ? (
               <itemConfig.icon />
             ) : (
               <div

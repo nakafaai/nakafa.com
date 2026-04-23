@@ -92,7 +92,7 @@ export const components = {
   table: ({ children, className, ...props }: TableProps) => (
     <Table
       className={cn("has-[tbody]:[&_thead]:border-b", className)}
-      containerClassName="my-4 rounded-xl border"
+      containerClassName="content-auto-md my-4 rounded-xl border"
       {...props}
     >
       {filterWhitespaceNodes(children)}
