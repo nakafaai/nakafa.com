@@ -30,7 +30,7 @@ export function Stage({ title, labels }: Props) {
   ];
 
   return (
-    <Card className="mb-4 content-auto-lg">
+    <Card className="mb-4 content-auto-card">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>

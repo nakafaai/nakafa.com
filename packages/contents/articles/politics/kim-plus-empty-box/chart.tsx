@@ -87,7 +87,7 @@ export function ElectabilityChart({
   } satisfies ChartConfig;
 
   return (
-    <Card className="content-auto-lg">
+    <Card className="content-auto-card">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

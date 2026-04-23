@@ -32,7 +32,10 @@ export function MathContainer({
 }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("my-4 space-y-4 content-auto-md last:mb-0", className)}
+      className={cn(
+        "my-4 space-y-4 content-auto-math-stack last:mb-0",
+        className
+      )}
       {...props}
     />
   );
@@ -49,7 +52,7 @@ export function BlockMath({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-xl border bg-card text-card-foreground content-auto-sm",
+        "overflow-hidden rounded-xl border bg-card text-card-foreground content-auto-formula",
         className
       )}
     >

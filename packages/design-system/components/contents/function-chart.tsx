@@ -54,7 +54,7 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
   } satisfies ChartConfig;
 
   return (
-    <Card className="content-auto-lg">
+    <Card className="content-auto-card">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

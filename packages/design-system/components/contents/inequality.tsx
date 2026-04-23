@@ -20,7 +20,7 @@ interface Props {
  */
 export function Inequality({ title, description, data }: Props) {
   return (
-    <Card className="content-auto-lg">
+    <Card className="content-auto-card">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

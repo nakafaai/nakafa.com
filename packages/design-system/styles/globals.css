@@ -230,19 +230,34 @@
   font-size: 15px;
 }
 
-/* Keep offscreen learn content out of layout and paint until it is near view. */
-@utility content-auto-sm {
-  contain-intrinsic-size: auto 10rem;
+/* Measured fallback heights keep skipped learn blocks close to their rendered size. */
+@utility content-auto-formula {
+  contain-intrinsic-size: auto none auto 5rem;
   content-visibility: auto;
 }
 
-@utility content-auto-md {
-  contain-intrinsic-size: auto 24rem;
+@utility content-auto-table {
+  contain-intrinsic-size: auto none auto 12rem;
   content-visibility: auto;
 }
 
-@utility content-auto-lg {
-  contain-intrinsic-size: auto 40rem;
+@utility content-auto-math-stack {
+  contain-intrinsic-size: auto none auto 32rem;
+  content-visibility: auto;
+}
+
+@utility content-auto-card {
+  contain-intrinsic-size: auto none auto 48rem;
+  content-visibility: auto;
+}
+
+@utility content-auto-code {
+  contain-intrinsic-size: auto none auto 48rem;
+  content-visibility: auto;
+}
+
+@utility content-auto-exercise {
+  contain-intrinsic-size: auto none auto 60rem;
   content-visibility: auto;
 }
 

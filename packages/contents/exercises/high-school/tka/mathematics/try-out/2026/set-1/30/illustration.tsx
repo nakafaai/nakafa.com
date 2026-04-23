@@ -16,7 +16,7 @@ interface Props {
 
 export function Illustration({ labels }: Props) {
   return (
-    <Card className="content-auto-lg">
+    <Card className="content-auto-card">
       <CardContent>
         <div className="grid grid-cols-1 items-center gap-4 sm:grid-cols-2">
           <div className="relative m-6 mr-18 flex flex-col items-center justify-center rounded-none border border-foreground">

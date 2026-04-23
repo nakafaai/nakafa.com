@@ -26,7 +26,7 @@ export function ExerciseArticle({
   return (
     <article
       aria-labelledby={`exercise-${id}-title`}
-      className="content-auto-lg"
+      className="content-auto-exercise"
       id={articleId}
     >
       <div className="flex items-center gap-4">

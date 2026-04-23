@@ -23,7 +23,7 @@ import {
 export function CodeBlockMdx({ data }: { data: CodeBlockData[] }) {
   return (
     <CodeBlock
-      className="my-4 content-auto-lg"
+      className="my-4 content-auto-code"
       data={data}
       defaultValue={data[0].language}
     >

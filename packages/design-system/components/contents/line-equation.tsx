@@ -36,7 +36,7 @@ export function LineEquation({
   showZAxis = true,
 }: Props) {
   return (
-    <Card className="content-auto-lg">
+    <Card className="content-auto-card">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
