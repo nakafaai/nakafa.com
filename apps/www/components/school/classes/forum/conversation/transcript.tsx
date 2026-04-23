@@ -166,9 +166,7 @@ const HydratedTranscript = memo(
     const hasBootstrappedRestoreRef = useRef(false);
     const [isPendingLatestPlacement, setIsPendingLatestPlacement] =
       useState(false);
-    const lastScrollCacheRef = useRef(
-      initialSavedScrollSnapshot?.cache ?? null
-    );
+    const lastScrollCacheRef = useRef(initialRestorableCache);
     const lastScrollOffsetRef = useRef(initialSavedScrollSnapshot?.offset ?? 0);
     const lastWasAtBottomRef = useRef(
       initialSavedScrollSnapshot?.wasAtBottom ?? false
@@ -582,7 +580,19 @@ const HydratedTranscript = memo(
 
     useLayoutEffect(() => {
       const frameId = requestAnimationFrame(() => {
-        const wasAtBottom = lastWasAtBottomRef.current;
+        const shouldStickToBottom =
+          lastWasAtBottomRef.current &&
+          !pendingPlacementRef.current &&
+          pendingScrollOffsetRef.current === null;
+
+        if (shouldStickToBottom) {
+          setPendingPlacement({
+            behavior: "smooth",
+            completion: "reached",
+            highlightPostId: null,
+            view: { kind: "bottom" },
+          });
+        }
 
         syncViewport();
 
@@ -594,9 +604,6 @@ const HydratedTranscript = memo(
           syncViewport();
         } else if (pendingPlacementRef.current) {
           flushPendingPlacement();
-        } else if (wasAtBottom) {
-          scrollController.scrollToLatest({ behavior: "smooth" });
-          syncViewport();
         }
 
         persistSettledState();
@@ -608,7 +615,7 @@ const HydratedTranscript = memo(
     }, [
       flushPendingPlacement,
       persistSettledState,
-      scrollController,
+      setPendingPlacement,
       syncViewport,
     ]);
 
