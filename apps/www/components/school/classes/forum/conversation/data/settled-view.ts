@@ -1,195 +1,300 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { FORUM_BOTTOM_THRESHOLD } from "@/components/school/classes/forum/conversation/data/pages";
+import type { VirtualizerHandle } from "virtua";
+import {
+  type ConversationRow,
+  FORUM_BOTTOM_THRESHOLD,
+} from "@/components/school/classes/forum/conversation/data/pages";
 import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view";
 
-function getPostElements(root: HTMLElement) {
-  return Array.from(root.querySelectorAll<HTMLElement>("[data-post-id]"));
+type ConversationGeometryHandle = Pick<
+  VirtualizerHandle,
+  | "findItemIndex"
+  | "getItemOffset"
+  | "getItemSize"
+  | "scrollOffset"
+  | "scrollSize"
+  | "viewportSize"
+>;
+
+/** Clamps one row index into the currently rendered transcript range. */
+function clampConversationIndex(index: number, itemCount: number) {
+  return Math.max(0, Math.min(itemCount - 1, index));
 }
 
-function getConversationPostId({
-  postIds,
-  value,
-}: {
-  postIds: Id<"schoolClassForumPosts">[];
-  value: string | undefined;
-}) {
-  if (!value) {
+/** Returns the post id for post rows and ignores structural rows. */
+function getConversationPostId(row: ConversationRow | undefined) {
+  if (row?.type !== "post") {
     return null;
   }
 
-  return postIds.find((postId) => postId === value) ?? null;
+  return row.post._id;
 }
 
-function isElementVisibleInsideRoot({
-  element,
-  root,
-}: {
-  element: HTMLElement;
-  root: HTMLElement;
-}) {
-  const elementRect = element.getBoundingClientRect();
-  const rootRect = root.getBoundingClientRect();
-
-  return elementRect.bottom > rootRect.top && elementRect.top < rootRect.bottom;
+/** Returns the absolute offset of the viewport center line. */
+function getConversationViewportCenter(handle: ConversationGeometryHandle) {
+  return handle.scrollOffset + handle.viewportSize / 2;
 }
 
-function isElementCenteredInsideRoot({
-  element,
-  root,
-}: {
-  element: HTMLElement;
-  root: HTMLElement;
-}) {
-  const elementRect = element.getBoundingClientRect();
-  const rootRect = root.getBoundingClientRect();
-  const centerThreshold = Math.max(32, Math.min(96, root.clientHeight * 0.12));
-  const elementCenter = (elementRect.top + elementRect.bottom) / 2;
-  const rootCenter = (rootRect.top + rootRect.bottom) / 2;
-
-  return Math.abs(elementCenter - rootCenter) <= centerThreshold;
+/** Returns one row's absolute start offset from the virtualizer cache. */
+function getConversationRowStart(
+  handle: ConversationGeometryHandle,
+  index: number
+) {
+  return handle.getItemOffset(index);
 }
 
-function isElementPlacementSettledInsideRoot({
-  element,
-  root,
+/** Returns one row's absolute end offset from the virtualizer cache. */
+function getConversationRowEnd(
+  handle: ConversationGeometryHandle,
+  index: number
+) {
+  return getConversationRowStart(handle, index) + handle.getItemSize(index);
+}
+
+/** Returns one row's absolute center offset from the virtualizer cache. */
+function getConversationRowCenter(
+  handle: ConversationGeometryHandle,
+  index: number
+) {
+  return (
+    (getConversationRowStart(handle, index) +
+      getConversationRowEnd(handle, index)) /
+    2
+  );
+}
+
+/** Returns whether one row intersects the current viewport. */
+function isConversationRowVisible({
+  handle,
+  index,
 }: {
-  element: HTMLElement;
-  root: HTMLElement;
+  handle: ConversationGeometryHandle;
+  index: number;
 }) {
-  if (!isElementVisibleInsideRoot({ element, root })) {
-    return false;
+  const viewportStart = handle.scrollOffset;
+  const viewportEnd = viewportStart + handle.viewportSize;
+  const rowStart = getConversationRowStart(handle, index);
+  const rowEnd = getConversationRowEnd(handle, index);
+
+  return rowEnd > viewportStart && rowStart < viewportEnd;
+}
+
+/** Returns the nearest visible index bounds for the current viewport. */
+function getVisibleConversationIndexRange({
+  handle,
+  itemCount,
+}: {
+  handle: ConversationGeometryHandle;
+  itemCount: number;
+}) {
+  if (handle.viewportSize <= 0) {
+    return null;
   }
 
-  if (isElementCenteredInsideRoot({ element, root })) {
-    return true;
+  if (itemCount === 0) {
+    return null;
   }
 
-  const elementRect = element.getBoundingClientRect();
-  const rootRect = root.getBoundingClientRect();
-  const elementCenter = (elementRect.top + elementRect.bottom) / 2;
-  const rootCenter = (rootRect.top + rootRect.bottom) / 2;
+  const viewportStart = handle.scrollOffset;
+  const viewportEnd = viewportStart + handle.viewportSize;
 
-  if (elementCenter < rootCenter) {
-    return root.scrollTop <= FORUM_BOTTOM_THRESHOLD;
-  }
-
-  return getConversationBottomDistance(root) <= FORUM_BOTTOM_THRESHOLD;
+  return {
+    firstVisibleIndex: clampConversationIndex(
+      handle.findItemIndex(viewportStart),
+      itemCount
+    ),
+    lastVisibleIndex: clampConversationIndex(
+      handle.findItemIndex(viewportEnd),
+      itemCount
+    ),
+  };
 }
 
-function getElementDistanceToRootCenter({
-  element,
-  root,
+/** Looks up the rendered row index for one post id. */
+function getConversationPostTargetIndex({
+  rowIndexByPostId,
+  postId,
 }: {
-  element: HTMLElement;
-  root: HTMLElement;
+  rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
+  postId: Id<"schoolClassForumPosts">;
 }) {
-  const elementRect = element.getBoundingClientRect();
-  const rootRect = root.getBoundingClientRect();
-  const rootCenter = (rootRect.top + rootRect.bottom) / 2;
+  return rowIndexByPostId.get(postId);
+}
 
-  if (elementRect.top <= rootCenter && elementRect.bottom >= rootCenter) {
+/** Returns how far one row is from the viewport center line. */
+function getConversationDistanceToViewportCenter({
+  handle,
+  index,
+}: {
+  handle: ConversationGeometryHandle;
+  index: number;
+}) {
+  const viewportCenter = getConversationViewportCenter(handle);
+  const rowStart = getConversationRowStart(handle, index);
+  const rowEnd = getConversationRowEnd(handle, index);
+
+  if (rowStart <= viewportCenter && rowEnd >= viewportCenter) {
     return 0;
   }
 
-  if (elementRect.bottom < rootCenter) {
-    return rootCenter - elementRect.bottom;
+  if (rowEnd < viewportCenter) {
+    return viewportCenter - rowEnd;
   }
 
-  return elementRect.top - rootCenter;
+  return rowStart - viewportCenter;
 }
 
-/** Returns the current bottom distance from a normal scroll container. */
-export function getConversationBottomDistance(root: HTMLElement) {
-  return Math.max(0, root.scrollHeight - root.clientHeight - root.scrollTop);
+/** Returns the viewport-center tolerance used by transcript post placement. */
+export function getConversationCenterThreshold(viewportSize: number) {
+  return Math.max(32, Math.min(96, viewportSize * 0.12));
+}
+
+/** Returns the current bottom distance from the active virtualizer metrics. */
+export function getConversationBottomDistance(
+  handle: ConversationGeometryHandle
+) {
+  return Math.max(
+    0,
+    handle.scrollSize - handle.viewportSize - handle.scrollOffset
+  );
 }
 
 /** Returns the first visible post id inside the current transcript viewport. */
 export function getFirstVisibleConversationPostId({
-  postIds,
-  root,
+  handle,
+  rows,
 }: {
-  postIds: Id<"schoolClassForumPosts">[];
-  root: HTMLElement;
+  handle: ConversationGeometryHandle;
+  rows: readonly ConversationRow[];
 }) {
-  const visibleElement = getPostElements(root).find((element) =>
-    isElementVisibleInsideRoot({ element, root })
-  );
-
-  return getConversationPostId({
-    postIds,
-    value: visibleElement?.dataset.postId,
+  const range = getVisibleConversationIndexRange({
+    handle,
+    itemCount: rows.length,
   });
+
+  if (!range) {
+    return null;
+  }
+
+  for (
+    let index = range.firstVisibleIndex;
+    index <= range.lastVisibleIndex;
+    index += 1
+  ) {
+    if (!isConversationRowVisible({ handle, index })) {
+      continue;
+    }
+
+    const postId = getConversationPostId(rows[index]);
+
+    if (postId) {
+      return postId;
+    }
+  }
+
+  return null;
 }
 
 /** Returns the last visible post id inside the current transcript viewport. */
 export function getLastVisibleConversationPostId({
-  postIds,
-  root,
+  handle,
+  rows,
 }: {
-  postIds: Id<"schoolClassForumPosts">[];
-  root: HTMLElement;
+  handle: ConversationGeometryHandle;
+  rows: readonly ConversationRow[];
 }) {
-  const visibleElement = getPostElements(root)
-    .slice()
-    .reverse()
-    .find((element) => isElementVisibleInsideRoot({ element, root }));
-
-  return getConversationPostId({
-    postIds,
-    value: visibleElement?.dataset.postId,
+  const range = getVisibleConversationIndexRange({
+    handle,
+    itemCount: rows.length,
   });
+
+  if (!range) {
+    return null;
+  }
+
+  for (
+    let index = range.lastVisibleIndex;
+    index >= range.firstVisibleIndex;
+    index -= 1
+  ) {
+    if (!isConversationRowVisible({ handle, index })) {
+      continue;
+    }
+
+    const postId = getConversationPostId(rows[index]);
+
+    if (postId) {
+      return postId;
+    }
+  }
+
+  return null;
 }
 
 /** Returns the visible post id closest to the viewport center line. */
 export function getCenteredConversationPostId({
-  postIds,
-  root,
+  handle,
+  rows,
 }: {
-  postIds: Id<"schoolClassForumPosts">[];
-  root: HTMLElement;
+  handle: ConversationGeometryHandle;
+  rows: readonly ConversationRow[];
 }) {
-  const centeredElement = getPostElements(root)
-    .filter((element) => isElementVisibleInsideRoot({ element, root }))
-    .sort(
-      (left, right) =>
-        getElementDistanceToRootCenter({ element: left, root }) -
-        getElementDistanceToRootCenter({ element: right, root })
-    )
-    .at(0);
-
-  return getConversationPostId({
-    postIds,
-    value: centeredElement?.dataset.postId,
+  const range = getVisibleConversationIndexRange({
+    handle,
+    itemCount: rows.length,
   });
+
+  if (!range) {
+    return null;
+  }
+
+  let centeredPostId: Id<"schoolClassForumPosts"> | null = null;
+  let shortestDistance = Number.POSITIVE_INFINITY;
+
+  for (
+    let index = range.firstVisibleIndex;
+    index <= range.lastVisibleIndex;
+    index += 1
+  ) {
+    const postId = getConversationPostId(rows[index]);
+
+    if (!(postId && isConversationRowVisible({ handle, index }))) {
+      continue;
+    }
+
+    const distance = getConversationDistanceToViewportCenter({ handle, index });
+
+    if (distance < shortestDistance) {
+      centeredPostId = postId;
+      shortestDistance = distance;
+    }
+  }
+
+  return centeredPostId;
 }
 
 /**
- * Captures the current semantic transcript view from real DOM placement.
+ * Captures the current semantic transcript view from the virtualizer metrics.
  *
  * Restore scroll places post views at the viewport center, so persisted post
  * views must also be derived from the row nearest the viewport center. Using
  * the first visible row here would slowly drift the saved view upward across
  * repeated close/open cycles.
- *
- * References:
- * - https://react.dev/reference/react/useLayoutEffect
- * - https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
- * - https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
  */
 export function captureConversationView({
-  postIds,
-  root,
+  handle,
+  rows,
 }: {
-  postIds: Id<"schoolClassForumPosts">[];
-  root: HTMLElement;
+  handle: ConversationGeometryHandle;
+  rows: readonly ConversationRow[];
 }) {
-  if (getConversationBottomDistance(root) <= FORUM_BOTTOM_THRESHOLD) {
+  if (getConversationBottomDistance(handle) <= FORUM_BOTTOM_THRESHOLD) {
     return { kind: "bottom" } satisfies ConversationView;
   }
 
   const centeredPostId = getCenteredConversationPostId({
-    postIds,
-    root,
+    handle,
+    rows,
   });
 
   if (!centeredPostId) {
@@ -202,94 +307,117 @@ export function captureConversationView({
   } satisfies ConversationView;
 }
 
-/** Returns whether one semantic transcript view is already visible in the DOM. */
+/** Returns whether one semantic transcript view is already visible. */
 export function isConversationViewVisible({
-  root,
+  handle,
+  rowIndexByPostId,
   view,
 }: {
-  root: HTMLElement;
+  handle: ConversationGeometryHandle;
+  rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
   view: ConversationView;
 }) {
   if (view.kind === "bottom") {
-    return getConversationBottomDistance(root) <= FORUM_BOTTOM_THRESHOLD;
+    return getConversationBottomDistance(handle) <= FORUM_BOTTOM_THRESHOLD;
   }
 
-  const element = root.querySelector<HTMLElement>(
-    `[data-post-id="${view.postId}"]`
-  );
+  const targetIndex = getConversationPostTargetIndex({
+    rowIndexByPostId,
+    postId: view.postId,
+  });
 
-  if (!element) {
+  if (targetIndex === undefined) {
     return false;
   }
 
-  return isElementVisibleInsideRoot({ element, root });
+  return isConversationRowVisible({
+    handle,
+    index: targetIndex,
+  });
 }
 
 /**
- * Returns whether one semantic transcript view is already centered in the DOM.
+ * Returns whether one semantic transcript view is already centered.
  *
  * `go to message` should keep scrolling until the target row reaches the
  * viewport center, even if that row is already only partially visible.
- *
- * References:
- * - https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
- * - https://react.dev/learn/manipulating-the-dom-with-refs
  */
 export function isConversationViewCentered({
-  root,
+  handle,
+  rowIndexByPostId,
   view,
 }: {
-  root: HTMLElement;
+  handle: ConversationGeometryHandle;
+  rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
   view: ConversationView;
 }) {
   if (view.kind === "bottom") {
-    return getConversationBottomDistance(root) <= FORUM_BOTTOM_THRESHOLD;
+    return getConversationBottomDistance(handle) <= FORUM_BOTTOM_THRESHOLD;
   }
 
-  const element = root.querySelector<HTMLElement>(
-    `[data-post-id="${view.postId}"]`
-  );
+  const targetIndex = getConversationPostTargetIndex({
+    rowIndexByPostId,
+    postId: view.postId,
+  });
 
-  if (!element) {
+  if (targetIndex === undefined) {
     return false;
   }
 
-  return isElementCenteredInsideRoot({ element, root });
+  if (!isConversationRowVisible({ handle, index: targetIndex })) {
+    return false;
+  }
+
+  return (
+    Math.abs(
+      getConversationRowCenter(handle, targetIndex) -
+        getConversationViewportCenter(handle)
+    ) <= getConversationCenterThreshold(handle.viewportSize)
+  );
 }
 
 /**
- * Returns whether one semantic post placement has settled as far as the DOM can
- * place it.
- *
- * `scrollIntoView({ block: "center" })` may clamp at the top or bottom edges
- * when there is not enough remaining scroll range to truly center the target.
- * Those edge-clamped placements should still count as settled so the jump
- * highlight can start once the target is visibly reached.
- *
- * References:
- * - https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
- * - https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
+ * Returns whether one semantic post placement has settled as far as the
+ * virtualizer can place it.
  */
 export function hasConversationViewSettledPlacement({
-  root,
+  handle,
+  rowIndexByPostId,
   view,
 }: {
-  root: HTMLElement;
+  handle: ConversationGeometryHandle;
+  rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
   view: ConversationView;
 }) {
-  if (view.kind === "bottom") {
-    return getConversationBottomDistance(root) <= FORUM_BOTTOM_THRESHOLD;
+  if (isConversationViewCentered({ handle, rowIndexByPostId, view })) {
+    return true;
   }
 
-  const element = root.querySelector<HTMLElement>(
-    `[data-post-id="${view.postId}"]`
-  );
-
-  if (!element) {
+  if (view.kind === "bottom") {
     return false;
   }
 
-  return isElementPlacementSettledInsideRoot({ element, root });
+  const targetIndex = getConversationPostTargetIndex({
+    rowIndexByPostId,
+    postId: view.postId,
+  });
+
+  if (targetIndex === undefined) {
+    return false;
+  }
+
+  if (!isConversationRowVisible({ handle, index: targetIndex })) {
+    return false;
+  }
+
+  const targetCenter = getConversationRowCenter(handle, targetIndex);
+  const viewportCenter = getConversationViewportCenter(handle);
+
+  if (targetCenter < viewportCenter) {
+    return handle.scrollOffset <= FORUM_BOTTOM_THRESHOLD;
+  }
+
+  return getConversationBottomDistance(handle) <= FORUM_BOTTOM_THRESHOLD;
 }
 
 /**
@@ -299,13 +427,15 @@ export function hasConversationViewSettledPlacement({
  * viewport top, which matches the "reached or passed" back-button rule.
  */
 export function hasConversationViewReached({
-  root,
+  handle,
+  rowIndexByPostId,
   view,
 }: {
-  root: HTMLElement;
+  handle: ConversationGeometryHandle;
+  rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
   view: ConversationView;
 }) {
-  if (isConversationViewVisible({ root, view })) {
+  if (isConversationViewVisible({ handle, rowIndexByPostId, view })) {
     return true;
   }
 
@@ -313,15 +443,14 @@ export function hasConversationViewReached({
     return false;
   }
 
-  const element = root.querySelector<HTMLElement>(
-    `[data-post-id="${view.postId}"]`
-  );
+  const targetIndex = getConversationPostTargetIndex({
+    rowIndexByPostId,
+    postId: view.postId,
+  });
 
-  if (!element) {
+  if (targetIndex === undefined) {
     return false;
   }
 
-  return (
-    element.getBoundingClientRect().top <= root.getBoundingClientRect().top
-  );
+  return getConversationRowStart(handle, targetIndex) <= handle.scrollOffset;
 }

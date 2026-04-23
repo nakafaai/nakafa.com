@@ -24,6 +24,14 @@ export function SessionProvider({
   const [store] = useState(() => createSessionStore(classId));
 
   useLayoutEffect(() => {
+    /*
+     * The session store opts into manual persist hydration so this provider can
+     * finish loading the client-only snapshot before the transcript renders.
+     *
+     * References:
+     * - https://zustand.docs.pmnd.rs/reference/middlewares/persist
+     * - https://zustand.docs.pmnd.rs/reference/integrations/persisting-store-data
+     */
     if (store.persist.hasHydrated()) {
       store.getState().setHydrated(true);
       return;
@@ -52,4 +60,15 @@ export function useSession<T>(selector: (state: SessionStore) => T): T {
   }
 
   return useStore(store, useShallow(selector));
+}
+
+/** Reads the raw session store API without subscribing to its state. */
+export function useSessionStoreApi() {
+  const store = useContextSelector(SessionContext, (value) => value);
+
+  if (!store) {
+    throw new Error("useSessionStoreApi must be used within a SessionProvider");
+  }
+
+  return store;
 }

@@ -1,4 +1,4 @@
-import { type ComponentProps, memo } from "react";
+import { memo } from "react";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/pages";
 import { ForumHeader } from "@/components/school/classes/forum/conversation/header";
@@ -12,12 +12,10 @@ export const TranscriptRow = memo(
     row,
     previousRow,
     nextRow,
-    itemRef,
   }: {
     row: ConversationRow;
     previousRow?: ConversationRow;
     nextRow?: ConversationRow;
-    itemRef?: ComponentProps<"div">["ref"];
   }) => {
     const forum = useData((state) => state.forum);
 
@@ -46,10 +44,29 @@ export const TranscriptRow = memo(
       <ForumPostItem
         isFirstInGroup={isFirstInGroup}
         isLastInGroup={isLastInGroup}
-        itemRef={itemRef}
         post={row.post}
       />
     );
   }
 );
 TranscriptRow.displayName = "TranscriptRow";
+
+/** Adapts one virtualized row index back into the grouped transcript row shape. */
+export const VirtualTranscriptRow = memo(
+  ({
+    index,
+    row,
+    rows,
+  }: {
+    index: number;
+    row: ConversationRow;
+    rows: readonly ConversationRow[];
+  }) => (
+    <TranscriptRow
+      nextRow={rows[index + 1]}
+      previousRow={rows[index - 1]}
+      row={row}
+    />
+  )
+);
+VirtualTranscriptRow.displayName = "VirtualTranscriptRow";

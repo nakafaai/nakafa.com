@@ -7,7 +7,7 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import { format } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
-import { Activity, type ComponentProps, memo } from "react";
+import { Activity, memo } from "react";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
 import { useViewport } from "@/components/school/classes/forum/conversation/context/use-viewport";
@@ -25,12 +25,10 @@ export const ForumPostItem = memo(
     post,
     isFirstInGroup,
     isLastInGroup,
-    itemRef,
   }: {
     post: ForumPost;
     isFirstInGroup: boolean;
     isLastInGroup: boolean;
-    itemRef?: ComponentProps<"div">["ref"];
   }) => {
     const t = useTranslations("Common");
     const locale = useLocale();
@@ -59,9 +57,7 @@ export const ForumPostItem = memo(
             isReplyTo === true && "border-secondary bg-secondary/10",
             isJumpHighlighted === true && "border-secondary bg-secondary/10"
           )}
-          data-post-id={post._id}
           id={post._id}
-          ref={itemRef}
         >
           <PostItemActions post={post} />
 

@@ -13,16 +13,19 @@ export const ConversationUnreadSeparator = memo(
       <div className="flex items-center gap-3 py-2">
         <div
           className={cn(
-            "h-px flex-1",
+            "h-px flex-1 transition-colors ease-out motion-reduce:transition-none",
             isHistory ? "bg-muted" : "bg-destructive"
           )}
         />
-        <Badge variant={isHistory ? "muted" : "destructive"}>
+        <Badge
+          className="transition-colors ease-out motion-reduce:transition-none"
+          variant={isHistory ? "muted" : "destructive"}
+        >
           {isHistory ? t("left-off-here") : t("new-messages", { count })}
         </Badge>
         <div
           className={cn(
-            "h-px flex-1",
+            "h-px flex-1 transition-colors ease-out motion-reduce:transition-none",
             isHistory ? "bg-muted" : "bg-destructive"
           )}
         />
