@@ -629,13 +629,11 @@ const HydratedTranscript = memo(
 
     useLayoutEffect(
       () => () => {
-        if (persistSettledState.isPending()) {
-          return;
-        }
-
+        // Layout cleanup still has the Virtualizer handle. Mantine's passive
+        // flush can run after the child imperative handle has been detached.
         persistCurrentScrollSnapshotRef.current?.();
       },
-      [persistSettledState]
+      []
     );
 
     if (isError) {
