@@ -1,216 +1,233 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { RefObject } from "react";
-import type { VirtualizerHandle } from "virtua";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
+import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/pages";
 import { createConversationScrollController } from "@/components/school/classes/forum/conversation/data/transcript-scroll";
+import {
+  createConversationTestFindItemIndex,
+  createConversationTestHandle,
+  createConversationTestPost,
+} from "@/components/school/classes/forum/conversation/helpers/test";
 
-const postId = "post_1" as Id<"schoolClassForumPosts">;
-
-function setRect(
-  element: Element,
-  { bottom, top }: { bottom: number; top: number }
-) {
-  Object.defineProperty(element, "getBoundingClientRect", {
-    configurable: true,
-    value: () => ({
-      bottom,
-      height: bottom - top,
-      left: 0,
-      right: 0,
-      top,
-      width: 0,
-      x: 0,
-      y: top,
-      toJSON: () => undefined,
-    }),
-  });
-}
-
-function setScrollMetrics(
-  element: HTMLElement,
-  {
-    clientHeight,
-    scrollHeight,
-    scrollTop,
-  }: {
-    clientHeight: number;
-    scrollHeight: number;
-    scrollTop: number;
-  }
-) {
-  Object.defineProperty(element, "clientHeight", {
-    configurable: true,
-    value: clientHeight,
-  });
-  Object.defineProperty(element, "scrollHeight", {
-    configurable: true,
-    value: scrollHeight,
-  });
-  Object.defineProperty(element, "scrollTop", {
-    configurable: true,
-    value: scrollTop,
-    writable: true,
-  });
-}
-
-function createRoot({
-  clientHeight = 400,
-  scrollHeight = 3000,
-  scrollTop = 200,
-  top = 0,
-}: {
-  clientHeight?: number;
-  scrollHeight?: number;
-  scrollTop?: number;
-  top?: number;
-} = {}) {
-  const root = document.createElement("div");
-
-  setRect(root, {
-    top,
-    bottom: top + clientHeight,
-  });
-  setScrollMetrics(root, {
-    clientHeight,
-    scrollHeight,
-    scrollTop,
-  });
-
-  return root;
-}
-
-function appendPost(
-  root: HTMLElement,
-  {
-    id = postId,
-    bottom,
-    top,
-  }: {
-    id?: Id<"schoolClassForumPosts">;
-    bottom: number;
-    top: number;
-  }
-) {
-  const element = document.createElement("div");
-
-  element.dataset.postId = id;
-  setRect(element, { bottom, top });
-  root.append(element);
-
-  return element;
-}
+const firstPost = createConversationTestPost({
+  postId: "post_1",
+  sequence: 1,
+});
+const secondPost = createConversationTestPost({
+  postId: "post_2",
+  sequence: 2,
+});
+const rows = [
+  { type: "header" },
+  { type: "date", value: firstPost._creationTime },
+  { post: firstPost, type: "post" },
+  { count: 2, postId: secondPost._id, status: "new", type: "unread" },
+  { post: secondPost, type: "post" },
+] satisfies ConversationRow[];
+const rowIndexByPostId = new Map<Id<"schoolClassForumPosts">, number>([
+  [firstPost._id, 2],
+  [secondPost._id, 4],
+]);
 
 function createHandle({
-  findItemIndex = (offset: number) => Math.min(9, Math.floor(offset / 100)),
-  getItemOffset = (index: number) => index * 100,
+  offsets = rows.map((_, index) => index * 100),
+  getItemOffset = (index: number) => offsets[index] ?? index * 100,
   getItemSize = () => 100,
   scrollOffset,
-  scrollSize = 3000,
-  viewportSize = 400,
+  scrollSize = rows.length * 100,
+  viewportSize = 200,
 }: {
-  findItemIndex?: (offset: number) => number;
+  offsets?: readonly number[];
   getItemOffset?: (index: number) => number;
   getItemSize?: (index: number) => number;
   scrollOffset: number;
   scrollSize?: number;
   viewportSize?: number;
 }) {
-  const scrollToIndex = vi.fn();
-
-  const handle = {
-    cache: {} as VirtualizerHandle["cache"],
-    findItemIndex,
+  return createConversationTestHandle({
+    findItemIndex: createConversationTestFindItemIndex(offsets),
     getItemOffset,
     getItemSize,
-    scrollBy: vi.fn(),
     scrollOffset,
     scrollSize,
-    scrollTo: vi.fn(),
-    scrollToIndex,
     viewportSize,
-  } satisfies VirtualizerHandle;
-
-  return {
-    handle,
-    scrollToIndex,
-  };
+  });
 }
 
 function createController({
-  handle = createHandle({ scrollOffset: 100 }).handle,
-  lastRowIndex = 9,
-  postIds = [postId],
+  handle = createHandle({
+    scrollOffset: 100,
+  }),
   prefersReducedMotion = false,
-  root = createRoot(),
-  rowIndexByPostId = new Map([[postId, 3]]),
+  rowsOverride = rows,
+  rowIndexByPostIdOverride = rowIndexByPostId,
 }: {
-  handle?: VirtualizerHandle | null;
-  lastRowIndex?: number | null;
-  postIds?: Id<"schoolClassForumPosts">[];
+  handle?: ReturnType<typeof createConversationTestHandle> | null;
   prefersReducedMotion?: boolean;
-  root?: HTMLElement | null;
-  rowIndexByPostId?: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
+  rowIndexByPostIdOverride?: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
+  rowsOverride?: readonly ConversationRow[];
 } = {}) {
   return createConversationScrollController({
-    lastRowIndex,
-    postIds,
     prefersReducedMotion,
-    rowIndexByPostId,
-    scrollRootRef: {
-      current: root,
-    } satisfies RefObject<HTMLElement | null>,
+    rowIndexByPostId: rowIndexByPostIdOverride,
+    rows: rowsOverride,
     virtualizerRef: {
-      current: handle,
-    } satisfies RefObject<VirtualizerHandle | null>,
+      current: handle?.handle ?? null,
+    },
   });
 }
 
 describe("conversation/data/transcript-scroll", () => {
-  it("captures null when the scroll root is unavailable", () => {
-    const controller = createController({
-      handle: null,
-      root: null,
-    });
-
-    expect(controller.captureView()).toBeNull();
+  it("captures null when no virtualizer handle is available", () => {
+    expect(
+      createController({
+        handle: null,
+      }).captureView()
+    ).toBeNull();
   });
 
-  it("captures the current bottom view from the mounted transcript root", () => {
-    const controller = createController({
-      handle: null,
-      root: createRoot({
-        clientHeight: 200,
-        scrollHeight: 200,
-        scrollTop: 0,
-      }),
-    });
-
-    expect(controller.captureView()).toEqual({
-      kind: "bottom",
-    });
+  it("captures the current bottom view from virtualizer metrics", () => {
+    expect(
+      createController({
+        handle: createHandle({
+          scrollOffset: 300,
+        }),
+      }).captureView()
+    ).toEqual({ kind: "bottom" });
   });
 
-  it("returns false for reached checks when the scroll root is unavailable", () => {
-    const controller = createController({
-      handle: null,
-      root: null,
+  it("captures the centered visible post when detached from bottom", () => {
+    const handle = createHandle({
+      offsets: [0, 60, 120, 150, 170],
+      getItemOffset: (index) => [0, 60, 120, 150, 170][index] ?? index * 100,
+      getItemSize: (index) => [60, 60, 30, 20, 120][index] ?? 100,
+      scrollOffset: 80,
+      scrollSize: 400,
     });
 
     expect(
-      controller.isViewReached({
+      createController({
+        handle,
+      }).captureView()
+    ).toEqual({
+      kind: "post",
+      postId: secondPost._id,
+    });
+  });
+
+  it("treats a visible or passed post as reached", () => {
+    expect(
+      createController().isViewReached({
         kind: "post",
-        postId,
+        postId: firstPost._id,
+      })
+    ).toBe(true);
+
+    expect(
+      createController({
+        handle: createHandle({
+          scrollOffset: 350,
+        }),
+      }).isViewReached({
+        kind: "post",
+        postId: firstPost._id,
+      })
+    ).toBe(true);
+  });
+
+  it("returns false for reached checks when the handle or target is unavailable", () => {
+    expect(
+      createController({
+        handle: null,
+      }).isViewReached({
+        kind: "post",
+        postId: firstPost._id,
+      })
+    ).toBe(false);
+
+    expect(
+      createController({
+        rowIndexByPostIdOverride: new Map(),
+      }).isViewReached({
+        kind: "post",
+        postId: firstPost._id,
       })
     ).toBe(false);
   });
 
-  it("treats the latest edge as reached for bottom views", () => {
+  it("treats a centered or edge-clamped post as settled", () => {
+    expect(
+      createController({
+        handle: createHandle({
+          offsets: [0, 100, 180, 300, 360],
+          getItemOffset: (index) =>
+            [0, 100, 180, 300, 360][index] ?? index * 100,
+          getItemSize: (index) => [100, 80, 120, 60, 100][index] ?? 100,
+          scrollOffset: 80,
+          scrollSize: 460,
+          viewportSize: 320,
+        }),
+      }).isViewSettled({
+        kind: "post",
+        postId: firstPost._id,
+      })
+    ).toBe(true);
+
+    expect(
+      createController({
+        handle: createHandle({
+          offsets: [0, 10, 20, 140, 240],
+          getItemOffset: (index) => [0, 10, 20, 140, 240][index] ?? index * 100,
+          getItemSize: (index) => [10, 10, 100, 100, 100][index] ?? 100,
+          scrollOffset: 0,
+          scrollSize: 340,
+        }),
+      }).isViewSettled({
+        kind: "post",
+        postId: firstPost._id,
+      })
+    ).toBe(true);
+
+    expect(
+      createController({
+        handle: createHandle({
+          offsets: [0, 100, 200, 300, 380],
+          getItemOffset: (index) =>
+            [0, 100, 200, 300, 380][index] ?? index * 100,
+          getItemSize: (index) => [100, 100, 100, 80, 100][index] ?? 100,
+          scrollOffset: 300,
+          scrollSize: 480,
+        }),
+      }).isViewSettled({
+        kind: "post",
+        postId: secondPost._id,
+      })
+    ).toBe(true);
+  });
+
+  it("returns false for settled checks when the handle or target is unavailable", () => {
+    expect(
+      createController({
+        handle: null,
+      }).isViewSettled({
+        kind: "post",
+        postId: firstPost._id,
+      })
+    ).toBe(false);
+
+    expect(
+      createController({
+        rowIndexByPostIdOverride: new Map(),
+      }).isViewSettled({
+        kind: "post",
+        postId: firstPost._id,
+      })
+    ).toBe(false);
+  });
+
+  it("treats bottom views as reached and settled when the latest edge is reached", () => {
     const controller = createController({
-      handle: null,
-      root: createRoot({
-        clientHeight: 200,
-        scrollHeight: 200,
-        scrollTop: 0,
+      handle: createHandle({
+        scrollOffset: 300,
       }),
     });
 
@@ -219,124 +236,6 @@ describe("conversation/data/transcript-scroll", () => {
         kind: "bottom",
       })
     ).toBe(true);
-  });
-
-  it("treats a mounted visible post as reached", () => {
-    const root = createRoot();
-
-    appendPost(root, {
-      bottom: 180,
-      top: 120,
-    });
-
-    const controller = createController({
-      handle: null,
-      root,
-    });
-
-    expect(
-      controller.isViewReached({
-        kind: "post",
-        postId,
-      })
-    ).toBe(true);
-  });
-
-  it("treats an off-screen post above the viewport as reached once the virtual range has passed it", () => {
-    const controller = createController({
-      handle: createHandle({ scrollOffset: 500 }).handle,
-      rowIndexByPostId: new Map([[postId, 2]]),
-    });
-
-    expect(
-      controller.isViewReached({
-        kind: "post",
-        postId,
-      })
-    ).toBe(true);
-  });
-
-  it("returns false when a post is missing from both the DOM and the virtual index map", () => {
-    const controller = createController({
-      handle: createHandle({ scrollOffset: 100 }).handle,
-      rowIndexByPostId: new Map(),
-    });
-
-    expect(
-      controller.isViewReached({
-        kind: "post",
-        postId,
-      })
-    ).toBe(false);
-  });
-
-  it("returns false for an off-screen post when no virtualizer handle is available", () => {
-    const controller = createController({
-      handle: null,
-    });
-
-    expect(
-      controller.isViewReached({
-        kind: "post",
-        postId,
-      })
-    ).toBe(false);
-  });
-
-  it("returns false when the virtual transcript has no rows yet", () => {
-    const controller = createController({
-      handle: createHandle({ scrollOffset: 100 }).handle,
-      lastRowIndex: null,
-    });
-
-    expect(
-      controller.isViewReached({
-        kind: "post",
-        postId,
-      })
-    ).toBe(false);
-  });
-
-  it("returns false when the virtual list has no visible range yet", () => {
-    const controller = createController({
-      handle: createHandle({
-        scrollOffset: 100,
-        viewportSize: 0,
-      }).handle,
-    });
-
-    expect(
-      controller.isViewReached({
-        kind: "post",
-        postId,
-      })
-    ).toBe(false);
-  });
-
-  it("returns false for settled checks when the scroll root is unavailable", () => {
-    const controller = createController({
-      handle: null,
-      root: null,
-    });
-
-    expect(
-      controller.isViewSettled({
-        kind: "post",
-        postId,
-      })
-    ).toBe(false);
-  });
-
-  it("treats the latest edge as settled for bottom views", () => {
-    const controller = createController({
-      handle: null,
-      root: createRoot({
-        clientHeight: 200,
-        scrollHeight: 200,
-        scrollTop: 0,
-      }),
-    });
-
     expect(
       controller.isViewSettled({
         kind: "bottom",
@@ -344,146 +243,22 @@ describe("conversation/data/transcript-scroll", () => {
     ).toBe(true);
   });
 
-  it("treats a mounted centered post as settled", () => {
-    const root = createRoot();
-
-    appendPost(root, {
-      bottom: 260,
-      top: 140,
-    });
-
-    const controller = createController({
-      handle: null,
-      root,
-    });
-
+  it("returns false when latest scrolling is requested without a handle or rows", () => {
     expect(
-      controller.isViewSettled({
-        kind: "post",
-        postId,
-      })
-    ).toBe(true);
-  });
-
-  it("returns false for an off-screen post when no virtualizer handle is available", () => {
-    const controller = createController({
-      handle: null,
-    });
-
-    expect(
-      controller.isViewSettled({
-        kind: "post",
-        postId,
-      })
+      createController({
+        handle: null,
+      }).scrollToLatest()
     ).toBe(false);
-  });
-
-  it("returns false for settled checks when the target index is unknown", () => {
-    const controller = createController({
-      rowIndexByPostId: new Map(),
-    });
 
     expect(
-      controller.isViewSettled({
-        kind: "post",
-        postId,
-      })
+      createController({
+        rowsOverride: [],
+      }).scrollToLatest()
     ).toBe(false);
-  });
-
-  it("returns false for settled checks when the virtualizer has no viewport yet", () => {
-    const controller = createController({
-      handle: createHandle({
-        scrollOffset: 100,
-        viewportSize: 0,
-      }).handle,
-    });
-
-    expect(
-      controller.isViewSettled({
-        kind: "post",
-        postId,
-      })
-    ).toBe(false);
-  });
-
-  it("treats a virtualized target near the viewport center as settled", () => {
-    const controller = createController({
-      handle: createHandle({
-        getItemOffset: () => 300,
-        getItemSize: () => 100,
-        scrollOffset: 150,
-      }).handle,
-    });
-
-    expect(
-      controller.isViewSettled({
-        kind: "post",
-        postId,
-      })
-    ).toBe(true);
-  });
-
-  it("treats a top-clamped virtualized target as settled", () => {
-    const controller = createController({
-      handle: createHandle({
-        getItemOffset: () => 0,
-        scrollOffset: 0,
-      }).handle,
-      rowIndexByPostId: new Map([[postId, 0]]),
-      root: createRoot({
-        scrollTop: 0,
-      }),
-    });
-
-    expect(
-      controller.isViewSettled({
-        kind: "post",
-        postId,
-      })
-    ).toBe(true);
-  });
-
-  it("treats a bottom-clamped virtualized target as settled", () => {
-    const controller = createController({
-      handle: createHandle({
-        getItemOffset: () => 900,
-        scrollOffset: 200,
-      }).handle,
-      rowIndexByPostId: new Map([[postId, 9]]),
-      root: createRoot({
-        clientHeight: 400,
-        scrollHeight: 1000,
-        scrollTop: 600,
-      }),
-    });
-
-    expect(
-      controller.isViewSettled({
-        kind: "post",
-        postId,
-      })
-    ).toBe(true);
-  });
-
-  it("returns false when latest scrolling is requested without a virtualizer handle", () => {
-    const controller = createController({
-      handle: null,
-    });
-
-    expect(controller.scrollToLatest()).toBe(false);
-  });
-
-  it("returns false when latest scrolling is requested before any rows exist", () => {
-    const controller = createController({
-      lastRowIndex: null,
-    });
-
-    expect(controller.scrollToLatest()).toBe(false);
   });
 
   it("disables smooth latest scrolling when reduced motion is enabled", () => {
-    const { handle, scrollToIndex } = createHandle({
+    const handle = createHandle({
       scrollOffset: 100,
     });
     const controller = createController({
@@ -492,58 +267,47 @@ describe("conversation/data/transcript-scroll", () => {
     });
 
     expect(controller.scrollToLatest()).toBe(true);
-    expect(scrollToIndex).toHaveBeenCalledWith(9, {
+    expect(handle.scrollToIndex).toHaveBeenCalledWith(rows.length - 1, {
       align: "end",
       smooth: false,
     });
   });
 
-  it("returns false when post scrolling is requested without a virtualizer handle", () => {
-    const controller = createController({
-      handle: null,
-    });
+  it("returns false when post scrolling is requested without a handle or target index", () => {
+    expect(
+      createController({
+        handle: null,
+      }).scrollToPost(firstPost._id)
+    ).toBe(false);
 
-    expect(controller.scrollToPost(postId)).toBe(false);
+    expect(
+      createController({
+        rowIndexByPostIdOverride: new Map(),
+      }).scrollToPost(firstPost._id)
+    ).toBe(false);
   });
 
-  it("returns false when post scrolling is requested for an unknown post", () => {
-    const controller = createController({
-      rowIndexByPostId: new Map(),
-    });
-
-    expect(controller.scrollToPost(postId)).toBe(false);
-  });
-
-  it("centers post jumps by default", () => {
-    const { handle, scrollToIndex } = createHandle({
+  it("centers post jumps by default and supports non-centered placement", () => {
+    const handle = createHandle({
       scrollOffset: 100,
     });
     const controller = createController({
       handle,
     });
 
-    expect(controller.scrollToPost(postId)).toBe(true);
-    expect(scrollToIndex).toHaveBeenCalledWith(3, {
+    expect(controller.scrollToPost(firstPost._id)).toBe(true);
+    expect(handle.scrollToIndex).toHaveBeenCalledWith(2, {
       align: "center",
       smooth: true,
     });
-  });
-
-  it("supports non-centered post placement when one caller asks for it", () => {
-    const { handle, scrollToIndex } = createHandle({
-      scrollOffset: 100,
-    });
-    const controller = createController({
-      handle,
-    });
 
     expect(
-      controller.scrollToPost(postId, {
+      controller.scrollToPost(firstPost._id, {
         align: "start",
         behavior: "auto",
       })
     ).toBe(true);
-    expect(scrollToIndex).toHaveBeenCalledWith(3, {
+    expect(handle.scrollToIndex).toHaveBeenLastCalledWith(2, {
       align: "start",
       smooth: false,
     });

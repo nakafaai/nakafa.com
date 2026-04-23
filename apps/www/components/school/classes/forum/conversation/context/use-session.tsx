@@ -61,3 +61,14 @@ export function useSession<T>(selector: (state: SessionStore) => T): T {
 
   return useStore(store, useShallow(selector));
 }
+
+/** Reads the raw session store API without subscribing to its state. */
+export function useSessionStoreApi() {
+  const store = useContextSelector(SessionContext, (value) => value);
+
+  if (!store) {
+    throw new Error("useSessionStoreApi must be used within a SessionProvider");
+  }
+
+  return store;
+}

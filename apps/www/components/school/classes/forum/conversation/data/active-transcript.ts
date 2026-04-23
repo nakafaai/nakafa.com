@@ -1,5 +1,4 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useMemo } from "react";
 import type {
   Forum,
   ForumPost,
@@ -13,7 +12,6 @@ import type { ConversationUnreadCue } from "@/components/school/classes/forum/co
 
 export interface ActiveTranscriptModel {
   lastPostId: Id<"schoolClassForumPosts"> | null;
-  lastRowIndex: number | null;
   postIds: Id<"schoolClassForumPosts">[];
   rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
   rows: ConversationRow[];
@@ -45,28 +43,8 @@ export function createActiveTranscriptModel({
 
   return {
     lastPostId: getLastConversationPostId(posts),
-    lastRowIndex: rows.length > 0 ? rows.length - 1 : null,
     postIds,
     rowIndexByPostId,
     rows,
   } satisfies ActiveTranscriptModel;
-}
-
-/** Memoized boundary between transcript data and the render/scroll engine. */
-export function useActiveTranscriptModel(input: {
-  forum: Forum | undefined;
-  posts: ForumPost[];
-  unreadCue?: ConversationUnreadCue | null;
-}) {
-  const { forum, posts, unreadCue } = input;
-
-  return useMemo(
-    () =>
-      createActiveTranscriptModel({
-        forum,
-        posts,
-        unreadCue,
-      }),
-    [forum, posts, unreadCue]
-  );
 }
