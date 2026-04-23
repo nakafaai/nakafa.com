@@ -95,13 +95,13 @@ Terlihat bahwa beda antara jumlah kursi pada baris yang berurutan adalah 4. Ini 
 
 **Langkah 2: Menggunakan rumus untuk mencari jumlah kursi pada baris ke-15**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="U_{15} = a + (n-1)b" />
   <BlockMath math="U_{15} = 20 + (15-1)4" />
   <BlockMath math="U_{15} = 20 + (14)4" />
   <BlockMath math="U_{15} = 20 + 56" />
   <BlockMath math="U_{15} = 76" />
-</div>
+</MathContainer>
 
 Jadi, jumlah kursi pada baris ke-15 adalah 76 kursi.
 
@@ -113,37 +113,37 @@ Diketahui suatu barisan aritmetika, suku ke-3 = 9, suku ke-6 = 18. Tentukan rumu
 
 Untuk menentukan rumus suku ke-n, kita perlu mencari nilai suku pertama <InlineMath math="(a)" /> dan beda <InlineMath math="(b)" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="U_3 = a + 2b = 9" />
   <BlockMath math="U_6 = a + 5b = 18" />
-</div>
+</MathContainer>
 
 Kita eliminasi persamaan di atas untuk mendapatkan nilai b:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="U_6 - U_3 = (a + 5b) - (a + 2b)" />
   <BlockMath math="18 - 9 = 3b" />
   <BlockMath math="9 = 3b" />
   <BlockMath math="b = 3" />
-</div>
+</MathContainer>
 
 Setelah mendapatkan nilai b, kita substitusikan ke persamaan pertama untuk mendapatkan nilai a:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="a + 2b = 9" />
   <BlockMath math="a + 2(3) = 9" />
   <BlockMath math="a + 6 = 9" />
   <BlockMath math="a = 9 - 6 = 3" />
-</div>
+</MathContainer>
 
 Setelah mendapatkan nilai a = 3 dan b = 3, kita bisa merumuskan suku ke-n:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="U_n = a + (n-1)b" />
   <BlockMath math="U_n = 3 + (n-1)3" />
   <BlockMath math="U_n = 3 + 3n - 3" />
   <BlockMath math="U_n = 3n" />
-</div>
+</MathContainer>
 
 Jadi, rumus suku ke-n dari barisan tersebut adalah <InlineMath math="U_n = 3n" />
 
@@ -161,7 +161,7 @@ Tabungan Rudi membentuk barisan aritmetika karena selisih kenaikan nominal antar
 
 **a. Mencari selisih nominal uang yang ditabung antarbulan**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="U_5 = 70.000" />
   <BlockMath math="a + (5-1)b = 70.000" />
   <BlockMath math="a + 4b = 70.000 \text{ ... (persamaan 1)}" />
@@ -169,14 +169,14 @@ Tabungan Rudi membentuk barisan aritmetika karena selisih kenaikan nominal antar
   <BlockMath math="U_9 = 90.000" />
   <BlockMath math="a + (9-1)b = 90.000" />
   <BlockMath math="a + 8b = 90.000 \text{ ... (persamaan 2)}" />
-</div>
+</MathContainer>
 
 Eliminasi persamaan 1 dan 2:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="4b = 20.000" />
   <BlockMath math="b = 5.000" />
-</div>
+</MathContainer>
 
 Jadi, selisih nominal uang yang ditabung Rudi antarbulan adalah Rp5.000,00.
 
@@ -184,12 +184,12 @@ Jadi, selisih nominal uang yang ditabung Rudi antarbulan adalah Rp5.000,00.
 
 Kita sudah mendapatkan nilai b = 5.000, selanjutnya kita substitusikan ke persamaan 1 untuk mendapatkan nilai a:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="a + 4b = 70.000" />
   <BlockMath math="a + 4(5.000) = 70.000" />
   <BlockMath math="a + 20.000 = 70.000" />
   <BlockMath math="a = 70.000 - 20.000" />
   <BlockMath math="a = 50.000" />
-</div>
+</MathContainer>
 
 Jadi, uang yang ditabung Rudi untuk pertama kalinya adalah Rp50.000,00.

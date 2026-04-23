@@ -37,10 +37,10 @@ The conditions for this limit to exist are:
 
 More formally, left and right limits can be written as:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\lim_{x \to c^-} f(x) = L \quad \text{(left limit: } x \text{ approaches } c \text{ from the left)}" />
 <BlockMath math="\lim_{x \to c^+} f(x) = L \quad \text{(right limit: } x \text{ approaches } c \text{ from the right)}" />
-</div>
+</MathContainer>
 
 If both limits are equal, then <InlineMath math="\lim_{x \to c} f(x) = L" />. If they are different, then the limit does not exist.
 
@@ -64,10 +64,10 @@ Find <InlineMath math="\lim_{x \to 2} \frac{x^2 - 4}{x - 2}" />.
 
 If we substitute <InlineMath math="x = 2" /> directly, we get the indeterminate form <InlineMath math="\frac{0}{0}" />. We need to simplify first by factoring:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="x^2 - 4 = (x + 2)(x - 2)" />
 <BlockMath math="\lim_{x \to 2} \frac{x^2 - 4}{x - 2} = \lim_{x \to 2} \frac{(x + 2)(x - 2)}{x - 2}" />
-</div>
+</MathContainer>
 
 Since we are calculating the limit when <InlineMath math="x" /> **approaches** 2 (not **equals** 2), then <InlineMath math="x \neq 2" /> and we can cancel <InlineMath math="(x - 2)" />:
 
@@ -111,10 +111,10 @@ Some important properties that facilitate limit calculations:
 
    Direct substitution yields the form <InlineMath math="\frac{0}{0}" />. We factor first:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="x^2 - 1 = (x + 1)(x - 1)" />
    <BlockMath math="\lim_{x \to 1} \frac{x^2 - 1}{x - 1} = \lim_{x \to 1} \frac{(x + 1)(x - 1)}{x - 1}" />
-   </div>
+   </MathContainer>
 
    Since <InlineMath math="x" /> approaches 1 (not equal to 1), then <InlineMath math="x \neq 1" /> and we can cancel <InlineMath math="(x - 1)" />:
 

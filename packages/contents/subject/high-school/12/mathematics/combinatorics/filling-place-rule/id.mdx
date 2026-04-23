@@ -26,9 +26,9 @@ Dengan menggunakan tabel, kita dapat melihat semua kombinasi yang mungkin:
 | Platform B | B-Mat | B-Fis | B-Kim | B-Bio |
 | Platform C | C-Mat | C-Fis | C-Kim | C-Bio |
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Total kombinasi} = 3 \times 4 = 12 \text{ cara}" />
-</div>
+</MathContainer>
 
 ## Metode Diagram Cabang
 
@@ -52,9 +52,9 @@ Untuk kasus yang sama, diagram cabang dimulai dari satu titik awal, kemudian ber
 
 **Aturan perkalian** adalah metode paling efisien untuk menghitung banyaknya cara mengisi tempat yang tersedia. Jika terdapat <InlineMath math="n" /> tempat dengan masing-masing tempat ke-<InlineMath math="i" /> memiliki <InlineMath math="k_i" /> pilihan, maka **total cara pengisian** adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Total cara} = k_1 \times k_2 \times k_3 \times \cdots \times k_n" />
-</div>
+</MathContainer>
 
 ### Contoh Penggunaan Aturan Perkalian
 
@@ -65,12 +65,12 @@ Sebuah sekolah ingin membuat kode akses untuk sistem pembelajaran digital. Kode 
 
 Maka, total kode berbeda yang dapat dibuat adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="k_1 = 3 \text{ (pilihan huruf)}" />
 <BlockMath math="k_2 = 5 \text{ (pilihan angka)}" />
 <BlockMath math="k_3 = 2 \text{ (pilihan simbol)}" />
 <BlockMath math="\text{Total kode berbeda} = 3 \times 5 \times 2 = 30 \text{ kode}" />
-</div>
+</MathContainer>
 
 ## Kasus Dengan Pembatasan
 
@@ -82,12 +82,12 @@ Jika objek yang sama **tidak boleh digunakan berulang**, maka setiap tempat yang
 
 **Contoh:** Membuat bilangan 3 digit dari angka 2, 3, 4, 5, 6 tanpa pengulangan.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Tempat pertama} = 5 \text{ pilihan}" />
 <BlockMath math="\text{Tempat kedua} = 4 \text{ pilihan (1 angka sudah terpakai)}" />
 <BlockMath math="\text{Tempat ketiga} = 3 \text{ pilihan (2 angka sudah terpakai)}" />
 <BlockMath math="\text{Total bilangan} = 5 \times 4 \times 3 = 60 \text{ bilangan}" />
-</div>
+</MathContainer>
 
 ### Pengulangan Diperbolehkan
 
@@ -95,10 +95,10 @@ Jika objek yang sama **boleh digunakan berulang**, maka pilihan di setiap tempat
 
 Untuk kasus yang sama dengan pengulangan diperbolehkan:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Setiap tempat} = 5 \text{ pilihan}" />
 <BlockMath math="\text{Total bilangan} = 5 \times 5 \times 5 = 125 \text{ bilangan}" />
-</div>
+</MathContainer>
 
 ## Latihan
 
@@ -113,28 +113,28 @@ Untuk kasus yang sama dengan pengulangan diperbolehkan:
 ### Kunci Jawaban
 
 1. Diketahui: 4 merek, 3 kapasitas memori, 5 pilihan warna
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Total kombinasi} = 4 \times 3 \times 5 = 60 \text{ kombinasi smartphone}" />
-   </div>
+   </MathContainer>
 
 2. Diketahui: 1 huruf dari <InlineMath math="\{A, B, C, D\}" />, 2 angka dari <InlineMath math="\{1, 2, 3, 4, 5\}" /> tanpa pengulangan
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Pilihan huruf} = 4" />
    <BlockMath math="\text{Pilihan angka pertama} = 5" />
    <BlockMath math="\text{Pilihan angka kedua} = 4 \text{ (tanpa pengulangan)}" />
    <BlockMath math="\text{Total password} = 4 \times 5 \times 4 = 80 \text{ password}" />
-   </div>
+   </MathContainer>
 
 3. Diketahui: 3 jalan dari P ke Q, 4 jalan dari Q ke R
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Total rute} = 3 \times 4 = 12 \text{ rute berbeda}" />
-   </div>
+   </MathContainer>
 
 4. Diketahui: 2 huruf dari 26 huruf, 3 angka dari 10 angka, pengulangan diperbolehkan
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Pilihan huruf pertama} = 26" />
    <BlockMath math="\text{Pilihan huruf kedua} = 26" />
    <BlockMath math="\text{Pilihan setiap angka} = 10" />
    <BlockMath math="\text{Total nomor plat} = 26 \times 26 \times 10 \times 10 \times 10" />
    <BlockMath math="= 676 \times 1000 = 676000 \text{ nomor plat}" />
-   </div>
+   </MathContainer>

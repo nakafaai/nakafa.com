@@ -31,20 +31,20 @@ Fungsi nilai mutlak memiliki beberapa sifat penting yang perlu dipahami:
 
 **Sifat dasar:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="|x| \geq 0 \text{ untuk semua } x \in \mathbb{R}" />
   <BlockMath math="|-x| = |x|" />
   <BlockMath math="|x|^2 = x^2" />
   <BlockMath math="|xy| = |x| \cdot |y|" />
   <BlockMath math="\left|\frac{x}{y}\right| = \frac{|x|}{|y|}, \text{ dengan } y \neq 0" />
-</div>
+</MathContainer>
 
 **Sifat ketidaksamaan segitiga:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="|x + y| \leq |x| + |y|" />
   <BlockMath math="||x| - |y|| \leq |x - y|" />
-</div>
+</MathContainer>
 
 ## Grafik Fungsi Nilai Mutlak
 
@@ -271,17 +271,17 @@ dengan:
 
 Untuk menyelesaikan <InlineMath math="|x| = a" /> dengan <InlineMath math="a \geq 0" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="|x| = a \Rightarrow x = a \text{ atau } x = -a" />
-</div>
+</MathContainer>
 
 **Contoh:** Selesaikan <InlineMath math="|x - 3| = 5" />
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="|x - 3| = 5" />
   <BlockMath math="x - 3 = 5 \text{ atau } x - 3 = -5" />
   <BlockMath math="x = 8 \text{ atau } x = -2" />
-</div>
+</MathContainer>
 
 **Menyelesaikan pertidaksamaan nilai mutlak:**
 
@@ -311,32 +311,32 @@ Untuk <InlineMath math="|x| > a" /> dengan <InlineMath math="a > 0" />:
 
    Substitusi setiap nilai x ke dalam fungsi <InlineMath math="f(x) = |2x - 6|" />:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="f(-1) = |2(-1) - 6| = |-2 - 6| = |-8| = 8" />
      <BlockMath math="f(0) = |2(0) - 6| = |0 - 6| = |-6| = 6" />
      <BlockMath math="f(3) = |2(3) - 6| = |6 - 6| = |0| = 0" />
      <BlockMath math="f(5) = |2(5) - 6| = |10 - 6| = |4| = 4" />
-   </div>
+   </MathContainer>
 
 2. **Menyelesaikan persamaan nilai mutlak:**
 
    Untuk persamaan <InlineMath math="|3x + 1| = 7" />, kita gunakan definisi nilai mutlak yang menghasilkan dua kemungkinan:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="3x + 1 = 7 \quad \text{atau} \quad 3x + 1 = -7" />
      <BlockMath math="3x = 6 \quad \text{atau} \quad 3x = -8" />
      <BlockMath math="x = 2 \quad \text{atau} \quad x = -\frac{8}{3}" />
-   </div>
+   </MathContainer>
 
 3. **Menyelesaikan pertidaksamaan nilai mutlak:**
 
    Untuk <InlineMath math="|x - 2| < 4" />, kita gunakan sifat bahwa <InlineMath math="|a| < b" /> ekuivalen dengan <InlineMath math="-b < a < b" />:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="-4 < x - 2 < 4" />
      <BlockMath math="-4 + 2 < x < 4 + 2" />
      <BlockMath math="-2 < x < 6" />
-   </div>
+   </MathContainer>
 
    Jadi himpunan penyelesaiannya adalah <InlineMath math="x \in (-2, 6)" />.
 
@@ -354,10 +354,10 @@ Untuk <InlineMath math="|x| > a" /> dengan <InlineMath math="a > 0" />:
 
    Diketahui jarak antara kota A dan B adalah 150 km, dengan kota A di koordinat -50 km. Misalkan kota B berada di koordinat <InlineMath math="x_B" />:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="|-50 - x_B| = 150" />
      <BlockMath math="-50 - x_B = 150 \quad \text{atau} \quad -50 - x_B = -150" />
      <BlockMath math="x_B = -50 - 150 = -200 \quad \text{atau} \quad x_B = -50 + 150 = 100" />
-   </div>
+   </MathContainer>
 
    Jadi kota B dapat berada di koordinat 100 km atau -200 km.

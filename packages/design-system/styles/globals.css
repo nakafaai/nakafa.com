@@ -241,8 +241,18 @@
   content-visibility: auto;
 }
 
+@utility content-auto-math-stack-compact {
+  contain-intrinsic-size: auto none auto 12rem;
+  content-visibility: auto;
+}
+
 @utility content-auto-math-stack {
-  contain-intrinsic-size: auto none auto 32rem;
+  contain-intrinsic-size: auto none auto 24rem;
+  content-visibility: auto;
+}
+
+@utility content-auto-math-stack-spacious {
+  contain-intrinsic-size: auto none auto 40rem;
   content-visibility: auto;
 }
 

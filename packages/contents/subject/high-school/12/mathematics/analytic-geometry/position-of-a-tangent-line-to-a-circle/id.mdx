@@ -261,21 +261,21 @@ Kadang kita tidak diberikan titik singgung, tetapi diminta mencari garis singgun
 
 Untuk lingkaran <InlineMath math="x^2 + y^2 = r^2" /> dan gradien <InlineMath math="m" /> yang diketahui, kita substitusikan persamaan garis <InlineMath math="y = mx + c" /> ke persamaan lingkaran:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x^2 + (mx + c)^2 = r^2" />
   <BlockMath math="x^2 + m^2x^2 + 2mcx + c^2 = r^2" />
   <BlockMath math="(1 + m^2)x^2 + 2mcx + (c^2 - r^2) = 0" />
-</div>
+</MathContainer>
 
 Karena garis menyinggung lingkaran, diskriminan persamaan kuadrat ini harus nol:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\Delta = (2mc)^2 - 4(1 + m^2)(c^2 - r^2) = 0" />
   <BlockMath math="4m^2c^2 - 4(1 + m^2)(c^2 - r^2) = 0" />
   <BlockMath math="m^2c^2 - (1 + m^2)c^2 + (1 + m^2)r^2 = 0" />
   <BlockMath math="-c^2 + (1 + m^2)r^2 = 0" />
   <BlockMath math="c^2 = (1 + m^2)r^2" />
-</div>
+</MathContainer>
 
 Sehingga diperoleh:
 
@@ -457,19 +457,19 @@ Mari kita lihat contoh konkret. Diketahui lingkaran <InlineMath math="L \equiv (
 
 **Langkah 1**: Tentukan persamaan garis kutub titik <InlineMath math="B(2, 6)" /> terhadap lingkaran:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(x-(-1))(2-(-1)) + (y-2)(6-2) = 9" />
   <BlockMath math="(x+1)(3) + (y-2)(4) = 9" />
   <BlockMath math="3x + 3 + 4y - 8 = 9" />
   <BlockMath math="3x + 4y = 14" />
-</div>
+</MathContainer>
 
 **Langkah 2**: Cari titik potong garis kutub <InlineMath math="3x + 4y = 14" /> dengan lingkaran. Dari persamaan garis, kita dapat <InlineMath math="x = \frac{14-4y}{3}" />. Substitusi ke persamaan lingkaran:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(\frac{14-4y}{3} + 1)^2 + (y-2)^2 = 9" />
   <BlockMath math="(\frac{17-4y}{3})^2 + (y-2)^2 = 9" />
-</div>
+</MathContainer>
 
 Setelah diselesaikan, kita akan mendapat dua titik singgung. Kemudian gunakan titik-titik tersebut untuk menentukan persamaan garis singgung.
 
@@ -491,10 +491,10 @@ Setelah diselesaikan, kita akan mendapat dua titik singgung. Kemudian gunakan ti
    
    Menggunakan rumus garis singgung: <InlineMath math="(x-a)(x_1-a) + (y-b)(y_1-b) = r^2" />
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="(x-0)(3-0) + (y-0)(4-0) = 25" />
      <BlockMath math="3x + 4y = 25" />
-   </div>
+   </MathContainer>
    
    Jadi persamaan garis singgungnya adalah <InlineMath math="3x + 4y = 25" />.
 
@@ -506,10 +506,10 @@ Setelah diselesaikan, kita akan mendapat dua titik singgung. Kemudian gunakan ti
    
    <BlockMath math="y = mx \pm r\sqrt{1 + m^2}" />
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="y = 2x \pm 4\sqrt{1 + 4}" />
      <BlockMath math="y = 2x \pm 4\sqrt{5}" />
-   </div>
+   </MathContainer>
    
    Jadi ada dua garis singgung: <InlineMath math="y = 2x + 4\sqrt{5}" /> dan <InlineMath math="y = 2x - 4\sqrt{5}" />.
 
@@ -519,12 +519,12 @@ Setelah diselesaikan, kita akan mendapat dua titik singgung. Kemudian gunakan ti
    
    Persamaan garis kutub titik <InlineMath math="(4,2)" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="(x-1)(4-1) + (y-(-2))(2-(-2)) = 8" />
      <BlockMath math="3(x-1) + 4(y+2) = 8" />
      <BlockMath math="3x - 3 + 4y + 8 = 8" />
      <BlockMath math="3x + 4y = 3" />
-   </div>
+   </MathContainer>
    
    Cari titik potong dengan lingkaran untuk mendapat titik-titik singgung, lalu tentukan persamaan garis singgung melalui masing-masing titik singgung dan titik <InlineMath math="(4,2)" />.
 
@@ -532,11 +532,11 @@ Setelah diselesaikan, kita akan mendapat dua titik singgung. Kemudian gunakan ti
 
    Ubah persamaan lingkaran ke bentuk standar dengan melengkapkan kuadrat:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="x^2 + y^2 - 4x + 6y - 3 = 0" />
      <BlockMath math="(x^2 - 4x + 4) + (y^2 + 6y + 9) = 3 + 4 + 9" />
      <BlockMath math="(x-2)^2 + (y+3)^2 = 16" />
-   </div>
+   </MathContainer>
    
    Pusat <InlineMath math="(2,-3)" />, jari-jari <InlineMath math="r = 4" />.
    
@@ -546,10 +546,10 @@ Setelah diselesaikan, kita akan mendapat dua titik singgung. Kemudian gunakan ti
    
    Untuk lingkaran dengan pusat <InlineMath math="(2,-3)" />, persamaan garis singgung dengan gradien 2:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="y - (-3) = 2(x - 2) \pm 4\sqrt{1 + 4}" />
      <BlockMath math="y + 3 = 2x - 4 \pm 4\sqrt{5}" />
      <BlockMath math="y = 2x - 7 \pm 4\sqrt{5}" />
-   </div>
+   </MathContainer>
    
    Jadi dua garis singgung: <InlineMath math="y = 2x - 7 + 4\sqrt{5}" /> dan <InlineMath math="y = 2x - 7 - 4\sqrt{5}" />.

@@ -148,19 +148,19 @@ Misalkan kita punya garis dengan persamaan <InlineMath math="y = mx + c" /> dan 
 
 Langkah pertama adalah mensubstitusikan persamaan garis ke dalam persamaan lingkaran. Caranya gampang, tinggal ganti semua <InlineMath math="y" /> di persamaan lingkaran dengan <InlineMath math="mx + c" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x^2 + (mx + c)^2 + Dx + E(mx + c) + F = 0" />
   <BlockMath math="x^2 + m^2x^2 + 2mcx + c^2 + Dx + Emx + Ec + F = 0" />
   <BlockMath math="(1 + m^2)x^2 + (2mc + D + Em)x + (c^2 + Ec + F) = 0" />
-</div>
+</MathContainer>
 
 Hasil substitusi ini membentuk persamaan kuadrat dalam bentuk <InlineMath math="ax^2 + bx + c = 0" /> dengan koefisien:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="a = 1 + m^2" />
   <BlockMath math="b = 2mc + D + Em" />
   <BlockMath math="c = c^2 + Ec + F" />
-</div>
+</MathContainer>
 
 Nah, sekarang kita hitung **diskriminan** dari persamaan kuadrat ini. Diskriminan adalah nilai yang menentukan jenis akar persamaan kuadrat:
 
@@ -182,20 +182,20 @@ Mari kita lihat contoh konkret supaya lebih jelas. Misalnya kita punya garis <In
 
 Kita substitusikan <InlineMath math="y = 2x - 1" /> ke dalam persamaan lingkaran:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x^2 + (2x - 1)^2 - 4x + 2(2x - 1) - 4 = 0" />
   <BlockMath math="x^2 + 4x^2 - 4x + 1 - 4x + 4x - 2 - 4 = 0" />
   <BlockMath math="5x^2 - 4x - 5 = 0" />
-</div>
+</MathContainer>
 
 Dari persamaan kuadrat <InlineMath math="5x^2 - 4x - 5 = 0" />, kita identifikasi koefisiennya: <InlineMath math="a = 5" />, <InlineMath math="b = -4" />, dan <InlineMath math="c = -5" />.
 
 Hitung diskriminan:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\Delta = b^2 - 4ac = (-4)^2 - 4(5)(-5)" />
   <BlockMath math="\Delta = 16 + 100 = 116" />
-</div>
+</MathContainer>
 
 Karena <InlineMath math="\Delta = 116 > 0" />, maka garis <InlineMath math="y = 2x - 1" /> **memotong lingkaran di dua titik**.
 
@@ -207,11 +207,11 @@ Untuk lingkaran dengan pusat di titik asal seperti <InlineMath math="x^2 + y^2 =
 
 Substitusikan garis ke lingkaran:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x^2 + (mx + c)^2 = r^2" />
   <BlockMath math="x^2 + m^2x^2 + 2mcx + c^2 = r^2" />
   <BlockMath math="(1 + m^2)x^2 + 2mcx + (c^2 - r^2) = 0" />
-</div>
+</MathContainer>
 
 Diskriminan untuk kasus ini adalah:
 
@@ -239,11 +239,11 @@ Interpretasinya tetap sama berdasarkan tanda diskriminan.
 
    Substitusi <InlineMath math="y = x + 3" /> ke <InlineMath math="x^2 + y^2 = 8" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="x^2 + (x + 3)^2 = 8" />
      <BlockMath math="x^2 + x^2 + 6x + 9 = 8" />
      <BlockMath math="2x^2 + 6x + 1 = 0" />
-   </div>
+   </MathContainer>
    
    Diskriminan: <InlineMath math="\Delta = 6^2 - 4(2)(1) = 36 - 8 = 28" />
    
@@ -253,11 +253,11 @@ Interpretasinya tetap sama berdasarkan tanda diskriminan.
 
    Substitusi <InlineMath math="y = -2x + 5" /> ke <InlineMath math="x^2 + y^2 - 6x + 4y + 9 = 0" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="x^2 + (-2x + 5)^2 - 6x + 4(-2x + 5) + 9 = 0" />
      <BlockMath math="x^2 + 4x^2 - 20x + 25 - 6x - 8x + 20 + 9 = 0" />
      <BlockMath math="5x^2 - 34x + 54 = 0" />
-   </div>
+   </MathContainer>
    
    Diskriminan: <InlineMath math="\Delta = (-34)^2 - 4(5)(54) = 1156 - 1080 = 76" />
    
@@ -269,11 +269,11 @@ Interpretasinya tetap sama berdasarkan tanda diskriminan.
    
    Substitusi ke <InlineMath math="x^2 + y^2 = 5" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="x^2 + (-2x + 4)^2 = 5" />
      <BlockMath math="x^2 + 4x^2 - 16x + 16 = 5" />
      <BlockMath math="5x^2 - 16x + 11 = 0" />
-   </div>
+   </MathContainer>
    
    Diskriminan: <InlineMath math="\Delta = (-16)^2 - 4(5)(11) = 256 - 220 = 36" />
    
@@ -285,21 +285,21 @@ Interpretasinya tetap sama berdasarkan tanda diskriminan.
    
    Substitusi <InlineMath math="y = x + k" /> ke <InlineMath math="x^2 + y^2 = 18" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="x^2 + (x + k)^2 = 18" />
      <BlockMath math="x^2 + x^2 + 2kx + k^2 = 18" />
      <BlockMath math="2x^2 + 2kx + (k^2 - 18) = 0" />
-   </div>
+   </MathContainer>
    
    Diskriminan: <InlineMath math="\Delta = (2k)^2 - 4(2)(k^2 - 18) = 4k^2 - 8k^2 + 144 = -4k^2 + 144" />
    
    Supaya <InlineMath math="\Delta = 0" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="-4k^2 + 144 = 0" />
      <BlockMath math="4k^2 = 144" />
      <BlockMath math="k^2 = 36" />
      <BlockMath math="k = \pm 6" />
-   </div>
+   </MathContainer>
    
    Jadi nilai <InlineMath math="k = 6" /> atau <InlineMath math="k = -6" />.

@@ -14,7 +14,7 @@ Bayangkan seperti membuka kemasan hadiah berlapis. Setiap lapisan yang kita buka
 
 Mari kita lihat pola dasar untuk beberapa pangkat pertama:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="(x + y)^0 = 1" />
 
 <BlockMath math="(x + y)^1 = x + y" />
@@ -24,7 +24,7 @@ Mari kita lihat pola dasar untuk beberapa pangkat pertama:
 <BlockMath math="(x + y)^3 = x^3 + 3x^2y + 3xy^2 + y^3" />
 
 <BlockMath math="(x + y)^4 = x^4 + 4x^3y + 6x^2y^2 + 4xy^3 + y^4" />
-</div>
+</MathContainer>
 
 Dari pola ini, kita dapat melihat bahwa setiap suku memiliki **koefisien tertentu** yang mengikuti aturan matematika yang jelas.
 
@@ -62,11 +62,11 @@ Untuk mendapat suku yang mengandung <InlineMath math="x^2" />, kita perlu <Inlin
 
 Menghitung koefisien binomial:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\binom{2014}{2} = \frac{2014!}{2!(2014-2)!} = \frac{2014 \times 2013}{2 \times 1}" />
 
 <BlockMath math="= \frac{4{,}053{,}182}{2} = 2{,}026{,}591" />
-</div>
+</MathContainer>
 
 Jadi, koefisien dari <InlineMath math="x^2" /> adalah <InlineMath math="2{,}026{,}591" />.
 
@@ -82,13 +82,13 @@ Kita tulis dalam bentuk binomial dengan <InlineMath math="a = 3x^3" /> dan <Inli
 
 Suku umum adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\binom{8}{k} (3x^3)^{8-k} \left(-\frac{2}{x}\right)^k = \binom{8}{k} \cdot (3)^{8-k} \cdot (x^3)^{8-k} \cdot (-2)^k \cdot (x^{-1})^k" />
 
 <BlockMath math="= \binom{8}{k} \cdot 3^{8-k} \cdot (-2)^k \cdot x^{3(8-k)} \cdot x^{-k}" />
 
 <BlockMath math="= \binom{8}{k} \cdot 3^{8-k} \cdot (-2)^k \cdot x^{24-3k-k} = \binom{8}{k} \cdot 3^{8-k} \cdot (-2)^k \cdot x^{24-4k}" />
-</div>
+</MathContainer>
 
 Untuk suku konstanta, pangkat <InlineMath math="x" /> harus nol:
 
@@ -96,13 +96,13 @@ Untuk suku konstanta, pangkat <InlineMath math="x" /> harus nol:
 
 Substitusi <InlineMath math="k = 6" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\binom{8}{6} \cdot 3^{8-6} \cdot (-2)^6 \cdot x^0 = \binom{8}{6} \cdot 3^2 \cdot (-2)^6" />
 
 <BlockMath math="= \frac{8!}{6! \cdot 2!} \cdot 9 \cdot 64 = \frac{8 \times 7}{2 \times 1} \cdot 9 \cdot 64" />
 
 <BlockMath math="= 28 \cdot 9 \cdot 64 = 252 \cdot 64 = 16{,}128" />
-</div>
+</MathContainer>
 
 Perhatikan bahwa <InlineMath math="(-2)^6 = 64" /> karena pangkat genap selalu menghasilkan nilai positif, sama seperti <InlineMath math="(+2)^6 = 64" />.
 
@@ -148,7 +148,7 @@ Tentukan koefisien dari <InlineMath math="x^5" /> dalam ekspansi <InlineMath mat
 
     Substitusi <InlineMath math="k = 3" />:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="\binom{8}{3} \cdot 2^{8-3} \cdot 3^3 \cdot x^5 = \binom{8}{3} \cdot 2^5 \cdot 3^3 \cdot x^5" />
 
     <BlockMath math="= \frac{8!}{3! \cdot 5!} \cdot 32 \cdot 27 \cdot x^5" />
@@ -158,7 +158,7 @@ Tentukan koefisien dari <InlineMath math="x^5" /> dalam ekspansi <InlineMath mat
     <BlockMath math="= 56 \cdot 32 \cdot 27 \cdot x^5" />
 
     <BlockMath math="= 1{,}792 \cdot 27 \cdot x^5 = 48{,}384x^5" />
-    </div>
+    </MathContainer>
 
     Jadi, koefisien dari <InlineMath math="x^5" /> adalah <InlineMath math="48{,}384" />.
 
@@ -182,7 +182,7 @@ Ingatlah bahwa **setiap suku dalam ekspansi binomial** memiliki total pangkat ya
    
    Untuk koefisien <InlineMath math="x^4" />, perlu <InlineMath math="7-k = 4" />, sehingga <InlineMath math="k = 3" />.
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\binom{7}{3} \cdot 2^{7-3} \cdot (-3)^3 = \binom{7}{3} \cdot 2^4 \cdot (-3)^3" />
    
    <BlockMath math="= \frac{7!}{3! \cdot 4!} \cdot 16 \cdot (-27)" />
@@ -190,7 +190,7 @@ Ingatlah bahwa **setiap suku dalam ekspansi binomial** memiliki total pangkat ya
    <BlockMath math="= \frac{7 \times 6 \times 5}{3 \times 2 \times 1} \cdot 16 \cdot (-27)" />
    
    <BlockMath math="= 35 \cdot 16 \cdot (-27) = 560 \cdot (-27) = -15{,}120" />
-   </div>
+   </MathContainer>
    
    Jadi, koefisien dari <InlineMath math="x^4" /> adalah <InlineMath math="-15{,}120" />.
 
@@ -198,11 +198,11 @@ Ingatlah bahwa **setiap suku dalam ekspansi binomial** memiliki total pangkat ya
 
    Tulis dalam bentuk binomial dengan <InlineMath math="a = x^2" />, <InlineMath math="b = \frac{1}{x}" />, dan <InlineMath math="n = 9" />.
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Suku umum: } \binom{9}{k} (x^2)^{9-k} \left(\frac{1}{x}\right)^k = \binom{9}{k} \cdot x^{2(9-k)} \cdot x^{-k}" />
    
    <BlockMath math="= \binom{9}{k} \cdot x^{18-2k} \cdot x^{-k} = \binom{9}{k} \cdot x^{18-2k-k} = \binom{9}{k} \cdot x^{18-3k}" />
-   </div>
+   </MathContainer>
    
    Untuk suku konstanta, pangkat <InlineMath math="x" /> harus nol: <InlineMath math="18-3k = 0" />, sehingga <InlineMath math="k = 6" />.
    
@@ -218,8 +218,8 @@ Ingatlah bahwa **setiap suku dalam ekspansi binomial** memiliki total pangkat ya
    
    Untuk suku yang mengandung <InlineMath math="x^3" />, perlu <InlineMath math="k = 3" />.
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\binom{10}{3} \cdot 2^3 \cdot x^3 = 120 \cdot 8 \cdot x^3 = 960x^3" />
-   </div>
+   </MathContainer>
    
    Jadi, suku yang mengandung <InlineMath math="x^3" /> adalah <InlineMath math="960x^3" />.

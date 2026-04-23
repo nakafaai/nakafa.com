@@ -68,21 +68,21 @@ Let's use slightly different functions this time:
 
 **Step 1: Determine the resulting function from multiplication**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(f \cdot g)(x) = f(x) \cdot g(x)" />
   <BlockMath math="= (x^2) \cdot (x - 1)" />
   <BlockMath math="= x^3 - x^2" />
-</div>
+</MathContainer>
 
 **Step 2: Determine the domain of the resulting function**
 
 We find the intersection of <InlineMath math="D_f" /> and <InlineMath math="D_g" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="D_{f \cdot g} = D_f \cap D_g" />
   <BlockMath math="= \{x | x \in \mathbb{R}\} \cap \{x | x \in \mathbb{R}\}" />
   <BlockMath math="= \{x | x \in \mathbb{R}\}" />
-</div>
+</MathContainer>
 
 So, the resulting function from multiplication is <InlineMath math="(f \cdot g)(x) = x^3 - x^2" /> with the domain of all real numbers.
 
@@ -119,11 +119,11 @@ First, find the intersection of <InlineMath math="D_f" /> and <InlineMath math="
 
 Second, find the value of <InlineMath math="x" /> that makes <InlineMath math="g(x) = 0" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="g(x) = 0" />
   <BlockMath math="x - 1 = 0" />
   <BlockMath math="x = 1" />
-</div>
+</MathContainer>
 
 Third, exclude the value <InlineMath math="x=1" /> from the intersection of the domains:
 
@@ -148,19 +148,19 @@ Given the function <InlineMath math="f(x) = \sqrt{x+4}" /> with <InlineMath math
 
 1.  **Finding <InlineMath math="(f \cdot g)(x)" />:**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(f \cdot g)(x) = f(x) \cdot g(x)" />
       <BlockMath math="= (\sqrt{x+4}) \cdot (x^2 - 9)" />
       <BlockMath math="= (x^2 - 9)\sqrt{x+4}" />
-    </div>
+    </MathContainer>
 
     **Finding Domain <InlineMath math="D_{f \cdot g}" />:**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="D_{f \cdot g} = D_f \cap D_g" />
       <BlockMath math="= \{x | x \ge -4, x \in \mathbb{R}\} \cap \{x | x \in \mathbb{R}\}" />
       <BlockMath math="= \{x | x \ge -4, x \in \mathbb{R}\}" />
-    </div>
+    </MathContainer>
 
     So, <InlineMath math="(f \cdot g)(x) = (x^2 - 9)\sqrt{x+4}" /> with domain <InlineMath math="\{x | x \ge -4, x \in \mathbb{R}\}" />.
 
@@ -174,12 +174,12 @@ Given the function <InlineMath math="f(x) = \sqrt{x+4}" /> with <InlineMath math
 
     Find <InlineMath math="x" /> that makes <InlineMath math="g(x)=0" />:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="g(x) = 0" />
       <BlockMath math="x^2 - 9 = 0" />
       <BlockMath math="(x-3)(x+3) = 0" />
       <BlockMath math="x = 3 \text{ or } x = -3" />
-    </div>
+    </MathContainer>
 
     Exclude <InlineMath math="x=3" /> and <InlineMath math="x=-3" /> from the domain intersection:
 
@@ -197,12 +197,12 @@ Given the function <InlineMath math="f(x) = \sqrt{x+4}" /> with <InlineMath math
 
     Since <InlineMath math="5 \ge -4" />, <InlineMath math="x=5" /> is in the domain <InlineMath math="D_{f \cdot g}" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(f \cdot g)(5) = (5^2 - 9)\sqrt{5+4}" />
       <BlockMath math="= (25 - 9)\sqrt{9}" />
       <BlockMath math="= (16)(3)" />
       <BlockMath math="= 48" />
-    </div>
+    </MathContainer>
 
 4.  **Is <InlineMath math="(\frac{f}{g})(3)" /> defined?**
 

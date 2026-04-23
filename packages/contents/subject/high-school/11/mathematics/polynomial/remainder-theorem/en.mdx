@@ -33,12 +33,12 @@ Where:
 
 Now, let's substitute <InlineMath math="x = c" /> into the division algorithm equation:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="P(c) = (c - c) \cdot H(c) + S" />
   <BlockMath math="P(c) = (0) \cdot H(c) + S" />
   <BlockMath math="P(c) = 0 + S" />
   <BlockMath math="P(c) = S" />
-</div>
+</MathContainer>
 
 This proves that the value of the polynomial <InlineMath math="P(x)" /> at <InlineMath math="x = c" /> is equal to the remainder <InlineMath math="S" /> when <InlineMath math="P(x)" /> is divided by <InlineMath math="(x - c)" />.
 
@@ -76,7 +76,7 @@ According to the Remainder Theorem, the remainder when <InlineMath math="P(x)" /
 
 Let's calculate <InlineMath math="P(-4)" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="P(-4) = 2(-4)^5 + 5(-4)^4 - 10(-4)^3 + 9(-4)^2 - 10" />
   <BlockMath math="P(-4) = 2(-1024) + 5(256) - 10(-64) + 9(16) - 10" />
   <BlockMath math="P(-4) = -2048 + 1280 + 640 + 144 - 10" />
@@ -84,7 +84,7 @@ Let's calculate <InlineMath math="P(-4)" />:
   <BlockMath math="P(-4) = -128 + 144 - 10" />
   <BlockMath math="P(-4) = 16 - 10" />
   <BlockMath math="P(-4) = 6" />
-</div>
+</MathContainer>
 
 The result is the same! Using the Remainder Theorem, we found the remainder is 6, just like with Horner's method, but without performing the full division process.
 
@@ -98,7 +98,7 @@ If <InlineMath math="P(x) = 3x^5 - 20x^4 - 6x^3 - 48x - 8" /> is divided by <Inl
 
 According to the Remainder Theorem, the remainder when <InlineMath math="P(x)" /> is divided by <InlineMath math="x - 7" /> is <InlineMath math="P(7)" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="P(7) = 3(7)^5 - 20(7)^4 - 6(7)^3 - 48(7) - 8" />
   <BlockMath math="P(7) = 3(16807) - 20(2401) - 6(343) - 336 - 8" />
   <BlockMath math="P(7) = 50421 - 48020 - 2058 - 336 - 8" />
@@ -106,6 +106,6 @@ According to the Remainder Theorem, the remainder when <InlineMath math="P(x)" /
   <BlockMath math="P(7) = 343 - 336 - 8" />
   <BlockMath math="P(7) = 7 - 8" />
   <BlockMath math="P(7) = -1" />
-</div>
+</MathContainer>
 
 So, the remainder is <InlineMath math="-1" />.

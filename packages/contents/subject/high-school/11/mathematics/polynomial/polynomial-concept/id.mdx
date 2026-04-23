@@ -10,14 +10,14 @@ export const metadata = {
 
 Sebelum kita masuk ke definisi polinomial, mari kita kenali dulu komponen penyusunnya, yaitu **monomial**. Coba perhatikan beberapa bentuk aljabar berikut:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\sqrt[3]{p} \quad \text{(bukan monomial)}" />
   <BlockMath math="2x^2y \quad \text{(monomial)}" />
   <BlockMath math="-8 \quad \text{(monomial)}" />
   <BlockMath math="\frac{2}{m} \quad \text{(bukan monomial)}" />
   <BlockMath math="1,24k^4 \quad \text{(monomial)}" />
   <BlockMath math="5a^{-6} \quad \text{(bukan monomial)}" />
-</div>
+</MathContainer>
 
 Dari bentuk-bentuk di atas, kita bisa mengelompokkannya menjadi dua:
 
@@ -70,11 +70,11 @@ Setelah memahami monomial, sekarang kita bisa mendefinisikan **polinomial**.
 
 Perhatikan contoh berikut:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="4x^3y - 3x^2" />
   <BlockMath math="x + 2\sqrt{x}" />
   <BlockMath math="2x^3 - 5x^{-2} + 1" />
-</div>
+</MathContainer>
 
 Mari kita identifikasi mana yang polinomial dan mana yang bukan:
 

@@ -19,10 +19,10 @@ Misalkan titik pusat pencerminan adalah <InlineMath math="P(a,b)" />. Jika sebua
 
 Jika sebuah titik <InlineMath math="Q(x, y)" /> dicerminkan terhadap titik <InlineMath math="P(a, b)" />, maka koordinat bayangannya, <InlineMath math="Q'(x', y')" />, ditentukan oleh rumus:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = 2a - x" />
   <BlockMath math="y' = 2b - y" />
-</div>
+</MathContainer>
 
 Atau bisa juga ditulis:
 
@@ -40,10 +40,10 @@ Di sini, <InlineMath math="x=5" />, <InlineMath math="y=4" />, <InlineMath math=
 
 Menggunakan rumus:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = 2a - x = 2(2) - 5 = 4 - 5 = -1" />
   <BlockMath math="y' = 2b - y = 2(3) - 4 = 6 - 4 = 2" />
-</div>
+</MathContainer>
 
 Jadi, bayangan titik <InlineMath math="(5,4)" /> adalah <InlineMath math="(-1,2)" />.
 
@@ -97,18 +97,18 @@ Tentukan titik peta dari setengah putar <InlineMath math="\sigma_{(1,3)}" /> unt
 
 Ambil sembarang titik <InlineMath math="(x,y)" /> pada garis <InlineMath math="l" />. Bayangannya, <InlineMath math="(x',y')" />, setelah dicerminkan terhadap titik <InlineMath math="P(1,3)" /> adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = 2(1) - x = 2 - x \implies x = 2 - x'" />
   <BlockMath math="y' = 2(3) - y = 6 - y \implies y = 6 - y'" />
-</div>
+</MathContainer>
 
 Substitusikan <InlineMath math="x = 2 - x'" /> dan <InlineMath math="y = 6 - y'" /> ke dalam persamaan garis <InlineMath math="l" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="2(2 - x') - (6 - y') + 3 = 0" />
   <BlockMath math="4 - 2x' - 6 + y' + 3 = 0" />
   <BlockMath math="-2x' + y' + 1 = 0" />
-</div>
+</MathContainer>
 
 Mengganti <InlineMath math="x'" /> dan <InlineMath math="y'" /> kembali ke <InlineMath math="x" /> dan <InlineMath math="y" />, persamaan garis bayangan <InlineMath math="l'" /> adalah:
 
@@ -170,35 +170,35 @@ Atau bisa ditulis sebagai <InlineMath math="2x - y - 1 = 0" />.
 
 1.  Pusat <InlineMath math="P(-2,3)" />, titik <InlineMath math="Q(3,-4)" />. Maka <InlineMath math="a=-2, b=3, x=3, y=-4" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = 2a - x = 2(-2) - 3 = -4 - 3 = -7" />
       <BlockMath math="y' = 2b - y = 2(3) - (-4) = 6 + 4 = 10" />
-    </div>
+    </MathContainer>
 
     Jadi, bayangan titik <InlineMath math="Q(3,-4)" /> adalah <InlineMath math="(-7,10)" />.
 
 2.  Pusat <InlineMath math="O(0,0)" />, titik <InlineMath math="K(-5,1)" />. Maka <InlineMath math="a=0, b=0, x=-5, y=1" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = 2(0) - (-5) = 0 + 5 = 5" />
       <BlockMath math="y' = 2(0) - 1 = 0 - 1 = -1" />
-    </div>
+    </MathContainer>
 
     Jadi, bayangan titik <InlineMath math="K(-5,1)" /> adalah <InlineMath math="K'(5,-1)" />.
 
 3.  Pusat <InlineMath math="P(1,-3)" />. Garis <InlineMath math="2x + 5y + 6 = 0" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = 2(1) - x = 2 - x \implies x = 2 - x'" />
       <BlockMath math="y' = 2(-3) - y = -6 - y \implies y = -6 - y'" />
-    </div>
+    </MathContainer>
 
     Substitusi ke persamaan garis:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="2(2 - x') + 5(-6 - y') + 6 = 0" />
       <BlockMath math="4 - 2x' - 30 - 5y' + 6 = 0" />
       <BlockMath math="-2x' - 5y' - 20 = 0" />
-    </div>
+    </MathContainer>
 
     Persamaan garis bayangan: <InlineMath math="-2x - 5y - 20 = 0" /> atau <InlineMath math="2x + 5y + 20 = 0" />.

@@ -28,10 +28,10 @@ Ini berarti vektor dari pusat dilatasi ke bayangan adalah <InlineMath math="k" /
 
 Jika pusat dilatasi adalah titik asal <InlineMath math="O(0,0)" /> dan faktor skalanya adalah <InlineMath math="k" />, maka untuk sebuah titik <InlineMath math="A(x,y)" />, bayangannya <InlineMath math="A'(x',y')" /> diberikan oleh:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = kx" />
   <BlockMath math="y' = ky" />
-</div>
+</MathContainer>
 
 ### Mendilatasikan Sebuah Titik terhadap Titik Asal
 
@@ -41,10 +41,10 @@ Di sini, <InlineMath math="x=1" />, <InlineMath math="y=2" />, dan <InlineMath m
 
 Pusat dilatasi <InlineMath math="O(0,0)" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = 2 \cdot 1 = 2" />
   <BlockMath math="y' = 2 \cdot 2 = 4" />
-</div>
+</MathContainer>
 
 Jadi, petanya adalah <InlineMath math="A'(2,4)" />.
 
@@ -104,10 +104,10 @@ Jadi, petanya adalah <InlineMath math="A'(2,4)" />.
 
 Jika pusat dilatasi adalah titik sembarang <InlineMath math="C(a,b)" /> dan faktor skalanya adalah <InlineMath math="k" />, maka untuk sebuah titik <InlineMath math="A(x,y)" />, bayangannya <InlineMath math="A'(x',y')" /> diberikan oleh:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = a + k(x - a)" />
   <BlockMath math="y' = b + k(y - b)" />
-</div>
+</MathContainer>
 
 Ini dapat diinterpretasikan sebagai: translasikan sistem sehingga <InlineMath math="C" /> menjadi titik asal, lakukan dilatasi dengan faktor <InlineMath math="k" />, lalu translasikan kembali.
 
@@ -121,10 +121,10 @@ Pusat dilatasi adalah <InlineMath math="P(2,3)" />, jadi <InlineMath math="a=2, 
 
 Faktor skala <InlineMath math="k=2" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = 2 + 2(5 - 2) = 2 + 2(3) = 2 + 6 = 8" />
   <BlockMath math="y' = 3 + 2(2 - 3) = 3 + 2(-1) = 3 - 2 = 1" />
-</div>
+</MathContainer>
 
 Jadi, petanya adalah <InlineMath math="C'(8,1)" />.
 
@@ -189,19 +189,19 @@ Jadi, petanya adalah <InlineMath math="C'(8,1)" />.
 
 1.  Titik <InlineMath math="B(2,5)" />, pusat <InlineMath math="O(0,0)" />, <InlineMath math="k=3" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = 3 \cdot 2 = 6" />
       <BlockMath math="y' = 3 \cdot 5 = 15" />
-    </div>
+    </MathContainer>
 
     Jadi, bayangannya <InlineMath math="B'(6,15)" />.
 
 2.  Titik <InlineMath math="B(2,5)" />, pusat <InlineMath math="P(1,3)" />, <InlineMath math="k=3" />. (<InlineMath math="x=2, y=5, a=1, b=3" />)
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = 1 + 3(2 - 1) = 1 + 3(1) = 1 + 3 = 4" />
       <BlockMath math="y' = 3 + 3(5 - 3) = 3 + 3(2) = 3 + 6 = 9" />
-    </div>
+    </MathContainer>
 
     Jadi, bayangannya <InlineMath math="B'(4,9)" />.
 

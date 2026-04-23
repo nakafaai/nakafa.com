@@ -451,10 +451,10 @@ Find the equation of the tangent line to circle <InlineMath math="x^2 + y^2 = 25
 
 Since point <InlineMath math="(3, 4)" /> lies on the circle (can be verified: <InlineMath math="3^2 + 4^2 = 9 + 16 = 25" />), the equation of the tangent line is:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x_1 \cdot x + y_1 \cdot y = r^2" />
   <BlockMath math="3x + 4y = 25" />
-</div>
+</MathContainer>
 
 ### Determining Tangent Line with a Given Gradient
 
@@ -466,14 +466,14 @@ The gradient of line <InlineMath math="3x - 4y + 5 = 0" /> is <InlineMath math="
 
 Equation of tangent line with gradient <InlineMath math="m = \frac{3}{4}" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y = mx \pm r\sqrt{1 + m^2}" />
   <BlockMath math="y = \frac{3}{4}x \pm 4\sqrt{1 + \left(\frac{3}{4}\right)^2}" />
   <BlockMath math="y = \frac{3}{4}x \pm 4\sqrt{1 + \frac{9}{16}}" />
   <BlockMath math="y = \frac{3}{4}x \pm 4\sqrt{\frac{25}{16}}" />
   <BlockMath math="y = \frac{3}{4}x \pm 4 \cdot \frac{5}{4}" />
   <BlockMath math="y = \frac{3}{4}x \pm 5" />
-</div>
+</MathContainer>
 
 Therefore, the equations of the tangent lines are:
 
@@ -488,13 +488,13 @@ Find the length of the tangent line from point <InlineMath math="P(7, 1)" /> to 
 
 Circle center <InlineMath math="O(0, 0)" /> and radius <InlineMath math="r = 5" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="PT = \sqrt{(x_1 - a)^2 + (y_1 - b)^2 - r^2}" />
   <BlockMath math="PT = \sqrt{(7 - 0)^2 + (1 - 0)^2 - 25}" />
   <BlockMath math="PT = \sqrt{49 + 1 - 25}" />
   <BlockMath math="PT = \sqrt{25}" />
   <BlockMath math="PT = 5" />
-</div>
+</MathContainer>
 
 ## Practice Problems
 
@@ -521,12 +521,12 @@ Circle center <InlineMath math="O(0, 0)" /> and radius <InlineMath math="r = 5" 
 
     Tangent line equation:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x_1 \cdot x + y_1 \cdot y = r^2" />
       <BlockMath math="-3x + 3\sqrt{3}y = 36" />
       <BlockMath math="-x + \sqrt{3}y = 12" />
       <BlockMath math="x - \sqrt{3}y + 12 = 0" />
-    </div>
+    </MathContainer>
 
 2.  **Tangent line perpendicular to a given line**
 
@@ -536,12 +536,12 @@ Circle center <InlineMath math="O(0, 0)" /> and radius <InlineMath math="r = 5" 
 
     Tangent line equation:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="y - b = m(x - a) \pm r\sqrt{1 + m^2}" />
       <BlockMath math="y + 3 = \frac{1}{2}(x - 2) \pm 5\sqrt{1 + \frac{1}{4}}" />
       <BlockMath math="y + 3 = \frac{1}{2}(x - 2) \pm 5 \cdot \frac{\sqrt{5}}{2}" />
       <BlockMath math="y + 3 = \frac{1}{2}x - 1 \pm \frac{5\sqrt{5}}{2}" />
-    </div>
+    </MathContainer>
 
     Therefore: <InlineMath math="x - 2y - 4 \pm 5\sqrt{5} = 0" />
 
@@ -549,18 +549,18 @@ Circle center <InlineMath math="O(0, 0)" /> and radius <InlineMath math="r = 5" 
 
     - Length of tangent line:
 
-      <div className="flex flex-col gap-4">
+      <MathContainer>
         <BlockMath math="AT = \sqrt{10^2 + 0^2 - 36} = \sqrt{100 - 36} = \sqrt{64} = 8" />
-      </div>
+      </MathContainer>
 
     - Coordinates of tangent points can be found using the tangent line equation from external point.
 
 4.  **External common tangent line**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="d = \sqrt{(4-(-4))^2 + (0-0)^2} = 8" />
       <BlockMath math="l = \sqrt{d^2 - (r_2 - r_1)^2} = \sqrt{64 - 1} = \sqrt{63} = 3\sqrt{7}" />
-    </div>
+    </MathContainer>
 
 5.  **Tangent line through external point**
 
@@ -574,9 +574,9 @@ Circle center <InlineMath math="O(0, 0)" /> and radius <InlineMath math="r = 5" 
 
     Point is exactly on the circle! Therefore the tangent line equation is:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(8-3)(x-3) + (-2+2)(y+2) = 25" />
       <BlockMath math="5(x-3) + 0 = 25" />
       <BlockMath math="x - 3 = 5" />
       <BlockMath math="x = 8" />
-    </div>
+    </MathContainer>

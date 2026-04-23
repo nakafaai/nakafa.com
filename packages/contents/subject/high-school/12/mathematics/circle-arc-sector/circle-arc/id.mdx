@@ -265,10 +265,10 @@ Perhatikan visualisasi berikut:
 
 Dalam sistem koordinat Cartesian, busur dapat direpresentasikan menggunakan persamaan parametrik:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="x = r\cos(t)" />
 <BlockMath math="y = r\sin(t)" />
-</div>
+</MathContainer>
 
 Dimana <InlineMath math="t" /> adalah parameter yang bervariasi dari sudut awal hingga sudut akhir busur.
 
@@ -359,20 +359,20 @@ Mari kita terapkan konsep ini dalam perhitungan teknik. Misalkan kita merancang 
 
 **Menghitung panjang tali busur:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="c = 2r \sin\left(\frac{\theta}{2}\right)" />
 <BlockMath math="c = 2 \times 25 \times \sin\left(\frac{120°}{2}\right)" />
 <BlockMath math="c = 50 \times \sin(60°)" />
 <BlockMath math="c = 50 \times \frac{\sqrt{3}}{2} = 25\sqrt{3} \text{ meter}" />
-</div>
+</MathContainer>
 
 **Menghitung tinggi busur:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="h = r\left(1 - \cos\left(\frac{\theta}{2}\right)\right)" />
 <BlockMath math="h = 25\left(1 - \cos(60°)\right)" />
 <BlockMath math="h = 25\left(1 - \frac{1}{2}\right) = 12.5 \text{ meter}" />
-</div>
+</MathContainer>
 
 ## Latihan
 
@@ -391,16 +391,16 @@ Mari kita terapkan konsep ini dalam perhitungan teknik. Misalkan kita merancang 
    Diketahui: <InlineMath math="r = 30 \text{ m}" /> dan <InlineMath math="\theta = 90°" />
    
    **Panjang tali busur:**
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="c = 2r \sin\left(\frac{\theta}{2}\right) = 2 \times 30 \times \sin(45°)" />
    <BlockMath math="c = 60 \times \frac{\sqrt{2}}{2} = 30\sqrt{2} \text{ m} \approx 42.43 \text{ m}" />
-   </div>
+   </MathContainer>
    
    **Tinggi busur:**
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="h = r\left(1 - \cos\left(\frac{\theta}{2}\right)\right) = 30\left(1 - \cos(45°)\right)" />
    <BlockMath math="h = 30\left(1 - \frac{\sqrt{2}}{2}\right) \approx 8.79 \text{ m}" />
-   </div>
+   </MathContainer>
 
 2. **Penyelesaian:**
    
@@ -410,32 +410,32 @@ Mari kita terapkan konsep ini dalam perhitungan teknik. Misalkan kita merancang 
    <BlockMath math="8 = 15\left(1 - \cos\left(\frac{\theta}{2}\right)\right)" />
    
    **Langkah 2:** Isolasi cos
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\frac{8}{15} = 1 - \cos\left(\frac{\theta}{2}\right)" />
    <BlockMath math="\cos\left(\frac{\theta}{2}\right) = 1 - \frac{8}{15} = \frac{7}{15}" />
-   </div>
+   </MathContainer>
    
    **Langkah 3:** Hitung sudut
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\frac{\theta}{2} = \arccos\left(\frac{7}{15}\right) \approx 62.18°" />
    <BlockMath math="\theta \approx 124.36°" />
-   </div>
+   </MathContainer>
 
 3. **Penyelesaian:**
    
    Diketahui: <InlineMath math="c = 24 \text{ m}" /> dan <InlineMath math="r = 15 \text{ m}" />
    
    **Langkah 1:** Gunakan rumus tali busur
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="24 = 2 \times 15 \times \sin\left(\frac{\theta}{2}\right)" />
    <BlockMath math="\sin\left(\frac{\theta}{2}\right) = \frac{24}{30} = 0.8" />
-   </div>
+   </MathContainer>
    
    **Langkah 2:** Hitung sudut pusat
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\frac{\theta}{2} = \arcsin(0.8) \approx 53.13°" />
    <BlockMath math="\theta \approx 106.26°" />
-   </div>
+   </MathContainer>
    
    **Langkah 3:** Hitung tinggi busur
    <BlockMath math="h = 15\left(1 - \cos(53.13°)\right) = 15(1 - 0.6) = 6 \text{ m}" />
@@ -447,8 +447,8 @@ Mari kita terapkan konsep ini dalam perhitungan teknik. Misalkan kita merancang 
    - Jari-jari: <InlineMath math="r = 4" />
    
    **Persamaan parametrik:**
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="x = 4\cos(t)" />
    <BlockMath math="y = 4\sin(t)" />
    <BlockMath math="0° \leq t \leq 90°" />
-   </div>
+   </MathContainer>

@@ -82,27 +82,27 @@ First, let's identify the parameters:
 
 Now we use the binomial distribution formula:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="b(5;7,\frac{1}{2}) = \binom{7}{5} \left(\frac{1}{2}\right)^5 \left(\frac{1}{2}\right)^{7-5}" />
 
 <BlockMath math="= \binom{7}{5} \left(\frac{1}{2}\right)^5 \left(\frac{1}{2}\right)^2" />
 
 <BlockMath math="= \binom{7}{5} \left(\frac{1}{2}\right)^7" />
-</div>
+</MathContainer>
 
 Let's calculate <InlineMath math="\binom{7}{5}" /> first:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\binom{7}{5} = \frac{7!}{5!(7-5)!} = \frac{7!}{5! \cdot 2!}" />
 
 <BlockMath math="= \frac{7 \times 6 \times 5!}{5! \times 2 \times 1} = \frac{7 \times 6}{2} = \frac{42}{2} = 21" />
-</div>
+</MathContainer>
 
 So the complete calculation is:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="b(5;7,\frac{1}{2}) = 21 \times \frac{1}{2^7} = 21 \times \frac{1}{128} = \frac{21}{128}" />
-</div>
+</MathContainer>
 
 Therefore, the probability of getting <InlineMath math="5" /> tails in <InlineMath math="7" /> flips is <InlineMath math="\frac{21}{128}" /> or approximately <InlineMath math="16.4\%" />.
 
@@ -127,9 +127,9 @@ Therefore, the probability of getting <InlineMath math="5" /> tails in <InlineMa
 
     **Step 2: Calculate using binomial distribution formula.**
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="b(3;5,0.6) = \binom{5}{3} (0.6)^3 (0.4)^2" />
-    </div>
+    </MathContainer>
     
     Let's calculate <InlineMath math="\binom{5}{3}" /> first:
 
@@ -137,11 +137,11 @@ Therefore, the probability of getting <InlineMath math="5" /> tails in <InlineMa
     
     Then:
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="= 10 \times (0.6)^3 \times (0.4)^2" />
     
     <BlockMath math="= 10 \times 0.216 \times 0.16 = 0.3456" />
-    </div>
+    </MathContainer>
     
     Therefore, the probability of drawing exactly <InlineMath math="3" /> red balls is <InlineMath math="0.3456" /> or approximately <InlineMath math="34.6\%" />.
 
@@ -156,9 +156,9 @@ Therefore, the probability of getting <InlineMath math="5" /> tails in <InlineMa
 
     **Step 2: Calculate using binomial distribution formula.**
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="b(4;6,0.8) = \binom{6}{4} (0.8)^4 (0.2)^2" />
-    </div>
+    </MathContainer>
     
     Let's calculate <InlineMath math="\binom{6}{4}" /> first:
     
@@ -166,11 +166,11 @@ Therefore, the probability of getting <InlineMath math="5" /> tails in <InlineMa
     
     Then:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="= 15 \times (0.8)^4 \times (0.2)^2" />
     
     <BlockMath math="= 15 \times 0.4096 \times 0.04 = 0.2458" />
-    </div>
+    </MathContainer>
     
     Therefore, the probability of the archer hitting the target exactly <InlineMath math="4" /> times is <InlineMath math="0.2458" /> or approximately <InlineMath math="24.6\%" />.
 
@@ -185,9 +185,9 @@ Therefore, the probability of getting <InlineMath math="5" /> tails in <InlineMa
 
     **Step 2: Calculate using binomial distribution formula.**
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="b(2;8,0.25) = \binom{8}{2} (0.25)^2 (0.75)^6" />
-    </div>
+    </MathContainer>
     
     Let's calculate <InlineMath math="\binom{8}{2}" /> first:
 
@@ -195,10 +195,10 @@ Therefore, the probability of getting <InlineMath math="5" /> tails in <InlineMa
     
     Then:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="= 28 \times (0.25)^2 \times (0.75)^6" />
     
     <BlockMath math="= 28 \times 0.0625 \times 0.178 = 0.3115" />
-    </div>
+    </MathContainer>
     
     Therefore, the probability of the student answering exactly <InlineMath math="2" /> questions correctly is <InlineMath math="0.3115" /> or approximately <InlineMath math="31.2\%" />.

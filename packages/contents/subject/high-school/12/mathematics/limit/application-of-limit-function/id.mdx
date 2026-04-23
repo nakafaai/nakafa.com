@@ -30,10 +30,10 @@ Ketika <InlineMath math="t" /> sangat besar, suku <InlineMath math="t^2" /> akan
 
 Jadi,
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\sqrt{t^2 - t + (190.68)^3} \approx \sqrt{t^2} = |t| = t \quad \text{(untuk } t > 0\text{)}" />
 <BlockMath math="\lim_{t \to \infty} N(t) = \lim_{t \to \infty} (285000 - t) = -\infty" />
-</div>
+</MathContainer>
 
 > Hasil negatif ini secara matematis menunjukkan bahwa model ini hanya berlaku untuk periode waktu terbatas. Dalam konteks nyata, jumlah penduduk terinfeksi tidak mungkin negatif, sehingga model ini valid hanya hingga titik dimana <InlineMath math="N(t) \geq 0" />.
 
@@ -106,13 +106,13 @@ Dalam kimia, laju reaksi dapat dimodelkan menggunakan fungsi eksponensial. Limit
 
     Justifikasi Target Vaksinasi 282,367 orang:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="\text{Anak-anak} = 0.21 \times 576{,}260 = 121{,}015 \text{ orang}" />
     <BlockMath math="\text{Dewasa} = 0.79 \times 576{,}260 = 455{,}245 \text{ orang}" />
     <BlockMath math="\text{Total positif} = 0.3 \times 576{,}260 = 172{,}878 \text{ orang}" />
     <BlockMath math="\text{Dewasa positif} = 0.79 \times 172{,}878 = 136{,}574 \text{ orang}" />
     <BlockMath math="\text{Dewasa dapat divaksinasi} = 455{,}245 - 136{,}574 = 318{,}671 \text{ orang}" />
-    </div>
+    </MathContainer>
 
     Target vaksinasi 282,367 orang merupakan 89% dari dewasa yang memenuhi syarat, disesuaikan dengan ketersediaan vaksin dan kapasitas tenaga medis.
 
@@ -136,11 +136,11 @@ Dalam kimia, laju reaksi dapat dimodelkan menggunakan fungsi eksponensial. Limit
 
     **Langkah 4:** Hitung hasil akhir
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="N(282{,}367) = 285{,}000 - \sqrt{79{,}737{,}773{,}229.88}" />
     <BlockMath math="= 285{,}000 - 282{,}378.78" />
     <BlockMath math="= 2{,}621.22 \approx 2{,}621 \text{ orang}" />
-    </div>
+    </MathContainer>
 
 5. **Interpretasi Hasil:**
 
@@ -171,21 +171,21 @@ Dalam kimia, laju reaksi dapat dimodelkan menggunakan fungsi eksponensial. Limit
 
    Kapasitas produksi maksimum diperoleh dengan menghitung limit ketika <InlineMath math="t \to \infty" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{t \to \infty} P(t) = \lim_{t \to \infty} 50000(1 - e^{-0.1t})" />
    <BlockMath math="= 50000 \lim_{t \to \infty} (1 - e^{-0.1t})" />
    <BlockMath math="= 50000(1 - 0) = 50000 \text{ unit vaksin}" />
-   </div>
+   </MathContainer>
 
    Jadi, kapasitas produksi maksimum adalah 50,000 unit vaksin.
 
 2. **Penyelesaian:**
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{t \to \infty} I(t) = \lim_{t \to \infty} \frac{100000t}{t + 50}" />
    <BlockMath math="= \lim_{t \to \infty} \frac{100000t}{t(1 + \frac{50}{t})} = \lim_{t \to \infty} \frac{100000}{1 + \frac{50}{t}}" />
    <BlockMath math="= \frac{100000}{1 + 0} = 100000 \text{ orang}" />
-   </div>
+   </MathContainer>
 
    Dalam jangka panjang, informasi akan mencapai maksimal 100,000 orang, menunjukkan adanya saturasi dalam penyebaran informasi.
 
@@ -193,9 +193,9 @@ Dalam kimia, laju reaksi dapat dimodelkan menggunakan fungsi eksponensial. Limit
 
    Biaya marginal adalah turunan dari fungsi biaya, yang dapat dihitung menggunakan definisi limit:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Biaya Marginal} = \lim_{\Delta x \to 0} \frac{C(x + \Delta x) - C(x)}{\Delta x}" />
-   </div>
+   </MathContainer>
 
    **Langkah detail:**
    
@@ -211,10 +211,10 @@ Dalam kimia, laju reaksi dapat dimodelkan menggunakan fungsi eksponensial. Limit
 
    Maka,
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="C(x + \Delta x) - C(x) = 5\Delta x + 0.02x\Delta x + 0.01(\Delta x)^2" />
    <BlockMath math="\frac{C(x + \Delta x) - C(x)}{\Delta x} = 5 + 0.02x + 0.01\Delta x" />
    <BlockMath math="\lim_{\Delta x \to 0} (5 + 0.02x + 0.01\Delta x) = 5 + 0.02x" />
-   </div>
+   </MathContainer>
 
    Biaya marginal adalah <InlineMath math="5 + 0.02x" /> rupiah per unit. Artinya, untuk memproduksi masker ke-<InlineMath math="x" />, tambahan biayanya adalah <InlineMath math="5 + 0.02x" /> rupiah. Semakin banyak produksi, biaya marginal semakin meningkat karena adanya suku <InlineMath math="0.02x" />.

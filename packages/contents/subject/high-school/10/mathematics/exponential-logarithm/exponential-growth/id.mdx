@@ -88,13 +88,13 @@ Misalkan kita mengetahui bahwa jumlah bakteri pada fase ke-2 adalah 8.000 dan ba
 
 Kita dapat menggunakan persamaan <InlineMath math="x_2 = a^2 \cdot x_0" /> dengan <InlineMath math="a = 2" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x_2 = a^2 \cdot x_0" />
   <BlockMath math="8000 = 2^2 \cdot x_0" />
   <BlockMath math="8000 = 4 \cdot x_0" />
   <BlockMath math="\frac{8000}{4} = x_0" />
   <BlockMath math="x_0 = 2000" />
-</div>
+</MathContainer>
 
 Jadi, banyaknya bakteri mula-mula adalah 2.000 bakteri.
 
@@ -106,11 +106,11 @@ Untuk menghitung jumlah bakteri setelah waktu yang lebih lama, kita tetap menggu
 
 Substitusikan nilai <InlineMath math="a = 2" /> dan <InlineMath math="x_0 = 2.000" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x_{10} = 2^{10} \cdot 2.000" />
   <BlockMath math="x_{10} = 1.024 \cdot 2.000" />
   <BlockMath math="x_{10} = 2.048.000" />
-</div>
+</MathContainer>
 
 Jadi, banyaknya bakteri setelah 10 jam adalah 2.048.000 bakteri.
 
@@ -150,19 +150,19 @@ Jadi, banyaknya bakteri setelah 10 jam adalah 2.048.000 bakteri.
 
    c. Setelah 3 jam pertama berarti fase ke-12 (bakteri membelah setiap 15 menit):
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="f(12) = 50 \cdot (2^{12})" />
      <BlockMath math="f(12) = 50 \cdot 4.096" />
      <BlockMath math="f(12) = 204.800" />
-   </div>
+   </MathContainer>
 
    Setelah 4 jam pertama berarti fase ke-16 (bakteri membelah setiap 15 menit):
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="f(16) = 50 \cdot (2^{16})" />
      <BlockMath math="f(16) = 50 \cdot 65.536" />
      <BlockMath math="f(16) = 3.276.800" />
-   </div>
+   </MathContainer>
 
 2. Kasus HIV-AIDS:
 
@@ -174,11 +174,11 @@ Jadi, banyaknya bakteri setelah 10 jam adalah 2.048.000 bakteri.
 
    Untuk menghitung kasus pada tahun 2020 (5 tahun setelah 2015):
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="f(5) = 36.000.000 \cdot (1,02)^5" />
      <BlockMath math="f(5) = 36.000.000 \cdot 1,1040808" />
      <BlockMath math="f(5) = 39.746.908" />
-   </div>
+   </MathContainer>
 
    Jadi, prediksi jumlah kasus HIV-AIDS pada tahun 2020 adalah sekitar 39.746.908 jiwa.
 

@@ -38,11 +38,11 @@ Substitute this function into the expected value formula:
 
 Now, let's perform the substitution <InlineMath math="t = \frac{x-\mu}{\sigma}" />. Then <InlineMath math="x = \sigma t + \mu" /> and <InlineMath math="dx = \sigma \, dt" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="E(X) = \int_{-\infty}^{\infty} (\sigma t + \mu) \cdot \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}t^2} \cdot \sigma \, dt" />
 <BlockMath math="E(X) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{\infty} (\sigma t + \mu) e^{-\frac{1}{2}t^2} \, dt" />
 <BlockMath math="E(X) = \frac{\sigma}{\sqrt{2\pi}} \int_{-\infty}^{\infty} t e^{-\frac{1}{2}t^2} \, dt + \frac{\mu}{\sqrt{2\pi}} \int_{-\infty}^{\infty} e^{-\frac{1}{2}t^2} \, dt" />
-</div>
+</MathContainer>
 
 Note that:
 
@@ -52,10 +52,10 @@ Note that:
 
 Therefore:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="E(X) = \frac{\sigma}{\sqrt{2\pi}} \cdot 0 + \frac{\mu}{\sqrt{2\pi}} \cdot \sqrt{2\pi}" />
 <BlockMath math="E(X) = 0 + \mu = \mu" />
-</div>
+</MathContainer>
 
 It is proven that **the expected value of normal distribution equals its mean parameter**.
 

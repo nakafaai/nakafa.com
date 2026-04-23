@@ -54,11 +54,11 @@ Find the derivative of <InlineMath math="y = 2 \sin x + 5x" />.
 
 We can differentiate this function term by term using the sum rule.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
     <BlockMath math="y' = \frac{d}{dx}(2 \sin x) + \frac{d}{dx}(5x)" />
     <BlockMath math="y' = 2(\cos x) + 5(1)" />
     <BlockMath math="y' = 2 \cos x + 5" />
-</div>
+</MathContainer>
 
 ### Using the Product Rule
 
@@ -72,11 +72,11 @@ Let <InlineMath math="u = 2 \sin x" /> and <InlineMath math="v = \tan x" />.
 
 Then <InlineMath math="u' = 2 \cos x" /> and <InlineMath math="v' = \sec^2 x" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
     <BlockMath math="y' = (2 \cos x)(\tan x) + (2 \sin x)(\sec^2 x)" />
     <BlockMath math="y' = (2 \cos x)\left(\frac{\sin x}{\cos x}\right) + (2 \sin x)(\sec^2 x)" />
     <BlockMath math="y' = 2 \sin x + 2 \sin x \sec^2 x" />
-</div>
+</MathContainer>
 
 ### Using the Quotient Rule
 
@@ -90,14 +90,14 @@ Let <InlineMath math="u = 1 + \cos x" /> and <InlineMath math="v = \sin x" />.
 
 Then <InlineMath math="u' = -\sin x" /> and <InlineMath math="v' = \cos x" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
     <BlockMath math="y' = \frac{(-\sin x)(\sin x) - (1 + \cos x)(\cos x)}{(\sin x)^2}" />
     <BlockMath math="y' = \frac{-\sin^2 x - (\cos x + \cos^2 x)}{\sin^2 x}" />
     <BlockMath math="y' = \frac{-(\sin^2 x + \cos^2 x) - \cos x}{\sin^2 x}" />
     <BlockMath math="y' = \frac{-1 - \cos x}{1 - \cos^2 x} \quad (\text{Pythagorean Identity})" />
     <BlockMath math="y' = \frac{-(1 + \cos x)}{(1 - \cos x)(1 + \cos x)} \quad (\text{Factorization})" />
     <BlockMath math="y' = \frac{-1}{1 - \cos x} = \frac{1}{\cos x - 1}" />
-</div>
+</MathContainer>
 
 ## Exercises
 
@@ -136,10 +136,10 @@ Then <InlineMath math="u' = -\sin x" /> and <InlineMath math="v' = \cos x" />.
 
     **Step 2: Apply the Product Rule**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="f'(x) = (\cos x)(\cos x) + (\sin x)(-\sin x)" />
         <BlockMath math="f'(x) = \cos^2 x - \sin^2 x" />
-    </div>
+    </MathContainer>
 
     **Step 3: Use a Trigonometric Identity (Optional)**
 

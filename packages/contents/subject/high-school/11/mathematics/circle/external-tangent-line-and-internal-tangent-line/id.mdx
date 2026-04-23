@@ -327,13 +327,13 @@ showZAxis={false}
 
 **Penyelesaian:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="d = \sqrt{(3-(-3))^2 + (0-0)^2} = \sqrt{36} = 6" />
   <BlockMath math="l = \sqrt{d^2 - (r_2 - r_1)^2}" />
   <BlockMath math="l = \sqrt{6^2 - (2.5 - 1.5)^2}" />
   <BlockMath math="l = \sqrt{36 - 1}" />
   <BlockMath math="l = \sqrt{35}" />
-</div>
+</MathContainer>
 
 Jadi, panjang garis singgung persekutuan luar adalah <InlineMath math="\sqrt{35}" /> satuan.
 
@@ -576,21 +576,21 @@ showZAxis={false}
 
 Pertama, periksa apakah garis singgung persekutuan dalam ada:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="d = \sqrt{(5-(-5))^2 + (0-0)^2} = \sqrt{100} = 10" />
   <BlockMath math="r_1 + r_2 = 2 + 3 = 5" />
   <BlockMath math="d = 10 > 5 = r_1 + r_2 \space \checkmark" />
-</div>
+</MathContainer>
 
 Karena syarat terpenuhi, maka:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="l = \sqrt{d^2 - (r_1 + r_2)^2}" />
   <BlockMath math="l = \sqrt{10^2 - 5^2}" />
   <BlockMath math="l = \sqrt{100 - 25}" />
   <BlockMath math="l = \sqrt{75}" />
   <BlockMath math="l = 5\sqrt{3}" />
-</div>
+</MathContainer>
 
 Jadi, panjang garis singgung persekutuan dalam adalah <InlineMath math="5\sqrt{3}" /> satuan.
 
@@ -868,11 +868,11 @@ showZAxis={false}
 
 **Penyelesaian:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="d = \sqrt{(6-(-6))^2 + (0-0)^2} = 12" />
   <BlockMath math="l_{luar} = \sqrt{12^2 - (2-1)^2} = \sqrt{144 - 1} = \sqrt{143}" />
   <BlockMath math="l_{dalam} = \sqrt{12^2 - (1+2)^2} = \sqrt{144 - 9} = \sqrt{135} = 3\sqrt{15}" />
-</div>
+</MathContainer>
 
 ### Lingkaran Berdekatan
 
@@ -994,12 +994,12 @@ showZAxis={false}
 
 **Penyelesaian:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="d = \sqrt{(2-(-2))^2 + (0-0)^2} = 4" />
   <BlockMath math="r_1 = r_2 = 1.5" />
   <BlockMath math="l_{luar} = d = 4" />
   <BlockMath math="l_{dalam} = \sqrt{4^2 - (1.5+1.5)^2} = \sqrt{16 - 9} = \sqrt{7}" />
-</div>
+</MathContainer>
 
 ## Latihan Soal
 
@@ -1023,43 +1023,43 @@ showZAxis={false}
 
 1. **Menghitung panjang garis singgung persekutuan**
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="d = \sqrt{(4-(-4))^2 + (0-0)^2} = 8" />
      <BlockMath math="l_{luar} = \sqrt{8^2 - (3-2)^2} = \sqrt{64 - 1} = \sqrt{63} = 3\sqrt{7}" />
      <BlockMath math="l_{dalam} = \sqrt{8^2 - (2+3)^2} = \sqrt{64 - 25} = \sqrt{39}" />
-   </div>
+   </MathContainer>
 
 2. **Lingkaran dengan pusat berbeda**
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="d = \sqrt{(10-0)^2 + (0-0)^2} = 10" />
      <BlockMath math="l_{luar} = \sqrt{10^2 - (4-2)^2} = \sqrt{100 - 4} = \sqrt{96} = 4\sqrt{6}" />
      <BlockMath math="l_{dalam} = \sqrt{10^2 - (4+2)^2} = \sqrt{100 - 36} = \sqrt{64} = 8" />
-   </div>
+   </MathContainer>
 
 3. **Mencari jarak pusat dari panjang garis singgung dalam**
 
    Diketahui: <InlineMath math="r_1 = r_2 = 3" />, <InlineMath math="l_{dalam} = 8" />
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="l = \sqrt{d^2 - (r_1 + r_2)^2}" />
      <BlockMath math="8 = \sqrt{d^2 - 6^2}" />
      <BlockMath math="64 = d^2 - 36" />
      <BlockMath math="d^2 = 100" />
      <BlockMath math="d = 10 \text{ cm}" />
-   </div>
+   </MathContainer>
 
 4. **Mencari nilai r**
 
    Diketahui: <InlineMath math="d = 12" />, <InlineMath math="r_1 = r" />, <InlineMath math="r_2 = 2r" />, <InlineMath math="l_{luar} = 4\sqrt{8}" />
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="4\sqrt{8} = \sqrt{12^2 - (2r - r)^2}" />
      <BlockMath math="16 \cdot 8 = 144 - r^2" />
      <BlockMath math="128 = 144 - r^2" />
      <BlockMath math="r^2 = 16" />
      <BlockMath math="r = 4" />
-   </div>
+   </MathContainer>
 
 5. **Syarat jumlah garis singgung persekutuan**
 

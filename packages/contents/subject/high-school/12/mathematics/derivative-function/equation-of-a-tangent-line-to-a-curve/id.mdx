@@ -53,12 +53,12 @@ Sekarang kita punya semua yang dibutuhkan:
 -   Gradien <InlineMath math="m = -8" />
 
 Masukkan ke dalam rumus persamaan garis:
-<div className="flex flex-col gap-4">
+<MathContainer>
     <BlockMath math="y - b = m(x - a)" />
     <BlockMath math="y - (-2) = -8(x - 1)" />
     <BlockMath math="y + 2 = -8x + 8" />
     <BlockMath math="y = -8x + 6" />
-</div>
+</MathContainer>
 
 Jadi, persamaan garis singgungnya adalah <InlineMath math="y = -8x + 6" />.
 
@@ -139,10 +139,10 @@ Jadi, persamaan garis singgungnya adalah <InlineMath math="y = -8x + 6" />.
 
     Garis singgung harus sejajar dengan garis <InlineMath math="x + 2y + 3 = 0" />. Untuk menemukan gradiennya, kita ubah dulu persamaan garis ini ke bentuk <InlineMath math="y = mx + c" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="2y = -x - 3" />
         <BlockMath math="y = -\frac{1}{2}x - \frac{3}{2}" />
-    </div>
+    </MathContainer>
 
     Dari sini, kita tahu gradien garisnya adalah <InlineMath math="m = -\frac{1}{2}" />. Karena garis singgungnya sejajar, maka gradiennya juga sama.
 
@@ -154,11 +154,11 @@ Jadi, persamaan garis singgungnya adalah <InlineMath math="y = -8x + 6" />.
 
     Kemudian, kita samakan nilai turunan ini dengan gradien yang sudah kita ketahui (<InlineMath math="m = -1/2" />) untuk menemukan absis (<InlineMath math="x" />) dari titik singgung.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="2x - \frac{31}{5} = -\frac{1}{2}" />
         <BlockMath math="2x = \frac{31}{5} - \frac{1}{2} = \frac{62 - 5}{10} = \frac{57}{10}" />
         <BlockMath math="x = \frac{57}{20}" />
-    </div>
+    </MathContainer>
 
     Setelah mendapatkan absis <InlineMath math="x=\frac{57}{20}" />, kita substitusikan nilai ini kembali ke persamaan kurva *awal* untuk menemukan ordinatnya (<InlineMath math="y" />).
 
@@ -170,12 +170,12 @@ Jadi, persamaan garis singgungnya adalah <InlineMath math="y = -8x + 6" />.
 
     Dengan titik <InlineMath math="\left(\frac{57}{20}, \frac{1981}{400}\right)" /> dan gradien <InlineMath math="m = -\frac{1}{2}" />, persamaannya adalah:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="y - \frac{1981}{400} = -\frac{1}{2}\left(x - \frac{57}{20}\right)" />
         <BlockMath math="y = -\frac{1}{2}x + \frac{57}{40} + \frac{1981}{400}" />
         <BlockMath math="y = -\frac{1}{2}x + \frac{570 + 1981}{400}" />
         <BlockMath math="y = -\frac{1}{2}x + \frac{2551}{400}" />
-    </div>
+    </MathContainer>
 
 2.  **Penyelesaian:**
 
@@ -183,11 +183,11 @@ Jadi, persamaan garis singgungnya adalah <InlineMath math="y = -8x + 6" />.
 
     Karena ordinatnya adalah 4, kita atur <InlineMath math="y=4" /> pada persamaan parabola.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="4 = 2x^2 - 3x + 5" />
         <BlockMath math="2x^2 - 3x + 1 = 0" />
         <BlockMath math="(2x-1)(x-1) = 0" />
-    </div>
+    </MathContainer>
 
     Dari faktorisasi, kita mendapatkan dua nilai absis, yaitu <InlineMath math="x=1" /> dan <InlineMath math="x=\frac{1}{2}" />. Ini berarti ada dua titik singgung: <InlineMath math="(1, 4)" /> dan <InlineMath math="\left(\frac{1}{2}, 4\right)" />. Karena itu, akan ada dua persamaan garis singgung.
 
@@ -217,10 +217,10 @@ Jadi, persamaan garis singgungnya adalah <InlineMath math="y = -8x + 6" />.
 
     Kurva memotong sumbu X saat <InlineMath math="y=0" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="0 = 3x - \frac{3}{x^2}" />
         <BlockMath math="3x = \frac{3}{x^2} \implies 3x^3 = 3 \implies x^3 = 1 \implies x=1" />
-    </div>
+    </MathContainer>
 
     Jadi, titik potong P adalah <InlineMath math="(1, 0)" />.
 
@@ -284,10 +284,10 @@ Jadi, persamaan garis singgungnya adalah <InlineMath math="y = -8x + 6" />.
 
     Kita samakan dengan gradien yang sudah kita dapatkan:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="4x - 7 = 1" />
         <BlockMath math="4x = 8 \implies x = 2" />
-    </div>
+    </MathContainer>
 
     Sekarang, cari nilai <InlineMath math="y" /> dengan memasukkan <InlineMath math="x=2" /> ke persamaan kurva:
 
@@ -299,8 +299,8 @@ Jadi, persamaan garis singgungnya adalah <InlineMath math="y = -8x + 6" />.
 
     Menggunakan titik <InlineMath math="(2, -5)" /> dan gradien <InlineMath math="m=1" />:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="y - (-5) = 1(x - 2)" />
         <BlockMath math="y + 5 = x - 2" />
         <BlockMath math="y = x - 7" />
-    </div>
+    </MathContainer>

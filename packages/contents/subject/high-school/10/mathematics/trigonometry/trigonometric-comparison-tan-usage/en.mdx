@@ -81,10 +81,10 @@ For example, if we have shadows from three objects of different heights (child, 
 
 With this equation, if we know the child's height (e.g., 114 cm), their shadow length (200 cm), and the teenager's height (148 cm), we can calculate the teenager's shadow length:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\frac{114 \text{ cm}}{200 \text{ cm}} = \frac{148 \text{ cm}}{x \text{ cm}}" />
   <BlockMath math="x \text{ cm} = \frac{148 \text{ cm} \times 200 \text{ cm}}{114 \text{ cm}} = \frac{29,600 \text{ cm}}{114 \text{ cm}} = 259.65 \text{ cm}" />
-</div>
+</MathContainer>
 
 ### Using the Tangent Formula
 
@@ -94,12 +94,12 @@ Another more direct way is to use the tangent trigonometric ratio. We know that:
 
 For example, if we have a sun elevation angle of 30° (<InlineMath math="\tan 30° = 0.57" />) and want to calculate the shadow length of a teenager with height 148 cm:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\tan \theta = \frac{\text{teenager's height}}{\text{teenager's shadow length}}" />
   <BlockMath math="\tan 30° = \frac{148 \text{ cm}}{x \text{ cm}}" />
   <BlockMath math="0.57 = \frac{148 \text{ cm}}{x \text{ cm}}" />
   <BlockMath math="x \text{ cm} = \frac{148 \text{ cm}}{0.57} = 259.65 \text{ cm}" />
-</div>
+</MathContainer>
 
 <div className="mt-4">
   <Triangle

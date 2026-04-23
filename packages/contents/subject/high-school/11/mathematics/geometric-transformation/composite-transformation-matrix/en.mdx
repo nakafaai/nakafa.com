@@ -161,10 +161,10 @@ Let:
 
 The composition of transformations is <InlineMath math="T_3 \circ T_2 \circ T_1" />. Its matrix is <InlineMath math="M = M_3 M_2 M_1" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="M_2 M_1 = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} = \begin{pmatrix} (0)(1)+(-1)(0) & (0)(0)+(-1)(-1) \\ (1)(1)+(0)(0) & (1)(0)+(0)(-1) \end{pmatrix} = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}" />
   <BlockMath math="M = M_3 (M_2 M_1) = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix} = \begin{pmatrix} (-1)(0)+(0)(1) & (-1)(1)+(0)(0) \\ (0)(0)+(-1)(1) & (0)(1)+(-1)(0) \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix}" />
-</div>
+</MathContainer>
 
 The image of <InlineMath math="P(2,5)" /> is:
 

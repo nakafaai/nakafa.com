@@ -87,12 +87,12 @@ Simplify: <InlineMath math="f(x) = \frac{6x^2}{3x}" />
 
 **Solution:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="f(x) = \frac{6x^2}{3x}" />
   <BlockMath math="= \frac{6x \cdot x}{3x}" />
   <BlockMath math="= \frac{6x}{3} \cdot \frac{x}{x}" />
   <BlockMath math="= 2x" />
-</div>
+</MathContainer>
 
 ### With Factoring
 
@@ -100,11 +100,11 @@ Simplify: <InlineMath math="f(x) = \frac{x^2 - 4}{x - 2}" />
 
 **Solution:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="f(x) = \frac{x^2 - 4}{x - 2}" />
   <BlockMath math="= \frac{(x + 2)(x - 2)}{x - 2}" />
   <BlockMath math="= x + 2" />
-</div>
+</MathContainer>
 
 Note: <InlineMath math="x \neq 2" /> (from the original domain)
 
@@ -118,13 +118,13 @@ Just like regular fractions, we need to find a common denominator first!
 
 **Solution:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\frac{2}{x} + \frac{3}{x + 1}" />
   <BlockMath math="= \frac{2(x + 1)}{x(x + 1)} + \frac{3x}{x(x + 1)}" />
   <BlockMath math="= \frac{2(x + 1) + 3x}{x(x + 1)}" />
   <BlockMath math="= \frac{2x + 2 + 3x}{x(x + 1)}" />
   <BlockMath math="= \frac{5x + 2}{x(x + 1)}" />
-</div>
+</MathContainer>
 
 ### Multiplication
 
@@ -158,32 +158,32 @@ Remember, dividing = multiplying by the reciprocal:
 
 **Answer 1:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x^2 - 9 = 0" />
   <BlockMath math="(x + 3)(x - 3) = 0" />
   <BlockMath math="x = -3 \text{ or } x = 3" />
-</div>
+</MathContainer>
 
 Domain: <InlineMath math="D_f = \{x | x \neq -3, x \neq 3, x \in \mathbb{R}\}" />
 
 **Answer 2:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="f(x) = \frac{x^2 - 1}{x + 1}" />
   <BlockMath math="= \frac{(x + 1)(x - 1)}{x + 1}" />
   <BlockMath math="= x - 1" />
-</div>
+</MathContainer>
 
 With the condition <InlineMath math="x \neq -1" />
 
 **Answer 3:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\frac{1}{x - 1} - \frac{2}{x + 1}" />
   <BlockMath math="= \frac{(x + 1) - 2(x - 1)}{(x - 1)(x + 1)}" />
   <BlockMath math="= \frac{x + 1 - 2x + 2}{(x - 1)(x + 1)}" />
   <BlockMath math="= \frac{-x + 3}{(x - 1)(x + 1)}" />
-</div>
+</MathContainer>
 
 **Answer 4:**
 

@@ -190,23 +190,23 @@ Mari kita mulai dengan parabola yang paling sederhana: **parabola dengan puncak 
 
 Keempat bentuk persamaan parabola standar adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y^2 = 4px \quad \text{(terbuka ke kanan)}" />
   <BlockMath math="y^2 = -4px \quad \text{(terbuka ke kiri)}" />
   <BlockMath math="x^2 = 4py \quad \text{(terbuka ke atas)}" />
   <BlockMath math="x^2 = -4py \quad \text{(terbuka ke bawah)}" />
-</div>
+</MathContainer>
 
 Nilai <InlineMath math="p" /> dalam persamaan ini menunjukkan **jarak dari puncak ke fokus**. Semakin besar nilai <InlineMath math="p" />, semakin "terbuka" parabola tersebut.
 
 Sebagai contoh, untuk parabola <InlineMath math="y^2 = 4px" /> (terbuka ke kanan):
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Puncak: } (0, 0)" />
   <BlockMath math="\text{Fokus: } (p, 0)" />
   <BlockMath math="\text{Direktriks: } x = -p" />
   <BlockMath math="\text{Sumbu simetri: sumbu } X" />
-</div>
+</MathContainer>
 
 > Ingat bahwa tanda <InlineMath math="p" /> menentukan arah bukaan: positif untuk kanan/atas, negatif untuk kiri/bawah.
 
@@ -302,28 +302,28 @@ Dalam aplikasi nyata, parabola tidak selalu berpusat di titik asal. Parabola bis
 
 Bentuk umum persamaan parabola dengan puncak di <InlineMath math="(h, k)" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(y-k)^2 = 4p(x-h) \quad \text{(horizontal)}" />
   <BlockMath math="(x-h)^2 = 4p(y-k) \quad \text{(vertikal)}" />
-</div>
+</MathContainer>
 
 Untuk parabola vertikal <InlineMath math="(x-h)^2 = 4p(y-k)" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Puncak: } (h, k)" />
   <BlockMath math="\text{Fokus: } (h, k+p)" />
   <BlockMath math="\text{Direktriks: } y = k-p" />
   <BlockMath math="\text{Sumbu simetri: } x = h" />
-</div>
+</MathContainer>
 
 Untuk parabola horizontal <InlineMath math="(y-k)^2 = 4p(x-h)" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Puncak: } (h, k)" />
   <BlockMath math="\text{Fokus: } (h+p, k)" />
   <BlockMath math="\text{Direktriks: } x = h-p" />
   <BlockMath math="\text{Sumbu simetri: } y = k" />
-</div>
+</MathContainer>
 
 > Tanda nilai <InlineMath math="p" /> menentukan arah bukaan parabola. Positif untuk ke atas/kanan, negatif untuk ke bawah/kiri.
 
@@ -340,13 +340,13 @@ Mari kita lihat bagaimana caranya dengan contoh.
 
 Langkah pertama adalah mengubah ke bentuk baku dengan melengkapkan kuadrat sempurna:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x^2 - 4x - 8y + 12 = 0" />
   <BlockMath math="x^2 - 4x = 8y - 12" />
   <BlockMath math="x^2 - 4x + 4 = 8y - 12 + 4" />
   <BlockMath math="(x-2)^2 = 8y - 8" />
   <BlockMath math="(x-2)^2 = 8(y-1)" />
-</div>
+</MathContainer>
 
 Dari bentuk <InlineMath math="(x-2)^2 = 8(y-1)" />, kita identifikasi:
 
@@ -443,13 +443,13 @@ Maka unsur-unsur parabola adalah:
 
 Dari analisis ini kita dapatkan:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Puncak: } (2, 1)" />
   <BlockMath math="\text{Fokus: } (2, 3)" />
   <BlockMath math="\text{Direktriks: } y = -1" />
   <BlockMath math="\text{Sumbu simetri: } x = 2" />
   <BlockMath math="\text{Arah bukaan: ke atas (karena } p = 2 > 0\text{)}" />
-</div>
+</MathContainer>
 
 ## Contoh Soal
 
@@ -461,10 +461,10 @@ Mari kita kerjakan beberapa soal untuk memperdalam pemahaman tentang parabola.
 
 Karena puncak dan fokus memiliki ordinat yang sama, parabola ini **horizontal**.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Puncak: } (h, k) = (1, -2)" />
   <BlockMath math="\text{Fokus: } (h+p, k) = (4, -2)" />
-</div>
+</MathContainer>
 
 Dari kondisi fokus, kita dapat <InlineMath math="h + p = 4" />. Substitusi <InlineMath math="h = 1" />:
 
@@ -472,10 +472,10 @@ Dari kondisi fokus, kita dapat <InlineMath math="h + p = 4" />. Substitusi <Inli
 
 Persamaan parabola horizontal adalah <InlineMath math="(y-k)^2 = 4p(x-h)" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(y-(-2))^2 = 4(3)(x-1)" />
   <BlockMath math="(y+2)^2 = 12(x-1)" />
-</div>
+</MathContainer>
 
 **Soal 2**: Parabola <InlineMath math="y^2 - 6y - 4x + 13 = 0" />. Tentukan koordinat puncak dan fokusnya.
 
@@ -483,24 +483,24 @@ Persamaan parabola horizontal adalah <InlineMath math="(y-k)^2 = 4p(x-h)" />:
 
 Lengkapkan kuadrat sempurna untuk variabel <InlineMath math="y" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y^2 - 6y - 4x + 13 = 0" />
   <BlockMath math="y^2 - 6y = 4x - 13" />
   <BlockMath math="y^2 - 6y + 9 = 4x - 13 + 9" />
   <BlockMath math="(y-3)^2 = 4x - 4" />
   <BlockMath math="(y-3)^2 = 4(x-1)" />
-</div>
+</MathContainer>
 
 Dari bentuk <InlineMath math="(y-3)^2 = 4(x-1)" />, kita identifikasi:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="h = 1, \quad k = 3" />
   <BlockMath math="4p = 4 \Rightarrow p = 1" />
-</div>
+</MathContainer>
 
 Sehingga:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Puncak: } (h, k) = (1, 3)" />
   <BlockMath math="\text{Fokus: } (h+p, k) = (1+1, 3) = (2, 3)" />
-</div>
+</MathContainer>

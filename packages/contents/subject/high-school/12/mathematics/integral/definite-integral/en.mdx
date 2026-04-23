@@ -67,12 +67,12 @@ We can factor constants out of the sigma notation, as <InlineMath math="n" /> is
 
 Next, we replace <InlineMath math="\sum_{i=1}^{n} i" /> with its series summation formula, <InlineMath math="\frac{n(n+1)}{2}" />, and then simplify the expression to make it easier to evaluate the limit.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\frac{49}{n^2} \cdot \frac{n(n+1)}{2}" />
 <BlockMath math="= \frac{49n(n+1)}{2n^2}" />
 <BlockMath math="= \frac{49(n+1)}{2n}" />
 <BlockMath math="= \frac{49}{2} \left( \frac{n+1}{n} \right) = \frac{49}{2} \left( 1 + \frac{1}{n} \right)" />
-</div>
+</MathContainer>
 
 The simplification steps above ensure we get the easiest form to evaluate the limit. First, we cancel <InlineMath math="n" /> from the numerator and denominator, then we split the fraction.
 
@@ -85,10 +85,10 @@ The simplification steps above ensure we get the easiest form to evaluate the li
 
 Finally, we take the limit as <InlineMath math="n \to \infty" /> to find the exact area.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\int_{0}^{7} x \, dx = \lim_{n \to \infty} \frac{49}{2} \left( 1 + \frac{1}{n} \right)" />
 <BlockMath math="= \frac{49}{2} \left( 1 + 0 \right)" />
 <BlockMath math="= \frac{49}{2}" />
-</div>
+</MathContainer>
 
 So, the exact area of the region under the curve <InlineMath math="f(x) = x" /> from <InlineMath math="x=0" /> to <InlineMath math="x=7" /> is **49/2** or **24.5**. This is an example of how the definite integral provides an exact answer, no longer an approximation.

@@ -401,16 +401,16 @@ Kombinasi transformasi memiliki beberapa sifat penting:
 3. Perbandingan dua urutan transformasi:
    
    **Urutan A**: Dilatasi dulu, lalu translasi
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="h_1(x) = 3x^2" />
    <BlockMath math="h_A(x) = 3x^2 + 2" />
-   </div>
+   </MathContainer>
    
    **Urutan B**: Translasi dulu, lalu dilatasi
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="h_2(x) = x^2 + 2" />
    <BlockMath math="h_B(x) = 3(x^2 + 2) = 3x^2 + 6" />
-   </div>
+   </MathContainer>
    
    Hasil berbeda: <InlineMath math="h_A(x) = 3x^2 + 2" /> dan <InlineMath math="h_B(x) = 3x^2 + 6" />.
 
@@ -478,11 +478,11 @@ Kombinasi transformasi memiliki beberapa sifat penting:
 
 5. Transformasi bertahap pada <InlineMath math="f(x) = |x|" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="f_1(x) = |x + 2|" />
    <BlockMath math="f_2(x) = -|x + 2|" />
    <BlockMath math="g(x) = -3|x + 2|" />
-   </div>
+   </MathContainer>
    
    Jadi rumus fungsi hasil transformasi adalah <InlineMath math="g(x) = -3|x + 2|" />.
 

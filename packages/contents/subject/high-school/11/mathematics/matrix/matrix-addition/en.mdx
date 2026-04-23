@@ -36,20 +36,20 @@ To add two matrices, follow these steps:
 
 Suppose we have two matrices, <InlineMath math="P" /> and <InlineMath math="Q" />, as follows:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="P = \begin{bmatrix} 1 & 5 \\ -2 & 0 \\ 4 & 7 \end{bmatrix}" />
   <BlockMath math="Q = \begin{bmatrix} 6 & -3 \\ 8 & 1 \\ -2 & 9 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Both matrices are of order <InlineMath math="3 \times 2" /> (3 rows and 2 columns), so they can be added.
 
 Then, <InlineMath math="P+Q" /> is:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="P+Q = \begin{bmatrix} 1 & 5 \\ -2 & 0 \\ 4 & 7 \end{bmatrix} + \begin{bmatrix} 6 & -3 \\ 8 & 1 \\ -2 & 9 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 1+6 & 5+(-3) \\ -2+8 & 0+1 \\ 4+(-2) & 7+9 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 7 & 2 \\ 6 & 1 \\ 2 & 16 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Thus, the sum of matrix <InlineMath math="P" /> and matrix <InlineMath math="Q" /> is the matrix <InlineMath math="\begin{bmatrix} 7 & 2 \\ 6 & 1 \\ 2 & 16 \end{bmatrix}" />.
 
@@ -103,11 +103,11 @@ Matrix addition has several important properties, similar to the properties of a
 
 Given the following matrices:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="A = \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix}" />
   <BlockMath math="B = \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix}" />
   <BlockMath math="C = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Calculate <InlineMath math="A+B" /> and <InlineMath math="B+A" />. Then, determine if <InlineMath math="A+C" /> can be calculated and provide your explanation.
 
@@ -127,11 +127,11 @@ If <InlineMath math="P = \begin{bmatrix} 1 & -2 \\ 3 & 0 \end{bmatrix}" />, dete
 
 Given matrices:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="A = \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix}" />
   <BlockMath math="B = \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix}" />
   <BlockMath math="C = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Addition of matrix <InlineMath math="A" /> and <InlineMath math="B" /> (<InlineMath math="A+B" />):
 
@@ -163,10 +163,10 @@ Given the matrix addition:
 
 Perform matrix addition on the left side:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\begin{bmatrix} 2x+4 & 5+(-2) \\ -1+z & 3y+7 \end{bmatrix} = \begin{bmatrix} 10 & 3 \\ 6 & 1 \end{bmatrix}" />
   <BlockMath math="\begin{bmatrix} 2x+4 & 3 \\ -1+z & 3y+7 \end{bmatrix} = \begin{bmatrix} 10 & 3 \\ 6 & 1 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Based on the equality of two matrices, corresponding elements must be equal:
 
@@ -207,10 +207,10 @@ The additive inverse of <InlineMath math="P" />, which is <InlineMath math="-P" 
 
 Proof that <InlineMath math="P + (-P) = O" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="P + (-P) = \begin{bmatrix} 1 & -2 \\ 3 & 0 \end{bmatrix} + \begin{bmatrix} -1 & 2 \\ -3 & 0 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 1+(-1) & -2+2 \\ 3+(-3) & 0+0 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 0 & 0 \\ 0 & 0 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 The result is the zero matrix <InlineMath math="O" /> of order <InlineMath math="2 \times 2" />. Proven.

@@ -65,10 +65,10 @@ Let's use the card example:
 
 So, the probability of getting a Heart OR a King is:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="P(A \cup B) = P(A) + P(B) - P(A \cap B)" />
   <BlockMath math="= \frac{13}{52} + \frac{4}{52} - \frac{1}{52}" />
   <BlockMath math="= \frac{16}{52} = \frac{4}{13}" />
-</div>
+</MathContainer>
 
 See? We subtract <InlineMath math="1/52" /> so the King of Hearts isn't counted twice.

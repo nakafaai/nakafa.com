@@ -16,9 +16,9 @@ Imagine arranging a photo line for all students in a class. If there are 5 stude
 
 For permutation of n items from n objects, **the formula used** is:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="nP_n = \frac{n!}{(n-n)!} = \frac{n!}{0!}" />
-</div>
+</MathContainer>
 
 **Explanation of why this formula becomes simple:**
 - <InlineMath math="(n-n) = 0" />, so the denominator becomes <InlineMath math="0!" />
@@ -27,17 +27,17 @@ For permutation of n items from n objects, **the formula used** is:
 
 So, the formula is:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="nP_n = n!" />
-</div>
+</MathContainer>
 
 ## Factorial Concept
 
 **Factorial** is the consecutive multiplication of positive integers. Factorial of number n is written as <InlineMath math="n!" /> and defined as:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="n! = n \times (n-1) \times (n-2) \times \cdots \times 2 \times 1" />
-</div>
+</MathContainer>
 
 **Special rules** for factorial:
 - <InlineMath math="0! = 1" /> (based on mathematical definition)
@@ -51,17 +51,17 @@ Suppose there are 4 students who will fill 4 positions in class leadership: pres
 
 The number of ways to arrange the leadership is:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="4P_4 = 4! = 4 \times 3 \times 2 \times 1 = 24 \text{ ways}" />
-</div>
+</MathContainer>
 
 ### Seating Arrangement
 
 A family consisting of 6 members will sit in a row on a sofa for a family photo. The number of ways they can be arranged is:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="6P_6 = 6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720 \text{ ways}" />
-</div>
+</MathContainer>
 
 ## Systematic Calculation Steps
 
@@ -76,12 +76,12 @@ To calculate permutation of n items from n objects, follow these steps:
 
 Calculating <InlineMath math="5!" /> with clear steps:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="5! = 5 \times 4 \times 3 \times 2 \times 1" />
 <BlockMath math="= 20 \times 3 \times 2 \times 1" />
 <BlockMath math="= 60 \times 2 \times 1" />
 <BlockMath math="= 120 \times 1 = 120" />
-</div>
+</MathContainer>
 
 ## Difference from Partial Permutation
 
@@ -94,11 +94,11 @@ Calculating <InlineMath math="5!" /> with clear steps:
 
 **Detailed calculation for partial permutation**:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="5P_3 = \frac{5!}{(5-3)!} = \frac{5!}{2!}" />
 <BlockMath math="= \frac{5 \times 4 \times 3 \times 2 \times 1}{2 \times 1}" />
 <BlockMath math="= \frac{120}{2} = 60 \text{ ways}" />
-</div>
+</MathContainer>
 
 In permutation of n items from n objects, **no objects are left over** and **all positions must be filled**.
 
@@ -115,21 +115,21 @@ In permutation of n items from n objects, **no objects are left over** and **all
 ### Answer Key
 
 1. Given: 7 models will be arranged in one line (all models used)
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="7P_7 = 7! = 7 \times 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 5040 \text{ ways}" />
-   </div>
+   </MathContainer>
 
 2. Given: 5 running participants with different finishing order (all participants finish)
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="5P_5 = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120 \text{ possible orders}" />
-   </div>
+   </MathContainer>
 
 3. Given: 6 types of food will be arranged in one straight line (all food arranged)
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="6P_6 = 6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720 \text{ ways}" />
-   </div>
+   </MathContainer>
 
 4. Given: 8 different books will be arranged on one shelf (all books arranged)
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="8P_8 = 8! = 8 \times 7 \times 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 40320 \text{ ways}" />
-   </div>
+   </MathContainer>

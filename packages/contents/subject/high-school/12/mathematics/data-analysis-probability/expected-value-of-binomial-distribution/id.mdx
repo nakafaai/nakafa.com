@@ -42,10 +42,10 @@ Karena jumlah total keberhasilan (<InlineMath math="X" />) adalah jumlah dari se
 
 Dengan menggunakan sifat nilai harapan, kita bisa menjumlahkan semua nilai harapan dari setiap percobaan:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="E(X) = E(I_1) + E(I_2) + ... + E(I_n)" />
 <BlockMath math="E(X) = \underbrace{p + p + ... + p}_{n \text{ kali}} = np" />
-</div>
+</MathContainer>
 
 Terbukti, kan? Nilai harapan totalnya adalah hasil kali dari jumlah percobaan dengan peluang keberhasilannya.
 
@@ -68,11 +68,11 @@ Pertama, mari kita pastikan bahwa ini memenuhi syarat distribusi binomial:
 
 Sekarang kita identifikasi parameternya:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="S = \{1, 2, 3, 4, 5, 6\}" />
 <BlockMath math="p = \frac{1}{6}" />
 <BlockMath math="n = 7" />
-</div>
+</MathContainer>
 
 Sekarang kita bisa langsung hitung nilai harapannya menggunakan rumus:
 

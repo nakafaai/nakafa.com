@@ -38,21 +38,21 @@ Untuk setiap <InlineMath math="a, b \neq 0" /> dan <InlineMath math="m" /> bilan
 
 _Metode 1:_
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(ab)^m = \underbrace{ab \times ab \times ab \times \ldots \times ab}_{m\text{ faktor}}" />
   <BlockMath math="(ab)^m = \underbrace{a \times a \times a \times \ldots \times a}_{m\text{ faktor}} \times \underbrace{b \times b \times b \times \ldots \times b}_{m\text{ faktor}}" />
   <BlockMath math="(ab)^m = a^m \times b^m" />
-</div>
+</MathContainer>
 
 _Metode 2:_
 
 Kita dapat mengambil beberapa contoh dengan nilai <InlineMath math="m, a" /> dan <InlineMath math="b" /> tertentu
 untuk melihat pola yang terbentuk. Misalnya dengan <InlineMath math="m=2, a=3, b=4" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(3 \cdot 4)^2 = 12^2 = 144" />
   <BlockMath math="3^2 \cdot 4^2 = 9 \cdot 16 = 144" />
-</div>
+</MathContainer>
 
 ### Sifat 5
 
@@ -62,11 +62,11 @@ Untuk setiap <InlineMath math="a \neq 0, b \neq 0" /> dan <InlineMath math="m" /
 
 **Pembuktian:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\left(\frac{a}{b}\right)^m = \underbrace{\frac{a}{b} \times \frac{a}{b} \times \frac{a}{b} \times \ldots \times \frac{a}{b}}_{m\text{ faktor}}" />
   <BlockMath math="\left(\frac{a}{b}\right)^m = \frac{\underbrace{a \times a \times a \times \ldots \times a}_{m\text{ faktor}}}{\underbrace{b \times b \times b \times \ldots \times b}_{m\text{ faktor}}}" />
   <BlockMath math="\left(\frac{a}{b}\right)^m = \frac{a^m}{b^m}" />
-</div>
+</MathContainer>
 
 ### Sifat 6
 
@@ -78,10 +78,10 @@ Untuk setiap <InlineMath math="a > 0" />, <InlineMath math="\frac{m}{n}" /> dan 
 
 Dengan menggunakan Sifat 1, kita memperoleh:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(a^{\frac{m}{n}})(a^{\frac{p}{n}}) = a^{\frac{m}{n} + \frac{p}{n}}" />
   <BlockMath math="(a^{\frac{m}{n}})(a^{\frac{p}{n}}) = a^{\frac{m+p}{n}}" />
-</div>
+</MathContainer>
 
 ### Sifat 7
 
@@ -93,11 +93,11 @@ Untuk setiap <InlineMath math="a > 0" />, <InlineMath math="\frac{m}{n}" /> dan 
 
 Dengan menggunakan Sifat 1, kita perlu menyamakan penyebut dari pangkat:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(a^{\frac{m}{n}})(a^{\frac{p}{q}}) = a^{\frac{m}{n} + \frac{p}{q}}" />
   <BlockMath math="(a^{\frac{m}{n}})(a^{\frac{p}{q}}) = a^{\frac{mq}{nq} + \frac{pn}{nq}}" />
   <BlockMath math="(a^{\frac{m}{n}})(a^{\frac{p}{q}}) = a^{\frac{mq + pn}{nq}}" />
-</div>
+</MathContainer>
 
 ## Contoh Soal
 
@@ -107,28 +107,28 @@ Dengan menggunakan Sifat 1, kita perlu menyamakan penyebut dari pangkat:
 
     Solusi: Menggunakan Sifat 3, <InlineMath math="(a^m)^n = a^{m \cdot n}" />
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(3^4)^2 = 3^{4 \cdot 2} = 3^8" />
       <BlockMath math="p = 8" />
-    </div>
+    </MathContainer>
 
 2. <InlineMath math="b^4 \cdot b^5 = b^9" />
 
     Solusi: Menggunakan Sifat 1, <InlineMath math="a^m \cdot a^n = a^{m+n}" />
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="b^4 \cdot b^5 = b^{4+5} = b^9" />
       <BlockMath math="\text{Sehingga persamaan terbukti benar.}" />
-    </div>
+    </MathContainer>
 
 3. <InlineMath math="(3\pi)^p = 27\pi^3" />
 
     Solusi: Mengubah <InlineMath math="27\pi^3" /> menjadi <InlineMath math="3^3 \cdot \pi^3" />
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="27\pi^3 = 3^3 \cdot \pi^3 = (3\pi)^3" />
       <BlockMath math="p = 3" />
-    </div>
+    </MathContainer>
 
 ### Menyederhanakan
 

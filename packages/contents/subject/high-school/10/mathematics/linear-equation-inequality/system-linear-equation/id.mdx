@@ -65,11 +65,11 @@ Masukkan persamaan (3) ke persamaan (1):
 
 **Langkah 3**: Selesaikan persamaan hasil substitusi.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="20 - 2y + 3y = 21" />
   <BlockMath math="20 + y = 21" />
   <BlockMath math="y = 1 \ldots (4)" />
-</div>
+</MathContainer>
 
 **Langkah 4**: Substitusi balik untuk mendapatkan nilai variabel lainnya.
 
@@ -93,19 +93,19 @@ Kalikan persamaan (2) dengan 2 untuk menyamakan koefisien <InlineMath math="x" /
 
 **Langkah 2**: Eliminasi variabel dengan mengurangkan persamaan.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(1) - (3): (2x + 3y) - (2x + 2y) = 21 - 20" />
   <BlockMath math="y = 1 \ldots (4)" />
-</div>
+</MathContainer>
 
 **Langkah 3**: Gunakan nilai <InlineMath math="y" /> untuk menemukan <InlineMath math="x" />.
 
 Substitusi nilai <InlineMath math="y = 1" /> dari persamaan (4) ke persamaan (2):
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x + 1 = 10" />
   <BlockMath math="x = 9" />
-</div>
+</MathContainer>
 
 Jadi solusinya adalah <InlineMath math="x = 9" /> dan <InlineMath math="y = 1" />.
 
@@ -142,17 +142,17 @@ Jika Wijaya mencetak 27 poin, melakukan 16 lemparan dengan 6 di antaranya lempar
 
 Dengan substitusi <InlineMath math="a = 6" /> ke persamaan kedua:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="6 + b + c = 16" />
   <BlockMath math="b + c = 10" />
-</div>
+</MathContainer>
 
 Substitusi ke persamaan pertama:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="6 + 2b + 3c = 27" />
   <BlockMath math="2b + 3c = 21" />
-</div>
+</MathContainer>
 
 Dari dua persamaan:
 

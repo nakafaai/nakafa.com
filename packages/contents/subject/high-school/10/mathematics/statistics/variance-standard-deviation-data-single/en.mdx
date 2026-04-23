@@ -121,26 +121,26 @@ Let's recalculate the variance for Group 1 using this formula:
 
 1.  Calculate <InlineMath math="\sum x_i^2" /> for Group 1:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="13^2 + 14^2 + 15^2 + 15^2 + 16^2 + 16^2 + 17^2 + 17^2 + 17^2 + 17^2 + 17^2 + 18^2" />
       <BlockMath math="= 169 + 196 + 225 + 225 + 256 + 256 + 289 + 289 + 289 + 289 + 289 + 324 = 3096" />
-    </div>
+    </MathContainer>
 
 2.  Calculate <InlineMath math="\sum x_i" /> for Group 1:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="13 + 14 + 15 + 15 + 16 + 16 + 17 + 17 + 17 + 17 + 17 + 18" />
       <BlockMath math="= 192" />
-    </div>
+    </MathContainer>
 
     We also know <InlineMath math="n=12" />.
 
 3.  Plug into the alternative formula:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="\sigma^2 = \frac{3096}{12} - \left( \frac{192}{12} \right)^2" />
       <BlockMath math="\sigma^2 = 258 - (16)^2" />
       <BlockMath math="\sigma^2 = 258 - 256 = 2" />
-    </div>
+    </MathContainer>
 
 The result is **exactly the same** as the first method! (<InlineMath math="\sigma^2 = 2" />).

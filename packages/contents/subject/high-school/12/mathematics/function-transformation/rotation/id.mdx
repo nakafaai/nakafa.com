@@ -19,10 +19,10 @@ Bayangkan seperti memutar sebuah roda. Setiap titik pada roda akan bergerak meng
 
 Untuk rotasi terhadap titik pusat <InlineMath math="(a, b)" /> dengan sudut <InlineMath math="\theta" />, rumus transformasinya adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="x' = (x - a) \cos \theta - (y - b) \sin \theta + a" />
 <BlockMath math="y' = (x - a) \sin \theta + (y - b) \cos \theta + b" />
-</div>
+</MathContainer>
 
 Dimana:
 - <InlineMath math="(x, y)" /> adalah koordinat titik asal
@@ -223,10 +223,10 @@ Untuk menentukan hasil rotasi suatu fungsi, ikuti langkah berikut:
 
 1. Menggunakan rumus rotasi 90°:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="(x, y) \rightarrow (-y, x)" />
    <BlockMath math="(3, 4) \rightarrow (-4, 3)" />
-   </div>
+   </MathContainer>
    
    Jadi hasil rotasi adalah <InlineMath math="(-4, 3)" />.
 
@@ -272,10 +272,10 @@ Untuk menentukan hasil rotasi suatu fungsi, ikuti langkah berikut:
 
 2. Titik puncak asli dirotasi 180°:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="(x, y) \rightarrow (-x, -y)" />
    <BlockMath math="(1, 0) \rightarrow (-1, 0)" />
-   </div>
+   </MathContainer>
    
    Koordinat titik puncak hasil rotasi adalah <InlineMath math="(-1, 0)" />.
 
@@ -324,13 +324,13 @@ Untuk menentukan hasil rotasi suatu fungsi, ikuti langkah berikut:
 
 3. Ambil dua titik pada garis dan rotasi 270°:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="(x, y) \rightarrow (y, -x)" />
    <BlockMath math="(0, -2) \rightarrow (-2, 0)" />
    <BlockMath math="(1, 1) \rightarrow (1, -1)" />
    <BlockMath math="m = \frac{-1 - 0}{1 - (-2)} = \frac{-1}{3}" />
    <BlockMath math="y = -\frac{1}{3}x - \frac{2}{3}" />
-   </div>
+   </MathContainer>
 
    Maka persamaan garis hasil rotasi adalah <InlineMath math="y = -\frac{1}{3}x - \frac{2}{3}" />.
 
@@ -379,14 +379,14 @@ Untuk menentukan hasil rotasi suatu fungsi, ikuti langkah berikut:
 
 4. Menggunakan rumus rotasi terhadap titik dengan sudut 60°:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="x' = (x-a) \cos \theta - (y-b) \sin \theta + a" />
    <BlockMath math="y' = (x-a) \sin \theta + (y-b) \cos \theta + b" />
    <BlockMath math="x' = (2-1) \cdot \frac{1}{2} - (5-1) \cdot \frac{\sqrt{3}}{2} + 1" />
    <BlockMath math="x' = \frac{3}{2} - 2\sqrt{3}" />
    <BlockMath math="y' = (2-1) \cdot \frac{\sqrt{3}}{2} + (5-1) \cdot \frac{1}{2} + 1" />
    <BlockMath math="y' = 3 + \frac{\sqrt{3}}{2}" />
-   </div>
+   </MathContainer>
    
    Koordinat hasil rotasi: <InlineMath math="(\frac{3}{2} - 2\sqrt{3}, 3 + \frac{\sqrt{3}}{2})" />
 
@@ -437,10 +437,10 @@ Untuk menentukan hasil rotasi suatu fungsi, ikuti langkah berikut:
 
 5. Fungsi <InlineMath math="y = \sqrt{x}" /> dirotasi 90° menjadi:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="x = -\sqrt{y}" />
    <BlockMath math="y = x^2 \text{ untuk } x \leq 0" />
-   </div>
+   </MathContainer>
    
    Grafik hasil rotasi berbentuk parabola yang terbuka ke atas dengan domain <InlineMath math="x \leq 0" /> dan range <InlineMath math="y \geq 0" />. Ini adalah refleksi dari parabola <InlineMath math="y = x^2" /> terhadap sumbu y.
 

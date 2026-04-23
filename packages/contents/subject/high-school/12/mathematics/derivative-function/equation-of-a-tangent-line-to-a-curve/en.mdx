@@ -53,12 +53,12 @@ Now we have everything we need:
 -   Gradient <InlineMath math="m = -8" />
 
 Plug them into the line equation formula:
-<div className="flex flex-col gap-4">
+<MathContainer>
     <BlockMath math="y - b = m(x - a)" />
     <BlockMath math="y - (-2) = -8(x - 1)" />
     <BlockMath math="y + 2 = -8x + 8" />
     <BlockMath math="y = -8x + 6" />
-</div>
+</MathContainer>
 
 So, the equation of the tangent line is <InlineMath math="y = -8x + 6" />.
 
@@ -139,10 +139,10 @@ So, the equation of the tangent line is <InlineMath math="y = -8x + 6" />.
 
     The tangent line must be parallel to the line <InlineMath math="x + 2y + 3 = 0" />. To find its gradient, let's first convert this line's equation into the slope-intercept form <InlineMath math="y = mx + c" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="2y = -x - 3" />
         <BlockMath math="y = -\frac{1}{2}x - \frac{3}{2}" />
-    </div>
+    </MathContainer>
 
     From this, we know the gradient of the line is <InlineMath math="m = -\frac{1}{2}" />. Since the tangent line is parallel, its gradient is the same.
 
@@ -154,11 +154,11 @@ So, the equation of the tangent line is <InlineMath math="y = -8x + 6" />.
 
     Next, we set this derivative equal to the gradient we know (<InlineMath math="m = -1/2" />) to find the x-coordinate of the point of tangency.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="2x - \frac{31}{5} = -\frac{1}{2}" />
         <BlockMath math="2x = \frac{31}{5} - \frac{1}{2} = \frac{62 - 5}{10} = \frac{57}{10}" />
         <BlockMath math="x = \frac{57}{20}" />
-    </div>
+    </MathContainer>
 
     After getting the x-coordinate <InlineMath math="x=\frac{57}{20}" />, we substitute this value back into the *original* curve equation to find its y-coordinate.
 
@@ -170,12 +170,12 @@ So, the equation of the tangent line is <InlineMath math="y = -8x + 6" />.
 
     With the point <InlineMath math="\left(\frac{57}{20}, \frac{1981}{400}\right)" /> and gradient <InlineMath math="m = -\frac{1}{2}" />, the equation is:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="y - \frac{1981}{400} = -\frac{1}{2}\left(x - \frac{57}{20}\right)" />
         <BlockMath math="y = -\frac{1}{2}x + \frac{57}{40} + \frac{1981}{400}" />
         <BlockMath math="y = -\frac{1}{2}x + \frac{570 + 1981}{400}" />
         <BlockMath math="y = -\frac{1}{2}x + \frac{2551}{400}" />
-    </div>
+    </MathContainer>
 
 2.  **Solution:**
 
@@ -183,11 +183,11 @@ So, the equation of the tangent line is <InlineMath math="y = -8x + 6" />.
 
     Since the ordinate is 4, we set <InlineMath math="y=4" /> in the parabola's equation.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="4 = 2x^2 - 3x + 5" />
         <BlockMath math="2x^2 - 3x + 1 = 0" />
         <BlockMath math="(2x-1)(x-1) = 0" />
-    </div>
+    </MathContainer>
 
     From factorization, we get two x-values: <InlineMath math="x=1" /> and <InlineMath math="x=\frac{1}{2}" />. This means there are two points of tangency: <InlineMath math="(1, 4)" /> and <InlineMath math="\left(\frac{1}{2}, 4\right)" />. Therefore, there will be two tangent line equations.
 
@@ -217,10 +217,10 @@ So, the equation of the tangent line is <InlineMath math="y = -8x + 6" />.
 
     The curve intersects the X-axis when <InlineMath math="y=0" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="0 = 3x - \frac{3}{x^2}" />
         <BlockMath math="3x = \frac{3}{x^2} \implies 3x^3 = 3 \implies x^3 = 1 \implies x=1" />
-    </div>
+    </MathContainer>
 
     So, the intersection point P is <InlineMath math="(1, 0)" />.
 
@@ -284,10 +284,10 @@ So, the equation of the tangent line is <InlineMath math="y = -8x + 6" />.
 
     We set it equal to the gradient we found:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="4x - 7 = 1" />
         <BlockMath math="4x = 8 \implies x = 2" />
-    </div>
+    </MathContainer>
 
     Now, find the <InlineMath math="y" />-value by plugging <InlineMath math="x=2" /> into the curve's equation:
 
@@ -299,8 +299,8 @@ So, the equation of the tangent line is <InlineMath math="y = -8x + 6" />.
 
     Using the point <InlineMath math="(2, -5)" /> and gradient <InlineMath math="m=1" />:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="y - (-5) = 1(x - 2)" />
         <BlockMath math="y + 5 = x - 2" />
         <BlockMath math="y = x - 7" />
-    </div>
+    </MathContainer>

@@ -48,10 +48,10 @@ The most common method is to factor the numerator and denominator, then simplify
 
 Direct substitution gives <InlineMath math="\frac{0}{0}" />. Let's factor:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="x^2 - 4 = (x + 2)(x - 2)" />
 <BlockMath math="\lim_{x \to 2} \frac{x^2 - 4}{x - 2} = \lim_{x \to 2} \frac{(x + 2)(x - 2)}{x - 2}" />
-</div>
+</MathContainer>
 
 Since <InlineMath math="x" /> approaches 2 (not equal to 2), we can cancel the factor <InlineMath math="(x - 2)" />:
 
@@ -65,17 +65,17 @@ For limits involving radical forms, we often need to rationalize. Direct substit
 
 Direct substitution:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\frac{\sqrt{1} - 1}{1 - 1} = \frac{1 - 1}{0} = \frac{0}{0} \text{ (indeterminate form)}" />
-</div>
+</MathContainer>
 
 We rationalize by multiplying with the **conjugate** <InlineMath math="\sqrt{x} + 1" />. The purpose is to eliminate the radical form in the numerator using the formula <InlineMath math="(a-b)(a+b) = a^2 - b^2" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\lim_{x \to 1} \frac{\sqrt{x} - 1}{x - 1} \cdot \frac{\sqrt{x} + 1}{\sqrt{x} + 1}" />
 <BlockMath math="= \lim_{x \to 1} \frac{(\sqrt{x} - 1)(\sqrt{x} + 1)}{(x - 1)(\sqrt{x} + 1)}" />
 <BlockMath math="= \lim_{x \to 1} \frac{(\sqrt{x})^2 - 1^2}{(x - 1)(\sqrt{x} + 1)} = \lim_{x \to 1} \frac{x - 1}{(x - 1)(\sqrt{x} + 1)}" />
-</div>
+</MathContainer>
 
 Since <InlineMath math="x \neq 1" /> (approaching 1), we can cancel <InlineMath math="(x - 1)" />:
 
@@ -91,22 +91,22 @@ The limit properties we have learned can be applied systematically:
 
 Direct substitution:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\frac{3^2 - 9}{3^2 + 2(3) - 15} = \frac{9 - 9}{9 + 6 - 15} = \frac{0}{0} \text{ (indeterminate form)}" /> 
-</div>
+</MathContainer>
 
 Let's factor both. For <InlineMath math="x^2 + 2x - 15" />, we find two numbers that when multiplied give <InlineMath math="-15" /> and when added give <InlineMath math="2" />. Those numbers are <InlineMath math="5" /> and <InlineMath math="-3" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="x^2 - 9 = (x - 3)(x + 3)" />
 <BlockMath math="x^2 + 2x - 15 = x^2 + 5x - 3x - 15 = x(x + 5) - 3(x + 5) = (x - 3)(x + 5)" />
-</div>
+</MathContainer>
 
 Therefore:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\lim_{x \to 3} \frac{(x - 3)(x + 3)}{(x - 3)(x + 5)} = \lim_{x \to 3} \frac{x + 3}{x + 5}" />
-</div>
+</MathContainer>
 
 Substitute <InlineMath math="x = 3" />: <InlineMath math="\frac{3 + 3}{3 + 5} = \frac{6}{8} = \frac{3}{4}" />
 
@@ -140,28 +140,28 @@ Polynomial functions are continuous at all points, while rational functions are 
 
    Since this is a polynomial function that is continuous at all points, we can substitute directly:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{x \to 2} (x^4 - 5x^3 + x^2 - 7) = 2^4 - 5(2^3) + 2^2 - 7" />
    <BlockMath math="= 16 - 5(8) + 4 - 7 = 16 - 40 + 4 - 7 = -27" />
-   </div>
+   </MathContainer>
 
 2. **Solution:**
 
    Since this is a rational function with a non-zero denominator at <InlineMath math="x = 2" />, use direct substitution:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{x \to 2} \frac{x^2 - 6x + 8}{x^2 + 16x + 28} = \frac{2^2 - 6(2) + 8}{2^2 + 16(2) + 28}" />
    <BlockMath math="= \frac{4 - 12 + 8}{4 + 32 + 28} = \frac{0}{64} = 0" />
-   </div>
+   </MathContainer>
 
 3. **Solution:**
 
    Direct substitution gives <InlineMath math="\frac{0}{0}" />. Let's factor the numerator:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="x^2 - 2x + 1 = (x - 1)^2" />
    <BlockMath math="\lim_{x \to 1} \frac{(x - 1)^2}{x - 1} = \lim_{x \to 1} (x - 1) = 1 - 1 = 0" />
-   </div>
+   </MathContainer>
 
 4. **Solution:**
 
@@ -181,9 +181,9 @@ Polynomial functions are continuous at all points, while rational functions are 
    
    Use rationalization by multiplying with the conjugate <InlineMath math="\sqrt{x + 4} + 2" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{x \to 0} \frac{\sqrt{x + 4} - 2}{x} \cdot \frac{\sqrt{x + 4} + 2}{\sqrt{x + 4} + 2}" />
    <BlockMath math="= \lim_{x \to 0} \frac{(\sqrt{x + 4})^2 - 2^2}{x(\sqrt{x + 4} + 2)} = \lim_{x \to 0} \frac{(x + 4) - 4}{x(\sqrt{x + 4} + 2)}" />
    <BlockMath math="= \lim_{x \to 0} \frac{x}{x(\sqrt{x + 4} + 2)} = \lim_{x \to 0} \frac{1}{\sqrt{x + 4} + 2}" />
    <BlockMath math="= \frac{1}{\sqrt{0 + 4} + 2} = \frac{1}{\sqrt{4} + 2} = \frac{1}{2 + 2} = \frac{1}{4}" />
-   </div>
+   </MathContainer>
