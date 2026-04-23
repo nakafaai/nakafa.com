@@ -311,5 +311,15 @@ describe("conversation/data/transcript-scroll", () => {
       align: "start",
       smooth: false,
     });
+
+    expect(
+      controller.scrollToPost(firstPost._id, {
+        behavior: "instant",
+      })
+    ).toBe(true);
+    expect(handle.scrollToIndex).toHaveBeenLastCalledWith(2, {
+      align: "center",
+      smooth: false,
+    });
   });
 });

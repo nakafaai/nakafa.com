@@ -42,7 +42,11 @@ function resolveScrollMode({
     return false;
   }
 
-  return behavior !== "auto";
+  if (behavior === "auto" || behavior === "instant") {
+    return false;
+  }
+
+  return true;
 }
 
 /**
