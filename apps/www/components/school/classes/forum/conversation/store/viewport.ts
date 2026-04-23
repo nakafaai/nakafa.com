@@ -1,3 +1,4 @@
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { createStore } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import {
@@ -6,18 +7,22 @@ import {
 } from "@/components/school/classes/forum/conversation/data/view";
 
 interface State {
-  backOrigin: ConversationView | null;
-  hasPendingLatestPosts: boolean;
+  backStack: ConversationView[];
+  hasOverflow: boolean;
+  highlightedPostId: Id<"schoolClassForumPosts"> | null;
   isAtBottom: boolean;
-  mode: "focused" | "live";
+  settledView: ConversationView | null;
 }
 
 interface Actions {
-  clearBackOrigin: () => void;
-  setBackOrigin: (view: ConversationView | null) => void;
-  setMode: (mode: State["mode"]) => void;
+  clearBackStack: () => void;
+  clearHighlightedPost: () => void;
+  highlightPost: (postId: Id<"schoolClassForumPosts">) => void;
+  popBackView: () => ConversationView | null;
+  pushBackView: (view: ConversationView) => void;
+  setSettledView: (view: ConversationView | null) => void;
   updateViewport: (state: {
-    hasPendingLatestPosts?: boolean;
+    hasOverflow?: boolean;
     isAtBottom?: boolean;
   }) => void;
 }
@@ -25,64 +30,100 @@ interface Actions {
 export type ViewportStore = State & Actions;
 
 const initialState: State = {
-  backOrigin: null,
-  hasPendingLatestPosts: false,
+  backStack: [],
+  hasOverflow: false,
+  highlightedPostId: null,
   isAtBottom: true,
-  mode: "live",
+  settledView: null,
 };
 
-/** Creates the per-conversation UI-intent store for the transcript viewport. */
+/** Creates the per-conversation UI-intent store for transcript navigation state. */
 export function createViewportStore() {
   return createStore<ViewportStore>()(
     immer((set, get) => ({
       ...initialState,
 
-      clearBackOrigin: () => {
-        if (!get().backOrigin) {
+      clearBackStack: () => {
+        if (get().backStack.length === 0) {
           return;
         }
 
         set((state) => {
-          state.backOrigin = null;
+          state.backStack = [];
         });
       },
 
-      setBackOrigin: (view) => {
-        if (areConversationViewsEqual(get().backOrigin, view)) {
+      clearHighlightedPost: () => {
+        if (!get().highlightedPostId) {
           return;
         }
 
         set((state) => {
-          state.backOrigin = view;
+          state.highlightedPostId = null;
         });
       },
 
-      setMode: (mode) => {
-        if (get().mode === mode) {
+      highlightPost: (postId) => {
+        if (get().highlightedPostId === postId) {
           return;
         }
 
         set((state) => {
-          state.mode = mode;
+          state.highlightedPostId = postId;
+        });
+      },
+
+      popBackView: () => {
+        const view = get().backStack.at(-1) ?? null;
+
+        if (!view) {
+          return null;
+        }
+
+        set((state) => {
+          state.backStack.pop();
+        });
+
+        return view;
+      },
+
+      pushBackView: (view) => {
+        const current = get().backStack.at(-1);
+
+        if (areConversationViewsEqual(current, view)) {
+          return;
+        }
+
+        set((state) => {
+          state.backStack.push(view);
+        });
+      },
+
+      setSettledView: (view) => {
+        if (areConversationViewsEqual(get().settledView, view)) {
+          return;
+        }
+
+        set((state) => {
+          state.settledView = view;
         });
       },
 
       updateViewport: (viewport) => {
         const current = get();
-        const nextHasPendingLatestPosts =
-          viewport.hasPendingLatestPosts ?? current.hasPendingLatestPosts;
+        const nextHasOverflow = viewport.hasOverflow ?? current.hasOverflow;
         const nextIsAtBottom = viewport.isAtBottom ?? current.isAtBottom;
 
         if (
-          nextHasPendingLatestPosts === current.hasPendingLatestPosts &&
+          nextHasOverflow === current.hasOverflow &&
           nextIsAtBottom === current.isAtBottom
         ) {
           return;
         }
 
         set((state) => {
-          if (viewport.hasPendingLatestPosts !== undefined) {
-            state.hasPendingLatestPosts = viewport.hasPendingLatestPosts;
+          if (viewport.hasOverflow !== undefined) {
+            state.hasOverflow = viewport.hasOverflow;
           }
 
           if (viewport.isAtBottom !== undefined) {

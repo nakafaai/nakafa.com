@@ -2,29 +2,25 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
-  forumPostsByAuthorSequence,
-  forumPostsBySequence,
-} from "@repo/backend/convex/classes/forums/aggregate";
-import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 const FORUM_CREATED_AT = Date.UTC(2026, 3, 18, 8, 0, 0);
 
 async function insertSchool(ctx: MutationCtx, userId: Id<"users">) {
   return await ctx.db.insert("schools", {
-    name: "Nakafa School",
-    slug: `nakafa-${userId}`,
-    email: `${userId}@example.com`,
     city: "Jakarta",
-    province: "DKI Jakarta",
-    type: "high-school",
+    createdBy: userId,
     currentStudents: 0,
     currentTeachers: 0,
+    email: `${userId}@example.com`,
+    name: "Nakafa School",
+    province: "DKI Jakarta",
+    slug: `nakafa-${userId}`,
+    type: "high-school",
     updatedAt: FORUM_CREATED_AT,
-    createdBy: userId,
     updatedBy: userId,
   });
 }
@@ -35,65 +31,65 @@ async function insertClass(
   userId: Id<"users">
 ) {
   return await ctx.db.insert("schoolClasses", {
-    schoolId,
-    name: "Class 10A",
-    subject: "Mathematics",
-    year: "2026/2027",
+    createdBy: userId,
     image: "retro",
     isArchived: false,
-    visibility: "public",
+    name: "Class 10A",
+    schoolId,
     studentCount: 0,
+    subject: "Mathematics",
     teacherCount: 0,
     updatedAt: FORUM_CREATED_AT,
-    createdBy: userId,
     updatedBy: userId,
+    visibility: "public",
+    year: "2026/2027",
   });
 }
 
 async function insertMemberships(
   ctx: MutationCtx,
   {
+    authorId,
     classId,
     schoolId,
     viewerId,
-    authorId,
   }: {
+    authorId: Id<"users">;
     classId: Id<"schoolClasses">;
     schoolId: Id<"schools">;
     viewerId: Id<"users">;
-    authorId: Id<"users">;
   }
 ) {
   await ctx.db.insert("schoolMembers", {
-    schoolId,
-    userId: viewerId,
-    role: "student",
-    status: "active",
     joinedAt: FORUM_CREATED_AT,
+    role: "student",
+    schoolId,
+    status: "active",
     updatedAt: FORUM_CREATED_AT,
+    userId: viewerId,
   });
   await ctx.db.insert("schoolMembers", {
-    schoolId,
-    userId: authorId,
-    role: "teacher",
-    status: "active",
     joinedAt: FORUM_CREATED_AT,
-    updatedAt: FORUM_CREATED_AT,
-  });
-  await ctx.db.insert("schoolClassMembers", {
-    classId,
-    schoolId,
-    userId: viewerId,
-    role: "student",
-    updatedAt: FORUM_CREATED_AT,
-  });
-  await ctx.db.insert("schoolClassMembers", {
-    classId,
-    schoolId,
-    userId: authorId,
     role: "teacher",
+    schoolId,
+    status: "active",
+    updatedAt: FORUM_CREATED_AT,
+    userId: authorId,
+  });
+  await ctx.db.insert("schoolClassMembers", {
+    classId,
+    role: "student",
+    schoolId,
+    updatedAt: FORUM_CREATED_AT,
+    userId: viewerId,
+  });
+  await ctx.db.insert("schoolClassMembers", {
+    classId,
+    role: "teacher",
+    schoolId,
     teacherRole: "primary",
     updatedAt: FORUM_CREATED_AT,
+    userId: authorId,
   });
 }
 
@@ -101,32 +97,32 @@ async function insertForum(
   ctx: MutationCtx,
   {
     classId,
-    schoolId,
     createdBy,
     postCount,
+    schoolId,
     title,
   }: {
     classId: Id<"schoolClasses">;
-    schoolId: Id<"schools">;
     createdBy: Id<"users">;
     postCount: number;
+    schoolId: Id<"schools">;
     title: string;
   }
 ) {
   return await ctx.db.insert("schoolClassForums", {
-    classId,
-    schoolId,
-    title,
     body: `${title} body`,
-    tag: "general",
-    status: "open",
+    classId,
+    createdBy,
     isPinned: false,
-    postCount,
-    nextPostSequence: postCount + 1,
-    reactionCounts: [],
     lastPostAt: FORUM_CREATED_AT + postCount,
     lastPostBy: createdBy,
-    createdBy,
+    nextPostSequence: postCount + 1,
+    postCount,
+    reactionCounts: [],
+    schoolId,
+    status: "open",
+    tag: "general",
+    title,
     updatedAt: FORUM_CREATED_AT + postCount,
   });
 }
@@ -149,27 +145,17 @@ async function insertForumPost(
 
   vi.setSystemTime(new Date(createdAt));
 
-  const postId = await ctx.db.insert("schoolClassForumPosts", {
-    forumId,
-    classId,
+  return await ctx.db.insert("schoolClassForumPosts", {
     body: `post-${sequence}`,
+    classId,
+    createdBy: authorId,
+    forumId,
     mentions: [],
     reactionCounts: [],
     replyCount: 0,
     sequence,
-    createdBy: authorId,
     updatedAt: createdAt,
   });
-  const post = await ctx.db.get("schoolClassForumPosts", postId);
-
-  if (!post) {
-    throw new Error("Forum post not found after insert.");
-  }
-
-  await forumPostsBySequence.insert(ctx, post);
-  await forumPostsByAuthorSequence.insert(ctx, post);
-
-  return postId;
 }
 
 async function seedForum() {
@@ -209,196 +195,91 @@ async function seedForum() {
   };
 }
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe("classes/forums/queries/pages", () => {
-  it("returns the newest posts from the requested forum window", async () => {
+  it("returns the full transcript in ascending order with unread metadata", async () => {
     const { identity, t } = await seedForum();
     const forumId = await t.mutation(async (ctx) => {
-      const forumId = await insertForum(ctx, {
+      const createdForumId = await insertForum(ctx, {
         classId: identity.classId,
-        schoolId: identity.schoolId,
         createdBy: identity.authorId,
-        postCount: 3,
-        title: "Target forum",
-      });
-      const otherForumId = await insertForum(ctx, {
-        classId: identity.classId,
+        postCount: 4,
         schoolId: identity.schoolId,
-        createdBy: identity.authorId,
-        postCount: 1,
-        title: "Other forum",
+        title: "Latest forum",
       });
 
-      await insertForumPost(ctx, {
-        authorId: identity.authorId,
-        classId: identity.classId,
-        forumId: otherForumId,
-        sequence: 1,
-      });
-
-      for (const sequence of [1, 2, 3]) {
+      for (const sequence of [1, 2, 3, 4]) {
         await insertForumPost(ctx, {
           authorId: identity.authorId,
           classId: identity.classId,
-          forumId,
+          forumId: createdForumId,
           sequence,
         });
       }
 
-      return forumId;
+      await ctx.db.insert("schoolClassForumReadStates", {
+        classId: identity.classId,
+        forumId: createdForumId,
+        lastReadSequence: 2,
+        userId: identity.viewerId,
+      });
+
+      return createdForumId;
     });
 
     const result = await t
       .withIdentity({
-        subject: identity.authUserId,
         sessionId: identity.sessionId,
+        subject: identity.authUserId,
       })
-      .query(api.classes.forums.queries.pages.getForumPostsWindow, {
+      .query(api.classes.forums.queries.pages.getForumPosts, {
         forumId,
-        numItems: 2,
-        order: "desc",
       });
 
-    expect(result.page.map((post) => post.sequence)).toEqual([3, 2]);
-    expect(result.hasMore).toBe(true);
-    expect(result.page.every((post) => post.forumId === forumId)).toBe(true);
+    expect(result.map((post) => post.sequence)).toEqual([1, 2, 3, 4]);
+    expect(result.map((post) => post.isUnread)).toEqual([
+      false,
+      false,
+      true,
+      true,
+    ]);
   });
 
-  it("keeps older windows gapless when pinned by index keys", async () => {
+  it("never marks the viewer's own posts as unread", async () => {
     const { identity, t } = await seedForum();
     const forumId = await t.mutation(async (ctx) => {
-      const forumId = await insertForum(ctx, {
+      const createdForumId = await insertForum(ctx, {
         classId: identity.classId,
+        createdBy: identity.viewerId,
+        postCount: 2,
         schoolId: identity.schoolId,
-        createdBy: identity.authorId,
-        postCount: 5,
-        title: "Gapless forum",
+        title: "Viewer forum",
       });
 
-      for (const sequence of [1, 2, 3, 4, 5]) {
+      for (const sequence of [1, 2]) {
         await insertForumPost(ctx, {
-          authorId: identity.authorId,
+          authorId: identity.viewerId,
           classId: identity.classId,
-          forumId,
+          forumId: createdForumId,
           sequence,
         });
       }
 
-      return forumId;
-    });
-
-    const client = t.withIdentity({
-      subject: identity.authUserId,
-      sessionId: identity.sessionId,
-    });
-    const latest = await client.query(
-      api.classes.forums.queries.pages.getForumPostsWindow,
-      {
-        forumId,
-        numItems: 2,
-        order: "desc",
-      }
-    );
-    const older = await client.query(
-      api.classes.forums.queries.pages.getForumPostsWindow,
-      {
-        forumId,
-        numItems: 2,
-        order: "desc",
-        startInclusive: false,
-        startIndexKey: latest.indexKeys.at(-1),
-      }
-    );
-
-    expect(latest.page.map((post) => post.sequence)).toEqual([5, 4]);
-    expect(older.page.map((post) => post.sequence)).toEqual([3, 2]);
-    expect(
-      [...older.page]
-        .reverse()
-        .concat([...latest.page].reverse())
-        .map((post) => post.sequence)
-    ).toEqual([2, 3, 4, 5]);
-  });
-
-  it("returns the stable anchor index key for one post", async () => {
-    const { identity, t } = await seedForum();
-    const target = await t.mutation(async (ctx) => {
-      const forumId = await insertForum(ctx, {
-        classId: identity.classId,
-        schoolId: identity.schoolId,
-        createdBy: identity.authorId,
-        postCount: 3,
-        title: "Anchor forum",
-      });
-
-      await insertForumPost(ctx, {
-        authorId: identity.authorId,
-        classId: identity.classId,
-        forumId,
-        sequence: 1,
-      });
-      const postId = await insertForumPost(ctx, {
-        authorId: identity.authorId,
-        classId: identity.classId,
-        forumId,
-        sequence: 2,
-      });
-      await insertForumPost(ctx, {
-        authorId: identity.authorId,
-        classId: identity.classId,
-        forumId,
-        sequence: 3,
-      });
-
-      return { forumId, postId };
+      return createdForumId;
     });
 
     const result = await t
       .withIdentity({
-        subject: identity.authUserId,
         sessionId: identity.sessionId,
+        subject: identity.authUserId,
       })
-      .query(api.classes.forums.queries.pages.getForumPostAnchor, target);
-
-    expect(result.postId).toBe(target.postId);
-    expect(result.indexKey[0]).toBe(target.forumId);
-    expect(result.indexKey[1]).toBe(2);
-    expect(result.indexKey.at(-1)).toBe(target.postId);
-  });
-
-  it("fails cleanly when the target post does not belong to the forum", async () => {
-    const { identity, t } = await seedForum();
-    const target = await t.mutation(async (ctx) => {
-      const forumId = await insertForum(ctx, {
-        classId: identity.classId,
-        schoolId: identity.schoolId,
-        createdBy: identity.authorId,
-        postCount: 1,
-        title: "First forum",
-      });
-      const otherForumId = await insertForum(ctx, {
-        classId: identity.classId,
-        schoolId: identity.schoolId,
-        createdBy: identity.authorId,
-        postCount: 1,
-        title: "Second forum",
-      });
-      const postId = await insertForumPost(ctx, {
-        authorId: identity.authorId,
-        classId: identity.classId,
-        forumId: otherForumId,
-        sequence: 1,
+      .query(api.classes.forums.queries.pages.getForumPosts, {
+        forumId,
       });
 
-      return { forumId, postId };
-    });
-
-    await expect(
-      t
-        .withIdentity({
-          subject: identity.authUserId,
-          sessionId: identity.sessionId,
-        })
-        .query(api.classes.forums.queries.pages.getForumPostAnchor, target)
-    ).rejects.toThrow("Forum post not found.");
+    expect(result.map((post) => post.isUnread)).toEqual([false, false]);
   });
 });

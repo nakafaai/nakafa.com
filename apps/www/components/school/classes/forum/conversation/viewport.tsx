@@ -2,31 +2,16 @@
 
 import { memo } from "react";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
-import { useViewport } from "@/components/school/classes/forum/conversation/context/use-viewport";
-import { JumpBar } from "@/components/school/classes/forum/conversation/jump-bar";
 import { ForumConversationTranscript } from "@/components/school/classes/forum/conversation/transcript";
 
 /** Renders the live transcript viewport with one simple latest button. */
 export const ForumConversationViewport = memo(() => {
   const forum = useData((state) => state.forum);
-  const backOrigin = useViewport((state) => state.backOrigin);
-  const hasPendingLatestPosts = useViewport(
-    (state) => state.hasPendingLatestPosts
-  );
-  const isAtBottom = useViewport((state) => state.isAtBottom);
-  const mode = useViewport((state) => state.mode);
-  const shouldShowJumpBar =
-    !!backOrigin || hasPendingLatestPosts || mode === "focused" || !isAtBottom;
 
   if (!forum) {
     return null;
   }
 
-  return (
-    <>
-      <ForumConversationTranscript />
-      {shouldShowJumpBar ? <JumpBar /> : null}
-    </>
-  );
+  return <ForumConversationTranscript />;
 });
 ForumConversationViewport.displayName = "ForumConversationViewport";

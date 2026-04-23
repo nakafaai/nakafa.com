@@ -1,5 +1,5 @@
 import { ArrowUp01Icon } from "@hugeicons/core-free-icons";
-import { useDisclosure, useOs } from "@mantine/hooks";
+import { useDisclosure, useOs, useResizeObserver } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -43,8 +43,9 @@ export const ForumPostInput = memo(() => {
   const t = useTranslations("School.Classes");
   const replyTo = useSession((state) => state.replyTo);
   const setReplyTo = useSession((state) => state.setReplyTo);
-  const { goToLatest } = useControls();
+  const { acknowledgeUnreadCue, goToLatest } = useControls();
   const forumId = useData((state) => state.forumId);
+  const [composerRef] = useResizeObserver<HTMLFormElement>();
   const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
   const generateUploadUrl = useMutation(
     api.classes.forums.mutations.uploads.generateUploadUrl
@@ -153,6 +154,7 @@ export const ForumPostInput = memo(() => {
         form.reset();
         clearFiles();
         setReplyTo(null);
+        acknowledgeUnreadCue();
 
         requestAnimationFrame(() => {
           textareaRef.current?.focus();
@@ -189,7 +191,22 @@ export const ForumPostInput = memo(() => {
         event.preventDefault();
         form.handleSubmit();
       }}
+      ref={composerRef}
     >
+      {/*
+       * `react-textarea-autosize` remeasures on render and window resize, but
+       * the forum panel width can also change when the resizable class layout
+       * settles after mount. Observing the composer element forces the
+       * controlled textarea to rerender on those panel-size changes, so the
+       * initial height stays compact instead of preserving a stale oversized
+       * measurement.
+       *
+       * References:
+       * - react-textarea-autosize README:
+       *   https://www.npmjs.com/package/react-textarea-autosize
+       * - Mantine useResizeObserver:
+       *   https://mantine.dev/hooks/use-resize-observer/
+       */}
       <ReplyIndicator />
       <AttachmentPreviews
         files={files}
@@ -201,11 +218,12 @@ export const ForumPostInput = memo(() => {
       <form.Field name="body">
         {(field) => (
           <form.Subscribe
-            selector={(state) =>
-              [state.isSubmitting, state.values.body] as const
-            }
+            selector={(state) => ({
+              isSubmitting: state.isSubmitting,
+              body: state.values.body,
+            })}
           >
-            {([isSubmitting, body]) => {
+            {({ isSubmitting, body }) => {
               const canSubmit = body.trim().length > 0 || files.length > 0;
               const submitDisabled = isSubmitting || !canSubmit;
 

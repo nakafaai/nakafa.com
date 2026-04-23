@@ -15,7 +15,7 @@ export const PostReplyIndicator = memo(({ post }: { post: ForumPost }) => {
 
   return (
     <button
-      className="flex min-w-0 items-center gap-1 text-left text-muted-foreground text-xs"
+      className="flex min-w-0 cursor-pointer items-center gap-1 text-left text-muted-foreground text-xs transition-colors hover:text-foreground"
       onClick={() => goToPost(parentId)}
       type="button"
     >

@@ -40,11 +40,6 @@ export const forumFeedPostValidator = v.object({
   isUnread: v.boolean(),
 });
 
-/** Shared index-key payload for Convex manual pagination windows. */
-export const forumPostWindowIndexKeyValidator = v.array(
-  v.union(v.number(), v.string())
-);
-
 /** Shared forum list row payload returned by the class forum list. */
 export const forumListItemValidator = v.object({
   ...vv.doc("schoolClassForums").fields,
@@ -65,24 +60,6 @@ export const forumDetailValidator = v.object({
 export const paginatedForumsValidator = paginationResultValidator(
   forumListItemValidator
 );
-
-/** Paginated live forum feed payload used by the conversation transcript. */
-export const paginatedForumFeedValidator = paginationResultValidator(
-  forumFeedPostValidator
-);
-
-/** Manual forum transcript window payload used by `useQueries(windowMap)`. */
-export const forumPostsWindowValidator = v.object({
-  hasMore: v.boolean(),
-  indexKeys: v.array(forumPostWindowIndexKeyValidator),
-  page: v.array(forumFeedPostValidator),
-});
-
-/** Stable anchor payload used for restore, jump-to-message, and back. */
-export const forumPostAnchorValidator = v.object({
-  indexKey: forumPostWindowIndexKeyValidator,
-  postId: vv.id("schoolClassForumPosts"),
-});
 
 /** Mutation result for toggling a reaction on a forum or forum post. */
 export const forumReactionToggleResultValidator = v.object({

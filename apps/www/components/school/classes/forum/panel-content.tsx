@@ -25,7 +25,6 @@ export const SchoolClassesForumPanelContent = memo(
         currentUserId={user.appUser._id}
         forum={forum}
         forumId={forumId}
-        key={forumId}
       />
     );
   }

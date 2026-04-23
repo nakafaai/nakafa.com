@@ -70,7 +70,7 @@ export function createSessionStore(classId: string) {
           savedConversationViews: state.savedConversationViews,
         }),
         storage: createJSONStorage(() => sessionStorage),
-        version: 1,
+        version: 2,
       }
     )
   );

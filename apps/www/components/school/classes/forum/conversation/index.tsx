@@ -2,9 +2,9 @@
 
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { memo } from "react";
+import { ConversationProvider } from "@/components/school/classes/forum/conversation/context/provider";
 import type { Forum } from "@/components/school/classes/forum/conversation/data/entities";
 import { ForumPostInput } from "@/components/school/classes/forum/conversation/input";
-import { ConversationProvider } from "@/components/school/classes/forum/conversation/provider";
 import { ForumConversationViewport } from "@/components/school/classes/forum/conversation/viewport";
 
 /** Renders the forum conversation shell around the extracted controller state. */

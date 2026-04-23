@@ -11,7 +11,7 @@ import {
 } from "react";
 
 interface Controls {
-  goBack: () => void;
+  acknowledgeUnreadCue: () => void;
   goToLatest: () => void;
   goToPost: (postId: Id<"schoolClassForumPosts">) => void;
 }
@@ -21,7 +21,7 @@ interface ControlsContextValue extends Controls {
 }
 
 const noopControls: Controls = {
-  goBack: () => undefined,
+  acknowledgeUnreadCue: () => undefined,
   goToLatest: () => undefined,
   goToPost: () => undefined,
 };
@@ -38,7 +38,7 @@ export function ControlsProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      goBack: () => controlsRef.current.goBack(),
+      acknowledgeUnreadCue: () => controlsRef.current.acknowledgeUnreadCue(),
       goToLatest: () => controlsRef.current.goToLatest(),
       goToPost: (postId: Parameters<Controls["goToPost"]>[0]) =>
         controlsRef.current.goToPost(postId),

@@ -4,7 +4,6 @@ export type ConversationView =
   | { kind: "bottom" }
   | {
       kind: "post";
-      offset: number;
       postId: Id<"schoolClassForumPosts">;
     };
 
@@ -25,31 +24,7 @@ export function areConversationViewsEqual(
     return true;
   }
 
-  if (right.kind !== "post") {
-    return false;
-  }
-
-  return left.postId === right.postId && left.offset === right.offset;
-}
-
-/** Returns whether one semantic view is already at the target origin. */
-export function hasReachedConversationView(
-  currentView: ConversationView | null,
-  targetView: ConversationView | null
-) {
-  if (!(currentView && targetView)) {
-    return false;
-  }
-
-  if (targetView.kind === "bottom") {
-    return currentView.kind === "bottom";
-  }
-
-  if (currentView.kind !== "post" || currentView.postId !== targetView.postId) {
-    return false;
-  }
-
-  return Math.abs(currentView.offset - targetView.offset) <= 1;
+  return right.kind === "post" && left.postId === right.postId;
 }
 
 /** Returns whether the current settled view is already anchored to one post. */
