@@ -101,7 +101,6 @@ const HydratedTranscript = memo(
     const isAtBottom = useViewport((state) => state.isAtBottom);
     const popBackView = useViewport((state) => state.popBackView);
     const pushBackView = useViewport((state) => state.pushBackView);
-    const setSettledView = useViewport((state) => state.setSettledView);
     const updateViewport = useViewport((state) => state.updateViewport);
     const { registerControls } = useControls();
     const prefersReducedMotion = useReducedMotion();
@@ -231,8 +230,6 @@ const HydratedTranscript = memo(
         postIds: postIdsRef.current,
         root,
       });
-
-      setSettledView(view);
 
       if (view) {
         saveConversationView(forumId, view);

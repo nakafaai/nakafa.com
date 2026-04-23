@@ -37,18 +37,6 @@ describe("conversation/store/viewport", () => {
     expect(store.getState().backStack).toEqual([]);
   });
 
-  it("keeps settled view idempotent", () => {
-    const store = createViewportStore();
-
-    store.getState().setSettledView({ kind: "post", postId: firstPostId });
-    store.getState().setSettledView({ kind: "post", postId: firstPostId });
-
-    expect(store.getState().settledView).toEqual({
-      kind: "post",
-      postId: firstPostId,
-    });
-  });
-
   it("updates only the provided viewport booleans", () => {
     const store = createViewportStore();
 

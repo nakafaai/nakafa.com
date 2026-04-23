@@ -11,7 +11,6 @@ interface State {
   hasOverflow: boolean;
   highlightedPostId: Id<"schoolClassForumPosts"> | null;
   isAtBottom: boolean;
-  settledView: ConversationView | null;
 }
 
 interface Actions {
@@ -20,7 +19,6 @@ interface Actions {
   highlightPost: (postId: Id<"schoolClassForumPosts">) => void;
   popBackView: () => ConversationView | null;
   pushBackView: (view: ConversationView) => void;
-  setSettledView: (view: ConversationView | null) => void;
   updateViewport: (state: {
     hasOverflow?: boolean;
     isAtBottom?: boolean;
@@ -34,7 +32,6 @@ const initialState: State = {
   hasOverflow: false,
   highlightedPostId: null,
   isAtBottom: true,
-  settledView: null,
 };
 
 /** Creates the per-conversation UI-intent store for transcript navigation state. */
@@ -96,16 +93,6 @@ export function createViewportStore() {
 
         set((state) => {
           state.backStack.push(view);
-        });
-      },
-
-      setSettledView: (view) => {
-        if (areConversationViewsEqual(get().settledView, view)) {
-          return;
-        }
-
-        set((state) => {
-          state.settledView = view;
         });
       },
 

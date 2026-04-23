@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { describe, expect, it } from "vitest";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 import {
-  getLiveConversationUnreadCue,
+  getInitialConversationUnreadCue,
   useConversationUnreadCue,
 } from "@/components/school/classes/forum/conversation/data/unread";
 
@@ -90,7 +90,7 @@ function createHarness() {
 
 describe("conversation/data/unread", () => {
   it("returns the first unread post id and total unread count", () => {
-    const cue = getLiveConversationUnreadCue([
+    const cue = getInitialConversationUnreadCue([
       createPost({ postId: "post_1", sequence: 1 }),
       createPost({ isUnread: true, postId: "post_2", sequence: 2 }),
       createPost({ isUnread: true, postId: "post_3", sequence: 3 }),
@@ -103,7 +103,7 @@ describe("conversation/data/unread", () => {
   });
 
   it("returns null when the transcript has no unread posts", () => {
-    const cue = getLiveConversationUnreadCue([
+    const cue = getInitialConversationUnreadCue([
       createPost({ postId: "post_1", sequence: 1 }),
       createPost({ postId: "post_2", sequence: 2 }),
     ]);
@@ -111,7 +111,7 @@ describe("conversation/data/unread", () => {
     expect(cue).toBeNull();
   });
 
-  it("seeds one unread cue after the first resolved transcript result", () => {
+  it("seeds one initial unread cue after the first resolved transcript result", () => {
     const harness = createHarness();
     const posts = [
       createPost({ postId: "post_1", sequence: 1 }),
@@ -138,7 +138,7 @@ describe("conversation/data/unread", () => {
     harness.cleanup();
   });
 
-  it("keeps the seeded unread anchor and downgrades it to history", () => {
+  it("keeps the seeded initial unread anchor and downgrades it to history", () => {
     const harness = createHarness();
 
     harness.render({
