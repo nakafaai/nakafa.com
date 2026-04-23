@@ -1,6 +1,7 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import { type QueryCtx, query } from "@repo/backend/convex/_generated/server";
 import { loadForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
+import { MAX_FORUM_TRANSCRIPT_POSTS } from "@repo/backend/convex/classes/forums/utils/constants";
 import { enrichForumPosts } from "@repo/backend/convex/classes/forums/utils/posts";
 import { forumFeedPostValidator } from "@repo/backend/convex/classes/forums/validators";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
@@ -54,11 +55,13 @@ async function createForumFeedPosts(
 }
 
 /**
- * Returns the whole forum transcript in ascending sequence order.
+ * Returns the latest forum transcript window in ascending sequence order.
  *
  * This is intentionally the simplest possible Convex-first contract for the
  * current rewrite: one reactive query, one ordered array, no client window
- * stitching, and no anchor query.
+ * stitching, and no anchor query. The query stays bounded by loading the most
+ * recent posts first and then flipping that small window back to chronological
+ * order for the UI.
  *
  * References:
  * - https://docs.convex.dev/understanding/best-practices/
@@ -80,13 +83,13 @@ export const getForumPosts = query({
       .withIndex("by_forumId_and_sequence", (q) =>
         q.eq("forumId", args.forumId)
       )
-      .order("asc")
-      .collect();
+      .order("desc")
+      .take(MAX_FORUM_TRANSCRIPT_POSTS);
 
     return await createForumFeedPosts(ctx, {
       currentUserId,
       forumId: args.forumId,
-      posts,
+      posts: posts.reverse(),
     });
   },
 });

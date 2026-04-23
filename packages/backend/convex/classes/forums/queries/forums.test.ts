@@ -6,6 +6,12 @@ import {
   forumPostsBySequence,
 } from "@repo/backend/convex/classes/forums/aggregate";
 import {
+  insertClass,
+  insertClassMembership,
+  insertSchool,
+  insertSchoolMembership,
+} from "@repo/backend/convex/classes/test.helpers";
+import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
@@ -14,93 +20,6 @@ import { describe, expect, it, vi } from "vitest";
 const FORUM_CREATED_AT = Date.UTC(2026, 3, 18, 8, 0, 0);
 const READ_AT = Date.UTC(2026, 3, 18, 8, 5, 0);
 const LAST_POST_AT = Date.UTC(2026, 3, 18, 8, 10, 0);
-
-/** Insert one school row with the minimum fields required by the schema. */
-async function insertSchool(ctx: MutationCtx, userId: Id<"users">) {
-  return await ctx.db.insert("schools", {
-    name: "Nakafa School",
-    slug: `nakafa-${userId}`,
-    email: `${userId}@example.com`,
-    city: "Jakarta",
-    province: "DKI Jakarta",
-    type: "high-school",
-    currentStudents: 0,
-    currentTeachers: 0,
-    updatedAt: FORUM_CREATED_AT,
-    createdBy: userId,
-    updatedBy: userId,
-  });
-}
-
-/** Insert one class row with the minimum fields required by the schema. */
-async function insertClass(
-  ctx: MutationCtx,
-  schoolId: Id<"schools">,
-  userId: Id<"users">
-) {
-  return await ctx.db.insert("schoolClasses", {
-    schoolId,
-    name: "Class 10A",
-    subject: "Mathematics",
-    year: "2026/2027",
-    image: "retro",
-    isArchived: false,
-    visibility: "public",
-    studentCount: 0,
-    teacherCount: 0,
-    updatedAt: FORUM_CREATED_AT,
-    createdBy: userId,
-    updatedBy: userId,
-  });
-}
-
-/** Insert one active school membership for the given user. */
-async function insertSchoolMembership(
-  ctx: MutationCtx,
-  {
-    role,
-    schoolId,
-    userId,
-  }: {
-    role: "admin" | "student" | "teacher";
-    schoolId: Id<"schools">;
-    userId: Id<"users">;
-  }
-) {
-  await ctx.db.insert("schoolMembers", {
-    schoolId,
-    userId,
-    role,
-    status: "active",
-    joinedAt: FORUM_CREATED_AT,
-    updatedAt: FORUM_CREATED_AT,
-  });
-}
-
-/** Insert one active class membership for the given user. */
-async function insertClassMembership(
-  ctx: MutationCtx,
-  {
-    role,
-    classId,
-    schoolId,
-    userId,
-  }: {
-    role: "student" | "teacher";
-    classId: Id<"schoolClasses">;
-    schoolId: Id<"schools">;
-    userId: Id<"users">;
-  }
-) {
-  await ctx.db.insert("schoolClassMembers", {
-    classId,
-    schoolId,
-    userId,
-    role,
-    ...(role === "teacher" ? { teacherRole: "primary" as const } : {}),
-    updatedAt: FORUM_CREATED_AT,
-  });
-}
 
 /** Insert one forum thread with explicit denormalized list metadata. */
 async function insertForum(
@@ -200,26 +119,37 @@ describe("classes/forums/queries/forums:getForums", () => {
         now: FORUM_CREATED_AT,
         suffix: "author",
       });
-      const schoolId = await insertSchool(ctx, author.userId);
-      const classId = await insertClass(ctx, schoolId, author.userId);
+      const schoolId = await insertSchool(ctx, {
+        now: FORUM_CREATED_AT,
+        userId: author.userId,
+      });
+      const classId = await insertClass(ctx, {
+        now: FORUM_CREATED_AT,
+        schoolId,
+        userId: author.userId,
+      });
 
       await insertSchoolMembership(ctx, {
+        now: FORUM_CREATED_AT,
         role: "student",
         schoolId,
         userId: viewer.userId,
       });
       await insertSchoolMembership(ctx, {
+        now: FORUM_CREATED_AT,
         role: "teacher",
         schoolId,
         userId: author.userId,
       });
       await insertClassMembership(ctx, {
+        now: FORUM_CREATED_AT,
         role: "student",
         classId,
         schoolId,
         userId: viewer.userId,
       });
       await insertClassMembership(ctx, {
+        now: FORUM_CREATED_AT,
         role: "teacher",
         classId,
         schoolId,
@@ -286,15 +216,24 @@ describe("classes/forums/queries/forums:getForums", () => {
         now: FORUM_CREATED_AT,
         suffix: "solo-viewer",
       });
-      const schoolId = await insertSchool(ctx, viewer.userId);
-      const classId = await insertClass(ctx, schoolId, viewer.userId);
+      const schoolId = await insertSchool(ctx, {
+        now: FORUM_CREATED_AT,
+        userId: viewer.userId,
+      });
+      const classId = await insertClass(ctx, {
+        now: FORUM_CREATED_AT,
+        schoolId,
+        userId: viewer.userId,
+      });
 
       await insertSchoolMembership(ctx, {
+        now: FORUM_CREATED_AT,
         role: "teacher",
         schoolId,
         userId: viewer.userId,
       });
       await insertClassMembership(ctx, {
+        now: FORUM_CREATED_AT,
         role: "teacher",
         classId,
         schoolId,

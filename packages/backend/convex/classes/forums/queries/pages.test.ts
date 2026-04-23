@@ -1,6 +1,13 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { MAX_FORUM_TRANSCRIPT_POSTS } from "@repo/backend/convex/classes/forums/utils/constants";
+import {
+  insertClass,
+  insertClassMembership,
+  insertSchool,
+  insertSchoolMembership,
+} from "@repo/backend/convex/classes/test.helpers";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -8,43 +15,6 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const FORUM_CREATED_AT = Date.UTC(2026, 3, 18, 8, 0, 0);
-
-async function insertSchool(ctx: MutationCtx, userId: Id<"users">) {
-  return await ctx.db.insert("schools", {
-    city: "Jakarta",
-    createdBy: userId,
-    currentStudents: 0,
-    currentTeachers: 0,
-    email: `${userId}@example.com`,
-    name: "Nakafa School",
-    province: "DKI Jakarta",
-    slug: `nakafa-${userId}`,
-    type: "high-school",
-    updatedAt: FORUM_CREATED_AT,
-    updatedBy: userId,
-  });
-}
-
-async function insertClass(
-  ctx: MutationCtx,
-  schoolId: Id<"schools">,
-  userId: Id<"users">
-) {
-  return await ctx.db.insert("schoolClasses", {
-    createdBy: userId,
-    image: "retro",
-    isArchived: false,
-    name: "Class 10A",
-    schoolId,
-    studentCount: 0,
-    subject: "Mathematics",
-    teacherCount: 0,
-    updatedAt: FORUM_CREATED_AT,
-    updatedBy: userId,
-    visibility: "public",
-    year: "2026/2027",
-  });
-}
 
 async function insertMemberships(
   ctx: MutationCtx,
@@ -60,35 +30,30 @@ async function insertMemberships(
     viewerId: Id<"users">;
   }
 ) {
-  await ctx.db.insert("schoolMembers", {
-    joinedAt: FORUM_CREATED_AT,
+  await insertSchoolMembership(ctx, {
+    now: FORUM_CREATED_AT,
     role: "student",
     schoolId,
-    status: "active",
-    updatedAt: FORUM_CREATED_AT,
     userId: viewerId,
   });
-  await ctx.db.insert("schoolMembers", {
-    joinedAt: FORUM_CREATED_AT,
+  await insertSchoolMembership(ctx, {
+    now: FORUM_CREATED_AT,
     role: "teacher",
     schoolId,
-    status: "active",
-    updatedAt: FORUM_CREATED_AT,
     userId: authorId,
   });
-  await ctx.db.insert("schoolClassMembers", {
+  await insertClassMembership(ctx, {
+    now: FORUM_CREATED_AT,
     classId,
     role: "student",
     schoolId,
-    updatedAt: FORUM_CREATED_AT,
     userId: viewerId,
   });
-  await ctx.db.insert("schoolClassMembers", {
+  await insertClassMembership(ctx, {
+    now: FORUM_CREATED_AT,
     classId,
     role: "teacher",
     schoolId,
-    teacherRole: "primary",
-    updatedAt: FORUM_CREATED_AT,
     userId: authorId,
   });
 }
@@ -169,8 +134,15 @@ async function seedForum() {
       now: FORUM_CREATED_AT,
       suffix: "author",
     });
-    const schoolId = await insertSchool(ctx, author.userId);
-    const classId = await insertClass(ctx, schoolId, author.userId);
+    const schoolId = await insertSchool(ctx, {
+      now: FORUM_CREATED_AT,
+      userId: author.userId,
+    });
+    const classId = await insertClass(ctx, {
+      now: FORUM_CREATED_AT,
+      schoolId,
+      userId: author.userId,
+    });
 
     await insertMemberships(ctx, {
       authorId: author.userId,
@@ -281,5 +253,45 @@ describe("classes/forums/queries/pages", () => {
       });
 
     expect(result.map((post) => post.isUnread)).toEqual([false, false]);
+  });
+
+  it("returns only the latest transcript window while preserving ascending order", async () => {
+    const { identity, t } = await seedForum();
+    const totalPosts = MAX_FORUM_TRANSCRIPT_POSTS + 25;
+    const forumId = await t.mutation(async (ctx) => {
+      const createdForumId = await insertForum(ctx, {
+        classId: identity.classId,
+        createdBy: identity.authorId,
+        postCount: totalPosts,
+        schoolId: identity.schoolId,
+        title: "Busy forum",
+      });
+
+      for (let sequence = 1; sequence <= totalPosts; sequence += 1) {
+        await insertForumPost(ctx, {
+          authorId: identity.authorId,
+          classId: identity.classId,
+          forumId: createdForumId,
+          sequence,
+        });
+      }
+
+      return createdForumId;
+    });
+
+    const result = await t
+      .withIdentity({
+        sessionId: identity.sessionId,
+        subject: identity.authUserId,
+      })
+      .query(api.classes.forums.queries.pages.getForumPosts, {
+        forumId,
+      });
+
+    expect(result).toHaveLength(MAX_FORUM_TRANSCRIPT_POSTS);
+    expect(result[0]?.sequence).toBe(
+      totalPosts - MAX_FORUM_TRANSCRIPT_POSTS + 1
+    );
+    expect(result.at(-1)?.sequence).toBe(totalPosts);
   });
 });
