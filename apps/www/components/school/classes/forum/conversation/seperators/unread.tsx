@@ -10,7 +10,7 @@ export const ConversationUnreadSeparator = memo(
     const isHistory = status === "history";
 
     return (
-      <div className="flex items-center gap-3 py-2">
+      <div className="flex items-center gap-3 py-2 transition-colors ease-out motion-reduce:transition-none">
         <div
           className={cn(
             "h-px flex-1",
