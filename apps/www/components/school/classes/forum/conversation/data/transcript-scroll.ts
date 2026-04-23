@@ -1,16 +1,20 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { RefObject } from "react";
-import type { VirtualizerHandle } from "virtua";
+import type { ScrollToIndexOpts, VirtualizerHandle } from "virtua";
 import { FORUM_BOTTOM_THRESHOLD } from "@/components/school/classes/forum/conversation/data/pages";
 import {
   captureConversationView,
   getConversationBottomDistance,
+  getConversationCenterThreshold,
+  hasConversationViewReached,
   hasConversationViewSettledPlacement,
-  isConversationViewVisible,
 } from "@/components/school/classes/forum/conversation/data/settled-view";
 import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view";
 
+type ScrollTargetAlign = NonNullable<ScrollToIndexOpts["align"]>;
+
 interface ScrollTargetOptions {
+  align?: ScrollTargetAlign;
   behavior?: ScrollBehavior;
 }
 
@@ -25,14 +29,21 @@ export interface ConversationScrollController {
   ) => boolean;
 }
 
+/** Keeps a virtualized index inside the current rendered transcript bounds. */
 function clampIndex(index: number, itemCount: number) {
   return Math.max(0, Math.min(itemCount - 1, index));
 }
 
-function getCenteredThreshold(viewportSize: number) {
-  return Math.max(32, Math.min(96, viewportSize * 0.12));
+/** Converts the active row count metadata back into a concrete item count. */
+function getItemCount(lastRowIndex: number | null) {
+  if (lastRowIndex === null) {
+    return 0;
+  }
+
+  return lastRowIndex + 1;
 }
 
+/** Returns the currently visible virtual index range for the mounted list. */
 function getVisibleIndexRange({
   itemCount,
   handle,
@@ -40,7 +51,11 @@ function getVisibleIndexRange({
   itemCount: number;
   handle: VirtualizerHandle;
 }) {
-  if (itemCount === 0 || handle.viewportSize <= 0) {
+  if (itemCount === 0) {
+    return null;
+  }
+
+  if (handle.viewportSize <= 0) {
     return null;
   }
 
@@ -53,6 +68,7 @@ function getVisibleIndexRange({
   };
 }
 
+/** Maps DOM-style scroll behavior to Virtua's `smooth` flag. */
 function resolveScrollMode({
   behavior,
   prefersReducedMotion,
@@ -90,6 +106,8 @@ export function createConversationScrollController({
   scrollRootRef: RefObject<HTMLElement | null>;
   virtualizerRef: RefObject<VirtualizerHandle | null>;
 }) {
+  const itemCount = getItemCount(lastRowIndex);
+
   return {
     captureView: () => {
       const root = scrollRootRef.current;
@@ -115,35 +133,32 @@ export function createConversationScrollController({
         return getConversationBottomDistance(root) <= FORUM_BOTTOM_THRESHOLD;
       }
 
-      if (isConversationViewVisible({ root, view })) {
+      if (hasConversationViewReached({ root, view })) {
         return true;
       }
 
       const handle = virtualizerRef.current;
-      const targetIndex = rowIndexByPostId.get(view.postId);
 
-      if (handle && targetIndex !== undefined) {
-        const range = getVisibleIndexRange({
-          handle,
-          itemCount: lastRowIndex === null ? 0 : lastRowIndex + 1,
-        });
-
-        if (range && targetIndex <= range.lastVisibleIndex) {
-          return true;
-        }
-      }
-
-      const element = root.querySelector<HTMLElement>(
-        `[data-post-id="${view.postId}"]`
-      );
-
-      if (!element) {
+      if (!handle) {
         return false;
       }
 
-      return (
-        element.getBoundingClientRect().top <= root.getBoundingClientRect().top
-      );
+      const targetIndex = rowIndexByPostId.get(view.postId);
+
+      if (targetIndex === undefined) {
+        return false;
+      }
+
+      const range = getVisibleIndexRange({
+        handle,
+        itemCount,
+      });
+
+      if (!range) {
+        return false;
+      }
+
+      return targetIndex <= range.lastVisibleIndex;
     },
 
     isViewSettled: (view) => {
@@ -162,16 +177,27 @@ export function createConversationScrollController({
       }
 
       const handle = virtualizerRef.current;
+
+      if (!handle) {
+        return false;
+      }
+
       const targetIndex = rowIndexByPostId.get(view.postId);
 
-      if (!(handle && targetIndex !== undefined) || handle.viewportSize <= 0) {
+      if (targetIndex === undefined) {
+        return false;
+      }
+
+      if (handle.viewportSize <= 0) {
         return false;
       }
 
       const viewportCenter = handle.scrollOffset + handle.viewportSize / 2;
       const targetCenter =
         handle.getItemOffset(targetIndex) + handle.getItemSize(targetIndex) / 2;
-      const centerThreshold = getCenteredThreshold(handle.viewportSize);
+      const centerThreshold = getConversationCenterThreshold(
+        handle.viewportSize
+      );
 
       if (Math.abs(targetCenter - viewportCenter) <= centerThreshold) {
         return true;
@@ -187,7 +213,11 @@ export function createConversationScrollController({
     scrollToLatest: (options?: ScrollTargetOptions) => {
       const handle = virtualizerRef.current;
 
-      if (!(handle && lastRowIndex !== null)) {
+      if (!handle) {
+        return false;
+      }
+
+      if (lastRowIndex === null) {
         return false;
       }
 
@@ -206,14 +236,19 @@ export function createConversationScrollController({
       options?: ScrollTargetOptions
     ) => {
       const handle = virtualizerRef.current;
+
+      if (!handle) {
+        return false;
+      }
+
       const targetIndex = rowIndexByPostId.get(postId);
 
-      if (!(handle && targetIndex !== undefined)) {
+      if (targetIndex === undefined) {
         return false;
       }
 
       handle.scrollToIndex(targetIndex, {
-        align: "center",
+        align: options?.align ?? "center",
         smooth: resolveScrollMode({
           behavior: options?.behavior,
           prefersReducedMotion,

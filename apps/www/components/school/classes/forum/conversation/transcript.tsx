@@ -17,7 +17,11 @@ import {
   useRef,
   useState,
 } from "react";
-import { Virtualizer, type VirtualizerHandle } from "virtua";
+import {
+  type ScrollToIndexOpts,
+  Virtualizer,
+  type VirtualizerHandle,
+} from "virtua";
 import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
@@ -37,11 +41,15 @@ import type { ConversationView } from "@/components/school/classes/forum/convers
 import { isConversationViewAtPost } from "@/components/school/classes/forum/conversation/data/view";
 import { JumpBar } from "@/components/school/classes/forum/conversation/jump-bar";
 import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/conversation/store/session";
-import { canRestoreConversationScrollSnapshot } from "@/components/school/classes/forum/conversation/store/session";
+import { canRestoreConversationScrollCache } from "@/components/school/classes/forum/conversation/store/session";
 import { VirtualTranscriptRow } from "@/components/school/classes/forum/conversation/transcript-row";
 
+type PendingPlacementAlign = NonNullable<ScrollToIndexOpts["align"]>;
+
 interface PendingPlacement {
+  align?: PendingPlacementAlign;
   behavior?: ScrollBehavior;
+  completion: "reached" | "settled";
   highlightPostId: Id<"schoolClassForumPosts"> | null;
   view: ConversationView;
 }
@@ -134,28 +142,19 @@ const HydratedTranscript = memo(
       posts: transcriptPosts,
       unreadCue,
     });
-    const initialFallbackView =
-      unreadCue === null
-        ? ({ kind: "bottom" } satisfies ConversationView)
-        : ({
-            kind: "post",
-            postId: unreadCue.postId,
-          } satisfies ConversationView);
-    const initialRestorableScrollSnapshot =
-      canRestoreConversationScrollSnapshot({
-        lastPostId: activeTranscript.lastPostId,
-        rowCount: activeTranscript.rows.length,
-        snapshot: initialSavedScrollSnapshot,
-      })
-        ? initialSavedScrollSnapshot
-        : null;
+    const canRestoreInitialCache = canRestoreConversationScrollCache({
+      lastPostId: activeTranscript.lastPostId,
+      renderedRowCount: activeTranscript.rows.length,
+      snapshot: initialSavedScrollSnapshot,
+    });
+    const initialRestorableCache = canRestoreInitialCache
+      ? (initialSavedScrollSnapshot?.cache ?? null)
+      : null;
     const canGoBack = backStack.length > 0;
     const scrollRootRef = useRef<HTMLDivElement | null>(null);
     const virtualizerRef = useRef<VirtualizerHandle | null>(null);
     const pendingPlacementRef = useRef<PendingPlacement | null>(null);
-    const pendingScrollSnapshotRef = useRef<ConversationScrollSnapshot | null>(
-      null
-    );
+    const pendingScrollOffsetRef = useRef<number | null>(null);
     const hasBootstrappedRestoreRef = useRef(false);
     const [isPendingLatestPlacement, setIsPendingLatestPlacement] =
       useState(false);
@@ -164,21 +163,38 @@ const HydratedTranscript = memo(
     );
     const postIdsRef = useRef(activeTranscript.postIds);
     const backStackRef = useRef(backStack);
-    const isAtBottomRef = useRef(isAtBottom);
     const persistCurrentScrollSnapshotRef = useRef<(() => void) | null>(null);
 
     postIdsRef.current = activeTranscript.postIds;
     backStackRef.current = backStack;
-    isAtBottomRef.current = isAtBottom;
 
     if (!(hasBootstrappedRestoreRef.current || isPending)) {
-      if (initialRestorableScrollSnapshot) {
-        pendingScrollSnapshotRef.current = initialRestorableScrollSnapshot;
+      if (initialSavedScrollSnapshot?.wasAtBottom) {
+        pendingPlacementRef.current = {
+          behavior: "auto",
+          completion: "reached",
+          highlightPostId: null,
+          view: { kind: "bottom" },
+        };
+      } else if (initialSavedScrollSnapshot) {
+        pendingScrollOffsetRef.current = initialSavedScrollSnapshot.offset;
+      } else if (unreadCue) {
+        pendingPlacementRef.current = {
+          align: "start",
+          behavior: "auto",
+          completion: "reached",
+          highlightPostId: null,
+          view: {
+            kind: "post",
+            postId: unreadCue.postId,
+          },
+        };
       } else {
         pendingPlacementRef.current = {
           behavior: "auto",
+          completion: "reached",
           highlightPostId: null,
-          view: initialFallbackView,
+          view: { kind: "bottom" },
         };
       }
 
@@ -256,7 +272,7 @@ const HydratedTranscript = memo(
       }
 
       const hasReachedPendingPlacement =
-        pendingPlacement.view.kind === "post"
+        pendingPlacement.completion === "settled"
           ? scrollController.isViewSettled(pendingPlacement.view)
           : scrollController.isViewReached(pendingPlacement.view);
 
@@ -325,8 +341,9 @@ const HydratedTranscript = memo(
 
     persistCurrentScrollSnapshotRef.current = () => {
       const handle = virtualizerRef.current;
+      const root = scrollRootRef.current;
 
-      if (!handle) {
+      if (!(handle && root)) {
         return;
       }
 
@@ -334,17 +351,20 @@ const HydratedTranscript = memo(
         cache: handle.cache,
         lastPostId: activeTranscript.lastPostId,
         offset: handle.scrollOffset,
-        rowCount: activeTranscript.rows.length,
+        renderedRowCount: activeTranscript.rows.length,
+        wasAtBottom:
+          pendingPlacementRef.current?.view.kind === "bottom" ||
+          getConversationBottomDistance(root) <= FORUM_BOTTOM_THRESHOLD,
       });
     };
 
     const scrollToPendingPlacement = useCallback(
-      ({ behavior, view }: PendingPlacement) => {
+      ({ align, behavior, view }: PendingPlacement) => {
         if (view.kind === "bottom") {
           return scrollController.scrollToLatest({ behavior });
         }
 
-        return scrollController.scrollToPost(view.postId, { behavior });
+        return scrollController.scrollToPost(view.postId, { align, behavior });
       },
       [scrollController]
     );
@@ -363,6 +383,7 @@ const HydratedTranscript = memo(
       ) {
         setPendingPlacement({
           behavior: pendingPlacement.behavior,
+          completion: "reached",
           highlightPostId: null,
           view: { kind: "bottom" },
         });
@@ -414,7 +435,9 @@ const HydratedTranscript = memo(
         }
 
         setPendingPlacement({
+          align: "center",
           behavior: "smooth",
+          completion: "settled",
           highlightPostId: postId,
           view: targetView,
         });
@@ -437,6 +460,7 @@ const HydratedTranscript = memo(
     const goToLatest = useCallback(() => {
       setPendingPlacement({
         behavior: "smooth",
+        completion: "reached",
         highlightPostId: null,
         view: { kind: "bottom" },
       });
@@ -466,11 +490,22 @@ const HydratedTranscript = memo(
         return;
       }
 
-      setPendingPlacement({
-        behavior: "smooth",
-        highlightPostId: null,
-        view: backView,
-      });
+      if (backView.kind === "bottom") {
+        setPendingPlacement({
+          behavior: "smooth",
+          completion: "reached",
+          highlightPostId: null,
+          view: backView,
+        });
+      } else {
+        setPendingPlacement({
+          align: "center",
+          behavior: "smooth",
+          completion: "settled",
+          highlightPostId: null,
+          view: backView,
+        });
+      }
       clearHighlightTimeout();
       clearHighlightedPost();
       flushPendingPlacement();
@@ -522,17 +557,14 @@ const HydratedTranscript = memo(
       const frameId = requestAnimationFrame(() => {
         syncViewport();
 
-        if (pendingScrollSnapshotRef.current) {
-          virtualizerRef.current?.scrollTo(
-            pendingScrollSnapshotRef.current.offset
-          );
-          pendingScrollSnapshotRef.current = null;
+        if (pendingPlacementRef.current?.view.kind === "bottom") {
+          flushPendingPlacement();
+        } else if (pendingScrollOffsetRef.current !== null) {
+          virtualizerRef.current?.scrollTo(pendingScrollOffsetRef.current);
+          pendingScrollOffsetRef.current = null;
           syncViewport();
         } else if (pendingPlacementRef.current) {
           flushPendingPlacement();
-        } else if (isAtBottomRef.current) {
-          scrollController.scrollToLatest();
-          syncViewport();
         }
 
         persistSettledState();
@@ -541,12 +573,7 @@ const HydratedTranscript = memo(
       return () => {
         cancelAnimationFrame(frameId);
       };
-    }, [
-      flushPendingPlacement,
-      persistSettledState,
-      scrollController,
-      syncViewport,
-    ]);
+    }, [flushPendingPlacement, persistSettledState, syncViewport]);
 
     useLayoutEffect(
       () => () => {
@@ -573,7 +600,7 @@ const HydratedTranscript = memo(
         >
           <div className="grow" />
           <Virtualizer
-            cache={initialRestorableScrollSnapshot?.cache ?? undefined}
+            cache={initialRestorableCache ?? undefined}
             data={activeTranscript.rows}
             ref={virtualizerRef}
             scrollRef={scrollRootRef}

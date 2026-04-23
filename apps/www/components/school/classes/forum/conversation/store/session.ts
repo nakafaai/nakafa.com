@@ -9,7 +9,8 @@ export interface ConversationScrollSnapshot {
   cache: CacheSnapshot | null;
   lastPostId: Id<"schoolClassForumPosts"> | null;
   offset: number;
-  rowCount: number;
+  renderedRowCount: number;
+  wasAtBottom: boolean;
 }
 
 interface State {
@@ -37,26 +38,34 @@ const initialState: State = {
   savedConversationScrollSnapshots: {},
 };
 
-/** Returns whether one stored scroll snapshot still matches the current list. */
-export function canRestoreConversationScrollSnapshot({
+/** Returns whether one stored cache snapshot still matches the current list. */
+export function canRestoreConversationScrollCache({
   lastPostId,
-  rowCount,
+  renderedRowCount,
   snapshot,
 }: {
   lastPostId: Id<"schoolClassForumPosts"> | null;
-  rowCount: number;
+  renderedRowCount: number;
   snapshot: ConversationScrollSnapshot | null | undefined;
 }) {
-  if (!snapshot) {
+  if (!snapshot?.cache) {
     return false;
   }
 
-  return snapshot.lastPostId === lastPostId && snapshot.rowCount === rowCount;
+  return (
+    snapshot.lastPostId === lastPostId &&
+    snapshot.renderedRowCount === renderedRowCount
+  );
 }
 
-/** Creates one class-scoped session store for reply state and scroll restoration. */
+/**
+ * Creates one class-scoped session store for reply state and scroll restoration.
+ *
+ * Hydration is intentionally manual so the conversation provider can rehydrate
+ * session-backed state on the client before the transcript renders.
+ */
 export function createSessionStore(classId: string) {
-  const store = createStore<SessionStore>()(
+  return createStore<SessionStore>()(
     persist(
       immer((set) => ({
         ...initialState,
@@ -85,18 +94,10 @@ export function createSessionStore(classId: string) {
           savedConversationScrollSnapshots:
             state.savedConversationScrollSnapshots,
         }),
+        skipHydration: true,
         storage: createJSONStorage(() => sessionStorage),
         version: 1,
       }
     )
   );
-
-  if (store.persist.hasHydrated()) {
-    store.setState((state) => ({
-      ...state,
-      isHydrated: true,
-    }));
-  }
-
-  return store;
 }

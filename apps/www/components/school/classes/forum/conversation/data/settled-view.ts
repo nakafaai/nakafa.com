@@ -6,6 +6,11 @@ function getPostElements(root: HTMLElement) {
   return Array.from(root.querySelectorAll<HTMLElement>("[data-post-id]"));
 }
 
+/** Returns the viewport-center tolerance used by transcript post placement. */
+export function getConversationCenterThreshold(viewportSize: number) {
+  return Math.max(32, Math.min(96, viewportSize * 0.12));
+}
+
 function getConversationPostId({
   postIds,
   value,
@@ -42,7 +47,7 @@ function isElementCenteredInsideRoot({
 }) {
   const elementRect = element.getBoundingClientRect();
   const rootRect = root.getBoundingClientRect();
-  const centerThreshold = Math.max(32, Math.min(96, root.clientHeight * 0.12));
+  const centerThreshold = getConversationCenterThreshold(root.clientHeight);
   const elementCenter = (elementRect.top + elementRect.bottom) / 2;
   const rootCenter = (rootRect.top + rootRect.bottom) / 2;
 

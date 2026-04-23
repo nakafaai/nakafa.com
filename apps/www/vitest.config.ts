@@ -5,9 +5,11 @@ import { mergeConfig } from "vitest/config";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** Extend the shared frontend Vitest baseline with app-local aliases and setup. */
+/**
+ * Keep this config aligned with the shared frontend Vitest baseline.
+ * Do not weaken coverage or add app-local execution overrides here.
+ */
 export default mergeConfig(config, {
-  fileParallelism: false,
   resolve: {
     alias: {
       /** Match the app's `@/` import alias inside tests. */
@@ -18,8 +20,6 @@ export default mergeConfig(config, {
     /** Prepare the React test environment before each suite loads. */
     setupFiles: ["./vitest.setup.ts"],
     coverage: {
-      clean: false,
-      cleanOnRerun: false,
       thresholds: {
         100: true,
         perFile: true,
