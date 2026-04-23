@@ -53,3 +53,23 @@ export const TranscriptRow = memo(
   }
 );
 TranscriptRow.displayName = "TranscriptRow";
+
+/** Adapts one virtualized row index back into the grouped transcript row shape. */
+export const VirtualTranscriptRow = memo(
+  ({
+    index,
+    row,
+    rows,
+  }: {
+    index: number;
+    row: ConversationRow;
+    rows: readonly ConversationRow[];
+  }) => (
+    <TranscriptRow
+      nextRow={rows[index + 1]}
+      previousRow={rows[index - 1]}
+      row={row}
+    />
+  )
+);
+VirtualTranscriptRow.displayName = "VirtualTranscriptRow";

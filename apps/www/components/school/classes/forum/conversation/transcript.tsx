@@ -9,37 +9,36 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useMutation } from "convex/react";
-import { memo, useCallback, useMemo, useRef } from "react";
+import { memo, useCallback, useLayoutEffect, useMemo, useRef } from "react";
+import { Virtualizer, type VirtualizerHandle } from "virtua";
 import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
 import { useViewport } from "@/components/school/classes/forum/conversation/context/use-viewport";
+import { useActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/active-transcript";
 import {
-  createConversationRows,
   FORUM_BOTTOM_THRESHOLD,
   getConversationRowKey,
 } from "@/components/school/classes/forum/conversation/data/pages";
 import {
-  captureConversationView,
   getConversationBottomDistance,
   getLastVisibleConversationPostId,
-  hasConversationViewReached,
-  hasConversationViewSettledPlacement,
 } from "@/components/school/classes/forum/conversation/data/settled-view";
+import { createConversationScrollController } from "@/components/school/classes/forum/conversation/data/transcript-scroll";
 import { useConversationUnreadCue } from "@/components/school/classes/forum/conversation/data/unread";
 import type { ConversationView } from "@/components/school/classes/forum/conversation/data/view";
 import { isConversationViewAtPost } from "@/components/school/classes/forum/conversation/data/view";
 import { JumpBar } from "@/components/school/classes/forum/conversation/jump-bar";
-import { TranscriptRow } from "@/components/school/classes/forum/conversation/transcript-row";
+import { VirtualTranscriptRow } from "@/components/school/classes/forum/conversation/transcript-row";
 
 interface PendingPlacement {
-  behavior: ScrollBehavior;
+  behavior?: ScrollBehavior;
   highlightPostId: Id<"schoolClassForumPosts"> | null;
   view: ConversationView;
 }
 
 /**
- * Normal-DOM transcript backed by one reactive Convex query.
+ * Virtua transcript backed by one reactive Convex query.
  *
  * References:
  * - Convex best practices:
@@ -121,23 +120,15 @@ const HydratedTranscript = memo(
       isPending,
       posts: transcriptPosts,
     });
-    const rows = useMemo(
-      () =>
-        createConversationRows({
-          forum,
-          posts: transcriptPosts,
-          unreadCue,
-        }),
-      [forum, transcriptPosts, unreadCue]
-    );
-    const postIds = useMemo(
-      () => transcriptPosts.map((post) => post._id),
-      [transcriptPosts]
-    );
+    const activeTranscript = useActiveTranscriptModel({
+      forum,
+      posts: transcriptPosts,
+      unreadCue,
+    });
     const canGoBack = backStack.length > 0;
     const shouldShowJumpBar = hasOverflow && (canGoBack || !isAtBottom);
     const scrollRootRef = useRef<HTMLDivElement | null>(null);
-    const contentObserverRef = useRef<ResizeObserver | null>(null);
+    const virtualizerRef = useRef<VirtualizerHandle | null>(null);
     const pendingPlacementRef = useRef<PendingPlacement | null>({
       behavior: "auto",
       highlightPostId: null,
@@ -146,13 +137,31 @@ const HydratedTranscript = memo(
     const lastMarkedPostIdRef = useRef<Id<"schoolClassForumPosts"> | null>(
       null
     );
-    const postIdsRef = useRef(postIds);
+    const postIdsRef = useRef(activeTranscript.postIds);
     const backStackRef = useRef(backStack);
     const isAtBottomRef = useRef(isAtBottom);
 
-    postIdsRef.current = postIds;
+    postIdsRef.current = activeTranscript.postIds;
     backStackRef.current = backStack;
     isAtBottomRef.current = isAtBottom;
+
+    const scrollController = useMemo(
+      () =>
+        createConversationScrollController({
+          lastRowIndex: activeTranscript.lastRowIndex,
+          postIds: activeTranscript.postIds,
+          prefersReducedMotion,
+          rowIndexByPostId: activeTranscript.rowIndexByPostId,
+          scrollRootRef,
+          virtualizerRef,
+        }),
+      [
+        activeTranscript.lastRowIndex,
+        activeTranscript.postIds,
+        activeTranscript.rowIndexByPostId,
+        prefersReducedMotion,
+      ]
+    );
 
     /*
      * The jump highlight needs one restartable timer owned by the transcript,
@@ -193,11 +202,8 @@ const HydratedTranscript = memo(
 
       const hasReachedPendingPlacement =
         pendingPlacement.view.kind === "post"
-          ? hasConversationViewSettledPlacement({
-              root,
-              view: pendingPlacement.view,
-            })
-          : hasConversationViewReached({ root, view: pendingPlacement.view });
+          ? scrollController.isViewSettled(pendingPlacement.view)
+          : scrollController.isViewReached(pendingPlacement.view);
 
       if (!hasReachedPendingPlacement) {
         return;
@@ -210,7 +216,12 @@ const HydratedTranscript = memo(
       }
 
       pendingPlacementRef.current = null;
-    }, [clearHighlightTimeout, highlightPost, startHighlightTimeout]);
+    }, [
+      clearHighlightTimeout,
+      highlightPost,
+      scrollController,
+      startHighlightTimeout,
+    ]);
 
     /**
      * Persists only settled semantic transcript state.
@@ -226,10 +237,7 @@ const HydratedTranscript = memo(
         return;
       }
 
-      const view = captureConversationView({
-        postIds: postIdsRef.current,
-        root,
-      });
+      const view = scrollController.captureView();
 
       if (view) {
         saveConversationView(forumId, view);
@@ -257,63 +265,23 @@ const HydratedTranscript = memo(
 
       const backView = backStackRef.current.at(-1);
 
-      if (backView && hasConversationViewReached({ root, view: backView })) {
+      if (backView && scrollController.isViewReached(backView)) {
         popBackView();
       }
     }, 160);
 
-    /** Scrolls the real DOM transcript to one semantic target. */
-    const scrollToBottom = useCallback((behavior: ScrollBehavior) => {
-      const root = scrollRootRef.current;
-
-      if (!root) {
-        return false;
-      }
-
-      root.scrollTo({
-        behavior,
-        top: root.scrollHeight,
-      });
-      return true;
-    }, []);
-
-    /** Scrolls the real DOM transcript to one semantic target. */
-    const scrollToView = useCallback(
+    const scrollToPendingPlacement = useCallback(
       ({ behavior, view }: PendingPlacement) => {
         if (view.kind === "bottom") {
-          return scrollToBottom(behavior);
+          return scrollController.scrollToLatest({ behavior });
         }
 
-        const root = scrollRootRef.current;
-
-        if (!root) {
-          return false;
-        }
-
-        const node = root.querySelector<HTMLElement>(
-          `[data-post-id="${view.postId}"]`
-        );
-
-        if (!node) {
-          return false;
-        }
-
-        node.scrollIntoView({
-          behavior,
-          block: "center",
-          inline: "nearest",
-        });
-        return true;
+        return scrollController.scrollToPost(view.postId, { behavior });
       },
-      [scrollToBottom]
+      [scrollController]
     );
 
-    /**
-     * Retries semantic placement when the target row appears or content resizes.
-     *
-     * Follow-up retries downgrade to `auto` so repeated image/content resizes do
-     * not restart a smooth scroll animation on every observer callback.
-     */
+    /** Retries semantic placement when the target row appears or content resizes. */
     const flushPendingPlacement = useCallback(() => {
       const pendingPlacement = pendingPlacementRef.current;
 
@@ -326,7 +294,7 @@ const HydratedTranscript = memo(
         !postIdsRef.current.includes(pendingPlacement.view.postId)
       ) {
         pendingPlacementRef.current = {
-          behavior: "auto",
+          behavior: pendingPlacement.behavior,
           highlightPostId: null,
           view: { kind: "bottom" },
         };
@@ -334,36 +302,8 @@ const HydratedTranscript = memo(
 
       const nextPlacement = pendingPlacementRef.current;
 
-      if (!(nextPlacement && scrollToView(nextPlacement))) {
+      if (!(nextPlacement && scrollToPendingPlacement(nextPlacement))) {
         return;
-      }
-
-      pendingPlacementRef.current = {
-        ...nextPlacement,
-        behavior: "auto",
-      };
-      syncViewport();
-      clearReachedPendingPlacement();
-      persistSettledState();
-    }, [
-      clearReachedPendingPlacement,
-      persistSettledState,
-      scrollToView,
-      syncViewport,
-    ]);
-
-    /** Maintains pinned-to-bottom behavior when live content expands. */
-    const handleContentResize = useCallback(() => {
-      const root = scrollRootRef.current;
-
-      if (!root) {
-        return;
-      }
-
-      if (pendingPlacementRef.current) {
-        flushPendingPlacement();
-      } else if (isAtBottomRef.current) {
-        scrollToBottom("auto");
       }
 
       syncViewport();
@@ -371,16 +311,10 @@ const HydratedTranscript = memo(
       persistSettledState();
     }, [
       clearReachedPendingPlacement,
-      flushPendingPlacement,
       persistSettledState,
-      scrollToBottom,
+      scrollToPendingPlacement,
       syncViewport,
     ]);
-
-    const getScrollBehavior = useCallback(
-      () => (prefersReducedMotion ? "auto" : "smooth"),
-      [prefersReducedMotion]
-    );
 
     /**
      * Jumping to a post stays purely client-side now because every transcript
@@ -390,7 +324,7 @@ const HydratedTranscript = memo(
       (postId: Id<"schoolClassForumPosts">) => {
         const root = scrollRootRef.current;
 
-        if (!(root && postIdsRef.current.includes(postId))) {
+        if (!(root && activeTranscript.rowIndexByPostId.has(postId))) {
           return;
         }
 
@@ -398,35 +332,33 @@ const HydratedTranscript = memo(
         clearHighlightTimeout();
         clearHighlightedPost();
 
-        if (hasConversationViewSettledPlacement({ root, view: targetView })) {
+        if (scrollController.isViewSettled(targetView)) {
           highlightPost(postId);
           startHighlightTimeout();
           return;
         }
 
-        const currentView = captureConversationView({
-          postIds: postIdsRef.current,
-          root,
-        });
+        const currentView = scrollController.captureView();
 
         if (currentView && !isConversationViewAtPost(currentView, postId)) {
           pushBackView(currentView);
         }
 
         pendingPlacementRef.current = {
-          behavior: getScrollBehavior(),
+          behavior: "smooth",
           highlightPostId: postId,
           view: targetView,
         };
         flushPendingPlacement();
       },
       [
+        activeTranscript.rowIndexByPostId,
         clearHighlightedPost,
         clearHighlightTimeout,
         flushPendingPlacement,
-        getScrollBehavior,
         highlightPost,
         pushBackView,
+        scrollController,
         startHighlightTimeout,
       ]
     );
@@ -434,19 +366,14 @@ const HydratedTranscript = memo(
     /** Latest is just the real end of the DOM transcript, not a mode switch. */
     const goToLatest = useCallback(() => {
       pendingPlacementRef.current = {
-        behavior: getScrollBehavior(),
+        behavior: "smooth",
         highlightPostId: null,
         view: { kind: "bottom" },
       };
       clearHighlightTimeout();
       clearHighlightedPost();
       flushPendingPlacement();
-    }, [
-      clearHighlightedPost,
-      clearHighlightTimeout,
-      flushPendingPlacement,
-      getScrollBehavior,
-    ]);
+    }, [clearHighlightedPost, clearHighlightTimeout, flushPendingPlacement]);
 
     /** Back restores the saved semantic origin instead of raw scrollTop pixels. */
     const goBack = useCallback(() => {
@@ -465,7 +392,7 @@ const HydratedTranscript = memo(
       }
 
       pendingPlacementRef.current = {
-        behavior: getScrollBehavior(),
+        behavior: "smooth",
         highlightPostId: null,
         view: backView,
       };
@@ -476,29 +403,9 @@ const HydratedTranscript = memo(
       clearHighlightedPost,
       clearHighlightTimeout,
       flushPendingPlacement,
-      getScrollBehavior,
       goToLatest,
       popBackView,
     ]);
-
-    /** Reconnects one ResizeObserver without mirroring DOM refs into React state. */
-    const handleContentRef = useCallback(
-      (node: HTMLDivElement | null) => {
-        contentObserverRef.current?.disconnect();
-        contentObserverRef.current = null;
-
-        if (!node) {
-          return;
-        }
-
-        const observer = new ResizeObserver(handleContentResize);
-
-        contentObserverRef.current = observer;
-        observer.observe(node);
-        requestAnimationFrame(handleContentResize);
-      },
-      [handleContentResize]
-    );
 
     /** Registers transcript controls and boots the initial semantic restore. */
     const handleScrollRootRef = useCallback(
@@ -519,15 +426,11 @@ const HydratedTranscript = memo(
           goToPost,
         });
         syncViewport();
-        requestAnimationFrame(flushPendingPlacement);
-        requestAnimationFrame(persistSettledState);
       },
       [
         acknowledgeUnreadCue,
-        flushPendingPlacement,
         goToLatest,
         goToPost,
-        persistSettledState,
         registerControls,
         syncViewport,
       ]
@@ -538,6 +441,30 @@ const HydratedTranscript = memo(
       clearReachedPendingPlacement();
       persistSettledState();
     }, [clearReachedPendingPlacement, persistSettledState, syncViewport]);
+
+    useLayoutEffect(() => {
+      const frameId = requestAnimationFrame(() => {
+        syncViewport();
+
+        if (pendingPlacementRef.current) {
+          flushPendingPlacement();
+        } else if (isAtBottomRef.current) {
+          scrollController.scrollToLatest();
+          syncViewport();
+        }
+
+        persistSettledState();
+      });
+
+      return () => {
+        cancelAnimationFrame(frameId);
+      };
+    }, [
+      flushPendingPlacement,
+      persistSettledState,
+      scrollController,
+      syncViewport,
+    ]);
 
     if (isError) {
       throw error;
@@ -550,20 +477,26 @@ const HydratedTranscript = memo(
     return (
       <div className="absolute inset-0">
         <div
-          className="absolute inset-0 overflow-y-auto overscroll-contain"
+          className="absolute inset-0 flex flex-col overflow-y-auto overscroll-contain"
           onScroll={handleScroll}
           ref={handleScrollRootRef}
+          style={{ overflowAnchor: "none" }}
         >
-          <div className="min-h-full" ref={handleContentRef}>
-            {rows.map((row, index) => (
-              <TranscriptRow
+          <div className="grow" />
+          <Virtualizer
+            data={activeTranscript.rows}
+            ref={virtualizerRef}
+            scrollRef={scrollRootRef}
+          >
+            {(row, index) => (
+              <VirtualTranscriptRow
+                index={index}
                 key={getConversationRowKey(row, forum?._id)}
-                nextRow={rows[index + 1]}
-                previousRow={rows[index - 1]}
                 row={row}
+                rows={activeTranscript.rows}
               />
-            ))}
-          </div>
+            )}
+          </Virtualizer>
         </div>
 
         {shouldShowJumpBar ? (
