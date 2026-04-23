@@ -510,8 +510,6 @@ const HydratedTranscript = memo(
         scrollRootRef.current = node;
 
         if (!node) {
-          contentObserverRef.current?.disconnect();
-          contentObserverRef.current = null;
           return;
         }
 
