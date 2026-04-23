@@ -28,7 +28,7 @@ export const JumpBar = memo(
       >
         <div
           className={cn(
-            "opacity-100 transition-none motion-reduce:transition-none",
+            "transition-opacity ease-out motion-reduce:transition-none",
             visible
               ? "pointer-events-auto opacity-100"
               : "pointer-events-none opacity-0"

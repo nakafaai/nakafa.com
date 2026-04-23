@@ -604,9 +604,13 @@ const HydratedTranscript = memo(
 
     useLayoutEffect(
       () => () => {
+        if (persistSettledState.isPending()) {
+          return;
+        }
+
         persistCurrentScrollSnapshotRef.current?.();
       },
-      []
+      [persistSettledState]
     );
 
     if (isError) {
