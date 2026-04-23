@@ -16,5 +16,7 @@ app.use(resend);
 // Aggregates for tryout leaderboard rankings
 app.use(aggregate, { name: "tryoutLeaderboard" });
 app.use(aggregate, { name: "globalLeaderboard" });
+app.use(aggregate, { name: "forumPostsBySequence" });
+app.use(aggregate, { name: "forumPostsByAuthorSequence" });
 
 export default app;

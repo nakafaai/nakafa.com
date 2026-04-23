@@ -11,12 +11,13 @@ import { describe, expect, it } from "vitest";
 describe("tryouts/queries/me/session", () => {
   it("returns null when the user has no resolved tryout attempt", async () => {
     const t = createTryoutTestConvex();
-    const identity = await t.mutation(async (ctx) => {
-      return await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "session-missing",
-      });
-    });
+    const identity = await t.mutation(
+      async (ctx) =>
+        await seedAuthenticatedUser(ctx, {
+          now: NOW,
+          suffix: "session-missing",
+        })
+    );
 
     const result = await t
       .withIdentity({

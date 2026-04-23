@@ -1,21 +1,50 @@
 import { notFound } from "next/navigation";
-import { use } from "react";
-import { SchoolClassesForumPostSheet } from "@/components/school/classes/forum/post-sheet";
+import type { ReactNode } from "react";
+import { Suspense } from "react";
+import { SessionProvider } from "@/components/school/classes/forum/conversation/context/use-session";
 import { SchoolClassesHeaderInfo } from "@/components/school/classes/info";
 import { SchoolClassesJoinForm } from "@/components/school/classes/join-form";
 import { SchoolClassesTabs } from "@/components/school/classes/tabs";
+import { SchoolClassesWorkspaceShell } from "@/components/school/classes/workspace-shell";
 import { ClassContextProvider } from "@/lib/context/use-class";
-import { ForumContextProvider } from "@/lib/context/use-forum";
 import { getClassRouteSnapshot } from "@/lib/school/server";
 
 /** Bind the resolved class route snapshot to the class subtree. */
-export default function Layout(
-  props: LayoutProps<"/[locale]/school/[slug]/classes/[id]">
-) {
-  const { children, params } = props;
-  const { id } = use(params);
+export default function Layout({
+  children,
+  panel,
+  params,
+}: {
+  children: ReactNode;
+  panel: ReactNode;
+  params: LayoutProps<"/[locale]/school/[slug]/classes/[id]">["params"];
+}) {
+  return (
+    <Suspense fallback={null}>
+      <ResolvedClassRouteBoundary panel={panel} params={params}>
+        {children}
+      </ResolvedClassRouteBoundary>
+    </Suspense>
+  );
+}
 
-  return <ClassRouteBoundary classId={id}>{children}</ClassRouteBoundary>;
+/** Resolve the class route params inside Suspense before loading class data. */
+async function ResolvedClassRouteBoundary({
+  children,
+  panel,
+  params,
+}: {
+  children: ReactNode;
+  panel: ReactNode;
+  params: LayoutProps<"/[locale]/school/[slug]/classes/[id]">["params"];
+}) {
+  const { id } = await params;
+
+  return (
+    <ClassRouteBoundary classId={id} panel={panel}>
+      {children}
+    </ClassRouteBoundary>
+  );
 }
 
 /**
@@ -25,9 +54,11 @@ export default function Layout(
 async function ClassRouteBoundary({
   children,
   classId,
+  panel,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   classId: string;
+  panel: ReactNode;
 }) {
   const value = await getClassRouteSnapshot({ classId });
 
@@ -46,13 +77,13 @@ async function ClassRouteBoundary({
 
   return (
     <ClassContextProvider value={value}>
-      <SchoolClassesHeaderInfo />
-      <SchoolClassesTabs />
-
-      <ForumContextProvider key={classId}>
-        <SchoolClassesForumPostSheet />
-        {children}
-      </ForumContextProvider>
+      <SessionProvider classId={classId} key={classId}>
+        <SchoolClassesWorkspaceShell panel={panel}>
+          <SchoolClassesHeaderInfo />
+          <SchoolClassesTabs />
+          {children}
+        </SchoolClassesWorkspaceShell>
+      </SessionProvider>
     </ClassContextProvider>
   );
 }

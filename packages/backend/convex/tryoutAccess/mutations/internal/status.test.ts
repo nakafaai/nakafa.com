@@ -63,17 +63,15 @@ describe("tryoutAccess/mutations/internal/status", () => {
       await syncTryoutAccessGrantStatus(ctx.db, grant, NOW);
     });
 
-    const result = await t.query(async (ctx) => {
-      return {
-        entitlement: await ctx.db
-          .query("userTryoutEntitlements")
-          .withIndex("by_accessGrantId", (q) =>
-            q.eq("accessGrantId", state.grantId)
-          )
-          .unique(),
-        grant: await ctx.db.get("tryoutAccessGrants", state.grantId),
-      };
-    });
+    const result = await t.query(async (ctx) => ({
+      entitlement: await ctx.db
+        .query("userTryoutEntitlements")
+        .withIndex("by_accessGrantId", (q) =>
+          q.eq("accessGrantId", state.grantId)
+        )
+        .unique(),
+      grant: await ctx.db.get("tryoutAccessGrants", state.grantId),
+    }));
 
     expect(result.grant?.endsAt).toBe(state.oldGrantEndsAt);
     expect(result.grant?.status).toBe("active");
@@ -153,14 +151,15 @@ describe("tryoutAccess/mutations/internal/status", () => {
       await syncTryoutAccessGrantStatus(ctx.db, grant, NOW);
     });
 
-    const entitlements = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("userTryoutEntitlements")
-        .withIndex("by_accessGrantId", (q) =>
-          q.eq("accessGrantId", state.grantId)
-        )
-        .collect();
-    });
+    const entitlements = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("userTryoutEntitlements")
+          .withIndex("by_accessGrantId", (q) =>
+            q.eq("accessGrantId", state.grantId)
+          )
+          .collect()
+    );
 
     expect(entitlements).toEqual([
       expect.objectContaining({
@@ -232,16 +231,19 @@ describe("tryoutAccess/mutations/internal/status", () => {
 
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-    const finalizedCount = await t.query(async (ctx) => {
-      return (
-        await ctx.db
-          .query("tryoutAccessCampaigns")
-          .withIndex("by_campaignKind_and_resultsStatus_and_endsAt", (q) =>
-            q.eq("campaignKind", "competition").eq("resultsStatus", "finalized")
-          )
-          .take(102)
-      ).length;
-    });
+    const finalizedCount = await t.query(
+      async (ctx) =>
+        (
+          await ctx.db
+            .query("tryoutAccessCampaigns")
+            .withIndex("by_campaignKind_and_resultsStatus_and_endsAt", (q) =>
+              q
+                .eq("campaignKind", "competition")
+                .eq("resultsStatus", "finalized")
+            )
+            .take(102)
+        ).length
+    );
 
     expect(finalizedCount).toBe(101);
 

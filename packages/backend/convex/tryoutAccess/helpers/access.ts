@@ -297,12 +297,13 @@ export async function listCanonicalActiveTryoutSubscriptions(
   }
 ) {
   const activeSubscriptions = await Promise.all(
-    tryoutProducts.map(async (product) => {
-      return await getLatestActiveSubscriptionForProduct(db, {
-        customerId,
-        productId: tryoutPaidProductIds[product],
-      });
-    })
+    tryoutProducts.map(
+      async (product) =>
+        await getLatestActiveSubscriptionForProduct(db, {
+          customerId,
+          productId: tryoutPaidProductIds[product],
+        })
+    )
   );
 
   return activeSubscriptions.filter(

@@ -34,9 +34,9 @@ describe("resolveContentsDir", () => {
       "/workspace/apps/www/exercises",
       "/workspace/apps/www/subject",
     ]);
-    mockExistsSync.mockImplementation((filePath: string) => {
-      return existingPaths.has(filePath);
-    });
+    mockExistsSync.mockImplementation((filePath: string) =>
+      existingPaths.has(filePath)
+    );
 
     const result = resolveContentsDir(
       "file:///vercel/path0/apps/www/server/chunk.js"
@@ -51,9 +51,9 @@ describe("resolveContentsDir", () => {
       "/workspace/packages/contents/exercises",
       "/workspace/packages/contents/subject",
     ]);
-    mockExistsSync.mockImplementation((filePath: string) => {
-      return existingPaths.has(filePath);
-    });
+    mockExistsSync.mockImplementation((filePath: string) =>
+      existingPaths.has(filePath)
+    );
 
     const result = resolveContentsDir(
       "file:///vercel/path0/apps/www/server/chunk.js"

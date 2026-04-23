@@ -6,21 +6,23 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { UserData } from "@repo/backend/convex/lib/helpers/user";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { cn } from "@repo/design-system/lib/utils";
+import { Link } from "@repo/internationalization/src/navigation";
 import { useMutation, usePaginatedQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
+import { useParams, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useQueryState, useQueryStates } from "nuqs";
+import { useQueryStates } from "nuqs";
 import { Activity, useTransition } from "react";
 import { getTagIcon } from "@/components/school/classes/_data/tag";
-import { forumSearchParsers } from "@/components/school/classes/forum/search-params";
+import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
 import { useClass } from "@/lib/context/use-class";
-import { useForum } from "@/lib/context/use-forum";
 import { searchParsers } from "@/lib/nuqs/search";
 import { getLocale } from "@/lib/utils/date";
 
@@ -31,6 +33,7 @@ type ForumListItem = Doc<"schoolClassForums"> & {
 };
 
 const DEBOUNCE_TIME = 500;
+const FORUM_UNREAD_BADGE_LIMIT = 25;
 
 /**
  * Render the searchable forum thread list for one class.
@@ -39,15 +42,27 @@ export function SchoolClassesForumList() {
   const t = useTranslations("School.Classes");
 
   const locale = useLocale();
+  const routeParams = useParams<{
+    forumId?: Id<"schoolClassForums">;
+    id: string;
+    slug: string;
+  }>();
+  const searchParams = useSearchParams();
 
   const classId = useClass((state) => state.class._id);
-  const resetConversationState = useForum(
-    (state) => state.resetConversationState
-  );
+  const setReplyTo = useSession((state) => state.setReplyTo);
   const [{ q }] = useQueryStates(searchParsers);
-  const [, setForumId] = useQueryState("forum", forumSearchParsers.forum);
 
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
+
+  /** Clears transient reply state before forum route navigation. */
+  function handleForumNavigate(nextForumId: Id<"schoolClassForums">) {
+    if (routeParams.forumId === nextForumId) {
+      return;
+    }
+
+    setReplyTo(null);
+  }
 
   const { results, status, loadMore } = usePaginatedQuery(
     api.classes.forums.queries.forums.getForums,
@@ -77,21 +92,29 @@ export function SchoolClassesForumList() {
       <section className="flex flex-col divide-y overflow-hidden rounded-md border shadow-sm">
         {results.map((forum) => {
           const Icon = getTagIcon(forum.tag);
+          const search = searchParams.toString();
+          const href = `/school/${routeParams.slug}/classes/${routeParams.id}/forum/${forum._id}${search ? `?${search}` : ""}`;
+          const isActive = routeParams.forumId === forum._id;
+
           return (
             <div className="group relative" key={forum._id}>
-              <button
-                className="absolute inset-0 z-0 cursor-pointer"
-                onClick={() => {
-                  resetConversationState();
-                  setForumId(forum._id);
-                }}
-                type="button"
+              <Link
+                aria-current={isActive ? "page" : undefined}
+                className="absolute inset-0 z-0 rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                href={href}
+                onNavigate={() => handleForumNavigate(forum._id)}
+                prefetch
               >
                 <span className="sr-only">{forum.title}</span>
-              </button>
+              </Link>
 
-              <div className="pointer-events-none flex flex-col gap-3 p-4 transition-colors ease-out group-hover:bg-accent/20">
-                <Badge variant="muted">
+              <div
+                className={cn(
+                  "pointer-events-none flex flex-col gap-3 p-4 transition-colors ease-out group-focus-within:bg-accent/20 group-hover:bg-accent/20",
+                  isActive && "bg-accent/20"
+                )}
+              >
+                <Badge variant="outline">
                   <HugeIcons icon={Icon} />
                   {t(forum.tag)}
                 </Badge>
@@ -105,7 +128,9 @@ export function SchoolClassesForumList() {
                       mode={forum.unreadCount > 0 ? "visible" : "hidden"}
                     >
                       <Badge variant="destructive">
-                        {forum.unreadCount > 25 ? "25+" : forum.unreadCount}
+                        {forum.unreadCount > FORUM_UNREAD_BADGE_LIMIT
+                          ? `${FORUM_UNREAD_BADGE_LIMIT}+`
+                          : forum.unreadCount}
                       </Badge>
                     </Activity>
                   </div>

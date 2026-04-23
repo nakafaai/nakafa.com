@@ -18,14 +18,14 @@ export function SchoolClassesHeaderSearch() {
 
   return (
     <InputGroup>
-      <InputGroupAddon>
-        <HugeIcons icon={Search02Icon} />
-      </InputGroupAddon>
       <InputGroupInput
         onChange={(e) => setSearch({ q: e.target.value })}
         placeholder={t("search-placeholder")}
         value={q}
       />
+      <InputGroupAddon>
+        <HugeIcons icon={Search02Icon} />
+      </InputGroupAddon>
     </InputGroup>
   );
 }

@@ -22,6 +22,7 @@ export const createForumPost = mutation({
     mentions: v.optional(v.array(vv.id("users"))),
     parentId: v.optional(vv.id("schoolClassForumPosts")),
   },
+  returns: vv.id("schoolClassForumPosts"),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;
@@ -74,6 +75,12 @@ export const createForumPost = mutation({
     }
 
     const now = Date.now();
+    const sequence = forum.nextPostSequence;
+
+    await ctx.db.patch("schoolClassForums", forum._id, {
+      nextPostSequence: sequence + 1,
+    });
+
     const postId = await ctx.db.insert("schoolClassForumPosts", {
       body: args.body,
       classId: forum.classId,
@@ -85,6 +92,7 @@ export const createForumPost = mutation({
       replyCount: 0,
       replyToBody,
       replyToUserId,
+      sequence,
       updatedAt: now,
     });
 

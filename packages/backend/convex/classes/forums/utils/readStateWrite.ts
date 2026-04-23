@@ -14,8 +14,7 @@ export async function updateForumReadState(
     forumId: Id<"schoolClassForums">;
     classId: Id<"schoolClasses">;
     userId: Id<"users">;
-    lastReadAt: number;
-    lastReadPostId?: Id<"schoolClassForumPosts">;
+    lastReadSequence: number;
   }
 ) {
   const existing = await ctx.db
@@ -29,8 +28,7 @@ export async function updateForumReadState(
     await ctx.db.insert("schoolClassForumReadStates", {
       classId: args.classId,
       forumId: args.forumId,
-      lastReadAt: args.lastReadAt,
-      lastReadPostId: args.lastReadPostId,
+      lastReadSequence: args.lastReadSequence,
       userId: args.userId,
     });
 
@@ -38,19 +36,15 @@ export async function updateForumReadState(
   }
 
   if (
-    !(await shouldAdvanceForumReadBoundary(ctx.db, {
-      existingLastReadAt: existing.lastReadAt,
-      existingLastReadPostId: existing.lastReadPostId,
-      forumId: args.forumId,
-      nextLastReadAt: args.lastReadAt,
-      nextLastReadPostId: args.lastReadPostId,
-    }))
+    !shouldAdvanceForumReadBoundary({
+      existingLastReadSequence: existing.lastReadSequence,
+      nextLastReadSequence: args.lastReadSequence,
+    })
   ) {
     return;
   }
 
   await ctx.db.patch("schoolClassForumReadStates", existing._id, {
-    lastReadAt: args.lastReadAt,
-    lastReadPostId: args.lastReadPostId,
+    lastReadSequence: args.lastReadSequence,
   });
 }

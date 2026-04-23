@@ -18,12 +18,13 @@ describe("credits/mutations", () => {
       plan: "free",
     });
 
-    const storedPeriod = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("creditResetPeriods")
-        .withIndex("by_plan", (q) => q.eq("plan", "free"))
-        .unique();
-    });
+    const storedPeriod = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("creditResetPeriods")
+          .withIndex("by_plan", (q) => q.eq("plan", "free"))
+          .unique()
+    );
 
     expect(storedPeriod).toMatchObject({
       plan: "free",
@@ -38,9 +39,9 @@ describe("credits/mutations", () => {
 
     await t.mutation(internal.credits.mutations.syncAllCreditResetPeriods, {});
 
-    const storedPeriods = await t.query(async (ctx) => {
-      return await ctx.db.query("creditResetPeriods").collect();
-    });
+    const storedPeriods = await t.query(
+      async (ctx) => await ctx.db.query("creditResetPeriods").collect()
+    );
 
     expect(storedPeriods).toHaveLength(2);
     expect(storedPeriods).toEqual(

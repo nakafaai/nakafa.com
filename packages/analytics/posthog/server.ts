@@ -74,7 +74,7 @@ function getCookieValue(cookieHeader: string, cookieName: string) {
     }
   }
 
-  return undefined;
+  return;
 }
 
 /**
@@ -101,10 +101,10 @@ function parseDistinctIdFromCookieValue(cookieValue: string) {
       return payload.distinct_id;
     }
   } catch {
-    return undefined;
+    return;
   }
 
-  return undefined;
+  return;
 }
 
 /**
@@ -117,7 +117,7 @@ export function extractDistinctIdFromPostHogCookie(cookieHeader: CookieHeader) {
   const normalizedCookieHeader = normalizeCookieHeader(cookieHeader);
 
   if (!normalizedCookieHeader) {
-    return undefined;
+    return;
   }
 
   const cookieValue = getCookieValue(
@@ -126,7 +126,7 @@ export function extractDistinctIdFromPostHogCookie(cookieHeader: CookieHeader) {
   );
 
   if (!cookieValue) {
-    return undefined;
+    return;
   }
 
   return parseDistinctIdFromCookieValue(cookieValue);

@@ -184,7 +184,7 @@ export function getContentsMetadata(
         const metadata = yield* Effect.either(getContentMetadata(slug, locale));
 
         if (metadata._tag === "Left") {
-          return undefined;
+          return;
         }
 
         const url = new URL(`/${locale}/${slug}`, "https://nakafa.com");

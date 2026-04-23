@@ -127,13 +127,15 @@ export function BlockArt({
   const hoveredCellsRef = useRef<Set<number>>(new Set());
   const timeoutIdsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
 
-  const cellData = useMemo(() => {
-    return Array.from({ length: totalCells }, (_, i) => ({
-      index: i,
-      row: Math.floor(i / Cols),
-      col: i % Cols,
-    }));
-  }, [totalCells, Cols]);
+  const cellData = useMemo(
+    () =>
+      Array.from({ length: totalCells }, (_, i) => ({
+        index: i,
+        row: Math.floor(i / Cols),
+        col: i % Cols,
+      })),
+    [totalCells, Cols]
+  );
 
   // Handle hover start with instant color change
   const handleHoverStart = useCallback(
@@ -565,13 +567,14 @@ export function BlockArt({
     };
   }, [startAnimation]);
 
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-    };
-  }, []);
+    },
+    []
+  );
 
   const handleRipple = useCallback(
     (x: number, y: number) => {

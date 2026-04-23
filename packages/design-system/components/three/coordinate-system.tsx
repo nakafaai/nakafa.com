@@ -133,15 +133,16 @@ export function CoordinateSystem({
   // Cache Components preserve hidden page DOM with Activity. Reset the canvas
   // when this visualization is hidden so revisiting the page mounts a fresh
   // WebGL scene instead of preserving a stale one.
-  useLayoutEffect(() => {
-    return () => {
+  useLayoutEffect(
+    () => () => {
       setCanvasKey((key) => key + 1);
       setIsDragging(false);
       setPlay(false);
       setSceneReady(false);
       setShowGrid(initialShowGrid);
-    };
-  }, [initialShowGrid]);
+    },
+    [initialShowGrid]
+  );
 
   return (
     <div

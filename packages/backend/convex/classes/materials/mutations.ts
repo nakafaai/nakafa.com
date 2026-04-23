@@ -179,6 +179,7 @@ export const publishMaterialGroup = internalMutation({
 
     await ctx.db.patch("schoolClassMaterialGroups", args.groupId, {
       status: "published",
+      scheduledAt: undefined,
       scheduledJobId: undefined,
       publishedAt: now,
       publishedBy: args.publishedBy,
@@ -204,6 +205,10 @@ export const deleteMaterialGroup = mutation({
       classId: group.classId,
       schoolId: classData.schoolId,
     });
+
+    if (group.status === "scheduled" && group.scheduledJobId) {
+      await ctx.scheduler.cancel(group.scheduledJobId);
+    }
 
     // Delete triggers cascade: children, materials, attachments, views, parent count
     await ctx.db.delete("schoolClassMaterialGroups", args.groupId);

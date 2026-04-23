@@ -19,7 +19,7 @@ function getErrorDigest(error: unknown) {
     return error.digest;
   }
 
-  return undefined;
+  return;
 }
 
 /**

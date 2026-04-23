@@ -176,20 +176,18 @@ describe("irt/mutations/internal/scales", () => {
     );
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-    const result = await t.query(async (ctx) => {
-      return {
-        publicationEntries: await ctx.db
-          .query("irtScalePublicationQueue")
-          .withIndex("by_tryoutId_and_enqueuedAt", (q) =>
-            q.eq("tryoutId", tryoutId)
-          )
-          .collect(),
-        qualityCheck: await ctx.db
-          .query("irtScaleQualityChecks")
-          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
-          .unique(),
-      };
-    });
+    const result = await t.query(async (ctx) => ({
+      publicationEntries: await ctx.db
+        .query("irtScalePublicationQueue")
+        .withIndex("by_tryoutId_and_enqueuedAt", (q) =>
+          q.eq("tryoutId", tryoutId)
+        )
+        .collect(),
+      qualityCheck: await ctx.db
+        .query("irtScaleQualityChecks")
+        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
+        .unique(),
+    }));
 
     expect(result.publicationEntries).toHaveLength(0);
     expect(result.qualityCheck).toMatchObject({
@@ -229,18 +227,16 @@ describe("irt/mutations/internal/scales", () => {
     );
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-    const result = await t.query(async (ctx) => {
-      return {
-        queueEntries: await ctx.db
-          .query("irtScaleQualityRefreshQueue")
-          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
-          .collect(),
-        qualityCheck: await ctx.db
-          .query("irtScaleQualityChecks")
-          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
-          .unique(),
-      };
-    });
+    const result = await t.query(async (ctx) => ({
+      queueEntries: await ctx.db
+        .query("irtScaleQualityRefreshQueue")
+        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
+        .collect(),
+      qualityCheck: await ctx.db
+        .query("irtScaleQualityChecks")
+        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
+        .unique(),
+    }));
 
     expect(result.queueEntries).toHaveLength(1);
     expect(result.queueEntries[0]?.processingStartedAt).toBeUndefined();
@@ -273,18 +269,16 @@ describe("irt/mutations/internal/scales", () => {
       {}
     );
 
-    const claimedState = await t.mutation(async (ctx) => {
-      return {
-        enqueuedAgain: await enqueueScaleQualityRefresh(ctx, {
-          tryoutId,
-          enqueuedAt: Date.now(),
-        }),
-        queueEntries: await ctx.db
-          .query("irtScaleQualityRefreshQueue")
-          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
-          .collect(),
-      };
-    });
+    const claimedState = await t.mutation(async (ctx) => ({
+      enqueuedAgain: await enqueueScaleQualityRefresh(ctx, {
+        tryoutId,
+        enqueuedAt: Date.now(),
+      }),
+      queueEntries: await ctx.db
+        .query("irtScaleQualityRefreshQueue")
+        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
+        .collect(),
+    }));
 
     expect(claimedState.enqueuedAgain).toBe(false);
     expect(claimedState.queueEntries).toHaveLength(1);
@@ -292,18 +286,16 @@ describe("irt/mutations/internal/scales", () => {
 
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-    const finalState = await t.query(async (ctx) => {
-      return {
-        qualityCheck: await ctx.db
-          .query("irtScaleQualityChecks")
-          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
-          .unique(),
-        queueEntries: await ctx.db
-          .query("irtScaleQualityRefreshQueue")
-          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
-          .collect(),
-      };
-    });
+    const finalState = await t.query(async (ctx) => ({
+      qualityCheck: await ctx.db
+        .query("irtScaleQualityChecks")
+        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
+        .unique(),
+      queueEntries: await ctx.db
+        .query("irtScaleQualityRefreshQueue")
+        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
+        .collect(),
+    }));
 
     expect(finalState.queueEntries).toHaveLength(0);
     expect(finalState.qualityCheck).toMatchObject({
@@ -335,18 +327,16 @@ describe("irt/mutations/internal/scales", () => {
       return tryoutId;
     });
 
-    const result = await t.mutation(async (ctx) => {
-      return {
-        enqueuedAgain: await enqueueScaleQualityRefresh(ctx, {
-          tryoutId,
-          enqueuedAt: Date.now(),
-        }),
-        queueEntries: await ctx.db
-          .query("irtScaleQualityRefreshQueue")
-          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
-          .collect(),
-      };
-    });
+    const result = await t.mutation(async (ctx) => ({
+      enqueuedAgain: await enqueueScaleQualityRefresh(ctx, {
+        tryoutId,
+        enqueuedAt: Date.now(),
+      }),
+      queueEntries: await ctx.db
+        .query("irtScaleQualityRefreshQueue")
+        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
+        .collect(),
+    }));
 
     expect(result.enqueuedAgain).toBe(true);
     expect(result.queueEntries).toHaveLength(1);
@@ -410,18 +400,16 @@ describe("irt/mutations/internal/scales", () => {
 
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-    const finalState = await t.query(async (ctx) => {
-      return {
-        qualityCheck: await ctx.db
-          .query("irtScaleQualityChecks")
-          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", pendingTryoutId))
-          .unique(),
-        queueEntries: await ctx.db
-          .query("irtScaleQualityRefreshQueue")
-          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", pendingTryoutId))
-          .collect(),
-      };
-    });
+    const finalState = await t.query(async (ctx) => ({
+      qualityCheck: await ctx.db
+        .query("irtScaleQualityChecks")
+        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", pendingTryoutId))
+        .unique(),
+      queueEntries: await ctx.db
+        .query("irtScaleQualityRefreshQueue")
+        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", pendingTryoutId))
+        .collect(),
+    }));
 
     expect(finalState.queueEntries).toHaveLength(0);
     expect(finalState.qualityCheck).toMatchObject({
@@ -467,12 +455,13 @@ describe("irt/mutations/internal/scales", () => {
         {}
       );
 
-      const queueEntries = await t.query(async (ctx) => {
-        return await ctx.db
-          .query("irtScaleQualityRefreshQueue")
-          .withIndex("by_enqueuedAt")
-          .collect();
-      });
+      const queueEntries = await t.query(
+        async (ctx) =>
+          await ctx.db
+            .query("irtScaleQualityRefreshQueue")
+            .withIndex("by_enqueuedAt")
+            .collect()
+      );
 
       expect(result).toEqual({
         isDone: true,
@@ -513,10 +502,10 @@ describe("irt/mutations/internal/scales", () => {
         );
       });
 
-      const refreshQueueCount = await t.query(async (ctx) => {
-        return (await ctx.db.query("irtScaleQualityRefreshQueue").collect())
-          .length;
-      });
+      const refreshQueueCount = await t.query(
+        async (ctx) =>
+          (await ctx.db.query("irtScaleQualityRefreshQueue").collect()).length
+      );
 
       expect(firstPageResult).toEqual({
         isDone: false,
@@ -564,10 +553,10 @@ describe("irt/mutations/internal/scales", () => {
         }
       );
 
-      const refreshQueueCount = await t.query(async (ctx) => {
-        return (await ctx.db.query("irtScaleQualityRefreshQueue").collect())
-          .length;
-      });
+      const refreshQueueCount = await t.query(
+        async (ctx) =>
+          (await ctx.db.query("irtScaleQualityRefreshQueue").collect()).length
+      );
 
       expect(secondPageResult).toEqual({
         isDone: true,
@@ -607,16 +596,13 @@ describe("irt/mutations/internal/scales", () => {
     );
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-    const result = await t.query(async (ctx) => {
-      return {
-        qualityCheckCount: (
-          await ctx.db.query("irtScaleQualityChecks").collect()
-        ).length,
-        refreshQueueCount: (
-          await ctx.db.query("irtScaleQualityRefreshQueue").collect()
-        ).length,
-      };
-    });
+    const result = await t.query(async (ctx) => ({
+      qualityCheckCount: (await ctx.db.query("irtScaleQualityChecks").collect())
+        .length,
+      refreshQueueCount: (
+        await ctx.db.query("irtScaleQualityRefreshQueue").collect()
+      ).length,
+    }));
 
     expect(result).toEqual({
       qualityCheckCount: SCALE_QUALITY_REBUILD_BATCH_SIZE + 1,
@@ -655,12 +641,13 @@ describe("irt/mutations/internal/scales", () => {
     );
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-    const queueEntries = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("irtScaleQualityRefreshQueue")
-        .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
-        .collect();
-    });
+    const queueEntries = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("irtScaleQualityRefreshQueue")
+          .withIndex("by_tryoutId", (q) => q.eq("tryoutId", tryoutId))
+          .collect()
+    );
 
     expect(result).toEqual({
       processedCount: 25,

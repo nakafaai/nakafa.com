@@ -21,8 +21,8 @@ export const createContentAccessTool = ({
   locale,
   context,
   usageAccumulator,
-}: ContentAccessToolParams) => {
-  return tool({
+}: ContentAccessToolParams) =>
+  tool({
     description:
       "Access Nakafa educational content including articles, subjects, Quran chapters, and exercises. Use this for retrieving content from the Nakafa platform.",
     inputSchema: z.object({
@@ -46,4 +46,3 @@ export const createContentAccessTool = ({
       return result.text;
     },
   });
-};

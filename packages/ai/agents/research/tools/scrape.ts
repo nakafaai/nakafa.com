@@ -14,8 +14,8 @@ interface Params {
   writer: UIMessageStreamWriter<MyUIMessage>;
 }
 
-export const createScrape = ({ writer }: Params) => {
-  return tool({
+export const createScrape = ({ writer }: Params) =>
+  tool({
     description: nakafaScrape(),
     inputSchema: scrapeInputSchema,
     outputSchema: z.string(),
@@ -92,7 +92,6 @@ export const createScrape = ({ writer }: Params) => {
       }
     },
   });
-};
 
 function createOutput({ output }: { output: ScrapeOutput }): string {
   return dedentString(`

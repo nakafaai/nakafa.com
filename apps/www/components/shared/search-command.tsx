@@ -48,11 +48,12 @@ export function SearchCommand() {
     setOpen: state.setOpen,
   }));
 
-  useLayoutEffect(() => {
-    return () => {
+  useLayoutEffect(
+    () => () => {
       setOpen(false);
-    };
-  }, [setOpen]);
+    },
+    [setOpen]
+  );
 
   useHotkeys([
     ["/", () => setOpen(true)],

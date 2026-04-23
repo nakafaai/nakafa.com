@@ -634,9 +634,7 @@ describe("cache - mocked filesystem tests", () => {
   it("should handle stack iteration when stack is empty", () => {
     const mockFs = vi.mocked(fs);
 
-    vi.spyOn(mockFs, "readdirSync").mockImplementation(() => {
-      return [];
-    });
+    vi.spyOn(mockFs, "readdirSync").mockImplementation(() => []);
 
     resetMDXFileCache();
     const cache = registry.build();

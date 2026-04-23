@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AssignmentsIcon,
   BookOpen02Icon,
   MessageMultiple02Icon,
   UserMultipleIcon,
@@ -33,6 +34,11 @@ export function SchoolClassesTabs() {
         href: `/school/${slug}/classes/${id}/materials`,
       },
       {
+        icon: AssignmentsIcon,
+        label: t("assessments"),
+        href: `/school/${slug}/classes/${id}/assessments`,
+      },
+      {
         icon: UserMultipleIcon,
         label: t("people"),
         href: `/school/${slug}/classes/${id}/people`,
@@ -42,7 +48,10 @@ export function SchoolClassesTabs() {
   );
 
   const defaultValue = useMemo(
-    () => tabs.find((tab) => pathname === tab.href)?.href || tabs[0]?.href,
+    () =>
+      tabs.find(
+        (tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`)
+      )?.href || tabs[0]?.href,
     [pathname, tabs]
   );
 

@@ -10,7 +10,13 @@ export function Intersection({
   ...props
 }: {
   onIntersect: () => void;
-  root?: null;
+  /**
+   * Keep `root` aligned with Mantine's `useIntersection`, which forwards to the
+   * browser IntersectionObserver API:
+   * https://mantine.dev/hooks/use-intersection/
+   * https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
+   */
+  root?: Document | Element | null;
   rootMargin?: string;
   threshold?: number;
   /** If true, onIntersect fires only once */
