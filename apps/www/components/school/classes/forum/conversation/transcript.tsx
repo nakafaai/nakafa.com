@@ -9,7 +9,14 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useMutation } from "convex/react";
-import { memo, useCallback, useLayoutEffect, useMemo, useRef } from "react";
+import {
+  memo,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Virtualizer, type VirtualizerHandle } from "virtua";
 import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
@@ -126,7 +133,6 @@ const HydratedTranscript = memo(
       unreadCue,
     });
     const canGoBack = backStack.length > 0;
-    const shouldShowJumpBar = hasOverflow && (canGoBack || !isAtBottom);
     const scrollRootRef = useRef<HTMLDivElement | null>(null);
     const virtualizerRef = useRef<VirtualizerHandle | null>(null);
     const pendingPlacementRef = useRef<PendingPlacement | null>({
@@ -134,6 +140,9 @@ const HydratedTranscript = memo(
       highlightPostId: null,
       view: initialSavedView ?? { kind: "bottom" },
     });
+    const [isPendingLatestPlacement, setIsPendingLatestPlacement] = useState(
+      pendingPlacementRef.current?.view.kind === "bottom"
+    );
     const lastMarkedPostIdRef = useRef<Id<"schoolClassForumPosts"> | null>(
       null
     );
@@ -144,6 +153,17 @@ const HydratedTranscript = memo(
     postIdsRef.current = activeTranscript.postIds;
     backStackRef.current = backStack;
     isAtBottomRef.current = isAtBottom;
+
+    const shouldShowJumpBar =
+      hasOverflow && (canGoBack || !(isAtBottom || isPendingLatestPlacement));
+
+    const setPendingPlacement = useCallback(
+      (placement: PendingPlacement | null) => {
+        pendingPlacementRef.current = placement;
+        setIsPendingLatestPlacement(placement?.view.kind === "bottom");
+      },
+      []
+    );
 
     const scrollController = useMemo(
       () =>
@@ -215,10 +235,11 @@ const HydratedTranscript = memo(
         startHighlightTimeout();
       }
 
-      pendingPlacementRef.current = null;
+      setPendingPlacement(null);
     }, [
       clearHighlightTimeout,
       highlightPost,
+      setPendingPlacement,
       scrollController,
       startHighlightTimeout,
     ]);
@@ -293,11 +314,11 @@ const HydratedTranscript = memo(
         pendingPlacement.view.kind === "post" &&
         !postIdsRef.current.includes(pendingPlacement.view.postId)
       ) {
-        pendingPlacementRef.current = {
+        setPendingPlacement({
           behavior: pendingPlacement.behavior,
           highlightPostId: null,
           view: { kind: "bottom" },
-        };
+        });
       }
 
       const nextPlacement = pendingPlacementRef.current;
@@ -312,6 +333,7 @@ const HydratedTranscript = memo(
     }, [
       clearReachedPendingPlacement,
       persistSettledState,
+      setPendingPlacement,
       scrollToPendingPlacement,
       syncViewport,
     ]);
@@ -344,11 +366,11 @@ const HydratedTranscript = memo(
           pushBackView(currentView);
         }
 
-        pendingPlacementRef.current = {
+        setPendingPlacement({
           behavior: "smooth",
           highlightPostId: postId,
           view: targetView,
-        };
+        });
         flushPendingPlacement();
       },
       [
@@ -358,6 +380,7 @@ const HydratedTranscript = memo(
         flushPendingPlacement,
         highlightPost,
         pushBackView,
+        setPendingPlacement,
         scrollController,
         startHighlightTimeout,
       ]
@@ -365,15 +388,20 @@ const HydratedTranscript = memo(
 
     /** Latest is just the real end of the DOM transcript, not a mode switch. */
     const goToLatest = useCallback(() => {
-      pendingPlacementRef.current = {
+      setPendingPlacement({
         behavior: "smooth",
         highlightPostId: null,
         view: { kind: "bottom" },
-      };
+      });
       clearHighlightTimeout();
       clearHighlightedPost();
       flushPendingPlacement();
-    }, [clearHighlightedPost, clearHighlightTimeout, flushPendingPlacement]);
+    }, [
+      clearHighlightedPost,
+      clearHighlightTimeout,
+      flushPendingPlacement,
+      setPendingPlacement,
+    ]);
 
     /** Back restores the saved semantic origin instead of raw scrollTop pixels. */
     const goBack = useCallback(() => {
@@ -391,11 +419,11 @@ const HydratedTranscript = memo(
         return;
       }
 
-      pendingPlacementRef.current = {
+      setPendingPlacement({
         behavior: "smooth",
         highlightPostId: null,
         view: backView,
-      };
+      });
       clearHighlightTimeout();
       clearHighlightedPost();
       flushPendingPlacement();
@@ -405,6 +433,7 @@ const HydratedTranscript = memo(
       flushPendingPlacement,
       goToLatest,
       popBackView,
+      setPendingPlacement,
     ]);
 
     /** Registers transcript controls and boots the initial semantic restore. */
@@ -499,13 +528,12 @@ const HydratedTranscript = memo(
           </Virtualizer>
         </div>
 
-        {shouldShowJumpBar ? (
-          <JumpBar
-            canGoBack={canGoBack}
-            onBack={goBack}
-            onLatest={goToLatest}
-          />
-        ) : null}
+        <JumpBar
+          canGoBack={canGoBack}
+          onBack={goBack}
+          onLatest={goToLatest}
+          visible={shouldShowJumpBar}
+        />
       </div>
     );
   }

@@ -82,6 +82,21 @@ describe("conversation/data/settled-view", () => {
     });
   });
 
+  it("still treats the viewport as bottom when only a small gap remains", () => {
+    const root = document.createElement("div");
+
+    setRect(root, { top: 0, bottom: 200 });
+    setScrollMetrics(root, {
+      clientHeight: 200,
+      scrollHeight: 600,
+      scrollTop: 388,
+    });
+
+    expect(captureConversationView({ postIds: [], root })).toEqual({
+      kind: "bottom",
+    });
+  });
+
   it("captures the post closest to the viewport center when detached from bottom", () => {
     const root = document.createElement("div");
     const firstPost = document.createElement("div");
