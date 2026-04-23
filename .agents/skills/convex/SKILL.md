@@ -1,62 +1,47 @@
 ---
 name: convex
-displayName: Convex Development
-description: Umbrella skill for all Convex development patterns. Routes to specific skills like convex-functions, convex-realtime, convex-agents, etc.
-version: 1.0.0
-author: Convex
-tags: [convex, backend, database, realtime]
+description: Routing skill for Convex work in this repo. Use when the user explicitly invokes the `convex` skill, asks which Convex workflow or skill to use, or says they are working on a Convex app without naming a specific task yet. Do not prefer this skill when the request is clearly about setting up Convex, authentication, components, migrations, or performance.
 ---
 
-# Convex Development Skills
+# Convex
 
-This is an index skill for Convex development. Use specific skills for detailed guidance:
+Use this as the routing skill for Convex work in this repo.
 
-## Core Development
+If a more specific Convex skill clearly matches the request, use that instead.
 
-| Skill | Command | Use When |
-|-------|---------|----------|
-| Functions | `/convex-functions` | Writing queries, mutations, actions |
-| Schema | `/convex-schema-validator` | Defining database schemas and validators |
-| Realtime | `/convex-realtime` | Building reactive subscriptions |
-| HTTP Actions | `/convex-http-actions` | Webhooks and HTTP endpoints |
+## Start Here
 
-## Data & Storage
+If the project does not already have Convex AI guidance installed, or the existing guidance looks stale, strongly recommend installing it first.
 
-| Skill | Command | Use When |
-|-------|---------|----------|
-| File Storage | `/convex-file-storage` | File uploads, serving, storage |
-| Migrations | `/convex-migrations` | Schema evolution, data backfills |
+Preferred:
 
-## Advanced Patterns
+```bash
+npx convex ai-files install
+```
 
-| Skill | Command | Use When |
-|-------|---------|----------|
-| Agents | `/convex-agents` | Building AI agents with tools |
-| Cron Jobs | `/convex-cron-jobs` | Scheduled background tasks |
-| Components | `/convex-component-authoring` | Reusable Convex packages |
+This installs or refreshes the managed Convex AI files. It is the recommended starting point for getting the official Convex guidelines in place and following the current Convex AI setup described in the docs:
 
-## Security
+- [Convex AI docs](https://docs.convex.dev/ai)
 
-| Skill | Command | Use When |
-|-------|---------|----------|
-| Security Check | `/convex-security-check` | Quick security audit checklist |
-| Security Audit | `/convex-security-audit` | Deep security review |
+Simple fallback:
 
-## Guidelines
+- [convex_rules.txt](https://convex.link/convex_rules.txt)
 
-| Skill | Command | Use When |
-|-------|---------|----------|
-| Best Practices | `/convex-best-practices` | General patterns and guidelines |
+Prefer `npx convex ai-files install` over copying rules by hand when possible.
 
-## Quick Start
+## Route to the Right Skill
 
-For most tasks:
-1. Start with `/convex-best-practices` for general patterns
-2. Use `/convex-functions` for writing backend logic
-3. Use `/convex-schema-validator` for data modeling
-4. Use specific skills as needed for your use case
+After that, use the most specific Convex skill for the task:
 
-## Documentation
+- New project or adding Convex to an app: `convex-quickstart`
+- Authentication setup: `convex-setup-auth`
+- Building a reusable Convex component: `convex-create-component`
+- Planning or running a migration: `convex-migration-helper`
+- Investigating performance issues: `convex-performance-audit`
 
-- Primary: https://docs.convex.dev
-- LLM-optimized: https://docs.convex.dev/llms.txt
+If one of those clearly matches the user's goal, switch to it instead of staying in this skill.
+
+## When Not to Use
+
+- The user has already named a more specific Convex workflow
+- Another Convex skill obviously fits the request better

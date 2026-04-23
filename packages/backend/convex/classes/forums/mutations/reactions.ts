@@ -1,6 +1,7 @@
 import { loadActiveForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
 import { MAX_FORUM_REACTION_VARIANTS } from "@repo/backend/convex/classes/forums/utils/constants";
 import { validateForumReactionValue } from "@repo/backend/convex/classes/forums/utils/reactions";
+import { forumReactionToggleResultValidator } from "@repo/backend/convex/classes/forums/validators";
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -14,6 +15,7 @@ export const togglePostReaction = mutation({
     emoji: v.string(),
     postId: vv.id("schoolClassForumPosts"),
   },
+  returns: forumReactionToggleResultValidator,
   handler: async (ctx, args) => {
     const emoji = validateForumReactionValue(args.emoji);
     const user = await requireAuth(ctx);
@@ -76,6 +78,7 @@ export const toggleForumReaction = mutation({
     emoji: v.string(),
     forumId: vv.id("schoolClassForums"),
   },
+  returns: forumReactionToggleResultValidator,
   handler: async (ctx, args) => {
     const emoji = validateForumReactionValue(args.emoji);
     const user = await requireAuth(ctx);

@@ -99,6 +99,7 @@
     "reply": "Balas",
     "replying-to-user": "Membalas <name></name>",
     "new-messages": "{count, plural, =1 {# pesan baru} other {# pesan baru}}",
+    "left-off-here": "Kamu terakhir baca dari sini",
     "cancel": "Batal",
     "like": "Suka",
     "dislike": "Tidak suka",
@@ -311,6 +312,7 @@
   },
   "Utils": {
     "search": "Cari",
+    "clear-search": "Hapus pencarian",
     "search-bar-placeholder": "Cari konten...",
     "search-placeholder": "Temukan apa yang kamu inginkan...",
     "search-not-found": "Yah, nggak nemu apa-apa nih.",

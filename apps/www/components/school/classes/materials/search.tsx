@@ -22,14 +22,14 @@ export function SchoolClassesMaterialsSearch() {
   return (
     <ButtonGroup className="w-full">
       <InputGroup>
-        <InputGroupAddon>
-          <HugeIcons icon={Search02Icon} />
-        </InputGroupAddon>
         <InputGroupInput
           onChange={(e) => setSearch({ q: e.target.value })}
           placeholder={t("modules-search-placeholder")}
           value={q}
         />
+        <InputGroupAddon>
+          <HugeIcons icon={Search02Icon} />
+        </InputGroupAddon>
         <InputGroupAddon
           align="inline-end"
           className={cn(

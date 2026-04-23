@@ -22,14 +22,14 @@ export function SchoolClassesAssessmentsSearch() {
   return (
     <ButtonGroup className="w-full">
       <InputGroup>
-        <InputGroupAddon>
-          <HugeIcons icon={Search02Icon} />
-        </InputGroupAddon>
         <InputGroupInput
           onChange={(event) => setSearch({ q: event.target.value })}
           placeholder={t("assessments-search-placeholder")}
           value={q}
         />
+        <InputGroupAddon>
+          <HugeIcons icon={Search02Icon} />
+        </InputGroupAddon>
         <InputGroupAddon
           align="inline-end"
           className={cn(

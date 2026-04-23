@@ -38,7 +38,9 @@ export async function updateForumAfterDelete(
 
   const latestRemainingPost = await ctx.db
     .query("schoolClassForumPosts")
-    .withIndex("by_forumId", (q) => q.eq("forumId", oldPost.forumId))
+    .withIndex("by_forumId_and_sequence", (q) =>
+      q.eq("forumId", oldPost.forumId)
+    )
     .order("desc")
     .first();
 

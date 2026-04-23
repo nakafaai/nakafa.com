@@ -1,6 +1,10 @@
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import {
+  insertClass,
+  insertClassMembership,
+  insertSchool,
+  insertSchoolMembership,
+} from "@repo/backend/convex/classes/test.helpers";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -9,71 +13,38 @@ import { describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 14, 12, 0, 0);
 
-/** Insert one school row with the minimum fields required by the schema. */
-async function insertSchool(ctx: MutationCtx, userId: Id<"users">) {
-  return await ctx.db.insert("schools", {
-    name: "Nakafa School",
-    slug: "nakafa-school",
-    email: "school@example.com",
-    city: "Jakarta",
-    province: "DKI Jakarta",
-    type: "high-school",
-    currentStudents: 0,
-    currentTeachers: 0,
-    updatedAt: NOW,
-    createdBy: userId,
-    updatedBy: userId,
-  });
-}
-
-/** Insert one class row with the minimum fields required by the schema. */
-async function insertClass(
-  ctx: MutationCtx,
-  schoolId: Id<"schools">,
-  userId: Id<"users">
-) {
-  return await ctx.db.insert("schoolClasses", {
-    schoolId,
-    name: "Class 10A",
-    subject: "Mathematics",
-    year: "2026/2027",
-    image: "retro",
-    isArchived: false,
-    visibility: "public",
-    studentCount: 0,
-    teacherCount: 0,
-    updatedAt: NOW,
-    createdBy: userId,
-    updatedBy: userId,
-  });
-}
-
 describe("classes/queries:getClassRoute", () => {
   it("returns the accessible route snapshot for class members", async () => {
     vi.setSystemTime(new Date(NOW));
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const viewer = await seedAuthenticatedUser(ctx, { now: NOW });
-      const schoolId = await insertSchool(ctx, viewer.userId);
-
-      await ctx.db.insert("schoolMembers", {
-        schoolId,
+      const schoolId = await insertSchool(ctx, {
+        now: NOW,
         userId: viewer.userId,
-        role: "teacher",
-        status: "active",
-        joinedAt: NOW,
-        updatedAt: NOW,
+        email: "school@example.com",
+        slug: "nakafa-school",
       });
 
-      const classId = await insertClass(ctx, schoolId, viewer.userId);
-
-      await ctx.db.insert("schoolClassMembers", {
-        classId,
+      await insertSchoolMembership(ctx, {
+        now: NOW,
+        role: "teacher",
         schoolId,
         userId: viewer.userId,
+      });
+
+      const classId = await insertClass(ctx, {
+        now: NOW,
+        schoolId,
+        userId: viewer.userId,
+      });
+
+      await insertClassMembership(ctx, {
+        now: NOW,
+        classId,
         role: "teacher",
-        teacherRole: "primary",
-        updatedAt: NOW,
+        schoolId,
+        userId: viewer.userId,
       });
 
       return { ...viewer, classId };
@@ -109,35 +80,39 @@ describe("classes/queries:getClassRoute", () => {
         now: NOW,
         suffix: "student",
       });
-      const schoolId = await insertSchool(ctx, teacher.userId);
-
-      await ctx.db.insert("schoolMembers", {
-        schoolId,
+      const schoolId = await insertSchool(ctx, {
+        now: NOW,
         userId: teacher.userId,
-        role: "teacher",
-        status: "active",
-        joinedAt: NOW,
-        updatedAt: NOW,
+        email: "school@example.com",
+        slug: "nakafa-school",
       });
 
-      await ctx.db.insert("schoolMembers", {
+      await insertSchoolMembership(ctx, {
+        now: NOW,
+        role: "teacher",
+        schoolId,
+        userId: teacher.userId,
+      });
+
+      await insertSchoolMembership(ctx, {
+        now: NOW,
+        role: "student",
         schoolId,
         userId: student.userId,
-        role: "student",
-        status: "active",
-        joinedAt: NOW,
-        updatedAt: NOW,
       });
 
-      const classId = await insertClass(ctx, schoolId, teacher.userId);
-
-      await ctx.db.insert("schoolClassMembers", {
-        classId,
+      const classId = await insertClass(ctx, {
+        now: NOW,
         schoolId,
         userId: teacher.userId,
+      });
+
+      await insertClassMembership(ctx, {
+        now: NOW,
+        classId,
         role: "teacher",
-        teacherRole: "primary",
-        updatedAt: NOW,
+        schoolId,
+        userId: teacher.userId,
       });
 
       return { ...student, classId };

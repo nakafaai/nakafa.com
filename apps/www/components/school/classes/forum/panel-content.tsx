@@ -2,8 +2,8 @@
 
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { memo } from "react";
-import { ForumPostConversation } from "@/components/school/classes/forum/conversation";
-import type { Forum } from "@/components/school/classes/forum/conversation/types";
+import type { Forum } from "@/components/school/classes/forum/conversation/data/entities";
+import { ForumPostConversation } from "@/components/school/classes/forum/conversation/index";
 import { useUser } from "@/lib/context/use-user";
 
 export const SchoolClassesForumPanelContent = memo(
@@ -25,7 +25,6 @@ export const SchoolClassesForumPanelContent = memo(
         currentUserId={user.appUser._id}
         forum={forum}
         forumId={forumId}
-        key={forumId}
       />
     );
   }

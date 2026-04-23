@@ -6,7 +6,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { UserData } from "@repo/backend/convex/lib/helpers/user";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -21,8 +21,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { Activity, useTransition } from "react";
 import { getTagIcon } from "@/components/school/classes/_data/tag";
+import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
 import { useClass } from "@/lib/context/use-class";
-import { useForum } from "@/lib/context/use-forum";
 import { searchParsers } from "@/lib/nuqs/search";
 import { getLocale } from "@/lib/utils/date";
 
@@ -33,6 +33,7 @@ type ForumListItem = Doc<"schoolClassForums"> & {
 };
 
 const DEBOUNCE_TIME = 500;
+const FORUM_UNREAD_BADGE_LIMIT = 25;
 
 /**
  * Render the searchable forum thread list for one class.
@@ -42,19 +43,26 @@ export function SchoolClassesForumList() {
 
   const locale = useLocale();
   const routeParams = useParams<{
-    forumId?: string;
+    forumId?: Id<"schoolClassForums">;
     id: string;
     slug: string;
   }>();
   const searchParams = useSearchParams();
 
   const classId = useClass((state) => state.class._id);
-  const resetConversationState = useForum(
-    (state) => state.resetConversationState
-  );
+  const setReplyTo = useSession((state) => state.setReplyTo);
   const [{ q }] = useQueryStates(searchParsers);
 
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
+
+  /** Clears transient reply state before forum route navigation. */
+  function handleForumNavigate(nextForumId: Id<"schoolClassForums">) {
+    if (routeParams.forumId === nextForumId) {
+      return;
+    }
+
+    setReplyTo(null);
+  }
 
   const { results, status, loadMore } = usePaginatedQuery(
     api.classes.forums.queries.forums.getForums,
@@ -94,7 +102,7 @@ export function SchoolClassesForumList() {
                 aria-current={isActive ? "page" : undefined}
                 className="absolute inset-0 z-0 rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 href={href}
-                onNavigate={() => resetConversationState()}
+                onNavigate={() => handleForumNavigate(forum._id)}
                 prefetch
               >
                 <span className="sr-only">{forum.title}</span>
@@ -120,7 +128,9 @@ export function SchoolClassesForumList() {
                       mode={forum.unreadCount > 0 ? "visible" : "hidden"}
                     >
                       <Badge variant="destructive">
-                        {forum.unreadCount > 25 ? "25+" : forum.unreadCount}
+                        {forum.unreadCount > FORUM_UNREAD_BADGE_LIMIT
+                          ? `${FORUM_UNREAD_BADGE_LIMIT}+`
+                          : forum.unreadCount}
                       </Badge>
                     </Activity>
                   </div>

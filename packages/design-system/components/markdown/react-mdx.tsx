@@ -5,6 +5,7 @@ import {
 } from "@repo/design-system/components/ai/code-block";
 import { Anchor } from "@repo/design-system/components/markdown/anchor";
 import { Heading } from "@repo/design-system/components/markdown/heading";
+import { MarkdownImage } from "@repo/design-system/components/markdown/image";
 import {
   BlockMath,
   InlineMath,
@@ -201,6 +202,10 @@ export const reactMdxComponents: Options["components"] = {
   ),
   a: memo(
     ({ ...props }) => <Anchor data-nakafa="anchor" {...props} />,
+    (p, n) => sameClassAndNode(p, n)
+  ),
+  img: memo(
+    ({ ...props }) => <MarkdownImage data-nakafa="image" {...props} />,
     (p, n) => sameClassAndNode(p, n)
   ),
   table: memo(

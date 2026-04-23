@@ -99,6 +99,7 @@
     "reply": "Reply",
     "replying-to-user": "Replying to <name></name>",
     "new-messages": "{count, plural, =1 {# new message} other {# new messages}}",
+    "left-off-here": "You left off here",
     "cancel": "Cancel",
     "like": "Like",
     "dislike": "Dislike",
@@ -311,6 +312,7 @@
   },
   "Utils": {
     "search": "Search",
+    "clear-search": "Clear search",
     "search-bar-placeholder": "Search content...",
     "search-placeholder": "Find what you want...",
     "search-not-found": "We couldn't find anything matching that.",

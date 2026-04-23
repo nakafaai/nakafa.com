@@ -64,6 +64,7 @@ async function insertForum(
     status: "open",
     isPinned: false,
     postCount: 0,
+    nextPostSequence: 1,
     reactionCounts: [],
     lastPostAt: NOW,
     lastPostBy: userId,
@@ -86,6 +87,7 @@ async function insertForumPost(
     mentions: [],
     replyCount: 0,
     reactionCounts: [],
+    sequence: 1,
     createdBy: userId,
     updatedAt: NOW,
   });
@@ -236,7 +238,7 @@ describe("triggers/schools/cleanupDeletedForum", () => {
         forumId,
         classId,
         userId: viewer.userId,
-        lastReadAt: NOW,
+        lastReadSequence: 0,
       });
       await insertUnreadNotification(ctx, {
         entityId: forumId,

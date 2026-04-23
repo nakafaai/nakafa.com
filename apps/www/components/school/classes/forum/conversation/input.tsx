@@ -1,15 +1,5 @@
-"use client";
-
-import {
-  Add01Icon,
-  ArrowTurnBackwardIcon,
-  ArrowUp01Icon,
-  Cancel01Icon,
-  FileAttachmentIcon,
-  FileIcon,
-  WinkIcon,
-} from "@hugeicons/core-free-icons";
-import { useDisclosure, useOs } from "@mantine/hooks";
+import { ArrowUp01Icon } from "@hugeicons/core-free-icons";
+import { useDisclosure, useOs, useResizeObserver } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -17,45 +7,21 @@ import {
   MAX_FORUM_ATTACHMENT_BYTES,
   MAX_FORUM_POST_ATTACHMENTS,
 } from "@repo/backend/convex/classes/forums/utils/constants";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import {
-  EmojiPicker,
-  EmojiPickerContent,
-  EmojiPickerFooter,
-  EmojiPickerSearch,
-} from "@repo/design-system/components/ui/emoji-picker";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupTextarea,
 } from "@repo/design-system/components/ui/input-group";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@repo/design-system/components/ui/popover";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import {
-  type FileWithPreview,
-  useFileUpload,
-} from "@repo/design-system/hooks/use-file-upload";
-import { cn, formatFileSize } from "@repo/design-system/lib/utils";
+import { useFileUpload } from "@repo/design-system/hooks/use-file-upload";
+import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import ky from "ky";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import {
   Activity,
-  type ComponentProps,
   type ComponentRef,
   memo,
   useCallback,
@@ -64,39 +30,37 @@ import {
 } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
-import { useForum } from "@/lib/context/use-forum";
-import { useForumScroll } from "@/lib/context/use-forum-scroll";
+import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
+import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
+import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
+import { AttachmentPreviews } from "@/components/school/classes/forum/conversation/input/attachment-previews";
+import { InputAttachments } from "@/components/school/classes/forum/conversation/input/attachments-trigger";
+import { EmojiButton } from "@/components/school/classes/forum/conversation/input/emoji-button";
+import { ReplyIndicator } from "@/components/school/classes/forum/conversation/input/reply-indicator";
 
-/**
- * Handle forum message submission, attachment upload/finalization, and reply
- * state cleanup for the active conversation.
- */
-export const ForumPostInput = memo(
-  ({ forumId }: { forumId: Id<"schoolClassForums"> }) => {
-    const t = useTranslations("School.Classes");
-    const replyTo = useForum((f) => f.replyTo);
-    const setReplyTo = useForum((f) => f.setReplyTo);
-    const exitJumpMode = useForum((f) => f.exitJumpMode);
-    const scrollToBottom = useForumScroll((state) => state.scrollToBottom);
-
-    const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
-    const generateUploadUrl = useMutation(
-      api.classes.forums.mutations.uploads.generateUploadUrl
-    );
-    const discardForumUploads = useMutation(
-      api.classes.forums.mutations.uploads.discardForumUploads
-    );
-    const saveForumUpload = useMutation(
-      api.classes.forums.mutations.uploads.saveForumUpload
-    );
-    const createPost = useMutation(
-      api.classes.forums.mutations.posts.createForumPost
-    );
-
-    const [
-      { files },
-      { removeFile, clearFiles, openFileDialog, getInputProps },
-    ] = useFileUpload({
+/** Handles forum post submission, uploads, and reply cleanup for the transcript. */
+export const ForumPostInput = memo(() => {
+  const t = useTranslations("School.Classes");
+  const replyTo = useSession((state) => state.replyTo);
+  const setReplyTo = useSession((state) => state.setReplyTo);
+  const { acknowledgeUnreadCue, goToLatest } = useControls();
+  const forumId = useData((state) => state.forumId);
+  const [composerRef] = useResizeObserver<HTMLFormElement>();
+  const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
+  const generateUploadUrl = useMutation(
+    api.classes.forums.mutations.uploads.generateUploadUrl
+  );
+  const discardForumUploads = useMutation(
+    api.classes.forums.mutations.uploads.discardForumUploads
+  );
+  const saveForumUpload = useMutation(
+    api.classes.forums.mutations.uploads.saveForumUpload
+  );
+  const createPost = useMutation(
+    api.classes.forums.mutations.posts.createForumPost
+  );
+  const [{ files }, { removeFile, clearFiles, openFileDialog, getInputProps }] =
+    useFileUpload({
       multiple: true,
       accept: "image/*,.pdf,.doc,.docx,.txt",
       maxSize: MAX_FORUM_ATTACHMENT_BYTES,
@@ -107,392 +71,247 @@ export const ForumPostInput = memo(
         }
       },
     });
+  const [isEmojiPickerOpen, emojiPicker] = useDisclosure(false);
+  const os = useOs();
+  const isMobile = os === "ios" || os === "android";
 
-    const [isEmojiPickerOpen, emojiPicker] = useDisclosure(false);
-    const os = useOs();
-    const isMobile = os === "ios" || os === "android";
+  useEffect(() => {
+    if (replyTo) {
+      textareaRef.current?.focus();
+    }
+  }, [replyTo]);
 
-    useEffect(() => {
-      if (replyTo) {
-        textareaRef.current?.focus();
+  const uploadFile = useCallback(
+    async (file: File) => {
+      const { uploadId, uploadUrl } = await generateUploadUrl({ forumId });
+
+      try {
+        const { storageId } = await ky
+          .post(uploadUrl, {
+            headers: { "Content-Type": file.type },
+            body: file,
+          })
+          .json<{ storageId: Id<"_storage"> }>();
+
+        await saveForumUpload({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          storageId,
+          uploadId,
+        });
+
+        return uploadId;
+      } catch (error) {
+        await discardForumUploads({ uploadIds: [uploadId] }).catch(
+          (cleanupError) => {
+            captureException(cleanupError, {
+              source: "forum-upload-discard-single",
+            });
+            return null;
+          }
+        );
+        throw error;
       }
-    }, [replyTo]);
+    },
+    [discardForumUploads, forumId, generateUploadUrl, saveForumUpload]
+  );
 
-    const uploadFile = useCallback(
-      async (file: File) => {
-        const { uploadId, uploadUrl } = await generateUploadUrl({ forumId });
+  const form = useForm({
+    defaultValues: { body: "" },
+    validators: {
+      onSubmit: z.object({
+        body: z.string(),
+      }),
+    },
+    onSubmit: async ({ value }) => {
+      const hasBody = value.body.trim().length > 0;
+      const hasAttachments = files.length > 0;
 
-        try {
-          const { storageId } = await ky
-            .post(uploadUrl, {
-              headers: { "Content-Type": file.type },
-              body: file,
-            })
-            .json<{ storageId: Id<"_storage"> }>();
+      if (!(hasBody || hasAttachments)) {
+        return;
+      }
 
-          await saveForumUpload({
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            storageId,
-            uploadId,
-          });
+      const attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] = [];
 
-          return uploadId;
-        } catch (error) {
-          await discardForumUploads({ uploadIds: [uploadId] }).catch(
+      try {
+        for (const fileWithPreview of files) {
+          if (!(fileWithPreview.file instanceof File)) {
+            continue;
+          }
+
+          attachmentUploadIds.push(await uploadFile(fileWithPreview.file));
+        }
+
+        await createPost({
+          attachmentUploadIds:
+            attachmentUploadIds.length > 0 ? attachmentUploadIds : undefined,
+          forumId,
+          body: value.body,
+          parentId: replyTo?.postId,
+        });
+
+        form.reset();
+        clearFiles();
+        setReplyTo(null);
+        acknowledgeUnreadCue();
+
+        requestAnimationFrame(() => {
+          textareaRef.current?.focus();
+          goToLatest();
+        });
+      } catch (error) {
+        if (attachmentUploadIds.length > 0) {
+          await discardForumUploads({ uploadIds: attachmentUploadIds }).catch(
             (cleanupError) => {
               captureException(cleanupError, {
-                source: "forum-upload-discard-single",
+                source: "forum-upload-discard-batch",
               });
               return null;
             }
           );
-          throw error;
-        }
-      },
-      [discardForumUploads, forumId, generateUploadUrl, saveForumUpload]
-    );
-
-    const form = useForm({
-      defaultValues: { body: "" },
-      validators: {
-        onSubmit: z.object({
-          body: z.string(),
-        }),
-      },
-      onSubmit: async ({ value }) => {
-        const hasBody = value.body.trim().length > 0;
-        const hasAttachments = files.length > 0;
-
-        if (!(hasBody || hasAttachments)) {
-          return;
         }
 
-        const attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] = [];
+        captureException(error, {
+          source: "forum-post-submit",
+        });
+        toast.error(t("create-post-failed"));
 
-        try {
-          for (const fileWithPreview of files) {
-            if (!(fileWithPreview.file instanceof File)) {
-              continue;
-            }
-
-            attachmentUploadIds.push(await uploadFile(fileWithPreview.file));
-          }
-
-          await createPost({
-            attachmentUploadIds:
-              attachmentUploadIds.length > 0 ? attachmentUploadIds : undefined,
-            forumId,
-            body: value.body,
-            parentId: replyTo?.postId,
-          });
-
-          form.reset();
-          clearFiles();
-          setReplyTo(null);
-          exitJumpMode();
-
-          requestAnimationFrame(() => {
-            scrollToBottom();
-          });
-        } catch (error) {
-          if (attachmentUploadIds.length > 0) {
-            await discardForumUploads({ uploadIds: attachmentUploadIds }).catch(
-              (cleanupError) => {
-                captureException(cleanupError, {
-                  source: "forum-upload-discard-batch",
-                });
-                return null;
-              }
-            );
-          }
-
-          captureException(error, {
-            source: "forum-post-submit",
-          });
-
-          toast.error(t("create-post-failed"));
-        }
-      },
-    });
-
-    return (
-      <form
-        className="grid shrink-0 px-2 pb-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          form.handleSubmit();
-        }}
-      >
-        <ReplyIndicator />
-        <AttachmentPreviews
-          files={files}
-          hasReplyTo={!!replyTo}
-          onRemove={removeFile}
-        />
-
-        <input className="hidden" {...getInputProps()} />
-
-        <form.Field name="body">
-          {(field) => (
-            <form.Subscribe
-              selector={(state) =>
-                [state.isSubmitting, state.values.body] as const
-              }
-            >
-              {([isSubmitting, body]) => {
-                const canSubmit = body.trim().length > 0 || files.length > 0;
-                const submitDisabled = isSubmitting || !canSubmit;
-                return (
-                  <InputGroup
-                    className={cn(
-                      (!!replyTo || files.length > 0) && "rounded-t-none"
-                    )}
-                  >
-                    <InputGroupAddon align="inline-start">
-                      <InputAttachments
-                        disabled={isSubmitting}
-                        onOpenFiles={openFileDialog}
-                      />
-                    </InputGroupAddon>
-                    <InputGroupTextarea
-                      aria-label={t("send-message-placeholder")}
-                      autoFocus
-                      className="scrollbar-hide max-h-36 min-h-0"
-                      disabled={isSubmitting}
-                      name={field.name}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          form.handleSubmit();
-                        }
-                      }}
-                      placeholder={t("send-message-placeholder")}
-                      ref={textareaRef}
-                      value={field.state.value}
-                    />
-                    <InputGroupAddon align="inline-end">
-                      <Popover
-                        onOpenChange={(open) => {
-                          if (open) {
-                            emojiPicker.open();
-                            return;
-                          }
-
-                          emojiPicker.close();
-                        }}
-                        open={isEmojiPickerOpen}
-                      >
-                        <PopoverTrigger asChild>
-                          <InputGroupButton
-                            aria-label={t("emoji")}
-                            disabled={isSubmitting}
-                            size="icon"
-                            type="button"
-                            variant="ghost"
-                          >
-                            <Activity mode={isMobile ? "hidden" : "visible"}>
-                              <Spinner
-                                icon={WinkIcon}
-                                isLoading={isSubmitting}
-                              />
-                            </Activity>
-                            <Activity mode={isMobile ? "visible" : "hidden"}>
-                              <HugeIcons icon={WinkIcon} />
-                            </Activity>
-                            <span className="sr-only">{t("emoji")}</span>
-                          </InputGroupButton>
-                        </PopoverTrigger>
-                        <PopoverContent align="end" className="w-fit p-0">
-                          <EmojiPicker
-                            className="h-80"
-                            onEmojiSelect={({ emoji }) => {
-                              field.handleChange(field.state.value + emoji);
-                              emojiPicker.close();
-                              textareaRef.current?.focus();
-                            }}
-                          >
-                            <EmojiPickerSearch />
-                            <EmojiPickerContent />
-                            <EmojiPickerFooter />
-                          </EmojiPicker>
-                        </PopoverContent>
-                      </Popover>
-                      <Activity mode={isMobile ? "visible" : "hidden"}>
-                        <InputGroupButton
-                          disabled={submitDisabled}
-                          size="icon"
-                          type="submit"
-                          variant="default"
-                        >
-                          <Spinner
-                            icon={ArrowUp01Icon}
-                            isLoading={isSubmitting}
-                          />
-                          <span className="sr-only">{t("submit")}</span>
-                        </InputGroupButton>
-                      </Activity>
-                    </InputGroupAddon>
-                  </InputGroup>
-                );
-              }}
-            </form.Subscribe>
-          )}
-        </form.Field>
-      </form>
-    );
-  }
-);
-ForumPostInput.displayName = "ForumPostInput";
-
-const AttachmentPreviews = memo(
-  ({
-    files,
-    hasReplyTo,
-    onRemove,
-  }: {
-    files: FileWithPreview[];
-    hasReplyTo: boolean;
-    onRemove: (id: string) => void;
-  }) => {
-    const t = useTranslations("File");
-
-    if (files.length === 0) {
-      return null;
-    }
-
-    return (
-      <div
-        aria-live="polite"
-        className={cn(
-          "scrollbar-hide flex items-center gap-2 overflow-x-auto border-x border-t p-3",
-          !hasReplyTo && "rounded-t-md"
-        )}
-      >
-        {files.map(({ id, file, preview }) => {
-          const isImage = file.type.startsWith("image/");
-
-          return (
-            <div
-              className="group relative flex shrink-0 items-center gap-2 rounded-md border bg-background p-2"
-              key={id}
-            >
-              <Activity mode={isImage ? "hidden" : "visible"}>
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-muted">
-                  <HugeIcons
-                    className="size-4 text-muted-foreground"
-                    icon={FileIcon}
-                  />
-                </div>
-              </Activity>
-              <Activity mode={isImage ? "visible" : "hidden"}>
-                <div className="relative size-8 shrink-0 overflow-hidden rounded-sm border bg-muted">
-                  <Image
-                    alt={file.name || t("unknown-file")}
-                    className="object-cover"
-                    fill
-                    src={preview || ""}
-                  />
-                </div>
-              </Activity>
-              <div className="flex min-w-0 max-w-32 flex-col">
-                <span className="truncate font-medium text-xs">
-                  {file.name || t("unknown-file")}
-                </span>
-                <span className="text-[10px] text-muted-foreground">
-                  {formatFileSize(file.size)}
-                </span>
-              </div>
-
-              <Button
-                aria-label="Remove attachment"
-                className="absolute -top-2 -right-2 z-1 opacity-0 transition-opacity ease-out group-hover:opacity-100"
-                onClick={() => onRemove(id)}
-                size="icon-xs"
-                type="button"
-                variant="outline"
-              >
-                <HugeIcons icon={Cancel01Icon} />
-                <span className="sr-only">Remove attachment</span>
-              </Button>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-);
-AttachmentPreviews.displayName = "AttachmentPreviews";
-
-const InputAttachments = memo(
-  ({
-    onOpenFiles,
-    ...props
-  }: ComponentProps<typeof InputGroupButton> & {
-    onOpenFiles: () => void;
-  }) => {
-    const t = useTranslations("School.Classes");
-
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <InputGroupButton
-            size="icon"
-            type="button"
-            variant="ghost"
-            {...props}
-          >
-            <HugeIcons icon={Add01Icon} />
-            <span className="sr-only">{t("attachments")}</span>
-          </InputGroupButton>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent align="start">
-          <DropdownMenuItem className="cursor-pointer" onSelect={onOpenFiles}>
-            <HugeIcons icon={FileAttachmentIcon} />
-            {t("attachments")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  }
-);
-InputAttachments.displayName = "InputAttachments";
-
-const ReplyIndicator = memo(() => {
-  const t = useTranslations("Common");
-  const replyTo = useForum((f) => f.replyTo);
-  const setReplyTo = useForum((f) => f.setReplyTo);
-
-  if (!replyTo) {
-    return null;
-  }
+        requestAnimationFrame(() => {
+          textareaRef.current?.focus();
+        });
+      }
+    },
+  });
 
   return (
-    <div className="flex items-center gap-2 overflow-hidden rounded-t-md border-x border-t bg-[color-mix(in_oklch,var(--secondary)_10%,var(--background))] px-3 py-2 text-sm">
-      <HugeIcons
-        className="size-4 text-muted-foreground"
-        icon={ArrowTurnBackwardIcon}
+    <form
+      className="grid shrink-0 px-2 pb-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        form.handleSubmit();
+      }}
+      ref={composerRef}
+    >
+      {/*
+       * `react-textarea-autosize` remeasures on render and window resize, but
+       * the forum panel width can also change when the resizable class layout
+       * settles after mount. Observing the composer element forces the
+       * controlled textarea to rerender on those panel-size changes, so the
+       * initial height stays compact instead of preserving a stale oversized
+       * measurement.
+       *
+       * References:
+       * - react-textarea-autosize README:
+       *   https://www.npmjs.com/package/react-textarea-autosize
+       * - Mantine useResizeObserver:
+       *   https://mantine.dev/hooks/use-resize-observer/
+       */}
+      <ReplyIndicator />
+      <AttachmentPreviews
+        files={files}
+        hasReplyTo={!!replyTo}
+        onRemove={removeFile}
       />
-      <p className="min-w-0 flex-1 truncate text-muted-foreground">
-        {t.rich("replying-to-user", {
-          name: () => (
-            <span className="font-medium text-primary">{replyTo.userName}</span>
-          ),
-        })}
-      </p>
-      <Button
-        onClick={() => setReplyTo(null)}
-        size="icon-xs"
-        type="button"
-        variant="ghost"
-      >
-        <span className="sr-only">{t("cancel")}</span>
-        <HugeIcons icon={Cancel01Icon} />
-      </Button>
-    </div>
+      <input className="hidden" {...getInputProps()} />
+
+      <form.Field name="body">
+        {(field) => (
+          <form.Subscribe
+            selector={(state) => ({
+              isSubmitting: state.isSubmitting,
+              body: state.values.body,
+            })}
+          >
+            {({ isSubmitting, body }) => {
+              const canSubmit = body.trim().length > 0 || files.length > 0;
+              const submitDisabled = isSubmitting || !canSubmit;
+
+              return (
+                <InputGroup
+                  className={cn(
+                    (!!replyTo || files.length > 0) && "rounded-t-none"
+                  )}
+                >
+                  <InputGroupAddon align="inline-start">
+                    <InputAttachments
+                      disabled={isSubmitting}
+                      onOpenFiles={openFileDialog}
+                    />
+                  </InputGroupAddon>
+                  <InputGroupTextarea
+                    aria-label={t("send-message-placeholder")}
+                    autoFocus
+                    className="scrollbar-hide max-h-36 min-h-0 py-2"
+                    // `Textarea` wraps `react-textarea-autosize`, so explicit row
+                    // bounds keep the composer compact instead of inheriting the
+                    // base textarea's larger `min-h-16`.
+                    maxRows={6}
+                    minRows={1}
+                    name={field.name}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.nativeEvent.isComposing) {
+                        return;
+                      }
+
+                      if (event.key !== "Enter" || event.shiftKey) {
+                        return;
+                      }
+
+                      event.preventDefault();
+
+                      if (!submitDisabled) {
+                        form.handleSubmit();
+                      }
+                    }}
+                    placeholder={t("send-message-placeholder")}
+                    readOnly={isSubmitting}
+                    ref={textareaRef}
+                    value={field.state.value}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <EmojiButton
+                      isMobile={isMobile}
+                      isOpen={isEmojiPickerOpen}
+                      isSubmitting={isSubmitting}
+                      label={t("emoji")}
+                      onAppendEmoji={(emoji) => {
+                        field.handleChange(field.state.value + emoji);
+                        emojiPicker.close();
+                        textareaRef.current?.focus();
+                      }}
+                      onOpenChange={(open) => {
+                        if (open) {
+                          emojiPicker.open();
+                          return;
+                        }
+
+                        emojiPicker.close();
+                      }}
+                    />
+                    <Activity mode={isMobile ? "visible" : "hidden"}>
+                      <InputGroupButton
+                        disabled={submitDisabled}
+                        size="icon"
+                        type="submit"
+                        variant="default"
+                      >
+                        <Spinner
+                          icon={ArrowUp01Icon}
+                          isLoading={isSubmitting}
+                        />
+                        <span className="sr-only">{t("submit")}</span>
+                      </InputGroupButton>
+                    </Activity>
+                  </InputGroupAddon>
+                </InputGroup>
+              );
+            }}
+          </form.Subscribe>
+        )}
+      </form.Field>
+    </form>
   );
 });
-ReplyIndicator.displayName = "ReplyIndicator";
+ForumPostInput.displayName = "ForumPostInput";

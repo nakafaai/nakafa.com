@@ -1,6 +1,6 @@
 "use client";
 
-import { useMediaQuery } from "@mantine/hooks";
+import { useMediaQuery, useMounted } from "@mantine/hooks";
 import {
   ResizablePanel,
   ResizablePanelGroup,
@@ -17,7 +17,7 @@ interface SchoolClassesWorkspaceModeContextValue {
 export const SCHOOL_CLASSES_WORKSPACE_DETAIL_PANEL_ID = "detail";
 const SCHOOL_CLASSES_WORKSPACE_MAIN_PANEL_ID = "content";
 const SCHOOL_CLASSES_WORKSPACE_MAIN_PANEL_MIN_SIZE = "36rem";
-const SCHOOL_CLASSES_WORKSPACE_PANEL_GROUP_ID = "school-classes-workspace";
+const SCHOOL_CLASSES_WORKSPACE_PANEL_GROUP_ID = "school-classes-workspace-v2";
 const SCHOOL_CLASSES_WORKSPACE_RESIZE_TARGET_MINIMUM_SIZE = {
   coarse: 28,
   fine: 12,
@@ -36,6 +36,14 @@ const SCHOOL_CLASSES_WORKSPACE_LAYOUT_STORAGE = {
     }
 
     window.localStorage.setItem(key, value);
+  },
+} as const;
+const SCHOOL_CLASSES_WORKSPACE_EMPTY_LAYOUT_STORAGE = {
+  getItem() {
+    return null;
+  },
+  setItem() {
+    // Ignore layout writes until the client has mounted.
   },
 } as const;
 const SchoolClassesWorkspaceModeContext =
@@ -71,6 +79,7 @@ export function SchoolClassesWorkspaceShell({
   const isCompact = useMediaQuery(
     `(max-width: ${SCHOOL_CLASSES_DETAIL_PANEL_BREAKPOINT - 1}px)`
   );
+  const hasPanel = panel !== null;
 
   if (isCompact) {
     return (
@@ -82,6 +91,27 @@ export function SchoolClassesWorkspaceShell({
           {children}
           {panel}
         </div>
+      </SchoolClassesWorkspaceModeContext.Provider>
+    );
+  }
+
+  if (!hasPanel) {
+    /*
+     * `react-resizable-panels` expects the mounted Panel set to match the ids
+     * used for saved layouts. The class workspace panel route is optional, so
+     * the desktop shell should only mount the two-panel resizable group when
+     * the detail panel branch actually exists.
+     *
+     * References:
+     * - react-resizable-panels README, `useDefaultLayout` panelIds guidance
+     * - node_modules/.pnpm/react-resizable-panels@4.10.0_react-dom@19.2.5_react@19.2.5__react@19.2.5/node_modules/react-resizable-panels/dist/react-resizable-panels.d.ts
+     */
+    return (
+      <SchoolClassesWorkspaceModeContext.Provider
+        key="desktop"
+        value={{ isCompact: false }}
+      >
+        <div className="flex min-w-0 flex-col">{children}</div>
       </SchoolClassesWorkspaceModeContext.Provider>
     );
   }
@@ -106,13 +136,23 @@ function SchoolClassesResizableWorkspaceShell({
   children: ReactNode;
   panel: ReactNode;
 }) {
+  const isMounted = useMounted();
   const { defaultLayout, onLayoutChanged } = useResizableDefaultLayout({
     id: SCHOOL_CLASSES_WORKSPACE_PANEL_GROUP_ID,
     panelIds: [
       SCHOOL_CLASSES_WORKSPACE_MAIN_PANEL_ID,
       SCHOOL_CLASSES_WORKSPACE_DETAIL_PANEL_ID,
     ],
-    storage: SCHOOL_CLASSES_WORKSPACE_LAYOUT_STORAGE,
+    // Keep the hydration pass deterministic. Next.js hydration errors happen
+    // when server and client first render disagree; the server cannot read
+    // browser storage, so we wait until mount before reading the saved panel
+    // layout.
+    // References:
+    // https://nextjs.org/docs/messages/react-hydration-error
+    // https://react.dev/reference/react-dom/client/hydrateRoot#handling-different-client-and-server-content
+    storage: isMounted
+      ? SCHOOL_CLASSES_WORKSPACE_LAYOUT_STORAGE
+      : SCHOOL_CLASSES_WORKSPACE_EMPTY_LAYOUT_STORAGE,
   });
 
   return (

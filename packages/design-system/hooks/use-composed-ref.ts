@@ -13,7 +13,7 @@ const updateRef = <T>(ref: NonNullable<UserRef<T>>, value: T | null) => {
   if (typeof ref === "function") {
     ref(value);
   } else if (ref && typeof ref === "object" && "current" in ref) {
-    // Safe assignment without MutableRefObject
+    // Safe assignment without depending on legacy ref aliases.
     (ref as { current: T | null }).current = value;
   }
 };
