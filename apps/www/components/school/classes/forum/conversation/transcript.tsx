@@ -582,6 +582,8 @@ const HydratedTranscript = memo(
 
     useLayoutEffect(() => {
       const frameId = requestAnimationFrame(() => {
+        const wasAtBottom = lastWasAtBottomRef.current;
+
         syncViewport();
 
         if (pendingPlacementRef.current?.view.kind === "bottom") {
@@ -592,6 +594,9 @@ const HydratedTranscript = memo(
           syncViewport();
         } else if (pendingPlacementRef.current) {
           flushPendingPlacement();
+        } else if (wasAtBottom) {
+          scrollController.scrollToLatest({ behavior: "smooth" });
+          syncViewport();
         }
 
         persistSettledState();
@@ -600,7 +605,12 @@ const HydratedTranscript = memo(
       return () => {
         cancelAnimationFrame(frameId);
       };
-    }, [flushPendingPlacement, persistSettledState, syncViewport]);
+    }, [
+      flushPendingPlacement,
+      persistSettledState,
+      scrollController,
+      syncViewport,
+    ]);
 
     useLayoutEffect(
       () => () => {
