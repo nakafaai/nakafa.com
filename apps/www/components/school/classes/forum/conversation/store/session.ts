@@ -1,25 +1,29 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { CacheSnapshot } from "virtua";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import type { ReplyTo } from "@/components/school/classes/forum/conversation/data/entities";
-import {
-  areConversationViewsEqual,
-  type ConversationView,
-} from "@/components/school/classes/forum/conversation/data/view";
+
+export interface ConversationScrollSnapshot {
+  cache: CacheSnapshot | null;
+  lastPostId: Id<"schoolClassForumPosts"> | null;
+  offset: number;
+  rowCount: number;
+}
 
 interface State {
   isHydrated: boolean;
   replyTo: ReplyTo | null;
-  savedConversationViews: Partial<
-    Record<Id<"schoolClassForums">, ConversationView>
+  savedConversationScrollSnapshots: Partial<
+    Record<Id<"schoolClassForums">, ConversationScrollSnapshot>
   >;
 }
 
 interface Actions {
-  saveConversationView: (
+  saveConversationScrollSnapshot: (
     forumId: Id<"schoolClassForums">,
-    view: ConversationView
+    snapshot: ConversationScrollSnapshot
   ) => void;
   setHydrated: (isHydrated: boolean) => void;
   setReplyTo: (replyTo: ReplyTo | null) => void;
@@ -30,25 +34,36 @@ export type SessionStore = State & Actions;
 const initialState: State = {
   isHydrated: false,
   replyTo: null,
-  savedConversationViews: {},
+  savedConversationScrollSnapshots: {},
 };
 
-/** Creates one class-scoped session store for reply state and semantic restore. */
+/** Returns whether one stored scroll snapshot still matches the current list. */
+export function canRestoreConversationScrollSnapshot({
+  lastPostId,
+  rowCount,
+  snapshot,
+}: {
+  lastPostId: Id<"schoolClassForumPosts"> | null;
+  rowCount: number;
+  snapshot: ConversationScrollSnapshot | null | undefined;
+}) {
+  if (!snapshot) {
+    return false;
+  }
+
+  return snapshot.lastPostId === lastPostId && snapshot.rowCount === rowCount;
+}
+
+/** Creates one class-scoped session store for reply state and scroll restoration. */
 export function createSessionStore(classId: string) {
   const store = createStore<SessionStore>()(
     persist(
-      immer((set, get) => ({
+      immer((set) => ({
         ...initialState,
 
-        saveConversationView: (forumId, view) => {
-          const savedView = get().savedConversationViews[forumId];
-
-          if (areConversationViewsEqual(savedView, view)) {
-            return;
-          }
-
+        saveConversationScrollSnapshot: (forumId, snapshot) => {
           set((state) => {
-            state.savedConversationViews[forumId] = view;
+            state.savedConversationScrollSnapshots[forumId] = snapshot;
           });
         },
 
@@ -65,12 +80,13 @@ export function createSessionStore(classId: string) {
         },
       })),
       {
-        name: `forum-session:${classId}`,
+        name: `nakafa-forum-session:${classId}`,
         partialize: (state) => ({
-          savedConversationViews: state.savedConversationViews,
+          savedConversationScrollSnapshots:
+            state.savedConversationScrollSnapshots,
         }),
         storage: createJSONStorage(() => sessionStorage),
-        version: 2,
+        version: 1,
       }
     )
   );
