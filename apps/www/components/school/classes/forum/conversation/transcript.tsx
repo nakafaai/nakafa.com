@@ -30,16 +30,13 @@ import {
   useSessionStoreApi,
 } from "@/components/school/classes/forum/conversation/context/use-session";
 import { useViewport } from "@/components/school/classes/forum/conversation/context/use-viewport";
-import {
-  FORUM_BOTTOM_THRESHOLD,
-  getConversationRowKey,
-} from "@/components/school/classes/forum/conversation/data/pages";
+import { getConversationRowKey } from "@/components/school/classes/forum/conversation/data/pages";
 import {
   createConversationScrollSnapshot,
   getInitialConversationRestoreTarget,
 } from "@/components/school/classes/forum/conversation/data/scroll-snapshot";
 import {
-  getConversationBottomDistance,
+  getConversationViewportState,
   getLastVisibleConversationPostId,
 } from "@/components/school/classes/forum/conversation/data/settled-view";
 import { createConversationScrollController } from "@/components/school/classes/forum/conversation/data/transcript-scroll";
@@ -266,17 +263,16 @@ const HydratedTranscript = memo(
         return;
       }
 
-      const bottomDistance = getConversationBottomDistance(handle);
-      const isAtBottom = bottomDistance <= FORUM_BOTTOM_THRESHOLD;
+      const viewport = getConversationViewportState(handle);
 
-      lastWasAtBottomRef.current = isAtBottom;
+      if (!viewport) {
+        return;
+      }
+
+      lastWasAtBottomRef.current = viewport.isAtBottom;
       lastScrollOffsetRef.current = handle.scrollOffset;
 
-      updateViewport({
-        hasOverflow:
-          handle.scrollSize - handle.viewportSize > FORUM_BOTTOM_THRESHOLD,
-        isAtBottom,
-      });
+      updateViewport(viewport);
     }, [updateViewport]);
 
     /** Clears pending placement once the semantic target is settled in place. */
@@ -360,11 +356,13 @@ const HydratedTranscript = memo(
     /** Captures a restorable scroll snapshot from current or last known metrics. */
     persistCurrentScrollSnapshotRef.current = () => {
       const handle = virtualizerRef.current;
-      const cache = handle?.cache ?? lastScrollCacheRef.current;
-      const offset = handle?.scrollOffset ?? lastScrollOffsetRef.current;
-      const isAtBottomFromHandle = handle
-        ? getConversationBottomDistance(handle) <= FORUM_BOTTOM_THRESHOLD
-        : lastWasAtBottomRef.current;
+      const viewport = handle ? getConversationViewportState(handle) : null;
+      const cache =
+        handle && viewport ? handle.cache : lastScrollCacheRef.current;
+      const offset =
+        handle && viewport ? handle.scrollOffset : lastScrollOffsetRef.current;
+      const isAtBottomFromHandle =
+        viewport?.isAtBottom ?? lastWasAtBottomRef.current;
       const isAtBottom =
         pendingPlacementRef.current?.view.kind === "bottom" ||
         isAtBottomFromHandle;
@@ -650,7 +648,6 @@ const HydratedTranscript = memo(
           className="absolute inset-0 flex flex-col overflow-y-auto overscroll-contain"
           style={{ overflowAnchor: "none" }}
         >
-          <div className="grow" />
           <Virtualizer
             cache={initialRestorableCache ?? undefined}
             data={activeTranscript.rows}

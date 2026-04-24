@@ -4,6 +4,7 @@ import {
   captureConversationView,
   getCenteredConversationPostId,
   getConversationBottomDistance,
+  getConversationViewportState,
   getFirstVisibleConversationPostId,
   getLastVisibleConversationPostId,
   hasConversationViewReached,
@@ -81,6 +82,46 @@ describe("conversation/data/settled-view", () => {
         })
       )
     ).toBe(12);
+  });
+
+  it("waits for a measured viewport before deriving jump-bar state", () => {
+    expect(
+      getConversationViewportState(
+        createHandle({
+          scrollOffset: 0,
+          scrollSize: 300,
+          viewportSize: 0,
+        })
+      )
+    ).toBeNull();
+  });
+
+  it("derives jump-bar state from measured virtualizer metrics", () => {
+    expect(
+      getConversationViewportState(
+        createHandle({
+          scrollOffset: 0,
+          scrollSize: 300,
+          viewportSize: 500,
+        })
+      )
+    ).toEqual({
+      hasOverflow: false,
+      isAtBottom: true,
+    });
+
+    expect(
+      getConversationViewportState(
+        createHandle({
+          scrollOffset: 100,
+          scrollSize: 800,
+          viewportSize: 500,
+        })
+      )
+    ).toEqual({
+      hasOverflow: true,
+      isAtBottom: false,
+    });
   });
 
   it("captures bottom when the transcript is already settled at the latest edge", () => {
