@@ -13,12 +13,6 @@ export const createAiStore = () =>
     persist(
       immer((set, get) => ({
         ...initialState,
-        clearPendingQuery: () =>
-          set({
-            pendingQuery: "",
-            pendingQueryChatId: null,
-            pendingQueryOwner: null,
-          }),
         getModel: () => {
           const current = get().model;
           if (MODEL_IDS.includes(current)) {
@@ -26,13 +20,8 @@ export const createAiStore = () =>
           }
           return initialState.model;
         },
-        queuePendingQuery: ({ chatId, owner, query }) =>
-          set({
-            pendingQuery: query,
-            pendingQueryChatId: chatId,
-            pendingQueryOwner: owner,
-          }),
         setActiveChatId: (activeChatId) => set({ activeChatId }),
+        setChatSession: (chatSession) => set({ chatSession }),
         setContextTitle: (contextTitle) => set({ contextTitle }),
         setModel: (model) => set({ model }),
         setOpen: (open) => set({ open }),

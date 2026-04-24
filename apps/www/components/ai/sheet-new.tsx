@@ -19,6 +19,8 @@ import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { memo, useTransition } from "react";
 import { useAi } from "@/components/ai/context/use-ai";
+import { createChatRuntime } from "@/components/ai/helpers/runtime";
+import { reportChatRuntimeError } from "@/components/ai/helpers/runtime-error";
 import { SheetInput } from "@/components/ai/sheet-input";
 import { useUser } from "@/lib/context/use-user";
 
@@ -29,19 +31,23 @@ export const SheetNew = memo(() => {
   const router = useRouter();
   const pathname = usePathname();
 
-  const queuePendingQuery = useAi((state) => state.queuePendingQuery);
+  const getModel = useAi((state) => state.getModel);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
+  const setChatSession = useAi((state) => state.setChatSession);
   const setOpen = useAi((state) => state.setOpen);
+  const setText = useAi((state) => state.setText);
 
   const user = useUser((state) => state.user);
   const createChat = useMutation(api.chats.mutations.createChat);
 
   const [isPending, startTransition] = useTransition();
 
-  /** Creates a chat, queues the first user message, and opens that chat. */
+  /** Creates a chat, starts the stream, and opens that chat in the sheet. */
   function handleSubmit(message: PromptInputMessage) {
     startTransition(async () => {
-      if (!message.text?.trim()) {
+      const query = message.text?.trim();
+
+      if (!query) {
         return;
       }
 
@@ -56,8 +62,22 @@ export const SheetNew = memo(() => {
         type: "study",
       });
 
-      queuePendingQuery({ chatId, owner: "sheet", query: message.text });
+      const chatRuntime = createChatRuntime({
+        chatId,
+        getModel,
+        initialMessages: [],
+        onError: (error) =>
+          reportChatRuntimeError({
+            error,
+            fallbackMessage: t("error-message"),
+            insufficientCreditsMessage: t("insufficient-credits"),
+          }),
+      });
+
+      setChatSession({ chatId, runtime: chatRuntime });
       setActiveChatId(chatId);
+      setText("");
+      chatRuntime.sendMessage({ text: query });
     });
   }
 

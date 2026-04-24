@@ -33,11 +33,7 @@ export const SheetMain = memo(() => {
   }
 
   return (
-    <ChatProvider
-      chatId={chat._id}
-      initialMessages={messages}
-      pendingQueryOwner="sheet"
-    >
+    <ChatProvider chatId={chat._id} initialMessages={messages}>
       <SheetConversation />
     </ChatProvider>
   );

@@ -68,11 +68,7 @@ function AiChatMain() {
   }
 
   return (
-    <ChatProvider
-      chatId={chat._id}
-      initialMessages={messages}
-      pendingQueryOwner="page"
-    >
+    <ChatProvider chatId={chat._id} initialMessages={messages}>
       <AiChatPageContent />
     </ChatProvider>
   );

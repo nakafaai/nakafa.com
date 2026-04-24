@@ -1,28 +1,26 @@
 "use client";
 
+import type { Chat } from "@ai-sdk/react";
 import type { ModelId } from "@repo/ai/config/models";
+import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 
 export interface AiState {
   activeChatId: Id<"chats"> | null;
+  chatSession: {
+    chatId: Id<"chats">;
+    runtime: Chat<MyUIMessage>;
+  } | null;
   contextTitle: string | null;
   model: ModelId;
   open: boolean;
-  pendingQuery: string;
-  pendingQueryChatId: Id<"chats"> | null;
-  pendingQueryOwner: "page" | "sheet" | null;
   text: string;
 }
 
 export interface AiActions {
-  clearPendingQuery: () => void;
   getModel: () => AiState["model"];
-  queuePendingQuery: (value: {
-    chatId: Id<"chats">;
-    owner: NonNullable<AiState["pendingQueryOwner"]>;
-    query: string;
-  }) => void;
   setActiveChatId: (activeChatId: AiState["activeChatId"]) => void;
+  setChatSession: (chatSession: AiState["chatSession"]) => void;
   setContextTitle: (contextTitle: AiState["contextTitle"]) => void;
   setModel: (model: AiState["model"]) => void;
   setOpen: (open: AiState["open"]) => void;

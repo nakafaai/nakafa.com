@@ -2,21 +2,13 @@
 
 import { type UseChatHelpers, useChat as useAiChat } from "@ai-sdk/react";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { captureException } from "@repo/analytics/posthog";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { DefaultChatTransport } from "ai";
 import { useTranslations } from "next-intl";
-import {
-  type PropsWithChildren,
-  useEffect,
-  useEffectEvent,
-  useMemo,
-} from "react";
-import { toast } from "sonner";
+import { type PropsWithChildren, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
-import { CHAT_ERRORS } from "@/app/api/chat/constants";
 import { useAi } from "@/components/ai/context/use-ai";
-import { getLocale, getPathname } from "@/lib/utils/browser";
+import { createChatTransport } from "@/components/ai/helpers/runtime";
+import { reportChatRuntimeError } from "@/components/ai/helpers/runtime-error";
 
 interface ChatContextValue {
   chat: UseChatHelpers<MyUIMessage>;
@@ -39,85 +31,38 @@ export function ChatProvider({
   chatId,
   initialMessages,
   apiUrl = "/api/chat",
-  pendingQueryOwner,
   children,
 }: PropsWithChildren<{
   chatId: Id<"chats">;
   initialMessages: MyUIMessage[];
   apiUrl?: string;
-  pendingQueryOwner?: "page" | "sheet";
 }>) {
   const t = useTranslations("Ai");
 
-  const clearPendingQuery = useAi((state) => state.clearPendingQuery);
+  const chatSession = useAi((state) => state.chatSession);
   const getModel = useAi((state) => state.getModel);
-  const pendingQuery = useAi((state) => state.pendingQuery);
-  const pendingQueryChatId = useAi((state) => state.pendingQueryChatId);
-  const pendingOwner = useAi((state) => state.pendingQueryOwner);
-  const setText = useAi((state) => state.setText);
+  const reusableChatRuntime =
+    chatSession?.chatId === chatId ? chatSession.runtime : undefined;
 
-  const chat = useAiChat<MyUIMessage>({
-    id: chatId,
-    messages: initialMessages,
-    transport: new DefaultChatTransport({
-      api: apiUrl,
-      prepareSendMessagesRequest: ({ id, messages }) => {
-        const lastMessage = messages.at(-1);
+  /** Handles one failed chat request with localized user feedback. */
+  function handleError(error: Error) {
+    reportChatRuntimeError({
+      error,
+      fallbackMessage: t("error-message"),
+      insufficientCreditsMessage: t("insufficient-credits"),
+    });
+  }
 
-        return {
-          body: {
-            id,
-            locale: getLocale(),
-            message: lastMessage,
-            model: getModel(),
-            slug: getPathname(),
-          },
-        };
-      },
-    }),
-    onError: (error) => {
-      const errorCode = error.message.trim();
-
-      if (errorCode === CHAT_ERRORS.INSUFFICIENT_CREDITS.code) {
-        toast.error(t("insufficient-credits"), { position: "bottom-center" });
-        return;
-      }
-
-      captureException(error, {
-        source: "chat-provider-send-message",
-      });
-
-      toast.error(t("error-message"), { position: "bottom-center" });
-    },
-  });
-
-  const consumePendingQuery = useEffectEvent((text: string) => {
-    chat.sendMessage({ text });
-    clearPendingQuery();
-    setText("");
-  });
-
-  useEffect(() => {
-    if (!pendingQueryOwner) {
-      return;
-    }
-
-    if (pendingOwner !== pendingQueryOwner) {
-      return;
-    }
-
-    if (pendingQueryChatId !== chatId || !pendingQuery) {
-      return;
-    }
-
-    consumePendingQuery(pendingQuery);
-  }, [
-    chatId,
-    pendingOwner,
-    pendingQuery,
-    pendingQueryChatId,
-    pendingQueryOwner,
-  ]);
+  const chat = useAiChat<MyUIMessage>(
+    reusableChatRuntime
+      ? { chat: reusableChatRuntime }
+      : {
+          id: chatId,
+          messages: initialMessages,
+          transport: createChatTransport({ apiUrl, getModel }),
+          onError: handleError,
+        }
+  );
 
   const value = useMemo(
     () => ({
