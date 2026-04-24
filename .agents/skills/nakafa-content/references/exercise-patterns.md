@@ -1,247 +1,96 @@
 # Exercise Patterns Reference
 
-Detailed patterns for creating exercises at Nakafa.
+Verified against `packages/contents/exercises/` and `packages/contents/_types/exercises/choices.ts`.
 
-## Exercise Categories and Types
+## Supported Exercise Paths
 
-### Categories
-
-- `high-school`: SMA/SMK/MA level
-- `middle-school`: SMP/MTs level
-
-### Types
-
-**High School:**
-- `tka`: Tes Kemampuan Akademik
-- `snbt`: Seleksi Nasional Berbasis Tes
-
-**Middle School:**
-- `grade-9`: Kelas 9 (preparation for high school entrance)
-
-### Materials (Subjects)
-
-**TKA:**
-- `mathematics`: Mathematics
-
-**SNBT:**
-- `quantitative-knowledge`: Pengetahuan Kuantitatif
-- `mathematical-reasoning`: Penalaran Matematika
-- `general-reasoning`: Penalaran Umum
-- `indonesian-language`: Bahasa Indonesia
-- `english-language`: Bahasa Inggris
-- `general-knowledge`: Pengetahuan dan Pemahaman Umum
-- `reading-and-writing-skills`: Literasi Membaca dan Menulis
-
-## File Structure Pattern
-
-```
-exercises/
-├── {category}/              # high-school | middle-school
-│   ├── {type}/              # tka | snbt | grade-9
-│   │   ├── {material}/      # mathematics | quantitative-knowledge | ...
-│   │   │   ├── {set}/       # try-out/set-1 | try-out/set-2 | ...
-│   │   │   │   ├── {number}/ # 1, 2, 3, ..., 25
-│   │   │   │   │   ├── _question/
-│   │   │   │   │   │   ├── id.mdx
-│   │   │   │   │   │   └── en.mdx
-│   │   │   │   │   ├── _answer/
-│   │   │   │   │   │   ├── id.mdx
-│   │   │   │   │   │   └── en.mdx
-│   │   │   │   │   └── choices.ts
+```text
+packages/contents/exercises/
+├── high-school/
+│   ├── tka/mathematics/try-out/{year}/{set}/{number}/
+│   └── snbt/{subject}/try-out/{year}/{set}/{number}/
+└── middle-school/
 ```
 
-## Question File Pattern
+Examples:
 
-### Basic Structure
+- `packages/contents/exercises/high-school/tka/mathematics/try-out/2026/set-1/1/`
+- `packages/contents/exercises/high-school/snbt/general-reasoning/try-out/2026/set-2/1/`
 
-```mdx
-export const metadata = {
-  title: "Soal {number}",
-  authors: [{ name: "Author Name" }],
-  date: "MM/DD/YYYY",
-};
+## Per-Question Structure
 
-{Question text with <InlineMath math="..." /> for all math}
-
-<BlockMath math="..." />
+```text
+{number}/
+├── _question/
+│   ├── id.mdx
+│   └── en.mdx
+├── _answer/
+│   ├── id.mdx
+│   └── en.mdx
+└── choices.ts
 ```
 
-### Example: Simple Math
+## Question MDX
 
 ```mdx
 export const metadata = {
   title: "Soal 1",
-  authors: [{ name: "Nabil Akbarazzima Fatih" }],
-  date: "06/11/2025",
-};
-
-Diketahui <InlineMath math="a = \frac{1}{2}" />, <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
-
-Nilai dari
-
-<BlockMath math="\frac{a^{-2}bc^3}{ab^2c^{-1}} = ...." />
-```
-
-### Example: With Graph
-
-```mdx
-export const metadata = {
-  title: "Soal 25",
-  authors: [{ name: "Nabil Akbarazzima Fatih" }],
-  date: "06/11/2025",
-};
-
-Diketahui persamaan lingkaran <InlineMath math="x^2 + y^2 + 2x - 6y + 2 = 0" />. Persamaan garis singgung pada lingkaran yang sejajar dengan garis <InlineMath math="x - y + 3 = 0" /> adalah ...
-```
-
-### Key Points
-
-1. **Date Format**: Always `MM/DD/YYYY`
-2. **Math Everywhere**: All numbers must use `<InlineMath math="..." />`
-3. **BlockMath**: For equations that stand alone
-4. **Numbered References**: `<InlineMath math="(1)" />` not `(1)`
-5. **Lists**: Use standard Markdown lists
-
-## Answer File Pattern
-
-### Structure
-
-```mdx
-export const metadata = {
-  title: "Pembahasan Soal {number}",
   authors: [{ name: "Author Name" }],
-  date: "MM/DD/YYYY",
+  date: "06/11/2025",
 };
 
-#### {Descriptive Heading 1}
+Diketahui <InlineMath math="a = \frac{1}{2}" /> dan <InlineMath math="b = 2" />.
 
-Explanation text with <InlineMath math="..." />.
+Nilai dari ekspresi berikut adalah ....
 
-<MathContainer>
-  <BlockMath math="..." />
-  <BlockMath math="..." />
-</MathContainer>
-
-#### {Descriptive Heading 2}
-
-More explanation...
-
-Jadi, {conclusion}.
+<BlockMath math="\frac{a^{-2}b}{ab^2}" />
 ```
 
-### Example: Step-by-Step Solution
+Rules:
+
+- Date format is `MM/DD/YYYY`.
+- Use `<InlineMath />` for every mathematical expression, variable, quantity, unit, coordinate, and calculated value in prose.
+- Use `<BlockMath />` for standalone formulas.
+- Keep wording unambiguous.
+- Do not include answer-option letters in the question text unless the original format truly requires them.
+
+## Answer MDX
 
 ```mdx
 export const metadata = {
   title: "Pembahasan Soal 1",
-  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  authors: [{ name: "Author Name" }],
   date: "06/11/2025",
 };
 
-Diketahui: <InlineMath math="a = \frac{1}{2}" />; <InlineMath math="b = 2" />, <InlineMath math="c = 1" />
+### Analyze the Known Values
 
-<MathContainer>
-<BlockMath math="\frac{a^{-2}bc^3}{ab^2c^{-1}} = \frac{bc^3}{ab^2} \cdot \frac{c^1}{a^2}" />
+Diketahui <InlineMath math="a = \frac{1}{2}" /> dan <InlineMath math="b = 2" />.
 
-<BlockMath math="= \frac{2 \cdot 1^3}{\left(\frac{1}{2}\right) \cdot 2^2} \cdot \frac{1^1}{\left(\frac{1}{2}\right)^2}" />
+<BlockMath math="\begin{aligned}
+\frac{a^{-2}b}{ab^2}
+  &= \frac{b}{a^3b^2} \\
+  &= \frac{1}{a^3b} \\
+  &= \frac{1}{\left(\frac{1}{2}\right)^3 \cdot 2} \\
+  &= 4
+\end{aligned}" />
 
-<BlockMath math="= \frac{2 \cdot 4}{2} = 4" />
-</MathContainer>
-
-Jadi, nilai dari ekspresi tersebut adalah <InlineMath math="4" />.
+Jadi, nilai ekspresi tersebut adalah <InlineMath math="4" />.
 ```
 
-### Example: With Graph Component
+Rules:
 
-```mdx
-import { LineEquation } from "@repo/design-system/components/contents/line-equation";
-import { getColor } from "@repo/design-system/lib/color";
+- Headings start at `##` and do not go deeper than `###`.
+- Use descriptive headings, not "Step 1".
+- Do not put math, symbols, or parenthesized numbers in headings.
+- Do not refer to option letters such as `(A)`, `(B)`, or `(C)` in explanations.
+- State the final answer by content, not by option letter.
+- Keep notation consistent with the question.
+- Prefer one expressive `<BlockMath />` for one connected derivation.
+- Use `<MathContainer>` only when rows should remain visually separate.
+- Do not use em dash in prose.
 
-export const metadata = {
-  title: "Pembahasan Soal 25",
-  authors: [{ name: "Nabil Akbarazzima Fatih" }],
-  date: "06/11/2025",
-};
-
-Diketahui lingkaran <InlineMath math="L = x^2 + y^2 + 2x - 6y + 2 = 0" /> sejajar dengan garis <InlineMath math="x - y + 3 = 0" />.
-
-#### Menentukan Jari-Jari Lingkaran
-
-Bentuk umum lingkaran <InlineMath math="(x - a)^2 + (y - b)^2 = r^2" /> dapat ditentukan dari persamaan <InlineMath math="L" />
-
-<MathContainer>
-<BlockMath math="x^2 + y^2 + 2x - 6y + 2 = 0" />
-
-<BlockMath math="(x + 1)^2 - 1 + (y - 3)^2 - 9 = -2" />
-
-<BlockMath math="(x + 1)^2 + (y - 3)^2 = 8" />
-</MathContainer>
-
-Sehingga pusat lingkaran di <InlineMath math="(-1, 3)" /> dan jari-jari <InlineMath math="r = \sqrt{8} = 2\sqrt{2}" />.
-
-#### Menentukan Gradien
-
-Karena <InlineMath math="y = mx + c" /> dan garis sejajar dengan garis singgung, maka gradiennya adalah
-
-<MathContainer>
-<BlockMath math="x - y + 3 = 0 \Leftrightarrow y = x + 3" />
-
-<BlockMath math="m_g = m = 1" />
-</MathContainer>
-
-#### Persamaan Garis Singgung
-
-Rumus persamaan garis singgung lingkaran dengan gradien <InlineMath math="m" />
-
-<BlockMath math="y - b = m(x - a) \pm r\sqrt{1 + m^2}" />
-
-Substitusi nilai yang diketahui
-
-<MathContainer>
-<BlockMath math="y - 3 = 1(x + 1) \pm \sqrt{8} \cdot \sqrt{1 + (1)^2}" />
-
-<BlockMath math="y - 3 = x + 1 \pm \sqrt{8} \cdot \sqrt{2}" />
-
-<BlockMath math="y - 3 = x + 1 \pm 4" />
-</MathContainer>
-
-Diperoleh dua persamaan
-
-<MathContainer>
-<BlockMath math="y = x + 4 + 4 \quad \text{atau} \quad y = x + 4 - 4" />
-
-<BlockMath math="y = x + 8 \quad \text{atau} \quad y = x" />
-</MathContainer>
-
-Bentuk umumnya
-
-<BlockMath math="x - y + 8 = 0 \quad \text{atau} \quad x - y = 0" />
-
-Jawaban yang paling tepat adalah <InlineMath math="x - y + 8 = 0" />.
-```
-
-## Choices File Pattern
-
-### Structure
-
-```typescript
-import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
-
-const choices: ExercisesChoices = {
-  id: [
-    // Indonesian choices
-  ],
-  en: [
-    // English choices
-  ],
-};
-
-export default choices;
-```
-
-### Examples
-
-**Numeric Choices:**
+## Choices File
 
 ```typescript
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
@@ -252,61 +101,13 @@ const choices: ExercisesChoices = {
     { label: "$$2$$", value: false },
     { label: "$$3$$", value: false },
     { label: "$$4$$", value: true },
-    { label: "$$5$$", value: false },
-  ],
-  en: [
-    { label: "$$1$$", value: false },
-    { label: "$$2$$", value: false },
-    { label: "$$3$$", value: false },
-    { label: "$$4$$", value: true },
-    { label: "$$5$$", value: false },
-  ],
-};
-
-export default choices;
-```
-
-**Fraction Choices:**
-
-**Important:** In TypeScript strings, backslashes must be escaped as `\\`.
-
-```typescript
-const choices: ExercisesChoices = {
-  id: [
-    { label: "$$-\\frac{5}{2}$$", value: true },
-    { label: "$$\\frac{5}{2}$$", value: false },
-    { label: "$$10$$", value: false },
-    { label: "Tidak ada solusi", value: false },
-    { label: "$$\\infty$$", value: false },
-  ],
-  en: [
-    { label: "$$-\\frac{5}{2}$$", value: true },
-    { label: "$$\\frac{5}{2}$$", value: false },
-    { label: "$$10$$", value: false },
-    { label: "No solution", value: false },
-    { label: "$$\\infty$$", value: false },
-  ],
-};
-
-export default choices;
-```
-
-**Mixed Math and Text:**
-
-```typescript
-const choices: ExercisesChoices = {
-  id: [
-    { label: "$$x - y = 0$$", value: false },
-    { label: "$$x - y + 8 = 0$$", value: true },
-    { label: "$$x + y - 8 = 0$$", value: false },
-    { label: "$$x + y = 0$$", value: false },
     { label: "Tidak ada jawaban yang tepat", value: false },
   ],
   en: [
-    { label: "$$x - y = 0$$", value: false },
-    { label: "$$x - y + 8 = 0$$", value: true },
-    { label: "$$x + y - 8 = 0$$", value: false },
-    { label: "$$x + y = 0$$", value: false },
+    { label: "$$1$$", value: false },
+    { label: "$$2$$", value: false },
+    { label: "$$3$$", value: false },
+    { label: "$$4$$", value: true },
     { label: "None of the above", value: false },
   ],
 };
@@ -314,115 +115,85 @@ const choices: ExercisesChoices = {
 export default choices;
 ```
 
+Rules:
+
+- Both `id` and `en` arrays are required.
+- Use `$$...$$` for math labels in `choices.ts`.
+- Escape LaTeX backslashes in TypeScript strings, for example `$$\\frac{a}{b}$$`.
+- Use plain strings for non-math labels.
+- Keep exactly one `value: true` per language unless the exercise format explicitly allows otherwise.
+
 ## Common Anti-Patterns
 
-### WRONG: Using (A), (B), (C) in explanations
+### Wrong: option-letter answers
 
 ```mdx
-> Jadi jawabannya adalah (C).  // NEVER DO THIS
+The correct answer is C.
 ```
 
-### CORRECT: Refer to content
+### Correct: content-based answers
 
 ```mdx
-> Jadi, persamaan garis singgungnya adalah <InlineMath math="x - y + 8 = 0" />.
+The correct expression is <InlineMath math="x - y + 8 = 0" />.
 ```
 
-### WRONG: Using math in headings
+### Wrong: math in headings
 
 ```mdx
-#### Mencari Nilai <InlineMath math="x" />  // NEVER DO THIS
+### Finding <InlineMath math="x" />
 ```
 
-### CORRECT: Plain text headings
+### Correct: plain text headings
 
 ```mdx
-#### Mencari Nilai x
+### Finding the Unknown Value
 ```
 
-### WRONG: Using parentheses in headings
+### Wrong: raw numbers in math prose
 
 ```mdx
-#### Analisis Pernyataan (1)  // NEVER DO THIS
+Given a = 5 and b = 3.
 ```
 
-### CORRECT: Plain numbers in headings
+### Correct: math components in math prose
 
 ```mdx
-#### Analisis Pernyataan 1
+Given <InlineMath math="a = 5" /> and <InlineMath math="b = 3" />.
 ```
 
-### WRONG: Plain numbers in text
+### Wrong: splitting one equation chain without a reason
 
 ```mdx
-Diketahui a = 5 dan b = 3.  // NEVER DO THIS
+<MathContainer>
+  <BlockMath math="2x + 3 = 11" />
+  <BlockMath math="2x = 8" />
+  <BlockMath math="x = 4" />
+</MathContainer>
 ```
 
-### CORRECT: InlineMath for numbers
+### Correct: one connected derivation in one block
 
 ```mdx
-Diketahui <InlineMath math="a = 5" /> dan <InlineMath math="b = 3" />.
-```
-
-### WRONG: Hard-coded points in graphs
-
-```tsx
-points: [
-  { x: 0, y: 0, z: 0 },
-  { x: 1, y: 1, z: 0 },
-  { x: 2, y: 4, z: 0 },
-  // ... 97 more points  // NEVER DO THIS
-]
-```
-
-### CORRECT: Generated points
-
-```tsx
-points: Array.from({ length: 100 }, (_, i) => {
-  const x = (i / 99) * 5;
-  return { x, y: x * x, z: 0 };
-})
+<BlockMath math="\begin{aligned}
+2x + 3 &= 11 \\
+2x &= 8 \\
+x &= 4
+\end{aligned}" />
 ```
 
 ## Quality Checklist
 
-### Content
-
-- [ ] Question is clear and unambiguous
-- [ ] All math expressions use proper components
-- [ ] Numbers use `<InlineMath />`
-- [ ] Block equations use `<BlockMath />`
-- [ ] Multiple equations wrapped in `<MathContainer />`
-
-### Structure
-
-- [ ] Metadata includes title, authors, date
-- [ ] Date format is MM/DD/YYYY
-- [ ] Headings are descriptive (no "Step 1")
-- [ ] Headings contain no math or symbols
-- [ ] Headings use plain numbers (not parentheses)
-
-### Answer
-
-- [ ] Explanation is complete and unambiguous
-- [ ] No reference to option letters (A, B, C)
-- [ ] Conclusion clearly states the answer
-- [ ] Math notation matches question
-
-### Choices
-
-- [ ] Type imported from `@repo/contents/_types/exercises/choices`
-- [ ] Both `id` and `en` arrays present
-- [ ] Math uses `$$...$$`
-- [ ] Text uses plain strings
-- [ ] Exactly one `value: true` per language
-
-### Graphs (if applicable)
-
-- [ ] Components imported correctly
-- [ ] `getColor()` used for colors
-- [ ] Points generated with `Array.from()`
-- [ ] `showZAxis={false}` for 2D graphs
-- [ ] `cameraPosition={[0, 0, 15]}` for 2D
-- [ ] Labels don't overlap
-- [ ] Description ends with period
+- [ ] Question is clear and unambiguous.
+- [ ] Metadata includes title, authors, and date.
+- [ ] Date uses `MM/DD/YYYY`.
+- [ ] Math in prose always uses `<InlineMath />`.
+- [ ] Standalone equations use `<BlockMath />`.
+- [ ] One connected derivation uses one expressive `<BlockMath />` when clearer.
+- [ ] Separate derivation rows use `<MathContainer>` only when they should stay visually separate.
+- [ ] Headings follow the `##` to `###` depth rule.
+- [ ] No em dash appears in prose.
+- [ ] Answer explains the reasoning, not only the final result.
+- [ ] Explanation does not reference option letters.
+- [ ] `choices.ts` has both `id` and `en`.
+- [ ] Choice labels escape LaTeX correctly.
+- [ ] Exactly one choice is correct per language unless intentionally different.
