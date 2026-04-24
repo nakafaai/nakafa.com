@@ -24,7 +24,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { memo, useTransition } from "react";
-import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
+import { useForumSession } from "@/components/school/classes/forum/context/use-session";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 
 /**
@@ -33,7 +33,9 @@ import type { ForumPost } from "@/components/school/classes/forum/conversation/d
  */
 export const PostItemActions = memo(({ post }: { post: ForumPost }) => {
   const t = useTranslations("Common");
-  const setReplyTo = useSession((state) => state.setReplyTo);
+  const setForumReplyTarget = useForumSession(
+    (state) => state.setForumReplyTarget
+  );
   const [isReactionPickerOpen, reactionPicker] = useDisclosure(false);
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
@@ -92,7 +94,12 @@ export const PostItemActions = memo(({ post }: { post: ForumPost }) => {
         <TooltipTrigger
           render={
             <Button
-              onClick={() => setReplyTo({ postId: post._id, userName })}
+              onClick={() =>
+                setForumReplyTarget(post.forumId, {
+                  postId: post._id,
+                  userName,
+                })
+              }
               size="icon"
               variant="outline"
             >

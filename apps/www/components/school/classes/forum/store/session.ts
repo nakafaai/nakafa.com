@@ -3,7 +3,11 @@ import type { CacheSnapshot } from "virtua";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import type { ReplyTo } from "@/components/school/classes/forum/conversation/data/entities";
+
+export interface ForumReplyTarget {
+  postId: Id<"schoolClassForumPosts">;
+  userName: string;
+}
 
 export interface ConversationScrollSnapshot {
   cache: CacheSnapshot | null;
@@ -14,10 +18,12 @@ export interface ConversationScrollSnapshot {
 }
 
 interface State {
-  isHydrated: boolean;
-  replyTo: ReplyTo | null;
-  savedConversationScrollSnapshots: Partial<
+  conversationScrollSnapshotByForumId: Partial<
     Record<Id<"schoolClassForums">, ConversationScrollSnapshot>
+  >;
+  isHydrated: boolean;
+  replyTargetByForumId: Partial<
+    Record<Id<"schoolClassForums">, ForumReplyTarget>
   >;
 }
 
@@ -26,16 +32,19 @@ interface Actions {
     forumId: Id<"schoolClassForums">,
     snapshot: ConversationScrollSnapshot
   ) => void;
+  setForumReplyTarget: (
+    forumId: Id<"schoolClassForums">,
+    replyTarget: ForumReplyTarget | null
+  ) => void;
   setHydrated: (isHydrated: boolean) => void;
-  setReplyTo: (replyTo: ReplyTo | null) => void;
 }
 
-export type SessionStore = State & Actions;
+export type ForumSessionStore = State & Actions;
 
 const initialState: State = {
   isHydrated: false,
-  replyTo: null,
-  savedConversationScrollSnapshots: {},
+  conversationScrollSnapshotByForumId: {},
+  replyTargetByForumId: {},
 };
 
 /** Returns whether one stored cache snapshot still matches the current list. */
@@ -59,20 +68,20 @@ export function canRestoreConversationScrollCache({
 }
 
 /**
- * Creates one class-scoped session store for reply state and scroll restoration.
+ * Creates one class-scoped session store for forum reply state and scroll restoration.
  *
- * Hydration is intentionally manual so the conversation provider can rehydrate
+ * Hydration is intentionally manual so the forum provider can rehydrate
  * session-backed state on the client before the transcript renders.
  */
-export function createSessionStore(classId: string) {
-  return createStore<SessionStore>()(
+export function createForumSessionStore(classId: string) {
+  return createStore<ForumSessionStore>()(
     persist(
       immer((set) => ({
         ...initialState,
 
         saveConversationScrollSnapshot: (forumId, snapshot) => {
           set((state) => {
-            state.savedConversationScrollSnapshots[forumId] = snapshot;
+            state.conversationScrollSnapshotByForumId[forumId] = snapshot;
           });
         },
 
@@ -82,17 +91,22 @@ export function createSessionStore(classId: string) {
           });
         },
 
-        setReplyTo: (replyTo) => {
+        setForumReplyTarget: (forumId, replyTarget) => {
           set((state) => {
-            state.replyTo = replyTo;
+            if (!replyTarget) {
+              delete state.replyTargetByForumId[forumId];
+              return;
+            }
+
+            state.replyTargetByForumId[forumId] = replyTarget;
           });
         },
       })),
       {
         name: `nakafa-forum-session:${classId}`,
         partialize: (state) => ({
-          savedConversationScrollSnapshots:
-            state.savedConversationScrollSnapshots,
+          conversationScrollSnapshotByForumId:
+            state.conversationScrollSnapshotByForumId,
         }),
         skipHydration: true,
         storage: createJSONStorage(() => sessionStorage),

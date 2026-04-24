@@ -30,9 +30,9 @@ import {
 } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
+import { useForumSession } from "@/components/school/classes/forum/context/use-session";
 import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
-import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
 import { AttachmentPreviews } from "@/components/school/classes/forum/conversation/input/attachment-previews";
 import { InputAttachments } from "@/components/school/classes/forum/conversation/input/attachments-trigger";
 import { EmojiButton } from "@/components/school/classes/forum/conversation/input/emoji-button";
@@ -41,10 +41,14 @@ import { ReplyIndicator } from "@/components/school/classes/forum/conversation/i
 /** Handles forum post submission, uploads, and reply cleanup for the transcript. */
 export const ForumPostInput = memo(() => {
   const t = useTranslations("School.Classes");
-  const replyTo = useSession((state) => state.replyTo);
-  const setReplyTo = useSession((state) => state.setReplyTo);
   const { acknowledgeUnreadCue, goToLatest } = useControls();
   const forumId = useData((state) => state.forumId);
+  const replyTarget = useForumSession(
+    (state) => state.replyTargetByForumId[forumId] ?? null
+  );
+  const setForumReplyTarget = useForumSession(
+    (state) => state.setForumReplyTarget
+  );
   const [composerRef] = useResizeObserver<HTMLFormElement>();
   const textareaRef = useRef<ComponentRef<typeof InputGroupTextarea>>(null);
   const generateUploadUrl = useMutation(
@@ -76,10 +80,10 @@ export const ForumPostInput = memo(() => {
   const isMobile = os === "ios" || os === "android";
 
   useEffect(() => {
-    if (replyTo) {
+    if (replyTarget) {
       textareaRef.current?.focus();
     }
-  }, [replyTo]);
+  }, [replyTarget]);
 
   const uploadFile = useCallback(
     async (file: File) => {
@@ -148,12 +152,12 @@ export const ForumPostInput = memo(() => {
             attachmentUploadIds.length > 0 ? attachmentUploadIds : undefined,
           forumId,
           body: value.body,
-          parentId: replyTo?.postId,
+          parentId: replyTarget?.postId,
         });
 
         form.reset();
         clearFiles();
-        setReplyTo(null);
+        setForumReplyTarget(forumId, null);
         acknowledgeUnreadCue();
 
         requestAnimationFrame(() => {
@@ -210,7 +214,7 @@ export const ForumPostInput = memo(() => {
       <ReplyIndicator />
       <AttachmentPreviews
         files={files}
-        hasReplyTo={!!replyTo}
+        hasReplyTo={!!replyTarget}
         onRemove={removeFile}
       />
       <input className="hidden" {...getInputProps()} />
@@ -230,7 +234,7 @@ export const ForumPostInput = memo(() => {
               return (
                 <InputGroup
                   className={cn(
-                    (!!replyTo || files.length > 0) && "rounded-t-none"
+                    (!!replyTarget || files.length > 0) && "rounded-t-none"
                   )}
                 >
                   <InputGroupAddon align="inline-start">

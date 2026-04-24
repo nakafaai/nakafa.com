@@ -23,12 +23,12 @@ import {
   Virtualizer,
   type VirtualizerHandle,
 } from "virtua";
+import {
+  useForumSession,
+  useForumSessionStoreApi,
+} from "@/components/school/classes/forum/context/use-session";
 import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
-import {
-  useSession,
-  useSessionStoreApi,
-} from "@/components/school/classes/forum/conversation/context/use-session";
 import { useViewport } from "@/components/school/classes/forum/conversation/context/use-viewport";
 import { getConversationRowKey } from "@/components/school/classes/forum/conversation/data/pages";
 import {
@@ -45,9 +45,9 @@ import { isConversationViewAtPost } from "@/components/school/classes/forum/conv
 import { useActiveTranscriptModel } from "@/components/school/classes/forum/conversation/hooks/use-active-transcript-model";
 import { useConversationUnreadCue } from "@/components/school/classes/forum/conversation/hooks/use-conversation-unread-cue";
 import { JumpBar } from "@/components/school/classes/forum/conversation/jump-bar";
-import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/conversation/store/session";
-import { canRestoreConversationScrollCache } from "@/components/school/classes/forum/conversation/store/session";
 import { VirtualTranscriptRow } from "@/components/school/classes/forum/conversation/transcript-row";
+import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
+import { canRestoreConversationScrollCache } from "@/components/school/classes/forum/store/session";
 
 type PendingPlacementAlign = NonNullable<ScrollToIndexOpts["align"]>;
 
@@ -74,11 +74,12 @@ interface PendingPlacement {
  */
 export const ForumConversationTranscript = memo(() => {
   const forumId = useData((state) => state.forumId);
-  const isHydrated = useSession((state) => state.isHydrated);
-  const sessionStore = useSessionStoreApi();
+  const isHydrated = useForumSession((state) => state.isHydrated);
+  const forumSessionStore = useForumSessionStoreApi();
 
   const savedScrollSnapshot =
-    sessionStore.getState().savedConversationScrollSnapshots[forumId] ?? null;
+    forumSessionStore.getState().conversationScrollSnapshotByForumId[forumId] ??
+    null;
 
   if (!isHydrated) {
     return null;
@@ -112,7 +113,7 @@ const HydratedTranscript = memo(
     initialSavedScrollSnapshot: ConversationScrollSnapshot | null;
   }) => {
     const forum = useData((state) => state.forum);
-    const saveConversationScrollSnapshot = useSession(
+    const saveConversationScrollSnapshot = useForumSession(
       (state) => state.saveConversationScrollSnapshot
     );
     const backStack = useViewport((state) => state.backStack);

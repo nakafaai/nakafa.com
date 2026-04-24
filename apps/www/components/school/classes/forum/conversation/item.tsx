@@ -8,8 +8,8 @@ import { cn } from "@repo/design-system/lib/utils";
 import { format } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, memo } from "react";
+import { useForumSession } from "@/components/school/classes/forum/context/use-session";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
-import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
 import { useViewport } from "@/components/school/classes/forum/conversation/context/use-viewport";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 import { PostItemActions } from "@/components/school/classes/forum/conversation/item/actions";
@@ -33,13 +33,15 @@ export const ForumPostItem = memo(
     const t = useTranslations("Common");
     const locale = useLocale();
     const currentUserId = useData((state) => state.currentUserId);
-    const replyTo = useSession((state) => state.replyTo);
+    const replyTarget = useForumSession(
+      (state) => state.replyTargetByForumId[post.forumId] ?? null
+    );
     const userName = post.user?.name ?? t("anonymous");
     const userImage = post.user?.image ?? "";
     const isJumpHighlighted = useViewport(
       (state) => state.highlightedPostId === post._id
     );
-    const isReplyTo = replyTo?.postId === post._id;
+    const isReplyTarget = replyTarget?.postId === post._id;
     const isReplyToMe = post.replyToUserId === currentUserId;
 
     return (
@@ -54,7 +56,7 @@ export const ForumPostItem = memo(
           className={cn(
             "group relative flex items-start gap-3 border-l-2 border-l-transparent px-4 py-1.5 transition-colors ease-out hover:bg-accent/20",
             isReplyToMe === true && "border-primary bg-primary/10",
-            isReplyTo === true && "border-secondary bg-secondary/10",
+            isReplyTarget === true && "border-secondary bg-secondary/10",
             isJumpHighlighted === true && "border-secondary bg-secondary/10"
           )}
           id={post._id}

@@ -8,7 +8,7 @@ import { useQuery } from "convex/react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { SchoolClassesDetailPanel } from "@/components/school/classes/detail-panel";
-import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
+import { getSchoolClassesForumHref } from "@/components/school/classes/forum/helpers/routes";
 import { SchoolClassesForumPanelContent } from "@/components/school/classes/forum/panel-content";
 import { SchoolClassesForumPanelError } from "@/components/school/classes/forum/panel-error";
 import { SchoolClassesForumPanelInfo } from "@/components/school/classes/forum/panel-info";
@@ -26,16 +26,17 @@ export function SchoolClassesForumPanel({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { id, slug } = useParams<{ id: string; slug: string }>();
-  const setReplyTo = useSession((state) => state.setReplyTo);
   const forum = useQuery(api.classes.forums.queries.forums.getForum, {
     forumId,
   });
-  const search = searchParams.toString();
-  const closeHref = `/school/${slug}/classes/${id}/forum${search ? `?${search}` : ""}`;
+  const closeHref = getSchoolClassesForumHref({
+    classRouteId: id,
+    queryString: searchParams.toString(),
+    slug,
+  });
 
-  /** Clears reply state before returning to the forum list. */
+  /** Returns to the forum list while preserving per-forum composer state. */
   function handleClose() {
-    setReplyTo(null);
     router.replace(closeHref);
   }
 

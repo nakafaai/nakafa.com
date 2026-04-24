@@ -5,23 +5,23 @@ import { createContext, useContextSelector } from "use-context-selector";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import {
-  createSessionStore,
-  type SessionStore,
-} from "@/components/school/classes/forum/conversation/store/session";
+  createForumSessionStore,
+  type ForumSessionStore,
+} from "@/components/school/classes/forum/store/session";
 
-type SessionStoreApi = ReturnType<typeof createSessionStore>;
+type ForumSessionStoreApi = ReturnType<typeof createForumSessionStore>;
 
-const SessionContext = createContext<SessionStoreApi | null>(null);
+const ForumSessionContext = createContext<ForumSessionStoreApi | null>(null);
 
 /** Provides one class-scoped session store instance. */
-export function SessionProvider({
+export function ForumSessionProvider({
   children,
   classId,
 }: {
-  children?: ReactNode;
+  children: ReactNode;
   classId: string;
 }) {
-  const [store] = useState(() => createSessionStore(classId));
+  const [store] = useState(() => createForumSessionStore(classId));
 
   useLayoutEffect(() => {
     /*
@@ -47,27 +47,35 @@ export function SessionProvider({
   }, [store]);
 
   return (
-    <SessionContext.Provider value={store}>{children}</SessionContext.Provider>
+    <ForumSessionContext.Provider value={store}>
+      {children}
+    </ForumSessionContext.Provider>
   );
 }
 
 /** Reads one selected slice from the session store. */
-export function useSession<T>(selector: (state: SessionStore) => T): T {
-  const store = useContextSelector(SessionContext, (value) => value);
+export function useForumSession<T>(
+  selector: (state: ForumSessionStore) => T
+): T {
+  const store = useContextSelector(ForumSessionContext, (value) => value);
 
   if (!store) {
-    throw new Error("useSession must be used within a SessionProvider");
+    throw new Error(
+      "useForumSession must be used within a ForumSessionProvider"
+    );
   }
 
   return useStore(store, useShallow(selector));
 }
 
 /** Reads the raw session store API without subscribing to its state. */
-export function useSessionStoreApi() {
-  const store = useContextSelector(SessionContext, (value) => value);
+export function useForumSessionStoreApi() {
+  const store = useContextSelector(ForumSessionContext, (value) => value);
 
   if (!store) {
-    throw new Error("useSessionStoreApi must be used within a SessionProvider");
+    throw new Error(
+      "useForumSessionStoreApi must be used within a ForumSessionProvider"
+    );
   }
 
   return store;
