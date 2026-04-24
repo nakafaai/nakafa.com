@@ -52,33 +52,35 @@ export const ForumHeader = memo(() => {
   const userImage = forum.user?.image ?? "";
 
   return (
-    <div className="group flex items-start gap-3 border-primary border-l-2 bg-primary/10 p-4">
-      <Avatar className="size-8 shrink-0">
-        <AvatarImage alt={userName} src={userImage} />
-        <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
-      </Avatar>
+    <div className="min-w-0 pb-3">
+      <div className="group flex items-start gap-3 border-primary border-l-2 bg-primary/10 p-4">
+        <Avatar className="size-8 shrink-0">
+          <AvatarImage alt={userName} src={userImage} />
+          <AvatarFallback>{getInitialName(userName)}</AvatarFallback>
+        </Avatar>
 
-      <div className="grid min-w-0 flex-1 gap-2">
-        <div className="grid gap-1">
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="min-w-0 truncate font-medium text-sm">
-              {userName}
-            </span>
-            <time className="min-w-0 truncate text-muted-foreground text-xs tracking-tight">
-              {format(forum._creationTime, "HH:mm", {
-                locale: getLocale(locale),
-              })}
-            </time>
+        <div className="grid min-w-0 flex-1 gap-2">
+          <div className="grid gap-1">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="min-w-0 truncate font-medium text-sm">
+                {userName}
+              </span>
+              <time className="min-w-0 truncate text-muted-foreground text-xs tracking-tight">
+                {format(forum._creationTime, "HH:mm", {
+                  locale: getLocale(locale),
+                })}
+              </time>
+            </div>
+
+            <div className="wrap-break-word min-w-0 text-chat">
+              <Response id={forum._id}>{forum.body}</Response>
+            </div>
           </div>
 
-          <div className="wrap-break-word min-w-0 text-chat">
-            <Response id={forum._id}>{forum.body}</Response>
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <ForumReactions />
+            <ForumActions />
           </div>
-        </div>
-
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <ForumReactions />
-          <ForumActions />
         </div>
       </div>
     </div>
