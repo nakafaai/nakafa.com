@@ -87,12 +87,12 @@ Sederhanakan: <InlineMath math="f(x) = \frac{6x^2}{3x}" />
 
 **Penyelesaian:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="f(x) = \frac{6x^2}{3x}" />
   <BlockMath math="= \frac{6x \cdot x}{3x}" />
   <BlockMath math="= \frac{6x}{3} \cdot \frac{x}{x}" />
   <BlockMath math="= 2x" />
-</div>
+</MathContainer>
 
 ### Dengan Pemfaktoran
 
@@ -100,11 +100,11 @@ Sederhanakan: <InlineMath math="f(x) = \frac{x^2 - 4}{x - 2}" />
 
 **Penyelesaian:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="f(x) = \frac{x^2 - 4}{x - 2}" />
   <BlockMath math="= \frac{(x + 2)(x - 2)}{x - 2}" />
   <BlockMath math="= x + 2" />
-</div>
+</MathContainer>
 
 Catatan: <InlineMath math="x \neq 2" /> (dari domain awal)
 
@@ -118,13 +118,13 @@ Sama seperti pecahan biasa, kita perlu samakan penyebutnya dulu!
 
 **Penyelesaian:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\frac{2}{x} + \frac{3}{x + 1}" />
   <BlockMath math="= \frac{2(x + 1)}{x(x + 1)} + \frac{3x}{x(x + 1)}" />
   <BlockMath math="= \frac{2(x + 1) + 3x}{x(x + 1)}" />
   <BlockMath math="= \frac{2x + 2 + 3x}{x(x + 1)}" />
   <BlockMath math="= \frac{5x + 2}{x(x + 1)}" />
-</div>
+</MathContainer>
 
 ### Perkalian
 
@@ -158,32 +158,32 @@ Ingat, membagi = mengalikan dengan kebalikannya:
 
 **Jawaban 1:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x^2 - 9 = 0" />
   <BlockMath math="(x + 3)(x - 3) = 0" />
   <BlockMath math="x = -3 \text{ atau } x = 3" />
-</div>
+</MathContainer>
 
 Domain: <InlineMath math="D_f = \{x | x \neq -3, x \neq 3, x \in \mathbb{R}\}" />
 
 **Jawaban 2:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="f(x) = \frac{x^2 - 1}{x + 1}" />
   <BlockMath math="= \frac{(x + 1)(x - 1)}{x + 1}" />
   <BlockMath math="= x - 1" />
-</div>
+</MathContainer>
 
 Dengan syarat <InlineMath math="x \neq -1" />
 
 **Jawaban 3:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\frac{1}{x - 1} - \frac{2}{x + 1}" />
   <BlockMath math="= \frac{(x + 1) - 2(x - 1)}{(x - 1)(x + 1)}" />
   <BlockMath math="= \frac{x + 1 - 2x + 2}{(x - 1)(x + 1)}" />
   <BlockMath math="= \frac{-x + 3}{(x - 1)(x + 1)}" />
-</div>
+</MathContainer>
 
 **Jawaban 4:**
 

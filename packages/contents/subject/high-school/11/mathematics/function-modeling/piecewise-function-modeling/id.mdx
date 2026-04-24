@@ -284,25 +284,25 @@ Fungsi piecewise:
 
    Misalkan <InlineMath math="x" /> adalah jarak dalam km, maka:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="C(x) = \begin{cases} 10000, & \text{jika } 0 < x \leq 2 \\ 10000 + 4000(x-2), & \text{jika } 2 < x \leq 10 \\ 10000 + 32000 + 3000(x-10), & \text{jika } x > 10 \end{cases}" />
-   </div>
+   </MathContainer>
 
    Atau disederhanakan:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="C(x) = \begin{cases} 10000, & \text{jika } 0 < x \leq 2 \\ 4000x + 2000, & \text{jika } 2 < x \leq 10 \\ 3000x + 12000, & \text{jika } x > 10 \end{cases}" />
-   </div>
+   </MathContainer>
 
 3. **Memeriksa kontinuitas:**
 
    Di <InlineMath math="x = 1" />:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\lim_{x \to 1^-} g(x) = \lim_{x \to 1^-} (3x - 1) = 3(1) - 1 = 2" />
      <BlockMath math="\lim_{x \to 1^+} g(x) = \lim_{x \to 1^+} (x + 1) = 1 + 1 = 2" />
      <BlockMath math="g(1) = 2" />
-   </div>
+   </MathContainer>
 
    Karena <InlineMath math="\lim_{x \to 1^-} g(x) = \lim_{x \to 1^+} g(x) = g(1) = 2" />, maka fungsi **kontinu** di <InlineMath math="x = 1" />.
 
@@ -357,12 +357,12 @@ Fungsi piecewise:
 
    Misalkan <InlineMath math="t" /> adalah jam kerja, maka:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="U(t) = \begin{cases} 50000t, & \text{jika } 0 < t \leq 8 \\ 400000 + 75000(t-8), & \text{jika } 8 < t \leq 12 \end{cases}" />
-   </div>
+   </MathContainer>
 
    Atau disederhanakan:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="U(t) = \begin{cases} 50000t, & \text{jika } 0 < t \leq 8 \\ 75000t - 200000, & \text{jika } 8 < t \leq 12 \end{cases}" />
-   </div>
+   </MathContainer>

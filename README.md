@@ -4,7 +4,11 @@
 
 ## Overview
 
-**Nakafa** is an open-source educational platform providing structured learning content across multiple educational levels (elementary, middle, high school, university) with political analysis articles.
+**Nakafa** is a source-available educational platform providing structured learning content across multiple educational levels (elementary, middle, high school, university) with political analysis articles.
+
+Nakafa is **not open source** under the Open Source Definition because commercial,
+hosted, redistribution, modification, white-label, rebrand, and AI-training uses
+require prior written permission from PT. Nakafa Tekno Kreatif.
 
 **Live Site**: [nakafa.com](https://nakafa.com)
 
@@ -12,7 +16,7 @@
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 22+
 - pnpm
 - Git
 
@@ -20,8 +24,8 @@
 
 ```bash
 # Clone & install
-git clone https://github.com/nakafaai/nakafa.git
-cd nakafa
+git clone https://github.com/nakafaai/nakafa.com.git
+cd nakafa.com
 pnpm install
 
 # Start development
@@ -188,6 +192,11 @@ Common mocks for Next.js routing, i18n, and browser APIs are pre-configured in `
 
 ### Contributing
 
+By submitting a contribution, you agree to the contribution terms in
+[`.github/CONTRIBUTING.md`](./.github/CONTRIBUTING.md). Do not submit code,
+content, data, designs, or other materials unless you have the right to grant
+those contribution rights.
+
 1. Fork repository
 2. Create feature branch: `git checkout -b feature/name`
 3. Make changes following established patterns
@@ -196,9 +205,50 @@ Common mocks for Next.js routing, i18n, and browser APIs are pre-configured in `
 
 ## License
 
-**AGPL-3.0** - Copyleft license requiring source disclosure for network use.
+Nakafa uses a source-available license model.
+
+| Area | License or policy |
+| ------ | ------------------- |
+| Software source code | [Nakafa Source Available License 1.0](./LICENSE) |
+| Educational content, articles, exercises, datasets, and media | [Nakafa Content License 1.0](./CONTENT_LICENSE.md) |
+| Nakafa names, logos, domains, product names, UI identity, and brand assets | [Nakafa Trademark and Brand Policy](./TRADEMARKS.md) |
+
+Allowed without written permission:
+
+- View, inspect, and audit the source code.
+- Clone one copy for personal review.
+- Create a GitHub fork only to submit contributions back to Nakafa.
+- Run the unmodified software locally for personal, non-commercial learning,
+  research, testing, security review, or hobby evaluation.
+- Read Nakafa content for personal, non-commercial learning.
+- Submit contributions under [`.github/CONTRIBUTING.md`](./.github/CONTRIBUTING.md).
+
+Not allowed without prior written permission:
+
+- Commercial or revenue-generating use.
+- Any hosted deployment outside your own local machine.
+- Use by a company, school, institution, nonprofit organization, government
+  organization, team, or client.
+- Redistribution, mirroring, packaging, resale, sublicensing, or publishing
+  copies.
+- Modification, derivative products, forked products, white-label use,
+  private-label use, or rebranding.
+- Scraping, bulk extraction, dataset creation, embeddings, AI training,
+  fine-tuning, benchmarking, or competing educational products.
+- Use of the Nakafa name, logos, domains, screenshots, UI identity, or brand
+  assets as your own brand.
 
 For commercial licensing inquiries: <nakafaai@gmail.com>
+
+Reference sources behind this license model:
+
+- [Open Source Definition](https://opensource.org/definition-annotated) requires
+  free redistribution, derived works, and no field-of-use restrictions.
+- [GitHub licensing docs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository)
+  explain that public source visibility does not automatically grant copyright
+  permissions beyond viewing and forking on GitHub.
+- [PolyForm licenses](https://polyformproject.org/licenses/) document common
+  source-available patterns for limited source-code rights.
 
 ## Contact
 

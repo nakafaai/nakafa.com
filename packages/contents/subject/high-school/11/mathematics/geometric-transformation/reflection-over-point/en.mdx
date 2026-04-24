@@ -19,10 +19,10 @@ Suppose the center of reflection is <InlineMath math="P(a,b)" />. If a point <In
 
 If a point <InlineMath math="Q(x, y)" /> is reflected over the point <InlineMath math="P(a, b)" />, its image's coordinates, <InlineMath math="Q'(x', y')" />, are determined by the formula:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = 2a - x" />
   <BlockMath math="y' = 2b - y" />
-</div>
+</MathContainer>
 
 Alternatively, it can be written as:
 
@@ -40,10 +40,10 @@ Here, <InlineMath math="x=5" />, <InlineMath math="y=4" />, <InlineMath math="a=
 
 Using the formula:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = 2a - x = 2(2) - 5 = 4 - 5 = -1" />
   <BlockMath math="y' = 2b - y = 2(3) - 4 = 6 - 4 = 2" />
-</div>
+</MathContainer>
 
 Thus, the image of point <InlineMath math="(5,4)" /> is <InlineMath math="(-1,2)" />.
 
@@ -97,18 +97,18 @@ Determine the image of a half-turn <InlineMath math="\sigma_{(1,3)}" /> for the 
 
 Take an arbitrary point <InlineMath math="(x,y)" /> on line <InlineMath math="l" />. Its image, <InlineMath math="(x',y')" />, after reflection over point <InlineMath math="P(1,3)" /> is:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = 2(1) - x = 2 - x \implies x = 2 - x'" />
   <BlockMath math="y' = 2(3) - y = 6 - y \implies y = 6 - y'" />
-</div>
+</MathContainer>
 
 Substitute <InlineMath math="x = 2 - x'" /> and <InlineMath math="y = 6 - y'" /> into the equation of line <InlineMath math="l" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="2(2 - x') - (6 - y') + 3 = 0" />
   <BlockMath math="4 - 2x' - 6 + y' + 3 = 0" />
   <BlockMath math="-2x' + y' + 1 = 0" />
-</div>
+</MathContainer>
 
 Replacing <InlineMath math="x'" /> and <InlineMath math="y'" /> back to <InlineMath math="x" /> and <InlineMath math="y" />, the equation of the image line <InlineMath math="l'" /> is:
 
@@ -170,35 +170,35 @@ Alternatively, it can be written as <InlineMath math="2x - y - 1 = 0" />.
 
 1.  Center <InlineMath math="P(-2,3)" />, point <InlineMath math="Q(3,-4)" />. So <InlineMath math="a=-2, b=3, x=3, y=-4" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = 2a - x = 2(-2) - 3 = -4 - 3 = -7" />
       <BlockMath math="y' = 2b - y = 2(3) - (-4) = 6 + 4 = 10" />
-    </div>
+    </MathContainer>
 
     Thus, the image of point <InlineMath math="Q(3,-4)" /> is <InlineMath math="(-7,10)" />.
 
 2.  Center <InlineMath math="O(0,0)" />, point <InlineMath math="K(-5,1)" />. So <InlineMath math="a=0, b=0, x=-5, y=1" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = 2(0) - (-5) = 0 + 5 = 5" />
       <BlockMath math="y' = 2(0) - 1 = 0 - 1 = -1" />
-    </div>
+    </MathContainer>
 
     Thus, the image of point <InlineMath math="K(-5,1)" /> is <InlineMath math="K'(5,-1)" />.
 
 3.  Center <InlineMath math="P(1,-3)" />. Line <InlineMath math="2x + 5y + 6 = 0" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = 2(1) - x = 2 - x \implies x = 2 - x'" />
       <BlockMath math="y' = 2(-3) - y = -6 - y \implies y = -6 - y'" />
-    </div>
+    </MathContainer>
 
     Substitute into the line equation:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="2(2 - x') + 5(-6 - y') + 6 = 0" />
       <BlockMath math="4 - 2x' - 30 - 5y' + 6 = 0" />
       <BlockMath math="-2x' - 5y' - 20 = 0" />
-    </div>
+    </MathContainer>
 
     Image line equation: <InlineMath math="-2x - 5y - 20 = 0" /> or <InlineMath math="2x + 5y + 20 = 0" />.

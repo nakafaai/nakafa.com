@@ -95,13 +95,13 @@ We can see that the difference between the number of seats in consecutive rows i
 
 **Step 2: Using the formula to find the number of seats in row 15**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="U_{15} = a + (n-1)b" />
   <BlockMath math="U_{15} = 20 + (15-1)4" />
   <BlockMath math="U_{15} = 20 + (14)4" />
   <BlockMath math="U_{15} = 20 + 56" />
   <BlockMath math="U_{15} = 76" />
-</div>
+</MathContainer>
 
 Therefore, there are 76 seats in row 15.
 
@@ -113,37 +113,37 @@ Given an arithmetic sequence with the 3rd term = 9 and the 6th term = 18. Find t
 
 To determine the formula for the nth term, we need to find the values of the first term <InlineMath math="(a)" /> and the common difference <InlineMath math="(b)" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="U_3 = a + 2b = 9" />
   <BlockMath math="U_6 = a + 5b = 18" />
-</div>
+</MathContainer>
 
 We eliminate these equations to find the value of b:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="U_6 - U_3 = (a + 5b) - (a + 2b)" />
   <BlockMath math="18 - 9 = 3b" />
   <BlockMath math="9 = 3b" />
   <BlockMath math="b = 3" />
-</div>
+</MathContainer>
 
 After finding b, we substitute it into the first equation to find a:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="a + 2b = 9" />
   <BlockMath math="a + 2(3) = 9" />
   <BlockMath math="a + 6 = 9" />
   <BlockMath math="a = 9 - 6 = 3" />
-</div>
+</MathContainer>
 
 With a = 3 and b = 3, we can formulate the nth term:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="U_n = a + (n-1)b" />
   <BlockMath math="U_n = 3 + (n-1)3" />
   <BlockMath math="U_n = 3 + 3n - 3" />
   <BlockMath math="U_n = 3n" />
-</div>
+</MathContainer>
 
 Therefore, the formula for the nth term of this sequence is <InlineMath math="U_n = 3n" />
 
@@ -161,7 +161,7 @@ Rudi's savings form an arithmetic sequence because the monthly increase is const
 
 **a. Finding the monthly increase in savings**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="U_5 = 70,000" />
   <BlockMath math="a + (5-1)b = 70,000" />
   <BlockMath math="a + 4b = 70,000 \text{ ... (equation 1)}" />
@@ -169,14 +169,14 @@ Rudi's savings form an arithmetic sequence because the monthly increase is const
   <BlockMath math="U_9 = 90,000" />
   <BlockMath math="a + (9-1)b = 90,000" />
   <BlockMath math="a + 8b = 90,000 \text{ ... (equation 2)}" />
-</div>
+</MathContainer>
 
 Eliminating equations 1 and 2:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="4b = 20,000" />
   <BlockMath math="b = 5,000" />
-</div>
+</MathContainer>
 
 Therefore, the monthly increase in Rudi's savings is Rp5,000.00.
 
@@ -184,12 +184,12 @@ Therefore, the monthly increase in Rudi's savings is Rp5,000.00.
 
 We have found b = 5,000, now we substitute it into equation 1 to find a:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="a + 4b = 70,000" />
   <BlockMath math="a + 4(5,000) = 70,000" />
   <BlockMath math="a + 20,000 = 70,000" />
   <BlockMath math="a = 70,000 - 20,000" />
   <BlockMath math="a = 50,000" />
-</div>
+</MathContainer>
 
 Therefore, Rudi's initial savings was Rp50,000.00.

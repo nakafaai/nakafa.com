@@ -69,10 +69,10 @@ Misalkan <InlineMath math="f(x) = x + 1" /> (inversnya <InlineMath math="f^{-1}(
 
 3.  **Cari <InlineMath math="(g^{-1} \circ f^{-1})(x)" />:**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(g^{-1} \circ f^{-1})(x) = g^{-1}(f^{-1}(x)) = g^{-1}(x - 1)" />
       <BlockMath math="g^{-1}(x - 1) = \frac{x - 1}{3}" />
-    </div>
+    </MathContainer>
 
 Karena hasil dari langkah 2 dan 3 sama, terbukti bahwa <InlineMath math="(f \circ g)^{-1}(x) = (g^{-1} \circ f^{-1})(x)" />.
 
@@ -80,7 +80,7 @@ Karena hasil dari langkah 2 dan 3 sama, terbukti bahwa <InlineMath math="(f \cir
 
 Domain dari fungsi asli <InlineMath math="f" /> menjadi range dari fungsi inversnya <InlineMath math="f^{-1}" />, dan range dari fungsi asli <InlineMath math="f" /> menjadi domain dari fungsi inversnya <InlineMath math="f^{-1}" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Domain}(f) = \text{Range}(f^{-1})" />
   <BlockMath math="\text{Range}(f) = \text{Domain}(f^{-1})" />
-</div>
+</MathContainer>

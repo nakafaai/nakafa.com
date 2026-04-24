@@ -401,16 +401,16 @@ Combined transformations have several important properties:
 3. Comparison of two transformation orders:
    
    **Order A**: Dilation first, then translation
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="h_1(x) = 3x^2" />
    <BlockMath math="h_A(x) = 3x^2 + 2" />
-   </div>
+   </MathContainer>
    
    **Order B**: Translation first, then dilation
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="h_2(x) = x^2 + 2" />
    <BlockMath math="h_B(x) = 3(x^2 + 2) = 3x^2 + 6" />
-   </div>
+   </MathContainer>
    
    Different results: <InlineMath math="h_A(x) = 3x^2 + 2" /> and <InlineMath math="h_B(x) = 3x^2 + 6" />.
 
@@ -478,11 +478,11 @@ Combined transformations have several important properties:
 
 5. Step-by-step transformation of <InlineMath math="f(x) = |x|" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="f_1(x) = |x + 2|" />
    <BlockMath math="f_2(x) = -|x + 2|" />
    <BlockMath math="g(x) = -3|x + 2|" />
-   </div>
+   </MathContainer>
    
    So the formula of the transformed function is <InlineMath math="g(x) = -3|x + 2|" />.
 

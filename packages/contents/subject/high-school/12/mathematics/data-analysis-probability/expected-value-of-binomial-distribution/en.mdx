@@ -42,10 +42,10 @@ Since the total number of successes (<InlineMath math="X" />) is the sum of all 
 
 Using the properties of expected value, we can sum all expected values from each trial:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="E(X) = E(I_1) + E(I_2) + ... + E(I_n)" />
 <BlockMath math="E(X) = \underbrace{p + p + ... + p}_{n \text{ times}} = np" />
-</div>
+</MathContainer>
 
 See? The total expected value is the product of the number of trials and the probability of success.
 
@@ -68,11 +68,11 @@ First, let's make sure this meets the requirements for binomial distribution:
 
 Now we identify the parameters:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="S = \{1, 2, 3, 4, 5, 6\}" />
 <BlockMath math="p = \frac{1}{6}" />
 <BlockMath math="n = 7" />
-</div>
+</MathContainer>
 
 Now we can directly calculate the expected value using the formula:
 

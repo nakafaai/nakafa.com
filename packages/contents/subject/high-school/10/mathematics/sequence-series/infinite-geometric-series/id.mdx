@@ -12,10 +12,10 @@ Bayangkan kamu melempar sebuah bola tenis dari ketinggian 1 meter. Bola itu akan
 
 Ketinggian pantulan bola ini membentuk sebuah **barisan geometri**:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="1, \quad 1 \times \frac{1}{4}, \quad (1 \times \frac{1}{4}) \times \frac{1}{4}, \quad \dots" />
   <BlockMath math="1, \quad \frac{1}{4}, \quad \frac{1}{16}, \quad \frac{1}{64}, \quad \dots" />
-</div>
+</MathContainer>
 
 Dengan suku pertama (<InlineMath math="a" />) adalah 1 dan rasio (<InlineMath math="r" />) adalah <InlineMath math="\frac{1}{4}" />.
 
@@ -74,10 +74,10 @@ Kita bisa menghitung total lintasan bola menggunakan rumus <InlineMath math="S_\
 
 **Total Panjang Lintasan** = Jumlah Lintasan Turun + Jumlah Lintasan Naik
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Total} = S_{\text{turun}} + S_{\text{naik}} = \frac{a}{1 - r} + \frac{ar}{1 - r}" />
   <BlockMath math="\text{Total} = \frac{a(1 + r)}{1 - r}" />
-</div>
+</MathContainer>
 
 Untuk contoh bola tenis dengan <InlineMath math="a = 1" /> meter dan <InlineMath math="r = \frac{1}{4}" />:
 
@@ -87,9 +87,9 @@ Jadi, total panjang lintasan bola sampai berhenti adalah <InlineMath math="\frac
 **Cara Lain (Mengikuti Hint):**
 Total lintasan juga bisa dihitung sebagai: Lintasan jatuh pertama + 2 kali jumlah semua lintasan naik.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Total} = a + 2 \times S_{\text{naik}} = a + 2 \times \left( \frac{ar}{1 - r} \right)" />
   <BlockMath math="\text{Total} = 1 + 2 \times \left( \frac{1 \times \frac{1}{4}}{1 - \frac{1}{4}} \right) = 1 + 2 \times \left( \frac{1/4}{3/4} \right) = 1 + 2 \times \left( \frac{1}{3} \right) = 1 + \frac{2}{3} = \frac{5}{3}" />
-</div>
+</MathContainer>
 
 Hasilnya sama!

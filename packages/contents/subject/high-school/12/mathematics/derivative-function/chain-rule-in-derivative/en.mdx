@@ -45,16 +45,16 @@ Next, we find the derivative of each function:
 -   Derivative of the outer function: <InlineMath math="\frac{dy}{du} = 8u^7" />.
 
 Now, we can combine them using the chain rule:
-<div className="flex flex-col gap-4">
+<MathContainer>
     <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dx}" />
     <BlockMath math="\frac{dy}{dx} = 8u^7 \cdot (2x - 4)" />
-</div>
+</MathContainer>
 
 Finally, we substitute <InlineMath math="u" /> back in and simplify the expression:
-<div className="flex flex-col gap-4">
+<MathContainer>
     <BlockMath math="\frac{dy}{dx} = 8(x^2 - 4x - 2)^7 (2x - 4)" />
     <BlockMath math="\frac{dy}{dx} = (16x - 32)(x^2 - 4x - 2)^7" />
-</div>
+</MathContainer>
 
 ### Trigonometric Functions
 
@@ -75,17 +75,17 @@ Then, we differentiate each layer:
 -   Derivative of the innermost function: <InlineMath math="\frac{dv}{dx} = -4" />
 
 Combine them all using the chain rule:
-<div className="flex flex-col gap-4">
+<MathContainer>
     <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dv} \cdot \frac{dv}{dx}" />
     <BlockMath math="\frac{dy}{dx} = (4u^3) \cdot (-\sin(v)) \cdot (-4)" />
-</div>
+</MathContainer>
 
 Now, substitute <InlineMath math="u" /> and <InlineMath math="v" /> back in step-by-step to get the final result:
-<div className="flex flex-col gap-4">
+<MathContainer>
     <BlockMath math="\frac{dy}{dx} = (4\cos^3(v)) \cdot (-\sin(v)) \cdot (-4)" />
     <BlockMath math="\frac{dy}{dx} = 16\cos^3(v)\sin(v)" />
     <BlockMath math="\frac{dy}{dx} = 16\cos^3(3 - 4x)\sin(3 - 4x)" />
-</div>
+</MathContainer>
 
 ## Exercises
 
@@ -105,10 +105,10 @@ Now, substitute <InlineMath math="u" /> and <InlineMath math="v" /> back in step
     -   <InlineMath math="\frac{dy}{du} = 3u^2" />
 
     **Step 3: Combine with the chain rule**
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dx}" />
         <BlockMath math="\frac{dy}{dx} = 3u^2 \cdot 6x = 18x \cdot u^2" />
-    </div>
+    </MathContainer>
     
     **Step 4: Don't forget to substitute back**
     <BlockMath math="\frac{dy}{dx} = 18x(3x^2 - 1)^2" />
@@ -128,14 +128,14 @@ Now, substitute <InlineMath math="u" /> and <InlineMath math="v" /> back in step
     -   <InlineMath math="\frac{dy}{du} = 3u^2" />
 
     **Step 3: Combine with the chain rule**
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dv} \cdot \frac{dv}{dx}" />
         <BlockMath math="\frac{dy}{dx} = (3u^2) \cdot (\cos(v)) \cdot (2)" />
-    </div>
+    </MathContainer>
 
     **Step 4: Substitute back and simplify**
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="\frac{dy}{dx} = 6u^2 \cos(v)" />
         <BlockMath math="\frac{dy}{dx} = 6\sin^2(v) \cos(v)" />
         <BlockMath math="\frac{dy}{dx} = 6\sin^2(2x) \cos(2x)" />
-    </div>
+    </MathContainer>

@@ -12,11 +12,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@repo/design-system/components/ui/tooltip";
 import type { ComponentProps, ReactNode } from "react";
 import { CommentsButton } from "@/components/sidebar/comments-button";
 import { GithubButton } from "@/components/sidebar/github-button";
@@ -52,33 +47,16 @@ function SidebarRightHeader({
     <SidebarHeader>
       <SidebarMenu>
         <SidebarMenuItem>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <SidebarMenuButton asChild size="lg">
-                  <NavigationLink href={header.href} title={header.title}>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-medium">
-                        {header.title}
-                      </span>
-                      {!!header.description && (
-                        <span className="truncate text-xs">
-                          {header.description}
-                        </span>
-                      )}
-                    </div>
-                  </NavigationLink>
-                </SidebarMenuButton>
-              }
-            />
-            <TooltipContent
-              align="center"
-              className="hidden max-w-xs sm:block"
-              side="left"
-            >
-              {header.title}
-            </TooltipContent>
-          </Tooltip>
+          <SidebarMenuButton asChild size="lg">
+            <NavigationLink href={header.href} title={header.title}>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">{header.title}</span>
+                {!!header.description && (
+                  <span className="truncate text-xs">{header.description}</span>
+                )}
+              </div>
+            </NavigationLink>
+          </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarHeader>

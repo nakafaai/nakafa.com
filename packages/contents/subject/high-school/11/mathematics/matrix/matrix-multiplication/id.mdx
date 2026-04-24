@@ -44,21 +44,21 @@ Matriks <InlineMath math="P" /> berordo <InlineMath math="2 \times 2" /> dan mat
 
 Elemen-elemen matriks <InlineMath math="R" /> dihitung sebagai berikut:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="r_{11} = (\text{baris 1 dari } P) \cdot (\text{kolom 1 dari } Q) = p_{11}q_{11} + p_{12}q_{21}" />
   <BlockMath math="r_{12} = (\text{baris 1 dari } P) \cdot (\text{kolom 2 dari } Q) = p_{11}q_{12} + p_{12}q_{22}" />
   <BlockMath math="r_{21} = (\text{baris 2 dari } P) \cdot (\text{kolom 1 dari } Q) = p_{21}q_{11} + p_{22}q_{21}" />
   <BlockMath math="r_{22} = (\text{baris 2 dari } P) \cdot (\text{kolom 2 dari } Q) = p_{21}q_{12} + p_{22}q_{22}" />
-</div>
+</MathContainer>
 
 ## Contoh Perkalian Dua Matriks
 
 Diberikan dua matriks:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="A = \begin{bmatrix} -7 & 2 & -2 \\ 1 & 0 & -1 \\ 2 & 3 & -1 \end{bmatrix}" />
   <BlockMath math="B = \begin{bmatrix} 1 & 2 \\ -1 & 3 \\ 2 & 0 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Matriks <InlineMath math="A" /> berordo <InlineMath math="3 \times 3" /> dan matriks <InlineMath math="B" /> berordo <InlineMath math="3 \times 2" />.
 
@@ -68,7 +68,7 @@ Jadi, <InlineMath math="AB" /> dapat dihitung dan akan menghasilkan matriks bero
 
 Mari kita hitung <InlineMath math="C = AB" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="C = \begin{bmatrix} c_{11} & c_{12} \\ c_{21} & c_{22} \\ c_{31} & c_{32} \end{bmatrix}" />
   <BlockMath math="c_{11} = (-7)(1) + (2)(-1) + (-2)(2) = -7 - 2 - 4 = -13" />
   <BlockMath math="c_{12} = (-7)(2) + (2)(3) + (-2)(0) = -14 + 6 + 0 = -8" />
@@ -76,7 +76,7 @@ Mari kita hitung <InlineMath math="C = AB" />:
   <BlockMath math="c_{22} = (1)(2) + (0)(3) + (-1)(0) = 2 + 0 + 0 = 2" />
   <BlockMath math="c_{31} = (2)(1) + (3)(-1) + (-1)(2) = 2 - 3 - 2 = -3" />
   <BlockMath math="c_{32} = (2)(2) + (3)(3) + (-1)(0) = 4 + 9 + 0 = 13" />
-</div>
+</MathContainer>
 
 Jadi, hasil perkalian matriks <InlineMath math="AB" /> adalah:
 
@@ -106,10 +106,10 @@ Perkalian matriks memiliki beberapa sifat penting:
 
     Perkalian matriks bersifat distributif terhadap penjumlahan atau pengurangan matriks:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="A(B + C) = AB + AC" />
       <BlockMath math="(A + B)C = AC + BC" />
-    </div>
+    </MathContainer>
 
     Ini berlaku jika semua operasi penjumlahan dan perkalian yang terlibat terdefinisi.
 
@@ -151,12 +151,12 @@ Namun, perhatikan ordo matriks. Matriks <InlineMath math="P" /> berordo <InlineM
 
 Matriks <InlineMath math="R = PQ" /> akan menunjukkan total pendapatan untuk setiap jenis keripik.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="R = PQ = \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix} \begin{bmatrix} 20.000 \\ 15.000 \\ 30.000 \end{bmatrix}" />
   <BlockMath math="R = \begin{bmatrix} (15)(20.000) + (12)(15.000) + (20)(30.000) \\ (25)(20.000) + (10)(15.000) + (15)(30.000) \\ (15)(20.000) + (15)(15.000) + (20)(30.000) \end{bmatrix}" />
   <BlockMath math="R = \begin{bmatrix} 300.000 + 180.000 + 600.000 \\ 500.000 + 150.000 + 450.000 \\ 300.000 + 225.000 + 600.000 \end{bmatrix}" />
   <BlockMath math="R = \begin{bmatrix} 1.080.000 \\ 1.100.000 \\ 1.125.000 \end{bmatrix} \begin{matrix} \text{Total Pendapatan Keripik Tempe} \\ \text{Total Pendapatan Keripik Pisang} \\ \text{Total Pendapatan Keripik Kentang} \end{matrix}" />
-</div>
+</MathContainer>
 
 Dari matriks <InlineMath math="R" />, kita bisa melihat bahwa total pendapatan dari penjualan keripik tempe adalah Rp1.080.000, keripik pisang Rp1.100.000, dan keripik kentang Rp1.125.000.
 
@@ -166,12 +166,12 @@ Misalkan kita ingin mencari total pendapatan di Tempat A, Tempat B, dan Tempat C
 
 Matriks <InlineMath math="Q^T" /> berordo <InlineMath math="1 \times 3" /> dan <InlineMath math="P" /> berordo <InlineMath math="3 \times 3" />. Hasilnya <InlineMath math="S" /> akan berordo <InlineMath math="1 \times 3" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="S = \begin{bmatrix} 20.000 & 15.000 & 30.000 \end{bmatrix} \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix}" />
   <BlockMath math="s_{11} = (20.000)(15) + (15.000)(25) + (30.000)(15) = 300.000 + 375.000 + 450.000 = 1.125.000" />
   <BlockMath math="s_{12} = (20.000)(12) + (15.000)(10) + (30.000)(15) = 240.000 + 150.000 + 450.000 = 840.000" />
   <BlockMath math="s_{13} = (20.000)(20) + (15.000)(15) + (30.000)(20) = 400.000 + 225.000 + 600.000 = 1.225.000" />
-</div>
+</MathContainer>
 
 Maka, <InlineMath math="S = \begin{bmatrix} 1.125.000 & 840.000 & 1.225.000 \end{bmatrix}" />.
 
@@ -183,10 +183,10 @@ Interpretasi elemen matriks hasil perkalian sangat bergantung pada bagaimana mat
 
 Diberikan matriks-matriks berikut:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="C = \begin{bmatrix} 1 & -3 \\ 1 & 2 \end{bmatrix}" />
   <BlockMath math="D = \begin{bmatrix} 1 & -4 \\ 8 & 2 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Tentukan matriks <InlineMath math="CD" /> dan matriks <InlineMath math="DC" />.
 
@@ -198,23 +198,23 @@ Apakah <InlineMath math="CD = DC" />?
 
     Matriks <InlineMath math="C" /> berordo <InlineMath math="2 \times 2" /> dan <InlineMath math="D" /> berordo <InlineMath math="2 \times 2" />. Hasilnya akan berordo <InlineMath math="2 \times 2" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="CD = \begin{bmatrix} 1 & -3 \\ 1 & 2 \end{bmatrix} \begin{bmatrix} 1 & -4 \\ 8 & 2 \end{bmatrix}" />
       <BlockMath math="CD = \begin{bmatrix} (1)(1) + (-3)(8) & (1)(-4) + (-3)(2) \\ (1)(1) + (2)(8) & (1)(-4) + (2)(2) \end{bmatrix}" />
       <BlockMath math="CD = \begin{bmatrix} 1 - 24 & -4 - 6 \\ 1 + 16 & -4 + 4 \end{bmatrix}" />
       <BlockMath math="CD = \begin{bmatrix} -23 & -10 \\ 17 & 0 \end{bmatrix}" />
-    </div>
+    </MathContainer>
 
 2.  Menghitung <InlineMath math="DC" />:
 
     Matriks <InlineMath math="D" /> berordo <InlineMath math="2 \times 2" /> dan <InlineMath math="C" /> berordo <InlineMath math="2 \times 2" />. Hasilnya akan berordo <InlineMath math="2 \times 2" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="DC = \begin{bmatrix} 1 & -4 \\ 8 & 2 \end{bmatrix} \begin{bmatrix} 1 & -3 \\ 1 & 2 \end{bmatrix}" />
       <BlockMath math="DC = \begin{bmatrix} (1)(1) + (-4)(1) & (1)(-3) + (-4)(2) \\ (8)(1) + (2)(1) & (8)(-3) + (2)(2) \end{bmatrix}" />
       <BlockMath math="DC = \begin{bmatrix} 1 - 4 & -3 - 8 \\ 8 + 2 & -24 + 4 \end{bmatrix}" />
       <BlockMath math="DC = \begin{bmatrix} -3 & -11 \\ 10 & -20 \end{bmatrix}" />
-    </div>
+    </MathContainer>
 
 Dari hasil di atas, terlihat bahwa <InlineMath math="CD = \begin{bmatrix} -23 & -10 \\ 17 & 0 \end{bmatrix}" /> dan <InlineMath math="DC = \begin{bmatrix} -3 & -11 \\ 10 & -20 \end{bmatrix}" />.
 

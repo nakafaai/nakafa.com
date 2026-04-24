@@ -22,10 +22,10 @@ This means we can determine the precise velocity at any instant, not just the av
 
 For example, the motion of a particle is determined by the position function <InlineMath math="s(t) = t^3 - 6t^2 + 9t" />, where <InlineMath math="s" /> is in meters and <InlineMath math="t" /> is in seconds. To find its velocity function, we simply differentiate the function <InlineMath math="s(t)" /> with respect to <InlineMath math="t" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="v(t) = \frac{d}{dt}(t^3 - 6t^2 + 9t)" />
   <BlockMath math="v(t) = 3t^2 - 12t + 9" />
-</div>
+</MathContainer>
 
 With this function, we can calculate the particle's velocity at any time. For instance, at <InlineMath math="t = 1" /> second, the velocity is <InlineMath math="v(1) = 3(1)^2 - 12(1) + 9 = 0" /> meters/second. This zero result indicates that the particle is momentarily at rest, perhaps pausing for a moment or even changing direction.
 
@@ -39,10 +39,10 @@ Now, what if the velocity itself is changing? Perhaps you're pressing the gas pe
 
 Continuing with the previous particle example, we already have the velocity function <InlineMath math="v(t) = 3t^2 - 12t + 9" />. We can find its acceleration function by differentiating the function <InlineMath math="v(t)" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="a(t) = \frac{d}{dt}(3t^2 - 12t + 9)" />
   <BlockMath math="a(t) = 6t - 12" />
-</div>
+</MathContainer>
 
 From this, we can find the particle's acceleration at any time. For example, at <InlineMath math="t = 3" /> seconds, its acceleration is <InlineMath math="a(3) = 6(3) - 12 = 6" /> meters/second².
 
@@ -66,12 +66,12 @@ One of the most interesting questions is: **when does the ball reach its maximum
 
 The ball reaches its highest point exactly when it stops for a moment to change direction and fall back down. In other words, this occurs when its velocity is exactly zero.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
     <BlockMath math="v(t) = 0" />
     <BlockMath math="50 - 10t = 0" />
     <BlockMath math="10t = 50" />
     <BlockMath math="t = 5" />
-</div>
+</MathContainer>
 
 So, the ball reaches its peak at 5 seconds. To find out what the maximum height is, we substitute <InlineMath math="t=5" /> back into the initial height function.
 

@@ -41,20 +41,20 @@ Here, <InlineMath math="x=1" /> and <InlineMath math="y=-1" />.
 
 Using the first formula:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x^2+y^2 = (1)^2 + (-1)^2 = 1 + 1 = 2" />
   <BlockMath math="z^{-1} = \frac{x}{x^2+y^2} - i\frac{y}{x^2+y^2}" />
   <BlockMath math="= \frac{1}{2} - i\frac{-1}{2}" />
   <BlockMath math="= \frac{1}{2} + \frac{1}{2}i" />
-</div>
+</MathContainer>
 
 Using the conjugate and modulus formula:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\bar{z} = 1 - (-1)i = 1+i" />
   <BlockMath math="|z|^2 = x^2+y^2 = 1^2 + (-1)^2 = 2" />
   <BlockMath math="z^{-1} = \frac{\bar{z}}{|z|^2} = \frac{1+i}{2} = \frac{1}{2} + \frac{1}{2}i" />
-</div>
+</MathContainer>
 
 The result is the same, namely:
 
@@ -119,10 +119,10 @@ Step 2: Find the inverse of <InlineMath math="z = 3+2i" />.
 Here <InlineMath math="x=3" /> and <InlineMath math="y=2" />.
 We use the formula <InlineMath math="z^{-1} = \frac{\bar{z}}{|z|^2}" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\bar{z} = 3-2i" />
   <BlockMath math="|z|^2 = x^2+y^2 = 3^2 + 2^2 = 9 + 4 = 13" />
   <BlockMath math="z^{-1} = \frac{3-2i}{13} = \frac{3}{13} - \frac{2}{13}i" />
-</div>
+</MathContainer>
 
 So, the inverse of <InlineMath math="z_1 + z_2" /> is <InlineMath math="\frac{3}{13} - \frac{2}{13}i" />.

@@ -19,9 +19,9 @@ Hubungan ini dapat dinyatakan dalam bentuk perbandingan yang konsisten. Ketika s
 
 Perbandingan mendasar yang menghubungkan panjang busur dan luas juring terhadap lingkaran utuh dapat dinyatakan sebagai berikut:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\frac{\text{Panjang Busur}}{\text{Keliling Lingkaran}} = \frac{\text{Luas Juring}}{\text{Luas Lingkaran}} = \frac{\alpha}{360°}" />
-</div>
+</MathContainer>
 
 Rumus ini menunjukkan bahwa perbandingan panjang busur terhadap keliling lingkaran sama dengan perbandingan luas juring terhadap luas lingkaran, yang keduanya sama dengan perbandingan sudut pusat terhadap sudut penuh lingkaran.
 
@@ -29,16 +29,16 @@ Rumus ini menunjukkan bahwa perbandingan panjang busur terhadap keliling lingkar
 
 Berdasarkan hubungan proporsional tersebut, kita dapat menurunkan formula untuk menghitung panjang busur dan luas juring:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Panjang Busur} = \frac{\alpha}{360°} \times 2\pi r" />
 <BlockMath math="\text{Luas Juring} = \frac{\alpha}{360°} \times \pi r^2" />
-</div>
+</MathContainer>
 
 Dari kedua formula ini, kita dapat menemukan hubungan langsung antara panjang busur dan luas juring:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Luas Juring} = \frac{1}{2} \times \text{Panjang Busur} \times r" />
-</div>
+</MathContainer>
 
 ## Visualisasi Hubungan Proporsional
 
@@ -296,17 +296,17 @@ Mari kita lihat bagaimana hubungan proporsional ini berlaku untuk berbagai sudut
 
 Dari visualisasi di atas, kita dapat melihat pola yang konsisten. Untuk setiap sudut pusat <InlineMath math="\alpha" />, berlaku hubungan matematis:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Panjang Busur} = \frac{\alpha}{360°} \times \text{Keliling Lingkaran}" />
 <BlockMath math="\text{Luas Juring} = \frac{\alpha}{360°} \times \text{Luas Lingkaran}" />
-</div>
+</MathContainer>
 
 Atau dalam bentuk rumus lengkap:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Panjang Busur} = \frac{\alpha}{360°} \times 2\pi r" />
 <BlockMath math="\text{Luas Juring} = \frac{\alpha}{360°} \times \pi r^2" />
-</div>
+</MathContainer>
 
 Penting untuk dipahami bahwa kedua rumus ini saling terkait. Dua busur dikatakan kongruen pada lingkaran yang sama jika sudut pusat yang bersesuaian sama besar. Selain itu, panjang busur yang dibuat oleh dua busur yang berdekatan dengan titik ujung yang berhimpit akan sama dengan jumlah panjang kedua busur tersebut.
 
@@ -423,19 +423,19 @@ Salah satu penerapan paling menarik dari hubungan panjang busur dan luas juring 
 
 Menggunakan hubungan proporsional:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\frac{\text{Jarak Alexandria-Syene}}{\text{Keliling Bumi}} = \frac{7,2°}{360°}" />
 <BlockMath math="\frac{500 \text{ mil}}{\text{Keliling Bumi}} = \frac{7,2°}{360°} = \frac{1}{50}" />
 <BlockMath math="\text{Keliling Bumi} = 500 \times 50 = 25.000 \text{ mil}" />
-</div>
+</MathContainer>
 
 ## Hubungan Antara Busur dan Juring
 
 Penting untuk memahami bahwa dalam satu lingkaran dengan sudut pusat yang sama, perbandingan antara panjang busur dan luas juring memiliki hubungan khusus:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\frac{\text{Luas Juring}}{\text{Panjang Busur}} = \frac{r}{2}" />
-</div>
+</MathContainer>
 
 Hubungan ini menunjukkan bahwa rasio luas juring terhadap panjang busur selalu sama dengan setengah jari-jari lingkaran, tidak bergantung pada besar sudut pusat.
 
@@ -455,12 +455,12 @@ Hubungan ini menunjukkan bahwa rasio luas juring terhadap panjang busur selalu s
    
    Menggunakan hubungan: <InlineMath math="\text{Luas Juring} = \frac{1}{2} \times \text{Panjang Busur} \times r" />
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Luas Juring} = \frac{1}{2} \times 22 \times 14" />
    <BlockMath math="= \frac{22 \times 14}{2}" />
    <BlockMath math="= \frac{308}{2}" />
    <BlockMath math="= 154 \text{ cm}^2" />
-   </div>
+   </MathContainer>
 
 2. **Langkah Penyelesaian:**
 
@@ -468,11 +468,11 @@ Hubungan ini menunjukkan bahwa rasio luas juring terhadap panjang busur selalu s
    
    Menggunakan hubungan: <InlineMath math="\frac{\text{Luas Juring}}{\text{Panjang Busur}} = \frac{r}{2}" />
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\frac{154}{22} = \frac{r}{2}" />
    <BlockMath math="7 = \frac{r}{2}" />
    <BlockMath math="r = 14 \text{ cm}" />
-   </div>
+   </MathContainer>
 
 3. **Langkah Penyelesaian:**
 
@@ -480,8 +480,8 @@ Hubungan ini menunjukkan bahwa rasio luas juring terhadap panjang busur selalu s
    
    Menggunakan perbandingan: <InlineMath math="\frac{\text{Jarak}}{\text{Keliling Bumi}} = \frac{9°}{360°}" />
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\frac{1.000}{\text{Keliling Bumi}} = \frac{9°}{360°} = \frac{1}{40}" />
    <BlockMath math="\text{Keliling Bumi} = 1.000 \times 40" />
    <BlockMath math="= 40.000 \text{ km}" />
-   </div>
+   </MathContainer>

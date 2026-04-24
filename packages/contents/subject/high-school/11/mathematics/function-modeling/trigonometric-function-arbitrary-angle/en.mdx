@@ -33,11 +33,11 @@ Let's understand in detail:
 
 **Important definitions:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\sin \theta = y \text{ (vertical coordinate)}" />
   <BlockMath math="\cos \theta = x \text{ (horizontal coordinate)}" />
   <BlockMath math="\tan \theta = \frac{y}{x} = \frac{\sin \theta}{\cos \theta}, \quad x \neq 0" />
-</div>
+</MathContainer>
 
 ## Why Do Signs Change in Each Quadrant?
 
@@ -104,11 +104,11 @@ Here are systematic steps to determine trigonometric function values:
 
 Using special angle values for 60°:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\sin 120° = +\sin 60° = \frac{\sqrt{3}}{2}" />
   <BlockMath math="\cos 120° = -\cos 60° = -\frac{1}{2}" />
   <BlockMath math="\tan 120° = -\tan 60° = -\sqrt{3}" />
-</div>
+</MathContainer>
 
 ### Angle in Quadrant III
 
@@ -122,11 +122,11 @@ Using special angle values for 60°:
 
 Using special angle values for 60°:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\sin 240° = -\sin 60° = -\frac{\sqrt{3}}{2}" />
   <BlockMath math="\cos 240° = -\cos 60° = -\frac{1}{2}" />
   <BlockMath math="\tan 240° = +\tan 60° = \sqrt{3}" />
-</div>
+</MathContainer>
 
 ### Angle in Quadrant IV
 
@@ -141,11 +141,11 @@ Using special angle values for 60°:
 
 Using special angle values for 60°:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\sin 300° = -\sin 60° = -\frac{\sqrt{3}}{2}" />
   <BlockMath math="\cos 300° = +\cos 60° = \frac{1}{2}" />
   <BlockMath math="\tan 300° = -\tan 60° = -\sqrt{3}" />
-</div>
+</MathContainer>
 
 ## Handling Special Angles
 
@@ -188,11 +188,11 @@ Use the periodicity property. Subtract or add multiples of 360° until the angle
 
    The reference angle is <InlineMath math="360° - 315° = 45°" />.
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\sin 315° = -\sin 45° = -\frac{\sqrt{2}}{2}" />
      <BlockMath math="\cos 315° = +\cos 45° = \frac{\sqrt{2}}{2}" />
      <BlockMath math="\tan 315° = -\tan 45° = -1" />
-   </div>
+   </MathContainer>
 
 2. Let's calculate each term separately. For <InlineMath math="\sin(-60°)" />, use the odd function property.
 
@@ -200,12 +200,12 @@ Use the periodicity property. Subtract or add multiples of 360° until the angle
 
    For <InlineMath math="\tan(-135°)" />, first convert to positive angle.
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\sin(-60°) = -\sin 60° = -\frac{\sqrt{3}}{2}" />
      <BlockMath math="\cos 210° = -\cos 30° = -\frac{\sqrt{3}}{2}" />
      <BlockMath math="\tan(-135°) = -\tan 135° = -(-\tan 45°) = 1" />
      <BlockMath math="\text{Result} = -\frac{\sqrt{3}}{2} - \frac{\sqrt{3}}{2} + 1 = -\sqrt{3} + 1" />
-   </div>
+   </MathContainer>
 
 3. Given <InlineMath math="\sin \theta = \frac{3}{5}" /> in quadrant II.
 
@@ -213,13 +213,13 @@ Use the periodicity property. Subtract or add multiples of 360° until the angle
 
    Remember that in quadrant II, <InlineMath math="\cos" /> is negative.
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\sin^2 \theta + \cos^2 \theta = 1" />
      <BlockMath math="\left(\frac{3}{5}\right)^2 + \cos^2 \theta = 1" />
      <BlockMath math="\cos^2 \theta = 1 - \frac{9}{25} = \frac{16}{25}" />
      <BlockMath math="\cos \theta = -\frac{4}{5} \text{ (negative in quadrant II)}" />
      <BlockMath math="\tan \theta = \frac{\sin \theta}{\cos \theta} = \frac{3/5}{-4/5} = -\frac{3}{4}" />
-   </div>
+   </MathContainer>
 
 4. First simplify the angles.
 
@@ -227,11 +227,11 @@ Use the periodicity property. Subtract or add multiples of 360° until the angle
 
    For <InlineMath math="-330°" />, add 360° to get 30°.
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\sin 840° = \sin 120° = \sin(180° - 60°) = \sin 60° = \frac{\sqrt{3}}{2}" />
      <BlockMath math="\cos(-330°) = \cos 330° = \cos(360° - 30°) = \cos 30° = \frac{\sqrt{3}}{2}" />
      <BlockMath math="\sin 840° \cdot \cos(-330°) = \frac{\sqrt{3}}{2} \cdot \frac{\sqrt{3}}{2} = \frac{3}{4}" />
-   </div>
+   </MathContainer>
 
 5. Angle 1050° needs to be simplified first.
 
@@ -239,8 +239,8 @@ Use the periodicity property. Subtract or add multiples of 360° until the angle
 
    Angle 330° is in quadrant IV with reference angle 30°.
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="x = \cos 330° = \cos 30° = \frac{\sqrt{3}}{2}" />
      <BlockMath math="y = \sin 330° = -\sin 30° = -\frac{1}{2}" />
      <BlockMath math="\text{Blade tip coordinates: } \left(\frac{\sqrt{3}}{2}, -\frac{1}{2}\right)" />
-   </div>
+   </MathContainer>

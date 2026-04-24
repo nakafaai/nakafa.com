@@ -23,10 +23,10 @@ However, we can represent this transformation as a combination of matrix operati
 
 Mathematically, if <InlineMath math="(x', y')" /> is the image of <InlineMath math="(x,y)" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} x-a \\ y-b \end{pmatrix} + \begin{pmatrix} a \\ b \end{pmatrix}" />
   <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -(x-a) \\ -(y-b) \end{pmatrix} + \begin{pmatrix} a \\ b \end{pmatrix} = \begin{pmatrix} -x+a \\ -y+b \end{pmatrix} + \begin{pmatrix} a \\ b \end{pmatrix} = \begin{pmatrix} -x+2a \\ -y+2b \end{pmatrix}" />
-</div>
+</MathContainer>
 
 This corresponds to the formula we are familiar with.
 
@@ -50,11 +50,11 @@ Determine the image of point <InlineMath math="(2,3)" /> by reflection over poin
 
 Point <InlineMath math="(x,y) = (2,3)" />. Center <InlineMath math="(a,b) = (1,1)" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 2 \\ 3 \end{pmatrix} + 2 \begin{pmatrix} 1 \\ 1 \end{pmatrix}" />
   <BlockMath math="= \begin{pmatrix} (-1)(2) + (0)(3) \\ (0)(2) + (-1)(3) \end{pmatrix} + \begin{pmatrix} 2 \\ 2 \end{pmatrix}" />
   <BlockMath math="= \begin{pmatrix} -2 \\ -3 \end{pmatrix} + \begin{pmatrix} 2 \\ 2 \end{pmatrix} = \begin{pmatrix} -2+2 \\ -3+2 \end{pmatrix} = \begin{pmatrix} 0 \\ -1 \end{pmatrix}" />
-</div>
+</MathContainer>
 
 Visualization:
 
@@ -113,10 +113,10 @@ Visualization:
 
     Using the formula <InlineMath math="x' = 2a-x" /> and <InlineMath math="y' = 2b-y" />:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = 2(-2) - 3 = -4 - 3 = -7" />
       <BlockMath math="y' = 2(-1) - 1 = -2 - 1 = -3" />
-    </div>
+    </MathContainer>
 
     Its image is <InlineMath math="(-7,-3)" />. Or using matrix operations:
 
@@ -126,19 +126,19 @@ Visualization:
 
     Image of point <InlineMath math="A(1,2)" />:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x'_A = 2(0)-1 = -1" />
       <BlockMath math="y'_A = 2(1)-2 = 0" />
-    </div>
+    </MathContainer>
 
     So <InlineMath math="A'(-1,0)" />.
 
     Image of point <InlineMath math="B(3,4)" />:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x'_B = 2(0)-3 = -3" />
       <BlockMath math="y'_B = 2(1)-4 = -2" />
-    </div>
+    </MathContainer>
 
     So <InlineMath math="B'(-3,-2)" />.
 
@@ -148,11 +148,11 @@ Visualization:
 
     Equation of the line:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="y - y'_A = m'(x - x'_A)" />
       <BlockMath math="y - 0 = 1(x - (-1))" />
       <BlockMath math="y = x + 1" />
-    </div>
+    </MathContainer>
 
     or
 

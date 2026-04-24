@@ -99,7 +99,7 @@ Let's apply this concept to an example.
 
     The height of each rectangle is determined by the function's value <InlineMath math="f(x) = x" /> at the chosen sample points:
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="f(x_1) = f(0) = 0" />
     <BlockMath math="f(x_2) = f(1) = 1" />
     <BlockMath math="f(x_3) = f(2) = 2" />
@@ -107,18 +107,18 @@ Let's apply this concept to an example.
     <BlockMath math="f(x_5) = f(4) = 4" />
     <BlockMath math="f(x_6) = f(5) = 5" />
     <BlockMath math="f(x_7) = f(6) = 6" />
-    </div>
+    </MathContainer>
 
 5.  **Calculate the Riemann Sum:**
 
     Now we can calculate the total area by summing the areas of all rectangles. Remember that the area of each rectangle is height times width:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="R_7 = \sum_{i=1}^{7} f(x_i^*) \Delta x" />
     <BlockMath math="= [f(0) + f(1) + f(2) + f(3) + f(4) + f(5) + f(6)] \cdot 1" />
     <BlockMath math="= (0 + 1 + 2 + 3 + 4 + 5 + 6) \cdot 1" />
     <BlockMath math="= 21" />
-    </div>
+    </MathContainer>
 
     Thus, the estimated area under the curve <InlineMath math="f(x)=x" /> from 0 to 7 is **21**.
 
@@ -192,22 +192,22 @@ Let's apply this concept to an example.
 
     The height of each rectangle is determined by the function's value <InlineMath math="f(x) = x^2 + 1" /> at the right endpoint sample points:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="f(x_1) = f(1) = 1^2 + 1 = 2" />
     <BlockMath math="f(x_2) = f(2) = 2^2 + 1 = 5" />
     <BlockMath math="f(x_3) = f(3) = 3^2 + 1 = 10" />
     <BlockMath math="f(x_4) = f(4) = 4^2 + 1 = 17" />
-    </div>
+    </MathContainer>
 
     **Step 5: Calculate the total Riemann Sum.**
 
     Now we sum the areas of all rectangles (height × width):
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="R_4 = \sum_{i=1}^{4} f(x_i^*) \Delta x" />
     <BlockMath math="= [f(1) + f(2) + f(3) + f(4)] \cdot 1" />
     <BlockMath math="= (2 + 5 + 10 + 17) \cdot 1" />
     <BlockMath math="= 34" />
-    </div>
+    </MathContainer>
 
     Thus, the Riemann Sum for the function is **34**.

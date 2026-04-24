@@ -38,21 +38,21 @@ For every <InlineMath math="a, b \neq 0" /> and <InlineMath math="m" /> integer.
 
 _Method 1:_
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(ab)^m = \underbrace{ab \times ab \times ab \times \ldots \times ab}_{m\text{ factors}}" />
   <BlockMath math="(ab)^m = \underbrace{a \times a \times a \times \ldots \times a}_{m\text{ factors}} \times \underbrace{b \times b \times b \times \ldots \times b}_{m\text{ factors}}" />
   <BlockMath math="(ab)^m = a^m \times b^m" />
-</div>
+</MathContainer>
 
 _Method 2:_
 
 We can take several examples with specific values of <InlineMath math="m, a" /> and <InlineMath math="b" />
 to observe the pattern that forms. For example, with <InlineMath math="m=2, a=3, b=4" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(3 \cdot 4)^2 = 12^2 = 144" />
   <BlockMath math="3^2 \cdot 4^2 = 9 \cdot 16 = 144" />
-</div>
+</MathContainer>
 
 ### Property 5
 
@@ -62,11 +62,11 @@ For every <InlineMath math="a \neq 0, b \neq 0" /> and <InlineMath math="m" /> i
 
 **Proof:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\left(\frac{a}{b}\right)^m = \underbrace{\frac{a}{b} \times \frac{a}{b} \times \frac{a}{b} \times \ldots \times \frac{a}{b}}_{m\text{ factors}}" />
   <BlockMath math="\left(\frac{a}{b}\right)^m = \frac{\underbrace{a \times a \times a \times \ldots \times a}_{m\text{ factors}}}{\underbrace{b \times b \times b \times \ldots \times b}_{m\text{ factors}}}" />
   <BlockMath math="\left(\frac{a}{b}\right)^m = \frac{a^m}{b^m}" />
-</div>
+</MathContainer>
 
 ### Property 6
 
@@ -78,10 +78,10 @@ For every <InlineMath math="a > 0" />, <InlineMath math="\frac{m}{n}" /> and <In
 
 Using Property 1, we obtain:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(a^{\frac{m}{n}})(a^{\frac{p}{n}}) = a^{\frac{m}{n} + \frac{p}{n}}" />
   <BlockMath math="(a^{\frac{m}{n}})(a^{\frac{p}{n}}) = a^{\frac{m+p}{n}}" />
-</div>
+</MathContainer>
 
 ### Property 7
 
@@ -93,11 +93,11 @@ For every <InlineMath math="a > 0" />, <InlineMath math="\frac{m}{n}" /> and <In
 
 Using Property 1, we need to equalize the denominators of the exponents:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(a^{\frac{m}{n}})(a^{\frac{p}{q}}) = a^{\frac{m}{n} + \frac{p}{q}}" />
   <BlockMath math="(a^{\frac{m}{n}})(a^{\frac{p}{q}}) = a^{\frac{mq}{nq} + \frac{pn}{nq}}" />
   <BlockMath math="(a^{\frac{m}{n}})(a^{\frac{p}{q}}) = a^{\frac{mq + pn}{nq}}" />
-</div>
+</MathContainer>
 
 ## Example Problems
 
@@ -107,28 +107,28 @@ Using Property 1, we need to equalize the denominators of the exponents:
 
     Solution: Using Property 3, <InlineMath math="(a^m)^n = a^{m \cdot n}" />
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(3^4)^2 = 3^{4 \cdot 2} = 3^8" />
       <BlockMath math="p = 8" />
-    </div>
+    </MathContainer>
 
 2. <InlineMath math="b^4 \cdot b^5 = b^9" />
 
     Solution: Using Property 1, <InlineMath math="a^m \cdot a^n = a^{m+n}" />
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="b^4 \cdot b^5 = b^{4+5} = b^9" />
       <BlockMath math="\text{Therefore, the equation is proven true.}" />
-    </div>
+    </MathContainer>
 
 3. <InlineMath math="(3\pi)^p = 27\pi^3" />
 
     Solution: Converting <InlineMath math="27\pi^3" /> to <InlineMath math="3^3 \cdot \pi^3" />
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="27\pi^3 = 3^3 \cdot \pi^3 = (3\pi)^3" />
       <BlockMath math="p = 3" />
-    </div>
+    </MathContainer>
 
 ### Simplifying Expressions
 

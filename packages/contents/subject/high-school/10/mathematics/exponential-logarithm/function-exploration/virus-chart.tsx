@@ -76,7 +76,7 @@ export function VirusChart({
   } satisfies ChartConfig;
 
   return (
-    <Card>
+    <Card className="content-auto-card">
       <CardHeader>
         <CardTitle>{labels.title}</CardTitle>
         <CardDescription>{labels.description}</CardDescription>
@@ -106,7 +106,7 @@ export function VirusChart({
             />
             <ChartTooltip
               content={({ active, payload }) => {
-                if (!!active && !!payload && payload.length > 0) {
+                if (active && payload && payload.length > 0) {
                   // Extract the phase value from the first payload item
                   const phaseValue = payload[0].payload.phase;
                   return (

@@ -94,10 +94,10 @@ First, we can write the coordinates of the points as columns of a matrix, i.e., 
 
 Next, multiply this matrix from the left by <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 1 & 4 & 4 \\ 1 & 1 & 2 \end{pmatrix} = \begin{pmatrix} (-1)(1)+(0)(1) & (-1)(4)+(0)(1) & (-1)(4)+(0)(2) \\ (0)(1)+(-1)(1) & (0)(4)+(-1)(1) & (0)(4)+(-1)(2) \end{pmatrix}" />
   <BlockMath math="= \begin{pmatrix} -1 & -4 & -4 \\ -1 & -1 & -2 \end{pmatrix}" />
-</div>
+</MathContainer>
 
 The result of the transformation is a new triangle <InlineMath math="\triangle A'B'C'" /> with vertices <InlineMath math="A'(-1,-1)" />, <InlineMath math="B'(-4,-1)" />, and <InlineMath math="C'(-4,-2)" />.
 
@@ -181,10 +181,10 @@ The matrix <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" /> 
 
     Point matrix: <InlineMath math="\begin{pmatrix} 2 & 2 & 0 \\ 0 & 1 & 1 \end{pmatrix}" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="\begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix} \begin{pmatrix} 2 & 2 & 0 \\ 0 & 1 & 1 \end{pmatrix} = \begin{pmatrix} (1)(2)+(2)(0) & (1)(2)+(2)(1) & (1)(0)+(2)(1) \\ (0)(2)+(1)(0) & (0)(2)+(1)(1) & (0)(0)+(1)(1) \end{pmatrix}" />
       <BlockMath math="= \begin{pmatrix} 2+0 & 2+2 & 0+2 \\ 0+0 & 0+1 & 0+1 \end{pmatrix} = \begin{pmatrix} 2 & 4 & 2 \\ 0 & 1 & 1 \end{pmatrix}" />
-    </div>
+    </MathContainer>
 
     Image vertices: <InlineMath math="A'(2,0)" />, <InlineMath math="B'(4,1)" />, <InlineMath math="C'(2,1)" />.
 

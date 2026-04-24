@@ -21,10 +21,10 @@ Diberikan sembarang titik <InlineMath math="P(x,y)" />. Translasi yang berkaitan
 
 Ini berarti:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = x + a" />
   <BlockMath math="y' = y + b" />
-</div>
+</MathContainer>
 
 Di sini, <InlineMath math="a" /> adalah pergeseran horizontal (positif ke kanan, negatif ke kiri) dan <InlineMath math="b" /> adalah pergeseran vertikal (positif ke atas, negatif ke bawah).
 
@@ -36,10 +36,10 @@ Di sini, <InlineMath math="x=3" />, <InlineMath math="y=2" />, <InlineMath math=
 
 Menggunakan rumus:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = x + a = 3 + (-2) = 1" />
   <BlockMath math="y' = y + b = 2 + 3 = 5" />
-</div>
+</MathContainer>
 
 Jadi, bayangan titik <InlineMath math="(3,2)" /> adalah <InlineMath math="(1,5)" />.
 
@@ -87,18 +87,18 @@ Tentukan peta dari garis <InlineMath math="l \equiv 2x + 3y - 1 = 0" /> ditransl
 
 Misalkan <InlineMath math="P(x,y)" /> adalah sembarang titik pada garis <InlineMath math="l" />. Jika ditranslasikan oleh vektor <InlineMath math="\begin{pmatrix} -1 \\ 1 \end{pmatrix}" />, bayangannya adalah <InlineMath math="P'(x',y')" /> di mana:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = x + (-1) = x - 1 \implies x = x' + 1" />
   <BlockMath math="y' = y + 1 \implies y = y' - 1" />
-</div>
+</MathContainer>
 
 Substitusikan nilai <InlineMath math="x" /> dan <InlineMath math="y" /> ini ke dalam persamaan garis <InlineMath math="l" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="2(x' + 1) + 3(y' - 1) - 1 = 0" />
   <BlockMath math="2x' + 2 + 3y' - 3 - 1 = 0" />
   <BlockMath math="2x' + 3y' - 2 = 0" />
-</div>
+</MathContainer>
 
 Mengganti <InlineMath math="x'" /> dan <InlineMath math="y'" /> kembali ke <InlineMath math="x" /> dan <InlineMath math="y" />, persamaan garis bayangan <InlineMath math="l'" /> adalah:
 
@@ -152,36 +152,36 @@ Mengganti <InlineMath math="x'" /> dan <InlineMath math="y'" /> kembali ke <Inli
 
 1.  Titik <InlineMath math="(-4,4)" />, vektor <InlineMath math="\begin{pmatrix} -2 \\ -3 \end{pmatrix}" />. <InlineMath math="x=-4, y=4, a=-2, b=-3" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = -4 + (-2) = -6" />
       <BlockMath math="y' = 4 + (-3) = 1" />
-    </div>
+    </MathContainer>
 
     Jadi, bayangan titiknya adalah <InlineMath math="(-6,1)" />.
 
 2.  Garis <InlineMath math="5x - 2y + 3 = 0" />, vektor <InlineMath math="\begin{pmatrix} 2 \\ -1 \end{pmatrix}" />. <InlineMath math="a=2, b=-1" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = x + 2 \implies x = x' - 2" />
       <BlockMath math="y' = y - 1 \implies y = y' + 1" />
-    </div>
+    </MathContainer>
 
     Substitusi ke persamaan garis:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="5(x' - 2) - 2(y' + 1) + 3 = 0" />
       <BlockMath math="5x' - 10 - 2y' - 2 + 3 = 0" />
       <BlockMath math="5x' - 2y' - 9 = 0" />
-    </div>
+    </MathContainer>
 
     Persamaan garis bayangan: <InlineMath math="5x - 2y - 9 = 0" />.
 
 3.  Titik <InlineMath math="A(1,1)" />, <InlineMath math="B(4,1)" />, <InlineMath math="C(1,5)" />. Vektor <InlineMath math="\begin{pmatrix} 2 \\ 3 \end{pmatrix}" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="A'(1+2, 1+3) = A'(3,4)" />
       <BlockMath math="B'(4+2, 1+3) = B'(6,4)" />
       <BlockMath math="C'(1+2, 5+3) = C'(3,8)" />
-    </div>
+    </MathContainer>
 
     Koordinat bayangan segitiga adalah <InlineMath math="A'(3,4)" />, <InlineMath math="B'(6,4)" />, dan <InlineMath math="C'(3,8)" />.

@@ -49,11 +49,11 @@ Atau:
 
 Selanjutnya, kita jumlahkan kedua versi <InlineMath math="S_n"/> tersebut, suku demi suku:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="S_n = a + (a+b) + \dots + (a+(n-2)b) + (a+(n-1)b)" />
   <BlockMath math="S_n = (a+(n-1)b) + (a+(n-2)b) + \dots + (a+b) + a" />
   <BlockMath math="2S_n = [2a+(n-1)b] + [2a+(n-1)b] + \dots + [2a+(n-1)b] + [2a+(n-1)b]" />
-</div>
+</MathContainer>
 
 Perhatikan! Setiap pasang suku (atas dan bawah) jika dijumlahkan hasilnya selalu
 sama, yaitu <InlineMath math="2a + (n-1)b" />. Karena ada <InlineMath math="n" /> suku,
@@ -78,10 +78,10 @@ Ada dua bentuk rumus yang paling sering digunakan untuk menghitung <InlineMath m
 2.  Jika diketahui **suku pertama <InlineMath math="(a)" />** dan **suku ke-<InlineMath math="(n)" /> <InlineMath math="(U_n)" />**:
     Ingat rumus suku ke-<InlineMath math="n"/> adalah <InlineMath math="U_n = a + (n-1)b"/>. Substitusi ini ke rumus pertama:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="S_n = \frac{n}{2}(a + a + (n - 1)b)" />
       <BlockMath math="S_n = \frac{n}{2}(a + U_n)" />
-    </div>
+    </MathContainer>
 
     Rumus kedua ini mirip cara Gauss: jumlah suku pertama dan terakhir,
     dikalikan banyaknya pasangan <InlineMath math="(\frac{n}{2})" />.
@@ -109,12 +109,12 @@ Diketahui:
 
 Karena <InlineMath math="a"/> dan <InlineMath math="U_n"/> diketahui, kita pakai rumus kedua:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="S_n = \frac{n}{2}(a + U_n)" />
   <BlockMath math="S_{100} = \frac{100}{2}(1 + 100)" />
   <BlockMath math="S_{100} = 50(101)" />
   <BlockMath math="S_{100} = 5050" />
-</div>
+</MathContainer>
 
 Hasilnya sama persis dengan cara Gauss!
 
@@ -130,13 +130,13 @@ Diketahui:
 
 Karena <InlineMath math="a"/> dan <InlineMath math="b"/> diketahui, kita pakai rumus pertama:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="S_n = \frac{n}{2}(2a + (n - 1)b)" />
   <BlockMath math="S_{30} = \frac{30}{2}[2(13) + (30 - 1)(3)]" />
   <BlockMath math="S_{30} = 15[26 + (29)(3)]" />
   <BlockMath math="S_{30} = 15(26 + 87)" />
   <BlockMath math="S_{30} = 15(113)" />
   <BlockMath math="S_{30} = 1695" />
-</div>
+</MathContainer>
 
 Jadi, jumlah 30 suku pertama deret tersebut adalah 1695.

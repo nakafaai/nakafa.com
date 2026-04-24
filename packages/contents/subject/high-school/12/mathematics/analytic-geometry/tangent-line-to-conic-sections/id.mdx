@@ -32,11 +32,11 @@ Coba kita ambil contoh parabola <InlineMath math="y^2 = 8x" /> di titik <InlineM
 
 Dari parabola <InlineMath math="y^2 = 8x" />, kita tau <InlineMath math="4p = 8" /> jadi <InlineMath math="p = 2" />. Garis singgung di titik <InlineMath math="(2, 4)" /> adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y \cdot 4 = 2 \cdot 2 \cdot (x + 2)" />
   <BlockMath math="4y = 4(x + 2)" />
   <BlockMath math="y = x + 2" />
-</div>
+</MathContainer>
 
 > Prinsip bagi adil ini bikin perhitungan jadi lebih mudah! Kita gak perlu ribet hitung turunan. Cukup "bagi" setiap pangkat dua jadi perkalian sama koordinat titik singgung!
 
@@ -50,11 +50,11 @@ Langkah pertama, kita tentuin dulu gradien garis singgungnya. Karena garis singg
 
 Persamaan garis singgung hiperbola dengan gradien <InlineMath math="m" /> itu <InlineMath math="y = mx + c" />. Kita substitusikan ke persamaan hiperbolanya:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="4x^2 - 9(4x + c)^2 = 36" />
   <BlockMath math="4x^2 - 9(16x^2 + 8cx + c^2) = 36" />
   <BlockMath math="-140x^2 - 72cx - 9c^2 = 36" />
-</div>
+</MathContainer>
 
 Buat garis singgung, diskriminannya harus nol:
 
@@ -74,21 +74,21 @@ Untuk menentukan persamaan garis singgung lewat titik luar, kita pakai persamaan
 
 Substitusikan <InlineMath math="x_1 = 2" /> dan <InlineMath math="y_1 = 5" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="5y = 4(x + 2)" />
   <BlockMath math="5y = 4x + 8" />
   <BlockMath math="y = \frac{4x + 8}{5}" />
-</div>
+</MathContainer>
 
 Sekarang kita substitusikan ke persamaan parabola untuk cari titik singgungnya:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\left(\frac{4x + 8}{5}\right)^2 = 8x" />
   <BlockMath math="\frac{16x^2 + 64x + 64}{25} = 8x" />
   <BlockMath math="16x^2 + 64x + 64 = 200x" />
   <BlockMath math="16x^2 - 136x + 64 = 0" />
   <BlockMath math="2x^2 - 17x + 8 = 0" />
-</div>
+</MathContainer>
 
 Pakai rumus kuadrat, kita dapet <InlineMath math="x_1 = \frac{1}{2}" /> dan <InlineMath math="x_2 = 8" />. Jadi titik singgungnya ada di <InlineMath math="(\frac{1}{2}, 2)" /> dan <InlineMath math="(8, 8)" />.
 
@@ -131,13 +131,13 @@ Ini dia tabel lengkap persamaan irisan kerucut dan persamaan garis singgungnya. 
    
    Pakai rumus garis singgung parabola:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="yy_1 = 2p(x + x_1)" />
      <BlockMath math="y \cdot 6 = 2 \cdot 3 \cdot (x + 3)" />
      <BlockMath math="6y = 6(x + 3)" />
      <BlockMath math="6y = 6x + 18" />
      <BlockMath math="y = x + 3" />
-   </div>
+   </MathContainer>
    
    Jadi persamaan garis singgungnya <InlineMath math="y = x + 3" />.
 
@@ -157,12 +157,12 @@ Ini dia tabel lengkap persamaan irisan kerucut dan persamaan garis singgungnya. 
    
    Dengan <InlineMath math="a^2 = 9" />, <InlineMath math="b^2 = 4" />, dan <InlineMath math="m = 4" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="y = 4x \pm \sqrt{9 \cdot 16 - 4}" />
      <BlockMath math="y = 4x \pm \sqrt{144 - 4}" />
      <BlockMath math="y = 4x \pm \sqrt{140}" />
      <BlockMath math="y = 4x \pm 2\sqrt{35}" />
-   </div>
+   </MathContainer>
    
    Jadi persamaan garis singgungnya <InlineMath math="y = 4x + 2\sqrt{35}" /> atau <InlineMath math="y = 4x - 2\sqrt{35}" />.
 
@@ -182,11 +182,11 @@ Ini dia tabel lengkap persamaan irisan kerucut dan persamaan garis singgungnya. 
    
    Substitusikan <InlineMath math="x_1 = 1" /> dan <InlineMath math="y_1 = 3" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\frac{x \cdot 1}{9} + \frac{y \cdot 3}{4} = 1" />
      <BlockMath math="\frac{x}{9} + \frac{3y}{4} = 1" />
      <BlockMath math="4x + 27y = 36" />
-   </div>
+   </MathContainer>
    
    Kalau mau cari titik singgungnya, substitusikan persamaan ini ke persamaan elips. Dari <InlineMath math="4x + 27y = 36" />, kita dapat <InlineMath math="x = \frac{36 - 27y}{4}" />.
 
@@ -210,22 +210,22 @@ Ini dia tabel lengkap persamaan irisan kerucut dan persamaan garis singgungnya. 
    
    Substitusikan <InlineMath math="x_1 = 2" /> dan <InlineMath math="y_1 = 5" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="5y = 4(x + 2)" />
      <BlockMath math="5y = 4x + 8" />
      <BlockMath math="y = \frac{4x + 8}{5}" />
-   </div>
+   </MathContainer>
    
    Substitusikan ke persamaan parabola:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\left(\frac{4x + 8}{5}\right)^2 = 8x" />
      <BlockMath math="\frac{(4x + 8)^2}{25} = 8x" />
      <BlockMath math="(4x + 8)^2 = 200x" />
      <BlockMath math="16x^2 + 64x + 64 = 200x" />
      <BlockMath math="16x^2 - 136x + 64 = 0" />
      <BlockMath math="2x^2 - 17x + 8 = 0" />
-   </div>
+   </MathContainer>
    
    Pakai rumus kuadrat:
    

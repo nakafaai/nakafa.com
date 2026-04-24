@@ -48,11 +48,11 @@ Tentukan semua pembuat nol kompleks dari <InlineMath math="P(x) = x^3 - x^2 + x 
 
     - Faktorkan dengan pengelompokan (grouping):
 
-      <div className="flex flex-col gap-4">
+      <MathContainer>
         <BlockMath math="P(x) = (x^3 - x^2) + (x - 1)" />
         <BlockMath math="P(x) = x^2(x - 1) + 1(x - 1)" />
         <BlockMath math="P(x) = (x^2 + 1)(x - 1)" />
-      </div>
+      </MathContainer>
 
     - Sekarang, cari akar dengan menyetarakan <InlineMath math="P(x) = 0" />:
 
@@ -75,10 +75,10 @@ Tentukan semua pembuat nol kompleks dari <InlineMath math="P(x) = x^3 - x^2 + x 
 
     Koefisien utama <InlineMath math="P(x)" /> adalah <InlineMath math="a_3 = 1" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="P(x) = 1 \cdot (x - 1)(x - i)(x + i)" />
       <BlockMath math="P(x) = (x - 1)(x - i)(x + i)" />
-    </div>
+    </MathContainer>
 
 ## Latihan
 
@@ -116,13 +116,13 @@ Tentukan semua pembuat nol kompleks dari <InlineMath math="P(x) = x^3 - 3x^2 + x
 
 3. **Cari Akar dari Hasil Bagi:** Selesaikan <InlineMath math="x^2 - 4x + 5 = 0" /> dengan rumus kuadratik.
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="x = \frac{-(-4) \pm \sqrt{(-4)^2 - 4(1)(5)}}{2(1)}" />
      <BlockMath math="x = \frac{4 \pm \sqrt{16 - 20}}{2}" />
      <BlockMath math="x = \frac{4 \pm \sqrt{-4}}{2}" />
      <BlockMath math="x = \frac{4 \pm 2i}{2}" />
      <BlockMath math="x = 2 \pm i" />
-   </div>
+   </MathContainer>
 
    Akar lainnya adalah <InlineMath math="2 + i" /> dan <InlineMath math="2 - i" />.
 
@@ -130,10 +130,10 @@ Tentukan semua pembuat nol kompleks dari <InlineMath math="P(x) = x^3 - 3x^2 + x
 
 5. **Faktorisasi Penuh (<InlineMath math="a_n = 1" />):**
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="P(x) = 1 \cdot (x - (-1))(x - (2+i))(x - (2-i))" />
      <BlockMath math="P(x) = (x + 1)(x - 2 - i)(x - 2 + i)" />
-   </div>
+   </MathContainer>
 
 ## Pasangan Akar Konjugat Kompleks
 

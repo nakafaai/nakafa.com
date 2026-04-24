@@ -230,6 +230,47 @@
   font-size: 15px;
 }
 
+/* Measured fallback heights keep skipped learn blocks close to their rendered size. */
+@utility content-auto-formula {
+  contain-intrinsic-size: auto none auto 5rem;
+  content-visibility: auto;
+}
+
+@utility content-auto-table {
+  contain-intrinsic-size: auto none auto 12rem;
+  content-visibility: auto;
+}
+
+@utility content-auto-math-stack-compact {
+  contain-intrinsic-size: auto none auto 12rem;
+  content-visibility: auto;
+}
+
+@utility content-auto-math-stack {
+  contain-intrinsic-size: auto none auto 24rem;
+  content-visibility: auto;
+}
+
+@utility content-auto-math-stack-spacious {
+  contain-intrinsic-size: auto none auto 40rem;
+  content-visibility: auto;
+}
+
+@utility content-auto-card {
+  contain-intrinsic-size: auto none auto 48rem;
+  content-visibility: auto;
+}
+
+@utility content-auto-code {
+  contain-intrinsic-size: auto none auto 48rem;
+  content-visibility: auto;
+}
+
+@utility content-auto-exercise {
+  contain-intrinsic-size: auto none auto 60rem;
+  content-visibility: auto;
+}
+
 @layer utilities {
   /* Style scrollbar for webkit browsers (Chrome, Safari, etc) */
   ::-webkit-scrollbar {

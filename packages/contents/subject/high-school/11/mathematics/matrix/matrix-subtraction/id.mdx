@@ -48,21 +48,21 @@ Untuk mengurangkan dua matriks, ikuti langkah-langkah berikut:
 
 Misalkan kita memiliki dua matriks, <InlineMath math="P" /> dan <InlineMath math="Q" />, sebagai berikut:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="P = \begin{bmatrix} 8 & 5 \\ 3 & 7 \end{bmatrix}" />
   <BlockMath math="Q = \begin{bmatrix} 2 & 1 \\ -1 & 4 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Kedua matriks ini berordo <InlineMath math="2 \times 2" />, sehingga dapat dikurangkan.
 
 Menggunakan metode pengurangan elemen seletak:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="P - Q = \begin{bmatrix} 8 & 5 \\ 3 & 7 \end{bmatrix} - \begin{bmatrix} 2 & 1 \\ -1 & 4 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 8-2 & 5-1 \\ 3-(-1) & 7-4 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 6 & 4 \\ 3+1 & 3 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 6 & 4 \\ 4 & 3 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Menggunakan metode penjumlahan dengan lawan (<InlineMath math="P + (-Q)" />):
 
@@ -72,11 +72,11 @@ Pertama, tentukan <InlineMath math="-Q" />:
 
 Kemudian, jumlahkan <InlineMath math="P" /> dengan <InlineMath math="-Q" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="P + (-Q) = \begin{bmatrix} 8 & 5 \\ 3 & 7 \end{bmatrix} + \begin{bmatrix} -2 & -1 \\ 1 & -4 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 8+(-2) & 5+(-1) \\ 3+1 & 7+(-4) \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 6 & 4 \\ 4 & 3 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Kedua metode menghasilkan matriks yang sama.
 
@@ -100,11 +100,11 @@ Berbeda dengan penjumlahan matriks yang memiliki beberapa sifat penting seperti 
 
     Sedangkan,
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="Q-P = \begin{bmatrix} 2 & 1 \\ -1 & 4 \end{bmatrix} - \begin{bmatrix} 8 & 5 \\ 3 & 7 \end{bmatrix}" />
       <BlockMath math="= \begin{bmatrix} 2-8 & 1-5 \\ -1-3 & 4-7 \end{bmatrix}" />
       <BlockMath math="= \begin{bmatrix} -6 & -4 \\ -4 & -3 \end{bmatrix}" />
-    </div>
+    </MathContainer>
 
     Terlihat jelas bahwa <InlineMath math="P-Q \neq Q-P" />.
 
@@ -124,10 +124,10 @@ Dengan mengubah operasi pengurangan menjadi penjumlahan dengan matriks lawan, ki
 
 Diketahui matriks-matriks berikut:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="M = \begin{bmatrix} 4 & -2 & 0 \\ 1 & 5 & 3 \end{bmatrix}" />
   <BlockMath math="N = \begin{bmatrix} -1 & 1 & -2 \\ 6 & 0 & 7 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Tentukan hasil dari <InlineMath math="M-N" />.
 
@@ -141,11 +141,11 @@ Tentukan nilai <InlineMath math="x, y," /> dan <InlineMath math="z" /> dari pers
 
 Diberikan tiga matriks:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="A = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
   <BlockMath math="B = \begin{bmatrix} 3 & -2 \\ 5 & 1 \end{bmatrix}" />
   <BlockMath math="C = \begin{bmatrix} -4 & 0 \\ 2 & -3 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Hitunglah <InlineMath math="(A-B)-C" /> dan <InlineMath math="A-(B-C)" />. Apakah hasilnya sama?
 
@@ -155,19 +155,19 @@ Hitunglah <InlineMath math="(A-B)-C" /> dan <InlineMath math="A-(B-C)" />. Apaka
 
 Diketahui:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="M = \begin{bmatrix} 4 & -2 & 0 \\ 1 & 5 & 3 \end{bmatrix}" />
   <BlockMath math="N = \begin{bmatrix} -1 & 1 & -2 \\ 6 & 0 & 7 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Maka, <InlineMath math="M-N" /> adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="M-N = \begin{bmatrix} 4 & -2 & 0 \\ 1 & 5 & 3 \end{bmatrix} - \begin{bmatrix} -1 & 1 & -2 \\ 6 & 0 & 7 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 4-(-1) & -2-1 & 0-(-2) \\ 1-6 & 5-0 & 3-7 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 4+1 & -3 & 0+2 \\ -5 & 5 & -4 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 5 & -3 & 2 \\ -5 & 5 & -4 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 **Soal 2**
 
@@ -177,10 +177,10 @@ Diketahui persamaan matriks:
 
 Lakukan operasi pengurangan pada ruas kiri:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\begin{bmatrix} 2x-3 & 7-z \\ (y-1)-4 & 5-(-2x) \end{bmatrix} = \begin{bmatrix} 5 & 10 \\ -3 & 1 \end{bmatrix}" />
   <BlockMath math="\begin{bmatrix} 2x-3 & 7-z \\ y-5 & 5+2x \end{bmatrix} = \begin{bmatrix} 5 & 10 \\ -3 & 1 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Berdasarkan kesamaan dua matriks, elemen-elemen yang seletak harus sama:
 
@@ -221,43 +221,43 @@ Dalam situasi ujian, inkonsistensi seperti ini sebaiknya dikonfirmasi kepada pen
 
 Diberikan:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="A = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
   <BlockMath math="B = \begin{bmatrix} 3 & -2 \\ 5 & 1 \end{bmatrix}" />
   <BlockMath math="C = \begin{bmatrix} -4 & 0 \\ 2 & -3 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Hitung <InlineMath math="(A-B)-C" />:
 
 Pertama, <InlineMath math="A-B" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="A-B = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} - \begin{bmatrix} 3 & -2 \\ 5 & 1 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 1-3 & 0-(-2) \\ 0-5 & 1-1 \end{bmatrix} = \begin{bmatrix} -2 & 2 \\ -5 & 0 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Kemudian, <InlineMath math="(A-B)-C" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(A-B)-C = \begin{bmatrix} -2 & 2 \\ -5 & 0 \end{bmatrix} - \begin{bmatrix} -4 & 0 \\ 2 & -3 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} -2-(-4) & 2-0 \\ -5-2 & 0-(-3) \end{bmatrix} = \begin{bmatrix} -2+4 & 2 \\ -7 & 0+3 \end{bmatrix} = \begin{bmatrix} 2 & 2 \\ -7 & 3 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Hitung <InlineMath math="A-(B-C)" />:
 
 Pertama, <InlineMath math="B-C" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="B-C = \begin{bmatrix} 3 & -2 \\ 5 & 1 \end{bmatrix} - \begin{bmatrix} -4 & 0 \\ 2 & -3 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 3-(-4) & -2-0 \\ 5-2 & 1-(-3) \end{bmatrix} = \begin{bmatrix} 3+4 & -2 \\ 3 & 1+3 \end{bmatrix} = \begin{bmatrix} 7 & -2 \\ 3 & 4 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Kemudian, <InlineMath math="A-(B-C)" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="A-(B-C) = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} - \begin{bmatrix} 7 & -2 \\ 3 & 4 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 1-7 & 0-(-2) \\ 0-3 & 1-4 \end{bmatrix} = \begin{bmatrix} -6 & 2 \\ -3 & -3 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Hasilnya tidak sama: <InlineMath math="\begin{bmatrix} 2 & 2 \\ -7 & 3 \end{bmatrix} \neq \begin{bmatrix} -6 & 2 \\ -3 & -3 \end{bmatrix}" />.
 

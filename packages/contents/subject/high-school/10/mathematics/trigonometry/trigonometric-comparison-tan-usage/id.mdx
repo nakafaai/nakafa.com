@@ -81,10 +81,10 @@ Misalnya, jika kita memiliki bayangan dari tiga objek berbeda tinggi (anak kecil
 
 Dengan persamaan ini, jika kita mengetahui tinggi anak kecil (misalnya 114 cm), panjang bayangannya (200 cm), dan tinggi remaja (148 cm), kita bisa menghitung panjang bayangan remaja:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\frac{114 \text{ cm}}{200 \text{ cm}} = \frac{148 \text{ cm}}{x \text{ cm}}" />
   <BlockMath math="x \text{ cm} = \frac{148 \text{ cm} \times 200 \text{ cm}}{114 \text{ cm}} = \frac{29.600 \text{ cm}}{114 \text{ cm}} = 259,65 \text{ cm}" />
-</div>
+</MathContainer>
 
 ### Menggunakan Rumus Tangen
 
@@ -94,12 +94,12 @@ Cara lain yang lebih langsung adalah dengan menggunakan perbandingan trigonometr
 
 Misalnya, jika kita memiliki sudut elevasi matahari 30° (<InlineMath math="\tan 30° = 0,57" />) dan ingin menghitung panjang bayangan remaja dengan tinggi 148 cm:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\tan \theta = \frac{\text{tinggi remaja}}{\text{panjang bayangan remaja}}" />
   <BlockMath math="\tan 30° = \frac{148 \text{ cm}}{x \text{ cm}}" />
   <BlockMath math="0,57 = \frac{148 \text{ cm}}{x \text{ cm}}" />
   <BlockMath math="x \text{ cm} = \frac{148 \text{ cm}}{0,57} = 259,65 \text{ cm}" />
-</div>
+</MathContainer>
 
 <div className="mt-4">
   <Triangle

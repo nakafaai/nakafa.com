@@ -37,10 +37,10 @@ Syarat agar limit ini ada adalah:
 
 Secara lebih formal, limit kiri dan kanan dapat ditulis sebagai:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\lim_{x \to c^-} f(x) = L \quad \text{(limit kiri: } x \text{ mendekati } c \text{ dari kiri)}" />
 <BlockMath math="\lim_{x \to c^+} f(x) = L \quad \text{(limit kanan: } x \text{ mendekati } c \text{ dari kanan)}" />
-</div>
+</MathContainer>
 
 Jika kedua limit ini sama, maka <InlineMath math="\lim_{x \to c} f(x) = L" />. Jika berbeda, maka limit tidak ada.
 
@@ -64,10 +64,10 @@ Tentukan <InlineMath math="\lim_{x \to 2} \frac{x^2 - 4}{x - 2}" />.
 
 Jika kita substitusi langsung <InlineMath math="x = 2" />, kita mendapat bentuk <InlineMath math="\frac{0}{0}" /> yang tak tentu. Kita perlu menyederhanakan terlebih dahulu dengan memfaktorkan:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="x^2 - 4 = (x + 2)(x - 2)" />
 <BlockMath math="\lim_{x \to 2} \frac{x^2 - 4}{x - 2} = \lim_{x \to 2} \frac{(x + 2)(x - 2)}{x - 2}" />
-</div>
+</MathContainer>
 
 Karena kita menghitung limit ketika <InlineMath math="x" /> **mendekati** 2 (bukan **sama dengan** 2), maka <InlineMath math="x \neq 2" /> dan kita dapat membatalkan <InlineMath math="(x - 2)" />:
 
@@ -111,10 +111,10 @@ Beberapa sifat penting yang memudahkan perhitungan limit:
 
    Substitusi langsung menghasilkan bentuk <InlineMath math="\frac{0}{0}" />. Kita faktorkan terlebih dahulu:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="x^2 - 1 = (x + 1)(x - 1)" />
    <BlockMath math="\lim_{x \to 1} \frac{x^2 - 1}{x - 1} = \lim_{x \to 1} \frac{(x + 1)(x - 1)}{x - 1}" />
-   </div>
+   </MathContainer>
 
    Karena <InlineMath math="x" /> mendekati 1 (bukan sama dengan 1), maka <InlineMath math="x \neq 1" /> dan kita dapat membatalkan <InlineMath math="(x - 1)" />:
 

@@ -81,7 +81,7 @@ export function CabinetChart({
   } satisfies ChartConfig;
 
   return (
-    <Card>
+    <Card className="content-auto-card">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -190,7 +190,7 @@ export function CompositionChart({
   } satisfies ChartConfig;
 
   return (
-    <Card>
+    <Card className="content-auto-card">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

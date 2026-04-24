@@ -75,13 +75,13 @@ Simplify <InlineMath math="^2\log 32 + {^2\log 8} - {^2\log 4}" />
 
 **Solution:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="^2\log 32 + {^2\log 8} - {^2\log 4}" />
   <BlockMath math="= {^2\log(32 \times 8)} - {^2\log 4}" />
   <BlockMath math="= {^2\log 256} - {^2\log 4}" />
   <BlockMath math="= {^2\log\left(\frac{256}{4}\right)}" />
   <BlockMath math="= {^2\log 64} = 6" />
-</div>
+</MathContainer>
 
 ### Solving Equations
 
@@ -89,12 +89,12 @@ Find the value of <InlineMath math="x" /> if <InlineMath math="^3\log x + {^3\lo
 
 **Solution:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="^3\log x + {^3\log 9} = {^3\log 81}" />
   <BlockMath math="^3\log(x \times 9) = {^3\log 81}" />
   <BlockMath math="x \times 9 = 81" />
   <BlockMath math="x = \frac{81}{9} = 9" />
-</div>
+</MathContainer>
 
 ## Real-Life Applications
 
@@ -114,12 +114,12 @@ Where:
 
 **Solution:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="R = \log\left(\frac{I}{I_0}\right)" />
   <BlockMath math="= \log\left(\frac{10^7 I_0}{I_0}\right)" />
   <BlockMath math="= \log(10^7)" />
   <BlockMath math="= 7" />
-</div>
+</MathContainer>
 
 Therefore, the earthquake in Haiti in 2010 had a strength of 7 on the Richter scale.
 
@@ -140,13 +140,13 @@ Where:
 
 **Solution:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="t = -\frac{1}{k}\ln\left(1 - \frac{C}{C_0}\right)" />
   <BlockMath math="= -\frac{1}{0.02}\ln\left(1 - \frac{0.9C_0}{C_0}\right)" />
   <BlockMath math="= -50\ln(1 - 0.9)" />
   <BlockMath math="= -50\ln(0.1)" />
   <BlockMath math="\approx 115.13" />
-</div>
+</MathContainer>
 
 Therefore, the charging time is approximately 115 minutes.
 
@@ -162,12 +162,12 @@ where <InlineMath math="H(t)" /> is the value at time <InlineMath math="t" />.
 
 **Solution:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="H(0) = 200 \text{ million, so } 200 = ce^0 = c" />
   <BlockMath math="H(5) = 100 \text{ million, so } 100 = 200e^{5k}" />
   <BlockMath math="e^{5k} = \frac{1}{2} \text{, therefore } 5k = \ln\left(\frac{1}{2}\right)" />
   <BlockMath math="k = \frac{1}{5}\ln\left(\frac{1}{2}\right) = -0.1386" />
-</div>
+</MathContainer>
 
 From these results, the car's price at any time <InlineMath math="t" /> is:
 
@@ -195,24 +195,24 @@ Find the value of <InlineMath math="x" /> if <InlineMath math="^4\log(x-1) = {^4
 
 **Answer 1**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="^5\log 125 + {^5\log 25} - {^5\log 5}" />
   <BlockMath math="= 3 + 2 - 1 = 4" />
-</div>
+</MathContainer>
 
 **Answer 2**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="^2\log(xy) = {^2\log x} + {^2\log y}" />
   <BlockMath math="= 3 + 5 = 8" />
-</div>
+</MathContainer>
 
 **Answer 3**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="^4\log(x-1) = {^4\log 16} - {^4\log 2}" />
   <BlockMath math="^4\log(x-1) = {^4\log\left(\frac{16}{2}\right)}" />
   <BlockMath math="^4\log(x-1) = {^4\log 8}" />
   <BlockMath math="x - 1 = 8" />
   <BlockMath math="x = 9" />
-</div>
+</MathContainer>

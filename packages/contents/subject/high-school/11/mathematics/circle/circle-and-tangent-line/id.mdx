@@ -451,10 +451,10 @@ Tentukan persamaan garis singgung lingkaran <InlineMath math="x^2 + y^2 = 25" />
 
 Karena titik <InlineMath math="(3, 4)" /> terletak pada lingkaran (dapat diverifikasi: <InlineMath math="3^2 + 4^2 = 9 + 16 = 25" />), maka persamaan garis singgungnya:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x_1 \cdot x + y_1 \cdot y = r^2" />
   <BlockMath math="3x + 4y = 25" />
-</div>
+</MathContainer>
 
 ### Menentukan Garis Singgung dengan Gradien Tertentu
 
@@ -466,14 +466,14 @@ Gradien garis <InlineMath math="3x - 4y + 5 = 0" /> adalah <InlineMath math="m =
 
 Persamaan garis singgung dengan gradien <InlineMath math="m = \frac{3}{4}" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y = mx \pm r\sqrt{1 + m^2}" />
   <BlockMath math="y = \frac{3}{4}x \pm 4\sqrt{1 + \left(\frac{3}{4}\right)^2}" />
   <BlockMath math="y = \frac{3}{4}x \pm 4\sqrt{1 + \frac{9}{16}}" />
   <BlockMath math="y = \frac{3}{4}x \pm 4\sqrt{\frac{25}{16}}" />
   <BlockMath math="y = \frac{3}{4}x \pm 4 \cdot \frac{5}{4}" />
   <BlockMath math="y = \frac{3}{4}x \pm 5" />
-</div>
+</MathContainer>
 
 Jadi, persamaan garis singgungnya adalah:
 
@@ -488,13 +488,13 @@ Tentukan panjang garis singgung dari titik <InlineMath math="P(7, 1)" /> ke ling
 
 Pusat lingkaran <InlineMath math="O(0, 0)" /> dan jari-jari <InlineMath math="r = 5" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="PT = \sqrt{(x_1 - a)^2 + (y_1 - b)^2 - r^2}" />
   <BlockMath math="PT = \sqrt{(7 - 0)^2 + (1 - 0)^2 - 25}" />
   <BlockMath math="PT = \sqrt{49 + 1 - 25}" />
   <BlockMath math="PT = \sqrt{25}" />
   <BlockMath math="PT = 5" />
-</div>
+</MathContainer>
 
 ## Latihan Soal
 
@@ -521,12 +521,12 @@ Pusat lingkaran <InlineMath math="O(0, 0)" /> dan jari-jari <InlineMath math="r 
 
    Persamaan garis singgung:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="x_1 \cdot x + y_1 \cdot y = r^2" />
      <BlockMath math="-3x + 3\sqrt{3}y = 36" />
      <BlockMath math="-x + \sqrt{3}y = 12" />
      <BlockMath math="x - \sqrt{3}y + 12 = 0" />
-   </div>
+   </MathContainer>
 
 2. **Garis singgung tegak lurus dengan garis tertentu**
 
@@ -536,12 +536,12 @@ Pusat lingkaran <InlineMath math="O(0, 0)" /> dan jari-jari <InlineMath math="r 
 
    Persamaan garis singgung:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="y - b = m(x - a) \pm r\sqrt{1 + m^2}" />
      <BlockMath math="y + 3 = \frac{1}{2}(x - 2) \pm 5\sqrt{1 + \frac{1}{4}}" />
      <BlockMath math="y + 3 = \frac{1}{2}(x - 2) \pm 5 \cdot \frac{\sqrt{5}}{2}" />
      <BlockMath math="y + 3 = \frac{1}{2}x - 1 \pm \frac{5\sqrt{5}}{2}" />
-   </div>
+   </MathContainer>
 
    Jadi: <InlineMath math="x - 2y - 4 \pm 5\sqrt{5} = 0" />
 
@@ -549,18 +549,18 @@ Pusat lingkaran <InlineMath math="O(0, 0)" /> dan jari-jari <InlineMath math="r 
 
    - Panjang garis singgung:
 
-     <div className="flex flex-col gap-4">
+     <MathContainer>
        <BlockMath math="AT = \sqrt{10^2 + 0^2 - 36} = \sqrt{100 - 36} = \sqrt{64} = 8" />
-     </div>
+     </MathContainer>
 
    - Koordinat titik singgung dapat dicari dengan persamaan garis singgung dari titik luar.
 
 4. **Garis singgung persekutuan luar**
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="d = \sqrt{(4-(-4))^2 + (0-0)^2} = 8" />
      <BlockMath math="l = \sqrt{d^2 - (r_2 - r_1)^2} = \sqrt{64 - 1} = \sqrt{63} = 3\sqrt{7}" />
-   </div>
+   </MathContainer>
 
 5. **Garis singgung melalui titik luar**
 
@@ -574,9 +574,9 @@ Pusat lingkaran <InlineMath math="O(0, 0)" /> dan jari-jari <InlineMath math="r 
 
    Titik tepat pada lingkaran! Maka persamaan garis singgungnya:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="(8-3)(x-3) + (-2+2)(y+2) = 25" />
      <BlockMath math="5(x-3) + 0 = 25" />
      <BlockMath math="x - 3 = 5" />
      <BlockMath math="x = 8" />
-   </div>
+   </MathContainer>

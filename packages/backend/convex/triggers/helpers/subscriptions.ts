@@ -1,7 +1,7 @@
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
 import { resolveCurrentCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
-import { listCanonicalActiveTryoutSubscriptions } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { listCanonicalActiveTryoutSubscriptions } from "@repo/backend/convex/tryoutAccess/helpers/subscriptions";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { products } from "@repo/backend/convex/utils/polar/products";

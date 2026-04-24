@@ -10,11 +10,11 @@ export const metadata = {
 
 Komposisi fungsi, yaitu menggabungkan fungsi secara berurutan, memiliki beberapa sifat penting yang perlu kita ketahui. Mari kita pelajari sifat-sifat ini dengan menggunakan contoh fungsi berikut:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="f(x) = 2x + 1" />
   <BlockMath math="g(x) = x^2 + 4" />
   <BlockMath math="h(x) = \frac{1}{x+1}" />
-</div>
+</MathContainer>
 
 ### Sifat Tidak Komutatif
 
@@ -28,17 +28,17 @@ Mari kita bandingkan <InlineMath math="(g \circ f)(x)" /> dan <InlineMath math="
 
 1.  **Menghitung <InlineMath math="(g \circ f)(x)" />:**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(g \circ f)(x) = g(f(x)) = g(2x+1)" />
       <BlockMath math="g(2x+1) = (2x+1)^2 + 4 = (4x^2 + 4x + 1) + 4 = 4x^2 + 4x + 5" />
-    </div>
+    </MathContainer>
 
 2.  **Menghitung <InlineMath math="(f \circ g)(x)" />:**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(f \circ g)(x) = f(g(x)) = f(x^2+4)" />
       <BlockMath math="f(x^2+4) = 2(x^2+4) + 1 = (2x^2 + 8) + 1 = 2x^2 + 9" />
-    </div>
+    </MathContainer>
 
 Karena <InlineMath math="4x^2 + 4x + 5 \neq 2x^2 + 9" />, maka terbukti bahwa <InlineMath math="(g \circ f)(x) \neq (f \circ g)(x)" />. Sifat ini berlaku juga untuk komposisi lain, misalnya <InlineMath math="(f \circ h)(x) \neq (h \circ f)(x)" /> dan <InlineMath math="(g \circ h)(x) \neq (h \circ g)(x)" />.
 
@@ -60,26 +60,26 @@ Mari kita cek apakah <InlineMath math="((f \circ g) \circ h)(x) = (f \circ (g \c
 
     Kita sudah tahu <InlineMath math="(f \circ g)(x) = 2x^2 + 9" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="((f \circ g) \circ h)(x) = (f \circ g)(h(x)) = (f \circ g)(\frac{1}{x+1})" />
       <BlockMath math="(f \circ g)(\frac{1}{x+1}) = 2\left(\frac{1}{x+1}\right)^2 + 9 = \frac{2}{(x+1)^2} + 9" />
-    </div>
+    </MathContainer>
 
 2.  **Menghitung <InlineMath math="(f \circ (g \circ h))(x)" />:**
 
     Pertama, cari <InlineMath math="(g \circ h)(x)" />:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(g \circ h)(x) = g(h(x)) = g(\frac{1}{x+1})" />
       <BlockMath math="g(\frac{1}{x+1}) = \left(\frac{1}{x+1}\right)^2 + 4 = \frac{1}{(x+1)^2} + 4" />
-    </div>
+    </MathContainer>
 
     Sekarang, komposisikan <InlineMath math="f" /> dengan hasil ini:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(f \circ (g \circ h))(x) = f((g \circ h)(x)) = f\left(\frac{1}{(x+1)^2} + 4\right)" />
       <BlockMath math="f\left(\frac{1}{(x+1)^2} + 4\right) = 2\left(\frac{1}{(x+1)^2} + 4\right) + 1 = \frac{2}{(x+1)^2} + 8 + 1 = \frac{2}{(x+1)^2} + 9" />
-    </div>
+    </MathContainer>
 
 Karena hasil keduanya sama (<InlineMath math="\frac{2}{(x+1)^2} + 9" />), maka terbukti sifat asosiatif berlaku: <InlineMath math="((f \circ g) \circ h)(x) = (f \circ (g \circ h))(x)" />.
 
@@ -91,10 +91,10 @@ Ada sebuah fungsi khusus yang disebut **fungsi identitas**, dilambangkan dengan 
 
 Jika fungsi <InlineMath math="f" /> dikomposisikan dengan fungsi identitas <InlineMath math="I" /> (baik dari kiri maupun kanan), hasilnya adalah fungsi <InlineMath math="f" /> itu sendiri.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(f \circ I)(x) = f(I(x)) = f(x)" />
   <BlockMath math="(I \circ f)(x) = I(f(x)) = f(x)" />
-</div>
+</MathContainer>
 
 **Contoh:**
 

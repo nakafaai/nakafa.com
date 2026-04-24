@@ -67,12 +67,12 @@ Kita bisa mengeluarkan konstanta dari sigma, karena <InlineMath math="n" /> dian
 
 Selanjutnya, kita ganti <InlineMath math="\sum_{i=1}^{n} i" /> dengan rumus jumlah deretnya, yaitu <InlineMath math="\frac{n(n+1)}{2}" />, lalu kita sederhanakan ekspresinya untuk mempermudah perhitungan limit.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\frac{49}{n^2} \cdot \frac{n(n+1)}{2}" />
 <BlockMath math="= \frac{49n(n+1)}{2n^2}" />
 <BlockMath math="= \frac{49(n+1)}{2n}" />
 <BlockMath math="= \frac{49}{2} \left( \frac{n+1}{n} \right) = \frac{49}{2} \left( 1 + \frac{1}{n} \right)" />
-</div>
+</MathContainer>
 
 Langkah-langkah penyederhanaan di atas memastikan kita mendapatkan bentuk yang paling mudah untuk dihitung limitnya. Pertama kita kanselasi <InlineMath math="n" /> dari pembilang dan penyebut, kemudian kita pisahkan pecahannya.
 
@@ -85,10 +85,10 @@ Langkah-langkah penyederhanaan di atas memastikan kita mendapatkan bentuk yang p
 
 Terakhir, kita ambil limit saat <InlineMath math="n \to \infty" /> untuk menemukan luas pastinya.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\int_{0}^{7} x \, dx = \lim_{n \to \infty} \frac{49}{2} \left( 1 + \frac{1}{n} \right)" />
 <BlockMath math="= \frac{49}{2} \left( 1 + 0 \right)" />
 <BlockMath math="= \frac{49}{2}" />
-</div>
+</MathContainer>
 
 Jadi, luas pasti daerah di bawah kurva <InlineMath math="f(x) = x" /> dari <InlineMath math="x=0" /> sampai <InlineMath math="x=7" /> adalah **49/2** atau **24.5**. Ini adalah contoh bagaimana integral tentu memberikan jawaban yang eksak, bukan lagi perkiraan.

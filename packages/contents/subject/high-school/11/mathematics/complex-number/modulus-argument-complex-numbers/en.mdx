@@ -104,11 +104,11 @@ The **Argument** of a non-zero complex number <InlineMath math="z = x + iy" />, 
 
 From basic trigonometry on the same right-angled triangle as in the modulus visualization, we know the relationships:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x = |z| \cos \theta" />
   <BlockMath math="y = |z| \sin \theta" />
   <BlockMath math="\tan \theta = \frac{y}{x} \quad (\text{if } x \neq 0)" />
-</div>
+</MathContainer>
 
 To find <InlineMath math="\theta" />, we can use the arctangent function (or <InlineMath math="\tan^{-1}" />):
 
@@ -146,20 +146,20 @@ Often, we are interested in the **Principal Argument** (written <InlineMath math
 
     The point <InlineMath math="(1, 1)" /> is in Quadrant <InlineMath math="I" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="\tan \theta = \frac{y}{x} = \frac{1}{1} = 1" />
       <BlockMath math="\theta = \arctan(1) = 45^\circ \text{ or } \frac{\pi}{4} \text{ radians}" />
-    </div>
+    </MathContainer>
 
 2.  **Find the argument of <InlineMath math="z_2 = -\sqrt{3} + i" />**
 
     The point <InlineMath math="(-\sqrt{3}, 1)" /> is in Quadrant <InlineMath math="II" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="\tan \theta = \frac{y}{x} = \frac{1}{-\sqrt{3}}" />
       <BlockMath math="\text{Base angle} = \arctan\left(\left|\frac{1}{-\sqrt{3}}\right|\right) = \arctan\left(\frac{1}{\sqrt{3}}\right) = 30^\circ" />
       <BlockMath math="\theta = 180^\circ - 30^\circ = 150^\circ \text{ or } \frac{5\pi}{6} \text{ radians}" />
-    </div>
+    </MathContainer>
 
     (Because it's in Quadrant <InlineMath math="II" />, we use <InlineMath math="180^\circ - \text{base angle}" />)
 
@@ -167,11 +167,11 @@ Often, we are interested in the **Principal Argument** (written <InlineMath math
 
     The point <InlineMath math="(-1, -\sqrt{3})" /> is in Quadrant <InlineMath math="III" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="\tan \theta = \frac{y}{x} = \frac{-\sqrt{3}}{-1} = \sqrt{3}" />
       <BlockMath math="\text{Base angle} = \arctan(\sqrt{3}) = 60^\circ" />
       <BlockMath math="\theta = 180^\circ + 60^\circ = 240^\circ \text{ or } \frac{4\pi}{3} \text{ radians}" />
-    </div>
+    </MathContainer>
 
     (Because it's in Quadrant <InlineMath math="III" />, we use <InlineMath math="180^\circ + \text{base angle}" />
     . Principal Argument: <InlineMath math="-120^\circ" /> or <InlineMath math="-2\pi/3" />
@@ -181,11 +181,11 @@ Often, we are interested in the **Principal Argument** (written <InlineMath math
 
     The point <InlineMath math="(3, -3)" /> is in Quadrant <InlineMath math="IV" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="\tan \theta = \frac{y}{x} = \frac{-3}{3} = -1" />
       <BlockMath math="\text{Base angle} = \arctan(|-1|) = \arctan(1) = 45^\circ" />
       <BlockMath math="\theta = 360^\circ - 45^\circ = 315^\circ \text{ or } \frac{7\pi}{4} \text{ radians}" />
-    </div>
+    </MathContainer>
 
     (Because it's in Quadrant <InlineMath math="IV" />, we use <InlineMath math="360^\circ - \text{base angle}" />
     . Principal Argument: <InlineMath math="-45^\circ" /> or <InlineMath math="-\pi/4" />

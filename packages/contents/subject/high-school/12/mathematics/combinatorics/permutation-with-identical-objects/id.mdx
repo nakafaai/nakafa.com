@@ -16,9 +16,9 @@ Bayangkan menyusun huruf dari kata "MAMA". Walaupun ada 4 huruf, kita tidak bisa
 
 Untuk permutasi n objek dimana terdapat objek yang sama, **rumus yang digunakan** adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="P = \frac{n!}{r_1! \times r_2! \times r_3! \times \cdots \times r_k!}" />
-</div>
+</MathContainer>
 
 **Keterangan:**
 
@@ -43,18 +43,18 @@ Identifikasi huruf: K muncul 1 kali, A muncul 3 kali (posisi ke-2, ke-6, ke-9), 
 
 **Perhitungan:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="P = \frac{10!}{1! \times 3! \times 1! \times 1! \times 1! \times 2! \times 1!}" />
 <BlockMath math="= \frac{10!}{3! \times 2!}" />
-</div>
+</MathContainer>
 
 Sederhanakan pecahan dengan membatalkan faktor yang sama:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3!}{3! \times 2!}" />
 <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{2!}" />
 <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{2}" />
-</div>
+</MathContainer>
 
 Hitung langkah demi langkah:
 - Bagi 10 dengan 2: <InlineMath math="\frac{10}{2} = 5" />
@@ -75,12 +75,12 @@ Hitung setiap faktorial:
 
 Jadi, perhitungannya adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="P = \frac{6!}{2! \times 3! \times 1!}" />
 <BlockMath math="= \frac{6 \times 5 \times 4 \times 3!}{2! \times 3! \times 1!}" />
 <BlockMath math="= \frac{6 \times 5 \times 4}{2 \times 1}" />
 <BlockMath math="= \frac{6 \times 5 \times 4}{2}" />
-</div>
+</MathContainer>
 
 Sederhanakan dengan membagi 6 dengan 2:
 - <InlineMath math="\frac{6}{2} = 3" />
@@ -124,21 +124,21 @@ Mari kita terapkan langkah-langkah ini untuk mencari susunan kata "BANANA":
 
    Gunakan rumus permutasi dengan objek yang sama:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P = \frac{n!}{r_1! \times r_2! \times r_3!}" />
    <BlockMath math="P = \frac{6!}{1! \times 3! \times 2!}" />
-   </div>
+   </MathContainer>
 
 5. **Hitung faktorial**
 
    Sederhanakan pecahan terlebih dahulu:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P = \frac{6!}{1! \times 3! \times 2!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4 \times 3!}{1! \times 3! \times 2!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4}{1 \times 2!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4}{2}" />
-   </div>
+   </MathContainer>
 
    Hitung dengan penyederhanaan:
    - Bagi 6 dengan 2: <InlineMath math="\frac{6}{2} = 3" />
@@ -152,9 +152,9 @@ Jadi, kata "BANANA" dapat disusun dalam **60 cara yang berbeda**.
 
 **Permutasi dengan objek sama**: Ada objek identik, menggunakan rumus:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\frac{n!}{r_1! \times r_2! \times \cdots \times r_k!}" />
-</div>
+</MathContainer>
 
 **Contoh perbandingan:**
 
@@ -162,9 +162,9 @@ Menyusun huruf A, B, C, D (semua berbeda): <InlineMath math="4! = 24" /> cara
 
 Menyusun huruf A, A, B, C (ada yang sama): 
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\frac{4!}{2!} = \frac{24}{2} = 12 \text{ cara}" />
-</div>
+</MathContainer>
 
 Objek yang sama **mengurangi** jumlah susunan karena pertukaran objek identik tidak menghasilkan perbedaan.
 
@@ -188,12 +188,12 @@ Objek yang sama **mengurangi** jumlah susunan karena pertukaran objek identik ti
    
    Sederhanakan pecahan dengan membatalkan faktor yang sama:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P = \frac{10!}{2! \times 3! \times 2! \times 1! \times 1! \times 1!}" />
    <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3!}{2! \times 3! \times 2!}" />
    <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{2! \times 2!}" />
    <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{4}" />
-   </div>
+   </MathContainer>
 
    Hitung dengan penyederhanaan:
    - Perhitungan lengkap: <InlineMath math="10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 = 604.800" />
@@ -203,13 +203,13 @@ Objek yang sama **mengurangi** jumlah susunan karena pertukaran objek identik ti
    
    Sederhanakan pecahan dengan membatalkan faktor yang sama:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P = \frac{8!}{3! \times 3! \times 2!}" />
    <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4 \times 3!}{3! \times 3! \times 2!}" />
    <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4}{3! \times 2!}" />
    <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4}{6 \times 2}" />
    <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4}{12}" />
-   </div>
+   </MathContainer>
 
    Hitung dengan penyederhanaan:
    - Bagi 6 dengan 12: <InlineMath math="\frac{6}{12} = \frac{1}{2}" />
@@ -222,12 +222,12 @@ Objek yang sama **mengurangi** jumlah susunan karena pertukaran objek identik ti
    
    Sederhanakan pecahan dengan membatalkan faktor yang sama:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P = \frac{6!}{2! \times 3! \times 1!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4 \times 3!}{2! \times 3!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4}{2!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4}{2}" />
-   </div>
+   </MathContainer>
 
    Hitung dengan penyederhanaan:
    - Bagi 6 dengan 2: <InlineMath math="\frac{6}{2} = 3" />
@@ -241,12 +241,12 @@ Objek yang sama **mengurangi** jumlah susunan karena pertukaran objek identik ti
    
    Sederhanakan pecahan dengan membatalkan faktor yang sama:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P = \frac{9!}{2! \times 2! \times 1! \times 1! \times 1! \times 1! \times 1!}" />
    <BlockMath math="= \frac{9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3 \times 2!}{2! \times 2!}" />
    <BlockMath math="= \frac{9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3}{2!}" />
    <BlockMath math="= \frac{9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3}{2}" />
-   </div>
+   </MathContainer>
 
    Hitung dengan penyederhanaan:
    - Bagi dengan 2: <InlineMath math="\frac{8}{2} = 4" />

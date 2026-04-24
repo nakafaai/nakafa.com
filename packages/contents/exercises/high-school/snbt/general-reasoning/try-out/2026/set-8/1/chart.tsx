@@ -80,7 +80,7 @@ export function SalesChart({ lang = "en" }: Props) {
   };
 
   return (
-    <Card>
+    <Card className="content-auto-card">
       <CardHeader>
         <CardTitle>{t.title}</CardTitle>
         <CardDescription>{t.description}</CardDescription>

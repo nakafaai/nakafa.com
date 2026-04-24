@@ -190,23 +190,23 @@ Let's start with the simplest parabola: **a parabola with vertex at the origin**
 
 The four standard parabola equation forms are:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y^2 = 4px \quad \text{(opens rightward)}" />
   <BlockMath math="y^2 = -4px \quad \text{(opens leftward)}" />
   <BlockMath math="x^2 = 4py \quad \text{(opens upward)}" />
   <BlockMath math="x^2 = -4py \quad \text{(opens downward)}" />
-</div>
+</MathContainer>
 
 The value <InlineMath math="p" /> in these equations represents the **distance from vertex to focus**. The larger the value of <InlineMath math="p" />, the more "open" the parabola becomes.
 
 For example, for the parabola <InlineMath math="y^2 = 4px" /> (opens rightward):
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Vertex: } (0, 0)" />
   <BlockMath math="\text{Focus: } (p, 0)" />
   <BlockMath math="\text{Directrix: } x = -p" />
   <BlockMath math="\text{Axis of symmetry: } X\text{-axis}" />
-</div>
+</MathContainer>
 
 > Remember that the sign of <InlineMath math="p" /> determines the opening direction: positive for right/up, negative for left/down.
 
@@ -302,28 +302,28 @@ In real applications, parabolas don't always center at the origin. A parabola ca
 
 General form of parabola equations with vertex at <InlineMath math="(h, k)" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(y-k)^2 = 4p(x-h) \quad \text{(horizontal)}" />
   <BlockMath math="(x-h)^2 = 4p(y-k) \quad \text{(vertical)}" />
-</div>
+</MathContainer>
 
 For vertical parabola <InlineMath math="(x-h)^2 = 4p(y-k)" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Vertex: } (h, k)" />
   <BlockMath math="\text{Focus: } (h, k+p)" />
   <BlockMath math="\text{Directrix: } y = k-p" />
   <BlockMath math="\text{Axis of symmetry: } x = h" />
-</div>
+</MathContainer>
 
 For horizontal parabola <InlineMath math="(y-k)^2 = 4p(x-h)" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Vertex: } (h, k)" />
   <BlockMath math="\text{Focus: } (h+p, k)" />
   <BlockMath math="\text{Directrix: } x = h-p" />
   <BlockMath math="\text{Axis of symmetry: } y = k" />
-</div>
+</MathContainer>
 
 > The sign of <InlineMath math="p" /> determines the parabola's opening direction. Positive for up/right, negative for down/left.
 
@@ -340,13 +340,13 @@ Let's see how to do this with an example.
 
 The first step is to convert to standard form by completing the square:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x^2 - 4x - 8y + 12 = 0" />
   <BlockMath math="x^2 - 4x = 8y - 12" />
   <BlockMath math="x^2 - 4x + 4 = 8y - 12 + 4" />
   <BlockMath math="(x-2)^2 = 8y - 8" />
   <BlockMath math="(x-2)^2 = 8(y-1)" />
-</div>
+</MathContainer>
 
 From the form <InlineMath math="(x-2)^2 = 8(y-1)" />, we identify:
 
@@ -443,13 +443,13 @@ Therefore, the parabola elements are:
 
 From this analysis we obtain:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Vertex: } (2, 1)" />
   <BlockMath math="\text{Focus: } (2, 3)" />
   <BlockMath math="\text{Directrix: } y = -1" />
   <BlockMath math="\text{Axis of symmetry: } x = 2" />
   <BlockMath math="\text{Opening direction: upward (since } p = 2 > 0\text{)}" />
-</div>
+</MathContainer>
 
 ## Example Problems
 
@@ -461,10 +461,10 @@ Let's work through some problems to deepen our understanding of parabolas.
 
 Since the vertex and focus have the same y-coordinate, this parabola is **horizontal**.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Vertex: } (h, k) = (1, -2)" />
   <BlockMath math="\text{Focus: } (h+p, k) = (4, -2)" />
-</div>
+</MathContainer>
 
 From the focus condition, we get <InlineMath math="h + p = 4" />. Substituting <InlineMath math="h = 1" />:
 
@@ -472,10 +472,10 @@ From the focus condition, we get <InlineMath math="h + p = 4" />. Substituting <
 
 The equation for a horizontal parabola is <InlineMath math="(y-k)^2 = 4p(x-h)" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(y-(-2))^2 = 4(3)(x-1)" />
   <BlockMath math="(y+2)^2 = 12(x-1)" />
-</div>
+</MathContainer>
 
 **Problem 2**: For parabola <InlineMath math="y^2 - 6y - 4x + 13 = 0" />. Determine the coordinates of the vertex and focus.
 
@@ -483,24 +483,24 @@ The equation for a horizontal parabola is <InlineMath math="(y-k)^2 = 4p(x-h)" /
 
 Complete the square for variable <InlineMath math="y" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y^2 - 6y - 4x + 13 = 0" />
   <BlockMath math="y^2 - 6y = 4x - 13" />
   <BlockMath math="y^2 - 6y + 9 = 4x - 13 + 9" />
   <BlockMath math="(y-3)^2 = 4x - 4" />
   <BlockMath math="(y-3)^2 = 4(x-1)" />
-</div>
+</MathContainer>
 
 From the form <InlineMath math="(y-3)^2 = 4(x-1)" />, we identify:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="h = 1, \quad k = 3" />
   <BlockMath math="4p = 4 \Rightarrow p = 1" />
-</div>
+</MathContainer>
 
 Therefore:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Vertex: } (h, k) = (1, 3)" />
   <BlockMath math="\text{Focus: } (h+p, k) = (1+1, 3) = (2, 3)" />
-</div>
+</MathContainer>

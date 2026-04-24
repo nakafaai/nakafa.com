@@ -1,3 +1,5 @@
+// CoordinateSystem renders a dynamic WebGL canvas with SSR disabled.
+// https://nextjs.org/docs/app/guides/lazy-loading#skipping-ssr
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { LineEquation as LineEquation3D } from "@repo/design-system/components/three/line-equation";
 import {
@@ -36,7 +38,7 @@ export function LineEquation({
   showZAxis = true,
 }: Props) {
   return (
-    <Card>
+    <Card className="content-auto-card">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

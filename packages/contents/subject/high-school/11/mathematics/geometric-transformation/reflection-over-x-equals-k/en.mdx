@@ -19,10 +19,10 @@ The horizontal distance from the original point to the mirror line is equal to t
 
 If a point <InlineMath math="P(x, y)" /> is reflected over the line <InlineMath math="x = k" />, its image's coordinates, <InlineMath math="P'(x', y')" />, are determined by the rule:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = 2k - x" />
   <BlockMath math="y' = y" />
-</div>
+</MathContainer>
 
 Thus, the image of point <InlineMath math="P(x, y)" /> is <InlineMath math="P'(2k - x, y)" />. Note that the y-coordinate remains the same, while the x-coordinate changes based on its distance from the line <InlineMath math="x=k" />.
 
@@ -34,10 +34,10 @@ In this case, <InlineMath math="x=3" />, <InlineMath math="y=2" />, and <InlineM
 
 Using the rule <InlineMath math="P'(2k - x, y)" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = 2(3) - 3 = 6 - 3 = 3" />
   <BlockMath math="y' = 2" />
-</div>
+</MathContainer>
 
 Thus, the image of point <InlineMath math="P(3,2)" /> is <InlineMath math="P'(3,2)" />. The point lies on the mirror line, so its image is the point itself.
 
@@ -45,10 +45,10 @@ Now, let's try another example. Determine the image of point <InlineMath math="A
 
 Here, <InlineMath math="x=1" />, <InlineMath math="y=4" />, and <InlineMath math="k=3" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = 2(3) - 1 = 6 - 1 = 5" />
   <BlockMath math="y' = 4" />
-</div>
+</MathContainer>
 
 Thus, the image of point <InlineMath math="A(1,4)" /> is <InlineMath math="A'(5,4)" />.
 
@@ -107,19 +107,19 @@ Thus, the image of point <InlineMath math="A(1,4)" /> is <InlineMath math="A'(5,
 
 1.  Given <InlineMath math="P(3,2)" /> and the mirror line <InlineMath math="x=5" />. So <InlineMath math="x=3, y=2, k=5" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = 2k - x = 2(5) - 3 = 10 - 3 = 7" />
       <BlockMath math="y' = y = 2" />
-    </div>
+    </MathContainer>
 
     Thus, the image of point P is <InlineMath math="P'(7,2)" />.
 
 2.  Given <InlineMath math="B(-2, 5)" /> and the mirror line <InlineMath math="x=1" />. So <InlineMath math="x=-2, y=5, k=1" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = 2k - x = 2(1) - (-2) = 2 + 2 = 4" />
       <BlockMath math="y' = y = 5" />
-    </div>
+    </MathContainer>
 
     Thus, the image of point B is <InlineMath math="B'(4,5)" />.
 
@@ -131,9 +131,9 @@ Thus, the image of point <InlineMath math="A(1,4)" /> is <InlineMath math="A'(5,
 
     From <InlineMath math="x' = 2k - x" />, then <InlineMath math="0 = 2(-2) - x" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="0 = -4 - x" />
       <BlockMath math="x = -4" />
-    </div>
+    </MathContainer>
 
     Thus, the coordinates of point C are <InlineMath math="C(-4,3)" />.

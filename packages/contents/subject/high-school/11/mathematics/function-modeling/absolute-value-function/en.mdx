@@ -31,20 +31,20 @@ Absolute value functions have several important properties that need to be under
 
 **Basic properties:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="|x| \geq 0 \text{ for all } x \in \mathbb{R}" />
   <BlockMath math="|-x| = |x|" />
   <BlockMath math="|x|^2 = x^2" />
   <BlockMath math="|xy| = |x| \cdot |y|" />
   <BlockMath math="\left|\frac{x}{y}\right| = \frac{|x|}{|y|}, \text{ with } y \neq 0" />
-</div>
+</MathContainer>
 
 **Triangle inequality properties:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="|x + y| \leq |x| + |y|" />
   <BlockMath math="||x| - |y|| \leq |x - y|" />
-</div>
+</MathContainer>
 
 ## Graphs of Absolute Value Functions
 
@@ -271,17 +271,17 @@ where:
 
 To solve <InlineMath math="|x| = a" /> with <InlineMath math="a \geq 0" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="|x| = a \Rightarrow x = a \text{ or } x = -a" />
-</div>
+</MathContainer>
 
 **Example:** Solve <InlineMath math="|x - 3| = 5" />
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="|x - 3| = 5" />
   <BlockMath math="x - 3 = 5 \text{ or } x - 3 = -5" />
   <BlockMath math="x = 8 \text{ or } x = -2" />
-</div>
+</MathContainer>
 
 **Solving absolute value inequalities:**
 
@@ -311,32 +311,32 @@ For <InlineMath math="|x| > a" /> with <InlineMath math="a > 0" />:
 
    Substitute each value of x into the function <InlineMath math="f(x) = |2x - 6|" />:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="f(-1) = |2(-1) - 6| = |-2 - 6| = |-8| = 8" />
      <BlockMath math="f(0) = |2(0) - 6| = |0 - 6| = |-6| = 6" />
      <BlockMath math="f(3) = |2(3) - 6| = |6 - 6| = |0| = 0" />
      <BlockMath math="f(5) = |2(5) - 6| = |10 - 6| = |4| = 4" />
-   </div>
+   </MathContainer>
 
 2. **Solving absolute value equations:**
 
    For the equation <InlineMath math="|3x + 1| = 7" />, we use the definition of absolute value which produces two possibilities:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="3x + 1 = 7 \quad \text{or} \quad 3x + 1 = -7" />
      <BlockMath math="3x = 6 \quad \text{or} \quad 3x = -8" />
      <BlockMath math="x = 2 \quad \text{or} \quad x = -\frac{8}{3}" />
-   </div>
+   </MathContainer>
 
 3. **Solving absolute value inequalities:**
 
    For <InlineMath math="|x - 2| < 4" />, we use the property that <InlineMath math="|a| < b" /> is equivalent to <InlineMath math="-b < a < b" />:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="-4 < x - 2 < 4" />
      <BlockMath math="-4 + 2 < x < 4 + 2" />
      <BlockMath math="-2 < x < 6" />
-   </div>
+   </MathContainer>
 
    So the solution set is <InlineMath math="x \in (-2, 6)" />.
 
@@ -354,10 +354,10 @@ For <InlineMath math="|x| > a" /> with <InlineMath math="a > 0" />:
 
    Given that the distance between cities A and B is 150 km, with city A at coordinate -50 km. Let city B be at coordinate <InlineMath math="x_B" />:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="|-50 - x_B| = 150" />
      <BlockMath math="-50 - x_B = 150 \quad \text{or} \quad -50 - x_B = -150" />
      <BlockMath math="x_B = -50 - 150 = -200 \quad \text{or} \quad x_B = -50 + 150 = 100" />
-   </div>
+   </MathContainer>
 
    So city B can be located at coordinate 100 km or -200 km.

@@ -12,7 +12,14 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import {
+  AnimatePresence,
+  domMax,
+  LayoutGroup,
+  LazyMotion,
+  MotionConfig,
+} from "motion/react";
+import * as m from "motion/react-m";
 import {
   useCallback,
   useDeferredValue,
@@ -82,6 +89,16 @@ interface BacterialGrowthProps {
   timeUnit?: string;
 }
 
+/**
+ * Renders a bounded bacterial-growth animation for exponential-growth lessons.
+ *
+ * `LazyMotion` with `domMax` keeps the layout/popLayout feature bundle explicit,
+ * while `MotionConfig reducedMotion="user"` follows the user's OS preference.
+ *
+ * @see https://motion.dev/docs/react-reduce-bundle-size
+ * @see https://motion.dev/docs/react-accessibility
+ * @see https://motion.dev/docs/react-animate-presence#poplayout
+ */
 export function BacterialGrowth({
   ratio = 2,
   initialCount = 1,
@@ -98,22 +115,18 @@ export function BacterialGrowth({
 }: BacterialGrowthProps) {
   const [generation, setGeneration] = useState(0);
   const [speed, setSpeed] = useState(1);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  const deferredPlaying = useDeferredValue(isPlaying);
-  const deferredGeneration = useDeferredValue(generation);
+  const [isPlaying, setIsPlaying] = useState(true);
 
   const { ref, entry } = useIntersection({
     threshold: 0.1,
   });
 
-  useEffect(() => {
-    if (entry) {
-      setIsPlaying(entry.isIntersecting);
-    }
-  }, [entry]);
-
-  // Start playing when component comes into view
+  const isInView = entry?.isIntersecting ?? false;
+  // Viewport visibility gates work without overriding the user's Play/Pause intent.
+  const isAnimating = isPlaying && isInView;
+  const deferredAnimating = useDeferredValue(isAnimating);
+  const deferredGeneration = useDeferredValue(generation);
+  const pulseRepeat = deferredAnimating ? Number.POSITIVE_INFINITY : 0;
 
   // Calculate current bacteria count based on the selected formula type
   const bacteriaCount = useMemo(() => {
@@ -159,27 +172,27 @@ export function BacterialGrowth({
   );
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-
     // Stop playing when maximum generation is reached
     if (deferredGeneration >= maxGenerations) {
       setIsPlaying(false);
       return;
     }
 
-    if (deferredPlaying) {
-      interval = setInterval(() => {
-        setGeneration((prev) => {
-          if (prev < maxGenerations) {
-            return prev + 1;
-          }
-          return prev;
-        });
-      }, SPEED_INTERVAL / speed);
+    if (!deferredAnimating) {
+      return;
     }
 
+    const interval = setInterval(() => {
+      setGeneration((prev) => {
+        if (prev < maxGenerations) {
+          return prev + 1;
+        }
+        return prev;
+      });
+    }, SPEED_INTERVAL / speed);
+
     return () => clearInterval(interval);
-  }, [deferredPlaying, deferredGeneration, maxGenerations, speed]);
+  }, [deferredAnimating, deferredGeneration, maxGenerations, speed]);
 
   const resetAnimation = useCallback(() => {
     setGeneration(0);
@@ -191,9 +204,10 @@ export function BacterialGrowth({
       // If at max generation and trying to play, restart from beginning
       setGeneration(0);
       setIsPlaying(true);
-    } else {
-      setIsPlaying(!isPlaying);
+      return;
     }
+
+    setIsPlaying(!isPlaying);
   }, [isPlaying, generation, maxGenerations]);
 
   // Generate time buttons
@@ -220,7 +234,7 @@ export function BacterialGrowth({
   );
 
   return (
-    <Card>
+    <Card className="content-auto-card" ref={ref}>
       <CardHeader>
         <CardTitle>{labels.title}</CardTitle>
         <CardDescription>
@@ -229,54 +243,57 @@ export function BacterialGrowth({
       </CardHeader>
 
       <CardContent>
-        <div
-          className="relative aspect-square w-full overflow-hidden rounded-lg border border-cyan-100 bg-cyan-50 sm:aspect-video dark:border-cyan-900 dark:bg-cyan-950"
-          ref={ref}
-        >
+        <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-cyan-100 bg-cyan-50 sm:aspect-video dark:border-cyan-900 dark:bg-cyan-950">
           <div
-            className="grid h-full w-full gap-0.5 p-2 sm:px-0"
+            className="relative grid h-full w-full gap-0.5 p-2 sm:px-0"
             style={{
               gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
             }}
           >
-            <LayoutGroup>
-              <AnimatePresence mode="popLayout">
-                {bacteria.map((id) => (
-                  <motion.div
-                    animate={{
-                      scale: 1,
-                      opacity: 1,
-                    }}
-                    className="relative flex items-center justify-center"
-                    exit={{ scale: 0, opacity: 0 }}
-                    initial={{ scale: 0, opacity: 0 }}
-                    key={id}
-                    layout
-                    transition={{
-                      type: "spring",
-                      stiffness: 500,
-                      damping: 30,
-                      delay: id * STAGGER_DELAY, // Stagger effect
-                    }}
-                  >
-                    <motion.div
-                      animate={{
-                        scale: [1, SCALE_INCREASE, 1],
-                      }}
-                      className="aspect-square h-full max-h-5 w-full max-w-5 rounded-full bg-cyan-300 transition-colors hover:bg-cyan-400 sm:max-h-8 sm:max-w-8 dark:bg-cyan-500"
-                      transition={{
-                        duration: 1,
-                        repeat: Number.POSITIVE_INFINITY,
-                        repeatType: "reverse",
-                      }}
-                      whileHover={{
-                        scale: SCALE_INCREASE,
-                      }}
-                    />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </LayoutGroup>
+            <MotionConfig reducedMotion="user">
+              <LazyMotion features={domMax} strict>
+                <LayoutGroup>
+                  <AnimatePresence mode="popLayout">
+                    {bacteria.map((id) => (
+                      <m.div
+                        animate={{
+                          scale: 1,
+                          opacity: 1,
+                        }}
+                        className="relative flex items-center justify-center"
+                        exit={{ scale: 0, opacity: 0 }}
+                        initial={{ scale: 0, opacity: 0 }}
+                        key={id}
+                        layout
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 30,
+                          delay: id * STAGGER_DELAY, // Stagger effect
+                        }}
+                      >
+                        <m.div
+                          animate={{
+                            scale: deferredAnimating
+                              ? [1, SCALE_INCREASE, 1]
+                              : 1,
+                          }}
+                          className="aspect-square h-full max-h-5 w-full max-w-5 rounded-full bg-cyan-300 transition-colors hover:bg-cyan-400 sm:max-h-8 sm:max-w-8 dark:bg-cyan-500"
+                          transition={{
+                            duration: 1,
+                            repeat: pulseRepeat,
+                            repeatType: "reverse",
+                          }}
+                          whileHover={{
+                            scale: SCALE_INCREASE,
+                          }}
+                        />
+                      </m.div>
+                    ))}
+                  </AnimatePresence>
+                </LayoutGroup>
+              </LazyMotion>
+            </MotionConfig>
           </div>
         </div>
       </CardContent>

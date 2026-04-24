@@ -45,16 +45,16 @@ Selanjutnya, kita cari turunan dari masing-masing fungsi:
 -   Turunan fungsi luar: <InlineMath math="\frac{dy}{du} = 8u^7" />.
 
 Sekarang, kita bisa gabungkan keduanya pakai aturan rantai:
-<div className="flex flex-col gap-4">
+<MathContainer>
     <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dx}" />
     <BlockMath math="\frac{dy}{dx} = 8u^7 \cdot (2x - 4)" />
-</div>
+</MathContainer>
 
 Terakhir, kita substitusikan kembali <InlineMath math="u" /> dan sederhanakan ekspresinya:
-<div className="flex flex-col gap-4">
+<MathContainer>
     <BlockMath math="\frac{dy}{dx} = 8(x^2 - 4x - 2)^7 (2x - 4)" />
     <BlockMath math="\frac{dy}{dx} = (16x - 32)(x^2 - 4x - 2)^7" />
-</div>
+</MathContainer>
 
 ### Fungsi Trigonometri
 
@@ -75,17 +75,17 @@ Kemudian, kita turunkan setiap lapisan:
 -   Turunan fungsi terdalam: <InlineMath math="\frac{dv}{dx} = -4" />
 
 Gabungkan semuanya dengan aturan rantai:
-<div className="flex flex-col gap-4">
+<MathContainer>
     <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dv} \cdot \frac{dv}{dx}" />
     <BlockMath math="\frac{dy}{dx} = (4u^3) \cdot (-\sin(v)) \cdot (-4)" />
-</div>
+</MathContainer>
 
 Sekarang, substitusikan kembali <InlineMath math="u" /> dan <InlineMath math="v" /> secara bertahap untuk mendapatkan hasil akhir:
-<div className="flex flex-col gap-4">
+<MathContainer>
     <BlockMath math="\frac{dy}{dx} = (4\cos^3(v)) \cdot (-\sin(v)) \cdot (-4)" />
     <BlockMath math="\frac{dy}{dx} = 16\cos^3(v)\sin(v)" />
     <BlockMath math="\frac{dy}{dx} = 16\cos^3(3 - 4x)\sin(3 - 4x)" />
-</div>
+</MathContainer>
 
 ## Latihan
 
@@ -105,10 +105,10 @@ Sekarang, substitusikan kembali <InlineMath math="u" /> dan <InlineMath math="v"
     -   <InlineMath math="\frac{dy}{du} = 3u^2" />
 
     **Langkah 3: Gabungkan dengan aturan rantai**
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dx}" />
         <BlockMath math="\frac{dy}{dx} = 3u^2 \cdot 6x = 18x \cdot u^2" />
-    </div>
+    </MathContainer>
     
     **Langkah 4: Jangan lupa substitusi balik**
     <BlockMath math="\frac{dy}{dx} = 18x(3x^2 - 1)^2" />
@@ -128,14 +128,14 @@ Sekarang, substitusikan kembali <InlineMath math="u" /> dan <InlineMath math="v"
     -   <InlineMath math="\frac{dy}{du} = 3u^2" />
 
     **Langkah 3: Gabungkan dengan aturan rantai**
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dv} \cdot \frac{dv}{dx}" />
         <BlockMath math="\frac{dy}{dx} = (3u^2) \cdot (\cos(v)) \cdot (2)" />
-    </div>
+    </MathContainer>
 
     **Langkah 4: Substitusi balik dan sederhanakan**
-    <div className="flex flex-col gap-4">
+    <MathContainer>
         <BlockMath math="\frac{dy}{dx} = 6u^2 \cos(v)" />
         <BlockMath math="\frac{dy}{dx} = 6\sin^2(v) \cos(v)" />
         <BlockMath math="\frac{dy}{dx} = 6\sin^2(2x) \cos(2x)" />
-    </div>
+    </MathContainer>

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="author" content="Kami">
+<meta name="description" content="Tesla, Inc. 公司介绍 · 电动车、能源、AI 三条主线">
+<meta name="keywords" content="Tesla, EV, 电动车, 公司介绍, one-pager">
+<meta name="generator" content="Kami · tw93/kami">
+<title>Tesla, Inc. · 公司介绍</title>
+<style>
+  @font-face {
+    font-family: "TsangerJinKai02";
+    src: url("../fonts/TsangerJinKai02-W04.ttf") format("truetype"),
+       url("https://cdn.jsdelivr.net/gh/tw93/Kami@main/assets/fonts/TsangerJinKai02-W04.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+  }
+  @font-face {
+    font-family: "TsangerJinKai02";
+    src: url("../fonts/TsangerJinKai02-W05.ttf") format("truetype"),
+       url("https://cdn.jsdelivr.net/gh/tw93/Kami@main/assets/fonts/TsangerJinKai02-W05.ttf") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+  }
+
+  @page {
+    size: A4;
+    margin: 15mm 16mm 15mm 16mm;
+    background: #f5f4ed;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --parchment: #f5f4ed;
+    --ivory:     #faf9f5;
+    --near-black:#141413;
+    --dark-warm: #3d3d3a;
+    --charcoal:  #4d4c48;
+    --olive:     #5e5d59;
+    --stone:     #87867f;
+    --brand:     #1B365D;
+    --brand-dim: #2d4e7a;
+    --border:    #e8e6dc;
+    --border-md: #d6d3c8;
+  }
+
+  html, body {
+    background: var(--parchment);
+    color: var(--near-black);
+    font-family: "TsangerJinKai02", "Source Han Serif SC",
+                 "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    font-size: 9.5pt;
+    line-height: 1.55;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    border-left: 2.5pt solid var(--brand);
+    border-radius: 1pt;
+    padding-left: 10pt;
+    margin-bottom: 20pt;
+  }
+  .eyebrow {
+    font-size: 7pt;
+    color: var(--brand);
+    letter-spacing: 1.5pt;
+    text-transform: uppercase;
+    margin-bottom: 8pt;
+  }
+  .header-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20pt;
+  }
+  .title-block { flex: 1; margin-top: 6pt; }
+  h1 {
+    font-size: 21pt;
+    font-weight: 500;
+    color: var(--near-black);
+    line-height: 1.12;
+    letter-spacing: -0.3pt;
+    margin-bottom: 3pt;
+  }
+  .subtitle {
+    font-size: 9.5pt;
+    color: var(--olive);
+    line-height: 1.4;
+  }
+  .meta {
+    font-size: 7.5pt;
+    color: var(--stone);
+    text-align: right;
+    line-height: 1.7;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ── METRICS ── */
+  .metrics {
+    display: flex;
+    gap: 8pt;
+    margin-bottom: 15pt;
+  }
+  .metric {
+    flex: 1;
+    background: var(--ivory);
+    border: 0.5pt solid var(--border);
+    border-radius: 4pt;
+    padding: 9pt 10pt 10pt 10pt;
+    break-inside: avoid;
+  }
+  .metric-value {
+    font-size: 22pt;
+    font-weight: 500;
+    color: var(--brand);
+    line-height: 1;
+    letter-spacing: -0.5pt;
+    margin-bottom: 3pt;
+  }
+  .metric-label {
+    font-size: 7.5pt;
+    color: var(--stone);
+    line-height: 1.3;
+  }
+
+  /* ── LEAD ── */
+  .lead {
+    font-size: 10.5pt;
+    line-height: 1.55;
+    color: var(--dark-warm);
+    margin-bottom: 18pt;
+  }
+  .hl { color: var(--brand); font-weight: 500; }
+
+  /* ── SECTION HEADING ── */
+  section { margin-bottom: 0; break-inside: avoid; }
+
+  h2 {
+    font-size: 14pt;
+    font-weight: 500;
+    color: var(--near-black);
+    line-height: 1.25;
+    margin-top: 5pt;
+    margin-bottom: 11pt;
+    display: block;
+  }
+  h2 .sub {
+    font-size: 9pt;
+    color: var(--stone);
+    font-weight: 400;
+    letter-spacing: 0;
+    margin-left: 5pt;
+  }
+
+  p { margin-bottom: 5pt; line-height: 1.55; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ── 2-col ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20pt;
+  }
+  .two-col-wide {
+    display: grid;
+    grid-template-columns: 55fr 45fr;
+    gap: 20pt;
+  }
+
+  /* ── dash list ── */
+  ul.dash {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  ul.dash li {
+    margin-bottom: 4pt;
+    line-height: 1.5;
+    padding-left: 11pt;
+    text-indent: -11pt;
+  }
+  ul.dash li::before {
+    content: '–\00a0';
+    color: var(--stone);
+  }
+
+  /* ── Timeline ── */
+  .tl-wrap {
+    padding-top: 3pt;
+    display: flex;
+    gap: 0;
+  }
+  .tl-step {
+    flex: 1;
+    padding-right: 18pt;
+    break-inside: avoid;
+  }
+  .tl-step:last-child { padding-right: 0; }
+  .tl-plan {
+    font-size: 7.5pt;
+    font-weight: 500;
+    color: var(--brand);
+    letter-spacing: 0.5pt;
+    text-transform: uppercase;
+    margin-bottom: 4pt;
+  }
+  .tl-head {
+    font-size: 10pt;
+    font-weight: 500;
+    color: var(--near-black);
+    margin-bottom: 4pt;
+  }
+  .tl-body {
+    font-size: 8pt;
+    color: var(--olive);
+    line-height: 1.6;
+  }
+
+  /* ── CHART ── */
+  figure.chart { margin: 4pt 0; break-inside: avoid; }
+
+  /* ── FOOTER ── */
+  .footer {
+    margin-top: 14pt;
+    padding-top: 7pt;
+    border-top: 0.4pt solid var(--border);
+    font-size: 7.5pt;
+    color: var(--stone);
+    display: flex;
+    justify-content: space-between;
+    letter-spacing: 0.3pt;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="eyebrow">Tesla, Inc. · Company Brief · 公司介绍</div>
+  <div class="header-body">
+    <div class="title-block">
+      <h1>把汽车产业从内燃机拖进电气化时代</h1>
+      <div class="subtitle">电动车、能源、AI 三条主线，共用一套制造哲学。</div>
+    </div>
+    <div class="meta">
+      公开资料整理<br>
+      2026.04<br>
+      公开版
+    </div>
+  </div>
+</div>
+
+<!-- METRICS -->
+<div class="metrics">
+  <div class="metric">
+    <div class="metric-value">1.8M</div>
+    <div class="metric-label">2024 全球交付量</div>
+  </div>
+  <div class="metric">
+    <div class="metric-value">$97B</div>
+    <div class="metric-label">全年营收</div>
+  </div>
+  <div class="metric">
+    <div class="metric-value">4</div>
+    <div class="metric-label">全球超级工厂</div>
+  </div>
+  <div class="metric">
+    <div class="metric-value">2003</div>
+    <div class="metric-label">加州帕洛阿尔托</div>
+  </div>
+</div>
+
+<!-- LEAD -->
+<p class="lead">Tesla 以<span class="hl">第一性原理重造制造业</span>：电动车只是起点，储能、Robotaxi、Optimus 是同一套哲学在不同领域的延伸。</p>
+
+<!-- 业务主线 + 关键变量 -->
+<div class="two-col">
+  <section>
+    <h2>业务主线</h2>
+    <ul class="dash">
+      <li><span class="hl">汽车</span>：Model S/3/X/Y + Cybertruck，覆盖 $25k–$100k</li>
+      <li><span class="hl">能源</span>：Powerwall + Megapack，增速已超整车</li>
+      <li><span class="hl">AI</span>：FSD + Optimus，共用同一感知栈</li>
+    </ul>
+  </section>
+  <section>
+    <h2>2025 关键变量</h2>
+    <ul class="dash">
+      <li><span class="hl">FSD 商业化</span>：无监督版全球扩展，订阅毛利远高整车</li>
+      <li><span class="hl">$25k 新车</span>：最大增量市场，2025 年内交付</li>
+      <li><span class="hl">主要风险</span>：中国竞争 · FSD 监管 · Musk 分心</li>
+    </ul>
+  </section>
+</div>
+
+<!-- 数据图表: 交付量趋势 + 营收结构 -->
+<div class="two-col" style="margin-top: 14pt;">
+  <section>
+    <h2>交付量趋势<span class="sub">近四季度</span></h2>
+    <figure class="chart">
+      <svg viewBox="0 0 560 140" width="100%" style="display:block;" xmlns="http://www.w3.org/2000/svg">
+        <!-- Baseline -->
+        <line x1="8" y1="108" x2="392" y2="108" stroke="#e8e6dc" stroke-width="0.8"/>
+        <!-- Q2 2024: 444K -->
+        <rect x="8" y="31" width="80" height="77" rx="3" fill="#87867f"/>
+        <text x="48" y="26" text-anchor="middle" font-size="16" font-weight="bold" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#87867f">444K</text>
+        <text x="48" y="123" text-anchor="middle" font-size="14" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#87867f">Q2'24</text>
+        <!-- Q3 2024: 463K -->
+        <rect x="108" y="28" width="80" height="80" rx="3" fill="#5e5d59"/>
+        <text x="148" y="23" text-anchor="middle" font-size="16" font-weight="bold" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#5e5d59">463K</text>
+        <text x="148" y="123" text-anchor="middle" font-size="14" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#4d4c48">Q3'24</text>
+        <!-- Q4 2024: 496K (peak) -->
+        <rect x="208" y="22" width="80" height="86" rx="3" fill="#1B365D"/>
+        <text x="248" y="17" text-anchor="middle" font-size="16" font-weight="bold" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#1B365D">496K</text>
+        <text x="248" y="123" text-anchor="middle" font-size="14" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#4d4c48">Q4'24</text>
+        <!-- Q1 2025: 337K (decline) -->
+        <rect x="308" y="49" width="80" height="59" rx="3" fill="#b8b7b0"/>
+        <text x="348" y="44" text-anchor="middle" font-size="16" font-weight="bold" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#b8b7b0">337K</text>
+        <text x="348" y="123" text-anchor="middle" font-size="14" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#4d4c48">Q1'25</text>
+        <!-- Source -->
+        <text x="8" y="138" font-size="11" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#b8b7b0">Source: Tesla Earnings Reports</text>
+      </svg>
+    </figure>
+  </section>
+  <section>
+    <h2>营收结构<span class="sub">Q1 2025</span></h2>
+    <figure class="chart">
+      <svg viewBox="0 0 560 140" width="100%" style="display:block;" xmlns="http://www.w3.org/2000/svg">
+        <!-- Automotive 76%: -90° → 183.6° (large-arc=1) -->
+        <path d="M 76,12 A 56,56 0 1,1 20.1,64.5 L 44.1,66 A 32,32 0 1,0 76,36 Z" fill="#1B365D" stroke="#f5f4ed" stroke-width="1.5"/>
+        <!-- Energy 14%: 183.6° → 234° -->
+        <path d="M 20.1,64.5 A 56,56 0 0,1 43.1,22.7 L 57.2,42.1 A 32,32 0 0,0 44.1,66 Z" fill="#5e5d59" stroke="#f5f4ed" stroke-width="1.5"/>
+        <!-- Services 10%: 234° → 270° -->
+        <path d="M 43.1,22.7 A 56,56 0 0,1 76,12 L 76,36 A 32,32 0 0,0 57.2,42.1 Z" fill="#87867f" stroke="#f5f4ed" stroke-width="1.5"/>
+        <!-- Center label -->
+        <text x="76" y="62" text-anchor="middle" font-size="16" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#3d3d3a">营收</text>
+        <text x="76" y="81" text-anchor="middle" font-size="16" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#3d3d3a">结构</text>
+        <!-- Legend: Automotive -->
+        <rect x="162" y="20" width="13" height="13" rx="2" fill="#1B365D"/>
+        <text x="182" y="31" font-size="16" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#4d4c48">汽车 Automotive</text>
+        <text x="360" y="31" font-size="17" font-weight="bold" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#1B365D">76%</text>
+        <!-- Legend: Energy -->
+        <rect x="162" y="61" width="13" height="13" rx="2" fill="#5e5d59"/>
+        <text x="182" y="72" font-size="16" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#4d4c48">能源 Energy</text>
+        <text x="360" y="72" font-size="17" font-weight="bold" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#5e5d59">14%</text>
+        <!-- Legend: Services -->
+        <rect x="162" y="101" width="13" height="13" rx="2" fill="#87867f"/>
+        <text x="182" y="112" font-size="16" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#4d4c48">服务 Services</text>
+        <text x="360" y="112" font-size="17" font-weight="bold" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#87867f">10%</text>
+        <!-- Source -->
+        <text x="162" y="133" font-size="11" font-family="'TsangerJinKai02','Source Han Serif SC','Noto Serif CJK SC','Songti SC',Georgia,serif" fill="#b8b7b0">Source: Tesla Q1 2025 Earnings</text>
+      </svg>
+    </figure>
+  </section>
+</div>
+
+<!-- Timeline -->
+<section style="margin-top: 14pt;">
+  <h2>三个主计划 · Master Plan</h2>
+  <div class="tl-wrap">
+    <div class="tl-step">
+      <div class="tl-plan">Plan 1 · 2006</div>
+      <div class="tl-head">高端立足</div>
+      <div class="tl-body">Roadster 验证路线，利润反哺 Model 3。</div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-plan">Plan 2 · 2016</div>
+      <div class="tl-head">规模化普及</div>
+      <div class="tl-body">Model 3 量产，储能并行，走向大众主流。</div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-plan">Plan 3 · 2023</div>
+      <div class="tl-head">能源 × AI</div>
+      <div class="tl-body">Robotaxi + Optimus，车屋工厂皆为 AI 终端。</div>
+    </div>
+  </div>
+</section>
+
+<!-- 产品矩阵 + 竞争格局 -->
+<div class="two-col" style="margin-top: 14pt;">
+  <section>
+    <h2>产品矩阵</h2>
+    <ul class="dash">
+      <li><span class="hl">Model 3 / Y</span>：走量主力，全球累计交付超 600 万辆</li>
+      <li><span class="hl">能源储能</span>：Powerwall + Megapack，单柜 3.9 MWh</li>
+      <li><span class="hl">FSD / Optimus</span>：自动驾驶与人形机器人，共用感知栈</li>
+    </ul>
+  </section>
+  <section>
+    <h2>竞争格局</h2>
+    <ul class="dash">
+      <li><span class="hl">BYD</span>：销量全球第一，软件与国际化仍滞后</li>
+      <li><span class="hl">小鹏·理想·蔚来</span>：端侧 AI 提速，中高端直接竞争</li>
+      <li><span class="hl">Tesla 优势</span>：超充领先、FSD 早 2–3 年、整合成本低</li>
+    </ul>
+  </section>
+</div>
+
+<!-- 三大护城河 -->
+<section style="margin-top: 14pt;">
+  <h2>三大护城河</h2>
+  <div class="tl-wrap">
+    <div class="tl-step">
+      <div class="tl-plan">数据飞轮</div>
+      <div class="tl-head">FSD 训练领先</div>
+      <div class="tl-body">车队实时回传驾驶数据，语料库规模远超同行，每一辆量产车都是数据采集终端。</div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-plan">超充网络</div>
+      <div class="tl-head">充电生态壁垒</div>
+      <div class="tl-body">全球 6.5 万+ 桩，先发 10 年，已成主要竞争对手无法短期复制的基础设施。</div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-plan">垂直整合</div>
+      <div class="tl-head">成本摊薄无上限</div>
+      <div class="tl-body">自研 4680 电芯、FSD 芯片、工厂设备，每条产线迭代都直接转化为毛利率改善。</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>公开 · 公司介绍</span>
+  <span>kami demo · 1 / 1</span>
+</div>
+
+</body>
+</html>

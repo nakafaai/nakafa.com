@@ -106,10 +106,10 @@ If <InlineMath math="m = b" />, then:
 Proof:
 Based on the definition:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="^a\log b = m \Leftrightarrow b = a^m" />
   <BlockMath math="^b\log c = n \Leftrightarrow c = b^n" />
-</div>
+</MathContainer>
 
 Substitute the value of <InlineMath math="b" /> into the equation for <InlineMath math="c" />:
 
@@ -149,40 +149,40 @@ Using **property 6**:
 
    a. Answer:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="^9\log 81 = ^9\log 9^2" />
      <BlockMath math="^9\log 81 = 2 \cdot ^9\log 9" />
      <BlockMath math="^9\log 81 = 2 \cdot 1 = 2" />
-   </div>
+   </MathContainer>
 
    b. Answer:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="^2\log 64 - ^2\log 16 = ^2\log \frac{64}{16}" />
      <BlockMath math="^2\log 64 - ^2\log 16 = ^2\log 4" />
      <BlockMath math="^2\log 64 - ^2\log 16 = 2" />
-   </div>
+   </MathContainer>
 
    c. Answer:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="^4\log 16^{10} = ^4\log (4^2)^{10}" />
      <BlockMath math="^4\log 16^{10} = ^4\log 4^{20}" />
      <BlockMath math="^4\log 16^{10} = 20" />
-   </div>
+   </MathContainer>
 
 2. Given that <InlineMath math="^5\log 4 = m" />, <InlineMath math="^4\log 3 = n" />
 
    Then:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="^{12}\log 100 = \frac{^4\log 100}{^4\log 12}" />
      <BlockMath math="= \frac{^4\log(4 \times 25)}{^4\log(4 \times 3)}" />
      <BlockMath math="= \frac{^4\log 4 + ^4\log 25}{^4\log 4 + ^4\log 3}" />
      <BlockMath math="= \frac{^4\log 4 + 2 \cdot ^4\log 5}{^4\log 4 + ^4\log 3}" />
      <BlockMath math="= \frac{1 + 2 \cdot \frac{1}{m}}{1 + n}" />
      <BlockMath math="= \frac{1 + \frac{2}{m}}{1 + n}" />
-   </div>
+   </MathContainer>
 
 3. Initial population = 300,000 people
 
@@ -194,14 +194,14 @@ Using **property 6**:
 
    For a population of 1,000,000 people:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="1,000,000 = 300,000(1 + 0.06)^x" />
      <BlockMath math="1,000,000 = 300,000(1.06)^x" />
      <BlockMath math="\frac{1,000,000}{300,000} = (1.06)^x" />
      <BlockMath math="3.33 = (1.06)^x" />
      <BlockMath math="x = ^{1.06}\log 3.33" />
      <BlockMath math="x = 20.645" />
-   </div>
+   </MathContainer>
 
    Therefore, the population will reach 1,000,000 people in 20 or 21 years.
 
@@ -217,13 +217,13 @@ Using **property 6**:
 
    For a final saving amount of Rp6,500,000.00:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="6,500,000 = 2,000,000(1 + 0.12)^x" />
      <BlockMath math="6,500,000 = 2,000,000(1.12)^x" />
      <BlockMath math="\frac{6,500,000}{2,000,000} = (1.12)^x" />
      <BlockMath math="3.25 = (1.12)^x" />
      <BlockMath math="x = ^{1.12}\log 3.25" />
      <BlockMath math="x = 10.4" />
-   </div>
+   </MathContainer>
 
    Therefore, Dini's savings will reach Rp6,500,000.00 in 10 years.

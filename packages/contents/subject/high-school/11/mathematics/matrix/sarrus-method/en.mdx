@@ -40,9 +40,9 @@ This helps us visualize the diagonals that will be multiplied.
 
 Multiply the elements along the three diagonals from the top-left to the bottom-right. Sum these products, let's call it <InlineMath math="D_{\text{positive}}" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="D_{\text{positive}} = (a_{11} \cdot a_{22} \cdot a_{33}) + (a_{12} \cdot a_{23} \cdot a_{31}) + (a_{13} \cdot a_{21} \cdot a_{32})" />
-</div>
+</MathContainer>
 
 The first term is the product of the main diagonal. The second and third terms are products of parallel diagonals involving elements from the copied columns.
 
@@ -50,9 +50,9 @@ The first term is the product of the main diagonal. The second and third terms a
 
 Multiply the elements along the three diagonals from the top-right to the bottom-left. Sum these products, let's call it <InlineMath math="D_{\text{negative}}" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="D_{\text{negative}} = (a_{13} \cdot a_{22} \cdot a_{31}) + (a_{11} \cdot a_{23} \cdot a_{32}) + (a_{12} \cdot a_{21} \cdot a_{33})" />
-</div>
+</MathContainer>
 
 The first term is the product of the secondary diagonal (anti-diagonal). The second and third terms are products of parallel diagonals involving elements from the copied columns, moving towards the bottom-left.
 
@@ -78,11 +78,11 @@ To visualize this process, we can write:
 
 Then, using Sarrus' Method, we expand the matrix and identify the multiplication paths:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\begin{array}{ccc|cc} a_{11} & a_{12} & a_{13} & a_{11} & a_{12} \\ a_{21} & a_{22} & a_{23} & a_{21} & a_{22} \\ a_{31} & a_{32} & a_{33} & a_{31} & a_{32} \end{array}" />
   <BlockMath math="\begin{array}{l} \text{Positive Paths } (\searrow): \\ \quad + (a_{11} \cdot a_{22} \cdot a_{33}) \\ \quad + (a_{12} \cdot a_{23} \cdot a_{31}) \\ \quad + (a_{13} \cdot a_{21} \cdot a_{32}) \end{array}" />
   <BlockMath math="\begin{array}{l} \text{Negative Paths } (\swarrow): \\ \quad - (a_{13} \cdot a_{22} \cdot a_{31}) \\ \quad - (a_{11} \cdot a_{23} \cdot a_{32}) \quad (\text{from } a_{11} \text{ col. 4}) \\ \quad - (a_{12} \cdot a_{21} \cdot a_{33}) \quad (\text{from } a_{12} \text{ col. 5}) \end{array}" />
-</div>
+</MathContainer>
 
 Thus, the complete formula becomes:
 

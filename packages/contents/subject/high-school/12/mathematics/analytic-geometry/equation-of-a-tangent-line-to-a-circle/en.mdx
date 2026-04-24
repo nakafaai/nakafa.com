@@ -275,11 +275,11 @@ The key is using the **point-to-line distance formula**. The distance from cente
 
 Since the line is tangent to the circle, this distance must exactly equal the radius:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\frac{|mh - k + c|}{\sqrt{m^2 + 1}} = r" />
   <BlockMath math="|mh - k + c| = r\sqrt{m^2 + 1}" />
   <BlockMath math="mh - k + c = \pm r\sqrt{m^2 + 1}" />
-</div>
+</MathContainer>
 
 Thus we obtain two constant values:
 
@@ -485,10 +485,10 @@ The tangent line from point P has form <InlineMath math="y - y_0 = m(x - x_0)" /
 
 Substitute into the circle equation and use the condition that discriminant equals zero:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x^2 + (mx - mx_0 + y_0)^2 = r^2" />
   <BlockMath math="(1 + m^2)x^2 + 2m(y_0 - mx_0)x + (y_0 - mx_0)^2 - r^2 = 0" />
-</div>
+</MathContainer>
 
 Discriminant equals zero gives a quadratic equation in <InlineMath math="m" />:
 
@@ -506,11 +506,11 @@ Let's solve one concrete case to clarify understanding. Determine the tangent li
 
 **Step 2**: Form quadratic equation in gradient with <InlineMath math="x_0 = 7" />, <InlineMath math="y_0 = 1" />, <InlineMath math="r^2 = 25" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(49 - 25)m^2 - 2(7)(1)m + (1 - 25) = 0" />
   <BlockMath math="24m^2 - 14m - 24 = 0" />
   <BlockMath math="12m^2 - 7m - 12 = 0" />
-</div>
+</MathContainer>
 
 **Step 3**: Solve using quadratic formula:
 
@@ -520,10 +520,10 @@ So <InlineMath math="m_1 = \frac{32}{24} = \frac{4}{3}" /> and <InlineMath math=
 
 **Step 4**: Construct final equations:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y - 1 = \frac{4}{3}(x - 7) \Rightarrow 4x - 3y = 25" />
   <BlockMath math="y - 1 = -\frac{3}{4}(x - 7) \Rightarrow 3x + 4y = 25" />
-</div>
+</MathContainer>
 
 ## Practice
 
@@ -545,10 +545,10 @@ So <InlineMath math="m_1 = \frac{32}{24} = \frac{4}{3}" /> and <InlineMath math=
    
    **Step 1**: Substitute tangent point coordinates
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="x \cdot 2\sqrt{2} + y \cdot 2\sqrt{2} = 16" />
      <BlockMath math="2\sqrt{2}x + 2\sqrt{2}y = 16" />
-   </div>
+   </MathContainer>
    
    **Step 2**: Simplify by dividing both sides by <InlineMath math="2\sqrt{2}" />
    
@@ -586,23 +586,23 @@ So <InlineMath math="m_1 = \frac{32}{24} = \frac{4}{3}" /> and <InlineMath math=
    
    **Step 3**: Quadratic equation in gradient for circle <InlineMath math="x^2 + y^2 = 25" /> from point <InlineMath math="(8,6)" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="(8^2 - 25)m^2 - 2(8)(6)m + (6^2 - 25) = 0" />
      <BlockMath math="39m^2 - 96m + 11 = 0" />
-   </div>
+   </MathContainer>
    
    **Step 4**: Using quadratic formula:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="m = \frac{96 \pm \sqrt{96^2 - 4(39)(11)}}{2(39)} = \frac{96 \pm \sqrt{9216 - 1716}}{78}" />
      <BlockMath math="m = \frac{96 \pm \sqrt{7500}}{78} = \frac{96 \pm 50\sqrt{3}}{78}" />
-   </div>
+   </MathContainer>
    
    **Step 5**: Simplify gradients and determine tangent line equation through point <InlineMath math="(11,10)" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="m_1 = \frac{96 + 50\sqrt{3}}{78} \text{ and } m_2 = \frac{96 - 50\sqrt{3}}{78}" />
-   </div>
+   </MathContainer>
    
    Both tangent line equations can be written in form <InlineMath math="y - 10 = m(x - 11)" />.
 
@@ -610,11 +610,11 @@ So <InlineMath math="m_1 = \frac{32}{24} = \frac{4}{3}" /> and <InlineMath math=
 
    **Step 1**: Convert circle equation to standard form by completing the square
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="x^2 + y^2 - 6x - 8y = 0" />
      <BlockMath math="(x^2 - 6x + 9) + (y^2 - 8y + 16) = 9 + 16" />
      <BlockMath math="(x-3)^2 + (y-4)^2 = 25" />
-   </div>
+   </MathContainer>
    
    Center <InlineMath math="(3,4)" />, radius <InlineMath math="r = 5" />.
    
@@ -624,17 +624,17 @@ So <InlineMath math="m_1 = \frac{32}{24} = \frac{4}{3}" /> and <InlineMath math=
    
    **Step 3**: For circle with center <InlineMath math="(3,4)" />, parallel tangent line equation:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="y - 4 = -\frac{3}{4}(x - 3) \pm 5\sqrt{1 + \frac{9}{16}}" />
      <BlockMath math="y - 4 = -\frac{3}{4}(x - 3) \pm 5 \cdot \frac{5}{4}" />
      <BlockMath math="y = -\frac{3}{4}x + \frac{9}{4} + 4 \pm \frac{25}{4}" />
-   </div>
+   </MathContainer>
    
    **Step 4**: Simplify both equations
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="y = -\frac{3}{4}x + \frac{50}{4} = -\frac{3}{4}x + \frac{25}{2}" />
      <BlockMath math="y = -\frac{3}{4}x" />
-   </div>
+   </MathContainer>
    
    So the two tangent line equations are: <InlineMath math="y = -\frac{3}{4}x + \frac{25}{2}" /> and <InlineMath math="y = -\frac{3}{4}x" />.

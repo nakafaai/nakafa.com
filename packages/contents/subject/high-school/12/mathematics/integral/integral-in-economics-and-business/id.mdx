@@ -26,18 +26,18 @@ Nah, sekarang pertanyaannya: berapa **total penjualan** dalam 3 bulan pertama? D
 
 Mari kita selesaikan ini dengan memisahkan integralnya terlebih dahulu:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="S = \int_{0}^{3} 2000\sqrt{t + 1} \, dt + \int_{0}^{3} 800 \, dt" />
 <BlockMath math="S = 2000 \int_{0}^{3} (t + 1)^{1/2} \, dt + 800t \Big|_{0}^{3}" />
-</div>
+</MathContainer>
 
 Untuk integral yang mengandung akar, kita bisa gunakan substitusi. Misalkan <InlineMath math="u = t + 1" />, maka <InlineMath math="du = dt" />. Jangan lupa ubah batas integrasinya juga!
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="S = 2000 \int_{1}^{4} u^{1/2} \, du + 2400" />
 <BlockMath math="S = 2000 \left[\frac{2}{3}u^{3/2}\right]_{1}^{4} + 2400" />
 <BlockMath math="S = \frac{4000}{3}(8 - 1) + 2400 = \frac{28000}{3} + 2400" />
-</div>
+</MathContainer>
 
 Hasil akhirnya adalah <InlineMath math="S = 9333 + 2400 = 11733" /> unit smartphone terjual dalam 3 bulan pertama.
 
@@ -47,12 +47,12 @@ Sekarang mari kita lihat contoh yang berbeda. Misalkan sebuah startup teknologi 
 
 Untuk menghitung **total peningkatan pendapatan** dalam 6 bulan pertama, kita integralkan fungsi laju pertumbuhan:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="R = \int_{0}^{6} 5000e^{0.1t} \, dt" />
 <BlockMath math="R = 5000 \int_{0}^{6} e^{0.1t} \, dt" />
 <BlockMath math="R = 5000 \left[\frac{e^{0.1t}}{0.1}\right]_{0}^{6}" />
 <BlockMath math="R = 50000(e^{0.6} - 1)" />
-</div>
+</MathContainer>
 
 Dengan <InlineMath math="e^{0.6} \approx 1.822" />, maka total peningkatan pendapatan adalah sekitar <InlineMath math="50000 \times 0.822 = 41100" /> ribu rupiah atau 41.1 juta rupiah.
 
@@ -66,10 +66,10 @@ Nah, jika perusahaan ingin mengetahui **total biaya variabel** untuk memproduksi
 
 Setelah kita integralkan dan evaluasi, diperoleh:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="VC = \left[0.1x^3 - 6x^2 + 200x\right]_{0}^{20}" />
 <BlockMath math="VC = 800 - 2400 + 4000 = 2400" />
-</div>
+</MathContainer>
 
 Jadi, total biaya variabel untuk memproduksi 20 unit adalah 2.4 juta rupiah.
 
@@ -85,10 +85,10 @@ Surplus konsumen menunjukkan total manfaat yang diperoleh konsumen di atas harga
 
 Setelah dievaluasi:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="CS = \left[40Q - 0.25Q^2\right]_{0}^{80}" />
 <BlockMath math="CS = 3200 - 1600 = 1600" />
-</div>
+</MathContainer>
 
 Surplus konsumen sebesar 1600 unit menunjukkan total manfaat yang diperoleh konsumen di atas harga keseimbangan.
 
@@ -110,10 +110,10 @@ Surplus konsumen sebesar 1600 unit menunjukkan total manfaat yang diperoleh kons
 
    Hasilnya adalah:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="S = \left[1000t + 250t^2\right]_{0}^{6}" />
    <BlockMath math="S = 6000 + 9000 = 15000" />
-   </div>
+   </MathContainer>
 
    Total penjualan dalam 6 bulan adalah 15,000 unit.
 
@@ -125,10 +125,10 @@ Surplus konsumen sebesar 1600 unit menunjukkan total manfaat yang diperoleh kons
    
    Setelah dievaluasi:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="VC = \left[x^2 + 50x\right]_{0}^{25}" />
    <BlockMath math="VC = 625 + 1250 = 1875" />
-   </div>
+   </MathContainer>
 
    Total biaya variabel adalah 1,875 ribu rupiah atau 1.875 juta rupiah.
 
@@ -140,9 +140,9 @@ Surplus konsumen sebesar 1600 unit menunjukkan total manfaat yang diperoleh kons
    
    Hasilnya adalah:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="I = 2000 \left[\frac{e^{0.05t}}{0.05}\right]_{0}^{4}" />
    <BlockMath math="I = 40000(e^{0.2} - 1) \approx 40000(0.221) = 8856" />
-   </div>
+   </MathContainer>
 
    Total pertumbuhan investasi dalam 4 tahun adalah sekitar 8.86 miliar rupiah.

@@ -34,12 +34,12 @@ To calculate its determinant, we identify <InlineMath math="a = -1" />, <InlineM
 
 Then, the determinant of matrix B is:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\det(B) = (-1 \times -5) - (3 \times -7)" />
   <BlockMath math="\det(B) = 5 - (-21)" />
   <BlockMath math="\det(B) = 5 + 21" />
   <BlockMath math="\det(B) = 26" />
-</div>
+</MathContainer>
 
 So, the determinant value of matrix B is 26.
 
@@ -49,10 +49,10 @@ One important application of determinants is to solve systems of linear equation
 
 Consider the following system of linear equations with two variables (SPLDV):
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="a_{11}x + a_{12}y = b_1" />
   <BlockMath math="a_{21}x + a_{22}y = b_2" />
-</div>
+</MathContainer>
 
 In this system, <InlineMath math="x" /> and <InlineMath math="y" /> are the variables whose values we want to find. The coefficients <InlineMath math="a_{11}, a_{12}, a_{21}, a_{22}" /> and constants <InlineMath math="b_1, b_2" /> are known numbers.
 
@@ -84,10 +84,10 @@ Next, we calculate two other determinants:
 
 After obtaining the values of <InlineMath math="D" />, <InlineMath math="D_x" />, and <InlineMath math="D_y" />, we can find the values of <InlineMath math="x" /> and <InlineMath math="y" /> using the formulas:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x = \frac{D_x}{D}" />
   <BlockMath math="y = \frac{D_y}{D}" />
-</div>
+</MathContainer>
 
 These formulas are only valid if <InlineMath math="D \neq 0" />.
 
@@ -95,10 +95,10 @@ These formulas are only valid if <InlineMath math="D \neq 0" />.
 
 Determine the solution of the following system of linear equations:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="2x - y = 7" />
   <BlockMath math="x - 4y = 14" />
-</div>
+</MathContainer>
 
 From the system above, we get:
 
@@ -121,10 +121,10 @@ Since <InlineMath math="D = -7 \neq 0" />, this system has a unique solution.
 
 **Step 4**: Calculate the values of <InlineMath math="x" /> and <InlineMath math="y" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x = \frac{D_x}{D} = \frac{-14}{-7} = 2" />
   <BlockMath math="y = \frac{D_y}{D} = \frac{21}{-7} = -3" />
-</div>
+</MathContainer>
 
 So, the solution set of the system of linear equations is <InlineMath math="x=2" /> and <InlineMath math="y=-3" />, or can be written as the ordered pair <InlineMath math="(2, -3)" />.
 
@@ -143,36 +143,36 @@ So, the solution set of the system of linear equations is <InlineMath math="x=2"
 
     Given <InlineMath math="\det(M) = 9" />, then:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="-63 - 8x = 9" />
       <BlockMath math="-8x = 9 + 63" />
       <BlockMath math="-8x = 72" />
       <BlockMath math="x = \frac{72}{-8}" />
       <BlockMath math="x = -9" />
-    </div>
+    </MathContainer>
 
     So, the value of <InlineMath math="x" /> is -9.
 
 2.  System of linear equations:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="2x - y = 8" />
       <BlockMath math="x + 3y = -10" />
-    </div>
+    </MathContainer>
 
     We determine <InlineMath math="D, D_x," /> and <InlineMath math="D_y" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="D = \begin{vmatrix} 2 & -1 \\ 1 & 3 \end{vmatrix} = (2 \times 3) - (-1 \times 1) = 6 - (-1) = 6 + 1 = 7" />
       <BlockMath math="D_x = \begin{vmatrix} 8 & -1 \\ -10 & 3 \end{vmatrix} = (8 \times 3) - (-1 \times -10) = 24 - 10 = 14" />
       <BlockMath math="D_y = \begin{vmatrix} 2 & 8 \\ 1 & -10 \end{vmatrix} = (2 \times -10) - (8 \times 1) = -20 - 8 = -28" />
-    </div>
+    </MathContainer>
 
     Then, the values of <InlineMath math="x" /> and <InlineMath math="y" /> are:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x = \frac{D_x}{D} = \frac{14}{7} = 2" />
       <BlockMath math="y = \frac{D_y}{D} = \frac{-28}{7} = -4" />
-    </div>
+    </MathContainer>
 
     So, the solution of the system of linear equations is <InlineMath math="x=2" /> and <InlineMath math="y=-4" />, or the ordered pair <InlineMath math="(2, -4)" />.

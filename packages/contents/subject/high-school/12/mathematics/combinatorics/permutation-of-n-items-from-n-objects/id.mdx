@@ -16,9 +16,9 @@ Bayangkan seperti menyusun barisan foto untuk seluruh siswa di kelas. Jika ada 5
 
 Untuk permutasi n item dari n objek, **rumus yang digunakan** adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="nP_n = \frac{n!}{(n-n)!} = \frac{n!}{0!}" />
-</div>
+</MathContainer>
 
 **Penjelasan mengapa rumus ini menjadi sederhana:**
 - <InlineMath math="(n-n) = 0" />, sehingga penyebutnya menjadi <InlineMath math="0!" />
@@ -27,17 +27,17 @@ Untuk permutasi n item dari n objek, **rumus yang digunakan** adalah:
 
 Jadi, rumusnya adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="nP_n = n!" />
-</div>
+</MathContainer>
 
 ## Konsep Faktorial
 
 **Faktorial** adalah perkalian berturut-turut dari bilangan bulat positif. Faktorial dari bilangan n ditulis sebagai <InlineMath math="n!" /> dan didefinisikan sebagai:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="n! = n \times (n-1) \times (n-2) \times \cdots \times 2 \times 1" />
-</div>
+</MathContainer>
 
 **Aturan khusus** untuk faktorial:
 - <InlineMath math="0! = 1" /> (berdasarkan definisi matematis)
@@ -51,17 +51,17 @@ Misalkan ada 4 siswa yang akan mengisi 4 posisi dalam kepengurusan kelas: ketua,
 
 Banyaknya cara menyusun kepengurusan tersebut adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="4P_4 = 4! = 4 \times 3 \times 2 \times 1 = 24 \text{ cara}" />
-</div>
+</MathContainer>
 
 ### Susunan Tempat Duduk
 
 Sebuah keluarga yang terdiri dari 6 anggota akan duduk berjajar di sofa untuk foto keluarga. Banyaknya cara mereka dapat disusun adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="6P_6 = 6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720 \text{ cara}" />
-</div>
+</MathContainer>
 
 ## Langkah Perhitungan Sistematis
 
@@ -76,12 +76,12 @@ Untuk menghitung permutasi n item dari n objek, ikuti langkah berikut:
 
 Menghitung <InlineMath math="5!" /> dengan langkah-langkah yang jelas:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="5! = 5 \times 4 \times 3 \times 2 \times 1" />
 <BlockMath math="= 20 \times 3 \times 2 \times 1" />
 <BlockMath math="= 60 \times 2 \times 1" />
 <BlockMath math="= 120 \times 1 = 120" />
-</div>
+</MathContainer>
 
 ## Perbedaan dengan Permutasi Sebagian
 
@@ -94,11 +94,11 @@ Menghitung <InlineMath math="5!" /> dengan langkah-langkah yang jelas:
 
 **Perhitungan detail untuk permutasi sebagian**:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="5P_3 = \frac{5!}{(5-3)!} = \frac{5!}{2!}" />
 <BlockMath math="= \frac{5 \times 4 \times 3 \times 2 \times 1}{2 \times 1}" />
 <BlockMath math="= \frac{120}{2} = 60 \text{ cara}" />
-</div>
+</MathContainer>
 
 Dalam permutasi n item dari n objek, **tidak ada objek yang tersisa** dan **semua posisi harus diisi**.
 
@@ -115,21 +115,21 @@ Dalam permutasi n item dari n objek, **tidak ada objek yang tersisa** dan **semu
 ### Kunci Jawaban
 
 1. Diketahui: 7 model akan disusun dalam satu barisan (semua model digunakan)
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="7P_7 = 7! = 7 \times 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 5040 \text{ cara}" />
-   </div>
+   </MathContainer>
 
 2. Diketahui: 5 peserta lari dengan urutan finis yang berbeda (semua peserta finis)
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="5P_5 = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120 \text{ kemungkinan urutan}" />
-   </div>
+   </MathContainer>
 
 3. Diketahui: 6 jenis makanan akan ditata dalam satu barisan lurus (semua makanan ditata)
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="6P_6 = 6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720 \text{ cara}" />
-   </div>
+   </MathContainer>
 
 4. Diketahui: 8 buku berbeda akan disusun dalam satu rak (semua buku disusun)
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="8P_8 = 8! = 8 \times 7 \times 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 40320 \text{ cara}" />
-   </div>
+   </MathContainer>

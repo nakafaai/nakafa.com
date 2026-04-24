@@ -66,10 +66,10 @@ Mari kita pakai contoh kartu:
 
 Maka, peluang dapat kartu Hati ATAU kartu King adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="P(A \cup B) = P(A) + P(B) - P(A \cap B)" />
   <BlockMath math="= \frac{13}{52} + \frac{4}{52} - \frac{1}{52}" />
   <BlockMath math="= \frac{16}{52} = \frac{4}{13}" />
-</div>
+</MathContainer>
 
 Lihat kan, kita kurangi <InlineMath math="1/52" /> supaya kartu King Hati nggak kehitung dua kali.

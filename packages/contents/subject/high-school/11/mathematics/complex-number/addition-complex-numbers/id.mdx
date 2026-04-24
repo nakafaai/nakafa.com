@@ -15,10 +15,10 @@ Bagaimana cara menjumlahkan dua bilangan kompleks?
 
 Misalkan kita punya dua bilangan kompleks:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="z_1 = x_1 + iy_1" />
   <BlockMath math="z_2 = x_2 + iy_2" />
-</div>
+</MathContainer>
 
 Untuk menjumlahkannya (<InlineMath math="z_1 + z_2" />), kita tinggal jumlahkan bagian real dengan bagian real, dan bagian imajiner dengan bagian imajiner.
 
@@ -133,10 +133,10 @@ Secara geometris, <InlineMath math="z_1 - z_2" /> adalah vektor dari ujung <Inli
 
 Misal kita punya:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="z_1 = 2 + \frac{1}{2}i" />
   <BlockMath math="z_2 = -3 + \sqrt{2}i" />
-</div>
+</MathContainer>
 
 Mari hitung beberapa operasi:
 
@@ -146,21 +146,21 @@ Mari hitung beberapa operasi:
 
 2.  **<InlineMath math="z_1 + 3z_2" /> (Penjumlahan dan Perkalian Skalar):**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="z_1 + 3z_2 = (2 + \frac{1}{2}i) + 3(-3 + \sqrt{2}i)" />
       <BlockMath math="= (2 + \frac{1}{2}i) + (3(-3) + i(3\sqrt{2}))" />
       <BlockMath math="= (2 + \frac{1}{2}i) + (-9 + 3\sqrt{2}i)" />
       <BlockMath math="= (2 - 9) + i(\frac{1}{2} + 3\sqrt{2})" />
       <BlockMath math="= -7 + i(\frac{1}{2} + 3\sqrt{2})" />
-    </div>
+    </MathContainer>
 
 3.  **<InlineMath math="2z_1 - z_2" /> (Pengurangan dan Perkalian Skalar):**
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="2z_1 - z_2 = (4 + i) - (-3 + \sqrt{2}i)" />
       <BlockMath math="= (4 - (-3)) + i(1 - \sqrt{2})" />
       <BlockMath math="= (4 + 3) + i(1 - \sqrt{2})" />
       <BlockMath math="= 7 + i(1 - \sqrt{2})" />
-    </div>
+    </MathContainer>
 
 ## Latihan
 

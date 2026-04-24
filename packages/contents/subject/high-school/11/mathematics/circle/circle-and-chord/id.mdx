@@ -756,34 +756,34 @@ Jika <InlineMath math="AB \parallel CD" />, maka busur <InlineMath math="AC" /> 
 
    Diketahui: <InlineMath math="r = 10" /> cm, <InlineMath math="\theta = 60° = \frac{\pi}{3}" /> rad
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="l = 2r \sin\left(\frac{\theta}{2}\right) = 2 \times 10 \times \sin\left(\frac{\pi/3}{2}\right)" />
      <BlockMath math="l = 20 \times \sin(30°) = 20 \times 0.5 = 10 \text{ cm}" />
      <BlockMath math="d = r \cos\left(\frac{\theta}{2}\right) = 10 \times \cos(30°)" />
      <BlockMath math="d = 10 \times \frac{\sqrt{3}}{2} = 5\sqrt{3} \text{ cm}" />
-   </div>
+   </MathContainer>
 
 2. **Teorema perpotongan tali busur**
 
    Diketahui: <InlineMath math="PA = 4" /> cm, <InlineMath math="PB = 6" /> cm, <InlineMath math="PC = 3" /> cm
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="PA \times PB = PC \times PD" />
      <BlockMath math="4 \times 6 = 3 \times PD" />
      <BlockMath math="24 = 3 \times PD" />
      <BlockMath math="PD = 8 \text{ cm}" />
-   </div>
+   </MathContainer>
 
 3. **Menghitung jarak tali busur dari pusat**
 
    Diketahui: <InlineMath math="r = 13" /> cm, <InlineMath math="l = 24" /> cm
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="d = \sqrt{r^2 - \left(\frac{l}{2}\right)^2}" />
      <BlockMath math="d = \sqrt{13^2 - 12^2}" />
      <BlockMath math="d = \sqrt{169 - 144}" />
      <BlockMath math="d = \sqrt{25} = 5 \text{ cm}" />
-   </div>
+   </MathContainer>
 
 4. **Tali busur sejajar**
 
@@ -791,30 +791,30 @@ Jika <InlineMath math="AB \parallel CD" />, maka busur <InlineMath math="AC" /> 
 
    Untuk tali busur pertama:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="l_1 = 2\sqrt{r^2 - d_1^2} = 2\sqrt{25 - 9} = 2\sqrt{16} = 8 \text{ cm}" />
-   </div>
+   </MathContainer>
 
    Untuk tali busur kedua:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="l_2 = 2\sqrt{r^2 - d_2^2} = 2\sqrt{25 - 16} = 2\sqrt{9} = 6 \text{ cm}" />
-   </div>
+   </MathContainer>
 
 5. **Bukti diameter adalah tali busur terpanjang**
 
    Untuk sebarang tali busur dengan sudut pusat <InlineMath math="\theta" />:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="l = 2r \sin\left(\frac{\theta}{2}\right)" />
-   </div>
+   </MathContainer>
 
    Nilai maksimum <InlineMath math="\sin\left(\frac{\theta}{2}\right) = 1" /> tercapai ketika <InlineMath math="\frac{\theta}{2} = 90°" />, yaitu <InlineMath math="\theta = 180°" />.
 
    Saat <InlineMath math="\theta = 180°" />, tali busur melewati pusat lingkaran (diameter) dengan panjang:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="l_{max} = 2r \times 1 = 2r" />
-   </div>
+   </MathContainer>
 
    Terbukti bahwa diameter adalah tali busur terpanjang.

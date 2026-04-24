@@ -48,11 +48,11 @@ Find all complex zeros of <InlineMath math="P(x) = x^3 - x^2 + x - 1" /> and fac
 
     - Factor by grouping:
 
-      <div className="flex flex-col gap-4">
+      <MathContainer>
         <BlockMath math="P(x) = (x^3 - x^2) + (x - 1)" />
         <BlockMath math="P(x) = x^2(x - 1) + 1(x - 1)" />
         <BlockMath math="P(x) = (x^2 + 1)(x - 1)" />
-      </div>
+      </MathContainer>
 
     - Now, find the roots by setting <InlineMath math="P(x) = 0" />:
 
@@ -75,10 +75,10 @@ Find all complex zeros of <InlineMath math="P(x) = x^3 - x^2 + x - 1" /> and fac
 
     The leading coefficient of <InlineMath math="P(x)" /> is <InlineMath math="a_3 = 1" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="P(x) = 1 \cdot (x - 1)(x - i)(x + i)" />
       <BlockMath math="P(x) = (x - 1)(x - i)(x + i)" />
-    </div>
+    </MathContainer>
 
 ## Exercise
 
@@ -116,13 +116,13 @@ Find all complex zeros of <InlineMath math="P(x) = x^3 - 3x^2 + x + 5" />, then 
 
 3. **Find Roots of the Quotient:** Solve <InlineMath math="x^2 - 4x + 5 = 0" /> using the quadratic formula.
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="x = \frac{-(-4) \pm \sqrt{(-4)^2 - 4(1)(5)}}{2(1)}" />
      <BlockMath math="x = \frac{4 \pm \sqrt{16 - 20}}{2}" />
      <BlockMath math="x = \frac{4 \pm \sqrt{-4}}{2}" />
      <BlockMath math="x = \frac{4 \pm 2i}{2}" />
      <BlockMath math="x = 2 \pm i" />
-   </div>
+   </MathContainer>
 
    The other roots are <InlineMath math="2 + i" /> and <InlineMath math="2 - i" />.
 
@@ -130,10 +130,10 @@ Find all complex zeros of <InlineMath math="P(x) = x^3 - 3x^2 + x + 5" />, then 
 
 5. **Complete Factorization (<InlineMath math="a_n = 1" />):**
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="P(x) = 1 \cdot (x - (-1))(x - (2+i))(x - (2-i))" />
      <BlockMath math="P(x) = (x + 1)(x - 2 - i)(x - 2 + i)" />
-   </div>
+   </MathContainer>
 
 ## Complex Conjugate Root Pairs
 

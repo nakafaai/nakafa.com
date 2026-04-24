@@ -49,11 +49,11 @@ Or:
 
 Next, let's add these two versions of <InlineMath math="S_n" /> together, term by term:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="S_n = a + (a+b) + \dots + (a+(n-2)b) + (a+(n-1)b)" />
   <BlockMath math="S_n = (a+(n-1)b) + (a+(n-2)b) + \dots + (a+b) + a" />
   <BlockMath math="2S_n = [2a+(n-1)b] + [2a+(n-1)b] + \dots + [2a+(n-1)b] + [2a+(n-1)b]" />
-</div>
+</MathContainer>
 
 Notice! The sum of each pair of terms (top and bottom) is always the same, which is <InlineMath math="2a + (n-1)b" />. Since there are <InlineMath math="n" /> terms, there are <InlineMath math="n" /> such identical sums.
 
@@ -76,10 +76,10 @@ There are two main formulas commonly used to calculate <InlineMath math="S_n" />
 2.  If the **first term <InlineMath math="(a)" />** and the **<InlineMath math="(n)" />-th term <InlineMath math="(U_n)" />** are known:
     Recall the formula for the <InlineMath math="n" />-th term is <InlineMath math="U_n = a + (n-1)b" />. Substituting this into the first formula:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="S_n = \frac{n}{2}(a + a + (n - 1)b)" />
       <BlockMath math="S_n = \frac{n}{2}(a + U_n)" />
-    </div>
+    </MathContainer>
 
     This second formula resembles Gauss's method: the sum of the first and last terms, multiplied by the number of pairs <InlineMath math="(\frac{n}{2})" />.
 
@@ -106,12 +106,12 @@ Given:
 
 Since <InlineMath math="a" /> and <InlineMath math="U_n" /> are known, we use the second formula:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="S_n = \frac{n}{2}(a + U_n)" />
   <BlockMath math="S_{100} = \frac{100}{2}(1 + 100)" />
   <BlockMath math="S_{100} = 50(101)" />
   <BlockMath math="S_{100} = 5050" />
-</div>
+</MathContainer>
 
 The result is exactly the same as Gauss's calculation!
 
@@ -127,13 +127,13 @@ Given:
 
 Since <InlineMath math="a" /> and <InlineMath math="b" /> are known, we use the first formula:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="S_n = \frac{n}{2}(2a + (n - 1)b)" />
   <BlockMath math="S_{30} = \frac{30}{2}[2(13) + (30 - 1)(3)]" />
   <BlockMath math="S_{30} = 15[26 + (29)(3)]" />
   <BlockMath math="S_{30} = 15(26 + 87)" />
   <BlockMath math="S_{30} = 15(113)" />
   <BlockMath math="S_{30} = 1695" />
-</div>
+</MathContainer>
 
 So, the sum of the first 30 terms of this series is 1695.

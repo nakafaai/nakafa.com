@@ -275,11 +275,11 @@ Kunci utama adalah menggunakan **rumus jarak titik ke garis**. Jarak dari pusat 
 
 Karena garis menyinggung lingkaran, jarak ini harus tepat sama dengan jari-jari:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\frac{|mh - k + c|}{\sqrt{m^2 + 1}} = r" />
   <BlockMath math="|mh - k + c| = r\sqrt{m^2 + 1}" />
   <BlockMath math="mh - k + c = \pm r\sqrt{m^2 + 1}" />
-</div>
+</MathContainer>
 
 Sehingga diperoleh dua nilai konstanta:
 
@@ -485,10 +485,10 @@ Garis singgung dari titik P berbentuk <InlineMath math="y - y_0 = m(x - x_0)" />
 
 Substitusikan ke persamaan lingkaran dan gunakan syarat diskriminan nol:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x^2 + (mx - mx_0 + y_0)^2 = r^2" />
   <BlockMath math="(1 + m^2)x^2 + 2m(y_0 - mx_0)x + (y_0 - mx_0)^2 - r^2 = 0" />
-</div>
+</MathContainer>
 
 Diskriminan sama dengan nol memberikan persamaan kuadrat dalam <InlineMath math="m" />:
 
@@ -506,11 +506,11 @@ Mari kita selesaikan satu kasus konkret untuk memperjelas pemahaman. Tentukan pe
 
 **Langkah 2**: Bentuk persamaan kuadrat dalam gradien dengan <InlineMath math="x_0 = 7" />, <InlineMath math="y_0 = 1" />, <InlineMath math="r^2 = 25" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(49 - 25)m^2 - 2(7)(1)m + (1 - 25) = 0" />
   <BlockMath math="24m^2 - 14m - 24 = 0" />
   <BlockMath math="12m^2 - 7m - 12 = 0" />
-</div>
+</MathContainer>
 
 **Langkah 3**: Selesaikan dengan rumus kuadrat:
 
@@ -520,10 +520,10 @@ Jadi <InlineMath math="m_1 = \frac{32}{24} = \frac{4}{3}" /> dan <InlineMath mat
 
 **Langkah 4**: Konstruksi persamaan akhir:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y - 1 = \frac{4}{3}(x - 7) \Rightarrow 4x - 3y = 25" />
   <BlockMath math="y - 1 = -\frac{3}{4}(x - 7) \Rightarrow 3x + 4y = 25" />
-</div>
+</MathContainer>
 
 ## Latihan
 
@@ -545,10 +545,10 @@ Jadi <InlineMath math="m_1 = \frac{32}{24} = \frac{4}{3}" /> dan <InlineMath mat
    
    **Langkah 1**: Substitusi koordinat titik singgung
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="x \cdot 2\sqrt{2} + y \cdot 2\sqrt{2} = 16" />
      <BlockMath math="2\sqrt{2}x + 2\sqrt{2}y = 16" />
-   </div>
+   </MathContainer>
    
    **Langkah 2**: Sederhanakan dengan membagi kedua ruas dengan <InlineMath math="2\sqrt{2}" />
    
@@ -586,23 +586,23 @@ Jadi <InlineMath math="m_1 = \frac{32}{24} = \frac{4}{3}" /> dan <InlineMath mat
    
    **Langkah 3**: Persamaan kuadrat dalam gradien untuk lingkaran <InlineMath math="x^2 + y^2 = 25" /> dari titik <InlineMath math="(8,6)" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="(8^2 - 25)m^2 - 2(8)(6)m + (6^2 - 25) = 0" />
      <BlockMath math="39m^2 - 96m + 11 = 0" />
-   </div>
+   </MathContainer>
    
    **Langkah 4**: Menggunakan rumus kuadrat:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="m = \frac{96 \pm \sqrt{96^2 - 4(39)(11)}}{2(39)} = \frac{96 \pm \sqrt{9216 - 1716}}{78}" />
      <BlockMath math="m = \frac{96 \pm \sqrt{7500}}{78} = \frac{96 \pm 50\sqrt{3}}{78}" />
-   </div>
+   </MathContainer>
    
    **Langkah 5**: Sederhanakan gradien dan tentukan persamaan garis singgung melalui titik <InlineMath math="(11,10)" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="m_1 = \frac{96 + 50\sqrt{3}}{78} \text{ dan } m_2 = \frac{96 - 50\sqrt{3}}{78}" />
-   </div>
+   </MathContainer>
    
    Persamaan kedua garis singgung dapat ditulis dalam bentuk <InlineMath math="y - 10 = m(x - 11)" />.
 
@@ -610,11 +610,11 @@ Jadi <InlineMath math="m_1 = \frac{32}{24} = \frac{4}{3}" /> dan <InlineMath mat
 
    **Langkah 1**: Ubah persamaan lingkaran ke bentuk standar dengan melengkapkan kuadrat
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="x^2 + y^2 - 6x - 8y = 0" />
      <BlockMath math="(x^2 - 6x + 9) + (y^2 - 8y + 16) = 9 + 16" />
      <BlockMath math="(x-3)^2 + (y-4)^2 = 25" />
-   </div>
+   </MathContainer>
    
    Pusat <InlineMath math="(3,4)" />, jari-jari <InlineMath math="r = 5" />.
    
@@ -624,17 +624,17 @@ Jadi <InlineMath math="m_1 = \frac{32}{24} = \frac{4}{3}" /> dan <InlineMath mat
    
    **Langkah 3**: Untuk lingkaran dengan pusat <InlineMath math="(3,4)" />, persamaan garis singgung sejajar:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="y - 4 = -\frac{3}{4}(x - 3) \pm 5\sqrt{1 + \frac{9}{16}}" />
      <BlockMath math="y - 4 = -\frac{3}{4}(x - 3) \pm 5 \cdot \frac{5}{4}" />
      <BlockMath math="y = -\frac{3}{4}x + \frac{9}{4} + 4 \pm \frac{25}{4}" />
-   </div>
+   </MathContainer>
    
    **Langkah 4**: Sederhanakan kedua persamaan
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="y = -\frac{3}{4}x + \frac{50}{4} = -\frac{3}{4}x + \frac{25}{2}" />
      <BlockMath math="y = -\frac{3}{4}x" />
-   </div>
+   </MathContainer>
    
    Jadi dua persamaan garis singgung: <InlineMath math="y = -\frac{3}{4}x + \frac{25}{2}" /> dan <InlineMath math="y = -\frac{3}{4}x" />.

@@ -12,10 +12,10 @@ Imagine throwing a tennis ball from a height of 1 meter. The ball will bounce, b
 
 The bounce heights form a **geometric sequence**:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="1, \quad 1 \times \frac{1}{4}, \quad (1 \times \frac{1}{4}) \times \frac{1}{4}, \quad \dots" />
   <BlockMath math="1, \quad \frac{1}{4}, \quad \frac{1}{16}, \quad \frac{1}{64}, \quad \dots" />
-</div>
+</MathContainer>
 
 With the first term (<InlineMath math="a" />) being 1 and the ratio (<InlineMath math="r" />) being <InlineMath math="\frac{1}{4}" />.
 
@@ -74,10 +74,10 @@ We can calculate the total distance traveled by the ball using the <InlineMath m
 
 **Total Distance** = Sum of Downward Path + Sum of Upward Path
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Total} = S_{\text{down}} + S_{\text{up}} = \frac{a}{1 - r} + \frac{ar}{1 - r}" />
   <BlockMath math="\text{Total} = \frac{a(1 + r)}{1 - r}" />
-</div>
+</MathContainer>
 
 For the tennis ball example with <InlineMath math="a = 1" /> meter and <InlineMath math="r = \frac{1}{4}" />:
 
@@ -87,9 +87,9 @@ So, the total distance traveled by the ball until it stops is <InlineMath math="
 **Alternative Method (Following the Hint):**
 The total distance can also be calculated as: First downward path + 2 times the sum of all upward paths.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\text{Total} = a + 2 \times S_{\text{up}} = a + 2 \times \left( \frac{ar}{1 - r} \right)" />
   <BlockMath math="\text{Total} = 1 + 2 \times \left( \frac{1 \times \frac{1}{4}}{1 - \frac{1}{4}} \right) = 1 + 2 \times \left( \frac{1/4}{3/4} \right) = 1 + 2 \times \left( \frac{1}{3} \right) = 1 + \frac{2}{3} = \frac{5}{3}" />
-</div>
+</MathContainer>
 
 The result is the same!

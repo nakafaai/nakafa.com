@@ -100,21 +100,21 @@ Fungsi logaritma dengan basis <InlineMath math="b" /> (dimana <InlineMath math="
 
 ### Sifat Dasar
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\log_b 1 = 0" />
   <BlockMath math="\log_b b = 1" />
   <BlockMath math="\log_b b^n = n" />
   <BlockMath math="b^{\log_b x} = x" />
-</div>
+</MathContainer>
 
 ### Sifat Operasi
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\log_b (xy) = \log_b x + \log_b y" />
   <BlockMath math="\log_b \left(\frac{x}{y}\right) = \log_b x - \log_b y" />
   <BlockMath math="\log_b x^n = n \cdot \log_b x" />
   <BlockMath math="\log_b x = \frac{\log_a x}{\log_a b} \quad \text{(perubahan basis)}" />
-</div>
+</MathContainer>
 
 ## Model Penyebaran COVID-19
 
@@ -144,10 +144,10 @@ Pada awal pandemi, penyebaran COVID-19 di Indonesia dapat dimodelkan dengan fung
 
 **Menggunakan logaritma**, kita dapat menghitung kapan akan ada 50.000 kasus:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="50000 = 2e^{\frac{1}{60}\ln(5059)t}" />
   <BlockMath math="t = \frac{60 \cdot \ln(25000)}{\ln(5059)} \approx 81.4 \text{ hari}" />
-</div>
+</MathContainer>
 
 ## Latihan
 

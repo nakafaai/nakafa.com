@@ -1,33 +1,35 @@
 "use client";
 
 import { Line, Text } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
 import { COLORS } from "@repo/design-system/lib/color";
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import {
   Color,
   ConeGeometry,
-  type Group,
   MeshBasicMaterial,
   Quaternion,
   Vector3,
 } from "three";
 import { FONT_PATH, MONO_FONT_PATH } from "./_data";
+import { GRAPH_ARROW_SEGMENTS } from "./quality";
 
-const ARROW_SEGMENTS = 16;
 const ARROW_SEGMENT_OFFSET = 0.2;
 
 // Shared geometry and material caches
 const coneGeometryCache = new Map<string, ConeGeometry>();
 const materialCache = new Map<string, MeshBasicMaterial>();
 
+/**
+ * Reuses cone geometry per arrow size to avoid repeated GPU resource work.
+ *
+ * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance#re-using-geometries-and-materials
+ */
 function getSharedConeGeometry(size: number): ConeGeometry {
   const key = `cone-${size}`;
   if (!coneGeometryCache.has(key)) {
-    // Reduced segments from 32 to 16 for better performance
     coneGeometryCache.set(
       key,
-      new ConeGeometry(size / 2, size, ARROW_SEGMENTS, 1)
+      new ConeGeometry(size / 2, size, GRAPH_ARROW_SEGMENTS, 1)
     );
   }
   const geometry = coneGeometryCache.get(key);
@@ -37,6 +39,11 @@ function getSharedConeGeometry(size: number): ConeGeometry {
   return geometry;
 }
 
+/**
+ * Reuses arrow materials by color so repeated vectors do not recompile materials.
+ *
+ * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance#re-using-geometries-and-materials
+ */
 function getSharedMaterial(color: string | Color): MeshBasicMaterial {
   const colorKey = color instanceof Color ? color.getHexString() : color;
   if (!materialCache.has(colorKey)) {
@@ -77,6 +84,9 @@ interface Props {
   [key: string]: unknown;
 }
 
+/**
+ * Renders a labeled 3D arrow with shared cone geometry and stable vector math.
+ */
 export function ArrowHelper({
   from = [0, 0, 0],
   to,
@@ -89,8 +99,6 @@ export function ArrowHelper({
   useMonoFont = true,
   ...props
 }: Props) {
-  const groupRef = useRef<Group>(null);
-
   // Memoize vector calculations
   const vectors = useMemo(() => {
     const fromVec = new Vector3(...from);
@@ -177,15 +185,8 @@ export function ArrowHelper({
     [useMonoFont]
   );
 
-  // Enable frustum culling for the entire group
-  useFrame(() => {
-    if (groupRef.current) {
-      groupRef.current.frustumCulled = true;
-    }
-  });
-
   return (
-    <group ref={groupRef} {...props}>
+    <group frustumCulled {...props}>
       {/* Shaft of the arrow */}
       <Line
         color={color}

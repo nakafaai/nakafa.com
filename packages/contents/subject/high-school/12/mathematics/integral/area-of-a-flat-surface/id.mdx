@@ -17,10 +17,10 @@ Dalam kehidupan sehari-hari, kita sering perlu menghitung luas berbagai bentuk b
 
 Bayangkan kita memiliki fungsi <InlineMath math="f(x)" /> dan ingin mencari luas daerah di bawah kurva dari <InlineMath math="x = a" /> sampai <InlineMath math="x = b" />. Kita dapat membagi interval <InlineMath math="[a, b]" /> menjadi <InlineMath math="n" /> bagian kecil dengan lebar <InlineMath math="\Delta x" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="A = \lim_{n \to \infty} \sum_{i=1}^{n} f(x_i) \cdot \Delta x" />
 <BlockMath math="A = \int_{a}^{b} f(x) \, dx" />
-</div>
+</MathContainer>
 
 ## Menentukan Luas dengan Integral Tentu
 
@@ -106,19 +106,19 @@ Sekarang, coba perhatikan gambar di atas. Fungsi <InlineMath math="f(x) = x^2 - 
 
 Nah, di sinilah letak keunikannya! Karena kita mencari **luas** yang selalu bernilai positif, maka kita perlu menggunakan nilai mutlak dari fungsi tersebut. Jadi integral kita menjadi:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="A = \int_{1}^{3} |x^2 - 4x| \, dx" />
 <BlockMath math="A = \int_{1}^{3} -(x^2 - 4x) \, dx" />
 <BlockMath math="A = \int_{1}^{3} (-x^2 + 4x) \, dx" />
-</div>
+</MathContainer>
 
 Mari kita selesaikan langkah demi langkah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="A = \left[-\frac{x^3}{3} + 2x^2\right]_{1}^{3}" />
 <BlockMath math="A = \left(-\frac{27}{3} + 18\right) - \left(-\frac{1}{3} + 2\right)" />
 <BlockMath math="A = 9 - \frac{5}{3} = \frac{22}{3}" />
-</div>
+</MathContainer>
 
 Jadi, luas daerah tersebut adalah <InlineMath math="\frac{22}{3}" /> satuan luas.
 
@@ -188,14 +188,14 @@ Jangan lupa mengubah batas integrasinya juga! Ketika <InlineMath math="x = 0" />
 
 Sekarang integral kita menjadi:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="A = \int_{0}^{2} x\sqrt{x^2 + 5} \, dx" />
 <BlockMath math="A = \int_{5}^{9} \frac{1}{2}\sqrt{u} \, du" />
 <BlockMath math="A = \frac{1}{2} \int_{5}^{9} u^{1/2} \, du" />
 <BlockMath math="A = \frac{1}{2} \left[\frac{2}{3}u^{3/2}\right]_{5}^{9}" />
 <BlockMath math="A = \frac{1}{3}\left[u^{3/2}\right]_{5}^{9}" />
 <BlockMath math="A = \frac{1}{3}\left(27 - 5\sqrt{5}\right)" />
-</div>
+</MathContainer>
 
 Perhatikan bahwa <InlineMath math="9^{3/2} = (3^2)^{3/2} = 3^3 = 27" /> dan <InlineMath math="5^{3/2} = 5 \cdot \sqrt{5}" />.
 
@@ -219,10 +219,10 @@ Perhatikan bahwa <InlineMath math="9^{3/2} = (3^2)^{3/2} = 3^3 = 27" /> dan <Inl
 
    Setelah kita integralkan dan evaluasi, diperoleh:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="A = \left[\frac{x^3}{3} + x\right]_{0}^{2}" />
    <BlockMath math="A = \left(\frac{8}{3} + 2\right) - 0 = \frac{14}{3}" />
-   </div>
+   </MathContainer>
 
    Jadi, luas daerah tersebut adalah <InlineMath math="\frac{14}{3}" /> satuan luas.
 
@@ -230,11 +230,11 @@ Perhatikan bahwa <InlineMath math="9^{3/2} = (3^2)^{3/2} = 3^3 = 27" /> dan <Inl
 
    Untuk integral ini, kita perlu mengingat bahwa antiturunan dari <InlineMath math="\frac{1}{x^2 + 1}" /> adalah <InlineMath math="\arctan(x)" />.
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="A = \int_{0}^{1} \frac{1}{x^2 + 1} \, dx" />
    <BlockMath math="A = [\arctan(x)]_{0}^{1}" />
    <BlockMath math="A = \arctan(1) - \arctan(0) = \frac{\pi}{4}" />
-   </div>
+   </MathContainer>
 
    Luas daerah tersebut adalah <InlineMath math="\frac{\pi}{4}" /> satuan luas.
 
@@ -246,10 +246,10 @@ Perhatikan bahwa <InlineMath math="9^{3/2} = (3^2)^{3/2} = 3^3 = 27" /> dan <Inl
 
    Jadi titik potongnya di <InlineMath math="x = 0" /> dan <InlineMath math="x = 2" />. Karena fungsi ini positif di antara kedua titik tersebut, kita dapat langsung mengintegralkan:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="A = \int_{0}^{2} (2x - x^2) \, dx" />
    <BlockMath math="A = \left[x^2 - \frac{x^3}{3}\right]_{0}^{2}" />
    <BlockMath math="A = 4 - \frac{8}{3} = \frac{4}{3}" />
-   </div>
+   </MathContainer>
 
    Luas daerah tersebut adalah <InlineMath math="\frac{4}{3}" /> satuan luas.

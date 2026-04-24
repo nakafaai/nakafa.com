@@ -7,6 +7,15 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("tryoutAccess/mutations/setup", () => {
+  async function countScheduledFunctions(
+    t: ReturnType<typeof createTryoutTestConvex>
+  ) {
+    return await t.query(
+      async (ctx) =>
+        (await ctx.db.system.query("_scheduled_functions").collect()).length
+    );
+  }
+
   it("stores competition campaigns without a grant duration", async () => {
     const t = createTryoutTestConvex();
 
@@ -88,6 +97,39 @@ describe("tryoutAccess/mutations/setup", () => {
     expect(campaign?.campaignKind).toBe("access-pass");
     expect(campaign?.grantDurationDays).toBe(7);
     expect(campaign?.resultsStatus).toBe("pending");
+  });
+
+  it("does not reschedule unchanged existing campaign windows", async () => {
+    const t = createTryoutTestConvex();
+    const args = {
+      campaign: {
+        slug: "unchanged-schedule",
+        name: "Unchanged Schedule",
+        targetProducts: ["snbt" as const],
+        campaignKind: "competition" as const,
+        enabled: true,
+        startsAt: NOW + 60 * 1000,
+        endsAt: NOW + 24 * 60 * 60 * 1000,
+      },
+      link: {
+        code: "unchanged-schedule",
+        label: "Unchanged Schedule",
+        enabled: true,
+      },
+    };
+
+    await t.mutation(
+      internal.tryoutAccess.mutations.setup.upsertCampaignAndLink,
+      args
+    );
+    const scheduledCount = await countScheduledFunctions(t);
+
+    await t.mutation(
+      internal.tryoutAccess.mutations.setup.upsertCampaignAndLink,
+      args
+    );
+
+    expect(await countScheduledFunctions(t)).toBe(scheduledCount);
   });
 
   it("does not allow changing the campaign kind after creation", async () => {

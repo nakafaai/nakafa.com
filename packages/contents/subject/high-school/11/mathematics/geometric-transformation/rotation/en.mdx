@@ -31,10 +31,10 @@ A common special case is rotation about the origin <InlineMath math="O(0,0)" />.
 
 If a point <InlineMath math="P(x,y)" /> is rotated about the origin <InlineMath math="O(0,0)" /> by an angle <InlineMath math="\theta" />, its image coordinates <InlineMath math="P'(x',y')" /> can be calculated using the following formulas:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = x \cos \theta - y \sin \theta" />
   <BlockMath math="y' = x \sin \theta + y \cos \theta" />
-</div>
+</MathContainer>
 
 ## Rotating a Point by 90°
 
@@ -46,10 +46,10 @@ We know <InlineMath math="\cos 90^\circ = 0" /> and <InlineMath math="\sin 90^\c
 
 Using the formulas:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = (0) \cos 90^\circ - (4) \sin 90^\circ = 0 \cdot 0 - 4 \cdot 1 = -4" />
   <BlockMath math="y' = (0) \sin 90^\circ + (4) \cos 90^\circ = 0 \cdot 1 + 4 \cdot 0 = 0" />
-</div>
+</MathContainer>
 
 Thus, the image of point <InlineMath math="B(0,4)" /> is <InlineMath math="B'(-4,0)" />.
 
@@ -111,19 +111,19 @@ Determine the image of the line <InlineMath math="y=2x" /> rotated about the ori
 
 Let <InlineMath math="P(x,y)" /> be any point on the line <InlineMath math="y=2x" />. Its image, <InlineMath math="P'(x',y')" />, after a <InlineMath math="90^\circ" /> rotation about the origin is:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = x \cos 90^\circ - y \sin 90^\circ = x(0) - y(1) = -y" />
   <BlockMath math="y' = x \sin 90^\circ + y \cos 90^\circ = x(1) + y(0) = x" />
-</div>
+</MathContainer>
 
 From this, we get <InlineMath math="y = -x'" /> and <InlineMath math="x = y'" />.
 
 Substitute <InlineMath math="x = y'" /> and <InlineMath math="y = -x'" /> into the original line equation <InlineMath math="y=2x" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(-x') = 2(y')" />
   <BlockMath math="-x' = 2y'" />
-</div>
+</MathContainer>
 
 Replacing <InlineMath math="x'" /> and <InlineMath math="y'" /> back to <InlineMath math="x" /> and <InlineMath math="y" />, the equation of the image line is <InlineMath math="-x = 2y" /> or <InlineMath math="y = -\frac{1}{2}x" />.
 
@@ -183,19 +183,19 @@ Replacing <InlineMath math="x'" /> and <InlineMath math="y'" /> back to <InlineM
 
 1.  Point <InlineMath math="A(3,0)" />, <InlineMath math="\theta = 90^\circ" />. <InlineMath math="x=3, y=0" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = 3 \cos 90^\circ - 0 \sin 90^\circ = 3(0) - 0(1) = 0" />
       <BlockMath math="y' = 3 \sin 90^\circ + 0 \cos 90^\circ = 3(1) + 0(0) = 3" />
-    </div>
+    </MathContainer>
 
     Thus, its image is <InlineMath math="A'(0,3)" />.
 
 2.  Line <InlineMath math="y=4x" />, <InlineMath math="\theta = 90^\circ" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = -y" />
       <BlockMath math="y' = x" />
-    </div>
+    </MathContainer>
 
     So <InlineMath math="y = -x'" /> and <InlineMath math="x = y'" />.
 
@@ -205,14 +205,14 @@ Replacing <InlineMath math="x'" /> and <InlineMath math="y'" /> back to <InlineM
 
 3.  Point <InlineMath math="P(-2,-5)" />, <InlineMath math="\theta = 180^\circ" />. <InlineMath math="x=-2, y=-5" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="\cos 180^\circ = -1" />
       <BlockMath math="\sin 180^\circ = 0" />
-    </div>
+    </MathContainer>
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = (-2) \cos 180^\circ - (-5) \sin 180^\circ = (-2)(-1) - (-5)(0) = 2 - 0 = 2" />
       <BlockMath math="y' = (-2) \sin 180^\circ + (-5) \cos 180^\circ = (-2)(0) + (-5)(-1) = 0 + 5 = 5" />
-    </div>
+    </MathContainer>
 
     Thus, the image of point P is <InlineMath math="P'(2,5)" />.
