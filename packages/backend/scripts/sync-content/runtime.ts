@@ -83,6 +83,5 @@ export const getChangedFilesSince = (commit: string): Set<string> => {
   }
 };
 
-export const globFiles = (pattern: string): Promise<string[]> => {
-  return glob(pattern, { cwd: CONTENTS_DIR, absolute: true });
-};
+export const globFiles = (pattern: string): Promise<string[]> =>
+  glob(pattern, { cwd: CONTENTS_DIR, absolute: true });

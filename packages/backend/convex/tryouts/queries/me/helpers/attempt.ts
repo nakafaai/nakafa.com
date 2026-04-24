@@ -130,16 +130,15 @@ export async function buildUserTryoutAttemptResult(
       ] as const;
     })
   );
-  const partAttempts = orderedParts.map((orderedPart) => {
-    return (
+  const partAttempts = orderedParts.map(
+    (orderedPart) =>
       partAttemptsByPartIndex.get(orderedPart.partIndex) ?? {
         partIndex: orderedPart.partIndex,
         partKey: orderedPart.partKey,
         score: null,
         setAttempt: null,
       }
-    );
-  });
+  );
   const scoredAttempt = {
     ...attempt,
     attemptNumber,

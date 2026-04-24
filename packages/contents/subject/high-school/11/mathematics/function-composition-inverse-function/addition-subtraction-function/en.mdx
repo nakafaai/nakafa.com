@@ -79,10 +79,10 @@ Suppose we have two functions:
 
 We find the intersection of <InlineMath math="D_f" /> and <InlineMath math="D_g" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="D_{f+g} = D_f \cap D_g = \{x | x \in \mathbb{R}\} \cap \{x | x \ge -2, x \in \mathbb{R}\}" />
   <BlockMath math="D_{f+g} = \{x | x \ge -2, x \in \mathbb{R}\}" />
-</div>
+</MathContainer>
 
 So, the resulting function from addition is <InlineMath math="(f+g)(x) = x^2 + \sqrt{x+2}" /> with domain <InlineMath math="\{x | x \ge -2, x \in \mathbb{R}\}" />.
 
@@ -127,38 +127,38 @@ Given the functions <InlineMath math="f(x) = 2x - 1" /> with <InlineMath math="D
 
 1.  **Finding <InlineMath math="(f+g)(x)" />:**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(f+g)(x) = f(x) + g(x)" />
       <BlockMath math="= (2x - 1) + (x^2 + 3)" />
       <BlockMath math="= x^2 + 2x + 2" />
-    </div>
+    </MathContainer>
 
     **Finding Domain <InlineMath math="D_{f+g}" />:**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="D_{f+g} = D_f \cap D_g" />
       <BlockMath math="= \{x | x \in \mathbb{R}\} \cap \{x | x \in \mathbb{R}\}" />
       <BlockMath math="= \{x | x \in \mathbb{R}\}" />
-    </div>
+    </MathContainer>
 
     So, <InlineMath math="(f+g)(x) = x^2 + 2x + 2" /> with domain all real numbers.
 
 2.  **Finding <InlineMath math="(f-g)(x)" />:**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(f-g)(x) = f(x) - g(x)" />
       <BlockMath math="= (2x - 1) - (x^2 + 3)" />
       <BlockMath math="= 2x - 1 - x^2 - 3" />
       <BlockMath math="= -x^2 + 2x - 4" />
-    </div>
+    </MathContainer>
 
     **Finding Domain <InlineMath math="D_{f-g}" />:**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="D_{f-g} = D_f \cap D_g" />
       <BlockMath math="= \{x | x \in \mathbb{R}\} \cap \{x | x \in \mathbb{R}\}" />
       <BlockMath math="= \{x | x \in \mathbb{R}\}" />
-    </div>
+    </MathContainer>
 
     So, <InlineMath math="(f-g)(x) = -x^2 + 2x - 4" /> with domain all real numbers.
 
@@ -166,18 +166,18 @@ Given the functions <InlineMath math="f(x) = 2x - 1" /> with <InlineMath math="D
 
     We use the result from number 1: <InlineMath math="(f+g)(x) = x^2 + 2x + 2" />
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(f+g)(2) = (2)^2 + 2(2) + 2" />
       <BlockMath math="= 4 + 4 + 2" />
       <BlockMath math="= 10" />
-    </div>
+    </MathContainer>
 
 4.  **Calculating <InlineMath math="(f-g)(-1)" />:**
 
     We use the result from number 2: <InlineMath math="(f-g)(x) = -x^2 + 2x - 4" />
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(f-g)(-1) = -(-1)^2 + 2(-1) - 4" />
       <BlockMath math="= -(1) - 2 - 4" />
       <BlockMath math="= -7" />
-    </div>
+    </MathContainer>

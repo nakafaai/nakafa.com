@@ -49,7 +49,7 @@ export function EventAccessPage({ code }: Props) {
   const authHref = getAuthHref(pathname);
   const [isActionPending, startTransition] = useTransition();
   const { data: pageState, isPending } = useQueryWithStatus(
-    api.tryoutAccess.queries.getEventPageState,
+    api.tryoutAccess.queries.page.getEventPageState,
     {
       code,
     }

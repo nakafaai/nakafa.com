@@ -126,10 +126,10 @@ This is the required matrix.
 
 1.  Given <InlineMath math="\theta = \frac{\pi}{6}" /> or <InlineMath math="30^\circ" />:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="\cos(\frac{\pi}{6}) = \frac{\sqrt{3}}{2}" />
       <BlockMath math="\sin(\frac{\pi}{6}) = \frac{1}{2}" />
-    </div>
+    </MathContainer>
 
     Rotation matrix:
 
@@ -143,11 +143,11 @@ This is the required matrix.
 
 3.  Given point <InlineMath math="Q(3,1)" />, center <InlineMath math="C(1,-2)" />, <InlineMath math="\theta = 90^\circ" />. <InlineMath math="(a,b)=(1,-2)" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="\cos 90^\circ = 0" />
       <BlockMath math="\sin 90^\circ = 1" />
       <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} 3-1 \\ 1-(-2) \end{pmatrix} + \begin{pmatrix} 1 \\ -2 \end{pmatrix}" />
       <BlockMath math="= \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} 2 \\ 3 \end{pmatrix} + \begin{pmatrix} 1 \\ -2 \end{pmatrix} = \begin{pmatrix} -3 \\ 2 \end{pmatrix} + \begin{pmatrix} 1 \\ -2 \end{pmatrix} = \begin{pmatrix} -2 \\ 0 \end{pmatrix}" />
-    </div>
+    </MathContainer>
 
     Image: <InlineMath math="Q'(-2,0)" />.

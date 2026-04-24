@@ -20,8 +20,8 @@ export const createResearchTool = ({
   locale,
   context,
   usageAccumulator,
-}: ResearchToolParams) => {
-  return tool({
+}: ResearchToolParams) =>
+  tool({
     description:
       "Conduct deep research on any topic by searching the web and analyzing sources. Use this for up-to-date information, general knowledge questions, and external research.",
     inputSchema: z.object({
@@ -45,4 +45,3 @@ export const createResearchTool = ({
       return result.text;
     },
   });
-};

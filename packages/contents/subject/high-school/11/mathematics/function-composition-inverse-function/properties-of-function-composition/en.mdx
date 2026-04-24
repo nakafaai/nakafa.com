@@ -10,11 +10,11 @@ export const metadata = {
 
 Function composition, which involves combining functions sequentially, has several important properties we need to know. Let's study these properties using the following example functions:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="f(x) = 2x + 1" />
   <BlockMath math="g(x) = x^2 + 4" />
   <BlockMath math="h(x) = \frac{1}{x+1}" />
-</div>
+</MathContainer>
 
 ### Non-Commutative Property
 
@@ -28,17 +28,17 @@ Let's compare <InlineMath math="(g \circ f)(x)" /> and <InlineMath math="(f \cir
 
 1.  **Calculating <InlineMath math="(g \circ f)(x)" />:**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(g \circ f)(x) = g(f(x)) = g(2x+1)" />
       <BlockMath math="g(2x+1) = (2x+1)^2 + 4 = (4x^2 + 4x + 1) + 4 = 4x^2 + 4x + 5" />
-    </div>
+    </MathContainer>
 
 2.  **Calculating <InlineMath math="(f \circ g)(x)" />:**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(f \circ g)(x) = f(g(x)) = f(x^2+4)" />
       <BlockMath math="f(x^2+4) = 2(x^2+4) + 1 = (2x^2 + 8) + 1 = 2x^2 + 9" />
-    </div>
+    </MathContainer>
 
 Since <InlineMath math="4x^2 + 4x + 5 \neq 2x^2 + 9" />, it is proven that <InlineMath math="(g \circ f)(x) \neq (f \circ g)(x)" />. This property also applies to other compositions, for example <InlineMath math="(f \circ h)(x) \neq (h \circ f)(x)" /> and <InlineMath math="(g \circ h)(x) \neq (h \circ g)(x)" />.
 
@@ -60,26 +60,26 @@ Let's check if <InlineMath math="((f \circ g) \circ h)(x) = (f \circ (g \circ h)
 
     We already know <InlineMath math="(f \circ g)(x) = 2x^2 + 9" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="((f \circ g) \circ h)(x) = (f \circ g)(h(x)) = (f \circ g)(\frac{1}{x+1})" />
       <BlockMath math="(f \circ g)(\frac{1}{x+1}) = 2\left(\frac{1}{x+1}\right)^2 + 9 = \frac{2}{(x+1)^2} + 9" />
-    </div>
+    </MathContainer>
 
 2.  **Calculating <InlineMath math="(f \circ (g \circ h))(x)" />:**
 
     First, find <InlineMath math="(g \circ h)(x)" />:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(g \circ h)(x) = g(h(x)) = g(\frac{1}{x+1})" />
       <BlockMath math="g(\frac{1}{x+1}) = \left(\frac{1}{x+1}\right)^2 + 4 = \frac{1}{(x+1)^2} + 4" />
-    </div>
+    </MathContainer>
 
     Now, compose <InlineMath math="f" /> with this result:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(f \circ (g \circ h))(x) = f((g \circ h)(x)) = f\left(\frac{1}{(x+1)^2} + 4\right)" />
       <BlockMath math="f\left(\frac{1}{(x+1)^2} + 4\right) = 2\left(\frac{1}{(x+1)^2} + 4\right) + 1 = \frac{2}{(x+1)^2} + 8 + 1 = \frac{2}{(x+1)^2} + 9" />
-    </div>
+    </MathContainer>
 
 Since both results are the same (<InlineMath math="\frac{2}{(x+1)^2} + 9" />), the associative property is proven to hold: <InlineMath math="((f \circ g) \circ h)(x) = (f \circ (g \circ h))(x)" />.
 
@@ -91,10 +91,10 @@ There is a special function called the **identity function**, denoted by <Inline
 
 If a function <InlineMath math="f" /> is composed with the identity function <InlineMath math="I" /> (from either the left or the right), the result is the function <InlineMath math="f" /> itself.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(f \circ I)(x) = f(I(x)) = f(x)" />
   <BlockMath math="(I \circ f)(x) = I(f(x)) = f(x)" />
-</div>
+</MathContainer>
 
 **Example:**
 

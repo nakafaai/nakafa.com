@@ -66,13 +66,13 @@ Two dice are rolled simultaneously, one red die and one white die. Find the prob
 
 Both events are **independent** because the result of the red die does not affect the result of the white die.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="P(A) = \frac{1}{6}" />
 
 <BlockMath math="P(B) = \frac{1}{6}" />
 
 <BlockMath math="P(A \cap B) = P(A) \times P(B) = \frac{1}{6} \times \frac{1}{6} = \frac{1}{36}" />
-</div>
+</MathContainer>
 
 So the probability of getting number <InlineMath math="2" /> on the red die and number <InlineMath math="5" /> on the white die is <InlineMath math="\frac{1}{36}" />.
 
@@ -82,24 +82,24 @@ A die and a coin are thrown simultaneously. Find the probability of getting an e
 
 **Solution:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="S_{die} = \{1, 2, 3, 4, 5, 6\}" />
 
 <BlockMath math="S_{coin} = \{H, T\}" />
-</div>
+</MathContainer>
 
 - Event A: getting an even number on the die = <InlineMath math="\{2, 4, 6\}" />
 - Event B: getting tails on the coin = <InlineMath math="\{T\}" />
 
 Both events are **independent** because the result of the die does not affect the result of the coin.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
 
 <BlockMath math="P(B) = \frac{1}{2}" />
 
 <BlockMath math="P(A \cap B) = P(A) \times P(B) = \frac{1}{2} \times \frac{1}{2} = \frac{1}{4}" />
-</div>
+</MathContainer>
 
 ### Real-World Application Example
 
@@ -116,11 +116,11 @@ Both events can be considered **independent** because the need for a fire truck 
 
 **Detailed calculation:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="P(A \cap B) = P(A) \times P(B)" />
 
 <BlockMath math="P(A \cap B) = 0.98 \times 0.92 = 0.9016" />
-</div>
+</MathContainer>
 
 So the probability that both vehicles are needed on the same day is <InlineMath math="0.9016" /> or <InlineMath math="90.16\%" />.
 

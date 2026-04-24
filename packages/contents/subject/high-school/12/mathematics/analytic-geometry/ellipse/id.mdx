@@ -435,10 +435,10 @@ dengan syarat <InlineMath math="a > b" />.
 
 Kalau pusat elips bukan di titik asal, tapi di titik <InlineMath math="(h, k)" />, persamaannya jadi:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\frac{(x-h)^2}{a^2} + \frac{(y-k)^2}{b^2} = 1 \quad \text{(sumbu mayor horizontal)}" />
   <BlockMath math="\frac{(x-h)^2}{b^2} + \frac{(y-k)^2}{a^2} = 1 \quad \text{(sumbu mayor vertikal)}" />
-</div>
+</MathContainer>
 
 Visualisasi:
 
@@ -581,10 +581,10 @@ Nilai eksentrisitas elips selalu <InlineMath math="0 < e < 1" />. Makin mendekat
    
    Hitung <InlineMath math="c" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="c^2 = a^2 - b^2 = 25 - 16 = 9" />
      <BlockMath math="c = 3" />
-   </div>
+   </MathContainer>
    
    Koordinat fokus: <InlineMath math="(\pm 3, 0)" /> yaitu <InlineMath math="(-3, 0)" /> dan <InlineMath math="(3, 0)" />
    
@@ -607,12 +607,12 @@ Nilai eksentrisitas elips selalu <InlineMath math="0 < e < 1" />. Makin mendekat
    
    Hitung <InlineMath math="a" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="c^2 = a^2 - b^2" />
      <BlockMath math="9 = a^2 - 9" />
      <BlockMath math="a^2 = 18" />
      <BlockMath math="a = 3\sqrt{2}" />
-   </div>
+   </MathContainer>
    
    Persamaan elips dengan pusat <InlineMath math="(h,k) = (3,-1)" /> dan sumbu mayor vertikal:
    
@@ -634,30 +634,30 @@ Nilai eksentrisitas elips selalu <InlineMath math="0 < e < 1" />. Makin mendekat
    
    Misalkan <InlineMath math="u = \frac{1}{a^2}" /> dan <InlineMath math="v = \frac{1}{b^2}" />, maka:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="16u + 9v = 1 \quad \text{...(1)}" />
      <BlockMath math="36u + 4v = 1 \quad \text{...(2)}" />
-   </div>
+   </MathContainer>
    
    Dari persamaan (1): <InlineMath math="v = \frac{1-16u}{9}" />
    
    Substitusi ke persamaan (2):
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="36u + 4 \cdot \frac{1-16u}{9} = 1" />
      <BlockMath math="36u + \frac{4-64u}{9} = 1" />
      <BlockMath math="324u + 4 - 64u = 9" />
      <BlockMath math="260u = 5" />
      <BlockMath math="u = \frac{1}{52}" />
-   </div>
+   </MathContainer>
    
    Maka <InlineMath math="a^2 = 52" />
    
    Substitusi kembali:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="v = \frac{1-16 \cdot \frac{1}{52}}{9} = \frac{1-\frac{16}{52}}{9} = \frac{\frac{36}{52}}{9} = \frac{4}{52} = \frac{1}{13}" />
-   </div>
+   </MathContainer>
    
    Maka <InlineMath math="b^2 = 13" />
    

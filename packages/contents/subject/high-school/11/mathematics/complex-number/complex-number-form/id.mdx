@@ -77,26 +77,26 @@ Selain Kartesius, ada cara lain buat menyatakan bilangan kompleks, yaitu **bentu
 
 Hubungan antara bentuk Kartesius (<InlineMath math="x, y" />) dan bentuk Polar (<InlineMath math="r, \theta" />) bisa kita lihat dari trigonometri dasar:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x = r \cos \theta" />
   <BlockMath math="y = r \sin \theta" />
-</div>
+</MathContainer>
 
 Dari sini, kita bisa cari <InlineMath math="r" /> dan <InlineMath math="\theta" /> jika <InlineMath math="x" /> dan <InlineMath math="y" /> diketahui:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="r = |z| = \sqrt{x^2 + y^2}" />
   <BlockMath math="\tan \theta = \frac{y}{x}" />
-</div>
+</MathContainer>
 
 Saat mencari <InlineMath math="\theta" /> dari <InlineMath math="\tan \theta" />, perhatikan kuadran tempat titik <InlineMath math="(x, y)" /> berada untuk menentukan sudut yang tepat.
 
 Dengan substitusi <InlineMath math="x" /> dan <InlineMath math="y" /> ke bentuk Kartesius, kita dapatkan **bentuk polar**:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="z = x + iy = (r \cos \theta) + i(r \sin \theta)" />
   <BlockMath math="z = r (\cos \theta + i \sin \theta)" />
-</div>
+</MathContainer>
 
 Kadang, bentuk <InlineMath math="(\cos \theta + i \sin \theta)" /> disingkat jadi <InlineMath math="\text{cis } \theta" />.
 
@@ -336,14 +336,14 @@ Tentukan apakah pasangan bilangan kompleks berikut sama atau berbeda:
 
     dengan <InlineMath math="a=1, b=-2, c=6" />:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x = \frac{-(-2) \pm \sqrt{(-2)^2 - 4(1)(6)}}{2(1)}" />
       <BlockMath math="x = \frac{2 \pm \sqrt{4 - 24}}{2}" />
       <BlockMath math="x = \frac{2 \pm \sqrt{-20}}{2}" />
       <BlockMath math="x = \frac{2 \pm \sqrt{20}\sqrt{-1}}{2}" />
       <BlockMath math="x = \frac{2 \pm 2\sqrt{5}i}{2}" />
       <BlockMath math="x = 1 \pm i\sqrt{5}" />
-    </div>
+    </MathContainer>
 
     Solusinya adalah <InlineMath math="x_1 = 1 + i\sqrt{5}" /> dan <InlineMath math="x_2 = 1 - i\sqrt{5}" />.
 
@@ -359,7 +359,7 @@ Tentukan apakah pasangan bilangan kompleks berikut sama atau berbeda:
 
     - Susun persamaan kuadrat:
 
-      <div className="flex flex-col gap-4">
+      <MathContainer>
         <BlockMath math="x^2 - (2)x + (2) = 0" />
         <BlockMath math="x^2 - 2x + 2 = 0" />
-      </div>
+      </MathContainer>

@@ -320,7 +320,7 @@ export function getScopedContents(
       );
 
       if (content._tag === "Left") {
-        return undefined;
+        return;
       }
 
       const url = new URL(`/${contentLocale}/${slug}`, "https://nakafa.com");

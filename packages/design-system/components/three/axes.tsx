@@ -1,15 +1,19 @@
 "use client";
 
 import { Line, Text } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
 import { COLORS } from "@repo/design-system/lib/color";
-import { type ComponentProps, useMemo, useRef } from "react";
-import { type Group, MeshBasicMaterial, Vector3 } from "three";
+import { type ComponentProps, useMemo } from "react";
+import { MeshBasicMaterial, Vector3 } from "three";
 import { FONT_PATH, MONO_FONT_PATH } from "./_data";
 
 // Shared materials cache for text components
 const textMaterialCache = new Map<string, MeshBasicMaterial>();
 
+/**
+ * Reuses text materials per axis color across repeated coordinate systems.
+ *
+ * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance#re-using-geometries-and-materials
+ */
 function getTextMaterial(color: string): MeshBasicMaterial {
   if (!textMaterialCache.has(color)) {
     textMaterialCache.set(
@@ -24,6 +28,9 @@ function getTextMaterial(color: string): MeshBasicMaterial {
   return material;
 }
 
+/**
+ * Renders the shared X/Y/Z axes and labels for educational 3D scenes.
+ */
 export function Axes({
   size = 10,
   showLabels = true,
@@ -40,8 +47,6 @@ export function Axes({
   labelOffset?: number;
   font?: "mono" | "sans";
 } & ComponentProps<"group">) {
-  const groupRef = useRef<Group>(null);
-
   // Create points for each axis (now extending in both positive and negative directions)
   const xPoints = useMemo(
     () => [new Vector3(-size, 0, 0), new Vector3(size, 0, 0)],
@@ -64,21 +69,14 @@ export function Axes({
   const labelPositions = useMemo(() => {
     const offset = size + labelOffset;
     return {
-      xPos: [offset, 0, 0] as [number, number, number],
-      xNeg: [-offset, 0, 0] as [number, number, number],
-      yPos: [0, offset, 0] as [number, number, number],
-      yNeg: [0, -offset, 0] as [number, number, number],
-      zPos: [0, 0, offset] as [number, number, number],
-      zNeg: [0, 0, -offset] as [number, number, number],
+      xPos: new Vector3(offset, 0, 0),
+      xNeg: new Vector3(-offset, 0, 0),
+      yPos: new Vector3(0, offset, 0),
+      yNeg: new Vector3(0, -offset, 0),
+      zPos: new Vector3(0, 0, offset),
+      zNeg: new Vector3(0, 0, -offset),
     };
   }, [size, labelOffset]);
-
-  // Enable frustum culling for the entire group
-  useFrame(() => {
-    if (groupRef.current) {
-      groupRef.current.frustumCulled = true;
-    }
-  });
 
   // Get shared materials for text
   const redMaterial = getTextMaterial(COLORS.RED);
@@ -86,7 +84,7 @@ export function Axes({
   const blueMaterial = getTextMaterial(COLORS.BLUE);
 
   return (
-    <group ref={groupRef} {...props}>
+    <group frustumCulled {...props}>
       {/* Axis lines with frustum culling */}
       <Line color={COLORS.RED} frustumCulled lineWidth={2} points={xPoints} />
       <Line color={COLORS.GREEN} frustumCulled lineWidth={2} points={yPoints} />

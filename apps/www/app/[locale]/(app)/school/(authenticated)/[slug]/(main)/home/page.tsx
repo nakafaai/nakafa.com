@@ -16,6 +16,7 @@ export async function generateMetadata({
   };
 }
 
+/** Render the school home shell until live dashboard modules are connected. */
 export default function Page() {
   return <SchoolLayoutContent />;
 }

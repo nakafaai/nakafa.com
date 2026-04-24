@@ -82,27 +82,27 @@ Kita identifikasi dulu parameternya:
 
 Sekarang kita gunakan rumus distribusi binomial:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="b(5;7,\frac{1}{2}) = \binom{7}{5} \left(\frac{1}{2}\right)^5 \left(\frac{1}{2}\right)^{7-5}" />
 
 <BlockMath math="= \binom{7}{5} \left(\frac{1}{2}\right)^5 \left(\frac{1}{2}\right)^2" />
 
 <BlockMath math="= \binom{7}{5} \left(\frac{1}{2}\right)^7" />
-</div>
+</MathContainer>
 
 Mari kita hitung <InlineMath math="\binom{7}{5}" /> terlebih dahulu:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\binom{7}{5} = \frac{7!}{5!(7-5)!} = \frac{7!}{5! \cdot 2!}" />
 
 <BlockMath math="= \frac{7 \times 6 \times 5!}{5! \times 2 \times 1} = \frac{7 \times 6}{2} = \frac{42}{2} = 21" />
-</div>
+</MathContainer>
 
 Jadi perhitungan lengkapnya:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="b(5;7,\frac{1}{2}) = 21 \times \frac{1}{2^7} = 21 \times \frac{1}{128} = \frac{21}{128}" />
-</div>
+</MathContainer>
 
 Jadi, peluang mendapatkan <InlineMath math="5" /> gambar dalam <InlineMath math="7" /> kali lemparan adalah <InlineMath math="\frac{21}{128}" /> atau sekitar <InlineMath math="16{,}4\%" />.
 
@@ -127,9 +127,9 @@ Jadi, peluang mendapatkan <InlineMath math="5" /> gambar dalam <InlineMath math=
 
     **Langkah 2: Hitung menggunakan rumus distribusi binomial.**
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="b(3;5,0{,}6) = \binom{5}{3} (0{,}6)^3 (0{,}4)^2" />
-    </div>
+    </MathContainer>
     
     Mari hitung <InlineMath math="\binom{5}{3}" /> dulu:
 
@@ -137,11 +137,11 @@ Jadi, peluang mendapatkan <InlineMath math="5" /> gambar dalam <InlineMath math=
     
     Kemudian:
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="= 10 \times (0{,}6)^3 \times (0{,}4)^2" />
     
     <BlockMath math="= 10 \times 0{,}216 \times 0{,}16 = 0{,}3456" />
-    </div>
+    </MathContainer>
     
     Jadi, peluang terambilnya tepat <InlineMath math="3" /> bola merah adalah <InlineMath math="0{,}3456" /> atau sekitar <InlineMath math="34{,}6\%" />.
 
@@ -156,9 +156,9 @@ Jadi, peluang mendapatkan <InlineMath math="5" /> gambar dalam <InlineMath math=
 
     **Langkah 2: Hitung menggunakan rumus distribusi binomial.**
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="b(4;6,0{,}8) = \binom{6}{4} (0{,}8)^4 (0{,}2)^2" />
-    </div>
+    </MathContainer>
     
     Mari hitung <InlineMath math="\binom{6}{4}" /> dulu:
     
@@ -166,11 +166,11 @@ Jadi, peluang mendapatkan <InlineMath math="5" /> gambar dalam <InlineMath math=
     
     Kemudian:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="= 15 \times (0{,}8)^4 \times (0{,}2)^2" />
     
     <BlockMath math="= 15 \times 0{,}4096 \times 0{,}04 = 0{,}2458" />
-    </div>
+    </MathContainer>
     
     Jadi, peluang pemanah mengenai target tepat <InlineMath math="4" /> kali adalah <InlineMath math="0{,}2458" /> atau sekitar <InlineMath math="24{,}6\%" />.
 
@@ -185,9 +185,9 @@ Jadi, peluang mendapatkan <InlineMath math="5" /> gambar dalam <InlineMath math=
 
     **Langkah 2: Hitung menggunakan rumus distribusi binomial.**
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="b(2;8,0{,}25) = \binom{8}{2} (0{,}25)^2 (0{,}75)^6" />
-    </div>
+    </MathContainer>
     
     Mari hitung <InlineMath math="\binom{8}{2}" /> dulu:
 
@@ -195,10 +195,10 @@ Jadi, peluang mendapatkan <InlineMath math="5" /> gambar dalam <InlineMath math=
     
     Kemudian:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="= 28 \times (0{,}25)^2 \times (0{,}75)^6" />
     
     <BlockMath math="= 28 \times 0{,}0625 \times 0{,}178 = 0{,}3115" />
-    </div>
+    </MathContainer>
     
     Jadi, peluang siswa menjawab benar tepat <InlineMath math="2" /> soal adalah <InlineMath math="0{,}3115" /> atau sekitar <InlineMath math="31{,}2\%" />.

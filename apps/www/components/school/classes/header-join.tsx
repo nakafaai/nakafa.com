@@ -1,10 +1,10 @@
 "use client";
 
 import { InLoveIcon, Rocket01Icon } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
-import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   Field,
   FieldGroup,
@@ -21,7 +21,6 @@ import {
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
 
@@ -39,7 +38,7 @@ export function SchoolClassesHeaderJoin() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const [open, setOpen] = useState(false);
+  const [open, openHandlers] = useDisclosure(false);
 
   const joinClass = useMutation(api.classes.mutations.joinClass);
 
@@ -52,7 +51,7 @@ export function SchoolClassesHeaderJoin() {
       try {
         const { classId } = await joinClass(value);
         router.push(`${pathname}/${classId}`);
-        setOpen(false);
+        openHandlers.close();
         form.reset();
       } catch (error) {
         captureException(error, {
@@ -72,12 +71,10 @@ export function SchoolClassesHeaderJoin() {
         form.handleSubmit();
       }}
     >
-      <ButtonGroup>
-        <Button onClick={() => setOpen(true)}>
-          <HugeIcons icon={Rocket01Icon} />
-          <span className="hidden sm:inline">{t("join-class")}</span>
-        </Button>
-      </ButtonGroup>
+      <Button onClick={openHandlers.open} type="button">
+        <HugeIcons icon={Rocket01Icon} />
+        <span className="hidden sm:inline">{t("join-class")}</span>
+      </Button>
 
       <ResponsiveDialog
         description={t("join-class-description")}
@@ -98,7 +95,7 @@ export function SchoolClassesHeaderJoin() {
           </form.Subscribe>
         }
         open={open}
-        setOpen={setOpen}
+        setOpen={openHandlers.set}
         title={t("join-class")}
       >
         <FieldGroup>

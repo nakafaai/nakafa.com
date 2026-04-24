@@ -38,10 +38,10 @@ Misalkan <InlineMath math="\lim_{x \to c} f(x) = L" /> dan <InlineMath math="\li
 
 Limit dari **jumlah** atau **selisih** dua fungsi sama dengan jumlah atau selisih **limit masing-masing fungsi**:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\lim_{x \to c} [f(x) + g(x)] = \lim_{x \to c} f(x) + \lim_{x \to c} g(x) = L + M" />
 <BlockMath math="\lim_{x \to c} [f(x) - g(x)] = \lim_{x \to c} f(x) - \lim_{x \to c} g(x) = L - M" />
-</div>
+</MathContainer>
 
 > Sifat ini memungkinkan kita memecah limit yang kompleks menjadi bagian-bagian yang lebih sederhana.
 
@@ -95,11 +95,11 @@ Hitung <InlineMath math="\lim_{x \to 2} (3x^2 + 5x - 1)" />.
 
 Menggunakan sifat-sifat limit:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\lim_{x \to 2} (3x^2 + 5x - 1) = \lim_{x \to 2} 3x^2 + \lim_{x \to 2} 5x - \lim_{x \to 2} 1" />
 <BlockMath math="= 3 \lim_{x \to 2} x^2 + 5 \lim_{x \to 2} x - 1" />
 <BlockMath math="= 3(2)^2 + 5(2) - 1 = 12 + 10 - 1 = 21" />
-</div>
+</MathContainer>
 
 ### Contoh dengan Pecahan
 
@@ -109,16 +109,16 @@ Hitung <InlineMath math="\lim_{x \to 4} \frac{x\sqrt{x}}{x^2 + 3}" />.
 
 Menggunakan sifat pembagian dan perkalian:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\lim_{x \to 4} \frac{x\sqrt{x}}{x^2 + 3} = \frac{\lim_{x \to 4} x\sqrt{x}}{\lim_{x \to 4} (x^2 + 3)}" />
 <BlockMath math="= \frac{\lim_{x \to 4} x \cdot \lim_{x \to 4} \sqrt{x}}{\lim_{x \to 4} x^2 + \lim_{x \to 4} 3}" />
-</div>
+</MathContainer>
 
 Sekarang kita substitusi nilai <InlineMath math="x = 4" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="= \frac{4 \cdot \sqrt{4}}{4^2 + 3} = \frac{4 \cdot 2}{16 + 3} = \frac{8}{19}" />
-</div>
+</MathContainer>
 
 Dalam bentuk **desimal**: <InlineMath math="\frac{8}{19} \approx 0.421" />
 
@@ -130,15 +130,15 @@ Hitung <InlineMath math="\lim_{x \to 0} \sqrt{x^2 - 3x + 2}" />.
 
 Menggunakan sifat akar (karena <InlineMath math="n = 2" /> genap, kita perlu memastikan hasil di dalam akar tidak negatif):
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\lim_{x \to 0} \sqrt{x^2 - 3x + 2} = \sqrt{\lim_{x \to 0} (x^2 - 3x + 2)}" />
-</div>
+</MathContainer>
 
 Hitung limit di dalam akar terlebih dahulu:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\lim_{x \to 0} (x^2 - 3x + 2) = 0^2 - 3(0) + 2 = 0 - 0 + 2 = 2" />
-</div>
+</MathContainer>
 
 Karena <InlineMath math="2 > 0" />, kita dapat menggunakan sifat akar:
 
@@ -162,24 +162,24 @@ Karena <InlineMath math="2 > 0" />, kita dapat menggunakan sifat akar:
 
    Menggunakan sifat penjumlahan dan perkalian dengan konstanta:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{x \to 3} (2x^2 - 4x + 1) = 2\lim_{x \to 3} x^2 - 4\lim_{x \to 3} x + \lim_{x \to 3} 1" />
-   </div>
+   </MathContainer>
 
    Substitusi <InlineMath math="x = 3" />:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="= 2(3)^2 - 4(3) + 1 = 2(9) - 12 + 1 = 18 - 12 + 1 = 7" />
-   </div>
+   </MathContainer>
 
 2. **Penyelesaian:**
 
    Menggunakan sifat pembagian:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{x \to 1} \frac{3x + 2}{x^2 + 1} = \frac{\lim_{x \to 1} (3x + 2)}{\lim_{x \to 1} (x^2 + 1)}" />
    <BlockMath math="= \frac{3(1) + 2}{1^2 + 1} = \frac{5}{2}" />
-   </div>
+   </MathContainer>
 
    Dalam bentuk **desimal**: <InlineMath math="\frac{5}{2} = 2.5" />
 
@@ -187,25 +187,25 @@ Karena <InlineMath math="2 > 0" />, kita dapat menggunakan sifat akar:
 
    Menggunakan sifat akar:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{x \to 4} \sqrt{x + 5} = \sqrt{\lim_{x \to 4} (x + 5)}" />
    <BlockMath math="= \sqrt{4 + 5} = \sqrt{9} = 3" />
-   </div>
+   </MathContainer>
 
 4. **Penyelesaian:**
 
    Menggunakan sifat perpangkatan:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{x \to 2} (x + 1)^3 = \left[\lim_{x \to 2} (x + 1)\right]^3" />
    <BlockMath math="= (2 + 1)^3 = 3^3 = 27" />
-   </div>
+   </MathContainer>
 
 5. **Penyelesaian:**
 
    Menggunakan sifat pembagian:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{x \to 0} \frac{5x^2 + 3x}{2x + 1} = \frac{\lim_{x \to 0} (5x^2 + 3x)}{\lim_{x \to 0} (2x + 1)}" />
    <BlockMath math="= \frac{5(0)^2 + 3(0)}{2(0) + 1} = \frac{0}{1} = 0" />
-   </div>
+   </MathContainer>

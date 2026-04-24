@@ -118,7 +118,7 @@ export function validateExercisesMaterial(
 
 export function parseExerciseYear(value: string | undefined, context: string) {
   if (value === undefined) {
-    return undefined;
+    return;
   }
 
   if (!EXERCISE_YEAR_SEGMENT_REGEX.test(value)) {

@@ -10,6 +10,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { MIN_FORUM_THREAD_TEXT_LENGTH } from "@repo/backend/convex/classes/forums/utils/constants";
+import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
@@ -36,6 +37,7 @@ import { toast } from "sonner";
 import * as z from "zod/mini";
 import { getTag, getTagsByRole } from "@/components/school/classes/_data/tag";
 import { useClass } from "@/lib/context/use-class";
+import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 
 const formSchema = z.object({
   title: z.string().check(z.minLength(MIN_FORUM_THREAD_TEXT_LENGTH), z.trim()),
@@ -55,6 +57,7 @@ const defaultValues: z.infer<typeof formSchema> = {
   tag: "general",
 };
 
+/** Render the create-forum dialog and submit it through the class forum API. */
 export function SchoolClassesForumNew() {
   const t = useTranslations("School.Classes");
 
@@ -63,12 +66,16 @@ export function SchoolClassesForumNew() {
   const classId = useClass((c) => c.class._id);
   const classMembership = useClass((c) => c.classMembership);
   const schoolMembership = useClass((c) => c.schoolMembership);
+  const { can } = useClassPermissions();
   const createForum = useMutation(
     api.classes.forums.mutations.forums.createForum
   );
 
-  // Get available tags based on user role (school admins get all tags)
+  const canModerateForum = can(PERMISSIONS.FORUM_MODERATE);
+
+  // Get available tags based on the same permission split enforced by Convex.
   const availableTags = getTagsByRole(
+    canModerateForum,
     classMembership?.role ?? "student",
     schoolMembership?.role ?? "student"
   );

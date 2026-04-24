@@ -22,11 +22,11 @@ Find the first derivative of <InlineMath math="y = 4x^2 + x + 2" />.
 
 We can differentiate each term one by one using the power rule and the constant rule.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y' = (4 \cdot 2)x^{2-1} + (1 \cdot 1)x^{1-1} + 0" />
   <BlockMath math="y' = 8x^1 + 1x^0" />
   <BlockMath math="y' = 8x + 1 \quad (\text{since } x^0=1)" />
-</div>
+</MathContainer>
 
 ### Conquering Radical Forms
 
@@ -42,21 +42,21 @@ First, we convert the radical form to an exponent: <InlineMath math="y = x \cdot
 
 Let <InlineMath math="u(x) = x" /> and <InlineMath math="v(x) = x^{3/2}" />. Then, <InlineMath math="u'(x)=1" /> and <InlineMath math="v'(x) = \frac{3}{2}x^{1/2}" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y' = u'(x)v(x) + u(x)v'(x)" />
   <BlockMath math="y' = (1)(x^{3/2}) + (x)(\frac{3}{2}x^{1/2})" />
   <BlockMath math="y' = x^{3/2} + \frac{3}{2}x^{3/2}" />
   <BlockMath math="y' = \frac{5}{2}x^{3/2}" />
-</div>
+</MathContainer>
 
 **Method 2: Simplifying First**
 
 We can simplify the function before differentiating it.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y = x \cdot x^{3/2} = x^{1 + 3/2} = x^{5/2}" />
   <BlockMath math="y' = \frac{5}{2}x^{5/2 - 1} = \frac{5}{2}x^{3/2}" />
-</div>
+</MathContainer>
 
 > Both methods give the same result. Sometimes, simplifying the function first can make the differentiation process quicker.
 
@@ -68,13 +68,13 @@ Find the first derivative of <InlineMath math="y = 2\left(\frac{x^2+2}{x}\right)
 
 We use the quotient rule. Let <InlineMath math="u(x) = x^2+2" /> and <InlineMath math="v(x) = x" />. Then <InlineMath math="u'(x) = 2x" /> and <InlineMath math="v'(x) = 1" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y' = 2 \cdot \left(\frac{u'(x)v(x) - u(x)v'(x)}{[v(x)]^2}\right)" />
   <BlockMath math="y' = 2 \cdot \left(\frac{(2x)(x) - (x^2+2)(1)}{x^2}\right)" />
   <BlockMath math="y' = 2 \cdot \left(\frac{2x^2 - x^2 - 2}{x^2}\right)" />
   <BlockMath math="y' = 2 \cdot \left(\frac{x^2 - 2}{x^2}\right)" />
   <BlockMath math="y' = 2 \cdot \left(\frac{x^2}{x^2} - \frac{2}{x^2}\right) = 2 \cdot \left(1 - \frac{2}{x^2}\right) = 2 - \frac{4}{x^2}" />
-</div>
+</MathContainer>
 
 ## Exercises
 
@@ -94,19 +94,19 @@ We use the quotient rule. Let <InlineMath math="u(x) = x^2+2" /> and <InlineMath
     
     Convert the square root to the exponent <InlineMath math="x^{1/2}" /> and use exponent properties to simplify each term.
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="y = \frac{x^{1/2}}{2x^1} + \frac{x^2}{2x^1}" />
       <BlockMath math="y = \frac{1}{2}x^{1/2 - 1} + \frac{1}{2}x^{2-1}" />
       <BlockMath math="y = \frac{1}{2}x^{-1/2} + \frac{1}{2}x" />
-    </div>
+    </MathContainer>
 
     **Step 3: Apply the Power Rule**
     
     Once the function is simplified, we can directly differentiate it term by term.
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="y' = \frac{1}{2}\left(-\frac{1}{2}x^{-1/2 - 1}\right) + \frac{1}{2}(1)" />
       <BlockMath math="y' = -\frac{1}{4}x^{-3/2} + \frac{1}{2}" />
-    </div>
+    </MathContainer>
     
     So, the first derivative is <InlineMath math="\frac{1}{2} - \frac{1}{4}x^{-3/2}" />.

@@ -1,6 +1,8 @@
 {
   "name": "nakafa",
   "version": "1.0.0",
+  "private": true,
+  "license": "SEE LICENSE IN LICENSE",
   "bin": {
     "nakafa": "dist/index.js"
   },
@@ -38,9 +40,9 @@
     "deps-check-mcp": "cd apps/mcp && depcheck --ignore-dirs=node_modules || true"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.11",
+    "@biomejs/biome": "2.4.13",
     "@changesets/changelog-github": "^0.6.0",
-    "@changesets/cli": "^2.30.0",
+    "@changesets/cli": "^2.31.0",
     "@effect/language-service": "^0.85.1",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^2.9.6",
@@ -48,12 +50,12 @@
     "depcheck": "^1.4.7",
     "tsup": "^8.5.1",
     "turbo": "^2.9.6",
-    "typescript": "^6.0.2",
-    "ultracite": "^7.5.6"
+    "typescript": "^6.0.3",
+    "ultracite": "^7.6.1"
   },
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@10.33.2",
   "type": "module"
 }

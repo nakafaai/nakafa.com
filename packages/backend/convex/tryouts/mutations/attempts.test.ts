@@ -2,7 +2,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
-import { syncTryoutAccessGrantStatus } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { syncTryoutAccessGrantStatus } from "@repo/backend/convex/tryoutAccess/helpers/entitlements";
 import { insertTryoutAccessCampaign } from "@repo/backend/convex/tryoutAccess/test.helpers";
 import {
   ATTEMPT_WINDOW_MS,
@@ -135,14 +135,15 @@ describe("tryouts/mutations/attempts", () => {
         }),
     ]);
 
-    const attempts = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
-          q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
-        )
-        .collect();
-    });
+    const attempts = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("tryoutAttempts")
+          .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+            q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
+          )
+          .collect()
+    );
 
     expect(attempts).toHaveLength(1);
   });
@@ -199,14 +200,15 @@ describe("tryouts/mutations/attempts", () => {
         }),
     ]);
 
-    const attempts = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_startedAt", (q) =>
-          q.eq("userId", state.userId)
-        )
-        .collect();
-    });
+    const attempts = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("tryoutAttempts")
+          .withIndex("by_userId_and_startedAt", (q) =>
+            q.eq("userId", state.userId)
+          )
+          .collect()
+    );
 
     expect(attempts).toHaveLength(2);
     expect(new Set(attempts.map((attempt) => attempt.tryoutId))).toEqual(
@@ -285,14 +287,15 @@ describe("tryouts/mutations/attempts", () => {
         }),
     ]);
 
-    const attempts = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
-          q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
-        )
-        .collect();
-    });
+    const attempts = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("tryoutAttempts")
+          .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+            q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
+          )
+          .collect()
+    );
 
     expect(attempts).toHaveLength(1);
     expect(attempts[0]).toMatchObject({
@@ -332,15 +335,16 @@ describe("tryouts/mutations/attempts", () => {
         tryoutSlug: "2026-reporting-start",
       });
 
-    const tryoutAttempt = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
-          q.eq("userId", identity.userId).eq("tryoutId", identity.tryoutId)
-        )
-        .order("desc")
-        .first();
-    });
+    const tryoutAttempt = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("tryoutAttempts")
+          .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+            q.eq("userId", identity.userId).eq("tryoutId", identity.tryoutId)
+          )
+          .order("desc")
+          .first()
+    );
 
     expect(tryoutAttempt).not.toBeNull();
     expect(tryoutAttempt?.theta).toBe(0);
@@ -451,15 +455,16 @@ describe("tryouts/mutations/attempts", () => {
         tryoutSlug: "competition-first-attempt",
       });
 
-    const tryoutAttempt = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
-          q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
-        )
-        .order("desc")
-        .first();
-    });
+    const tryoutAttempt = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("tryoutAttempts")
+          .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+            q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
+          )
+          .order("desc")
+          .first()
+    );
 
     expect(tryoutAttempt?.accessKind).toBe("event");
     expect(tryoutAttempt?.accessCampaignId).toBe(state.campaignId);
@@ -556,15 +561,16 @@ describe("tryouts/mutations/attempts", () => {
         tryoutSlug: "competition-then-pro",
       });
 
-    const latestAttempt = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
-          q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
-        )
-        .order("desc")
-        .first();
-    });
+    const latestAttempt = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("tryoutAttempts")
+          .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+            q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
+          )
+          .order("desc")
+          .first()
+    );
 
     expect(latestAttempt?.accessKind).toBe("subscription");
     expect(latestAttempt?.accessCampaignId).toBeUndefined();
@@ -902,15 +908,16 @@ describe("tryouts/mutations/attempts", () => {
         tryoutSlug: "longest-access-pass-window",
       });
 
-    const tryoutAttempt = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
-          q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
-        )
-        .order("desc")
-        .first();
-    });
+    const tryoutAttempt = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("tryoutAttempts")
+          .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+            q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
+          )
+          .order("desc")
+          .first()
+    );
 
     expect(tryoutAttempt?.accessCampaignId).toBe(state.longerCampaignId);
     expect(tryoutAttempt?.accessGrantId).toBe(state.longerGrantId);
@@ -991,15 +998,16 @@ describe("tryouts/mutations/attempts", () => {
         tryoutSlug: "many-access-pass-grants",
       });
 
-    const tryoutAttempt = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
-          q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
-        )
-        .order("desc")
-        .first();
-    });
+    const tryoutAttempt = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("tryoutAttempts")
+          .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+            q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
+          )
+          .order("desc")
+          .first()
+    );
 
     expect(tryoutAttempt?.accessCampaignId).toBe(state.longestCampaignId);
     expect(tryoutAttempt?.accessGrantId).toBe(state.longestGrantId);
@@ -1224,14 +1232,15 @@ describe("tryouts/mutations/attempts", () => {
         tryoutAttemptId: state.tryoutAttemptId,
       });
 
-    const result = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("tryoutPartAttempts")
-        .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
-          q.eq("tryoutAttemptId", state.tryoutAttemptId).eq("partIndex", 0)
-        )
-        .take(2);
-    });
+    const result = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("tryoutPartAttempts")
+          .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
+            q.eq("tryoutAttemptId", state.tryoutAttemptId).eq("partIndex", 0)
+          )
+          .take(2)
+    );
 
     expect(result).toHaveLength(1);
     expect(result[0]?.setAttemptId).toBe(state.setAttemptId);
@@ -1454,9 +1463,9 @@ describe("tryouts/mutations/attempts", () => {
         tryoutAttemptId: state.tryoutAttemptId,
       });
 
-    const result = await t.query(async (ctx) => {
-      return await ctx.db.get("tryoutAttempts", state.tryoutAttemptId);
-    });
+    const result = await t.query(
+      async (ctx) => await ctx.db.get("tryoutAttempts", state.tryoutAttemptId)
+    );
 
     expect(result?.completedPartIndices).toEqual([0]);
   });
@@ -1607,14 +1616,15 @@ describe("tryouts/mutations/attempts", () => {
         tryoutSlug: "reuse-shrunk-partcount",
       });
 
-    const attempts = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
-          q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
-        )
-        .collect();
-    });
+    const attempts = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("tryoutAttempts")
+          .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
+            q.eq("userId", state.userId).eq("tryoutId", state.tryoutId)
+          )
+          .collect()
+    );
 
     expect(attempts).toHaveLength(1);
   });

@@ -19,6 +19,7 @@ import { getInitialName } from "@/lib/utils/helper";
 
 const DEBOUNCE_TIME = 500;
 
+/** Render the paginated class roster for the active class. */
 export function SchoolClassesPeopleList() {
   const t = useTranslations("School.Classes");
 
@@ -78,7 +79,7 @@ export function SchoolClassesPeopleList() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Badge variant="secondary">
+            <Badge variant={person.role === "teacher" ? "secondary" : "muted"}>
               <HugeIcons
                 icon={person.role === "teacher" ? TeacherIcon : StudentIcon}
               />

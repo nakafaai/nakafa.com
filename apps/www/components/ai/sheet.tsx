@@ -372,9 +372,7 @@ const AiSheetMainPlaceholder = memo(() => (
 ));
 AiSheetMainPlaceholder.displayName = "AiSheetMainPlaceholder";
 
-const AiSheetMainContent = memo(() => {
-  return <AiSheetContent />;
-});
+const AiSheetMainContent = memo(() => <AiSheetContent />);
 
 const AiSheetContent = memo(() => {
   const router = useRouter();

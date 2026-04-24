@@ -8,15 +8,29 @@ import {
 } from "@repo/backend/convex/credits/constants";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import aggregateSchema from "@repo/backend/node_modules/@convex-dev/aggregate/src/component/schema";
 import { convexTest } from "convex-test";
 
 const betterAuthModules = import.meta.glob(["./betterAuth/**/*.ts"]);
+const aggregateModules = import.meta.glob([
+  "../node_modules/@convex-dev/aggregate/src/component/**/*.ts",
+]);
 const DEFAULT_SESSION_DURATION_MS = 365 * 24 * 60 * 60 * 1000;
 
 /** Builds a Convex test instance with the Better Auth component registered. */
 export function createConvexTestWithBetterAuth() {
   const t = convexTest(schema, convexModules);
   t.registerComponent("betterAuth", authSchema, betterAuthModules);
+  t.registerComponent(
+    "forumPostsByAuthorSequence",
+    aggregateSchema,
+    aggregateModules
+  );
+  t.registerComponent(
+    "forumPostsBySequence",
+    aggregateSchema,
+    aggregateModules
+  );
   return t;
 }
 

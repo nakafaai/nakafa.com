@@ -18,10 +18,10 @@ Sebagai contoh, mari kita selesaikan <InlineMath math="\int x^5 \, dx" />.
 
 Disini, <InlineMath math="n=5" />, jadi:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\int x^5 \, dx = \frac{1}{5+1}x^{5+1} + C" />
 <BlockMath math="= \frac{1}{6}x^6 + C" />
-</div>
+</MathContainer>
 
 ## Aturan Kelipatan Konstanta
 
@@ -39,11 +39,11 @@ Bagaimana jika kita harus mengintegralkan dua fungsi yang dijumlahkan atau dikur
 
 Contohnya, untuk menyelesaikan <InlineMath math="\int (x^4 - x^3) \, dx" />, kita pisahkan dulu:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\int (x^4 - x^3) \, dx = \int x^4 \, dx - \int x^3 \, dx" />
 <BlockMath math="= \left( \frac{1}{4+1}x^5 \right) - \left( \frac{1}{3+1}x^4 \right) + C" />
 <BlockMath math="= \frac{1}{5}x^5 - \frac{1}{4}x^4 + C" />
-</div>
+</MathContainer>
 
 Jangan lupa untuk hanya menambahkan satu konstanta **C** di akhir. Secara teknis, setiap integral akan menghasilkan konstantanya sendiri (misalnya, <InlineMath math="C_1" /> dan <InlineMath math="C_2" />). Namun, karena semua konstanta tersebut nilainya tak tentu, hasil penjumlahan atau pengurangannya pun akan menjadi sebuah konstanta tak tentu baru. Oleh karena itu, kita cukup menuliskannya sebagai satu **C** di akhir.
 
@@ -71,10 +71,10 @@ Ini sering disebut juga sebagai **substitusi u**. Metode ini sangat ampuh untuk 
     
     **Langkah 2:** Gunakan aturan pangkat pada <InlineMath math="\int x^2 \, dx" />, di mana <InlineMath math="n=2" />.
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="6 \left( \frac{1}{2+1}x^{2+1} \right) + C" />
     <BlockMath math="= 6 \left( \frac{1}{3}x^3 \right) + C" />
-    </div>
+    </MathContainer>
     
     **Langkah 3:** Kalikan konstantanya untuk mendapatkan hasil akhir.
     
@@ -88,10 +88,10 @@ Ini sering disebut juga sebagai **substitusi u**. Metode ini sangat ampuh untuk 
     
     **Langkah 2:** Selesaikan setiap integral satu per satu menggunakan aturan pangkat dan konstanta.
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="= 3\left(\frac{1}{3}x^3\right) + 2\left(\frac{1}{2}x^2\right) - 5x + C" />
     <BlockMath math="= x^3 + x^2 - 5x + C" />
-    </div>
+    </MathContainer>
     
     Jadi, jawabannya adalah <InlineMath math="x^3 + x^2 - 5x + C" />.
 

@@ -15,10 +15,10 @@ How do you add two complex numbers?
 
 Suppose we have two complex numbers:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="z_1 = x_1 + iy_1" />
   <BlockMath math="z_2 = x_2 + iy_2" />
-</div>
+</MathContainer>
 
 To add them (<InlineMath math="z_1 + z_2" />), simply add the real parts together and the imaginary parts together.
 
@@ -133,10 +133,10 @@ Geometrically, <InlineMath math="z_1 - z_2" /> is the vector from the tip of <In
 
 Suppose we have:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="z_1 = 2 + \frac{1}{2}i" />
   <BlockMath math="z_2 = -3 + \sqrt{2}i" />
-</div>
+</MathContainer>
 
 Let's calculate some operations:
 
@@ -146,21 +146,21 @@ Let's calculate some operations:
 
 2.  **<InlineMath math="z_1 + 3z_2" /> (Addition and Scalar Multiplication):**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="z_1 + 3z_2 = (2 + \frac{1}{2}i) + 3(-3 + \sqrt{2}i)" />
       <BlockMath math="= (2 + \frac{1}{2}i) + (3(-3) + i(3\sqrt{2}))" />
       <BlockMath math="= (2 + \frac{1}{2}i) + (-9 + 3\sqrt{2}i)" />
       <BlockMath math="= (2 - 9) + i(\frac{1}{2} + 3\sqrt{2})" />
       <BlockMath math="= -7 + i(\frac{1}{2} + 3\sqrt{2})" />
-    </div>
+    </MathContainer>
 
 3.  **<InlineMath math="2z_1 - z_2" /> (Subtraction and Scalar Multiplication):**
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="2z_1 - z_2 = (4 + i) - (-3 + \sqrt{2}i)" />
       <BlockMath math="= (4 - (-3)) + i(1 - \sqrt{2})" />
       <BlockMath math="= (4 + 3) + i(1 - \sqrt{2})" />
       <BlockMath math="= 7 + i(1 - \sqrt{2})" />
-    </div>
+    </MathContainer>
 
 ## Exercise
 

@@ -12,19 +12,20 @@ export function useClassPermissions() {
   const teacherRole = classMembership?.teacherRole;
 
   const can = (permission: Permission) => {
-    const schoolPerms = schoolRole ? (ROLE_PERMISSIONS[schoolRole] ?? []) : [];
+    const schoolPerms =
+      schoolRole === undefined ? [] : ROLE_PERMISSIONS[schoolRole];
     if (schoolPerms.includes(permission)) {
       return true;
     }
 
-    if (classRole) {
-      const classPerms = ROLE_PERMISSIONS[classRole] ?? [];
+    if (classRole !== undefined) {
+      const classPerms = ROLE_PERMISSIONS[classRole];
       if (classPerms.includes(permission)) {
         return true;
       }
 
-      if (classRole === "teacher" && teacherRole) {
-        const teacherPerms = ROLE_PERMISSIONS[teacherRole] ?? [];
+      if (classRole === "teacher" && teacherRole !== undefined) {
+        const teacherPerms = ROLE_PERMISSIONS[teacherRole];
         if (teacherPerms.includes(permission)) {
           return true;
         }

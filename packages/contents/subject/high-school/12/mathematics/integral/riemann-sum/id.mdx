@@ -99,7 +99,7 @@ Mari kita terapkan konsep ini pada sebuah contoh.
 
     Tinggi setiap persegi panjang ditentukan oleh nilai fungsi <InlineMath math="f(x) = x" /> di titik sampel yang telah dipilih:
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="f(x_1) = f(0) = 0" />
     <BlockMath math="f(x_2) = f(1) = 1" />
     <BlockMath math="f(x_3) = f(2) = 2" />
@@ -107,18 +107,18 @@ Mari kita terapkan konsep ini pada sebuah contoh.
     <BlockMath math="f(x_5) = f(4) = 4" />
     <BlockMath math="f(x_6) = f(5) = 5" />
     <BlockMath math="f(x_7) = f(6) = 6" />
-    </div>
+    </MathContainer>
 
 5.  **Hitung Jumlahan Riemann:**
 
     Sekarang kita dapat menghitung total luas dengan menjumlahkan luas semua persegi panjang. Ingat bahwa luas setiap persegi panjang adalah tinggi dikali lebar:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="R_7 = \sum_{i=1}^{7} f(x_i^*) \Delta x" />
     <BlockMath math="= [f(0) + f(1) + f(2) + f(3) + f(4) + f(5) + f(6)] \cdot 1" />
     <BlockMath math="= (0 + 1 + 2 + 3 + 4 + 5 + 6) \cdot 1" />
     <BlockMath math="= 21" />
-    </div>
+    </MathContainer>
 
     Jadi, perkiraan luas daerah di bawah kurva <InlineMath math="f(x)=x" /> dari 0 sampai 7 adalah **21**.
 
@@ -192,22 +192,22 @@ Mari kita terapkan konsep ini pada sebuah contoh.
 
     Tinggi setiap persegi panjang ditentukan oleh nilai fungsi <InlineMath math="f(x) = x^2 + 1" /> di titik sampel ujung kanan:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="f(x_1) = f(1) = 1^2 + 1 = 2" />
     <BlockMath math="f(x_2) = f(2) = 2^2 + 1 = 5" />
     <BlockMath math="f(x_3) = f(3) = 3^2 + 1 = 10" />
     <BlockMath math="f(x_4) = f(4) = 4^2 + 1 = 17" />
-    </div>
+    </MathContainer>
 
     **Langkah 5: Hitung total Jumlahan Riemann.**
 
     Sekarang kita jumlahkan luas semua persegi panjang (tinggi × lebar):
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="R_4 = \sum_{i=1}^{4} f(x_i^*) \Delta x" />
     <BlockMath math="= [f(1) + f(2) + f(3) + f(4)] \cdot 1" />
     <BlockMath math="= (2 + 5 + 10 + 17) \cdot 1" />
     <BlockMath math="= 34" />
-    </div>
+    </MathContainer>
 
     Jadi, Jumlahan Riemann untuk fungsi tersebut adalah **34**.

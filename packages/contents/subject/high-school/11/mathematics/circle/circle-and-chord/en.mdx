@@ -756,34 +756,34 @@ If <InlineMath math="AB \parallel CD" />, then arc <InlineMath math="AC" /> equa
 
    Given: <InlineMath math="r = 10" /> cm, <InlineMath math="\theta = 60° = \frac{\pi}{3}" /> rad
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="l = 2r \sin\left(\frac{\theta}{2}\right) = 2 \times 10 \times \sin\left(\frac{\pi/3}{2}\right)" />
      <BlockMath math="l = 20 \times \sin(30°) = 20 \times 0.5 = 10 \text{ cm}" />
      <BlockMath math="d = r \cos\left(\frac{\theta}{2}\right) = 10 \times \cos(30°)" />
      <BlockMath math="d = 10 \times \frac{\sqrt{3}}{2} = 5\sqrt{3} \text{ cm}" />
-   </div>
+   </MathContainer>
 
 2. **Intersecting chords theorem**
 
    Given: <InlineMath math="PA = 4" /> cm, <InlineMath math="PB = 6" /> cm, <InlineMath math="PC = 3" /> cm
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="PA \times PB = PC \times PD" />
      <BlockMath math="4 \times 6 = 3 \times PD" />
      <BlockMath math="24 = 3 \times PD" />
      <BlockMath math="PD = 8 \text{ cm}" />
-   </div>
+   </MathContainer>
 
 3. **Calculating distance of chord from center**
 
    Given: <InlineMath math="r = 13" /> cm, <InlineMath math="l = 24" /> cm
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="d = \sqrt{r^2 - \left(\frac{l}{2}\right)^2}" />
      <BlockMath math="d = \sqrt{13^2 - 12^2}" />
      <BlockMath math="d = \sqrt{169 - 144}" />
      <BlockMath math="d = \sqrt{25} = 5 \text{ cm}" />
-   </div>
+   </MathContainer>
 
 4. **Parallel chords**
 
@@ -791,30 +791,30 @@ If <InlineMath math="AB \parallel CD" />, then arc <InlineMath math="AC" /> equa
 
    For the first chord:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="l_1 = 2\sqrt{r^2 - d_1^2} = 2\sqrt{25 - 9} = 2\sqrt{16} = 8 \text{ cm}" />
-   </div>
+   </MathContainer>
 
    For the second chord:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="l_2 = 2\sqrt{r^2 - d_2^2} = 2\sqrt{25 - 16} = 2\sqrt{9} = 6 \text{ cm}" />
-   </div>
+   </MathContainer>
 
 5. **Proof that diameter is the longest chord**
 
    For any chord with central angle <InlineMath math="\theta" />:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="l = 2r \sin\left(\frac{\theta}{2}\right)" />
-   </div>
+   </MathContainer>
 
    The maximum value of <InlineMath math="\sin\left(\frac{\theta}{2}\right) = 1" /> is achieved when <InlineMath math="\frac{\theta}{2} = 90°" />, that is <InlineMath math="\theta = 180°" />.
 
    When <InlineMath math="\theta = 180°" />, the chord passes through the center of the circle (diameter) with length:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="l_{max} = 2r \times 1 = 2r" />
-   </div>
+   </MathContainer>
 
    Therefore, the diameter is the longest chord.

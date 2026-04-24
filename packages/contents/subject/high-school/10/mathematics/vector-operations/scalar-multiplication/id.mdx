@@ -34,15 +34,15 @@ Secara geometris, perkalian skalar dengan vektor mengubah panjang (magnitudo) ve
 
 Jika <InlineMath math="\vec{v} = (v_1, v_2, v_3)" /> adalah vektor di ruang 3 dimensi, maka:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="k \cdot \vec{v} = k(v_1, v_2, v_3) = (k \cdot v_1, k \cdot v_2, k \cdot v_3)" />
-</div>
+</MathContainer>
 
 Dalam notasi vektor satuan:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="k \cdot \vec{v} = k(v_1\vec{i} + v_2\vec{j} + v_3\vec{k}) = k \cdot v_1\vec{i} + k \cdot v_2\vec{j} + k \cdot v_3\vec{k}" />
-</div>
+</MathContainer>
 
 ## Contoh Perkalian Skalar dengan Vektor
 
@@ -52,10 +52,10 @@ Diketahui vektor <InlineMath math="\vec{a} = 2\vec{i} + 3\vec{j} + 5\vec{k}" />.
 
 **Penyelesaian:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="2\vec{a} = 2(2\vec{i} + 3\vec{j} + 5\vec{k})" />
   <BlockMath math="= 4\vec{i} + 6\vec{j} + 10\vec{k}" />
-</div>
+</MathContainer>
 
 ### Contoh 2
 
@@ -63,10 +63,10 @@ Diketahui vektor <InlineMath math="\vec{v} = (4, -2, 3)" />. Tentukan hasil dari
 
 **Penyelesaian:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="-3\vec{v} = -3(4, -2, 3)" />
   <BlockMath math="= (-12, 6, -9)" />
-</div>
+</MathContainer>
 
 Perhatikan bahwa arah vektor hasil berlawanan dengan vektor asal karena skalarnya negatif.
 
@@ -100,10 +100,10 @@ Diketahui vektor <InlineMath math="\vec{a} = 3\vec{i} - 4\vec{j} + 2\vec{k}" />.
 
 **Penyelesaian:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="-2\vec{a} = -2(3\vec{i} - 4\vec{j} + 2\vec{k})" />
   <BlockMath math="= -6\vec{i} + 8\vec{j} - 4\vec{k}" />
-</div>
+</MathContainer>
 
 Jadi, hasil dari <InlineMath math="-2\vec{a}" /> adalah <InlineMath math="-6\vec{i} + 8\vec{j} - 4\vec{k}" />.
 
@@ -113,14 +113,14 @@ Vektor <InlineMath math="\vec{u} = (2, -5, 1)" /> dan <InlineMath math="\vec{v} 
 
 **Penyelesaian:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="2\vec{u} = 2(2, -5, 1) = (4, -10, 2)" />
   <BlockMath math="3\vec{v} = 3(-4, 3, 6) = (-12, 9, 18)" />
   <BlockMath math="2\vec{u} - 3\vec{v} = (4, -10, 2) - (-12, 9, 18)" />
   <BlockMath math="= (4 - (-12), -10 - 9, 2 - 18)" />
   <BlockMath math="= (4 + 12, -10 - 9, 2 - 18)" />
   <BlockMath math="= (16, -19, -16)" />
-</div>
+</MathContainer>
 
 Jadi, vektor <InlineMath math="2\vec{u} - 3\vec{v}" /> adalah <InlineMath math="(16, -19, -16)" /> atau <InlineMath math="16\vec{i} - 19\vec{j} - 16\vec{k}" />.
 
@@ -138,12 +138,12 @@ Kita tahu:
 
 Mari kita periksa apakah <InlineMath math="\overrightarrow{BU} + \overrightarrow{UR} = \overrightarrow{BR}" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\overrightarrow{BU} + \overrightarrow{UR} = 0,65 \cdot \overrightarrow{BR} + 0,35 \cdot \overrightarrow{BR}" />
   <BlockMath math="= (0,65 + 0,35) \cdot \overrightarrow{BR}" />
   <BlockMath math="= 1 \cdot \overrightarrow{BR}" />
   <BlockMath math="= \overrightarrow{BR}" />
-</div>
+</MathContainer>
 
 Hasil ini menunjukkan bahwa <InlineMath math="\overrightarrow{BU} + \overrightarrow{UR} = \overrightarrow{BR}" />, yang sesuai dengan hukum penjumlahan vektor untuk titik-titik B, U, dan R yang segaris.
 
@@ -160,12 +160,12 @@ Diketahui <InlineMath math="|\vec{p}| = 5" /> satuan dan <InlineMath math="\vec{
 
 Untuk menentukan panjang vektor <InlineMath math="\vec{q}" />, kita menggunakan sifat perkalian skalar:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="|\vec{q}| = |3\vec{p}|" />
   <BlockMath math="= |3| \cdot |\vec{p}|" />
   <BlockMath math="= 3 \cdot 5" />
   <BlockMath math="= 15" />
-</div>
+</MathContainer>
 
 Jadi, panjang vektor <InlineMath math="\vec{q}" /> adalah 15 satuan.
 
@@ -176,29 +176,29 @@ Diketahui titik <InlineMath math="A(2, 3, -1)" />, <InlineMath math="B(5, -2, 4)
 **Penyelesaian:**
 Pertama, kita tentukan vektor <InlineMath math="\overrightarrow{AB}" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\overrightarrow{AB} = B - A" />
   <BlockMath math="= (5, -2, 4) - (2, 3, -1)" />
   <BlockMath math="= (5-2, -2-3, 4-(-1))" />
   <BlockMath math="= (3, -5, 5)" />
-</div>
+</MathContainer>
 
 Kemudian, kita gunakan hubungan <InlineMath math="\overrightarrow{AC} = 2\overrightarrow{AB}" /> untuk menentukan vektor <InlineMath math="\overrightarrow{AC}" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\overrightarrow{AC} = 2\overrightarrow{AB}" />
   <BlockMath math="= 2(3, -5, 5)" />
   <BlockMath math="= (6, -10, 10)" />
-</div>
+</MathContainer>
 
 Selanjutnya, kita tentukan koordinat titik C:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\overrightarrow{AC} = C - A" />
   <BlockMath math="(6, -10, 10) = C - (2, 3, -1)" />
   <BlockMath math="C = (6, -10, 10) + (2, 3, -1)" />
   <BlockMath math="C = (6+2, -10+3, 10+(-1))" />
   <BlockMath math="C = (8, -7, 9)" />
-</div>
+</MathContainer>
 
 Jadi, koordinat titik C adalah <InlineMath math="C(8, -7, 9)" />.

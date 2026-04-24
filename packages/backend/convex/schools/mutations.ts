@@ -4,12 +4,12 @@ import {
   validateInviteCodeState,
   validateNotExistingMembership,
 } from "@repo/backend/convex/lib/helpers/invite";
-import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { generateUniqueSlug } from "@repo/backend/convex/schools/utils";
 import { generateNanoId } from "@repo/backend/convex/utils/id";
 import { slugify } from "@repo/backend/convex/utils/text";
 import { ConvexError, v } from "convex/values";
 import { schoolTypeValidator } from "./schema";
+import { schoolIdentityResultValidator } from "./validators";
 
 /**
  * Create a new school and automatically add the creator as an admin member.
@@ -25,10 +25,7 @@ export const createSchool = mutation({
     province: v.string(),
     type: schoolTypeValidator,
   },
-  returns: v.object({
-    schoolId: vv.id("schools"),
-    slug: v.string(),
-  }),
+  returns: schoolIdentityResultValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 
@@ -102,10 +99,7 @@ export const joinSchool = mutation({
   args: {
     code: v.string(),
   },
-  returns: v.object({
-    schoolId: vv.id("schools"),
-    slug: v.string(),
-  }),
+  returns: schoolIdentityResultValidator,
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
 

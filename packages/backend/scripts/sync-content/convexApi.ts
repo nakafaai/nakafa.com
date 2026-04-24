@@ -96,47 +96,32 @@ export const runConvexMutation = (
   config: ConvexConfig,
   functionPath: string,
   args: Record<string, unknown>
-): Promise<SyncResult> => {
-  return requestConvex(
-    config,
-    "mutation",
-    functionPath,
-    args,
-    SyncResultSchema
-  );
-};
+): Promise<SyncResult> =>
+  requestConvex(config, "mutation", functionPath, args, SyncResultSchema);
 
 export const runConvexMutationGeneric = <T>(
   config: ConvexConfig,
   functionPath: string,
   args: Record<string, unknown>,
   schema: z.ZodType<T>
-): Promise<T> => {
-  return requestConvex(config, "mutation", functionPath, args, schema);
-};
+): Promise<T> => requestConvex(config, "mutation", functionPath, args, schema);
 
 export const runConvexQuery = <T>(
   config: ConvexConfig,
   functionPath: string,
   schema: z.ZodType<T>
-): Promise<T> => {
-  return requestConvex(config, "query", functionPath, {}, schema);
-};
+): Promise<T> => requestConvex(config, "query", functionPath, {}, schema);
 
 export const runConvexQueryWithArgs = <T>(
   config: ConvexConfig,
   functionPath: string,
   args: Record<string, unknown>,
   schema: z.ZodType<T>
-): Promise<T> => {
-  return requestConvex(config, "query", functionPath, args, schema);
-};
+): Promise<T> => requestConvex(config, "query", functionPath, args, schema);
 
 export const runConvexActionWithArgs = <T>(
   config: ConvexConfig,
   functionPath: string,
   args: Record<string, unknown>,
   schema: z.ZodType<T>
-): Promise<T> => {
-  return requestConvex(config, "action", functionPath, args, schema);
-};
+): Promise<T> => requestConvex(config, "action", functionPath, args, schema);

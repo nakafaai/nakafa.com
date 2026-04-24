@@ -1,6 +1,7 @@
 "use client";
 
 import { Cancel01Icon, PaintBrush04Icon } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { SchoolClassImage } from "@repo/backend/convex/classes/schema";
@@ -18,26 +19,17 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@repo/design-system/components/ui/sheet";
-import { useMutation, useQuery } from "convex/react";
+import { useRouter } from "@repo/internationalization/src/navigation";
+import { useMutation } from "convex/react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useClass } from "@/lib/context/use-class";
 import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 
+/** Render the active class hero using the resolved class route snapshot. */
 export function SchoolClassesHeaderInfo() {
-  const classId = useClass((state) => state.class._id);
-  const classInfo = useQuery(api.classes.queries.getClassInfo, {
-    classId,
-  });
-
-  if (!classInfo) {
-    return (
-      <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-3">
-        <div className="relative h-40 overflow-hidden rounded-md bg-[color-mix(in_oklch,var(--primary)_2.5%,var(--background))] sm:h-48" />
-      </div>
-    );
-  }
+  const classInfo = useClass((state) => state.class);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 pt-6 pb-3">
@@ -70,9 +62,11 @@ export function SchoolClassesHeaderInfo() {
   );
 }
 
+/** Render the class image customization sheet for users who can edit the class. */
 function InfoCustomizeButton() {
   const t = useTranslations("Common");
-  const [open, setOpen] = useState(false);
+  const [open, openHandlers] = useDisclosure(false);
+  const router = useRouter();
 
   const [isPending, startTransition] = useTransition();
   const { can } = useClassPermissions();
@@ -88,6 +82,7 @@ function InfoCustomizeButton() {
           classId,
           image,
         });
+        router.refresh();
       } catch (error) {
         captureException(error, {
           image,
@@ -102,7 +97,7 @@ function InfoCustomizeButton() {
   }
 
   return (
-    <Sheet modal={false} onOpenChange={setOpen} open={open}>
+    <Sheet modal={false} onOpenChange={openHandlers.set} open={open}>
       <SheetTrigger
         render={
           <Button size="sm" variant="outline">
@@ -121,7 +116,7 @@ function InfoCustomizeButton() {
 
             <div className="flex items-center">
               <Button
-                onClick={() => setOpen(false)}
+                onClick={openHandlers.close}
                 size="icon-sm"
                 variant="ghost"
               >
@@ -160,6 +155,7 @@ function InfoCustomizeButton() {
   );
 }
 
+/** Return the selectable class cover images shown in the customization sheet. */
 function getImageList() {
   return Array.from(CLASS_IMAGES.entries()).map(([key, src]) => ({
     value: key,

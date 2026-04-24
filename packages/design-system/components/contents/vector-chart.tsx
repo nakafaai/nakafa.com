@@ -187,7 +187,7 @@ export function VectorChart({
   }, [vectors]);
 
   return (
-    <Card>
+    <Card className="content-auto-card">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -262,7 +262,7 @@ export function VectorChart({
 
             <ChartTooltip
               content={({ active, payload }) => {
-                if (!!active && !!payload && payload.length > 0) {
+                if (active && payload && payload.length > 0) {
                   const xValue = payload[0]?.payload.x;
 
                   return (

@@ -1,6 +1,6 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
-import { syncTryoutAccessGrantStatus } from "@repo/backend/convex/tryoutAccess/helpers/access";
+import { syncTryoutAccessGrantStatus } from "@repo/backend/convex/tryoutAccess/helpers/entitlements";
 import { insertTryoutAccessCampaign } from "@repo/backend/convex/tryoutAccess/test.helpers";
 import {
   createTryoutTestConvex,
@@ -63,17 +63,15 @@ describe("tryoutAccess/mutations/internal/status", () => {
       await syncTryoutAccessGrantStatus(ctx.db, grant, NOW);
     });
 
-    const result = await t.query(async (ctx) => {
-      return {
-        entitlement: await ctx.db
-          .query("userTryoutEntitlements")
-          .withIndex("by_accessGrantId", (q) =>
-            q.eq("accessGrantId", state.grantId)
-          )
-          .unique(),
-        grant: await ctx.db.get("tryoutAccessGrants", state.grantId),
-      };
-    });
+    const result = await t.query(async (ctx) => ({
+      entitlement: await ctx.db
+        .query("userTryoutEntitlements")
+        .withIndex("by_accessGrantId", (q) =>
+          q.eq("accessGrantId", state.grantId)
+        )
+        .unique(),
+      grant: await ctx.db.get("tryoutAccessGrants", state.grantId),
+    }));
 
     expect(result.grant?.endsAt).toBe(state.oldGrantEndsAt);
     expect(result.grant?.status).toBe("active");
@@ -153,14 +151,15 @@ describe("tryoutAccess/mutations/internal/status", () => {
       await syncTryoutAccessGrantStatus(ctx.db, grant, NOW);
     });
 
-    const entitlements = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("userTryoutEntitlements")
-        .withIndex("by_accessGrantId", (q) =>
-          q.eq("accessGrantId", state.grantId)
-        )
-        .collect();
-    });
+    const entitlements = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("userTryoutEntitlements")
+          .withIndex("by_accessGrantId", (q) =>
+            q.eq("accessGrantId", state.grantId)
+          )
+          .collect()
+    );
 
     expect(entitlements).toEqual([
       expect.objectContaining({
@@ -171,6 +170,75 @@ describe("tryoutAccess/mutations/internal/status", () => {
         userId: state.userId,
       }),
     ]);
+  });
+
+  it("expires grant entitlements without requiring the campaign row", async () => {
+    const t = createTryoutTestConvex();
+    const state = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "expire-without-campaign",
+      });
+      const campaignId = await insertTryoutAccessCampaign(ctx, {
+        slug: "expire-without-campaign",
+        name: "Expire Without Campaign",
+        targetProducts: ["snbt"],
+        campaignKind: "competition",
+        enabled: true,
+        redeemStatus: "ended",
+        resultsStatus: "finalized",
+        resultsFinalizedAt: NOW - 1000,
+        startsAt: NOW - 24 * 60 * 60 * 1000,
+        endsAt: NOW - 1,
+      });
+      const linkId = await ctx.db.insert("tryoutAccessLinks", {
+        campaignId,
+        code: "expire-without-campaign",
+        label: "Expire Without Campaign",
+        enabled: true,
+      });
+      const grantId = await ctx.db.insert("tryoutAccessGrants", {
+        campaignId,
+        linkId,
+        userId: identity.userId,
+        redeemedAt: NOW - 60 * 1000,
+        endsAt: NOW - 1,
+        status: "active",
+      });
+
+      await ctx.db.insert("userTryoutEntitlements", {
+        userId: identity.userId,
+        product: "snbt",
+        sourceKind: "competition",
+        accessCampaignId: campaignId,
+        accessGrantId: grantId,
+        startsAt: NOW - 60 * 1000,
+        endsAt: NOW - 1,
+      });
+      await ctx.db.delete("tryoutAccessCampaigns", campaignId);
+
+      return { grantId };
+    });
+
+    await t.mutation(
+      internal.tryoutAccess.mutations.internal.status.expireGrant,
+      {
+        grantId: state.grantId,
+      }
+    );
+
+    const result = await t.query(async (ctx) => ({
+      entitlements: await ctx.db
+        .query("userTryoutEntitlements")
+        .withIndex("by_accessGrantId", (q) =>
+          q.eq("accessGrantId", state.grantId)
+        )
+        .collect(),
+      grant: await ctx.db.get("tryoutAccessGrants", state.grantId),
+    }));
+
+    expect(result.grant?.status).toBe("expired");
+    expect(result.entitlements).toEqual([]);
   });
 
   it("finalizes overdue pending competition batches in bounded sweep passes", async () => {
@@ -232,16 +300,19 @@ describe("tryoutAccess/mutations/internal/status", () => {
 
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-    const finalizedCount = await t.query(async (ctx) => {
-      return (
-        await ctx.db
-          .query("tryoutAccessCampaigns")
-          .withIndex("by_campaignKind_and_resultsStatus_and_endsAt", (q) =>
-            q.eq("campaignKind", "competition").eq("resultsStatus", "finalized")
-          )
-          .take(102)
-      ).length;
-    });
+    const finalizedCount = await t.query(
+      async (ctx) =>
+        (
+          await ctx.db
+            .query("tryoutAccessCampaigns")
+            .withIndex("by_campaignKind_and_resultsStatus_and_endsAt", (q) =>
+              q
+                .eq("campaignKind", "competition")
+                .eq("resultsStatus", "finalized")
+            )
+            .take(102)
+        ).length
+    );
 
     expect(finalizedCount).toBe(101);
 

@@ -6,12 +6,10 @@ import type {
   SyncResult,
 } from "./types";
 
-export const createMetrics = (): SyncMetrics => {
-  return {
-    phases: [],
-    totalStartTime: performance.now(),
-  };
-};
+export const createMetrics = (): SyncMetrics => ({
+  phases: [],
+  totalStartTime: performance.now(),
+});
 
 export const startPhase = (
   metrics: SyncMetrics,
@@ -60,14 +58,12 @@ export const finalizeMetrics = (metrics: SyncMetrics): void => {
 export const createBatchProgress = (
   totalItems: number,
   batchSize: number
-): BatchProgress => {
-  return {
-    totalItems,
-    processedItems: 0,
-    batchSize,
-    startTime: performance.now(),
-  };
-};
+): BatchProgress => ({
+  totalItems,
+  processedItems: 0,
+  batchSize,
+  startTime: performance.now(),
+});
 
 export const updateBatchProgress = (
   progress: BatchProgress,

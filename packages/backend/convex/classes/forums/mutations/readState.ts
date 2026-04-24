@@ -3,7 +3,7 @@ import { updateForumReadState } from "@repo/backend/convex/classes/forums/utils/
 import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { ConvexError } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 /**
  * Mark a forum as read through a concrete post boundary.
@@ -13,6 +13,7 @@ export const markForumRead = mutation({
     forumId: vv.id("schoolClassForums"),
     lastReadPostId: vv.id("schoolClassForumPosts"),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;
@@ -36,9 +37,10 @@ export const markForumRead = mutation({
     await updateForumReadState(ctx, {
       classId: forum.classId,
       forumId: args.forumId,
-      lastReadAt: Math.min(lastReadPost._creationTime, forum.lastPostAt),
-      lastReadPostId: lastReadPost._id,
+      lastReadSequence: lastReadPost.sequence,
       userId,
     });
+
+    return null;
   },
 });

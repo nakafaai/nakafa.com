@@ -50,11 +50,12 @@ export function useTryoutStartFlow({
   const isAuthPending = access === "authenticated" && isLoading;
   const isStartBlocked = isActionPending || isAuthPending;
 
-  useLayoutEffect(() => {
-    return () => {
+  useLayoutEffect(
+    () => () => {
       closeDialog();
-    };
-  }, [closeDialog]);
+    },
+    [closeDialog]
+  );
 
   /** Keeps the dialog state aligned with route preservation and unmounts. */
   const setDialogOpenAction = useCallback(

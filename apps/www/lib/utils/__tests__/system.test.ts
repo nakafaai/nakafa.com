@@ -31,53 +31,51 @@ vi.mock("@repo/contents/_lib/metadata", () => ({
   getContentMetadata: mockGetContentMetadata,
 }));
 
-vi.mock("next-intl/server", () => {
-  return {
-    getTranslations: vi.fn((params) => {
-      const createTranslator = (key: string) => key;
-      const translator = Object.assign(createTranslator, {
-        rich: createTranslator,
-        markup: createTranslator,
-        raw: createTranslator,
-        has: () => false,
-      });
+vi.mock("next-intl/server", () => ({
+  getTranslations: vi.fn((params) => {
+    const createTranslator = (key: string) => key;
+    const translator = Object.assign(createTranslator, {
+      rich: createTranslator,
+      markup: createTranslator,
+      raw: createTranslator,
+      has: () => false,
+    });
 
-      if (params.namespace === "Common") {
-        const commonTranslator = (key: string) => {
-          if (key === "made-with-love") {
-            return "Made with Love";
-          }
-          return key;
-        };
-        return Promise.resolve(
-          Object.assign(commonTranslator, {
-            rich: commonTranslator,
-            markup: commonTranslator,
-            raw: commonTranslator,
-            has: () => false,
-          })
-        );
-      }
-      if (params.namespace === "Metadata") {
-        const metadataTranslator = (key: string) => {
-          if (key === "short-description") {
-            return "Short description";
-          }
-          return key;
-        };
-        return Promise.resolve(
-          Object.assign(metadataTranslator, {
-            rich: metadataTranslator,
-            markup: metadataTranslator,
-            raw: metadataTranslator,
-            has: () => false,
-          })
-        );
-      }
-      return Promise.resolve(translator);
-    }),
-  };
-});
+    if (params.namespace === "Common") {
+      const commonTranslator = (key: string) => {
+        if (key === "made-with-love") {
+          return "Made with Love";
+        }
+        return key;
+      };
+      return Promise.resolve(
+        Object.assign(commonTranslator, {
+          rich: commonTranslator,
+          markup: commonTranslator,
+          raw: commonTranslator,
+          has: () => false,
+        })
+      );
+    }
+    if (params.namespace === "Metadata") {
+      const metadataTranslator = (key: string) => {
+        if (key === "short-description") {
+          return "Short description";
+        }
+        return key;
+      };
+      return Promise.resolve(
+        Object.assign(metadataTranslator, {
+          rich: metadataTranslator,
+          markup: metadataTranslator,
+          raw: metadataTranslator,
+          has: () => false,
+        })
+      );
+    }
+    return Promise.resolve(translator);
+  }),
+}));
 
 beforeEach(() => {
   mockGetFolderChildNames.mockReturnValue(Effect.succeed([]));

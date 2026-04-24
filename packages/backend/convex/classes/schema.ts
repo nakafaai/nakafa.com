@@ -219,6 +219,7 @@ export const schoolClassForumValidator = v.object({
   status: schoolClassForumStatusValidator,
   isPinned: v.boolean(),
   postCount: v.number(),
+  nextPostSequence: v.number(),
   reactionCounts: v.array(schoolClassReactionCountValidator),
   lastPostAt: v.number(),
   lastPostBy: v.optional(v.id("users")),
@@ -240,6 +241,7 @@ export const schoolClassForumPostValidator = v.object({
   replyToBody: v.optional(v.string()),
   replyCount: v.number(),
   reactionCounts: v.array(schoolClassReactionCountValidator),
+  sequence: v.number(),
   createdBy: v.id("users"),
   updatedAt: v.number(),
   editedAt: v.optional(v.number()),
@@ -265,19 +267,6 @@ export const schoolClassMaterialGroupValidator = v.object({
   publishedAt: v.optional(v.number()),
   publishedBy: v.optional(v.id("users")),
 });
-
-/**
- * Class info validator (for public info without auth)
- */
-export const classInfoValidator = nullable(
-  v.object({
-    name: v.string(),
-    subject: v.string(),
-    year: v.string(),
-    image: schoolClassImageValidator,
-    visibility: schoolClassVisibilityValidator,
-  })
-);
 
 /**
  * User data validator (for joined user info in class members)
@@ -350,10 +339,9 @@ const tables = {
     .index("by_forumId_and_userId_and_emoji", ["forumId", "userId", "emoji"])
     .index("by_forumId_and_emoji_and_userId", ["forumId", "emoji", "userId"]),
 
-  schoolClassForumPosts: defineTable(schoolClassForumPostValidator).index(
-    "by_forumId",
-    ["forumId"]
-  ),
+  schoolClassForumPosts: defineTable(schoolClassForumPostValidator)
+    .index("by_forumId", ["forumId"])
+    .index("by_forumId_and_sequence", ["forumId", "sequence"]),
 
   /**
    * Tracks uploads that were authorized for one user+forum but not yet claimed
@@ -396,16 +384,12 @@ const tables = {
     .index("by_postId_and_userId_and_emoji", ["postId", "userId", "emoji"])
     .index("by_postId_and_emoji_and_userId", ["postId", "emoji", "userId"]),
 
-  /**
-   * Persists each user's read boundary by forum, using both timestamp and post
-   * id so equal-timestamp posts stay ordered correctly.
-   */
+  /** Persists each user's read boundary by forum sequence. */
   schoolClassForumReadStates: defineTable({
     forumId: v.id("schoolClassForums"),
     classId: v.id("schoolClasses"),
     userId: v.id("users"),
-    lastReadAt: v.number(),
-    lastReadPostId: v.optional(v.id("schoolClassForumPosts")),
+    lastReadSequence: v.number(),
   })
     .index("by_forumId_and_userId", ["forumId", "userId"])
     .index("by_classId_and_userId", ["classId", "userId"]),

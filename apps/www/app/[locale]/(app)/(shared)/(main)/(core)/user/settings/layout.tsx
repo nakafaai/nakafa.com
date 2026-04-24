@@ -1,12 +1,10 @@
 import { useTranslations } from "next-intl";
-import { use } from "react";
 import { UserSettingsTabs } from "@/components/user/settings/tabs";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-export default function Layout(props: LayoutProps<"/[locale]/user/settings">) {
-  const { children, params } = props;
-  getLocaleOrThrow(use(params).locale);
-
+/** Render the user settings shell inside the validated locale subtree. */
+export default function Layout({
+  children,
+}: LayoutProps<"/[locale]/user/settings">) {
   const t = useTranslations("Auth");
 
   return (

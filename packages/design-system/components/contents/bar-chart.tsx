@@ -40,7 +40,7 @@ export function HistogramChart({
   yAxisLabel,
 }: Props) {
   return (
-    <Card>
+    <Card className="content-auto-card">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -93,7 +93,7 @@ export function BarChart({
   yAxisLabel,
 }: Props) {
   return (
-    <Card>
+    <Card className="content-auto-card">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

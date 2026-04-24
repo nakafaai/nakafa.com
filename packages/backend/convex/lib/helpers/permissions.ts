@@ -25,6 +25,13 @@ export type Permission =
   | "class:read"
   | "class:write"
   | "class:delete"
+  | "assessment:create"
+  | "assessment:update"
+  | "assessment:publish"
+  | "assessment:delete"
+  | "assessment:monitor"
+  | "assessment:grade"
+  | "assessment:release"
   | "member:add"
   | "member:remove"
   | "content:create"
@@ -40,6 +47,13 @@ export const PERMISSIONS = {
   CLASS_READ: "class:read",
   CLASS_WRITE: "class:write",
   CLASS_DELETE: "class:delete",
+  ASSESSMENT_CREATE: "assessment:create",
+  ASSESSMENT_UPDATE: "assessment:update",
+  ASSESSMENT_PUBLISH: "assessment:publish",
+  ASSESSMENT_DELETE: "assessment:delete",
+  ASSESSMENT_MONITOR: "assessment:monitor",
+  ASSESSMENT_GRADE: "assessment:grade",
+  ASSESSMENT_RELEASE: "assessment:release",
   MEMBER_ADD: "member:add",
   MEMBER_REMOVE: "member:remove",
   CONTENT_CREATE: "content:create",
@@ -60,6 +74,13 @@ export const ROLE_PERMISSIONS: Record<
     "class:read",
     "class:write",
     "class:delete",
+    "assessment:create",
+    "assessment:update",
+    "assessment:publish",
+    "assessment:delete",
+    "assessment:monitor",
+    "assessment:grade",
+    "assessment:release",
     "member:add",
     "member:remove",
     "content:create",
@@ -74,6 +95,13 @@ export const ROLE_PERMISSIONS: Record<
     "class:create",
     "class:read",
     "class:write",
+    "assessment:create",
+    "assessment:update",
+    "assessment:publish",
+    "assessment:delete",
+    "assessment:monitor",
+    "assessment:grade",
+    "assessment:release",
     "content:create",
     "content:read",
     "content:edit",
@@ -87,6 +115,13 @@ export const ROLE_PERMISSIONS: Record<
     "class:read",
     "class:write",
     "class:delete",
+    "assessment:create",
+    "assessment:update",
+    "assessment:publish",
+    "assessment:delete",
+    "assessment:monitor",
+    "assessment:grade",
+    "assessment:release",
     "member:add",
     "member:remove",
     "content:create",
@@ -97,12 +132,13 @@ export const ROLE_PERMISSIONS: Record<
     "forum:write",
     "forum:moderate",
   ],
-  "co-teacher": ["content:delete"],
+  "co-teacher": ["content:delete", "assessment:grade", "assessment:monitor"],
   assistant: ["forum:moderate"],
   primary: [
     "class:delete",
     "member:remove",
     "content:delete",
+    "assessment:delete",
     "forum:moderate",
   ],
 };

@@ -77,26 +77,26 @@ Besides Cartesian, there's another way to represent complex numbers: the **polar
 
 The relationship between Cartesian form (<InlineMath math="x, y" />) and Polar form (<InlineMath math="r, \theta" />) can be seen from basic trigonometry:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x = r \cos \theta" />
   <BlockMath math="y = r \sin \theta" />
-</div>
+</MathContainer>
 
 From this, we can find <InlineMath math="r" /> and <InlineMath math="\theta" /> if <InlineMath math="x" /> and <InlineMath math="y" /> are known:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="r = |z| = \sqrt{x^2 + y^2}" />
   <BlockMath math="\tan \theta = \frac{y}{x}" />
-</div>
+</MathContainer>
 
 When finding <InlineMath math="\theta" /> from <InlineMath math="\tan \theta" />, pay attention to the quadrant where the point <InlineMath math="(x, y)" /> lies to determine the correct angle.
 
 By substituting <InlineMath math="x" /> and <InlineMath math="y" /> into the Cartesian form, we get the **polar form**:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="z = x + iy = (r \cos \theta) + i(r \sin \theta)" />
   <BlockMath math="z = r (\cos \theta + i \sin \theta)" />
-</div>
+</MathContainer>
 
 Sometimes, the form <InlineMath math="(\cos \theta + i \sin \theta)" /> is abbreviated as <InlineMath math="\text{cis } \theta" />.
 
@@ -288,14 +288,14 @@ Determine if the following pairs of complex numbers are equal or different:
 6.  To solve <InlineMath math="x^2 - 2x + 6 = 0" />, use the quadratic formula:
     <BlockMath math="x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}" />
     with <InlineMath math="a=1, b=-2, c=6" />:
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x = \frac{-(-2) \pm \sqrt{(-2)^2 - 4(1)(6)}}{2(1)}" />
       <BlockMath math="x = \frac{2 \pm \sqrt{4 - 24}}{2}" />
       <BlockMath math="x = \frac{2 \pm \sqrt{-20}}{2}" />
       <BlockMath math="x = \frac{2 \pm \sqrt{20}\sqrt{-1}}{2}" />
       <BlockMath math="x = \frac{2 \pm 2\sqrt{5}i}{2}" />
       <BlockMath math="x = 1 \pm i\sqrt{5}" />
-    </div>
+    </MathContainer>
     The solutions are <InlineMath math="x_1 = 1 + i\sqrt{5}" /> and <InlineMath math="x_2 = 1 - i\sqrt{5}" />
     .
 7.  If the roots of a quadratic equation are <InlineMath math="x_1 = 1 + i" /> and <InlineMath math="x_2 = 1 - i" />, the equation can be formed from <InlineMath math="(x - x_1)(x - x_2) = 0" /> or <InlineMath math="x^2 - (x_1 + x_2)x + (x_1 x_2) = 0" />.
@@ -304,7 +304,7 @@ Determine if the following pairs of complex numbers are equal or different:
     - Calculate the product of the roots:
       <BlockMath math="x_1 x_2 = (1+i)(1-i) = 1^2 - i^2 = 1 - (-1) = 1 + 1 = 2" />
     - Construct the quadratic equation:
-      <div className="flex flex-col gap-4">
+      <MathContainer>
         <BlockMath math="x^2 - (2)x + (2) = 0" />
         <BlockMath math="x^2 - 2x + 2 = 0" />
-      </div>
+      </MathContainer>

@@ -26,9 +26,9 @@ Using a table, we can see all possible combinations:
 | Platform B | B-Math | B-Phys | B-Chem | B-Bio |
 | Platform C | C-Math | C-Phys | C-Chem | C-Bio |
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Total combinations} = 3 \times 4 = 12 \text{ ways}" />
-</div>
+</MathContainer>
 
 ## Tree Diagram Method
 
@@ -52,9 +52,9 @@ For the same case, the tree diagram starts from one initial point, then branches
 
 **Multiplication rule** is the most efficient method to calculate the number of ways to fill available slots. If there are <InlineMath math="n" /> slots with each slot <InlineMath math="i" /> having <InlineMath math="k_i" /> choices, then the **total number of ways to fill** is:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Total ways} = k_1 \times k_2 \times k_3 \times \cdots \times k_n" />
-</div>
+</MathContainer>
 
 ### Example of Multiplication Rule Usage
 
@@ -65,12 +65,12 @@ A school wants to create access codes for digital learning systems. The code con
 
 Then, the total different codes that can be created are:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="k_1 = 3 \text{ (letter choices)}" />
 <BlockMath math="k_2 = 5 \text{ (number choices)}" />
 <BlockMath math="k_3 = 2 \text{ (symbol choices)}" />
 <BlockMath math="\text{Total different codes} = 3 \times 5 \times 2 = 30 \text{ codes}" />
-</div>
+</MathContainer>
 
 ## Cases with Restrictions
 
@@ -82,12 +82,12 @@ If the same object **cannot be used repeatedly**, then each filled slot will red
 
 **Example:** Creating a 3-digit number from digits 2, 3, 4, 5, 6 without repetition.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{First slot} = 5 \text{ choices}" />
 <BlockMath math="\text{Second slot} = 4 \text{ choices (1 digit already used)}" />
 <BlockMath math="\text{Third slot} = 3 \text{ choices (2 digits already used)}" />
 <BlockMath math="\text{Total numbers} = 5 \times 4 \times 3 = 60 \text{ numbers}" />
-</div>
+</MathContainer>
 
 ### Repetition Allowed
 
@@ -95,10 +95,10 @@ If the same object **can be used repeatedly**, then the choices in each slot rem
 
 For the same case with repetition allowed:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Each slot} = 5 \text{ choices}" />
 <BlockMath math="\text{Total numbers} = 5 \times 5 \times 5 = 125 \text{ numbers}" />
-</div>
+</MathContainer>
 
 ## Exercises
 
@@ -113,28 +113,28 @@ For the same case with repetition allowed:
 ### Answer Key
 
 1. Given: 4 brands, 3 memory capacities, 5 color choices
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Total combinations} = 4 \times 3 \times 5 = 60 \text{ smartphone combinations}" />
-   </div>
+   </MathContainer>
 
 2. Given: 1 letter from <InlineMath math="\{A, B, C, D\}" />, 2 numbers from <InlineMath math="\{1, 2, 3, 4, 5\}" /> without repetition
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Letter choices} = 4" />
    <BlockMath math="\text{First number choices} = 5" />
    <BlockMath math="\text{Second number choices} = 4 \text{ (without repetition)}" />
    <BlockMath math="\text{Total passwords} = 4 \times 5 \times 4 = 80 \text{ passwords}" />
-   </div>
+   </MathContainer>
 
 3. Given: 3 roads from P to Q, 4 roads from Q to R
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Total routes} = 3 \times 4 = 12 \text{ different routes}" />
-   </div>
+   </MathContainer>
 
 4. Given: 2 letters from 26 letters, 3 numbers from 10 numbers, repetition allowed
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{First letter choices} = 26" />
    <BlockMath math="\text{Second letter choices} = 26" />
    <BlockMath math="\text{Each number choices} = 10" />
    <BlockMath math="\text{Total license plates} = 26 \times 26 \times 10 \times 10 \times 10" />
    <BlockMath math="= 676 \times 1000 = 676000 \text{ license plates}" />
-   </div>
+   </MathContainer>

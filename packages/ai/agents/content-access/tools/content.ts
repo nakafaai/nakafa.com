@@ -22,8 +22,8 @@ interface Params {
   writer: UIMessageStreamWriter<MyUIMessage>;
 }
 
-export const createGetContent = ({ writer }: Params) => {
-  return tool({
+export const createGetContent = ({ writer }: Params) =>
+  tool({
     description: nakafaContent(),
     inputSchema: getContentInputSchema,
     outputSchema: z.string(),
@@ -287,7 +287,6 @@ export const createGetContent = ({ writer }: Params) => {
       return createOutput({ output: { url, content: data.raw } });
     },
   });
-};
 
 function createOutput({ output }: { output: GetContentOutput }): string {
   return dedentString(`

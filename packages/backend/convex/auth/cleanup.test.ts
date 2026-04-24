@@ -140,38 +140,30 @@ describe("auth/cleanup", () => {
       userId: state.userId,
     });
 
-    const result = await t.query(async (ctx) => {
-      return {
-        answers: await ctx.db
-          .query("exerciseAnswers")
-          .withIndex("by_attemptId_and_exerciseNumber", (q) =>
-            q.eq("attemptId", state.setAttemptId)
-          )
-          .collect(),
-        entitlements: await ctx.db
-          .query("userTryoutEntitlements")
-          .withIndex("by_userId_and_product_and_sourceKind_and_endsAt", (q) =>
-            q.eq("userId", state.userId)
-          )
-          .collect(),
-        exerciseAttempt: await ctx.db.get(
-          "exerciseAttempts",
-          state.setAttemptId
-        ),
-        grant: await ctx.db.get("tryoutAccessGrants", state.grantId),
-        tryoutAttempt: await ctx.db.get(
-          "tryoutAttempts",
-          state.tryoutAttemptId
-        ),
-        tryoutPartAttempts: await ctx.db
-          .query("tryoutPartAttempts")
-          .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
-            q.eq("tryoutAttemptId", state.tryoutAttemptId)
-          )
-          .collect(),
-        user: await ctx.db.get("users", state.userId),
-      };
-    });
+    const result = await t.query(async (ctx) => ({
+      answers: await ctx.db
+        .query("exerciseAnswers")
+        .withIndex("by_attemptId_and_exerciseNumber", (q) =>
+          q.eq("attemptId", state.setAttemptId)
+        )
+        .collect(),
+      entitlements: await ctx.db
+        .query("userTryoutEntitlements")
+        .withIndex("by_userId_and_product_and_sourceKind_and_endsAt", (q) =>
+          q.eq("userId", state.userId)
+        )
+        .collect(),
+      exerciseAttempt: await ctx.db.get("exerciseAttempts", state.setAttemptId),
+      grant: await ctx.db.get("tryoutAccessGrants", state.grantId),
+      tryoutAttempt: await ctx.db.get("tryoutAttempts", state.tryoutAttemptId),
+      tryoutPartAttempts: await ctx.db
+        .query("tryoutPartAttempts")
+        .withIndex("by_tryoutAttemptId_and_partIndex", (q) =>
+          q.eq("tryoutAttemptId", state.tryoutAttemptId)
+        )
+        .collect(),
+      user: await ctx.db.get("users", state.userId),
+    }));
 
     expect(result.user).toBeNull();
     expect(result.tryoutAttempt).toBeNull();

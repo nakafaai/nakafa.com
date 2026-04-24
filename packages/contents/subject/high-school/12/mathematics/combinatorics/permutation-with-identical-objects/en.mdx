@@ -16,9 +16,9 @@ Imagine arranging letters from the word "MAMA". Although there are 4 letters, we
 
 For permutation of n objects where there are identical objects, **the formula used** is:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="P = \frac{n!}{r_1! \times r_2! \times r_3! \times \cdots \times r_k!}" />
-</div>
+</MathContainer>
 
 **Explanation:**
 
@@ -43,18 +43,18 @@ Letter identification: K appears 1 time, A appears 3 times (positions 2, 6, 9), 
 
 **Calculation:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="P = \frac{10!}{1! \times 3! \times 1! \times 1! \times 1! \times 2! \times 1!}" />
 <BlockMath math="= \frac{10!}{3! \times 2!}" />
-</div>
+</MathContainer>
 
 Simplify the fraction by canceling common factors:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3!}{3! \times 2!}" />
 <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{2!}" />
 <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{2}" />
-</div>
+</MathContainer>
 
 Calculate step by step:
 - Divide 10 by 2: <InlineMath math="\frac{10}{2} = 5" />
@@ -75,12 +75,12 @@ Calculate each factorial:
 
 So, the calculation is:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="P = \frac{6!}{2! \times 3! \times 1!}" />
 <BlockMath math="= \frac{6 \times 5 \times 4 \times 3!}{2! \times 3! \times 1!}" />
 <BlockMath math="= \frac{6 \times 5 \times 4}{2 \times 1}" />
 <BlockMath math="= \frac{6 \times 5 \times 4}{2}" />
-</div>
+</MathContainer>
 
 Simplify by dividing 6 by 2:
 - <InlineMath math="\frac{6}{2} = 3" />
@@ -124,21 +124,21 @@ Let's apply these steps to find arrangements of the word "BANANA":
 
    Use the permutation formula with identical objects:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P = \frac{n!}{r_1! \times r_2! \times r_3!}" />
    <BlockMath math="P = \frac{6!}{1! \times 3! \times 2!}" />
-   </div>
+   </MathContainer>
 
 5. **Calculate factorial**
 
    Simplify the fraction first:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P = \frac{6!}{1! \times 3! \times 2!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4 \times 3!}{1! \times 3! \times 2!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4}{1 \times 2!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4}{2}" />
-   </div>
+   </MathContainer>
 
    Calculate with simplification:
    - Divide 6 by 2: <InlineMath math="\frac{6}{2} = 3" />
@@ -152,9 +152,9 @@ Therefore, the word "BANANA" can be arranged in **60 different ways**.
 
 **Permutation with identical objects**: There are identical objects, using formula:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\frac{n!}{r_1! \times r_2! \times \cdots \times r_k!}" />
-</div>
+</MathContainer>
 
 **Comparison example:**
 
@@ -162,9 +162,9 @@ Arranging letters A, B, C, D (all different): <InlineMath math="4! = 24" /> ways
 
 Arranging letters A, A, B, C (some identical): 
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\frac{4!}{2!} = \frac{24}{2} = 12 \text{ ways}" />
-</div>
+</MathContainer>
 
 Identical objects **reduce** the number of arrangements because exchanging identical objects does not produce differences.
 
@@ -188,12 +188,12 @@ Identical objects **reduce** the number of arrangements because exchanging ident
    
    Simplify the fraction by canceling common factors:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P = \frac{10!}{2! \times 3! \times 2! \times 1! \times 1! \times 1!}" />
    <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3!}{2! \times 3! \times 2!}" />
    <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{2! \times 2!}" />
    <BlockMath math="= \frac{10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4}{4}" />
-   </div>
+   </MathContainer>
 
    Calculate with simplification:
    - Complete calculation: <InlineMath math="10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 = 604,800" />
@@ -203,13 +203,13 @@ Identical objects **reduce** the number of arrangements because exchanging ident
    
    Simplify the fraction by canceling common factors:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P = \frac{8!}{3! \times 3! \times 2!}" />
    <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4 \times 3!}{3! \times 3! \times 2!}" />
    <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4}{3! \times 2!}" />
    <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4}{6 \times 2}" />
    <BlockMath math="= \frac{8 \times 7 \times 6 \times 5 \times 4}{12}" />
-   </div>
+   </MathContainer>
 
    Calculate with simplification:
    - Divide 6 by 12: <InlineMath math="\frac{6}{12} = \frac{1}{2}" />
@@ -222,12 +222,12 @@ Identical objects **reduce** the number of arrangements because exchanging ident
    
    Simplify the fraction by canceling common factors:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P = \frac{6!}{2! \times 3! \times 1!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4 \times 3!}{2! \times 3!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4}{2!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4}{2}" />
-   </div>
+   </MathContainer>
 
    Calculate with simplification:
    - Divide 6 by 2: <InlineMath math="\frac{6}{2} = 3" />
@@ -241,12 +241,12 @@ Identical objects **reduce** the number of arrangements because exchanging ident
    
    Simplify the fraction by canceling common factors:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P = \frac{9!}{2! \times 2! \times 1! \times 1! \times 1! \times 1! \times 1!}" />
    <BlockMath math="= \frac{9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3 \times 2!}{2! \times 2!}" />
    <BlockMath math="= \frac{9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3}{2!}" />
    <BlockMath math="= \frac{9 \times 8 \times 7 \times 6 \times 5 \times 4 \times 3}{2}" />
-   </div>
+   </MathContainer>
 
    Calculate with simplification:
    - Divide by 2: <InlineMath math="\frac{8}{2} = 4" />

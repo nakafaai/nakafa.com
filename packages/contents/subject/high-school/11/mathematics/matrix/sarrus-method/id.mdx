@@ -40,9 +40,9 @@ Ini membantu kita memvisualisasikan diagonal-diagonal yang akan dikalikan.
 
 Kalikan elemen-elemen di sepanjang tiga diagonal dari kiri atas ke kanan bawah. Jumlahkan hasil perkalian ini, kita sebut <InlineMath math="D_{\text{positif}}" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="D_{\text{positif}} = (a_{11} \cdot a_{22} \cdot a_{33}) + (a_{12} \cdot a_{23} \cdot a_{31}) + (a_{13} \cdot a_{21} \cdot a_{32})" />
-</div>
+</MathContainer>
 
 Suku pertama adalah perkalian diagonal utama. Suku kedua dan ketiga adalah perkalian diagonal sejajar yang melibatkan elemen dari kolom yang disalin.
 
@@ -50,9 +50,9 @@ Suku pertama adalah perkalian diagonal utama. Suku kedua dan ketiga adalah perka
 
 Kalikan elemen-elemen di sepanjang tiga diagonal dari kanan atas ke kiri bawah. Jumlahkan hasil perkalian ini, kita sebut <InlineMath math="D_{\text{negatif}}" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="D_{\text{negatif}} = (a_{13} \cdot a_{22} \cdot a_{31}) + (a_{11} \cdot a_{23} \cdot a_{32}) + (a_{12} \cdot a_{21} \cdot a_{33})" />
-</div>
+</MathContainer>
 
 Suku pertama adalah perkalian diagonal sekunder (anti-diagonal). Suku kedua dan ketiga adalah perkalian diagonal sejajar yang melibatkan elemen dari kolom yang disalin, bergerak ke arah kiri bawah.
 
@@ -78,11 +78,11 @@ Untuk memvisualisasikan proses ini, kita bisa menuliskan:
 
 Kemudian, dengan Metode Sarrus, kita perluas matriks dan identifikasi jalur perkalian:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\begin{array}{ccc|cc} a_{11} & a_{12} & a_{13} & a_{11} & a_{12} \\ a_{21} & a_{22} & a_{23} & a_{21} & a_{22} \\ a_{31} & a_{32} & a_{33} & a_{31} & a_{32} \end{array}" />
   <BlockMath math="\begin{array}{l} \text{Jalur Positif } (\searrow): \\ \quad + (a_{11} \cdot a_{22} \cdot a_{33}) \\ \quad + (a_{12} \cdot a_{23} \cdot a_{31}) \\ \quad + (a_{13} \cdot a_{21} \cdot a_{32}) \end{array}" />
   <BlockMath math="\begin{array}{l} \text{Jalur Negatif } (\swarrow): \\ \quad - (a_{13} \cdot a_{22} \cdot a_{31}) \\ \quad - (a_{11} \cdot a_{23} \cdot a_{32}) \quad (\text{dari } a_{11} \text{ kol. 4}) \\ \quad - (a_{12} \cdot a_{21} \cdot a_{33}) \quad (\text{dari } a_{12} \text{ kol. 5}) \end{array}" />
-</div>
+</MathContainer>
 
 Sehingga, formula lengkapnya menjadi:
 

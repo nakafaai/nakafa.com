@@ -110,35 +110,36 @@ describe("contents/mutations/audio", () => {
   it("skips items below the minimum view threshold", async () => {
     const t = convexTest(schema, convexModules);
 
-    const sourceId = await t.mutation(async (ctx) => {
-      return await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
+    const sourceId = await t.mutation(
+      async (ctx) =>
+        await ctx.db.insert("subjectSections", {
+          topicId: await ctx.db.insert("subjectTopics", {
+            category: "high-school",
+            grade: "10",
+            material: "mathematics",
+            topic: REAL_VECTOR_ADDITION_EN.topic,
+            title: REAL_VECTOR_ADDITION_EN.topicTitle,
+            locale: REAL_VECTOR_ADDITION_EN.locale,
+            slug: REAL_VECTOR_TOPIC_SLUG,
+            sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
+            syncedAt: 1,
+          }),
+          locale: REAL_VECTOR_ADDITION_EN.locale,
+          slug: REAL_VECTOR_SECTION_SLUG,
           category: "high-school",
           grade: "10",
           material: "mathematics",
           topic: REAL_VECTOR_ADDITION_EN.topic,
-          title: REAL_VECTOR_ADDITION_EN.topicTitle,
-          locale: REAL_VECTOR_ADDITION_EN.locale,
-          slug: REAL_VECTOR_TOPIC_SLUG,
-          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
+          section: REAL_VECTOR_ADDITION_EN.section,
+          title: REAL_VECTOR_ADDITION_EN.title,
+          description: REAL_VECTOR_ADDITION_EN.description,
+          date: REAL_VECTOR_PUBLISHED_AT,
+          subject: REAL_VECTOR_ADDITION_EN.subject,
+          body: REAL_VECTOR_ADDITION_EN.body,
+          contentHash: REAL_VECTOR_ADDITION_EN.hash,
           syncedAt: 1,
-        }),
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
-        material: "mathematics",
-        topic: REAL_VECTOR_ADDITION_EN.topic,
-        section: REAL_VECTOR_ADDITION_EN.section,
-        title: REAL_VECTOR_ADDITION_EN.title,
-        description: REAL_VECTOR_ADDITION_EN.description,
-        date: REAL_VECTOR_PUBLISHED_AT,
-        subject: REAL_VECTOR_ADDITION_EN.subject,
-        body: REAL_VECTOR_ADDITION_EN.body,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        syncedAt: 1,
-      });
-    });
+        })
+    );
 
     const result = await t.mutation(
       internal.contents.mutations.audio.enqueuePopularContentForAudio,
@@ -147,9 +148,9 @@ describe("contents/mutations/audio", () => {
       }
     );
 
-    const queuedCount = await t.query(async (ctx) => {
-      return await ctx.db.query("audioGenerationQueue").collect();
-    });
+    const queuedCount = await t.query(
+      async (ctx) => await ctx.db.query("audioGenerationQueue").collect()
+    );
 
     expect(result).toEqual({ processed: 1, queued: 0 });
     expect(queuedCount).toHaveLength(0);
@@ -225,14 +226,15 @@ describe("contents/mutations/audio", () => {
       }
     );
 
-    const queuedItems = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("audioGenerationQueue")
-        .withIndex("by_slug_and_status", (q) =>
-          q.eq("slug", REAL_VECTOR_SECTION_SLUG).eq("status", "pending")
-        )
-        .collect();
-    });
+    const queuedItems = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("audioGenerationQueue")
+          .withIndex("by_slug_and_status", (q) =>
+            q.eq("slug", REAL_VECTOR_SECTION_SLUG).eq("status", "pending")
+          )
+          .collect()
+    );
 
     expect(result).toEqual({ processed: 1, queued: 2 });
     expect(queuedItems).toHaveLength(2);
@@ -320,14 +322,15 @@ describe("contents/mutations/audio", () => {
       }
     );
 
-    const queuedItems = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("audioGenerationQueue")
-        .withIndex("by_slug_and_status", (q) =>
-          q.eq("slug", REAL_VECTOR_SECTION_SLUG).eq("status", "pending")
-        )
-        .collect();
-    });
+    const queuedItems = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("audioGenerationQueue")
+          .withIndex("by_slug_and_status", (q) =>
+            q.eq("slug", REAL_VECTOR_SECTION_SLUG).eq("status", "pending")
+          )
+          .collect()
+    );
 
     expect(result).toEqual({ processed: 1, queued: 2 });
     expect(queuedItems).toHaveLength(2);
@@ -383,35 +386,36 @@ describe("contents/mutations/audio", () => {
   it("queues only locales that exist for the content slug", async () => {
     const t = convexTest(schema, convexModules);
 
-    const sourceId = await t.mutation(async (ctx) => {
-      return await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
+    const sourceId = await t.mutation(
+      async (ctx) =>
+        await ctx.db.insert("subjectSections", {
+          topicId: await ctx.db.insert("subjectTopics", {
+            category: "high-school",
+            grade: "10",
+            material: "mathematics",
+            topic: REAL_VECTOR_ADDITION_EN.topic,
+            title: REAL_VECTOR_ADDITION_EN.topicTitle,
+            locale: REAL_VECTOR_ADDITION_EN.locale,
+            slug: REAL_VECTOR_TOPIC_SLUG,
+            sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
+            syncedAt: 1,
+          }),
+          locale: REAL_VECTOR_ADDITION_EN.locale,
+          slug: REAL_VECTOR_SECTION_SLUG,
           category: "high-school",
           grade: "10",
           material: "mathematics",
           topic: REAL_VECTOR_ADDITION_EN.topic,
-          title: REAL_VECTOR_ADDITION_EN.topicTitle,
-          locale: REAL_VECTOR_ADDITION_EN.locale,
-          slug: REAL_VECTOR_TOPIC_SLUG,
-          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
+          section: REAL_VECTOR_ADDITION_EN.section,
+          title: REAL_VECTOR_ADDITION_EN.title,
+          description: REAL_VECTOR_ADDITION_EN.description,
+          date: REAL_VECTOR_PUBLISHED_AT,
+          subject: REAL_VECTOR_ADDITION_EN.subject,
+          body: REAL_VECTOR_ADDITION_EN.body,
+          contentHash: REAL_VECTOR_ADDITION_EN.hash,
           syncedAt: 1,
-        }),
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
-        material: "mathematics",
-        topic: REAL_VECTOR_ADDITION_EN.topic,
-        section: REAL_VECTOR_ADDITION_EN.section,
-        title: REAL_VECTOR_ADDITION_EN.title,
-        description: REAL_VECTOR_ADDITION_EN.description,
-        date: REAL_VECTOR_PUBLISHED_AT,
-        subject: REAL_VECTOR_ADDITION_EN.subject,
-        body: REAL_VECTOR_ADDITION_EN.body,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        syncedAt: 1,
-      });
-    });
+        })
+    );
 
     const result = await t.mutation(
       internal.contents.mutations.audio.enqueuePopularContentForAudio,
@@ -420,9 +424,9 @@ describe("contents/mutations/audio", () => {
       }
     );
 
-    const queuedItems = await t.query(async (ctx) => {
-      return await ctx.db.query("audioGenerationQueue").collect();
-    });
+    const queuedItems = await t.query(
+      async (ctx) => await ctx.db.query("audioGenerationQueue").collect()
+    );
 
     expect(result).toEqual({ processed: 1, queued: 1 });
     expect(queuedItems).toHaveLength(1);
@@ -511,14 +515,15 @@ describe("contents/mutations/audio", () => {
       }
     );
 
-    const queuedItems = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("audioGenerationQueue")
-        .withIndex("by_slug_and_status", (q) =>
-          q.eq("slug", REAL_VECTOR_SECTION_SLUG).eq("status", "pending")
-        )
-        .collect();
-    });
+    const queuedItems = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("audioGenerationQueue")
+          .withIndex("by_slug_and_status", (q) =>
+            q.eq("slug", REAL_VECTOR_SECTION_SLUG).eq("status", "pending")
+          )
+          .collect()
+    );
 
     expect(result).toEqual({ processed: 1, queued: 1 });
     expect(queuedItems).toHaveLength(2);
@@ -596,14 +601,15 @@ describe("contents/mutations/audio", () => {
       }
     );
 
-    const queuedItems = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("audioGenerationQueue")
-        .withIndex("by_slug_and_status", (q) =>
-          q.eq("slug", REAL_DYNASTIC_ARTICLE_SLUG).eq("status", "pending")
-        )
-        .collect();
-    });
+    const queuedItems = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("audioGenerationQueue")
+          .withIndex("by_slug_and_status", (q) =>
+            q.eq("slug", REAL_DYNASTIC_ARTICLE_SLUG).eq("status", "pending")
+          )
+          .collect()
+    );
 
     expect(result).toEqual({ processed: 2, queued: 2 });
     expect(queuedItems).toHaveLength(2);
@@ -693,20 +699,18 @@ describe("contents/mutations/audio", () => {
       }
     );
 
-    const { completedQueueItem, queuedItems } = await t.query(async (ctx) => {
-      return {
-        completedQueueItem: await ctx.db.get(
-          "audioGenerationQueue",
-          completedQueueId
-        ),
-        queuedItems: await ctx.db
-          .query("audioGenerationQueue")
-          .withIndex("by_slug_and_status", (q) =>
-            q.eq("slug", REAL_VECTOR_SECTION_SLUG).eq("status", "pending")
-          )
-          .collect(),
-      };
-    });
+    const { completedQueueItem, queuedItems } = await t.query(async (ctx) => ({
+      completedQueueItem: await ctx.db.get(
+        "audioGenerationQueue",
+        completedQueueId
+      ),
+      queuedItems: await ctx.db
+        .query("audioGenerationQueue")
+        .withIndex("by_slug_and_status", (q) =>
+          q.eq("slug", REAL_VECTOR_SECTION_SLUG).eq("status", "pending")
+        )
+        .collect(),
+    }));
 
     expect(result).toEqual({ processed: 1, queued: 2 });
     expect(completedQueueItem).toBeNull();
@@ -796,9 +800,9 @@ describe("contents/mutations/audio", () => {
       }
     );
 
-    const queuedItems = await t.query(async (ctx) => {
-      return await ctx.db.query("audioGenerationQueue").collect();
-    });
+    const queuedItems = await t.query(
+      async (ctx) => await ctx.db.query("audioGenerationQueue").collect()
+    );
 
     expect(result).toEqual({ processed: 1, queued: 1 });
     expect(queuedItems).toHaveLength(1);
@@ -850,14 +854,15 @@ describe("contents/mutations/audio", () => {
       }
     );
 
-    const queuedItems = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("audioGenerationQueue")
-        .withIndex("by_slug_and_status", (q) =>
-          q.eq("slug", REAL_DYNASTIC_ARTICLE_SLUG).eq("status", "pending")
-        )
-        .collect();
-    });
+    const queuedItems = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("audioGenerationQueue")
+          .withIndex("by_slug_and_status", (q) =>
+            q.eq("slug", REAL_DYNASTIC_ARTICLE_SLUG).eq("status", "pending")
+          )
+          .collect()
+    );
 
     expect(result).toEqual({ processed: 1, queued: 2 });
     expect(queuedItems).toHaveLength(2);

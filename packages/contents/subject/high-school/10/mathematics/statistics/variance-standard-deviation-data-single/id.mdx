@@ -124,26 +124,26 @@ Mari kita coba hitung ulang varian Kelompok 1 pakai rumus ini:
 
 1.  Hitung <InlineMath math="\sum x_i^2" /> untuk Kelompok 1:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="13^2 + 14^2 + 15^2 + 15^2 + 16^2 + 16^2 + 17^2 + 17^2 + 17^2 + 17^2 + 17^2 + 18^2" />
       <BlockMath math="= 169 + 196 + 225 + 225 + 256 + 256 + 289 + 289 + 289 + 289 + 289 + 324 = 3096" />
-    </div>
+    </MathContainer>
 
 2.  Hitung <InlineMath math="\sum x_i" /> untuk Kelompok 1:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="13 + 14 + 15 + 15 + 16 + 16 + 17 + 17 + 17 + 17 + 17 + 18" />
       <BlockMath math="= 192" />
-    </div>
+    </MathContainer>
 
     Kita juga tahu <InlineMath math="n=12" />.
 
 3.  Masukkan ke rumus alternatif:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="\sigma^2 = \frac{3096}{12} - \left( \frac{192}{12} \right)^2" />
       <BlockMath math="\sigma^2 = 258 - (16)^2" />
       <BlockMath math="\sigma^2 = 258 - 256 = 2" />
-    </div>
+    </MathContainer>
 
 Hasilnya **sama persis** dengan cara pertama! (<InlineMath math="\sigma^2 = 2" />).

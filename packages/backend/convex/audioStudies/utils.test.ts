@@ -88,33 +88,32 @@ describe("audioStudies/utils", () => {
   it("loads real article content and lookup metadata", async () => {
     const t = convexTest(schema, convexModules);
 
-    const articleId = await t.mutation(async (ctx) => {
-      return await ctx.db.insert("articleContents", {
-        locale: REAL_DYNASTIC_ARTICLE_EN.locale,
-        slug: REAL_DYNASTIC_ARTICLE_SLUG,
-        category: "politics",
-        articleSlug: REAL_DYNASTIC_ARTICLE_ID,
-        title: REAL_DYNASTIC_ARTICLE_EN.title,
-        description: REAL_DYNASTIC_ARTICLE_EN.description,
-        date: REAL_DYNASTIC_ARTICLE_PUBLISHED_AT,
-        body: REAL_DYNASTIC_ARTICLE_EN.body,
-        contentHash: REAL_DYNASTIC_ARTICLE_EN.hash,
-        syncedAt: 1,
-      });
-    });
+    const articleId = await t.mutation(
+      async (ctx) =>
+        await ctx.db.insert("articleContents", {
+          locale: REAL_DYNASTIC_ARTICLE_EN.locale,
+          slug: REAL_DYNASTIC_ARTICLE_SLUG,
+          category: "politics",
+          articleSlug: REAL_DYNASTIC_ARTICLE_ID,
+          title: REAL_DYNASTIC_ARTICLE_EN.title,
+          description: REAL_DYNASTIC_ARTICLE_EN.description,
+          date: REAL_DYNASTIC_ARTICLE_PUBLISHED_AT,
+          body: REAL_DYNASTIC_ARTICLE_EN.body,
+          contentHash: REAL_DYNASTIC_ARTICLE_EN.hash,
+          syncedAt: 1,
+        })
+    );
 
-    const result = await t.query(async (ctx) => {
-      return {
-        content: await fetchContentForAudio(ctx, {
-          type: "article",
-          id: articleId,
-        }),
-        lookup: await getAudioContentLookup(ctx, {
-          type: "article",
-          id: articleId,
-        }),
-      };
-    });
+    const result = await t.query(async (ctx) => ({
+      content: await fetchContentForAudio(ctx, {
+        type: "article",
+        id: articleId,
+      }),
+      lookup: await getAudioContentLookup(ctx, {
+        type: "article",
+        id: articleId,
+      }),
+    }));
 
     expect(result).toEqual({
       content: {
@@ -135,48 +134,47 @@ describe("audioStudies/utils", () => {
   it("loads real subject content and lookup metadata", async () => {
     const t = convexTest(schema, convexModules);
 
-    const subjectId = await t.mutation(async (ctx) => {
-      return await ctx.db.insert("subjectSections", {
-        topicId: await ctx.db.insert("subjectTopics", {
+    const subjectId = await t.mutation(
+      async (ctx) =>
+        await ctx.db.insert("subjectSections", {
+          topicId: await ctx.db.insert("subjectTopics", {
+            category: "high-school",
+            grade: "10",
+            material: "mathematics",
+            topic: REAL_VECTOR_ADDITION_EN.topic,
+            title: REAL_VECTOR_ADDITION_EN.topicTitle,
+            locale: REAL_VECTOR_ADDITION_EN.locale,
+            slug: REAL_VECTOR_TOPIC_SLUG,
+            sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
+            syncedAt: 1,
+          }),
+          locale: REAL_VECTOR_ADDITION_EN.locale,
+          slug: REAL_VECTOR_SECTION_SLUG,
           category: "high-school",
           grade: "10",
           material: "mathematics",
           topic: REAL_VECTOR_ADDITION_EN.topic,
-          title: REAL_VECTOR_ADDITION_EN.topicTitle,
-          locale: REAL_VECTOR_ADDITION_EN.locale,
-          slug: REAL_VECTOR_TOPIC_SLUG,
-          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
+          section: REAL_VECTOR_ADDITION_EN.section,
+          title: REAL_VECTOR_ADDITION_EN.title,
+          description: REAL_VECTOR_ADDITION_EN.description,
+          date: REAL_VECTOR_PUBLISHED_AT,
+          subject: REAL_VECTOR_ADDITION_EN.subject,
+          body: REAL_VECTOR_ADDITION_EN.body,
+          contentHash: REAL_VECTOR_ADDITION_EN.hash,
           syncedAt: 1,
-        }),
-        locale: REAL_VECTOR_ADDITION_EN.locale,
-        slug: REAL_VECTOR_SECTION_SLUG,
-        category: "high-school",
-        grade: "10",
-        material: "mathematics",
-        topic: REAL_VECTOR_ADDITION_EN.topic,
-        section: REAL_VECTOR_ADDITION_EN.section,
-        title: REAL_VECTOR_ADDITION_EN.title,
-        description: REAL_VECTOR_ADDITION_EN.description,
-        date: REAL_VECTOR_PUBLISHED_AT,
-        subject: REAL_VECTOR_ADDITION_EN.subject,
-        body: REAL_VECTOR_ADDITION_EN.body,
-        contentHash: REAL_VECTOR_ADDITION_EN.hash,
-        syncedAt: 1,
-      });
-    });
+        })
+    );
 
-    const result = await t.query(async (ctx) => {
-      return {
-        content: await fetchContentForAudio(ctx, {
-          type: "subject",
-          id: subjectId,
-        }),
-        lookup: await getAudioContentLookup(ctx, {
-          type: "subject",
-          id: subjectId,
-        }),
-      };
-    });
+    const result = await t.query(async (ctx) => ({
+      content: await fetchContentForAudio(ctx, {
+        type: "subject",
+        id: subjectId,
+      }),
+      lookup: await getAudioContentLookup(ctx, {
+        type: "subject",
+        id: subjectId,
+      }),
+    }));
 
     expect(result).toEqual({
       content: {
@@ -244,18 +242,16 @@ describe("audioStudies/utils", () => {
       return { articleId, subjectId };
     });
 
-    const result = await t.query(async (ctx) => {
-      return {
-        articleContent: await fetchContentForAudio(ctx, {
-          type: "article",
-          id: articleId,
-        }),
-        subjectLookup: await getAudioContentLookup(ctx, {
-          type: "subject",
-          id: subjectId,
-        }),
-      };
-    });
+    const result = await t.query(async (ctx) => ({
+      articleContent: await fetchContentForAudio(ctx, {
+        type: "article",
+        id: articleId,
+      }),
+      subjectLookup: await getAudioContentLookup(ctx, {
+        type: "subject",
+        id: subjectId,
+      }),
+    }));
 
     expect(result).toEqual({
       articleContent: null,
@@ -603,13 +599,14 @@ describe("audioStudies/utils", () => {
       return subjectId;
     });
 
-    const updatedCount = await t.mutation(async (ctx) => {
-      return await updateContentHash(
-        ctx,
-        { type: "subject", id: subjectId },
-        REAL_VECTOR_ADDITION_EN.hash
-      );
-    });
+    const updatedCount = await t.mutation(
+      async (ctx) =>
+        await updateContentHash(
+          ctx,
+          { type: "subject", id: subjectId },
+          REAL_VECTOR_ADDITION_EN.hash
+        )
+    );
 
     expect(updatedCount).toBe(0);
   });
@@ -659,17 +656,18 @@ describe("audioStudies/utils", () => {
       return { audioId, subjectId };
     });
 
-    const updatedCount = await t.mutation(async (ctx) => {
-      return await updateContentHash(
-        ctx,
-        { type: "subject", id: subjectId },
-        REAL_VECTOR_ADDITION_EN.hash
-      );
-    });
+    const updatedCount = await t.mutation(
+      async (ctx) =>
+        await updateContentHash(
+          ctx,
+          { type: "subject", id: subjectId },
+          REAL_VECTOR_ADDITION_EN.hash
+        )
+    );
 
-    const audio = await t.query(async (ctx) => {
-      return await ctx.db.get("contentAudios", audioId);
-    });
+    const audio = await t.query(
+      async (ctx) => await ctx.db.get("contentAudios", audioId)
+    );
 
     expect(updatedCount).toBe(1);
     expect(audio).toMatchObject({
@@ -733,17 +731,18 @@ describe("audioStudies/utils", () => {
       return { audioId, subjectId };
     });
 
-    const updatedCount = await t.mutation(async (ctx) => {
-      return await updateContentHash(
-        ctx,
-        { type: "subject", id: subjectId },
-        REAL_VECTOR_ADDITION_EN.hash
-      );
-    });
+    const updatedCount = await t.mutation(
+      async (ctx) =>
+        await updateContentHash(
+          ctx,
+          { type: "subject", id: subjectId },
+          REAL_VECTOR_ADDITION_EN.hash
+        )
+    );
 
-    const audio = await t.query(async (ctx) => {
-      return await ctx.db.get("contentAudios", audioId);
-    });
+    const audio = await t.query(
+      async (ctx) => await ctx.db.get("contentAudios", audioId)
+    );
 
     expect(updatedCount).toBe(1);
     expect(audio).toMatchObject({

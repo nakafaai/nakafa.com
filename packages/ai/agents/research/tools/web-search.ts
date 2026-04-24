@@ -14,8 +14,8 @@ interface Params {
   writer: UIMessageStreamWriter<MyUIMessage>;
 }
 
-export const createWebSearch = ({ writer }: Params) => {
-  return tool({
+export const createWebSearch = ({ writer }: Params) =>
+  tool({
     description: nakafaWebSearch(),
     inputSchema: webSearchInputSchema,
     outputSchema: z.string(),
@@ -126,7 +126,6 @@ export const createWebSearch = ({ writer }: Params) => {
       }
     },
   });
-};
 
 function createOutput({ output }: { output: WebSearchOutput }): string {
   return dedentString(`

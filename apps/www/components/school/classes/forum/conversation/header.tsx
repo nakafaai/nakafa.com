@@ -1,5 +1,3 @@
-"use client";
-
 import { WinkIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -36,13 +34,19 @@ import { useMutation } from "convex/react";
 import { format } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { memo, useTransition } from "react";
-import type { Forum } from "@/components/school/classes/forum/conversation/types";
+import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
-export const ForumHeader = memo(({ forum }: { forum: Forum }) => {
+/** Renders the forum starter card at the top of the transcript. */
+export const ForumHeader = memo(() => {
   const t = useTranslations("Common");
   const locale = useLocale();
+  const forum = useData((state) => state.forum);
+
+  if (!forum) {
+    return null;
+  }
 
   const userName = forum.user?.name ?? t("anonymous");
   const userImage = forum.user?.image ?? "";
@@ -73,8 +77,8 @@ export const ForumHeader = memo(({ forum }: { forum: Forum }) => {
         </div>
 
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <ForumReactions forum={forum} />
-          <ForumActions forum={forum} />
+          <ForumReactions />
+          <ForumActions />
         </div>
       </div>
     </div>
@@ -82,23 +86,24 @@ export const ForumHeader = memo(({ forum }: { forum: Forum }) => {
 });
 ForumHeader.displayName = "ForumHeader";
 
-const ForumReactions = memo(({ forum }: { forum: Forum }) => {
+const ForumReactions = memo(() => {
   const t = useTranslations("Common");
+  const forum = useData((state) => state.forum);
 
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
     api.classes.forums.mutations.reactions.toggleForumReaction
   );
 
+  if (!(forum && forum.reactionUsers.length > 0)) {
+    return null;
+  }
+
   const handleToggleReaction = (emoji: string) => {
     startTransition(async () => {
       await toggleReaction({ forumId: forum._id, emoji });
     });
   };
-
-  if (forum.reactionUsers.length === 0) {
-    return null;
-  }
 
   return (
     <div className="flex flex-wrap items-center gap-1">
@@ -144,14 +149,19 @@ const ForumReactions = memo(({ forum }: { forum: Forum }) => {
 });
 ForumReactions.displayName = "ForumReactions";
 
-const ForumActions = memo(({ forum }: { forum: Forum }) => {
+const ForumActions = memo(() => {
   const t = useTranslations("Common");
+  const forum = useData((state) => state.forum);
 
   const [isReactionPickerOpen, reactionPicker] = useDisclosure(false);
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
     api.classes.forums.mutations.reactions.toggleForumReaction
   );
+
+  if (!forum) {
+    return null;
+  }
 
   const handleToggleReaction = (emoji: string) => {
     startTransition(async () => {

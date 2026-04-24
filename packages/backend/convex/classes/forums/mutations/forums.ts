@@ -21,6 +21,7 @@ export const createForum = mutation({
     tag: schoolClassForumTagValidator,
     title: v.string(),
   },
+  returns: vv.id("schoolClassForums"),
   handler: async (ctx, args) => {
     const user = await requireAuth(ctx);
     const userId = user.appUser._id;
@@ -72,6 +73,7 @@ export const createForum = mutation({
       isPinned: false,
       lastPostAt: now,
       lastPostBy: userId,
+      nextPostSequence: 1,
       postCount: 0,
       reactionCounts: [],
       schoolId: classData.schoolId,

@@ -33,11 +33,11 @@ Mari kita pahami dengan detail:
 
 **Definisi penting:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\sin \theta = y \text{ (koordinat vertikal)}" />
   <BlockMath math="\cos \theta = x \text{ (koordinat horizontal)}" />
   <BlockMath math="\tan \theta = \frac{y}{x} = \frac{\sin \theta}{\cos \theta}, \quad x \neq 0" />
-</div>
+</MathContainer>
 
 ## Mengapa Tanda Berubah di Setiap Kuadran?
 
@@ -104,11 +104,11 @@ Berikut langkah sistematis untuk menentukan nilai fungsi trigonometri:
 
 Menggunakan nilai sudut istimewa 60°:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\sin 120° = +\sin 60° = \frac{\sqrt{3}}{2}" />
   <BlockMath math="\cos 120° = -\cos 60° = -\frac{1}{2}" />
   <BlockMath math="\tan 120° = -\tan 60° = -\sqrt{3}" />
-</div>
+</MathContainer>
 
 ### Sudut di Kuadran III
 
@@ -122,11 +122,11 @@ Menggunakan nilai sudut istimewa 60°:
 
 Menggunakan nilai sudut istimewa 60°:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\sin 240° = -\sin 60° = -\frac{\sqrt{3}}{2}" />
   <BlockMath math="\cos 240° = -\cos 60° = -\frac{1}{2}" />
   <BlockMath math="\tan 240° = +\tan 60° = \sqrt{3}" />
-</div>
+</MathContainer>
 
 ### Sudut di Kuadran IV
 
@@ -141,11 +141,11 @@ Menggunakan nilai sudut istimewa 60°:
 
 Menggunakan nilai sudut istimewa 60°:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\sin 300° = -\sin 60° = -\frac{\sqrt{3}}{2}" />
   <BlockMath math="\cos 300° = +\cos 60° = \frac{1}{2}" />
   <BlockMath math="\tan 300° = -\tan 60° = -\sqrt{3}" />
-</div>
+</MathContainer>
 
 ## Menangani Sudut Khusus
 
@@ -188,11 +188,11 @@ Gunakan sifat periodisitas. Kurangi atau tambahkan kelipatan 360° sampai sudut 
 
    Sudut referensinya adalah <InlineMath math="360° - 315° = 45°" />.
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\sin 315° = -\sin 45° = -\frac{\sqrt{2}}{2}" />
      <BlockMath math="\cos 315° = +\cos 45° = \frac{\sqrt{2}}{2}" />
      <BlockMath math="\tan 315° = -\tan 45° = -1" />
-   </div>
+   </MathContainer>
 
 2. Mari kita hitung setiap suku secara terpisah. Untuk <InlineMath math="\sin(-60°)" />, gunakan sifat fungsi ganjil.
 
@@ -200,12 +200,12 @@ Gunakan sifat periodisitas. Kurangi atau tambahkan kelipatan 360° sampai sudut 
 
    Untuk <InlineMath math="\tan(-135°)" />, ubah dulu ke sudut positif.
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\sin(-60°) = -\sin 60° = -\frac{\sqrt{3}}{2}" />
      <BlockMath math="\cos 210° = -\cos 30° = -\frac{\sqrt{3}}{2}" />
      <BlockMath math="\tan(-135°) = -\tan 135° = -(-\tan 45°) = 1" />
      <BlockMath math="\text{Hasil} = -\frac{\sqrt{3}}{2} - \frac{\sqrt{3}}{2} + 1 = -\sqrt{3} + 1" />
-   </div>
+   </MathContainer>
 
 3. Diketahui <InlineMath math="\sin \theta = \frac{3}{5}" /> di kuadran II.
 
@@ -213,13 +213,13 @@ Gunakan sifat periodisitas. Kurangi atau tambahkan kelipatan 360° sampai sudut 
 
    Ingat bahwa di kuadran II, <InlineMath math="\cos" /> bernilai negatif.
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\sin^2 \theta + \cos^2 \theta = 1" />
      <BlockMath math="\left(\frac{3}{5}\right)^2 + \cos^2 \theta = 1" />
      <BlockMath math="\cos^2 \theta = 1 - \frac{9}{25} = \frac{16}{25}" />
      <BlockMath math="\cos \theta = -\frac{4}{5} \text{ (negatif di kuadran II)}" />
      <BlockMath math="\tan \theta = \frac{\sin \theta}{\cos \theta} = \frac{3/5}{-4/5} = -\frac{3}{4}" />
-   </div>
+   </MathContainer>
 
 4. Pertama sederhanakan sudut-sudutnya.
 
@@ -227,11 +227,11 @@ Gunakan sifat periodisitas. Kurangi atau tambahkan kelipatan 360° sampai sudut 
 
    Untuk <InlineMath math="-330°" />, tambahkan 360° menjadi 30°.
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\sin 840° = \sin 120° = \sin(180° - 60°) = \sin 60° = \frac{\sqrt{3}}{2}" />
      <BlockMath math="\cos(-330°) = \cos 330° = \cos(360° - 30°) = \cos 30° = \frac{\sqrt{3}}{2}" />
      <BlockMath math="\sin 840° \cdot \cos(-330°) = \frac{\sqrt{3}}{2} \cdot \frac{\sqrt{3}}{2} = \frac{3}{4}" />
-   </div>
+   </MathContainer>
 
 5. Sudut 1050° perlu disederhanakan terlebih dahulu.
 
@@ -239,8 +239,8 @@ Gunakan sifat periodisitas. Kurangi atau tambahkan kelipatan 360° sampai sudut 
 
    Sudut 330° berada di kuadran IV dengan sudut referensi 30°.
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="x = \cos 330° = \cos 30° = \frac{\sqrt{3}}{2}" />
      <BlockMath math="y = \sin 330° = -\sin 30° = -\frac{1}{2}" />
      <BlockMath math="\text{Koordinat ujung bilah: } \left(\frac{\sqrt{3}}{2}, -\frac{1}{2}\right)" />
-   </div>
+   </MathContainer>

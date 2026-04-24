@@ -17,8 +17,8 @@ export const createMathTool = ({
   locale,
   context,
   usageAccumulator,
-}: MathToolParams) => {
-  return tool({
+}: MathToolParams) =>
+  tool({
     description:
       "Perform mathematical calculations and solve math problems. Use this for ANY mathematical computation - from simple arithmetic to complex expressions.",
     inputSchema: z.object({
@@ -42,4 +42,3 @@ export const createMathTool = ({
       return result.text;
     },
   });
-};

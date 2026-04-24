@@ -10,6 +10,7 @@ const BASE_CONTENT_SECURITY_POLICY = {
     "https://*.convex.site",
     "https://*.vercel-analytics.com",
     "https://accounts.google.com",
+    "https://cdn.jsdelivr.net",
     "https://www.youtube-nocookie.com",
     "https://www.youtube.com",
   ],

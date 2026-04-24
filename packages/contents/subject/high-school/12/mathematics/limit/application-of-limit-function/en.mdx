@@ -30,10 +30,10 @@ When <InlineMath math="t" /> is very large, the term <InlineMath math="t^2" /> w
 
 So,
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\sqrt{t^2 - t + (190.68)^3} \approx \sqrt{t^2} = |t| = t \quad \text{(for } t > 0\text{)}" />
 <BlockMath math="\lim_{t \to \infty} N(t) = \lim_{t \to \infty} (285000 - t) = -\infty" />
-</div>
+</MathContainer>
 
 > This negative result mathematically indicates that this model is only valid for a limited time period. In real context, the number of infected residents cannot be negative, so this model is only valid up to the point where <InlineMath math="N(t) \geq 0" />.
 
@@ -106,13 +106,13 @@ In chemistry, reaction rates can be modeled using exponential functions. Limit f
 
     Justification for Vaccination Target of 282,367 people:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="\text{Children} = 0.21 \times 576{,}260 = 121{,}015 \text{ people}" />
     <BlockMath math="\text{Adults} = 0.79 \times 576{,}260 = 455{,}245 \text{ people}" />
     <BlockMath math="\text{Total positive} = 0.3 \times 576{,}260 = 172{,}878 \text{ people}" />
     <BlockMath math="\text{Positive adults} = 0.79 \times 172{,}878 = 136{,}574 \text{ people}" />
     <BlockMath math="\text{Adults eligible for vaccination} = 455{,}245 - 136{,}574 = 318{,}671 \text{ people}" />
-    </div>
+    </MathContainer>
 
     The vaccination target of 282,367 people represents 89% of eligible adults, adjusted for vaccine availability and medical staff capacity.
 
@@ -136,11 +136,11 @@ In chemistry, reaction rates can be modeled using exponential functions. Limit f
 
     **Step 4:** Calculate the final result
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="N(282{,}367) = 285{,}000 - \sqrt{79{,}737{,}773{,}229.88}" />
     <BlockMath math="= 285{,}000 - 282{,}378.78" />
     <BlockMath math="= 2{,}621.22 \approx 2{,}621 \text{ people}" />
-    </div>
+    </MathContainer>
 
 5. **Result Interpretation:**
 
@@ -171,21 +171,21 @@ In chemistry, reaction rates can be modeled using exponential functions. Limit f
 
    Maximum production capacity is obtained by calculating the limit when <InlineMath math="t \to \infty" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{t \to \infty} P(t) = \lim_{t \to \infty} 50000(1 - e^{-0.1t})" />
    <BlockMath math="= 50000 \lim_{t \to \infty} (1 - e^{-0.1t})" />
    <BlockMath math="= 50000(1 - 0) = 50000 \text{ vaccine units}" />
-   </div>
+   </MathContainer>
 
    So, the maximum production capacity is 50,000 vaccine units.
 
 2. **Solution:**
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{t \to \infty} I(t) = \lim_{t \to \infty} \frac{100000t}{t + 50}" />
    <BlockMath math="= \lim_{t \to \infty} \frac{100000t}{t(1 + \frac{50}{t})} = \lim_{t \to \infty} \frac{100000}{1 + \frac{50}{t}}" />
    <BlockMath math="= \frac{100000}{1 + 0} = 100000 \text{ people}" />
-   </div>
+   </MathContainer>
 
    In the long term, information will reach a maximum of 100,000 people, indicating saturation in information spread.
 
@@ -193,9 +193,9 @@ In chemistry, reaction rates can be modeled using exponential functions. Limit f
 
    Marginal cost is the derivative of the cost function, which can be calculated using the limit definition:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Marginal Cost} = \lim_{\Delta x \to 0} \frac{C(x + \Delta x) - C(x)}{\Delta x}" />
-   </div>
+   </MathContainer>
 
    **Detailed steps:**
    
@@ -211,10 +211,10 @@ In chemistry, reaction rates can be modeled using exponential functions. Limit f
 
    So,
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="C(x + \Delta x) - C(x) = 5\Delta x + 0.02x\Delta x + 0.01(\Delta x)^2" />
    <BlockMath math="\frac{C(x + \Delta x) - C(x)}{\Delta x} = 5 + 0.02x + 0.01\Delta x" />
    <BlockMath math="\lim_{\Delta x \to 0} (5 + 0.02x + 0.01\Delta x) = 5 + 0.02x" />
-   </div>
+   </MathContainer>
 
    The marginal cost is <InlineMath math="5 + 0.02x" /> rupiah per unit. This means, to produce the <InlineMath math="x" />-th mask, the additional cost is <InlineMath math="5 + 0.02x" /> rupiah. The more production, the higher the marginal cost due to the term <InlineMath math="0.02x" />.

@@ -1,16 +1,14 @@
 import { Suspense } from "react";
 import { AppProviders } from "@/components/providers/app";
 import { getToken } from "@/lib/auth/server";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /**
- * Binds the validated locale to the shared authenticated app subtree.
+ * Mount the shared authenticated app provider tree for the localized app
+ * subtree.
  *
- * Every route in the `(app)` group relies on the shared authenticated runtime,
- * so this layout resolves the Better Auth token once and mounts a single
- * provider tree behind a real Suspense boundary. The public `/auth` page lives
- * outside this subtree so account switches fully remount the auth provider
- * instead of preserving stale authenticated client state through navigation.
+ * The parent `app/[locale]/layout.tsx` already validates the locale, so this
+ * segment only needs to mount the shared request-scoped auth provider tree
+ * behind a real Suspense boundary.
  *
  * References:
  * - Convex App Router SSR:
@@ -18,12 +16,9 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
  * - Next.js Cache Components / mixed static-dynamic routes:
  *   @.agents/skills/next-cache-components/SKILL.md
  */
-export default async function Layout(props: LayoutProps<"/[locale]">) {
-  const { children, params } = props;
-  getLocaleOrThrow((await params).locale);
-
+export default function Layout({ children }: LayoutProps<"/[locale]">) {
   return (
-    <Suspense fallback={<div className="min-h-svh bg-background" />}>
+    <Suspense fallback={null}>
       <AuthenticatedAppProviders>{children}</AuthenticatedAppProviders>
     </Suspense>
   );

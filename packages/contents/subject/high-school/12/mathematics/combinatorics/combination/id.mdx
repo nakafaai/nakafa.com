@@ -46,19 +46,19 @@ Pembagian dengan <InlineMath math="k!" /> dilakukan karena dalam kombinasi, kita
 
 Dari 10 siswa yang tersedia, berapa cara memilih 5 siswa untuk tim basket?
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="C(10,5) = \frac{10!}{5! \times 5!}" />
 <BlockMath math="C(10,5) = \frac{10 \times 9 \times 8 \times 7 \times 6}{5 \times 4 \times 3 \times 2 \times 1} = \frac{30.240}{120} = 252 \text{ cara}" />
-</div>
+</MathContainer>
 
 **Pemilihan Menu Makanan:**
 
 Sebuah restoran menawarkan 8 jenis makanan dan kamu boleh memilih 3 jenis. Berapa banyak kombinasi pilihan yang mungkin?
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="C(8,3) = \frac{8!}{5! \times 3!}" />
 <BlockMath math="C(8,3) = \frac{8 \times 7 \times 6}{3 \times 2 \times 1} = \frac{336}{6} = 56 \text{ kombinasi}" />
-</div>
+</MathContainer>
 
 **Situasi dengan Syarat Khusus:**
 
@@ -72,21 +72,21 @@ Kadang-kadang ada **pembatasan tertentu** dalam pemilihan. Misalnya, dari 12 sis
 **Perhitungan detail:**
 
 **Kasus 1:** 2 perempuan + 2 laki-laki
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="C(5,2) \times C(7,2) = \frac{5!}{3! \times 2!} \times \frac{7!}{5! \times 2!}" />
 <BlockMath math="= \frac{5 \times 4}{2 \times 1} \times \frac{7 \times 6}{2 \times 1} = 10 \times 21 = 210" />
-</div>
+</MathContainer>
 
 **Kasus 2:** 3 perempuan + 1 laki-laki
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="C(5,3) \times C(7,1) = \frac{5!}{2! \times 3!} \times \frac{7!}{6! \times 1!}" />
 <BlockMath math="= \frac{5 \times 4}{2 \times 1} \times 7 = 10 \times 7 = 70" />
-</div>
+</MathContainer>
 
 **Kasus 3:** 4 perempuan + 0 laki-laki
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="C(5,4) = \frac{5!}{1! \times 4!} = \frac{5}{1} = 5" />
-</div>
+</MathContainer>
 
 **Total:** <InlineMath math="210 + 70 + 5 = 285" /> cara
 
@@ -110,10 +110,10 @@ Kadang-kadang ada **pembatasan tertentu** dalam pemilihan. Misalnya, dari 12 sis
    
    Rumus kombinasi:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
       <BlockMath math="C(n,k) = \frac{n!}{(n-k)! \times k!}" />
       <BlockMath math="C(8,3) = \frac{8!}{5! \times 3!} = \frac{8 \times 7 \times 6}{3 \times 2 \times 1} = \frac{336}{6} = 56" />
-   </div>
+   </MathContainer>
    
    Jadi, ada 56 cara memilih 3 buku dari 8 buku yang tersedia.
 
@@ -125,10 +125,10 @@ Kadang-kadang ada **pembatasan tertentu** dalam pemilihan. Misalnya, dari 12 sis
    
    Rumus kombinasi:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
       <BlockMath math="C(12,5) = \frac{12!}{7! \times 5!}" />
       <BlockMath math="C(12,5) = \frac{12 \times 11 \times 10 \times 9 \times 8}{5 \times 4 \times 3 \times 2 \times 1} = \frac{95.040}{120} = 792" />
-   </div>
+   </MathContainer>
    
    Tim futsal dapat memilih 5 pemain dari 12 pemain dengan 792 cara berbeda.
 
@@ -143,22 +143,22 @@ Kadang-kadang ada **pembatasan tertentu** dalam pemilihan. Misalnya, dari 12 sis
    **Rincian perhitungan setiap kasus:**
    
    **Kasus 1:** 3 merah + 2 biru
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="C(6,3) \times C(4,2) = \frac{6!}{3! \times 3!} \times \frac{4!}{2! \times 2!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4}{3 \times 2 \times 1} \times \frac{4 \times 3}{2 \times 1} = 20 \times 6 = 120" />
-   </div>
+   </MathContainer>
    
    **Kasus 2:** 4 merah + 1 biru
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="C(6,4) \times C(4,1) = \frac{6!}{2! \times 4!} \times \frac{4!}{3! \times 1!}" />
    <BlockMath math="= \frac{6 \times 5}{2 \times 1} \times 4 = 15 \times 4 = 60" />
-   </div>
+   </MathContainer>
    
    **Kasus 3:** 5 merah + 0 biru
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="C(6,5) \times C(4,0) = \frac{6!}{1! \times 5!} \times \frac{4!}{4! \times 0!}" />
    <BlockMath math="= 6 \times 1 = 6" />
-   </div>
+   </MathContainer>
    
    **Total:** <InlineMath math="120 + 60 + 6 = 186" />
    
@@ -175,22 +175,22 @@ Kadang-kadang ada **pembatasan tertentu** dalam pemilihan. Misalnya, dari 12 sis
    **Rincian perhitungan setiap kasus:**
    
    **Kasus 1:** 2 wajib + 2 pilihan
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="C(6,2) \times C(4,2) = \frac{6!}{4! \times 2!} \times \frac{4!}{2! \times 2!}" />
    <BlockMath math="= \frac{6 \times 5}{2 \times 1} \times \frac{4 \times 3}{2 \times 1} = 15 \times 6 = 90" />
-   </div>
+   </MathContainer>
    
    **Kasus 2:** 3 wajib + 1 pilihan
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="C(6,3) \times C(4,1) = \frac{6!}{3! \times 3!} \times \frac{4!}{3! \times 1!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4}{3 \times 2 \times 1} \times 4 = 20 \times 4 = 80" />
-   </div>
+   </MathContainer>
    
    **Kasus 3:** 4 wajib + 0 pilihan
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="C(6,4) \times C(4,0) = \frac{6!}{2! \times 4!} \times \frac{4!}{4! \times 0!}" />
    <BlockMath math="= \frac{6 \times 5}{2 \times 1} \times 1 = 15 \times 1 = 15" />
-   </div>
+   </MathContainer>
    
    **Total:** <InlineMath math="90 + 80 + 15 = 185" />
    

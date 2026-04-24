@@ -10,10 +10,10 @@ export const metadata = {
 
 Misalkan kita memiliki dua matriks, A dan B, sebagai berikut:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="A = \begin{bmatrix} -5 & 2 \\ 1 & -3 \end{bmatrix}" />
   <BlockMath math="B = \begin{bmatrix} 9 & -4 \\ 1 & -1 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 ### Determinan dari Perkalian Dua Matriks
 
@@ -35,12 +35,12 @@ Determinan dari matriks B adalah:
 
 Matriks AB diperoleh dengan mengalikan matriks A dan B:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="AB = \begin{bmatrix} -5 & 2 \\ 1 & -3 \end{bmatrix} \begin{bmatrix} 9 & -4 \\ 1 & -1 \end{bmatrix}" />
   <BlockMath math="AB = \begin{bmatrix} (-5)(9) + (2)(1) & (-5)(-4) + (2)(-1) \\ (1)(9) + (-3)(1) & (1)(-4) + (-3)(-1) \end{bmatrix}" />
   <BlockMath math="AB = \begin{bmatrix} -45 + 2 & 20 - 2 \\ 9 - 3 & -4 + 3 \end{bmatrix}" />
   <BlockMath math="AB = \begin{bmatrix} -43 & 18 \\ 6 & -1 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 **Langkah 4: Hitung Determinan Matriks AB (<InlineMath math="|AB|" />)**
 

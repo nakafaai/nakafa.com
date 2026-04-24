@@ -51,12 +51,10 @@ describe("chats/mutations", () => {
       }
     );
 
-    const savedState = await t.query(async (ctx) => {
-      return {
-        creditTransactions: await ctx.db.query("creditTransactions").collect(),
-        user: await ctx.db.get("users", userId),
-      };
-    });
+    const savedState = await t.query(async (ctx) => ({
+      creditTransactions: await ctx.db.query("creditTransactions").collect(),
+      user: await ctx.db.get("users", userId),
+    }));
 
     expect(result.credits).toBe(1);
     expect(result.newBalance).toBe(6);

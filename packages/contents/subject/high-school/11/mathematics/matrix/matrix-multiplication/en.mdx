@@ -44,21 +44,21 @@ Matrix <InlineMath math="P" /> has an order of <InlineMath math="2 \times 2" /> 
 
 The elements of matrix <InlineMath math="R" /> are calculated as follows:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="r_{11} = (\text{row 1 of } P) \cdot (\text{column 1 of } Q) = p_{11}q_{11} + p_{12}q_{21}" />
   <BlockMath math="r_{12} = (\text{row 1 of } P) \cdot (\text{column 2 of } Q) = p_{11}q_{12} + p_{12}q_{22}" />
   <BlockMath math="r_{21} = (\text{row 2 of } P) \cdot (\text{column 1 of } Q) = p_{21}q_{11} + p_{22}q_{21}" />
   <BlockMath math="r_{22} = (\text{row 2 of } P) \cdot (\text{column 2 of } Q) = p_{21}q_{12} + p_{22}q_{22}" />
-</div>
+</MathContainer>
 
 ## Example of Multiplying Two Matrices
 
 Given two matrices:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="A = \begin{bmatrix} -7 & 2 & -2 \\ 1 & 0 & -1 \\ 2 & 3 & -1 \end{bmatrix}" />
   <BlockMath math="B = \begin{bmatrix} 1 & 2 \\ -1 & 3 \\ 2 & 0 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Matrix <InlineMath math="A" /> has an order of <InlineMath math="3 \times 3" /> and matrix <InlineMath math="B" /> has an order of <InlineMath math="3 \times 2" />.
 
@@ -68,7 +68,7 @@ So, <InlineMath math="AB" /> can be calculated and will result in a matrix of or
 
 Let's calculate <InlineMath math="C = AB" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="C = \begin{bmatrix} c_{11} & c_{12} \\ c_{21} & c_{22} \\ c_{31} & c_{32} \end{bmatrix}" />
   <BlockMath math="c_{11} = (-7)(1) + (2)(-1) + (-2)(2) = -7 - 2 - 4 = -13" />
   <BlockMath math="c_{12} = (-7)(2) + (2)(3) + (-2)(0) = -14 + 6 + 0 = -8" />
@@ -76,7 +76,7 @@ Let's calculate <InlineMath math="C = AB" />:
   <BlockMath math="c_{22} = (1)(2) + (0)(3) + (-1)(0) = 2 + 0 + 0 = 2" />
   <BlockMath math="c_{31} = (2)(1) + (3)(-1) + (-1)(2) = 2 - 3 - 2 = -3" />
   <BlockMath math="c_{32} = (2)(2) + (3)(3) + (-1)(0) = 4 + 9 + 0 = 13" />
-</div>
+</MathContainer>
 
 So, the result of the matrix multiplication <InlineMath math="AB" /> is:
 
@@ -106,10 +106,10 @@ Matrix multiplication has several important properties:
 
     Matrix multiplication is distributive over matrix addition or subtraction:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="A(B + C) = AB + AC" />
       <BlockMath math="(A + B)C = AC + BC" />
-    </div>
+    </MathContainer>
 
     This holds if all involved addition and multiplication operations are defined.
 
@@ -151,12 +151,12 @@ However, pay attention to the order of the matrices. Matrix <InlineMath math="P"
 
 Matrix <InlineMath math="R = PQ" /> will show the total revenue for each type of chip.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="R = PQ = \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix} \begin{bmatrix} 20,000 \\ 15,000 \\ 30,000 \end{bmatrix}" />
   <BlockMath math="R = \begin{bmatrix} (15)(20,000) + (12)(15,000) + (20)(30,000) \\ (25)(20,000) + (10)(15,000) + (15)(30,000) \\ (15)(20,000) + (15)(15,000) + (20)(30,000) \end{bmatrix}" />
   <BlockMath math="R = \begin{bmatrix} 300,000 + 180,000 + 600,000 \\ 500,000 + 150,000 + 450,000 \\ 300,000 + 225,000 + 600,000 \end{bmatrix}" />
   <BlockMath math="R = \begin{bmatrix} 1,080,000 \\ 1,100,000 \\ 1,125,000 \end{bmatrix} \begin{matrix} \text{Total Revenue from Tempeh Chips} \\ \text{Total Revenue from Banana Chips} \\ \text{Total Revenue from Potato Chips} \end{matrix}" />
-</div>
+</MathContainer>
 
 From matrix <InlineMath math="R" />, we can see that the total revenue from the sale of tempeh chips is Rp1,080,000, banana chips Rp1,100,000, and potato chips Rp1,125,000.
 
@@ -166,12 +166,12 @@ Suppose we want to find the total revenue in Place A, Place B, and Place C. We c
 
 Matrix <InlineMath math="Q^T" /> has an order of <InlineMath math="1 \times 3" /> and <InlineMath math="P" /> has an order of <InlineMath math="3 \times 3" />. The result <InlineMath math="S" /> will have an order of <InlineMath math="1 \times 3" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="S = \begin{bmatrix} 20,000 & 15,000 & 30,000 \end{bmatrix} \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix}" />
   <BlockMath math="s_{11} = (20,000)(15) + (15,000)(25) + (30,000)(15) = 300,000 + 375,000 + 450,000 = 1,125,000" />
   <BlockMath math="s_{12} = (20,000)(12) + (15,000)(10) + (30,000)(15) = 240,000 + 150,000 + 450,000 = 840,000" />
   <BlockMath math="s_{13} = (20,000)(20) + (15,000)(15) + (30,000)(20) = 400,000 + 225,000 + 600,000 = 1,225,000" />
-</div>
+</MathContainer>
 
 Thus, <InlineMath math="S = \begin{bmatrix} 1,125,000 & 840,000 & 1,225,000 \end{bmatrix}" />.
 
@@ -183,10 +183,10 @@ The interpretation of the elements of the resulting matrix greatly depends on ho
 
 Given the following matrices:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="C = \begin{bmatrix} 1 & -3 \\ 1 & 2 \end{bmatrix}" />
   <BlockMath math="D = \begin{bmatrix} 1 & -4 \\ 8 & 2 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Determine the matrices <InlineMath math="CD" /> and <InlineMath math="DC" />.
 
@@ -198,23 +198,23 @@ Is <InlineMath math="CD = DC" />?
 
     Matrix <InlineMath math="C" /> has an order of <InlineMath math="2 \times 2" /> and <InlineMath math="D" /> has an order of <InlineMath math="2 \times 2" />. The result will have an order of <InlineMath math="2 \times 2" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="CD = \begin{bmatrix} 1 & -3 \\ 1 & 2 \end{bmatrix} \begin{bmatrix} 1 & -4 \\ 8 & 2 \end{bmatrix}" />
       <BlockMath math="CD = \begin{bmatrix} (1)(1) + (-3)(8) & (1)(-4) + (-3)(2) \\ (1)(1) + (2)(8) & (1)(-4) + (2)(2) \end{bmatrix}" />
       <BlockMath math="CD = \begin{bmatrix} 1 - 24 & -4 - 6 \\ 1 + 16 & -4 + 4 \end{bmatrix}" />
       <BlockMath math="CD = \begin{bmatrix} -23 & -10 \\ 17 & 0 \end{bmatrix}" />
-    </div>
+    </MathContainer>
 
 2.  Calculating <InlineMath math="DC" />:
 
     Matrix <InlineMath math="D" /> has an order of <InlineMath math="2 \times 2" /> and <InlineMath math="C" /> has an order of <InlineMath math="2 \times 2" />. The result will have an order of <InlineMath math="2 \times 2" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="DC = \begin{bmatrix} 1 & -4 \\ 8 & 2 \end{bmatrix} \begin{bmatrix} 1 & -3 \\ 1 & 2 \end{bmatrix}" />
       <BlockMath math="DC = \begin{bmatrix} (1)(1) + (-4)(1) & (1)(-3) + (-4)(2) \\ (8)(1) + (2)(1) & (8)(-3) + (2)(2) \end{bmatrix}" />
       <BlockMath math="DC = \begin{bmatrix} 1 - 4 & -3 - 8 \\ 8 + 2 & -24 + 4 \end{bmatrix}" />
       <BlockMath math="DC = \begin{bmatrix} -3 & -11 \\ 10 & -20 \end{bmatrix}" />
-    </div>
+    </MathContainer>
 
 From the results above, it is clear that <InlineMath math="CD = \begin{bmatrix} -23 & -10 \\ 17 & 0 \end{bmatrix}" /> and <InlineMath math="DC = \begin{bmatrix} -3 & -11 \\ 10 & -20 \end{bmatrix}" />.
 

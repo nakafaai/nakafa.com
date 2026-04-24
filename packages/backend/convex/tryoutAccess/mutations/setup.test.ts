@@ -7,6 +7,15 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("tryoutAccess/mutations/setup", () => {
+  async function countScheduledFunctions(
+    t: ReturnType<typeof createTryoutTestConvex>
+  ) {
+    return await t.query(
+      async (ctx) =>
+        (await ctx.db.system.query("_scheduled_functions").collect()).length
+    );
+  }
+
   it("stores competition campaigns without a grant duration", async () => {
     const t = createTryoutTestConvex();
 
@@ -30,17 +39,15 @@ describe("tryoutAccess/mutations/setup", () => {
       }
     );
 
-    const state = await t.query(async (ctx) => {
-      return {
-        campaign: await ctx.db.get("tryoutAccessCampaigns", result.campaignId),
-        campaignProducts: await ctx.db
-          .query("tryoutAccessCampaignProducts")
-          .withIndex("by_campaignId", (q) =>
-            q.eq("campaignId", result.campaignId)
-          )
-          .collect(),
-      };
-    });
+    const state = await t.query(async (ctx) => ({
+      campaign: await ctx.db.get("tryoutAccessCampaigns", result.campaignId),
+      campaignProducts: await ctx.db
+        .query("tryoutAccessCampaignProducts")
+        .withIndex("by_campaignId", (q) =>
+          q.eq("campaignId", result.campaignId)
+        )
+        .collect(),
+    }));
 
     expect(state.campaign?.campaignKind).toBe("competition");
     expect(state.campaign?.firstRedeemedAt).toBeNull();
@@ -82,13 +89,47 @@ describe("tryoutAccess/mutations/setup", () => {
       }
     );
 
-    const campaign = await t.query(async (ctx) => {
-      return await ctx.db.get("tryoutAccessCampaigns", result.campaignId);
-    });
+    const campaign = await t.query(
+      async (ctx) =>
+        await ctx.db.get("tryoutAccessCampaigns", result.campaignId)
+    );
 
     expect(campaign?.campaignKind).toBe("access-pass");
     expect(campaign?.grantDurationDays).toBe(7);
     expect(campaign?.resultsStatus).toBe("pending");
+  });
+
+  it("does not reschedule unchanged existing campaign windows", async () => {
+    const t = createTryoutTestConvex();
+    const args = {
+      campaign: {
+        slug: "unchanged-schedule",
+        name: "Unchanged Schedule",
+        targetProducts: ["snbt" as const],
+        campaignKind: "competition" as const,
+        enabled: true,
+        startsAt: NOW + 60 * 1000,
+        endsAt: NOW + 24 * 60 * 60 * 1000,
+      },
+      link: {
+        code: "unchanged-schedule",
+        label: "Unchanged Schedule",
+        enabled: true,
+      },
+    };
+
+    await t.mutation(
+      internal.tryoutAccess.mutations.setup.upsertCampaignAndLink,
+      args
+    );
+    const scheduledCount = await countScheduledFunctions(t);
+
+    await t.mutation(
+      internal.tryoutAccess.mutations.setup.upsertCampaignAndLink,
+      args
+    );
+
+    expect(await countScheduledFunctions(t)).toBe(scheduledCount);
   });
 
   it("does not allow changing the campaign kind after creation", async () => {
@@ -287,12 +328,13 @@ describe("tryoutAccess/mutations/setup", () => {
         code: "locked-policy",
       });
 
-    const redeemedCampaign = await t.query(async (ctx) => {
-      return await ctx.db
-        .query("tryoutAccessCampaigns")
-        .withIndex("by_slug", (q) => q.eq("slug", "locked-policy"))
-        .unique();
-    });
+    const redeemedCampaign = await t.query(
+      async (ctx) =>
+        await ctx.db
+          .query("tryoutAccessCampaigns")
+          .withIndex("by_slug", (q) => q.eq("slug", "locked-policy"))
+          .unique()
+    );
 
     expect(redeemedCampaign?.firstRedeemedAt).not.toBeNull();
 

@@ -70,13 +70,11 @@ export const WebSearchPart = memo(({ message }: Props) => {
 });
 WebSearchPart.displayName = "WebSearchPart";
 
-const WebSearchPartQuery = memo(({ query }: { query: string }) => {
-  return (
-    <blockquote className="text-muted-foreground text-sm italic">
-      "{query}"
-    </blockquote>
-  );
-});
+const WebSearchPartQuery = memo(({ query }: { query: string }) => (
+  <blockquote className="text-muted-foreground text-sm italic">
+    "{query}"
+  </blockquote>
+));
 WebSearchPartQuery.displayName = "WebSearchPartQuery";
 
 const WebSearchPartPreview = memo(

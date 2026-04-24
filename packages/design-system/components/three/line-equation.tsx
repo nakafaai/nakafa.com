@@ -1,24 +1,25 @@
 "use client";
 
 import { Instance, Instances, Line, Text } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
 import { randomColor } from "@repo/design-system/lib/color";
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import {
   CatmullRomCurve3,
   Color,
   ConeGeometry,
-  type Group,
   MeshBasicMaterial,
   Quaternion,
   SphereGeometry,
   Vector3,
 } from "three";
 import { FONT_PATH, MONO_FONT_PATH } from "./_data";
+import {
+  GRAPH_ARROW_SEGMENTS,
+  GRAPH_POINT_SEGMENTS,
+  getCurveDivisions,
+} from "./quality";
 
 const SPHERE_GEOMETRY_RADIUS = 0.1;
-const SPHERE_GEOMETRY_SEGMENTS = 8;
-const CONE_GEOMETRY_SEGMENTS = 16;
 const CONE_GEOMETRY_HEIGHT_SEGMENTS = 1;
 const DEFAULT_ARROW_SIZE = 0.5;
 const DEFAULT_FONT_SIZE = 0.5;
@@ -28,28 +29,36 @@ let sharedSphereGeometry: SphereGeometry | null = null;
 const sharedConeGeometries = new Map<string, ConeGeometry>();
 const sharedMaterials = new Map<string, MeshBasicMaterial>();
 
+/**
+ * Reuses point marker geometry across all rendered line equations.
+ *
+ * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance#re-using-geometries-and-materials
+ */
 function getSharedSphereGeometry(): SphereGeometry {
   if (!sharedSphereGeometry) {
-    // Reduced segments for better performance
     sharedSphereGeometry = new SphereGeometry(
       SPHERE_GEOMETRY_RADIUS,
-      SPHERE_GEOMETRY_SEGMENTS,
-      SPHERE_GEOMETRY_SEGMENTS
+      GRAPH_POINT_SEGMENTS,
+      GRAPH_POINT_SEGMENTS
     );
   }
   return sharedSphereGeometry;
 }
 
+/**
+ * Reuses arrowhead geometry per size for line equation direction markers.
+ *
+ * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance#re-using-geometries-and-materials
+ */
 function getSharedConeGeometry(size: number): ConeGeometry {
   const key = `cone-${size}`;
   if (!sharedConeGeometries.has(key)) {
-    // Reduced segments for better performance
     sharedConeGeometries.set(
       key,
       new ConeGeometry(
         size / 2,
         size,
-        CONE_GEOMETRY_SEGMENTS,
+        GRAPH_ARROW_SEGMENTS,
         CONE_GEOMETRY_HEIGHT_SEGMENTS
       )
     );
@@ -61,6 +70,11 @@ function getSharedConeGeometry(size: number): ConeGeometry {
   return geometry;
 }
 
+/**
+ * Reuses line equation materials by color to avoid repeated material setup.
+ *
+ * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance#re-using-geometries-and-materials
+ */
 function getSharedMaterial(color: string | Color): MeshBasicMaterial {
   const colorKey = color instanceof Color ? color.getHexString() : color;
   if (!sharedMaterials.has(colorKey)) {
@@ -127,19 +141,20 @@ export interface Props {
   useMonoFont?: boolean;
 }
 
+/**
+ * Renders a 3D line or curve with optional point markers, labels, and arrowheads.
+ */
 export function LineEquation({
   points,
   color = randomColor(["YELLOW", "GREEN", "BLUE"]),
   lineWidth = 2,
   showPoints = true,
   smooth = true,
-  curvePoints = 30, // Reduced default from 50 for better performance
+  curvePoints,
   labels = [],
   useMonoFont = true,
   cone,
 }: Props) {
-  const groupRef = useRef<Group>(null);
-
   const vectorPoints = useMemo(
     () => points.map((point) => new Vector3(point.x, point.y, point.z)),
     [points]
@@ -154,15 +169,12 @@ export function LineEquation({
       return vectorPoints;
     }
 
-    let basePoints: Vector3[];
+    let basePoints = [...vectorPoints];
 
-    if (smooth) {
-      // Use CatmullRomCurve3 for smooth curves
+    if (smooth && vectorPoints.length > 2) {
       const curve = new CatmullRomCurve3(vectorPoints);
-      basePoints = curve.getPoints(curvePoints);
-    } else {
-      // For non-smooth lines, use the original points directly
-      basePoints = [...vectorPoints];
+      const divisions = getCurveDivisions(vectorPoints.length, curvePoints);
+      basePoints = curve.getPoints(divisions);
     }
 
     // Adjust line end points to account for the cone size to prevent overlap
@@ -275,44 +287,35 @@ export function LineEquation({
     return cones.length > 0 ? cones : null;
   }, [cone, vectorPoints, arrowSize]);
 
-  // Enable frustum culling for the entire group
-  useFrame(() => {
-    if (groupRef.current) {
-      groupRef.current.frustumCulled = true;
-    }
-  });
-
   // Pre-calculate label data to avoid recreating in render
   const labelData = useMemo(
     () =>
-      labels
-        .map((label, idx) => {
-          const mid = Math.floor(vectorPoints.length / 2);
-          const index = label.at ?? mid;
-          const base = vectorPoints[index];
-          if (!base) {
-            return null;
-          }
-          const [ox = 0, oy = 0, oz = 0] = label.offset || [0, 0, 0];
-          const pos: [number, number, number] = [
-            base.x + ox,
-            base.y + oy,
-            base.z + oz,
-          ];
-          return {
+      labels.flatMap((label, idx) => {
+        const mid = Math.floor(vectorPoints.length / 2);
+        const index = label.at ?? mid;
+        const base = vectorPoints[index];
+        if (!base) {
+          return [];
+        }
+
+        const [ox = 0, oy = 0, oz = 0] = label.offset || [0, 0, 0];
+        const position = new Vector3(base.x + ox, base.y + oy, base.z + oz);
+
+        return [
+          {
             key: `label-${idx}`,
-            position: pos,
+            position,
             color: label.color ?? color,
             fontSize: label.fontSize ?? DEFAULT_FONT_SIZE,
             text: label.text,
-          };
-        })
-        .filter(Boolean),
+          },
+        ];
+      }),
     [labels, vectorPoints, color]
   );
 
   return (
-    <group ref={groupRef}>
+    <group frustumCulled>
       {/* Draw a line connecting the provided points */}
       <Line
         color={color}
@@ -354,27 +357,22 @@ export function LineEquation({
       </Instances>
 
       {/* Render custom labels at specified indices */}
-      {labelData.map((data) => {
-        if (!data) {
-          return null;
-        }
-        return (
-          <Text
-            anchorX="center"
-            anchorY="middle"
-            color={data.color}
-            font={fontPath}
-            fontSize={data.fontSize}
-            frustumCulled={false}
-            key={data.key}
-            material-depthTest={false}
-            position={data.position}
-            renderOrder={10}
-          >
-            {data.text}
-          </Text>
-        );
-      })}
+      {labelData.map((data) => (
+        <Text
+          anchorX="center"
+          anchorY="middle"
+          color={data.color}
+          font={fontPath}
+          fontSize={data.fontSize}
+          frustumCulled={false}
+          key={data.key}
+          material-depthTest={false}
+          position={data.position}
+          renderOrder={10}
+        >
+          {data.text}
+        </Text>
+      ))}
     </group>
   );
 }

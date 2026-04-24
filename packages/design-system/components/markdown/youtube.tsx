@@ -18,7 +18,7 @@ interface Props {
 export function Youtube({ videoId }: Props) {
   const t = useTranslations("Common");
   return (
-    <Card className="my-4 grid gap-0 overflow-hidden pb-0">
+    <Card className="my-4 grid gap-0 overflow-hidden pb-0 content-auto-card">
       <CardHeader className="gap-0 border-b">
         <CardTitle className="flex items-center gap-2">
           <SiYoutube />

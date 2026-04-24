@@ -1,16 +1,10 @@
-import { captureServerException } from "@repo/analytics/posthog/server";
-import { api } from "@repo/backend/convex/_generated/api";
-import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { fetchQuery } from "convex/nextjs";
 import type { Metadata } from "next";
-import { cache, use } from "react";
-import { SchoolNotFound } from "@/components/school/not-found";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { SchoolContextProvider } from "@/lib/context/use-school";
+import { getSchoolRouteSnapshot } from "@/lib/school/server";
 
-const getSchoolInfo = cache(async (slug: string) =>
-  fetchQuery(api.schools.queries.getSchoolInfoBySlug, { slug })
-);
-
+/** Generate the school page title from the slug-resolved school metadata. */
 export async function generateMetadata({
   params,
 }: {
@@ -19,35 +13,63 @@ export async function generateMetadata({
   const { slug } = await params;
   const defaultMetadata = {};
 
-  try {
-    const schoolInfo = await getSchoolInfo(slug);
-    if (!schoolInfo) {
-      return defaultMetadata;
-    }
-    return {
-      title: {
-        absolute: schoolInfo.name,
-      },
-    };
-  } catch (error) {
-    await captureServerException(error, undefined, {
-      slug,
-      source: "school-layout-metadata",
-    });
+  const schoolRoute = await getSchoolRouteSnapshot(slug);
 
+  if (!schoolRoute) {
     return defaultMetadata;
   }
+
+  return {
+    title: {
+      absolute: schoolRoute.school.name,
+    },
+  };
 }
 
+/** Bind the resolved school route snapshot to the school subtree. */
 export default function Layout(props: LayoutProps<"/[locale]/school/[slug]">) {
   const { children, params } = props;
-  const { slug } = use(params);
 
   return (
-    <ErrorBoundary fallback={<SchoolNotFound />}>
-      <SchoolContextProvider slug={decodeURIComponent(slug)}>
+    <Suspense fallback={null}>
+      <ResolvedSchoolRouteBoundary params={params}>
         {children}
-      </SchoolContextProvider>
-    </ErrorBoundary>
+      </ResolvedSchoolRouteBoundary>
+    </Suspense>
+  );
+}
+
+/** Read the school slug from the route params inside a Suspense boundary. */
+async function ResolvedSchoolRouteBoundary({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: LayoutProps<"/[locale]/school/[slug]">["params"];
+}) {
+  const { slug } = await params;
+
+  return <SchoolRouteBoundary slug={slug}>{children}</SchoolRouteBoundary>;
+}
+
+/**
+ * Resolve the authenticated school route snapshot on the server before mounting
+ * the school client subtree.
+ */
+async function SchoolRouteBoundary({
+  children,
+  slug,
+}: {
+  children: React.ReactNode;
+  slug: string;
+}) {
+  const value = await getSchoolRouteSnapshot(slug);
+
+  if (!value) {
+    notFound();
+  }
+
+  return (
+    <SchoolContextProvider value={value}>{children}</SchoolContextProvider>
   );
 }

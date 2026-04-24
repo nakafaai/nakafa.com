@@ -41,13 +41,13 @@ Periksa irisan: <InlineMath math="A \cap B = \emptyset" /> (himpunan kosong)
 
 Karena tidak ada irisan, maka kedua kejadian **saling lepas**.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
 
 <BlockMath math="P(B) = \frac{2}{6} = \frac{1}{3}" />
 
 <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{2} + \frac{1}{3} = \frac{3}{6} + \frac{2}{6} = \frac{5}{6}" />
-</div>
+</MathContainer>
 
 ### Kejadian Tidak Saling Lepas
 
@@ -74,7 +74,7 @@ Total kartu = 52
 
 Irisan (kartu merah dan bergambar): 6 kartu (Jack, Queen, King dari Hati dan Wajik)
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="P(A) = \frac{26}{52} = \frac{1}{2}" />
 
 <BlockMath math="P(B) = \frac{12}{52} = \frac{3}{13}" />
@@ -82,7 +82,7 @@ Irisan (kartu merah dan bergambar): 6 kartu (Jack, Queen, King dari Hati dan Waj
 <BlockMath math="P(A \cap B) = \frac{6}{52} = \frac{3}{26}" />
 
 <BlockMath math="P(A \cup B) = \frac{1}{2} + \frac{3}{13} - \frac{3}{26} = \frac{13}{26} + \frac{6}{26} - \frac{3}{26} = \frac{16}{26} = \frac{8}{13}" />
-</div>
+</MathContainer>
 
 ### Kejadian Saling Bebas
 
@@ -105,13 +105,13 @@ Dua dadu dilempar secara bersamaan. Tentukan peluang munculnya angka 3 pada dadu
 
 Karena hasil dadu pertama tidak mempengaruhi dadu kedua, maka kedua kejadian saling bebas.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="P(A) = \frac{1}{6}" />
 
 <BlockMath math="P(B) = \frac{3}{6} = \frac{1}{2}" />
 
 <BlockMath math="P(A \cap B) = P(A) \times P(B) = \frac{1}{6} \times \frac{1}{2} = \frac{1}{12}" />
-</div>
+</MathContainer>
 
 ### Kejadian Tidak Saling Bebas
 
@@ -138,13 +138,13 @@ Total bola awal = 8 + 4 = 12 bola
 
 Karena pengambilan tanpa pengembalian, kondisi berubah setelah pengambilan pertama, sehingga ini adalah kejadian tidak saling bebas.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="P(A) = \frac{8}{12} = \frac{2}{3}" />
 
 <BlockMath math="P(B|A) = \frac{7}{11}" />
 
 <BlockMath math="P(A \cap B) = P(A) \times P(B|A) = \frac{2}{3} \times \frac{7}{11} = \frac{14}{33}" />
-</div>
+</MathContainer>
 
 ## Penerapan dalam Perhitungan
 
@@ -194,7 +194,7 @@ Selanjutnya, tentukan apakah kejadian tersebut saling lepas atau tidak dengan me
    
    Karena ada irisan, maka kejadian tidak saling lepas. Menggunakan rumus:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P(A \cup B) = P(A) + P(B) - P(A \cap B)" />
    
    <BlockMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
@@ -204,7 +204,7 @@ Selanjutnya, tentukan apakah kejadian tersebut saling lepas atau tidak dengan me
    <BlockMath math="P(A \cap B) = \frac{2}{6} = \frac{1}{3}" />
    
    <BlockMath math="P(A \cup B) = \frac{1}{2} + \frac{1}{2} - \frac{1}{3} = 1 - \frac{1}{3} = \frac{2}{3}" />
-   </div>
+   </MathContainer>
 
 2. **Penyelesaian:**
    
@@ -215,13 +215,13 @@ Selanjutnya, tentukan apakah kejadian tersebut saling lepas atau tidak dengan me
    
    Karena pengambilan **tanpa pengembalian**, kondisi berubah setelah pengambilan pertama, sehingga ini adalah kejadian tidak saling bebas.
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P(A) = \frac{6}{10} = \frac{3}{5}" />
    
    <BlockMath math="P(B|A) = \frac{5}{9}" />
    
    <BlockMath math="P(A \cap B) = P(A) \times P(B|A) = \frac{3}{5} \times \frac{5}{9} = \frac{15}{45} = \frac{1}{3}" />
-   </div>
+   </MathContainer>
 
 3. **Penyelesaian:**
    
@@ -232,13 +232,13 @@ Selanjutnya, tentukan apakah kejadian tersebut saling lepas atau tidak dengan me
    
    Kedua kejadian saling lepas karena tidak mungkin jumlah dadu sekaligus 7 dan 11.
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P(A) = \frac{6}{36} = \frac{1}{6}" />
    
    <BlockMath math="P(B) = \frac{2}{36} = \frac{1}{18}" />
    
    <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{6} + \frac{1}{18} = \frac{3}{18} + \frac{1}{18} = \frac{4}{18} = \frac{2}{9}" />
-   </div>
+   </MathContainer>
 
 4. **Penyelesaian:**
    
@@ -249,7 +249,7 @@ Selanjutnya, tentukan apakah kejadian tersebut saling lepas atau tidak dengan me
    
    Irisan (As hitam): As Spade dan As Club = 2 kartu
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="P(A) = \frac{4}{52} = \frac{1}{13}" />
    
    <BlockMath math="P(B) = \frac{26}{52} = \frac{1}{2}" />
@@ -257,4 +257,4 @@ Selanjutnya, tentukan apakah kejadian tersebut saling lepas atau tidak dengan me
    <BlockMath math="P(A \cap B) = \frac{2}{52} = \frac{1}{26}" />
    
    <BlockMath math="P(A \cup B) = \frac{1}{13} + \frac{1}{2} - \frac{1}{26} = \frac{2}{26} + \frac{13}{26} - \frac{1}{26} = \frac{14}{26} = \frac{7}{13}" />
-   </div>
+   </MathContainer>

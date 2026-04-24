@@ -1539,9 +1539,9 @@ describe("parseModuleMetadata", () => {
   it("should stringify non-Error parse failures", async () => {
     const parseSpy = vi
       .spyOn(ContentMetadataSchema, "parse")
-      .mockImplementation(() => {
-        return Function("throw 'plain metadata failure'")() as never;
-      });
+      .mockImplementation(
+        () => Function("throw 'plain metadata failure'")() as never
+      );
 
     const result = await Effect.runPromise(
       Effect.match(

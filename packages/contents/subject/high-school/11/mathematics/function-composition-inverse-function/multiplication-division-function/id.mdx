@@ -68,21 +68,21 @@ Mari kita pakai fungsi yang sedikit berbeda kali ini:
 
 **Langkah 1: Tentukan fungsi hasil perkalian**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(f \cdot g)(x) = f(x) \cdot g(x)" />
   <BlockMath math="= (x^2) \cdot (x - 1)" />
   <BlockMath math="= x^3 - x^2" />
-</div>
+</MathContainer>
 
 **Langkah 2: Tentukan domain fungsi hasil perkalian**
 
 Kita cari irisan dari <InlineMath math="D_f" /> dan <InlineMath math="D_g" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="D_{f \cdot g} = D_f \cap D_g" />
   <BlockMath math="= \{x | x \in \mathbb{R}\} \cap \{x | x \in \mathbb{R}\}" />
   <BlockMath math="= \{x | x \in \mathbb{R}\}" />
-</div>
+</MathContainer>
 
 Jadi, fungsi hasil perkaliannya adalah <InlineMath math="(f \cdot g)(x) = x^3 - x^2" /> dengan domain semua bilangan real.
 
@@ -119,11 +119,11 @@ Pertama, kita cari irisan <InlineMath math="D_f" /> dan <InlineMath math="D_g" /
 
 Kedua, kita cari nilai <InlineMath math="x" /> yang membuat <InlineMath math="g(x) = 0" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="g(x) = 0" />
   <BlockMath math="x - 1 = 0" />
   <BlockMath math="x = 1" />
-</div>
+</MathContainer>
 
 Ketiga, kita kecualikan nilai <InlineMath math="x=1" /> dari irisan domain:
 
@@ -148,19 +148,19 @@ Diketahui fungsi <InlineMath math="f(x) = \sqrt{x+4}" /> dengan <InlineMath math
 
 1.  **Mencari <InlineMath math="(f \cdot g)(x)" />:**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(f \cdot g)(x) = f(x) \cdot g(x)" />
       <BlockMath math="= (\sqrt{x+4}) \cdot (x^2 - 9)" />
       <BlockMath math="= (x^2 - 9)\sqrt{x+4}" />
-    </div>
+    </MathContainer>
 
     **Mencari Domain <InlineMath math="D_{f \cdot g}" />:**
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="D_{f \cdot g} = D_f \cap D_g" />
       <BlockMath math="= \{x | x \ge -4, x \in \mathbb{R}\} \cap \{x | x \in \mathbb{R}\}" />
       <BlockMath math="= \{x | x \ge -4, x \in \mathbb{R}\}" />
-    </div>
+    </MathContainer>
 
     Jadi, <InlineMath math="(f \cdot g)(x) = (x^2 - 9)\sqrt{x+4}" /> dengan domain <InlineMath math="\{x | x \ge -4, x \in \mathbb{R}\}" />.
 
@@ -174,12 +174,12 @@ Diketahui fungsi <InlineMath math="f(x) = \sqrt{x+4}" /> dengan <InlineMath math
 
     Cari <InlineMath math="x" /> yang membuat <InlineMath math="g(x)=0" />:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="g(x) = 0" />
       <BlockMath math="x^2 - 9 = 0" />
       <BlockMath math="(x-3)(x+3) = 0" />
       <BlockMath math="x = 3 \text{ atau } x = -3" />
-    </div>
+    </MathContainer>
 
     Kecualikan <InlineMath math="x=3" /> dan <InlineMath math="x=-3" /> dari irisan domain:
 
@@ -197,12 +197,12 @@ Diketahui fungsi <InlineMath math="f(x) = \sqrt{x+4}" /> dengan <InlineMath math
 
     Karena <InlineMath math="5 \ge -4" />, <InlineMath math="x=5" /> ada di dalam domain <InlineMath math="D_{f \cdot g}" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(f \cdot g)(5) = (5^2 - 9)\sqrt{5+4}" />
       <BlockMath math="= (25 - 9)\sqrt{9}" />
       <BlockMath math="= (16)(3)" />
       <BlockMath math="= 48" />
-    </div>
+    </MathContainer>
 
 4.  **Apakah <InlineMath math="(\frac{f}{g})(3)" /> terdefinisi?**
 

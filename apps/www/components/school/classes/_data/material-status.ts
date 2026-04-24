@@ -8,7 +8,7 @@ import {
 export const materialStatusList = [
   {
     value: "published",
-    labelKey: "status-publish-now",
+    labelKey: "status-published",
     icon: Rocket01Icon,
   },
   {

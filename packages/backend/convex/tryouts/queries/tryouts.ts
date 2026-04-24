@@ -95,19 +95,19 @@ async function loadActiveTryoutCatalogEntries(
   }
 
   const latestAttempts = await Promise.all(
-    entries.map((entry) => {
-      return ctx.db
+    entries.map((entry) =>
+      ctx.db
         .query("tryoutAttempts")
         .withIndex("by_userId_and_tryoutId_and_startedAt", (q) =>
           q.eq("userId", userId).eq("tryoutId", entry._id)
         )
         .order("desc")
-        .first();
-    })
+        .first()
+    )
   );
 
-  return entries.map((entry, index) => {
-    return buildActiveTryoutCatalogEntry({
+  return entries.map((entry, index) =>
+    buildActiveTryoutCatalogEntry({
       entry,
       latestAttempt: latestAttempts[index]
         ? {
@@ -116,8 +116,8 @@ async function loadActiveTryoutCatalogEntries(
             status: latestAttempts[index].status,
           }
         : null,
-    });
-  });
+    })
+  );
 }
 
 /** Returns one ordered page of active tryout catalog rows with page-local latest badges. */

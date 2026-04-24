@@ -100,21 +100,21 @@ A logarithmic function with base <InlineMath math="b" /> (where <InlineMath math
 
 ### Basic Properties
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\log_b 1 = 0" />
   <BlockMath math="\log_b b = 1" />
   <BlockMath math="\log_b b^n = n" />
   <BlockMath math="b^{\log_b x} = x" />
-</div>
+</MathContainer>
 
 ### Operational Properties
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\log_b (xy) = \log_b x + \log_b y" />
   <BlockMath math="\log_b \left(\frac{x}{y}\right) = \log_b x - \log_b y" />
   <BlockMath math="\log_b x^n = n \cdot \log_b x" />
   <BlockMath math="\log_b x = \frac{\log_a x}{\log_a b} \quad \text{(change of base)}" />
-</div>
+</MathContainer>
 
 ## COVID-19 Spread Model
 
@@ -144,10 +144,10 @@ In the early pandemic, COVID-19 spread in Indonesia could be modeled with an exp
 
 **Using logarithms**, we can calculate when there will be 50,000 cases:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="50000 = 2e^{\frac{1}{60}\ln(5059)t}" />
   <BlockMath math="t = \frac{60 \cdot \ln(25000)}{\ln(5059)} \approx 81.4 \text{ days}" />
-</div>
+</MathContainer>
 
 ## Exercises
 

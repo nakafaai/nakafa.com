@@ -351,9 +351,9 @@ export async function generateSEOMetadata(
 
   return Effect.runPromise(
     effect.pipe(
-      Effect.catchAll(() => {
-        return Effect.sync(() => generateFallbackMetadata(context));
-      })
+      Effect.catchAll(() =>
+        Effect.sync(() => generateFallbackMetadata(context))
+      )
     )
   );
 }

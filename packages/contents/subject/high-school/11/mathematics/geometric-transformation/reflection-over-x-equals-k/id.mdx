@@ -19,10 +19,10 @@ Jarak horizontal dari titik asli ke garis cermin sama dengan jarak horizontal da
 
 Jika sebuah titik <InlineMath math="P(x, y)" /> dicerminkan terhadap garis <InlineMath math="x = k" />, maka koordinat bayangannya, <InlineMath math="P'(x', y')" />, ditentukan oleh aturan:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = 2k - x" />
   <BlockMath math="y' = y" />
-</div>
+</MathContainer>
 
 Jadi, peta dari titik <InlineMath math="P(x, y)" /> adalah <InlineMath math="P'(2k - x, y)" />. Perhatikan bahwa koordinat y tetap, sementara koordinat x berubah berdasarkan jaraknya dari garis <InlineMath math="x=k" />.
 
@@ -34,10 +34,10 @@ Dalam kasus ini, <InlineMath math="x=3" />, <InlineMath math="y=2" />, dan <Inli
 
 Menggunakan aturan <InlineMath math="P'(2k - x, y)" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = 2(3) - 3 = 6 - 3 = 3" />
   <BlockMath math="y' = 2" />
-</div>
+</MathContainer>
 
 Jadi, bayangan titik <InlineMath math="P(3,2)" /> adalah <InlineMath math="P'(3,2)" />. Titik tersebut berada pada garis cermin, sehingga bayangannya adalah titik itu sendiri.
 
@@ -45,10 +45,10 @@ Sekarang, mari kita coba contoh lain. Tentukan peta dari titik <InlineMath math=
 
 Di sini, <InlineMath math="x=1" />, <InlineMath math="y=4" />, dan <InlineMath math="k=3" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x' = 2(3) - 1 = 6 - 1 = 5" />
   <BlockMath math="y' = 4" />
-</div>
+</MathContainer>
 
 Jadi, bayangan titik <InlineMath math="A(1,4)" /> adalah <InlineMath math="A'(5,4)" />.
 
@@ -106,19 +106,19 @@ Jadi, bayangan titik <InlineMath math="A(1,4)" /> adalah <InlineMath math="A'(5,
 
 1.  Diberikan <InlineMath math="P(3,2)" /> dan garis cermin <InlineMath math="x=5" />. Maka <InlineMath math="x=3, y=2, k=5" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = 2k - x = 2(5) - 3 = 10 - 3 = 7" />
       <BlockMath math="y' = y = 2" />
-    </div>
+    </MathContainer>
 
     Jadi, bayangan titik P adalah <InlineMath math="P'(7,2)" />.
 
 2.  Diberikan <InlineMath math="B(-2, 5)" /> dan garis cermin <InlineMath math="x=1" />. Maka <InlineMath math="x=-2, y=5, k=1" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x' = 2k - x = 2(1) - (-2) = 2 + 2 = 4" />
       <BlockMath math="y' = y = 5" />
-    </div>
+    </MathContainer>
 
     Jadi, bayangan titik B adalah <InlineMath math="B'(4,5)" />.
 
@@ -130,9 +130,9 @@ Jadi, bayangan titik <InlineMath math="A(1,4)" /> adalah <InlineMath math="A'(5,
 
     Dari <InlineMath math="x' = 2k - x" />, maka <InlineMath math="0 = 2(-2) - x" />.
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="0 = -4 - x" />
       <BlockMath math="x = -4" />
-    </div>
+    </MathContainer>
 
     Jadi, koordinat titik C adalah <InlineMath math="C(-4,3)" />.

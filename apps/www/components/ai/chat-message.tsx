@@ -14,19 +14,17 @@ interface Props {
   message: MyUIMessage;
 }
 
-export const AiChatMessage = memo(({ message }: Props) => {
-  return (
-    <MessageProvider message={message}>
-      <div className="flex size-full flex-col gap-3 group-[.is-user]:items-end group-[.is-user]:justify-end">
-        <AiChatMessageContent />
-        <div className="flex items-center justify-between gap-4">
-          <AiChatMessageActions />
-          <AiChatMessageCredits />
-        </div>
-        <AiChatMessageSuggestions />
+export const AiChatMessage = memo(({ message }: Props) => (
+  <MessageProvider message={message}>
+    <div className="flex size-full flex-col gap-3 group-[.is-user]:items-end group-[.is-user]:justify-end">
+      <AiChatMessageContent />
+      <div className="flex items-center justify-between gap-4">
+        <AiChatMessageActions />
+        <AiChatMessageCredits />
       </div>
-    </MessageProvider>
-  );
-});
+      <AiChatMessageSuggestions />
+    </div>
+  </MessageProvider>
+));
 
 AiChatMessage.displayName = "AiChatMessage";

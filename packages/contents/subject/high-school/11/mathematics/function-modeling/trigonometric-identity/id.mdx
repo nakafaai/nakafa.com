@@ -53,35 +53,35 @@ Dari identitas dasar di atas, kita dapat menurunkan dua bentuk lain:
 
 **Bentuk kedua:** Bagi kedua ruas dengan <InlineMath math="\cos^2 \theta" /> (untuk <InlineMath math="\cos \theta \neq 0" />)
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\frac{\sin^2 \theta}{\cos^2 \theta} + \frac{\cos^2 \theta}{\cos^2 \theta} = \frac{1}{\cos^2 \theta}" />
   <BlockMath math="\tan^2 \theta + 1 = \sec^2 \theta" />
-</div>
+</MathContainer>
 
 **Bentuk ketiga:** Bagi kedua ruas dengan <InlineMath math="\sin^2 \theta" /> (untuk <InlineMath math="\sin \theta \neq 0" />)
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\frac{\sin^2 \theta}{\sin^2 \theta} + \frac{\cos^2 \theta}{\sin^2 \theta} = \frac{1}{\sin^2 \theta}" />
   <BlockMath math="1 + \cot^2 \theta = \csc^2 \theta" />
-</div>
+</MathContainer>
 
 ### Identitas Kebalikan
 
 Setiap fungsi trigonometri memiliki kebalikannya. Hubungan ini membentuk identitas kebalikan:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\sin \theta = \frac{1}{\csc \theta}" />
   <BlockMath math="\cos \theta = \frac{1}{\sec \theta}" />
   <BlockMath math="\tan \theta = \frac{1}{\cot \theta}" />
-</div>
+</MathContainer>
 
 Atau dalam bentuk sebaliknya:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\csc \theta = \frac{1}{\sin \theta}" />
   <BlockMath math="\sec \theta = \frac{1}{\cos \theta}" />
   <BlockMath math="\cot \theta = \frac{1}{\tan \theta}" />
-</div>
+</MathContainer>
 
 ### Identitas Hasil Bagi
 
@@ -134,12 +134,12 @@ Sederhanakan <InlineMath math="\frac{\sin^2 \theta}{\cos \theta} + \cos \theta" 
 
 **Penyelesaian:**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\frac{\sin^2 \theta}{\cos \theta} + \cos \theta = \frac{\sin^2 \theta}{\cos \theta} + \frac{\cos^2 \theta}{\cos \theta}" />
   <BlockMath math="= \frac{\sin^2 \theta + \cos^2 \theta}{\cos \theta}" />
   <BlockMath math="= \frac{1}{\cos \theta} \quad \text{(menggunakan identitas Pythagoras)}" />
   <BlockMath math="= \sec \theta" />
-</div>
+</MathContainer>
 
 ### Membuktikan Identitas
 
@@ -149,10 +149,10 @@ Buktikan bahwa <InlineMath math="\frac{1 + \tan^2 \theta}{\sec \theta} = \sec \t
 
 Kita mulai dari ruas kiri:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\frac{1 + \tan^2 \theta}{\sec \theta} = \frac{\sec^2 \theta}{\sec \theta} \quad \text{(menggunakan } 1 + \tan^2 \theta = \sec^2 \theta \text{)}" />
   <BlockMath math="= \sec \theta" />
-</div>
+</MathContainer>
 
 Terbukti bahwa ruas kiri sama dengan ruas kanan.
 
@@ -168,25 +168,25 @@ Jika <InlineMath math="\sin \theta = \frac{3}{5}" /> dan <InlineMath math="90° 
 
 Gunakan identitas Pythagoras untuk mencari <InlineMath math="\cos \theta" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\sin^2 \theta + \cos^2 \theta = 1" />
   <BlockMath math="\left(\frac{3}{5}\right)^2 + \cos^2 \theta = 1" />
   <BlockMath math="\frac{9}{25} + \cos^2 \theta = 1" />
   <BlockMath math="\cos^2 \theta = 1 - \frac{9}{25} = \frac{16}{25}" />
   <BlockMath math="\cos \theta = \pm \frac{4}{5}" />
-</div>
+</MathContainer>
 
 Karena <InlineMath math="\theta" /> di kuadran II, maka <InlineMath math="\cos \theta < 0" />.
 Jadi, <InlineMath math="\cos \theta = -\frac{4}{5}" />
 
 Selanjutnya, hitung fungsi trigonometri lainnya:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\tan \theta = \frac{\sin \theta}{\cos \theta} = \frac{3/5}{-4/5} = -\frac{3}{4}" />
   <BlockMath math="\csc \theta = \frac{1}{\sin \theta} = \frac{5}{3}" />
   <BlockMath math="\sec \theta = \frac{1}{\cos \theta} = -\frac{5}{4}" />
   <BlockMath math="\cot \theta = \frac{1}{\tan \theta} = -\frac{4}{3}" />
-</div>
+</MathContainer>
 
 ## Latihan
 
@@ -204,47 +204,47 @@ Selanjutnya, hitung fungsi trigonometri lainnya:
 
 1. Mari sederhanakan langkah demi langkah:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\frac{\tan \theta \cdot \cos \theta}{\sin \theta} = \frac{\frac{\sin \theta}{\cos \theta} \cdot \cos \theta}{\sin \theta}" />
      <BlockMath math="= \frac{\sin \theta}{\sin \theta} = 1" />
-   </div>
+   </MathContainer>
 
 2. Untuk membuktikan identitas, kita akan mengubah ruas kiri:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\frac{\sin \theta}{1 + \cos \theta} = \frac{\sin \theta}{1 + \cos \theta} \cdot \frac{1 - \cos \theta}{1 - \cos \theta}" />
      <BlockMath math="= \frac{\sin \theta (1 - \cos \theta)}{(1 + \cos \theta)(1 - \cos \theta)}" />
      <BlockMath math="= \frac{\sin \theta (1 - \cos \theta)}{1 - \cos^2 \theta}" />
      <BlockMath math="= \frac{\sin \theta (1 - \cos \theta)}{\sin^2 \theta}" />
      <BlockMath math="= \frac{1 - \cos \theta}{\sin \theta}" />
-   </div>
+   </MathContainer>
 
 3. Diketahui <InlineMath math="\cos \theta = \frac{5}{13}" /> di kuadran IV.
 
    Mencari <InlineMath math="\sin \theta" />:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\sin^2 \theta = 1 - \cos^2 \theta = 1 - \frac{25}{169} = \frac{144}{169}" />
      <BlockMath math="\sin \theta = -\frac{12}{13} \text{ (negatif di kuadran IV)}" />
-   </div>
+   </MathContainer>
 
    Fungsi trigonometri lainnya:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\tan \theta = \frac{-12/13}{5/13} = -\frac{12}{5}" />
      <BlockMath math="\csc \theta = -\frac{13}{12}" />
      <BlockMath math="\sec \theta = \frac{13}{5}" />
      <BlockMath math="\cot \theta = -\frac{5}{12}" />
-   </div>
+   </MathContainer>
 
 4. Gunakan pemfaktoran selisih kuadrat:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\sin^4 \theta - \cos^4 \theta = (\sin^2 \theta)^2 - (\cos^2 \theta)^2" />
      <BlockMath math="= (\sin^2 \theta + \cos^2 \theta)(\sin^2 \theta - \cos^2 \theta)" />
      <BlockMath math="= 1 \cdot (\sin^2 \theta - \cos^2 \theta)" />
      <BlockMath math="= \sin^2 \theta - \cos^2 \theta" />
-   </div>
+   </MathContainer>
 
 5. Diketahui <InlineMath math="\tan \theta = \frac{4}{3}" /> dan <InlineMath math="\sin \theta < 0" />.
 
@@ -252,17 +252,17 @@ Selanjutnya, hitung fungsi trigonometri lainnya:
 
    Gunakan identitas <InlineMath math="1 + \tan^2 \theta = \sec^2 \theta" />:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="1 + \frac{16}{9} = \sec^2 \theta" />
      <BlockMath math="\sec^2 \theta = \frac{25}{9}" />
      <BlockMath math="\sec \theta = -\frac{5}{3} \text{ (negatif di kuadran III)}" />
      <BlockMath math="\cos \theta = -\frac{3}{5}" />
-   </div>
+   </MathContainer>
 
    Untuk <InlineMath math="\sin \theta" />:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\tan \theta = \frac{\sin \theta}{\cos \theta}" />
      <BlockMath math="\frac{4}{3} = \frac{\sin \theta}{-3/5}" />
      <BlockMath math="\sin \theta = \frac{4}{3} \cdot \left(-\frac{3}{5}\right) = -\frac{4}{5}" />
-   </div>
+   </MathContainer>

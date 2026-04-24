@@ -36,20 +36,20 @@ Untuk menjumlahkan dua matriks, ikuti langkah-langkah berikut:
 
 Misalkan kita memiliki dua matriks, <InlineMath math="P" /> dan <InlineMath math="Q" />, sebagai berikut:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="P = \begin{bmatrix} 1 & 5 \\ -2 & 0 \\ 4 & 7 \end{bmatrix}" />
   <BlockMath math="Q = \begin{bmatrix} 6 & -3 \\ 8 & 1 \\ -2 & 9 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Kedua matriks ini berordo <InlineMath math="3 \times 2" /> (3 baris dan 2 kolom), sehingga dapat dijumlahkan.
 
 Maka, <InlineMath math="P+Q" /> adalah:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="P+Q = \begin{bmatrix} 1 & 5 \\ -2 & 0 \\ 4 & 7 \end{bmatrix} + \begin{bmatrix} 6 & -3 \\ 8 & 1 \\ -2 & 9 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 1+6 & 5+(-3) \\ -2+8 & 0+1 \\ 4+(-2) & 7+9 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 7 & 2 \\ 6 & 1 \\ 2 & 16 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Jadi, hasil penjumlahan matriks <InlineMath math="P" /> dan <InlineMath math="Q" /> adalah matriks <InlineMath math="\begin{bmatrix} 7 & 2 \\ 6 & 1 \\ 2 & 16 \end{bmatrix}" />.
 
@@ -103,11 +103,11 @@ Penjumlahan matriks memiliki beberapa sifat penting, mirip dengan sifat penjumla
 
 Diketahui matriks-matriks berikut:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="A = \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix}" />
   <BlockMath math="B = \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix}" />
   <BlockMath math="C = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Hitunglah <InlineMath math="A+B" /> dan <InlineMath math="B+A" />. Kemudian, tentukan apakah <InlineMath math="A+C" /> dapat dihitung dan berikan penjelasanmu.
 
@@ -127,11 +127,11 @@ Jika <InlineMath math="P = \begin{bmatrix} 1 & -2 \\ 3 & 0 \end{bmatrix}" />, te
 
 Diketahui matriks-matriks:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="A = \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix}" />
   <BlockMath math="B = \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix}" />
   <BlockMath math="C = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Penjumlahan matriks <InlineMath math="A" /> dan <InlineMath math="B" /> (<InlineMath math="A+B" />):
 
@@ -163,10 +163,10 @@ Diketahui penjumlahan matriks:
 
 Lakukan penjumlahan matriks di ruas kiri:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\begin{bmatrix} 2x+4 & 5+(-2) \\ -1+z & 3y+7 \end{bmatrix} = \begin{bmatrix} 10 & 3 \\ 6 & 1 \end{bmatrix}" />
   <BlockMath math="\begin{bmatrix} 2x+4 & 3 \\ -1+z & 3y+7 \end{bmatrix} = \begin{bmatrix} 10 & 3 \\ 6 & 1 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Berdasarkan kesamaan dua matriks, elemen-elemen yang seletak harus sama:
 
@@ -207,10 +207,10 @@ Invers aditif dari <InlineMath math="P" />, yaitu <InlineMath math="-P" />, adal
 
 Pembuktian bahwa <InlineMath math="P + (-P) = O" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="P + (-P) = \begin{bmatrix} 1 & -2 \\ 3 & 0 \end{bmatrix} + \begin{bmatrix} -1 & 2 \\ -3 & 0 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 1+(-1) & -2+2 \\ 3+(-3) & 0+0 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 0 & 0 \\ 0 & 0 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Hasilnya adalah matriks nol <InlineMath math="O" /> berordo <InlineMath math="2 \times 2" />. Terbukti.

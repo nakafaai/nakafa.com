@@ -506,15 +506,15 @@ To calculate the area of a segment, we need to understand that a segment is form
 - **Arc Length** = <InlineMath math="\frac{\alpha}{360°} \times 2\pi r" /> (units: cm, m, etc.)
 - **Segment Area** ≠ Arc Length (because segment is a 2D area, not a 1D line)
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="\text{Segment Area} = \text{Sector Area} - \text{Triangle Area}" />
-    </div>
+    </MathContainer>
 
     In more detail, the formula can be written as:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="\text{Segment Area} = \frac{\alpha}{360°} \times \pi r^2 - \frac{1}{2} r^2 \sin \alpha" />
-    </div>
+    </MathContainer>
 
     Where <InlineMath math="\alpha" /> is the central angle in degrees and <InlineMath math="r" /> is the radius of the circle.
 
@@ -638,32 +638,32 @@ To understand how to calculate the area of a segment, let's use an example with 
 
 **Step 1: Calculate Sector Area**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Sector Area} = \frac{90°}{360°} \times \pi r^2" />
 <BlockMath math="= \frac{1}{4} \times \pi \times 10^2" />
 <BlockMath math="= \frac{1}{4} \times \pi \times 100" />
 <BlockMath math="= 25\pi \text{ cm}^2 = 78.5398 \text{ cm}^2" />
-</div>
+</MathContainer>
 
 **Step 2: Calculate Triangle Area**
 
 For a <InlineMath math="90°" /> angle, the triangle formed is a right triangle with both perpendicular sides being radii:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Triangle Area} = \frac{1}{2} \times r^2 \times \sin 90°" />
 <BlockMath math="= \frac{1}{2} \times 10^2 \times 1" />
 <BlockMath math="= \frac{1}{2} \times 100 \times 1" />
 <BlockMath math="= 50 \text{ cm}^2" />
-</div>
+</MathContainer>
 
 **Step 3: Calculate Segment Area**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Segment Area} = \text{Sector Area} - \text{Triangle Area}" />
 <BlockMath math="= 25\pi - 50" />
 <BlockMath math="= 78.5398 - 50" />
 <BlockMath math="= 28.5398 \text{ cm}^2" />
-</div>
+</MathContainer>
 
 ## Exercises
 
@@ -680,24 +680,24 @@ For a <InlineMath math="90°" /> angle, the triangle formed is a right triangle 
    Given: <InlineMath math="r = 7 \text{ cm}" />, <InlineMath math="\alpha = 60°" />
    
    Calculate sector area:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Sector Area} = \frac{60°}{360°} \times \pi \times 7^2" />
    <BlockMath math="= \frac{1}{6} \times \pi \times 49" />
    <BlockMath math="= \frac{49\pi}{6} \text{ cm}^2" />
-   </div>
+   </MathContainer>
    
    Calculate triangle area:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Triangle Area} = \frac{1}{2} r^2 \sin 60°" />
    <BlockMath math="= \frac{1}{2} \times 49 \times \frac{\sqrt{3}}{2}" />
    <BlockMath math="= \frac{49\sqrt{3}}{4} \text{ cm}^2" />
-   </div>
+   </MathContainer>
    
    Calculate segment area:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Segment Area} = \frac{49\pi}{6} - \frac{49\sqrt{3}}{4}" />
    <BlockMath math="= 25.6563 - 21.2176 = 4.4387 \text{ cm}^2" />
-   </div>
+   </MathContainer>
 
 2. **Solution Steps:**
 
@@ -709,11 +709,11 @@ For a <InlineMath math="90°" /> angle, the triangle formed is a right triangle 
    <InlineMath math="\alpha \approx 120°" />
    
    Verification:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Sector Area} = \frac{120°}{360°} \times \pi \times 25 = \frac{25\pi}{3}" />
    <BlockMath math="\text{Triangle Area} = \frac{1}{2} \times 25 \times \sin 120° = \frac{25\sqrt{3}}{4}" />
    <BlockMath math="\text{Segment Area} = \frac{25\pi}{3} - \frac{25\sqrt{3}}{4} \approx 26.1799 - 10.8253 = 15.3546 \text{ cm}^2" />
-   </div>
+   </MathContainer>
    
    The calculated result (<InlineMath math="15.3546 \text{ cm}^2" />) is slightly different from what is given in the problem (<InlineMath math="15.7 \text{ cm}^2" />). This difference is due to the precision of the values <InlineMath math="\pi" /> and <InlineMath math="\sqrt{3}" /> used. Mathematically, the calculated result <InlineMath math="15.3546 \text{ cm}^2" /> is the most accurate.
 
@@ -726,25 +726,25 @@ For a <InlineMath math="90°" /> angle, the triangle formed is a right triangle 
    For horizontal cylindrical tanks, we use a special segment formula with a specific height.
    
    Determine segment height from tank bottom:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="h = 1.5 \text{ m (water height from bottom)}" />
-   </div>
+   </MathContainer>
    
    Using the segment area formula for water segment in horizontal tanks:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Area} = r^2 \times \left[\arccos\left(\frac{r-h}{r}\right) - \frac{r-h}{r} \times \sqrt{1-\left(\frac{r-h}{r}\right)^2}\right]" />
-   </div>
+   </MathContainer>
    
    Substitute values:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\frac{r-h}{r} = \frac{2-1.5}{2} = 0.25" />
    <BlockMath math="\arccos(0.25) = 1.3181 \text{ radians}" />
    <BlockMath math="\sqrt{1-0.25^2} = \sqrt{0.9375} = 0.9682" />
-   </div>
+   </MathContainer>
    
    Calculate water surface area:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Area} = 4 \times [1.3181 - 0.25 \times 0.9682]" />
    <BlockMath math="= 4 \times [1.3181 - 0.2421]" />
    <BlockMath math="= 4 \times 1.0760 = 4.3040 \text{ m}^2" />
-   </div>
+   </MathContainer>

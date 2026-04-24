@@ -195,26 +195,24 @@ function TryoutAttemptHistoryControls({
               >
                 <CommandEmpty>{tTryouts("attempt-menu-empty")}</CommandEmpty>
                 <CommandGroup heading={tTryouts("attempt-menu-label")}>
-                  {attemptOptions.map((attemptOption) => {
-                    return (
-                      <TryoutAttemptHistoryItem
-                        attempt={attemptOption}
-                        isSelected={attemptOption.attemptId === activeAttemptId}
-                        key={attemptOption.attemptId}
-                        onSelect={() => {
-                          setSelectedAttemptId(
-                            attemptOption.isLatest
-                              ? null
-                              : attemptOption.attemptId,
-                            {
-                              shallow: false,
-                              startTransition,
-                            }
-                          );
-                        }}
-                      />
-                    );
-                  })}
+                  {attemptOptions.map((attemptOption) => (
+                    <TryoutAttemptHistoryItem
+                      attempt={attemptOption}
+                      isSelected={attemptOption.attemptId === activeAttemptId}
+                      key={attemptOption.attemptId}
+                      onSelect={() => {
+                        setSelectedAttemptId(
+                          attemptOption.isLatest
+                            ? null
+                            : attemptOption.attemptId,
+                          {
+                            shallow: false,
+                            startTransition,
+                          }
+                        );
+                      }}
+                    />
+                  ))}
                 </CommandGroup>
               </CommandList>
             </Command>

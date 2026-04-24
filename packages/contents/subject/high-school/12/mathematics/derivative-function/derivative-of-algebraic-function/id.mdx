@@ -22,11 +22,11 @@ Tentukan turunan pertama dari <InlineMath math="y = 4x^2 + x + 2" />.
 
 Kita bisa menurunkan setiap suku satu per satu menggunakan aturan pangkat dan aturan konstanta.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y' = (4 \cdot 2)x^{2-1} + (1 \cdot 1)x^{1-1} + 0" />
   <BlockMath math="y' = 8x^1 + 1x^0" />
   <BlockMath math="y' = 8x + 1 \quad (\text{karena } x^0=1)" />
-</div>
+</MathContainer>
 
 ### Menaklukkan Bentuk Akar
 
@@ -42,21 +42,21 @@ Pertama, kita ubah bentuk akar menjadi pangkat: <InlineMath math="y = x \cdot x^
 
 Misalkan <InlineMath math="u(x) = x" /> dan <InlineMath math="v(x) = x^{3/2}" />. Maka, <InlineMath math="u'(x)=1" /> dan <InlineMath math="v'(x) = \frac{3}{2}x^{1/2}" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y' = u'(x)v(x) + u(x)v'(x)" />
   <BlockMath math="y' = (1)(x^{3/2}) + (x)(\frac{3}{2}x^{1/2})" />
   <BlockMath math="y' = x^{3/2} + \frac{3}{2}x^{3/2}" />
   <BlockMath math="y' = \frac{5}{2}x^{3/2}" />
-</div>
+</MathContainer>
 
 **Cara 2: Menyederhanakan Terlebih Dahulu**
 
 Kita bisa menyederhanakan fungsinya sebelum diturunkan.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y = x \cdot x^{3/2} = x^{1 + 3/2} = x^{5/2}" />
   <BlockMath math="y' = \frac{5}{2}x^{5/2 - 1} = \frac{5}{2}x^{3/2}" />
-</div>
+</MathContainer>
 
 > Kedua cara memberikan hasil yang sama. Terkadang, menyederhanakan fungsi terlebih dahulu dapat membuat proses penurunan menjadi lebih cepat.
 
@@ -68,13 +68,13 @@ Tentukan turunan pertama dari <InlineMath math="y = 2\left(\frac{x^2+2}{x}\right
 
 Kita gunakan aturan hasil bagi. Misalkan <InlineMath math="u(x) = x^2+2" /> dan <InlineMath math="v(x) = x" />. Maka <InlineMath math="u'(x) = 2x" /> dan <InlineMath math="v'(x) = 1" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y' = 2 \cdot \left(\frac{u'(x)v(x) - u(x)v'(x)}{[v(x)]^2}\right)" />
   <BlockMath math="y' = 2 \cdot \left(\frac{(2x)(x) - (x^2+2)(1)}{x^2}\right)" />
   <BlockMath math="y' = 2 \cdot \left(\frac{2x^2 - x^2 - 2}{x^2}\right)" />
   <BlockMath math="y' = 2 \cdot \left(\frac{x^2 - 2}{x^2}\right)" />
   <BlockMath math="y' = 2 \cdot \left(\frac{x^2}{x^2} - \frac{2}{x^2}\right) = 2 \cdot \left(1 - \frac{2}{x^2}\right) = 2 - \frac{4}{x^2}" />
-</div>
+</MathContainer>
 
 ## Latihan
 
@@ -94,19 +94,19 @@ Kita gunakan aturan hasil bagi. Misalkan <InlineMath math="u(x) = x^2+2" /> dan 
     
     Ubah bentuk akar menjadi pangkat <InlineMath math="x^{1/2}" /> dan gunakan sifat eksponen untuk menyederhanakan setiap suku.
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="y = \frac{x^{1/2}}{2x^1} + \frac{x^2}{2x^1}" />
       <BlockMath math="y = \frac{1}{2}x^{1/2 - 1} + \frac{1}{2}x^{2-1}" />
       <BlockMath math="y = \frac{1}{2}x^{-1/2} + \frac{1}{2}x" />
-    </div>
+    </MathContainer>
     
     **Langkah 3: Terapkan Aturan Pangkat**
     
     Setelah fungsi menjadi sederhana, kita bisa langsung menurunkannya suku per suku.
     
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="y' = \frac{1}{2}\left(-\frac{1}{2}x^{-1/2 - 1}\right) + \frac{1}{2}(1)" />
       <BlockMath math="y' = -\frac{1}{4}x^{-3/2} + \frac{1}{2}" />
-    </div>
+    </MathContainer>
 
     Jadi, turunan pertamanya adalah <InlineMath math="\frac{1}{2} - \frac{1}{4}x^{-3/2}" />.

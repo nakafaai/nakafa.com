@@ -1,7 +1,6 @@
 "use client";
 
 import { Line, Text } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
 import { COLORS } from "@repo/design-system/lib/color";
 import {
   getCos,
@@ -11,9 +10,15 @@ import {
 } from "@repo/design-system/lib/math";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { useMemo, useRef } from "react";
-import { type Group, MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
+import { useMemo } from "react";
+import { MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
 import { FONT_PATH, MONO_FONT_PATH, ORIGIN_COLOR } from "./_data";
+import {
+  createArcPoints,
+  GRAPH_ANGLE_ARC_SEGMENTS,
+  GRAPH_FULL_CIRCLE_SEGMENTS,
+  GRAPH_POINT_SEGMENTS,
+} from "./quality";
 
 interface Props {
   /** Angle in degrees */
@@ -36,10 +41,6 @@ interface Props {
   [key: string]: unknown;
 }
 
-// Optimized settings for performance
-const UNIT_CIRCLE_SEGMENTS = 48; // Reduced from 64
-const UNIT_ARC_SEGMENTS = 16; // Reduced from 24
-const SPHERE_SEGMENTS = 8; // Low poly sphere
 const SPHERE_RADIUS = 0.05;
 const ARC_RADIUS = 0.3;
 const LABEL_FONT_SIZE = 0.12;
@@ -56,32 +57,40 @@ const SQRT_3 = Math.sqrt(THREE);
 const TWO = 2;
 const FOUR = 4;
 const ONE = 1;
+const FULL_CIRCLE_RADIANS = Math.PI * 2;
 
-// Pre-calculate static circle points once
-const STATIC_CIRCLE_POINTS: Vector3[] = (() => {
-  const pts: Vector3[] = [];
-  for (let i = 0; i <= UNIT_CIRCLE_SEGMENTS; i += 1) {
-    const a = (i / UNIT_CIRCLE_SEGMENTS) * Math.PI * 2;
-    pts.push(new Vector3(Math.cos(a), Math.sin(a), 0));
-  }
-  return pts;
-})();
+// Pre-calculate static circle points once.
+const STATIC_CIRCLE_POINTS = createArcPoints(
+  1,
+  FULL_CIRCLE_RADIANS,
+  GRAPH_FULL_CIRCLE_SEGMENTS
+);
 
 // Shared geometry instances
 let sharedSphereGeometry: SphereGeometry | null = null;
 const sharedMaterials: Map<string, MeshBasicMaterial> = new Map();
 
+/**
+ * Reuses point marker geometry across unit-circle renders.
+ *
+ * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance#re-using-geometries-and-materials
+ */
 function getSharedSphereGeometry() {
   if (!sharedSphereGeometry) {
     sharedSphereGeometry = new SphereGeometry(
       SPHERE_RADIUS,
-      SPHERE_SEGMENTS,
-      SPHERE_SEGMENTS
+      GRAPH_POINT_SEGMENTS,
+      GRAPH_POINT_SEGMENTS
     );
   }
   return sharedSphereGeometry;
 }
 
+/**
+ * Reuses unit-circle materials by color for labels and point markers.
+ *
+ * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance#re-using-geometries-and-materials
+ */
 function getSharedMaterial(color: string) {
   if (!sharedMaterials.has(color)) {
     sharedMaterials.set(color, new MeshBasicMaterial({ color }));
@@ -93,6 +102,9 @@ function getSharedMaterial(color: string) {
   return material;
 }
 
+/**
+ * Renders the interactive unit-circle scene with smooth circle and angle arcs.
+ */
 export function UnitCircle({
   angle = 45,
   showLabels = true,
@@ -104,7 +116,6 @@ export function UnitCircle({
 }: Props) {
   const t = useTranslations("Common");
   const { resolvedTheme } = useTheme();
-  const groupRef = useRef<Group>(null);
 
   const angleInRadians = getRadians(angle);
   const sin = getSin(angle);
@@ -114,17 +125,10 @@ export function UnitCircle({
   // Use precomputed circle outline points (static)
   const circlePoints = STATIC_CIRCLE_POINTS;
 
-  // Memoize angle arc points with reduced segments
-  const arcPoints = useMemo(() => {
-    const pts: Vector3[] = [];
-    for (let i = 0; i <= UNIT_ARC_SEGMENTS; i += 1) {
-      const a = (i / UNIT_ARC_SEGMENTS) * angleInRadians;
-      pts.push(
-        new Vector3(Math.cos(a) * ARC_RADIUS, Math.sin(a) * ARC_RADIUS, 0)
-      );
-    }
-    return pts;
-  }, [angleInRadians]);
+  const arcPoints = useMemo(
+    () => createArcPoints(ARC_RADIUS, angleInRadians, GRAPH_ANGLE_ARC_SEGMENTS),
+    [angleInRadians]
+  );
 
   // Format values according to display mode - memoize the function
   const formatValue = useMemo(() => {
@@ -211,19 +215,12 @@ export function UnitCircle({
     [origin, pointPosition, cosPoint]
   );
 
-  // Use frustum culling
-  useFrame(() => {
-    if (groupRef.current) {
-      groupRef.current.frustumCulled = true;
-    }
-  });
-
   // Get shared geometry and material
   const sphereGeometry = getSharedSphereGeometry();
   const sphereMaterial = getSharedMaterial(circleColor);
 
   return (
-    <group ref={groupRef} {...props}>
+    <group frustumCulled {...props}>
       {/* Unit Circle (XY plane) */}
       <group rotation={[0, 0, 0]}>
         {/* Circle outline */}

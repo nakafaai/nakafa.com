@@ -506,15 +506,15 @@ Untuk menghitung luas tembereng, kita perlu memahami bahwa tembereng terbentuk d
 - **Panjang Busur** = <InlineMath math="\frac{\alpha}{360°} \times 2\pi r" /> (satuan: cm, m, dll.)
 - **Luas Tembereng** ≠ Panjang Busur (karena tembereng adalah area 2D, bukan garis 1D)
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="\text{Luas Tembereng} = \text{Luas Juring} - \text{Luas Segitiga}" />
-    </div>
+    </MathContainer>
 
     Secara lebih rinci, rumus tersebut dapat ditulis sebagai:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
     <BlockMath math="\text{Luas Tembereng} = \frac{\alpha}{360°} \times \pi r^2 - \frac{1}{2} r^2 \sin \alpha" />
-    </div>
+    </MathContainer>
 
     Di mana <InlineMath math="\alpha" /> adalah sudut pusat dalam derajat dan <InlineMath math="r" /> adalah jari-jari lingkaran.
 
@@ -638,32 +638,32 @@ Untuk memahami cara menghitung luas tembereng, mari kita gunakan contoh dengan s
 
 **Langkah 1: Menghitung Luas Juring**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Luas Juring} = \frac{90°}{360°} \times \pi r^2" />
 <BlockMath math="= \frac{1}{4} \times \pi \times 10^2" />
 <BlockMath math="= \frac{1}{4} \times \pi \times 100" />
 <BlockMath math="= 25\pi \text{ cm}^2 = 78,5398 \text{ cm}^2" />
-</div>
+</MathContainer>
 
 **Langkah 2: Menghitung Luas Segitiga**
 
 Untuk sudut <InlineMath math="90°" />, segitiga yang terbentuk adalah segitiga siku-siku dengan kedua sisi tegak berupa jari-jari:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Luas Segitiga} = \frac{1}{2} \times r^2 \times \sin 90°" />
 <BlockMath math="= \frac{1}{2} \times 10^2 \times 1" />
 <BlockMath math="= \frac{1}{2} \times 100 \times 1" />
 <BlockMath math="= 50 \text{ cm}^2" />
-</div>
+</MathContainer>
 
 **Langkah 3: Menghitung Luas Tembereng**
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\text{Luas Tembereng} = \text{Luas Juring} - \text{Luas Segitiga}" />
 <BlockMath math="= 25\pi - 50" />
 <BlockMath math="= 78,5398 - 50" />
 <BlockMath math="= 28,5398 \text{ cm}^2" />
-</div>
+</MathContainer>
 
 ## Latihan
 
@@ -680,24 +680,24 @@ Untuk sudut <InlineMath math="90°" />, segitiga yang terbentuk adalah segitiga 
    Diketahui: <InlineMath math="r = 7 \text{ cm}" />, <InlineMath math="\alpha = 60°" />
    
    Menghitung luas juring:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Luas Juring} = \frac{60°}{360°} \times \pi \times 7^2" />
    <BlockMath math="= \frac{1}{6} \times \pi \times 49" />
    <BlockMath math="= \frac{49\pi}{6} \text{ cm}^2" />
-   </div>
+   </MathContainer>
    
    Menghitung luas segitiga:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Luas Segitiga} = \frac{1}{2} r^2 \sin 60°" />
    <BlockMath math="= \frac{1}{2} \times 49 \times \frac{\sqrt{3}}{2}" />
    <BlockMath math="= \frac{49\sqrt{3}}{4} \text{ cm}^2" />
-   </div>
+   </MathContainer>
    
    Menghitung luas tembereng:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Luas Tembereng} = \frac{49\pi}{6} - \frac{49\sqrt{3}}{4}" />
    <BlockMath math="= 25,6563 - 21,2176 = 4,4387 \text{ cm}^2" />
-   </div>
+   </MathContainer>
 
 2. **Langkah Penyelesaian:**
 
@@ -709,11 +709,11 @@ Untuk sudut <InlineMath math="90°" />, segitiga yang terbentuk adalah segitiga 
    <InlineMath math="\alpha \approx 120°" />
    
    Verifikasi:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Luas Juring} = \frac{120°}{360°} \times \pi \times 25 = \frac{25\pi}{3}" />
    <BlockMath math="\text{Luas Segitiga} = \frac{1}{2} \times 25 \times \sin 120° = \frac{25\sqrt{3}}{4}" />
    <BlockMath math="\text{Luas Tembereng} = \frac{25\pi}{3} - \frac{25\sqrt{3}}{4} \approx 26,1799 - 10,8253 = 15,3546 \text{ cm}^2" />
-   </div>
+   </MathContainer>
    
    Hasil perhitungan (<InlineMath math="15,3546 \text{ cm}^2" />) sedikit berbeda dengan yang diberikan di soal (<InlineMath math="15,7 \text{ cm}^2" />). Perbedaan ini disebabkan oleh presisi nilai <InlineMath math="\pi" /> dan <InlineMath math="\sqrt{3}" /> yang digunakan. Dalam matematika, hasil perhitungan <InlineMath math="15,3546 \text{ cm}^2" /> adalah yang paling akurat.
 
@@ -726,25 +726,25 @@ Untuk sudut <InlineMath math="90°" />, segitiga yang terbentuk adalah segitiga 
    Untuk tangki silinder horizontal, kita menggunakan rumus khusus tembereng dengan tinggi tertentu.
    
    Menentukan tinggi tembereng dari dasar tangki:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="h = 1,5 \text{ m (tinggi air dari dasar)}" />
-   </div>
+   </MathContainer>
    
    Menggunakan rumus luas tembereng untuk segmen air pada tangki horizontal:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Luas} = r^2 \times \left[\arccos\left(\frac{r-h}{r}\right) - \frac{r-h}{r} \times \sqrt{1-\left(\frac{r-h}{r}\right)^2}\right]" />
-   </div>
+   </MathContainer>
    
    Substitusi nilai:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\frac{r-h}{r} = \frac{2-1,5}{2} = 0,25" />
    <BlockMath math="\arccos(0,25) = 1,3181 \text{ radian}" />
    <BlockMath math="\sqrt{1-0,25^2} = \sqrt{0,9375} = 0,9682" />
-   </div>
+   </MathContainer>
    
    Menghitung luas permukaan air:
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\text{Luas} = 4 \times [1,3181 - 0,25 \times 0,9682]" />
    <BlockMath math="= 4 \times [1,3181 - 0,2421]" />
    <BlockMath math="= 4 \times 1,0760 = 4,3040 \text{ m}^2" />
-   </div>
+   </MathContainer>

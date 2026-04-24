@@ -1,10 +1,12 @@
 "use client";
 
+import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { SchoolClassesPeopleInvite } from "@/components/school/classes/people/invite";
 import { SchoolClassesPeopleSearch } from "@/components/school/classes/people/search";
-import { useClass } from "@/lib/context/use-class";
+import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 
+/** Render the people toolbar for the active class. */
 export function SchoolClassesPeopleHeader() {
   return (
     <ButtonGroup className="w-full">
@@ -15,16 +17,13 @@ export function SchoolClassesPeopleHeader() {
   );
 }
 
+/** Render the roster action area using the shared class permission model. */
 function SchoolClassesPeopleHeaderAction() {
-  const classMembership = useClass((state) => state.classMembership);
-  const schoolMembership = useClass((state) => state.schoolMembership);
+  const { can } = useClassPermissions();
 
-  if (
-    schoolMembership?.role === "admin" ||
-    classMembership?.role === "teacher"
-  ) {
-    return <SchoolClassesPeopleInvite />;
+  if (!can(PERMISSIONS.MEMBER_ADD)) {
+    return null;
   }
 
-  return null;
+  return <SchoolClassesPeopleInvite />;
 }

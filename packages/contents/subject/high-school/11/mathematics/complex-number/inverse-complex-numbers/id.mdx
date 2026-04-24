@@ -41,20 +41,20 @@ Di sini, <InlineMath math="x=1" /> dan <InlineMath math="y=-1" />.
 
 Menggunakan rumus pertama:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="x^2+y^2 = (1)^2 + (-1)^2 = 1 + 1 = 2" />
   <BlockMath math="z^{-1} = \frac{x}{x^2+y^2} - i\frac{y}{x^2+y^2}" />
   <BlockMath math="= \frac{1}{2} - i\frac{-1}{2}" />
   <BlockMath math="= \frac{1}{2} + \frac{1}{2}i" />
-</div>
+</MathContainer>
 
 Menggunakan rumus konjugat dan modulus:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\bar{z} = 1 - (-1)i = 1+i" />
   <BlockMath math="|z|^2 = x^2+y^2 = 1^2 + (-1)^2 = 2" />
   <BlockMath math="z^{-1} = \frac{\bar{z}}{|z|^2} = \frac{1+i}{2} = \frac{1}{2} + \frac{1}{2}i" />
-</div>
+</MathContainer>
 
 Hasilnya sama, yaitu:
 
@@ -118,10 +118,10 @@ Langkah 2: Cari invers dari <InlineMath math="z = 3+2i" />.
 Di sini <InlineMath math="x=3" /> dan <InlineMath math="y=2" />.
 Kita gunakan rumus <InlineMath math="z^{-1} = \frac{\bar{z}}{|z|^2}" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\bar{z} = 3-2i" />
   <BlockMath math="|z|^2 = x^2+y^2 = 3^2 + 2^2 = 9 + 4 = 13" />
   <BlockMath math="z^{-1} = \frac{3-2i}{13} = \frac{3}{13} - \frac{2}{13}i" />
-</div>
+</MathContainer>
 
 Jadi, invers dari <InlineMath math="z_1 + z_2" /> adalah <InlineMath math="\frac{3}{13} - \frac{2}{13}i" />.

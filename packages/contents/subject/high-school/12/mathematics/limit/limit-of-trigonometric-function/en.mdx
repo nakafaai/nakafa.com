@@ -30,11 +30,11 @@ This theorem **cannot be proven** using direct substitution because it results i
 
 From the fundamental limit above, we can derive several other important limits:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\lim_{x \to 0} \frac{\tan x}{x} = 1 \quad \text{(because } \tan x = \frac{\sin x}{\cos x} \text{ and } \cos x \to 1\text{)}" />
 <BlockMath math="\lim_{x \to 0} \frac{1 - \cos x}{x} = 0 \quad \text{(use L'Hôpital or Taylor expansion)}" />
 <BlockMath math="\lim_{x \to 0} \frac{1 - \cos x}{x^2} = \frac{1}{2} \quad \text{(identity } 1 - \cos x = 2\sin^2\frac{x}{2}\text{)}" />
-</div>
+</MathContainer>
 
 ## Properties of Trigonometric Limits
 
@@ -55,10 +55,10 @@ For constants <InlineMath math="a \neq 0" /> and <InlineMath math="b \neq 0" />,
 
 From the trigonometric ratio properties, we can derive several trigonometric combination properties:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\lim_{x \to 0} \frac{\sin ax}{\sin bx} = \frac{a}{b}" />
 <BlockMath math="\lim_{x \to 0} \frac{\tan ax}{\sin bx} = \frac{a}{b}" />
-</div>
+</MathContainer>
 
 ## Techniques for Solving Trigonometric Limits
 
@@ -70,10 +70,10 @@ When facing complex trigonometric limits, we often need to manipulate expression
 
 We manipulate to obtain the standard form:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\lim_{x \to 0} \frac{\sin 2x}{3x} = \lim_{x \to 0} \frac{2 \sin 2x}{2 \cdot 3x} = \lim_{x \to 0} \frac{2}{3} \cdot \frac{\sin 2x}{2x}" />
 <BlockMath math="= \frac{2}{3} \lim_{x \to 0} \frac{\sin 2x}{2x} = \frac{2}{3} \cdot 1 = \frac{2}{3}" />
-</div>
+</MathContainer>
 
 ### Trigonometric Identity Techniques
 
@@ -85,10 +85,10 @@ Since <InlineMath math="\sin(\frac{\pi}{4}) = \frac{\sqrt{2}}{2} \neq 0" />, the
 
 Direct substitution:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\lim_{x \to \frac{\pi}{4}} \frac{\sin x + \cos x}{\sin x} = \frac{\sin \frac{\pi}{4} + \cos \frac{\pi}{4}}{\sin \frac{\pi}{4}}" />
 <BlockMath math="= \frac{\frac{\sqrt{2}}{2} + \frac{\sqrt{2}}{2}}{\frac{\sqrt{2}}{2}} = \frac{2 \cdot \frac{\sqrt{2}}{2}}{\frac{\sqrt{2}}{2}} = \frac{\sqrt{2}}{\frac{\sqrt{2}}{2}} = \sqrt{2} \cdot \frac{2}{\sqrt{2}} = 2" />
-</div>
+</MathContainer>
 
 ### Techniques for Special Forms
 
@@ -98,11 +98,11 @@ For limits involving the form <InlineMath math="\frac{0}{0}" />, we need special
 
 Let <InlineMath math="u = x - \frac{\pi}{2}" />, then when <InlineMath math="x \to \frac{\pi}{2}" />, we have <InlineMath math="u \to 0" /> and <InlineMath math="x = u + \frac{\pi}{2}" />.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\lim_{u \to 0} \frac{\sin^2 u}{(u + \frac{\pi}{2}) \cdot u} = \lim_{u \to 0} \frac{\sin^2 u}{u^2} \cdot \frac{u}{u + \frac{\pi}{2}}" />
 <BlockMath math="= \lim_{u \to 0} \left(\frac{\sin u}{u}\right)^2 \cdot \lim_{u \to 0} \frac{u}{u + \frac{\pi}{2}}" />
 <BlockMath math="= 1^2 \cdot \lim_{u \to 0} \frac{u}{\frac{\pi}{2} + u} = 1 \cdot \frac{0}{\frac{\pi}{2}} = 0" />
-</div>
+</MathContainer>
 
 ## Trigonometric Limits with Angle Identities
 
@@ -114,10 +114,10 @@ When dealing with trigonometric functions involving sum or difference of angles,
 
 Using the definition of cotangent:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
 <BlockMath math="\lim_{t \to 0} \frac{\cot 5t}{\cot 10t} = \lim_{t \to 0} \frac{\frac{\cos 5t}{\sin 5t}}{\frac{\cos 10t}{\sin 10t}} = \lim_{t \to 0} \frac{\cos 5t \sin 10t}{\sin 5t \cos 10t}" />
 <BlockMath math="= \lim_{t \to 0} \frac{\cos 5t}{\cos 10t} \cdot \frac{\sin 10t}{\sin 5t} = 1 \cdot \frac{10}{5} = 2" />
-</div>
+</MathContainer>
 
 ## Exercises
 
@@ -137,50 +137,50 @@ Using the definition of cotangent:
 
    Use algebraic manipulation to obtain the standard form:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{x \to 0} \frac{\sin 3x}{4x} = \lim_{x \to 0} \frac{3 \sin 3x}{3 \cdot 4x} = \lim_{x \to 0} \frac{3}{4} \cdot \frac{\sin 3x}{3x}" />
    <BlockMath math="= \frac{3}{4} \lim_{x \to 0} \frac{\sin 3x}{3x} = \frac{3}{4} \cdot 1 = \frac{3}{4}" />
-   </div>
+   </MathContainer>
 
 2. **Solution:**
 
    Use trigonometric ratio properties:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{x \to 0} \frac{\tan 2x}{\sin 5x} = \lim_{x \to 0} \frac{\tan 2x}{2x} \cdot \frac{5x}{\sin 5x} \cdot \frac{2x}{5x}" />
    <BlockMath math="= \lim_{x \to 0} \frac{\tan 2x}{2x} \cdot \lim_{x \to 0} \frac{5x}{\sin 5x} \cdot \frac{2}{5}" />
    <BlockMath math="= 1 \cdot 1 \cdot \frac{2}{5} = \frac{2}{5}" />
-   </div>
+   </MathContainer>
 
 3. **Solution:**
 
    Use the identity <InlineMath math="1 - \cos ax = 2\sin^2\frac{ax}{2}" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{x \to 0} \frac{1 - \cos 3x}{x^2} = \lim_{x \to 0} \frac{2\sin^2\frac{3x}{2}}{x^2}" />
    <BlockMath math="= \lim_{x \to 0} 2 \cdot \left(\frac{\sin\frac{3x}{2}}{\frac{3x}{2}}\right)^2 \cdot \left(\frac{3}{2}\right)^2" />
    <BlockMath math="= 2 \cdot 1^2 \cdot \frac{9}{4} = \frac{9}{2}" />
-   </div>
+   </MathContainer>
 
 4. **Solution:**
 
    Let <InlineMath math="h = x - \frac{\pi}{6}" />, then <InlineMath math="x = h + \frac{\pi}{6}" /> and when <InlineMath math="x \to \frac{\pi}{6}" />, we have <InlineMath math="h \to 0" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{h \to 0} \frac{\sin(h + \frac{\pi}{6}) - \frac{1}{2}}{h}" />
    <BlockMath math="= \lim_{h \to 0} \frac{\sin h \cos\frac{\pi}{6} + \cos h \sin\frac{\pi}{6} - \frac{1}{2}}{h}" />
    <BlockMath math="= \lim_{h \to 0} \frac{\sin h \cdot \frac{\sqrt{3}}{2} + \cos h \cdot \frac{1}{2} - \frac{1}{2}}{h}" />
    <BlockMath math="= \lim_{h \to 0} \frac{\frac{\sqrt{3}}{2}\sin h + \frac{1}{2}(\cos h - 1)}{h}" />
    <BlockMath math="= \frac{\sqrt{3}}{2} \lim_{h \to 0} \frac{\sin h}{h} + \frac{1}{2} \lim_{h \to 0} \frac{\cos h - 1}{h}" />
    <BlockMath math="= \frac{\sqrt{3}}{2} \cdot 1 + \frac{1}{2} \cdot 0 = \frac{\sqrt{3}}{2}" />
-   </div>
+   </MathContainer>
 
 5. **Solution:**
 
    Use the identity <InlineMath math="\sin x \cos x = \frac{1}{2}\sin 2x" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
    <BlockMath math="\lim_{x \to 0} \frac{\sin x \cos x}{x} = \lim_{x \to 0} \frac{\frac{1}{2}\sin 2x}{x}" />
    <BlockMath math="= \frac{1}{2} \lim_{x \to 0} \frac{\sin 2x}{x} = \frac{1}{2} \lim_{x \to 0} \frac{2 \sin 2x}{2x}" />
    <BlockMath math="= \frac{1}{2} \cdot 2 \lim_{x \to 0} \frac{\sin 2x}{2x} = 1 \cdot 1 = 1" />
-   </div>
+   </MathContainer>

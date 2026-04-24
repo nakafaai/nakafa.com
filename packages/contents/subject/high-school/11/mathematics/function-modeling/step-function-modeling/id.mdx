@@ -247,19 +247,19 @@ Fungsi <InlineMath math="f(x) = \lfloor x - h \rfloor" /> menggeser grafik ke ka
 
 1. **Menghitung nilai fungsi lantai dan langit-langit:**
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\lfloor 3.7 \rfloor = 3 \text{ (bilangan bulat terbesar } \leq 3.7\text{)}" />
      <BlockMath math="\lceil -2.3 \rceil = -2 \text{ (bilangan bulat terkecil } \geq -2.3\text{)}" />
      <BlockMath math="\lfloor 3.7 \rfloor + \lceil -2.3 \rceil = 3 + (-2) = 1" />
-   </div>
+   </MathContainer>
 
 2. **Model fungsi diskon toko buku:**
 
    Misalkan <InlineMath math="n" /> adalah jumlah buku yang dibeli, maka total harga setelah diskon adalah:
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="H(n) = \begin{cases} 50000n, & \text{jika } 1 \leq n \leq 5 \\ 50000n \times 0.9, & \text{jika } 6 \leq n \leq 10 \\ 50000n \times 0.85, & \text{jika } 11 \leq n \leq 20 \\ 50000n \times 0.8, & \text{jika } n > 20 \end{cases}" />
-   </div>
+   </MathContainer>
 
 3. **Grafik fungsi <InlineMath math="f(x) = 2\lfloor x \rfloor - 1" />:**
 
@@ -304,11 +304,11 @@ Fungsi <InlineMath math="f(x) = \lfloor x - h \rfloor" /> menggeser grafik ke ka
 
 4. **Menyelesaikan persamaan <InlineMath math="\lfloor 2x + 1 \rfloor = 5" />:**
 
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="5 \leq 2x + 1 < 6" />
      <BlockMath math="4 \leq 2x < 5" />
      <BlockMath math="2 \leq x < 2.5" />
-   </div>
+   </MathContainer>
 
    Jadi himpunan penyelesaiannya adalah <InlineMath math="x \in [2, 2.5)" />.
 

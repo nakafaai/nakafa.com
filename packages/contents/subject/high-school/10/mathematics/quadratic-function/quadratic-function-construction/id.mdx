@@ -31,11 +31,11 @@ Cara paling umum untuk mengonstruksi fungsi kuadrat adalah dengan menggunakan ti
 
 Jika kita memiliki tiga titik <InlineMath math="(x_1, y_1)" />, <InlineMath math="(x_2, y_2)" />, dan <InlineMath math="(x_3, y_3)" />, kita dapat memasukkan nilai-nilai ini ke dalam persamaan standar untuk mendapatkan tiga persamaan linear dengan tiga variabel a, b, dan c.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y_1 = ax_1^2 + bx_1 + c" />
   <BlockMath math="y_2 = ax_2^2 + bx_2 + c" />
   <BlockMath math="y_3 = ax_3^2 + bx_3 + c" />
-</div>
+</MathContainer>
 
 **Contoh**:
 
@@ -43,42 +43,42 @@ Carilah persamaan fungsi kuadrat yang grafiknya melalui titik K(-1, 0), L(0, -3)
 
 Masukkan nilai koordinat ke dalam persamaan standar.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="K(-1, 0): 0 = a(-1)^2 + b(-1) + c" />
   <BlockMath math="L(0, -3): -3 = a(0)^2 + b(0) + c" />
   <BlockMath math="M(1, -4): -4 = a(1)^2 + b(1) + c" />
-</div>
+</MathContainer>
 
 Sederhanakan persamaan-persamaan tersebut.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="0 = a - b + c" />
   <BlockMath math="-3 = c" />
   <BlockMath math="-4 = a + b + c" />
-</div>
+</MathContainer>
 
 Substitusi <InlineMath math="c = -3" /> ke persamaan pertama dan ketiga.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="0 = a - b - 3" />
   <BlockMath math="-4 = a + b - 3" />
-</div>
+</MathContainer>
 
 Sederhanakan dan jumlahkan kedua persamaan untuk menemukan nilai a.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="a - b = 3" />
   <BlockMath math="a + b = -1" />
   <BlockMath math="2a = 2" />
   <BlockMath math="a = 1" />
-</div>
+</MathContainer>
 
 Substitusi nilai a ke persamaan <InlineMath math="a - b = 3" /> untuk menemukan nilai b.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="1 - b = 3" />
   <BlockMath math="b = -2" />
-</div>
+</MathContainer>
 
 Fungsi kuadrat yang dihasilkan adalah:
 
@@ -146,11 +146,11 @@ Gunakan bentuk vertex <InlineMath math="f(x) = a(x - h)^2 + k" /> dengan h = 2 d
 
 Substitusi titik (4, 4) untuk menemukan nilai a.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="4 = a(4 - 2)^2" />
   <BlockMath math="4 = 4a" />
   <BlockMath math="a = 1" />
-</div>
+</MathContainer>
 
 Fungsi kuadrat yang dihasilkan adalah:
 
@@ -213,12 +213,12 @@ Gunakan bentuk faktor <InlineMath math="f(x) = a(x - p)(x - q)" /> dengan p = -2
 
 Substitusi titik (1, -6) untuk menemukan nilai a.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="-6 = a(1 + 2)(1 - 3)" />
   <BlockMath math="-6 = a(3)(-2)" />
   <BlockMath math="-6 = -6a" />
   <BlockMath math="a = 1" />
-</div>
+</MathContainer>
 
 Fungsi kuadrat yang dihasilkan adalah:
 
@@ -286,20 +286,20 @@ Dari diskriminan D = 16, kita tahu bahwa <InlineMath math="b^2 - 4ac = 16" />.
 
 Substitusi <InlineMath math="b = -2a" /> ke persamaan diskriminan.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(-2a)^2 - 4ac = 16" />
   <BlockMath math="4a^2 - 4ac = 16" />
   <BlockMath math="4a(a - c) = 16" />
   <BlockMath math="a(a - c) = 4" />
-</div>
+</MathContainer>
 
 Ada banyak nilai a dan c yang memenuhi persamaan ini. Mari kita ambil kasus sederhana dengan a = 1.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="1(1 - c) = 4" />
   <BlockMath math="1 - c = 4" />
   <BlockMath math="c = -3" />
-</div>
+</MathContainer>
 
 Dengan a = 1, b = -2, dan c = -3, fungsi kuadrat yang dihasilkan adalah:
 
@@ -321,11 +321,11 @@ Gunakan bentuk vertex <InlineMath math="f(x) = a(x - h)^2 + k" /> dengan h = 0 d
 
 Substitusi titik (4, 1) untuk menemukan nilai a.
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="1 = a(4)^2" />
   <BlockMath math="1 = 16a" />
   <BlockMath math="a = \frac{1}{16}" />
-</div>
+</MathContainer>
 
 Fungsi kuadrat yang dihasilkan adalah:
 
@@ -405,12 +405,12 @@ Untuk mengubah <InlineMath math="f(x) = ax^2 + bx + c" /> menjadi bentuk faktor 
 
 Untuk mengubah <InlineMath math="f(x) = a(x - p)(x - q)" /> menjadi bentuk standar <InlineMath math="f(x) = ax^2 + bx + c" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="f(x) = a(x - p)(x - q)" />
   <BlockMath math="f(x) = a(x^2 - qx - px + pq)" />
   <BlockMath math="f(x) = a(x^2 - (p+q)x + pq)" />
   <BlockMath math="f(x) = ax^2 - a(p+q)x + apq" />
-</div>
+</MathContainer>
 
 Dengan membandingkan dengan bentuk standar, kita mendapatkan:
 
@@ -427,36 +427,36 @@ Temukan persamaan fungsi kuadrat yang melalui titik (-2, 4), (1, -5), dan (3, 7)
 
 Masukkan titik-titik ke persamaan standar:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="4 = a(-2)^2 + b(-2) + c = 4a - 2b + c" />
   <BlockMath math="-5 = a(1)^2 + b(1) + c = a + b + c" />
   <BlockMath math="7 = a(3)^2 + b(3) + c = 9a + 3b + c" />
-</div>
+</MathContainer>
 
 Dari persamaan kedua, <InlineMath math="c = -5 - a - b" />.
 Substitusi ke persamaan pertama, lalu selesaikan:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="4 = 4a - 2b + (-5 - a - b)" />
   <BlockMath math="9 = 3a - 3b" />
   <BlockMath math="3 = a - b" />
   <BlockMath math="a = 3 + b" />
-</div>
+</MathContainer>
 
 Substitusi ke persamaan ketiga:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="7 = 9(3 + b) + 3b + (-5 - (3 + b) - b)" />
   <BlockMath math="7 = 19 + 10b" />
   <BlockMath math="b = -\frac{12}{10} = -\frac{6}{5}" />
-</div>
+</MathContainer>
 
 Kemudian:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="a = 3 + (-\frac{6}{5}) = \frac{9}{5}" />
   <BlockMath math="c = -5 - \frac{9}{5} - (-\frac{6}{5}) = -\frac{28}{5}" />
-</div>
+</MathContainer>
 
 Jadi, persamaan fungsi kuadratnya adalah:
 
@@ -474,12 +474,12 @@ Gunakan bentuk vertex dengan h = -1 dan k = 4:
 
 Substitusi titik (2, -5):
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="-5 = a(2 + 1)^2 + 4" />
   <BlockMath math="-5 = 9a + 4" />
   <BlockMath math="-9 = 9a" />
   <BlockMath math="a = -1" />
-</div>
+</MathContainer>
 
 Jadi, persamaan fungsi kuadratnya adalah:
 
@@ -501,10 +501,10 @@ Titik puncak berada di <InlineMath math="x = \frac{p + q}{2} = \frac{-3 + 2}{2} 
 
 Substitusi x = -1/2 ke bentuk faktor dan gunakan bahwa nilai maksimum adalah 4:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="f(-\frac{1}{2}) = a(-\frac{1}{2} + 3)(-\frac{1}{2} - 2) = -a\frac{25}{4} = 4" />
   <BlockMath math="a = -\frac{16}{25}" />
-</div>
+</MathContainer>
 
 Jadi, persamaan fungsi kuadratnya adalah:
 

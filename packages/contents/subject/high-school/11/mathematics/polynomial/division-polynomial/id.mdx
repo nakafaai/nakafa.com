@@ -73,12 +73,12 @@ Buktikan bahwa <InlineMath math="x^3 + 4x^2 + 5x + 8 = (x + 3)(x^2 + x + 2) + 2"
 
 Kita jabarkan ruas kanan:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="(x + 3)(x^2 + x + 2) + 2" />
   <BlockMath math="= [x(x^2 + x + 2) + 3(x^2 + x + 2)] + 2 \quad \text{(Distribusi } (x+3))" />
   <BlockMath math="= [x^3 + x^2 + 2x + 3x^2 + 3x + 6] + 2 \quad \text{(Distribusi } x \text{ dan } 3)" />
   <BlockMath math="= x^3 + (x^2 + 3x^2) + (2x + 3x) + 6 + 2 \quad \text{(Kelompokkan suku sejenis)}" />
   <BlockMath math="= x^3 + 4x^2 + 5x + 8 \quad \text{(Hasil akhir)}" />
-</div>
+</MathContainer>
 
 Karena ruas kanan sama dengan ruas kiri, maka persamaan terbukti benar.

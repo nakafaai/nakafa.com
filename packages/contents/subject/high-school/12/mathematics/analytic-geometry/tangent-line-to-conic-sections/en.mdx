@@ -32,11 +32,11 @@ Let's take an example of parabola <InlineMath math="y^2 = 8x" /> at point <Inlin
 
 From parabola <InlineMath math="y^2 = 8x" />, we know <InlineMath math="4p = 8" /> so <InlineMath math="p = 2" />. The tangent line at point <InlineMath math="(2, 4)" /> is:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="y \cdot 4 = 2 \cdot 2 \cdot (x + 2)" />
   <BlockMath math="4y = 4(x + 2)" />
   <BlockMath math="y = x + 2" />
-</div>
+</MathContainer>
 
 > This division principle makes calculations much easier! We don't need to bother calculating derivatives. Just "divide" each squared term into multiplication with the tangent point coordinates!
 
@@ -50,11 +50,11 @@ First step, we determine the gradient of the tangent line. Since the tangent lin
 
 The tangent line equation of a hyperbola with gradient <InlineMath math="m" /> is <InlineMath math="y = mx + c" />. We substitute it into the hyperbola equation:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="4x^2 - 9(4x + c)^2 = 36" />
   <BlockMath math="4x^2 - 9(16x^2 + 8cx + c^2) = 36" />
   <BlockMath math="-140x^2 - 72cx - 9c^2 = 36" />
-</div>
+</MathContainer>
 
 For a tangent line, the discriminant must be zero:
 
@@ -74,21 +74,21 @@ To determine the tangent line equation through an external point, we use the pol
 
 Substitute <InlineMath math="x_1 = 2" /> and <InlineMath math="y_1 = 5" />:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="5y = 4(x + 2)" />
   <BlockMath math="5y = 4x + 8" />
   <BlockMath math="y = \frac{4x + 8}{5}" />
-</div>
+</MathContainer>
 
 Now we substitute into the parabola equation to find the tangent points:
 
-<div className="flex flex-col gap-4">
+<MathContainer>
   <BlockMath math="\left(\frac{4x + 8}{5}\right)^2 = 8x" />
   <BlockMath math="\frac{16x^2 + 64x + 64}{25} = 8x" />
   <BlockMath math="16x^2 + 64x + 64 = 200x" />
   <BlockMath math="16x^2 - 136x + 64 = 0" />
   <BlockMath math="2x^2 - 17x + 8 = 0" />
-</div>
+</MathContainer>
 
 Using the quadratic formula, we get <InlineMath math="x_1 = \frac{1}{2}" /> and <InlineMath math="x_2 = 8" />. So the tangent points are at <InlineMath math="(\frac{1}{2}, 2)" /> and <InlineMath math="(8, 8)" />.
 
@@ -131,13 +131,13 @@ Here's the complete table of conic section equations and their tangent line equa
    
    Use the parabola tangent line formula:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="yy_1 = 2p(x + x_1)" />
      <BlockMath math="y \cdot 6 = 2 \cdot 3 \cdot (x + 3)" />
      <BlockMath math="6y = 6(x + 3)" />
      <BlockMath math="6y = 6x + 18" />
      <BlockMath math="y = x + 3" />
-   </div>
+   </MathContainer>
    
    So the tangent line equation is <InlineMath math="y = x + 3" />.
 
@@ -157,12 +157,12 @@ Here's the complete table of conic section equations and their tangent line equa
    
    With <InlineMath math="a^2 = 9" />, <InlineMath math="b^2 = 4" />, and <InlineMath math="m = 4" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="y = 4x \pm \sqrt{9 \cdot 16 - 4}" />
      <BlockMath math="y = 4x \pm \sqrt{144 - 4}" />
      <BlockMath math="y = 4x \pm \sqrt{140}" />
      <BlockMath math="y = 4x \pm 2\sqrt{35}" />
-   </div>
+   </MathContainer>
    
    So the tangent line equations are <InlineMath math="y = 4x + 2\sqrt{35}" /> or <InlineMath math="y = 4x - 2\sqrt{35}" />.
 
@@ -182,11 +182,11 @@ Here's the complete table of conic section equations and their tangent line equa
    
    Substitute <InlineMath math="x_1 = 1" /> and <InlineMath math="y_1 = 3" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\frac{x \cdot 1}{9} + \frac{y \cdot 3}{4} = 1" />
      <BlockMath math="\frac{x}{9} + \frac{3y}{4} = 1" />
      <BlockMath math="4x + 27y = 36" />
-   </div>
+   </MathContainer>
    
    If you want to find the tangent points, substitute this equation into the ellipse equation. From <InlineMath math="4x + 27y = 36" />, we get <InlineMath math="x = \frac{36 - 27y}{4}" />.
 
@@ -210,22 +210,22 @@ Here's the complete table of conic section equations and their tangent line equa
    
    Substitute <InlineMath math="x_1 = 2" /> and <InlineMath math="y_1 = 5" />:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="5y = 4(x + 2)" />
      <BlockMath math="5y = 4x + 8" />
      <BlockMath math="y = \frac{4x + 8}{5}" />
-   </div>
+   </MathContainer>
    
    Substitute into the parabola equation:
    
-   <div className="flex flex-col gap-4">
+   <MathContainer>
      <BlockMath math="\left(\frac{4x + 8}{5}\right)^2 = 8x" />
      <BlockMath math="\frac{(4x + 8)^2}{25} = 8x" />
      <BlockMath math="(4x + 8)^2 = 200x" />
      <BlockMath math="16x^2 + 64x + 64 = 200x" />
      <BlockMath math="16x^2 - 136x + 64 = 0" />
      <BlockMath math="2x^2 - 17x + 8 = 0" />
-   </div>
+   </MathContainer>
    
    Use the quadratic formula:
    

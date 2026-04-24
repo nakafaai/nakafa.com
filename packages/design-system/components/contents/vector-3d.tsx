@@ -1,3 +1,5 @@
+// CoordinateSystem renders a dynamic WebGL canvas with SSR disabled.
+// https://nextjs.org/docs/app/guides/lazy-loading#skipping-ssr
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { Vector } from "@repo/design-system/components/three/vector";
 import {
@@ -34,7 +36,7 @@ export function Vector3d({
   ],
 }: Props) {
   return (
-    <Card>
+    <Card className="content-auto-card">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

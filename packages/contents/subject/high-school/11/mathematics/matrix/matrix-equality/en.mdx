@@ -109,37 +109,37 @@ Answer the following questions with **True** or **False**.
 
     Solve Equation 2 first:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(x-2y)^2 = 0" />
       <BlockMath math="x-2y = \sqrt{0}" />
       <BlockMath math="x-2y = 0" />
       <BlockMath math="x = 2y \quad \text{(Equation 2')}" />
-    </div>
+    </MathContainer>
 
     Substitute Equation 2' into Equation 1:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="-(2y)-3y = 1" />
       <BlockMath math="-2y-3y = 1" />
       <BlockMath math="-5y = 1" />
       <BlockMath math="y = -\frac{1}{5}" />
-    </div>
+    </MathContainer>
 
     Substitute the value of <InlineMath math="y = -\frac{1}{5}" /> into Equation 2':
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x = 2\left(-\frac{1}{5}\right)" />
       <BlockMath math="x = -\frac{2}{5}" />
-    </div>
+    </MathContainer>
 
     Then, the value of <InlineMath math="x+y" /> is:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="x+y = \left(-\frac{2}{5}\right) + \left(-\frac{1}{5}\right)" />
       <BlockMath math="= -\frac{2}{5} - \frac{1}{5}" />
       <BlockMath math="= \frac{-2-1}{5}" />
       <BlockMath math="= -\frac{3}{5}" />
-    </div>
+    </MathContainer>
 
 6.  Given the matrix equality:
 
@@ -156,67 +156,67 @@ Answer the following questions with **True** or **False**.
 
     Initial equations:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="a+2b = 3 \quad \text{(1)}" />
       <BlockMath math="2a+b = -3 \quad \text{(2)}" />
-    </div>
+    </MathContainer>
 
     To eliminate <InlineMath math="b" />, multiply equation (2) by 2:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="2(2a+b) = 2(-3)" />
       <BlockMath math="4a+2b = -6 \quad \text{(2')}" />
-    </div>
+    </MathContainer>
 
     Subtract equation (1) from equation (2'):
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(4a+2b) - (a+2b) = -6 - 3" />
       <BlockMath math="4a - a + 2b - 2b = -9" />
       <BlockMath math="3a = -9" />
       <BlockMath math="a = \frac{-9}{3}" />
       <BlockMath math="a = -3" />
-    </div>
+    </MathContainer>
 
     Substitute the value of <InlineMath math="a=-3" /> into equation (1):
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="-3+2b=3" />
       <BlockMath math="2b=3+3" />
       <BlockMath math="2b=6" />
       <BlockMath math="b = \frac{6}{2}" />
       <BlockMath math="b = 3" />
-    </div>
+    </MathContainer>
 
     Solve the system of equations for <InlineMath math="c" /> and <InlineMath math="d" /> (equations 3 and 4):
 
     Initial equations:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="c+d = 7 \quad \text{(3)}" />
       <BlockMath math="2c+d = 1 \quad \text{(4)}" />
-    </div>
+    </MathContainer>
 
     Subtract equation (3) from equation (4) to eliminate <InlineMath math="d" />:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="(2c+d) - (c+d) = 1 - 7" />
       <BlockMath math="2c - c + d - d = -6" />
       <BlockMath math="c = -6" />
-    </div>
+    </MathContainer>
 
     Substitute the value of <InlineMath math="c=-6" /> into equation (3):
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="-6+d=7" />
       <BlockMath math="d=7+6" />
       <BlockMath math="d=13" />
-    </div>
+    </MathContainer>
 
     Then, the value of <InlineMath math="a+b+c+d" /> is:
 
-    <div className="flex flex-col gap-4">
+    <MathContainer>
       <BlockMath math="a+b+c+d = (-3) + 3 + (-6) + 13" />
       <BlockMath math="= 0 - 6 + 13" />
       <BlockMath math="= 7" />
-    </div>
+    </MathContainer>
