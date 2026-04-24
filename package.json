@@ -1,6 +1,8 @@
 {
   "name": "nakafa",
   "version": "1.0.0",
+  "private": true,
+  "license": "SEE LICENSE IN LICENSE",
   "bin": {
     "nakafa": "dist/index.js"
   },

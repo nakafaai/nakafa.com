@@ -2,10 +2,37 @@
 
 Thank you for contributing! Every contribution helps improve educational content for millions of learners.
 
+## Contribution License
+
+Nakafa is source-available, not open source. Read `LICENSE`,
+`CONTENT_LICENSE.md`, and `TRADEMARKS.md` before contributing.
+
+You may create a GitHub fork only to prepare and submit contributions back to
+Nakafa. The fork must not be used as a standalone project, hosted service,
+mirror, product, rebrand, or distribution channel.
+
+By submitting a pull request, patch, issue attachment, content correction,
+translation, design, dataset, documentation change, or any other contribution,
+you certify that:
+
+- You have the right to submit the contribution.
+- The contribution is your original work, or you have permission to submit it.
+- The contribution does not include secrets, private data, copied proprietary
+  material, or material with license terms that conflict with Nakafa.
+- You grant PT. Nakafa Tekno Kreatif a perpetual, worldwide, non-exclusive,
+  royalty-free, sublicensable, and transferable license to use, reproduce,
+  modify, distribute, publicly display, publicly perform, create derivative
+  works from, and relicense the contribution as part of Nakafa.
+- PT. Nakafa Tekno Kreatif may use the contribution in source-available,
+  commercial, proprietary, hosted, educational, and internal versions of Nakafa
+  without owing you payment.
+
+Do not submit a contribution if you cannot grant these rights.
+
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 22+
 - pnpm
 - Git
 
@@ -36,7 +63,7 @@ Visit http://localhost:3000
 pnpm test         # Run tests
 pnpm lint         # Check code quality
 pnpm format       # Format code
-pnpm type-check   # Type check
+pnpm --filter www typecheck # Type check the web app
 ```
 
 ### Code Standards
