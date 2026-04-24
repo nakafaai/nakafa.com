@@ -12,7 +12,14 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { AnimatePresence, LayoutGroup, motion } from "motion/react";
+import {
+  AnimatePresence,
+  domMax,
+  LayoutGroup,
+  LazyMotion,
+  MotionConfig,
+} from "motion/react";
+import * as m from "motion/react-m";
 import {
   useCallback,
   useDeferredValue,
@@ -59,6 +66,16 @@ interface ChairItem {
   y: number;
 }
 
+/**
+ * Renders the table-chair sequence animation used by the sequence concept page.
+ *
+ * `LazyMotion` with `domMax` keeps layout animation support explicit, while
+ * `MotionConfig reducedMotion="user"` follows the user's OS preference.
+ *
+ * @see https://motion.dev/docs/react-reduce-bundle-size
+ * @see https://motion.dev/docs/react-accessibility
+ * @see https://motion.dev/docs/react-layout-animations
+ */
 export default function TableChairsAnimation({
   labels = {
     title: "Table and Chair Sequence Pattern",
@@ -68,22 +85,19 @@ export default function TableChairsAnimation({
 }: TableChairsProps) {
   const [tableCount, setTableCount] = useState(1);
   const [speed, setSpeed] = useState(1);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  const deferredPlaying = useDeferredValue(isPlaying);
-  const deferredTableCount = useDeferredValue(tableCount);
-
-  const isMobile = useMediaQuery("(max-width: 640px)");
+  const [isPlaying, setIsPlaying] = useState(true);
 
   const { ref, entry } = useIntersection({
     threshold: 0.1,
   });
 
-  useEffect(() => {
-    if (entry) {
-      setIsPlaying(entry.isIntersecting);
-    }
-  }, [entry]);
+  const isInView = entry?.isIntersecting ?? false;
+  // Viewport visibility gates work without overriding the user's Play/Pause intent.
+  const isAnimating = isPlaying && isInView;
+  const deferredAnimating = useDeferredValue(isAnimating);
+  const deferredTableCount = useDeferredValue(tableCount);
+
+  const isMobile = useMediaQuery("(max-width: 640px)");
 
   const maxTables = isMobile ? MAX_TABLES_MOBILE : MAX_TABLES_DESKTOP;
 
@@ -94,27 +108,27 @@ export default function TableChairsAnimation({
   );
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-
     // Stop playing when maximum table count is reached
     if (deferredTableCount >= maxTables) {
       setIsPlaying(false);
       return;
     }
 
-    if (deferredPlaying) {
-      interval = setInterval(() => {
-        setTableCount((prev) => {
-          if (prev < maxTables) {
-            return prev + 1;
-          }
-          return prev;
-        });
-      }, ANIMATION_INTERVAL_MS / speed);
+    if (!deferredAnimating) {
+      return;
     }
 
+    const interval = setInterval(() => {
+      setTableCount((prev) => {
+        if (prev < maxTables) {
+          return prev + 1;
+        }
+        return prev;
+      });
+    }, ANIMATION_INTERVAL_MS / speed);
+
     return () => clearInterval(interval);
-  }, [deferredPlaying, deferredTableCount, maxTables, speed]);
+  }, [deferredAnimating, deferredTableCount, maxTables, speed]);
 
   const resetAnimation = useCallback(() => {
     setTableCount(1);
@@ -126,9 +140,10 @@ export default function TableChairsAnimation({
       // If at max table count and trying to play, restart from beginning
       setTableCount(1);
       setIsPlaying(true);
-    } else {
-      setIsPlaying(!isPlaying);
+      return;
     }
+
+    setIsPlaying(!isPlaying);
   }, [isPlaying, tableCount, maxTables]);
 
   // Constants for sizing and spacing
@@ -237,7 +252,7 @@ export default function TableChairsAnimation({
   }, [deferredTableCount]);
 
   return (
-    <Card className="content-auto-card">
+    <Card className="content-auto-card" ref={ref}>
       <CardHeader>
         <CardTitle>{labels.title}</CardTitle>
         <CardDescription>
@@ -246,10 +261,7 @@ export default function TableChairsAnimation({
       </CardHeader>
 
       <CardContent>
-        <div
-          className="relative aspect-square w-full overflow-hidden rounded-lg border border-cyan-100 bg-cyan-50 p-4 sm:aspect-video dark:border-cyan-900 dark:bg-cyan-950"
-          ref={ref}
-        >
+        <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-cyan-100 bg-cyan-50 p-4 sm:aspect-video dark:border-cyan-900 dark:bg-cyan-950">
           <div className="flex h-full flex-col items-center justify-center gap-8">
             {/* Table and chairs visualization */}
             <div className="relative flex w-full items-center justify-center">
@@ -262,61 +274,65 @@ export default function TableChairsAnimation({
                   height: tableHeight,
                 }}
               >
-                <LayoutGroup>
-                  {/* Tables */}
-                  <AnimatePresence mode="popLayout">
-                    {arrangement.tables.map((table) => (
-                      <motion.div
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="absolute rounded-md bg-teal-300 shadow-sm transition-colors hover:bg-teal-400 dark:bg-teal-500"
-                        exit={{ opacity: 0, scale: 0 }}
-                        initial={{ opacity: 0, scale: 0 }}
-                        key={`table-${table.id}`}
-                        layout
-                        style={{
-                          left: table.x,
-                          top: table.y,
-                          width: table.width,
-                          height: table.height,
-                          zIndex: Z_INDEX_TABLE,
-                        }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 30,
-                          delay: (table.id - 1) * STAGGER_DELAY, // Stagger effect
-                        }}
-                      />
-                    ))}
-                  </AnimatePresence>
+                <MotionConfig reducedMotion="user">
+                  <LazyMotion features={domMax} strict>
+                    <LayoutGroup>
+                      {/* Tables */}
+                      <AnimatePresence mode="popLayout">
+                        {arrangement.tables.map((table) => (
+                          <m.div
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="absolute rounded-md bg-teal-300 shadow-sm transition-colors hover:bg-teal-400 dark:bg-teal-500"
+                            exit={{ opacity: 0, scale: 0 }}
+                            initial={{ opacity: 0, scale: 0 }}
+                            key={`table-${table.id}`}
+                            layout
+                            style={{
+                              left: table.x,
+                              top: table.y,
+                              width: table.width,
+                              height: table.height,
+                              zIndex: Z_INDEX_TABLE,
+                            }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 500,
+                              damping: 30,
+                              delay: (table.id - 1) * STAGGER_DELAY, // Stagger effect
+                            }}
+                          />
+                        ))}
+                      </AnimatePresence>
 
-                  {/* Chairs */}
-                  <AnimatePresence mode="popLayout">
-                    {arrangement.chairs.map((chair) => (
-                      <motion.div
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="absolute rounded-full bg-cyan-300 shadow-sm transition-colors hover:bg-cyan-400 dark:bg-cyan-500"
-                        exit={{ opacity: 0, scale: 0 }}
-                        initial={{ opacity: 0, scale: 0 }}
-                        key={`chair-${chair.id}`}
-                        layout
-                        style={{
-                          left: chair.x,
-                          top: chair.y,
-                          width: CHAIR_SIZE,
-                          height: CHAIR_SIZE,
-                          zIndex: Z_INDEX_CHAIR,
-                        }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 30,
-                          delay: chair.id * STAGGER_DELAY, // Stagger effect
-                        }}
-                      />
-                    ))}
-                  </AnimatePresence>
-                </LayoutGroup>
+                      {/* Chairs */}
+                      <AnimatePresence mode="popLayout">
+                        {arrangement.chairs.map((chair) => (
+                          <m.div
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="absolute rounded-full bg-cyan-300 shadow-sm transition-colors hover:bg-cyan-400 dark:bg-cyan-500"
+                            exit={{ opacity: 0, scale: 0 }}
+                            initial={{ opacity: 0, scale: 0 }}
+                            key={`chair-${chair.id}`}
+                            layout
+                            style={{
+                              left: chair.x,
+                              top: chair.y,
+                              width: CHAIR_SIZE,
+                              height: CHAIR_SIZE,
+                              zIndex: Z_INDEX_CHAIR,
+                            }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 500,
+                              damping: 30,
+                              delay: chair.id * STAGGER_DELAY, // Stagger effect
+                            }}
+                          />
+                        ))}
+                      </AnimatePresence>
+                    </LayoutGroup>
+                  </LazyMotion>
+                </MotionConfig>
               </div>
             </div>
           </div>
