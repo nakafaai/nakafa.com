@@ -1,20 +1,19 @@
 "use client";
 
-import { Text } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
+import { Line, Text } from "@react-three/drei";
 import { COLORS } from "@repo/design-system/lib/color";
 import { isMobileDevice } from "@repo/design-system/lib/device";
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import {
   BufferAttribute,
   BufferGeometry,
   Color,
   DoubleSide,
   Float32BufferAttribute,
-  type Group,
   MeshBasicMaterial,
 } from "three";
 import { FONT_PATH, MONO_FONT_PATH } from "./_data";
+import { GRAPH_BOUNDARY_SEGMENTS } from "./quality";
 
 // Performance tuning constants
 const MIN_CORES_FOR_HIGH_RES = 8;
@@ -37,8 +36,6 @@ const SATISFIED_CORNERS_THRESHOLD_HIGH = 3;
 const SATISFIED_CORNERS_THRESHOLD_LOW = 2;
 const RESOLUTION_THRESHOLD_FOR_CORNERS = 80;
 
-// Boundary line constants
-const MAX_LINE_RESOLUTION = 50;
 const EPSILON = 1e-10;
 const VERTICAL_CONNECTOR_DENSITY_FACTOR = 4;
 
@@ -88,7 +85,9 @@ interface Props {
   zRange?: [number, number];
 }
 
-// Performance optimization: Adaptive resolution based on device capabilities
+/**
+ * Adapts inequality mesh resolution to the device budget while honoring callers.
+ */
 function getAdaptiveResolution(requestedResolution: number): number {
   // Check device capabilities
   const isMobile = isMobileDevice();
@@ -103,6 +102,9 @@ function getAdaptiveResolution(requestedResolution: number): number {
   return Math.min(requestedResolution, MAX_RES_MEDIUM_CORE);
 }
 
+/**
+ * Renders 2D or 3D inequality regions with a wide boundary guide line.
+ */
 export function Inequality({
   boundaryFunction,
   is2D = false,
@@ -120,7 +122,6 @@ export function Inequality({
   useMonoFont = true,
 }: Props) {
   const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
-  const groupRef = useRef<Group>(null);
 
   // Adaptive resolution for performance
   const adaptiveResolution = getAdaptiveResolution(resolution);
@@ -345,13 +346,16 @@ export function Inequality({
 
   // Generate boundary lines for rendering - optimized
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: This is a complex function, but it's necessary for the inequality visualization
-  const boundarySegmentsGeometry = useMemo(() => {
+  const boundaryPoints = useMemo(() => {
     if (!((boundaryFunction || boundaryLine2D) && showBoundary)) {
       return;
     }
 
-    const vertices: number[] = [];
-    const lineResolution = Math.min(adaptiveResolution, MAX_LINE_RESOLUTION); // Lower resolution for lines
+    const points: Point[] = [];
+    const lineResolution = Math.min(
+      adaptiveResolution,
+      GRAPH_BOUNDARY_SEGMENTS
+    );
     const xStep = (xRange[1] - xRange[0]) / lineResolution;
     const yStep = (yRange[1] - yRange[0]) / lineResolution;
 
@@ -371,9 +375,9 @@ export function Inequality({
             const prevY = (-a * prevX - c) / b;
             if (prevY >= yRange[0] && prevY <= yRange[1]) {
               // Bottom edge
-              vertices.push(prevX, prevY, zRange[0], x, y, zRange[0]);
+              points.push([prevX, prevY, zRange[0]], [x, y, zRange[0]]);
               // Top edge
-              vertices.push(prevX, prevY, zRange[1], x, y, zRange[1]);
+              points.push([prevX, prevY, zRange[1]], [x, y, zRange[1]]);
             }
           }
         }
@@ -382,12 +386,15 @@ export function Inequality({
         for (
           let i = 0;
           i <= lineResolution;
-          i += Math.floor(lineResolution / VERTICAL_CONNECTOR_DENSITY_FACTOR)
+          i += Math.max(
+            1,
+            Math.floor(lineResolution / VERTICAL_CONNECTOR_DENSITY_FACTOR)
+          )
         ) {
           const x = xRange[0] + i * xStep;
           const y = (-a * x - c) / b;
           if (y >= yRange[0] && y <= yRange[1]) {
-            vertices.push(x, y, zRange[0], x, y, zRange[1]);
+            points.push([x, y, zRange[0]], [x, y, zRange[1]]);
           }
         }
       } else if (Math.abs(a) > EPSILON) {
@@ -400,15 +407,15 @@ export function Inequality({
             const prevY = yRange[0] + (iy - 1) * yStep;
             const prevX = (-b * prevY - c) / a;
             if (prevX >= xRange[0] && prevX <= xRange[1]) {
-              vertices.push(prevX, prevY, zRange[0], x, y, zRange[0]);
-              vertices.push(prevX, prevY, zRange[1], x, y, zRange[1]);
+              points.push([prevX, prevY, zRange[0]], [x, y, zRange[0]]);
+              points.push([prevX, prevY, zRange[1]], [x, y, zRange[1]]);
             }
           }
         }
       }
     } else if (boundaryFunction) {
       // For 3D inequalities - create a wireframe grid
-      const gridStep = Math.floor(lineResolution / 10);
+      const gridStep = Math.max(1, Math.floor(lineResolution / 10));
 
       // Lines along x-axis
       for (let iy = 0; iy <= lineResolution; iy += gridStep) {
@@ -425,7 +432,7 @@ export function Inequality({
             prevZ >= zRange[0] &&
             prevZ <= zRange[1]
           ) {
-            vertices.push(prevX, y, prevZ, x, y, z);
+            points.push([prevX, y, prevZ], [x, y, z]);
           }
         }
       }
@@ -445,22 +452,17 @@ export function Inequality({
             prevZ >= zRange[0] &&
             prevZ <= zRange[1]
           ) {
-            vertices.push(x, prevY, prevZ, x, y, z);
+            points.push([x, prevY, prevZ], [x, y, z]);
           }
         }
       }
     }
 
-    if (vertices.length === 0) {
+    if (points.length === 0) {
       return;
     }
 
-    const geom = new BufferGeometry();
-    geom.setAttribute(
-      "position",
-      new Float32BufferAttribute(vertices, COMPONENTS_PER_VERTEX)
-    );
-    return geom;
+    return points;
   }, [
     showBoundary,
     adaptiveResolution,
@@ -475,26 +477,20 @@ export function Inequality({
   // Default boundary color is the same as the region color but more opaque
   const finalBoundaryColor = boundaryColor || color;
 
-  // Use frustum culling
-  useFrame(() => {
-    if (groupRef.current) {
-      groupRef.current.frustumCulled = true;
-    }
-  });
-
   return (
-    <group ref={groupRef}>
+    <group frustumCulled>
       {/* Render the shaded region */}
       <mesh frustumCulled geometry={geometry} material={material} />
 
-      {/* Render the boundary as one lineSegments for better performance */}
-      {!!showBoundary && !!boundarySegmentsGeometry && (
-        <lineSegments frustumCulled geometry={boundarySegmentsGeometry}>
-          <lineBasicMaterial
-            color={finalBoundaryColor}
-            linewidth={boundaryLineWidth}
-          />
-        </lineSegments>
+      {/* Drei Line uses Line2, unlike LineBasicMaterial linewidth in WebGL. */}
+      {!!showBoundary && !!boundaryPoints && (
+        <Line
+          color={finalBoundaryColor}
+          frustumCulled
+          lineWidth={boundaryLineWidth}
+          points={boundaryPoints}
+          segments
+        />
       )}
 
       {/* Render label if provided */}

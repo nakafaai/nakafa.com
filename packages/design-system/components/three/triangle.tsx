@@ -1,16 +1,16 @@
 "use client";
 
 import { Instance, Instances, Line, Text } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
 import { COLORS } from "@repo/design-system/lib/color";
 import { useTheme } from "next-themes";
-import { useMemo, useRef } from "react";
-import { type Group, MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
+import { useMemo } from "react";
+import { MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
 import { FONT_PATH, MONO_FONT_PATH, ORIGIN_COLOR } from "./_data";
-
-// Pre-calculate common values
-const SPHERE_SEGMENTS = 8; // Reduced from 16
-const ARC_SEGMENTS = 20; // Reduced from 30
+import {
+  createArcPoints,
+  GRAPH_ANGLE_ARC_SEGMENTS,
+  GRAPH_POINT_SEGMENTS,
+} from "./quality";
 
 // Angle and Quadrant constants
 const DEGREES_IN_HALF_CIRCLE = 180;
@@ -60,17 +60,27 @@ interface Props {
 let sharedSphereGeometry: SphereGeometry | null = null;
 const sharedMaterials: Map<string, MeshBasicMaterial> = new Map();
 
+/**
+ * Reuses vertex marker geometry across triangle visualizations.
+ *
+ * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance#re-using-geometries-and-materials
+ */
 function getSharedSphereGeometry() {
   if (!sharedSphereGeometry) {
     sharedSphereGeometry = new SphereGeometry(
       1,
-      SPHERE_SEGMENTS,
-      SPHERE_SEGMENTS
+      GRAPH_POINT_SEGMENTS,
+      GRAPH_POINT_SEGMENTS
     );
   }
   return sharedSphereGeometry;
 }
 
+/**
+ * Reuses triangle materials by color for repeated side and point rendering.
+ *
+ * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance#re-using-geometries-and-materials
+ */
 function getSharedMaterial(color: string) {
   if (!sharedMaterials.has(color)) {
     sharedMaterials.set(color, new MeshBasicMaterial({ color }));
@@ -82,6 +92,9 @@ function getSharedMaterial(color: string) {
   return material;
 }
 
+/**
+ * Renders a trigonometric triangle with smooth angle arcs and reusable markers.
+ */
 export function Triangle({
   angle = 45,
   size = 1,
@@ -94,7 +107,6 @@ export function Triangle({
   ...props
 }: Props) {
   const { resolvedTheme } = useTheme();
-  const groupRef = useRef<Group>(null);
 
   // Convert angle to radians and calculate the points
   const angleInRadians = angle * DEGREES_TO_RADIANS;
@@ -141,17 +153,10 @@ export function Triangle({
     ];
   }, [adjacent, opposite]);
 
-  // Memoize the angle arc points with fewer segments for performance
-  const triangleArcPoints = useMemo(() => {
-    const pts: Vector3[] = [];
-    for (let i = 0; i <= ARC_SEGMENTS; i += 1) {
-      const a = (i / ARC_SEGMENTS) * angleInRadians;
-      pts.push(
-        new Vector3(Math.cos(a) * arcRadius, Math.sin(a) * arcRadius, 0)
-      );
-    }
-    return pts;
-  }, [angleInRadians, arcRadius]);
+  const triangleArcPoints = useMemo(
+    () => createArcPoints(arcRadius, angleInRadians, GRAPH_ANGLE_ARC_SEGMENTS),
+    [angleInRadians, arcRadius]
+  );
 
   // Vertices for instancing with semantic labels
   const triangleVertices = useMemo(() => {
@@ -256,13 +261,6 @@ export function Triangle({
     }
   }, [quadrant, opposite, adjacent]);
 
-  // Use frustum culling
-  useFrame(() => {
-    if (groupRef.current) {
-      groupRef.current.frustumCulled = true;
-    }
-  });
-
   // Line colors and semantic keys for triangle sides
   const sideConfig = [
     { color: COLORS.CYAN, key: "adjacent" },
@@ -271,7 +269,7 @@ export function Triangle({
   ];
 
   return (
-    <group ref={groupRef} {...props}>
+    <group frustumCulled {...props}>
       {/* Draw the triangle sides - optimized with single color array access */}
       {triangleSideLines.map((pts, i) => (
         <Line
