@@ -135,19 +135,19 @@ Diketahui matriks-matriks:
 
 Penjumlahan matriks <InlineMath math="A" /> dan <InlineMath math="B" /> (<InlineMath math="A+B" />):
 
-<div className="flex flex-col gap-4 mt-4">
+<MathContainer>
   <BlockMath math="A+B = \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix} + \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 3+(-2) & -1+9 & 7+(-4) \\ 0+6 & 5+(-3) & 2+1 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 1 & 8 & 3 \\ 6 & 2 & 3 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Penjumlahan matriks <InlineMath math="B" /> dan <InlineMath math="A" /> (<InlineMath math="B+A" />):
 
-<div className="flex flex-col gap-4 mt-4">
+<MathContainer>
   <BlockMath math="B+A = \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix} + \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} -2+3 & 9+(-1) & -4+7 \\ 6+0 & -3+5 & 1+2 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 1 & 8 & 3 \\ 6 & 2 & 3 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 (Terbukti sifat komutatif: <InlineMath math="A+B = B+A" />)
 
@@ -172,28 +172,28 @@ Berdasarkan kesamaan dua matriks, elemen-elemen yang seletak harus sama:
 
 Untuk elemen baris 1, kolom 1: <InlineMath math="2x+4 = 10" />
 
-<div className="flex flex-col gap-4 mt-4">
+<MathContainer>
   <BlockMath math="2x = 10-4" />
   <BlockMath math="2x = 6" />
   <BlockMath math="x = 3" />
-</div>
+</MathContainer>
 
 Untuk elemen baris 1, kolom 2: <InlineMath math="3 = 3" /> (sudah sesuai).
 
 Untuk elemen baris 2, kolom 1: <InlineMath math="-1+z = 6" />
 
-<div className="flex flex-col gap-4 mt-4">
+<MathContainer>
   <BlockMath math="z = 6+1" />
   <BlockMath math="z = 7" />
-</div>
+</MathContainer>
 
 Untuk elemen baris 2, kolom 2: <InlineMath math="3y+7 = 1" />
 
-<div className="flex flex-col gap-4 mt-4">
+<MathContainer>
   <BlockMath math="3y = 1-7" />
   <BlockMath math="3y = -6" />
   <BlockMath math="y = -2" />
-</div>
+</MathContainer>
 
 Jadi, nilai <InlineMath math="x=3" />, <InlineMath math="y=-2" />, dan <InlineMath math="z=7" />.
 

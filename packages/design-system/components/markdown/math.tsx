@@ -48,7 +48,15 @@ export function BlockMathKatex(props: MathComponentProps) {
 }
 
 /**
- * Groups consecutive math blocks with the shared vertical spacing.
+ * Groups consecutive math blocks into one stacked card.
+ *
+ * Use this in MDX whenever multiple BlockMath rows are part of the same
+ * derivation. The stack keeps one shared outer radius while each row remains
+ * horizontally scrollable.
+ *
+ * @see https://web.dev/articles/content-visibility
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/content-visibility
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/contain-intrinsic-size
  */
 export function MathContainer({
   className,
@@ -95,6 +103,9 @@ export function MathContainer({
 /**
  * Renders one block-math card with native horizontal scrolling for wide
  * formulas.
+ *
+ * MathContainer uses the data-math-block presence marker to style adjacent
+ * rows without coupling the stack to implementation-specific class names.
  */
 export function BlockMath({
   className,

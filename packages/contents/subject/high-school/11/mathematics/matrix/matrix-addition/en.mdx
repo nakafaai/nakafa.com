@@ -135,19 +135,19 @@ Given matrices:
 
 Addition of matrix <InlineMath math="A" /> and <InlineMath math="B" /> (<InlineMath math="A+B" />):
 
-<div className="flex flex-col gap-4 mt-4">
+<MathContainer>
   <BlockMath math="A+B = \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix} + \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 3+(-2) & -1+9 & 7+(-4) \\ 0+6 & 5+(-3) & 2+1 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 1 & 8 & 3 \\ 6 & 2 & 3 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 Addition of matrix <InlineMath math="B" /> and <InlineMath math="A" /> (<InlineMath math="B+A" />):
 
-<div className="flex flex-col gap-4 mt-4">
+<MathContainer>
   <BlockMath math="B+A = \begin{bmatrix} -2 & 9 & -4 \\ 6 & -3 & 1 \end{bmatrix} + \begin{bmatrix} 3 & -1 & 7 \\ 0 & 5 & 2 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} -2+3 & 9+(-1) & -4+7 \\ 6+0 & -3+5 & 1+2 \end{bmatrix}" />
   <BlockMath math="= \begin{bmatrix} 1 & 8 & 3 \\ 6 & 2 & 3 \end{bmatrix}" />
-</div>
+</MathContainer>
 
 (Commutative property proven: <InlineMath math="A+B = B+A" />)
 
@@ -172,28 +172,28 @@ Based on the equality of two matrices, corresponding elements must be equal:
 
 For the element in row 1, column 1: <InlineMath math="2x+4 = 10" />
 
-<div className="flex flex-col gap-4 mt-4">
+<MathContainer>
   <BlockMath math="2x = 10-4" />
   <BlockMath math="2x = 6" />
   <BlockMath math="x = 3" />
-</div>
+</MathContainer>
 
 For the element in row 1, column 2: <InlineMath math="3 = 3" /> (already consistent).
 
 For the element in row 2, column 1: <InlineMath math="-1+z = 6" />
 
-<div className="flex flex-col gap-4 mt-4">
+<MathContainer>
   <BlockMath math="z = 6+1" />
   <BlockMath math="z = 7" />
-</div>
+</MathContainer>
 
 For the element in row 2, column 2: <InlineMath math="3y+7 = 1" />
 
-<div className="flex flex-col gap-4 mt-4">
+<MathContainer>
   <BlockMath math="3y = 1-7" />
   <BlockMath math="3y = -6" />
   <BlockMath math="y = -2" />
-</div>
+</MathContainer>
 
 Thus, the values are <InlineMath math="x=3" />, <InlineMath math="y=-2" />, and <InlineMath math="z=7" />.
 
