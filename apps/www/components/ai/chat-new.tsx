@@ -15,7 +15,7 @@ import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { AiChatModel } from "@/components/ai/chat-model";
-import { useAi } from "@/lib/context/use-ai";
+import { useAi } from "@/components/ai/context/use-ai";
 import { useUser } from "@/lib/context/use-user";
 
 export function ChatNew() {

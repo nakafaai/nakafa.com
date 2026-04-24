@@ -15,7 +15,7 @@ import {
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
-import { useAi } from "@/lib/context/use-ai";
+import { useAi } from "@/components/ai/context/use-ai";
 import { getLocale, getPathname } from "@/lib/utils/browser";
 
 interface ChatContextValue {
@@ -25,7 +25,7 @@ interface ChatContextValue {
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
 
 /**
- * Provide the shared AI chat instance for one chat route or sheet.
+ * Provides the shared AI SDK chat instance for one chat route or sheet.
  *
  * Source of truth:
  * `apps/www/node_modules/ai/src/ui/http-chat-transport.ts`
@@ -62,18 +62,15 @@ export function ChatProvider({
     transport: new DefaultChatTransport({
       api: apiUrl,
       prepareSendMessagesRequest: ({ id, messages }) => {
-        // send only the last message and chat id
-        // we will then fetch message history (for our chatId) on server
-        // and append this message for the full context to send to the model
         const lastMessage = messages.at(-1);
 
         return {
           body: {
             id,
-            message: lastMessage,
             locale: getLocale(),
-            slug: getPathname(),
+            message: lastMessage,
             model: getModel(),
+            slug: getPathname(),
           },
         };
       },
@@ -132,10 +129,11 @@ export function ChatProvider({
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }
 
+/** Reads one selected slice of the active AI SDK chat. */
 export function useChat<T>(selector: (state: ChatContextValue) => T) {
   const context = useContextSelector(ChatContext, (value) => value);
   if (!context) {
-    throw new Error("useChat must be used within a ChatProvider");
+    throw new Error("useChat must be used within ChatProvider");
   }
   return selector(context);
 }

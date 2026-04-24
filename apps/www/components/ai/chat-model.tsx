@@ -34,7 +34,7 @@ import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { useAi } from "@/lib/context/use-ai";
+import { useAi } from "@/components/ai/context/use-ai";
 import { useUser } from "@/lib/context/use-user";
 import { aiModels, getFreeModels, getPremiumModels } from "@/lib/data/models";
 

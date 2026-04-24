@@ -18,6 +18,7 @@ import {
 } from "@repo/contents/_lib/subject/slug";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
+import { ContentMetadataSchema } from "@repo/contents/_types/content";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import type { Material } from "@repo/contents/_types/subject/material";
@@ -185,6 +186,9 @@ export default async function Page({
     }
   );
   const Content = content?.default;
+  const contentMetadata = ContentMetadataSchema.safeParse(
+    content?.metadata
+  ).data;
 
   return (
     <CachedSubjectShell
@@ -201,6 +205,7 @@ export default async function Page({
             slug: filePath,
             contentType: "subject",
           }}
+          contextTitle={contentMetadata?.title}
           key={`audio:${filePath}`}
         />
       }

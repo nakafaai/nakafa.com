@@ -2,13 +2,13 @@
 
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { memo } from "react";
-import { AiChatMessageActions } from "./message-actions";
-import { MessageProvider } from "./message-context";
-import { AiChatMessageCredits } from "./message-credits";
+import { MessageProvider } from "@/components/ai/context/use-message";
+import { AiChatMessageActions } from "@/components/ai/message-actions";
+import { AiChatMessageCredits } from "@/components/ai/message-credits";
 import {
   AiChatMessageContent,
   AiChatMessageSuggestions,
-} from "./message-parts";
+} from "@/components/ai/message-parts";
 
 interface Props {
   message: MyUIMessage;

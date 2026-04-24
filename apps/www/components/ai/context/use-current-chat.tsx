@@ -13,10 +13,6 @@ import {
 import { type PropsWithChildren, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
-interface Props {
-  chatId: Id<"chats">;
-}
-
 type ChatMessagesQueryResult = UsePaginatedQueryReturnType<
   typeof api.chats.queries.loadMessagesPage
 >;
@@ -30,10 +26,11 @@ interface ChatContextValue {
 
 const CurrentChatContext = createContext<ChatContextValue | null>(null);
 
+/** Provides the current chat document and paginated messages. */
 export function CurrentChatProvider({
   chatId,
   children,
-}: PropsWithChildren<Props>) {
+}: PropsWithChildren<{ chatId: Id<"chats"> }>) {
   const chat = useQuery(api.chats.queries.getChat, {
     chatId,
   });
@@ -43,19 +40,19 @@ export function CurrentChatProvider({
     { initialNumItems: CHAT_MESSAGES_PAGE_SIZE }
   );
 
-  const messages = useMemo(
-    () =>
-      status === "LoadingFirstPage" && results.length === 0
-        ? undefined
-        : mapDBMessagesToUIMessages([...results].reverse()),
-    [results, status]
-  );
+  const messages = useMemo(() => {
+    if (status === "LoadingFirstPage" && results.length === 0) {
+      return;
+    }
+
+    return mapDBMessagesToUIMessages([...results].reverse());
+  }, [results, status]);
   const value = useMemo(
     () => ({
       chat,
+      loadMoreMessages: loadMore,
       messages,
       messageStatus: status,
-      loadMoreMessages: loadMore,
     }),
     [chat, loadMore, messages, status]
   );
@@ -67,11 +64,11 @@ export function CurrentChatProvider({
   );
 }
 
-export function useCurrentChat<T>(selector: (state: ChatContextValue) => T): T {
-  return useContextSelector(CurrentChatContext, (context) => {
-    if (!context) {
-      throw new Error("useChat must be used within CurrentChatProvider");
-    }
-    return selector(context);
-  });
+/** Reads one selected slice of the current chat context. */
+export function useCurrentChat<T>(selector: (state: ChatContextValue) => T) {
+  const context = useContextSelector(CurrentChatContext, (value) => value);
+  if (!context) {
+    throw new Error("useCurrentChat must be used within CurrentChatProvider");
+  }
+  return selector(context);
 }

@@ -39,8 +39,8 @@ import {
   useTransition,
 } from "react";
 import { toast } from "sonner";
+import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 import { useUser } from "@/lib/context/use-user";
-import { useCurrentChat } from "./chat-provider";
 
 export function AiChatHeader() {
   const chat = useCurrentChat((s) => s.chat);

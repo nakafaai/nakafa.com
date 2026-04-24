@@ -6,6 +6,7 @@ import { importContentModule } from "@repo/contents/_lib/module";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
+import { ContentMetadataSchema } from "@repo/contents/_types/content";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
@@ -175,6 +176,9 @@ export default async function Page({
     }
   );
   const Content = content?.default;
+  const contentMetadata = ContentMetadataSchema.safeParse(
+    content?.metadata
+  ).data;
 
   return (
     <CachedArticleShell
@@ -189,6 +193,7 @@ export default async function Page({
             slug: filePath,
             contentType: "article",
           }}
+          contextTitle={contentMetadata?.title}
           key={`audio:${filePath}`}
         />
       }

@@ -1,55 +1,18 @@
-import type { ModelId } from "@repo/ai/config/models";
+"use client";
+
 import { MODEL_IDS } from "@repo/ai/config/models";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { createStore } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
+import { initialState } from "@/components/ai/store/state";
+import type { AiStore } from "@/components/ai/store/types";
 
-interface State {
-  activeChatId: Id<"chats"> | null;
-  model: ModelId;
-  open: boolean;
-  pendingQuery: string;
-  pendingQueryChatId: Id<"chats"> | null;
-  pendingQueryOwner: "page" | "sheet" | null;
-  text: string;
-}
-
-interface Actions {
-  clearPendingQuery: () => void;
-  getModel: () => ModelId;
-  queuePendingQuery: (args: {
-    chatId: Id<"chats">;
-    owner: "page" | "sheet";
-    query: string;
-  }) => void;
-  setActiveChatId: (activeChatId: Id<"chats"> | null) => void;
-  setModel: (model: ModelId) => void;
-  setOpen: (open: boolean) => void;
-  setText: (text: string) => void;
-}
-
-export type AiStore = State & Actions;
-
-const initialState: State = {
-  open: false,
-  text: "",
-  model: "kimi-k2.5",
-  pendingQuery: "",
-  pendingQueryChatId: null,
-  pendingQueryOwner: null,
-  activeChatId: null,
-};
-
+/** Creates one scoped Zustand store for Nina UI state. */
 export const createAiStore = () =>
   createStore<AiStore>()(
     persist(
       immer((set, get) => ({
         ...initialState,
-
-        setOpen: (open) => set({ open }),
-        setText: (text) => set({ text }),
-        setModel: (model) => set({ model }),
         clearPendingQuery: () =>
           set({
             pendingQuery: "",
@@ -70,6 +33,10 @@ export const createAiStore = () =>
             pendingQueryOwner: owner,
           }),
         setActiveChatId: (activeChatId) => set({ activeChatId }),
+        setContextTitle: (contextTitle) => set({ contextTitle }),
+        setModel: (model) => set({ model }),
+        setOpen: (open) => set({ open }),
+        setText: (text) => set({ text }),
       })),
       {
         name: "nakafa-ai",
@@ -78,3 +45,5 @@ export const createAiStore = () =>
       }
     )
   );
+
+export type AiStoreApi = ReturnType<typeof createAiStore>;

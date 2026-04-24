@@ -10,6 +10,7 @@ interface MessageContextValue {
 
 const MessageContext = createContext<MessageContextValue | null>(null);
 
+/** Provides one AI message to message-part components. */
 export function MessageProvider({
   message,
   children,
@@ -21,7 +22,8 @@ export function MessageProvider({
   );
 }
 
-export function useMessage<T>(selector: (state: MessageContextValue) => T): T {
+/** Reads one selected slice of the current message. */
+export function useMessage<T>(selector: (state: MessageContextValue) => T) {
   return useContextSelector(MessageContext, (context) => {
     if (!context) {
       throw new Error("useMessage must be used within MessageProvider");

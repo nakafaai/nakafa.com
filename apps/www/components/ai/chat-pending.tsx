@@ -3,7 +3,7 @@
 import { Message } from "@repo/design-system/components/ai/message";
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 import { memo } from "react";
-import { useChat } from "@/lib/context/use-chat";
+import { useChat } from "@/components/ai/context/use-chat";
 
 export const AiChatPending = memo(() => {
   const status = useChat((state) => state.chat.status);

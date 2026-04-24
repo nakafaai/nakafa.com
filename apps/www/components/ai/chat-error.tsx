@@ -21,7 +21,7 @@ import { useAction } from "convex/react";
 import { useTranslations } from "next-intl";
 import { Activity, memo, useTransition } from "react";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
-import { useChat } from "@/lib/context/use-chat";
+import { useChat } from "@/components/ai/context/use-chat";
 
 export const AiChatError = memo(() => {
   const t = useTranslations("Ai");

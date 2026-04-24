@@ -1,12 +1,12 @@
 "use client";
 
 import { memo } from "react";
+import { useCurrentChat } from "@/components/ai/context/use-current-chat";
+import { useMessage } from "@/components/ai/context/use-message";
+import { AiChatMessageLoading } from "@/components/ai/message-loading";
+import { AiMessagePart } from "@/components/ai/message-part";
+import { SuggestionsPart } from "@/components/ai/message-part/suggestions";
 import { useUser } from "@/lib/context/use-user";
-import { useCurrentChat } from "./chat-provider";
-import { useMessage } from "./message-context";
-import { AiChatMessageLoading } from "./message-loading";
-import { AiMessagePart } from "./message-part";
-import { SuggestionsPart } from "./message-part/suggestions";
 
 export const AiChatMessageContent = memo(() => {
   const parts = useMessage((state) =>
