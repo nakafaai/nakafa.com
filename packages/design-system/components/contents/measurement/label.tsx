@@ -2,7 +2,7 @@ import { Billboard, Text } from "@react-three/drei";
 
 import { MONO_FONT_PATH } from "@repo/design-system/components/three/_data";
 
-import type { CameraPoint } from "./data";
+type SceneLabelPosition = readonly [number, number, number];
 
 /**
  * Renders camera-facing text so labels remain readable after the scene rotates.
@@ -16,7 +16,7 @@ export function SceneLabel({
   children: string;
   color: string;
   fontSize: number;
-  position: CameraPoint;
+  position: SceneLabelPosition;
 }) {
   return (
     <Billboard position={position}>

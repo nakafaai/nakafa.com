@@ -1,6 +1,7 @@
 import { RoundedBox } from "@react-three/drei";
 import { useMemo } from "react";
 
+import { SceneLabel } from "../label";
 import type { MeasurementSceneProps } from "./data";
 import {
   OBJECT_COLOR,
@@ -11,7 +12,6 @@ import {
   RULER_START_X,
   RULER_STEP_CM,
 } from "./data";
-import { SceneLabel } from "./label";
 
 /**
  * Renders a ruler with an object whose length matches the selected reading.

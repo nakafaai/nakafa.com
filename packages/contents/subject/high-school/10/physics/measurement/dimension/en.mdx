@@ -1,0 +1,116 @@
+import { DimensionLab } from "@repo/design-system/components/contents/measurement/dimension/lab";
+
+export const metadata = {
+  title: "Dimensions",
+  description:
+    "Learn physical dimensions as codes built from base quantities, how to derive dimensions of derived quantities, and how to check formulas without numbers.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/25/2026",
+  subject: "Measurement in Scientific Work",
+};
+
+## Dimension Is Not Just Object Size
+
+In everyday language, dimension often means spatial size such as length, width, and height. In physics, **dimension** has a more specific meaning: it is a code that shows which base quantities build a physical quantity.
+
+For example, bolt length, nut diameter, marble radius, and travel distance can use different units, but they are still the same kind of quantity.
+
+<BlockMath math="\text{length, diameter, radius, distance} \Rightarrow [\mathrm{L}]" />
+
+A dimension does not tell us the measured value. It tells us the *physical kind* behind the measured value.
+
+## Seeing Dimension Powers
+
+The visual below focuses only on the length dimension. Switch from length to area and then volume. Notice how one length factor becomes <InlineMath math="[\mathrm{L}]" />, <InlineMath math="[\mathrm{L}]^2" />, and <InlineMath math="[\mathrm{L}]^3" />.
+
+<DimensionLab
+  title={<>Length Dimension Builder</>}
+  description={
+    <>
+      Choose a shape built from length factors to see its formula, unit, and
+      dimension.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose a dimension shape",
+    dimension: "Dimension",
+    formula: "Formula",
+    modes: {
+      length: "Length",
+      area: "Area",
+      volume: "Volume",
+    },
+    unit: "SI unit",
+  }}
+/>
+
+## The Alphabet of Base Quantities
+
+The International System of Units or SI uses <InlineMath math="7" /> base quantities. In dimensional analysis, these base quantities work like an alphabet for building other quantities.
+
+| Base quantity | Example symbol | Dimension |
+| :------------ | :------------- | :-------- |
+| Length | <InlineMath math="\ell,\ x,\ r" /> | <InlineMath math="[\mathrm{L}]" /> |
+| Mass | <InlineMath math="m" /> | <InlineMath math="[\mathrm{M}]" /> |
+| Time | <InlineMath math="t" /> | <InlineMath math="[\mathrm{T}]" /> |
+| Electric current | <InlineMath math="I" /> | <InlineMath math="[\mathrm{I}]" /> |
+| Thermodynamic temperature | <InlineMath math="T" /> | <InlineMath math="[\Theta]" /> |
+| Amount of substance | <InlineMath math="n" /> | <InlineMath math="[\mathrm{N}]" /> |
+| Luminous intensity | <InlineMath math="I_v" /> | <InlineMath math="[\mathrm{J}]" /> |
+
+Dimensions are written in square brackets so they are not confused with units. For example, <InlineMath math="[\mathrm{L}]" /> is the dimension of length, while <InlineMath math="\text{m}" /> is the unit meter.
+
+## Deriving Dimensions from Formulas
+
+Dimensional analysis works by replacing every quantity in a formula with its dimension, then simplifying the powers.
+
+<BlockMath math="\begin{aligned}
+[A] &= [l][w] = [\mathrm{L}][\mathrm{L}] = [\mathrm{L}]^2 \\
+[V] &= [l][w][h] = [\mathrm{L}]^3 \\
+[v] &= \frac{[\Delta s]}{[\Delta t]} = \frac{[\mathrm{L}]}{[\mathrm{T}]} = [\mathrm{L}][\mathrm{T}]^{-1} \\
+[a] &= \frac{[\Delta v]}{[\Delta t]} = \frac{[\mathrm{L}][\mathrm{T}]^{-1}}{[\mathrm{T}]} = [\mathrm{L}][\mathrm{T}]^{-2}
+\end{aligned}" />
+
+Force, work, and power can also be read as dimension structures.
+
+<BlockMath math="\begin{aligned}
+[F] &= [m][a] = [\mathrm{M}][\mathrm{L}][\mathrm{T}]^{-2} \\
+[W] &= [F][\Delta s] = [\mathrm{M}][\mathrm{L}]^2[\mathrm{T}]^{-2} \\
+[P] &= \frac{[W]}{[t]} = [\mathrm{M}][\mathrm{L}]^2[\mathrm{T}]^{-3}
+\end{aligned}" />
+
+## A Formula That Passes Inspection
+
+Dimensions can help check whether a formula form could be correct. Every term being added must have the same dimension.
+
+Take the displacement formula for uniformly accelerated motion:
+
+<BlockMath math="s = v_0 t + \frac{1}{2} a t^2" />
+
+Check the dimensions:
+
+<BlockMath math="\begin{aligned}
+[v_0t] &= [\mathrm{L}][\mathrm{T}]^{-1}[\mathrm{T}] = [\mathrm{L}] \\
+[at^2] &= [\mathrm{L}][\mathrm{T}]^{-2}[\mathrm{T}]^2 = [\mathrm{L}]
+\end{aligned}" />
+
+Both terms on the right have dimension <InlineMath math="[\mathrm{L}]" />, so the formula passes the dimensional check. This check does not prove the formula is definitely correct, but it can quickly catch impossible formulas.
+
+<BlockMath math="s + t \quad \text{is not valid because} \quad [\mathrm{L}] \ne [\mathrm{T}]" />
+
+## One Object, Many Dimensions
+
+A bolt and a nut look like small objects, but measuring them can involve several different quantities. That is why one object sometimes needs more than one measuring tool.
+
+| What is checked | Suitable tool | Dimension |
+| :-------------- | :------------ | :-------- |
+| Bolt length | ruler or vernier caliper | <InlineMath math="[\mathrm{L}]" /> |
+| Outer diameter | vernier caliper or micrometer screw gauge | <InlineMath math="[\mathrm{L}]" /> |
+| Cross-sectional area | calculated from diameter | <InlineMath math="[\mathrm{L}]^2" /> |
+| Material volume | calculated from spatial size | <InlineMath math="[\mathrm{L}]^3" /> |
+| Mass | balance | <InlineMath math="[\mathrm{M}]" /> |
+| Density | mass divided by volume | <InlineMath math="[\mathrm{M}][\mathrm{L}]^{-3}" /> |
+
+So, two measuring tools can measure quantities with the same dimension, but they serve different contexts. A ruler is enough for a large length that does not need high precision. A vernier caliper or micrometer screw gauge is better when a small diameter must be read more carefully.
+
+Concept reference for dimensional analysis: [OpenStax dimensional analysis](https://openstax.org/books/university-physics-volume-1/pages/1-4-dimensional-analysis).

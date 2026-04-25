@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import type { Group, Mesh } from "three";
 
+import { SceneLabel } from "../label";
 import type { MeasurementSceneProps } from "./data";
 import {
   MASS_ARM_LENGTH,
@@ -24,7 +25,6 @@ import {
   OBJECT_COLOR,
   RULER_COLOR,
 } from "./data";
-import { SceneLabel } from "./label";
 
 /**
  * Renders an equal-arm balance driven by the net torque direction.
