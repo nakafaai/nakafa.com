@@ -1,0 +1,78 @@
+export const metadata = {
+  title: "Physical Quantities",
+  description:
+    "Learn what a physical quantity is, how base and derived quantities differ, and how quantities connect to SI units and dimensions.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/25/2026",
+  subject: "Measurement in Scientific Work",
+};
+
+## Reading Quantities from Measurements
+
+When we write a measurement result such as <InlineMath math="0.60 \text{ m}" />, <InlineMath math="2" /> parts are working together.
+
+<BlockMath math="\text{measurement result} = \text{measured value} \times \text{unit}" />
+
+The value <InlineMath math="0.60" /> tells us *how much*. The unit <InlineMath math="\text{m}" /> tells us *which standard it is compared with*. The quantity is the property of an object or event being measured, such as length, mass, time, temperature, or speed.
+
+> Without a quantity, a number has no direction. Without a unit, a number cannot be compared.
+
+## Base and Derived Quantities
+
+In SI, the **International System of Units**, <InlineMath math="7" /> base quantities are used as foundations. Other quantities can be built from combinations of those base quantities.
+
+| Base quantity | Typical symbol | SI unit | Dimension |
+| :------------ | :------------- | :------ | :-------- |
+| Length | <InlineMath math="\ell,\ x,\ r" /> | <InlineMath math="\text{m}" /> | <InlineMath math="\mathrm{L}" /> |
+| Mass | <InlineMath math="m" /> | <InlineMath math="\text{kg}" /> | <InlineMath math="\mathrm{M}" /> |
+| Time | <InlineMath math="t" /> | <InlineMath math="\text{s}" /> | <InlineMath math="\mathrm{T}" /> |
+| Electric current | <InlineMath math="I" /> | <InlineMath math="\text{A}" /> | <InlineMath math="\mathrm{I}" /> |
+| Thermodynamic temperature | <InlineMath math="T" /> | <InlineMath math="\text{K}" /> | <InlineMath math="\Theta" /> |
+| Amount of substance | <InlineMath math="n" /> | <InlineMath math="\text{mol}" /> | <InlineMath math="\mathrm{N}" /> |
+| Luminous intensity | <InlineMath math="I_v" /> | <InlineMath math="\text{cd}" /> | <InlineMath math="\mathrm{J}" /> |
+
+A derived quantity appears when base quantities are combined. For example, area comes from length multiplied by width.
+
+<BlockMath math="\begin{aligned}
+A &= l \times w \\
+\text{unit of } A &= \text{m} \times \text{m} = \text{m}^2 \\
+\dim A &= \mathrm{L} \times \mathrm{L} = \mathrm{L}^2
+\end{aligned}" />
+
+Speed is also a derived quantity because it comes from distance divided by time.
+
+<BlockMath math="\begin{aligned}
+v &= \frac{s}{t} \\
+\text{unit of } v &= \frac{\text{m}}{\text{s}} = \text{m s}^{-1} \\
+\dim v &= \frac{\mathrm{L}}{\mathrm{T}} = \mathrm{L}\mathrm{T}^{-1}
+\end{aligned}" />
+
+## Dimension as a Code
+
+Dimension is a compact way to see which base quantities build a quantity. It does not replace units, but it helps us check whether a formula makes sense.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Choose the measured quantity"] --> B["Identify the base quantities behind it"]
+    B --> C["Write the SI unit"]
+    B --> D["Write the dimension"]
+    C --> E["Check the measurement result"]
+    D --> E`}/>
+
+For example, the area of a desk and the area of a sheet of paper can have different values, but they are the same kind of quantity. Both are area, both use the SI unit <InlineMath math="\text{m}^2" />, and both have dimension <InlineMath math="\mathrm{L}^2" />.
+
+On the other hand, length, width, height, diameter, radius, distance, and displacement can all use length units. They all have dimension <InlineMath math="\mathrm{L}" />.
+
+## Quick Example
+
+A sheet of paper has length <InlineMath math="0.30 \text{ m}" /> and width <InlineMath math="0.20 \text{ m}" />. Its area is:
+
+<BlockMath math="\begin{aligned}
+A &= l \times w \\
+&= 0.30 \text{ m} \times 0.20 \text{ m} \\
+&= 0.060 \text{ m}^2
+\end{aligned}" />
+
+The value <InlineMath math="0.060 \text{ m}^2" /> is the measurement result for area. Since area is built from <InlineMath math="2" /> length quantities, area is a derived quantity.
+
+Notice the pattern: once a unit is built from operations between other units, the quantity is no longer base. This way of reading values, units, and dimensions will come back when we study unit systems in more detail.

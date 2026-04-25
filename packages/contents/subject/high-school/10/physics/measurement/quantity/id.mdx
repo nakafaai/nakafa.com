@@ -1,0 +1,78 @@
+export const metadata = {
+  title: "Besaran",
+  description:
+    "Pelajari arti besaran fisika, perbedaan besaran pokok dan besaran turunan, serta hubungan awalnya dengan satuan SI dan dimensi.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/25/2026",
+  subject: "Pengukuran dalam Kerja Ilmiah",
+};
+
+## Membaca Besaran dari Hasil Ukur
+
+Ketika kalian menulis hasil ukur seperti <InlineMath math="0,60 \text{ m}" />, sebenarnya ada <InlineMath math="2" /> bagian yang sedang bekerja bersama.
+
+<BlockMath math="\text{hasil ukur} = \text{nilai ukur} \times \text{satuan}" />
+
+Nilai <InlineMath math="0,60" /> memberi tahu *berapa banyak*. Satuan <InlineMath math="\text{m}" /> memberi tahu *dibandingkan dengan standar apa*. Besarannya adalah sifat benda atau kejadian yang sedang diukur, misalnya panjang, massa, waktu, suhu, atau kelajuan.
+
+> Tanpa besaran, angka tidak punya arah. Tanpa satuan, angka tidak bisa dibandingkan.
+
+## Besaran Pokok dan Besaran Turunan
+
+Dalam SI, yaitu **Sistem Satuan Internasional**, ada <InlineMath math="7" /> besaran pokok yang dipakai sebagai dasar. Besaran lain dapat dibangun dari gabungan besaran pokok tersebut.
+
+| Besaran pokok | Simbol umum | Satuan SI | Dimensi |
+| :------------ | :---------- | :-------- | :------ |
+| Panjang | <InlineMath math="\ell,\ x,\ r" /> | <InlineMath math="\text{m}" /> | <InlineMath math="\mathrm{L}" /> |
+| Massa | <InlineMath math="m" /> | <InlineMath math="\text{kg}" /> | <InlineMath math="\mathrm{M}" /> |
+| Waktu | <InlineMath math="t" /> | <InlineMath math="\text{s}" /> | <InlineMath math="\mathrm{T}" /> |
+| Arus listrik | <InlineMath math="I" /> | <InlineMath math="\text{A}" /> | <InlineMath math="\mathrm{I}" /> |
+| Suhu termodinamika | <InlineMath math="T" /> | <InlineMath math="\text{K}" /> | <InlineMath math="\Theta" /> |
+| Jumlah zat | <InlineMath math="n" /> | <InlineMath math="\text{mol}" /> | <InlineMath math="\mathrm{N}" /> |
+| Intensitas cahaya | <InlineMath math="I_v" /> | <InlineMath math="\text{cd}" /> | <InlineMath math="\mathrm{J}" /> |
+
+Besaran turunan muncul ketika kita menggabungkan besaran pokok. Misalnya luas berasal dari panjang dikali lebar.
+
+<BlockMath math="\begin{aligned}
+A &= p \times l \\
+\text{satuan } A &= \text{m} \times \text{m} = \text{m}^2 \\
+\dim A &= \mathrm{L} \times \mathrm{L} = \mathrm{L}^2
+\end{aligned}" />
+
+Kelajuan juga besaran turunan, karena berasal dari jarak dibagi waktu.
+
+<BlockMath math="\begin{aligned}
+v &= \frac{s}{t} \\
+\text{satuan } v &= \frac{\text{m}}{\text{s}} = \text{m s}^{-1} \\
+\dim v &= \frac{\mathrm{L}}{\mathrm{T}} = \mathrm{L}\mathrm{T}^{-1}
+\end{aligned}" />
+
+## Dimensi sebagai Kode
+
+Dimensi adalah cara singkat untuk melihat susunan besaran pokok di dalam suatu besaran. Dimensi tidak menggantikan satuan, tetapi membantu kita mengecek apakah rumus masuk akal.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Pilih besaran yang diukur"] --> B["Tentukan besaran pokok pembentuknya"]
+    B --> C["Tulis satuan SI"]
+    B --> D["Tulis dimensi"]
+    C --> E["Cek hasil ukur"]
+    D --> E`}/>
+
+Contohnya, luas meja dan luas kertas bisa punya nilai berbeda, tetapi jenis besarannya sama. Keduanya sama-sama luas, satuan SI-nya <InlineMath math="\text{m}^2" />, dan dimensinya <InlineMath math="\mathrm{L}^2" />.
+
+Sebaliknya, panjang, lebar, tinggi, diameter, jari-jari, jarak, dan perpindahan bisa memakai satuan panjang yang sama. Semuanya memiliki dimensi <InlineMath math="\mathrm{L}" />.
+
+## Contoh Cepat
+
+Sebuah kertas memiliki panjang <InlineMath math="0,30 \text{ m}" /> dan lebar <InlineMath math="0,20 \text{ m}" />. Luasnya adalah:
+
+<BlockMath math="\begin{aligned}
+A &= p \times l \\
+&= 0,30 \text{ m} \times 0,20 \text{ m} \\
+&= 0,060 \text{ m}^2
+\end{aligned}" />
+
+Nilai <InlineMath math="0,060 \text{ m}^2" /> adalah hasil ukur untuk besaran luas. Karena luas dibentuk dari <InlineMath math="2" /> besaran panjang, luas termasuk besaran turunan.
+
+Perhatikan polanya: begitu satuan mulai tersusun dari operasi satuan lain, besarannya bukan lagi pokok. Cara membaca nilai, satuan, dan dimensi ini akan dipakai lagi saat kita membahas sistem satuan dengan lebih rinci.

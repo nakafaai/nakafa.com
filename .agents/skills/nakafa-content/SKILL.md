@@ -34,6 +34,8 @@ When the user provides official curriculum pages, book screenshots, or teacher r
 - Fix obvious source mistakes only when the math or reasoning is verifiably wrong, and make the correction in the final content.
 - Ask the user when grade level, curriculum version, target locale, topic scope, or source meaning is unclear.
 - Prefer one complete, useful page over many shallow pages. Google explicitly warns against mass-producing many topics only to attract search traffic.
+- Every lesson must stand alone. Do not assume students already opened the previous subchapter, even when the route order suggests it.
+- Define abbreviations, acronyms, symbols, and localized terms the first time they appear in each `id.mdx` and `en.mdx` file.
 
 ## Language
 
@@ -290,6 +292,18 @@ No nested lists. No blank lines between items.
 - **Provide Context**: Explain the reasoning and context so students understand WHY, not just WHAT
 - **People-first**: Each page must leave students feeling they learned enough to make progress without searching again.
 - **Original value**: Add worked examples, intuition, checks, or common mistakes beyond a plain rewrite of the source.
+- **No Formulaic Closings**: Avoid repeated generic closing sections such as "Key Takeaway", "Summary", or localized equivalents on every lesson. If a closing note helps, make it specific to the lesson and weave it naturally into the final section.
+
+### Lesson Independence and Voice
+
+- **Standalone Subchapters**: Each subchapter must be understandable from a direct search visit. Briefly reintroduce prerequisite terms, notation, or context when the lesson needs them.
+- **First-Use Definitions**: Expand abbreviations and acronyms on first use in each file. Example: write "International System of Units (SI)" before using "SI" alone.
+- **No Ambiguous References**: Avoid vague pointers such as "this", "that formula", or "the previous concept" when the referent is not immediately visible. Name the concept directly.
+- **No Repeated Skeletons**: Do not reuse the same section pattern across every lesson, such as always opening with definition, then example, then check, then takeaway. Let the structure follow the concept.
+- **Specific Headings**: Use headings that could only belong to that lesson. Avoid reusable headings when a more precise heading would help scanning.
+- **Original Learning Path**: Give each lesson its own angle, such as a concrete phenomenon, a misconception, a comparison, a small investigation, a worked example, or an interactive model.
+- **No Forced Sections**: Do not add an activity, visualization, Mermaid chart, recap, or closing paragraph unless it genuinely improves understanding.
+- **Human Rhythm**: Vary paragraph length, examples, transitions, and final notes so adjacent subchapters do not read like they came from one rigid template.
 
 ### Paragraphs and Math
 
@@ -456,6 +470,11 @@ Before submitting content:
 
 - [ ] Nearby content patterns were inspected
 - [ ] Source material and target scope are clear
+- [ ] The lesson works as a standalone page for students arriving from search
+- [ ] Abbreviations, acronyms, symbols, and potentially ambiguous terms are defined on first use in each locale
+- [ ] The section flow is specific to this lesson and does not copy a repeated template from adjacent lessons
+- [ ] Headings are specific enough that they do not feel reusable across every subchapter
+- [ ] Visualizations, Mermaid diagrams, activities, and closings are included only when they improve the lesson
 - [ ] Content is original, useful, and aligned with Google helpful-content guidance
 - [ ] Math notation consistent between question and answer
 - [ ] All math expressions, variables, quantities, units, coordinates, and calculated values use math components

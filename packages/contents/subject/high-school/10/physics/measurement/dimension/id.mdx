@@ -1,0 +1,116 @@
+import { DimensionLab } from "@repo/design-system/components/contents/measurement/dimension/lab";
+
+export const metadata = {
+  title: "Dimensi",
+  description:
+    "Pelajari dimensi fisika sebagai kode penyusun besaran pokok, cara menurunkan dimensi besaran turunan, dan cara mengecek rumus tanpa angka.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/25/2026",
+  subject: "Pengukuran dalam Kerja Ilmiah",
+};
+
+## Dimensi Bukan Sekadar Ukuran Benda
+
+Dalam percakapan sehari-hari, kata dimensi sering berarti ukuran ruang seperti panjang, lebar, dan tinggi. Dalam fisika, **dimensi** punya makna yang lebih khusus: dimensi adalah kode yang menunjukkan suatu besaran tersusun dari besaran pokok apa saja.
+
+Contohnya, panjang baut, diameter mur, jari-jari kelereng, dan jarak tempuh kendaraan bisa memakai satuan berbeda, tetapi semuanya masih satu jenis besaran.
+
+<BlockMath math="\text{panjang, diameter, jari-jari, jarak} \Rightarrow [\mathrm{L}]" />
+
+Dimensi tidak memberi tahu nilai ukur. Dimensi memberi tahu *jenis fisika* di balik nilai ukur.
+
+## Melihat Pangkat Dimensi
+
+Visual berikut hanya fokus pada dimensi panjang. Geser mode dari panjang ke luas lalu volume. Perhatikan bagaimana satu faktor panjang berubah menjadi <InlineMath math="[\mathrm{L}]" />, <InlineMath math="[\mathrm{L}]^2" />, dan <InlineMath math="[\mathrm{L}]^3" />.
+
+<DimensionLab
+  title={<>Pembangun Dimensi Panjang</>}
+  description={
+    <>
+      Pilih bentuk yang disusun dari faktor panjang untuk melihat rumus, satuan,
+      dan dimensinya.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih bentuk dimensi",
+    dimension: "Dimensi",
+    formula: "Rumus",
+    modes: {
+      length: "Panjang",
+      area: "Luas",
+      volume: "Volume",
+    },
+    unit: "Satuan SI",
+  }}
+/>
+
+## Alfabet Besaran Pokok
+
+Sistem Satuan Internasional atau SI memakai <InlineMath math="7" /> besaran pokok. Dalam analisis dimensi, besaran pokok itu seperti alfabet untuk menyusun besaran lain.
+
+| Besaran pokok | Contoh simbol | Dimensi |
+| :------------ | :------------ | :------ |
+| Panjang | <InlineMath math="\ell,\ x,\ r" /> | <InlineMath math="[\mathrm{L}]" /> |
+| Massa | <InlineMath math="m" /> | <InlineMath math="[\mathrm{M}]" /> |
+| Waktu | <InlineMath math="t" /> | <InlineMath math="[\mathrm{T}]" /> |
+| Arus listrik | <InlineMath math="I" /> | <InlineMath math="[\mathrm{I}]" /> |
+| Suhu termodinamika | <InlineMath math="T" /> | <InlineMath math="[\Theta]" /> |
+| Jumlah zat | <InlineMath math="n" /> | <InlineMath math="[\mathrm{N}]" /> |
+| Intensitas cahaya | <InlineMath math="I_v" /> | <InlineMath math="[\mathrm{J}]" /> |
+
+Dimensi ditulis dengan kurung siku supaya tidak tertukar dengan satuan. Misalnya <InlineMath math="[\mathrm{L}]" /> adalah dimensi panjang, sedangkan <InlineMath math="\text{m}" /> adalah satuan meter.
+
+## Menurunkan Dimensi dari Rumus
+
+Cara kerja analisis dimensi sederhana: ganti setiap besaran dalam rumus dengan dimensinya, lalu sederhanakan pangkatnya.
+
+<BlockMath math="\begin{aligned}
+[A] &= [p][l] = [\mathrm{L}][\mathrm{L}] = [\mathrm{L}]^2 \\
+[V] &= [p][l][h] = [\mathrm{L}]^3 \\
+[v] &= \frac{[\Delta s]}{[\Delta t]} = \frac{[\mathrm{L}]}{[\mathrm{T}]} = [\mathrm{L}][\mathrm{T}]^{-1} \\
+[a] &= \frac{[\Delta v]}{[\Delta t]} = \frac{[\mathrm{L}][\mathrm{T}]^{-1}}{[\mathrm{T}]} = [\mathrm{L}][\mathrm{T}]^{-2}
+\end{aligned}" />
+
+Gaya, usaha, dan daya juga bisa dibaca sebagai susunan dimensi.
+
+<BlockMath math="\begin{aligned}
+[F] &= [m][a] = [\mathrm{M}][\mathrm{L}][\mathrm{T}]^{-2} \\
+[W] &= [F][\Delta s] = [\mathrm{M}][\mathrm{L}]^2[\mathrm{T}]^{-2} \\
+[P] &= \frac{[W]}{[t]} = [\mathrm{M}][\mathrm{L}]^2[\mathrm{T}]^{-3}
+\end{aligned}" />
+
+## Rumus yang Lolos Pemeriksaan
+
+Dimensi bisa dipakai untuk mengecek apakah bentuk rumus mungkin benar. Setiap suku yang dijumlahkan harus punya dimensi yang sama.
+
+Ambil rumus perpindahan dalam gerak lurus berubah beraturan:
+
+<BlockMath math="s = v_0 t + \frac{1}{2} a t^2" />
+
+Cek dimensinya:
+
+<BlockMath math="\begin{aligned}
+[v_0t] &= [\mathrm{L}][\mathrm{T}]^{-1}[\mathrm{T}] = [\mathrm{L}] \\
+[at^2] &= [\mathrm{L}][\mathrm{T}]^{-2}[\mathrm{T}]^2 = [\mathrm{L}]
+\end{aligned}" />
+
+Kedua suku di kanan sama-sama berdimensi <InlineMath math="[\mathrm{L}]" />, sehingga rumus itu lolos pemeriksaan dimensi. Pemeriksaan ini belum membuktikan rumus pasti benar, tetapi bisa cepat menemukan rumus yang mustahil.
+
+<BlockMath math="s + t \quad \text{tidak valid karena} \quad [\mathrm{L}] \ne [\mathrm{T}]" />
+
+## Satu Benda, Banyak Dimensi
+
+Baut dan mur terlihat seperti benda kecil, tetapi pengukurannya bisa melibatkan beberapa besaran berbeda. Itulah alasan satu benda kadang memerlukan lebih dari satu alat ukur.
+
+| Yang diperiksa | Alat yang cocok | Dimensi |
+| :------------- | :-------------- | :------ |
+| Panjang baut | penggaris atau jangka sorong | <InlineMath math="[\mathrm{L}]" /> |
+| Diameter luar | jangka sorong atau mikrometer sekrup | <InlineMath math="[\mathrm{L}]" /> |
+| Luas penampang | dihitung dari diameter | <InlineMath math="[\mathrm{L}]^2" /> |
+| Volume bahan | dihitung dari ukuran ruang | <InlineMath math="[\mathrm{L}]^3" /> |
+| Massa | neraca | <InlineMath math="[\mathrm{M}]" /> |
+| Massa jenis | massa dibagi volume | <InlineMath math="[\mathrm{M}][\mathrm{L}]^{-3}" /> |
+
+Jadi, dua alat ukur dapat mengukur besaran berdimensi sama, tetapi dipakai untuk konteks yang berbeda. Penggaris cukup untuk panjang besar yang tidak butuh ketelitian tinggi. Jangka sorong atau mikrometer sekrup lebih cocok saat diameter kecil perlu dibaca lebih teliti.
+
+Rujukan konsep analisis dimensi: [OpenStax dimensional analysis](https://openstax.org/books/university-physics-volume-1/pages/1-4-dimensional-analysis).
