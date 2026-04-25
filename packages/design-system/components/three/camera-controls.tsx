@@ -2,35 +2,84 @@
 
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { type ComponentRef, useRef } from "react";
+import { type ComponentRef, useEffect, useRef } from "react";
 
 const DEFAULT_CAMERA_X = 12;
 const DEFAULT_CAMERA_Y = 8;
 const DEFAULT_CAMERA_Z = 12;
+const DEFAULT_TARGET_X = 0;
+const DEFAULT_TARGET_Y = 0;
+const DEFAULT_TARGET_Z = 0;
+const DEFAULT_CAMERA_POSITION = [
+  DEFAULT_CAMERA_X,
+  DEFAULT_CAMERA_Y,
+  DEFAULT_CAMERA_Z,
+] satisfies readonly [number, number, number];
+const DEFAULT_CAMERA_TARGET = [
+  DEFAULT_TARGET_X,
+  DEFAULT_TARGET_Y,
+  DEFAULT_TARGET_Z,
+] satisfies readonly [number, number, number];
 
+/**
+ * Keeps a shared R3F camera and OrbitControls pair in sync with scene-specific
+ * camera defaults.
+ *
+ * When the caller changes the camera target, the controls reset immediately so
+ * each interactive scene starts from a readable view without forcing the user to
+ * drag or zoom first.
+ *
+ * This effect is intentional: React effects are for synchronizing with external
+ * systems, Three.js requires OrbitControls.update() after manual camera
+ * transform changes, and demand-rendered R3F canvases need invalidate() after
+ * imperative mutations.
+ *
+ * @see https://react.dev/learn/synchronizing-with-effects
+ * @see https://threejs.org/docs/#examples/en/controls/OrbitControls
+ * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance
+ * @see https://drei.docs.pmnd.rs/controls/orbit-controls
+ */
 export function CameraControls({
-  cameraPosition = [DEFAULT_CAMERA_X, DEFAULT_CAMERA_Y, DEFAULT_CAMERA_Z],
+  cameraPosition = DEFAULT_CAMERA_POSITION,
+  cameraTarget = DEFAULT_CAMERA_TARGET,
   autoRotate = true,
 }: {
-  cameraPosition?: [number, number, number];
+  cameraPosition?: readonly [number, number, number];
+  cameraTarget?: readonly [number, number, number];
   autoRotate?: boolean;
 }) {
   const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
   const { invalidate, performance } = useThree();
 
-  // Handle auto-rotation with proper invalidation for on-demand rendering
-  useFrame(() => {
-    if (autoRotate && controlsRef.current) {
-      // Trigger performance regression during auto-rotation
-      performance.regress();
-      // Only invalidate if auto-rotate is actually changing something
-      controlsRef.current.update();
-      invalidate();
+  useEffect(() => {
+    if (!controlsRef.current) {
+      return;
     }
+
+    controlsRef.current.object.position.set(...cameraPosition);
+    controlsRef.current.target.set(...cameraTarget);
+    controlsRef.current.update();
+    invalidate();
+  }, [cameraPosition, cameraTarget, invalidate]);
+
+  useFrame(() => {
+    if (!autoRotate) {
+      return;
+    }
+
+    if (!controlsRef.current) {
+      return;
+    }
+
+    performance.regress();
+    controlsRef.current.update();
+    invalidate();
   });
 
+  /**
+   * Re-renders demand-driven canvases when the user interacts with controls.
+   */
   function handleChange() {
-    // Trigger performance regression on control changes (movement)
     performance.regress();
     invalidate();
   }
@@ -50,6 +99,7 @@ export function CameraControls({
         onChange={handleChange}
         ref={controlsRef}
         screenSpacePanning={true}
+        target={cameraTarget}
         zoomSpeed={1.25}
       />
     </>

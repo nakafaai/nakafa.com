@@ -1,0 +1,152 @@
+import { MeasurementToolsLab } from "@repo/design-system/components/contents/measurement/lab";
+
+export const metadata = {
+  title: "Macam-macam Alat Ukur",
+  description:
+    "Pelajari macam-macam alat ukur fisika, cara memilih alat ukur yang tepat, dan cara membaca hasil pengukuran dengan satuan.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/25/2026",
+  subject: "Pengukuran dalam Kerja Ilmiah",
+};
+
+## Mengapa Pengukuran Penting
+
+Setiap kali kita menimbang bahan makanan, melihat speedometer, membaca suhu tubuh, atau mengukur panjang meja, kita sedang melakukan pengukuran. Dalam fisika, pengukuran berarti membandingkan suatu besaran dengan satuan standar.
+
+<BlockMath math="\text{hasil pengukuran} = \text{nilai ukur} \times \text{satuan}" />
+
+Contohnya, jika panjang sebuah benda terbaca <InlineMath math="8 \text{ cm}" />, maka <InlineMath math="8" /> adalah nilai ukur dan <InlineMath math="\text{cm}" /> adalah satuannya.
+
+> Alat ukur yang tepat membuat hasil pengukuran lebih berguna. Alat yang salah bisa membuat jawaban terlihat rapi, tetapi tetap tidak sesuai dengan benda yang diukur.
+
+## Eksplorasi Alat Ukur
+
+Gunakan laboratorium kecil ini untuk membandingkan tiga alat ukur dasar. Putar modelnya, lalu perhatikan apa yang diukur, satuan yang muncul, dan cara membaca angkanya.
+
+<MeasurementToolsLab
+  title={<>Laboratorium Alat Ukur</>}
+  description={
+    <>
+      Pilih alat ukur untuk melihat hubungan antara besaran, benda yang diukur,
+      dan hasil bacaannya.
+    </>
+  }
+  labels={{
+    chooseTool: "Pilih alat ukur",
+    decimalSeparator: ",",
+    instrument: "Alat ukur",
+    measuredObject: "Benda yang diukur",
+    reading: "Hasil bacaan",
+    tools: {
+      length: {
+        tab: "Panjang",
+        control: "Panjang balok",
+        instrument: "Penggaris",
+        object: "Balok kecil",
+      },
+      mass: {
+        tab: "Massa",
+        control: "Massa benda",
+        instrument: "Neraca",
+        object: "Benda padat",
+      },
+      time: {
+        tab: "Waktu",
+        control: "Durasi gerak",
+        instrument: "Stopwatch",
+        object: "Durasi gerak",
+      },
+    },
+  }}
+/>
+
+## Memilih Alat Ukur
+
+Sebelum mengukur, tanyakan dulu: besaran apa yang ingin dicari? Dari pertanyaan itu, alat ukur dan satuannya menjadi lebih jelas.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Apa yang ingin diukur?"] --> B["Panjang"]
+    A --> C["Massa"]
+    A --> D["Waktu"]
+    B --> E["Penggaris, meteran, jangka sorong, mikrometer sekrup"]
+    C --> F["Neraca"]
+    D --> G["Jam atau stopwatch"]
+    E --> H["Hasil berupa nilai dan satuan panjang"]
+    F --> I["Hasil berupa nilai dan satuan massa"]
+    G --> J["Hasil berupa nilai dan satuan waktu"]`}
+/>
+
+SI adalah singkatan internasional dari *Système international d’unités*, yaitu **Sistem Satuan Internasional**. Sederhananya, SI adalah kesepakatan standar agar hasil pengukuran dari sekolah, laboratorium, dan negara berbeda dapat dibaca dengan cara yang sama.
+
+Dalam SI, besaran pokok yang sering muncul di awal fisika antara lain panjang, massa, dan waktu. Satuan pokoknya adalah <InlineMath math="\text{m}" /> untuk panjang, <InlineMath math="\text{kg}" /> untuk massa, dan <InlineMath math="\text{s}" /> untuk waktu.
+
+## Membaca Hasil Pengukuran
+
+### Panjang
+
+Saat membaca penggaris, jangan hanya melihat angka di ujung benda. Perhatikan juga posisi awal benda. Jika benda dimulai dari <InlineMath math="0 \text{ cm}" /> dan ujungnya berada di <InlineMath math="8 \text{ cm}" />, hasilnya:
+
+<BlockMath math="\begin{aligned}
+\text{panjang benda} &= 8 \text{ cm} - 0 \text{ cm} \\
+&= 8 \text{ cm}
+\end{aligned}" />
+
+Jika benda dimulai dari <InlineMath math="1 \text{ cm}" /> dan ujungnya berada di <InlineMath math="7 \text{ cm}" />, panjangnya bukan <InlineMath math="7 \text{ cm}" />.
+
+<BlockMath math="\begin{aligned}
+\text{panjang benda} &= 7 \text{ cm} - 1 \text{ cm} \\
+&= 6 \text{ cm}
+\end{aligned}" />
+
+### Massa
+
+Neraca digunakan untuk mengukur massa, yaitu banyaknya materi dalam suatu benda. Jika neraca menunjukkan <InlineMath math="250 \text{ g}" />, maka massa benda tersebut adalah:
+
+<BlockMath math="m = 250 \text{ g}" />
+
+Pada laboratorium di atas, neraca dibuat sebagai neraca lengan sama. Benda berada di kiri, sedangkan anak timbangan acuan <InlineMath math="250 \text{ g}" /> berada di kanan. Jika massa benda lebih besar dari <InlineMath math="250 \text{ g}" />, sisi benda turun. Jika massanya lebih kecil dari <InlineMath math="250 \text{ g}" />, sisi anak timbangan turun. Jika keduanya sama, neraca berada pada keadaan seimbang.
+
+<BlockMath math="\begin{aligned}
+\tau_\text{kiri} &= r m_\text{benda} g \\
+\tau_\text{kanan} &= r m_\text{acuan} g \\
+m_\text{benda} = m_\text{acuan} &\Rightarrow \tau_\text{kiri} = \tau_\text{kanan}
+\end{aligned}" />
+
+Untuk penulisan SI penuh, massa dapat diubah ke kilogram.
+
+<BlockMath math="\begin{aligned}
+250 \text{ g} &= 250 \times 10^{-3} \text{ kg} \\
+&= 0,25 \text{ kg}
+\end{aligned}" />
+
+### Waktu
+
+Stopwatch digunakan ketika kita ingin mengukur durasi suatu kejadian. Jika bacaan stopwatch adalah <InlineMath math="12,8 \text{ s}" />, artinya kejadian berlangsung selama <InlineMath math="12,8" /> sekon.
+
+<BlockMath math="t = 12,8 \text{ s}" />
+
+## Contoh Alat Ukur di Sekitar Kita
+
+- Penggaris dan meteran membantu mengukur panjang meja, tinggi badan, atau jarak pendek.
+- Jangka sorong membantu mengukur diameter luar, diameter dalam, atau kedalaman benda kecil.
+- Mikrometer sekrup membantu mengukur ketebalan benda yang sangat kecil, seperti kawat tipis.
+- Neraca membantu mengukur massa benda.
+- Termometer membantu mengukur suhu.
+- Stopwatch membantu mengukur durasi kejadian.
+- Speedometer membantu mengukur kelajuan kendaraan.
+
+## Cek Pemahaman
+
+Sebuah pensil diletakkan pada penggaris. Ujung kiri pensil berada di <InlineMath math="2 \text{ cm}" />, sedangkan ujung kanannya berada di <InlineMath math="15 \text{ cm}" />. Panjang pensil adalah:
+
+<BlockMath math="\begin{aligned}
+\text{panjang pensil} &= 15 \text{ cm} - 2 \text{ cm} \\
+&= 13 \text{ cm}
+\end{aligned}" />
+
+Jadi, panjang pensil adalah <InlineMath math="13 \text{ cm}" />.
+
+## Inti Materi
+
+Pengukuran selalu membutuhkan tiga hal: besaran yang ingin diukur, alat ukur yang sesuai, dan satuan. Jika tiga hal ini jelas, hasil pengukuran menjadi mudah dibaca, dibandingkan, dan dipakai untuk kerja ilmiah berikutnya.

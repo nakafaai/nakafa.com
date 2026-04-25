@@ -1,0 +1,152 @@
+import { MeasurementToolsLab } from "@repo/design-system/components/contents/measurement/lab";
+
+export const metadata = {
+  title: "Types of Measurement Tools",
+  description:
+    "Learn common physics measurement tools, how to choose the right tool, and how to read measurement results with units.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/25/2026",
+  subject: "Measurement in Scientific Work",
+};
+
+## Why Measurement Matters
+
+Every time we weigh food ingredients, look at a speedometer, read body temperature, or measure the length of a table, we are measuring something. In physics, measurement means comparing a quantity with a standard unit.
+
+<BlockMath math="\text{measurement result} = \text{measured value} \times \text{unit}" />
+
+For example, if the length of an object reads <InlineMath math="8 \text{ cm}" />, then <InlineMath math="8" /> is the measured value and <InlineMath math="\text{cm}" /> is the unit.
+
+> The right measuring tool makes a result useful. The wrong tool can make an answer look neat, but still fail to match the object being measured.
+
+## Explore Measurement Tools
+
+Use this small lab to compare three basic measurement tools. Rotate the model, then notice what is measured, which unit appears, and how the reading is interpreted.
+
+<MeasurementToolsLab
+  title={<>Measurement Tools Lab</>}
+  description={
+    <>
+      Choose a tool to see the relationship between the quantity, measured
+      object, and reading.
+    </>
+  }
+  labels={{
+    chooseTool: "Choose a measuring tool",
+    decimalSeparator: ".",
+    instrument: "Instrument",
+    measuredObject: "Measured object",
+    reading: "Reading",
+    tools: {
+      length: {
+        tab: "Length",
+        control: "Block length",
+        instrument: "Ruler",
+        object: "Small block",
+      },
+      mass: {
+        tab: "Mass",
+        control: "Object mass",
+        instrument: "Balance",
+        object: "Solid object",
+      },
+      time: {
+        tab: "Time",
+        control: "Motion duration",
+        instrument: "Stopwatch",
+        object: "Motion duration",
+      },
+    },
+  }}
+/>
+
+## Choosing a Measurement Tool
+
+Before measuring, first ask: what quantity do we want to find? From that question, the measuring tool and unit become clearer.
+
+<Mermaid
+  chart={`flowchart TD
+    A["What do we want to measure?"] --> B["Length"]
+    A --> C["Mass"]
+    A --> D["Time"]
+    B --> E["Ruler, tape measure, vernier caliper, micrometer screw gauge"]
+    C --> F["Balance"]
+    D --> G["Clock or stopwatch"]
+    E --> H["Result uses a length value and unit"]
+    F --> I["Result uses a mass value and unit"]
+    G --> J["Result uses a time value and unit"]`}
+/>
+
+SI is the international abbreviation for *Système international d’unités*, the **International System of Units**. In practice, SI is the shared standard that lets measurements from different classrooms, laboratories, and countries be compared in the same language.
+
+In SI, base quantities that often appear at the start of physics include length, mass, and time. Their base units are <InlineMath math="\text{m}" /> for length, <InlineMath math="\text{kg}" /> for mass, and <InlineMath math="\text{s}" /> for time.
+
+## Reading Measurement Results
+
+### Length
+
+When reading a ruler, do not only look at the number at the end of the object. Also check the starting position. If the object starts at <InlineMath math="0 \text{ cm}" /> and its end is at <InlineMath math="8 \text{ cm}" />, the result is:
+
+<BlockMath math="\begin{aligned}
+\text{object length} &= 8 \text{ cm} - 0 \text{ cm} \\
+&= 8 \text{ cm}
+\end{aligned}" />
+
+If the object starts at <InlineMath math="1 \text{ cm}" /> and ends at <InlineMath math="7 \text{ cm}" />, its length is not <InlineMath math="7 \text{ cm}" />.
+
+<BlockMath math="\begin{aligned}
+\text{object length} &= 7 \text{ cm} - 1 \text{ cm} \\
+&= 6 \text{ cm}
+\end{aligned}" />
+
+### Mass
+
+A balance is used to measure mass, the amount of matter in an object. If the balance reads <InlineMath math="250 \text{ g}" />, then the object's mass is:
+
+<BlockMath math="m = 250 \text{ g}" />
+
+In the lab above, the balance is modeled as an equal-arm balance. The object sits on the left pan, while a <InlineMath math="250 \text{ g}" /> reference mass sits on the right pan. If the object mass is greater than <InlineMath math="250 \text{ g}" />, the object side moves down. If it is smaller than <InlineMath math="250 \text{ g}" />, the reference side moves down. If both masses are equal, the balance is in equilibrium.
+
+<BlockMath math="\begin{aligned}
+\tau_\text{left} &= r m_\text{object} g \\
+\tau_\text{right} &= r m_\text{reference} g \\
+m_\text{object} = m_\text{reference} &\Rightarrow \tau_\text{left} = \tau_\text{right}
+\end{aligned}" />
+
+For full SI writing, the mass can be converted to kilograms.
+
+<BlockMath math="\begin{aligned}
+250 \text{ g} &= 250 \times 10^{-3} \text{ kg} \\
+&= 0.25 \text{ kg}
+\end{aligned}" />
+
+### Time
+
+A stopwatch is used when we want to measure the duration of an event. If the stopwatch reads <InlineMath math="12.8 \text{ s}" />, the event lasts for <InlineMath math="12.8" /> seconds.
+
+<BlockMath math="t = 12.8 \text{ s}" />
+
+## Measurement Tools Around Us
+
+- Rulers and tape measures help measure table length, body height, or short distances.
+- Vernier calipers help measure outside diameter, inside diameter, or the depth of small objects.
+- Micrometer screw gauges help measure the thickness of very small objects, such as thin wire.
+- Balances help measure the mass of objects.
+- Thermometers help measure temperature.
+- Stopwatches help measure the duration of events.
+- Speedometers help measure vehicle speed.
+
+## Check Your Understanding
+
+A pencil is placed on a ruler. The left end of the pencil is at <InlineMath math="2 \text{ cm}" />, while the right end is at <InlineMath math="15 \text{ cm}" />. The pencil length is:
+
+<BlockMath math="\begin{aligned}
+\text{pencil length} &= 15 \text{ cm} - 2 \text{ cm} \\
+&= 13 \text{ cm}
+\end{aligned}" />
+
+So, the pencil length is <InlineMath math="13 \text{ cm}" />.
+
+## Key Takeaway
+
+Measurement always needs three things: the quantity we want to measure, the correct measuring tool, and the unit. When these three are clear, the result is easier to read, compare, and use in later scientific work.
