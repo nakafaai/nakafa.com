@@ -29,6 +29,9 @@ const DEFAULT_CAMERA_TARGET = [
  * each interactive scene starts from a readable view without forcing the user to
  * drag or zoom first.
  *
+ * Camera tuples are read by value so MDX and visualization callers can pass
+ * inline arrays without resetting the user's orbit on unrelated re-renders.
+ *
  * This effect is intentional: React effects are for synchronizing with external
  * systems, Three.js requires OrbitControls.update() after manual camera
  * transform changes, and demand-rendered R3F canvases need invalidate() after
@@ -52,17 +55,31 @@ export function CameraControls({
   const domElement = useThree((state) => state.gl.domElement);
   const invalidate = useThree((state) => state.invalidate);
   const regress = useThree((state) => state.performance.regress);
+  const [cameraPositionX, cameraPositionY, cameraPositionZ] = cameraPosition;
+  const [cameraTargetX, cameraTargetY, cameraTargetZ] = cameraTarget;
 
   useEffect(() => {
     if (!controlsRef.current) {
       return;
     }
 
-    controlsRef.current.object.position.set(...cameraPosition);
-    controlsRef.current.target.set(...cameraTarget);
+    controlsRef.current.object.position.set(
+      cameraPositionX,
+      cameraPositionY,
+      cameraPositionZ
+    );
+    controlsRef.current.target.set(cameraTargetX, cameraTargetY, cameraTargetZ);
     controlsRef.current.update();
     invalidate();
-  }, [cameraPosition, cameraTarget, invalidate]);
+  }, [
+    cameraPositionX,
+    cameraPositionY,
+    cameraPositionZ,
+    cameraTargetX,
+    cameraTargetY,
+    cameraTargetZ,
+    invalidate,
+  ]);
 
   useEffect(() => {
     const previousCursor = domElement.style.cursor;
