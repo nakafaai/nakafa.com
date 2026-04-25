@@ -1,0 +1,141 @@
+export const metadata = {
+  title: "Unit Systems",
+  description:
+    "Learn why physics needs standard units, how to read SI units, derived units, and metric prefixes.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/25/2026",
+  subject: "Measurement in Scientific Work",
+};
+
+## Numbers Need a Shared Language
+
+Imagine reading the measurement result <InlineMath math="12" /> without a unit. Is it <InlineMath math="12 \text{ cm}" />, <InlineMath math="12 \text{ m}" />, <InlineMath math="12 \text{ kg}" />, or <InlineMath math="12 \text{ s}" />? The number is the same, but the meaning can change completely.
+
+A unit is a reference size used to compare a quantity. In physics, units make measurements from different people, tools, and places readable in the same language.
+
+<BlockMath math="\text{measurement result} = \text{measured value} \times \text{unit}" />
+
+The measured value answers *how much*. The unit answers *which reference it is compared with*.
+
+## From Many Systems to SI
+
+Before one standard became widely used, several unit systems existed side by side. Three names often appear in physics books:
+
+| System | Example base units | How to read them |
+| :----- | :----------------- | :--------------- |
+| FPS | <InlineMath math="\text{ft},\ \text{lb},\ \text{s}" /> | foot, pound, and second |
+| CGS | <InlineMath math="\text{cm},\ \text{g},\ \text{s}" /> | centimeter, gram, and second |
+| MKS | <InlineMath math="\text{m},\ \text{kg},\ \text{s}" /> | meter, kilogram, and second |
+
+These differences make measurements hard to compare when the unit system is unclear. That is why modern science uses the **International System of Units** or **SI**. SI comes from the French name *Système international d'unités*. BIPM, the International Bureau of Weights and Measures, is the international organization that maintains the SI standard.
+
+Official BIPM source for measurement units: [BIPM measurement units](https://www.bipm.org/en/measurement-units).
+
+> SI is not just a list of abbreviations. SI is an agreement that <InlineMath math="1 \text{ m}" />, <InlineMath math="1 \text{ kg}" />, and <InlineMath math="1 \text{ s}" /> mean the same thing in different classrooms, laboratories, factories, and countries.
+
+## The Seven SI Base Units
+
+SI base units are the building blocks. From them, other units such as <InlineMath math="\text{m}^2" />, <InlineMath math="\text{m/s}" />, <InlineMath math="\text{N}" />, <InlineMath math="\text{J}" />, and <InlineMath math="\text{W}" /> are built.
+
+| Base quantity | Common symbol | SI unit | Unit symbol | Dimension |
+| :------------ | :------------ | :------ | :---------- | :-------- |
+| Length | <InlineMath math="\ell,\ x,\ r" /> | meter | <InlineMath math="\text{m}" /> | <InlineMath math="[\mathrm{L}]" /> |
+| Mass | <InlineMath math="m" /> | kilogram | <InlineMath math="\text{kg}" /> | <InlineMath math="[\mathrm{M}]" /> |
+| Time | <InlineMath math="t" /> | second | <InlineMath math="\text{s}" /> | <InlineMath math="[\mathrm{T}]" /> |
+| Electric current | <InlineMath math="I" /> | ampere | <InlineMath math="\text{A}" /> | <InlineMath math="[\mathrm{I}]" /> |
+| Thermodynamic temperature | <InlineMath math="T" /> | kelvin | <InlineMath math="\text{K}" /> | <InlineMath math="[\Theta]" /> |
+| Amount of substance | <InlineMath math="n" /> | mole | <InlineMath math="\text{mol}" /> | <InlineMath math="[\mathrm{N}]" /> |
+| Luminous intensity | <InlineMath math="I_v" /> | candela | <InlineMath math="\text{cd}" /> | <InlineMath math="[\mathrm{J}]" /> |
+
+One detail often causes confusion: the SI base unit for mass is <InlineMath math="\text{kg}" />, not <InlineMath math="\text{g}" />. So when mass is written in grams, convert it to kilograms if you want the full SI base unit form.
+
+<BlockMath math="\begin{aligned}
+1 \text{ g} &= 10^{-3} \text{ kg} \\
+250 \text{ g} &= 250 \times 10^{-3} \text{ kg} = 0.25 \text{ kg}
+\end{aligned}" />
+
+## Derived Units Come from Operations
+
+A derived unit appears when a derived quantity is formed from base quantities. If the formula multiplies or divides quantities, the units are multiplied or divided too.
+
+| Derived quantity | Quantity formula | SI unit | Dimension |
+| :--------------- | :--------------- | :------ | :-------- |
+| Area | <InlineMath math="A = l \times w" /> | <InlineMath math="\text{m}^2" /> | <InlineMath math="[\mathrm{L}]^2" /> |
+| Volume | <InlineMath math="V = l \times w \times h" /> | <InlineMath math="\text{m}^3" /> | <InlineMath math="[\mathrm{L}]^3" /> |
+| Density | <InlineMath math="\rho = \frac{m}{V}" /> | <InlineMath math="\text{kg/m}^3" /> | <InlineMath math="[\mathrm{M}][\mathrm{L}]^{-3}" /> |
+| Speed | <InlineMath math="v = \frac{\Delta s}{\Delta t}" /> | <InlineMath math="\text{m/s}" /> | <InlineMath math="[\mathrm{L}][\mathrm{T}]^{-1}" /> |
+| Acceleration | <InlineMath math="a = \frac{\Delta v}{\Delta t}" /> | <InlineMath math="\text{m/s}^2" /> | <InlineMath math="[\mathrm{L}][\mathrm{T}]^{-2}" /> |
+| Force | <InlineMath math="F = m \times a" /> | <InlineMath math="\text{N}" /> | <InlineMath math="[\mathrm{M}][\mathrm{L}][\mathrm{T}]^{-2}" /> |
+| Work | <InlineMath math="W = F \times \Delta s" /> | <InlineMath math="\text{J}" /> | <InlineMath math="[\mathrm{M}][\mathrm{L}]^2[\mathrm{T}]^{-2}" /> |
+| Power | <InlineMath math="P = \frac{W}{t}" /> | <InlineMath math="\text{W}" /> | <InlineMath math="[\mathrm{M}][\mathrm{L}]^2[\mathrm{T}]^{-3}" /> |
+
+The chain of a derived unit shows where it came from. For example, force uses the unit newton, but a newton is built from kilogram, meter, and second.
+
+<BlockMath math="\begin{aligned}
+F &= m \times a \\
+1 \text{ N} &= 1 \text{ kg} \cdot \text{m/s}^2 \\
+&= 1 \text{ kg m s}^{-2}
+\end{aligned}" />
+
+Once force is clear, work and power can be read step by step.
+
+<BlockMath math="\begin{aligned}
+1 \text{ J} &= 1 \text{ N} \cdot \text{m}
+= 1 \text{ kg m}^2\text{ s}^{-2} \\
+1 \text{ W} &= \frac{1 \text{ J}}{1 \text{ s}}
+= 1 \text{ kg m}^2\text{ s}^{-3}
+\end{aligned}" />
+
+## Metric Prefixes Save Zeros
+
+When a size is very large or very small, we do not need to write long rows of zeros. SI uses metric prefixes to express powers of <InlineMath math="10" />.
+
+<Mermaid
+  chart={`flowchart LR
+    A["Read the value and unit"] --> B["Separate the prefix from the base unit"]
+    B --> C["Replace the prefix with a power-of-ten factor"]
+    C --> D["Multiply the measured value"]
+    D --> E["Write the target unit"]`}/>
+
+Common prefixes include:
+
+| Factor | Prefix | Symbol | Factor | Prefix | Symbol |
+| :----- | :----- | :----- | :----- | :----- | :----- |
+| <InlineMath math="10^1" /> | deca | <InlineMath math="\text{da}" /> | <InlineMath math="10^{-1}" /> | deci | <InlineMath math="\text{d}" /> |
+| <InlineMath math="10^2" /> | hecto | <InlineMath math="\text{h}" /> | <InlineMath math="10^{-2}" /> | centi | <InlineMath math="\text{c}" /> |
+| <InlineMath math="10^3" /> | kilo | <InlineMath math="\text{k}" /> | <InlineMath math="10^{-3}" /> | milli | <InlineMath math="\text{m}" /> |
+| <InlineMath math="10^6" /> | mega | <InlineMath math="\text{M}" /> | <InlineMath math="10^{-6}" /> | micro | <InlineMath math="\mu" /> |
+| <InlineMath math="10^9" /> | giga | <InlineMath math="\text{G}" /> | <InlineMath math="10^{-9}" /> | nano | <InlineMath math="\text{n}" /> |
+| <InlineMath math="10^{12}" /> | tera | <InlineMath math="\text{T}" /> | <InlineMath math="10^{-12}" /> | pico | <InlineMath math="\text{p}" /> |
+| <InlineMath math="10^{15}" /> | peta | <InlineMath math="\text{P}" /> | <InlineMath math="10^{-15}" /> | femto | <InlineMath math="\text{f}" /> |
+| <InlineMath math="10^{18}" /> | exa | <InlineMath math="\text{E}" /> | <InlineMath math="10^{-18}" /> | atto | <InlineMath math="\text{a}" /> |
+| <InlineMath math="10^{21}" /> | zetta | <InlineMath math="\text{Z}" /> | <InlineMath math="10^{-21}" /> | zepto | <InlineMath math="\text{z}" /> |
+| <InlineMath math="10^{24}" /> | yotta | <InlineMath math="\text{Y}" /> | <InlineMath math="10^{-24}" /> | yocto | <InlineMath math="\text{y}" /> |
+
+Scope note: the list above follows prefixes commonly used in grade <InlineMath math="10" /> material. BIPM also lists newer SI prefixes that go larger and smaller, such as <InlineMath math="10^{30}" /> and <InlineMath math="10^{-30}" />.
+
+Official BIPM source for SI prefixes: [BIPM SI prefixes](https://www.bipm.org/en/measurement-units/si-prefixes).
+
+## Reading Prefixes in Calculations
+
+A prefix is attached to a base unit. For example, <InlineMath math="\text{km}" /> means kilo-meter, not a separate unit unrelated to the meter.
+
+<BlockMath math="\begin{aligned}
+7.5 \text{ km}
+&= 7.5 \times 10^3 \text{ m} \\
+&= 7500 \text{ m}
+\end{aligned}" />
+
+For small sizes, prefixes keep writing compact. A diameter of <InlineMath math="0.1 \ \mu\text{m}" /> is equal to:
+
+<BlockMath math="\begin{aligned}
+0.1 \ \mu\text{m}
+&= 0.1 \times 10^{-6} \text{ m} \\
+&= 1.0 \times 10^{-7} \text{ m}
+\end{aligned}" />
+
+The extremely small mass of an electron is also easier to read with scientific notation.
+
+<BlockMath math="9.11 \times 10^{-31} \text{ kg}" />
+
+The point is not to memorize every prefix at once. When you see a unit such as <InlineMath math="\text{cm}" />, <InlineMath math="\text{mg}" />, or <InlineMath math="\mu\text{m}" />, first separate the prefix from the base unit. Then convert the prefix into a power of <InlineMath math="10" /> and continue the calculation.

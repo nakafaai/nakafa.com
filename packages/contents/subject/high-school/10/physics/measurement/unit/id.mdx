@@ -1,0 +1,141 @@
+export const metadata = {
+  title: "Sistem Satuan",
+  description:
+    "Pelajari mengapa fisika membutuhkan satuan baku, cara membaca satuan SI, satuan turunan, dan awalan satuan metrik.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/25/2026",
+  subject: "Pengukuran dalam Kerja Ilmiah",
+};
+
+## Angka Harus Punya Bahasa yang Sama
+
+Bayangkan kalian membaca hasil ukur <InlineMath math="12" /> tanpa satuan. Apakah itu <InlineMath math="12 \text{ cm}" />, <InlineMath math="12 \text{ m}" />, <InlineMath math="12 \text{ kg}" />, atau <InlineMath math="12 \text{ s}" />? Angkanya sama, tetapi maknanya bisa berubah total.
+
+Satuan adalah ukuran acuan untuk membandingkan suatu besaran. Dalam fisika, satuan membuat hasil ukur dari orang, alat, dan tempat berbeda tetap bisa dibaca dengan bahasa yang sama.
+
+<BlockMath math="\text{hasil ukur} = \text{nilai ukur} \times \text{satuan}" />
+
+Nilai ukur menjawab *berapa banyak*. Satuan menjawab *dibandingkan dengan acuan apa*.
+
+## Dari Banyak Sistem Menuju SI
+
+Sebelum satu standar dipakai luas, beberapa sistem satuan pernah berjalan bersamaan. Tiga nama yang sering muncul di buku fisika adalah:
+
+| Sistem | Contoh satuan dasar | Cara membacanya |
+| :----- | :------------------ | :-------------- |
+| FPS | <InlineMath math="\text{ft},\ \text{lb},\ \text{s}" /> | *foot*, *pound*, dan *second* |
+| CGS | <InlineMath math="\text{cm},\ \text{g},\ \text{s}" /> | sentimeter, gram, dan sekon |
+| MKS | <InlineMath math="\text{m},\ \text{kg},\ \text{s}" /> | meter, kilogram, dan sekon |
+
+Perbedaan sistem ini membuat hasil ukur sulit dibandingkan jika satuannya tidak dijelaskan. Karena itu, sains modern memakai **Sistem Satuan Internasional** atau **SI**. SI berasal dari nama Prancis *Système international d'unités* dan dalam bahasa Inggris disebut *International System of Units*. BIPM, yaitu *Bureau International des Poids et Mesures*, adalah lembaga internasional yang menjaga standar SI.
+
+Sumber resmi BIPM untuk satuan pengukuran: [BIPM measurement units](https://www.bipm.org/en/measurement-units).
+
+> SI bukan sekadar daftar singkatan. SI adalah kesepakatan agar <InlineMath math="1 \text{ m}" />, <InlineMath math="1 \text{ kg}" />, dan <InlineMath math="1 \text{ s}" /> punya arti yang sama di kelas, laboratorium, pabrik, dan negara berbeda.
+
+## Tujuh Satuan Pokok SI
+
+Satuan pokok SI dipakai sebagai bahan dasar. Dari satuan pokok inilah satuan lain seperti <InlineMath math="\text{m}^2" />, <InlineMath math="\text{m/s}" />, <InlineMath math="\text{N}" />, <InlineMath math="\text{J}" />, dan <InlineMath math="\text{W}" /> dibangun.
+
+| Besaran pokok | Simbol umum | Satuan SI | Simbol satuan | Dimensi |
+| :------------ | :---------- | :-------- | :------------ | :------ |
+| Panjang | <InlineMath math="\ell,\ x,\ r" /> | meter | <InlineMath math="\text{m}" /> | <InlineMath math="[\mathrm{L}]" /> |
+| Massa | <InlineMath math="m" /> | kilogram | <InlineMath math="\text{kg}" /> | <InlineMath math="[\mathrm{M}]" /> |
+| Waktu | <InlineMath math="t" /> | sekon | <InlineMath math="\text{s}" /> | <InlineMath math="[\mathrm{T}]" /> |
+| Arus listrik | <InlineMath math="I" /> | ampere | <InlineMath math="\text{A}" /> | <InlineMath math="[\mathrm{I}]" /> |
+| Suhu termodinamika | <InlineMath math="T" /> | kelvin | <InlineMath math="\text{K}" /> | <InlineMath math="[\Theta]" /> |
+| Jumlah zat | <InlineMath math="n" /> | mol | <InlineMath math="\text{mol}" /> | <InlineMath math="[\mathrm{N}]" /> |
+| Intensitas cahaya | <InlineMath math="I_v" /> | candela | <InlineMath math="\text{cd}" /> | <InlineMath math="[\mathrm{J}]" /> |
+
+Ada satu hal yang sering mengecoh: satuan pokok SI untuk massa adalah <InlineMath math="\text{kg}" />, bukan <InlineMath math="\text{g}" />. Jadi ketika massa ditulis dalam gram, kita perlu mengubahnya ke kilogram jika ingin menulis satuan SI pokok secara penuh.
+
+<BlockMath math="\begin{aligned}
+1 \text{ g} &= 10^{-3} \text{ kg} \\
+250 \text{ g} &= 250 \times 10^{-3} \text{ kg} = 0,25 \text{ kg}
+\end{aligned}" />
+
+## Satuan Turunan Dibangun dari Operasi
+
+Satuan turunan muncul ketika besaran turunan dibentuk dari gabungan besaran pokok. Kalau rumusnya mengalikan atau membagi besaran, satuannya juga ikut dikalikan atau dibagi.
+
+| Besaran turunan | Rumus besaran | Satuan SI | Dimensi |
+| :-------------- | :------------ | :-------- | :------ |
+| Luas | <InlineMath math="A = p \times l" /> | <InlineMath math="\text{m}^2" /> | <InlineMath math="[\mathrm{L}]^2" /> |
+| Volume | <InlineMath math="V = p \times l \times t" /> | <InlineMath math="\text{m}^3" /> | <InlineMath math="[\mathrm{L}]^3" /> |
+| Massa jenis | <InlineMath math="\rho = \frac{m}{V}" /> | <InlineMath math="\text{kg/m}^3" /> | <InlineMath math="[\mathrm{M}][\mathrm{L}]^{-3}" /> |
+| Kelajuan | <InlineMath math="v = \frac{\Delta s}{\Delta t}" /> | <InlineMath math="\text{m/s}" /> | <InlineMath math="[\mathrm{L}][\mathrm{T}]^{-1}" /> |
+| Percepatan | <InlineMath math="a = \frac{\Delta v}{\Delta t}" /> | <InlineMath math="\text{m/s}^2" /> | <InlineMath math="[\mathrm{L}][\mathrm{T}]^{-2}" /> |
+| Gaya | <InlineMath math="F = m \times a" /> | <InlineMath math="\text{N}" /> | <InlineMath math="[\mathrm{M}][\mathrm{L}][\mathrm{T}]^{-2}" /> |
+| Usaha | <InlineMath math="W = F \times \Delta s" /> | <InlineMath math="\text{J}" /> | <InlineMath math="[\mathrm{M}][\mathrm{L}]^2[\mathrm{T}]^{-2}" /> |
+| Daya | <InlineMath math="P = \frac{W}{t}" /> | <InlineMath math="\text{W}" /> | <InlineMath math="[\mathrm{M}][\mathrm{L}]^2[\mathrm{T}]^{-3}" /> |
+
+Rantai satuan turunan bisa dibaca seperti jejak asalnya. Contohnya, gaya memakai satuan newton, tetapi newton sendiri berasal dari kilogram, meter, dan sekon.
+
+<BlockMath math="\begin{aligned}
+F &= m \times a \\
+1 \text{ N} &= 1 \text{ kg} \cdot \text{m/s}^2 \\
+&= 1 \text{ kg m s}^{-2}
+\end{aligned}" />
+
+Kalau satuan gaya sudah jelas, satuan usaha dan daya bisa dibaca bertahap.
+
+<BlockMath math="\begin{aligned}
+1 \text{ J} &= 1 \text{ N} \cdot \text{m}
+= 1 \text{ kg m}^2\text{ s}^{-2} \\
+1 \text{ W} &= \frac{1 \text{ J}}{1 \text{ s}}
+= 1 \text{ kg m}^2\text{ s}^{-3}
+\end{aligned}" />
+
+## Awalan Metrik Menghemat Nol
+
+Ketika ukuran terlalu besar atau terlalu kecil, kita tidak perlu menulis deretan nol panjang. SI memakai awalan metrik untuk menyatakan kelipatan pangkat <InlineMath math="10" />.
+
+<Mermaid
+  chart={`flowchart LR
+    A["Baca nilai dan satuan"] --> B["Pisahkan awalan dari satuan dasar"]
+    B --> C["Ganti awalan dengan faktor pangkat sepuluh"]
+    C --> D["Kalikan nilai ukur"]
+    D --> E["Tulis satuan yang diinginkan"]`}/>
+
+Contoh awalan yang sering dipakai:
+
+| Faktor | Awalan | Simbol | Faktor | Awalan | Simbol |
+| :----- | :----- | :----- | :----- | :----- | :----- |
+| <InlineMath math="10^1" /> | deka | <InlineMath math="\text{da}" /> | <InlineMath math="10^{-1}" /> | desi | <InlineMath math="\text{d}" /> |
+| <InlineMath math="10^2" /> | hekto | <InlineMath math="\text{h}" /> | <InlineMath math="10^{-2}" /> | senti | <InlineMath math="\text{c}" /> |
+| <InlineMath math="10^3" /> | kilo | <InlineMath math="\text{k}" /> | <InlineMath math="10^{-3}" /> | mili | <InlineMath math="\text{m}" /> |
+| <InlineMath math="10^6" /> | mega | <InlineMath math="\text{M}" /> | <InlineMath math="10^{-6}" /> | mikro | <InlineMath math="\mu" /> |
+| <InlineMath math="10^9" /> | giga | <InlineMath math="\text{G}" /> | <InlineMath math="10^{-9}" /> | nano | <InlineMath math="\text{n}" /> |
+| <InlineMath math="10^{12}" /> | tera | <InlineMath math="\text{T}" /> | <InlineMath math="10^{-12}" /> | piko | <InlineMath math="\text{p}" /> |
+| <InlineMath math="10^{15}" /> | peta | <InlineMath math="\text{P}" /> | <InlineMath math="10^{-15}" /> | femto | <InlineMath math="\text{f}" /> |
+| <InlineMath math="10^{18}" /> | eksa | <InlineMath math="\text{E}" /> | <InlineMath math="10^{-18}" /> | atto | <InlineMath math="\text{a}" /> |
+| <InlineMath math="10^{21}" /> | zetta | <InlineMath math="\text{Z}" /> | <InlineMath math="10^{-21}" /> | zepto | <InlineMath math="\text{z}" /> |
+| <InlineMath math="10^{24}" /> | yotta | <InlineMath math="\text{Y}" /> | <InlineMath math="10^{-24}" /> | yocto | <InlineMath math="\text{y}" /> |
+
+Catatan cakupan: daftar di atas mengikuti awalan yang umum muncul di materi kelas <InlineMath math="10" />. BIPM juga mencantumkan awalan SI modern yang lebih besar dan lebih kecil, seperti <InlineMath math="10^{30}" /> dan <InlineMath math="10^{-30}" />.
+
+Sumber resmi BIPM untuk daftar awalan SI: [BIPM SI prefixes](https://www.bipm.org/en/measurement-units/si-prefixes).
+
+## Membaca Awalan dalam Perhitungan
+
+Awalan selalu menempel pada satuan dasar. Misalnya <InlineMath math="\text{km}" /> berarti kilo-meter, bukan satuan baru yang terpisah dari meter.
+
+<BlockMath math="\begin{aligned}
+7,5 \text{ km}
+&= 7,5 \times 10^3 \text{ m} \\
+&= 7500 \text{ m}
+\end{aligned}" />
+
+Untuk ukuran kecil, awalan membantu kita tetap menulis dengan ringkas. Diameter <InlineMath math="0,1 \ \mu\text{m}" /> sama dengan:
+
+<BlockMath math="\begin{aligned}
+0,1 \ \mu\text{m}
+&= 0,1 \times 10^{-6} \text{ m} \\
+&= 1,0 \times 10^{-7} \text{ m}
+\end{aligned}" />
+
+Massa elektron yang sangat kecil juga lebih mudah dibaca dengan notasi ilmiah.
+
+<BlockMath math="9,11 \times 10^{-31} \text{ kg}" />
+
+Kuncinya bukan menghafal semua awalan sekaligus. Saat melihat satuan seperti <InlineMath math="\text{cm}" />, <InlineMath math="\text{mg}" />, atau <InlineMath math="\mu\text{m}" />, pisahkan dulu awalan dari satuan dasarnya. Setelah itu, ubah awalan menjadi faktor pangkat <InlineMath math="10" /> dan baru lakukan perhitungan.
