@@ -101,6 +101,18 @@ export const aiModels: Model[] = [
     type: "premium",
   },
   {
+    icon: Gemini,
+    value: "gemini-3.1-flash-lite",
+    label: "Gemini 3.1 Flash Lite",
+    type: "free",
+  },
+  {
+    icon: Gemini,
+    value: "gemini-2.5-flash",
+    label: "Gemini 2.5 Flash",
+    type: "free",
+  },
+  {
     icon: Kimi,
     value: "kimi-k2.5",
     label: "Kimi K2.5",
@@ -110,12 +122,6 @@ export const aiModels: Model[] = [
     icon: Kimi,
     value: "kimi-k2",
     label: "Kimi K2",
-    type: "free",
-  },
-  {
-    icon: Gemini,
-    value: "gemini-2.5-flash",
-    label: "Gemini 2.5 Flash",
     type: "free",
   },
   {
