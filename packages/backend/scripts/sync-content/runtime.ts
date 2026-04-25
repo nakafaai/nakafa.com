@@ -5,6 +5,8 @@ import { CONTENTS_DIR, getBackendEnvFilePath, getSyncStateFile } from "./paths";
 import { SyncStateSchema } from "./schemas";
 import type { SyncState } from "./types";
 
+const CONTENTS_PATH_PREFIX = "packages/contents/";
+
 export const loadEnvFile = (): void => {
   const envPath = getBackendEnvFilePath();
   if (!fs.existsSync(envPath)) {
@@ -64,24 +66,53 @@ export const getCurrentGitCommit = (): string => {
   }
 };
 
+/** Returns committed, working-tree, staged, and untracked content changes. */
 export const getChangedFilesSince = (commit: string): Set<string> => {
+  const changedFiles = new Set<string>();
+
+  addGitOutputFiles(changedFiles, `git diff --name-only ${commit} HEAD -- .`);
+  addGitOutputFiles(changedFiles, "git diff --name-only -- .");
+  addGitOutputFiles(changedFiles, "git diff --name-only --cached -- .");
+  addGitOutputFiles(
+    changedFiles,
+    "git ls-files --others --exclude-standard -- ."
+  );
+
+  return changedFiles;
+};
+
+/** Adds content-root relative files from one git command into a shared set. */
+function addGitOutputFiles(changedFiles: Set<string>, command: string) {
   try {
-    const output = execSync(`git diff --name-only ${commit} HEAD`, {
+    const output = execSync(command, {
       cwd: CONTENTS_DIR,
       encoding: "utf8",
     });
 
-    return new Set(
-      output
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .map((file) => `${CONTENTS_DIR}/${file}`)
-    );
+    for (const file of getOutputFiles(output)) {
+      changedFiles.add(getContentFilePath(file));
+    }
   } catch {
-    return new Set();
+    return;
   }
-};
+}
+
+/** Converts either repo-root or content-root git paths to absolute paths. */
+function getContentFilePath(file: string) {
+  if (file.startsWith(CONTENTS_PATH_PREFIX)) {
+    return `${CONTENTS_DIR}/${file.slice(CONTENTS_PATH_PREFIX.length)}`;
+  }
+
+  return `${CONTENTS_DIR}/${file}`;
+}
+
+/** Returns normalized file paths from one git command output. */
+function getOutputFiles(output: string) {
+  return output
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
 
 export const globFiles = (pattern: string): Promise<string[]> =>
   glob(pattern, { cwd: CONTENTS_DIR, absolute: true });

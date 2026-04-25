@@ -61,6 +61,16 @@ Use Mermaid for flowcharts, dependency diagrams, timelines, decision paths, and 
 
 Use normal Markdown for paragraphs, lists, links, blockquotes, and tables. Content headings must start at `##` and must not go deeper than `###`.
 
+## Standalone Lesson Writing
+
+Each subject lesson should work for students who arrive directly from search.
+
+- Define abbreviations, acronyms, symbols, and uncommon terms on first use in each locale.
+- Reintroduce prerequisite context briefly instead of pointing vaguely to earlier lessons.
+- Avoid repeating the same section skeleton across adjacent subchapters.
+- Use headings, examples, diagrams, and final notes that fit the current concept specifically.
+- Add Mermaid, visual components, activities, or closing paragraphs only when they improve understanding.
+
 ## Imported Content Components
 
 Import these only when the lesson needs the visualization.

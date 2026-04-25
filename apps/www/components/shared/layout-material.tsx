@@ -14,6 +14,14 @@ export function LayoutMaterialHeader({
   return <HeaderContent {...props} />;
 }
 
+/**
+ * Renders the main material column.
+ *
+ * `min-w-0` lets the flex item shrink below its content's min-content width,
+ * while BlockMath and Mermaid keep their own internal horizontal scroll.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/flex
+ */
 export function LayoutMaterialContent({
   children,
   className,
@@ -21,7 +29,7 @@ export function LayoutMaterialContent({
   children: ReactNode;
   className?: string;
 }) {
-  return <div className={cn("flex-1", className)}>{children}</div>;
+  return <div className={cn("min-w-0 flex-1", className)}>{children}</div>;
 }
 
 export function LayoutMaterialMain({

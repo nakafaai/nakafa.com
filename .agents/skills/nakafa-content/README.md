@@ -71,13 +71,21 @@ points: Array.from({ length: 100 }, (_, i) => {
 - Prefer one expressive `<BlockMath />` for one connected derivation; use `<MathContainer>` when rows should stay visually separate.
 - For card components whose `title` and `description` props accept `ReactNode`, use fragments with `<InlineMath />` when those props contain math.
 - Verify prop types first; `BarChart` and `HistogramChart` currently accept strings.
+- Make every subchapter understandable as a standalone page. Define abbreviations, acronyms, symbols, and potentially ambiguous terms on first use in each locale.
+- Avoid vague references to previous lessons. If a prerequisite matters, briefly reintroduce it in the current page.
+- Do not reuse the same section skeleton across adjacent lessons. Give each page its own flow, headings, examples, and closing rhythm.
+- Use headings that are specific to the lesson, not generic labels that could appear unchanged on every subchapter.
 - Use `getColor()` for visualization colors.
 - Do not use em dash in content prose.
 - Use Markdown creatively, including blockquotes, tables, emphasis, code blocks, Mermaid diagrams, and math blocks when they improve scanning.
 - Keep each page useful enough that a student can make progress without searching again.
+- Avoid repeated generic closing sections such as "Key Takeaway", "Summary", or localized equivalents. When a closing note is useful, make it specific and blend it into the final section.
 
 ## Verification
 
 - Inspect nearby content before writing new content.
+- Confirm the page can stand alone for students arriving from search.
+- Confirm no abbreviations, symbols, or context references are left unexplained.
+- Confirm the section flow does not look copied from adjacent subchapters.
 - Run `pnpm --filter @repo/contents typecheck` when content imports TSX/components.
 - Run `pnpm lint` when the content change is ready for review.

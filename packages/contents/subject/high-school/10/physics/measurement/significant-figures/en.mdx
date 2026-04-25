@@ -1,0 +1,104 @@
+export const metadata = {
+  title: "Significant Figures Rules",
+  description:
+    "Learn how to identify significant figures, round measurement results, and report calculated values with the right precision.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/25/2026",
+  subject: "Measurement in Scientific Work",
+};
+
+## A Calculator Does Not Know the Tool Precision
+
+When a bottle cap diameter is read as <InlineMath math="3.12 \text{ cm}" />, a calculator can produce many digits after the area is calculated. The measuring tool does not justify all of those digits. This is why we use **significant figures**.
+
+Significant figures are the trusted digits in a measurement. The last digit is usually an estimated digit, meaning it is still reasonable based on the measuring tool.
+
+<BlockMath math="\text{measurement result}=\text{certain digits}+\text{last estimated digit}" />
+
+The rule is not about making numbers shorter. It keeps a report from looking more precise than the measurement tool.
+
+| Situation | Question to answer |
+| :-------- | :----------------- |
+| Reading one measurement | Which digits are actually supported by the tool? |
+| Addition and subtraction | Which data has the smallest number of decimal places? |
+| Multiplication and division | Which data has the smallest number of significant figures? |
+
+## Zero Can Be a Digit or a Placeholder
+
+Zeros are tricky because their meaning depends on where they are written.
+
+| Measurement writing | How to read the significant figures |
+| :------------------ | :---------------------------------- |
+| <InlineMath math="3.25 \text{ cm}" /> | Every nonzero digit counts, so there are <InlineMath math="3" /> significant figures. |
+| <InlineMath math="1.004 \text{ cm}" /> | Zeros between nonzero digits count, so there are <InlineMath math="4" /> significant figures. |
+| <InlineMath math="31.00 \text{ cm}" /> | Zeros after the decimal point count, so there are <InlineMath math="4" /> significant figures. |
+| <InlineMath math="0.0026 \text{ kg}" /> | Zeros before the first nonzero digit only hold place value, so there are <InlineMath math="2" /> significant figures. |
+| <InlineMath math="1000 \text{ m}" /> | Without a decimal point or another marker, trailing zeros are usually not treated as significant. |
+| <InlineMath math="3.14 \times 10^{-5} \text{ m}" /> | The coefficient <InlineMath math="3.14" /> has <InlineMath math="3" /> significant figures. The power <InlineMath math="10^{-5}" /> only gives the scale. |
+
+If a zero must be significant, write it in a way that removes ambiguity. Scientific notation is often the cleanest choice.
+
+<BlockMath math="\begin{aligned}
+1000 \text{ m} \text{ with } 1 \text{ significant figure} &= 1 \times 10^3 \text{ m} \\
+1000 \text{ m} \text{ with } 4 \text{ significant figures} &= 1.000 \times 10^3 \text{ m}
+\end{aligned}" />
+
+## Rounding Follows the Next Digit
+
+After the allowed number of digits is known, inspect the first digit that will be dropped.
+
+| First dropped digit | Decision |
+| :------------------ | :------- |
+| <InlineMath math="\ge 5" /> | Increase the last kept digit. |
+| <InlineMath math="<5" /> | Keep the last kept digit unchanged. |
+
+For example, if a calculated area is <InlineMath math="52.976686625 \text{ cm}^2" /> and it must be written to <InlineMath math="4" /> significant figures, the next digit is <InlineMath math="6" />.
+
+<BlockMath math="52.976686625 \text{ cm}^2 \to 52.98 \text{ cm}^2" />
+
+If the calculated value is <InlineMath math="52.973376625 \text{ cm}^2" />, the next digit is <InlineMath math="3" />.
+
+<BlockMath math="52.973376625 \text{ cm}^2 \to 52.97 \text{ cm}^2" />
+
+## Addition Follows Decimal Position
+
+For addition and subtraction, precision is judged by decimal position. The roughest data decides the final decimal place.
+
+Suppose an iron rod of length <InlineMath math="8.235 \text{ cm}" /> is joined to another rod of length <InlineMath math="4.5 \text{ cm}" />.
+
+<BlockMath math="\begin{aligned}
+8.235 \text{ cm}+4.5 \text{ cm} &= 12.735 \text{ cm} \\
+&\to 12.7 \text{ cm}
+\end{aligned}" />
+
+The value <InlineMath math="12.735 \text{ cm}" /> is rounded to <InlineMath math="1" /> decimal place because <InlineMath math="4.5 \text{ cm}" /> has only <InlineMath math="1" /> digit after the decimal point.
+
+## Multiplication Follows the Least Precise Data
+
+For multiplication and division, the limiting value is the smallest number of significant figures among the measured data.
+
+Suppose a rectangle has width <InlineMath math="12.455 \text{ cm}" /> and length <InlineMath math="35.2 \text{ cm}" />.
+
+<BlockMath math="\begin{aligned}
+A &= l \times w \\
+&= 35.2 \text{ cm} \times 12.455 \text{ cm} \\
+&= 438.416 \text{ cm}^2 \\
+&\to 438 \text{ cm}^2
+\end{aligned}" />
+
+The value <InlineMath math="12.455 \text{ cm}" /> has <InlineMath math="5" /> significant figures, while <InlineMath math="35.2 \text{ cm}" /> has <InlineMath math="3" /> significant figures. Therefore, the area is reported with <InlineMath math="3" /> significant figures.
+
+For a bottle cap with diameter <InlineMath math="3.12 \text{ cm}" />, constants such as <InlineMath math="\pi" /> and <InlineMath math="\frac{1}{4}" /> do not limit significant figures because they come from the formula, not from a measuring tool. In this classroom calculation, <InlineMath math="\pi" /> is approximated as <InlineMath math="3.14" />.
+
+<BlockMath math="\begin{aligned}
+A &= \frac{1}{4}\pi d^2 \\
+&= \frac{1}{4}(3.14)(3.12 \text{ cm})^2 \\
+&= 7.641504 \text{ cm}^2 \\
+&\to 7.64 \text{ cm}^2
+\end{aligned}" />
+
+If the International System of Units (SI) is required, convert <InlineMath math="\text{cm}^2" /> to <InlineMath math="\text{m}^2" />. SI is the international standard for measurement units used in science.
+
+<BlockMath math="7.64 \text{ cm}^2 = 0.000764 \text{ m}^2 = 7.64 \times 10^{-4} \text{ m}^2" />
+
+Reference for the rules: [OpenStax University Physics, Significant Figures section](https://openstax.org/books/university-physics-volume-1/pages/1-6-significant-figures) and [NIST Technical Note 1297, reporting uncertainty section](https://www.nist.gov/pml/nist-technical-note-1297/nist-tn-1297-7-reporting-uncertainty).
