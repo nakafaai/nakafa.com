@@ -22,7 +22,7 @@
     "@repo/security": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "better-auth": "1.5.3",
+    "better-auth": "~1.6.9",
     "effect": "^3.21.2",
     "next": "16.2.4",
     "pino": "^10.3.1",
