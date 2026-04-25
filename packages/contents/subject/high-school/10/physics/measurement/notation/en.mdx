@@ -1,0 +1,91 @@
+export const metadata = {
+  title: "Scientific Notation",
+  description:
+    "Learn how to write very large or very small values with scientific notation, preserve significant figures, and convert units without losing meaning.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/25/2026",
+  subject: "Measurement in Scientific Work",
+};
+
+## When Zeros Get in the Way
+
+Physics often uses values that are too large or too small to write comfortably. An area of <InlineMath math="0.000764 \text{ m}^2" /> is still readable, but an electron mass of about <InlineMath math="0.000000000000000000000000000000911 \text{ kg}" /> makes it easy to lose count of the zeros.
+
+**Scientific notation** writes a value as a coefficient multiplied by a power of <InlineMath math="10" />.
+
+<BlockMath math="a \times 10^n" />
+
+For positive values, the standard form is:
+
+<BlockMath math="1 \le a < 10 \quad \text{and} \quad n \in \mathbb{Z}" />
+
+The coefficient <InlineMath math="a" /> carries the significant figures. The exponent <InlineMath math="n" /> carries the scale.
+
+## The Decimal Point Moves, the Value Stays
+
+The safest way to read scientific notation is to imagine moving the decimal point until the coefficient is between <InlineMath math="1" /> and <InlineMath math="10" />.
+
+| Ordinary value | Decimal movement | Scientific notation |
+| :------------- | :--------------- | :------------------ |
+| <InlineMath math="7\,640\,000 \text{ m}" /> | <InlineMath math="6" /> places left | <InlineMath math="7.64 \times 10^6 \text{ m}" /> |
+| <InlineMath math="0.000764 \text{ m}^2" /> | <InlineMath math="4" /> places right | <InlineMath math="7.64 \times 10^{-4} \text{ m}^2" /> |
+| <InlineMath math="0.000000911 \text{ kg}" /> | <InlineMath math="7" /> places right | <InlineMath math="9.11 \times 10^{-7} \text{ kg}" /> |
+
+If the decimal point moves left, the exponent is positive. If the decimal point moves right, the exponent is negative.
+
+<BlockMath math="\begin{aligned}
+7\,640\,000 &= 7.64 \times 10^6 \\
+0.000764 &= 7.64 \times 10^{-4}
+\end{aligned}" />
+
+## The Exponent Is Not a Significant Figure
+
+In scientific notation, the number of significant figures is read from the coefficient, not from the power of <InlineMath math="10" />.
+
+| Scientific notation | Significant figures | Reason |
+| :------------------ | :------------------ | :----- |
+| <InlineMath math="7.64 \times 10^{-4} \text{ m}^2" /> | <InlineMath math="3" /> | The coefficient is <InlineMath math="7.64" />. |
+| <InlineMath math="1.0 \times 10^{-7} \text{ m}" /> | <InlineMath math="2" /> | The zero after the decimal point in <InlineMath math="1.0" /> is intentional. |
+| <InlineMath math="1 \times 10^3 \text{ m}" /> | <InlineMath math="1" /> | The coefficient is only <InlineMath math="1" />. |
+| <InlineMath math="1.000 \times 10^3 \text{ m}" /> | <InlineMath math="4" /> | The zeros in <InlineMath math="1.000" /> express precision. |
+
+That is why scientific notation is useful for measurement. The value <InlineMath math="1000 \text{ m}" /> can be ambiguous, but <InlineMath math="1.000 \times 10^3 \text{ m}" /> clearly has <InlineMath math="4" /> significant figures.
+
+## The Order for Reporting Measurements
+
+When scientific notation is used for a measurement result, do not reverse the order.
+
+<BlockMath math="\text{round to significant figures} \to \text{convert units} \to \text{write scientific notation}" />
+
+For example, the calculated area of a bottle cap is <InlineMath math="7.641404 \text{ cm}^2" />. If the original diameter supports only <InlineMath math="3" /> significant figures, the area is written as:
+
+<BlockMath math="7.641404 \text{ cm}^2 \to 7.64 \text{ cm}^2" />
+
+Only after that do we convert the area to the International System of Units (SI). SI is the international measurement unit standard used in science.
+
+<BlockMath math="\begin{aligned}
+1 \text{ cm} &= 10^{-2} \text{ m} \\
+1 \text{ cm}^2 &= (10^{-2} \text{ m})^2 = 10^{-4} \text{ m}^2 \\
+7.64 \text{ cm}^2 &= 7.64 \times 10^{-4} \text{ m}^2
+\end{aligned}" />
+
+So the SI scientific-notation result is <InlineMath math="7.64 \times 10^{-4} \text{ m}^2" />.
+
+> Be careful with powered units. The conversion factor is powered too. From <InlineMath math="\text{cm}" /> to <InlineMath math="\text{m}" />, the factor is <InlineMath math="10^{-2}" />, but from <InlineMath math="\text{cm}^2" /> to <InlineMath math="\text{m}^2" />, the factor is <InlineMath math="10^{-4}" />.
+
+## Calculating Without Long Strings of Zeros
+
+Scientific notation also keeps operations tidy because powers of <InlineMath math="10" /> can be grouped.
+
+Suppose a very small object has length <InlineMath math="2.5 \times 10^{-6} \text{ m}" /> and width <InlineMath math="4.0 \times 10^{-7} \text{ m}" />.
+
+<BlockMath math="\begin{aligned}
+A &= (2.5 \times 10^{-6})(4.0 \times 10^{-7}) \text{ m}^2 \\
+&= (2.5 \times 4.0) \times 10^{-6+(-7)} \text{ m}^2 \\
+&= 10.0 \times 10^{-13} \text{ m}^2 \\
+&= 1.00 \times 10^{-12} \text{ m}^2
+\end{aligned}" />
+
+The last step matters: the coefficient <InlineMath math="10.0" /> is not in standard form because it is not less than <InlineMath math="10" />. We rewrite it as <InlineMath math="1.00 \times 10^{-12}" /> while preserving <InlineMath math="3" /> significant figures.
+
+References for measurement-value writing: [NIST Guide to the SI, Chapter 7](https://www.nist.gov/pml/special-publication-811/nist-guide-si-chapter-7-rules-and-style-conventions-expressing-values) and [OpenStax Significant Figures](https://openstax.org/books/university-physics-volume-1/pages/1-6-significant-figures).

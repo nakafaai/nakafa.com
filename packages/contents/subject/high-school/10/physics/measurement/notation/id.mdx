@@ -1,0 +1,91 @@
+export const metadata = {
+  title: "Notasi Ilmiah",
+  description:
+    "Pelajari cara menulis nilai sangat besar atau sangat kecil dengan notasi ilmiah, menjaga angka penting, dan mengonversi satuan tanpa kehilangan makna.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/25/2026",
+  subject: "Pengukuran dalam Kerja Ilmiah",
+};
+
+## Ketika Nol Mulai Mengganggu
+
+Fisika sering bertemu nilai yang terlalu besar atau terlalu kecil untuk ditulis nyaman. Luas <InlineMath math="0{,}000764 \text{ m}^2" /> masih bisa dibaca, tetapi massa elektron sekitar <InlineMath math="0{,}000000000000000000000000000000911 \text{ kg}" /> sudah membuat mata mudah kehilangan hitungan nol.
+
+**Notasi ilmiah** adalah cara menulis nilai sebagai perkalian antara koefisien dan pangkat <InlineMath math="10" />.
+
+<BlockMath math="a \times 10^n" />
+
+Untuk nilai positif, bentuk bakunya adalah:
+
+<BlockMath math="1 \le a < 10 \quad \text{dan} \quad n \in \mathbb{Z}" />
+
+Koefisien <InlineMath math="a" /> menyimpan angka penting. Pangkat <InlineMath math="n" /> menyimpan skala.
+
+## Koma Bergerak, Nilai Tetap
+
+Cara paling aman membaca notasi ilmiah adalah membayangkan tanda koma bergerak sampai koefisien berada di antara <InlineMath math="1" /> dan <InlineMath math="10" />.
+
+| Nilai biasa | Gerak koma | Notasi ilmiah |
+| :---------- | :--------- | :------------ |
+| <InlineMath math="7\,640\,000 \text{ m}" /> | <InlineMath math="6" /> tempat ke kiri | <InlineMath math="7{,}64 \times 10^6 \text{ m}" /> |
+| <InlineMath math="0{,}000764 \text{ m}^2" /> | <InlineMath math="4" /> tempat ke kanan | <InlineMath math="7{,}64 \times 10^{-4} \text{ m}^2" /> |
+| <InlineMath math="0{,}000000911 \text{ kg}" /> | <InlineMath math="7" /> tempat ke kanan | <InlineMath math="9{,}11 \times 10^{-7} \text{ kg}" /> |
+
+Jika koma bergerak ke kiri, pangkatnya positif. Jika koma bergerak ke kanan, pangkatnya negatif.
+
+<BlockMath math="\begin{aligned}
+7\,640\,000 &= 7{,}64 \times 10^6 \\
+0{,}000764 &= 7{,}64 \times 10^{-4}
+\end{aligned}" />
+
+## Pangkat Bukan Angka Penting
+
+Dalam notasi ilmiah, jumlah angka penting dibaca dari koefisiennya, bukan dari pangkat <InlineMath math="10" />.
+
+| Notasi ilmiah | Angka penting | Alasannya |
+| :------------ | :------------ | :-------- |
+| <InlineMath math="7{,}64 \times 10^{-4} \text{ m}^2" /> | <InlineMath math="3" /> | Koefisiennya <InlineMath math="7{,}64" />. |
+| <InlineMath math="1{,}0 \times 10^{-7} \text{ m}" /> | <InlineMath math="2" /> | Nol setelah koma pada <InlineMath math="1{,}0" /> sengaja ditulis. |
+| <InlineMath math="1 \times 10^3 \text{ m}" /> | <InlineMath math="1" /> | Koefisiennya hanya <InlineMath math="1" />. |
+| <InlineMath math="1{,}000 \times 10^3 \text{ m}" /> | <InlineMath math="4" /> | Nol pada <InlineMath math="1{,}000" /> menyatakan ketelitian. |
+
+Itulah alasan notasi ilmiah berguna untuk pengukuran. Bentuk <InlineMath math="1000 \text{ m}" /> bisa ambigu, tetapi <InlineMath math="1{,}000 \times 10^3 \text{ m}" /> jelas memiliki <InlineMath math="4" /> angka penting.
+
+## Urutan Menulis Hasil Ukur
+
+Saat notasi ilmiah dipakai untuk hasil pengukuran, urutannya jangan dibalik.
+
+<BlockMath math="\text{bulatkan sesuai angka penting} \to \text{konversi satuan} \to \text{tulis notasi ilmiah}" />
+
+Contohnya, hasil perhitungan luas tutup botol adalah <InlineMath math="7{,}641404 \text{ cm}^2" />. Jika diameter awal hanya mendukung <InlineMath math="3" /> angka penting, luasnya ditulis:
+
+<BlockMath math="7{,}641404 \text{ cm}^2 \to 7{,}64 \text{ cm}^2" />
+
+Baru setelah itu satuan luas diubah ke Sistem Satuan Internasional (SI). SI adalah standar internasional satuan pengukuran yang dipakai dalam sains.
+
+<BlockMath math="\begin{aligned}
+1 \text{ cm} &= 10^{-2} \text{ m} \\
+1 \text{ cm}^2 &= (10^{-2} \text{ m})^2 = 10^{-4} \text{ m}^2 \\
+7{,}64 \text{ cm}^2 &= 7{,}64 \times 10^{-4} \text{ m}^2
+\end{aligned}" />
+
+Jadi, penulisan SI dan notasi ilmiahnya adalah <InlineMath math="7{,}64 \times 10^{-4} \text{ m}^2" />.
+
+> Hati-hati dengan satuan berpangkat. Faktor konversinya ikut berpangkat juga. Dari <InlineMath math="\text{cm}" /> ke <InlineMath math="\text{m}" /> faktornya <InlineMath math="10^{-2}" />, tetapi dari <InlineMath math="\text{cm}^2" /> ke <InlineMath math="\text{m}^2" /> faktornya <InlineMath math="10^{-4}" />.
+
+## Menghitung Tanpa Deretan Nol
+
+Notasi ilmiah juga membuat operasi lebih rapi karena pangkat <InlineMath math="10" /> bisa dikelompokkan.
+
+Misalnya sebuah benda sangat kecil memiliki panjang <InlineMath math="2{,}5 \times 10^{-6} \text{ m}" /> dan lebarnya <InlineMath math="4{,}0 \times 10^{-7} \text{ m}" />.
+
+<BlockMath math="\begin{aligned}
+A &= (2{,}5 \times 10^{-6})(4{,}0 \times 10^{-7}) \text{ m}^2 \\
+&= (2{,}5 \times 4{,}0) \times 10^{-6+(-7)} \text{ m}^2 \\
+&= 10{,}0 \times 10^{-13} \text{ m}^2 \\
+&= 1{,}00 \times 10^{-12} \text{ m}^2
+\end{aligned}" />
+
+Langkah terakhir penting: koefisien <InlineMath math="10{,}0" /> belum berbentuk baku karena tidak kurang dari <InlineMath math="10" />. Kita ubah menjadi <InlineMath math="1{,}00 \times 10^{-12}" /> dan tetap menjaga <InlineMath math="3" /> angka penting.
+
+Rujukan penulisan nilai pengukuran: [NIST Guide to the SI, Chapter 7](https://www.nist.gov/pml/special-publication-811/nist-guide-si-chapter-7-rules-and-style-conventions-expressing-values) dan [OpenStax Significant Figures](https://openstax.org/books/university-physics-volume-1/pages/1-6-significant-figures).
