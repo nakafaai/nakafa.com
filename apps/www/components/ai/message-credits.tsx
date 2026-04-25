@@ -18,8 +18,8 @@ import {
 } from "@repo/design-system/components/ui/popover";
 import { useTranslations } from "next-intl";
 import { memo, useState } from "react";
+import { useMessage } from "@/components/ai/context/use-message";
 import { aiModels } from "@/lib/data/models";
-import { useMessage } from "./message-context";
 
 export const AiChatMessageCredits = memo(() => {
   const t = useTranslations("Ai");

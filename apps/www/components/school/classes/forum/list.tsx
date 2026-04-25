@@ -21,7 +21,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { Activity, useTransition } from "react";
 import { getTagIcon } from "@/components/school/classes/_data/tag";
-import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
+import { getSchoolClassesForumHref } from "@/components/school/classes/forum/helpers/routes";
 import { useClass } from "@/lib/context/use-class";
 import { searchParsers } from "@/lib/nuqs/search";
 import { getLocale } from "@/lib/utils/date";
@@ -50,19 +50,9 @@ export function SchoolClassesForumList() {
   const searchParams = useSearchParams();
 
   const classId = useClass((state) => state.class._id);
-  const setReplyTo = useSession((state) => state.setReplyTo);
   const [{ q }] = useQueryStates(searchParsers);
 
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
-
-  /** Clears transient reply state before forum route navigation. */
-  function handleForumNavigate(nextForumId: Id<"schoolClassForums">) {
-    if (routeParams.forumId === nextForumId) {
-      return;
-    }
-
-    setReplyTo(null);
-  }
 
   const { results, status, loadMore } = usePaginatedQuery(
     api.classes.forums.queries.forums.getForums,
@@ -92,8 +82,12 @@ export function SchoolClassesForumList() {
       <section className="flex flex-col divide-y overflow-hidden rounded-md border shadow-sm">
         {results.map((forum) => {
           const Icon = getTagIcon(forum.tag);
-          const search = searchParams.toString();
-          const href = `/school/${routeParams.slug}/classes/${routeParams.id}/forum/${forum._id}${search ? `?${search}` : ""}`;
+          const href = getSchoolClassesForumHref({
+            classRouteId: routeParams.id,
+            forumId: forum._id,
+            queryString: searchParams.toString(),
+            slug: routeParams.slug,
+          });
           const isActive = routeParams.forumId === forum._id;
 
           return (
@@ -102,7 +96,6 @@ export function SchoolClassesForumList() {
                 aria-current={isActive ? "page" : undefined}
                 className="absolute inset-0 z-0 rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 href={href}
-                onNavigate={() => handleForumNavigate(forum._id)}
                 prefetch
               >
                 <span className="sr-only">{forum.title}</span>

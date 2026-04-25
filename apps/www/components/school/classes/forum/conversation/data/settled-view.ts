@@ -159,6 +159,23 @@ export function getConversationBottomDistance(
   );
 }
 
+/** Returns stable viewport booleans after Virtua has measured its viewport. */
+export function getConversationViewportState(
+  handle: ConversationGeometryHandle
+) {
+  if (handle.viewportSize <= 0) {
+    return null;
+  }
+
+  const bottomDistance = getConversationBottomDistance(handle);
+
+  return {
+    hasOverflow:
+      handle.scrollSize - handle.viewportSize > FORUM_BOTTOM_THRESHOLD,
+    isAtBottom: bottomDistance <= FORUM_BOTTOM_THRESHOLD,
+  };
+}
+
 /** Returns the first visible post id inside the current transcript viewport. */
 export function getFirstVisibleConversationPostId({
   handle,

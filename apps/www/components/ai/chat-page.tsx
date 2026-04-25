@@ -14,10 +14,13 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Unauthenticated } from "convex/react";
 import { useTranslations } from "next-intl";
+import { AiChat } from "@/components/ai/chat";
+import { ChatProvider } from "@/components/ai/context/use-chat";
+import {
+  CurrentChatProvider,
+  useCurrentChat,
+} from "@/components/ai/context/use-current-chat";
 import { AuthGoogle } from "@/components/auth/google";
-import { ChatProvider } from "@/lib/context/use-chat";
-import { AiChat } from "./chat";
-import { CurrentChatProvider, useCurrentChat } from "./chat-provider";
 
 export function AiChatPage({ chatId }: { chatId: Id<"chats"> }) {
   return (
@@ -65,11 +68,7 @@ function AiChatMain() {
   }
 
   return (
-    <ChatProvider
-      chatId={chat._id}
-      initialMessages={messages}
-      pendingQueryOwner="page"
-    >
+    <ChatProvider chatId={chat._id} initialMessages={messages}>
       <AiChatPageContent />
     </ChatProvider>
   );

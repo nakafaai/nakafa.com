@@ -1,48 +1,58 @@
-# Quick Reference
+# Nakafa Content Skill
 
-## Skill Location
-`.agents/skills/nakafa-content/`
+Quick reference for creating and editing educational MDX content in Nakafa.
 
-## When to Use
-- Creating educational content (MDX)
-- Creating exercises (questions, answers, choices)
-- Editing existing content
-- Adding visualizations/graphs
+## Files
 
-## Files Created
+- `SKILL.md`: primary workflow and rules.
+- `references/mdx-components.md`: verified MDX and visualization component reference.
+- `references/exercise-patterns.md`: exercise structure and answer-writing patterns.
+- `templates/exercise-template.md`: compact exercise template.
+- `templates/subject-template.md`: compact subject-content template.
 
-### Main Skill
-- `SKILL.md` - Complete guidelines for content creation
+## Source of Truth
 
-### References
-- `references/mdx-components.md` - All available components
-- `references/exercise-patterns.md` - Exercise creation patterns
+- Root repo rules: `AGENTS.md`.
+- Helpful content guidance: https://developers.google.com/search/docs/fundamentals/creating-helpful-content
+- MDX component map: `packages/design-system/components/markdown/mdx.tsx`.
+- Math container implementation: `packages/design-system/components/markdown/math.tsx`.
+- Visualization components: `packages/design-system/components/contents/`.
+- Content data and nearby examples: `packages/contents/`.
 
-### Templates
-- `templates/exercise-template.md` - Exercise folder template
-- `templates/subject-template.md` - Subject content template
+## Language Rule
 
-## Updated Rules Files
-- `.trae/rules/content_creation.md` - Updated with correct component usage
-- `.trae/rules/exercise_creation.md` - Added imports and patterns
-- `.trae/rules/project_structure.md` - Fixed app names and added packages
+All skill documentation must be written in English.
 
-## Key Patterns
+Indonesian is allowed only inside snippets that intentionally demonstrate `id.mdx` content, localized labels, or real Indonesian source material. Actual `id.mdx` content must still be Indonesian.
 
-### Math Components (NOT $ or $$)
+## Core Patterns
+
+Use MDX math components instead of raw `$...$` or `$$...$$` in MDX:
+
 ```mdx
 <InlineMath math="x + y" />
 <BlockMath math="x^2 + y^2 = r^2" />
-<MathContainer>...</MathContainer>
+<MathContainer>
+  <BlockMath math="a = b" />
+  <BlockMath math="c = d" />
+</MathContainer>
 ```
 
-### Import Content Components
+Use Mermaid for flowcharts, dependency diagrams, timelines, decision paths, or process maps when a diagram makes the concept easier to understand:
+
+```mdx
+<Mermaid chart="graph TD; A[Read] --> B[Understand]; B --> C[Practice];" />
+```
+
+Import visual content components from the design system:
+
 ```typescript
 import { LineEquation } from "@repo/design-system/components/contents/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 ```
 
-### Generate Points (NEVER hard-code)
+Generate graph points from formulas instead of hard-coding point arrays:
+
 ```typescript
 points: Array.from({ length: 100 }, (_, i) => {
   const x = -5 + (i / 99) * 10;
@@ -50,38 +60,24 @@ points: Array.from({ length: 100 }, (_, i) => {
 })
 ```
 
-### Colors
-- Use: `getColor("INDIGO")`, `getColor("TEAL")`, `getColor("PURPLE")`
-- NEVER: RED, GREEN, BLUE for lines
+## Content Rules
 
-### Headings
-- Start from h2, max h4
-- No math or symbols: "Finding Value x" (not "Finding <InlineMath math='x' />")
-- No parentheses: "Analysis 1" (not "Analysis (1)")
-
-### Date Format
-Always `MM/DD/YYYY` (e.g., "06/11/2025")
-
-### Choices.ts
-```typescript
-import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
-// Math: $$...$$
-// Text: plain
-```
-
-## Writing Style for Content
-
-### Indonesian (id.mdx)
-Use proper Indonesian grammar with natural, engaging tone:
-- Use "kita" (we) and "kalian" (you all) to engage readers
-- Write like you're explaining to a friend
-- Keep it educational but not stiff
-- Example: "Mari kita mulai dengan...", "Pernahkah kalian memperhatikan..."
-
-### English (en.mdx)
-Use proper English grammar with natural, engaging tone:
-- Write clearly and conversationally
-- Keep it educational but approachable
+- Start content headings at `##`.
+- Do not go deeper than `###`.
+- Do not put math, symbols, or parenthesized numbers in headings.
+- Use `<InlineMath />` for math values in prose.
+- Use math components for expressions, variables, quantities, units, coordinates, and calculated values.
+- Keep math notation consistent every time the same concept appears.
+- Prefer one expressive `<BlockMath />` for one connected derivation; use `<MathContainer>` when rows should stay visually separate.
+- For card components whose `title` and `description` props accept `ReactNode`, use fragments with `<InlineMath />` when those props contain math.
+- Verify prop types first; `BarChart` and `HistogramChart` currently accept strings.
+- Use `getColor()` for visualization colors.
+- Do not use em dash in content prose.
+- Use Markdown creatively, including blockquotes, tables, emphasis, code blocks, Mermaid diagrams, and math blocks when they improve scanning.
+- Keep each page useful enough that a student can make progress without searching again.
 
 ## Verification
-All files pass `pnpm lint` ✅
+
+- Inspect nearby content before writing new content.
+- Run `pnpm --filter @repo/contents typecheck` when content imports TSX/components.
+- Run `pnpm lint` when the content change is ready for review.

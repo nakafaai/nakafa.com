@@ -15,7 +15,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
-import { memo, type PropsWithChildren, useState } from "react";
+import { memo, useState } from "react";
 
 interface Props {
   message: DataPart["get-content"];
@@ -31,19 +31,23 @@ export const ContentPart = memo(({ message }: Props) => {
 
   if (isLoading) {
     return (
-      <ContentCard>
-        <Spinner className="size-4" />
-        <p className="text-sm">{t("get-content-loading")}</p>
-      </ContentCard>
+      <div className="flex items-center gap-2">
+        <Spinner className="size-4 text-muted-foreground" />
+        <p className="text-muted-foreground text-sm">
+          {t("get-content-loading")}
+        </p>
+      </div>
     );
   }
 
   if (isError) {
     return (
-      <ContentCard>
+      <div className="flex items-center gap-2">
         <HugeIcons className="size-4 text-destructive" icon={Sad02Icon} />
-        <p className="text-sm">{t("get-content-error")}</p>
-      </ContentCard>
+        <span className="text-muted-foreground text-sm">
+          {t("get-content-error")}
+        </span>
+      </div>
     );
   }
 
@@ -84,19 +88,3 @@ export const ContentPart = memo(({ message }: Props) => {
   );
 });
 ContentPart.displayName = "ContentPart";
-
-const ContentCard = memo(
-  ({ children, className }: PropsWithChildren<{ className?: string }>) => (
-    <div className="overflow-hidden rounded-md border">
-      <div
-        className={cn(
-          "flex w-full items-center gap-2 bg-muted/80 px-4 py-3",
-          className
-        )}
-      >
-        {children}
-      </div>
-    </div>
-  )
-);
-ContentCard.displayName = "ContentCard";

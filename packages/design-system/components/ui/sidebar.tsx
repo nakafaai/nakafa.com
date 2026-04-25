@@ -215,7 +215,7 @@ function Sidebar({
   collapsible?: "offcanvas" | "icon" | "none";
   containerClassName?: string;
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+  const { state, openMobile, setOpenMobile } = useSidebar();
 
   if (collapsible === "none") {
     return (
@@ -232,9 +232,9 @@ function Sidebar({
     );
   }
 
-  if (isMobile) {
-    return (
-      <Sheet onOpenChange={setOpenMobile} open={openMobile} {...props}>
+  return (
+    <>
+      <Sheet onOpenChange={setOpenMobile} open={openMobile}>
         <SheetContent
           className="w-72 bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
           data-mobile="true"
@@ -249,57 +249,55 @@ function Sidebar({
           <div className="flex h-full w-full flex-col">{children}</div>
         </SheetContent>
       </Sheet>
-    );
-  }
 
-  return (
-    <div
-      className={cn(
-        "group peer hidden text-sidebar-foreground lg:block",
-        containerClassName
-      )}
-      data-collapsible={state === "collapsed" ? collapsible : ""}
-      data-side={side}
-      data-slot="sidebar"
-      data-state={state}
-      data-variant={variant}
-    >
-      {/* This is what handles the sidebar gap on desktop */}
       <div
         className={cn(
-          "relative w-64 bg-transparent transition-[width] duration-200 ease-out",
-          "group-data-[collapsible=offcanvas]:w-0",
-          "group-data-[side=right]:rotate-180",
-          variant === "floating" || variant === "inset"
-            ? "group-data-[collapsible=icon]:w-[calc(3rem+(--spacing(4)))]"
-            : "group-data-[collapsible=icon]:w-12"
+          "group peer hidden text-sidebar-foreground lg:block",
+          containerClassName
         )}
-        data-slot="sidebar-gap"
-      />
-      <div
-        className={cn(
-          "fixed inset-y-0 z-10 hidden h-svh w-64 transition-[left,right,width] duration-200 ease-out md:flex",
-          side === "left"
-            ? "left-0 group-data-[collapsible=offcanvas]:-left-64"
-            : "right-0 group-data-[collapsible=offcanvas]:-right-64",
-          // Adjust the padding for floating and inset variants.
-          variant === "floating" || variant === "inset"
-            ? "p-2 group-data-[collapsible=icon]:w-[calc(3rem+(--spacing(4))+2px)]"
-            : "group-data-[collapsible=icon]:w-12 group-data-[side=left]:border-r group-data-[side=right]:border-l",
-          className
-        )}
-        data-slot="sidebar-container"
-        {...props}
+        data-collapsible={state === "collapsed" ? collapsible : ""}
+        data-side={side}
+        data-slot="sidebar"
+        data-state={state}
+        data-variant={variant}
       >
+        {/* This is what handles the sidebar gap on desktop */}
         <div
-          className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow-sm"
-          data-sidebar="sidebar"
-          data-slot="sidebar-inner"
+          className={cn(
+            "relative w-64 bg-transparent transition-[width] duration-200 ease-out",
+            "group-data-[collapsible=offcanvas]:w-0",
+            "group-data-[side=right]:rotate-180",
+            variant === "floating" || variant === "inset"
+              ? "group-data-[collapsible=icon]:w-[calc(3rem+(--spacing(4)))]"
+              : "group-data-[collapsible=icon]:w-12"
+          )}
+          data-slot="sidebar-gap"
+        />
+        <div
+          className={cn(
+            "fixed inset-y-0 z-10 hidden h-svh w-64 transition-[left,right,width] duration-200 ease-out md:flex",
+            side === "left"
+              ? "left-0 group-data-[collapsible=offcanvas]:-left-64"
+              : "right-0 group-data-[collapsible=offcanvas]:-right-64",
+            // Adjust the padding for floating and inset variants.
+            variant === "floating" || variant === "inset"
+              ? "p-2 group-data-[collapsible=icon]:w-[calc(3rem+(--spacing(4))+2px)]"
+              : "group-data-[collapsible=icon]:w-12 group-data-[side=left]:border-r group-data-[side=right]:border-l",
+            className
+          )}
+          data-slot="sidebar-container"
+          {...props}
         >
-          {children}
+          <div
+            className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow-sm"
+            data-sidebar="sidebar"
+            data-slot="sidebar-inner"
+          >
+            {children}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

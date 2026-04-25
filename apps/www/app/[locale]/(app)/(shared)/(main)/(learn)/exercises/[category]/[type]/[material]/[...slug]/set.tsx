@@ -10,6 +10,8 @@ import { FOUNDER } from "@repo/seo/json-ld/constants";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import { ExerciseAttempt } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/attempt";
+import type { ExerciseRouteData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/data";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { ExerciseTrackedEntry } from "@/components/exercise/entry";
@@ -23,8 +25,6 @@ import {
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
 import { getOgUrl } from "@/lib/utils/metadata";
-import { ExerciseAttempt } from "./attempt";
-import type { ExerciseRouteData } from "./data";
 
 /** Renders the exercise-set variant for one learn route. */
 export async function ExerciseSetPage({
@@ -103,7 +103,7 @@ export async function ExerciseSetPage({
           <LayoutMaterialFooter>
             <DeferredComments slug={data.pagePath} />
           </LayoutMaterialFooter>
-          <DeferredAiSheetOpen />
+          <DeferredAiSheetOpen contextTitle={data.currentMaterialItem.title} />
         </LayoutMaterialContent>
         <LayoutMaterialToc
           chapters={{

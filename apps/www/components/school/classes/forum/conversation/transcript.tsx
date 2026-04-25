@@ -23,23 +23,20 @@ import {
   Virtualizer,
   type VirtualizerHandle,
 } from "virtua";
+import {
+  useForumSession,
+  useForumSessionStoreApi,
+} from "@/components/school/classes/forum/context/use-session";
 import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
-import {
-  useSession,
-  useSessionStoreApi,
-} from "@/components/school/classes/forum/conversation/context/use-session";
 import { useViewport } from "@/components/school/classes/forum/conversation/context/use-viewport";
-import {
-  FORUM_BOTTOM_THRESHOLD,
-  getConversationRowKey,
-} from "@/components/school/classes/forum/conversation/data/pages";
+import { getConversationRowKey } from "@/components/school/classes/forum/conversation/data/pages";
 import {
   createConversationScrollSnapshot,
   getInitialConversationRestoreTarget,
 } from "@/components/school/classes/forum/conversation/data/scroll-snapshot";
 import {
-  getConversationBottomDistance,
+  getConversationViewportState,
   getLastVisibleConversationPostId,
 } from "@/components/school/classes/forum/conversation/data/settled-view";
 import { createConversationScrollController } from "@/components/school/classes/forum/conversation/data/transcript-scroll";
@@ -48,9 +45,9 @@ import { isConversationViewAtPost } from "@/components/school/classes/forum/conv
 import { useActiveTranscriptModel } from "@/components/school/classes/forum/conversation/hooks/use-active-transcript-model";
 import { useConversationUnreadCue } from "@/components/school/classes/forum/conversation/hooks/use-conversation-unread-cue";
 import { JumpBar } from "@/components/school/classes/forum/conversation/jump-bar";
-import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/conversation/store/session";
-import { canRestoreConversationScrollCache } from "@/components/school/classes/forum/conversation/store/session";
 import { VirtualTranscriptRow } from "@/components/school/classes/forum/conversation/transcript-row";
+import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
+import { canRestoreConversationScrollCache } from "@/components/school/classes/forum/store/session";
 
 type PendingPlacementAlign = NonNullable<ScrollToIndexOpts["align"]>;
 
@@ -77,11 +74,12 @@ interface PendingPlacement {
  */
 export const ForumConversationTranscript = memo(() => {
   const forumId = useData((state) => state.forumId);
-  const isHydrated = useSession((state) => state.isHydrated);
-  const sessionStore = useSessionStoreApi();
+  const isHydrated = useForumSession((state) => state.isHydrated);
+  const forumSessionStore = useForumSessionStoreApi();
 
   const savedScrollSnapshot =
-    sessionStore.getState().savedConversationScrollSnapshots[forumId] ?? null;
+    forumSessionStore.getState().conversationScrollSnapshotByForumId[forumId] ??
+    null;
 
   if (!isHydrated) {
     return null;
@@ -115,7 +113,7 @@ const HydratedTranscript = memo(
     initialSavedScrollSnapshot: ConversationScrollSnapshot | null;
   }) => {
     const forum = useData((state) => state.forum);
-    const saveConversationScrollSnapshot = useSession(
+    const saveConversationScrollSnapshot = useForumSession(
       (state) => state.saveConversationScrollSnapshot
     );
     const backStack = useViewport((state) => state.backStack);
@@ -266,17 +264,16 @@ const HydratedTranscript = memo(
         return;
       }
 
-      const bottomDistance = getConversationBottomDistance(handle);
-      const isAtBottom = bottomDistance <= FORUM_BOTTOM_THRESHOLD;
+      const viewport = getConversationViewportState(handle);
 
-      lastWasAtBottomRef.current = isAtBottom;
+      if (!viewport) {
+        return;
+      }
+
+      lastWasAtBottomRef.current = viewport.isAtBottom;
       lastScrollOffsetRef.current = handle.scrollOffset;
 
-      updateViewport({
-        hasOverflow:
-          handle.scrollSize - handle.viewportSize > FORUM_BOTTOM_THRESHOLD,
-        isAtBottom,
-      });
+      updateViewport(viewport);
     }, [updateViewport]);
 
     /** Clears pending placement once the semantic target is settled in place. */
@@ -360,11 +357,13 @@ const HydratedTranscript = memo(
     /** Captures a restorable scroll snapshot from current or last known metrics. */
     persistCurrentScrollSnapshotRef.current = () => {
       const handle = virtualizerRef.current;
-      const cache = handle?.cache ?? lastScrollCacheRef.current;
-      const offset = handle?.scrollOffset ?? lastScrollOffsetRef.current;
-      const isAtBottomFromHandle = handle
-        ? getConversationBottomDistance(handle) <= FORUM_BOTTOM_THRESHOLD
-        : lastWasAtBottomRef.current;
+      const viewport = handle ? getConversationViewportState(handle) : null;
+      const cache =
+        handle && viewport ? handle.cache : lastScrollCacheRef.current;
+      const offset =
+        handle && viewport ? handle.scrollOffset : lastScrollOffsetRef.current;
+      const isAtBottomFromHandle =
+        viewport?.isAtBottom ?? lastWasAtBottomRef.current;
       const isAtBottom =
         pendingPlacementRef.current?.view.kind === "bottom" ||
         isAtBottomFromHandle;
@@ -650,7 +649,6 @@ const HydratedTranscript = memo(
           className="absolute inset-0 flex flex-col overflow-y-auto overscroll-contain"
           style={{ overflowAnchor: "none" }}
         >
-          <div className="grow" />
           <Virtualizer
             cache={initialRestorableCache ?? undefined}
             data={activeTranscript.rows}

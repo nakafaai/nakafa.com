@@ -3,25 +3,30 @@ import type { CacheSnapshot } from "virtua";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   canRestoreConversationScrollCache,
-  createSessionStore,
-} from "@/components/school/classes/forum/conversation/store/session";
+  createForumSessionStore,
+} from "@/components/school/classes/forum/store/session";
 
 const forumId = "forum_1" as Id<"schoolClassForums">;
+const otherForumId = "forum_2" as Id<"schoolClassForums">;
 const lastPostId = "post_1" as Id<"schoolClassForumPosts">;
 const otherPostId = "post_2" as Id<"schoolClassForumPosts">;
 const cache = {} as CacheSnapshot;
-const replyTo = {
+const replyTarget = {
   postId: lastPostId,
   userName: "Nabil",
 } as const;
+const otherReplyTarget = {
+  postId: otherPostId,
+  userName: "Fatih",
+} as const;
 
-describe("conversation/store/session", () => {
+describe("forum/store/session", () => {
   beforeEach(() => {
     sessionStorage.clear();
   });
 
   it("stores one conversation scroll snapshot per forum", () => {
-    const store = createSessionStore("class-session-test");
+    const store = createForumSessionStore("class-session-test");
 
     store.getState().saveConversationScrollSnapshot(forumId, {
       cache,
@@ -31,7 +36,9 @@ describe("conversation/store/session", () => {
       wasAtBottom: false,
     });
 
-    expect(store.getState().savedConversationScrollSnapshots[forumId]).toEqual({
+    expect(
+      store.getState().conversationScrollSnapshotByForumId[forumId]
+    ).toEqual({
       cache,
       lastPostId,
       offset: 240,
@@ -40,8 +47,27 @@ describe("conversation/store/session", () => {
     });
   });
 
+  it("stores one reply target per forum", () => {
+    const store = createForumSessionStore("class-session-test");
+
+    store.getState().setForumReplyTarget(forumId, replyTarget);
+    store.getState().setForumReplyTarget(otherForumId, otherReplyTarget);
+
+    expect(store.getState().replyTargetByForumId[forumId]).toEqual(replyTarget);
+    expect(store.getState().replyTargetByForumId[otherForumId]).toEqual(
+      otherReplyTarget
+    );
+
+    store.getState().setForumReplyTarget(forumId, null);
+
+    expect(store.getState().replyTargetByForumId[forumId]).toBeUndefined();
+    expect(store.getState().replyTargetByForumId[otherForumId]).toEqual(
+      otherReplyTarget
+    );
+  });
+
   it("rehydrates snapshots manually and keeps volatile composer state out of storage", async () => {
-    const writer = createSessionStore("class-session-test");
+    const writer = createForumSessionStore("class-session-test");
 
     writer.getState().saveConversationScrollSnapshot(forumId, {
       cache,
@@ -50,29 +76,29 @@ describe("conversation/store/session", () => {
       renderedRowCount: 12,
       wasAtBottom: true,
     });
-    writer.getState().setReplyTo(replyTo);
+    writer.getState().setForumReplyTarget(forumId, replyTarget);
     writer.getState().setHydrated(true);
 
-    const reader = createSessionStore("class-session-test");
+    const reader = createForumSessionStore("class-session-test");
 
     expect(reader.persist.hasHydrated()).toBe(false);
-    expect(reader.getState().savedConversationScrollSnapshots).toEqual({});
-    expect(reader.getState().replyTo).toBeNull();
+    expect(reader.getState().conversationScrollSnapshotByForumId).toEqual({});
+    expect(reader.getState().replyTargetByForumId).toEqual({});
     expect(reader.getState().isHydrated).toBe(false);
 
     await reader.persist.rehydrate();
 
     expect(reader.persist.hasHydrated()).toBe(true);
-    expect(reader.getState().savedConversationScrollSnapshots[forumId]).toEqual(
-      {
-        cache,
-        lastPostId,
-        offset: 240,
-        renderedRowCount: 12,
-        wasAtBottom: true,
-      }
-    );
-    expect(reader.getState().replyTo).toBeNull();
+    expect(
+      reader.getState().conversationScrollSnapshotByForumId[forumId]
+    ).toEqual({
+      cache,
+      lastPostId,
+      offset: 240,
+      renderedRowCount: 12,
+      wasAtBottom: true,
+    });
+    expect(reader.getState().replyTargetByForumId).toEqual({});
     expect(reader.getState().isHydrated).toBe(false);
   });
 

@@ -9,12 +9,12 @@ import {
 } from "@repo/design-system/components/ai/reasoning";
 import { Response } from "@repo/design-system/components/ai/response";
 import { memo } from "react";
-import { useMessage } from "../message-context";
-import { ArticlesPart } from "./articles";
-import { CalculatorPart } from "./calculator";
-import { ContentPart } from "./content";
-import { SubjectsPart } from "./subjects";
-import { WebSearchPart } from "./web-search";
+import { useMessage } from "@/components/ai/context/use-message";
+import { ArticlesPart } from "@/components/ai/message-part/articles";
+import { CalculatorPart } from "@/components/ai/message-part/calculator";
+import { ContentPart } from "@/components/ai/message-part/content";
+import { SubjectsPart } from "@/components/ai/message-part/subjects";
+import { WebSearchPart } from "@/components/ai/message-part/web-search";
 
 interface Props {
   part: MyUIMessage["parts"][number];

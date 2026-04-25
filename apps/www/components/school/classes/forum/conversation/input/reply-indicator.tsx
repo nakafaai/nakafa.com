@@ -6,15 +6,21 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
-import { useSession } from "@/components/school/classes/forum/conversation/context/use-session";
+import { useForumSession } from "@/components/school/classes/forum/context/use-session";
+import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 
 /** Renders the active reply target bar above the forum input. */
 export const ReplyIndicator = memo(() => {
   const t = useTranslations("Common");
-  const replyTo = useSession((state) => state.replyTo);
-  const setReplyTo = useSession((state) => state.setReplyTo);
+  const forumId = useData((state) => state.forumId);
+  const replyTarget = useForumSession(
+    (state) => state.replyTargetByForumId[forumId] ?? null
+  );
+  const setForumReplyTarget = useForumSession(
+    (state) => state.setForumReplyTarget
+  );
 
-  if (!replyTo) {
+  if (!replyTarget) {
     return null;
   }
 
@@ -27,12 +33,14 @@ export const ReplyIndicator = memo(() => {
       <p className="min-w-0 flex-1 truncate text-muted-foreground">
         {t.rich("replying-to-user", {
           name: () => (
-            <span className="font-medium text-primary">{replyTo.userName}</span>
+            <span className="font-medium text-primary">
+              {replyTarget.userName}
+            </span>
           ),
         })}
       </p>
       <Button
-        onClick={() => setReplyTo(null)}
+        onClick={() => setForumReplyTarget(forumId, null)}
         size="icon-xs"
         type="button"
         variant="ghost"

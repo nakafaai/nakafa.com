@@ -17,17 +17,17 @@ import { Message } from "@repo/design-system/components/ai/message";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
-import { useAi } from "@/lib/context/use-ai";
-import { useChat } from "@/lib/context/use-chat";
+import { AiChatError } from "@/components/ai/chat-error";
+import { AiChatHeader } from "@/components/ai/chat-header";
+import { AiChatMessage } from "@/components/ai/chat-message";
+import { AiChatModel } from "@/components/ai/chat-model";
+import { AiChatPaginationTrigger } from "@/components/ai/chat-pagination-trigger";
+import { AiChatPending } from "@/components/ai/chat-pending";
+import { ChatSpacing } from "@/components/ai/chat-spacing";
+import { useAi } from "@/components/ai/context/use-ai";
+import { useChat } from "@/components/ai/context/use-chat";
+import { useCurrentChat } from "@/components/ai/context/use-current-chat";
 import { useUser } from "@/lib/context/use-user";
-import { AiChatError } from "./chat-error";
-import { AiChatHeader } from "./chat-header";
-import { AiChatMessage } from "./chat-message";
-import { AiChatModel } from "./chat-model";
-import { AiChatPaginationTrigger } from "./chat-pagination-trigger";
-import { AiChatPending } from "./chat-pending";
-import { useCurrentChat } from "./chat-provider";
-import { ChatSpacing } from "./chat-spacing";
 
 export function AiChat() {
   return (

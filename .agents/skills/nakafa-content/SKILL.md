@@ -7,10 +7,40 @@ description: Create educational content (MDX) and exercises for Nakafa platform.
 
 Guidelines for creating educational content and exercises for the Nakafa platform.
 
+## Source of Truth
+
+- Repo rules: read the root `AGENTS.md` before content work.
+- Google helpful-content guidance: https://developers.google.com/search/docs/fundamentals/creating-helpful-content
+- Local content patterns: inspect nearby files in `packages/contents/` before writing.
+- Local MDX components: verify against `packages/design-system/components/markdown/mdx.tsx`.
+- Visual components: verify against `packages/design-system/components/contents/` and the component's prop types.
+
+## Skill Package Files
+
+- `README.md`: quick reference and verification checklist.
+- `references/mdx-components.md`: verified MDX and visualization component examples.
+- `references/exercise-patterns.md`: exercise folder structure, answer rules, and anti-patterns.
+- `templates/exercise-template.md`: compact scaffold for one exercise.
+- `templates/subject-template.md`: compact scaffold for one subject lesson.
+
+## Source Material Workflow
+
+When the user provides official curriculum pages, book screenshots, or teacher references:
+
+- Treat screenshots as reference material, not final copy.
+- Extract the learning objective, concept sequence, formulas, examples, and common misconceptions.
+- Write original explanations in Nakafa's voice instead of copying long textbook prose.
+- Keep facts, formulas, terminology, and curriculum scope aligned with the official source.
+- Fix obvious source mistakes only when the math or reasoning is verifiably wrong, and make the correction in the final content.
+- Ask the user when grade level, curriculum version, target locale, topic scope, or source meaning is unclear.
+- Prefer one complete, useful page over many shallow pages. Google explicitly warns against mass-producing many topics only to attract search traffic.
+
 ## Language
 
-### For This Skill (Documentation)
-Use normal English - clear and straightforward.
+### For This Skill Package
+Write all skill documentation in clear English.
+
+Indonesian is allowed only inside snippets that intentionally demonstrate `id.mdx` content, localized labels, or real Indonesian source material.
 
 ### For Actual Content (MDX Files)
 - **Indonesian (id.mdx)**: Use proper Indonesian grammar with natural, engaging tone
@@ -34,23 +64,25 @@ subject/
 │   ├── 10/mathematics/{topic}/
 │   ├── 11/mathematics/{topic}/
 │   └── 12/mathematics/{topic}/
+├── middle-school/
+│   └── {grade}/mathematics/{topic}/
 └── university/
     └── bachelor/
         └── ai-ds/
 ```
 
-Each topic contains:
+Each lesson folder usually contains:
 - `id.mdx`: Indonesian version (Source of Truth) - natural, engaging tone
 - `en.mdx`: English translation - natural, engaging tone
-- `graph.tsx`: Shared graph component (if needed)
+- optional local `.tsx` visualization component when the lesson needs custom interaction
 
 ### 2. Exercises (`packages/contents/exercises/`)
 
 ```
 exercises/
 ├── high-school/
-│   ├── tka/mathematics/{material}/{set}/{number}/
-│   └── snbt/{subject}/{material}/{set}/{number}/
+│   ├── tka/mathematics/try-out/{year}/{set}/{number}/
+│   └── snbt/{subject}/try-out/{year}/{set}/{number}/
 └── middle-school/
 ```
 
@@ -89,7 +121,11 @@ Available in all MDX files without importing:
 />
 
 <Mermaid chart="graph TD; A-->B;" />
+
+<Youtube videoId="youtube-video-id" />
 ```
+
+Use Mermaid for flowcharts, dependency diagrams, timelines, decision paths, or process maps when a diagram makes the concept easier to understand. Keep Mermaid charts readable and avoid using them as decoration.
 
 ### Content Components (Import Required)
 
@@ -106,7 +142,7 @@ import { Inequality } from "@repo/design-system/components/contents/inequality";
 import { FunctionChart } from "@repo/design-system/components/contents/function-chart";
 import { ScatterDiagram } from "@repo/design-system/components/contents/scatter-diagram";
 import { BarChart } from "@repo/design-system/components/contents/bar-chart";
-import { AnimationBacterial } from "@repo/design-system/components/contents/animation-bacterial";
+import { BacterialGrowth } from "@repo/design-system/components/contents/animation-bacterial";
 ```
 
 ### Color System
@@ -117,7 +153,8 @@ Always use `getColor()` for deterministic colors:
 import { getColor } from "@repo/design-system/lib/color";
 
 // Available colors: RED, ORANGE, AMBER, YELLOW, LIME, GREEN, EMERALD,
-// TEAL, CYAN, SKY, BLUE, INDIGO, VIOLET, PURPLE, FUCHSIA, PINK, ROSE
+// TEAL, CYAN, SKY, BLUE, INDIGO, VIOLET, PURPLE, FUCHSIA, PINK, ROSE,
+// SLATE, GRAY, ZINC, NEUTRAL, STONE
 
 <LineEquation
   data={[{
@@ -132,7 +169,7 @@ import { getColor } from "@repo/design-system/lib/color";
 />
 ```
 
-**Never use default RED, GREEN, or BLUE for lines.**
+Avoid default RED, GREEN, or BLUE for generic lines. Pick deterministic colors that support the explanation.
 
 ## Math Formatting Rules
 
@@ -140,13 +177,50 @@ import { getColor } from "@repo/design-system/lib/color";
 
 - **Inline math**: `<InlineMath math="x + y" />`
 - **Block math**: `<BlockMath math="x^2 + y^2 = r^2" />`
-- **Multiple blocks**: Wrap with `<MathContainer>`
+- **Related equation chain**: Prefer one expressive `<BlockMath />` when the lines form one connected derivation.
+- **Separate visual rows**: Use `<MathContainer>` when each row should remain its own card row.
+
+### Card Titles and Descriptions
+
+Many card-based content components accept React nodes for `title` and `description`. Verify the component prop type first. When the prop accepts `ReactNode`, use fragments with `<InlineMath />` when labels contain math.
+
+`BarChart` and `HistogramChart` currently accept string titles and descriptions, so do not pass JSX there unless the component API changes.
+
+```tsx
+<LineEquation
+  title={<>Graph of <InlineMath math="f(x) = x^2" /></>}
+  description={
+    <>
+      The curve passes through <InlineMath math="(0, 0)" />.
+    </>
+  }
+  data={[...]}
+/>
+```
+
+### Math Consistency
+
+- Use math components for every mathematical expression, variable, quantity, unit, coordinate, equation, inequality, numbered math reference, and calculated value.
+- Do not write mathematical values as plain text when they are part of the concept, example, question, solution, chart title, chart description, label, or caption.
+- Years can be plain text when they are calendar context, such as `2026 school year`.
+- Years must use math when they are part of a formula, table value, calculation, axis value, or data point.
+- If a concept is written with math notation in one place, use math notation everywhere that same concept appears.
+- Prefer richer LaTeX expressions where they improve readability, such as aligned or piecewise structures inside one `BlockMath`.
+
+```mdx
+<BlockMath math="\begin{aligned}
+2x + 3 &= 11 \\
+2x &= 8 \\
+x &= 4
+\end{aligned}" />
+```
 
 ### Numbers
 
-- Use `<InlineMath math="5" />` for numbers in text (not plain `5`)
+- Use `<InlineMath math="5" />` for mathematical numbers in text (not plain `5`)
 - Use `<InlineMath math="(1)" />` for numbered references
 - Units: `<InlineMath math="5 \text{ cm}" />`
+- Calendar years can stay plain text when they are only calendar context.
 
 ### Variables in Text
 
@@ -174,7 +248,7 @@ Use comma: `3,14` (not `3.14`)
 ### Headings
 
 - Start at h2 (`##`)
-- Maximum depth: h4 (`####`)
+- Maximum depth: h3 (`###`)
 - Descriptive titles (NOT "Step 1")
 - **NO symbols or math** in headings
 - **NO parentheses** in headings (use "Analysis 1" not "Analysis (1)")
@@ -183,14 +257,14 @@ Use comma: `3,14` (not `3.14`)
 ```md
 ## Finding the Value of x
 
-#### Analysis 1
+### Analysis 1
 ```
 
 **Incorrect:**
 ```md
 ## Step 1: Finding <InlineMath math="x" />
 
-#### Analysis (1)
+### Analysis (1)
 ```
 
 ### Lists
@@ -210,8 +284,12 @@ No nested lists. No blank lines between items.
 - **Be Creative**: Use various Markdown formatting and LaTeX math syntax creatively to present content engagingly
 - **NO Bloated Explanations**: Get straight to the point. Avoid unnecessary introductory text
 - **NO Excessive Lists**: Lists are okay but don't overuse them. **NEVER use nested lists**
+- **NO Em Dash**: Do not use em dash in content prose.
+- **Use Markdown Well**: Use blockquotes, tables, emphasis, callout-like prose, code blocks, Mermaid diagrams, and math blocks when they genuinely make the lesson easier to scan.
 - **Images are Reference Only**: If you find errors in questions or calculations from source images, fix them directly. The source is just a reference for the calculation method, not absolute truth
 - **Provide Context**: Explain the reasoning and context so students understand WHY, not just WHAT
+- **People-first**: Each page must leave students feeling they learned enough to make progress without searching again.
+- **Original value**: Add worked examples, intuition, checks, or common mistakes beyond a plain rewrite of the source.
 
 ### Paragraphs and Math
 
@@ -250,14 +328,14 @@ export const metadata = {
   date: "06/11/2025",
 };
 
-#### Analisis Soal
+### Analisis Soal
 
 Diketahui <InlineMath math="a = 5" /> dan <InlineMath math="b = 3" />.
 
-<MathContainer>
-  <BlockMath math="a + b = 5 + 3" />
-  <BlockMath math="a + b = 8" />
-</MathContainer>
+<BlockMath math="\begin{aligned}
+a + b &= 5 + 3 \\
+&= 8
+\end{aligned}" />
 
 Jadi, nilai <InlineMath math="a + b" /> adalah <InlineMath math="8" />.
 ```
@@ -338,8 +416,12 @@ For 2D visualizations:
 
 ```tsx
 <LineEquation
-  title={<>Graph of f(x)</>}
-  description="Visualization of the function"
+  title={<>Graph of <InlineMath math="f(x)" /></>}
+  description={
+    <>
+      The graph is drawn on the <InlineMath math="xy" />-plane.
+    </>
+  }
   showZAxis={false}
   cameraPosition={[0, 0, 15]}  // Perpendicular to plane
   data={[{
@@ -353,11 +435,11 @@ For 2D visualizations:
 
 ### Labels
 
-Ensure labels don't overlap:
+Ensure labels do not overlap. If a component only accepts string labels, use clear plain math notation in the label and keep the surrounding prose mathematically formatted.
 
 ```tsx
 labels: [
-  { text: "y = x²", at: 50, offset: [1, 0.5, 0] }
+  { text: "y = x^2", at: 50, offset: [1, 0.5, 0] }
 ]
 ```
 
@@ -372,13 +454,23 @@ labels: [
 
 Before submitting content:
 
+- [ ] Nearby content patterns were inspected
+- [ ] Source material and target scope are clear
+- [ ] Content is original, useful, and aligned with Google helpful-content guidance
 - [ ] Math notation consistent between question and answer
-- [ ] All numbers use `<InlineMath />`
+- [ ] All math expressions, variables, quantities, units, coordinates, and calculated values use math components
+- [ ] Calendar years are plain text only when they are calendar context, not formula/data values
+- [ ] Card titles and descriptions use ReactNode fragments with `<InlineMath />` when they contain math and the component supports ReactNode props
+- [ ] Related derivations use one expressive `<BlockMath />` when that is clearer than separate rows
+- [ ] Mermaid diagrams are used for flow, dependency, timeline, decision, or process explanations when they improve clarity
 - [ ] Headings don't contain math or symbols
+- [ ] Headings start at `##` and do not go deeper than `###`
+- [ ] No em dash appears in prose
 - [ ] Date format is MM/DD/YYYY
 - [ ] Colors use `getColor()` not hard-coded values
 - [ ] 3D points generated via `Array.from()`, not hard-coded
 - [ ] No option letters (A, B, C) in explanations
 - [ ] Explanations are clear and unambiguous
 - [ ] Graph descriptions end with period
-- [ ] Run `pnpm lint` before submitting
+- [ ] Run targeted content checks or `pnpm --filter @repo/contents typecheck` when content imports TSX/components
+- [ ] Run `pnpm lint` before submitting when the change is ready

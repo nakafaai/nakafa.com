@@ -21,6 +21,7 @@ export const MODEL_IDS = [
   "gemini-2.5-flash",
   "gemini-2.5-pro",
   "gemini-3-flash",
+  "gemini-3.1-flash-lite",
   "gemini-3-pro",
   "gemini-3.1-pro",
 
@@ -97,6 +98,10 @@ export const modelRegistry = {
   },
   "gemini-3-flash": {
     gatewayId: "google/gemini-3-flash",
+    credits: 1,
+  },
+  "gemini-3.1-flash-lite": {
+    gatewayId: "google/gemini-3.1-flash-lite-preview",
     credits: 1,
   },
   "gemini-3-pro": {
@@ -195,7 +200,7 @@ export const modelRegistry = {
   },
 } satisfies Record<ModelId, { gatewayId: GatewayModelId; credits: number }>;
 
-export const defaultModel: ModelId = "kimi-k2.5";
+export const defaultModel: ModelId = "gemini-3.1-flash-lite";
 
 export function getModelCreditCost(modelId: ModelId) {
   return modelRegistry[modelId].credits;

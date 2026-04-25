@@ -15,16 +15,20 @@ import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { AiChatModel } from "@/components/ai/chat-model";
-import { useAi } from "@/lib/context/use-ai";
+import { useAi } from "@/components/ai/context/use-ai";
+import { createChatRuntime } from "@/components/ai/helpers/runtime";
+import { reportChatRuntimeError } from "@/components/ai/helpers/runtime-error";
 import { useUser } from "@/lib/context/use-user";
 
+/** Renders the standalone new-chat input and starts the first message. */
 export function ChatNew() {
   const t = useTranslations("Ai");
 
   const router = useRouter();
 
   const text = useAi((state) => state.text);
-  const queuePendingQuery = useAi((state) => state.queuePendingQuery);
+  const getModel = useAi((state) => state.getModel);
+  const setChatSession = useAi((state) => state.setChatSession);
   const setText = useAi((state) => state.setText);
 
   const user = useUser((state) => state.user);
@@ -32,9 +36,12 @@ export function ChatNew() {
 
   const [isPending, startTransition] = useTransition();
 
+  /** Creates the chat, starts the stream, and moves the user to the chat page. */
   function handleSubmit(message: PromptInputMessage) {
     startTransition(async () => {
-      if (!message.text?.trim()) {
+      const query = message.text?.trim();
+
+      if (!query) {
         return;
       }
 
@@ -48,8 +55,21 @@ export function ChatNew() {
         type: "study",
       });
 
-      queuePendingQuery({ chatId, owner: "page", query: message.text });
+      const chatRuntime = createChatRuntime({
+        chatId,
+        getModel,
+        initialMessages: [],
+        onError: (error) =>
+          reportChatRuntimeError({
+            error,
+            fallbackMessage: t("error-message"),
+            insufficientCreditsMessage: t("insufficient-credits"),
+          }),
+      });
 
+      setChatSession({ chatId, runtime: chatRuntime });
+      setText("");
+      chatRuntime.sendMessage({ text: query });
       router.push(`/chat/${chatId}`);
     });
   }

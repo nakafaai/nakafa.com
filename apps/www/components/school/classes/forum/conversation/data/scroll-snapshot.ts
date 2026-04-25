@@ -1,6 +1,6 @@
 import type { ScrollToIndexOpts } from "virtua";
 import type { ConversationUnreadCue } from "@/components/school/classes/forum/conversation/data/unread";
-import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/conversation/store/session";
+import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
 
 type RestoreAlign = NonNullable<ScrollToIndexOpts["align"]>;
 

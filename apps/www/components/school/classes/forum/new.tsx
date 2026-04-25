@@ -30,12 +30,15 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
+import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import * as z from "zod/mini";
 import { getTag, getTagsByRole } from "@/components/school/classes/_data/tag";
+import { getSchoolClassesForumHref } from "@/components/school/classes/forum/helpers/routes";
 import { useClass } from "@/lib/context/use-class";
 import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 
@@ -60,6 +63,9 @@ const defaultValues: z.infer<typeof formSchema> = {
 /** Render the create-forum dialog and submit it through the class forum API. */
 export function SchoolClassesForumNew() {
   const t = useTranslations("School.Classes");
+  const router = useRouter();
+  const routeParams = useParams<{ id: string; slug: string }>();
+  const searchParams = useSearchParams();
 
   const [isDialogOpen, dialog] = useDisclosure(false);
 
@@ -87,9 +93,17 @@ export function SchoolClassesForumNew() {
     },
     onSubmit: async ({ value }) => {
       try {
-        await createForum({ ...value, classId });
+        const forumId = await createForum({ ...value, classId });
+        const href = getSchoolClassesForumHref({
+          classRouteId: routeParams.id,
+          forumId,
+          queryString: searchParams.toString(),
+          slug: routeParams.slug,
+        });
+
         dialog.close();
         form.reset();
+        router.push(href);
       } catch (error) {
         captureException(error, {
           source: "school-forum-create",

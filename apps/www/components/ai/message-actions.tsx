@@ -11,10 +11,10 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
-import { useCurrentChat } from "@/components/ai/chat-provider";
-import { useChat } from "@/lib/context/use-chat";
+import { useChat } from "@/components/ai/context/use-chat";
+import { useCurrentChat } from "@/components/ai/context/use-current-chat";
+import { useMessage } from "@/components/ai/context/use-message";
 import { useUser } from "@/lib/context/use-user";
-import { useMessage } from "./message-context";
 
 export const AiChatMessageActions = memo(() => {
   const t = useTranslations("Ai");

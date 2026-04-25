@@ -1,62 +1,43 @@
 # MDX Components Reference
 
-Complete reference for all available MDX components.
+Verified against `packages/design-system/components/markdown/mdx.tsx` and `packages/design-system/components/contents/`.
 
 ## Auto-Imported Components
 
-These components are available in ALL MDX files without importing.
+These components are available in MDX without imports.
 
-### BlockMath
-
-Display math equations on their own line.
+### Math
 
 ```mdx
+Inline math: <InlineMath math="x + y" />
+
 <BlockMath math="x^2 + y^2 = r^2" />
 
-<BlockMath math="\int_{a}^{b} f(x) \, dx = F(b) - F(a)" />
+<BlockMath math="\begin{aligned}
+x^2 - 4 &= 0 \\
+x^2 &= 4 \\
+x &= \pm 2
+\end{aligned}" />
 ```
 
-### InlineMath
-
-Display math within text flow.
-
-```mdx
-Diketahui <InlineMath math="a = 5" /> dan <InlineMath math="b = 3" />.
-
-Nilai <InlineMath math="(1)" /> menunjukkan...
-```
-
-### MathContainer
-
-Wrap multiple BlockMath components for consecutive equations.
+Prefer one expressive `BlockMath` when the formulas are one connected derivation. Use `MathContainer` when separate rows should remain visually distinct.
 
 ```mdx
 <MathContainer>
-  <BlockMath math="x^2 - 4 = 0" />
-  <BlockMath math="x^2 = 4" />
-  <BlockMath math="x = \pm 2" />
+  <BlockMath math="a^m \cdot a^n = a^{m+n}" />
+  <BlockMath math="\frac{a^m}{a^n} = a^{m-n}" />
 </MathContainer>
 ```
 
 ### CodeBlock
-
-Multi-language code display with tabs.
 
 ```mdx
 <CodeBlock
   data={[
     {
       language: "typescript",
-      filename: "math.ts",
-      code: `function add(a: number, b: number): number {
-  return a + b;
-}`,
-    },
-    {
-      language: "python",
-      filename: "math.py",
-      code: `def add(a, b):
-    return a + b`,
+      filename: "example.ts",
+      code: "const value = 1;",
     },
   ]}
 />
@@ -64,69 +45,39 @@ Multi-language code display with tabs.
 
 ### Mermaid
 
-Create diagrams using Mermaid syntax.
-
 ```mdx
-<Mermaid
-  chart="graph TD;
-    A[Start] --> B{Is it?};
-    B -->|Yes| C[OK];
-    C --> D[Rethink];
-    D --> B;
-    B -->|No| E[End];"
-/>
+<Mermaid chart="graph TD; A[Start] --> B[Finish];" />
 ```
 
-### Youtube
+Use Mermaid for flowcharts, dependency diagrams, timelines, decision paths, and process maps. Do not use Mermaid as decoration when prose, a table, or math is clearer.
 
-Embed YouTube videos.
+### Youtube
 
 ```mdx
 <Youtube videoId="dQw4w9WgXcQ" />
 ```
 
-### Standard Markdown Elements
+### Standard Markdown
 
-All standard Markdown elements work with enhanced styling:
+Use normal Markdown for paragraphs, lists, links, blockquotes, and tables. Content headings must start at `##` and must not go deeper than `###`.
 
-```mdx
-# Heading 1
-## Heading 2
-### Heading 3
+## Imported Content Components
 
-**Bold text**
-*Italic text*
-
-- List item 1
-- List item 2
-
-1. Ordered item 1
-2. Ordered item 2
-
-[Link text](https://example.com)
-
-> Blockquote
-
-| Table | Header |
-|-------|--------|
-| Cell  | Cell   |
-```
-
-## Content Components (Require Import)
-
-Import from `@repo/design-system/components/contents/*`.
+Import these only when the lesson needs the visualization.
 
 ### LineEquation
-
-3D line/curve visualization using Three.js.
 
 ```tsx
 import { LineEquation } from "@repo/design-system/components/contents/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 
 <LineEquation
-  title={<>Graph of f(x) = x²</>}
-  description="Parabola opening upward"
+  title={<>Graph of <InlineMath math="f(x) = x^2" /></>}
+  description={
+    <>
+      The curve passes through <InlineMath math="(0, 0)" />.
+    </>
+  }
   showZAxis={false}
   cameraPosition={[0, 0, 15]}
   data={[
@@ -135,259 +86,251 @@ import { getColor } from "@repo/design-system/lib/color";
         const x = -5 + (i / 99) * 10;
         return { x, y: x * x, z: 0 };
       }),
-      color: getColor("PURPLE"),
+      color: getColor("INDIGO"),
       smooth: true,
       showPoints: false,
-      labels: [
-        { text: "y = x²", at: 50, offset: [1, 0.5, 0] }
-      ],
+      labels: [{ text: "y = x^2", at: 75, offset: [0.3, 0.5, 0] }],
     },
   ]}
 />
 ```
 
-**Props:**
-- `title`: ReactNode - Card title
-- `description`: ReactNode - Card description
-- `showZAxis`: boolean - Show Z axis (default: true)
-- `cameraPosition`: [number, number, number] - Camera position
-- `data`: LineData[] - Array of line data
-
-**LineData:**
-- `points`: { x, y, z }[] - Points for the line
-- `color`: string - Line color
-- `smooth`: boolean - Smooth curve
-- `showPoints`: boolean - Show point markers
-- `labels`: Label[] - Labels along the line
-
 ### NumberLine
-
-Visual number line with segments.
 
 ```tsx
 import { NumberLine } from "@repo/design-system/components/contents/number-line";
 
 <NumberLine
-  min={-10}
-  max={10}
-  title="Interval Notation"
-  description="x ≥ 3 or x < -2"
+  title={<>Solution Set for <InlineMath math="x \ge 3" /></>}
+  description={
+    <>
+      The shaded ray starts at <InlineMath math="3" /> and extends to the right.
+    </>
+  }
   segments={[
     {
-      start: -10,
-      end: -2,
-      startInclusive: false,
-      endInclusive: false,
-      label: "x < -2",
-      shaded: true,
-    },
-    {
       start: 3,
-      end: 10,
+      end: Number.POSITIVE_INFINITY,
       startInclusive: true,
-      endInclusive: false,
-      label: "x ≥ 3",
-      shaded: true,
+      label: <InlineMath math="x \ge 3" />,
     },
   ]}
 />
 ```
 
-**Props:**
-- `min`: number - Minimum value
-- `max`: number - Maximum value
-- `title`: ReactNode - Card title
-- `description`: ReactNode - Card description
-- `segments`: Segment[] - Array of segments
-
-**Segment:**
-- `start`: number - Start value
-- `end`: number - End value
-- `startInclusive`: boolean - Include start point
-- `endInclusive`: boolean - Include end point
-- `startLabel`: ReactNode - Custom label for start
-- `endLabel`: ReactNode - Custom label for end
-- `label`: ReactNode - Segment label
-- `shaded`: boolean - Shade the segment
-- `showPoints`: boolean - Show endpoints
-- `backgroundColor`: string - Custom background color
-
 ### Triangle
-
-Interactive right triangle for trigonometry.
 
 ```tsx
 import { Triangle } from "@repo/design-system/components/contents/triangle";
 
 <Triangle
-  title="Right Triangle"
-  description="Triangle with angle θ"
-  angle={Math.PI / 6}  // 30 degrees
-  showLabels={true}
-  showValues={true}
+  title={<>Right Triangle with <InlineMath math="30^\circ" /></>}
+  description={
+    <>
+      The angle measure is <InlineMath math="30^\circ" />.
+    </>
+  }
+  angle={30}
+  labels={{
+    opposite: "opposite",
+    adjacent: "adjacent",
+    hypotenuse: "hypotenuse",
+  }}
 />
 ```
 
 ### UnitCircle
 
-Interactive unit circle for trigonometry.
-
 ```tsx
 import { UnitCircle } from "@repo/design-system/components/contents/unit-circle";
 
 <UnitCircle
-  title="Unit Circle"
-  description="Standard unit circle with angle θ"
-  angle={Math.PI / 4}  // 45 degrees
-  showAngle={true}
-  showCoordinates={true}
-  showTriangle={true}
+  title={<>Unit Circle at <InlineMath math="45^\circ" /></>}
+  description={
+    <>
+      The terminal point has equal <InlineMath math="x" /> and <InlineMath math="y" /> coordinates.
+    </>
+  }
+  angle={45}
+  trigValues={{ sin: "\\frac{\\sqrt{2}}{2}", cos: "\\frac{\\sqrt{2}}{2}" }}
 />
 ```
 
 ### Vector3d
 
-3D vector visualization.
-
 ```tsx
 import { Vector3d } from "@repo/design-system/components/contents/vector-3d";
+import { getColor } from "@repo/design-system/lib/color";
 
 <Vector3d
-  title="Vector Addition"
-  description="u + v = w"
+  title={<>Vectors <InlineMath math="\vec{u}" /> and <InlineMath math="\vec{v}" /></>}
+  description={
+    <>
+      Both vectors start at <InlineMath math="(0, 0, 0)" />.
+    </>
+  }
   vectors={[
-    { x: 3, y: 2, z: 0, color: getColor("BLUE"), label: "u" },
-    { x: 2, y: 4, z: 0, color: getColor("GREEN"), label: "v" },
-    { x: 5, y: 6, z: 0, color: getColor("RED"), label: "w" },
+    { to: [3, 2, 0], color: getColor("TEAL"), label: "u" },
+    { to: [2, 4, 0], color: getColor("INDIGO"), label: "v" },
   ]}
 />
 ```
 
 ### VectorChart
 
-2D vector diagram.
-
 ```tsx
 import { VectorChart } from "@repo/design-system/components/contents/vector-chart";
+import { getColor } from "@repo/design-system/lib/color";
 
 <VectorChart
-  title="2D Vectors"
-  description="Vector representation in 2D"
+  title={<>Components of <InlineMath math="\vec{u}" /></>}
+  description={
+    <>
+      The endpoint is <InlineMath math="(3, 4)" />.
+    </>
+  }
   vectors={[
-    { x: 3, y: 4, label: "a" },
-    { x: -2, y: 1, label: "b" },
+    {
+      id: "u",
+      name: "u",
+      color: getColor("TEAL"),
+      points: [
+        { x: 0, y: 0 },
+        { x: 3, y: 4 },
+      ],
+    },
   ]}
 />
 ```
 
 ### FunctionChart
 
-Line chart for functions.
-
 ```tsx
 import { FunctionChart } from "@repo/design-system/components/contents/function-chart";
 
 <FunctionChart
-  title="Linear Function"
-  description="y = 2x + 1"
-  data={[
-    { x: 0, y: 1 },
-    { x: 1, y: 3 },
-    { x: 2, y: 5 },
-  ]}
+  title={<>Exponential Function <InlineMath math="f(x) = 2^x" /></>}
+  description={
+    <>
+      The initial value is <InlineMath math="1" /> and the base is <InlineMath math="2" />.
+    </>
+  }
+  p={1}
+  a={2}
+  n={8}
 />
 ```
 
 ### ScatterDiagram
 
-Scatter plot with regression line.
-
 ```tsx
 import { ScatterDiagram } from "@repo/design-system/components/contents/scatter-diagram";
+import { getColor } from "@repo/design-system/lib/color";
 
 <ScatterDiagram
-  title="Correlation Analysis"
-  description="Scatter plot of X vs Y"
-  data={[
-    { x: 1, y: 2 },
-    { x: 2, y: 3 },
-    { x: 3, y: 5 },
+  title={<>Scatter Plot for <InlineMath math="(x, y)" /> Data</>}
+  description={
+    <>
+      The regression line summarizes the relationship between <InlineMath math="x" /> and <InlineMath math="y" />.
+    </>
+  }
+  calculateRegressionLine={true}
+  datasets={[
+    {
+      name: "Sample",
+      color: getColor("INDIGO"),
+      points: [
+        { x: 1, y: 2 },
+        { x: 2, y: 3 },
+        { x: 3, y: 5 },
+      ],
+    },
   ]}
-  showRegression={true}
 />
 ```
 
-### BarChart
-
-Bar or histogram chart.
+### BarChart and HistogramChart
 
 ```tsx
 import { BarChart } from "@repo/design-system/components/contents/bar-chart";
 
+const chartConfig = {
+  value: {
+    label: "Frequency",
+    color: "var(--chart-1)",
+  },
+};
+
 <BarChart
   title="Frequency Distribution"
-  description="Data frequency"
+  description="Frequency by category."
+  yAxisLabel="Frequency"
+  chartConfig={chartConfig}
   data={[
-    { label: "A", value: 10 },
-    { label: "B", value: 20 },
-    { label: "C", value: 15 },
+    { name: "A", value: 10 },
+    { name: "B", value: 20 },
+    { name: "C", value: 15 },
   ]}
 />
 ```
 
 ### Inequality
 
-Inequality region visualization.
-
 ```tsx
 import { Inequality } from "@repo/design-system/components/contents/inequality";
+import { getColor } from "@repo/design-system/lib/color";
 
 <Inequality
-  title="Linear Inequality"
-  description="y > x + 1"
-  inequality="y > x + 1"
-  bounds={{ x: [-5, 5], y: [-5, 5] }}
+  title={<>Linear Inequality <InlineMath math="x + y \le 5" /></>}
+  description={
+    <>
+      The shaded region represents <InlineMath math="x + y \le 5" />.
+    </>
+  }
+  data={[
+    {
+      is2D: true,
+      boundaryLine2D: [1, 1, -5],
+      color: getColor("TEAL"),
+      boundaryColor: getColor("INDIGO"),
+      label: { text: "x + y <= 5", position: [1, 1, 0] },
+    },
+  ]}
 />
 ```
 
-### AnimationBacterial
-
-Bacterial growth animation.
+### BacterialGrowth
 
 ```tsx
-import { AnimationBacterial } from "@repo/design-system/components/contents/animation-bacterial";
+import { BacterialGrowth } from "@repo/design-system/components/contents/animation-bacterial";
 
-<AnimationBacterial
-  title="Bacterial Growth"
-  description="Exponential growth model"
-  initialCount={100}
-  growthRate={0.5}
-  timeSteps={10}
+<BacterialGrowth
+  initialCount={1}
+  ratio={2}
+  maxGenerations={6}
+  labels={{
+    title: "Bacterial Growth",
+    bacterial: "Bacteria",
+    initialBacteria: "Initial bacteria",
+  }}
 />
 ```
+
+## Math Consistency
+
+- Use `<InlineMath />` or `<BlockMath />` for mathematical expressions, variables, quantities, units, coordinates, equations, inequalities, and calculated values.
+- Keep the same math notation everywhere the same concept appears.
+- Use plain text for calendar years only when the year is contextual, such as `2026 school year`.
+- Use math for years when they are formula values, data values, table values, or axis values.
+- Many card-based visual components accept React nodes for `title` and `description`; use fragments with `<InlineMath />` whenever those props contain math.
+- Verify prop types before using JSX in props. `BarChart` and `HistogramChart` currently accept string titles and descriptions.
+- Some visualization labels are string-only. Use clear plain math notation there, and keep surrounding prose formatted with math components.
+- Do not use em dash in prose.
 
 ## Color Reference
 
-Available colors from `@repo/design-system/lib/color`:
+Use `getColor()` from `@repo/design-system/lib/color`.
 
-| Color | Hex | Usage |
-|-------|-----|-------|
-| RED | #dc2626 | Avoid for lines |
-| ORANGE | #ea580c | Good for emphasis |
-| AMBER | #d97706 | Warnings |
-| YELLOW | #ca8a04 | Highlights |
-| LIME | #65a30d | Good alternative |
-| GREEN | #16a34a | Avoid for lines |
-| EMERALD | #059669 | Good for lines |
-| TEAL | #0d9488 | Good for lines |
-| CYAN | #0891b2 | Good for lines |
-| SKY | #0284c7 | Good for lines |
-| BLUE | #2563eb | Avoid for lines |
-| INDIGO | #4f46e5 | Good for lines |
-| VIOLET | #7c3aed | Good for lines |
-| PURPLE | #9333ea | Good for lines |
-| FUCHSIA | #c026d3 | Good for lines |
-| PINK | #db2777 | Good for lines |
-| ROSE | #e11d48 | Good for lines |
+Available keys: `RED`, `ORANGE`, `AMBER`, `YELLOW`, `LIME`, `GREEN`, `EMERALD`, `TEAL`, `CYAN`, `SKY`, `BLUE`, `INDIGO`, `VIOLET`, `PURPLE`, `FUCHSIA`, `PINK`, `ROSE`, `SLATE`, `GRAY`, `ZINC`, `NEUTRAL`, `STONE`.
 
-**Recommendation**: Use `INDIGO`, `TEAL`, `EMERALD`, `VIOLET`, `ORANGE`, `CYAN`, or `PURPLE` for lines.
+Avoid generic `RED`, `GREEN`, or `BLUE` for ordinary lines. Prefer deterministic colors that support the explanation, such as `INDIGO`, `TEAL`, `EMERALD`, `VIOLET`, `ORANGE`, `CYAN`, or `PURPLE`.

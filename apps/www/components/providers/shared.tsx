@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AiContextProvider } from "@/lib/context/use-ai";
+import { AiContextProvider } from "@/components/ai/context/use-ai";
 import { ContentViewsProvider } from "@/lib/context/use-content-views";
 import { PagefindProvider } from "@/lib/context/use-pagefind";
 import { SearchContextProvider } from "@/lib/context/use-search";

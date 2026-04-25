@@ -1,97 +1,46 @@
 "use client";
 
-import {
-  Add01Icon,
-  ArrowExpand01Icon,
-  ArrowShrink02Icon,
-  Cancel01Icon,
-  ChatSearch01Icon,
-  GeometricShapes01Icon,
-  Globe02Icon,
-  SquareLock01Icon,
-  StarsIcon,
-  Tick01Icon,
-} from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
-import { DEFAULT_TITLE } from "@repo/ai/features/constants";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import {
-  Conversation,
-  ConversationContent,
-  ConversationEmptyState,
-  ConversationScrollButton,
-} from "@repo/design-system/components/ai/conversation";
-import {
-  PromptInput,
-  type PromptInputMessage,
-  PromptInputSubmit,
-  PromptInputTextarea,
-  PromptInputToolbar,
-  PromptInputTools,
-} from "@repo/design-system/components/ai/input";
-import { Message } from "@repo/design-system/components/ai/message";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@repo/design-system/components/ui/sheet";
+import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "@repo/design-system/lib/utils";
-import {
-  usePathname,
-  useRouter,
-} from "@repo/internationalization/src/navigation";
-import type { ChatStatus } from "ai";
-import {
-  Authenticated,
-  Unauthenticated,
-  useMutation,
-  usePaginatedQuery,
-} from "convex/react";
-import { useTranslations } from "next-intl";
-import { Activity, memo, useTransition } from "react";
-import { useAi } from "@/lib/context/use-ai";
-import { ChatProvider, useChat } from "@/lib/context/use-chat";
-import { useUser } from "@/lib/context/use-user";
-import { AiChatError } from "./chat-error";
-import { AiChatMessage } from "./chat-message";
-import { AiChatModel } from "./chat-model";
-import { AiChatPaginationTrigger } from "./chat-pagination-trigger";
-import { AiChatPending } from "./chat-pending";
-import { CurrentChatProvider, useCurrentChat } from "./chat-provider";
-import { ChatSpacing } from "./chat-spacing";
+import { Authenticated, Unauthenticated } from "convex/react";
+import { Activity, memo } from "react";
+import { useAi } from "@/components/ai/context/use-ai";
+import { CurrentChatProvider } from "@/components/ai/context/use-current-chat";
+import { AiSheetHeader } from "@/components/ai/sheet-header";
+import { SheetMain } from "@/components/ai/sheet-main";
+import { SheetNew } from "@/components/ai/sheet-new";
 
 const MIN_WIDTH = 384;
 const MAX_WIDTH = 672;
 
+/** Renders Nina's resizable side sheet shell. */
 export function AiSheet() {
   const open = useAi((state) => state.open);
   const setOpen = useAi((state) => state.setOpen);
-  const setActiveChatId = useAi((state) => state.setActiveChatId);
   const activeChatId = useAi((state) => state.activeChatId);
+  const setActiveChatId = useAi((state) => state.setActiveChatId);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   const { width, isResizing, resizerProps, setWidth } = useResizable({
     initialWidth: MIN_WIDTH,
-    minWidth: MIN_WIDTH,
     maxWidth: MAX_WIDTH,
+    minWidth: MIN_WIDTH,
   });
+  const expanded = width === MAX_WIDTH;
+
+  /** Toggles Nina sheet between compact and expanded widths. */
+  function handleResizeToggle() {
+    setWidth(expanded ? MIN_WIDTH : MAX_WIDTH);
+  }
+
+  /** Returns the sheet to a new-chat state after private-chat failures. */
+  function handlePrivateChatError() {
+    setActiveChatId(null);
+  }
 
   return (
     <Sheet
@@ -118,77 +67,28 @@ export function AiSheet() {
           onMouseDown={resizerProps.onMouseDown}
           type="button"
         />
-        <SheetHeader className="border-b p-3">
-          <SheetTitle className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 px-2">
-              <div className="flex items-center gap-2 text-base">
-                <HugeIcons className="size-4" icon={StarsIcon} />
-                <span>Nina</span>
-              </div>
-            </div>
-
-            <div className="flex items-center">
-              <Activity mode={activeChatId ? "visible" : "hidden"}>
-                <Button
-                  onClick={() => setActiveChatId(null)}
-                  size="icon-sm"
-                  variant="ghost"
-                >
-                  <HugeIcons icon={Add01Icon} />
-                  <span className="sr-only">New Chat</span>
-                </Button>
-              </Activity>
-              <AiSheetHistory />
-              <Button
-                onClick={() => {
-                  setWidth(
-                    width === MAX_WIDTH ? (MIN_WIDTH ?? 0) : (MAX_WIDTH ?? 0)
-                  );
-                }}
-                size="icon-sm"
-                variant="ghost"
-              >
-                <HugeIcons
-                  icon={
-                    width === MAX_WIDTH ? ArrowShrink02Icon : ArrowExpand01Icon
-                  }
-                />
-                <span className="sr-only">Resize</span>
-              </Button>
-              <Button
-                onClick={() => setOpen(false)}
-                size="icon-sm"
-                variant="ghost"
-              >
-                <HugeIcons icon={Cancel01Icon} />
-                <span className="sr-only">Close</span>
-              </Button>
-            </div>
-          </SheetTitle>
-          <SheetDescription className="sr-only">
-            Nina is a chatbot that can help you with your questions.
-          </SheetDescription>
-        </SheetHeader>
+        <AiSheetHeader
+          expanded={expanded}
+          onResizeToggle={handleResizeToggle}
+        />
 
         <Activity mode={activeChatId ? "hidden" : "visible"}>
-          <AiSheetNewChat />
+          <SheetNew />
         </Activity>
         <Activity mode={activeChatId ? "visible" : "hidden"}>
           <ErrorBoundary
-            fallback={<AiSheetError />}
-            onError={() => {
-              setActiveChatId(null);
-            }}
+            fallback={<SheetError />}
+            onError={handlePrivateChatError}
           >
             <Authenticated>
               {!!activeChatId && (
                 <CurrentChatProvider chatId={activeChatId}>
-                  <AiSheetMain />
+                  <SheetMain />
                 </CurrentChatProvider>
               )}
             </Authenticated>
             <Unauthenticated>
-              <AiSheetNewChat />
+              <SheetNew />
             </Unauthenticated>
           </ErrorBoundary>
         </Activity>
@@ -197,289 +97,5 @@ export function AiSheet() {
   );
 }
 
-const AiSheetError = memo(() => null);
-AiSheetError.displayName = "AiSheetError";
-
-const AiSheetNewChat = memo(() => {
-  const t = useTranslations("Ai");
-
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const queuePendingQuery = useAi((state) => state.queuePendingQuery);
-  const setOpen = useAi((state) => state.setOpen);
-  const setActiveChatId = useAi((state) => state.setActiveChatId);
-
-  const user = useUser((s) => s.user);
-  const createChat = useMutation(api.chats.mutations.createChat);
-
-  const [isPending, startTransition] = useTransition();
-
-  function handleSubmit(message: PromptInputMessage) {
-    startTransition(async () => {
-      if (!message.text?.trim()) {
-        return;
-      }
-
-      if (!user) {
-        setOpen(false);
-        router.push(`/auth?redirect=${pathname}`);
-        return;
-      }
-
-      const chatId = await createChat({
-        title: DEFAULT_TITLE,
-        type: "study",
-      });
-
-      queuePendingQuery({ chatId, owner: "sheet", query: message.text });
-      setActiveChatId(chatId);
-    });
-  }
-
-  return (
-    <div className="relative flex size-full flex-col overflow-hidden">
-      <Conversation>
-        <ConversationContent>
-          <ConversationEmptyState
-            description={t("new-chat-description")}
-            icon={<HugeIcons className="size-6" icon={GeometricShapes01Icon} />}
-            title={t("new-chat-title")}
-          />
-        </ConversationContent>
-        <ConversationScrollButton />
-      </Conversation>
-
-      <AiSheetInput
-        disabled={isPending}
-        isPending={isPending}
-        key="ai-sheet-input"
-        onSubmit={handleSubmit}
-      />
-    </div>
-  );
-});
-AiSheetNewChat.displayName = "AiSheetNewChat";
-
-const AiSheetHistory = memo(() => {
-  const user = useUser((s) => s.user);
-
-  if (!user) {
-    return null;
-  }
-
-  return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <Button size="icon-sm" variant="ghost">
-          <HugeIcons icon={ChatSearch01Icon} />
-          <span className="sr-only">History</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <Authenticated>
-        <AiSheetHistoryContent userId={user.appUser._id} />
-      </Authenticated>
-    </DropdownMenu>
-  );
-});
-AiSheetHistory.displayName = "AiSheetHistory";
-
-const AiSheetHistoryContent = memo(({ userId }: { userId: Id<"users"> }) => {
-  const t = useTranslations("Ai");
-  const activeChatId = useAi((state) => state.activeChatId);
-  const setActiveChatId = useAi((state) => state.setActiveChatId);
-  const { results, status } = usePaginatedQuery(
-    api.chats.queries.getChats,
-    { userId, type: "study" },
-    { initialNumItems: 50 }
-  );
-
-  if (status === "LoadingFirstPage" || results.length === 0) {
-    return null;
-  }
-
-  return (
-    <DropdownMenuContent align="end" className="max-h-64">
-      <DropdownMenuLabel>{t("recent-chats")}</DropdownMenuLabel>
-      <DropdownMenuGroup>
-        {results.map((chat) => {
-          const isPrivate = chat.visibility === "private";
-          return (
-            <DropdownMenuItem
-              className="cursor-pointer"
-              key={chat._id}
-              onSelect={() => {
-                setActiveChatId(chat._id);
-              }}
-            >
-              <HugeIcons icon={isPrivate ? SquareLock01Icon : Globe02Icon} />
-              <span className="max-w-62.5 truncate">{chat.title}</span>
-              <DropdownMenuShortcut>
-                <HugeIcons
-                  className={cn(
-                    "transition-opacity ease-out",
-                    activeChatId === chat._id ? "opacity-100" : "opacity-0"
-                  )}
-                  icon={Tick01Icon}
-                />
-              </DropdownMenuShortcut>
-            </DropdownMenuItem>
-          );
-        })}
-      </DropdownMenuGroup>
-    </DropdownMenuContent>
-  );
-});
-
-const AiSheetMain = memo(() => {
-  const chat = useCurrentChat((s) => s.chat);
-  const messages = useCurrentChat((s) => s.messages);
-
-  if (!(chat && messages)) {
-    return <AiSheetMainPlaceholder />;
-  }
-
-  return (
-    <ChatProvider
-      chatId={chat._id}
-      initialMessages={messages}
-      pendingQueryOwner="sheet"
-    >
-      <AiSheetMainContent />
-    </ChatProvider>
-  );
-});
-AiSheetMain.displayName = "AiSheetMain";
-
-const AiSheetMainPlaceholder = memo(() => (
-  <div className="relative flex size-full flex-col overflow-hidden">
-    <Conversation>
-      <ConversationContent>
-        <div />
-      </ConversationContent>
-      <ConversationScrollButton />
-    </Conversation>
-
-    <AiSheetInput
-      disabled={true}
-      isPending={true}
-      key="ai-sheet-input"
-      onSubmit={() => {
-        return;
-      }}
-    />
-  </div>
-));
-AiSheetMainPlaceholder.displayName = "AiSheetMainPlaceholder";
-
-const AiSheetMainContent = memo(() => <AiSheetContent />);
-
-const AiSheetContent = memo(() => {
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const messages = useChat((state) => state.chat.messages);
-  const setText = useAi((state) => state.setText);
-
-  const user = useUser((s) => s.user);
-  const { sendMessage, status, stop } = useChat((state) => state.chat);
-
-  function handleSubmit(message: PromptInputMessage) {
-    if (status === "streaming") {
-      stop();
-      return;
-    }
-
-    if (!message.text?.trim()) {
-      return;
-    }
-
-    if (!user) {
-      router.push(`/auth?redirect=${pathname}`);
-      return;
-    }
-
-    sendMessage({
-      text: message.text,
-      files: message.files,
-    });
-    setText("");
-  }
-
-  return (
-    <div className="relative flex size-full flex-col overflow-hidden">
-      <Conversation>
-        <ConversationContent>
-          {messages.map((message, index) => (
-            <Message
-              from={message.role === "user" ? "user" : "assistant"}
-              key={message.id}
-            >
-              {index === 0 ? <AiChatPaginationTrigger /> : null}
-              <AiChatMessage message={message} />
-            </Message>
-          ))}
-
-          <AiChatPending />
-
-          <AiChatError />
-
-          <ChatSpacing />
-        </ConversationContent>
-        <ConversationScrollButton />
-      </Conversation>
-
-      <AiSheetInput
-        disabled={status === "submitted"}
-        key="ai-sheet-input"
-        onSubmit={handleSubmit}
-        status={status}
-      />
-    </div>
-  );
-});
-AiSheetContent.displayName = "AiSheetContent";
-
-const AiSheetInput = memo(
-  ({
-    onSubmit,
-    disabled,
-    status,
-    isPending,
-  }: {
-    onSubmit: (message: PromptInputMessage) => void;
-    disabled?: boolean;
-    status?: ChatStatus;
-    isPending?: boolean;
-  }) => {
-    const t = useTranslations("Ai");
-
-    const text = useAi((state) => state.text);
-    const setText = useAi((state) => state.setText);
-
-    return (
-      <div className="grid shrink-0 px-2 pb-2">
-        <PromptInput onSubmit={onSubmit}>
-          <PromptInputTextarea
-            aria-label={t("text-placeholder")}
-            autoFocus
-            onChange={(e) => setText(e.target.value)}
-            placeholder={t("text-placeholder")}
-            value={text}
-          />
-          <PromptInputToolbar>
-            <PromptInputTools>
-              <AiChatModel />
-            </PromptInputTools>
-            <PromptInputSubmit
-              disabled={disabled}
-              isPending={isPending}
-              status={status}
-            />
-          </PromptInputToolbar>
-        </PromptInput>
-      </div>
-    );
-  }
-);
-AiSheetInput.displayName = "AiSheetInput";
+/** Keeps private-chat errors visually empty while the sheet resets. */
+const SheetError = memo(() => null);

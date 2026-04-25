@@ -14,7 +14,7 @@
     "@ai-sdk/google-vertex": "^4.0.112",
     "@ai-sdk/openai": "^3.0.53",
     "@ai-sdk/react": "^3.0.170",
-    "@mendable/firecrawl-js": "^4.19.0",
+    "@mendable/firecrawl-js": "^4.20.0",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "ai": "^6.0.168",

@@ -42,7 +42,7 @@ import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
 
 /**
- * Renders the signed-in user menu and the guest login shortcut in the sidebar.
+ * Renders the signed-in user menu, plan indicator, and guest login shortcut in the sidebar.
  */
 export function NavUser() {
   const t = useTranslations("Auth");
@@ -81,12 +81,21 @@ export function NavUser() {
     );
   }
 
+  const planLabelByPlan = {
+    free: t("plan-free"),
+    pro: t("plan-pro"),
+  };
+  const planLabel = planLabelByPlan[user.appUser.plan];
+
   return (
     <SidebarMenuItem>
       <DropdownMenu onOpenChange={set} open={open}>
         <DropdownMenuTrigger asChild>
-          <SidebarMenuButton className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-            <Avatar className="size-6">
+          <SidebarMenuButton
+            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            size="lg"
+          >
+            <Avatar>
               <AvatarImage
                 alt={user.authUser.name}
                 role="presentation"
@@ -96,10 +105,13 @@ export function NavUser() {
                 {getInitialName(user.authUser.name)}
               </AvatarFallback>
             </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
+            <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
               <span className="truncate">{user.authUser.name}</span>
+              <span className="truncate text-muted-foreground text-xs">
+                {planLabel}
+              </span>
             </div>
-            <HugeIcons className="ml-auto size-4" icon={MoreVerticalIcon} />
+            <HugeIcons className="ml-auto" icon={MoreVerticalIcon} />
           </SidebarMenuButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -110,7 +122,7 @@ export function NavUser() {
         >
           <DropdownMenuLabel className="p-0 font-normal">
             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-              <Avatar className="size-8">
+              <Avatar>
                 <AvatarImage
                   alt={user.authUser.name}
                   role="presentation"
