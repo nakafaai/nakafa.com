@@ -1,0 +1,104 @@
+export const metadata = {
+  title: "Aturan Angka Penting",
+  description:
+    "Pelajari cara menentukan angka penting, membulatkan hasil pengukuran, dan menulis hasil operasi hitung sesuai ketelitian alat ukur.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/25/2026",
+  subject: "Pengukuran dalam Kerja Ilmiah",
+};
+
+## Kalkulator Belum Tahu Ketelitian Alat
+
+Saat diameter tutup botol terbaca <InlineMath math="3,12 \text{ cm}" />, kalkulator bisa memberi banyak digit setelah kita menghitung luasnya. Namun alat ukur hanya mendukung sebagian digit itu. Di sinilah **angka penting** dipakai.
+
+Angka penting adalah digit yang dipercaya dari hasil pengukuran. Digit terakhir biasanya merupakan angka taksiran, yaitu digit yang masih masuk akal berdasarkan ketelitian alat.
+
+<BlockMath math="\text{hasil ukur}=\text{angka pasti}+\text{angka taksiran terakhir}" />
+
+Jadi, aturan angka penting bukan aturan untuk membuat angka terlihat pendek. Aturan ini menjaga agar laporan tidak terlihat lebih teliti daripada alat ukurnya.
+
+| Situasi | Pertanyaan yang harus dijawab |
+| :------ | :---------------------------- |
+| Membaca satu hasil ukur | Digit mana yang benar-benar didukung alat? |
+| Penjumlahan dan pengurangan | Data mana yang punya tempat desimal paling sedikit? |
+| Perkalian dan pembagian | Data mana yang punya jumlah angka penting paling sedikit? |
+
+## Nol Bisa Menjadi Angka atau Penjaga Tempat
+
+Nol sering membuat siswa keliru karena perannya bergantung pada posisi penulisan.
+
+| Penulisan hasil ukur | Cara membaca angka penting |
+| :------------------- | :------------------------- |
+| <InlineMath math="3,25 \text{ cm}" /> | Semua digit bukan nol dihitung, jadi ada <InlineMath math="3" /> angka penting. |
+| <InlineMath math="1,004 \text{ cm}" /> | Nol di antara angka bukan nol dihitung, jadi ada <InlineMath math="4" /> angka penting. |
+| <InlineMath math="31,00 \text{ cm}" /> | Nol setelah tanda desimal dihitung, jadi ada <InlineMath math="4" /> angka penting. |
+| <InlineMath math="0,0026 \text{ kg}" /> | Nol di depan angka bukan nol hanya penjaga tempat, jadi ada <InlineMath math="2" /> angka penting. |
+| <InlineMath math="1000 \text{ m}" /> | Tanpa tanda desimal atau notasi lain, nol belakang biasanya tidak dianggap angka penting. |
+| <InlineMath math="3,14 \times 10^{-5} \text{ m}" /> | Bagian <InlineMath math="3,14" /> punya <InlineMath math="3" /> angka penting. Pangkat <InlineMath math="10^{-5}" /> hanya menunjukkan skala. |
+
+Jika sebuah nol memang perlu dianggap penting, tulis dengan cara yang tidak ambigu. Notasi ilmiah sering menjadi pilihan paling rapi.
+
+<BlockMath math="\begin{aligned}
+1000 \text{ m} \text{ dengan } 1 \text{ angka penting} &= 1 \times 10^3 \text{ m} \\
+1000 \text{ m} \text{ dengan } 4 \text{ angka penting} &= 1,000 \times 10^3 \text{ m}
+\end{aligned}" />
+
+## Pembulatan Mengikuti Digit Berikutnya
+
+Setelah jumlah digit yang boleh dilaporkan diketahui, lihat digit pertama yang dibuang.
+
+| Digit pertama yang dibuang | Keputusan |
+| :------------------------- | :-------- |
+| <InlineMath math="\ge 5" /> | Naikkan digit terakhir yang dipertahankan. |
+| <InlineMath math="<5" /> | Biarkan digit terakhir yang dipertahankan. |
+
+Contohnya, jika luas hasil hitung adalah <InlineMath math="52,976686625 \text{ cm}^2" /> dan perlu ditulis sampai <InlineMath math="4" /> angka penting, digit berikutnya adalah <InlineMath math="6" />.
+
+<BlockMath math="52,976686625 \text{ cm}^2 \to 52,98 \text{ cm}^2" />
+
+Jika hasil hitung adalah <InlineMath math="52,973376625 \text{ cm}^2" />, digit berikutnya adalah <InlineMath math="3" />.
+
+<BlockMath math="52,973376625 \text{ cm}^2 \to 52,97 \text{ cm}^2" />
+
+## Penjumlahan Mengikuti Posisi Desimal
+
+Pada penjumlahan dan pengurangan, ketelitian dilihat dari posisi desimal. Data yang paling kasar menentukan posisi desimal terakhir pada hasil.
+
+Misalnya panjang besi <InlineMath math="8,235 \text{ cm}" /> disambung dengan panjang <InlineMath math="4,5 \text{ cm}" />.
+
+<BlockMath math="\begin{aligned}
+8,235 \text{ cm}+4,5 \text{ cm} &= 12,735 \text{ cm} \\
+&\to 12,7 \text{ cm}
+\end{aligned}" />
+
+Hasil <InlineMath math="12,735 \text{ cm}" /> harus dibulatkan ke <InlineMath math="1" /> tempat desimal karena <InlineMath math="4,5 \text{ cm}" /> hanya memiliki <InlineMath math="1" /> digit setelah koma.
+
+## Perkalian Mengikuti Data Paling Sedikit
+
+Pada perkalian dan pembagian, yang membatasi adalah jumlah angka penting paling sedikit di antara data ukur.
+
+Misalnya lebar karton <InlineMath math="12,455 \text{ cm}" /> dan panjangnya <InlineMath math="35,2 \text{ cm}" />.
+
+<BlockMath math="\begin{aligned}
+A &= p \times l \\
+&= 12,455 \text{ cm} \times 35,2 \text{ cm} \\
+&= 438,416 \text{ cm}^2 \\
+&\to 438 \text{ cm}^2
+\end{aligned}" />
+
+Nilai <InlineMath math="12,455 \text{ cm}" /> punya <InlineMath math="5" /> angka penting, sedangkan <InlineMath math="35,2 \text{ cm}" /> punya <InlineMath math="3" /> angka penting. Karena itu, luas dilaporkan dengan <InlineMath math="3" /> angka penting.
+
+Untuk tutup botol berdiameter <InlineMath math="3,12 \text{ cm}" />, konstanta <InlineMath math="\pi" /> dan <InlineMath math="\frac{1}{4}" /> tidak membatasi angka penting karena keduanya berasal dari rumus, bukan bacaan alat. Pada perhitungan kelas ini, <InlineMath math="\pi" /> didekati dengan <InlineMath math="3,14" />.
+
+<BlockMath math="\begin{aligned}
+A &= \frac{1}{4}\pi d^2 \\
+&= \frac{1}{4}(3,14)(3,12 \text{ cm})^2 \\
+&= 7,641404 \text{ cm}^2 \\
+&\to 7,64 \text{ cm}^2
+\end{aligned}" />
+
+Jika satuan Sistem Satuan Internasional (SI) diminta, ubah <InlineMath math="\text{cm}^2" /> menjadi <InlineMath math="\text{m}^2" />. SI adalah standar internasional satuan pengukuran yang dipakai dalam sains.
+
+<BlockMath math="7,64 \text{ cm}^2 = 0,000764 \text{ m}^2 = 7,64 \times 10^{-4} \text{ m}^2" />
+
+Rujukan aturan angka penting: [OpenStax University Physics, bagian Significant Figures](https://openstax.org/books/university-physics-volume-1/pages/1-6-significant-figures) dan [NIST Technical Note 1297, bagian reporting uncertainty](https://www.nist.gov/pml/nist-technical-note-1297/nist-tn-1297-7-reporting-uncertainty).
