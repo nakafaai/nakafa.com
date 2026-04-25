@@ -273,16 +273,9 @@ export const syncIncremental = async (
   log(`Last commit: ${syncState.lastSyncCommit.slice(0, 8)}`);
   log(`Current commit: ${currentCommit.slice(0, 8)}\n`);
 
-  if (syncState.lastSyncCommit === currentCommit) {
-    logSuccess("No changes since last sync. Nothing to do!");
-    finalizeMetrics(metrics);
-    logSyncMetrics(metrics);
-    return;
-  }
-
   const changedFiles = getChangedFilesSince(syncState.lastSyncCommit);
   if (changedFiles.size === 0) {
-    logSuccess("No content files changed. Nothing to do!");
+    logSuccess("No tracked or untracked content files changed. Nothing to do!");
     saveSyncState(
       { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
       options.prod ?? false

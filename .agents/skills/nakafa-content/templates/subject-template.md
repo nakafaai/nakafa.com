@@ -13,6 +13,17 @@ Use this template for subject lessons under `packages/contents/subject/`.
 
 Local visualization files do not need a fixed name. Match the nearby content pattern, such as `virus-chart.tsx`.
 
+## Structure Guardrails
+
+Do not copy this section sequence literally into every lesson. The template only shows valid syntax.
+
+Before writing, choose a lesson-specific flow:
+
+- Define prerequisite terms, abbreviations, and notation on first use.
+- Use headings that match this exact lesson, not generic labels reused across the topic.
+- Pick an angle that fits the concept, such as a phenomenon, misconception, comparison, investigation, worked example, or interactive model.
+- Skip recap or takeaway sections unless the closing note can be specific and naturally connected to the final example.
+
 ## Common Locations
 
 - High school: `packages/contents/subject/high-school/{grade}/{subject}/{topic}/{lesson}/`
@@ -29,15 +40,15 @@ export const metadata = {
   date: "MM/DD/YYYY",
 };
 
-## Pengertian
+## Mengenali Pola Utama
 
-Paragraf pembuka yang langsung menjelaskan konsep utama dan mengapa konsep ini penting.
+Paragraf pembuka yang langsung menjelaskan konsep utama, konteksnya, dan istilah yang wajib dipahami di halaman ini.
 
 Gunakan <InlineMath math="x" /> untuk nilai atau simbol matematika di dalam kalimat.
 
 <BlockMath math="f(x) = ax^2 + bx + c" />
 
-### Contoh Penggunaan
+### Saat Nilai Masukan Berubah
 
 Tentukan nilai fungsi ketika <InlineMath math="x = 2" />.
 
@@ -59,15 +70,15 @@ export const metadata = {
   date: "MM/DD/YYYY",
 };
 
-## Definition
+## Reading the Main Pattern
 
-Open with the core concept and why it matters.
+Open with the core concept, its context, and any term that must be understood on this page.
 
 Use <InlineMath math="x" /> for mathematical values or symbols inside prose.
 
 <BlockMath math="f(x) = ax^2 + bx + c" />
 
-### Worked Example
+### When the Input Changes
 
 Find the function value when <InlineMath math="x = 2" />.
 
@@ -125,6 +136,9 @@ import { QuadraticGraph } from "./quadratic-graph";
 
 - Inspect nearby content before writing.
 - Keep skill docs in English; write `id.mdx` content in Indonesian.
+- Make the lesson standalone. Define abbreviations, symbols, and required context on first use.
+- Replace template headings with lesson-specific headings.
+- Avoid repeating the same section skeleton across adjacent subchapters.
 - Start content headings at `##`; do not go deeper than `###`.
 - Do not put math or parenthesized numbers in headings.
 - Use `<InlineMath />`, `<BlockMath />`, and `<MathContainer>` consistently.
@@ -134,5 +148,6 @@ import { QuadraticGraph } from "./quadratic-graph";
 - Verify prop types before using JSX in component props.
 - Do not use em dash in prose.
 - Add original examples, intuition, checks, or common mistakes beyond the source screenshot.
+- Add visualizations, Mermaid diagrams, activities, and closings only when they genuinely improve understanding.
 - Keep the page useful enough that students can make progress without searching again.
 - Run `pnpm --filter @repo/contents typecheck` when TSX components are added or changed.

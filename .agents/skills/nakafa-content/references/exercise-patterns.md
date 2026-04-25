@@ -52,6 +52,7 @@ Rules:
 - Use `<InlineMath />` for every mathematical expression, variable, quantity, unit, coordinate, and calculated value in prose.
 - Use `<BlockMath />` for standalone formulas.
 - Keep wording unambiguous.
+- Define abbreviations, acronyms, symbols, and uncommon terms inside the question when the item depends on them.
 - Do not include answer-option letters in the question text unless the original format truly requires them.
 
 ## Answer MDX
@@ -86,6 +87,7 @@ Rules:
 - Do not refer to option letters such as `(A)`, `(B)`, or `(C)` in explanations.
 - State the final answer by content, not by option letter.
 - Keep notation consistent with the question.
+- Do not assume students remember a previous question or lesson. Restate the needed context inside the explanation.
 - Prefer one expressive `<BlockMath />` for one connected derivation.
 - Use `<MathContainer>` only when rows should remain visually separate.
 - Do not use em dash in prose.
@@ -184,6 +186,7 @@ x &= 4
 ## Quality Checklist
 
 - [ ] Question is clear and unambiguous.
+- [ ] Any abbreviation, symbol, or uncommon term needed for the item is defined.
 - [ ] Metadata includes title, authors, and date.
 - [ ] Date uses `MM/DD/YYYY`.
 - [ ] Math in prose always uses `<InlineMath />`.
@@ -193,6 +196,7 @@ x &= 4
 - [ ] Headings follow the `##` to `###` depth rule.
 - [ ] No em dash appears in prose.
 - [ ] Answer explains the reasoning, not only the final result.
+- [ ] Explanation can stand alone without relying on another question or lesson.
 - [ ] Explanation does not reference option letters.
 - [ ] `choices.ts` has both `id` and `en`.
 - [ ] Choice labels escape LaTeX correctly.

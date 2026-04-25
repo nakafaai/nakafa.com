@@ -2,7 +2,7 @@
 
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { type ComponentRef, useEffect, useRef } from "react";
+import { type ComponentRef, useCallback, useEffect, useRef } from "react";
 
 const DEFAULT_CAMERA_X = 12;
 const DEFAULT_CAMERA_Y = 8;
@@ -49,7 +49,9 @@ export function CameraControls({
   autoRotate?: boolean;
 }) {
   const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
-  const { invalidate, performance } = useThree();
+  const domElement = useThree((state) => state.gl.domElement);
+  const invalidate = useThree((state) => state.invalidate);
+  const regress = useThree((state) => state.performance.regress);
 
   useEffect(() => {
     if (!controlsRef.current) {
@@ -62,6 +64,16 @@ export function CameraControls({
     invalidate();
   }, [cameraPosition, cameraTarget, invalidate]);
 
+  useEffect(() => {
+    const previousCursor = domElement.style.cursor;
+
+    domElement.style.cursor = "grab";
+
+    return () => {
+      domElement.style.cursor = previousCursor;
+    };
+  }, [domElement]);
+
   useFrame(() => {
     if (!autoRotate) {
       return;
@@ -71,7 +83,7 @@ export function CameraControls({
       return;
     }
 
-    performance.regress();
+    regress();
     controlsRef.current.update();
     invalidate();
   });
@@ -79,10 +91,24 @@ export function CameraControls({
   /**
    * Re-renders demand-driven canvases when the user interacts with controls.
    */
-  function handleChange() {
-    performance.regress();
+  const handleChange = useCallback(() => {
+    regress();
     invalidate();
-  }
+  }, [invalidate, regress]);
+
+  /**
+   * Mirrors OrbitControls interaction state into the canvas cursor.
+   */
+  const handleStart = useCallback(() => {
+    domElement.style.cursor = "grabbing";
+  }, [domElement]);
+
+  /**
+   * Restores the visible affordance after OrbitControls releases capture.
+   */
+  const handleEnd = useCallback(() => {
+    domElement.style.cursor = "grab";
+  }, [domElement]);
 
   return (
     <>
@@ -97,6 +123,8 @@ export function CameraControls({
         maxDistance={100}
         minDistance={1}
         onChange={handleChange}
+        onEnd={handleEnd}
+        onStart={handleStart}
         ref={controlsRef}
         screenSpacePanning={true}
         target={cameraTarget}

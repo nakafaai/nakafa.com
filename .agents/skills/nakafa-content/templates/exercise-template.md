@@ -114,6 +114,8 @@ export default choices;
 
 - Use `MM/DD/YYYY` dates.
 - Keep headings between `##` and `###`.
+- Make each question and answer standalone.
+- Define abbreviations, symbols, and uncommon terms when the item depends on them.
 - Use `<InlineMath />` for math in prose.
 - Use one expressive `<BlockMath />` for one connected derivation.
 - Use `<MathContainer>` only when rows should stay visually separate.
