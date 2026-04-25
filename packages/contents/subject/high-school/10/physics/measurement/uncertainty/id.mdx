@@ -1,0 +1,124 @@
+export const metadata = {
+  title: "Nilai Ketidakpastian pada Pengukuran Berulang",
+  description:
+    "Pelajari cara membaca data pengukuran berulang, menghitung rerata, menentukan ketidakpastian, dan menulis hasil ukur tanpa memberi kesan terlalu pasti.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/25/2026",
+  subject: "Pengukuran dalam Kerja Ilmiah",
+};
+
+## Data Berbeda Bukan Berarti Gagal
+
+Saat satu benda diukur beberapa kali, hasilnya bisa sedikit berbeda. Itu normal. Tangan bisa menekan alat dengan gaya berbeda, mata bisa membaca skala dari sudut yang berbeda, dan benda yang diukur bisa bergeser sedikit.
+
+**Ketidakpastian pengukuran** adalah taksiran seberapa jauh hasil ukur mungkin menyimpang dari nilai yang kita laporkan. Untuk pengukuran berulang, ketidakpastian terutama membaca sebaran data.
+
+> Pengukuran berulang membantu melihat galat acak, yaitu perubahan kecil yang naik turun dari satu pembacaan ke pembacaan lain. Galat sistematis seperti alat belum nol atau skala rusak tetap perlu dicek dengan kalibrasi alat.
+
+## Rerata Menjadi Wakil Data
+
+Misalkan <InlineMath math="5" /> siswa mengukur diameter tutup botol dengan jangka sorong. Semua pembacaan memakai satuan yang sama, yaitu <InlineMath math="\text{cm}" />.
+
+| Data | Diameter |
+| :--- | :------- |
+| <InlineMath math="d_1" /> | <InlineMath math="3{,}12 \text{ cm}" /> |
+| <InlineMath math="d_2" /> | <InlineMath math="3{,}14 \text{ cm}" /> |
+| <InlineMath math="d_3" /> | <InlineMath math="3{,}15 \text{ cm}" /> |
+| <InlineMath math="d_4" /> | <InlineMath math="3{,}11 \text{ cm}" /> |
+| <InlineMath math="d_5" /> | <InlineMath math="3{,}14 \text{ cm}" /> |
+
+Nilai yang paling masuk akal untuk mewakili data berulang adalah rerata.
+
+<BlockMath math="\bar d=\frac{\sum_{i=1}^{N} d_i}{N}" />
+
+Untuk data di atas:
+
+<BlockMath math="\begin{aligned}
+\bar d
+&= \frac{3{,}12+3{,}14+3{,}15+3{,}11+3{,}14}{5}\text{ cm} \\
+&= 3{,}132 \text{ cm}
+\end{aligned}" />
+
+Rerata belum cukup. Kita juga perlu tahu apakah data menumpuk rapat di sekitar rerata atau menyebar jauh.
+
+## Sebaran yang Terlihat dari Rerata
+
+Untuk data berulang, sebaran sampel dapat dihitung dari jarak setiap data terhadap reratanya.
+
+<BlockMath math="s_d=\sqrt{\frac{\sum_{i=1}^{N}(d_i-\bar d)^2}{N-1}}" />
+
+Nilai <InlineMath math="N-1" /> dipakai karena data kelas hanya sampel kecil, bukan seluruh kemungkinan pengukuran yang bisa terjadi.
+
+<BlockMath math="\begin{aligned}
+s_d
+&= \sqrt{\frac{(-0{,}012)^2+(0{,}008)^2+(0{,}018)^2+(-0{,}022)^2+(0{,}008)^2}{4}}\text{ cm} \\
+&= 0{,}0164\text{ cm}
+\end{aligned}" />
+
+Jika kita menulis hasil diameter dengan ketidakpastian sebaran data, bentuknya menjadi:
+
+<BlockMath math="d=(3{,}13 \pm 0{,}02)\text{ cm}" />
+
+Angka <InlineMath math="3{,}13 \text{ cm}" /> adalah nilai wakil data. Angka <InlineMath math="0{,}02 \text{ cm}" /> mengingatkan pembaca bahwa pembacaan berulang tidak persis sama.
+
+## Rumus Ringkas yang Sering Tertukar
+
+Buku sekolah kadang menulis sebaran data berulang dalam bentuk ringkas berikut.
+
+<BlockMath math="\Delta x=\frac{1}{\sqrt{N}}\sqrt{\frac{N\sum_{i=1}^{N}x_i^2-\left(\sum_{i=1}^{N}x_i\right)^2}{N-1}}" />
+
+Rumus itu setara dengan simpangan baku sampel:
+
+<BlockMath math="\Delta x=s_x=\sqrt{\frac{\sum_{i=1}^{N}(x_i-\bar x)^2}{N-1}}" />
+
+Jadi, tanda <InlineMath math="\frac{1}{\sqrt N}" /> pada bentuk ringkas bukan berarti hasilnya otomatis menjadi ketidakpastian rerata formal.
+
+Dalam metrologi formal, NIST dan JCGM GUM menyebut ketidakpastian baku rerata sebagai:
+
+<BlockMath math="u(\bar x)=\frac{s_x}{\sqrt N}" />
+
+Untuk materi kelas ini, ikuti konvensi soal yang diberikan guru. Jika soal memakai simbol <InlineMath math="\Delta x" /> untuk rumus ringkas di atas, sebut <InlineMath math="\Delta x" /> sebagai ketidakpastian pengukuran berulang sesuai model kelas. Yang penting adalah tidak mencampur dua makna tersebut tanpa penjelasan.
+
+## Saat Targetnya Bukan Diameter
+
+Kadang data yang diukur adalah diameter, tetapi yang diminta adalah luas permukaan tutup botol. Untuk lingkaran, luasnya:
+
+<BlockMath math="A=\frac{1}{4}\pi d^2" />
+
+Karena luas bergantung pada diameter, setiap pembacaan diameter menghasilkan luas yang sedikit berbeda. Pakai <InlineMath math="\pi \approx 3{,}14" /> seperti perhitungan kelas, lalu simpan beberapa digit pengaman selama menghitung.
+
+| Data | Diameter | Luas dari diameter |
+| :--- | :------- | :----------------- |
+| <InlineMath math="1" /> | <InlineMath math="3{,}12 \text{ cm}" /> | <InlineMath math="7{,}6415 \text{ cm}^2" /> |
+| <InlineMath math="2" /> | <InlineMath math="3{,}14 \text{ cm}" /> | <InlineMath math="7{,}7398 \text{ cm}^2" /> |
+| <InlineMath math="3" /> | <InlineMath math="3{,}15 \text{ cm}" /> | <InlineMath math="7{,}7892 \text{ cm}^2" /> |
+| <InlineMath math="4" /> | <InlineMath math="3{,}11 \text{ cm}" /> | <InlineMath math="7{,}5926 \text{ cm}^2" /> |
+| <InlineMath math="5" /> | <InlineMath math="3{,}14 \text{ cm}" /> | <InlineMath math="7{,}7398 \text{ cm}^2" /> |
+
+Rerata luasnya:
+
+<BlockMath math="\bar A=\frac{7{,}6415+7{,}7398+7{,}7892+7{,}5926+7{,}7398}{5}\text{ cm}^2=7{,}7006 \text{ cm}^2" />
+
+Sebaran luasnya:
+
+<BlockMath math="s_A=0{,}0807 \text{ cm}^2" />
+
+Maka hasilnya dapat ditulis:
+
+<BlockMath math="A=(7{,}70 \pm 0{,}08)\text{ cm}^2" />
+
+Jangan membulatkan kolom luas terlalu cepat lalu menguadratkan angka yang sudah dipotong. Pembulatan di tengah perhitungan bisa mengubah ketidakpastian akhir.
+
+## Persentase yang Membaca Besar Kecilnya Risiko
+
+Ketidakpastian relatif membandingkan ketidakpastian dengan nilai yang dilaporkan.
+
+<BlockMath math="\varepsilon_r=\frac{\Delta x}{|\bar x|}\times 100\%" />
+
+Untuk luas tutup botol:
+
+<BlockMath math="\varepsilon_r=\frac{0{,}0807}{7{,}7006}\times 100\%=1{,}05\%" />
+
+Artinya, sebaran data sekitar <InlineMath math="1{,}05\%" /> dari nilai luas yang dilaporkan. Nilai ini cukup kecil untuk membuat hasil <InlineMath math="7{,}70 \text{ cm}^2" /> masuk akal, tetapi cukup nyata untuk tetap ditulis bersama ketidakpastiannya.
+
+Rujukan konsep ketidakpastian yang dipakai di sini adalah NIST Technical Note <InlineMath math="1297" /> untuk evaluasi Tipe A dan dokumen JCGM GUM dari BIPM. Tautan resminya: [NIST Type A evaluation](https://www.nist.gov/pml/nist-technical-note-1297/nist-tn-1297-3-type-evaluation-standard-uncertainty) dan [BIPM JCGM GUM](https://www.bipm.org/documents/20126/2071204/JCGM_100_2008_E.pdf).
