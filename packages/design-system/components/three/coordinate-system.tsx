@@ -88,7 +88,6 @@ export function CoordinateSystem({
   const [play, setPlay] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [canvasKey, setCanvasKey] = useState(0);
 
   // Color mapping based on color scheme
   const gridColors = useMemo(() => {
@@ -130,12 +129,10 @@ export function CoordinateSystem({
     setIsDragging(false);
   }, []);
 
-  // Cache Components preserve hidden page DOM with Activity. Reset the canvas
-  // when this visualization is hidden so revisiting the page mounts a fresh
-  // WebGL scene instead of preserving a stale one.
+  // Activity hides preserved routes by disconnecting effects. ThreeCanvas owns
+  // WebGL remounting, so this cleanup only resets local interaction state.
   useLayoutEffect(
     () => () => {
-      setCanvasKey((key) => key + 1);
       setIsDragging(false);
       setPlay(false);
       setSceneReady(false);
@@ -155,7 +152,6 @@ export function CoordinateSystem({
       onPointerUp={handlePointerUp}
     >
       <ThreeCanvas
-        key={canvasKey}
         onCreated={() =>
           setTimeout(() => setSceneReady(true), SCENE_READY_DELAY)
         }

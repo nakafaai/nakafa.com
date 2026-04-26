@@ -17,7 +17,7 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import { type ReactNode, useLayoutEffect, useState } from "react";
 
 function ErrorFallback({
   error,
@@ -83,6 +83,25 @@ function ThreeCanvasComponent({
 } & CanvasProps) {
   const powerPreference = getPowerPreference();
   const deviceInfo = getDeviceInfoForAnalytics();
+  const [canvasKey, setCanvasKey] = useState(0);
+
+  /**
+   * Next.js Cache Components can preserve recently visited routes with React
+   * Activity. Activity keeps the DOM hidden, but it disconnects effects while
+   * hidden and reconnects them when visible again. WebGL renderers are external
+   * resources owned by React Three Fiber, so the safest shared behavior is to
+   * remount only the Canvas after a route has been hidden.
+   *
+   * @see https://nextjs.org/docs/app/guides/preserving-ui-state
+   * @see https://react.dev/reference/react/Activity
+   * @see https://r3f.docs.pmnd.rs/api/canvas
+   */
+  useLayoutEffect(
+    () => () => {
+      setCanvasKey((key) => key + 1);
+    },
+    []
+  );
 
   return (
     <ErrorBoundary
@@ -116,6 +135,7 @@ function ThreeCanvasComponent({
           powerPreference,
           alpha: true,
         }}
+        key={canvasKey}
         onCreated={() => {
           analytics.capture("webgl_init_success", deviceInfo);
         }}
