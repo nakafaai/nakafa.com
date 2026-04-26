@@ -1,0 +1,126 @@
+export const metadata = {
+  title: "Energy Concept",
+  description:
+    "Learn what energy means in physics, how energy relates to work, joules, power, and how to read kWh in everyday electricity use.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/26/2026",
+  subject: "Renewable Energy",
+};
+
+## Energy Shows Up as Change
+
+When a lamp turns on, water boils, a bicycle moves, or a phone charges, energy is being transferred or transformed. In physics, **energy** is the ability to do work or cause change.
+
+That definition matters because energy is not always visible as an object. We read energy from its effects: an object moves, temperature changes, light appears, sound is produced, or electric charge flows.
+
+<BlockMath math="\text{energy} \rightarrow \text{ability to do work or cause change}" />
+
+This explanation follows the definition used by the U.S. Energy Information Administration (EIA). You can open EIA's Energy Explained page about energy through [this source link](https://www.eia.gov/energyexplained/what-is-energy/).
+
+## Work as a Way to Measure Energy
+
+Energy is often calculated through **work**. In physics, work happens when a force causes displacement in the direction of that force.
+
+<BlockMath math="W = F \Delta s" />
+
+Symbol guide:
+
+| Symbol | Meaning | SI unit |
+| :----- | :------ | :------ |
+| <InlineMath math="W" /> | work or transferred energy | <InlineMath math="\text{J}" /> |
+| <InlineMath math="F" /> | force | <InlineMath math="\text{N}" /> |
+| <InlineMath math="\Delta s" /> | displacement | <InlineMath math="\text{m}" /> |
+
+Suppose you push a box with a force of <InlineMath math="15 \text{ N}" /> until it moves <InlineMath math="2 \text{ m}" />. The energy transferred to the box through work is:
+
+<BlockMath math="\begin{aligned}
+W &= F \Delta s \\
+&= 15 \text{ N} \times 2 \text{ m} \\
+&= 30 \text{ J}
+\end{aligned}" />
+
+So, the box receives <InlineMath math="30 \text{ J}" /> of energy through that push.
+
+> If a force is applied but the object does not move, the mechanical work on the object is <InlineMath math="0 \text{ J}" />. The person pushing may still feel tired, but that energy does not become mechanical work on the object that stays still.
+
+## Joule Is More Than a Unit Name
+
+The International System of Units (SI) unit for energy is the joule, with symbol <InlineMath math="\text{J}" />. Because energy can be calculated from force times displacement, a joule can be read as:
+
+<BlockMath math="\begin{aligned}
+1 \text{ J}
+&= 1 \text{ N} \cdot 1 \text{ m} \\
+&= 1 \text{ kg m}^2\text{s}^{-2}
+\end{aligned}" />
+
+The National Institute of Standards and Technology (NIST) lists the joule as an SI derived unit for energy, work, and heat. NIST SP 330 section <InlineMath math="2" /> can be opened through the [SI reference](https://www.nist.gov/pml/special-publication-330/sp-330-section-2), while the NIST joule glossary can be opened through the [joule reference](https://www.nist.gov/glossary-term/26261).
+
+## Energy Trails Around Us
+
+Energy moves from a source into a device, then changes into the form we need.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Sunlight"] --> B["Solar panel"]
+    B --> C["Electrical energy"]
+    C --> D["Lamp turns on"]
+    E["Water at height"] --> F["Turbine"]
+    F --> G["Generator"]
+    G --> C
+    H["Food"] --> I["Body"]
+    I --> J["Muscles move"]`}/>
+
+The diagram shows a pattern, not every technical detail. In a solar panel, light energy changes into electrical energy. In hydropower, gravitational potential energy of water changes into turbine motion, then into electrical energy. In the body, chemical energy from food helps muscles do work.
+
+## Power and Energy Are Easy to Mix Up
+
+Energy answers the question *how much capacity to do work is used*. Power answers the question *how quickly energy is used or transferred*.
+
+<BlockMath math="P = \frac{E}{t}" />
+
+From that equation, energy can be written as:
+
+<BlockMath math="E = P t" />
+
+The unit of power is the watt, with symbol <InlineMath math="\text{W}" />. One watt means <InlineMath math="1 \text{ J}" /> per <InlineMath math="1 \text{ s}" />.
+
+<BlockMath math="1 \text{ W} = 1 \text{ J/s}" />
+
+Watch the symbol context: italic <InlineMath math="W" /> usually means work, while upright <InlineMath math="\text{W}" /> means the unit watt.
+
+That is why electricity bills use <InlineMath math="\text{kWh}" />, or kilowatt-hour. Even though the unit contains watt, <InlineMath math="\text{kWh}" /> is a unit of energy, not power.
+
+<BlockMath math="\begin{aligned}
+1 \text{ kWh}
+&= 1000 \text{ W} \times 1 \text{ h} \\
+&= 1000 \text{ J/s} \times 3600 \text{ s} \\
+&= 3.6 \times 10^6 \text{ J}
+\end{aligned}" />
+
+A <InlineMath math="10 \text{ W}" /> lamp that stays on for <InlineMath math="5 \text{ h}" /> uses:
+
+<BlockMath math="\begin{aligned}
+E &= P t \\
+&= 10 \text{ W} \times 5 \text{ h} \\
+&= 50 \text{ Wh} \\
+&= 0.05 \text{ kWh}
+\end{aligned}" />
+
+If the same lamp stays on longer, its energy use increases. If the power is higher, the energy use also increases for the same duration.
+
+## Why This Leads to Renewable Energy
+
+Renewable energy is not just a list of energy sources. Its foundation is a more basic physics question: where does the energy come from, what does it become, and how much of it is actually useful?
+
+| Situation | Physics question |
+| :-------- | :--------------- |
+| Solar panels are installed on a roof | How much light energy becomes electrical energy? |
+| Flowing water turns a turbine | How much water motion energy can be transferred to a generator? |
+| Home lamps turn on every night | How much electrical energy is used in <InlineMath math="\text{kWh}" />? |
+| Fuel burns inside an engine | How much chemical energy becomes motion and heat? |
+
+An energy source is called **renewable** when it can be replenished naturally on a human timescale, such as sunlight, wind, flowing water, geothermal heat, and properly managed biomass. An energy source is called **non-renewable** when it forms much more slowly than it is used, such as coal, oil, and natural gas. The classification reference comes from the U.S. Energy Information Administration (EIA), on EIA's Renewable Energy Explained page through [this source link](https://www.eia.gov/energyexplained/renewable-sources/).
+
+The International Energy Agency (IEA) reported that global renewable capacity additions reached nearly <InlineMath math="510 \text{ GW}" />, or <InlineMath math="510" /> gigawatts, in 2023. You do not need to memorize that number here, but it shows why energy, power, and energy transformation matter when discussing the future of electricity. The number comes from IEA's Renewables 2023 report through [this source link](https://www.iea.org/reports/renewables-2023/executive-summary).
+
+Now we have the basic language for the next topics: forms of energy, conservation of energy, energy transformation, and why energy demand should be met with cleaner sources.
