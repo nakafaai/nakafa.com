@@ -19,6 +19,7 @@ Do not copy this section sequence literally into every lesson. The template only
 
 Before writing, choose a lesson-specific flow:
 
+- Match the target grade and subject. Use familiar examples and analogies only when they make the concept easier to understand.
 - Define prerequisite terms, abbreviations, and notation on first use.
 - Use headings that match this exact lesson, not generic labels reused across the topic.
 - Pick an angle that fits the concept, such as a phenomenon, misconception, comparison, investigation, worked example, or interactive model.
@@ -135,6 +136,7 @@ import { QuadraticGraph } from "./quadratic-graph";
 ## Checks
 
 - Inspect nearby content before writing.
+- Match the target grade and subject in language, examples, analogies, and cognitive load.
 - Keep skill docs in English; write `id.mdx` content in Indonesian.
 - Make the lesson standalone. Define abbreviations, symbols, and required context on first use.
 - Replace template headings with lesson-specific headings.

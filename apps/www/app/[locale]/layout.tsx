@@ -148,13 +148,10 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
 
   return (
     <html className={fonts} lang={locale} suppressHydrationWarning>
-      <NextIntlClientProvider locale={locale} messages={messages}>
-        <head>
-          {/* Add JSON-LD structured data using the JsonLd component */}
-          <EducationalOrgJsonLd />
-          <WebsiteJsonLd locale={locale} />
-        </head>
-        <body className="relative">
+      <body className="relative">
+        <EducationalOrgJsonLd />
+        <WebsiteJsonLd locale={locale} />
+        <NextIntlClientProvider locale={locale} messages={messages}>
           <AnalyticsProvider>
             <div className="isolate">
               <DesignSystemProvider>{children}</DesignSystemProvider>
@@ -163,8 +160,8 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
             <Toaster />
           </AnalyticsProvider>
           <TailwindIndicator />
-        </body>
-      </NextIntlClientProvider>
+        </NextIntlClientProvider>
+      </body>
     </html>
   );
 }

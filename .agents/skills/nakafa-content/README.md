@@ -72,6 +72,8 @@ points: Array.from({ length: 100 }, (_, i) => {
 - For card components whose `title` and `description` props accept `ReactNode`, use fragments with `<InlineMath />` when those props contain math.
 - Verify prop types first; `BarChart` and `HistogramChart` currently accept strings.
 - Make every subchapter understandable as a standalone page. Define abbreviations, acronyms, symbols, and potentially ambiguous terms on first use in each locale.
+- Match the target grade and subject. Use age-appropriate language, familiar examples, and only the prerequisite knowledge that the lesson has introduced or the curriculum expects.
+- Use analogies only when they clarify the concept. After the analogy, name the actual concept so the analogy does not become a substitute for understanding.
 - Avoid vague references to previous lessons. If a prerequisite matters, briefly reintroduce it in the current page.
 - Do not reuse the same section skeleton across adjacent lessons. Give each page its own flow, headings, examples, and closing rhythm.
 - Use headings that are specific to the lesson, not generic labels that could appear unchanged on every subchapter.
@@ -84,6 +86,7 @@ points: Array.from({ length: 100 }, (_, i) => {
 ## Verification
 
 - Inspect nearby content before writing new content.
+- Confirm the language, examples, analogies, and cognitive load match the target grade and subject.
 - Confirm the page can stand alone for students arriving from search.
 - Confirm no abbreviations, symbols, or context references are left unexplained.
 - Confirm the section flow does not look copied from adjacent subchapters.
