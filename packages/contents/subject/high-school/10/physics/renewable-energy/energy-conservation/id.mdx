@@ -1,0 +1,112 @@
+export const metadata = {
+  title: "Hukum Kekekalan Energi",
+  description:
+    "Gunakan hukum kekekalan energi untuk membaca perubahan energi, energi berguna, dan energi yang terdisipasi pada sistem energi terbarukan.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/27/2026",
+  subject: "Energi Terbarukan",
+};
+
+## Energi Tidak Hilang, Hanya Berpindah Jalur
+
+Hukum kekekalan energi menyatakan bahwa energi tidak dapat diciptakan atau dimusnahkan. Energi dapat berpindah dari satu benda ke benda lain, atau berubah dari satu bentuk ke bentuk lain.
+
+Dalam Sistem Satuan Internasional (SI, International System of Units), semua energi tetap dapat dinyatakan dalam joule dengan simbol <InlineMath math="\text{J}" />.
+
+<BlockMath math="\text{energi total sebelum proses}=\text{energi total sesudah proses}" />
+
+Kalimat itu terdengar sederhana, tetapi sering salah dibaca. Jika energi listrik dari sebuah alat lebih kecil daripada energi masuknya, bukan berarti energi sisanya menghilang. Energi sisanya biasanya berubah menjadi kalor, bunyi, getaran, cahaya yang tidak berguna, atau energi internal pada komponen alat.
+
+OpenStax College Physics 2e membahas kekekalan energi pada halaman Conservation of Energy. Halaman tersebut bisa dibuka di [tautan sumber](https://openstax.org/books/college-physics-2e/pages/7-6-conservation-of-energy).
+
+## Tentukan Dulu Sistemnya
+
+**Sistem** adalah bagian yang kita pilih untuk dianalisis. Semua yang berada di luar sistem disebut **lingkungan**. Hukum kekekalan energi paling jelas jika kita tegas menentukan sistemnya.
+
+<Mermaid
+  chart={`flowchart LR
+    A["Energi masuk"] --> B["Sistem"]
+    B --> C["Energi berguna"]
+    B --> D["Energi terdisipasi<br/>kalor, bunyi, getaran"]`}/>
+
+Diagram itu bukan hiasan. Diagram itu mengingatkan kita bahwa keluaran sistem tidak harus satu jenis energi saja.
+
+| Pilihan sistem | Yang masuk ke sistem | Yang keluar dari sistem |
+| :------------- | :------------------- | :---------------------- |
+| Air yang jatuh | energi potensial gravitasi | energi kinetik air |
+| Turbin dan generator | energi kinetik putaran | energi listrik, kalor, bunyi |
+| Panel surya | energi radiasi Matahari | energi listrik, kalor, cahaya pantul |
+
+Jika sistem terlalu sempit, ada energi yang tampak keluar. Jika sistem diperluas sampai mencakup lingkungan, energi total tetap sama.
+
+## Saat Gesekan Diabaikan
+
+Pada banyak soal awal, kita mengabaikan gesekan dan hambatan udara agar ide utamanya terlihat. Untuk gerak yang hanya melibatkan energi kinetik dan energi potensial gravitasi, energi mekanik ditulis sebagai:
+
+<BlockMath math="\begin{aligned}
+E_m &= E_k+E_p \\
+&= \frac{1}{2}mv^2+mgh
+\end{aligned}" />
+
+Jika tidak ada gesekan, hambatan udara, atau kerja dari luar, energi mekanik tetap.
+
+<BlockMath math="\frac{1}{2}mv_i^2+mgh_i=\frac{1}{2}mv_f^2+mgh_f" />
+
+Subskrip <InlineMath math="i" /> berarti keadaan awal, sedangkan subskrip <InlineMath math="f" /> berarti keadaan akhir.
+
+Misalkan air bermassa <InlineMath math="1 \text{ kg}" /> turun dari ketinggian <InlineMath math="12 \text{ m}" />. Jika kita memakai <InlineMath math="g=10 \text{ m/s}^2" /> dan air mula-mula dianggap diam, energi potensial gravitasi awalnya adalah:
+
+<BlockMath math="\begin{aligned}
+E_p &= mgh \\
+&= (1 \text{ kg})(10 \text{ m/s}^2)(12 \text{ m}) \\
+&= 120 \text{ J}
+\end{aligned}" />
+
+Jika tidak ada energi yang terdisipasi, energi sebesar <InlineMath math="120 \text{ J}" /> itu berubah menjadi energi kinetik air. Dalam alat nyata, sebagian energi tetap berpindah ke lingkungan sebagai kalor, bunyi, dan getaran.
+
+## Energi Berguna Bukan Energi Total
+
+Pada teknologi energi terbarukan, yang biasanya kita inginkan adalah **energi berguna**, misalnya energi listrik. Hukum kekekalan energi tetap berlaku, tetapi energi masuk tidak seluruhnya menjadi energi listrik.
+
+<BlockMath math="E_{\text{masuk}}=E_{\text{berguna}}+E_{\text{terdisipasi}}" />
+
+Contoh: aliran air membawa energi sebesar <InlineMath math="120 \text{ J}" /> menuju turbin kecil. Generator menghasilkan energi listrik <InlineMath math="90 \text{ J}" />. Energi yang terdisipasi adalah:
+
+<BlockMath math="\begin{aligned}
+E_{\text{terdisipasi}}
+&= E_{\text{masuk}}-E_{\text{berguna}} \\
+&= 120 \text{ J}-90 \text{ J} \\
+&= 30 \text{ J}
+\end{aligned}" />
+
+Jadi, energi <InlineMath math="30 \text{ J}" /> tidak hilang. Energi itu berpindah ke lingkungan, misalnya sebagai panas pada poros, suara putaran, atau getaran struktur.
+
+U.S. Department of Energy menjelaskan bahwa pembangkit listrik tenaga air memanfaatkan perbedaan ketinggian air untuk menggerakkan turbin dan generator. Penjelasan mekanisme tersebut bisa dibuka di [tautan sumber](https://www.energy.gov/eere/water/how-hydropower-works).
+
+## Cara Cepat Mengecek Klaim Energi
+
+Hukum kekekalan energi bisa dipakai seperti alat audit. Jika ada klaim energi, jumlahkan semua jalurnya.
+
+| Klaim | Cek dengan hukum kekekalan energi |
+| :---- | :-------------------------------- |
+| Panel menerima <InlineMath math="500 \text{ J}" /> radiasi dan menghasilkan <InlineMath math="500 \text{ J}" /> listrik | tidak realistis untuk panel nyata; dari sisi kekekalan energi, klaim itu hanya mungkin jika tidak ada energi yang terpantul atau menjadi kalor |
+| Turbin menerima <InlineMath math="120 \text{ J}" /> dan menghasilkan <InlineMath math="90 \text{ J}" /> listrik | masih masuk akal jika <InlineMath math="30 \text{ J}" /> terdisipasi |
+| Mesin menghasilkan <InlineMath math="150 \text{ J}" /> listrik dari masukan <InlineMath math="120 \text{ J}" /> tanpa sumber lain | tidak sesuai kekekalan energi |
+
+U.S. Department of Energy menjelaskan bahwa tidak semua cahaya yang mencapai sel fotovoltaik berubah menjadi listrik; sebagian bisa terpantul atau berubah menjadi panas. Penjelasan faktor efisiensi panel surya bisa dibuka di [tautan sumber](https://www.energy.gov/cmei/systems/solar-performance-and-efficiency).
+
+Hukum ini membuat kita lebih hati-hati membaca kata *hemat*, *efisien*, dan *ramah lingkungan*. Alat yang efisien bukan alat yang menciptakan energi baru. Alat yang efisien adalah alat yang membuat bagian energi berguna menjadi lebih besar dan energi terdisipasi menjadi lebih kecil.
+
+## Hubungannya dengan Energi Terbarukan
+
+Sumber energi terbarukan tetap harus tunduk pada hukum kekekalan energi. Matahari, angin, air, panas bumi, dan biomassa menyediakan energi masuk. Teknologi membantu mengubah energi masuk itu menjadi energi yang kita perlukan.
+
+<BlockMath math="\text{sumber energi} \rightarrow \text{alat konversi} \rightarrow \text{energi berguna}+\text{energi terdisipasi}" />
+
+Karena energi tidak diciptakan dari nol, pembahasan energi terbarukan selalu kembali ke tiga pertanyaan:
+
+- Dari mana energi masuknya?
+- Ke mana energi yang tidak menjadi keluaran berguna berpindah?
+- Seberapa besar bagian energi yang benar-benar menjadi keluaran berguna?
+
+Jika kalian bisa menjawab tiga pertanyaan itu, kalian tidak hanya menghafal hukum kekekalan energi. Kalian sedang memakai hukum itu untuk membaca teknologi energi secara kritis.

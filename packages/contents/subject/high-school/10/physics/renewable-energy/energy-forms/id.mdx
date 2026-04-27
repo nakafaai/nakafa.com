@@ -1,0 +1,135 @@
+export const metadata = {
+  title: "Bentuk-bentuk Energi",
+  description:
+    "Bedakan energi kinetik, energi potensial gravitasi, kalor, energi listrik, dan bentuk energi lain yang muncul dalam teknologi energi terbarukan.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/26/2026",
+  subject: "Energi Terbarukan",
+};
+
+## Bentuk Energi Dibaca dari Cara Energi Muncul
+
+Energi punya satuan yang sama, yaitu joule dengan simbol <InlineMath math="\text{J}" />, tetapi cara energi muncul atau berpindah bisa berbeda. Ada energi yang terlihat sebagai gerak, posisi, keadaan termal yang terkait suhu, ikatan kimia, cahaya, atau keadaan muatan listrik.
+
+Dalam Sistem Satuan Internasional (SI, International System of Units), semua bentuk energi tetap dapat dinyatakan dalam joule. Yang berubah adalah *cara kita menghitung atau mengenali energinya*.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Energi"] --> B["Energi potensial"]
+    A --> C["Energi kinetik"]
+    B --> D["Kimia<br/>Gravitasi"]
+    C --> E["Gerak<br/>Termal<br/>Radiasi<br/>Listrik"]`}/>
+
+Diagram ringkas itu mengikuti cara baca U.S. Energy Information Administration (EIA): bentuk energi dapat dikelompokkan sebagai energi potensial dan energi kinetik. Pada bagian rumus di halaman ini, kita tetap membedakan kalor sebagai energi yang berpindah karena perbedaan suhu. Halaman Forms of Energy milik EIA bisa dibuka di [tautan sumber](https://www.eia.gov/energyexplained/what-is-energy/forms-of-energy.php).
+
+## Gerak, Posisi, Kalor, dan Muatan
+
+Bentuk berikut sering muncul saat membahas energi terbarukan karena pembangkit listrik hampir selalu melibatkan gerak, ketinggian, panas, atau aliran muatan.
+
+| Bentuk energi | Kapan muncul | Model matematis yang sering dipakai | Contoh di energi terbarukan |
+| :------------ | :----------- | :---------------------------------- | :-------------------------- |
+| Energi kinetik | benda bergerak | <InlineMath math="E_k=\frac{1}{2}mv^2" /> | angin memutar turbin |
+| Energi potensial gravitasi | benda punya ketinggian terhadap acuan | <InlineMath math="E_p=mgh" /> | air waduk berada lebih tinggi dari turbin |
+| Kalor | energi berpindah karena beda suhu | <InlineMath math="Q=mc\Delta T" /> | fluida panas bumi memanaskan sistem pembangkit |
+| Energi listrik | muatan bergerak karena beda potensial | <InlineMath math="E=VIt" /> | generator mengirim energi ke jaringan listrik |
+
+Tabel itu bukan daftar yang menutup kemungkinan bentuk lain. Biomassa menyimpan energi kimia, panel surya menerima energi radiasi dari Matahari, dan baterai menyimpan energi dalam keadaan kimia-elektrokimia. Namun, rumus di tabel membantu kita membaca sebagian besar perhitungan dasar di kelas <InlineMath math="10" />.
+
+## Membaca Rumus dari Penyebab Energinya
+
+Energi kinetik adalah energi yang dimiliki benda karena geraknya.
+
+<BlockMath math="E_k=\frac{1}{2}mv^2" />
+
+Keterangan simbol:
+
+| Simbol | Makna | Satuan SI |
+| :----- | :---- | :-------- |
+| <InlineMath math="E_k" /> | energi kinetik | <InlineMath math="\text{J}" /> |
+| <InlineMath math="m" /> | massa benda | <InlineMath math="\text{kg}" /> |
+| <InlineMath math="v" /> | kelajuan benda | <InlineMath math="\text{m/s}" /> |
+
+Jika massa udara yang melewati turbin adalah <InlineMath math="2 \text{ kg}" /> dan kelajuannya <InlineMath math="3 \text{ m/s}" />, energi kinetiknya adalah:
+
+<BlockMath math="\begin{aligned}
+E_k &= \frac{1}{2}mv^2 \\
+&= \frac{1}{2}(2 \text{ kg})(3 \text{ m/s})^2 \\
+&= 9 \text{ J}
+\end{aligned}" />
+
+OpenStax College Physics 2e menjelaskan energi kinetik melalui hubungan usaha dan energi pada halaman Kinetic Energy and the Work-Energy Theorem. Halaman tersebut bisa dibuka di [tautan sumber](https://openstax.org/books/college-physics-2e/pages/7-2-kinetic-energy-and-the-work-energy-theorem).
+
+Energi potensial gravitasi adalah energi yang terkait dengan posisi benda dalam medan gravitasi. Untuk benda dekat permukaan Bumi, model yang umum dipakai adalah:
+
+<BlockMath math="E_p=mgh" />
+
+Keterangan simbol:
+
+| Simbol | Makna | Satuan SI |
+| :----- | :---- | :-------- |
+| <InlineMath math="E_p" /> | energi potensial gravitasi | <InlineMath math="\text{J}" /> |
+| <InlineMath math="m" /> | massa benda | <InlineMath math="\text{kg}" /> |
+| <InlineMath math="g" /> | percepatan gravitasi | <InlineMath math="\text{m/s}^2" /> |
+| <InlineMath math="h" /> | ketinggian terhadap titik acuan | <InlineMath math="\text{m}" /> |
+
+Nilai <InlineMath math="g" /> di dekat permukaan Bumi sekitar <InlineMath math="9{,}8 \text{ m/s}^2" />. Di banyak soal sekolah, <InlineMath math="g" /> sering dibulatkan menjadi <InlineMath math="10 \text{ m/s}^2" /> agar perhitungan lebih ringkas.
+
+Kalor adalah energi yang berpindah karena perbedaan suhu. Jadi, benda tidak "menyimpan kalor" seperti menyimpan benda di laci. Benda memiliki energi internal, lalu kalor mengalir saat ada perbedaan suhu.
+
+<BlockMath math="Q=mc\Delta T" />
+
+Keterangan simbol:
+
+| Simbol | Makna | Satuan SI |
+| :----- | :---- | :-------- |
+| <InlineMath math="Q" /> | kalor atau energi yang berpindah | <InlineMath math="\text{J}" /> |
+| <InlineMath math="m" /> | massa benda | <InlineMath math="\text{kg}" /> |
+| <InlineMath math="c" /> | kalor jenis | <InlineMath math="\text{J/(kg K)}" /> |
+| <InlineMath math="\Delta T" /> | perubahan suhu | <InlineMath math="\text{K}" /> |
+
+OpenStax College Physics 2e membahas hubungan <InlineMath math="Q=mc\Delta T" /> pada halaman Temperature Change and Heat Capacity. Halaman tersebut bisa dibuka di [tautan sumber](https://openstax.org/books/college-physics-2e/pages/14-2-temperature-change-and-heat-capacity).
+
+Energi listrik dapat dibaca dari daya listrik yang bekerja selama selang waktu tertentu. Model berikut dipakai saat <InlineMath math="V" /> dan <InlineMath math="I" /> dianggap tetap selama interval waktu yang dihitung.
+
+<BlockMath math="\begin{aligned}
+P &= VI \\
+E &= Pt \\
+E &= VIt
+\end{aligned}" />
+
+Keterangan simbol:
+
+| Simbol | Makna | Satuan SI |
+| :----- | :---- | :-------- |
+| <InlineMath math="E" /> | energi listrik | <InlineMath math="\text{J}" /> |
+| <InlineMath math="P" /> | daya listrik | <InlineMath math="\text{W}" /> |
+| <InlineMath math="V" /> | beda potensial listrik | <InlineMath math="\text{V}" /> |
+| <InlineMath math="I" /> | kuat arus listrik | <InlineMath math="\text{A}" /> |
+| <InlineMath math="t" /> | waktu | <InlineMath math="\text{s}" /> |
+
+Buku kadang memakai simbol <InlineMath math="W" /> untuk energi listrik sebagai usaha listrik. Di Nakafa, halaman ini memakai <InlineMath math="E" /> agar tidak tertukar dengan <InlineMath math="\text{W}" /> sebagai satuan watt.
+
+OpenStax College Physics 2e membahas hubungan daya dan energi listrik pada halaman Electric Power and Energy. Halaman tersebut bisa dibuka di [tautan sumber](https://openstax.org/books/college-physics-2e/pages/20-4-electric-power-and-energy).
+
+## Satu Situasi Bisa Memuat Banyak Bentuk
+
+Satu pembangkit listrik tidak hanya memakai satu bentuk energi. Pembangkit listrik tenaga air, misalnya, lebih mudah dibaca sebagai rantai bentuk energi.
+
+<BlockMath math="\text{potensial gravitasi air} \rightarrow \text{kinetik aliran air} \rightarrow \text{kinetik turbin} \rightarrow \text{listrik}" />
+
+Panel surya juga bukan sekadar "membuat listrik". Panel surya menerima energi radiasi dari cahaya Matahari, lalu mengubah sebagian energi itu menjadi energi listrik.
+
+<BlockMath math="\text{radiasi Matahari} \rightarrow \text{energi listrik}" />
+
+Di sini kalian mulai melihat alasan topik bentuk energi penting untuk energi terbarukan. Kita perlu tahu bentuk energi awalnya, bentuk energi yang diinginkan, dan jalur perubahannya.
+
+## Kesalahan yang Sering Terjadi
+
+| Kekeliruan | Cara membacanya dengan lebih tepat |
+| :--------- | :--------------------------------- |
+| Energi kinetik dianggap hanya bergantung pada massa | Energi kinetik juga bergantung pada kuadrat kelajuan, yaitu <InlineMath math="v^2" /> |
+| Kalor dianggap zat yang disimpan benda | Kalor adalah energi yang berpindah karena perbedaan suhu |
+| <InlineMath math="\text{kWh}" /> dianggap satuan daya | <InlineMath math="\text{kWh}" /> adalah satuan energi karena berasal dari <InlineMath math="P \times t" /> |
+| Semua energi pada sumber terbarukan dianggap langsung menjadi listrik | Selalu ada proses perubahan bentuk energi dan ada energi yang tidak menjadi keluaran listrik berguna |
+
+Saat membaca teknologi energi terbarukan, tanyakan bentuk energinya sebelum bertanya alatnya. Angin membawa energi kinetik, air tinggi menyimpan energi potensial gravitasi, panas bumi membawa energi termal, biomassa menyimpan energi kimia, dan cahaya Matahari membawa energi radiasi.

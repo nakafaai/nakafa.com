@@ -33,6 +33,7 @@ When the user provides official curriculum pages, book screenshots, or teacher r
 - Keep facts, formulas, terminology, and curriculum scope aligned with the official source.
 - Fix obvious source mistakes only when the math or reasoning is verifiably wrong, and make the correction in the final content.
 - Ask the user when grade level, curriculum version, target locale, topic scope, or source meaning is unclear.
+- Calibrate every explanation to the exact level and lesson context. For example, a grade 10 physics lesson should assume first-year high-school reasoning, briefly reintroduce prerequisite math or science terms, and avoid university-level shortcuts unless the curriculum source explicitly requires them.
 - Prefer one complete, useful page over many shallow pages. Google explicitly warns against mass-producing many topics only to attract search traffic.
 - Every lesson must stand alone. Do not assume students already opened the previous subchapter, even when the route order suggests it.
 - Define abbreviations, acronyms, symbols, and localized terms the first time they appear in each `id.mdx` and `en.mdx` file.
@@ -48,11 +49,15 @@ Indonesian is allowed only inside snippets that intentionally demonstrate `id.md
 - **Indonesian (id.mdx)**: Use proper Indonesian grammar with natural, engaging tone
   - Use "kita" (we) and "kalian" (you all) to engage readers
   - Write like you're explaining to a friend, but keep it educational
+  - Match the student's level. Use familiar examples, small analogies, and concrete situations when they make the concept easier to understand.
+  - Keep analogies honest. State the real physics concept clearly and avoid analogies that hide important limits.
   - Example: "Mari kita mulai dengan...", "Pernahkah kalian memperhatikan..."
   
 - **English (en.mdx)**: Use proper English grammar with natural, engaging tone
   - Write clearly and conversationally
   - Keep it educational but not stiff
+  - Match the student's level. Use familiar examples, small analogies, and concrete situations when they make the concept easier to understand.
+  - Keep analogies honest. State the real concept clearly and avoid analogies that hide important limits.
 
 ## Content Types
 
@@ -294,6 +299,14 @@ No nested lists. No blank lines between items.
 - **Original value**: Add worked examples, intuition, checks, or common mistakes beyond a plain rewrite of the source.
 - **No Formulaic Closings**: Avoid repeated generic closing sections such as "Key Takeaway", "Summary", or localized equivalents on every lesson. If a closing note helps, make it specific to the lesson and weave it naturally into the final section.
 
+### Grade-Level Fit
+
+- Read the path and metadata before writing. The route often tells you the target level, such as `high-school/10/physics`.
+- Keep the cognitive load appropriate for that level. Define technical words before using them as shortcuts.
+- Prefer concrete school-age examples before abstract generalizations.
+- Use analogies when they reduce confusion, not as decoration. After an analogy, name the actual concept so students do not confuse the analogy with the physics.
+- If a source uses advanced language, translate the idea into the target level while preserving the verified fact, formula, and curriculum scope.
+
 ### Lesson Independence and Voice
 
 - **Standalone Subchapters**: Each subchapter must be understandable from a direct search visit. Briefly reintroduce prerequisite terms, notation, or context when the lesson needs them.
@@ -470,6 +483,7 @@ Before submitting content:
 
 - [ ] Nearby content patterns were inspected
 - [ ] Source material and target scope are clear
+- [ ] The language, examples, analogies, and cognitive load match the target grade and subject
 - [ ] The lesson works as a standalone page for students arriving from search
 - [ ] Abbreviations, acronyms, symbols, and potentially ambiguous terms are defined on first use in each locale
 - [ ] The section flow is specific to this lesson and does not copy a repeated template from adjacent lessons
