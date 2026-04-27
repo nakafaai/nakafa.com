@@ -41,7 +41,7 @@ const idMaterials: MaterialList = [
   {
     title: "Energi Terbarukan",
     description:
-      "Pahami energi, kebutuhan listrik, dan sumber terbarukan dengan tetap membaca batas alamnya.",
+      "Membaca masa depan listrik bersih dari Matahari, angin, air, panas bumi, dan keputusan energi yang bertanggung jawab.",
     href: `${BASE_PATH}/renewable-energy`,
     items: [
       {

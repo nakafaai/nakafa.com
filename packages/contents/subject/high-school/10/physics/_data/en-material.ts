@@ -41,7 +41,7 @@ const enMaterials: MaterialList = [
   {
     title: "Renewable Energy",
     description:
-      "Understand energy, electricity demand, and renewable sources while still reading their natural limits.",
+      "Read the future of clean electricity through sunlight, wind, water, geothermal heat, and responsible energy choices.",
     href: `${BASE_PATH}/renewable-energy`,
     items: [
       {
