@@ -1,0 +1,99 @@
+export const metadata = {
+  title: "Konversi Energi",
+  description:
+    "Pelajari cara membaca konversi energi dari sumber alam menjadi energi listrik, termasuk energi berguna, energi terdisipasi, dan efisiensi sederhana.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/27/2026",
+  subject: "Energi Terbarukan",
+};
+
+## Membaca Alat dari Jalurnya
+
+**Konversi energi** adalah perubahan energi dari satu bentuk ke bentuk lain. Kata "konversi" tidak berarti energi diciptakan dari nol. Energi tetap mengikuti hukum kekekalan energi, tetapi bentuk dan tempat berpindahnya berubah.
+
+U.S. Energy Information Administration (EIA) menjelaskan bahwa energi tidak diciptakan atau dimusnahkan saat digunakan, melainkan berubah bentuk. EIA juga menekankan bahwa setiap konversi menghasilkan energi berguna dan energi yang tidak berguna bagi tujuan alat. Halaman Laws of Energy milik EIA bisa dibuka di [tautan sumber](https://www.eia.gov/energyexplained/what-is-energy/laws-of-energy.php).
+
+Cara paling rapi membaca teknologi energi adalah menuliskan jalurnya.
+
+<BlockMath math="\text{sumber energi} \rightarrow \text{bentuk awal} \rightarrow \text{alat konversi} \rightarrow \text{energi berguna}+\text{energi terdisipasi}" />
+
+Energi terdisipasi bukan energi yang hilang. Energi itu menyebar ke lingkungan, misalnya sebagai kalor, bunyi, getaran, atau cahaya yang terpantul.
+
+## Jalur Konversi pada Pembangkit
+
+Diagram berikut membantu kita membaca satu pertanyaan sederhana: energi dari alam berubah menjadi apa sebelum akhirnya dipakai?
+
+<Mermaid
+  chart={`flowchart TD
+    A["Sumber alam"] --> B["Bentuk energi awal"]
+    B --> C["Alat konversi"]
+    C --> D["Energi berguna"]
+    C --> E["Energi terdisipasi"]`}/>
+
+Pada pembangkit listrik tenaga air, U.S. Department of Energy (DOE) menjelaskan bahwa air mengalir melalui penstock, memutar turbin, lalu turbin memutar generator untuk menghasilkan listrik. Penjelasan DOE tentang cara kerja tenaga air bisa dibuka di [tautan sumber](https://www.energy.gov/cmei/water/how-hydropower-works).
+
+Pada pembangkit listrik tenaga angin, DOE menjelaskan bahwa angin memutar bilah turbin, rotor memutar generator, lalu generator menghasilkan listrik. Halaman DOE tentang cara kerja turbin angin bisa dibuka di [tautan sumber](https://www.energy.gov/cmei/systems/how-do-wind-turbines-work).
+
+Pada panel surya fotovoltaik, EIA menjelaskan bahwa sel fotovoltaik mengubah cahaya Matahari langsung menjadi listrik. Namun, hanya foton yang diserap oleh bahan semikonduktor yang memberi energi untuk menghasilkan listrik. Halaman EIA tentang photovoltaic and electricity bisa dibuka di [tautan sumber](https://www.eia.gov/energyexplained/solar/photovoltaics-and-electricity.php).
+
+| Teknologi | Jalur konversi utama | Energi yang sering terdisipasi |
+| :-------- | :------------------- | :----------------------------- |
+| Pembangkit listrik tenaga air | <InlineMath math="\text{potensial gravitasi air}\rightarrow\text{kinetik air}\rightarrow\text{gerak turbin}\rightarrow\text{listrik}" /> | kalor pada poros, bunyi, getaran |
+| Turbin angin | <InlineMath math="\text{kinetik angin}\rightarrow\text{gerak turbin}\rightarrow\text{listrik}" /> | bunyi, getaran, kalor pada komponen |
+| Panel surya fotovoltaik | <InlineMath math="\text{radiasi Matahari}\rightarrow\text{listrik}" /> | cahaya pantul dan kalor |
+| Biomassa atau biogas | <InlineMath math="\text{kimia bahan bakar}\rightarrow\text{kalor}\rightarrow\text{gerak turbin}\rightarrow\text{listrik}" /> | kalor sisa, gas buang, bunyi |
+| Panas bumi | <InlineMath math="\text{termal fluida bumi}\rightarrow\text{uap atau fluida bergerak}\rightarrow\text{gerak turbin}\rightarrow\text{listrik}" /> | kalor sisa dan gesekan sistem |
+
+DOE menjelaskan bahwa teknologi biopower mengubah bahan bakar biomassa menjadi panas dan listrik melalui pembakaran, penguraian bakteri, atau konversi menjadi bahan bakar gas dan cair. Penjelasan DOE tentang biopower bisa dibuka di [tautan sumber](https://www.energy.gov/cmei/fuels/biopower-energy-heat-and-electricity).
+
+DOE juga menjelaskan bahwa pembangkit panas bumi memakai fluida panas atau uap dari bawah permukaan Bumi untuk menggerakkan turbin dan menghasilkan listrik. Halaman DOE tentang geothermal electricity generation bisa dibuka di [tautan sumber](https://www.energy.gov/hgeo/geothermal/geothermal-electricity-generation).
+
+## Efisiensi Menjawab Bagian yang Berguna
+
+Karena tidak semua energi masuk menjadi keluaran yang kita butuhkan, kita memakai **efisiensi**. Efisiensi menunjukkan perbandingan antara energi berguna dan energi masuk.
+
+<BlockMath math="\eta=\frac{E_{\text{berguna}}}{E_{\text{masuk}}}\times 100\%" />
+
+Keterangan simbol:
+
+| Simbol | Makna |
+| :----- | :---- |
+| <InlineMath math="\eta" /> | efisiensi |
+| <InlineMath math="E_{\text{berguna}}" /> | energi yang sesuai tujuan alat |
+| <InlineMath math="E_{\text{masuk}}" /> | energi yang diterima alat |
+
+Misalkan sebuah panel menerima energi cahaya <InlineMath math="800 \text{ J}" /> dan menghasilkan energi listrik <InlineMath math="160 \text{ J}" />. Efisiensinya adalah:
+
+<BlockMath math="\begin{aligned}
+\eta
+&= \frac{E_{\text{berguna}}}{E_{\text{masuk}}}\times 100\% \\
+&= \frac{160 \text{ J}}{800 \text{ J}}\times 100\% \\
+&= 20\%
+\end{aligned}" />
+
+Energi yang tidak menjadi listrik berguna adalah:
+
+<BlockMath math="\begin{aligned}
+E_{\text{terdisipasi}}
+&= E_{\text{masuk}}-E_{\text{berguna}} \\
+&= 800 \text{ J}-160 \text{ J} \\
+&= 640 \text{ J}
+\end{aligned}" />
+
+Jadi, efisiensi <InlineMath math="20\%" /> bukan berarti sisa <InlineMath math="80\%" /> hilang. Sisa energinya berpindah ke lingkungan, misalnya sebagai kalor dan cahaya yang tidak terserap panel.
+
+EIA memakai istilah efisiensi energi untuk kinerja teknis alat konversi energi dan alat pemakai energi. Halaman EIA tentang energy efficiency and conservation bisa dibuka di [tautan sumber](https://www.eia.gov/energyexplained/use-of-energy/efficiency-and-conservation.php).
+
+## Jangan Berhenti di Nama Alat
+
+Nama alat sering membuat konversi energi terasa terlalu sederhana. Panel surya, turbin angin, generator, dan reaktor biogas bukan "pembuat energi". Alat-alat itu mengubah jalur energi.
+
+| Kalau melihat ini | Tanyakan ini |
+| :---------------- | :----------- |
+| panel surya | berapa bagian energi radiasi yang menjadi listrik? |
+| turbin angin | apakah angin cukup cepat untuk memutar rotor? |
+| pembangkit air | seberapa besar debit air dan beda ketinggiannya? |
+| biomassa | apakah bahan bakunya cukup dan dikelola berkelanjutan? |
+| panas bumi | apakah lokasi memiliki panas, fluida, dan jalur aliran yang cukup? |
+
+Dengan membaca jalur konversi, kalian bisa menilai teknologi energi terbarukan lebih teliti: sumbernya apa, bentuk awalnya apa, alatnya mengubah energi menjadi apa, dan bagian mana yang benar-benar berguna.

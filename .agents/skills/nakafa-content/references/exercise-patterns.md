@@ -91,6 +91,7 @@ Rules:
 - Prefer one expressive `<BlockMath />` for one connected derivation.
 - Use `<MathContainer>` only when rows should remain visually separate.
 - Do not use em dash in prose.
+- Do not use raw HTML elements such as `<br />`, `<div>`, or `<span>` in MDX.
 
 ## Choices File
 
@@ -195,6 +196,7 @@ x &= 4
 - [ ] Separate derivation rows use `<MathContainer>` only when they should stay visually separate.
 - [ ] Headings follow the `##` to `###` depth rule.
 - [ ] No em dash appears in prose.
+- [ ] No raw HTML elements appear in MDX.
 - [ ] Answer explains the reasoning, not only the final result.
 - [ ] Explanation can stand alone without relying on another question or lesson.
 - [ ] Explanation does not reference option letters.

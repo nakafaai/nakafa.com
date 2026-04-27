@@ -41,7 +41,7 @@ const idMaterials: MaterialList = [
   {
     title: "Energi Terbarukan",
     description:
-      "Kunci masa depan planet dengan energi bersih yang tak pernah habis untuk generasi mendatang.",
+      "Pahami energi, kebutuhan listrik, dan sumber terbarukan dengan tetap membaca batas alamnya.",
     href: `${BASE_PATH}/renewable-energy`,
     items: [
       {

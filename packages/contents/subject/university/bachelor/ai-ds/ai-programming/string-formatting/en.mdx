@@ -51,9 +51,9 @@ print('|{0:1}|'.format('xxx'))      # Output: |xxx|`
         B --> D["> (Right)"] 
         B --> E["^ (Center)"]
         
-        C --> F["Output:<br/>'xxx            '"]
-        D --> G["Output:<br/>'            xxx'"]
-        E --> H["Output:<br/>'      xxx      '"]
+        C --> F["'xxx            '"]
+        D --> G["'            xxx'"]
+        E --> H["'      xxx      '"]
   `}
 />
 
@@ -99,13 +99,13 @@ Python provides three ways to reference arguments in replacement fields, each wi
     flowchart TD
         A["String Formatting"] --> B["Argument Reference Methods"]
         
-        B --> C["Numbered Fields<br/>{0} {1} {2}"]
-        B --> D["Keyword Fields<br/>{name} {age}"]
-        B --> E["Automatic Fields<br/>{} {} {}"]
+        B --> C["Numbered: {0} {1}"]
+        B --> D["Keyword: {name}"]
+        B --> E["Automatic: {}"]
         
-        C --> F["✓ Explicit control<br/>✓ Can repeat<br/>✗ Must match count"]
-        D --> G["✓ Easy to read<br/>✓ Flexible order<br/>✗ Names must match"]
-        E --> H["✓ Simple syntax<br/>✓ Sequential order<br/>✗ Cannot mix with numbered"]
+        C --> F["Explicit and reusable"]
+        D --> G["Readable and flexible"]
+        E --> H["Simple but sequential"]
   `}
 />
 
@@ -171,9 +171,9 @@ Precision controls the number of decimal places or significant digits in number 
         B --> D["- (default)"]
         B --> E["space (for positive)"]
         
-        C --> F["Output:<br/>+100, -200"]
-        D --> G["Output:<br/>100, -200"]
-        E --> H["Output:<br/> 100, -200"]
+        C --> F["+100, -200"]
+        D --> G["100, -200"]
+        E --> H[" 100, -200"]
   `}
 />
 
@@ -265,7 +265,7 @@ print(f'Area: {math.pi * radius**2:.2f} cm²') # Output: Area: 102.07 cm²`
         H --> I["type (type: d b o x f e g)"]
         
         J["Complete Example"] --> K["{value:*^+10.2f}"]
-        K --> L["* = fill character<br/>^ = center align<br/>+ = always show sign<br/>10 = width minimum<br/>.2 = 2 decimal places<br/>f = float type"]
+        K --> L["fill, align, sign, width, precision, type"]
   `}
 />
 

@@ -117,6 +117,7 @@ export default choices;
 - Make each question and answer standalone.
 - Define abbreviations, symbols, and uncommon terms when the item depends on them.
 - Use `<InlineMath />` for math in prose.
+- Do not use raw HTML elements such as `<br />`, `<div>`, or `<span>` in MDX.
 - Use one expressive `<BlockMath />` for one connected derivation.
 - Use `<MathContainer>` only when rows should stay visually separate.
 - Do not reference option letters in the explanation.

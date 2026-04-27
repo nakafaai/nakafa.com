@@ -219,12 +219,12 @@ print(list2)         # [0, 'x', 2] (tidak berubah)`
   chart={`
     flowchart TD
         subgraph Sebelum ["Sebelum Modifikasi"]
-            A[list1] --> C[Objek List<br/>Data: 0, 1, 2]
+            A[list1] --> C["Objek list: 0, 1, 2"]
             B[list2] --> C
         end
         
         subgraph Sesudah ["Sesudah list1[1] = x"]
-            D[list1] --> F[Objek List yang sama<br/>Data: 0, x, 2]
+            D[list1] --> F["Objek list sama: 0, x, 2"]
             E[list2] --> F
         end
         

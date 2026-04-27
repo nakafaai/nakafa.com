@@ -61,6 +61,10 @@ Use Mermaid for flowcharts, dependency diagrams, timelines, decision paths, and 
 
 Use normal Markdown for paragraphs, lists, links, blockquotes, and tables. Content headings must start at `##` and must not go deeper than `###`.
 
+Do not use raw HTML elements in MDX, including `<br />`, `<div>`, `<span>`, or HTML line breaks inside Mermaid labels. If a table cell or diagram label feels crowded, shorten the text, split it into separate rows or nodes, or use a supported MDX component.
+
+Keep table cells compact. Prefer one sentence per cell, then move extra explanation into prose after the table.
+
 ## Standalone Lesson Writing
 
 Each subject lesson should work for students who arrive directly from search.
@@ -336,6 +340,8 @@ import { BacterialGrowth } from "@repo/design-system/components/contents/animati
 - Verify prop types before using JSX in props. `BarChart` and `HistogramChart` currently accept string titles and descriptions.
 - Some visualization labels are string-only. Use clear plain math notation there, and keep surrounding prose formatted with math components.
 - Do not use em dash in prose.
+- Do not use raw HTML elements in MDX prose, tables, or Mermaid labels.
+- Keep table cells compact and avoid multiple sentences in one cell.
 
 ## Color Reference
 

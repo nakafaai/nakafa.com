@@ -1,0 +1,99 @@
+export const metadata = {
+  title: "Energy Transformation",
+  description:
+    "Learn how to trace energy transformation from natural sources into electricity, including useful energy, dissipated energy, and simple efficiency.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/27/2026",
+  subject: "Renewable Energy",
+};
+
+## Read the Device by Its Path
+
+**Energy transformation** is the change of energy from one form into another. The word "transformation" does not mean energy is created from nothing. Energy still follows the law of energy conservation, but its form and transfer path change.
+
+The U.S. Energy Information Administration (EIA) explains that energy is not created or destroyed when used, but changes form. EIA also explains that every conversion produces useful energy and energy that is not useful for the device's purpose. EIA's Laws of Energy page can be opened through [this source link](https://www.eia.gov/energyexplained/what-is-energy/laws-of-energy.php).
+
+The cleanest way to read an energy technology is to write its path.
+
+<BlockMath math="\text{energy source} \rightarrow \text{initial form} \rightarrow \text{conversion device} \rightarrow \text{useful energy}+\text{dissipated energy}" />
+
+Dissipated energy is not lost energy. It spreads to the surroundings, for example as heat, sound, vibration, or reflected light.
+
+## Conversion Paths in Power Plants
+
+The diagram below helps us ask one simple question: what does energy from nature become before we use it?
+
+<Mermaid
+  chart={`flowchart TD
+    A["Natural source"] --> B["Initial energy form"]
+    B --> C["Conversion device"]
+    C --> D["Useful energy"]
+    C --> E["Dissipated energy"]`}/>
+
+In hydropower, the U.S. Department of Energy (DOE) explains that water flows through a penstock, spins turbine blades, and the turbine spins a generator that produces electricity. DOE's explanation of how hydropower works can be opened through [this source link](https://www.energy.gov/cmei/water/how-hydropower-works).
+
+In wind power, DOE explains that wind turns turbine blades, the rotor spins a generator, and the generator creates electricity. DOE's page on how wind turbines work can be opened through [this source link](https://www.energy.gov/cmei/systems/how-do-wind-turbines-work).
+
+In a photovoltaic solar panel, EIA explains that a photovoltaic cell converts sunlight directly into electricity. However, only photons absorbed by the semiconductor material provide energy to generate electricity. EIA's Photovoltaics and Electricity page can be opened through [this source link](https://www.eia.gov/energyexplained/solar/photovoltaics-and-electricity.php).
+
+| Technology | Main conversion path | Energy often dissipated as |
+| :--------- | :------------------- | :------------------------- |
+| Hydropower plant | <InlineMath math="\text{gravitational potential of water}\rightarrow\text{water motion}\rightarrow\text{turbine motion}\rightarrow\text{electricity}" /> | shaft heat, sound, vibration |
+| Wind turbine | <InlineMath math="\text{wind kinetic energy}\rightarrow\text{turbine motion}\rightarrow\text{electricity}" /> | sound, vibration, component heat |
+| Photovoltaic solar panel | <InlineMath math="\text{solar radiation}\rightarrow\text{electricity}" /> | reflected light and heat |
+| Biomass or biogas | <InlineMath math="\text{chemical energy of fuel}\rightarrow\text{heat}\rightarrow\text{turbine motion}\rightarrow\text{electricity}" /> | waste heat, exhaust gases, sound |
+| Geothermal power | <InlineMath math="\text{thermal energy of Earth fluid}\rightarrow\text{moving steam or fluid}\rightarrow\text{turbine motion}\rightarrow\text{electricity}" /> | waste heat and system friction |
+
+DOE explains that biopower technologies convert biomass fuels into heat and electricity through burning, bacterial decay, or conversion into gas and liquid fuels. DOE's biopower explanation can be opened through [this source link](https://www.energy.gov/cmei/fuels/biopower-energy-heat-and-electricity).
+
+DOE also explains that geothermal power plants use hot fluid or steam from below Earth's surface to drive turbines and produce electricity. DOE's Geothermal Electricity Generation page can be opened through [this source link](https://www.energy.gov/hgeo/geothermal/geothermal-electricity-generation).
+
+## Efficiency Tells Us the Useful Part
+
+Because not all input energy becomes the output we need, we use **efficiency**. Efficiency compares useful energy with input energy.
+
+<BlockMath math="\eta=\frac{E_{\text{useful}}}{E_{\text{input}}}\times 100\%" />
+
+Symbol guide:
+
+| Symbol | Meaning |
+| :----- | :------ |
+| <InlineMath math="\eta" /> | efficiency |
+| <InlineMath math="E_{\text{useful}}" /> | energy that matches the device's purpose |
+| <InlineMath math="E_{\text{input}}" /> | energy received by the device |
+
+Suppose a panel receives <InlineMath math="800 \text{ J}" /> of light energy and produces <InlineMath math="160 \text{ J}" /> of electrical energy. Its efficiency is:
+
+<BlockMath math="\begin{aligned}
+\eta
+&= \frac{E_{\text{useful}}}{E_{\text{input}}}\times 100\% \\
+&= \frac{160 \text{ J}}{800 \text{ J}}\times 100\% \\
+&= 20\%
+\end{aligned}" />
+
+The energy that does not become useful electricity is:
+
+<BlockMath math="\begin{aligned}
+E_{\text{dissipated}}
+&= E_{\text{input}}-E_{\text{useful}} \\
+&= 800 \text{ J}-160 \text{ J} \\
+&= 640 \text{ J}
+\end{aligned}" />
+
+So, an efficiency of <InlineMath math="20\%" /> does not mean the remaining <InlineMath math="80\%" /> disappears. The remaining energy moves into the surroundings, for example as heat and light that the panel does not absorb.
+
+EIA uses energy efficiency to describe the technical performance of energy conversion and energy-consuming devices. EIA's Energy Efficiency and Conservation page can be opened through [this source link](https://www.eia.gov/energyexplained/use-of-energy/efficiency-and-conservation.php).
+
+## Do Not Stop at the Device Name
+
+Device names often make energy transformation sound too simple. Solar panels, wind turbines, generators, and biogas reactors are not "energy makers". They redirect energy paths.
+
+| When you see this | Ask this |
+| :---------------- | :------- |
+| solar panel | how much radiant energy becomes electricity? |
+| wind turbine | is the wind fast enough to rotate the rotor? |
+| hydropower plant | how large are the water flow rate and height difference? |
+| biomass | is the feedstock sufficient and managed sustainably? |
+| geothermal heat | does the site have enough heat, fluid, and flow pathways? |
+
+By tracing the conversion path, you can evaluate renewable-energy technology more carefully: what the source is, what the initial energy form is, what the device transforms it into, and which part is actually useful.

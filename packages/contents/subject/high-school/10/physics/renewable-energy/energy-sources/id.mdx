@@ -25,26 +25,29 @@ Sumber energi terbarukan dipulihkan oleh proses alam dalam skala waktu manusia. 
   chart={`flowchart TD
     A["Sumber energi"] --> B["Stok terbatas"]
     A --> C["Aliran alam"]
-    B --> D["Batu bara<br/>minyak bumi<br/>gas alam"]
-    C --> E["Matahari<br/>angin<br/>air<br/>biomassa<br/>panas bumi<br/>laut"]
-    D --> F["Tak terbarukan"]
-    E --> G["Terbarukan, tetapi ketersediaannya tetap perlu dicek"]`}/>
+    B --> D["Tak terbarukan"]
+    C --> E["Terbarukan"]
+    D --> F["Contoh: bahan bakar fosil"]
+    E --> G["Contoh: surya, angin, air"]
+    E --> H["Tetap cek cuaca, musim, lokasi"]`}/>
 
 EIA menjelaskan bahwa sumber energi terbarukan secara alami terisi kembali, tetapi tetap dibatasi oleh ketersediaan sumbernya. EIA juga mencantumkan biomassa, tenaga air, panas bumi, angin, dan surya sebagai jenis utama energi terbarukan di halaman Renewable Energy Explained yang bisa dibuka di [tautan sumber](https://www.eia.gov/energyexplained/renewable-sources/).
 
 ## Membaca Sumber dari Jalur Konversinya
 
-Cara paling aman membaca sumber energi adalah menelusuri bentuk energi awal, alat konversinya, dan batasannya. Tabel ini bukan untuk dihafal mentah-mentah. Pakai tabel ini sebagai pola baca.
+Cara paling aman membaca sumber energi adalah menelusuri bentuk energi awal, alat konversinya, dan batasannya. Tabel ini hanya menampilkan pola satu kalimat supaya mudah dipindai.
 
-| Sumber energi | Bentuk energi awal | Jalur konversi yang umum | Catatan yang perlu dibaca |
-| :------------ | :----------------- | :----------------------- | :------------------------ |
-| Batu bara, minyak bumi, gas alam | energi kimia pada bahan bakar fosil | pembakaran menghasilkan kalor, lalu kalor dapat memutar turbin melalui uap atau gas panas | tak terbarukan karena pembentukannya sangat lama; pembakaran menghasilkan emisi seperti <InlineMath math="\text{CO}_2" /> |
-| Biomassa dan biogas | energi kimia dari bahan organik | pembakaran, fermentasi, atau penguraian tanpa oksigen menghasilkan bahan bakar | dapat terbarukan jika bahan bakunya dikelola; biogas banyak mengandung <InlineMath math="\text{CH}_4" /> |
-| Air | energi potensial gravitasi dan energi kinetik aliran | air mengalir memutar turbin, lalu generator menghasilkan listrik | cocok jika debit dan beda ketinggian mendukung |
-| Angin | energi kinetik udara bergerak | angin memutar bilah turbin, lalu generator menghasilkan listrik | keluarannya berubah mengikuti kelajuan angin |
-| Matahari | energi radiasi | sel fotovoltaik mengubah cahaya menjadi listrik, atau sistem termal surya mengumpulkan kalor | kuat pada lokasi dengan radiasi Matahari tinggi |
-| Gelombang dan pasang surut laut | energi mekanik gerak air laut | pelampung, kolom air, atau turbin laut mengubah gerak air menjadi listrik | sangat bergantung pada lokasi pesisir dan teknologi yang dipakai |
-| Panas bumi | energi termal dari dalam Bumi | fluida panas atau uap mengalir ke turbin, lalu generator menghasilkan listrik | stabil, tetapi lokasi dan pengeboran sangat menentukan |
+| Sumber energi | Pola konversi singkat |
+| :------------ | :-------------------- |
+| Batu bara, minyak bumi, gas alam | Energi kimia bahan bakar fosil dibakar menjadi kalor untuk menggerakkan turbin. |
+| Biomassa dan biogas | Energi kimia bahan organik diolah menjadi bahan bakar lewat pembakaran atau penguraian tanpa oksigen. |
+| Air | Energi potensial gravitasi dan energi kinetik aliran air memutar turbin. |
+| Angin | Energi kinetik udara bergerak memutar bilah turbin. |
+| Matahari | Energi radiasi Matahari diubah menjadi listrik oleh sel surya atau menjadi kalor oleh pemanas surya. |
+| Gelombang dan pasang surut laut | Energi mekanik gerak air laut diubah menjadi listrik oleh pelampung, kolom air, atau turbin laut. |
+| Panas bumi | Energi termal dari dalam Bumi mengalir melalui fluida panas atau uap untuk memutar turbin. |
+
+Batasannya dibaca setelah pola dasarnya jelas: fosil bergantung pada stok yang terbatas, biomassa pada pengelolaan bahan baku, air pada debit dan beda ketinggian, angin pada kelajuan udara, surya pada radiasi Matahari, laut pada lokasi pesisir, dan panas bumi pada kondisi geologi.
 
 EIA menjelaskan bahwa bahan bakar fosil seperti batu bara, minyak bumi, dan gas alam terbentuk dari sisa makhluk hidup purba dalam waktu yang sangat lama. Penjelasan tersebut ada pada halaman sources of energy milik EIA di [tautan sumber](https://www.eia.gov/energyexplained/what-is-energy/sources-of-energy.php).
 
@@ -52,7 +55,7 @@ EIA menjelaskan bahwa bahan bakar fosil seperti batu bara, minyak bumi, dan gas 
 
 **Biogas** berasal dari biomassa yang diuraikan mikroorganisme tanpa oksigen. Proses ini disebut *anaerobic digestion* atau pencernaan anaerobik. U.S. Environmental Protection Agency (EPA) menjelaskan bahwa biogas terutama berisi metana, yaitu <InlineMath math="\text{CH}_4" />, dan karbon dioksida, yaitu <InlineMath math="\text{CO}_2" />. Penjelasan EPA tentang anaerobic digestion bisa dibuka di [tautan sumber](https://www.epa.gov/anaerobic-digestion/basic-information-about-anaerobic-digestion).
 
-**Energi surya** tidak selalu berarti panel fotovoltaik. Panel fotovoltaik mengubah cahaya langsung menjadi listrik, sedangkan sistem termal surya mengumpulkan kalor dari sinar Matahari. EIA menjelaskan cara sel fotovoltaik mengubah cahaya menjadi listrik pada halaman Photovoltaics and Electricity yang bisa dibuka di [tautan sumber](https://www.eia.gov/energyexplained/solar/photovoltaics-and-electricity.php).
+**Energi surya** tidak selalu berarti panel fotovoltaik, yaitu panel yang mengubah cahaya langsung menjadi listrik. Sistem termal surya berbeda karena mengumpulkan kalor dari sinar Matahari. EIA menjelaskan cara sel fotovoltaik mengubah cahaya menjadi listrik pada halaman Photovoltaics and Electricity yang bisa dibuka di [tautan sumber](https://www.eia.gov/energyexplained/solar/photovoltaics-and-electricity.php).
 
 **Energi laut** mencakup gelombang, pasang surut, arus laut, dan perbedaan suhu air laut. U.S. Department of Energy (DOE) menjelaskan bahwa teknologi energi laut dapat memakai energi kinetik gelombang, arus, dan pasang surut. Halaman Marine Energy Basics milik DOE bisa dibuka di [tautan sumber](https://www.energy.gov/cmei/water/marine-energy-basics).
 

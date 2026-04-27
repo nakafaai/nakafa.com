@@ -143,6 +143,8 @@ import { QuadraticGraph } from "./quadratic-graph";
 - Avoid repeating the same section skeleton across adjacent subchapters.
 - Start content headings at `##`; do not go deeper than `###`.
 - Do not put math or parenthesized numbers in headings.
+- Do not use raw HTML elements such as `<br />`, `<div>`, or `<span>` in MDX.
+- Keep table cells compact and avoid multiple sentences in one cell.
 - Use `<InlineMath />`, `<BlockMath />`, and `<MathContainer>` consistently.
 - Use one expressive `<BlockMath />` for one connected derivation.
 - Use `<MathContainer>` only when rows should stay visually separate.

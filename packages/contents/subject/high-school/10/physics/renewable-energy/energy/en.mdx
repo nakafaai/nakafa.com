@@ -63,14 +63,12 @@ Energy moves from a source into a device, then changes into the form we need.
 
 <Mermaid
   chart={`flowchart TD
-    A["Sunlight"] --> B["Solar panel"]
-    B --> C["Electrical energy"]
-    C --> D["Lamp turns on"]
-    E["Water at height"] --> F["Turbine"]
-    F --> G["Generator"]
-    G --> C
-    H["Food"] --> I["Body"]
-    I --> J["Muscles move"]`}/>
+    A["Energy around us"] --> B["Sunlight to panel"]
+    B --> C["Electricity for lamp"]
+    A --> D["High water to turbine"]
+    D --> C
+    A --> E["Food to body"]
+    E --> F["Muscles move"]`}/>
 
 The diagram shows a pattern, not every technical detail. In a solar panel, light energy changes into electrical energy. In hydropower, gravitational potential energy of water changes into turbine motion, then into electrical energy. In the body, chemical energy from food helps muscles do work.
 

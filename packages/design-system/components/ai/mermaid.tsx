@@ -17,8 +17,8 @@ async function initializeMermaid(customConfig?: MermaidConfig) {
     startOnLoad: false,
     theme: "default",
     securityLevel: "strict",
-    fontFamily: "monospace",
-    fontSize: 14,
+    fontFamily: "inherit",
+    fontSize: 16,
     suppressErrorRendering: true,
   } as MermaidConfig;
 

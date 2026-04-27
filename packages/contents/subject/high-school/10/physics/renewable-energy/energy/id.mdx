@@ -63,14 +63,12 @@ Energi berpindah dari sumber menuju alat, lalu berubah menjadi bentuk yang kita 
 
 <Mermaid
   chart={`flowchart TD
-    A["Cahaya matahari"] --> B["Panel surya"]
-    B --> C["Energi listrik"]
-    C --> D["Lampu menyala"]
-    E["Air di tempat tinggi"] --> F["Turbin"]
-    F --> G["Generator"]
-    G --> C
-    H["Makanan"] --> I["Tubuh"]
-    I --> J["Otot bergerak"]`}/>
+    A["Energi di sekitar"] --> B["Cahaya ke panel"]
+    B --> C["Listrik untuk lampu"]
+    A --> D["Air tinggi ke turbin"]
+    D --> C
+    A --> E["Makanan ke tubuh"]
+    E --> F["Otot bergerak"]`}/>
 
 Diagram itu sengaja menampilkan pola, bukan semua detail teknis. Pada panel surya, energi cahaya berubah menjadi energi listrik. Pada pembangkit listrik tenaga air, energi potensial gravitasi air berubah menjadi energi gerak turbin, lalu menjadi energi listrik. Pada tubuh, energi kimia dari makanan membantu otot melakukan kerja.
 

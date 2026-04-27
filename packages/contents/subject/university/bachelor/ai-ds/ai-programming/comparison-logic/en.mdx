@@ -13,12 +13,12 @@ In programming, computers execute operations based on a specific precedence orde
 <Mermaid
   chart={`
     flowchart TD
-        A["**<br/>(exponent)"] --> B["*, /, //, %<br/>(arithmetic)"]
-        B --> C["+, -<br/>(add, subtract)"]
-        C --> D["==, !=, <, <=, >, >=<br/>(comparison)"]
-        D --> E["not<br/>(boolean NOT)"]
-        E --> F["and<br/>(boolean AND)"]
-        F --> G["or<br/>(boolean OR)"]
+        A["** exponent"] --> B["*, /, //, % arithmetic"]
+        B --> C["+, - add subtract"]
+        C --> D["==, !=, <, <=, >, >= comparison"]
+        D --> E["not"]
+        E --> F["and"]
+        F --> G["or"]
   `}
 />
 
@@ -61,14 +61,16 @@ Boolean operators allow you to combine multiple conditions or modify boolean val
     flowchart LR
         A[Input A] --> AND{and}
         B[Input B] --> AND
-        AND --> C[Output:<br/>A if A false,<br/>B if A true]
+        AND --> C["A false: A"]
+        AND --> D["A true: B"]
         
-        D[Input A] --> OR{or}
-        E[Input B] --> OR
-        OR --> F[Output:<br/>A if A true,<br/>B if A false]
+        E[Input A] --> OR{or}
+        F[Input B] --> OR
+        OR --> G["A true: A"]
+        OR --> H["A false: B"]
         
-        G[Input] --> NOT{not}
-        NOT --> H[Output:<br/>boolean opposite of Input]
+        I[Input] --> NOT{not}
+        NOT --> J["Opposite boolean"]
   `}
 />
 
@@ -117,8 +119,12 @@ Python has special rules for determining which values are considered `False` or 
   chart={`
     flowchart TD
         A[Python Values] --> B{Boolean Evaluation}
-        B -->|Falsy| C[False<br/>None<br/>0, 0.0, 0j<br/>Empty string<br/>Empty list<br/>Empty dict]
-        B -->|Truthy| D[All other values<br/>Non-zero numbers<br/>Non-empty strings<br/>Non-empty containers]
+        B -->|Falsy| C[False]
+        B -->|Falsy| D[None]
+        B -->|Falsy| E["Zero and empty containers"]
+        B -->|Truthy| F["All other values"]
+        F --> G["Non-zero numbers"]
+        F --> H["Non-empty values"]
   `}
 />
 

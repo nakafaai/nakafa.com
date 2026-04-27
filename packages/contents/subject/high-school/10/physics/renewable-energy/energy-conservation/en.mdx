@@ -17,17 +17,18 @@ In the International System of Units (SI), every form of energy can still be exp
 
 That sentence sounds simple, but it is often misread. If the electrical energy from a device is smaller than the energy supplied to it, the remaining energy has not disappeared. It usually becomes heat, sound, vibration, unused light, or internal energy in the device components.
 
-OpenStax College Physics 2e discusses energy conservation on the Conservation of Energy page. That page can be opened through [this source link](https://openstax.org/books/college-physics-2e/pages/7-6-conservation-of-energy).
+OpenStax College Physics 2e discusses energy conservation on the Conservation of Energy page, which can be opened through [this source link](https://openstax.org/books/college-physics-2e/pages/7-6-conservation-of-energy).
 
 ## Choose the System First
 
 A **system** is the part we choose to analyze. Everything outside the system is called the **surroundings**. The law of energy conservation is clearest when the system is chosen explicitly.
 
 <Mermaid
-  chart={`flowchart LR
+  chart={`flowchart TD
     A["Energy input"] --> B["System"]
     B --> C["Useful energy"]
-    B --> D["Dissipated energy<br/>heat, sound, vibration"]`}/>
+    B --> D["Dissipated energy"]
+    D --> E["Heat, sound, vibration"]`}/>
 
 The diagram is not decorative. It reminds us that a system can have more than one energy output.
 

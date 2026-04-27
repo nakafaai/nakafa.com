@@ -293,6 +293,8 @@ No nested lists. No blank lines between items.
 - **NO Excessive Lists**: Lists are okay but don't overuse them. **NEVER use nested lists**
 - **NO Em Dash**: Do not use em dash in content prose.
 - **Use Markdown Well**: Use blockquotes, tables, emphasis, callout-like prose, code blocks, Mermaid diagrams, and math blocks when they genuinely make the lesson easier to scan.
+- **No Raw HTML**: Do not use raw HTML elements in MDX, including `<br />`, `<div>`, `<span>`, or HTML line breaks inside Mermaid labels. Use Markdown, supported MDX components, shorter table copy, or separate Mermaid nodes instead.
+- **Readable Tables**: Keep table cells compact. Prefer one sentence per cell; if a cell needs multiple facts, split them into separate rows or move the extra explanation to prose after the table.
 - **Images are Reference Only**: If you find errors in questions or calculations from source images, fix them directly. The source is just a reference for the calculation method, not absolute truth
 - **Provide Context**: Explain the reasoning and context so students understand WHY, not just WHAT
 - **People-first**: Each page must leave students feeling they learned enough to make progress without searching again.
@@ -496,6 +498,8 @@ Before submitting content:
 - [ ] Card titles and descriptions use ReactNode fragments with `<InlineMath />` when they contain math and the component supports ReactNode props
 - [ ] Related derivations use one expressive `<BlockMath />` when that is clearer than separate rows
 - [ ] Mermaid diagrams are used for flow, dependency, timeline, decision, or process explanations when they improve clarity
+- [ ] No raw HTML elements appear in MDX prose, tables, or Mermaid labels
+- [ ] Table cells stay compact and avoid multiple sentences in one cell
 - [ ] Headings don't contain math or symbols
 - [ ] Headings start at `##` and do not go deeper than `###`
 - [ ] No em dash appears in prose

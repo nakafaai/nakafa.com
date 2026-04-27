@@ -41,7 +41,7 @@ const enMaterials: MaterialList = [
   {
     title: "Renewable Energy",
     description:
-      "The key to our planet's future with clean energy that never runs out for generations to come.",
+      "Understand energy, electricity demand, and renewable sources while still reading their natural limits.",
     href: `${BASE_PATH}/renewable-energy`,
     items: [
       {

@@ -80,6 +80,8 @@ points: Array.from({ length: 100 }, (_, i) => {
 - Use `getColor()` for visualization colors.
 - Do not use em dash in content prose.
 - Use Markdown creatively, including blockquotes, tables, emphasis, code blocks, Mermaid diagrams, and math blocks when they improve scanning.
+- Do not use raw HTML elements in MDX. Avoid `<br />`, `<div>`, `<span>`, and HTML breaks inside Mermaid labels; restructure the Markdown or diagram instead.
+- Keep table cells compact. Prefer one sentence per cell; move extra explanation to prose after the table.
 - Keep each page useful enough that a student can make progress without searching again.
 - Avoid repeated generic closing sections such as "Key Takeaway", "Summary", or localized equivalents. When a closing note is useful, make it specific and blend it into the final section.
 
