@@ -33,7 +33,7 @@ When the user provides official curriculum pages, book screenshots, or teacher r
 - Keep facts, formulas, terminology, and curriculum scope aligned with the official source.
 - Fix obvious source mistakes only when the math or reasoning is verifiably wrong, and make the correction in the final content.
 - Ask the user when grade level, curriculum version, target locale, topic scope, or source meaning is unclear.
-- Calibrate every explanation to the exact level and lesson context. For example, a grade 10 physics lesson should assume first-year high-school reasoning, briefly reintroduce prerequisite math or science terms, and avoid university-level shortcuts unless the curriculum source explicitly requires them.
+- Calibrate every explanation to the exact level, subject, and lesson context. Use only the prior knowledge that the target students are expected to have, and briefly reintroduce prerequisites when the page needs them.
 - Prefer one complete, useful page over many shallow pages. Google explicitly warns against mass-producing many topics only to attract search traffic.
 - Every lesson must stand alone. Do not assume students already opened the previous subchapter, even when the route order suggests it.
 - Define abbreviations, acronyms, symbols, and localized terms the first time they appear in each `id.mdx` and `en.mdx` file.
@@ -50,7 +50,7 @@ Indonesian is allowed only inside snippets that intentionally demonstrate `id.md
   - Use "kita" (we) and "kalian" (you all) to engage readers
   - Write like you're explaining to a friend, but keep it educational
   - Match the student's level. Use familiar examples, small analogies, and concrete situations when they make the concept easier to understand.
-  - Keep analogies honest. State the real physics concept clearly and avoid analogies that hide important limits.
+  - Keep analogies honest. State the real concept clearly and avoid analogies that hide important limits.
   - Example: "Mari kita mulai dengan...", "Pernahkah kalian memperhatikan..."
   
 - **English (en.mdx)**: Use proper English grammar with natural, engaging tone
@@ -301,10 +301,10 @@ No nested lists. No blank lines between items.
 
 ### Grade-Level Fit
 
-- Read the path and metadata before writing. The route often tells you the target level, such as `high-school/10/physics`.
+- Read the path and metadata before writing. The route often tells you the target level, grade, subject, topic, and lesson.
 - Keep the cognitive load appropriate for that level. Define technical words before using them as shortcuts.
 - Prefer concrete school-age examples before abstract generalizations.
-- Use analogies when they reduce confusion, not as decoration. After an analogy, name the actual concept so students do not confuse the analogy with the physics.
+- Use analogies when they reduce confusion, not as decoration. After an analogy, name the actual concept so students do not confuse the analogy with the lesson concept.
 - If a source uses advanced language, translate the idea into the target level while preserving the verified fact, formula, and curriculum scope.
 
 ### Lesson Independence and Voice
