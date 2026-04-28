@@ -4,8 +4,6 @@ import type {
 } from "@repo/design-system/components/contents/chemistry/dalton-evidence/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
-import { LayoutGroup } from "motion/react";
-import * as m from "motion/react-m";
 
 /**
  * Renders the selected Dalton evidence as one balanced comparison scene.
@@ -24,13 +22,11 @@ export function DaltonEvidenceScene({
   expression: string;
 }) {
   return (
-    <LayoutGroup>
-      <div className="grid gap-3 py-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center">
-        <MoleculePanel molecules={beforeMolecules} title={beforeTitle} />
-        <ComparisonExpression expression={expression} />
-        <MoleculePanel molecules={afterMolecules} title={afterTitle} />
-      </div>
-    </LayoutGroup>
+    <div className="grid gap-3 py-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center">
+      <MoleculePanel molecules={beforeMolecules} title={beforeTitle} />
+      <ComparisonExpression expression={expression} />
+      <MoleculePanel molecules={afterMolecules} title={afterTitle} />
+    </div>
   );
 }
 
@@ -42,33 +38,30 @@ function MoleculePanel({
   title: string;
 }) {
   return (
-    <m.section
-      className="flex min-h-36 flex-col items-center justify-center gap-4 p-3 text-center"
-      layout
-    >
+    <section className="flex min-h-36 flex-col items-center justify-center gap-4 p-3 text-center">
       <div className="font-medium text-muted-foreground text-sm">{title}</div>
       <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3">
         {molecules.map((molecule) => (
           <MoleculeGroup key={molecule.id} molecule={molecule} />
         ))}
       </div>
-    </m.section>
+    </section>
   );
 }
 
 function ComparisonExpression({ expression }: { expression: string }) {
   return (
-    <m.div className="flex items-center justify-center" layout>
+    <div className="flex items-center justify-center">
       <span className="inline-flex w-fit shrink-0 items-center justify-center px-2 py-1">
         <InlineMath math={expression} />
       </span>
-    </m.div>
+    </div>
   );
 }
 
 function MoleculeGroup({ molecule }: { molecule: Molecule }) {
   return (
-    <m.div className="grid w-24 justify-items-center gap-2" layout>
+    <div className="grid w-24 justify-items-center gap-2">
       <div className="flex -space-x-2">
         {molecule.atoms.map((atom) => (
           <Atom key={atom.id} symbol={atom.symbol} />
@@ -77,7 +70,7 @@ function MoleculeGroup({ molecule }: { molecule: Molecule }) {
       <span className="text-muted-foreground">
         <InlineMath math={molecule.label} />
       </span>
-    </m.div>
+    </div>
   );
 }
 

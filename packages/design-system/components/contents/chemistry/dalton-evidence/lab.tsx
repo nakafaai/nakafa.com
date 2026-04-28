@@ -22,18 +22,13 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
-import { domMax, LazyMotion, MotionConfig } from "motion/react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
 /**
- * Renders a compact Motion lab for Dalton's evidence from mass patterns.
+ * Renders a compact lab for Dalton's evidence from mass patterns.
  *
  * The chemical layouts stay in data.ts, while MDX owns the localized copy.
- * `LazyMotion` keeps Motion features scoped to this client component.
- *
- * @see https://motion.dev/docs/react
- * @see https://motion.dev/docs/react-reduce-bundle-size
  */
 export function DaltonEvidenceLab({
   title,
@@ -61,52 +56,48 @@ export function DaltonEvidenceLab({
   }
 
   return (
-    <MotionConfig reducedMotion="user">
-      <LazyMotion features={domMax} strict>
-        <Card className="overflow-hidden content-auto-card">
-          <CardHeader>
-            <CardTitle>{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-5">
-            <ToggleGroup
-              aria-label={labels.chooseMode}
-              className="w-full"
-              onValueChange={handleModeChange}
-              type="single"
-              value={selectedModeId}
-              variant="outline"
-            >
-              {DALTON_MODE_IDS.map((modeId) => (
-                <ToggleGroupItem key={modeId} value={modeId}>
-                  {labels.modes[modeId].tab}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
+    <Card className="overflow-hidden content-auto-card">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-5">
+        <ToggleGroup
+          aria-label={labels.chooseMode}
+          className="w-full"
+          onValueChange={handleModeChange}
+          type="single"
+          value={selectedModeId}
+          variant="outline"
+        >
+          {DALTON_MODE_IDS.map((modeId) => (
+            <ToggleGroupItem key={modeId} value={modeId}>
+              {labels.modes[modeId].tab}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
 
-            <DaltonEvidenceScene
-              afterMolecules={selectedLayout.after}
-              afterTitle={selectedLabels.afterTitle}
-              beforeMolecules={selectedLayout.before}
-              beforeTitle={selectedLabels.beforeTitle}
-              expression={selectedLabels.expression}
+        <DaltonEvidenceScene
+          afterMolecules={selectedLayout.after}
+          afterTitle={selectedLabels.afterTitle}
+          beforeMolecules={selectedLayout.before}
+          beforeTitle={selectedLabels.beforeTitle}
+          expression={selectedLabels.expression}
+        />
+      </CardContent>
+
+      <CardFooter className="border-t">
+        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+          {selectedLabels.facts.map((fact) => (
+            <LabFact
+              key={fact.label}
+              label={fact.label}
+              value={<InlineMath math={fact.value} />}
             />
-          </CardContent>
-
-          <CardFooter className="border-t">
-            <dl className="grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
-              {selectedLabels.facts.map((fact) => (
-                <LabFact
-                  key={fact.label}
-                  label={fact.label}
-                  value={<InlineMath math={fact.value} />}
-                />
-              ))}
-            </dl>
-          </CardFooter>
-        </Card>
-      </LazyMotion>
-    </MotionConfig>
+          ))}
+        </dl>
+      </CardFooter>
+    </Card>
   );
 }
 

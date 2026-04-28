@@ -148,7 +148,7 @@ export function MeasurementToolsLab({
         </div>
 
         <div className="flex flex-col gap-3 pt-2">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4 text-sm">
             <div className="min-w-0">
               <div>{selectedLabels.control}</div>
             </div>
