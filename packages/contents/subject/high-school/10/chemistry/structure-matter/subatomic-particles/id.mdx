@@ -1,0 +1,144 @@
+import { SubatomicParticlesLab } from "@repo/design-system/components/contents/chemistry/subatomic-particles/lab";
+
+export const metadata = {
+  title: "Partikel Subatom",
+  description:
+    "Pelajari bagaimana eksperimen Thomson, Rutherford, dan Chadwick menunjukkan bahwa atom tersusun dari elektron, proton, dan neutron.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/28/2026",
+  subject: "Struktur Atom",
+};
+
+## Bukti Baru dari Ruang Sangat Kecil
+
+Model Dalton membuat reaksi kimia lebih mudah dihitung, tetapi model itu masih membayangkan atom seperti bola pejal. Pertanyaan berikutnya sederhana: kalau atom benar-benar pejal dan tidak punya bagian dalam, mengapa atom bisa berkaitan dengan listrik?
+
+Pada akhir 1800-an, ilmuwan mulai memakai tabung kaca bertekanan rendah dan tegangan tinggi. Dari tabung itu muncul **sinar katode**, yaitu berkas yang bergerak dari katode. Berkas ini bisa dibelokkan oleh medan listrik dan medan magnet. Dari sini, atom mulai terlihat bukan sebagai bola tanpa isi, melainkan sebagai struktur yang memiliki partikel lebih kecil.
+
+OpenStax Chemistry Atoms First 2e bagian Evolution of Atomic Theory menjelaskan urutan bukti dari sinar katode Thomson, percobaan lempeng emas Rutherford, sampai penemuan neutron oleh Chadwick. Bagian sumber itu bisa dibuka di [Evolution of Atomic Theory dari OpenStax](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-2-evolution-of-atomic-theory).
+
+Britannica juga mencatat bahwa J. J. Thomson menemukan elektron pada tahun 1897 dan menunjukkan bahwa partikel itu jauh lebih ringan daripada atom. Biografi itu bisa dibuka di [J. J. Thomson dari Britannica](https://www.britannica.com/biography/J-J-Thomson).
+
+## Mini Lab Penemuan Partikel
+
+Ganti mode di bawah ini. Jangan mulai dari hafalan nama partikel dulu. Amati dulu **arah gerak**, **bagian yang dibelokkan**, dan **bagian yang tetap lurus**.
+
+<SubatomicParticlesLab
+  title={<>Mini Lab Partikel Subatom</>}
+  description={
+    <>
+      Tiga eksperimen kunci yang membuat atom tidak lagi dianggap sebagai bola
+      pejal tanpa bagian dalam.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih bukti partikel subatom",
+    scene: {
+      alphaParticle: "Partikel alfa",
+      anode: "Anode",
+      cathode: "Katode",
+      cathodeRay: "Sinar katode",
+      negativePlate: "Pelat negatif",
+      nucleus: "Inti atom",
+      positivePlate: "Pelat positif",
+    },
+    modes: {
+      "cathode-ray": {
+        tab: "Sinar katode",
+        description: (
+          <>
+            Sinar katode tertarik ke pelat positif. Artinya, partikel penyusun
+            berkas itu bermuatan negatif.
+          </>
+        ),
+        facts: [
+          { label: "Partikel", value: "e^-", math: true },
+          { label: "Bukti", value: "Tertarik ke muatan positif" },
+          { label: "Makna", value: "Atom punya bagian dalam" },
+        ],
+      },
+      "gold-foil": {
+        tab: "Lempeng emas",
+        description: (
+          <>
+            Hampir semua partikel alfa lewat lurus. Hanya sebagian kecil yang
+            membelok tajam atau memantul, berarti muatan positif atom terkumpul
+            di inti yang sangat kecil.
+          </>
+        ),
+        facts: [
+          { label: "Peluru uji", value: "\\alpha^{2+}", math: true },
+          { label: "Arah utama", value: "Sebagian besar lurus" },
+          { label: "Makna", value: "Atom banyak ruang kosong" },
+        ],
+      },
+      "atom-map": {
+        tab: "Isi atom",
+        description: (
+          <>
+            Proton dan neutron berada di inti atom. Elektron berada di ruang
+            sekitar inti. Garis tipis hanya penanda ruang elektron, bukan
+            lintasan pasti.
+          </>
+        ),
+        facts: [
+          { label: "Inti", value: "p^+ + n^0", math: true },
+          { label: "Elektron", value: "e^-", math: true },
+          { label: "Massa", value: "Hampir semua di inti" },
+        ],
+      },
+    },
+  }}
+/>
+
+## Elektron Membuka Pintu
+
+Thomson memakai tabung sinar katode. Di dalam tabung, udara dibuat sangat sedikit, lalu diberi tegangan tinggi. Sinar yang muncul selalu tertarik ke arah muatan positif dan menjauhi muatan negatif.
+
+Aturan listriknya mudah: muatan berbeda saling tarik, muatan sejenis saling tolak. Karena sinar katode tertarik ke muatan positif, partikel penyusunnya bermuatan negatif. Partikel itu sekarang disebut **elektron**.
+
+<BlockMath math="\text{sinar katode tertarik ke } (+) \Rightarrow \text{partikel bermuatan } (-)" />
+
+Thomson juga menemukan bahwa partikel sinar katode jauh lebih ringan daripada atom dan sifatnya sama walaupun logam elektrodanya diganti. Ini penting, karena berarti elektron bukan serpihan dari satu logam tertentu. Elektron adalah bagian umum dari atom.
+
+Untuk membayangkan model Thomson, pikirkan roti berisi kismis. Adonan roti mewakili muatan positif yang tersebar, sedangkan kismis mewakili elektron negatif yang tertanam. Analogi ini membantu, tetapi jangan dibaca terlalu jauh: atom tentu bukan roti, dan model Thomson nanti diperbaiki oleh Rutherford.
+
+## Inti Atom yang Kecil tetapi Padat
+
+Rutherford menguji model Thomson dengan menembakkan partikel alfa, yaitu partikel bermuatan positif, ke lempeng emas yang sangat tipis. Jika muatan positif tersebar merata seperti model Thomson, hampir semua partikel alfa seharusnya hanya lewat dengan belokan kecil.
+
+Hasilnya lebih mengejutkan:
+
+- sebagian besar partikel alfa menembus lempeng emas tanpa banyak berubah arah
+- sebagian kecil membelok
+- sangat sedikit partikel alfa memantul balik
+
+OpenStax menjelaskan bahwa pola ini membuat Rutherford menyimpulkan dua hal: atom sebagian besar berupa ruang kosong, dan muatan positif terkonsentrasi dalam pusat kecil yang relatif berat. Pusat kecil itu disebut **inti atom** atau **nukleus**.
+
+Analogi aman untuk ukurannya begini: jika inti atom sebesar satu buah beri kecil di tengah stadion, ruang atom kira-kira sebesar stadionnya. OpenStax Chemistry Atoms First 2e bagian Atomic Structure and Symbolism menyatakan bahwa diameter atom sekitar <InlineMath math="10^{-10}\ \text{m}" />, sedangkan diameter inti sekitar <InlineMath math="10^{-15}\ \text{m}" />, kira-kira <InlineMath math="10^5" /> kali lebih kecil. Rujukan ini bisa dibuka di [Atomic Structure and Symbolism dari OpenStax](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-3-atomic-structure-and-symbolism).
+
+## Neutron Menutup Celah Massa
+
+Model Rutherford sudah menjelaskan inti positif dan elektron negatif, tetapi masih ada celah: massa atom sering lebih besar daripada jumlah proton saja. Jika semua muatan positif dijelaskan oleh proton, apa yang menambah massa inti tanpa menambah muatan?
+
+Pada tahun 1932, James Chadwick menunjukkan adanya partikel netral dengan massa hampir sama seperti proton. Partikel itu disebut **neutron**. Netral berarti muatannya <InlineMath math="0" />, sehingga neutron dapat menambah massa inti tanpa mengubah muatan listrik atom.
+
+Nobel Prize facts untuk James Chadwick menyebutkan bahwa ia membuktikan radiasi dari berilium yang ditembak partikel alfa tersusun dari partikel netral bermassa kira-kira sama dengan proton. Ringkasan itu bisa dibuka di [James Chadwick dari Nobel Prize](https://www.nobelprize.org/prizes/physics/1935/chadwick/facts/).
+
+Keberadaan neutron juga membantu menjelaskan isotop. Isotop adalah atom dari unsur yang sama, tetapi jumlah neutronnya berbeda. Unsurnya tetap sama karena jumlah protonnya sama, sedangkan massanya bisa berbeda karena neutronnya berbeda.
+
+## Membaca Tiga Partikel dengan Cepat
+
+Tabel ini belum masuk ke perhitungan lambang atom secara lengkap. Tujuannya hanya membuat peta awal: siapa bermuatan apa, ada di mana, dan menyumbang massa sebesar apa.
+
+| Partikel | Letak dominan | Muatan relatif | Massa relatif | Cara membayangkannya |
+| :------- | :------------ | :------------- | :------------ | :------------------- |
+| Elektron | Ruang sekitar inti | <InlineMath math="-1" /> | Sekitar <InlineMath math="\frac{1}{1800}" /> massa proton | Penanda muatan negatif yang bergerak di ruang atom |
+| Proton | Inti atom | <InlineMath math="+1" /> | Sekitar <InlineMath math="1\ \text{u}" /> | Penentu identitas unsur |
+| Neutron | Inti atom | <InlineMath math="0" /> | Sekitar <InlineMath math="1\ \text{u}" /> | Penambah massa inti tanpa menambah muatan |
+
+Satu atom netral memiliki jumlah proton dan elektron yang sama. Misalnya, jika sebuah atom memiliki <InlineMath math="6" /> proton dan masih netral, atom itu juga memiliki <InlineMath math="6" /> elektron.
+
+<BlockMath math="\text{atom netral} \Rightarrow \text{jumlah } p^+ = \text{jumlah } e^-" />
+
+Yang perlu dipegang untuk bab berikutnya: **proton menentukan identitas unsur**, **neutron ikut menentukan massa**, dan **elektron menentukan banyak perilaku kimia**. Setelah peta ini jelas, sifat partikel subatom dan lambang atom akan jauh lebih mudah dibaca.

@@ -1,0 +1,127 @@
+import { DaltonEvidenceLab } from "@repo/design-system/components/contents/chemistry/dalton-evidence/lab";
+
+export const metadata = {
+  title: "Atomic Reconceptualization",
+  description:
+    "Learn how John Dalton turned the idea of atoms into a chemistry theory based on mass, fixed composition, and multiple proportions.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/28/2026",
+  subject: "Atomic Structure",
+};
+
+## When Atoms Became Counting Tools
+
+Before John Dalton, atoms had already been imagined as the smallest pieces of matter. The problem was that the idea stayed mostly philosophical: reasonable, but not strong enough to calculate experimental results.
+
+Dalton changed the direction of the discussion. He did not see atoms directly. He read **mass patterns** when substances reacted, then built a model that could explain why mass and composition often appear in neat ratios.
+
+> Reconceptualization means rebuilding the way we view a concept. On this page, an atom is no longer only a tiny piece of matter. It becomes a counting unit for explaining chemical reactions.
+
+Britannica's history of John Dalton places his work in the early 1800s, when he turned the Greek atomic idea into a scientific theory for chemistry. That reference can be opened through [Britannica's history of John Dalton](https://www.britannica.com/biography/John-Dalton).
+
+OpenStax Chemistry Atoms First 2e also emphasizes that Dalton's theory explains the laws of definite and multiple proportions. That section can be opened through [OpenStax's Early Ideas in Atomic Theory](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-1-early-ideas-in-atomic-theory).
+
+## Dalton Ratio Lab
+
+Choose a mode, then watch what stays fixed: atom count, compound recipe, or mass ratio.
+
+<DaltonEvidenceLab
+  title={<>Dalton Ratio Lab</>}
+  description={
+    <>
+      Compare the particles on the left, the particles on the right, and the
+      ratio number.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose evidence for Dalton's atomic theory",
+    modes: {
+      conservation: {
+        tab: "Mass conserved",
+        beforeTitle: "Before reaction",
+        afterTitle: "After reaction",
+        expression: "\\mathrm{2CO + O_2 \\rightarrow 2CO_2}",
+        facts: [
+          { label: "C count", value: "2 = 2" },
+          { label: "O count", value: "4 = 4" },
+          { label: "Meaning", value: "\\text{Rearranged}" },
+        ],
+      },
+      fixed: {
+        tab: "Fixed composition",
+        beforeTitle: "Small sample",
+        afterTitle: "Larger sample",
+        expression: "\\mathrm{H_2O}",
+        facts: [
+          { label: "Atom ratio", value: "H:O = 2:1" },
+          { label: "Mass ratio", value: "m_H:m_O = 1:8" },
+          { label: "Meaning", value: "\\text{Fixed composition}" },
+        ],
+      },
+      multiple: {
+        tab: "Multiple ratios",
+        beforeTitle: "Carbon monoxide",
+        afterTitle: "Carbon dioxide",
+        expression: "\\mathrm{CO \\quad and \\quad CO_2}",
+        facts: [
+          { label: "O mass", value: "16:32" },
+          { label: "Simplified", value: "1:2" },
+          { label: "Meaning", value: "\\text{Multiple ratio}" },
+        ],
+      },
+    },
+  }}
+/>
+
+## Five Claims that Made Chemistry Measurable
+
+Dalton's model is often called the solid sphere model. Atoms were imagined as tiny solid balls that could not be divided, differed by element, and joined with other atoms in definite numbers.
+
+| Dalton's claim | How to read it in chemistry class |
+| :------------- | :-------------------------------- |
+| Matter is made of atoms. | A substance can be understood as a collection of extremely small particles. |
+| Atoms of the same element are treated as identical. | A <InlineMath math="C" /> atom is treated differently from an <InlineMath math="O" /> atom. |
+| Atoms do not turn into atoms of another element in ordinary chemical reactions. | A chemical reaction rearranges atoms instead of creating new atoms from nothing. |
+| Compounds form from atoms in definite ratios. | Water is written as <InlineMath math="\mathrm{H_2O}" /> because the atom ratio is <InlineMath math="H:O = 2:1" />. |
+| Two elements can form more than one compound. | <InlineMath math="\mathrm{CO}" /> and <InlineMath math="\mathrm{CO_2}" /> both contain carbon and oxygen, but their ratios differ. |
+
+The strong part of Dalton's theory is the idea of **atoms as discrete units**. Discrete means counted one by one, like marbles, not poured freely like water. If atoms join in whole-number counts, it makes sense that mass data often form simple ratios too.
+
+## Reading Carbon and Oxygen like Dalton
+
+Take carbon monoxide and carbon dioxide. Both contain carbon and oxygen, but the number of oxygen atoms is different.
+
+| Compound | Formula | Atom ratio | Relative O mass when C is fixed |
+| :------- | :------ | :--------- | :----------------------------------- |
+| Carbon monoxide | <InlineMath math="\mathrm{CO}" /> | <InlineMath math="C:O = 1:1" /> | <InlineMath math="16" /> parts |
+| Carbon dioxide | <InlineMath math="\mathrm{CO_2}" /> | <InlineMath math="C:O = 1:2" /> | <InlineMath math="32" /> parts |
+
+Here, **parts** means comparison units. The important thing is the ratio, not a particular classroom scale unit.
+
+If the carbon mass is kept the same, the oxygen masses in <InlineMath math="\mathrm{CO}" /> and <InlineMath math="\mathrm{CO_2}" /> form this ratio:
+
+<BlockMath math="\begin{aligned}
+\frac{m_O \text{ in } \mathrm{CO}}{m_O \text{ in } \mathrm{CO_2}}
+&= \frac{16}{32} \\
+&= \frac{1}{2}
+\end{aligned}" />
+
+The ratio <InlineMath math="1:2" /> is a simple whole-number ratio. This pattern supports the law of multiple proportions: when two elements form several compounds, the masses of one element that combine with a fixed mass of another element have a simple whole-number ratio.
+
+## What Dalton Could Not Explain Yet
+
+Dalton's model was very useful for reading chemical reactions, but it did not explain every observation. If atoms were truly solid balls with no inner parts, why could metals conduct electricity? Why could cathode rays be bent by electric and magnetic fields?
+
+<Mermaid
+  chart={`flowchart TD
+    A["Atom idea"] --> B["Reaction mass data"]
+    B --> C["Dalton model"]
+    C --> D["Electrical evidence"]
+    D --> E["Subatomic particles"]`}
+/>
+
+OpenStax Chemistry Atoms First 2e explains that J. J. Thomson's cathode ray experiments showed a negatively charged particle much smaller than an atom. That section can be opened through [OpenStax's Evolution of Atomic Theory](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-2-evolution-of-atomic-theory). We now call that particle the electron. This means atoms are not completely indivisible as Dalton assumed.
+
+Dalton's model also did not know about isotopes, which are atoms of the same element that can have different masses. That detail only makes sense after subatomic particles are discussed.
+
+That weakness does not make Dalton useless. Dalton's model was the right foundation for its time: strong enough to explain mass, fixed composition, and multiple ratios, but not detailed enough to explain electric charge and the inner structure of atoms. That gap is where the study of subatomic particles begins.

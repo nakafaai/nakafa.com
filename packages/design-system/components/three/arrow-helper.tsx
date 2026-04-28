@@ -10,7 +10,12 @@ import {
   Quaternion,
   Vector3,
 } from "three";
-import { FONT_PATH, MONO_FONT_PATH } from "./_data";
+import {
+  FONT_PATH,
+  MONO_FONT_PATH,
+  resolveThreeFontSize,
+  type ThreeFontSize,
+} from "./_data";
 import { GRAPH_ARROW_SEGMENTS } from "./quality";
 
 const ARROW_SEGMENT_OFFSET = 0.2;
@@ -72,6 +77,8 @@ interface Props {
   label?: string;
   /** Position of the label */
   labelPosition?: "start" | "middle" | "end";
+  /** Font size of the label text */
+  labelSize?: ThreeFontSize | number;
   /** Width of the vector line */
   lineWidth?: number;
   /** Show arrowhead */
@@ -96,6 +103,7 @@ export function ArrowHelper({
   arrowSize = 0.5,
   label,
   labelPosition = "end",
+  labelSize = "diagram",
   useMonoFont = true,
   ...props
 }: Props) {
@@ -184,6 +192,7 @@ export function ArrowHelper({
     () => (useMonoFont ? MONO_FONT_PATH : FONT_PATH),
     [useMonoFont]
   );
+  const resolvedLabelSize = resolveThreeFontSize(labelSize);
 
   return (
     <group frustumCulled {...props}>
@@ -211,7 +220,7 @@ export function ArrowHelper({
         anchorX="left"
         color={color instanceof Color ? color.getStyle() : color || ""}
         font={fontPath}
-        fontSize={0.5}
+        fontSize={resolvedLabelSize}
         frustumCulled={false}
         material-depthTest={false}
         position={labelPos}

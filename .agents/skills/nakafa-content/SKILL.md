@@ -152,6 +152,15 @@ import { BarChart } from "@repo/design-system/components/contents/bar-chart";
 import { BacterialGrowth } from "@repo/design-system/components/contents/animation-bacterial";
 ```
 
+### Visualization Strategy
+
+- Use the simplest visual that fully explains the concept. Plain MDX, tables, Mermaid, or existing content components are enough when the idea stays readable.
+- When a custom illustration starts needing many layered shapes, labels, hover states, responsive breakpoints, or animation paths, prefer React Three Fiber / Three.js over complex hand-built SVG.
+- Treat `packages/design-system/components/contents/measurement/tools/` as the reference pattern for complex interactive visualizations: one card, stable default camera, readable labels on first render, responsive canvas, and optional orbit interaction.
+- For R3F work, read the relevant `r3f-*` skills and nearby `packages/design-system/components/three/` utilities before coding. Use shared `ThreeCanvas`, `CameraControls`, `SceneLabel`, theme-aware colors, and existing design-system primitives where they fit.
+- The first render must be understandable without dragging, zooming, or rotating. Interactivity should improve exploration, not be required to read labels or identify objects.
+- Avoid custom SVG when it becomes a layout workaround. If labels clip, overlap, flicker, or need many viewport-specific fixes, switch to R3F or simplify the visual.
+
 ### Color System
 
 Always use `getColor()` for deterministic colors:
@@ -498,6 +507,7 @@ Before submitting content:
 - [ ] Card titles and descriptions use ReactNode fragments with `<InlineMath />` when they contain math and the component supports ReactNode props
 - [ ] Related derivations use one expressive `<BlockMath />` when that is clearer than separate rows
 - [ ] Mermaid diagrams are used for flow, dependency, timeline, decision, or process explanations when they improve clarity
+- [ ] Complex custom visuals use R3F/Three.js instead of hard-to-maintain SVG when many shapes, labels, animations, or responsive fixes are needed
 - [ ] No raw HTML elements appear in MDX prose, tables, or Mermaid labels
 - [ ] Table cells stay compact and avoid multiple sentences in one cell
 - [ ] Headings don't contain math or symbols

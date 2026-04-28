@@ -12,7 +12,13 @@ import {
   SphereGeometry,
   Vector3,
 } from "three";
-import { FONT_PATH, MONO_FONT_PATH } from "./_data";
+import {
+  FONT_PATH,
+  MONO_FONT_PATH,
+  resolveThreeFontSize,
+  THREE_FONT_SIZE,
+  type ThreeFontSize,
+} from "./_data";
 import {
   GRAPH_ARROW_SEGMENTS,
   GRAPH_POINT_SEGMENTS,
@@ -22,7 +28,7 @@ import {
 const SPHERE_GEOMETRY_RADIUS = 0.1;
 const CONE_GEOMETRY_HEIGHT_SEGMENTS = 1;
 const DEFAULT_ARROW_SIZE = 0.5;
-const DEFAULT_FONT_SIZE = 0.5;
+const DEFAULT_FONT_SIZE = THREE_FONT_SIZE.diagram;
 
 // Shared geometry cache
 let sharedSphereGeometry: SphereGeometry | null = null;
@@ -122,7 +128,7 @@ export interface Props {
     /** Color for the label text */
     color?: string | Color;
     /** Font size of the label text */
-    fontSize?: number;
+    fontSize?: ThreeFontSize | number;
   }>;
   lineWidth?: number;
   points: {
@@ -306,7 +312,7 @@ export function LineEquation({
             key: `label-${idx}`,
             position,
             color: label.color ?? color,
-            fontSize: label.fontSize ?? DEFAULT_FONT_SIZE,
+            fontSize: resolveThreeFontSize(label.fontSize ?? DEFAULT_FONT_SIZE),
             text: label.text,
           },
         ];

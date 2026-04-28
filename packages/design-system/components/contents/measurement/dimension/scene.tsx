@@ -1,4 +1,5 @@
 import { RoundedBox } from "@react-three/drei";
+import { THREE_FONT_SIZE } from "@repo/design-system/components/three/_data";
 import { DoubleSide } from "three";
 
 import { SceneLabel } from "../label";
@@ -36,7 +37,7 @@ export function DimensionScene({
 
       <SceneLabel
         color={colors.text}
-        fontSize={0.32}
+        fontSize={THREE_FONT_SIZE.display}
         position={[0, 1.35, 1.05]}
       >
         {powerLabel}

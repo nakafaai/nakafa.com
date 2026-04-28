@@ -1,5 +1,8 @@
 import { Text } from "@react-three/drei";
-import { MONO_FONT_PATH } from "@repo/design-system/components/three/_data";
+import {
+  MONO_FONT_PATH,
+  THREE_FONT_SIZE,
+} from "@repo/design-system/components/three/_data";
 import { useMemo } from "react";
 
 import type { MeasurementSceneProps } from "./data";
@@ -87,7 +90,7 @@ export function TimeScene({
         anchorX="center"
         color={colors.text}
         font={MONO_FONT_PATH}
-        fontSize={0.34}
+        fontSize={THREE_FONT_SIZE.display}
         position={[0, -0.55, 0.25]}
       >
         {reading}

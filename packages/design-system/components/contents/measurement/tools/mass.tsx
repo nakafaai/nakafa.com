@@ -1,5 +1,6 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import { THREE_FONT_SIZE } from "@repo/design-system/components/three/_data";
 import { useRef } from "react";
 import type { Group, Mesh } from "three";
 
@@ -177,14 +178,14 @@ export function MassScene({
       </group>
       <SceneLabel
         color={colors.text}
-        fontSize={0.24}
+        fontSize={THREE_FONT_SIZE.reading}
         position={[-MASS_ARM_LENGTH, 0.45, 1.05]}
       >
         {reading}
       </SceneLabel>
       <SceneLabel
         color={colors.text}
-        fontSize={0.24}
+        fontSize={THREE_FONT_SIZE.reading}
         position={[MASS_ARM_LENGTH, 0.45, 1.05]}
       >
         {referenceReading}

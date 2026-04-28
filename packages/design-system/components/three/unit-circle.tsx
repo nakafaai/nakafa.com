@@ -12,7 +12,12 @@ import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useMemo } from "react";
 import { MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
-import { FONT_PATH, MONO_FONT_PATH, ORIGIN_COLOR } from "./_data";
+import {
+  FONT_PATH,
+  MONO_FONT_PATH,
+  ORIGIN_COLOR,
+  THREE_FONT_SIZE,
+} from "./_data";
 import {
   createArcPoints,
   GRAPH_ANGLE_ARC_SEGMENTS,
@@ -43,7 +48,7 @@ interface Props {
 
 const SPHERE_RADIUS = 0.05;
 const ARC_RADIUS = 0.3;
-const LABEL_FONT_SIZE = 0.12;
+const LABEL_FONT_SIZE = THREE_FONT_SIZE.compact;
 const EPSILON = 1e-10;
 
 // Label positioning constants

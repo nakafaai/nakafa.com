@@ -1,4 +1,5 @@
 import { RoundedBox } from "@react-three/drei";
+import { THREE_FONT_SIZE } from "@repo/design-system/components/three/_data";
 import { useMemo } from "react";
 
 import { SceneLabel } from "../label";
@@ -74,14 +75,14 @@ export function LengthScene({
 
       <SceneLabel
         color={colors.text}
-        fontSize={0.24}
+        fontSize={THREE_FONT_SIZE.reading}
         position={[RULER_START_X - 0.35, 0.64, 1]}
       >
         0
       </SceneLabel>
       <SceneLabel
         color={colors.text}
-        fontSize={0.24}
+        fontSize={THREE_FONT_SIZE.reading}
         position={[readingLabelX, 0.92, 1]}
       >
         {reading}
