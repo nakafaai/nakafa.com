@@ -1,5 +1,18 @@
 "use client";
 
+import {
+  AREA_MODE_ID,
+  CAMERA_POSITION,
+  CAMERA_TARGET,
+  DIMENSION_MODES,
+  type DimensionLabProps,
+  type DimensionModeId,
+  getDimensionSceneColors,
+  isDimensionModeId,
+  LENGTH_MODE_ID,
+  VOLUME_MODE_ID,
+} from "@repo/design-system/components/contents/physics/measurement/dimension/data";
+import { DimensionScene } from "@repo/design-system/components/contents/physics/measurement/dimension/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
@@ -18,20 +31,6 @@ import {
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
-
-import {
-  AREA_MODE_ID,
-  CAMERA_POSITION,
-  CAMERA_TARGET,
-  DIMENSION_MODES,
-  type DimensionLabProps,
-  type DimensionModeId,
-  getDimensionSceneColors,
-  isDimensionModeId,
-  LENGTH_MODE_ID,
-  VOLUME_MODE_ID,
-} from "./data";
-import { DimensionScene } from "./scene";
 
 /**
  * Renders a compact 3D model for visualizing length powers in dimensions.

@@ -1,20 +1,19 @@
 import { Billboard, Line, RoundedBox, Text } from "@react-three/drei";
 import {
-  getThreeParticleLabelFontSize,
-  MONO_FONT_PATH,
-  THREE_FONT_SIZE,
-} from "@repo/design-system/components/three/_data";
-import { Vector3 } from "three";
-
-import { SceneLabel } from "../../measurement/label";
-import {
   ATOM_MAP_MODE_ID,
   CATHODE_RAY_MODE_ID,
   GOLD_FOIL_MODE_ID,
   type SubatomicParticlesModeId,
   type SubatomicParticlesSceneLabels,
   type SubatomicSceneColors,
-} from "./data";
+} from "@repo/design-system/components/contents/chemistry/subatomic-particles/data";
+import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import {
+  getThreeParticleLabelFontSize,
+  MONO_FONT_PATH,
+  THREE_FONT_SIZE,
+} from "@repo/design-system/components/three/data/constants";
+import { Vector3 } from "three";
 
 const PATH_POINT_COUNT = 48;
 const CATHODE_RAY_POINTS = createPath(PATH_POINT_COUNT, getCathodeRayPoint);
@@ -58,10 +57,10 @@ const ELECTRON_POSITIONS = [
   [1.45, -0.62, -0.05],
 ];
 const NUCLEON_POSITIONS = [
-  { kind: "proton", label: "p^+", position: [-0.42, 0.24, 0.16] },
-  { kind: "neutron", label: "n^0", position: [0.42, 0.24, -0.06] },
-  { kind: "neutron", label: "n^0", position: [-0.42, -0.3, 0.04] },
-  { kind: "proton", label: "p^+", position: [0.42, -0.3, 0.16] },
+  { kind: "proton", label: "p^+", position: [-0.48, 0.28, 0.16] },
+  { kind: "neutron", label: "n^0", position: [0.48, 0.28, -0.06] },
+  { kind: "neutron", label: "n^0", position: [-0.48, -0.34, 0.04] },
+  { kind: "proton", label: "p^+", position: [0.48, -0.34, 0.16] },
 ];
 const PARTICLE_LABEL_SURFACE_OFFSET_RATIO = 1.04;
 const SUBATOMIC_LABEL_SIZE = THREE_FONT_SIZE.annotation;
@@ -447,8 +446,10 @@ function ParticleLabel({
         font={MONO_FONT_PATH}
         fontSize={fontSize}
         position={[0, 0, radius * PARTICLE_LABEL_SURFACE_OFFSET_RATIO]}
+        renderOrder={10}
       >
         {children}
+        <meshBasicMaterial color={color} depthTest={false} toneMapped={false} />
       </Text>
     </Billboard>
   );

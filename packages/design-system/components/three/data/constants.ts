@@ -1,15 +1,16 @@
-// origin point O(0, 0, 0)
+/** Shared neutral colors for Three.js labels and helper geometry. */
 export const ORIGIN_COLOR = {
   LIGHT: "#f4f4f5",
   DARK: "#18181b",
 };
 
-// Needs to load the fonts through URLs, not direct file system paths
-// Font path for the 3D text
+/** Font URL used by Drei Text inside WebGL scenes. */
 export const FONT_PATH = "/fonts/Geist-Regular.ttf";
+
+/** Monospace font URL used by technical Three.js labels. */
 export const MONO_FONT_PATH = "/fonts/GeistMono-Regular.ttf";
 
-// Font sizes are in Three.js world units, not CSS pixels.
+/** Shared Three.js font sizes in world units, not CSS pixels. */
 export const THREE_FONT_SIZE = {
   marker: 0.08,
   compact: 0.12,

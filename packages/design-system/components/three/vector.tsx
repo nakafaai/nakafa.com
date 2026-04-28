@@ -1,7 +1,7 @@
 "use client";
 
+import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 import type * as Three from "three";
-import { ArrowHelper } from "./arrow-helper";
 
 interface VectorProps {
   /** Size of the arrowhead */

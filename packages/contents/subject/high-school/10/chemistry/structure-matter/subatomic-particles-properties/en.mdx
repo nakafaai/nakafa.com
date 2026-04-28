@@ -1,0 +1,165 @@
+import { SubatomicParticlePropertiesLab } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/lab";
+
+export const metadata = {
+  title: "Subatomic Particle Properties",
+  description:
+    "Learn the charge, mass, and location of protons, neutrons, and electrons so atomic symbols become easier to read.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/28/2026",
+  subject: "Atomic Structure",
+};
+
+## Three Properties to Read
+
+We already know the three particles that make up atoms: **protons**, **neutrons**, and **electrons**. Now the focus is not “who discovered them,” but **which properties make them different**.
+
+Three properties matter most in chemistry class:
+
+- **charge**, the electric sign of the particle
+- **mass**, how much the particle contributes to atomic mass
+- **location**, the part of the atom where the particle is usually discussed
+
+The Atomic Structure and Symbolism section from OpenStax gives a table of subatomic particle charge, mass, and location. The source table can be opened through [OpenStax's Properties of Subatomic Particles](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-3-atomic-structure-and-symbolism).
+
+For more precise constants, NIST publishes CODATA recommended values. The summary can be opened through [NIST's CODATA 2022 wall chart](https://physics.nist.gov/cuu/pdf/wall_2022.pdf).
+
+## Particle Property Mini Lab
+
+Switch the mode below. First watch the big pattern: direction of bending, mass comparison height, and particle location inside the atom.
+
+<SubatomicParticlePropertiesLab
+  title={<>Subatomic Particle Property Map</>}
+  description={
+    <>
+      One visual for reading the charge, mass, and location of protons,
+      neutrons, and electrons.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose a subatomic particle property",
+    scene: {
+      electron: "Electron",
+      electronRegion: "Electron region",
+      negativePlate: "Negative plate",
+      neutron: "Neutron",
+      nucleus: "Nucleus",
+      positivePlate: "Positive plate",
+      proton: "Proton",
+    },
+    modes: {
+      charge: {
+        tab: "Charge",
+        summary: (
+          <>
+            Protons are positive, electrons are negative, and neutrons are
+            neutral. In an electric field, charge sign controls the bending
+            direction.
+          </>
+        ),
+        facts: [
+          { label: "Proton", value: "+1", math: true },
+          { label: "Neutron", value: "0", math: true },
+          { label: "Electron", value: "-1", math: true },
+        ],
+      },
+      mass: {
+        tab: "Mass",
+        summary: (
+          <>
+            Protons and neutrons have almost the same mass. The electron bar is
+            enlarged because electrons are much lighter.
+          </>
+        ),
+        facts: [
+          { label: "Proton", value: "1.0073\\ \\text{u}", math: true },
+          { label: "Neutron", value: "1.0087\\ \\text{u}", math: true },
+          { label: "Electron", value: "0.00055\\ \\text{u}", math: true },
+        ],
+      },
+      location: {
+        tab: "Location",
+        summary: (
+          <>
+            Protons and neutrons are in the nucleus. Electrons occupy the space
+            around the nucleus, not fixed railway-like paths.
+          </>
+        ),
+        facts: [
+          { label: "Nucleus", value: "p^+ + n^0", math: true },
+          { label: "Outside nucleus", value: "e^-", math: true },
+          { label: "Role", value: "Identity, mass, and reactions" },
+        ],
+      },
+    },
+  }}
+/>
+
+## Charge Decides the Direction of Bending
+
+Electric charge can be read as a particle's “interaction sign.” A proton is positive, an electron is negative, and a neutron has no total charge.
+
+The proton and electron have the same charge magnitude, but opposite signs:
+
+<BlockMath math="e = 1.602176634 \times 10^{-19}\ \text{C}" />
+
+That means:
+
+- a proton has charge <InlineMath math="+e" />
+- an electron has charge <InlineMath math="-e" />
+- a neutron has charge <InlineMath math="0" />
+
+In an electric field, a charged particle feels a force. The short way to read it is:
+
+<BlockMath math="F = qE" />
+
+The symbol <InlineMath math="q" /> is the particle charge, and <InlineMath math="E" /> is the electric field. If <InlineMath math="q" /> is positive, the force points with the field. If <InlineMath math="q" /> is negative, the force points the opposite way. If <InlineMath math="q = 0" />, the particle is not bent by a simple electric field.
+
+A quick analogy: an electric field is like wind, but only objects with charge can “feel” it. Protons and electrons both feel the push, but in opposite directions. A neutron is neutral, so in this class-level model it goes straight.
+
+## Mass Changes How Strongly Motion Changes
+
+Subatomic particle masses are tiny, so we often use the **unified atomic mass unit**, written <InlineMath math="\text{u}" />. It is defined from the mass of a carbon-12 atom.
+
+| Particle | Relative charge | Relative mass | Absolute mass | Main location |
+| :------- | :-------------- | :------------ | :------------ | :------------ |
+| Proton | <InlineMath math="+1" /> | <InlineMath math="1.0073\ \text{u}" /> | <InlineMath math="1.67262 \times 10^{-24}\ \text{g}" /> | Nucleus |
+| Neutron | <InlineMath math="0" /> | <InlineMath math="1.0087\ \text{u}" /> | <InlineMath math="1.67493 \times 10^{-24}\ \text{g}" /> | Nucleus |
+| Electron | <InlineMath math="-1" /> | <InlineMath math="0.00055\ \text{u}" /> | <InlineMath math="9.10939 \times 10^{-28}\ \text{g}" /> | Space around the nucleus |
+
+The table shows two important ideas. First, protons and neutrons are almost equally heavy. Second, electrons are extremely light compared with protons and neutrons.
+
+A simple comparison is:
+
+<BlockMath math="\frac{m_p}{m_e} \approx 1836" />
+
+So one proton has about the same mass as <InlineMath math="1836" /> electrons. That is why almost all atomic mass comes from the nucleus, not from the electrons.
+
+Imagine pushing two objects with the same force: a tennis ball changes motion more easily than a bowling ball. This is only a mass analogy, not the shape of a particle. In an atom, an electron is much lighter, so a force can change its motion much more than it changes a proton's motion.
+
+## Location Gives Each Particle Its Role
+
+Particle location gives each particle a different role.
+
+| Particle | Location | Common role in chemistry |
+| :------- | :------- | :----------------------- |
+| Proton | Nucleus | Determines element identity. |
+| Neutron | Nucleus | Adds mass and distinguishes isotopes. |
+| Electron | Space around the nucleus | Strongly affects reactions and ion formation. |
+
+The number of protons determines the element. For example, an atom with <InlineMath math="6" /> protons is carbon. If the neutron number changes, the element is still carbon, but the isotope is different. If the electron number changes, the atom becomes an ion.
+
+For a neutral atom, the number of protons and electrons is the same:
+
+<BlockMath math="\text{neutral atom} \Rightarrow p^+ = e^-" />
+
+That sentence does not mean protons and electrons have the same mass. It means the total positive and negative charges balance.
+
+## Ready for Atomic Symbols
+
+In the next subchapter, atomic symbols will use three important numbers. Subatomic particle properties tell us how to read them:
+
+- the number of protons is read as the **atomic number**
+- the number of protons plus neutrons is read as the **mass number**
+- the difference between protons and electrons is read as the **ion charge**
+
+So do not memorize the table as disconnected numbers. Read the main relationship: **protons give identity**, **neutrons add mass**, and **electrons control the atom's outer charge**.

@@ -1,4 +1,4 @@
-import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 

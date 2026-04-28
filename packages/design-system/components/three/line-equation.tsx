@@ -1,6 +1,18 @@
 "use client";
 
 import { Instance, Instances, Line, Text } from "@react-three/drei";
+import {
+  FONT_PATH,
+  MONO_FONT_PATH,
+  resolveThreeFontSize,
+  THREE_FONT_SIZE,
+  type ThreeFontSize,
+} from "@repo/design-system/components/three/data/constants";
+import {
+  GRAPH_ARROW_SEGMENTS,
+  GRAPH_POINT_SEGMENTS,
+  getCurveDivisions,
+} from "@repo/design-system/components/three/helpers/quality";
 import { randomColor } from "@repo/design-system/lib/color";
 import { useMemo } from "react";
 import {
@@ -12,18 +24,6 @@ import {
   SphereGeometry,
   Vector3,
 } from "three";
-import {
-  FONT_PATH,
-  MONO_FONT_PATH,
-  resolveThreeFontSize,
-  THREE_FONT_SIZE,
-  type ThreeFontSize,
-} from "./_data";
-import {
-  GRAPH_ARROW_SEGMENTS,
-  GRAPH_POINT_SEGMENTS,
-  getCurveDivisions,
-} from "./quality";
 
 const SPHERE_GEOMETRY_RADIUS = 0.1;
 const CONE_GEOMETRY_HEIGHT_SEGMENTS = 1;

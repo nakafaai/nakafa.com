@@ -1,3 +1,4 @@
+import { getCategoryPath } from "@repo/contents/_lib/subject/category";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
@@ -7,7 +8,6 @@ import {
 } from "@repo/contents/_types/subject/grade";
 import { MaterialSchema } from "@repo/contents/_types/subject/material";
 import * as z from "zod";
-import { getCategoryPath } from "./category";
 
 const CATEGORY_GRADES: Record<SubjectCategory, Grade[]> = {
   "elementary-school": ["1", "2", "3", "4", "5", "6"],

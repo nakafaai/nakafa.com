@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  CONSERVATION_MODE_ID,
+  DALTON_LAYOUTS,
+  DALTON_MODE_IDS,
+  type DaltonEvidenceLabProps,
+  type DaltonModeId,
+  isDaltonModeId,
+} from "@repo/design-system/components/contents/chemistry/dalton-evidence/data";
+import { DaltonEvidenceScene } from "@repo/design-system/components/contents/chemistry/dalton-evidence/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   Card,
@@ -16,16 +25,6 @@ import {
 import { domMax, LazyMotion, MotionConfig } from "motion/react";
 import type { ReactNode } from "react";
 import { useState } from "react";
-
-import {
-  CONSERVATION_MODE_ID,
-  DALTON_LAYOUTS,
-  DALTON_MODE_IDS,
-  type DaltonEvidenceLabProps,
-  type DaltonModeId,
-  isDaltonModeId,
-} from "./data";
-import { DaltonEvidenceScene } from "./scene";
 
 /**
  * Renders a compact Motion lab for Dalton's evidence from mass patterns.

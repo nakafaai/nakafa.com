@@ -1,6 +1,13 @@
 "use client";
 
 import { Line, Text } from "@react-three/drei";
+import {
+  FONT_PATH,
+  MONO_FONT_PATH,
+  resolveThreeFontSize,
+  type ThreeFontSize,
+} from "@repo/design-system/components/three/data/constants";
+import { GRAPH_ARROW_SEGMENTS } from "@repo/design-system/components/three/helpers/quality";
 import { COLORS } from "@repo/design-system/lib/color";
 import { useMemo } from "react";
 import {
@@ -10,13 +17,6 @@ import {
   Quaternion,
   Vector3,
 } from "three";
-import {
-  FONT_PATH,
-  MONO_FONT_PATH,
-  resolveThreeFontSize,
-  type ThreeFontSize,
-} from "./_data";
-import { GRAPH_ARROW_SEGMENTS } from "./quality";
 
 const ARROW_SEGMENT_OFFSET = 0.2;
 

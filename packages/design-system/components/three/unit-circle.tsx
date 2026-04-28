@@ -1,6 +1,18 @@
 "use client";
 
 import { Line, Text } from "@react-three/drei";
+import {
+  FONT_PATH,
+  MONO_FONT_PATH,
+  ORIGIN_COLOR,
+  THREE_FONT_SIZE,
+} from "@repo/design-system/components/three/data/constants";
+import {
+  createArcPoints,
+  GRAPH_ANGLE_ARC_SEGMENTS,
+  GRAPH_FULL_CIRCLE_SEGMENTS,
+  GRAPH_POINT_SEGMENTS,
+} from "@repo/design-system/components/three/helpers/quality";
 import { COLORS } from "@repo/design-system/lib/color";
 import {
   getCos,
@@ -12,18 +24,6 @@ import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useMemo } from "react";
 import { MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
-import {
-  FONT_PATH,
-  MONO_FONT_PATH,
-  ORIGIN_COLOR,
-  THREE_FONT_SIZE,
-} from "./_data";
-import {
-  createArcPoints,
-  GRAPH_ANGLE_ARC_SEGMENTS,
-  GRAPH_FULL_CIRCLE_SEGMENTS,
-  GRAPH_POINT_SEGMENTS,
-} from "./quality";
 
 interface Props {
   /** Angle in degrees */

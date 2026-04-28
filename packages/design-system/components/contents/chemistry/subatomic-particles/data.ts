@@ -1,4 +1,4 @@
-import { ORIGIN_COLOR } from "@repo/design-system/components/three/_data";
+import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 

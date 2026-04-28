@@ -5,6 +5,12 @@ export const FIRST_CUT_LEVEL_ID = "first-cut";
 export const SECOND_CUT_LEVEL_ID = "second-cut";
 export const FINE_CUT_LEVEL_ID = "fine-cut";
 
+export type AncientAtomLevelId =
+  | typeof WHOLE_MATTER_LEVEL_ID
+  | typeof FIRST_CUT_LEVEL_ID
+  | typeof SECOND_CUT_LEVEL_ID
+  | typeof FINE_CUT_LEVEL_ID;
+
 export const ANCIENT_ATOM_LEVELS = [
   {
     id: WHOLE_MATTER_LEVEL_ID,
@@ -22,9 +28,10 @@ export const ANCIENT_ATOM_LEVELS = [
     id: FINE_CUT_LEVEL_ID,
     pieces: 8,
   },
-] as const;
-
-export type AncientAtomLevelId = (typeof ANCIENT_ATOM_LEVELS)[number]["id"];
+] satisfies {
+  id: AncientAtomLevelId;
+  pieces: number;
+}[];
 
 export interface AncientAtomLevelLabels {
   tab: string;

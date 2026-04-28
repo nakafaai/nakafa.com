@@ -136,27 +136,28 @@ Use Mermaid for flowcharts, dependency diagrams, timelines, decision paths, or p
 
 ### Content Components (Import Required)
 
-From `@repo/design-system/components/contents/*`:
+From the domain folders under `@repo/design-system/components/contents/*`:
 
 ```typescript
-import { LineEquation } from "@repo/design-system/components/contents/line-equation";
-import { NumberLine } from "@repo/design-system/components/contents/number-line";
-import { Triangle } from "@repo/design-system/components/contents/triangle";
-import { UnitCircle } from "@repo/design-system/components/contents/unit-circle";
-import { Vector3d } from "@repo/design-system/components/contents/vector-3d";
-import { VectorChart } from "@repo/design-system/components/contents/vector-chart";
-import { Inequality } from "@repo/design-system/components/contents/inequality";
-import { FunctionChart } from "@repo/design-system/components/contents/function-chart";
-import { ScatterDiagram } from "@repo/design-system/components/contents/scatter-diagram";
-import { BarChart } from "@repo/design-system/components/contents/bar-chart";
-import { BacterialGrowth } from "@repo/design-system/components/contents/animation-bacterial";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { NumberLine } from "@repo/design-system/components/contents/mathematics/number-line";
+import { Triangle } from "@repo/design-system/components/contents/mathematics/triangle";
+import { UnitCircle } from "@repo/design-system/components/contents/mathematics/unit-circle";
+import { Vector3d } from "@repo/design-system/components/contents/mathematics/vector-3d";
+import { VectorChart } from "@repo/design-system/components/contents/mathematics/vector-chart";
+import { Inequality } from "@repo/design-system/components/contents/mathematics/inequality";
+import { FunctionChart } from "@repo/design-system/components/contents/mathematics/function-chart";
+import { ScatterDiagram } from "@repo/design-system/components/contents/mathematics/scatter-diagram";
+import { BarChart } from "@repo/design-system/components/contents/mathematics/bar-chart";
+import { BacterialGrowth } from "@repo/design-system/components/contents/mathematics/animation-bacterial";
 ```
 
 ### Visualization Strategy
 
 - Use the simplest visual that fully explains the concept. Plain MDX, tables, Mermaid, or existing content components are enough when the idea stays readable.
 - When a custom illustration starts needing many layered shapes, labels, hover states, responsive breakpoints, or animation paths, prefer React Three Fiber / Three.js over complex hand-built SVG.
-- Treat `packages/design-system/components/contents/measurement/tools/` as the reference pattern for complex interactive visualizations: one card, stable default camera, readable labels on first render, responsive canvas, and optional orbit interaction.
+- Trace `packages/design-system/components/contents/` before building custom visuals. Use the closest existing domain component as inspiration, whether it lives under chemistry, mathematics, physics, or a shared root component.
+- For complex interactive visualizations, follow the common patterns already used across `components/contents`: one card, stable default camera, readable labels on first render, responsive canvas, and optional orbit interaction when 3D exploration helps.
 - For R3F work, read the relevant `r3f-*` skills and nearby `packages/design-system/components/three/` utilities before coding. Use shared `ThreeCanvas`, `CameraControls`, `SceneLabel`, theme-aware colors, and existing design-system primitives where they fit.
 - The first render must be understandable without dragging, zooming, or rotating. Interactivity should improve exploration, not be required to read labels or identify objects.
 - Avoid custom SVG when it becomes a layout workaround. If labels clip, overlap, flicker, or need many viewport-specific fixes, switch to R3F or simplify the visual.

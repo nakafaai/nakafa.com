@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  createMaxWidthMediaQuery,
+  createMinWidthMediaQuery,
+  TAILWIND_BREAKPOINT_PIXELS,
+} from "@repo/design-system/lib/breakpoints";
 import { useEffect, useState } from "react";
 
 type BreakpointMode = "min" | "max";
@@ -7,28 +12,26 @@ type BreakpointMode = "min" | "max";
 /**
  * Hook to detect whether the current viewport matches a given breakpoint rule.
  * Example:
- *   useIsBreakpoint("max", 768)   // true when width < 768
- *   useIsBreakpoint("min", 1024)  // true when width >= 1024
+ *   useIsBreakpoint("max", TAILWIND_BREAKPOINT_PIXELS.md)
+ *   useIsBreakpoint("min", TAILWIND_BREAKPOINT_PIXELS.lg)
  */
 export function useIsBreakpoint(
   mode: BreakpointMode = "max",
-  breakpoint = 768
+  breakpoint = TAILWIND_BREAKPOINT_PIXELS.md
 ) {
   const [matches, setMatches] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
     const query =
       mode === "min"
-        ? `(min-width: ${breakpoint}px)`
-        : `(max-width: ${breakpoint - 1}px)`;
+        ? createMinWidthMediaQuery(breakpoint)
+        : createMaxWidthMediaQuery(breakpoint);
 
     const mql = window.matchMedia(query);
     const onChange = (e: MediaQueryListEvent) => setMatches(e.matches);
 
-    // Set initial value
     setMatches(mql.matches);
 
-    // Add listener
     mql.addEventListener("change", onChange);
     return () => mql.removeEventListener("change", onChange);
   }, [mode, breakpoint]);

@@ -55,10 +55,6 @@ function SingleToggleGroup({
   value,
   ...props
 }: ToggleGroupSingleProps) {
-  const rootClassName = cn(
-    "group/toggle-group flex w-fit items-center rounded-md data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch data-[variant=outline]:shadow-xs",
-    className
-  );
   const groupDefaultValue =
     defaultValue === undefined ? undefined : toSingleValueArray(defaultValue);
   const groupValue =
@@ -70,7 +66,10 @@ function SingleToggleGroup({
 
   return (
     <ToggleGroupPrimitive
-      className={rootClassName}
+      className={cn(
+        "group/toggle-group flex w-fit items-center rounded-md data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch data-[variant=outline]:shadow-xs",
+        className
+      )}
       data-orientation={orientation}
       data-size={size}
       data-slot="toggle-group"
@@ -98,14 +97,12 @@ function MultipleToggleGroup({
   type,
   ...props
 }: ToggleGroupMultipleProps) {
-  const rootClassName = cn(
-    "group/toggle-group flex w-fit items-center rounded-md data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch data-[variant=outline]:shadow-xs",
-    className
-  );
-
   return (
     <ToggleGroupPrimitive
-      className={rootClassName}
+      className={cn(
+        "group/toggle-group flex w-fit items-center rounded-md data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch data-[variant=outline]:shadow-xs",
+        className
+      )}
       data-orientation={orientation}
       data-size={size}
       data-slot="toggle-group"

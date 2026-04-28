@@ -1,0 +1,164 @@
+import { SubatomicParticlePropertiesLab } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/lab";
+
+export const metadata = {
+  title: "Sifat Partikel Subatom",
+  description:
+    "Pelajari muatan, massa, dan letak proton, neutron, dan elektron supaya lambang atom lebih mudah dibaca.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/28/2026",
+  subject: "Struktur Atom",
+};
+
+## Tiga Sifat yang Perlu Dibaca
+
+Kita sudah mengenal tiga partikel penyusun atom: **proton**, **neutron**, dan **elektron**. Sekarang fokusnya bukan lagi “siapa yang menemukan”, tetapi **sifat apa yang membedakan ketiganya**.
+
+Ada tiga sifat yang paling sering dipakai di kelas kimia:
+
+- **muatan**, yaitu tanda listrik partikel
+- **massa**, yaitu seberapa besar sumbangan partikel terhadap massa atom
+- **letak**, yaitu bagian atom tempat partikel berada dalam model atom
+
+Bagian Atomic Structure and Symbolism dari OpenStax menyajikan tabel muatan, massa, dan letak partikel subatom. Tabel sumber itu bisa dibuka di [Properties of Subatomic Particles dari OpenStax](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-3-atomic-structure-and-symbolism).
+
+Untuk nilai konstanta yang lebih presisi, NIST menerbitkan CODATA recommended values. Ringkasannya bisa dibuka di [wall chart CODATA 2022 dari NIST](https://physics.nist.gov/cuu/pdf/wall_2022.pdf).
+
+## Mini Lab Sifat Partikel
+
+Ganti mode di bawah ini. Perhatikan dulu gambar besarnya: arah belokan, tinggi massa pembanding, dan lokasi partikel di dalam atom.
+
+<SubatomicParticlePropertiesLab
+  title={<>Peta Sifat Partikel Subatom</>}
+  description={
+    <>
+      Satu visual untuk membaca muatan, massa, dan letak proton, neutron, dan
+      elektron.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih sifat partikel subatom",
+    scene: {
+      electron: "Elektron",
+      electronRegion: "Ruang elektron",
+      negativePlate: "Pelat negatif",
+      neutron: "Neutron",
+      nucleus: "Inti atom",
+      positivePlate: "Pelat positif",
+      proton: "Proton",
+    },
+    modes: {
+      charge: {
+        tab: "Muatan",
+        summary: (
+          <>
+            Proton bermuatan positif, elektron bermuatan negatif, dan neutron
+            netral. Di medan listrik, tanda muatan menentukan arah belokan.
+          </>
+        ),
+        facts: [
+          { label: "Proton", value: "+1", math: true },
+          { label: "Neutron", value: "0", math: true },
+          { label: "Elektron", value: "-1", math: true },
+        ],
+      },
+      mass: {
+        tab: "Massa",
+        summary: (
+          <>
+            Proton dan neutron massanya hampir sama. Batang elektron diperbesar
+            karena elektron jauh lebih ringan.
+          </>
+        ),
+        facts: [
+          { label: "Proton", value: "1.0073\\ \\text{sma}", math: true },
+          { label: "Neutron", value: "1.0087\\ \\text{sma}", math: true },
+          { label: "Elektron", value: "0.00055\\ \\text{sma}", math: true },
+        ],
+      },
+      location: {
+        tab: "Lokasi",
+        summary: (
+          <>
+            Proton dan neutron berada di inti atom. Elektron berada di ruang
+            sekitar inti, bukan pada garis lintasan pasti seperti rel.
+          </>
+        ),
+        facts: [
+          { label: "Inti", value: "p^+ + n^0", math: true },
+          { label: "Luar inti", value: "e^-", math: true },
+          { label: "Peran", value: "Identitas, massa, dan reaksi" },
+        ],
+      },
+    },
+  }}
+/>
+
+## Muatan Menentukan Arah Belokan
+
+Muatan listrik bisa dibaca sebagai “tanda interaksi” partikel. Proton bertanda positif, elektron bertanda negatif, sedangkan neutron tidak memiliki muatan total.
+
+Muatan mutlak proton dan elektron sama besar, hanya tandanya berlawanan:
+
+<BlockMath math="e = 1.602176634 \times 10^{-19}\ \text{C}" />
+
+Artinya:
+
+- proton memiliki muatan <InlineMath math="+e" />
+- elektron memiliki muatan <InlineMath math="-e" />
+- neutron memiliki muatan <InlineMath math="0" />
+
+Di medan listrik, partikel bermuatan mendapat gaya. Cara ringkas membacanya:
+
+<BlockMath math="F = qE" />
+
+Simbol <InlineMath math="q" /> adalah muatan partikel, sedangkan <InlineMath math="E" /> adalah medan listrik. Jika <InlineMath math="q" /> positif, arah gayanya searah medan. Jika <InlineMath math="q" /> negatif, arahnya berlawanan. Jika <InlineMath math="q = 0" />, partikel tidak dibelokkan oleh medan listrik sederhana.
+
+Analogi singkatnya: medan listrik seperti angin, tetapi hanya “terasa” oleh benda yang punya tanda muatan. Proton dan elektron sama-sama merasakan dorongan, tetapi arahnya berlawanan. Neutron netral, jadi pada model kelas ini ia lewat lurus.
+
+## Massa Menentukan Seberapa Kuat Perubahan Gerak
+
+Massa partikel subatom sangat kecil, sehingga kita sering memakai **satuan massa atom** atau **sma**. Satuan ini juga sering ditulis <InlineMath math="\text{u}" />. Satu <InlineMath math="\text{sma}" /> didefinisikan dari massa atom karbon-12.
+
+| Partikel | Muatan relatif | Massa relatif | Massa absolut | Letak utama |
+| :------- | :------------- | :------------ | :------------ | :---------- |
+| Proton | <InlineMath math="+1" /> | <InlineMath math="1.0073\ \text{sma}" /> | <InlineMath math="1.67262 \times 10^{-24}\ \text{g}" /> | Inti atom |
+| Neutron | <InlineMath math="0" /> | <InlineMath math="1.0087\ \text{sma}" /> | <InlineMath math="1.67493 \times 10^{-24}\ \text{g}" /> | Inti atom |
+| Elektron | <InlineMath math="-1" /> | <InlineMath math="0.00055\ \text{sma}" /> | <InlineMath math="9.10939 \times 10^{-28}\ \text{g}" /> | Ruang sekitar inti |
+
+Tabel ini menunjukkan dua hal penting. Pertama, proton dan neutron hampir sama berat. Kedua, elektron sangat ringan dibanding proton dan neutron.
+
+Perbandingan sederhananya:
+
+<BlockMath math="\frac{m_p}{m_e} \approx 1836" />
+
+Jadi, satu proton massanya kira-kira sama dengan <InlineMath math="1836" /> elektron. Karena itu, hampir seluruh massa atom berasal dari inti, bukan dari elektron.
+
+Bayangkan dua benda didorong dengan gaya yang sama: bola tenis lebih mudah berubah gerak daripada bola bowling. Ini hanya analogi massa, bukan bentuk partikel. Dalam atom, elektron jauh lebih ringan, sehingga pengaruh gaya pada geraknya bisa jauh lebih besar daripada pada proton.
+
+## Letak Menentukan Peran
+
+Letak partikel membuat perannya berbeda.
+
+| Partikel | Letak | Peran yang paling sering dipakai |
+| :------- | :---- | :------------------------------- |
+| Proton | Inti atom | Menentukan identitas unsur. |
+| Neutron | Inti atom | Menambah massa dan membedakan isotop. |
+| Elektron | Ruang sekitar inti | Banyak menentukan reaksi kimia dan pembentukan ion. |
+
+Jumlah proton menentukan unsur. Misalnya, atom dengan <InlineMath math="6" /> proton adalah karbon. Jika jumlah neutronnya berubah, unsur masih karbon, tetapi isotopnya berbeda. Jika jumlah elektronnya berubah, atom menjadi ion.
+
+Untuk atom netral, jumlah proton dan elektron sama:
+
+<BlockMath math="\text{atom netral} \Rightarrow p^+ = e^-" />
+
+Kalimat itu bukan berarti proton dan elektron massanya sama. Maksudnya, jumlah muatan positif dan negatifnya saling menyeimbangkan.
+
+## Bekal untuk Membaca Lambang Atom
+
+Pada subbab berikutnya, lambang atom akan memakai tiga angka penting. Sifat partikel subatom membantu kita membaca angka-angka itu:
+
+- jumlah proton dibaca sebagai **nomor atom**
+- jumlah proton dan neutron dibaca sebagai **nomor massa**
+- selisih proton dan elektron dibaca sebagai **muatan ion**
+
+Jadi, jangan menghafal tabel sebagai angka terpisah. Baca hubungan utamanya: **proton memberi identitas**, **neutron menambah massa**, dan **elektron mengatur muatan luar atom**.

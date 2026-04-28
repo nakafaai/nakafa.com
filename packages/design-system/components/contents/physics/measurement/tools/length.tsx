@@ -1,9 +1,5 @@
 import { RoundedBox } from "@react-three/drei";
-import { THREE_FONT_SIZE } from "@repo/design-system/components/three/_data";
-import { useMemo } from "react";
-
-import { SceneLabel } from "../label";
-import type { MeasurementSceneProps } from "./data";
+import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/data";
 import {
   OBJECT_COLOR,
   RULER_COLOR,
@@ -12,7 +8,10 @@ import {
   RULER_MINOR_TICK_COUNT,
   RULER_START_X,
   RULER_STEP_CM,
-} from "./data";
+} from "@repo/design-system/components/contents/physics/measurement/tools/data";
+import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
+import { useMemo } from "react";
 
 /**
  * Renders a ruler with an object whose length matches the selected reading.

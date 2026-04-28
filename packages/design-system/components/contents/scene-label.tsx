@@ -4,7 +4,7 @@ import {
   MONO_FONT_PATH,
   resolveThreeFontSize,
   type ThreeFontSize,
-} from "@repo/design-system/components/three/_data";
+} from "@repo/design-system/components/three/data/constants";
 
 type SceneLabelPosition = readonly [number, number, number];
 

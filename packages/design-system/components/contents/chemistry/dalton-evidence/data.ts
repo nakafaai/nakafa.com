@@ -4,13 +4,17 @@ export const CONSERVATION_MODE_ID = "conservation";
 export const FIXED_MODE_ID = "fixed";
 export const MULTIPLE_MODE_ID = "multiple";
 
+export type DaltonModeId =
+  | typeof CONSERVATION_MODE_ID
+  | typeof FIXED_MODE_ID
+  | typeof MULTIPLE_MODE_ID;
+
 export const DALTON_MODE_IDS = [
   CONSERVATION_MODE_ID,
   FIXED_MODE_ID,
   MULTIPLE_MODE_ID,
-] as const;
+] satisfies DaltonModeId[];
 
-export type DaltonModeId = (typeof DALTON_MODE_IDS)[number];
 export type AtomSymbol = "C" | "H" | "O";
 
 export interface Atom {

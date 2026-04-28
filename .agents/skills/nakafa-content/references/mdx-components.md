@@ -82,7 +82,7 @@ Import these only when the lesson needs the visualization.
 ### LineEquation
 
 ```tsx
-import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 
 <LineEquation
@@ -112,7 +112,7 @@ import { getColor } from "@repo/design-system/lib/color";
 ### NumberLine
 
 ```tsx
-import { NumberLine } from "@repo/design-system/components/contents/number-line";
+import { NumberLine } from "@repo/design-system/components/contents/mathematics/number-line";
 
 <NumberLine
   title={<>Solution Set for <InlineMath math="x \ge 3" /></>}
@@ -135,7 +135,7 @@ import { NumberLine } from "@repo/design-system/components/contents/number-line"
 ### Triangle
 
 ```tsx
-import { Triangle } from "@repo/design-system/components/contents/triangle";
+import { Triangle } from "@repo/design-system/components/contents/mathematics/triangle";
 
 <Triangle
   title={<>Right Triangle with <InlineMath math="30^\circ" /></>}
@@ -156,7 +156,7 @@ import { Triangle } from "@repo/design-system/components/contents/triangle";
 ### UnitCircle
 
 ```tsx
-import { UnitCircle } from "@repo/design-system/components/contents/unit-circle";
+import { UnitCircle } from "@repo/design-system/components/contents/mathematics/unit-circle";
 
 <UnitCircle
   title={<>Unit Circle at <InlineMath math="45^\circ" /></>}
@@ -173,7 +173,7 @@ import { UnitCircle } from "@repo/design-system/components/contents/unit-circle"
 ### Vector3d
 
 ```tsx
-import { Vector3d } from "@repo/design-system/components/contents/vector-3d";
+import { Vector3d } from "@repo/design-system/components/contents/mathematics/vector-3d";
 import { getColor } from "@repo/design-system/lib/color";
 
 <Vector3d
@@ -193,7 +193,7 @@ import { getColor } from "@repo/design-system/lib/color";
 ### VectorChart
 
 ```tsx
-import { VectorChart } from "@repo/design-system/components/contents/vector-chart";
+import { VectorChart } from "@repo/design-system/components/contents/mathematics/vector-chart";
 import { getColor } from "@repo/design-system/lib/color";
 
 <VectorChart
@@ -220,7 +220,7 @@ import { getColor } from "@repo/design-system/lib/color";
 ### FunctionChart
 
 ```tsx
-import { FunctionChart } from "@repo/design-system/components/contents/function-chart";
+import { FunctionChart } from "@repo/design-system/components/contents/mathematics/function-chart";
 
 <FunctionChart
   title={<>Exponential Function <InlineMath math="f(x) = 2^x" /></>}
@@ -238,7 +238,7 @@ import { FunctionChart } from "@repo/design-system/components/contents/function-
 ### ScatterDiagram
 
 ```tsx
-import { ScatterDiagram } from "@repo/design-system/components/contents/scatter-diagram";
+import { ScatterDiagram } from "@repo/design-system/components/contents/mathematics/scatter-diagram";
 import { getColor } from "@repo/design-system/lib/color";
 
 <ScatterDiagram
@@ -266,7 +266,7 @@ import { getColor } from "@repo/design-system/lib/color";
 ### BarChart and HistogramChart
 
 ```tsx
-import { BarChart } from "@repo/design-system/components/contents/bar-chart";
+import { BarChart } from "@repo/design-system/components/contents/mathematics/bar-chart";
 
 const chartConfig = {
   value: {
@@ -291,7 +291,7 @@ const chartConfig = {
 ### Inequality
 
 ```tsx
-import { Inequality } from "@repo/design-system/components/contents/inequality";
+import { Inequality } from "@repo/design-system/components/contents/mathematics/inequality";
 import { getColor } from "@repo/design-system/lib/color";
 
 <Inequality
@@ -316,7 +316,7 @@ import { getColor } from "@repo/design-system/lib/color";
 ### BacterialGrowth
 
 ```tsx
-import { BacterialGrowth } from "@repo/design-system/components/contents/animation-bacterial";
+import { BacterialGrowth } from "@repo/design-system/components/contents/mathematics/animation-bacterial";
 
 <BacterialGrowth
   initialCount={1}

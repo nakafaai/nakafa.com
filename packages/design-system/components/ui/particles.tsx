@@ -2,6 +2,7 @@
 
 import { useMediaQuery } from "@mantine/hooks";
 import { useMousePosition } from "@repo/design-system/hooks/use-mouse";
+import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { cn } from "@repo/design-system/lib/utils";
 import dynamic from "next/dynamic";
@@ -64,7 +65,7 @@ function ParticlesComponent({
   const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
   const dpr = typeof window === "undefined" ? 1 : window.devicePixelRatio;
 
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useMediaQuery(TAILWIND_MEDIA_QUERIES.belowMd);
 
   const rngRef = useRef(createSeededRandom(quantity, staticity, ease));
 

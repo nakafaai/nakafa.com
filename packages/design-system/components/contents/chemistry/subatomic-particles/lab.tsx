@@ -2,6 +2,17 @@
 
 import { useMediaQuery } from "@mantine/hooks";
 import { useThree } from "@react-three/fiber";
+import {
+  CATHODE_RAY_MODE_ID,
+  getSubatomicSceneColors,
+  isSubatomicParticlesModeId,
+  SUBATOMIC_PARTICLE_MODE_IDS,
+  SUBATOMIC_VIEW_CONFIG,
+  type SubatomicParticlesFact,
+  type SubatomicParticlesLabProps,
+  type SubatomicParticlesModeId,
+} from "@repo/design-system/components/contents/chemistry/subatomic-particles/data";
+import { SubatomicParticlesScene } from "@repo/design-system/components/contents/chemistry/subatomic-particles/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
@@ -17,23 +28,11 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { useTheme } from "next-themes";
 import { Suspense, useState } from "react";
 
-import {
-  CATHODE_RAY_MODE_ID,
-  getSubatomicSceneColors,
-  isSubatomicParticlesModeId,
-  SUBATOMIC_PARTICLE_MODE_IDS,
-  SUBATOMIC_VIEW_CONFIG,
-  type SubatomicParticlesFact,
-  type SubatomicParticlesLabProps,
-  type SubatomicParticlesModeId,
-} from "./data";
-import { SubatomicParticlesScene } from "./scene";
-
 const NARROW_CANVAS_ASPECT_RATIO = 1.4;
-const VERTICAL_TOGGLE_MEDIA_QUERY = "(max-width: 430px)";
 
 /**
  * Renders one theme-aware 3D lab for the evidence behind electrons, nuclei,
@@ -48,9 +47,11 @@ export function SubatomicParticlesLab({
   labels,
 }: SubatomicParticlesLabProps) {
   const { resolvedTheme } = useTheme();
-  const useVerticalToggle = useMediaQuery(VERTICAL_TOGGLE_MEDIA_QUERY, false, {
-    getInitialValueInEffect: false,
-  });
+  const useVerticalToggle = useMediaQuery(
+    TAILWIND_MEDIA_QUERIES.belowSm,
+    false,
+    { getInitialValueInEffect: false }
+  );
   const [selectedModeId, setSelectedModeId] =
     useState<SubatomicParticlesModeId>(CATHODE_RAY_MODE_ID);
   const selectedLabels = labels.modes[selectedModeId];
@@ -83,7 +84,7 @@ export function SubatomicParticlesLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseMode}
-          className="w-full"
+          className="w-full max-sm:flex-col max-sm:items-stretch"
           onValueChange={handleModeChange}
           orientation={toggleOrientation}
           type="single"
@@ -91,13 +92,17 @@ export function SubatomicParticlesLab({
           variant="outline"
         >
           {SUBATOMIC_PARTICLE_MODE_IDS.map((modeId) => (
-            <ToggleGroupItem key={modeId} value={modeId}>
+            <ToggleGroupItem
+              className="max-sm:w-full max-sm:flex-none max-sm:border-t-0 max-sm:border-l max-sm:last:rounded-r-none max-sm:last:rounded-b-md max-sm:first:rounded-t-md max-sm:first:rounded-l-none max-sm:first:border-t"
+              key={modeId}
+              value={modeId}
+            >
               {labels.modes[modeId].tab}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
 
-        <div className="relative aspect-16/10 overflow-hidden rounded-md bg-card max-[480px]:aspect-4/3">
+        <div className="relative aspect-16/10 overflow-hidden rounded-md bg-card">
           <ThreeCanvas
             camera={{ fov: 45, position: viewConfig.cameraPosition }}
           >

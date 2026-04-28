@@ -1,5 +1,22 @@
 "use client";
 
+import type {
+  MeasurementToolId,
+  MeasurementToolsLabProps,
+} from "@repo/design-system/components/contents/physics/measurement/tools/data";
+import {
+  createInitialMeasurements,
+  formatMeasurement,
+  getSceneColors,
+  isMeasurementToolId,
+  LENGTH_TOOL_ID,
+  MASS_TOOL_ID,
+  MEASUREMENT_CONTROLS,
+  normalizeMeasurement,
+  TIME_TOOL_ID,
+  TOOL_VIEW_CONFIG,
+} from "@repo/design-system/components/contents/physics/measurement/tools/data";
+import { MeasurementScene } from "@repo/design-system/components/contents/physics/measurement/tools/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
@@ -19,20 +36,6 @@ import {
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
-import type { MeasurementToolId, MeasurementToolsLabProps } from "./data";
-import {
-  createInitialMeasurements,
-  formatMeasurement,
-  getSceneColors,
-  isMeasurementToolId,
-  LENGTH_TOOL_ID,
-  MASS_TOOL_ID,
-  MEASUREMENT_CONTROLS,
-  normalizeMeasurement,
-  TIME_TOOL_ID,
-  TOOL_VIEW_CONFIG,
-} from "./data";
-import { MeasurementScene } from "./scene";
 
 /**
  * Renders an interactive 3D lab for grade 10 measurement tools.

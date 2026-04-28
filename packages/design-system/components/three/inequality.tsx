@@ -1,6 +1,14 @@
 "use client";
 
 import { Line, Text } from "@react-three/drei";
+import {
+  FONT_PATH,
+  MONO_FONT_PATH,
+  resolveThreeFontSize,
+  THREE_FONT_SIZE,
+  type ThreeFontSize,
+} from "@repo/design-system/components/three/data/constants";
+import { GRAPH_BOUNDARY_SEGMENTS } from "@repo/design-system/components/three/helpers/quality";
 import { COLORS } from "@repo/design-system/lib/color";
 import { isMobileDevice } from "@repo/design-system/lib/device";
 import { useMemo } from "react";
@@ -12,14 +20,6 @@ import {
   Float32BufferAttribute,
   MeshBasicMaterial,
 } from "three";
-import {
-  FONT_PATH,
-  MONO_FONT_PATH,
-  resolveThreeFontSize,
-  THREE_FONT_SIZE,
-  type ThreeFontSize,
-} from "./_data";
-import { GRAPH_BOUNDARY_SEGMENTS } from "./quality";
 
 // Performance tuning constants
 const MIN_CORES_FOR_HIGH_RES = 8;

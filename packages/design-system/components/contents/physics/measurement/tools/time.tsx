@@ -1,11 +1,5 @@
 import { Text } from "@react-three/drei";
-import {
-  MONO_FONT_PATH,
-  THREE_FONT_SIZE,
-} from "@repo/design-system/components/three/_data";
-import { useMemo } from "react";
-
-import type { MeasurementSceneProps } from "./data";
+import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/data";
 import {
   METAL_COLOR,
   STOPWATCH_HAND_CENTER,
@@ -14,7 +8,12 @@ import {
   TIME_COLOR,
   TIME_FACE_COLOR,
   TIME_SCENE_SCALE,
-} from "./data";
+} from "@repo/design-system/components/contents/physics/measurement/tools/data";
+import {
+  MONO_FONT_PATH,
+  THREE_FONT_SIZE,
+} from "@repo/design-system/components/three/data/constants";
+import { useMemo } from "react";
 
 /**
  * Renders a stopwatch with a hand angle derived from elapsed seconds.

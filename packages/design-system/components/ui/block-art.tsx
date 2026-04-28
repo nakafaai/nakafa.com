@@ -1,6 +1,7 @@
 "use client";
 
 import { useMediaQuery } from "@mantine/hooks";
+import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { cn } from "@repo/design-system/lib/utils";
 import { MotionConfig, motion, useAnimate } from "motion/react";
@@ -87,8 +88,8 @@ export function BlockArt({
   waveDuration = DEFAULT_WAVE_DURATION,
   onCellClick,
 }: BlockArtProps) {
-  const isLaptop = useMediaQuery("(min-width: 1024px)");
-  const isDesktop = useMediaQuery("(min-width: 1280px)");
+  const isLaptop = useMediaQuery(TAILWIND_MEDIA_QUERIES.lgAndUp);
+  const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.xlAndUp);
 
   const getDefaultCols = () => {
     if (isDesktop) {

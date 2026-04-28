@@ -47,7 +47,7 @@ Use Mermaid for flowcharts, dependency diagrams, timelines, decision paths, or p
 Import visual content components from the design system:
 
 ```typescript
-import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 ```
 

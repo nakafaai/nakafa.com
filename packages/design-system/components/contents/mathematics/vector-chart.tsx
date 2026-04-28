@@ -165,7 +165,6 @@ export function VectorChart({
       }
 
       if (direction === "none") {
-        // No arrows at any end
         return {
           ...vector,
           startPoint: vector.points[0],
@@ -266,7 +265,7 @@ export function VectorChart({
                   const xValue = payload[0]?.payload.x;
 
                   return (
-                    <div className="grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+                    <div className="grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-sm shadow-xl">
                       {payload.map((entry) => {
                         if (entry.value === null) {
                           return null;

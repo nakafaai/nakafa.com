@@ -15,6 +15,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
+import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -52,7 +53,7 @@ export function ResponsiveDialog({
   footer,
   styleClassName,
 }: Props) {
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
 
   if (isDesktop) {
     return (

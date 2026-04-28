@@ -1,9 +1,11 @@
+import type {
+  AtomSymbol,
+  Molecule,
+} from "@repo/design-system/components/contents/chemistry/dalton-evidence/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import { LayoutGroup } from "motion/react";
 import * as m from "motion/react-m";
-
-import type { AtomSymbol, Molecule } from "./data";
 
 /**
  * Renders the selected Dalton evidence as one balanced comparison scene.

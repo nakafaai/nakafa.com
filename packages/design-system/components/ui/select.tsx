@@ -9,10 +9,10 @@ import {
   ArrowUp01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { Select as SelectPrimitive } from "radix-ui";
 import type * as React from "react";
-import { HugeIcons } from "./huge-icons";
 
 function Select({
   ...props

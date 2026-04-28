@@ -1,21 +1,21 @@
 "use client";
 
 import { Instance, Instances, Line, Text } from "@react-three/drei";
-import { COLORS } from "@repo/design-system/lib/color";
-import { useTheme } from "next-themes";
-import { useMemo } from "react";
-import { MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
 import {
   FONT_PATH,
   MONO_FONT_PATH,
   ORIGIN_COLOR,
   THREE_FONT_SIZE,
-} from "./_data";
+} from "@repo/design-system/components/three/data/constants";
 import {
   createArcPoints,
   GRAPH_ANGLE_ARC_SEGMENTS,
   GRAPH_POINT_SEGMENTS,
-} from "./quality";
+} from "@repo/design-system/components/three/helpers/quality";
+import { COLORS } from "@repo/design-system/lib/color";
+import { useTheme } from "next-themes";
+import { useMemo } from "react";
+import { MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
 
 // Angle and Quadrant constants
 const DEGREES_IN_HALF_CIRCLE = 180;

@@ -1,8 +1,4 @@
 import { RoundedBox } from "@react-three/drei";
-import { THREE_FONT_SIZE } from "@repo/design-system/components/three/_data";
-import { DoubleSide } from "three";
-
-import { SceneLabel } from "../label";
 import {
   AREA_MODE_ID,
   BLOCK_DEPTH,
@@ -13,7 +9,10 @@ import {
   LENGTH_MODE_ID,
   type SceneColors,
   VOLUME_MODE_ID,
-} from "./data";
+} from "@repo/design-system/components/contents/physics/measurement/dimension/data";
+import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
+import { DoubleSide } from "three";
 
 /**
  * Renders the selected geometric meaning of a length dimension.

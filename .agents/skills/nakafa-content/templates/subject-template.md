@@ -94,7 +94,7 @@ Therefore, the value depends on the coefficients <InlineMath math="a" />, <Inlin
 ## Optional Visualization
 
 ```tsx
-import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 
 export function QuadraticGraph() {

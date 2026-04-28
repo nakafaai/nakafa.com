@@ -1,15 +1,15 @@
 "use client";
 
 import { Line, Text } from "@react-three/drei";
-import { COLORS } from "@repo/design-system/lib/color";
-import { type ComponentProps, useMemo } from "react";
-import { MeshBasicMaterial, Vector3 } from "three";
 import {
   FONT_PATH,
   MONO_FONT_PATH,
   resolveThreeFontSize,
   type ThreeFontSize,
-} from "./_data";
+} from "@repo/design-system/components/three/data/constants";
+import { COLORS } from "@repo/design-system/lib/color";
+import { type ComponentProps, useMemo } from "react";
+import { MeshBasicMaterial, Vector3 } from "three";
 
 // Shared materials cache for text components
 const textMaterialCache = new Map<string, MeshBasicMaterial>();

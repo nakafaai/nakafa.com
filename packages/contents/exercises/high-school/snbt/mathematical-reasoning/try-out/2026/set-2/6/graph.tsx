@@ -1,4 +1,4 @@
-import { LineEquation } from "@repo/design-system/components/contents/line-equation";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 

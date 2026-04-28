@@ -1,11 +1,6 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { THREE_FONT_SIZE } from "@repo/design-system/components/three/_data";
-import { useRef } from "react";
-import type { Group, Mesh } from "three";
-
-import { SceneLabel } from "../label";
-import type { MeasurementSceneProps } from "./data";
+import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/data";
 import {
   MASS_ARM_LENGTH,
   MASS_BALANCE_DAMPING,
@@ -25,7 +20,11 @@ import {
   METAL_COLOR,
   OBJECT_COLOR,
   RULER_COLOR,
-} from "./data";
+} from "@repo/design-system/components/contents/physics/measurement/tools/data";
+import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
+import { useRef } from "react";
+import type { Group, Mesh } from "three";
 
 /**
  * Renders an equal-arm balance driven by the net torque direction.

@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  ANCIENT_ATOM_LEVELS,
+  type AncientAtomLabProps,
+  type AncientAtomLevelId,
+  WHOLE_MATTER_LEVEL_ID,
+} from "@repo/design-system/components/contents/chemistry/ancient-atom/data";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -21,13 +27,6 @@ import {
 import * as m from "motion/react-m";
 import type { ReactNode } from "react";
 import { useState } from "react";
-
-import {
-  ANCIENT_ATOM_LEVELS,
-  type AncientAtomLabProps,
-  type AncientAtomLevelId,
-  WHOLE_MATTER_LEVEL_ID,
-} from "./data";
 
 /**
  * Renders a grade-level thought experiment for Greek atomism.
