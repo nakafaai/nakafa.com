@@ -29,7 +29,7 @@ Sebelum satu standar dipakai luas, beberapa sistem satuan pernah berjalan bersam
 
 Perbedaan sistem ini membuat hasil ukur sulit dibandingkan jika satuannya tidak dijelaskan. Karena itu, sains modern memakai **Sistem Satuan Internasional** atau **SI**. SI berasal dari nama Prancis *Système international d'unités* dan dalam bahasa Inggris disebut *International System of Units*. BIPM, yaitu *Bureau International des Poids et Mesures*, adalah lembaga internasional yang menjaga standar SI.
 
-Sumber resmi BIPM untuk satuan pengukuran: [BIPM measurement units](https://www.bipm.org/en/measurement-units).
+Sumber resmi BIPM untuk satuan pengukuran dapat dibuka di [tautan sumber](https://www.bipm.org/en/measurement-units).
 
 > SI bukan sekadar daftar singkatan. SI adalah kesepakatan agar <InlineMath math="1 \text{ m}" />, <InlineMath math="1 \text{ kg}" />, dan <InlineMath math="1 \text{ s}" /> punya arti yang sama di kelas, laboratorium, pabrik, dan negara berbeda.
 
@@ -91,11 +91,11 @@ Kalau satuan gaya sudah jelas, satuan usaha dan daya bisa dibaca bertahap.
 Ketika ukuran terlalu besar atau terlalu kecil, kita tidak perlu menulis deretan nol panjang. SI memakai awalan metrik untuk menyatakan kelipatan pangkat <InlineMath math="10" />.
 
 <Mermaid
-  chart={`flowchart LR
+  chart={`flowchart TD
     A["Baca nilai dan satuan"] --> B["Pisahkan awalan dari satuan dasar"]
-    B --> C["Ganti awalan dengan faktor pangkat sepuluh"]
-    C --> D["Kalikan nilai ukur"]
-    D --> E["Tulis satuan yang diinginkan"]`}/>
+    B --> C["Ubah ke faktor 10"]
+    C --> D["Kalikan nilai"]
+    D --> E["Tulis satuan akhir"]`}/>
 
 Contoh awalan yang sering dipakai:
 
@@ -114,7 +114,7 @@ Contoh awalan yang sering dipakai:
 
 Catatan cakupan: daftar di atas mengikuti awalan yang umum muncul di materi kelas <InlineMath math="10" />. BIPM juga mencantumkan awalan SI modern yang lebih besar dan lebih kecil, seperti <InlineMath math="10^{30}" /> dan <InlineMath math="10^{-30}" />.
 
-Sumber resmi BIPM untuk daftar awalan SI: [BIPM SI prefixes](https://www.bipm.org/en/measurement-units/si-prefixes).
+Sumber resmi BIPM untuk daftar awalan SI dapat dibuka di [tautan sumber](https://www.bipm.org/en/measurement-units/si-prefixes).
 
 ## Membaca Awalan dalam Perhitungan
 
