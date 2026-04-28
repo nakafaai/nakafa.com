@@ -21,6 +21,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import {
+  createMaxWidthInclusiveMediaQuery,
   createMaxWidthMediaQuery,
   TAILWIND_BREAKPOINT_PIXELS,
 } from "@repo/design-system/lib/breakpoints";
@@ -96,7 +97,9 @@ function SidebarProvider({
   onOpenChange?: (open: boolean) => void;
 }) {
   const isMobile = useMediaQuery(
-    createMaxWidthMediaQuery(sidebarDesktop ?? SIDEBAR_DESKTOP)
+    sidebarDesktop === undefined
+      ? createMaxWidthMediaQuery(SIDEBAR_DESKTOP)
+      : createMaxWidthInclusiveMediaQuery(sidebarDesktop)
   );
   const [mobileOpen, setMobileOpenState] = useState(false);
   const isLocked = locked;

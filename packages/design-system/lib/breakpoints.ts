@@ -36,6 +36,13 @@ export function createMaxWidthMediaQuery(breakpoint: number | string) {
 }
 
 /**
+ * Builds an inclusive max-width query for explicit runtime cutoffs.
+ */
+export function createMaxWidthInclusiveMediaQuery(breakpoint: number | string) {
+  return `(width <= ${formatMediaBreakpoint(breakpoint)})`;
+}
+
+/**
  * Builds a media query that matches Tailwind's `*:` breakpoint semantics.
  */
 export function createMinWidthMediaQuery(breakpoint: number | string) {
