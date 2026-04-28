@@ -13,10 +13,10 @@
     "@react-email/components": "1.0.12",
     "@repo/email": "workspace:*",
     "react": "19.2.5",
-    "react-email": "6.0.1"
+    "react-email": "6.0.5"
   },
   "devDependencies": {
-    "@react-email/ui": "6.0.1",
+    "@react-email/ui": "6.0.5",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "25.6.0",
     "@types/react": "19.2.14",
