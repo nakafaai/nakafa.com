@@ -52,15 +52,19 @@ Indonesian is allowed only inside snippets that intentionally demonstrate `id.md
 - **Indonesian (id.mdx)**: Use proper Indonesian grammar with natural, engaging tone
   - Use "kita" (we) and "kalian" (you all) to engage readers
   - Write like a clear teacher guiding students in class, not like a stiff textbook author or content-management note
-  - Match the student's level. Use familiar examples, small analogies, and concrete situations when they make the concept easier to understand.
-  - Keep analogies honest. State the real concept clearly and avoid analogies that hide important limits.
+  - Match the student's level. Use familiar examples, concrete comparisons, and everyday situations when they make the concept easier to understand.
+  - Keep comparisons honest. State the real concept clearly and avoid comparisons that hide important limits.
+  - Use comparisons only when the mapping is immediate and concrete. If the comparison needs extra explanation to make sense, remove it and explain the concept directly.
+  - Avoid visible meta-labels before comparisons. Prefer seamless phrasing such as "Bayangkan...". Reserve colons for tables, ratios, code, math, metadata, or genuinely clearer lists.
   - Example: "Mari kita mulai dengan...", "Pernahkah kalian memperhatikan..."
   
 - **English (en.mdx)**: Use proper English grammar with natural, engaging tone
   - Write clearly and conversationally, like a teacher guiding students, not like a formal textbook voice
   - Keep it educational but not stiff
-  - Match the student's level. Use familiar examples, small analogies, and concrete situations when they make the concept easier to understand.
-  - Keep analogies honest. State the real concept clearly and avoid analogies that hide important limits.
+  - Match the student's level. Use familiar examples, concrete comparisons, and everyday situations when they make the concept easier to understand.
+  - Keep comparisons honest. State the real concept clearly and avoid comparisons that hide important limits.
+  - Use comparisons only when the mapping is immediate and concrete. If the comparison needs extra explanation to make sense, remove it and explain the concept directly.
+  - Avoid visible meta-labels before comparisons. Prefer seamless phrasing such as "Picture...". Reserve colons for tables, ratios, code, math, metadata, or genuinely clearer lists.
 
 ## Content Types
 
@@ -346,7 +350,7 @@ No nested lists. No blank lines between items.
 - Read the path and metadata before writing. The route often tells you the target level, grade, subject, topic, and lesson.
 - Keep the cognitive load appropriate for that level. Define technical words before using them as shortcuts.
 - Prefer concrete school-age examples before abstract generalizations.
-- Use analogies when they reduce confusion, not as decoration. After an analogy, name the actual concept so students do not confuse the analogy with the lesson concept.
+- Use comparisons when they reduce confusion, not as decoration. After a comparison, name the actual concept so students do not confuse the comparison with the lesson concept.
 - If a source uses advanced language, translate the idea into the target level while preserving the verified fact, formula, and curriculum scope.
 
 ### Lesson Independence and Voice
@@ -529,7 +533,7 @@ Before submitting content:
 - [ ] Relevant files under `packages/design-system/components/three/`, theme/style files, UI primitives, and shared utilities were inspected before R3F or design-system visual work
 - [ ] Recent git history and current diff were checked for touched content/design-system paths before structural changes
 - [ ] Source material and target scope are clear
-- [ ] The language, examples, analogies, and cognitive load match the target grade and subject
+- [ ] The language, examples, comparisons, and cognitive load match the target grade and subject
 - [ ] The voice sounds like a teacher guiding students, not a stiff textbook author or internal content note
 - [ ] The lesson works as a standalone page for students arriving from search
 - [ ] Abbreviations, acronyms, symbols, and potentially ambiguous terms are defined on first use in each locale

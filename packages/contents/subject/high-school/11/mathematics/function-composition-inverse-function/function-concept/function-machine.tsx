@@ -33,7 +33,7 @@ interface Props {
   title: string;
 }
 
-export function FunctionAnalogy({ title, description }: Props) {
+export function FunctionMachine({ title, description }: Props) {
   return (
     <Card className="content-auto-card">
       <CardHeader>
