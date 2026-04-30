@@ -13,7 +13,7 @@
     "react-dom": "19.2.5",
     "react-email": "6.0.5",
     "resend": "^6.12.2",
-    "zod": "^4.3.6"
+    "zod": "^4.4.1"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
