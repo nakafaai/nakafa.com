@@ -1,0 +1,90 @@
+import { AncientAtomLab } from "@repo/design-system/components/contents/chemistry/ancient-atom/lab";
+
+export const metadata = {
+  title: "Konsep Atom Zaman Yunani",
+  description:
+    "Mulai dari pertanyaan sederhana tentang benda yang dipotong terus-menerus, lalu lihat mengapa gagasan atom lahir sebelum alat laboratorium modern ada.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/28/2026",
+  subject: "Struktur Atom",
+};
+
+## Pertanyaan Kecil dari Potongan Materi
+
+Coba bayangkan sepotong kapur, kertas, atau garam. Jika benda itu dipotong menjadi dua, lalu potongannya dipotong lagi, apakah proses membagi materi bisa berlangsung terus tanpa batas?
+
+Pertanyaan seperti ini sudah dipikirkan para filsuf Yunani jauh sebelum mikroskop, tabung reaksi modern, atau alat ukur partikel ada. Mereka belum membuktikan struktur atom dengan eksperimen seperti ilmuwan sekarang. Mereka sedang mencari cara masuk akal untuk menjawab pertanyaan: **materi sebenarnya tersusun seperti apa?**
+
+OpenStax Chemistry menjelaskan sejarah awal teori atom pada halaman [Early Ideas in Atomic Theory dari OpenStax](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-1-early-ideas-in-atomic-theory). Sumber itu menempatkan perdebatan kuno ini sebagai awal perjalanan panjang menuju teori atom modern.
+
+## Dua Jawaban yang Saling Berlawanan
+
+Ada dua gagasan besar yang penting untuk kelas kimia.
+
+| Gagasan | Cara membayangkan materi | Tokoh yang mewakili |
+| :------ | :----------------------- | :------------------ |
+| Materi kontinu. | Materi dapat terus dibagi menjadi bagian yang lebih kecil. | Aristoteles. |
+| Materi diskret. | Materi tersusun dari bagian terkecil yang tidak dapat dibagi lagi. | Leucippus dan Demokritos. |
+
+**Kontinu** berarti tidak terputus, seperti garis yang terus bisa dibagi menjadi bagian lebih pendek. **Diskret** berarti tersusun dari satuan-satuan terpisah, seperti tumpukan bata yang membentuk dinding.
+
+Demokritos menyebut bagian terkecil itu *atomos*, istilah Yunani yang berarti tidak dapat dipotong. Britannica membahas gagasan Demokritos dalam artikel [Democritus dari Britannica](https://www.britannica.com/biography/Democritus), sedangkan Stanford Encyclopedia of Philosophy membahas atomisme Yunani kuno pada artikel [Ancient Atomism dari Stanford Encyclopedia of Philosophy](https://plato.stanford.edu/entries/atomism-ancient/).
+
+## Mencoba Cara Pikir Demokritos
+
+Visual ini bukan gambar atom sungguhan. Ini hanya percobaan pikiran: kita membayangkan sebuah benda dipotong lagi dan lagi, lalu melihat bedanya cara baca Aristoteles dan Demokritos.
+
+<AncientAtomLab
+  title={<>Percobaan Pikiran Memotong Materi</>}
+  description={
+    <>
+      Pilih tahap potongan untuk melihat mengapa gagasan atom muncul dari
+      pertanyaan sederhana tentang batas pembagian materi.
+    </>
+  }
+  labels={{
+    chooseLevel: "Pilih tahap pemotongan materi",
+    aristotleLabel: "Kontinu",
+    aristotleBody: (
+      <>
+        Menurut Aristoteles, pembagian materi tidak berhenti pada satuan terakhir.
+      </>
+    ),
+    democritusLabel: "Diskret",
+    democritusBody: (
+      <>
+        Menurut Demokritos, pembagian berhenti pada satuan terkecil yang ia sebut atomos.
+      </>
+    ),
+    levels: {
+      whole: {
+        tab: "Utuh",
+      },
+      "first-cut": {
+        tab: "Dua",
+      },
+      "second-cut": {
+        tab: "Empat",
+      },
+      "fine-cut": {
+        tab: "Kecil",
+      },
+    },
+  }}
+/>
+
+## Mengapa Gagasan Ini Belum Disebut Teori Modern
+
+Kalian perlu hati-hati: Demokritos tidak menemukan atom dengan alat laboratorium. Ia membuat penjelasan filosofis yang menarik, tetapi belum memiliki data eksperimen seperti ilmuwan modern.
+
+Gagasan Demokritos benar dalam arah besarnya, yaitu materi tersusun dari satuan sangat kecil. Namun, detailnya berbeda dari kimia modern. Atom modern masih memiliki partikel subatom seperti proton, neutron, dan elektron, sehingga kata “tidak dapat dibagi” harus dibaca sebagai gagasan sejarah, bukan definisi akhir.
+
+Aristoteles juga tidak boleh dibaca sebagai tokoh yang “bodoh”. Pada zamannya, gagasan materi kontinu terasa masuk akal karena benda sehari-hari tampak dapat dibelah, dihancurkan, atau dicampur tanpa menunjukkan batas partikel.
+
+## Dari Filsafat Menuju Kimia
+
+Nilai penting konsep atom Yunani bukan pada alat ukurnya, melainkan pada pertanyaannya. Mereka membuka jalan bagi ide bahwa materi mungkin punya penyusun kecil yang tidak terlihat langsung.
+
+> Dalam kimia, pertanyaan yang bagus sering lebih dulu muncul daripada alat untuk menjawabnya.
+
+Lebih dari dua ribu tahun kemudian, John Dalton membawa gagasan atom ke kimia modern dengan cara baru. Dalton tidak hanya bertanya “materi tersusun dari apa?”, tetapi juga memakai data massa reaksi untuk membuat atom menjadi model yang bisa dipakai menghitung. Di titik itulah pembahasan atom mulai bergerak dari filsafat menuju teori kimia.

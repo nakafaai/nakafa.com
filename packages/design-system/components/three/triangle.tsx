@@ -1,16 +1,21 @@
 "use client";
 
 import { Instance, Instances, Line, Text } from "@react-three/drei";
-import { COLORS } from "@repo/design-system/lib/color";
-import { useTheme } from "next-themes";
-import { useMemo } from "react";
-import { MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
-import { FONT_PATH, MONO_FONT_PATH, ORIGIN_COLOR } from "./_data";
+import {
+  FONT_PATH,
+  MONO_FONT_PATH,
+  ORIGIN_COLOR,
+  THREE_FONT_SIZE,
+} from "@repo/design-system/components/three/data/constants";
 import {
   createArcPoints,
   GRAPH_ANGLE_ARC_SEGMENTS,
   GRAPH_POINT_SEGMENTS,
-} from "./quality";
+} from "@repo/design-system/components/three/helpers/quality";
+import { COLORS } from "@repo/design-system/lib/color";
+import { useTheme } from "next-themes";
+import { useMemo } from "react";
+import { MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
 
 // Angle and Quadrant constants
 const DEGREES_IN_HALF_CIRCLE = 180;
@@ -19,8 +24,7 @@ const DEGREES_IN_QUADRANT = 90;
 const QUADRANTS_IN_CIRCLE = 4;
 
 // Sizing and scaling constants
-const BASE_FONT_SIZE = 0.12;
-const FONT_SIZE_SCALE_FACTOR = 0.12;
+const BASE_FONT_SIZE = THREE_FONT_SIZE.compact;
 const BASE_VERTEX_SIZE = 0.05;
 const VERTEX_SIZE_SCALE_FACTOR = 0.05;
 const ARC_RADIUS_SCALE_FACTOR = 0.2;
@@ -123,9 +127,7 @@ export function Triangle({
   // Font path based on the useMonoFont setting
   const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
 
-  // Scale the font size based on the triangle size
-  const fontSize =
-    BASE_FONT_SIZE * Math.max(MIN_SCALE_FACTOR, size * FONT_SIZE_SCALE_FACTOR);
+  const fontSize = BASE_FONT_SIZE;
 
   // Colors based on theme
   const baseColor =
@@ -246,7 +248,7 @@ export function Triangle({
     }
 
     return { adjacentLabelPos, oppositeLabelPos, hypotenuseLabelPos };
-  }, [quadrant, adjacent, opposite, fontSize]);
+  }, [quadrant, adjacent, opposite]);
 
   // Calculate hypotenuse rotation once
   const hypotenuseLabelRotation = useMemo(() => {

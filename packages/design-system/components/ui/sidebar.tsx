@@ -20,6 +20,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import {
+  createMaxWidthInclusiveMediaQuery,
+  createMaxWidthMediaQuery,
+  TAILWIND_BREAKPOINT_PIXELS,
+} from "@repo/design-system/lib/breakpoints";
 import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Slot as SlotPrimitive } from "radix-ui";
@@ -41,7 +46,7 @@ export const SIDEBAR_COOKIE_NAME = "sidebar_state";
 export const SIDEBAR_COOKIE_MAX_AGE =
   SECONDS_PER_MINUTE * MINUTES_PER_HOUR * HOURS_PER_DAY * DAYS_PER_WEEK;
 export const SIDEBAR_KEYBOARD_SHORTCUT = "b";
-export const SIDEBAR_DESKTOP = 1024;
+export const SIDEBAR_DESKTOP = TAILWIND_BREAKPOINT_PIXELS.lg;
 
 interface SidebarContextProps {
   isLocked: boolean;
@@ -92,7 +97,9 @@ function SidebarProvider({
   onOpenChange?: (open: boolean) => void;
 }) {
   const isMobile = useMediaQuery(
-    `(max-width: ${sidebarDesktop ?? SIDEBAR_DESKTOP - 1}px)`
+    sidebarDesktop === undefined
+      ? createMaxWidthMediaQuery(SIDEBAR_DESKTOP)
+      : createMaxWidthInclusiveMediaQuery(sidebarDesktop)
   );
   const [mobileOpen, setMobileOpenState] = useState(false);
   const isLocked = locked;

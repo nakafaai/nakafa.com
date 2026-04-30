@@ -1,11 +1,11 @@
 "use client";
 
 import { Tick01Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { Slot as SlotPrimitive } from "radix-ui";
 import { createContext, useCallback, useContext, useState } from "react";
-import { HugeIcons } from "./huge-icons";
-import { Spinner } from "./spinner";
 
 // Types
 interface StepperContextValue {

@@ -1,0 +1,126 @@
+import { DaltonEvidenceLab } from "@repo/design-system/components/contents/chemistry/dalton-evidence/lab";
+
+export const metadata = {
+  title: "Rekonseptualisasi Atom",
+  description:
+    "Pelajari bagaimana John Dalton mengubah gagasan atom menjadi teori kimia berbasis massa, komposisi tetap, dan perbandingan berganda.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/28/2026",
+  subject: "Struktur Atom",
+};
+
+## Saat Atom Mulai Menjadi Alat Hitung
+
+Sebelum John Dalton, atom sudah pernah dibayangkan sebagai bagian terkecil penyusun materi. Masalahnya, gagasan itu lama berada di wilayah filsafat: masuk akal, tetapi belum cukup kuat untuk menghitung hasil percobaan.
+
+Dalton mengubah arah pembicaraan. Ia tidak melihat atom secara langsung. Ia membaca **pola massa** saat zat bereaksi, lalu menyusun model yang bisa menjelaskan mengapa massa dan komposisi zat sering muncul dalam rasio yang rapi.
+
+> Rekonseptualisasi berarti menyusun ulang cara memandang suatu konsep. Dalam teori Dalton, atom tidak lagi hanya dibahas sebagai benda sangat kecil, tetapi sebagai satuan hitung untuk menjelaskan reaksi kimia.
+
+Sejarah John Dalton dari Britannica menempatkan karya Dalton pada awal 1800-an, ketika ia mengubah gagasan atom Yunani menjadi teori ilmiah untuk kimia. Rujukan itu bisa dibuka di [sejarah John Dalton dari Britannica](https://www.britannica.com/biography/John-Dalton).
+
+OpenStax Chemistry Atoms First 2e juga menekankan bahwa teori Dalton menjelaskan hukum perbandingan tetap dan hukum perbandingan berganda. Bagian itu bisa dibuka di [Early Ideas in Atomic Theory dari OpenStax](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-1-early-ideas-in-atomic-theory).
+
+## Laboratorium Rasio Dalton
+
+Pilih mode, lalu lihat mana yang tetap: jumlah atom, resep senyawa, atau rasio massa.
+
+<DaltonEvidenceLab
+  title={<>Laboratorium Rasio Dalton</>}
+  description={
+    <>
+      Bandingkan partikel di kiri, partikel di kanan, dan angka rasionya.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih bukti teori Dalton",
+    modes: {
+      conservation: {
+        tab: "Massa kekal",
+        beforeTitle: "Sebelum reaksi",
+        afterTitle: "Sesudah reaksi",
+        expression: "\\mathrm{2CO + O_2 \\rightarrow 2CO_2}",
+        facts: [
+          { label: "Jumlah C", value: "2 = 2" },
+          { label: "Jumlah O", value: "4 = 4" },
+          { label: "Makna", value: "\\text{Tersusun ulang}" },
+        ],
+      },
+      fixed: {
+        tab: "Komposisi tetap",
+        beforeTitle: "Sampel kecil",
+        afterTitle: "Sampel lebih besar",
+        expression: "\\mathrm{H_2O}",
+        facts: [
+          { label: "Rasio atom", value: "H:O = 2:1" },
+          { label: "Rasio massa", value: "m_H:m_O = 1:8" },
+          { label: "Makna", value: "\\text{Komposisi tetap}" },
+        ],
+      },
+      multiple: {
+        tab: "Rasio berganda",
+        beforeTitle: "Karbon monoksida",
+        afterTitle: "Karbon dioksida",
+        expression: "\\mathrm{CO \\quad dan \\quad CO_2}",
+        facts: [
+          { label: "Massa O", value: "16:32" },
+          { label: "Disederhanakan", value: "1:2" },
+          { label: "Makna", value: "\\text{Rasio berganda}" },
+        ],
+      },
+    },
+  }}
+/>
+
+## Lima Dugaan yang Membuat Kimia Lebih Terukur
+
+Model Dalton sering disebut model bola pejal. Atom dibayangkan seperti bola kecil yang tidak dapat dibagi lagi, berbeda untuk tiap unsur, dan bergabung dengan atom lain dalam jumlah tertentu.
+
+| Dugaan Dalton | Cara membacanya di kelas kimia |
+| :------------ | :----------------------------- |
+| Materi tersusun atas atom. | Zat dapat dipahami sebagai kumpulan partikel sangat kecil. |
+| Atom unsur yang sama dianggap identik. | Atom <InlineMath math="C" /> diperlakukan berbeda dari atom <InlineMath math="O" />. |
+| Atom tidak berubah menjadi atom unsur lain dalam reaksi kimia biasa. | Reaksi kimia menyusun ulang atom, bukan membuat atom baru dari nol. |
+| Senyawa terbentuk dari atom dengan perbandingan tertentu. | Air ditulis <InlineMath math="\mathrm{H_2O}" /> karena rasio atom <InlineMath math="H:O = 2:1" />. |
+| Dua unsur dapat membentuk lebih dari satu senyawa. | <InlineMath math="\mathrm{CO}" /> dan <InlineMath math="\mathrm{CO_2}" /> sama-sama tersusun dari karbon dan oksigen, tetapi rasionya berbeda. |
+
+Bagian yang kuat dari teori Dalton adalah idenya tentang **atom sebagai unit diskret**. Diskret artinya dihitung satu-satu, seperti kelereng, bukan mengalir bebas seperti air. Jika atom memang bergabung dalam hitungan bulat, wajar jika data massa juga sering membentuk rasio sederhana.
+
+## Membaca Karbon dan Oksigen seperti Dalton
+
+Kita ambil karbon monoksida dan karbon dioksida. Keduanya sama-sama tersusun dari karbon dan oksigen, tetapi jumlah atom oksigennya berbeda.
+
+| Senyawa | Rumus | Rasio atom | Massa O relatif saat C sama |
+| :------ | :---- | :--------- | :-------------------------- |
+| Karbon monoksida | <InlineMath math="\mathrm{CO}" /> | <InlineMath math="C:O = 1:1" /> | <InlineMath math="16" /> bagian |
+| Karbon dioksida | <InlineMath math="\mathrm{CO_2}" /> | <InlineMath math="C:O = 1:2" /> | <InlineMath math="32" /> bagian |
+
+Kata **bagian** berarti satuan pembanding. Yang penting adalah perbandingannya, bukan satuan timbang tertentu di laboratorium kelas.
+
+Jika massa karbon dibuat sama, massa oksigen pada <InlineMath math="\mathrm{CO}" /> dan <InlineMath math="\mathrm{CO_2}" /> membentuk perbandingan:
+
+<BlockMath math="\begin{aligned}
+\frac{m_O \text{ pada } \mathrm{CO}}{m_O \text{ pada } \mathrm{CO_2}}
+&= \frac{16}{32} \\
+&= \frac{1}{2}
+\end{aligned}" />
+
+Rasio <InlineMath math="1:2" /> adalah bilangan bulat sederhana. Pola seperti ini mendukung hukum perbandingan berganda: jika dua unsur membentuk beberapa senyawa, massa salah satu unsur yang bergabung dengan massa tetap unsur lain memiliki rasio bilangan bulat sederhana.
+
+## Batas yang Tidak Bisa Dijawab Dalton
+
+Model Dalton sangat berguna untuk membaca reaksi kimia, tetapi model itu belum menjelaskan semua gejala. Jika atom benar-benar bola pejal tanpa bagian dalam, mengapa logam dapat menghantarkan listrik? Mengapa ada sinar katode yang dapat dibelokkan oleh medan listrik dan medan magnet?
+
+<Mermaid
+  chart={`flowchart TD
+    A["Gagasan atom"] --> B["Data massa reaksi"]
+    B --> C["Model Dalton"]
+    C --> D["Gejala listrik"]
+    D --> E["Partikel subatom"]`}
+/>
+
+OpenStax Chemistry Atoms First 2e menjelaskan bahwa eksperimen J. J. Thomson pada sinar katode menunjukkan adanya partikel bermuatan negatif yang jauh lebih kecil daripada atom. Bagian itu bisa dibuka di [Evolution of Atomic Theory dari OpenStax](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-2-evolution-of-atomic-theory). Partikel itu sekarang kita kenal sebagai elektron. Artinya, atom tidak sepenuhnya tak terbagi seperti dugaan Dalton.
+
+Model Dalton juga belum mengenal isotop, yaitu atom dari unsur yang sama tetapi massanya dapat berbeda. Detail itu baru masuk akal setelah partikel subatom dibahas.
+
+Kelemahan ini tidak membuat Dalton gagal. Model Dalton adalah pijakan yang tepat untuk zamannya: cukup kuat untuk menjelaskan massa, komposisi tetap, dan rasio berganda, tetapi belum cukup rinci untuk menjelaskan muatan listrik dan struktur bagian dalam atom. Dari celah itulah pembahasan partikel subatom dimulai.

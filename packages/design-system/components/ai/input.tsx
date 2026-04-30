@@ -17,12 +17,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupTextarea,
 } from "@repo/design-system/components/ui/input-group";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
   Tooltip,
   TooltipContent,
@@ -55,8 +57,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { HugeIcons } from "../ui/huge-icons";
-import { Spinner } from "../ui/spinner";
 // ============================================================================
 // Provider Context & Types
 // ============================================================================

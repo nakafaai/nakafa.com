@@ -1,0 +1,136 @@
+import { AtomSymbolLab } from "@repo/design-system/components/contents/chemistry/atom-symbol/lab";
+
+export const metadata = {
+  title: "Atomic Symbol",
+  description:
+    "Learn how to read atomic number, mass number, protons, neutrons, and electrons from atomic symbols.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/29/2026",
+  subject: "Atomic Structure",
+};
+
+## An Atom Identity Card
+
+An atomic symbol is a compact way to write the identity of an atom. Like a student card that carries a name and an ID number, an atomic symbol carries the **element symbol**, **atomic number**, and **mass number**.
+
+The Atomic Structure and Symbolism section from OpenStax explains that the atomic number is the number of protons, while the mass number is the number of protons plus neutrons. The section can be opened through [OpenStax's Atomic Structure and Symbolism](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-3-atomic-structure-and-symbolism).
+
+The notation commonly used in chemistry class is:
+
+<BlockMath math="{}^{A}_{Z}\mathrm{X}" />
+
+Read it like this:
+
+- <InlineMath math="\mathrm{X}" /> is the element symbol
+- <InlineMath math="Z" /> is the atomic number
+- <InlineMath math="A" /> is the mass number
+
+## Read the Numbers by Position
+
+Choose an atom below, then read the positions of the numbers. The upper number is not an exponent. The lower number is not a divisor. They are position labels that tell us which part of the atom is being counted.
+
+<AtomSymbolLab
+  title={<>Atomic Symbol Reader</>}
+  description={
+    <>
+      Change the atom example, then match the upper-left and lower-left numbers
+      with the particle counts.
+    </>
+  }
+  labels={{
+    chooseAtom: "Choose an atom example",
+    massNumber: "Mass number",
+    atomicNumber: "Atomic number",
+    elementSymbol: "Element symbol",
+    protonCount: "Protons",
+    neutronCount: "Neutrons",
+    electronCount: "Electrons",
+    neutralAtom: "in a neutral atom",
+    samples: {
+      "carbon-12": {
+        tab: "Carbon",
+        ariaName: "Carbon-12",
+        name: <InlineMath math="{}^{12}_{6}\mathrm{C}" />,
+      },
+      "oxygen-16": {
+        tab: "Oxygen",
+        ariaName: "Oxygen-16",
+        name: <InlineMath math="{}^{16}_{8}\mathrm{O}" />,
+      },
+      "sodium-23": {
+        tab: "Sodium",
+        ariaName: "Sodium-23",
+        name: <InlineMath math="{}^{23}_{11}\mathrm{Na}" />,
+      },
+      "chlorine-35": {
+        tab: "Chlorine",
+        ariaName: "Chlorine-35",
+        name: <InlineMath math="{}^{35}_{17}\mathrm{Cl}" />,
+      },
+    },
+  }}
+/>
+
+## Three Core Counts
+
+The atomic number is written as <InlineMath math="Z" />. This number equals the number of protons in the nucleus.
+
+<BlockMath math="Z = p^+" />
+
+For a neutral atom, the number of electrons equals the number of protons. Neutral means the total positive and negative charges balance.
+
+<BlockMath math="\text{neutral atom} \Rightarrow e^- = p^+ = Z" />
+
+The mass number is written as <InlineMath math="A" />. This number counts protons and neutrons in the nucleus.
+
+<BlockMath math="A = p^+ + n^0" />
+
+Once the mass number and atomic number are known, the neutron count is just their difference:
+
+<BlockMath math="n^0 = A - Z" />
+
+## Carbon Example
+
+For a carbon atom with mass number <InlineMath math="12" />, the symbol is written:
+
+<BlockMath math="{}^{12}_{6}\mathrm{C}" />
+
+From that symbol, we read:
+
+<BlockMath math="\begin{aligned}
+Z &= 6 \Rightarrow p^+ = 6 \\
+A &= 12 \Rightarrow p^+ + n^0 = 12 \\
+n^0 &= 12 - 6 = 6
+\end{aligned}" />
+
+If that <InlineMath math="{}^{12}_{6}\mathrm{C}" /> atom is neutral, it also has <InlineMath math="6" /> electrons.
+
+## Do Not Confuse It with Average Atomic Mass
+
+On the periodic table, you often see decimal values such as carbon's relative atomic mass of about <InlineMath math="12.01" />. That decimal is not the mass number of one specific carbon atom.
+
+NIST's column notes explain that the relative atomic mass of an element is derived from averaging the masses of the element's isotopes. The explanation can be opened through [NIST's Atomic Weights and Isotopic Compositions](https://www.nist.gov/pml/atomic-weights-and-isotopic-compositions-column-descriptions).
+
+So keep these two ideas separate:
+
+| What you read | Common form | Meaning |
+| :------------ | :---------- | :------ |
+| Mass number | A whole number, such as <InlineMath math="12" /> in <InlineMath math="{}^{12}_{6}\mathrm{C}" /> | The number of protons plus neutrons in one specific atom. |
+| Relative atomic mass | Often decimal, such as about <InlineMath math="12.01" /> for carbon | The average mass of isotopes in a natural sample. |
+
+This difference matters in three common readings: atomic symbols give proton and neutron counts, ions change electron count, while isotopes change neutron count. Element identity is still locked by proton count.
+
+## Element Symbols Need Exact Capitalization
+
+Element symbols usually have one or two letters. The first letter is always uppercase, and the second letter, if present, is lowercase.
+
+| Writing | How to read it |
+| :------ | :------------- |
+| <InlineMath math="\mathrm{C}" /> | Carbon |
+| <InlineMath math="\mathrm{Cl}" /> | Chlorine |
+| <InlineMath math="\mathrm{Co}" /> | Cobalt |
+| <InlineMath math="\mathrm{CO}" /> | Not one element, but the formula for carbon monoxide |
+
+OpenStax gives the example that <InlineMath math="\mathrm{Co}" /> is cobalt, while <InlineMath math="\mathrm{CO}" /> is the compound carbon monoxide. Capitalization is not decoration. One letter can change the chemical meaning.
+
+IUPAC's official periodic table lists element symbols and relative atomic masses that are reviewed periodically. The reference can be opened through [IUPAC's Periodic Table of Elements](https://iupac.org/what-we-do/periodic-table-of-elements/).

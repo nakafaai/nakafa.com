@@ -10,7 +10,24 @@ import {
   contentViewRefValidator,
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
+
+/**
+ * Detects content registry misses so view tracking stays best-effort.
+ */
+function isContentNotFoundError(error: unknown) {
+  if (!(error instanceof ConvexError)) {
+    return false;
+  }
+
+  const data = error.data;
+
+  if (!(typeof data === "object" && data !== null && "code" in data)) {
+    return false;
+  }
+
+  return data.code === "CONTENT_NOT_FOUND";
+}
 
 /** Records a unique content view per user or device. */
 export const recordContentView = mutation({
@@ -31,7 +48,17 @@ export const recordContentView = mutation({
       locale: args.locale,
       slug: args.contentRef.slug,
       type: args.contentRef.type,
+    }).catch((error) => {
+      if (isContentNotFoundError(error)) {
+        return null;
+      }
+
+      throw error;
     });
+
+    if (!contentRef) {
+      return { success: false, isNewView: false, alreadyViewed: false };
+    }
 
     const result = await upsertContentView(ctx.db, contentRef, {
       deviceId: args.deviceId,

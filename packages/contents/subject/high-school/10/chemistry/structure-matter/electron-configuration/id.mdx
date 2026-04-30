@@ -1,0 +1,156 @@
+import { ElectronConfigurationLab } from "@repo/design-system/components/contents/chemistry/electron-configuration/lab";
+
+export const metadata = {
+  title: "Konfigurasi Elektron",
+  description:
+    "Pelajari konfigurasi elektron sebagai cara membaca penyebaran elektron pada kulit atom, hubungannya dengan spektrum garis, dan batas model Bohr.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/29/2026",
+  subject: "Struktur Atom",
+};
+
+## Warna Nyala Memberi Petunjuk
+
+Saat garam seperti <InlineMath math="\mathrm{NaCl}" /> atau <InlineMath math="\mathrm{KCl}" /> dipanaskan dalam uji nyala, warna yang tampak bukan muncul secara acak. Energi panas dapat membuat elektron berada pada keadaan energi yang lebih tinggi untuk sementara. Ketika elektron kembali ke keadaan yang lebih rendah, atom atau ion memancarkan cahaya.
+
+OpenStax menjelaskan bahwa model Bohr memakai tingkat energi diskret untuk menjelaskan spektrum garis atom hidrogen. Rujukan konsepnya bisa dibuka di [Bohr Model dari OpenStax](https://openstax.org/books/chemistry-atoms-first-2e/pages/3-2-the-bohr-model).
+
+Kata **diskret** berarti tidak semua nilai energi boleh dipakai. Bayangkan anak tangga. Kalian bisa berdiri di anak tangga pertama, kedua, atau ketiga, tetapi tidak di ruang kosong antara dua anak tangga. Dalam atom, elektron hanya boleh berada pada tingkat energi tertentu.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Energi masuk"] --> B["Elektron tereksitasi"]
+    B --> C["Elektron kembali"]
+    C --> D["Cahaya dilepaskan"]
+    D --> E["Garis spektrum"]`}
+/>
+
+**Eksitasi** berarti elektron menyerap energi dan naik sementara ke tingkat energi lebih tinggi. Saat elektron turun kembali, energi dilepas sebagai cahaya. Pada eksperimen nyala, percobaan harus dilakukan sesuai instruksi guru dan memakai alat pelindung diri karena melibatkan pemanasan bahan kimia.
+
+## Apa yang Disebut Konfigurasi Elektron
+
+**Konfigurasi elektron** adalah cara menuliskan penyebaran elektron di sekitar inti atom. Di sini, kita memakai **model kulit sederhana**, yaitu elektron dikelompokkan pada kulit <InlineMath math="\mathrm{K}" />, <InlineMath math="\mathrm{L}" />, <InlineMath math="\mathrm{M}" />, dan <InlineMath math="\mathrm{N}" />.
+
+Untuk atom netral:
+
+<BlockMath math="e^- = Z" />
+
+Simbol <InlineMath math="e^-" /> adalah jumlah elektron, sedangkan <InlineMath math="Z" /> adalah nomor atom atau jumlah proton. Jadi, atom natrium netral dengan <InlineMath math="Z = 11" /> memiliki <InlineMath math="11" /> elektron.
+
+Model kulit sederhana ini dibatasi untuk contoh unsur ringan sampai kalsium, yaitu <InlineMath math="Z \le 20" />. Untuk unsur yang lebih berat, kimia modern memakai pembahasan subkulit dan orbital yang lebih rinci. OpenStax membahas bentuk yang lebih lanjut itu pada [Electronic Structure and Electron Configurations](https://openstax.org/books/chemistry-atoms-first-2e/pages/3-4-electronic-structure-of-atoms-electron-configurations).
+
+## Model Interaktif Kulit Elektron
+
+Pilih atom netral di bawah ini. Baca dulu nomor atomnya, lalu lihat bagaimana elektron tersebar dari kulit dalam ke kulit luar.
+
+<ElectronConfigurationLab
+  title={<>Model Konfigurasi Elektron</>}
+  description={
+    <>
+      Pilih atom netral, lalu lihat jumlah elektron pada kulit sederhana
+      <InlineMath math="\mathrm{K}" />, <InlineMath math="\mathrm{L}" />,
+      <InlineMath math="\mathrm{M}" />, dan <InlineMath math="\mathrm{N}" />.
+    </>
+  }
+  labels={{
+    chooseAtom: "Pilih atom netral",
+    atomicNumber: "Nomor atom",
+    electronTotal: "Jumlah elektron",
+    configuration: "Konfigurasi",
+    outerShell: "Kulit terluar",
+    samples: {
+      hydrogen: {
+        name: "Hidrogen",
+        note: <>Elektronnya hanya <InlineMath math="1" />, jadi berada di kulit <InlineMath math="\mathrm{K}" />.</>,
+      },
+      helium: {
+        name: "Helium",
+        note: <>Kulit <InlineMath math="\mathrm{K}" /> penuh dengan <InlineMath math="2" /> elektron.</>,
+      },
+      carbon: {
+        name: "Karbon",
+        note: <>Kulit <InlineMath math="\mathrm{K}" /> penuh, lalu sisa elektron masuk kulit <InlineMath math="\mathrm{L}" />.</>,
+      },
+      neon: {
+        name: "Neon",
+        note: <>Konfigurasinya <InlineMath math="2, 8" />, sehingga dua kulit pertamanya penuh.</>,
+      },
+      sodium: {
+        name: "Natrium",
+        note: <>Setelah <InlineMath math="2, 8" />, masih ada <InlineMath math="1" /> elektron pada kulit berikutnya.</>,
+      },
+      magnesium: {
+        name: "Magnesium",
+        note: <>Konfigurasinya <InlineMath math="2, 8, 2" /> untuk atom netral.</>,
+      },
+      chlorine: {
+        name: "Klorin",
+        note: <>Kulit terluarnya berisi <InlineMath math="7" /> elektron pada model sederhana ini.</>,
+      },
+      calcium: {
+        name: "Kalsium",
+        note: <>Untuk unsur sampai kalsium, model kulit sederhana menuliskan <InlineMath math="2, 8, 8, 2" />.</>,
+      },
+    },
+  }}
+/>
+
+## Membaca Urutan Pengisian
+
+Pada model kulit sederhana untuk unsur pertama sampai kalsium, elektron diisikan dari kulit yang lebih dekat inti dulu. Urutannya:
+
+| Kulit | Jumlah maksimum pada model sederhana ini | Cara membaca |
+| :---- | :------------------------------------- | :----------- |
+| <InlineMath math="\mathrm{K}" /> | <InlineMath math="2" /> | Kulit pertama, paling dekat inti. |
+| <InlineMath math="\mathrm{L}" /> | <InlineMath math="8" /> | Diisi setelah kulit <InlineMath math="\mathrm{K}" /> penuh. |
+| <InlineMath math="\mathrm{M}" /> | <InlineMath math="8" /> untuk pola awal ini | Diisi setelah kulit <InlineMath math="\mathrm{L}" /> penuh. |
+| <InlineMath math="\mathrm{N}" /> | Mulai tampak pada unsur dengan <InlineMath math="Z = 19" /> sampai <InlineMath math="20" /> di pola awal | Dipakai setelah pola <InlineMath math="2, 8, 8" />. |
+
+Catatan penting: kulit <InlineMath math="\mathrm{M}" /> dapat dibahas lebih rinci pada materi lanjutan. Di sini, pola <InlineMath math="2, 8, 8, 2" /> dipakai sebagai jembatan untuk membaca unsur ringan, bukan sebagai aturan lengkap untuk semua unsur.
+
+Contoh natrium:
+
+<BlockMath math="\begin{aligned}
+\mathrm{Na}: Z &= 11 \\
+e^- &= 11 \\
+\text{konfigurasi} &= 2, 8, 1
+\end{aligned}" />
+
+Contoh klorin:
+
+<BlockMath math="\begin{aligned}
+\mathrm{Cl}: Z &= 17 \\
+e^- &= 17 \\
+\text{konfigurasi} &= 2, 8, 7
+\end{aligned}" />
+
+## Menghubungkan Konfigurasi dengan Spektrum
+
+Konfigurasi elektron menunjukkan susunan elektron pada keadaan dasar, yaitu keadaan energi yang biasa dan stabil. Spektrum garis muncul ketika elektron menerima energi, lalu kembali ke tingkat energi yang lebih rendah.
+
+Energi cahaya yang dilepas dapat ditulis:
+
+<BlockMath math="E_{\text{foton}} = E_{\text{tinggi}} - E_{\text{rendah}} = h\nu = \frac{hc}{\lambda}" />
+
+Simbol <InlineMath math="h" /> adalah tetapan Planck, <InlineMath math="\nu" /> adalah frekuensi cahaya, <InlineMath math="c" /> adalah cepat rambat cahaya, dan <InlineMath math="\lambda" /> adalah panjang gelombang. NIST mencantumkan nilai eksak <InlineMath math="h = 6{,}62607015 \times 10^{-34}\ \mathrm{J\,s}" /> dan <InlineMath math="c = 2{,}99792458 \times 10^8\ \mathrm{m\,s^{-1}}" /> dalam daftar konstanta CODATA. Rujukannya bisa dibuka di [Fundamental Physical Constants dari NIST](https://physics.nist.gov/cuu/Constants/Table/allascii.txt).
+
+Cukup pegang hubungan idenya: elektron punya tingkat energi tertentu, perubahan tingkat energi menghasilkan cahaya tertentu, dan susunan elektron membantu kita membaca perilaku atom.
+
+## Cek Cepat dari Nomor Atom
+
+Saat diminta menulis konfigurasi elektron sederhana, pakai urutan ini:
+
+- Pastikan atomnya netral atau ion.
+- Jika netral, jumlah elektron sama dengan nomor atom.
+- Isi kulit dari dalam ke luar pada model yang sedang dipakai.
+- Tulis jumlah elektron tiap kulit dengan koma.
+
+Untuk magnesium netral:
+
+<BlockMath math="\begin{aligned}
+Z &= 12 \\
+e^- &= 12 \\
+\text{konfigurasi} &= 2, 8, 2
+\end{aligned}" />
+
+Jadi, konfigurasi elektron magnesium netral adalah <InlineMath math="2, 8, 2" />. Mulai dari nomor atom membuat langkahnya lebih aman daripada langsung menghafal daftar konfigurasi.

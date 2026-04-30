@@ -1,0 +1,186 @@
+import { ValenceElectronLab } from "@repo/design-system/components/contents/chemistry/valence-electron/lab";
+
+export const metadata = {
+  title: "Valence Electrons",
+  description:
+    "Learn valence electrons as electrons in the outermost occupied shell, how to identify them from shell configurations, and how they connect to chemical properties.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/29/2026",
+  subject: "Atomic Structure",
+};
+
+## The Outer Electrons that React Most Often
+
+Start with calcium. In the simple shell model, a neutral calcium atom is written with the electron configuration <InlineMath math="2, 8, 8, 2" />. That means calcium's electrons are spread across the <InlineMath math="\mathrm{K}" />, <InlineMath math="\mathrm{L}" />, <InlineMath math="\mathrm{M}" />, and <InlineMath math="\mathrm{N}" /> shells.
+
+The outermost occupied shell is the <InlineMath math="\mathrm{N}" /> shell. It contains <InlineMath math="2" /> electrons. So, a calcium atom has <InlineMath math="2" /> **valence electrons**.
+
+Valence electrons are electrons in the outermost occupied shell of an atom. OpenStax explains that outer-shell electrons are called valence electrons and play the most important role in chemical reactions. You can read the reference in [Electronic Structure of Atoms from OpenStax](https://openstax.org/books/chemistry/pages/6-4-electronic-structure-of-atoms-electron-configurations).
+
+Because they are on the outside, valence electrons are the electrons most often involved when an atom bonds, loses electrons, or gains electrons. They do not simply fly away on their own. The point is that the outside of the atom strongly shapes how the atom reacts.
+
+## Valence Electron Model
+
+Choose a neutral atom. Read the shell configuration from left to right, then look at the last shell that still contains electrons. The number in that last shell is the number of valence electrons.
+
+<ValenceElectronLab
+  title={<>Valence Electron Reader</>}
+  description={
+    <>
+      The outer shell uses a different color so the valence-electron count is
+      visible directly from the model.
+    </>
+  }
+  labels={{
+    chooseAtom: "Choose a neutral atom",
+    atomicNumber: "Atomic number",
+    configuration: "Shell configuration",
+    outerShell: "Outermost shell",
+    valenceElectron: "Valence electrons",
+    behavior: "Tendency",
+    samples: {
+      hydrogen: {
+        tab: "H",
+        name: "Hydrogen",
+        note: <>Its configuration is <InlineMath math="1" />. Its outer shell contains <InlineMath math="1" /> electron.</>,
+        tendency: <>Hydrogen can share an electron or form ions in certain conditions. Its behavior is not the same as alkali metals.</>,
+      },
+      helium: {
+        tab: "He",
+        name: "Helium",
+        note: <>Its configuration is <InlineMath math="2" />. The <InlineMath math="\mathrm{K}" /> shell is full for helium.</>,
+        tendency: <>Helium is very unreactive because its outer shell is already full.</>,
+      },
+      sodium: {
+        tab: "Na",
+        name: "Sodium",
+        note: <>Its configuration is <InlineMath math="2, 8, 1" />. It has <InlineMath math="1" /> valence electron.</>,
+        tendency: <>Sodium tends to lose <InlineMath math="1" /> valence electron when forming <InlineMath math="\mathrm{Na^+}" />.</>,
+      },
+      magnesium: {
+        tab: "Mg",
+        name: "Magnesium",
+        note: <>Its configuration is <InlineMath math="2, 8, 2" />. Its outer shell contains <InlineMath math="2" /> electrons.</>,
+        tendency: <>Magnesium tends to lose <InlineMath math="2" /> valence electrons when forming <InlineMath math="\mathrm{Mg^{2+}}" />.</>,
+      },
+      aluminum: {
+        tab: "Al",
+        name: "Aluminum",
+        note: <>Its configuration is <InlineMath math="2, 8, 3" />. It has <InlineMath math="3" /> valence electrons.</>,
+        tendency: <>Aluminum is often introduced as an element that can lose <InlineMath math="3" /> valence electrons.</>,
+      },
+      chlorine: {
+        tab: "Cl",
+        name: "Chlorine",
+        note: <>Its configuration is <InlineMath math="2, 8, 7" />. Its outer shell is almost full.</>,
+        tendency: <>Chlorine tends to gain <InlineMath math="1" /> electron to reach <InlineMath math="8" /> valence electrons.</>,
+      },
+      argon: {
+        tab: "Ar",
+        name: "Argon",
+        note: <>Its configuration is <InlineMath math="2, 8, 8" />. Its outer shell is full in this model.</>,
+        tendency: <>Argon is very unreactive because it already has <InlineMath math="8" /> valence electrons.</>,
+      },
+      calcium: {
+        tab: "Ca",
+        name: "Calcium",
+        note: <>Its configuration is <InlineMath math="2, 8, 8, 2" />. The <InlineMath math="\mathrm{N}" /> shell contains <InlineMath math="2" /> electrons.</>,
+        tendency: <>Calcium tends to lose <InlineMath math="2" /> valence electrons when forming <InlineMath math="\mathrm{Ca^{2+}}" />.</>,
+      },
+    },
+  }}
+/>
+
+## A Fast Way to Identify Valence Electrons
+
+Use the same sequence every time so the idea stays clear.
+
+- Write the shell configuration for the neutral atom.
+- Find the last shell that still contains electrons.
+- The number of electrons in that last shell is the number of valence electrons.
+
+Examples:
+
+| Atom | Shell configuration | Outermost shell | Valence electrons |
+| :--- | :------------------ | :-------------- | :---------------- |
+| <InlineMath math="\mathrm{Mg}" /> | <InlineMath math="2, 8, 2" /> | <InlineMath math="\mathrm{M}" /> | <InlineMath math="2" /> |
+| <InlineMath math="\mathrm{Cl}" /> | <InlineMath math="2, 8, 7" /> | <InlineMath math="\mathrm{M}" /> | <InlineMath math="7" /> |
+| <InlineMath math="\mathrm{Ar}" /> | <InlineMath math="2, 8, 8" /> | <InlineMath math="\mathrm{M}" /> | <InlineMath math="8" /> |
+| <InlineMath math="\mathrm{Ca}" /> | <InlineMath math="2, 8, 8, 2" /> | <InlineMath math="\mathrm{N}" /> | <InlineMath math="2" /> |
+
+Do not add all electrons when looking for valence electrons. Calcium has <InlineMath math="20" /> total electrons, but only <InlineMath math="2" /> valence electrons because only the outermost occupied shell is counted.
+
+## Patterns in the Same Group
+
+Main-group elements in the same group often have the same number of valence electrons. That is why their chemical properties can be similar. OpenStax explains that elements in one group have the same number of valence electrons, and this shared number explains their similar chemical properties. You can read the reference in [Periodic Variations in Element Properties from OpenStax](https://openstax.org/books/chemistry-2e/pages/6-5-periodic-variations-in-element-properties).
+
+Notice the pattern below.
+
+| Element | Atomic number | <InlineMath math="\mathrm{K}" /> | <InlineMath math="\mathrm{L}" /> | <InlineMath math="\mathrm{M}" /> | <InlineMath math="\mathrm{N}" /> | <InlineMath math="\mathrm{O}" /> | <InlineMath math="\mathrm{P}" /> | <InlineMath math="\mathrm{Q}" /> | Valence electrons |
+| :------ | :------------ | :------------------------------- | :------------------------------- | :------------------------------- | :------------------------------- | :------------------------------- | :------------------------------- | :------------------------------- | :---------------- |
+| <InlineMath math="\mathrm{H}" /> | <InlineMath math="1" /> | <InlineMath math="1" /> | - | - | - | - | - | - | <InlineMath math="1" /> |
+| <InlineMath math="\mathrm{Li}" /> | <InlineMath math="3" /> | <InlineMath math="2" /> | <InlineMath math="1" /> | - | - | - | - | - | <InlineMath math="1" /> |
+| <InlineMath math="\mathrm{Na}" /> | <InlineMath math="11" /> | <InlineMath math="2" /> | <InlineMath math="8" /> | <InlineMath math="1" /> | - | - | - | - | <InlineMath math="1" /> |
+| <InlineMath math="\mathrm{K}" /> | <InlineMath math="19" /> | <InlineMath math="2" /> | <InlineMath math="8" /> | <InlineMath math="8" /> | <InlineMath math="1" /> | - | - | - | <InlineMath math="1" /> |
+| <InlineMath math="\mathrm{Rb}" /> | <InlineMath math="37" /> | <InlineMath math="2" /> | <InlineMath math="8" /> | <InlineMath math="18" /> | <InlineMath math="8" /> | <InlineMath math="1" /> | - | - | <InlineMath math="1" /> |
+| <InlineMath math="\mathrm{Cs}" /> | <InlineMath math="55" /> | <InlineMath math="2" /> | <InlineMath math="8" /> | <InlineMath math="18" /> | <InlineMath math="18" /> | <InlineMath math="8" /> | <InlineMath math="1" /> | - | <InlineMath math="1" /> |
+| <InlineMath math="\mathrm{Fr}" /> | <InlineMath math="87" /> | <InlineMath math="2" /> | <InlineMath math="8" /> | <InlineMath math="18" /> | <InlineMath math="32" /> | <InlineMath math="18" /> | <InlineMath math="8" /> | <InlineMath math="1" /> | <InlineMath math="1" /> |
+
+The table shows the key idea: even though the number of occupied shells increases down the group, the outermost shell still contains <InlineMath math="1" /> electron. This is why lithium, sodium, potassium, rubidium, cesium, and francium are placed in the same group.
+
+Small caution: hydrogen also has <InlineMath math="1" /> valence electron, but it does not behave exactly like the alkali metals. The number of valence electrons is a strong clue, not the only explanation of an element's properties.
+
+## Connection to Chemical Properties
+
+Valence electrons matter because chemical reactions often involve the outer electrons. Atoms can lose, gain, or share valence electrons.
+
+In short:
+
+- In many main-group metals, atoms with <InlineMath math="1" /> or <InlineMath math="2" /> valence electrons tend to lose electrons when forming ions.
+- Elements with <InlineMath math="7" /> valence electrons often gain or share <InlineMath math="1" /> electron.
+- Noble gases such as helium and argon have full outer shells, so they are very unreactive.
+
+For main-group elements, the quick pattern is:
+
+- Group <InlineMath math="1" /> has <InlineMath math="1" /> valence electron.
+- Group <InlineMath math="2" /> has <InlineMath math="2" /> valence electrons.
+- Groups <InlineMath math="13" /> to <InlineMath math="18" /> have <InlineMath math="3" /> to <InlineMath math="8" /> valence electrons.
+
+Helium is an important exception: helium is in group <InlineMath math="18" />, but it has only <InlineMath math="2" /> valence electrons because its first shell is full with <InlineMath math="2" /> electrons.
+
+For transition elements, counting valence electrons can be more complicated because <InlineMath math="d" /> subshells can matter. This discussion focuses on main-group elements and the simple shell model.
+
+## Outermost-Shell Self-Check
+
+Use this list as a check. Read the shell configuration, then take the rightmost shell count as the valence-electron count.
+
+### First Twenty Elements
+
+| Atomic number | Element | Shell configuration | Valence electrons |
+| :------------ | :------ | :------------------ | :---------------- |
+| <InlineMath math="1" /> | <InlineMath math="\mathrm{H}" /> | <InlineMath math="1" /> | <InlineMath math="1" /> |
+| <InlineMath math="2" /> | <InlineMath math="\mathrm{He}" /> | <InlineMath math="2" /> | <InlineMath math="2" /> |
+| <InlineMath math="3" /> | <InlineMath math="\mathrm{Li}" /> | <InlineMath math="2, 1" /> | <InlineMath math="1" /> |
+| <InlineMath math="4" /> | <InlineMath math="\mathrm{Be}" /> | <InlineMath math="2, 2" /> | <InlineMath math="2" /> |
+| <InlineMath math="5" /> | <InlineMath math="\mathrm{B}" /> | <InlineMath math="2, 3" /> | <InlineMath math="3" /> |
+| <InlineMath math="6" /> | <InlineMath math="\mathrm{C}" /> | <InlineMath math="2, 4" /> | <InlineMath math="4" /> |
+| <InlineMath math="7" /> | <InlineMath math="\mathrm{N}" /> | <InlineMath math="2, 5" /> | <InlineMath math="5" /> |
+| <InlineMath math="8" /> | <InlineMath math="\mathrm{O}" /> | <InlineMath math="2, 6" /> | <InlineMath math="6" /> |
+| <InlineMath math="9" /> | <InlineMath math="\mathrm{F}" /> | <InlineMath math="2, 7" /> | <InlineMath math="7" /> |
+| <InlineMath math="10" /> | <InlineMath math="\mathrm{Ne}" /> | <InlineMath math="2, 8" /> | <InlineMath math="8" /> |
+| <InlineMath math="11" /> | <InlineMath math="\mathrm{Na}" /> | <InlineMath math="2, 8, 1" /> | <InlineMath math="1" /> |
+| <InlineMath math="12" /> | <InlineMath math="\mathrm{Mg}" /> | <InlineMath math="2, 8, 2" /> | <InlineMath math="2" /> |
+| <InlineMath math="13" /> | <InlineMath math="\mathrm{Al}" /> | <InlineMath math="2, 8, 3" /> | <InlineMath math="3" /> |
+| <InlineMath math="14" /> | <InlineMath math="\mathrm{Si}" /> | <InlineMath math="2, 8, 4" /> | <InlineMath math="4" /> |
+| <InlineMath math="15" /> | <InlineMath math="\mathrm{P}" /> | <InlineMath math="2, 8, 5" /> | <InlineMath math="5" /> |
+| <InlineMath math="16" /> | <InlineMath math="\mathrm{S}" /> | <InlineMath math="2, 8, 6" /> | <InlineMath math="6" /> |
+| <InlineMath math="17" /> | <InlineMath math="\mathrm{Cl}" /> | <InlineMath math="2, 8, 7" /> | <InlineMath math="7" /> |
+| <InlineMath math="18" /> | <InlineMath math="\mathrm{Ar}" /> | <InlineMath math="2, 8, 8" /> | <InlineMath math="8" /> |
+| <InlineMath math="19" /> | <InlineMath math="\mathrm{K}" /> | <InlineMath math="2, 8, 8, 1" /> | <InlineMath math="1" /> |
+| <InlineMath math="20" /> | <InlineMath math="\mathrm{Ca}" /> | <InlineMath math="2, 8, 8, 2" /> | <InlineMath math="2" /> |
+
+### Patterns to Notice
+
+Elements <InlineMath math="\mathrm{B}" />, <InlineMath math="\mathrm{Al}" />, <InlineMath math="\mathrm{Ga}" />, <InlineMath math="\mathrm{In}" />, and <InlineMath math="\mathrm{Tl}" /> are in group <InlineMath math="13" />. The quick main-group pattern is <InlineMath math="3" /> valence electrons.
+
+That is why <InlineMath math="\mathrm{Na}" /> and <InlineMath math="\mathrm{K}" /> both tend to form <InlineMath math="+1" /> ions: each has <InlineMath math="1" /> valence electron that is easily lost. Argon is much less reactive than chlorine because argon's outer shell is already full, while chlorine still needs <InlineMath math="1" /> more electron to reach a full-shell pattern.

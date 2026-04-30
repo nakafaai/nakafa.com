@@ -1,0 +1,138 @@
+import { IonLab } from "@repo/design-system/components/contents/chemistry/ion/lab";
+
+export const metadata = {
+  title: "Ion",
+  description:
+    "Pelajari cara atom menjadi ion, cara membedakan kation dan anion, serta cara menghitung elektron dari muatan ion.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/29/2026",
+  subject: "Struktur Atom",
+};
+
+## Saat Atom Tidak Lagi Netral
+
+Atom netral memiliki jumlah proton dan elektron yang sama. **Ion** terbentuk ketika sebuah atom atau gugus atom, yaitu beberapa atom yang terikat bersama, memiliki muatan total. Di sini, kita fokus dulu pada ion dari satu atom.
+
+Bagian Atomic Structure and Symbolism dari OpenStax menjelaskan bahwa ion terbentuk ketika jumlah elektron tidak sama dengan jumlah proton. Bagian sumber itu bisa dibuka di [Atomic Structure and Symbolism dari OpenStax](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-3-atomic-structure-and-symbolism).
+
+Proton berada di inti atom dan biasanya tidak berpindah dalam proses kimia sederhana. Yang berubah adalah **elektron**. Jadi, identitas unsur tetap dikunci oleh jumlah proton, sedangkan muatan ion ditentukan oleh selisih proton dan elektron.
+
+Cara mudah membacanya memakai tanda muatan. Proton memberi hitungan positif, sedangkan elektron memberi hitungan negatif. Jika jumlahnya sama, hasilnya <InlineMath math="0" /> atau netral. Jika elektron berkurang, muatan positif tersisa. Jika elektron bertambah, muatan negatif tersisa.
+
+## Kation dan Anion
+
+Ion bermuatan positif disebut **kation**. Kation terbentuk saat atom kehilangan elektron.
+
+Ion bermuatan negatif disebut **anion**. Anion terbentuk saat atom menerima elektron.
+
+IUPAC Gold Book mendefinisikan ion sebagai partikel atomik atau molekuler yang memiliki muatan listrik total. Rujukan istilahnya bisa dibuka di [ion dari IUPAC Gold Book](https://goldbook.iupac.org/terms/view/I03158).
+
+<IonLab
+  title={<>Simulasi Pembentukan Ion</>}
+  description={
+    <>
+      Lihat alurnya dari kiri ke kanan: atom netral melepas atau menerima
+      elektron, lalu menjadi kation atau anion. Proton dan neutron tetap.
+    </>
+  }
+  labels={{
+    beforeChange: "Sebelum",
+    electronChange: "Elektron berubah",
+    afterChange: "Sesudah",
+    chooseIon: "Pilih contoh ion",
+    neutralAtom: "Atom netral",
+    protons: "Proton",
+    neutrons: "Neutron",
+    electrons: "Elektron",
+    charge: "Muatan",
+    samples: {
+      "sodium-cation": {
+        name: "Ion natrium",
+        type: "Kation",
+        action: <>Melepas <InlineMath math="1" /> elektron</>,
+      },
+      "fluoride-anion": {
+        name: "Ion fluorida",
+        type: "Anion",
+        action: <>Menerima <InlineMath math="1" /> elektron</>,
+      },
+      "lithium-cation": {
+        name: "Ion litium",
+        type: "Kation",
+        action: <>Melepas <InlineMath math="1" /> elektron</>,
+      },
+      "oxide-anion": {
+        name: "Ion oksida",
+        type: "Anion",
+        action: <>Menerima <InlineMath math="2" /> elektron</>,
+      },
+    },
+  }}
+/>
+
+## Muatan Dibaca dari Selisih
+
+Rumus paling aman untuk membaca muatan ion adalah:
+
+<BlockMath math="q = p^+ - e^-" />
+
+Simbol <InlineMath math="q" /> adalah muatan ion, <InlineMath math="p^+" /> adalah jumlah proton, dan <InlineMath math="e^-" /> adalah jumlah elektron.
+
+Untuk mencari jumlah elektron ion, rumus yang sama bisa ditata ulang:
+
+<BlockMath math="e^- = p^+ - q" />
+
+Contoh natrium:
+
+<BlockMath math="\begin{aligned}
+{}^{23}_{11}\mathrm{Na}^{+} &: p^+ = 11,\ q = +1 \\
+e^- &= 11 - (+1) \\
+&= 10
+\end{aligned}" />
+
+Contoh fluorida:
+
+<BlockMath math="\begin{aligned}
+{}^{19}_{9}\mathrm{F}^{-} &: p^+ = 9,\ q = -1 \\
+e^- &= 9 - (-1) \\
+&= 10
+\end{aligned}" />
+
+Tanda negatif pada <InlineMath math="\mathrm{F}^{-}" /> berarti jumlah elektron lebih banyak daripada jumlah proton. Karena itu, <InlineMath math="9 - (-1)" /> menjadi <InlineMath math="10" />.
+
+## Yang Berubah dan Yang Tetap
+
+Saat atom menjadi ion, jangan ubah semua angka sekaligus. Baca satu per satu.
+
+| Bagian yang dibaca | Saat menjadi ion | Dampaknya |
+| :----------------- | :--------------- | :-------- |
+| Proton | Tetap sama | Unsur tidak berubah. |
+| Neutron | Tetap sama pada ion yang sama | Nomor massa tidak berubah. |
+| Elektron | Berubah | Muatan ion berubah. |
+
+Jadi, <InlineMath math="\mathrm{Na}" /> dan <InlineMath math="\mathrm{Na}^{+}" /> sama-sama unsur natrium karena jumlah protonnya tetap <InlineMath math="11" />. Bedanya, <InlineMath math="\mathrm{Na}^{+}" /> memiliki <InlineMath math="10" /> elektron, bukan <InlineMath math="11" /> elektron.
+
+## Contoh Membaca Tabel Ion
+
+Gunakan tabel berikut sebagai contoh yang sudah terisi. Bacalah satu baris dari kiri ke kanan: nomor atom <InlineMath math="Z" /> memberi jumlah proton, selisih <InlineMath math="A - Z" /> memberi jumlah neutron, lalu rumus <InlineMath math="q = p^+ - e^-" /> menghubungkan muatan dengan jumlah elektron.
+
+| Lambang | Nomor atom | Nomor massa | Muatan | Proton | Elektron | Neutron |
+| :------ | :--------- | :---------- | :----- | :----- | :------- | :------ |
+| <InlineMath math="{}^{7}_{3}\mathrm{Li}" /> | <InlineMath math="3" /> | <InlineMath math="7" /> | <InlineMath math="0" /> | <InlineMath math="3" /> | <InlineMath math="3" /> | <InlineMath math="4" /> |
+| <InlineMath math="{}^{7}_{3}\mathrm{Li}^{+}" /> | <InlineMath math="3" /> | <InlineMath math="7" /> | <InlineMath math="+1" /> | <InlineMath math="3" /> | <InlineMath math="2" /> | <InlineMath math="4" /> |
+| <InlineMath math="{}^{16}_{8}\mathrm{O}" /> | <InlineMath math="8" /> | <InlineMath math="16" /> | <InlineMath math="0" /> | <InlineMath math="8" /> | <InlineMath math="8" /> | <InlineMath math="8" /> |
+| <InlineMath math="{}^{16}_{8}\mathrm{O}^{2-}" /> | <InlineMath math="8" /> | <InlineMath math="16" /> | <InlineMath math="-2" /> | <InlineMath math="8" /> | <InlineMath math="10" /> | <InlineMath math="8" /> |
+| <InlineMath math="{}^{27}_{13}\mathrm{Al}" /> | <InlineMath math="13" /> | <InlineMath math="27" /> | <InlineMath math="0" /> | <InlineMath math="13" /> | <InlineMath math="13" /> | <InlineMath math="14" /> |
+| <InlineMath math="{}^{27}_{13}\mathrm{Al}^{3+}" /> | <InlineMath math="13" /> | <InlineMath math="27" /> | <InlineMath math="+3" /> | <InlineMath math="13" /> | <InlineMath math="10" /> | <InlineMath math="14" /> |
+
+### Cek Baris Litium
+
+Cek satu baris, misalnya <InlineMath math="{}^{7}_{3}\mathrm{Li}^{+}" />. Nomor atomnya <InlineMath math="3" />, jadi protonnya <InlineMath math="3" />. Muatannya <InlineMath math="+1" />, jadi elektronnya:
+
+<BlockMath math="e^- = 3 - (+1) = 2" />
+
+Neutronnya dibaca dari nomor massa:
+
+<BlockMath math="n^0 = 7 - 3 = 4" />
+
+Jika masih bingung, mulai dari hitungan muatan. Kation selalu punya elektron lebih sedikit daripada proton, sedangkan anion punya elektron lebih banyak daripada proton.

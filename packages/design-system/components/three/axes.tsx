@@ -1,10 +1,15 @@
 "use client";
 
 import { Line, Text } from "@react-three/drei";
+import {
+  FONT_PATH,
+  MONO_FONT_PATH,
+  resolveThreeFontSize,
+  type ThreeFontSize,
+} from "@repo/design-system/components/three/data/constants";
 import { COLORS } from "@repo/design-system/lib/color";
 import { type ComponentProps, useMemo } from "react";
 import { MeshBasicMaterial, Vector3 } from "three";
-import { FONT_PATH, MONO_FONT_PATH } from "./_data";
 
 // Shared materials cache for text components
 const textMaterialCache = new Map<string, MeshBasicMaterial>();
@@ -35,7 +40,7 @@ export function Axes({
   size = 10,
   showLabels = true,
   showZAxis = true,
-  labelSize = 0.5,
+  labelSize = "diagram",
   labelOffset = 0.5,
   font = "mono",
   ...props
@@ -43,7 +48,7 @@ export function Axes({
   size?: number;
   showLabels?: boolean;
   showZAxis?: boolean;
-  labelSize?: number;
+  labelSize?: ThreeFontSize | number;
   labelOffset?: number;
   font?: "mono" | "sans";
 } & ComponentProps<"group">) {
@@ -64,6 +69,7 @@ export function Axes({
   );
 
   const fontToUse = font === "mono" ? MONO_FONT_PATH : FONT_PATH;
+  const resolvedLabelSize = resolveThreeFontSize(labelSize);
 
   // Memoize label positions to avoid recreating them
   const labelPositions = useMemo(() => {
@@ -101,7 +107,7 @@ export function Axes({
         anchorX="left"
         color={COLORS.RED}
         font={fontToUse}
-        fontSize={labelSize}
+        fontSize={resolvedLabelSize}
         frustumCulled={false}
         material={redMaterial}
         position={labelPositions.xPos}
@@ -114,7 +120,7 @@ export function Axes({
         anchorX="right"
         color={COLORS.RED}
         font={fontToUse}
-        fontSize={labelSize}
+        fontSize={resolvedLabelSize}
         frustumCulled={false}
         material={redMaterial}
         position={labelPositions.xNeg}
@@ -129,7 +135,7 @@ export function Axes({
         anchorX="left"
         color={COLORS.GREEN}
         font={fontToUse}
-        fontSize={labelSize}
+        fontSize={resolvedLabelSize}
         frustumCulled={false}
         material={greenMaterial}
         position={labelPositions.yPos}
@@ -142,7 +148,7 @@ export function Axes({
         anchorX="left"
         color={COLORS.GREEN}
         font={fontToUse}
-        fontSize={labelSize}
+        fontSize={resolvedLabelSize}
         frustumCulled={false}
         material={greenMaterial}
         position={labelPositions.yNeg}
@@ -157,7 +163,7 @@ export function Axes({
         anchorX="left"
         color={COLORS.BLUE}
         font={fontToUse}
-        fontSize={labelSize}
+        fontSize={resolvedLabelSize}
         frustumCulled={false}
         material={blueMaterial}
         position={labelPositions.zPos}
@@ -170,7 +176,7 @@ export function Axes({
         anchorX="left"
         color={COLORS.BLUE}
         font={fontToUse}
-        fontSize={labelSize}
+        fontSize={resolvedLabelSize}
         frustumCulled={false}
         material={blueMaterial}
         position={labelPositions.zNeg}

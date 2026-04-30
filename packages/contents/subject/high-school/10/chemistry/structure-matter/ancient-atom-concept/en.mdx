@@ -1,0 +1,90 @@
+import { AncientAtomLab } from "@repo/design-system/components/contents/chemistry/ancient-atom/lab";
+
+export const metadata = {
+  title: "Ancient Greek Atomic Concept",
+  description:
+    "Start from a simple question about cutting matter again and again, then see why the atomic idea appeared before modern laboratory tools existed.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/28/2026",
+  subject: "Atomic Structure",
+};
+
+## A Small Question from Pieces of Matter
+
+Imagine a piece of chalk, paper, or salt. If the object is cut in half, then each piece is cut again, can matter keep being divided forever?
+
+Greek philosophers asked questions like this long before microscopes, modern test tubes, or particle instruments existed. They were not proving atomic structure through experiments the way scientists do today. They were trying to answer a basic question in a reasonable way: **what is matter really made of?**
+
+OpenStax Chemistry explains this early history on the page [OpenStax's Early Ideas in Atomic Theory](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-1-early-ideas-in-atomic-theory). That source places the ancient debate at the beginning of a long path toward modern atomic theory.
+
+## Two Opposite Answers
+
+There are two big ideas that matter for chemistry class.
+
+| Idea | How it imagines matter | Main figures |
+| :--- | :--------------------- | :----------- |
+| Matter is continuous. | Matter can keep being divided into smaller parts. | Aristotle. |
+| Matter is discrete. | Matter is made of the smallest parts that cannot be divided again. | Leucippus and Democritus. |
+
+**Continuous** means unbroken, like a line that can keep being split into shorter pieces. **Discrete** means made of separate units, like bricks forming a wall.
+
+Democritus called the smallest part *atomos*, a Greek term meaning uncuttable. Britannica discusses Democritus in [Britannica's Democritus article](https://www.britannica.com/biography/Democritus), while the Stanford Encyclopedia of Philosophy discusses ancient Greek atomism in [Stanford Encyclopedia of Philosophy's Ancient Atomism article](https://plato.stanford.edu/entries/atomism-ancient/).
+
+## Trying Democritus's Way of Thinking
+
+This visual is not a picture of a real atom. It is a thought experiment: we imagine cutting an object again and again, then compare how Aristotle and Democritus would read the same situation.
+
+<AncientAtomLab
+  title={<>Matter-Cutting Thought Experiment</>}
+  description={
+    <>
+      Switch between cutting stages to see why the atomic idea grew from a
+      simple question about the limit of dividing matter.
+    </>
+  }
+  labels={{
+    chooseLevel: "Choose a matter-cutting stage",
+    aristotleLabel: "Continuous",
+    aristotleBody: (
+      <>
+        For Aristotle, dividing matter does not stop at one final unit.
+      </>
+    ),
+    democritusLabel: "Discrete",
+    democritusBody: (
+      <>
+        For Democritus, division stops at the smallest unit he called atomos.
+      </>
+    ),
+    levels: {
+      whole: {
+        tab: "Whole",
+      },
+      "first-cut": {
+        tab: "Two",
+      },
+      "second-cut": {
+        tab: "Four",
+      },
+      "fine-cut": {
+        tab: "Tiny",
+      },
+    },
+  }}
+/>
+
+## Why This Was Not Modern Theory Yet
+
+Be careful here: Democritus did not discover atoms with laboratory tools. He built an interesting philosophical explanation, but he did not yet have experimental data like modern scientists.
+
+Democritus was broadly right that matter is made of very small units. However, the details are different from modern chemistry. Modern atoms still contain subatomic particles such as protons, neutrons, and electrons, so the word “indivisible” should be read as a historical idea, not a final definition.
+
+Aristotle should not be read as simply “wrong and foolish” either. In his time, continuous matter felt reasonable because everyday objects seem possible to cut, crush, or mix without showing a particle boundary.
+
+## From Philosophy to Chemistry
+
+The value of the Greek atomic concept is not in its measuring tools. Its value is in the question it made visible: maybe matter has tiny building blocks that cannot be seen directly.
+
+> In chemistry, a good question often appears before the tool that can answer it.
+
+More than two thousand years later, John Dalton brought the atomic idea into modern chemistry in a new way. Dalton did not only ask “what is matter made of?” He used reaction mass data to make atoms into a model that could be used for calculation. That is where the discussion of atoms began moving from philosophy toward chemical theory.

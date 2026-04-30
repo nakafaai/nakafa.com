@@ -1,0 +1,138 @@
+import { IonLab } from "@repo/design-system/components/contents/chemistry/ion/lab";
+
+export const metadata = {
+  title: "Ions",
+  description:
+    "Learn how atoms become ions, how to distinguish cations and anions, and how to calculate electrons from ion charge.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/29/2026",
+  subject: "Atomic Structure",
+};
+
+## When an Atom Is No Longer Neutral
+
+A neutral atom has the same number of protons and electrons. An **ion** forms when an atom or group of atoms has an overall charge. Here, we focus first on ions made from one atom.
+
+The Atomic Structure and Symbolism section from OpenStax explains that ions form when the number of electrons is not equal to the number of protons. The source can be opened through [OpenStax's Atomic Structure and Symbolism](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-3-atomic-structure-and-symbolism).
+
+Protons are in the nucleus and usually do not move during simple chemical processes. **Electrons** are the particles that change. So element identity stays locked by the number of protons, while ion charge is determined by the difference between protons and electrons.
+
+A simple way to read charge is by its sign. Protons add positive count, while electrons add negative count. If the counts match, the result is <InlineMath math="0" /> or neutral. If electrons decrease, positive charge remains. If electrons increase, negative charge remains.
+
+## Cations and Anions
+
+A positively charged ion is called a **cation**. A cation forms when an atom loses electrons.
+
+A negatively charged ion is called an **anion**. An anion forms when an atom gains electrons.
+
+The IUPAC Gold Book defines an ion as an atomic or molecular particle that has a net electric charge. The term reference can be opened through [IUPAC Gold Book's ion entry](https://goldbook.iupac.org/terms/view/I03158).
+
+<IonLab
+  title={<>Ion Formation Simulator</>}
+  description={
+    <>
+      Follow the left-to-right path: a neutral atom loses or gains electrons,
+      then becomes a cation or anion. Protons and neutrons stay the same.
+    </>
+  }
+  labels={{
+    beforeChange: "Before",
+    electronChange: "Electrons change",
+    afterChange: "After",
+    chooseIon: "Choose an ion example",
+    neutralAtom: "Neutral atom",
+    protons: "Protons",
+    neutrons: "Neutrons",
+    electrons: "Electrons",
+    charge: "Charge",
+    samples: {
+      "sodium-cation": {
+        name: "Sodium ion",
+        type: "Cation",
+        action: <>Loses <InlineMath math="1" /> electron</>,
+      },
+      "fluoride-anion": {
+        name: "Fluoride ion",
+        type: "Anion",
+        action: <>Gains <InlineMath math="1" /> electron</>,
+      },
+      "lithium-cation": {
+        name: "Lithium ion",
+        type: "Cation",
+        action: <>Loses <InlineMath math="1" /> electron</>,
+      },
+      "oxide-anion": {
+        name: "Oxide ion",
+        type: "Anion",
+        action: <>Gains <InlineMath math="2" /> electrons</>,
+      },
+    },
+  }}
+/>
+
+## Charge Comes from the Difference
+
+The safest formula for reading ion charge is:
+
+<BlockMath math="q = p^+ - e^-" />
+
+The symbol <InlineMath math="q" /> is the ion charge, <InlineMath math="p^+" /> is the number of protons, and <InlineMath math="e^-" /> is the number of electrons.
+
+To find the electron count of an ion, rearrange the same formula:
+
+<BlockMath math="e^- = p^+ - q" />
+
+Sodium example:
+
+<BlockMath math="\begin{aligned}
+{}^{23}_{11}\mathrm{Na}^{+} &: p^+ = 11,\ q = +1 \\
+e^- &= 11 - (+1) \\
+&= 10
+\end{aligned}" />
+
+Fluoride example:
+
+<BlockMath math="\begin{aligned}
+{}^{19}_{9}\mathrm{F}^{-} &: p^+ = 9,\ q = -1 \\
+e^- &= 9 - (-1) \\
+&= 10
+\end{aligned}" />
+
+The negative sign in <InlineMath math="\mathrm{F}^{-}" /> means there are more electrons than protons. That is why <InlineMath math="9 - (-1)" /> becomes <InlineMath math="10" />.
+
+## What Changes and What Stays
+
+When an atom becomes an ion, do not change every number at once. Read each part separately.
+
+| Part to read | When an ion forms | Effect |
+| :----------- | :---------------- | :----- |
+| Protons | Stay the same | The element does not change. |
+| Neutrons | Stay the same for the same ion | The mass number does not change. |
+| Electrons | Change | The ion charge changes. |
+
+So <InlineMath math="\mathrm{Na}" /> and <InlineMath math="\mathrm{Na}^{+}" /> are both sodium because the proton count stays <InlineMath math="11" />. The difference is that <InlineMath math="\mathrm{Na}^{+}" /> has <InlineMath math="10" /> electrons, not <InlineMath math="11" /> electrons.
+
+## Worked Table for Ion Counts
+
+Use the table below as a completed example. Read each row from left to right: atomic number <InlineMath math="Z" /> gives the proton count, <InlineMath math="A - Z" /> gives the neutron count, and <InlineMath math="q = p^+ - e^-" /> connects charge with the electron count.
+
+| Symbol | Atomic number | Mass number | Charge | Protons | Electrons | Neutrons |
+| :----- | :------------ | :---------- | :----- | :------ | :-------- | :------- |
+| <InlineMath math="{}^{7}_{3}\mathrm{Li}" /> | <InlineMath math="3" /> | <InlineMath math="7" /> | <InlineMath math="0" /> | <InlineMath math="3" /> | <InlineMath math="3" /> | <InlineMath math="4" /> |
+| <InlineMath math="{}^{7}_{3}\mathrm{Li}^{+}" /> | <InlineMath math="3" /> | <InlineMath math="7" /> | <InlineMath math="+1" /> | <InlineMath math="3" /> | <InlineMath math="2" /> | <InlineMath math="4" /> |
+| <InlineMath math="{}^{16}_{8}\mathrm{O}" /> | <InlineMath math="8" /> | <InlineMath math="16" /> | <InlineMath math="0" /> | <InlineMath math="8" /> | <InlineMath math="8" /> | <InlineMath math="8" /> |
+| <InlineMath math="{}^{16}_{8}\mathrm{O}^{2-}" /> | <InlineMath math="8" /> | <InlineMath math="16" /> | <InlineMath math="-2" /> | <InlineMath math="8" /> | <InlineMath math="10" /> | <InlineMath math="8" /> |
+| <InlineMath math="{}^{27}_{13}\mathrm{Al}" /> | <InlineMath math="13" /> | <InlineMath math="27" /> | <InlineMath math="0" /> | <InlineMath math="13" /> | <InlineMath math="13" /> | <InlineMath math="14" /> |
+| <InlineMath math="{}^{27}_{13}\mathrm{Al}^{3+}" /> | <InlineMath math="13" /> | <InlineMath math="27" /> | <InlineMath math="+3" /> | <InlineMath math="13" /> | <InlineMath math="10" /> | <InlineMath math="14" /> |
+
+### Checking the Lithium Row
+
+Check one row, such as <InlineMath math="{}^{7}_{3}\mathrm{Li}^{+}" />. Its atomic number is <InlineMath math="3" />, so it has <InlineMath math="3" /> protons. Its charge is <InlineMath math="+1" />, so the electron count is:
+
+<BlockMath math="e^- = 3 - (+1) = 2" />
+
+Its neutron count comes from the mass number:
+
+<BlockMath math="n^0 = 7 - 3 = 4" />
+
+If you feel unsure, start from the charge calculation. Cations always have fewer electrons than protons, while anions have more electrons than protons.
