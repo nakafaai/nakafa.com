@@ -1,5 +1,5 @@
 import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
-import { BASE_PATH } from ".";
+import { BASE_PATH } from "@repo/contents/exercises/middle-school/grade-9/mathematics/_data";
 
 const idMaterials: ExercisesMaterialList = [
   {

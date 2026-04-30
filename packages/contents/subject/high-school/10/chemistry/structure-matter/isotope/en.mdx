@@ -1,0 +1,179 @@
+import { IsotopeLab } from "@repo/design-system/components/contents/chemistry/isotope/lab";
+
+export const metadata = {
+  title: "Isotopes",
+  description:
+    "Learn isotopes as atoms of the same element with the same number of protons, but different numbers of neutrons and mass numbers.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/29/2026",
+  subject: "Atomic Structure",
+};
+
+## Same Element, Different Mass
+
+Hydrogen in the Sun, carbon in our bodies, and oxygen in water do not always appear as only one mass version. One element can have several atoms with the same number of protons but different numbers of neutrons. Those atoms are called **isotopes**.
+
+The Atomic Structure and Symbolism section from OpenStax explains that isotopes are atoms of the same element with the same atomic number but different mass numbers. The source can be opened through [OpenStax's Atomic Structure and Symbolism](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-3-atomic-structure-and-symbolism).
+
+The IUPAC Gold Book emphasizes the same idea: isotopes have the same atomic number but different mass numbers. The term reference can be opened through [IUPAC Gold Book's isotope entry](https://goldbook.iupac.org/terms/view/I03331).
+
+Read the pattern like this:
+
+<BlockMath math="\text{isotopes} \Rightarrow Z\ \text{same},\ n^0\ \text{different},\ A\ \text{different}" />
+
+The symbol <InlineMath math="Z" /> is the atomic number, which equals the number of protons. The symbol <InlineMath math="A" /> is the mass number, which equals protons plus neutrons. If <InlineMath math="Z" /> is the same, the element is the same. If <InlineMath math="n^0" /> is different, the mass number also changes.
+
+So isotopes are mass versions of the same element, not new elements. The key stays the proton count. Neutrons only change the mass number.
+
+## Isotope Mini Lab
+
+Choose an isotope below. First notice what does not change: the number of protons. Then compare the neutron count.
+
+<IsotopeLab
+  title={<>Isotope Reader</>}
+  description={
+    <>
+      Compare hydrogen and carbon isotopes. The element stays the same when the
+      atomic number stays the same, but the mass number changes when neutrons
+      change.
+    </>
+  }
+  labels={{
+    chooseIsotope: "Choose an isotope example",
+    atomicNumber: "Atomic number",
+    massNumber: "Mass number",
+    protons: "Protons",
+    neutrons: "Neutrons",
+    electrons: "Neutral electrons",
+    abundance: "Natural abundance",
+    samples: {
+      "hydrogen-1": {
+        tab: <InlineMath math="{}^{1}\mathrm{H}" />,
+        ariaName: "Hydrogen-1",
+        name: <InlineMath math="{}^{1}_{1}\mathrm{H}" />,
+        abundance: <>About <InlineMath math="99.9885\%" /></>,
+        note: <>Has no neutrons.</>,
+      },
+      deuterium: {
+        tab: <InlineMath math="{}^{2}\mathrm{H}" />,
+        ariaName: "Deuterium, H-2",
+        name: <>Deuterium <InlineMath math="{}^{2}_{1}\mathrm{H}" /></>,
+        abundance: <>About <InlineMath math="0.0115\%" /></>,
+        note: <>Has <InlineMath math="1" /> neutron.</>,
+      },
+      tritium: {
+        tab: <InlineMath math="{}^{3}\mathrm{H}" />,
+        ariaName: "Tritium, H-3",
+        name: <>Tritium <InlineMath math="{}^{3}_{1}\mathrm{H}" /></>,
+        abundance: <>Extremely small in nature</>,
+        note: <>Has <InlineMath math="2" /> neutrons.</>,
+      },
+      "carbon-12": {
+        tab: <InlineMath math="{}^{12}\mathrm{C}" />,
+        ariaName: "Carbon-12",
+        name: <InlineMath math="{}^{12}_{6}\mathrm{C}" />,
+        abundance: <>About <InlineMath math="98.93\%" /></>,
+        note: <>Has <InlineMath math="6" /> neutrons.</>,
+      },
+      "carbon-13": {
+        tab: <InlineMath math="{}^{13}\mathrm{C}" />,
+        ariaName: "Carbon-13",
+        name: <InlineMath math="{}^{13}_{6}\mathrm{C}" />,
+        abundance: <>About <InlineMath math="1.07\%" /></>,
+        note: <>Has <InlineMath math="7" /> neutrons.</>,
+      },
+      "carbon-14": {
+        tab: <InlineMath math="{}^{14}\mathrm{C}" />,
+        ariaName: "Carbon-14",
+        name: <InlineMath math="{}^{14}_{6}\mathrm{C}" />,
+        abundance: <>Extremely small and radioactive</>,
+        note: <>Has <InlineMath math="8" /> neutrons.</>,
+      },
+    },
+  }}
+/>
+
+## Hydrogen Has Three Important Examples
+
+All hydrogen isotopes have <InlineMath math="1" /> proton. Because their proton count is <InlineMath math="1" />, they are still hydrogen. The difference is their neutron count.
+
+| Hydrogen isotope | Symbol | Protons | Neutral electrons | Neutrons |
+| :--------------- | :----- | :------ | :---------------- | :------- |
+| Light hydrogen | <InlineMath math="{}^{1}_{1}\mathrm{H}" /> | <InlineMath math="1" /> | <InlineMath math="1" /> | <InlineMath math="0" /> |
+| Deuterium | <InlineMath math="{}^{2}_{1}\mathrm{H}" /> | <InlineMath math="1" /> | <InlineMath math="1" /> | <InlineMath math="1" /> |
+| Tritium | <InlineMath math="{}^{3}_{1}\mathrm{H}" /> | <InlineMath math="1" /> | <InlineMath math="1" /> | <InlineMath math="2" /> |
+
+Deuterium is sometimes written as <InlineMath math="\mathrm{D}" />, and tritium is sometimes written as <InlineMath math="\mathrm{T}" />. Those shortcuts do not mean new elements. Deuterium and tritium are still hydrogen because their proton count is still <InlineMath math="1" />.
+
+## Carbon Shows the Role of Neutrons
+
+Carbon always has <InlineMath math="6" /> protons. In <InlineMath math="{}^{12}_{6}\mathrm{C}" />, <InlineMath math="{}^{13}_{6}\mathrm{C}" />, and <InlineMath math="{}^{14}_{6}\mathrm{C}" />, the neutron count increases.
+
+<BlockMath math="\begin{aligned}
+{}^{12}_{6}\mathrm{C} &: n^0 = 12 - 6 = 6 \\
+{}^{13}_{6}\mathrm{C} &: n^0 = 13 - 6 = 7 \\
+{}^{14}_{6}\mathrm{C} &: n^0 = 14 - 6 = 8
+\end{aligned}" />
+
+<InlineMath math="{}^{12}_{6}\mathrm{C}" /> and <InlineMath math="{}^{13}_{6}\mathrm{C}" /> are stable. <InlineMath math="{}^{14}_{6}\mathrm{C}" /> is radioactive, so its amount in nature is extremely small. Because <InlineMath math="{}^{14}_{6}\mathrm{C}" /> decays over time, scientists can use it to estimate the age of objects that once came from living things, such as old wood or bone.
+
+## Do Not Mix It Up with Ions
+
+Ions and isotopes both change numbers in an atom, but the changing part is different.
+
+| Concept | What changes | What locks the element |
+| :------ | :----------- | :--------------------- |
+| Ion | Electrons | Protons |
+| Isotope | Neutrons | Protons |
+
+For example, <InlineMath math="\mathrm{C}^{2-}" /> is a carbon ion because its electrons changed. In contrast, <InlineMath math="{}^{14}_{6}\mathrm{C}" /> is a carbon isotope because its neutron count is different from <InlineMath math="{}^{12}_{6}\mathrm{C}" />.
+
+If the atom is neutral, electrons still equal protons:
+
+<BlockMath math="\text{neutral atom} \Rightarrow e^- = p^+" />
+
+So neutral <InlineMath math="{}^{14}_{6}\mathrm{C}" /> has <InlineMath math="6" /> protons, <InlineMath math="6" /> electrons, and <InlineMath math="8" /> neutrons.
+
+## Uses of Isotopes
+
+Isotopes do not only differ in tables. Different neutron counts can make some isotopes useful for research, energy, or age estimation.
+
+Deuterium and tritium, two hydrogen isotopes, are widely discussed in nuclear fusion research. The Department of Energy explains deuterium-tritium fuel as an important isotope pair in fusion energy development. The reference can be opened through [DOE's Deuterium-Tritium Fusion Fuel](https://www.energy.gov/science/doe-explainsdeuterium-tritium-fusion-fuel).
+
+<InlineMath math="{}^{14}_{6}\mathrm{C}" /> is used in radiocarbon dating to estimate the age of organic materials, meaning materials that once came from living things. The University of Chicago explains that <InlineMath math="{}^{14}_{6}\mathrm{C}" /> dating can determine the age of organic materials up to about <InlineMath math="60\,000" /> years. The reference can be opened through [the University of Chicago explainer](https://news.uchicago.edu/explainer/what-is-carbon-14-dating).
+
+The important note is that isotope uses must be read together with stability, meaning whether the nucleus tends to decay. Radioactive isotopes such as tritium and <InlineMath math="{}^{14}_{6}\mathrm{C}" /> are not materials for casual experiments, so their use requires safety rules.
+
+## From Isotopes to Average Atomic Mass
+
+On the periodic table, relative atomic mass is often a decimal. That number is not the mass number of one isotope. It is a weighted average of the isotopes found in nature.
+
+NIST explains that an element's relative atomic mass is calculated from isotope masses and isotopic composition. The column notes can be opened through [NIST's Atomic Weights and Isotopic Compositions](https://www.nist.gov/pml/atomic-weights-and-isotopic-compositions-column-descriptions).
+
+Carbon is an easy example:
+
+| Carbon isotope | Mass number | Natural abundance |
+| :------------- | :---------- | :---------------- |
+| <InlineMath math="{}^{12}_{6}\mathrm{C}" /> | <InlineMath math="12" /> | About <InlineMath math="98.93\%" /> |
+| <InlineMath math="{}^{13}_{6}\mathrm{C}" /> | <InlineMath math="13" /> | About <InlineMath math="1.07\%" /> |
+| <InlineMath math="{}^{14}_{6}\mathrm{C}" /> | <InlineMath math="14" /> | Extremely small |
+
+Because <InlineMath math="{}^{12}_{6}\mathrm{C}" /> is the most abundant carbon isotope, carbon's relative atomic mass on the periodic table is close to <InlineMath math="12" />, but not exactly <InlineMath math="12" />.
+
+## Quick Check Without Memorizing
+
+Use these three questions whenever you read an isotope:
+
+- How many protons are there?
+- What is the mass number?
+- How many neutrons come from <InlineMath math="A - Z" />?
+
+For <InlineMath math="{}^{92}_{40}\mathrm{Zr}" />:
+
+<BlockMath math="\begin{aligned}
+n^0 &= A - Z \\
+&= 92 - 40 \\
+&= 52
+\end{aligned}" />
+
+So <InlineMath math="{}^{92}_{40}\mathrm{Zr}" /> has <InlineMath math="52" /> neutrons. This method is safer than memorizing tables because you can calculate any isotope when the atomic number and mass number are known.

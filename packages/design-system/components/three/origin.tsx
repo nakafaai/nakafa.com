@@ -1,6 +1,6 @@
+import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
+import { GRAPH_POINT_SEGMENTS } from "@repo/design-system/components/three/helpers/quality";
 import type { ComponentProps } from "react";
-import { ORIGIN_COLOR } from "./_data";
-import { GRAPH_POINT_SEGMENTS } from "./quality";
 
 /**
  * Renders the origin marker shared by coordinate-system based 3D content.

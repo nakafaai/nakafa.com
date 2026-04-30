@@ -67,7 +67,7 @@ export const PostAttachments = memo(
                 <span className="max-w-30 truncate font-medium text-xs">
                   {attachment.name}
                 </span>
-                <span className="text-[10px] text-muted-foreground group-hover/file:text-accent-foreground">
+                <span className="text-muted-foreground text-xs group-hover/file:text-accent-foreground">
                   {formatFileSize(attachment.size)}
                 </span>
               </div>

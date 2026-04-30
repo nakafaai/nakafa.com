@@ -62,7 +62,7 @@ export const AttachmentPreviews = memo(
                 <span className="truncate font-medium text-xs">
                   {file.name || t("unknown-file")}
                 </span>
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {formatFileSize(file.size)}
                 </span>
               </div>

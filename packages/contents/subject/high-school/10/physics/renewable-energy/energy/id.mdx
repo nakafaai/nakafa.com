@@ -1,0 +1,126 @@
+export const metadata = {
+  title: "Energi",
+  description:
+    "Pelajari arti energi dalam fisika, hubungan energi dengan usaha, satuan joule, daya, dan cara membaca kWh pada pemakaian listrik sehari-hari.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/26/2026",
+  subject: "Energi Terbarukan",
+};
+
+## Energi Terlihat dari Perubahan
+
+Saat lampu menyala, air mendidih, sepeda bergerak, atau ponsel terisi ulang, ada energi yang sedang berpindah atau berubah bentuk. Dalam fisika, **energi** adalah kemampuan untuk melakukan usaha atau menyebabkan perubahan.
+
+Definisi ini penting karena energi tidak selalu terlihat sebagai benda. Energi dibaca dari akibatnya: benda bergerak, suhu berubah, cahaya muncul, suara terdengar, atau muatan listrik mengalir.
+
+<BlockMath math="\text{energi} \rightarrow \text{kemampuan melakukan usaha atau membuat perubahan}" />
+
+Rujukan definisi energi yang sejalan dengan penjelasan ini berasal dari U.S. Energy Information Administration (EIA). Kalian bisa membuka halaman Energy Explained tentang energi milik EIA di [tautan ini](https://www.eia.gov/energyexplained/what-is-energy/).
+
+## Usaha sebagai Cara Membaca Energi
+
+Energi sering dihitung lewat **usaha**. Dalam fisika, usaha terjadi ketika gaya menyebabkan perpindahan pada arah gaya tersebut.
+
+<BlockMath math="W = F \Delta s" />
+
+Mulai dari sini, kita memakai Sistem Satuan Internasional (SI, International System of Units) agar satuan gaya, perpindahan, dan energi konsisten.
+
+Keterangan simbol:
+
+| Simbol | Makna | Satuan SI |
+| :----- | :---- | :-------- |
+| <InlineMath math="W" /> | usaha atau energi yang dipindahkan | <InlineMath math="\text{J}" /> |
+| <InlineMath math="F" /> | gaya | <InlineMath math="\text{N}" /> |
+| <InlineMath math="\Delta s" /> | perpindahan | <InlineMath math="\text{m}" /> |
+
+Misalkan kalian mendorong kotak dengan gaya <InlineMath math="15 \text{ N}" /> sehingga kotak berpindah <InlineMath math="2 \text{ m}" />. Energi yang kalian pindahkan ke kotak melalui usaha adalah:
+
+<BlockMath math="\begin{aligned}
+W &= F \Delta s \\
+&= 15 \text{ N} \times 2 \text{ m} \\
+&= 30 \text{ J}
+\end{aligned}" />
+
+Jadi, kotak menerima energi sebesar <InlineMath math="30 \text{ J}" /> melalui dorongan tersebut.
+
+> Kalau gaya diberikan tetapi benda tidak berpindah, usaha mekanik pada benda bernilai <InlineMath math="0 \text{ J}" />. Capeknya orang yang mendorong tetap nyata, tetapi energi itu tidak menjadi usaha mekanik pada benda yang diam.
+
+## Joule Bukan Sekadar Nama Satuan
+
+Dalam SI, satuan untuk energi adalah joule, dengan simbol <InlineMath math="\text{J}" />. Karena energi dapat dihitung dari gaya dikali perpindahan, satuan joule dapat dibaca sebagai:
+
+<BlockMath math="\begin{aligned}
+1 \text{ J}
+&= 1 \text{ N} \cdot 1 \text{ m} \\
+&= 1 \text{ kg m}^2\text{s}^{-2}
+\end{aligned}" />
+
+National Institute of Standards and Technology (NIST) mencantumkan joule sebagai satuan SI turunan untuk energi, usaha, dan kalor. Dokumen SP 330 bagian <InlineMath math="2" /> dapat dibuka di [rujukan SI](https://www.nist.gov/pml/special-publication-330/sp-330-section-2), sedangkan glosarium joule NIST dapat dibuka di [rujukan joule](https://www.nist.gov/glossary-term/26261).
+
+## Jejak Energi di Sekitar Kita
+
+Energi berpindah dari sumber menuju alat, lalu berubah menjadi bentuk yang kita perlukan.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Energi di sekitar"] --> B["Cahaya ke panel"]
+    B --> C["Listrik untuk lampu"]
+    A --> D["Air tinggi ke turbin"]
+    D --> C
+    A --> E["Makanan ke tubuh"]
+    E --> F["Otot bergerak"]`}/>
+
+Diagram itu sengaja menampilkan pola, bukan semua detail teknis. Pada panel surya, energi cahaya berubah menjadi energi listrik. Pada pembangkit listrik tenaga air, energi potensial gravitasi air berubah menjadi energi gerak turbin, lalu menjadi energi listrik. Pada tubuh, energi kimia dari makanan membantu otot melakukan kerja.
+
+## Daya dan Energi Sering Tertukar
+
+Energi menjawab pertanyaan *berapa banyak kemampuan kerja yang digunakan*. Daya menjawab pertanyaan *seberapa cepat energi digunakan atau dipindahkan*.
+
+<BlockMath math="P = \frac{E}{t}" />
+
+Dari persamaan itu, energi dapat ditulis:
+
+<BlockMath math="E = P t" />
+
+Satuan daya adalah watt, dengan simbol <InlineMath math="\text{W}" />. Satu watt berarti <InlineMath math="1 \text{ J}" /> per <InlineMath math="1 \text{ s}" />.
+
+<BlockMath math="1 \text{ W} = 1 \text{ J/s}" />
+
+Perhatikan konteks simbolnya: <InlineMath math="W" /> miring biasanya menyatakan usaha, sedangkan <InlineMath math="\text{W}" /> tegak menyatakan satuan watt.
+
+Inilah alasan tagihan listrik memakai <InlineMath math="\text{kWh}" /> atau kilowatt-jam. Walaupun ada kata watt, <InlineMath math="\text{kWh}" /> adalah satuan energi, bukan satuan daya.
+
+<BlockMath math="\begin{aligned}
+1 \text{ kWh}
+&= 1000 \text{ W} \times 1 \text{ h} \\
+&= 1000 \text{ J/s} \times 3600 \text{ s} \\
+&= 3{,}6 \times 10^6 \text{ J}
+\end{aligned}" />
+
+Lampu berdaya <InlineMath math="10 \text{ W}" /> yang menyala selama <InlineMath math="5 \text{ jam}" /> memakai energi:
+
+<BlockMath math="\begin{aligned}
+E &= P t \\
+&= 10 \text{ W} \times 5 \text{ h} \\
+&= 50 \text{ Wh} \\
+&= 0{,}05 \text{ kWh}
+\end{aligned}" />
+
+Kalau lampu yang sama menyala lebih lama, energinya bertambah. Kalau dayanya lebih besar, energinya juga bertambah untuk durasi yang sama.
+
+## Mengapa Ini Mengarah ke Energi Terbarukan
+
+Topik energi terbarukan bukan hanya soal daftar sumber energi. Fondasinya adalah pertanyaan fisika yang lebih dasar: energi dari mana, berubah menjadi apa, dan berapa banyak yang benar-benar berguna?
+
+| Situasi | Pertanyaan fisika |
+| :------ | :---------------- |
+| Panel surya dipasang di atap | Berapa banyak energi cahaya yang berubah menjadi energi listrik? |
+| Air mengalir memutar turbin | Berapa besar energi gerak air yang dapat dipindahkan ke generator? |
+| Lampu rumah menyala setiap malam | Berapa energi listrik yang dipakai dalam <InlineMath math="\text{kWh}" />? |
+| Bahan bakar dibakar di mesin | Berapa banyak energi kimia yang berubah menjadi gerak dan panas? |
+
+Sumber energi disebut **terbarukan** jika persediaannya dapat dipulihkan secara alami dalam skala waktu manusia, misalnya cahaya matahari, angin, aliran air, panas bumi, dan biomassa yang dikelola dengan benar. Sumber energi disebut **tak terbarukan** jika pembentukannya jauh lebih lambat daripada pemakaiannya, misalnya batu bara, minyak bumi, dan gas alam. Rujukan klasifikasi ini berasal dari U.S. Energy Information Administration (EIA), pada halaman Renewable Energy Explained milik EIA di [tautan ini](https://www.eia.gov/energyexplained/renewable-sources/).
+
+International Energy Agency (IEA) melaporkan bahwa penambahan kapasitas energi terbarukan global mencapai hampir <InlineMath math="510 \text{ GW}" /> atau <InlineMath math="510" /> gigawatt pada tahun 2023. Angka itu bukan untuk dihafal, tetapi membantu melihat mengapa konsep energi, daya, dan konversi energi menjadi penting saat kita membahas masa depan listrik. Rujukan angkanya ada di laporan Renewables 2023 milik IEA di [tautan ini](https://www.iea.org/reports/renewables-2023/executive-summary).
+
+Dengan bahasa dasar ini, kita bisa membaca bentuk energi, kekekalan energi, konversi energi, dan alasan mengapa kebutuhan energi perlu dipenuhi dengan sumber yang lebih bersih.

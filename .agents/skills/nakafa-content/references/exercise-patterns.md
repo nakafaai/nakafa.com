@@ -32,6 +32,8 @@ Examples:
 
 ## Question MDX
 
+The example shows an `id.mdx` file, so the prose is Indonesian.
+
 ```mdx
 export const metadata = {
   title: "Soal 1",
@@ -57,6 +59,8 @@ Rules:
 
 ## Answer MDX
 
+The example shows an `_answer/id.mdx` file, so the prose is Indonesian and the first heading uses `###`.
+
 ```mdx
 export const metadata = {
   title: "Pembahasan Soal 1",
@@ -64,7 +68,7 @@ export const metadata = {
   date: "06/11/2025",
 };
 
-### Analyze the Known Values
+### Membaca Nilai yang Diketahui
 
 Diketahui <InlineMath math="a = \frac{1}{2}" /> dan <InlineMath math="b = 2" />.
 
@@ -81,7 +85,7 @@ Jadi, nilai ekspresi tersebut adalah <InlineMath math="4" />.
 
 Rules:
 
-- Headings start at `##` and do not go deeper than `###`.
+- Exercise answer headings default to `###`; do not add an `##` before them unless nearby exercise files already use that structure.
 - Use descriptive headings, not "Step 1".
 - Do not put math, symbols, or parenthesized numbers in headings.
 - Do not refer to option letters such as `(A)`, `(B)`, or `(C)` in explanations.
@@ -91,6 +95,7 @@ Rules:
 - Prefer one expressive `<BlockMath />` for one connected derivation.
 - Use `<MathContainer>` only when rows should remain visually separate.
 - Do not use em dash in prose.
+- Do not use raw HTML elements such as `<br />`, `<div>`, or `<span>` in MDX.
 
 ## Choices File
 
@@ -193,8 +198,9 @@ x &= 4
 - [ ] Standalone equations use `<BlockMath />`.
 - [ ] One connected derivation uses one expressive `<BlockMath />` when clearer.
 - [ ] Separate derivation rows use `<MathContainer>` only when they should stay visually separate.
-- [ ] Headings follow the `##` to `###` depth rule.
+- [ ] Exercise answer headings use `###` by default without a preceding `##`.
 - [ ] No em dash appears in prose.
+- [ ] No raw HTML elements appear in MDX.
 - [ ] Answer explains the reasoning, not only the final result.
 - [ ] Explanation can stand alone without relying on another question or lesson.
 - [ ] Explanation does not reference option letters.

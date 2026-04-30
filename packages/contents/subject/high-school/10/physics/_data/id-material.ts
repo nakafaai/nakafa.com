@@ -1,5 +1,5 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from ".";
+import { BASE_PATH } from "@repo/contents/subject/high-school/10/physics/_data";
 
 const idMaterials: MaterialList = [
   {
@@ -41,7 +41,7 @@ const idMaterials: MaterialList = [
   {
     title: "Energi Terbarukan",
     description:
-      "Kunci masa depan planet dengan energi bersih yang tak pernah habis untuk generasi mendatang.",
+      "Membaca masa depan listrik bersih dari Matahari, angin, air, panas bumi, dan keputusan energi yang bertanggung jawab.",
     href: `${BASE_PATH}/renewable-energy`,
     items: [
       {

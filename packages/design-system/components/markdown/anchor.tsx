@@ -1,7 +1,11 @@
+import {
+  Source,
+  SourceContent,
+  SourceTrigger,
+} from "@repo/design-system/components/ai/source";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cn } from "@repo/design-system/lib/utils";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
-import { Source, SourceContent, SourceTrigger } from "../ai/source";
 
 export function Anchor({
   href,

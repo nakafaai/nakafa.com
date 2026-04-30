@@ -46,10 +46,26 @@ export function CameraControls({
   cameraPosition = DEFAULT_CAMERA_POSITION,
   cameraTarget = DEFAULT_CAMERA_TARGET,
   autoRotate = true,
+  enablePan = true,
+  enableZoom = true,
+  maxAzimuthAngle,
+  maxDistance = 100,
+  maxPolarAngle,
+  minAzimuthAngle,
+  minDistance = 1,
+  minPolarAngle,
 }: {
   cameraPosition?: readonly [number, number, number];
   cameraTarget?: readonly [number, number, number];
   autoRotate?: boolean;
+  enablePan?: boolean;
+  enableZoom?: boolean;
+  maxAzimuthAngle?: number;
+  maxDistance?: number;
+  maxPolarAngle?: number;
+  minAzimuthAngle?: number;
+  minDistance?: number;
+  minPolarAngle?: number;
 }) {
   const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
   const domElement = useThree((state) => state.gl.domElement);
@@ -135,10 +151,15 @@ export function CameraControls({
         autoRotateSpeed={0.5}
         dampingFactor={0.05}
         enableDamping
-        enableZoom={true}
+        enablePan={enablePan}
+        enableZoom={enableZoom}
         makeDefault
-        maxDistance={100}
-        minDistance={1}
+        maxAzimuthAngle={maxAzimuthAngle}
+        maxDistance={maxDistance}
+        maxPolarAngle={maxPolarAngle}
+        minAzimuthAngle={minAzimuthAngle}
+        minDistance={minDistance}
+        minPolarAngle={minPolarAngle}
         onChange={handleChange}
         onEnd={handleEnd}
         onStart={handleStart}

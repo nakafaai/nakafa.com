@@ -5,10 +5,10 @@ import {
   CircleIcon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { Menubar as MenubarPrimitive } from "radix-ui";
 import type * as React from "react";
-import { HugeIcons } from "./huge-icons";
 
 function Menubar({
   className,

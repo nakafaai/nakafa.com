@@ -1,5 +1,5 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from ".";
+import { BASE_PATH } from "@repo/contents/subject/middle-school/8/mathematics/_data";
 
 const idMaterials: MaterialList = [
   {

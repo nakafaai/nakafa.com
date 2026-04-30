@@ -1,0 +1,144 @@
+import { SubatomicParticlesLab } from "@repo/design-system/components/contents/chemistry/subatomic-particles/lab";
+
+export const metadata = {
+  title: "Subatomic Particles",
+  description:
+    "Learn how Thomson, Rutherford, and Chadwick showed that atoms contain electrons, protons, and neutrons.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/28/2026",
+  subject: "Atomic Structure",
+};
+
+## New Evidence from a Tiny Space
+
+Dalton's model made chemical reactions easier to count, but it still pictured atoms as solid spheres. That model left a simple problem: if atoms were truly solid and had no inner parts, why were atoms connected to electricity?
+
+In the late 1800s, scientists began using low-pressure glass tubes and high voltage. A beam called a **cathode ray** appeared inside the tube. The beam could be bent by electric and magnetic fields. From this evidence, atoms started to look less like solid balls and more like structures with smaller particles inside.
+
+OpenStax Chemistry Atoms First 2e, in the Evolution of Atomic Theory section, explains the evidence sequence from Thomson's cathode ray experiment, Rutherford's gold foil experiment, and Chadwick's discovery of the neutron. The source section can be opened through [OpenStax's Evolution of Atomic Theory](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-2-evolution-of-atomic-theory).
+
+Britannica also records that J. J. Thomson discovered the electron in 1897 and showed that this particle was far lighter than an atom. The biography can be opened through [Britannica's J. J. Thomson page](https://www.britannica.com/biography/J-J-Thomson).
+
+## Particle Discovery Mini Lab
+
+Switch the mode below. Do not start by memorizing particle names. First watch the **direction of motion**, **which path bends**, and **which path stays straight**.
+
+<SubatomicParticlesLab
+  title={<>Subatomic Particle Mini Lab</>}
+  description={
+    <>
+      Three key experiments that made atoms no longer look like solid spheres
+      with no inner structure.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose subatomic particle evidence",
+    scene: {
+      alphaParticle: "Alpha particle",
+      anode: "Anode",
+      cathode: "Cathode",
+      cathodeRay: "Cathode ray",
+      negativePlate: "Negative plate",
+      nucleus: "Nucleus",
+      positivePlate: "Positive plate",
+    },
+    modes: {
+      "cathode-ray": {
+        tab: "Cathode ray",
+        description: (
+          <>
+            The cathode ray bent toward the positive plate. That means the
+            particles in the beam carried negative charge.
+          </>
+        ),
+        facts: [
+          { label: "Particle", value: "e^-", math: true },
+          { label: "Evidence", value: "Attracted to positive charge" },
+          { label: "Meaning", value: "Atoms have inner parts" },
+        ],
+      },
+      "gold-foil": {
+        tab: "Gold foil",
+        description: (
+          <>
+            Almost all alpha particles went straight through. Only a small
+            fraction bent sharply or bounced back, so the atom's positive
+            charge had to be concentrated in a tiny nucleus.
+          </>
+        ),
+        facts: [
+          { label: "Probe", value: "\\alpha^{2+}", math: true },
+          { label: "Main path", value: "Mostly straight" },
+          { label: "Meaning", value: "Atoms are mostly empty space" },
+        ],
+      },
+      "atom-map": {
+        tab: "Inside atom",
+        description: (
+          <>
+            Protons and neutrons are in the nucleus. Electrons occupy the space
+            around the nucleus. The thin rings only mark the electron region,
+            not exact paths.
+          </>
+        ),
+        facts: [
+          { label: "Nucleus", value: "p^+ + n^0", math: true },
+          { label: "Electron", value: "e^-", math: true },
+          { label: "Mass", value: "Almost all in the nucleus" },
+        ],
+      },
+    },
+  }}
+/>
+
+## Electrons Opened the Door
+
+Thomson used a cathode ray tube. Inside the tube, most air was removed, then a high voltage was applied. The beam that appeared was always attracted toward positive charge and pushed away from negative charge.
+
+The electrical rule is simple: opposite charges attract, and like charges repel. Because the cathode ray was attracted to positive charge, its particles had negative charge. We now call those particles **electrons**.
+
+<BlockMath math="\text{cathode ray attracted to } (+) \Rightarrow \text{particle has } (-) \text{ charge}" />
+
+Thomson also found that cathode ray particles were far lighter than atoms and had the same properties even when the electrode metal changed. That matters because the electron was not a fragment from one specific metal. The electron is a common part of atoms.
+
+To picture Thomson's model, imagine plum pudding. The pudding represents spread-out positive charge, while the plums represent embedded negative electrons. This picture only helps us read the model, not the real shape of an atom. Rutherford later improved Thomson's model.
+
+## A Tiny Dense Nucleus
+
+Rutherford tested Thomson's model by firing alpha particles, which are positively charged particles, at a very thin sheet of gold foil. If positive charge were spread out evenly as Thomson's model suggested, almost all alpha particles should pass through with only small bends.
+
+The result was more surprising:
+
+- most alpha particles passed through the gold foil with little change in direction
+- a small fraction bent
+- a very tiny fraction bounced backward
+
+OpenStax explains that this pattern led Rutherford to two conclusions: atoms are mostly empty space, and positive charge is concentrated in a tiny, relatively heavy center. That small center is called the **atomic nucleus**.
+
+To picture the size, imagine the nucleus as a small berry in the middle of a stadium. The atom would be about the size of the stadium. OpenStax Chemistry Atoms First 2e, in the Atomic Structure and Symbolism section, states that an atom's diameter is about <InlineMath math="10^{-10}\ \text{m}" />, while the nucleus is about <InlineMath math="10^{-15}\ \text{m}" /> across, roughly <InlineMath math="10^5" /> times smaller. The reference can be opened through [OpenStax's Atomic Structure and Symbolism](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-3-atomic-structure-and-symbolism).
+
+## Neutrons Closed the Mass Gap
+
+Rutherford's model explained the positive nucleus and negative electrons, but there was still a gap: atomic masses were often larger than the mass of the protons alone. If protons explained positive charge, what added mass to the nucleus without adding charge?
+
+In 1932, James Chadwick showed evidence for a neutral particle with almost the same mass as a proton. That particle is called the **neutron**. Neutral means its charge is <InlineMath math="0" />, so neutrons can add mass to a nucleus without changing the atom's electric charge.
+
+Nobel Prize facts for James Chadwick state that he proved radiation from beryllium hit by alpha particles consisted of neutral particles with about the same mass as protons. The summary can be opened through [Nobel Prize's James Chadwick facts](https://www.nobelprize.org/prizes/physics/1935/chadwick/facts/).
+
+Neutrons also help explain isotopes. Isotopes are atoms of the same element with different numbers of neutrons. The element stays the same because the proton number stays the same, while the mass can differ because the neutron number differs.
+
+## Reading the Three Particles Quickly
+
+This table is a compact guide for reading atoms: which particle has which charge, where it is found, and how much mass it contributes.
+
+| Particle | Main location | Relative charge | Relative mass | How to picture it |
+| :------- | :------------ | :-------------- | :------------ | :---------------- |
+| Electron | Space around the nucleus | <InlineMath math="-1" /> | About <InlineMath math="\frac{1}{1800}" /> of a proton's mass | A negative charge marker in atomic space |
+| Proton | Nucleus | <InlineMath math="+1" /> | About <InlineMath math="1\ \text{u}" /> | The particle that determines element identity |
+| Neutron | Nucleus | <InlineMath math="0" /> | About <InlineMath math="1\ \text{u}" /> | Mass inside the nucleus without extra charge |
+
+A neutral atom has the same number of protons and electrons. For example, if an atom has <InlineMath math="6" /> protons and is still neutral, it also has <InlineMath math="6" /> electrons.
+
+<BlockMath math="\text{neutral atom} \Rightarrow \text{number of } p^+ = \text{number of } e^-" />
+
+Hold these three relationships: **protons determine element identity**, **neutrons help determine mass**, and **electrons determine many chemical behaviors**. With this guide, charge, mass, and atomic identity become easier to read together.

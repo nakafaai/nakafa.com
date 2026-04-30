@@ -51,9 +51,9 @@ print('|{0:1}|'.format('xxx'))      # Output: |xxx|`
         B --> D["> (Right)"] 
         B --> E["^ (Center)"]
         
-        C --> F["Output:<br/>'xxx            '"]
-        D --> G["Output:<br/>'            xxx'"]
-        E --> H["Output:<br/>'      xxx      '"]
+        C --> F["'xxx            '"]
+        D --> G["'            xxx'"]
+        E --> H["'      xxx      '"]
   `}
 />
 
@@ -99,13 +99,13 @@ Python menyediakan tiga cara mereferensikan argumen dalam replacement fields, ma
     flowchart TD
         A["Pemformatan String"] --> B["Metode Referensi Argumen"]
         
-        B --> C["Numbered Fields<br/>{0} {1} {2}"]
-        B --> D["Keyword Fields<br/>{name} {age}"]
-        B --> E["Automatic Fields<br/>{} {} {}"]
+        B --> C["Numbered: {0} {1}"]
+        B --> D["Keyword: {name}"]
+        B --> E["Automatic: {}"]
         
-        C --> F["✓ Kontrol eksplisit<br/>✓ Bisa diulang<br/>✗ Harus sesuai jumlah"]
-        D --> G["✓ Mudah dibaca<br/>✓ Urutan fleksibel<br/>✗ Nama harus cocok"]
-        E --> H["✓ Sintaks sederhana<br/>✓ Urutan berurutan<br/>✗ Tidak bisa dicampur"]
+        C --> F["Eksplisit dan bisa diulang"]
+        D --> G["Mudah dibaca dan fleksibel"]
+        E --> H["Sederhana tetapi berurutan"]
   `}
 />
 
@@ -171,9 +171,9 @@ Precision mengontrol jumlah digit desimal atau digit signifikan dalam tampilan a
         B --> D["- (default)"]
         B --> E["spasi (untuk positif)"]
         
-        C --> F["Output:<br/>+100, -200"]
-        D --> G["Output:<br/>100, -200"]
-        E --> H["Output:<br/> 100, -200"]
+        C --> F["+100, -200"]
+        D --> G["100, -200"]
+        E --> H[" 100, -200"]
   `}
 />
 
@@ -265,7 +265,7 @@ print(f'Area: {math.pi * radius**2:.2f} cm²') # Output: Area: 102.07 cm²`
         H --> I["type (tipe: d b o x f e g)"]
         
         J["Contoh Lengkap"] --> K["{nilai:*^+10.2f}"]
-        K --> L["* = fill character<br/>^ = center align<br/>+ = always show sign<br/>10 = width minimum<br/>.2 = 2 decimal places<br/>f = float type"]
+        K --> L["fill, align, sign, width, precision, type"]
   `}
 />
 

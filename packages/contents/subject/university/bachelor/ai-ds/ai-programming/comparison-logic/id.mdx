@@ -13,12 +13,12 @@ Dalam pemrograman, komputer menjalankan operasi berdasarkan urutan prioritas ter
 <Mermaid
   chart={`
     flowchart TD
-        A["**<br/>(pangkat)"] --> B["*, /, //, %<br/>(aritmatika)"]
-        B --> C["+, -<br/>(tambah, kurang)"]
-        C --> D["==, !=, <, <=, >, >=<br/>(perbandingan)"]
-        D --> E["not<br/>(boolean NOT)"]
-        E --> F["and<br/>(boolean AND)"]
-        F --> G["or<br/>(boolean OR)"]
+        A["** pangkat"] --> B["*, /, //, % aritmatika"]
+        B --> C["+, - tambah kurang"]
+        C --> D["==, !=, <, <=, >, >= perbandingan"]
+        D --> E["not"]
+        E --> F["and"]
+        F --> G["or"]
   `}
 />
 
@@ -61,14 +61,16 @@ Operator boolean memungkinkan kamu menggabungkan beberapa kondisi atau memodifik
     flowchart LR
         A[Input A] --> AND{and}
         B[Input B] --> AND
-        AND --> C[Output:<br/>A jika A false,<br/>B jika A true]
+        AND --> C["A false: A"]
+        AND --> D["A true: B"]
         
-        D[Input A] --> OR{or}
-        E[Input B] --> OR
-        OR --> F[Output:<br/>A jika A true,<br/>B jika A false]
+        E[Input A] --> OR{or}
+        F[Input B] --> OR
+        OR --> G["A true: A"]
+        OR --> H["A false: B"]
         
-        G[Input] --> NOT{not}
-        NOT --> H[Output:<br/>boolean kebalikan dari Input]
+        I[Input] --> NOT{not}
+        NOT --> J["Boolean kebalikan"]
   `}
 />
 
@@ -117,8 +119,12 @@ Python memiliki aturan khusus untuk menentukan nilai mana yang dianggap `False` 
   chart={`
     flowchart TD
         A[Nilai Python] --> B{Evaluasi Boolean}
-        B -->|Falsy| C[False<br/>None<br/>0, 0.0, 0j<br/>String kosong<br/>List kosong<br/>Dict kosong]
-        B -->|Truthy| D[Semua nilai lainnya<br/>Angka bukan nol<br/>String berisi<br/>Container berisi]
+        B -->|Falsy| C[False]
+        B -->|Falsy| D[None]
+        B -->|Falsy| E["Nol dan container kosong"]
+        B -->|Truthy| F["Semua nilai lainnya"]
+        F --> G["Angka bukan nol"]
+        F --> H["String atau container berisi"]
   `}
 />
 

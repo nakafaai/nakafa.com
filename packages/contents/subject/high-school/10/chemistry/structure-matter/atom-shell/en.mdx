@@ -1,0 +1,149 @@
+import { AtomShellLab } from "@repo/design-system/components/contents/chemistry/atom-shell/lab";
+
+export const metadata = {
+  title: "Atomic Shells",
+  description:
+    "Learn atomic shells as electron energy levels, shell numbers, the 2n^2 capacity rule, and the calcium shell configuration.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/29/2026",
+  subject: "Atomic Structure",
+};
+
+## Shells as Energy Levels
+
+In the simple Bohr model, electrons are shown in **atomic shells**, which represent specific energy levels around the nucleus. A shell closer to the nucleus has lower energy. A shell farther from the nucleus has higher energy.
+
+OpenStax explains that the Bohr model uses orbits with specific energies to explain the line spectrum of hydrogen. The reference is available at [The Bohr Model from OpenStax](https://openstax.org/books/chemistry-atoms-first-2e/pages/3-2-the-bohr-model).
+
+Picture a building with floors. The first floor is near the ground, the second floor is higher, and so on. In an atom, the "floor" is not a physical floor. It is an energy level. So, a circular shell diagram is an **energy-level sketch**, not a rigid track that electrons follow like a train.
+
+Shells are named with letters:
+
+| Shell | Shell number |
+| :---- | :----------- |
+| <InlineMath math="\mathrm{K}" /> | <InlineMath math="n = 1" /> |
+| <InlineMath math="\mathrm{L}" /> | <InlineMath math="n = 2" /> |
+| <InlineMath math="\mathrm{M}" /> | <InlineMath math="n = 3" /> |
+| <InlineMath math="\mathrm{N}" /> | <InlineMath math="n = 4" /> |
+| <InlineMath math="\mathrm{O}" /> | <InlineMath math="n = 5" /> |
+| <InlineMath math="\mathrm{P}" /> | <InlineMath math="n = 6" /> |
+| <InlineMath math="\mathrm{Q}" /> | <InlineMath math="n = 7" /> |
+
+The letters <InlineMath math="\mathrm{K}" /> through <InlineMath math="\mathrm{Q}" /> are shell names. The value <InlineMath math="n" /> is the **shell number**. A larger <InlineMath math="n" /> means a farther energy level.
+
+## Maximum Electron Capacity
+
+The maximum number of electrons in one shell is calculated with:
+
+<BlockMath math="\text{maximum electrons in a shell} = 2n^2" />
+
+LibreTexts explains the shell names <InlineMath math="\mathrm{K}" /> through <InlineMath math="\mathrm{Q}" /> and their maximum capacities in its Bohr model discussion. The reference is available at [The Bohr Model of Atoms from LibreTexts](https://chem.libretexts.org/Courses/Barstow_Community_College/Survey_of_Chemistry_and_Physics/02%3A_Structure_of_Matter/2.03%3A_Atomic_Theory/2.3.01%3A_Atomic_Structure/2.3.1.01%3A_The_Bohr_Model_of_Atoms).
+
+The results are:
+
+| Shell | Shell number | Maximum electrons from <InlineMath math="2n^2" /> |
+| :---- | :----------- | :----------------------------------------------- |
+| <InlineMath math="\mathrm{K}" /> | <InlineMath math="1" /> | <InlineMath math="2(1)^2 = 2" /> |
+| <InlineMath math="\mathrm{L}" /> | <InlineMath math="2" /> | <InlineMath math="2(2)^2 = 8" /> |
+| <InlineMath math="\mathrm{M}" /> | <InlineMath math="3" /> | <InlineMath math="2(3)^2 = 18" /> |
+| <InlineMath math="\mathrm{N}" /> | <InlineMath math="4" /> | <InlineMath math="2(4)^2 = 32" /> |
+| <InlineMath math="\mathrm{O}" /> | <InlineMath math="5" /> | <InlineMath math="2(5)^2 = 50" /> |
+| <InlineMath math="\mathrm{P}" /> | <InlineMath math="6" /> | <InlineMath math="2(6)^2 = 72" /> |
+| <InlineMath math="\mathrm{Q}" /> | <InlineMath math="7" /> | <InlineMath math="2(7)^2 = 98" /> |
+
+The word **maximum** matters. Shell <InlineMath math="\mathrm{M}" /> can hold up to <InlineMath math="18" /> electrons, but that does not mean every atom fills <InlineMath math="\mathrm{M}" /> to <InlineMath math="18" /> before using the next shell. For introductory examples up to calcium, we use the simpler pattern in the interactive lab.
+
+## Shell Lab for Light Elements
+
+Choose a neutral atom. Notice that the electron count equals the atomic number, then read how the electrons are distributed across shells <InlineMath math="\mathrm{K}" />, <InlineMath math="\mathrm{L}" />, <InlineMath math="\mathrm{M}" />, and <InlineMath math="\mathrm{N}" />.
+
+<AtomShellLab
+  title={<>Atomic Shell Model</>}
+  description={
+    <>
+      This diagram uses the simple shell model for neutral atoms up to calcium.
+      It focuses on reading the outer shell and separating the shell content
+      from the maximum <InlineMath math="2n^2" /> capacity.
+    </>
+  }
+  labels={{
+    chooseAtom: "Choose a neutral atom",
+    atomicNumber: "Atomic number",
+    configuration: "Configuration",
+    electronTotal: "Electron count",
+    maximumCapacity: "capacity",
+    outerShell: "Outer shell",
+    samples: {
+      neon: {
+        tab: "Ne",
+        name: "Neon",
+        note: <>Its configuration is <InlineMath math="2, 8" />. Shell <InlineMath math="\mathrm{L}" /> is the outer shell.</>,
+      },
+      magnesium: {
+        tab: "Mg",
+        name: "Magnesium",
+        note: <>After shells <InlineMath math="\mathrm{K}" /> and <InlineMath math="\mathrm{L}" /> are filled, the remaining <InlineMath math="2" /> electrons enter shell <InlineMath math="\mathrm{M}" />.</>,
+      },
+      chlorine: {
+        tab: "Cl",
+        name: "Chlorine",
+        note: <>Its outer shell contains <InlineMath math="7" /> electrons in this simple shell model.</>,
+      },
+      argon: {
+        tab: "Ar",
+        name: "Argon",
+        note: <>The introductory pattern is <InlineMath math="2, 8, 8" />, so shell <InlineMath math="\mathrm{M}" /> contains <InlineMath math="8" /> electrons.</>,
+      },
+      potassium: {
+        tab: "K",
+        name: "Potassium",
+        note: <>Potassium has the element symbol <InlineMath math="\mathrm{K}" />. That is different from shell <InlineMath math="\mathrm{K}" />. After <InlineMath math="2, 8, 8" />, the remaining <InlineMath math="1" /> electron enters shell <InlineMath math="\mathrm{N}" />.</>,
+      },
+      calcium: {
+        tab: "Ca",
+        name: "Calcium",
+        note: <>Calcium has <InlineMath math="20" /> electrons, so its simple shell pattern is <InlineMath math="2, 8, 8, 2" />.</>,
+      },
+    },
+  }}
+/>
+
+## Why Calcium Is Two Eight Eight Two
+
+Calcium has atomic number <InlineMath math="20" />. The symbol <InlineMath math="Z" /> means atomic number. Since the atom is neutral, it also has <InlineMath math="20" /> electrons.
+
+### Calcium Shell Filling Steps
+
+The filling steps in the simple shell model are:
+
+<BlockMath math="\begin{aligned}
+\mathrm{Ca}: Z &= 20 \\
+e^- &= 20 \\
+\mathrm{K} &: 2 \quad \text{left } 18 \\
+\mathrm{L} &: 8 \quad \text{left } 10 \\
+\mathrm{M} &: 8 \quad \text{left } 2 \\
+\mathrm{N} &: 2 \quad \text{left } 0
+\end{aligned}" />
+
+### Why Not Two Eight Ten
+
+A common question is: why not <InlineMath math="2, 8, 10" />?
+
+The answer is that in the simple shell model for light elements up to calcium, shell <InlineMath math="\mathrm{M}" /> is written with <InlineMath math="8" /> electrons before the remaining electrons begin shell <InlineMath math="\mathrm{N}" />. After shells <InlineMath math="\mathrm{K}" /> and <InlineMath math="\mathrm{L}" /> are filled, calcium has <InlineMath math="10" /> electrons left, so shell <InlineMath math="\mathrm{M}" /> is written as <InlineMath math="8" /> and shell <InlineMath math="\mathrm{N}" /> receives the remaining <InlineMath math="2" />.
+
+Therefore:
+
+<BlockMath math="\text{calcium electron configuration} = 2, 8, 8, 2" />
+
+## Limits of the Model
+
+Do not mix up these two ideas.
+
+| Statement | Accurate meaning |
+| :-------- | :--------------- |
+| Atomic shells are drawn as circles. | The drawing helps show energy levels. It is not a rigid physical path. |
+| The formula <InlineMath math="2n^2" /> gives maximum capacity. | It is not the complete filling order for every element. Heavier elements need the subshell and orbital model. |
+
+OpenStax explains that in the modern orbital model, electrons after argon enter the <InlineMath math="4s" /> level before <InlineMath math="3d" />. The reference is available at [Electronic Structure of Atoms from OpenStax](https://openstax.org/books/chemistry/pages/6-4-electronic-structure-of-atoms-electron-configurations). Here, we stop at the simple shell pattern so the foundation stays clear.
+
+The outermost shell also leads into the idea of valence electrons. Electrons in the outermost shell are called **valence electrons**, and they strongly affect whether an atom tends to form ions or chemical bonds.

@@ -1,5 +1,5 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from ".";
+import { BASE_PATH } from "@repo/contents/subject/high-school/10/physics/_data";
 
 const enMaterials: MaterialList = [
   {
@@ -41,7 +41,7 @@ const enMaterials: MaterialList = [
   {
     title: "Renewable Energy",
     description:
-      "The key to our planet's future with clean energy that never runs out for generations to come.",
+      "Read the future of clean electricity through sunlight, wind, water, geothermal heat, and responsible energy choices.",
     href: `${BASE_PATH}/renewable-energy`,
     items: [
       {

@@ -1,5 +1,5 @@
+import { ThemeProvider } from "@repo/design-system/providers/theme";
 import type { ThemeProviderProps } from "next-themes";
-import { ThemeProvider } from "./providers/theme";
 
 type Properties = ThemeProviderProps;
 

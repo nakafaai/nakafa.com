@@ -1,5 +1,5 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from ".";
+import { BASE_PATH } from "@repo/contents/subject/high-school/11/mathematics/_data";
 
 const enMaterials: MaterialList = [
   {
@@ -441,6 +441,6 @@ const enMaterials: MaterialList = [
       },
     ],
   },
-];
+] as const;
 
 export default enMaterials;

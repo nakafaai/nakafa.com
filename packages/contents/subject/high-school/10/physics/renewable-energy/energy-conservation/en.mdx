@@ -1,0 +1,113 @@
+export const metadata = {
+  title: "Law of Energy Conservation",
+  description:
+    "Use the law of energy conservation to track energy changes, useful energy, and dissipated energy in renewable-energy systems.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/27/2026",
+  subject: "Renewable Energy",
+};
+
+## Energy Does Not Vanish, It Changes Path
+
+The law of energy conservation states that energy cannot be created or destroyed. Energy can move from one object to another, or change from one form to another.
+
+In the International System of Units (SI), every form of energy can still be expressed in joules with symbol <InlineMath math="\text{J}" />.
+
+<BlockMath math="\text{total energy before a process}=\text{total energy after a process}" />
+
+That sentence sounds simple, but it is often misread. If the electrical energy from a device is smaller than the energy supplied to it, the remaining energy has not disappeared. It usually becomes heat, sound, vibration, unused light, or internal energy in the device components.
+
+OpenStax College Physics 2e discusses energy conservation on the Conservation of Energy page, which can be opened through [this source link](https://openstax.org/books/college-physics-2e/pages/7-6-conservation-of-energy).
+
+## Choose the System First
+
+A **system** is the part we choose to analyze. Everything outside the system is called the **surroundings**. The law of energy conservation is clearest when the system is chosen explicitly.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Energy input"] --> B["System"]
+    B --> C["Useful energy"]
+    B --> D["Dissipated energy"]
+    D --> E["Heat, sound, vibration"]`}/>
+
+The diagram is not decorative. It reminds us that a system can have more than one energy output.
+
+| Chosen system | Energy entering the system | Energy leaving the system |
+| :------------ | :------------------------- | :------------------------ |
+| Falling water | gravitational potential energy | kinetic energy of water |
+| Turbine and generator | rotational kinetic energy | electrical energy, heat, sound |
+| Solar panel | radiant energy from sunlight | electrical energy, heat, reflected light |
+
+If the system is too narrow, some energy appears to leave. If the system is expanded to include the surroundings, total energy stays the same.
+
+## When Friction Is Ignored
+
+In many introductory problems, friction and air resistance are ignored so the main idea is easier to see. For motion involving only kinetic energy and gravitational potential energy, mechanical energy is written as:
+
+<BlockMath math="\begin{aligned}
+E_m &= E_k+E_p \\
+&= \frac{1}{2}mv^2+mgh
+\end{aligned}" />
+
+If there is no friction, no air resistance, and no external work, mechanical energy remains constant.
+
+<BlockMath math="\frac{1}{2}mv_i^2+mgh_i=\frac{1}{2}mv_f^2+mgh_f" />
+
+The subscript <InlineMath math="i" /> means initial state, while the subscript <InlineMath math="f" /> means final state.
+
+Suppose water with mass <InlineMath math="1 \text{ kg}" /> falls from a height of <InlineMath math="12 \text{ m}" />. If we use <InlineMath math="g=10 \text{ m/s}^2" /> and treat the water as initially at rest, its initial gravitational potential energy is:
+
+<BlockMath math="\begin{aligned}
+E_p &= mgh \\
+&= (1 \text{ kg})(10 \text{ m/s}^2)(12 \text{ m}) \\
+&= 120 \text{ J}
+\end{aligned}" />
+
+If no energy is dissipated, that <InlineMath math="120 \text{ J}" /> changes into kinetic energy of water. In real devices, part of the energy still moves to the surroundings as heat, sound, and vibration.
+
+## Useful Energy Is Not Total Energy
+
+In renewable-energy technology, the desired output is usually **useful energy**, such as electrical energy. Energy conservation still applies, but the energy input does not all become electricity.
+
+<BlockMath math="E_{\text{input}}=E_{\text{useful}}+E_{\text{dissipated}}" />
+
+Example: flowing water carries <InlineMath math="120 \text{ J}" /> of energy toward a small turbine. The generator produces <InlineMath math="90 \text{ J}" /> of electrical energy. The dissipated energy is:
+
+<BlockMath math="\begin{aligned}
+E_{\text{dissipated}}
+&= E_{\text{input}}-E_{\text{useful}} \\
+&= 120 \text{ J}-90 \text{ J} \\
+&= 30 \text{ J}
+\end{aligned}" />
+
+So the <InlineMath math="30 \text{ J}" /> has not vanished. It has moved to the surroundings, for example as heat in the shaft, sound from rotation, or vibration in the structure.
+
+The U.S. Department of Energy explains that hydropower plants use a height difference in water to move turbines and generators. The mechanism can be opened through [this source link](https://www.energy.gov/eere/water/how-hydropower-works).
+
+## A Quick Way to Check Energy Claims
+
+The law of energy conservation can be used like an audit tool. If there is an energy claim, add up all the paths.
+
+| Claim | Check with energy conservation |
+| :---- | :----------------------------- |
+| A panel receives <InlineMath math="500 \text{ J}" /> of radiation and produces <InlineMath math="500 \text{ J}" /> of electricity | not realistic for a real panel; from energy conservation alone, the claim is possible only if no energy is reflected or becomes heat |
+| A turbine receives <InlineMath math="120 \text{ J}" /> and produces <InlineMath math="90 \text{ J}" /> of electricity | reasonable if <InlineMath math="30 \text{ J}" /> is dissipated |
+| A machine produces <InlineMath math="150 \text{ J}" /> of electricity from <InlineMath math="120 \text{ J}" /> of input without another source | not consistent with energy conservation |
+
+The U.S. Department of Energy explains that not all light reaching a photovoltaic cell becomes electricity; some can be reflected or converted to heat. The solar-panel efficiency factors can be opened through [this source link](https://www.energy.gov/cmei/systems/solar-performance-and-efficiency).
+
+This law helps us read words like *saving*, *efficient*, and *clean* more carefully. An efficient device is not a device that creates new energy. An efficient device makes the useful part of the energy larger and the dissipated part smaller.
+
+## Why This Matters for Renewable Energy
+
+Renewable energy sources still obey the law of energy conservation. Sunlight, wind, water, geothermal heat, and biomass provide energy input. Technology helps transform that input into the energy we need.
+
+<BlockMath math="\text{energy source} \rightarrow \text{conversion device} \rightarrow \text{useful energy}+\text{dissipated energy}" />
+
+Because energy is not created from nothing, renewable-energy discussion always returns to three questions:
+
+- Where does the input energy come from?
+- Where does the energy that does not become useful output go?
+- How much of the energy actually becomes useful output?
+
+If you can answer those three questions, you are not just memorizing the law of energy conservation. You are using it to read energy technology critically.

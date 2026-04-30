@@ -1,3 +1,4 @@
+import { cn } from "@repo/design-system/lib/utils";
 import { GeistMono } from "geist/font/mono";
 import {
   GeistPixelCircle,
@@ -8,7 +9,6 @@ import {
 } from "geist/font/pixel";
 import { GeistSans } from "geist/font/sans";
 import { Amiri } from "next/font/google";
-import { cn } from "./utils";
 
 export const quranSans = Amiri({
   variable: "--font-quran",

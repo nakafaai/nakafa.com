@@ -1,6 +1,14 @@
 "use client";
 
 import { Line, Text } from "@react-three/drei";
+import {
+  FONT_PATH,
+  MONO_FONT_PATH,
+  resolveThreeFontSize,
+  THREE_FONT_SIZE,
+  type ThreeFontSize,
+} from "@repo/design-system/components/three/data/constants";
+import { GRAPH_BOUNDARY_SEGMENTS } from "@repo/design-system/components/three/helpers/quality";
 import { COLORS } from "@repo/design-system/lib/color";
 import { isMobileDevice } from "@repo/design-system/lib/device";
 import { useMemo } from "react";
@@ -12,8 +20,6 @@ import {
   Float32BufferAttribute,
   MeshBasicMaterial,
 } from "three";
-import { FONT_PATH, MONO_FONT_PATH } from "./_data";
-import { GRAPH_BOUNDARY_SEGMENTS } from "./quality";
 
 // Performance tuning constants
 const MIN_CORES_FOR_HIGH_RES = 8;
@@ -40,7 +46,7 @@ const EPSILON = 1e-10;
 const VERTICAL_CONNECTOR_DENSITY_FACTOR = 4;
 
 // Label constants
-const DEFAULT_LABEL_FONT_SIZE = 0.5;
+const DEFAULT_LABEL_FONT_SIZE = THREE_FONT_SIZE.diagram;
 
 type Point = [number, number, number];
 
@@ -67,7 +73,7 @@ interface Props {
     /** Color for the label text */
     color?: string | Color;
     /** Font size of the label text */
-    fontSize?: number;
+    fontSize?: ThreeFontSize | number;
   };
   /** Opacity of the region */
   opacity?: number;
@@ -500,7 +506,9 @@ export function Inequality({
           anchorY="middle"
           color={label.color || finalBoundaryColor}
           font={fontPath}
-          fontSize={label.fontSize || DEFAULT_LABEL_FONT_SIZE}
+          fontSize={resolveThreeFontSize(
+            label.fontSize ?? DEFAULT_LABEL_FONT_SIZE
+          )}
           frustumCulled={false}
           material-depthTest={false}
           position={label.position}

@@ -1,0 +1,178 @@
+import { IsotopeLab } from "@repo/design-system/components/contents/chemistry/isotope/lab";
+
+export const metadata = {
+  title: "Isotop",
+  description:
+    "Pelajari isotop sebagai atom dari unsur yang sama dengan jumlah proton sama, tetapi jumlah neutron dan nomor massa berbeda.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/29/2026",
+  subject: "Struktur Atom",
+};
+
+## Unsur yang Sama, Massa yang Berbeda
+
+Hidrogen di Matahari, karbon di tubuh kita, dan oksigen di air tidak selalu hadir sebagai satu "versi" massa saja. Satu unsur bisa memiliki beberapa atom yang jumlah protonnya sama, tetapi jumlah neutronnya berbeda. Atom-atom seperti itu disebut **isotop**.
+
+Bagian Atomic Structure and Symbolism dari OpenStax menjelaskan bahwa isotop adalah atom dari unsur yang sama dengan nomor atom sama, tetapi nomor massa berbeda. Bagian sumber itu bisa dibuka di [Atomic Structure and Symbolism dari OpenStax](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-3-atomic-structure-and-symbolism).
+
+IUPAC Gold Book juga menekankan ide yang sama: isotop memiliki nomor atom sama, tetapi nomor massa berbeda. Rujukan istilahnya bisa dibuka di [isotope dari IUPAC Gold Book](https://goldbook.iupac.org/terms/view/I03331).
+
+Cara membacanya:
+
+<BlockMath math="\text{isotop} \Rightarrow Z\ \text{sama},\ n^0\ \text{berbeda},\ A\ \text{berbeda}" />
+
+Simbol <InlineMath math="Z" /> adalah nomor atom, yaitu jumlah proton. Simbol <InlineMath math="A" /> adalah nomor massa, yaitu jumlah proton dan neutron. Kalau <InlineMath math="Z" /> sama, unsurnya sama. Kalau <InlineMath math="n^0" /> berbeda, nomor massanya ikut berbeda.
+
+Jadi, isotop adalah versi massa dari unsur yang sama, bukan unsur baru. Kuncinya tetap jumlah proton. Neutron hanya mengubah nomor massa.
+
+## Mini Lab Isotop
+
+Pilih isotop di bawah ini. Perhatikan bagian yang tidak berubah dulu: jumlah proton. Setelah itu, bandingkan jumlah neutronnya.
+
+<IsotopeLab
+  title={<>Pembaca Isotop</>}
+  description={
+    <>
+      Bandingkan isotop hidrogen dan karbon. Unsurnya tetap sama ketika nomor
+      atom tetap sama, tetapi nomor massa berubah ketika neutron berubah.
+    </>
+  }
+  labels={{
+    chooseIsotope: "Pilih contoh isotop",
+    atomicNumber: "Nomor atom",
+    massNumber: "Nomor massa",
+    protons: "Proton",
+    neutrons: "Neutron",
+    electrons: "Elektron netral",
+    abundance: "Kelimpahan alami",
+    samples: {
+      "hydrogen-1": {
+        tab: <InlineMath math="{}^{1}\mathrm{H}" />,
+        ariaName: "Hidrogen-1",
+        name: <InlineMath math="{}^{1}_{1}\mathrm{H}" />,
+        abundance: <>Sekitar <InlineMath math="99{,}9885\%" /></>,
+        note: <>Tidak memiliki neutron.</>,
+      },
+      deuterium: {
+        tab: <InlineMath math="{}^{2}\mathrm{H}" />,
+        ariaName: "Deuterium, H-2",
+        name: <>Deuterium <InlineMath math="{}^{2}_{1}\mathrm{H}" /></>,
+        abundance: <>Sekitar <InlineMath math="0{,}0115\%" /></>,
+        note: <>Memiliki <InlineMath math="1" /> neutron.</>,
+      },
+      tritium: {
+        tab: <InlineMath math="{}^{3}\mathrm{H}" />,
+        ariaName: "Tritium, H-3",
+        name: <>Tritium <InlineMath math="{}^{3}_{1}\mathrm{H}" /></>,
+        abundance: <>Sangat kecil di alam</>,
+        note: <>Memiliki <InlineMath math="2" /> neutron.</>,
+      },
+      "carbon-12": {
+        tab: <InlineMath math="{}^{12}\mathrm{C}" />,
+        ariaName: "Karbon-12",
+        name: <InlineMath math="{}^{12}_{6}\mathrm{C}" />,
+        abundance: <>Sekitar <InlineMath math="98{,}93\%" /></>,
+        note: <>Memiliki <InlineMath math="6" /> neutron.</>,
+      },
+      "carbon-13": {
+        tab: <InlineMath math="{}^{13}\mathrm{C}" />,
+        ariaName: "Karbon-13",
+        name: <InlineMath math="{}^{13}_{6}\mathrm{C}" />,
+        abundance: <>Sekitar <InlineMath math="1{,}07\%" /></>,
+        note: <>Memiliki <InlineMath math="7" /> neutron.</>,
+      },
+      "carbon-14": {
+        tab: <InlineMath math="{}^{14}\mathrm{C}" />,
+        ariaName: "Karbon-14",
+        name: <InlineMath math="{}^{14}_{6}\mathrm{C}" />,
+        abundance: <>Sangat kecil dan radioaktif</>,
+        note: <>Memiliki <InlineMath math="8" /> neutron.</>,
+      },
+    },
+  }}
+/>
+
+## Hidrogen Punya Tiga Contoh Penting
+
+Semua isotop hidrogen memiliki <InlineMath math="1" /> proton. Karena jumlah protonnya <InlineMath math="1" />, semuanya tetap unsur hidrogen. Perbedaannya ada pada jumlah neutron.
+
+| Isotop hidrogen | Lambang | Proton | Elektron netral | Neutron |
+| :-------------- | :------ | :----- | :-------------- | :------ |
+| Hidrogen ringan | <InlineMath math="{}^{1}_{1}\mathrm{H}" /> | <InlineMath math="1" /> | <InlineMath math="1" /> | <InlineMath math="0" /> |
+| Deuterium | <InlineMath math="{}^{2}_{1}\mathrm{H}" /> | <InlineMath math="1" /> | <InlineMath math="1" /> | <InlineMath math="1" /> |
+| Tritium | <InlineMath math="{}^{3}_{1}\mathrm{H}" /> | <InlineMath math="1" /> | <InlineMath math="1" /> | <InlineMath math="2" /> |
+
+Deuterium kadang ditulis <InlineMath math="\mathrm{D}" />, dan tritium kadang ditulis <InlineMath math="\mathrm{T}" />. Kedua simbol singkat itu tidak berarti unsur baru. Deuterium dan tritium tetap hidrogen karena jumlah protonnya tetap <InlineMath math="1" />.
+
+## Karbon Menunjukkan Peran Neutron
+
+Karbon selalu memiliki <InlineMath math="6" /> proton. Pada <InlineMath math="{}^{12}_{6}\mathrm{C}" />, <InlineMath math="{}^{13}_{6}\mathrm{C}" />, dan <InlineMath math="{}^{14}_{6}\mathrm{C}" />, jumlah neutronnya bertambah.
+
+<BlockMath math="\begin{aligned}
+{}^{12}_{6}\mathrm{C} &: n^0 = 12 - 6 = 6 \\
+{}^{13}_{6}\mathrm{C} &: n^0 = 13 - 6 = 7 \\
+{}^{14}_{6}\mathrm{C} &: n^0 = 14 - 6 = 8
+\end{aligned}" />
+
+<InlineMath math="{}^{12}_{6}\mathrm{C}" /> dan <InlineMath math="{}^{13}_{6}\mathrm{C}" /> stabil. <InlineMath math="{}^{14}_{6}\mathrm{C}" /> radioaktif, sehingga jumlahnya sangat kecil di alam. Karena <InlineMath math="{}^{14}_{6}\mathrm{C}" /> meluruh seiring waktu, ilmuwan dapat memakainya untuk memperkirakan usia benda yang pernah berasal dari makhluk hidup, misalnya kayu tua atau tulang.
+
+## Jangan Campur dengan Ion
+
+Ion dan isotop sama-sama mengubah angka pada atom, tetapi bagian yang berubah berbeda.
+
+| Konsep | Yang berubah | Yang tetap mengunci unsur |
+| :----- | :----------- | :------------------------ |
+| Ion | Elektron | Proton |
+| Isotop | Neutron | Proton |
+
+Contohnya, <InlineMath math="\mathrm{C}^{2-}" /> adalah ion karbon karena elektronnya berubah. Sebaliknya, <InlineMath math="{}^{14}_{6}\mathrm{C}" /> adalah isotop karbon karena neutronnya berbeda dari <InlineMath math="{}^{12}_{6}\mathrm{C}" />.
+
+Jika atomnya netral, elektron tetap sama dengan proton:
+
+<BlockMath math="\text{atom netral} \Rightarrow e^- = p^+" />
+
+Jadi, <InlineMath math="{}^{14}_{6}\mathrm{C}" /> netral memiliki <InlineMath math="6" /> proton, <InlineMath math="6" /> elektron, dan <InlineMath math="8" /> neutron.
+
+## Kegunaan Isotop
+
+Isotop tidak hanya berbeda di tabel. Perbedaan neutron dapat membuat beberapa isotop berguna untuk penelitian, energi, atau penentuan umur bahan.
+
+Deuterium dan tritium, dua isotop hidrogen, banyak dibahas dalam riset fusi nuklir. Department of Energy menjelaskan bahan bakar deuterium-tritium sebagai salah satu pasangan isotop penting dalam pengembangan energi fusi. Rujukannya bisa dibuka di [Deuterium-Tritium Fusion Fuel dari DOE](https://www.energy.gov/science/doe-explainsdeuterium-tritium-fusion-fuel).
+
+<InlineMath math="{}^{14}_{6}\mathrm{C}" /> dipakai dalam penanggalan radiokarbon untuk memperkirakan umur bahan organik, yaitu bahan yang pernah berasal dari makhluk hidup. University of Chicago menjelaskan bahwa penanggalan <InlineMath math="{}^{14}_{6}\mathrm{C}" /> dapat menentukan usia material organik hingga sekitar <InlineMath math="60\,000" /> tahun. Rujukannya bisa dibuka di [penjelasan University of Chicago](https://news.uchicago.edu/explainer/what-is-carbon-14-dating).
+
+Catatan pentingnya: kegunaan isotop harus dibaca bersama sifat kestabilannya, yaitu apakah inti atom mudah meluruh atau tidak. Isotop radioaktif seperti tritium dan <InlineMath math="{}^{14}_{6}\mathrm{C}" /> bukan bahan percobaan bebas, sehingga pemakaiannya memerlukan aturan keselamatan.
+
+## Dari Isotop ke Massa Atom Rata-Rata
+
+Pada tabel periodik, massa atom relatif sering berupa angka desimal. Angka itu bukan nomor massa satu isotop, melainkan rata-rata tertimbang dari isotop-isotop yang ada di alam.
+
+NIST menjelaskan bahwa massa atom relatif unsur dihitung dari massa isotop dan komposisi isotopnya. Penjelasan kolom datanya bisa dibuka di [Atomic Weights and Isotopic Compositions dari NIST](https://www.nist.gov/pml/atomic-weights-and-isotopic-compositions-column-descriptions).
+
+Karbon menjadi contoh yang mudah:
+
+| Isotop karbon | Nomor massa | Kelimpahan alami |
+| :------------ | :---------- | :--------------- |
+| <InlineMath math="{}^{12}_{6}\mathrm{C}" /> | <InlineMath math="12" /> | Sekitar <InlineMath math="98{,}93\%" /> |
+| <InlineMath math="{}^{13}_{6}\mathrm{C}" /> | <InlineMath math="13" /> | Sekitar <InlineMath math="1{,}07\%" /> |
+| <InlineMath math="{}^{14}_{6}\mathrm{C}" /> | <InlineMath math="14" /> | Sangat kecil |
+
+Karena <InlineMath math="{}^{12}_{6}\mathrm{C}" /> paling melimpah, massa atom relatif karbon di tabel periodik berada dekat <InlineMath math="12" />, tetapi tidak tepat sama dengan <InlineMath math="12" />.
+
+## Cek Cepat Tanpa Menghafal
+
+Gunakan tiga pertanyaan ini setiap membaca isotop:
+
+- Berapa jumlah protonnya?
+- Berapa nomor massanya?
+- Berapa neutronnya dari <InlineMath math="A - Z" />?
+
+Untuk <InlineMath math="{}^{92}_{40}\mathrm{Zr}" />:
+
+<BlockMath math="\begin{aligned}
+n^0 &= A - Z \\
+&= 92 - 40 \\
+&= 52
+\end{aligned}" />
+
+Jadi, <InlineMath math="{}^{92}_{40}\mathrm{Zr}" /> memiliki <InlineMath math="52" /> neutron. Cara ini lebih aman daripada menghafal tabel, karena kalian bisa menghitung isotop apa pun selama nomor atom dan nomor massanya diketahui.

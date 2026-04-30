@@ -52,7 +52,7 @@ export const metadata = {
   date: "MM/DD/YYYY",
 };
 
-### Analyze the Known Values
+### Membaca Nilai yang Diketahui
 
 Diketahui <InlineMath math="a = 5" /> dan <InlineMath math="b = 3" />.
 
@@ -113,10 +113,11 @@ export default choices;
 ## Checks
 
 - Use `MM/DD/YYYY` dates.
-- Keep headings between `##` and `###`.
+- Exercise answer headings default to `###`; do not add an `##` before them unless the nearby exercise pattern already requires it.
 - Make each question and answer standalone.
 - Define abbreviations, symbols, and uncommon terms when the item depends on them.
 - Use `<InlineMath />` for math in prose.
+- Do not use raw HTML elements such as `<br />`, `<div>`, or `<span>` in MDX.
 - Use one expressive `<BlockMath />` for one connected derivation.
 - Use `<MathContainer>` only when rows should stay visually separate.
 - Do not reference option letters in the explanation.

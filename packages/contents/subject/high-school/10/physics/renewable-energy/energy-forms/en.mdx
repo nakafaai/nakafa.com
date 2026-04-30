@@ -1,0 +1,137 @@
+export const metadata = {
+  title: "Forms of Energy",
+  description:
+    "Distinguish kinetic energy, gravitational potential energy, heat, electrical energy, and other forms that appear in renewable-energy technology.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/26/2026",
+  subject: "Renewable Energy",
+};
+
+## Energy Forms Come from How Energy Appears
+
+Energy has the same unit, the joule with symbol <InlineMath math="\text{J}" />, but energy can appear or be transferred in different ways. Energy may show up as motion, position, a thermal state related to temperature, chemical bonds, light, or the state of electric charges.
+
+In the International System of Units (SI), every form of energy can still be expressed in joules. What changes is *how we recognize or calculate the energy*.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Energy"] --> B["Stored"]
+    A --> C["Moving or transferred"]
+    B --> D["Chemical"]
+    B --> E["Gravitational"]
+    C --> F["Motion"]
+    C --> G["Heat, light, electricity"]`}/>
+
+The compact diagram follows the U.S. Energy Information Administration (EIA) reading: forms of energy can be grouped as potential energy and kinetic energy. In the formula discussion, we still treat heat separately as energy transferred because of a temperature difference. EIA's Forms of Energy page can be opened through [this source link](https://www.eia.gov/energyexplained/what-is-energy/forms-of-energy.php).
+
+## Motion, Position, Heat, and Charge
+
+The following forms appear often in renewable-energy discussions because electricity generation usually involves motion, height, heat, or moving charges.
+
+| Energy form | When it appears | Common mathematical model | Renewable-energy example |
+| :---------- | :-------------- | :------------------------ | :----------------------- |
+| Kinetic energy | an object moves | <InlineMath math="E_k=\frac{1}{2}mv^2" /> | wind turns a turbine |
+| Gravitational potential energy | an object has height relative to a reference level | <InlineMath math="E_p=mgh" /> | stored water is higher than a turbine |
+| Heat | energy transfers because of a temperature difference | <InlineMath math="Q=mc\Delta T" /> | geothermal fluid heats a power system |
+| Electrical energy | charge moves because of electric potential difference | <InlineMath math="E=VIt" /> | a generator sends energy into the grid |
+
+Beyond these four examples, biomass stores chemical energy, solar panels receive radiant energy from the Sun, and batteries store energy in chemical-electrochemical states. The four formulas in the table are the ones most useful for many basic calculations in grade <InlineMath math="10" /> physics.
+
+## Reading Formulas from the Cause of the Energy
+
+Kinetic energy is the energy an object has because of its motion.
+
+<BlockMath math="E_k=\frac{1}{2}mv^2" />
+
+Symbol guide:
+
+| Symbol | Meaning | SI unit |
+| :----- | :------ | :------ |
+| <InlineMath math="E_k" /> | kinetic energy | <InlineMath math="\text{J}" /> |
+| <InlineMath math="m" /> | object mass | <InlineMath math="\text{kg}" /> |
+| <InlineMath math="v" /> | object speed | <InlineMath math="\text{m/s}" /> |
+
+If the air mass passing a turbine is <InlineMath math="2 \text{ kg}" /> and its speed is <InlineMath math="3 \text{ m/s}" />, its kinetic energy is:
+
+<BlockMath math="\begin{aligned}
+E_k &= \frac{1}{2}mv^2 \\
+&= \frac{1}{2}(2 \text{ kg})(3 \text{ m/s})^2 \\
+&= 9 \text{ J}
+\end{aligned}" />
+
+OpenStax College Physics 2e explains kinetic energy through work and energy on the Kinetic Energy and the Work-Energy Theorem page, which can be opened through [this source link](https://openstax.org/books/college-physics-2e/pages/7-2-kinetic-energy-and-the-work-energy-theorem).
+
+Gravitational potential energy is energy related to an object's position in a gravitational field. For objects near Earth's surface, the common model is:
+
+<BlockMath math="E_p=mgh" />
+
+Symbol guide:
+
+| Symbol | Meaning | SI unit |
+| :----- | :------ | :------ |
+| <InlineMath math="E_p" /> | gravitational potential energy | <InlineMath math="\text{J}" /> |
+| <InlineMath math="m" /> | object mass | <InlineMath math="\text{kg}" /> |
+| <InlineMath math="g" /> | gravitational acceleration | <InlineMath math="\text{m/s}^2" /> |
+| <InlineMath math="h" /> | height relative to a reference level | <InlineMath math="\text{m}" /> |
+
+The value of <InlineMath math="g" /> near Earth's surface is about <InlineMath math="9.8 \text{ m/s}^2" />. In many school problems, <InlineMath math="g" /> is rounded to <InlineMath math="10 \text{ m/s}^2" /> so the arithmetic is shorter.
+
+Heat is energy transferred because of a temperature difference. So an object does not "store heat" like it stores an item in a drawer. An object has internal energy, and heat flows when there is a temperature difference.
+
+<BlockMath math="Q=mc\Delta T" />
+
+Symbol guide:
+
+| Symbol | Meaning | SI unit |
+| :----- | :------ | :------ |
+| <InlineMath math="Q" /> | heat or transferred energy | <InlineMath math="\text{J}" /> |
+| <InlineMath math="m" /> | object mass | <InlineMath math="\text{kg}" /> |
+| <InlineMath math="c" /> | specific heat capacity | <InlineMath math="\text{J/(kg K)}" /> |
+| <InlineMath math="\Delta T" /> | temperature change | <InlineMath math="\text{K}" /> |
+
+OpenStax College Physics 2e discusses <InlineMath math="Q=mc\Delta T" /> on the Temperature Change and Heat Capacity page, which can be opened through [this source link](https://openstax.org/books/college-physics-2e/pages/14-2-temperature-change-and-heat-capacity).
+
+Electrical energy can be read from electric power acting over a time interval. The model below is used when <InlineMath math="V" /> and <InlineMath math="I" /> are treated as constant during the time interval.
+
+<BlockMath math="\begin{aligned}
+P &= VI \\
+E &= Pt \\
+E &= VIt
+\end{aligned}" />
+
+Symbol guide:
+
+| Symbol | Meaning | SI unit |
+| :----- | :------ | :------ |
+| <InlineMath math="E" /> | electrical energy | <InlineMath math="\text{J}" /> |
+| <InlineMath math="P" /> | electric power | <InlineMath math="\text{W}" /> |
+| <InlineMath math="V" /> | electric potential difference | <InlineMath math="\text{V}" /> |
+| <InlineMath math="I" /> | electric current | <InlineMath math="\text{A}" /> |
+| <InlineMath math="t" /> | time | <InlineMath math="\text{s}" /> |
+
+Some books use <InlineMath math="W" /> for electrical energy as electrical work. Nakafa uses <InlineMath math="E" /> so it is not confused with <InlineMath math="\text{W}" /> as the unit watt.
+
+OpenStax College Physics 2e discusses the relationship between electric power and energy on the Electric Power and Energy page, which can be opened through [this source link](https://openstax.org/books/college-physics-2e/pages/20-4-electric-power-and-energy).
+
+## One Situation Can Contain Many Forms
+
+A power plant does not use only one form of energy. Hydropower, for example, is easier to read as a chain of energy forms.
+
+<BlockMath math="\text{gravitational potential energy of water} \rightarrow \text{kinetic energy of flowing water} \rightarrow \text{kinetic energy of turbine} \rightarrow \text{electrical energy}" />
+
+A solar panel is also not simply "making electricity". A solar panel receives radiant energy from sunlight, then changes part of that energy into electrical energy.
+
+<BlockMath math="\text{solar radiation} \rightarrow \text{electrical energy}" />
+
+This is why forms of energy matter for renewable energy. We need to know the starting form, the desired output form, and the transformation path.
+
+## Common Reading Mistakes
+
+| Mistake | More precise reading |
+| :------ | :------------------- |
+| Kinetic energy is treated as depending only on mass | Kinetic energy also depends on the square of speed, written as <InlineMath math="v^2" /> |
+| Heat is treated as a substance stored inside an object | Heat is energy transferred because of a temperature difference |
+| <InlineMath math="\text{kWh}" /> is treated as a unit of power | <InlineMath math="\text{kWh}" /> is a unit of energy because it comes from <InlineMath math="P \times t" /> |
+| All energy from a renewable source is treated as directly becoming electricity | There is always an energy transformation process, and not all input energy becomes useful electrical output |
+
+When reading renewable-energy technology, ask about the energy form before asking about the device. Wind carries kinetic energy, elevated water stores gravitational potential energy, geothermal heat carries thermal energy, biomass stores chemical energy, and sunlight carries radiant energy.

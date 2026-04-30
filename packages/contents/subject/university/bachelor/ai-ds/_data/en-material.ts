@@ -1,5 +1,5 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from ".";
+import { BASE_PATH } from "@repo/contents/subject/university/bachelor/ai-ds/_data";
 
 const enMaterials: MaterialList = [
   {
