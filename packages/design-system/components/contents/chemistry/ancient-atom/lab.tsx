@@ -29,7 +29,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 
 /**
- * Renders a grade-level thought experiment for Greek atomism.
+ * Renders an introductory thought experiment for Greek atomism.
  *
  * The visual is intentionally code-native instead of bitmap-based, so the
  * concept stays theme-aware, localizable, and easy to inspect in review.

@@ -13,6 +13,7 @@ import {
   PERIODIC_ELEMENT_CATEGORY_IDS,
 } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { Badge } from "@repo/design-system/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -137,11 +138,12 @@ function Legend({
   labels: ModernPeriodicTableLabProps["labels"];
 }) {
   return (
-    <div className="flex flex-wrap justify-center gap-2 text-xs">
+    <div className="mx-auto flex max-w-lg flex-wrap justify-center gap-2 text-xs">
       {PERIODIC_ELEMENT_CATEGORY_IDS.map((categoryId) => (
-        <span
-          className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-muted-foreground"
+        <Badge
+          className="min-w-32 max-w-full justify-center gap-2 overflow-visible whitespace-normal px-3 py-1 text-center text-muted-foreground leading-snug sm:min-w-40 sm:whitespace-nowrap"
           key={categoryId}
+          variant="outline"
         >
           <span
             aria-hidden="true"
@@ -154,7 +156,7 @@ function Legend({
             }}
           />
           {labels.categoryNames[categoryId]}
-        </span>
+        </Badge>
       ))}
     </div>
   );

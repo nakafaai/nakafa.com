@@ -18,7 +18,9 @@ const PERIOD_STEP = 0.62;
 const GROUP_X = -2.08;
 const GROUP_START_Z = -0.22;
 const GROUP_STEP = 0.68;
-const RAIL_Y = 0.03;
+const RAIL_Y = -0.04;
+const PERIOD_RAIL_Z_OFFSET = 0.34;
+const GROUP_RAIL_X_OFFSET = 0.34;
 const PILLAR_RADIUS = 0.17;
 const PILLAR_MIN_HEIGHT = 0.18;
 const PILLAR_MAX_HEIGHT = 1.46;
@@ -89,9 +91,10 @@ function TrendTrack({
   range: PeriodicPropertyRange;
   samples: readonly PeriodicPropertySample[];
 }) {
-  const points = getTrackPoints(axis, samples.length);
-  const [startPoint] = points;
-  const endPoint = points.at(-1);
+  const markerPoints = getTrackPoints(axis, samples.length);
+  const railPoints = getRailPoints(axis, markerPoints);
+  const [startPoint] = railPoints;
+  const endPoint = railPoints.at(-1);
 
   if (!(startPoint && endPoint)) {
     return null;
@@ -99,7 +102,7 @@ function TrendTrack({
 
   return (
     <group>
-      <Line color={colors.rail} lineWidth={2} points={points} />
+      <Line color={colors.rail} lineWidth={2} points={railPoints} />
       <ArrowHelper
         arrowSize={0.16}
         color={color}
@@ -114,7 +117,7 @@ function TrendTrack({
           colors={colors}
           key={`${axis}-${sample.symbol}`}
           mode={mode}
-          position={points[sampleIndex]}
+          position={markerPoints[sampleIndex]}
           range={range}
           sample={sample}
         />
@@ -284,6 +287,19 @@ function getTrackPoints(axis: TrendAxis, sampleCount: number) {
       RAIL_Y,
       GROUP_START_Z + sampleIndex * GROUP_STEP,
     ] satisfies ScenePoint;
+  });
+}
+
+/**
+ * Offsets the guide rail away from markers so direction arrows do not cut through the data.
+ */
+function getRailPoints(axis: TrendAxis, markerPoints: readonly ScenePoint[]) {
+  return markerPoints.map(([x, , z]) => {
+    if (axis === "period") {
+      return [x, RAIL_Y, z + PERIOD_RAIL_Z_OFFSET] satisfies ScenePoint;
+    }
+
+    return [x + GROUP_RAIL_X_OFFSET, RAIL_Y, z] satisfies ScenePoint;
   });
 }
 

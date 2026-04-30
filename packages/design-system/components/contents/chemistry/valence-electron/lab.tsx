@@ -23,6 +23,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import { cn } from "@repo/design-system/lib/utils";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -96,7 +97,7 @@ export function ValenceElectronLab({
       </CardContent>
 
       <CardFooter className="border-t">
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
           <ValenceFact
             label={labels.valenceElectron}
             value={<InlineMath math={`${facts.valenceElectronCount}`} />}
@@ -110,6 +111,7 @@ export function ValenceElectronLab({
             value={<InlineMath math={facts.configurationMath} />}
           />
           <ValenceFact
+            className="sm:col-span-3"
             label={labels.behavior}
             value={selectedLabels.tendency}
           />
@@ -120,9 +122,17 @@ export function ValenceElectronLab({
 }
 
 /** Presents one compact fact about the selected atom. */
-function ValenceFact({ label, value }: { label: string; value: ReactNode }) {
+function ValenceFact({
+  className,
+  label,
+  value,
+}: {
+  className?: string;
+  label: string;
+  value: ReactNode;
+}) {
   return (
-    <div className="flex min-w-0 flex-col gap-1">
+    <div className={cn("flex min-w-0 flex-col gap-1", className)}>
       <dt className="text-muted-foreground text-sm">{label}</dt>
       <dd className="wrap-break-word text-foreground">{value}</dd>
     </div>

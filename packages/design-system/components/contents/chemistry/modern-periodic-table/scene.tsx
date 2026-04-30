@@ -34,6 +34,7 @@ const MAIN_LABEL_Z = -2.35;
 const SERIES_START_GROUP = 4;
 const SERIES_LANTHANIDE_Z = 2.22;
 const SERIES_ACTINIDE_Z = 2.76;
+const PERIOD_AXIS_LABEL_OFFSET = TILE_GAP * 2.8;
 const TILE_LABEL_Y_OFFSET = 0.16;
 const TILE_LABEL_RENDER_ORDER = 10;
 const TILE_LABEL_OUTLINE_WIDTH = 0.018;
@@ -112,7 +113,7 @@ function GuideLabels({
         alwaysOnTop
         color={colors.text}
         fontSize={THREE_FONT_SIZE.reading}
-        position={[-4.88, 0.42, 0]}
+        position={[getMainX(1) - PERIOD_AXIS_LABEL_OFFSET, 0.42, 0]}
       >
         {`${labels.period} 1-7`}
       </SceneLabel>

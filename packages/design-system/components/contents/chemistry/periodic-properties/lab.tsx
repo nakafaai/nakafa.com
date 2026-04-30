@@ -3,7 +3,6 @@
 import { PeriodicPropertiesCanvas } from "@repo/design-system/components/contents/chemistry/periodic-properties/canvas";
 import {
   ATOMIC_RADIUS_MODE_ID,
-  getPeriodicPropertyModeColor,
   isPeriodicPropertyModeId,
   PERIODIC_PROPERTY_MODE_IDS,
   type PeriodicPropertiesLabProps,
@@ -36,7 +35,6 @@ export function PeriodicPropertiesLab({
     ATOMIC_RADIUS_MODE_ID
   );
   const selectedLabels = labels.modes[selectedModeId];
-  const selectedColor = getPeriodicPropertyModeColor(selectedModeId);
 
   /**
    * Keeps one trend selected when ToggleGroup emits an empty value.
@@ -92,10 +90,9 @@ export function PeriodicPropertiesLab({
       </CardContent>
 
       <CardFooter className="border-t">
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           <TrendFact
             label={labels.factLabels.question}
-            markerColor={selectedColor}
             value={selectedLabels.question}
           />
           <TrendFact
@@ -119,27 +116,10 @@ export function PeriodicPropertiesLab({
 /**
  * Presents one compact fact below the 3D model.
  */
-function TrendFact({
-  label,
-  markerColor,
-  value,
-}: {
-  label: string;
-  markerColor?: string;
-  value: ReactNode;
-}) {
+function TrendFact({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-1">
-      <dt className="flex items-center gap-2 text-muted-foreground text-sm">
-        {markerColor && (
-          <span
-            aria-hidden="true"
-            className="size-2.5 rounded-full"
-            style={{ backgroundColor: markerColor }}
-          />
-        )}
-        {label}
-      </dt>
+      <dt className="text-muted-foreground text-sm">{label}</dt>
       <dd className="wrap-break-word text-foreground">{value}</dd>
     </div>
   );
