@@ -1,6 +1,5 @@
-import { Billboard, Line, Text } from "@react-three/drei";
+import { Billboard, Text } from "@react-three/drei";
 import {
-  GROUP_ONE_FOCUS_ID,
   getModernPeriodicTableCategoryColor,
   INNER_TRANSITION_FOCUS_ID,
   MAIN_PERIODIC_TABLE_ROWS,
@@ -8,8 +7,6 @@ import {
   type ModernPeriodicTableFocusId,
   type ModernPeriodicTableLabLabels,
   type ModernPeriodicTableSceneColors,
-  NOBLE_GAS_FOCUS_ID,
-  PERIOD_THREE_FOCUS_ID,
   PERIODIC_SERIES_ROWS,
   type PeriodicElementEntry,
   SERIES_MARKER_CATEGORY_ID,
@@ -44,7 +41,7 @@ const INNER_TRANSITION_LABEL_SYMBOLS = ["La", "Lu", "Ac", "Lr"];
 const ALWAYS_VISIBLE_SYMBOLS = ["H", "He", "Na", "Mg", "Si", "Cl", "Ar"];
 
 /**
- * Renders the 3D periodic-table map and highlights the active reading focus.
+ * Renders the 3D periodic-table model and highlights the active reading focus.
  */
 export function ModernPeriodicTableScene({
   colors,
@@ -58,7 +55,6 @@ export function ModernPeriodicTableScene({
   return (
     <group>
       <GuideLabels colors={colors} labels={labels} />
-      <GuideLines colors={colors} focusId={focusId} />
 
       {MAIN_PERIODIC_TABLE_ROWS.map((row) =>
         row.entries.map((entry) => (
@@ -89,7 +85,7 @@ export function ModernPeriodicTableScene({
 }
 
 /**
- * Places the main axis labels so the map can be read without dragging first.
+ * Places the main axis labels so the model can be read without dragging first.
  */
 function GuideLabels({
   colors,
@@ -131,79 +127,6 @@ function GuideLabels({
       ))}
     </>
   );
-}
-
-/**
- * Draws subtle reading rails for the active row or column.
- */
-function GuideLines({
-  colors,
-  focusId,
-}: {
-  colors: ModernPeriodicTableSceneColors;
-  focusId: ModernPeriodicTableFocusId;
-}) {
-  if (focusId === PERIOD_THREE_FOCUS_ID) {
-    const z = getMainZ(3);
-
-    return (
-      <Line
-        color={colors.activeStroke}
-        lineWidth={4}
-        points={[
-          [getMainX(1), 0.08, z],
-          [getMainX(18), 0.08, z],
-        ]}
-      />
-    );
-  }
-
-  if (focusId === INNER_TRANSITION_FOCUS_ID) {
-    return (
-      <Line
-        color={colors.activeStroke}
-        lineWidth={4}
-        points={[
-          [getSeriesX(0), 0.08, SERIES_LANTHANIDE_Z],
-          [getSeriesX(14), 0.08, SERIES_ACTINIDE_Z],
-        ]}
-      />
-    );
-  }
-
-  const group = getFocusedGroup(focusId);
-
-  if (group === 0) {
-    return null;
-  }
-
-  const x = getMainX(group);
-
-  return (
-    <Line
-      color={colors.activeStroke}
-      lineWidth={4}
-      points={[
-        [x, 0.08, getMainZ(1)],
-        [x, 0.08, getMainZ(7)],
-      ]}
-    />
-  );
-}
-
-/**
- * Resolves the highlighted column when a focus maps to one clear group.
- */
-function getFocusedGroup(focusId: ModernPeriodicTableFocusId) {
-  if (focusId === GROUP_ONE_FOCUS_ID) {
-    return 1;
-  }
-
-  if (focusId === NOBLE_GAS_FOCUS_ID) {
-    return 18;
-  }
-
-  return 0;
 }
 
 /**

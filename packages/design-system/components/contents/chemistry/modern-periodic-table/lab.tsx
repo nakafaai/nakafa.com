@@ -116,7 +116,7 @@ export function ModernPeriodicTableLab({
 }
 
 /**
- * Presents one compact fact below the 3D map.
+ * Presents one compact fact below the 3D model.
  */
 function LabFact({ label, value }: { label: string; value: ReactNode }) {
   return (

@@ -313,7 +313,7 @@ export type ModernPeriodicTableSceneColors = ReturnType<
 >;
 
 /**
- * Chooses stable, theme-aware colors for the 3D periodic-table map.
+ * Chooses stable, theme-aware colors for the 3D periodic-table model.
  */
 export function getModernPeriodicTableSceneColors(
   resolvedTheme: string | undefined
@@ -321,7 +321,6 @@ export function getModernPeriodicTableSceneColors(
   const isDarkTheme = resolvedTheme === "dark";
 
   return {
-    activeStroke: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
     groundLight: isDarkTheme ? getColor("SLATE") : getColor("STONE"),
     innerTransition: getColor("ROSE"),
     metal: getColor("TEAL"),
