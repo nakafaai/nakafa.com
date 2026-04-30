@@ -19,7 +19,7 @@ Do not copy this section sequence literally into every lesson. The template only
 
 Before writing, choose a lesson-specific flow:
 
-- Match the target grade and subject. Use familiar examples and analogies only when they make the concept easier to understand.
+- Match the target grade and subject. Use familiar examples and comparisons only when they make the concept easier to understand.
 - Define prerequisite terms, abbreviations, and notation on first use.
 - Use headings that match this exact lesson, not generic labels reused across the topic.
 - Pick an angle that fits the concept, such as a phenomenon, misconception, comparison, investigation, worked example, or interactive model.
@@ -43,7 +43,7 @@ export const metadata = {
 
 ## Mengenali Pola Utama
 
-Paragraf pembuka yang langsung menjelaskan konsep utama, konteksnya, dan istilah yang wajib dipahami di halaman ini.
+Mulai dari konsep utama, konteksnya, dan istilah yang wajib dipahami di halaman ini.
 
 Gunakan <InlineMath math="x" /> untuk nilai atau simbol matematika di dalam kalimat.
 
@@ -136,11 +136,11 @@ import { QuadraticGraph } from "./quadratic-graph";
 ## Checks
 
 - Inspect nearby content before writing.
-- Match the target grade and subject in language, examples, analogies, and cognitive load.
-- Keep skill docs in English; write `id.mdx` content in Indonesian.
+- Match the target grade and subject in language, examples, comparisons, and cognitive load.
+- Keep instructions in English; write localized MDX snippets and actual content files in their target locale.
 - Make the lesson standalone. Define abbreviations, symbols, and required context on first use.
 - Replace template headings with lesson-specific headings.
-- Avoid repeating the same section skeleton across adjacent subchapters.
+- Avoid repeating the same section skeleton across adjacent lessons.
 - Start content headings at `##`; do not go deeper than `###`.
 - Do not put math or parenthesized numbers in headings.
 - Do not use raw HTML elements such as `<br />`, `<div>`, or `<span>` in MDX.

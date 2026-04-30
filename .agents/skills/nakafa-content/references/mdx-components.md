@@ -71,7 +71,7 @@ Each subject lesson should work for students who arrive directly from search.
 
 - Define abbreviations, acronyms, symbols, and uncommon terms on first use in each locale.
 - Reintroduce prerequisite context briefly instead of pointing vaguely to earlier lessons.
-- Avoid repeating the same section skeleton across adjacent subchapters.
+- Avoid repeating the same section skeleton across nearby lessons.
 - Use headings, examples, diagrams, and final notes that fit the current concept specifically.
 - Add Mermaid, visual components, activities, or closing paragraphs only when they improve understanding.
 
