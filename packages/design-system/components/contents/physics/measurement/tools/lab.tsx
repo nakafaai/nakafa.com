@@ -103,6 +103,7 @@ export function MeasurementToolsLab({
         <ToggleGroup
           aria-label={labels.chooseTool}
           className="grid w-full grid-cols-3"
+          layout="grid"
           onValueChange={handleToolChange}
           type="single"
           value={selectedToolId}

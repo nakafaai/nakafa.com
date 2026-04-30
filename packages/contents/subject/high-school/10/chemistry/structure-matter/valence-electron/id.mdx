@@ -1,0 +1,186 @@
+import { ValenceElectronLab } from "@repo/design-system/components/contents/chemistry/valence-electron/lab";
+
+export const metadata = {
+  title: "Elektron Valensi",
+  description:
+    "Pelajari elektron valensi sebagai elektron pada kulit terluar, cara menentukannya dari konfigurasi kulit, dan hubungannya dengan sifat kimia unsur.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/29/2026",
+  subject: "Struktur Atom",
+};
+
+## Elektron Terluar yang Paling Sering Beraksi
+
+Ambil contoh kalsium. Dalam model kulit sederhana, atom kalsium netral ditulis memiliki konfigurasi elektron <InlineMath math="2, 8, 8, 2" />. Artinya, elektron kalsium tersebar pada kulit <InlineMath math="\mathrm{K}" />, <InlineMath math="\mathrm{L}" />, <InlineMath math="\mathrm{M}" />, dan <InlineMath math="\mathrm{N}" />.
+
+Kulit terluarnya adalah kulit <InlineMath math="\mathrm{N}" /> karena kulit itulah kulit terjauh yang terisi elektron. Isi kulit <InlineMath math="\mathrm{N}" /> ada <InlineMath math="2" /> elektron. Jadi, atom kalsium memiliki <InlineMath math="2" /> **elektron valensi**.
+
+Elektron valensi adalah elektron pada kulit terluar atom. Dalam pembahasan OpenStax, elektron pada kulit terluar disebut valence electrons dan berperan paling penting dalam reaksi kimia. Rujukannya bisa dibuka di [Electronic Structure of Atoms dari OpenStax](https://openstax.org/books/chemistry/pages/6-4-electronic-structure-of-atoms-electron-configurations).
+
+Analogi sederhananya seperti barang yang ada di saku paling luar. Barang itu paling mudah diambil, ditukar, atau dipakai. Elektron valensi juga begitu: bukan berarti elektronnya bebas lepas sendiri, tetapi elektron terluar paling banyak menentukan bagaimana atom berikatan, melepas elektron, atau menerima elektron.
+
+## Peta Elektron Valensi
+
+Pilih atom netral. Baca konfigurasi kulitnya dari kiri ke kanan, lalu lihat kulit terakhir yang masih berisi elektron. Angka pada kulit terakhir itulah jumlah elektron valensi.
+
+<ValenceElectronLab
+  title={<>Pembaca Elektron Valensi</>}
+  description={
+    <>
+      Kulit terluar diberi warna berbeda supaya jumlah elektron valensi
+      langsung terbaca dari model.
+    </>
+  }
+  labels={{
+    chooseAtom: "Pilih atom netral",
+    atomicNumber: "Nomor atom",
+    configuration: "Konfigurasi kulit",
+    outerShell: "Kulit terluar",
+    valenceElectron: "Elektron valensi",
+    behavior: "Kecenderungan",
+    samples: {
+      hydrogen: {
+        tab: "H",
+        name: "Hidrogen",
+        note: <>Konfigurasinya <InlineMath math="1" />. Kulit terluarnya berisi <InlineMath math="1" /> elektron.</>,
+        tendency: <>Hidrogen dapat berbagi elektron, atau dalam kondisi tertentu membentuk ion. Sifatnya tidak sama persis dengan logam alkali.</>,
+      },
+      helium: {
+        tab: "He",
+        name: "Helium",
+        note: <>Konfigurasinya <InlineMath math="2" />. Kulit <InlineMath math="\mathrm{K}" /> sudah penuh untuk helium.</>,
+        tendency: <>Helium sangat sukar bereaksi karena kulit terluarnya sudah penuh.</>,
+      },
+      sodium: {
+        tab: "Na",
+        name: "Natrium",
+        note: <>Konfigurasinya <InlineMath math="2, 8, 1" />. Elektron valensinya <InlineMath math="1" />.</>,
+        tendency: <>Natrium cenderung melepas <InlineMath math="1" /> elektron valensi saat membentuk ion <InlineMath math="\mathrm{Na^+}" />.</>,
+      },
+      magnesium: {
+        tab: "Mg",
+        name: "Magnesium",
+        note: <>Konfigurasinya <InlineMath math="2, 8, 2" />. Kulit terluarnya berisi <InlineMath math="2" /> elektron.</>,
+        tendency: <>Magnesium cenderung melepas <InlineMath math="2" /> elektron valensi saat membentuk ion <InlineMath math="\mathrm{Mg^{2+}}" />.</>,
+      },
+      aluminum: {
+        tab: "Al",
+        name: "Aluminium",
+        note: <>Konfigurasinya <InlineMath math="2, 8, 3" />. Elektron valensinya <InlineMath math="3" />.</>,
+        tendency: <>Aluminium sering dibahas sebagai unsur yang dapat melepas <InlineMath math="3" /> elektron valensi.</>,
+      },
+      chlorine: {
+        tab: "Cl",
+        name: "Klorin",
+        note: <>Konfigurasinya <InlineMath math="2, 8, 7" />. Kulit terluarnya hampir penuh.</>,
+        tendency: <>Klorin cenderung menerima <InlineMath math="1" /> elektron untuk mencapai susunan <InlineMath math="8" /> elektron valensi.</>,
+      },
+      argon: {
+        tab: "Ar",
+        name: "Argon",
+        note: <>Konfigurasinya <InlineMath math="2, 8, 8" />. Kulit terluarnya penuh pada model ini.</>,
+        tendency: <>Argon sangat sukar bereaksi karena sudah memiliki <InlineMath math="8" /> elektron valensi.</>,
+      },
+      calcium: {
+        tab: "Ca",
+        name: "Kalsium",
+        note: <>Konfigurasinya <InlineMath math="2, 8, 8, 2" />. Kulit <InlineMath math="\mathrm{N}" /> berisi <InlineMath math="2" /> elektron.</>,
+        tendency: <>Kalsium cenderung melepas <InlineMath math="2" /> elektron valensi saat membentuk ion <InlineMath math="\mathrm{Ca^{2+}}" />.</>,
+      },
+    },
+  }}
+/>
+
+## Cara Cepat Menentukan Elektron Valensi
+
+Gunakan urutan yang sama setiap kali supaya tidak tertukar.
+
+- Tulis konfigurasi kulit atom netral.
+- Cari kulit terakhir yang masih berisi elektron.
+- Jumlah elektron pada kulit terakhir itu adalah jumlah elektron valensi.
+
+Contohnya:
+
+| Atom | Konfigurasi kulit | Kulit terluar | Elektron valensi |
+| :--- | :---------------- | :------------ | :--------------- |
+| <InlineMath math="\mathrm{Mg}" /> | <InlineMath math="2, 8, 2" /> | <InlineMath math="\mathrm{M}" /> | <InlineMath math="2" /> |
+| <InlineMath math="\mathrm{Cl}" /> | <InlineMath math="2, 8, 7" /> | <InlineMath math="\mathrm{M}" /> | <InlineMath math="7" /> |
+| <InlineMath math="\mathrm{Ar}" /> | <InlineMath math="2, 8, 8" /> | <InlineMath math="\mathrm{M}" /> | <InlineMath math="8" /> |
+| <InlineMath math="\mathrm{Ca}" /> | <InlineMath math="2, 8, 8, 2" /> | <InlineMath math="\mathrm{N}" /> | <InlineMath math="2" /> |
+
+Jangan menjumlahkan semua elektron untuk mencari elektron valensi. Untuk kalsium, jumlah semua elektronnya memang <InlineMath math="20" />, tetapi elektron valensinya hanya <InlineMath math="2" /> karena yang dihitung adalah elektron di kulit terluar.
+
+## Pola pada Golongan yang Sama
+
+Unsur dalam satu golongan utama sering memiliki jumlah elektron valensi yang sama. Karena itulah sifat kimianya dapat mirip. OpenStax menjelaskan bahwa unsur dalam satu golongan memiliki jumlah elektron valensi yang sama, dan kesamaan sifat kimia muncul karena kesamaan ini. Rujukannya bisa dibuka di [Periodic Variations in Element Properties dari OpenStax](https://openstax.org/books/chemistry-2e/pages/6-5-periodic-variations-in-element-properties).
+
+Perhatikan pola berikut.
+
+| Unsur | Nomor atom | <InlineMath math="\mathrm{K}" /> | <InlineMath math="\mathrm{L}" /> | <InlineMath math="\mathrm{M}" /> | <InlineMath math="\mathrm{N}" /> | <InlineMath math="\mathrm{O}" /> | <InlineMath math="\mathrm{P}" /> | <InlineMath math="\mathrm{Q}" /> | Elektron valensi |
+| :---- | :--------- | :------------------------------- | :------------------------------- | :------------------------------- | :------------------------------- | :------------------------------- | :------------------------------- | :------------------------------- | :--------------- |
+| <InlineMath math="\mathrm{H}" /> | <InlineMath math="1" /> | <InlineMath math="1" /> | - | - | - | - | - | - | <InlineMath math="1" /> |
+| <InlineMath math="\mathrm{Li}" /> | <InlineMath math="3" /> | <InlineMath math="2" /> | <InlineMath math="1" /> | - | - | - | - | - | <InlineMath math="1" /> |
+| <InlineMath math="\mathrm{Na}" /> | <InlineMath math="11" /> | <InlineMath math="2" /> | <InlineMath math="8" /> | <InlineMath math="1" /> | - | - | - | - | <InlineMath math="1" /> |
+| <InlineMath math="\mathrm{K}" /> | <InlineMath math="19" /> | <InlineMath math="2" /> | <InlineMath math="8" /> | <InlineMath math="8" /> | <InlineMath math="1" /> | - | - | - | <InlineMath math="1" /> |
+| <InlineMath math="\mathrm{Rb}" /> | <InlineMath math="37" /> | <InlineMath math="2" /> | <InlineMath math="8" /> | <InlineMath math="18" /> | <InlineMath math="8" /> | <InlineMath math="1" /> | - | - | <InlineMath math="1" /> |
+| <InlineMath math="\mathrm{Cs}" /> | <InlineMath math="55" /> | <InlineMath math="2" /> | <InlineMath math="8" /> | <InlineMath math="18" /> | <InlineMath math="18" /> | <InlineMath math="8" /> | <InlineMath math="1" /> | - | <InlineMath math="1" /> |
+| <InlineMath math="\mathrm{Fr}" /> | <InlineMath math="87" /> | <InlineMath math="2" /> | <InlineMath math="8" /> | <InlineMath math="18" /> | <InlineMath math="32" /> | <InlineMath math="18" /> | <InlineMath math="8" /> | <InlineMath math="1" /> | <InlineMath math="1" /> |
+
+Tabel itu menunjukkan ide penting: meskipun jumlah kulit bertambah dari atas ke bawah, kulit terluar unsur-unsur tersebut tetap berisi <InlineMath math="1" /> elektron. Itulah sebabnya litium, natrium, kalium, rubidium, sesium, dan fransium ditempatkan dalam golongan yang sama.
+
+Catatan kecil: hidrogen juga memiliki <InlineMath math="1" /> elektron valensi, tetapi sifatnya tidak sama dengan logam alkali. Jadi, jumlah elektron valensi adalah petunjuk kuat, bukan satu-satunya penjelasan sifat unsur.
+
+## Hubungan dengan Sifat Kimia
+
+Elektron valensi penting karena reaksi kimia banyak melibatkan elektron terluar. Atom dapat melepas, menerima, atau berbagi elektron valensi.
+
+Ringkasnya:
+
+- Pada banyak logam golongan utama, atom dengan <InlineMath math="1" /> atau <InlineMath math="2" /> elektron valensi cenderung melepas elektron ketika membentuk ion.
+- Unsur dengan <InlineMath math="7" /> elektron valensi sering mudah menerima atau berbagi <InlineMath math="1" /> elektron.
+- Unsur gas mulia seperti helium dan argon sudah memiliki kulit terluar penuh, sehingga sangat sukar bereaksi.
+
+Untuk unsur golongan utama, aturan cepatnya seperti ini:
+
+- Golongan <InlineMath math="1" /> memiliki <InlineMath math="1" /> elektron valensi.
+- Golongan <InlineMath math="2" /> memiliki <InlineMath math="2" /> elektron valensi.
+- Golongan <InlineMath math="13" /> sampai <InlineMath math="18" /> memiliki <InlineMath math="3" /> sampai <InlineMath math="8" /> elektron valensi.
+
+Helium adalah pengecualian penting: helium berada pada golongan <InlineMath math="18" />, tetapi hanya memiliki <InlineMath math="2" /> elektron valensi karena kulit pertamanya penuh dengan <InlineMath math="2" /> elektron.
+
+Pada unsur transisi, cara menghitung elektron valensi bisa lebih rumit karena subkulit <InlineMath math="d" /> ikut berperan. Karena itu, pembahasan ini fokus pada unsur golongan utama dan model kulit sederhana.
+
+## Cek Mandiri Kulit Terluar
+
+Gunakan daftar ini sebagai pembanding. Bacalah konfigurasi kulit, lalu ambil angka pada kulit paling kanan sebagai elektron valensi.
+
+### Dua Puluh Unsur Pertama
+
+| Nomor atom | Unsur | Konfigurasi kulit | Elektron valensi |
+| :--------- | :---- | :---------------- | :--------------- |
+| <InlineMath math="1" /> | <InlineMath math="\mathrm{H}" /> | <InlineMath math="1" /> | <InlineMath math="1" /> |
+| <InlineMath math="2" /> | <InlineMath math="\mathrm{He}" /> | <InlineMath math="2" /> | <InlineMath math="2" /> |
+| <InlineMath math="3" /> | <InlineMath math="\mathrm{Li}" /> | <InlineMath math="2, 1" /> | <InlineMath math="1" /> |
+| <InlineMath math="4" /> | <InlineMath math="\mathrm{Be}" /> | <InlineMath math="2, 2" /> | <InlineMath math="2" /> |
+| <InlineMath math="5" /> | <InlineMath math="\mathrm{B}" /> | <InlineMath math="2, 3" /> | <InlineMath math="3" /> |
+| <InlineMath math="6" /> | <InlineMath math="\mathrm{C}" /> | <InlineMath math="2, 4" /> | <InlineMath math="4" /> |
+| <InlineMath math="7" /> | <InlineMath math="\mathrm{N}" /> | <InlineMath math="2, 5" /> | <InlineMath math="5" /> |
+| <InlineMath math="8" /> | <InlineMath math="\mathrm{O}" /> | <InlineMath math="2, 6" /> | <InlineMath math="6" /> |
+| <InlineMath math="9" /> | <InlineMath math="\mathrm{F}" /> | <InlineMath math="2, 7" /> | <InlineMath math="7" /> |
+| <InlineMath math="10" /> | <InlineMath math="\mathrm{Ne}" /> | <InlineMath math="2, 8" /> | <InlineMath math="8" /> |
+| <InlineMath math="11" /> | <InlineMath math="\mathrm{Na}" /> | <InlineMath math="2, 8, 1" /> | <InlineMath math="1" /> |
+| <InlineMath math="12" /> | <InlineMath math="\mathrm{Mg}" /> | <InlineMath math="2, 8, 2" /> | <InlineMath math="2" /> |
+| <InlineMath math="13" /> | <InlineMath math="\mathrm{Al}" /> | <InlineMath math="2, 8, 3" /> | <InlineMath math="3" /> |
+| <InlineMath math="14" /> | <InlineMath math="\mathrm{Si}" /> | <InlineMath math="2, 8, 4" /> | <InlineMath math="4" /> |
+| <InlineMath math="15" /> | <InlineMath math="\mathrm{P}" /> | <InlineMath math="2, 8, 5" /> | <InlineMath math="5" /> |
+| <InlineMath math="16" /> | <InlineMath math="\mathrm{S}" /> | <InlineMath math="2, 8, 6" /> | <InlineMath math="6" /> |
+| <InlineMath math="17" /> | <InlineMath math="\mathrm{Cl}" /> | <InlineMath math="2, 8, 7" /> | <InlineMath math="7" /> |
+| <InlineMath math="18" /> | <InlineMath math="\mathrm{Ar}" /> | <InlineMath math="2, 8, 8" /> | <InlineMath math="8" /> |
+| <InlineMath math="19" /> | <InlineMath math="\mathrm{K}" /> | <InlineMath math="2, 8, 8, 1" /> | <InlineMath math="1" /> |
+| <InlineMath math="20" /> | <InlineMath math="\mathrm{Ca}" /> | <InlineMath math="2, 8, 8, 2" /> | <InlineMath math="2" /> |
+
+### Pola yang Perlu Terbaca
+
+Unsur <InlineMath math="\mathrm{B}" />, <InlineMath math="\mathrm{Al}" />, <InlineMath math="\mathrm{Ga}" />, <InlineMath math="\mathrm{In}" />, dan <InlineMath math="\mathrm{Tl}" /> berada pada golongan <InlineMath math="13" />. Pola cepat untuk golongan utama adalah <InlineMath math="3" /> elektron valensi.
+
+Itulah alasan <InlineMath math="\mathrm{Na}" /> dan <InlineMath math="\mathrm{K}" /> sama-sama cenderung membentuk ion <InlineMath math="+1" />: keduanya punya <InlineMath math="1" /> elektron valensi yang mudah dilepas. Sebaliknya, argon jauh lebih sukar bereaksi daripada klorin karena kulit terluar argon sudah penuh, sedangkan klorin masih membutuhkan <InlineMath math="1" /> elektron lagi untuk mencapai pola penuh.

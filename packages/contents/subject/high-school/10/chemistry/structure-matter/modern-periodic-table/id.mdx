@@ -1,0 +1,121 @@
+import { ModernPeriodicTableLab } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/lab";
+
+export const metadata = {
+  title: "Sistem Periodik Unsur Modern",
+  description:
+    "Pelajari cara membaca tabel periodik modern dari nomor atom, golongan, periode, logam, nonlogam, semilogam, serta deret lantanida dan aktinida.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/29/2026",
+  subject: "Struktur Atom",
+};
+
+## Mulai dari Alamat Unsur
+
+Tabel periodik modern paling mudah dibaca seperti peta tempat duduk. Setiap kotak adalah satu unsur. Angka yang menentukan urutan kursinya disebut **nomor atom**, disimbolkan <InlineMath math="Z" />, yaitu jumlah proton di inti atom.
+
+Jadi, unsur tidak disusun berdasarkan nama atau ukuran huruf lambangnya. Unsur disusun terutama menurut kenaikan <InlineMath math="Z" />. Karena jumlah proton menentukan identitas unsur, urutan ini membuat pola sifat kimia terlihat berulang.
+
+<ModernPeriodicTableLab
+  title={<>Peta Tabel Periodik Modern</>}
+  description={
+    <>
+      Pilih bagian yang ingin dibaca. Blok yang naik menunjukkan pola utama
+      pada tabel: kolom, baris, daerah tengah, deret bawah, semilogam, dan gas
+      mulia.
+    </>
+  }
+  labels={{
+    chooseFocus: "Pilih fokus tabel periodik",
+    tableLabel: "Peta tiga dimensi sistem periodik unsur modern",
+    focusLabel: "Fokus",
+    group: "Golongan",
+    period: "Periode",
+    periodPrefix: "Periode",
+    atomicNumber: "Nomor atom",
+    categoryNames: {
+      metal: "Logam",
+      "transition-metal": "Logam transisi",
+      metalloid: "Semilogam",
+      nonmetal: "Nonlogam",
+      "noble-gas": "Gas mulia",
+      "inner-transition": "Transisi dalam",
+      "series-marker": "Deret bawah",
+    },
+    seriesNames: {
+      lanthanide: "Lantanida",
+      actinide: "Aktinida",
+    },
+    focuses: {
+      "group-one": {
+        tab: "Golongan 1",
+        name: "Kolom dengan pola luar mirip",
+        detail: <>Dalam golongan utama, unsur satu kolom sering memiliki jumlah elektron valensi yang sama. Hidrogen berada di golongan <InlineMath math="1" /> karena memiliki <InlineMath math="1" /> elektron, tetapi sifatnya tidak sama persis dengan logam alkali.</>,
+      },
+      "period-three": {
+        tab: "Periode 3",
+        name: "Baris dengan jumlah kulit sama",
+        detail: <>Periode <InlineMath math="3" /> berjalan dari natrium sampai argon. Dalam model kulit sederhana, unsur-unsur ini sama-sama memakai kulit utama sampai <InlineMath math="\mathrm{M}" />.</>,
+      },
+      transition: {
+        tab: "Transisi",
+        name: "Daerah tengah yang banyak berisi logam",
+        detail: <>Logam transisi berada di bagian tengah, yaitu golongan <InlineMath math="3" /> sampai <InlineMath math="12" />. Di tingkat lanjut, daerah ini dibaca dengan subkulit <InlineMath math="d" />.</>,
+      },
+      "inner-transition": {
+        tab: "Deret bawah",
+        name: "Lantanida dan aktinida dipindah agar peta ringkas",
+        detail: <>Lantanida bernomor atom <InlineMath math="57" /> sampai <InlineMath math="71" />, sedangkan aktinida bernomor atom <InlineMath math="89" /> sampai <InlineMath math="103" />. Keduanya ditaruh di bawah supaya tabel utama tidak terlalu lebar.</>,
+      },
+      metalloid: {
+        tab: "Semilogam",
+        name: "Jembatan sifat antara logam dan nonlogam",
+        detail: <>Semilogam berada di dekat batas bertangga antara logam dan nonlogam. Contoh yang sering dipakai di sekolah adalah boron, silikon, germanium, arsen, antimon, telurium, dan polonium.</>,
+      },
+      "noble-gas": {
+        tab: "Gas mulia",
+        name: "Golongan 18 yang sangat sukar bereaksi",
+        detail: <>Gas mulia berada di golongan <InlineMath math="18" />. Helium stabil dengan <InlineMath math="2" /> elektron valensi, sedangkan neon sampai radon umumnya stabil dengan <InlineMath math="8" /> elektron valensi.</>,
+      },
+    },
+  }}
+/>
+
+## Dua Arah Baca yang Wajib Lancar
+
+**Periode** adalah baris mendatar. Periode dibaca dari kiri ke kanan dan bernomor <InlineMath math="1" /> sampai <InlineMath math="7" />. Dalam model kulit sederhana, unsur pada periode yang sama memiliki jumlah kulit utama yang sama.
+
+**Golongan** adalah kolom tegak. Golongan dibaca dari atas ke bawah dan bernomor <InlineMath math="1" /> sampai <InlineMath math="18" />. Pada golongan utama, jumlah elektron valensi sering sama, sehingga sifat kimianya cenderung mirip.
+
+Bayangkan golongan seperti keluarga besar. Anggotanya tidak selalu identik, tetapi ada ciri luar yang sering mirip. Pada kimia, ciri luar itu terutama elektron valensi.
+
+## Warna Bukan Hafalan, Warna Adalah Petunjuk
+
+Tabel periodik juga membagi unsur menjadi beberapa daerah.
+
+| Daerah | Cara membacanya |
+| :----- | :-------------- |
+| Logam | Banyak berada di kiri dan tengah tabel. Banyak logam mudah menghantarkan listrik dan cenderung melepas elektron saat membentuk ion. |
+| Nonlogam | Banyak berada di kanan atas tabel. Banyak nonlogam cenderung menerima atau berbagi elektron saat berikatan. |
+| Semilogam | Berada di batas antara logam dan nonlogam. Sifatnya berada di tengah, misalnya silikon dapat dipakai sebagai bahan semikonduktor. |
+| Gas mulia | Berada di golongan <InlineMath math="18" />. Unsur-unsur ini sangat sukar bereaksi karena susunan elektron luarnya stabil. |
+
+Batas semilogam tidak selalu digambar sama di semua buku, karena beberapa unsur berada di wilayah sifat yang beririsan. Untuk kelas <InlineMath math="10" />, yang penting adalah memahami posisinya: daerah peralihan antara logam dan nonlogam.
+
+## Kenapa Ada Dua Baris di Bawah
+
+Jika lantanida dan aktinida diletakkan di tengah tabel utama, tabel periodik akan menjadi sangat lebar. Karena itu, keduanya biasanya dipindahkan ke bawah. Ini hanya cara menggambar agar peta mudah dibaca, bukan berarti unsur-unsur itu terpisah dari sistem periodik.
+
+Lantanida tetap bagian dari periode <InlineMath math="6" />, sedangkan aktinida tetap bagian dari periode <InlineMath math="7" />.
+
+## Coba Baca Petanya
+
+Gunakan peta interaktif itu untuk mengecek jawaban kalian sendiri.
+
+| Pertanyaan | Cek jawaban |
+| :--------- | :---------- |
+| Di golongan berapa <InlineMath math="\mathrm{Mg}" />, <InlineMath math="\mathrm{Ca}" />, dan <InlineMath math="\mathrm{Sr}" />? | Ketiganya berada pada golongan <InlineMath math="2" />. |
+| Mengapa <InlineMath math="\mathrm{Na}" /> sampai <InlineMath math="\mathrm{Ar}" /> berada pada periode <InlineMath math="3" />? | Dalam model kulit sederhana, kulit utama terluarnya sama-sama kulit <InlineMath math="\mathrm{M}" />. |
+| Mengapa <InlineMath math="\mathrm{B}" />, <InlineMath math="\mathrm{Si}" />, dan <InlineMath math="\mathrm{Ge}" /> sering dibahas sebagai semilogam? | Letaknya berada di daerah peralihan antara logam dan nonlogam. |
+| Mengapa unsur satu golongan utama sering memiliki sifat kimia mirip? | Elektron valensinya sama atau berpola mirip, sehingga cara unsur itu bereaksi juga sering mirip. |
+
+Nama dan nomor unsur modern dapat dicek di [Periodic Table of Elements dari IUPAC](https://iupac.org/what-we-do/periodic-table-of-elements/). Rujukan pengantar pola tabel periodik juga tersedia di [The Periodic Table dari OpenStax](https://openstax.org/books/chemistry-atoms-first/pages/3-6-the-periodic-table).

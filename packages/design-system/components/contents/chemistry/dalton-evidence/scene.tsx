@@ -3,7 +3,12 @@ import type {
   Molecule,
 } from "@repo/design-system/components/contents/chemistry/dalton-evidence/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { getColor } from "@repo/design-system/lib/color";
+
+const ATOM_COLORS = {
+  C: "var(--muted-foreground)",
+  H: "var(--chart-1)",
+  O: "var(--primary)",
+} satisfies Record<AtomSymbol, string>;
 
 /**
  * Renders the selected Dalton evidence as one balanced comparison scene.
@@ -87,13 +92,5 @@ function Atom({ symbol }: { symbol: AtomSymbol }) {
 }
 
 function getAtomColor(symbol: AtomSymbol) {
-  if (symbol === "C") {
-    return getColor("SLATE");
-  }
-
-  if (symbol === "H") {
-    return getColor("CYAN");
-  }
-
-  return getColor("ROSE");
+  return ATOM_COLORS[symbol];
 }

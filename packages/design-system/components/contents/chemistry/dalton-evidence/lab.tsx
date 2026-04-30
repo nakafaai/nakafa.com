@@ -64,7 +64,8 @@ export function DaltonEvidenceLab({
       <CardContent className="flex flex-col gap-5">
         <ToggleGroup
           aria-label={labels.chooseMode}
-          className="w-full"
+          className="grid w-full grid-cols-1 sm:grid-cols-3"
+          layout="grid"
           onValueChange={handleModeChange}
           type="single"
           value={selectedModeId}
@@ -101,6 +102,9 @@ export function DaltonEvidenceLab({
   );
 }
 
+/**
+ * Renders one compact ratio fact in the lab footer.
+ */
 function LabFact({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-1">

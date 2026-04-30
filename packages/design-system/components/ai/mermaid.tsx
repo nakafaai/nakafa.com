@@ -12,15 +12,17 @@ const MAGIC_NUMBER = 0;
 const RANDOM_STRING_LENGTH = 9;
 const SHIFT_5 = 5;
 
+/**
+ * Loads Mermaid on the client and applies the site defaults before rendering.
+ */
 async function initializeMermaid(customConfig?: MermaidConfig) {
-  const defaultConfig: MermaidConfig = {
+  const defaultConfig = {
     startOnLoad: false,
     theme: "default",
     securityLevel: "strict",
     fontFamily: "inherit",
-    fontSize: 16,
     suppressErrorRendering: true,
-  } as MermaidConfig;
+  } satisfies MermaidConfig;
 
   const config = { ...defaultConfig, ...customConfig };
 
@@ -111,13 +113,20 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
   // Only show error if we have no valid SVG to display
   if (error && !svgContent && !lastValidSvg) {
     return (
-      <div className={cn("bg-red-50 p-4", className)}>
-        <p className="font-mono text-red-700 text-sm">Mermaid Error: {error}</p>
+      <div
+        className={cn(
+          "border border-destructive/20 bg-destructive/10 p-4",
+          className
+        )}
+      >
+        <p className="font-mono text-destructive text-sm">
+          Mermaid Error: {error}
+        </p>
         <details className="mt-2">
-          <summary className="cursor-pointer text-red-600 text-xs">
+          <summary className="cursor-pointer text-destructive text-xs">
             Show Code
           </summary>
-          <pre className="mt-2 overflow-x-auto rounded bg-red-100 p-2 text-red-800 text-xs">
+          <pre className="mt-2 overflow-x-auto rounded bg-destructive/10 p-2 text-destructive text-xs">
             {chart}
           </pre>
         </details>

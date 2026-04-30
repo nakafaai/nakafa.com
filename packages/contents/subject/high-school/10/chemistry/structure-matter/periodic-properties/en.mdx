@@ -1,0 +1,101 @@
+import { PeriodicPropertiesLab } from "@repo/design-system/components/contents/chemistry/periodic-properties/lab";
+
+export const metadata = {
+  title: "Periodic Properties of Elements",
+  description:
+    "Read atomic radius, first ionization energy, electron affinity, and electronegativity from an element's position in the periodic table.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/29/2026",
+  subject: "Atomic Structure",
+};
+
+## Nuclear Pull Seen on a Map
+
+The periodic table can be read like a map. An element's position gives clues about atomic size, how easily an electron is removed, and how strongly the atom pulls electrons in a bond.
+
+The key idea is **nuclear attraction toward valence electrons**. Valence electrons are electrons in the outer shell. When the number of protons increases, the nuclear pull usually becomes stronger. When the number of shells increases, valence electrons are farther from the nucleus and feel a weaker pull.
+
+<PeriodicPropertiesLab
+  title={<>Periodic Trend Map</>}
+  description={
+    <>
+      Pick one property, then compare the period track and the group track. The
+      model shows the direction first so the terms feel less abstract.
+    </>
+  }
+  labels={{
+    chooseTrend: "Choose a periodic property",
+    sceneLabel: "Three-dimensional model of periodic properties",
+    factLabels: {
+      question: "Read as",
+      period: "Across a period",
+      group: "Down a group",
+      cause: "Closest reason",
+    },
+    modes: {
+      "atomic-radius": {
+        tab: "Radius",
+        name: "Atomic radius",
+        question: <>Relative atomic size, usually in <InlineMath math="\mathrm{pm}" />.</>,
+        periodTrend: <>From <InlineMath math="\mathrm{Na}" /> to <InlineMath math="\mathrm{Cl}" />, the size decreases.</>,
+        groupTrend: <>From <InlineMath math="\mathrm{N}" /> to <InlineMath math="\mathrm{Bi}" />, the size increases.</>,
+        cause: <>To the right, <InlineMath math="Z" /> increases. Downward, the number of shells increases.</>,
+        guidance: <>Start with the period track: the <InlineMath math="\mathrm{Na}" /> marker is largest, then the markers shrink toward <InlineMath math="\mathrm{Cl}" />. In the same period, the nucleus pulls the outer electrons more strongly.</>,
+      },
+      "ionization-energy": {
+        tab: "Ionization",
+        name: "First ionization energy",
+        question: <>The minimum energy needed to remove the first electron from a neutral gaseous atom, written <InlineMath math="E_1" />.</>,
+        periodTrend: <>It generally rises from <InlineMath math="\mathrm{Na}" /> to <InlineMath math="\mathrm{Ar}" />, with small dips at <InlineMath math="\mathrm{Al}" /> and <InlineMath math="\mathrm{S}" />.</>,
+        groupTrend: <>In the alkali group, it decreases from <InlineMath math="\mathrm{Li}" /> to <InlineMath math="\mathrm{Cs}" />.</>,
+        cause: <>An electron that is closer to the nucleus and held more strongly is harder to remove.</>,
+        guidance: <>The period track does not rise perfectly smoothly. That is expected: subshell arrangements make a few atoms easier to ionize than their neighbors.</>,
+      },
+      "electron-affinity": {
+        tab: "Affinity",
+        name: "Electron affinity",
+        question: <>The energy change when a gaseous atom accepts an electron. In this model, taller markers mean more energy is released.</>,
+        periodTrend: <>Halogens such as <InlineMath math="\mathrm{Cl}" /> are high; <InlineMath math="\mathrm{Mg}" /> and <InlineMath math="\mathrm{Ar}" /> are low because accepting an electron is unfavorable.</>,
+        groupTrend: <>Among halogens, <InlineMath math="\mathrm{Cl}" /> is slightly higher than <InlineMath math="\mathrm{F}" />, then the value tends to decrease toward <InlineMath math="\mathrm{I}" />.</>,
+        cause: <>Nuclear pull helps an electron enter, but electron repulsion and filled shells make this trend less tidy than the others.</>,
+        guidance: <>Notice the prominent <InlineMath math="\mathrm{Cl}" /> marker. Electron affinity has important exceptions, so read it with its sign and context instead of memorizing one clean arrow.</>,
+      },
+      "electronegativity": {
+        tab: "Electronegativity",
+        name: "Electronegativity",
+        question: <>An atom's tendency to attract shared electrons in a chemical bond, often written <InlineMath math="\chi" />.</>,
+        periodTrend: <>It increases from <InlineMath math="\mathrm{Na}" /> to <InlineMath math="\mathrm{Cl}" />.</>,
+        groupTrend: <>It decreases from <InlineMath math="\mathrm{F}" /> to <InlineMath math="\mathrm{I}" />.</>,
+        cause: <>A small atom with strong nuclear pull attracts bonding electron pairs more strongly.</>,
+        guidance: <>The model shows the upper-right region as the strongest electron-pulling area. That is why <InlineMath math="\mathrm{F}" /> is the strongest reference point on the Pauling scale.</>,
+      },
+    },
+  }}
+/>
+
+## Four Properties, Four Questions
+
+Do not memorize arrows first. Ask what each property is trying to answer.
+
+- **Atomic radius** asks: how large is the atom? Atoms do not have hard surfaces, so size is read from internuclear distances or another comparable measurement model.
+- **First ionization energy** asks: how hard is it to remove the first electron from a neutral atom?
+- **Electron affinity** asks: what energy change happens when an electron enters a gaseous atom?
+- **Electronegativity** asks: how strongly does an atom pull electrons that are shared in a bond?
+
+Electron affinity and electronegativity are easy to mix up. The difference is this: electron affinity is about an electron **entering** a gaseous atom, while electronegativity is about pulling electrons **inside a bond**.
+
+## The Most Useful Pattern
+
+Across one period, the number of protons increases, but the valence electrons are still in the same main shell. The effective nuclear attraction becomes stronger. As a result, atomic radius tends to decrease, while ionization energy and electronegativity tend to increase.
+
+Down one group, the number of shells increases. Valence electrons are farther from the nucleus, and inner electrons block part of the nuclear pull. This blocking effect is called **electron shielding**. Think of a lamp behind several sheets of paper: the light is still there, but it feels weaker from outside.
+
+Electron affinity needs more careful reading. If we use the reaction-energy convention, a negative value means energy is released:
+
+<BlockMath math="\mathrm{Cl(g)}+e^- \rightarrow \mathrm{Cl^-(g)} \qquad E_{\mathrm{ea}}<0" />
+
+Noble gases such as <InlineMath math="\mathrm{Ar}" /> already have stable valence shells, so they do not easily accept extra electrons. That is why electron affinity is less tidy than atomic radius or ionization energy.
+
+## A Safe Way to Read the Table
+
+Start with two questions: are the valence electrons closer to or farther from the nucleus? Is the effective nuclear attraction stronger or weaker? Those two questions explain most grade <InlineMath math="10" /> periodic trends without memorizing empty arrows.

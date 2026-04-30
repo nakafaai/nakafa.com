@@ -49,8 +49,7 @@ export function SubatomicParticlesLab({
   const { resolvedTheme } = useTheme();
   const useVerticalToggle = useMediaQuery(
     TAILWIND_MEDIA_QUERIES.belowSm,
-    false,
-    { getInitialValueInEffect: false }
+    false
   );
   const [selectedModeId, setSelectedModeId] =
     useState<SubatomicParticlesModeId>(CATHODE_RAY_MODE_ID);

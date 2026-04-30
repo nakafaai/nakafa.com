@@ -77,6 +77,7 @@ export function DimensionLab({
         <ToggleGroup
           aria-label={labels.chooseMode}
           className="grid w-full grid-cols-3"
+          layout="grid"
           onValueChange={handleModeChange}
           type="single"
           value={selectedModeId}

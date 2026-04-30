@@ -1,0 +1,101 @@
+import { PeriodicPropertiesLab } from "@repo/design-system/components/contents/chemistry/periodic-properties/lab";
+
+export const metadata = {
+  title: "Sifat Keperiodikan Unsur",
+  description:
+    "Baca pola jari-jari atom, energi ionisasi pertama, afinitas elektron, dan keelektronegatifan dari posisi unsur dalam tabel periodik.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/29/2026",
+  subject: "Struktur Atom",
+};
+
+## Tarikan Inti yang Terlihat di Peta
+
+Tabel periodik bisa dibaca seperti peta. Posisi unsur memberi petunjuk tentang ukuran atom, sulit atau mudahnya elektron lepas, dan kuatnya atom menarik elektron saat berikatan.
+
+Kunci besarnya ada pada **tarikan inti terhadap elektron valensi**. Elektron valensi adalah elektron pada kulit terluar. Saat jumlah proton bertambah, tarikan inti cenderung makin kuat. Saat jumlah kulit bertambah, elektron valensi makin jauh dari inti dan tarikan terasa lebih lemah.
+
+<PeriodicPropertiesLab
+  title={<>Peta Tren Periodik</>}
+  description={
+    <>
+      Pilih satu sifat, lalu perhatikan jalur periode dan golongan. Model ini
+      sengaja menunjukkan arah pola sebelum kita masuk ke definisi istilahnya.
+    </>
+  }
+  labels={{
+    chooseTrend: "Pilih sifat periodik",
+    sceneLabel: "Model tiga dimensi sifat keperiodikan unsur",
+    factLabels: {
+      question: "Dibaca sebagai",
+      period: "Dalam periode",
+      group: "Dalam golongan",
+      cause: "Alasan dekat",
+    },
+    modes: {
+      "atomic-radius": {
+        tab: "Jari-jari",
+        name: "Jari-jari atom",
+        question: <>Ukuran relatif atom, biasanya dalam <InlineMath math="\mathrm{pm}" />.</>,
+        periodTrend: <>Dari <InlineMath math="\mathrm{Na}" /> ke <InlineMath math="\mathrm{Cl}" />, ukurannya mengecil.</>,
+        groupTrend: <>Dari <InlineMath math="\mathrm{N}" /> ke <InlineMath math="\mathrm{Bi}" />, ukurannya membesar.</>,
+        cause: <>Ke kanan, <InlineMath math="Z" /> bertambah. Ke bawah, jumlah kulit bertambah.</>,
+        guidance: <>Mulai dari jalur periode: marker <InlineMath math="\mathrm{Na}" /> tampak paling besar, lalu mengecil ke arah <InlineMath math="\mathrm{Cl}" />. Artinya, dalam periode yang sama, inti makin kuat menarik elektron terluar.</>,
+      },
+      "ionization-energy": {
+        tab: "Ionisasi",
+        name: "Energi ionisasi pertama",
+        question: <>Energi minimum untuk melepas elektron pertama dari atom netral gas, ditulis <InlineMath math="E_1" />.</>,
+        periodTrend: <>Secara umum naik dari <InlineMath math="\mathrm{Na}" /> ke <InlineMath math="\mathrm{Ar}" />, walau ada lekukan di <InlineMath math="\mathrm{Al}" /> dan <InlineMath math="\mathrm{S}" />.</>,
+        groupTrend: <>Pada golongan alkali, nilainya turun dari <InlineMath math="\mathrm{Li}" /> ke <InlineMath math="\mathrm{Cs}" />.</>,
+        cause: <>Elektron yang dekat dan kuat tertarik inti lebih sulit dilepas.</>,
+        guidance: <>Pada jalur periode, tinggi marker tidak naik mulus. Itu normal: susunan subkulit membuat beberapa unsur sedikit lebih mudah melepas elektron daripada tetangganya.</>,
+      },
+      "electron-affinity": {
+        tab: "Afinitas",
+        name: "Afinitas elektron",
+        question: <>Perubahan energi saat atom gas menerima elektron. Di model ini, marker tinggi berarti energi yang dilepas makin besar.</>,
+        periodTrend: <>Halogen seperti <InlineMath math="\mathrm{Cl}" /> tinggi; <InlineMath math="\mathrm{Mg}" /> dan <InlineMath math="\mathrm{Ar}" /> rendah karena menerima elektron tidak menguntungkan.</>,
+        groupTrend: <>Pada halogen, <InlineMath math="\mathrm{Cl}" /> sedikit lebih tinggi dari <InlineMath math="\mathrm{F}" />, lalu cenderung turun ke <InlineMath math="\mathrm{I}" />.</>,
+        cause: <>Tarikan inti membantu elektron masuk, tetapi tolakan antarelektron dan kulit penuh membuat trennya tidak serapi sifat lain.</>,
+        guidance: <>Lihat marker <InlineMath math="\mathrm{Cl}" /> yang paling menonjol. Afinitas elektron memang punya pengecualian, jadi kita membaca polanya dengan tanda dan konteks, bukan dengan satu panah hafalan.</>,
+      },
+      "electronegativity": {
+        tab: "Elektronegatif",
+        name: "Keelektronegatifan",
+        question: <>Kecenderungan atom menarik elektron bersama dalam ikatan kimia, sering ditulis <InlineMath math="\chi" />.</>,
+        periodTrend: <>Naik dari <InlineMath math="\mathrm{Na}" /> ke <InlineMath math="\mathrm{Cl}" />.</>,
+        groupTrend: <>Turun dari <InlineMath math="\mathrm{F}" /> ke <InlineMath math="\mathrm{I}" />.</>,
+        cause: <>Atom kecil dengan tarikan inti kuat lebih mudah menarik pasangan elektron ikatan.</>,
+        guidance: <>Model ini memperlihatkan daerah kanan-atas sebagai daerah tarikan elektron yang kuat. Karena itu, <InlineMath math="\mathrm{F}" /> menjadi pembanding paling kuat pada skala Pauling.</>,
+      },
+    },
+  }}
+/>
+
+## Empat Sifat, Empat Pertanyaan
+
+Jangan hafalkan panahnya dulu. Tanyakan dulu sifat itu sedang menjawab pertanyaan apa.
+
+- **Jari-jari atom** bertanya: seberapa besar atomnya? Atom tidak punya permukaan keras, jadi ukuran dibaca dari jarak antarinti atau model pengukuran lain yang sebanding.
+- **Energi ionisasi pertama** bertanya: seberapa sulit melepas satu elektron pertama dari atom netral?
+- **Afinitas elektron** bertanya: energi apa yang berubah saat elektron masuk ke atom gas?
+- **Keelektronegatifan** bertanya: seberapa kuat atom menarik elektron yang sedang dipakai bersama dalam ikatan?
+
+Afinitas elektron dan keelektronegatifan sering tertukar. Bedanya begini: afinitas elektron membahas elektron **masuk** ke atom gas, sedangkan keelektronegatifan membahas tarikan elektron **di dalam ikatan**.
+
+## Pola yang Paling Sering Dipakai
+
+Dalam satu periode, jumlah proton bertambah, tetapi elektron valensi masih berada pada kulit utama yang sama. Tarikan inti efektif makin kuat. Akibatnya, jari-jari atom cenderung mengecil, sedangkan energi ionisasi dan keelektronegatifan cenderung membesar.
+
+Dalam satu golongan, jumlah kulit bertambah. Elektron valensi berada lebih jauh dari inti dan sebagian tarikan inti tertahan oleh elektron dalam. Efek penahan ini disebut **perisai elektron**. Bayangkan lampu yang ditutup beberapa lembar kertas: cahayanya masih ada, tetapi dari luar terasa lebih lemah.
+
+Afinitas elektron perlu dibaca lebih hati-hati. Jika kita memakai konvensi perubahan energi reaksi, nilai negatif berarti energi dilepas:
+
+<BlockMath math="\mathrm{Cl(g)}+e^- \rightarrow \mathrm{Cl^-(g)} \qquad E_{\mathrm{ea}}<0" />
+
+Gas mulia seperti <InlineMath math="\mathrm{Ar}" /> sudah memiliki kulit valensi stabil, sehingga tidak mudah menerima elektron tambahan. Itulah sebabnya afinitas elektron tidak serapi tren jari-jari atom atau energi ionisasi.
+
+## Cara Aman Membaca Tabel Periodik
+
+Mulailah dari dua pertanyaan sederhana: elektron valensi makin dekat atau makin jauh dari inti? Tarikan inti efektif makin kuat atau makin lemah? Dari dua pertanyaan itu, sebagian besar tren periodik kelas <InlineMath math="10" /> bisa dijelaskan tanpa menghafal panah kosong.

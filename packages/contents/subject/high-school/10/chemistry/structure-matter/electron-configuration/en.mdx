@@ -1,0 +1,157 @@
+import { ElectronConfigurationLab } from "@repo/design-system/components/contents/chemistry/electron-configuration/lab";
+
+export const metadata = {
+  title: "Electron Configuration",
+  description:
+    "Learn electron configuration as a way to read how electrons are distributed in atomic shells, how it connects to line spectra, and where the Bohr model is limited.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/29/2026",
+  subject: "Atomic Structure",
+};
+
+## Flame Colors Give a Clue
+
+When salts such as <InlineMath math="\mathrm{NaCl}" /> or <InlineMath math="\mathrm{KCl}" /> are heated in a flame test, the visible color is not random. Heat energy can temporarily place electrons at a higher energy state. When the electrons return to a lower state, the atom or ion emits light.
+
+OpenStax explains that the Bohr model uses discrete energy levels to explain the line spectrum of hydrogen. The concept reference can be opened through [OpenStax's Bohr Model](https://openstax.org/books/chemistry-atoms-first-2e/pages/3-2-the-bohr-model).
+
+The word **discrete** means not every energy value is allowed. A simple analogy is a staircase: you can stand on the first, second, or third step, but not comfortably in the empty space halfway between two steps. In an atom, electrons are only allowed at certain energy levels.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Energy enters"] --> B["Electron is excited"]
+    B --> C["Electron returns"]
+    C --> D["Light is emitted"]
+    D --> E["Line spectrum"]`}
+/>
+
+**Excitation** means an electron absorbs energy and temporarily moves to a higher energy level. When the electron drops back down, energy is released as light. In a flame test, the experiment must follow teacher instructions and use protective equipment because it involves heating chemicals.
+
+## What Electron Configuration Means
+
+**Electron configuration** is a way to write how electrons are distributed around the atomic nucleus. Here, we use a **simple shell model**, where electrons are grouped into shells <InlineMath math="\mathrm{K}" />, <InlineMath math="\mathrm{L}" />, <InlineMath math="\mathrm{M}" />, and <InlineMath math="\mathrm{N}" />.
+
+For a neutral atom:
+
+<BlockMath math="e^- = Z" />
+
+The symbol <InlineMath math="e^-" /> is the number of electrons, while <InlineMath math="Z" /> is the atomic number or the number of protons. So a neutral sodium atom with <InlineMath math="Z = 11" /> has <InlineMath math="11" /> electrons.
+
+This simple shell model is limited to light-element examples up to calcium, which means <InlineMath math="Z \le 20" />. For heavier elements, modern chemistry uses a more detailed discussion of subshells and orbitals. OpenStax discusses that deeper form in [Electronic Structure and Electron Configurations](https://openstax.org/books/chemistry-atoms-first-2e/pages/3-4-electronic-structure-of-atoms-electron-configurations).
+
+## Interactive Electron Shell Map
+
+Choose a neutral atom below. First read its atomic number, then see how its electrons spread from the inner shell to the outer shell.
+
+<ElectronConfigurationLab
+  title={<>Electron Configuration Map</>}
+  description={
+    <>
+      Choose a neutral atom, then read the electron count in the simple
+      <InlineMath math="\mathrm{K}" />, <InlineMath math="\mathrm{L}" />,
+      <InlineMath math="\mathrm{M}" />, and <InlineMath math="\mathrm{N}" />{" "}
+      shells.
+    </>
+  }
+  labels={{
+    chooseAtom: "Choose a neutral atom",
+    atomicNumber: "Atomic number",
+    electronTotal: "Electron count",
+    configuration: "Configuration",
+    outerShell: "Outer shell",
+    samples: {
+      hydrogen: {
+        name: "Hydrogen",
+        note: <>It has only <InlineMath math="1" /> electron, so it is in the <InlineMath math="\mathrm{K}" /> shell.</>,
+      },
+      helium: {
+        name: "Helium",
+        note: <>The <InlineMath math="\mathrm{K}" /> shell is full with <InlineMath math="2" /> electrons.</>,
+      },
+      carbon: {
+        name: "Carbon",
+        note: <>The <InlineMath math="\mathrm{K}" /> shell is full, then the remaining electrons enter the <InlineMath math="\mathrm{L}" /> shell.</>,
+      },
+      neon: {
+        name: "Neon",
+        note: <>Its configuration is <InlineMath math="2, 8" />, so the first two shells are full.</>,
+      },
+      sodium: {
+        name: "Sodium",
+        note: <>After <InlineMath math="2, 8" />, there is still <InlineMath math="1" /> electron in the next shell.</>,
+      },
+      magnesium: {
+        name: "Magnesium",
+        note: <>Its configuration is <InlineMath math="2, 8, 2" /> for a neutral atom.</>,
+      },
+      chlorine: {
+        name: "Chlorine",
+        note: <>Its outer shell has <InlineMath math="7" /> electrons in this simple model.</>,
+      },
+      calcium: {
+        name: "Calcium",
+        note: <>For elements up to calcium, the simple shell model writes <InlineMath math="2, 8, 8, 2" />.</>,
+      },
+    },
+  }}
+/>
+
+## Reading the Filling Order
+
+In the simple shell model for the first elements up to calcium, electrons are filled from the shell closer to the nucleus first. The order is:
+
+| Shell | Maximum count in this simple model | How to read it |
+| :---- | :------------------------------- | :------------- |
+| <InlineMath math="\mathrm{K}" /> | <InlineMath math="2" /> | First shell, closest to the nucleus. |
+| <InlineMath math="\mathrm{L}" /> | <InlineMath math="8" /> | Filled after the <InlineMath math="\mathrm{K}" /> shell is full. |
+| <InlineMath math="\mathrm{M}" /> | <InlineMath math="8" /> for this early pattern | Filled after the <InlineMath math="\mathrm{L}" /> shell is full. |
+| <InlineMath math="\mathrm{N}" /> | Starts appearing around elements with <InlineMath math="Z = 19" /> to <InlineMath math="20" /> in the early pattern | Used after the <InlineMath math="2, 8, 8" /> pattern. |
+
+Important note: the <InlineMath math="\mathrm{M}" /> shell can be discussed in more detail in later chemistry. Here, the <InlineMath math="2, 8, 8, 2" /> pattern is used as a grade-level bridge for light elements, not as a complete rule for every element.
+
+Sodium example:
+
+<BlockMath math="\begin{aligned}
+\mathrm{Na}: Z &= 11 \\
+e^- &= 11 \\
+\text{configuration} &= 2, 8, 1
+\end{aligned}" />
+
+Chlorine example:
+
+<BlockMath math="\begin{aligned}
+\mathrm{Cl}: Z &= 17 \\
+e^- &= 17 \\
+\text{configuration} &= 2, 8, 7
+\end{aligned}" />
+
+## Connecting Configuration to Spectra
+
+Electron configuration shows the arrangement of electrons in the ground state, meaning the usual stable energy state. A line spectrum appears when an electron receives energy and then returns to a lower energy level.
+
+The energy of the emitted light can be written as:
+
+<BlockMath math="E_{\text{photon}} = E_{\text{high}} - E_{\text{low}} = h\nu = \frac{hc}{\lambda}" />
+
+The symbol <InlineMath math="h" /> is Planck's constant, <InlineMath math="\nu" /> is the frequency of light, <InlineMath math="c" /> is the speed of light, and <InlineMath math="\lambda" /> is wavelength. NIST lists the exact values <InlineMath math="h = 6.62607015 \times 10^{-34}\ \mathrm{J\,s}" /> and <InlineMath math="c = 2.99792458 \times 10^8\ \mathrm{m\,s^{-1}}" /> in its CODATA constants list. The reference can be opened through [NIST's Fundamental Physical Constants](https://physics.nist.gov/cuu/Constants/Table/allascii.txt).
+
+For grade <InlineMath math="10" />, the main idea is enough: electrons have certain energy levels, changes between energy levels produce specific light, and electron arrangement helps us read atomic behavior.
+
+## Quick Check from Atomic Number
+
+When asked to write a simple electron configuration, use this order:
+
+- Make sure whether the particle is a neutral atom or an ion.
+- If it is neutral, the electron count equals the atomic number.
+- Fill shells from inside to outside in the model being used.
+- Write the electron count in each shell with commas.
+
+For neutral magnesium:
+
+<BlockMath math="\begin{aligned}
+Z &= 12 \\
+e^- &= 12 \\
+\text{configuration} &= 2, 8, 2
+\end{aligned}" />
+
+So the electron configuration of neutral magnesium is <InlineMath math="2, 8, 2" />. Starting from the atomic number is safer than trying to memorize a configuration list directly.

@@ -1,0 +1,136 @@
+import { AtomSymbolLab } from "@repo/design-system/components/contents/chemistry/atom-symbol/lab";
+
+export const metadata = {
+  title: "Lambang Atom",
+  description:
+    "Pelajari cara membaca nomor atom, nomor massa, jumlah proton, neutron, dan elektron dari lambang atom.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/29/2026",
+  subject: "Struktur Atom",
+};
+
+## Kartu Identitas Atom
+
+Lambang atom adalah cara ringkas untuk menulis identitas sebuah atom. Seperti kartu pelajar yang memuat nama dan nomor induk, lambang atom memuat **simbol unsur**, **nomor atom**, dan **nomor massa**.
+
+Bagian Atomic Structure and Symbolism dari OpenStax menjelaskan bahwa nomor atom adalah jumlah proton, sedangkan nomor massa adalah jumlah proton dan neutron. Bagian itu bisa dibuka di [Atomic Structure and Symbolism dari OpenStax](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-3-atomic-structure-and-symbolism).
+
+Notasi yang sering dipakai di kelas kimia adalah:
+
+<BlockMath math="{}^{A}_{Z}\mathrm{X}" />
+
+Cara membacanya:
+
+- <InlineMath math="\mathrm{X}" /> adalah simbol unsur
+- <InlineMath math="Z" /> adalah nomor atom
+- <InlineMath math="A" /> adalah nomor massa
+
+## Baca Angkanya dari Posisi
+
+Pilih atom di bawah ini, lalu baca posisi angkanya. Angka atas bukan pangkat. Angka bawah juga bukan pembagi. Keduanya adalah "label posisi" untuk memberi tahu bagian atom mana yang sedang dihitung.
+
+<AtomSymbolLab
+  title={<>Pembaca Lambang Atom</>}
+  description={
+    <>
+      Ubah contoh atom, lalu cocokkan angka kiri atas dan kiri bawah dengan
+      jumlah partikel penyusunnya.
+    </>
+  }
+  labels={{
+    chooseAtom: "Pilih contoh atom",
+    massNumber: "Nomor massa",
+    atomicNumber: "Nomor atom",
+    elementSymbol: "Simbol unsur",
+    protonCount: "Proton",
+    neutronCount: "Neutron",
+    electronCount: "Elektron",
+    neutralAtom: "pada atom netral",
+    samples: {
+      "carbon-12": {
+        tab: "Karbon",
+        ariaName: "Karbon-12",
+        name: <InlineMath math="{}^{12}_{6}\mathrm{C}" />,
+      },
+      "oxygen-16": {
+        tab: "Oksigen",
+        ariaName: "Oksigen-16",
+        name: <InlineMath math="{}^{16}_{8}\mathrm{O}" />,
+      },
+      "sodium-23": {
+        tab: "Natrium",
+        ariaName: "Natrium-23",
+        name: <InlineMath math="{}^{23}_{11}\mathrm{Na}" />,
+      },
+      "chlorine-35": {
+        tab: "Klorin",
+        ariaName: "Klorin-35",
+        name: <InlineMath math="{}^{35}_{17}\mathrm{Cl}" />,
+      },
+    },
+  }}
+/>
+
+## Tiga Hitungan Utama
+
+Nomor atom ditulis sebagai <InlineMath math="Z" />. Angka ini sama dengan jumlah proton di inti atom.
+
+<BlockMath math="Z = p^+" />
+
+Untuk atom netral, jumlah elektron sama dengan jumlah proton. Netral berarti total muatan positif dan negatif saling menyeimbangkan.
+
+<BlockMath math="\text{atom netral} \Rightarrow e^- = p^+ = Z" />
+
+Nomor massa ditulis sebagai <InlineMath math="A" />. Angka ini menghitung proton dan neutron di inti atom.
+
+<BlockMath math="A = p^+ + n^0" />
+
+Kalau nomor massa dan nomor atom sudah diketahui, jumlah neutron tinggal dicari dari selisihnya:
+
+<BlockMath math="n^0 = A - Z" />
+
+## Contoh Karbon
+
+Untuk atom karbon dengan nomor massa <InlineMath math="12" />, lambangnya ditulis:
+
+<BlockMath math="{}^{12}_{6}\mathrm{C}" />
+
+Dari lambang itu, kita baca:
+
+<BlockMath math="\begin{aligned}
+Z &= 6 \Rightarrow p^+ = 6 \\
+A &= 12 \Rightarrow p^+ + n^0 = 12 \\
+n^0 &= 12 - 6 = 6
+\end{aligned}" />
+
+Jika atom <InlineMath math="{}^{12}_{6}\mathrm{C}" /> itu netral, jumlah elektronnya juga <InlineMath math="6" />.
+
+## Jangan Tertukar dengan Massa Atom Rata-Rata
+
+Di tabel periodik, kalian sering melihat angka desimal seperti massa atom relatif karbon sekitar <InlineMath math="12{,}01" />. Angka desimal itu bukan nomor massa satu atom karbon tertentu.
+
+Catatan kolom data NIST menjelaskan bahwa massa atom relatif suatu unsur diperoleh dari rata-rata massa isotop-isotop unsur tersebut. Penjelasan itu bisa dibuka di [Atomic Weights and Isotopic Compositions dari NIST](https://www.nist.gov/pml/atomic-weights-and-isotopic-compositions-column-descriptions).
+
+Jadi bedakan dua hal ini:
+
+| Yang dibaca | Bentuk umum | Makna |
+| :---------- | :---------- | :---- |
+| Nomor massa | Bilangan bulat, misalnya <InlineMath math="12" /> pada <InlineMath math="{}^{12}_{6}\mathrm{C}" /> | Jumlah proton dan neutron dalam satu atom tertentu. |
+| Massa atom relatif | Sering desimal, misalnya sekitar <InlineMath math="12{,}01" /> untuk karbon | Rata-rata massa isotop dalam sampel alami. |
+
+Perbedaan ini penting untuk membaca tiga situasi yang sering muncul: lambang atom memberi jumlah proton dan neutron, ion mengubah jumlah elektron, sedangkan isotop mengubah jumlah neutron. Identitas unsur tetap dikunci oleh jumlah proton.
+
+## Simbol Unsur Harus Tepat Kapitalnya
+
+Simbol unsur biasanya terdiri dari satu atau dua huruf. Huruf pertama selalu kapital, sedangkan huruf kedua jika ada selalu huruf kecil.
+
+| Penulisan | Cara membaca |
+| :-------- | :----------- |
+| <InlineMath math="\mathrm{C}" /> | Karbon |
+| <InlineMath math="\mathrm{Cl}" /> | Klorin |
+| <InlineMath math="\mathrm{Co}" /> | Kobalt |
+| <InlineMath math="\mathrm{CO}" /> | Bukan satu unsur, tetapi rumus karbon monoksida |
+
+OpenStax memberi contoh bahwa <InlineMath math="\mathrm{Co}" /> adalah kobalt, sedangkan <InlineMath math="\mathrm{CO}" /> adalah senyawa karbon monoksida. Jadi, kapital kecilnya bukan hiasan. Satu huruf yang salah bisa mengubah makna kimianya.
+
+Tabel periodik resmi IUPAC memuat simbol dan massa atom relatif unsur yang ditinjau berkala. Rujukan itu bisa dibuka di [Periodic Table of Elements dari IUPAC](https://iupac.org/what-we-do/periodic-table-of-elements/).

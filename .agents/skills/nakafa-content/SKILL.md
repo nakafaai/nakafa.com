@@ -14,6 +14,9 @@ Guidelines for creating educational content and exercises for the Nakafa platfor
 - Local content patterns: inspect nearby files in `packages/contents/` before writing.
 - Local MDX components: verify against `packages/design-system/components/markdown/mdx.tsx`.
 - Visual components: verify against `packages/design-system/components/contents/` and the component's prop types.
+- Before creating or changing any content visualization, trace the relevant files in `packages/design-system/components/contents/`, not just the one component you plan to edit. Inspect the subject folder, sibling lessons, shared content helpers, and at least one cross-domain component with similar interaction or layout.
+- For R3F or Three.js visuals, also inspect `packages/design-system/components/three/`, shared color utilities, UI primitives used by nearby content cards, and theme/style files before coding.
+- For structural or style changes, skim recent git history and current diff for the touched content and design-system paths so old patterns, dead code, and user edits are not reintroduced.
 
 ## Skill Package Files
 
@@ -48,13 +51,13 @@ Indonesian is allowed only inside snippets that intentionally demonstrate `id.md
 ### For Actual Content (MDX Files)
 - **Indonesian (id.mdx)**: Use proper Indonesian grammar with natural, engaging tone
   - Use "kita" (we) and "kalian" (you all) to engage readers
-  - Write like you're explaining to a friend, but keep it educational
+  - Write like a clear teacher guiding students in class, not like a stiff textbook author or content-management note
   - Match the student's level. Use familiar examples, small analogies, and concrete situations when they make the concept easier to understand.
   - Keep analogies honest. State the real concept clearly and avoid analogies that hide important limits.
   - Example: "Mari kita mulai dengan...", "Pernahkah kalian memperhatikan..."
   
 - **English (en.mdx)**: Use proper English grammar with natural, engaging tone
-  - Write clearly and conversationally
+  - Write clearly and conversationally, like a teacher guiding students, not like a formal textbook voice
   - Keep it educational but not stiff
   - Match the student's level. Use familiar examples, small analogies, and concrete situations when they make the concept easier to understand.
   - Keep analogies honest. State the real concept clearly and avoid analogies that hide important limits.
@@ -157,14 +160,23 @@ import { BacterialGrowth } from "@repo/design-system/components/contents/mathema
 - Use the simplest visual that fully explains the concept. Plain MDX, tables, Mermaid, or existing content components are enough when the idea stays readable.
 - When a custom illustration starts needing many layered shapes, labels, hover states, responsive breakpoints, or animation paths, prefer React Three Fiber / Three.js over complex hand-built SVG.
 - Trace `packages/design-system/components/contents/` before building custom visuals. Use the closest existing domain component as inspiration, whether it lives under chemistry, mathematics, physics, or a shared root component.
+- Do not stop at one file. Use `rg --files packages/design-system/components/contents` to map the component surface, then read the sibling folder, shared helpers, and comparable components before choosing an implementation pattern.
 - For complex interactive visualizations, follow the common patterns already used across `components/contents`: one card, stable default camera, readable labels on first render, responsive canvas, and optional orbit interaction when 3D exploration helps.
 - For R3F work, read the relevant `r3f-*` skills and nearby `packages/design-system/components/three/` utilities before coding. Use shared `ThreeCanvas`, `CameraControls`, `SceneLabel`, theme-aware colors, and existing design-system primitives where they fit.
+- Inspect all directly relevant files in `packages/design-system/components/three/` before adding scene code: canvas wrapper, camera controls, shared constants, labels, materials, color helpers, and any existing scene utilities.
 - The first render must be understandable without dragging, zooming, or rotating. Interactivity should improve exploration, not be required to read labels or identify objects.
+- Prefer "show, then explain": let the visual carry the main concept first, then use short prose or footer facts for reading guidance. Do not duplicate the same information in large side-by-side text panels when the visual already shows it.
 - Avoid custom SVG when it becomes a layout workaround. If labels clip, overlap, flicker, or need many viewport-specific fixes, switch to R3F or simplify the visual.
 
 ### Color System
 
-Always use `getColor()` for deterministic colors:
+Use theme tokens for UI chrome and deterministic colors only for data or scientific categories.
+
+- Use semantic classes such as `bg-card`, `bg-background`, `bg-muted`, `text-foreground`, `text-muted-foreground`, `border`, `bg-primary`, `text-primary-foreground`, `bg-secondary`, and `text-secondary-foreground` for cards, labels, badges, buttons, and explanatory panels.
+- Do not use palette utility classes such as `text-white`, `bg-blue-*`, `bg-rose-*`, or hard-coded foreground colors in reusable content components unless a visualization truly needs a measured category color and the foreground remains readable in every theme.
+- Do not use arbitrary Tailwind values for typography or common spacing in content components, such as `text-[0.7rem]`, when the Tailwind scale already has `text-xs`, `text-sm`, `gap-2`, `p-3`, and similar readable utilities. Reserve arbitrary values for geometry that cannot be represented clearly with the scale, such as generated chart grids or precise canvas math.
+- Do not add background blocks inside a content card just to separate information. Let the card surface carry the background; use whitespace, border, or a small ring only when grouping is necessary for comprehension.
+- Use `getColor()` for deterministic visualization colors:
 
 ```typescript
 import { getColor } from "@repo/design-system/lib/color";
@@ -187,6 +199,15 @@ import { getColor } from "@repo/design-system/lib/color";
 ```
 
 Avoid default RED, GREEN, or BLUE for generic lines. Pick deterministic colors that support the explanation.
+
+### Implementation Hygiene
+
+- Let existing design-system patterns lead. Read component props, local helpers, UI primitives, theme tokens, and utilities before inventing new structure.
+- Avoid hard-coded styling for reusable UI: no palette utility classes, no hard-coded foreground colors, no arbitrary typography or spacing when Tailwind scale utilities exist, and no inline styles except deterministic visualization geometry or data colors.
+- Name geometry constants and derive repeated values from data. Do not hard-code repeated points, particles, rows, columns, labels, or visual state by hand when they can be generated from structured data.
+- Keep final code clean: no redundant branches, wrapper functions without a real readability gain, commented-out code, temporary artifacts, legacy fallback paths, dead exports, or leftover verification files.
+- Keep layout cohesive. Avoid card-inside-card, dense left-right explanation panels, and background blocks that only separate information visually. Use whitespace, borders, footer facts, or a clearer visual instead.
+- Validate mobile, tablet, and desktop when a component is visual or interactive. Check overflow, toggle shape, label readability, first-render camera framing, and whether the user can understand the concept without extra dragging or guessing.
 
 ## Math Formatting Rules
 
@@ -269,6 +290,8 @@ Use comma: `3,14` (not `3.14`)
 - Descriptive titles (NOT "Step 1")
 - **NO symbols or math** in headings
 - **NO parentheses** in headings (use "Analysis 1" not "Analysis (1)")
+- Use h3 when one h2 section contains distinct sibling ideas, such as several concept cases, a worked-example table followed by a row check, or a common-misconception note after calculation steps.
+- Do not force h3 into every lesson. An h2-only page is correct when each h2 section already contains one focused idea.
 
 **Correct:**
 ```md
@@ -311,6 +334,13 @@ No nested lists. No blank lines between items.
 - **Original value**: Add worked examples, intuition, checks, or common mistakes beyond a plain rewrite of the source.
 - **No Formulaic Closings**: Avoid repeated generic closing sections such as "Key Takeaway", "Summary", or localized equivalents on every lesson. If a closing note helps, make it specific to the lesson and weave it naturally into the final section.
 
+### No Meta-Jargon or Ambiguous Practice
+
+- Do not write content-management phrases inside lessons, such as "this is not a blank exercise", "use this as filler", "practice data", or similar wording that sounds like an author note instead of a teacher speaking to students.
+- If a table, prompt, or activity is a worked example, say that directly and show enough calculation or reasoning for students to verify at least one row.
+- If a lesson asks students to solve something, include the answer, explanation, or an immediately visible self-check. Do not leave lesson-page practice ambiguous.
+- Use human labels such as "worked example", "completed example", "sample data", or a precise concept heading instead of defensive phrasing about what the section is not.
+
 ### Grade-Level Fit
 
 - Read the path and metadata before writing. The route often tells you the target level, grade, subject, topic, and lesson.
@@ -329,6 +359,7 @@ No nested lists. No blank lines between items.
 - **Original Learning Path**: Give each lesson its own angle, such as a concrete phenomenon, a misconception, a comparison, a small investigation, a worked example, or an interactive model.
 - **No Forced Sections**: Do not add an activity, visualization, Mermaid chart, recap, or closing paragraph unless it genuinely improves understanding.
 - **Human Rhythm**: Vary paragraph length, examples, transitions, and final notes so adjacent subchapters do not read like they came from one rigid template.
+- **Teacher Voice**: Prefer direct classroom explanations: point at what students should notice, name the reason, then give a quick check. Avoid stiff book-author phrasing, defensive meta-comments, and generic filler transitions.
 
 ### Paragraphs and Math
 
@@ -494,14 +525,20 @@ labels: [
 Before submitting content:
 
 - [ ] Nearby content patterns were inspected
+- [ ] Relevant files under `packages/design-system/components/contents/` were traced before adding or changing a visual component
+- [ ] Relevant files under `packages/design-system/components/three/`, theme/style files, UI primitives, and shared utilities were inspected before R3F or design-system visual work
+- [ ] Recent git history and current diff were checked for touched content/design-system paths before structural changes
 - [ ] Source material and target scope are clear
 - [ ] The language, examples, analogies, and cognitive load match the target grade and subject
+- [ ] The voice sounds like a teacher guiding students, not a stiff textbook author or internal content note
 - [ ] The lesson works as a standalone page for students arriving from search
 - [ ] Abbreviations, acronyms, symbols, and potentially ambiguous terms are defined on first use in each locale
 - [ ] The section flow is specific to this lesson and does not copy a repeated template from adjacent lessons
 - [ ] Headings are specific enough that they do not feel reusable across every subchapter
 - [ ] Visualizations, Mermaid diagrams, activities, and closings are included only when they improve the lesson
 - [ ] Content is original, useful, and aligned with Google helpful-content guidance
+- [ ] Lesson prose has no meta-jargon such as "not a blank exercise"; worked examples and practice prompts are named plainly
+- [ ] Any lesson-page practice includes an answer, explanation, or immediately visible self-check
 - [ ] Math notation consistent between question and answer
 - [ ] All math expressions, variables, quantities, units, coordinates, and calculated values use math components
 - [ ] Calendar years are plain text only when they are calendar context, not formula/data values
@@ -515,8 +552,10 @@ Before submitting content:
 - [ ] Headings start at `##` and do not go deeper than `###`
 - [ ] No em dash appears in prose
 - [ ] Date format is MM/DD/YYYY
-- [ ] Colors use `getColor()` not hard-coded values
+- [ ] UI colors use theme tokens, deterministic visualization colors avoid palette utility classes or hard-coded foregrounds, and typography/spacing uses Tailwind scale utilities instead of arbitrary values when a scale utility exists
 - [ ] 3D points generated via `Array.from()`, not hard-coded
+- [ ] No redundant code, dead code, leftover verification artifact, legacy fallback, or wrapper-without-benefit remains
+- [ ] Visual components were checked on mobile, tablet, and desktop for overflow, label readability, toggle layout, and first-render framing
 - [ ] No option letters (A, B, C) in explanations
 - [ ] Explanations are clear and unambiguous
 - [ ] Graph descriptions end with period

@@ -49,8 +49,7 @@ export function SubatomicParticlePropertiesLab({
   const { resolvedTheme } = useTheme();
   const useVerticalToggle = useMediaQuery(
     TAILWIND_MEDIA_QUERIES.belowSm,
-    false,
-    { getInitialValueInEffect: false }
+    false
   );
   const [selectedModeId, setSelectedModeId] =
     useState<SubatomicParticlePropertiesModeId>(CHARGE_MODE_ID);

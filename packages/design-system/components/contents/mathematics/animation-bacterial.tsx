@@ -243,7 +243,7 @@ export function BacterialGrowth({
       </CardHeader>
 
       <CardContent>
-        <div className="relative aspect-square w-full overflow-hidden rounded-lg border bg-card sm:aspect-video">
+        <div className="relative aspect-square w-full overflow-hidden rounded-lg border bg-secondary/10 sm:aspect-video">
           <div
             className="relative grid h-full w-full gap-0.5 p-2 sm:px-0"
             style={{
@@ -278,7 +278,7 @@ export function BacterialGrowth({
                               ? [1, SCALE_INCREASE, 1]
                               : 1,
                           }}
-                          className="aspect-square h-full max-h-5 w-full max-w-5 rounded-full bg-primary/70 transition-colors hover:bg-primary sm:max-h-8 sm:max-w-8"
+                          className="aspect-square h-full max-h-5 w-full max-w-5 rounded-full bg-secondary/90 transition-colors hover:bg-secondary sm:max-h-8 sm:max-w-8"
                           transition={{
                             duration: 1,
                             repeat: pulseRepeat,

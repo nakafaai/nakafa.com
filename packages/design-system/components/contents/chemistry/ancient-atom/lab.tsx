@@ -90,6 +90,7 @@ export function AncientAtomLab({
             <ToggleGroup
               aria-label={labels.chooseLevel}
               className="grid w-full grid-cols-4"
+              layout="grid"
               onValueChange={handleLevelChange}
               type="single"
               value={selectedLevelId}

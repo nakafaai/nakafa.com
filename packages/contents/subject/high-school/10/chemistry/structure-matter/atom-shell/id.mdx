@@ -1,0 +1,149 @@
+import { AtomShellLab } from "@repo/design-system/components/contents/chemistry/atom-shell/lab";
+
+export const metadata = {
+  title: "Kulit Atom",
+  description:
+    "Pelajari kulit atom sebagai tingkat energi elektron, cara membaca nomor kulit, rumus kapasitas 2n^2, dan contoh konfigurasi kalsium.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "04/29/2026",
+  subject: "Struktur Atom",
+};
+
+## Kulit Atom sebagai Tingkat Energi
+
+Pada model Bohr sederhana, elektron digambarkan berada pada **kulit atom**, yaitu tingkat energi tertentu di sekitar inti. Kulit yang lebih dekat inti memiliki energi lebih rendah. Kulit yang lebih jauh dari inti memiliki energi lebih tinggi.
+
+OpenStax menjelaskan bahwa model Bohr memakai orbit dengan energi tertentu untuk menjelaskan spektrum garis atom hidrogen. Rujukannya bisa dibuka di [Bohr Model dari OpenStax](https://openstax.org/books/chemistry-atoms-first-2e/pages/3-2-the-bohr-model).
+
+Analogi mudahnya seperti gedung bertingkat. Lantai pertama dekat dasar, lantai kedua lebih tinggi, dan seterusnya. Dalam atom, "lantai" itu bukan lantai fisik, melainkan tingkat energi. Jadi, gambar lingkaran kulit atom adalah **peta energi**, bukan rel keras yang benar-benar dilalui elektron seperti kereta.
+
+Kulit diberi nama huruf:
+
+| Kulit | Nomor kulit |
+| :---- | :---------- |
+| <InlineMath math="\mathrm{K}" /> | <InlineMath math="n = 1" /> |
+| <InlineMath math="\mathrm{L}" /> | <InlineMath math="n = 2" /> |
+| <InlineMath math="\mathrm{M}" /> | <InlineMath math="n = 3" /> |
+| <InlineMath math="\mathrm{N}" /> | <InlineMath math="n = 4" /> |
+| <InlineMath math="\mathrm{O}" /> | <InlineMath math="n = 5" /> |
+| <InlineMath math="\mathrm{P}" /> | <InlineMath math="n = 6" /> |
+| <InlineMath math="\mathrm{Q}" /> | <InlineMath math="n = 7" /> |
+
+Huruf <InlineMath math="\mathrm{K}" /> sampai <InlineMath math="\mathrm{Q}" /> adalah nama kulit. Angka <InlineMath math="n" /> adalah **nomor kulit**. Semakin besar <InlineMath math="n" />, semakin jauh tingkat energinya dari inti.
+
+## Batas Maksimum Elektron
+
+Untuk menghitung jumlah maksimum elektron pada satu kulit, digunakan rumus:
+
+<BlockMath math="\text{jumlah maksimum elektron pada kulit} = 2n^2" />
+
+LibreTexts menjelaskan penamaan kulit <InlineMath math="\mathrm{K}" /> sampai <InlineMath math="\mathrm{Q}" /> dan kapasitas maksimumnya dalam pembahasan model Bohr. Rujukannya bisa dibuka di [The Bohr Model of Atoms dari LibreTexts](https://chem.libretexts.org/Courses/Barstow_Community_College/Survey_of_Chemistry_and_Physics/02%3A_Structure_of_Matter/2.03%3A_Atomic_Theory/2.3.01%3A_Atomic_Structure/2.3.1.01%3A_The_Bohr_Model_of_Atoms).
+
+Hasilnya:
+
+| Kulit | Nomor kulit | Maksimum elektron dari <InlineMath math="2n^2" /> |
+| :---- | :---------- | :------------------------------------------------ |
+| <InlineMath math="\mathrm{K}" /> | <InlineMath math="1" /> | <InlineMath math="2(1)^2 = 2" /> |
+| <InlineMath math="\mathrm{L}" /> | <InlineMath math="2" /> | <InlineMath math="2(2)^2 = 8" /> |
+| <InlineMath math="\mathrm{M}" /> | <InlineMath math="3" /> | <InlineMath math="2(3)^2 = 18" /> |
+| <InlineMath math="\mathrm{N}" /> | <InlineMath math="4" /> | <InlineMath math="2(4)^2 = 32" /> |
+| <InlineMath math="\mathrm{O}" /> | <InlineMath math="5" /> | <InlineMath math="2(5)^2 = 50" /> |
+| <InlineMath math="\mathrm{P}" /> | <InlineMath math="6" /> | <InlineMath math="2(6)^2 = 72" /> |
+| <InlineMath math="\mathrm{Q}" /> | <InlineMath math="7" /> | <InlineMath math="2(7)^2 = 98" /> |
+
+Kata **maksimum** penting. Kulit <InlineMath math="\mathrm{M}" /> memang dapat menampung sampai <InlineMath math="18" /> elektron, tetapi bukan berarti semua atom harus mengisi <InlineMath math="\mathrm{M}" /> sampai <InlineMath math="18" /> sebelum kulit berikutnya dipakai. Untuk contoh pengantar sampai kalsium, kita memakai pola sederhana pada lab interaktif.
+
+## Lab Kulit untuk Unsur Ringan
+
+Pilih atom netral. Perhatikan bahwa jumlah elektron sama dengan nomor atom, lalu lihat pembagian elektronnya pada kulit <InlineMath math="\mathrm{K}" />, <InlineMath math="\mathrm{L}" />, <InlineMath math="\mathrm{M}" />, dan <InlineMath math="\mathrm{N}" />.
+
+<AtomShellLab
+  title={<>Peta Kulit Atom</>}
+  description={
+    <>
+      Diagram ini memakai model kulit sederhana untuk unsur netral sampai
+      kalsium. Fokusnya adalah membaca kulit terluar dan membedakan isi kulit
+      dari kapasitas maksimum <InlineMath math="2n^2" />.
+    </>
+  }
+  labels={{
+    chooseAtom: "Pilih atom netral",
+    atomicNumber: "Nomor atom",
+    configuration: "Konfigurasi",
+    electronTotal: "Jumlah elektron",
+    maximumCapacity: "kapasitas",
+    outerShell: "Kulit terluar",
+    samples: {
+      neon: {
+        tab: "Ne",
+        name: "Neon",
+        note: <>Konfigurasinya <InlineMath math="2, 8" />. Kulit <InlineMath math="\mathrm{L}" /> menjadi kulit terluar.</>,
+      },
+      magnesium: {
+        tab: "Mg",
+        name: "Magnesium",
+        note: <>Setelah kulit <InlineMath math="\mathrm{K}" /> dan <InlineMath math="\mathrm{L}" /> terisi, sisa <InlineMath math="2" /> elektron masuk kulit <InlineMath math="\mathrm{M}" />.</>,
+      },
+      chlorine: {
+        tab: "Cl",
+        name: "Klorin",
+        note: <>Kulit terluarnya berisi <InlineMath math="7" /> elektron pada model kulit sederhana.</>,
+      },
+      argon: {
+        tab: "Ar",
+        name: "Argon",
+        note: <>Pola awalnya <InlineMath math="2, 8, 8" />, sehingga kulit <InlineMath math="\mathrm{M}" /> berisi <InlineMath math="8" /> elektron.</>,
+      },
+      potassium: {
+        tab: "K",
+        name: "Kalium",
+        note: <>Kalium adalah unsur dengan simbol <InlineMath math="\mathrm{K}" />. Itu berbeda dari nama kulit <InlineMath math="\mathrm{K}" />. Setelah <InlineMath math="2, 8, 8" />, sisa <InlineMath math="1" /> elektron masuk kulit <InlineMath math="\mathrm{N}" />.</>,
+      },
+      calcium: {
+        tab: "Ca",
+        name: "Kalsium",
+        note: <>Kalsium memiliki <InlineMath math="20" /> elektron, sehingga pola kulit sederhananya <InlineMath math="2, 8, 8, 2" />.</>,
+      },
+    },
+  }}
+/>
+
+## Mengapa Kalsium Dua Delapan Delapan Dua
+
+Kalsium memiliki nomor atom <InlineMath math="20" />. Simbol <InlineMath math="Z" /> berarti nomor atom. Karena atomnya netral, jumlah elektronnya juga <InlineMath math="20" />.
+
+### Langkah Mengisi Kulit Kalsium
+
+Langkah pengisiannya pada model kulit sederhana:
+
+<BlockMath math="\begin{aligned}
+\mathrm{Ca}: Z &= 20 \\
+e^- &= 20 \\
+\mathrm{K} &: 2 \quad \text{sisa } 18 \\
+\mathrm{L} &: 8 \quad \text{sisa } 10 \\
+\mathrm{M} &: 8 \quad \text{sisa } 2 \\
+\mathrm{N} &: 2 \quad \text{sisa } 0
+\end{aligned}" />
+
+### Mengapa Bukan Dua Delapan Sepuluh
+
+Pertanyaan yang sering muncul: mengapa bukan <InlineMath math="2, 8, 10" />?
+
+Jawabannya: pada model kulit sederhana kelas <InlineMath math="10" /> untuk unsur ringan sampai kalsium, kulit <InlineMath math="\mathrm{M}" /> ditulis berisi <InlineMath math="8" /> elektron sebelum sisa elektron mulai ditulis pada kulit <InlineMath math="\mathrm{N}" />. Karena setelah kulit <InlineMath math="\mathrm{K}" /> dan <InlineMath math="\mathrm{L}" /> terisi masih tersisa <InlineMath math="10" /> elektron, kulit <InlineMath math="\mathrm{M}" /> ditulis <InlineMath math="8" /> dan kulit <InlineMath math="\mathrm{N}" /> mendapat sisa <InlineMath math="2" />.
+
+Jadi:
+
+<BlockMath math="\text{konfigurasi elektron kalsium} = 2, 8, 8, 2" />
+
+## Batas Model yang Perlu Diingat
+
+Ada dua hal yang tidak boleh tertukar.
+
+| Pernyataan | Maksud yang benar |
+| :--------- | :---------------- |
+| Kulit atom digambar sebagai lingkaran. | Itu gambar bantu untuk tingkat energi, bukan bentuk lintasan fisik yang kaku. |
+| Rumus <InlineMath math="2n^2" /> memberi kapasitas maksimum. | Itu bukan urutan pengisian lengkap untuk semua unsur. Unsur lebih berat perlu model subkulit dan orbital. |
+
+OpenStax menjelaskan bahwa dalam model orbital modern, elektron setelah argon masuk ke tingkat <InlineMath math="4s" /> sebelum <InlineMath math="3d" />. Rujukannya bisa dibuka di [Electronic Structure of Atoms dari OpenStax](https://openstax.org/books/chemistry/pages/6-4-electronic-structure-of-atoms-electron-configurations). Untuk kelas <InlineMath math="10" />, kita cukup berhenti pada pola kulit sederhana supaya fondasinya tetap jelas.
+
+Kulit terluar juga menjadi jembatan menuju konsep elektron valensi. Elektron pada kulit terluar disebut **elektron valensi**, dan elektron inilah yang banyak menentukan kecenderungan atom membentuk ion atau ikatan kimia.
