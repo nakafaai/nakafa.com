@@ -29,6 +29,9 @@ Use this file as the routing map. Load only the references needed for the curren
 - Localized content uses natural teacher voice for that locale; Indonesian lessons should feel like a teacher speaking to students, not formal textbook prose.
 - Use concrete examples or comparisons only when they immediately clarify the concept. Avoid meta-labels before comparisons; phrase them naturally.
 - Do not add activities, Mermaid diagrams, visuals, or closing sections unless they improve understanding.
+- Prefer show-over-tell visuals: avoid oversized explanatory scene titles or dense overlays when the model, interaction, and short captions can carry the concept.
+- Use shared 3D typography helpers and tokens instead of hard-coded WebGL font sizes; keep labels subordinate to the visual.
+- Keep text-heavy lab footers readable instead of dense; prefer one or two columns unless each fact is very short.
 - Use `InlineMath`, `BlockMath`, and `MathContainer` consistently for math. If notation appears once, keep it consistent everywhere.
 - Keep headings at `##` or `###`, specific to the lesson, with no math or symbols.
 - Avoid raw HTML, em dash, card-inside-card, hard-coded palette classes, arbitrary typography or spacing when Tailwind scale utilities exist, dead code, redundant wrappers, legacy fallbacks, and leftover artifacts.
