@@ -3,7 +3,10 @@ import type {
   ChemicalReactionTypeSceneColors,
   ChemicalReactionTypeScenePoint,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
-import { Particle } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/parts";
+import {
+  BEAKER_CONTENT_BOTTOM_Y,
+  Particle,
+} from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/parts";
 import { useRef } from "react";
 import type { Group, Mesh } from "three";
 
@@ -21,6 +24,17 @@ const BUBBLES = [
 ] satisfies GasBubble[];
 
 const BUBBLE_RADIUS = 0.055;
+const SETTLED_SOLID_RADIUS = 0.055;
+const SETTLED_SOLID_BASE_Y =
+  BEAKER_CONTENT_BOTTOM_Y + SETTLED_SOLID_RADIUS + 0.02;
+
+const SETTLED_SOLID_POINTS = [
+  [-0.18, SETTLED_SOLID_BASE_Y, 0.02],
+  [-0.07, SETTLED_SOLID_BASE_Y - 0.01, -0.04],
+  [0.06, SETTLED_SOLID_BASE_Y, 0.04],
+  [0.18, SETTLED_SOLID_BASE_Y + 0.01, -0.02],
+  [-0.01, SETTLED_SOLID_BASE_Y + 0.09, 0.01],
+] satisfies ChemicalReactionTypeScenePoint[];
 
 interface GasBubble {
   phase: number;
@@ -103,16 +117,16 @@ export function SettledSolid({
   colors: ChemicalReactionTypeSceneColors;
 }) {
   return (
-    <group position={[0, -0.48, 0]}>
-      {[-0.2, -0.08, 0.06, 0.18].map((x) => (
+    <group>
+      {SETTLED_SOLID_POINTS.map((point) => (
         <Particle
           color={colors.precipitate}
-          key={x}
+          key={point.join(",")}
           label=""
           labelColor={colors.text}
           labelOutlineColor={colors.sphereTextOutline}
-          position={[x, 0, 0]}
-          radius={0.075}
+          position={point}
+          radius={SETTLED_SOLID_RADIUS}
         />
       ))}
     </group>

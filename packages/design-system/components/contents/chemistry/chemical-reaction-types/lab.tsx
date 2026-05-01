@@ -14,6 +14,10 @@ import { ChemicalReactionTypesScene } from "@repo/design-system/components/conte
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene-frame";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -86,7 +90,7 @@ export function ChemicalReactionTypesLab({
 
         <section
           aria-label={labels.reactionView}
-          className="relative aspect-4/3 overflow-hidden rounded-md bg-card sm:aspect-16/10"
+          className={threeSceneFrameVariants()}
         >
           <ThreeCanvas
             camera={{
@@ -153,10 +157,9 @@ export function ChemicalReactionTypesLab({
  */
 function ReactionTypeCameraControls() {
   const size = useThree((state) => state.size);
-  const cameraPosition =
-    size.width < size.height * NARROW_CANVAS_ASPECT_RATIO
-      ? CHEMICAL_REACTION_TYPES_SCENE_VIEW.narrowCameraPosition
-      : CHEMICAL_REACTION_TYPES_SCENE_VIEW.cameraPosition;
+  const cameraPosition = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO)
+    ? CHEMICAL_REACTION_TYPES_SCENE_VIEW.narrowCameraPosition
+    : CHEMICAL_REACTION_TYPES_SCENE_VIEW.cameraPosition;
 
   return (
     <CameraControls

@@ -72,7 +72,7 @@ export const CHEMICAL_REACTION_TYPES = {
 export const CHEMICAL_REACTION_TYPES_SCENE_VIEW = {
   cameraPosition: [0, 1.8, 4],
   cameraTarget: [0, 0, 0],
-  narrowCameraPosition: [0, 2, 4.3],
+  narrowCameraPosition: [0, 2.1, 4.9],
 } satisfies Record<string, ChemicalReactionTypeScenePoint>;
 
 /**

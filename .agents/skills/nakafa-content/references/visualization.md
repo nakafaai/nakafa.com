@@ -18,14 +18,14 @@ Use this reference when a lesson needs Mermaid, imported content components, cus
 - Avoid dense left-right explanation panels, card-inside-card, and background blocks that only separate information.
 - Avoid large explanatory titles inside the scene. If labels are needed, keep them small, camera-facing, and secondary to the model.
 - Keep text-heavy footer facts at one or two columns; do not force four columns when content needs reading width.
-- The first render must be understandable without dragging, zooming, or rotating. Interactivity should improve exploration, not be required.
+- For interactive visuals, the first render must explain the core idea before the user drags, zooms, or rotates.
 
 ## R3F Patterns
 
 - Use shared `ThreeCanvas`, camera controls, scene labels, theme-aware colors, materials, and existing scene utilities where they fit.
+- Use `threeSceneFrameVariants()` from `packages/design-system/components/three/scene-frame.ts` for educational R3F lab containers unless the scene has a documented reason not to. When applying it, verify first-render framing at mobile and desktop; add or reuse a narrow-camera position with `isNarrowThreeScene` when square mobile would otherwise crop the model.
 - Use `SceneLabel`, `THREE_FONT_SIZE`, `resolveThreeFontSize`, and `getThreeParticleLabelFontSize` from `packages/design-system/components/three/data/constants.ts` before introducing any 3D text sizing.
-- Keep a stable default camera and readable labels on first render.
-- Allow orbit or zoom only when exploration helps; do not require it to understand the model.
+- Keep orbit, pan, and zoom available; tune the default camera instead of requiring interaction to understand the model.
 - Labels must stay readable while rotating or zooming. Follow existing scene-label patterns instead of placing raw text that blends into the background.
 - Derive geometry from structured data. Do not hard-code repeated particles, points, rows, columns, labels, or visual states by hand.
 

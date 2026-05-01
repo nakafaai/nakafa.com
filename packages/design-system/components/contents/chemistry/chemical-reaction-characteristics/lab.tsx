@@ -14,6 +14,10 @@ import { ReactionCharacteristicsScene } from "@repo/design-system/components/con
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene-frame";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -85,7 +89,7 @@ export function ChemicalReactionCharacteristicsLab({
 
         <section
           aria-label={labels.transition}
-          className="relative aspect-square overflow-hidden rounded-md bg-card sm:aspect-16/10"
+          className={threeSceneFrameVariants()}
         >
           <ThreeCanvas
             camera={{ fov: 45, position: REACTION_SCENE_VIEW.cameraPosition }}
@@ -140,10 +144,9 @@ export function ChemicalReactionCharacteristicsLab({
  */
 function ReactionCameraControls() {
   const size = useThree((state) => state.size);
-  const cameraPosition =
-    size.width < size.height * NARROW_CANVAS_ASPECT_RATIO
-      ? REACTION_SCENE_VIEW.narrowCameraPosition
-      : REACTION_SCENE_VIEW.cameraPosition;
+  const cameraPosition = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO)
+    ? REACTION_SCENE_VIEW.narrowCameraPosition
+    : REACTION_SCENE_VIEW.cameraPosition;
 
   return (
     <CameraControls

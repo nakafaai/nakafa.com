@@ -17,6 +17,10 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene-frame";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -101,7 +105,7 @@ export function SubatomicParticlePropertiesLab({
           ))}
         </ToggleGroup>
 
-        <div className="relative aspect-16/10 overflow-hidden rounded-md bg-card">
+        <div className={threeSceneFrameVariants()}>
           <ThreeCanvas
             camera={{ fov: 45, position: viewConfig.cameraPosition }}
           >
@@ -148,10 +152,9 @@ function ResponsivePropertyCamera({
   viewConfig: (typeof SUBATOMIC_PARTICLE_PROPERTIES_VIEW_CONFIG)[SubatomicParticlePropertiesModeId];
 }) {
   const size = useThree((state) => state.size);
-  const cameraPosition =
-    size.width < size.height * NARROW_CANVAS_ASPECT_RATIO
-      ? viewConfig.narrowCameraPosition
-      : viewConfig.cameraPosition;
+  const cameraPosition = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO)
+    ? viewConfig.narrowCameraPosition
+    : viewConfig.cameraPosition;
 
   return (
     <CameraControls

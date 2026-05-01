@@ -9,6 +9,10 @@ import {
 import { ModernPeriodicTableScene } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
+import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene-frame";
 import { useTheme } from "next-themes";
 import { Suspense, useEffect } from "react";
 
@@ -17,7 +21,7 @@ const CAMERA_POSITION = [0, 6.8, 7.6] satisfies readonly [
   number,
   number,
 ];
-const NARROW_CAMERA_POSITION = [0, 7.4, 8.2] satisfies readonly [
+const NARROW_CAMERA_POSITION = [0, 8.6, 11.8] satisfies readonly [
   number,
   number,
   number,
@@ -41,10 +45,7 @@ export function ModernPeriodicTableCanvas({
   const colors = getModernPeriodicTableSceneColors(resolvedTheme);
 
   return (
-    <section
-      aria-label={ariaLabel}
-      className="relative aspect-4/3 overflow-hidden rounded-md bg-card sm:aspect-16/10"
-    >
+    <section aria-label={ariaLabel} className={threeSceneFrameVariants()}>
       <ThreeCanvas
         camera={{ fov: 42, position: CAMERA_POSITION }}
         frameloop="demand"
@@ -89,10 +90,9 @@ function ModernPeriodicTableRenderSync() {
  */
 function ResponsiveModernPeriodicTableCamera() {
   const size = useThree((state) => state.size);
-  const cameraPosition =
-    size.width < size.height * NARROW_CANVAS_ASPECT_RATIO
-      ? NARROW_CAMERA_POSITION
-      : CAMERA_POSITION;
+  const cameraPosition = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO)
+    ? NARROW_CAMERA_POSITION
+    : CAMERA_POSITION;
 
   return (
     <CameraControls

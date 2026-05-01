@@ -1,5 +1,6 @@
 "use client";
 
+import { useThree } from "@react-three/fiber";
 import type {
   MeasurementToolId,
   MeasurementToolsLabProps,
@@ -21,6 +22,10 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene-frame";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -36,6 +41,8 @@ import {
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
+
+const NARROW_CANVAS_ASPECT_RATIO = 1.4;
 
 /**
  * Renders an interactive 3D lab for grade 10 measurement tools.
@@ -120,17 +127,13 @@ export function MeasurementToolsLab({
           </ToggleGroupItem>
         </ToggleGroup>
 
-        <div className="relative aspect-16/10 overflow-hidden rounded-md bg-card">
+        <div className={threeSceneFrameVariants()}>
           <ThreeCanvas
             camera={{ fov: 45, position: viewConfig.cameraPosition }}
             frameloop="demand"
           >
             <Suspense>
-              <CameraControls
-                autoRotate={false}
-                cameraPosition={viewConfig.cameraPosition}
-                cameraTarget={viewConfig.cameraTarget}
-              />
+              <ResponsiveMeasurementCamera viewConfig={viewConfig} />
               <ambientLight intensity={0.75} />
               <hemisphereLight
                 color={sceneColors.skyLight}
@@ -184,6 +187,29 @@ export function MeasurementToolsLab({
         </dl>
       </CardFooter>
     </Card>
+  );
+}
+
+/**
+ * Keeps each instrument framed when the shared 3D frame becomes square on
+ * mobile screens.
+ */
+function ResponsiveMeasurementCamera({
+  viewConfig,
+}: {
+  viewConfig: (typeof TOOL_VIEW_CONFIG)[MeasurementToolId];
+}) {
+  const size = useThree((state) => state.size);
+  const cameraPosition = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO)
+    ? viewConfig.narrowCameraPosition
+    : viewConfig.cameraPosition;
+
+  return (
+    <CameraControls
+      autoRotate={false}
+      cameraPosition={cameraPosition}
+      cameraTarget={viewConfig.cameraTarget}
+    />
   );
 }
 
