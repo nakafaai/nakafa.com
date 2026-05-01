@@ -8,6 +8,12 @@ import {
   HYDROGEN_EXCESS_MODE_ID,
   OXYGEN_EXCESS_MODE_ID,
 } from "@repo/design-system/components/contents/chemistry/constant-composition-law/data";
+import {
+  CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH,
+  ChemistryParticleLabel,
+  getChemistryParticleLabelFontSize,
+  getChemistryParticleLabelPosition,
+} from "@repo/design-system/components/contents/chemistry/particle-label";
 import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 import type { ReactNode } from "react";
@@ -250,6 +256,15 @@ function AtomParticle({
         <sphereGeometry args={[radius, 32, 20]} />
         <meshStandardMaterial color={color} roughness={0.34} />
       </mesh>
+      <ChemistryParticleLabel
+        color={colors.sphereText}
+        fontSize={getChemistryParticleLabelFontSize(radius)}
+        outlineColor={colors.sphereTextOutline}
+        outlineWidth={CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH}
+        position={getChemistryParticleLabelPosition(radius)}
+      >
+        {atomSymbol(atomData.element)}
+      </ChemistryParticleLabel>
     </group>
   );
 }
@@ -268,4 +283,8 @@ function atom(
 
 function atomRadius(element: AtomElement) {
   return element === "hydrogen" ? HYDROGEN_RADIUS : OXYGEN_RADIUS;
+}
+
+function atomSymbol(element: AtomElement) {
+  return element === "hydrogen" ? "H" : "O";
 }

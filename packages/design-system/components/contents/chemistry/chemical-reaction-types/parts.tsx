@@ -1,17 +1,17 @@
-import { Billboard, Text } from "@react-three/drei";
 import type {
   ChemicalReactionTypeSceneColors,
   ChemicalReactionTypeScenePoint,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
 import {
-  getThreeParticleLabelFontSize,
-  MONO_FONT_PATH,
-} from "@repo/design-system/components/three/data/constants";
+  CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO,
+  CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH,
+  ChemistryParticleLabel,
+  getChemistryParticleLabelFontSize,
+  getChemistryParticleLabelPosition,
+} from "@repo/design-system/components/contents/chemistry/particle-label";
 import type { ReactNode } from "react";
 import { DoubleSide } from "three";
 
-const PARTICLE_LABEL_SURFACE_OFFSET_RATIO = 1.04;
-const LABEL_OUTLINE_WIDTH = 0.01;
 const BEAKER_RADIUS = 0.36;
 const BEAKER_HEIGHT = 1;
 const BEAKER_FLOOR_CLEARANCE = 0.04;
@@ -163,48 +163,19 @@ export function Particle({
         <meshStandardMaterial color={color} roughness={0.34} />
       </mesh>
       {label && (
-        <ParticleLabel
+        <ChemistryParticleLabel
           color={labelColor}
-          fontSize={getThreeParticleLabelFontSize(radius)}
+          fontSize={getChemistryParticleLabelFontSize(radius)}
           outlineColor={labelOutlineColor}
-          radius={radius}
+          outlineWidth={CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH}
+          position={getChemistryParticleLabelPosition(
+            radius,
+            CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO
+          )}
         >
           {label}
-        </ParticleLabel>
+        </ChemistryParticleLabel>
       )}
     </group>
-  );
-}
-
-function ParticleLabel({
-  children,
-  color,
-  fontSize,
-  outlineColor,
-  radius,
-}: {
-  children: string;
-  color: string;
-  fontSize: number;
-  outlineColor: string;
-  radius: number;
-}) {
-  return (
-    <Billboard>
-      <Text
-        anchorX="center"
-        anchorY="middle"
-        color={color}
-        font={MONO_FONT_PATH}
-        fontSize={fontSize}
-        outlineColor={outlineColor}
-        outlineWidth={LABEL_OUTLINE_WIDTH}
-        position={[0, 0, radius * PARTICLE_LABEL_SURFACE_OFFSET_RATIO]}
-        renderOrder={10}
-      >
-        {children}
-        <meshBasicMaterial color={color} depthTest={false} toneMapped={false} />
-      </Text>
-    </Billboard>
   );
 }

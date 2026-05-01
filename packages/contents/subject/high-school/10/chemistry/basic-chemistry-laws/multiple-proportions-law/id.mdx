@@ -1,0 +1,157 @@
+import { MultipleProportionsLab } from "@repo/design-system/components/contents/chemistry/multiple-proportions-law/lab";
+
+export const metadata = {
+  title: "Hukum Perbandingan Berganda",
+  description:
+    "Pelajari cara membaca rasio massa bilangan bulat sederhana saat dua unsur yang sama membentuk lebih dari satu senyawa.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/01/2026",
+  subject: "Hukum Dasar Kimia",
+};
+
+## Dua Unsur, Lebih dari Satu Senyawa
+
+Hukum perbandingan berganda dipakai saat **dua unsur yang sama** dapat membentuk **lebih dari satu senyawa**. Jika massa salah satu unsur dibuat tetap, massa unsur lain yang bergabung akan berbanding sebagai bilangan bulat sederhana.
+
+OpenStax Chemistry: Atoms First 2e menjelaskan hukum ini lewat ide bahwa massa tetap dari satu unsur dapat bergabung dengan massa unsur lain dalam rasio bilangan bulat kecil di [Early Ideas in Atomic Theory](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-1-early-ideas-in-atomic-theory). Britannica juga merangkum hukum ini sebagai pola massa unsur yang bergabung dengan massa tetap unsur lain di [law of multiple proportions](https://www.britannica.com/science/law-of-multiple-proportions).
+
+Jadi, hukum ini tidak membandingkan sembarang dua zat. Yang dibandingkan harus senyawa berbeda, tetapi unsur penyusunnya sama.
+
+## Rasio yang Dibuat Tetap
+
+Misalkan dua senyawa sama-sama tersusun dari unsur <InlineMath math="\mathrm{A}" /> dan <InlineMath math="\mathrm{B}" />. Untuk membaca hukum Dalton, kita kunci massa <InlineMath math="\mathrm{A}" /> lebih dulu, lalu bandingkan massa <InlineMath math="\mathrm{B}" /> yang ikut bergabung.
+
+<BlockMath math="\frac{m_{\mathrm{B\ pada\ senyawa\ 2}}}{m_{\mathrm{B\ pada\ senyawa\ 1}}} = \text{bilangan bulat sederhana}" />
+
+Kata "dibuat tetap" penting. Kalau massa kedua unsur berubah sekaligus, perbandingannya bisa terlihat membingungkan. Setelah satu unsur dibuat sama, pola bergandanya baru terlihat.
+
+## Pembanding Senyawa Sekeluarga
+
+Pilih pasangan senyawa berikut. Modelnya menunjukkan unsur yang dibuat tetap dan unsur yang massanya berubah.
+
+<MultipleProportionsLab
+  title={<>Pembanding Rasio Ganda</>}
+  description={
+    <>
+      Bandingkan dua senyawa dari unsur yang sama. Massa satu unsur dibuat
+      tetap, lalu unsur lain dibaca sebagai rasio sederhana.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih pasangan senyawa",
+    comparisonView: "Model hukum perbandingan berganda",
+    fixedLabel: "Massa yang dibuat tetap",
+    changingLabel: "Rasio yang berubah",
+    modes: {
+      "water-peroxide": {
+        tab: "Air",
+        tabLabel: "Air dan Peroksida",
+        helperCaption: (
+          <>
+            Dengan massa <InlineMath math="\mathrm{H}" /> yang sama,{" "}
+            <InlineMath math="\mathrm{H_2O_2}" /> membawa dua kali massa{" "}
+            <InlineMath math="\mathrm{O}" /> dibanding{" "}
+            <InlineMath math="\mathrm{H_2O}" />.
+          </>
+        ),
+        fixed: (
+          <>
+            Massa hidrogen sama, yaitu <InlineMath math="2\ \mathrm{g}" />.
+          </>
+        ),
+        changing: (
+          <>
+            Massa oksigen <InlineMath math="16:32 = 1:2" />.
+          </>
+        ),
+      },
+      "carbon-oxides": {
+        tab: "Karbon Oksida",
+        tabLabel: "Karbon Oksida",
+        helperCaption: (
+          <>
+            Dengan massa <InlineMath math="\mathrm{C}" /> yang sama,{" "}
+            <InlineMath math="\mathrm{CO_2}" /> membawa dua kali massa{" "}
+            <InlineMath math="\mathrm{O}" /> dibanding{" "}
+            <InlineMath math="\mathrm{CO}" />.
+          </>
+        ),
+        fixed: (
+          <>
+            Massa karbon sama, yaitu <InlineMath math="12\ \mathrm{g}" />.
+          </>
+        ),
+        changing: (
+          <>
+            Massa oksigen <InlineMath math="16:32 = 1:2" />.
+          </>
+        ),
+      },
+      "nitrogen-oxides": {
+        tab: "Nitrogen Oksida",
+        tabLabel: "Nitrogen Oksida",
+        helperCaption: (
+          <>
+            Dengan massa <InlineMath math="\mathrm{O}" /> yang sama,{" "}
+            <InlineMath math="2\mathrm{N_2O}" /> membawa empat kali massa{" "}
+            <InlineMath math="\mathrm{N}" /> dibanding{" "}
+            <InlineMath math="\mathrm{NO_2}" />.
+          </>
+        ),
+        fixed: (
+          <>
+            Massa oksigen sama, yaitu <InlineMath math="32\ \mathrm{g}" />.
+          </>
+        ),
+        changing: (
+          <>
+            Massa nitrogen <InlineMath math="56:14 = 4:1" />.
+          </>
+        ),
+      },
+    },
+  }}
+/>
+
+Pada setiap pasangan di atas, satu unsur dipakai sebagai dasar pembanding. Setelah dasar itu sama, unsur lain yang jumlahnya berubah dibaca sebagai rasio massa sederhana.
+
+## Air dan Hidrogen Peroksida
+
+Air memiliki rumus <InlineMath math="\mathrm{H_2O}" />, sedangkan hidrogen peroksida memiliki rumus <InlineMath math="\mathrm{H_2O_2}" />. PubChem mencatat keduanya di [water property record](https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/water/property/MolecularFormula,MolecularWeight/JSON) dan [hydrogen peroxide property record](https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/hydrogen%20peroxide/property/MolecularFormula,MolecularWeight/JSON).
+
+Dengan <InlineMath math="A_r\mathrm{(H)} = 1" /> dan <InlineMath math="A_r\mathrm{(O)} = 16" />, massa hidrogen pada kedua rumus bisa dibuat sama, yaitu <InlineMath math="2\ \mathrm{g}" />.
+
+| Senyawa | Massa <InlineMath math="\mathrm{H}" /> | Massa <InlineMath math="\mathrm{O}" /> |
+| :------ | :------------------------------------ | :------------------------------------ |
+| <InlineMath math="\mathrm{H_2O}" /> | <InlineMath math="2\ \mathrm{g}" /> | <InlineMath math="16\ \mathrm{g}" /> |
+| <InlineMath math="\mathrm{H_2O_2}" /> | <InlineMath math="2\ \mathrm{g}" /> | <InlineMath math="32\ \mathrm{g}" /> |
+
+Karena massa hidrogen sudah sama, langsung bandingkan massa oksigennya.
+
+<BlockMath math="m_{\mathrm{O\ pada\ H_2O}} : m_{\mathrm{O\ pada\ H_2O_2}} = 16:32 = 1:2" />
+
+Rasio <InlineMath math="1:2" /> adalah bilangan bulat sederhana. Ini menunjukkan bahwa data tersebut sesuai dengan hukum perbandingan berganda.
+
+## Nitrogen Oksida
+
+Nitrogen dan oksigen dapat membentuk beberapa senyawa. Dua contohnya adalah dinitrogen monoksida atau gas tertawa, <InlineMath math="\mathrm{N_2O}" />, dan nitrogen dioksida, <InlineMath math="\mathrm{NO_2}" />. PubChem mencatat rumus <InlineMath math="\mathrm{N_2O}" /> dan <InlineMath math="\mathrm{NO_2}" /> di [nitrous oxide property record](https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/nitrous%20oxide/property/MolecularFormula,MolecularWeight/JSON) dan [nitrogen dioxide property record](https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/nitrogen%20dioxide/property/MolecularFormula,MolecularWeight/JSON).
+
+Supaya massa oksigen sama, bandingkan <InlineMath math="2\mathrm{N_2O}" /> dengan <InlineMath math="\mathrm{NO_2}" />. Keduanya memuat massa oksigen <InlineMath math="32\ \mathrm{g}" />.
+
+| Senyawa yang dibandingkan | Massa <InlineMath math="\mathrm{O}" /> | Massa <InlineMath math="\mathrm{N}" /> |
+| :------------------------ | :------------------------------------ | :------------------------------------ |
+| <InlineMath math="2\mathrm{N_2O}" /> | <InlineMath math="32\ \mathrm{g}" /> | <InlineMath math="56\ \mathrm{g}" /> |
+| <InlineMath math="\mathrm{NO_2}" /> | <InlineMath math="32\ \mathrm{g}" /> | <InlineMath math="14\ \mathrm{g}" /> |
+
+Sekarang massa oksigen sudah sama, maka massa nitrogen yang dibandingkan adalah:
+
+<BlockMath math="m_{\mathrm{N\ pada\ 2N_2O}} : m_{\mathrm{N\ pada\ NO_2}} = 56:14 = 4:1" />
+
+Mengalikan <InlineMath math="\mathrm{N_2O}" /> menjadi <InlineMath math="2\mathrm{N_2O}" /> hanya cara menyamakan basis massa oksigen. Rumus senyawanya tetap <InlineMath math="\mathrm{N_2O}" />, bukan berubah menjadi senyawa baru.
+
+## Kesalahan yang Perlu Dihindari
+
+- Jangan membandingkan massa total senyawa. Yang dibandingkan adalah massa salah satu unsur setelah massa unsur lain dibuat tetap.
+- Jangan memakai hukum ini untuk dua zat yang unsur penyusunnya berbeda. Hukum ini hanya berlaku untuk pasangan senyawa dari unsur-unsur yang sama.
+
+Hukum perbandingan tetap membaca satu senyawa. Hukum perbandingan berganda membaca beberapa senyawa dari pasangan unsur yang sama. Perbedaan kecil itu yang membuat hukum Dalton kuat sebagai bukti bahwa atom bergabung dalam hitungan bilangan bulat.

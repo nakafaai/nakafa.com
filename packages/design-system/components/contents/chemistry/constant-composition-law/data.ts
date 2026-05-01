@@ -85,6 +85,8 @@ export function getConstantCompositionSceneColors(
     bond: isDarkTheme ? getColor("ZINC") : getColor("SLATE"),
     hydrogen: isDarkTheme ? getColor("ZINC") : getColor("STONE"),
     oxygen: getColor("SKY"),
+    sphereText: ORIGIN_COLOR.LIGHT,
+    sphereTextOutline: isDarkTheme ? ORIGIN_COLOR.DARK : getColor("SLATE"),
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
   };
 }
