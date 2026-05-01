@@ -1,0 +1,113 @@
+import { MassConservationLab } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/lab";
+
+export const metadata = {
+  title: "Hukum Kekekalan Massa",
+  description:
+    "Pelajari mengapa massa dalam reaksi kimia tetap sama jika seluruh sistem dihitung, termasuk produk, sisa reaktan, dan gas yang mungkin keluar.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/01/2026",
+  subject: "Hukum Dasar Kimia",
+};
+
+## Massa Sistem yang Dijaga
+
+Saat reaksi kimia terjadi, atom tidak hilang dan tidak muncul dari ketiadaan. Atom hanya tersusun ulang menjadi zat baru. Karena itu, massa seluruh sistem sebelum reaksi sama dengan massa seluruh sistem setelah reaksi.
+
+<BlockMath math="m_{\text{sistem sebelum}} = m_{\text{sistem sesudah}}" />
+
+Kata pentingnya adalah **sistem**. Kalau wadah tertutup, semua zat tetap berada di tempat yang ditimbang. Kalau wadah terbuka, sebagian gas bisa keluar, sehingga massa yang terbaca di neraca terlihat berubah walaupun massa total zatnya tetap ada. OpenStax Chemistry 2e menjelaskan hukum kekekalan materi sebagai tidak adanya perubahan terdeteksi pada jumlah total materi saat materi mengalami perubahan kimia atau perubahan fisika di [Phases and Classification of Matter](https://openstax.org/books/chemistry-2e/pages/1-2-phases-and-classification-of-matter).
+
+## Dari Timbangan Lavoisier
+
+Sebelum kimia modern, pembakaran sering dijelaskan dengan gagasan flogiston, seolah-olah ada sesuatu yang lepas dari benda saat terbakar. Antoine Lavoisier menantangnya lewat penimbangan yang teliti. Ia memperhatikan massa pereaksi dan hasil reaksi, termasuk gas, sehingga pembakaran bisa dibaca sebagai reaksi dengan oksigen, bukan kehilangan zat misterius.
+
+Science History Institute merangkum peran Lavoisier sebagai ilmuwan yang menetapkan hukum kekekalan massa dan mengaitkan pembakaran dengan oksigen di [Antoine-Laurent Lavoisier](https://www.sciencehistory.org/education/scientific-biographies/antoine-laurent-lavoisier/).
+
+## Neraca Sistem Tertutup
+
+Pilih sistem tertutup dan terbuka. Perhatikan bahwa hukum yang benar selalu menghitung semua zat, bukan hanya bagian yang masih terlihat di wadah.
+
+<MassConservationLab
+  title={<>Neraca Sistem Tertutup</>}
+  description={
+    <>
+      Bandingkan apa yang dibaca neraca saat semua zat tetap di wadah dan saat
+      sebagian zat keluar dari batas sistem.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih batas sistem",
+    before: "Sebelum",
+    after: "Sesudah",
+    reactionView: "Model hukum kekekalan massa pada neraca",
+    systemLabel: "Yang dihitung",
+    calculationLabel: "Pembacaan massa",
+    modes: {
+      closed: {
+        tab: "Tertutup",
+        beforeCaption: <>Semua reaktan berada di wadah yang sama.</>,
+        afterCaption: <>Produk dan sisa reaktan tetap ikut ditimbang.</>,
+        readoutBefore: "12,00 g",
+        readoutAfter: "12,00 g",
+        system: <>Wadah, produk, dan sisa reaktan dihitung sebagai satu sistem.</>,
+        calculation: (
+          <>
+            <InlineMath math="10{,}00 + 2{,}00 = 6{,}08 + 5{,}92" />, jadi
+            massa total tetap <InlineMath math="12{,}00\ \mathrm{g}" />.
+          </>
+        ),
+      },
+      open: {
+        tab: "Terbuka",
+        beforeCaption: <>Batas sistem masih tampak berisi semua zat awal.</>,
+        afterCaption: <>Sebagian gas dapat keluar dari bagian yang ditimbang.</>,
+        readoutBefore: "12,00 g",
+        readoutAfter: "<12,00 g",
+        system: <>Hukum tetap berlaku jika gas yang keluar juga ikut dihitung.</>,
+        calculation: (
+          <>
+            Massa terbaca turun karena batas sistemnya salah, bukan karena massa
+            hilang.
+          </>
+        ),
+      },
+    },
+  }}
+/>
+
+## Contoh Seng dan Belerang
+
+Seorang siswa memanaskan <InlineMath math="10{,}00\ \mathrm{g}" /> seng dengan <InlineMath math="2{,}00\ \mathrm{g}" /> belerang. Setelah reaksi, terbentuk <InlineMath math="6{,}08\ \mathrm{g}" /> seng sulfida dan masih ada <InlineMath math="5{,}92\ \mathrm{g}" /> seng yang tidak bereaksi.
+
+Persamaan sederhananya:
+
+<BlockMath math="\mathrm{Zn(s)} + \mathrm{S(s)} \rightarrow \mathrm{ZnS(s)}" />
+
+Produk tidak harus sama dengan jumlah semua zat awal kalau ada reaktan yang tersisa. Hitung dulu seng yang benar-benar bereaksi.
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{Zn\ bereaksi}} &= 10{,}00 - 5{,}92 = 4{,}08\ \mathrm{g} \\
+m_{\mathrm{reaktan\ bereaksi}} &= 4{,}08 + 2{,}00 = 6{,}08\ \mathrm{g} \\
+m_{\mathrm{produk}} &= 6{,}08\ \mathrm{g}
+\end{aligned}" />
+
+Jadi hukum kekekalan massa terbukti pada bagian yang benar-benar bereaksi: massa seng yang bereaksi ditambah massa belerang sama dengan massa seng sulfida yang terbentuk.
+
+Kalau seluruh wadah dihitung, massanya juga tetap:
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{sebelum}} &= 10{,}00 + 2{,}00 = 12{,}00\ \mathrm{g} \\
+m_{\mathrm{sesudah}} &= 6{,}08 + 5{,}92 = 12{,}00\ \mathrm{g}
+\end{aligned}" />
+
+## Cara Tidak Salah Membaca Massa
+
+Ada tiga pertanyaan yang perlu dipisahkan.
+
+- **Berapa massa produk?** Jawabannya hanya massa zat hasil, yaitu <InlineMath math="6{,}08\ \mathrm{g}" /> seng sulfida.
+- **Apakah massa sistem tetap?** Jawabannya ya, kalau produk dan sisa reaktan dihitung bersama.
+- **Apakah massa bisa tampak turun?** Bisa, kalau gas keluar dari wadah terbuka dan tidak ikut ditimbang.
+
+Britannica menjelaskan bahwa persamaan reaksi harus setara karena jumlah atom tiap unsur sama di kedua sisi, lalu perhitungan massa mengikuti prinsip kekekalan materi di [The Conservation of Matter](https://www.britannica.com/science/chemical-reaction/The-conservation-of-matter).
+
+Setelah massa total dijaga, pertanyaan berikutnya menjadi lebih tajam: jika dua unsur membentuk senyawa yang sama, apakah perbandingan massanya selalu tetap? Itulah pintu masuk ke hukum perbandingan tetap.

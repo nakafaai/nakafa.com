@@ -1,0 +1,113 @@
+import { MassConservationLab } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/lab";
+
+export const metadata = {
+  title: "Mass Conservation",
+  description:
+    "Learn why mass stays the same in a chemical reaction when the whole system is counted, including products, leftover reactants, and any gas that may escape.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/01/2026",
+  subject: "Basic Laws of Chemistry",
+};
+
+## The System Keeps Its Mass
+
+When a chemical reaction happens, atoms do not vanish or appear from nothing. They are rearranged into new substances. That is why the mass of the whole system before a reaction equals the mass of the whole system after the reaction.
+
+<BlockMath math="m_{\text{system before}} = m_{\text{system after}}" />
+
+The key word is **system**. In a closed container, every substance remains in the part being weighed. In an open container, some gas may leave, so the balance reading can appear to change even though the total mass of the substances is still conserved. OpenStax Chemistry 2e describes conservation of matter as no detectable change in the total amount of matter during chemical or physical changes in [Phases and Classification of Matter](https://openstax.org/books/chemistry-2e/pages/1-2-phases-and-classification-of-matter).
+
+## Lavoisier's Balance
+
+Before modern chemistry, combustion was often explained with phlogiston, as if something left a material when it burned. Antoine Lavoisier challenged that idea through careful weighing. He tracked the mass of reactants and products, including gases, so combustion could be read as a reaction with oxygen, not as the loss of a mysterious substance.
+
+Science History Institute summarizes Lavoisier's role in establishing the law of conservation of mass and connecting combustion with oxygen in [Antoine-Laurent Lavoisier](https://www.sciencehistory.org/education/scientific-biographies/antoine-laurent-lavoisier/).
+
+## Closed-System Balance
+
+Switch between a closed and an open system. The correct law always counts every substance, not only the part that is still visible inside the container.
+
+<MassConservationLab
+  title={<>Closed-System Balance</>}
+  description={
+    <>
+      Compare what the balance reads when all substances stay in the container
+      and when some substance leaves the system boundary.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose the system boundary",
+    before: "Before",
+    after: "After",
+    reactionView: "Mass conservation balance model",
+    systemLabel: "What is counted",
+    calculationLabel: "Mass reading",
+    modes: {
+      closed: {
+        tab: "Closed",
+        beforeCaption: <>All reactants are in the same container.</>,
+        afterCaption: <>Products and leftover reactants are still weighed.</>,
+        readoutBefore: "12.00 g",
+        readoutAfter: "12.00 g",
+        system: <>The container, products, and leftover reactants are one system.</>,
+        calculation: (
+          <>
+            <InlineMath math="10.00 + 2.00 = 6.08 + 5.92" />, so the total mass
+            stays <InlineMath math="12.00\ \mathrm{g}" />.
+          </>
+        ),
+      },
+      open: {
+        tab: "Open",
+        beforeCaption: <>The system boundary appears to include all starting substances.</>,
+        afterCaption: <>Some gas can leave the part being weighed.</>,
+        readoutBefore: "12.00 g",
+        readoutAfter: "<12.00 g",
+        system: <>The law still holds when the escaped gas is counted too.</>,
+        calculation: (
+          <>
+            The reading drops because the system boundary is wrong, not because
+            mass disappeared.
+          </>
+        ),
+      },
+    },
+  }}
+/>
+
+## Zinc and Sulfur
+
+A student heats <InlineMath math="10.00\ \mathrm{g}" /> of zinc with <InlineMath math="2.00\ \mathrm{g}" /> of sulfur. After the reaction, <InlineMath math="6.08\ \mathrm{g}" /> of zinc sulfide forms and <InlineMath math="5.92\ \mathrm{g}" /> of zinc remains unreacted.
+
+The simplified equation is:
+
+<BlockMath math="\mathrm{Zn(s)} + \mathrm{S(s)} \rightarrow \mathrm{ZnS(s)}" />
+
+The product mass does not have to equal the mass of every starting substance if one reactant is left over. First count only the zinc that actually reacted.
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{Zn\ reacted}} &= 10.00 - 5.92 = 4.08\ \mathrm{g} \\
+m_{\mathrm{reactants\ reacted}} &= 4.08 + 2.00 = 6.08\ \mathrm{g} \\
+m_{\mathrm{product}} &= 6.08\ \mathrm{g}
+\end{aligned}" />
+
+So mass conservation is confirmed for the part that actually reacts: the mass of zinc that reacts plus the mass of sulfur equals the mass of zinc sulfide formed.
+
+If the whole container is counted, the mass is also unchanged:
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{before}} &= 10.00 + 2.00 = 12.00\ \mathrm{g} \\
+m_{\mathrm{after}} &= 6.08 + 5.92 = 12.00\ \mathrm{g}
+\end{aligned}" />
+
+## Reading Mass Carefully
+
+Keep three questions separate.
+
+- **What is the product mass?** Only the new product counts, so it is <InlineMath math="6.08\ \mathrm{g}" /> of zinc sulfide.
+- **Is the system mass conserved?** Yes, when the product and leftover reactant are counted together.
+- **Can the reading appear lower?** Yes, if gas leaves an open container and is not weighed.
+
+Britannica explains that chemical equations must be balanced because the same number of atoms of each element appears on both sides, and mass calculations follow conservation of matter in [The Conservation of Matter](https://www.britannica.com/science/chemical-reaction/The-conservation-of-matter).
+
+Once total mass is protected, the next question becomes sharper: if two elements form the same compound, does their mass ratio stay fixed? That leads directly to the law of constant composition.
