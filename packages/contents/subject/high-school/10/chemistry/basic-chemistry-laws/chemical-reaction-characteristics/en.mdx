@@ -1,0 +1,119 @@
+import { ChemicalReactionCharacteristicsLab } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/lab";
+
+export const metadata = {
+  title: "Characteristics of Chemical Reactions",
+  description:
+    "Learn how to distinguish chemical changes from physical changes using gas, precipitates, color changes, and energy changes.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/01/2026",
+  subject: "Basic Laws of Chemistry",
+};
+
+## From Mixing to Changing
+
+Not every mixture is a chemical reaction. Sugar dissolved in water is still sugar. Ice that melts is still water. In both cases, the particles have not turned into a new substance.
+
+A **chemical reaction** happens when starting substances change into new substances. The starting substances are called **reactants**, and the substances formed are called **products**.
+
+<BlockMath math="\text{reactants} \rightarrow \text{products}" />
+
+Without analysis equipment, chemical reactions are usually recognized from visible clues. Those clues can be gas, a precipitate, a color change, or an energy change. OpenStax Chemistry 2e discusses chemical reactions through substance changes and examples such as precipitation, acid-base, and oxidation-reduction reactions in [Classifying Chemical Reactions](https://openstax.org/books/chemistry-2e/pages/4-2-classifying-chemical-reactions).
+
+## Reaction Clue Lab
+
+Choose one clue, then compare the before and after states. Read not only what appears, but also what may have happened to the substances.
+
+<ChemicalReactionCharacteristicsLab
+  title={<>Reaction Clue Reader</>}
+  description={
+    <>
+      Watch the visible change, then separate strong clues from signs that still
+      need another check.
+    </>
+  }
+  labels={{
+    chooseCue: "Choose a chemical reaction clue",
+    before: "Before",
+    after: "After",
+    transition: "Change from before to after",
+    observationLabel: "What appears",
+    meaningLabel: "How to read it",
+    limitLabel: "Limit",
+    cues: {
+      gas: {
+        tab: "Gas",
+        beforeCaption: <>The solution is still calm.</>,
+        afterCaption: <>Bubbles appear.</>,
+        observation: <>Bubbles or gas leave the mixture.</>,
+        meaning: (
+          <>
+            One product may be a gas, such as{" "}
+            <InlineMath math="\mathrm{CO_2}" />.
+          </>
+        ),
+        limit: <>Boiling bubbles are not automatically a chemical reaction.</>,
+      },
+      precipitate: {
+        tab: "Precipitate",
+        beforeCaption: <>Two solutions appear to mix evenly.</>,
+        afterCaption: <>A solid forms at the bottom.</>,
+        observation: <>A new insoluble solid appears.</>,
+        meaning: <>Ions in solution can form a solid compound.</>,
+        limit: <>Dust or dirt is not evidence of a new product.</>,
+      },
+      color: {
+        tab: "Color",
+        beforeCaption: <>The starting color is uniform.</>,
+        afterCaption: <>The solution changes color.</>,
+        observation: <>Color changes without added dye.</>,
+        meaning: <>New particles can absorb light in a different way.</>,
+        limit: <>Mixing dye into water is only a physical change.</>,
+      },
+      energy: {
+        tab: "Energy",
+        beforeCaption: <>The starting temperature is unchanged.</>,
+        afterCaption: <>Heat, cooling, or light appears.</>,
+        observation: <>Temperature changes or light appears as substances react.</>,
+        meaning: <>Old bonds break and new bonds form with different energy.</>,
+        limit: <>Heat from an outside source must be separated from reaction heat.</>,
+      },
+    },
+  }}
+/>
+
+## Four Common Clues
+
+**Gas** can appear as bubbles, smoke, or a distinct odor. In class, odor should not become the main test unless a teacher directs it, because some gases are dangerous even when they are hard to see.
+
+**A precipitate** is a new solid formed from a solution. For example, two clear solutions can produce a white solid because their ions form a compound that does not dissolve well.
+
+**A color change** can be a strong clue when no dye is added. The color changes because a new product can interact with light differently.
+
+**An energy change** can feel warm, cold, or appear as light. Burning is easy to recognize because it releases heat and light. Other reactions absorb heat, so the mixture feels cooler.
+
+Chem LibreTexts also separates chemical changes from physical changes by asking whether a new substance forms. The summary is available at [Chemical Change vs Physical Change](https://chem.libretexts.org/Bookshelves/Physical_and_Theoretical_Chemistry_Textbook_Maps/Supplemental_Modules_%28Physical_and_Theoretical_Chemistry%29/Fundamentals/Chemical_Change_vs._Physical_Change).
+
+## A Clue Is Not a Verdict
+
+One sign is not always enough. Boiling water produces bubbles, but it is a physical change because the substance is still <InlineMath math="\mathrm{H_2O}" />. Dissolved salt also looks different, but it can be recovered by evaporating the water.
+
+Use this simple reading guide.
+
+| Event | Better reading | Nearby reason |
+| :---- | :------------- | :------------ |
+| Ice melts | Physical change | The substance is still <InlineMath math="\mathrm{H_2O}" />. |
+| Paper burns | Chemical reaction | New substances such as gases, ash, heat, and light appear. |
+| Two clear solutions produce a solid | Likely chemical reaction | A precipitate appears that was not there before. |
+| Red dye is mixed with water | Physical change | The color changes because dye spreads out, not because a new product forms. |
+
+To be sure, we need to check whether the products are truly different from the reactants. In the laboratory, that can be done by measuring mass, testing a gas, observing a precipitate, or analyzing composition.
+
+## Why This Matters for Basic Laws
+
+The basic laws of chemistry describe patterns that stay consistent during reactions. Before those patterns can be read, we need to know when an event deserves to be called a reaction.
+
+Take metal oxides as an example. Nickel can form one of its oxides with the formula <InlineMath math="\mathrm{NiO}" />, and cobalt can also form one of its oxides with the formula <InlineMath math="\mathrm{CoO}" />. Each formula says that a metal and oxygen combine in a definite ratio.
+
+<BlockMath math="2\mathrm{Ni} + \mathrm{O_2} \rightarrow 2\mathrm{NiO}" />
+
+Reaction clues help us recognize that a change is happening. The basic laws of chemistry help us calculate the mass pattern. The order is simple: observe the clue first, then measure the substance ratio.

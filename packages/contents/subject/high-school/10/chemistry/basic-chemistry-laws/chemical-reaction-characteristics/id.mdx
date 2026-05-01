@@ -1,0 +1,119 @@
+import { ChemicalReactionCharacteristicsLab } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/lab";
+
+export const metadata = {
+  title: "Ciri-Ciri Reaksi Kimia",
+  description:
+    "Pelajari cara membedakan perubahan kimia dari perubahan fisika lewat gas, endapan, perubahan warna, dan perubahan energi.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/01/2026",
+  subject: "Hukum Dasar Kimia",
+};
+
+## Dari Bercampur ke Berubah
+
+Tidak semua zat yang dicampur langsung bereaksi. Gula yang larut dalam air masih gula. Es yang mencair masih air. Pada dua contoh itu, susunan partikelnya tidak berubah menjadi zat baru.
+
+**Reaksi kimia** terjadi ketika zat awal berubah menjadi zat baru. Zat awal disebut **reaktan**, sedangkan zat hasil disebut **produk**.
+
+<BlockMath math="\text{reaktan} \rightarrow \text{produk}" />
+
+Kalau kita tidak punya alat analisis, reaksi kimia biasanya dikenali lewat petunjuk yang tampak. Petunjuk itu bisa berupa gas, endapan, perubahan warna, atau perubahan energi. OpenStax Chemistry 2e membahas reaksi kimia lewat perubahan zat dan contoh reaksi seperti pengendapan, asam-basa, dan oksidasi-reduksi di [Classifying Chemical Reactions](https://openstax.org/books/chemistry-2e/pages/4-2-classifying-chemical-reactions).
+
+## Lab Petunjuk Reaksi
+
+Pilih satu petunjuk, lalu perhatikan perubahan sebelum dan sesudah. Yang perlu dibaca bukan tampilannya saja, tetapi apa yang mungkin terjadi pada zatnya.
+
+<ChemicalReactionCharacteristicsLab
+  title={<>Pembaca Ciri Reaksi</>}
+  description={
+    <>
+      Amati perubahan yang muncul, lalu bedakan petunjuk kuat dari tanda yang
+      masih perlu dicek lagi.
+    </>
+  }
+  labels={{
+    chooseCue: "Pilih ciri reaksi kimia",
+    before: "Sebelum",
+    after: "Sesudah",
+    transition: "Perubahan dari sebelum ke sesudah",
+    observationLabel: "Yang tampak",
+    meaningLabel: "Cara membaca",
+    limitLabel: "Batasnya",
+    cues: {
+      gas: {
+        tab: "Gas",
+        beforeCaption: <>Larutan masih tenang.</>,
+        afterCaption: <>Gelembung muncul.</>,
+        observation: <>Ada gelembung atau gas keluar dari campuran.</>,
+        meaning: (
+          <>
+            Salah satu produk mungkin berupa gas, misalnya{" "}
+            <InlineMath math="\mathrm{CO_2}" />.
+          </>
+        ),
+        limit: <>Gelembung karena mendidih belum tentu reaksi kimia.</>,
+      },
+      precipitate: {
+        tab: "Endapan",
+        beforeCaption: <>Dua larutan tampak menyatu.</>,
+        afterCaption: <>Padatan muncul di dasar.</>,
+        observation: <>Ada zat padat baru yang tidak larut.</>,
+        meaning: <>Ion-ion dalam larutan dapat membentuk senyawa padat.</>,
+        limit: <>Debu atau kotoran bukan bukti terbentuknya produk baru.</>,
+      },
+      color: {
+        tab: "Warna",
+        beforeCaption: <>Warna awal masih seragam.</>,
+        afterCaption: <>Warna larutan berubah.</>,
+        observation: <>Warna berubah tanpa pewarna tambahan.</>,
+        meaning: <>Partikel baru dapat menyerap cahaya dengan cara berbeda.</>,
+        limit: <>Pencampuran pewarna saja termasuk perubahan fisika.</>,
+      },
+      energy: {
+        tab: "Energi",
+        beforeCaption: <>Suhu awal belum berubah.</>,
+        afterCaption: <>Panas, dingin, atau cahaya muncul.</>,
+        observation: <>Suhu berubah atau cahaya muncul saat zat bereaksi.</>,
+        meaning: <>Ikatan lama putus dan ikatan baru terbentuk dengan energi berbeda.</>,
+        limit: <>Sumber panas dari luar harus dipisahkan dari panas reaksi.</>,
+      },
+    },
+  }}
+/>
+
+## Empat Petunjuk yang Sering Dipakai
+
+**Gas** terlihat sebagai gelembung, asap, atau bau tertentu. Di kelas, bau tidak dijadikan uji utama tanpa arahan guru, karena beberapa gas berbahaya walaupun tidak terlihat jelas.
+
+**Endapan** adalah padatan baru yang terbentuk dari larutan. Misalnya, dua larutan yang awalnya bening dapat menghasilkan padatan putih karena ion-ionnya membentuk senyawa yang sukar larut.
+
+**Perubahan warna** bisa menjadi petunjuk kuat jika tidak ada pewarna yang sengaja ditambahkan. Warna berubah karena produk baru dapat berinteraksi dengan cahaya secara berbeda.
+
+**Perubahan energi** dapat terasa sebagai panas, dingin, atau cahaya. Reaksi pembakaran mudah dikenali karena melepaskan panas dan cahaya. Sebaliknya, ada reaksi yang menyerap panas sehingga campuran terasa lebih dingin.
+
+Chem LibreTexts juga membedakan perubahan kimia dan perubahan fisika lewat terbentuknya zat baru. Ringkasannya bisa dibuka di [Chemical Change vs Physical Change](https://chem.libretexts.org/Bookshelves/Physical_and_Theoretical_Chemistry_Textbook_Maps/Supplemental_Modules_%28Physical_and_Theoretical_Chemistry%29/Fundamentals/Chemical_Change_vs._Physical_Change).
+
+## Petunjuk Bukan Vonis
+
+Satu tanda saja belum selalu cukup. Air yang mendidih mengeluarkan gelembung, tetapi itu perubahan fisika karena zatnya masih <InlineMath math="\mathrm{H_2O}" />. Garam yang larut juga tampak berubah, tetapi dapat diperoleh kembali dengan menguapkan air.
+
+Cara aman membacanya begini.
+
+| Peristiwa | Lebih tepat dibaca sebagai | Alasan dekat |
+| :-------- | :------------------------- | :----------- |
+| Es mencair | Perubahan fisika | Zatnya tetap <InlineMath math="\mathrm{H_2O}" />. |
+| Kertas terbakar | Reaksi kimia | Muncul zat baru seperti gas, abu, panas, dan cahaya. |
+| Dua larutan bening menghasilkan padatan | Kemungkinan reaksi kimia | Ada endapan yang tidak ada sebelumnya. |
+| Pewarna merah dicampur air | Perubahan fisika | Warna berubah karena zat pewarna tersebar, bukan karena produk baru. |
+
+Kalau ingin yakin, kita perlu mengecek apakah produk benar-benar berbeda dari reaktannya. Di laboratorium, itu bisa dilakukan lewat pengukuran massa, pengujian gas, pengamatan endapan, atau analisis komposisi.
+
+## Mengapa Ini Penting untuk Hukum Dasar Kimia
+
+Hukum dasar kimia membahas pola yang tetap saat reaksi terjadi. Agar pola itu bisa dibaca, kita perlu tahu dulu kapan suatu peristiwa layak disebut reaksi.
+
+Ambil contoh oksida logam. Nikel dapat membentuk salah satu oksidanya dengan rumus <InlineMath math="\mathrm{NiO}" />, sedangkan kobalt juga dapat membentuk salah satu oksidanya dengan rumus <InlineMath math="\mathrm{CoO}" />. Rumus itu memberi pesan bahwa logam dan oksigen bergabung dalam perbandingan tertentu.
+
+<BlockMath math="2\mathrm{Ni} + \mathrm{O_2} \rightarrow 2\mathrm{NiO}" />
+
+Tanda reaksi membantu kita mengenali perubahan yang terjadi. Hukum dasar kimia membantu kita menghitung pola massanya. Jadi, urutannya jelas: amati dulu cirinya, lalu ukur perbandingan zatnya.
