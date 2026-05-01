@@ -19,8 +19,7 @@ export type ReactionSceneColors = ReturnType<typeof getReactionSceneColors>;
 export type ReactionScenePoint = readonly [number, number, number];
 
 export interface ReactionCueLabels {
-  afterCaption: ReactNode;
-  beforeCaption: ReactNode;
+  helperCaption: ReactNode;
   limit: ReactNode;
   meaning: ReactNode;
   observation: ReactNode;

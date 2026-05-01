@@ -2,15 +2,15 @@
 
 import { useThree } from "@react-three/fiber";
 import {
-  CLOSED_SYSTEM_MODE_ID,
-  getMassConservationSceneColors,
-  isMassConservationModeId,
-  MASS_CONSERVATION_MODE_IDS,
-  MASS_CONSERVATION_SCENE_VIEW,
-  type MassConservationLabProps,
-  type MassConservationModeId,
-} from "@repo/design-system/components/contents/chemistry/mass-conservation-law/data";
-import { MassConservationScene } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/scene";
+  CONSTANT_COMPOSITION_MODE_IDS,
+  CONSTANT_COMPOSITION_SCENE_VIEW,
+  type ConstantCompositionLabProps,
+  type ConstantCompositionModeId,
+  EXACT_RATIO_MODE_ID,
+  getConstantCompositionSceneColors,
+  isConstantCompositionModeId,
+} from "@repo/design-system/components/contents/chemistry/constant-composition-law/data";
+import { ConstantCompositionScene } from "@repo/design-system/components/contents/chemistry/constant-composition-law/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
@@ -33,26 +33,25 @@ import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
-const NARROW_CANVAS_ASPECT_RATIO = 1.22;
+const NARROW_CANVAS_ASPECT_RATIO = 1.28;
 
-export function MassConservationLab({
+export function ConstantCompositionLab({
   title,
   description,
   labels,
-}: MassConservationLabProps) {
+}: ConstantCompositionLabProps) {
   const { resolvedTheme } = useTheme();
-  const [selectedModeId, setSelectedModeId] = useState<MassConservationModeId>(
-    CLOSED_SYSTEM_MODE_ID
-  );
+  const [selectedModeId, setSelectedModeId] =
+    useState<ConstantCompositionModeId>(EXACT_RATIO_MODE_ID);
   const selectedLabels = labels.modes[selectedModeId];
-  const sceneColors = getMassConservationSceneColors(resolvedTheme);
+  const sceneColors = getConstantCompositionSceneColors(resolvedTheme);
 
   function handleModeChange(value: string) {
     if (!value) {
       return;
     }
 
-    if (!isMassConservationModeId(value)) {
+    if (!isConstantCompositionModeId(value)) {
       return;
     }
 
@@ -69,15 +68,19 @@ export function MassConservationLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseMode}
-          className="grid w-full grid-cols-2"
+          className="grid w-full grid-cols-1 sm:grid-cols-3"
           layout="grid"
           onValueChange={handleModeChange}
           type="single"
           value={selectedModeId}
           variant="outline"
         >
-          {MASS_CONSERVATION_MODE_IDS.map((modeId) => (
-            <ToggleGroupItem key={modeId} value={modeId}>
+          {CONSTANT_COMPOSITION_MODE_IDS.map((modeId) => (
+            <ToggleGroupItem
+              aria-label={labels.modes[modeId].tabLabel}
+              key={modeId}
+              value={modeId}
+            >
               {labels.modes[modeId].tab}
             </ToggleGroupItem>
           ))}
@@ -89,21 +92,21 @@ export function MassConservationLab({
         >
           <ThreeCanvas
             camera={{
-              fov: 42,
-              position: MASS_CONSERVATION_SCENE_VIEW.cameraPosition,
+              fov: 43,
+              position: CONSTANT_COMPOSITION_SCENE_VIEW.cameraPosition,
             }}
             frameloop="always"
           >
             <Suspense>
-              <MassConservationCameraControls />
-              <ambientLight intensity={0.68} />
+              <ConstantCompositionCameraControls />
+              <ambientLight intensity={0.7} />
               <hemisphereLight
                 color={sceneColors.text}
-                groundColor={sceneColors.groundLight}
-                intensity={0.58}
+                groundColor={sceneColors.bond}
+                intensity={0.62}
               />
               <directionalLight intensity={1.25} position={[4, 5, 5]} />
-              <MassConservationScene
+              <ConstantCompositionScene
                 colors={sceneColors}
                 labels={labels}
                 modeId={selectedModeId}
@@ -119,10 +122,10 @@ export function MassConservationLab({
 
       <CardFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <LabFact label={labels.systemLabel} value={selectedLabels.system} />
+          <LabFact label={labels.ratioLabel} value={selectedLabels.ratio} />
           <LabFact
-            label={labels.calculationLabel}
-            value={selectedLabels.calculation}
+            label={labels.leftoverLabel}
+            value={selectedLabels.leftover}
           />
         </dl>
       </CardFooter>
@@ -130,19 +133,19 @@ export function MassConservationLab({
   );
 }
 
-function MassConservationCameraControls() {
+function ConstantCompositionCameraControls() {
   const size = useThree((state) => state.size);
   const cameraPosition = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO)
-    ? MASS_CONSERVATION_SCENE_VIEW.narrowCameraPosition
-    : MASS_CONSERVATION_SCENE_VIEW.cameraPosition;
+    ? CONSTANT_COMPOSITION_SCENE_VIEW.narrowCameraPosition
+    : CONSTANT_COMPOSITION_SCENE_VIEW.cameraPosition;
 
   return (
     <CameraControls
       autoRotate={false}
       cameraPosition={cameraPosition}
-      cameraTarget={MASS_CONSERVATION_SCENE_VIEW.cameraTarget}
-      maxDistance={9.2}
-      minDistance={2.9}
+      cameraTarget={CONSTANT_COMPOSITION_SCENE_VIEW.cameraTarget}
+      maxDistance={8.6}
+      minDistance={2.7}
     />
   );
 }

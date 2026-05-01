@@ -39,8 +39,11 @@ Choose one reaction type. Watch the visible change first, then match it with the
     types: {
       combustion: {
         tab: "Combustion",
-        beforeCaption: <>Phosphorus and oxygen are still separate.</>,
-        afterCaption: <>An oxide product forms while heat and light are released.</>,
+        helperCaption: (
+          <>
+            Phosphorus and oxygen form an oxide while releasing heat and light.
+          </>
+        ),
         equation: (
           <InlineMath math="\mathrm{P_4} + 5\mathrm{O_2} \rightarrow 2\mathrm{P_2O_5}" />
         ),
@@ -54,8 +57,7 @@ Choose one reaction type. Watch the visible change first, then match it with the
       },
       rust: {
         tab: "Rusting",
-        beforeCaption: <>Iron contacts oxygen and water.</>,
-        afterCaption: <>A reddish-brown layer forms on the metal surface.</>,
+        helperCaption: <>Iron reacts with oxygen and water until a rust layer forms.</>,
         equation: (
           <InlineMath math="4\mathrm{Fe} + 3\mathrm{O_2} + 2x\mathrm{H_2O} \rightarrow 2\mathrm{Fe_2O_3} \cdot x\mathrm{H_2O}" />
         ),
@@ -70,8 +72,7 @@ Choose one reaction type. Watch the visible change first, then match it with the
       },
       precipitate: {
         tab: "Precipitate",
-        beforeCaption: <>Ions are still dispersed in the solution.</>,
-        afterCaption: <>A white solid forms and settles to the bottom.</>,
+        helperCaption: <>Ions in solution assemble into a poorly soluble solid product.</>,
         equation: (
           <InlineMath math="\mathrm{Ca(OH)_2} + \mathrm{NaHCO_3} \rightarrow \mathrm{CaCO_3} + \mathrm{NaOH} + \mathrm{H_2O}" />
         ),
@@ -86,8 +87,7 @@ Choose one reaction type. Watch the visible change first, then match it with the
       },
       gas: {
         tab: "Gas",
-        beforeCaption: <>The starting substance has not produced gas bubbles.</>,
-        afterCaption: <>Gas leaves the mixture as bubbles.</>,
+        helperCaption: <>A gas product leaves the mixture as bubbles.</>,
         equation: (
           <InlineMath math="\mathrm{C_6H_{12}O_6} \rightarrow 2\mathrm{C_2H_5OH} + 2\mathrm{CO_2}" />
         ),

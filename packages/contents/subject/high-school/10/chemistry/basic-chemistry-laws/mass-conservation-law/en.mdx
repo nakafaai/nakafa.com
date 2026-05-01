@@ -45,8 +45,12 @@ Switch between a closed and an open system. The correct law always counts every 
     modes: {
       closed: {
         tab: "Closed",
-        beforeCaption: <>All reactants are in the same container.</>,
-        afterCaption: <>Products and leftover reactants are still weighed.</>,
+        helperCaption: (
+          <>
+            In a closed system, products and leftover reactants stay inside the
+            part being weighed.
+          </>
+        ),
         readoutBefore: "12.00 g",
         readoutAfter: "12.00 g",
         system: <>The container, products, and leftover reactants are one system.</>,
@@ -59,8 +63,12 @@ Switch between a closed and an open system. The correct law always counts every 
       },
       open: {
         tab: "Open",
-        beforeCaption: <>The system boundary appears to include all starting substances.</>,
-        afterCaption: <>Some gas can leave the part being weighed.</>,
+        helperCaption: (
+          <>
+            In an open system, escaping gas makes the weighed part appear to lose
+            mass.
+          </>
+        ),
         readoutBefore: "12.00 g",
         readoutAfter: "<12.00 g",
         system: <>The law still holds when the escaped gas is counted too.</>,

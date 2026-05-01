@@ -39,8 +39,12 @@ Pilih satu jenis reaksi. Perhatikan dulu perubahan yang tampak, lalu cocokkan de
     types: {
       combustion: {
         tab: "Pembakaran",
-        beforeCaption: <>Fosfor dan oksigen masih terpisah.</>,
-        afterCaption: <>Produk oksida terbentuk sambil melepas panas dan cahaya.</>,
+        helperCaption: (
+          <>
+            Fosfor dan oksigen berubah menjadi oksida sambil melepas panas dan
+            cahaya.
+          </>
+        ),
         equation: (
           <InlineMath math="\mathrm{P_4} + 5\mathrm{O_2} \rightarrow 2\mathrm{P_2O_5}" />
         ),
@@ -54,8 +58,7 @@ Pilih satu jenis reaksi. Perhatikan dulu perubahan yang tampak, lalu cocokkan de
       },
       rust: {
         tab: "Perkaratan",
-        beforeCaption: <>Besi bersentuhan dengan oksigen dan air.</>,
-        afterCaption: <>Lapisan kemerahan terbentuk di permukaan logam.</>,
+        helperCaption: <>Besi bereaksi dengan oksigen dan air hingga lapisan karat terbentuk.</>,
         equation: (
           <InlineMath math="4\mathrm{Fe} + 3\mathrm{O_2} + 2x\mathrm{H_2O} \rightarrow 2\mathrm{Fe_2O_3} \cdot x\mathrm{H_2O}" />
         ),
@@ -70,8 +73,7 @@ Pilih satu jenis reaksi. Perhatikan dulu perubahan yang tampak, lalu cocokkan de
       },
       precipitate: {
         tab: "Endapan",
-        beforeCaption: <>Ion-ion masih tersebar di larutan.</>,
-        afterCaption: <>Padatan putih terbentuk dan turun ke dasar.</>,
+        helperCaption: <>Ion dalam larutan menyusun produk padat yang sukar larut.</>,
         equation: (
           <InlineMath math="\mathrm{Ca(OH)_2} + \mathrm{NaHCO_3} \rightarrow \mathrm{CaCO_3} + \mathrm{NaOH} + \mathrm{H_2O}" />
         ),
@@ -86,8 +88,7 @@ Pilih satu jenis reaksi. Perhatikan dulu perubahan yang tampak, lalu cocokkan de
       },
       gas: {
         tab: "Gas",
-        beforeCaption: <>Zat awal belum menghasilkan gelembung gas.</>,
-        afterCaption: <>Gas keluar sebagai gelembung dari campuran.</>,
+        helperCaption: <>Produk gas keluar dari campuran sebagai gelembung.</>,
         equation: (
           <InlineMath math="\mathrm{C_6H_{12}O_6} \rightarrow 2\mathrm{C_2H_5OH} + 2\mathrm{CO_2}" />
         ),

@@ -19,9 +19,8 @@ export type MassConservationSceneColors = ReturnType<
 export type MassConservationScenePoint = readonly [number, number, number];
 
 export interface MassConservationModeLabels {
-  afterCaption: ReactNode;
-  beforeCaption: ReactNode;
   calculation: ReactNode;
+  helperCaption: ReactNode;
   readoutAfter: string;
   readoutBefore: string;
   system: ReactNode;

@@ -22,10 +22,9 @@ export type ChemicalReactionTypeSceneColors = ReturnType<
 export type ChemicalReactionTypeScenePoint = readonly [number, number, number];
 
 export interface ChemicalReactionTypeLabels {
-  afterCaption: ReactNode;
-  beforeCaption: ReactNode;
   check: ReactNode;
   equation: ReactNode;
+  helperCaption: ReactNode;
   reading: ReactNode;
   tab: string;
   visibleCue: ReactNode;

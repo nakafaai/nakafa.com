@@ -113,14 +113,13 @@ export function ChemicalReactionCharacteristicsLab({
           </ThreeCanvas>
         </section>
 
-        <div className="grid grid-cols-2 gap-3 text-center text-muted-foreground text-sm">
-          <p>{selectedLabels.beforeCaption}</p>
-          <p>{selectedLabels.afterCaption}</p>
-        </div>
+        <p className="text-muted-foreground text-sm">
+          {selectedLabels.helperCaption}
+        </p>
       </CardContent>
 
       <CardFooter className="border-t">
-        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           <ReactionFact
             label={labels.observationLabel}
             value={selectedLabels.observation}

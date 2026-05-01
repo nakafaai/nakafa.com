@@ -122,10 +122,9 @@ export function ChemicalReactionTypesLab({
           </ThreeCanvas>
         </section>
 
-        <div className="grid grid-cols-2 gap-3 text-center text-muted-foreground text-sm">
-          <p>{selectedLabels.beforeCaption}</p>
-          <p>{selectedLabels.afterCaption}</p>
-        </div>
+        <p className="text-muted-foreground text-sm">
+          {selectedLabels.helperCaption}
+        </p>
       </CardContent>
 
       <CardFooter className="border-t">

@@ -45,8 +45,12 @@ Pilih sistem tertutup dan terbuka. Perhatikan bahwa hukum yang benar selalu meng
     modes: {
       closed: {
         tab: "Tertutup",
-        beforeCaption: <>Semua reaktan berada di wadah yang sama.</>,
-        afterCaption: <>Produk dan sisa reaktan tetap ikut ditimbang.</>,
+        helperCaption: (
+          <>
+            Dalam sistem tertutup, produk dan sisa reaktan tetap berada di
+            bagian yang ditimbang.
+          </>
+        ),
         readoutBefore: "12,00 g",
         readoutAfter: "12,00 g",
         system: <>Wadah, produk, dan sisa reaktan dihitung sebagai satu sistem.</>,
@@ -59,8 +63,12 @@ Pilih sistem tertutup dan terbuka. Perhatikan bahwa hukum yang benar selalu meng
       },
       open: {
         tab: "Terbuka",
-        beforeCaption: <>Batas sistem masih tampak berisi semua zat awal.</>,
-        afterCaption: <>Sebagian gas dapat keluar dari bagian yang ditimbang.</>,
+        helperCaption: (
+          <>
+            Dalam sistem terbuka, gas yang keluar membuat massa bagian yang
+            ditimbang tampak berkurang.
+          </>
+        ),
         readoutBefore: "12,00 g",
         readoutAfter: "<12,00 g",
         system: <>Hukum tetap berlaku jika gas yang keluar juga ikut dihitung.</>,

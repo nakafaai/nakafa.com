@@ -75,6 +75,7 @@ function ErrorFallback({
  */
 function ThreeCanvasComponent({
   children,
+  className,
   frameloop = "demand",
   ...props
 }: {
@@ -120,6 +121,7 @@ function ThreeCanvasComponent({
       }}
     >
       <Canvas
+        className={cn("size-full [&_canvas]:size-full", className)}
         fallback={
           <div className="flex h-full w-full items-center justify-center">
             <HugeIcons
