@@ -1,74 +1,35 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-const { mockExistsSync } = vi.hoisted(() => ({
-  mockExistsSync: vi.fn(),
-}));
-
-vi.mock("node:fs", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("node:fs")>();
-  return {
-    ...actual,
-    default: {
-      ...actual,
-      existsSync: mockExistsSync,
-    },
-    existsSync: mockExistsSync,
-  };
-});
-
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
+import { describe, expect, it } from "vitest";
 
-beforeEach(() => {
-  vi.spyOn(process, "cwd").mockReturnValue("/workspace/apps/www");
-  mockExistsSync.mockReset();
-});
+const contentsPath = process.cwd();
 
-afterEach(() => {
-  vi.restoreAllMocks();
-});
+/**
+ * Converts a real package source path into the URL shape passed by `import.meta.url`.
+ */
+function getSourceUrl(...segments: string[]) {
+  return pathToFileURL(path.join(contentsPath, ...segments)).href;
+}
 
 describe("resolveContentsDir", () => {
-  it("prefers the current working directory when it already contains the contents structure", () => {
-    const existingPaths = new Set([
-      "/workspace/apps/www/articles",
-      "/workspace/apps/www/exercises",
-      "/workspace/apps/www/subject",
-    ]);
-    mockExistsSync.mockImplementation((filePath: string) =>
-      existingPaths.has(filePath)
-    );
+  it("finds the contents root from a direct _lib source module", () => {
+    const result = resolveContentsDir(getSourceUrl("_lib", "root.ts"));
 
-    const result = resolveContentsDir(
-      "file:///vercel/path0/apps/www/server/chunk.js"
-    );
-
-    expect(result).toBe("/workspace/apps/www");
+    expect(result).toBe(contentsPath);
   });
 
-  it("finds the monorepo contents directory relative to the working directory", () => {
-    const existingPaths = new Set([
-      "/workspace/packages/contents/articles",
-      "/workspace/packages/contents/exercises",
-      "/workspace/packages/contents/subject",
-    ]);
-    mockExistsSync.mockImplementation((filePath: string) =>
-      existingPaths.has(filePath)
-    );
-
+  it("finds the contents root from a nested _lib source module", () => {
     const result = resolveContentsDir(
-      "file:///vercel/path0/apps/www/server/chunk.js"
+      getSourceUrl("_lib", "exercises", "source.ts")
     );
 
-    expect(result).toBe("/workspace/packages/contents");
+    expect(result).toBe(contentsPath);
   });
 
-  it("falls back to the source-relative directory when no candidate contains the contents structure", () => {
-    mockExistsSync.mockReturnValue(false);
+  it("falls back to the file directory when the source is outside _lib", () => {
+    const result = resolveContentsDir(getSourceUrl("root.ts"));
 
-    const result = resolveContentsDir(
-      "file:///var/task/apps/www/server/chunk.js"
-    );
-
-    expect(result).toBe("/var/task/apps/www");
+    expect(result).toBe(contentsPath);
   });
 });

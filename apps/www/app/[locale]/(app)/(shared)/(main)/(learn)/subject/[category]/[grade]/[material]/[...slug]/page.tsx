@@ -92,8 +92,15 @@ export async function generateMetadata({
     slug,
   });
 
+  if (!metadata) {
+    notFound();
+  }
+
   const alternates = {
     canonical: path,
+    types: {
+      "text/markdown": `${path}.md`,
+    },
   };
   const image = {
     url: getOgUrl(locale, filePath),
@@ -120,9 +127,9 @@ export async function generateMetadata({
     material,
     chapter,
     data: {
-      title: metadata?.title,
-      description: metadata?.description,
-      subject: metadata?.subject,
+      title: metadata.title,
+      description: metadata.description,
+      subject: metadata.subject,
     },
   };
 
@@ -130,15 +137,6 @@ export async function generateMetadata({
     seoContext,
     locale
   );
-
-  if (!metadata) {
-    return {
-      title: { absolute: title },
-      alternates,
-      openGraph,
-      twitter,
-    };
-  }
 
   return {
     title: { absolute: title },
@@ -186,6 +184,10 @@ export default async function Page({
     }
   );
   const Content = content?.default;
+  if (!Content) {
+    notFound();
+  }
+
   const contentMetadata = ContentMetadataSchema.safeParse(
     content?.metadata
   ).data;
@@ -210,7 +212,7 @@ export default async function Page({
         />
       }
     >
-      {Content ? <Content /> : null}
+      <Content />
     </CachedSubjectShell>
   );
 }
@@ -325,7 +327,11 @@ async function CachedSubjectShell({
     }),
   ]);
 
-  if (!(content.content && materials && children !== null)) {
+  if (!content.content) {
+    notFound();
+  }
+
+  if (!(materials && children !== null)) {
     return (
       <LayoutMaterial>
         <LayoutMaterialContent>

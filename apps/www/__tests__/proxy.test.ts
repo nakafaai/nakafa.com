@@ -46,6 +46,14 @@ describe("proxy", () => {
     );
   });
 
+  it("bypasses locale routing for the same-origin MCP endpoint", async () => {
+    const { proxy } = await import("@/proxy");
+    const response = proxy(new NextRequest("http://localhost:3000/mcp"));
+
+    expect(localeMiddleware).not.toHaveBeenCalled();
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
+
   it("delegates regular routes to the locale middleware", async () => {
     const { proxy } = await import("@/proxy");
     const response = proxy(new NextRequest("http://localhost:3000/en/search"));

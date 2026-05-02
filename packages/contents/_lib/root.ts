@@ -1,57 +1,42 @@
-import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const CONTENTS_SENTINELS = ["articles", "exercises", "subject"];
+const CONTENTS_LIB_SEGMENT = `${path.sep}_lib${path.sep}`;
 
 /**
- * Checks whether a directory looks like the `packages/contents` root.
+ * Finds the `packages/contents` root boundary from a source file path.
  *
- * The contents package is treated as valid only when all required runtime
- * folders exist. This keeps filesystem lookups stable in local development,
- * tests, and production bundles where `import.meta.url` may resolve inside
- * generated server chunks.
- *
- * @param directory - Absolute directory candidate to validate
- * @returns True when the directory contains the expected contents structure
+ * @param filePath - Absolute source file path from `import.meta.url`
+ * @returns Absolute contents root path when the file lives under `_lib`
  */
-function isContentsDirectory(directory: string) {
-  return CONTENTS_SENTINELS.every((entry) =>
-    fs.existsSync(path.join(directory, entry))
-  );
+function getContentsRootFromLibPath(filePath: string) {
+  const boundaryIndex = filePath.lastIndexOf(CONTENTS_LIB_SEGMENT);
+
+  if (boundaryIndex === -1) {
+    return null;
+  }
+
+  return filePath.slice(0, boundaryIndex);
 }
 
 /**
  * Resolves the runtime root of the `packages/contents` workspace.
  *
- * On Vercel and in Next.js production bundles, modules can be executed from
- * generated chunk locations instead of the original source file path. This
- * helper prefers `process.cwd()`-relative monorepo locations first, then falls
- * back to the source-relative path derived from `import.meta.url`.
+ * Next.js and Turbopack preserve package source locations for `import.meta.url`
+ * in bundled server code. The contents runtime callers live under
+ * `packages/contents/_lib`, so the package root can be derived directly from
+ * the source path without probing parent folders at build time.
  *
  * @param metaUrl - The current module `import.meta.url`
  * @returns Absolute path to the contents package root directory
  */
 export function resolveContentsDir(metaUrl: string) {
-  const currentWorkingDirectory = process.cwd();
-  const fallbackDirectory = path.resolve(
-    path.dirname(fileURLToPath(metaUrl)),
-    ".."
-  );
+  const filePath = fileURLToPath(metaUrl);
+  const contentsRoot = getContentsRootFromLibPath(filePath);
 
-  const candidates = [
-    currentWorkingDirectory,
-    path.resolve(currentWorkingDirectory, "packages/contents"),
-    path.resolve(currentWorkingDirectory, "../packages/contents"),
-    path.resolve(currentWorkingDirectory, "../../packages/contents"),
-    fallbackDirectory,
-  ];
-
-  for (const candidate of new Set(candidates)) {
-    if (isContentsDirectory(candidate)) {
-      return candidate;
-    }
+  if (contentsRoot) {
+    return contentsRoot;
   }
 
-  return fallbackDirectory;
+  return path.dirname(filePath);
 }

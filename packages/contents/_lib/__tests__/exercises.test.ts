@@ -398,7 +398,7 @@ describe("getExercisesContent", () => {
       { includeMDX: false }
     );
     expect(mockReadFile).toHaveBeenCalledWith(
-      "/virtual/contents/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1/03/choices.ts",
+      expect.stringContaining(`${exerciseBasePath}/03/choices.ts`),
       "utf8"
     );
   });

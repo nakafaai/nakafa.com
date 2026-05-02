@@ -41,7 +41,7 @@ export const baseRoutes = [
 ];
 
 /** Builds relative Quran routes from `/quran/1` through `/quran/114`. */
-export function getQuranRoutes(): string[] {
+export function getQuranRoutes() {
   return Array.from({ length: 114 }, (_, index) => `/quran/${index + 1}`);
 }
 
@@ -49,7 +49,7 @@ export function getQuranRoutes(): string[] {
  * Walks the content package tree and converts indexable folders into relative
  * route paths.
  */
-export function getContentRoutes(currentPath = ""): string[] {
+export function getContentRoutes(currentPath = "") {
   const children = Effect.runSync(
     Effect.match(getFolderChildNames(currentPath || "."), {
       onFailure: () => [],
@@ -69,7 +69,7 @@ export function getContentRoutes(currentPath = ""): string[] {
 }
 
 /** Builds the deduplicated route list used by `/sitemap.xml` and indexing scripts. */
-export function getSitemapRoutes(): string[] {
+export function getSitemapRoutes() {
   const contentRoutes = getContentRoutes().filter(isIndexableContentRoute);
   const allRoutes = new Set([
     ...baseRoutes,

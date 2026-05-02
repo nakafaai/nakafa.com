@@ -5,40 +5,16 @@ import {
   isYearlessTryOutCollectionSlug,
   LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
 } from "@repo/contents/_lib/exercises/slug";
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import type { Metadata } from "next";
-import { permanentRedirect } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { getOgUrl } from "@/lib/utils/metadata";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
 import { getExerciseRouteData, getResolvedParams } from "./data";
-import { MissingExercisePage } from "./empty";
 import { YearGroupPage } from "./group";
 import { ExerciseSetPage } from "./set";
 import { SingleExercisePage } from "./single";
-
-/** Builds the fallback metadata shape when exercise route resolution fails. */
-const metadataFallback = ({
-  category,
-  material,
-  pagePath,
-  type,
-}: {
-  category: ExercisesCategory;
-  material: ExercisesMaterial;
-  pagePath: string;
-  type: ExercisesType;
-}) => ({
-  category,
-  currentMaterial: undefined,
-  currentMaterialItem: undefined,
-  kind: "missing" as const,
-  materialPath: getSlugPath(category, type, material, []),
-  pagePath,
-});
 
 /** Generates SEO metadata for one learn-exercises route. */
 export async function generateMetadata({
@@ -63,8 +39,12 @@ export async function generateMetadata({
       source: "exercise-route-metadata",
     });
 
-    return metadataFallback({ category, material, pagePath, type });
+    notFound();
   });
+
+  if (data.kind === "missing") {
+    notFound();
+  }
 
   const urlPath = `/${locale}${data.pagePath}`;
   const image = {
@@ -121,6 +101,9 @@ export async function generateMetadata({
     keywords,
     alternates: {
       canonical: urlPath,
+      types: {
+        "text/markdown": `${urlPath}.md`,
+      },
     },
     openGraph: {
       title: finalTitle,
@@ -211,6 +194,6 @@ export default async function Page({
         />
       );
     default:
-      return <MissingExercisePage />;
+      notFound();
   }
 }

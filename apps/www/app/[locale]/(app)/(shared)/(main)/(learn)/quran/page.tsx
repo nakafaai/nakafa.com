@@ -25,6 +25,9 @@ export async function generateMetadata({
 
   const alternates = {
     canonical: path,
+    types: {
+      "text/markdown": `${path}.md`,
+    },
   };
   const image = {
     url: "/quran.png",

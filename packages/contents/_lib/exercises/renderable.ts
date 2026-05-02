@@ -22,21 +22,25 @@ function loadRenderableExercise(
   cleanPath: string,
   locale: Locale
 ) {
-  return Effect.runPromise(
-    loadExerciseEntry(cleanPath, exerciseNumberSegment, {
-      loadQuestion: (questionPath) =>
-        Effect.promise(() => readExerciseContentData(locale, questionPath)),
-      loadAnswer: (answerPath) =>
-        Effect.promise(() => readExerciseContentData(locale, answerPath)),
-      loadChoices: (choicesPath) =>
-        Effect.promise(() =>
-          readExerciseChoices(choicesPath).catch(() => null)
-        ),
-    }).pipe(
-      Effect.map((exercise) =>
-        Option.isSome(exercise) ? exercise.value : null
-      )
-    )
+  return loadExerciseEntry(cleanPath, exerciseNumberSegment, {
+    loadQuestion: (questionPath) =>
+      readExerciseContentData(locale, questionPath),
+    loadAnswer: (answerPath) => readExerciseContentData(locale, answerPath),
+    loadChoices: (choicesPath) =>
+      readExerciseChoices(choicesPath).pipe(
+        Effect.catchTags({
+          GitHubFetchError: () => Effect.succeed(null),
+          InvalidPathError: () => Effect.succeed(null),
+        })
+      ),
+  }).pipe(
+    Effect.map((exercise) => {
+      if (Option.isNone(exercise)) {
+        return null;
+      }
+
+      return exercise.value;
+    })
   );
 }
 
@@ -62,13 +66,18 @@ export async function getRenderableExercisesContent(
     return [];
   }
 
-  const exercises = await Promise.all(
-    exerciseNumbers.map((exerciseNumber) =>
-      loadRenderableExercise(exerciseNumber, cleanPath, locale)
+  return await Effect.runPromise(
+    Effect.all(
+      exerciseNumbers.map((exerciseNumber) =>
+        loadRenderableExercise(exerciseNumber, cleanPath, locale)
+      ),
+      { concurrency: "unbounded" }
+    ).pipe(
+      Effect.map((exercises) =>
+        exercises.filter((exercise) => exercise !== null)
+      )
     )
   );
-
-  return exercises.filter((exercise) => exercise !== null);
 }
 
 /**
@@ -94,5 +103,7 @@ export function getRenderableExerciseByNumber(
     return null;
   }
 
-  return loadRenderableExercise(numberSegment, cleanPath, locale);
+  return Effect.runPromise(
+    loadRenderableExercise(numberSegment, cleanPath, locale)
+  );
 }

@@ -2,6 +2,11 @@ import { promises as fsPromises } from "node:fs";
 import nodePath from "node:path";
 import { extractMetadata } from "@repo/contents/_lib/metadata";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
+import {
+  FileReadError,
+  GitHubFetchError,
+  InvalidPathError,
+} from "@repo/contents/_shared/error";
 import type { Locale } from "@repo/contents/_types/content";
 import { ExercisesChoicesSchema } from "@repo/contents/_types/exercises/choices";
 import { cleanSlug } from "@repo/utilities/helper";
@@ -11,6 +16,44 @@ import ky from "ky";
 const contentsDir = resolveContentsDir(import.meta.url);
 const CHOICES_REGEX =
   /const\s+choices\s*(?::\s*ExercisesChoices\s*)?=\s*({[\s\S]*?});/;
+const EXERCISES_ROOT = "exercises";
+
+/**
+ * Checks whether a clean path segment is safe for filesystem lookup.
+ *
+ * @param segment - One slash-delimited path segment
+ * @returns True when the segment cannot traverse outside the exercise root
+ */
+function isSafePathSegment(segment: string) {
+  return segment !== "" && segment !== "." && segment !== "..";
+}
+
+/**
+ * Resolves a content-relative exercise path under the literal exercises root.
+ *
+ * @param filePath - Relative path inside `packages/contents`
+ * @returns Absolute file path, or `null` for unsafe/non-exercise paths
+ */
+function resolveExerciseFilePath(filePath: string) {
+  if (nodePath.isAbsolute(filePath)) {
+    return null;
+  }
+
+  const cleanPath = cleanSlug(filePath);
+  const segments = cleanPath.split("/");
+
+  if (segments[0] !== EXERCISES_ROOT) {
+    return null;
+  }
+
+  if (!segments.every(isSafePathSegment)) {
+    return null;
+  }
+
+  return nodePath
+    .join(contentsDir, EXERCISES_ROOT, ...segments.slice(1))
+    .replaceAll(nodePath.sep, "/");
+}
 
 /**
  * Builds the content and choices file paths for one exercise inside a set.
@@ -73,29 +116,62 @@ export function loadExerciseEntry<TQuestion, TAnswer, TChoices, TError>(
 }
 
 /**
- * Reads one text file from the contents workspace and falls back to the
- * canonical GitHub raw copy when the local file is unavailable.
+ * Builds the canonical GitHub raw URL for one contents file.
  *
  * @param filePath - Relative file path inside `packages/contents`
- * @returns Raw file contents from disk or GitHub
+ * @returns Raw GitHub URL for the file
  */
-async function readContentsTextWithGitHubFallback(filePath: string) {
-  const fullPath = nodePath.join(contentsDir, filePath);
+function getRawGitHubUrl(filePath: string) {
+  return `https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/${filePath}`;
+}
 
-  if (!fullPath.startsWith(contentsDir)) {
-    throw new Error("Path escapes contents root");
-  }
+/**
+ * Reads one text file from the contents workspace.
+ *
+ * @param filePath - Relative file path inside `packages/contents`
+ * @returns Effect that resolves to the raw local file contents
+ */
+function readContentsText(filePath: string) {
+  return Effect.gen(function* () {
+    const fullPath = resolveExerciseFilePath(filePath);
 
-  return await fsPromises
-    .readFile(fullPath, "utf8")
-    .catch(() =>
-      ky
-        .get(
-          `https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/${filePath}`,
-          { cache: "force-cache" }
-        )
-        .text()
-    );
+    if (!fullPath) {
+      return yield* Effect.fail(
+        new InvalidPathError({
+          path: filePath,
+          reason: "Path traversal detected",
+        })
+      );
+    }
+
+    return yield* Effect.tryPromise({
+      try: () =>
+        fsPromises.readFile(/* turbopackIgnore: true */ fullPath, "utf8"),
+      catch: (cause) =>
+        new FileReadError({
+          path: fullPath,
+          cause,
+        }),
+    });
+  });
+}
+
+/**
+ * Reads one text file and falls back to the canonical GitHub raw copy.
+ *
+ * @param filePath - Relative file path inside `packages/contents`
+ * @returns Effect that resolves to raw file contents from disk or GitHub
+ */
+function readContentsTextWithGitHubFallback(filePath: string) {
+  const url = getRawGitHubUrl(filePath);
+  const fetchFromGitHub = Effect.tryPromise({
+    try: () => ky.get(url, { cache: "force-cache" }).text(),
+    catch: (cause) => new GitHubFetchError({ url, cause }),
+  });
+
+  return readContentsText(filePath).pipe(
+    Effect.catchTag("FileReadError", () => fetchFromGitHub)
+  );
 }
 
 /**
@@ -108,25 +184,27 @@ async function readContentsTextWithGitHubFallback(filePath: string) {
  * @param choicesPath - Root-relative path to the `choices.ts` file
  * @returns Parsed choices payload, or `null` when the file is invalid
  */
-export async function readExerciseChoices(choicesPath: string) {
-  const raw = await readContentsTextWithGitHubFallback(choicesPath);
-  const match = raw.match(CHOICES_REGEX);
+export function readExerciseChoices(choicesPath: string) {
+  return Effect.gen(function* () {
+    const raw = yield* readContentsTextWithGitHubFallback(choicesPath);
+    const match = raw.match(CHOICES_REGEX);
 
-  if (!match?.[1]) {
-    return null;
-  }
+    if (!match?.[1]) {
+      return null;
+    }
 
-  const choicesObject = Either.try({
-    try: () => new Function(`return ${match[1]}`)(),
-    catch: () => null,
+    const choicesObject = Either.try({
+      try: () => new Function(`return ${match[1]}`)(),
+      catch: () => null,
+    });
+
+    if (Either.isLeft(choicesObject)) {
+      return null;
+    }
+
+    const parsed = ExercisesChoicesSchema.safeParse(choicesObject.right);
+    return parsed.success ? parsed.data : null;
   });
-
-  if (Either.isLeft(choicesObject)) {
-    return null;
-  }
-
-  const parsed = ExercisesChoicesSchema.safeParse(choicesObject.right);
-  return parsed.success ? parsed.data : null;
 }
 
 /**
@@ -137,31 +215,30 @@ export async function readExerciseChoices(choicesPath: string) {
  * @param filePath - Exercise question or answer path relative to `packages/contents`
  * @returns Metadata plus raw MDX, or `null` when the file is missing or invalid
  */
-export async function readExerciseContentData(
-  locale: Locale,
-  filePath: string
-) {
+export function readExerciseContentData(locale: Locale, filePath: string) {
   const cleanPath = cleanSlug(filePath);
-  const fullPath = nodePath.join(contentsDir, `${cleanPath}/${locale}.mdx`);
 
-  if (!fullPath.startsWith(contentsDir)) {
-    return null;
-  }
+  return Effect.gen(function* () {
+    const raw = yield* readContentsText(`${cleanPath}/${locale}.mdx`).pipe(
+      Effect.catchTags({
+        FileReadError: () => Effect.succeed(null),
+        InvalidPathError: () => Effect.succeed(null),
+      })
+    );
 
-  const raw = await fsPromises.readFile(fullPath, "utf8").catch(() => null);
+    if (raw === null) {
+      return null;
+    }
 
-  if (raw === null) {
-    return null;
-  }
+    const metadata = extractMetadata(raw);
 
-  const metadata = extractMetadata(raw);
+    if (Option.isNone(metadata)) {
+      return null;
+    }
 
-  if (Option.isNone(metadata)) {
-    return null;
-  }
-
-  return {
-    metadata: metadata.value,
-    raw,
-  };
+    return {
+      metadata: metadata.value,
+      raw,
+    };
+  });
 }

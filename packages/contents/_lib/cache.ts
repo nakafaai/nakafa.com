@@ -135,7 +135,7 @@ class MDXCacheRegistry {
             const newRelativePath =
               relativePath === ""
                 ? dirEntry.name
-                : path.join(relativePath, dirEntry.name);
+                : `${relativePath}/${dirEntry.name}`;
 
             stack.push({
               absolutePath: newAbsolutePath,
@@ -171,8 +171,7 @@ class MDXCacheRegistry {
       return;
     }
 
-    const localeValue = Option.getOrThrow(locale);
-    const localeSet = cache.get(localeValue);
+    const localeSet = cache.get(locale.value);
 
     if (localeSet && relativePath !== "") {
       localeSet.add(relativePath);
@@ -213,7 +212,7 @@ class MDXCacheRegistry {
     const subdirectoryRelativePath =
       parentRelativePath === ""
         ? subdirectoryName
-        : path.join(parentRelativePath, subdirectoryName);
+        : `${parentRelativePath}/${subdirectoryName}`;
 
     for (const entry of entries) {
       if (entry.isFile()) {
@@ -223,9 +222,7 @@ class MDXCacheRegistry {
   }
 }
 
-const registry = new MDXCacheRegistry();
-
-export { registry };
+export const registry = new MDXCacheRegistry();
 
 /**
  * Resets the MDX file cache, forcing a rebuild on the next request.
