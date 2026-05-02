@@ -82,6 +82,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, category, grade, material, slug } =
     await getResolvedParams(params);
+
+  if (slug.length === 1) {
+    redirect(getSlugPath(category, grade, material, []));
+  }
+
   const t = await getTranslations("Subject");
 
   const { chapter, filePath, metadata, path } = await getSubjectMetadataData({
