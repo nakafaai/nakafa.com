@@ -162,11 +162,8 @@ function buildScopedLlmsIndexText({
     ...childGroups.map(([segment, childEntries]) =>
       formatChildIndexLine({ childEntries, locale, prefixParts, segment })
     ),
+    ...directEntries.map(formatLlmsEntryLine),
   ];
-
-  if (directEntries.length > 0) {
-    lines.push(...directEntries.map(formatLlmsEntryLine));
-  }
 
   return renderIndexText({
     lines,

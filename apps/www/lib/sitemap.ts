@@ -86,9 +86,8 @@ export function getSitemapRoutes() {
  */
 export async function getEntries(
   href: Href,
-  optionsOrDomain: SitemapEntryOptions | string = {}
+  options: SitemapEntryOptions = {}
 ): Promise<MetadataRoute.Sitemap> {
-  const options = normalizeSitemapOptions(optionsOrDomain);
   const routeString = typeof href === "string" ? href : href.pathname;
   const { changeFrequency, priority } = getContentSeoSettings(routeString);
   let lastModified = new Date();
@@ -280,15 +279,4 @@ async function reportError(
   }
 
   await options.reportError(error, context);
-}
-
-/** Normalizes the current options object and the older direct-domain call shape. */
-function normalizeSitemapOptions(
-  optionsOrDomain: SitemapEntryOptions | string
-): SitemapEntryOptions {
-  if (typeof optionsOrDomain === "string") {
-    return { domain: optionsOrDomain };
-  }
-
-  return optionsOrDomain;
 }

@@ -18,7 +18,7 @@ describe("MCP route proxy", () => {
   }
 
   it("forwards MCP-safe request headers without browser credentials", async () => {
-    const fetchMock = vi.fn((_url: URL, _init: RequestInit) =>
+    const fetchMock = vi.fn<typeof fetch>(() =>
       Promise.resolve(Response.json({ ok: true }))
     );
     vi.stubGlobal("fetch", fetchMock);
@@ -53,6 +53,11 @@ describe("MCP route proxy", () => {
     }
 
     const [upstreamUrl, upstreamInit] = firstCall;
+
+    if (!upstreamInit) {
+      throw new Error("Expected MCP proxy to pass fetch init options");
+    }
+
     const upstreamHeaders = upstreamInit.headers;
 
     if (!(upstreamHeaders instanceof Headers)) {

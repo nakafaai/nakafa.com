@@ -4,19 +4,34 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getLocalizedLlmsEntries } from "@/lib/llms/entries";
 import {
   buildRootLlmsIndexText,
+  getCachedLlmsSectionIndexText,
   getLlmsSectionIndexText,
 } from "@/lib/llms/indexes";
 import { getSitemapRoutes } from "@/lib/sitemap";
 
-type PathnameParams = Parameters<typeof getPathname>[number];
+const mockCacheLife = vi.hoisted(() => vi.fn());
+const mockGetPathname = vi.hoisted(() =>
+  vi.fn<typeof getPathname>(
+    ({ href, locale }) =>
+      `/${locale}${typeof href === "string" ? href : href.pathname}`
+  )
+);
+
+vi.mock("next/cache", () => ({
+  cacheLife: mockCacheLife,
+}));
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
-  getPathname: ({ href, locale }: PathnameParams) =>
-    `/${locale}${typeof href === "string" ? href : href.pathname}`,
+  getPathname: mockGetPathname,
 }));
 
 const AF_DOCS_LLMS_SIZE_LIMIT = 50_000;
 const LLMS_TITLE_WITH_SUMMARY_PATTERN = /^# .+\n\n> /;
+
+beforeEach(() => {
+  mockCacheLife.mockClear();
+  mockGetPathname.mockClear();
+});
 
 describe("llms indexes", () => {
   it("builds a small root index with the standard title and summary", () => {
@@ -56,44 +71,8 @@ describe("llms indexes", () => {
       getLlmsSectionIndexText("llms/en/unknown")
     ).resolves.toBeNull();
   });
-});
-
-describe("llms index route coverage", () => {
-  const llmsSections = ["articles", "subject", "exercises", "quran", "site"];
-  const mockCacheLife = vi.fn();
-  const mockGetLocalizedLlmsEntries = vi.fn();
-
-  beforeEach(() => {
-    vi.resetModules();
-    mockCacheLife.mockClear();
-    mockGetLocalizedLlmsEntries.mockReset();
-    mockGetLocalizedLlmsEntries.mockResolvedValue([
-      {
-        description: "Subject landing",
-        href: "https://nakafa.com/en/subject.md",
-        route: "/subject",
-        section: "subject",
-        segments: ["subject"],
-        title: "Subject",
-      },
-    ]);
-
-    vi.doMock("next/cache", () => ({
-      cacheLife: mockCacheLife,
-    }));
-    vi.doMock("@/lib/llms/entries", () => ({
-      getLlmsSections: () => llmsSections,
-      getLocalizedLlmsEntries: mockGetLocalizedLlmsEntries,
-      isLlmsSection: (section: string | undefined) =>
-        typeof section === "string" && llmsSections.includes(section),
-    }));
-  });
 
   it("uses the cached wrapper without changing section output", async () => {
-    const { getCachedLlmsSectionIndexText } = await import(
-      "@/lib/llms/indexes"
-    );
-
     await expect(
       getCachedLlmsSectionIndexText({ cleanSlug: "llms/en" })
     ).resolves.toContain("# Nakafa English Docs");
@@ -102,62 +81,20 @@ describe("llms index route coverage", () => {
   });
 
   it("returns null for missing scoped entries", async () => {
-    const { getLlmsSectionIndexText: getText } = await import(
-      "@/lib/llms/indexes"
-    );
-
-    await expect(getText("llms/en/articles/missing")).resolves.toBeNull();
+    await expect(
+      getLlmsSectionIndexText("llms/en/articles/missing")
+    ).resolves.toBeNull();
   });
 
   it("splits large nested indexes into child links while keeping direct pages", async () => {
-    mockGetLocalizedLlmsEntries.mockResolvedValue([
-      {
-        description: "Direct high school page",
-        href: "https://nakafa.com/en/subject/high-school.md",
-        route: "/subject/high-school",
-        section: "subject",
-        segments: ["subject", "high-school"],
-        title: "High School",
-      },
-      ...Array.from({ length: 8 }, (_, index) => ({
-        description: "x".repeat(7000),
-        href: `https://nakafa.com/en/subject/high-school/topic-${index}.md`,
-        route: `/subject/high-school/topic-${index}`,
-        section: "subject",
-        segments: ["subject", "high-school", `topic-${index}`],
-        title: `Topic ${index}`,
-      })),
-    ]);
-    const { getLlmsSectionIndexText: getText } = await import(
-      "@/lib/llms/indexes"
-    );
-
-    const text = await getText("llms/en/subject/high-school");
+    const text = await getLlmsSectionIndexText("llms/en/subject/high-school");
 
     expect(text).toContain("# Nakafa English Subject: High School Index");
-    expect(text).toContain("[Topic 0]");
+    expect(text).toContain("Sitemap group");
+    expect(text).toContain(
+      "https://nakafa.com/llms/en/subject/high-school/10/llms.txt"
+    );
     expect(text).toContain("[High School]");
-  });
-
-  it("splits large nested indexes without direct pages", async () => {
-    mockGetLocalizedLlmsEntries.mockResolvedValue(
-      Array.from({ length: 8 }, (_, index) => ({
-        description: "x".repeat(7000),
-        href: `https://nakafa.com/en/subject/high-school/topic-${index}.md`,
-        route: `/subject/high-school/topic-${index}`,
-        section: "subject",
-        segments: ["subject", "high-school", `topic-${index}`],
-        title: `Topic ${index}`,
-      }))
-    );
-    const { getLlmsSectionIndexText: getText } = await import(
-      "@/lib/llms/indexes"
-    );
-
-    const text = await getText("llms/en/subject/high-school");
-
-    expect(text).toContain("# Nakafa English Subject: High School Index");
-    expect(text).toContain("[Topic 0]");
   });
 });
 

@@ -10,17 +10,14 @@ import {
   getUrl,
 } from "@/lib/sitemap";
 
-type PathnameParams = Parameters<typeof getPathname>[number];
-
 const mockGetContentMetadata = vi.hoisted(() => vi.fn());
 const mockGetFolderChildNames = vi.hoisted(() => vi.fn());
 const mockGetPathname = vi.hoisted(() =>
-  vi.fn((params: PathnameParams) => {
-    const href =
-      typeof params.href === "string" ? params.href : params.href.pathname;
-    const pathname = href.startsWith("/") ? href : `/${href}`;
+  vi.fn<typeof getPathname>(({ href, locale }) => {
+    const pathname = typeof href === "string" ? href : href.pathname;
+    const route = pathname.startsWith("/") ? pathname : `/${pathname}`;
 
-    return `/${params.locale}${pathname === "/" ? "" : pathname}`;
+    return `/${locale}${route === "/" ? "" : route}`;
   })
 );
 
@@ -130,10 +127,12 @@ describe("sitemap entries", () => {
     });
   });
 
-  it("supports object hrefs and the legacy direct-domain option", async () => {
+  it("supports object hrefs and custom domains", async () => {
     const entries = await getEntries(
       { pathname: "/search" },
-      "docs.example.com"
+      {
+        domain: "docs.example.com",
+      }
     );
 
     expect(getUrl({ pathname: "/search" }, "id", "docs.example.com")).toBe(
@@ -198,8 +197,11 @@ describe("sitemap entries", () => {
   });
 
   it("reports content metadata errors and keeps sitemap generation alive", async () => {
-    const reportError = vi.fn((_: unknown, context: Record<string, string>) => {
-      if (context.source === "sitemap-content-last-modified") {
+    const reportError = vi.fn();
+    reportError.mockImplementation(() => {
+      const context = reportError.mock.calls.at(-1)?.[1];
+
+      if (context?.source === "sitemap-content-last-modified") {
         return Promise.reject(new Error("reporter failed"));
       }
 
