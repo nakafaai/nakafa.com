@@ -1,0 +1,161 @@
+import { CombiningVolumesLab } from "@repo/design-system/components/contents/chemistry/combining-volumes-law/lab";
+
+export const metadata = {
+  title: "Hukum Perbandingan Volume",
+  description:
+    "Pelajari cara membaca perbandingan volume gas dari koefisien reaksi saat suhu dan tekanan dibuat sama.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/02/2026",
+  subject: "Hukum Dasar Kimia",
+};
+
+## Volume Gas Mengikuti Koefisien
+
+Hukum perbandingan volume menyatakan bahwa gas-gas yang bereaksi, dan gas yang terbentuk, memiliki perbandingan volume berupa bilangan bulat sederhana jika diukur pada suhu dan tekanan yang sama. Hukum ini juga dikenal sebagai hukum Gay-Lussac untuk volume penggabungan gas.
+
+OpenStax Chemistry 2e menjelaskan bahwa rasio volume gas dalam reaksi mengikuti koefisien persamaan reaksi setara jika semua volume gas diukur pada suhu dan tekanan yang sama di [Stoichiometry of Gaseous Substances, Mixtures, and Reactions](https://openstax.org/books/chemistry-2e/pages/9-3-stoichiometry-of-gaseous-substances-mixtures-and-reactions). Britannica juga merangkum bahwa Gay-Lussac menemukan hidrogen dan oksigen bergabung menurut rasio volume <InlineMath math="2:1" /> untuk membentuk air di [Gay-Lussac's law of combining volumes](https://www.britannica.com/science/Gay-Lussacs-law-of-combining-volumes).
+
+Kuncinya ada pada kata **gas**. Koefisien bisa langsung dibaca sebagai perbandingan volume hanya untuk zat yang berada dalam wujud gas dan dibandingkan pada suhu serta tekanan yang sama.
+
+## Membaca Air sebagai Uap
+
+Perhatikan persamaan pembentukan uap air.
+
+<BlockMath math="2\mathrm{H_2(g)} + \mathrm{O_2(g)} \rightarrow 2\mathrm{H_2O(g)}" />
+
+Koefisien <InlineMath math="2:1:2" /> berarti <InlineMath math="2" /> bagian volume hidrogen bereaksi dengan <InlineMath math="1" /> bagian volume oksigen menghasilkan <InlineMath math="2" /> bagian volume uap air.
+
+<BlockMath math="V_{\mathrm{H_2}} : V_{\mathrm{O_2}} : V_{\mathrm{H_2O}} = 2:1:2" />
+
+Jadi, jika semua gas diukur pada suhu dan tekanan yang sama, <InlineMath math="200\ \mathrm{mL}" /> hidrogen bereaksi dengan <InlineMath math="100\ \mathrm{mL}" /> oksigen menghasilkan <InlineMath math="200\ \mathrm{mL}" /> uap air. Jika airnya sudah mengembun menjadi cair, volume cairan tidak lagi dibaca langsung dari rasio gas ini.
+
+## Meter Volume Gas
+
+Pilih reaksi berikut. Setiap tabung menunjukkan satu bagian volume gas pada suhu dan tekanan yang sama.
+
+<CombiningVolumesLab
+  title={<>Meter Volume Gas</>}
+  description={
+    <>
+      Bandingkan tinggi tabung untuk melihat koefisien reaksi sebagai rasio
+      volume gas.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih reaksi gas",
+    reactants: "Reaktan",
+    products: "Produk",
+    reactionView: "Model hukum perbandingan volume gas",
+    ratioLabel: "Rasio volume",
+    exampleLabel: "Contoh skala",
+    volumeUnit: "bagian",
+    modes: {
+      "water-vapor": {
+        tab: "Uap Air",
+        tabLabel: "Pembentukan uap air",
+        helperCaption: (
+          <>
+            Dua bagian <InlineMath math="\mathrm{H_2}" /> bertemu satu bagian{" "}
+            <InlineMath math="\mathrm{O_2}" /> dan membentuk dua bagian{" "}
+            <InlineMath math="\mathrm{H_2O(g)}" />.
+          </>
+        ),
+        ratio: (
+          <>
+            <InlineMath math="\mathrm{H_2:O_2:H_2O} = 2:1:2" />.
+          </>
+        ),
+        example: (
+          <>
+            <InlineMath math="200\ \mathrm{mL}" />{" "}
+            <InlineMath math="\mathrm{H_2}" /> membutuhkan{" "}
+            <InlineMath math="100\ \mathrm{mL}" />{" "}
+            <InlineMath math="\mathrm{O_2}" />.
+          </>
+        ),
+      },
+      "ammonia-synthesis": {
+        tab: "Amonia",
+        tabLabel: "Pembentukan amonia",
+        helperCaption: (
+          <>
+            Satu bagian <InlineMath math="\mathrm{N_2}" /> membutuhkan tiga
+            bagian <InlineMath math="\mathrm{H_2}" /> untuk membentuk dua
+            bagian <InlineMath math="\mathrm{NH_3}" />.
+          </>
+        ),
+        ratio: (
+          <>
+            <InlineMath math="\mathrm{N_2:H_2:NH_3} = 1:3:2" />.
+          </>
+        ),
+        example: (
+          <>
+            <InlineMath math="1\ \mathrm{L}" />{" "}
+            <InlineMath math="\mathrm{N_2}" /> membutuhkan{" "}
+            <InlineMath math="3\ \mathrm{L}" />{" "}
+            <InlineMath math="\mathrm{H_2}" />.
+          </>
+        ),
+      },
+      "ammonia-decomposition": {
+        tab: "Urai Amonia",
+        tabLabel: "Penguraian amonia",
+        helperCaption: (
+          <>
+            Dua bagian <InlineMath math="\mathrm{NH_3}" /> terurai menjadi tiga
+            bagian <InlineMath math="\mathrm{H_2}" /> dan satu bagian{" "}
+            <InlineMath math="\mathrm{N_2}" />.
+          </>
+        ),
+        ratio: (
+          <>
+            <InlineMath math="\mathrm{NH_3:H_2:N_2} = 2:3:1" />.
+          </>
+        ),
+        example: (
+          <>
+            <InlineMath math="600\ \mathrm{mL}" />{" "}
+            <InlineMath math="\mathrm{NH_3}" /> menghasilkan{" "}
+            <InlineMath math="900\ \mathrm{mL}" />{" "}
+            <InlineMath math="\mathrm{H_2}" /> dan{" "}
+            <InlineMath math="300\ \mathrm{mL}" />{" "}
+            <InlineMath math="\mathrm{N_2}" />.
+          </>
+        ),
+      },
+    },
+  }}
+/>
+
+Model di atas tidak sedang membandingkan massa. Yang dibuat sebanding adalah volume gas. Karena suhu dan tekanannya sama, bagian volume dapat mengikuti koefisien reaksi setara.
+
+## Contoh Penguraian Amonia
+
+Misalkan <InlineMath math="600\ \mathrm{mL}" /> gas amonia terurai sempurna pada suhu dan tekanan yang sama. Persamaan setaranya:
+
+<BlockMath math="2\mathrm{NH_3(g)} \rightarrow 3\mathrm{H_2(g)} + \mathrm{N_2(g)}" />
+
+Koefisien memberi rasio volume:
+
+<BlockMath math="V_{\mathrm{NH_3}} : V_{\mathrm{H_2}} : V_{\mathrm{N_2}} = 2:3:1" />
+
+Karena <InlineMath math="2" /> bagian amonia sama dengan <InlineMath math="600\ \mathrm{mL}" />, maka <InlineMath math="1" /> bagian volume sama dengan <InlineMath math="300\ \mathrm{mL}" />.
+
+<BlockMath math="\begin{aligned}
+V_{\mathrm{H_2}} &= 3 \times 300 = 900\ \mathrm{mL} \\
+V_{\mathrm{N_2}} &= 1 \times 300 = 300\ \mathrm{mL}
+\end{aligned}" />
+
+Jadi, penguraian <InlineMath math="600\ \mathrm{mL}" /> gas amonia menghasilkan <InlineMath math="900\ \mathrm{mL}" /> gas hidrogen dan <InlineMath math="300\ \mathrm{mL}" /> gas nitrogen.
+
+## Batas Pemakaian
+
+Hukum ini nyaman dipakai, tetapi syaratnya harus jelas.
+
+- Persamaan reaksi harus sudah setara.
+- Zat yang dibandingkan harus berupa gas.
+- Semua volume gas harus diukur pada suhu dan tekanan yang sama.
+- Jika produk berubah menjadi cair atau padat, volume produk itu tidak lagi dibaca langsung dari koefisien gas.
+
+Dengan syarat itu, koefisien reaksi bukan hanya menghitung mol. Untuk gas pada kondisi yang sama, koefisien juga menjadi peta cepat untuk perbandingan volume.

@@ -1,0 +1,118 @@
+export const metadata = {
+  title: "Law Applications",
+  description:
+    "Use the basic laws of chemistry to read mass data, compound ratios, compound pairs, and gas volumes without mixing up the steps.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/02/2026",
+  subject: "Basic Laws of Chemistry",
+};
+
+## Choose the Law from Data
+
+Applying the basic laws of chemistry is not just reciting each law. The main task is reading the data: does it preserve total mass, lock the composition of one compound, compare two compounds made from the same elements, or use gas volumes under the same conditions?
+
+OpenStax Chemistry 2e describes stoichiometric calculations as calculations that use factors from balanced equations to relate amounts of substances in [Reaction Stoichiometry](https://openstax.org/books/chemistry-2e/pages/4-3-reaction-stoichiometry). So before calculating, identify the balanced equation, the substance being asked for, and the unit in the data.
+
+Start from the type of data given.
+
+- If every substance in the system is counted, use conservation of mass.
+- If one pure compound is being analyzed, use constant composition.
+- If two different compounds are made from the same two elements, use multiple proportions.
+- If all compared substances are gases at the same temperature and pressure, use combining volumes.
+
+## Mass and Volume Patterns
+
+Application problems become easier when we see what is held fixed before the numbers are calculated.
+
+### Reaction System
+
+Suppose <InlineMath math="10.00\ \mathrm{g}" /> of zinc reacts with <InlineMath math="2.00\ \mathrm{g}" /> of sulfur. After the reaction, <InlineMath math="6.08\ \mathrm{g}" /> of zinc sulfide forms and <InlineMath math="5.92\ \mathrm{g}" /> of zinc remains.
+
+<BlockMath math="\mathrm{Zn(s)} + \mathrm{S(s)} \rightarrow \mathrm{ZnS(s)}" />
+
+The reacting zinc is not <InlineMath math="10.00\ \mathrm{g}" />, because some zinc is left over.
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{Zn\ reacted}} &= 10.00 - 5.92 = 4.08\ \mathrm{g} \\
+m_{\mathrm{reactants\ reacted}} &= 4.08 + 2.00 = 6.08\ \mathrm{g}
+\end{aligned}" />
+
+The mass of the reactants that actually reacted equals the product mass. If the whole container is counted, the mass before and after is also <InlineMath math="12.00\ \mathrm{g}" />.
+
+### One Compound Composition
+
+Calcium oxide, <InlineMath math="\mathrm{CaO}" />, can be checked with two different samples. The first sample has mass <InlineMath math="2.8\ \mathrm{g}" /> and contains <InlineMath math="0.8\ \mathrm{g}" /> of oxygen. The second sample has mass <InlineMath math="3.5\ \mathrm{g}" /> and contains <InlineMath math="1.0\ \mathrm{g}" /> of oxygen.
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{Ca,1}} &= 2.8 - 0.8 = 2.0\ \mathrm{g} \\
+m_{\mathrm{Ca,2}} &= 3.5 - 1.0 = 2.5\ \mathrm{g} \\
+2.0:0.8 &= 2.5:1 \\
+2.5:1.0 &= 2.5:1
+\end{aligned}" />
+
+The sample masses may differ, but the calcium-to-oxygen mass ratio stays the same. That is the pattern of constant composition.
+
+### Same Elements, Different Compounds
+
+Water and hydrogen peroxide are both made from hydrogen and oxygen, but their formulas are different.
+
+<BlockMath math="\mathrm{H_2O}\quad\text{and}\quad\mathrm{H_2O_2}" />
+
+With <InlineMath math="A_r\mathrm{(H)} = 1" /> and <InlineMath math="A_r\mathrm{(O)} = 16" />, the hydrogen mass in both compounds can be made the same: <InlineMath math="2\ \mathrm{g}" />.
+
+<BlockMath math="\begin{aligned}
+\mathrm{H_2O} &: 2\ \mathrm{g\ H} + 16\ \mathrm{g\ O} \\
+\mathrm{H_2O_2} &: 2\ \mathrm{g\ H} + 32\ \mathrm{g\ O} \\
+m_{\mathrm{O}} &: 16:32 = 1:2
+\end{aligned}" />
+
+Because the hydrogen mass is already the same, compare the oxygen mass. The ratio <InlineMath math="1:2" /> is a simple whole-number ratio, matching the law of multiple proportions.
+
+### Gases Under Matching Conditions
+
+For gases at the same temperature and pressure, the coefficients in a balanced equation can be read directly as volume ratios. For example, ammonia decomposition:
+
+<BlockMath math="2\mathrm{NH_3(g)} \rightarrow 3\mathrm{H_2(g)} + \mathrm{N_2(g)}" />
+
+If <InlineMath math="600\ \mathrm{mL}" /> of ammonia decomposes, then <InlineMath math="2" /> parts equal <InlineMath math="600\ \mathrm{mL}" /> and <InlineMath math="1" /> part equals <InlineMath math="300\ \mathrm{mL}" />.
+
+<BlockMath math="\begin{aligned}
+V_{\mathrm{H_2}} &= 3 \times 300 = 900\ \mathrm{mL} \\
+V_{\mathrm{N_2}} &= 1 \times 300 = 300\ \mathrm{mL}
+\end{aligned}" />
+
+OpenStax Chemistry 2e emphasizes that a balanced equation must have the same number of atoms on the reactant and product sides in [Writing and Balancing Chemical Equations](https://openstax.org/books/chemistry-2e/pages/4-1-writing-and-balancing-chemical-equations). For gases, OpenStax also explains that gas volume ratios follow equation coefficients when measured at the same temperature and pressure in [Stoichiometry of Gaseous Substances, Mixtures, and Reactions](https://openstax.org/books/chemistry-2e/pages/9-3-stoichiometry-of-gaseous-substances-mixtures-and-reactions).
+
+## When One Problem Uses Two Laws
+
+One problem can use more than one law. Product mass and leftover reactant use conservation of mass, but if the problem then asks for element composition in the same compound, that part uses constant composition. Do not force one law to answer every question.
+
+Define the system boundary, then choose the part of the data that is actually being compared.
+
+- If the problem asks about total mass, define the system boundary first.
+- If it asks about one compound's composition, compare the masses of its elements.
+- If it compares two compounds from the same elements, hold one element fixed before comparing the other.
+- If it asks about gas volume, confirm that all gases are measured at the same temperature and pressure.
+
+## Methane Combustion
+
+Methane burns according to this balanced equation.
+
+<BlockMath math="\begin{aligned}
+\mathrm{CH_4(g)} + 2\mathrm{O_2(g)}
+  &\rightarrow \mathrm{CO_2(g)} \\
+  &\quad + 2\mathrm{H_2O(g)}
+\end{aligned}" />
+
+If <InlineMath math="50\ \mathrm{mL}" /> of methane gas reacts completely and every gas is measured at the same temperature and pressure, what volume of <InlineMath math="\mathrm{O_2}" /> is needed and what volume of <InlineMath math="\mathrm{CO_2}" /> forms?
+
+The coefficients give the volume ratio <InlineMath math="\mathrm{CH_4:O_2:CO_2:H_2O} = 1:2:1:2" />. Therefore:
+
+<BlockMath math="\begin{aligned}
+V_{\mathrm{O_2}} &= 2 \times 50 = 100\ \mathrm{mL} \\
+V_{\mathrm{CO_2}} &= 1 \times 50 = 50\ \mathrm{mL}
+\end{aligned}" />
+
+The answer is <InlineMath math="100\ \mathrm{mL}" /> of oxygen gas and <InlineMath math="50\ \mathrm{mL}" /> of carbon dioxide gas. If the water product has condensed into liquid, its volume is not read directly from the gas ratio.
+
+OpenStax Chemistry: Atoms First 2e summarizes definite and multiple proportions as mass patterns supporting the idea that atoms combine in fixed ratios in [Early Ideas in Atomic Theory](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-1-early-ideas-in-atomic-theory).
