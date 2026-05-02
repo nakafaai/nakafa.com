@@ -8,17 +8,17 @@ export const metadata = {
 
 ## What Are Quartiles?
 
-The median is like a ruler that divides data into two equal parts, right in the middle (50%). Well, there's another friend of the median, called **quartiles**.
+The median is like a ruler that divides data into two equal parts, right in the middle (<InlineMath math="50\%" />). Well, there's another friend of the median, called **quartiles**.
 
 If the median divides data into two, quartiles are even better; they divide the sorted data into **four** equal parts! Imagine you have a chocolate bar, and you break it into four equal pieces. Quartiles are the breaking points.
 
 There are three quartile breaking points:
 
-1.  **Lower Quartile (<InlineMath math="Q_1" />):** This is the first break. It separates the smallest 25% of the data from the rest. Like the first quarter of the chocolate.
-2.  **Middle Quartile (<InlineMath math="Q_2" />):** This is the **median**! It's exactly in the middle, dividing the data in half (50% left, 50% right). Like the break in the middle of the chocolate.
-3.  **Upper Quartile (<InlineMath math="Q_3" />):** This is the last break. It separates the smallest 75% of the data from the largest 25%. Like the boundary after three-quarters of the chocolate.
+1.  **Lower Quartile (<InlineMath math="Q_1" />):** This is the first break. It separates the smallest <InlineMath math="25\%" /> of the data from the rest. Like the first quarter of the chocolate.
+2.  **Middle Quartile (<InlineMath math="Q_2" />):** This is the **median**! It's exactly in the middle, dividing the data in half (<InlineMath math="50\%" /> left, <InlineMath math="50\%" /> right). Like the break in the middle of the chocolate.
+3.  **Upper Quartile (<InlineMath math="Q_3" />):** This is the last break. It separates the smallest <InlineMath math="75\%" /> of the data from the largest <InlineMath math="25\%" />. Like the boundary after three-quarters of the chocolate.
 
-So, <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" /> divide our data into four small groups with the same number of data points (25% each).
+So, <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" /> divide our data into four small groups with the same number of data points (<InlineMath math="25\%" /> each).
 
 ## How to Find the Position of Quartiles
 
@@ -121,6 +121,6 @@ Look at the sorted data: 5, 6, 7, 7, 8, 9, 10
 
 You might be wondering, "If there's <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" />, is there a <InlineMath math="Q_4" />?"
 
-Technically, the concept of quartiles divides the data into four parts. <InlineMath math="Q_1" /> is the boundary for the first 25%, <InlineMath math="Q_2" /> (the median) is the 50% boundary, and <InlineMath math="Q_3" /> is the 75% boundary. The final boundary, which encompasses 100% of the data, is actually the **maximum value** of the dataset.
+Technically, the concept of quartiles divides the data into four parts. <InlineMath math="Q_1" /> is the boundary for the first <InlineMath math="25\%" />, <InlineMath math="Q_2" /> (the median) is the <InlineMath math="50\%" /> boundary, and <InlineMath math="Q_3" /> is the <InlineMath math="75\%" /> boundary. The final boundary, which encompasses <InlineMath math="100\%" /> of the data, is actually the **maximum value** of the dataset.
 
-So, while we could refer to the maximum value as "<InlineMath math="Q_4" />", in statistical analysis, we don't typically use the term <InlineMath math="Q_4" /> explicitly. The main focus is on <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" /> because they provide important information about the spread and center of the data in the lower, middle, and upper sections. The minimum value is sometimes called "<InlineMath math="Q_0" />", but like <InlineMath math="Q_4" />, it's less commonly used than <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" />.
+So, while we could refer to the maximum value as <InlineMath math="Q_4" />, in statistical analysis, we don't typically use the term <InlineMath math="Q_4" /> explicitly. The main focus is on <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" /> because they provide important information about the spread and center of the data in the lower, middle, and upper sections. The minimum value is sometimes called <InlineMath math="Q_0" />, but like <InlineMath math="Q_4" />, it's less commonly used than <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" />.

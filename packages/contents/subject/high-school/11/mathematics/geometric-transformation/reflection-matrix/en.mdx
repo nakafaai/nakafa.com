@@ -3,15 +3,15 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 
 export const metadata = {
   title: "Reflection Matrix",
-  description: "Master reflection matrices for X-axis, Y-axis, y=x, and y=-x lines. Learn to transform points and triangles with detailed matrix calculations.",
+  description: "Master reflection matrices for coordinate axes and diagonal lines. Learn to transform points and triangles with detailed matrix calculations.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/10/2025",
   subject: "Geometric Transformation",
 };
 
-## Reflection Matrix for X-axis
+## Reflection Matrix for Horizontal Axis
 
-Recall that reflecting a point <InlineMath math="(x,y)" /> across the X-axis results in the image <InlineMath math="(x,-y)" />.
+Recall that reflecting a point <InlineMath math="(x,y)" /> across the <InlineMath math="x" />-axis results in the image <InlineMath math="(x,-y)" />.
 
 We are looking for a matrix <InlineMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix}" /> such that:
 
@@ -25,11 +25,11 @@ By equating the coefficients, we get:
 - <InlineMath math="rx + sy = 1x + 0y \implies r=1, s=0" />
 - <InlineMath math="tx + uy = 0x - 1y \implies t=0, u=-1" />
 
-Thus, the reflection matrix for the X-axis is <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+Thus, the reflection matrix for the <InlineMath math="x" />-axis is <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />.
 
-## Reflection Matrix for Y-axis
+## Reflection Matrix for Vertical Axis
 
-Reflecting a point <InlineMath math="(x,y)" /> across the Y-axis results in <InlineMath math="(-x,y)" />.
+Reflecting a point <InlineMath math="(x,y)" /> across the <InlineMath math="y" />-axis results in <InlineMath math="(-x,y)" />.
 
 <MathContainer>
   <BlockMath math="\begin{pmatrix} r & s \\ t & u \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} -x \\ y \end{pmatrix}" />
@@ -40,7 +40,7 @@ This gives <InlineMath math="r=-1, s=0, t=0, u=1" />.
 
 The matrix is <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
 
-## Reflection Matrix for Line y = x
+## Reflection Matrix for Main Diagonal Line
 
 Reflecting a point <InlineMath math="(x,y)" /> across the line <InlineMath math="y=x" /> results in <InlineMath math="(y,x)" />.
 
@@ -53,7 +53,7 @@ This gives <InlineMath math="r=0, s=1, t=1, u=0" />.
 
 The matrix is <InlineMath math="\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}" />.
 
-## Reflection Matrix for Line y = -x
+## Reflection Matrix for Negative Diagonal Line
 
 Reflecting a point <InlineMath math="(x,y)" /> across the line <InlineMath math="y=-x" /> results in <InlineMath math="(-y,-x)" />.
 
@@ -68,18 +68,18 @@ The matrix is <InlineMath math="\begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix}" 
 
 ## Basic Reflection Matrices
 
-- Reflection matrix for X-axis: <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
-- Reflection matrix for Y-axis: <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />
+- Reflection matrix for the <InlineMath math="x" />-axis: <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
+- Reflection matrix for the <InlineMath math="y" />-axis: <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />
 - Reflection matrix for line <InlineMath math="y=x" />: <InlineMath math="\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}" />
 - Reflection matrix for line <InlineMath math="y=-x" />: <InlineMath math="\begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix}" />
 
 ## Finding the Image of a Point using Matrix
 
-Find the image of <InlineMath math="(3,-4)" /> reflected across the X-axis.
+Find the image of <InlineMath math="(3,-4)" /> reflected across the <InlineMath math="x" />-axis.
 
 **Alternative Solution:**
 
-Using the reflection matrix for the X-axis:
+Using the reflection matrix for the <InlineMath math="x" />-axis:
 
 <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 3 \\ -4 \end{pmatrix} = \begin{pmatrix} (1)(3) + (0)(-4) \\ (0)(3) + (-1)(-4) \end{pmatrix} = \begin{pmatrix} 3 \\ 4 \end{pmatrix}" />
 
@@ -87,11 +87,11 @@ Thus, the image is <InlineMath math="(3,4)" />.
 
 ## Finding the Image of a Triangle using Matrix
 
-Determine the image of triangle ABC with vertices <InlineMath math="A(3,1)" />, <InlineMath math="B(-2,3)" />, and <InlineMath math="C(2,-1)" /> reflected across the Y-axis!
+Determine the image of triangle ABC with vertices <InlineMath math="A(3,1)" />, <InlineMath math="B(-2,3)" />, and <InlineMath math="C(2,-1)" /> reflected across the <InlineMath math="y" />-axis!
 
 **Alternative Solution:**
 
-The reflection matrix for the Y-axis is <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
+The reflection matrix for the <InlineMath math="y" />-axis is <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
 
 The matrix of the triangle's vertices ABC: <InlineMath math="\begin{pmatrix} 3 & -2 & 2 \\ 1 & 3 & -1 \end{pmatrix}" />.
 
@@ -105,7 +105,7 @@ Thus, the image is triangle <InlineMath math="A'B'C'" /> with vertices <InlineMa
 <LineEquation
   title={
     <>
-      Reflection of <InlineMath math="\triangle ABC" /> over Y-axis using Matrix
+      Reflection of <InlineMath math="\triangle ABC" /> over <InlineMath math="y" />-axis using Matrix
     </>
   }
   description={
@@ -160,12 +160,12 @@ Thus, the image is triangle <InlineMath math="A'B'C'" /> with vertices <InlineMa
 
 ## Exercises
 
-1.  Find the image of point <InlineMath math="(3,5)" /> reflected across the X-axis using the matrix multiplication <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />.
+1.  Find the image of point <InlineMath math="(3,5)" /> reflected across the <InlineMath math="x" />-axis using the matrix multiplication <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />.
 2.  Determine the image of triangle ABC with vertices <InlineMath math="A(3,1)" />, <InlineMath math="B(-2,3)" />, and <InlineMath math="C(2,-1)" /> reflected across the line <InlineMath math="y=-x" />!
 
 ### Key Answers
 
-1.  The image of point <InlineMath math="(3,5)" /> reflected across the X-axis using the matrix multiplication <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" /> is:
+1.  The image of point <InlineMath math="(3,5)" /> reflected across the <InlineMath math="x" />-axis using the matrix multiplication <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" /> is:
 
     <BlockMath math="\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} 3 \\ 5 \end{pmatrix} = \begin{pmatrix} 3 \\ -5 \end{pmatrix}" />
 

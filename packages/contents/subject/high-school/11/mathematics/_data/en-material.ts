@@ -308,27 +308,27 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/geometric-transformation/reflection-over-line`,
       },
       {
-        title: "Reflection over X Axis",
+        title: "Reflection over the Horizontal Axis",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-x-axis`,
       },
       {
-        title: "Reflection over Y Axis",
+        title: "Reflection over the Vertical Axis",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-y-axis`,
       },
       {
-        title: "Reflection over Line y = x",
+        title: "Reflection over the Main Diagonal Line",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-y-equals-x`,
       },
       {
-        title: "Reflection over Line y = -x",
+        title: "Reflection over the Negative Diagonal Line",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-y-equals-minus-x`,
       },
       {
-        title: "Reflection over Line x = k",
+        title: "Reflection over a Vertical Line",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-x-equals-k`,
       },
       {
-        title: "Reflection over Line y = h",
+        title: "Reflection over a Horizontal Line",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-y-equals-h`,
       },
       {

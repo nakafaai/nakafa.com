@@ -49,20 +49,20 @@ Exponential decay has many applications in real life. Here are some examples:
 
 ### Drug Elimination in the Body
 
-A patient receives a 50 microgram dose of pain medication. Every hour, half of the remaining drug dose will decay and be eliminated from the body.
+A patient receives a <InlineMath math="50 \text{ microgram}" /> dose of pain medication. Every hour, half of the remaining drug dose will decay and be eliminated from the body.
 
-If we model the amount of drug remaining after <InlineMath math="x" /> hours as <InlineMath math="f(x)" />, then:
+If we model the amount of drug remaining after <InlineMath math="x \text{ hours}" /> as <InlineMath math="f(x)" />, then:
 
 <BlockMath math="f(x) = 50 \times \left(\frac{1}{2}\right)^x" />
 
 Calculating the remaining dose:
 
-- Initial dose: <InlineMath math="f(0) = 50" /> micrograms
-- After 1 hour: <InlineMath math="f(1) = 50 \times \frac{1}{2} = 25" /> micrograms
-- After 2 hours: <InlineMath math="f(2) = 25 \times \frac{1}{2} = 12.5" /> micrograms
-- After 3 hours: <InlineMath math="f(3) = 12.5 \times \frac{1}{2} = 6.25" /> micrograms
+- Initial dose: <InlineMath math="f(0) = 50 \text{ micrograms}" />
+- After <InlineMath math="1 \text{ hour}" />: <InlineMath math="f(1) = 50 \times \frac{1}{2} = 25 \text{ micrograms}" />
+- After <InlineMath math="2 \text{ hours}" />: <InlineMath math="f(2) = 25 \times \frac{1}{2} = 12.5 \text{ micrograms}" />
+- After <InlineMath math="3 \text{ hours}" />: <InlineMath math="f(3) = 12.5 \times \frac{1}{2} = 6.25 \text{ micrograms}" />
 
-With this pattern, we can calculate that after 9 hours, the amount of the drug in the patient's body will be less than 0.1 micrograms.
+With this pattern, we can calculate that after <InlineMath math="9 \text{ hours}" />, the amount of the drug in the patient's body will be less than <InlineMath math="0.1 \text{ micrograms}" />.
 
 ### Radioactive Decay
 
@@ -76,50 +76,50 @@ When a ball is dropped, each time it bounces, the bounce height reaches a portio
 
 <BlockMath math="h_n = h_0 \times p^n" />
 
-For example, if a basketball is dropped from a height of 3 meters and each bounce reaches <InlineMath math="\frac{3}{5}" /> of the previous height, then:
+For example, if a basketball is dropped from a height of <InlineMath math="3 \text{ meters}" /> and each bounce reaches <InlineMath math="\frac{3}{5}" /> of the previous height, then:
 
-- Initial height: <InlineMath math="h_0 = 300" /> cm
-- First bounce: <InlineMath math="h_1 = 300 \times \frac{3}{5} = 180" /> cm
-- Second bounce: <InlineMath math="h_2 = 180 \times \frac{3}{5} = 108" /> cm
-- Third bounce: <InlineMath math="h_3 = 108 \times \frac{3}{5} = 64.8" /> cm
+- Initial height: <InlineMath math="h_0 = 300 \text{ cm}" />
+- First bounce: <InlineMath math="h_1 = 300 \times \frac{3}{5} = 180 \text{ cm}" />
+- Second bounce: <InlineMath math="h_2 = 180 \times \frac{3}{5} = 108 \text{ cm}" />
+- Third bounce: <InlineMath math="h_3 = 108 \times \frac{3}{5} = 64.8 \text{ cm}" />
 
 The bounce height function can be expressed as:
 
 <BlockMath math="h(n) = 300 \times \left(\frac{3}{5}\right)^n" />
 
-The ball will eventually stop bouncing when the bounce height becomes very small, around 0.65 cm at the 12th bounce.
+The ball will eventually stop bouncing when the bounce height becomes very small, around <InlineMath math="0.65 \text{ cm}" /> at the 12th bounce.
 
 ## Exercises
 
 Here are some practice problems to deepen your understanding of exponential decay:
 
-1. Two hundred mg of a substance is injected into the body of a patient suffering from lung cancer. The substance is excreted from the body through the kidneys every hour. If 50% of the substance is eliminated from the patient's body every hour, how many mg of the substance remains in the patient's body after 5 hours?
+1. Two hundred mg of a substance is injected into the body of a patient suffering from lung cancer. The substance is excreted from the body through the kidneys every hour. If <InlineMath math="50\%" /> of the substance is eliminated from the patient's body every hour, how many mg of the substance remains in the patient's body after <InlineMath math="5 \text{ hours}" />?
 
-2. The mass of a radioactive substance is 0.3 kg at 10 am. The decay rate of the radioactive substance is 15% per hour. How much radioactive substance will remain 8 hours later?
+2. The mass of a radioactive substance is <InlineMath math="0.3 \text{ kg}" /> at 10 am. The decay rate of the radioactive substance is <InlineMath math="15\%" /> per hour. How much radioactive substance will remain <InlineMath math="8 \text{ hours}" /> later?
 
-3. A basketball is dropped from a height of 3 meters. The ball hits the ground and then bounces back to a height of <InlineMath math="\frac{3}{5}" /> of its previous height. The ball continues to bounce with the same height ratio until it finally stops bouncing and falls to the ground.
+3. A basketball is dropped from a height of <InlineMath math="3 \text{ meters}" />. The ball hits the ground and then bounces back to a height of <InlineMath math="\frac{3}{5}" /> of its previous height. The ball continues to bounce with the same height ratio until it finally stops bouncing and falls to the ground.
    a. Draw a graph of the function showing the change in bounce height until the ball finally touches the ground.
    b. At which bounce does the ball finally stop bouncing?
 
 ### Answer Key
 
-1. Let <InlineMath math="f(x)" /> be the amount of substance remaining after <InlineMath math="x" /> hours. We have:
+1. Let <InlineMath math="f(x)" /> be the amount of substance remaining after <InlineMath math="x \text{ hours}" />. We have:
 
    <BlockMath math="f(x) = 200 \times \left(\frac{1}{2}\right)^x" />
 
-   After 5 hours:
+   After <InlineMath math="5 \text{ hours}" />:
 
    <BlockMath math="f(5) = 200 \times \left(\frac{1}{2}\right)^5 = 200 \times 0.03125 = 6.25" />
 
-   So, the substance remaining after 5 hours is 6.25 mg.
+   So, the substance remaining after <InlineMath math="5 \text{ hours}" /> is <InlineMath math="6.25 \text{ mg}" />.
 
-2. Let <InlineMath math="f(x)" /> be the mass of the radioactive substance after <InlineMath math="x" /> hours. We have:
+2. Let <InlineMath math="f(x)" /> be the mass of the radioactive substance after <InlineMath math="x \text{ hours}" />. We have:
 
    <BlockMath math="f(x) = 0.3 \times (0.85)^x" />
 
-   After 8 hours:
+   After <InlineMath math="8 \text{ hours}" />:
 
-   <BlockMath math="f(8) = 0.3 \times (0.85)^8 \approx 0.083 \text{ kg} \text{ or about } 83 \text{ grams}." />
+   <BlockMath math="f(8) = 0.3 \times (0.85)^8 \approx 0.083 \text{ kg} \text{ or about} 83 \text{ grams}." />
 
 3. a. The bounce height function is:
 
@@ -134,7 +134,7 @@ Here are some practice problems to deepen your understanding of exponential deca
      />
    </div>
 
-   b. The ball will stop bouncing when its height approaches zero. Based on calculations, at the 12th bounce, the ball's height reaches 0.653035 cm, which is small enough to consider the ball has stopped bouncing. However, considering the ball's mass, it might have stopped bouncing by the 10th bounce, when its height is about 1.8 cm.
+   b. The ball will stop bouncing when its height approaches zero. Based on calculations, at the 12th bounce, the ball's height reaches <InlineMath math="0.653035 \text{ cm}" />, which is small enough to consider the ball has stopped bouncing. However, considering the ball's mass, it might have stopped bouncing by the 10th bounce, when its height is about <InlineMath math="1.8 \text{ cm}" />.
 
    | Bounce                       | Height                         |
    | ---------------------------- | ------------------------------ |

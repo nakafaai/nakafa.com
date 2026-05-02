@@ -27,11 +27,11 @@ Exponential growth is often found in real life, such as the growth of bacteria t
 
 ### Bacterial Growth
 
-A researcher observes bacterial growth on a host with an initial condition of 30 bacteria. These bacteria divide into two every 30 minutes.
+A researcher observes bacterial growth on a host with an initial condition of <InlineMath math="30 \text{ bacteria}" />. These bacteria divide into two every <InlineMath math="30 \text{ minutes}" />.
 
-If <InlineMath math="x" /> is the growth phase of bacteria every 30 minutes, then:
+If <InlineMath math="x" /> is the growth phase of bacteria every <InlineMath math="30 \text{ minutes}" />, then:
 
-| Phase (30 minutes) | 0   | 1   | 2   | 3   | 4   | 5   |
+| Phase (<InlineMath math="30 \text{ minutes}" />) | 0   | 1   | 2   | 3   | 4   | 5   |
 | ------------------ | --- | --- | --- | --- | --- | --- |
 | Number of bacteria | 30  | 60  | 120 | 240 | 480 | 960 |
 
@@ -55,16 +55,20 @@ The graph of the function <InlineMath math="f(x) = 30 \cdot (2^x)" /> shows grow
   p={30}
   a={2}
   title="Bacterial Growth"
-  description="Growth of bacteria that divide into two every 30 minutes."
+  description={
+    <>
+      Growth of bacteria that divide into two every <InlineMath math="30 \text{ minutes}" />.
+    </>
+  }
 />
 
 ### Calculating the Number of Bacteria at a Specific Time
 
-If we want to calculate the number of bacteria at the 5th hour, we need to know that the 5th hour occurs at phase 10 (because each phase is 30 minutes):
+If we want to calculate the number of bacteria at the 5th hour, we need to know that the 5th hour occurs at phase 10 (because each phase is <InlineMath math="30 \text{ minutes}" />):
 
 <BlockMath math="f(10) = 30 \cdot (2^{10}) = 30 \cdot 1024 = 30,720" />
 
-So, at the 5th hour, there are 30,720 bacteria.
+So, at the 5th hour, there are <InlineMath math="30{,}720 \text{ bacteria}" />.
 
 ## Variations in Initial Value
 
@@ -96,11 +100,11 @@ We can use the equation <InlineMath math="x_2 = a^2 \cdot x_0" /> with <InlineMa
   <BlockMath math="x_0 = 2000" />
 </MathContainer>
 
-So, the initial number of bacteria is 2,000 bacteria.
+So, the initial number of bacteria is <InlineMath math="2{,}000 \text{ bacteria}" />.
 
 ### Calculating Long-Term Growth
 
-To calculate the number of bacteria after a longer time, we still use the same model. For example, to calculate the number of bacteria after 10 hours:
+To calculate the number of bacteria after a longer time, we still use the same model. For example, to calculate the number of bacteria after <InlineMath math="10 \text{ hours}" />:
 
 <BlockMath math="x_{10} = a^{10} \cdot x_0" />
 
@@ -112,7 +116,7 @@ Substitute the values <InlineMath math="a = 2" /> and <InlineMath math="x_0 = 2,
   <BlockMath math="x_{10} = 2,048,000" />
 </MathContainer>
 
-So, the number of bacteria after 10 hours is 2,048,000 bacteria.
+So, the number of bacteria after <InlineMath math="10 \text{ hours}" /> is 2,<InlineMath math="048{,}000 \text{ bacteria}" />.
 
 ## Exercises
 
@@ -122,17 +126,17 @@ So, the number of bacteria after 10 hours is 2,048,000 bacteria.
 
    b. Model the function that describes the growth of E.coli bacteria every quarter of an hour.
 
-   c. Predict how many bacteria will be present after the first 3 and 4 hours.
+   c. Predict how many bacteria will be present after the first 3 and <InlineMath math="4 \text{ hours}" />.
 
-2. In 2015, positive HIV-AIDS cases totaled about 36 million people. This number increased by an average of 2% each year from 2010 to 2015. If the increase in positive HIV cases in subsequent years is predicted to increase exponentially at 2% each year, how many cases will occur in 2020?
+2. In 2015, positive HIV-AIDS cases totaled about <InlineMath math="36 \text{ million people}" />. This number increased by an average of <InlineMath math="2\%" /> each year from 2010 to 2015. If the increase in positive HIV cases in subsequent years is predicted to increase exponentially at <InlineMath math="2\%" /> each year, how many cases will occur in 2020?
 
 ### Answer Key
 
-1. E.coli bacteria with an initial count of 50 bacteria that divide into two every 15 minutes.
+1. E.coli bacteria with an initial count of <InlineMath math="50 \text{ bacteria}" /> that divide into two every <InlineMath math="15 \text{ minutes}" />.
 
    a. Bacterial Growth:
 
-   | Phase (15 minutes) | 0   | 1   | 2   | 3   | 4   | 5     |
+   | Phase (<InlineMath math="15 \text{ minutes}" />) | 0   | 1   | 2   | 3   | 4   | 5     |
    | ------------------ | --- | --- | --- | --- | --- | ----- |
    | Number of bacteria | 50  | 100 | 200 | 400 | 800 | 1,600 |
 
@@ -141,14 +145,18 @@ So, the number of bacteria after 10 hours is 2,048,000 bacteria.
      a={2}
      n={7}
      title="Bacterial Growth"
-     description="Growth of bacteria that divide into two every 15 minutes."
+     description={
+       <>
+         Growth of bacteria that divide into two every <InlineMath math="15 \text{ minutes}" />.
+       </>
+     }
    />
 
    b. The E.coli bacterial growth function can be modeled as:
 
    <BlockMath math="f(x) = 50 \cdot (2^x)" />
 
-   c. After the first 3 hours means phase 12 (bacteria divide every 15 minutes):
+   c. After the first <InlineMath math="3 \text{ hours}" /> means phase 12 (bacteria divide every <InlineMath math="15 \text{ minutes}" />):
 
    <MathContainer>
      <BlockMath math="f(12) = 50 \cdot (2^{12})" />
@@ -156,7 +164,7 @@ So, the number of bacteria after 10 hours is 2,048,000 bacteria.
      <BlockMath math="f(12) = 204,800" />
    </MathContainer>
 
-   After the first 4 hours means phase 16 (bacteria divide every 15 minutes):
+   After the first <InlineMath math="4 \text{ hours}" /> means phase 16 (bacteria divide every <InlineMath math="15 \text{ minutes}" />):
 
    <MathContainer>
      <BlockMath math="f(16) = 50 \cdot (2^{16})" />
@@ -166,13 +174,13 @@ So, the number of bacteria after 10 hours is 2,048,000 bacteria.
 
 2. HIV-AIDS cases:
 
-   The number of cases in 2015 was 36,000,000 people with a 2% annual increase.
+   The number of cases in 2015 was 36,<InlineMath math="000{,}000 \text{ people}" /> with a <InlineMath math="2\%" /> annual increase.
 
    Mathematical model:
 
    <BlockMath math="f(x) = 36,000,000 \cdot (1 + 0.02)^x" />
 
-   To calculate cases in 2020 (5 years after 2015):
+   To calculate cases in 2020 (<InlineMath math="5 \text{ years}" /> after 2015):
 
    <MathContainer>
      <BlockMath math="f(5) = 36,000,000 \cdot (1.02)^5" />
@@ -180,7 +188,7 @@ So, the number of bacteria after 10 hours is 2,048,000 bacteria.
      <BlockMath math="f(5) = 39,746,908" />
    </MathContainer>
 
-   Therefore, the predicted number of HIV-AIDS cases in 2020 is approximately 39,746,908 people.
+   Therefore, the predicted number of HIV-AIDS cases in 2020 is approximately 39,<InlineMath math="746{,}908 \text{ people}" />.
 
 ## Other Applications of Exponential Growth
 

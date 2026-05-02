@@ -11,7 +11,7 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 
 ## Basic Concepts of Horizontal Translation
 
-Horizontal translation is a geometric transformation that shifts the graph of a function left or right along the x-axis without changing the shape of the graph. Imagine sliding an object horizontally on a table, its shape remains the same, only its position changes.
+Horizontal translation is a geometric transformation that shifts the graph of a function left or right along the <InlineMath math="x" />-axis without changing the shape of the graph. Imagine sliding an object horizontally on a table, its shape remains the same, only its position changes.
 
 If we have a function <InlineMath math="f(x)" />, then horizontal translation produces a new function <InlineMath math="g(x) = f(x - h)" /> where <InlineMath math="h" /> is the translation constant.
 
@@ -22,8 +22,8 @@ For any function <InlineMath math="f(x)" />, horizontal translation is defined a
 <BlockMath math="g(x) = f(x - h)" />
 
 Where:
-- If <InlineMath math="h > 0" />, the graph shifts to the **right** by <InlineMath math="h" /> units
-- If <InlineMath math="h < 0" />, the graph shifts to the **left** by <InlineMath math="|h|" /> units
+- If <InlineMath math="h > 0" />, the graph shifts to the **right** by <InlineMath math="h \text{ units}" />
+- If <InlineMath math="h < 0" />, the graph shifts to the **left** by <InlineMath math="|h| \text{ units}" />
 - If <InlineMath math="h = 0" />, there is no translation (graph remains the same)
 
 ## Visualization of Horizontal Translation
@@ -68,8 +68,8 @@ Let's see how horizontal translation works on the quadratic function <InlineMath
 
 From the visualization above, we can observe:
 - The original function <InlineMath math="f(x) = x^2" /> has its vertex at <InlineMath math="(0, 0)" />
-- Function <InlineMath math="g(x) = (x - 3)^2" /> shifts right by 3 units with vertex at <InlineMath math="(3, 0)" />
-- Function <InlineMath math="h(x) = (x + 2)^2" /> shifts left by 2 units with vertex at <InlineMath math="(-2, 0)" />
+- Function <InlineMath math="g(x) = (x - 3)^2" /> shifts right by <InlineMath math="3 \text{ units}" /> with vertex at <InlineMath math="(3, 0)" />
+- Function <InlineMath math="h(x) = (x + 2)^2" /> shifts left by <InlineMath math="2 \text{ units}" /> with vertex at <InlineMath math="(-2, 0)" />
 
 ## Horizontal Translation on Linear Functions
 
@@ -113,8 +113,8 @@ Now let's apply the same concept to the linear function <InlineMath math="f(x) =
 
 Notice that:
 - All lines have the same slope of 2
-- Function <InlineMath math="g(x) = 2(x - 4) + 1" /> shifts right by 4 units
-- Function <InlineMath math="h(x) = 2(x + 3) + 1" /> shifts left by 3 units
+- Function <InlineMath math="g(x) = 2(x - 4) + 1" /> shifts right by <InlineMath math="4 \text{ units}" />
+- Function <InlineMath math="h(x) = 2(x + 3) + 1" /> shifts left by <InlineMath math="3 \text{ units}" />
 
 ## Important Properties of Horizontal Translation
 
@@ -128,7 +128,7 @@ If point <InlineMath math="(a, b)" /> is on the graph of <InlineMath math="f(x)"
 
 ### Domain and Range
 
-- **Domain**: Shifts by <InlineMath math="h" /> units
+- **Domain**: Shifts by <InlineMath math="h \text{ units}" />
 - **Range**: Does not change after horizontal translation
 
 If the domain of the original function is <InlineMath math="[c, d]" />, then the domain after horizontal translation <InlineMath math="h" /> becomes <InlineMath math="[c + h, d + h]" />.
@@ -178,8 +178,8 @@ Let's look at horizontal translation on the exponential function <InlineMath mat
 For exponential functions:
 - The horizontal asymptote remains at <InlineMath math="y = 0" /> for all functions
 - The y-intercept changes due to horizontal shift
-- Function <InlineMath math="g(x) = 2^{x-2}" /> shifts right by 2 units
-- Function <InlineMath math="h(x) = 2^{x+1}" /> shifts left by 1 unit
+- Function <InlineMath math="g(x) = 2^{x-2}" /> shifts right by <InlineMath math="2 \text{ units}" />
+- Function <InlineMath math="h(x) = 2^{x+1}" /> shifts left by <InlineMath math="1 \text{ unit}" />
 
 ## Difference from Vertical Translation
 
@@ -197,9 +197,9 @@ It's important to understand the difference between horizontal and vertical tran
 
 ## Exercises
 
-1. Given the function <InlineMath math="f(x) = x^2 + 2x + 1" />. Determine the equation of the function resulting from horizontal translation to the right by 3 units.
+1. Given the function <InlineMath math="f(x) = x^2 + 2x + 1" />. Determine the equation of the function resulting from horizontal translation to the right by <InlineMath math="3 \text{ units}" />.
 
-2. If the graph of function <InlineMath math="g(x) = \sqrt{x}" /> is translated horizontally to the left by 4 units, determine:
+2. If the graph of function <InlineMath math="g(x) = \sqrt{x}" /> is translated horizontally to the left by <InlineMath math="4 \text{ units}" />, determine:
    - The equation of the resulting translated function
    - The domain of the function after translation
 
@@ -207,11 +207,16 @@ It's important to understand the difference between horizontal and vertical tran
 
 ### Answer Key
 
-1. Horizontal translation to the right by 3 units: <InlineMath math="f'(x) = f(x - 3) = (x - 3)^2 + 2(x - 3) + 1 = x^2 - 4x + 4" />
+1. Horizontal translation to the right by <InlineMath math="3 \text{ units}" />: <InlineMath math="f'(x) = f(x - 3) = (x - 3)^2 + 2(x - 3) + 1 = x^2 - 4x + 4" />
 
    <LineEquation
      title={<>Function <InlineMath math="f(x) = x^2 + 2x + 1" /> and Its Translation Result</>}
-     description="Original quadratic function and the result of horizontal translation to the right by 3 units."
+     description={
+       <>
+         Original quadratic function and the result of horizontal translation to
+         the right by <InlineMath math="3 \text{ units}" />.
+       </>
+     }
      showZAxis={false}
      cameraPosition={[12, 8, 12]}
      data={[
@@ -238,14 +243,19 @@ It's important to understand the difference between horizontal and vertical tran
 
 2. Equation of the resulting translated function:
     
-   - Translation to the left by 4 units: <InlineMath math="g'(x) = g(x + 4) = \sqrt{x + 4}" />
+   - Translation to the left by <InlineMath math="4 \text{ units}" />: <InlineMath math="g'(x) = g(x + 4) = \sqrt{x + 4}" />
    - Domain after translation: <InlineMath math="x + 4 \geq 0" />, so <InlineMath math="x \geq -4" /> or <InlineMath math="[-4, \infty)" />
 
    Visualization:
 
    <LineEquation
      title={<>Function <InlineMath math="g(x) = \sqrt{x}" /> and Its Translation Result</>}
-     description="Original square root function and the result of horizontal translation to the left by 4 units."
+     description={
+       <>
+         Original square root function and the result of horizontal translation
+         to the left by <InlineMath math="4 \text{ units}" />.
+       </>
+     }
      showZAxis={false}
      cameraPosition={[8, 6, 8]}
      data={[
@@ -273,12 +283,17 @@ It's important to understand the difference between horizontal and vertical tran
      ]}
    />
 
-3. Point <InlineMath math="(0, 1)" /> on <InlineMath math="h(x) = 3^x" /> becomes <InlineMath math="(2, 1)" />, meaning horizontal translation by <InlineMath math="h = 2" /> units to the right.
+3. Point <InlineMath math="(0, 1)" /> on <InlineMath math="h(x) = 3^x" /> becomes <InlineMath math="(2, 1)" />, meaning horizontal translation by <InlineMath math="h = 2 \text{ units}" /> to the right.
    Equation of the translation result: <InlineMath math="h'(x) = 3^{x-2}" />
 
    <LineEquation
      title={<>Function <InlineMath math="h(x) = 3^x" /> and Its Translation Result</>}
-     description="Original exponential function and the result of horizontal translation to the right by 2 units."
+     description={
+       <>
+         Original exponential function and the result of horizontal translation
+         to the right by <InlineMath math="2 \text{ units}" />.
+       </>
+     }
      showZAxis={false}
      cameraPosition={[10, 6, 10]}
      data={[

@@ -189,15 +189,15 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/trigonometry/right-triangle-naming`,
       },
       {
-        title: "Trigonometric Comparison: Tan θ",
+        title: "Trigonometric Comparison: Tangent",
         href: `${BASE_PATH}/trigonometry/trigonometric-comparison-tan`,
       },
       {
-        title: "Applications of Tan θ Trigonometric Comparison",
+        title: "Applications of the Tangent Ratio",
         href: `${BASE_PATH}/trigonometry/trigonometric-comparison-tan-usage`,
       },
       {
-        title: "Trigonometric Comparison: Sin θ and Cos θ",
+        title: "Trigonometric Comparison: Sine and Cosine",
         href: `${BASE_PATH}/trigonometry/trigonometric-comparison-sin-cos`,
       },
       {

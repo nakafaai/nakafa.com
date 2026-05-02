@@ -19,7 +19,7 @@ In mathematics, we can combine translation, reflection, rotation, and dilation t
 
 ### Vertical Combined Transformations
 
-Vertical transformations involve changes on the y-axis. A common combination is vertical translation followed by vertical dilation.
+Vertical transformations involve changes on the <InlineMath math="y" />-axis. A common combination is vertical translation followed by vertical dilation.
 
 For function <InlineMath math="f(x)" /> that undergoes vertical translation by <InlineMath math="b" /> then vertical dilation with factor <InlineMath math="k" />, the formula becomes:
 
@@ -27,9 +27,9 @@ For function <InlineMath math="f(x)" /> that undergoes vertical translation by <
 
 ### Horizontal Combined Transformations
 
-Horizontal transformations affect the x-axis. An example is reflection across the y-axis followed by horizontal translation.
+Horizontal transformations affect the <InlineMath math="x" />-axis. An example is reflection across the <InlineMath math="y" />-axis followed by horizontal translation.
 
-For function <InlineMath math="f(x)" /> that is reflected across the y-axis then translated horizontally by <InlineMath math="a" />, the formula is:
+For function <InlineMath math="f(x)" /> that is reflected across the <InlineMath math="y" />-axis then translated horizontally by <InlineMath math="a" />, the formula is:
 
 <BlockMath math="g(x) = f(-(x - a))" />
 
@@ -41,7 +41,7 @@ Let's see how combined transformations affect the quadratic function <InlineMath
 
 1. **Initial Function**: <InlineMath math="f(x) = x^2" />
 
-2. **Step 1 - Vertical Translation**: Shift 2 units up
+2. **Step 1 - Vertical Translation**: Shift <InlineMath math="2 \text{ units}" /> up
 
    <BlockMath math="f_1(x) = f(x) + 2 = x^2 + 2" />
 
@@ -58,7 +58,11 @@ If we visualize this, it will look like this:
 
 <LineEquation
   title={<>Combination of Vertical Translation and Dilation</>}
-  description="Quadratic function with vertical translation 2 units up then vertical dilation with factor 0.5."
+  description={
+    <>
+      Quadratic function with vertical translation <InlineMath math="2 \text{ units}" /> up then vertical dilation with factor <InlineMath math="0.5" />.
+    </>
+  }
   data={[
     {
       points: Array.from({ length: 21 }, (_, i) => {
@@ -205,10 +209,10 @@ For horizontal transformations, we can combine reflection and translation:
 
 1. **Initial Function**: <InlineMath math="f(x) = 1.5^x" />
 
-2. **Step 1 - Reflection across y-axis**: Replace x with -x
+2. **Step 1 - Reflection across <InlineMath math="y" />-axis**: replace <InlineMath math="x" /> with <InlineMath math="-x" />
    <BlockMath math="f_1(x) = f(-x) = 1.5^{-x}" />
 
-3. **Step 2 - Horizontal translation**: Shift 2 units to the right
+3. **Step 2 - Horizontal translation**: Shift <InlineMath math="2 \text{ units}" /> to the right
    <BlockMath math="g(x) = f_1(x-2) = 1.5^{-(x-2)} = 1.5^{-x+2}" />
 
 **Example Calculation for <InlineMath math="x = 3" />:**
@@ -284,17 +288,17 @@ Combined transformations have several important properties:
 
 ## Exercises
 
-1. Function <InlineMath math="f(x) = x^2" /> is translated vertically 3 units up, then dilated vertically with factor <InlineMath math="\frac{1}{2}" />. Determine the formula of the transformed function.
+1. Function <InlineMath math="f(x) = x^2" /> is translated vertically <InlineMath math="3 \text{ units}" /> up, then dilated vertically with factor <InlineMath math="\frac{1}{2}" />. Determine the formula of the transformed function.
 
-2. Function <InlineMath math="g(x) = 2^x" /> is reflected across the y-axis, then translated horizontally 1 unit to the right. Write the formula of the transformed function.
+2. Function <InlineMath math="g(x) = 2^x" /> is reflected across the <InlineMath math="y" />-axis, then translated horizontally <InlineMath math="1 \text{ unit}" /> to the right. Write the formula of the transformed function.
 
 3. Compare the transformation results of function <InlineMath math="h(x) = x^2" /> with two different orders:
-   - Order A: Vertical dilation factor 3, then vertical translation 2 units up
-   - Order B: Vertical translation 2 units up, then vertical dilation factor 3
+   - Order A: Vertical dilation factor 3, then vertical translation <InlineMath math="2 \text{ units}" /> up
+   - Order B: Vertical translation <InlineMath math="2 \text{ units}" /> up, then vertical dilation factor 3
 
 4. Function <InlineMath math="f(x) = \sqrt{x}" /> undergoes combined transformations to become <InlineMath math="g(x) = 2\sqrt{x + 3} - 1" />. List what transformations occur and their order.
 
-5. Determine the formula of the transformed function if <InlineMath math="f(x) = |x|" /> is translated horizontally 2 units to the left, reflected across the x-axis, then dilated vertically with factor 3.
+5. Determine the formula of the transformed function if <InlineMath math="f(x) = |x|" /> is translated horizontally <InlineMath math="2 \text{ units}" /> to the left, reflected across the <InlineMath math="x" />-axis, then dilated vertically with factor <InlineMath math="3" />.
 
 ### Answer Key
 
@@ -350,10 +354,10 @@ Combined transformations have several important properties:
 
 2. Step-by-step transformation of <InlineMath math="g(x) = 2^x" />:
    
-   Step 1: Reflection across y-axis
+   Step 1: Reflection across <InlineMath math="y" />-axis
    <BlockMath math="g_1(x) = 2^{-x}" />
    
-   Step 2: Horizontal translation 1 unit to the right
+   Step 2: Horizontal translation <InlineMath math="1 \text{ unit}" /> to the right
    <BlockMath math="h(x) = 2^{-(x-1)} = 2^{-x+1} = 2 \cdot 2^{-x}" />
    
    So the formula of the transformed function is <InlineMath math="h(x) = 2^{1-x}" />.
@@ -472,9 +476,9 @@ Combined transformations have several important properties:
 4. Analysis of transformation <InlineMath math="g(x) = 2\sqrt{x + 3} - 1" /> from <InlineMath math="f(x) = \sqrt{x}" />:
    
    Transformations that occur sequentially:
-   - Horizontal translation 3 units to the left: <InlineMath math="f(x + 3) = \sqrt{x + 3}" />
+   - Horizontal translation <InlineMath math="3 \text{ units}" /> to the left: <InlineMath math="f(x + 3) = \sqrt{x + 3}" />
    - Vertical dilation with factor 2: <InlineMath math="2\sqrt{x + 3}" />
-   - Vertical translation 1 unit down: <InlineMath math="2\sqrt{x + 3} - 1" />
+   - Vertical translation <InlineMath math="1 \text{ unit}" /> down: <InlineMath math="2\sqrt{x + 3} - 1" />
 
 5. Step-by-step transformation of <InlineMath math="f(x) = |x|" />:
    

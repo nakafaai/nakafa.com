@@ -7,11 +7,15 @@ export const metadata = {
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 
-Given a regular square pyramid P.QRST with base edge <InlineMath math="3" /> cm and lateral edge <InlineMath math="3\sqrt{2}" /> cm
+Given a regular square pyramid P.QRST with base edge <InlineMath math="3 \text{ cm}" /> and lateral edge <InlineMath math="3\sqrt{2} \text{ cm}" />
 
 <LineEquation
   title="Pyramid P.QRST"
-  description="Visualization of a regular square pyramid with base edge 3 cm and lateral edge 3√2 cm."
+  description={
+    <>
+      Visualization of a regular square pyramid with base edge <InlineMath math="3 \text{ cm}" /> and lateral edge <InlineMath math="3\sqrt{2} \text{ cm}" />.
+    </>
+  }
   cameraPosition={[8, 6, 8]}
   data={[
     {
@@ -193,4 +197,3 @@ The tangent of angle <InlineMath math="\alpha" /> between line PT and base QRST
 </MathContainer>
 
 Therefore, the tangent of the angle between line PT and base QRST is <InlineMath math="\sqrt{3}" />
-

@@ -8,17 +8,17 @@ export const metadata = {
 
 ## Apa Itu Kuartil?
 
-Median itu kayak penggaris yang membagi data jadi dua bagian sama besar, pas di tengah (50%). Nah, ada lagi nih temannya median, namanya **kuartil**.
+Median itu kayak penggaris yang membagi data jadi dua bagian sama besar, pas di tengah (<InlineMath math="50\%" />). Nah, ada lagi nih temannya median, namanya **kuartil**.
 
 Kalau median membagi data jadi dua, kuartil ini lebih jago lagi, dia membagi data yang sudah diurutin jadi **empat** bagian yang sama besar! Bayangin kamu punya coklat batang, terus kamu patahin jadi empat potong sama rata. Nah, kuartil itu titik-titik patahannya.
 
 Ada tiga titik patahan kuartil:
 
-1.  **Kuartil Bawah (<InlineMath math="Q_1" />):** Ini patahan pertama. Dia misahin 25% data yang paling kecil dari yang lainnya. Kayak seperempat coklat pertama.
-2.  **Kuartil Tengah (<InlineMath math="Q_2" />):** Ini dia si **median**! Dia ada di tengah-tengah persis, membagi data jadi dua (50% kiri, 50% kanan). Kayak patahan di tengah coklat.
-3.  **Kuartil Atas (<InlineMath math="Q_3" />):** Ini patahan terakhir. Dia misahin 75% data yang kecil dari 25% data yang paling gede. Kayak batas setelah tiga perempat coklat.
+1.  **Kuartil Bawah (<InlineMath math="Q_1" />):** Ini patahan pertama. Dia misahin <InlineMath math="25\%" /> data yang paling kecil dari yang lainnya. Kayak seperempat coklat pertama.
+2.  **Kuartil Tengah (<InlineMath math="Q_2" />):** Ini dia si **median**! Dia ada di tengah-tengah persis, membagi data jadi dua (<InlineMath math="50\%" /> kiri, <InlineMath math="50\%" /> kanan). Kayak patahan di tengah coklat.
+3.  **Kuartil Atas (<InlineMath math="Q_3" />):** Ini patahan terakhir. Dia misahin <InlineMath math="75\%" /> data yang kecil dari <InlineMath math="25\%" /> data yang paling gede. Kayak batas setelah tiga perempat coklat.
 
-Jadi, <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, dan <InlineMath math="Q_3" /> membagi data kita jadi empat kelompok kecil yang isinya sama banyak (masing-masing 25%).
+Jadi, <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, dan <InlineMath math="Q_3" /> membagi data kita jadi empat kelompok kecil yang isinya sama banyak (masing-masing <InlineMath math="25\%" />).
 
 ## Cara Mencari Letak Kuartil
 
@@ -121,6 +121,6 @@ Lihat data terurut: 5, 6, 7, 7, 8, 9, 10
 
 Mungkin kamu bertanya-tanya, "Kalau ada <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, dan <InlineMath math="Q_3" />, apakah ada <InlineMath math="Q_4" />?"
 
-Secara teknis, konsep kuartil membagi data menjadi empat bagian. <InlineMath math="Q_1" /> adalah batas 25% pertama, <InlineMath math="Q_2" /> (median) adalah batas 50%, dan <InlineMath math="Q_3" /> adalah batas 75%. Batas terakhir, yang mencakup 100% data, sebenarnya adalah **nilai maksimum** dari data tersebut.
+Secara teknis, konsep kuartil membagi data menjadi empat bagian. <InlineMath math="Q_1" /> adalah batas <InlineMath math="25\%" /> pertama, <InlineMath math="Q_2" /> (median) adalah batas <InlineMath math="50\%" />, dan <InlineMath math="Q_3" /> adalah batas <InlineMath math="75\%" />. Batas terakhir, yang mencakup <InlineMath math="100\%" /> data, sebenarnya adalah **nilai maksimum** dari data tersebut.
 
-Jadi, meskipun kita bisa menyebut nilai maksimum sebagai "<InlineMath math="Q_4" />", dalam analisis statistik kita biasanya tidak secara eksplisit menggunakan istilah <InlineMath math="Q_4" />. Fokus utamanya adalah pada <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, dan <InlineMath math="Q_3" /> karena mereka memberikan informasi penting tentang penyebaran dan pusat data di bagian bawah, tengah, dan atas. Nilai minimum kadang disebut "<InlineMath math="Q_0" />", tapi sama seperti <InlineMath math="Q_4" />, ini kurang umum digunakan dibandingkan <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, dan <InlineMath math="Q_3" />.
+Jadi, meskipun kita bisa menyebut nilai maksimum sebagai <InlineMath math="Q_4" />, dalam analisis statistik kita biasanya tidak secara eksplisit menggunakan istilah <InlineMath math="Q_4" />. Fokus utamanya adalah pada <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, dan <InlineMath math="Q_3" /> karena mereka memberikan informasi penting tentang penyebaran dan pusat data di bagian bawah, tengah, dan atas. Nilai minimum kadang disebut <InlineMath math="Q_0" />, tapi sama seperti <InlineMath math="Q_4" />, ini kurang umum digunakan dibandingkan <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, dan <InlineMath math="Q_3" />.

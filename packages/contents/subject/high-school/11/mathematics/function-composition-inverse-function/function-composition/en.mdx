@@ -10,8 +10,8 @@ export const metadata = {
 
 Imagine you are shopping at a store that offers two attractive promos:
 
-1.  **Promo A:** 20% discount, then another deduction of Rp25,000.00.
-2.  **Promo B:** Price reduction of Rp25,000.00, then a 20% discount.
+1.  **Promo A:** <InlineMath math="20\%" /> discount, then another deduction of Rp25,000.00.
+2.  **Promo B:** Price reduction of Rp25,000.00, then a <InlineMath math="20\%" /> discount.
 
 Do both promos result in the same final price? Which promo is more beneficial? To answer this, we need to understand the concept of **function composition**.
 
@@ -33,7 +33,7 @@ Let's calculate the final price for an item worth Rp200,000.00 using both promos
 
 Let <InlineMath math="x" /> be the initial price of the item.
 
-- **20% discount function:** <InlineMath math="d(x) = x - 0.20x = 0.80x" />
+- **<InlineMath math="20\%" /> discount function:** <InlineMath math="d(x) = x - 0.20x = 0.80x" />
 - **Rp25,000.00 reduction function:** <InlineMath math="p(x) = x - 25000" />
 
 Now let's compose these two functions according to the promo sequence:

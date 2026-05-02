@@ -156,8 +156,8 @@ Unlike the floor and ceiling functions, the unit step function has a value of 0 
 
 1. <InlineMath math="\lfloor x \rfloor \leq x < \lfloor x \rfloor + 1" />
 2. <InlineMath math="\lceil x \rceil - 1 < x \leq \lceil x \rceil" />
-3. <InlineMath math="\lceil x \rceil = \lfloor x \rfloor + 1 \text{ if } x \notin \mathbb{Z}" />
-4. <InlineMath math="\lceil x \rceil = \lfloor x \rfloor \text{ if } x \in \mathbb{Z}" />
+3. <InlineMath math="\lceil x \rceil = \lfloor x \rfloor + 1 \text{ if} x \notin \mathbb{Z}" />
+4. <InlineMath math="\lceil x \rceil = \lfloor x \rfloor \text{ if} x \in \mathbb{Z}" />
 
 **Comparison table of floor and ceiling functions:**
 
@@ -230,10 +230,10 @@ The function <InlineMath math="f(x) = \lfloor x - h \rfloor" /> shifts the graph
 
 2. A bookstore gives discounts based on the number of purchases:
 
-   - 1-5 books: no discount
-   - 6-10 books: 10% discount
-   - 11-20 books: 15% discount
-   - <InlineMath math=">" /> 20 books: 20% discount
+- <InlineMath math="1\text{-}5" /> books: no discount
+- <InlineMath math="6\text{-}10" /> books: <InlineMath math="10\%" /> discount
+- <InlineMath math="11\text{-}20" /> books: <InlineMath math="15\%" /> discount
+   - <InlineMath math=">" /> 20 books: <InlineMath math="20\%" /> discount
 
    If the price per book is Rp 50,000, create a function that represents the total price after discount!
 
@@ -241,15 +241,15 @@ The function <InlineMath math="f(x) = \lfloor x - h \rfloor" /> shifts the graph
 
 4. Solve the equation <InlineMath math="\lfloor 2x + 1 \rfloor = 5" />
 
-5. An elevator can accommodate a maximum of 8 people. If there are <InlineMath math="n" /> people who want to use the elevator, how many times must the elevator operate?
+5. An elevator can accommodate a maximum of <InlineMath math="8 \text{ people}" />. If there are <InlineMath math="n \text{ people}" /> who want to use the elevator, how many times must the elevator operate?
 
 ### Answer Key
 
 1. **Calculating floor and ceiling function values:**
 
    <MathContainer>
-     <BlockMath math="\lfloor 3.7 \rfloor = 3 \text{ (largest integer } \leq 3.7\text{)}" />
-     <BlockMath math="\lceil -2.3 \rceil = -2 \text{ (smallest integer } \geq -2.3\text{)}" />
+     <BlockMath math="\lfloor 3.7 \rfloor = 3 \text{ (largest integer} \leq 3.7\text{)}" />
+     <BlockMath math="\lceil -2.3 \rceil = -2 \text{ (smallest integer} \geq -2.3\text{)}" />
      <BlockMath math="\lfloor 3.7 \rfloor + \lceil -2.3 \rceil = 3 + (-2) = 1" />
    </MathContainer>
 
@@ -314,7 +314,7 @@ The function <InlineMath math="f(x) = \lfloor x - h \rfloor" /> shifts the graph
 
 5. **Calculating the number of elevator operations:**
 
-   If there are <InlineMath math="n" /> people and the elevator can accommodate a maximum of 8 people, then the number of elevator operations required is:
+   If there are <InlineMath math="n \text{ people}" /> and the elevator can accommodate a maximum of <InlineMath math="8 \text{ people}" />, then the number of elevator operations required is:
 
    <BlockMath math="f(n) = \lceil \frac{n}{8} \rceil" />
 

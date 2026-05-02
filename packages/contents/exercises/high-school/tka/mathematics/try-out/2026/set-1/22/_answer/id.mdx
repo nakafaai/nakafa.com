@@ -7,11 +7,15 @@ export const metadata = {
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 
-Diketahui kubus ABCD.EFGH dengan rusuk <InlineMath math="12" /> cm
+Diketahui kubus ABCD.EFGH dengan rusuk <InlineMath math="12 \text{ cm}" />
 
 <LineEquation
   title="Kubus ABCD.EFGH"
-  description="Visualisasi kubus dengan rusuk 12 cm dan titik P di tengah CG."
+  description={
+    <>
+      Visualisasi kubus dengan rusuk <InlineMath math="12 \text{ cm}" /> dan titik <InlineMath math="P" /> di tengah <InlineMath math="CG" />.
+    </>
+  }
   cameraPosition={[10, 8, 10]}
   data={[
     {
@@ -166,6 +170,5 @@ Karena <InlineMath math="P" /> adalah titik di tengah <InlineMath math="CG" /> d
 <BlockMath math="= 6\sqrt{2}" />
 </MathContainer>
 
-Jadi, jarak titik <InlineMath math="P" /> dengan garis <InlineMath math="HB" /> adalah <InlineMath math="6\sqrt{2}" /> cm
-
+Jadi, jarak titik <InlineMath math="P" /> dengan garis <InlineMath math="HB" /> adalah <InlineMath math="6\sqrt{2} \text{ cm}" />
 

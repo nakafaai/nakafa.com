@@ -32,7 +32,7 @@ Pada kejadian tidak saling lepas, ada bagian yang menjadi anggota kedua kejadian
 
 Karena ada irisan, peluang kejadian A **DAN** B terjadi bersamaan itu **lebih dari nol**.
 
-<BlockMath math="P(A \text{ dan } B) > 0" />
+<BlockMath math="P(A \text{ dan} B) > 0" />
 
 Atau pakai simbol irisan:
 
@@ -42,13 +42,13 @@ Ini beda banget sama kejadian saling lepas yang <InlineMath math="P(A \cap B) = 
 
 ## Menghitung Peluang A ATAU B untuk Kejadian Tidak Saling Lepas
 
-Karena ada kemungkinan kejadian A dan B terjadi barengan, kita nggak bisa asal jumlahin <InlineMath math="P(A) + P(B)" /> untuk mencari <InlineMath math="P(A \text{ atau } B)" />.
+Karena ada kemungkinan kejadian A dan B terjadi barengan, kita nggak bisa asal jumlahin <InlineMath math="P(A) + P(B)" /> untuk mencari <InlineMath math="P(A \text{ atau} B)" />.
 
 Kenapa? Karena kalau langsung dijumlah, bagian irisannya (<InlineMath math="A \cap B" />) jadi **kehitung dua kali**, sekali di <InlineMath math="P(A)" /> dan sekali lagi di <InlineMath math="P(B)" />.
 
 Biar hitungannya benar, kita harus **kurangkan** peluang irisan yang kehitung dobel itu. Jadilah **Aturan Penjumlahan Umum** untuk peluang:
 
-<BlockMath math="P(A \text{ atau } B) = P(A) + P(B) - P(A \cap B)" />
+<BlockMath math="P(A \text{ atau} B) = P(A) + P(B) - P(A \cap B)" />
 
 Atau pakai simbol gabungan (union) dan irisan:
 
@@ -60,9 +60,9 @@ Rumus ini berlaku umum, bisa untuk kejadian saling lepas maupun tidak saling lep
 
 Mari kita pakai contoh kartu:
 
-- Kejadian A: Dapat kartu Hati (<InlineMath math="\heartsuit" />). Ada 13 kartu Hati dari 52 kartu. <InlineMath math="P(A) = 13/52" />.
-- Kejadian B: Dapat kartu King. Ada 4 kartu King dari 52 kartu. <InlineMath math="P(B) = 4/52" />.
-- Kejadian A **dan** B: Dapat kartu King Hati (<InlineMath math="K\heartsuit" />). Cuma ada 1 kartu King Hati. <InlineMath math="P(A \cap B) = 1/52" />.
+- Kejadian A: Dapat kartu Hati (<InlineMath math="\heartsuit" />). Ada <InlineMath math="13 \text{ kartu}" /> Hati dari <InlineMath math="52 \text{ kartu}" />. <InlineMath math="P(A) = 13/52" />.
+- Kejadian B: Dapat kartu King. Ada <InlineMath math="4 \text{ kartu}" /> King dari <InlineMath math="52 \text{ kartu}" />. <InlineMath math="P(B) = 4/52" />.
+- Kejadian A **dan** B: Dapat kartu King Hati (<InlineMath math="K\heartsuit" />). Cuma ada <InlineMath math="1 \text{ kartu}" /> King Hati. <InlineMath math="P(A \cap B) = 1/52" />.
 
 Maka, peluang dapat kartu Hati ATAU kartu King adalah:
 
