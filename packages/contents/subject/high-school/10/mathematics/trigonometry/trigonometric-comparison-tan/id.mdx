@@ -1,7 +1,7 @@
 import { Triangle } from "@repo/design-system/components/contents/mathematics/triangle";
 
 export const metadata = {
-  title: "Perbandingan Trigonometri: Tan θ",
+  title: "Perbandingan Trigonometri: Tangen",
   description: "Hitung rasio tangen menggunakan sisi depan dan samping. Selesaikan masalah tinggi, kemiringan, dan sudut dengan contoh langkah demi langkah dan latihan.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/14/2025",
@@ -12,7 +12,7 @@ export const metadata = {
 
 Dalam mempelajari trigonometri, kita akan berkenalan dengan beberapa jenis perbandingan. Salah satu yang paling dasar adalah perbandingan tangen atau yang sering disingkat sebagai tan.
 
-### Pengertian Tangen (tan)
+### Pengertian Tangen
 
 Tangen adalah perbandingan antara panjang sisi depan (sisi di depan sudut yang diketahui) dengan sisi samping (sisi yang bersebelahan dengan sudut) pada sebuah segitiga siku-siku.
 
@@ -33,17 +33,17 @@ Tangen adalah perbandingan antara panjang sisi depan (sisi di depan sudut yang d
 
 Pada segitiga siku-siku, kita bisa melihat bahwa:
 
-- Sisi depan adalah sisi yang berhadapan dengan sudut θ
-- Sisi samping adalah sisi yang bersebelahan dengan sudut θ (selain sisi miring)
+- Sisi depan adalah sisi yang berhadapan dengan sudut <InlineMath math="\theta" />.
+- Sisi samping adalah sisi yang bersebelahan dengan sudut <InlineMath math="\theta" /> selain sisi miring.
 - Tangen didapat dengan membagi panjang sisi depan dengan sisi samping
 
 ### Contoh Nilai Tangen
 
 Nilai tangen untuk sudut-sudut tertentu dapat dihitung secara pasti. Misalnya:
 
-- <InlineMath math="\tan 30° = 0,57 \text{ atau } \frac{1}{\sqrt{3}}" />
+- <InlineMath math="\tan 30° = 0,57 \text{ atau} \frac{1}{\sqrt{3}}" />
 - <InlineMath math="\tan 45° = 1" />
-- <InlineMath math="\tan 60° = 1,73 \text{ atau } \sqrt{3}" />
+- <InlineMath math="\tan 60° = 1,73 \text{ atau} \sqrt{3}" />
 
 Nilai tangen ini bisa didapatkan dengan melakukan perhitungan perbandingan sisi-sisi pada segitiga yang memiliki sudut tersebut.
 
@@ -51,7 +51,7 @@ Nilai tangen ini bisa didapatkan dengan melakukan perhitungan perbandingan sisi-
 
 ### Contoh Menghitung Tangen
 
-Misalnya kita memiliki sebuah segitiga siku-siku dengan sudut <InlineMath math="30°" />, sisi depan 15 cm, dan sisi samping 26 cm.
+Misalnya kita memiliki sebuah segitiga siku-siku dengan sudut <InlineMath math="30^\circ" />, sisi depan <InlineMath math="15 \text{ cm}" />, dan sisi samping <InlineMath math="26 \text{ cm}" />.
 
 <Triangle
   title={
@@ -59,7 +59,12 @@ Misalnya kita memiliki sebuah segitiga siku-siku dengan sudut <InlineMath math="
       Contoh Segitiga dengan Sudut <InlineMath math="30°" />
     </>
   }
-  description="Perbandingan sisi depan (15 cm) dengan sisi samping (26 cm)."
+  description={
+    <>
+      Perbandingan sisi depan (<InlineMath math="15 \text{ cm}" />) dengan sisi
+      samping (<InlineMath math="26 \text{ cm}" />).
+    </>
+  }
   angle={30}
   labels={{
     opposite: "15 cm",
@@ -83,7 +88,7 @@ Tangen sangat berguna dalam kehidupan sehari-hari, terutama untuk:
 
 ## Latihan Soal
 
-Perhatikan segitiga siku-siku berikut dengan sudut <InlineMath math="70°" />, sisi depan 15 cm, dan sisi samping 7 cm.
+Perhatikan segitiga siku-siku berikut dengan sudut <InlineMath math="70°" />, sisi depan <InlineMath math="15 \text{ cm}" />, dan sisi samping <InlineMath math="7 \text{ cm}" />.
 
 <Triangle
   title={
@@ -91,7 +96,12 @@ Perhatikan segitiga siku-siku berikut dengan sudut <InlineMath math="70°" />, s
       Segitiga dengan Sudut <InlineMath math="70°" />
     </>
   }
-  description="Segitiga dengan sisi depan 15 cm dan sisi samping 7 cm."
+  description={
+    <>
+      Segitiga dengan sisi depan <InlineMath math="15 \text{ cm}" /> dan sisi
+      samping <InlineMath math="7 \text{ cm}" />.
+    </>
+  }
   angle={70}
   labels={{
     opposite: "15 cm",

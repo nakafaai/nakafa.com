@@ -41,7 +41,7 @@ Mari kita lihat bagaimana kombinasi transformasi mempengaruhi fungsi kuadrat <In
 
 1. **Fungsi Awal**: <InlineMath math="f(x) = x^2" />
 
-2. **Langkah 1 - Translasi Vertikal**: Geser 2 unit ke atas
+2. **Langkah 1 - Translasi Vertikal**: Geser <InlineMath math="2 \text{ unit}" /> ke atas
 
    <BlockMath math="f_1(x) = f(x) + 2 = x^2 + 2" />
 
@@ -58,7 +58,11 @@ Jika kita visualisasikan, maka akan terlihat seperti ini:
 
 <LineEquation
   title={<>Kombinasi Translasi dan Dilatasi Vertikal</>}
-  description="Fungsi kuadrat dengan translasi vertikal 2 unit ke atas kemudian dilatasi vertikal dengan faktor 0.5."
+  description={
+    <>
+      Fungsi kuadrat dengan translasi vertikal <InlineMath math="2 \text{ unit}" /> ke atas kemudian dilatasi vertikal dengan faktor <InlineMath math="0.5" />.
+    </>
+  }
   data={[
     {
       points: Array.from({ length: 21 }, (_, i) => {
@@ -208,7 +212,7 @@ Untuk transformasi horizontal, kita dapat menggabungkan refleksi dan translasi:
 2. **Langkah 1 - Refleksi terhadap sumbu y**: Ganti x dengan -x
    <BlockMath math="f_1(x) = f(-x) = 1.5^{-x}" />
 
-3. **Langkah 2 - Translasi horizontal**: Geser 2 unit ke kanan
+3. **Langkah 2 - Translasi horizontal**: Geser <InlineMath math="2 \text{ unit}" /> ke kanan
    <BlockMath math="g(x) = f_1(x-2) = 1.5^{-(x-2)} = 1.5^{-x+2}" />
 
 **Contoh Perhitungan untuk <InlineMath math="x = 3" />:**
@@ -284,17 +288,17 @@ Kombinasi transformasi memiliki beberapa sifat penting:
 
 ## Latihan
 
-1. Fungsi <InlineMath math="f(x) = x^2" /> ditranslasi vertikal 3 unit ke atas, kemudian dilatasi vertikal dengan faktor <InlineMath math="\frac{1}{2}" />. Tentukan rumus fungsi hasil transformasi.
+1. Fungsi <InlineMath math="f(x) = x^2" /> ditranslasi vertikal <InlineMath math="3 \text{ unit}" /> ke atas, kemudian dilatasi vertikal dengan faktor <InlineMath math="\frac{1}{2}" />. Tentukan rumus fungsi hasil transformasi.
 
-2. Fungsi <InlineMath math="g(x) = 2^x" /> direfleksikan terhadap sumbu y, kemudian ditranslasi horizontal 1 unit ke kanan. Tuliskan rumus fungsi hasil transformasi.
+2. Fungsi <InlineMath math="g(x) = 2^x" /> direfleksikan terhadap sumbu y, kemudian ditranslasi horizontal <InlineMath math="1 \text{ unit}" /> ke kanan. Tuliskan rumus fungsi hasil transformasi.
 
 3. Bandingkan hasil transformasi fungsi <InlineMath math="h(x) = x^2" /> dengan dua urutan berbeda:
-   - Urutan A: Dilatasi vertikal faktor 3, lalu translasi vertikal 2 unit ke atas
-   - Urutan B: Translasi vertikal 2 unit ke atas, lalu dilatasi vertikal faktor 3
+   - Urutan A: Dilatasi vertikal faktor 3, lalu translasi vertikal <InlineMath math="2 \text{ unit}" /> ke atas
+   - Urutan B: Translasi vertikal <InlineMath math="2 \text{ unit}" /> ke atas, lalu dilatasi vertikal faktor 3
 
 4. Fungsi <InlineMath math="f(x) = \sqrt{x}" /> mengalami kombinasi transformasi sehingga menjadi <InlineMath math="g(x) = 2\sqrt{x + 3} - 1" />. Sebutkan transformasi apa saja yang terjadi dan urutannya.
 
-5. Tentukan rumus fungsi hasil transformasi jika <InlineMath math="f(x) = |x|" /> ditranslasi horizontal 2 unit ke kiri, direfleksikan terhadap sumbu x, kemudian dilatasi vertikal dengan faktor 3.
+5. Tentukan rumus fungsi hasil transformasi jika <InlineMath math="f(x) = |x|" /> ditranslasi horizontal <InlineMath math="2 \text{ unit}" /> ke kiri, direfleksikan terhadap sumbu x, kemudian dilatasi vertikal dengan faktor 3.
 
 ### Kunci Jawaban
 
@@ -353,7 +357,7 @@ Kombinasi transformasi memiliki beberapa sifat penting:
    Langkah 1: Refleksi terhadap sumbu y
    <BlockMath math="g_1(x) = 2^{-x}" />
    
-   Langkah 2: Translasi horizontal 1 unit ke kanan
+   Langkah 2: Translasi horizontal <InlineMath math="1 \text{ unit}" /> ke kanan
    <BlockMath math="h(x) = 2^{-(x-1)} = 2^{-x+1} = 2 \cdot 2^{-x}" />
    
    Jadi rumus fungsi hasil transformasi adalah <InlineMath math="h(x) = 2^{1-x}" />.
@@ -472,9 +476,9 @@ Kombinasi transformasi memiliki beberapa sifat penting:
 4. Analisis transformasi <InlineMath math="g(x) = 2\sqrt{x + 3} - 1" /> dari <InlineMath math="f(x) = \sqrt{x}" />:
    
    Transformasi yang terjadi secara berurutan:
-   - Translasi horizontal 3 unit ke kiri: <InlineMath math="f(x + 3) = \sqrt{x + 3}" />
+   - Translasi horizontal <InlineMath math="3 \text{ unit}" /> ke kiri: <InlineMath math="f(x + 3) = \sqrt{x + 3}" />
    - Dilatasi vertikal dengan faktor 2: <InlineMath math="2\sqrt{x + 3}" />
-   - Translasi vertikal 1 unit ke bawah: <InlineMath math="2\sqrt{x + 3} - 1" />
+   - Translasi vertikal <InlineMath math="1 \text{ unit}" /> ke bawah: <InlineMath math="2\sqrt{x + 3} - 1" />
 
 5. Transformasi bertahap pada <InlineMath math="f(x) = |x|" />:
    

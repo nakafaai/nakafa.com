@@ -3,13 +3,13 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 
 export const metadata = {
   title: "Matriks Pencerminan",
-  description: "Kuasai matriks pencerminan sumbu X, Y, garis y=x, dan y=-x. Pelajari cara mentransformasi titik dan segitiga dengan perhitungan matriks detail.",
+  description: "Kuasai matriks pencerminan terhadap sumbu koordinat dan garis diagonal. Pelajari cara mentransformasi titik dan segitiga dengan perhitungan matriks detail.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/10/2025",
   subject: "Transformasi Geometri",
 };
 
-## Matriks Pencerminan terhadap Sumbu X
+## Matriks Pencerminan terhadap Sumbu Horizontal
 
 Ingat kembali bahwa pencerminan titik <InlineMath math="(x,y)" /> terhadap sumbu X menghasilkan bayangan <InlineMath math="(x,-y)" />.
 
@@ -27,7 +27,7 @@ Dengan menyamakan koefisien, kita peroleh:
 
 Jadi, matriks pencerminan terhadap sumbu X adalah <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />.
 
-## Matriks Pencerminan terhadap Sumbu Y
+## Matriks Pencerminan terhadap Sumbu Vertikal
 
 Pencerminan titik <InlineMath math="(x,y)" /> terhadap sumbu Y menghasilkan <InlineMath math="(-x,y)" />.
 
@@ -40,7 +40,7 @@ Diperoleh <InlineMath math="r=-1, s=0, t=0, u=1" />.
 
 Matriksnya adalah <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
 
-## Matriks Pencerminan terhadap Garis y = x
+## Matriks Pencerminan terhadap Garis Diagonal Utama
 
 Pencerminan titik <InlineMath math="(x,y)" /> terhadap garis <InlineMath math="y=x" /> menghasilkan <InlineMath math="(y,x)" />.
 
@@ -53,7 +53,7 @@ Diperoleh <InlineMath math="r=0, s=1, t=1, u=0" />.
 
 Matriksnya adalah <InlineMath math="\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}" />.
 
-## Matriks Pencerminan terhadap Garis y = -x
+## Matriks Pencerminan terhadap Garis Diagonal Negatif
 
 Pencerminan titik <InlineMath math="(x,y)" /> terhadap garis <InlineMath math="y=-x" /> menghasilkan <InlineMath math="(-y,-x)" />.
 

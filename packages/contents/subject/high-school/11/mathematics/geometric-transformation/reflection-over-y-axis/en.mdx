@@ -2,20 +2,20 @@ import { getColor } from "@repo/design-system/lib/color";
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 
 export const metadata = {
-  title: "Reflection over Y Axis",
-  description: "Learn y-axis reflection with complete examples for points, triangles, and lines. Master the P'(-x, y) rule with interactive visualizations.",
+  title: "Reflection over the Vertical Axis",
+  description: "Learn vertical-axis reflection with complete examples for points, triangles, and lines through interactive visualizations.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/10/2025",
   subject: "Geometric Transformation",
 };
 
-## Understanding Reflection over the Y-axis
+## Understanding Reflection over the Vertical Axis
 
-Reflection over the Y-axis is a type of geometric transformation that moves every point on an object to a new position. Imagine the Y-axis as a mirror. Every point will have an image on the opposite side of the Y-axis at the same distance from the Y-axis.
+Reflection over the <InlineMath math="y" />-axis is a type of geometric transformation that moves every point on an object to a new position. Imagine the <InlineMath math="y" />-axis as a mirror. Every point will have an image on the opposite side of the <InlineMath math="y" />-axis at the same distance from the <InlineMath math="y" />-axis.
 
-### Rule for Reflection over the Y-axis
+### Rule for Reflection over the Vertical Axis
 
-If a point <InlineMath math="P(x, y)" /> is reflected over the Y-axis, its image's coordinates, <InlineMath math="P'(x', y')" />, will follow the rule:
+If a point <InlineMath math="P(x, y)" /> is reflected over the <InlineMath math="y" />-axis, its image's coordinates, <InlineMath math="P'(x', y')" />, will follow the rule:
 
 <MathContainer>
   <BlockMath math="x' = -x" />
@@ -24,15 +24,15 @@ If a point <InlineMath math="P(x, y)" /> is reflected over the Y-axis, its image
 
 Thus, the image of point <InlineMath math="P(x, y)" /> is <InlineMath math="P'(-x, y)" />.
 
-Note that the value of the y-coordinate does not change, while the value of the x-coordinate becomes its opposite (negative if positive, positive if negative).
+Note that the value of the <InlineMath math="y" />-coordinate does not change, while the value of the <InlineMath math="x" />-coordinate becomes its opposite (negative if positive, positive if negative).
 
 ## Reflecting a Point
 
-Suppose we have point <InlineMath math="A(3, 4)" />. If point A is reflected over the Y-axis, its image, <InlineMath math="A'" />, can be determined as follows:
+Suppose we have point <InlineMath math="A(3, 4)" />. If point A is reflected over the <InlineMath math="y" />-axis, its image, <InlineMath math="A'" />, can be determined as follows:
 
-The original x-coordinate is 3, so <InlineMath math="x' = -3" />.
+The original <InlineMath math="x" />-coordinate is <InlineMath math="3" />, so <InlineMath math="x' = -3" />.
 
-The original y-coordinate is 4, so <InlineMath math="y' = 4" />.
+The original <InlineMath math="y" />-coordinate is <InlineMath math="4" />, so <InlineMath math="y' = 4" />.
 
 Thus, the image of point A is <InlineMath math="A'(-3, 4)" />.
 
@@ -66,7 +66,7 @@ Let's visualize this:
 
 ## Reflecting a Triangle
 
-Now, let's reflect a triangle <InlineMath math="PQR" /> with vertices <InlineMath math="P(1, 2)" />, <InlineMath math="Q(4, 4)" />, and <InlineMath math="R(2, 0)" /> over the Y-axis.
+Now, let's reflect a triangle <InlineMath math="PQR" /> with vertices <InlineMath math="P(1, 2)" />, <InlineMath math="Q(4, 4)" />, and <InlineMath math="R(2, 0)" /> over the <InlineMath math="y" />-axis.
 
 To reflect a triangle, we need to reflect each of its vertices.
 
@@ -136,7 +136,7 @@ By connecting the image points <InlineMath math="P'Q'R'" />, we obtain the refle
 
 ## Reflecting a Line Equation
 
-Suppose we have a line with the equation <InlineMath math="y = x + 2" />. To find the equation of its image after reflection over the Y-axis, we substitute <InlineMath math="x" /> with <InlineMath math="-x" /> (because <InlineMath math="x' = -x" />) and <InlineMath math="y" /> with <InlineMath math="y" /> (because <InlineMath math="y' = y" />) into the original equation.
+Suppose we have a line with the equation <InlineMath math="y = x + 2" />. To find the equation of its image after reflection over the <InlineMath math="y" />-axis, we substitute <InlineMath math="x" /> with <InlineMath math="-x" /> (because <InlineMath math="x' = -x" />) and <InlineMath math="y" /> with <InlineMath math="y" /> (because <InlineMath math="y' = y" />) into the original equation.
 
 Original equation:
 
@@ -188,10 +188,10 @@ Let's visualize these two lines:
 
 ## Exercises
 
-1.  Determine the coordinates of the image of point <InlineMath math="K(-5, 8)" /> if it is reflected over the Y-axis!
-2.  A triangle <InlineMath math="ABC" /> has vertices <InlineMath math="A(2, 1)" />, <InlineMath math="B(5, 3)" />, and <InlineMath math="C(3, 6)" />. Determine the coordinates of the image triangle <InlineMath math="A'B'C'" /> after reflection over the Y-axis!
-3.  Determine the equation of the image of the line <InlineMath math="3x - 2y + 6 = 0" /> if it is reflected over the Y-axis!
-4.  A line has the equation <InlineMath math="y = -3x - 4" />. Determine the equation of its image after reflection over the Y-axis.
+1.  Determine the coordinates of the image of point <InlineMath math="K(-5, 8)" /> if it is reflected over the <InlineMath math="y" />-axis!
+2.  A triangle <InlineMath math="ABC" /> has vertices <InlineMath math="A(2, 1)" />, <InlineMath math="B(5, 3)" />, and <InlineMath math="C(3, 6)" />. Determine the coordinates of the image triangle <InlineMath math="A'B'C'" /> after reflection over the <InlineMath math="y" />-axis!
+3.  Determine the equation of the image of the line <InlineMath math="3x - 2y + 6 = 0" /> if it is reflected over the <InlineMath math="y" />-axis!
+4.  A line has the equation <InlineMath math="y = -3x - 4" />. Determine the equation of its image after reflection over the <InlineMath math="y" />-axis.
 
 ### Key Answers
 

@@ -64,7 +64,7 @@ For function <InlineMath math="f(x) = \log_b x" /> with <InlineMath math="b > 1"
 1. **Domain**: <InlineMath math="x > 0" /> (positive numbers only)
 2. **Range**: All real numbers (<InlineMath math="-\infty < y < \infty" />)
 3. **x-intercept**: <InlineMath math="(1, 0)" /> because <InlineMath math="\log_b 1 = 0" />
-4. **Vertical asymptote**: y-axis (<InlineMath math="x = 0" />)
+4. **Vertical asymptote**: <InlineMath math="y" />-axis (<InlineMath math="x = 0" />)
 5. **Function behavior**:
    - Increasing for <InlineMath math="b > 1" />
    - Decreasing for <InlineMath math="0 < b < 1" />
@@ -346,12 +346,12 @@ We can shift the logarithmic function graph by adding or subtracting a constant 
 
 3. For <InlineMath math="g(x) = \log_2 (x - 4)" />:
 
-   - Shift: 4 units to the right
+   - Shift: <InlineMath math="4 \text{ units}" /> to the right
    - Domain: <InlineMath math="x - 4 > 0 \Rightarrow x > 4" />
 
 4. For <InlineMath math="y = \log_3 x + 2" />:
 
-   - Graph <InlineMath math="y = \log_3 x" /> shifted 2 units up
+   - Graph <InlineMath math="y = \log_3 x" /> shifted <InlineMath math="2 \text{ units}" /> up
    - There is no y-intercept because the domain is <InlineMath math="x > 0" />
 
    <div className="mt-4">
@@ -361,7 +361,11 @@ We can shift the logarithmic function graph by adding or subtracting a constant 
            Sketch of Graph <InlineMath math="y = \log_3 x + 2" />
          </>
        }
-       description="Logarithmic graph base 3 shifted 2 units up."
+       description={
+         <>
+           Logarithmic graph base <InlineMath math="3" /> shifted <InlineMath math="2 \text{ units}" /> up.
+         </>
+       }
        data={[
          {
            points: Array.from({ length: 100 }, (_, i) => {

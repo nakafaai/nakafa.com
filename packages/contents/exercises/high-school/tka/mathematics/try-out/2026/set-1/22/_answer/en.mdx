@@ -7,11 +7,15 @@ export const metadata = {
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 
-Given cube ABCD.EFGH with edge <InlineMath math="12" /> cm
+Given cube ABCD.EFGH with edge <InlineMath math="12 \text{ cm}" />
 
 <LineEquation
   title="Cube ABCD.EFGH"
-  description="Visualization of a cube with edge 12 cm and point P at the midpoint of CG."
+  description={
+    <>
+      Visualization of a cube with edge <InlineMath math="12 \text{ cm}" /> and point <InlineMath math="P" /> at the midpoint of <InlineMath math="CG" />.
+    </>
+  }
   cameraPosition={[10, 8, 10]}
   data={[
     {
@@ -166,6 +170,5 @@ Since <InlineMath math="P" /> is the midpoint of <InlineMath math="CG" /> and <I
 <BlockMath math="= 6\sqrt{2}" />
 </MathContainer>
 
-Therefore, the distance from point <InlineMath math="P" /> to line <InlineMath math="HB" /> is <InlineMath math="6\sqrt{2}" /> cm
-
+Therefore, the distance from point <InlineMath math="P" /> to line <InlineMath math="HB" /> is <InlineMath math="6\sqrt{2} \text{ cm}" />
 

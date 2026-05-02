@@ -156,8 +156,8 @@ Berbeda dengan fungsi lantai dan langit-langit, fungsi unit step memiliki nilai 
 
 1. <InlineMath math="\lfloor x \rfloor \leq x < \lfloor x \rfloor + 1" />
 2. <InlineMath math="\lceil x \rceil - 1 < x \leq \lceil x \rceil" />
-3. <InlineMath math="\lceil x \rceil = \lfloor x \rfloor + 1 \text{ jika } x \notin \mathbb{Z}" />
-4. <InlineMath math="\lceil x \rceil = \lfloor x \rfloor \text{ jika } x \in \mathbb{Z}" />
+3. <InlineMath math="\lceil x \rceil = \lfloor x \rfloor + 1 \text{ jika} x \notin \mathbb{Z}" />
+4. <InlineMath math="\lceil x \rceil = \lfloor x \rfloor \text{ jika} x \in \mathbb{Z}" />
 
 **Tabel perbandingan fungsi lantai dan langit-langit:**
 
@@ -230,10 +230,10 @@ Fungsi <InlineMath math="f(x) = \lfloor x - h \rfloor" /> menggeser grafik ke ka
 
 2. Sebuah toko buku memberikan diskon berdasarkan jumlah pembelian:
 
-   - 1-5 buku: tidak ada diskon
-   - 6-10 buku: diskon 10%
-   - 11-20 buku: diskon 15%
-   - <InlineMath math=">" /> 20 buku: diskon 20%
+- <InlineMath math="1\text{-}5" /> buku: tidak ada diskon
+- <InlineMath math="6\text{-}10" /> buku: diskon <InlineMath math="10\%" />
+- <InlineMath math="11\text{-}20" /> buku: diskon <InlineMath math="15\%" />
+   - <InlineMath math=">" /> 20 buku: diskon <InlineMath math="20\%" />
 
    Jika harga per buku Rp 50.000, buatlah fungsi yang menyatakan total harga setelah diskon!
 
@@ -241,15 +241,15 @@ Fungsi <InlineMath math="f(x) = \lfloor x - h \rfloor" /> menggeser grafik ke ka
 
 4. Selesaikan persamaan <InlineMath math="\lfloor 2x + 1 \rfloor = 5" />
 
-5. Sebuah lift dapat menampung maksimal 8 orang. Jika ada <InlineMath math="n" /> orang yang ingin naik lift, berapa kali lift harus beroperasi?
+5. Sebuah lift dapat menampung maksimal <InlineMath math="8 \text{ orang}" />. Jika ada <InlineMath math="n \text{ orang}" /> yang ingin naik lift, berapa kali lift harus beroperasi?
 
 ### Kunci Jawaban
 
 1. **Menghitung nilai fungsi lantai dan langit-langit:**
 
    <MathContainer>
-     <BlockMath math="\lfloor 3.7 \rfloor = 3 \text{ (bilangan bulat terbesar } \leq 3.7\text{)}" />
-     <BlockMath math="\lceil -2.3 \rceil = -2 \text{ (bilangan bulat terkecil } \geq -2.3\text{)}" />
+     <BlockMath math="\lfloor 3.7 \rfloor = 3 \text{ (bilangan bulat terbesar} \leq 3.7\text{)}" />
+     <BlockMath math="\lceil -2.3 \rceil = -2 \text{ (bilangan bulat terkecil} \geq -2.3\text{)}" />
      <BlockMath math="\lfloor 3.7 \rfloor + \lceil -2.3 \rceil = 3 + (-2) = 1" />
    </MathContainer>
 
@@ -314,7 +314,7 @@ Fungsi <InlineMath math="f(x) = \lfloor x - h \rfloor" /> menggeser grafik ke ka
 
 5. **Menghitung jumlah operasi lift:**
 
-   Jika ada <InlineMath math="n" /> orang dan lift dapat menampung maksimal 8 orang, maka jumlah operasi lift yang diperlukan adalah:
+   Jika ada <InlineMath math="n \text{ orang}" /> dan lift dapat menampung maksimal <InlineMath math="8 \text{ orang}" />, maka jumlah operasi lift yang diperlukan adalah:
 
    <BlockMath math="f(n) = \lceil \frac{n}{8} \rceil" />
 

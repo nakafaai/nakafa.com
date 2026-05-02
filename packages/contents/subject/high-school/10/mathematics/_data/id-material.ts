@@ -188,15 +188,15 @@ const idMaterials: MaterialList = [
         href: `${BASE_PATH}/trigonometry/right-triangle-naming`,
       },
       {
-        title: "Perbandingan Trigonometri: Tan θ",
+        title: "Perbandingan Trigonometri: Tangen",
         href: `${BASE_PATH}/trigonometry/trigonometric-comparison-tan`,
       },
       {
-        title: "Kegunaan Perbandingan Trigonometri Tan θ",
+        title: "Kegunaan Perbandingan Trigonometri Tangen",
         href: `${BASE_PATH}/trigonometry/trigonometric-comparison-tan-usage`,
       },
       {
-        title: "Perbandingan Trigonometri: Sin θ dan Cos θ",
+        title: "Perbandingan Trigonometri: Sinus dan Cosinus",
         href: `${BASE_PATH}/trigonometry/trigonometric-comparison-sin-cos`,
       },
       {

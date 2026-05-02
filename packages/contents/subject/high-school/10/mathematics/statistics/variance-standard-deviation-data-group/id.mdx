@@ -8,9 +8,9 @@ export const metadata = {
 
 ## Menghitung Sebaran Data Kelompok
 
-Bagaimana sebaran data yang disajikan dalam bentuk tabel frekuensi berkelompok? Misalnya, data durasi baterai HP yang dikelompokkan dalam interval jam (6-10 jam, 11-15 jam, dst.).
+Bagaimana sebaran data yang disajikan dalam bentuk tabel frekuensi berkelompok? Misalnya, data durasi baterai HP yang dikelompokkan dalam interval jam (<InlineMath math="6\text{-}10" /> jam, <InlineMath math="11\text{-}15" /> jam, dst.).
 
-Karena kita tidak tahu nilai pasti setiap data dalam satu kelas interval (misalnya, di kelas 11-15 jam, kita tidak tahu apakah durasinya pas 11 jam, 12 jam, atau lainnya), kita perlu asumsi.
+Karena kita tidak tahu nilai pasti setiap data dalam satu kelas interval (misalnya, di kelas <InlineMath math="11\text{-}15" /> jam, kita tidak tahu apakah durasinya pas <InlineMath math="11 \text{ jam}" />, <InlineMath math="12 \text{ jam}" />, atau lainnya), kita perlu asumsi.
 
 Asumsi yang paling umum adalah semua data dalam satu kelas interval itu terdistribusi merata, sehingga kita bisa **mewakili** semua data di kelas itu dengan **nilai tengah** (<InlineMath math="x_i" />) kelas tersebut.
 
@@ -38,11 +38,11 @@ Misalkan sebuah penelitian mengenai lamanya durasi baterai HP menghasilkan data 
 
 | Durasi baterai (jam) | Frekuensi (<InlineMath math="f" />) |
 | :------------------: | :---------------------------------: |
-|         6-10         |                  2                  |
-|        11-15         |                 10                  |
-|        16-20         |                 18                  |
-|        21-25         |                 45                  |
-|        26-30         |                  5                  |
+| <InlineMath math="6\text{-}10" />  | <InlineMath math="2" />  |
+| <InlineMath math="11\text{-}15" /> | <InlineMath math="10" /> |
+| <InlineMath math="16\text{-}20" /> | <InlineMath math="18" /> |
+| <InlineMath math="21\text{-}25" /> | <InlineMath math="45" /> |
+| <InlineMath math="26\text{-}30" /> | <InlineMath math="5" />  |
 
 Mari kita tentukan varian dan simpangan baku dari data durasi baterai ini.
 
@@ -52,11 +52,11 @@ Kita perlu menghitung nilai tengah (<InlineMath math="x_i" />) untuk setiap kela
 
 | Durasi baterai (jam) | Nilai tengah, <InlineMath math="x_i" />  |  Frekuensi, <InlineMath math="f" />   |     <InlineMath math="f \cdot x_i" />      |      <InlineMath math="f \cdot x_i^2" />      |
 | :------------------: | :--------------------------------------: | :-----------------------------------: | :----------------------------------------: | :-------------------------------------------: |
-|         6-10         |  <InlineMath math="\frac{6+10}{2}=8" />  |                   2                   |   <InlineMath math="2 \times 8 = 16" />    |   <InlineMath math="2 \times 8^2 = 128" />    |
-|        11-15         | <InlineMath math="\frac{11+15}{2}=13" /> |                  10                   |  <InlineMath math="10 \times 13 = 130" />  |  <InlineMath math="10 \times 13^2 = 1690" />  |
-|        16-20         | <InlineMath math="\frac{16+20}{2}=18" /> |                  18                   |  <InlineMath math="18 \times 18 = 324" />  |  <InlineMath math="18 \times 18^2 = 5832" />  |
-|        21-25         | <InlineMath math="\frac{21+25}{2}=23" /> |                  45                   | <InlineMath math="45 \times 23 = 1035" />  | <InlineMath math="45 \times 23^2 = 23805" />  |
-|        26-30         | <InlineMath math="\frac{26+30}{2}=28" /> |                   5                   |  <InlineMath math="5 \times 28 = 140" />   |  <InlineMath math="5 \times 28^2 = 3920" />   |
+| <InlineMath math="6\text{-}10" />  |  <InlineMath math="\frac{6+10}{2}=8" />  | <InlineMath math="2" />  |   <InlineMath math="2 \times 8 = 16" />    |   <InlineMath math="2 \times 8^2 = 128" />    |
+| <InlineMath math="11\text{-}15" /> | <InlineMath math="\frac{11+15}{2}=13" /> | <InlineMath math="10" /> |  <InlineMath math="10 \times 13 = 130" />  |  <InlineMath math="10 \times 13^2 = 1690" />  |
+| <InlineMath math="16\text{-}20" /> | <InlineMath math="\frac{16+20}{2}=18" /> | <InlineMath math="18" /> |  <InlineMath math="18 \times 18 = 324" />  |  <InlineMath math="18 \times 18^2 = 5832" />  |
+| <InlineMath math="21\text{-}25" /> | <InlineMath math="\frac{21+25}{2}=23" /> | <InlineMath math="45" /> | <InlineMath math="45 \times 23 = 1035" />  | <InlineMath math="45 \times 23^2 = 23805" />  |
+| <InlineMath math="26\text{-}30" /> | <InlineMath math="\frac{26+30}{2}=28" /> | <InlineMath math="5" />  |  <InlineMath math="5 \times 28 = 140" />   |  <InlineMath math="5 \times 28^2 = 3920" />   |
 |      **Jumlah**      |                                          | **<InlineMath math="\sum f = 80" />** | **<InlineMath math="\sum fx_i = 1645" />** | **<InlineMath math="\sum fx_i^2 = 35375" />** |
 
 ### Hitung Varian
@@ -79,6 +79,6 @@ Ambil akar kuadrat dari varian:
 
 <BlockMath math="\sigma = \sqrt{19,37} \approx 4,4" />
 
-Simpangan baku durasi baterai HP adalah sekitar 4,4 jam. Ini memberi kita gambaran bahwa rata-rata penyimpangan durasi baterai dari mean (yang bisa dihitung sebagai <InlineMath math="\frac{1645}{80} \approx 20,56" /> jam) adalah sekitar 4,4 jam.
+Simpangan baku durasi baterai HP adalah sekitar <InlineMath math="4{,}4 \text{ jam}" />. Ini memberi kita gambaran bahwa rata-rata penyimpangan durasi baterai dari mean (yang bisa dihitung sebagai <InlineMath math="\frac{1645}{80} \approx 20,56 \text{ jam}" />) adalah sekitar <InlineMath math="4{,}4 \text{ jam}" />.
 
 Semakin kecil simpangan baku, semakin seragam durasi baterai HP dalam penelitian tersebut.

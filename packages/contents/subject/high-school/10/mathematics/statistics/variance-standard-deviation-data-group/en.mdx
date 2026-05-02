@@ -8,9 +8,9 @@ export const metadata = {
 
 ## Calculating Spread for Grouped Data
 
-How do we measure the spread of data presented in a grouped frequency table? For example, data on phone battery duration grouped into hour intervals (6-10 hours, 11-15 hours, etc.).
+How do we measure the spread of data presented in a grouped frequency table? For example, data on phone battery duration grouped into hour intervals (<InlineMath math="6\text{-}10" /> hours, <InlineMath math="11\text{-}15" /> hours, etc.).
 
-Since we don't know the exact value of each data point within a class interval (e.g., in the 11-15 hours class, we don't know if the duration was exactly 11 hours, 12 hours, or something else), we need to make an assumption.
+Since we don't know the exact value of each data point within a class interval (e.g., in the <InlineMath math="11\text{-}15" /> hours class, we don't know if the duration was exactly <InlineMath math="11 \text{ hours}" />, <InlineMath math="12 \text{ hours}" />, or something else), we need to make an assumption.
 
 The most common assumption is that all data within a class interval are evenly distributed. Therefore, we can **represent** all data in that class using the **midpoint** (<InlineMath math="x_i" />) of that class.
 
@@ -36,11 +36,11 @@ Suppose a study on phone battery duration yielded the following data:
 
 | Battery duration (hours) | Frequency (<InlineMath math="f" />) |
 | :----------------------: | :---------------------------------: |
-|           6-10           |                  2                  |
-|          11-15           |                 10                  |
-|          16-20           |                 18                  |
-|          21-25           |                 45                  |
-|          26-30           |                  5                  |
+| <InlineMath math="6\text{-}10" />  | <InlineMath math="2" />  |
+| <InlineMath math="11\text{-}15" /> | <InlineMath math="10" /> |
+| <InlineMath math="16\text{-}20" /> | <InlineMath math="18" /> |
+| <InlineMath math="21\text{-}25" /> | <InlineMath math="45" /> |
+| <InlineMath math="26\text{-}30" /> | <InlineMath math="5" />  |
 
 Let's determine the variance and standard deviation for this battery duration data.
 
@@ -50,11 +50,11 @@ We need to calculate the midpoint (<InlineMath math="x_i" />) for each class, th
 
 | Battery duration (hours) |   Midpoint, <InlineMath math="x_i" />    |  Frequency, <InlineMath math="f" />   |     <InlineMath math="f \cdot x_i" />      |      <InlineMath math="f \cdot x_i^2" />      |
 | :----------------------: | :--------------------------------------: | :-----------------------------------: | :----------------------------------------: | :-------------------------------------------: |
-|           6-10           |  <InlineMath math="\frac{6+10}{2}=8" />  |                   2                   |   <InlineMath math="2 \times 8 = 16" />    |   <InlineMath math="2 \times 8^2 = 128" />    |
-|          11-15           | <InlineMath math="\frac{11+15}{2}=13" /> |                  10                   |  <InlineMath math="10 \times 13 = 130" />  |  <InlineMath math="10 \times 13^2 = 1690" />  |
-|          16-20           | <InlineMath math="\frac{16+20}{2}=18" /> |                  18                   |  <InlineMath math="18 \times 18 = 324" />  |  <InlineMath math="18 \times 18^2 = 5832" />  |
-|          21-25           | <InlineMath math="\frac{21+25}{2}=23" /> |                  45                   | <InlineMath math="45 \times 23 = 1035" />  | <InlineMath math="45 \times 23^2 = 23805" />  |
-|          26-30           | <InlineMath math="\frac{26+30}{2}=28" /> |                   5                   |  <InlineMath math="5 \times 28 = 140" />   |  <InlineMath math="5 \times 28^2 = 3920" />   |
+| <InlineMath math="6\text{-}10" />  |  <InlineMath math="\frac{6+10}{2}=8" />  | <InlineMath math="2" />  |   <InlineMath math="2 \times 8 = 16" />    |   <InlineMath math="2 \times 8^2 = 128" />    |
+| <InlineMath math="11\text{-}15" /> | <InlineMath math="\frac{11+15}{2}=13" /> | <InlineMath math="10" /> |  <InlineMath math="10 \times 13 = 130" />  |  <InlineMath math="10 \times 13^2 = 1690" />  |
+| <InlineMath math="16\text{-}20" /> | <InlineMath math="\frac{16+20}{2}=18" /> | <InlineMath math="18" /> |  <InlineMath math="18 \times 18 = 324" />  |  <InlineMath math="18 \times 18^2 = 5832" />  |
+| <InlineMath math="21\text{-}25" /> | <InlineMath math="\frac{21+25}{2}=23" /> | <InlineMath math="45" /> | <InlineMath math="45 \times 23 = 1035" />  | <InlineMath math="45 \times 23^2 = 23805" />  |
+| <InlineMath math="26\text{-}30" /> | <InlineMath math="\frac{26+30}{2}=28" /> | <InlineMath math="5" />  |  <InlineMath math="5 \times 28 = 140" />   |  <InlineMath math="5 \times 28^2 = 3920" />   |
 |        **Total**         |                                          | **<InlineMath math="\sum f = 80" />** | **<InlineMath math="\sum fx_i = 1645" />** | **<InlineMath math="\sum fx_i^2 = 35375" />** |
 
 ### Calculate Variance
@@ -77,6 +77,6 @@ Take the square root of the variance:
 
 <BlockMath math="\sigma = \sqrt{19.37} \approx 4.4" />
 
-The standard deviation of the phone battery duration is approximately 4.4 hours. This gives us an idea that the average deviation of battery duration from the mean (which can be calculated as <InlineMath math="\frac{1645}{80} \approx 20.56" /> hours) is about 4.4 hours.
+The standard deviation of the phone battery duration is approximately <InlineMath math="4.4 \text{ hours}" />. This gives us an idea that the average deviation of battery duration from the mean (which can be calculated as <InlineMath math="\frac{1645}{80} \approx 20.56 \text{ hours}" />) is about <InlineMath math="4.4 \text{ hours}" />.
 
 The smaller the standard deviation, the more uniform the phone battery durations were in the study.

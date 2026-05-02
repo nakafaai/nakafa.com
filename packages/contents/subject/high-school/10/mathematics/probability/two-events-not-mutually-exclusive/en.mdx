@@ -31,7 +31,7 @@ In non-mutually exclusive events, there's a part that belongs to both events sim
 
 Because there is an intersection, the probability of event A **AND** B happening together is **greater than zero**.
 
-<BlockMath math="P(A \text{ and } B) > 0" />
+<BlockMath math="P(A \text{ and} B) > 0" />
 
 Or using the intersection symbol:
 
@@ -41,13 +41,13 @@ This is very different from mutually exclusive events, where <InlineMath math="P
 
 ## Calculating P(A OR B) for Non-Mutually Exclusive Events
 
-Since there's a chance that events A and B can happen together, we can't just add <InlineMath math="P(A) + P(B)" /> to find <InlineMath math="P(A \text{ or } B)" />.
+Since there's a chance that events A and B can happen together, we can't just add <InlineMath math="P(A) + P(B)" /> to find <InlineMath math="P(A \text{ or} B)" />.
 
 Why not? Because if we simply add them, the intersection part (<InlineMath math="A \cap B" />) gets **counted twice**, once in <InlineMath math="P(A)" /> and again in <InlineMath math="P(B)" />.
 
 To get the correct calculation, we must **subtract** the probability of the intersection that was double-counted. This gives us the **General Addition Rule** for probability:
 
-<BlockMath math="P(A \text{ or } B) = P(A) + P(B) - P(A \cap B)" />
+<BlockMath math="P(A \text{ or} B) = P(A) + P(B) - P(A \cap B)" />
 
 Or using the union and intersection symbols:
 
@@ -59,8 +59,8 @@ This formula works generally, for both mutually exclusive and non-mutually exclu
 
 Let's use the card example:
 
-- Event A: Getting a Heart (<InlineMath math="\heartsuit" />). There are 13 Hearts in 52 cards. <InlineMath math="P(A) = 13/52" />.
-- Event B: Getting a King. There are 4 Kings in 52 cards. <InlineMath math="P(B) = 4/52" />.
+- Event A: Getting a Heart (<InlineMath math="\heartsuit" />). There are 13 Hearts in <InlineMath math="52 \text{ cards}" />. <InlineMath math="P(A) = 13/52" />.
+- Event B: Getting a King. There are 4 Kings in <InlineMath math="52 \text{ cards}" />. <InlineMath math="P(B) = 4/52" />.
 - Event A **and** B: Getting the King of Hearts (<InlineMath math="K\heartsuit" />). There is only 1 King of Hearts. <InlineMath math="P(A \cap B) = 1/52" />.
 
 So, the probability of getting a Heart OR a King is:

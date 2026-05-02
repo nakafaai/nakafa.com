@@ -41,20 +41,20 @@ Jadi,
 
 Dalam konteks program vaksinasi, limit fungsi membantu menentukan **target vaksinasi yang efektif**. Jika kita tahu bahwa pada waktu tertentu jumlah kasus akan stabil atau menurun, kita dapat menghitung berapa banyak vaksin yang dibutuhkan.
 
-Misalkan target vaksinasi untuk penduduk berusia di atas 18 tahun adalah <InlineMath math="V" /> orang, dan kita ingin mencapai kondisi dimana jumlah kasus baru mendekati nol. Kita dapat menggunakan limit untuk menentukan strategi optimal.
+Misalkan target vaksinasi untuk penduduk berusia di atas <InlineMath math="18 \text{ tahun}" /> adalah <InlineMath math="V \text{ orang}" />, dan kita ingin mencapai kondisi dimana jumlah kasus baru mendekati nol. Kita dapat menggunakan limit untuk menentukan strategi optimal.
 
 ## Aplikasi dalam Bidang Ekonomi
 
 ### Analisis Biaya Marginal
 
-Dalam ekonomi, **biaya marginal** adalah tambahan biaya untuk memproduksi satu unit tambahan. Secara praktis, ini menjawab pertanyaan: "Berapa tambahan biaya jika kita memproduksi 1 unit lagi?"
+Dalam ekonomi, **biaya marginal** adalah tambahan biaya untuk memproduksi satu unit tambahan. Secara praktis, ini menjawab pertanyaan: "Berapa tambahan biaya jika kita memproduksi <InlineMath math="1 \text{ unit}" /> lagi?"
 
 **Definisi matematis menggunakan limit:**
 
 <BlockMath math="\text{Biaya Marginal} = \lim_{\Delta x \to 0} \frac{C(x + \Delta x) - C(x)}{\Delta x}" />
 
 dimana:
-- <InlineMath math="C(x)" /> = fungsi total biaya produksi untuk <InlineMath math="x" /> unit
+- <InlineMath math="C(x)" /> = fungsi total biaya produksi untuk <InlineMath math="x \text{ unit}" />
 - <InlineMath math="\Delta x" /> = perubahan kecil dalam jumlah produksi
 - Limit memberikan **laju perubahan sesaat** biaya terhadap produksi
 
@@ -84,7 +84,7 @@ Dalam kimia, laju reaksi dapat dimodelkan menggunakan fungsi eksponensial. Limit
 
 1. **Deskripsi Masalah:**
 
-    Sebuah kota dengan populasi 576,260 orang sedang menghadapi wabah penyakit. Pemerintah kota telah mengembangkan model matematika untuk memprediksi jumlah kasus positif berdasarkan jumlah orang yang telah divaksinasi. Model tersebut dinyatakan dalam fungsi:
+    Sebuah kota dengan populasi <InlineMath math="576{,}260 \text{ orang}" /> sedang menghadapi wabah penyakit. Pemerintah kota telah mengembangkan model matematika untuk memprediksi jumlah kasus positif berdasarkan jumlah orang yang telah divaksinasi. Model tersebut dinyatakan dalam fungsi:
 
     <BlockMath math="N(t) = 285000 - \sqrt{t^2 - t + (190.68)^3}" />
 
@@ -94,17 +94,17 @@ Dalam kimia, laju reaksi dapat dimodelkan menggunakan fungsi eksponensial. Limit
 
 2. **Pertanyaan:**
 
-    Jika target program vaksinasi adalah 282,367 orang, berapa jumlah kasus positif yang masih tersisa ketika target tercapai?
+    Jika target program vaksinasi adalah <InlineMath math="282{,}367 \text{ orang}" />, berapa jumlah kasus positif yang masih tersisa ketika target tercapai?
 
 3. **Data dan Asumsi:**
 
     Berdasarkan survei demografis kota:
-    - Total populasi: 576,260 orang
-    - Komposisi usia: 21% anak-anak (≤18 tahun), 79% dewasa (>18 tahun)
-    - Status kesehatan: 30% sudah terkonfirmasi positif
+    - Total populasi: <InlineMath math="576{,}260 \text{ orang}" />
+    - Komposisi usia: <InlineMath math="21\%" /> anak-anak (<InlineMath math="\leq 18 \text{ tahun}" />), <InlineMath math="79\%" /> dewasa (<InlineMath math="\gt 18 \text{ tahun}" />)
+    - Status kesehatan: <InlineMath math="30\%" /> sudah terkonfirmasi positif
     - Kebijakan: Hanya dewasa yang belum positif yang dapat divaksinasi
 
-    Justifikasi Target Vaksinasi 282,367 orang:
+    Justifikasi Target Vaksinasi <InlineMath math="282{,}367 \text{ orang}" />:
 
     <MathContainer>
     <BlockMath math="\text{Anak-anak} = 0.21 \times 576{,}260 = 121{,}015 \text{ orang}" />
@@ -114,7 +114,7 @@ Dalam kimia, laju reaksi dapat dimodelkan menggunakan fungsi eksponensial. Limit
     <BlockMath math="\text{Dewasa dapat divaksinasi} = 455{,}245 - 136{,}574 = 318{,}671 \text{ orang}" />
     </MathContainer>
 
-    Target vaksinasi 282,367 orang merupakan 89% dari dewasa yang memenuhi syarat, disesuaikan dengan ketersediaan vaksin dan kapasitas tenaga medis.
+    Target vaksinasi <InlineMath math="282{,}367 \text{ orang}" /> merupakan <InlineMath math="89\%" /> dari dewasa yang memenuhi syarat, disesuaikan dengan ketersediaan vaksin dan kapasitas tenaga medis.
 
 4. **Penyelesaian:**
 
@@ -144,7 +144,7 @@ Dalam kimia, laju reaksi dapat dimodelkan menggunakan fungsi eksponensial. Limit
 
 5. **Interpretasi Hasil:**
 
-    Ketika program vaksinasi mencapai target 282,367 orang yang divaksinasi, model memprediksi bahwa akan tersisa **2,621 kasus positif** yang masih perlu ditangani. Hasil ini memberikan informasi penting untuk perencanaan sumber daya kesehatan selanjutnya.
+    Ketika program vaksinasi mencapai target <InlineMath math="282{,}367 \text{ orang}" /> yang divaksinasi, model memprediksi bahwa akan tersisa **<InlineMath math="2{,}621 \text{ kasus}" /> positif** yang masih perlu ditangani. Hasil ini memberikan informasi penting untuk perencanaan sumber daya kesehatan selanjutnya.
 
 ## Interpretasi dan Pengambilan Keputusan
 
@@ -177,7 +177,7 @@ Dalam kimia, laju reaksi dapat dimodelkan menggunakan fungsi eksponensial. Limit
    <BlockMath math="= 50000(1 - 0) = 50000 \text{ unit vaksin}" />
    </MathContainer>
 
-   Jadi, kapasitas produksi maksimum adalah 50,000 unit vaksin.
+   Jadi, kapasitas produksi maksimum adalah <InlineMath math="50{,}000 \text{ unit}" /> vaksin.
 
 2. **Penyelesaian:**
 
@@ -187,7 +187,7 @@ Dalam kimia, laju reaksi dapat dimodelkan menggunakan fungsi eksponensial. Limit
    <BlockMath math="= \frac{100000}{1 + 0} = 100000 \text{ orang}" />
    </MathContainer>
 
-   Dalam jangka panjang, informasi akan mencapai maksimal 100,000 orang, menunjukkan adanya saturasi dalam penyebaran informasi.
+   Dalam jangka panjang, informasi akan mencapai maksimal <InlineMath math="100{,}000 \text{ orang}" />, menunjukkan adanya saturasi dalam penyebaran informasi.
 
 3. **Penyelesaian:**
 

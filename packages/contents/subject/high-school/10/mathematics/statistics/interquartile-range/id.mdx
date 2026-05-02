@@ -10,7 +10,7 @@ export const metadata = {
 
 Kita sudah tahu cara mencari [rata-rata (mean)](/subject/high-school/10/mathematics/statistics/mean) dari data. Tapi, rata-rata saja kadang nggak cukup buat menggambarkan data lho. Bayangin ada dua kelompok teman, rata-rata umurnya sama, tapi pas dilihat, anggota kelompoknya beda banget sebaran umurnya.
 
-Nah, di sinilah **Jangkauan Interkuartil** atau **Interquartile Range (IQR)** berperan! IQR ini adalah ukuran penyebaran data yang fokus pada **50% data yang ada di tengah**, setelah data diurutkan.
+Nah, di sinilah **Jangkauan Interkuartil** atau **Interquartile Range (IQR)** berperan! IQR ini adalah ukuran penyebaran data yang fokus pada **<InlineMath math="50\%" /> data yang ada di tengah**, setelah data diurutkan.
 
 Kenapa fokus ke tengah? Karena kadang ada data yang nilainya jauh banget di ujung (terlalu kecil atau terlalu besar, disebut pencilan/outlier), yang bisa bikin ukuran sebaran lain (kayak Jangkauan/Range) jadi kurang akurat. IQR ini lebih "kebal" sama data-data ekstrem itu.
 
@@ -18,8 +18,8 @@ Rumus IQR gampang banget:
 
 <BlockMath math="IQR = Q_3 - Q_1" />
 
-- <InlineMath math="Q_3" /> adalah Kuartil Atas (nilai yang membatasi 75% data terbawah).
-- <InlineMath math="Q_1" /> adalah Kuartil Bawah (nilai yang membatasi 25% data terbawah).
+- <InlineMath math="Q_3" /> adalah Kuartil Atas (nilai yang membatasi <InlineMath math="75\%" /> data terbawah).
+- <InlineMath math="Q_1" /> adalah Kuartil Bawah (nilai yang membatasi <InlineMath math="25\%" /> data terbawah).
 
 Jadi, IQR itu selisih antara kuartil atas dan kuartil bawah.
 
@@ -27,7 +27,7 @@ Jadi, IQR itu selisih antara kuartil atas dan kuartil bawah.
 
 Biar lebih jelas, mari kita lihat sebuah contoh.
 
-Ada dua kelompok, masing-masing 12 orang. Kita lihat data umurnya dalam tabel berikut:
+Ada dua kelompok, masing-masing <InlineMath math="12 \text{ orang}" />. Kita lihat data umurnya dalam tabel berikut:
 
 | Data ke- | Kelompok Pertama | Kelompok Kedua |
 | :------: | :--------------: | :------------: |
@@ -50,7 +50,7 @@ Coba kita hitung beberapa ukuran statistik buat kedua kelompok ini.
 
 1.  **Mean (Rata-rata):**
 
-    Kalau kamu hitung rata-rata umur kedua kelompok, hasilnya **sama persis**, yaitu 16 tahun.
+    Kalau kamu hitung rata-rata umur kedua kelompok, hasilnya **sama persis**, yaitu <InlineMath math="16 \text{ tahun}" />.
 
     Kelompok 1:
 
@@ -90,19 +90,19 @@ Sekarang kita hitung ukuran penyebarannya.
 
 1.  **Jangkauan (Range):**
 
-    Range = Nilai Maksimum - Nilai Minimum
+    <InlineMath math="\text{Range} = \text{Nilai maksimum} - \text{Nilai minimum}" />
 
-    - Range Kelompok Pertama = 18 - 13 = **5**
-    - Range Kelompok Kedua = 36 - 1 = **35**
+    - Range Kelompok Pertama adalah <InlineMath math="18 - 13 = 5" />
+    - Range Kelompok Kedua adalah <InlineMath math="36 - 1 = 35" />
 
       Wah, jangkauannya beda jauh! Kelompok kedua lebih menyebar datanya kalau dilihat dari nilai ekstremnya.
 
 2.  **Jangkauan Interkuartil (IQR):**
 
-    IQR = <InlineMath math="Q_3 - Q_1" />
+    <InlineMath math="IQR = Q_3 - Q_1" />
 
-    - IQR Kelompok Pertama = 17 - 15 = **2**
-    - IQR Kelompok Kedua = 28,5 - 4,5 = **24**
+    - IQR Kelompok Pertama adalah <InlineMath math="17 - 15 = 2" />
+    - IQR Kelompok Kedua adalah <InlineMath math="28,5 - 4,5 = 24" />
 
       IQR-nya juga beda jauh!
 
@@ -117,7 +117,7 @@ Mari kita rangkum dalam tabel agar mudah dibandingkan:
 
 - Kedua kelompok punya **Mean (rata-rata) umur yang sama**, yaitu 16.
 - Tapi **Range** dan **IQR** nya **beda banget**.
-- **Kelompok Pertama** punya Range kecil (5) dan IQR sangat kecil (2). Ini artinya, umur orang-orang di kelompok pertama itu **sangat berdekatan**, terutama yang 50% di tengah, umurnya cuma beda 2 tahun (<InlineMath math="Q_1=15, Q_3=17" />). Datanya **rapat** di sekitar rata-rata.
-- **Kelompok Kedua** punya Range besar (35) dan IQR besar (24). Ini artinya, umur orang-orang di kelompok kedua itu **jauh lebih menyebar**. Yang 50% di tengah saja rentang umurnya 24 tahun (<InlineMath math="Q_1=4,5, Q_3=28,5" />). Datanya **tidak serapat** kelompok pertama.
+- **Kelompok Pertama** punya Range kecil (5) dan IQR sangat kecil (2). Ini artinya, umur orang-orang di kelompok pertama itu **sangat berdekatan**, terutama yang <InlineMath math="50\%" /> di tengah, umurnya cuma beda <InlineMath math="2 \text{ tahun}" /> (<InlineMath math="Q_1=15, Q_3=17" />). Datanya **rapat** di sekitar rata-rata.
+- **Kelompok Kedua** punya Range besar (35) dan IQR besar (24). Ini artinya, umur orang-orang di kelompok kedua itu **jauh lebih menyebar**. Yang <InlineMath math="50\%" /> di tengah saja rentang umurnya <InlineMath math="24 \text{ tahun}" /> (<InlineMath math="Q_1=4,5, Q_3=28,5" />). Datanya **tidak serapat** kelompok pertama.
 
 Walaupun rata-ratanya sama, sebaran data bisa sangat berbeda. IQR membantu kita melihat seberapa menyebar data di bagian tengah, memberikan gambaran yang lebih baik tentang variasi data dibandingkan hanya melihat mean atau range saja, terutama jika ada data ekstrem.

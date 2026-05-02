@@ -8,7 +8,7 @@ export const metadata = {
 
 ## Memahami Konsep Nilai Harapan
 
-Bayangkan kamu adalah seorang pemain basket. Secara rata-rata, dari <InlineMath math="10" /> kali lemparan bebas, kamu berhasil memasukkan bola sebanyak <InlineMath math="8" /> kali. Nah, angka <InlineMath math="8" /> ini bisa kita sebut sebagai **nilai harapan** atau ekspektasi keberhasilanmu.
+Bayangkan kamu adalah seorang pemain basket. Secara rata-rata, dari <InlineMath math="10 \text{ kali}" /> lemparan bebas, kamu berhasil memasukkan bola sebanyak <InlineMath math="8 \text{ kali}" />. Nah, angka <InlineMath math="8" /> ini bisa kita sebut sebagai **nilai harapan** atau ekspektasi keberhasilanmu.
 
 Secara sederhana, nilai harapan adalah **nilai rata-rata yang kita harapkan terjadi** dari sebuah percobaan jika percobaan itu diulang berkali-kali dalam kondisi yang sama. Ini bukan berarti kamu *pasti* akan mendapatkan hasil itu setiap kali, tapi ini adalah prediksi rata-rata jangka panjangnya.
 
@@ -22,7 +22,7 @@ Distribusi binomial <InlineMath math="b(x;n,p)" /> memiliki nilai harapan:
 
 dengan <InlineMath math="n" /> adalah banyaknya percobaan dan <InlineMath math="p" /> adalah peluang keberhasilan.
 
-Rumus ini sangat intuitif. Jika peluang sukses dalam satu kali coba adalah <InlineMath math="p" />, maka dalam <InlineMath math="n" /> kali percobaan, harapan suksesnya adalah:
+Rumus ini sangat intuitif. Jika peluang sukses dalam satu kali coba adalah <InlineMath math="p" />, maka dalam <InlineMath math="n \text{ kali}" /> percobaan, harapan suksesnya adalah:
 
 <BlockMath math="E(X) = n \times p" />
 
@@ -55,14 +55,14 @@ Mari kita terapkan konsep ini pada sebuah contoh.
 
 **Soal:**
 
-Sebuah dadu seimbang dilempar sebanyak <InlineMath math="7" /> kali. Berapa nilai harapan untuk munculnya mata dadu lima dari seluruh lemparan tersebut?
+Sebuah dadu seimbang dilempar sebanyak <InlineMath math="7 \text{ kali}" />. Berapa nilai harapan untuk munculnya mata dadu lima dari seluruh lemparan tersebut?
 
 **Penyelesaian:**
 
 Pertama, mari kita pastikan bahwa ini memenuhi syarat distribusi binomial:
 
 - Hanya ada dua kemungkinan: **sukses** (keluar angka <InlineMath math="5" />) atau **gagal** (keluar angka selain <InlineMath math="5" />)
-- Jumlah percobaan tetap: <InlineMath math="7" /> kali
+- Jumlah percobaan tetap: <InlineMath math="7 \text{ kali}" />
 - Setiap lemparan independen: hasil lemparan sebelumnya tidak mempengaruhi lemparan berikutnya
 - Peluang sukses sama: <InlineMath math="p = \frac{1}{6}" /> di setiap lemparan
 
@@ -80,6 +80,6 @@ Sekarang kita bisa langsung hitung nilai harapannya menggunakan rumus:
 
 **Jadi, apa artinya angka <InlineMath math="1.167" /> ini?**
 
-Nilai harapan <InlineMath math="1.167" /> bukan berarti kamu akan mendapat "<InlineMath math="1.167" /> kali" angka <InlineMath math="5" /> dalam satu eksperimen (karena itu tidak mungkin). Yang dimaksud adalah: jika kamu mengulangi eksperimen "lempar dadu <InlineMath math="7" /> kali" ini **ratusan atau ribuan kali**, maka rata-rata kamu akan mendapat angka <InlineMath math="5" /> sekitar <InlineMath math="1.167" /> kali per set <InlineMath math="7" /> lemparan.
+Nilai harapan <InlineMath math="1.167" /> bukan berarti kamu akan mendapat <InlineMath math="1.167 \text{ kali}" /> angka <InlineMath math="5" /> dalam satu eksperimen (karena itu tidak mungkin). Yang dimaksud adalah: jika kamu mengulangi eksperimen lempar dadu <InlineMath math="7 \text{ kali}" /> ini **ratusan atau ribuan kali**, maka rata-rata kamu akan mendapat angka <InlineMath math="5" /> sekitar <InlineMath math="1.167 \text{ kali}" /> per set <InlineMath math="7" /> lemparan.
 
-Dalam praktiknya, dalam satu set <InlineMath math="7" /> lemparan, kamu mungkin mendapat angka <InlineMath math="5" /> sebanyak <InlineMath math="0" />, <InlineMath math="1" />, <InlineMath math="2" />, atau bahkan <InlineMath math="3" /> kali. Tapi kalau dirata-ratakan dalam jangka panjang, hasilnya akan mendekati <InlineMath math="1.167" />.
+Dalam praktiknya, dalam satu set <InlineMath math="7" /> lemparan, kamu mungkin mendapat angka <InlineMath math="5" /> sebanyak <InlineMath math="0" />, <InlineMath math="1" />, <InlineMath math="2" />, atau bahkan <InlineMath math="3 \text{ kali}" />. Tapi kalau dirata-ratakan dalam jangka panjang, hasilnya akan mendekati <InlineMath math="1.167" />.

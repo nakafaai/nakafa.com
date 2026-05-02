@@ -7,11 +7,15 @@ export const metadata = {
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 
-Diketahui limas segi empat beraturan P.QRST dengan rusuk alas <InlineMath math="3" /> cm dan rusuk tegak <InlineMath math="3\sqrt{2}" /> cm
+Diketahui limas segi empat beraturan P.QRST dengan rusuk alas <InlineMath math="3 \text{ cm}" /> dan rusuk tegak <InlineMath math="3\sqrt{2} \text{ cm}" />
 
 <LineEquation
   title="Limas P.QRST"
-  description="Visualisasi limas segi empat beraturan dengan rusuk alas 3 cm dan rusuk tegak 3√2 cm."
+  description={
+    <>
+      Visualisasi limas segi empat beraturan dengan rusuk alas <InlineMath math="3 \text{ cm}" /> dan rusuk tegak <InlineMath math="3\sqrt{2} \text{ cm}" />.
+    </>
+  }
   cameraPosition={[8, 6, 8]}
   data={[
     {
@@ -195,5 +199,4 @@ Tangen sudut <InlineMath math="\alpha" /> antara garis PT dan alas QRST
 </MathContainer>
 
 Jadi, tangen sudut antara garis PT dan alas QRST adalah <InlineMath math="\sqrt{3}" />
-
 
