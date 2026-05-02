@@ -27,7 +27,10 @@ describe("quran llms text", () => {
 
   it("returns null for non-quran and malformed quran markdown routes", () => {
     expect(
-      getQuranLlmsText({ cleanSlug: "articles/story", locale: "en" })
+      getQuranLlmsText({
+        cleanSlug: "articles/politics/dynastic-politics-asian-values",
+        locale: "en",
+      })
     ).toBe(null);
     expect(getQuranLlmsText({ cleanSlug: "quran/1/extra", locale: "en" })).toBe(
       null

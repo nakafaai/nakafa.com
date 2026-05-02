@@ -88,7 +88,7 @@ describe("llms exercise markdown", () => {
   it("returns null for non-exercise markdown routes", async () => {
     await expect(
       getCachedLlmsExerciseText({
-        cleanSlug: "articles/story",
+        cleanSlug: "articles/politics/dynastic-politics-asian-values",
         locale: "en",
       })
     ).resolves.toBeNull();

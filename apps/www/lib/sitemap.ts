@@ -149,18 +149,7 @@ export async function getSitemapEntries(
     getEntries(route, options)
   );
   const routeArrays = await Promise.all(routePromises);
-  const allEntries = routeArrays.flat();
-  const uniqueUrls = new Map<string, MetadataRoute.Sitemap[number]>();
-
-  for (const entry of allEntries) {
-    if (uniqueUrls.has(entry.url)) {
-      continue;
-    }
-
-    uniqueUrls.set(entry.url, entry);
-  }
-
-  return Array.from(uniqueUrls.values());
+  return routeArrays.flat();
 }
 
 /**

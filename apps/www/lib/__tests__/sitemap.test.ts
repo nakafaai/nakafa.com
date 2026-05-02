@@ -36,14 +36,15 @@ vi.mock("@repo/internationalization/src/navigation", () => ({
 vi.mock("@repo/internationalization/src/routing", () => ({
   routing: {
     defaultLocale: "en",
-    locales: ["en", "en"],
+    locales: ["en", "id"],
   },
 }));
 
 const folderTree = new Map([
   [".", ["articles", "exercises"]],
-  ["articles", ["story"]],
-  ["articles/story", []],
+  ["articles", ["politics"]],
+  ["articles/politics", ["dynastic-politics-asian-values"]],
+  ["articles/politics/dynastic-politics-asian-values", []],
   ["exercises", ["high-school"]],
   ["exercises/high-school", ["snbt"]],
   ["exercises/high-school/snbt", ["quantitative-knowledge"]],
@@ -77,14 +78,17 @@ describe("sitemap route discovery", () => {
     expect(getQuranRoutes()).toHaveLength(114);
     expect(getContentRoutes("articles")).toEqual([
       "/articles",
-      "/articles/story",
+      "/articles/politics",
+      "/articles/politics/dynastic-politics-asian-values",
     ]);
 
     const routes = getSitemapRoutes();
 
     expect(routes).toContain("/");
     expect(routes).toContain("/quran/114");
-    expect(routes).toContain("/articles/story");
+    expect(routes).toContain(
+      "/articles/politics/dynastic-politics-asian-values"
+    );
     expect(routes).toContain(
       "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1"
     );
@@ -104,26 +108,31 @@ describe("sitemap route discovery", () => {
 
 describe("sitemap entries", () => {
   it("builds localized URLs with parsed content last-modified dates", async () => {
-    const entries = await getEntries("/articles/story", {
-      domain: "docs.example.com",
-    });
+    const entries = await getEntries(
+      "/articles/politics/dynastic-politics-asian-values",
+      {
+        domain: "docs.example.com",
+      }
+    );
 
     expect(entries).toHaveLength(2);
     expect(entries[0]).toMatchObject({
       changeFrequency: "monthly",
       priority: 0.5,
-      url: "https://docs.example.com/en/articles/story",
+      url: "https://docs.example.com/en/articles/politics/dynastic-politics-asian-values",
     });
     expect(entries[0]?.lastModified).toEqual(new Date(2024, 0, 2));
   });
 
   it("accepts content routes without a leading slash", async () => {
-    const entries = await getEntries("articles/story");
+    const entries = await getEntries(
+      "articles/politics/dynastic-politics-asian-values"
+    );
 
     expect(entries[0]).toMatchObject({
       changeFrequency: "monthly",
       priority: 0.5,
-      url: "https://nakafa.com/en/articles/story",
+      url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
     });
   });
 
@@ -179,7 +188,9 @@ describe("sitemap entries", () => {
       })
     );
 
-    const invalidDateEntries = await getEntries("/articles/story");
+    const invalidDateEntries = await getEntries(
+      "/articles/politics/dynastic-politics-asian-values"
+    );
 
     expect(invalidDateEntries[0]?.lastModified).toBeInstanceOf(Date);
 
@@ -187,13 +198,17 @@ describe("sitemap entries", () => {
       Effect.fail(new Error("metadata unavailable"))
     );
 
-    await expect(getEntries("/articles/story")).resolves.toHaveLength(2);
+    await expect(
+      getEntries("/articles/politics/dynastic-politics-asian-values")
+    ).resolves.toHaveLength(2);
 
     mockGetContentMetadata.mockImplementationOnce(() => {
       throw new Error("metadata crashed");
     });
 
-    await expect(getEntries("/articles/story")).resolves.toHaveLength(2);
+    await expect(
+      getEntries("/articles/politics/dynastic-politics-asian-values")
+    ).resolves.toHaveLength(2);
   });
 
   it("reports content metadata errors and keeps sitemap generation alive", async () => {
@@ -212,7 +227,10 @@ describe("sitemap entries", () => {
       throw new Error("metadata crashed");
     });
 
-    const entries = await getEntries("/articles/story", { reportError });
+    const entries = await getEntries(
+      "/articles/politics/dynastic-politics-asian-values",
+      { reportError }
+    );
 
     expect(entries).toHaveLength(2);
     expect(reportError).toHaveBeenCalledWith(
@@ -224,13 +242,13 @@ describe("sitemap entries", () => {
     expect(reportError).toHaveBeenCalledWith(
       expect.any(Error),
       expect.objectContaining({
-        route: "/articles/story",
+        route: "/articles/politics/dynastic-politics-asian-values",
         source: "sitemap-route-entry",
       })
     );
   });
 
-  it("deduplicates generated sitemap entries", async () => {
+  it("generates unique sitemap entries from real route and locale inputs", async () => {
     const entries = await getSitemapEntries();
     const urls = entries.map((entry) => entry.url);
 

@@ -14,14 +14,15 @@ describe("llms formatting helpers", () => {
     expect(
       buildHeader({
         description: "Description",
-        source: "packages/contents/example/en.mdx",
-        url: "https://nakafa.com/en/example.md",
+        source:
+          "packages/contents/articles/politics/dynastic-politics-asian-values/en.mdx",
+        url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
       })
     ).toStrictEqual([
       "# Nakafa Framework: LLM",
       "",
-      "URL: https://nakafa.com/en/example.md",
-      "Source: packages/contents/example/en.mdx",
+      "URL: https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
+      "Source: packages/contents/articles/politics/dynastic-politics-asian-values/en.mdx",
       "",
       "Description",
       "",
@@ -32,7 +33,7 @@ describe("llms formatting helpers", () => {
     expect(
       buildHeader({
         description: "Description",
-        url: "https://nakafa.com/en/example.md",
+        url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
       })
     ).not.toContain("Source:");
   });
