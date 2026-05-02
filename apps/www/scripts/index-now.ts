@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { getSitemapEntries } from "@/lib/sitemap";
+import { getSitemapEntries } from "@/lib/sitemap/entries";
 import { logger } from "@/scripts/utils";
 
 const BATCH_SIZE = 100;

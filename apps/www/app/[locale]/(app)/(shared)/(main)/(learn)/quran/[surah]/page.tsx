@@ -48,6 +48,9 @@ export async function generateMetadata({
 
   const alternates = {
     canonical: path,
+    types: {
+      "text/markdown": `${path}.md`,
+    },
   };
   const image = {
     url: "/quran.png",
@@ -68,16 +71,12 @@ export async function generateMetadata({
   const surahNumber = Number(surah);
 
   if (Number.isNaN(surahNumber)) {
-    return {
-      alternates,
-    };
+    notFound();
   }
 
   const surahData = await getSurahMetadataData({ surah: surahNumber });
   if (!surahData) {
-    return {
-      alternates,
-    };
+    notFound();
   }
 
   // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
