@@ -3,6 +3,19 @@ import { env } from "@/env";
 
 const MCP_ENDPOINT = new URL("/mcp", env.NEXT_PUBLIC_MCP_URL);
 const MCP_UPSTREAM_UNAVAILABLE_MESSAGE = "MCP upstream is unavailable";
+const MCP_DISCOVERY_TEXT = [
+  "# Nakafa MCP Server",
+  "",
+  "Nakafa exposes a Streamable HTTP MCP endpoint at https://nakafa.com/mcp.",
+  "MCP clients should send JSON-RPC POST requests with Accept: application/json, text/event-stream and Content-Type: application/json.",
+  "Available tools: get_contents and get_content.",
+  "",
+].join("\n");
+
+const MCP_DISCOVERY_HEADERS = {
+  "Cache-Control": "no-store",
+  "Content-Type": "text/plain; charset=utf-8",
+};
 
 const CONNECTION_HEADERS = new Set([
   "connection",
@@ -66,6 +79,13 @@ function getForwardHeaders(request: Request) {
   return headers;
 }
 
+/** Serves crawler-friendly MCP discovery without opening an SSE stream. */
+function getMcpDiscoveryResponse() {
+  return new Response(MCP_DISCOVERY_TEXT, {
+    headers: MCP_DISCOVERY_HEADERS,
+  });
+}
+
 /** Forwards MCP HTTP requests to the configured MCP service. */
 function proxyMcpRequest(request: Request) {
   const upstreamUrl = new URL(MCP_ENDPOINT);
@@ -126,7 +146,22 @@ function proxyMcpRequest(request: Request) {
   );
 }
 
-export const GET = proxyMcpRequest;
+/** Handles browser discovery requests and real MCP GET streams. */
+export function GET(request: Request) {
+  if (!request.headers.get("accept")?.includes("text/event-stream")) {
+    return getMcpDiscoveryResponse();
+  }
+
+  return proxyMcpRequest(request);
+}
+
+/** Lets crawlers validate the MCP endpoint without opening a stream. */
+export function HEAD() {
+  return new Response(null, {
+    headers: MCP_DISCOVERY_HEADERS,
+  });
+}
+
 export const POST = proxyMcpRequest;
 export const DELETE = proxyMcpRequest;
 export const OPTIONS = proxyMcpRequest;

@@ -1,4 +1,6 @@
 export const BASE_URL = "https://nakafa.com";
+export const LLMS_CACHE_CONTROL =
+  "public, max-age=300, s-maxage=3600, must-revalidate";
 export const LLMS_INDEX_TARGET_MAX_CHARS = 45_000;
 export const MARKDOWN_EXTENSIONS = /\.(?:md|mdx|txt)$/;
 export const NUMBER_SEGMENT = /^\d+$/;

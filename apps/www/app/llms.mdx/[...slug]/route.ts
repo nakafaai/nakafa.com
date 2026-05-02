@@ -2,6 +2,7 @@ import { generateSlugOnlyParams } from "@repo/contents/_lib/static-params";
 import { routing } from "@repo/internationalization/src/routing";
 import type { NextRequest } from "next/server";
 import { hasLocale } from "next-intl";
+import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
 import { getCachedLlmsExerciseText } from "@/lib/llms/exercises";
 import { stripLlmsRouteExtension } from "@/lib/llms/format";
 import {
@@ -12,11 +13,13 @@ import { getCachedLlmsMdxText } from "@/lib/llms/mdx";
 import { getQuranLlmsText } from "@/lib/llms/quran";
 
 const MARKDOWN_HEADERS = {
+  "Cache-Control": LLMS_CACHE_CONTROL,
   "Content-Type": "text/markdown; charset=utf-8",
   Vary: "Accept",
 };
 
 const TEXT_HEADERS = {
+  "Cache-Control": LLMS_CACHE_CONTROL,
   "Content-Type": "text/plain; charset=utf-8",
   Vary: "Accept",
 };

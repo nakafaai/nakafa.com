@@ -43,6 +43,8 @@ describe("llms indexes", () => {
     expect(text).toContain("https://nakafa.com/llms/id/llms.txt");
     expect(text).toContain("https://nakafa.com/mcp");
     expect(text).toContain("https://nakafa.com/sitemap.xml");
+    expect(text).not.toContain("[MCP server]");
+    expect(text).not.toContain("[Sitemap]");
   });
 
   it("builds small locale and section indexes with blockquote summaries", async () => {

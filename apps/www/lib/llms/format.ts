@@ -1,5 +1,6 @@
 import type { Locale } from "next-intl";
 import {
+  BASE_URL,
   ENGLISH_LANGUAGE_NAMES,
   MARKDOWN_EXTENSIONS,
 } from "@/lib/llms/constants";
@@ -14,7 +15,13 @@ export function buildHeader({
   description: string;
   source?: string;
 }) {
-  const header = ["# Nakafa Framework: LLM", "", `URL: ${url}`];
+  const header = [
+    "# Nakafa Framework: LLM",
+    "",
+    `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt). Markdown versions are available by appending \`.md\` to content URLs or sending \`Accept: text/markdown\`.`,
+    "",
+    `URL: ${url}`,
+  ];
 
   if (source) {
     header.push(`Source: ${source}`);

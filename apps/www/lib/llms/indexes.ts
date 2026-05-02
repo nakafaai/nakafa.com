@@ -29,8 +29,11 @@ export function buildRootLlmsIndexText() {
     "## Indexes",
     "",
     ...routing.locales.map(formatLocaleIndexLine),
-    `- [MCP server](${BASE_URL}/mcp): Tool endpoint for searching and retrieving Nakafa content.`,
-    `- [Sitemap](${BASE_URL}/sitemap.xml): Canonical sitemap used to generate these indexes.`,
+    "",
+    "## References",
+    "",
+    `- MCP endpoint: \`${BASE_URL}/mcp\` for tools that support Streamable HTTP MCP.`,
+    `- Sitemap: \`${BASE_URL}/sitemap.xml\`, used to generate these indexes.`,
     "",
   ].join("\n");
 }
@@ -110,7 +113,7 @@ function buildLocaleLlmsIndexText(locale: Locale) {
   return [
     `# Nakafa ${localeLabel} Docs`,
     "",
-    `> ${localeLabel} Nakafa content index generated from the sitemap. Follow a section llms.txt link, then use \`.md\` page links when available for clean markdown content.`,
+    `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt). ${localeLabel} Nakafa content index generated from the sitemap. Follow a section llms.txt link, then use \`.md\` page links when available for clean markdown content.`,
     "",
     "## Sections",
     "",
@@ -142,7 +145,7 @@ function buildScopedLlmsIndexText({
     title = `Nakafa ${localeLabel} ${sectionLabel}: ${titleSuffix} Index`;
   }
 
-  const summary = `Sitemap-derived links for ${localeLabel} ${sectionLabel.toLowerCase()} pages. Use \`.md\` links when available for agent-friendly markdown.`;
+  const summary = `For AI agents: use [llms.txt](${BASE_URL}/llms.txt). Sitemap-derived links for ${localeLabel} ${sectionLabel.toLowerCase()} pages. Use \`.md\` links when available for agent-friendly markdown.`;
   const allPageLines = entries.map(formatLlmsEntryLine);
   const fullPageIndex = renderIndexText({
     lines: allPageLines,

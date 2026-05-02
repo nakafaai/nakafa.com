@@ -30,7 +30,6 @@ const EXERCISE_ROUTE_PREFIX_LEN = 4;
 
 /** Static top-level routes that should always be present in the sitemap. */
 export const baseRoutes = [
-  "/",
   "/search",
   "/contributor",
   "/quran",
@@ -241,6 +240,10 @@ function isContentRoute(route: string) {
 
 /** Filters raw content folder routes down to routes that represent real pages. */
 function isIndexableContentRoute(route: string) {
+  if (route === "/") {
+    return false;
+  }
+
   const routeSegments = route.split("/").filter(Boolean);
   const [routeBase, category, type, material] = routeSegments;
   const isExerciseRoute =

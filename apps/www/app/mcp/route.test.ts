@@ -97,7 +97,13 @@ describe("MCP route proxy", () => {
     );
 
     const { GET } = await import("@/app/mcp/route");
-    const response = await GET(new Request("https://nakafa.com/mcp"));
+    const response = await GET(
+      new Request("https://nakafa.com/mcp", {
+        headers: {
+          accept: "text/event-stream",
+        },
+      })
+    );
 
     expect(response.headers.get("content-encoding")).toBeNull();
     expect(response.headers.get("content-length")).toBeNull();
@@ -132,9 +138,34 @@ describe("MCP route proxy", () => {
     );
 
     const { GET } = await import("@/app/mcp/route");
-    const response = await GET(new Request("https://nakafa.com/mcp"));
+    const response = await GET(
+      new Request("https://nakafa.com/mcp", {
+        headers: {
+          accept: "text/event-stream",
+        },
+      })
+    );
 
     expect(response.status).toBe(502);
     await expect(response.text()).resolves.toBe("MCP upstream is unavailable");
+  });
+
+  it("serves MCP discovery for browser and crawler requests", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { GET, HEAD } = await import("@/app/mcp/route");
+    const response = await GET(new Request("https://nakafa.com/mcp"));
+    const headResponse = HEAD();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.headers.get("content-type")).toBe(
+      "text/plain; charset=utf-8"
+    );
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(headResponse.status).toBe(200);
+    await expect(response.text()).resolves.toContain(
+      "Nakafa exposes a Streamable HTTP MCP endpoint"
+    );
   });
 });
