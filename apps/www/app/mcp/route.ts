@@ -2,11 +2,8 @@ import { env } from "@/env";
 
 const MCP_ENDPOINT = new URL("/mcp", env.NEXT_PUBLIC_MCP_URL);
 
-const HOP_BY_HOP_HEADERS = new Set([
+const CONNECTION_HEADERS = new Set([
   "connection",
-  "content-encoding",
-  "content-length",
-  "host",
   "keep-alive",
   "proxy-authenticate",
   "proxy-authorization",
@@ -16,11 +13,18 @@ const HOP_BY_HOP_HEADERS = new Set([
   "upgrade",
 ]);
 
-/** Copies request headers while removing hop-by-hop proxy headers. */
+const REQUEST_MANAGED_HEADERS = new Set(["content-length", "host"]);
+
+const FETCH_DECODED_RESPONSE_HEADERS = new Set([
+  "content-encoding",
+  "content-length",
+]);
+
+/** Copies request headers while removing proxy-managed headers. */
 function getForwardHeaders(request: Request) {
   const headers = new Headers(request.headers);
 
-  for (const header of HOP_BY_HOP_HEADERS) {
+  for (const header of [...CONNECTION_HEADERS, ...REQUEST_MANAGED_HEADERS]) {
     headers.delete(header);
   }
 
@@ -47,7 +51,10 @@ async function proxyMcpRequest(request: Request) {
     });
     const headers = new Headers(upstream.headers);
 
-    for (const header of HOP_BY_HOP_HEADERS) {
+    for (const header of [
+      ...CONNECTION_HEADERS,
+      ...FETCH_DECODED_RESPONSE_HEADERS,
+    ]) {
       headers.delete(header);
     }
 
