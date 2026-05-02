@@ -11,7 +11,7 @@ afterEach(() => {
 });
 
 describe("MCP route proxy", () => {
-  it("preserves request content encoding for encoded MCP bodies", async () => {
+  it("forwards MCP-safe request headers without browser credentials", async () => {
     const fetchMock = vi.fn((_url: URL, _init: RequestInit) =>
       Promise.resolve(Response.json({ ok: true }))
     );
@@ -24,9 +24,16 @@ describe("MCP route proxy", () => {
       new Request("https://nakafa.com/mcp?session=1", {
         body,
         headers: {
+          accept: "application/json, text/event-stream",
+          authorization: "Bearer user-token",
+          cookie: "session=user-session",
           "content-encoding": "gzip",
           "content-length": body.byteLength.toString(),
           "content-type": "application/json",
+          "mcp-method": "initialize",
+          "mcp-param-region": "us-west1",
+          "mcp-protocol-version": "2025-06-18",
+          "mcp-session-id": "session-1",
         },
         method: "POST",
       })
@@ -46,8 +53,17 @@ describe("MCP route proxy", () => {
       throw new Error("Expected forwarded headers to use the Headers API");
     }
 
+    expect(upstreamHeaders.get("accept")).toBe(
+      "application/json, text/event-stream"
+    );
+    expect(upstreamHeaders.get("authorization")).toBeNull();
+    expect(upstreamHeaders.get("cookie")).toBeNull();
     expect(upstreamHeaders.get("content-encoding")).toBe("gzip");
     expect(upstreamHeaders.get("content-length")).toBeNull();
+    expect(upstreamHeaders.get("mcp-method")).toBe("initialize");
+    expect(upstreamHeaders.get("mcp-param-region")).toBe("us-west1");
+    expect(upstreamHeaders.get("mcp-protocol-version")).toBe("2025-06-18");
+    expect(upstreamHeaders.get("mcp-session-id")).toBe("session-1");
     expect(upstreamUrl.toString()).toBe(
       "https://mcp.example.com/mcp?session=1"
     );
