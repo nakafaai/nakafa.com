@@ -5,6 +5,7 @@ import {
   resolveThreeFontSize,
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
+import { Suspense } from "react";
 
 type SceneLabelPosition = readonly [number, number, number];
 
@@ -28,23 +29,25 @@ export function SceneLabel({
 
   return (
     <Billboard position={position}>
-      <Text
-        anchorX="center"
-        anchorY="middle"
-        color={color}
-        font={MONO_FONT_PATH}
-        fontSize={resolvedFontSize}
-        renderOrder={alwaysOnTop ? 10 : undefined}
-      >
-        {children}
-        {alwaysOnTop && (
-          <meshBasicMaterial
-            color={color}
-            depthTest={false}
-            toneMapped={false}
-          />
-        )}
-      </Text>
+      <Suspense fallback={null}>
+        <Text
+          anchorX="center"
+          anchorY="middle"
+          color={color}
+          font={MONO_FONT_PATH}
+          fontSize={resolvedFontSize}
+          renderOrder={alwaysOnTop ? 10 : undefined}
+        >
+          {children}
+          {alwaysOnTop && (
+            <meshBasicMaterial
+              color={color}
+              depthTest={false}
+              toneMapped={false}
+            />
+          )}
+        </Text>
+      </Suspense>
     </Billboard>
   );
 }

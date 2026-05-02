@@ -9,6 +9,10 @@ import {
 import { ShellModelScene } from "@repo/design-system/components/contents/chemistry/shell-model/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
+import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene-frame";
 import { useTheme } from "next-themes";
 import { Suspense } from "react";
 
@@ -43,10 +47,7 @@ export function ShellModelCanvas({
   const sceneColors = getShellModelSceneColors(resolvedTheme);
 
   return (
-    <section
-      aria-label={ariaLabel}
-      className="relative aspect-16/10 overflow-hidden rounded-md bg-card"
-    >
+    <section aria-label={ariaLabel} className={threeSceneFrameVariants()}>
       <ThreeCanvas
         camera={{ fov: 45, position: CAMERA_POSITION }}
         frameloop="always"
@@ -78,10 +79,9 @@ export function ShellModelCanvas({
  */
 function ResponsiveShellModelCamera() {
   const size = useThree((state) => state.size);
-  const cameraPosition =
-    size.width < size.height * NARROW_CANVAS_ASPECT_RATIO
-      ? NARROW_CAMERA_POSITION
-      : CAMERA_POSITION;
+  const cameraPosition = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO)
+    ? NARROW_CAMERA_POSITION
+    : CAMERA_POSITION;
 
   return (
     <CameraControls

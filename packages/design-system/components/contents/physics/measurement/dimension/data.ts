@@ -15,6 +15,11 @@ export const CAMERA_POSITION = [3.6, 2.8, 4.4] satisfies readonly [
   number,
   number,
 ];
+export const NARROW_CAMERA_POSITION = [4.4, 3.3, 5.4] satisfies readonly [
+  number,
+  number,
+  number,
+];
 export const CAMERA_TARGET = [0, 0.45, 0] satisfies readonly [
   number,
   number,

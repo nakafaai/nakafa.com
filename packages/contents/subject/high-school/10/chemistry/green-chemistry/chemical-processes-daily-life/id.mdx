@@ -1,0 +1,192 @@
+import { MatterParticleReaderLab } from "@repo/design-system/components/contents/chemistry/matter-particle-reader/lab";
+
+export const metadata = {
+  title: "Proses Kimia Sehari-hari",
+  description:
+    "Baca proses kimia di sekitar kita dari atom, unsur, molekul, persamaan reaksi, lalu cek apakah prosesnya selaras dengan prinsip kimia hijau.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/02/2026",
+  subject: "Kimia Hijau",
+};
+
+## Baca Prosesnya Dulu
+
+Sebelum menilai sebuah aktivitas sebagai "hijau" atau "tidak hijau", kita perlu tahu proses kimia apa yang sedang terjadi. Membakar sampah, mencuci pakaian, membuat kompos, memasak, fotosintesis pada tanaman, dan karat pada besi sama-sama melibatkan zat yang berubah atau berinteraksi.
+
+Kimia hijau tidak bertanya apakah suatu proses terlihat alami. Kimia hijau bertanya apakah proses itu dirancang untuk mengurangi bahaya, limbah, energi berlebihan, bahan sekali pakai, dan risiko kecelakaan sejak awal. EPA merangkum gagasan ini sebagai desain produk dan proses kimia yang mengurangi penggunaan atau pembentukan zat berbahaya pada [Basics of Green Chemistry](https://www.epa.gov/greenchemistry/basics-green-chemistry).
+
+Untuk membaca prosesnya, pakai urutan sederhana ini.
+
+| Yang dibaca | Pertanyaan |
+| :---------- | :--------- |
+| Zat awal | Zat apa yang masuk ke proses? |
+| Perubahan | Apakah zat hanya bercampur, atau berubah menjadi zat baru? |
+| Zat hasil | Zat apa yang terbentuk setelah proses berjalan? |
+| Dampak | Apakah ada limbah, panas berlebih, gas berbahaya, atau bahan yang sulit terurai? |
+
+## Atom, Unsur, dan Molekul
+
+Tabel periodik membantu kita membaca simbol unsur, tetapi simbol saja belum cukup. Kita perlu tahu apakah yang sedang dibaca adalah atom, unsur, molekul unsur, atau molekul senyawa.
+
+Menurut IUPAC Gold Book, **atom** adalah partikel terkecil yang masih mencirikan suatu unsur kimia. **Unsur kimia** berarti atom-atom dengan jumlah proton yang sama. **Molekul** adalah entitas netral yang tersusun dari beberapa atom.
+
+<MatterParticleReaderLab
+  title={<>Model Atom dan Molekul</>}
+  description={
+    <>
+      Putar model untuk membedakan satu atom, satu unsur, molekul unsur, dan
+      molekul senyawa sebelum membaca persamaan reaksi.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih jenis zat",
+    particleView: "Model atom, unsur, dan molekul",
+    categoryLabel: "Yang sedang dibaca",
+    readingLabel: "Cara membacanya",
+    modes: {
+      atom: {
+        tab: "Atom",
+        tabLabel: "Atom",
+        helperCaption: (
+          <>Satu partikel masih dibaca sebagai atom, bukan molekul.</>
+        ),
+        category: (
+          <>
+            Atom <InlineMath math="\mathrm{C}" /> tunggal.
+          </>
+        ),
+        reading: <>Satu partikel yang masih mencirikan unsur karbon.</>,
+      },
+      element: {
+        tab: "Unsur",
+        tabLabel: "Unsur",
+        helperCaption: (
+          <>Beberapa atom sejenis tetap menunjukkan unsur yang sama.</>
+        ),
+        category: (
+          <>
+            Unsur karbon, ditulis <InlineMath math="\mathrm{C}" />.
+          </>
+        ),
+        reading: <>Semua partikel punya identitas atom yang sama.</>,
+      },
+      "elemental-molecule": {
+        tab: "Molekul Unsur",
+        tabLabel: "Molekul unsur",
+        helperCaption: (
+          <>Ikatan boleh ada, tetapi atomnya tetap dari unsur yang sama.</>
+        ),
+        category: (
+          <>
+            <InlineMath math="\mathrm{O_2}" /> dan{" "}
+            <InlineMath math="\mathrm{N_2}" />.
+          </>
+        ),
+        reading: <>Setiap molekul tersusun dari satu jenis unsur saja.</>,
+      },
+      "compound-molecule": {
+        tab: "Molekul Senyawa",
+        tabLabel: "Molekul senyawa",
+        helperCaption: (
+          <>Begitu unsur berbeda terikat, bacanya menjadi senyawa.</>
+        ),
+        category: (
+          <>
+            <InlineMath math="\mathrm{H_2O}" /> dan{" "}
+            <InlineMath math="\mathrm{CO_2}" />.
+          </>
+        ),
+        reading: <>Setiap molekul mengikat atom dari unsur berbeda.</>,
+      },
+    },
+  }}
+/>
+
+Bacaan ringkasnya bisa dibuat seperti berikut.
+
+| Istilah | Cara membaca | Contoh |
+| :------ | :----------- | :----- |
+| Atom | Satu partikel dari suatu unsur. | atom <InlineMath math="\mathrm{C}" /> atau atom <InlineMath math="\mathrm{O}" /> |
+| Unsur | Zat yang identitas atomnya dikunci oleh jumlah proton. | besi, karbon, oksigen |
+| Molekul unsur | Molekul yang tersusun dari atom unsur yang sama. | <InlineMath math="\mathrm{O_2}" />, <InlineMath math="\mathrm{N_2}" />, <InlineMath math="\mathrm{P_4}" />, <InlineMath math="\mathrm{S_8}" /> |
+| Molekul senyawa | Molekul yang tersusun dari atom unsur berbeda. | <InlineMath math="\mathrm{H_2O}" />, <InlineMath math="\mathrm{CO_2}" />, <InlineMath math="\mathrm{C_6H_{12}O_6}" /> |
+
+Catatan penting: tidak semua senyawa berbentuk molekul terpisah. Garam dapur, misalnya, biasanya dibaca sebagai susunan ion, bukan molekul tunggal. Namun, contoh pada halaman ini memakai molekul karena kita sedang berlatih membaca persamaan reaksi sederhana.
+
+## Persamaan Reaksi sebagai Peta
+
+Persamaan reaksi kimia adalah peta singkat. Zat di kiri adalah **reaktan**, zat di kanan adalah **produk**, tanda panah dibaca "menghasilkan", dan angka di depan rumus disebut **koefisien**.
+
+OpenStax menjelaskan bahwa reaktan ditulis di sisi kiri, produk di sisi kanan, tanda tambah memisahkan zat, dan koefisien menunjukkan jumlah relatif zat pada [Writing and Balancing Chemical Equations](https://openstax.org/books/chemistry-2e/pages/4-1-writing-and-balancing-chemical-equations).
+
+Pola dasarnya:
+
+<BlockMath math="\text{reaktan} \rightarrow \text{produk}" />
+
+Simbol wujud ditulis setelah rumus zat.
+
+| Simbol | Dibaca |
+| :----- | :----- |
+| <InlineMath math="\mathrm{(s)}" /> | padat |
+| <InlineMath math="\mathrm{(l)}" /> | cair |
+| <InlineMath math="\mathrm{(g)}" /> | gas |
+| <InlineMath math="\mathrm{(aq)}" /> | larut dalam air |
+
+Koefisien boleh diubah untuk menyetarakan reaksi. Subskrip di dalam rumus tidak boleh diubah sembarangan, karena subskrip menentukan zatnya. Menulis <InlineMath math="\mathrm{H_2O}" /> berbeda dari menulis <InlineMath math="\mathrm{H_2O_2}" />.
+
+## Fotosintesis sebagai Contoh Baca
+
+Fotosintesis sering ditulis sebagai ringkasan reaksi. Proses aslinya berlangsung dalam banyak langkah, tetapi persamaan ringkasnya membantu kita melihat cara atom disusun ulang. OpenStax Concepts of Biology menjelaskan bahwa fotosintesis memakai karbon dioksida dan air untuk menghasilkan gula dan oksigen pada [Overview of Photosynthesis](https://openstax.org/books/concepts-biology/pages/5-1-overview-of-photosynthesis).
+
+Persamaan yang belum setara bisa ditulis:
+
+<BlockMath math="\mathrm{CO_2(g)} + \mathrm{H_2O(l)} \rightarrow \mathrm{C_6H_{12}O_6(s)} + \mathrm{O_2(g)}" />
+
+Kalau jumlah atom dihitung, hasilnya belum sama.
+
+| Unsur | Kiri | Kanan |
+| :---- | :--- | :---- |
+| <InlineMath math="\mathrm{C}" /> | <InlineMath math="1" /> | <InlineMath math="6" /> |
+| <InlineMath math="\mathrm{H}" /> | <InlineMath math="2" /> | <InlineMath math="12" /> |
+| <InlineMath math="\mathrm{O}" /> | <InlineMath math="3" /> | <InlineMath math="8" /> |
+
+Koefisien yang tepat membuat jumlah atom kiri dan kanan sama:
+
+<BlockMath math="6\mathrm{CO_2(g)} + 6\mathrm{H_2O(l)} \xrightarrow{\text{cahaya}} \mathrm{C_6H_{12}O_6(s)} + 6\mathrm{O_2(g)}" />
+
+Sekarang hitungannya rapi.
+
+| Unsur | Kiri | Kanan |
+| :---- | :--- | :---- |
+| <InlineMath math="\mathrm{C}" /> | <InlineMath math="6" /> | <InlineMath math="6" /> |
+| <InlineMath math="\mathrm{H}" /> | <InlineMath math="12" /> | <InlineMath math="12" /> |
+| <InlineMath math="\mathrm{O}" /> | <InlineMath math="18" /> | <InlineMath math="18" /> |
+
+Bagian yang penting bukan menghafal angka fotosintesis, melainkan kebiasaan membacanya: rumus zat tidak diganti, koefisien yang diatur, dan atom tetap terhitung sama.
+
+## Dari Reaksi ke Penilaian Hijau
+
+Setelah reaksi dapat dibaca, barulah kita menilai apakah prosesnya sejalan dengan prinsip kimia hijau. Sebuah proses bisa tampak berguna, tetapi tetap tidak hijau jika menghasilkan polutan, memakai bahan berbahaya tanpa perlu, atau membutuhkan energi terlalu besar.
+
+| Proses sehari-hari | Cara membaca kimianya | Catatan kimia hijau |
+| :----------------- | :-------------------- | :------------------ |
+| Membakar sampah plastik | Zat organik dalam plastik bereaksi dengan oksigen dan panas. | Tidak sejalan karena dapat menghasilkan asap berbahaya dan tidak mencegah limbah dari sumbernya. |
+| Memakai pembersih secukupnya | Zat pembersih membantu mengangkat kotoran tanpa pemakaian berlebihan. | Lebih dekat dengan prinsip pencegahan limbah, tetapi tetap perlu membaca label bahaya. |
+| Membuat kompos dari sisa makanan | Mikroorganisme menguraikan bahan organik menjadi bahan yang lebih sederhana. | Dapat mengurangi sampah organik, selama tidak menimbulkan bau, lindi, atau hama karena pengelolaan buruk. |
+| Mencampur pembersih rumah tangga sembarangan | Zat yang aman dipakai terpisah bisa bereaksi menjadi gas berbahaya. | Tidak sejalan karena meningkatkan risiko kecelakaan. Jangan mencampur produk pembersih tanpa petunjuk resmi. |
+
+Perhatikan bahwa "alami" dan "hijau" tidak selalu sama. Kompos bisa membantu, tetapi jika dikelola buruk tetap menimbulkan masalah. Pembersih buatan pabrik bisa lebih aman jika formulanya jelas, dosisnya tepat, dan limbahnya dikurangi.
+
+## Menilai Proses dari Zat dan Dampaknya
+
+Misalkan ada tiga cara mengatasi sisa daun kering di halaman.
+
+| Pilihan | Yang terjadi | Penilaian |
+| :------ | :----------- | :-------- |
+| Dibakar | Daun bereaksi dengan oksigen dan menghasilkan asap. | Tidak cocok dengan prinsip kimia hijau karena polusi terbentuk. |
+| Dibuang bersama sampah campuran | Daun tidak langsung bereaksi, tetapi menjadi beban pengelolaan sampah. | Lebih baik dari dibakar, tetapi belum mencegah limbah. |
+| Dikomposkan dengan benar | Bahan organik diuraikan perlahan menjadi kompos. | Lebih dekat dengan kimia hijau karena mengurangi limbah dan memanfaatkan bahan kembali. |
+
+Jawaban terbaik di sini adalah **dikomposkan dengan benar**. Alasannya bukan karena kompos terdengar alami, tetapi karena jalur prosesnya mengurangi pembakaran, mengurangi sampah, dan memanfaatkan bahan organik yang sudah ada.
+
+Jadi, membaca proses kimia sehari-hari selalu dimulai dari zatnya: apa yang masuk, apa yang berubah, apa yang keluar, lalu bahaya apa yang dapat dicegah sejak awal.

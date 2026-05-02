@@ -12,6 +12,7 @@ import { CameraControls } from "@repo/design-system/components/three/camera-cont
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { Origin } from "@repo/design-system/components/three/origin";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { COLORS } from "@repo/design-system/lib/color";
@@ -144,7 +145,8 @@ export function CoordinateSystem({
   return (
     <div
       className={cn(
-        "relative grid aspect-square overflow-hidden rounded-md sm:aspect-[1.43/1]", // IMAX aspect ratio
+        threeSceneFrameVariants(),
+        "grid",
         isDragging ? "cursor-grabbing" : "cursor-grab",
         className
       )}

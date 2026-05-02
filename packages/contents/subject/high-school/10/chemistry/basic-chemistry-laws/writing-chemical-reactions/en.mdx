@@ -1,0 +1,79 @@
+export const metadata = {
+  title: "Writing Chemical Reactions",
+  description:
+    "Turn a reaction story into a clear chemical equation: reactants, products, coefficients, and state symbols.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/01/2026",
+  subject: "Basic Laws of Chemistry",
+};
+
+## From Story to Equation
+
+A chemical reaction equation is a compact way to record starting substances, products, and the relative particle counts that react. The IUPAC Gold Book describes reactants on the left, products on the right, and reaction symbols such as arrows in [chemical reaction equation](https://goldbook.iupac.org/terms/view/C01034).
+
+The basic pattern looks like this.
+
+<BlockMath math="\text{reactants} \rightarrow \text{products}" />
+
+Read the arrow as "yields". A plus sign means there is more than one substance on the same side.
+
+## A Complete Methane Example
+
+Start from an ordinary sentence: methane reacts with oxygen to produce carbon dioxide and water. Reactants go on the left, products go on the right.
+
+| Step | Reaction form |
+| :--- | :------------ |
+| Reaction sentence | methane + oxygen <InlineMath math="\rightarrow" /> carbon dioxide + water |
+| Starting formulas | <InlineMath math="\mathrm{CH_4} + \mathrm{O_2} \rightarrow \mathrm{CO_2} + \mathrm{H_2O}" /> |
+| Balanced equation | <InlineMath math="\mathrm{CH_4} + 2\mathrm{O_2} \rightarrow \mathrm{CO_2} + 2\mathrm{H_2O}" /> |
+
+The starting formulas are not balanced because the left side has only <InlineMath math="2" /> oxygen atoms, while the right side has <InlineMath math="3" />. After coefficients are placed, the count is clean.
+
+| Element | Left | Right |
+| :------ | :--- | :---- |
+| <InlineMath math="\mathrm{C}" /> | <InlineMath math="1" /> | <InlineMath math="1" /> |
+| <InlineMath math="\mathrm{H}" /> | <InlineMath math="4" /> | <InlineMath math="4" /> |
+| <InlineMath math="\mathrm{O}" /> | <InlineMath math="4" /> | <InlineMath math="4" /> |
+
+The coefficients read as the ratio <InlineMath math="1:2:1:2" />. That means <InlineMath math="1" /> methane particle reacts with <InlineMath math="2" /> oxygen particles to produce <InlineMath math="1" /> carbon dioxide particle and <InlineMath math="2" /> water particles.
+
+## Coefficients Do Not Change Formulas
+
+OpenStax Chemistry 2e emphasizes that atom counts come from multiplying coefficients by subscripts in [Writing and Balancing Chemical Equations](https://openstax.org/books/chemistry-2e/pages/4-1-writing-and-balancing-chemical-equations). Coefficients can change because they state relative amounts.
+
+<BlockMath math="\mathrm{CH_4} + 2\mathrm{O_2} \rightarrow \mathrm{CO_2} + 2\mathrm{H_2O}" />
+
+The coefficient <InlineMath math="2" /> before <InlineMath math="\mathrm{O_2}" /> means two oxygen molecules. The subscript in <InlineMath math="\mathrm{O_2}" /> is part of the oxygen formula, so it must not be changed into <InlineMath math="\mathrm{O_4}" />.
+
+## State Symbols Come After Formulas
+
+When the physical states are known, write the state symbol after each formula. For methane combustion, the complete equation can be written as:
+
+<BlockMath math="\mathrm{CH_4(g)} + 2\mathrm{O_2(g)} \rightarrow \mathrm{CO_2(g)} + 2\mathrm{H_2O(g)}" />
+
+State symbols do not change atom counts. They only tell the reader the physical form of each substance during the reaction.
+
+| Symbol | Read as | Example |
+| :----- | :------ | :------ |
+| <InlineMath math="\mathrm{(s)}" /> | solid | <InlineMath math="\mathrm{AgCl(s)}" /> |
+| <InlineMath math="\mathrm{(l)}" /> | liquid | <InlineMath math="\mathrm{H_2O(l)}" /> |
+| <InlineMath math="\mathrm{(g)}" /> | gas | <InlineMath math="\mathrm{CO_2(g)}" /> |
+| <InlineMath math="\mathrm{(aq)}" /> | dissolved in water | <InlineMath math="\mathrm{NaCl(aq)}" /> |
+
+## Read a Precipitate Example
+
+Two clear solutions can form a new solid. For example, silver nitrate solution reacts with sodium chloride solution to produce a silver chloride precipitate.
+
+<BlockMath math="\mathrm{AgNO_3(aq)} + \mathrm{NaCl(aq)} \rightarrow \mathrm{AgCl(s)} + \mathrm{NaNO_3(aq)}" />
+
+This equation is already balanced with the coefficient ratio <InlineMath math="1:1:1:1" />. The <InlineMath math="\mathrm{(s)}" /> on <InlineMath math="\mathrm{AgCl(s)}" /> helps us read that product as a solid.
+
+## Safe Writing Order
+
+1. Write reactant names on the left and product names on the right.
+2. Convert each substance name into the correct chemical formula.
+3. Count each element on the left and right.
+4. Adjust coefficients until the atoms balance.
+5. Add state symbols when the information is available.
+
+The most expensive mistake usually happens in step two. If the formula is wrong, an equation that looks balanced is still chemically wrong.
