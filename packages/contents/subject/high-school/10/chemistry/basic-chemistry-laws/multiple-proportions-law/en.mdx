@@ -1,0 +1,154 @@
+import { MultipleProportionsLab } from "@repo/design-system/components/contents/chemistry/multiple-proportions-law/lab";
+
+export const metadata = {
+  title: "Multiple Proportions",
+  description:
+    "Learn how to read simple whole-number mass ratios when the same two elements form more than one compound.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/01/2026",
+  subject: "Basic Laws of Chemistry",
+};
+
+## Two Elements Can Make Several Compounds
+
+The law of multiple proportions applies when **the same two elements** form **more than one compound**. If the mass of one element is kept fixed, the masses of the other element that combine with it form a simple whole-number ratio.
+
+OpenStax Chemistry: Atoms First 2e explains this law as a fixed mass of one element reacting with masses of another element in a small whole-number ratio in [Early Ideas in Atomic Theory](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-1-early-ideas-in-atomic-theory). Britannica summarizes the same mass pattern in [law of multiple proportions](https://www.britannica.com/science/law-of-multiple-proportions).
+
+So this law does not compare any two substances at random. The compounds must be different, but their elements must be the same.
+
+## Keep One Ratio Base Fixed
+
+Suppose two compounds are both made from elements <InlineMath math="\mathrm{A}" /> and <InlineMath math="\mathrm{B}" />. To read Dalton's law, first hold the mass of <InlineMath math="\mathrm{A}" /> fixed, then compare the mass of <InlineMath math="\mathrm{B}" /> that combines with it.
+
+<BlockMath math="\frac{m_{\mathrm{B\ in\ compound\ 2}}}{m_{\mathrm{B\ in\ compound\ 1}}} = \text{simple whole-number ratio}" />
+
+The fixed mass is the important move. If both element masses change at once, the pattern can look messy. Once one element is put on the same basis, the multiple ratio becomes visible.
+
+## Compare Related Compounds
+
+Choose a compound pair below. The model shows the element held fixed and the element whose mass changes.
+
+<MultipleProportionsLab
+  title={<>Ratio Pairing</>}
+  description={
+    <>
+      Compare two compounds made from the same elements. One element mass is
+      held fixed, then the other is read as a simple ratio.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose compound pair",
+    comparisonView: "Law of multiple proportions model",
+    fixedLabel: "Mass held fixed",
+    changingLabel: "Changing ratio",
+    modes: {
+      "water-peroxide": {
+        tab: "Water",
+        tabLabel: "Water and Peroxide",
+        helperCaption: (
+          <>
+            With the same mass of <InlineMath math="\mathrm{H}" />,{" "}
+            <InlineMath math="\mathrm{H_2O_2}" /> carries twice the mass of{" "}
+            <InlineMath math="\mathrm{O}" /> as <InlineMath math="\mathrm{H_2O}" />.
+          </>
+        ),
+        fixed: (
+          <>
+            The hydrogen mass is fixed at <InlineMath math="2\ \mathrm{g}" />.
+          </>
+        ),
+        changing: (
+          <>
+            The oxygen masses are <InlineMath math="16:32 = 1:2" />.
+          </>
+        ),
+      },
+      "carbon-oxides": {
+        tab: "Carbon Oxides",
+        tabLabel: "Carbon Oxides",
+        helperCaption: (
+          <>
+            With the same mass of <InlineMath math="\mathrm{C}" />,{" "}
+            <InlineMath math="\mathrm{CO_2}" /> carries twice the mass of{" "}
+            <InlineMath math="\mathrm{O}" /> as <InlineMath math="\mathrm{CO}" />.
+          </>
+        ),
+        fixed: (
+          <>
+            The carbon mass is fixed at <InlineMath math="12\ \mathrm{g}" />.
+          </>
+        ),
+        changing: (
+          <>
+            The oxygen masses are <InlineMath math="16:32 = 1:2" />.
+          </>
+        ),
+      },
+      "nitrogen-oxides": {
+        tab: "Nitrogen Oxides",
+        tabLabel: "Nitrogen Oxides",
+        helperCaption: (
+          <>
+            With the same mass of <InlineMath math="\mathrm{O}" />,{" "}
+            <InlineMath math="2\mathrm{N_2O}" /> carries four times the mass of{" "}
+            <InlineMath math="\mathrm{N}" /> as <InlineMath math="\mathrm{NO_2}" />.
+          </>
+        ),
+        fixed: (
+          <>
+            The oxygen mass is fixed at <InlineMath math="32\ \mathrm{g}" />.
+          </>
+        ),
+        changing: (
+          <>
+            The nitrogen masses are <InlineMath math="56:14 = 4:1" />.
+          </>
+        ),
+      },
+    },
+  }}
+/>
+
+In each pair above, one element is used as the comparison base. Once that base is the same, the element whose count changes is read as a simple mass ratio.
+
+## Water and Hydrogen Peroxide
+
+Water has the formula <InlineMath math="\mathrm{H_2O}" />, while hydrogen peroxide has the formula <InlineMath math="\mathrm{H_2O_2}" />. PubChem records those formulas in its [water property record](https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/water/property/MolecularFormula,MolecularWeight/JSON) and [hydrogen peroxide property record](https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/hydrogen%20peroxide/property/MolecularFormula,MolecularWeight/JSON).
+
+Using <InlineMath math="A_r\mathrm{(H)} = 1" /> and <InlineMath math="A_r\mathrm{(O)} = 16" />, the hydrogen mass in the two formulas can be made the same, <InlineMath math="2\ \mathrm{g}" />.
+
+| Compound | Mass of <InlineMath math="\mathrm{H}" /> | Mass of <InlineMath math="\mathrm{O}" /> |
+| :------- | :--------------------------------------- | :--------------------------------------- |
+| <InlineMath math="\mathrm{H_2O}" /> | <InlineMath math="2\ \mathrm{g}" /> | <InlineMath math="16\ \mathrm{g}" /> |
+| <InlineMath math="\mathrm{H_2O_2}" /> | <InlineMath math="2\ \mathrm{g}" /> | <InlineMath math="32\ \mathrm{g}" /> |
+
+Because the hydrogen mass is already the same, compare the oxygen masses directly.
+
+<BlockMath math="m_{\mathrm{O\ in\ H_2O}} : m_{\mathrm{O\ in\ H_2O_2}} = 16:32 = 1:2" />
+
+The ratio <InlineMath math="1:2" /> is a simple whole-number ratio. That means these data fit the law of multiple proportions.
+
+## Nitrogen Oxides
+
+Nitrogen and oxygen can form several compounds. Two examples are dinitrogen monoxide, or nitrous oxide, <InlineMath math="\mathrm{N_2O}" />, and nitrogen dioxide, <InlineMath math="\mathrm{NO_2}" />. PubChem records <InlineMath math="\mathrm{N_2O}" /> and <InlineMath math="\mathrm{NO_2}" /> in its [nitrous oxide property record](https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/nitrous%20oxide/property/MolecularFormula,MolecularWeight/JSON) and [nitrogen dioxide property record](https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/nitrogen%20dioxide/property/MolecularFormula,MolecularWeight/JSON).
+
+To make the oxygen mass the same, compare <InlineMath math="2\mathrm{N_2O}" /> with <InlineMath math="\mathrm{NO_2}" />. Both contain <InlineMath math="32\ \mathrm{g}" /> of oxygen.
+
+| Compared compound | Mass of <InlineMath math="\mathrm{O}" /> | Mass of <InlineMath math="\mathrm{N}" /> |
+| :---------------- | :--------------------------------------- | :--------------------------------------- |
+| <InlineMath math="2\mathrm{N_2O}" /> | <InlineMath math="32\ \mathrm{g}" /> | <InlineMath math="56\ \mathrm{g}" /> |
+| <InlineMath math="\mathrm{NO_2}" /> | <InlineMath math="32\ \mathrm{g}" /> | <InlineMath math="14\ \mathrm{g}" /> |
+
+Now that the oxygen mass is the same, compare the nitrogen masses:
+
+<BlockMath math="m_{\mathrm{N\ in\ 2N_2O}} : m_{\mathrm{N\ in\ NO_2}} = 56:14 = 4:1" />
+
+Multiplying <InlineMath math="\mathrm{N_2O}" /> to <InlineMath math="2\mathrm{N_2O}" /> is only a way to put oxygen on the same mass basis. The compound formula is still <InlineMath math="\mathrm{N_2O}" />, not a new compound.
+
+## Mistakes to Avoid
+
+- Do not compare total compound masses. Compare the mass of one element after the other element has been held fixed.
+- Do not use this law for two substances made from different elements. It only applies to compound pairs made from the same elements.
+
+The law of constant composition reads one compound. The law of multiple proportions reads several compounds made from the same element pair. That small shift is why Dalton's law became strong evidence that atoms combine in whole-number counts.

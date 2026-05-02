@@ -1,4 +1,5 @@
-import { Billboard, Line, Text } from "@react-three/drei";
+import { Line } from "@react-three/drei";
+import { ChemistryParticleLabel } from "@repo/design-system/components/contents/chemistry/particle-label";
 import {
   getPeriodicPropertyModeColor,
   PERIODIC_PROPERTY_MODES,
@@ -8,10 +9,7 @@ import {
   type PeriodicPropertySample,
 } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
-import {
-  MONO_FONT_PATH,
-  THREE_FONT_SIZE,
-} from "@repo/design-system/components/three/data/constants";
+import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 
 const PERIOD_Z = -1.18;
 const PERIOD_STEP = 0.62;
@@ -213,25 +211,15 @@ function MarkerLabel({
   position: ScenePoint;
 }) {
   return (
-    <Billboard position={position}>
-      <Text
-        anchorX="center"
-        anchorY="middle"
-        color={colors.markerText}
-        font={MONO_FONT_PATH}
-        fontSize={fontSize}
-        outlineColor={colors.markerTextOutline}
-        outlineWidth={MARKER_LABEL_OUTLINE_WIDTH}
-        renderOrder={10}
-      >
-        {children}
-        <meshBasicMaterial
-          color={colors.markerText}
-          depthTest={false}
-          toneMapped={false}
-        />
-      </Text>
-    </Billboard>
+    <ChemistryParticleLabel
+      color={colors.markerText}
+      fontSize={fontSize}
+      outlineColor={colors.markerTextOutline}
+      outlineWidth={MARKER_LABEL_OUTLINE_WIDTH}
+      position={position}
+    >
+      {children}
+    </ChemistryParticleLabel>
   );
 }
 

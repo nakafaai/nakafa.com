@@ -1,0 +1,79 @@
+export const metadata = {
+  title: "Cara Menuliskan Reaksi Kimia",
+  description:
+    "Ubah cerita reaksi menjadi persamaan kimia yang rapi: reaktan, produk, koefisien, dan simbol wujud.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/01/2026",
+  subject: "Hukum Dasar Kimia",
+};
+
+## Dari Cerita ke Persamaan
+
+Persamaan reaksi kimia adalah cara ringkas untuk mencatat zat awal, zat hasil, dan perbandingan jumlah partikel yang bereaksi. IUPAC Gold Book menjelaskan bahwa reaktan ditulis di kiri, produk di kanan, lalu keduanya dihubungkan dengan tanda reaksi seperti panah pada [chemical reaction equation](https://goldbook.iupac.org/terms/view/C01034).
+
+Pola dasarnya seperti ini.
+
+<BlockMath math="\text{reaktan} \rightarrow \text{produk}" />
+
+Tanda panah dibaca "menghasilkan". Tanda tambah berarti ada lebih dari satu zat di sisi yang sama.
+
+## Contoh Utuh Pembakaran Metana
+
+Mulai dari kalimat biasa: metana bereaksi dengan oksigen menghasilkan karbon dioksida dan air. Di kiri ada reaktan, di kanan ada produk.
+
+| Langkah | Bentuk reaksi |
+| :------ | :------------ |
+| Kalimat reaksi | metana + oksigen <InlineMath math="\rightarrow" /> karbon dioksida + air |
+| Rumus awal | <InlineMath math="\mathrm{CH_4} + \mathrm{O_2} \rightarrow \mathrm{CO_2} + \mathrm{H_2O}" /> |
+| Persamaan setara | <InlineMath math="\mathrm{CH_4} + 2\mathrm{O_2} \rightarrow \mathrm{CO_2} + 2\mathrm{H_2O}" /> |
+
+Rumus awal belum setara karena jumlah atom oksigen di kiri hanya <InlineMath math="2" />, sedangkan di kanan ada <InlineMath math="3" />. Setelah koefisien dipasang, hitungannya menjadi rapi.
+
+| Unsur | Kiri | Kanan |
+| :---- | :--- | :---- |
+| <InlineMath math="\mathrm{C}" /> | <InlineMath math="1" /> | <InlineMath math="1" /> |
+| <InlineMath math="\mathrm{H}" /> | <InlineMath math="4" /> | <InlineMath math="4" /> |
+| <InlineMath math="\mathrm{O}" /> | <InlineMath math="4" /> | <InlineMath math="4" /> |
+
+Koefisiennya terbaca sebagai perbandingan <InlineMath math="1:2:1:2" />. Artinya, <InlineMath math="1" /> partikel metana bereaksi dengan <InlineMath math="2" /> partikel oksigen menghasilkan <InlineMath math="1" /> partikel karbon dioksida dan <InlineMath math="2" /> partikel air.
+
+## Koefisien Tidak Mengubah Rumus
+
+OpenStax Chemistry 2e menekankan bahwa jumlah atom dihitung dari koefisien dikali subskrip pada [Writing and Balancing Chemical Equations](https://openstax.org/books/chemistry-2e/pages/4-1-writing-and-balancing-chemical-equations). Koefisien boleh diubah karena hanya menyatakan jumlah relatif zat.
+
+<BlockMath math="\mathrm{CH_4} + 2\mathrm{O_2} \rightarrow \mathrm{CO_2} + 2\mathrm{H_2O}" />
+
+Angka <InlineMath math="2" /> di depan <InlineMath math="\mathrm{O_2}" /> berarti ada dua molekul oksigen. Angka kecil pada <InlineMath math="\mathrm{O_2}" /> adalah bagian dari rumus oksigen, jadi tidak boleh diganti menjadi <InlineMath math="\mathrm{O_4}" />.
+
+## Simbol Wujud Dibaca Setelah Rumusnya
+
+Kalau wujud zat diketahui, tulis simbolnya setelah rumus. Untuk pembakaran metana, persamaan lengkapnya dapat ditulis:
+
+<BlockMath math="\mathrm{CH_4(g)} + 2\mathrm{O_2(g)} \rightarrow \mathrm{CO_2(g)} + 2\mathrm{H_2O(g)}" />
+
+Simbol wujud tidak mengubah jumlah atom. Simbol itu hanya memberi tahu keadaan zat saat reaksi berlangsung.
+
+| Simbol | Dibaca | Contoh |
+| :----- | :----- | :----- |
+| <InlineMath math="\mathrm{(s)}" /> | padat | <InlineMath math="\mathrm{AgCl(s)}" /> |
+| <InlineMath math="\mathrm{(l)}" /> | cair | <InlineMath math="\mathrm{H_2O(l)}" /> |
+| <InlineMath math="\mathrm{(g)}" /> | gas | <InlineMath math="\mathrm{CO_2(g)}" /> |
+| <InlineMath math="\mathrm{(aq)}" /> | larut dalam air | <InlineMath math="\mathrm{NaCl(aq)}" /> |
+
+## Coba Baca Contoh Endapan
+
+Dua larutan bening bisa membentuk padatan baru. Misalnya, larutan perak nitrat bereaksi dengan larutan natrium klorida menghasilkan endapan perak klorida.
+
+<BlockMath math="\mathrm{AgNO_3(aq)} + \mathrm{NaCl(aq)} \rightarrow \mathrm{AgCl(s)} + \mathrm{NaNO_3(aq)}" />
+
+Persamaan itu sudah setara dengan rasio koefisien <InlineMath math="1:1:1:1" />. Tanda <InlineMath math="\mathrm{(s)}" /> pada <InlineMath math="\mathrm{AgCl(s)}" /> membantu kita membaca bahwa produk itu muncul sebagai padatan.
+
+## Urutan Aman Menulis Reaksi
+
+1. Tulis nama reaktan di kiri dan nama produk di kanan.
+2. Ubah setiap nama zat menjadi rumus kimia yang benar.
+3. Hitung atom tiap unsur di kiri dan kanan.
+4. Atur koefisien sampai atomnya setara.
+5. Tambahkan simbol wujud jika informasinya ada.
+
+Kesalahan paling mahal biasanya terjadi pada langkah kedua. Kalau rumus zatnya salah, persamaan yang terlihat setara tetap salah secara kimia.

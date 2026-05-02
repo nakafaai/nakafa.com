@@ -1,5 +1,6 @@
 "use client";
 
+import { useThree } from "@react-three/fiber";
 import {
   AREA_MODE_ID,
   CAMERA_POSITION,
@@ -10,12 +11,17 @@ import {
   getDimensionSceneColors,
   isDimensionModeId,
   LENGTH_MODE_ID,
+  NARROW_CAMERA_POSITION,
   VOLUME_MODE_ID,
 } from "@repo/design-system/components/contents/physics/measurement/dimension/data";
 import { DimensionScene } from "@repo/design-system/components/contents/physics/measurement/dimension/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
+import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene-frame";
 import {
   Card,
   CardContent,
@@ -31,6 +37,8 @@ import {
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
+
+const NARROW_CANVAS_ASPECT_RATIO = 1.4;
 
 /**
  * Renders a compact 3D model for visualizing length powers in dimensions.
@@ -94,17 +102,13 @@ export function DimensionLab({
           </ToggleGroupItem>
         </ToggleGroup>
 
-        <div className="relative aspect-16/10 overflow-hidden rounded-md bg-card">
+        <div className={threeSceneFrameVariants()}>
           <ThreeCanvas
             camera={{ fov: 45, position: CAMERA_POSITION }}
             frameloop="demand"
           >
             <Suspense>
-              <CameraControls
-                autoRotate={false}
-                cameraPosition={CAMERA_POSITION}
-                cameraTarget={CAMERA_TARGET}
-              />
+              <ResponsiveDimensionCamera />
               <ambientLight intensity={0.75} />
               <hemisphereLight
                 color={sceneColors.skyLight}
@@ -138,6 +142,24 @@ export function DimensionLab({
         </dl>
       </CardFooter>
     </Card>
+  );
+}
+
+/**
+ * Keeps the block powers readable when the shared 3D frame is square on mobile.
+ */
+function ResponsiveDimensionCamera() {
+  const size = useThree((state) => state.size);
+  const cameraPosition = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO)
+    ? NARROW_CAMERA_POSITION
+    : CAMERA_POSITION;
+
+  return (
+    <CameraControls
+      autoRotate={false}
+      cameraPosition={cameraPosition}
+      cameraTarget={CAMERA_TARGET}
+    />
   );
 }
 

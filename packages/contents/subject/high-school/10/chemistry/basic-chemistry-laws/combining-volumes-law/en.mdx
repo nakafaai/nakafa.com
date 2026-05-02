@@ -1,0 +1,160 @@
+import { CombiningVolumesLab } from "@repo/design-system/components/contents/chemistry/combining-volumes-law/lab";
+
+export const metadata = {
+  title: "Combining Volumes",
+  description:
+    "Learn how to read gas volume ratios from reaction coefficients when temperature and pressure are kept the same.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/02/2026",
+  subject: "Basic Laws of Chemistry",
+};
+
+## Gas Volumes Follow Coefficients
+
+The law of combining volumes states that reacting gases, and gaseous products, have volumes in simple whole-number ratios when measured at the same temperature and pressure. This law is also known as Gay-Lussac's law of combining gas volumes.
+
+OpenStax Chemistry 2e explains that gas volume ratios in a reaction are given by the coefficients in the balanced equation when all gas volumes are measured at the same temperature and pressure in [Stoichiometry of Gaseous Substances, Mixtures, and Reactions](https://openstax.org/books/chemistry-2e/pages/9-3-stoichiometry-of-gaseous-substances-mixtures-and-reactions). Britannica also summarizes Gay-Lussac's finding that hydrogen and oxygen combine by volume in a <InlineMath math="2:1" /> ratio to form water in [Gay-Lussac's law of combining volumes](https://www.britannica.com/science/Gay-Lussacs-law-of-combining-volumes).
+
+The important word is **gas**. Coefficients can be read directly as volume ratios only for substances in the gas phase and only when those volumes are compared at the same temperature and pressure.
+
+## Read Water as Vapor
+
+Look at the balanced equation for forming water vapor.
+
+<BlockMath math="2\mathrm{H_2(g)} + \mathrm{O_2(g)} \rightarrow 2\mathrm{H_2O(g)}" />
+
+The coefficients <InlineMath math="2:1:2" /> mean <InlineMath math="2" /> volume parts of hydrogen react with <InlineMath math="1" /> volume part of oxygen to form <InlineMath math="2" /> volume parts of water vapor.
+
+<BlockMath math="V_{\mathrm{H_2}} : V_{\mathrm{O_2}} : V_{\mathrm{H_2O}} = 2:1:2" />
+
+So, if every gas is measured at the same temperature and pressure, <InlineMath math="200\ \mathrm{mL}" /> of hydrogen reacts with <InlineMath math="100\ \mathrm{mL}" /> of oxygen to produce <InlineMath math="200\ \mathrm{mL}" /> of water vapor. If the water has condensed into liquid, the liquid volume is no longer read directly from this gas ratio.
+
+## Gas Volume Meter
+
+Choose a reaction below. Each tube represents one volume part of gas at the same temperature and pressure.
+
+<CombiningVolumesLab
+  title={<>Gas Volume Meter</>}
+  description={
+    <>
+      Compare tube heights to see reaction coefficients as gas volume ratios.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose gas reaction",
+    reactants: "Reactants",
+    products: "Products",
+    reactionView: "Law of combining volumes gas model",
+    ratioLabel: "Volume ratio",
+    exampleLabel: "Scaled example",
+    volumeUnit: "vol",
+    modes: {
+      "water-vapor": {
+        tab: "Steam",
+        tabLabel: "Water vapor formation",
+        helperCaption: (
+          <>
+            Two parts of <InlineMath math="\mathrm{H_2}" /> meet one part of{" "}
+            <InlineMath math="\mathrm{O_2}" /> and form two parts of{" "}
+            <InlineMath math="\mathrm{H_2O(g)}" />.
+          </>
+        ),
+        ratio: (
+          <>
+            <InlineMath math="\mathrm{H_2:O_2:H_2O} = 2:1:2" />.
+          </>
+        ),
+        example: (
+          <>
+            <InlineMath math="200\ \mathrm{mL}" /> of{" "}
+            <InlineMath math="\mathrm{H_2}" /> needs{" "}
+            <InlineMath math="100\ \mathrm{mL}" /> of{" "}
+            <InlineMath math="\mathrm{O_2}" />.
+          </>
+        ),
+      },
+      "ammonia-synthesis": {
+        tab: "Ammonia",
+        tabLabel: "Ammonia formation",
+        helperCaption: (
+          <>
+            One part of <InlineMath math="\mathrm{N_2}" /> needs three parts of{" "}
+            <InlineMath math="\mathrm{H_2}" /> to form two parts of{" "}
+            <InlineMath math="\mathrm{NH_3}" />.
+          </>
+        ),
+        ratio: (
+          <>
+            <InlineMath math="\mathrm{N_2:H_2:NH_3} = 1:3:2" />.
+          </>
+        ),
+        example: (
+          <>
+            <InlineMath math="1\ \mathrm{L}" /> of{" "}
+            <InlineMath math="\mathrm{N_2}" /> needs{" "}
+            <InlineMath math="3\ \mathrm{L}" /> of{" "}
+            <InlineMath math="\mathrm{H_2}" />.
+          </>
+        ),
+      },
+      "ammonia-decomposition": {
+        tab: "Decompose",
+        tabLabel: "Ammonia decomposition",
+        helperCaption: (
+          <>
+            Two parts of <InlineMath math="\mathrm{NH_3}" /> break into three
+            parts of <InlineMath math="\mathrm{H_2}" /> and one part of{" "}
+            <InlineMath math="\mathrm{N_2}" />.
+          </>
+        ),
+        ratio: (
+          <>
+            <InlineMath math="\mathrm{NH_3:H_2:N_2} = 2:3:1" />.
+          </>
+        ),
+        example: (
+          <>
+            <InlineMath math="600\ \mathrm{mL}" /> of{" "}
+            <InlineMath math="\mathrm{NH_3}" /> produces{" "}
+            <InlineMath math="900\ \mathrm{mL}" /> of{" "}
+            <InlineMath math="\mathrm{H_2}" /> and{" "}
+            <InlineMath math="300\ \mathrm{mL}" /> of{" "}
+            <InlineMath math="\mathrm{N_2}" />.
+          </>
+        ),
+      },
+    },
+  }}
+/>
+
+The model is not comparing mass. It compares gas volume. Because the temperature and pressure are the same, each volume part follows a coefficient in the balanced reaction.
+
+## Ammonia Decomposition Example
+
+Suppose <InlineMath math="600\ \mathrm{mL}" /> of ammonia gas decomposes completely at the same temperature and pressure. The balanced equation is:
+
+<BlockMath math="2\mathrm{NH_3(g)} \rightarrow 3\mathrm{H_2(g)} + \mathrm{N_2(g)}" />
+
+The coefficients give this volume ratio:
+
+<BlockMath math="V_{\mathrm{NH_3}} : V_{\mathrm{H_2}} : V_{\mathrm{N_2}} = 2:3:1" />
+
+Because <InlineMath math="2" /> parts of ammonia equal <InlineMath math="600\ \mathrm{mL}" />, <InlineMath math="1" /> volume part equals <InlineMath math="300\ \mathrm{mL}" />.
+
+<BlockMath math="\begin{aligned}
+V_{\mathrm{H_2}} &= 3 \times 300 = 900\ \mathrm{mL} \\
+V_{\mathrm{N_2}} &= 1 \times 300 = 300\ \mathrm{mL}
+\end{aligned}" />
+
+So decomposing <InlineMath math="600\ \mathrm{mL}" /> of ammonia gas produces <InlineMath math="900\ \mathrm{mL}" /> of hydrogen gas and <InlineMath math="300\ \mathrm{mL}" /> of nitrogen gas.
+
+## Where the Shortcut Stops
+
+This law is useful, but its conditions must stay visible.
+
+- The reaction equation must already be balanced.
+- The substances being compared must be gases.
+- All gas volumes must be measured at the same temperature and pressure.
+- If a product turns into a liquid or solid, that product volume is not read directly from the gas coefficients.
+
+With those conditions in place, reaction coefficients do more than count moles. For gases under the same conditions, they also give a quick map of relative volumes.

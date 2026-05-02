@@ -1,0 +1,173 @@
+import { ConstantCompositionLab } from "@repo/design-system/components/contents/chemistry/constant-composition-law/lab";
+
+export const metadata = {
+  title: "Hukum Perbandingan Tetap",
+  description:
+    "Pelajari mengapa senyawa murni selalu tersusun dari unsur-unsur dengan perbandingan massa yang tetap, walaupun massa awalnya berbeda.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/01/2026",
+  subject: "Hukum Dasar Kimia",
+};
+
+## Senyawa Punya Perbandingan Massa
+
+Hukum perbandingan tetap menyatakan bahwa setiap senyawa murni selalu mengandung unsur-unsur penyusunnya dalam perbandingan massa yang tetap. Hukum ini juga dikenal sebagai hukum Proust atau hukum komposisi tetap.
+
+OpenStax Chemistry: Atoms First 2e menjelaskan bahwa Joseph-Louis Proust menunjukkan sampel senyawa murni mengandung unsur yang sama dalam perbandingan massa yang sama di [Early Ideas in Atomic Theory](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-1-early-ideas-in-atomic-theory). Britannica juga merangkum hukum ini sebagai pernyataan bahwa senyawa kimia memiliki proporsi massa unsur yang tetap di [law of definite proportions](https://www.britannica.com/science/law-of-definite-proportions).
+
+Kata **senyawa murni** penting. Campuran air gula bisa dibuat lebih manis atau lebih encer, tetapi senyawa air murni tetap tersusun dari hidrogen dan oksigen dengan pola yang sama. IUPAC Gold Book memakai gagasan komposisi tetap saat mendefinisikan zat kimia di [chemical substance](https://goldbook.iupac.org/terms/view/C01039/plain).
+
+## Rasio Air Tidak Ikut Berubah
+
+Rumus air adalah <InlineMath math="\mathrm{H_2O}" />. Artinya, setiap satuan air tersusun dari <InlineMath math="2" /> atom hidrogen dan <InlineMath math="1" /> atom oksigen. Dengan massa atom relatif sederhana <InlineMath math="A_r\mathrm{(H)} = 1" /> dan <InlineMath math="A_r\mathrm{(O)} = 16" />, perbandingan massa hidrogen dan oksigen dalam air adalah:
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{H}} : m_{\mathrm{O}}
+  &= (2 \times 1) : (1 \times 16) \\
+  &= 2 : 16 \\
+  &= 1 : 8
+\end{aligned}" />
+
+Jadi, kalau air yang terbentuk massanya berbeda, perbandingan massa hidrogen terhadap oksigen yang benar-benar bereaksi tetap <InlineMath math="1:8" />. PubChem mencatat rumus air sebagai <InlineMath math="\mathrm{H_2O}" /> dan massa molekulnya sekitar <InlineMath math="18{,}015\ \mathrm{g/mol}" /> di [water property record](https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/water/property/MolecularFormula,MolecularWeight/JSON).
+
+## Reaktan Berlebih Tetap Tersisa
+
+Ubah massa awal pada model berikut. Yang berubah adalah ada atau tidaknya zat sisa. Yang tidak berubah adalah rasio hidrogen dan oksigen yang masuk ke senyawa air.
+
+<ConstantCompositionLab
+  title={<>Gerbang Rasio Air</>}
+  description={
+    <>
+      Lihat bagaimana air hanya terbentuk dari bagian reaktan yang memenuhi
+      perbandingan massa <InlineMath math="1:8" />.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih massa awal",
+    before: "Awal",
+    after: "Terbentuk",
+    reactionView: "Model hukum perbandingan tetap pada pembentukan air",
+    ratioLabel: "Rasio yang bereaksi",
+    leftoverLabel: "Sisa setelah reaksi",
+    modes: {
+      exact: {
+        tab: "Pas",
+        tabLabel: "Pas",
+        helperCaption: (
+          <>
+            Semua reaktan membentuk air karena massa hidrogen dan oksigen sudah
+            mengikuti rasio <InlineMath math="1:8" />.
+          </>
+        ),
+        readoutBefore: "2 g H + 16 g O",
+        readoutAfter: "18 g H₂O",
+        ratio: (
+          <>
+            <InlineMath math="2:16 = 1:8" />, sama dengan rasio massa air.
+          </>
+        ),
+        leftover: <>Tidak ada zat berlebih yang tersisa.</>,
+      },
+      "hydrogen-excess": {
+        tab: (
+          <>
+            <InlineMath math="\mathrm{H}" /> Berlebih
+          </>
+        ),
+        tabLabel: "H Berlebih",
+        helperCaption: (
+          <>
+            Air tetap terbentuk dari rasio <InlineMath math="1:8" />, sedangkan
+            hidrogen di luar rasio itu tersisa.
+          </>
+        ),
+        readoutBefore: "3 g H + 16 g O",
+        readoutAfter: "18 g H₂O + 1 g H",
+        ratio: (
+          <>
+            Yang bereaksi hanya <InlineMath math="2:16 = 1:8" />.
+          </>
+        ),
+        leftover: (
+          <>
+            <InlineMath math="1\ \mathrm{g}" /> hidrogen tidak ikut membentuk
+            air.
+          </>
+        ),
+      },
+      "oxygen-excess": {
+        tab: (
+          <>
+            <InlineMath math="\mathrm{O}" /> Berlebih
+          </>
+        ),
+        tabLabel: "O Berlebih",
+        helperCaption: (
+          <>
+            Air tetap terbentuk dari rasio <InlineMath math="1:8" />, sedangkan
+            oksigen di luar rasio itu tersisa.
+          </>
+        ),
+        readoutBefore: "2 g H + 20 g O",
+        readoutAfter: "18 g H₂O + 4 g O",
+        ratio: (
+          <>
+            Yang bereaksi tetap <InlineMath math="2:16 = 1:8" />.
+          </>
+        ),
+        leftover: (
+          <>
+            <InlineMath math="4\ \mathrm{g}" /> oksigen tidak ikut membentuk
+            air.
+          </>
+        ),
+      },
+    },
+  }}
+/>
+
+Hukum ini sering keliru dibaca sebagai "semua zat awal pasti habis". Bukan begitu. Jika massa awal tidak cocok dengan perbandingan senyawa, hanya bagian yang cocok yang bereaksi, sedangkan sisanya tetap ada sebagai reaktan berlebih.
+
+## Menguji Data Kalsium Oksida
+
+Sekarang baca data seperti peneliti. Kalsium oksida memiliki rumus <InlineMath math="\mathrm{CaO}" />. PubChem mencatat rumus itu dan massa molekul <InlineMath math="56{,}08\ \mathrm{g/mol}" /> di [calcium oxide property record](https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/calcium%20oxide/property/MolecularFormula,MolecularWeight/JSON).
+
+Misalkan dua percobaan memberi data berikut.
+
+| Percobaan | Massa <InlineMath math="\mathrm{CaO}" /> | Massa <InlineMath math="\mathrm{O}" /> | Massa <InlineMath math="\mathrm{Ca}" /> | Rasio <InlineMath math="\mathrm{Ca:O}" /> |
+| :-------- | :--------------------------------------- | :------------------------------------ | :------------------------------------- | :----------------------------------------- |
+| <InlineMath math="1" /> | <InlineMath math="2{,}8\ \mathrm{g}" /> | <InlineMath math="0{,}8\ \mathrm{g}" /> | <InlineMath math="2{,}0\ \mathrm{g}" /> | <InlineMath math="2{,}0:0{,}8 = 2{,}5:1" /> |
+| <InlineMath math="2" /> | <InlineMath math="3{,}5\ \mathrm{g}" /> | <InlineMath math="1{,}0\ \mathrm{g}" /> | <InlineMath math="2{,}5\ \mathrm{g}" /> | <InlineMath math="2{,}5:1{,}0 = 2{,}5:1" /> |
+
+Massa kalsium dihitung dari massa senyawa dikurangi massa oksigen.
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{Ca,1}} &= 2{,}8 - 0{,}8 = 2{,}0\ \mathrm{g} \\
+m_{\mathrm{Ca,2}} &= 3{,}5 - 1{,}0 = 2{,}5\ \mathrm{g}
+\end{aligned}" />
+
+Kedua percobaan menghasilkan massa senyawa yang berbeda, tetapi rasio massa kalsium terhadap oksigen sama, yaitu <InlineMath math="2{,}5:1" />. Itulah bukti bahwa sampel tersebut konsisten dengan hukum perbandingan tetap.
+
+## Menghitung Massa dari Rumus
+
+Untuk senyawa besi(III) oksida, rumusnya <InlineMath math="\mathrm{Fe_2O_3}" />. Data PubChem untuk ferric oxide juga mencatat rumus <InlineMath math="\mathrm{Fe_2O_3}" /> di [ferric oxide property record](https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/ferric%20oxide/property/MolecularFormula,MolecularWeight/JSON).
+
+Dengan <InlineMath math="A_r\mathrm{(Fe)} = 56" /> dan <InlineMath math="A_r\mathrm{(O)} = 16" />, rasio massa besi terhadap oksigen adalah:
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{Fe}} : m_{\mathrm{O}}
+  &= (2 \times 56) : (3 \times 16) \\
+  &= 112 : 48 \\
+  &= 7 : 3
+\end{aligned}" />
+
+Jika massa <InlineMath math="\mathrm{Fe_2O_3}" /> adalah <InlineMath math="64\ \mathrm{g}" />, maka total bagian rasionya <InlineMath math="7 + 3 = 10" />.
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{Fe}} &= \frac{7}{10} \times 64 = 44{,}8\ \mathrm{g} \\
+m_{\mathrm{O}} &= \frac{3}{10} \times 64 = 19{,}2\ \mathrm{g}
+\end{aligned}" />
+
+Jadi, dalam <InlineMath math="64\ \mathrm{g}" /> besi(III) oksida terdapat <InlineMath math="44{,}8\ \mathrm{g}" /> besi dan <InlineMath math="19{,}2\ \mathrm{g}" /> oksigen yang saling berikatan.
+
+Setelah satu senyawa punya rasio tetap, pertanyaan berikutnya adalah apa yang terjadi jika dua unsur yang sama dapat membentuk lebih dari satu senyawa. Itulah wilayah hukum perbandingan berganda.

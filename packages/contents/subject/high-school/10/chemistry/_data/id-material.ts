@@ -77,16 +77,24 @@ const idMaterials: MaterialList = [
         href: `${BASE_PATH}/basic-chemistry-laws/writing-chemical-reactions`,
       },
       {
-        title: "Empat Hukum Dasar Kimia",
-        href: `${BASE_PATH}/basic-chemistry-laws/four-basic-chemistry-laws`,
-      },
-      {
-        title: "Aplikasi Hukum Dasar Kimia",
-        href: `${BASE_PATH}/basic-chemistry-laws/application-basic-chemistry-laws`,
+        title: "Hukum Kekekalan Massa",
+        href: `${BASE_PATH}/basic-chemistry-laws/mass-conservation-law`,
       },
       {
         title: "Hukum Perbandingan Tetap",
-        href: `${BASE_PATH}/basic-chemistry-laws/law-constant-composition`,
+        href: `${BASE_PATH}/basic-chemistry-laws/constant-composition-law`,
+      },
+      {
+        title: "Hukum Perbandingan Berganda",
+        href: `${BASE_PATH}/basic-chemistry-laws/multiple-proportions-law`,
+      },
+      {
+        title: "Hukum Perbandingan Volume",
+        href: `${BASE_PATH}/basic-chemistry-laws/combining-volumes-law`,
+      },
+      {
+        title: "Aplikasi Hukum Kimia",
+        href: `${BASE_PATH}/basic-chemistry-laws/chemistry-law-applications`,
       },
     ],
   },

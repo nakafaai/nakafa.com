@@ -7,7 +7,29 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { cn } from "@repo/design-system/lib/utils";
+import { cva } from "class-variance-authority";
 import type { ReactNode } from "react";
+
+const numberLineSegmentVariants = cva("absolute top-1/2 h-8 -translate-y-1/2", {
+  variants: {
+    edge: {
+      bothInfinity: "",
+      endInfinity: "rounded-l-sm",
+      finite: "rounded-sm",
+      startInfinity: "rounded-r-sm",
+    },
+  },
+  defaultVariants: {
+    edge: "finite",
+  },
+});
+
+const NUMBER_LINE_SEGMENT_EDGE = {
+  bothInfinity: "bothInfinity",
+  endInfinity: "endInfinity",
+  finite: "finite",
+  startInfinity: "startInfinity",
+} as const;
 
 interface NumberLineSegment {
   /** The background color of the segment */
@@ -38,6 +60,31 @@ interface NumberLineProps {
   min?: number;
   segments: NumberLineSegment[];
   title: ReactNode;
+}
+
+/**
+ * Selects the segment end-cap shape from infinite bounds.
+ */
+function getSegmentEdge({
+  isStartInfinity,
+  isEndInfinity,
+}: {
+  isEndInfinity: boolean;
+  isStartInfinity: boolean;
+}) {
+  if (isStartInfinity && isEndInfinity) {
+    return NUMBER_LINE_SEGMENT_EDGE.bothInfinity;
+  }
+
+  if (isStartInfinity) {
+    return NUMBER_LINE_SEGMENT_EDGE.startInfinity;
+  }
+
+  if (isEndInfinity) {
+    return NUMBER_LINE_SEGMENT_EDGE.endInfinity;
+  }
+
+  return NUMBER_LINE_SEGMENT_EDGE.finite;
 }
 
 export function NumberLine({
@@ -84,15 +131,6 @@ export function NumberLine({
     const showPoints =
       segment.showPoints ?? !(isStartInfinity || isEndInfinity);
 
-    let roundedClass = "rounded-sm";
-    if (isStartInfinity && isEndInfinity) {
-      roundedClass = "";
-    } else if (isStartInfinity) {
-      roundedClass = "rounded-r-sm";
-    } else if (isEndInfinity) {
-      roundedClass = "rounded-l-sm";
-    }
-
     return {
       ...segment,
       startPos,
@@ -101,7 +139,7 @@ export function NumberLine({
       shaded,
       bgColor,
       showPoints,
-      roundedClass,
+      edge: getSegmentEdge({ isStartInfinity, isEndInfinity }),
       index,
     };
   });
@@ -120,9 +158,8 @@ export function NumberLine({
                 {!!segment.shaded && (
                   <div
                     className={cn(
-                      "absolute top-1/2 h-8 -translate-y-1/2",
-                      !segment.bgColor && "bg-chart-1/80",
-                      segment.roundedClass
+                      numberLineSegmentVariants({ edge: segment.edge }),
+                      !segment.bgColor && "bg-chart-1/80"
                     )}
                     style={{
                       left: `${segment.startPos}%`,

@@ -95,18 +95,25 @@ export const TOOL_VIEW_CONFIG = {
   [LENGTH_TOOL_ID]: {
     cameraPosition: [0, 4.5, 8.5],
     cameraTarget: [0, 0.15, 0],
+    narrowCameraPosition: [0, 5.1, 9.8],
   },
   [MASS_TOOL_ID]: {
     cameraPosition: [0, 3.1, 8],
     cameraTarget: [0, 0.85, 0],
+    narrowCameraPosition: [0, 3.5, 9.2],
   },
   [TIME_TOOL_ID]: {
     cameraPosition: [0, 1.8, 7.4],
     cameraTarget: [0, 0.45, 0],
+    narrowCameraPosition: [0, 2.1, 8.6],
   },
 } satisfies Record<
   MeasurementToolId,
-  { cameraPosition: CameraPoint; cameraTarget: CameraPoint }
+  {
+    cameraPosition: CameraPoint;
+    cameraTarget: CameraPoint;
+    narrowCameraPosition: CameraPoint;
+  }
 >;
 
 export interface ToolLabels {

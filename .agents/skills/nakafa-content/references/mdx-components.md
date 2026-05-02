@@ -65,6 +65,10 @@ Do not use raw HTML elements in MDX, including `<br />`, `<div>`, `<span>`, or H
 
 Keep table cells compact. Prefer one sentence per cell, then move extra explanation into prose after the table.
 
+### External Links
+
+External Markdown links render as compact source chips. The linked text is not shown as normal prose. Do not wrap a concept word or required sentence fragment in an external link, such as `IUPAC defines [atom](...) as ...`. Write the concept in plain text first, then place the source link only after a complete sentence when the source itself is useful.
+
 ## Standalone Lesson Writing
 
 Each subject lesson should work for students who arrive directly from search.

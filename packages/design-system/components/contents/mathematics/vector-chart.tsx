@@ -281,7 +281,7 @@ export function VectorChart({
                             key={`tooltip-${entry.name}-${entry.value}`}
                           >
                             <div
-                              className="h-2 w-2 shrink-0 rounded-[2px]"
+                              className="h-2 w-2 shrink-0 rounded-xs"
                               style={{ backgroundColor: color }}
                             />
                             <span className="font-medium">{vectorName}</span>
