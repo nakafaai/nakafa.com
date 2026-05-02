@@ -309,27 +309,27 @@ const idMaterials: MaterialList = [
         href: `${BASE_PATH}/geometric-transformation/reflection-over-line`,
       },
       {
-        title: "Pencerminan terhadap Sumbu X",
+        title: "Pencerminan terhadap Sumbu Horizontal",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-x-axis`,
       },
       {
-        title: "Pencerminan terhadap Sumbu Y",
+        title: "Pencerminan terhadap Sumbu Vertikal",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-y-axis`,
       },
       {
-        title: "Pencerminan terhadap Garis y = x",
+        title: "Pencerminan terhadap Garis Diagonal Utama",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-y-equals-x`,
       },
       {
-        title: "Pencerminan terhadap Garis y = -x",
+        title: "Pencerminan terhadap Garis Diagonal Negatif",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-y-equals-minus-x`,
       },
       {
-        title: "Pencerminan terhadap Garis x = k",
+        title: "Pencerminan terhadap Garis Vertikal",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-x-equals-k`,
       },
       {
-        title: "Pencerminan terhadap Garis y = h",
+        title: "Pencerminan terhadap Garis Horizontal",
         href: `${BASE_PATH}/geometric-transformation/reflection-over-y-equals-h`,
       },
       {

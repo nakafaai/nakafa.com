@@ -1,16 +1,16 @@
 import { Triangle } from "@repo/design-system/components/contents/mathematics/triangle";
 
 export const metadata = {
-  title: "Trigonometric Comparison: Sin θ and Cos θ",
+  title: "Trigonometric Comparison: Sine and Cosine",
   description: "Master sine and cosine ratios with real-world pyramid examples. Compare trigonometric functions, solve practical problems, and understand their applications.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/14/2025",
   subject: "Trigonometry",
 };
 
-## What is Sine Ratio (sin θ)?
+## What is the Sine Ratio?
 
-Sine of an angle θ in a right triangle is the ratio between the length of the opposite side and the hypotenuse.
+Sine of an angle <InlineMath math="\theta" /> in a right triangle is the ratio between the length of the opposite side and the hypotenuse.
 
 <BlockMath math="\sin \theta = \frac{\text{opposite side}}{\text{hypotenuse}}" />
 
@@ -31,9 +31,9 @@ Sine of an angle θ in a right triangle is the ratio between the length of the o
   />
 </div>
 
-### What is Cosine Ratio (cos θ)?
+### What is the Cosine Ratio?
 
-Cosine of an angle θ in a right triangle is the ratio between the length of the adjacent side and the hypotenuse.
+Cosine of an angle <InlineMath math="\theta" /> in a right triangle is the ratio between the length of the adjacent side and the hypotenuse.
 
 <BlockMath math="\cos \theta = \frac{\text{adjacent side}}{\text{hypotenuse}}" />
 
@@ -58,7 +58,7 @@ Cosine of an angle θ in a right triangle is the ratio between the length of the
 
 Here are some sine and cosine values for commonly used angles:
 
-| Angle                     | Sine Value (sin θ)                       | Decimal Value              | Cosine Value (cos θ)                     | Decimal Value              |
+| Angle                     | Sine Value <InlineMath math="\sin \theta" /> | Decimal Value              | Cosine Value <InlineMath math="\cos \theta" /> | Decimal Value              |
 | ------------------------- | ---------------------------------------- | -------------------------- | ---------------------------------------- | -------------------------- |
 | <InlineMath math="0°" />  | <InlineMath math="0" />                  | <InlineMath math="0" />    | <InlineMath math="1" />                  | <InlineMath math="1" />    |
 | <InlineMath math="30°" /> | <InlineMath math="\frac{1}{2}" />        | <InlineMath math="0.5" />  | <InlineMath math="\frac{\sqrt{3}}{2}" /> | <InlineMath math="0.87" /> |
@@ -82,7 +82,7 @@ Let's look at an example of applying sine and cosine in the context of pyramids:
 
 ### Using Sine to Calculate Pyramid Height
 
-Suppose an archaeologist wants to know the height of a pyramid. They know that the elevation angle from the base to the top of the pyramid is 41° and the slant height (edge) of the pyramid is 600 m.
+Suppose an archaeologist wants to know the height of a pyramid. They know that the elevation angle from the base to the top of the pyramid is <InlineMath math="41^\circ" /> and the slant height (edge) of the pyramid is <InlineMath math="600 \text{ m}" />.
 
 <Triangle
   title="Calculating Pyramid Height with Sine"
@@ -104,7 +104,7 @@ To calculate the height of the pyramid, we use the sine ratio:
   <BlockMath math="x = 0.66 \times 600 \text{ m} = 396 \text{ m}" />
 </MathContainer>
 
-Therefore, the height of the pyramid is 396 meters.
+Therefore, the height of the pyramid is <InlineMath math="396 \text{ m}" />.
 
 ### Using Cosine to Calculate Pyramid Base Radius
 
@@ -117,15 +117,15 @@ Now, if we want to know the base radius of the pyramid, we can use the cosine ra
   <BlockMath math="x = 0.75 \times 600 \text{ m} = 450 \text{ m}" />
 </MathContainer>
 
-Therefore, the base radius of the pyramid is 450 meters.
+Therefore, the base radius of the pyramid is <InlineMath math="450 \text{ m}" />.
 
 ## Differences and Similarities Between Sin, Cos, and Tan
 
 ### Differences
 
-1. **Sine (sin θ)** compares the opposite side with the hypotenuse.
-2. **Cosine (cos θ)** compares the adjacent side with the hypotenuse.
-3. **Tangent (tan θ)** compares the opposite side with the adjacent side.
+1. **Sine** <InlineMath math="\sin \theta" /> compares the opposite side with the hypotenuse.
+2. **Cosine** <InlineMath math="\cos \theta" /> compares the adjacent side with the hypotenuse.
+3. **Tangent** <InlineMath math="\tan \theta" /> compares the opposite side with the adjacent side.
 
 ### Similarities
 
@@ -137,7 +137,7 @@ Therefore, the base radius of the pyramid is 450 meters.
 
 ## Practice Problem
 
-A child is flying a kite and has managed to raise it to a height of 3.5 m. The child is holding the string at a height of 60 cm from the ground. If the kite string forms an angle of 25° with the ground, what is the length of the string being used?
+A child is flying a kite and has managed to raise it to a height of <InlineMath math="3.5 \text{ m}" />. The child is holding the string at a height of <InlineMath math="60 \text{ cm}" /> from the ground. If the kite string forms an angle of <InlineMath math="25^\circ" /> with the ground, what is the length of the string being used?
 
 <Triangle
   title="Kite Problem"
@@ -155,8 +155,8 @@ To solve this problem, which trigonometric ratio should we use?
 **Correct Solution:**
 
 1. We need to calculate the string length (hypotenuse)
-2. We know the effective height of the kite (3.5 m - 0.6 m = 2.9 m)
-3. We know the elevation angle (25°)
+2. We know the effective height of the kite, which is <InlineMath math="3.5 \text{ m} - 0.6 \text{ m} = 2.9 \text{ m}" />.
+3. We know the elevation angle <InlineMath math="25^\circ" />.
 4. Since we're looking for the hypotenuse and we know the opposite side (effective height), we use the sine ratio:
 
    <MathContainer>
@@ -166,4 +166,4 @@ To solve this problem, which trigonometric ratio should we use?
      <BlockMath math="x = \frac{2.9 \text{ m}}{0.42} = 6.9 \text{ m}" />
    </MathContainer>
 
-Therefore, the length of the kite string being used is approximately 6.9 meters.
+Therefore, the length of the kite string being used is approximately <InlineMath math="6.9 \text{ m}" />.

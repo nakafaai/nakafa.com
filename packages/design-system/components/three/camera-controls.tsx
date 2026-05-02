@@ -46,8 +46,6 @@ export function CameraControls({
   cameraPosition = DEFAULT_CAMERA_POSITION,
   cameraTarget = DEFAULT_CAMERA_TARGET,
   autoRotate = true,
-  enablePan = true,
-  enableZoom = true,
   maxAzimuthAngle,
   maxDistance = 100,
   maxPolarAngle,
@@ -58,8 +56,6 @@ export function CameraControls({
   cameraPosition?: readonly [number, number, number];
   cameraTarget?: readonly [number, number, number];
   autoRotate?: boolean;
-  enablePan?: boolean;
-  enableZoom?: boolean;
   maxAzimuthAngle?: number;
   maxDistance?: number;
   maxPolarAngle?: number;
@@ -151,8 +147,6 @@ export function CameraControls({
         autoRotateSpeed={0.5}
         dampingFactor={0.05}
         enableDamping
-        enablePan={enablePan}
-        enableZoom={enableZoom}
         makeDefault
         maxAzimuthAngle={maxAzimuthAngle}
         maxDistance={maxDistance}

@@ -2,13 +2,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  baseRoutes,
-  getContentRoutes,
-  getEntries,
-  getQuranRoutes,
-} from "../app/sitemap";
-import { logger } from "./utils";
+import { getSitemapEntries } from "@/lib/sitemap/entries";
+import { logger } from "@/scripts/utils";
 
 const BATCH_SIZE = 100;
 const MAX_RETRIES = 2;
@@ -97,22 +92,7 @@ async function getUnsubmittedUrls(service: "indexNow" | "bing"): Promise<{
   // Load existing submission history
   const history = loadSubmissionHistory();
 
-  // Get all URLs from sitemap
-  const routes = getContentRoutes();
-  const quranRoutes = getQuranRoutes();
-
-  // Deduplicate all base routes (contentRoutes might include "/" which is also in baseRoutes)
-  const allBaseRoutesSet = new Set([...baseRoutes, ...routes, ...quranRoutes]);
-  const allBaseRoutes = Array.from(allBaseRoutesSet);
-
-  // Get all entries asynchronously - simplified to only locale-prefixed routes
-  // Per Google best practices: sitemaps should only contain URLs you want indexed
-  // https://www.sitemaps.org/protocol.html
-  const routePromises = allBaseRoutes.map((route) => getEntries(route));
-
-  const routeArrays = await Promise.all(routePromises);
-
-  const allEntries = routeArrays.flat();
+  const allEntries = await getSitemapEntries();
 
   // Extract unique URLs
   const allUrls = new Set<string>();

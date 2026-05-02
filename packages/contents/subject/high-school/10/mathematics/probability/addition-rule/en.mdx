@@ -38,7 +38,7 @@ If event A happens, then event B definitely doesn't happen, and vice versa.
 
 If events A and B are mutually exclusive, calculating the probability of "A OR B" is super easy – just add their individual probabilities:
 
-<BlockMath math="P(A \text{ or } B) = P(A) + P(B)" />
+<BlockMath math="P(A \text{ or} B) = P(A) + P(B)" />
 
 **Calculation Example:**
 
@@ -78,9 +78,9 @@ If we just add them: <InlineMath math="5/36 + 6/36 = 11/36" />. The pair <Inline
 
 For events A and B that are not mutually exclusive, the way to calculate the probability of "A OR B" is:
 
-<BlockMath math="P(A \text{ or } B) = P(A) + P(B) - P(A \text{ and } B)" />
+<BlockMath math="P(A \text{ or} B) = P(A) + P(B) - P(A \text{ and} B)" />
 
-The <InlineMath math="P(A \text{ and } B)" /> part is the probability that events A and B happen **at the same time** (the intersection). We subtract this so we don't count it twice.
+The <InlineMath math="P(A \text{ and} B)" /> part is the probability that events A and B happen **at the same time** (the intersection). We subtract this so we don't count it twice.
 
 **Calculation Example:**
 
@@ -88,7 +88,7 @@ Let's continue the sum 8 OR doubles example:
 
 - <InlineMath math="P(S=8) = 5/36" />
 - <InlineMath math="P(\text{Doubles}) = 6/36" />
-- The probability of the event "sum is 8 AND doubles" (<InlineMath math="P(S=8 \text{ and Doubles})" />) is just one outcome: the pair (4,4). So its probability is <InlineMath math="1/36" />.
+- The probability of the event "sum is 8 AND doubles" (<InlineMath math="P(S=8 \text{ and Doubles})" />) is just one outcome: the pair <InlineMath math="(4, 4)" />. So its probability is <InlineMath math="1/36" />.
 
 Therefore, the probability of getting a sum of 8 OR doubles is:
 
@@ -104,5 +104,5 @@ In mathematics, "A or B" means it could be A only, B only, or BOTH A and B (if p
 ## When to Use Which Formula?
 
 1.  **First, check:** Can events A and B happen at the same time?
-2.  **If they CANNOT happen together:** Use the simple formula <InlineMath math="P(A \text{ or } B) = P(A) + P(B)" />.
-3.  **If they CAN happen together:** Use the full formula <InlineMath math="P(A \text{ or } B) = P(A) + P(B) - P(A \text{ and } B)" />.
+2.  **If they CANNOT happen together:** Use the simple formula <InlineMath math="P(A \text{ or} B) = P(A) + P(B)" />.
+3.  **If they CAN happen together:** Use the full formula <InlineMath math="P(A \text{ or} B) = P(A) + P(B) - P(A \text{ and} B)" />.

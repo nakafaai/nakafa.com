@@ -11,7 +11,7 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 
 ## Basic Concepts of Vertical Translation
 
-Vertical translation is a geometric transformation that shifts the graph of a function up or down along the y-axis without changing the shape of the graph. Imagine lifting or lowering an object vertically, its shape remains the same, only its position changes.
+Vertical translation is a geometric transformation that shifts the graph of a function up or down along the <InlineMath math="y" />-axis without changing the shape of the graph. Imagine lifting or lowering an object vertically, its shape remains the same, only its position changes.
 
 If we have a function <InlineMath math="f(x)" />, then vertical translation produces a new function <InlineMath math="g(x) = f(x) + k" /> where <InlineMath math="k" /> is the translation constant.
 
@@ -22,8 +22,8 @@ For any function <InlineMath math="f(x)" />, vertical translation is defined as:
 <BlockMath math="g(x) = f(x) + k" />
 
 Where:
-- If <InlineMath math="k > 0" />, the graph shifts **upward** by <InlineMath math="k" /> units
-- If <InlineMath math="k < 0" />, the graph shifts **downward** by <InlineMath math="|k|" /> units
+- If <InlineMath math="k > 0" />, the graph shifts **upward** by <InlineMath math="k \text{ units}" />
+- If <InlineMath math="k < 0" />, the graph shifts **downward** by <InlineMath math="|k| \text{ units}" />
 - If <InlineMath math="k = 0" />, there is no translation (graph remains the same)
 
 ## Visualization of Vertical Translation
@@ -67,8 +67,8 @@ Let's see how vertical translation works on the linear function <InlineMath math
 
 From the visualization above, we can observe:
 - The original function <InlineMath math="f(x) = 2x" /> passes through the origin
-- Function <InlineMath math="g(x) = 2x + 3" /> is the result of translation upward by 3 units
-- Function <InlineMath math="h(x) = 2x + (-2)" /> is the result of translation downward by 2 units
+- Function <InlineMath math="g(x) = 2x + 3" /> is the result of translation upward by <InlineMath math="3 \text{ units}" />
+- Function <InlineMath math="h(x) = 2x + (-2)" /> is the result of translation downward by <InlineMath math="2 \text{ units}" />
 
 ## Vertical Translation on Quadratic Functions
 
@@ -127,7 +127,7 @@ If point <InlineMath math="(a, b)" /> is on the graph of <InlineMath math="f(x)"
 ### Domain and Range
 
 - **Domain**: Does not change after vertical translation
-- **Range**: Shifts by <InlineMath math="k" /> units
+- **Range**: Shifts by <InlineMath math="k \text{ units}" />
 
 If the range of the original function is <InlineMath math="[c, d]" />, then the range after vertical translation <InlineMath math="k" /> becomes <InlineMath math="[c + k, d + k]" />.
 
@@ -178,9 +178,9 @@ For exponential functions:
 
 ## Exercises
 
-1. Given the function <InlineMath math="f(x) = x^2 + 4x + 3" />. Determine the equation of the function resulting from vertical translation upward by 5 units.
+1. Given the function <InlineMath math="f(x) = x^2 + 4x + 3" />. Determine the equation of the function resulting from vertical translation upward by <InlineMath math="5 \text{ units}" />.
 
-2. If the graph of function <InlineMath math="g(x) = 3x + 2" /> is translated vertically downward by 7 units, determine:
+2. If the graph of function <InlineMath math="g(x) = 3x + 2" /> is translated vertically downward by <InlineMath math="7 \text{ units}" />, determine:
    - The equation of the resulting translated function
    - The y-intercept after translation
 
@@ -188,11 +188,16 @@ For exponential functions:
 
 ### Answer Key
 
-1. Vertical translation upward by 5 units: <InlineMath math="f'(x) = f(x) + 5 = x^2 + 4x + 3 + 5 = x^2 + 4x + 8" />
+1. Vertical translation upward by <InlineMath math="5 \text{ units}" />: <InlineMath math="f'(x) = f(x) + 5 = x^2 + 4x + 3 + 5 = x^2 + 4x + 8" />
 
    <LineEquation
      title={<>Function <InlineMath math="f(x) = x^2 + 4x + 3" /> and Its Translation Result</>}
-     description="Original quadratic function and the result of vertical translation upward by 5 units."
+     description={
+       <>
+         Original quadratic function and the result of vertical translation
+         upward by <InlineMath math="5 \text{ units}" />.
+       </>
+     }
      showZAxis={false}
      data={[
        {
@@ -218,14 +223,19 @@ For exponential functions:
 
 2. Equation of the resulting translated function:
     
-   - Translation downward by 7 units: <InlineMath math="g'(x) = g(x) + (-7) = 3x + 2 + (-7) = 3x + (-5)" />
+   - Translation downward by <InlineMath math="7 \text{ units}" />: <InlineMath math="g'(x) = g(x) + (-7) = 3x + 2 + (-7) = 3x + (-5)" />
    - Y-intercept: substitute <InlineMath math="x = 0" /> into <InlineMath math="g'(x) = 3(0) + (-5) = -5" />, so the intercept point is <InlineMath math="(0, -5)" />
 
    Visualization:
 
    <LineEquation
      title={<>Function <InlineMath math="g(x) = 3x + 2" /> and Its Translation Result</>}
-     description="Original linear function and the result of vertical translation downward by 7 units."
+     description={
+       <>
+         Original linear function and the result of vertical translation
+         downward by <InlineMath math="7 \text{ units}" />.
+       </>
+     }
      showZAxis={false}
      data={[
        {
@@ -249,12 +259,17 @@ For exponential functions:
      ]}
    />
 
-3. Point <InlineMath math="(4, 2)" /> on <InlineMath math="h(x) = \sqrt{x}" /> becomes <InlineMath math="(4, 5)" />, meaning vertical translation by <InlineMath math="k = 5 - 2 = 3" /> units upward.
+3. Point <InlineMath math="(4, 2)" /> on <InlineMath math="h(x) = \sqrt{x}" /> becomes <InlineMath math="(4, 5)" />, meaning vertical translation by <InlineMath math="k = 5 - 2 = 3 \text{ units}" /> upward.
    Equation of the translation result: <InlineMath math="h'(x) = \sqrt{x} + 3" />
 
    <LineEquation
      title={<>Function <InlineMath math="h(x) = \sqrt{x}" /> and Its Translation Result</>}
-     description="Original square root function and the result of vertical translation upward by 3 units."
+     description={
+       <>
+         Original square root function and the result of vertical translation
+         upward by <InlineMath math="3 \text{ units}" />.
+       </>
+     }
      showZAxis={false}
      data={[
        {

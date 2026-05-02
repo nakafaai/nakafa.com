@@ -18,7 +18,7 @@ Konsep dasar integral dalam fisika adalah **akumulasi**. Jika kita memiliki laju
 
 Mari kita mulai dengan konsep yang paling fundamental: **usaha** atau work. Dalam fisika, usaha didefinisikan sebagai hasil kali gaya dengan perpindahan. Tapi bagaimana jika gayanya berubah-ubah sepanjang lintasan?
 
-Bayangkan sebuah partikel yang berada pada posisi <InlineMath math="x" /> meter dari titik asal. Gaya yang bekerja pada partikel tersebut adalah <InlineMath math="F(x) = x^2 + 2x" /> Newton. Sekarang, berapa usaha yang diperlukan untuk memindahkan partikel dari posisi <InlineMath math="x = 1" /> meter ke posisi <InlineMath math="x = 3" /> meter?
+Bayangkan sebuah partikel yang berada pada posisi <InlineMath math="x \text{ meter}" /> dari titik asal. Gaya yang bekerja pada partikel tersebut adalah <InlineMath math="F(x) = x^2 + 2x" /> Newton. Sekarang, berapa usaha yang diperlukan untuk memindahkan partikel dari posisi <InlineMath math="x = 1 \text{ meter}" /> ke posisi <InlineMath math="x = 3 \text{ meter}" />?
 
 Nah, karena gayanya berubah seiring dengan posisi, kita tidak bisa menggunakan rumus sederhana <InlineMath math="W = F \times s" />. Kita perlu menggunakan integral:
 
@@ -45,17 +45,17 @@ Menurut Hukum Hooke, gaya yang diperlukan untuk meregangkan atau menekan pegas s
 
 di mana <InlineMath math="k" /> adalah konstanta pegas dan <InlineMath math="x" /> adalah jarak perpindahan dari posisi alami.
 
-Mari kita lihat contoh nyata. Misalkan diperlukan gaya <InlineMath math="40" /> N untuk menahan pegas yang telah direntangkan dari panjang aslinya <InlineMath math="10" /> cm sampai <InlineMath math="15" /> cm. Sekarang, berapa usaha yang diperlukan untuk meregangkan pegas dari <InlineMath math="15" /> cm menjadi <InlineMath math="18" /> cm?
+Mari kita lihat contoh nyata. Misalkan diperlukan gaya <InlineMath math="40" /> N untuk menahan pegas yang telah direntangkan dari panjang aslinya <InlineMath math="10 \text{ cm}" /> sampai <InlineMath math="15 \text{ cm}" />. Sekarang, berapa usaha yang diperlukan untuk meregangkan pegas dari <InlineMath math="15 \text{ cm}" /> menjadi <InlineMath math="18 \text{ cm}" />?
 
-Pertama, kita tentukan konstanta pegas. Perpindahan dari posisi alami adalah <InlineMath math="15 - 10 = 5" /> cm = <InlineMath math="0.05" /> m. Karena <InlineMath math="F = kx" />, maka:
+Pertama, kita tentukan konstanta pegas. Perpindahan dari posisi alami adalah <InlineMath math="15 - 10 = 5 \text{ cm}" /> = <InlineMath math="0.05" /> m. Karena <InlineMath math="F = kx" />, maka:
 
 <BlockMath math="40 = k \times 0.05" />
 
 Sehingga <InlineMath math="k = \frac{40}{0.05} = 800" /> N/m.
 
-Sekarang, untuk menghitung usaha meregangkan pegas dari <InlineMath math="15" /> cm ke <InlineMath math="18" /> cm, kita perlu menghitung integral. Koordinat yang kita gunakan:
-- Posisi <InlineMath math="15" /> cm = <InlineMath math="0.05" /> m dari posisi alami
-- Posisi <InlineMath math="18" /> cm = <InlineMath math="0.08" /> m dari posisi alami
+Sekarang, untuk menghitung usaha meregangkan pegas dari <InlineMath math="15 \text{ cm}" /> ke <InlineMath math="18 \text{ cm}" />, kita perlu menghitung integral. Koordinat yang kita gunakan:
+- Posisi <InlineMath math="15 \text{ cm}" /> = <InlineMath math="0.05" /> m dari posisi alami
+- Posisi <InlineMath math="18 \text{ cm}" /> = <InlineMath math="0.08" /> m dari posisi alami
 
 Kita bisa menghitung usaha dengan integral:
 
@@ -70,7 +70,7 @@ Kita bisa menghitung usaha dengan integral:
 
 Aplikasi integral lainnya dalam fisika adalah menghitung **massa** suatu benda jika kita mengetahui fungsi densitasnya. Ini sangat berguna untuk benda yang densitasnya tidak seragam.
 
-Misalkan kita memiliki batang sepanjang <InlineMath math="2" /> meter dengan densitas linear <InlineMath math="\rho(x) = 3x + 2" /> kg/m, di mana <InlineMath math="x" /> adalah jarak dari salah satu ujung batang. Berapa massa total batang tersebut?
+Misalkan kita memiliki batang sepanjang <InlineMath math="2 \text{ meter}" /> dengan densitas linear <InlineMath math="\rho(x) = 3x + 2 \text{ kg}" />/m, di mana <InlineMath math="x" /> adalah jarak dari salah satu ujung batang. Berapa massa total batang tersebut?
 
 <MathContainer>
 <BlockMath math="m = \int_{0}^{2} \rho(x) \, dx = \int_{0}^{2} (3x + 2) \, dx" />
@@ -110,11 +110,11 @@ Untuk batang homogen dengan massa <InlineMath math="M" /> dan panjang <InlineMat
 
 ## Latihan
 
-1. Sebuah partikel bergerak sepanjang sumbu x dengan gaya <InlineMath math="F(x) = 4x - x^2" /> Newton. Hitunglah usaha yang dilakukan untuk memindahkan partikel dari <InlineMath math="x = 0" /> ke <InlineMath math="x = 3" /> meter!
+1. Sebuah partikel bergerak sepanjang sumbu x dengan gaya <InlineMath math="F(x) = 4x - x^2" /> Newton. Hitunglah usaha yang dilakukan untuk memindahkan partikel dari <InlineMath math="x = 0" /> ke <InlineMath math="x = 3 \text{ meter}" />!
 
-2. Sebuah pegas memiliki konstanta pegas <InlineMath math="k = 200" /> N/m. Berapa energi yang tersimpan dalam pegas ketika diregangkan sejauh <InlineMath math="0.1" /> meter dari posisi kesetimbangan?
+2. Sebuah pegas memiliki konstanta pegas <InlineMath math="k = 200" /> N/m. Berapa energi yang tersimpan dalam pegas ketika diregangkan sejauh <InlineMath math="0.1 \text{ meter}" /> dari posisi kesetimbangan?
 
-3. Sebuah kawat sepanjang <InlineMath math="4" /> meter memiliki densitas linear <InlineMath math="\rho(x) = 2 + x" /> kg/m. Tentukan massa total kawat dan posisi pusat massanya!
+3. Sebuah kawat sepanjang <InlineMath math="4 \text{ meter}" /> memiliki densitas linear <InlineMath math="\rho(x) = 2 + x \text{ kg}" />/m. Tentukan massa total kawat dan posisi pusat massanya!
 
 ### Kunci Jawaban
 
@@ -156,4 +156,4 @@ Untuk batang homogen dengan massa <InlineMath math="M" /> dan panjang <InlineMat
    <BlockMath math="\bar{x} = \frac{\frac{48 + 64}{3}}{16} = \frac{\frac{112}{3}}{16} = \frac{112}{48} = \frac{7}{3} \text{ meter}" />
    </MathContainer>
 
-   Massa total kawat adalah <InlineMath math="16" /> kg dan pusat massanya berada pada posisi <InlineMath math="\frac{7}{3}" /> meter dari ujung.
+   Massa total kawat adalah <InlineMath math="16 \text{ kg}" /> dan pusat massanya berada pada posisi <InlineMath math="\frac{7}{3} \text{ meter}" /> dari ujung.

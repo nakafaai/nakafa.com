@@ -8,12 +8,21 @@ import {
 import { PeriodicPropertiesScene } from "@repo/design-system/components/contents/chemistry/periodic-properties/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
+import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene-frame";
 import { useTheme } from "next-themes";
 import { Suspense, useEffect } from "react";
 
 const CAMERA_POSITION = [0, 4.2, 6.8] satisfies [number, number, number];
-const NARROW_CAMERA_POSITION = [0, 4.5, 7.2] satisfies [number, number, number];
 const CAMERA_TARGET = [0, 0.34, 0.28] satisfies [number, number, number];
+const NARROW_CAMERA_POSITION = [0, 4.8, 8.2] satisfies [number, number, number];
+const NARROW_CAMERA_TARGET = [-0.28, 0.34, 0.28] satisfies [
+  number,
+  number,
+  number,
+];
 const NARROW_CANVAS_ASPECT_RATIO = 1.25;
 
 /**
@@ -30,10 +39,7 @@ export function PeriodicPropertiesCanvas({
   const colors = getPeriodicPropertiesSceneColors(resolvedTheme);
 
   return (
-    <section
-      aria-label={ariaLabel}
-      className="relative aspect-4/3 overflow-hidden rounded-md bg-card sm:aspect-16/10"
-    >
+    <section aria-label={ariaLabel} className={threeSceneFrameVariants()}>
       <ThreeCanvas
         camera={{ fov: 44, position: CAMERA_POSITION }}
         frameloop="demand"
@@ -73,16 +79,15 @@ function PeriodicPropertiesRenderSync() {
  */
 function ResponsivePeriodicPropertiesCamera() {
   const size = useThree((state) => state.size);
-  const cameraPosition =
-    size.width < size.height * NARROW_CANVAS_ASPECT_RATIO
-      ? NARROW_CAMERA_POSITION
-      : CAMERA_POSITION;
+  const isNarrow = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO);
+  const cameraPosition = isNarrow ? NARROW_CAMERA_POSITION : CAMERA_POSITION;
+  const cameraTarget = isNarrow ? NARROW_CAMERA_TARGET : CAMERA_TARGET;
 
   return (
     <CameraControls
       autoRotate={false}
       cameraPosition={cameraPosition}
-      cameraTarget={CAMERA_TARGET}
+      cameraTarget={cameraTarget}
       maxDistance={12}
       minDistance={3}
     />

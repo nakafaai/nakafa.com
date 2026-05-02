@@ -12,12 +12,12 @@ In geometry, a transformation is an operation that moves or changes the shape of
 
 We can use matrices to represent many geometric transformations and also to find the result of the composition of these transformations.
 
-We will focus on transformations that can be represented by <InlineMath math="2 \times 2" /> matrices. For example, reflection across the X-axis can be represented by the matrix <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />. If the point <InlineMath math="(x,y)" /> is reflected across the X-axis, its image can be found by multiplying this matrix by the position vector of the point: <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix}" />.
+We will focus on transformations that can be represented by <InlineMath math="2 \times 2" /> matrices. For example, reflection across the <InlineMath math="x" />-axis can be represented by the matrix <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />. If the point <InlineMath math="(x,y)" /> is reflected across the <InlineMath math="x" />-axis, its image can be found by multiplying this matrix by the position vector of the point: <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix}" />.
 
 Here are some basic transformations along with their matrices that are often used in the composition of transformations:
 
-1.  Reflection across the X-axis: <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
-2.  Reflection across the Y-axis: <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />
+1.  Reflection across the <InlineMath math="x" />-axis: <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
+2.  Reflection across the <InlineMath math="y" />-axis: <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />
 3.  Reflection across the line <InlineMath math="y=x" />: <InlineMath math="\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}" />
 4.  Reflection across the line <InlineMath math="y=-x" />: <InlineMath math="\begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix}" />
 5.  Reflection across the origin <InlineMath math="O(0,0)" /> (equivalent to a <InlineMath math="180^\circ" /> rotation): <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />
@@ -49,9 +49,9 @@ Both methods yield the same final image due to the associative property of matri
 
 **Illustrative Example:**
 
-Suppose <InlineMath math="T_1" /> is a reflection across the Y-axis, and <InlineMath math="T_2" /> is a rotation about the origin <InlineMath math="O" /> by <InlineMath math="\frac{1}{2}\pi" /> radians (<InlineMath math="90^\circ" />). We want to find the image of point <InlineMath math="P(x,y)" /> under <InlineMath math="T_2 \circ T_1" />.
+Suppose <InlineMath math="T_1" /> is a reflection across the <InlineMath math="y" />-axis, and <InlineMath math="T_2" /> is a rotation about the origin <InlineMath math="O" /> by <InlineMath math="\frac{1}{2}\pi" /> radians (<InlineMath math="90^\circ" />). We want to find the image of point <InlineMath math="P(x,y)" /> under <InlineMath math="T_2 \circ T_1" />.
 
-The matrix for <InlineMath math="T_1" /> (reflection across Y-axis) is <InlineMath math="M_1 = \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
+The matrix for <InlineMath math="T_1" /> (reflection across the <InlineMath math="y" />-axis) is <InlineMath math="M_1 = \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
 
 The matrix for <InlineMath math="T_2" /> (rotation <InlineMath math="90^\circ" />) is <InlineMath math="M_2 = \begin{pmatrix} \cos 90^\circ & -\sin 90^\circ \\ \sin 90^\circ & \cos 90^\circ \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}" />.
 
@@ -95,11 +95,11 @@ Remember that the order of matrix multiplication is important. The matrix for th
 
 ### Composition of Two Reflections
 
-Determine the image of the point <InlineMath math="(2,5)" /> reflected across the X-axis and then reflected across the Y-axis.
+Determine the image of the point <InlineMath math="(2,5)" /> reflected across the <InlineMath math="x" />-axis and then reflected across the <InlineMath math="y" />-axis.
 
 **Alternative Solution:**
 
-Let <InlineMath math="T_1" /> be the reflection across the X-axis, and <InlineMath math="T_2" /> be the reflection across the Y-axis.
+Let <InlineMath math="T_1" /> be the reflection across the <InlineMath math="x" />-axis, and <InlineMath math="T_2" /> be the reflection across the <InlineMath math="y" />-axis.
 
 The matrix for <InlineMath math="T_1" /> (<InlineMath math="M_1" />) is <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />.
 
@@ -117,11 +117,11 @@ So, the image of the point is <InlineMath math="(-2,-5)" />.
 
 ### Composition of Reflection and Rotation
 
-Determine the image of the point <InlineMath math="(-2,3)" /> transformed by the composition of a reflection across the Y-axis followed by a <InlineMath math="180^\circ" /> rotation about the origin.
+Determine the image of the point <InlineMath math="(-2,3)" /> transformed by the composition of a reflection across the <InlineMath math="y" />-axis followed by a <InlineMath math="180^\circ" /> rotation about the origin.
 
 **Alternative Solution:**
 
-Let <InlineMath math="T_1" /> be the reflection across the Y-axis, and <InlineMath math="T_2" /> be the <InlineMath math="180^\circ" /> rotation about the origin.
+Let <InlineMath math="T_1" /> be the reflection across the <InlineMath math="y" />-axis, and <InlineMath math="T_2" /> be the <InlineMath math="180^\circ" /> rotation about the origin.
 
 The matrix for <InlineMath math="T_1" /> (<InlineMath math="M_1" />) is <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
 
@@ -139,13 +139,13 @@ So, the image of the point is <InlineMath math="(-2,-3)" />.
 
 ### Composition of Three Transformations
 
-Suppose you want to perform three transformations on a point <InlineMath math="P(2,5)" />, namely reflection across the X-axis, rotation <InlineMath math="90^\circ" /> about the origin, and a half turn (<InlineMath math="180^\circ" /> rotation about the origin). Determine its image!
+Suppose you want to perform three transformations on a point <InlineMath math="P(2,5)" />, namely reflection across the <InlineMath math="x" />-axis, rotation <InlineMath math="90^\circ" /> about the origin, and a half turn (<InlineMath math="180^\circ" /> rotation about the origin). Determine its image!
 
 **Alternative Solution:**
 
 Let:
 
-- <InlineMath math="T_1" />: Reflection across the X-axis.
+- <InlineMath math="T_1" />: Reflection across the <InlineMath math="x" />-axis.
 
   Matrix <InlineMath math="M_1 = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
 
@@ -174,13 +174,13 @@ So, the image of the point is <InlineMath math="(-5,-2)" />.
 
 ## Exercise
 
-Suppose we want to perform three transformations on a point <InlineMath math="P(2,5)" />, namely reflection across the Y-axis, rotation <InlineMath math="180^\circ" /> about the origin, and reflection across the line <InlineMath math="y=x" />. Determine its image!
+Suppose we want to perform three transformations on a point <InlineMath math="P(2,5)" />, namely reflection across the <InlineMath math="y" />-axis, rotation <InlineMath math="180^\circ" /> about the origin, and reflection across the line <InlineMath math="y=x" />. Determine its image!
 
 ### Answer Key
 
 Let:
 
-- <InlineMath math="T_1" />: Reflection across the Y-axis.
+- <InlineMath math="T_1" />: Reflection across the <InlineMath math="y" />-axis.
 
   Matrix <InlineMath math="M_1 = \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
 

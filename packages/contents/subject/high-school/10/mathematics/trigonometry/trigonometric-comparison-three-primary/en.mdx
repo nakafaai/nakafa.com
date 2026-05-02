@@ -23,9 +23,9 @@ When ancient mathematicians studied triangles, they discovered useful patterns i
 
 Before we go further, it's important to understand the terms used in trigonometric ratios:
 
-1. **Hypotenuse**: The longest side of a right triangle, always opposite to the right angle (90°).
-2. **Opposite side**: The side that is opposite to the angle θ we are examining.
-3. **Adjacent side**: The side that is adjacent to the angle θ we are examining (not the hypotenuse).
+1. **Hypotenuse**: The longest side of a right triangle, always opposite to the right angle <InlineMath math="90^\circ" />.
+2. **Opposite side**: The side that is opposite to the angle <InlineMath math="\theta" /> we are examining.
+3. **Adjacent side**: The side that is adjacent to the angle <InlineMath math="\theta" /> we are examining, not the hypotenuse.
 
 <div className="mt-4">
   <Triangle
@@ -40,9 +40,9 @@ Before we go further, it's important to understand the terms used in trigonometr
   />
 </div>
 
-## Sine (sin θ)
+## Sine
 
-The sine of angle θ is the ratio between the length of the opposite side and the length of the hypotenuse.
+The sine of angle <InlineMath math="\theta" /> is the ratio between the length of the opposite side and the length of the hypotenuse.
 
 <BlockMath math="\sin \theta = \frac{\text{opposite side}}{\text{hypotenuse}}" />
 
@@ -56,7 +56,7 @@ The sine of angle θ is the ratio between the length of the opposite side and th
     description="Notice how the sine value changes as the angle changes."
     angle={30}
     labels={{
-      opposite: "Opposite Side (determines sin θ value)",
+      opposite: "Opposite Side (determines sine value)",
       adjacent: "Adjacent Side",
       hypotenuse: "Hypotenuse (divisor)",
     }}
@@ -73,9 +73,9 @@ The sine of angle θ is the ratio between the length of the opposite side and th
 | <InlineMath math="60°" /> | <InlineMath math="\frac{\sqrt{3}}{2}" /> | <InlineMath math="0.87" /> |
 | <InlineMath math="90°" /> | <InlineMath math="1" />                  | <InlineMath math="1" />    |
 
-## Cosine (cos θ)
+## Cosine
 
-The cosine of angle θ is the ratio between the length of the adjacent side and the length of the hypotenuse.
+The cosine of angle <InlineMath math="\theta" /> is the ratio between the length of the adjacent side and the length of the hypotenuse.
 
 <BlockMath math="\cos \theta = \frac{\text{adjacent side}}{\text{hypotenuse}}" />
 
@@ -90,7 +90,7 @@ The cosine of angle θ is the ratio between the length of the adjacent side and 
     angle={60}
     labels={{
       opposite: "Opposite Side",
-      adjacent: "Adjacent Side (determines cos θ value)",
+      adjacent: "Adjacent Side (determines cosine value)",
       hypotenuse: "Hypotenuse (divisor)",
     }}
   />
@@ -106,9 +106,9 @@ The cosine of angle θ is the ratio between the length of the adjacent side and 
 | <InlineMath math="60°" /> | <InlineMath math="\frac{1}{2}" />        | <InlineMath math="0.5" />  |
 | <InlineMath math="90°" /> | <InlineMath math="0" />                  | <InlineMath math="0" />    |
 
-## Tangent (tan θ)
+## Tangent
 
-The tangent of angle θ is the ratio between the length of the opposite side and the length of the adjacent side. It can also be calculated as the ratio between the sine and cosine of the same angle.
+The tangent of angle <InlineMath math="\theta" /> is the ratio between the length of the opposite side and the length of the adjacent side. It can also be calculated as the ratio between the sine and cosine of the same angle.
 
 <BlockMath math="\tan \theta = \frac{\text{opposite side}}{\text{adjacent side}} = \frac{\sin \theta}{\cos \theta}" />
 
@@ -145,15 +145,15 @@ To understand how these trigonometric ratios work for all angles, we can use the
 
 <UnitCircle
   title="Unit Circle and Trigonometric Ratios"
-  description="Move the slider to see how the values of sin, cos, and tan change on the unit circle."
+  description="Move the slider to see how the values of sine, cosine, and tangent change on the unit circle."
   angle={45}
 />
 
 In the unit circle:
 
-- The x-coordinate on the unit circle = cos θ
-- The y-coordinate on the unit circle = sin θ
-- Tan θ is the slope of the line from the center to the point on the unit circle
+- The <InlineMath math="x" />-coordinate on the unit circle is <InlineMath math="\cos \theta" />.
+- The <InlineMath math="y" />-coordinate on the unit circle is <InlineMath math="\sin \theta" />.
+- <InlineMath math="\tan \theta" /> is the slope of the line from the center to the point on the unit circle.
 
 ## Relationships Between the Three Trigonometric Ratios
 

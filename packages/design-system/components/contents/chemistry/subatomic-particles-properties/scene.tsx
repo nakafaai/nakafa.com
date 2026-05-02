@@ -1,4 +1,10 @@
-import { Billboard, Line, RoundedBox, Text } from "@react-three/drei";
+import { Line, RoundedBox } from "@react-three/drei";
+import {
+  CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO,
+  ChemistryParticleLabel,
+  getChemistryParticleLabelFontSize,
+  getChemistryParticleLabelPosition,
+} from "@repo/design-system/components/contents/chemistry/particle-label";
 import {
   CHARGE_MODE_ID,
   LOCATION_MODE_ID,
@@ -8,15 +14,10 @@ import {
   type SubatomicParticlePropertiesSceneLabels,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/data";
 import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
-import {
-  getThreeParticleLabelFontSize,
-  MONO_FONT_PATH,
-  THREE_FONT_SIZE,
-} from "@repo/design-system/components/three/data/constants";
+import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { Vector3 } from "three";
 
 const PATH_POINT_COUNT = 44;
-const PARTICLE_LABEL_SURFACE_OFFSET_RATIO = 1.04;
 
 const ELECTRON_PATH = createQuadraticPath(
   new Vector3(-2.35, 0, 0),
@@ -373,24 +374,16 @@ function Particle({
         <sphereGeometry args={[radius, 32, 32]} />
         <meshStandardMaterial color={color} roughness={0.35} />
       </mesh>
-      <Billboard>
-        <Text
-          anchorX="center"
-          anchorY="middle"
-          color={labelColor}
-          font={MONO_FONT_PATH}
-          fontSize={getThreeParticleLabelFontSize(radius)}
-          position={[0, 0, radius * PARTICLE_LABEL_SURFACE_OFFSET_RATIO]}
-          renderOrder={10}
-        >
-          {label}
-          <meshBasicMaterial
-            color={labelColor}
-            depthTest={false}
-            toneMapped={false}
-          />
-        </Text>
-      </Billboard>
+      <ChemistryParticleLabel
+        color={labelColor}
+        fontSize={getChemistryParticleLabelFontSize(radius)}
+        position={getChemistryParticleLabelPosition(
+          radius,
+          CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO
+        )}
+      >
+        {label}
+      </ChemistryParticleLabel>
     </group>
   );
 }

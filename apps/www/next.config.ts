@@ -1,5 +1,6 @@
 import path from "node:path";
 import { createPostHogProxyRewrites } from "@repo/analytics/posthog/config";
+import { routing } from "@repo/internationalization/src/routing";
 import {
   config,
   createSecurityHeaders,
@@ -22,13 +23,37 @@ const withNextIntl = createNextIntlPlugin(
  * https://posthog.com/docs/advanced/proxy/vercel
  */
 function createAppRewrites() {
-  const llmSource = [
-    "/:path*.md",
-    "/:path*.mdx",
-    "/:path*.txt",
-    "/:path*/llms.txt",
-  ];
+  const llmSource = ["/:path*.md", "/:path*.mdx", "/:path*/llms.txt"];
   const llmDestination = "/llms.mdx/:path*";
+  const markdownAcceptHeader = [
+    {
+      type: "header",
+      key: "accept",
+      value: ".*text/markdown.*",
+    },
+  ];
+  const markdownAcceptRewrites = routing.locales.flatMap((locale) => [
+    {
+      source: `/${locale}/articles/:path*`,
+      destination: `/llms.mdx/${locale}/articles/:path*`,
+      has: markdownAcceptHeader,
+    },
+    {
+      source: `/${locale}/subject/:path*`,
+      destination: `/llms.mdx/${locale}/subject/:path*`,
+      has: markdownAcceptHeader,
+    },
+    {
+      source: `/${locale}/exercises/:path*`,
+      destination: `/llms.mdx/${locale}/exercises/:path*`,
+      has: markdownAcceptHeader,
+    },
+    {
+      source: `/${locale}/quran/:path*`,
+      destination: `/llms.mdx/${locale}/quran/:path*`,
+      has: markdownAcceptHeader,
+    },
+  ]);
   const ogSource = ["/:path*.png", "/:path*.og", "/:path*/image.png"];
   const ogDestination = "/og/:path*";
 
@@ -36,6 +61,7 @@ function createAppRewrites() {
     // PostHog requires the specific static and array rewrites to come before the
     // catch-all analytics rewrite so asset cache headers are preserved.
     ...createPostHogProxyRewrites(env.POSTHOG_PROXY_HOST),
+    ...markdownAcceptRewrites,
     ...llmSource.map((source) => ({
       source,
       destination: llmDestination,
@@ -77,7 +103,7 @@ function createLocalizedRedirects() {
       destination: "https://discord.gg/CPCSfKhvfQ",
       permanent: false,
     },
-  ] as const;
+  ];
 
   return redirects.flatMap(({ source, destination, permanent }) => {
     const isExternal = destination.startsWith("http");
@@ -108,7 +134,7 @@ function createAppHeaders() {
   ];
 }
 
-let nextConfig: NextConfig = {
+const nextConfig = {
   ...config,
   cacheComponents: true,
   // PostHog's same-origin proxy endpoints include trailing slashes such as
@@ -149,10 +175,9 @@ let nextConfig: NextConfig = {
     globalNotFound: true,
     rootParams: true,
   },
-};
+} satisfies NextConfig;
 
-if (env.ANALYZE === "true") {
-  nextConfig = withAnalyzer(nextConfig);
-}
+const analyzedConfig =
+  env.ANALYZE === "true" ? withAnalyzer(nextConfig) : nextConfig;
 
-export default withMDX(withNextIntl(nextConfig));
+export default withMDX(withNextIntl(analyzedConfig));

@@ -23,9 +23,9 @@ Ketika matematikawan zaman kuno mempelajari segitiga, mereka menemukan pola perb
 
 Sebelum kita melangkah lebih jauh, penting untuk memahami istilah-istilah yang digunakan dalam perbandingan trigonometri:
 
-1. **Sisi miring (hypotenuse)**: Sisi terpanjang pada segitiga siku-siku, selalu berada di seberang sudut siku-siku (90°).
-2. **Sisi depan (opposite)**: Sisi yang berada di seberang sudut θ yang kita tinjau.
-3. **Sisi samping (adjacent)**: Sisi yang berdekatan dengan sudut θ yang kita tinjau (bukan sisi miring).
+1. **Sisi miring (hypotenuse)**: Sisi terpanjang pada segitiga siku-siku, selalu berada di seberang sudut siku-siku <InlineMath math="90^\circ" />.
+2. **Sisi depan (opposite)**: Sisi yang berada di seberang sudut <InlineMath math="\theta" /> yang kita tinjau.
+3. **Sisi samping (adjacent)**: Sisi yang berdekatan dengan sudut <InlineMath math="\theta" /> yang kita tinjau, bukan sisi miring.
 
 <div className="mt-4">
   <Triangle
@@ -40,9 +40,9 @@ Sebelum kita melangkah lebih jauh, penting untuk memahami istilah-istilah yang d
   />
 </div>
 
-## Sinus (sin θ)
+## Sinus
 
-Sinus dari sudut θ adalah perbandingan antara panjang sisi depan dengan panjang sisi miring.
+Sinus dari sudut <InlineMath math="\theta" /> adalah perbandingan antara panjang sisi depan dengan panjang sisi miring.
 
 <BlockMath math="\sin \theta = \frac{\text{sisi depan}}{\text{sisi miring}}" />
 
@@ -56,7 +56,7 @@ Sinus dari sudut θ adalah perbandingan antara panjang sisi depan dengan panjang
     description="Perhatikan bagaimana nilai sinus berubah saat sudut berubah."
     angle={30}
     labels={{
-      opposite: "Sisi Depan (menentukan nilai sin θ)",
+      opposite: "Sisi Depan (menentukan nilai sinus)",
       adjacent: "Sisi Samping",
       hypotenuse: "Sisi Miring (pembagi)",
     }}
@@ -73,9 +73,9 @@ Sinus dari sudut θ adalah perbandingan antara panjang sisi depan dengan panjang
 | <InlineMath math="60°" /> | <InlineMath math="\frac{\sqrt{3}}{2}" /> | <InlineMath math="0,87" /> |
 | <InlineMath math="90°" /> | <InlineMath math="1" />                  | <InlineMath math="1" />    |
 
-## Cosinus (cos θ)
+## Cosinus
 
-Cosinus dari sudut θ adalah perbandingan antara panjang sisi samping dengan panjang sisi miring.
+Cosinus dari sudut <InlineMath math="\theta" /> adalah perbandingan antara panjang sisi samping dengan panjang sisi miring.
 
 <BlockMath math="\cos \theta = \frac{\text{sisi samping}}{\text{sisi miring}}" />
 
@@ -90,7 +90,7 @@ Cosinus dari sudut θ adalah perbandingan antara panjang sisi samping dengan pan
     angle={60}
     labels={{
       opposite: "Sisi Depan",
-      adjacent: "Sisi Samping (menentukan nilai cos θ)",
+      adjacent: "Sisi Samping (menentukan nilai cosinus)",
       hypotenuse: "Sisi Miring (pembagi)",
     }}
   />
@@ -106,9 +106,9 @@ Cosinus dari sudut θ adalah perbandingan antara panjang sisi samping dengan pan
 | <InlineMath math="60°" /> | <InlineMath math="\frac{1}{2}" />        | <InlineMath math="0,5" />  |
 | <InlineMath math="90°" /> | <InlineMath math="0" />                  | <InlineMath math="0" />    |
 
-## Tangen (tan θ)
+## Tangen
 
-Tangen dari sudut θ adalah perbandingan antara panjang sisi depan dengan panjang sisi samping. Ini juga dapat dihitung sebagai perbandingan antara sinus dan cosinus dari sudut yang sama.
+Tangen dari sudut <InlineMath math="\theta" /> adalah perbandingan antara panjang sisi depan dengan panjang sisi samping. Ini juga dapat dihitung sebagai perbandingan antara sinus dan cosinus dari sudut yang sama.
 
 <BlockMath math="\tan \theta = \frac{\text{sisi depan}}{\text{sisi samping}} = \frac{\sin \theta}{\cos \theta}" />
 
@@ -145,15 +145,15 @@ Untuk memahami bagaimana perbandingan trigonometri ini bekerja untuk semua sudut
 
 <UnitCircle
   title="Lingkaran Satuan dan Perbandingan Trigonometri"
-  description="Geser slider untuk melihat bagaimana nilai sin, cos, dan tan berubah di lingkaran satuan."
+  description="Geser slider untuk melihat bagaimana nilai sinus, cosinus, dan tangen berubah di lingkaran satuan."
   angle={45}
 />
 
 Dalam lingkaran satuan:
 
-- Koordinat x pada lingkaran satuan = cos θ
-- Koordinat y pada lingkaran satuan = sin θ
-- Tan θ adalah kemiringan garis dari pusat ke titik pada lingkaran satuan
+- Koordinat <InlineMath math="x" /> pada lingkaran satuan adalah <InlineMath math="\cos \theta" />.
+- Koordinat <InlineMath math="y" /> pada lingkaran satuan adalah <InlineMath math="\sin \theta" />.
+- <InlineMath math="\tan \theta" /> adalah kemiringan garis dari pusat ke titik pada lingkaran satuan.
 
 ## Hubungan antara Ketiga Perbandingan Trigonometri
 

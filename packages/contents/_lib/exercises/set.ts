@@ -56,14 +56,15 @@ function loadExercise(
         )
       ),
     loadChoices: (choicesPath) =>
-      Effect.tryPromise({
-        try: () => readExerciseChoices(choicesPath),
-        catch: () =>
-          new ExerciseLoadError({
-            path: choicesPath,
-            reason: "Failed to load choices",
-          }),
-      }),
+      readExerciseChoices(choicesPath).pipe(
+        Effect.mapError(
+          () =>
+            new ExerciseLoadError({
+              path: choicesPath,
+              reason: "Failed to load choices",
+            })
+        )
+      ),
   }).pipe(
     Effect.map((exercise) => {
       if (Option.isNone(exercise)) {

@@ -1,4 +1,10 @@
-import { Billboard, Line, RoundedBox, Text } from "@react-three/drei";
+import { Line, RoundedBox } from "@react-three/drei";
+import {
+  CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO,
+  ChemistryParticleLabel,
+  getChemistryParticleLabelFontSize,
+  getChemistryParticleLabelPosition,
+} from "@repo/design-system/components/contents/chemistry/particle-label";
 import {
   ATOM_MAP_MODE_ID,
   CATHODE_RAY_MODE_ID,
@@ -8,11 +14,7 @@ import {
   type SubatomicSceneColors,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles/data";
 import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
-import {
-  getThreeParticleLabelFontSize,
-  MONO_FONT_PATH,
-  THREE_FONT_SIZE,
-} from "@repo/design-system/components/three/data/constants";
+import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { Vector3 } from "three";
 
 const PATH_POINT_COUNT = 48;
@@ -62,7 +64,6 @@ const NUCLEON_POSITIONS = [
   { kind: "neutron", label: "n^0", position: [-0.48, -0.34, 0.04] },
   { kind: "proton", label: "p^+", position: [0.48, -0.34, 0.16] },
 ];
-const PARTICLE_LABEL_SURFACE_OFFSET_RATIO = 1.04;
 const SUBATOMIC_LABEL_SIZE = THREE_FONT_SIZE.annotation;
 const ATOM_MAP_SCALE = 1.1;
 
@@ -410,47 +411,17 @@ function Particle({
         <meshStandardMaterial color={color} roughness={0.35} />
       </mesh>
       {label && (
-        <ParticleLabel
+        <ChemistryParticleLabel
           color={labelColor}
-          fontSize={getThreeParticleLabelFontSize(radius)}
-          radius={radius}
+          fontSize={getChemistryParticleLabelFontSize(radius)}
+          position={getChemistryParticleLabelPosition(
+            radius,
+            CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO
+          )}
         >
           {label}
-        </ParticleLabel>
+        </ChemistryParticleLabel>
       )}
     </group>
-  );
-}
-
-/**
- * Keeps particle symbols on the visible side of each sphere without forcing them
- * through other particles during camera orbit.
- */
-function ParticleLabel({
-  children,
-  color,
-  fontSize,
-  radius,
-}: {
-  children: string;
-  color: string;
-  fontSize: number;
-  radius: number;
-}) {
-  return (
-    <Billboard>
-      <Text
-        anchorX="center"
-        anchorY="middle"
-        color={color}
-        font={MONO_FONT_PATH}
-        fontSize={fontSize}
-        position={[0, 0, radius * PARTICLE_LABEL_SURFACE_OFFSET_RATIO]}
-        renderOrder={10}
-      >
-        {children}
-        <meshBasicMaterial color={color} depthTest={false} toneMapped={false} />
-      </Text>
-    </Billboard>
   );
 }

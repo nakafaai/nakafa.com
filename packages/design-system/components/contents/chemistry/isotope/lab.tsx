@@ -21,14 +21,21 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
-import { cn } from "@repo/design-system/lib/utils";
+import { cva, type VariantProps } from "class-variance-authority";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
-const PARTICLE_CLASS_NAMES = {
-  neutron: "bg-secondary text-secondary-foreground",
-  proton: "bg-primary text-primary-foreground",
-};
+const particleDotVariants = cva(
+  "grid size-8 place-items-center rounded-full font-medium text-xs",
+  {
+    variants: {
+      type: {
+        neutron: "bg-secondary text-secondary-foreground",
+        proton: "bg-primary text-primary-foreground",
+      },
+    },
+  }
+);
 
 /**
  * Renders a compact lab for comparing isotopes by their neutron count.
@@ -205,16 +212,10 @@ function ParticleDot({
   type,
 }: {
   label: string;
-  type: keyof typeof PARTICLE_CLASS_NAMES;
+  type: NonNullable<VariantProps<typeof particleDotVariants>["type"]>;
 }) {
   return (
-    <span
-      aria-hidden
-      className={cn(
-        "grid size-8 place-items-center rounded-full font-medium text-xs",
-        PARTICLE_CLASS_NAMES[type]
-      )}
-    >
+    <span aria-hidden className={particleDotVariants({ type })}>
       <InlineMath math={label} />
     </span>
   );

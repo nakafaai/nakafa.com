@@ -77,16 +77,24 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/basic-chemistry-laws/writing-chemical-reactions`,
       },
       {
-        title: "Four Basic Laws of Chemistry",
-        href: `${BASE_PATH}/basic-chemistry-laws/four-basic-chemistry-laws`,
+        title: "Mass Conservation",
+        href: `${BASE_PATH}/basic-chemistry-laws/mass-conservation-law`,
       },
       {
-        title: "Applications of Basic Chemistry Laws",
-        href: `${BASE_PATH}/basic-chemistry-laws/application-basic-chemistry-laws`,
+        title: "Constant Composition",
+        href: `${BASE_PATH}/basic-chemistry-laws/constant-composition-law`,
       },
       {
-        title: "Law of Constant Composition",
-        href: `${BASE_PATH}/basic-chemistry-laws/law-constant-composition`,
+        title: "Multiple Proportions",
+        href: `${BASE_PATH}/basic-chemistry-laws/multiple-proportions-law`,
+      },
+      {
+        title: "Combining Volumes",
+        href: `${BASE_PATH}/basic-chemistry-laws/combining-volumes-law`,
+      },
+      {
+        title: "Law Applications",
+        href: `${BASE_PATH}/basic-chemistry-laws/chemistry-law-applications`,
       },
     ],
   },

@@ -8,7 +8,7 @@ export const metadata = {
 
 ## Pengertian Kombinasi
 
-Bayangkan kamu diminta memilih 3 orang teman untuk bergabung dalam tim futsal. Apakah urutan pemilihan mereka penting? Tentu tidak! Yang penting adalah **siapa saja** yang terpilih, bukan dalam urutan apa mereka dipilih.
+Bayangkan kamu diminta memilih <InlineMath math="3 \text{ orang}" /> teman untuk bergabung dalam tim futsal. Apakah urutan pemilihan mereka penting? Tentu tidak! Yang penting adalah **siapa saja** yang terpilih, bukan dalam urutan apa mereka dipilih.
 
 Inilah perbedaan mendasar antara kombinasi dan permutasi. **Kombinasi** adalah cara memilih sejumlah objek dari kumpulan objek yang lebih besar, dimana **urutan tidak diperhatikan**.
 
@@ -38,7 +38,7 @@ Rumus kombinasi sebenarnya berasal dari rumus permutasi yang dibagi dengan <Inli
 
 <BlockMath math="C(n,k) = \frac{P(n,k)}{k!} = \frac{n!}{(n-k)! \times k!}" />
 
-Pembagian dengan <InlineMath math="k!" /> dilakukan karena dalam kombinasi, kita **tidak peduli urutan**. Setiap kelompok <InlineMath math="k" /> objek memiliki <InlineMath math="k!" /> cara pengaturan yang berbeda, tetapi semuanya dianggap **sama** dalam kombinasi.
+Pembagian dengan <InlineMath math="k!" /> dilakukan karena dalam kombinasi, kita **tidak peduli urutan**. Setiap kelompok <InlineMath math="k" /> objek memiliki <InlineMath math="k! \text{ cara}" /> pengaturan yang berbeda, tetapi semuanya dianggap **sama** dalam kombinasi.
 
 ## Penerapan dalam Situasi Nyata
 
@@ -96,13 +96,13 @@ Kadang-kadang ada **pembatasan tertentu** dalam pemilihan. Misalnya, dari 12 sis
 
 2. Sebuah tim futsal memiliki 12 pemain. Berapa cara memilih 5 pemain untuk bermain di lapangan?
 
-3. Dalam sebuah kotak terdapat 6 bola merah dan 4 bola biru. Berapa cara mengambil 5 bola dengan syarat minimal 3 bola merah?
+3. Dalam sebuah kotak terdapat <InlineMath math="6 \text{ bola}" /> merah dan <InlineMath math="4 \text{ bola}" /> biru. Berapa cara mengambil <InlineMath math="5 \text{ bola}" /> dengan syarat minimal <InlineMath math="3 \text{ bola}" /> merah?
 
 4. Seorang siswa harus memilih 4 mata pelajaran dari 10 mata pelajaran yang tersedia. Jika 6 mata pelajaran adalah wajib dan 4 mata pelajaran adalah pilihan, berapa cara memilih jika harus ada minimal 2 mata pelajaran wajib?
 
 ### Kunci Jawaban
 
-1. **Jawaban: 56 cara**
+1. **Jawaban: <InlineMath math="56 \text{ cara}" />**
    
    Langkah penyelesaian:
    
@@ -115,9 +115,9 @@ Kadang-kadang ada **pembatasan tertentu** dalam pemilihan. Misalnya, dari 12 sis
       <BlockMath math="C(8,3) = \frac{8!}{5! \times 3!} = \frac{8 \times 7 \times 6}{3 \times 2 \times 1} = \frac{336}{6} = 56" />
    </MathContainer>
    
-   Jadi, ada 56 cara memilih 3 buku dari 8 buku yang tersedia.
+   Jadi, ada <InlineMath math="56 \text{ cara}" /> memilih 3 buku dari 8 buku yang tersedia.
 
-2. **Jawaban: 792 cara**
+2. **Jawaban: <InlineMath math="792 \text{ cara}" />**
    
    Langkah penyelesaian:
    
@@ -130,15 +130,15 @@ Kadang-kadang ada **pembatasan tertentu** dalam pemilihan. Misalnya, dari 12 sis
       <BlockMath math="C(12,5) = \frac{12 \times 11 \times 10 \times 9 \times 8}{5 \times 4 \times 3 \times 2 \times 1} = \frac{95.040}{120} = 792" />
    </MathContainer>
    
-   Tim futsal dapat memilih 5 pemain dari 12 pemain dengan 792 cara berbeda.
+   Tim futsal dapat memilih 5 pemain dari 12 pemain dengan <InlineMath math="792 \text{ cara}" /> berbeda.
 
-3. **Jawaban: 186 cara**
+3. **Jawaban: <InlineMath math="186 \text{ cara}" />**
    
    Langkah penyelesaian (**metode kasus**):
    
-   Total bola: 6 merah + 4 biru = 10 bola
+   Total bola: 6 merah + 4 biru = <InlineMath math="10 \text{ bola}" />
    
-   Ambil 5 bola dengan minimal 3 bola merah
+   Ambil <InlineMath math="5 \text{ bola}" /> dengan minimal <InlineMath math="3 \text{ bola}" /> merah
    
    **Rincian perhitungan setiap kasus:**
    
@@ -162,9 +162,9 @@ Kadang-kadang ada **pembatasan tertentu** dalam pemilihan. Misalnya, dari 12 sis
    
    **Total:** <InlineMath math="120 + 60 + 6 = 186" />
    
-   Ada 186 cara mengambil 5 bola dengan minimal 3 bola merah.
+   Ada <InlineMath math="186 \text{ cara}" /> mengambil <InlineMath math="5 \text{ bola}" /> dengan minimal <InlineMath math="3 \text{ bola}" /> merah.
 
-4. **Jawaban: 185 cara**
+4. **Jawaban: <InlineMath math="185 \text{ cara}" />**
    
    Langkah penyelesaian (**metode kasus**):
    
@@ -194,4 +194,4 @@ Kadang-kadang ada **pembatasan tertentu** dalam pemilihan. Misalnya, dari 12 sis
    
    **Total:** <InlineMath math="90 + 80 + 15 = 185" />
    
-   Ada 185 cara memilih mata pelajaran dengan syarat yang diberikan.
+   Ada <InlineMath math="185 \text{ cara}" /> memilih mata pelajaran dengan syarat yang diberikan.

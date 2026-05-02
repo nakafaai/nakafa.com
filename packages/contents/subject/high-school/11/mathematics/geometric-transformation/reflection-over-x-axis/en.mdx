@@ -2,24 +2,24 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 import { getColor } from "@repo/design-system/lib/color";
 
 export const metadata = {
-  title: "Reflection over X Axis",
-  description: "Master X-axis reflection transformations. Learn how coordinates change (x,y) to (x,-y) with triangles, lines, and interactive visualizations.",
+  title: "Reflection over the Horizontal Axis",
+  description: "Master horizontal-axis reflection transformations. Learn how coordinates change with triangles, lines, and interactive visualizations.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/10/2025",
   subject: "Geometric Transformation",
 };
 
-## Understanding Reflection across the X-Axis
+## Understanding Reflection across the Horizontal Axis
 
-Reflection across the X-axis is a type of geometric transformation that moves every point of an object to a new position symmetrical to the X-axis. Imagine the X-axis as a flat mirror.
+Reflection across the <InlineMath math="x" />-axis is a type of geometric transformation that moves every point of an object to a new position symmetrical to the <InlineMath math="x" />-axis. Imagine the <InlineMath math="x" />-axis as a flat mirror.
 
 If a point <InlineMath math="P" /> has coordinates <InlineMath math="(x,y)" />, then its reflection, which we'll call <InlineMath math="P'" />, will have the same <InlineMath math="x" />-coordinate, but its <InlineMath math="y" />-coordinate will be the negative of the original <InlineMath math="y" /> value.
 
-Mathematically, if the initial point is <InlineMath math="P(x,y)" />, then after reflection across the X-axis, its image is <InlineMath math="P'(x,-y)" />.
+Mathematically, if the initial point is <InlineMath math="P(x,y)" />, then after reflection across the <InlineMath math="x" />-axis, its image is <InlineMath math="P'(x,-y)" />.
 
 ### Visualizing Points and Their Reflections
 
-Let's observe some points and their reflections after being mirrored across the X-axis.
+Let's observe some points and their reflections after being mirrored across the <InlineMath math="x" />-axis.
 
 Notice how the <InlineMath math="y" />-coordinate changes sign, while the <InlineMath math="x" />-coordinate remains the same.
 
@@ -29,7 +29,7 @@ Notice how the <InlineMath math="y" />-coordinate changes sign, while the <Inlin
     <>
       Visualization of points <InlineMath math="A, B, C, D" /> and their
       reflections <InlineMath math="A', B', C', D'" /> after mirroring across
-      the X-axis.
+      the <InlineMath math="x" />-axis.
     </>
   }
   cameraPosition={[0, 0, 15]}
@@ -75,19 +75,19 @@ Based on the interactive visualization above, we can observe the relationship be
 
 The visible pattern is that the <InlineMath math="x" /> value remains constant, and the <InlineMath math="y" /> value changes sign (becomes its opposite).
 
-## Property of Reflection across the X-Axis
+## Property of Reflection across the Horizontal Axis
 
-Based on the observations above, we can formulate the property of reflection across the X-axis:
+Based on the observations above, we can formulate the property of reflection across the <InlineMath math="x" />-axis:
 
 <BlockMath math="P(x,y) \xrightarrow{\text{X-axis}} P'(x,-y)" />
 
-This means the image of point <InlineMath math="P(x,y)" /> reflected across the X-axis is <InlineMath math="P'(x,-y)" />. The X-axis in this case acts as the line <InlineMath math="y=0" />.
+This means the image of point <InlineMath math="P(x,y)" /> reflected across the <InlineMath math="x" />-axis is <InlineMath math="P'(x,-y)" />. The <InlineMath math="x" />-axis in this case acts as the line <InlineMath math="y=0" />.
 
 ## Application Examples
 
 ### Reflecting a Triangle
 
-Determine the image of triangle <InlineMath math="ABC" /> with vertices <InlineMath math="A(-1,4)" />, <InlineMath math="B(2,1)" />, and <InlineMath math="C(-2,-1)" /> reflected across the X-axis.
+Determine the image of triangle <InlineMath math="ABC" /> with vertices <InlineMath math="A(-1,4)" />, <InlineMath math="B(2,1)" />, and <InlineMath math="C(-2,-1)" /> reflected across the <InlineMath math="x" />-axis.
 
 To determine the image of triangle <InlineMath math="ABC" />, we apply the reflection property to each of its vertices:
 
@@ -109,7 +109,7 @@ Consequently, the image of triangle <InlineMath math="ABC" /> is triangle <Inlin
     <>
       Visualization of triangle <InlineMath math="ABC" /> and its
       reflection <InlineMath math="A'B'C'" /> after mirroring across
-      the X-axis.
+      the <InlineMath math="x" />-axis.
     </>
   }
   cameraPosition={[0, 0, 15]}
@@ -174,7 +174,7 @@ Consequently, the image of triangle <InlineMath math="ABC" /> is triangle <Inlin
 
 ### Reflecting a Line
 
-If a line has the equation <InlineMath math="2x - 3y = 0" /> and is reflected across the X-axis, determine the equation of its reflected line.
+If a line has the equation <InlineMath math="2x - 3y = 0" /> and is reflected across the <InlineMath math="x" />-axis, determine the equation of its reflected line.
 
 **Alternative Solution:**
 
@@ -182,7 +182,7 @@ Let an arbitrary point <InlineMath math="P(a,b)" /> lie on the line <InlineMath 
 
 <BlockMath math="2a - 3b = 0" />
 
-The point <InlineMath math="P(a,b)" /> reflected across the X-axis produces the image <InlineMath math="P'(a,-b)" />.
+The point <InlineMath math="P(a,b)" /> reflected across the <InlineMath math="x" />-axis produces the image <InlineMath math="P'(a,-b)" />.
 
 To obtain the equation of the reflected line, we substitute the coordinates of the image into new variables. Let <InlineMath math="x' = a" /> and <InlineMath math="y' = -b" />.
 
@@ -238,4 +238,4 @@ Thus, the equation of the reflected line is:
   />
 </div>
 
-This shows how the equation of a line changes after being reflected across the X-axis.
+This shows how the equation of a line changes after being reflected across the <InlineMath math="x" />-axis.

@@ -1,0 +1,161 @@
+import { ChemicalReactionTypesLab } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/lab";
+
+export const metadata = {
+  title: "Types of Chemical Reactions",
+  description:
+    "Recognize combustion, rusting, precipitation, and gas-forming reactions through a 3D model and balanced chemical equations.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/01/2026",
+  subject: "Basic Laws of Chemistry",
+};
+
+## Reactions Have Patterns
+
+When substances react, we do more than notice clues such as heat, color, precipitates, or gas. We can also read the **reaction type** from the pattern of reactants and products.
+
+This lesson uses four common examples: combustion, rusting, precipitation, and gas formation. OpenStax Chemistry 2e also groups reactions through examples such as precipitation, acid-base reactions, and oxidation-reduction in [Classifying Chemical Reactions](https://openstax.org/books/chemistry-2e/pages/4-2-classifying-chemical-reactions).
+
+## Reaction Type Lab
+
+Choose one reaction type. Watch the visible change first, then match it with the chemical equation.
+
+<ChemicalReactionTypesLab
+  title={<>Reaction Type Reader</>}
+  description={
+    <>
+      This model places reactants on the left and products on the right. Focus on
+      the new substance that forms, not only on the shape of the model.
+    </>
+  }
+  labels={{
+    chooseType: "Choose a chemical reaction type",
+    before: "Reactants",
+    after: "Products",
+    reactionView: "Three-dimensional model of chemical reaction types",
+    equationLabel: "Balanced equation",
+    visibleCueLabel: "What appears",
+    readingLabel: "Type to read",
+    checkLabel: "Quick check",
+    types: {
+      combustion: {
+        tab: "Combustion",
+        helperCaption: (
+          <>
+            Phosphorus and oxygen form an oxide while releasing heat and light.
+          </>
+        ),
+        equation: (
+          <InlineMath math="\mathrm{P_4} + 5\mathrm{O_2} \rightarrow 2\mathrm{P_2O_5}" />
+        ),
+        visibleCue: <>Heat and light appear.</>,
+        reading: (
+          <>
+            The reactant combines with <InlineMath math="\mathrm{O_2}" />.
+          </>
+        ),
+        check: <>The atoms on the left and right must match.</>,
+      },
+      rust: {
+        tab: "Rusting",
+        helperCaption: <>Iron reacts with oxygen and water until a rust layer forms.</>,
+        equation: (
+          <InlineMath math="4\mathrm{Fe} + 3\mathrm{O_2} + 2x\mathrm{H_2O} \rightarrow 2\mathrm{Fe_2O_3} \cdot x\mathrm{H_2O}" />
+        ),
+        visibleCue: <>The surface color changes.</>,
+        reading: <>Iron is oxidized into rust.</>,
+        check: (
+          <>
+            <InlineMath math="x" /> means the amount of water attached to each{" "}
+            <InlineMath math="\mathrm{Fe_2O_3}" />.
+          </>
+        ),
+      },
+      precipitate: {
+        tab: "Precipitate",
+        helperCaption: <>Ions in solution assemble into a poorly soluble solid product.</>,
+        equation: (
+          <InlineMath math="\mathrm{Ca(OH)_2} + \mathrm{NaHCO_3} \rightarrow \mathrm{CaCO_3} + \mathrm{NaOH} + \mathrm{H_2O}" />
+        ),
+        visibleCue: <>A new solid appears.</>,
+        reading: (
+          <>
+            The product <InlineMath math="\mathrm{CaCO_3}" /> is poorly soluble,
+            so it appears as a precipitate.
+          </>
+        ),
+        check: <>If a new solid appears from solution, look for a precipitate.</>,
+      },
+      gas: {
+        tab: "Gas",
+        helperCaption: <>A gas product leaves the mixture as bubbles.</>,
+        equation: (
+          <InlineMath math="\mathrm{C_6H_{12}O_6} \rightarrow 2\mathrm{C_2H_5OH} + 2\mathrm{CO_2}" />
+        ),
+        visibleCue: <>Gas bubbles form.</>,
+        reading: (
+          <>
+            One product is <InlineMath math="\mathrm{CO_2}" />.
+          </>
+        ),
+        check: <>When gas is a product, bubbles or gas leaving the mixture may appear.</>,
+      },
+    },
+  }}
+/>
+
+## Four Examples to Recognize
+
+### Combustion
+
+Combustion happens when a substance reacts with oxygen and usually releases energy as heat or light. For burning phosphorus, a common school-level equation is:
+
+<BlockMath math="\mathrm{P_4} + 5\mathrm{O_2} \rightarrow 2\mathrm{P_2O_5}" />
+
+Some chemistry sources write the phosphorus oxide as <InlineMath math="\mathrm{P_4O_{10}}" />. That does not contradict the equation above because <InlineMath math="\mathrm{P_2O_5}" /> is its empirical formula. For coefficient practice here, <InlineMath math="\mathrm{2P_2O_5}" /> keeps the numbers of <InlineMath math="\mathrm{P}" /> and <InlineMath math="\mathrm{O}" /> atoms balanced.
+
+### Rusting
+
+Rusting is an example of oxidation in metals. Iron reacts with oxygen and water, then forms rust, often written as hydrated iron(III) oxide.
+
+<BlockMath math="4\mathrm{Fe} + 3\mathrm{O_2} + 2x\mathrm{H_2O} \rightarrow 2\mathrm{Fe_2O_3} \cdot x\mathrm{H_2O}" />
+
+The letter <InlineMath math="x" /> means the amount of water in rust is not always one fixed number. Because the product has coefficient <InlineMath math="2" />, the water on the left is written as <InlineMath math="2x\mathrm{H_2O}" /> so the equation stays balanced. The key pattern here is that iron changes into a new reddish-brown substance.
+
+### Precipitation
+
+Precipitation happens when a newly formed substance does not dissolve well in the mixture. For example, limewater can react with dissolved baking soda and form calcium carbonate as a white precipitate.
+
+<BlockMath math="\mathrm{Ca(OH)_2} + \mathrm{NaHCO_3} \rightarrow \mathrm{CaCO_3} + \mathrm{NaOH} + \mathrm{H_2O}" />
+
+The product <InlineMath math="\mathrm{CaCO_3}" /> matters because this compound appears as the solid. A precipitate is a newly formed product with low solubility, not just material that falls to the bottom.
+
+### Gas Formation
+
+In some reactions, one product escapes as a gas. Fermentation of glucose can produce ethanol and carbon dioxide.
+
+<BlockMath math="\mathrm{C_6H_{12}O_6} \rightarrow 2\mathrm{C_2H_5OH} + 2\mathrm{CO_2}" />
+
+The coefficient <InlineMath math="2" /> before ethanol and carbon dioxide should not be dropped. Without it, the carbon, hydrogen, and oxygen atoms would not be balanced.
+
+## Coefficients Do Not Change Formulas
+
+A coefficient is the number placed before a chemical formula. We may change coefficients so the number of atoms before and after the reaction matches.
+
+<BlockMath math="\mathrm{P_4} + 5\mathrm{O_2} \rightarrow 2\mathrm{P_2O_5}" />
+
+In this equation, <InlineMath math="5" /> before <InlineMath math="\mathrm{O_2}" /> and <InlineMath math="2" /> before <InlineMath math="\mathrm{P_2O_5}" /> are coefficients. The formula <InlineMath math="\mathrm{O_2}" /> must not be changed into <InlineMath math="\mathrm{O_5}" />, because that would change the substance.
+
+## The Name Helps, the Equation Decides
+
+Names such as combustion, precipitation, or gas formation help us predict the reaction pattern. The final check still comes from the balanced chemical equation.
+
+Use this quick check.
+
+| Reaction type | Nearby clue | What to check |
+| :------------ | :---------- | :------------ |
+| Combustion | <InlineMath math="\mathrm{O_2}" /> appears and energy is released. | Atoms on the left and right are balanced. |
+| Rusting | A metal changes color into rust. | The new product contains metal and oxygen. |
+| Precipitation | A new solid appears from solution. | The solid product is written as a new compound. |
+| Gas formation | Bubbles or gas leave the mixture. | A gas product such as <InlineMath math="\mathrm{CO_2}" /> appears. |
+
+Once the reaction type is readable, the next move is to write the reaction neatly. Put reactants on the left, products on the right, then adjust coefficients until the atoms balance.

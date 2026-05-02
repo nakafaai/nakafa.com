@@ -23,7 +23,7 @@
     "react": "19.2.5",
     "react-aria-components": "^1.17.0",
     "recharts": "^2.15.4",
-    "zod": "^4.4.1"
+    "zod": "^4.4.2"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

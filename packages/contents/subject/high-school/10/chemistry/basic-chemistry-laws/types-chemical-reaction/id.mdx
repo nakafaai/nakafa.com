@@ -1,0 +1,162 @@
+import { ChemicalReactionTypesLab } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/lab";
+
+export const metadata = {
+  title: "Jenis Reaksi Kimia",
+  description:
+    "Kenali pembakaran, perkaratan, pengendapan, dan pembentukan gas lewat model 3D serta persamaan reaksi yang setara.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/01/2026",
+  subject: "Hukum Dasar Kimia",
+};
+
+## Reaksi Punya Pola
+
+Saat zat bereaksi, kita tidak hanya melihat tanda seperti panas, warna, endapan, atau gas. Kita juga bisa membaca **jenis reaksinya** dari pola reaktan dan produk.
+
+Kita pakai empat contoh yang sering muncul di sekitar kita, yaitu pembakaran, perkaratan, pengendapan, dan pembentukan gas. OpenStax Chemistry 2e juga membahas cara mengelompokkan reaksi lewat contoh seperti pengendapan, reaksi asam-basa, dan oksidasi-reduksi di [Classifying Chemical Reactions](https://openstax.org/books/chemistry-2e/pages/4-2-classifying-chemical-reactions).
+
+## Lab Jenis Reaksi
+
+Pilih satu jenis reaksi. Perhatikan dulu perubahan yang tampak, lalu cocokkan dengan persamaan reaksinya.
+
+<ChemicalReactionTypesLab
+  title={<>Pembaca Jenis Reaksi</>}
+  description={
+    <>
+      Model ini menampilkan reaktan di kiri dan produk di kanan. Fokuskan
+      perhatian pada zat baru yang terbentuk, bukan sekadar bentuk modelnya.
+    </>
+  }
+  labels={{
+    chooseType: "Pilih jenis reaksi kimia",
+    before: "Reaktan",
+    after: "Produk",
+    reactionView: "Model tiga dimensi jenis reaksi kimia",
+    equationLabel: "Persamaan setara",
+    visibleCueLabel: "Yang tampak",
+    readingLabel: "Jenis yang dibaca",
+    checkLabel: "Cara cek cepat",
+    types: {
+      combustion: {
+        tab: "Pembakaran",
+        helperCaption: (
+          <>
+            Fosfor dan oksigen berubah menjadi oksida sambil melepas panas dan
+            cahaya.
+          </>
+        ),
+        equation: (
+          <InlineMath math="\mathrm{P_4} + 5\mathrm{O_2} \rightarrow 2\mathrm{P_2O_5}" />
+        ),
+        visibleCue: <>Panas dan cahaya muncul.</>,
+        reading: (
+          <>
+            Reaktan bereaksi dengan <InlineMath math="\mathrm{O_2}" />.
+          </>
+        ),
+        check: <>Jumlah atom di kiri dan kanan harus sama.</>,
+      },
+      rust: {
+        tab: "Perkaratan",
+        helperCaption: <>Besi bereaksi dengan oksigen dan air hingga lapisan karat terbentuk.</>,
+        equation: (
+          <InlineMath math="4\mathrm{Fe} + 3\mathrm{O_2} + 2x\mathrm{H_2O} \rightarrow 2\mathrm{Fe_2O_3} \cdot x\mathrm{H_2O}" />
+        ),
+        visibleCue: <>Warna permukaan berubah.</>,
+        reading: <>Besi teroksidasi menjadi karat.</>,
+        check: (
+          <>
+            <InlineMath math="x" /> menunjukkan jumlah air yang menempel pada
+            tiap <InlineMath math="\mathrm{Fe_2O_3}" />.
+          </>
+        ),
+      },
+      precipitate: {
+        tab: "Endapan",
+        helperCaption: <>Ion dalam larutan menyusun produk padat yang sukar larut.</>,
+        equation: (
+          <InlineMath math="\mathrm{Ca(OH)_2} + \mathrm{NaHCO_3} \rightarrow \mathrm{CaCO_3} + \mathrm{NaOH} + \mathrm{H_2O}" />
+        ),
+        visibleCue: <>Padatan baru muncul.</>,
+        reading: (
+          <>
+            Produk <InlineMath math="\mathrm{CaCO_3}" /> sukar larut, sehingga
+            tampak sebagai endapan.
+          </>
+        ),
+        check: <>Kalau produk padat baru muncul dari larutan, cari tanda endapan.</>,
+      },
+      gas: {
+        tab: "Gas",
+        helperCaption: <>Produk gas keluar dari campuran sebagai gelembung.</>,
+        equation: (
+          <InlineMath math="\mathrm{C_6H_{12}O_6} \rightarrow 2\mathrm{C_2H_5OH} + 2\mathrm{CO_2}" />
+        ),
+        visibleCue: <>Gelembung gas terbentuk.</>,
+        reading: (
+          <>
+            Salah satu produk adalah <InlineMath math="\mathrm{CO_2}" />.
+          </>
+        ),
+        check: <>Jika gas adalah produk reaksi, biasanya ada gelembung atau gas keluar.</>,
+      },
+    },
+  }}
+/>
+
+## Empat Contoh yang Perlu Kamu Kenali
+
+### Pembakaran
+
+Pembakaran terjadi ketika suatu zat bereaksi dengan oksigen dan biasanya melepas energi sebagai panas atau cahaya. Pada pembakaran fosfor, persamaan yang sering dipakai di buku sekolah adalah:
+
+<BlockMath math="\mathrm{P_4} + 5\mathrm{O_2} \rightarrow 2\mathrm{P_2O_5}" />
+
+Ada buku kimia yang menulis oksida fosfor sebagai <InlineMath math="\mathrm{P_4O_{10}}" />. Itu tidak bertentangan dengan bentuk di atas, karena <InlineMath math="\mathrm{P_2O_5}" /> adalah rumus empirisnya. Untuk latihan koefisien di sini, bentuk <InlineMath math="\mathrm{2P_2O_5}" /> sudah menjaga jumlah atom <InlineMath math="\mathrm{P}" /> dan <InlineMath math="\mathrm{O}" /> tetap sama.
+
+### Perkaratan
+
+Perkaratan adalah contoh oksidasi pada logam. Besi bereaksi dengan oksigen dan air, lalu membentuk karat yang sering ditulis sebagai hidrat besi(III) oksida.
+
+<BlockMath math="4\mathrm{Fe} + 3\mathrm{O_2} + 2x\mathrm{H_2O} \rightarrow 2\mathrm{Fe_2O_3} \cdot x\mathrm{H_2O}" />
+
+Huruf <InlineMath math="x" /> berarti jumlah air dalam karat tidak selalu satu angka tetap. Karena produk ditulis dengan koefisien <InlineMath math="2" />, air di kiri ditulis <InlineMath math="2x\mathrm{H_2O}" /> agar persamaannya tetap setara. Yang penting untuk dibaca adalah polanya, yaitu besi berubah menjadi zat baru berwarna cokelat kemerahan.
+
+### Pengendapan
+
+Pengendapan terjadi ketika zat baru yang terbentuk tidak larut dalam campuran. Misalnya, larutan kapur bereaksi dengan soda kue yang sudah larut dan menghasilkan kalsium karbonat sebagai endapan putih.
+
+<BlockMath math="\mathrm{Ca(OH)_2} + \mathrm{NaHCO_3} \rightarrow \mathrm{CaCO_3} + \mathrm{NaOH} + \mathrm{H_2O}" />
+
+Tanda <InlineMath math="\mathrm{CaCO_3}" /> penting karena senyawa inilah yang muncul sebagai padatan. Jadi, endapan bukan sekadar zat yang turun ke dasar, tetapi produk baru yang sukar larut.
+
+### Pembentukan Gas
+
+Pada beberapa reaksi, salah satu produk keluar sebagai gas. Fermentasi glukosa dapat menghasilkan etanol dan karbon dioksida.
+
+<BlockMath math="\mathrm{C_6H_{12}O_6} \rightarrow 2\mathrm{C_2H_5OH} + 2\mathrm{CO_2}" />
+
+Koefisien <InlineMath math="2" /> di depan etanol dan karbon dioksida tidak boleh dihilangkan, karena tanpa angka itu jumlah atom karbon, hidrogen, dan oksigen tidak seimbang.
+
+## Koefisien Tidak Mengubah Rumus
+
+Koefisien adalah angka di depan rumus zat. Angka ini boleh diubah supaya jumlah atom sebelum dan sesudah reaksi sama.
+
+<BlockMath math="\mathrm{P_4} + 5\mathrm{O_2} \rightarrow 2\mathrm{P_2O_5}" />
+
+Pada persamaan itu, angka <InlineMath math="5" /> di depan <InlineMath math="\mathrm{O_2}" /> dan angka <InlineMath math="2" /> di depan <InlineMath math="\mathrm{P_2O_5}" /> adalah koefisien. Rumus <InlineMath math="\mathrm{O_2}" /> tidak boleh diganti menjadi <InlineMath math="\mathrm{O_5}" />, karena itu akan mengubah zatnya.
+
+## Nama Jenis Membantu, Persamaan Tetap Menentukan
+
+Nama seperti pembakaran, pengendapan, atau pembentukan gas membantu kita menebak pola reaksi. Namun, jawaban akhirnya tetap dibaca dari persamaan reaksi yang setara.
+
+Cara ceknya sederhana.
+
+| Jenis reaksi | Petunjuk dekat | Yang harus dicek |
+| :----------- | :------------- | :--------------- |
+| Pembakaran | Ada <InlineMath math="\mathrm{O_2}" /> dan energi dilepas. | Atom di kiri dan kanan setara. |
+| Perkaratan | Logam berubah warna menjadi karat. | Produk baru mengandung logam dan oksigen. |
+| Pengendapan | Padatan baru muncul dari larutan. | Produk padatnya ditulis sebagai senyawa baru. |
+| Pembentukan gas | Gelembung atau gas keluar. | Ada produk berwujud gas seperti <InlineMath math="\mathrm{CO_2}" />. |
+
+Kalau jenisnya sudah terbaca, langkah berikutnya adalah menulis reaksi dengan rapi. Letakkan reaktan di kiri, produk di kanan, lalu atur koefisien sampai jumlah atomnya seimbang.

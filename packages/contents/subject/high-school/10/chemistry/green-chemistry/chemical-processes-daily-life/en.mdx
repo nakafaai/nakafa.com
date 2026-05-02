@@ -1,0 +1,192 @@
+import { MatterParticleReaderLab } from "@repo/design-system/components/contents/chemistry/matter-particle-reader/lab";
+
+export const metadata = {
+  title: "Daily Chemical Processes",
+  description:
+    "Read everyday chemical processes through atoms, elements, molecules, reaction equations, then judge whether the process fits green chemistry principles.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/02/2026",
+  subject: "Green Chemistry",
+};
+
+## Read the Process First
+
+Before judging an activity as "green" or "not green", we need to know what chemical process is happening. Burning waste, washing clothes, making compost, cooking, photosynthesis in plants, and rusting iron all involve substances changing or interacting.
+
+Green chemistry does not ask whether a process looks natural. It asks whether the process is designed to reduce hazards, waste, excessive energy use, single-use materials, and accident risks from the start. EPA summarizes this idea as designing chemical products and processes that reduce the use or generation of hazardous substances in [Basics of Green Chemistry](https://www.epa.gov/greenchemistry/basics-green-chemistry).
+
+Use this simple order to read a process.
+
+| What to read | Question |
+| :----------- | :------- |
+| Starting substances | What substances enter the process? |
+| Change | Are the substances only mixed, or do they become new substances? |
+| Products | What substances form after the process runs? |
+| Impact | Is there waste, excess heat, hazardous gas, or material that is hard to degrade? |
+
+## Atoms, Elements, and Molecules
+
+The periodic table helps us read element symbols, but symbols alone are not enough. We need to know whether we are reading an atom, an element, an elemental molecule, or a compound molecule.
+
+According to the IUPAC Gold Book, an **atom** is the smallest particle that still characterizes a chemical element. A **chemical element** means atoms with the same number of protons. A **molecule** is a neutral entity made of multiple atoms.
+
+<MatterParticleReaderLab
+  title={<>Atom and Molecule Model</>}
+  description={
+    <>
+      Rotate the model to distinguish one atom, one element, an elemental
+      molecule, and a compound molecule before reading reaction equations.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose a substance type",
+    particleView: "Atom, element, and molecule model",
+    categoryLabel: "What you are reading",
+    readingLabel: "How to read it",
+    modes: {
+      atom: {
+        tab: "Atom",
+        tabLabel: "Atom",
+        helperCaption: (
+          <>One particle is still read as an atom, not a molecule.</>
+        ),
+        category: (
+          <>
+            One <InlineMath math="\mathrm{C}" /> atom.
+          </>
+        ),
+        reading: <>One particle that still characterizes carbon.</>,
+      },
+      element: {
+        tab: "Element",
+        tabLabel: "Element",
+        helperCaption: (
+          <>Several same-kind atoms still show the same element.</>
+        ),
+        category: (
+          <>
+            Carbon as an element, written <InlineMath math="\mathrm{C}" />.
+          </>
+        ),
+        reading: <>Every particle has the same atomic identity.</>,
+      },
+      "elemental-molecule": {
+        tab: "Elemental Molecule",
+        tabLabel: "Elemental molecule",
+        helperCaption: (
+          <>Bonds may be present, but the atoms are still one element.</>
+        ),
+        category: (
+          <>
+            <InlineMath math="\mathrm{O_2}" /> and{" "}
+            <InlineMath math="\mathrm{N_2}" />.
+          </>
+        ),
+        reading: <>Each molecule is made from one kind of element.</>,
+      },
+      "compound-molecule": {
+        tab: "Compound Molecule",
+        tabLabel: "Compound molecule",
+        helperCaption: (
+          <>Once different elements are bonded, read it as a compound.</>
+        ),
+        category: (
+          <>
+            <InlineMath math="\mathrm{H_2O}" /> and{" "}
+            <InlineMath math="\mathrm{CO_2}" />.
+          </>
+        ),
+        reading: <>Each molecule bonds atoms from different elements.</>,
+      },
+    },
+  }}
+/>
+
+For this lesson, read them like this.
+
+| Term | How to read it | Example |
+| :--- | :------------- | :------ |
+| Atom | One particle of an element. | a <InlineMath math="\mathrm{C}" /> atom or an <InlineMath math="\mathrm{O}" /> atom |
+| Element | A substance whose atomic identity is fixed by proton number. | iron, carbon, oxygen |
+| Elemental molecule | A molecule made from atoms of the same element. | <InlineMath math="\mathrm{O_2}" />, <InlineMath math="\mathrm{N_2}" />, <InlineMath math="\mathrm{P_4}" />, <InlineMath math="\mathrm{S_8}" /> |
+| Compound molecule | A molecule made from atoms of different elements. | <InlineMath math="\mathrm{H_2O}" />, <InlineMath math="\mathrm{CO_2}" />, <InlineMath math="\mathrm{C_6H_{12}O_6}" /> |
+
+Important note: not every compound exists as separate molecules. Table salt, for example, is usually read as an ionic arrangement, not as one single molecule. The examples on this page use molecules because we are practicing simple reaction equations.
+
+## Equations as Maps
+
+A chemical reaction equation is a compact map. Substances on the left are **reactants**, substances on the right are **products**, the arrow means "yields", and numbers placed before formulas are called **coefficients**.
+
+OpenStax explains that reactants are written on the left, products on the right, plus signs separate substances, and coefficients show relative amounts in [Writing and Balancing Chemical Equations](https://openstax.org/books/chemistry-2e/pages/4-1-writing-and-balancing-chemical-equations).
+
+The basic pattern is:
+
+<BlockMath math="\text{reactants} \rightarrow \text{products}" />
+
+State symbols are written after the formula.
+
+| Symbol | Meaning |
+| :----- | :------ |
+| <InlineMath math="\mathrm{(s)}" /> | solid |
+| <InlineMath math="\mathrm{(l)}" /> | liquid |
+| <InlineMath math="\mathrm{(g)}" /> | gas |
+| <InlineMath math="\mathrm{(aq)}" /> | dissolved in water |
+
+Coefficients may be changed to balance a reaction. Subscripts inside formulas must not be changed casually, because subscripts define the substance. Writing <InlineMath math="\mathrm{H_2O}" /> is different from writing <InlineMath math="\mathrm{H_2O_2}" />.
+
+## Reading Photosynthesis
+
+Photosynthesis is often written as a summary reaction. The real process has many steps, but the summary equation helps us see how atoms are rearranged. OpenStax Concepts of Biology explains that photosynthesis uses carbon dioxide and water to produce sugar and oxygen in [Overview of Photosynthesis](https://openstax.org/books/concepts-biology/pages/5-1-overview-of-photosynthesis).
+
+An unbalanced equation can be written as:
+
+<BlockMath math="\mathrm{CO_2(g)} + \mathrm{H_2O(l)} \rightarrow \mathrm{C_6H_{12}O_6(s)} + \mathrm{O_2(g)}" />
+
+If we count atoms, the two sides do not match.
+
+| Element | Left | Right |
+| :------ | :--- | :---- |
+| <InlineMath math="\mathrm{C}" /> | <InlineMath math="1" /> | <InlineMath math="6" /> |
+| <InlineMath math="\mathrm{H}" /> | <InlineMath math="2" /> | <InlineMath math="12" /> |
+| <InlineMath math="\mathrm{O}" /> | <InlineMath math="3" /> | <InlineMath math="8" /> |
+
+The right coefficients make the atom count match:
+
+<BlockMath math="6\mathrm{CO_2(g)} + 6\mathrm{H_2O(l)} \xrightarrow{\text{light}} \mathrm{C_6H_{12}O_6(s)} + 6\mathrm{O_2(g)}" />
+
+Now the count is balanced.
+
+| Element | Left | Right |
+| :------ | :--- | :---- |
+| <InlineMath math="\mathrm{C}" /> | <InlineMath math="6" /> | <InlineMath math="6" /> |
+| <InlineMath math="\mathrm{H}" /> | <InlineMath math="12" /> | <InlineMath math="12" /> |
+| <InlineMath math="\mathrm{O}" /> | <InlineMath math="18" /> | <InlineMath math="18" /> |
+
+The point is not memorizing the photosynthesis numbers. The useful habit is reading the equation correctly: do not change formulas, adjust coefficients, and keep the atom count equal on both sides.
+
+## From Reaction to Green Judgment
+
+After we can read a reaction, we can judge whether the process fits green chemistry principles. A process can be useful but still not green if it forms pollutants, uses unnecessary hazardous substances, or needs too much energy.
+
+| Everyday process | Chemical reading | Green chemistry note |
+| :--------------- | :--------------- | :------------------- |
+| Burning plastic waste | Organic substances in plastic react with oxygen and heat. | Not aligned because hazardous smoke can form and waste is not prevented at the source. |
+| Using cleaner in the right amount | Cleaning agents help remove dirt without excessive use. | Closer to waste prevention, but hazard labels still matter. |
+| Composting food scraps | Microorganisms break organic materials into simpler materials. | Can reduce organic waste if managed without odor, leachate, or pests. |
+| Randomly mixing household cleaners | Substances that are safe separately can react to form hazardous gas. | Not aligned because it increases accident risk. Do not mix cleaning products without official instructions. |
+
+Notice that "natural" and "green" are not always the same. Composting can help, but poor management can still create problems. A manufactured cleaner can be safer if its formula is clear, the dose is right, and waste is reduced.
+
+## Judging Processes from Substances and Impact
+
+Imagine three ways to handle dry leaves in a yard.
+
+| Option | What happens | Judgment |
+| :----- | :----------- | :------- |
+| Burn them | Leaves react with oxygen and produce smoke. | Not suitable for green chemistry because pollution forms. |
+| Put them in mixed trash | The leaves do not immediately react, but they add to waste handling. | Better than burning, but it still does not prevent waste. |
+| Compost them properly | Organic material slowly breaks down into compost. | Closer to green chemistry because it reduces waste and reuses existing material. |
+
+The best answer here is **proper composting**. The reason is not that compost sounds natural, but that the pathway reduces burning, reduces waste, and makes use of organic material that already exists.
+
+Reading everyday chemical processes always starts with the substances: what enters, what changes, what comes out, and which hazards can be prevented from the start.

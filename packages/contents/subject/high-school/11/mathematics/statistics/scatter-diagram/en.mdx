@@ -10,7 +10,7 @@ export const metadata = {
 
 ## What Is a Scatter Diagram?
 
-A Scatter Diagram is like a map that shows the relationship between two types of data. For example, we might want to see the relationship between study time (X-axis) and exam scores (Y-axis).
+A Scatter Diagram is like a map that shows the relationship between two types of data. For example, we might want to see the relationship between study time (<InlineMath math="x" />-axis) and exam scores (<InlineMath math="y" />-axis).
 
 Each point on the diagram represents one pair of data (e.g., one student's data). By looking at the pattern of the points, we can understand their relationship.
 
@@ -98,7 +98,11 @@ If the points tend to fall from the top left to the bottom right, it means there
 If the points are scattered randomly without a clear pattern, it means there is **no correlation** or the correlation is very weak. We can also display different groups in one diagram.
 
 <ScatterDiagram
-  title="Relationship Between Height (cm) and 100m Run Time (seconds) for Two Schools"
+  title={
+    <>
+      Relationship Between Height (<InlineMath math="\text{cm}" />) and <InlineMath math="100 \text{ m}" /> Run Time (seconds) for Two Schools
+    </>
+  }
   description="Example of no correlation between height and running speed, with data from two different schools."
   xAxisLabel="Height (cm)"
   yAxisLabel="100m Run Time (seconds)"

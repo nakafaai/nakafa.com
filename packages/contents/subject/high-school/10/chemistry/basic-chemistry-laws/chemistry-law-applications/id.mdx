@@ -1,0 +1,118 @@
+export const metadata = {
+  title: "Aplikasi Hukum Kimia",
+  description:
+    "Gunakan hukum dasar kimia untuk membaca data massa, rasio senyawa, pasangan senyawa, dan volume gas tanpa tertukar langkah.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/02/2026",
+  subject: "Hukum Dasar Kimia",
+};
+
+## Memilih Hukum dari Data
+
+Aplikasi hukum dasar kimia bukan sekadar menghafal bunyi hukum. Tugas utamanya adalah membaca data: apakah data itu menjaga massa total, mengunci perbandingan penyusun senyawa, membandingkan dua senyawa dari unsur yang sama, atau memakai volume gas pada kondisi yang sama.
+
+OpenStax Chemistry 2e menyebut perhitungan stoikiometri sebagai perhitungan yang memakai faktor dari persamaan reaksi setara untuk menghubungkan jumlah zat di [Reaction Stoichiometry](https://openstax.org/books/chemistry-2e/pages/4-3-reaction-stoichiometry). Jadi sebelum menghitung, pastikan dulu persamaan reaksi, zat yang ditanya, dan satuan datanya.
+
+Mulai dari jenis data yang diberikan.
+
+- Jika semua zat dalam sistem dihitung, pakai hukum kekekalan massa.
+- Jika satu senyawa murni ditanya komposisinya, pakai hukum perbandingan tetap.
+- Jika dua senyawa berbeda tersusun dari dua unsur yang sama, pakai hukum perbandingan berganda.
+- Jika zat yang dibandingkan semuanya gas pada suhu dan tekanan yang sama, pakai hukum perbandingan volume.
+
+## Pola Massa dan Volume
+
+Soal aplikasi biasanya menjadi lebih mudah ketika kita melihat apa yang dibuat tetap sebelum angka dihitung.
+
+### Sistem Reaksi
+
+Misalkan <InlineMath math="10{,}00\ \mathrm{g}" /> seng bereaksi dengan <InlineMath math="2{,}00\ \mathrm{g}" /> belerang. Setelah reaksi terbentuk <InlineMath math="6{,}08\ \mathrm{g}" /> seng sulfida dan tersisa <InlineMath math="5{,}92\ \mathrm{g}" /> seng.
+
+<BlockMath math="\mathrm{Zn(s)} + \mathrm{S(s)} \rightarrow \mathrm{ZnS(s)}" />
+
+Bagian seng yang bereaksi bukan <InlineMath math="10{,}00\ \mathrm{g}" />, karena ada seng yang tersisa.
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{Zn\ bereaksi}} &= 10{,}00 - 5{,}92 = 4{,}08\ \mathrm{g} \\
+m_{\mathrm{reaktan\ bereaksi}} &= 4{,}08 + 2{,}00 = 6{,}08\ \mathrm{g}
+\end{aligned}" />
+
+Massa reaktan yang benar-benar bereaksi sama dengan massa produk. Jika seluruh wadah dihitung, massa sebelum dan sesudah juga tetap <InlineMath math="12{,}00\ \mathrm{g}" />.
+
+### Komposisi Satu Senyawa
+
+Kalsium oksida, <InlineMath math="\mathrm{CaO}" />, dapat diuji dengan dua sampel berbeda. Sampel pertama memiliki massa <InlineMath math="2{,}8\ \mathrm{g}" /> dan memuat <InlineMath math="0{,}8\ \mathrm{g}" /> oksigen. Sampel kedua memiliki massa <InlineMath math="3{,}5\ \mathrm{g}" /> dan memuat <InlineMath math="1{,}0\ \mathrm{g}" /> oksigen.
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{Ca,1}} &= 2{,}8 - 0{,}8 = 2{,}0\ \mathrm{g} \\
+m_{\mathrm{Ca,2}} &= 3{,}5 - 1{,}0 = 2{,}5\ \mathrm{g} \\
+2{,}0:0{,}8 &= 2{,}5:1 \\
+2{,}5:1{,}0 &= 2{,}5:1
+\end{aligned}" />
+
+Massa sampel boleh berbeda, tetapi rasio massa kalsium terhadap oksigen tetap sama. Itulah pola hukum perbandingan tetap.
+
+### Dua Senyawa dari Unsur Sama
+
+Air dan hidrogen peroksida sama-sama tersusun dari hidrogen dan oksigen, tetapi rumusnya berbeda.
+
+<BlockMath math="\mathrm{H_2O}\quad\text{dan}\quad\mathrm{H_2O_2}" />
+
+Dengan <InlineMath math="A_r\mathrm{(H)} = 1" /> dan <InlineMath math="A_r\mathrm{(O)} = 16" />, massa hidrogen pada kedua senyawa bisa dibuat sama, yaitu <InlineMath math="2\ \mathrm{g}" />.
+
+<BlockMath math="\begin{aligned}
+\mathrm{H_2O} &: 2\ \mathrm{g\ H} + 16\ \mathrm{g\ O} \\
+\mathrm{H_2O_2} &: 2\ \mathrm{g\ H} + 32\ \mathrm{g\ O} \\
+m_{\mathrm{O}} &: 16:32 = 1:2
+\end{aligned}" />
+
+Karena massa hidrogen sudah sama, yang dibandingkan adalah massa oksigen. Rasio <InlineMath math="1:2" /> adalah bilangan bulat sederhana, sesuai hukum perbandingan berganda.
+
+### Gas pada Kondisi Sama
+
+Untuk gas pada suhu dan tekanan yang sama, koefisien reaksi setara dapat langsung dibaca sebagai rasio volume. Misalnya penguraian amonia:
+
+<BlockMath math="2\mathrm{NH_3(g)} \rightarrow 3\mathrm{H_2(g)} + \mathrm{N_2(g)}" />
+
+Jika <InlineMath math="600\ \mathrm{mL}" /> amonia terurai, maka <InlineMath math="2" /> bagian sama dengan <InlineMath math="600\ \mathrm{mL}" /> dan <InlineMath math="1" /> bagian sama dengan <InlineMath math="300\ \mathrm{mL}" />.
+
+<BlockMath math="\begin{aligned}
+V_{\mathrm{H_2}} &= 3 \times 300 = 900\ \mathrm{mL} \\
+V_{\mathrm{N_2}} &= 1 \times 300 = 300\ \mathrm{mL}
+\end{aligned}" />
+
+OpenStax Chemistry 2e menegaskan bahwa persamaan reaksi setara harus memiliki jumlah atom yang sama di sisi reaktan dan produk di [Writing and Balancing Chemical Equations](https://openstax.org/books/chemistry-2e/pages/4-1-writing-and-balancing-chemical-equations). Untuk gas, OpenStax juga menjelaskan bahwa rasio volume gas mengikuti koefisien persamaan jika diukur pada suhu dan tekanan yang sama di [Stoichiometry of Gaseous Substances, Mixtures, and Reactions](https://openstax.org/books/chemistry-2e/pages/9-3-stoichiometry-of-gaseous-substances-mixtures-and-reactions).
+
+## Ketika Satu Soal Memakai Dua Hukum
+
+Satu soal kadang memuat lebih dari satu hukum. Misalnya data massa produk dan sisa reaktan memakai hukum kekekalan massa, tetapi jika soal lalu meminta komposisi unsur dalam senyawa yang sama, bagian itu memakai hukum perbandingan tetap. Jangan memaksa satu hukum untuk semua pertanyaan.
+
+Tentukan batas sistem, lalu pilih bagian data yang benar-benar dibandingkan.
+
+- Jika soal menanyakan massa total, jaga batas sistemnya dulu.
+- Jika soal menanyakan komposisi satu senyawa, bandingkan massa unsur penyusunnya.
+- Jika soal menanyakan dua senyawa dari unsur yang sama, samakan satu unsur sebelum membandingkan unsur lain.
+- Jika soal menanyakan volume gas, pastikan semua gas diukur pada suhu dan tekanan yang sama.
+
+## Pembakaran Metana
+
+Gas metana terbakar menurut persamaan setara berikut.
+
+<BlockMath math="\begin{aligned}
+\mathrm{CH_4(g)} + 2\mathrm{O_2(g)}
+  &\rightarrow \mathrm{CO_2(g)} \\
+  &\quad + 2\mathrm{H_2O(g)}
+\end{aligned}" />
+
+Jika <InlineMath math="50\ \mathrm{mL}" /> gas metana bereaksi sempurna dan semua gas diukur pada suhu serta tekanan yang sama, berapa volume <InlineMath math="\mathrm{O_2}" /> yang dibutuhkan dan berapa volume <InlineMath math="\mathrm{CO_2}" /> yang terbentuk?
+
+Koefisiennya memberi rasio volume <InlineMath math="\mathrm{CH_4:O_2:CO_2:H_2O} = 1:2:1:2" />. Jadi:
+
+<BlockMath math="\begin{aligned}
+V_{\mathrm{O_2}} &= 2 \times 50 = 100\ \mathrm{mL} \\
+V_{\mathrm{CO_2}} &= 1 \times 50 = 50\ \mathrm{mL}
+\end{aligned}" />
+
+Jawabannya adalah <InlineMath math="100\ \mathrm{mL}" /> gas oksigen dan <InlineMath math="50\ \mathrm{mL}" /> gas karbon dioksida. Jika air hasil reaksi sudah menjadi cair, volumenya tidak dibaca langsung dari rasio gas.
+
+OpenStax Chemistry: Atoms First 2e merangkum hukum perbandingan tetap dan berganda sebagai pola massa yang mendukung gagasan atom bergabung dalam rasio tertentu di [Early Ideas in Atomic Theory](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-1-early-ideas-in-atomic-theory).

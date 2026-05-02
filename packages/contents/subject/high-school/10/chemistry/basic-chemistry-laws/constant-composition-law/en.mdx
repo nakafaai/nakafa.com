@@ -1,0 +1,172 @@
+import { ConstantCompositionLab } from "@repo/design-system/components/contents/chemistry/constant-composition-law/lab";
+
+export const metadata = {
+  title: "Constant Composition",
+  description:
+    "Learn why a pure compound always contains its elements in a fixed mass ratio, even when the starting masses are different.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/01/2026",
+  subject: "Basic Laws of Chemistry",
+};
+
+## Compounds Keep a Mass Ratio
+
+The law of constant composition states that every pure compound contains its constituent elements in a fixed mass ratio. It is also called the law of definite proportions or Proust's law.
+
+OpenStax Chemistry: Atoms First 2e explains that Joseph-Louis Proust showed samples of a pure compound contain the same elements in the same mass proportion in [Early Ideas in Atomic Theory](https://openstax.org/books/chemistry-atoms-first-2e/pages/2-1-early-ideas-in-atomic-theory). Britannica summarizes the law as the statement that a chemical compound has fixed element proportions by mass in [law of definite proportions](https://www.britannica.com/science/law-of-definite-proportions).
+
+The phrase **pure compound** matters. Sugar water can be made sweeter or more dilute, but pure water is still composed of hydrogen and oxygen in the same pattern. The IUPAC Gold Book uses the idea of constant composition when defining a chemical substance in [chemical substance](https://goldbook.iupac.org/terms/view/C01039/plain).
+
+## Water Keeps the Same Ratio
+
+The formula for water is <InlineMath math="\mathrm{H_2O}" />. That means each unit of water contains <InlineMath math="2" /> hydrogen atoms and <InlineMath math="1" /> oxygen atom. Using the simple relative atomic masses <InlineMath math="A_r\mathrm{(H)} = 1" /> and <InlineMath math="A_r\mathrm{(O)} = 16" />, the hydrogen-to-oxygen mass ratio in water is:
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{H}} : m_{\mathrm{O}}
+  &= (2 \times 1) : (1 \times 16) \\
+  &= 2 : 16 \\
+  &= 1 : 8
+\end{aligned}" />
+
+So even when different amounts of water form, the mass ratio of hydrogen to oxygen that actually reacts stays <InlineMath math="1:8" />. PubChem lists water as <InlineMath math="\mathrm{H_2O}" /> with a molecular weight of about <InlineMath math="18.015\ \mathrm{g/mol}" /> in its [water property record](https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/water/property/MolecularFormula,MolecularWeight/JSON).
+
+## Extra Reactant Stays Extra
+
+Change the starting masses in the model. The leftover substance changes. The hydrogen-to-oxygen ratio that enters water does not.
+
+<ConstantCompositionLab
+  title={<>Water Ratio Gate</>}
+  description={
+    <>
+      Watch water form only from the reactant portion that satisfies the mass
+      ratio <InlineMath math="1:8" />.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose starting mass",
+    before: "Start",
+    after: "Formed",
+    reactionView: "Constant composition model for water formation",
+    ratioLabel: "Reacting ratio",
+    leftoverLabel: "Left after reaction",
+    modes: {
+      exact: {
+        tab: "Exact",
+        tabLabel: "Exact",
+        helperCaption: (
+          <>
+            All reactants form water because the hydrogen and oxygen masses
+            already match the <InlineMath math="1:8" /> ratio.
+          </>
+        ),
+        readoutBefore: "2 g H + 16 g O",
+        readoutAfter: "18 g H₂O",
+        ratio: (
+          <>
+            <InlineMath math="2:16 = 1:8" />, the water mass ratio.
+          </>
+        ),
+        leftover: <>No excess substance remains.</>,
+      },
+      "hydrogen-excess": {
+        tab: (
+          <>
+            Extra <InlineMath math="\mathrm{H}" />
+          </>
+        ),
+        tabLabel: "Extra H",
+        helperCaption: (
+          <>
+            Water still forms from the <InlineMath math="1:8" /> ratio, and the
+            hydrogen outside that ratio remains extra.
+          </>
+        ),
+        readoutBefore: "3 g H + 16 g O",
+        readoutAfter: "18 g H₂O + 1 g H",
+        ratio: (
+          <>
+            Only <InlineMath math="2:16 = 1:8" /> reacts.
+          </>
+        ),
+        leftover: (
+          <>
+            <InlineMath math="1\ \mathrm{g}" /> of hydrogen does not become
+            water.
+          </>
+        ),
+      },
+      "oxygen-excess": {
+        tab: (
+          <>
+            Extra <InlineMath math="\mathrm{O}" />
+          </>
+        ),
+        tabLabel: "Extra O",
+        helperCaption: (
+          <>
+            Water still forms from the <InlineMath math="1:8" /> ratio, and the
+            oxygen outside that ratio remains extra.
+          </>
+        ),
+        readoutBefore: "2 g H + 20 g O",
+        readoutAfter: "18 g H₂O + 4 g O",
+        ratio: (
+          <>
+            The reacting part is still <InlineMath math="2:16 = 1:8" />.
+          </>
+        ),
+        leftover: (
+          <>
+            <InlineMath math="4\ \mathrm{g}" /> of oxygen does not become water.
+          </>
+        ),
+      },
+    },
+  }}
+/>
+
+This law is often misread as "all starting material must be used up." Not quite. If the starting masses do not match the compound's ratio, only the matching portion reacts and the rest remains as excess reactant.
+
+## Testing Calcium Oxide Data
+
+Now read the data like a researcher. Calcium oxide has the formula <InlineMath math="\mathrm{CaO}" />. PubChem lists that formula and a molecular weight of <InlineMath math="56.08\ \mathrm{g/mol}" /> in its [calcium oxide property record](https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/calcium%20oxide/property/MolecularFormula,MolecularWeight/JSON).
+
+Suppose two experiments give the following data.
+
+| Trial | Mass of <InlineMath math="\mathrm{CaO}" /> | Mass of <InlineMath math="\mathrm{O}" /> | Mass of <InlineMath math="\mathrm{Ca}" /> | Ratio <InlineMath math="\mathrm{Ca:O}" /> |
+| :---- | :----------------------------------------- | :-------------------------------------- | :--------------------------------------- | :----------------------------------------- |
+| <InlineMath math="1" /> | <InlineMath math="2.8\ \mathrm{g}" /> | <InlineMath math="0.8\ \mathrm{g}" /> | <InlineMath math="2.0\ \mathrm{g}" /> | <InlineMath math="2.0:0.8 = 2.5:1" /> |
+| <InlineMath math="2" /> | <InlineMath math="3.5\ \mathrm{g}" /> | <InlineMath math="1.0\ \mathrm{g}" /> | <InlineMath math="2.5\ \mathrm{g}" /> | <InlineMath math="2.5:1.0 = 2.5:1" /> |
+
+The calcium mass is the compound mass minus the oxygen mass.
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{Ca,1}} &= 2.8 - 0.8 = 2.0\ \mathrm{g} \\
+m_{\mathrm{Ca,2}} &= 3.5 - 1.0 = 2.5\ \mathrm{g}
+\end{aligned}" />
+
+The two experiments form different masses of compound, but the calcium-to-oxygen mass ratio is the same, <InlineMath math="2.5:1" />. That is evidence that the samples fit the law of constant composition.
+
+## Calculating Mass from a Formula
+
+For iron(III) oxide, the formula is <InlineMath math="\mathrm{Fe_2O_3}" />. PubChem's ferric oxide data also lists <InlineMath math="\mathrm{Fe_2O_3}" /> in its [ferric oxide property record](https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/ferric%20oxide/property/MolecularFormula,MolecularWeight/JSON).
+
+Using <InlineMath math="A_r\mathrm{(Fe)} = 56" /> and <InlineMath math="A_r\mathrm{(O)} = 16" />, the mass ratio of iron to oxygen is:
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{Fe}} : m_{\mathrm{O}}
+  &= (2 \times 56) : (3 \times 16) \\
+  &= 112 : 48 \\
+  &= 7 : 3
+\end{aligned}" />
+
+If the mass of <InlineMath math="\mathrm{Fe_2O_3}" /> is <InlineMath math="64\ \mathrm{g}" />, the total ratio parts are <InlineMath math="7 + 3 = 10" />.
+
+<BlockMath math="\begin{aligned}
+m_{\mathrm{Fe}} &= \frac{7}{10} \times 64 = 44.8\ \mathrm{g} \\
+m_{\mathrm{O}} &= \frac{3}{10} \times 64 = 19.2\ \mathrm{g}
+\end{aligned}" />
+
+Therefore, <InlineMath math="64\ \mathrm{g}" /> of iron(III) oxide contains <InlineMath math="44.8\ \mathrm{g}" /> of iron and <InlineMath math="19.2\ \mathrm{g}" /> of oxygen bonded together.
+
+Once one compound has a fixed ratio, the next question is what happens when the same two elements can form more than one compound. That is where the law of multiple proportions begins.

@@ -9,15 +9,15 @@ export const metadata = {
   subject: "Functions and Their Modeling",
 };
 
-## Understanding Angles Greater than 90°
+## Understanding Angles Greater than a Right Angle
 
-Have you ever observed a clock? When the minute hand moves from 12 to 6, it forms a 180° angle. Even in one complete rotation, the hand forms a 360° angle.
+Have you ever observed a clock? When the minute hand moves from <InlineMath math="12" /> to <InlineMath math="6" />, it forms a <InlineMath math="180^\circ" /> angle. Even in one complete rotation, the hand forms a <InlineMath math="360^\circ" /> angle.
 
 In mathematics, we need to understand trigonometric values for angles like these. Not just limited to acute angles in right triangles.
 
 ## Unit Circle
 
-To understand trigonometric functions of arbitrary angles, we use the unit circle. A circle with a radius of exactly 1 unit centered at point <InlineMath math="O(0,0)" />.
+To understand trigonometric functions of arbitrary angles, we use the unit circle. A circle with a radius of exactly <InlineMath math="1 \text{ unit}" /> centered at point <InlineMath math="O(0,0)" />.
 
 <UnitCircle
   title="Unit Circle Exploration"
@@ -27,7 +27,7 @@ To understand trigonometric functions of arbitrary angles, we use the unit circl
 
 Let's understand in detail:
 
-- Angle <InlineMath math="\theta" /> is always measured from the positive x-axis
+- Angle <InlineMath math="\theta" /> is always measured from the positive <InlineMath math="x" />-axis
 - Positive direction is counterclockwise
 - Every point on the circle has coordinates <InlineMath math="(x, y)" />
 
@@ -41,7 +41,7 @@ Let's understand in detail:
 
 ## Why Do Signs Change in Each Quadrant?
 
-Notice that as the point moves around the circle, the x and y coordinates can be positive or negative. This is what causes the signs of trigonometric functions to change.
+Notice that as the point moves around the circle, the <InlineMath math="x" /> and <InlineMath math="y" /> coordinates can be positive or negative. This is what causes the signs of trigonometric functions to change.
 
 <Triangle
   title="Sign Change Visualization"
@@ -68,7 +68,7 @@ To avoid confusion, we can remember this with **"All Students Take Calculus"**. 
 
 ## Reference Angle
 
-A reference angle is an acute angle (0° to 90°) formed between the terminal side of an angle and the nearest x-axis. This concept allows us to use trigonometric values of acute angles that we've already memorized.
+A reference angle is an acute angle (<InlineMath math="0^\circ" /> to <InlineMath math="90^\circ" />) formed between the terminal side of an angle and the nearest <InlineMath math="x" />-axis. This concept allows us to use trigonometric values of acute angles that we've already memorized.
 
 <UnitCircle
   title="Understanding Reference Angle"
@@ -87,7 +87,7 @@ A reference angle is an acute angle (0° to 90°) formed between the terminal si
 
 Here are systematic steps to determine trigonometric function values:
 
-1. **Simplify the angle** (if greater than 360° or negative)
+1. **Simplify the angle** (if greater than <InlineMath math="360^\circ" /> or negative)
 2. **Determine the quadrant** where the angle lies
 3. **Calculate the reference angle**
 4. **Use the reference angle value** with the appropriate sign for the quadrant
@@ -98,11 +98,11 @@ Here are systematic steps to determine trigonometric function values:
 
 **Solution:**
 
-- Angle 120° lies in quadrant II (since <InlineMath math="90° < 120° < 180°" />)
+- Angle <InlineMath math="120^\circ" /> lies in quadrant II (since <InlineMath math="90° < 120° < 180°" />)
 - Reference angle: <InlineMath math="\alpha = 180° - 120° = 60°" />
 - In quadrant II: <InlineMath math="\sin(+), \cos(-), \tan(-)" />
 
-Using special angle values for 60°:
+Using special angle values for <InlineMath math="60^\circ" />:
 
 <MathContainer>
   <BlockMath math="\sin 120° = +\sin 60° = \frac{\sqrt{3}}{2}" />
@@ -112,15 +112,15 @@ Using special angle values for 60°:
 
 ### Angle in Quadrant III
 
-**Problem:** Determine trigonometric values for angle 240°
+**Problem:** Determine trigonometric values for angle <InlineMath math="240^\circ" />
 
 **Solution:**
 
-- Angle 240° lies in quadrant III (since <InlineMath math="180° < 240° < 270°" />)
+- Angle <InlineMath math="240^\circ" /> lies in quadrant III (since <InlineMath math="180° < 240° < 270°" />)
 - Reference angle: <InlineMath math="\alpha = 240° - 180° = 60°" />
 - In quadrant III: <InlineMath math="\sin(-), \cos(-), \tan(+)" />
 
-Using special angle values for 60°:
+Using special angle values for <InlineMath math="60^\circ" />:
 
 <MathContainer>
   <BlockMath math="\sin 240° = -\sin 60° = -\frac{\sqrt{3}}{2}" />
@@ -130,16 +130,16 @@ Using special angle values for 60°:
 
 ### Angle in Quadrant IV
 
-**Problem:** Determine trigonometric values for angle 300°
+**Problem:** Determine trigonometric values for angle <InlineMath math="300^\circ" />
 
 **Solution:**
 
-- Angle 300° lies in quadrant IV (since <InlineMath math="270° < 300° < 360°" />)
+- Angle <InlineMath math="300^\circ" /> lies in quadrant IV (since <InlineMath math="270° < 300° < 360°" />)
 
 - Reference angle: <InlineMath math="\alpha = 360° - 300° = 60°" />
 - In quadrant IV: <InlineMath math="\sin(-), \cos(+), \tan(-)" />
 
-Using special angle values for 60°:
+Using special angle values for <InlineMath math="60^\circ" />:
 
 <MathContainer>
   <BlockMath math="\sin 300° = -\sin 60° = -\frac{\sqrt{3}}{2}" />
@@ -159,9 +159,9 @@ When the angle is negative, we move clockwise. Use the properties:
 
 **Example:** <InlineMath math="\sin(-30°) = -\sin 30° = -\frac{1}{2}" />
 
-### Angles Greater than 360°
+### Angles Greater than One Full Rotation
 
-Use the periodicity property. Subtract or add multiples of 360° until the angle is in the range of 0° to 360°.
+Use the periodicity property. Subtract or add multiples of <InlineMath math="360^\circ" /> until the angle is in the range of <InlineMath math="0^\circ" /> to <InlineMath math="360^\circ" />.
 
 **Example:**
 
@@ -178,11 +178,11 @@ Use the periodicity property. Subtract or add multiples of 360° until the angle
 
 4. Simplify <InlineMath math="\sin 840° \cdot \cos(-330°)" />.
 
-5. A windmill rotates 1050° from its initial position. If the initial position of the blade is on the positive x-axis, determine the coordinates of the blade tip on the unit circle after this rotation.
+5. A windmill rotates <InlineMath math="1050^\circ" /> from its initial position. If the initial position of the blade is on the positive <InlineMath math="x" />-axis, determine the coordinates of the blade tip on the unit circle after this rotation.
 
 ### Answer Key
 
-1. For angle 315°, we need to determine its quadrant first.
+1. For angle <InlineMath math="315^\circ" />, we need to determine its quadrant first.
 
    Since <InlineMath math="270° < 315° < 360°" />, the angle is in quadrant IV.
 
@@ -196,7 +196,7 @@ Use the periodicity property. Subtract or add multiples of 360° until the angle
 
 2. Let's calculate each term separately. For <InlineMath math="\sin(-60°)" />, use the odd function property.
 
-   For <InlineMath math="\cos 210°" />, the angle is in quadrant III with reference 30°.
+   For <InlineMath math="\cos 210°" />, the angle is in quadrant III with reference <InlineMath math="30^\circ" />.
 
    For <InlineMath math="\tan(-135°)" />, first convert to positive angle.
 
@@ -225,7 +225,7 @@ Use the periodicity property. Subtract or add multiples of 360° until the angle
 
    <BlockMath math="840° = 840° - 2(360°) = 120°" />
 
-   For <InlineMath math="-330°" />, add 360° to get 30°.
+   For <InlineMath math="-330°" />, add <InlineMath math="360^\circ" /> to get <InlineMath math="30^\circ" />.
 
    <MathContainer>
      <BlockMath math="\sin 840° = \sin 120° = \sin(180° - 60°) = \sin 60° = \frac{\sqrt{3}}{2}" />
@@ -233,11 +233,11 @@ Use the periodicity property. Subtract or add multiples of 360° until the angle
      <BlockMath math="\sin 840° \cdot \cos(-330°) = \frac{\sqrt{3}}{2} \cdot \frac{\sqrt{3}}{2} = \frac{3}{4}" />
    </MathContainer>
 
-5. Angle 1050° needs to be simplified first.
+5. Angle <InlineMath math="1050^\circ" /> needs to be simplified first.
 
    <BlockMath math="1050° = 1050° - 2(360°) = 1050° - 720° = 330°" />
 
-   Angle 330° is in quadrant IV with reference angle 30°.
+   Angle <InlineMath math="330^\circ" /> is in quadrant IV with reference angle <InlineMath math="30^\circ" />.
 
    <MathContainer>
      <BlockMath math="x = \cos 330° = \cos 30° = \frac{\sqrt{3}}{2}" />
