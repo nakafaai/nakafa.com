@@ -12,20 +12,13 @@ const mockGetContentMetadata = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/sitemap", () => ({
   getSitemapRoutes: () => [
     "/",
-    "/articles/story",
-    "/exercises/set",
+    "/articles/politics",
+    "/articles/politics/dynastic-politics-asian-values",
+    "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
     "/quran",
-    "/subject/topic",
+    "/subject/high-school/10",
+    "/subject/high-school/10/chemistry/green-chemistry/definition",
   ],
-}));
-
-vi.mock("@/lib/llms/exercises", () => ({
-  getExerciseRouteMetadata: () => ({
-    description: undefined,
-    hasMarkdown: true,
-    title: "Exercise Set",
-  }),
-  getExerciseSetRoutes: () => new Set(["/exercises/set"]),
 }));
 
 vi.mock("@/lib/llms/quran", () => ({
@@ -42,17 +35,21 @@ vi.mock("@repo/contents/_lib/metadata", () => ({
 
 beforeEach(() => {
   mockGetContentMetadata.mockImplementation((path) => {
-    if (path === "articles/story") {
+    if (path === "articles/politics/dynastic-politics-asian-values") {
       return Effect.succeed({
-        description: "Article description",
-        title: "Article Story",
+        description:
+          "Power is passed down under the guise of practicing asian values.",
+        title:
+          "Framing Dynastic Politics in Local Elections within Asian Values",
       });
     }
 
-    if (path === "subject/topic") {
+    if (
+      path === "subject/high-school/10/chemistry/green-chemistry/definition"
+    ) {
       return Effect.succeed({
-        subject: "Subject fallback",
-        title: "Subject Topic",
+        subject: "Green Chemistry",
+        title: "Definition of Green Chemistry",
       });
     }
 
@@ -62,7 +59,7 @@ beforeEach(() => {
 
 describe("llms entries", () => {
   it("classifies supported llms sections and falls back to site", () => {
-    expect(getRouteSection("/articles/story")).toBe("articles");
+    expect(getRouteSection("/articles/politics")).toBe("articles");
     expect(getRouteSection("/site/about")).toBe("site");
     expect(getRouteSection("/")).toBe("site");
     expect(isLlmsSection("articles")).toBe(true);
@@ -82,20 +79,39 @@ describe("llms entries", () => {
 
     expect(entries).toContainEqual(
       expect.objectContaining({
-        description: "Article description",
-        href: "https://nakafa.com/en/articles/story.md",
-        route: "/articles/story",
+        description:
+          "Power is passed down under the guise of practicing asian values.",
+        href: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
+        route: "/articles/politics/dynastic-politics-asian-values",
         section: "articles",
-        title: "Article Story",
+        title:
+          "Framing Dynastic Politics in Local Elections within Asian Values",
       })
     );
     expect(entries).toContainEqual(
       expect.objectContaining({
-        description: "Subject fallback",
-        href: "https://nakafa.com/en/subject/topic.md",
-        route: "/subject/topic",
+        description: "Green Chemistry",
+        href: "https://nakafa.com/en/subject/high-school/10/chemistry/green-chemistry/definition.md",
+        route: "/subject/high-school/10/chemistry/green-chemistry/definition",
         section: "subject",
-        title: "Subject Topic",
+        title: "Definition of Green Chemistry",
+      })
+    );
+    expect(entries).toContainEqual(
+      expect.objectContaining({
+        href: "https://nakafa.com/en/subject/high-school/10.md",
+        route: "/subject/high-school/10",
+        section: "subject",
+        title: "10",
+      })
+    );
+    expect(entries).toContainEqual(
+      expect.objectContaining({
+        href: "https://nakafa.com/en/exercises/high-school/snbt/quantitative-knowledge/try-out/2026.md",
+        route:
+          "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
+        section: "exercises",
+        title: "2026",
       })
     );
     expect(entries).toContainEqual(

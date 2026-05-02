@@ -25,6 +25,17 @@ export async function generateMetadata({
   const { locale, category, type, material, slug } =
     await getResolvedParams(params);
   const pagePath = getSlugPath(category, type, material, slug);
+  const legacyTryOutRedirectPath = getLegacyTryOutRedirectPath({
+    category,
+    locale,
+    material,
+    slug,
+    type,
+  });
+
+  if (legacyTryOutRedirectPath) {
+    permanentRedirect(legacyTryOutRedirectPath);
+  }
 
   const data = await getExerciseRouteData(
     locale,
@@ -142,21 +153,18 @@ export default async function Page({
 }: PageProps<"/[locale]/exercises/[category]/[type]/[material]/[...slug]">) {
   const { locale, category, type, material, slug } =
     await getResolvedParams(params);
+  const legacyTryOutRedirectPath = getLegacyTryOutRedirectPath({
+    category,
+    locale,
+    material,
+    slug,
+    type,
+  });
 
-  if (hasInvalidTryOutYearSlug(slug)) {
-    const tryOutSuffixIndex = 1;
-    const legacyTryOutSuffix = slug.slice(tryOutSuffixIndex);
-
-    // Legacy yearless try-out URLs were already indexed before the year segment
-    // migration, so keep forwarding them to their yearful 2026 successor.
-    permanentRedirect(
-      getSlugPath(category, type, material, [
-        "try-out",
-        LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
-        ...legacyTryOutSuffix,
-      ])
-    );
+  if (legacyTryOutRedirectPath) {
+    permanentRedirect(legacyTryOutRedirectPath);
   }
+
   const data = await getExerciseRouteData(
     locale,
     category,
@@ -196,4 +204,25 @@ export default async function Page({
     default:
       notFound();
   }
+}
+
+/** Returns the canonical target for migrated yearless try-out URLs. */
+function getLegacyTryOutRedirectPath({
+  category,
+  locale,
+  material,
+  slug,
+  type,
+}: Awaited<ReturnType<typeof getResolvedParams>>) {
+  if (!hasInvalidTryOutYearSlug(slug)) {
+    return null;
+  }
+
+  const canonicalPath = getSlugPath(category, type, material, [
+    "try-out",
+    LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
+    ...slug.slice(1),
+  ]);
+
+  return `/${locale}${canonicalPath}`;
 }

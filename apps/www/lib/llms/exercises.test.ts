@@ -1,24 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  getCachedLlmsExerciseText,
-  getExerciseRouteMetadata,
-  getExerciseSetRoutes,
-  hasExerciseMarkdownRoute,
-} from "@/lib/llms/exercises";
+import { getCachedLlmsExerciseText } from "@/lib/llms/exercises";
 
 const mockCacheLife = vi.hoisted(() => vi.fn());
 const mockGetCurrentMaterial = vi.hoisted(() => vi.fn());
-const mockGetExerciseSetPaths = vi.hoisted(() => vi.fn());
 const mockGetMaterialPath = vi.hoisted(() => vi.fn());
 const mockGetMaterials = vi.hoisted(() => vi.fn());
 const mockGetRenderableExercisesContent = vi.hoisted(() => vi.fn());
 
 vi.mock("next/cache", () => ({
   cacheLife: mockCacheLife,
-}));
-
-vi.mock("@repo/contents/_lib/exercises/collection", () => ({
-  getExerciseSetPaths: mockGetExerciseSetPaths,
 }));
 
 vi.mock("@repo/contents/_lib/exercises/material", () => ({
@@ -69,12 +59,10 @@ const exerciseWithoutChoices = {
 beforeEach(() => {
   mockCacheLife.mockClear();
   mockGetCurrentMaterial.mockReset();
-  mockGetExerciseSetPaths.mockReset();
   mockGetMaterialPath.mockReset();
   mockGetMaterials.mockReset();
   mockGetRenderableExercisesContent.mockReset();
 
-  mockGetExerciseSetPaths.mockReturnValue([validSetPath]);
   mockGetMaterialPath.mockReturnValue(
     "/exercises/high-school/snbt/quantitative-knowledge"
   );
@@ -94,36 +82,6 @@ beforeEach(() => {
     exerciseWithLocalizedChoices,
     exerciseWithoutChoices,
   ]);
-});
-
-describe("llms exercise metadata", () => {
-  it("detects set and numbered exercise markdown routes", () => {
-    const exerciseSetRoutes = getExerciseSetRoutes("en");
-
-    expect(exerciseSetRoutes.has(`/${validSetPath}`)).toBe(true);
-    expect(
-      hasExerciseMarkdownRoute(`/${validSetPath}`, exerciseSetRoutes)
-    ).toBe(true);
-    expect(
-      hasExerciseMarkdownRoute(`/${validSetPath}/2`, exerciseSetRoutes)
-    ).toBe(true);
-    expect(
-      hasExerciseMarkdownRoute(`/${validSetPath}/summary`, exerciseSetRoutes)
-    ).toBe(false);
-    expect(
-      hasExerciseMarkdownRoute("/exercises/other/set/2", exerciseSetRoutes)
-    ).toBe(false);
-    expect(
-      getExerciseRouteMetadata({
-        exerciseSetRoutes,
-        route: `/${validSetPath}/2`,
-      })
-    ).toEqual({
-      description: undefined,
-      hasMarkdown: true,
-      title: "2",
-    });
-  });
 });
 
 describe("llms exercise markdown", () => {

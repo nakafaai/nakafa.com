@@ -6,10 +6,6 @@ import {
   type LlmsSection,
   SECTION_LABELS,
 } from "@/lib/llms/constants";
-import {
-  getExerciseRouteMetadata,
-  getExerciseSetRoutes,
-} from "@/lib/llms/exercises";
 import { formatRouteTitle } from "@/lib/llms/format";
 import { getQuranRouteMetadata } from "@/lib/llms/quran";
 import { getSitemapRoutes } from "@/lib/sitemap";
@@ -19,11 +15,8 @@ export type LlmsEntry = Awaited<ReturnType<typeof buildLocalizedLlmsEntry>>;
 /** Builds sitemap-aligned llms entries for one locale. */
 export async function getLocalizedLlmsEntries(locale: Locale) {
   const routes = getSitemapRoutes().sort((a, b) => a.localeCompare(b));
-  const exerciseSetRoutes = getExerciseSetRoutes(locale);
   const entries = await Promise.all(
-    routes.map((route) =>
-      buildLocalizedLlmsEntry(locale, route, exerciseSetRoutes)
-    )
+    routes.map((route) => buildLocalizedLlmsEntry(locale, route))
   );
 
   return entries;
@@ -53,16 +46,11 @@ export function getLlmsSections() {
 }
 
 /** Builds one locale-specific llms entry from a sitemap route. */
-async function buildLocalizedLlmsEntry(
-  locale: Locale,
-  route: string,
-  exerciseSetRoutes: Set<string>
-) {
+async function buildLocalizedLlmsEntry(locale: Locale, route: string) {
   const hrefBase = `${BASE_URL}/${locale}${route === "/" ? "" : route}`;
   const section = getRouteSection(route);
   const routePath = route.slice(1);
   const metadata = await getRouteMetadata({
-    exerciseSetRoutes,
     locale,
     route,
     section,
@@ -85,12 +73,10 @@ async function buildLocalizedLlmsEntry(
 
 /** Resolves title, description, and markdown availability for one route. */
 async function getRouteMetadata({
-  exerciseSetRoutes,
   locale,
   route,
   section,
 }: {
-  exerciseSetRoutes: Set<string>;
   locale: Locale;
   route: string;
   section: LlmsSection;
@@ -100,7 +86,7 @@ async function getRouteMetadata({
   }
 
   if (section === "exercises") {
-    return getExerciseRouteMetadata({ exerciseSetRoutes, route });
+    return getIndexRouteMetadata(route);
   }
 
   if (section === "articles" || section === "subject") {
@@ -109,11 +95,22 @@ async function getRouteMetadata({
     if (metadata) {
       return metadata;
     }
+
+    return getIndexRouteMetadata(route);
   }
 
   return {
     description: undefined,
     hasMarkdown: false,
+    title: formatRouteTitle(route),
+  };
+}
+
+/** Builds fallback metadata for routes served as sitemap-derived indexes. */
+function getIndexRouteMetadata(route: string) {
+  return {
+    description: undefined,
+    hasMarkdown: true,
     title: formatRouteTitle(route),
   };
 }

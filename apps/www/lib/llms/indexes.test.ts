@@ -127,31 +127,16 @@ describe("llms sitemap alignment", () => {
 
   it("uses markdown URLs for sitemap pages with markdown variants", async () => {
     const entries = await getLocalizedLlmsEntries("en");
-    const exerciseEntries = entries.filter((entry) =>
-      entry.route.startsWith("/exercises/")
-    );
 
-    expect(
-      entries.some(
-        (entry) =>
-          entry.route.startsWith("/subject/") && entry.href.endsWith(".md")
-      )
-    ).toBe(true);
-    expect(
-      entries.some(
-        (entry) =>
-          entry.route.startsWith("/quran") && entry.href.endsWith(".md")
-      )
-    ).toBe(true);
-    expect(exerciseEntries.some((entry) => entry.href.endsWith(".md"))).toBe(
-      true
-    );
-    expect(
-      exerciseEntries.some(
-        (entry) =>
-          entry.route === "/exercises/high-school" &&
-          !entry.href.endsWith(".md")
-      )
-    ).toBe(true);
+    for (const section of ["articles", "exercises", "quran", "subject"]) {
+      const sectionEntries = entries.filter((entry) =>
+        entry.route.startsWith(`/${section}`)
+      );
+
+      expect(sectionEntries.length).toBeGreaterThan(0);
+      expect(sectionEntries.every((entry) => entry.href.endsWith(".md"))).toBe(
+        true
+      );
+    }
   }, 30_000);
 });

@@ -77,6 +77,15 @@ export async function GET(
     });
   }
 
+  const routeIndexText = await getCachedLlmsSectionIndexText({
+    cleanSlug: `llms/${locale}/${cleanSlug}`,
+  });
+  if (routeIndexText) {
+    return new Response(routeIndexText, {
+      headers: MARKDOWN_HEADERS,
+    });
+  }
+
   if (cleanSlug === "llms") {
     return new Response(buildRootLlmsIndexText(), {
       headers: MARKDOWN_HEADERS,

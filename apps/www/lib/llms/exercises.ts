@@ -1,4 +1,3 @@
-import { getExerciseSetPaths } from "@repo/contents/_lib/exercises/collection";
 import {
   getCurrentMaterial,
   getMaterialPath,
@@ -11,47 +10,7 @@ import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { BASE_URL, NUMBER_SEGMENT } from "@/lib/llms/constants";
-import { buildHeader, formatRouteTitle } from "@/lib/llms/format";
-
-/** Returns exercise set routes that can produce markdown for one locale. */
-export function getExerciseSetRoutes(locale: Locale) {
-  return new Set(getExerciseSetPaths(locale).map((path) => `/${path}`));
-}
-
-/** Checks whether an exercise route has set or single-question markdown. */
-export function hasExerciseMarkdownRoute(
-  route: string,
-  exerciseSetRoutes: Set<string>
-) {
-  if (exerciseSetRoutes.has(route)) {
-    return true;
-  }
-
-  const routeParts = route.split("/").filter(Boolean);
-  const lastPart = routeParts.at(-1);
-
-  if (!(lastPart && NUMBER_SEGMENT.test(lastPart))) {
-    return false;
-  }
-
-  const setRoute = `/${routeParts.slice(0, -1).join("/")}`;
-  return exerciseSetRoutes.has(setRoute);
-}
-
-/** Builds metadata for exercise routes without inventing page summaries. */
-export function getExerciseRouteMetadata({
-  exerciseSetRoutes,
-  route,
-}: {
-  exerciseSetRoutes: Set<string>;
-  route: string;
-}) {
-  return {
-    description: undefined,
-    hasMarkdown: hasExerciseMarkdownRoute(route, exerciseSetRoutes),
-    title: formatRouteTitle(route),
-  };
-}
+import { buildHeader } from "@/lib/llms/format";
 
 /** Builds markdown for an exercise set or a single exercise question. */
 export async function getCachedLlmsExerciseText({
