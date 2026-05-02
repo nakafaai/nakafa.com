@@ -1,17 +1,9 @@
 import type { getPathname } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  getContentRoutes,
-  getEntries,
-  getQuranRoutes,
-  getSitemapEntries,
-  getSitemapRoutes,
-  getUrl,
-} from "@/lib/sitemap";
+import { getEntries, getSitemapEntries, getUrl } from "@/lib/sitemap/entries";
 
 const mockGetContentMetadata = vi.hoisted(() => vi.fn());
-const mockGetFolderChildNames = vi.hoisted(() => vi.fn());
 const mockGetPathname = vi.hoisted(() =>
   vi.fn<typeof getPathname>(({ href, locale }) => {
     const pathname = typeof href === "string" ? href : href.pathname;
@@ -20,10 +12,6 @@ const mockGetPathname = vi.hoisted(() =>
     return `/${locale}${route === "/" ? "" : route}`;
   })
 );
-
-vi.mock("@repo/contents/_lib/fs", () => ({
-  getFolderChildNames: mockGetFolderChildNames,
-}));
 
 vi.mock("@repo/contents/_lib/metadata", () => ({
   getContentMetadata: mockGetContentMetadata,
@@ -40,27 +28,29 @@ vi.mock("@repo/internationalization/src/routing", () => ({
   },
 }));
 
-const folderTree = new Map([
-  [".", ["articles", "exercises"]],
-  ["articles", ["politics"]],
-  ["articles/politics", ["dynastic-politics-asian-values"]],
-  ["articles/politics/dynastic-politics-asian-values", []],
-  ["exercises", ["high-school"]],
-  ["exercises/high-school", ["snbt"]],
-  ["exercises/high-school/snbt", ["quantitative-knowledge"]],
-  [
-    "exercises/high-school/snbt/quantitative-knowledge",
-    ["semester-1", "try-out"],
+vi.mock("@/lib/sitemap/routes", () => ({
+  baseRoutes: [
+    "/",
+    "/search",
+    "/contributor",
+    "/quran",
+    "/subject",
+    "/about",
+    "/terms-of-service",
+    "/privacy-policy",
+    "/security-policy",
   ],
-  ["exercises/high-school/snbt/quantitative-knowledge/semester-1", []],
-  ["exercises/high-school/snbt/quantitative-knowledge/try-out", ["2026"]],
-  ["exercises/high-school/snbt/quantitative-knowledge/try-out/2026", ["set-1"]],
-  ["exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1", []],
-]);
+  getSitemapRoutes: () => [
+    "/",
+    "/search",
+    "/articles/politics/dynastic-politics-asian-values",
+    "/quran/1",
+    "/subject/high-school/10",
+  ],
+}));
 
 beforeEach(() => {
   mockGetContentMetadata.mockReset();
-  mockGetFolderChildNames.mockReset();
   mockGetPathname.mockClear();
 
   mockGetContentMetadata.mockReturnValue(
@@ -68,42 +58,6 @@ beforeEach(() => {
       date: "01/02/2024",
     })
   );
-  mockGetFolderChildNames.mockImplementation((path) =>
-    Effect.succeed(folderTree.get(path) ?? [])
-  );
-});
-
-describe("sitemap route discovery", () => {
-  it("builds recursive content, quran, and filtered sitemap routes", () => {
-    expect(getQuranRoutes()).toHaveLength(114);
-    expect(getContentRoutes("articles")).toEqual([
-      "/articles",
-      "/articles/politics",
-      "/articles/politics/dynastic-politics-asian-values",
-    ]);
-
-    const routes = getSitemapRoutes();
-
-    expect(routes).not.toContain("/");
-    expect(routes).toContain("/quran/114");
-    expect(routes).toContain(
-      "/articles/politics/dynastic-politics-asian-values"
-    );
-    expect(routes).toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1"
-    );
-    expect(routes).not.toContain(
-      "/exercises/high-school/snbt/quantitative-knowledge/try-out"
-    );
-  });
-
-  it("keeps the current route when content folder traversal fails", () => {
-    mockGetFolderChildNames.mockReturnValueOnce(
-      Effect.fail(new Error("folder unavailable"))
-    );
-
-    expect(getContentRoutes()).toEqual(["/"]);
-  });
 });
 
 describe("sitemap entries", () => {
@@ -160,6 +114,12 @@ describe("sitemap entries", () => {
     );
     await expect(getEntries("/quran/1")).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "yearly", priority: 0.6 })
+    );
+    await expect(getEntries("/about")).resolves.toContainEqual(
+      expect.objectContaining({ changeFrequency: "weekly", priority: 0.8 })
+    );
+    await expect(getEntries("/contributor")).resolves.toContainEqual(
+      expect.objectContaining({ changeFrequency: "weekly", priority: 0.8 })
     );
     await expect(
       getEntries("/subject/university/bachelor")
@@ -248,10 +208,12 @@ describe("sitemap entries", () => {
     );
   });
 
-  it("generates unique sitemap entries from real route and locale inputs", async () => {
+  it("generates sitemap entries from route and locale inputs", async () => {
     const entries = await getSitemapEntries();
     const urls = entries.map((entry) => entry.url);
 
     expect(new Set(urls).size).toBe(urls.length);
+    expect(urls).toContain("https://nakafa.com/en");
+    expect(urls).toContain("https://nakafa.com/id/subject/high-school/10");
   });
 });

@@ -31,7 +31,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { JWT } from "google-auth-library";
-import { getSitemapEntries } from "@/lib/sitemap";
+import { getSitemapEntries } from "@/lib/sitemap/entries";
 import { logger } from "@/scripts/utils";
 
 const RATE_LIMIT_DELAY = 1000; // 1 second between requests

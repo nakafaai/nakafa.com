@@ -8,7 +8,7 @@ import {
 } from "@/lib/llms/constants";
 import { formatRouteTitle } from "@/lib/llms/format";
 import { getQuranRouteMetadata } from "@/lib/llms/quran";
-import { getSitemapRoutes } from "@/lib/sitemap";
+import { getSitemapRoutes } from "@/lib/sitemap/routes";
 
 export type LlmsEntry = Awaited<ReturnType<typeof buildLocalizedLlmsEntry>>;
 

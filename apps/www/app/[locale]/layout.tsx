@@ -150,10 +150,9 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
     <html className={fonts} lang={locale} suppressHydrationWarning>
       <body className="relative">
         <p className="sr-only">
-          For AI agents: a documentation index is available at{" "}
-          <a href="/llms.txt">/llms.txt</a>; markdown versions are available by
-          appending <code>.md</code> to content URLs or sending{" "}
-          <code>Accept: text/markdown</code>.
+          AI agents can use <a href="/llms.txt">/llms.txt</a> as a documentation
+          index. Markdown versions are available by appending <code>.md</code>{" "}
+          to content URLs or sending <code>Accept: text/markdown</code>.
         </p>
         <EducationalOrgJsonLd />
         <WebsiteJsonLd locale={locale} />

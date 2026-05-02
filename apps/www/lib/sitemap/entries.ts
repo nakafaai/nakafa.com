@@ -1,5 +1,3 @@
-import { isYearlessTryOutCollectionSlug } from "@repo/contents/_lib/exercises/slug";
-import { getFolderChildNames } from "@repo/contents/_lib/fs";
 import { getContentMetadata } from "@repo/contents/_lib/metadata";
 import { parseContentDate } from "@repo/contents/_shared/date";
 import { getPathname } from "@repo/internationalization/src/navigation";
@@ -8,6 +6,7 @@ import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect } from "effect";
 import type { MetadataRoute } from "next";
 import type { Locale } from "next-intl";
+import { baseRoutes, getSitemapRoutes } from "@/lib/sitemap/routes";
 
 type Href = Parameters<typeof getPathname>[number]["href"];
 type SitemapErrorContext = Record<string, string>;
@@ -26,58 +25,6 @@ const host = `https://${MAIN_DOMAIN}`;
 
 const MONTHS_IN_FALLBACK_PERIOD = 6;
 const MONTHS_IN_CONTENT_FALLBACK = 3;
-const EXERCISE_ROUTE_PREFIX_LEN = 4;
-
-/** Static top-level routes that should always be present in the sitemap. */
-export const baseRoutes = [
-  "/search",
-  "/contributor",
-  "/quran",
-  "/about",
-  "/terms-of-service",
-  "/privacy-policy",
-  "/security-policy",
-];
-
-/** Builds relative Quran routes from `/quran/1` through `/quran/114`. */
-export function getQuranRoutes() {
-  return Array.from({ length: 114 }, (_, index) => `/quran/${index + 1}`);
-}
-
-/**
- * Walks the content package tree and converts indexable folders into relative
- * route paths.
- */
-export function getContentRoutes(currentPath = "") {
-  const children = Effect.runSync(
-    Effect.match(getFolderChildNames(currentPath || "."), {
-      onFailure: () => [],
-      onSuccess: (data) => data,
-    })
-  );
-
-  let routes = currentPath ? [`/${currentPath.replace(/\\/g, "/")}`] : ["/"];
-
-  for (const child of children) {
-    const childPath = currentPath ? `${currentPath}/${child}` : child;
-    const childRoutes = getContentRoutes(childPath);
-    routes = [...routes, ...childRoutes];
-  }
-
-  return routes;
-}
-
-/** Builds the deduplicated route list used by `/sitemap.xml` and indexing scripts. */
-export function getSitemapRoutes() {
-  const contentRoutes = getContentRoutes().filter(isIndexableContentRoute);
-  const allRoutes = new Set([
-    ...baseRoutes,
-    ...contentRoutes,
-    ...getQuranRoutes(),
-  ]);
-
-  return Array.from(allRoutes);
-}
 
 /**
  * Expands one route into localized sitemap entries with alternate language
@@ -137,6 +84,7 @@ export async function getEntries(
 export function getUrl(href: Href, locale: Locale, domain?: string): string {
   const pathname = getPathname({ locale, href, forcePrefix: true });
   const domainHost = domain ? `https://${domain}` : host;
+
   return domainHost + pathname;
 }
 
@@ -236,28 +184,6 @@ function isContentRoute(route: string) {
   return (
     route !== "/" && !baseRoutes.includes(route) && !route.startsWith("/quran")
   );
-}
-
-/** Filters raw content folder routes down to routes that represent real pages. */
-function isIndexableContentRoute(route: string) {
-  if (route === "/") {
-    return false;
-  }
-
-  const routeSegments = route.split("/").filter(Boolean);
-  const [routeBase, category, type, material] = routeSegments;
-  const isExerciseRoute =
-    routeBase === "exercises" &&
-    category !== undefined &&
-    type !== undefined &&
-    material !== undefined;
-
-  if (!isExerciseRoute) {
-    return true;
-  }
-
-  const exerciseSlugFromRoute = routeSegments.slice(EXERCISE_ROUTE_PREFIX_LEN);
-  return !isYearlessTryOutCollectionSlug(exerciseSlugFromRoute);
 }
 
 /** Sends a non-fatal sitemap generation error to the optional reporter. */

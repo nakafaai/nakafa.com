@@ -7,7 +7,7 @@ import {
   getCachedLlmsSectionIndexText,
   getLlmsSectionIndexText,
 } from "@/lib/llms/indexes";
-import { getSitemapRoutes } from "@/lib/sitemap";
+import { getSitemapRoutes } from "@/lib/sitemap/routes";
 
 const mockCacheLife = vi.hoisted(() => vi.fn());
 const mockGetPathname = vi.hoisted(() =>
@@ -88,7 +88,7 @@ describe("llms indexes", () => {
     ).resolves.toBeNull();
   });
 
-  it("splits large nested indexes into child links while keeping direct pages", async () => {
+  it("splits large nested indexes into child route groups", async () => {
     const text = await getLlmsSectionIndexText("llms/en/subject/high-school");
 
     expect(text).toContain("# Nakafa English Subject: High School Index");
@@ -96,7 +96,7 @@ describe("llms indexes", () => {
     expect(text).toContain(
       "https://nakafa.com/llms/en/subject/high-school/10/llms.txt"
     );
-    expect(text).toContain("[High School]");
+    expect(text).not.toContain("[High School]");
   });
 });
 

@@ -9,7 +9,7 @@ import {
 
 const mockGetContentMetadata = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/sitemap", () => ({
+vi.mock("@/lib/sitemap/routes", () => ({
   getSitemapRoutes: () => [
     "/",
     "/articles/politics",
