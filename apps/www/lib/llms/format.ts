@@ -1,5 +1,8 @@
 import type { Locale } from "next-intl";
-import { LANGUAGE_NAMES, MARKDOWN_EXTENSIONS } from "@/lib/llms/constants";
+import {
+  ENGLISH_LANGUAGE_NAMES,
+  MARKDOWN_EXTENSIONS,
+} from "@/lib/llms/constants";
 
 /** Builds the common markdown header used by page-level llms output. */
 export function buildHeader({
@@ -35,9 +38,9 @@ export function stripLlmsRouteExtension(slug: string) {
   return slug.replace(MARKDOWN_EXTENSIONS, "");
 }
 
-/** Formats a locale code into a readable English language name. */
-export function getLocaleLabel(locale: Locale) {
-  return LANGUAGE_NAMES.of(locale) ?? locale;
+/** Formats a locale code as an English language name for agent-facing indexes. */
+export function getLocaleLabel(locale: string) {
+  return ENGLISH_LANGUAGE_NAMES.of(locale) ?? locale;
 }
 
 /** Builds a human-readable fallback title from a sitemap route. */

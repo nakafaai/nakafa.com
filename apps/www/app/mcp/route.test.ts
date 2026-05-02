@@ -11,6 +11,12 @@ afterEach(() => {
 });
 
 describe("MCP route proxy", () => {
+  class UnreadableBodyRequest extends Request {
+    override arrayBuffer() {
+      return Promise.reject(new Error("body unavailable"));
+    }
+  }
+
   it("forwards MCP-safe request headers without browser credentials", async () => {
     const fetchMock = vi.fn((_url: URL, _init: RequestInit) =>
       Promise.resolve(Response.json({ ok: true }))
@@ -92,5 +98,38 @@ describe("MCP route proxy", () => {
     expect(response.headers.get("content-length")).toBeNull();
     expect(response.headers.get("content-type")).toBe("text/plain");
     await expect(response.text()).resolves.toBe("decoded");
+  });
+
+  it("returns 502 when the request body cannot be read", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { POST } = await import("@/app/mcp/route");
+    const response = await POST(
+      new UnreadableBodyRequest("https://nakafa.com/mcp", {
+        body: "unreadable",
+        method: "POST",
+      })
+    );
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(502);
+    expect(response.headers.get("content-type")).toBe(
+      "text/plain; charset=utf-8"
+    );
+    await expect(response.text()).resolves.toBe("MCP upstream is unavailable");
+  });
+
+  it("returns 502 when the upstream request fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.reject(new Error("upstream unavailable")))
+    );
+
+    const { GET } = await import("@/app/mcp/route");
+    const response = await GET(new Request("https://nakafa.com/mcp"));
+
+    expect(response.status).toBe(502);
+    await expect(response.text()).resolves.toBe("MCP upstream is unavailable");
   });
 });

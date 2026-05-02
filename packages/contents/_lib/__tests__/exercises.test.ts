@@ -1,4 +1,7 @@
-import { ExerciseLoadError } from "@repo/contents/_shared/error";
+import {
+  ExerciseLoadError,
+  InvalidPathError,
+} from "@repo/contents/_shared/error";
 import { Effect, Option } from "effect";
 import { createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -68,6 +71,7 @@ import {
   getExerciseByNumber,
   getExercisesContent,
 } from "@repo/contents/_lib/exercises/set";
+import { readExerciseChoices } from "@repo/contents/_lib/exercises/source";
 
 const exerciseBasePath =
   "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
@@ -145,6 +149,24 @@ describe("getExerciseCount", () => {
     const result = await Effect.runPromise(getExerciseCount(exerciseBasePath));
 
     expect(result).toBe(0);
+  });
+});
+
+describe("readExerciseChoices", () => {
+  it("fails with InvalidPathError for absolute choices paths", async () => {
+    const result = await captureFailure(readExerciseChoices("/tmp/choices.ts"));
+
+    expect(result).toBeInstanceOf(InvalidPathError);
+    expect(mockReadFile).not.toHaveBeenCalled();
+  });
+
+  it("fails with InvalidPathError for traversal below the exercises root", async () => {
+    const result = await captureFailure(
+      readExerciseChoices("exercises/../choices.ts")
+    );
+
+    expect(result).toBeInstanceOf(InvalidPathError);
+    expect(mockReadFile).not.toHaveBeenCalled();
   });
 });
 
@@ -796,6 +818,36 @@ describe("getRenderableExercisesContent", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]?.choices.en[0]?.label).toBe("Remote EN");
+    expect(mockKyGet).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips exercises when local and remote choices are unavailable", async () => {
+    mockGetMDXSlugsForLocale.mockReturnValue([
+      `${exerciseBasePath}/1/_question`,
+      `${exerciseBasePath}/1/_answer`,
+    ]);
+    mockReadFile.mockImplementation((filePath: string) => {
+      if (filePath.endsWith("choices.ts")) {
+        return Promise.reject(new Error("missing choices file"));
+      }
+
+      if (filePath.endsWith("_question/id.mdx")) {
+        return Promise.resolve(
+          'export const metadata = { title: "Question 1", description: "Q1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Question 1'
+        );
+      }
+
+      return Promise.resolve(
+        'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Answer 1'
+      );
+    });
+    mockKyGet.mockReturnValue({
+      text: () => Promise.reject(new Error("remote choices unavailable")),
+    });
+
+    const result = await getRenderableExercisesContent("en", exerciseBasePath);
+
+    expect(result).toStrictEqual([]);
     expect(mockKyGet).toHaveBeenCalledTimes(1);
   });
 
