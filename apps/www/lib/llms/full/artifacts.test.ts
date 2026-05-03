@@ -130,7 +130,7 @@ describe("llms full document", () => {
     );
   });
 
-  it("builds a complete locale-grouped markdown snapshot from sitemap entries", async () => {
+  it("builds a compact full-corpus entrypoint from sitemap entries", async () => {
     const text = await Effect.runPromise(getLlmsFullText());
 
     expect(text.startsWith("# Nakafa Full Documentation\n\n> ")).toBe(true);
@@ -138,22 +138,15 @@ describe("llms full document", () => {
     expect(text).toContain(
       "Shard manifest: https://nakafa.com/llms-full/index.json"
     );
-    expect(text).toContain("## Shard Map");
-    expect(text).toContain("## English Documentation");
-    expect(text).toContain("## Indonesian Documentation");
-    expect(text).toContain(
-      "Markdown URL: https://nakafa.com/en/articles/story/example.md"
-    );
-    expect(text).toContain("en:articles/story/example: full markdown");
-    expect(text).toContain(
-      "en:subject/high-school/10/chemistry: full markdown"
-    );
-    expect(text).toContain(
-      "en:exercises/high-school/snbt/general-knowledge/try-out/2026/set-1: full markdown"
-    );
-    expect(text).toContain("en:quran/1: full markdown");
-    expect(text).toContain("en:quran: full markdown");
-    expect(text).toContain("id:quran/1: full markdown");
+    expect(text).toContain("Sitemap: https://nakafa.com/sitemap.xml");
+    expect(text).toContain("## How To Use");
+    expect(text).toContain("## Corpus Summary");
+    expect(text).toContain("## Top-Level Shards");
+    expect(text).toContain("- Documents: 10");
+    expect(text).toContain("Nakafa English Full Documentation");
+    expect(text).toContain("Nakafa Indonesian Full Documentation");
+    expect(text).not.toContain("Markdown URL:");
+    expect(text).not.toContain("full markdown");
     expect(text).not.toContain("Markdown URL: https://nakafa.com/en/about");
     expect(text).not.toContain("articles/story/missing: full markdown");
     expect(text).not.toContain(
@@ -199,11 +192,22 @@ describe("llms full document", () => {
         (artifact) => artifact.path === "llms-full/en/quran.txt"
       )?.text
     ).toContain("## Direct Documents");
-    expect(manifestData.full).toBe("https://nakafa.com/llms-full.txt");
+    expect(manifestData.entrypoint).toBe("https://nakafa.com/llms-full.txt");
     expect(manifestData.manifest).toBe(
       "https://nakafa.com/llms-full/index.json"
     );
+    expect(manifestData.sitemap).toBe("https://nakafa.com/sitemap.xml");
     expect(manifestData.totals.documents).toBe(10);
+    expect(manifestData.totals.entrypointBytes).toBe(
+      Buffer.byteLength(artifacts.root.text, "utf8")
+    );
+    expect(manifestData.oversized).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: "llms-full/en/articles/story/example.txt",
+        }),
+      ])
+    );
     expect(manifestData.shards).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -236,7 +240,7 @@ describe("llms full document", () => {
 
     const text = await Effect.runPromise(getLlmsFullText());
 
-    expect(text).not.toContain("## English Documentation");
-    expect(text).not.toContain("## Indonesian Documentation");
+    expect(text).toContain("- Documents: 0");
+    expect(text).not.toContain("Markdown URL:");
   });
 });
