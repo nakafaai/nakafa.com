@@ -1,5 +1,41 @@
 # www
 
+## 2.0.0
+
+### Major Changes
+
+- [`c6b51e6`](https://github.com/nakafaai/nakafa.com/commit/c6b51e60d3dd96fd3d148035d19f3c2304145ab7) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Migrate contents to use effect, adding extensive testing, adding cache for building contents, improving performance and type safety
+
+### Minor Changes
+
+- [`727a480`](https://github.com/nakafaai/nakafa.com/commit/727a480db92a0f95be982ce3a10b5b86e38b2b30) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Add sticky and remove backdrop
+
+- [`058989c`](https://github.com/nakafaai/nakafa.com/commit/058989cb329c018b58a3f1e15ba71d8433db0d9f) Thanks [@nabilfatih](https://github.com/nabilfatih)! - remove node options
+
+- [`e9c4947`](https://github.com/nakafaai/nakafa.com/commit/e9c4947c95d674cb42a21c34544c0939d1bd804d) Thanks [@nabilfatih](https://github.com/nabilfatih)! - add email package with welcome template and components
+
+- [`8743029`](https://github.com/nakafaai/nakafa.com/commit/87430293f82dd666543ea9722289ed68d318aefa) Thanks [@nabilfatih](https://github.com/nabilfatih)! - New set of try out snbt, use semantic html, fix tailwind css lint
+
+- [`aa179b9`](https://github.com/nakafaai/nakafa.com/commit/aa179b9e3a196cc6117d997246a150e1561b7442) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Add exercise tracking, get results, timer
+
+- [`e6778d2`](https://github.com/nakafaai/nakafa.com/commit/e6778d2db6a60557ae222b2e1b975002339577e4) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Add unit testing for utils functions, proper testing coverage, bump version, add new try out for snbt
+
+### Patch Changes
+
+- [`e746ef6`](https://github.com/nakafaai/nakafa.com/commit/e746ef6441de79a219289eafef653492b6172685) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Migrate lucide react to hugeicons
+
+- Updated dependencies [[`c6b51e6`](https://github.com/nakafaai/nakafa.com/commit/c6b51e60d3dd96fd3d148035d19f3c2304145ab7), [`e746ef6`](https://github.com/nakafaai/nakafa.com/commit/e746ef6441de79a219289eafef653492b6172685), [`e9c4947`](https://github.com/nakafaai/nakafa.com/commit/e9c4947c95d674cb42a21c34544c0939d1bd804d), [`8743029`](https://github.com/nakafaai/nakafa.com/commit/87430293f82dd666543ea9722289ed68d318aefa), [`aa179b9`](https://github.com/nakafaai/nakafa.com/commit/aa179b9e3a196cc6117d997246a150e1561b7442), [`e6778d2`](https://github.com/nakafaai/nakafa.com/commit/e6778d2db6a60557ae222b2e1b975002339577e4)]:
+  - @repo/internationalization@1.0.0
+  - @repo/design-system@1.0.0
+  - @repo/next-config@1.0.0
+  - @repo/connection@1.0.0
+  - @repo/contents@1.0.0
+  - @repo/backend@2.0.0
+  - @repo/seo@1.0.0
+  - @repo/ai@2.0.0
+  - @repo/analytics@0.1.0
+  - @repo/utilities@0.2.0
+
 ## 1.3.0
 
 ### Minor Changes
