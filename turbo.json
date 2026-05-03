@@ -25,6 +25,8 @@
       "outputs": [
         ".next/**",
         "!.next/cache/**",
+        "public/llms-full.txt",
+        "public/llms-full/**",
         "**/generated/**",
         "storybook-static/**",
         ".react-email/**"
