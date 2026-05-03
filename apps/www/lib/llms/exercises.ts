@@ -24,6 +24,17 @@ export async function getCachedLlmsExerciseText({
 
   cacheLife("max");
 
+  return await getLlmsExerciseText({ cleanSlug, locale });
+}
+
+/** Builds uncached exercise markdown from source content. */
+export async function getLlmsExerciseText({
+  cleanSlug,
+  locale,
+}: {
+  cleanSlug: string;
+  locale: Locale;
+}) {
   if (!cleanSlug.startsWith("exercises")) {
     return null;
   }

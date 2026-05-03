@@ -8,6 +8,10 @@ import type { ProxyConfig } from "next/server";
 import { type NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import {
+  AGENT_DISCOVERY_LINK_HEADER,
+  LLMS_TEXT_PATH,
+} from "@/lib/agent-discovery";
+import {
   getPublicContentRedirects,
   getPublicContentRequestRoutes,
   getPublicContentRouteRoots,
@@ -17,7 +21,19 @@ const handleLocalizedRequest = createMiddleware(routing);
 const TRAILING_SLASH_PATTERN = /\/+$/;
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
 const AUTH_REDIRECT_PATH_COOKIE = "auth-redirect-path";
-const LOCALE_BYPASS_PATHS = new Set(["/mcp"]);
+const LOCALE_BYPASS_PATHS = new Set([
+  "/mcp",
+  "/llms.txt",
+  "/llms-full.txt",
+  "/skill.md",
+  "/.well-known/llms.txt",
+  "/.well-known/llms-full.txt",
+  "/.well-known/agent-skills/index.json",
+  "/.well-known/agent-skills/nakafa/SKILL.md",
+  "/.well-known/skills/index.json",
+  "/.well-known/skills/nakafa/SKILL.md",
+  "/.well-known/skills/nakafa/skill.md",
+]);
 const requestRoutes = new Set(getPublicContentRequestRoutes());
 const contentRedirects = new Map(getPublicContentRedirects());
 const publicContentRouteRoots = new Set(getPublicContentRouteRoots());
@@ -43,7 +59,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(redirectUrl, 308);
   }
 
-  if (LOCALE_BYPASS_PATHS.has(pathname)) {
+  if (isLocaleBypassPath(pathname)) {
     return NextResponse.next();
   }
 
@@ -84,11 +100,32 @@ export function proxy(request: NextRequest) {
         status: 404,
       });
     }
+
+    if (
+      localizedContentRoute.markdownExtension ||
+      request.headers.get("accept")?.includes("text/markdown")
+    ) {
+      const rewriteUrl = new URL(request.url);
+      rewriteUrl.pathname = `/llms.mdx/${localizedContentRoute.locale}${localizedContentRoute.route}`;
+
+      return NextResponse.rewrite(rewriteUrl);
+    }
   }
 
   request.cookies.set(AUTH_REDIRECT_PATH_COOKIE, pathname);
 
-  return handleLocalizedRequest(request);
+  const response = handleLocalizedRequest(request);
+  response.headers.append("Link", AGENT_DISCOVERY_LINK_HEADER);
+  response.headers.set("X-Llms-Txt", LLMS_TEXT_PATH);
+
+  return response;
+}
+
+/** Returns whether one public AI/system path should skip locale routing. */
+function isLocaleBypassPath(pathname: string) {
+  return (
+    LOCALE_BYPASS_PATHS.has(pathname) || pathname.startsWith("/llms-full/")
+  );
 }
 
 /** Returns the canonical target for content routes that intentionally redirect. */

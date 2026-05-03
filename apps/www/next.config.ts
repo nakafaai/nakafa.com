@@ -1,6 +1,5 @@
 import path from "node:path";
 import { createPostHogProxyRewrites } from "@repo/analytics/posthog/config";
-import { routing } from "@repo/internationalization/src/routing";
 import {
   config,
   createSecurityHeaders,
@@ -10,50 +9,45 @@ import {
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { env } from "@/env";
+import { AGENT_DISCOVERY_HEADERS } from "@/lib/agent-discovery";
+import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
 
 const withNextIntl = createNextIntlPlugin(
   "../../packages/internationalization/src/request.ts"
 );
 
 /**
- * Build the rewrite rules for SEO assets and the same-origin PostHog proxy.
+ * Build the rewrite rules for agent discovery, SEO assets, and the PostHog proxy.
  *
  * References:
  * https://posthog.com/docs/advanced/proxy/nextjs
  * https://posthog.com/docs/advanced/proxy/vercel
  */
 function createAppRewrites() {
-  const llmSource = ["/:path*.md", "/:path*.mdx", "/:path*/llms.txt"];
-  const llmDestination = "/llms.mdx/:path*";
-  const markdownAcceptHeader = [
+  const agentDiscoveryRewrites = [
     {
-      type: "header",
-      key: "accept",
-      value: ".*text/markdown.*",
+      source: "/.well-known/llms.txt",
+      destination: "/llms.txt",
+    },
+    {
+      source: "/.well-known/llms-full.txt",
+      destination: "/llms-full.txt",
+    },
+    {
+      source: "/.well-known/agent-skills/nakafa/SKILL.md",
+      destination: "/skill.md",
+    },
+    {
+      source: "/.well-known/skills/nakafa/SKILL.md",
+      destination: "/skill.md",
+    },
+    {
+      source: "/.well-known/skills/nakafa/skill.md",
+      destination: "/skill.md",
     },
   ];
-  const markdownAcceptRewrites = routing.locales.flatMap((locale) => [
-    {
-      source: `/${locale}/articles/:path*`,
-      destination: `/llms.mdx/${locale}/articles/:path*`,
-      has: markdownAcceptHeader,
-    },
-    {
-      source: `/${locale}/subject/:path*`,
-      destination: `/llms.mdx/${locale}/subject/:path*`,
-      has: markdownAcceptHeader,
-    },
-    {
-      source: `/${locale}/exercises/:path*`,
-      destination: `/llms.mdx/${locale}/exercises/:path*`,
-      has: markdownAcceptHeader,
-    },
-    {
-      source: `/${locale}/quran/:path*`,
-      destination: `/llms.mdx/${locale}/quran/:path*`,
-      has: markdownAcceptHeader,
-    },
-  ]);
+  const llmSource = ["/:path*.md", "/:path*.mdx", "/:path*/llms.txt"];
+  const llmDestination = "/llms.mdx/:path*";
   const ogSource = ["/:path*.png", "/:path*.og", "/:path*/image.png"];
   const ogDestination = "/og/:path*";
 
@@ -61,7 +55,7 @@ function createAppRewrites() {
     // PostHog requires the specific static and array rewrites to come before the
     // catch-all analytics rewrite so asset cache headers are preserved.
     ...createPostHogProxyRewrites(env.POSTHOG_PROXY_HOST),
-    ...markdownAcceptRewrites,
+    ...agentDiscoveryRewrites,
     ...llmSource.map((source) => ({
       source,
       destination: llmDestination,
@@ -126,10 +120,29 @@ function createLocalizedRedirects() {
  * Return the shared security headers for all application responses.
  */
 function createAppHeaders() {
+  const llmsFileHeaders = [
+    {
+      key: "Cache-Control",
+      value: LLMS_CACHE_CONTROL,
+    },
+  ];
+
   return [
     {
       source: "/:path*",
-      headers: createSecurityHeaders(),
+      headers: [...createSecurityHeaders(), ...AGENT_DISCOVERY_HEADERS],
+    },
+    {
+      source: "/llms-full.txt",
+      headers: llmsFileHeaders,
+    },
+    {
+      source: "/llms-full/:path*",
+      headers: llmsFileHeaders,
+    },
+    {
+      source: "/.well-known/llms-full.txt",
+      headers: llmsFileHeaders,
     },
   ];
 }

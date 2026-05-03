@@ -33,6 +33,7 @@ export function buildRootLlmsIndexText() {
     "## References",
     "",
     `- MCP endpoint: \`${BASE_URL}/mcp\` for tools that support Streamable HTTP MCP.`,
+    `- Full snapshot: \`${BASE_URL}/llms-full.txt\`; shard manifest: \`${BASE_URL}/llms-full/index.json\` for locale and section full-content files.`,
     `- Sitemap: \`${BASE_URL}/sitemap.xml\`, used to generate these indexes.`,
     "",
   ].join("\n");

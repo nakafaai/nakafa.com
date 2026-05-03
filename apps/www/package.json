@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 --turbopack",
+    "prebuild": "tsx scripts/llms-full/build.ts",
     "build": "next build",
     "start": "next start -p 3000",
     "analyze": "ANALYZE=true next build",
