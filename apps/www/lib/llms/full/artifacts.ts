@@ -25,7 +25,7 @@ interface LlmsFullArtifactOptions {
   shardTargetBytes?: number;
 }
 
-/** Builds a full-document snapshot from existing llms markdown sources. */
+/** Builds the compact full-corpus entrypoint from existing llms markdown sources. */
 export const getLlmsFullText = Effect.fn("llms.getLlmsFullText")(function* () {
   const artifacts = yield* getLlmsFullArtifacts();
 

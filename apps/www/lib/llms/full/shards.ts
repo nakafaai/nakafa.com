@@ -16,7 +16,7 @@ import type {
   LlmsFullTextArtifact,
 } from "@/lib/llms/full/types";
 
-/** Builds the complete compatibility llms-full text with a shard map. */
+/** Builds the compact full-corpus entrypoint for agent retrieval. */
 export function buildRootFullText({
   documents,
   localeShards,
@@ -24,36 +24,46 @@ export function buildRootFullText({
   documents: LlmsFullDocument[];
   localeShards: LlmsFullShard[];
 }) {
-  const scanned = [
+  const shards = flattenShards(localeShards);
+  const oversizedShards = shards.filter((shard) => shard.oversized);
+  const lines = [
     "# Nakafa Full Documentation",
     "",
-    "> Complete sitemap-derived Nakafa markdown snapshot for AI agents. Use llms.txt for navigation, llms-full shards for large-scope retrieval, and page-level .md URLs for focused retrieval.",
+    "> Compact sitemap-derived Nakafa full-corpus map for AI agents. Use shard files for complete untruncated markdown content, page-level .md URLs for focused retrieval, and llms.txt for navigation.",
     "",
     `Source index: ${BASE_URL}/llms.txt`,
     `Shard manifest: ${BASE_URL}/${LLMS_FULL_MANIFEST_PATH}`,
+    `Sitemap: ${BASE_URL}/sitemap.xml`,
     "",
-    "## Shard Map",
+    "## How To Use",
+    "",
+    "- Fetch one page with its `.md` URL when the task is focused.",
+    "- Fetch a shard when the task needs a locale, section, topic, set, or Quran scope.",
+    "- Fetch the manifest for machine-readable shard discovery.",
+    "- Avoid HTML unless markdown is unavailable.",
+    "",
+    "## Corpus Summary",
+    "",
+    `- Locales: ${routing.locales.map(getLocaleLabel).join(", ")}`,
+    `- Documents: ${documents.length}`,
+    `- Source bytes: ${getDocumentsBytes(documents)}`,
+    `- Shards: ${shards.length}`,
+    "",
+    "## Top-Level Shards",
     "",
     ...localeShards.map(formatShardLine),
     "",
+    "## Manifest",
+    "",
+    `- [Machine-readable shard manifest](${BASE_URL}/${LLMS_FULL_MANIFEST_PATH}): all generated shard paths, byte counts, document counts, and oversized markers.`,
   ];
 
-  for (const locale of routing.locales) {
-    const localeDocuments = documents.filter(
-      (document) => document.locale === locale
-    );
-
-    if (localeDocuments.length === 0) {
-      continue;
-    }
-
-    scanned.push(`## ${getLocaleLabel(locale)} Documentation`);
-    scanned.push("");
-    scanned.push(renderDocuments(localeDocuments));
-    scanned.push("");
+  if (oversizedShards.length > 0) {
+    lines.push("", "## Oversized Shards", "");
+    lines.push(...oversizedShards.map(formatShardLine));
   }
 
-  return `${scanned.join("\n").trimEnd()}\n`;
+  return `${lines.join("\n").trimEnd()}\n`;
 }
 
 /** Builds one shard node and recursively splits oversized scopes by segments. */
@@ -136,16 +146,21 @@ export function buildFullManifest({
   root: LlmsFullTextArtifact;
   shards: LlmsFullShard[];
 }) {
+  const flattenedShards = flattenShards(shards);
+  const oversizedShards = flattenedShards.filter((shard) => shard.oversized);
+
   return {
+    entrypoint: `${BASE_URL}/${root.path}`,
     llms: `${BASE_URL}/llms.txt`,
-    full: `${BASE_URL}/${root.path}`,
     manifest: `${BASE_URL}/${LLMS_FULL_MANIFEST_PATH}`,
+    sitemap: `${BASE_URL}/sitemap.xml`,
     totals: {
       documents: documents.length,
+      entrypointBytes: root.bytes,
       sourceBytes: getDocumentsBytes(documents),
-      rootBytes: root.bytes,
     },
-    shards: flattenShards(shards).map(formatManifestShard),
+    shards: flattenedShards.map(formatManifestShard),
+    oversized: oversizedShards.map(formatManifestShard),
   };
 }
 
@@ -183,7 +198,7 @@ function renderShardIndexText({
     `> Shard index for ${scopeLabel}. Open the child shard files for complete markdown content without downloading the whole corpus.`,
     "",
     `Source index: ${BASE_URL}/llms.txt`,
-    `Complete snapshot: ${BASE_URL}/${LLMS_FULL_TEXT_PATH}`,
+    `Full corpus entrypoint: ${BASE_URL}/${LLMS_FULL_TEXT_PATH}`,
     `Shard manifest: ${BASE_URL}/${LLMS_FULL_MANIFEST_PATH}`,
     `Documents covered: ${documentCount}`,
     `Source bytes covered: ${sourceBytes}`,
@@ -218,7 +233,7 @@ function renderShardContentText({
     `> Complete markdown content for ${scopeLabel}.`,
     "",
     `Source index: ${BASE_URL}/llms.txt`,
-    `Complete snapshot: ${BASE_URL}/${LLMS_FULL_TEXT_PATH}`,
+    `Full corpus entrypoint: ${BASE_URL}/${LLMS_FULL_TEXT_PATH}`,
     `Shard manifest: ${BASE_URL}/${LLMS_FULL_MANIFEST_PATH}`,
     `Documents: ${documents.length}`,
     `Source bytes: ${getDocumentsBytes(documents)}`,

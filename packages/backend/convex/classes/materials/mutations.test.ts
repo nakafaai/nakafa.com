@@ -12,6 +12,7 @@ import { describe, expect, it, vi } from "vitest";
 
 describe("classes/materials/mutations", () => {
   it("clears schedule fields when a scheduled material is published", async () => {
+    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = createConvexTestWithBetterAuth();
@@ -83,6 +84,7 @@ describe("classes/materials/mutations", () => {
   });
 
   it("cancels the pending publish job before deleting a scheduled material", async () => {
+    vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
 
     const t = createConvexTestWithBetterAuth();
