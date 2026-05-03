@@ -173,7 +173,8 @@ Before any Next.js work, find and read the relevant doc in `node_modules/next/di
 ## MDX And Content Rules
 
 - Content is primarily Indonesian unless context requires English.
-- Start content headings at `h2`; keep maximum depth at `h3`.
+- Subject lesson headings start at `h2`; keep lesson depth at `h3`.
+- Exercise answer MDX is rendered under the app-provided `h3` answer heading, so answer sections start at `h4` and may use `h5` for real nested analysis.
 - Use inline code for programming syntax.
 - Use `InlineMath` and `BlockMath` for math, not plain text math.
 - Use `MathContainer` around consecutive math blocks when needed.
