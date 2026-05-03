@@ -18,7 +18,7 @@ In daily life, we often encounter combinations when:
 - Selecting elective subjects at school
 - Determining color combinations for design
 
-The difference from permutation is very clear: if in permutation ABC is different from BAC, then in combination ABC is the same as BAC because the members are the same, only the order is different.
+The difference from permutation is very clear: if in permutation <InlineMath math="ABC" /> is different from <InlineMath math="BAC" />, then in combination <InlineMath math="ABC" /> is the same as <InlineMath math="BAC" /> because the members are the same, only the order is different.
 
 ## Combination Formula
 
@@ -44,7 +44,7 @@ Division by <InlineMath math="k!" /> is done because in combinations, we **don't
 
 **Sports Team Formation:**
 
-From 10 available students, how many ways can we select 5 students for a basketball team?
+From 10 available students, how many ways can we select <InlineMath math="5 \text{ students}" /> for a basketball team?
 
 <MathContainer>
 <BlockMath math="C(10,5) = \frac{10!}{5! \times 5!}" />
@@ -62,7 +62,7 @@ A restaurant offers 8 types of food and you can choose 3 types. How many possibl
 
 **Situations with Special Conditions:**
 
-Sometimes there are **certain restrictions** in selection. For example, from 12 students (7 males and 5 females), we must select 4 students with the condition of at least 2 females.
+Sometimes there are **certain restrictions** in selection. For example, from <InlineMath math="12 \text{ students}" /> (7 males and 5 females), we must select <InlineMath math="4 \text{ students}" /> with the condition of at least 2 females.
 
 **Solution strategy:**
 1. **Count all possibilities** that meet the conditions
@@ -72,18 +72,21 @@ Sometimes there are **certain restrictions** in selection. For example, from 12 
 **Detailed calculations:**
 
 **Case 1:** 2 females + 2 males
+
 <MathContainer>
 <BlockMath math="C(5,2) \times C(7,2) = \frac{5!}{3! \times 2!} \times \frac{7!}{5! \times 2!}" />
 <BlockMath math="= \frac{5 \times 4}{2 \times 1} \times \frac{7 \times 6}{2 \times 1} = 10 \times 21 = 210" />
 </MathContainer>
 
 **Case 2:** 3 females + 1 male
+
 <MathContainer>
 <BlockMath math="C(5,3) \times C(7,1) = \frac{5!}{2! \times 3!} \times \frac{7!}{6! \times 1!}" />
 <BlockMath math="= \frac{5 \times 4}{2 \times 1} \times 7 = 10 \times 7 = 70" />
 </MathContainer>
 
 **Case 3:** 4 females + 0 males
+
 <MathContainer>
 <BlockMath math="C(5,4) = \frac{5!}{1! \times 4!} = \frac{5}{1} = 5" />
 </MathContainer>
@@ -136,25 +139,28 @@ Sometimes there are **certain restrictions** in selection. For example, from 12 
    
    Solution steps (**case method**):
    
-   Total balls: 6 red + 4 blue = <InlineMath math="10 \text{ balls}" />
+   Total balls: 6 red + 4 blue is <InlineMath math="10 \text{ balls}" />
    
    Take <InlineMath math="5 \text{ balls}" /> with at least 3 red balls
    
    **Detailed calculation for each case:**
    
    **Case 1:** 3 red + 2 blue
+
    <MathContainer>
    <BlockMath math="C(6,3) \times C(4,2) = \frac{6!}{3! \times 3!} \times \frac{4!}{2! \times 2!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4}{3 \times 2 \times 1} \times \frac{4 \times 3}{2 \times 1} = 20 \times 6 = 120" />
    </MathContainer>
    
    **Case 2:** 4 red + 1 blue
+
    <MathContainer>
    <BlockMath math="C(6,4) \times C(4,1) = \frac{6!}{2! \times 4!} \times \frac{4!}{3! \times 1!}" />
    <BlockMath math="= \frac{6 \times 5}{2 \times 1} \times 4 = 15 \times 4 = 60" />
    </MathContainer>
    
    **Case 3:** 5 red + 0 blue
+
    <MathContainer>
    <BlockMath math="C(6,5) \times C(4,0) = \frac{6!}{1! \times 5!} \times \frac{4!}{4! \times 0!}" />
    <BlockMath math="= 6 \times 1 = 6" />
@@ -175,18 +181,21 @@ Sometimes there are **certain restrictions** in selection. For example, from 12 
    **Detailed calculation for each case:**
    
    **Case 1:** 2 mandatory + 2 elective
+
    <MathContainer>
    <BlockMath math="C(6,2) \times C(4,2) = \frac{6!}{4! \times 2!} \times \frac{4!}{2! \times 2!}" />
    <BlockMath math="= \frac{6 \times 5}{2 \times 1} \times \frac{4 \times 3}{2 \times 1} = 15 \times 6 = 90" />
    </MathContainer>
    
    **Case 2:** 3 mandatory + 1 elective
+
    <MathContainer>
    <BlockMath math="C(6,3) \times C(4,1) = \frac{6!}{3! \times 3!} \times \frac{4!}{3! \times 1!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4}{3 \times 2 \times 1} \times 4 = 20 \times 4 = 80" />
    </MathContainer>
    
    **Case 3:** 4 mandatory + 0 elective
+
    <MathContainer>
    <BlockMath math="C(6,4) \times C(4,0) = \frac{6!}{2! \times 4!} \times \frac{4!}{4! \times 0!}" />
    <BlockMath math="= \frac{6 \times 5}{2 \times 1} \times 1 = 15 \times 1 = 15" />

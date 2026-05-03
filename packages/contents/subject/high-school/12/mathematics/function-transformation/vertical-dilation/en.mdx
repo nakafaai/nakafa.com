@@ -134,8 +134,8 @@ If the range of the original function is <InlineMath math="[c, d]" />, then the 
 
 ### Axis Intercepts
 
-- **x-intercept**: Does not change (except if <InlineMath math="k = 0" />)
-- **y-intercept**: Changes according to the scale factor
+- **<InlineMath math="x" />-intercept**: Does not change (except if <InlineMath math="k = 0" />)
+- **<InlineMath math="y" />-intercept**: Changes according to the scale factor
 
 ## Application Examples
 
@@ -172,7 +172,7 @@ Let's look at vertical dilation on the exponential function <InlineMath math="f(
 
 For exponential functions:
 - The horizontal asymptote remains at <InlineMath math="y = 0" /> for both functions
-- The y-intercept changes from <InlineMath math="(0, 1)" /> to <InlineMath math="(0, 2)" />
+- The <InlineMath math="y" />-intercept changes from <InlineMath math="(0, 1)" /> to <InlineMath math="(0, 2)" />
 - The growth rate of the function increases according to the scale factor
 
 ## Vertical Dilation with Negative Factor
@@ -227,7 +227,12 @@ When the scale factor is negative:
 
    <LineEquation
      title={<>Function <InlineMath math="f(x) = x^2 - 4x + 3" /> and Its Dilation Result</>}
-     description="The original parabola is vertically stretched by factor 3 producing a taller parabola."
+     description={
+       <>
+         The original parabola is vertically stretched by factor{" "}
+         <InlineMath math="3" /> producing a taller parabola.
+       </>
+     }
      showZAxis={false}
      cameraPosition={[12, 8, 12]}
      data={[
@@ -261,7 +266,12 @@ When the scale factor is negative:
 
    <LineEquation
      title={<>Function <InlineMath math="g(x) = \sqrt{x}" /> and Its Dilation Result</>}
-     description="The square root curve is vertically compressed by factor 0.5 producing a lower curve."
+     description={
+       <>
+         The square root curve is vertically compressed by factor{" "}
+         <InlineMath math="0.5" /> producing a lower curve.
+       </>
+     }
      showZAxis={false}
      cameraPosition={[8, 6, 8]}
      data={[

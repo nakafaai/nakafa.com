@@ -10,7 +10,7 @@ export const metadata = {
 
 Imagine asking your classmates, "How did you get to school today?". Then you want to know, what's the probability if we randomly pick one student, that they came by **bike OR motorcycle**?
 
-Well, the word **"OR"** is super important in the world of probability. The Addition Rule is how we calculate the combined probability of two (or more) events using the word "OR". It means we want to know the probability that event A happens, _or_ event B happens, _or_ even both happen (if that's possible).
+Well, the word **"OR"** is super important in the world of probability. The Addition Rule is how we calculate the combined probability of two (or more) events using the word "OR". It means we want to know the probability that event <InlineMath math="A" /> happens, _or_ event <InlineMath math="B" /> happens, _or_ even both happen (if that's possible).
 
 There are two important situations when we talk about "OR":
 
@@ -23,7 +23,7 @@ Let's break them down!
 
 Mutually Exclusive events (or the fancy names _Disjoint_ events) mean two events that **cannot possibly happen at the same time** in a single trial.
 
-If event A happens, then event B definitely doesn't happen, and vice versa.
+If event <InlineMath math="A" /> happens, then event <InlineMath math="B" /> definitely doesn't happen, and vice versa.
 
 **Simple Examples:**
 
@@ -36,7 +36,7 @@ If event A happens, then event B definitely doesn't happen, and vice versa.
 
 ### Formula for Mutually Exclusive Events
 
-If events A and B are mutually exclusive, calculating the probability of "A OR B" is super easy – just add their individual probabilities:
+If events <InlineMath math="A" /> and <InlineMath math="B" /> are mutually exclusive, calculating the probability of "A OR B" is super easy – just add their individual probabilities:
 
 <BlockMath math="P(A \text{ or} B) = P(A) + P(B)" />
 
@@ -44,8 +44,8 @@ If events A and B are mutually exclusive, calculating the probability of "A OR B
 
 Using the two-dice roll from before:
 
-- Probability of sum being 7 (<InlineMath math="P(S=7)" />) = There are 6 pairs out of 36 total = <InlineMath math="6/36" />
-- Probability of getting doubles (<InlineMath math="P(\text{Doubles})" />) = There are 6 pairs out of 36 total = <InlineMath math="6/36" />
+- Probability of sum being 7 (<InlineMath math="P(S=7)" />) = There are 6 pairs out of <InlineMath math="36" /> total is <InlineMath math="6/36" />
+- Probability of getting doubles (<InlineMath math="P(\text{Doubles})" />) = There are 6 pairs out of <InlineMath math="36" /> total is <InlineMath math="6/36" />
 
 So, the probability of getting a sum of 7 OR doubles is:
 
@@ -65,22 +65,22 @@ Not Mutually Exclusive events mean two events that **CAN happen at the same time
 
 **Can we just add them up?**
 
-If we just add <InlineMath math="P(A) + P(B)" /> for non-mutually exclusive events, we'll count something twice! That something is the part where A and B happen together (their intersection).
+If we just add <InlineMath math="P(A) + P(B)" /> for non-mutually exclusive events, we'll count something twice! That something is the part where <InlineMath math="A" /> and <InlineMath math="B" /> happen together (their intersection).
 
 Like in the sum 8 OR doubles example:
 
-- <InlineMath math="P(S=8)" /> = There are 5 pairs = <InlineMath math="5/36" />
-- <InlineMath math="P(\text{Doubles})" /> = There are 6 pairs = <InlineMath math="6/36" />
+- <InlineMath math="P(S=8)" /> = There are 5 pairs is <InlineMath math="5/36" />
+- <InlineMath math="P(\text{Doubles})" /> = There are 6 pairs is <InlineMath math="6/36" />
 
 If we just add them: <InlineMath math="5/36 + 6/36 = 11/36" />. The pair <InlineMath math="(4,4)" /> was counted in the "Sum is 8" group AND counted again in the "Doubles" group. **So it was counted twice**!
 
 ### Formula for Non-Mutually Exclusive Events
 
-For events A and B that are not mutually exclusive, the way to calculate the probability of "A OR B" is:
+For events <InlineMath math="A" /> and <InlineMath math="B" /> that are not mutually exclusive, the way to calculate the probability of "A OR B" is:
 
 <BlockMath math="P(A \text{ or} B) = P(A) + P(B) - P(A \text{ and} B)" />
 
-The <InlineMath math="P(A \text{ and} B)" /> part is the probability that events A and B happen **at the same time** (the intersection). We subtract this so we don't count it twice.
+The <InlineMath math="P(A \text{ and} B)" /> part is the probability that events <InlineMath math="A" /> and <InlineMath math="B" /> happen **at the same time** (the intersection). We subtract this so we don't count it twice.
 
 **Calculation Example:**
 
@@ -99,10 +99,10 @@ Therefore, the probability of getting a sum of 8 OR doubles is:
 
 **Important Note About the Word "OR"!**
 
-In mathematics, "A or B" means it could be A only, B only, or BOTH A and B (if possible). This is different from everyday "or" which sometimes means "pick one or the other". Remember, "or" in math is **inclusive**!
+In mathematics, "<InlineMath math="A" /> or <InlineMath math="B" />" means it could be <InlineMath math="A" /> only, <InlineMath math="B" /> only, or BOTH <InlineMath math="A" /> and <InlineMath math="B" /> (if possible). This is different from everyday "or" which sometimes means "pick one or the other". Remember, "or" in math is **inclusive**!
 
 ## When to Use Which Formula?
 
-1.  **First, check:** Can events A and B happen at the same time?
+1.  **First, check:** Can events <InlineMath math="A" /> and <InlineMath math="B" /> happen at the same time?
 2.  **If they CANNOT happen together:** Use the simple formula <InlineMath math="P(A \text{ or} B) = P(A) + P(B)" />.
 3.  **If they CAN happen together:** Use the full formula <InlineMath math="P(A \text{ or} B) = P(A) + P(B) - P(A \text{ and} B)" />.

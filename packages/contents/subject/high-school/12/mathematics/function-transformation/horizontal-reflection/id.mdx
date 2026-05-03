@@ -11,9 +11,9 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 
 ## Konsep Dasar Refleksi Horizontal
 
-Refleksi horizontal adalah transformasi geometri yang memantulkan grafik fungsi terhadap sumbu y, seperti melihat bayangan objek di cermin vertikal. Bayangkan berdiri di depan cermin, tangan kanan Anda akan terlihat sebagai tangan kiri di cermin, begitu pula dengan grafik fungsi yang direfleksikan secara horizontal.
+Refleksi horizontal adalah transformasi geometri yang memantulkan grafik fungsi terhadap sumbu <InlineMath math="y" />, seperti melihat bayangan objek di cermin vertikal. Bayangkan berdiri di depan cermin, tangan kanan Anda akan terlihat sebagai tangan kiri di cermin, begitu pula dengan grafik fungsi yang direfleksikan secara horizontal.
 
-Jika kita memiliki fungsi <InlineMath math="f(x)" />, maka refleksi horizontal menghasilkan fungsi baru <InlineMath math="g(x) = f(-x)" /> yang merupakan bayangan dari fungsi asli terhadap sumbu y.
+Jika kita memiliki fungsi <InlineMath math="f(x)" />, maka refleksi horizontal menghasilkan fungsi baru <InlineMath math="g(x) = f(-x)" /> yang merupakan bayangan dari fungsi asli terhadap sumbu <InlineMath math="y" />.
 
 ### Aturan Refleksi Horizontal
 
@@ -29,7 +29,7 @@ Mari kita lihat bagaimana refleksi horizontal bekerja pada fungsi kuadrat <Inlin
 
 <LineEquation
   title={<>Refleksi Horizontal Fungsi Kuadrat <InlineMath math="f(x) = (x - 2)^2" /></>}
-  description="Perhatikan bagaimana grafik terpantul terhadap sumbu y, membentuk bayangan yang simetris."
+  description={<>Perhatikan bagaimana grafik terpantul terhadap sumbu <InlineMath math="y" />, membentuk bayangan yang simetris.</>}
   showZAxis={false}
   cameraPosition={[12, 8, 12]}
   data={[
@@ -57,7 +57,7 @@ Mari kita lihat bagaimana refleksi horizontal bekerja pada fungsi kuadrat <Inlin
 Dari visualisasi di atas, kita dapat mengamati:
 - Fungsi asli <InlineMath math="f(x) = (x - 2)^2" /> memiliki titik puncak di <InlineMath math="(2, 0)" />
 - Fungsi hasil refleksi <InlineMath math="g(x) = (-x - 2)^2" /> memiliki titik puncak di <InlineMath math="(-2, 0)" />
-- Kedua grafik simetris terhadap sumbu y
+- Kedua grafik simetris terhadap sumbu <InlineMath math="y" />
 
 ## Refleksi Horizontal pada Fungsi Linear
 
@@ -93,13 +93,13 @@ Sekarang mari kita terapkan konsep yang sama pada fungsi linear <InlineMath math
 Perhatikan bahwa:
 - Fungsi asli <InlineMath math="f(x) = 2x + 3" /> memiliki kemiringan positif 2
 - Fungsi hasil refleksi <InlineMath math="g(x) = -2x + 3" /> memiliki kemiringan negatif 2
-- Kedua garis memotong sumbu y di titik yang sama <InlineMath math="(0, 3)" />
+- Kedua garis memotong sumbu <InlineMath math="y" /> di titik yang sama <InlineMath math="(0, 3)" />
 
 ## Sifat Penting Refleksi Horizontal
 
-### Sumbu y sebagai Sumbu Simetri
+### Sumbu Vertikal sebagai Sumbu Simetri
 
-Refleksi horizontal menggunakan sumbu y sebagai garis cermin. Setiap titik pada grafik asli memiliki jarak yang sama ke sumbu y dengan titik yang bersesuaian pada grafik hasil refleksi.
+Refleksi horizontal menggunakan sumbu <InlineMath math="y" /> sebagai garis cermin. Setiap titik pada grafik asli memiliki jarak yang sama ke sumbu <InlineMath math="y" /> dengan titik yang bersesuaian pada grafik hasil refleksi.
 
 ### Pengaruh pada Titik Koordinat
 
@@ -147,7 +147,7 @@ Mari kita lihat refleksi horizontal pada fungsi eksponensial <InlineMath math="f
 
 Pada fungsi eksponensial:
 - Asimtot horizontal tetap di <InlineMath math="y = 0" /> untuk kedua fungsi
-- Titik potong dengan sumbu y tetap sama di <InlineMath math="(0, 1)" />
+- Titik potong dengan sumbu <InlineMath math="y" /> tetap sama di <InlineMath math="(0, 1)" />
 - Fungsi yang semula naik menjadi turun setelah refleksi
 
 ## Refleksi Horizontal pada Fungsi Akar
@@ -193,7 +193,7 @@ Perhatikan bahwa:
 
 1. Diberikan fungsi <InlineMath math="f(x) = x^2 + 3x + 2" />. Tentukan persamaan fungsi hasil refleksi horizontal.
 
-2. Jika grafik fungsi <InlineMath math="g(x) = 3^x + 1" /> direfleksikan terhadap sumbu y, tentukan:
+2. Jika grafik fungsi <InlineMath math="g(x) = 3^x + 1" /> direfleksikan terhadap sumbu <InlineMath math="y" />, tentukan:
    - Persamaan fungsi hasil refleksi
    - Domain fungsi setelah refleksi
 
@@ -205,7 +205,7 @@ Perhatikan bahwa:
 
    <LineEquation
      title={<>Fungsi <InlineMath math="f(x) = x^2 + 3x + 2" /> dan Hasil Refleksinya</>}
-     description="Parabola asli direfleksikan terhadap sumbu y menghasilkan parabola dengan orientasi berbeda."
+     description={<>Parabola asli direfleksikan terhadap sumbu <InlineMath math="y" /> menghasilkan parabola dengan orientasi berbeda.</>}
      showZAxis={false}
      cameraPosition={[12, 8, 12]}
      data={[
@@ -269,7 +269,7 @@ Perhatikan bahwa:
 
    <LineEquation
      title={<>Fungsi <InlineMath math="h(x) = |x + 2|" /> dan Hasil Refleksinya</>}
-     description="Fungsi nilai mutlak direfleksikan terhadap sumbu y menghasilkan fungsi dengan titik puncak yang berlawanan."
+     description={<>Fungsi nilai mutlak direfleksikan terhadap sumbu <InlineMath math="y" /> menghasilkan fungsi dengan titik puncak yang berlawanan.</>}
      showZAxis={false}
      cameraPosition={[10, 6, 10]}
      data={[
@@ -292,4 +292,4 @@ Perhatikan bahwa:
          showPoints: false,
        },
      ]}
-   />  
+   />

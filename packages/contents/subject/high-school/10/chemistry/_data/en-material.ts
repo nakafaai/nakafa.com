@@ -41,7 +41,7 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/structure-matter/electron-configuration`,
       },
       {
-        title: "Atomic Shell",
+        title: "Atomic Shells",
         href: `${BASE_PATH}/structure-matter/atom-shell`,
       },
       {
@@ -109,11 +109,11 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/green-chemistry/definition`,
       },
       {
-        title: "Principles of Green Chemistry",
+        title: "Green Chemistry Principles",
         href: `${BASE_PATH}/green-chemistry/principles`,
       },
       {
-        title: "Chemical Processes in Daily Life",
+        title: "Daily Chemical Processes",
         href: `${BASE_PATH}/green-chemistry/chemical-processes-daily-life`,
       },
       {

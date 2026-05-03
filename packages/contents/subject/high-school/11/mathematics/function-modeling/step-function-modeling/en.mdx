@@ -68,9 +68,9 @@ To make it easier to understand, let's look at the following example:
 
 **Floor function value table:**
 
-| x                                       | -2.5 | -1.7 | -1  | -0.3 | 0   | 0.8 | 1   | 1.9 | 2.4 |
+| <InlineMath math="x" /> | <InlineMath math="-2.5" /> | <InlineMath math="-1.7" /> | <InlineMath math="-1" /> | <InlineMath math="-0.3" /> | <InlineMath math="0" /> | <InlineMath math="0.8" /> | <InlineMath math="1" /> | <InlineMath math="1.9" /> | <InlineMath math="2.4" /> |
 | --------------------------------------- | ---- | ---- | --- | ---- | --- | --- | --- | --- | --- |
-| <InlineMath math="\lfloor x \rfloor" /> | -3   | -2   | -1  | -1   | 0   | 0   | 1   | 1   | 2   |
+| <InlineMath math="\lfloor x \rfloor" /> | <InlineMath math="-3" /> | <InlineMath math="-2" /> | <InlineMath math="-1" /> | <InlineMath math="-1" /> | <InlineMath math="0" /> | <InlineMath math="0" /> | <InlineMath math="1" /> | <InlineMath math="1" /> | <InlineMath math="2" /> |
 
 ### Ceiling Function
 
@@ -114,7 +114,7 @@ The unit step function or Heaviside function, denoted by <InlineMath math="H(x)"
 
 <BlockMath math="H(x) = \begin{cases} 0, & \text{if } x < 0 \\ 1, & \text{if } x \geq 0 \end{cases}" />
 
-Unlike the floor and ceiling functions, the unit step function has a value of 0 for <InlineMath math="x < 0" /> and 1 for <InlineMath math="x \geq 0" />.
+Unlike the floor and ceiling functions, the unit step function has a value of <InlineMath math="0" /> for <InlineMath math="x < 0" /> and <InlineMath math="1" /> for <InlineMath math="x \geq 0" />.
 
 <LineEquation
   title={
@@ -124,8 +124,8 @@ Unlike the floor and ceiling functions, the unit step function has a value of 0 
   }
   description={
     <>
-      The graph shows the unit step function that jumps from 0 to 1 at point x =
-      0.
+      The graph shows the unit step function that jumps from <InlineMath math="0" /> to{" "}
+      <InlineMath math="1" /> at point <InlineMath math="x = 0" />.
     </>
   }
   data={[
@@ -161,13 +161,13 @@ Unlike the floor and ceiling functions, the unit step function has a value of 0 
 
 **Comparison table of floor and ceiling functions:**
 
-| x    | <InlineMath math="\lfloor x \rfloor" /> | <InlineMath math="\lceil x \rceil" /> | Difference |
+| <InlineMath math="x" /> | <InlineMath math="\lfloor x \rfloor" /> | <InlineMath math="\lceil x \rceil" /> | Difference |
 | ---- | --------------------------------------- | ------------------------------------- | ---------- |
-| -2.3 | -3                                      | -2                                    | 1          |
-| -1   | -1                                      | -1                                    | 0          |
-| 0.7  | 0                                       | 1                                     | 1          |
-| 2    | 2                                       | 2                                     | 0          |
-| 3.8  | 3                                       | 4                                     | 1          |
+| <InlineMath math="-2.3" /> | <InlineMath math="-3" /> | <InlineMath math="-2" /> | <InlineMath math="1" /> |
+| <InlineMath math="-1" /> | <InlineMath math="-1" /> | <InlineMath math="-1" /> | <InlineMath math="0" /> |
+| <InlineMath math="0.7" /> | <InlineMath math="0" /> | <InlineMath math="1" /> | <InlineMath math="1" /> |
+| <InlineMath math="2" /> | <InlineMath math="2" /> | <InlineMath math="2" /> | <InlineMath math="0" /> |
+| <InlineMath math="3.8" /> | <InlineMath math="3" /> | <InlineMath math="4" /> | <InlineMath math="1" /> |
 
 ## Transformations of Step Functions
 

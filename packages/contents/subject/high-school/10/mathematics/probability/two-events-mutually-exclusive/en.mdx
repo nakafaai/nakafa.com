@@ -10,17 +10,17 @@ export const metadata = {
 
 Imagine you have two choices, but you can only pick **one**, not both at the same time. Well, in the world of probability, this is similar to the concept of **Mutually Exclusive Events** (other cool names: _Disjoint Events_).
 
-Two events (let's call them event A and event B) are said to be **mutually exclusive** if both events **cannot possibly occur at the same time** in a single trial. Simply put, if A happens, B cannot happen. If B happens, A cannot happen.
+Two events (let's call them event <InlineMath math="A" /> and event <InlineMath math="B" />) are said to be **mutually exclusive** if both events **cannot possibly occur at the same time** in a single trial. Simply put, if <InlineMath math="A" /> happens, <InlineMath math="B" /> cannot happen. If <InlineMath math="B" /> happens, <InlineMath math="A" /> cannot happen.
 
 ## Characteristics of Mutually Exclusive Events
 
-The main characteristic is just that: **cannot happen simultaneously**. There's no outcome that can belong to event A and event B at the same time.
+The main characteristic is just that: **cannot happen simultaneously**. There's no outcome that can belong to event <InlineMath math="A" /> and event <InlineMath math="B" /> at the same time.
 
-### Probability of Event A AND B Occurring Together
+### Probability of Two Events Occurring Together
 
-Because events A and B cannot happen together if they are mutually exclusive, the probability of both occurring simultaneously is **zero**!
+Because events <InlineMath math="A" /> and <InlineMath math="B" /> cannot happen together if they are mutually exclusive, the probability of both occurring simultaneously is **zero**!
 
-We can write the probability of event "A **and** B" (both occurring) as:
+We can write the probability of event "<InlineMath math="A" /> **and** <InlineMath math="B" />" (both occurring) as:
 
 <BlockMath math="P(A \text{ and} B) = 0" />
 
@@ -30,9 +30,9 @@ Or using the intersection symbol:
 
 Remember, if they are mutually exclusive, their intersection is empty, so the probability is zero!
 
-## Calculating the Probability of A OR B for Mutually Exclusive Events
+## Calculating the Combined Probability for Mutually Exclusive Events
 
-So, how do we calculate the probability of event A happening **OR** event B happening if A and B are mutually exclusive?
+So, how do we calculate the probability of event <InlineMath math="A" /> happening **OR** event <InlineMath math="B" /> happening if <InlineMath math="A" /> and <InlineMath math="B" /> are mutually exclusive?
 
 Since they can't happen together, we simply **add** the probabilities of each individual event.
 
@@ -56,26 +56,26 @@ To understand better, look at these examples:
 
     - <InlineMath math="P(\text{Heads}) = 1/2" />
     - <InlineMath math="P(\text{Tails}) = 1/2" />
-    - Probability of getting Heads OR Tails = <InlineMath math="P(\text{Heads}) + P(\text{Tails}) = 1/2 + 1/2 = 1" /> (One of them must occur).
+    - Probability of getting Heads OR Tails is <InlineMath math="P(\text{Heads}) + P(\text{Tails}) = 1/2 + 1/2 = 1" /> (One of them must occur).
 
 2.  **Rolling a Die (once):**
 
     - The event of getting a "3" and the event of getting a "5". You can't get both numbers at once.
       - <InlineMath math="P(3) = 1/6" />
       - <InlineMath math="P(5) = 1/6" />
-      - Probability of getting a 3 OR 5 = <InlineMath math="P(3) + P(5) = 1/6 + 1/6 = 2/6 = 1/3" />.
+      - Probability of getting a 3 OR 5 is <InlineMath math="P(3) + P(5) = 1/6 + 1/6 = 2/6 = 1/3" />.
     - The event of getting an "even number" (<InlineMath math="\{2, 4, 6\}" />) and the event of getting an "odd number" (<InlineMath math="\{1, 3, 5\}" />). No number is both even and odd.
       - <InlineMath math="P(\text{Even}) = 3/6 = 1/2" />
       - <InlineMath math="P(\text{Odd}) = 3/6 = 1/2" />
-      - Probability of getting Even OR Odd = <InlineMath math="P(\text{Even}) + P(\text{Odd}) = 1/2 + 1/2 = 1" />.
+      - Probability of getting Even OR Odd is <InlineMath math="P(\text{Even}) + P(\text{Odd}) = 1/2 + 1/2 = 1" />.
 
 3.  **Drawing a Card (once):**
 
     - The event of getting a "King" and the event of getting a "Queen". One card cannot be both a King and a Queen.
       - There are 4 Kings in <InlineMath math="52 \text{ cards}" />, <InlineMath math="P(\text{King}) = 4/52" />
       - There are 4 Queens in <InlineMath math="52 \text{ cards}" />, <InlineMath math="P(\text{Queen}) = 4/52" />
-      - Probability of getting a King OR Queen = <InlineMath math="P(\text{King}) + P(\text{Queen}) = 4/52 + 4/52 = 8/52 = 2/13" />.
+      - Probability of getting a King OR Queen is <InlineMath math="P(\text{King}) + P(\text{Queen}) = 4/52 + 4/52 = 8/52 = 2/13" />.
     - The event of getting a "Red card (Hearts/Diamonds)" and the event of getting a "Club (<InlineMath math="\clubsuit" />)". Clubs are black, so a card cannot be red and a club simultaneously.
-      - There are 26 red cards, <InlineMath math="P(\text{Red}) = 26/52" />
+      - There are <InlineMath math="26 \text{ red cards}" />, <InlineMath math="P(\text{Red}) = 26/52" />
       - There are 13 clubs, <InlineMath math="P(\clubsuit) = 13/52" />
-      - Probability of getting Red OR Club = <InlineMath math="P(\text{Red}) + P(\clubsuit) = 26/52 + 13/52 = 39/52 = 3/4" />.
+      - Probability of getting Red OR Club is <InlineMath math="P(\text{Red}) + P(\clubsuit) = 26/52 + 13/52 = 39/52 = 3/4" />.

@@ -4,7 +4,7 @@ export const metadata = {
   date: "06/11/2025",
 };
 
-Lintasan dihitung mulai dari kotak hingga ke B10 sehingga didapatkan sebuah deret aritmetika dari jarak tempuh <InlineMath math="10, 18, 26, 34, \ldots" />
+Lintasan dihitung mulai dari kotak hingga ke <InlineMath math="B10" /> sehingga didapatkan sebuah deret aritmetika dari jarak tempuh <InlineMath math="10, 18, 26, 34, \ldots" />
 
 #### Menentukan Parameter Deret
 
@@ -12,36 +12,29 @@ Dari deret <InlineMath math="10, 18, 26, 34, \ldots" />, kita dapatkan
 
 - Suku pertama <InlineMath math="a = 10" />
 - Beda <InlineMath math="b = 18 - 10 = 8" />
-- Banyak suku <InlineMath math="n = 10" /> (dari kotak ke B10)
+- Banyak suku <InlineMath math="n = 10" /> (dari kotak ke <InlineMath math="B10" />)
 
-#### Menghitung Suku ke-10
+#### Menghitung Suku yang Ditanya
 
 Rumus suku ke-<InlineMath math="n" /> deret aritmetika
 
 <MathContainer>
 <BlockMath math="U_n = a + (n - 1)b" />
-
 <BlockMath math="U_{10} = 10 + (10 - 1) \cdot 8" />
-
 <BlockMath math="= 10 + 9 \cdot 8" />
-
 <BlockMath math="= 10 + 72 = 82" />
 </MathContainer>
 
 #### Menghitung Jumlah Deret
 
-Jumlah deret jarak tempuh dari kotak hingga B10
+Jumlah deret jarak tempuh dari kotak hingga <InlineMath math="B10" />
 
 <MathContainer>
 <BlockMath math="S_n = \frac{n}{2}(a + U_n)" />
-
 <BlockMath math="S_{10} = \frac{10}{2}(a + U_{10})" />
-
 <BlockMath math="= 5(10 + 82)" />
-
 <BlockMath math="= 5 \cdot 92 = 460" />
 </MathContainer>
 
 Jadi, jarak start ke kotak adalah <InlineMath math="460 \text{ meter}" />
-
 

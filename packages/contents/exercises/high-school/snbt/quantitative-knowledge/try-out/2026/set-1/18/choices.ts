@@ -3,15 +3,15 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 const choices: ExercisesChoices = {
   id: [
     {
-      label: "$$(1), (2), \\text{ dan } (3)$$ SAJA yang benar",
+      label: "$$(1)$$, $$(2)$$, dan $$(3)$$ SAJA yang benar",
       value: true,
     },
     {
-      label: "$$(1) \\text{ dan } (3)$$ SAJA yang benar",
+      label: "$$(1)$$ dan $$(3)$$ SAJA yang benar",
       value: false,
     },
     {
-      label: "$$(2) \\text{ dan } (4)$$ SAJA yang benar",
+      label: "$$(2)$$ dan $$(4)$$ SAJA yang benar",
       value: false,
     },
     {
@@ -25,15 +25,15 @@ const choices: ExercisesChoices = {
   ],
   en: [
     {
-      label: "$$(1), (2), \\text{ and } (3)$$ ONLY are true",
+      label: "$$(1)$$, $$(2)$$, and $$(3)$$ ONLY are true",
       value: true,
     },
     {
-      label: "$$(1) \\text{ and } (3)$$ ONLY are true",
+      label: "$$(1)$$ and $$(3)$$ ONLY are true",
       value: false,
     },
     {
-      label: "$$(2) \\text{ and } (4)$$ ONLY are true",
+      label: "$$(2)$$ and $$(4)$$ ONLY are true",
       value: false,
     },
     {

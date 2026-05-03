@@ -129,7 +129,7 @@ Bayangkan kamu mengikat tali pada sebuah paku, lalu menarik tali tersebut hingga
   showZAxis={false}
 />
 
-Dalam visualisasi di atas, titik P adalah pusat lingkaran, sedangkan titik A, B, dan C adalah beberapa titik yang berada pada lingkaran. Coba perhatikan bahwa jarak dari P ke A, P ke B, dan P ke C semuanya sama dengan <InlineMath math="r" />. Ini yang membuat mereka semua berada di lingkaran yang sama.
+Dalam visualisasi di atas, titik <InlineMath math="P" /> adalah pusat lingkaran, sedangkan titik <InlineMath math="A" />, <InlineMath math="B" />, dan <InlineMath math="C" /> adalah beberapa titik yang berada pada lingkaran. Coba perhatikan bahwa jarak dari <InlineMath math="P" /> ke <InlineMath math="A" />, <InlineMath math="P" /> ke <InlineMath math="B" />, dan <InlineMath math="P" /> ke <InlineMath math="C" /> semuanya sama dengan <InlineMath math="r" />. Ini yang membuat mereka semua berada di lingkaran yang sama.
 
 ## Definisi Matematis
 
@@ -137,7 +137,7 @@ Nah, sekarang kita bikin definisi yang lebih formal. Secara matematis, lingkaran
 
 <BlockMath math="d(P, (x,y)) = r" />
 
-Di mana <InlineMath math="d(P, (x,y))" /> adalah jarak dari titik pusat P ke titik <InlineMath math="(x, y)" /> pada lingkaran.
+Di mana <InlineMath math="d(P, (x,y))" /> adalah jarak dari titik pusat <InlineMath math="P" /> ke titik <InlineMath math="(x, y)" /> pada lingkaran.
 
 Kalau kita pakai rumus jarak dalam sistem koordinat Kartesius, bisa kita tulis seperti ini:
 
@@ -156,7 +156,7 @@ Inilah **persamaan umum lingkaran** dengan pusat <InlineMath math="(a, b)" /> da
 
 <LineEquation
   title="Lingkaran dalam Sistem Koordinat"
-  description="Lingkaran dengan pusat (2, 1) dan jari-jari 2."
+  description={<>Lingkaran dengan pusat <InlineMath math="(2, 1)" /> dan jari-jari <InlineMath math="2" />.</>}
   data={[
     {
       points: Array.from({ length: 361 }, (_, i) => {
@@ -192,7 +192,7 @@ Inilah **persamaan umum lingkaran** dengan pusat <InlineMath math="(a, b)" /> da
       points: Array.from({ length: 2 }, (_, i) => {
         const xMin = -1;
         const xMax = 5;
-        const y = 0; // x-axis
+        const y = 0; // <InlineMath math="x" />-axis
         return {
           x: xMin + i * (xMax - xMin),
           y: y,
@@ -207,7 +207,7 @@ Inilah **persamaan umum lingkaran** dengan pusat <InlineMath math="(a, b)" /> da
       points: Array.from({ length: 2 }, (_, i) => {
         const yMin = -2;
         const yMax = 4;
-        const x = 0; // y-axis
+        const x = 0; // <InlineMath math="y" />-axis
         return {
           x: x,
           y: yMin + i * (yMax - yMin),

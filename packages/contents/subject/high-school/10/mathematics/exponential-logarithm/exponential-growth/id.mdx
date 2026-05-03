@@ -31,17 +31,17 @@ Seorang peneliti mengamati pertumbuhan bakteri pada inang dengan kondisi awal <I
 
 Jika <InlineMath math="x" /> adalah fase pertumbuhan bakteri setiap <InlineMath math="30 \text{ menit}" />, maka:
 
-| Fase (<InlineMath math="30 \text{ menit}" />) | 0   | 1   | 2   | 3   | 4   | 5   |
+| Fase (<InlineMath math="30 \text{ menit}" />) | <InlineMath math="0" /> | <InlineMath math="1" /> | <InlineMath math="2" /> | <InlineMath math="3" /> | <InlineMath math="4" /> | <InlineMath math="5" /> |
 | --------------- | --- | --- | --- | --- | --- | --- |
-| Banyak bakteri  | 30  | 60  | 120 | 240 | 480 | 960 |
+| Banyak bakteri | <InlineMath math="30" /> | <InlineMath math="60" /> | <InlineMath math="120" /> | <InlineMath math="240" /> | <InlineMath math="480" /> | <InlineMath math="960" /> |
 
 Dapat diamati bahwa:
 
-- Untuk <InlineMath math="x = 0" />, banyak bakteri = 30
-- Untuk <InlineMath math="x = 1" />, banyak bakteri = 60
-- Untuk <InlineMath math="x = 2" />, banyak bakteri = 120 = <InlineMath math="2^2 \cdot 30" />
-- Untuk <InlineMath math="x = 3" />, banyak bakteri = 240 = <InlineMath math="2^3 \cdot 30" />
-- Untuk <InlineMath math="x = 4" />, banyak bakteri = 480 = <InlineMath math="2^4 \cdot 30" />
+- Untuk <InlineMath math="x = 0" />, banyak bakteri adalah <InlineMath math="30" />
+- Untuk <InlineMath math="x = 1" />, banyak bakteri adalah <InlineMath math="60" />
+- Untuk <InlineMath math="x = 2" />, banyak bakteri adalah <InlineMath math="120 = 2^2 \cdot 30" />
+- Untuk <InlineMath math="x = 3" />, banyak bakteri adalah <InlineMath math="240 = 2^3 \cdot 30" />
+- Untuk <InlineMath math="x = 4" />, banyak bakteri adalah <InlineMath math="480 = 2^4 \cdot 30" />
 
 Dari pola tersebut, pertumbuhan bakteri dapat dimodelkan dengan fungsi eksponen:
 
@@ -55,16 +55,20 @@ Grafik fungsi <InlineMath math="f(x) = 30 \cdot (2^x)" /> menunjukkan pertumbuha
   p={30}
   a={2}
   title="Pertumbuhan Bakteri"
-  description="Pertumbuhan bakteri yang membelah menjadi dua setiap 30 menit."
+  description={
+    <>
+      Pertumbuhan bakteri yang membelah menjadi dua setiap <InlineMath math="30 \text{ menit}" />.
+    </>
+  }
 />
 
 ### Perhitungan Jumlah Bakteri pada Waktu Tertentu
 
-Jika ingin menghitung jumlah bakteri pada jam ke-5, perlu diketahui bahwa jam ke-5 terjadi pada fase ke-10 (karena setiap fase adalah <InlineMath math="30 \text{ menit}" />):
+Jika ingin menghitung jumlah bakteri pada jam ke-<InlineMath math="5" />, perlu diketahui bahwa jam ke-<InlineMath math="5" /> terjadi pada fase ke-<InlineMath math="10" /> (karena setiap fase adalah <InlineMath math="30 \text{ menit}" />):
 
 <BlockMath math="f(10) = 30 \cdot (2^{10}) = 30 \cdot 1024 = 30.720" />
 
-Jadi, pada jam ke-5 terdapat <InlineMath math="30.720 \text{ bakteri}" />.
+Jadi, pada jam ke-<InlineMath math="5" /> terdapat <InlineMath math="30.720 \text{ bakteri}" />.
 
 ## Variasi Nilai Awal
 
@@ -74,9 +78,9 @@ Pertumbuhan eksponen dapat memiliki nilai awal yang berbeda-beda. Secara umum, j
 
 Misalnya:
 
-- Jika banyak bakteri awal adalah 50, maka <InlineMath math="f(x) = 50 \cdot (2^x)" />
-- Jika banyak bakteri awal adalah 100, maka <InlineMath math="f(x) = 100 \cdot (2^x)" />
-- Jika banyak bakteri awal adalah 200, maka <InlineMath math="f(x) = 200 \cdot (2^x)" />
+- Jika banyak bakteri awal adalah <InlineMath math="50" />, maka <InlineMath math="f(x) = 50 \cdot (2^x)" />
+- Jika banyak bakteri awal adalah <InlineMath math="100" />, maka <InlineMath math="f(x) = 100 \cdot (2^x)" />
+- Jika banyak bakteri awal adalah <InlineMath math="200" />, maka <InlineMath math="f(x) = 200 \cdot (2^x)" />
 
 ### Menentukan Nilai Awal
 
@@ -84,7 +88,7 @@ Terkadang kita perlu menentukan nilai awal <InlineMath math="x_0" /> dari suatu 
 
 **Contoh kasus**:
 
-Misalkan kita mengetahui bahwa jumlah bakteri pada fase ke-2 adalah 8.000 dan bakteri membelah menjadi dua setiap interval waktu. Berapakah jumlah bakteri awal?
+Misalkan kita mengetahui bahwa jumlah bakteri pada fase ke-<InlineMath math="2" /> adalah <InlineMath math="8.000" /> dan bakteri membelah menjadi dua setiap interval waktu. Berapakah jumlah bakteri awal?
 
 Kita dapat menggunakan persamaan <InlineMath math="x_2 = a^2 \cdot x_0" /> dengan <InlineMath math="a = 2" />:
 
@@ -112,19 +116,19 @@ Substitusikan nilai <InlineMath math="a = 2" /> dan <InlineMath math="x_0 = 2.00
   <BlockMath math="x_{10} = 2.048.000" />
 </MathContainer>
 
-Jadi, banyaknya bakteri setelah <InlineMath math="10 \text{ jam}" /> adalah 2.<InlineMath math="048.000 \text{ bakteri}" />.
+Jadi, banyaknya bakteri setelah <InlineMath math="10 \text{ jam}" /> adalah <InlineMath math="2.048.000 \text{ bakteri}" />.
 
 ## Latihan
 
-1. Bakteri E.coli menyebabkan penyakit diare pada manusia. Seorang peneliti mengamati pertumbuhan <InlineMath math="50 \text{ bakteri}" /> ini pada sepotong makanan dan menemukan bahwa bakteri ini membelah menjadi 2 setiap seperempat jam.
+1. Bakteri E.coli menyebabkan penyakit diare pada manusia. Seorang peneliti mengamati pertumbuhan <InlineMath math="50 \text{ bakteri}" /> ini pada sepotong makanan dan menemukan bahwa bakteri ini membelah menjadi <InlineMath math="2" /> setiap seperempat jam.
 
-   a. Gambarkanlah tabel dan grafik yang menunjukkan pertumbuhan bakteri ini dari fase 0 sampai fase 5.
+   a. Gambarkanlah tabel dan grafik yang menunjukkan pertumbuhan bakteri ini dari fase <InlineMath math="0" /> sampai fase <InlineMath math="5" />.
 
    b. Modelkan fungsi yang menggambarkan pertumbuhan bakteri E.coli setiap seperempat jam.
 
-   c. Prediksi berapa banyaknya bakteri setelah 3 dan <InlineMath math="4 \text{ jam}" /> pertama.
+   c. Prediksi berapa banyaknya bakteri setelah <InlineMath math="3 \text{ jam}" /> dan <InlineMath math="4 \text{ jam}" /> pertama.
 
-2. Pada tahun <InlineMath math="2015 \text{ kasus}" /> positif HIV-AIDS berjumlah sekitar <InlineMath math="36 \text{ juta jiwa}" />. Jumlah ini meningkat rata-rata <InlineMath math="2\%" /> setiap tahun dari tahun 2010 hingga 2015. Jika peningkatan kasus positif HIV di tahun-tahun berikutnya diprediksi bertambah secara eksponen pada peningkatan <InlineMath math="2\%" /> setiap tahun, berapa banyak kasus yang terjadi pada tahun 2020?
+2. Pada tahun <InlineMath math="2015" />, kasus positif HIV-AIDS berjumlah sekitar <InlineMath math="36 \text{ juta jiwa}" />. Jumlah ini meningkat rata-rata <InlineMath math="2\%" /> setiap tahun dari tahun <InlineMath math="2010" /> hingga <InlineMath math="2015" />. Jika peningkatan kasus positif HIV di tahun-tahun berikutnya diprediksi bertambah secara eksponen pada peningkatan <InlineMath math="2\%" /> setiap tahun, berapa banyak kasus yang terjadi pada tahun <InlineMath math="2020" />?
 
 ### Kunci Jawaban
 
@@ -132,23 +136,27 @@ Jadi, banyaknya bakteri setelah <InlineMath math="10 \text{ jam}" /> adalah 2.<I
 
    a. Pertumbuhan Bakteri:
 
-   | Fase (<InlineMath math="15 \text{ menit}" />) | 0   | 1   | 2   | 3   | 4   | 5     |
+   | Fase (<InlineMath math="15 \text{ menit}" />) | <InlineMath math="0" /> | <InlineMath math="1" /> | <InlineMath math="2" /> | <InlineMath math="3" /> | <InlineMath math="4" /> | <InlineMath math="5" /> |
    | --------------- | --- | --- | --- | --- | --- | ----- |
-   | Banyak bakteri  | 50  | 100 | 200 | 400 | 800 | 1.600 |
+   | Banyak bakteri | <InlineMath math="50" /> | <InlineMath math="100" /> | <InlineMath math="200" /> | <InlineMath math="400" /> | <InlineMath math="800" /> | <InlineMath math="1.600" /> |
 
    <FunctionChart
      p={50}
      a={2}
      n={7}
      title="Pertumbuhan Bakteri"
-     description="Pertumbuhan bakteri yang membelah menjadi dua setiap 15 menit."
+     description={
+       <>
+         Pertumbuhan bakteri yang membelah menjadi dua setiap <InlineMath math="15 \text{ menit}" />.
+       </>
+     }
    />
 
    b. Fungsi pertumbuhan bakteri E.coli dapat dimodelkan dengan:
 
    <BlockMath math="f(x) = 50 \cdot (2^x)" />
 
-   c. Setelah <InlineMath math="3 \text{ jam}" /> pertama berarti fase ke-12 (bakteri membelah setiap <InlineMath math="15 \text{ menit}" />):
+   c. Setelah <InlineMath math="3 \text{ jam}" /> pertama berarti fase ke-<InlineMath math="12" /> (bakteri membelah setiap <InlineMath math="15 \text{ menit}" />):
 
    <MathContainer>
      <BlockMath math="f(12) = 50 \cdot (2^{12})" />
@@ -156,7 +164,7 @@ Jadi, banyaknya bakteri setelah <InlineMath math="10 \text{ jam}" /> adalah 2.<I
      <BlockMath math="f(12) = 204.800" />
    </MathContainer>
 
-   Setelah <InlineMath math="4 \text{ jam}" /> pertama berarti fase ke-16 (bakteri membelah setiap <InlineMath math="15 \text{ menit}" />):
+   Setelah <InlineMath math="4 \text{ jam}" /> pertama berarti fase ke-<InlineMath math="16" /> (bakteri membelah setiap <InlineMath math="15 \text{ menit}" />):
 
    <MathContainer>
      <BlockMath math="f(16) = 50 \cdot (2^{16})" />
@@ -166,13 +174,13 @@ Jadi, banyaknya bakteri setelah <InlineMath math="10 \text{ jam}" /> adalah 2.<I
 
 2. Kasus HIV-AIDS:
 
-   Jumlah kasus pada tahun 2015 adalah 36.<InlineMath math="000.000 \text{ jiwa}" /> dengan peningkatan <InlineMath math="2\%" /> per tahun.
+   Jumlah kasus pada tahun <InlineMath math="2015" /> adalah <InlineMath math="36.000.000 \text{ jiwa}" /> dengan peningkatan <InlineMath math="2\%" /> per tahun.
 
    Model matematika:
 
    <BlockMath math="f(x) = 36.000.000 \cdot (1 + 0,02)^x" />
 
-   Untuk menghitung kasus pada tahun 2020 (<InlineMath math="5 \text{ tahun}" /> setelah 2015):
+   Untuk menghitung kasus pada tahun <InlineMath math="2020" /> (<InlineMath math="5 \text{ tahun}" /> setelah <InlineMath math="2015" />):
 
    <MathContainer>
      <BlockMath math="f(5) = 36.000.000 \cdot (1,02)^5" />
@@ -180,7 +188,7 @@ Jadi, banyaknya bakteri setelah <InlineMath math="10 \text{ jam}" /> adalah 2.<I
      <BlockMath math="f(5) = 39.746.908" />
    </MathContainer>
 
-   Jadi, prediksi jumlah kasus HIV-AIDS pada tahun 2020 adalah sekitar 39.<InlineMath math="746.908 \text{ jiwa}" />.
+   Jadi, prediksi jumlah kasus HIV-AIDS pada tahun <InlineMath math="2020" /> adalah sekitar <InlineMath math="39.746.908 \text{ jiwa}" />.
 
 ## Penerapan Lain Pertumbuhan Eksponen
 

@@ -13,11 +13,17 @@ import { getColor } from "@repo/design-system/lib/color";
 
 A central angle is an angle formed by two radii of a circle with its vertex located at the center of the circle. Imagine it like a slice of pizza, where the pointed tip of the pizza is exactly at the center of the circle. Both sides of this central angle are radii that connect the center of the circle to the edge of the circle.
 
-In a circle with center O, if we have points A and B on the circumference of the circle, then <InlineMath math="\angle AOB" /> is a central angle. This angle faces arc AB which is the part of the circle's circumference between points A and B.
+In a circle with center <InlineMath math="O" />, if we have points <InlineMath math="A" /> and <InlineMath math="B" /> on the circumference of the circle, then <InlineMath math="\angle AOB" /> is a central angle. This angle faces arc <InlineMath math="AB" /> which is the part of the circle's circumference between points <InlineMath math="A" /> and <InlineMath math="B" />.
 
 <LineEquation
   title={<>Central Angle Visualization <InlineMath math="\angle AOB" /></>}
-  description="Central angle formed by two radii OA and OB with vertex at the center of circle O."
+  description={
+    <>
+      Central angle formed by two radii <InlineMath math="OA" /> and{" "}
+      <InlineMath math="OB" /> with vertex at the center of circle{" "}
+      <InlineMath math="O" />.
+    </>
+  }
   data={[
     {
       points: [
@@ -90,23 +96,27 @@ The fundamental relationship between a central angle and the arc it faces is ver
 
 <BlockMath math="\text{Central angle measure} = \text{Arc measure faced}" />
 
-If the central angle <InlineMath math="\angle AOB = 60°" />, then arc AB also measures <InlineMath math="60°" />. This concept applies because an arc is defined based on the central angle that faces it.
+If the central angle <InlineMath math="\angle AOB = 60^\circ" />, then arc <InlineMath math="AB" /> also measures <InlineMath math="60^\circ" />. This concept applies because an arc is defined based on the central angle that faces it.
 
 ## Types of Arcs Based on Central Angle
 
 Based on the measure of their central angles, arcs can be classified into three types:
 
 ### Minor Arc
-A minor arc is an arc faced by a central angle less than <InlineMath math="180°" />. This is an arc shorter than half a circle. Like a piece of cake smaller than half the whole cake.
+
+A minor arc is an arc faced by a central angle less than <InlineMath math="180^\circ" />. This is an arc shorter than half a circle. Like a piece of cake smaller than half the whole cake.
 
 ### Semicircle Arc
-A semicircle arc is faced by a central angle of exactly <InlineMath math="180°" />. This central angle is formed by the diameter of the circle, so the arc is half the circumference of the circle.
+
+A semicircle arc is faced by a central angle of exactly <InlineMath math="180^\circ" />. This central angle is formed by the diameter of the circle, so the arc is half the circumference of the circle.
 
 ### Major Arc
-A major arc is an arc faced by a central angle greater than <InlineMath math="180°" />. This is an arc longer than half a circle. To calculate the measure of a major arc, we use:
+
+A major arc is an arc faced by a central angle greater than <InlineMath math="180^\circ" />. This is an arc longer than half a circle. To calculate the measure of a major arc, we use:
 
 <div className="flex flex-col gap-4">
-<BlockMath math="\text{Major arc} = 360° - \text{Minor arc}" />
+
+<BlockMath math="\text{Major arc} = 360^\circ - \text{Minor arc}" />
 
 <LineEquation
   title="Comparison of Arc Types"
@@ -219,7 +229,7 @@ A major arc is an arc faced by a central angle greater than <InlineMath math="18
 
 Arc length can be calculated using the ratio between the central angle and the full angle of the circle. The basic formula for calculating arc length is:
 
-<BlockMath math="s = \frac{\theta}{360°} \times 2\pi r" />
+<BlockMath math="s = \frac{\theta}{360^\circ} \times 2\pi r" />
 
 Where:
 - <InlineMath math="s" /> = arc length
@@ -234,21 +244,21 @@ Where <InlineMath math="\theta" /> is in radians.
 
 ## Example Application
 
-Let's apply this concept in a concrete example. Suppose we have a circle with radius <InlineMath math="r = 6 \text{ cm}" /> and central angle <InlineMath math="\theta = 120°" />.
+Let's apply this concept in a concrete example. Suppose we have a circle with radius <InlineMath math="r = 6 \text{ cm}" /> and central angle <InlineMath math="\theta = 120^\circ" />.
 
 First step, we calculate the arc length:
 
 <MathContainer>
-<BlockMath math="s = \frac{120°}{360°} \times 2\pi \times 6" />
+<BlockMath math="s = \frac{120^\circ}{360^\circ} \times 2\pi \times 6" />
 <BlockMath math="s = \frac{1}{3} \times 12\pi" />
 <BlockMath math="s = 4\pi \text{ cm}" />
 </MathContainer>
 
-So the arc length faced by the central angle <InlineMath math="120°" /> is <InlineMath math="4\pi \text{ cm}" /> or approximately <InlineMath math="12.57 \text{ cm}" />.
+So the arc length faced by the central angle <InlineMath math="120^\circ" /> is <InlineMath math="4\pi \text{ cm}" /> or approximately <InlineMath math="12.57 \text{ cm}" />.
 
 <LineEquation
-  title={<>Central Angle Example <InlineMath math="120°" /></>}
-  description={<>Circle with radius 6 cm and central angle <InlineMath math="120°" />.</>}
+  title={<>Central Angle Example <InlineMath math="120^\circ" /></>}
+  description={<>Circle with radius <InlineMath math="6 \text{ cm}" /> and central angle <InlineMath math="120^\circ" />.</>}
   data={[
     {
       points: [
@@ -323,32 +333,36 @@ In navigation, aircraft pilots use the concept of circular arcs to calculate tra
 
 ## Exercises
 
-1. A circle has a radius of <InlineMath math="8 \text{ cm}" />. If the central angle facing an arc is <InlineMath math="45°" />, calculate the length of that arc.
+1. A circle has a radius of <InlineMath math="8 \text{ cm}" />. If the central angle facing an arc is <InlineMath math="45^\circ" />, calculate the length of that arc.
 
 2. Given that the arc length of a circle is <InlineMath math="10\pi \text{ cm}" /> and its radius is <InlineMath math="15 \text{ cm}" />. Determine the measure of the central angle facing that arc.
 
-3. In a circle with center O, there is a central angle <InlineMath math="\angle AOB = 72°" />. If the circle's radius is <InlineMath math="5 \text{ cm}" />, determine the length of arc AB and express the result in terms of <InlineMath math="\pi" />.
+3. In a circle with center <InlineMath math="O" />, there is a central angle <InlineMath math="\angle AOB = 72^\circ" />. If the circle's radius is <InlineMath math="5 \text{ cm}" />, determine the length of arc <InlineMath math="AB" /> and express the result in terms of <InlineMath math="\pi" />.
 
-4. A bicycle wheel has a radius of <InlineMath math="30 \text{ cm}" />. If the wheel rotates forming a central angle of <InlineMath math="150°" />, what distance is traveled by a point on the wheel's edge?
+4. A bicycle wheel has a radius of <InlineMath math="30 \text{ cm}" />. If the wheel rotates forming a central angle of <InlineMath math="150^\circ" />, what distance is traveled by a point on the wheel's edge?
 
 ### Answer Key
 
 1. **Solution:**
    
-   Given: <InlineMath math="r = 8 \text{ cm}" /> and <InlineMath math="\theta = 45°" />
+   Given: <InlineMath math="r = 8 \text{ cm}" /> and <InlineMath math="\theta = 45^\circ" />
    
    Find: Arc length <InlineMath math="s" />
    
    **Step 1:** Use the arc length formula
-   <BlockMath math="s = \frac{\theta}{360°} \times 2\pi r" />
+
+   <BlockMath math="s = \frac{\theta}{360^\circ} \times 2\pi r" />
    
    **Step 2:** Substitute the known values
-   <BlockMath math="s = \frac{45°}{360°} \times 2\pi \times 8" />
+
+   <BlockMath math="s = \frac{45^\circ}{360^\circ} \times 2\pi \times 8" />
    
    **Step 3:** Simplify the fraction
+
    <BlockMath math="s = \frac{1}{8} \times 16\pi" />
    
    **Step 4:** Calculate the final result
+
    <BlockMath math="s = 2\pi \text{ cm}" />
    
    Therefore, the arc length is <InlineMath math="2\pi \text{ cm}" /> or approximately <InlineMath math="6.28 \text{ cm}" />.
@@ -360,58 +374,71 @@ In navigation, aircraft pilots use the concept of circular arcs to calculate tra
    Find: Central angle measure <InlineMath math="\theta" />
    
    **Step 1:** Use the arc length formula
-   <BlockMath math="s = \frac{\theta}{360°} \times 2\pi r" />
+
+   <BlockMath math="s = \frac{\theta}{360^\circ} \times 2\pi r" />
    
    **Step 2:** Substitute the known values
-   <BlockMath math="10\pi = \frac{\theta}{360°} \times 2\pi \times 15" />
+
+   <BlockMath math="10\pi = \frac{\theta}{360^\circ} \times 2\pi \times 15" />
    
    **Step 3:** Simplify the equation
-   <BlockMath math="10\pi = \frac{\theta \times 30\pi}{360°}" />
+
+   <BlockMath math="10\pi = \frac{\theta \times 30\pi}{360^\circ}" />
    
    **Step 4:** Isolate θ
-   <BlockMath math="\theta = \frac{10\pi \times 360°}{30\pi}" />
+
+   <BlockMath math="\theta = \frac{10\pi \times 360^\circ}{30\pi}" />
    
    **Step 5:** Calculate the final result
-   <BlockMath math="\theta = \frac{3600°}{30} = 120°" />
+
+   <BlockMath math="\theta = \frac{3600^\circ}{30} = 120^\circ" />
    
-   Therefore, the central angle measure facing that arc is <InlineMath math="120°" />.
+   Therefore, the central angle measure facing that arc is <InlineMath math="120^\circ" />.
 
 3. **Solution:**
    
-   Given: <InlineMath math="\angle AOB = 72°" /> and <InlineMath math="r = 5 \text{ cm}" />
+   Given: <InlineMath math="\angle AOB = 72^\circ" /> and <InlineMath math="r = 5 \text{ cm}" />
    
-   Find: Length of arc AB
+   Find: Length of arc <InlineMath math="AB" />
    
    **Step 1:** Use the arc length formula
-   <BlockMath math="s = \frac{\theta}{360°} \times 2\pi r" />
+
+   <BlockMath math="s = \frac{\theta}{360^\circ} \times 2\pi r" />
    
    **Step 2:** Substitute the known values
-   <BlockMath math="s = \frac{72°}{360°} \times 2\pi \times 5" />
+
+   <BlockMath math="s = \frac{72^\circ}{360^\circ} \times 2\pi \times 5" />
    
    **Step 3:** Simplify the fraction
-   <BlockMath math="s = \frac{72°}{360°} \times 10\pi = \frac{1}{5} \times 10\pi" />
+
+   <BlockMath math="s = \frac{72^\circ}{360^\circ} \times 10\pi = \frac{1}{5} \times 10\pi" />
    
    **Step 4:** Calculate the final result
+
    <BlockMath math="s = 2\pi \text{ cm}" />
    
-   Therefore, the length of arc AB is <InlineMath math="2\pi \text{ cm}" />.
+   Therefore, the length of arc <InlineMath math="AB" /> is <InlineMath math="2\pi \text{ cm}" />.
 
 4. **Solution:**
    
-   Given: <InlineMath math="r = 30 \text{ cm}" /> and <InlineMath math="\theta = 150°" />
+   Given: <InlineMath math="r = 30 \text{ cm}" /> and <InlineMath math="\theta = 150^\circ" />
    
    Find: Distance traveled (arc length)
    
    **Step 1:** Use the arc length formula
-   <BlockMath math="s = \frac{\theta}{360°} \times 2\pi r" />
+
+   <BlockMath math="s = \frac{\theta}{360^\circ} \times 2\pi r" />
    
    **Step 2:** Substitute the known values
-   <BlockMath math="s = \frac{150°}{360°} \times 2\pi \times 30" />
+
+   <BlockMath math="s = \frac{150^\circ}{360^\circ} \times 2\pi \times 30" />
    
    **Step 3:** Simplify the fraction
-   <BlockMath math="s = \frac{150°}{360°} \times 60\pi = \frac{5}{12} \times 60\pi" />
+
+   <BlockMath math="s = \frac{150^\circ}{360^\circ} \times 60\pi = \frac{5}{12} \times 60\pi" />
    
    **Step 4:** Calculate the final result
+
    <BlockMath math="s = 25\pi \text{ cm}" />
    
    Therefore, the distance traveled by a point on the wheel's edge is <InlineMath math="25\pi \text{ cm}" /> or approximately <InlineMath math="78.54 \text{ cm}" />.

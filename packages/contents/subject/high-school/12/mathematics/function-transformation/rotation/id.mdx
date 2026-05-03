@@ -34,15 +34,15 @@ Dimana:
 
 Ketika rotasi dilakukan terhadap titik asal <InlineMath math="(0, 0)" />, rumus menjadi lebih sederhana:
 
-1. Rotasi 90 Derajat
+1. Rotasi <InlineMath math="90^\circ" />
 
     <BlockMath math="(x, y) \rightarrow (-y, x)" />
 
-2. Rotasi 180 Derajat
+2. Rotasi <InlineMath math="180^\circ" />
 
     <BlockMath math="(x, y) \rightarrow (-x, -y)" />
 
-3. Rotasi 270 Derajat
+3. Rotasi <InlineMath math="270^\circ" />
 
     <BlockMath math="(x, y) \rightarrow (y, -x)" />
 
@@ -52,7 +52,7 @@ Mari kita lihat bagaimana rotasi mempengaruhi fungsi kuadrat <InlineMath math="y
 
 <LineEquation
   title={<>Rotasi Fungsi <InlineMath math="y = x^2" /> Terhadap Titik Asal</>}
-  description="Perbandingan fungsi asli dengan hasil rotasi 90° berlawanan arah jarum jam."
+  description={<>Perbandingan fungsi asli dengan hasil rotasi <InlineMath math="90^\circ" /> berlawanan arah jarum jam.</>}
   data={[
     {
       points: Array.from({ length: 21 }, (_, i) => {
@@ -108,7 +108,7 @@ Untuk fungsi linear <InlineMath math="y = mx + c" />, rotasi akan mengubah kemir
 
 <LineEquation
   title={<>Rotasi Fungsi Linear <InlineMath math="y = 2x + 1" /></>}
-  description="Rotasi 45° terhadap titik asal."
+  description={<>Rotasi <InlineMath math="45^\circ" /> terhadap titik asal.</>}
   data={[
     {
       points: Array.from({ length: 11 }, (_, i) => {
@@ -156,7 +156,7 @@ Rotasi juga dapat diterapkan pada fungsi eksponensial dengan hasil yang menarik.
 
 <LineEquation
   title={<>Rotasi Fungsi <InlineMath math="y = 2^x" /></>}
-  description="Rotasi 90° berlawanan arah jarum jam."
+  description={<>Rotasi <InlineMath math="90^\circ" /> berlawanan arah jarum jam.</>}
   cameraPosition={[8, 6, 8]}
   data={[
     {
@@ -209,19 +209,19 @@ Untuk menentukan hasil rotasi suatu fungsi, ikuti langkah berikut:
 
 ## Latihan
 
-1. Tentukan hasil rotasi titik <InlineMath math="(3, 4)" /> terhadap titik asal dengan sudut <InlineMath math="90°" /> berlawanan arah jarum jam.
+1. Tentukan hasil rotasi titik <InlineMath math="(3, 4)" /> terhadap titik asal dengan sudut <InlineMath math="90^\circ" /> berlawanan arah jarum jam.
 
-2. Fungsi <InlineMath math="f(x) = x^2 - 2x + 1" /> dirotasi <InlineMath math="180°" /> terhadap titik asal. Tentukan koordinat titik puncak hasil rotasi jika titik puncak asli berada di <InlineMath math="(1, 0)" />.
+2. Fungsi <InlineMath math="f(x) = x^2 - 2x + 1" /> dirotasi <InlineMath math="180^\circ" /> terhadap titik asal. Tentukan koordinat titik puncak hasil rotasi jika titik puncak asli berada di <InlineMath math="(1, 0)" />.
 
-3. Garis <InlineMath math="y = 3x - 2" /> dirotasi <InlineMath math="270°" /> terhadap titik asal. Tentukan persamaan garis hasil rotasi.
+3. Garis <InlineMath math="y = 3x - 2" /> dirotasi <InlineMath math="270^\circ" /> terhadap titik asal. Tentukan persamaan garis hasil rotasi.
 
-4. Titik <InlineMath math="(2, 5)" /> dirotasi <InlineMath math="60°" /> terhadap titik <InlineMath math="(1, 1)" />. Tentukan koordinat hasil rotasi.
+4. Titik <InlineMath math="(2, 5)" /> dirotasi <InlineMath math="60^\circ" /> terhadap titik <InlineMath math="(1, 1)" />. Tentukan koordinat hasil rotasi.
 
-5. Fungsi <InlineMath math="y = \sqrt{x}" /> untuk <InlineMath math="x \geq 0" /> dirotasi <InlineMath math="90°" /> berlawanan arah jarum jam terhadap titik asal. Jelaskan bentuk grafik hasil rotasi.
+5. Fungsi <InlineMath math="y = \sqrt{x}" /> untuk <InlineMath math="x \geq 0" /> dirotasi <InlineMath math="90^\circ" /> berlawanan arah jarum jam terhadap titik asal. Jelaskan bentuk grafik hasil rotasi.
 
 ### Kunci Jawaban
 
-1. Menggunakan rumus rotasi <InlineMath math="90°" />:
+1. Menggunakan rumus rotasi <InlineMath math="90^\circ" />:
    
    <MathContainer>
    <BlockMath math="(x, y) \rightarrow (-y, x)" />
@@ -231,8 +231,8 @@ Untuk menentukan hasil rotasi suatu fungsi, ikuti langkah berikut:
    Jadi hasil rotasi adalah <InlineMath math="(-4, 3)" />.
 
    <LineEquation
-     title="Visualisasi Rotasi Titik (3, 4)"
-     description="Rotasi 90° berlawanan arah jarum jam terhadap titik asal."
+     title={<>Visualisasi Rotasi Titik <InlineMath math="(3, 4)" /></>}
+     description={<>Rotasi <InlineMath math="90^\circ" /> berlawanan arah jarum jam terhadap titik asal.</>}
      cameraPosition={[8, 6, 8]}
      data={[
        {
@@ -270,7 +270,7 @@ Untuk menentukan hasil rotasi suatu fungsi, ikuti langkah berikut:
      ]}
    />
 
-2. Titik puncak asli dirotasi <InlineMath math="180°" />:
+2. Titik puncak asli dirotasi <InlineMath math="180^\circ" />:
    
    <MathContainer>
    <BlockMath math="(x, y) \rightarrow (-x, -y)" />
@@ -281,7 +281,7 @@ Untuk menentukan hasil rotasi suatu fungsi, ikuti langkah berikut:
 
    <LineEquation
      title={<>Rotasi Fungsi <InlineMath math="f(x) = x^2 - 2x + 1" /></>}
-     description="Rotasi 180° terhadap titik asal."
+     description={<>Rotasi <InlineMath math="180^\circ" /> terhadap titik asal.</>}
      cameraPosition={[10, 6, 10]}
      data={[
        {
@@ -322,7 +322,7 @@ Untuk menentukan hasil rotasi suatu fungsi, ikuti langkah berikut:
      ]}
    />
 
-3. Ambil dua titik pada garis dan rotasi <InlineMath math="270°" />:
+3. Ambil dua titik pada garis dan rotasi <InlineMath math="270^\circ" />:
    
    <MathContainer>
    <BlockMath math="(x, y) \rightarrow (y, -x)" />
@@ -336,7 +336,7 @@ Untuk menentukan hasil rotasi suatu fungsi, ikuti langkah berikut:
 
    <LineEquation
      title={<>Rotasi Garis <InlineMath math="y = 3x - 2" /></>}
-     description="Rotasi 270° terhadap titik asal."
+     description={<>Rotasi <InlineMath math="270^\circ" /> terhadap titik asal.</>}
      cameraPosition={[8, 6, 8]}
      data={[
        {
@@ -377,7 +377,7 @@ Untuk menentukan hasil rotasi suatu fungsi, ikuti langkah berikut:
      ]}
    />
 
-4. Menggunakan rumus rotasi terhadap titik dengan sudut <InlineMath math="60°" />:
+4. Menggunakan rumus rotasi terhadap titik dengan sudut <InlineMath math="60^\circ" />:
    
    <MathContainer>
    <BlockMath math="x' = (x-a) \cos \theta - (y-b) \sin \theta + a" />
@@ -391,8 +391,8 @@ Untuk menentukan hasil rotasi suatu fungsi, ikuti langkah berikut:
    Koordinat hasil rotasi: <InlineMath math="(\frac{3}{2} - 2\sqrt{3}, 3 + \frac{\sqrt{3}}{2})" />
 
    <LineEquation
-     title="Rotasi Titik (2, 5) Terhadap Titik (1, 1)"
-     description="Rotasi 60° berlawanan arah jarum jam."
+     title={<>Rotasi Titik <InlineMath math="(2, 5)" /> Terhadap Titik <InlineMath math="(1, 1)" /></>}
+     description={<>Rotasi <InlineMath math="60^\circ" /> berlawanan arah jarum jam.</>}
      cameraPosition={[8, 6, 8]}
      data={[
        {
@@ -435,18 +435,18 @@ Untuk menentukan hasil rotasi suatu fungsi, ikuti langkah berikut:
      ]}
    />
 
-5. Fungsi <InlineMath math="y = \sqrt{x}" /> dirotasi <InlineMath math="90°" /> menjadi:
+5. Fungsi <InlineMath math="y = \sqrt{x}" /> dirotasi <InlineMath math="90^\circ" /> menjadi:
    
    <MathContainer>
    <BlockMath math="x = -\sqrt{y}" />
    <BlockMath math="y = x^2 \text{ untuk} x \leq 0" />
    </MathContainer>
    
-   Grafik hasil rotasi berbentuk parabola yang terbuka ke atas dengan domain <InlineMath math="x \leq 0" /> dan range <InlineMath math="y \geq 0" />. Ini adalah refleksi dari parabola <InlineMath math="y = x^2" /> terhadap sumbu y.
+   Grafik hasil rotasi berbentuk parabola yang terbuka ke atas dengan domain <InlineMath math="x \leq 0" /> dan range <InlineMath math="y \geq 0" />. Ini adalah refleksi dari parabola <InlineMath math="y = x^2" /> terhadap sumbu <InlineMath math="y" />.
 
    <LineEquation
      title={<>Rotasi Fungsi <InlineMath math="y = \sqrt{x}" /></>}
-     description="Rotasi 90° berlawanan arah jarum jam terhadap titik asal."
+     description={<>Rotasi <InlineMath math="90^\circ" /> berlawanan arah jarum jam terhadap titik asal.</>}
      cameraPosition={[8, 6, 8]}
      data={[
        {

@@ -209,7 +209,7 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/polynomial/division-polynomial`,
       },
       {
-        title: "Synthetic Division",
+        title: "Polynomial Long Division",
         href: `${BASE_PATH}/polynomial/synthetic-division`,
       },
       {
@@ -225,11 +225,11 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/polynomial/factor-theorem`,
       },
       {
-        title: "Rational Zero",
+        title: "Rational Zero Theorem",
         href: `${BASE_PATH}/polynomial/rational-zero`,
       },
       {
-        title: "Polynomial Factorization",
+        title: "Complete Polynomial Factorization",
         href: `${BASE_PATH}/polynomial/polynomial-factorization`,
       },
       {

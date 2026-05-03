@@ -10,7 +10,7 @@ export const metadata = {
 
 Dalam kehidupan nyata, kita sering menghadapi situasi dimana **hasil satu kejadian tidak mempengaruhi hasil kejadian lainnya**. Bayangkan kamu melempar koin dan dadu secara bersamaan. Apakah hasil koin mempengaruhi angka yang muncul pada dadu? Tentu tidak! Kedua kejadian ini bersifat independen atau saling bebas.
 
-**Kejadian saling bebas** adalah dua atau lebih kejadian yang hasil dari satu kejadian tidak mempengaruhi probabilitas kejadian lainnya. Jika kejadian A tidak mempengaruhi kejadian B, dan sebaliknya, maka kedua kejadian tersebut saling bebas.
+**Kejadian saling bebas** adalah dua atau lebih kejadian yang hasil dari satu kejadian tidak mempengaruhi probabilitas kejadian lainnya. Jika kejadian <InlineMath math="A" /> tidak mempengaruhi kejadian <InlineMath math="B" />, dan sebaliknya, maka kedua kejadian tersebut saling bebas.
 
 Sebagai ilustrasi sederhana, pikirkan tentang cuaca hari ini dan hasil ujian matematika kamu besok. Hujan atau cerah hari ini tidak akan mempengaruhi nilai ujian kamu (kecuali kamu terlambat karena hujan, tapi itu cerita lain!). Kedua kejadian ini saling bebas secara statistik.
 
@@ -18,11 +18,11 @@ Sebagai ilustrasi sederhana, pikirkan tentang cuaca hari ini dan hasil ujian mat
 
 ### Tidak Saling Mempengaruhi
 
-Ciri utama kejadian saling bebas adalah **hasil satu kejadian tidak mengubah probabilitas kejadian lainnya**. Dalam notasi matematika, jika A dan B adalah kejadian saling bebas, maka:
+Ciri utama kejadian saling bebas adalah **hasil satu kejadian tidak mengubah probabilitas kejadian lainnya**. Dalam notasi matematika, jika <InlineMath math="A" /> dan <InlineMath math="B" /> adalah kejadian saling bebas, maka:
 
 <BlockMath math="P(A|B) = P(A)" />
 
-Artinya probabilitas A terjadi ketika B sudah terjadi sama dengan probabilitas A terjadi secara umum.
+Artinya probabilitas <InlineMath math="A" /> terjadi ketika <InlineMath math="B" /> sudah terjadi sama dengan probabilitas <InlineMath math="A" /> terjadi secara umum.
 
 ### Contoh Kehidupan Sehari Hari
 
@@ -43,7 +43,7 @@ Karena kejadian saling bebas tidak saling mempengaruhi, perhitungan probabilitas
 
 <BlockMath math="P(A \cap B) = P(A) \times P(B)" />
 
-Rumus ini menunjukkan bahwa probabilitas kedua kejadian A dan B terjadi bersamaan sama dengan perkalian probabilitas masing-masing kejadian.
+Rumus ini menunjukkan bahwa probabilitas kedua kejadian <InlineMath math="A" /> dan <InlineMath math="B" /> terjadi bersamaan sama dengan perkalian probabilitas masing-masing kejadian.
 
 ### Mengapa Rumus Ini Berlaku
 
@@ -61,16 +61,14 @@ Dua dadu dilempar bersamaan, satu dadu merah dan satu dadu putih. Tentukan proba
 
 **Penyelesaian:**
 
-- Kejadian A: munculnya angka <InlineMath math="2" /> pada dadu merah
-- Kejadian B: munculnya angka <InlineMath math="5" /> pada dadu putih
+- Kejadian <InlineMath math="A" />: munculnya angka <InlineMath math="2" /> pada dadu merah
+- Kejadian <InlineMath math="B" />: munculnya angka <InlineMath math="5" /> pada dadu putih
 
 Kedua kejadian ini **saling bebas** karena hasil dadu merah tidak mempengaruhi hasil dadu putih.
 
 <MathContainer>
 <BlockMath math="P(A) = \frac{1}{6}" />
-
 <BlockMath math="P(B) = \frac{1}{6}" />
-
 <BlockMath math="P(A \cap B) = P(A) \times P(B) = \frac{1}{6} \times \frac{1}{6} = \frac{1}{36}" />
 </MathContainer>
 
@@ -84,20 +82,17 @@ Sebuah dadu dan sebuah koin dilempar bersamaan. Tentukan probabilitas mendapatka
 
 <MathContainer>
 <BlockMath math="S_{dadu} = \{1, 2, 3, 4, 5, 6\}" />
-
 <BlockMath math="S_{koin} = \{A, G\}" />
 </MathContainer>
 
-- Kejadian A: munculnya angka genap pada dadu = <InlineMath math="\{2, 4, 6\}" />
-- Kejadian B: munculnya gambar pada koin = <InlineMath math="\{G\}" />
+- Kejadian <InlineMath math="A" />: munculnya angka genap pada dadu adalah <InlineMath math="\{2, 4, 6\}" />
+- Kejadian <InlineMath math="B" />: munculnya gambar pada koin adalah <InlineMath math="\{G\}" />
 
 Kedua kejadian **saling bebas** karena hasil dadu tidak mempengaruhi hasil koin.
 
 <MathContainer>
 <BlockMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
-
 <BlockMath math="P(B) = \frac{1}{2}" />
-
 <BlockMath math="P(A \cap B) = P(A) \times P(B) = \frac{1}{2} \times \frac{1}{2} = \frac{1}{4}" />
 </MathContainer>
 
@@ -109,8 +104,8 @@ Angka probabilitas ini menggambarkan skenario kota besar dengan tingkat aktivita
 
 **Penyelesaian:**
 
-- Kejadian A: mobil pemadam kebakaran diperlukan
-- Kejadian B: ambulans diperlukan
+- Kejadian <InlineMath math="A" />: mobil pemadam kebakaran diperlukan
+- Kejadian <InlineMath math="B" />: ambulans diperlukan
 
 Kedua kejadian ini dapat dianggap **saling bebas** karena kebutuhan pemadam kebakaran tidak mempengaruhi kebutuhan ambulans.
 
@@ -118,7 +113,6 @@ Kedua kejadian ini dapat dianggap **saling bebas** karena kebutuhan pemadam keba
 
 <MathContainer>
 <BlockMath math="P(A \cap B) = P(A) \times P(B)" />
-
 <BlockMath math="P(A \cap B) = 0.98 \times 0.92 = 0.9016" />
 </MathContainer>
 
@@ -175,8 +169,8 @@ Perhatikan karakteristik berikut untuk mengidentifikasi kejadian saling bebas:
 
 1. **Penyelesaian:**
    
-   - Kejadian A: angka pada koin pertama, <InlineMath math="P(A) = \frac{1}{2}" />
-   - Kejadian B: gambar pada koin kedua, <InlineMath math="P(B) = \frac{1}{2}" />
+   - Kejadian <InlineMath math="A" />: angka pada koin pertama, <InlineMath math="P(A) = \frac{1}{2}" />
+   - Kejadian <InlineMath math="B" />: gambar pada koin kedua, <InlineMath math="P(B) = \frac{1}{2}" />
    
    Kedua kejadian saling bebas karena hasil koin pertama tidak mempengaruhi koin kedua.
    
@@ -184,8 +178,8 @@ Perhatikan karakteristik berikut untuk mengidentifikasi kejadian saling bebas:
 
 2. **Penyelesaian:**
    
-   - Kejadian A: angka prima pada dadu = <InlineMath math="\{2, 3, 5\}" />, sehingga <InlineMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
-   - Kejadian B: kartu merah (hati dan wajik), sehingga <InlineMath math="P(B) = \frac{26}{52} = \frac{1}{2}" />
+   - Kejadian <InlineMath math="A" />: angka prima pada dadu adalah <InlineMath math="\{2, 3, 5\}" />, sehingga <InlineMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
+   - Kejadian <InlineMath math="B" />: kartu merah (hati dan wajik), sehingga <InlineMath math="P(B) = \frac{26}{52} = \frac{1}{2}" />
    
    Kedua kejadian saling bebas.
    
@@ -193,8 +187,8 @@ Perhatikan karakteristik berikut untuk mengidentifikasi kejadian saling bebas:
 
 3. **Penyelesaian:**
    
-   - Kejadian A: lulus matematika, <InlineMath math="P(A) = 0.85" />
-   - Kejadian B: lulus fisika, <InlineMath math="P(B) = 0.78" />
+   - Kejadian <InlineMath math="A" />: lulus matematika, <InlineMath math="P(A) = 0.85" />
+   - Kejadian <InlineMath math="B" />: lulus fisika, <InlineMath math="P(B) = 0.78" />
    
    Karena kedua mata pelajaran independen:
    
@@ -206,7 +200,7 @@ Perhatikan karakteristik berikut untuk mengidentifikasi kejadian saling bebas:
    
    **Cara 1: Enumerasi Langsung**
    
-   Ruang sampel 3 koin (A = Angka, G = Gambar): <InlineMath math="\{AAA, AAG, AGA, AGG, GAA, GAG, GGA, GGG\}" />, total = <InlineMath math="8" />
+   Ruang sampel 3 koin (<InlineMath math="A" /> = Angka, <InlineMath math="G" /> = Gambar): <InlineMath math="\{AAA, AAG, AGA, AGG, GAA, GAG, GGA, GGG\}" />, total adalah <InlineMath math="8" />
    
    Kejadian tepat dua gambar: <InlineMath math="\{AGG, GAG, GGA\}" />, ada <InlineMath math="3" /> kejadian
    

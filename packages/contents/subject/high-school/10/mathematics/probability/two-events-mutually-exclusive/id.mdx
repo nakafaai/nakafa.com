@@ -10,17 +10,17 @@ export const metadata = {
 
 Bayangin kamu punya dua pilihan, tapi kamu cuma bisa pilih **salah satu** aja, nggak bisa dua-duanya sekaligus. Nah, dalam dunia peluang, ini mirip sama konsep **Kejadian Saling Lepas** (nama keren lainnya: _Mutually Exclusive_ atau _Disjoint Events_).
 
-Dua kejadian (kita sebut aja kejadian A dan kejadian B) dikatakan **saling lepas** kalau kedua kejadian itu **tidak mungkin terjadi secara bersamaan** dalam satu kali percobaan. Simpelnya, kalau A sudah terjadi, B nggak mungkin terjadi. Kalau B terjadi, A nggak mungkin terjadi.
+Dua kejadian (kita sebut aja kejadian <InlineMath math="A" /> dan kejadian <InlineMath math="B" />) dikatakan **saling lepas** kalau kedua kejadian itu **tidak mungkin terjadi secara bersamaan** dalam satu kali percobaan. Simpelnya, kalau <InlineMath math="A" /> sudah terjadi, <InlineMath math="B" /> nggak mungkin terjadi. Kalau <InlineMath math="B" /> terjadi, <InlineMath math="A" /> nggak mungkin terjadi.
 
 ## Ciri Khas Kejadian Saling Lepas
 
-Ciri utamanya ya itu tadi: **tidak bisa terjadi bersamaan**. Nggak ada hasil percobaan yang bisa masuk ke kejadian A sekaligus masuk ke kejadian B.
+Ciri utamanya ya itu tadi: **tidak bisa terjadi bersamaan**. Nggak ada hasil percobaan yang bisa masuk ke kejadian <InlineMath math="A" /> sekaligus masuk ke kejadian <InlineMath math="B" />.
 
-### Peluang Kejadian A DAN B Terjadi Bersamaan
+### Peluang Dua Kejadian Terjadi Bersamaan
 
-Karena kejadian A dan B nggak mungkin terjadi barengan kalau mereka saling lepas, maka peluang keduanya terjadi bersamaan adalah **nol besar**!
+Karena kejadian <InlineMath math="A" /> dan <InlineMath math="B" /> nggak mungkin terjadi barengan kalau mereka saling lepas, maka peluang keduanya terjadi bersamaan adalah **nol besar**!
 
-Kita bisa tulis peluang kejadian "A **dan** B" (keduanya terjadi) sebagai:
+Kita bisa tulis peluang kejadian "<InlineMath math="A" /> **dan** <InlineMath math="B" />" (keduanya terjadi) sebagai:
 
 <BlockMath math="P(A \text{ dan} B) = 0" />
 
@@ -30,9 +30,9 @@ Atau pakai simbol irisan:
 
 Ingat ya, kalau saling lepas, irisannya kosong, jadi peluangnya nol!
 
-## Menghitung Peluang A ATAU B untuk Kejadian Saling Lepas
+## Menghitung Peluang Gabungan untuk Kejadian Saling Lepas
 
-Nah, kalau kita mau hitung peluang kejadian A terjadi **ATAU** kejadian B terjadi, gimana caranya kalau A dan B itu saling lepas?
+Nah, kalau kita mau hitung peluang kejadian <InlineMath math="A" /> terjadi **ATAU** kejadian <InlineMath math="B" /> terjadi, gimana caranya kalau <InlineMath math="A" /> dan <InlineMath math="B" /> itu saling lepas?
 
 Karena mereka nggak bisa terjadi barengan, kita tinggal **jumlahkan** saja peluang masing-masing kejadian.
 
@@ -56,26 +56,26 @@ Biar makin ngerti, lihat contoh-contoh ini:
 
     - <InlineMath math="P(\text{Angka}) = 1/2" />
     - <InlineMath math="P(\text{Gambar}) = 1/2" />
-    - Peluang muncul Angka ATAU Gambar = <InlineMath math="P(\text{Angka}) + P(\text{Gambar}) = 1/2 + 1/2 = 1" /> (Pasti salah satu muncul).
+    - Peluang muncul Angka ATAU Gambar adalah <InlineMath math="P(\text{Angka}) + P(\text{Gambar}) = 1/2 + 1/2 = 1" /> (Pasti salah satu muncul).
 
 2.  **Lempar Dadu (satu kali):**
 
     - Kejadian dapat angka "3" dan kejadian dapat angka "5". Nggak bisa dapat dua angka sekaligus.
       - <InlineMath math="P(3) = 1/6" />
       - <InlineMath math="P(5) = 1/6" />
-      - Peluang dapat 3 ATAU 5 = <InlineMath math="P(3) + P(5) = 1/6 + 1/6 = 2/6 = 1/3" />.
+      - Peluang dapat 3 ATAU 5 adalah <InlineMath math="P(3) + P(5) = 1/6 + 1/6 = 2/6 = 1/3" />.
     - Kejadian dapat "angka genap" (<InlineMath math="\{2, 4, 6\}" />) dan kejadian dapat "angka ganjil" (<InlineMath math="\{1, 3, 5\}" />). Nggak ada angka yang genap sekaligus ganjil.
       - <InlineMath math="P(\text{Genap}) = 3/6 = 1/2" />
       - <InlineMath math="P(\text{Ganjil}) = 3/6 = 1/2" />
-      - Peluang dapat Genap ATAU Ganjil = <InlineMath math="P(\text{Genap}) + P(\text{Ganjil}) = 1/2 + 1/2 = 1" />.
+      - Peluang dapat Genap ATAU Ganjil adalah <InlineMath math="P(\text{Genap}) + P(\text{Ganjil}) = 1/2 + 1/2 = 1" />.
 
 3.  **Ambil Kartu (satu kali):**
 
     - Kejadian dapat "kartu King" dan kejadian dapat "kartu Queen". Nggak bisa satu kartu jadi King dan Queen sekaligus.
       - Ada 4 King di <InlineMath math="52 \text{ kartu}" />, <InlineMath math="P(\text{King}) = 4/52" />
       - Ada 4 Queen di <InlineMath math="52 \text{ kartu}" />, <InlineMath math="P(\text{Queen}) = 4/52" />
-      - Peluang dapat King ATAU Queen = <InlineMath math="P(\text{King}) + P(\text{Queen}) = 4/52 + 4/52 = 8/52 = 2/13" />.
+      - Peluang dapat King ATAU Queen adalah <InlineMath math="P(\text{King}) + P(\text{Queen}) = 4/52 + 4/52 = 8/52 = 2/13" />.
     - Kejadian dapat "kartu Merah (Hati/Wajik)" dan kejadian dapat "kartu Keriting (<InlineMath math="\clubsuit" />)". Kartu keriting warnanya hitam, jadi nggak mungkin merah sekaligus keriting.
       - Ada <InlineMath math="26 \text{ kartu}" /> merah, <InlineMath math="P(\text{Merah}) = 26/52" />
       - Ada <InlineMath math="13 \text{ kartu}" /> keriting, <InlineMath math="P(\clubsuit) = 13/52" />
-      - Peluang dapat Merah ATAU Keriting = <InlineMath math="P(\text{Merah}) + P(\clubsuit) = 26/52 + 13/52 = 39/52 = 3/4" />.
+      - Peluang dapat Merah ATAU Keriting adalah <InlineMath math="P(\text{Merah}) + P(\clubsuit) = 26/52 + 13/52 = 39/52 = 3/4" />.

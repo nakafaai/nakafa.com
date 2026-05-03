@@ -16,14 +16,14 @@ Konsep ini berbeda dengan peluang biasa karena kita harus mempertimbangkan **kon
 
 ## Rumus dan Notasi Matematis
 
-Untuk dua kejadian A dan B yang saling bebas namun berurutan, rumus peluang bersyarat adalah:
+Untuk dua kejadian <InlineMath math="A" /> dan <InlineMath math="B" /> yang saling bebas namun berurutan, rumus peluang bersyarat adalah:
 
 <BlockMath math="P(B|A) = \frac{P(A \cap B)}{P(A)}" />
 
 Di mana:
-- <InlineMath math="P(B|A)" /> adalah peluang kejadian B terjadi setelah kejadian A terjadi
-- <InlineMath math="P(A \cap B)" /> adalah peluang kedua kejadian A dan B terjadi bersamaan
-- <InlineMath math="P(A)" /> adalah peluang kejadian A terjadi
+- <InlineMath math="P(B|A)" /> adalah peluang kejadian <InlineMath math="B" /> terjadi setelah kejadian <InlineMath math="A" /> terjadi
+- <InlineMath math="P(A \cap B)" /> adalah peluang kedua kejadian <InlineMath math="A" /> dan <InlineMath math="B" /> terjadi bersamaan
+- <InlineMath math="P(A)" /> adalah peluang kejadian <InlineMath math="A" /> terjadi
 
 Karena kejadian saling bebas, kita dapat menuliskan:
 
@@ -42,16 +42,14 @@ Sebuah deck kartu standar memiliki <InlineMath math="52 \text{ kartu}" />. Terda
 **Analisis langkah demi langkah:**
 
 Misalkan:
-- Kejadian C = mendapat kartu merah pada pengambilan pertama
-- Kejadian D = mendapat kartu hati pada pengambilan kedua
+- Kejadian <InlineMath math="C" /> = mendapat kartu merah pada pengambilan pertama
+- Kejadian <InlineMath math="D" /> = mendapat kartu hati pada pengambilan kedua
 
 Perhitungan peluang:
 
 <MathContainer>
 <BlockMath math="P(C) = \frac{26}{52} = \frac{1}{2}" />
-
 <BlockMath math="P(D|C) = \frac{13}{51}" />
-
 <BlockMath math="P(C \cap D) = P(C) \times P(D|C) = \frac{26}{52} \times \frac{13}{51} = \frac{1}{2} \times \frac{13}{51} = \frac{13}{102}" />
 </MathContainer>
 
@@ -74,18 +72,16 @@ Sebuah perusahaan multinasional sedang melakukan **audit internal** untuk mengev
 
 | Posisi Manajemen | Laki-laki (L) | Perempuan (P) | Total |
 |------------------|---------------|---------------|-------|
-| Senior (S)       | 78            | 122           | 200   |
-| Menengah (M)     | 78            | 122           | 200   |
-| Junior (J)       | 44            | 156           | 200   |
-| **Total**        | **200**       | **400**       | **600** |
+| Senior (S)       | <InlineMath math="78" /> | <InlineMath math="122" /> | <InlineMath math="200" /> |
+| Menengah (M)     | <InlineMath math="78" /> | <InlineMath math="122" /> | <InlineMath math="200" /> |
+| Junior (J)       | <InlineMath math="44" /> | <InlineMath math="156" /> | <InlineMath math="200" /> |
+| **Total**        | <InlineMath math="200" /> | <InlineMath math="400" /> | <InlineMath math="600" /> |
 
 Dari data ini, perusahaan ingin menganalisis peluang dalam proses **seleksi acak** untuk komite khusus yang akan dibentuk. Jika dipilih dua manajer secara acak tanpa pengembalian, peluang mendapat manajer laki-laki pada pemilihan pertama dan kedua adalah:
 
 <MathContainer>
 <BlockMath math="P(L_1) = \frac{200}{600} = \frac{1}{3}" />
-
 <BlockMath math="P(L_2|L_1) = \frac{199}{599}" />
-
 <BlockMath math="P(L_1 \cap L_2) = \frac{200}{600} \times \frac{199}{599} = \frac{1}{3} \times \frac{199}{599} = \frac{199}{1797}" />
 </MathContainer>
 
@@ -109,7 +105,7 @@ Untuk menyelesaikan soal peluang bersyarat independen:
 
 **Contoh Konkret: Mengambil Dua Kartu As**
 
-Misalkan kita ingin menghitung peluang mendapat dua kartu As berturut-turut dari deck standar (<InlineMath math="52 \text{ kartu}" />, 4 As).
+Misalkan kita ingin menghitung peluang mendapat dua kartu As berturut-turut dari deck standar (<InlineMath math="52 \text{ kartu}" />, <InlineMath math="4" /> As).
 
 1. **Peluang Independen (Dengan Pengembalian):**
 
@@ -117,9 +113,7 @@ Misalkan kita ingin menghitung peluang mendapat dua kartu As berturut-turut dari
 
     <MathContainer>
     <BlockMath math="P(As_1) = \frac{4}{52} = \frac{1}{13}" />
-
     <BlockMath math="P(As_2) = \frac{4}{52} = \frac{1}{13}" />
-
     <BlockMath math="P(As_1 \cap As_2) = \frac{4}{52} \times \frac{4}{52} = \frac{1}{13} \times \frac{1}{13} = \frac{1}{169}" />
     </MathContainer>
 
@@ -129,9 +123,7 @@ Misalkan kita ingin menghitung peluang mendapat dua kartu As berturut-turut dari
 
     <MathContainer>
     <BlockMath math="P(As_1) = \frac{4}{52} = \frac{1}{13}" />
-
     <BlockMath math="P(As_2|As_1) = \frac{3}{51} = \frac{1}{17}" />
-
     <BlockMath math="P(As_1 \cap As_2) = \frac{4}{52} \times \frac{3}{51} = \frac{1}{13} \times \frac{1}{17} = \frac{1}{221}" />
     </MathContainer>
 
@@ -139,7 +131,7 @@ Misalkan kita ingin menghitung peluang mendapat dua kartu As berturut-turut dari
 - Peluang independen: <InlineMath math="\frac{1}{169} = 0.00592" />
 - Peluang bersyarat: <InlineMath math="\frac{1}{221} = 0.00452" />
 
-Peluang bersyarat memberikan hasil yang **lebih kecil** karena setelah mengambil satu As, jumlah As yang tersisa berkurang dari 4 menjadi 3, sementara total kartu juga berkurang dari 52 menjadi 51.
+Peluang bersyarat memberikan hasil yang **lebih kecil** karena setelah mengambil satu As, jumlah As yang tersisa berkurang dari <InlineMath math="4" /> menjadi <InlineMath math="3" />, sementara total kartu juga berkurang dari <InlineMath math="52" /> menjadi <InlineMath math="51" />.
 
 ## Latihan
 
@@ -151,15 +143,13 @@ Peluang bersyarat memberikan hasil yang **lebih kecil** karena setelah mengambil
 
 1. **Penyelesaian:**
 
-   Misalkan A = mendapat bola merah pertama, B = mendapat bola biru kedua
+   Misalkan <InlineMath math="A" /> = mendapat bola merah pertama, <InlineMath math="B" /> = mendapat bola biru kedua
    
-   Total bola awal = <InlineMath math="8 + 12 = 20 \text{ bola}" />
+   Total bola awal adalah <InlineMath math="8 + 12 = 20 \text{ bola}" />
    
    <MathContainer>
    <BlockMath math="P(A) = \frac{8}{20} = \frac{2}{5}" />
-   
    <BlockMath math="P(B|A) = \frac{12}{19}" />
-   
    <BlockMath math="P(A \cap B) = \frac{8}{20} \times \frac{12}{19} = \frac{2}{5} \times \frac{12}{19} = \frac{24}{95}" />
    </MathContainer>
    
@@ -167,17 +157,14 @@ Peluang bersyarat memberikan hasil yang **lebih kecil** karena setelah mengambil
 
 2. **Penyelesaian:**
 
-   Misalkan A = mendapat As pertama, K = mendapat King kedua, Q = mendapat Queen ketiga
+   Misalkan <InlineMath math="A" /> = mendapat As pertama, <InlineMath math="K" /> = mendapat King kedua, <InlineMath math="Q" /> = mendapat Queen ketiga
    
-   Deck standar memiliki <InlineMath math="52 \text{ kartu}" /> dengan masing-masing: 4 As, 4 King, 4 Queen
+   Deck standar memiliki <InlineMath math="52 \text{ kartu}" /> dengan masing-masing: <InlineMath math="4" /> As, <InlineMath math="4" /> King, <InlineMath math="4" /> Queen
    
    <MathContainer>
    <BlockMath math="P(A) = \frac{4}{52} = \frac{1}{13}" />
-   
    <BlockMath math="P(K|A) = \frac{4}{51}" />
-   
    <BlockMath math="P(Q|A \cap K) = \frac{4}{50} = \frac{2}{25}" />
-   
    <BlockMath math="P(A \cap K \cap Q) = \frac{4}{52} \times \frac{4}{51} \times \frac{4}{50} = \frac{1}{13} \times \frac{4}{51} \times \frac{2}{25} = \frac{8}{16575}" />
    </MathContainer>
    

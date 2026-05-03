@@ -18,7 +18,7 @@ Sebagai ilustrasi sederhana, bayangkan kamu mengambil satu kartu dari satu deck.
 
 ### Tidak Ada Irisan
 
-Ciri utama kejadian saling lepas adalah **tidak memiliki irisan atau elemen yang sama**. Dalam notasi matematika, jika A dan B adalah kejadian saling lepas, maka:
+Ciri utama kejadian saling lepas adalah **tidak memiliki irisan atau elemen yang sama**. Dalam notasi matematika, jika <InlineMath math="A" /> dan <InlineMath math="B" /> adalah kejadian saling lepas, maka:
 
 <BlockMath math="A \cap B = \emptyset" />
 
@@ -42,7 +42,7 @@ Karena kejadian saling lepas tidak memiliki irisan, perhitungan peluangnya menja
 
 <BlockMath math="P(A \cup B) = P(A) + P(B)" />
 
-Rumus ini menunjukkan bahwa peluang terjadinya kejadian A atau kejadian B sama dengan jumlah peluang masing-masing kejadian.
+Rumus ini menunjukkan bahwa peluang terjadinya kejadian <InlineMath math="A" /> atau kejadian <InlineMath math="B" /> sama dengan jumlah peluang masing-masing kejadian.
 
 ### Mengapa Rumus Ini Berlaku
 
@@ -58,14 +58,14 @@ Menjadi:
 
 ### Pelemparan Dadu
 
-Sebuah dadu dilempar satu kali. Tentukan peluang munculnya angka prima atau angka yang lebih besar dari 4.
+Sebuah dadu dilempar satu kali. Tentukan peluang munculnya angka prima atau angka yang lebih besar dari <InlineMath math="4" />.
 
 **Penyelesaian:**
 
-Ruang sampel: S = <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />
+Ruang sampel: <InlineMath math="S = \{1, 2, 3, 4, 5, 6\}" />
 
-- Kejadian A (angka prima): A = <InlineMath math="\{2, 3, 5\}" />
-- Kejadian B (angka > 4): B = <InlineMath math="\{5, 6\}" />
+- Kejadian <InlineMath math="A" /> (angka prima): <InlineMath math="A = \{2, 3, 5\}" />
+- Kejadian <InlineMath math="B" /> (angka > 4): <InlineMath math="B = \{5, 6\}" />
 
 Periksa irisan: <InlineMath math="A \cap B = \{5\}" />
 
@@ -73,8 +73,8 @@ Karena terdapat irisan (angka 5), kedua kejadian **tidak saling lepas**. Mari gu
 
 **Contoh yang Tepat:**
 
-- Kejadian A (angka ganjil): A = <InlineMath math="\{1, 3, 5\}" />
-- Kejadian C (angka genap): C = <InlineMath math="\{2, 4, 6\}" />
+- Kejadian <InlineMath math="A" /> (angka ganjil): <InlineMath math="A = \{1, 3, 5\}" />
+- Kejadian <InlineMath math="C" /> (angka genap): <InlineMath math="C = \{2, 4, 6\}" />
 
 Periksa irisan: <InlineMath math="A \cap C = \emptyset" />
 
@@ -82,9 +82,7 @@ Karena tidak ada irisan, kedua kejadian **saling lepas**.
 
 <MathContainer>
 <BlockMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
-
 <BlockMath math="P(C) = \frac{3}{6} = \frac{1}{2}" />
-
 <BlockMath math="P(A \cup C) = P(A) + P(C) = \frac{1}{2} + \frac{1}{2} = 1" />
 </MathContainer>
 
@@ -98,20 +96,20 @@ Dua dadu dilempar bersamaan. Tentukan peluang mendapatkan jumlah mata dadu 5 ata
 
 Untuk memahami lebih jelas, mari kita lihat semua kemungkinan hasil pelemparan dua dadu dalam tabel berikut:
 
-| Dadu 1 \\ Dadu 2 | 1 | 2 | 3 | 4 | 5 | 6 |
+| Dadu 1 \\ Dadu 2 | <InlineMath math="1" /> | <InlineMath math="2" /> | <InlineMath math="3" /> | <InlineMath math="4" /> | <InlineMath math="5" /> | <InlineMath math="6" /> |
 |------------------|---|---|---|---|---|---|
-| **1** | <InlineMath math="(1,1)" /> | <InlineMath math="(1,2)" /> | <InlineMath math="(1,3)" /> | <InlineMath math="(1,4)" /> | <InlineMath math="(1,5)" /> | <InlineMath math="(1,6)" /> |
-| **2** | <InlineMath math="(2,1)" /> | <InlineMath math="(2,2)" /> | <InlineMath math="(2,3)" /> | <InlineMath math="(2,4)" /> | <InlineMath math="(2,5)" /> | <InlineMath math="(2,6)" /> |
-| **3** | <InlineMath math="(3,1)" /> | <InlineMath math="(3,2)" /> | <InlineMath math="(3,3)" /> | <InlineMath math="(3,4)" /> | <InlineMath math="(3,5)" /> | <InlineMath math="(3,6)" /> |
-| **4** | <InlineMath math="(4,1)" /> | <InlineMath math="(4,2)" /> | <InlineMath math="(4,3)" /> | <InlineMath math="(4,4)" /> | <InlineMath math="(4,5)" /> | <InlineMath math="(4,6)" /> |
-| **5** | <InlineMath math="(5,1)" /> | <InlineMath math="(5,2)" /> | <InlineMath math="(5,3)" /> | <InlineMath math="(5,4)" /> | <InlineMath math="(5,5)" /> | <InlineMath math="(5,6)" /> |
-| **6** | <InlineMath math="(6,1)" /> | <InlineMath math="(6,2)" /> | <InlineMath math="(6,3)" /> | <InlineMath math="(6,4)" /> | <InlineMath math="(6,5)" /> | <InlineMath math="(6,6)" /> |
+| <InlineMath math="1" /> | <InlineMath math="(1,1)" /> | <InlineMath math="(1,2)" /> | <InlineMath math="(1,3)" /> | <InlineMath math="(1,4)" /> | <InlineMath math="(1,5)" /> | <InlineMath math="(1,6)" /> |
+| <InlineMath math="2" /> | <InlineMath math="(2,1)" /> | <InlineMath math="(2,2)" /> | <InlineMath math="(2,3)" /> | <InlineMath math="(2,4)" /> | <InlineMath math="(2,5)" /> | <InlineMath math="(2,6)" /> |
+| <InlineMath math="3" /> | <InlineMath math="(3,1)" /> | <InlineMath math="(3,2)" /> | <InlineMath math="(3,3)" /> | <InlineMath math="(3,4)" /> | <InlineMath math="(3,5)" /> | <InlineMath math="(3,6)" /> |
+| <InlineMath math="4" /> | <InlineMath math="(4,1)" /> | <InlineMath math="(4,2)" /> | <InlineMath math="(4,3)" /> | <InlineMath math="(4,4)" /> | <InlineMath math="(4,5)" /> | <InlineMath math="(4,6)" /> |
+| <InlineMath math="5" /> | <InlineMath math="(5,1)" /> | <InlineMath math="(5,2)" /> | <InlineMath math="(5,3)" /> | <InlineMath math="(5,4)" /> | <InlineMath math="(5,5)" /> | <InlineMath math="(5,6)" /> |
+| <InlineMath math="6" /> | <InlineMath math="(6,1)" /> | <InlineMath math="(6,2)" /> | <InlineMath math="(6,3)" /> | <InlineMath math="(6,4)" /> | <InlineMath math="(6,5)" /> | <InlineMath math="(6,6)" /> |
 
-Total kemungkinan = <InlineMath math="6 \times 6 = 36" />
+Total kemungkinan adalah <InlineMath math="6 \times 6 = 36" />
 
 **Identifikasi kejadian:**
 
-**Kejadian A (jumlah = 5):**
+**Kejadian <InlineMath math="A" /> (jumlah = 5):**
 
 Dari tabel di atas, pasangan yang menghasilkan jumlah 5 adalah:
 - <InlineMath math="(1,4): 1 + 4 = 5" />
@@ -121,7 +119,7 @@ Dari tabel di atas, pasangan yang menghasilkan jumlah 5 adalah:
 
 Jadi ada **<InlineMath math="4 \text{ cara}" />** untuk mendapatkan jumlah 5.
 
-**Kejadian B (jumlah = 7):**
+**Kejadian <InlineMath math="B" /> (jumlah = 7):**
 
 Dari tabel di atas, pasangan yang menghasilkan jumlah 7 adalah:
 - <InlineMath math="(1,6): 1 + 6 = 7" />
@@ -139,9 +137,7 @@ Kedua kejadian **saling lepas**.
 
 <MathContainer>
 <BlockMath math="P(A) = \frac{4}{36} = \frac{1}{9}" />
-
 <BlockMath math="P(B) = \frac{6}{36} = \frac{1}{6}" />
-
 <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{9} + \frac{1}{6}" />
 </MathContainer>
 
@@ -153,9 +149,7 @@ Untuk menjumlahkan <InlineMath math="\frac{1}{9} + \frac{1}{6}" />, kita perlu m
 
 <MathContainer>
 <BlockMath math="\frac{1}{9} = \frac{1 \times 2}{9 \times 2} = \frac{2}{18}" />
-
 <BlockMath math="\frac{1}{6} = \frac{1 \times 3}{6 \times 3} = \frac{3}{18}" />
-
 <BlockMath math="P(A \cup B) = \frac{2}{18} + \frac{3}{18} = \frac{5}{18}" />
 </MathContainer>
 
@@ -184,22 +178,22 @@ Beberapa tips untuk memudahkan pemahaman:
 Banyak siswa keliru mengidentifikasi kejadian saling lepas. Berikut adalah contoh kejadian yang **tampak** saling lepas namun **sebenarnya tidak**:
 
 **Contoh 1: Pelemparan Dadu**
-- Kejadian A: Munculnya angka prima = <InlineMath math="\{2, 3, 5\}" />
-- Kejadian B: Munculnya angka ganjil = <InlineMath math="\{1, 3, 5\}" />
+- Kejadian <InlineMath math="A" />: Munculnya angka prima adalah <InlineMath math="\{2, 3, 5\}" />
+- Kejadian <InlineMath math="B" />: Munculnya angka ganjil adalah <InlineMath math="\{1, 3, 5\}" />
 
 **Kesalahan umum**: "Prima dan ganjil berbeda, jadi saling lepas"
 **Kenyataan**: <InlineMath math="A \cap B = \{3, 5\}" /> ≠ ∅, jadi **tidak saling lepas**
 
 **Contoh 2: Pengambilan Kartu**
-- Kejadian A: Mengambil kartu merah
-- Kejadian B: Mengambil kartu As
+- Kejadian <InlineMath math="A" />: Mengambil kartu merah
+- Kejadian <InlineMath math="B" />: Mengambil kartu As
 
 **Kesalahan umum**: "Warna dan jenis kartu berbeda, jadi saling lepas"
 **Kenyataan**: Ada As merah (As hati dan As wajik), jadi **tidak saling lepas**
 
 **Contoh 3: Karakteristik Siswa**
-- Kejadian A: Siswa yang tinggi (> <InlineMath math="160 \text{ cm}" />)
-- Kejadian B: Siswa yang pintar (nilai > 80)
+- Kejadian <InlineMath math="A" />: Siswa yang tinggi (> <InlineMath math="160 \text{ cm}" />)
+- Kejadian <InlineMath math="B" />: Siswa yang pintar (nilai > 80)
 
 **Kesalahan umum**: "Tinggi badan dan kepintaran tidak berhubungan"
 **Kenyataan**: Bisa ada siswa yang sekaligus tinggi dan pintar, jadi **tidak saling lepas**
@@ -212,7 +206,7 @@ Banyak siswa keliru mengidentifikasi kejadian saling lepas. Berikut adalah conto
 
 ## Latihan
 
-1. Sebuah dadu dilempar satu kali. Tentukan peluang munculnya angka kurang dari 3 atau angka lebih dari 5.
+1. Sebuah dadu dilempar satu kali. Tentukan peluang munculnya angka kurang dari <InlineMath math="3" /> atau angka lebih dari <InlineMath math="5" />.
 
 2. Dari sekotak kartu bridge standar, satu kartu diambil secara acak. Hitunglah peluang terambilnya kartu As atau kartu King.
 
@@ -224,10 +218,10 @@ Banyak siswa keliru mengidentifikasi kejadian saling lepas. Berikut adalah conto
 
 1. **Penyelesaian:**
    
-   Ruang sampel: S = <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />, sehingga <InlineMath math="n(S) = 6" />
+   Ruang sampel: <InlineMath math="S = \{1, 2, 3, 4, 5, 6\}" />, sehingga <InlineMath math="n(S) = 6" />
    
-   - Kejadian A (angka < 3): A = <InlineMath math="\{1, 2\}" />, sehingga <InlineMath math="n(A) = 2" />
-   - Kejadian B (angka > 5): B = <InlineMath math="\{6\}" />, sehingga <InlineMath math="n(B) = 1" />
+   - Kejadian <InlineMath math="A" /> (angka < 3): <InlineMath math="A = \{1, 2\}" />, sehingga <InlineMath math="n(A) = 2" />
+   - Kejadian <InlineMath math="B" /> (angka > 5): <InlineMath math="B = \{6\}" />, sehingga <InlineMath math="n(B) = 1" />
    
    Periksa irisan: <InlineMath math="A \cap B = \emptyset" /> (tidak ada angka yang sekaligus < 3 dan > 5)
    
@@ -235,18 +229,16 @@ Banyak siswa keliru mengidentifikasi kejadian saling lepas. Berikut adalah conto
    
    <MathContainer>
    <BlockMath math="P(A) = \frac{2}{6} = \frac{1}{3}" />
-   
    <BlockMath math="P(B) = \frac{1}{6}" />
-   
    <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{3} + \frac{1}{6} = \frac{2}{6} + \frac{1}{6} = \frac{3}{6} = \frac{1}{2}" />
    </MathContainer>
 
 2. **Penyelesaian:**
    
-   Total kartu = <InlineMath math="52" />
+   Total kartu adalah <InlineMath math="52" />
    
-   - Kejadian A (kartu As): <InlineMath math="4 \text{ kartu}" /> As
-   - Kejadian B (kartu King): <InlineMath math="4 \text{ kartu}" /> King
+   - Kejadian <InlineMath math="A" /> (kartu As): <InlineMath math="4 \text{ kartu}" /> As
+   - Kejadian <InlineMath math="B" /> (kartu King): <InlineMath math="4 \text{ kartu}" /> King
    
    Periksa irisan: Tidak ada kartu yang sekaligus As dan King, sehingga <InlineMath math="A \cap B = \emptyset" />
    
@@ -254,26 +246,22 @@ Banyak siswa keliru mengidentifikasi kejadian saling lepas. Berikut adalah conto
    
    <MathContainer>
    <BlockMath math="P(A) = \frac{4}{52} = \frac{1}{13}" />
-   
    <BlockMath math="P(B) = \frac{4}{52} = \frac{1}{13}" />
-   
    <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{13} + \frac{1}{13} = \frac{2}{13}" />
    </MathContainer>
 
 3. **Penyelesaian:**
    
-   Ruang sampel pelemparan dua koin: <InlineMath math="\{(A,A), (A,G), (G,A), (G,G)\}" />, total = <InlineMath math="4" />
+   Ruang sampel pelemparan dua koin: <InlineMath math="\{(A,A), (A,G), (G,A), (G,G)\}" />, total adalah <InlineMath math="4" />
    
-   - Kejadian A (tepat satu gambar): <InlineMath math="\{(A,G), (G,A)\}" />, sehingga <InlineMath math="n(A) = 2" />
-   - Kejadian B (tepat dua angka): <InlineMath math="\{(A,A)\}" />, sehingga <InlineMath math="n(B) = 1" />
+   - Kejadian <InlineMath math="A" /> (tepat satu gambar): <InlineMath math="\{(A,G), (G,A)\}" />, sehingga <InlineMath math="n(A) = 2" />
+   - Kejadian <InlineMath math="B" /> (tepat dua angka): <InlineMath math="\{(A,A)\}" />, sehingga <InlineMath math="n(B) = 1" />
    
    Periksa irisan: <InlineMath math="A \cap B = \emptyset" /> (tidak mungkin tepat satu gambar dan tepat dua angka bersamaan)
    
    <MathContainer>
    <BlockMath math="P(A) = \frac{2}{4} = \frac{1}{2}" />
-   
    <BlockMath math="P(B) = \frac{1}{4}" />
-   
    <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{2} + \frac{1}{4} = \frac{2}{4} + \frac{1}{4} = \frac{3}{4}" />
    </MathContainer>
 
@@ -281,18 +269,16 @@ Banyak siswa keliru mengidentifikasi kejadian saling lepas. Berikut adalah conto
 
    Prima ganjil adalah bilangan prima yang sekaligus ganjil. Bilangan prima dari <InlineMath math="1\text{-}10" /> adalah <InlineMath math="\{2, 3, 5, 7\}" />, sehingga prima ganjil adalah <InlineMath math="\{3, 5, 7\}" />.
    
-   Ruang sampel: S = <InlineMath math="\{1, 2, 3, 4, 5, 6, 7, 8, 9, 10\}" />, sehingga <InlineMath math="n(S) = 10" />
+   Ruang sampel: <InlineMath math="S = \{1, 2, 3, 4, 5, 6, 7, 8, 9, 10\}" />, sehingga <InlineMath math="n(S) = 10" />
    
-   - Kejadian A (nomor genap): A = <InlineMath math="\{2, 4, 6, 8, 10\}" />, sehingga <InlineMath math="n(A) = 5" />
-   - Kejadian B (nomor prima ganjil): B = <InlineMath math="\{3, 5, 7\}" />, sehingga <InlineMath math="n(B) = 3" />
+   - Kejadian <InlineMath math="A" /> (nomor genap): <InlineMath math="A = \{2, 4, 6, 8, 10\}" />, sehingga <InlineMath math="n(A) = 5" />
+   - Kejadian <InlineMath math="B" /> (nomor prima ganjil): <InlineMath math="B = \{3, 5, 7\}" />, sehingga <InlineMath math="n(B) = 3" />
    
    Periksa irisan: <InlineMath math="A \cap B = \emptyset" /> (tidak ada nomor yang sekaligus genap dan prima ganjil)
    
    <MathContainer>
    <BlockMath math="P(A) = \frac{5}{10} = \frac{1}{2}" />
-   
    <BlockMath math="P(B) = \frac{3}{10}" />
-   
    <BlockMath math="P(A \cup B) = P(A) + P(B) = \frac{1}{2} + \frac{3}{10}" />
    </MathContainer>
 

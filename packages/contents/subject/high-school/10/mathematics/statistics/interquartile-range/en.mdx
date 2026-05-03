@@ -1,29 +1,29 @@
 export const metadata = {
   title: "Interquartile Range",
-  description: "Calculate interquartile range (IQR) to measure data spread. Learn Q1, Q3 quartiles, compare with range, and understand middle 50% data variation.",
+  description: "Calculate interquartile range to measure data spread. Learn lower and upper quartiles, compare with range, and understand middle data variation.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/22/2025",
   subject: "Statistics",
 };
 
-## What Is the Interquartile Range (IQR)?
+## What Is the Interquartile Range?
 
 We already know how to find the [mean](/subject/high-school/10/mathematics/statistics/mean) of data. But sometimes, the mean alone isn't enough to describe the data. Imagine two groups of friends with the same average age, but when you look closer, the age spread within each group is very different.
 
-This is where the **Interquartile Range (IQR)** comes in handy! The IQR is a measure of data spread that focuses on the **middle <InlineMath math="50\%" /> of the data** after it has been sorted.
+This is where the **Interquartile Range** (<InlineMath math="\mathrm{IQR}" />) comes in handy! The <InlineMath math="\mathrm{IQR}" /> is a measure of data spread that focuses on the **middle <InlineMath math="50\%" /> of the data** after it has been sorted.
 
-Why focus on the middle? Sometimes data has values at the extremes (too small or too large, called outliers) that can make other spread measures (like the Range) less accurate. The IQR is more "resistant" to these extreme values.
+Why focus on the middle? Sometimes data has values at the extremes (too small or too large, called outliers) that can make other spread measures (like the Range) less accurate. The <InlineMath math="\mathrm{IQR}" /> is more "resistant" to these extreme values.
 
-The IQR formula is super simple:
+The <InlineMath math="\mathrm{IQR}" /> formula is super simple:
 
-<BlockMath math="IQR = Q_3 - Q_1" />
+<BlockMath math="\mathrm{IQR} = Q_3 - Q_1" />
 
 - <InlineMath math="Q_3" /> is the Upper Quartile (the value marking the bottom <InlineMath math="75\%" />
   of the data).
 - <InlineMath math="Q_1" /> is the Lower Quartile (the value marking the bottom <InlineMath math="25\%" />
   of the data).
 
-So, the IQR is the difference between the upper and lower quartiles.
+So, the <InlineMath math="\mathrm{IQR}" /> is the difference between the upper and lower quartiles.
 
 ## Comparing Age Spreads
 
@@ -33,22 +33,22 @@ There are two groups, each with <InlineMath math="12 \text{ people}" />. Let's l
 
 | Data Point # | Group One | Group Two |
 | :----------: | :-------: | :-------: |
-|      1       |    13     |     1     |
-|      2       |    14     |     3     |
-|      3       |    15     |     4     |
-|      4       |    15     |     5     |
-|      5       |    16     |     7     |
-|      6       |    16     |     8     |
-|      7       |    17     |    12     |
-|      8       |    17     |    27     |
-|      9       |    17     |    28     |
-|      10      |    17     |    29     |
-|      11      |    17     |    32     |
-|      12      |    18     |    36     |
+| <InlineMath math="1" /> | <InlineMath math="13" /> | <InlineMath math="1" /> |
+| <InlineMath math="2" /> | <InlineMath math="14" /> | <InlineMath math="3" /> |
+| <InlineMath math="3" /> | <InlineMath math="15" /> | <InlineMath math="4" /> |
+| <InlineMath math="4" /> | <InlineMath math="15" /> | <InlineMath math="5" /> |
+| <InlineMath math="5" /> | <InlineMath math="16" /> | <InlineMath math="7" /> |
+| <InlineMath math="6" /> | <InlineMath math="16" /> | <InlineMath math="8" /> |
+| <InlineMath math="7" /> | <InlineMath math="17" /> | <InlineMath math="12" /> |
+| <InlineMath math="8" /> | <InlineMath math="17" /> | <InlineMath math="27" /> |
+| <InlineMath math="9" /> | <InlineMath math="17" /> | <InlineMath math="28" /> |
+| <InlineMath math="10" /> | <InlineMath math="17" /> | <InlineMath math="29" /> |
+| <InlineMath math="11" /> | <InlineMath math="17" /> | <InlineMath math="32" /> |
+| <InlineMath math="12" /> | <InlineMath math="18" /> | <InlineMath math="36" /> |
 
 Let's calculate some statistics for these two groups.
 
-### Calculating Mean, Q1, and Q3
+### Calculating the Mean and Quartiles
 
 1.  **Mean (Average):**
 
@@ -67,24 +67,24 @@ Let's calculate some statistics for these two groups.
     After sorting the data (as in the table above), we find the positions of the quartiles.
 
     **Group One (<InlineMath math="n=12" />):**
-    The position of <InlineMath math="Q_1" /> is at data point <InlineMath math="\frac{1}{4}(12+1) = 3.25" />. This means <InlineMath math="Q_1" /> is between the 3rd (15) and 4th (15) data points. Since both values are the same, then
+    The position of <InlineMath math="Q_1" /> is at data point <InlineMath math="\frac{1}{4}(12+1) = 3.25" />. This means <InlineMath math="Q_1" /> is between the <InlineMath math="3^{\text{rd}}" /> (<InlineMath math="15" />) and <InlineMath math="4^{\text{th}}" /> (<InlineMath math="15" />) data points. Since both values are the same, then
 
     <BlockMath math="Q_1 = 15" />
 
-    The position of <InlineMath math="Q_3" /> is at data point <InlineMath math="\frac{3}{4}(12+1) = 9.75" />. This means <InlineMath math="Q_3" /> is between the 9th (17) and 10th (17) data points. Since both values are the same, then
+    The position of <InlineMath math="Q_3" /> is at data point <InlineMath math="\frac{3}{4}(12+1) = 9.75" />. This means <InlineMath math="Q_3" /> is between the <InlineMath math="9^{\text{th}}" /> (<InlineMath math="17" />) and <InlineMath math="10^{\text{th}}" /> (<InlineMath math="17" />) data points. Since both values are the same, then
 
     <BlockMath math="Q_3 = 17" />
 
     **Group Two (<InlineMath math="n=12" />):**
-    The position of <InlineMath math="Q_1" /> is at data point 3.25. This means <InlineMath math="Q_1" /> is between the 3rd (4) and 4th (5) data points. In this case, we can take the average of these two data points:
+    The position of <InlineMath math="Q_1" /> is at data point <InlineMath math="3.25" />. This means <InlineMath math="Q_1" /> is between the <InlineMath math="3^{\text{rd}}" /> (<InlineMath math="4" />) and <InlineMath math="4^{\text{th}}" /> (<InlineMath math="5" />) data points. In this case, we can take the average of these two data points:
 
     <BlockMath math="Q_1 = \frac{4+5}{2} = 4.5" />
 
-    The position of <InlineMath math="Q_3" /> is at data point 9.75. This means <InlineMath math="Q_3" /> is between the 9th (28) and 10th (29) data points. Similarly, we take their average:
+    The position of <InlineMath math="Q_3" /> is at data point <InlineMath math="9.75" />. This means <InlineMath math="Q_3" /> is between the <InlineMath math="9^{\text{th}}" /> (<InlineMath math="28" />) and <InlineMath math="10^{\text{th}}" /> (<InlineMath math="29" />) data points. Similarly, we take their average:
 
     <BlockMath math="Q_3 = \frac{28+29}{2} = 28.5" />
 
-### Calculating Range and IQR
+### Calculating the Range and Interquartile Range
 
 Now let's calculate the measures of spread.
 
@@ -97,27 +97,27 @@ Now let's calculate the measures of spread.
 
       Wow, the ranges are very different! Group Two's data is much more spread out when looking at the extreme values.
 
-2.  **Interquartile Range (IQR):**
+2.  **Interquartile Range** (<InlineMath math="\mathrm{IQR}" />):
 
-    <InlineMath math="IQR = Q_3 - Q_1" />
+    <InlineMath math="\mathrm{IQR} = Q_3 - Q_1" />
 
-    - IQR Group One is <InlineMath math="17 - 15 = 2" />
-    - IQR Group Two is <InlineMath math="28.5 - 4.5 = 24" />
+    - <InlineMath math="\mathrm{IQR}" /> Group One is <InlineMath math="17 - 15 = 2" />
+    - <InlineMath math="\mathrm{IQR}" /> Group Two is <InlineMath math="28.5 - 4.5 = 24" />
 
-      The IQRs are also very different!
+      The <InlineMath math="\mathrm{IQR}" /> values are also very different!
 
 ### Interpreting the Results
 
 Let's summarize in a table for easy comparison:
 
-| Group | Mean | <InlineMath math="Q_1"/> | <InlineMath math="Q_3"/> | Range | Interquartile Range (IQR) |
+| Group | Mean | <InlineMath math="Q_1"/> | <InlineMath math="Q_3"/> | Range | Interquartile Range (<InlineMath math="\mathrm{IQR}" />) |
 | :---: | :--: | :----------------------: | :----------------------: | :---: | :-----------------------: |
-|  One  |  16  |            15            |            17            |   5   |             2             |
-|  Two  |  16  |           4.5            |           28.5           |  35   |            24             |
+|  One  | <InlineMath math="16" /> | <InlineMath math="15" /> | <InlineMath math="17" /> | <InlineMath math="5" /> | <InlineMath math="2" /> |
+|  Two  | <InlineMath math="16" /> | <InlineMath math="4.5" /> | <InlineMath math="28.5" /> | <InlineMath math="35" /> | <InlineMath math="24" /> |
 
 - Both groups have the **same Mean (average) age**, which is 16.
-- But their **Range** and **IQR** are **very different**.
-- **Group One** has a small Range (5) and a very small IQR (2). This means the ages of people in Group One are **very close together**, especially the middle <InlineMath math="50\%" />, whose ages only differ by <InlineMath math="2 \text{ years}" /> (<InlineMath math="Q_1=15, Q_3=17" />). The data is **clustered** around the mean.
-- **Group Two** has a large Range (35) and a large IQR (24). This means the ages of people in Group Two are **much more spread out**. Even the middle <InlineMath math="50\%" /> spans <InlineMath math="24 \text{ years}" /> (<InlineMath math="Q_1=4.5, Q_3=28.5" />). The data is **not as clustered** as Group One.
+- But their **Range** and <InlineMath math="\mathrm{IQR}" /> values are **very different**.
+- **Group One** has a small Range (<InlineMath math="5" />) and a very small <InlineMath math="\mathrm{IQR}" /> (<InlineMath math="2" />). This means the ages of people in Group One are **very close together**, especially the middle <InlineMath math="50\%" />, whose ages only differ by <InlineMath math="2 \text{ years}" /> (<InlineMath math="Q_1=15, Q_3=17" />). The data is **clustered** around the mean.
+- **Group Two** has a large Range (<InlineMath math="35" />) and a large <InlineMath math="\mathrm{IQR}" /> (<InlineMath math="24" />). This means the ages of people in Group Two are **much more spread out**. Even the middle <InlineMath math="50\%" /> spans <InlineMath math="24 \text{ years}" /> (<InlineMath math="Q_1=4.5, Q_3=28.5" />). The data is **not as clustered** as Group One.
 
-Even if the average is the same, the spread of the data can be very different. IQR helps us see how spread out the middle part of the data is, giving a better picture of data variation than just looking at the mean or range, especially when there are extreme values.
+Even if the average is the same, the spread of the data can be very different. The <InlineMath math="\mathrm{IQR}" /> helps us see how spread out the middle part of the data is, giving a better picture of data variation than just looking at the mean or range, especially when there are extreme values.

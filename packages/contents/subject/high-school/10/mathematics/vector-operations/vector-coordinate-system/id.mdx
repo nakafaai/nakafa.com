@@ -84,7 +84,13 @@ Berbeda dengan koordinat yang menyatakan _posisi_ suatu titik, **vektor** adalah
 
   <VectorChart
     title="Vektor Perpindahan"
-    description="Vektor perpindahan dari P ke Q atau dari Q ke R"
+    description={
+      <>
+        Vektor perpindahan dari <InlineMath math="P" /> ke{" "}
+        <InlineMath math="Q" /> atau dari <InlineMath math="Q" /> ke{" "}
+        <InlineMath math="R" />
+      </>
+    }
     vectors={[
       {
         id: "QR",

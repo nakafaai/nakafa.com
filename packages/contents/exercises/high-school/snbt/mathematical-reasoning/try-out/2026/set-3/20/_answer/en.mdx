@@ -4,17 +4,17 @@ export const metadata = {
   date: "02/08/2026",
 };
 
-We need to find the number of days **without** shipments of oil <InlineMath math="A" /> or <InlineMath math="B" />. The most efficient way is to count the days **with** shipments, then subtract that from the total days in April (<InlineMath math="30" /> days).
+We need to find the number of days **without** shipments of oil <InlineMath math="A" /> or <InlineMath math="B" />. The most efficient way is to count the days **with** shipments, then subtract that from the total days in April (<InlineMath math="30\text{ days}" />).
 
 Here is the breakdown of the delivery schedule:
 
 | Oil Type | Delivery Dates (Arithmetic Sequence) | Total Days |
 | :--- | :--- | :---: |
-| **Oil <InlineMath math="A" />** (Every <InlineMath math="3" /> days) | <InlineMath math="1, 4, 7, 10, 13, 16, 19, 22, 25, 28" /> | <InlineMath math="10" /> |
-| **Oil <InlineMath math="B" />** (Every <InlineMath math="4" /> days) | <InlineMath math="1, 5, 9, 13, 17, 21, 25, 29" /> | <InlineMath math="8" /> |
+| **Oil <InlineMath math="A" />** (Every <InlineMath math="3\text{ days}" />) | <InlineMath math="1, 4, 7, 10, 13, 16, 19, 22, 25, 28" /> | <InlineMath math="10" /> |
+| **Oil <InlineMath math="B" />** (Every <InlineMath math="4\text{ days}" />) | <InlineMath math="1, 5, 9, 13, 17, 21, 25, 29" /> | <InlineMath math="8" /> |
 | **Union** (<InlineMath math="A \cup B" />) | <InlineMath math="1, 4, 5, 7, 9, 10, 13, 16, 17, 19, 21, 22, 25, 28, 29" /> | **<InlineMath math="15" />** |
 
-From the table above, there are **<InlineMath math="15" /> days** where the shop receives a shipment (either <InlineMath math="A" />, <InlineMath math="B" />, or both).
+From the table above, there are **<InlineMath math="15\text{ days}" />** where the shop receives a shipment (either <InlineMath math="A" />, <InlineMath math="B" />, or both).
 
 Thus, the number of days **without** shipments is:
 
@@ -23,4 +23,4 @@ Thus, the number of days **without** shipments is:
   <BlockMath math="\text{Empty Days} = 30 - 15 = 15" />
 </MathContainer>
 
-So, there are **<InlineMath math="15" /> days** where the shop did not receive any shipment of oil <InlineMath math="A" /> or <InlineMath math="B" />.
+So, there are **<InlineMath math="15\text{ days}" />** where the shop did not receive any shipment of oil <InlineMath math="A" /> or <InlineMath math="B" />.

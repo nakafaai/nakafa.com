@@ -1,6 +1,6 @@
 export const metadata = {
    title: "Permutasi Siklis",
-   description: "Kuasai rumus permutasi siklis (n-1)! untuk susunan melingkar & masalah tempat duduk. Pelajari mengapa rotasi identik dengan contoh detail & latihan soal lengkap.",
+   description: "Kuasai rumus permutasi siklis untuk susunan melingkar dan masalah tempat duduk. Pelajari mengapa rotasi identik dengan contoh detail dan latihan soal lengkap.",
    authors: [{ name: "Nabil Akbarazzima Fatih" }],
    date: "05/26/2025",
    subject: "Kombinatorik",
@@ -29,7 +29,7 @@ Dimana:
 
 Konsep kuncinya adalah rotasi tidak mengubah susunan melingkar. Mari kita lihat dari contoh meja bundar.
 
-Bayangkan 3 anak (A, B, C) duduk mengelilingi meja bundar. Susunan ABC, BCA, dan CAB sebenarnya adalah **susunan yang sama** jika dilihat dari perspektif lingkaran, karena posisi relatif mereka tidak berubah.
+Bayangkan <InlineMath math="3" /> anak, yaitu <InlineMath math="A" />, <InlineMath math="B" />, dan <InlineMath math="C" />, duduk mengelilingi meja bundar. Susunan <InlineMath math="ABC" />, <InlineMath math="BCA" />, dan <InlineMath math="CAB" /> sebenarnya adalah **susunan yang sama** jika dilihat dari perspektif lingkaran, karena posisi relatif mereka tidak berubah.
 
 Langkah perhitungan:
 1. Tetapkan satu objek sebagai **titik referensi** (misalnya anak A)
@@ -113,9 +113,9 @@ Contoh: 4 pasang suami istri duduk melingkar, setiap pasangan harus berdampingan
    
    Langkah penyelesaian (**metode komplemen**):
    - Total cara tanpa syarat: <InlineMath math="(7-1)! = 6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720" />
-   - **Hitung cara yang TIDAK diinginkan** (2 siswa bersebelahan):
-     - Anggap 2 siswa sebagai satu unit: <InlineMath math="(6-1)! = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120" />
-     - 2 siswa dapat bertukar posisi: <InlineMath math="2! = 2" />
+   - **Hitung cara yang TIDAK diinginkan** (<InlineMath math="2 \text{ siswa}" /> bersebelahan):
+     - Anggap <InlineMath math="2 \text{ siswa}" /> sebagai satu unit: <InlineMath math="(6-1)! = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120" />
+     - <InlineMath math="2 \text{ siswa}" /> dapat bertukar posisi: <InlineMath math="2! = 2" />
      - Total cara bersebelahan: <InlineMath math="120 \times 2 = 240" />
    - **Cara yang diinginkan:** <InlineMath math="720 - 240 = 480" />
    

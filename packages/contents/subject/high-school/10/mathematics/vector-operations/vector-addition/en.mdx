@@ -13,7 +13,7 @@ export const metadata = {
 
 Vector addition differs from scalar addition. In scalar addition, we only add magnitudes without considering direction. For example, <InlineMath math="2 \text{ kg}" /> of sugar plus <InlineMath math="3 \text{ kg}" /> of sugar equals <InlineMath math="5 \text{ kg}" /> of sugar. However, in vector addition, we must consider both magnitude and direction.
 
-For instance, if someone walks 2 m east and then 3 m west, the result differs from walking 2 m east and then 3 m east again. The result of vector addition is called the **resultant vector**.
+For instance, if someone walks <InlineMath math="2 \text{ m}" /> east and then <InlineMath math="3 \text{ m}" /> west, the result differs from walking <InlineMath math="2 \text{ m}" /> east and then <InlineMath math="3 \text{ m}" /> east again. The result of vector addition is called the **resultant vector**.
 
 ## Vector Addition Using the Triangle Method
 
@@ -26,7 +26,7 @@ Vector addition can be performed graphically using the triangle method. The prin
 <div className="mt-4">
   <Vector3d
     title="Vector Addition Using the Triangle Method"
-    description="Triangle method for adding vector a and vector b."
+    description={<>Triangle method for adding vector <InlineMath math="\vec{a}" /> and vector <InlineMath math="\vec{b}" />.</>}
     vectors={[
       {
         from: [0, 0, 0],
@@ -72,7 +72,7 @@ Another method for adding vectors is the parallelogram method. The steps are:
 <div className="mt-4">
   <Vector3d
     title="Vector Addition Using the Parallelogram Method"
-    description="Parallelogram method for adding vector a and vector b."
+    description={<>Parallelogram method for adding vector <InlineMath math="\vec{a}" /> and vector <InlineMath math="\vec{b}" />.</>}
     vectors={[
       {
         from: [0, 0, 0],
@@ -352,6 +352,6 @@ Scalar addition produces only one answer, while vector addition can produce vari
 
 **Example of vector addition**:
 
-displacement of 3 m east + 4 m east = 7 m east, but displacement of 3 m east + 4 m west = 1 m west.
+displacement of <InlineMath math="3 \text{ m}" /> east + <InlineMath math="4 \text{ m}" /> east is <InlineMath math="7 \text{ m}" /> east, but displacement of <InlineMath math="3 \text{ m}" /> east + <InlineMath math="4 \text{ m}" /> west = <InlineMath math="1 \text{ m}" /> west.
 
 With the concept of vector addition, we can analyze various physical phenomena involving vector quantities such as displacement, velocity, acceleration, and force.

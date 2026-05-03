@@ -11,9 +11,9 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 
 ## Konsep Dasar Refleksi Vertikal
 
-Refleksi vertikal adalah transformasi geometri yang memantulkan grafik fungsi terhadap sumbu x, seperti melihat bayangan objek di permukaan air yang tenang. Bayangkan sebuah objek yang dipantulkan di cermin horizontal, bentuknya tetap sama tetapi posisinya terbalik secara vertikal.
+Refleksi vertikal adalah transformasi geometri yang memantulkan grafik fungsi terhadap sumbu <InlineMath math="x" />, seperti melihat bayangan objek di permukaan air yang tenang. Bayangkan sebuah objek yang dipantulkan di cermin horizontal, bentuknya tetap sama tetapi posisinya terbalik secara vertikal.
 
-Jika kita memiliki fungsi <InlineMath math="f(x)" />, maka refleksi vertikal menghasilkan fungsi baru <InlineMath math="g(x) = -f(x)" /> yang merupakan bayangan dari fungsi asli terhadap sumbu x.
+Jika kita memiliki fungsi <InlineMath math="f(x)" />, maka refleksi vertikal menghasilkan fungsi baru <InlineMath math="g(x) = -f(x)" /> yang merupakan bayangan dari fungsi asli terhadap sumbu <InlineMath math="x" />.
 
 ### Aturan Refleksi Vertikal
 
@@ -29,7 +29,7 @@ Mari kita lihat bagaimana refleksi vertikal bekerja pada fungsi kuadrat <InlineM
 
 <LineEquation
   title={<>Refleksi Vertikal Fungsi Kuadrat <InlineMath math="f(x) = x^2" /></>}
-  description="Perhatikan bagaimana grafik terpantul terhadap sumbu x, membentuk bayangan yang terbalik."
+  description={<>Perhatikan bagaimana grafik terpantul terhadap sumbu <InlineMath math="x" />, membentuk bayangan yang terbalik.</>}
   showZAxis={false}
   data={[
     {
@@ -56,7 +56,7 @@ Mari kita lihat bagaimana refleksi vertikal bekerja pada fungsi kuadrat <InlineM
 Dari visualisasi di atas, kita dapat mengamati:
 - Fungsi asli <InlineMath math="f(x) = x^2" /> membuka ke atas dengan titik puncak di <InlineMath math="(0, 0)" />
 - Fungsi hasil refleksi <InlineMath math="g(x) = -x^2" /> membuka ke bawah dengan titik puncak tetap di <InlineMath math="(0, 0)" />
-- Kedua grafik simetris terhadap sumbu x
+- Kedua grafik simetris terhadap sumbu <InlineMath math="x" />
 
 ## Refleksi Vertikal pada Fungsi Linear
 
@@ -90,15 +90,15 @@ Sekarang mari kita terapkan konsep yang sama pada fungsi linear <InlineMath math
 />
 
 Perhatikan bahwa:
-- Fungsi asli <InlineMath math="f(x) = 2x + 3" /> memiliki kemiringan positif dan memotong sumbu y di <InlineMath math="(0, 3)" />
-- Fungsi hasil refleksi <InlineMath math="g(x) = -2x - 3" /> memiliki kemiringan negatif dan memotong sumbu y di <InlineMath math="(0, -3)" />
-- Kedua garis berpotongan di sumbu x
+- Fungsi asli <InlineMath math="f(x) = 2x + 3" /> memiliki kemiringan positif dan memotong sumbu <InlineMath math="y" /> di <InlineMath math="(0, 3)" />
+- Fungsi hasil refleksi <InlineMath math="g(x) = -2x - 3" /> memiliki kemiringan negatif dan memotong sumbu <InlineMath math="y" /> di <InlineMath math="(0, -3)" />
+- Kedua garis berpotongan di sumbu <InlineMath math="x" />
 
 ## Sifat Penting Refleksi Vertikal
 
-### Sumbu x sebagai Sumbu Simetri
+### Sumbu Horizontal sebagai Sumbu Simetri
 
-Refleksi vertikal menggunakan sumbu x sebagai garis cermin. Setiap titik pada grafik asli memiliki jarak yang sama ke sumbu x dengan titik yang bersesuaian pada grafik hasil refleksi.
+Refleksi vertikal menggunakan sumbu <InlineMath math="x" /> sebagai garis cermin. Setiap titik pada grafik asli memiliki jarak yang sama ke sumbu <InlineMath math="x" /> dengan titik yang bersesuaian pada grafik hasil refleksi.
 
 ### Pengaruh pada Titik Koordinat
 
@@ -119,7 +119,7 @@ Mari kita lihat refleksi vertikal pada fungsi eksponensial <InlineMath math="f(x
 
 <LineEquation
   title={<>Refleksi Vertikal Fungsi Eksponensial <InlineMath math="f(x) = 2^x" /></>}
-  description="Kurva eksponensial terpantul menjadi kurva yang menurun dengan asimtot horizontal di bawah sumbu x."
+  description={<>Kurva eksponensial terpantul menjadi kurva yang menurun dengan asimtot horizontal di bawah sumbu <InlineMath math="x" />.</>}
   showZAxis={false}
   cameraPosition={[8, 6, 8]}
   data={[
@@ -145,8 +145,8 @@ Mari kita lihat refleksi vertikal pada fungsi eksponensial <InlineMath math="f(x
 />
 
 Pada fungsi eksponensial:
-- Asimtot horizontal tetap di <InlineMath math="y = 0" /> untuk kedua fungsi (karena sumbu x terpantul pada dirinya sendiri)
-- Titik potong dengan sumbu y berubah dari <InlineMath math="(0, 1)" /> menjadi <InlineMath math="(0, -1)" />
+- Asimtot horizontal tetap di <InlineMath math="y = 0" /> untuk kedua fungsi (karena sumbu <InlineMath math="x" /> terpantul pada dirinya sendiri)
+- Titik potong dengan sumbu <InlineMath math="y" /> berubah dari <InlineMath math="(0, 1)" /> menjadi <InlineMath math="(0, -1)" />
 - Fungsi yang semula naik menjadi turun
 
 ## Refleksi Vertikal pada Fungsi Trigonometri
@@ -189,11 +189,11 @@ Perhatikan bahwa:
 
 1. Diberikan fungsi <InlineMath math="f(x) = x^2 + 4x + 3" />. Tentukan persamaan fungsi hasil refleksi vertikal.
 
-2. Jika grafik fungsi <InlineMath math="g(x) = 3^x + 2" /> direfleksikan terhadap sumbu x, tentukan:
+2. Jika grafik fungsi <InlineMath math="g(x) = 3^x + 2" /> direfleksikan terhadap sumbu <InlineMath math="x" />, tentukan:
    - Persamaan fungsi hasil refleksi
    - Range fungsi setelah refleksi
 
-3. Fungsi <InlineMath math="h(x) = \sqrt{x + 1}" /> mengalami refleksi vertikal. Tentukan titik potong dengan sumbu y dari fungsi hasil refleksi.
+3. Fungsi <InlineMath math="h(x) = \sqrt{x + 1}" /> mengalami refleksi vertikal. Tentukan titik potong dengan sumbu <InlineMath math="y" /> dari fungsi hasil refleksi.
 
 ### Kunci Jawaban
 
@@ -259,12 +259,12 @@ Perhatikan bahwa:
      ]}
    />
 
-3. Fungsi asli <InlineMath math="h(x) = \sqrt{x + 1}" /> memiliki titik potong dengan sumbu y di <InlineMath math="(0, 1)" /> karena <InlineMath math="h(0) = \sqrt{0 + 1} = 1" />.
-   Setelah refleksi vertikal: <InlineMath math="h'(x) = -\sqrt{x + 1}" />, titik potong dengan sumbu y menjadi <InlineMath math="(0, -1)" />.
+3. Fungsi asli <InlineMath math="h(x) = \sqrt{x + 1}" /> memiliki titik potong dengan sumbu <InlineMath math="y" /> di <InlineMath math="(0, 1)" /> karena <InlineMath math="h(0) = \sqrt{0 + 1} = 1" />.
+   Setelah refleksi vertikal: <InlineMath math="h'(x) = -\sqrt{x + 1}" />, titik potong dengan sumbu <InlineMath math="y" /> menjadi <InlineMath math="(0, -1)" />.
 
    <LineEquation
      title={<>Fungsi <InlineMath math="h(x) = \sqrt{x + 1}" /> dan Hasil Refleksinya</>}
-     description="Kurva akar kuadrat direfleksikan terhadap sumbu x menghasilkan kurva yang membuka ke bawah."
+     description={<>Kurva akar kuadrat direfleksikan terhadap sumbu <InlineMath math="x" /> menghasilkan kurva yang membuka ke bawah.</>}
      showZAxis={false}
      data={[
        {

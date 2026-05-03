@@ -34,15 +34,15 @@ Where:
 
 When rotation is performed around the origin <InlineMath math="(0, 0)" />, the formula becomes simpler:
 
-1. 90 Degree Rotation
+1. <InlineMath math="90^\circ" /> Rotation
 
     <BlockMath math="(x, y) \rightarrow (-y, x)" />
 
-2. 180 Degree Rotation
+2. <InlineMath math="180^\circ" /> Rotation
 
     <BlockMath math="(x, y) \rightarrow (-x, -y)" />
 
-3. 270 Degree Rotation
+3. <InlineMath math="270^\circ" /> Rotation
 
     <BlockMath math="(x, y) \rightarrow (y, -x)" />
 
@@ -52,7 +52,7 @@ Let's see how rotation affects the quadratic function <InlineMath math="y = x^2"
 
 <LineEquation
   title={<>Rotation of Function <InlineMath math="y = x^2" /> Around Origin</>}
-  description="Comparison of original function with 90° counterclockwise rotation result."
+  description={<>Comparison of original function with <InlineMath math="90^\circ" /> counterclockwise rotation result.</>}
   data={[
     {
       points: Array.from({ length: 21 }, (_, i) => {
@@ -108,7 +108,7 @@ For linear function <InlineMath math="y = mx + c" />, rotation will change the s
 
 <LineEquation
   title={<>Rotation of Linear Function <InlineMath math="y = 2x + 1" /></>}
-  description="45° rotation around origin."
+  description={<><InlineMath math="45^\circ" /> rotation around origin.</>}
   data={[
     {
       points: Array.from({ length: 11 }, (_, i) => {
@@ -156,7 +156,7 @@ Rotation can also be applied to exponential functions with interesting results.
 
 <LineEquation
   title={<>Rotation of Function <InlineMath math="y = 2^x" /></>}
-  description="90° counterclockwise rotation."
+  description={<><InlineMath math="90^\circ" /> counterclockwise rotation.</>}
   cameraPosition={[8, 6, 8]}
   data={[
     {
@@ -209,19 +209,19 @@ To determine the rotation result of a function, follow these steps:
 
 ## Exercises
 
-1. Determine the rotation result of point <InlineMath math="(3, 4)" /> around the origin with a <InlineMath math="90°" /> counterclockwise angle.
+1. Determine the rotation result of point <InlineMath math="(3, 4)" /> around the origin with a <InlineMath math="90^\circ" /> counterclockwise angle.
 
-2. Function <InlineMath math="f(x) = x^2 - 2x + 1" /> is rotated <InlineMath math="180°" /> around the origin. Determine the coordinates of the rotation result vertex if the original vertex is at <InlineMath math="(1, 0)" />.
+2. Function <InlineMath math="f(x) = x^2 - 2x + 1" /> is rotated <InlineMath math="180^\circ" /> around the origin. Determine the coordinates of the rotation result vertex if the original vertex is at <InlineMath math="(1, 0)" />.
 
-3. Line <InlineMath math="y = 3x - 2" /> is rotated <InlineMath math="270°" /> around the origin. Determine the equation of the rotation result line.
+3. Line <InlineMath math="y = 3x - 2" /> is rotated <InlineMath math="270^\circ" /> around the origin. Determine the equation of the rotation result line.
 
-4. Point <InlineMath math="(2, 5)" /> is rotated <InlineMath math="60°" /> around point <InlineMath math="(1, 1)" />. Determine the rotation result coordinates.
+4. Point <InlineMath math="(2, 5)" /> is rotated <InlineMath math="60^\circ" /> around point <InlineMath math="(1, 1)" />. Determine the rotation result coordinates.
 
-5. Function <InlineMath math="y = \sqrt{x}" /> for <InlineMath math="x \geq 0" /> is rotated <InlineMath math="90°" /> counterclockwise around the origin. Explain the shape of the rotation result graph.
+5. Function <InlineMath math="y = \sqrt{x}" /> for <InlineMath math="x \geq 0" /> is rotated <InlineMath math="90^\circ" /> counterclockwise around the origin. Explain the shape of the rotation result graph.
 
 ### Answer Key
 
-1. Using the <InlineMath math="90°" /> rotation formula:
+1. Using the <InlineMath math="90^\circ" /> rotation formula:
    
    <MathContainer>
    <BlockMath math="(x, y) \rightarrow (-y, x)" />
@@ -231,8 +231,8 @@ To determine the rotation result of a function, follow these steps:
    So the rotation result is <InlineMath math="(-4, 3)" />.
 
    <LineEquation
-     title="Visualization of Point (3, 4) Rotation"
-     description="90° counterclockwise rotation around origin."
+     title={<>Visualization of Point <InlineMath math="(3, 4)" /> Rotation</>}
+     description={<><InlineMath math="90^\circ" /> counterclockwise rotation around origin.</>}
      cameraPosition={[8, 6, 8]}
      data={[
        {
@@ -270,7 +270,7 @@ To determine the rotation result of a function, follow these steps:
      ]}
    />
 
-2. Original vertex rotated <InlineMath math="180°" />:
+2. Original vertex rotated <InlineMath math="180^\circ" />:
    
    <MathContainer>
    <BlockMath math="(x, y) \rightarrow (-x, -y)" />
@@ -281,7 +281,7 @@ To determine the rotation result of a function, follow these steps:
 
    <LineEquation
      title={<>Rotation of Function <InlineMath math="f(x) = x^2 - 2x + 1" /></>}
-     description="180° rotation around origin."
+     description={<><InlineMath math="180^\circ" /> rotation around origin.</>}
      cameraPosition={[10, 6, 10]}
      data={[
        {
@@ -322,7 +322,7 @@ To determine the rotation result of a function, follow these steps:
      ]}
    />
 
-3. Take two points on the line and rotate <InlineMath math="270°" />:
+3. Take two points on the line and rotate <InlineMath math="270^\circ" />:
    
    <MathContainer>
    <BlockMath math="(x, y) \rightarrow (y, -x)" />
@@ -336,7 +336,7 @@ To determine the rotation result of a function, follow these steps:
 
    <LineEquation
      title={<>Rotation of Line <InlineMath math="y = 3x - 2" /></>}
-     description="270° rotation around origin."
+     description={<><InlineMath math="270^\circ" /> rotation around origin.</>}
      cameraPosition={[8, 6, 8]}
      data={[
        {
@@ -377,7 +377,7 @@ To determine the rotation result of a function, follow these steps:
      ]}
    />
 
-4. Using the rotation formula around a point with <InlineMath math="60°" /> angle:
+4. Using the rotation formula around a point with <InlineMath math="60^\circ" /> angle:
    
    <MathContainer>
    <BlockMath math="x' = (x-a) \cos \theta - (y-b) \sin \theta + a" />
@@ -391,8 +391,8 @@ To determine the rotation result of a function, follow these steps:
    Rotation result coordinates: <InlineMath math="(\frac{3}{2} - 2\sqrt{3}, 3 + \frac{\sqrt{3}}{2})" />
 
    <LineEquation
-     title="Rotation of Point (2, 5) Around Point (1, 1)"
-     description="60° counterclockwise rotation."
+     title={<>Rotation of Point <InlineMath math="(2, 5)" /> Around Point <InlineMath math="(1, 1)" /></>}
+     description={<><InlineMath math="60^\circ" /> counterclockwise rotation.</>}
      cameraPosition={[8, 6, 8]}
      data={[
        {
@@ -435,7 +435,7 @@ To determine the rotation result of a function, follow these steps:
      ]}
    />
 
-5. Function <InlineMath math="y = \sqrt{x}" /> rotated <InlineMath math="90°" /> becomes:
+5. Function <InlineMath math="y = \sqrt{x}" /> rotated <InlineMath math="90^\circ" /> becomes:
    
    <MathContainer>
    <BlockMath math="x = -\sqrt{y}" />
@@ -446,7 +446,7 @@ To determine the rotation result of a function, follow these steps:
 
    <LineEquation
      title={<>Rotation of Function <InlineMath math="y = \sqrt{x}" /></>}
-     description="90° counterclockwise rotation around origin."
+     description={<><InlineMath math="90^\circ" /> counterclockwise rotation around origin.</>}
      cameraPosition={[8, 6, 8]}
      data={[
        {

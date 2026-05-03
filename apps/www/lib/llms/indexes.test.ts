@@ -42,6 +42,8 @@ describe("llms indexes", () => {
     expect(text).toContain("https://nakafa.com/llms/en/llms.txt");
     expect(text).toContain("https://nakafa.com/llms/id/llms.txt");
     expect(text).toContain("https://nakafa.com/mcp");
+    expect(text).toContain("https://nakafa.com/llms-full.txt");
+    expect(text).toContain("https://nakafa.com/llms-full/index.json");
     expect(text).toContain("https://nakafa.com/sitemap.xml");
     expect(text).not.toContain("[MCP server]");
     expect(text).not.toContain("[Sitemap]");

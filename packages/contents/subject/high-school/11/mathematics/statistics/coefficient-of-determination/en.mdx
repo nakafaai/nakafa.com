@@ -52,7 +52,7 @@ The value of <InlineMath math="r^2" /> is closely related to how tightly the dat
      regressionLineStyle={{ color: "var(--chart-4)" }}
    />
 
-   See how the data points above are very tightly packed and close to the regression line? This indicates a high <InlineMath math="r^2" /> value (for example, maybe around 0.95 or <InlineMath math="95\%" />). This means that most of the variation in Y values _can be explained_ well by the regression line (or by variable X).
+   See how the data points above are very tightly packed and close to the regression line? This indicates a high <InlineMath math="r^2" /> value (for example, maybe around 0.95 or <InlineMath math="95\%" />). This means that most of the variation in <InlineMath math="Y" /> values _can be explained_ well by the regression line (or by variable <InlineMath math="X" />).
 
 2. **Low <InlineMath math="r^2" /> (approaching 0 or <InlineMath math="0\%" />)**
 
@@ -86,7 +86,7 @@ The value of <InlineMath math="r^2" /> is closely related to how tightly the dat
      regressionLineStyle={{ color: "var(--chart-4)" }}
    />
 
-   Compare this with this diagram. The points are more spread out from the regression line (the residual lines are longer). This indicates a low <InlineMath math="r^2" /> value (for example, maybe around 0.40 or <InlineMath math="40\%" />). This means that this regression line is _not very good_ at explaining the variation in Y values; only a small portion of the variation in Y can be explained by X through this model.
+   Compare this with this diagram. The points are more spread out from the regression line (the residual lines are longer). This indicates a low <InlineMath math="r^2" /> value (for example, maybe around 0.40 or <InlineMath math="40\%" />). This means that this regression line is _not very good_ at explaining the variation in <InlineMath math="Y" /> values; only a small portion of the variation in <InlineMath math="Y" /> can be explained by <InlineMath math="X" /> through this model.
 
 ## Calculating the Coefficient of Determination
 
@@ -110,7 +110,7 @@ The value of <InlineMath math="r^2" /> can also be calculated directly using the
 
 The value of <InlineMath math="r^2" /> is often converted into a percentage (by multiplying by 100) for easier interpretation.
 
-- If <InlineMath math="r^2 = 0.81" />, it means that **<InlineMath math="81\%" />** of the total variation in variable Y can be explained by the variation in variable X through the linear regression model.
+- If <InlineMath math="r^2 = 0.81" />, it means that **<InlineMath math="81\%" />** of the total variation in variable <InlineMath math="Y" /> can be explained by the variation in variable <InlineMath math="X" /> through the linear regression model.
 - The remaining variation (<InlineMath math="1 - r^2" /> or <InlineMath math="19\%" /> in this example) is explained by other factors not included in the model (could be other variables, or _random error_).
 
-The higher the percentage of <InlineMath math="r^2" />, the better our linear regression model is at explaining the relationship between X and Y.
+The higher the percentage of <InlineMath math="r^2" />, the better our linear regression model is at explaining the relationship between <InlineMath math="X" /> and <InlineMath math="Y" />.

@@ -14,7 +14,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "PDB per kapita rakyat Indonesia sebesar Rp$$56$$ juta terjadi pada akhir tahun $$2018$$ dengan PDB hampir mencapai Rp$$15$$ ribu triliun",
+        "PDB per kapita rakyat Indonesia sebesar $$\\text{Rp56 juta}$$ terjadi pada akhir tahun $$2018$$ dengan PDB hampir mencapai $$\\text{Rp15 ribu triliun}$$",
       value: false,
     },
     {
@@ -41,7 +41,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Indonesia's GDP per capita of Rp$$56$$ million occurred at the end of $$2018$$ with GDP almost reaching Rp$$15$$ thousand trillion",
+        "Indonesia's GDP per capita of $$\\text{Rp56 million}$$ occurred at the end of $$2018$$ with GDP almost reaching $$\\text{Rp15 thousand trillion}$$",
       value: false,
     },
     {

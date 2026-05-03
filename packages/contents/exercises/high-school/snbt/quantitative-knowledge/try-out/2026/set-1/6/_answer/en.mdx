@@ -17,19 +17,17 @@ With <InlineMath math="P(0, 0)" /> and <InlineMath math="S(4, -3)" />
 
 <MathContainer>
 <BlockMath math="m_{PS} = \frac{-3 - 0}{4 - 0}" />
-
 <BlockMath math="m_{PS} = \frac{-3}{4}" />
-
 <BlockMath math="m_{PS} = -\frac{3}{4}" />
 </MathContainer>
 
 Since the line we're looking for is perpendicular to <InlineMath math="PS" />, then
 
+<MathContainer>
 <BlockMath math="m_1 \cdot m_2 = -1" />
-
 <BlockMath math="-\frac{3}{4} \cdot m_2 = -1" />
-
 <BlockMath math="m_2 = \frac{-1}{-\frac{3}{4}} = \frac{4}{3}" />
+</MathContainer>
 
 So the slope of the line passing through <InlineMath math="Q" /> and perpendicular to <InlineMath math="PS" /> is <InlineMath math="m = \frac{4}{3}" />.
 
@@ -38,7 +36,7 @@ For a line equation in the form <InlineMath math="ax + by = c" />, its slope is 
 Find the answer option that has slope <InlineMath math="\frac{4}{3}" />.
 
 <LineEquation
-  title="Line Through Q Perpendicular to PS"
+  title="Line Perpendicular to the Segment"
   description={<>Visualization of line <InlineMath math="PS" /> and the line passing through <InlineMath math="Q" /> that is perpendicular to <InlineMath math="PS" />.</>}
   data={[
     {
@@ -49,8 +47,8 @@ Find the answer option that has slope <InlineMath math="\frac{4}{3}" />.
       color: getColor("VIOLET"),
       showPoints: true,
       labels: [
-        { text: "P (0,0)", at: 0, offset: [-0.5, -0.5, 0] },
-        { text: "S (4,-3)", at: 1, offset: [0.3, -0.3, 0] }
+        { text: "P (0, 0)", at: 0, offset: [-0.5, -0.5, 0] },
+        { text: "S (4, -3)", at: 1, offset: [0.3, -0.3, 0] }
       ]
     },
     {
@@ -61,7 +59,7 @@ Find the answer option that has slope <InlineMath math="\frac{4}{3}" />.
       color: getColor("VIOLET"),
       showPoints: true,
       labels: [
-        { text: "R (8,0)", at: 1, offset: [0.5, -0.5, 0] }
+        { text: "R (8, 0)", at: 1, offset: [0.5, -0.5, 0] }
       ]
     },
     {
@@ -72,7 +70,7 @@ Find the answer option that has slope <InlineMath math="\frac{4}{3}" />.
       color: getColor("VIOLET"),
       showPoints: true,
       labels: [
-        { text: "Q (4,3)", at: 0, offset: [0.3, 0.3, 0] }
+        { text: "Q (4, 3)", at: 0, offset: [0.3, 0.3, 0] }
       ]
     },
     {

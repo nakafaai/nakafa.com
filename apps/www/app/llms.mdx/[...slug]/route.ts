@@ -3,14 +3,12 @@ import { routing } from "@repo/internationalization/src/routing";
 import type { NextRequest } from "next/server";
 import { hasLocale } from "next-intl";
 import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
-import { getCachedLlmsExerciseText } from "@/lib/llms/exercises";
+import { getLlmsMarkdownText } from "@/lib/llms/content";
 import { stripLlmsRouteExtension } from "@/lib/llms/format";
 import {
   buildRootLlmsIndexText,
   getCachedLlmsSectionIndexText,
 } from "@/lib/llms/indexes";
-import { getCachedLlmsMdxText } from "@/lib/llms/mdx";
-import { getQuranLlmsText } from "@/lib/llms/quran";
 
 const MARKDOWN_HEADERS = {
   "Cache-Control": LLMS_CACHE_CONTROL,
@@ -59,32 +57,9 @@ export async function GET(
     });
   }
 
-  const quranText = getQuranLlmsText({ cleanSlug, locale });
-  if (quranText) {
-    return new Response(quranText, {
-      headers: MARKDOWN_HEADERS,
-    });
-  }
-
-  const exerciseText = await getCachedLlmsExerciseText({ cleanSlug, locale });
-  if (exerciseText) {
-    return new Response(exerciseText, {
-      headers: MARKDOWN_HEADERS,
-    });
-  }
-
-  const mdxText = await getCachedLlmsMdxText({ cleanSlug, locale });
-  if (mdxText) {
-    return new Response(mdxText, {
-      headers: MARKDOWN_HEADERS,
-    });
-  }
-
-  const routeIndexText = await getCachedLlmsSectionIndexText({
-    cleanSlug: `llms/${locale}/${cleanSlug}`,
-  });
-  if (routeIndexText) {
-    return new Response(routeIndexText, {
+  const markdownText = await getLlmsMarkdownText({ cleanSlug, locale });
+  if (markdownText) {
+    return new Response(markdownText, {
       headers: MARKDOWN_HEADERS,
     });
   }

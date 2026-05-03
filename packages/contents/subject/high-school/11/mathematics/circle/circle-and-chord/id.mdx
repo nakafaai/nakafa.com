@@ -482,7 +482,12 @@ Sudut-sudut keliling yang menghadap tali busur yang sama memiliki besar yang sam
 
 <LineEquation
   title="Sudut Keliling Menghadap Tali Busur Sama"
-  description="Sudut keliling yang menghadap tali busur AB memiliki besar yang sama."
+  description={
+    <>
+      Sudut keliling yang menghadap tali busur <InlineMath math="AB" /> memiliki
+      besar yang sama.
+    </>
+  }
   data={[
     {
       points: Array.from({ length: 361 }, (_, i) => {
@@ -754,12 +759,12 @@ Jika <InlineMath math="AB \parallel CD" />, maka busur <InlineMath math="AC" /> 
 
 1. **Menghitung panjang tali busur dan jaraknya dari pusat**
 
-   Diketahui: <InlineMath math="r = 10 \text{ cm}" />, <InlineMath math="\theta = 60° = \frac{\pi}{3}" /> rad
+   Diketahui: <InlineMath math="r = 10 \text{ cm}" />, <InlineMath math="\theta = 60^\circ = \frac{\pi}{3}" /> rad
 
    <MathContainer>
      <BlockMath math="l = 2r \sin\left(\frac{\theta}{2}\right) = 2 \times 10 \times \sin\left(\frac{\pi/3}{2}\right)" />
-     <BlockMath math="l = 20 \times \sin(30°) = 20 \times 0.5 = 10 \text{ cm}" />
-     <BlockMath math="d = r \cos\left(\frac{\theta}{2}\right) = 10 \times \cos(30°)" />
+     <BlockMath math="l = 20 \times \sin(30^\circ) = 20 \times 0.5 = 10 \text{ cm}" />
+     <BlockMath math="d = r \cos\left(\frac{\theta}{2}\right) = 10 \times \cos(30^\circ)" />
      <BlockMath math="d = 10 \times \frac{\sqrt{3}}{2} = 5\sqrt{3} \text{ cm}" />
    </MathContainer>
 
@@ -809,9 +814,9 @@ Jika <InlineMath math="AB \parallel CD" />, maka busur <InlineMath math="AC" /> 
      <BlockMath math="l = 2r \sin\left(\frac{\theta}{2}\right)" />
    </MathContainer>
 
-   Nilai maksimum <InlineMath math="\sin\left(\frac{\theta}{2}\right) = 1" /> tercapai ketika <InlineMath math="\frac{\theta}{2} = 90°" />, yaitu <InlineMath math="\theta = 180°" />.
+   Nilai maksimum <InlineMath math="\sin\left(\frac{\theta}{2}\right) = 1" /> tercapai ketika <InlineMath math="\frac{\theta}{2} = 90^\circ" />, yaitu <InlineMath math="\theta = 180^\circ" />.
 
-   Saat <InlineMath math="\theta = 180°" />, tali busur melewati pusat lingkaran (diameter) dengan panjang:
+   Saat <InlineMath math="\theta = 180^\circ" />, tali busur melewati pusat lingkaran (diameter) dengan panjang:
 
    <MathContainer>
      <BlockMath math="l_{max} = 2r \times 1 = 2r" />

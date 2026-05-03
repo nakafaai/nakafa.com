@@ -11,7 +11,7 @@ export const metadata = {
 
 ## Mengenal Identitas Trigonometri
 
-Pernahkah kalian memperhatikan bahwa beberapa persamaan matematika selalu benar untuk setiap nilai variabelnya? Misalnya, <InlineMath math="(a + b)^2 = a^2 + 2ab + b^2" /> selalu benar untuk sembarang nilai a dan b. Persamaan seperti ini disebut identitas.
+Pernahkah kalian memperhatikan bahwa beberapa persamaan matematika selalu benar untuk setiap nilai variabelnya? Misalnya, <InlineMath math="(a + b)^2 = a^2 + 2ab + b^2" /> selalu benar untuk sembarang nilai <InlineMath math="a" /> dan <InlineMath math="b" />. Persamaan seperti ini disebut identitas.
 
 Dalam trigonometri, kita juga memiliki persamaan-persamaan yang selalu benar untuk setiap nilai sudutnya. Inilah yang disebut **identitas trigonometri**. Identitas ini sangat berguna untuk menyederhanakan ekspresi trigonometri dan menyelesaikan persamaan.
 
@@ -19,25 +19,31 @@ Dalam trigonometri, kita juga memiliki persamaan-persamaan yang selalu benar unt
 
 ### Identitas Pythagoras
 
-Mari kita mulai dengan identitas paling fundamental. Perhatikan lingkaran satuan dengan titik <InlineMath math="P(x, y)" /> yang membentuk sudut <InlineMath math="\theta" /> dengan sumbu x positif.
+Mari kita mulai dengan identitas paling fundamental. Perhatikan lingkaran satuan dengan titik <InlineMath math="P(x, y)" /> yang membentuk sudut <InlineMath math="\theta" /> dengan sumbu <InlineMath math="x" /> positif.
 
 <UnitCircle
   title="Lingkaran Satuan dan Identitas Pythagoras"
-  description="Perhatikan bagaimana koordinat titik P berubah saat sudut berubah. Koordinat ini adalah nilai cos θ dan sin θ."
+  description={
+    <>
+      Perhatikan bagaimana koordinat titik <InlineMath math="P" /> berubah saat
+      sudut berubah. Koordinat ini adalah nilai <InlineMath math="\cos\theta" />{" "}
+      dan <InlineMath math="\sin\theta" />.
+    </>
+  }
   angle={45}
 />
 
 Pada lingkaran satuan:
 
-- Jari-jari = 1
-- Koordinat x = <InlineMath math="\cos \theta" />
-- Koordinat y = <InlineMath math="\sin \theta" />
+- <InlineMath math="\text{jari-jari} = 1" />
+- Koordinat <InlineMath math="x = \cos \theta" />
+- Koordinat <InlineMath math="y = \sin \theta" />
 
-Menggunakan teorema Pythagoras untuk titik P:
+Menggunakan teorema Pythagoras untuk titik <InlineMath math="P" />:
 
 <BlockMath math="x^2 + y^2 = 1^2" />
 
-Substitusi nilai x dan y:
+Substitusi nilai <InlineMath math="x" /> dan <InlineMath math="y" />:
 
 <BlockMath math="(\cos \theta)^2 + (\sin \theta)^2 = 1" />
 
@@ -88,8 +94,11 @@ Atau dalam bentuk sebaliknya:
 Identitas hasil bagi menghubungkan tangen dan kotangen dengan sinus dan kosinus:
 
 <div className="flex flex-col gap-4">
+
   <BlockMath math="\tan \theta = \frac{\sin \theta}{\cos \theta}" />
+
   <BlockMath math="\cot \theta = \frac{\cos \theta}{\sin \theta}" />
+
   <Triangle
     title="Visualisasi Fungsi Trigonometri"
     description="Amati bagaimana perbandingan sisi-sisi segitiga memberikan nilai sin, cos, dan tan. Perhatikan juga bagaimana nilai-nilai ini berubah saat sudut berubah."
@@ -108,15 +117,18 @@ Kedua identitas ini dapat dibuktikan langsung dari definisi fungsi trigonometri 
 
 Ketika sudut bernilai negatif, fungsi trigonometri memiliki sifat khusus:
 
-**Fungsi genap (simetri terhadap sumbu y):**
+**Fungsi genap (simetri terhadap sumbu <InlineMath math="y" />):**
 
 <BlockMath math="\cos(-\theta) = \cos \theta" />
 
 **Fungsi ganjil (simetri terhadap titik asal):**
 
 <div className="flex flex-col gap-4">
+
   <BlockMath math="\sin(-\theta) = -\sin \theta" />
+
   <BlockMath math="\tan(-\theta) = -\tan \theta" />
+
   <UnitCircle
     title="Eksplorasi Sifat Genap dan Ganjil"
     description="Coba geser sudut ke nilai negatif dan positif. Perhatikan bagaimana nilai cos, sin, dan tan berubah untuk sudut yang berlawanan."
@@ -162,7 +174,7 @@ Identitas trigonometri sangat berguna untuk menentukan nilai semua fungsi trigon
 
 ### Aplikasi Identitas
 
-Jika <InlineMath math="\sin \theta = \frac{3}{5}" /> dan <InlineMath math="90° < \theta < 180°" /> (kuadran II), tentukan nilai fungsi trigonometri lainnya.
+Jika <InlineMath math="\sin \theta = \frac{3}{5}" /> dan <InlineMath math="90^\circ < \theta < 180^\circ" /> (kuadran II), tentukan nilai fungsi trigonometri lainnya.
 
 **Penyelesaian:**
 
@@ -194,7 +206,7 @@ Selanjutnya, hitung fungsi trigonometri lainnya:
 
 2. Buktikan identitas <InlineMath math="\frac{\sin \theta}{1 + \cos \theta} = \frac{1 - \cos \theta}{\sin \theta}" />
 
-3. Jika <InlineMath math="\cos \theta = \frac{5}{13}" /> dan <InlineMath math="270° < \theta < 360°" />, tentukan nilai semua fungsi trigonometri.
+3. Jika <InlineMath math="\cos \theta = \frac{5}{13}" /> dan <InlineMath math="270^\circ < \theta < 360^\circ" />, tentukan nilai semua fungsi trigonometri.
 
 4. Sederhanakan <InlineMath math="\sin^4 \theta - \cos^4 \theta" />
 

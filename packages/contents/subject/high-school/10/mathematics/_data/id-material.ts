@@ -140,7 +140,7 @@ const idMaterials: MaterialList = [
         href: `${BASE_PATH}/vector-operations/three-dimensional-vector`,
       },
       {
-        title: "Vektor Kolom dan Baris",
+        title: "Vektor Kolom dan Vektor Baris",
         href: `${BASE_PATH}/vector-operations/column-row-vector`,
       },
       {

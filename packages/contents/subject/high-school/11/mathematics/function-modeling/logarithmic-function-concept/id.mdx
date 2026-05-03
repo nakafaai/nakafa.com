@@ -92,8 +92,8 @@ Fungsi logaritma dengan basis <InlineMath math="b" /> (dimana <InlineMath math="
 
 - Domain: <InlineMath math="x > 0" /> (hanya bilangan positif)
 - Range: Semua bilangan real
-- Titik potong sumbu x: <InlineMath math="(1, 0)" />
-- Asimtot vertikal: Sumbu y (<InlineMath math="x = 0" />)
+- Titik potong sumbu <InlineMath math="x" />: <InlineMath math="(1, 0)" />
+- Asimtot vertikal: Sumbu <InlineMath math="y" /> (<InlineMath math="x = 0" />)
 - Fungsi naik untuk <InlineMath math="b > 1" />
 
 ## Sifat-sifat Logaritma
@@ -118,10 +118,12 @@ Fungsi logaritma dengan basis <InlineMath math="b" /> (dimana <InlineMath math="
 
 ## Model Penyebaran COVID-19
 
-Pada awal pandemi, penyebaran COVID-19 di Indonesia dapat dimodelkan dengan fungsi eksponensial. Jika pada 2 Maret 2020 ada <InlineMath math="2 \text{ kasus}" /> dan dalam 60 hari mencapai <InlineMath math="10.118 \text{ kasus}" />, maka:
+Pada awal pandemi, penyebaran COVID-19 di Indonesia dapat dimodelkan dengan fungsi eksponensial. Jika pada 2 Maret 2020 ada <InlineMath math="2 \text{ kasus}" /> dan dalam <InlineMath math="60 \text{ hari}" /> mencapai <InlineMath math="10.118 \text{ kasus}" />, maka:
 
 <div className="flex flex-col gap-4">
+
   <BlockMath math="P(t) = 2e^{\frac{1}{60}\ln(5059)t}" />
+
   <LineEquation
     title="Model Penyebaran COVID-19"
     description="Pertumbuhan eksponensial kasus COVID-19"
@@ -142,7 +144,7 @@ Pada awal pandemi, penyebaran COVID-19 di Indonesia dapat dimodelkan dengan fung
   />
 </div>
 
-**Menggunakan logaritma**, kita dapat menghitung kapan akan ada 50.000 kasus:
+**Menggunakan logaritma**, kita dapat menghitung kapan akan ada <InlineMath math="50.000 \text{ kasus}" />:
 
 <MathContainer>
   <BlockMath math="50000 = 2e^{\frac{1}{60}\ln(5059)t}" />

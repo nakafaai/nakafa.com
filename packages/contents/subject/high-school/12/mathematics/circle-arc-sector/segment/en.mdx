@@ -188,8 +188,8 @@ Based on their size, segments can be divided into two types with different chara
 <div className="flex flex-col gap-4">
 
 <LineEquation
-  title={<>Minor Segment (Central Angle &lt; <InlineMath math="180°" />)</>}
-  description={<>A segment whose area is smaller than half a circle, formed when the central angle is less than <InlineMath math="180°" />. This example shows a segment with a central angle of <InlineMath math="120°" />.</>}
+  title={<>Minor Segment (Central Angle &lt; <InlineMath math="180^\circ" />)</>}
+  description={<>A segment whose area is smaller than half a circle, formed when the central angle is less than <InlineMath math="180^\circ" />. This example shows a segment with a central angle of <InlineMath math="120^\circ" />.</>}
   cameraPosition={[0, 0, 12]}
   showZAxis={false}
   data={[
@@ -334,8 +334,8 @@ Based on their size, segments can be divided into two types with different chara
 />
 
 <LineEquation
-  title={<>Major Segment (Central Angle &gt; <InlineMath math="180°" />)</>}
-  description={<>A segment whose area is larger than half a circle, formed when the central angle is more than <InlineMath math="180°" />. This example shows a segment with a central angle of <InlineMath math="240°" />.</>}
+  title={<>Major Segment (Central Angle &gt; <InlineMath math="180^\circ" />)</>}
+  description={<>A segment whose area is larger than half a circle, formed when the central angle is more than <InlineMath math="180^\circ" />. This example shows a segment with a central angle of <InlineMath math="240^\circ" />.</>}
   cameraPosition={[0, 0, 12]}
   showZAxis={false}
   data={[
@@ -495,15 +495,15 @@ Based on their size, segments can be divided into two types with different chara
 </div>
 
 **Key Differences:**
-- **Minor Segment**: central angle <InlineMath math="\lt 180°" />, segment area <InlineMath math="\lt" /> half circle area
-- **Major Segment**: central angle <InlineMath math="\gt 180°" />, segment area <InlineMath math="\gt" /> half circle area
+- **Minor Segment**: central angle <InlineMath math="\lt 180^\circ" />, segment area <InlineMath math="\lt" /> half circle area
+- **Major Segment**: central angle <InlineMath math="\gt 180^\circ" />, segment area <InlineMath math="\gt" /> half circle area
 
 ## Segment Area Formula
 
 To calculate the area of a segment, we need to understand that a segment is formed from a sector minus the triangle formed by two radii and a chord.
 
 **Why is it different from the arc length formula?**
-- **Arc Length** = <InlineMath math="\frac{\alpha}{360°} \times 2\pi r" /> (units: cm, m, etc.)
+- **Arc Length** is <InlineMath math="\frac{\alpha}{360^\circ} \times 2\pi r" /> (units: cm, m, etc.)
 - **Segment Area** <InlineMath math="\neq" /> Arc Length (because segment is a <InlineMath math="2\text{D}" /> area, not a <InlineMath math="1\text{D}" /> line)
 
     <MathContainer>
@@ -513,7 +513,7 @@ To calculate the area of a segment, we need to understand that a segment is form
     In more detail, the formula can be written as:
 
     <MathContainer>
-    <BlockMath math="\text{Segment Area} = \frac{\alpha}{360°} \times \pi r^2 - \frac{1}{2} r^2 \sin \alpha" />
+    <BlockMath math="\text{Segment Area} = \frac{\alpha}{360^\circ} \times \pi r^2 - \frac{1}{2} r^2 \sin \alpha" />
     </MathContainer>
 
     Where <InlineMath math="\alpha" /> is the central angle in degrees and <InlineMath math="r" /> is the radius of the circle.
@@ -530,7 +530,14 @@ Let's see how a segment is formed from its components:
 
 <LineEquation
   title="Components of Segment Formation"
-  description={<>A segment is formed from sector AOB minus triangle AOB, with a central angle of <InlineMath math="90°" /> and radius of 4 units.</>}
+  description={
+    <>
+      A segment is formed from sector <InlineMath math="AOB" /> minus triangle{" "}
+      <InlineMath math="AOB" />, with a central angle of{" "}
+      <InlineMath math="90^\circ" /> and radius of{" "}
+      <InlineMath math="4 \text{ units}" />.
+    </>
+  }
   cameraPosition={[0, 0, 12]}
   showZAxis={false}
   data={[
@@ -634,12 +641,12 @@ Let's see how a segment is formed from its components:
 
 ## Segment Area Calculation
 
-To understand how to calculate the area of a segment, let's use an example with a central angle of <InlineMath math="90°" /> and radius <InlineMath math="r = 10 \text{ cm}" />, according to the visualization of segment formation components above.
+To understand how to calculate the area of a segment, let's use an example with a central angle of <InlineMath math="90^\circ" /> and radius <InlineMath math="r = 10 \text{ cm}" />, according to the visualization of segment formation components above.
 
 **Step 1: Calculate Sector Area**
 
 <MathContainer>
-<BlockMath math="\text{Sector Area} = \frac{90°}{360°} \times \pi r^2" />
+<BlockMath math="\text{Sector Area} = \frac{90^\circ}{360^\circ} \times \pi r^2" />
 <BlockMath math="= \frac{1}{4} \times \pi \times 10^2" />
 <BlockMath math="= \frac{1}{4} \times \pi \times 100" />
 <BlockMath math="= 25\pi \text{ cm}^2 = 78.5398 \text{ cm}^2" />
@@ -647,10 +654,10 @@ To understand how to calculate the area of a segment, let's use an example with 
 
 **Step 2: Calculate Triangle Area**
 
-For a <InlineMath math="90°" /> angle, the triangle formed is a right triangle with both perpendicular sides being radii:
+For a <InlineMath math="90^\circ" /> angle, the triangle formed is a right triangle with both perpendicular sides being radii:
 
 <MathContainer>
-<BlockMath math="\text{Triangle Area} = \frac{1}{2} \times r^2 \times \sin 90°" />
+<BlockMath math="\text{Triangle Area} = \frac{1}{2} \times r^2 \times \sin 90^\circ" />
 <BlockMath math="= \frac{1}{2} \times 10^2 \times 1" />
 <BlockMath math="= \frac{1}{2} \times 100 \times 1" />
 <BlockMath math="= 50 \text{ cm}^2" />
@@ -667,7 +674,7 @@ For a <InlineMath math="90°" /> angle, the triangle formed is a right triangle 
 
 ## Exercises
 
-1. A circle has a radius of <InlineMath math="7 \text{ cm}" />. If there is a segment with a central angle of <InlineMath math="60°" />, determine the area of the segment.
+1. A circle has a radius of <InlineMath math="7 \text{ cm}" />. If there is a segment with a central angle of <InlineMath math="60^\circ" />, determine the area of the segment.
 
 2. A segment is known to have an area of <InlineMath math="15.7 \text{ cm}^2" /> on a circle with a radius of <InlineMath math="5 \text{ cm}" />. Determine the central angle that forms the segment.
 
@@ -677,23 +684,26 @@ For a <InlineMath math="90°" /> angle, the triangle formed is a right triangle 
 
 1. **Solution Steps:**
 
-   Given: <InlineMath math="r = 7 \text{ cm}" />, <InlineMath math="\alpha = 60°" />
+   Given: <InlineMath math="r = 7 \text{ cm}" />, <InlineMath math="\alpha = 60^\circ" />
    
    Calculate sector area:
+
    <MathContainer>
-   <BlockMath math="\text{Sector Area} = \frac{60°}{360°} \times \pi \times 7^2" />
+   <BlockMath math="\text{Sector Area} = \frac{60^\circ}{360^\circ} \times \pi \times 7^2" />
    <BlockMath math="= \frac{1}{6} \times \pi \times 49" />
    <BlockMath math="= \frac{49\pi}{6} \text{ cm}^2" />
    </MathContainer>
    
    Calculate triangle area:
+
    <MathContainer>
-   <BlockMath math="\text{Triangle Area} = \frac{1}{2} r^2 \sin 60°" />
+   <BlockMath math="\text{Triangle Area} = \frac{1}{2} r^2 \sin 60^\circ" />
    <BlockMath math="= \frac{1}{2} \times 49 \times \frac{\sqrt{3}}{2}" />
    <BlockMath math="= \frac{49\sqrt{3}}{4} \text{ cm}^2" />
    </MathContainer>
    
    Calculate segment area:
+
    <MathContainer>
    <BlockMath math="\text{Segment Area} = \frac{49\pi}{6} - \frac{49\sqrt{3}}{4}" />
    <BlockMath math="= 25.6563 - 21.2176 = 4.4387 \text{ cm}^2" />
@@ -703,15 +713,16 @@ For a <InlineMath math="90°" /> angle, the triangle formed is a right triangle 
 
    Given: segment area = <InlineMath math="15.7 \text{ cm}^2" />, <InlineMath math="r = 5 \text{ cm}" />
    
-   Using the formula: <InlineMath math="\text{Segment Area} = \frac{\alpha}{360°} \times \pi r^2 - \frac{1}{2} r^2 \sin \alpha" />
+   Using the formula: <InlineMath math="\text{Segment Area} = \frac{\alpha}{360^\circ} \times \pi r^2 - \frac{1}{2} r^2 \sin \alpha" />
    
    Using trial and numerical approximation or graphing calculator, we get:
-   <InlineMath math="\alpha \approx 120°" />
+   <InlineMath math="\alpha \approx 120^\circ" />
    
    Verification:
+
    <MathContainer>
-   <BlockMath math="\text{Sector Area} = \frac{120°}{360°} \times \pi \times 25 = \frac{25\pi}{3}" />
-   <BlockMath math="\text{Triangle Area} = \frac{1}{2} \times 25 \times \sin 120° = \frac{25\sqrt{3}}{4}" />
+   <BlockMath math="\text{Sector Area} = \frac{120^\circ}{360^\circ} \times \pi \times 25 = \frac{25\pi}{3}" />
+   <BlockMath math="\text{Triangle Area} = \frac{1}{2} \times 25 \times \sin 120^\circ = \frac{25\sqrt{3}}{4}" />
    <BlockMath math="\text{Segment Area} = \frac{25\pi}{3} - \frac{25\sqrt{3}}{4} \approx 26.1799 - 10.8253 = 15.3546 \text{ cm}^2" />
    </MathContainer>
    
@@ -719,23 +730,26 @@ For a <InlineMath math="90°" /> angle, the triangle formed is a right triangle 
 
 3. **Solution Steps:**
 
-   Given: tank radius = 2 m, water depth = 1.5 m
+   Given: tank radius = <InlineMath math="2 \text{ m}" />, water depth = <InlineMath math="1.5 \text{ m}" />
    
-   Since the water depth (1.5 m) is less than the radius (2 m), the water surface forms a segment.
+   Since the water depth (<InlineMath math="1.5 \text{ m}" />) is less than the radius (<InlineMath math="2 \text{ m}" />), the water surface forms a segment.
    
    For horizontal cylindrical tanks, we use a special segment formula with a specific height.
    
    Determine segment height from tank bottom:
+
    <MathContainer>
    <BlockMath math="h = 1.5 \text{ m (water height from bottom)}" />
    </MathContainer>
    
    Using the segment area formula for water segment in horizontal tanks:
+
    <MathContainer>
    <BlockMath math="\text{Area} = r^2 \times \left[\arccos\left(\frac{r-h}{r}\right) - \frac{r-h}{r} \times \sqrt{1-\left(\frac{r-h}{r}\right)^2}\right]" />
    </MathContainer>
    
    Substitute values:
+
    <MathContainer>
    <BlockMath math="\frac{r-h}{r} = \frac{2-1.5}{2} = 0.25" />
    <BlockMath math="\arccos(0.25) = 1.3181 \text{ radians}" />
@@ -743,6 +757,7 @@ For a <InlineMath math="90°" /> angle, the triangle formed is a right triangle 
    </MathContainer>
    
    Calculate water surface area:
+
    <MathContainer>
    <BlockMath math="\text{Area} = 4 \times [1.3181 - 0.25 \times 0.9682]" />
    <BlockMath math="= 4 \times [1.3181 - 0.2421]" />

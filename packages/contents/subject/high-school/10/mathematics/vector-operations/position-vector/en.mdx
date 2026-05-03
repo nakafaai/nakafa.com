@@ -11,11 +11,16 @@ export const metadata = {
 
 ## Definition of Position Vector
 
-A position vector is a vector that starts from point O (origin) in a coordinate system and ends at another point. This vector plays an important role in determining the position or location of a point in a coordinate system.
+A position vector is a vector that starts from point <InlineMath math="O" /> (origin) in a coordinate system and ends at another point. This vector plays an important role in determining the position or location of a point in a coordinate system.
 
 <Vector3d
   title="Position Vector Visualization"
-  description="Examples of position vectors from origin O to points A and B."
+  description={
+    <>
+      Examples of position vectors from origin <InlineMath math="O" /> to points{" "}
+      <InlineMath math="A" /> and <InlineMath math="B" />.
+    </>
+  }
   vectors={[
     {
       from: [0, 0, 0],
@@ -39,20 +44,20 @@ A position vector is a vector that starts from point O (origin) in a coordinate 
 
 Each position vector has the following characteristics:
 
-- Always starts from the origin O (center of coordinates)
+- Always starts from the origin <InlineMath math="O" /> (center of coordinates)
 - Ends at a specific point in the coordinate system
 - The coordinates of the position vector are the same as the coordinates of its endpoint
 
 ## Representation of Position Vectors
 
-In general, if we have a point P with coordinates <InlineMath math="(x, y)" /> in a plane, then the position vector from point O to point P can be written as <InlineMath math="\overrightarrow{OP} = (x, y)" />.
+In general, if we have a point <InlineMath math="P" /> with coordinates <InlineMath math="(x, y)" /> in a plane, then the position vector from point <InlineMath math="O" /> to point <InlineMath math="P" /> can be written as <InlineMath math="\overrightarrow{OP} = (x, y)" />.
 
-In three-dimensional space, if point P has coordinates <InlineMath math="(x, y, z)" />, then its position vector is <InlineMath math="\overrightarrow{OP} = (x, y, z)" />.
+In three-dimensional space, if point <InlineMath math="P" /> has coordinates <InlineMath math="(x, y, z)" />, then its position vector is <InlineMath math="\overrightarrow{OP} = (x, y, z)" />.
 
-In the visualization below, we use the notation OA, OB, OC, and OD to indicate position vectors from point O to specific points (A, B, C, or D).
+In the visualization below, we use the notation <InlineMath math="OA" />, <InlineMath math="OB" />, <InlineMath math="OC" />, and <InlineMath math="OD" /> to indicate position vectors from point <InlineMath math="O" /> to specific points (<InlineMath math="A" />, <InlineMath math="B" />, <InlineMath math="C" />, or <InlineMath math="D" />).
 
 <Vector3d
-  title="Position Vectors in 3D Space"
+  title="Position Vectors in Three-Dimensional Space"
   description="Examples of several position vectors in three-dimensional space."
   vectors={[
     {
@@ -89,10 +94,10 @@ In the visualization below, we use the notation OA, OB, OC, and OD to indicate p
 
 ## Examples of Position Vectors
 
-Suppose there are two points A and B in the coordinate plane:
+Suppose there are two points <InlineMath math="A" /> and <InlineMath math="B" /> in the coordinate plane:
 
-- Point A with coordinates <InlineMath math="(-3, 2)" />
-- Point B with coordinates <InlineMath math="(7, 5)" />
+- Point <InlineMath math="A" /> with coordinates <InlineMath math="(-3, 2)" />
+- Point <InlineMath math="B" /> with coordinates <InlineMath math="(7, 5)" />
 
 Then the position vectors of these two points are:
 
@@ -110,7 +115,7 @@ Position vectors have several benefits in mathematics and its applications:
 
 ## Relationship with Displacement Vectors
 
-Displacement vectors can be obtained from the difference between two position vectors. If we have position vectors <InlineMath math="\overrightarrow{OA}" /> and <InlineMath math="\overrightarrow{OB}" />, then the displacement vector from A to B is:
+Displacement vectors can be obtained from the difference between two position vectors. If we have position vectors <InlineMath math="\overrightarrow{OA}" /> and <InlineMath math="\overrightarrow{OB}" />, then the displacement vector from <InlineMath math="A" /> to <InlineMath math="B" /> is:
 
 <BlockMath math="\overrightarrow{AB} = \overrightarrow{OB} - \overrightarrow{OA}" />
 
@@ -151,7 +156,7 @@ Displacement vectors can be obtained from the difference between two position ve
   />
 </div>
 
-From the previous example, the displacement vector from A to B is:
+From the previous example, the displacement vector from <InlineMath math="A" /> to <InlineMath math="B" /> is:
 
 <BlockMath
   math="\begin{align}
@@ -162,4 +167,4 @@ From the previous example, the displacement vector from A to B is:
 \end{align}"
 />
 
-Therefore, to move from point A to point B, we need to move <InlineMath math="10 \text{ units}" /> to the right and <InlineMath math="3 \text{ units}" /> upward.
+Therefore, to move from point <InlineMath math="A" /> to point <InlineMath math="B" />, we need to move <InlineMath math="10 \text{ units}" /> to the right and <InlineMath math="3 \text{ units}" /> upward.

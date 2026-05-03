@@ -11,7 +11,7 @@ export const metadata = {
 
 ## Understanding Three-Dimensional Vectors
 
-A three-dimensional vector is a quantity that has both magnitude and direction in three-dimensional space. Unlike two-dimensional vectors that exist only on a plane (x and y axes), three-dimensional vectors exist in space with three coordinate axes (x, y, and z axes).
+A three-dimensional vector is a quantity that has both magnitude and direction in three-dimensional space. Unlike two-dimensional vectors that exist only on a plane (<InlineMath math="x" />- and <InlineMath math="y" />-axes), three-dimensional vectors exist in space with three coordinate axes (<InlineMath math="x" />, <InlineMath math="y" />, and <InlineMath math="z" /> axes).
 
 <Vector3d
   title="Vector in Three-Dimensional Space"
@@ -162,7 +162,7 @@ If <InlineMath math="\vec{a} = (a_x, a_y, a_z)" /> and <InlineMath math="\vec{b}
 
 ### Scalar Multiplication of Vectors
 
-Multiplying a scalar <InlineMath math="k" /> with a vector <InlineMath math="\vec{a}" /> produces a new vector with the same direction (if <InlineMath math="k > 0" />) or opposite direction (if <InlineMath math="k < 0" />) and a magnitude <InlineMath math="|k|" /> times the magnitude of <InlineMath math="\vec{a}" />.
+Multiplying a scalar <InlineMath math="k" /> with a vector <InlineMath math="\vec{a}" /> produces a new vector with the same direction (if <InlineMath math="k > 0" />) or opposite direction (if <InlineMath math="k < 0" />) and a magnitude <InlineMath math="|k|\text{ times}" /> the magnitude of <InlineMath math="\vec{a}" />.
 
 <BlockMath math="k\vec{a} = (k \cdot a_x, k \cdot a_y, k \cdot a_z)" />
 
@@ -171,7 +171,7 @@ Multiplying a scalar <InlineMath math="k" /> with a vector <InlineMath math="\ve
     title="Scalar Multiplication of a Vector"
     description={
       <>
-        Visualization of scalar multiplication <InlineMath math="k" /> times
+        Visualization of scalar multiplication <InlineMath math="k\text{ times}" />
         vector <InlineMath math="a" />, where <InlineMath math="k = 2" />.
       </>
     }
@@ -222,7 +222,7 @@ where <InlineMath math="\theta" /> is the angle between the two vectors.
 
 <Vector3d
   title="Cross Product of Vectors"
-  description="Visualization of the cross product of vectors a and b producing vector c that is perpendicular to both."
+  description={<>Visualization of the cross product of vectors <InlineMath math="\vec{a}" /> and <InlineMath math="\vec{b}" /> producing vector <InlineMath math="\vec{c}" /> that is perpendicular to both.</>}
   vectors={[
     {
       from: [0, 0, 0],

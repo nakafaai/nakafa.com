@@ -6,23 +6,23 @@ export const metadata = {
 
 #### Track Analysis
 
-The track is circular with <InlineMath math="4" /> checkpoints: <InlineMath math="A, B, C, D" />. A full lap consists of <InlineMath math="4" /> segments: <InlineMath math="A \to B" />, <InlineMath math="B \to C" />, <InlineMath math="C \to D" />, and <InlineMath math="D \to A" />. The journey starts from <InlineMath math="A" />.
+The track is circular with <InlineMath math="4" /> checkpoints: <InlineMath math="A, B, C, D" />. A full lap consists of <InlineMath math="4\text{ segments}" />: <InlineMath math="A \to B" />, <InlineMath math="B \to C" />, <InlineMath math="C \to D" />, and <InlineMath math="D \to A" />. The journey starts from <InlineMath math="A" />.
 
 #### Calculating Initial Distance
 
-The runner passes checkpoint <InlineMath math="C" /> <InlineMath math="3" /> times.
+The runner passes checkpoint <InlineMath math="C" /> <InlineMath math="3\text{ times}" />.
 
-- **1st time:** <InlineMath math="A \to B \to C" /> (<InlineMath math="2" /> segments).
-- **2nd time:** Add 1 full lap (<InlineMath math="4" /> segments). Total: <InlineMath math="2 + 4 = 6" /> segments.
-- **3rd time:** Add 1 full lap (<InlineMath math="4" /> segments). Total: <InlineMath math="6 + 4 = 10" /> segments.
+- **<InlineMath math="1" />st time:** <InlineMath math="A \to B \to C" /> (<InlineMath math="2\text{ segments}" />).
+- **<InlineMath math="2" />nd time:** Add 1 full lap (<InlineMath math="4\text{ segments}" />). Total: <InlineMath math="2 + 4 = 6\text{ segments}" />.
+- **<InlineMath math="3" />rd time:** Add 1 full lap (<InlineMath math="4\text{ segments}" />). Total: <InlineMath math="6 + 4 = 10\text{ segments}" />.
 
-It is known that the travel time for <InlineMath math="10" /> segments is <InlineMath math="12" /> minutes. The time per segment (<InlineMath math="t_s" />) is:
+It is known that the travel time for <InlineMath math="10\text{ segments}" /> is <InlineMath math="12\text{ minutes}" />. The time per segment (<InlineMath math="t_s" />) is:
 
 <BlockMath math="t_s = \frac{12}{10} = 1.2 \text{ minutes}" />
 
 #### Calculating Total Time
 
-To reach checkpoint <InlineMath math="C" /> for the 4th time, the runner must cover 1 more lap (<InlineMath math="4" /> segments). The total segments covered are:
+To reach checkpoint <InlineMath math="C" /> for the <InlineMath math="4" />th time, the runner must cover 1 more lap (<InlineMath math="4\text{ segments}" />). The total segments covered are:
 
 <BlockMath math="10 + 4 = 14 \text{ segments}" />
 

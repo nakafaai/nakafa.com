@@ -11,11 +11,16 @@ export const metadata = {
 
 ## Pengertian Vektor Posisi
 
-Vektor posisi adalah vektor yang berpangkal di titik O (titik asal) pada sistem koordinat dan berujung di suatu titik lain. Vektor ini memiliki peran penting untuk menentukan posisi atau letak suatu titik dalam sistem koordinat.
+Vektor posisi adalah vektor yang berpangkal di titik <InlineMath math="O" /> (titik asal) pada sistem koordinat dan berujung di suatu titik lain. Vektor ini memiliki peran penting untuk menentukan posisi atau letak suatu titik dalam sistem koordinat.
 
 <Vector3d
   title="Visualisasi Vektor Posisi"
-  description="Contoh vektor posisi dari titik asal O ke titik A dan B."
+  description={
+    <>
+      Contoh vektor posisi dari titik asal <InlineMath math="O" /> ke titik{" "}
+      <InlineMath math="A" /> dan <InlineMath math="B" />.
+    </>
+  }
   vectors={[
     {
       from: [0, 0, 0],
@@ -39,20 +44,20 @@ Vektor posisi adalah vektor yang berpangkal di titik O (titik asal) pada sistem 
 
 Setiap vektor posisi memiliki karakteristik sebagai berikut:
 
-- Selalu dimulai dari titik asal O (pusat koordinat)
+- Selalu dimulai dari titik asal <InlineMath math="O" /> (pusat koordinat)
 - Berakhir pada suatu titik tertentu dalam sistem koordinat
 - Koordinat vektor posisi sama dengan koordinat titik akhirnya
 
 ## Representasi Vektor Posisi
 
-Secara umum, jika kita memiliki titik P dengan koordinat <InlineMath math="(x, y)" /> pada bidang, maka vektor posisi dari titik O ke titik P dapat ditulis sebagai <InlineMath math="\overrightarrow{OP} = (x, y)" />.
+Secara umum, jika kita memiliki titik <InlineMath math="P" /> dengan koordinat <InlineMath math="(x, y)" /> pada bidang, maka vektor posisi dari titik <InlineMath math="O" /> ke titik <InlineMath math="P" /> dapat ditulis sebagai <InlineMath math="\overrightarrow{OP} = (x, y)" />.
 
-Pada ruang tiga dimensi, jika titik P memiliki koordinat <InlineMath math="(x, y, z)" />, maka vektor posisinya adalah <InlineMath math="\overrightarrow{OP} = (x, y, z)" />.
+Pada ruang tiga dimensi, jika titik <InlineMath math="P" /> memiliki koordinat <InlineMath math="(x, y, z)" />, maka vektor posisinya adalah <InlineMath math="\overrightarrow{OP} = (x, y, z)" />.
 
-Dalam visualisasi di bawah, kita menggunakan notasi OA, OB, OC, dan OD untuk menunjukkan vektor posisi dari titik O ke titik tertentu (A, B, C, atau D).
+Dalam visualisasi di bawah, kita menggunakan notasi <InlineMath math="OA" />, <InlineMath math="OB" />, <InlineMath math="OC" />, dan <InlineMath math="OD" /> untuk menunjukkan vektor posisi dari titik <InlineMath math="O" /> ke titik tertentu (<InlineMath math="A" />, <InlineMath math="B" />, <InlineMath math="C" />, atau <InlineMath math="D" />).
 
 <Vector3d
-  title="Vektor Posisi dalam Ruang 3D"
+  title="Vektor Posisi dalam Ruang Tiga Dimensi"
   description="Contoh beberapa vektor posisi dalam ruang tiga dimensi."
   vectors={[
     {
@@ -89,10 +94,10 @@ Dalam visualisasi di bawah, kita menggunakan notasi OA, OB, OC, dan OD untuk men
 
 ## Contoh Vektor Posisi
 
-Misalkan terdapat dua titik A dan B pada bidang koordinat:
+Misalkan terdapat dua titik <InlineMath math="A" /> dan <InlineMath math="B" /> pada bidang koordinat:
 
-- Titik A dengan koordinat <InlineMath math="(-3, 2)" />
-- Titik B dengan koordinat <InlineMath math="(7, 5)" />
+- Titik <InlineMath math="A" /> dengan koordinat <InlineMath math="(-3, 2)" />
+- Titik <InlineMath math="B" /> dengan koordinat <InlineMath math="(7, 5)" />
 
 Maka vektor posisi dari kedua titik tersebut adalah:
 
@@ -110,7 +115,7 @@ Vektor posisi memiliki beberapa manfaat dalam matematika dan aplikasinya:
 
 ## Hubungan dengan Vektor Perpindahan
 
-Vektor perpindahan dapat diperoleh dari selisih dua vektor posisi. Jika kita memiliki vektor posisi <InlineMath math="\overrightarrow{OA}" /> dan <InlineMath math="\overrightarrow{OB}" />, maka vektor perpindahan dari A ke B adalah:
+Vektor perpindahan dapat diperoleh dari selisih dua vektor posisi. Jika kita memiliki vektor posisi <InlineMath math="\overrightarrow{OA}" /> dan <InlineMath math="\overrightarrow{OB}" />, maka vektor perpindahan dari <InlineMath math="A" /> ke <InlineMath math="B" /> adalah:
 
 <BlockMath math="\overrightarrow{AB} = \overrightarrow{OB} - \overrightarrow{OA}" />
 
@@ -150,7 +155,7 @@ Vektor perpindahan dapat diperoleh dari selisih dua vektor posisi. Jika kita mem
   />
 </div>
 
-Dari contoh sebelumnya, vektor perpindahan dari A ke B adalah:
+Dari contoh sebelumnya, vektor perpindahan dari <InlineMath math="A" /> ke <InlineMath math="B" /> adalah:
 
 <BlockMath
   math="\begin{align}
@@ -161,4 +166,4 @@ Dari contoh sebelumnya, vektor perpindahan dari A ke B adalah:
 \end{align}"
 />
 
-Sehingga, untuk berpindah dari titik A ke titik B, kita perlu bergerak <InlineMath math="10 \text{ satuan}" /> ke kanan dan <InlineMath math="3 \text{ satuan}" /> ke atas.
+Sehingga, untuk berpindah dari titik <InlineMath math="A" /> ke titik <InlineMath math="B" />, kita perlu bergerak <InlineMath math="10 \text{ satuan}" /> ke kanan dan <InlineMath math="3 \text{ satuan}" /> ke atas.

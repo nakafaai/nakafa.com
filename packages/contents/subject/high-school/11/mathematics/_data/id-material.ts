@@ -65,7 +65,7 @@ const idMaterials: MaterialList = [
         href: `${BASE_PATH}/circle/central-angle-and-inscribed-angle`,
       },
       {
-        title: "Sifat Sudut pada Lingkaran",
+        title: "Sifat Sudut dalam Lingkaran",
         href: `${BASE_PATH}/circle/properties-of-angle-in-circle`,
       },
       {

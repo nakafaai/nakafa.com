@@ -25,7 +25,7 @@ Sebelum menghitung peluang, kita perlu memahami dua konsep fundamental:
 
 **Kejadian (A)** adalah himpunan bagian dari ruang sampel yang merepresentasikan hasil yang kita inginkan atau hasil yang sedang kita tinjau.
 
-**Contoh konkret:** ketika melempar dua koin secara bersamaan, ruang sampelnya adalah <InlineMath math="\{AA, AG, GA, GG\}" />, dimana A = Angka dan G = Gambar. Jika kita ingin mengetahui peluang munculnya minimal satu gambar, maka kejadian A = <InlineMath math="\{AG, GA, GG\}" />.
+**Contoh konkret:** ketika melempar dua koin secara bersamaan, ruang sampelnya adalah <InlineMath math="\{AA, AG, GA, GG\}" />, dimana <InlineMath math="A" /> = Angka dan <InlineMath math="G" /> = Gambar. Jika kita ingin mengetahui peluang munculnya minimal satu gambar, maka kejadian <InlineMath math="A = \{AG, GA, GG\}" />.
 
 ## Formula Peluang
 
@@ -34,17 +34,17 @@ Untuk menghitung peluang suatu kejadian, kita menggunakan **rumus peluang klasik
 <BlockMath math="P(A) = \frac{n(A)}{n(S)}" />
 
 Dimana:
-- <InlineMath math="P(A)" /> = peluang terjadinya kejadian A
-- <InlineMath math="n(A)" /> = banyaknya hasil yang menguntungkan (anggota kejadian A)
+- <InlineMath math="P(A)" /> = peluang terjadinya kejadian <InlineMath math="A" />
+- <InlineMath math="n(A)" /> = banyaknya hasil yang menguntungkan (anggota kejadian <InlineMath math="A" />)
 - <InlineMath math="n(S)" /> = banyaknya semua hasil yang mungkin (anggota ruang sampel)
 
 **Syarat penting:** Rumus ini berlaku ketika semua hasil dalam ruang sampel memiliki **peluang yang sama** untuk terjadi (equiprobable).
 
 **Sifat-sifat fundamental peluang:**
 - <InlineMath math="0 \leq P(A) \leq 1" /> (peluang selalu antara 0 dan 1)
-- <InlineMath math="P(A) + P(A') = 1" />, dimana <InlineMath math="A'" /> adalah **komplemen** dari kejadian A
+- <InlineMath math="P(A) + P(A') = 1" />, dimana <InlineMath math="A'" /> adalah **komplemen** dari kejadian <InlineMath math="A" />
 
-**Konsep Komplemen:** Komplemen kejadian A adalah semua hasil dalam ruang sampel yang **bukan** termasuk kejadian A. Misalnya, jika A adalah "mendapat angka genap", maka A' adalah "mendapat angka ganjil".
+**Konsep Komplemen:** Komplemen kejadian <InlineMath math="A" /> adalah semua hasil dalam ruang sampel yang **bukan** termasuk kejadian <InlineMath math="A" />. Misalnya, jika <InlineMath math="A" /> adalah "mendapat angka genap", maka <InlineMath math="A'" /> adalah "mendapat angka ganjil".
 
 ## Penerapan dalam Situasi Nyata
 
@@ -63,6 +63,7 @@ Ketika melempar dua buah dadu, total kemungkinan hasil adalah <InlineMath math="
 2. Hitung banyaknya kejadian yang menguntungkan: <InlineMath math="n(A) = 4" />
 
 3. Tentukan peluang: 
+
     <BlockMath math="P(\text{jumlah} = 9) = \frac{4}{36} = \frac{1}{9} \approx 0.111" />
 
 **Strategi Pemasaran Berbasis Peluang:**
@@ -113,6 +114,7 @@ Ini adalah peluang tertinggi dibandingkan jumlah lainnya, sehingga sering dijadi
    **Total kejadian menguntungkan:** <InlineMath math="n(A) = 1 + 3 + 5 + 5 + 3 + 1 = 18" />
    
    **Perhitungan peluang:**
+
    <BlockMath math="P(\text{genap}) = \frac{18}{36} = \frac{1}{2} = 0.5" />
 
 2. **Jawaban: <InlineMath math="\frac{1}{2}" />**
@@ -124,6 +126,7 @@ Ini adalah peluang tertinggi dibandingkan jumlah lainnya, sehingga sering dijadi
    **Identifikasi bola yang bukan merah:** <InlineMath math="3 \text{ biru} + 2 \text{ hijau} = 5" /> bola
    
    **Perhitungan peluang:**
+
    <BlockMath math="P(\text{bukan merah}) = \frac{5}{10} = \frac{1}{2} = 0.5" />
 
 3. **Jawaban: <InlineMath math="\frac{3}{8}" />**
@@ -139,19 +142,21 @@ Ini adalah peluang tertinggi dibandingkan jumlah lainnya, sehingga sering dijadi
    **Banyaknya kejadian menguntungkan:** <InlineMath math="n(A) = 3" />
    
    **Perhitungan peluang:**
+
    <BlockMath math="P(\text{tepat 2 gambar}) = \frac{3}{8} = 0.375" />
 
 4. **Jawaban: <InlineMath math="\frac{19}{20}" /> atau <InlineMath math="95\%" />**
    
    **Langkah penyelesaian:**
    
-   **Total produk:** 1000 unit
+   **Total produk:** <InlineMath math="1000 \text{ unit}" />
    
-   **Produk cacat:** <InlineMath math="5\% \times 1000 = 50" /> unit
+   **Produk cacat:** <InlineMath math="5\% \times 1000 = 50 \text{ unit}" />
    
-   **Produk tidak cacat:** <InlineMath math="1000 - 50 = 950" /> unit
+   **Produk tidak cacat:** <InlineMath math="1000 - 50 = 950 \text{ unit}" />
    
    **Perhitungan peluang:**
+
    <BlockMath math="P(\text{tidak cacat}) = \frac{950}{1000} = \frac{19}{20} = 0.95 = 95\%" />
    
-   **Interpretasi:** Ada peluang 95% bahwa produk yang dibeli konsumen tidak mengalami cacat.
+   **Interpretasi:** Ada peluang <InlineMath math="95\%" /> bahwa produk yang dibeli konsumen tidak mengalami cacat.

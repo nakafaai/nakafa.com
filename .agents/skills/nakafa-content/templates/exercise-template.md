@@ -52,7 +52,7 @@ export const metadata = {
   date: "MM/DD/YYYY",
 };
 
-### Membaca Nilai yang Diketahui
+#### Membaca Nilai yang Diketahui
 
 Diketahui <InlineMath math="a = 5" /> dan <InlineMath math="b = 3" />.
 
@@ -73,7 +73,7 @@ export const metadata = {
   date: "MM/DD/YYYY",
 };
 
-### Analyze the Known Values
+#### Analyze the Known Values
 
 Given <InlineMath math="a = 5" /> and <InlineMath math="b = 3" />.
 
@@ -113,7 +113,7 @@ export default choices;
 ## Checks
 
 - Use `MM/DD/YYYY` dates.
-- Exercise answer headings default to `###`; do not add an `##` before them unless the nearby exercise pattern already requires it.
+- Exercise answer headings start at `####`; use `#####` only for real nested analysis under an answer section.
 - Make each question and answer standalone.
 - Define abbreviations, symbols, and uncommon terms when the item depends on them.
 - Use `<InlineMath />` for math in prose.

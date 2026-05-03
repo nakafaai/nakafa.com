@@ -355,14 +355,14 @@ Where <InlineMath math="t" /> is a parameter that varies from the initial angle 
 
 ## Engineering Calculation Example
 
-Let's apply this concept in engineering calculations. Suppose we design an arch bridge with a radius of <InlineMath math="25 \text{ meters}" /> and a central angle of <InlineMath math="120°" />.
+Let's apply this concept in engineering calculations. Suppose we design an arch bridge with a radius of <InlineMath math="25 \text{ meters}" /> and a central angle of <InlineMath math="120^\circ" />.
 
 **Calculating chord length:**
 
 <MathContainer>
 <BlockMath math="c = 2r \sin\left(\frac{\theta}{2}\right)" />
-<BlockMath math="c = 2 \times 25 \times \sin\left(\frac{120°}{2}\right)" />
-<BlockMath math="c = 50 \times \sin(60°)" />
+<BlockMath math="c = 2 \times 25 \times \sin\left(\frac{120^\circ}{2}\right)" />
+<BlockMath math="c = 50 \times \sin(60^\circ)" />
 <BlockMath math="c = 50 \times \frac{\sqrt{3}}{2} = 25\sqrt{3} \text{ meters}" />
 </MathContainer>
 
@@ -370,13 +370,13 @@ Let's apply this concept in engineering calculations. Suppose we design an arch 
 
 <MathContainer>
 <BlockMath math="h = r\left(1 - \cos\left(\frac{\theta}{2}\right)\right)" />
-<BlockMath math="h = 25\left(1 - \cos(60°)\right)" />
+<BlockMath math="h = 25\left(1 - \cos(60^\circ)\right)" />
 <BlockMath math="h = 25\left(1 - \frac{1}{2}\right) = 12.5 \text{ meters}" />
 </MathContainer>
 
 ## Exercises
 
-1. An arch bridge has a radius of <InlineMath math="30 \text{ meters}" /> and a central angle of <InlineMath math="90°" />. Calculate the chord length and arc height of the bridge.
+1. An arch bridge has a radius of <InlineMath math="30 \text{ meters}" /> and a central angle of <InlineMath math="90^\circ" />. Calculate the chord length and arc height of the bridge.
 
 2. In a mosque dome design, the arc height is <InlineMath math="8 \text{ meters}" /> and the circle radius is <InlineMath math="15 \text{ meters}" />. Determine the central angle of the arc.
 
@@ -388,17 +388,19 @@ Let's apply this concept in engineering calculations. Suppose we design an arch 
 
 1. **Solution:**
    
-   Given: <InlineMath math="r = 30 \text{ m}" /> and <InlineMath math="\theta = 90°" />
+   Given: <InlineMath math="r = 30 \text{ m}" /> and <InlineMath math="\theta = 90^\circ" />
    
    **Chord length:**
+
    <MathContainer>
-   <BlockMath math="c = 2r \sin\left(\frac{\theta}{2}\right) = 2 \times 30 \times \sin(45°)" />
+   <BlockMath math="c = 2r \sin\left(\frac{\theta}{2}\right) = 2 \times 30 \times \sin(45^\circ)" />
    <BlockMath math="c = 60 \times \frac{\sqrt{2}}{2} = 30\sqrt{2} \text{ m} \approx 42.43 \text{ m}" />
    </MathContainer>
    
    **Arc height:**
+
    <MathContainer>
-   <BlockMath math="h = r\left(1 - \cos\left(\frac{\theta}{2}\right)\right) = 30\left(1 - \cos(45°)\right)" />
+   <BlockMath math="h = r\left(1 - \cos\left(\frac{\theta}{2}\right)\right) = 30\left(1 - \cos(45^\circ)\right)" />
    <BlockMath math="h = 30\left(1 - \frac{\sqrt{2}}{2}\right) \approx 8.79 \text{ m}" />
    </MathContainer>
 
@@ -407,18 +409,21 @@ Let's apply this concept in engineering calculations. Suppose we design an arch 
    Given: <InlineMath math="h = 8 \text{ m}" /> and <InlineMath math="r = 15 \text{ m}" />
    
    **Step 1:** Use the arc height formula
+
    <BlockMath math="8 = 15\left(1 - \cos\left(\frac{\theta}{2}\right)\right)" />
    
    **Step 2:** Isolate cos
+
    <MathContainer>
    <BlockMath math="\frac{8}{15} = 1 - \cos\left(\frac{\theta}{2}\right)" />
    <BlockMath math="\cos\left(\frac{\theta}{2}\right) = 1 - \frac{8}{15} = \frac{7}{15}" />
    </MathContainer>
    
    **Step 3:** Calculate angle
+
    <MathContainer>
-   <BlockMath math="\frac{\theta}{2} = \arccos\left(\frac{7}{15}\right) \approx 62.18°" />
-   <BlockMath math="\theta \approx 124.36°" />
+   <BlockMath math="\frac{\theta}{2} = \arccos\left(\frac{7}{15}\right) \approx 62.18^\circ" />
+   <BlockMath math="\theta \approx 124.36^\circ" />
    </MathContainer>
 
 3. **Solution:**
@@ -426,29 +431,33 @@ Let's apply this concept in engineering calculations. Suppose we design an arch 
    Given: <InlineMath math="c = 24 \text{ m}" /> and <InlineMath math="r = 15 \text{ m}" />
    
    **Step 1:** Use the chord formula
+
    <MathContainer>
    <BlockMath math="24 = 2 \times 15 \times \sin\left(\frac{\theta}{2}\right)" />
    <BlockMath math="\sin\left(\frac{\theta}{2}\right) = \frac{24}{30} = 0.8" />
    </MathContainer>
    
    **Step 2:** Calculate central angle
+
    <MathContainer>
-   <BlockMath math="\frac{\theta}{2} = \arcsin(0.8) \approx 53.13°" />
-   <BlockMath math="\theta \approx 106.26°" />
+   <BlockMath math="\frac{\theta}{2} = \arcsin(0.8) \approx 53.13^\circ" />
+   <BlockMath math="\theta \approx 106.26^\circ" />
    </MathContainer>
    
    **Step 3:** Calculate arc height
-   <BlockMath math="h = 15\left(1 - \cos(53.13°)\right) = 15(1 - 0.6) = 6 \text{ m}" />
+
+   <BlockMath math="h = 15\left(1 - \cos(53.13^\circ)\right) = 15(1 - 0.6) = 6 \text{ m}" />
 
 4. **Solution:**
    
-   - Starting point: <InlineMath math="(4, 0)" /> → <InlineMath math="t_1 = 0°" />
-   - Ending point: <InlineMath math="(0, 4)" /> → <InlineMath math="t_2 = 90°" />
+   - Starting point: <InlineMath math="(4, 0)" /> → <InlineMath math="t_1 = 0^\circ" />
+   - Ending point: <InlineMath math="(0, 4)" /> → <InlineMath math="t_2 = 90^\circ" />
    - Radius: <InlineMath math="r = 4" />
    
    **Parametric equations:**
+
    <MathContainer>
    <BlockMath math="x = 4\cos(t)" />
    <BlockMath math="y = 4\sin(t)" />
-   <BlockMath math="0° \leq t \leq 90°" />
+   <BlockMath math="0^\circ \leq t \leq 90^\circ" />
    </MathContainer>

@@ -7,10 +7,10 @@ export const metadata = {
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 
-Diketahui limas segi empat beraturan P.QRST dengan rusuk alas <InlineMath math="3 \text{ cm}" /> dan rusuk tegak <InlineMath math="3\sqrt{2} \text{ cm}" />
+Diketahui limas segi empat beraturan <InlineMath math="P.QRST" /> dengan rusuk alas <InlineMath math="3 \text{ cm}" /> dan rusuk tegak <InlineMath math="3\sqrt{2} \text{ cm}" />
 
 <LineEquation
-  title="Limas P.QRST"
+  title="Limas Segi Empat"
   description={
     <>
       Visualisasi limas segi empat beraturan dengan rusuk alas <InlineMath math="3 \text{ cm}" /> dan rusuk tegak <InlineMath math="3\sqrt{2} \text{ cm}" />.
@@ -142,61 +142,48 @@ Diketahui limas segi empat beraturan P.QRST dengan rusuk alas <InlineMath math="
   ]}
 />
 
-#### Perhatikan Segitiga TQR
+#### Perhatikan Segitiga Alas
 
 Hitung panjang <InlineMath math="TR" /> menggunakan teorema Pythagoras pada segitiga siku-siku di alas
 
 <MathContainer>
 <BlockMath math="TR = \sqrt{QR^2 + QT^2}" />
-
 <BlockMath math="= \sqrt{3^2 + 3^2}" />
-
 <BlockMath math="= \sqrt{18} = 3\sqrt{2}" />
 </MathContainer>
 
-#### Menghitung TO
+#### Menghitung Setengah Diagonal Alas
 
 Karena <InlineMath math="O" /> adalah pusat alas, maka <InlineMath math="TO" /> adalah setengah dari diagonal <InlineMath math="TR" />
 
 <MathContainer>
 <BlockMath math="TO = \frac{1}{2}TR" />
-
 <BlockMath math="= \frac{1}{2} \cdot 3\sqrt{2}" />
-
 <BlockMath math="= \frac{3}{2}\sqrt{2}" />
 </MathContainer>
 
-#### Menghitung PO
+#### Menghitung Tinggi Limas
 
 Gunakan teorema Pythagoras pada segitiga <InlineMath math="PTO" />
 
 <MathContainer>
 <BlockMath math="PO = \sqrt{PR^2 - RO^2}" />
-
 <BlockMath math="= \sqrt{(3\sqrt{2})^2 - \left(\frac{3}{2}\sqrt{2}\right)^2}" />
-
 <BlockMath math="= \sqrt{18 - \frac{9}{2}}" />
-
 <BlockMath math="= \sqrt{\frac{36 - 9}{2}} = \sqrt{\frac{27}{2}}" />
 </MathContainer>
 
 #### Menghitung Tangen Sudut
 
-Tangen sudut <InlineMath math="\alpha" /> antara garis PT dan alas QRST
+Tangen sudut <InlineMath math="\alpha" /> antara garis <InlineMath math="PT" /> dan alas <InlineMath math="QRST" />
 
 <MathContainer>
 <BlockMath math="\tan \alpha = \frac{PO}{TO}" />
-
 <BlockMath math="= \frac{\sqrt{\frac{27}{2}}}{\frac{3}{2}\sqrt{2}}" />
-
 <BlockMath math="= \frac{\sqrt{27}}{\sqrt{2}} \cdot \frac{1}{\frac{3}{2}\sqrt{2}}" />
-
 <BlockMath math="= \frac{\sqrt{27}}{\sqrt{2}} \cdot \frac{2}{3\sqrt{2}}" />
-
 <BlockMath math="= \frac{2\sqrt{27}}{3 \cdot 2}" />
-
 <BlockMath math="= \frac{\sqrt{27}}{3} = \frac{3\sqrt{3}}{3} = \sqrt{3}" />
 </MathContainer>
 
-Jadi, tangen sudut antara garis PT dan alas QRST adalah <InlineMath math="\sqrt{3}" />
-
+Jadi, tangen sudut antara garis <InlineMath math="PT" /> dan alas <InlineMath math="QRST" /> adalah <InlineMath math="\sqrt{3}" />

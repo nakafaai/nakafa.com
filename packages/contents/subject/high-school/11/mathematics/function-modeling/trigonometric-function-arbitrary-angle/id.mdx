@@ -57,12 +57,12 @@ Perhatikan bahwa saat titik bergerak mengelilingi lingkaran, koordinat <InlineMa
 
 **Tanda di setiap kuadran:**
 
-| Kuadran | Rentang Sudut                              | x   | y   | sin | cos | tan |
+| Kuadran | Rentang Sudut                              | <InlineMath math="x" /> | <InlineMath math="y" /> | sin | cos | tan |
 | ------- | ------------------------------------------ | --- | --- | --- | --- | --- |
-| I       | <InlineMath math="0° < \theta < 90°" />    | +   | +   | +   | +   | +   |
-| II      | <InlineMath math="90° < \theta < 180°" />  | -   | +   | +   | -   | -   |
-| III     | <InlineMath math="180° < \theta < 270°" /> | -   | -   | -   | -   | +   |
-| IV      | <InlineMath math="270° < \theta < 360°" /> | +   | -   | -   | +   | -   |
+| <InlineMath math="\text{I}" />   | <InlineMath math="0^\circ < \theta < 90^\circ" />    | <InlineMath math="+" /> | <InlineMath math="+" /> | <InlineMath math="+" /> | <InlineMath math="+" /> | <InlineMath math="+" /> |
+| <InlineMath math="\text{II}" />  | <InlineMath math="90^\circ < \theta < 180^\circ" />  | <InlineMath math="-" /> | <InlineMath math="+" /> | <InlineMath math="+" /> | <InlineMath math="-" /> | <InlineMath math="-" /> |
+| <InlineMath math="\text{III}" /> | <InlineMath math="180^\circ < \theta < 270^\circ" /> | <InlineMath math="-" /> | <InlineMath math="-" /> | <InlineMath math="-" /> | <InlineMath math="-" /> | <InlineMath math="+" /> |
+| <InlineMath math="\text{IV}" />  | <InlineMath math="270^\circ < \theta < 360^\circ" /> | <InlineMath math="+" /> | <InlineMath math="-" /> | <InlineMath math="-" /> | <InlineMath math="+" /> | <InlineMath math="-" /> |
 
 Supaya kalian tidak bingung, kita bisa mengingatnya dengan **"All Students Take Calculus"**. Di kuadran I **A**ll positif, di kuadran II hanya **S**in positif, di kuadran III hanya **T**an positif, di kuadran IV hanya **C**os positif.
 
@@ -72,16 +72,16 @@ Sudut referensi adalah sudut lancip (<InlineMath math="0^\circ" /> sampai <Inlin
 
 <UnitCircle
   title="Memahami Sudut Referensi"
-  description="Perhatikan sudut lancip yang terbentuk dengan sumbu x saat sudut berubah."
+  description={<>Perhatikan sudut lancip yang terbentuk dengan sumbu <InlineMath math="x" /> saat sudut berubah.</>}
   angle={135}
 />
 
 **Cara menentukan sudut referensi (<InlineMath math="\alpha" />):**
 
 - Kuadran I: <InlineMath math="\alpha = \theta" />
-- Kuadran II: <InlineMath math="\alpha = 180° - \theta" />
-- Kuadran III: <InlineMath math="\alpha = \theta - 180°" />
-- Kuadran IV: <InlineMath math="\alpha = 360° - \theta" />
+- Kuadran II: <InlineMath math="\alpha = 180^\circ - \theta" />
+- Kuadran III: <InlineMath math="\alpha = \theta - 180^\circ" />
+- Kuadran IV: <InlineMath math="\alpha = 360^\circ - \theta" />
 
 ## Menentukan Nilai Trigonometri
 
@@ -92,59 +92,59 @@ Berikut langkah sistematis untuk menentukan nilai fungsi trigonometri:
 3. **Hitung sudut referensi**
 4. **Gunakan nilai sudut referensi** dengan tanda sesuai kuadran
 
-### Sudut di Kuadran II
+### Sudut di Kuadran Dua
 
-**Soal:** Tentukan <InlineMath math="\sin 120°" />, <InlineMath math="\cos 120°" />, dan <InlineMath math="\tan 120°" />
+**Soal:** Tentukan <InlineMath math="\sin 120^\circ" />, <InlineMath math="\cos 120^\circ" />, dan <InlineMath math="\tan 120^\circ" />
 
 **Penyelesaian:**
 
-- Sudut <InlineMath math="120^\circ" /> terletak di kuadran II (karena <InlineMath math="90° < 120° < 180°" />)
-- Sudut referensi: <InlineMath math="\alpha = 180° - 120° = 60°" />
+- Sudut <InlineMath math="120^\circ" /> terletak di kuadran II (karena <InlineMath math="90^\circ < 120^\circ < 180^\circ" />)
+- Sudut referensi: <InlineMath math="\alpha = 180^\circ - 120^\circ = 60^\circ" />
 - Di kuadran II: <InlineMath math="\sin(+), \cos(-), \tan(-)" />
 
 Menggunakan nilai sudut istimewa <InlineMath math="60^\circ" />:
 
 <MathContainer>
-  <BlockMath math="\sin 120° = +\sin 60° = \frac{\sqrt{3}}{2}" />
-  <BlockMath math="\cos 120° = -\cos 60° = -\frac{1}{2}" />
-  <BlockMath math="\tan 120° = -\tan 60° = -\sqrt{3}" />
+  <BlockMath math="\sin 120^\circ = +\sin 60^\circ = \frac{\sqrt{3}}{2}" />
+  <BlockMath math="\cos 120^\circ = -\cos 60^\circ = -\frac{1}{2}" />
+  <BlockMath math="\tan 120^\circ = -\tan 60^\circ = -\sqrt{3}" />
 </MathContainer>
 
-### Sudut di Kuadran III
+### Sudut di Kuadran Tiga
 
 **Soal:** Tentukan nilai trigonometri untuk sudut <InlineMath math="240^\circ" />
 
 **Penyelesaian:**
 
-- Sudut <InlineMath math="240^\circ" /> terletak di kuadran III (karena <InlineMath math="180° < 240° < 270°" />)
-- Sudut referensi: <InlineMath math="\alpha = 240° - 180° = 60°" />
+- Sudut <InlineMath math="240^\circ" /> terletak di kuadran III (karena <InlineMath math="180^\circ < 240^\circ < 270^\circ" />)
+- Sudut referensi: <InlineMath math="\alpha = 240^\circ - 180^\circ = 60^\circ" />
 - Di kuadran III: <InlineMath math="\sin(-), \cos(-), \tan(+)" />
 
 Menggunakan nilai sudut istimewa <InlineMath math="60^\circ" />:
 
 <MathContainer>
-  <BlockMath math="\sin 240° = -\sin 60° = -\frac{\sqrt{3}}{2}" />
-  <BlockMath math="\cos 240° = -\cos 60° = -\frac{1}{2}" />
-  <BlockMath math="\tan 240° = +\tan 60° = \sqrt{3}" />
+  <BlockMath math="\sin 240^\circ = -\sin 60^\circ = -\frac{\sqrt{3}}{2}" />
+  <BlockMath math="\cos 240^\circ = -\cos 60^\circ = -\frac{1}{2}" />
+  <BlockMath math="\tan 240^\circ = +\tan 60^\circ = \sqrt{3}" />
 </MathContainer>
 
-### Sudut di Kuadran IV
+### Sudut di Kuadran Empat
 
 **Soal:** Tentukan nilai trigonometri untuk sudut <InlineMath math="300^\circ" />
 
 **Penyelesaian:**
 
-- Sudut <InlineMath math="300^\circ" /> terletak di kuadran IV (karena <InlineMath math="270° < 300° < 360°" />)
+- Sudut <InlineMath math="300^\circ" /> terletak di kuadran IV (karena <InlineMath math="270^\circ < 300^\circ < 360^\circ" />)
 
-- Sudut referensi: <InlineMath math="\alpha = 360° - 300° = 60°" />
+- Sudut referensi: <InlineMath math="\alpha = 360^\circ - 300^\circ = 60^\circ" />
 - Di kuadran IV: <InlineMath math="\sin(-), \cos(+), \tan(-)" />
 
 Menggunakan nilai sudut istimewa <InlineMath math="60^\circ" />:
 
 <MathContainer>
-  <BlockMath math="\sin 300° = -\sin 60° = -\frac{\sqrt{3}}{2}" />
-  <BlockMath math="\cos 300° = +\cos 60° = \frac{1}{2}" />
-  <BlockMath math="\tan 300° = -\tan 60° = -\sqrt{3}" />
+  <BlockMath math="\sin 300^\circ = -\sin 60^\circ = -\frac{\sqrt{3}}{2}" />
+  <BlockMath math="\cos 300^\circ = +\cos 60^\circ = \frac{1}{2}" />
+  <BlockMath math="\tan 300^\circ = -\tan 60^\circ = -\sqrt{3}" />
 </MathContainer>
 
 ## Menangani Sudut Khusus
@@ -157,7 +157,7 @@ Ketika sudut negatif, kita bergerak searah jarum jam. Gunakan sifat:
 - <InlineMath math="\cos(-\theta) = \cos \theta" /> (fungsi genap)
 - <InlineMath math="\tan(-\theta) = -\tan \theta" /> (fungsi ganjil)
 
-**Contoh:** <InlineMath math="\sin(-30°) = -\sin 30° = -\frac{1}{2}" />
+**Contoh:** <InlineMath math="\sin(-30^\circ) = -\sin 30^\circ = -\frac{1}{2}" />
 
 ### Sudut Lebih dari Satu Putaran Penuh
 
@@ -165,18 +165,18 @@ Gunakan sifat periodisitas. Kurangi atau tambahkan kelipatan <InlineMath math="3
 
 **Contoh:**
 
-- <InlineMath math="750° = 750° - 2(360°) = 750° - 720° = 30°" />
-- Maka <InlineMath math="\sin 750° = \sin 30° = \frac{1}{2}" />
+- <InlineMath math="750^\circ = 750^\circ - 2(360^\circ) = 750^\circ - 720^\circ = 30^\circ" />
+- Maka <InlineMath math="\sin 750^\circ = \sin 30^\circ = \frac{1}{2}" />
 
 ## Latihan
 
-1. Tentukan nilai <InlineMath math="\sin 315°" />, <InlineMath math="\cos 315°" />, dan <InlineMath math="\tan 315°" />.
+1. Tentukan nilai <InlineMath math="\sin 315^\circ" />, <InlineMath math="\cos 315^\circ" />, dan <InlineMath math="\tan 315^\circ" />.
 
-2. Hitunglah <InlineMath math="\sin(-60°) + \cos 210° - \tan(-135°)" />.
+2. Hitunglah <InlineMath math="\sin(-60^\circ) + \cos 210^\circ - \tan(-135^\circ)" />.
 
 3. Jika <InlineMath math="\sin \theta = \frac{3}{5}" /> dan <InlineMath math="\theta" /> berada di kuadran II, tentukan <InlineMath math="\cos \theta" /> dan <InlineMath math="\tan \theta" />.
 
-4. Sederhanakan <InlineMath math="\sin 840° \cdot \cos(-330°)" />.
+4. Sederhanakan <InlineMath math="\sin 840^\circ \cdot \cos(-330^\circ)" />.
 
 5. Sebuah kincir angin berputar <InlineMath math="1050^\circ" /> dari posisi awal. Jika posisi awal bilah berada di sumbu <InlineMath math="x" /> positif, tentukan koordinat ujung bilah pada lingkaran satuan setelah putaran tersebut.
 
@@ -184,26 +184,26 @@ Gunakan sifat periodisitas. Kurangi atau tambahkan kelipatan <InlineMath math="3
 
 1. Untuk sudut <InlineMath math="315^\circ" />, kita perlu menentukan kuadrannya terlebih dahulu.
 
-   Karena <InlineMath math="270° < 315° < 360°" />, sudut berada di kuadran IV.
+   Karena <InlineMath math="270^\circ < 315^\circ < 360^\circ" />, sudut berada di kuadran IV.
 
-   Sudut referensinya adalah <InlineMath math="360° - 315° = 45°" />.
+   Sudut referensinya adalah <InlineMath math="360^\circ - 315^\circ = 45^\circ" />.
 
    <MathContainer>
-     <BlockMath math="\sin 315° = -\sin 45° = -\frac{\sqrt{2}}{2}" />
-     <BlockMath math="\cos 315° = +\cos 45° = \frac{\sqrt{2}}{2}" />
-     <BlockMath math="\tan 315° = -\tan 45° = -1" />
+     <BlockMath math="\sin 315^\circ = -\sin 45^\circ = -\frac{\sqrt{2}}{2}" />
+     <BlockMath math="\cos 315^\circ = +\cos 45^\circ = \frac{\sqrt{2}}{2}" />
+     <BlockMath math="\tan 315^\circ = -\tan 45^\circ = -1" />
    </MathContainer>
 
-2. Mari kita hitung setiap suku secara terpisah. Untuk <InlineMath math="\sin(-60°)" />, gunakan sifat fungsi ganjil.
+2. Mari kita hitung setiap suku secara terpisah. Untuk <InlineMath math="\sin(-60^\circ)" />, gunakan sifat fungsi ganjil.
 
-   Untuk <InlineMath math="\cos 210°" />, sudut di kuadran III dengan referensi <InlineMath math="30^\circ" />.
+   Untuk <InlineMath math="\cos 210^\circ" />, sudut di kuadran III dengan referensi <InlineMath math="30^\circ" />.
 
-   Untuk <InlineMath math="\tan(-135°)" />, ubah dulu ke sudut positif.
+   Untuk <InlineMath math="\tan(-135^\circ)" />, ubah dulu ke sudut positif.
 
    <MathContainer>
-     <BlockMath math="\sin(-60°) = -\sin 60° = -\frac{\sqrt{3}}{2}" />
-     <BlockMath math="\cos 210° = -\cos 30° = -\frac{\sqrt{3}}{2}" />
-     <BlockMath math="\tan(-135°) = -\tan 135° = -(-\tan 45°) = 1" />
+     <BlockMath math="\sin(-60^\circ) = -\sin 60^\circ = -\frac{\sqrt{3}}{2}" />
+     <BlockMath math="\cos 210^\circ = -\cos 30^\circ = -\frac{\sqrt{3}}{2}" />
+     <BlockMath math="\tan(-135^\circ) = -\tan 135^\circ = -(-\tan 45^\circ) = 1" />
      <BlockMath math="\text{Hasil} = -\frac{\sqrt{3}}{2} - \frac{\sqrt{3}}{2} + 1 = -\sqrt{3} + 1" />
    </MathContainer>
 
@@ -223,24 +223,24 @@ Gunakan sifat periodisitas. Kurangi atau tambahkan kelipatan <InlineMath math="3
 
 4. Pertama sederhanakan sudut-sudutnya.
 
-   <BlockMath math="840° = 840° - 2(360°) = 120°" />
+   <BlockMath math="840^\circ = 840^\circ - 2(360^\circ) = 120^\circ" />
 
-   Untuk <InlineMath math="-330°" />, tambahkan <InlineMath math="360^\circ" /> menjadi <InlineMath math="30^\circ" />.
+   Untuk <InlineMath math="-330^\circ" />, tambahkan <InlineMath math="360^\circ" /> menjadi <InlineMath math="30^\circ" />.
 
    <MathContainer>
-     <BlockMath math="\sin 840° = \sin 120° = \sin(180° - 60°) = \sin 60° = \frac{\sqrt{3}}{2}" />
-     <BlockMath math="\cos(-330°) = \cos 330° = \cos(360° - 30°) = \cos 30° = \frac{\sqrt{3}}{2}" />
-     <BlockMath math="\sin 840° \cdot \cos(-330°) = \frac{\sqrt{3}}{2} \cdot \frac{\sqrt{3}}{2} = \frac{3}{4}" />
+     <BlockMath math="\sin 840^\circ = \sin 120^\circ = \sin(180^\circ - 60^\circ) = \sin 60^\circ = \frac{\sqrt{3}}{2}" />
+     <BlockMath math="\cos(-330^\circ) = \cos 330^\circ = \cos(360^\circ - 30^\circ) = \cos 30^\circ = \frac{\sqrt{3}}{2}" />
+     <BlockMath math="\sin 840^\circ \cdot \cos(-330^\circ) = \frac{\sqrt{3}}{2} \cdot \frac{\sqrt{3}}{2} = \frac{3}{4}" />
    </MathContainer>
 
 5. Sudut <InlineMath math="1050^\circ" /> perlu disederhanakan terlebih dahulu.
 
-   <BlockMath math="1050° = 1050° - 2(360°) = 1050° - 720° = 330°" />
+   <BlockMath math="1050^\circ = 1050^\circ - 2(360^\circ) = 1050^\circ - 720^\circ = 330^\circ" />
 
    Sudut <InlineMath math="330^\circ" /> berada di kuadran IV dengan sudut referensi <InlineMath math="30^\circ" />.
 
    <MathContainer>
-     <BlockMath math="x = \cos 330° = \cos 30° = \frac{\sqrt{3}}{2}" />
-     <BlockMath math="y = \sin 330° = -\sin 30° = -\frac{1}{2}" />
+     <BlockMath math="x = \cos 330^\circ = \cos 30^\circ = \frac{\sqrt{3}}{2}" />
+     <BlockMath math="y = \sin 330^\circ = -\sin 30^\circ = -\frac{1}{2}" />
      <BlockMath math="\text{Koordinat ujung bilah: } \left(\frac{\sqrt{3}}{2}, -\frac{1}{2}\right)" />
    </MathContainer>

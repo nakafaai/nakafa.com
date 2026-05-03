@@ -22,6 +22,10 @@ Icon
 # pagefind
 _pagefind
 
+# generated agent files
+apps/www/public/llms-full.txt
+apps/www/public/llms-full/
+
 # Thumbnails
 ._*
 

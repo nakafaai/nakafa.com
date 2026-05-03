@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Matrix Determinant",
-  description: "Calculate 2x2 matrix determinants and solve linear equations using Cramer's Rule. Master determinant formulas with step-by-step examples and practice.",
+  description: "Calculate order-two matrix determinants and solve linear equations using Cramer's Rule. Master determinant formulas with step-by-step examples and practice.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "06/05/2025",
   subject: "Matrix",
@@ -10,13 +10,13 @@ export const metadata = {
 
 The determinant of a matrix is a scalar value (a single number) that can be calculated from the elements of a square matrix. The concept of a determinant is very important in linear algebra, one of its uses being to help solve systems of linear equations. Every square matrix has a unique determinant value.
 
-## Calculating the Determinant of a 2x2 Order Matrix
+## Calculating the Determinant of an Order-Two Matrix
 
-A 2x2 order matrix is a matrix that has two rows and two columns. Suppose we have matrix A as follows:
+A <InlineMath math="2 \times 2" /> order matrix is a matrix that has two rows and two columns. Suppose we have matrix <InlineMath math="A" /> as follows:
 
 <BlockMath math="A = \begin{bmatrix} a & b \\ c & d \end{bmatrix}" />
 
-The determinant of matrix A, usually written as <InlineMath math="\det(A)" /> or <InlineMath math="|A|" />, is calculated by subtracting the product of the elements of the main diagonal from the product of the elements of the second diagonal.
+The determinant of matrix <InlineMath math="A" />, usually written as <InlineMath math="\det(A)" /> or <InlineMath math="|A|" />, is calculated by subtracting the product of the elements of the main diagonal from the product of the elements of the second diagonal.
 
 The formula is:
 
@@ -24,15 +24,15 @@ The formula is:
 
 Note that the notation <InlineMath math="\begin{vmatrix} a & b \\ c & d \end{vmatrix}" /> uses straight lines, which denote the determinant, as opposed to square brackets <InlineMath math="\begin{bmatrix} a & b \\ c & d \end{bmatrix}" /> which denote the matrix itself.
 
-### Calculation of a 2x2 Matrix Determinant
+### Calculation of an Order-Two Matrix Determinant
 
-Suppose we have matrix B:
+Suppose we have matrix <InlineMath math="B" />:
 
 <BlockMath math="B = \begin{bmatrix} -1 & 3 \\ -7 & -5 \end{bmatrix}" />
 
 To calculate its determinant, we identify <InlineMath math="a = -1" />, <InlineMath math="b = 3" />, <InlineMath math="c = -7" />, and <InlineMath math="d = -5" />.
 
-Then, the determinant of matrix B is:
+Then, the determinant of matrix <InlineMath math="B" /> is:
 
 <MathContainer>
   <BlockMath math="\det(B) = (-1 \times -5) - (3 \times -7)" />
@@ -41,7 +41,7 @@ Then, the determinant of matrix B is:
   <BlockMath math="\det(B) = 26" />
 </MathContainer>
 
-So, the determinant value of matrix B is 26.
+So, the determinant value of matrix <InlineMath math="B" /> is 26.
 
 ## Solving Systems of Linear Equations with Two Variables (SPLDV) using Determinants
 
@@ -109,6 +109,7 @@ From the system above, we get:
 **Step 1**: Calculate the determinant <InlineMath math="D" />.
 
 <BlockMath math="D = \begin{vmatrix} 2 & -1 \\ 1 & -4 \end{vmatrix} = (2 \times -4) - (-1 \times 1) = -8 - (-1) = -8 + 1 = -7" />
+
 Since <InlineMath math="D = -7 \neq 0" />, this system has a unique solution.
 
 **Step 2**: Calculate the determinant <InlineMath math="D_x" />.

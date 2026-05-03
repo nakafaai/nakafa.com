@@ -11,24 +11,24 @@ export const metadata = {
 
 ## Memahami Pencerminan terhadap Sumbu Horizontal
 
-Pencerminan terhadap sumbu X adalah salah satu jenis transformasi geometri yang memindahkan setiap titik pada suatu objek ke posisi baru yang simetris terhadap sumbu X. Bayangkan sumbu X sebagai cermin datar.
+Pencerminan terhadap sumbu <InlineMath math="x" /> adalah salah satu jenis transformasi geometri yang memindahkan setiap titik pada suatu objek ke posisi baru yang simetris terhadap sumbu <InlineMath math="x" />. Bayangkan sumbu <InlineMath math="x" /> sebagai cermin datar.
 
 Jika sebuah titik <InlineMath math="P" /> memiliki koordinat <InlineMath math="(x,y)" />, maka bayangannya, kita sebut <InlineMath math="P'" />, akan memiliki koordinat <InlineMath math="x" /> yang sama, namun koordinat <InlineMath math="y" />-nya akan menjadi negatif dari nilai <InlineMath math="y" /> semula.
 
-Secara matematis, jika titik awal adalah <InlineMath math="P(x,y)" />, maka setelah dicerminkan terhadap sumbu X, bayangannya adalah <InlineMath math="P'(x,-y)" />.
+Secara matematis, jika titik awal adalah <InlineMath math="P(x,y)" />, maka setelah dicerminkan terhadap sumbu <InlineMath math="x" />, bayangannya adalah <InlineMath math="P'(x,-y)" />.
 
 ### Visualisasi Titik dan Bayangannya
 
-Mari kita amati beberapa titik dan bayangannya setelah dicerminkan terhadap sumbu X.
+Mari kita amati beberapa titik dan bayangannya setelah dicerminkan terhadap sumbu <InlineMath math="x" />.
 
 Perhatikan bagaimana koordinat <InlineMath math="y" /> berubah tanda, sementara koordinat <InlineMath math="x" /> tetap.
 
 <LineEquation
-  title="Peta Titik terhadap Sumbu X"
+  title={<>Peta Titik terhadap Sumbu <InlineMath math="x" /></>}
   description={
     <>
       Visualisasi titik-titik <InlineMath math="A, B, C, D" /> dan bayangannya{" "}
-      <InlineMath math="A', B', C', D'" /> setelah pencerminan terhadap sumbu X.
+      <InlineMath math="A', B', C', D'" /> setelah pencerminan terhadap sumbu <InlineMath math="x" />.
     </>
   }
   cameraPosition={[0, 0, 15]}
@@ -76,17 +76,17 @@ Pola yang tampak adalah nilai <InlineMath math="x" /> tetap, dan nilai <InlineMa
 
 ## Sifat Pencerminan terhadap Sumbu Horizontal
 
-Berdasarkan pengamatan di atas, kita dapat merumuskan sifat pencerminan terhadap sumbu X:
+Berdasarkan pengamatan di atas, kita dapat merumuskan sifat pencerminan terhadap sumbu <InlineMath math="x" />:
 
 <BlockMath math="P(x,y) \xrightarrow{\text{Sumbu X}} P'(x,-y)" />
 
-Artinya, peta dari titik <InlineMath math="P(x,y)" /> yang dicerminkan terhadap sumbu X adalah <InlineMath math="P'(x,-y)" />. Sumbu X dalam kasus ini bertindak sebagai garis <InlineMath math="y=0" />.
+Artinya, peta dari titik <InlineMath math="P(x,y)" /> yang dicerminkan terhadap sumbu <InlineMath math="x" /> adalah <InlineMath math="P'(x,-y)" />. Sumbu <InlineMath math="x" /> dalam kasus ini bertindak sebagai garis <InlineMath math="y=0" />.
 
 ## Contoh Aplikasi
 
 ### Mencerminkan Segitiga
 
-Tentukan peta dari segitiga <InlineMath math="ABC" /> dengan titik sudut <InlineMath math="A(-1,4)" />, <InlineMath math="B(2,1)" />, dan <InlineMath math="C(-2,-1)" /> yang dicerminkan terhadap sumbu X.
+Tentukan peta dari segitiga <InlineMath math="ABC" /> dengan titik sudut <InlineMath math="A(-1,4)" />, <InlineMath math="B(2,1)" />, dan <InlineMath math="C(-2,-1)" /> yang dicerminkan terhadap sumbu <InlineMath math="x" />.
 
 Untuk menentukan peta dari segitiga <InlineMath math="ABC" />, kita gunakan sifat pencerminan pada setiap titik sudutnya:
 
@@ -101,13 +101,13 @@ Akibatnya, peta dari segitiga <InlineMath math="ABC" /> adalah segitiga <InlineM
 <LineEquation
   title={
     <>
-      Pencerminan Segitiga <InlineMath math="ABC" /> terhadap Sumbu X
+      Pencerminan Segitiga <InlineMath math="ABC" /> terhadap Sumbu <InlineMath math="x" />
     </>
   }
   description={
     <>
       Visualisasi segitiga <InlineMath math="ABC" /> dan bayangannya{" "}
-      <InlineMath math="A'B'C'" /> setelah pencerminan terhadap sumbu X.
+      <InlineMath math="A'B'C'" /> setelah pencerminan terhadap sumbu <InlineMath math="x" />.
     </>
   }
   cameraPosition={[0, 0, 15]}
@@ -172,7 +172,7 @@ Akibatnya, peta dari segitiga <InlineMath math="ABC" /> adalah segitiga <InlineM
 
 ### Mencerminkan Garis
 
-Jika sebuah garis memiliki persamaan <InlineMath math="2x - 3y = 0" /> dicerminkan terhadap sumbu X, tentukan persamaan garis bayangannya.
+Jika sebuah garis memiliki persamaan <InlineMath math="2x - 3y = 0" /> dicerminkan terhadap sumbu <InlineMath math="x" />, tentukan persamaan garis bayangannya.
 
 **Alternatif Penyelesaian:**
 
@@ -180,7 +180,7 @@ Misalkan sebuah titik sembarang <InlineMath math="P(a,b)" /> terletak pada garis
 
 <BlockMath math="2a - 3b = 0" />
 
-Titik <InlineMath math="P(a,b)" /> dicerminkan terhadap sumbu X menghasilkan bayangan <InlineMath math="P'(a,-b)" />.
+Titik <InlineMath math="P(a,b)" /> dicerminkan terhadap sumbu <InlineMath math="x" /> menghasilkan bayangan <InlineMath math="P'(a,-b)" />.
 
 Untuk mendapatkan persamaan garis bayangan, kita substitusikan koordinat bayangan ke dalam variabel baru. Misalkan <InlineMath math="x' = a" /> dan <InlineMath math="y' = -b" />.
 
@@ -198,11 +198,13 @@ Karena <InlineMath math="x'" /> dan <InlineMath math="y'" /> adalah variabel sem
 Jadi, persamaan garis bayangannya adalah:
 
 <div className="flex flex-col gap-4">
+
   <BlockMath math="2x + 3y = 0" />
+
   <LineEquation
     title={
       <>
-        Pencerminan Garis <InlineMath math="2x - 3y = 0" /> terhadap Sumbu X
+        Pencerminan Garis <InlineMath math="2x - 3y = 0" /> terhadap Sumbu <InlineMath math="x" />
       </>
     }
     description={
@@ -237,4 +239,4 @@ Jadi, persamaan garis bayangannya adalah:
   />
 </div>
 
-Ini menunjukkan bagaimana persamaan sebuah garis berubah setelah dicerminkan terhadap sumbu X.
+Ini menunjukkan bagaimana persamaan sebuah garis berubah setelah dicerminkan terhadap sumbu <InlineMath math="x" />.

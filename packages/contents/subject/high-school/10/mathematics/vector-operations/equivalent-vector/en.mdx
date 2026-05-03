@@ -108,6 +108,7 @@ If vector <InlineMath math="\vec{a}" /> is equivalent to vector <InlineMath math
 If vector <InlineMath math="\vec{a}" /> is equivalent to vector <InlineMath math="\vec{b}" /> and vector <InlineMath math="\vec{b}" /> is equivalent to vector <InlineMath math="\vec{c}" />, then vector <InlineMath math="\vec{a}" /> is equivalent to vector <InlineMath math="\vec{c}" />.
 
 <div className="flex flex-col gap-4">
+
   <BlockMath math="\text{If } \vec{a} \equiv \vec{b} \text{ and} \vec{b} \equiv \vec{c} \text{, then } \vec{a} \equiv \vec{c}" />
 
   <Vector3d
@@ -158,7 +159,11 @@ Proof:
 Since <InlineMath math="\overrightarrow{AB} = \overrightarrow{CD} = (3, 4)" />, vector <InlineMath math="\overrightarrow{AB}" /> is equivalent to vector <InlineMath math="\overrightarrow{CD}" />.
 
 <Vector3d
-  title="Vectors AB and CD"
+  title={
+    <>
+      Vectors <InlineMath math="AB" /> and <InlineMath math="CD" />
+    </>
+  }
   description={
     <>
       Visualization of vectors <InlineMath math="AB(3,4,0)" /> and{" "}
@@ -196,7 +201,11 @@ Proof:
 Since <InlineMath math="\overrightarrow{PQ} = \overrightarrow{RS} = (2, 2)" />, vector <InlineMath math="\overrightarrow{PQ}" /> is equivalent to vector <InlineMath math="\overrightarrow{RS}" />.
 
 <Vector3d
-  title="Vectors PQ and RS"
+  title={
+    <>
+      Vectors <InlineMath math="PQ" /> and <InlineMath math="RS" />
+    </>
+  }
   description={
     <>
       Visualization of vectors <InlineMath math="PQ(2,2,0)" /> and{" "}

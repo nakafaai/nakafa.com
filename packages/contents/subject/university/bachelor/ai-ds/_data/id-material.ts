@@ -17,7 +17,7 @@ const idMaterials: MaterialList = [
         href: `${BASE_PATH}/linear-methods/determinant-calculation`,
       },
       {
-        title: "Teorema pengembangan Laplace",
+        title: "Teorema Pengembangan Laplace",
         href: `${BASE_PATH}/linear-methods/laplace-expansion`,
       },
       {
@@ -49,7 +49,7 @@ const idMaterials: MaterialList = [
         href: `${BASE_PATH}/linear-methods/orthogonal-unitary-matrix`,
       },
       {
-        title: "Matriks simetris dan Hermitian",
+        title: "Matriks Simetris dan Hermitian",
         href: `${BASE_PATH}/linear-methods/symmetric-hermitian-matrix`,
       },
       {

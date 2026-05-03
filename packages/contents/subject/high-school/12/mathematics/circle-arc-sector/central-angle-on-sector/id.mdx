@@ -17,7 +17,12 @@ Sudut pusat memiliki peran khusus dalam menentukan ukuran juring. Semakin besar 
 
 <LineEquation
   title={<>Sudut Pusat yang Membentuk Juring</>}
-  description="Sudut pusat ditunjukkan dengan vertex di pusat O dan dua jari-jari sebagai kaki sudut."
+  description={
+    <>
+      Sudut pusat ditunjukkan dengan vertex di pusat <InlineMath math="O" /> dan
+      dua jari-jari sebagai kaki sudut.
+    </>
+  }
   data={[
     {
       points: Array.from({ length: 101 }, (_, i) => {
@@ -113,7 +118,7 @@ Hubungan antara sudut pusat dan luas juring dapat dinyatakan dalam bentuk perban
 
 **Untuk sudut dalam derajat:**
 
-<BlockMath math="L = \frac{\theta}{360°} \times \pi r^2" />
+<BlockMath math="L = \frac{\theta}{360^\circ} \times \pi r^2" />
 
 **Untuk sudut dalam radian:**
 
@@ -128,7 +133,7 @@ Perbandingan ini menunjukkan bahwa luas juring sebanding dengan besar sudut pusa
 
 <LineEquation
   title={<>Perbandingan Sudut Pusat pada Juring Berbeda</>}
-  description="Visualisasi juring dengan sudut pusat 45°, 90°, dan 135° menunjukkan hubungan proporsional."
+  description={<>Visualisasi juring dengan sudut pusat <InlineMath math="45^\circ" />, <InlineMath math="90^\circ" />, dan <InlineMath math="135^\circ" /> menunjukkan hubungan proporsional.</>}
   data={[
     {
       points: Array.from({ length: 101 }, (_, i) => {
@@ -246,13 +251,13 @@ Mengidentifikasi sudut pusat pada juring memerlukan kemampuan mengenali ciri kha
 
 - **Menggunakan busur derajat**: Letakkan titik pusat busur tepat di pusat lingkaran, pastikan garis dasar busur sejajar dengan salah satu jari-jari, kemudian baca skala pada posisi jari-jari kedua
 - **Perhitungan matematis**: Menggunakan hubungan antara sudut pusat, jari-jari, panjang busur, dan luas juring
-- **Pembagian lingkaran**: membagi <InlineMath math="360°" /> dengan jumlah bagian yang sama
+- **Pembagian lingkaran**: membagi <InlineMath math="360^\circ" /> dengan jumlah bagian yang sama
 
 Metode pengukuran ini memungkinkan kita mengidentifikasi besar sudut pusat dengan akurat, yang kemudian dapat digunakan untuk menghitung luas juring atau panjang busur yang sesuai.
 
 <LineEquation
   title={<>Teknik Pengukuran Sudut Pusat</>}
-  description="Demonstrasi pengukuran sudut pusat 60° dengan jari-jari pembatas yang jelas."
+  description={<>Demonstrasi pengukuran sudut pusat <InlineMath math="60^\circ" /> dengan jari-jari pembatas yang jelas.</>}
   data={[
     {
       points: Array.from({ length: 101 }, (_, i) => {
@@ -350,15 +355,15 @@ Menentukan besar sudut pusat dapat dilakukan melalui berbagai informasi yang dik
 
 **1. Dari luas juring dan jari-jari:**
 
-<BlockMath math="\alpha = \frac{360° \times L}{\pi r^2}" />
+<BlockMath math="\alpha = \frac{360^\circ \times L}{\pi r^2}" />
 
 **2. Dari panjang busur dan jari-jari:**
 
-<BlockMath math="\alpha = \frac{180° \times s}{\pi r}" />
+<BlockMath math="\alpha = \frac{180^\circ \times s}{\pi r}" />
 
 **3. Dari pembagian lingkaran sama rata:**
 
-<BlockMath math="\alpha = \frac{360°}{n}" />
+<BlockMath math="\alpha = \frac{360^\circ}{n}" />
 
 dimana:
 - <InlineMath math="\alpha" /> = sudut pusat (dalam derajat)
@@ -371,7 +376,7 @@ Ketiga rumus ini memberikan fleksibilitas dalam menyelesaikan berbagai jenis soa
 
 <LineEquation
   title={<>Ilustrasi Parameter dalam Perhitungan Sudut Pusat</>}
-  description="Visualisasi elemen-elemen: jari-jari (r), panjang busur (s), dan sudut pusat (72°)."
+  description={<>Visualisasi elemen-elemen: jari-jari <InlineMath math="r" />, panjang busur <InlineMath math="s" />, dan sudut pusat <InlineMath math="72^\circ" />.</>}
   data={[
     {
       points: Array.from({ length: 101 }, (_, i) => {
@@ -449,8 +454,8 @@ Ketiga rumus ini memberikan fleksibilitas dalam menyelesaikan berbagai jenis soa
 
 **Contoh aplikasi rumus:**
 
-- Pizza dipotong menjadi <InlineMath math="8 \text{ bagian}" /> sama besar: <InlineMath math="\alpha = \frac{360°}{8} = 45°" />
-- Jam dinding dengan 12 angka: <InlineMath math="\alpha = \frac{360°}{12} = 30°" />
-- Kue tart dipotong menjadi <InlineMath math="6 \text{ bagian}" />: <InlineMath math="\alpha = \frac{360°}{6} = 60°" />
+- Pizza dipotong menjadi <InlineMath math="8 \text{ bagian}" /> sama besar: <InlineMath math="\alpha = \frac{360^\circ}{8} = 45^\circ" />
+- Jam dinding dengan 12 angka: <InlineMath math="\alpha = \frac{360^\circ}{12} = 30^\circ" />
+- Kue tart dipotong menjadi <InlineMath math="6 \text{ bagian}" />: <InlineMath math="\alpha = \frac{360^\circ}{6} = 60^\circ" />
 
 Contoh-contoh ini menunjukkan penerapan langsung rumus pembagian lingkaran dalam kehidupan sehari-hari, dimana setiap bagian memiliki sudut pusat yang sama besar.

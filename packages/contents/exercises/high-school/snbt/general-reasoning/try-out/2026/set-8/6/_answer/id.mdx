@@ -4,7 +4,7 @@ export const metadata = {
   date: "01/29/2026",
 };
 
-Untuk mengetahui perolehan suara M, kita harus membangun persamaan yang menghubungkan semua variabel. Mari kita analisis logika ketergantungannya:
+Untuk mengetahui perolehan suara <InlineMath math="M" />, kita harus membangun persamaan yang menghubungkan semua variabel. Mari kita analisis logika ketergantungannya:
 
 #### Menentukan Total Suara
 
@@ -14,7 +14,7 @@ Untuk menghitung nilai absolut (angka pasti) dari suara kandidat manapun, kita m
   <BlockMath math="\text{Total Suara} = 480" />
 </MathContainer>
 
-#### Menghitung Suara O dan P
+#### Menghitung Suara Kandidat Lain
 
 Diketahui hubungan penjumlahan semua suara:
 
@@ -22,22 +22,22 @@ Diketahui hubungan penjumlahan semua suara:
   <BlockMath math="M + N + O + P = \text{Total Suara}" />
 </MathContainer>
 
-Kita perlu mengetahui nilai O dan P untuk mengisolasi M dan N:
+Kita perlu mengetahui nilai <InlineMath math="O" /> dan <InlineMath math="P" /> untuk mengisolasi <InlineMath math="M" /> dan <InlineMath math="N" />:
 
-*   **Pernyataan 2** diperlukan untuk menghitung O (menggunakan Total Suara dari Pernyataan 4).
-*   **Pernyataan 3** diperlukan untuk menghitung P (menggunakan nilai O yang didapat dari Pernyataan 2).
+*   **Pernyataan 2** diperlukan untuk menghitung <InlineMath math="O" /> (menggunakan Total Suara dari Pernyataan 4).
+*   **Pernyataan 3** diperlukan untuk menghitung <InlineMath math="P" /> (menggunakan nilai <InlineMath math="O" /> yang didapat dari Pernyataan 2).
 
-Tanpa O dan P, persamaan kita masih memiliki terlalu banyak variabel yang tidak diketahui.
+Tanpa <InlineMath math="O" /> dan <InlineMath math="P" />, persamaan kita masih memiliki terlalu banyak variabel yang tidak diketahui.
 
-#### Menyelesaikan M
+#### Menyelesaikan Nilai yang Dicari
 
-Setelah mengetahui nilai Total, O, dan P, persamaan menjadi:
+Setelah mengetahui nilai total, <InlineMath math="O" />, dan <InlineMath math="P" />, persamaan menjadi:
 
 <MathContainer>
   <BlockMath math="M + N = \text{Sisa Suara}" />
 </MathContainer>
 
-Kita masih memiliki dua variabel (M dan N) dalam satu persamaan. Untuk mendapatkan nilai spesifik M, kita memerlukan hubungan antara M dan N.
+Kita masih memiliki dua variabel (<InlineMath math="M" /> dan <InlineMath math="N" />) dalam satu persamaan. Untuk mendapatkan nilai spesifik <InlineMath math="M" />, kita memerlukan hubungan antara <InlineMath math="M" /> dan <InlineMath math="N" />.
 
 **Pernyataan 1** memberikan hubungan ini:
 
@@ -45,10 +45,10 @@ Kita masih memiliki dua variabel (M dan N) dalam satu persamaan. Untuk mendapatk
   <BlockMath math="M = 2N \quad \text{atau} \quad N = \frac{1}{2}M" />
 </MathContainer>
 
-Dengan mensubstitusi N ke dalam persamaan sisa suara, kita dapat menyelesaikan nilai M.
+Dengan mensubstitusi <InlineMath math="N" /> ke dalam persamaan sisa suara, kita dapat menyelesaikan nilai <InlineMath math="M" />.
 
 #### Kesimpulan
 
-Kita memerlukan **Pernyataan 4** (Total), **Pernyataan 2** (untuk O), **Pernyataan 3** (untuk P), dan **Pernyataan 1** (untuk relasi M dan N) secara bersamaan untuk menemukan solusi.
+Kita memerlukan **Pernyataan 4** (Total), **Pernyataan 2** (untuk <InlineMath math="O" />), **Pernyataan 3** (untuk <InlineMath math="P" />), dan **Pernyataan 1** (untuk relasi <InlineMath math="M" /> dan <InlineMath math="N" />) secara bersamaan untuk menemukan solusi.
 
 Jadi, informasi yang dibutuhkan adalah **1, 2, 3, dan 4**.

@@ -33,7 +33,9 @@ Use this file as the routing map. Load only the references needed for the curren
 - Use shared 3D typography helpers and tokens instead of hard-coded WebGL font sizes; keep labels subordinate to the visual.
 - Keep text-heavy lab footers readable instead of dense; prefer one or two columns unless each fact is very short.
 - Use `InlineMath`, `BlockMath`, and `MathContainer` consistently for math. If notation appears once, keep it consistent everywhere.
-- Keep headings at `##` or `###`, specific to the lesson, with no math or symbols.
+- Keep subject lesson headings at `##` or `###`, specific to the lesson, with no math or symbols.
+- For exercise answers, follow `references/exercise-patterns.md`: the app renders the top answer heading at `###`, so MDX answer sections start at `####` and may use `#####` for real nested analysis.
+- Keep raw MDX readable: leave a blank line after headings across all content; follow `references/math-formatting.md` for math block spacing.
 - Avoid raw HTML, em dash, card-inside-card, hard-coded palette classes, arbitrary typography or spacing when Tailwind scale utilities exist, dead code, redundant wrappers, legacy fallbacks, and leftover artifacts.
 - If a lesson asks students to solve something, include the answer, explanation, or visible self-check.
 - Verify with `pnpm format`; run `pnpm --filter @repo/contents typecheck` when content imports components; run `pnpm lint` when ready.

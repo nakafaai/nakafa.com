@@ -20,12 +20,12 @@ Operasi penjumlahan dan pengurangan pada polinomial pada dasarnya sama seperti p
 **Contoh Suku Sejenis:**
 
 - <InlineMath math="3x, \space -7x, \space -\frac{1}{5}x" /> (semua memiliki variabel <InlineMath math="x" /> pangkat
-  1)
+  <InlineMath math="1" />)
 - <InlineMath math="\frac{1}{2}x^3, \space 4x^3, \space -2x^3" /> (semua memiliki
-  variabel <InlineMath math="x" /> pangkat 3)
+  variabel <InlineMath math="x" /> pangkat <InlineMath math="3" />)
 - <InlineMath math="2x^2yz^3, \space \frac{3}{4}x^2yz^3, \space -5z^3x^2y" /> (semua
-  memiliki variabel <InlineMath math="x" /> pangkat 2, <InlineMath math="y" /> pangkat
-  1, dan <InlineMath math="z" /> pangkat 3)
+  memiliki variabel <InlineMath math="x" /> pangkat <InlineMath math="2" />, <InlineMath math="y" /> pangkat
+  <InlineMath math="1" />, dan <InlineMath math="z" /> pangkat <InlineMath math="3" />)
 
 **Contoh Bukan Suku Sejenis:**
 
@@ -133,7 +133,7 @@ Misalkan kita memiliki tiga grafik fungsi polinomial:
         Grafik <InlineMath math="f(x) = x + 1" />
       </>
     }
-    description="Fungsi Linear (Derajat 1)"
+    description={<>Fungsi linear derajat <InlineMath math="1" /></>}
     showZAxis={false}
     cameraPosition={[0, 0, 15]}
     data={[
@@ -153,7 +153,7 @@ Misalkan kita memiliki tiga grafik fungsi polinomial:
         Grafik <InlineMath math="g(x) = 0.5x^4 - 2x^2 + 1" />
       </>
     }
-    description="Fungsi Derajat 4"
+    description={<>Fungsi derajat <InlineMath math="4" /></>}
     showZAxis={false}
     cameraPosition={[0, 0, 15]}
     data={[
@@ -173,7 +173,7 @@ Misalkan kita memiliki tiga grafik fungsi polinomial:
         Grafik <InlineMath math="h(x) = -0.5x^3 + 1.5x" />
       </>
     }
-    description="Fungsi Derajat 3"
+    description={<>Fungsi derajat <InlineMath math="3" /></>}
     showZAxis={false}
     cameraPosition={[0, 0, 15]}
     data={[

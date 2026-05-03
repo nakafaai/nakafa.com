@@ -1,20 +1,20 @@
 export const metadata = {
-   title: "Permutation of n Items from n Objects",
-   description: "Master permutation of n items from n objects using factorial formulas. Learn complete arrangements with step-by-step examples and practical exercises.",
+   title: "Permutation of All Objects",
+   description: "Master permutation of all objects using factorial formulas. Learn complete arrangements with step-by-step examples and practical exercises.",
    authors: [{ name: "Nabil Akbarazzima Fatih" }],
    date: "05/26/2025",
    subject: "Combinatorics",
 };
 
-## Understanding Permutation of n Items from n Objects
+## Understanding Permutation of All Objects
 
-**Permutation of n items from n objects** is an arrangement of all available objects where each object is used exactly once and **the order of arrangement is very important**. In this case, we use all available objects without any remaining.
+**Permutation of all objects** is an arrangement of all available objects, namely <InlineMath math="n" /> items from <InlineMath math="n" /> objects, where each object is used exactly once and **the order of arrangement is very important**. In this case, we use all available objects without any remaining.
 
-Imagine arranging a photo line for 5 students. All five students are placed in one line. Each student gets one position, none sits on the backup bench, and Andi's position in front or back gives different results.
+Imagine arranging a photo line for <InlineMath math="5 \text{ students}" />. All five students are placed in one line. Each student gets one position, none sits on the backup bench, and Andi's position in front or back gives different results.
 
 ## Complete Permutation Formula
 
-For permutation of n items from n objects, **the formula used** is:
+For permutation of <InlineMath math="n" /> items from <InlineMath math="n" /> objects, **the formula used** is:
 
 <MathContainer>
 <BlockMath math="nP_n = \frac{n!}{(n-n)!} = \frac{n!}{0!}" />
@@ -33,7 +33,7 @@ So, the formula is:
 
 ## Factorial Concept
 
-**Factorial** is the consecutive multiplication of positive integers. Factorial of number n is written as <InlineMath math="n!" /> and defined as:
+**Factorial** is the consecutive multiplication of positive integers. The factorial of a number <InlineMath math="n" /> is written as <InlineMath math="n!" /> and defined as:
 
 <MathContainer>
 <BlockMath math="n! = n \times (n-1) \times (n-2) \times \cdots \times 2 \times 1" />
@@ -47,7 +47,7 @@ So, the formula is:
 
 ### School Organization
 
-Suppose there are 4 students who will fill 4 positions in a student committee: president, vice president, secretary, and treasurer. Each student can only hold one position.
+Suppose there are <InlineMath math="4 \text{ students}" /> who will fill 4 positions in a student committee: president, vice president, secretary, and treasurer. Each student can only hold one position.
 
 The number of ways to arrange the leadership is:
 
@@ -65,11 +65,11 @@ A family consisting of 6 members will sit in a row on a sofa for a family photo.
 
 ## Systematic Calculation Steps
 
-To calculate permutation of n items from n objects, follow these steps:
+To calculate permutation of <InlineMath math="n" /> items from <InlineMath math="n" /> objects, follow these steps:
 
 1. **Identify the number of objects**: Ensure all objects will be used
 2. **Apply the formula**: Use <InlineMath math="n!" />
-3. **Calculate factorial**: Multiply consecutively from n to 1
+3. **Calculate factorial**: Multiply consecutively from <InlineMath math="n" /> to <InlineMath math="1" />
 4. **Verify the result**: Ensure the calculation is correct
 
 ### Detailed Calculation
@@ -85,12 +85,12 @@ Calculating <InlineMath math="5!" /> with clear steps:
 
 ## Difference from Partial Permutation
 
-**Complete permutation (n from n objects)**: Uses all available objects.
-**Partial permutation (r from n objects)**: Only uses some objects.
+**Complete permutation (<InlineMath math="n" /> from <InlineMath math="n" /> objects)**: Uses all available objects.
+**Partial permutation (<InlineMath math="r" /> from <InlineMath math="n" /> objects)**: Only uses some objects.
 
 **Concrete example**: 
-- Complete permutation: Arranging 5 books in 5 positions on a shelf = <InlineMath math="5!" /> = <InlineMath math="120 \text{ ways}" />
-- Partial permutation: Selecting and arranging 3 books from 5 available books = <InlineMath math="5P_3" /> = <InlineMath math="60 \text{ ways}" />
+- Complete permutation: Arranging 5 books in 5 positions on a shelf is <InlineMath math="5! = 120 \text{ ways}" />
+- Partial permutation: Selecting and arranging 3 books from 5 available books is <InlineMath math="5P_3 = 60 \text{ ways}" />
 
 **Detailed calculation for partial permutation**:
 
@@ -100,7 +100,7 @@ Calculating <InlineMath math="5!" /> with clear steps:
 <BlockMath math="= \frac{120}{2} = 60 \text{ ways}" />
 </MathContainer>
 
-In permutation of n items from n objects, **no objects are left over** and **all positions must be filled**.
+In permutation of <InlineMath math="n" /> items from <InlineMath math="n" /> objects, **no objects are left over** and **all positions must be filled**.
 
 ## Exercises
 
@@ -115,21 +115,25 @@ In permutation of n items from n objects, **no objects are left over** and **all
 ### Answer Key
 
 1. Given: 7 models will be arranged in one line (all models used)
+
    <MathContainer>
    <BlockMath math="7P_7 = 7! = 7 \times 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 5040 \text{ ways}" />
    </MathContainer>
 
 2. Given: 5 running participants with different finishing order (all participants finish)
+
    <MathContainer>
    <BlockMath math="5P_5 = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120 \text{ possible orders}" />
    </MathContainer>
 
 3. Given: 6 types of food will be arranged in one straight line (all food arranged)
+
    <MathContainer>
    <BlockMath math="6P_6 = 6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720 \text{ ways}" />
    </MathContainer>
 
 4. Given: 8 different books will be arranged on one shelf (all books arranged)
+
    <MathContainer>
    <BlockMath math="8P_8 = 8! = 8 \times 7 \times 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 40320 \text{ ways}" />
    </MathContainer>

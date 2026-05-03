@@ -149,22 +149,22 @@ If the points fall from top left to bottom right and are very tightly clustered,
 
 When the points are scattered randomly without a clear linear pattern, the <InlineMath math="r" /> value will be close to 0.
 
-## How is r Calculated?
+## How Is the Correlation Coefficient Calculated?
 
-The Pearson correlation coefficient (<InlineMath math="r" />) essentially measures how **synchronously** two variables (X and Y) move relative to their own variations.
+The Pearson correlation coefficient (<InlineMath math="r" />) essentially measures how **synchronously** two variables (<InlineMath math="X" /> and <InlineMath math="Y" />) move relative to their own variations.
 
 **Imagine this:**
 
 1.  **Individual Variation:**
 
-    Each variable (X and Y) has its own variability. Some values fluctuate a lot (large variation), while others are stable (small variation). This is measured by <InlineMath math="SS_{xx}" /> for X and <InlineMath math="SS_{yy}" /> for Y (formulas below).
+    Each variable (<InlineMath math="X" /> and <InlineMath math="Y" />) has its own variability. Some values fluctuate a lot (large variation), while others are stable (small variation). This is measured by <InlineMath math="SS_{xx}" /> for X and <InlineMath math="SS_{yy}" /> for Y (formulas below).
 
 2.  **Joint Variation (Covariance):**
 
-    We also need to know how X and Y vary _together_. When X increases, does Y also tend to increase? Or decrease? This measure of joint variation is called **covariance**, calculated using <InlineMath math="SS_{xy}" />.
+    We also need to know how <InlineMath math="X" /> and <InlineMath math="Y" /> vary _together_. When X increases, does Y also tend to increase? Or decrease? This measure of joint variation is called **covariance**, calculated using <InlineMath math="SS_{xy}" />.
 
-    - If <InlineMath math="SS_{xy}" /> is large and positive: X and Y often move in the same direction.
-    - If <InlineMath math="SS_{xy}" /> is large and negative: X and Y often move in opposite directions.
+    - If <InlineMath math="SS_{xy}" /> is large and positive: <InlineMath math="X" /> and <InlineMath math="Y" /> often move in the same direction.
+    - If <InlineMath math="SS_{xy}" /> is large and negative: <InlineMath math="X" /> and <InlineMath math="Y" /> often move in opposite directions.
     - If <InlineMath math="SS_{xy}" /> is close to zero: No clear pattern of joint movement.
 
 3.  **Standardizing the Measure:**
@@ -177,7 +177,7 @@ The Pearson correlation coefficient (<InlineMath math="r" />) essentially measur
 
 The result of this division is **<InlineMath math="r" />**, the Pearson Correlation Coefficient. Because it's standardized, its value will always be between -1 and +1, regardless of the original data units. This allows us to compare the strength of linear relationships between different pairs of variables.
 
-So, the value of <InlineMath math="r" /> is determined by comparing how strongly X and Y move together relative to how much they move individually.
+So, the value of <InlineMath math="r" /> is determined by comparing how strongly <InlineMath math="X" /> and <InlineMath math="Y" /> move together relative to how much they move individually.
 
 ## Product Moment Correlation Formula
 
@@ -189,30 +189,31 @@ To calculate the value of <InlineMath math="r" /> precisely, we use formulas inv
 
 These measure how varied our data is:
 
-1.  **<InlineMath math="SS_{xx}" /> (Sum of Squares for x):** Measures how spread out the x data is from its mean.
+1.  **<InlineMath math="SS_{xx}" /> (Sum of Squares for <InlineMath math="x" />):** Measures how spread out the <InlineMath math="x" /> data is from its mean.
 
     <BlockMath math="SS_{xx} = \sum (x - \bar{x})^2 = \sum x^2 - \frac{(\sum x)^2}{n}" />
 
-2.  **<InlineMath math="SS_{yy}" /> (Sum of Squares for y):** Measures how spread out the y data is from its mean.
+2.  **<InlineMath math="SS_{yy}" /> (Sum of Squares for <InlineMath math="y" />):** Measures how spread out the <InlineMath math="y" /> data is from its mean.
 
     <BlockMath math="SS_{yy} = \sum (y - \bar{y})^2 = \sum y^2 - \frac{(\sum y)^2}{n}" />
 
-3.  **<InlineMath math="SS_{xy}" /> (Sum of Products of deviations for x and y):** Measures how x and y vary _together_.
+3.  **<InlineMath math="SS_{xy}" /> (Sum of Products of deviations for <InlineMath math="x" /> and <InlineMath math="y" />):** Measures how <InlineMath math="x" /> and <InlineMath math="y" /> vary _together_.
+
     <BlockMath math="SS_{xy} = \sum (x - \bar{x})(y - \bar{y}) = \sum xy - \frac{(\sum x)(\sum y)}{n}" />
 
 Key:
 
-- <InlineMath math="n" />: Number of data pairs (x, y).
-- <InlineMath math="\sum x" />, <InlineMath math="\sum y" />: Sum of all x and y
+- <InlineMath math="n" />: Number of data pairs <InlineMath math="(x, y)" />.
+- <InlineMath math="\sum x" />, <InlineMath math="\sum y" />: Sum of all <InlineMath math="x" /> and <InlineMath math="y" />
   values.
 - <InlineMath math="\sum x^2" />, <InlineMath math="\sum y^2" />: Sum of the squares
-  of each x and y value.
-- <InlineMath math="\sum xy" />: Sum of the product of each x and y pair.
-- <InlineMath math="\bar{x}" />, <InlineMath math="\bar{y}" />: Mean of x and y values.
+  of each <InlineMath math="x" /> and <InlineMath math="y" /> value.
+- <InlineMath math="\sum xy" />: Sum of the product of each <InlineMath math="x" /> and <InlineMath math="y" /> pair.
+- <InlineMath math="\bar{x}" />, <InlineMath math="\bar{y}" />: Mean of <InlineMath math="x" /> and <InlineMath math="y" /> values.
 
-By calculating these three SS values and plugging them into the formula for <InlineMath math="r" />, we get the Product Moment Correlation Coefficient.
+By calculating these three <InlineMath math="SS" /> values and plugging them into the formula for <InlineMath math="r" />, we get the Product Moment Correlation Coefficient.
 
-## Interpreting the Value of r
+## Interpreting the Correlation Coefficient
 
 Once we have the value of <InlineMath math="r" />, we can interpret its strength and direction using the following general guidelines:
 

@@ -10,7 +10,7 @@ export const metadata = {
 
 In real life, we often encounter situations where **the result of one event does not affect the result of another event**. Imagine you throw a coin and a die simultaneously. Does the result of the coin affect the number that appears on the die? Of course not! These two events are independent.
 
-**Independent events** are two or more events where the result of one event does not affect the probability of another event. If event A does not affect event B, and vice versa, then both events are independent.
+**Independent events** are two or more events where the result of one event does not affect the probability of another event. If event <InlineMath math="A" /> does not affect event <InlineMath math="B" />, and vice versa, then both events are independent.
 
 As a simple illustration, think about today's weather and your math exam result tomorrow. Whether it's rainy or sunny today will not affect your exam score (unless you're late because of the rain, but that's another story!). These two events are statistically independent.
 
@@ -18,11 +18,11 @@ As a simple illustration, think about today's weather and your math exam result 
 
 ### Not Mutually Affecting
 
-The main characteristic of independent events is that **the result of one event does not change the probability of another event**. In mathematical notation, if A and B are independent events, then:
+The main characteristic of independent events is that **the result of one event does not change the probability of another event**. In mathematical notation, if <InlineMath math="A" /> and <InlineMath math="B" /> are independent events, then:
 
 <BlockMath math="P(A|B) = P(A)" />
 
-This means the probability of A occurring when B has already occurred is the same as the probability of A occurring in general.
+This means the probability of <InlineMath math="A" /> occurring when <InlineMath math="B" /> has already occurred is the same as the probability of <InlineMath math="A" /> occurring in general.
 
 ### Daily Life Examples
 
@@ -43,7 +43,7 @@ Since independent events do not affect each other, calculating their joint proba
 
 <BlockMath math="P(A \cap B) = P(A) \times P(B)" />
 
-This formula shows that the probability of both events A and B occurring together equals the multiplication of the probability of each event.
+This formula shows that the probability of both events <InlineMath math="A" /> and <InlineMath math="B" /> occurring together equals the multiplication of the probability of each event.
 
 ### Why This Formula Works
 
@@ -61,16 +61,14 @@ Two dice are rolled simultaneously, one red die and one white die. Find the prob
 
 **Solution:**
 
-- Event A: getting number <InlineMath math="2" /> on the red die
-- Event B: getting number <InlineMath math="5" /> on the white die
+- Event <InlineMath math="A" />: getting number <InlineMath math="2" /> on the red die
+- Event <InlineMath math="B" />: getting number <InlineMath math="5" /> on the white die
 
 Both events are **independent** because the result of the red die does not affect the result of the white die.
 
 <MathContainer>
 <BlockMath math="P(A) = \frac{1}{6}" />
-
 <BlockMath math="P(B) = \frac{1}{6}" />
-
 <BlockMath math="P(A \cap B) = P(A) \times P(B) = \frac{1}{6} \times \frac{1}{6} = \frac{1}{36}" />
 </MathContainer>
 
@@ -84,20 +82,17 @@ A die and a coin are thrown simultaneously. Find the probability of getting an e
 
 <MathContainer>
 <BlockMath math="S_{die} = \{1, 2, 3, 4, 5, 6\}" />
-
 <BlockMath math="S_{coin} = \{H, T\}" />
 </MathContainer>
 
-- Event A: getting an even number on the die = <InlineMath math="\{2, 4, 6\}" />
-- Event B: getting tails on the coin = <InlineMath math="\{T\}" />
+- Event <InlineMath math="A" />: getting an even number on the die is <InlineMath math="\{2, 4, 6\}" />
+- Event <InlineMath math="B" />: getting tails on the coin is <InlineMath math="\{T\}" />
 
 Both events are **independent** because the result of the die does not affect the result of the coin.
 
 <MathContainer>
 <BlockMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
-
 <BlockMath math="P(B) = \frac{1}{2}" />
-
 <BlockMath math="P(A \cap B) = P(A) \times P(B) = \frac{1}{2} \times \frac{1}{2} = \frac{1}{4}" />
 </MathContainer>
 
@@ -109,8 +104,8 @@ These probability numbers represent a scenario of a large city with high emergen
 
 **Solution:**
 
-- Event A: fire truck is needed
-- Event B: ambulance is needed
+- Event <InlineMath math="A" />: fire truck is needed
+- Event <InlineMath math="B" />: ambulance is needed
 
 Both events can be considered **independent** because the need for a fire truck does not affect the need for an ambulance.
 
@@ -118,7 +113,6 @@ Both events can be considered **independent** because the need for a fire truck 
 
 <MathContainer>
 <BlockMath math="P(A \cap B) = P(A) \times P(B)" />
-
 <BlockMath math="P(A \cap B) = 0.98 \times 0.92 = 0.9016" />
 </MathContainer>
 
@@ -175,8 +169,8 @@ Pay attention to the following characteristics to identify independent events:
 
 1. **Solution:**
    
-   - Event A: heads on the first coin, <InlineMath math="P(A) = \frac{1}{2}" />
-   - Event B: tails on the second coin, <InlineMath math="P(B) = \frac{1}{2}" />
+   - Event <InlineMath math="A" />: heads on the first coin, <InlineMath math="P(A) = \frac{1}{2}" />
+   - Event <InlineMath math="B" />: tails on the second coin, <InlineMath math="P(B) = \frac{1}{2}" />
    
    Both events are independent because the result of the first coin does not affect the second coin.
    
@@ -184,8 +178,8 @@ Pay attention to the following characteristics to identify independent events:
 
 2. **Solution:**
    
-   - Event A: prime number on the die = <InlineMath math="\{2, 3, 5\}" />, so <InlineMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
-   - Event B: red card (hearts and diamonds), so <InlineMath math="P(B) = \frac{26}{52} = \frac{1}{2}" />
+   - Event <InlineMath math="A" />: prime number on the die is <InlineMath math="\{2, 3, 5\}" />, so <InlineMath math="P(A) = \frac{3}{6} = \frac{1}{2}" />
+   - Event <InlineMath math="B" />: red card (hearts and diamonds), so <InlineMath math="P(B) = \frac{26}{52} = \frac{1}{2}" />
    
    Both events are independent.
    
@@ -193,8 +187,8 @@ Pay attention to the following characteristics to identify independent events:
 
 3. **Solution:**
    
-   - Event A: passing mathematics, <InlineMath math="P(A) = 0.85" />
-   - Event B: passing physics, <InlineMath math="P(B) = 0.78" />
+   - Event <InlineMath math="A" />: passing mathematics, <InlineMath math="P(A) = 0.85" />
+   - Event <InlineMath math="B" />: passing physics, <InlineMath math="P(B) = 0.78" />
    
    Since both subjects are independent:
    
@@ -206,7 +200,7 @@ Pay attention to the following characteristics to identify independent events:
    
    **Method 1: Direct Enumeration**
    
-   Sample space for 3 coins (H = Heads, T = Tails): <InlineMath math="\{HHH, HHT, HTH, HTT, THH, THT, TTH, TTT\}" />, total = <InlineMath math="8" />
+   Sample space for 3 coins (<InlineMath math="H" /> = Heads, <InlineMath math="T" /> = Tails): <InlineMath math="\{HHH, HHT, HTH, HTT, THH, THT, TTH, TTT\}" />, total is <InlineMath math="8" />
    
    Event of exactly two tails: <InlineMath math="\{HTT, THT, TTH\}" />, there are <InlineMath math="3" /> events
    

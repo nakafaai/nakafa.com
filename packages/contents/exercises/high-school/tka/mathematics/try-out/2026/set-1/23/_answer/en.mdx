@@ -7,10 +7,10 @@ export const metadata = {
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 
-Given a regular square pyramid P.QRST with base edge <InlineMath math="3 \text{ cm}" /> and lateral edge <InlineMath math="3\sqrt{2} \text{ cm}" />
+Given a regular square pyramid <InlineMath math="P.QRST" /> with base edge <InlineMath math="3 \text{ cm}" /> and lateral edge <InlineMath math="3\sqrt{2} \text{ cm}" />
 
 <LineEquation
-  title="Pyramid P.QRST"
+  title="Square Pyramid"
   description={
     <>
       Visualization of a regular square pyramid with base edge <InlineMath math="3 \text{ cm}" /> and lateral edge <InlineMath math="3\sqrt{2} \text{ cm}" />.
@@ -142,58 +142,47 @@ Given a regular square pyramid P.QRST with base edge <InlineMath math="3 \text{ 
   ]}
 />
 
-#### Consider Triangle TQR
+#### Consider the Base Triangle
 
 Calculate the length of <InlineMath math="TR" /> using the Pythagorean theorem on the right triangle at the base
 
 <MathContainer>
 <BlockMath math="TR = \sqrt{QR^2 + QT^2}" />
-
 <BlockMath math="= \sqrt{3^2 + 3^2}" />
-
 <BlockMath math="= \sqrt{18} = 3\sqrt{2}" />
 </MathContainer>
 
-#### Calculating TO
+#### Calculating Half of the Base Diagonal
 
 Since <InlineMath math="O" /> is the center of the base, <InlineMath math="TO" /> is half of the diagonal <InlineMath math="TR" />
 
 <MathContainer>
 <BlockMath math="TO = \frac{1}{2}TR" />
-
 <BlockMath math="= \frac{1}{2} \cdot 3\sqrt{2}" />
-
 <BlockMath math="= \frac{3}{2}\sqrt{2}" />
 </MathContainer>
 
-#### Calculating PO
+#### Calculating the Pyramid Height
 
 Use the Pythagorean theorem on triangle <InlineMath math="PTO" />
 
 <MathContainer>
 <BlockMath math="PO = \sqrt{PR^2 - RO^2}" />
-
 <BlockMath math="= \sqrt{(3\sqrt{2})^2 - \left(\frac{3}{2}\sqrt{2}\right)^2}" />
-
 <BlockMath math="= \sqrt{18 - \frac{9}{2}}" />
-
 <BlockMath math="= \sqrt{\frac{27}{2}}" />
 </MathContainer>
 
 #### Calculating Tangent of Angle
 
-The tangent of angle <InlineMath math="\alpha" /> between line PT and base QRST
+The tangent of angle <InlineMath math="\alpha" /> between line <InlineMath math="PT" /> and base <InlineMath math="QRST" />
 
 <MathContainer>
 <BlockMath math="\tan \alpha = \frac{PO}{TO}" />
-
 <BlockMath math="= \frac{\sqrt{\frac{27}{2}}}{\frac{3}{2}\sqrt{2}}" />
-
 <BlockMath math="= \sqrt{\frac{27}{2}} \cdot \frac{2}{3\sqrt{2}}" />
-
 <BlockMath math="= \frac{2\sqrt{27}}{3\sqrt{2} \cdot \sqrt{2}}" />
-
 <BlockMath math="= \frac{2 \cdot 3\sqrt{3}}{3 \cdot 2} = \frac{3\sqrt{3}}{3} = \sqrt{3}" />
 </MathContainer>
 
-Therefore, the tangent of the angle between line PT and base QRST is <InlineMath math="\sqrt{3}" />
+Therefore, the tangent of the angle between line <InlineMath math="PT" /> and base <InlineMath math="QRST" /> is <InlineMath math="\sqrt{3}" />

@@ -117,7 +117,7 @@ Perhatikan bahwa:
 - Fungsi asli <InlineMath math="f(x) = x + 1" /> memiliki kemiringan 1
 - Fungsi <InlineMath math="g(x) = 3(x + 1)" /> memiliki kemiringan 3 (diregangkan)
 - Fungsi <InlineMath math="h(x) = 0.5(x + 1)" /> memiliki kemiringan 0.5 (ditekan)
-- Semua garis masih memotong sumbu y, tetapi di titik yang berbeda
+- Semua garis masih memotong sumbu <InlineMath math="y" />, tetapi di titik yang berbeda
 
 ## Sifat Penting Dilatasi Vertikal
 
@@ -134,8 +134,8 @@ Jika range fungsi asli adalah <InlineMath math="[c, d]" />, maka range setelah d
 
 ### Titik Potong Sumbu
 
-- **Titik potong sumbu x**: Tidak berubah (kecuali jika <InlineMath math="k = 0" />)
-- **Titik potong sumbu y**: Berubah sesuai faktor skala
+- **Titik potong sumbu <InlineMath math="x" />**: Tidak berubah (kecuali jika <InlineMath math="k = 0" />)
+- **Titik potong sumbu <InlineMath math="y" />**: Berubah sesuai faktor skala
 
 ## Contoh Penerapan
 
@@ -172,7 +172,7 @@ Mari kita lihat dilatasi vertikal pada fungsi eksponensial <InlineMath math="f(x
 
 Pada fungsi eksponensial:
 - Asimtot horizontal tetap di <InlineMath math="y = 0" /> untuk kedua fungsi
-- Titik potong dengan sumbu y berubah dari <InlineMath math="(0, 1)" /> menjadi <InlineMath math="(0, 2)" />
+- Titik potong dengan sumbu <InlineMath math="y" /> berubah dari <InlineMath math="(0, 1)" /> menjadi <InlineMath math="(0, 2)" />
 - Laju pertumbuhan fungsi meningkat sesuai faktor skala
 
 ## Dilatasi Vertikal dengan Faktor Negatif
@@ -207,7 +207,7 @@ Mari kita lihat apa yang terjadi ketika faktor skala bernilai negatif.
 />
 
 Ketika faktor skala negatif:
-- Grafik mengalami refleksi terhadap sumbu x
+- Grafik mengalami refleksi terhadap sumbu <InlineMath math="x" />
 - Sekaligus mengalami dilatasi sesuai nilai absolut faktor skala
 - Parabola yang membuka ke atas menjadi membuka ke bawah
 
@@ -227,7 +227,12 @@ Ketika faktor skala negatif:
 
    <LineEquation
      title={<>Fungsi <InlineMath math="f(x) = x^2 - 4x + 3" /> dan Hasil Dilatasinya</>}
-     description="Parabola asli diregangkan vertikal dengan faktor 3 menghasilkan parabola yang lebih tinggi."
+     description={
+       <>
+         Parabola asli diregangkan vertikal dengan faktor{" "}
+         <InlineMath math="3" /> menghasilkan parabola yang lebih tinggi.
+       </>
+     }
      showZAxis={false}
      cameraPosition={[12, 8, 12]}
      data={[
@@ -261,7 +266,12 @@ Ketika faktor skala negatif:
 
    <LineEquation
      title={<>Fungsi <InlineMath math="g(x) = \sqrt{x}" /> dan Hasil Dilatasinya</>}
-     description="Kurva akar kuadrat ditekan vertikal dengan faktor 0.5 menghasilkan kurva yang lebih rendah."
+     description={
+       <>
+         Kurva akar kuadrat ditekan vertikal dengan faktor{" "}
+         <InlineMath math="0{,}5" /> menghasilkan kurva yang lebih rendah.
+       </>
+     }
      showZAxis={false}
      cameraPosition={[8, 6, 8]}
      data={[

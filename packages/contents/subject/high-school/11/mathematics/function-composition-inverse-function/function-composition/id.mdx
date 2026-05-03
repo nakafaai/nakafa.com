@@ -10,8 +10,8 @@ export const metadata = {
 
 Bayangkan kamu sedang berbelanja di sebuah toko yang menawarkan dua promo menarik:
 
-1.  **Promo A:** Diskon <InlineMath math="20\%" />, lalu dipotong lagi Rp25.000,00.
-2.  **Promo B:** Potongan harga Rp25.000,00, lalu didiskon <InlineMath math="20\%" />.
+1.  **Promo A:** Diskon <InlineMath math="20\%" />, lalu dipotong lagi <InlineMath math="\text{Rp}25.000,00" />.
+2.  **Promo B:** Potongan harga <InlineMath math="\text{Rp}25.000,00" />, lalu didiskon <InlineMath math="20\%" />.
 
 Apakah kedua promo ini memberikan hasil akhir yang sama? Promo mana yang lebih menguntungkan? Untuk menjawabnya, kita perlu memahami konsep **komposisi fungsi**.
 
@@ -29,12 +29,12 @@ Secara matematis, ini ditulis sebagai:
 
 ### Perhitungan Promo
 
-Mari kita hitung hasil akhir untuk barang seharga Rp200.000,00 dengan kedua promo di atas menggunakan konsep fungsi.
+Mari kita hitung hasil akhir untuk barang seharga <InlineMath math="\text{Rp}200.000,00" /> dengan kedua promo di atas menggunakan konsep fungsi.
 
 Misalkan <InlineMath math="x" /> adalah harga awal barang.
 
 - **Fungsi diskon <InlineMath math="20\%" />:** <InlineMath math="d(x) = x - 0.20x = 0.80x" />
-- **Fungsi potongan Rp25.000,00:** <InlineMath math="p(x) = x - 25000" />
+- **Fungsi potongan <InlineMath math="\text{Rp}25.000,00" />:** <InlineMath math="p(x) = x - 25000" />
 
 Sekarang kita komposisikan kedua fungsi sesuai urutan promo:
 
@@ -46,7 +46,7 @@ Sekarang kita komposisikan kedua fungsi sesuai urutan promo:
 
     <BlockMath math="(p \circ d)(200000) = 0.80(200000) - 25000 = 160000 - 25000 = 135000" />
 
-    Jadi, harga akhir dengan Promo A adalah Rp135.000,00.
+    Jadi, harga akhir dengan Promo A adalah <InlineMath math="\text{Rp}135.000,00" />.
 
 2.  **Promo B (Potong harga dulu, baru diskon):** Kita mencari <InlineMath math="(d \circ p)(x)" />
 
@@ -56,9 +56,9 @@ Sekarang kita komposisikan kedua fungsi sesuai urutan promo:
 
     <BlockMath math="(d \circ p)(200000) = 0.80(200000) - 20000 = 160000 - 20000 = 140000" />
 
-    Jadi, harga akhir dengan Promo B adalah Rp140.000,00.
+    Jadi, harga akhir dengan Promo B adalah <InlineMath math="\text{Rp}140.000,00" />.
 
-Ternyata, urutan penerapan fungsi (diskon dan potongan harga) memengaruhi hasil akhir. Promo A (<InlineMath math="p \circ d" />) lebih menguntungkan pembeli daripada Promo B (<InlineMath math="d \circ p" />) untuk barang seharga Rp200.000,00. Ini menunjukkan bahwa secara umum, <InlineMath math="(f \circ g)(x) \neq (g \circ f)(x)" />.
+Ternyata, urutan penerapan fungsi (diskon dan potongan harga) memengaruhi hasil akhir. Promo A (<InlineMath math="p \circ d" />) lebih menguntungkan pembeli daripada Promo B (<InlineMath math="d \circ p" />) untuk barang seharga <InlineMath math="\text{Rp}200.000,00" />. Ini menunjukkan bahwa secara umum, <InlineMath math="(f \circ g)(x) \neq (g \circ f)(x)" />.
 
 ## Contoh Lain
 

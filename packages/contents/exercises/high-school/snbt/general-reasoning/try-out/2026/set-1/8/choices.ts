@@ -2,18 +2,18 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 
 const choices: ExercisesChoices = {
   id: [
-    { label: "Rp40.000.000.000,00", value: false },
-    { label: "Rp50.000.000.000,00", value: false },
-    { label: "Rp60.000.000.000,00", value: false },
-    { label: "Rp70.000.000.000,00", value: true },
-    { label: "Rp80.000.000.000,00", value: false },
+    { label: "$$\\text{Rp}40.000.000.000,00$$", value: false },
+    { label: "$$\\text{Rp}50.000.000.000,00$$", value: false },
+    { label: "$$\\text{Rp}60.000.000.000,00$$", value: false },
+    { label: "$$\\text{Rp}70.000.000.000,00$$", value: true },
+    { label: "$$\\text{Rp}80.000.000.000,00$$", value: false },
   ],
   en: [
-    { label: "Rp40,000,000,000.00", value: false },
-    { label: "Rp50,000,000,000.00", value: false },
-    { label: "Rp60,000,000,000.00", value: false },
-    { label: "Rp70,000,000,000.00", value: true },
-    { label: "Rp80,000,000,000.00", value: false },
+    { label: "$$\\text{Rp}40,000,000,000.00$$", value: false },
+    { label: "$$\\text{Rp}50,000,000,000.00$$", value: false },
+    { label: "$$\\text{Rp}60,000,000,000.00$$", value: false },
+    { label: "$$\\text{Rp}70,000,000,000.00$$", value: true },
+    { label: "$$\\text{Rp}80,000,000,000.00$$", value: false },
   ],
 };
 

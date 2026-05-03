@@ -7,10 +7,10 @@ export const metadata = {
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 import { getColor } from "@repo/design-system/lib/color";
 
-Given cube ABCD.EFGH with edge <InlineMath math="12 \text{ cm}" />
+Given cube <InlineMath math="ABCD.EFGH" /> with edge <InlineMath math="12 \text{ cm}" />
 
 <LineEquation
-  title="Cube ABCD.EFGH"
+  title="Cube"
   description={
     <>
       Visualization of a cube with edge <InlineMath math="12 \text{ cm}" /> and point <InlineMath math="P" /> at the midpoint of <InlineMath math="CG" />.
@@ -158,17 +158,14 @@ If <InlineMath math="AC" /> and <InlineMath math="PR" /> are face diagonals, the
 
 <BlockMath math="AC = PR = 12\sqrt{2}" />
 
-#### Calculating Distance from Point P to Line HB
+#### Calculating Distance to the Space Diagonal
 
 Since <InlineMath math="P" /> is the midpoint of <InlineMath math="CG" /> and <InlineMath math="O" /> is the center of the cube, then
 
 <MathContainer>
 <BlockMath math="PO = \frac{1}{2}PR" />
-
 <BlockMath math="= \frac{1}{2} \cdot 12\sqrt{2}" />
-
 <BlockMath math="= 6\sqrt{2}" />
 </MathContainer>
 
 Therefore, the distance from point <InlineMath math="P" /> to line <InlineMath math="HB" /> is <InlineMath math="6\sqrt{2} \text{ cm}" />
-

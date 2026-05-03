@@ -99,7 +99,7 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/combinatorics/filling-place-rule`,
       },
       {
-        title: "Permutation of n Items from n Objects",
+        title: "Permutation of All Objects",
         href: `${BASE_PATH}/combinatorics/permutation-of-n-items-from-n-objects`,
       },
       {
@@ -255,15 +255,15 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/derivative-function/equation-of-a-tangent-line-to-a-curve`,
       },
       {
-        title: "Increasing, Decreasing, and Stationary Function",
+        title: "Increasing, Decreasing, and Stationary Functions",
         href: `${BASE_PATH}/derivative-function/increasing-decreasing-and-stationary-function`,
       },
       {
-        title: "Extrema, Maximum and Minimum Value",
+        title: "Extreme Points, Maximum and Minimum Turning Points",
         href: `${BASE_PATH}/derivative-function/extrema-maximum-and-minimum-value`,
       },
       {
-        title: "Application of Derivative",
+        title: "Application of Derivatives",
         href: `${BASE_PATH}/derivative-function/application-of-derivative`,
       },
     ],

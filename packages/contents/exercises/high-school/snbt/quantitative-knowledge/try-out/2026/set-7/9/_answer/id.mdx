@@ -7,6 +7,7 @@ export const metadata = {
 Kita akan menyusun sandi dengan pola **Huruf - Angka - Huruf - Angka**.
 
 Misalkan slot untuk sandi tersebut adalah:
+
 <MathContainer>
   <BlockMath math="\underline{H_1} \times \underline{A_1} \times \underline{H_2} \times \underline{A_2}" />
 </MathContainer>
@@ -24,6 +25,7 @@ Aturan dan Batasan:
 Karena <InlineMath math="A_1" /> harus ganjil dan <InlineMath math="A_2" /> dipilih dari himpunan tertentu, terdapat irisan pada angka <InlineMath math="1" />. Kita perlu membagi kasus berdasarkan nilai <InlineMath math="A_2" />.
 
 #### Kasus 1 Jika Angka Kedua Adalah 1
+
 Jika kita memilih angka <InlineMath math="1" /> untuk posisi <InlineMath math="A_2" />:
 1. <InlineMath math="H_2" /> (Huruf kedua): Harus <InlineMath math="O" /> (<InlineMath math="1" /> cara).
 2. <InlineMath math="A_2" /> (Angka kedua): Harus <InlineMath math="1" /> (<InlineMath math="1" /> cara).
@@ -33,11 +35,13 @@ Jika kita memilih angka <InlineMath math="1" /> untuk posisi <InlineMath math="A
    - Pilihan: <InlineMath math="\{3, 5, 7, 9\}" /> (<InlineMath math="4" /> cara).
 
 Total cara untuk Kasus <InlineMath math="1" />:
+
 <MathContainer>
   <BlockMath math="3 \times 4 \times 1 \times 1 = 12 \text{ cara}" />
 </MathContainer>
 
 #### Kasus 2 Jika Angka Kedua Bukan 1
+
 Jika kita memilih angka selain <InlineMath math="1" /> untuk posisi <InlineMath math="A_2" /> (yaitu genap):
 1. <InlineMath math="H_2" /> (Huruf kedua): Harus <InlineMath math="O" /> (<InlineMath math="1" /> cara).
 2. <InlineMath math="A_2" /> (Angka kedua): Dipilih dari <InlineMath math="\{0, 2, 4, 6\}" /> (<InlineMath math="4" /> cara).
@@ -47,12 +51,15 @@ Jika kita memilih angka selain <InlineMath math="1" /> untuk posisi <InlineMath 
    - Pilihan: <InlineMath math="5" /> cara.
 
 Total cara untuk Kasus <InlineMath math="2" />:
+
 <MathContainer>
   <BlockMath math="3 \times 5 \times 1 \times 4 = 60 \text{ cara}" />
 </MathContainer>
 
 #### Total Kombinasi
+
 Jumlahkan hasil dari kedua kasus tersebut:
+
 <MathContainer>
   <BlockMath math="12 + 60 = 72" />
 </MathContainer>
