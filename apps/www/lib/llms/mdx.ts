@@ -18,6 +18,17 @@ export async function getCachedLlmsMdxText({
 
   cacheLife("max");
 
+  return await getLlmsMdxText({ cleanSlug, locale });
+}
+
+/** Builds uncached markdown for one article or subject MDX content page. */
+export async function getLlmsMdxText({
+  cleanSlug,
+  locale,
+}: {
+  cleanSlug: string;
+  locale: Locale;
+}) {
   const content = await Effect.runPromise(
     Effect.match(getContentMetadataWithRaw(locale, cleanSlug), {
       onFailure: () => null,
