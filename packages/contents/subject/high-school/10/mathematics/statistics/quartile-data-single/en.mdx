@@ -26,24 +26,24 @@ Okay, now how do we know the position (rank) of <InlineMath math="Q_1" />, <Inli
 
 Assume we have <InlineMath math="n" /> data points that we have sorted from smallest to largest.
 
-### Q1 (Lower Quartile)
+### Lower Quartile
 
 The formula is simple:
 
 <BlockMath math="\text{Position of } Q_1 = \text{Data point at }\frac{1}{4}(n+1)" />
 
-- **If the result is a whole number**, for example 5, then <InlineMath math="Q_1" /> is the value of the 5th data point.
-- **If the result has a decimal**, for example <InlineMath math="5.25" />, then <InlineMath math="Q_1" /> lies between the 5th and 6th data points. (There's a way to calculate its value later, but for now, we're just finding the position).
+- **If the result is a whole number**, for example <InlineMath math="5" />, then <InlineMath math="Q_1" /> is the value of the <InlineMath math="5^{\text{th}}" /> data point.
+- **If the result has a decimal**, for example <InlineMath math="5.25" />, then <InlineMath math="Q_1" /> lies between the <InlineMath math="5^{\text{th}}" /> and <InlineMath math="6^{\text{th}}" /> data points. (There's a way to calculate its value later, but for now, we're just finding the position).
 
 **Simple Example:**
 
-Suppose we have 20 data points (<InlineMath math="n=20" />).
+Suppose we have <InlineMath math="20" /> data points (<InlineMath math="n=20" />).
 
-Position of <InlineMath math="Q_1" /> = Data point at <InlineMath math="\frac{1}{4}(20+1)" /> = Data point at <InlineMath math="\frac{21}{4}" /> = Data point at 5.25.
+Position of <InlineMath math="Q_1" /> = Data point at <InlineMath math="\frac{1}{4}(20+1)" /> = Data point at <InlineMath math="\frac{21}{4}" /> = Data point at <InlineMath math="5.25" />.
 
-This means <InlineMath math="Q_1" /> is between the 5th and 6th data points.
+This means <InlineMath math="Q_1" /> is between the <InlineMath math="5^{\text{th}}" /> and <InlineMath math="6^{\text{th}}" /> data points.
 
-### Q2 (Median or Middle Quartile)
+### Middle Quartile
 
 This is the median, so the formula is:
 
@@ -51,16 +51,16 @@ This is the median, so the formula is:
 
 The rules are the same as for <InlineMath math="Q_1" />:
 
-- **If the result is a whole number**, say 10, <InlineMath math="Q_2" /> is the value of the 10th data point.
-- **If the result has a decimal**, say 10.5, <InlineMath math="Q_2" /> is between the 10th and 11th data points.
+- **If the result is a whole number**, say <InlineMath math="10" />, <InlineMath math="Q_2" /> is the value of data point <InlineMath math="10" />.
+- **If the result has a decimal**, say <InlineMath math="10.5" />, <InlineMath math="Q_2" /> is between data points <InlineMath math="10" /> and <InlineMath math="11" />.
 
 **Simple Example (<InlineMath math="n=20" />):**
 
-Position of <InlineMath math="Q_2" /> = Data point at <InlineMath math="\frac{1}{2}(20+1)" /> = Data point at <InlineMath math="\frac{21}{2}" /> = Data point at 10.5.
+Position of <InlineMath math="Q_2" /> = Data point at <InlineMath math="\frac{1}{2}(20+1)" /> = Data point at <InlineMath math="\frac{21}{2}" /> = Data point at <InlineMath math="10.5" />.
 
-This means <InlineMath math="Q_2" /> (the median) is between the 10th and 11th data points.
+This means <InlineMath math="Q_2" /> (the median) is between data points <InlineMath math="10" /> and <InlineMath math="11" />.
 
-### Q3 (Upper Quartile)
+### Upper Quartile
 
 The formula is similar again:
 
@@ -68,26 +68,26 @@ The formula is similar again:
 
 The rules are exactly the same:
 
-- **If the result is a whole number**, say 15, <InlineMath math="Q_3" /> is the value of the 15th data point.
-- **If the result has a decimal**, say 15.75, <InlineMath math="Q_3" /> is between the 15th and 16th data points.
+- **If the result is a whole number**, say <InlineMath math="15" />, <InlineMath math="Q_3" /> is the value of data point <InlineMath math="15" />.
+- **If the result has a decimal**, say <InlineMath math="15.75" />, <InlineMath math="Q_3" /> is between data points <InlineMath math="15" /> and <InlineMath math="16" />.
 
 **Simple Example (<InlineMath math="n=20" />):**
 
-Position of <InlineMath math="Q_3" /> = Data point at <InlineMath math="\frac{3}{4}(20+1)" /> = Data point at <InlineMath math="\frac{63}{4}" /> = Data point at 15.75.
+Position of <InlineMath math="Q_3" /> = Data point at <InlineMath math="\frac{3}{4}(20+1)" /> = Data point at <InlineMath math="\frac{63}{4}" /> = Data point at <InlineMath math="15.75" />.
 
-This means <InlineMath math="Q_3" /> is between the 15th and 16th data points.
+This means <InlineMath math="Q_3" /> is between data points <InlineMath math="15" /> and <InlineMath math="16" />.
 
 ## Exercise
 
-Try to find the position of <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" /> from the math test scores of these 7 children:
+Try to find the position of <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" /> from the math test scores of these <InlineMath math="7" /> children:
 
-**Scores:** 7, 5, 8, 6, 9, 7, 10
+**Scores:** <InlineMath math="7, 5, 8, 6, 9, 7, 10" />
 
 **Step 1: Sort the data first!**
 
-Sorted data: 5, 6, 7, 7, 8, 9, 10
+Sorted data: <InlineMath math="5, 6, 7, 7, 8, 9, 10" />
 
-Number of data points (<InlineMath math="n" />) = 7
+Number of data points: <InlineMath math="n = 7" />
 
 **Step 2: Find the quartile positions using the formulas**
 
@@ -95,29 +95,29 @@ Number of data points (<InlineMath math="n" />) = 7
 
   <InlineMath math="\text{Data point at }\frac{1}{4}(n+1) = \text{Data point at }\frac{1}{4}(7+1) = \text{Data point at }\frac{8}{4} = \text{Data point at }2" />
 
-  The result is a whole number (2), so <InlineMath math="Q_1" /> is the 2nd data point.
+  The result is a whole number (2), so <InlineMath math="Q_1" /> is the <InlineMath math="2" />nd data point.
 
 - **Position of <InlineMath math="Q_2" /> (Median):**
 
   <InlineMath math="\text{Data point at }\frac{1}{2}(n+1) = \text{Data point at }\frac{1}{2}(7+1) = \text{Data point at }\frac{8}{2} = \text{Data point at }4" />
 
-  The result is a whole number (4), so <InlineMath math="Q_2" /> is the 4th data point.
+  The result is a whole number (4), so <InlineMath math="Q_2" /> is the <InlineMath math="4" />th data point.
 
 - **Position of <InlineMath math="Q_3" />:**
 
   <InlineMath math="\text{Data point at }\frac{3}{4}(n+1) = \text{Data point at }\frac{3}{4}(7+1) = \text{Data point at }\frac{24}{4} = \text{Data point at }6" />
 
-  The result is a whole number (6), so <InlineMath math="Q_3" /> is the 6th data point.
+  The result is a whole number (6), so <InlineMath math="Q_3" /> is the <InlineMath math="6" />th data point.
 
 **Step 3: Determine the quartile values**
 
 Look at the sorted data: 5, 6, 7, 7, 8, 9, 10
 
-- <InlineMath math="Q_1" /> = 2nd data point = **6**
-- <InlineMath math="Q_2" /> = 4th data point = **7**
-- <InlineMath math="Q_3" /> = 6th data point = **9**
+- <InlineMath math="Q_1" /> is <InlineMath math="2" />nd data point = **6**
+- <InlineMath math="Q_2" /> is <InlineMath math="4" />th data point = **7**
+- <InlineMath math="Q_3" /> is <InlineMath math="6" />th data point = **9**
 
-## The Fourth Quartile (Q4)
+## The Fourth Quartile
 
 You might be wondering, "If there's <InlineMath math="Q_1" />, <InlineMath math="Q_2" />, and <InlineMath math="Q_3" />, is there a <InlineMath math="Q_4" />?"
 

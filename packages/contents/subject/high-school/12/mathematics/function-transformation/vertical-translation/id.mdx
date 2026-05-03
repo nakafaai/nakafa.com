@@ -11,7 +11,7 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 
 ## Konsep Dasar Translasi Vertikal
 
-Translasi vertikal adalah transformasi geometri yang menggeser grafik fungsi ke atas atau ke bawah sepanjang sumbu y tanpa mengubah bentuk grafik tersebut. Bayangkan seperti mengangkat atau menurunkan sebuah objek secara vertikal, bentuknya tetap sama, hanya posisinya yang berubah.
+Translasi vertikal adalah transformasi geometri yang menggeser grafik fungsi ke atas atau ke bawah sepanjang sumbu <InlineMath math="y" /> tanpa mengubah bentuk grafik tersebut. Bayangkan seperti mengangkat atau menurunkan sebuah objek secara vertikal, bentuknya tetap sama, hanya posisinya yang berubah.
 
 Jika kita memiliki fungsi <InlineMath math="f(x)" />, maka translasi vertikal menghasilkan fungsi baru <InlineMath math="g(x) = f(x) + k" /> dimana <InlineMath math="k" /> adalah konstanta translasi.
 
@@ -174,7 +174,7 @@ Mari kita lihat translasi vertikal pada fungsi eksponensial <InlineMath math="f(
 
 Pada fungsi eksponensial:
 - Asimtot horizontal <InlineMath math="y = 0" /> pada <InlineMath math="f(x) = 2^x" /> bergeser menjadi <InlineMath math="y = k" /> pada <InlineMath math="f(x) + k" />
-- Titik potong dengan sumbu y bergeser dari <InlineMath math="(0, 1)" /> menjadi <InlineMath math="(0, 1 + k)" />
+- Titik potong dengan sumbu <InlineMath math="y" /> bergeser dari <InlineMath math="(0, 1)" /> menjadi <InlineMath math="(0, 1 + k)" />
 
 ## Latihan
 
@@ -182,7 +182,7 @@ Pada fungsi eksponensial:
 
 2. Jika grafik fungsi <InlineMath math="g(x) = 3x + 2" /> ditranslasi vertikal ke bawah sebesar <InlineMath math="7 \text{ satuan}" />, tentukan:
    - Persamaan fungsi hasil translasi
-   - Titik potong dengan sumbu y setelah translasi
+   - Titik potong dengan sumbu <InlineMath math="y" /> setelah translasi
 
 3. Fungsi <InlineMath math="h(x) = \sqrt{x}" /> mengalami translasi vertikal sehingga titik <InlineMath math="(4, 2)" /> menjadi <InlineMath math="(4, 5)" />. Tentukan nilai konstanta translasi dan persamaan fungsi hasil translasi.
 
@@ -192,7 +192,7 @@ Pada fungsi eksponensial:
 
    <LineEquation
      title={<>Fungsi <InlineMath math="f(x) = x^2 + 4x + 3" /> dan Hasil Translasinya</>}
-     description="Fungsi kuadrat asli dan hasil translasi vertikal ke atas 5 satuan."
+     description={<>Fungsi kuadrat asli dan hasil translasi vertikal ke atas <InlineMath math="5 \text{ satuan}" />.</>}
      showZAxis={false}
      data={[
        {
@@ -219,13 +219,13 @@ Pada fungsi eksponensial:
 2. Persamaan fungsi hasil translasi:
     
    - Translasi ke bawah <InlineMath math="7 \text{ satuan}" />: <InlineMath math="g'(x) = g(x) + (-7) = 3x + 2 + (-7) = 3x + (-5)" />
-   - Titik potong dengan sumbu y: substitusi <InlineMath math="x = 0" /> ke <InlineMath math="g'(x) = 3(0) + (-5) = -5" />, jadi titik potongnya adalah <InlineMath math="(0, -5)" />
+   - Titik potong dengan sumbu <InlineMath math="y" />: substitusi <InlineMath math="x = 0" /> ke <InlineMath math="g'(x) = 3(0) + (-5) = -5" />, jadi titik potongnya adalah <InlineMath math="(0, -5)" />
 
    Visualisasi:
 
    <LineEquation
      title={<>Fungsi <InlineMath math="g(x) = 3x + 2" /> dan Hasil Translasinya</>}
-     description="Fungsi linear asli dan hasil translasi vertikal ke bawah 7 satuan."
+     description={<>Fungsi linear asli dan hasil translasi vertikal ke bawah <InlineMath math="7 \text{ satuan}" />.</>}
      showZAxis={false}
      data={[
        {
@@ -254,7 +254,7 @@ Pada fungsi eksponensial:
 
    <LineEquation
      title={<>Fungsi <InlineMath math="h(x) = \sqrt{x}" /> dan Hasil Translasinya</>}
-     description="Fungsi akar kuadrat asli dan hasil translasi vertikal ke atas 3 satuan."
+     description={<>Fungsi akar kuadrat asli dan hasil translasi vertikal ke atas <InlineMath math="3 \text{ satuan}" />.</>}
      showZAxis={false}
      data={[
        {

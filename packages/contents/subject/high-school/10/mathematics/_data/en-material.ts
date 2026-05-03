@@ -37,7 +37,7 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/exponential-logarithm/exponential-decay`,
       },
       {
-        title: "Radical Forms",
+        title: "Radical Form",
         href: `${BASE_PATH}/exponential-logarithm/radical-form`,
       },
       {
@@ -61,7 +61,7 @@ const enMaterials: MaterialList = [
     href: `${BASE_PATH}/sequence-series`,
     items: [
       {
-        title: "Sequence Concepts",
+        title: "Sequence Concept",
         href: `${BASE_PATH}/sequence-series/sequence-concept`,
       },
       {
@@ -93,7 +93,7 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/sequence-series/infinite-geometric-series`,
       },
       {
-        title: "Difference between Convergence and Divergence",
+        title: "Difference Between Convergence and Divergence",
         href: `${BASE_PATH}/sequence-series/convergence-divergence`,
       },
       {
@@ -153,7 +153,7 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/vector-operations/position-vector`,
       },
       {
-        title: "Opposite Vector",
+        title: "Reciprocal Vector",
         href: `${BASE_PATH}/vector-operations/opposite-vector`,
       },
       {

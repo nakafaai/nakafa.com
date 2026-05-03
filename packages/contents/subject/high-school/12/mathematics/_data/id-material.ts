@@ -101,7 +101,7 @@ const idMaterials: MaterialList = [
         href: `${BASE_PATH}/combinatorics/filling-place-rule`,
       },
       {
-        title: "Permutasi n Item dari n Objek",
+        title: "Permutasi Semua Objek",
         href: `${BASE_PATH}/combinatorics/permutation-of-n-items-from-n-objects`,
       },
       {

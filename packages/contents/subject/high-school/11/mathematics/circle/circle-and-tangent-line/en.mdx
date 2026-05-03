@@ -85,7 +85,12 @@ From a point outside the circle, two tangent lines can be drawn to the circle.
 
 <LineEquation
   title="Two Tangent Lines from External Point"
-  description="From point P outside the circle, two tangent lines can be drawn."
+  description={
+    <>
+      From point <InlineMath math="P" /> outside the circle, two tangent lines can
+      be drawn.
+    </>
+  }
   data={[
     {
       points: Array.from({ length: 361 }, (_, i) => {

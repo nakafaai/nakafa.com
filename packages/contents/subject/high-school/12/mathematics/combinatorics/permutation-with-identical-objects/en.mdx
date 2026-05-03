@@ -10,11 +10,11 @@ export const metadata = {
 
 **Permutation with identical objects** is an arrangement of objects where there are several objects that are identical or the same. When there are identical objects, the number of different arrangements will decrease because **exchanging identical objects does not produce new arrangements**.
 
-Imagine arranging letters from the word "MAMA". Although there are 4 letters, we cannot distinguish between the first M and the second M, or the first A and the second A. As a result, arrangements that look different but use the same letters in different positions are considered identical.
+Imagine arranging letters from the word "MAMA". Although there are <InlineMath math="4" /> letters, we cannot distinguish between the first <InlineMath math="M" /> and the second <InlineMath math="M" />, or the first <InlineMath math="A" /> and the second <InlineMath math="A" />. As a result, arrangements that look different but use the same letters in different positions are considered identical.
 
 ## Formula for Identical Object Permutation
 
-For permutation of n objects where there are identical objects, **the formula used** is:
+For permutation of <InlineMath math="n" /> objects where there are identical objects, **the formula used** is:
 
 <MathContainer>
 <BlockMath math="P = \frac{n!}{r_1! \times r_2! \times r_3! \times \cdots \times r_k!}" />
@@ -37,9 +37,9 @@ Let's calculate how many letter arrangements can be made from the word "KALIMANT
 **Systematic identification steps:**
 Write letters one by one: K-A-L-I-M-A-N-T-A-N
 
-Total letters: 10
+Total letters: <InlineMath math="10" />
 
-Letter identification: K appears 1 time, A appears 3 times (positions 2, 6, 9), L appears 1 time, I appears 1 time, M appears 1 time, N appears 2 times (positions 7, 10), T appears 1 time
+Letter identification: <InlineMath math="K" /> appears <InlineMath math="1 \text{ time}" />, <InlineMath math="A" /> appears <InlineMath math="3 \text{ times}" /> (positions <InlineMath math="2, 6, 9" />), <InlineMath math="L" /> appears <InlineMath math="1 \text{ time}" />, <InlineMath math="I" /> appears <InlineMath math="1 \text{ time}" />, <InlineMath math="M" /> appears <InlineMath math="1 \text{ time}" />, <InlineMath math="N" /> appears <InlineMath math="2 \text{ times}" /> (positions <InlineMath math="7, 10" />), and <InlineMath math="T" /> appears <InlineMath math="1 \text{ time}" />
 
 **Calculation:**
 
@@ -63,10 +63,10 @@ Calculate step by step:
 
 ### Example Word PALAPA
 
-For the word "PALAPA" with 6 letters:
+For the word "PALAPA" with <InlineMath math="6" /> letters:
 Write letters one by one: P-A-L-A-P-A
 
-**Letter identification:** P appears 2 times (positions 1, 5), A appears 3 times (positions 2, 4, 6), L appears 1 time
+**Letter identification:** <InlineMath math="P" /> appears <InlineMath math="2 \text{ times}" /> (positions <InlineMath math="1, 5" />), <InlineMath math="A" /> appears <InlineMath math="3 \text{ times}" /> (positions <InlineMath math="2, 4, 6" />), and <InlineMath math="L" /> appears <InlineMath math="1 \text{ time}" />
 
 Calculate each factorial:
 - <InlineMath math="6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720" />
@@ -116,9 +116,9 @@ Let's apply these steps to find arrangements of the word "BANANA":
 3. **Count frequency**
 
    Count how many times each letter appears:
-   - B appears 1 time
-   - A appears 3 times
-   - N appears 2 times
+   - <InlineMath math="B" /> appears <InlineMath math="1 \text{ time}" />
+   - A appears <InlineMath math="3 \text{ times}" />
+   - N appears <InlineMath math="2 \text{ times}" />
 
 4. **Apply formula**
 
@@ -180,11 +180,11 @@ Identical objects **reduce** the number of arrangements because exchanging ident
 
 ### Answer Key
 
-1. The word "MATEMATIKA" has 10 letters
+1. The word "MATEMATIKA" has <InlineMath math="10" /> letters
 
    **Letters one by one:** M-A-T-E-M-A-T-I-K-A
    
-   **Letter identification:** M appears 2 times (positions 1, 5), A appears 3 times (positions 2, 6, 10), T appears 2 times (positions 3, 7), E appears 1 time, I appears 1 time, K appears 1 time
+   **Letter identification:** <InlineMath math="M" /> appears <InlineMath math="2 \text{ times}" /> (positions <InlineMath math="1, 5" />), <InlineMath math="A" /> appears <InlineMath math="3 \text{ times}" /> (positions <InlineMath math="2, 6, 10" />), <InlineMath math="T" /> appears <InlineMath math="2 \text{ times}" /> (positions <InlineMath math="3, 7" />), <InlineMath math="E" /> appears <InlineMath math="1 \text{ time}" />, <InlineMath math="I" /> appears <InlineMath math="1 \text{ time}" />, and <InlineMath math="K" /> appears <InlineMath math="1 \text{ time}" />
    
    Simplify the fraction by canceling common factors:
    
@@ -199,7 +199,7 @@ Identical objects **reduce** the number of arrangements because exchanging ident
    - Complete calculation: <InlineMath math="10 \times 9 \times 8 \times 7 \times 6 \times 5 \times 4 = 604,800" />
    - Divide by 4: <InlineMath math="\frac{604,800}{4} = 151,200 \text{ arrangements}" />
 
-2. Total 8 flowers with red 3, white 3, yellow 2
+2. Total <InlineMath math="8" /> flowers with red <InlineMath math="3" />, white <InlineMath math="3" />, and yellow <InlineMath math="2" />
    
    Simplify the fraction by canceling common factors:
    
@@ -216,9 +216,9 @@ Identical objects **reduce** the number of arrangements because exchanging ident
    - So: <InlineMath math="8 \times 7 \times \frac{1}{2} \times 5 \times 4" />
    - <InlineMath math="= 4 \times 7 \times 5 \times 4 = 560 \text{ ways}" />
 
-3. Digits 1, 1, 2, 2, 2, 3 (total 6 digits)
+3. Digits <InlineMath math="1, 1, 2, 2, 2, 3" /> (total <InlineMath math="6" /> digits)
    
-   **Digit identification:** digit 1 appears 2 times, digit 2 appears 3 times, digit 3 appears 1 time
+   **Digit identification:** digit <InlineMath math="1" /> appears <InlineMath math="2 \text{ times}" />, digit <InlineMath math="2" /> appears <InlineMath math="3 \text{ times}" />, and digit <InlineMath math="3" /> appears <InlineMath math="1 \text{ time}" />
    
    Simplify the fraction by canceling common factors:
    
@@ -233,11 +233,11 @@ Identical objects **reduce** the number of arrangements because exchanging ident
    - Divide 6 by 2: <InlineMath math="\frac{6}{2} = 3" />
    - So: <InlineMath math="3 \times 5 \times 4 = 60 \text{ numbers}" />
 
-4. The word "INDONESIA" has 9 letters
+4. The word "INDONESIA" has <InlineMath math="9" /> letters
    
    **Letters one by one:** I-N-D-O-N-E-S-I-A
    
-   **Letter identification:** I appears 2 times (positions 1, 8), N appears 2 times (positions 2, 5), D appears 1 time, O appears 1 time, E appears 1 time, S appears 1 time, A appears 1 time
+   **Letter identification:** <InlineMath math="I" /> appears <InlineMath math="2 \text{ times}" /> (positions <InlineMath math="1, 8" />), <InlineMath math="N" /> appears <InlineMath math="2 \text{ times}" /> (positions <InlineMath math="2, 5" />), <InlineMath math="D" /> appears <InlineMath math="1 \text{ time}" />, <InlineMath math="O" /> appears <InlineMath math="1 \text{ time}" />, <InlineMath math="E" /> appears <InlineMath math="1 \text{ time}" />, <InlineMath math="S" /> appears <InlineMath math="1 \text{ time}" />, and <InlineMath math="A" /> appears <InlineMath math="1 \text{ time}" />
    
    Simplify the fraction by canceling common factors:
    

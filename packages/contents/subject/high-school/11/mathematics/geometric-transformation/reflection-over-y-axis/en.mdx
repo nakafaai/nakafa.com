@@ -28,13 +28,13 @@ Note that the value of the <InlineMath math="y" />-coordinate does not change, w
 
 ## Reflecting a Point
 
-Suppose we have point <InlineMath math="A(3, 4)" />. If point A is reflected over the <InlineMath math="y" />-axis, its image, <InlineMath math="A'" />, can be determined as follows:
+Suppose we have point <InlineMath math="A(3, 4)" />. If point <InlineMath math="A" /> is reflected over the <InlineMath math="y" />-axis, its image, <InlineMath math="A'" />, can be determined as follows:
 
 The original <InlineMath math="x" />-coordinate is <InlineMath math="3" />, so <InlineMath math="x' = -3" />.
 
 The original <InlineMath math="y" />-coordinate is <InlineMath math="4" />, so <InlineMath math="y' = 4" />.
 
-Thus, the image of point A is <InlineMath math="A'(-3, 4)" />.
+Thus, the image of point <InlineMath math="A" /> is <InlineMath math="A'(-3, 4)" />.
 
 Let's visualize this:
 
@@ -45,7 +45,12 @@ Let's visualize this:
       <InlineMath math="A'(-3,4)" />
     </>
   }
-  description="Visualization of the reflection of point A over the Y-axis."
+  description={
+    <>
+      Visualization of the reflection of point <InlineMath math="A" /> over the{" "}
+      <InlineMath math="y" />-axis.
+    </>
+  }
   data={[
     {
       points: [{ x: 3, y: 4, z: 0 }],
@@ -83,7 +88,12 @@ By connecting the image points <InlineMath math="P'Q'R'" />, we obtain the refle
       <InlineMath math="P'Q'R'" />
     </>
   }
-  description="Visualization of the reflection of triangle PQR over the Y-axis."
+  description={
+    <>
+      Visualization of the reflection of triangle <InlineMath math="PQR" /> over
+      the <InlineMath math="y" />-axis.
+    </>
+  }
   data={[
     ...[
       {
@@ -159,7 +169,7 @@ Let's visualize these two lines:
       <InlineMath math="y = -x + 2" />
     </>
   }
-  description="Reflection of a line over the Y-axis."
+  description={<>Reflection of a line over the <InlineMath math="y" />-axis.</>}
   data={[
     {
       // Original Line y = x + 2

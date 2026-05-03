@@ -10,26 +10,26 @@ export const metadata = {
 
 We learned about [mutually exclusive events](/subject/high-school/10/mathematics/probability/two-events-mutually-exclusive) that can't happen together (like turning left and right at the same time). Now, let's talk about **Non-Mutually Exclusive Events**. These are two (or more) events that **CAN happen at the same time** in a single experiment.
 
-This means it's possible to get an outcome that belongs to event A and also belongs to event B.
+This means it's possible to get an outcome that belongs to event <InlineMath math="A" /> and also belongs to event <InlineMath math="B" />.
 
 **Simple Examples:**
 
 1.  **Drawing a Card:** You draw one card from a standard deck.
 
-    - Event A: Getting a **Heart** (<InlineMath math="\heartsuit" />).
-    - Event B: Getting a **King**.
-      Can events A and B happen together? Absolutely! There's a card that is both a Heart and a King: the **King of Hearts** (<InlineMath math="K\heartsuit" />). Since they can happen together, events A and B are **non-mutually exclusive**.
+    - Event <InlineMath math="A" />: Getting a **Heart** (<InlineMath math="\heartsuit" />).
+    - Event <InlineMath math="B" />: Getting a **King**.
+      Can events <InlineMath math="A" /> and <InlineMath math="B" /> happen together? Absolutely! There's a card that is both a Heart and a King: the **King of Hearts** (<InlineMath math="K\heartsuit" />). Since they can happen together, events <InlineMath math="A" /> and <InlineMath math="B" /> are **non-mutually exclusive**.
 
 2.  **Rolling a Die (once):**
-    - Event A: Getting an **even** number (<InlineMath math="\{2, 4, 6\}" />).
-    - Event B: Getting a number **greater than 3** (<InlineMath math="\{4, 5, 6\}" />).
-      Can these happen together? Yes! The numbers <InlineMath math="4" /> and <InlineMath math="6" /> are both even and greater than 3. So, events A and B are **non-mutually exclusive**.
+    - Event <InlineMath math="A" />: Getting an **even** number (<InlineMath math="\{2, 4, 6\}" />).
+    - Event <InlineMath math="B" />: Getting a number **greater than 3** (<InlineMath math="\{4, 5, 6\}" />).
+      Can these happen together? Yes! The numbers <InlineMath math="4" /> and <InlineMath math="6" /> are both even and greater than 3. So, events <InlineMath math="A" /> and <InlineMath math="B" /> are **non-mutually exclusive**.
 
 ## The Intersection is Important!
 
 In non-mutually exclusive events, there's a part that belongs to both events simultaneously. This part is called the **intersection**.
 
-Because there is an intersection, the probability of event A **AND** B happening together is **greater than zero**.
+Because there is an intersection, the probability of event <InlineMath math="A" /> **AND** B happening together is **greater than zero**.
 
 <BlockMath math="P(A \text{ and} B) > 0" />
 
@@ -39,9 +39,9 @@ Or using the intersection symbol:
 
 This is very different from mutually exclusive events, where <InlineMath math="P(A \cap B) = 0" />.
 
-## Calculating P(A OR B) for Non-Mutually Exclusive Events
+## Calculating Combined Probability for Non-Mutually Exclusive Events
 
-Since there's a chance that events A and B can happen together, we can't just add <InlineMath math="P(A) + P(B)" /> to find <InlineMath math="P(A \text{ or} B)" />.
+Since there's a chance that events <InlineMath math="A" /> and <InlineMath math="B" /> can happen together, we can't just add <InlineMath math="P(A) + P(B)" /> to find <InlineMath math="P(A \text{ or} B)" />.
 
 Why not? Because if we simply add them, the intersection part (<InlineMath math="A \cap B" />) gets **counted twice**, once in <InlineMath math="P(A)" /> and again in <InlineMath math="P(B)" />.
 
@@ -59,9 +59,9 @@ This formula works generally, for both mutually exclusive and non-mutually exclu
 
 Let's use the card example:
 
-- Event A: Getting a Heart (<InlineMath math="\heartsuit" />). There are 13 Hearts in <InlineMath math="52 \text{ cards}" />. <InlineMath math="P(A) = 13/52" />.
-- Event B: Getting a King. There are 4 Kings in <InlineMath math="52 \text{ cards}" />. <InlineMath math="P(B) = 4/52" />.
-- Event A **and** B: Getting the King of Hearts (<InlineMath math="K\heartsuit" />). There is only 1 King of Hearts. <InlineMath math="P(A \cap B) = 1/52" />.
+- Event <InlineMath math="A" />: Getting a Heart (<InlineMath math="\heartsuit" />). There are <InlineMath math="13" /> Hearts in <InlineMath math="52 \text{ cards}" />. <InlineMath math="P(A) = 13/52" />.
+- Event <InlineMath math="B" />: Getting a King. There are <InlineMath math="4" /> Kings in <InlineMath math="52 \text{ cards}" />. <InlineMath math="P(B) = 4/52" />.
+- Event <InlineMath math="A" /> **and** B: Getting the King of Hearts (<InlineMath math="K\heartsuit" />). There is only <InlineMath math="1" /> King of Hearts. <InlineMath math="P(A \cap B) = 1/52" />.
 
 So, the probability of getting a Heart OR a King is:
 

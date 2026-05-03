@@ -18,7 +18,7 @@ Sebagai ilustrasi sederhana, bayangkan kamu melempar sebuah dadu dan sebuah koin
 
 ### Kejadian Saling Lepas
 
-Dua kejadian dikatakan **saling lepas** ketika kedua kejadian tersebut tidak dapat terjadi bersamaan dalam satu percobaan. Dengan kata lain, jika kejadian A terjadi, maka kejadian B pasti tidak terjadi, begitu juga sebaliknya.
+Dua kejadian dikatakan **saling lepas** ketika kedua kejadian tersebut tidak dapat terjadi bersamaan dalam satu percobaan. Dengan kata lain, jika kejadian <InlineMath math="A" /> terjadi, maka kejadian <InlineMath math="B" /> pasti tidak terjadi, begitu juga sebaliknya.
 
 Contoh klasik adalah pelemparan satu dadu. Kejadian munculnya angka genap dan kejadian munculnya angka ganjil adalah saling lepas, karena dalam satu lemparan tidak mungkin muncul angka yang sekaligus genap dan ganjil.
 
@@ -32,10 +32,10 @@ Sebuah dadu dilempar satu kali. Tentukan peluang munculnya angka genap atau angk
 
 **Penyelesaian:**
 
-Ruang sampel: S = <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />
+Ruang sampel: <InlineMath math="S = \{1, 2, 3, 4, 5, 6\}" />
 
-- Kejadian A (angka genap): A = <InlineMath math="\{2, 4, 6\}" />
-- Kejadian B (angka 1 atau 3): B = <InlineMath math="\{1, 3\}" />
+- Kejadian <InlineMath math="A" /> (angka genap): <InlineMath math="A = \{2, 4, 6\}" />
+- Kejadian <InlineMath math="B" /> (angka 1 atau 3): <InlineMath math="B = \{1, 3\}" />
 
 Periksa irisan: <InlineMath math="A \cap B = \emptyset" /> (himpunan kosong)
 
@@ -69,8 +69,8 @@ Dari sekotak kartu bridge standar, satu kartu diambil secara acak. Tentukan pelu
 
 Total kartu = 52
 
-- Kejadian A (kartu merah): <InlineMath math="26 \text{ kartu}" /> (13 Hati + 13 Wajik)
-- Kejadian B (kartu bergambar): <InlineMath math="12 \text{ kartu}" /> (4 Jack + 4 Queen + 4 King)
+- Kejadian <InlineMath math="A" /> (kartu merah): <InlineMath math="26 \text{ kartu}" /> (<InlineMath math="13" /> Hati + <InlineMath math="13" /> Wajik)
+- Kejadian <InlineMath math="B" /> (kartu bergambar): <InlineMath math="12 \text{ kartu}" /> (<InlineMath math="4" /> Jack + <InlineMath math="4" /> Queen + <InlineMath math="4" /> King)
 
 Irisan (kartu merah dan bergambar): <InlineMath math="6 \text{ kartu}" /> (Jack, Queen, King dari Hati dan Wajik)
 
@@ -100,8 +100,8 @@ Dua dadu dilempar secara bersamaan. Tentukan peluang munculnya angka 3 pada dadu
 
 **Penyelesaian:**
 
-- Kejadian A (angka 3 pada dadu pertama): 1 kemungkinan dari 6
-- Kejadian B (angka genap pada dadu kedua): <InlineMath math="\{2, 4, 6\}" /> = 3 kemungkinan dari 6
+- Kejadian <InlineMath math="A" /> (angka 3 pada dadu pertama): <InlineMath math="1 \text{ kemungkinan}" /> dari <InlineMath math="6" />
+- Kejadian <InlineMath math="B" /> (angka genap pada dadu kedua): <InlineMath math="\{2, 4, 6\} = 3 \text{ kemungkinan}" /> dari <InlineMath math="6" />
 
 Karena hasil dadu pertama tidak mempengaruhi dadu kedua, maka kedua kejadian saling bebas.
 
@@ -123,7 +123,7 @@ Rumus untuk kejadian tidak saling bebas:
 
 <BlockMath math="P(A \cap B) = P(A) \times P(B|A)" />
 
-dimana <InlineMath math="P(B|A)" /> adalah peluang kejadian B terjadi dengan syarat kejadian A telah terjadi.
+dimana <InlineMath math="P(B|A)" /> adalah peluang kejadian <InlineMath math="B" /> terjadi dengan syarat kejadian <InlineMath math="A" /> telah terjadi.
 
 **Contoh Perhitungan:**
 
@@ -131,10 +131,10 @@ Dalam sebuah kotak terdapat <InlineMath math="8 \text{ bola}" /> biru dan <Inlin
 
 **Penyelesaian:**
 
-Total bola awal = <InlineMath math="8 + 4 = 12 \text{ bola}" />
+Total bola awal adalah <InlineMath math="8 + 4 = 12 \text{ bola}" />
 
-- Kejadian A (bola pertama biru): <InlineMath math="8 \text{ bola}" /> biru dari <InlineMath math="12 \text{ bola}" /> total
-- Kejadian B (bola kedua biru setelah A): Karena <InlineMath math="1 \text{ bola}" /> biru sudah diambil, tersisa <InlineMath math="7 \text{ bola}" /> biru dari <InlineMath math="11 \text{ bola}" /> total
+- Kejadian <InlineMath math="A" /> (bola pertama biru): <InlineMath math="8 \text{ bola}" /> biru dari <InlineMath math="12 \text{ bola}" /> total
+- Kejadian <InlineMath math="B" /> (bola kedua biru setelah <InlineMath math="A" />): Karena <InlineMath math="1 \text{ bola}" /> biru sudah diambil, tersisa <InlineMath math="7 \text{ bola}" /> biru dari <InlineMath math="11 \text{ bola}" /> total
 
 Karena pengambilan tanpa pengembalian, kondisi berubah setelah pengambilan pertama, sehingga ini adalah kejadian tidak saling bebas.
 
@@ -150,13 +150,13 @@ Karena pengambilan tanpa pengembalian, kondisi berubah setelah pengambilan perta
 
 ### Operasi Gabungan
 
-Ketika kita ingin mengetahui peluang "kejadian A **ATAU** kejadian B", kita menggunakan operasi gabungan (union). Kata kunci "atau" menunjukkan bahwa kita mencari peluang dimana minimal salah satu kejadian terjadi.
+Ketika kita ingin mengetahui peluang "kejadian <InlineMath math="A" /> **ATAU** kejadian <InlineMath math="B" />", kita menggunakan operasi gabungan (union). Kata kunci "atau" menunjukkan bahwa kita mencari peluang dimana minimal salah satu kejadian terjadi.
 
 Dalam pelemparan dadu, jika kita ingin mencari peluang munculnya angka ganjil atau angka prima, kita perlu mempertimbangkan apakah kedua kejadian saling lepas atau tidak.
 
 ### Operasi Irisan
 
-Sebaliknya, ketika mencari peluang "kejadian A **DAN** kejadian B", kita menggunakan operasi irisan (intersection). Kata kunci "dan" menunjukkan bahwa kedua kejadian harus terjadi bersamaan.
+Sebaliknya, ketika mencari peluang "kejadian <InlineMath math="A" /> **DAN** kejadian <InlineMath math="B" />", kita menggunakan operasi irisan (intersection). Kata kunci "dan" menunjukkan bahwa kedua kejadian harus terjadi bersamaan.
 
 Dalam konteks pengambilan kartu, jika kita mencari peluang "mengambil kartu merah DAN kartu bernomor genap", kita harus menghitung kartu yang memenuhi kedua kriteria tersebut.
 
@@ -185,12 +185,12 @@ Selanjutnya, tentukan apakah kejadian tersebut saling lepas atau tidak dengan me
 
 1. **Penyelesaian:**
    
-   Ruang sampel: S = <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />, sehingga n(S) = 6
+   Ruang sampel: <InlineMath math="S = \{1, 2, 3, 4, 5, 6\}" />, sehingga <InlineMath math="n(S) = 6" />
    
-   - Kejadian A (bilangan prima): A = <InlineMath math="\{2, 3, 5\}" />, sehingga n(A) = 3
-   - Kejadian B (bilangan ganjil): B = <InlineMath math="\{1, 3, 5\}" />, sehingga n(B) = 3
+   - Kejadian <InlineMath math="A" /> (bilangan prima): <InlineMath math="A = \{2, 3, 5\}" />, sehingga <InlineMath math="n(A) = 3" />
+   - Kejadian <InlineMath math="B" /> (bilangan ganjil): <InlineMath math="B = \{1, 3, 5\}" />, sehingga <InlineMath math="n(B) = 3" />
    
-   Irisan A dan B: <InlineMath math="A \cap B" /> = <InlineMath math="\{3, 5\}" />, sehingga <InlineMath math="n(A \cap B)" /> = 2
+   Irisan <InlineMath math="A" /> dan <InlineMath math="B" />: <InlineMath math="A \cap B = \{3, 5\}" />, sehingga <InlineMath math="n(A \cap B) = 2" />
    
    Karena ada irisan, maka kejadian tidak saling lepas. Menggunakan rumus:
    
@@ -208,10 +208,10 @@ Selanjutnya, tentukan apakah kejadian tersebut saling lepas atau tidak dengan me
 
 2. **Penyelesaian:**
    
-   Total bola = <InlineMath math="6 + 4 = 10 \text{ bola}" />
+   Total bola adalah <InlineMath math="6 + 4 = 10 \text{ bola}" />
    
-   - Kejadian A (bola pertama merah): <InlineMath math="6 \text{ bola}" /> merah dari <InlineMath math="10 \text{ bola}" /> total
-   - Kejadian B (bola kedua merah setelah A): Setelah <InlineMath math="1 \text{ bola}" /> merah diambil, tersisa <InlineMath math="5 \text{ bola}" /> merah dari <InlineMath math="9 \text{ bola}" /> total
+   - Kejadian <InlineMath math="A" /> (bola pertama merah): <InlineMath math="6 \text{ bola}" /> merah dari <InlineMath math="10 \text{ bola}" /> total
+   - Kejadian <InlineMath math="B" /> (bola kedua merah setelah <InlineMath math="A" />): Setelah <InlineMath math="1 \text{ bola}" /> merah diambil, tersisa <InlineMath math="5 \text{ bola}" /> merah dari <InlineMath math="9 \text{ bola}" /> total
    
    Karena pengambilan **tanpa pengembalian**, kondisi berubah setelah pengambilan pertama, sehingga ini adalah kejadian tidak saling bebas.
 
@@ -225,10 +225,10 @@ Selanjutnya, tentukan apakah kejadian tersebut saling lepas atau tidak dengan me
 
 3. **Penyelesaian:**
    
-   Total kemungkinan = <InlineMath math="6 \times 6 = 36" />
+   Total kemungkinan adalah <InlineMath math="6 \times 6 = 36" />
    
-   - Kejadian A (jumlah = <InlineMath math="7" />): <InlineMath math="(1,6), (2,5), (3,4), (4,3), (5,2), (6,1)" /> → <InlineMath math="6 \text{ cara}" />
-   - Kejadian B (jumlah = <InlineMath math="11" />): <InlineMath math="(5,6), (6,5)" /> → <InlineMath math="2 \text{ cara}" />
+   - Kejadian <InlineMath math="A" /> (jumlah adalah <InlineMath math="7" />): <InlineMath math="(1,6), (2,5), (3,4), (4,3), (5,2), (6,1)" /> → <InlineMath math="6 \text{ cara}" />
+   - Kejadian <InlineMath math="B" /> (jumlah adalah <InlineMath math="11" />): <InlineMath math="(5,6), (6,5)" /> → <InlineMath math="2 \text{ cara}" />
    
    Kedua kejadian saling lepas karena tidak mungkin jumlah dadu sekaligus 7 dan 11.
    
@@ -244,10 +244,10 @@ Selanjutnya, tentukan apakah kejadian tersebut saling lepas atau tidak dengan me
    
    Total kartu = 52
    
-   - Kejadian A (kartu As): <InlineMath math="4 \text{ kartu}" /> As
-   - Kejadian B (kartu hitam): <InlineMath math="26 \text{ kartu}" /> (Spade dan Club)
+   - Kejadian <InlineMath math="A" /> (kartu As): <InlineMath math="4 \text{ kartu}" /> As
+   - Kejadian <InlineMath math="B" /> (kartu hitam): <InlineMath math="26 \text{ kartu}" /> (Spade dan Club)
    
-   Irisan (As hitam): As Spade dan As Club = <InlineMath math="2 \text{ kartu}" />
+   Irisan (As hitam): As Spade dan As Club adalah <InlineMath math="2 \text{ kartu}" />
    
    <MathContainer>
    <BlockMath math="P(A) = \frac{4}{52} = \frac{1}{13}" />

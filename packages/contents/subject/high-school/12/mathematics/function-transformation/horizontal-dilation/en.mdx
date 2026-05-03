@@ -134,8 +134,8 @@ If the domain of the original function is <InlineMath math="[c, d]" />, then the
 
 ### Axis Intercepts
 
-- **x-intercept**: Changes according to the scale factor
-- **y-intercept**: Does not change
+- **<InlineMath math="x" />-intercept**: Changes according to the scale factor
+- **<InlineMath math="y" />-intercept**: Does not change
 
 ## Application Examples
 
@@ -172,7 +172,7 @@ Let's look at horizontal dilation on the exponential function <InlineMath math="
 
 For exponential functions:
 - The horizontal asymptote remains at <InlineMath math="y = 0" /> for both functions
-- The y-intercept remains the same at <InlineMath math="(0, 1)" />
+- The <InlineMath math="y" />-intercept remains the same at <InlineMath math="(0, 1)" />
 - The growth rate of the function changes according to the scale factor
 
 ## Horizontal Dilation with Negative Factor
@@ -227,7 +227,12 @@ When the scale factor is negative:
 
    <LineEquation
      title={<>Function <InlineMath math="f(x) = x^2 - 2x + 1" /> and Its Dilation Result</>}
-     description="The original parabola is horizontally compressed by factor 3 producing a narrower parabola."
+     description={
+       <>
+         The original parabola is horizontally compressed by factor{" "}
+         <InlineMath math="3" /> producing a narrower parabola.
+       </>
+     }
      showZAxis={false}
      cameraPosition={[12, 8, 12]}
      data={[
@@ -261,7 +266,12 @@ When the scale factor is negative:
 
    <LineEquation
      title={<>Function <InlineMath math="g(x) = \sqrt{x}" /> and Its Dilation Result</>}
-     description="The square root curve is horizontally stretched by factor 0.5 producing a wider curve."
+     description={
+       <>
+         The square root curve is horizontally stretched by factor{" "}
+         <InlineMath math="0.5" /> producing a wider curve.
+       </>
+     }
      showZAxis={false}
      data={[
        {

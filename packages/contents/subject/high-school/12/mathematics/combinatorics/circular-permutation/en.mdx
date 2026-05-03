@@ -1,6 +1,6 @@
 export const metadata = {
    title: "Circular Permutation",
-   description: "Master circular permutation formula (n-1)! for seating arrangements & circular problems. Learn why rotations are identical with step-by-step examples & practice.",
+   description: "Master circular permutation formulas for seating arrangements and circular problems. Learn why rotations are identical with step-by-step examples and practice.",
    authors: [{ name: "Nabil Akbarazzima Fatih" }],
    date: "05/26/2025",
    subject: "Combinatorics",
@@ -29,7 +29,7 @@ Where:
 
 The key concept is that rotation does not change a circular arrangement. Let's see it with a round-table example.
 
-Imagine 3 children (A, B, C) sitting around a round table. The arrangements ABC, BCA, and CAB are actually **the same arrangement** when viewed from a circular perspective, because their relative positions remain unchanged.
+Imagine <InlineMath math="3" /> children (<InlineMath math="A" />, <InlineMath math="B" />, <InlineMath math="C" />) sitting around a round table. The arrangements <InlineMath math="ABC" />, <InlineMath math="BCA" />, and <InlineMath math="CAB" /> are actually **the same arrangement** when viewed from a circular perspective, because their relative positions remain unchanged.
 
 Calculation steps:
 1. Fix one object as a **reference point** (for example, child A)
@@ -113,9 +113,9 @@ Example: 4 married couples sit in a circle, each couple must be adjacent.
    
    Solution steps (**complement method**):
    - Total ways without restrictions: <InlineMath math="(7-1)! = 6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720" />
-   - **Count unwanted ways** (2 students sitting adjacent):
-     - Consider 2 students as one unit: <InlineMath math="(6-1)! = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120" />
-     - 2 students can exchange positions: <InlineMath math="2! = 2" />
+   - **Count unwanted ways** (<InlineMath math="2 \text{ students}" /> sitting adjacent):
+     - Consider <InlineMath math="2 \text{ students}" /> as one unit: <InlineMath math="(6-1)! = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120" />
+     - <InlineMath math="2 \text{ students}" /> can exchange positions: <InlineMath math="2! = 2" />
      - Total adjacent arrangements: <InlineMath math="120 \times 2 = 240" />
    - **Desired ways:** <InlineMath math="720 - 240 = 480" />
    

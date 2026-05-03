@@ -10,27 +10,27 @@ export const metadata = {
 
 Kita sudah belajar [kejadian saling lepas](/subject/high-school/10/mathematics/probability/two-events-mutually-exclusive) yang nggak bisa terjadi barengan (kayak belok kiri dan kanan sekaligus), sekarang kita bahas **Kejadian Tidak Saling Lepas**. Ini adalah dua kejadian (atau lebih) yang **BISA terjadi secara bersamaan** dalam satu kali percobaan.
 
-Artinya, ada kemungkinan kamu mendapatkan hasil yang termasuk dalam kejadian A, sekaligus termasuk dalam kejadian B.
+Artinya, ada kemungkinan kamu mendapatkan hasil yang termasuk dalam kejadian <InlineMath math="A" />, sekaligus termasuk dalam kejadian <InlineMath math="B" />.
 
 **Contoh Gampang:**
 
 1.  **Ambil Kartu:** Kamu ambil satu kartu dari tumpukan kartu bridge.
 
-    - Kejadian A: Dapat kartu **Hati** (<InlineMath math="\heartsuit" />).
-    - Kejadian B: Dapat kartu **King**.
-      Apakah kejadian A dan B bisa terjadi barengan? Tentu bisa! Ada kartu yang merupakan Hati sekaligus King, yaitu kartu **King Hati** (<InlineMath math="K\heartsuit" />). Karena bisa terjadi barengan, kejadian A dan B ini **tidak saling lepas**.
+    - Kejadian <InlineMath math="A" />: Dapat kartu **Hati** (<InlineMath math="\heartsuit" />).
+    - Kejadian <InlineMath math="B" />: Dapat kartu **King**.
+      Apakah kejadian <InlineMath math="A" /> dan <InlineMath math="B" /> bisa terjadi barengan? Tentu bisa! Ada kartu yang merupakan Hati sekaligus King, yaitu kartu **King Hati** (<InlineMath math="K\heartsuit" />). Karena bisa terjadi barengan, kejadian <InlineMath math="A" /> dan <InlineMath math="B" /> ini **tidak saling lepas**.
 
 2.  **Lempar Dadu (satu kali):**
 
-    - Kejadian A: Dapat angka **genap** (<InlineMath math="\{2, 4, 6\}" />).
-    - Kejadian B: Dapat angka **lebih dari 3** (<InlineMath math="\{4, 5, 6\}" />).
-      Apakah bisa terjadi barengan? Bisa! Angka <InlineMath math="4" /> dan <InlineMath math="6" /> itu genap sekaligus lebih dari 3. Jadi, kejadian A dan B ini **tidak saling lepas**.
+    - Kejadian <InlineMath math="A" />: Dapat angka **genap** (<InlineMath math="\{2, 4, 6\}" />).
+    - Kejadian <InlineMath math="B" />: Dapat angka **lebih dari <InlineMath math="3" />** (<InlineMath math="\{4, 5, 6\}" />).
+      Apakah bisa terjadi barengan? Bisa! Angka <InlineMath math="4" /> dan <InlineMath math="6" /> itu genap sekaligus lebih dari <InlineMath math="3" />. Jadi, kejadian <InlineMath math="A" /> dan <InlineMath math="B" /> ini **tidak saling lepas**.
 
 ## Irisan Itu Penting!
 
 Pada kejadian tidak saling lepas, ada bagian yang menjadi anggota kedua kejadian sekaligus. Bagian ini disebut **irisan**.
 
-Karena ada irisan, peluang kejadian A **DAN** B terjadi bersamaan itu **lebih dari nol**.
+Karena ada irisan, peluang kejadian <InlineMath math="A" /> **DAN** B terjadi bersamaan itu **lebih dari nol**.
 
 <BlockMath math="P(A \text{ dan} B) > 0" />
 
@@ -40,9 +40,9 @@ Atau pakai simbol irisan:
 
 Ini beda banget sama kejadian saling lepas yang <InlineMath math="P(A \cap B) = 0" />.
 
-## Menghitung Peluang A ATAU B untuk Kejadian Tidak Saling Lepas
+## Menghitung Peluang Gabungan untuk Kejadian Tidak Saling Lepas
 
-Karena ada kemungkinan kejadian A dan B terjadi barengan, kita nggak bisa asal jumlahin <InlineMath math="P(A) + P(B)" /> untuk mencari <InlineMath math="P(A \text{ atau} B)" />.
+Karena ada kemungkinan kejadian <InlineMath math="A" /> dan <InlineMath math="B" /> terjadi barengan, kita nggak bisa asal jumlahin <InlineMath math="P(A) + P(B)" /> untuk mencari <InlineMath math="P(A \text{ atau} B)" />.
 
 Kenapa? Karena kalau langsung dijumlah, bagian irisannya (<InlineMath math="A \cap B" />) jadi **kehitung dua kali**, sekali di <InlineMath math="P(A)" /> dan sekali lagi di <InlineMath math="P(B)" />.
 
@@ -60,9 +60,9 @@ Rumus ini berlaku umum, bisa untuk kejadian saling lepas maupun tidak saling lep
 
 Mari kita pakai contoh kartu:
 
-- Kejadian A: Dapat kartu Hati (<InlineMath math="\heartsuit" />). Ada <InlineMath math="13 \text{ kartu}" /> Hati dari <InlineMath math="52 \text{ kartu}" />. <InlineMath math="P(A) = 13/52" />.
-- Kejadian B: Dapat kartu King. Ada <InlineMath math="4 \text{ kartu}" /> King dari <InlineMath math="52 \text{ kartu}" />. <InlineMath math="P(B) = 4/52" />.
-- Kejadian A **dan** B: Dapat kartu King Hati (<InlineMath math="K\heartsuit" />). Cuma ada <InlineMath math="1 \text{ kartu}" /> King Hati. <InlineMath math="P(A \cap B) = 1/52" />.
+- Kejadian <InlineMath math="A" />: Dapat kartu Hati (<InlineMath math="\heartsuit" />). Ada <InlineMath math="13 \text{ kartu}" /> Hati dari <InlineMath math="52 \text{ kartu}" />. <InlineMath math="P(A) = 13/52" />.
+- Kejadian <InlineMath math="B" />: Dapat kartu King. Ada <InlineMath math="4 \text{ kartu}" /> King dari <InlineMath math="52 \text{ kartu}" />. <InlineMath math="P(B) = 4/52" />.
+- Kejadian <InlineMath math="A" /> **dan** B: Dapat kartu King Hati (<InlineMath math="K\heartsuit" />). Cuma ada <InlineMath math="1 \text{ kartu}" /> King Hati. <InlineMath math="P(A \cap B) = 1/52" />.
 
 Maka, peluang dapat kartu Hati ATAU kartu King adalah:
 

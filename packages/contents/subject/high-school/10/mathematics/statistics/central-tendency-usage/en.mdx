@@ -18,19 +18,19 @@ Choosing the wrong measure can give a misleading picture of the data. So, let's 
 
 - **How to Calculate:** Sum all data values, then divide by the number of data points.
 - **Property:** Uses _all_ data values in the calculation. Because of this, the Mean is **very sensitive to extreme values (outliers)**. A single very large or small value can significantly change the Mean.
-- **Sensitivity Example:** If your test scores are <InlineMath math="7, 8, 9, 8, 10" /> (Mean = <InlineMath math="8.4" />), and then one additional score of 1 (an outlier) is added, the new Mean becomes <InlineMath math="(7+8+9+8+10+1)/6 = 7.17" />. The Mean drops drastically due to the outlier.
+- **Sensitivity Example:** If your test scores are <InlineMath math="7, 8, 9, 8, 10" /> (Mean is <InlineMath math="8.4" />), and then one additional score of 1 (an outlier) is added, the new Mean becomes <InlineMath math="(7+8+9+8+10+1)/6 = 7.17" />. The Mean drops drastically due to the outlier.
 
 ### Median (Middle Value)
 
 - **How to Calculate:** Sort the data, then find the value exactly in the middle position.
 - **Property:** Only considers the middle position of the data. Therefore, the Median is **not sensitive (robust) to extreme values (outliers)**.
-- **Robustness Example:** For data <InlineMath math="7, 8, 9, 8, 10" /> (Sorted: 7, 8, **8**, 9, 10), the Median=8. If a score of 1 is added (Sorted: 1, 7, **8**, **8**, 9, 10), the Median= <InlineMath math="(8+8)/2=8" />. The Median hardly changes despite the outlier.
+- **Robustness Example:** For data <InlineMath math="7, 8, 9, 8, 10" /> (sorted: <InlineMath math="7, 8, 8, 9, 10" />), the median is <InlineMath math="8" />. If a score of <InlineMath math="1" /> is added (sorted: <InlineMath math="1, 7, 8, 8, 9, 10" />), the median is <InlineMath math="(8+8)/2=8" />. The median hardly changes despite the outlier.
 
 ### Mode (Most Frequent Value)
 
 - **How to Calculate:** Find the data value with the highest frequency.
 - **Property:** Focuses on the most popular value. Like the Median, the Mode is **not sensitive (robust) to extreme values (outliers)**. Also, the Mode is the only measure of central tendency that can be used for **qualitative data** (non-numerical).
-- **Robustness & Qualitative Example:** For data 7, 8, 9, 8, 10, the Mode=8. If a score of 1 is added, the Mode remains 8. If the data is favorite colors (Red, Blue, Red, Green), the Mode=Red.
+- **Robustness & Qualitative Example:** For data <InlineMath math="7, 8, 9, 8, 10" />, the mode is <InlineMath math="8" />. If a score of <InlineMath math="1" /> is added, the mode remains <InlineMath math="8" />. If the data is favorite colors (red, blue, red, green), the mode is red.
 
 ## Usage Guide
 

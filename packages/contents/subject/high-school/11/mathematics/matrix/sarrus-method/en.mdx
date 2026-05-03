@@ -8,9 +8,9 @@ export const metadata = {
 
 ## Basic Concept of Sarrus Method
 
-Sarrus' method is a practical way to calculate the determinant of a 3x3 matrix. This method is named after Pierre Frédéric Sarrus. To understand it, let's recall how to calculate the determinant of a 2x2 matrix.
+Sarrus' method is a practical way to calculate the determinant of a <InlineMath math="3 \times 3" /> matrix. This method is named after Pierre Frédéric Sarrus. To understand it, let's recall how to calculate the determinant of a <InlineMath math="2 \times 2" /> matrix.
 
-If we have a 2x2 matrix:
+If we have a <InlineMath math="2 \times 2" /> matrix:
 
 <BlockMath math="M = \begin{bmatrix} a & b \\ c & d \end{bmatrix}" />
 
@@ -18,11 +18,11 @@ Its determinant, <InlineMath math="\det(M)" /> or <InlineMath math="|M|" />, is 
 
 <BlockMath math="\det(M) = ad - bc" />
 
-This is the difference between the product of the main diagonal elements (<InlineMath math="ad" />) and the product of the secondary diagonal elements (<InlineMath math="bc" />). Sarrus' method adapts this principle for 3x3 matrices.
+This is the difference between the product of the main diagonal elements (<InlineMath math="ad" />) and the product of the secondary diagonal elements (<InlineMath math="bc" />). Sarrus' method adapts this principle for <InlineMath math="3 \times 3" /> matrices.
 
-## Steps to Calculate the Determinant of a 3x3 Matrix using Sarrus Method
+## Steps to Calculate an Order-Three Determinant with Sarrus Method
 
-Suppose we have a 3x3 matrix A:
+Suppose we have a <InlineMath math="3 \times 3" /> matrix <InlineMath math="A" />:
 
 <BlockMath math="A = \begin{bmatrix} a_{11} & a_{12} & a_{13} \\ a_{21} & a_{22} & a_{23} \\ a_{31} & a_{32} & a_{33} \end{bmatrix}" />
 
@@ -30,7 +30,7 @@ The element <InlineMath math="a_{ij}" /> is the element in the <InlineMath math=
 
 **Step 1: Copy the First Two Columns**
 
-Rewrite the first two columns of matrix A to the right of the third column:
+Rewrite the first two columns of matrix <InlineMath math="A" /> to the right of the third column:
 
 <BlockMath math="\begin{array}{|ccc|cc} a_{11} & a_{12} & a_{13} & a_{11} & a_{12} \\ a_{21} & a_{22} & a_{23} & a_{21} & a_{22} \\ a_{31} & a_{32} & a_{33} & a_{31} & a_{32} \end{array}" />
 
@@ -58,7 +58,7 @@ The first term is the product of the secondary diagonal (anti-diagonal). The sec
 
 **Step 4: Calculate the Final Determinant**
 
-The determinant of matrix A, <InlineMath math="\det(A)" />, is the difference between <InlineMath math="D_{\text{positive}}" /> and <InlineMath math="D_{\text{negative}}" />:
+The determinant of matrix <InlineMath math="A" />, <InlineMath math="\det(A)" />, is the difference between <InlineMath math="D_{\text{positive}}" /> and <InlineMath math="D_{\text{negative}}" />:
 
 <BlockMath math="\det(A) = D_{\text{positive}} - D_{\text{negative}}" />
 
@@ -90,4 +90,4 @@ Thus, the complete formula becomes:
 
 ## Important Limitation of Sarrus Method
 
-Sarrus' method is **only applicable to 2x2 and 3x3 matrices**. For matrices of higher order (e.g., 4x4), this method cannot be used. Other methods such as cofactor expansion or row reduction are required for such cases.
+Sarrus' method is **only applicable to <InlineMath math="2 \times 2" /> and <InlineMath math="3 \times 3" /> matrices**. For matrices of higher order (e.g., <InlineMath math="4 \times 4" />), this method cannot be used. Other methods such as cofactor expansion or row reduction are required for such cases.

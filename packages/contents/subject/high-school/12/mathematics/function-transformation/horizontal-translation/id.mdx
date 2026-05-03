@@ -11,7 +11,7 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 
 ## Konsep Dasar Translasi Horizontal
 
-Translasi horizontal adalah transformasi geometri yang menggeser grafik fungsi ke kiri atau ke kanan sepanjang sumbu x tanpa mengubah bentuk grafik tersebut. Bayangkan seperti menggeser sebuah objek secara horizontal di atas meja, bentuknya tetap sama, hanya posisinya yang berubah.
+Translasi horizontal adalah transformasi geometri yang menggeser grafik fungsi ke kiri atau ke kanan sepanjang sumbu <InlineMath math="x" /> tanpa mengubah bentuk grafik tersebut. Bayangkan seperti menggeser sebuah objek secara horizontal di atas meja, bentuknya tetap sama, hanya posisinya yang berubah.
 
 Jika kita memiliki fungsi <InlineMath math="f(x)" />, maka translasi horizontal menghasilkan fungsi baru <InlineMath math="g(x) = f(x - h)" /> dimana <InlineMath math="h" /> adalah konstanta translasi.
 
@@ -177,7 +177,7 @@ Mari kita lihat translasi horizontal pada fungsi eksponensial <InlineMath math="
 
 Pada fungsi eksponensial:
 - Asimtot horizontal tetap di <InlineMath math="y = 0" /> untuk semua fungsi
-- Titik potong dengan sumbu y berubah karena pergeseran horizontal
+- Titik potong dengan sumbu <InlineMath math="y" /> berubah karena pergeseran horizontal
 - Fungsi <InlineMath math="g(x) = 2^{x-2}" /> bergeser ke kanan <InlineMath math="2 \text{ satuan}" />
 - Fungsi <InlineMath math="h(x) = 2^{x+1}" /> bergeser ke kiri <InlineMath math="1 \text{ satuan}" />
 
@@ -211,7 +211,7 @@ Penting untuk memahami perbedaan antara translasi horizontal dan vertikal:
 
    <LineEquation
      title={<>Fungsi <InlineMath math="f(x) = x^2 + 2x + 1" /> dan Hasil Translasinya</>}
-     description="Fungsi kuadrat asli dan hasil translasi horizontal ke kanan 3 satuan."
+     description={<>Fungsi kuadrat asli dan hasil translasi horizontal ke kanan <InlineMath math="3 \text{ satuan}" />.</>}
      showZAxis={false}
      cameraPosition={[12, 8, 12]}
      data={[
@@ -245,7 +245,7 @@ Penting untuk memahami perbedaan antara translasi horizontal dan vertikal:
 
    <LineEquation
      title={<>Fungsi <InlineMath math="g(x) = \sqrt{x}" /> dan Hasil Translasinya</>}
-     description="Fungsi akar kuadrat asli dan hasil translasi horizontal ke kiri 4 satuan."
+     description={<>Fungsi akar kuadrat asli dan hasil translasi horizontal ke kiri <InlineMath math="4 \text{ satuan}" />.</>}
      showZAxis={false}
      cameraPosition={[8, 6, 8]}
      data={[
@@ -278,7 +278,7 @@ Penting untuk memahami perbedaan antara translasi horizontal dan vertikal:
 
    <LineEquation
      title={<>Fungsi <InlineMath math="h(x) = 3^x" /> dan Hasil Translasinya</>}
-     description="Fungsi eksponensial asli dan hasil translasi horizontal ke kanan 2 satuan."
+     description={<>Fungsi eksponensial asli dan hasil translasi horizontal ke kanan <InlineMath math="2 \text{ satuan}" />.</>}
      showZAxis={false}
      cameraPosition={[10, 6, 10]}
      data={[

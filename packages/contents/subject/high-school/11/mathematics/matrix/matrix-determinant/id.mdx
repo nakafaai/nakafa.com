@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Determinan Matriks",
-  description: "Hitung determinan matriks 2x2 dan selesaikan SPLDV dengan Aturan Cramer. Kuasai rumus determinan dengan contoh langkah demi langkah dan latihan.",
+  description: "Hitung determinan matriks ordo dua dan selesaikan SPLDV dengan Aturan Cramer. Kuasai rumus determinan dengan contoh langkah demi langkah dan latihan.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "06/05/2025",
   subject: "Matriks",
@@ -10,13 +10,13 @@ export const metadata = {
 
 Determinan matriks adalah sebuah nilai skalar (angka tunggal) yang dapat dihitung dari elemen-elemen sebuah matriks persegi. Konsep determinan sangat penting dalam aljabar linear, salah satunya adalah untuk membantu menyelesaikan sistem persamaan linear. Setiap matriks persegi memiliki nilai determinan yang unik.
 
-## Menghitung Determinan Matriks Ordo 2x2
+## Menghitung Determinan Matriks Ordo Dua
 
-Matriks ordo 2x2 adalah matriks yang memiliki dua baris dan dua kolom. Misalkan kita memiliki matriks A sebagai berikut:
+Matriks ordo <InlineMath math="2 \times 2" /> adalah matriks yang memiliki dua baris dan dua kolom. Misalkan kita memiliki matriks <InlineMath math="A" /> sebagai berikut:
 
 <BlockMath math="A = \begin{bmatrix} a & b \\ c & d \end{bmatrix}" />
 
-Determinan dari matriks A, yang biasa ditulis sebagai <InlineMath math="\det(A)" /> atau <InlineMath math="|A|" />, dihitung dengan mengurangkan hasil perkalian elemen-elemen diagonal utama dengan hasil perkalian elemen-elemen diagonal kedua.
+Determinan dari matriks <InlineMath math="A" />, yang biasa ditulis sebagai <InlineMath math="\det(A)" /> atau <InlineMath math="|A|" />, dihitung dengan mengurangkan hasil perkalian elemen-elemen diagonal utama dengan hasil perkalian elemen-elemen diagonal kedua.
 
 Rumusnya adalah:
 
@@ -24,15 +24,15 @@ Rumusnya adalah:
 
 Perhatikan bahwa notasi <InlineMath math="\begin{vmatrix} a & b \\ c & d \end{vmatrix}" /> menggunakan garis lurus, yang menandakan determinan, berbeda dengan kurung siku <InlineMath math="\begin{bmatrix} a & b \\ c & d \end{bmatrix}" /> yang menandakan matriks itu sendiri.
 
-### Perhitungan Determinan Matriks 2x2
+### Perhitungan Determinan Matriks Ordo Dua
 
-Misalkan kita memiliki matriks B:
+Misalkan kita memiliki matriks <InlineMath math="B" />:
 
 <BlockMath math="B = \begin{bmatrix} -1 & 3 \\ -7 & -5 \end{bmatrix}" />
 
 Untuk menghitung determinannya, kita identifikasi <InlineMath math="a = -1" />, <InlineMath math="b = 3" />, <InlineMath math="c = -7" />, dan <InlineMath math="d = -5" />.
 
-Maka, determinan matriks B adalah:
+Maka, determinan matriks <InlineMath math="B" /> adalah:
 
 <MathContainer>
   <BlockMath math="\det(B) = (-1 \times -5) - (3 \times -7)" />
@@ -41,7 +41,7 @@ Maka, determinan matriks B adalah:
   <BlockMath math="\det(B) = 26" />
 </MathContainer>
 
-Jadi, nilai determinan dari matriks B adalah 26.
+Jadi, nilai determinan dari matriks <InlineMath math="B" /> adalah 26.
 
 ## Menyelesaikan Sistem Persamaan Linear Dua Variabel (SPLDV) dengan Determinan
 

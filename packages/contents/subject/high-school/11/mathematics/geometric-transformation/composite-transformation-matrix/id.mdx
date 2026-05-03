@@ -12,12 +12,12 @@ Dalam geometri, transformasi adalah operasi yang memindahkan atau mengubah bentu
 
 Kita dapat menggunakan matriks untuk merepresentasikan banyak transformasi geometri dan juga untuk mencari hasil dari komposisi transformasi tersebut.
 
-Kita akan fokus pada transformasi-transformasi yang dapat direpresentasikan dengan matriks berordo <InlineMath math="2 \times 2" />. Sebagai contoh, pencerminan terhadap sumbu X dapat direpresentasikan oleh matriks <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />. Jika titik <InlineMath math="(x,y)" /> dicerminkan terhadap sumbu X, petanya dapat ditemukan dengan mengalikan matriks ini dengan vektor posisi titik: <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix}" />.
+Kita akan fokus pada transformasi-transformasi yang dapat direpresentasikan dengan matriks berordo <InlineMath math="2 \times 2" />. Sebagai contoh, pencerminan terhadap sumbu <InlineMath math="x" /> dapat direpresentasikan oleh matriks <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />. Jika titik <InlineMath math="(x,y)" /> dicerminkan terhadap sumbu <InlineMath math="x" />, petanya dapat ditemukan dengan mengalikan matriks ini dengan vektor posisi titik: <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix}" />.
 
 Berikut adalah beberapa transformasi dasar beserta matriksnya yang sering digunakan dalam komposisi transformasi:
 
-1.  Pencerminan terhadap sumbu X: <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
-2.  Pencerminan terhadap sumbu Y: <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />
+1.  Pencerminan terhadap sumbu <InlineMath math="x" />: <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
+2.  Pencerminan terhadap sumbu <InlineMath math="y" />: <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />
 3.  Pencerminan terhadap garis <InlineMath math="y=x" />: <InlineMath math="\begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}" />
 4.  Pencerminan terhadap garis <InlineMath math="y=-x" />: <InlineMath math="\begin{pmatrix} 0 & -1 \\ -1 & 0 \end{pmatrix}" />
 5.  Pencerminan terhadap titik pusat <InlineMath math="O(0,0)" /> (setara dengan rotasi <InlineMath math="180^\circ" />): <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix}" />
@@ -49,9 +49,9 @@ Kedua cara ini menghasilkan peta akhir yang sama karena sifat asosiatif perkalia
 
 **Contoh Ilustratif:**
 
-Misalkan <InlineMath math="T_1" /> adalah pencerminan terhadap sumbu Y, dan <InlineMath math="T_2" /> adalah rotasi terhadap titik asal <InlineMath math="O" /> sebesar <InlineMath math="\frac{1}{2}\pi" /> radian (<InlineMath math="90^\circ" />). Kita ingin mencari peta titik <InlineMath math="P(x,y)" /> oleh <InlineMath math="T_2 \circ T_1" />.
+Misalkan <InlineMath math="T_1" /> adalah pencerminan terhadap sumbu <InlineMath math="y" />, dan <InlineMath math="T_2" /> adalah rotasi terhadap titik asal <InlineMath math="O" /> sebesar <InlineMath math="\frac{1}{2}\pi" /> radian (<InlineMath math="90^\circ" />). Kita ingin mencari peta titik <InlineMath math="P(x,y)" /> oleh <InlineMath math="T_2 \circ T_1" />.
 
-Matriks untuk <InlineMath math="T_1" /> (pencerminan sumbu Y) adalah <InlineMath math="M_1 = \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
+Matriks untuk <InlineMath math="T_1" /> (pencerminan sumbu <InlineMath math="y" />) adalah <InlineMath math="M_1 = \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
 
 Matriks untuk <InlineMath math="T_2" /> (rotasi <InlineMath math="90^\circ" />) adalah <InlineMath math="M_2 = \begin{pmatrix} \cos 90^\circ & -\sin 90^\circ \\ \sin 90^\circ & \cos 90^\circ \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}" />.
 
@@ -95,11 +95,11 @@ Ingat bahwa urutan perkalian matriks penting. Matriks untuk transformasi yang di
 
 ### Komposisi Dua Pencerminan
 
-Tentukan peta dari titik <InlineMath math="(2,5)" /> yang dicerminkan terhadap sumbu X dan kemudian dicerminkan terhadap sumbu Y.
+Tentukan peta dari titik <InlineMath math="(2,5)" /> yang dicerminkan terhadap sumbu <InlineMath math="x" /> dan kemudian dicerminkan terhadap sumbu <InlineMath math="y" />.
 
 **Alternatif Penyelesaian:**
 
-Misalkan <InlineMath math="T_1" /> adalah pencerminan terhadap sumbu X, dan <InlineMath math="T_2" /> adalah pencerminan terhadap sumbu Y.
+Misalkan <InlineMath math="T_1" /> adalah pencerminan terhadap sumbu <InlineMath math="x" />, dan <InlineMath math="T_2" /> adalah pencerminan terhadap sumbu <InlineMath math="y" />.
 
 Matriks <InlineMath math="T_1" /> (<InlineMath math="M_1" />) adalah <InlineMath math="\begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />.
 
@@ -117,11 +117,11 @@ Jadi, peta titiknya adalah <InlineMath math="(-2,-5)" />.
 
 ### Komposisi Refleksi dan Rotasi
 
-Tentukan peta dari titik <InlineMath math="(-2,3)" /> yang ditransformasikan oleh komposisi dari refleksi sumbu Y yang dilanjutkan dengan rotasi <InlineMath math="180^\circ" /> terhadap titik asal.
+Tentukan peta dari titik <InlineMath math="(-2,3)" /> yang ditransformasikan oleh komposisi dari refleksi sumbu <InlineMath math="y" /> yang dilanjutkan dengan rotasi <InlineMath math="180^\circ" /> terhadap titik asal.
 
 **Alternatif Penyelesaian:**
 
-Misalkan <InlineMath math="T_1" /> adalah refleksi sumbu Y, dan <InlineMath math="T_2" /> adalah rotasi <InlineMath math="180^\circ" /> terhadap titik asal.
+Misalkan <InlineMath math="T_1" /> adalah refleksi sumbu <InlineMath math="y" />, dan <InlineMath math="T_2" /> adalah rotasi <InlineMath math="180^\circ" /> terhadap titik asal.
 
 Matriks <InlineMath math="T_1" /> (<InlineMath math="M_1" />) adalah <InlineMath math="\begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
 
@@ -139,13 +139,13 @@ Jadi, peta titiknya adalah <InlineMath math="(-2,-3)" />.
 
 ### Komposisi Tiga Transformasi
 
-Misalkan, kalian ingin melakukan tiga buah transformasi pada sebuah titik <InlineMath math="P(2,5)" />, yakni refleksi terhadap sumbu X, rotasi <InlineMath math="90^\circ" /> terhadap titik asal, dan setengah putar (<InlineMath math="180^\circ" /> rotasi terhadap titik asal). Tentukan petanya!
+Misalkan, kalian ingin melakukan tiga buah transformasi pada sebuah titik <InlineMath math="P(2,5)" />, yakni refleksi terhadap sumbu <InlineMath math="x" />, rotasi <InlineMath math="90^\circ" /> terhadap titik asal, dan setengah putar (<InlineMath math="180^\circ" /> rotasi terhadap titik asal). Tentukan petanya!
 
 **Alternatif Penyelesaian:**
 
 Misalkan:
 
-- <InlineMath math="T_1" />: Refleksi terhadap sumbu X.
+- <InlineMath math="T_1" />: Refleksi terhadap sumbu <InlineMath math="x" />.
 
   Matriks <InlineMath math="M_1 = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
 
@@ -174,13 +174,13 @@ Jadi, peta titiknya adalah <InlineMath math="(-5,-2)" />.
 
 ## Latihan
 
-Misalkan, kita ingin melakukan tiga buah transformasi pada sebuah titik <InlineMath math="P(2,5)" />, yakni refleksi terhadap sumbu Y, rotasi <InlineMath math="180^\circ" /> terhadap titik asal, dan pencerminan terhadap garis <InlineMath math="y=x" />. Tentukan petanya!
+Misalkan, kita ingin melakukan tiga buah transformasi pada sebuah titik <InlineMath math="P(2,5)" />, yakni refleksi terhadap sumbu <InlineMath math="y" />, rotasi <InlineMath math="180^\circ" /> terhadap titik asal, dan pencerminan terhadap garis <InlineMath math="y=x" />. Tentukan petanya!
 
 ### Kunci Jawaban
 
 Misalkan:
 
-- <InlineMath math="T_1" />: Refleksi terhadap sumbu Y.
+- <InlineMath math="T_1" />: Refleksi terhadap sumbu <InlineMath math="y" />.
 
   Matriks <InlineMath math="M_1 = \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix}" />.
 

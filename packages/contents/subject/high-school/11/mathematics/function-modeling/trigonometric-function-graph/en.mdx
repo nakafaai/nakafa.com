@@ -20,9 +20,9 @@ Before studying trigonometric function graphs, we need to understand angle measu
 One complete rotation of a circle is <InlineMath math="360^\circ" /> or <InlineMath math="2\pi" /> radians. This relationship gives us conversion formulas:
 
 <MathContainer>
-  <BlockMath math="180° = \pi \text{ radians}" />
-  <BlockMath math="1° = \frac{\pi}{180} \text{ radians}" />
-  <BlockMath math="1 \text{ radian} = \frac{180°}{\pi} \approx 57.3°" />
+  <BlockMath math="180^\circ = \pi \text{ radians}" />
+  <BlockMath math="1^\circ = \frac{\pi}{180} \text{ radians}" />
+  <BlockMath math="1 \text{ radian} = \frac{180^\circ}{\pi} \approx 57.3^\circ" />
 </MathContainer>
 
 ### Conversion Examples
@@ -30,16 +30,16 @@ One complete rotation of a circle is <InlineMath math="360^\circ" /> or <InlineM
 Converting degrees to radians:
 
 <MathContainer>
-  <BlockMath math="90° = 90 \times \frac{\pi}{180} = \frac{\pi}{2} \text{ radians}" />
-  <BlockMath math="60° = 60 \times \frac{\pi}{180} = \frac{\pi}{3} \text{ radians}" />
-  <BlockMath math="45° = 45 \times \frac{\pi}{180} = \frac{\pi}{4} \text{ radians}" />
+  <BlockMath math="90^\circ = 90 \times \frac{\pi}{180} = \frac{\pi}{2} \text{ radians}" />
+  <BlockMath math="60^\circ = 60 \times \frac{\pi}{180} = \frac{\pi}{3} \text{ radians}" />
+  <BlockMath math="45^\circ = 45 \times \frac{\pi}{180} = \frac{\pi}{4} \text{ radians}" />
 </MathContainer>
 
 Converting radians to degrees:
 
 <MathContainer>
-  <BlockMath math="\frac{\pi}{6} \text{ radians} = \frac{\pi}{6} \times \frac{180}{\pi} = 30°" />
-  <BlockMath math="\frac{3\pi}{4} \text{ radians} = \frac{3\pi}{4} \times \frac{180}{\pi} = 135°" />
+  <BlockMath math="\frac{\pi}{6} \text{ radians} = \frac{\pi}{6} \times \frac{180}{\pi} = 30^\circ" />
+  <BlockMath math="\frac{3\pi}{4} \text{ radians} = \frac{3\pi}{4} \times \frac{180}{\pi} = 135^\circ" />
 </MathContainer>
 
 ## What are Amplitude and Period?
@@ -52,7 +52,7 @@ Amplitude is the maximum distance from the center line (<InlineMath math="x" />-
 
 <LineEquation
   title="Amplitude Concept"
-  description="Amplitude determines the 'height' of the wave. Notice the distance from the x-axis to the peak."
+  description={<>Amplitude determines the 'height' of the wave. Notice the distance from the <InlineMath math="x" />-axis to the peak.</>}
   data={[
     {
       points: Array.from({ length: 100 }, (_, i) => {
@@ -304,7 +304,11 @@ The function <InlineMath math="y = A \sin x" /> changes the amplitude to <Inline
 
 <LineEquation
   title="Effect of Amplitude"
-  description="Notice how the value of A affects the wave height."
+  description={
+    <>
+      Notice how the value of <InlineMath math="A" /> affects the wave height.
+    </>
+  }
   data={[
     {
       points: Array.from({ length: 100 }, (_, i) => {
@@ -344,7 +348,11 @@ The function <InlineMath math="y = \sin(Bx)" /> changes the period to <InlineMat
 
 <LineEquation
   title="Effect of Period"
-  description="The value of B affects how fast the function repeats."
+  description={
+    <>
+      The value of <InlineMath math="B" /> affects how fast the function repeats.
+    </>
+  }
   data={[
     {
       points: Array.from({ length: 100 }, (_, i) => {
@@ -445,7 +453,7 @@ Notice the horizontal and vertical shifts of the graph:
    - Phase shift
    - Vertical shift
 
-4. If tidal height is modeled by <InlineMath math="h(t) = 2 \sin(\frac{\pi t}{6}) + 5 \text{ meters}" />, where t is in hours:
+4. If tidal height is modeled by <InlineMath math="h(t) = 2 \sin(\frac{\pi t}{6}) + 5 \text{ meters}" />, where <InlineMath math="t" /> is measured in hours:
 
    - What are the maximum and minimum water heights?
    - What is the tidal period?
@@ -461,13 +469,13 @@ Notice the horizontal and vertical shifts of the graph:
 
 1. Angle conversion:
 
-   - <InlineMath math="120° = 120 \times \frac{\pi}{180} = \frac{2\pi}{3}" /> radians
-   - <InlineMath math="\frac{5\pi}{6} = \frac{5\pi}{6} \times \frac{180}{\pi} = 150°" />
+   - <InlineMath math="120^\circ = 120 \times \frac{\pi}{180} = \frac{2\pi}{3}" /> radians
+   - <InlineMath math="\frac{5\pi}{6} = \frac{5\pi}{6} \times \frac{180}{\pi} = 150^\circ" />
 
 2. Period and amplitude:
 
-   - <InlineMath math="y = 3 \sin(2x)" />: Amplitude = 3, Period = <InlineMath math="\frac{2\pi}{2} = \pi" />
-   - <InlineMath math="y = -2 \cos(\frac{x}{3})" />: Amplitude = 2, Period = <InlineMath math="\frac{2\pi}{1/3} = 6\pi" />
+   - <InlineMath math="y = 3 \sin(2x)" />: Amplitude = 3, Period is <InlineMath math="\frac{2\pi}{2} = \pi" />
+   - <InlineMath math="y = -2 \cos(\frac{x}{3})" />: Amplitude = 2, Period is <InlineMath math="\frac{2\pi}{1/3} = 6\pi" />
 
 3. For <InlineMath math="y = 2 \sin(x + \frac{\pi}{3}) - 1" />:
 

@@ -111,7 +111,8 @@ Inscribed angles that subtend the same arc have equal measures, regardless of wh
 
 **Property:** <InlineMath math="\angle ACB = \angle ADB" />
 
-Both inscribed angles ACB and ADB subtend the same arc AB, so they have equal measures.
+Both inscribed angles <InlineMath math="\angle ACB" /> and{" "}
+<InlineMath math="\angle ADB" /> subtend the same arc <InlineMath math="AB" />, so they have equal measures.
 
 ## Central Angle and Inscribed Angle
 
@@ -119,7 +120,12 @@ The central angle is twice the inscribed angle that subtends the same arc.
 
 <LineEquation
   title="Relationship Between Central Angle and Inscribed Angle"
-  description="Central angle = 2 × inscribed angle for the same arc."
+  description={
+    <>
+      Central angle <InlineMath math="= 2 \times" /> inscribed angle for the
+      same arc.
+    </>
+  }
   data={[
     {
       points: Array.from({ length: 361 }, (_, i) => {
@@ -236,7 +242,7 @@ Every inscribed angle that subtends a diameter of the circle is always a right a
 
 <LineEquation
   title="Inscribed Angle Subtending a Diameter"
-  description="Inscribed angle subtending a diameter is always 90°."
+  description={<>Inscribed angle subtending a diameter is always <InlineMath math="90^\circ" />.</>}
   data={[
     {
       points: Array.from({ length: 361 }, (_, i) => {
@@ -340,7 +346,7 @@ cameraPosition={[0, 0, 12]}
 showZAxis={false}
 />
 
-**Property:** If AB is a diameter, then <InlineMath math="\angle ACB = \angle ADB = 90°" />
+**Property:** If <InlineMath math="AB" /> is a diameter, then <InlineMath math="\angle ACB = \angle ADB = 90^\circ" />
 
 This is known as **Thales' Theorem**.
 
@@ -350,7 +356,7 @@ A cyclic quadrilateral is a quadrilateral whose four vertices lie on a circle. T
 
 <LineEquation
   title="Cyclic Quadrilateral"
-  description="Sum of opposite angles = 180°."
+  description={<>Sum of opposite angles is <InlineMath math="180^\circ" />.</>}
   data={[
     {
       points: Array.from({ length: 361 }, (_, i) => {
@@ -413,7 +419,7 @@ A cyclic quadrilateral is a quadrilateral whose four vertices lie on a circle. T
   showZAxis={false}
 />
 
-**Property:** <InlineMath math="\alpha + \gamma = 180°" /> and <InlineMath math="\beta + \delta = 180°" />
+**Property:** <InlineMath math="\alpha + \gamma = 180^\circ" /> and <InlineMath math="\beta + \delta = 180^\circ" />
 
 ## Exterior Angle Equals Opposite Interior Angle
 
@@ -421,7 +427,11 @@ In a cyclic quadrilateral, an exterior angle at a vertex equals the interior ang
 
 <LineEquation
   title="Exterior Angle of Cyclic Quadrilateral"
-  description="Exterior angle = opposite interior angle."
+  description={
+    <>
+      Exterior angle <InlineMath math="=" /> opposite interior angle.
+    </>
+  }
   data={[
     {
       points: Array.from({ length: 361 }, (_, i) => {
@@ -494,7 +504,7 @@ cameraPosition={[0, 0, 12]}
 showZAxis={false}
 />
 
-**Property:** <InlineMath math="\angle DAE = \angle BCD" /> (exterior angle at A = interior angle at C)
+**Property:** <InlineMath math="\angle DAE = \angle BCD" /> (exterior angle at <InlineMath math="A" /> equals interior angle at <InlineMath math="C" />)
 
 ## Applications of Angle Properties in Circles
 
@@ -508,52 +518,52 @@ Using the property of central and inscribed angles:
 
 <MathContainer>
   <BlockMath math="\angle ACB = \frac{1}{2} \times \angle AOB" />
-  <BlockMath math="\angle ACB = \frac{1}{2} \times 100°" />
-  <BlockMath math="\angle ACB = 50°" />
+  <BlockMath math="\angle ACB = \frac{1}{2} \times 100^\circ" />
+  <BlockMath math="\angle ACB = 50^\circ" />
 </MathContainer>
 
 ### Finding Opposite Angles
 
-In cyclic quadrilateral ABCD, given <InlineMath math="\angle A = 75°" />. Find the measure of <InlineMath math="\angle C" />!
+In cyclic quadrilateral <InlineMath math="ABCD" />, given <InlineMath math="\angle A = 75^\circ" />. Find the measure of <InlineMath math="\angle C" />!
 
 **Solution:**
 
 Using the property of cyclic quadrilaterals:
 
 <MathContainer>
-  <BlockMath math="\angle A + \angle C = 180°" />
-  <BlockMath math="75° + \angle C = 180°" />
-  <BlockMath math="\angle C = 180° - 75°" />
-  <BlockMath math="\angle C = 105°" />
+  <BlockMath math="\angle A + \angle C = 180^\circ" />
+  <BlockMath math="75^\circ + \angle C = 180^\circ" />
+  <BlockMath math="\angle C = 180^\circ - 75^\circ" />
+  <BlockMath math="\angle C = 105^\circ" />
 </MathContainer>
 
 ### Using Thales' Theorem
 
-Point C lies on a circle with AB as the diameter. Find the measure of <InlineMath math="\angle ACB" />!
+Point <InlineMath math="C" /> lies on a circle with AB as the diameter. Find the measure of <InlineMath math="\angle ACB" />!
 
 **Solution:**
 
-Since AB is a diameter and C lies on the circle, by Thales' Theorem:
+Since <InlineMath math="AB" /> is a diameter and C lies on the circle, by Thales' Theorem:
 
-<BlockMath math="\angle ACB = 90°" />
+<BlockMath math="\angle ACB = 90^\circ" />
 
 ## Practice Problems
 
 1. In a circle with center <InlineMath math="O" />, central angle <InlineMath math="\angle AOB = 140^\circ" />. If <InlineMath math="C" /> and <InlineMath math="D" /> are two different points on the circle, find:
 
-   - The measure of angle ACB
-   - The measure of angle ADB
+   - The measure of angle <InlineMath math="ACB" />
+   - The measure of angle <InlineMath math="ADB" />
 
-2. In cyclic quadrilateral PQRS, given:
+2. In cyclic quadrilateral <InlineMath math="PQRS" />, given:
 
    <MathContainer>
-     <BlockMath math="\angle P = 85°" />
-     <BlockMath math="\angle Q = 110°" />
+     <BlockMath math="\angle P = 85^\circ" />
+     <BlockMath math="\angle Q = 110^\circ" />
    </MathContainer>
 
    Find the measures of <InlineMath math="\angle R" /> and <InlineMath math="\angle S" />!
 
-3. Points A, B, and C lie on a circle. If AB is a diameter and BC = AC, find the measure of <InlineMath math="\angle BAC" />!
+3. Points <InlineMath math="A" />, <InlineMath math="B" />, and <InlineMath math="C" /> lie on a circle. If <InlineMath math="AB" /> is a diameter and <InlineMath math="BC = AC" />, find the measure of <InlineMath math="\angle BAC" />!
 
 4. In a circle, inscribed angle <InlineMath math="\angle APB = 35^\circ" />. Find the measure of central angle <InlineMath math="\angle AOB" />!
 
@@ -565,7 +575,7 @@ Since AB is a diameter and C lies on the circle, by Thales' Theorem:
 
    <LineEquation
      title="Visualization"
-     description="Central angle AOB = 140° and inscribed angles subtending arc AB."
+     description={<>Central angle <InlineMath math="AOB = 140^\circ" /> and inscribed angles subtending arc <InlineMath math="AB" />.</>}
      data={[
        {
          points: Array.from({ length: 361 }, (_, i) => {
@@ -687,13 +697,13 @@ Since AB is a diameter and C lies on the circle, by Thales' Theorem:
    <MathContainer>
      <BlockMath math="\text{Inscribed angle} = \frac{1}{2} \times \text{Central angle}" />
      <BlockMath math="\angle ACB = \frac{1}{2} \times \angle AOB" />
-     <BlockMath math="\angle ACB = \frac{1}{2} \times 140°" />
-     <BlockMath math="\angle ACB = 70°" />
+     <BlockMath math="\angle ACB = \frac{1}{2} \times 140^\circ" />
+     <BlockMath math="\angle ACB = 70^\circ" />
    </MathContainer>
 
    Since inscribed angles subtending the same arc have equal measures:
 
-   <BlockMath math="\angle ADB = \angle ACB = 70°" />
+   <BlockMath math="\angle ADB = \angle ACB = 70^\circ" />
 
 2. **Finding angles in a cyclic quadrilateral**
 
@@ -701,29 +711,34 @@ Since AB is a diameter and C lies on the circle, by Thales' Theorem:
 
 In a cyclic quadrilateral, <InlineMath math="\text{sum of opposite angles} = 180^\circ" />
 
-   For angle R (opposite to P):
+   For angle <InlineMath math="R" /> (opposite to <InlineMath math="P" />):
 
    <MathContainer>
-     <BlockMath math="\angle P + \angle R = 180°" />
-     <BlockMath math="85° + \angle R = 180°" />
-     <BlockMath math="\angle R = 180° - 85°" />
-     <BlockMath math="\angle R = 95°" />
+     <BlockMath math="\angle P + \angle R = 180^\circ" />
+     <BlockMath math="85^\circ + \angle R = 180^\circ" />
+     <BlockMath math="\angle R = 180^\circ - 85^\circ" />
+     <BlockMath math="\angle R = 95^\circ" />
    </MathContainer>
 
-   For angle S (opposite to Q):
+   For angle <InlineMath math="S" /> (opposite to <InlineMath math="Q" />):
 
    <MathContainer>
-     <BlockMath math="\angle Q + \angle S = 180°" />
-     <BlockMath math="110° + \angle S = 180°" />
-     <BlockMath math="\angle S = 180° - 110°" />
-     <BlockMath math="\angle S = 70°" />
+     <BlockMath math="\angle Q + \angle S = 180^\circ" />
+     <BlockMath math="110^\circ + \angle S = 180^\circ" />
+     <BlockMath math="\angle S = 180^\circ - 110^\circ" />
+     <BlockMath math="\angle S = 70^\circ" />
    </MathContainer>
 
 3. **Finding angle in an isosceles triangle with diameter**
 
    <LineEquation
      title="Visualization"
-     description="AB is a diameter, BC = AC (isosceles triangle)."
+     description={
+       <>
+         <InlineMath math="AB" /> is a diameter,{" "}
+         <InlineMath math="BC = AC" /> (isosceles triangle).
+       </>
+     }
      data={[
        {
          points: Array.from({ length: 361 }, (_, i) => {
@@ -803,25 +818,26 @@ In a cyclic quadrilateral, <InlineMath math="\text{sum of opposite angles} = 180
 
    **Solution:**
 
-   Since AB is a diameter, by Thales' Theorem:
+   Since <InlineMath math="AB" /> is a diameter, by Thales' Theorem:
 
-   <BlockMath math="\angle ACB = 90°" />
+   <BlockMath math="\angle ACB = 90^\circ" />
 
-   Since BC = AC, triangle ABC is a right isosceles triangle.
+   Since <InlineMath math="BC = AC" />, triangle <InlineMath math="ABC" /> is a
+   right isosceles triangle.
 
    In a right isosceles triangle, both base angles are equal:
 
    <MathContainer>
-     <BlockMath math="\angle BAC + \angle ABC + \angle ACB = 180°" />
-     <BlockMath math="\angle BAC + \angle ABC + 90° = 180°" />
-     <BlockMath math="\angle BAC + \angle ABC = 90°" />
+     <BlockMath math="\angle BAC + \angle ABC + \angle ACB = 180^\circ" />
+     <BlockMath math="\angle BAC + \angle ABC + 90^\circ = 180^\circ" />
+     <BlockMath math="\angle BAC + \angle ABC = 90^\circ" />
    </MathContainer>
 
    Since <InlineMath math="\angle BAC = \angle ABC" /> (base angles of isosceles triangle):
 
    <MathContainer>
-     <BlockMath math="2 \times \angle BAC = 90°" />
-     <BlockMath math="\angle BAC = 45°" />
+     <BlockMath math="2 \times \angle BAC = 90^\circ" />
+     <BlockMath math="\angle BAC = 45^\circ" />
    </MathContainer>
 
 4. **Finding central angle from inscribed angle**
@@ -833,8 +849,8 @@ In a cyclic quadrilateral, <InlineMath math="\text{sum of opposite angles} = 180
    <MathContainer>
      <BlockMath math="\text{Central angle} = 2 \times \text{Inscribed angle}" />
      <BlockMath math="\angle AOB = 2 \times \angle APB" />
-     <BlockMath math="\angle AOB = 2 \times 35°" />
-     <BlockMath math="\angle AOB = 70°" />
+     <BlockMath math="\angle AOB = 2 \times 35^\circ" />
+     <BlockMath math="\angle AOB = 70^\circ" />
    </MathContainer>
 
 5. **Finding interior angle from exterior angle in cyclic quadrilateral**
@@ -845,6 +861,6 @@ In a cyclic quadrilateral, <InlineMath math="\text{sum of opposite angles} = 180
 
 If the exterior angle at <InlineMath math="K" /> is <InlineMath math="65^\circ" />, then:
 
-   <BlockMath math="\angle \text{interior at M} = \angle \text{exterior at K} = 65°" />
+   <BlockMath math="\angle \text{interior at M} = \angle \text{exterior at K} = 65^\circ" />
 
-   This is because vertices K and M are opposite in cyclic quadrilateral KLMN.
+   This is because vertices <InlineMath math="K" /> and <InlineMath math="M" /> are opposite in cyclic quadrilateral <InlineMath math="KLMN" />.

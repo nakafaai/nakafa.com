@@ -20,9 +20,9 @@ Untuk membaca grafik fungsi trigonometri, kita perlu memahami ukuran sudut dalam
 Satu putaran penuh lingkaran adalah <InlineMath math="360^\circ" /> atau <InlineMath math="2\pi" /> radian. Hubungan ini memberikan kita rumus konversi:
 
 <MathContainer>
-  <BlockMath math="180° = \pi \text{ radian}" />
-  <BlockMath math="1° = \frac{\pi}{180} \text{ radian}" />
-  <BlockMath math="1 \text{ radian} = \frac{180°}{\pi} \approx 57.3°" />
+  <BlockMath math="180^\circ = \pi \text{ radian}" />
+  <BlockMath math="1^\circ = \frac{\pi}{180} \text{ radian}" />
+  <BlockMath math="1 \text{ radian} = \frac{180^\circ}{\pi} \approx 57.3^\circ" />
 </MathContainer>
 
 ### Contoh Konversi
@@ -30,16 +30,16 @@ Satu putaran penuh lingkaran adalah <InlineMath math="360^\circ" /> atau <Inline
 Mengubah derajat ke radian:
 
 <MathContainer>
-  <BlockMath math="90° = 90 \times \frac{\pi}{180} = \frac{\pi}{2} \text{ radian}" />
-  <BlockMath math="60° = 60 \times \frac{\pi}{180} = \frac{\pi}{3} \text{ radian}" />
-  <BlockMath math="45° = 45 \times \frac{\pi}{180} = \frac{\pi}{4} \text{ radian}" />
+  <BlockMath math="90^\circ = 90 \times \frac{\pi}{180} = \frac{\pi}{2} \text{ radian}" />
+  <BlockMath math="60^\circ = 60 \times \frac{\pi}{180} = \frac{\pi}{3} \text{ radian}" />
+  <BlockMath math="45^\circ = 45 \times \frac{\pi}{180} = \frac{\pi}{4} \text{ radian}" />
 </MathContainer>
 
 Mengubah radian ke derajat:
 
 <MathContainer>
-  <BlockMath math="\frac{\pi}{6} \text{ radian} = \frac{\pi}{6} \times \frac{180}{\pi} = 30°" />
-  <BlockMath math="\frac{3\pi}{4} \text{ radian} = \frac{3\pi}{4} \times \frac{180}{\pi} = 135°" />
+  <BlockMath math="\frac{\pi}{6} \text{ radian} = \frac{\pi}{6} \times \frac{180}{\pi} = 30^\circ" />
+  <BlockMath math="\frac{3\pi}{4} \text{ radian} = \frac{3\pi}{4} \times \frac{180}{\pi} = 135^\circ" />
 </MathContainer>
 
 ## Apa itu Amplitudo dan Periode?
@@ -52,7 +52,7 @@ Amplitudo adalah jarak maksimum dari garis tengah (sumbu <InlineMath math="x" />
 
 <LineEquation
   title="Konsep Amplitudo"
-  description="Amplitudo menentukan 'tinggi' gelombang. Perhatikan jarak dari sumbu x ke puncak."
+  description={<>Amplitudo menentukan 'tinggi' gelombang. Perhatikan jarak dari sumbu <InlineMath math="x" /> ke puncak.</>}
   data={[
     {
       points: Array.from({ length: 100 }, (_, i) => {
@@ -167,7 +167,7 @@ Fungsi <InlineMath math="y = \sin x" /> adalah fungsi periodik dengan periode <I
 - **Amplitudo**: 1 (nilai maksimum - minimum dibagi 2)
 - **Domain**: Semua bilangan real
 - **Range**: <InlineMath math="[-1, 1]" />
-- **Titik potong sumbu x**: <InlineMath math="x = n\pi" /> untuk <InlineMath math="n" /> bilangan bulat
+- **Titik potong sumbu <InlineMath math="x" />**: <InlineMath math="x = n\pi" /> untuk <InlineMath math="n" /> bilangan bulat
 - **Nilai maksimum**: 1 pada <InlineMath math="x = \frac{\pi}{2} + 2n\pi" />
 - **Nilai minimum**: -1 pada <InlineMath math="x = \frac{3\pi}{2} + 2n\pi" />
 
@@ -203,7 +203,7 @@ Fungsi <InlineMath math="y = \cos x" /> memiliki bentuk yang mirip dengan sinus,
 - **Amplitudo**: 1
 - **Domain**: Semua bilangan real
 - **Range**: <InlineMath math="[-1, 1]" />
-- **Titik potong sumbu x**: <InlineMath math="x = \frac{\pi}{2} + n\pi" />
+- **Titik potong sumbu <InlineMath math="x" />**: <InlineMath math="x = \frac{\pi}{2} + n\pi" />
 - **Nilai maksimum**: 1 pada <InlineMath math="x = 2n\pi" />
 - **Nilai minimum**: -1 pada <InlineMath math="x = \pi + 2n\pi" />
 
@@ -294,7 +294,7 @@ Fungsi <InlineMath math="y = \tan x" /> berbeda dengan <InlineMath math="\sin" /
 - **Domain**: <InlineMath math="x \neq \frac{\pi}{2} + n\pi" />
 - **Range**: Semua bilangan real
 - **Asimtot vertikal**: <InlineMath math="x = \frac{\pi}{2} + n\pi" />
-- **Titik potong sumbu x**: <InlineMath math="x = n\pi" />
+- **Titik potong sumbu <InlineMath math="x" />**: <InlineMath math="x = n\pi" />
 
 ## Transformasi Fungsi Trigonometri
 
@@ -304,7 +304,12 @@ Fungsi <InlineMath math="y = A \sin x" /> mengubah amplitudo menjadi <InlineMath
 
 <LineEquation
   title="Pengaruh Amplitudo"
-  description="Perhatikan bagaimana nilai A mempengaruhi tinggi gelombang."
+  description={
+    <>
+      Perhatikan bagaimana nilai <InlineMath math="A" /> mempengaruhi tinggi
+      gelombang.
+    </>
+  }
   data={[
     {
       points: Array.from({ length: 100 }, (_, i) => {
@@ -344,7 +349,11 @@ Fungsi <InlineMath math="y = \sin(Bx)" /> mengubah periode menjadi <InlineMath m
 
 <LineEquation
   title="Pengaruh Periode"
-  description="Nilai B mempengaruhi seberapa cepat fungsi berulang."
+  description={
+    <>
+      Nilai <InlineMath math="B" /> mempengaruhi seberapa cepat fungsi berulang.
+    </>
+  }
   data={[
     {
       points: Array.from({ length: 100 }, (_, i) => {
@@ -461,13 +470,13 @@ Perhatikan pergeseran horizontal dan vertikal dari grafik:
 
 1. Konversi sudut:
 
-   - <InlineMath math="120° = 120 \times \frac{\pi}{180} = \frac{2\pi}{3}" /> radian
-   - <InlineMath math="\frac{5\pi}{6} = \frac{5\pi}{6} \times \frac{180}{\pi} = 150°" />
+   - <InlineMath math="120^\circ = 120 \times \frac{\pi}{180} = \frac{2\pi}{3}" /> radian
+   - <InlineMath math="\frac{5\pi}{6} = \frac{5\pi}{6} \times \frac{180}{\pi} = 150^\circ" />
 
 2. Periode dan amplitudo:
 
-   - <InlineMath math="y = 3 \sin(2x)" />: Amplitudo = 3, Periode = <InlineMath math="\frac{2\pi}{2} = \pi" />
-   - <InlineMath math="y = -2 \cos(\frac{x}{3})" />: Amplitudo = 2, Periode = <InlineMath math="\frac{2\pi}{1/3} = 6\pi" />
+   - <InlineMath math="y = 3 \sin(2x)" />: Amplitudo = 3, Periode adalah <InlineMath math="\frac{2\pi}{2} = \pi" />
+   - <InlineMath math="y = -2 \cos(\frac{x}{3})" />: Amplitudo = 2, Periode adalah <InlineMath math="\frac{2\pi}{1/3} = 6\pi" />
 
 3. Untuk <InlineMath math="y = 2 \sin(x + \frac{\pi}{3}) - 1" />:
 

@@ -188,8 +188,8 @@ Berdasarkan ukurannya, tembereng dapat dibedakan menjadi dua jenis yang memiliki
 <div className="flex flex-col gap-4">
 
 <LineEquation
-  title={<>Tembereng Minor (Sudut Pusat &lt; <InlineMath math="180°" />)</>}
-  description={<>Tembereng yang luasnya lebih kecil dibandingkan setengah lingkaran, terbentuk ketika sudut pusat kurang dari <InlineMath math="180°" />. Contoh ini menunjukkan tembereng dengan sudut pusat <InlineMath math="120°" />.</>}
+  title={<>Tembereng Minor (Sudut Pusat &lt; <InlineMath math="180^\circ" />)</>}
+  description={<>Tembereng yang luasnya lebih kecil dibandingkan setengah lingkaran, terbentuk ketika sudut pusat kurang dari <InlineMath math="180^\circ" />. Contoh ini menunjukkan tembereng dengan sudut pusat <InlineMath math="120^\circ" />.</>}
   cameraPosition={[0, 0, 12]}
   showZAxis={false}
   data={[
@@ -334,8 +334,8 @@ Berdasarkan ukurannya, tembereng dapat dibedakan menjadi dua jenis yang memiliki
 />
 
 <LineEquation
-  title={<>Tembereng Mayor (Sudut Pusat &gt; <InlineMath math="180°" />)</>}
-  description={<>Tembereng yang luasnya lebih besar dibandingkan setengah lingkaran, terbentuk ketika sudut pusat lebih dari <InlineMath math="180°" />. Contoh ini menunjukkan tembereng dengan sudut pusat <InlineMath math="240°" />.</>}
+  title={<>Tembereng Mayor (Sudut Pusat &gt; <InlineMath math="180^\circ" />)</>}
+  description={<>Tembereng yang luasnya lebih besar dibandingkan setengah lingkaran, terbentuk ketika sudut pusat lebih dari <InlineMath math="180^\circ" />. Contoh ini menunjukkan tembereng dengan sudut pusat <InlineMath math="240^\circ" />.</>}
   cameraPosition={[0, 0, 12]}
   showZAxis={false}
   data={[
@@ -495,15 +495,15 @@ Berdasarkan ukurannya, tembereng dapat dibedakan menjadi dua jenis yang memiliki
 </div>
 
 **Perbedaan Kunci:**
-- **Tembereng Minor**: sudut pusat <InlineMath math="\lt 180°" />, luas tembereng <InlineMath math="\lt" /> luas setengah lingkaran
-- **Tembereng Mayor**: sudut pusat <InlineMath math="\gt 180°" />, luas tembereng <InlineMath math="\gt" /> luas setengah lingkaran
+- **Tembereng Minor**: sudut pusat <InlineMath math="\lt 180^\circ" />, luas tembereng <InlineMath math="\lt" /> luas setengah lingkaran
+- **Tembereng Mayor**: sudut pusat <InlineMath math="\gt 180^\circ" />, luas tembereng <InlineMath math="\gt" /> luas setengah lingkaran
 
 ## Rumus Luas Tembereng
 
 Untuk menghitung luas tembereng, kita perlu memahami bahwa tembereng terbentuk dari juring yang dikurangi dengan segitiga yang dibentuk oleh dua jari-jari dan tali busur.
 
 **Mengapa berbeda dengan rumus panjang busur?**
-- **Panjang Busur** = <InlineMath math="\frac{\alpha}{360°} \times 2\pi r" /> (satuan: cm, m, dll.)
+- **Panjang Busur** adalah <InlineMath math="\frac{\alpha}{360^\circ} \times 2\pi r" /> (satuan: cm, m, dll.)
 - **Luas Tembereng** <InlineMath math="\neq" /> Panjang Busur (karena tembereng adalah area <InlineMath math="2\text{D}" />, bukan garis <InlineMath math="1\text{D}" />)
 
     <MathContainer>
@@ -513,7 +513,7 @@ Untuk menghitung luas tembereng, kita perlu memahami bahwa tembereng terbentuk d
     Secara lebih rinci, rumus tersebut dapat ditulis sebagai:
 
     <MathContainer>
-    <BlockMath math="\text{Luas Tembereng} = \frac{\alpha}{360°} \times \pi r^2 - \frac{1}{2} r^2 \sin \alpha" />
+    <BlockMath math="\text{Luas Tembereng} = \frac{\alpha}{360^\circ} \times \pi r^2 - \frac{1}{2} r^2 \sin \alpha" />
     </MathContainer>
 
     Di mana <InlineMath math="\alpha" /> adalah sudut pusat dalam derajat dan <InlineMath math="r" /> adalah jari-jari lingkaran.
@@ -530,7 +530,14 @@ Mari kita lihat bagaimana tembereng terbentuk dari komponen-komponennya:
 
 <LineEquation
   title="Komponen Pembentuk Tembereng"
-  description={<>Tembereng dibentuk dari juring AOB dikurangi dengan segitiga AOB, dengan sudut pusat <InlineMath math="90°" /> dan jari-jari 4 satuan.</>}
+  description={
+    <>
+      Tembereng dibentuk dari juring <InlineMath math="AOB" /> dikurangi dengan
+      segitiga <InlineMath math="AOB" />, dengan sudut pusat{" "}
+      <InlineMath math="90^\circ" /> dan jari-jari{" "}
+      <InlineMath math="4 \text{ satuan}" />.
+    </>
+  }
   cameraPosition={[0, 0, 12]}
   showZAxis={false}
   data={[
@@ -634,12 +641,12 @@ Mari kita lihat bagaimana tembereng terbentuk dari komponen-komponennya:
 
 ## Perhitungan Luas Tembereng
 
-Untuk memahami cara menghitung luas tembereng, mari kita gunakan contoh dengan sudut pusat <InlineMath math="90°" /> dan jari-jari <InlineMath math="r = 10 \text{ cm}" />, sesuai dengan visualisasi komponen pembentuk tembereng di atas.
+Untuk memahami cara menghitung luas tembereng, mari kita gunakan contoh dengan sudut pusat <InlineMath math="90^\circ" /> dan jari-jari <InlineMath math="r = 10 \text{ cm}" />, sesuai dengan visualisasi komponen pembentuk tembereng di atas.
 
 **Langkah 1: Menghitung Luas Juring**
 
 <MathContainer>
-<BlockMath math="\text{Luas Juring} = \frac{90°}{360°} \times \pi r^2" />
+<BlockMath math="\text{Luas Juring} = \frac{90^\circ}{360^\circ} \times \pi r^2" />
 <BlockMath math="= \frac{1}{4} \times \pi \times 10^2" />
 <BlockMath math="= \frac{1}{4} \times \pi \times 100" />
 <BlockMath math="= 25\pi \text{ cm}^2 = 78,5398 \text{ cm}^2" />
@@ -647,10 +654,10 @@ Untuk memahami cara menghitung luas tembereng, mari kita gunakan contoh dengan s
 
 **Langkah 2: Menghitung Luas Segitiga**
 
-Untuk sudut <InlineMath math="90°" />, segitiga yang terbentuk adalah segitiga siku-siku dengan kedua sisi tegak berupa jari-jari:
+Untuk sudut <InlineMath math="90^\circ" />, segitiga yang terbentuk adalah segitiga siku-siku dengan kedua sisi tegak berupa jari-jari:
 
 <MathContainer>
-<BlockMath math="\text{Luas Segitiga} = \frac{1}{2} \times r^2 \times \sin 90°" />
+<BlockMath math="\text{Luas Segitiga} = \frac{1}{2} \times r^2 \times \sin 90^\circ" />
 <BlockMath math="= \frac{1}{2} \times 10^2 \times 1" />
 <BlockMath math="= \frac{1}{2} \times 100 \times 1" />
 <BlockMath math="= 50 \text{ cm}^2" />
@@ -667,7 +674,7 @@ Untuk sudut <InlineMath math="90°" />, segitiga yang terbentuk adalah segitiga 
 
 ## Latihan
 
-1. Sebuah lingkaran memiliki jari-jari <InlineMath math="7 \text{ cm}" />. Jika terdapat tembereng dengan sudut pusat <InlineMath math="60°" />, tentukan luas tembereng tersebut.
+1. Sebuah lingkaran memiliki jari-jari <InlineMath math="7 \text{ cm}" />. Jika terdapat tembereng dengan sudut pusat <InlineMath math="60^\circ" />, tentukan luas tembereng tersebut.
 
 2. Diketahui sebuah tembereng memiliki luas <InlineMath math="15{,}7 \text{ cm}^2" /> pada lingkaran dengan jari-jari <InlineMath math="5 \text{ cm}" />. Tentukan besar sudut pusat yang membentuk tembereng tersebut.
 
@@ -677,18 +684,18 @@ Untuk sudut <InlineMath math="90°" />, segitiga yang terbentuk adalah segitiga 
 
 1. **Langkah Penyelesaian:**
 
-   Diketahui: <InlineMath math="r = 7 \text{ cm}" />, <InlineMath math="\alpha = 60°" />
+   Diketahui: <InlineMath math="r = 7 \text{ cm}" />, <InlineMath math="\alpha = 60^\circ" />
    
    Menghitung luas juring:
    <MathContainer>
-   <BlockMath math="\text{Luas Juring} = \frac{60°}{360°} \times \pi \times 7^2" />
+   <BlockMath math="\text{Luas Juring} = \frac{60^\circ}{360^\circ} \times \pi \times 7^2" />
    <BlockMath math="= \frac{1}{6} \times \pi \times 49" />
    <BlockMath math="= \frac{49\pi}{6} \text{ cm}^2" />
    </MathContainer>
    
    Menghitung luas segitiga:
    <MathContainer>
-   <BlockMath math="\text{Luas Segitiga} = \frac{1}{2} r^2 \sin 60°" />
+   <BlockMath math="\text{Luas Segitiga} = \frac{1}{2} r^2 \sin 60^\circ" />
    <BlockMath math="= \frac{1}{2} \times 49 \times \frac{\sqrt{3}}{2}" />
    <BlockMath math="= \frac{49\sqrt{3}}{4} \text{ cm}^2" />
    </MathContainer>
@@ -703,15 +710,15 @@ Untuk sudut <InlineMath math="90°" />, segitiga yang terbentuk adalah segitiga 
 
    Diketahui: luas tembereng = <InlineMath math="15{,}7 \text{ cm}^2" />, <InlineMath math="r = 5 \text{ cm}" />
    
-   Menggunakan rumus: <InlineMath math="\text{Luas Tembereng} = \frac{\alpha}{360°} \times \pi r^2 - \frac{1}{2} r^2 \sin \alpha" />
+   Menggunakan rumus: <InlineMath math="\text{Luas Tembereng} = \frac{\alpha}{360^\circ} \times \pi r^2 - \frac{1}{2} r^2 \sin \alpha" />
    
    Dengan trial dan pendekatan numerik atau menggunakan kalkulator grafik, diperoleh:
-   <InlineMath math="\alpha \approx 120°" />
+   <InlineMath math="\alpha \approx 120^\circ" />
    
    Verifikasi:
    <MathContainer>
-   <BlockMath math="\text{Luas Juring} = \frac{120°}{360°} \times \pi \times 25 = \frac{25\pi}{3}" />
-   <BlockMath math="\text{Luas Segitiga} = \frac{1}{2} \times 25 \times \sin 120° = \frac{25\sqrt{3}}{4}" />
+   <BlockMath math="\text{Luas Juring} = \frac{120^\circ}{360^\circ} \times \pi \times 25 = \frac{25\pi}{3}" />
+   <BlockMath math="\text{Luas Segitiga} = \frac{1}{2} \times 25 \times \sin 120^\circ = \frac{25\sqrt{3}}{4}" />
    <BlockMath math="\text{Luas Tembereng} = \frac{25\pi}{3} - \frac{25\sqrt{3}}{4} \approx 26,1799 - 10,8253 = 15,3546 \text{ cm}^2" />
    </MathContainer>
    
@@ -719,9 +726,9 @@ Untuk sudut <InlineMath math="90°" />, segitiga yang terbentuk adalah segitiga 
 
 3. **Langkah Penyelesaian:**
 
-   Diketahui: jari-jari tangki = 2 m, kedalaman air = 1,5 m
+   Diketahui: jari-jari tangki = <InlineMath math="2 \text{ m}" />, kedalaman air = <InlineMath math="1,5 \text{ m}" />
    
-   Karena kedalaman air (1,5 m) kurang dari jari-jari (2 m), permukaan air berbentuk tembereng.
+   Karena kedalaman air (<InlineMath math="1,5 \text{ m}" />) kurang dari jari-jari (<InlineMath math="2 \text{ m}" />), permukaan air berbentuk tembereng.
    
    Untuk tangki silinder horizontal, kita menggunakan rumus khusus tembereng dengan tinggi tertentu.
    

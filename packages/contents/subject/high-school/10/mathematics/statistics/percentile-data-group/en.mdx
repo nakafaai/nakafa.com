@@ -14,12 +14,12 @@ If quartiles divide data into 4 chunks, percentiles divide ordered data into **1
 
 Each chunk is separated by a percentile value. There are 99 percentile values, starting from <InlineMath math="P_1" />, <InlineMath math="P_2" />, <InlineMath math="P_3" />, ..., up to <InlineMath math="P_{99}" />.
 
-- <InlineMath math="P_{10}" /> (10th Percentile) means this value separates the smallest
+- <InlineMath math="P_{10}" /> (<InlineMath math="10" />th Percentile) means this value separates the smallest
   <InlineMath math="10\%" /> of the data from the remaining <InlineMath math="90\%" />.
-- <InlineMath math="P_{50}" /> (50th Percentile) is exactly the same as the **Median**
+- <InlineMath math="P_{50}" /> (<InlineMath math="50" />th Percentile) is exactly the same as the **Median**
   or the **Second Quartile (<InlineMath math="Q_2" />
   )**, because it divides the data right in the middle (<InlineMath math="50\%" /> below, <InlineMath math="50\%" /> above).
-- <InlineMath math="P_{85}" /> (85th Percentile) means this value separates the smallest
+- <InlineMath math="P_{85}" /> (<InlineMath math="85" />th Percentile) means this value separates the smallest
   <InlineMath math="85\%" /> of the data from the largest <InlineMath math="15\%" />.
 
 Percentiles are very useful for seeing the position of a specific value relative to the entire dataset, like test-score rankings in one group or a child's growth compared to peers of the same age.
@@ -62,7 +62,7 @@ Notice, the formula is very similar to the quartile formula, the only difference
 
 ## Finding Math Test Scores
 
-For example, let's say we have the math test scores of 40 students:
+For example, let's say we have the math test scores of <InlineMath math="40 \text{ students}" />:
 
 | Test Score | Frequency (<InlineMath math="f" />) | Cumulative Frequency (<InlineMath math="F_k" />) | Lower Boundary (<InlineMath math="T_b" />) | Class Width (<InlineMath math="p" />) |
 | :--------: | :---------------------------------: | :----------------------------------------------: | :----------------------------------------: | :-----------------------------------: |
@@ -72,7 +72,7 @@ For example, let's say we have the math test scores of 40 students:
 | <InlineMath math="91\text{-}100" /> | <InlineMath math="10" /> | <InlineMath math="40" /> | <InlineMath math="90.5" /> | <InlineMath math="10" /> |
 | **Total**  | <InlineMath math="40" /> |                                                  |                                            |                                       |
 
-We want to find the value of the 85th Percentile (<InlineMath math="P_{85}" />).
+We want to find the value of the <InlineMath math="85" />th Percentile (<InlineMath math="P_{85}" />).
 
 1.  **Find the Position of <InlineMath math="P_{85}" />:**
 
@@ -84,13 +84,13 @@ Look at the <InlineMath math="F_k" /> column. Where is the <InlineMath math="34"
 
 3.  **Gather Ingredients for the Formula:**
 
-    - <InlineMath math="T_b" /> (Lower boundary of class <InlineMath math="91\text{-}100" />) = <InlineMath math="90.5" />
-    - <InlineMath math="i" /> = <InlineMath math="85" />
-    - <InlineMath math="n" /> = <InlineMath math="40" />
+    - <InlineMath math="T_b" /> (Lower boundary of class <InlineMath math="91\text{-}100" />) is <InlineMath math="90.5" />
+    - <InlineMath math="i = 85" />
+    - <InlineMath math="n = 40" />
     - <InlineMath math="F_{kum}" /> (Cumulative frequency before class <InlineMath math="91\text{-}100" />) =
       <InlineMath math="30" />
-    - <InlineMath math="f_{85}" /> (Frequency of class <InlineMath math="91\text{-}100" />) = <InlineMath math="10" />
-    - <InlineMath math="p" /> (Class width) = <InlineMath math="10" />
+    - <InlineMath math="f_{85}" /> (Frequency of class <InlineMath math="91\text{-}100" />) is <InlineMath math="10" />
+    - <InlineMath math="p" /> (Class width) is <InlineMath math="10" />
 
 4.  **Calculate <InlineMath math="P_{85}" />:**
 
@@ -106,7 +106,7 @@ So, the <InlineMath math="85" />th Percentile value is <InlineMath math="94.5" /
 
 ## Exercise
 
-Try calculating the value of the 20th Percentile (<InlineMath math="P_{20}" />) from the math test score data above!
+Try calculating the value of the <InlineMath math="20" />th Percentile (<InlineMath math="P_{20}" />) from the math test score data above!
 
 ### Answer Key
 
@@ -120,9 +120,9 @@ Look at <InlineMath math="F_k" />. The <InlineMath math="8" />th data point is i
 
 3.  **Formula Ingredients:**
 
-    - <InlineMath math="T_b" /> = <InlineMath math="70.5" />
-    - <InlineMath math="i" /> = <InlineMath math="20" />
-    - <InlineMath math="n" /> = <InlineMath math="40" />
+    - <InlineMath math="T_b = 70.5" />
+    - <InlineMath math="i = 20" />
+    - <InlineMath math="n = 40" />
     - <InlineMath math="F_{kum}" /> = 4
     - <InlineMath math="f_{20}" /> = 10
     - <InlineMath math="p" /> = 10
@@ -137,4 +137,4 @@ Look at <InlineMath math="F_k" />. The <InlineMath math="8" />th data point is i
       <BlockMath math="P_{20} = 74.5" />
     </MathContainer>
 
-The 20th Percentile value is 74.5.
+The <InlineMath math="20" />th Percentile value is 74.5.

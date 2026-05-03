@@ -16,14 +16,14 @@ This concept differs from ordinary probability because we must consider **condit
 
 ## Mathematical Formula and Notation
 
-For two events A and B that are independent but sequential, the conditional probability formula is:
+For two events <InlineMath math="A" /> and <InlineMath math="B" /> that are independent but sequential, the conditional probability formula is:
 
 <BlockMath math="P(B|A) = \frac{P(A \cap B)}{P(A)}" />
 
 Where:
-- <InlineMath math="P(B|A)" /> is the probability of event B occurring after event A has occurred
-- <InlineMath math="P(A \cap B)" /> is the probability of both events A and B occurring together
-- <InlineMath math="P(A)" /> is the probability of event A occurring
+- <InlineMath math="P(B|A)" /> is the probability of event <InlineMath math="B" /> occurring after event <InlineMath math="A" /> has occurred
+- <InlineMath math="P(A \cap B)" /> is the probability of both events <InlineMath math="A" /> and <InlineMath math="B" /> occurring together
+- <InlineMath math="P(A)" /> is the probability of event <InlineMath math="A" /> occurring
 
 Since the events are independent, we can write:
 
@@ -37,13 +37,13 @@ Therefore, for the joint probability of both events:
 
 ### Red Card and Heart Scenario
 
-A standard deck of cards has <InlineMath math="52 \text{ cards}" />. There are 26 red cards and 13 heart cards. If we draw two cards sequentially without replacement, how do we calculate the probability of getting a red card first and a heart card second?
+A standard deck of cards has <InlineMath math="52 \text{ cards}" />. There are <InlineMath math="26 \text{ red cards}" /> and 13 heart cards. If we draw two cards sequentially without replacement, how do we calculate the probability of getting a red card first and a heart card second?
 
 **Step-by-step analysis:**
 
 Let:
-- Event C = getting a red card on the first draw
-- Event D = getting a heart card on the second draw
+- Event <InlineMath math="C" /> = getting a red card on the first draw
+- Event <InlineMath math="D" /> = getting a heart card on the second draw
 
 Probability calculation:
 
@@ -74,10 +74,10 @@ A multinational company is conducting an **internal audit** to evaluate the dist
 
 | Management Position | Male (L) | Female (P) | Total |
 |------------------|---------------|---------------|-------|
-| Senior (S)       | 78            | 122           | 200   |
-| Middle (M)     | 78            | 122           | 200   |
-| Junior (J)       | 44            | 156           | 200   |
-| **Total**        | **200**       | **400**       | **600** |
+| Senior (S)       | <InlineMath math="78" /> | <InlineMath math="122" /> | <InlineMath math="200" /> |
+| Middle (M)     | <InlineMath math="78" /> | <InlineMath math="122" /> | <InlineMath math="200" /> |
+| Junior (J)       | <InlineMath math="44" /> | <InlineMath math="156" /> | <InlineMath math="200" /> |
+| **Total**        | <InlineMath math="200" /> | <InlineMath math="400" /> | <InlineMath math="600" /> |
 
 From this data, the company wants to analyze the probability in a **random selection** process for a special committee to be formed. If two managers are randomly selected without replacement, the probability of getting a male manager on the first and second selection is:
 
@@ -109,7 +109,7 @@ To solve independent conditional probability problems:
 
 **Concrete Example: Drawing Two Ace Cards**
 
-Suppose we want to calculate the probability of getting two Ace cards in succession from a standard deck (<InlineMath math="52 \text{ cards}" />, 4 Aces).
+Suppose we want to calculate the probability of getting two Ace cards in succession from a standard deck (<InlineMath math="52 \text{ cards}" />, <InlineMath math="4" /> Aces).
 
 1. **Independent Probability (With Replacement):**
 
@@ -139,11 +139,11 @@ Suppose we want to calculate the probability of getting two Ace cards in success
 - Independent probability: <InlineMath math="\frac{1}{169} = 0.00592" />
 - Conditional probability: <InlineMath math="\frac{1}{221} = 0.00452" />
 
-Conditional probability gives a **smaller** result because after drawing one Ace, the number of remaining Aces decreases from 4 to 3, while the total cards also decrease from 52 to 51.
+Conditional probability gives a **smaller** result because after drawing one Ace, the number of remaining Aces decreases from <InlineMath math="4" /> to <InlineMath math="3" />, while the total cards also decrease from <InlineMath math="52" /> to <InlineMath math="51" />.
 
 ## Exercises
 
-1. A box contains 8 red balls and 12 blue balls. If two balls are drawn sequentially without replacement, calculate the probability of getting a red ball on the first draw and a blue ball on the second draw.
+1. A box contains <InlineMath math="8 \text{ red balls}" /> and <InlineMath math="12 \text{ blue balls}" />. If two balls are drawn sequentially without replacement, calculate the probability of getting a red ball on the first draw and a blue ball on the second draw.
 
 2. A deck of cards is shuffled randomly. Three cards are drawn successively without replacement. What is the probability of getting an Ace on the first draw, a King on the second draw, and a Queen on the third draw?
 
@@ -151,9 +151,9 @@ Conditional probability gives a **smaller** result because after drawing one Ace
 
 1. **Solution:**
 
-   Let A = getting a red ball first, B = getting a blue ball second
+   Let <InlineMath math="A" /> = getting a red ball first, <InlineMath math="B" /> = getting a blue ball second
    
-   Total initial balls = <InlineMath math="8 + 12 = 20 \text{ balls}" />
+   Total initial balls is <InlineMath math="8 + 12 = 20 \text{ balls}" />
    
    <MathContainer>
    <BlockMath math="P(A) = \frac{8}{20} = \frac{2}{5}" />
@@ -167,9 +167,9 @@ Conditional probability gives a **smaller** result because after drawing one Ace
 
 2. **Solution:**
 
-   Let A = getting an Ace first, K = getting a King second, Q = getting a Queen third
+   Let <InlineMath math="A" /> = getting an Ace first, <InlineMath math="K" /> = getting a King second, <InlineMath math="Q" /> = getting a Queen third
    
-   A standard deck has <InlineMath math="52 \text{ cards}" /> with each: 4 Aces, 4 Kings, 4 Queens
+   A standard deck has <InlineMath math="52 \text{ cards}" /> with each: <InlineMath math="4" /> Aces, <InlineMath math="4" /> Kings, <InlineMath math="4" /> Queens
    
    <MathContainer>
    <BlockMath math="P(A) = \frac{4}{52} = \frac{1}{13}" />

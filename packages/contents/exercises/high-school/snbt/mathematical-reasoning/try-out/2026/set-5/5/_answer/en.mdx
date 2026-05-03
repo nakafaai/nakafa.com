@@ -4,21 +4,21 @@ export const metadata = {
   date: "02/09/2026",
 };
 
-This problem can be solved using the concept of a geometric sequence, where bacteria divide into two every <InlineMath math="24" /> hours (1 day).
+This problem can be solved using the concept of a geometric sequence, where bacteria divide into two every <InlineMath math="24" /> hours (<InlineMath math="1 \text{ day }" />).
 
-For the **first 5 days** (day 1 to day 5), the number of bacteria follows a geometric sequence with an initial term <InlineMath math="a = 10" /> and a ratio <InlineMath math="r = 2" />. The number of bacteria on day 5 is:
+For the **first <InlineMath math="5 \text{ days }" />** (day 1 to day 5), the number of bacteria follows a geometric sequence with an initial term <InlineMath math="a = 10" /> and a ratio <InlineMath math="r = 2" />. The number of bacteria on day 5 is:
 
 <MathContainer>
   <BlockMath math="U_5 = a \cdot r^{n-1} = 10 \cdot 2^{5-1} = 10 \cdot 16 = 160" />
 </MathContainer>
 
-Every <InlineMath math="120" /> hours (5 days), half of the total bacteria are killed. Thus, the remaining bacteria at the end of day 5 is:
+Every <InlineMath math="120" /> hours (<InlineMath math="5 \text{ days }" />), half of the total bacteria are killed. Thus, the remaining bacteria at the end of day 5 is:
 
 <MathContainer>
   <BlockMath math="160 - \left(\frac{1}{2} \times 160\right) = 80" />
 </MathContainer>
 
-For the **second 5 days** (day 6 to day 10), the cycle restarts with an initial count of <InlineMath math="80" />. On day 6, the number of bacteria becomes <InlineMath math="80 \times 2 = 160" />. Thus, the number of bacteria on day 10 (the 5th term of the second phase) is:
+For the **second <InlineMath math="5 \text{ days }" />** (day 6 to day 10), the cycle restarts with an initial count of <InlineMath math="80" />. On day 6, the number of bacteria becomes <InlineMath math="80 \times 2 = 160" />. Thus, the number of bacteria on day 10 (the <InlineMath math="5" />th term of the second phase) is:
 
 <MathContainer>
   <BlockMath math="U_5 = 160 \cdot 2^{5-1} = 160 \cdot 16 = 2560" />
@@ -36,4 +36,4 @@ Next, we calculate the growth for day 11 and day 12:
   <BlockMath math="\begin{aligned} \text{Day 11} &= 1280 \times 2 = 2560 \\ \text{Day 12} &= 2560 \times 2 = 5120 \end{aligned}" />
 </MathContainer>
 
-Thus, the number of bacteria on the 12th day of observation is <InlineMath math="5120" />.
+Thus, the number of bacteria on the <InlineMath math="12" />th day of observation is <InlineMath math="5120" />.

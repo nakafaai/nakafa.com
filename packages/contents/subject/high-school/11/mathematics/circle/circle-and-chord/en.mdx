@@ -482,7 +482,12 @@ Inscribed angles that subtend the same chord have equal measures.
 
 <LineEquation
   title="Inscribed Angles Subtending the Same Chord"
-  description="Inscribed angles subtending chord AB have equal measures."
+  description={
+    <>
+      Inscribed angles subtending chord <InlineMath math="AB" /> have equal
+      measures.
+    </>
+  }
   data={[
     {
       points: Array.from({ length: 361 }, (_, i) => {
@@ -754,12 +759,12 @@ If <InlineMath math="AB \parallel CD" />, then arc <InlineMath math="AC" /> equa
 
 1. **Calculating chord length and its distance from center**
 
-   Given: <InlineMath math="r = 10 \text{ cm}" />, <InlineMath math="\theta = 60° = \frac{\pi}{3}" /> rad
+   Given: <InlineMath math="r = 10 \text{ cm}" />, <InlineMath math="\theta = 60^\circ = \frac{\pi}{3}" /> rad
 
    <MathContainer>
      <BlockMath math="l = 2r \sin\left(\frac{\theta}{2}\right) = 2 \times 10 \times \sin\left(\frac{\pi/3}{2}\right)" />
-     <BlockMath math="l = 20 \times \sin(30°) = 20 \times 0.5 = 10 \text{ cm}" />
-     <BlockMath math="d = r \cos\left(\frac{\theta}{2}\right) = 10 \times \cos(30°)" />
+     <BlockMath math="l = 20 \times \sin(30^\circ) = 20 \times 0.5 = 10 \text{ cm}" />
+     <BlockMath math="d = r \cos\left(\frac{\theta}{2}\right) = 10 \times \cos(30^\circ)" />
      <BlockMath math="d = 10 \times \frac{\sqrt{3}}{2} = 5\sqrt{3} \text{ cm}" />
    </MathContainer>
 
@@ -809,9 +814,9 @@ If <InlineMath math="AB \parallel CD" />, then arc <InlineMath math="AC" /> equa
      <BlockMath math="l = 2r \sin\left(\frac{\theta}{2}\right)" />
    </MathContainer>
 
-   The maximum value of <InlineMath math="\sin\left(\frac{\theta}{2}\right) = 1" /> is achieved when <InlineMath math="\frac{\theta}{2} = 90°" />, that is <InlineMath math="\theta = 180°" />.
+   The maximum value of <InlineMath math="\sin\left(\frac{\theta}{2}\right) = 1" /> is achieved when <InlineMath math="\frac{\theta}{2} = 90^\circ" />, that is <InlineMath math="\theta = 180^\circ" />.
 
-   When <InlineMath math="\theta = 180°" />, the chord passes through the center of the circle (diameter) with length:
+   When <InlineMath math="\theta = 180^\circ" />, the chord passes through the center of the circle (diameter) with length:
 
    <MathContainer>
      <BlockMath math="l_{max} = 2r \times 1 = 2r" />

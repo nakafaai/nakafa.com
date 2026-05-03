@@ -10,7 +10,7 @@ export const metadata = {
 
 Bayangin kamu lagi nanya temen-temen sekelas, "Hari ini ke sekolah naik apa?". Terus kamu pengen tahu, berapa sih peluangnya kalau kita pilih satu anak secara acak, anak itu naik **sepeda ATAU motor**?
 
-Nah, kata **"ATAU"** ini penting banget di dunia peluang. Aturan Penjumlahan itu cara kita menghitung peluang gabungan dari dua (atau lebih) kejadian, pakai kata "ATAU". Artinya, kita pengen tahu peluang kejadian A terjadi, _atau_ kejadian B terjadi, _atau_ bahkan keduanya terjadi (kalau memang bisa).
+Nah, kata **"ATAU"** ini penting banget di dunia peluang. Aturan Penjumlahan itu cara kita menghitung peluang gabungan dari dua (atau lebih) kejadian, pakai kata "ATAU". Artinya, kita pengen tahu peluang kejadian <InlineMath math="A" /> terjadi, _atau_ kejadian <InlineMath math="B" /> terjadi, _atau_ bahkan keduanya terjadi (kalau memang bisa).
 
 Ada dua jenis situasi penting nih pas kita ngomongin "ATAU":
 
@@ -21,7 +21,7 @@ Ada dua jenis situasi penting nih pas kita ngomongin "ATAU":
 
 Kejadian Saling Lepas (atau nama kerennya _Mutually Exclusive_ atau _Disjoint_) itu artinya dua kejadian yang **nggak mungkin terjadi secara bersamaan** dalam satu kali percobaan.
 
-Kalau kejadian A terjadi, maka kejadian B pasti nggak terjadi, begitu juga sebaliknya.
+Kalau kejadian <InlineMath math="A" /> terjadi, maka kejadian <InlineMath math="B" /> pasti nggak terjadi, begitu juga sebaliknya.
 
 **Contoh Gampang:**
 
@@ -34,7 +34,7 @@ Kalau kejadian A terjadi, maka kejadian B pasti nggak terjadi, begitu juga sebal
 
 ### Rumus Kejadian Saling Lepas
 
-Kalau kejadian A dan B itu saling lepas, cara hitung peluang "A ATAU B" tinggal dijumlahin aja peluang masing-masing:
+Kalau kejadian <InlineMath math="A" /> dan <InlineMath math="B" /> itu saling lepas, cara hitung peluang "A ATAU B" tinggal dijumlahin aja peluang masing-masing:
 
 <BlockMath math="P(A \text{ atau} B) = P(A) + P(B)" />
 
@@ -42,8 +42,8 @@ Kalau kejadian A dan B itu saling lepas, cara hitung peluang "A ATAU B" tinggal 
 
 Misalnya, dari lemparan dua dadu tadi:
 
-- Peluang jumlah 7 (<InlineMath math="P(J=7)" />) = Ada 6 pasangan dari total 36 = <InlineMath math="6/36" />
-- Peluang dapat angka kembar (<InlineMath math="P(\text{Kembar})" />) = Ada 6 pasangan dari total 36 = <InlineMath math="6/36" />
+- Peluang jumlah 7 (<InlineMath math="P(J=7)" />) = Ada 6 pasangan dari total 36 adalah <InlineMath math="6/36" />
+- Peluang dapat angka kembar (<InlineMath math="P(\text{Kembar})" />) = Ada 6 pasangan dari total 36 adalah <InlineMath math="6/36" />
 
 Maka, peluang dapat jumlah 7 ATAU angka kembar adalah:
 
@@ -63,22 +63,22 @@ Kejadian Tidak Saling Lepas itu artinya dua kejadian yang **BISA terjadi secara 
 
 **Apakah bisa langsung dijumlah?**
 
-Kalau kita langsung jumlahin <InlineMath math="P(A) + P(B)" /> untuk kejadian tidak saling lepas, nanti ada yang kehitung dua kali! Yaitu bagian yang sama-sama A dan B (irisannya).
+Kalau kita langsung jumlahin <InlineMath math="P(A) + P(B)" /> untuk kejadian tidak saling lepas, nanti ada yang kehitung dua kali! Yaitu bagian yang sama-sama <InlineMath math="A" /> dan <InlineMath math="B" /> (irisannya).
 
 Kayak di contoh jumlah 8 ATAU kembar tadi:
 
-- <InlineMath math="P(J=8)" /> = Ada 5 pasangan = <InlineMath math="5/36" />
-- <InlineMath math="P(\text{Kembar})" /> = Ada 6 pasangan = <InlineMath math="6/36" />
+- <InlineMath math="P(J=8)" /> = Ada 5 pasangan adalah <InlineMath math="5/36" />
+- <InlineMath math="P(\text{Kembar})" /> = Ada 6 pasangan adalah <InlineMath math="6/36" />
 
 Kalau kita jumlahin langsung: <InlineMath math="5/36 + 6/36 = 11/36" />. Pasangan <InlineMath math="(4,4)" /> kan dihitung di kelompok "Jumlah 8" dan dihitung lagi di kelompok "Kembar". **Jadi kehitung dua kali**!
 
 ### Rumus Kejadian Tidak Saling Lepas
 
-Untuk kejadian A dan B yang tidak saling lepas, cara hitung peluang "A ATAU B" adalah:
+Untuk kejadian <InlineMath math="A" /> dan <InlineMath math="B" /> yang tidak saling lepas, cara hitung peluang "A ATAU B" adalah:
 
 <BlockMath math="P(A \text{ atau} B) = P(A) + P(B) - P(A \text{ dan} B)" />
 
-Bagian <InlineMath math="P(A \text{ dan} B)" /> itu adalah peluang kejadian A dan B terjadi **bersamaan** (irisannya). Ini yang kita kurangkan biar nggak kehitung dua kali.
+Bagian <InlineMath math="P(A \text{ dan} B)" /> itu adalah peluang kejadian <InlineMath math="A" /> dan <InlineMath math="B" /> terjadi **bersamaan** (irisannya). Ini yang kita kurangkan biar nggak kehitung dua kali.
 
 **Contoh Hitung:**
 
@@ -97,10 +97,10 @@ Maka, peluang dapat jumlah 8 ATAU angka kembar adalah:
 
 **Penting Soal Kata "ATAU"!**
 
-Dalam matematika, "A atau B" itu artinya bisa A saja, bisa B saja, atau bisa A dan B KEDUANYA (kalau memungkinkan). Ini beda sama "atau" sehari-hari yang kadang maksudnya "pilih salah satu". Ingat ya, "atau" di matematika itu **inklusif**!
+Dalam matematika, "<InlineMath math="A" /> atau <InlineMath math="B" />" itu artinya bisa <InlineMath math="A" /> saja, bisa <InlineMath math="B" /> saja, atau bisa <InlineMath math="A" /> dan <InlineMath math="B" /> KEDUANYA (kalau memungkinkan). Ini beda sama "atau" sehari-hari yang kadang maksudnya "pilih salah satu". Ingat ya, "atau" di matematika itu **inklusif**!
 
 ## Kapan Pakai Rumus yang Mana?
 
-1.  **Lihat dulu:** Apakah kejadian A dan B bisa terjadi barengan?
+1.  **Lihat dulu:** Apakah kejadian <InlineMath math="A" /> dan <InlineMath math="B" /> bisa terjadi barengan?
 2.  **Jika TIDAK BISA barengan:** Pakai rumus simpel <InlineMath math="P(A \text{ atau} B) = P(A) + P(B)" />.
 3.  **Jika BISA barengan:** Pakai rumus lengkap <InlineMath math="P(A \text{ atau} B) = P(A) + P(B) - P(A \text{ dan} B)" />.

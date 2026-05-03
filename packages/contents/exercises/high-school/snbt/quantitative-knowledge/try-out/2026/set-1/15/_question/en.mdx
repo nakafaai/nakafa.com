@@ -10,7 +10,7 @@ import { getColor } from "@repo/design-system/lib/color";
 Triangle <InlineMath math="ABC" /> is similar to triangle <InlineMath math="ADE" />.
 
 <LineEquation
-  title="Triangle ABC and ADE"
+  title={<>Triangle <InlineMath math="ABC" /> and <InlineMath math="ADE" /></>}
   description="Visualization of two similar triangles with marked vertices."
   cameraPosition={[0, 0, 17]}
   showZAxis={false}
@@ -24,7 +24,7 @@ Triangle <InlineMath math="ABC" /> is similar to triangle <InlineMath math="ADE"
       color: getColor("VIOLET"),
       showPoints: false,
       labels: [
-        { text: "A (2,1)", at: 0, offset: [-0.8, 0.4, 0] }
+        { text: "A (2, 1)", at: 0, offset: [-0.8, 0.4, 0] }
       ]
     },
     {
@@ -36,7 +36,7 @@ Triangle <InlineMath math="ABC" /> is similar to triangle <InlineMath math="ADE"
       color: getColor("VIOLET"),
       showPoints: false,
       labels: [
-        { text: "B (8,4)", at: 2, offset: [0.8, 0.4, 0] },
+        { text: "B (8, 4)", at: 2, offset: [0.8, 0.4, 0] },
         { text: "C", at: 0, offset: [0.5, 0.5, 0] }
       ]
     },
@@ -70,7 +70,7 @@ Triangle <InlineMath math="ABC" /> is similar to triangle <InlineMath math="ADE"
       color: getColor("ORANGE"),
       showPoints: false,
       labels: [
-        { text: "E (2,-3)", at: 2, offset: [-0.5, -0.4, 0] }
+        { text: "E (2, -3)", at: 2, offset: [-0.5, -0.4, 0] }
       ]
     },
     {
@@ -86,4 +86,3 @@ Triangle <InlineMath math="ABC" /> is similar to triangle <InlineMath math="ADE"
 />
 
 The area of triangle <InlineMath math="ADE" /> is ....
-

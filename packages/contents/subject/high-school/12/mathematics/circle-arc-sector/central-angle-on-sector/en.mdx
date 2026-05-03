@@ -17,7 +17,12 @@ Central angles have a special role in determining the size of sectors. The large
 
 <LineEquation
   title={<>Central Angle Forming a Sector</>}
-  description="The central angle is shown with vertex at center O and two radii as the angle sides."
+  description={
+    <>
+      The central angle is shown with vertex at center <InlineMath math="O" />{" "}
+      and two radii as the angle sides.
+    </>
+  }
   data={[
     {
       points: Array.from({ length: 101 }, (_, i) => {
@@ -113,7 +118,7 @@ The relationship between central angle and sector area can be expressed as a mat
 
 **For angles in degrees:**
 
-<BlockMath math="L = \frac{\theta}{360°} \times \pi r^2" />
+<BlockMath math="L = \frac{\theta}{360^\circ} \times \pi r^2" />
 
 **For angles in radians:**
 
@@ -128,7 +133,7 @@ This ratio shows that sector area is proportional to the central angle size. Whe
 
 <LineEquation
   title={<>Comparison of Central Angles on Different Sectors</>}
-  description="Visualization of sectors with central angles of 45°, 90°, and 135° showing proportional relationships."
+  description={<>Visualization of sectors with central angles of <InlineMath math="45^\circ" />, <InlineMath math="90^\circ" />, and <InlineMath math="135^\circ" /> showing proportional relationships.</>}
   data={[
     {
       points: Array.from({ length: 101 }, (_, i) => {
@@ -246,13 +251,13 @@ Identifying central angles on sectors requires the ability to recognize their ge
 
 - **Using a protractor**: Place the protractor's center point exactly at the circle's center, ensure the base line is parallel to one radius, then read the scale at the position of the second radius
 - **Mathematical calculation**: Using relationships among central angle, radius, arc length, and sector area
-- **Circle division**: dividing <InlineMath math="360°" /> by the number of equal parts
+- **Circle division**: dividing <InlineMath math="360^\circ" /> by the number of equal parts
 
 These measurement methods enable us to accurately identify the central angle size, which can then be used to calculate the corresponding sector area or arc length.
 
 <LineEquation
   title={<>Central Angle Measurement Technique</>}
-  description="Demonstration of measuring a 60° central angle with clear bounding radii."
+  description={<>Demonstration of measuring a <InlineMath math="60^\circ" /> central angle with clear bounding radii.</>}
   data={[
     {
       points: Array.from({ length: 101 }, (_, i) => {
@@ -350,15 +355,15 @@ Determining the central angle measure can be done through various known informat
 
 **1. From sector area and radius:**
 
-<BlockMath math="\alpha = \frac{360° \times L}{\pi r^2}" />
+<BlockMath math="\alpha = \frac{360^\circ \times L}{\pi r^2}" />
 
 **2. From arc length and radius:**
 
-<BlockMath math="\alpha = \frac{180° \times s}{\pi r}" />
+<BlockMath math="\alpha = \frac{180^\circ \times s}{\pi r}" />
 
 **3. From equal circle division:**
 
-<BlockMath math="\alpha = \frac{360°}{n}" />
+<BlockMath math="\alpha = \frac{360^\circ}{n}" />
 
 where:
 - <InlineMath math="\alpha" /> = central angle (in degrees)
@@ -371,7 +376,7 @@ These three formulas provide flexibility in solving various types of circle geom
 
 <LineEquation
   title={<>Parameter Illustration in Central Angle Calculation</>}
-  description="Visualization of elements: radius (r), arc length (s), and central angle (72°)."
+  description={<>Visualization of elements: radius <InlineMath math="r" />, arc length <InlineMath math="s" />, and central angle <InlineMath math="72^\circ" />.</>}
   data={[
     {
       points: Array.from({ length: 101 }, (_, i) => {
@@ -449,8 +454,8 @@ These three formulas provide flexibility in solving various types of circle geom
 
 **Formula application examples:**
 
-- Pizza cut into 8 equal parts: <InlineMath math="\alpha = \frac{360°}{8} = 45°" />
-- Wall clock with 12 numbers: <InlineMath math="\alpha = \frac{360°}{12} = 30°" />
-- Cake cut into <InlineMath math="6 \text{ parts}" />: <InlineMath math="\alpha = \frac{360°}{6} = 60°" />
+- Pizza cut into 8 equal parts: <InlineMath math="\alpha = \frac{360^\circ}{8} = 45^\circ" />
+- Wall clock with 12 numbers: <InlineMath math="\alpha = \frac{360^\circ}{12} = 30^\circ" />
+- Cake cut into <InlineMath math="6 \text{ parts}" />: <InlineMath math="\alpha = \frac{360^\circ}{6} = 60^\circ" />
 
 These examples demonstrate the direct application of circle division formulas in daily life, where each part has an equal central angle.

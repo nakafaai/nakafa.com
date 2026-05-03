@@ -10,7 +10,7 @@ import { getColor } from "@repo/design-system/lib/color";
 Segitiga <InlineMath math="ABC" /> sebangun dengan segitiga <InlineMath math="ADE" />.
 
 <LineEquation
-  title="Segitiga ABC dan ADE"
+  title={<>Segitiga <InlineMath math="ABC" /> dan <InlineMath math="ADE" /></>}
   description="Visualisasi dua segitiga yang sebangun dengan titik sudut yang ditandai."
   cameraPosition={[0, 0, 17]}
   showZAxis={false}
@@ -24,7 +24,7 @@ Segitiga <InlineMath math="ABC" /> sebangun dengan segitiga <InlineMath math="AD
       color: getColor("VIOLET"),
       showPoints: false,
       labels: [
-        { text: "A (2,1)", at: 0, offset: [-0.8, 0.4, 0] }
+        { text: "A (2, 1)", at: 0, offset: [-0.8, 0.4, 0] }
       ]
     },
     {
@@ -36,7 +36,7 @@ Segitiga <InlineMath math="ABC" /> sebangun dengan segitiga <InlineMath math="AD
       color: getColor("VIOLET"),
       showPoints: false,
       labels: [
-        { text: "B (8,4)", at: 2, offset: [0.8, 0.4, 0] },
+        { text: "B (8, 4)", at: 2, offset: [0.8, 0.4, 0] },
         { text: "C", at: 0, offset: [0.5, 0.5, 0] }
       ]
     },
@@ -70,7 +70,7 @@ Segitiga <InlineMath math="ABC" /> sebangun dengan segitiga <InlineMath math="AD
       color: getColor("ORANGE"),
       showPoints: false,
       labels: [
-        { text: "E (2,-3)", at: 2, offset: [-0.5, -0.4, 0] }
+        { text: "E (2, -3)", at: 2, offset: [-0.5, -0.4, 0] }
       ]
     },
     {
@@ -86,4 +86,3 @@ Segitiga <InlineMath math="ABC" /> sebangun dengan segitiga <InlineMath math="AD
 />
 
 Luas segitiga <InlineMath math="ADE" /> adalah ....
-

@@ -1,20 +1,20 @@
 export const metadata = {
-   title: "Permutasi n Item dari n Objek",
-   description: "Kuasai permutasi n item dari n objek dengan rumus faktorial. Pelajari susunan lengkap dengan contoh langkah demi langkah dan latihan praktis.",
+   title: "Permutasi Semua Objek",
+   description: "Kuasai permutasi semua objek dengan rumus faktorial. Pelajari susunan lengkap dengan contoh langkah demi langkah dan latihan praktis.",
    authors: [{ name: "Nabil Akbarazzima Fatih" }],
    date: "05/26/2025",
    subject: "Kombinatorik",
 };
 
-## Pengertian Permutasi n Item dari n Objek
+## Pengertian Permutasi Semua Objek
 
-**Permutasi n item dari n objek** adalah susunan semua objek yang tersedia dimana setiap objek digunakan tepat satu kali dan **urutan penyusunannya sangat penting**. Dalam kasus ini, kita menggunakan seluruh objek yang ada tanpa ada yang tersisa.
+**Permutasi semua objek** adalah susunan semua objek yang tersedia, yaitu <InlineMath math="n" /> item dari <InlineMath math="n" /> objek, dimana setiap objek digunakan tepat satu kali dan **urutan penyusunannya sangat penting**. Dalam kasus ini, kita menggunakan seluruh objek yang ada tanpa ada yang tersisa.
 
-Bayangkan seperti menyusun barisan foto untuk 5 siswa. Kelima siswa tersebut disusun dalam satu barisan. Setiap siswa mendapat satu posisi, tidak ada yang duduk di bangku cadangan, dan posisi Andi di depan atau di belakang memberikan hasil yang berbeda.
+Bayangkan seperti menyusun barisan foto untuk <InlineMath math="5 \text{ siswa}" />. Kelima siswa tersebut disusun dalam satu barisan. Setiap siswa mendapat satu posisi, tidak ada yang duduk di bangku cadangan, dan posisi Andi di depan atau di belakang memberikan hasil yang berbeda.
 
 ## Rumus Permutasi Lengkap
 
-Untuk permutasi n item dari n objek, **rumus yang digunakan** adalah:
+Untuk permutasi <InlineMath math="n" /> item dari <InlineMath math="n" /> objek, **rumus yang digunakan** adalah:
 
 <MathContainer>
 <BlockMath math="nP_n = \frac{n!}{(n-n)!} = \frac{n!}{0!}" />
@@ -33,7 +33,7 @@ Jadi, rumusnya adalah:
 
 ## Konsep Faktorial
 
-**Faktorial** adalah perkalian berturut-turut dari bilangan bulat positif. Faktorial dari bilangan n ditulis sebagai <InlineMath math="n!" /> dan didefinisikan sebagai:
+**Faktorial** adalah perkalian berturut-turut dari bilangan bulat positif. Faktorial dari bilangan <InlineMath math="n" /> ditulis sebagai <InlineMath math="n!" /> dan didefinisikan sebagai:
 
 <MathContainer>
 <BlockMath math="n! = n \times (n-1) \times (n-2) \times \cdots \times 2 \times 1" />
@@ -47,7 +47,7 @@ Jadi, rumusnya adalah:
 
 ### Organisasi Sekolah
 
-Misalkan ada 4 siswa yang akan mengisi 4 posisi dalam kepengurusan kelas: ketua, wakil ketua, sekretaris, dan bendahara. Setiap siswa hanya dapat memegang satu jabatan.
+Misalkan ada <InlineMath math="4 \text{ siswa}" /> yang akan mengisi 4 posisi dalam kepengurusan kelas: ketua, wakil ketua, sekretaris, dan bendahara. Setiap siswa hanya dapat memegang satu jabatan.
 
 Banyaknya cara menyusun kepengurusan tersebut adalah:
 
@@ -65,11 +65,11 @@ Sebuah keluarga yang terdiri dari 6 anggota akan duduk berjajar di sofa untuk fo
 
 ## Langkah Perhitungan Sistematis
 
-Untuk menghitung permutasi n item dari n objek, ikuti langkah berikut:
+Untuk menghitung permutasi <InlineMath math="n" /> item dari <InlineMath math="n" /> objek, ikuti langkah berikut:
 
 1. **Identifikasi jumlah objek**: Pastikan semua objek akan digunakan
 2. **Terapkan rumus**: Gunakan <InlineMath math="n!" />
-3. **Hitung faktorial**: Kalikan berturut-turut dari n sampai 1
+3. **Hitung faktorial**: Kalikan berturut-turut dari <InlineMath math="n" /> sampai <InlineMath math="1" />
 4. **Verifikasi hasil**: Pastikan perhitungan sudah benar
 
 ### Perhitungan Detail
@@ -85,12 +85,12 @@ Menghitung <InlineMath math="5!" /> dengan langkah-langkah yang jelas:
 
 ## Perbedaan dengan Permutasi Sebagian
 
-**Permutasi lengkap (n dari n objek)**: Menggunakan semua objek yang tersedia.
-**Permutasi sebagian (r dari n objek)**: Hanya menggunakan sebagian objek.
+**Permutasi lengkap (<InlineMath math="n" /> dari <InlineMath math="n" /> objek)**: Menggunakan semua objek yang tersedia.
+**Permutasi sebagian (<InlineMath math="r" /> dari <InlineMath math="n" /> objek)**: Hanya menggunakan sebagian objek.
 
 **Contoh konkret**: 
-- Permutasi lengkap: Menyusun 5 buku dalam 5 posisi di rak = <InlineMath math="5!" /> = <InlineMath math="120 \text{ cara}" />
-- Permutasi sebagian: Memilih dan menyusun 3 buku dari 5 buku yang ada = <InlineMath math="5P_3" /> = <InlineMath math="60 \text{ cara}" />
+- Permutasi lengkap: Menyusun 5 buku dalam 5 posisi di rak adalah <InlineMath math="5! = 120 \text{ cara}" />
+- Permutasi sebagian: Memilih dan menyusun 3 buku dari 5 buku yang ada adalah <InlineMath math="5P_3 = 60 \text{ cara}" />
 
 **Perhitungan detail untuk permutasi sebagian**:
 
@@ -100,7 +100,7 @@ Menghitung <InlineMath math="5!" /> dengan langkah-langkah yang jelas:
 <BlockMath math="= \frac{120}{2} = 60 \text{ cara}" />
 </MathContainer>
 
-Dalam permutasi n item dari n objek, **tidak ada objek yang tersisa** dan **semua posisi harus diisi**.
+Dalam permutasi <InlineMath math="n" /> item dari <InlineMath math="n" /> objek, **tidak ada objek yang tersisa** dan **semua posisi harus diisi**.
 
 ## Latihan
 

@@ -18,7 +18,7 @@ As a simple illustration, imagine you throw a dice and a coin simultaneously. A 
 
 ### Mutually Exclusive Events
 
-Two events are said to be **mutually exclusive** when both events cannot occur simultaneously in one experiment. In other words, if event A occurs, then event B definitely cannot occur, and vice versa.
+Two events are said to be **mutually exclusive** when both events cannot occur simultaneously in one experiment. In other words, if event <InlineMath math="A" /> occurs, then event <InlineMath math="B" /> definitely cannot occur, and vice versa.
 
 A classic example is throwing one dice. The event of getting an even number and the event of getting an odd number are mutually exclusive, because in one throw it's impossible to get a number that is both even and odd.
 
@@ -32,10 +32,10 @@ A dice is thrown once. Determine the probability of getting an even number or nu
 
 **Solution:**
 
-Sample space: S = <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />
+Sample space: <InlineMath math="S = \{1, 2, 3, 4, 5, 6\}" />
 
-- Event A (even numbers): A = <InlineMath math="\{2, 4, 6\}" />
-- Event B (numbers 1 or 3): B = <InlineMath math="\{1, 3\}" />
+- Event <InlineMath math="A" /> (even numbers): <InlineMath math="A = \{2, 4, 6\}" />
+- Event <InlineMath math="B" /> (numbers 1 or 3): <InlineMath math="B = \{1, 3\}" />
 
 Check intersection: <InlineMath math="A \cap B = \emptyset" /> (empty set)
 
@@ -69,8 +69,8 @@ From a standard bridge card deck, one card is drawn randomly. Determine the prob
 
 Total cards = 52
 
-- Event A (red cards): <InlineMath math="26 \text{ cards}" /> (13 Hearts + 13 Diamonds)
-- Event B (face cards): <InlineMath math="12 \text{ cards}" /> (4 Jacks + 4 Queens + 4 Kings)
+- Event <InlineMath math="A" /> (red cards): <InlineMath math="26 \text{ cards}" /> (<InlineMath math="13" /> Hearts + <InlineMath math="13" /> Diamonds)
+- Event <InlineMath math="B" /> (face cards): <InlineMath math="12 \text{ cards}" /> (<InlineMath math="4" /> Jacks + <InlineMath math="4" /> Queens + <InlineMath math="4" /> Kings)
 
 Intersection (red and face cards): <InlineMath math="6 \text{ cards}" /> (Jack, Queen, King from Hearts and Diamonds)
 
@@ -100,8 +100,8 @@ Two dice are thrown simultaneously. Determine the probability of getting number 
 
 **Solution:**
 
-- Event A (number 3 on first dice): 1 possibility out of 6
-- Event B (even number on second dice): <InlineMath math="\{2, 4, 6\}" /> = 3 possibilities out of 6
+- Event <InlineMath math="A" /> (number 3 on first dice): <InlineMath math="1 \text{ possibility}" /> out of <InlineMath math="6" />
+- Event <InlineMath math="B" /> (even number on second dice): <InlineMath math="\{2, 4, 6\} = 3 \text{ possibilities}" /> out of <InlineMath math="6" />
 
 Since the result of the first dice does not affect the second dice, both events are independent.
 
@@ -123,18 +123,18 @@ Formula for dependent events:
 
 <BlockMath math="P(A \cap B) = P(A) \times P(B|A)" />
 
-where <InlineMath math="P(B|A)" /> is the probability of event B occurring given that event A has already occurred.
+where <InlineMath math="P(B|A)" /> is the probability of event <InlineMath math="B" /> occurring given that event <InlineMath math="A" /> has already occurred.
 
 **Calculation Example:**
 
-In a box there are 8 blue balls and 4 yellow balls. Two balls are drawn randomly **without replacement**. Determine the probability that both balls drawn are blue.
+In a box there are <InlineMath math="8 \text{ blue balls}" /> and <InlineMath math="4 \text{ yellow balls}" />. Two balls are drawn randomly **without replacement**. Determine the probability that both balls drawn are blue.
 
 **Solution:**
 
-Initial total balls = <InlineMath math="8 + 4 = 12 \text{ balls}" />
+Initial total balls is <InlineMath math="8 + 4 = 12 \text{ balls}" />
 
-- Event A (first ball blue): 8 blue balls out of 12 total balls
-- Event B (second ball blue after A): Since 1 blue ball has been drawn, 7 blue balls remain out of 11 total balls
+- Event <InlineMath math="A" /> (first ball blue): <InlineMath math="8 \text{ blue balls}" /> out of <InlineMath math="12 \text{ total balls}" />
+- Event <InlineMath math="B" /> (second ball blue after <InlineMath math="A" />): Since <InlineMath math="1 \text{ blue ball}" /> has been drawn, <InlineMath math="7 \text{ blue balls}" /> remain out of <InlineMath math="11 \text{ total balls}" />
 
 Since drawing is without replacement, conditions change after the first draw, so this is a dependent event.
 
@@ -150,13 +150,13 @@ Since drawing is without replacement, conditions change after the first draw, so
 
 ### Union Operation
 
-When we want to know the probability of "event A **OR** event B", we use the union operation. The keyword "or" indicates that we are looking for the probability where at least one event occurs.
+When we want to know the probability of "event <InlineMath math="A" /> **OR** event <InlineMath math="B" />", we use the union operation. The keyword "or" indicates that we are looking for the probability where at least one event occurs.
 
 In dice throwing, if we want to find the probability of getting an odd number or a prime number, we need to consider whether both events are mutually exclusive or not.
 
 ### Intersection Operation
 
-Conversely, when looking for the probability of "event A **AND** event B", we use the intersection operation. The keyword "and" indicates that both events must occur simultaneously.
+Conversely, when looking for the probability of "event <InlineMath math="A" /> **AND** event <InlineMath math="B" />", we use the intersection operation. The keyword "and" indicates that both events must occur simultaneously.
 
 In the context of card drawing, if we look for the probability of "drawing a red card AND an even-numbered card", we must count cards that meet both criteria.
 
@@ -175,7 +175,7 @@ Next, determine whether the events are mutually exclusive or not by checking if 
 
 1. In throwing a dice, determine the probability of getting a prime number or an odd number on the dice.
 
-2. A box contains 6 red balls and 4 white balls. Two balls are drawn randomly without replacement. Calculate the probability that both balls drawn are red.
+2. A box contains <InlineMath math="6 \text{ red balls}" /> and <InlineMath math="4 \text{ white balls}" />. Two balls are drawn randomly without replacement. Calculate the probability that both balls drawn are red.
 
 3. Two dice are thrown simultaneously. Determine the probability that the sum of the dice is 7 or 11.
 
@@ -185,12 +185,12 @@ Next, determine whether the events are mutually exclusive or not by checking if 
 
 1. **Solution:**
    
-   Sample space: S = <InlineMath math="\{1, 2, 3, 4, 5, 6\}" />, so n(S) = 6
+   Sample space: <InlineMath math="S = \{1, 2, 3, 4, 5, 6\}" />, so <InlineMath math="n(S) = 6" />
    
-   - Event A (prime numbers): A = <InlineMath math="\{2, 3, 5\}" />, so n(A) = 3
-   - Event B (odd numbers): B = <InlineMath math="\{1, 3, 5\}" />, so n(B) = 3
+   - Event <InlineMath math="A" /> (prime numbers): <InlineMath math="A = \{2, 3, 5\}" />, so <InlineMath math="n(A) = 3" />
+   - Event <InlineMath math="B" /> (odd numbers): <InlineMath math="B = \{1, 3, 5\}" />, so <InlineMath math="n(B) = 3" />
    
-   Intersection A and B: <InlineMath math="A \cap B" /> = <InlineMath math="\{3, 5\}" />, so <InlineMath math="n(A \cap B)" /> = 2
+   Intersection <InlineMath math="A" /> and <InlineMath math="B" />: <InlineMath math="A \cap B = \{3, 5\}" />, so <InlineMath math="n(A \cap B)" /> = 2
    
    Since there is an intersection, the events are not mutually exclusive. Using the formula:
    
@@ -208,10 +208,10 @@ Next, determine whether the events are mutually exclusive or not by checking if 
 
 2. **Solution:**
    
-   Total balls = <InlineMath math="6 + 4 = 10 \text{ balls}" />
+   Total balls is <InlineMath math="6 + 4 = 10 \text{ balls}" />
    
-   - Event A (first ball red): 6 red balls out of 10 total balls
-   - Event B (second ball red after A): After 1 red ball is drawn, 5 red balls remain out of 9 total balls
+   - Event <InlineMath math="A" /> (first ball red): <InlineMath math="6 \text{ red balls}" /> out of <InlineMath math="10 \text{ total balls}" />
+   - Event <InlineMath math="B" /> (second ball red after <InlineMath math="A" />): After <InlineMath math="1 \text{ red ball}" /> is drawn, <InlineMath math="5 \text{ red balls}" /> remain out of <InlineMath math="9 \text{ total balls}" />
    
    Since drawing is **without replacement**, conditions change after the first draw, so this is a dependent event.
 
@@ -225,10 +225,10 @@ Next, determine whether the events are mutually exclusive or not by checking if 
 
 3. **Solution:**
    
-   Total possibilities = <InlineMath math="6 \times 6 = 36" />
+   Total possibilities is <InlineMath math="6 \times 6 = 36" />
    
-   - Event A (sum = <InlineMath math="7" />): <InlineMath math="(1,6), (2,5), (3,4), (4,3), (5,2), (6,1)" /> → <InlineMath math="6 \text{ ways}" />
-   - Event B (sum = <InlineMath math="11" />): <InlineMath math="(5,6), (6,5)" /> → <InlineMath math="2 \text{ ways}" />
+   - Event <InlineMath math="A" /> (sum is <InlineMath math="7" />): <InlineMath math="(1,6), (2,5), (3,4), (4,3), (5,2), (6,1)" /> → <InlineMath math="6 \text{ ways}" />
+   - Event <InlineMath math="B" /> (sum is <InlineMath math="11" />): <InlineMath math="(5,6), (6,5)" /> → <InlineMath math="2 \text{ ways}" />
    
    Both events are mutually exclusive because it's impossible for the dice sum to be both 7 and 11.
    
@@ -244,10 +244,10 @@ Next, determine whether the events are mutually exclusive or not by checking if 
    
    Total cards = 52
    
-   - Event A (Ace cards): 4 Ace cards
-   - Event B (black cards): <InlineMath math="26 \text{ cards}" /> (Spades and Clubs)
+   - Event <InlineMath math="A" /> (Ace cards): <InlineMath math="4" /> Ace cards
+   - Event <InlineMath math="B" /> (black cards): <InlineMath math="26 \text{ cards}" /> (Spades and Clubs)
    
-   Intersection (black Aces): Ace of Spades and Ace of Clubs = <InlineMath math="2 \text{ cards}" />
+   Intersection (black Aces): Ace of Spades and Ace of Clubs is <InlineMath math="2 \text{ cards}" />
    
    <MathContainer>
    <BlockMath math="P(A) = \frac{4}{52} = \frac{1}{13}" />

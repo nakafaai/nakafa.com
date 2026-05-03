@@ -2,7 +2,7 @@ import { ScatterDiagram } from "@repo/design-system/components/contents/mathemat
 
 export const metadata = {
   title: "Korelasi Product Moment",
-  description: "Hitung koefisien korelasi Pearson (r) untuk mengukur hubungan linear. Pelajari rumus, analisis scatter plot, dan interpretasi nilai r dari -1 hingga +1.",
+  description: "Hitung koefisien korelasi Pearson untuk mengukur hubungan linear. Pelajari rumus, analisis scatter plot, dan interpretasi kekuatan korelasi.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/30/2025",
   subject: "Statistika",
@@ -150,22 +150,22 @@ linear.
 
 Ketika titik-titik menyebar acak tanpa pola lurus yang jelas, nilai <InlineMath math="r" />-nya akan mendekati 0.
 
-## Bagaimana Menghitung r?
+## Bagaimana Menghitung Koefisien Korelasi?
 
-Koefisien korelasi Pearson (<InlineMath math="r" />) pada dasarnya mengukur seberapa **sinkron** pergerakan dua variabel (X dan Y) relatif terhadap variasi masing-masing.
+Koefisien korelasi Pearson (<InlineMath math="r" />) pada dasarnya mengukur seberapa **sinkron** pergerakan dua variabel (<InlineMath math="X" /> dan <InlineMath math="Y" />) relatif terhadap variasi masing-masing.
 
 **Bayangkan begini:**
 
 1.  **Variasi Sendiri:**
 
-    Setiap variabel (X dan Y) punya variasinya sendiri. Ada yang nilainya naik-turun banyak (variasi besar), ada yang stabil (variasi kecil). Ini diukur oleh <InlineMath math="SS_{xx}" /> untuk X dan <InlineMath math="SS_{yy}" /> untuk Y (yang akan kita lihat rumusnya di bawah).
+    Setiap variabel (<InlineMath math="X" /> dan <InlineMath math="Y" />) punya variasinya sendiri. Ada yang nilainya naik-turun banyak (variasi besar), ada yang stabil (variasi kecil). Ini diukur oleh <InlineMath math="SS_{xx}" /> untuk <InlineMath math="X" /> dan <InlineMath math="SS_{yy}" /> untuk <InlineMath math="Y" /> (yang akan kita lihat rumusnya di bawah).
 
 2.  **Variasi Bersama (Kovariasi):**
 
-    Kita juga perlu tahu bagaimana X dan Y bervariasi _bersama-sama_. Apakah saat X naik, Y juga cenderung naik? Atau malah turun? Ukuran variasi bersama ini disebut **kovariasi**, dan dihitung menggunakan <InlineMath math="SS_{xy}" />.
+    Kita juga perlu tahu bagaimana <InlineMath math="X" /> dan <InlineMath math="Y" /> bervariasi _bersama-sama_. Apakah saat <InlineMath math="X" /> naik, <InlineMath math="Y" /> juga cenderung naik? Atau malah turun? Ukuran variasi bersama ini disebut **kovariasi**, dan dihitung menggunakan <InlineMath math="SS_{xy}" />.
 
-    - Jika <InlineMath math="SS_{xy}" /> positif besar: X dan Y sering bergerak searah.
-    - Jika <InlineMath math="SS_{xy}" /> negatif besar: X dan Y sering bergerak berlawanan arah.
+    - Jika <InlineMath math="SS_{xy}" /> positif besar: <InlineMath math="X" /> dan <InlineMath math="Y" /> sering bergerak searah.
+    - Jika <InlineMath math="SS_{xy}" /> negatif besar: <InlineMath math="X" /> dan <InlineMath math="Y" /> sering bergerak berlawanan arah.
     - Jika <InlineMath math="SS_{xy}" /> dekat nol: Tidak ada pola pergerakan bersama yang jelas.
 
 3.  **Menstandarkan Ukuran:**
@@ -178,7 +178,7 @@ Koefisien korelasi Pearson (<InlineMath math="r" />) pada dasarnya mengukur sebe
 
 Hasil pembagian inilah yang menjadi **<InlineMath math="r" />**, Koefisien Korelasi Pearson. Karena sudah distandarkan, nilainya akan selalu antara -1 dan +1, tidak peduli satuan asli datanya. Ini memungkinkan kita membandingkan kekuatan hubungan linear antar variabel yang berbeda-beda.
 
-Jadi, nilai <InlineMath math="r" /> ditentukan dengan membandingkan seberapa kuat X dan Y bergerak bersama, relatif terhadap seberapa banyak mereka bergerak secara individual.
+Jadi, nilai <InlineMath math="r" /> ditentukan dengan membandingkan seberapa kuat <InlineMath math="X" /> dan <InlineMath math="Y" /> bergerak bersama, relatif terhadap seberapa banyak mereka bergerak secara individual.
 
 ## Rumus Korelasi Product Moment
 
@@ -190,32 +190,32 @@ Untuk menghitung nilai <InlineMath math="r" /> secara pasti, kita gunakan rumus 
 
 Ini adalah cara mengukur seberapa bervariasi data kita:
 
-1.  **<InlineMath math="SS_{xx}" /> (Sum of Squares for x):** Mengukur seberapa menyebar data x dari rata-ratanya.
+1.  **<InlineMath math="SS_{xx}" /> (Sum of Squares for <InlineMath math="x" />):** Mengukur seberapa menyebar data <InlineMath math="x" /> dari rata-ratanya.
 
     <BlockMath math="SS_{xx} = \sum (x - \bar{x})^2 = \sum x^2 - \frac{(\sum x)^2}{n}" />
 
-2.  **<InlineMath math="SS_{yy}" /> (Sum of Squares for y):** Mengukur seberapa menyebar data y dari rata-ratanya.
+2.  **<InlineMath math="SS_{yy}" /> (Sum of Squares for <InlineMath math="y" />):** Mengukur seberapa menyebar data <InlineMath math="y" /> dari rata-ratanya.
 
     <BlockMath math="SS_{yy} = \sum (y - \bar{y})^2 = \sum y^2 - \frac{(\sum y)^2}{n}" />
 
-3.  **<InlineMath math="SS_{xy}" /> (Sum of Products of deviations for x and y):** Mengukur bagaimana x dan y bervariasi _bersama-sama_.
+3.  **<InlineMath math="SS_{xy}" /> (Sum of Products of deviations for <InlineMath math="x" /> and <InlineMath math="y" />):** Mengukur bagaimana <InlineMath math="x" /> dan <InlineMath math="y" /> bervariasi _bersama-sama_.
 
     <BlockMath math="SS_{xy} = \sum (x - \bar{x})(y - \bar{y}) = \sum xy - \frac{(\sum x)(\sum y)}{n}" />
 
 Keterangan:
 
-- <InlineMath math="n" />: Banyaknya pasangan data (x, y).
+- <InlineMath math="n" />: Banyaknya pasangan data <InlineMath math="(x, y)" />.
 - <InlineMath math="\sum x" />, <InlineMath math="\sum y" />: Jumlah semua nilai
-  x dan y.
+  <InlineMath math="x" /> dan <InlineMath math="y" />.
 - <InlineMath math="\sum x^2" />, <InlineMath math="\sum y^2" />: Jumlah kuadrat
-  dari setiap nilai x dan y.
-- <InlineMath math="\sum xy" />: Jumlah dari hasil kali setiap pasangan x dan y.
-- <InlineMath math="\bar{x}" />, <InlineMath math="\bar{y}" />: Rata-rata nilai x
-  dan y.
+  dari setiap nilai <InlineMath math="x" /> dan <InlineMath math="y" />.
+- <InlineMath math="\sum xy" />: Jumlah dari hasil kali setiap pasangan <InlineMath math="x" /> dan <InlineMath math="y" />.
+- <InlineMath math="\bar{x}" />, <InlineMath math="\bar{y}" />: Rata-rata nilai <InlineMath math="x" />
+  dan <InlineMath math="y" />.
 
 Dengan menghitung ketiga nilai SS ini dan memasukkannya ke rumus <InlineMath math="r" />, kita akan mendapatkan nilai Koefisien Korelasi Product Moment.
 
-## Interpretasi Nilai r
+## Interpretasi Koefisien Korelasi
 
 Setelah mendapatkan nilai <InlineMath math="r" />, kita bisa interpretasikan kekuatannya dan arahnya menggunakan panduan umum berikut:
 

@@ -10,7 +10,7 @@ export const metadata = {
 
 ## Apa Itu Diagram Pencar?
 
-Diagram Pencar (Scatter Diagram) itu seperti peta yang menunjukkan hubungan antara dua jenis data. Misalnya, kita mau lihat hubungan antara lama waktu belajar (sumbu X) dengan nilai ujian (sumbu Y).
+Diagram Pencar (Scatter Diagram) itu seperti peta yang menunjukkan hubungan antara dua jenis data. Misalnya, kita mau lihat hubungan antara lama waktu belajar (sumbu <InlineMath math="x" />) dengan nilai ujian (sumbu <InlineMath math="y" />).
 
 Setiap titik di diagram mewakili satu pasangan data (misalnya, data satu siswa). Dengan melihat pola titik-titiknya, kita bisa mengerti hubungannya.
 
@@ -35,7 +35,7 @@ Mari kita lihat beberapa contoh diagram pencar dengan pola yang berbeda:
 
 ### Korelasi Positif
 
-Kalau titik-titik cenderung naik dari kiri bawah ke kanan atas, itu artinya ada **korelasi positif**. Semakin besar nilai X, nilai Y juga cenderung semakin besar.
+Kalau titik-titik cenderung naik dari kiri bawah ke kanan atas, itu artinya ada **korelasi positif**. Semakin besar nilai <InlineMath math="X" />, nilai <InlineMath math="Y" /> juga cenderung semakin besar.
 
 <ScatterDiagram
   title="Hubungan Lama Belajar (Jam) dan Nilai Ujian"
@@ -66,7 +66,7 @@ Kalau titik-titik cenderung naik dari kiri bawah ke kanan atas, itu artinya ada 
 
 ### Korelasi Negatif
 
-Kalau titik-titik cenderung turun dari kiri atas ke kanan bawah, itu artinya ada **korelasi negatif**. Semakin besar nilai X, nilai Y malah cenderung semakin kecil.
+Kalau titik-titik cenderung turun dari kiri atas ke kanan bawah, itu artinya ada **korelasi negatif**. Semakin besar nilai <InlineMath math="X" />, nilai <InlineMath math="Y" /> malah cenderung semakin kecil.
 
 <ScatterDiagram
   title="Hubungan Usia Mobil (Tahun) dan Harga Jual (Puluh Juta)"
@@ -105,7 +105,7 @@ Kalau titik-titiknya tersebar acak tanpa pola yang jelas, itu artinya **tidak ad
   }
   description="Tidak ada korelasi antara tinggi badan dan kecepatan lari, dengan data dari dua sekolah berbeda."
   xAxisLabel="Tinggi Badan (cm)"
-  yAxisLabel="Waktu Lari 100m (detik)"
+  yAxisLabel="Waktu Lari Sprint (detik)"
   xAxisDomain="min-max"
   datasets={[
     {

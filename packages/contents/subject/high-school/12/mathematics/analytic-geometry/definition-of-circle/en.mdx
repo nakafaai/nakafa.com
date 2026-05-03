@@ -129,7 +129,7 @@ Imagine you tie a string to a nail, then pull the string tight and draw a comple
   showZAxis={false}
 />
 
-In the visualization above, point P is the center of the circle, while points A, B, and C are some points that lie on the circle. Notice that the distance from P to A, P to B, and P to C are all equal to <InlineMath math="r" />. This is what makes them all lie on the same circle.
+In the visualization above, point <InlineMath math="P" /> is the center of the circle, while points <InlineMath math="A" />, <InlineMath math="B" />, and <InlineMath math="C" /> are some points that lie on the circle. Notice that the distance from <InlineMath math="P" /> to <InlineMath math="A" />, <InlineMath math="P" /> to <InlineMath math="B" />, and <InlineMath math="P" /> to <InlineMath math="C" /> are all equal to <InlineMath math="r" />. This is what makes them all lie on the same circle.
 
 ## Mathematical Definition
 
@@ -137,7 +137,7 @@ Now, let's create a more formal definition. Mathematically, a circle with center
 
 <BlockMath math="d(P, (x,y)) = r" />
 
-Where <InlineMath math="d(P, (x,y))" /> is the distance from the center point P to the point <InlineMath math="(x, y)" /> on the circle.
+Where <InlineMath math="d(P, (x,y))" /> is the distance from the center point <InlineMath math="P" /> to the point <InlineMath math="(x, y)" /> on the circle.
 
 If we use the distance formula in the Cartesian coordinate system, we can write it like this:
 
@@ -156,7 +156,7 @@ This is the **general equation of a circle** with center <InlineMath math="(a, b
 
 <LineEquation
   title="Circle in Coordinate System"
-  description="Circle with center (2, 1) and radius 2."
+  description={<>Circle with center <InlineMath math="(2, 1)" /> and radius <InlineMath math="2" />.</>}
   data={[
     {
       points: Array.from({ length: 361 }, (_, i) => {
@@ -192,7 +192,7 @@ This is the **general equation of a circle** with center <InlineMath math="(a, b
       points: Array.from({ length: 2 }, (_, i) => {
         const xMin = -1;
         const xMax = 5;
-        const y = 0; // x-axis
+        const y = 0; // <InlineMath math="x" />-axis
         return {
           x: xMin + i * (xMax - xMin),
           y: y,
@@ -207,7 +207,7 @@ This is the **general equation of a circle** with center <InlineMath math="(a, b
       points: Array.from({ length: 2 }, (_, i) => {
         const yMin = -2;
         const yMax = 4;
-        const x = 0; // y-axis
+        const x = 0; // <InlineMath math="y" />-axis
         return {
           x: x,
           y: yMin + i * (yMax - yMin),

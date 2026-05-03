@@ -70,8 +70,8 @@ A central angle is an angle formed by two radii of a circle with the vertex loca
 
 In the figure above:
 
-- Point O is the center of the circle
-- OA and OB are radii of the circle
+- Point <InlineMath math="O" /> is the center of the circle
+- <InlineMath math="OA" /> and <InlineMath math="OB" /> are radii of the circle
 - <InlineMath math="\angle AOB" /> is the central angle
 - The measure of the central angle is denoted by <InlineMath math="\alpha" />
 
@@ -129,10 +129,10 @@ An inscribed angle is an angle formed by two chords with the vertex located on t
 
 In the figure above:
 
-- Point C is located on the circle
-- CA and CB are chords
+- Point <InlineMath math="C" /> is located on the circle
+- <InlineMath math="CA" /> and <InlineMath math="CB" /> are chords
 - <InlineMath math="\angle ACB" /> is the inscribed angle
-- Point O is the center of the circle
+- Point <InlineMath math="O" /> is the center of the circle
 
 ## Relationship Between Central Angle and Inscribed Angle
 
@@ -238,7 +238,12 @@ Let's prove the relationship between central angle and inscribed angle by constr
 
 <LineEquation
   title="Proof with Auxiliary Lines"
-  description="Constructing auxiliary line from C through O to prove the relationship."
+  description={
+    <>
+      Constructing auxiliary line from <InlineMath math="C" /> through{" "}
+      <InlineMath math="O" /> to prove the relationship.
+    </>
+  }
   data={[
     {
       points: Array.from({ length: 361 }, (_, i) => {
@@ -306,9 +311,9 @@ Let's prove the relationship between central angle and inscribed angle by constr
 
 **Proof steps:**
 
-1. Construct line CD that passes through point O (center of the circle)
-2. Note that OA = OB = OC = OD (radii of the circle)
-3. Triangles AOC and BOC are isosceles triangles
+1. Construct line <InlineMath math="CD" /> that passes through point <InlineMath math="O" /> (center of the circle)
+2. Note that <InlineMath math="OA = OB = OC = OD" /> (radii of the circle)
+3. Triangles <InlineMath math="AOC" /> and <InlineMath math="BOC" /> are isosceles triangles
 4. Let <InlineMath math="\angle ACO = x" /> and <InlineMath math="\angle BCO = y" />
 5. Since they are isosceles triangles: <InlineMath math="\angle CAO = x" /> and <InlineMath math="\angle CBO = y" />
 6. Exterior angles of triangles: <InlineMath math="\angle AOD = 2x" /> and <InlineMath math="\angle BOD = 2y" />
@@ -322,7 +327,7 @@ Every inscribed angle that subtends a diameter of a circle measures <InlineMath 
 
    <LineEquation
      title="Inscribed Angle Subtending a Diameter"
-     description="Inscribed angle subtending a diameter is always 90°."
+     description={<>Inscribed angle subtending a diameter is always <InlineMath math="90^\circ" />.</>}
      data={[
        {
          points: Array.from({ length: 361 }, (_, i) => {
@@ -403,7 +408,7 @@ Every inscribed angle that subtends a diameter of a circle measures <InlineMath 
 2. **Inscribed Angles Subtending the Same Arc**
 
    <InlineMath math="\angle ACB = \angle ADB" />, both angles subtend the same
-   arc AB.
+   arc <InlineMath math="AB" />.
 
    <LineEquation
      title="Inscribed Angles Subtending the Same Arc"
@@ -491,7 +496,7 @@ Given central angle <InlineMath math="\angle AOB = 80^\circ" />. Find the measur
 
 <LineEquation
   title="Visualization"
-  description="Central angle AOB = 80°, find inscribed angle ACB."
+  description={<>Central angle <InlineMath math="AOB = 80^\circ" />, find inscribed angle <InlineMath math="ACB" />.</>}
   data={[
     {
       points: Array.from({ length: 361 }, (_, i) => {
@@ -565,8 +570,8 @@ Given central angle <InlineMath math="\angle AOB = 80^\circ" />. Find the measur
 
 <MathContainer>
   <BlockMath math="\angle ACB = \frac{1}{2} \times \angle AOB" />
-  <BlockMath math="\angle ACB = \frac{1}{2} \times 80°" />
-  <BlockMath math="\angle ACB = 40°" />
+  <BlockMath math="\angle ACB = \frac{1}{2} \times 80^\circ" />
+  <BlockMath math="\angle ACB = 40^\circ" />
 </MathContainer>
 
 ## Calculating Central Angle
@@ -577,8 +582,8 @@ Given inscribed angle <InlineMath math="\angle ACB = 35^\circ" />. Find the meas
 
 <MathContainer>
   <BlockMath math="\angle AOB = 2 \times \angle ACB" />
-  <BlockMath math="\angle AOB = 2 \times 35°" />
-  <BlockMath math="\angle AOB = 70°" />
+  <BlockMath math="\angle AOB = 2 \times 35^\circ" />
+  <BlockMath math="\angle AOB = 70^\circ" />
 </MathContainer>
 
 ## Practice Problems
@@ -587,15 +592,15 @@ Given inscribed angle <InlineMath math="\angle ACB = 35^\circ" />. Find the meas
 
 2. Inscribed angle <InlineMath math="\angle ABC = 45^\circ" />. Find the measure of central angle <InlineMath math="\angle AOB" />!
 
-3. In a circle, inscribed angle PQR subtends a diameter. What is the measure of angle PQR?
+3. In a circle, inscribed angle <InlineMath math="PQR" /> subtends a diameter. What is the measure of angle <InlineMath math="PQR" />?
 
 4. Two inscribed angles subtend the same arc. If one angle measures <InlineMath math="25^\circ" />, find the measure of the other angle!
 
 ### Answer Key
 
-1. Inscribed angle = <InlineMath math="\frac{1}{2} \times 120° = 60°" />
+1. Inscribed angle is <InlineMath math="\frac{1}{2} \times 120^\circ = 60^\circ" />
 
-2. Central angle AOB = <InlineMath math="2 \times 45° = 90°" />
+2. Central angle <InlineMath math="\angle AOB = 2 \times 45^\circ = 90^\circ" />
 
 3. <InlineMath math="\angle PQR = 90^\circ" /> (an inscribed angle subtending a diameter is always <InlineMath math="90^\circ" />)
 

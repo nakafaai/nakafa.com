@@ -8,9 +8,9 @@ export const metadata = {
 
 ## Konsep Dasar Metode Sarrus
 
-Metode Sarrus adalah cara praktis untuk menghitung determinan matriks berordo 3x3. Metode ini dinamai dari Pierre Frédéric Sarrus. Untuk memahaminya, mari kita ingat kembali cara menghitung determinan matriks 2x2.
+Metode Sarrus adalah cara praktis untuk menghitung determinan matriks berordo <InlineMath math="3 \times 3" />. Metode ini dinamai dari Pierre Frédéric Sarrus. Untuk memahaminya, mari kita ingat kembali cara menghitung determinan matriks <InlineMath math="2 \times 2" />.
 
-Jika kita memiliki matriks 2x2:
+Jika kita memiliki matriks <InlineMath math="2 \times 2" />:
 
 <BlockMath math="M = \begin{bmatrix} a & b \\ c & d \end{bmatrix}" />
 
@@ -18,11 +18,11 @@ Determinannya, <InlineMath math="\det(M)" /> atau <InlineMath math="|M|" />, dih
 
 <BlockMath math="\det(M) = ad - bc" />
 
-Ini adalah selisih antara perkalian elemen diagonal utama (<InlineMath math="ad" />) dan perkalian elemen diagonal sekunder (<InlineMath math="bc" />). Metode Sarrus mengadaptasi prinsip ini untuk matriks 3x3.
+Ini adalah selisih antara perkalian elemen diagonal utama (<InlineMath math="ad" />) dan perkalian elemen diagonal sekunder (<InlineMath math="bc" />). Metode Sarrus mengadaptasi prinsip ini untuk matriks <InlineMath math="3 \times 3" />.
 
-## Langkah Menghitung Determinan Matriks 3x3 dengan Metode Sarrus
+## Langkah Menghitung Determinan Matriks Ordo Tiga dengan Metode Sarrus
 
-Misalkan kita memiliki matriks A berordo 3x3:
+Misalkan kita memiliki matriks <InlineMath math="A" /> berordo <InlineMath math="3 \times 3" />:
 
 <BlockMath math="A = \begin{bmatrix} a_{11} & a_{12} & a_{13} \\ a_{21} & a_{22} & a_{23} \\ a_{31} & a_{32} & a_{33} \end{bmatrix}" />
 
@@ -30,7 +30,7 @@ Elemen <InlineMath math="a_{ij}" /> adalah elemen pada baris ke-<InlineMath math
 
 **Langkah 1: Salin Dua Kolom Pertama**
 
-Tuliskan kembali dua kolom pertama matriks A di sebelah kanan kolom ketiga:
+Tuliskan kembali dua kolom pertama matriks <InlineMath math="A" /> di sebelah kanan kolom ketiga:
 
 <BlockMath math="\begin{array}{|ccc|cc} a_{11} & a_{12} & a_{13} & a_{11} & a_{12} \\ a_{21} & a_{22} & a_{23} & a_{21} & a_{22} \\ a_{31} & a_{32} & a_{33} & a_{31} & a_{32} \end{array}" />
 
@@ -58,7 +58,7 @@ Suku pertama adalah perkalian diagonal sekunder (anti-diagonal). Suku kedua dan 
 
 **Langkah 4: Hitung Determinan Akhir**
 
-Determinan matriks A, <InlineMath math="\det(A)" />, adalah selisih antara <InlineMath math="D_{\text{positif}}" /> dan <InlineMath math="D_{\text{negatif}}" />:
+Determinan matriks <InlineMath math="A" />, <InlineMath math="\det(A)" />, adalah selisih antara <InlineMath math="D_{\text{positif}}" /> dan <InlineMath math="D_{\text{negatif}}" />:
 
 <BlockMath math="\det(A) = D_{\text{positif}} - D_{\text{negatif}}" />
 
@@ -90,4 +90,4 @@ Sehingga, formula lengkapnya menjadi:
 
 ## Batasan Penting Metode Sarrus
 
-Metode Sarrus **hanya berlaku untuk matriks berordo 2x2 dan 3x3**. Untuk matriks dengan ordo lebih tinggi (misalnya 4x4), metode ini tidak dapat digunakan. Metode lain seperti ekspansi kofaktor atau reduksi baris diperlukan untuk kasus tersebut.
+Metode Sarrus **hanya berlaku untuk matriks berordo <InlineMath math="2 \times 2" /> dan <InlineMath math="3 \times 3" />**. Untuk matriks dengan ordo lebih tinggi (misalnya <InlineMath math="4 \times 4" />), metode ini tidak dapat digunakan. Metode lain seperti ekspansi kofaktor atau reduksi baris diperlukan untuk kasus tersebut.

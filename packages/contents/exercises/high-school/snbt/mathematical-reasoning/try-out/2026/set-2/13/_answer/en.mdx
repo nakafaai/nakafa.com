@@ -8,9 +8,9 @@ export const metadata = {
 
 The track is circular with the checkpoint sequence <InlineMath math="A \to B \to C \to D \to A" />. Since the distance between checkpoints is equal, we can count the number of segments the runner has traversed. Starting from <InlineMath math="A" />, the runner has passed checkpoint <InlineMath math="C" /> <InlineMath math="3" /> times.
 
-1.  Reaching <InlineMath math="C" /> for the 1st time: <InlineMath math="A \to B \to C" /> (<InlineMath math="2" /> segments).
-2.  Reaching <InlineMath math="C" /> for the 2nd time: <InlineMath math="C \to D \to A \to B \to C" /> (<InlineMath math="4" /> segments).
-3.  Reaching <InlineMath math="C" /> for the 3rd time: <InlineMath math="C \to D \to A \to B \to C" /> (<InlineMath math="4" /> segments).
+1.  Reaching <InlineMath math="C" /> for the <InlineMath math="1" />st time: <InlineMath math="A \to B \to C" /> (<InlineMath math="2" /> segments).
+2.  Reaching <InlineMath math="C" /> for the <InlineMath math="2" />nd time: <InlineMath math="C \to D \to A \to B \to C" /> (<InlineMath math="4" /> segments).
+3.  Reaching <InlineMath math="C" /> for the <InlineMath math="3" />rd time: <InlineMath math="C \to D \to A \to B \to C" /> (<InlineMath math="4" /> segments).
 
 The total segments traversed is the sum of these stages.
 
@@ -26,9 +26,9 @@ It is known that the time required to cover <InlineMath math="10" /> segments is
   <BlockMath math="\text{Time per segment} = \frac{12}{10} = 1.2 \text{ minutes}" />
 </MathContainer>
 
-**Calculating Total Time to Reach C for the 4th Time**
+**Calculating Total Time to Return to the Checkpoint**
 
-To reach checkpoint <InlineMath math="C" /> for the fourth time, the runner must complete another full lap from their last position (at the 3rd <InlineMath math="C" />). The additional path is <InlineMath math="C \to D \to A \to B \to C" />, which consists of <InlineMath math="4" /> segments.
+To reach checkpoint <InlineMath math="C" /> for the fourth time, the runner must complete another full lap from their last position (at the <InlineMath math="3" />rd <InlineMath math="C" />). The additional path is <InlineMath math="C \to D \to A \to B \to C" />, which consists of <InlineMath math="4" /> segments.
 
 The additional time required is:
 

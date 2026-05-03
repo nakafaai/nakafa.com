@@ -5,13 +5,13 @@ export const metadata = {
 };
 
 Given:
-*   Total teenagers (<InlineMath math="S" />) = <InlineMath math="300" />
-*   Sports activities (<InlineMath math="O" />) = <InlineMath math="135" />
-*   Nature lover activities (<InlineMath math="C" />) = <InlineMath math="255" />
+*   Total teenagers (<InlineMath math="S" />) is <InlineMath math="300" />
+*   Sports activities (<InlineMath math="O" />) is <InlineMath math="135" />
+*   Nature lover activities (<InlineMath math="C" />) is <InlineMath math="255" />
 
 We are asked to find the difference between the maximum value (<InlineMath math="B" />) and the minimum value (<InlineMath math="A" />) of the intersection of these two sets (<InlineMath math="O \cap C" />).
 
-#### Finding Minimum Value A
+#### Finding Minimum Unknown Value
 The minimum intersection occurs when the union of the two sets is maximized, which equals the total universe (<InlineMath math="300" />). This means everyone participates in at least one activity.
 <MathContainer>
   <BlockMath math="n(O \cup C) = n(O) + n(C) - n(O \cap C)" />
@@ -21,7 +21,7 @@ The minimum intersection occurs when the union of the two sets is maximized, whi
   <BlockMath math="A = 90" />
 </MathContainer>
 
-#### Finding Maximum Value B
+#### Finding Maximum Unknown Value
 The maximum intersection occurs when the smaller set is a subset of the larger set. In this case, all sports participants also participate in nature lover activities.
 <MathContainer>
   <BlockMath math="B = \min(n(O), n(C))" />
