@@ -6,13 +6,13 @@ export const metadata = {
 
 Kita dapat memodelkan masalah ini menggunakan konsep **Deret Geometri**. THR yang diterima Bima setiap tahunnya membentuk barisan geometri karena setiap tahunnya jumlah THR menjadi dua kali lipat dari tahun sebelumnya.
 
-Diketahui gaji bulanan Bima adalah <InlineMath math="Rp3.000.000,00" />. Langkah pertama adalah menentukan nilai suku pertama (<InlineMath math="a" />), yaitu besar THR pada tahun pertama:
+Diketahui gaji bulanan Bima adalah <InlineMath math="\text{Rp}3.000.000,00" />. Langkah pertama adalah menentukan nilai suku pertama (<InlineMath math="a" />), yaitu besar THR pada tahun pertama:
 
 <MathContainer>
   <BlockMath math="a = 10\% \times 3.000.000 = 300.000" />
 </MathContainer>
 
-Karena THR selalu menjadi dua kali lipat dari tahun sebelumnya, maka rasio (<InlineMath math="r" />) dari barisan ini adalah <InlineMath math="2" />. Kita diminta untuk mencari jumlah total THR selama <InlineMath math="5" /> tahun, yang berarti kita mencari jumlah <InlineMath math="5" /> suku pertama (<InlineMath math="S_5" />) dari deret geometri ini.
+Karena THR selalu menjadi dua kali lipat dari tahun sebelumnya, maka rasio (<InlineMath math="r" />) dari barisan ini adalah <InlineMath math="2" />. Kita diminta untuk mencari jumlah total THR selama <InlineMath math="5\text{ tahun}" />, yang berarti kita mencari jumlah <InlineMath math="5" /> suku pertama (<InlineMath math="S_5" />) dari deret geometri ini.
 
 Rumus jumlah <InlineMath math="n" /> suku pertama deret geometri adalah <InlineMath math="S_n = \frac{a(r^n - 1)}{r - 1}" />. Substitusikan nilai <InlineMath math="a = 300.000" />, <InlineMath math="r = 2" />, dan <InlineMath math="n = 5" /> ke dalam rumus tersebut:
 
@@ -23,4 +23,4 @@ Rumus jumlah <InlineMath math="n" /> suku pertama deret geometri adalah <InlineM
   <BlockMath math="S_5 = 9.300.000" />
 </MathContainer>
 
-Jadi, total THR yang diterima Bima selama <InlineMath math="5" /> tahun bekerja adalah **<InlineMath math="Rp9.300.000,00" />**.
+Jadi, total THR yang diterima Bima selama <InlineMath math="5\text{ tahun}" /> bekerja adalah **<InlineMath math="\text{Rp}9.300.000,00" />**.

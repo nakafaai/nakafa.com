@@ -10,8 +10,8 @@ export const metadata = {
 
 Imagine you are shopping at a store that offers two attractive promos:
 
-1.  **Promo A:** <InlineMath math="20\%" /> discount, then another deduction of Rp25,000.00.
-2.  **Promo B:** Price reduction of Rp25,000.00, then a <InlineMath math="20\%" /> discount.
+1.  **Promo A:** <InlineMath math="20\%" /> discount, then another deduction of <InlineMath math="\text{Rp}25,000.00" />.
+2.  **Promo B:** Price reduction of <InlineMath math="\text{Rp}25,000.00" />, then a <InlineMath math="20\%" /> discount.
 
 Do both promos result in the same final price? Which promo is more beneficial? To answer this, we need to understand the concept of **function composition**.
 
@@ -29,12 +29,12 @@ Mathematically, this is written as:
 
 ### Promo Calculation
 
-Let's calculate the final price for an item worth Rp200,000.00 using both promos with the concept of functions.
+Let's calculate the final price for an item worth <InlineMath math="\text{Rp}200,000.00" /> using both promos with the concept of functions.
 
 Let <InlineMath math="x" /> be the initial price of the item.
 
 - **<InlineMath math="20\%" /> discount function:** <InlineMath math="d(x) = x - 0.20x = 0.80x" />
-- **Rp25,000.00 reduction function:** <InlineMath math="p(x) = x - 25000" />
+- **<InlineMath math="\text{Rp}25,000.00" /> reduction function:** <InlineMath math="p(x) = x - 25000" />
 
 Now let's compose these two functions according to the promo sequence:
 
@@ -46,7 +46,7 @@ Now let's compose these two functions according to the promo sequence:
 
     <BlockMath math="(p \circ d)(200000) = 0.80(200000) - 25000 = 160000 - 25000 = 135000" />
 
-    So, the final price with Promo A is Rp135,000.00.
+    So, the final price with Promo A is <InlineMath math="\text{Rp}135,000.00" />.
 
 2.  **Promo B (Price reduction first, then discount):** We are looking for <InlineMath math="(d \circ p)(x)" />
 
@@ -56,9 +56,9 @@ Now let's compose these two functions according to the promo sequence:
 
     <BlockMath math="(d \circ p)(200000) = 0.80(200000) - 20000 = 160000 - 20000 = 140000" />
 
-    So, the final price with Promo B is Rp140,000.00.
+    So, the final price with Promo B is <InlineMath math="\text{Rp}140,000.00" />.
 
-It turns out that the order of applying the functions (discount and price reduction) affects the final result. Promo A (<InlineMath math="p \circ d" />) is more beneficial for the buyer than Promo B (<InlineMath math="d \circ p" />) for an item priced at Rp200,000.00. This demonstrates that, generally, <InlineMath math="(f \circ g)(x) \neq (g \circ f)(x)" />.
+It turns out that the order of applying the functions (discount and price reduction) affects the final result. Promo A (<InlineMath math="p \circ d" />) is more beneficial for the buyer than Promo B (<InlineMath math="d \circ p" />) for an item priced at <InlineMath math="\text{Rp}200,000.00" />. This demonstrates that, generally, <InlineMath math="(f \circ g)(x) \neq (g \circ f)(x)" />.
 
 ## Another Example
 

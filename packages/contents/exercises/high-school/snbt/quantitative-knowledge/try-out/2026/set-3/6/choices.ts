@@ -3,19 +3,19 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 const choices: ExercisesChoices = {
   id: [
     {
-      label: "(1), (2), dan (3) benar",
+      label: "$$(1)$$, $$(2)$$, dan $$(3)$$ benar",
       value: false,
     },
     {
-      label: "(1) dan (3) benar",
+      label: "$$(1)$$ dan $$(3)$$ benar",
       value: false,
     },
     {
-      label: "(2) dan (4) benar",
+      label: "$$(2)$$ dan $$(4)$$ benar",
       value: true,
     },
     {
-      label: "(4) saja benar",
+      label: "$$(4)$$ saja benar",
       value: false,
     },
     {
@@ -25,19 +25,19 @@ const choices: ExercisesChoices = {
   ],
   en: [
     {
-      label: "(1), (2), and (3) are correct",
+      label: "$$(1)$$, $$(2)$$, and $$(3)$$ are correct",
       value: false,
     },
     {
-      label: "(1) and (3) are correct",
+      label: "$$(1)$$ and $$(3)$$ are correct",
       value: false,
     },
     {
-      label: "(2) and (4) are correct",
+      label: "$$(2)$$ and $$(4)$$ are correct",
       value: true,
     },
     {
-      label: "(4) only is correct",
+      label: "$$(4)$$ only is correct",
       value: false,
     },
     {

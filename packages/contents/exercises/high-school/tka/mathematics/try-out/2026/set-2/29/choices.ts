@@ -3,7 +3,7 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 const choices: ExercisesChoices = {
   id: [
     {
-      label: "$$(1), (2), (3)$$ SAJA yang benar",
+      label: "$$(1)$$, $$(2)$$, $$(3)$$ SAJA yang benar",
       value: false,
     },
     {
@@ -25,7 +25,7 @@ const choices: ExercisesChoices = {
   ],
   en: [
     {
-      label: "ONLY $$(1), (2), (3)$$ are correct",
+      label: "ONLY $$(1)$$, $$(2)$$, $$(3)$$ are correct",
       value: false,
     },
     {

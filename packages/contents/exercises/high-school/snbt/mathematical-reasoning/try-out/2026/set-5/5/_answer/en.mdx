@@ -4,7 +4,7 @@ export const metadata = {
   date: "02/09/2026",
 };
 
-This problem can be solved using the concept of a geometric sequence, where bacteria divide into two every <InlineMath math="24" /> hours (<InlineMath math="1 \text{ day }" />).
+This problem can be solved using the concept of a geometric sequence, where bacteria divide into two every <InlineMath math="24\text{ hours}" /> (<InlineMath math="1 \text{ day }" />).
 
 For the **first <InlineMath math="5 \text{ days }" />** (day 1 to day 5), the number of bacteria follows a geometric sequence with an initial term <InlineMath math="a = 10" /> and a ratio <InlineMath math="r = 2" />. The number of bacteria on day 5 is:
 
@@ -12,7 +12,7 @@ For the **first <InlineMath math="5 \text{ days }" />** (day 1 to day 5), the nu
   <BlockMath math="U_5 = a \cdot r^{n-1} = 10 \cdot 2^{5-1} = 10 \cdot 16 = 160" />
 </MathContainer>
 
-Every <InlineMath math="120" /> hours (<InlineMath math="5 \text{ days }" />), half of the total bacteria are killed. Thus, the remaining bacteria at the end of day 5 is:
+Every <InlineMath math="120\text{ hours}" /> (<InlineMath math="5 \text{ days }" />), half of the total bacteria are killed. Thus, the remaining bacteria at the end of day 5 is:
 
 <MathContainer>
   <BlockMath math="160 - \left(\frac{1}{2} \times 160\right) = 80" />

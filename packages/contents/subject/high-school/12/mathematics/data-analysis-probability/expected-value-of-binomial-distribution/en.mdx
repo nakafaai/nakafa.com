@@ -55,14 +55,14 @@ Let's apply this concept to an example.
 
 **Problem:**
 
-A fair die is rolled <InlineMath math="7" /> times. What is the expected value for getting a five on the die from all the rolls?
+A fair die is rolled <InlineMath math="7\text{ times}" />. What is the expected value for getting a five on the die from all the rolls?
 
 **Solution:**
 
 First, let's make sure this meets the requirements for binomial distribution:
 
 - There are only two possibilities: **success** (rolling a <InlineMath math="5" />) or **failure** (rolling a number other than <InlineMath math="5" />)
-- Fixed number of trials: <InlineMath math="7" /> times
+- Fixed number of trials: <InlineMath math="7\text{ times}" />
 - Each roll is independent: the result of previous rolls doesn't affect subsequent rolls
 - Same probability of success: <InlineMath math="p = \frac{1}{6}" /> on each roll
 
@@ -82,4 +82,4 @@ Now we can directly calculate the expected value using the formula:
 
 Expected value <InlineMath math="1.167" /> doesn't mean you will get <InlineMath math="1.167 \text{ times}" /> the number <InlineMath math="5" /> in one experiment (because that's impossible). What it means is: if you repeat this experiment of rolling a die <InlineMath math="7 \text{ times}" /> **hundreds or thousands of times**, then on average you will get the number <InlineMath math="5" /> about <InlineMath math="1.167 \text{ times}" /> per set of <InlineMath math="7" /> rolls.
 
-In practice, in one set of <InlineMath math="7" /> rolls, you might get the number <InlineMath math="5" /> as many as <InlineMath math="0" />, <InlineMath math="1" />, <InlineMath math="2" />, or even <InlineMath math="3" /> times. But when averaged over the long term, the result will approach <InlineMath math="1.167" />.
+In practice, in one set of <InlineMath math="7" /> rolls, you might get the number <InlineMath math="5" /> as many as <InlineMath math="0" />, <InlineMath math="1" />, <InlineMath math="2" />, or even <InlineMath math="3\text{ times}" />. But when averaged over the long term, the result will approach <InlineMath math="1.167" />.

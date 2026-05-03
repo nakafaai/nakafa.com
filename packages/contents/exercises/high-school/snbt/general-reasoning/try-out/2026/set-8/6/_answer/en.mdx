@@ -4,7 +4,7 @@ export const metadata = {
   date: "01/29/2026",
 };
 
-To determine M's vote count, we must build equations connecting all variables. Let's analyze the dependency logic:
+To determine <InlineMath math="M" />'s vote count, we must build equations connecting all variables. Let's analyze the dependency logic:
 
 #### Determining Total Votes
 
@@ -14,7 +14,7 @@ To calculate the absolute value (exact number) of any candidate's votes, we need
   <BlockMath math="\text{Total Votes} = 480" />
 </MathContainer>
 
-#### Calculating O and P's Votes
+#### Calculating the Other Candidates' Votes
 
 We know the relationship for the sum of all votes:
 
@@ -22,22 +22,22 @@ We know the relationship for the sum of all votes:
   <BlockMath math="M + N + O + P = \text{Total Votes}" />
 </MathContainer>
 
-We need to know the values of O and P to isolate M and N:
+We need to know the values of <InlineMath math="O" /> and <InlineMath math="P" /> to isolate <InlineMath math="M" /> and <InlineMath math="N" />:
 
-*   **Statement 2** is needed to calculate O (using Total Votes from Statement 4).
-*   **Statement 3** is needed to calculate P (using the value of O derived from Statement 2).
+*   **Statement 2** is needed to calculate <InlineMath math="O" /> (using Total Votes from Statement 4).
+*   **Statement 3** is needed to calculate <InlineMath math="P" /> (using the value of <InlineMath math="O" /> derived from Statement 2).
 
-Without O and P, our equation still has too many unknown variables.
+Without <InlineMath math="O" /> and <InlineMath math="P" />, our equation still has too many unknown variables.
 
-#### Solving for M
+#### Solving for the Requested Value
 
-After knowing the values of Total, O, and P, the equation becomes:
+After knowing the total, <InlineMath math="O" />, and <InlineMath math="P" />, the equation becomes:
 
 <MathContainer>
   <BlockMath math="M + N = \text{Remaining Votes}" />
 </MathContainer>
 
-We still have two variables (M and N) in one equation. To get a specific value for M, we need the relationship between M and N.
+We still have two variables (<InlineMath math="M" /> and <InlineMath math="N" />) in one equation. To get a specific value for <InlineMath math="M" />, we need the relationship between <InlineMath math="M" /> and <InlineMath math="N" />.
 
 **Statement 1** provides this relationship:
 
@@ -45,10 +45,10 @@ We still have two variables (M and N) in one equation. To get a specific value f
   <BlockMath math="M = 2N \quad \text{or} \quad N = \frac{1}{2}M" />
 </MathContainer>
 
-By substituting N into the remaining votes equation, we can solve for M.
+By substituting <InlineMath math="N" /> into the remaining votes equation, we can solve for <InlineMath math="M" />.
 
 #### Conclusion
 
-We need **Statement 4** (Total), **Statement 2** (for O), **Statement 3** (for P), and **Statement 1** (for the M and N relation) all together to find the solution.
+We need **Statement 4** (Total), **Statement 2** (for <InlineMath math="O" />), **Statement 3** (for <InlineMath math="P" />), and **Statement 1** (for the <InlineMath math="M" /> and <InlineMath math="N" /> relation) all together to find the solution.
 
 Therefore, the information needed is **1, 2, 3, and 4**.
