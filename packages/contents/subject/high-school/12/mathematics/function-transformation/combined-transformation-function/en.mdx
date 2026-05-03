@@ -210,9 +210,11 @@ For horizontal transformations, we can combine reflection and translation:
 1. **Initial Function**: <InlineMath math="f(x) = 1.5^x" />
 
 2. **Step 1 - Reflection across <InlineMath math="y" />-axis**: replace <InlineMath math="x" /> with <InlineMath math="-x" />
+
    <BlockMath math="f_1(x) = f(-x) = 1.5^{-x}" />
 
 3. **Step 2 - Horizontal translation**: Shift <InlineMath math="2 \text{ units}" /> to the right
+
    <BlockMath math="g(x) = f_1(x-2) = 1.5^{-(x-2)} = 1.5^{-x+2}" />
 
 **Example Calculation for <InlineMath math="x = 3" />:**
@@ -305,9 +307,11 @@ Combined transformations have several important properties:
 1. Step-by-step transformation of <InlineMath math="f(x) = x^2" />:
    
    Step 1: Vertical translation +3
+
    <BlockMath math="f_1(x) = x^2 + 3" />
    
    Step 2: Vertical dilation with factor <InlineMath math="\frac{1}{2}" />
+
    <BlockMath math="g(x) = \frac{1}{2}(x^2 + 3) = \frac{1}{2}x^2 + \frac{3}{2}" />
    
    So the formula of the transformed function is <InlineMath math="g(x) = \frac{1}{2}x^2 + \frac{3}{2}" />.
@@ -355,9 +359,11 @@ Combined transformations have several important properties:
 2. Step-by-step transformation of <InlineMath math="g(x) = 2^x" />:
    
    Step 1: Reflection across <InlineMath math="y" />-axis
+
    <BlockMath math="g_1(x) = 2^{-x}" />
    
    Step 2: Horizontal translation <InlineMath math="1 \text{ unit}" /> to the right
+
    <BlockMath math="h(x) = 2^{-(x-1)} = 2^{-x+1} = 2 \cdot 2^{-x}" />
    
    So the formula of the transformed function is <InlineMath math="h(x) = 2^{1-x}" />.
@@ -405,12 +411,14 @@ Combined transformations have several important properties:
 3. Comparison of two transformation orders:
    
    **Order A**: Dilation first, then translation
+
    <MathContainer>
    <BlockMath math="h_1(x) = 3x^2" />
    <BlockMath math="h_A(x) = 3x^2 + 2" />
    </MathContainer>
    
    **Order B**: Translation first, then dilation
+
    <MathContainer>
    <BlockMath math="h_2(x) = x^2 + 2" />
    <BlockMath math="h_B(x) = 3(x^2 + 2) = 3x^2 + 6" />

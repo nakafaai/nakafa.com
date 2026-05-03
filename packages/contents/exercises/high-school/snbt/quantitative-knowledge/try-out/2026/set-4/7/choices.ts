@@ -7,15 +7,15 @@ const choices: ExercisesChoices = {
       value: true,
     },
     {
-      label: "1 dan 3",
+      label: "$$1 \\text{ dan } 3$$",
       value: false,
     },
     {
-      label: "2 dan 4",
+      label: "$$2 \\text{ dan } 4$$",
       value: false,
     },
     {
-      label: "4 saja",
+      label: "$$4 \\text{ saja}$$",
       value: false,
     },
     {
@@ -29,15 +29,15 @@ const choices: ExercisesChoices = {
       value: true,
     },
     {
-      label: "1 and 3",
+      label: "$$1 \\text{ and } 3$$",
       value: false,
     },
     {
-      label: "2 and 4",
+      label: "$$2 \\text{ and } 4$$",
       value: false,
     },
     {
-      label: "4 only",
+      label: "$$4 \\text{ only}$$",
       value: false,
     },
     {

@@ -182,6 +182,7 @@ with <InlineMath math="Q" /> being an orthogonal matrix.
 Implementation of the Householder procedure:
 
 Start with:
+
 <MathContainer>
 <BlockMath math="A_1 := A" />
 <BlockMath math="Q_1 := I" />
@@ -192,6 +193,7 @@ For <InlineMath math="i = 1, \ldots, n" />:
 <BlockMath math="\tilde{a}_i = \begin{pmatrix} a_{ii} \\ \vdots \\ a_{mi} \end{pmatrix} := \begin{pmatrix} (A_i)_{ii} \\ \vdots \\ (A_i)_{mi} \end{pmatrix} \in \mathbb{R}^{m-i+1}" />
 
 Compute:
+
 <MathContainer>
 <BlockMath math="\sigma := \|\tilde{a}_i\|_2" />
 <BlockMath math="u_i := \tilde{a}_i + \begin{pmatrix} \mp\sigma \\ 0 \\ \vdots \\ 0 \end{pmatrix} \in \mathbb{R}^{m-i+1}" />
@@ -199,9 +201,11 @@ Compute:
 </MathContainer>
 
 and:
+
 <BlockMath math="\beta := 1/(\sigma(\sigma + |\tilde{a}_{ii}|))" />
 
 Then:
+
 <MathContainer>
 <BlockMath math="v_i = \frac{\tilde{a}_i \mp \|\tilde{a}_i\|_2 \cdot e_1}{\|\tilde{a}_i \mp \|\tilde{a}_i\|_2 \cdot e_1\|_2} = \frac{u_i}{\|u_i\|_2}" />
 <BlockMath math="\tilde{S}_i = I_{m-i+1} - 2v_i v_i^T = I_{m-i+1} - \beta u_i u_i^T" />
@@ -209,12 +213,14 @@ Then:
 </MathContainer>
 
 So we obtain:
+
 <MathContainer>
 <BlockMath math="A_{i+1} := S_i A_i = (I_m - \beta \hat{u}_i \hat{u}_i^T) A_i = A_i - \hat{u}_i (\beta \hat{u}_i^T A_i)" />
 <BlockMath math="Q_{i+1} := Q_i S_i = Q_i (I_m - \beta \hat{u}_i \hat{u}_i^T) = Q_i - (Q_i \hat{u}_i) \beta \hat{u}_i^T" />
 </MathContainer>
 
 Finally we obtain:
+
 <MathContainer>
 <BlockMath math="R := A_{n+1}" />
 <BlockMath math="Q := Q_{n+1}" />

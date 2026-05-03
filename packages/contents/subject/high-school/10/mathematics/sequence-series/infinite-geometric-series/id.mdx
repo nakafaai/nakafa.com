@@ -28,6 +28,7 @@ Bola bergerak turun, lalu naik, turun lagi, naik lagi, dan seterusnya, sampai be
 Secara logika, bola akhirnya akan berhenti memantul, kan? Ini terjadi karena tinggi pantulannya semakin kecil dan mendekati nol. Dalam matematika, ini terjadi jika nilai mutlak dari rasio (<InlineMath math="r" />) kurang dari 1.
 
 <BlockMath math="|r| < 1 \quad \text{atau} \quad -1 < r < 1" />
+
 Deret seperti ini disebut **konvergen**, artinya jumlahnya menuju suatu nilai tertentu
 (tidak tak hingga). Dalam contoh bola, <InlineMath math="r = \frac{1}{4}" />,
 dan karena <InlineMath math="-1 < \frac{1}{4} < 1" />, deretnya konvergen. Bola itu
@@ -40,6 +41,7 @@ Jika <InlineMath math="|r| \ge 1" /> (yaitu <InlineMath math="r \ge 1" /> atau <
 Bagaimana cara menghitung jumlah deret tak hingga yang konvergen? Kita mulai dari rumus jumlah <InlineMath math="n" /> suku pertama deret geometri:
 
 <BlockMath math="S_n = \frac{a(1 - r^n)}{1 - r}" />
+
 Untuk deret tak hingga, kita mencari nilai <InlineMath math="S_n" /> saat <InlineMath math="n" /> sangat
 besar (mendekati tak hingga). Jika deretnya konvergen (<InlineMath math="-1 < r < 1" />
 ), maka nilai <InlineMath math="r^n" /> akan mendekati 0 saat <InlineMath math="n" /> mendekati
@@ -50,8 +52,11 @@ tak hingga. Contoh: <InlineMath math="(\frac{1}{4})^2 = \frac{1}{16}" />, <Inlin
 Jadi, untuk <InlineMath math="n \to \infty" /> dan <InlineMath math="-1 < r < 1" />, kita punya <InlineMath math="r^n \to 0" />. Rumusnya menjadi:
 
 <BlockMath math="S_\infty = \lim_{n \to \infty} S_n = \lim_{n \to \infty} \frac{a(1 - r^n)}{1 - r} = \frac{a(1 - 0)}{1 - r}" />
+
 Sehingga, rumus jumlah deret geometri tak hingga yang konvergen adalah:
+
 <BlockMath math="S_\infty = \frac{a}{1 - r}" />
+
 Dimana: * <InlineMath math="S_\infty" /> = Jumlah deret tak hingga * <InlineMath math="a" /> =
 Suku pertama * <InlineMath math="r" /> = Rasio (<InlineMath math="-1 < r < 1" />)
 
@@ -82,6 +87,7 @@ Kita bisa menghitung total lintasan bola menggunakan rumus <InlineMath math="S_\
 Untuk contoh bola tenis dengan <InlineMath math="a = 1 \text{ meter}" /> dan <InlineMath math="r = \frac{1}{4}" />:
 
 <BlockMath math="\text{Total} = \frac{1(1 + \frac{1}{4})}{1 - \frac{1}{4}} = \frac{1(\frac{5}{4})}{\frac{3}{4}} = \frac{5/4}{3/4} = \frac{5}{4} \times \frac{4}{3} = \frac{5}{3}" />
+
 Jadi, total panjang lintasan bola sampai berhenti adalah <InlineMath math="\frac{5}{3} \text{ meter}" />.
 
 **Cara Lain (Mengikuti Hint):**

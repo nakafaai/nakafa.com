@@ -8,6 +8,7 @@ Use this reference for MDX math notation, values, units, choices, and component 
 - Block math: `<BlockMath math="x^2 + y^2 = r^2" />`
 - Connected derivation: prefer one expressive `<BlockMath />`.
 - Separate visual rows: use `<MathContainer>` only when rows should remain visually distinct.
+- Raw MDX spacing: add blank lines around the outer math block only. If rows are wrapped in `<MathContainer>`, add spacing around `<MathContainer>`, not between child `<BlockMath />` rows. If `<BlockMath />` stands alone without `<MathContainer>`, add spacing around that standalone `<BlockMath />`.
 
 ```mdx
 <BlockMath math="\begin{aligned}

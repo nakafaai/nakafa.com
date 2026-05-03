@@ -217,7 +217,7 @@ const enMaterials: MaterialList = [
         href: `${BASE_PATH}/ai-programming/string-object`,
       },
       {
-        title: "Escape Sequences",
+        title: "Escape Sequence",
         href: `${BASE_PATH}/ai-programming/escape-sequence`,
       },
       {

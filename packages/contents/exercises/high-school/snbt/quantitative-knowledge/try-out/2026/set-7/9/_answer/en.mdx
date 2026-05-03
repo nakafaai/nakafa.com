@@ -7,6 +7,7 @@ export const metadata = {
 We need to form a code with the pattern **Letter - Digit - Letter - Digit**.
 
 Let the slots for the code be:
+
 <MathContainer>
   <BlockMath math="\underline{L_1} \times \underline{D_1} \times \underline{L_2} \times \underline{D_2}" />
 </MathContainer>
@@ -24,6 +25,7 @@ Rules and Constraints:
 Since <InlineMath math="D_1" /> must be odd and <InlineMath math="D_2" /> is chosen from a specific set, there is an overlap at the digit <InlineMath math="1" />. We need to split the calculation into cases based on the value of <InlineMath math="D_2" />.
 
 #### Case 1 If The Second Digit Is 1
+
 If we choose the digit <InlineMath math="1" /> for position <InlineMath math="D_2" />:
 1. <InlineMath math="L_2" /> (Second letter): Must be <InlineMath math="O" /> (<InlineMath math="1" /> way).
 2. <InlineMath math="D_2" /> (Second digit): Must be <InlineMath math="1" /> (<InlineMath math="1" /> way).
@@ -33,11 +35,13 @@ If we choose the digit <InlineMath math="1" /> for position <InlineMath math="D_
    - Choices: <InlineMath math="\{3, 5, 7, 9\}" /> (<InlineMath math="4" /> ways).
 
 Total ways for Case <InlineMath math="1" />:
+
 <MathContainer>
   <BlockMath math="3 \times 4 \times 1 \times 1 = 12 \text{ ways}" />
 </MathContainer>
 
 #### Case 2 If The Second Digit Is Not 1
+
 If we choose a digit other than <InlineMath math="1" /> for position <InlineMath math="D_2" /> (which means it is even):
 1. <InlineMath math="L_2" /> (Second letter): Must be <InlineMath math="O" /> (<InlineMath math="1" /> way).
 2. <InlineMath math="D_2" /> (Second digit): Chosen from <InlineMath math="\{0, 2, 4, 6\}" /> (<InlineMath math="4" /> ways).
@@ -47,12 +51,15 @@ If we choose a digit other than <InlineMath math="1" /> for position <InlineMath
    - Choices: <InlineMath math="5" /> ways.
 
 Total ways for Case <InlineMath math="2" />:
+
 <MathContainer>
   <BlockMath math="3 \times 5 \times 1 \times 4 = 60 \text{ ways}" />
 </MathContainer>
 
 #### Total Combinations
+
 Sum the results from both cases:
+
 <MathContainer>
   <BlockMath math="12 + 60 = 72" />
 </MathContainer>

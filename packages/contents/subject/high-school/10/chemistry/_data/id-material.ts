@@ -113,7 +113,7 @@ const idMaterials: MaterialList = [
         href: `${BASE_PATH}/green-chemistry/principles`,
       },
       {
-        title: "Proses Kimia dalam Kehidupan Sehari-Hari",
+        title: "Proses Kimia Sehari-hari",
         href: `${BASE_PATH}/green-chemistry/chemical-processes-daily-life`,
       },
       {

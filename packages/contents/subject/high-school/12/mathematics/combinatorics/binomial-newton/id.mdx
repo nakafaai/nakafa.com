@@ -16,13 +16,9 @@ Mari kita lihat pola dasar untuk beberapa pangkat pertama:
 
 <MathContainer>
 <BlockMath math="(x + y)^0 = 1" />
-
 <BlockMath math="(x + y)^1 = x + y" />
-
 <BlockMath math="(x + y)^2 = x^2 + 2xy + y^2" />
-
 <BlockMath math="(x + y)^3 = x^3 + 3x^2y + 3xy^2 + y^3" />
-
 <BlockMath math="(x + y)^4 = x^4 + 4x^3y + 6x^2y^2 + 4xy^3 + y^4" />
 </MathContainer>
 
@@ -64,7 +60,6 @@ Menghitung koefisien binomial:
 
 <MathContainer>
 <BlockMath math="\binom{2014}{2} = \frac{2014!}{2!(2014-2)!} = \frac{2014 \times 2013}{2 \times 1}" />
-
 <BlockMath math="= \frac{4{,}053{,}182}{2} = 2{,}026{,}591" />
 </MathContainer>
 
@@ -84,9 +79,7 @@ Suku umum adalah:
 
 <MathContainer>
 <BlockMath math="\binom{8}{k} (3x^3)^{8-k} \left(-\frac{2}{x}\right)^k = \binom{8}{k} \cdot (3)^{8-k} \cdot (x^3)^{8-k} \cdot (-2)^k \cdot (x^{-1})^k" />
-
 <BlockMath math="= \binom{8}{k} \cdot 3^{8-k} \cdot (-2)^k \cdot x^{3(8-k)} \cdot x^{-k}" />
-
 <BlockMath math="= \binom{8}{k} \cdot 3^{8-k} \cdot (-2)^k \cdot x^{24-3k-k} = \binom{8}{k} \cdot 3^{8-k} \cdot (-2)^k \cdot x^{24-4k}" />
 </MathContainer>
 
@@ -98,9 +91,7 @@ Substitusi <InlineMath math="k = 6" />:
 
 <MathContainer>
 <BlockMath math="\binom{8}{6} \cdot 3^{8-6} \cdot (-2)^6 \cdot x^0 = \binom{8}{6} \cdot 3^2 \cdot (-2)^6" />
-
 <BlockMath math="= \frac{8!}{6! \cdot 2!} \cdot 9 \cdot 64 = \frac{8 \times 7}{2 \times 1} \cdot 9 \cdot 64" />
-
 <BlockMath math="= 28 \cdot 9 \cdot 64 = 252 \cdot 64 = 16{,}128" />
 </MathContainer>
 
@@ -140,6 +131,7 @@ Tentukan koefisien dari <InlineMath math="x^5" /> dalam ekspansi <InlineMath mat
     Suku umum: <InlineMath math="\binom{8}{k} (2x)^{8-k} (3)^k" />
 
     Ekspansi suku umum:
+
     <BlockMath math="\binom{8}{k} (2x)^{8-k} (3)^k = \binom{8}{k} \cdot 2^{8-k} \cdot x^{8-k} \cdot 3^k = \binom{8}{k} \cdot 2^{8-k} \cdot 3^k \cdot x^{8-k}" />
 
     Untuk mendapat <InlineMath math="x^5" />, perlu <InlineMath math="8-k = 5" />, sehingga <InlineMath math="k = 3" />.
@@ -150,13 +142,9 @@ Tentukan koefisien dari <InlineMath math="x^5" /> dalam ekspansi <InlineMath mat
 
     <MathContainer>
     <BlockMath math="\binom{8}{3} \cdot 2^{8-3} \cdot 3^3 \cdot x^5 = \binom{8}{3} \cdot 2^5 \cdot 3^3 \cdot x^5" />
-
     <BlockMath math="= \frac{8!}{3! \cdot 5!} \cdot 32 \cdot 27 \cdot x^5" />
-
     <BlockMath math="= \frac{8 \times 7 \times 6}{3 \times 2 \times 1} \cdot 32 \cdot 27 \cdot x^5" />
-
     <BlockMath math="= 56 \cdot 32 \cdot 27 \cdot x^5" />
-
     <BlockMath math="= 1{,}792 \cdot 27 \cdot x^5 = 48{,}384x^5" />
     </MathContainer>
 
@@ -184,11 +172,8 @@ Ingatlah bahwa **setiap suku dalam ekspansi binomial** memiliki total pangkat ya
    
    <MathContainer>
    <BlockMath math="\binom{7}{3} \cdot 2^{7-3} \cdot (-3)^3 = \binom{7}{3} \cdot 2^4 \cdot (-3)^3" />
-   
    <BlockMath math="= \frac{7!}{3! \cdot 4!} \cdot 16 \cdot (-27)" />
-   
    <BlockMath math="= \frac{7 \times 6 \times 5}{3 \times 2 \times 1} \cdot 16 \cdot (-27)" />
-   
    <BlockMath math="= 35 \cdot 16 \cdot (-27) = 560 \cdot (-27) = -15{,}120" />
    </MathContainer>
    
@@ -200,7 +185,6 @@ Ingatlah bahwa **setiap suku dalam ekspansi binomial** memiliki total pangkat ya
    
    <MathContainer>
    <BlockMath math="\text{Suku umum: } \binom{9}{k} (x^2)^{9-k} \left(\frac{1}{x}\right)^k = \binom{9}{k} \cdot x^{2(9-k)} \cdot x^{-k}" />
-   
    <BlockMath math="= \binom{9}{k} \cdot x^{18-2k} \cdot x^{-k} = \binom{9}{k} \cdot x^{18-2k-k} = \binom{9}{k} \cdot x^{18-3k}" />
    </MathContainer>
    
