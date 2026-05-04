@@ -1,4 +1,5 @@
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import { EXERCISE_YEAR_SEGMENT_REGEX } from "@repo/backend/scripts/lib/mdx-parser/constants";
 import {
   type ArticleCategory,
   ArticleCategorySchema,
@@ -25,7 +26,6 @@ import {
   MaterialSchema,
 } from "@repo/contents/_types/subject/material";
 import * as z from "zod";
-import { EXERCISE_YEAR_SEGMENT_REGEX } from "./constants";
 
 const LocaleSchema = z.union([z.literal("en"), z.literal("id")]);
 

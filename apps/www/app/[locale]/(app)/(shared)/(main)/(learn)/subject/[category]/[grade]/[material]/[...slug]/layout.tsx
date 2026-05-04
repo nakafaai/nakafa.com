@@ -1,6 +1,6 @@
 import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
 import { parseGrade } from "@repo/contents/_lib/subject/grade";
-import { parseMaterial } from "@repo/contents/_lib/subject/material";
+import { parseMaterial } from "@repo/contents/_lib/subject/route";
 import { getSlugPath } from "@repo/contents/_lib/subject/slug";
 import { cleanSlug } from "@repo/utilities/helper";
 import { notFound } from "next/navigation";

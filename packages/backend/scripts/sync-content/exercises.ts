@@ -4,27 +4,36 @@ import {
   parseDateToEpoch,
   readExerciseChoices,
   readMdxFile,
-} from "../lib/mdx-parser/content";
-import { parseExerciseMaterialFile } from "../lib/mdx-parser/materials";
+} from "@repo/backend/scripts/lib/mdx-parser/content";
+import { parseExerciseMaterialFile } from "@repo/backend/scripts/lib/mdx-parser/materials";
 import {
   buildExerciseSetSlug,
   getExerciseDir,
   parseExercisePath,
-} from "../lib/mdx-parser/paths";
-import { runConvexMutation } from "./convexApi";
-import { formatDuration, log, logError, logSuccess } from "./logging";
+} from "@repo/backend/scripts/lib/mdx-parser/paths";
+import { runConvexMutation } from "@repo/backend/scripts/sync-content/convexApi";
+import {
+  formatDuration,
+  log,
+  logError,
+  logSuccess,
+} from "@repo/backend/scripts/sync-content/logging";
 import {
   createBatchProgress,
   formatBatchProgress,
   updateBatchProgress,
-} from "./metrics";
-import { globFiles } from "./runtime";
+} from "@repo/backend/scripts/sync-content/metrics";
+import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
 import {
   BATCH_SIZES,
   LOCALE_MATERIAL_FILE_REGEX,
   parseLocale,
-} from "./schemas";
-import type { ConvexConfig, SyncOptions, SyncResult } from "./types";
+} from "@repo/backend/scripts/sync-content/schemas";
+import type {
+  ConvexConfig,
+  SyncOptions,
+  SyncResult,
+} from "@repo/backend/scripts/sync-content/types";
 
 interface ExerciseSetPayload {
   category: string;

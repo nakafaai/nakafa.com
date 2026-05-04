@@ -1,15 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
-import { parseExercisesCategory } from "@repo/contents/_lib/exercises/category";
-import {
-  getMaterialPath,
-  getMaterials,
-  parseExercisesMaterial,
-} from "@repo/contents/_lib/exercises/material";
+import { getMaterials } from "@repo/contents/_lib/exercises/material";
 import {
   getExercisesPath,
+  getMaterialPath,
+  parseExercisesCategory,
+  parseExercisesMaterial,
   parseExercisesType,
-} from "@repo/contents/_lib/exercises/type";
+} from "@repo/contents/_lib/exercises/route";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";

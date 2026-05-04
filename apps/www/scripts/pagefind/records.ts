@@ -6,7 +6,7 @@ import {
   getMaterials as getExerciseMaterials,
 } from "@repo/contents/_lib/exercises/material";
 import { getExercisesContent } from "@repo/contents/_lib/exercises/set";
-import { getSurah, getSurahName } from "@repo/contents/_lib/quran";
+import { getAllSurah, getSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { ContentRootSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
@@ -184,26 +184,22 @@ export async function addQuranRecords(index: PagefindIndex) {
     await Promise.all(
       routing.locales.map((locale) =>
         Promise.all(
-          Array.from({ length: 114 }, (_, index) => index + 1).map(
-            async (number) => {
-              const surah = await Effect.runPromise(getSurah(number));
-              const title = getSurahName({ locale, name: surah.name });
-              const translation =
-                surah.name.translation[locale] ?? surah.name.translation.en;
-              const body = surah.verses
-                .map(
-                  (verse) => verse.translation[locale] ?? verse.translation.en
-                )
-                .join("\n");
+          getAllSurah().map(async ({ number }) => {
+            const surah = await Effect.runPromise(getSurah(number));
+            const title = getSurahName({ locale, name: surah.name });
+            const translation =
+              surah.name.translation[locale] ?? surah.name.translation.en;
+            const body = surah.verses
+              .map((verse) => verse.translation[locale] ?? verse.translation.en)
+              .join("\n");
 
-              return {
-                url: `/${locale}/quran/${surah.number}`,
-                language: locale,
-                meta: { title },
-                content: `${title}\n\n${translation}\n\n${body}`,
-              };
-            }
-          )
+            return {
+              url: `/${locale}/quran/${surah.number}`,
+              language: locale,
+              meta: { title },
+              content: `${title}\n\n${translation}\n\n${body}`,
+            };
+          })
         )
       )
     )

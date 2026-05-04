@@ -69,7 +69,14 @@ describe("app/api/chat/utils", () => {
   });
 
   it("returns false for invalid quran slugs", async () => {
-    const isVerified = await getVerified("/id/quran/1");
+    const isVerified = await getVerified("/id/quran/1/al-fatihah");
+
+    expect(isVerified).toBe(false);
+    expect(api.contents.getSurah).not.toHaveBeenCalled();
+  });
+
+  it("returns false for nonnumeric quran slugs", async () => {
+    const isVerified = await getVerified("/id/quran/not-a-number");
 
     expect(isVerified).toBe(false);
     expect(api.contents.getSurah).not.toHaveBeenCalled();
@@ -78,7 +85,7 @@ describe("app/api/chat/utils", () => {
   it("verifies valid quran slugs", async () => {
     vi.mocked(api.contents.getSurah).mockResolvedValue(quranSurahResult);
 
-    const isVerified = await getVerified("/id/quran/1/al-fatihah");
+    const isVerified = await getVerified("/id/quran/1");
 
     expect(isVerified).toBe(true);
     expect(api.contents.getSurah).toHaveBeenCalledWith({ surah: 1 });
@@ -90,7 +97,7 @@ describe("app/api/chat/utils", () => {
       error: { message: "not found", status: 404 },
     });
 
-    const isVerified = await getVerified("/quran/1/al-fatihah");
+    const isVerified = await getVerified("/quran/1");
 
     expect(isVerified).toBe(false);
   });

@@ -13,8 +13,11 @@ vi.mock("next/cache", () => ({
 
 vi.mock("@repo/contents/_lib/exercises/material", () => ({
   getCurrentMaterial: mockGetCurrentMaterial,
-  getMaterialPath: mockGetMaterialPath,
   getMaterials: mockGetMaterials,
+}));
+
+vi.mock("@repo/contents/_lib/exercises/route", () => ({
+  getMaterialPath: mockGetMaterialPath,
 }));
 
 vi.mock("@repo/contents/_lib/exercises/renderable", () => ({

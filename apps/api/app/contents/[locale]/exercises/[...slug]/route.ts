@@ -9,7 +9,7 @@ import {
 import {
   getExerciseNumberPaths,
   getExerciseSetPaths,
-} from "@repo/contents/_lib/static-params";
+} from "@repo/contents/_lib/params";
 import {
   FileReadError,
   GitHubFetchError,

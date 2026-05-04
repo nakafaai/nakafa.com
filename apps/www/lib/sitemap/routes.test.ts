@@ -18,8 +18,16 @@ const mockContentCache = vi.hoisted(() => ({
   ],
 }));
 
+const mockContentFolders = vi.hoisted(() => ({
+  getFolderChildNamesSync: vi.fn(),
+}));
+
 vi.mock("@repo/contents/_lib/cache", () => ({
   getMDXSlugsForLocale: mockContentCache.getMDXSlugsForLocale,
+}));
+
+vi.mock("@repo/contents/_lib/fs", () => ({
+  getFolderChildNamesSync: mockContentFolders.getFolderChildNamesSync,
 }));
 
 vi.mock("@repo/internationalization/src/routing", () => ({
@@ -29,9 +37,26 @@ vi.mock("@repo/internationalization/src/routing", () => ({
   },
 }));
 
+function mockContentFolderTree(tree: Record<string, string[]>) {
+  mockContentFolders.getFolderChildNamesSync.mockImplementation(
+    (folder) => tree[folder] ?? []
+  );
+}
+
 beforeEach(() => {
   mockContentCache.getMDXSlugsForLocale.mockReset();
   mockContentCache.getMDXSlugsForLocale.mockReturnValue(mockContentCache.slugs);
+  mockContentFolders.getFolderChildNamesSync.mockReset();
+  mockContentFolderTree({
+    exercises: ["middle-school", "high-school"],
+    "exercises/high-school": ["snbt"],
+    "exercises/high-school/snbt": ["quantitative-knowledge"],
+    "exercises/middle-school": ["grade-9"],
+    "exercises/middle-school/grade-9": ["mathematics"],
+    subject: ["high-school"],
+    "subject/high-school": ["10"],
+    "subject/high-school/10": ["biology", "chemistry", "history"],
+  });
 });
 
 describe("sitemap route discovery", () => {
@@ -55,6 +80,11 @@ describe("sitemap route discovery", () => {
     expect(routes).toContain(
       "/articles/politics/dynastic-politics-asian-values"
     );
+    expect(routes).toContain("/exercises/middle-school/grade-9");
+    expect(routes).toContain("/exercises/middle-school/grade-9/mathematics");
+    expect(routes).toContain("/subject/high-school/10");
+    expect(routes).toContain("/subject/high-school/10/biology");
+    expect(routes).toContain("/subject/high-school/10/history");
     expect(routes).toContain("/exercises/high-school/snbt");
     expect(routes).toContain(
       "/exercises/high-school/snbt/quantitative-knowledge"
@@ -106,6 +136,16 @@ describe("sitemap route discovery", () => {
       "exercises/high-school/snbt/not-a-material/try-out/2026/set-1/1/_question",
       "exercises/high-school/snbt/quantitative-knowledge/try-out/set-1/1/_question",
     ]);
+    mockContentFolderTree({
+      exercises: ["not-a-category", "middle-school"],
+      "exercises/not-a-category": ["not-a-type"],
+      "exercises/middle-school": ["not-a-type", "grade-9"],
+      "exercises/middle-school/grade-9": ["not-a-material"],
+      subject: ["not-a-category", "high-school"],
+      "subject/not-a-category": ["not-a-grade"],
+      "subject/high-school": ["not-a-grade", "10"],
+      "subject/high-school/10": ["not-a-material"],
+    });
 
     const routes = getSitemapRoutes();
 
@@ -126,6 +166,7 @@ describe("sitemap route discovery", () => {
     expect(routes).not.toContain(
       "/subject/high-school/10/not-a-material/green-chemistry/definition"
     );
+    expect(routes).not.toContain("/subject/high-school/10/not-a-material");
     expect(routes).not.toContain(
       "/exercises/high-school/snbt/quantitative-knowledge"
     );
@@ -135,5 +176,20 @@ describe("sitemap route discovery", () => {
     expect(routes).not.toContain(
       "/exercises/high-school/snbt/quantitative-knowledge/try-out/set-1"
     );
+    expect(routes).not.toContain("/exercises/middle-school/not-a-type");
+    expect(routes).not.toContain(
+      "/exercises/middle-school/grade-9/not-a-material"
+    );
+  });
+
+  it("keeps sitemap discovery working when subject folders cannot be read", () => {
+    mockContentFolders.getFolderChildNamesSync.mockReturnValue([]);
+
+    const routes = getSitemapRoutes();
+
+    expect(routes).toContain("/");
+    expect(routes).toContain("/subject");
+    expect(routes).toContain("/articles/politics");
+    expect(routes).not.toContain("/subject/high-school/10/biology");
   });
 });

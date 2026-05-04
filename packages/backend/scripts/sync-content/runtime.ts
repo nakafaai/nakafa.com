@@ -1,9 +1,13 @@
 import { execSync } from "node:child_process";
 import * as fs from "node:fs";
+import {
+  CONTENTS_DIR,
+  getBackendEnvFilePath,
+  getSyncStateFile,
+} from "@repo/backend/scripts/sync-content/paths";
+import { SyncStateSchema } from "@repo/backend/scripts/sync-content/schemas";
+import type { SyncState } from "@repo/backend/scripts/sync-content/types";
 import { glob } from "glob";
-import { CONTENTS_DIR, getBackendEnvFilePath, getSyncStateFile } from "./paths";
-import { SyncStateSchema } from "./schemas";
-import type { SyncState } from "./types";
 
 const CONTENTS_PATH_PREFIX = "packages/contents/";
 

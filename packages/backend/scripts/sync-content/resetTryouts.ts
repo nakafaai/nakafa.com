@@ -1,9 +1,17 @@
-import { runConvexMutationGeneric } from "./convexApi";
-import { getContentCounts } from "./counts";
-import { formatDuration, log, logSuccess, logWarning } from "./logging";
-import { clearSyncState } from "./runtime";
-import { BatchDeleteResultSchema } from "./schemas";
-import type { ConvexConfig, SyncOptions } from "./types";
+import { runConvexMutationGeneric } from "@repo/backend/scripts/sync-content/convexApi";
+import { getContentCounts } from "@repo/backend/scripts/sync-content/counts";
+import {
+  formatDuration,
+  log,
+  logSuccess,
+  logWarning,
+} from "@repo/backend/scripts/sync-content/logging";
+import { clearSyncState } from "@repo/backend/scripts/sync-content/runtime";
+import { BatchDeleteResultSchema } from "@repo/backend/scripts/sync-content/schemas";
+import type {
+  ConvexConfig,
+  SyncOptions,
+} from "@repo/backend/scripts/sync-content/types";
 
 interface ResetStep {
   label: string;

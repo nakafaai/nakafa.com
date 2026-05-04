@@ -1,4 +1,4 @@
-import { generateContentParams } from "@repo/contents/_lib/static-params";
+import { generateContentParams } from "@repo/contents/_lib/params";
 import { getSubjectContents } from "@repo/contents/_lib/subject/content";
 import {
   FileReadError,

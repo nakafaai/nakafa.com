@@ -1,7 +1,7 @@
-import { getSurah } from "@repo/contents/_lib/quran";
+import { getAllSurah, getSurah } from "@repo/contents/_lib/quran";
 import { SurahNotFoundError } from "@repo/contents/_shared/error";
 import { createServiceLogger, logError } from "@repo/utilities/logging";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import { NextResponse } from "next/server";
 
 export const revalidate = false;
@@ -9,9 +9,8 @@ export const revalidate = false;
 const logger = createServiceLogger("api-quran");
 
 export function generateStaticParams() {
-  // surah 1-114
-  return Array.from({ length: 114 }, (_, i) => ({
-    surah: (i + 1).toString(),
+  return getAllSurah().map((surah) => ({
+    surah: surah.number.toString(),
   }));
 }
 
@@ -23,15 +22,7 @@ export async function GET(
 
   const surahNumber = Number.parseInt(surah, 10);
 
-  const program = Effect.gen(function* () {
-    const surahData = Option.fromNullable(getSurah(surahNumber));
-
-    if (Option.isNone(surahData)) {
-      return yield* Effect.fail(new SurahNotFoundError({ surahNumber }));
-    }
-
-    return surahData.value;
-  });
+  const program = getSurah(surahNumber);
 
   const response = await Effect.runPromise(
     Effect.match(program, {

@@ -1,8 +1,15 @@
-import { getContentCounts } from "./counts";
-import { getDataIntegrity } from "./inspection";
-import { log, logError, logSuccess } from "./logging";
-import { globFiles } from "./runtime";
-import type { ConvexConfig, SyncOptions } from "./types";
+import { getContentCounts } from "@repo/backend/scripts/sync-content/counts";
+import { getDataIntegrity } from "@repo/backend/scripts/sync-content/inspection";
+import {
+  log,
+  logError,
+  logSuccess,
+} from "@repo/backend/scripts/sync-content/logging";
+import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
+import type {
+  ConvexConfig,
+  SyncOptions,
+} from "@repo/backend/scripts/sync-content/types";
 
 const logIntegrityList = (
   title: string,

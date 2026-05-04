@@ -1,22 +1,13 @@
-import { getCategoryPath } from "@repo/contents/_lib/exercises/category";
+import {
+  getCategoryPath,
+  getMaterialPath,
+} from "@repo/contents/_lib/exercises/route";
+import { getFolderChildNamesSync } from "@repo/contents/_lib/fs";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
+import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
-import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
 
-/**
- * Builds the public path for an exercises type page.
- *
- * @param category - Exercises category slug
- * @param type - Exercises type slug
- * @returns Canonical type path
- */
-export function getExercisesPath(
-  category: ExercisesCategory,
-  type: ExercisesType
-) {
-  return `/exercises/${category}/${type}` as const;
-}
+const orderedMaterials = ExercisesMaterialSchema.options;
 
 /**
  * Loads the material list for a given exercises category and type.
@@ -27,43 +18,19 @@ export function getExercisesPath(
  *
  * @example
  * ```ts
- * const subjects = await getSubjects("high-school", "tka");
+ * const subjects = getSubjects("high-school", "tka");
  * // Returns: [{ label: "mathematics", href: "/exercises/high-school/tka/mathematics" }, ...]
  * ```
  */
-export async function getSubjects(
-  category: ExercisesCategory,
-  type: ExercisesType
-): Promise<
-  {
-    label: ExercisesMaterial;
-    href: string;
-  }[]
-> {
-  try {
-    const gradePath = getCategoryPath(category);
+export function getSubjects(category: ExercisesCategory, type: ExercisesType) {
+  const categoryPath = getCategoryPath(category);
+  const typePath = `${categoryPath.slice(1)}/${type}`;
+  const materialFolders = new Set(getFolderChildNamesSync(typePath));
 
-    const cleanPath = gradePath.startsWith("/")
-      ? gradePath.slice(1)
-      : gradePath;
-
-    const gradeModule = await import(
-      `@repo/contents/${cleanPath}/_data/subject.ts`
-    );
-
-    return gradeModule.getSubjects(type);
-  } catch {
-    return [];
-  }
-}
-
-/** Narrows one exercises type route segment to the supported type union. */
-export function parseExercisesType(value: string) {
-  const parsedType = ExercisesTypeSchema.safeParse(value);
-
-  if (!parsedType.success) {
-    return null;
-  }
-
-  return parsedType.data;
+  return orderedMaterials
+    .filter((material) => materialFolders.has(material))
+    .map((material) => ({
+      label: material,
+      href: getMaterialPath(category, type, material),
+    }));
 }

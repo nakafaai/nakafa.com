@@ -1,10 +1,10 @@
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/fs";
+import { getAllSurah } from "@repo/contents/_lib/quran";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 
-const TOTAL_SURAH = 114;
 const EXERCISE_SET_REGEX = /^(exercises\/.*?)\/\d+\/_(?:question|answer)$/;
 const EXERCISE_NUMBER_REGEX = /^(exercises\/.*?\/\d+)\/_(?:question|answer)$/;
 
@@ -271,8 +271,8 @@ export function generateSlugOnlyParams(
     if (includeQuran) {
       addPath(locale, ["quran"]);
 
-      for (let i = 1; i <= TOTAL_SURAH; i++) {
-        addPath(locale, ["quran", i.toString()]);
+      for (const surah of getAllSurah()) {
+        addPath(locale, ["quran", surah.number.toString()]);
       }
     }
   }

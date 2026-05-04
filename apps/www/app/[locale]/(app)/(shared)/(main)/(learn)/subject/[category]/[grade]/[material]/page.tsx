@@ -8,10 +8,12 @@ import {
 } from "@repo/contents/_lib/subject/grade";
 import {
   getMaterialIcon,
-  getMaterialPath,
   getMaterials,
-  parseMaterial,
 } from "@repo/contents/_lib/subject/material";
+import {
+  getMaterialPath,
+  parseMaterial,
+} from "@repo/contents/_lib/subject/route";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import type { Material } from "@repo/contents/_types/subject/material";

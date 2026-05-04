@@ -1,6 +1,6 @@
-import { parseAndRun } from "./cli";
-import { logError } from "./logging";
-import { loadEnvFile } from "./runtime";
+import { parseAndRun } from "@repo/backend/scripts/sync-content/cli";
+import { logError } from "@repo/backend/scripts/sync-content/logging";
+import { loadEnvFile } from "@repo/backend/scripts/sync-content/runtime";
 
 export const runCli = (): void => {
   loadEnvFile();

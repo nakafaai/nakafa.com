@@ -1,4 +1,4 @@
-import { generateSlugOnlyParams } from "@repo/contents/_lib/static-params";
+import { generateSlugOnlyParams } from "@repo/contents/_lib/params";
 import { routing } from "@repo/internationalization/src/routing";
 import type { NextRequest } from "next/server";
 import { hasLocale } from "next-intl";

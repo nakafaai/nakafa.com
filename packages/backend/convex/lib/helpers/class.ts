@@ -3,13 +3,17 @@
  *
  * Check and enforce class membership and access rights.
  */
+
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import {
+  getSchoolMembership,
+  isAdmin,
+} from "@repo/backend/convex/lib/helpers/school";
 import { ConvexError } from "convex/values";
-import { getSchoolMembership, isAdmin } from "./school";
 
 /**
  * Get class membership for a user.

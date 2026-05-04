@@ -3,6 +3,7 @@
  *
  * Enforce chat visibility and ownership rules.
  */
+
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { ConvexError } from "convex/values";
 

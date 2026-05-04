@@ -1,31 +1,7 @@
-import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
-import type {
-  ExercisesMaterial,
-  ExercisesMaterialList,
-} from "@repo/contents/_types/exercises/material";
-import {
-  ExercisesMaterialListSchema,
-  ExercisesMaterialSchema,
-} from "@repo/contents/_types/exercises/material";
-import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
+import { ExercisesMaterialListSchema } from "@repo/contents/_types/exercises/material";
 import { cleanSlug } from "@repo/utilities/helper";
 import type { Locale } from "next-intl";
-
-/**
- * Builds the public path for an exercises material page.
- *
- * @param category - Exercises category slug
- * @param type - Exercises type slug
- * @param material - Exercises material slug
- * @returns Canonical material path
- */
-export function getMaterialPath(
-  category: ExercisesCategory,
-  type: ExercisesType,
-  material: ExercisesMaterial
-) {
-  return `/exercises/${category}/${type}/${material}` as const;
-}
 
 /**
  * Loads the localized material list for an exercises section.
@@ -90,15 +66,4 @@ export function getCurrentMaterial(
   }
 
   return { currentMaterial, currentMaterialItem };
-}
-
-/** Narrows one exercises material route segment to the supported material union. */
-export function parseExercisesMaterial(value: string) {
-  const parsedMaterial = ExercisesMaterialSchema.safeParse(value);
-
-  if (!parsedMaterial.success) {
-    return null;
-  }
-
-  return parsedMaterial.data;
 }

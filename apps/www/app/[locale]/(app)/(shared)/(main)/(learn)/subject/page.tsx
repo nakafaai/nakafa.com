@@ -16,8 +16,6 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGradeIcon } from "./icons";
 
-const CATEGORY_ORDER = ["middle-school", "high-school", "university"] as const;
-
 export async function generateMetadata({
   params,
 }: {
@@ -59,14 +57,17 @@ export default function Page(props: PageProps<"/[locale]/subject">) {
 }
 
 async function PageContent({ locale }: { locale: Locale }) {
-  const [allGrades, tCommon, tSubject] = await Promise.all([
-    getAllGradesWithSubjects(CATEGORY_ORDER),
+  const allGrades = getAllGradesWithSubjects();
+  const categoryOrder = Array.from(
+    new Set(allGrades.map((grade) => grade.category))
+  );
+  const [tCommon, tSubject] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Subject" }),
   ]);
 
   const groupedByCategory = new Map(
-    CATEGORY_ORDER.map((category) => [
+    categoryOrder.map((category) => [
       category,
       allGrades.filter((grade) => grade.category === category),
     ])
@@ -92,7 +93,7 @@ async function PageContent({ locale }: { locale: Locale }) {
       />
       <LayoutContent>
         <div className="flex flex-col gap-12 pb-24">
-          {CATEGORY_ORDER.map((category) => {
+          {categoryOrder.map((category) => {
             const grades = groupedByCategory.get(category);
             if (!grades || grades.length === 0) {
               return null;

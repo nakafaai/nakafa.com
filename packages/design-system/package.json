@@ -53,7 +53,7 @@
     "next": "^16.2.4",
     "next-intl": "^4.11.0",
     "next-themes": "^0.4.6",
-    "postcss": "^8.5.13",
+    "postcss": "^8.5.14",
     "radix-ui": "^1.4.3",
     "react": "19.2.5",
     "react-aria-components": "^1.17.0",

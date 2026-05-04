@@ -3,15 +3,15 @@ import {
   createTryoutTestConvex,
   NOW,
 } from "@repo/backend/convex/tryouts/test.helpers";
-import { getSubjects } from "@repo/contents/exercises/high-school/_data/subject";
+import { getSubjects } from "@repo/contents/_lib/exercises/type";
 import { describe, expect, it } from "vitest";
 
 describe("contentSync/mutations/tryouts", () => {
   it("keeps browse order metadata in sync for an unchanged detected tryout", async () => {
     const t = createTryoutTestConvex();
+    const snbtSubjects = getSubjects("high-school", "snbt");
 
     await t.mutation(async (ctx) => {
-      const snbtSubjects = getSubjects("snbt");
       const tryoutId = await ctx.db.insert("tryouts", {
         product: "snbt",
         locale: "id",
@@ -72,6 +72,7 @@ describe("contentSync/mutations/tryouts", () => {
       {
         locale: "id",
         product: "snbt",
+        requiredPartKeys: snbtSubjects.map((subject) => subject.label),
       }
     );
 
