@@ -37,6 +37,7 @@ const contentRoots = ContentRootSchema.enum;
 const quranRoot = "quran";
 const subjectRootRoute = `/${contentRoots.subject}`;
 const quranRootRoute = `/${quranRoot}`;
+const contentRootRoutes = Object.values(contentRoots).map((root) => `/${root}`);
 
 /** Static top-level routes that should always be present in the sitemap. */
 export const baseRoutes = [
@@ -52,7 +53,7 @@ export const baseRoutes = [
 ];
 
 /** Top-level educational pages handled outside the content route scan. */
-const publicContentBaseRoutes = [subjectRootRoute, quranRootRoute];
+const publicContentBaseRoutes = [...contentRootRoutes, quranRootRoute];
 
 /** Builds relative Quran routes from validated Quran data. */
 export function getQuranRoutes() {

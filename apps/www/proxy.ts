@@ -34,8 +34,9 @@ const LOCALE_BYPASS_PATHS = new Set([
   "/.well-known/skills/nakafa/SKILL.md",
   "/.well-known/skills/nakafa/skill.md",
 ]);
-const requestRoutes = new Set(getPublicContentRequestRoutes());
+const NEXT_INTL_LOCALE_HEADER = "X-NEXT-INTL-LOCALE";
 const contentRedirects = new Map(getPublicContentRedirects());
+const publicContentRequestRoutes = new Set(getPublicContentRequestRoutes());
 const publicContentRouteRoots = new Set(getPublicContentRouteRoots());
 
 /**
@@ -92,20 +93,6 @@ export function proxy(request: NextRequest) {
       return NextResponse.redirect(redirectUrl, 308);
     }
 
-    if (!requestRoutes.has(localizedContentRoute.route)) {
-      const rewriteUrl = new URL(request.url);
-      rewriteUrl.pathname = `/${localizedContentRoute.locale}/__not-found`;
-
-      return NextResponse.rewrite(rewriteUrl, {
-        headers: {
-          Link: AGENT_DISCOVERY_LINK_HEADER,
-          "X-Llms-Txt": LLMS_TEXT_PATH,
-          "x-robots-tag": "noindex",
-        },
-        status: 404,
-      });
-    }
-
     if (
       localizedContentRoute.markdownExtension ||
       request.headers.get("accept")?.includes("text/markdown")
@@ -114,6 +101,18 @@ export function proxy(request: NextRequest) {
       rewriteUrl.pathname = `/llms.mdx/${localizedContentRoute.locale}${localizedContentRoute.route}`;
 
       return NextResponse.rewrite(rewriteUrl);
+    }
+
+    if (!publicContentRequestRoutes.has(localizedContentRoute.route)) {
+      const rewriteUrl = new URL(request.url);
+      rewriteUrl.pathname = `/${localizedContentRoute.locale}/__not-found`;
+      const requestHeaders = new Headers(request.headers);
+      requestHeaders.set(NEXT_INTL_LOCALE_HEADER, localizedContentRoute.locale);
+
+      return NextResponse.rewrite(rewriteUrl, {
+        request: { headers: requestHeaders },
+        status: 404,
+      });
     }
   }
 

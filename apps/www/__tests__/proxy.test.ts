@@ -38,6 +38,10 @@ vi.mock("@/lib/sitemap/routes", () => ({
     "/quran",
   ],
   getPublicContentRequestRoutes: () => [
+    "/articles",
+    "/exercises",
+    "/subject",
+    "/quran",
     "/exercises/middle-school/grade-9",
     "/exercises/middle-school/grade-9/mathematics",
     "/subject/high-school/10/biology",
@@ -193,7 +197,7 @@ describe("proxy", () => {
     );
   });
 
-  it("returns a real 404 for missing public content routes", async () => {
+  it("rewrites missing markdown public content to the markdown route", () => {
     const response = proxy(
       new NextRequest(
         "http://localhost:3000/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-1/9-afdocs-nonexistent-8f3a",
@@ -206,20 +210,31 @@ describe("proxy", () => {
     );
 
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
-    expect(response.status).toBe(404);
     expect(response.headers.get("x-middleware-rewrite")).toBe(
-      "http://localhost:3000/en/__not-found"
+      "http://localhost:3000/llms.mdx/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-1/9-afdocs-nonexistent-8f3a"
     );
-    await expect(response.text()).resolves.toBe("");
   });
 
-  it("returns a real 404 for public content folders that are not pages", () => {
+  it("rewrites missing html public content to the localized not-found route", () => {
+    const response = proxy(
+      new NextRequest(
+        "http://localhost:3000/id/subject/high-school/10/history/history-introduction/human-space-time"
+      )
+    );
+
+    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expect(response.headers.get("x-middleware-rewrite")).toBe(
+      "http://localhost:3000/id/__not-found"
+    );
+  });
+
+  it("delegates public content folders to the localized app tree", () => {
     const response = proxy(
       new NextRequest("http://localhost:3000/en/articles")
     );
 
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
-    expect(response.status).toBe(404);
+    expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
+    expect(response.headers.get("x-locale-proxy")).toBe("1");
   });
 
   it("preserves markdown alternates for real public content routes", () => {
