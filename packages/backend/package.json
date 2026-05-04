@@ -63,7 +63,7 @@
     "jsonrepair": "^3.14.0",
     "nanoid": "^5.1.11",
     "strip-ansi": "^7.2.0",
-    "zod": "^4.4.2"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
