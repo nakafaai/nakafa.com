@@ -1,9 +1,19 @@
-import { readMdxFile } from "../lib/mdx-parser/content";
-import { runConvexMutationGeneric } from "./convexApi";
-import { formatDuration, log } from "./logging";
-import { globFiles } from "./runtime";
-import { AuthorSyncResultSchema, BATCH_SIZES } from "./schemas";
-import type { AuthorSyncResult, ConvexConfig, SyncOptions } from "./types";
+import { readMdxFile } from "@repo/backend/scripts/lib/mdx-parser/content";
+import { runConvexMutationGeneric } from "@repo/backend/scripts/sync-content/convexApi";
+import {
+  formatDuration,
+  log,
+} from "@repo/backend/scripts/sync-content/logging";
+import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
+import {
+  AuthorSyncResultSchema,
+  BATCH_SIZES,
+} from "@repo/backend/scripts/sync-content/schemas";
+import type {
+  AuthorSyncResult,
+  ConvexConfig,
+  SyncOptions,
+} from "@repo/backend/scripts/sync-content/types";
 
 export const collectAllAuthorNames = async (
   options: SyncOptions

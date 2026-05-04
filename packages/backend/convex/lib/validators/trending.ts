@@ -1,5 +1,8 @@
+import {
+  gradeValidator,
+  materialValidator,
+} from "@repo/backend/convex/lib/validators/contents";
 import { type Infer, v } from "convex/values";
-import { gradeValidator, materialValidator } from "./contents";
 
 /**
  * Validator for trending subject item.

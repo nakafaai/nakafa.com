@@ -1,8 +1,14 @@
-import { syncArticles } from "./articles";
-import { collectAuthorNamesFromFiles, syncAuthors } from "./authors";
-import { clean } from "./clean";
-import { runConvexMutationGeneric } from "./convexApi";
-import { syncExerciseQuestions, syncExerciseSets } from "./exercises";
+import { syncArticles } from "@repo/backend/scripts/sync-content/articles";
+import {
+  collectAuthorNamesFromFiles,
+  syncAuthors,
+} from "@repo/backend/scripts/sync-content/authors";
+import { clean } from "@repo/backend/scripts/sync-content/clean";
+import { runConvexMutationGeneric } from "@repo/backend/scripts/sync-content/convexApi";
+import {
+  syncExerciseQuestions,
+  syncExerciseSets,
+} from "@repo/backend/scripts/sync-content/exercises";
 import {
   formatDuration,
   formatSyncResult,
@@ -10,25 +16,35 @@ import {
   logError,
   logSuccess,
   logSyncMetrics,
-} from "./logging";
+} from "@repo/backend/scripts/sync-content/logging";
 import {
   addPhaseMetrics,
   createMetrics,
   endPhase,
   finalizeMetrics,
   startPhase,
-} from "./metrics";
+} from "@repo/backend/scripts/sync-content/metrics";
 import {
   getChangedFilesSince,
   getCurrentGitCommit,
   loadSyncState,
   saveSyncState,
-} from "./runtime";
-import { AuthorSyncResultSchema, BATCH_SIZES } from "./schemas";
-import { syncSubjectSections, syncSubjectTopics } from "./subjects";
-import { syncTryouts } from "./tryouts";
-import type { ConvexConfig, SyncOptions, SyncResult } from "./types";
-import { verify } from "./verify";
+} from "@repo/backend/scripts/sync-content/runtime";
+import {
+  AuthorSyncResultSchema,
+  BATCH_SIZES,
+} from "@repo/backend/scripts/sync-content/schemas";
+import {
+  syncSubjectSections,
+  syncSubjectTopics,
+} from "@repo/backend/scripts/sync-content/subjects";
+import { syncTryouts } from "@repo/backend/scripts/sync-content/tryouts";
+import type {
+  ConvexConfig,
+  SyncOptions,
+  SyncResult,
+} from "@repo/backend/scripts/sync-content/types";
+import { verify } from "@repo/backend/scripts/sync-content/verify";
 
 const logSyncSummary = (
   authorResult: { created: number },

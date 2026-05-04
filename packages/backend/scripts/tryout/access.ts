@@ -1,10 +1,10 @@
 import { tryoutProducts } from "@repo/backend/convex/tryouts/products";
-import * as z from "zod";
 import {
   getConvexConfig,
   runConvexQueryWithArgs,
-} from "../sync-content/convexApi";
-import { loadEnvFile } from "../sync-content/runtime";
+} from "@repo/backend/scripts/sync-content/convexApi";
+import { loadEnvFile } from "@repo/backend/scripts/sync-content/runtime";
+import * as z from "zod";
 
 const TRYOUT_ACCESS_PAGE_SIZE = 100;
 

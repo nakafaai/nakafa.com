@@ -1,10 +1,10 @@
-import { formatDuration } from "./logging";
+import { formatDuration } from "@repo/backend/scripts/sync-content/logging";
 import type {
   BatchProgress,
   PhaseMetrics,
   SyncMetrics,
   SyncResult,
-} from "./types";
+} from "@repo/backend/scripts/sync-content/types";
 
 export const createMetrics = (): SyncMetrics => ({
   phases: [],

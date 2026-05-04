@@ -2,26 +2,31 @@ import {
   readArticleReferences,
   readExerciseChoices,
   readMdxFile,
-} from "../lib/mdx-parser/content";
+} from "@repo/backend/scripts/lib/mdx-parser/content";
 import {
   parseExerciseMaterialFile,
   parseSubjectMaterialFile,
-} from "../lib/mdx-parser/materials";
+} from "@repo/backend/scripts/lib/mdx-parser/materials";
 import {
   getArticleDir,
   getExerciseDir,
   parseArticlePath,
   parseExercisePath,
   parseSubjectPath,
-} from "../lib/mdx-parser/paths";
-import { formatDuration, log, logError, logSuccess } from "./logging";
-import { globFiles } from "./runtime";
+} from "@repo/backend/scripts/lib/mdx-parser/paths";
+import {
+  formatDuration,
+  log,
+  logError,
+  logSuccess,
+} from "@repo/backend/scripts/sync-content/logging";
+import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
 import {
   LOCALE_MATERIAL_FILE_REGEX,
   LOCALE_SUBJECT_MATERIAL_FILE_REGEX,
   parseLocale,
-} from "./schemas";
-import type { ValidationResult } from "./types";
+} from "@repo/backend/scripts/sync-content/schemas";
+import type { ValidationResult } from "@repo/backend/scripts/sync-content/types";
 
 const createValidationResult = (): ValidationResult => ({
   valid: 0,

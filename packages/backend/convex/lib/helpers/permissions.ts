@@ -4,6 +4,7 @@
  * Defines permissions for school roles, class roles, and teacher roles.
  * Use requirePermission() to enforce access control in mutations.
  */
+
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,

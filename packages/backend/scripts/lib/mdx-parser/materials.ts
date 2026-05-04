@@ -1,9 +1,6 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-import { ExercisesMaterialListSchema } from "@repo/contents/_types/exercises/material";
-import { MaterialListSchema } from "@repo/contents/_types/subject/material";
-import type * as z from "zod";
 import {
   BACKSLASH_REGEX,
   BASE_PATH_REGEX,
@@ -14,9 +11,15 @@ import {
   LEADING_SLASH_REGEX,
   SUBJECT_MATERIAL_CONST_REGEX,
   SUBJECT_MATERIAL_PATH_REGEX,
-} from "./constants";
-import { buildExerciseSetSlug, getRelativeExercisePathSegments } from "./paths";
-import type { ParsedExerciseSet, ParsedSubjectTopic } from "./types";
+} from "@repo/backend/scripts/lib/mdx-parser/constants";
+import {
+  buildExerciseSetSlug,
+  getRelativeExercisePathSegments,
+} from "@repo/backend/scripts/lib/mdx-parser/paths";
+import type {
+  ParsedExerciseSet,
+  ParsedSubjectTopic,
+} from "@repo/backend/scripts/lib/mdx-parser/types";
 import {
   parseExerciseYear,
   validateExercisesCategory,
@@ -25,7 +28,10 @@ import {
   validateGrade,
   validateMaterial,
   validateSubjectCategory,
-} from "./validators";
+} from "@repo/backend/scripts/lib/mdx-parser/validators";
+import { ExercisesMaterialListSchema } from "@repo/contents/_types/exercises/material";
+import { MaterialListSchema } from "@repo/contents/_types/subject/material";
+import type * as z from "zod";
 
 async function readBasePath(
   materialFilePath: string,

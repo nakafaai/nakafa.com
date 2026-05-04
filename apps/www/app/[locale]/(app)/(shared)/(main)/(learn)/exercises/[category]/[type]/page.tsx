@@ -1,12 +1,10 @@
-import {
-  getCategoryIcon,
-  parseExercisesCategory,
-} from "@repo/contents/_lib/exercises/category";
+import { getCategoryIcon } from "@repo/contents/_lib/exercises/category";
 import {
   getExercisesPath,
-  getSubjects,
+  parseExercisesCategory,
   parseExercisesType,
-} from "@repo/contents/_lib/exercises/type";
+} from "@repo/contents/_lib/exercises/route";
+import { getSubjects } from "@repo/contents/_lib/exercises/type";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
@@ -141,10 +139,8 @@ async function PageContent({
 }) {
   const FilePath = getExercisesPath(category, type);
 
-  const [subjects, t] = await Promise.all([
-    getSubjects(category, type),
-    getTranslations({ locale, namespace: "Exercises" }),
-  ]);
+  const subjects = getSubjects(category, type);
+  const t = await getTranslations({ locale, namespace: "Exercises" });
 
   return (
     <>

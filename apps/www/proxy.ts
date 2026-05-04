@@ -93,9 +93,14 @@ export function proxy(request: NextRequest) {
     }
 
     if (!requestRoutes.has(localizedContentRoute.route)) {
-      return new NextResponse("Not Found", {
+      const rewriteUrl = new URL(request.url);
+      rewriteUrl.pathname = `/${localizedContentRoute.locale}/__not-found`;
+
+      return NextResponse.rewrite(rewriteUrl, {
         headers: {
-          "content-type": "text/plain; charset=utf-8",
+          Link: AGENT_DISCOVERY_LINK_HEADER,
+          "X-Llms-Txt": LLMS_TEXT_PATH,
+          "x-robots-tag": "noindex",
         },
         status: 404,
       });

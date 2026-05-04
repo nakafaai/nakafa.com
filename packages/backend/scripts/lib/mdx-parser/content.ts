@@ -1,6 +1,17 @@
 import { createHash } from "node:crypto";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import {
+  CONST_CHOICES_REGEX,
+  DEFAULT_EXPORT_REGEX,
+  METADATA_REGEX,
+  MULTIPLE_NEWLINES_REGEX,
+  REFERENCES_REGEX,
+} from "@repo/backend/scripts/lib/mdx-parser/constants";
+import type {
+  ExerciseChoicesByLocale,
+  ParsedMdx,
+} from "@repo/backend/scripts/lib/mdx-parser/types";
 import { parseContentDate } from "@repo/contents/_shared/date";
 import {
   ContentMetadataSchema,
@@ -8,14 +19,6 @@ import {
   ReferenceSchema,
 } from "@repo/contents/_types/content";
 import { ExercisesChoicesSchema } from "@repo/contents/_types/exercises/choices";
-import {
-  CONST_CHOICES_REGEX,
-  DEFAULT_EXPORT_REGEX,
-  METADATA_REGEX,
-  MULTIPLE_NEWLINES_REGEX,
-  REFERENCES_REGEX,
-} from "./constants";
-import type { ExerciseChoicesByLocale, ParsedMdx } from "./types";
 
 function normalizeWhitespace(content: string) {
   return content.replace(MULTIPLE_NEWLINES_REGEX, "\n\n").trim();

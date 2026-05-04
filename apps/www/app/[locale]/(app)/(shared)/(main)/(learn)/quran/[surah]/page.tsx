@@ -1,5 +1,5 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
-import { getSurahName } from "@repo/contents/_lib/quran";
+import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { cn, slugify } from "@repo/design-system/lib/utils";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { Effect } from "effect";
@@ -104,9 +104,8 @@ export async function generateMetadata({
 }
 
 export function generateStaticParams() {
-  // surah 1-114
-  return Array.from({ length: 114 }, (_, i) => ({
-    surah: (i + 1).toString(),
+  return getAllSurah().map((surah) => ({
+    surah: surah.number.toString(),
   }));
 }
 

@@ -1,4 +1,4 @@
-import { parseExercisesCategory } from "@repo/contents/_lib/exercises/category";
+import { parseExercisesCategory } from "@repo/contents/_lib/exercises/route";
 import { notFound } from "next/navigation";
 
 import { use } from "react";

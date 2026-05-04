@@ -1,14 +1,14 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { getSchoolMembership } from "@repo/backend/convex/lib/helpers/school";
-import { ConvexError, v } from "convex/values";
-import { getAll } from "convex-helpers/server/relationships";
 import {
   mySchoolsPageArgs,
   mySchoolsPageResultValidator,
   schoolBySlugResultValidator,
   schoolLandingStateResultValidator,
-} from "./validators";
+} from "@repo/backend/convex/schools/validators";
+import { ConvexError, v } from "convex/values";
+import { getAll } from "convex-helpers/server/relationships";
 
 /** Return the authenticated school route snapshot resolved from one slug. */
 export const getSchoolBySlug = query({

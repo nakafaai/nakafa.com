@@ -1,8 +1,35 @@
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-import { tryoutProducts } from "../../convex/tryouts/products";
-import { runConvexMutation } from "./convexApi";
-import { formatDuration, log } from "./logging";
-import type { ConvexConfig, SyncOptions, SyncResult } from "./types";
+import { tryoutProducts } from "@repo/backend/convex/tryouts/products";
+import { runConvexMutation } from "@repo/backend/scripts/sync-content/convexApi";
+import {
+  formatDuration,
+  log,
+} from "@repo/backend/scripts/sync-content/logging";
+import type {
+  ConvexConfig,
+  SyncOptions,
+  SyncResult,
+} from "@repo/backend/scripts/sync-content/types";
+import { getSubjects } from "@repo/contents/_lib/exercises/type";
+
+const tryoutPartKeyReaders = {
+  snbt: () =>
+    getSubjects("high-school", "snbt").map((subject) => subject.label),
+} satisfies Record<
+  (typeof tryoutProducts)[number],
+  () => ReturnType<typeof getSubjects>[number]["label"][]
+>;
+
+/** Returns product part keys from the same content folders used by web listings. */
+function getTryoutPartKeys(product: (typeof tryoutProducts)[number]) {
+  const partKeys = tryoutPartKeyReaders[product]();
+
+  if (partKeys.length === 0) {
+    throw new Error(`No tryout part keys found for ${product}.`);
+  }
+
+  return partKeys;
+}
 
 export const syncTryouts = async (
   config: ConvexConfig,
@@ -21,7 +48,7 @@ export const syncTryouts = async (
       const result = await runConvexMutation(
         config,
         "contentSync/mutations/tryouts:bulkSyncTryouts",
-        { product, locale }
+        { product, locale, requiredPartKeys: getTryoutPartKeys(product) }
       );
 
       totals.created += result.created;

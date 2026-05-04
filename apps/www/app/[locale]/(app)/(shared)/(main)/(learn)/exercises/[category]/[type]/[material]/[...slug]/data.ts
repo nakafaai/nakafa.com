@@ -1,20 +1,22 @@
-import { parseExercisesCategory } from "@repo/contents/_lib/exercises/category";
 import { getExerciseCount } from "@repo/contents/_lib/exercises/collection";
 import {
   getCurrentMaterial,
-  getMaterialPath,
   getMaterials,
-  parseExercisesMaterial,
 } from "@repo/contents/_lib/exercises/material";
 import {
   getRenderableExerciseByNumber,
   getRenderableExercisesContent,
 } from "@repo/contents/_lib/exercises/renderable";
 import {
+  getMaterialPath,
+  parseExercisesCategory,
+  parseExercisesMaterial,
+  parseExercisesType,
+} from "@repo/contents/_lib/exercises/route";
+import {
   getSlugPath,
   isTryOutCollectionSlug,
 } from "@repo/contents/_lib/exercises/slug";
-import { parseExercisesType } from "@repo/contents/_lib/exercises/type";
 import { Effect } from "effect";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";

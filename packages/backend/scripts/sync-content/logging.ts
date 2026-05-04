@@ -1,4 +1,9 @@
-import type { PhaseMetrics, StaleItem, SyncMetrics, SyncResult } from "./types";
+import type {
+  PhaseMetrics,
+  StaleItem,
+  SyncMetrics,
+  SyncResult,
+} from "@repo/backend/scripts/sync-content/types";
 
 export const log = (message: string): void => {
   console.log(message);

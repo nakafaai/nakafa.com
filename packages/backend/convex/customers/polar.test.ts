@@ -16,7 +16,7 @@ const {
   mockCustomersUpdate: vi.fn(),
 }));
 
-vi.mock("@repo/backend/convex/utils/polar/client", () => ({
+vi.mock("@/convex/utils/polar/client", () => ({
   polarClient: {},
 }));
 vi.mock("@polar-sh/sdk/funcs/checkoutsCreate.js", () => ({

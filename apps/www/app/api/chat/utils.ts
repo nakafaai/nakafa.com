@@ -4,8 +4,6 @@ import { routing } from "@repo/internationalization/src/routing";
 import { cleanSlug } from "@repo/utilities/helper";
 import { fetchMutation } from "convex/nextjs";
 
-const QURAN_SLUG_PARTS_COUNT = 3;
-
 function stripLocalePrefix(slug: string) {
   const slugParts = cleanSlug(slug).split("/");
   const firstSegment = slugParts[0];
@@ -28,12 +26,20 @@ export async function getVerified(url: string) {
   const slugParts = stripLocalePrefix(cleanedUrl);
 
   if (slugParts[0] === "quran") {
-    if (slugParts.length !== QURAN_SLUG_PARTS_COUNT) {
+    const [, surah, ...extraSegments] = slugParts;
+
+    if (!(surah && extraSegments.length === 0)) {
       return false;
     }
-    const surah = slugParts[1];
+
+    const surahNumber = Number(surah);
+
+    if (!Number.isInteger(surahNumber)) {
+      return false;
+    }
+
     const { data: surahData, error: surahError } = await api.contents.getSurah({
-      surah: Number.parseInt(surah, 10),
+      surah: surahNumber,
     });
     if (surahError) {
       return false;

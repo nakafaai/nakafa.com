@@ -1,29 +1,36 @@
 import {
   parseExerciseMaterialFile,
   parseSubjectMaterialFile,
-} from "../lib/mdx-parser/materials";
+} from "@repo/backend/scripts/lib/mdx-parser/materials";
 import {
   parseArticlePath,
   parseExercisePath,
   parseSubjectPath,
-} from "../lib/mdx-parser/paths";
-import { runConvexMutationGeneric } from "./convexApi";
-import { getStaleContent, getUnusedAuthors } from "./inspection";
-import { log, logStaleItems, logSuccess } from "./logging";
-import { globFiles } from "./runtime";
+} from "@repo/backend/scripts/lib/mdx-parser/paths";
+import { runConvexMutationGeneric } from "@repo/backend/scripts/sync-content/convexApi";
+import {
+  getStaleContent,
+  getUnusedAuthors,
+} from "@repo/backend/scripts/sync-content/inspection";
+import {
+  log,
+  logStaleItems,
+  logSuccess,
+} from "@repo/backend/scripts/sync-content/logging";
+import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
 import {
   BATCH_SIZES,
   DeleteResultSchema,
   LOCALE_MATERIAL_FILE_REGEX,
   LOCALE_SUBJECT_MATERIAL_FILE_REGEX,
   parseLocale,
-} from "./schemas";
+} from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
   FilesystemSlugs,
   StaleItem,
   SyncOptions,
-} from "./types";
+} from "@repo/backend/scripts/sync-content/types";
 
 const deleteStaleItems = async (
   config: ConvexConfig,

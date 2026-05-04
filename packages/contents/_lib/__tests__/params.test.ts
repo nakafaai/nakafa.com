@@ -6,7 +6,7 @@ import {
   generateSlugOnlyParams,
   getExerciseNumberPaths,
   getExerciseSetPaths,
-} from "@repo/contents/_lib/static-params";
+} from "@repo/contents/_lib/params";
 import { DirectoryReadError } from "@repo/contents/_shared/error";
 import type { Locale } from "@repo/contents/_types/content";
 import { Effect } from "effect";

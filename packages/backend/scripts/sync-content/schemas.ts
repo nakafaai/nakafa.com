@@ -1,6 +1,6 @@
+import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import * as z from "zod";
-import { CONTENT_SYNC_BATCH_LIMITS } from "../../convex/contentSync/constants";
 
 export const BATCH_SIZES = {
   articles: CONTENT_SYNC_BATCH_LIMITS.articles,

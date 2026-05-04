@@ -1,5 +1,5 @@
+import { chunkScript, DEFAULT_CHUNK_CONFIG } from "@repo/backend/helpers/chunk";
 import { describe, expect, it } from "vitest";
-import { chunkScript, DEFAULT_CHUNK_CONFIG } from "./chunk";
 
 /**
  * Helper to create a string of specific length.

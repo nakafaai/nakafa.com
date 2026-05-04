@@ -1,9 +1,9 @@
 import {
   getCurrentMaterial,
-  getMaterialPath,
   getMaterials,
 } from "@repo/contents/_lib/exercises/material";
 import { getRenderableExercisesContent } from "@repo/contents/_lib/exercises/renderable";
+import { getMaterialPath } from "@repo/contents/_lib/exercises/route";
 import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
