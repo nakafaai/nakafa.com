@@ -8,10 +8,12 @@ import {
 import {
   getCurrentMaterial,
   getMaterialIcon,
-  getMaterialPath,
   getMaterials,
-  parseMaterial,
 } from "@repo/contents/_lib/subject/material";
+import {
+  getMaterialPath,
+  parseMaterial,
+} from "@repo/contents/_lib/subject/route";
 import {
   getMaterialsPagination,
   getSlugPath,

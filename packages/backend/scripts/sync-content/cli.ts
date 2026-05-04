@@ -1,16 +1,26 @@
-import { syncArticles } from "./articles";
-import { syncAuthors } from "./authors";
-import { clean } from "./clean";
-import { getConvexConfig } from "./convexApi";
-import { syncExerciseQuestions, syncExerciseSets } from "./exercises";
-import { log, logError } from "./logging";
-import { reset } from "./reset";
-import { resetTryouts } from "./resetTryouts";
-import { syncSubjectSections, syncSubjectTopics } from "./subjects";
-import type { SyncOptions } from "./types";
-import { validate } from "./validate";
-import { verify } from "./verify";
-import { syncAll, syncFull, syncIncremental } from "./workflows";
+import { syncArticles } from "@repo/backend/scripts/sync-content/articles";
+import { syncAuthors } from "@repo/backend/scripts/sync-content/authors";
+import { clean } from "@repo/backend/scripts/sync-content/clean";
+import { getConvexConfig } from "@repo/backend/scripts/sync-content/convexApi";
+import {
+  syncExerciseQuestions,
+  syncExerciseSets,
+} from "@repo/backend/scripts/sync-content/exercises";
+import { log, logError } from "@repo/backend/scripts/sync-content/logging";
+import { reset } from "@repo/backend/scripts/sync-content/reset";
+import { resetTryouts } from "@repo/backend/scripts/sync-content/resetTryouts";
+import {
+  syncSubjectSections,
+  syncSubjectTopics,
+} from "@repo/backend/scripts/sync-content/subjects";
+import type { SyncOptions } from "@repo/backend/scripts/sync-content/types";
+import { validate } from "@repo/backend/scripts/sync-content/validate";
+import { verify } from "@repo/backend/scripts/sync-content/verify";
+import {
+  syncAll,
+  syncFull,
+  syncIncremental,
+} from "@repo/backend/scripts/sync-content/workflows";
 
 /** Parses one sync-content CLI invocation into a command and option bag. */
 const parseArgs = (): { options: SyncOptions; type: string } => {

@@ -16,9 +16,9 @@ import { useTheme } from "next-themes";
 import { Suspense, useEffect } from "react";
 
 const CAMERA_POSITION = [0, 4.2, 6.8] satisfies [number, number, number];
-const CAMERA_TARGET = [0, 0.34, 0.28] satisfies [number, number, number];
+const CAMERA_TARGET = [-0.2, 0.34, 0.28] satisfies [number, number, number];
 const NARROW_CAMERA_POSITION = [0, 4.8, 8.2] satisfies [number, number, number];
-const NARROW_CAMERA_TARGET = [-0.28, 0.34, 0.28] satisfies [
+const NARROW_CAMERA_TARGET = [-0.4, 0.34, 0.28] satisfies [
   number,
   number,
   number,

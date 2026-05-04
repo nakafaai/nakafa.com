@@ -11,23 +11,26 @@ import {
 import { Effect, Option, pipe } from "effect";
 import type { Locale } from "next-intl";
 
-const SURAH_COUNT = 114;
-const VERSE_COUNT = 286;
-const JUZ_COUNT = 30;
+const verses = quran.flatMap((surah) => surah.verses);
+
+/** Checks whether a route number can identify Quran data. */
+function isPositiveInteger(value: number) {
+  return Number.isInteger(value) && value > 0;
+}
 
 /**
- * Retrieves a surah by its 1-based number.
+ * Retrieves a surah by its Quran number.
  *
- * @param id - Surah number in the inclusive range `1..114`
+ * @param id - Surah number from the available Quran data
  * @returns Effect that resolves to the validated surah or fails when missing
  */
 export function getSurah(id: number): Effect.Effect<Surah, SurahNotFoundError> {
   return Effect.gen(function* () {
-    if (id < 1 || id > SURAH_COUNT) {
+    if (!isPositiveInteger(id)) {
       return yield* Effect.fail(new SurahNotFoundError({ surahNumber: id }));
     }
 
-    const surah = quran[id - 1];
+    const surah = quran.find((item) => item.number === id);
     const result = SurahSchema.safeParse(surah);
     if (!result.success) {
       return yield* Effect.fail(new SurahNotFoundError({ surahNumber: id }));
@@ -71,23 +74,21 @@ export function getAllSurah(): Omit<Surah, "verses">[] {
 /**
  * Returns all verses that belong to a juz.
  *
- * @param juz - Juz number in the inclusive range `1..30`
+ * @param juz - Juz number from the available Quran data
  * @returns All verses in the juz, or an empty array for invalid input
  */
 export function getVersesByJuz(juz: number): Verse[] {
-  if (juz < 1 || juz > JUZ_COUNT) {
+  if (!isPositiveInteger(juz)) {
     return [];
   }
 
-  return quran
-    .flatMap((surah) => surah.verses)
-    .filter((verse) => verse.meta.juz === juz);
+  return verses.filter((verse) => verse.meta.juz === juz);
 }
 
 /**
  * Retrieves a verse by surah number and verse number.
  *
- * @param surah - Surah number in the inclusive range `1..114`
+ * @param surah - Surah number from the available Quran data
  * @param verse - Verse number validated against the selected surah
  * @returns Effect that resolves to the verse or fails with a not-found error
  */
@@ -99,13 +100,7 @@ export function getVerseBySurah({
   verse: number;
 }): Effect.Effect<Verse, SurahNotFoundError | VerseNotFoundError> {
   return Effect.gen(function* () {
-    if (surahNum < 1 || surahNum > SURAH_COUNT) {
-      return yield* Effect.fail(
-        new SurahNotFoundError({ surahNumber: surahNum })
-      );
-    }
-
-    if (verseNum < 1 || verseNum > VERSE_COUNT) {
+    if (!isPositiveInteger(verseNum)) {
       return yield* Effect.fail(
         new VerseNotFoundError({
           surahNumber: surahNum,
@@ -115,7 +110,7 @@ export function getVerseBySurah({
     }
 
     const surah = yield* getSurah(surahNum);
-    const verse = surah.verses[verseNum - 1];
+    const verse = surah.verses.find((item) => item.number.inSurah === verseNum);
 
     if (!verse) {
       return yield* Effect.fail(

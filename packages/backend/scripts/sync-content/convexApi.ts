@@ -1,14 +1,18 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import path from "node:path";
-import type * as z from "zod";
-import { logWarning } from "./logging";
+import { logWarning } from "@repo/backend/scripts/sync-content/logging";
 import {
   ConvexAuthConfigSchema,
   ConvexResponseSchema,
   SyncResultSchema,
-} from "./schemas";
-import type { ConvexConfig, SyncOptions, SyncResult } from "./types";
+} from "@repo/backend/scripts/sync-content/schemas";
+import type {
+  ConvexConfig,
+  SyncOptions,
+  SyncResult,
+} from "@repo/backend/scripts/sync-content/types";
+import type * as z from "zod";
 
 const parseConvexResponse = <T>(
   json: unknown,

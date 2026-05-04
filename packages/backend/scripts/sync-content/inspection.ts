@@ -1,5 +1,4 @@
-import type * as z from "zod";
-import { runConvexQueryWithArgs } from "./convexApi";
+import { runConvexQueryWithArgs } from "@repo/backend/scripts/sync-content/convexApi";
 import {
   ArticleReferenceIntegrityPageSchema,
   AuthorPageSchema,
@@ -12,8 +11,12 @@ import {
   SubjectSectionIntegrityPageSchema,
   TryoutScaleIntegritySchema,
   UnusedAuthorsSchema,
-} from "./schemas";
-import type { ConvexConfig, FilesystemSlugs } from "./types";
+} from "@repo/backend/scripts/sync-content/schemas";
+import type {
+  ConvexConfig,
+  FilesystemSlugs,
+} from "@repo/backend/scripts/sync-content/types";
+import type * as z from "zod";
 
 const PAGE_SIZE = 1000;
 

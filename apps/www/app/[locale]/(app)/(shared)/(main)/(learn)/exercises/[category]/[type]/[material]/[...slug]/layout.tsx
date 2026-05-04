@@ -1,7 +1,9 @@
-import { parseExercisesCategory } from "@repo/contents/_lib/exercises/category";
-import { parseExercisesMaterial } from "@repo/contents/_lib/exercises/material";
+import {
+  parseExercisesCategory,
+  parseExercisesMaterial,
+  parseExercisesType,
+} from "@repo/contents/_lib/exercises/route";
 import { getSlugPath } from "@repo/contents/_lib/exercises/slug";
-import { parseExercisesType } from "@repo/contents/_lib/exercises/type";
 import { cleanSlug } from "@repo/utilities/helper";
 import { notFound } from "next/navigation";
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { getToken } from "@/lib/auth/server";
 import { SchoolContextProvider } from "@/lib/context/use-school";
 import { getSchoolRouteSnapshot } from "@/lib/school/server";
 
@@ -12,6 +13,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const defaultMetadata = {};
+  const token = await getToken();
+
+  if (!token) {
+    return defaultMetadata;
+  }
 
   const schoolRoute = await getSchoolRouteSnapshot(slug);
 
@@ -63,6 +69,12 @@ async function SchoolRouteBoundary({
   children: React.ReactNode;
   slug: string;
 }) {
+  const token = await getToken();
+
+  if (!token) {
+    return children;
+  }
+
   const value = await getSchoolRouteSnapshot(slug);
 
   if (!value) {

@@ -1,5 +1,4 @@
-import { Line } from "@react-three/drei";
-import { ChemistryParticleLabel } from "@repo/design-system/components/contents/chemistry/particle-label";
+import { Billboard, Line, Text } from "@react-three/drei";
 import {
   getPeriodicPropertyModeColor,
   PERIODIC_PROPERTY_MODES,
@@ -9,25 +8,27 @@ import {
   type PeriodicPropertySample,
 } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
-import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
+import {
+  MONO_FONT_PATH,
+  THREE_FONT_SIZE,
+} from "@repo/design-system/components/three/data/constants";
 
 const PERIOD_Z = -1.18;
-const PERIOD_STEP = 0.62;
-const GROUP_X = -2.08;
-const GROUP_START_Z = -0.22;
-const GROUP_STEP = 0.68;
+const PERIOD_STEP = 0.78;
+const GROUP_X = -2.8;
+const GROUP_START_Z = -0.46;
+const GROUP_STEP = 0.8;
 const RAIL_Y = -0.04;
 const PERIOD_RAIL_Z_OFFSET = 0.34;
 const GROUP_RAIL_X_OFFSET = 0.34;
 const PILLAR_RADIUS = 0.17;
 const PILLAR_MIN_HEIGHT = 0.18;
 const PILLAR_MAX_HEIGHT = 1.46;
-const SPHERE_MIN_RADIUS = 0.19;
-const SPHERE_MAX_RADIUS = 0.43;
+const SPHERE_MIN_RADIUS = 0.18;
+const SPHERE_MAX_RADIUS = 0.38;
 const MARKER_LABEL_OUTLINE_WIDTH = 0.012;
-const SPHERE_LABEL_FONT_RATIO = 0.92;
-const SPHERE_LABEL_OFFSET_RATIO = 1.04;
-const PILLAR_LABEL_OFFSET = 0.14;
+const MARKER_LABEL_RENDER_ORDER = 10;
+const PILLAR_LABEL_OFFSET = 0.22;
 const SCENE_SCALE = 1.12;
 const SCENE_Y_OFFSET = 0.62;
 
@@ -158,8 +159,8 @@ function TrendMarker({
         </mesh>
         <MarkerLabel
           colors={colors}
-          fontSize={getMarkerFontSize(radius)}
-          position={[0, radius, radius * SPHERE_LABEL_OFFSET_RATIO]}
+          fontSize={THREE_FONT_SIZE.compact}
+          position={[0, radius, 0]}
         >
           {sample.symbol}
         </MarkerLabel>
@@ -187,7 +188,7 @@ function TrendMarker({
       </mesh>
       <MarkerLabel
         colors={colors}
-        fontSize={THREE_FONT_SIZE.reading}
+        fontSize={THREE_FONT_SIZE.annotation}
         position={[0, height + PILLAR_LABEL_OFFSET, 0]}
       >
         {sample.symbol}
@@ -211,15 +212,25 @@ function MarkerLabel({
   position: ScenePoint;
 }) {
   return (
-    <ChemistryParticleLabel
-      color={colors.markerText}
-      fontSize={fontSize}
-      outlineColor={colors.markerTextOutline}
-      outlineWidth={MARKER_LABEL_OUTLINE_WIDTH}
-      position={position}
-    >
-      {children}
-    </ChemistryParticleLabel>
+    <Billboard position={position}>
+      <Text
+        anchorX="center"
+        anchorY="middle"
+        color={colors.markerText}
+        font={MONO_FONT_PATH}
+        fontSize={fontSize}
+        outlineColor={colors.markerTextOutline}
+        outlineWidth={MARKER_LABEL_OUTLINE_WIDTH}
+        renderOrder={MARKER_LABEL_RENDER_ORDER}
+      >
+        {children}
+        <meshBasicMaterial
+          color={colors.markerText}
+          depthTest={false}
+          toneMapped={false}
+        />
+      </Text>
+    </Billboard>
   );
 }
 
@@ -296,11 +307,4 @@ function getRailPoints(axis: TrendAxis, markerPoints: readonly ScenePoint[]) {
  */
 function getCenteredOffset(index: number, count: number, step: number) {
   return (index - (count - 1) / 2) * step;
-}
-
-/**
- * Keeps text inside radius spheres from overflowing.
- */
-function getMarkerFontSize(radius: number) {
-  return Math.min(radius * SPHERE_LABEL_FONT_RATIO, THREE_FONT_SIZE.reading);
 }

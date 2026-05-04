@@ -7,6 +7,7 @@
  *
  * @see https://labs.convex.dev/better-auth/basic-usage/authorization
  */
+
 import { internal } from "@repo/backend/convex/_generated/api";
 import type {
   ActionCtx,

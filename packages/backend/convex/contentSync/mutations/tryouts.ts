@@ -5,7 +5,10 @@ import { syncTryoutPartSetMappings } from "@repo/backend/convex/contentSync/lib/
 import { internalMutation } from "@repo/backend/convex/functions";
 import { enqueueScaleQualityRefresh } from "@repo/backend/convex/irt/helpers/queue";
 import { getOrPublishScaleVersionForTryout } from "@repo/backend/convex/irt/scales/publish";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import {
+  exercisesMaterialValidator,
+  localeValidator,
+} from "@repo/backend/convex/lib/validators/contents";
 import {
   tryoutProductPolicies,
   tryoutProductValidator,
@@ -25,6 +28,7 @@ export const bulkSyncTryouts = internalMutation({
   args: {
     locale: localeValidator,
     product: tryoutProductValidator,
+    requiredPartKeys: v.array(exercisesMaterialValidator),
   },
   returns: syncTryoutsResultValidator,
   handler: async (ctx, args) => {
@@ -54,6 +58,7 @@ export const bulkSyncTryouts = internalMutation({
 
     const detectedTryouts = tryoutProductPolicies[args.product].detectTryouts({
       locale: args.locale,
+      requiredPartKeys: args.requiredPartKeys,
       sets: tryoutCandidateSets,
     });
     const orderedDetectedTryouts = [...detectedTryouts].sort(

@@ -1,5 +1,4 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { getSubjects } from "@repo/contents/exercises/high-school/_data/subject";
 import { ConvexError } from "convex/values";
 import type { DetectedTryout, TryoutProductPolicy } from ".";
 
@@ -23,10 +22,6 @@ const SNBT_ATTEMPT_WINDOW_MS =
   SECONDS_PER_MINUTE *
   MILLISECONDS_PER_SECOND;
 
-const snbtPartLabels = getSubjects("snbt").map((subject) => subject.label);
-const snbtPartOrder = new Map(
-  snbtPartLabels.map((material, index) => [material, index])
-);
 /** Extracts the SNBT cycle year from a yearful tryout set slug. */
 function getSnbtCycleKeyFromSetSlug(setSlug: Doc<"exerciseSets">["slug"]) {
   const match = setSlug.match(YEARFUL_TRYOUT_SET_SLUG_REGEX);
@@ -82,11 +77,14 @@ function scaleSnbtThetaToScore(theta: Doc<"tryoutAttempts">["theta"]) {
   return Math.round(scaledScore);
 }
 
-/** SNBT policy is derived from the high-school subject source of truth. */
+/** SNBT policy uses script-provided content part keys to avoid filesystem access in Convex. */
 export const snbtTryoutProductPolicy = {
   attemptWindowMs: SNBT_ATTEMPT_WINDOW_MS,
   compareTryouts: compareSnbtTryouts,
-  detectTryouts: ({ locale, sets }) => {
+  detectTryouts: ({ locale, requiredPartKeys, sets }) => {
+    const partOrder = new Map(
+      requiredPartKeys.map((material, index) => [material, index])
+    );
     const candidateSets = sets.flatMap((set) => {
       if (set.type !== "snbt" || set.exerciseType !== "try-out") {
         return [];
@@ -118,10 +116,11 @@ export const snbtTryoutProductPolicy = {
       }
 
       const materials = new Set(groupedSets.map((set) => set.material));
-      const hasAllRequiredParts = snbtPartLabels.every((material) =>
+      const hasAllRequiredParts = requiredPartKeys.every((material) =>
         materials.has(material)
       );
-      const hasExpectedPartCount = groupedSets.length === snbtPartLabels.length;
+      const hasExpectedPartCount =
+        groupedSets.length === requiredPartKeys.length;
       const hasPositiveQuestionCounts = groupedSets.every(
         (set) => set.questionCount > 0
       );
@@ -138,8 +137,8 @@ export const snbtTryoutProductPolicy = {
 
       const sortedSets = [...groupedSets].sort(
         (left, right) =>
-          (snbtPartOrder.get(left.material) ?? Number.MAX_SAFE_INTEGER) -
-          (snbtPartOrder.get(right.material) ?? Number.MAX_SAFE_INTEGER)
+          (partOrder.get(left.material) ?? Number.MAX_SAFE_INTEGER) -
+          (partOrder.get(right.material) ?? Number.MAX_SAFE_INTEGER)
       );
       const totalQuestionCount = sortedSets.reduce(
         (count, set) => count + set.questionCount,

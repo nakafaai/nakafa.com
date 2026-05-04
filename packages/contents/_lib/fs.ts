@@ -147,7 +147,10 @@ function filterDirectoryNames(
  * @param exclude - Optional additional directory names to exclude
  * @returns Directory names that passed filtering, or an empty array on failure
  */
-function getFolderChildNamesSync(folder: string, exclude?: string[]): string[] {
+export function getFolderChildNamesSync(
+  folder: string,
+  exclude?: string[]
+): string[] {
   if (folder.includes("..") || path.isAbsolute(folder)) {
     return [];
   }

@@ -4,41 +4,47 @@ import {
 } from "@repo/contents/_lib/articles/category";
 import { getSlugPath as getArticleSlugPath } from "@repo/contents/_lib/articles/slug";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
-import { parseExercisesCategory } from "@repo/contents/_lib/exercises/category";
 import {
   getExerciseQuestionNumbers,
   getExerciseSetPaths,
 } from "@repo/contents/_lib/exercises/collection";
 import {
   getMaterialPath as getExerciseMaterialPath,
+  getExercisesPath,
+  parseExercisesCategory,
   parseExercisesMaterial,
-} from "@repo/contents/_lib/exercises/material";
+  parseExercisesType,
+} from "@repo/contents/_lib/exercises/route";
 import {
   getSlugPath as getExerciseSlugPath,
   hasInvalidTryOutYearSlug,
   isYearlessTryOutCollectionSlug,
 } from "@repo/contents/_lib/exercises/slug";
-import {
-  getExercisesPath,
-  parseExercisesType,
-} from "@repo/contents/_lib/exercises/type";
+import { getFolderChildNamesSync } from "@repo/contents/_lib/fs";
+import { getAllSurah } from "@repo/contents/_lib/quran";
 import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
 import { getGradePath, parseGrade } from "@repo/contents/_lib/subject/grade";
 import {
   getMaterialPath as getSubjectMaterialPath,
   parseMaterial,
-} from "@repo/contents/_lib/subject/material";
+} from "@repo/contents/_lib/subject/route";
 import { getSlugPath as getSubjectSlugPath } from "@repo/contents/_lib/subject/slug";
+import { ContentRootSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
 import type { Locale } from "next-intl";
+
+const contentRoots = ContentRootSchema.enum;
+const quranRoot = "quran";
+const subjectRootRoute = `/${contentRoots.subject}`;
+const quranRootRoute = `/${quranRoot}`;
 
 /** Static top-level routes that should always be present in the sitemap. */
 export const baseRoutes = [
   "/",
   "/search",
   "/contributor",
-  "/quran",
-  "/subject",
+  quranRootRoute,
+  subjectRootRoute,
   "/about",
   "/terms-of-service",
   "/privacy-policy",
@@ -46,11 +52,11 @@ export const baseRoutes = [
 ];
 
 /** Top-level educational pages handled outside the content route scan. */
-const publicContentBaseRoutes = ["/subject", "/quran"];
+const publicContentBaseRoutes = [subjectRootRoute, quranRootRoute];
 
-/** Builds relative Quran routes from `/quran/1` through `/quran/114`. */
+/** Builds relative Quran routes from validated Quran data. */
 export function getQuranRoutes() {
-  return Array.from({ length: 114 }, (_, index) => `/quran/${index + 1}`);
+  return getAllSurah().map((surah) => `/${quranRoot}/${surah.number}`);
 }
 
 /** Builds public educational routes that are backed by content or Quran data. */
@@ -99,6 +105,9 @@ function getContentRouteSets() {
   const pages = new Set<string>();
   const redirects = new Map<string, string>();
 
+  addExerciseListingRoutes(pages);
+  addSubjectListingRoutes(pages);
+
   for (const locale of routing.locales) {
     const slugs = getMDXSlugsForLocale(locale);
 
@@ -113,11 +122,82 @@ function getContentRouteSets() {
   return { pages, redirects };
 }
 
+/** Adds exercises type and material pages backed by folder-level listing data. */
+function addExerciseListingRoutes(routes: Set<string>) {
+  for (const rawCategory of getContentFolderNames(contentRoots.exercises)) {
+    const category = parseExercisesCategory(rawCategory);
+
+    if (!category) {
+      continue;
+    }
+
+    for (const rawType of getContentFolderNames(
+      `${contentRoots.exercises}/${category}`
+    )) {
+      const type = parseExercisesType(rawType);
+
+      if (!type) {
+        continue;
+      }
+
+      routes.add(getExercisesPath(category, type));
+
+      for (const rawMaterial of getContentFolderNames(
+        `${contentRoots.exercises}/${category}/${type}`
+      )) {
+        const material = parseExercisesMaterial(rawMaterial);
+
+        if (material) {
+          routes.add(getExerciseMaterialPath(category, type, material));
+        }
+      }
+    }
+  }
+}
+
+/** Adds subject grade and material pages backed by folder-level listing data. */
+function addSubjectListingRoutes(routes: Set<string>) {
+  for (const rawCategory of getContentFolderNames(contentRoots.subject)) {
+    const category = parseSubjectCategory(rawCategory);
+
+    if (!category) {
+      continue;
+    }
+
+    for (const rawGrade of getContentFolderNames(
+      `${contentRoots.subject}/${category}`
+    )) {
+      const grade = parseGrade(rawGrade);
+
+      if (!grade) {
+        continue;
+      }
+
+      routes.add(getGradePath(category, grade));
+
+      for (const rawMaterial of getContentFolderNames(
+        `${contentRoots.subject}/${category}/${grade}`
+      )) {
+        const material = parseMaterial(rawMaterial);
+
+        if (material) {
+          routes.add(getSubjectMaterialPath(category, grade, material));
+        }
+      }
+    }
+  }
+}
+
+/** Reads content child folders with missing folders treated as empty route groups. */
+function getContentFolderNames(folder: string) {
+  return getFolderChildNamesSync(folder);
+}
+
 /** Adds article category and detail pages backed by article MDX content. */
 function addArticleRoutes(routes: Set<string>, slug: string) {
   const [root, rawCategory, articleSlug] = slug.split("/");
 
-  if (root !== "articles" || !(rawCategory && articleSlug)) {
+  if (root !== contentRoots.articles || !(rawCategory && articleSlug)) {
     return;
   }
 
@@ -145,7 +225,7 @@ function addSubjectRoutes(
     ...lessonSlug
   ] = slug.split("/");
 
-  if (root !== "subject" || lessonSlug.length === 0) {
+  if (root !== contentRoots.subject || lessonSlug.length === 0) {
     return;
   }
 
@@ -192,7 +272,7 @@ function addExerciseRoutes(
     const [root, rawCategory = "", rawType = "", rawMaterial = "", ...setSlug] =
       setPath.split("/");
 
-    if (root !== "exercises" || setSlug.length === 0) {
+    if (root !== contentRoots.exercises || setSlug.length === 0) {
       continue;
     }
 

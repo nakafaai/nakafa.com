@@ -1,8 +1,8 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import { snbtTryoutProductPolicy } from "@repo/backend/convex/tryouts/products/snbt";
 import type { TryoutPartKey } from "@repo/backend/convex/tryouts/schema";
 import type { Infer } from "convex/values";
 import { literals } from "convex-helpers/validators";
-import { snbtTryoutProductPolicy } from "./snbt";
 
 export const tryoutProducts = ["snbt"] as const;
 
@@ -59,6 +59,7 @@ export interface TryoutProductPolicy {
   compareTryouts: (left: TryoutRecord, right: TryoutRecord) => number;
   detectTryouts: (args: {
     locale: TryoutSetCandidate["locale"];
+    requiredPartKeys: TryoutSetCandidate["material"][];
     sets: TryoutSetCandidate[];
   }) => DetectedTryout[];
   getLeaderboardNamespace: (args: TryoutLeaderboardNamespaceArgs) => string;

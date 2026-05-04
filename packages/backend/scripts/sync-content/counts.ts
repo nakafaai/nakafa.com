@@ -1,7 +1,10 @@
+import { runConvexQueryWithArgs } from "@repo/backend/scripts/sync-content/convexApi";
+import {
+  ContentCountsSchema,
+  CountTablePageSchema,
+} from "@repo/backend/scripts/sync-content/schemas";
+import type { ConvexConfig } from "@repo/backend/scripts/sync-content/types";
 import type * as z from "zod";
-import { runConvexQueryWithArgs } from "./convexApi";
-import { ContentCountsSchema, CountTablePageSchema } from "./schemas";
-import type { ConvexConfig } from "./types";
 
 const COUNT_PAGE_SIZE = 1000;
 

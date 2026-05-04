@@ -4,12 +4,12 @@ import {
   validateInviteCodeState,
   validateNotExistingMembership,
 } from "@repo/backend/convex/lib/helpers/invite";
+import { schoolTypeValidator } from "@repo/backend/convex/schools/schema";
 import { generateUniqueSlug } from "@repo/backend/convex/schools/utils";
+import { schoolIdentityResultValidator } from "@repo/backend/convex/schools/validators";
 import { generateNanoId } from "@repo/backend/convex/utils/id";
 import { slugify } from "@repo/backend/convex/utils/text";
 import { ConvexError, v } from "convex/values";
-import { schoolTypeValidator } from "./schema";
-import { schoolIdentityResultValidator } from "./validators";
 
 /**
  * Create a new school and automatically add the creator as an admin member.

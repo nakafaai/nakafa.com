@@ -24,7 +24,7 @@ export function getCategoryPath(category: SubjectCategory) {
  * @param category - Subject category slug
  * @returns Hugeicons icon for the category
  */
-export function getCategoryIcon(category: SubjectCategory) {
+export function getCategoryIcon(category: string) {
   switch (category) {
     case "elementary-school":
       return Backpack01Icon;

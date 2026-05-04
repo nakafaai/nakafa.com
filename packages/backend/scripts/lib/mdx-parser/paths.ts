@@ -5,12 +5,12 @@ import {
   LEADING_SLASH_REGEX,
   MDX_EXTENSION_REGEX,
   SUBJECT_PATH_REGEX,
-} from "./constants";
+} from "@repo/backend/scripts/lib/mdx-parser/constants";
 import type {
   ArticleParsedPath,
   ExerciseParsedPath,
   SubjectParsedPath,
-} from "./types";
+} from "@repo/backend/scripts/lib/mdx-parser/types";
 import {
   parseExerciseYear,
   validateArticleCategory,
@@ -21,7 +21,7 @@ import {
   validateLocale,
   validateMaterial,
   validateSubjectCategory,
-} from "./validators";
+} from "@repo/backend/scripts/lib/mdx-parser/validators";
 
 export function buildExerciseSetSlug({
   category,
