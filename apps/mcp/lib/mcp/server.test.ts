@@ -32,7 +32,14 @@ describe("registerNakafaMcpServer", () => {
     });
     const missingContent = await client.callTool({
       arguments: {
-        content_id_or_url: "en/articles/missing",
+        content_ref: "en/articles/missing",
+      },
+      name: "nakafa_get_content",
+    });
+    const legacyArgument = ["content", "id", "or", "url"].join("_");
+    const legacyContent = await client.callTool({
+      arguments: {
+        [legacyArgument]: "en/articles/missing",
       },
       name: "nakafa_get_content",
     });
@@ -60,5 +67,9 @@ describe("registerNakafaMcpServer", () => {
         },
       },
     });
+    expect(legacyContent).toMatchObject({
+      isError: true,
+    });
+    expect(JSON.stringify(legacyContent)).toContain("Invalid arguments");
   });
 });

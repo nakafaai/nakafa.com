@@ -32,7 +32,7 @@ export function getNakafaSkillText() {
     "- Prefer same-origin `.md` URLs from `llms.txt` for focused page retrieval.",
     "- Send `Accept: text/markdown` when requesting normal content URLs.",
     `- Use \`${NAKAFA_MCP_RECOMMENDED_ENDPOINT}\` when the client supports Streamable HTTP MCP tools.`,
-    "- Prefer `nakafa_search_content` first, then pass returned `content_id` values to `nakafa_get_content`, `nakafa_get_exercise`, or `nakafa_get_quran_reference`.",
+    "- Prefer `nakafa_search_content` first, then pass returned `content_id` values as `content_ref` to `nakafa_get_content` or `nakafa_get_exercise`.",
     "- Use `nakafa_get_taxonomy` to inspect supported locales, sections, categories, grades, materials, exercise types, and endpoint guidance.",
     "",
     "## Locale Rules",

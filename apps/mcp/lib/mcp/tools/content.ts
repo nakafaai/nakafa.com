@@ -19,19 +19,19 @@ export function registerNakafaGetContentTool(server: McpServer) {
     {
       annotations: NAKAFA_READ_ONLY_TOOL_ANNOTATIONS,
       description:
-        "Return full agent-readable markdown for a public Nakafa content ID, Nakafa URL, or nakafa://content resource URI.",
-      inputSchema: NakafaGetContentInputSchema.shape,
+        "Return full agent-readable markdown for a public Nakafa content reference.",
+      inputSchema: NakafaGetContentInputSchema,
       outputSchema: NakafaGetContentOutputSchema,
       title: "Get Nakafa Content",
     },
-    ({ content_id_or_url }) =>
+    ({ content_ref }) =>
       Effect.runPromise(
-        getNakafaAgentMarkdown(content_id_or_url).pipe(
+        getNakafaAgentMarkdown(content_ref).pipe(
           Effect.map(
             Option.match({
               onNone: () =>
                 toMcpToolError("Nakafa content was not found.", [
-                  "Call `nakafa_search_content` first and pass back the exact returned `content_id`.",
+                  "Call `nakafa_search_content` first and pass back the exact returned `content_id` as `content_ref`.",
                   "Use a canonical Nakafa URL such as `https://nakafa.com/en/quran/1`.",
                 ]),
               onSome: toMcpStructuredResult,

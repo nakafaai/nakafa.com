@@ -101,16 +101,20 @@ export const NakafaSearchContentInputSchema = z
   })
   .describe("Search arguments for Nakafa public content.");
 
+/** Shared content reference input accepted by lookup tools. */
+export const NakafaMcpContentRefInputSchema = z
+  .string()
+  .min(1)
+  .describe(
+    "Nakafa content reference: a `content_id` returned by `nakafa_search_content`, a canonical Nakafa URL, or a `nakafa://content/...` resource URI."
+  );
+
 /** Input schema for `nakafa_get_content`. */
 export const NakafaGetContentInputSchema = z
   .object({
-    content_id_or_url: z
-      .string()
-      .min(1)
-      .describe(
-        "A `content_id` returned by `nakafa_search_content`, a Nakafa URL, or a `nakafa://content/...` resource URI."
-      ),
+    content_ref: NakafaMcpContentRefInputSchema,
   })
+  .strict()
   .describe("Content lookup arguments.");
 
 /** Input schema for `nakafa_get_taxonomy`. */
@@ -125,12 +129,7 @@ export const NakafaGetTaxonomyInputSchema = z
 /** Input schema for `nakafa_get_exercise`. */
 export const NakafaGetExerciseInputSchema = z
   .object({
-    content_id_or_url: z
-      .string()
-      .min(1)
-      .describe(
-        "An exercise set `content_id`, exercise question `content_id`, Nakafa URL, or `nakafa://content/...` resource URI."
-      ),
+    content_ref: NakafaMcpContentRefInputSchema,
     exercise_number: z
       .number()
       .int()
@@ -138,6 +137,7 @@ export const NakafaGetExerciseInputSchema = z
       .optional()
       .describe("Optional exercise number inside the set."),
   })
+  .strict()
   .describe("Exercise lookup arguments.");
 
 /** Input schema for `nakafa_get_quran_reference`. */

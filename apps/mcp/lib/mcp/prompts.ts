@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import * as z from "zod";
+import { NakafaMcpContentRefInputSchema } from "@/lib/mcp/schemas";
 
 /** Registers reusable Nakafa prompts for agent clients. */
 export function registerNakafaMcpPrompts(server: McpServer) {
@@ -52,10 +53,7 @@ function registerAnswerFromContentPrompt(server: McpServer) {
     "nakafa_answer_from_content",
     {
       argsSchema: {
-        content_id_or_url: z
-          .string()
-          .min(1)
-          .describe("Nakafa content ID, URL, or resource URI to read."),
+        content_ref: NakafaMcpContentRefInputSchema,
         question: z
           .string()
           .min(1)
@@ -65,13 +63,13 @@ function registerAnswerFromContentPrompt(server: McpServer) {
         "Guide an agent to answer a question using one retrieved Nakafa content item.",
       title: "Answer From Nakafa Content",
     },
-    ({ content_id_or_url, question }) => ({
+    ({ content_ref, question }) => ({
       messages: [
         {
           content: {
             text: [
               `Answer this question from Nakafa content: ${question}`,
-              `Content: ${content_id_or_url}`,
+              `Content reference: ${content_ref}`,
               "Use `nakafa_get_content`, answer only from the returned markdown, and cite the canonical URL.",
             ].join("\n"),
             type: "text",
@@ -89,10 +87,7 @@ function registerExplainExercisePrompt(server: McpServer) {
     "nakafa_explain_exercise",
     {
       argsSchema: {
-        content_id_or_url: z
-          .string()
-          .min(1)
-          .describe("Nakafa exercise set or question content ID or URL."),
+        content_ref: NakafaMcpContentRefInputSchema,
         exercise_number: z
           .string()
           .optional()
@@ -104,13 +99,13 @@ function registerExplainExercisePrompt(server: McpServer) {
         "Guide an agent to explain a Nakafa exercise from its structured question, choices, answer, and explanation.",
       title: "Explain Nakafa Exercise",
     },
-    ({ content_id_or_url, exercise_number }) => ({
+    ({ content_ref, exercise_number }) => ({
       messages: [
         {
           content: {
             text: [
               "Explain this Nakafa exercise step by step.",
-              `Content: ${content_id_or_url}`,
+              `Content reference: ${content_ref}`,
               `Exercise number: ${exercise_number ?? "use the question in the content ID"}`,
               "Use `nakafa_get_exercise`, preserve the published answer, and cite the canonical URL.",
             ].join("\n"),

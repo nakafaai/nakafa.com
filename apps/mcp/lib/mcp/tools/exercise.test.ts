@@ -53,7 +53,7 @@ describe("nakafa_get_exercise", () => {
 
     const result = await client.callTool({
       arguments: {
-        content_id_or_url:
+        content_ref:
           "en/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
       },
       name: "nakafa_get_exercise",

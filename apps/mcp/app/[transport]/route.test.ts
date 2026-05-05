@@ -93,6 +93,7 @@ describe("Nakafa MCP route", () => {
               idempotentHint: z.literal(true),
               readOnlyHint: z.literal(true),
             }),
+            inputSchema: z.object({}).passthrough(),
             name: z.string(),
             outputSchema: z.object({}).passthrough(),
           })
@@ -114,6 +115,7 @@ describe("Nakafa MCP route", () => {
     expect(result.tools.every((tool) => tool.name.startsWith("nakafa_"))).toBe(
       true
     );
+    expect(JSON.stringify(result.tools)).toContain("content_ref");
   }, 15_000);
 
   it("uses search content IDs immediately with content, resource, and exercise retrieval", async () => {
@@ -127,10 +129,10 @@ describe("Nakafa MCP route", () => {
     );
     const contentId = search.items[0].content_id;
     const contentResponse = await callTool("nakafa_get_content", {
-      content_id_or_url: contentId,
+      content_ref: contentId,
     });
     const exerciseResponse = await callTool("nakafa_get_exercise", {
-      content_id_or_url: contentId,
+      content_ref: contentId,
     });
     const resourceResponse = await postMcp("resources/read", {
       uri: getNakafaContentResourceUri(contentId),
@@ -159,10 +161,10 @@ describe("Nakafa MCP route", () => {
 
   it("returns structured tool errors for missing content and exercise requests", async () => {
     const missingContent = await callTool("nakafa_get_content", {
-      content_id_or_url: "en/articles/missing",
+      content_ref: "en/articles/missing",
     });
     const missingExercise = await callTool("nakafa_get_exercise", {
-      content_id_or_url: "en/quran/1",
+      content_ref: "en/quran/1",
     });
     const errorSchema = z.object({
       isError: z.literal(true),
@@ -180,6 +182,24 @@ describe("Nakafa MCP route", () => {
     expect(
       errorSchema.parse(missingExercise.result).structuredContent.error.message
     ).toContain("exercise");
+  });
+
+  it("rejects the removed legacy content reference argument", async () => {
+    const legacyArgument = ["content", "id", "or", "url"].join("_");
+    const legacyContent = await callTool("nakafa_get_content", {
+      [legacyArgument]: "en/quran/1",
+    });
+    const legacyExercise = await callTool("nakafa_get_exercise", {
+      [legacyArgument]:
+        "en/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
+    });
+
+    expect(legacyContent.result?.isError).toBe(true);
+    expect(legacyExercise.result?.isError).toBe(true);
+    expect(JSON.stringify(legacyContent.result)).toContain("Invalid arguments");
+    expect(JSON.stringify(legacyExercise.result)).toContain(
+      "Invalid arguments"
+    );
   });
 
   it("returns taxonomy and bounded Quran references with actionable range errors", async () => {
@@ -241,12 +261,12 @@ describe("Nakafa MCP route", () => {
       uri: "nakafa://content/en%2Farticles%2Fmissing",
     });
     const prompts = await postMcp("prompts/list");
-    const promptNames = z
+    const listedPrompts = z
       .object({
-        prompts: z.array(z.object({ name: z.string() })),
+        prompts: z.array(z.object({ name: z.string() }).passthrough()),
       })
-      .parse(prompts.result)
-      .prompts.map((prompt) => prompt.name);
+      .parse(prompts.result).prompts;
+    const promptNames = listedPrompts.map((prompt) => prompt.name);
 
     for (const promptName of promptNames) {
       const prompt = await postMcp("prompts/get", {
@@ -263,7 +283,7 @@ describe("Nakafa MCP route", () => {
 
     const exercisePrompt = await postMcp("prompts/get", {
       arguments: {
-        content_id_or_url:
+        content_ref:
           "en/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
       },
       name: "nakafa_explain_exercise",
@@ -297,6 +317,7 @@ describe("Nakafa MCP route", () => {
     expect(JSON.stringify(usage.result)).toContain("nakafa_search_content");
     expect(JSON.stringify(taxonomy.result)).toContain("nakafa_get_taxonomy");
     expect(missingContent.error?.message).toContain("not found");
+    expect(JSON.stringify(listedPrompts)).toContain("content_ref");
     expect(JSON.stringify(exercisePrompt.result)).toContain(
       "use the question in the content ID"
     );
@@ -356,14 +377,14 @@ function getPromptArguments(promptName: string) {
 
   if (promptName === "nakafa_answer_from_content") {
     return {
-      content_id_or_url: "en/quran/1",
+      content_ref: "en/quran/1",
       question: "What is this Surah?",
     };
   }
 
   if (promptName === "nakafa_explain_exercise") {
     return {
-      content_id_or_url:
+      content_ref:
         "en/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
       exercise_number: "1",
     };

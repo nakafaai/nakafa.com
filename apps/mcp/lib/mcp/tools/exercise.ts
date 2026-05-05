@@ -19,19 +19,19 @@ export function registerNakafaGetExerciseTool(server: McpServer) {
     {
       annotations: NAKAFA_READ_ONLY_TOOL_ANNOTATIONS,
       description:
-        "Return structured Nakafa exercise questions, choices, answers, explanations, URLs, and metadata for an exercise set or question.",
-      inputSchema: NakafaGetExerciseInputSchema.shape,
+        "Return structured Nakafa exercise questions, choices, answers, explanations, URLs, and metadata for an exercise content reference.",
+      inputSchema: NakafaGetExerciseInputSchema,
       outputSchema: NakafaGetExerciseOutputSchema,
       title: "Get Nakafa Exercise",
     },
-    ({ content_id_or_url, exercise_number }) =>
+    ({ content_ref, exercise_number }) =>
       Effect.runPromise(
-        getNakafaAgentExercise(content_id_or_url, exercise_number).pipe(
+        getNakafaAgentExercise(content_ref, exercise_number).pipe(
           Effect.map(
             Option.match({
               onNone: () =>
                 toMcpToolError("Nakafa exercise content was not found.", [
-                  'Call `nakafa_search_content` with `section: "exercises"` and reuse the returned `content_id`.',
+                  'Call `nakafa_search_content` with `section: "exercises"` and reuse the returned `content_id` as `content_ref`.',
                   "If requesting one question, verify `exercise_number` exists in the exercise set.",
                 ]),
               onSome: toMcpStructuredResult,

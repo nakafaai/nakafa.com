@@ -56,7 +56,7 @@ describe("nakafa_get_content", () => {
 
     const result = await client.callTool({
       arguments: {
-        content_id_or_url: "en/quran/1",
+        content_ref: "en/quran/1",
       },
       name: "nakafa_get_content",
     });
@@ -101,7 +101,7 @@ describe("nakafa_get_content", () => {
 
     const result = await client.callTool({
       arguments: {
-        content_id_or_url: "en/quran/1",
+        content_ref: "en/quran/1",
       },
       name: "nakafa_get_content",
     });
