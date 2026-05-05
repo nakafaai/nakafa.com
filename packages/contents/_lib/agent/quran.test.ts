@@ -29,6 +29,14 @@ describe("Nakafa agent Quran references", () => {
         surah: 1,
       })
     );
+    const outOfSurahRange = await Effect.runPromise(
+      getNakafaAgentQuranReference({
+        from_verse: 7,
+        locale: "en",
+        surah: 1,
+        to_verse: 8,
+      })
+    );
     const invalidInput = await Effect.runPromise(
       Effect.match(
         getNakafaAgentQuranReference({
@@ -51,6 +59,7 @@ describe("Nakafa agent Quran references", () => {
     expect(reference.value.verses[0]?.tafsir).toBeTruthy();
     expect(Option.isNone(reversed)).toBe(true);
     expect(Option.isNone(missingVerse)).toBe(true);
+    expect(Option.isNone(outOfSurahRange)).toBe(true);
     expect(invalidInput).toBeInstanceOf(NakafaAgentInputError);
   });
 

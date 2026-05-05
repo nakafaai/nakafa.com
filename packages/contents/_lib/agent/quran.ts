@@ -22,12 +22,13 @@ export const getNakafaAgentQuranReference = Effect.fn(
   }
 
   const firstVerse = parsedOptions.from_verse;
-  const lastVerse = Math.min(
-    surah.value.numberOfVerses,
-    parsedOptions.to_verse ?? firstVerse
-  );
+  const lastVerse = parsedOptions.to_verse ?? firstVerse;
 
   if (lastVerse < firstVerse) {
+    return Option.none();
+  }
+
+  if (lastVerse > surah.value.numberOfVerses) {
     return Option.none();
   }
 
