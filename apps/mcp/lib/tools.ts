@@ -1,4 +1,4 @@
-import { GetContentSchema, GetContentsSchema } from "./schema";
+import { GetContentSchema, GetContentsSchema } from "@/lib/schema";
 
 export const tools = {
   getContents: {

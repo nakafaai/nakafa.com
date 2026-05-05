@@ -1,4 +1,4 @@
-import type { GetContentsParams } from "./schema";
+import type { GetContentsParams } from "@/lib/schema";
 
 export function buildContentSlug(params: GetContentsParams): string {
   const { locale, filters } = params;
