@@ -33,9 +33,15 @@ export function UserContextProvider({
 }) {
   const { data: user, isPending } = useQueryWithStatus(api.auth.getCurrentUser);
   const currentUser = user ?? null;
+  const appUser = currentUser?.appUser ?? null;
   const userId = currentUser?.appUser._id ?? null;
   const userEmail = currentUser?.authUser.email ?? null;
   const userName = currentUser?.authUser.name ?? null;
+  const userPlan = appUser?.plan ?? null;
+  const userRole = appUser?.role ?? null;
+  const signedUpAt = appUser
+    ? new Date(appUser._creationTime).toISOString()
+    : null;
 
   useEffect(() => {
     if (isPending) {
@@ -52,22 +58,33 @@ export function UserContextProvider({
       return;
     }
 
-    if (userEmail === null || userName === null) {
+    if (
+      userEmail === null ||
+      userName === null ||
+      userPlan === null ||
+      signedUpAt === null
+    ) {
       return;
     }
 
+    const roleProperties = userRole ? { role: userRole } : {};
     const personProperties = {
       email: userEmail,
       name: userName,
+      plan: userPlan,
+      ...roleProperties,
+    };
+    const setOnceProperties = {
+      signed_up_at: signedUpAt,
     };
 
     if (trackedUserId !== userId) {
-      analytics.identify(userId, personProperties);
+      analytics.identify(userId, personProperties, setOnceProperties);
       return;
     }
 
-    analytics.setPersonProperties(personProperties);
-  }, [isPending, userEmail, userId, userName]);
+    analytics.setPersonProperties(personProperties, setOnceProperties);
+  }, [isPending, signedUpAt, userEmail, userId, userName, userPlan, userRole]);
 
   return (
     <UserContext.Provider value={{ user: currentUser, isPending }}>

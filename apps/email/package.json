@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "email build --dir ../../packages/email/templates",
+    "build": "env -u npm_config_npm_globalconfig -u npm_config_verify_deps_before_run -u npm_config__jsr_registry -u npm_config_recursive email build --dir ../../packages/email/templates",
     "dev": "email dev --port 3004 --dir ../../packages/email/templates",
     "export": "email export --dir ../../packages/email/templates",
     "clean": "git clean -xdf .cache .turbo dist node_modules",

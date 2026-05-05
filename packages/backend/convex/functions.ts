@@ -9,10 +9,12 @@ import {
 } from "@repo/backend/convex/_generated/server";
 // Trigger handlers - direct imports only (no barrel files)
 import { chatsHandler } from "@repo/backend/convex/triggers/chats/chats";
+import { messagesHandler } from "@repo/backend/convex/triggers/chats/messages";
 import { commentsHandler } from "@repo/backend/convex/triggers/comments/comments";
 import { commentVotesHandler } from "@repo/backend/convex/triggers/comments/commentVotes";
 import { exerciseAnswersHandler } from "@repo/backend/convex/triggers/contents/exerciseAnswers";
 import { exerciseAttemptsHandler } from "@repo/backend/convex/triggers/contents/exerciseAttempts";
+import { contentViewsHandler } from "@repo/backend/convex/triggers/contents/views";
 import { postReactionsHandler } from "@repo/backend/convex/triggers/forums/postReactions";
 import { forumPostsHandler } from "@repo/backend/convex/triggers/forums/posts";
 import { forumReactionsHandler } from "@repo/backend/convex/triggers/forums/reactions";
@@ -29,6 +31,7 @@ import {
   globalLeaderboardTrigger,
   tryoutLeaderboardTrigger,
 } from "@repo/backend/convex/triggers/tryouts/leaderboard";
+import { tryoutAttemptsHandler } from "@repo/backend/convex/triggers/tryouts/tryoutAttempts";
 import {
   customCtx,
   customMutation,
@@ -44,7 +47,6 @@ export const internalMutation = customMutation(
 );
 
 // No-op triggers: tables modified by triggers but don't need custom logic
-triggers.register("messages", noopHandler);
 triggers.register("parts", noopHandler);
 triggers.register("schoolInviteCodes", noopHandler);
 triggers.register("schoolClassInviteCodes", noopHandler);
@@ -60,7 +62,6 @@ triggers.register("schoolClassMaterialAttachments", noopHandler);
 triggers.register("schoolClassMaterialViews", noopHandler);
 triggers.register("contentAudios", noopHandler);
 triggers.register("audioGenerationQueue", noopHandler);
-triggers.register("contentViews", noopHandler);
 triggers.register("contentViewAnalyticsQueue", noopHandler);
 triggers.register("contentAnalyticsPartitions", noopHandler);
 triggers.register("articlePopularity", noopHandler);
@@ -77,6 +78,8 @@ triggers.register("users", noopHandler);
 triggers.register("subscriptions", subscriptionsHandler);
 
 // Active triggers with custom logic
+triggers.register("messages", messagesHandler);
+triggers.register("contentViews", contentViewsHandler);
 triggers.register("exerciseAttempts", exerciseAttemptsHandler);
 triggers.register("exerciseAnswers", exerciseAnswersHandler);
 triggers.register("comments", commentsHandler);
@@ -94,3 +97,4 @@ triggers.register("schoolClassMaterialGroups", materialGroupsHandler);
 
 triggers.register("tryoutLeaderboardEntries", tryoutLeaderboardTrigger);
 triggers.register("userTryoutStats", globalLeaderboardTrigger);
+triggers.register("tryoutAttempts", tryoutAttemptsHandler);

@@ -1,4 +1,5 @@
 import { action } from "@repo/backend/convex/_generated/server";
+import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import {
   createPolarCheckoutSession,
   createPolarCustomerPortalSession,
@@ -62,7 +63,15 @@ function requireAllowedCheckoutProducts(productIds: string[]) {
     });
   }
 
-  return productIds;
+  const primaryProductId = productIds.at(0);
+  if (!primaryProductId) {
+    throw new ConvexError({
+      code: "INVALID_PRODUCT_SELECTION",
+      message: "Checkout requires at least one allowed product.",
+    });
+  }
+
+  return { primaryProductId, productIds };
 }
 
 /**
@@ -78,13 +87,27 @@ export const generateCheckoutLink = action({
   handler: async (ctx, args) => {
     const { appUser } = await requireAuthForAction(ctx);
     const customer = await requireCustomer(ctx, appUser._id);
-    const productIds = requireAllowedCheckoutProducts(args.productIds);
+    const { primaryProductId, productIds } = requireAllowedCheckoutProducts(
+      args.productIds
+    );
     const successUrl = requireAllowedSuccessUrl(args.successUrl);
 
     const checkout = await createPolarCheckoutSession({
       customerId: customer.id,
       productIds,
       successUrl,
+    });
+
+    await captureProductEvent(ctx, {
+      distinctId: appUser._id,
+      event: {
+        name: "checkout started",
+        properties: {
+          product_count: productIds.length,
+          product_id: primaryProductId,
+        },
+      },
+      timestamp: new Date(),
     });
 
     return { url: checkout.url };

@@ -1,3 +1,4 @@
+import posthogTest from "@posthog/convex/test";
 import { components } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -31,6 +32,7 @@ export function createConvexTestWithBetterAuth() {
     aggregateSchema,
     aggregateModules
   );
+  posthogTest.register(t);
   return t;
 }
 
