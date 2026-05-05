@@ -33,6 +33,15 @@ describe("Nakafa agent markdown", () => {
     const malformedSurah = await Effect.runPromise(
       getNakafaAgentMarkdown("en/quran")
     );
+    const partialSurah = await Effect.runPromise(
+      getNakafaAgentMarkdown("en/quran/1foo")
+    );
+    const nestedSurah = await Effect.runPromise(
+      getNakafaAgentMarkdown("en/quran/1/extra")
+    );
+    const zeroPaddedSurah = await Effect.runPromise(
+      getNakafaAgentMarkdown("en/quran/01")
+    );
 
     expect(Option.getOrUndefined(mdxContent)?.text).toContain("Source URL:");
     expect(Option.getOrUndefined(exerciseContent)?.text).toContain(
@@ -44,6 +53,9 @@ describe("Nakafa agent markdown", () => {
     expect(Option.isNone(missingExercise)).toBe(true);
     expect(Option.isNone(missingSurah)).toBe(true);
     expect(Option.isNone(malformedSurah)).toBe(true);
+    expect(Option.isNone(partialSurah)).toBe(true);
+    expect(Option.isNone(nestedSurah)).toBe(true);
+    expect(Option.isNone(zeroPaddedSurah)).toBe(true);
   });
 
   it("uses subject metadata when description metadata is absent", async () => {
@@ -70,7 +82,11 @@ describe("Nakafa agent markdown", () => {
       )
     );
 
-    expect(Option.getOrThrow(content).description).toBe("Fallback Subject");
+    if (Option.isNone(content)) {
+      throw new Error("Expected subject markdown to exist.");
+    }
+
+    expect(content.value.description).toBe("Fallback Subject");
     vi.doUnmock("@repo/contents/_lib/metadata");
     vi.resetModules();
   });
@@ -96,7 +112,11 @@ describe("Nakafa agent markdown", () => {
       getNakafaAgentMarkdown("en/articles/no-description")
     );
 
-    expect(Option.getOrThrow(content).description).toBe("");
+    if (Option.isNone(content)) {
+      throw new Error("Expected article markdown to exist.");
+    }
+
+    expect(content.value.description).toBe("");
     vi.doUnmock("@repo/contents/_lib/metadata");
     vi.resetModules();
   });

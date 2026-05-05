@@ -10,6 +10,19 @@ const DEFAULT_ALLOWED_ORIGINS = [
   "http://127.0.0.1:3001",
 ] as const;
 
+const DEFAULT_ALLOWED_CORS_HEADERS = [
+  "accept",
+  "authorization",
+  "content-type",
+  "last-event-id",
+  "mcp-method",
+  "mcp-name",
+  "mcp-protocol-version",
+  "mcp-session-id",
+] as const;
+
+const EXPOSED_MCP_HEADERS = ["mcp-protocol-version", "mcp-session-id"] as const;
+
 /** Wraps the MCP route with Origin validation and CORS headers. */
 export function withMcpOriginGuard(
   handler: (request: Request) => Promise<Response>,
@@ -40,11 +53,15 @@ function handleMcpOriginGuardedRequest(
     }
 
     if (request.method === "OPTIONS") {
-      return withMcpCorsHeaders(new Response(null, { status: 204 }), origin);
+      return withMcpCorsHeaders(
+        new Response(null, { status: 204 }),
+        origin,
+        request
+      );
     }
 
     const response = yield* Effect.promise(() => handler(request));
-    return withMcpCorsHeaders(response, origin);
+    return withMcpCorsHeaders(response, origin, request);
   });
 }
 
@@ -72,17 +89,23 @@ export function getAllowedRequestOrigin(
 
 /** Builds the configured Origin allow-list. */
 export function getAllowedMcpOrigins(extraAllowedOrigins = "") {
-  return new Set([
-    ...DEFAULT_ALLOWED_ORIGINS,
-    ...extraAllowedOrigins
-      .split(",")
-      .map((origin) => origin.trim())
-      .filter(Boolean),
-  ]);
+  return new Set(
+    [...DEFAULT_ALLOWED_ORIGINS, ...extraAllowedOrigins.split(",")].flatMap(
+      (origin) =>
+        Option.match(normalizeMcpOrigin(origin), {
+          onNone: () => [],
+          onSome: (normalizedOrigin) => [normalizedOrigin],
+        })
+    )
+  );
 }
 
 /** Adds browser CORS headers only when a concrete Origin was allowed. */
-function withMcpCorsHeaders(response: Response, origin: Option.Option<string>) {
+function withMcpCorsHeaders(
+  response: Response,
+  origin: Option.Option<string>,
+  request: Request
+) {
   if (Option.isNone(origin) || origin.value.length === 0) {
     return response;
   }
@@ -93,13 +116,55 @@ function withMcpCorsHeaders(response: Response, origin: Option.Option<string>) {
   headers.set("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
   headers.set(
     "Access-Control-Allow-Headers",
-    "accept,authorization,content-type,mcp-protocol-version,mcp-session-id"
+    getAllowedCorsHeaders(request).join(",")
   );
+  headers.set("Access-Control-Expose-Headers", EXPOSED_MCP_HEADERS.join(","));
   headers.append("Vary", "Origin");
+  headers.append("Vary", "Access-Control-Request-Headers");
 
   return new Response(response.body, {
     headers,
     status: response.status,
     statusText: response.statusText,
   });
+}
+
+/** Canonicalizes configured and request Origin values before comparison. */
+function normalizeMcpOrigin(origin: string) {
+  const trimmedOrigin = origin.trim();
+
+  if (!URL.canParse(trimmedOrigin)) {
+    return Option.none();
+  }
+
+  return Option.some(new URL(trimmedOrigin).origin);
+}
+
+/** Returns the CORS request headers this MCP endpoint supports. */
+function getAllowedCorsHeaders(request: Request) {
+  const requestedHeaders = request.headers.get(
+    "access-control-request-headers"
+  );
+
+  if (!requestedHeaders) {
+    return [...DEFAULT_ALLOWED_CORS_HEADERS];
+  }
+
+  return requestedHeaders
+    .split(",")
+    .map((header) => header.trim().toLowerCase())
+    .filter(isAllowedCorsHeader);
+}
+
+/** Checks one browser-requested CORS header against the MCP header contract. */
+function isAllowedCorsHeader(header: string) {
+  if (
+    DEFAULT_ALLOWED_CORS_HEADERS.some(
+      (allowedHeader) => allowedHeader === header
+    )
+  ) {
+    return true;
+  }
+
+  return header.startsWith("mcp-param-");
 }

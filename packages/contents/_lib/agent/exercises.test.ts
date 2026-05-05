@@ -10,7 +10,17 @@ describe("Nakafa agent exercises", () => {
     const exerciseSet = await Effect.runPromise(
       getNakafaAgentExercise(EXERCISE_CONTENT_ID)
     );
-    const firstExercise = Option.getOrThrow(exerciseSet).exercises[0];
+
+    if (Option.isNone(exerciseSet)) {
+      throw new Error("Expected exercise set to exist.");
+    }
+
+    const firstExercise = exerciseSet.value.exercises[0];
+
+    if (!firstExercise) {
+      throw new Error("Expected exercise set to include at least one item.");
+    }
+
     const numberedExercise = await Effect.runPromise(
       getNakafaAgentExercise(`${EXERCISE_CONTENT_ID}/${firstExercise.number}`)
     );
@@ -30,12 +40,18 @@ describe("Nakafa agent exercises", () => {
       getNakafaAgentExercise("en/quran/1")
     );
 
-    expect(Option.getOrThrow(exerciseSet).count).toBeGreaterThan(0);
-    expect(Option.getOrThrow(numberedExercise).count).toBe(1);
-    expect(Option.getOrThrow(explicitExercise).exercise_number).toBe(
-      firstExercise.number
-    );
-    expect(Option.getOrThrow(explicitNumberedExercise).exercise_number).toBe(
+    if (
+      Option.isNone(numberedExercise) ||
+      Option.isNone(explicitExercise) ||
+      Option.isNone(explicitNumberedExercise)
+    ) {
+      throw new Error("Expected numbered exercise lookups to exist.");
+    }
+
+    expect(exerciseSet.value.count).toBeGreaterThan(0);
+    expect(numberedExercise.value.count).toBe(1);
+    expect(explicitExercise.value.exercise_number).toBe(firstExercise.number);
+    expect(explicitNumberedExercise.value.exercise_number).toBe(
       firstExercise.number
     );
     expect(Option.isNone(missingExercise)).toBe(true);

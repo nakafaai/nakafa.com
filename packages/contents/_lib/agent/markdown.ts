@@ -10,6 +10,9 @@ import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import { getSurah } from "@repo/contents/_lib/quran";
 import { Effect, Option } from "effect";
 
+const QURAN_ROUTE_SECTION = "quran";
+const QURAN_SURAH_PATTERN = /^\d+$/;
+
 /** Retrieves full agent-readable markdown by content ID, resource URI, or URL. */
 export const getNakafaAgentMarkdown = Effect.fn("NakafaAgent.getMarkdown")(
   function* (input: string) {
@@ -110,8 +113,13 @@ function renderNakafaExerciseMarkdown(ref: NakafaAgentContentRef) {
 /** Renders a full Quran surah as agent markdown for content retrieval. */
 function renderNakafaQuranMarkdown(ref: NakafaAgentContentRef) {
   return Effect.gen(function* () {
-    const surahNumber = Number.parseInt(ref.route.split("/").at(1) ?? "", 10);
-    const surah = yield* Effect.option(getSurah(surahNumber));
+    const surahNumber = parseQuranSurahRoute(ref.route);
+
+    if (Option.isNone(surahNumber)) {
+      return Option.none();
+    }
+
+    const surah = yield* Effect.option(getSurah(surahNumber.value));
 
     if (Option.isNone(surah)) {
       return Option.none();
@@ -158,4 +166,30 @@ function renderNakafaQuranMarkdown(ref: NakafaAgentContentRef) {
       })
     );
   });
+}
+
+/** Parses only canonical `quran/{surah}` content routes. */
+function parseQuranSurahRoute(route: string) {
+  const routeSegments = route.split("/");
+  const surahSegment = routeSegments.at(1);
+
+  if (
+    routeSegments.length !== 2 ||
+    routeSegments.at(0) !== QURAN_ROUTE_SECTION ||
+    !surahSegment
+  ) {
+    return Option.none();
+  }
+
+  if (!QURAN_SURAH_PATTERN.test(surahSegment)) {
+    return Option.none();
+  }
+
+  const surahNumber = Number(surahSegment);
+
+  if (surahNumber.toString() !== surahSegment) {
+    return Option.none();
+  }
+
+  return Option.some(surahNumber);
 }

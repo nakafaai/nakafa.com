@@ -43,8 +43,12 @@ describe("Nakafa agent Quran references", () => {
       )
     );
 
-    expect(Option.getOrThrow(reference).verses).toHaveLength(2);
-    expect(Option.getOrThrow(reference).verses[0].tafsir).toBeTruthy();
+    if (Option.isNone(reference)) {
+      throw new Error("Expected Quran reference to exist.");
+    }
+
+    expect(reference.value.verses).toHaveLength(2);
+    expect(reference.value.verses[0]?.tafsir).toBeTruthy();
     expect(Option.isNone(reversed)).toBe(true);
     expect(Option.isNone(missingVerse)).toBe(true);
     expect(invalidInput).toBeInstanceOf(NakafaAgentInputError);
