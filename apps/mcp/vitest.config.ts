@@ -17,6 +17,7 @@ export default mergeConfig(config, {
     },
   },
   test: {
+    environment: "node",
     coverage: {
       thresholds: {
         100: true,

@@ -5,7 +5,6 @@ import { defineConfig } from "vitest/config";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const convexTestTimeout = 15_000;
-const convexSerialTestPattern = "convex/**/*.serial.test.ts";
 const defaultExcludes = ["**/node_modules/**", "coverage/**"];
 
 const config = defineConfig({
@@ -22,24 +21,6 @@ const config = defineConfig({
           },
           name: "convex",
           include: ["convex/**/*.test.ts"],
-          exclude: [convexSerialTestPattern, ...defaultExcludes],
-          environment: "edge-runtime",
-          testTimeout: convexTestTimeout,
-        },
-      },
-      {
-        extends: true,
-        test: {
-          coverage: {
-            enabled: true,
-            provider: "istanbul",
-            reportsDirectory: "./coverage/convex",
-          },
-          // convex-test runs delayed scheduled work through timers. Keep the
-          // scheduler-heavy IRT suite isolated so other Convex files stay fast.
-          fileParallelism: false,
-          name: "convex-serial",
-          include: [convexSerialTestPattern],
           exclude: defaultExcludes,
           environment: "edge-runtime",
           testTimeout: convexTestTimeout,

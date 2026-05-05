@@ -1,3 +1,8 @@
+import {
+  NAKAFA_MCP_DIRECT_ENDPOINT,
+  NAKAFA_MCP_INFORMATIONAL_ROOT,
+  NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+} from "@repo/contents/_lib/agent/constants";
 import { Effect, Schema } from "effect";
 import { env } from "@/env";
 
@@ -6,9 +11,13 @@ const MCP_UPSTREAM_UNAVAILABLE_MESSAGE = "MCP upstream is unavailable";
 const MCP_DISCOVERY_TEXT = [
   "# Nakafa MCP Server",
   "",
-  "Nakafa exposes a Streamable HTTP MCP endpoint at https://nakafa.com/mcp.",
+  `Recommended endpoint: ${NAKAFA_MCP_RECOMMENDED_ENDPOINT}.`,
+  `Direct endpoint: ${NAKAFA_MCP_DIRECT_ENDPOINT}.`,
+  `${NAKAFA_MCP_INFORMATIONAL_ROOT} is informational only and is not an MCP transport endpoint.`,
   "MCP clients should send JSON-RPC POST requests with Accept: application/json, text/event-stream and Content-Type: application/json.",
-  "Available tools: get_contents and get_content.",
+  "Available tools: nakafa_search_content, nakafa_get_content, nakafa_get_taxonomy, nakafa_get_exercise, nakafa_get_quran_reference.",
+  "Resources: nakafa://usage, nakafa://taxonomy, nakafa://content/{contentId}.",
+  "Prompts: nakafa_find_lesson, nakafa_answer_from_content, nakafa_explain_exercise, nakafa_quran_reference.",
   "",
 ].join("\n");
 

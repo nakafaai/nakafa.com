@@ -164,8 +164,10 @@ describe("MCP route proxy", () => {
     );
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(headResponse.status).toBe(200);
-    await expect(response.text()).resolves.toContain(
-      "Nakafa exposes a Streamable HTTP MCP endpoint"
-    );
+    const body = await response.text();
+
+    expect(body).toContain("Recommended endpoint: https://nakafa.com/mcp");
+    expect(body).toContain("Direct endpoint: https://mcp.nakafa.com/mcp");
+    expect(body).toContain("nakafa_search_content");
   });
 });
