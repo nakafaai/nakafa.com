@@ -20,6 +20,7 @@ const mockContentCache = vi.hoisted(() => ({
 }));
 
 const mockContentFolders = vi.hoisted(() => ({
+  clearFolderChildNamesCache: vi.fn(),
   getFolderChildNamesSync: vi.fn(),
 }));
 
@@ -28,6 +29,7 @@ vi.mock("@repo/contents/_lib/cache", () => ({
 }));
 
 vi.mock("@repo/contents/_lib/fs", () => ({
+  clearFolderChildNamesCache: mockContentFolders.clearFolderChildNamesCache,
   getFolderChildNamesSync: mockContentFolders.getFolderChildNamesSync,
 }));
 
@@ -45,7 +47,9 @@ function mockContentFolderTree(tree: Record<string, string[]>) {
 }
 
 beforeEach(() => {
+  mockContentFolders.clearFolderChildNamesCache.mockReset();
   clearSitemapRouteCache();
+  mockContentFolders.clearFolderChildNamesCache.mockClear();
   mockContentCache.getMDXSlugsForLocale.mockReset();
   mockContentCache.getMDXSlugsForLocale.mockReturnValue(mockContentCache.slugs);
   mockContentFolders.getFolderChildNamesSync.mockReset();
@@ -62,6 +66,14 @@ beforeEach(() => {
 });
 
 describe("sitemap route discovery", () => {
+  it("clears folder scans when clearing sitemap route discovery", () => {
+    clearSitemapRouteCache();
+
+    expect(
+      mockContentFolders.clearFolderChildNamesCache
+    ).toHaveBeenCalledOnce();
+  });
+
   it("builds sitemap routes from real content entries and quran routes", () => {
     expect(getQuranRoutes()).toHaveLength(114);
 

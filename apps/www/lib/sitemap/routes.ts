@@ -20,7 +20,10 @@ import {
   hasInvalidTryOutYearSlug,
   isYearlessTryOutCollectionSlug,
 } from "@repo/contents/_lib/exercises/slug";
-import { getFolderChildNamesSync } from "@repo/contents/_lib/fs";
+import {
+  clearFolderChildNamesCache,
+  getFolderChildNamesSync,
+} from "@repo/contents/_lib/fs";
 import { getAllSurah } from "@repo/contents/_lib/quran";
 import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
 import { getGradePath, parseGrade } from "@repo/contents/_lib/subject/grade";
@@ -44,6 +47,7 @@ const contentRouteSetsCache = new Map<
 
 /** Clears memoized sitemap route scans for tests and long-lived tools. */
 export function clearSitemapRouteCache() {
+  clearFolderChildNamesCache();
   contentRouteSetsCache.clear();
 }
 
