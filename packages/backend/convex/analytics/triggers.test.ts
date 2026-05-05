@@ -3,18 +3,20 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
 
 describe("analytics/triggers", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ now: NOW });
+  });
+
   afterEach(() => {
     vi.useRealTimers();
   });
 
   it("captures signed-in content views after the engaged view write", async () => {
-    vi.setSystemTime(new Date(NOW));
-
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, { now: NOW });
@@ -73,8 +75,6 @@ describe("analytics/triggers", () => {
   });
 
   it("captures exercise start and completion from the attempt lifecycle", async () => {
-    vi.setSystemTime(new Date(NOW));
-
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(
       async (ctx) => await seedAuthenticatedUser(ctx, { now: NOW })
