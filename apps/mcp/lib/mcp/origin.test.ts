@@ -34,6 +34,26 @@ describe("MCP Origin helpers", () => {
         origin: "https://agent.example.com",
       },
     });
+    const apiApp = new Request("https://mcp.nakafa.com/mcp", {
+      headers: {
+        origin: "https://api.nakafa.com",
+      },
+    });
+    const docsApp = new Request("https://mcp.nakafa.com/mcp", {
+      headers: {
+        origin: "https://docs.nakafa.com",
+      },
+    });
+    const localApiApp = new Request("https://mcp.nakafa.com/mcp", {
+      headers: {
+        origin: "http://localhost:3002",
+      },
+    });
+    const insecureNakafaSubdomain = new Request("https://mcp.nakafa.com/mcp", {
+      headers: {
+        origin: "http://api.nakafa.com",
+      },
+    });
 
     expect(Option.getOrUndefined(getAllowedRequestOrigin(allowed))).toBe(
       "https://nakafa.com"
@@ -44,9 +64,21 @@ describe("MCP Origin helpers", () => {
       )
     ).toBe("https://agent.example.com");
     expect(Option.getOrUndefined(getAllowedRequestOrigin(missing))).toBe("");
+    expect(Option.getOrUndefined(getAllowedRequestOrigin(apiApp))).toBe(
+      "https://api.nakafa.com"
+    );
+    expect(Option.getOrUndefined(getAllowedRequestOrigin(docsApp))).toBe(
+      "https://docs.nakafa.com"
+    );
+    expect(Option.getOrUndefined(getAllowedRequestOrigin(localApiApp))).toBe(
+      "http://localhost:3002"
+    );
     expect(Option.isNone(getAllowedRequestOrigin(invalid))).toBe(true);
     expect(Option.isNone(getAllowedRequestOrigin(disallowed))).toBe(true);
-    expect(getAllowedMcpOrigins().has("https://nakafa.com")).toBe(true);
+    expect(
+      Option.isNone(getAllowedRequestOrigin(insecureNakafaSubdomain))
+    ).toBe(true);
+    expect(getAllowedMcpOrigins().has("http://localhost:3002")).toBe(true);
     expect(
       getAllowedMcpOrigins("https://agent.example.com/").has(
         "https://agent.example.com"

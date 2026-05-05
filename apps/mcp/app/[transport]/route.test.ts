@@ -361,6 +361,14 @@ describe("Nakafa MCP route", () => {
         method: "OPTIONS",
       })
     );
+    const ownedAppOptions = await OPTIONS(
+      new Request("https://mcp.nakafa.com/mcp", {
+        headers: {
+          origin: "https://api.nakafa.com",
+        },
+        method: "OPTIONS",
+      })
+    );
     const forbidden = await POST(
       new Request("https://mcp.nakafa.com/mcp", {
         body: "{}",
@@ -384,6 +392,10 @@ describe("Nakafa MCP route", () => {
     expect(allowedOptions.status).toBe(204);
     expect(allowedOptions.headers.get("access-control-allow-origin")).toBe(
       "https://agent.example.com"
+    );
+    expect(ownedAppOptions.status).toBe(204);
+    expect(ownedAppOptions.headers.get("access-control-allow-origin")).toBe(
+      "https://api.nakafa.com"
     );
     expect(forbidden.status).toBe(403);
     expect(invalid.status).toBe(403);

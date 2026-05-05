@@ -1,13 +1,14 @@
 import { Effect, Option } from "effect";
 
-const DEFAULT_ALLOWED_ORIGINS = [
-  "https://nakafa.com",
-  "https://www.nakafa.com",
-  "https://mcp.nakafa.com",
+const NAKAFA_APP_HOSTNAME = "nakafa.com";
+
+const DEFAULT_ALLOWED_EXACT_ORIGINS = [
   "http://localhost:3000",
   "http://localhost:3001",
+  "http://localhost:3002",
   "http://127.0.0.1:3000",
   "http://127.0.0.1:3001",
+  "http://127.0.0.1:3002",
 ] as const;
 
 const DEFAULT_ALLOWED_CORS_HEADERS = [
@@ -80,22 +81,26 @@ export function getAllowedRequestOrigin(
     return Option.none<string>();
   }
 
-  if (!getAllowedMcpOrigins(extraAllowedOrigins).has(new URL(origin).origin)) {
+  const normalizedOrigin = new URL(origin);
+
+  if (!isAllowedMcpOrigin(normalizedOrigin, extraAllowedOrigins)) {
     return Option.none<string>();
   }
 
-  return Option.some(new URL(origin).origin);
+  return Option.some(normalizedOrigin.origin);
 }
 
-/** Builds the configured Origin allow-list. */
+/** Builds the configured exact Origin allow-list. */
 export function getAllowedMcpOrigins(extraAllowedOrigins = "") {
   return new Set(
-    [...DEFAULT_ALLOWED_ORIGINS, ...extraAllowedOrigins.split(",")].flatMap(
-      (origin) =>
-        Option.match(normalizeMcpOrigin(origin), {
-          onNone: () => [],
-          onSome: (normalizedOrigin) => [normalizedOrigin],
-        })
+    [
+      ...DEFAULT_ALLOWED_EXACT_ORIGINS,
+      ...extraAllowedOrigins.split(","),
+    ].flatMap((origin) =>
+      Option.match(normalizeMcpOrigin(origin), {
+        onNone: () => [],
+        onSome: (normalizedOrigin) => [normalizedOrigin],
+      })
     )
   );
 }
@@ -138,6 +143,28 @@ function normalizeMcpOrigin(origin: string) {
   }
 
   return Option.some(new URL(trimmedOrigin).origin);
+}
+
+/** Checks whether an Origin belongs to Nakafa's owned production app domain. */
+function isNakafaAppOrigin(origin: URL) {
+  if (origin.protocol !== "https:") {
+    return false;
+  }
+
+  if (origin.hostname === NAKAFA_APP_HOSTNAME) {
+    return true;
+  }
+
+  return origin.hostname.endsWith(`.${NAKAFA_APP_HOSTNAME}`);
+}
+
+/** Checks exact development/custom origins and owned Nakafa production apps. */
+function isAllowedMcpOrigin(origin: URL, extraAllowedOrigins: string) {
+  if (isNakafaAppOrigin(origin)) {
+    return true;
+  }
+
+  return getAllowedMcpOrigins(extraAllowedOrigins).has(origin.origin);
 }
 
 /** Returns the CORS request headers this MCP endpoint supports. */
