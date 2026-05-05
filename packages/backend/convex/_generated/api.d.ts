@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as analytics_capture from "../analytics/capture.js";
+import type * as analytics_events from "../analytics/events.js";
 import type * as assessments_helpers_access from "../assessments/helpers/access.js";
 import type * as assessments_helpers_attempts from "../assessments/helpers/attempts.js";
 import type * as assessments_helpers_authoring from "../assessments/helpers/authoring.js";
@@ -171,6 +173,7 @@ import type * as lib_validators_vv from "../lib/validators/vv.js";
 import type * as notifications_mutations from "../notifications/mutations.js";
 import type * as notifications_queries from "../notifications/queries.js";
 import type * as polyfills from "../polyfills.js";
+import type * as posthog from "../posthog.js";
 import type * as routes_constants from "../routes/constants.js";
 import type * as routes_middleware_requestId from "../routes/middleware/requestId.js";
 import type * as routes_polar from "../routes/polar.js";
@@ -186,11 +189,13 @@ import type * as subscriptions_queries from "../subscriptions/queries.js";
 import type * as subscriptions_utils from "../subscriptions/utils.js";
 import type * as triggers_chats_chats from "../triggers/chats/chats.js";
 import type * as triggers_chats_cleanup from "../triggers/chats/cleanup.js";
+import type * as triggers_chats_messages from "../triggers/chats/messages.js";
 import type * as triggers_comments_cleanup from "../triggers/comments/cleanup.js";
 import type * as triggers_comments_commentVotes from "../triggers/comments/commentVotes.js";
 import type * as triggers_comments_comments from "../triggers/comments/comments.js";
 import type * as triggers_contents_exerciseAnswers from "../triggers/contents/exerciseAnswers.js";
 import type * as triggers_contents_exerciseAttempts from "../triggers/contents/exerciseAttempts.js";
+import type * as triggers_contents_views from "../triggers/contents/views.js";
 import type * as triggers_forums_postReactions from "../triggers/forums/postReactions.js";
 import type * as triggers_forums_posts from "../triggers/forums/posts.js";
 import type * as triggers_forums_reactions from "../triggers/forums/reactions.js";
@@ -211,6 +216,7 @@ import type * as triggers_schools_members from "../triggers/schools/members.js";
 import type * as triggers_schools_schools from "../triggers/schools/schools.js";
 import type * as triggers_subscriptions_subscriptions from "../triggers/subscriptions/subscriptions.js";
 import type * as triggers_tryouts_leaderboard from "../triggers/tryouts/leaderboard.js";
+import type * as triggers_tryouts_tryoutAttempts from "../triggers/tryouts/tryoutAttempts.js";
 import type * as tryoutAccess_helpers_campaignProducts from "../tryoutAccess/helpers/campaignProducts.js";
 import type * as tryoutAccess_helpers_codes from "../tryoutAccess/helpers/codes.js";
 import type * as tryoutAccess_helpers_entitlements from "../tryoutAccess/helpers/entitlements.js";
@@ -289,6 +295,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "analytics/capture": typeof analytics_capture;
+  "analytics/events": typeof analytics_events;
   "assessments/helpers/access": typeof assessments_helpers_access;
   "assessments/helpers/attempts": typeof assessments_helpers_attempts;
   "assessments/helpers/authoring": typeof assessments_helpers_authoring;
@@ -452,6 +460,7 @@ declare const fullApi: ApiFromModules<{
   "notifications/mutations": typeof notifications_mutations;
   "notifications/queries": typeof notifications_queries;
   polyfills: typeof polyfills;
+  posthog: typeof posthog;
   "routes/constants": typeof routes_constants;
   "routes/middleware/requestId": typeof routes_middleware_requestId;
   "routes/polar": typeof routes_polar;
@@ -467,11 +476,13 @@ declare const fullApi: ApiFromModules<{
   "subscriptions/utils": typeof subscriptions_utils;
   "triggers/chats/chats": typeof triggers_chats_chats;
   "triggers/chats/cleanup": typeof triggers_chats_cleanup;
+  "triggers/chats/messages": typeof triggers_chats_messages;
   "triggers/comments/cleanup": typeof triggers_comments_cleanup;
   "triggers/comments/commentVotes": typeof triggers_comments_commentVotes;
   "triggers/comments/comments": typeof triggers_comments_comments;
   "triggers/contents/exerciseAnswers": typeof triggers_contents_exerciseAnswers;
   "triggers/contents/exerciseAttempts": typeof triggers_contents_exerciseAttempts;
+  "triggers/contents/views": typeof triggers_contents_views;
   "triggers/forums/postReactions": typeof triggers_forums_postReactions;
   "triggers/forums/posts": typeof triggers_forums_posts;
   "triggers/forums/reactions": typeof triggers_forums_reactions;
@@ -492,6 +503,7 @@ declare const fullApi: ApiFromModules<{
   "triggers/schools/schools": typeof triggers_schools_schools;
   "triggers/subscriptions/subscriptions": typeof triggers_subscriptions_subscriptions;
   "triggers/tryouts/leaderboard": typeof triggers_tryouts_leaderboard;
+  "triggers/tryouts/tryoutAttempts": typeof triggers_tryouts_tryoutAttempts;
   "tryoutAccess/helpers/campaignProducts": typeof tryoutAccess_helpers_campaignProducts;
   "tryoutAccess/helpers/codes": typeof tryoutAccess_helpers_codes;
   "tryoutAccess/helpers/entitlements": typeof tryoutAccess_helpers_entitlements;
@@ -597,6 +609,7 @@ export declare const components: {
   irtScalePublicationQueueWorkpool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"irtScalePublicationQueueWorkpool">;
   tryoutLeaderboardWorkpool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"tryoutLeaderboardWorkpool">;
   resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
+  posthog: import("@posthog/convex/_generated/component.js").ComponentApi<"posthog">;
   tryoutLeaderboard: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"tryoutLeaderboard">;
   globalLeaderboard: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"globalLeaderboard">;
   forumPostsBySequence: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"forumPostsBySequence">;

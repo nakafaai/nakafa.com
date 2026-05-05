@@ -1,5 +1,10 @@
-import { internal } from "@repo/backend/convex/_generated/api";
+import posthogTest from "@posthog/convex/test";
+import { api, internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import {
+  createConvexTestWithBetterAuth,
+  seedAuthenticatedUser,
+} from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -13,6 +18,7 @@ describe("chats/mutations", () => {
 
   it("records a reset grant before the usage transaction when credits roll into a new window", async () => {
     const t = convexTest(schema, convexModules);
+    posthogTest.register(t);
 
     const { chatId, userId } = await t.mutation(async (ctx) => {
       const userId = await ctx.db.insert("users", {
@@ -53,6 +59,9 @@ describe("chats/mutations", () => {
 
     const savedState = await t.query(async (ctx) => ({
       creditTransactions: await ctx.db.query("creditTransactions").collect(),
+      scheduledJobs: await ctx.db.system
+        .query("_scheduled_functions")
+        .collect(),
       user: await ctx.db.get("users", userId),
     }));
 
@@ -81,6 +90,71 @@ describe("chats/mutations", () => {
           totalTokens: 30,
           modelId: "gpt-5-nano",
         }),
+      }),
+    ]);
+    expect(savedState.scheduledJobs).toEqual([
+      expect.objectContaining({
+        args: [
+          expect.objectContaining({
+            disableGeoip: true,
+            distinctId: userId,
+            event: "chat response completed",
+            host: "https://eu.i.posthog.com",
+            properties: JSON.stringify({
+              chat_type: "study",
+              credits: 1,
+              input_tokens: 10,
+              model_id: "gpt-5-nano",
+              output_tokens: 20,
+              total_tokens: 30,
+            }),
+          }),
+        ],
+        name: expect.stringContaining("capture"),
+      }),
+    ]);
+  });
+
+  it("captures a user chat message with the selected model", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation(
+      async (ctx) => await seedAuthenticatedUser(ctx, { now: NOW })
+    );
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .mutation(api.chats.mutations.createChatWithMessage, {
+        type: "study",
+        message: {
+          role: "user",
+          identifier: "user-1",
+          modelId: "gpt-5-nano",
+        },
+        parts: [],
+      });
+
+    const scheduledJobs = await t.query(
+      async (ctx) => await ctx.db.system.query("_scheduled_functions").collect()
+    );
+
+    expect(result.chatId).toBeDefined();
+    expect(scheduledJobs).toEqual([
+      expect.objectContaining({
+        args: [
+          expect.objectContaining({
+            disableGeoip: true,
+            distinctId: identity.userId,
+            event: "chat message sent",
+            properties: JSON.stringify({
+              chat_type: "study",
+              model_id: "gpt-5-nano",
+            }),
+          }),
+        ],
+        name: expect.stringContaining("capture"),
       }),
     ]);
   });

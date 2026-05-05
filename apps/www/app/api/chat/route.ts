@@ -201,7 +201,12 @@ export async function POST(req: Request) {
     );
   }
 
-  const chatId = await saveOrCreateChat({ chatId: id, message, token });
+  const chatId = await saveOrCreateChat({
+    chatId: id,
+    message,
+    modelId: selectedModel,
+    token,
+  });
   const messages = await loadMessages({ chatId, token });
   const isFirstMessage = messages.length === 1;
 

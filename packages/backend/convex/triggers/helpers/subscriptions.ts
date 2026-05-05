@@ -1,4 +1,5 @@
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
+import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
 import { resolveCurrentCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
 import { listCanonicalActiveTryoutSubscriptions } from "@repo/backend/convex/tryoutAccess/helpers/subscriptions";
@@ -34,9 +35,10 @@ async function applyPlanChange(
   user: DataModel["users"]["document"],
   newPlan: UserPlan,
   now: number,
-  subscriptionId: string
+  subscription: DataModel["subscriptions"]["document"]
 ) {
   const previousPlan = user.plan;
+  const timestamp = new Date(now);
   const newCreditConfig = getPlanCreditConfig(newPlan);
   const nextResetTimestamp = await resolveCurrentCreditResetTimestamp(
     ctx.db,
@@ -62,16 +64,42 @@ async function applyPlanChange(
         reason: "plan-upgrade",
         "previous-plan": previousPlan,
         "new-plan": newPlan,
-        "subscription-id": subscriptionId,
+        "subscription-id": subscription.id,
       },
     });
 
     logger.info("User upgraded with credits", {
       userId: user._id,
-      subscriptionId,
+      subscriptionId: subscription.id,
       creditsGranted: newCreditConfig.amount,
       previousPlan,
       newPlan,
+    });
+
+    await captureProductEvent(ctx, {
+      distinctId: user._id,
+      event: {
+        name: "subscription started",
+        properties: {
+          product_id: subscription.productId,
+          status: subscription.status,
+          subscription_id: subscription.id,
+        },
+      },
+      timestamp,
+    });
+
+    await captureProductEvent(ctx, {
+      distinctId: user._id,
+      event: {
+        name: "plan changed",
+        properties: {
+          new_plan: newPlan,
+          previous_plan: previousPlan,
+          subscription_id: subscription.id,
+        },
+      },
+      timestamp,
     });
 
     return;
@@ -92,16 +120,42 @@ async function applyPlanChange(
       reason: "plan-downgrade",
       "previous-plan": previousPlan,
       "new-plan": newPlan,
-      "subscription-id": subscriptionId,
+      "subscription-id": subscription.id,
     },
   });
 
   logger.info("User downgraded, credits adjusted", {
     userId: user._id,
-    subscriptionId,
+    subscriptionId: subscription.id,
     newCredits: newCreditConfig.amount,
     previousPlan,
     newPlan,
+  });
+
+  await captureProductEvent(ctx, {
+    distinctId: user._id,
+    event: {
+      name: "subscription canceled",
+      properties: {
+        product_id: subscription.productId,
+        status: subscription.status,
+        subscription_id: subscription.id,
+      },
+    },
+    timestamp,
+  });
+
+  await captureProductEvent(ctx, {
+    distinctId: user._id,
+    event: {
+      name: "plan changed",
+      properties: {
+        new_plan: newPlan,
+        previous_plan: previousPlan,
+        subscription_id: subscription.id,
+      },
+    },
+    timestamp,
   });
 }
 
@@ -144,15 +198,24 @@ export async function syncCustomerPlan(
     }
   );
 
-  const newPlan = activeSubscriptions.reduce<UserPlan>(
-    (highestPlan, row) =>
-      getHigherPlan(highestPlan, getPlanFromProductId(row.productId)),
-    "free"
-  );
+  let newPlan: UserPlan = "free";
+  let planChangeSubscription = subscription;
+
+  for (const row of activeSubscriptions) {
+    const rowPlan = getPlanFromProductId(row.productId);
+    const highestPlan = getHigherPlan(newPlan, rowPlan);
+
+    if (highestPlan === newPlan) {
+      continue;
+    }
+
+    newPlan = highestPlan;
+    planChangeSubscription = row;
+  }
 
   if (newPlan === user.plan) {
     return;
   }
 
-  await applyPlanChange(ctx, user, newPlan, now, subscription.id);
+  await applyPlanChange(ctx, user, newPlan, now, planChangeSubscription);
 }

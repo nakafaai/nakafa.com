@@ -1,3 +1,4 @@
+import posthogTest from "@posthog/convex/test";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getStoredCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
@@ -10,6 +11,13 @@ import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 18, 0, 0);
+
+/** Builds a Convex test instance with the PostHog component registered. */
+function createSubscriptionTestConvex() {
+  const t = convexTest(schema, convexModules);
+  posthogTest.register(t);
+  return t;
+}
 
 /** Inserts one minimal app user row for subscription-trigger tests. */
 async function insertUser(
@@ -114,7 +122,7 @@ describe("triggers/helpers/subscriptions", () => {
   it("returns without side effects when the customer is missing", async () => {
     vi.setSystemTime(new Date(NOW));
 
-    const t = convexTest(schema, convexModules);
+    const t = createSubscriptionTestConvex();
 
     const result = await t.mutation(async (ctx) => {
       await insertSubscription(ctx, {
@@ -142,7 +150,7 @@ describe("triggers/helpers/subscriptions", () => {
   it("returns without side effects when the customer user is missing", async () => {
     vi.setSystemTime(new Date(NOW));
 
-    const t = convexTest(schema, convexModules);
+    const t = createSubscriptionTestConvex();
 
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "missing-user");
@@ -173,7 +181,7 @@ describe("triggers/helpers/subscriptions", () => {
   it("returns early when the derived plan is unchanged", async () => {
     vi.setSystemTime(new Date(NOW));
 
-    const t = convexTest(schema, convexModules);
+    const t = createSubscriptionTestConvex();
 
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "no-op", {
@@ -211,7 +219,7 @@ describe("triggers/helpers/subscriptions", () => {
   it("upgrades a free user to pro and records a purchase transaction", async () => {
     vi.setSystemTime(new Date(NOW));
 
-    const t = convexTest(schema, convexModules);
+    const t = createSubscriptionTestConvex();
 
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "upgrade", {
@@ -232,6 +240,9 @@ describe("triggers/helpers/subscriptions", () => {
 
       return {
         creditTransactions: await ctx.db.query("creditTransactions").collect(),
+        scheduledJobs: await ctx.db.system
+          .query("_scheduled_functions")
+          .collect(),
         storedResetAt: await getStoredCreditResetTimestamp(ctx.db, "pro"),
         user: await ctx.db.get("users", userId),
       };
@@ -255,13 +266,41 @@ describe("triggers/helpers/subscriptions", () => {
         }),
       }),
     ]);
+    expect(result.scheduledJobs).toEqual([
+      expect.objectContaining({
+        args: [
+          expect.objectContaining({
+            distinctId: result.user?._id,
+            event: "subscription started",
+            properties: JSON.stringify({
+              product_id: products.pro.id,
+              status: "active",
+              subscription_id: "sub-upgrade",
+            }),
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        args: [
+          expect.objectContaining({
+            distinctId: result.user?._id,
+            event: "plan changed",
+            properties: JSON.stringify({
+              new_plan: "pro",
+              previous_plan: "free",
+              subscription_id: "sub-upgrade",
+            }),
+          }),
+        ],
+      }),
+    ]);
     expect(result.storedResetAt).toBe(Date.UTC(2026, 3, 1, 0, 0, 0));
   });
 
   it("downgrades a pro user to free and records the reset grant transaction", async () => {
     vi.setSystemTime(new Date(NOW));
 
-    const t = convexTest(schema, convexModules);
+    const t = createSubscriptionTestConvex();
 
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "downgrade", {
@@ -282,6 +321,9 @@ describe("triggers/helpers/subscriptions", () => {
 
       return {
         creditTransactions: await ctx.db.query("creditTransactions").collect(),
+        scheduledJobs: await ctx.db.system
+          .query("_scheduled_functions")
+          .collect(),
         storedResetAt: await getStoredCreditResetTimestamp(ctx.db, "free"),
         user: await ctx.db.get("users", userId),
       };
@@ -305,13 +347,41 @@ describe("triggers/helpers/subscriptions", () => {
         }),
       }),
     ]);
+    expect(result.scheduledJobs).toEqual([
+      expect.objectContaining({
+        args: [
+          expect.objectContaining({
+            distinctId: result.user?._id,
+            event: "subscription canceled",
+            properties: JSON.stringify({
+              product_id: "free-plan",
+              status: "active",
+              subscription_id: "sub-downgrade",
+            }),
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        args: [
+          expect.objectContaining({
+            distinctId: result.user?._id,
+            event: "plan changed",
+            properties: JSON.stringify({
+              new_plan: "free",
+              previous_plan: "pro",
+              subscription_id: "sub-downgrade",
+            }),
+          }),
+        ],
+      }),
+    ]);
     expect(result.storedResetAt).toBe(Date.UTC(2026, 3, 2, 0, 0, 0));
   });
 
   it("picks the highest plan across overlapping active subscriptions", async () => {
     vi.setSystemTime(new Date(NOW));
 
-    const t = convexTest(schema, convexModules);
+    const t = createSubscriptionTestConvex();
 
     const result = await t.mutation(async (ctx) => {
       const userId = await insertUser(ctx, "highest-plan", {
