@@ -30,12 +30,6 @@ interface LocaleParamsConfig extends BaseConfig {}
 const folderPathCache = new Map<string, Set<string>>();
 const contentPathCandidatesCache = new Map<string, ContentPathCandidate[]>();
 
-/** Clears memoized static-param scans for tests and long-lived tools. */
-export function clearStaticParamCaches() {
-  folderPathCache.clear();
-  contentPathCandidatesCache.clear();
-}
-
 /**
  * Extracts unique exercise set paths from MDX cache entries.
  * Transforms paths like "exercises/.../set-1/1/_question" to "exercises/.../set-1"
