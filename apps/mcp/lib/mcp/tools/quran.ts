@@ -23,7 +23,7 @@ export function registerNakafaGetQuranReferenceTool(server: McpServer) {
       annotations: NAKAFA_READ_ONLY_TOOL_ANNOTATIONS,
       description:
         "Return bounded Surah and verse data with Arabic text, transliteration, selected translation, optional tafsir, and canonical Nakafa URL.",
-      inputSchema: NakafaGetQuranReferenceInputSchema.shape,
+      inputSchema: NakafaGetQuranReferenceInputSchema,
       outputSchema: NakafaGetQuranReferenceOutputSchema,
       title: "Get Nakafa Quran Reference",
     },

@@ -16,7 +16,7 @@ export function registerNakafaSearchContentTool(server: McpServer) {
       annotations: NAKAFA_READ_ONLY_TOOL_ANNOTATIONS,
       description:
         "Search the Nakafa public content index across articles, subjects, exercises, and Quran references. Returns bounded paginated summaries with stable content IDs.",
-      inputSchema: NakafaSearchContentInputSchema.shape,
+      inputSchema: NakafaSearchContentInputSchema,
       outputSchema: NakafaSearchContentOutputSchema,
       title: "Search Nakafa Content",
     },

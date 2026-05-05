@@ -115,7 +115,23 @@ describe("Nakafa MCP route", () => {
     expect(result.tools.every((tool) => tool.name.startsWith("nakafa_"))).toBe(
       true
     );
-    expect(JSON.stringify(result.tools)).toContain("content_ref");
+    const toolsByName = new Map(result.tools.map((tool) => [tool.name, tool]));
+
+    expect(
+      Object.keys(
+        toolsByName.get("nakafa_get_content")?.inputSchema.properties ?? {}
+      )
+    ).toStrictEqual(["content_ref"]);
+    expect(
+      Object.keys(
+        toolsByName.get("nakafa_get_exercise")?.inputSchema.properties ?? {}
+      )
+    ).toStrictEqual(["content_ref", "exercise_number"]);
+    expect(
+      Object.keys(
+        toolsByName.get("nakafa_get_content")?.outputSchema.properties ?? {}
+      )
+    ).toContain("content_id");
   }, 15_000);
 
   it("uses search content IDs immediately with content, resource, and exercise retrieval", async () => {
@@ -193,11 +209,19 @@ describe("Nakafa MCP route", () => {
       [legacyArgument]:
         "en/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
     });
+    const mixedLegacyContent = await callTool("nakafa_get_content", {
+      content_ref: "en/quran/1",
+      [legacyArgument]: "en/quran/2",
+    });
 
     expect(legacyContent.result?.isError).toBe(true);
     expect(legacyExercise.result?.isError).toBe(true);
+    expect(mixedLegacyContent.result?.isError).toBe(true);
     expect(JSON.stringify(legacyContent.result)).toContain("Invalid arguments");
     expect(JSON.stringify(legacyExercise.result)).toContain(
+      "Invalid arguments"
+    );
+    expect(JSON.stringify(mixedLegacyContent.result)).toContain(
       "Invalid arguments"
     );
   });

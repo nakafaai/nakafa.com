@@ -466,17 +466,17 @@ importers:
         specifier: ^3.0.67
         version: 3.0.67(zod@4.4.3)
       '@ai-sdk/google-vertex':
-        specifier: ^4.0.120
-        version: 4.0.120(zod@4.4.3)
+        specifier: ^4.0.121
+        version: 4.0.121(zod@4.4.3)
       '@ai-sdk/openai':
-        specifier: ^3.0.60
-        version: 3.0.60(zod@4.4.3)
+        specifier: ^3.0.61
+        version: 3.0.61(zod@4.4.3)
       '@ai-sdk/react':
         specifier: ^3.0.177
         version: 3.0.177(react@19.2.5)(zod@4.4.3)
       '@mendable/firecrawl-js':
-        specifier: ^4.21.0
-        version: 4.21.0
+        specifier: ^4.21.1
+        version: 4.21.1
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
@@ -1153,8 +1153,8 @@ importers:
 
 packages:
 
-  '@ai-sdk/anthropic@3.0.74':
-    resolution: {integrity: sha512-Xew9rfz9WWhDSyF8rNhjT/XWOWelNfJrMlmG0Ahw210hStisRpQZ1s+7VeI9JTJOZ5y5tXqBi5kfPwYnCfyRTA==}
+  '@ai-sdk/anthropic@3.0.75':
+    resolution: {integrity: sha512-5AV3CKwaOJFdGXhihVgvRLNrjwRn2Xmy71YygT8DYOA+5zTx93Seg2QSIS8b3tJxzZ7X4H84pEtrE8VZKBCZGA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1176,8 +1176,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google-vertex@4.0.120':
-    resolution: {integrity: sha512-GzUEBcpxYTqfce3C5tdiNo7NE/sP/0FRxPKeFwzyDmbyU3bos9vpuJbhQPuQdkKwgwM2bV3Faag7ZuQ4/P89ZA==}
+  '@ai-sdk/google-vertex@4.0.121':
+    resolution: {integrity: sha512-MAd6xphN/S2f43psjY2ZrjlHkSckvPnV0nzf98Tgm1hNeSV3ric2wVB4c9UyFzTEKPL0bFye95a1pvYCd6zulw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -1194,8 +1194,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/openai@3.0.60':
-    resolution: {integrity: sha512-vZKqbDSCF1T65gDMG2ILJ2NAEpG45U2VtvEve1Fv/WRLu2i5TPUqxjlGKm+5a7Dd57Yr6CGePxrJhsQJC8LJ3A==}
+  '@ai-sdk/openai@3.0.61':
+    resolution: {integrity: sha512-L5FdlTo+7IBOdXbnTZqVzowRdLGWnxPn01vHe4leLPp0G4ydoXhySu0tp0ttkoO0ZSzPjHo7iiAkYoT0J91Q8Q==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3498,8 +3498,8 @@ packages:
   '@mediapipe/tasks-vision@0.10.17':
     resolution: {integrity: sha512-CZWV/q6TTe8ta61cZXjfnnHsfWIdFhms03M9T7Cnd5y2mdpylJM0rF1qRq+wsQVRMLz1OYPVEBU9ph2Bx8cxrg==}
 
-  '@mendable/firecrawl-js@4.21.0':
-    resolution: {integrity: sha512-sUNGerLQmwMyC/IrPmgVsvjKLufXvelkHcTfzjJ5LB9yCWY3PWcplPWZ+zSxNHp19S44L00ZrNIlnRFqgOyuqQ==}
+  '@mendable/firecrawl-js@4.21.1':
+    resolution: {integrity: sha512-z6VCg61pRhJveAiFR1l9k95BXdpAbrzPbLDlvpJrggQTzQsPED3xzVmiH/W99oLZwyutZHbWXuboTyF4TDwg6w==}
     engines: {node: '>=22.0.0'}
 
   '@mermaid-js/parser@1.1.0':
@@ -13631,7 +13631,7 @@ packages:
 
 snapshots:
 
-  '@ai-sdk/anthropic@3.0.74(zod@4.4.3)':
+  '@ai-sdk/anthropic@3.0.75(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 3.0.10
       '@ai-sdk/provider-utils': 4.0.26(zod@4.4.3)
@@ -13656,9 +13656,9 @@ snapshots:
       '@vercel/oidc': 3.2.0
       zod: 4.4.3
 
-  '@ai-sdk/google-vertex@4.0.120(zod@4.4.3)':
+  '@ai-sdk/google-vertex@4.0.121(zod@4.4.3)':
     dependencies:
-      '@ai-sdk/anthropic': 3.0.74(zod@4.4.3)
+      '@ai-sdk/anthropic': 3.0.75(zod@4.4.3)
       '@ai-sdk/google': 3.0.67(zod@4.4.3)
       '@ai-sdk/openai-compatible': 2.0.46(zod@4.4.3)
       '@ai-sdk/provider': 3.0.10
@@ -13680,7 +13680,7 @@ snapshots:
       '@ai-sdk/provider-utils': 4.0.26(zod@4.4.3)
       zod: 4.4.3
 
-  '@ai-sdk/openai@3.0.60(zod@4.4.3)':
+  '@ai-sdk/openai@3.0.61(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 3.0.10
       '@ai-sdk/provider-utils': 4.0.26(zod@4.4.3)
@@ -15844,7 +15844,7 @@ snapshots:
 
   '@mediapipe/tasks-vision@0.10.17': {}
 
-  '@mendable/firecrawl-js@4.21.0':
+  '@mendable/firecrawl-js@4.21.1':
     dependencies:
       axios: 1.15.0
       firecrawl: 4.16.0

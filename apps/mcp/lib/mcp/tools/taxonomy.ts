@@ -16,7 +16,7 @@ export function registerNakafaGetTaxonomyTool(server: McpServer) {
       annotations: NAKAFA_READ_ONLY_TOOL_ANNOTATIONS,
       description:
         "Return supported Nakafa locales, sections, categories, grades, materials, exercise types, counts, and MCP endpoint guidance.",
-      inputSchema: NakafaGetTaxonomyInputSchema.shape,
+      inputSchema: NakafaGetTaxonomyInputSchema,
       outputSchema: NakafaGetTaxonomyOutputSchema,
       title: "Get Nakafa Taxonomy",
     },
