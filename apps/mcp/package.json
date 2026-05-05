@@ -6,17 +6,19 @@
     "dev": "next dev -p 3001 --turbopack",
     "build": "next build --turbopack",
     "start": "next start -p 3001",
-    "test-client": "node scripts/test-client.mjs",
-    "test-streamable-http-client": "node scripts/test-streamable-http-client.mjs",
+    "test": "NODE_ENV=test vitest run",
+    "test:watch": "NODE_ENV=test vitest watch",
+    "test:ui": "NODE_ENV=test vitest --ui",
+    "test:coverage": "NODE_ENV=test vitest run --coverage",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@repo/connection": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
+    "effect": "^3.21.2",
     "express": "^5.2.1",
     "mcp-handler": "1.1.0",
     "next": "16.2.4",
@@ -26,9 +28,14 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "25.6.0",
     "@types/react": "19.2.14",
-    "typescript": "^6.0.3"
+    "@vitest/coverage-istanbul": "^4.1.5",
+    "@vitest/ui": "^4.1.5",
+    "jsdom": "^29.1.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
   }
 }

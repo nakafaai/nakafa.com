@@ -1,3 +1,6 @@
+import { NAKAFA_MCP_SERVER_NAME } from "@repo/contents/_lib/agent/constants";
+import packageJson from "@/package.json";
+
 const UP_TIME_SECONDS_PER_HOUR = 3600;
 const UP_TIME_SECONDS_PER_MINUTE = 60;
 const MEMORY_USAGE_FACTOR = 1024;
@@ -16,8 +19,8 @@ export function GET() {
           formatted: uptimeFormatted,
         },
         server: {
-          name: "Nakafa MCP Server",
-          version: "1.0.0",
+          name: NAKAFA_MCP_SERVER_NAME,
+          version: packageJson.version,
           nodeVersion: process.version,
           platform: process.platform,
           arch: process.arch,

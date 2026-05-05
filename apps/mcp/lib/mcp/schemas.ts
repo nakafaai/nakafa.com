@@ -1,0 +1,167 @@
+import {
+  NakafaAgentExerciseResultSchema,
+  NakafaAgentMarkdownSchema,
+  NakafaAgentQuranReferenceSchema,
+  NakafaAgentSearchResultSchema,
+  NakafaAgentSectionSchema,
+  NakafaAgentTaxonomySchema,
+} from "@repo/contents/_lib/agent/schemas";
+import { LocaleSchema } from "@repo/contents/_types/content";
+import * as z from "zod";
+
+/** Shared tool-error schema used in `structuredContent` for failed calls. */
+export const NakafaMcpToolErrorSchema = z
+  .object({
+    error: z
+      .object({
+        message: z.string().describe("Actionable error message."),
+        suggestions: z
+          .array(z.string())
+          .min(1)
+          .describe("Concrete next steps the agent can try."),
+      })
+      .describe("Tool execution error details."),
+  })
+  .describe("Nakafa MCP tool error.");
+
+/** Output schema for `nakafa_search_content` success and error results. */
+export const NakafaSearchContentOutputSchema = z
+  .object({
+    ...NakafaAgentSearchResultSchema.shape,
+    ...NakafaMcpToolErrorSchema.shape,
+  })
+  .partial()
+  .describe("Nakafa content search output.");
+
+/** Output schema for `nakafa_get_content` success and error results. */
+export const NakafaGetContentOutputSchema = z
+  .object({
+    ...NakafaAgentMarkdownSchema.shape,
+    ...NakafaMcpToolErrorSchema.shape,
+  })
+  .partial()
+  .describe("Nakafa content markdown output.");
+
+/** Output schema for `nakafa_get_taxonomy` success and error results. */
+export const NakafaGetTaxonomyOutputSchema = z
+  .object({
+    ...NakafaAgentTaxonomySchema.shape,
+    ...NakafaMcpToolErrorSchema.shape,
+  })
+  .partial()
+  .describe("Nakafa taxonomy output.");
+
+/** Output schema for `nakafa_get_exercise` success and error results. */
+export const NakafaGetExerciseOutputSchema = z
+  .object({
+    ...NakafaAgentExerciseResultSchema.shape,
+    ...NakafaMcpToolErrorSchema.shape,
+  })
+  .partial()
+  .describe("Nakafa exercise output.");
+
+/** Output schema for `nakafa_get_quran_reference` success and error results. */
+export const NakafaGetQuranReferenceOutputSchema = z
+  .object({
+    ...NakafaAgentQuranReferenceSchema.shape,
+    ...NakafaMcpToolErrorSchema.shape,
+  })
+  .partial()
+  .describe("Nakafa Quran reference output.");
+
+/** Input schema for `nakafa_search_content`. */
+export const NakafaSearchContentInputSchema = z
+  .object({
+    limit: z
+      .number()
+      .int()
+      .min(1)
+      .max(50)
+      .default(20)
+      .describe("Maximum number of summaries to return, from 1 to 50."),
+    locale: LocaleSchema.default("en").describe(
+      "Content locale: `en` for English or `id` for Indonesian."
+    ),
+    offset: z
+      .number()
+      .int()
+      .min(0)
+      .default(0)
+      .describe("Zero-based pagination offset from a previous `next_offset`."),
+    query: z
+      .string()
+      .trim()
+      .optional()
+      .describe(
+        "Search text matched against IDs, titles, descriptions, and URLs."
+      ),
+    section: NakafaAgentSectionSchema.optional().describe(
+      "Optional section filter: articles, subject, exercises, or quran."
+    ),
+  })
+  .describe("Search arguments for Nakafa public content.");
+
+/** Shared content reference input accepted by lookup tools. */
+export const NakafaMcpContentRefInputSchema = z
+  .string()
+  .min(1)
+  .describe(
+    "Nakafa content reference: a `content_id` returned by `nakafa_search_content`, a canonical Nakafa URL, or a `nakafa://content/...` resource URI."
+  );
+
+/** Input schema for `nakafa_get_content`. */
+export const NakafaGetContentInputSchema = z
+  .object({
+    content_ref: NakafaMcpContentRefInputSchema,
+  })
+  .strict()
+  .describe("Content lookup arguments.");
+
+/** Input schema for `nakafa_get_taxonomy`. */
+export const NakafaGetTaxonomyInputSchema = z
+  .object({
+    locale: LocaleSchema.default("en").describe(
+      "Locale used for localized labels and content counts."
+    ),
+  })
+  .describe("Taxonomy lookup arguments.");
+
+/** Input schema for `nakafa_get_exercise`. */
+export const NakafaGetExerciseInputSchema = z
+  .object({
+    content_ref: NakafaMcpContentRefInputSchema,
+    exercise_number: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe("Optional exercise number inside the set."),
+  })
+  .strict()
+  .describe("Exercise lookup arguments.");
+
+/** Input schema for `nakafa_get_quran_reference`. */
+export const NakafaGetQuranReferenceInputSchema = z
+  .object({
+    from_verse: z
+      .number()
+      .int()
+      .min(1)
+      .default(1)
+      .describe("First verse number in the requested range."),
+    include_tafsir: z
+      .boolean()
+      .default(false)
+      .describe("Include concise Indonesian tafsir when available."),
+    locale: LocaleSchema.default("en").describe(
+      "Translation locale: `en` for English or `id` for Indonesian."
+    ),
+    surah: z.number().int().min(1).max(114).describe("Surah number, 1 to 114."),
+    to_verse: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe("Last verse number in the requested range."),
+  })
+  .describe("Quran reference lookup arguments.");

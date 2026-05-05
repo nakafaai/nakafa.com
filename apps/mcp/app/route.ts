@@ -1,16 +1,26 @@
+import {
+  NAKAFA_MCP_DIRECT_ENDPOINT,
+  NAKAFA_MCP_INFORMATIONAL_ROOT,
+  NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+} from "@repo/contents/_lib/agent/constants";
+
 export function GET() {
-  const terminalOutput = `❤️ Nakafa MCP Server ❤️
+  const timestamp = new Date().toLocaleTimeString();
+  const terminalOutput = `Nakafa MCP Server
 
-[${new Date().toLocaleTimeString()}] INFO: Welcome to Nakafa MCP Server!
-[${new Date().toLocaleTimeString()}] INFO: Your gateway to comprehensive multilingual educational content.
+[${timestamp}] INFO: Welcome to Nakafa MCP Server.
+[${timestamp}] INFO: Your gateway to comprehensive multilingual educational content.
 
-[${new Date().toLocaleTimeString()}] INFO: MCP Server initialized successfully
-[${new Date().toLocaleTimeString()}] INFO: Ready to serve educational content.
-[${new Date().toLocaleTimeString()}] INFO: Connection established - Happy learning!
+[${timestamp}] INFO: MCP Server initialized successfully.
+[${timestamp}] INFO: ${NAKAFA_MCP_INFORMATIONAL_ROOT} is informational only.
+[${timestamp}] INFO: Use ${NAKAFA_MCP_RECOMMENDED_ENDPOINT} as the recommended MCP endpoint.
+[${timestamp}] INFO: Use ${NAKAFA_MCP_DIRECT_ENDPOINT} as the direct MCP endpoint.
+[${timestamp}] INFO: Root URL ${NAKAFA_MCP_INFORMATIONAL_ROOT} is not an MCP transport endpoint.
+[${timestamp}] INFO: Tools: nakafa_search_content, nakafa_get_content, nakafa_get_taxonomy, nakafa_get_exercise, nakafa_get_quran_reference.
 
-[${new Date().toLocaleTimeString()}] INFO: Website: https://nakafa.com
-[${new Date().toLocaleTimeString()}] INFO: GitHub: https://github.com/nakafaai/nakafa.com
-[${new Date().toLocaleTimeString()}] INFO: Documentation: https://docs.nakafa.com
+[${timestamp}] INFO: Website: https://nakafa.com
+[${timestamp}] INFO: GitHub: https://github.com/nakafaai/nakafa.com
+[${timestamp}] INFO: Documentation: https://docs.nakafa.com
 
 nakafa-mcp-server:~$ _
 `;

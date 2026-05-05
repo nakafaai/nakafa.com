@@ -5,10 +5,12 @@ import * as z from "zod";
 export const env = createEnv({
   extends: [core()],
   server: {
+    MCP_ALLOWED_ORIGINS: z.string().optional(),
     REDIS_URL: z.string(),
   },
   client: {},
   runtimeEnv: {
+    MCP_ALLOWED_ORIGINS: process.env.MCP_ALLOWED_ORIGINS,
     REDIS_URL: process.env.REDIS_URL,
   },
 });
