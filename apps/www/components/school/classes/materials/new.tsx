@@ -5,7 +5,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
-import { CreateMaterialGroupDialog } from "./editor-dialog";
+import { CreateMaterialGroupDialog } from "@/components/school/classes/materials/editor-dialog";
 
 /** Render the create-material-group entry point for one class. */
 export function SchoolClassesMaterialsNew() {

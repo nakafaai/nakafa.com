@@ -5,7 +5,7 @@ import {
   addExerciseRecords,
   addQuranRecords,
   addSubjectRecords,
-} from "./records";
+} from "@/scripts/pagefind/records";
 
 const OUTPUT_PATH = "public/_pagefind";
 const logger = createServiceLogger("pagefind");

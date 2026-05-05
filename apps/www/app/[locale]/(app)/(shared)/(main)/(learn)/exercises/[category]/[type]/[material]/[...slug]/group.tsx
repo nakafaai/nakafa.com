@@ -5,6 +5,7 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import type { ExerciseRouteData } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/data";
 import { CardMaterial } from "@/components/shared/card-material";
 import { ContainerList } from "@/components/shared/container-list";
 import {
@@ -17,7 +18,6 @@ import {
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
-import type { ExerciseRouteData } from "./data";
 
 /** Renders the year-group overview variant for one exercises route. */
 export async function YearGroupPage({

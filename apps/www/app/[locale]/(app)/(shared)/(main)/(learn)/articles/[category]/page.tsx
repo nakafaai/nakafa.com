@@ -21,7 +21,7 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
-import { getOgUrl } from "@/lib/utils/metadata";
+import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { getStaticParams } from "@/lib/utils/system";
 
 async function getResolvedParams(
@@ -56,27 +56,24 @@ export async function generateMetadata({
 
   const FilePath = getCategoryPath(category);
 
-  const image = {
-    url: getOgUrl(locale, FilePath),
-    width: 1200,
-    height: 630,
-  };
+  const title = t(category);
+  const description = t("description");
+  const path = `/${locale}${FilePath}`;
+  const socialMetadata = getSocialMetadata({
+    title,
+    description,
+    locale,
+    path,
+    image: getOgUrl(locale, FilePath),
+  });
 
   return {
-    title: t(category),
-    description: t("description"),
+    title,
+    description,
     alternates: {
-      canonical: `/${locale}${FilePath}`,
+      canonical: path,
     },
-    openGraph: {
-      title: t(category),
-      description: t("description"),
-      url: `/${locale}${FilePath}`,
-      siteName: "Nakafa",
-      locale,
-      type: "website",
-      images: [image],
-    },
+    ...socialMetadata,
   };
 }
 

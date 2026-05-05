@@ -1,3 +1,4 @@
+import type { ModelId } from "@repo/ai/config/models";
 import { compressMessages } from "@repo/ai/lib/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
@@ -23,10 +24,12 @@ interface ChatMessagesPage {
 export async function saveOrCreateChat({
   chatId,
   message,
+  modelId,
   token,
 }: {
   chatId: Id<"chats"> | undefined;
   message: MyUIMessage;
+  modelId: ModelId;
   token: string;
 }): Promise<Id<"chats">> {
   const dbParts = mapUIMessagePartsToDBParts({ messageParts: message.parts });
@@ -65,6 +68,7 @@ export async function saveOrCreateChat({
           chatId,
           role: message.role,
           identifier: message.id,
+          modelId,
         },
         parts: dbParts,
       },
@@ -80,6 +84,7 @@ export async function saveOrCreateChat({
       message: {
         role: message.role,
         identifier: message.id,
+        modelId,
       },
       parts: dbParts,
     },

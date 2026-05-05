@@ -7,14 +7,17 @@ import {
 } from "@repo/contents/_lib/exercises/slug";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
-import { getOgUrl } from "@/lib/utils/metadata";
+import {
+  getExerciseRouteData,
+  getResolvedParams,
+} from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/data";
+import { YearGroupPage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/group";
+import { ExerciseSetPage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/set";
+import { SingleExercisePage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/single";
+import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
-import { getExerciseRouteData, getResolvedParams } from "./data";
-import { YearGroupPage } from "./group";
-import { ExerciseSetPage } from "./set";
-import { SingleExercisePage } from "./single";
 
 /** Generates SEO metadata for one learn-exercises route. */
 export async function generateMetadata({
@@ -58,12 +61,6 @@ export async function generateMetadata({
   }
 
   const urlPath = `/${locale}${data.pagePath}`;
-  const image = {
-    url: getOgUrl(locale, data.pagePath),
-    width: 1200,
-    height: 630,
-  };
-
   const exerciseNumber =
     data.kind === "single" ? data.exercise.number : undefined;
   let exerciseCount = 0;
@@ -103,6 +100,13 @@ export async function generateMetadata({
     description,
     keywords,
   } = await generateSEOMetadata(seoContext, locale);
+  const socialMetadata = getSocialMetadata({
+    title: finalTitle,
+    description,
+    locale,
+    path: urlPath,
+    image: getOgUrl(locale, data.pagePath),
+  });
 
   return {
     title: {
@@ -116,17 +120,7 @@ export async function generateMetadata({
         "text/markdown": `${urlPath}.md`,
       },
     },
-    openGraph: {
-      title: finalTitle,
-      url: urlPath,
-      siteName: "Nakafa",
-      locale,
-      type: "website",
-      images: [image],
-    },
-    twitter: {
-      images: [image],
-    },
+    ...socialMetadata,
   };
 }
 

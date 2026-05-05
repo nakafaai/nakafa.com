@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { usePagefind } from "@/lib/context/use-pagefind";
 import { normalizePagefindResult } from "@/lib/utils/pagefind";
 import type { PagefindResult, PagefindSearchOptions } from "@/types/pagefind";
-import { usePagefind } from "../context/use-pagefind";
 
 const SEARCH_OPTIONS: PagefindSearchOptions = {};
 

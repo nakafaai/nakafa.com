@@ -7,10 +7,10 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
+import { MaterialGroupCard } from "@/components/school/classes/materials/item";
 import { useClass } from "@/lib/context/use-class";
 import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 import { searchParsers } from "@/lib/nuqs/search";
-import { MaterialGroupCard } from "./item";
 
 const DEBOUNCE_TIME = 500;
 

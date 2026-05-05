@@ -3,8 +3,8 @@
 import { MessageMultiple01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
-import { CommentsAdd } from "./add";
-import { CommentsList } from "./list";
+import { CommentsAdd } from "@/components/comments/add";
+import { CommentsList } from "@/components/comments/list";
 
 interface Props {
   slug: string;

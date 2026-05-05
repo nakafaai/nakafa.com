@@ -1,4 +1,3 @@
-import { generateSlugOnlyParams } from "@repo/contents/_lib/params";
 import { routing } from "@repo/internationalization/src/routing";
 import type { NextRequest } from "next/server";
 import { hasLocale } from "next-intl";
@@ -21,15 +20,6 @@ const TEXT_HEADERS = {
   "Content-Type": "text/plain; charset=utf-8",
   Vary: "Accept",
 };
-
-/** Prebuilds markdown and llms index routes from existing content slugs. */
-export function generateStaticParams() {
-  return generateSlugOnlyParams({
-    includeExerciseNumbers: true,
-    includeExerciseSets: true,
-    includeQuran: true,
-  });
-}
 
 /** Serves section indexes or page-level markdown for agent retrieval. */
 export async function GET(

@@ -8,9 +8,13 @@ import { Effect } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { createSEODescription } from "./descriptions";
-import { createSEOTitle } from "./titles";
-import type { ContentSEOData, SEOContext, SEOMetadata } from "./types";
+import { createSEODescription } from "@/lib/utils/seo/descriptions";
+import { createSEOTitle } from "@/lib/utils/seo/titles";
+import type {
+  ContentSEOData,
+  SEOContext,
+  SEOMetadata,
+} from "@/lib/utils/seo/types";
 
 /**
  * Fetches translations for the Metadata namespace.

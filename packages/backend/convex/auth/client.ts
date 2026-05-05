@@ -1,12 +1,14 @@
 import { type AuthFunctions, createClient } from "@convex-dev/better-auth";
 import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
+import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import authSchema from "@repo/backend/convex/betterAuth/schema";
 import {
   DEFAULT_USER_CREDITS,
   DEFAULT_USER_PLAN,
 } from "@repo/backend/convex/credits/constants";
 import { getCurrentCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
+import { posthog } from "@repo/backend/convex/posthog";
 
 const authFunctions: AuthFunctions = internal.auth;
 
@@ -21,6 +23,8 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
     triggers: {
       user: {
         onCreate: async (ctx, authUser) => {
+          const now = Date.now();
+          const signedUpAt = new Date(now).toISOString();
           const userId = await ctx.db.insert("users", {
             email: authUser.email,
             authId: authUser._id,
@@ -30,7 +34,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             credits: DEFAULT_USER_CREDITS,
             creditsResetAt: getCurrentCreditResetTimestamp(
               DEFAULT_USER_PLAN,
-              Date.now()
+              now
             ),
           });
 
@@ -39,13 +43,39 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             userId,
             emailEnabled: true,
             emailDigest: "weekly",
-            updatedAt: Date.now(),
+            updatedAt: now,
           });
 
           await ctx.db.insert("notificationCounts", {
             userId,
             unreadCount: 0,
-            updatedAt: Date.now(),
+            updatedAt: now,
+          });
+
+          await posthog.identify(ctx, {
+            distinctId: userId,
+            disableGeoip: true,
+            properties: {
+              $set: {
+                email: authUser.email,
+                name: authUser.name,
+                plan: DEFAULT_USER_PLAN,
+              },
+              $set_once: {
+                signed_up_at: signedUpAt,
+              },
+            },
+          });
+
+          await captureProductEvent(ctx, {
+            distinctId: userId,
+            event: {
+              name: "user signed up",
+              properties: {
+                plan: DEFAULT_USER_PLAN,
+              },
+            },
+            timestamp: new Date(now),
           });
 
           await ctx.runMutation(components.betterAuth.mutations.setUserId, {

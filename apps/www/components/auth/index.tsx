@@ -2,8 +2,8 @@
 
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
-import { AuthGoogle } from "./google";
-import { AuthLogout } from "./logout";
+import { AuthGoogle } from "@/components/auth/google";
+import { AuthLogout } from "@/components/auth/logout";
 
 export function Auth() {
   return (

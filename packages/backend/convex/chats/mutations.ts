@@ -189,6 +189,7 @@ export const createChatWithMessage = mutation({
       chatId,
       role: args.message.role,
       identifier: args.message.identifier,
+      modelId: args.message.modelId,
     });
 
     const partIds = await insertParts(ctx, messageId, args.parts);

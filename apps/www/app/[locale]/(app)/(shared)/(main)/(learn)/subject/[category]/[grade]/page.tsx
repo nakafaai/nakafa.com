@@ -25,7 +25,7 @@ import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
-import { getOgUrl } from "@/lib/utils/metadata";
+import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 
@@ -77,43 +77,24 @@ export async function generateMetadata({
     ogUrl = `/open-graph/grade/${locale}-${grade}.png`;
   }
 
-  const image = {
-    url: ogUrl,
-    width: 1200,
-    height: 630,
-  };
+  const description = t("grade-description");
+  const socialMetadata = getSocialMetadata({
+    title,
+    description,
+    locale,
+    path,
+    image: ogUrl,
+  });
 
   return {
     title: {
       absolute: title,
     },
-    description: t("grade-description"),
+    description,
     alternates: {
       canonical: path,
     },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description: t("grade-description"),
-      images: [
-        {
-          url: ogUrl,
-          alt: title,
-          width: 1200,
-          height: 630,
-        },
-      ],
-      creator: "@nabilfatih_",
-      site: "@nabilfatih_",
-    },
-    openGraph: {
-      title,
-      url: path,
-      siteName: "Nakafa",
-      locale,
-      type: "website",
-      images: [image],
-    },
+    ...socialMetadata,
   };
 }
 

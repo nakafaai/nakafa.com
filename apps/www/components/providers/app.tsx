@@ -1,8 +1,8 @@
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ComponentProps, ReactNode } from "react";
+import { ConvexProvider } from "@/components/providers/convex";
+import { ReactQueryProviders } from "@/components/providers/react-query";
 import { UserContextProvider } from "@/lib/context/use-user";
-import { ConvexProvider } from "./convex";
-import { ReactQueryProviders } from "./react-query";
 
 /**
  * Mounts the app-wide client runtime providers for the localized app subtree.

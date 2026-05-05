@@ -87,9 +87,22 @@ export function getExerciseQuestionNumbers(
  * @returns Sorted list of unique exercise set paths
  */
 export function getExerciseSetPaths(locale: Locale) {
+  return getExerciseSetPathsFromSlugs(getMDXSlugsForLocale(locale));
+}
+
+/**
+ * Extracts unique exercise-set paths from already loaded exercise slugs.
+ *
+ * This lets callers that already hold the locale slug list avoid reading the
+ * MDX cache again while keeping the same set-level path rules in one place.
+ *
+ * @param slugs - Cached MDX slugs for one locale
+ * @returns Sorted list of unique exercise set paths
+ */
+export function getExerciseSetPathsFromSlugs(slugs: readonly string[]) {
   const setPaths = new Set<string>();
 
-  for (const slug of getMDXSlugsForLocale(locale)) {
+  for (const slug of slugs) {
     const pathParts = cleanSlug(slug).split("/");
 
     if (pathParts.length < 2) {

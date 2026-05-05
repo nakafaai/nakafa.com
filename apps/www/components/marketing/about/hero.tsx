@@ -2,8 +2,8 @@ import { LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
-import { HeroCta } from "./hero.client";
-import { HeroArt } from "./hero-art";
+import { HeroCta } from "@/components/marketing/about/hero.client";
+import { HeroArt } from "@/components/marketing/about/hero-art";
 
 export function Hero() {
   const t = useTranslations("About");

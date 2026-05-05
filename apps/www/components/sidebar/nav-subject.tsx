@@ -22,7 +22,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
-import { subjectMenu } from "./_data/subject";
+import { subjectMenu } from "@/components/sidebar/_data/subject";
 
 /**
  * Renders one subject category inside the app sidebar.

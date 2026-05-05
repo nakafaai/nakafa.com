@@ -1,5 +1,5 @@
 import * as z from "zod/mini";
-import { getCurrentAcademicYear } from "./header-add-utils";
+import { getCurrentAcademicYear } from "@/components/school/classes/header-add-utils";
 
 const MIN_NAME_LENGTH = 3;
 

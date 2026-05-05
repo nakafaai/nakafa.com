@@ -21,9 +21,12 @@ import type { Locale } from "next-intl";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { toast } from "sonner";
+import {
+  EventAccessCard,
+  EventAccessLayout,
+} from "@/components/event/access-card";
 import { getSafeInternalRedirectPath } from "@/lib/auth/utils";
 import { getLocale } from "@/lib/utils/date";
-import { EventAccessCard, EventAccessLayout } from "./access-card";
 
 interface Props {
   code: string;

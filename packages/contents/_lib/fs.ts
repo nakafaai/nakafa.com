@@ -11,6 +11,19 @@ import { Effect } from "effect";
 const contentsDir = resolveContentsDir(import.meta.url);
 
 const DEFAULT_EXCLUDE = ["_", "node_modules", ".", "coverage"] as const;
+const folderChildNamesCache = new Map<string, string[]>();
+let folderChildNamesCacheVersion = 0;
+
+/** Clears memoized synchronous folder scans for tests and long-lived tools. */
+export function clearFolderChildNamesCache() {
+  folderChildNamesCache.clear();
+  folderChildNamesCacheVersion += 1;
+}
+
+/** Returns the current folder scan cache version for derived memoized data. */
+export function getFolderChildNamesCacheVersion() {
+  return folderChildNamesCacheVersion;
+}
 
 /**
  * Validates that a folder path is safe for use within the contents directory.
@@ -155,14 +168,26 @@ export function getFolderChildNamesSync(
     return [];
   }
 
+  const cacheKey =
+    exclude && exclude.length > 0 ? `${folder}\0${exclude.join("\0")}` : folder;
+  const cachedNames = folderChildNamesCache.get(cacheKey);
+
+  if (cachedNames) {
+    return cachedNames;
+  }
+
   const contentDir = path.join(contentsDir, folder);
 
   try {
-    return filterDirectoryNames(
+    const names = filterDirectoryNames(
       fs.readdirSync(contentDir, { withFileTypes: true }),
       DEFAULT_EXCLUDE,
       exclude
     );
+
+    folderChildNamesCache.set(cacheKey, names);
+
+    return names;
   } catch {
     return [];
   }

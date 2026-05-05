@@ -42,15 +42,14 @@ import {
   smoothStream,
   stepCountIs,
   streamText,
-  type Tool,
 } from "ai";
 import { fetchAction, fetchMutation } from "convex/nextjs";
 import { getTranslations } from "next-intl/server";
 import * as z from "zod";
+import { CHAT_ERRORS } from "@/app/api/chat/constants";
+import { loadMessages, saveOrCreateChat } from "@/app/api/chat/persistence";
+import { getUserInfo, getVerified } from "@/app/api/chat/utils";
 import { getToken } from "@/lib/auth/server";
-import { CHAT_ERRORS } from "./constants";
-import { loadMessages, saveOrCreateChat } from "./persistence";
-import { getUserInfo, getVerified } from "./utils";
 
 const ModelIdSchema = z.enum(MODEL_IDS);
 
@@ -201,7 +200,12 @@ export async function POST(req: Request) {
     );
   }
 
-  const chatId = await saveOrCreateChat({ chatId: id, message, token });
+  const chatId = await saveOrCreateChat({
+    chatId: id,
+    message,
+    modelId: selectedModel,
+    token,
+  });
   const messages = await loadMessages({ chatId, token });
   const isFirstMessage = messages.length === 1;
 
@@ -370,8 +374,11 @@ export async function POST(req: Request) {
             return null;
           }
 
-          const tool: Tool =
-            availableTools[toolCall.toolName as keyof typeof availableTools];
+          const tool = availableTools[toolCall.toolName];
+          if (!tool) {
+            sessionLogger.warn("Tool is unavailable, not attempting repair");
+            return null;
+          }
 
           const { output: repairedArgs } = await generateText({
             model: model.languageModel(defaultModel),

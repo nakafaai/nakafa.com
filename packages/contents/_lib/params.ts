@@ -1,6 +1,9 @@
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
-import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/fs";
-import { getAllSurah } from "@repo/contents/_lib/quran";
+import {
+  getFolderChildNames,
+  getFolderChildNamesCacheVersion,
+  getNestedSlugs,
+} from "@repo/contents/_lib/fs";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -10,10 +13,6 @@ const EXERCISE_NUMBER_REGEX = /^(exercises\/.*?\/\d+)\/_(?:question|answer)$/;
 
 interface StaticParamsWithLocale {
   locale: Locale;
-  slug: string[];
-}
-
-interface StaticParamsSlugOnly {
   slug: string[];
 }
 
@@ -30,13 +29,20 @@ interface ContentPathsConfig extends BaseConfig {
   basePath: string;
 }
 
-interface SlugOnlyConfig extends BaseConfig {
-  includeExerciseNumbers?: boolean;
-  includeExerciseSets?: boolean;
-  includeQuran?: boolean;
+interface LocaleParamsConfig extends BaseConfig {}
+
+interface FolderPathCacheEntry {
+  paths: Set<string>;
+  version: number;
 }
 
-interface LocaleParamsConfig extends BaseConfig {}
+interface ContentPathCandidatesCacheEntry {
+  candidates: ContentPathCandidate[];
+  version: number;
+}
+
+const folderPathCache = new Map<string, FolderPathCacheEntry>();
+let contentPathCandidatesCache: ContentPathCandidatesCacheEntry | undefined;
 
 /**
  * Extracts unique exercise set paths from MDX cache entries.
@@ -91,6 +97,13 @@ function getMDXPathsForBasePath(locale: Locale, basePath: string): Set<string> {
  * Gets all folder paths under a base directory.
  */
 function getAllFolderPaths(basePath: string): Set<string> {
+  const version = getFolderChildNamesCacheVersion();
+  const cachedPaths = folderPathCache.get(basePath);
+
+  if (cachedPaths?.version === version) {
+    return cachedPaths.paths;
+  }
+
   const topDirs = Effect.runSync(
     Effect.match(getFolderChildNames(basePath), {
       onFailure: () => [],
@@ -109,6 +122,8 @@ function getAllFolderPaths(basePath: string): Set<string> {
     }
   }
 
+  folderPathCache.set(basePath, { paths: folderPaths, version });
+
   return folderPaths;
 }
 
@@ -116,12 +131,18 @@ function getAllFolderPaths(basePath: string): Set<string> {
  * Collects top-level and nested content paths once so locale-specific static
  * param generation can reuse the same filesystem walk.
  *
- * This keeps slug-only and locale-param generation from rescanning the same
- * directory tree for every locale.
+ * This keeps locale-param generation from rescanning the same directory tree
+ * for every locale.
  *
  * @returns Ordered path candidates rooted at the contents package
  */
 function getContentPathCandidates(): ContentPathCandidate[] {
+  const version = getFolderChildNamesCacheVersion();
+
+  if (contentPathCandidatesCache?.version === version) {
+    return contentPathCandidatesCache.candidates;
+  }
+
   const topDirs = Effect.runSync(
     Effect.match(getFolderChildNames("."), {
       onFailure: () => [],
@@ -146,6 +167,8 @@ function getContentPathCandidates(): ContentPathCandidate[] {
       });
     }
   }
+
+  contentPathCandidatesCache = { candidates, version };
 
   return candidates;
 }
@@ -211,81 +234,14 @@ export function generateContentParams(
 }
 
 /**
- * Generates static params with locale embedded in slug array.
- * Used by routes like /llms.mdx/[...slug] and /og/[...slug] where locale is part of the path.
- *
- * @example
- * ```ts
- * // For llms.mdx route
- * export function generateStaticParams() {
- *   return generateSlugOnlyParams({
- *     includeQuran: true,
- *     includeExerciseSets: true,
- *     includeExerciseNumbers: true,
- *   });
- * }
- *
- * ```
- */
-export function generateSlugOnlyParams(
-  config: SlugOnlyConfig = {}
-): StaticParamsSlugOnly[] {
-  const {
-    locales = routing.locales,
-    includeQuran = false,
-    includeExerciseSets = false,
-    includeExerciseNumbers = false,
-  } = config;
-
-  const contentPathCandidates = getContentPathCandidates();
-  const result: StaticParamsSlugOnly[] = [];
-
-  const addPath = (locale: Locale, slugParts: string[]) => {
-    result.push({ slug: [locale, ...slugParts] });
-  };
-
-  for (const locale of locales) {
-    const slugs = getMDXSlugsForLocale(locale);
-    const localeCache = new Set(slugs);
-
-    for (const candidate of contentPathCandidates) {
-      if (localeCache.has(candidate.fullPath)) {
-        addPath(locale, candidate.slugParts);
-      }
-    }
-
-    if (includeExerciseSets) {
-      const exerciseSetPaths = getExerciseSetPaths(slugs);
-      for (const exercisePath of exerciseSetPaths) {
-        addPath(locale, exercisePath.split("/"));
-      }
-    }
-
-    if (includeExerciseNumbers) {
-      const exerciseNumberPaths = getExerciseNumberPaths(slugs);
-      for (const exercisePath of exerciseNumberPaths) {
-        addPath(locale, exercisePath.split("/"));
-      }
-    }
-
-    if (includeQuran) {
-      addPath(locale, ["quran"]);
-
-      for (const surah of getAllSurah()) {
-        addPath(locale, ["quran", surah.number.toString()]);
-      }
-    }
-  }
-
-  return result;
-}
-
-/**
  * Generates static params with locale as separate param.
  * Used by routes like /[locale]/og/[...slug] where locale is a route param.
  *
  * @example
  * ```ts
+ * export function generateStaticParams() {
+ *   return generateLocaleParams();
+ * }
  * ```
  */
 export function generateLocaleParams(

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getInitialName } from "../helper";
+import { getInitialName } from "@/lib/utils/helper";
 
 describe("getInitialName", () => {
   describe("default fallback", () => {

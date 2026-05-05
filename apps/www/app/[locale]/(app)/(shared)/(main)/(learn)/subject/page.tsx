@@ -11,10 +11,11 @@ import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { use } from "react";
+import { getGradeIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/subject/icons";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { getGradeIcon } from "./icons";
+import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 
 export async function generateMetadata({
   params,
@@ -30,6 +31,13 @@ export async function generateMetadata({
   const path = `/${locale}/subject`;
   const title = tCommon("subject");
   const description = tSubject("subject-description");
+  const socialMetadata = getSocialMetadata({
+    title,
+    description,
+    locale,
+    path,
+    image: getOgUrl(locale, "/subject"),
+  });
 
   return {
     title,
@@ -37,14 +45,7 @@ export async function generateMetadata({
     alternates: {
       canonical: path,
     },
-    openGraph: {
-      title,
-      description,
-      url: path,
-      siteName: "Nakafa",
-      locale,
-      type: "website",
-    },
+    ...socialMetadata,
   };
 }
 

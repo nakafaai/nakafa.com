@@ -3,7 +3,7 @@ import type { FunctionReturnType } from "convex/server";
 import {
   getEffectivePartAttemptStatus,
   getEffectiveTryoutStatus,
-} from "./status";
+} from "@/components/tryout/utils/status";
 
 type TryoutAttemptData = FunctionReturnType<
   typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt

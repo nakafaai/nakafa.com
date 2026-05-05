@@ -9,6 +9,10 @@ import { preloadedQueryResult, preloadQuery } from "convex/nextjs";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import {
+  getTryoutExercises,
+  getTryoutPartData,
+} from "@/app/[locale]/(app)/(shared)/try-out/[product]/[slug]/part/[partKey]/data";
 import { ExerciseTrackedEntry } from "@/components/exercise/entry";
 import { TryoutPartRuntime } from "@/components/tryout/part-runtime";
 import { TryoutPartProvider } from "@/components/tryout/providers/part-provider";
@@ -18,7 +22,6 @@ import {
   getTryoutSetHref,
 } from "@/components/tryout/utils/routes";
 import { getToken } from "@/lib/auth/server";
-import { getTryoutExercises, getTryoutPartData } from "./data";
 
 /** Preloads the authenticated tryout runtime with vanilla Convex server preloading. */
 async function getTryoutRuntime(

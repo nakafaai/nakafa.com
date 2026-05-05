@@ -1,3 +1,6 @@
-import { buildPagefindIndex, handlePagefindError } from "./build";
+import {
+  buildPagefindIndex,
+  handlePagefindError,
+} from "@/scripts/pagefind/build";
 
 buildPagefindIndex().catch(handlePagefindError);

@@ -1,7 +1,7 @@
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { UserContextProvider, useUser } from "./use-user";
+import { UserContextProvider, useUser } from "@/lib/context/use-user";
 
 const mocks = vi.hoisted(() => ({
   getProperty: vi.fn(),
@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => ({
 }));
 
 const PROVIDER_ERROR = /useUser must be used within a UserContextProvider/;
+const SIGNED_UP_AT = "2026-04-02T12:00:00.000Z";
+const SIGNED_UP_AT_MS = Date.parse(SIGNED_UP_AT);
 
 vi.mock("@repo/analytics/posthog", () => ({
   analytics: {
@@ -69,7 +71,12 @@ describe("lib/context/use-user", () => {
     mocks.getProperty.mockReturnValue(undefined);
     mocks.useQueryWithStatus.mockReturnValue({
       data: {
-        appUser: { _id: "user_123" },
+        appUser: {
+          _id: "user_123",
+          _creationTime: SIGNED_UP_AT_MS,
+          plan: "pro",
+          role: "teacher",
+        },
         authUser: { email: "nabil@nakafa.com", name: "Nabil" },
       },
       isPending: false,
@@ -81,10 +88,18 @@ describe("lib/context/use-user", () => {
       );
     });
 
-    expect(mocks.identify).toHaveBeenCalledWith("user_123", {
-      email: "nabil@nakafa.com",
-      name: "Nabil",
-    });
+    expect(mocks.identify).toHaveBeenCalledWith(
+      "user_123",
+      {
+        email: "nabil@nakafa.com",
+        name: "Nabil",
+        plan: "pro",
+        role: "teacher",
+      },
+      {
+        signed_up_at: SIGNED_UP_AT,
+      }
+    );
     expect(mocks.setPersonProperties).not.toHaveBeenCalled();
     expect(mocks.reset).not.toHaveBeenCalled();
 
@@ -102,7 +117,11 @@ describe("lib/context/use-user", () => {
     mocks.getProperty.mockReturnValue(undefined);
     mocks.useQueryWithStatus.mockReturnValue({
       data: {
-        appUser: { _id: "user_123" },
+        appUser: {
+          _id: "user_123",
+          _creationTime: SIGNED_UP_AT_MS,
+          plan: "pro",
+        },
         authUser: { email: null, name: "Nabil" },
       },
       isPending: false,
@@ -132,7 +151,11 @@ describe("lib/context/use-user", () => {
     mocks.getProperty.mockReturnValue("user_123");
     mocks.useQueryWithStatus.mockReturnValue({
       data: {
-        appUser: { _id: "user_123" },
+        appUser: {
+          _id: "user_123",
+          _creationTime: SIGNED_UP_AT_MS,
+          plan: "free",
+        },
         authUser: { email: "nabil@nakafa.com", name: "Nabil" },
       },
       isPending: false,
@@ -145,10 +168,16 @@ describe("lib/context/use-user", () => {
     });
 
     expect(mocks.identify).not.toHaveBeenCalled();
-    expect(mocks.setPersonProperties).toHaveBeenCalledWith({
-      email: "nabil@nakafa.com",
-      name: "Nabil",
-    });
+    expect(mocks.setPersonProperties).toHaveBeenCalledWith(
+      {
+        email: "nabil@nakafa.com",
+        name: "Nabil",
+        plan: "free",
+      },
+      {
+        signed_up_at: SIGNED_UP_AT,
+      }
+    );
     expect(mocks.reset).not.toHaveBeenCalled();
 
     act(() => {
@@ -212,7 +241,11 @@ describe("lib/context/use-user", () => {
 
     mocks.useQueryWithStatus.mockReturnValue({
       data: {
-        appUser: { _id: "user_123" },
+        appUser: {
+          _id: "user_123",
+          _creationTime: SIGNED_UP_AT_MS,
+          plan: "free",
+        },
         authUser: { email: "nabil@nakafa.com", name: "Nabil" },
       },
       isPending: false,

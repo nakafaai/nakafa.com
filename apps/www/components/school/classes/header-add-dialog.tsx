@@ -49,14 +49,14 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { useSchool } from "@/lib/context/use-school";
-import { subjectList } from "./_data/subject";
+import { subjectList } from "@/components/school/classes/_data/subject";
 import {
   classCreateDefaultValues,
   classCreateFormSchema,
   classVisibilityList,
-} from "./header-add-schema";
-import { getAcademicYearList } from "./header-add-utils";
+} from "@/components/school/classes/header-add-schema";
+import { getAcademicYearList } from "@/components/school/classes/header-add-utils";
+import { useSchool } from "@/lib/context/use-school";
 
 /** Render the school class creation dialog. */
 export function CreateSchoolClassDialog({

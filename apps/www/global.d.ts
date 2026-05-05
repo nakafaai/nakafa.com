@@ -1,4 +1,4 @@
-import type { PagefindSearchOptions } from "./types/pagefind";
+import type { PagefindSearchOptions } from "@/types/pagefind";
 
 declare global {
   interface Window {

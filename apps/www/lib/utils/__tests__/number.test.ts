@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isNumber, parseNumber } from "../number";
+import { isNumber, parseNumber } from "@/lib/utils/number";
 
 describe("isNumber", () => {
   describe("valid positive integers", () => {

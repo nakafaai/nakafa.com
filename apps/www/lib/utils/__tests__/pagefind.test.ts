@@ -5,7 +5,7 @@ import {
   getPagefindSubResultHref,
   hasPagefindExcerpt,
   normalizePagefindResult,
-} from "../pagefind";
+} from "@/lib/utils/pagefind";
 
 describe("normalizeLocalizedInternalHref", () => {
   it("strips the leading locale from internal hrefs", () => {
