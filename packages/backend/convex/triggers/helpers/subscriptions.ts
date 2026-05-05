@@ -132,18 +132,20 @@ async function applyPlanChange(
     newPlan,
   });
 
-  await captureProductEvent(ctx, {
-    distinctId: user._id,
-    event: {
-      name: "subscription canceled",
-      properties: {
-        product_id: subscription.productId,
-        status: subscription.status,
-        subscription_id: subscription.id,
+  if (subscription.status === "canceled") {
+    await captureProductEvent(ctx, {
+      distinctId: user._id,
+      event: {
+        name: "subscription canceled",
+        properties: {
+          product_id: subscription.productId,
+          status: subscription.status,
+          subscription_id: subscription.id,
+        },
       },
-    },
-    timestamp,
-  });
+      timestamp,
+    });
+  }
 
   await captureProductEvent(ctx, {
     distinctId: user._id,

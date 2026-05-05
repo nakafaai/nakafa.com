@@ -5,13 +5,21 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { validate } from "convex-helpers/validators";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
 const posthogHost =
   process.env.POSTHOG_HOST?.trim() || "https://eu.i.posthog.com";
 
 describe("analytics/capture", () => {
+  beforeEach(() => {
+    vi.setSystemTime(new Date(NOW));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("keeps the product analytics contract on approved event names", () => {
     expect(
       validate(productAnalyticsEventValidator, {

@@ -42,7 +42,6 @@ import {
   smoothStream,
   stepCountIs,
   streamText,
-  type Tool,
 } from "ai";
 import { fetchAction, fetchMutation } from "convex/nextjs";
 import { getTranslations } from "next-intl/server";
@@ -375,8 +374,11 @@ export async function POST(req: Request) {
             return null;
           }
 
-          const tool: Tool =
-            availableTools[toolCall.toolName as keyof typeof availableTools];
+          const tool = availableTools[toolCall.toolName];
+          if (!tool) {
+            sessionLogger.warn("Tool is unavailable, not attempting repair");
+            return null;
+          }
 
           const { output: repairedArgs } = await generateText({
             model: model.languageModel(defaultModel),

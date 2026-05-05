@@ -297,7 +297,7 @@ describe("triggers/helpers/subscriptions", () => {
     expect(result.storedResetAt).toBe(Date.UTC(2026, 3, 1, 0, 0, 0));
   });
 
-  it("downgrades a pro user to free and records the reset grant transaction", async () => {
+  it("downgrades a pro user without recording a cancellation for an active subscription", async () => {
     vi.setSystemTime(new Date(NOW));
 
     const t = createSubscriptionTestConvex();
@@ -352,11 +352,64 @@ describe("triggers/helpers/subscriptions", () => {
         args: [
           expect.objectContaining({
             distinctId: result.user?._id,
+            event: "plan changed",
+            properties: JSON.stringify({
+              new_plan: "free",
+              previous_plan: "pro",
+              subscription_id: "sub-downgrade",
+            }),
+          }),
+        ],
+      }),
+    ]);
+    expect(result.storedResetAt).toBe(Date.UTC(2026, 3, 2, 0, 0, 0));
+  });
+
+  it("records a cancellation only when a canceled subscription downgrades the user", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createSubscriptionTestConvex();
+
+    const result = await t.mutation(async (ctx) => {
+      const userId = await insertUser(ctx, "canceled-downgrade", {
+        credits: 120,
+        creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
+        plan: "pro",
+      });
+
+      await insertCustomer(ctx, userId, "polar-canceled-downgrade");
+      await insertSubscription(ctx, {
+        customerId: "polar-canceled-downgrade",
+        productId: products.pro.id,
+        status: "canceled",
+        subscriptionId: "sub-canceled-downgrade",
+      });
+
+      await runSyncCustomerPlanBySubscriptionId(ctx, "sub-canceled-downgrade");
+
+      return {
+        scheduledJobs: await ctx.db.system
+          .query("_scheduled_functions")
+          .collect(),
+        user: await ctx.db.get("users", userId),
+      };
+    });
+
+    expect(result.user).toMatchObject({
+      credits: 10,
+      plan: "free",
+      creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
+    });
+    expect(result.scheduledJobs).toEqual([
+      expect.objectContaining({
+        args: [
+          expect.objectContaining({
+            distinctId: result.user?._id,
             event: "subscription canceled",
             properties: JSON.stringify({
-              product_id: "free-plan",
-              status: "active",
-              subscription_id: "sub-downgrade",
+              product_id: products.pro.id,
+              status: "canceled",
+              subscription_id: "sub-canceled-downgrade",
             }),
           }),
         ],
@@ -369,13 +422,12 @@ describe("triggers/helpers/subscriptions", () => {
             properties: JSON.stringify({
               new_plan: "free",
               previous_plan: "pro",
-              subscription_id: "sub-downgrade",
+              subscription_id: "sub-canceled-downgrade",
             }),
           }),
         ],
       }),
     ]);
-    expect(result.storedResetAt).toBe(Date.UTC(2026, 3, 2, 0, 0, 0));
   });
 
   it("picks the highest plan across overlapping active subscriptions", async () => {
