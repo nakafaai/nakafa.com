@@ -12,10 +12,17 @@ const contentsDir = resolveContentsDir(import.meta.url);
 
 const DEFAULT_EXCLUDE = ["_", "node_modules", ".", "coverage"] as const;
 const folderChildNamesCache = new Map<string, string[]>();
+let folderChildNamesCacheVersion = 0;
 
 /** Clears memoized synchronous folder scans for tests and long-lived tools. */
 export function clearFolderChildNamesCache() {
   folderChildNamesCache.clear();
+  folderChildNamesCacheVersion += 1;
+}
+
+/** Returns the current folder scan cache version for derived memoized data. */
+export function getFolderChildNamesCacheVersion() {
+  return folderChildNamesCacheVersion;
 }
 
 /**

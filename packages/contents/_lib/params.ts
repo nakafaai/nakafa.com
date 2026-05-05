@@ -1,5 +1,9 @@
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
-import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/fs";
+import {
+  getFolderChildNames,
+  getFolderChildNamesCacheVersion,
+  getNestedSlugs,
+} from "@repo/contents/_lib/fs";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -27,8 +31,18 @@ interface ContentPathsConfig extends BaseConfig {
 
 interface LocaleParamsConfig extends BaseConfig {}
 
-const folderPathCache = new Map<string, Set<string>>();
-const contentPathCandidatesCache = new Map<string, ContentPathCandidate[]>();
+interface FolderPathCacheEntry {
+  paths: Set<string>;
+  version: number;
+}
+
+interface ContentPathCandidatesCacheEntry {
+  candidates: ContentPathCandidate[];
+  version: number;
+}
+
+const folderPathCache = new Map<string, FolderPathCacheEntry>();
+let contentPathCandidatesCache: ContentPathCandidatesCacheEntry | undefined;
 
 /**
  * Extracts unique exercise set paths from MDX cache entries.
@@ -83,10 +97,11 @@ function getMDXPathsForBasePath(locale: Locale, basePath: string): Set<string> {
  * Gets all folder paths under a base directory.
  */
 function getAllFolderPaths(basePath: string): Set<string> {
+  const version = getFolderChildNamesCacheVersion();
   const cachedPaths = folderPathCache.get(basePath);
 
-  if (cachedPaths) {
-    return cachedPaths;
+  if (cachedPaths?.version === version) {
+    return cachedPaths.paths;
   }
 
   const topDirs = Effect.runSync(
@@ -107,7 +122,7 @@ function getAllFolderPaths(basePath: string): Set<string> {
     }
   }
 
-  folderPathCache.set(basePath, folderPaths);
+  folderPathCache.set(basePath, { paths: folderPaths, version });
 
   return folderPaths;
 }
@@ -122,10 +137,10 @@ function getAllFolderPaths(basePath: string): Set<string> {
  * @returns Ordered path candidates rooted at the contents package
  */
 function getContentPathCandidates(): ContentPathCandidate[] {
-  const cachedCandidates = contentPathCandidatesCache.get(".");
+  const version = getFolderChildNamesCacheVersion();
 
-  if (cachedCandidates) {
-    return cachedCandidates;
+  if (contentPathCandidatesCache?.version === version) {
+    return contentPathCandidatesCache.candidates;
   }
 
   const topDirs = Effect.runSync(
@@ -153,7 +168,7 @@ function getContentPathCandidates(): ContentPathCandidate[] {
     }
   }
 
-  contentPathCandidatesCache.set(".", candidates);
+  contentPathCandidatesCache = { candidates, version };
 
   return candidates;
 }

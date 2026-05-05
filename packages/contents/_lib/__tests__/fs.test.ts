@@ -1,6 +1,7 @@
 import {
   clearFolderChildNamesCache,
   getFolderChildNames,
+  getFolderChildNamesCacheVersion,
   getFolderChildNamesSync,
   getNestedSlugs,
 } from "@repo/contents/_lib/fs";
@@ -38,6 +39,14 @@ afterEach(() => {
 });
 
 describe("getFolderChildNames", () => {
+  it("increments the folder cache version when cleared", () => {
+    const version = getFolderChildNamesCacheVersion();
+
+    clearFolderChildNamesCache();
+
+    expect(getFolderChildNamesCacheVersion()).toBe(version + 1);
+  });
+
   it("should return child directory names for valid folder", () => {
     mockReadDirSync.mockReturnValue([
       { name: "folder1", isDirectory: () => true },
