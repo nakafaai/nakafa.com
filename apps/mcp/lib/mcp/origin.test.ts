@@ -24,6 +24,11 @@ describe("MCP Origin helpers", () => {
         origin: "not a url",
       },
     });
+    const disallowed = new Request("https://mcp.nakafa.com/mcp", {
+      headers: {
+        origin: "https://evil.example.com",
+      },
+    });
     const defaultPort = new Request("https://mcp.nakafa.com/mcp", {
       headers: {
         origin: "https://agent.example.com",
@@ -40,6 +45,7 @@ describe("MCP Origin helpers", () => {
     ).toBe("https://agent.example.com");
     expect(Option.getOrUndefined(getAllowedRequestOrigin(missing))).toBe("");
     expect(Option.isNone(getAllowedRequestOrigin(invalid))).toBe(true);
+    expect(Option.isNone(getAllowedRequestOrigin(disallowed))).toBe(true);
     expect(getAllowedMcpOrigins().has("https://nakafa.com")).toBe(true);
     expect(
       getAllowedMcpOrigins("https://agent.example.com/").has(
@@ -69,6 +75,36 @@ describe("MCP Origin helpers", () => {
     expect(response.headers.get("access-control-allow-origin")).toBe(
       "https://nakafa.com"
     );
+  });
+
+  it("rejects browser requests from untrusted Origins", async () => {
+    const guarded = withMcpOriginGuard(() =>
+      Promise.resolve(new Response("ok", { status: 200 }))
+    );
+    const response = await guarded(
+      new Request("https://mcp.nakafa.com/mcp", {
+        headers: {
+          origin: "https://evil.example.com",
+        },
+      })
+    );
+
+    expect(response.status).toBe(403);
+    expect(response.headers.get("content-type")).toBe(
+      "text/plain; charset=utf-8"
+    );
+    await expect(response.text()).resolves.toBe("Forbidden MCP Origin");
+  });
+
+  it("keeps server-client requests without Origin free of browser CORS headers", async () => {
+    const guarded = withMcpOriginGuard(() =>
+      Promise.resolve(new Response("ok", { status: 200 }))
+    );
+    const response = await guarded(new Request("https://mcp.nakafa.com/mcp"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("access-control-allow-origin")).toBeNull();
+    await expect(response.text()).resolves.toBe("ok");
   });
 
   it("echoes only supported MCP CORS request headers", async () => {
