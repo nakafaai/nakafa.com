@@ -40,6 +40,7 @@ describe("MCP route proxy", () => {
           "mcp-param-region": "us-west1",
           "mcp-protocol-version": "2025-06-18",
           "mcp-session-id": "session-1",
+          origin: "https://agent.example.com",
         },
         method: "POST",
       })
@@ -75,9 +76,56 @@ describe("MCP route proxy", () => {
     expect(upstreamHeaders.get("mcp-param-region")).toBe("us-west1");
     expect(upstreamHeaders.get("mcp-protocol-version")).toBe("2025-06-18");
     expect(upstreamHeaders.get("mcp-session-id")).toBe("session-1");
+    expect(upstreamHeaders.get("origin")).toBe("https://agent.example.com");
     expect(upstreamUrl.toString()).toBe(
       "https://mcp.example.com/mcp?session=1"
     );
+  });
+
+  it("forwards CORS preflight negotiation headers to the MCP origin guard", async () => {
+    const fetchMock = vi.fn<typeof fetch>(() =>
+      Promise.resolve(new Response(null, { status: 204 }))
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { OPTIONS } = await import("@/app/mcp/route");
+
+    await OPTIONS(
+      new Request("https://nakafa.com/mcp", {
+        headers: {
+          "access-control-request-headers":
+            "content-type,mcp-method,mcp-name,mcp-param-region",
+          "access-control-request-method": "POST",
+          origin: "https://agent.example.com",
+        },
+        method: "OPTIONS",
+      })
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const firstCall = fetchMock.mock.calls[0];
+    if (!firstCall) {
+      throw new Error("Expected MCP proxy to call fetch");
+    }
+
+    const [, upstreamInit] = firstCall;
+
+    if (!upstreamInit) {
+      throw new Error("Expected MCP proxy to pass fetch init options");
+    }
+
+    const upstreamHeaders = upstreamInit.headers;
+
+    if (!(upstreamHeaders instanceof Headers)) {
+      throw new Error("Expected forwarded headers to use the Headers API");
+    }
+
+    expect(upstreamHeaders.get("access-control-request-headers")).toBe(
+      "content-type,mcp-method,mcp-name,mcp-param-region"
+    );
+    expect(upstreamHeaders.get("access-control-request-method")).toBe("POST");
+    expect(upstreamHeaders.get("origin")).toBe("https://agent.example.com");
   });
 
   it("removes stale decoded response encoding headers from fetch responses", async () => {

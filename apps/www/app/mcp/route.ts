@@ -40,6 +40,8 @@ const CONNECTION_HEADERS = new Set([
 const FORWARDED_REQUEST_HEADERS = new Set([
   "accept",
   "accept-language",
+  "access-control-request-headers",
+  "access-control-request-method",
   "content-encoding",
   "content-type",
   "last-event-id",
@@ -47,6 +49,7 @@ const FORWARDED_REQUEST_HEADERS = new Set([
   "mcp-name",
   "mcp-protocol-version",
   "mcp-session-id",
+  "origin",
 ]);
 
 const FETCH_DECODED_RESPONSE_HEADERS = new Set([
@@ -73,7 +76,7 @@ function shouldForwardRequestHeader(header: string) {
   return normalizedHeader.startsWith("mcp-param-");
 }
 
-/** Copies protocol headers without leaking browser credentials upstream. */
+/** Copies protocol and CORS negotiation headers without leaking browser credentials upstream. */
 function getForwardHeaders(request: Request) {
   const headers = new Headers();
 
