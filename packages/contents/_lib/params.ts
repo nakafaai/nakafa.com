@@ -38,6 +38,15 @@ interface SlugOnlyConfig extends BaseConfig {
 
 interface LocaleParamsConfig extends BaseConfig {}
 
+const folderPathCache = new Map<string, Set<string>>();
+const contentPathCandidatesCache = new Map<string, ContentPathCandidate[]>();
+
+/** Clears memoized static-param scans for tests and long-lived tools. */
+export function clearStaticParamCaches() {
+  folderPathCache.clear();
+  contentPathCandidatesCache.clear();
+}
+
 /**
  * Extracts unique exercise set paths from MDX cache entries.
  * Transforms paths like "exercises/.../set-1/1/_question" to "exercises/.../set-1"
@@ -91,6 +100,12 @@ function getMDXPathsForBasePath(locale: Locale, basePath: string): Set<string> {
  * Gets all folder paths under a base directory.
  */
 function getAllFolderPaths(basePath: string): Set<string> {
+  const cachedPaths = folderPathCache.get(basePath);
+
+  if (cachedPaths) {
+    return cachedPaths;
+  }
+
   const topDirs = Effect.runSync(
     Effect.match(getFolderChildNames(basePath), {
       onFailure: () => [],
@@ -109,6 +124,8 @@ function getAllFolderPaths(basePath: string): Set<string> {
     }
   }
 
+  folderPathCache.set(basePath, folderPaths);
+
   return folderPaths;
 }
 
@@ -122,6 +139,12 @@ function getAllFolderPaths(basePath: string): Set<string> {
  * @returns Ordered path candidates rooted at the contents package
  */
 function getContentPathCandidates(): ContentPathCandidate[] {
+  const cachedCandidates = contentPathCandidatesCache.get(".");
+
+  if (cachedCandidates) {
+    return cachedCandidates;
+  }
+
   const topDirs = Effect.runSync(
     Effect.match(getFolderChildNames("."), {
       onFailure: () => [],
@@ -146,6 +169,8 @@ function getContentPathCandidates(): ContentPathCandidate[] {
       });
     }
   }
+
+  contentPathCandidatesCache.set(".", candidates);
 
   return candidates;
 }

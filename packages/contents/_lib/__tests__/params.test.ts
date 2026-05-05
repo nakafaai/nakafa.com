@@ -1,6 +1,7 @@
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/fs";
 import {
+  clearStaticParamCaches,
   generateContentParams,
   generateLocaleParams,
   generateSlugOnlyParams,
@@ -19,6 +20,10 @@ vi.mock("@repo/internationalization/src/routing", () => ({
     locales: ["en", "id"],
   },
 }));
+
+beforeEach(() => {
+  clearStaticParamCaches();
+});
 
 describe("getExerciseSetPaths", () => {
   it("should extract exercise set paths", () => {
@@ -232,6 +237,18 @@ describe("generateContentParams", () => {
     });
 
     expect(result).toHaveLength(0);
+  });
+
+  it("reuses folder discovery for repeated base paths", () => {
+    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["folder"]));
+    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
+
+    generateContentParams({ basePath: "articles", locales: ["en"] });
+    generateContentParams({ basePath: "articles", locales: ["id"] });
+
+    expect(getFolderChildNames).toHaveBeenCalledTimes(1);
+    expect(getNestedSlugs).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -467,6 +484,21 @@ describe("generateSlugOnlyParams", () => {
     expect(result.map((entry) => entry.slug.join("/"))).toContain(
       "id/subject/math/algebra"
     );
+  });
+
+  it("reuses content path discovery across static param helpers", () => {
+    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
+    vi.mocked(getNestedSlugs).mockReturnValue([["math"]]);
+    vi.mocked(getMDXSlugsForLocale).mockReturnValue([
+      "subject",
+      "subject/math",
+    ]);
+
+    generateSlugOnlyParams({ locales: ["en"] });
+    generateLocaleParams({ locales: ["en"] });
+
+    expect(getFolderChildNames).toHaveBeenCalledTimes(1);
+    expect(getNestedSlugs).toHaveBeenCalledTimes(1);
   });
 });
 

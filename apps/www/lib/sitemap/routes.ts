@@ -6,7 +6,7 @@ import { getSlugPath as getArticleSlugPath } from "@repo/contents/_lib/articles/
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import {
   getExerciseQuestionNumbers,
-  getExerciseSetPaths,
+  getExerciseSetPathsFromSlugs,
 } from "@repo/contents/_lib/exercises/collection";
 import {
   getMaterialPath as getExerciseMaterialPath,
@@ -31,13 +31,21 @@ import {
 import { getSlugPath as getSubjectSlugPath } from "@repo/contents/_lib/subject/slug";
 import { ContentRootSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
-import type { Locale } from "next-intl";
 
 const contentRoots = ContentRootSchema.enum;
 const quranRoot = "quran";
 const subjectRootRoute = `/${contentRoots.subject}`;
 const quranRootRoute = `/${quranRoot}`;
 const contentRootRoutes = Object.values(contentRoots).map((root) => `/${root}`);
+const contentRouteSetsCache = new Map<
+  "content",
+  ReturnType<typeof createContentRouteSets>
+>();
+
+/** Clears memoized sitemap route scans for tests and long-lived tools. */
+export function clearSitemapRouteCache() {
+  contentRouteSetsCache.clear();
+}
 
 /** Static top-level routes that should always be present in the sitemap. */
 export const baseRoutes = [
@@ -103,6 +111,20 @@ export function getPublicContentRouteRoots() {
 
 /** Builds route paths from localized content entries instead of raw folders. */
 function getContentRouteSets() {
+  const cachedRouteSets = contentRouteSetsCache.get("content");
+
+  if (cachedRouteSets) {
+    return cachedRouteSets;
+  }
+
+  const routeSets = createContentRouteSets();
+  contentRouteSetsCache.set("content", routeSets);
+
+  return routeSets;
+}
+
+/** Creates route paths from localized content entries instead of raw folders. */
+function createContentRouteSets() {
   const pages = new Set<string>();
   const redirects = new Map<string, string>();
 
@@ -117,7 +139,7 @@ function getContentRouteSets() {
       addSubjectRoutes(pages, redirects, slug);
     }
 
-    addExerciseRoutes(pages, locale, slugs);
+    addExerciseRoutes(pages, slugs);
   }
 
   return { pages, redirects };
@@ -264,12 +286,8 @@ function isSubjectChapterRedirectSlug(slug: string[]) {
 }
 
 /** Adds exercises listing, group, set, and question pages from exercise entries. */
-function addExerciseRoutes(
-  routes: Set<string>,
-  locale: Locale,
-  slugs: readonly string[]
-) {
-  for (const setPath of getExerciseSetPaths(locale)) {
+function addExerciseRoutes(routes: Set<string>, slugs: readonly string[]) {
+  for (const setPath of getExerciseSetPathsFromSlugs(slugs)) {
     const [root, rawCategory = "", rawType = "", rawMaterial = "", ...setSlug] =
       setPath.split("/");
 

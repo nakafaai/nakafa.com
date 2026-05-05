@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  clearSitemapRouteCache,
   getPublicContentRedirects,
   getPublicContentRequestRoutes,
   getPublicContentRouteRoots,
@@ -44,6 +45,7 @@ function mockContentFolderTree(tree: Record<string, string[]>) {
 }
 
 beforeEach(() => {
+  clearSitemapRouteCache();
   mockContentCache.getMDXSlugsForLocale.mockReset();
   mockContentCache.getMDXSlugsForLocale.mockReturnValue(mockContentCache.slugs);
   mockContentFolders.getFolderChildNamesSync.mockReset();
@@ -117,6 +119,7 @@ describe("sitemap route discovery", () => {
       "/subject/high-school/10/chemistry/green-chemistry",
       "/subject/high-school/10/chemistry",
     ]);
+    expect(mockContentCache.getMDXSlugsForLocale).toHaveBeenCalledTimes(2);
   });
 
   it("ignores malformed content entries instead of inventing sitemap pages", () => {

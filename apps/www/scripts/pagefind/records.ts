@@ -119,6 +119,11 @@ export async function addSubjectRecords(index: PagefindIndex) {
  * search relevance and tend to add noise without adding much retrieval value.
  */
 export async function addExerciseRecords(index: PagefindIndex) {
+  const materialListCache = new Map<
+    string,
+    ReturnType<typeof getExerciseMaterials>
+  >();
+
   const records = (
     await Promise.all(
       routing.locales.map((locale) =>
@@ -138,7 +143,15 @@ export async function addExerciseRecords(index: PagefindIndex) {
 
             const segments = setPath.split("/");
             const materialPath = `/${segments.slice(0, 4).join("/")}`;
-            const materials = await getExerciseMaterials(materialPath, locale);
+            const materialCacheKey = `${locale}:${materialPath}`;
+            let materialList = materialListCache.get(materialCacheKey);
+
+            if (!materialList) {
+              materialList = getExerciseMaterials(materialPath, locale);
+              materialListCache.set(materialCacheKey, materialList);
+            }
+
+            const materials = await materialList;
             const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
               `/${setPath}`,
               materials

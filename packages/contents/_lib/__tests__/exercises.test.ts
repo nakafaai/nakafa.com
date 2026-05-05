@@ -62,6 +62,7 @@ import {
   getExerciseCount,
   getExerciseQuestionNumbers,
   getExerciseSetPaths,
+  getExerciseSetPathsFromSlugs,
 } from "@repo/contents/_lib/exercises/collection";
 import {
   getRenderableExerciseByNumber,
@@ -271,6 +272,19 @@ describe("getExerciseSetPaths", () => {
     const result = getExerciseSetPaths("en");
 
     expect(result).toStrictEqual([]);
+  });
+});
+
+describe("getExerciseSetPathsFromSlugs", () => {
+  it("collects set paths without rereading the MDX cache", () => {
+    const result = getExerciseSetPathsFromSlugs([
+      `${exerciseBasePath}/1/_question`,
+      `${exerciseBasePath}/1/_answer`,
+      "articles/politics/dynastic-politics-asian-values",
+    ]);
+
+    expect(result).toStrictEqual([exerciseBasePath]);
+    expect(mockGetMDXSlugsForLocale).not.toHaveBeenCalled();
   });
 });
 

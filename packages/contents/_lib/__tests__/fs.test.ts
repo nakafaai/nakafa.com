@@ -1,4 +1,9 @@
-import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/fs";
+import {
+  clearFolderChildNamesCache,
+  getFolderChildNames,
+  getFolderChildNamesSync,
+  getNestedSlugs,
+} from "@repo/contents/_lib/fs";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -23,6 +28,7 @@ vi.mock("node:fs", () => ({
 }));
 
 beforeEach(() => {
+  clearFolderChildNamesCache();
   mockReadDirSync.mockReturnValue([]);
 });
 
@@ -405,6 +411,31 @@ describe("getNestedSlugs", () => {
     expect(result).toHaveLength(1000);
     expect(result[0]).toBe("folder0");
     expect(result[999]).toBe("folder999");
+  });
+
+  it("should reuse synchronous child folder scans", () => {
+    mockReadDirSync.mockReturnValue([
+      { name: "folder", isDirectory: () => true },
+    ]);
+
+    expect(getFolderChildNamesSync("cached/path")).toEqual(["folder"]);
+    expect(getFolderChildNamesSync("cached/path")).toEqual(["folder"]);
+    expect(mockReadDirSync).toHaveBeenCalledTimes(1);
+  });
+
+  it("should cache synchronous child scans with custom excludes", () => {
+    mockReadDirSync.mockReturnValue([
+      { name: "folder", isDirectory: () => true },
+      { name: "skip", isDirectory: () => true },
+    ]);
+
+    expect(getFolderChildNamesSync("cached/path", ["skip"])).toEqual([
+      "folder",
+    ]);
+    expect(getFolderChildNamesSync("cached/path", ["skip"])).toEqual([
+      "folder",
+    ]);
+    expect(mockReadDirSync).toHaveBeenCalledTimes(1);
   });
 
   it("should handle basePath with trailing slash", () => {
