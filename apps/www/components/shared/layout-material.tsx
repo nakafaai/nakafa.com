@@ -1,12 +1,12 @@
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ComponentProps, ReactNode } from "react";
-import { FooterContent } from "./footer-content";
-import { HeaderContent } from "./header-content";
-import { LayoutContent } from "./layout-content";
-import { PaginationContent } from "./pagination-content";
-import { SidebarRight } from "./sidebar-right";
-import { SidebarTree } from "./sidebar-tree";
+import { FooterContent } from "@/components/shared/footer-content";
+import { HeaderContent } from "@/components/shared/header-content";
+import { LayoutContent } from "@/components/shared/layout-content";
+import { PaginationContent } from "@/components/shared/pagination-content";
+import { SidebarRight } from "@/components/shared/sidebar-right";
+import { SidebarTree } from "@/components/shared/sidebar-tree";
 
 export function LayoutMaterialHeader({
   ...props

@@ -1,6 +1,6 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
-import { getEffectiveTryoutStatus } from "./status";
+import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 
 type ActiveTryoutCatalogPage = FunctionReturnType<
   typeof api.tryouts.queries.tryouts.getActiveTryoutCatalogPage

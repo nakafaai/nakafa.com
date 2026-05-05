@@ -1,7 +1,7 @@
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { UserContextProvider, useUser } from "./use-user";
+import { UserContextProvider, useUser } from "@/lib/context/use-user";
 
 const mocks = vi.hoisted(() => ({
   getProperty: vi.fn(),

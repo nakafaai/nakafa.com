@@ -44,12 +44,11 @@ import {
   getMaterialStatus,
   materialStatusList,
 } from "@/components/school/classes/_data/material-status";
-import { useClass } from "@/lib/context/use-class";
 import {
   type MaterialGroupFormValues,
   materialGroupFormSchema,
-} from "./schema";
-import type { MaterialGroup } from "./types";
+} from "@/components/school/classes/materials/schema";
+import type { MaterialGroup } from "@/components/school/classes/materials/types";
 import {
   formatScheduledAt,
   getDefaultScheduledAt,
@@ -57,7 +56,8 @@ import {
   getTimeString,
   updateDate,
   updateTime,
-} from "./utils";
+} from "@/components/school/classes/materials/utils";
+import { useClass } from "@/lib/context/use-class";
 
 interface MaterialGroupDialogShellProps {
   defaultValues: MaterialGroupFormValues;

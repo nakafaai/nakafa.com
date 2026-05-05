@@ -4,7 +4,6 @@ import {
   clearStaticParamCaches,
   generateContentParams,
   generateLocaleParams,
-  generateSlugOnlyParams,
   getExerciseNumberPaths,
   getExerciseSetPaths,
 } from "@repo/contents/_lib/params";
@@ -90,6 +89,12 @@ describe("getExerciseNumberPaths", () => {
     const result = getExerciseNumberPaths(slugs);
     expect(result).toContain("exercises/math/set-1/10");
     expect(result).toContain("exercises/math/set-1/99");
+  });
+
+  it("should not match non-exercise paths", () => {
+    const slugs = ["articles/my-article", "subject/math/algebra"];
+    const result = getExerciseNumberPaths(slugs);
+    expect(result).toEqual([]);
   });
 });
 
@@ -246,256 +251,6 @@ describe("generateContentParams", () => {
 
     generateContentParams({ basePath: "articles", locales: ["en"] });
     generateContentParams({ basePath: "articles", locales: ["id"] });
-
-    expect(getFolderChildNames).toHaveBeenCalledTimes(1);
-    expect(getNestedSlugs).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe("generateSlugOnlyParams", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("should work when called without arguments", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
-
-    const result = generateSlugOnlyParams();
-
-    expect(Array.isArray(result)).toBe(true);
-    expect(result.length).toBeGreaterThan(0);
-  });
-
-  it("should return params with locale in slug", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
-
-    const result = generateSlugOnlyParams({});
-
-    expect(result[0]).toHaveProperty("slug");
-    expect(result[0]).not.toHaveProperty("locale");
-    expect(result[0].slug[0]).toBe("en");
-  });
-
-  it("should include quran paths when includeQuran is true", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed([]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
-
-    const result = generateSlugOnlyParams({
-      includeQuran: true,
-      locales: ["en"],
-    });
-    const slugPaths = result.map((r) => r.slug.join("/"));
-
-    expect(slugPaths).toContain("en/quran");
-    expect(slugPaths).toContain("en/quran/1");
-    expect(slugPaths).toContain("en/quran/114");
-  });
-
-  it("should generate all 114 surah paths", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed([]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
-
-    const result = generateSlugOnlyParams({
-      includeQuran: true,
-      locales: ["en"],
-    });
-    const surahPaths = result.filter(
-      (r) => r.slug[1] === "quran" && r.slug.length === 3
-    );
-
-    expect(surahPaths).toHaveLength(114);
-  });
-
-  it("should include exercise sets when includeExerciseSets is true", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed([]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue([
-      "exercises/math/set-1/1/_question",
-    ]);
-
-    const result = generateSlugOnlyParams({
-      includeExerciseSets: true,
-      locales: ["en"],
-    });
-    const slugPaths = result.map((r) => r.slug.join("/"));
-
-    expect(slugPaths).toContain("en/exercises/math/set-1");
-  });
-
-  it("should include exercise numbers when includeExerciseNumbers is true", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed([]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue([
-      "exercises/math/set-1/1/_question",
-      "exercises/math/set-1/2/_question",
-    ]);
-
-    const result = generateSlugOnlyParams({
-      includeExerciseNumbers: true,
-      locales: ["en"],
-    });
-    const slugPaths = result.map((r) => r.slug.join("/"));
-
-    expect(slugPaths).toContain("en/exercises/math/set-1/1");
-    expect(slugPaths).toContain("en/exercises/math/set-1/2");
-  });
-
-  it("should handle all options together (llms.mdx use case)", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue([
-      "subject",
-      "exercises/math/set-1/1/_question",
-      "exercises/math/set-1/2/_question",
-    ]);
-
-    const result = generateSlugOnlyParams({
-      includeQuran: true,
-      includeExerciseSets: true,
-      includeExerciseNumbers: true,
-      locales: ["en"],
-    });
-    const slugPaths = result.map((r) => r.slug.join("/"));
-
-    expect(slugPaths).toContain("en/subject");
-    expect(slugPaths).toContain("en/quran");
-    expect(slugPaths).toContain("en/quran/1");
-    expect(slugPaths).toContain("en/exercises/math/set-1");
-    expect(slugPaths).toContain("en/exercises/math/set-1/1");
-    expect(slugPaths).toContain("en/exercises/math/set-1/2");
-  });
-
-  it("should include top-level dir when in MDX cache", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(
-      Effect.succeed(["subject", "articles"])
-    );
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
-
-    const result = generateSlugOnlyParams({ locales: ["en"] });
-    const slugPaths = result.map((r) => r.slug.join("/"));
-
-    expect(slugPaths).toContain("en/subject");
-    expect(slugPaths).not.toContain("en/articles");
-  });
-
-  it("should skip top-level dir when not in MDX cache", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(
-      Effect.succeed(["subject", "articles"])
-    );
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
-
-    const result = generateSlugOnlyParams({ locales: ["en"] });
-    const slugPaths = result.map((r) => r.slug.join("/"));
-
-    expect(slugPaths).not.toContain("en/subject");
-    expect(slugPaths).not.toContain("en/articles");
-  });
-
-  it("should include nested paths that exist in MDX cache", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([["math"], ["math", "algebra"]]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue([
-      "subject",
-      "subject/math",
-      "subject/math/algebra",
-    ]);
-
-    const result = generateSlugOnlyParams({ locales: ["en"] });
-    const slugPaths = result.map((r) => r.slug.join("/"));
-
-    expect(slugPaths).toContain("en/subject");
-    expect(slugPaths).toContain("en/subject/math");
-    expect(slugPaths).toContain("en/subject/math/algebra");
-  });
-
-  it("should skip nested paths not in MDX cache", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([["math"], ["physics"]]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue([
-      "subject",
-      "subject/math",
-    ]);
-
-    const result = generateSlugOnlyParams({ locales: ["en"] });
-    const slugPaths = result.map((r) => r.slug.join("/"));
-
-    expect(slugPaths).toContain("en/subject");
-    expect(slugPaths).toContain("en/subject/math");
-    expect(slugPaths).not.toContain("en/subject/physics");
-  });
-
-  it("should handle multiple locales", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
-
-    const result = generateSlugOnlyParams({ locales: ["en", "id"] });
-
-    const enResults = result.filter((r) => r.slug[0] === "en");
-    const idResults = result.filter((r) => r.slug[0] === "id");
-
-    expect(enResults.length).toBeGreaterThan(0);
-    expect(idResults.length).toBeGreaterThan(0);
-  });
-
-  it("should handle error gracefully", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(
-      Effect.fail(new DirectoryReadError({ path: ".", cause: "error" }))
-    );
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
-
-    const result = generateSlugOnlyParams({});
-    expect(result).toHaveLength(0);
-  });
-
-  it("should handle empty locales array", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
-
-    const result = generateSlugOnlyParams({ locales: [] });
-    expect(result).toHaveLength(0);
-  });
-
-  it("scans nested paths once and reuses them across locales", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(
-      Effect.succeed(["subject", "articles"])
-    );
-    vi.mocked(getNestedSlugs)
-      .mockReturnValueOnce([["math"], ["math", "algebra"]])
-      .mockReturnValueOnce([["politics"]]);
-    vi.mocked(getMDXSlugsForLocale).mockImplementation((locale: Locale) =>
-      locale === "en"
-        ? ["subject", "subject/math", "articles/politics"]
-        : ["subject", "subject/math/algebra", "articles/politics"]
-    );
-
-    const result = generateSlugOnlyParams({ locales: ["en", "id"] });
-
-    expect(getNestedSlugs).toHaveBeenCalledTimes(2);
-    expect(result.map((entry) => entry.slug.join("/"))).toContain(
-      "id/subject/math/algebra"
-    );
-  });
-
-  it("reuses content path discovery across static param helpers", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([["math"]]);
-    vi.mocked(getMDXSlugsForLocale).mockReturnValue([
-      "subject",
-      "subject/math",
-    ]);
-
-    generateSlugOnlyParams({ locales: ["en"] });
-    generateLocaleParams({ locales: ["en"] });
 
     expect(getFolderChildNames).toHaveBeenCalledTimes(1);
     expect(getNestedSlugs).toHaveBeenCalledTimes(1);
@@ -660,5 +415,20 @@ describe("generateLocaleParams", () => {
       locale: "id",
       slug: ["articles", "politics"],
     });
+  });
+
+  it("reuses content path discovery across repeated calls", () => {
+    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
+    vi.mocked(getNestedSlugs).mockReturnValue([["math"]]);
+    vi.mocked(getMDXSlugsForLocale).mockReturnValue([
+      "subject",
+      "subject/math",
+    ]);
+
+    generateLocaleParams({ locales: ["en"] });
+    generateLocaleParams({ locales: ["en"] });
+
+    expect(getFolderChildNames).toHaveBeenCalledTimes(1);
+    expect(getNestedSlugs).toHaveBeenCalledTimes(1);
   });
 });

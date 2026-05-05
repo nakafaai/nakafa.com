@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getLocale, getPathname } from "../browser";
+import { getLocale, getPathname } from "@/lib/utils/browser";
 
 describe("getLocale", () => {
   beforeEach(() => {

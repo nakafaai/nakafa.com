@@ -11,6 +11,7 @@ import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getSocialMetadata } from "@/lib/utils/metadata";
 
 export async function generateMetadata({
   params,
@@ -29,32 +30,23 @@ export async function generateMetadata({
       "text/markdown": `${path}.md`,
     },
   };
-  const image = {
-    url: "/quran.png",
-    width: 1200,
-    height: 630,
-  };
-  const twitter: Metadata["twitter"] = {
-    images: [image],
-  };
-  const openGraph: Metadata["openGraph"] = {
-    url: path,
-    images: [image],
-    type: "book",
-    siteName: "Nakafa",
-    locale,
-  };
-
   const title = t("quran");
   const description = t("quran-description");
+  const socialMetadata = getSocialMetadata({
+    title,
+    description,
+    locale,
+    path,
+    image: "/quran.png",
+    type: "book",
+  });
 
   return {
     title,
     description,
     alternates,
     category: t("quran"),
-    twitter,
-    openGraph,
+    ...socialMetadata,
   };
 }
 

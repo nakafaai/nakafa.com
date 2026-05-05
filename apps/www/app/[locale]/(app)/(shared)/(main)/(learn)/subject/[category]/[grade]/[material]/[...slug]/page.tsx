@@ -49,7 +49,7 @@ import {
 } from "@/components/shared/layout-material";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
-import { getOgUrl } from "@/lib/utils/metadata";
+import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { getContentMetadataContext } from "@/lib/utils/pages/subject";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
@@ -109,22 +109,6 @@ export async function generateMetadata({
       "text/markdown": `${path}.md`,
     },
   };
-  const image = {
-    url: getOgUrl(locale, filePath),
-    width: 1200,
-    height: 630,
-  };
-  const twitter: Metadata["twitter"] = {
-    images: [image],
-  };
-  const openGraph: Metadata["openGraph"] = {
-    url: path,
-    images: [image],
-    type: "article",
-    siteName: "Nakafa",
-    locale,
-  };
-
   // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
   // Source: https://developers.google.com/search/docs/appearance/title-link
   const seoContext: SEOContext = {
@@ -144,6 +128,14 @@ export async function generateMetadata({
     seoContext,
     locale
   );
+  const socialMetadata = getSocialMetadata({
+    title,
+    description,
+    locale,
+    path,
+    image: getOgUrl(locale, filePath),
+    type: "article",
+  });
 
   return {
     title: { absolute: title },
@@ -152,8 +144,7 @@ export async function generateMetadata({
     authors: metadata.authors,
     category: t(material),
     keywords,
-    openGraph,
-    twitter,
+    ...socialMetadata,
   };
 }
 

@@ -39,10 +39,10 @@ import { Activity, useTransition } from "react";
 import { toast } from "sonner";
 import { getMaterialStatus } from "@/components/school/classes/_data/material-status";
 import { SchoolClassesDeleteDialog } from "@/components/school/classes/delete-dialog";
+import { EditMaterialGroupDialog } from "@/components/school/classes/materials/editor-dialog";
+import type { MaterialGroup } from "@/components/school/classes/materials/types";
+import { formatScheduledAt } from "@/components/school/classes/materials/utils";
 import { getLocale } from "@/lib/utils/date";
-import { EditMaterialGroupDialog } from "./editor-dialog";
-import type { MaterialGroup } from "./types";
-import { formatScheduledAt } from "./utils";
 
 /** Return the badge variant used for one material-group status. */
 function getBadgeVariant(

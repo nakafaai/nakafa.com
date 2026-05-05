@@ -5,13 +5,13 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { motion } from "motion/react";
+import { CompleteExerciseButton } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/attempt-complete-button";
+import { StartExerciseButton } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/attempt-start-button";
 import { Countdown } from "@/components/exercise/attempt-countdown";
 import { ExerciseStats } from "@/components/exercise/attempt-stats";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExerciseTimer } from "@/lib/hooks/use-exercise-timer";
 import { useStickyVisibility } from "@/lib/hooks/use-sticky-visibility";
-import { CompleteExerciseButton } from "./attempt-complete-button";
-import { StartExerciseButton } from "./attempt-start-button";
 
 interface Props {
   totalExercises: number;

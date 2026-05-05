@@ -13,7 +13,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
-import { LangMenuSwitcher } from "./lang-menu-switcher";
+import { LangMenuSwitcher } from "@/components/sidebar/lang-menu-switcher";
 
 /**
  * Renders the sidebar language menu.

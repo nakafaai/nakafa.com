@@ -2,7 +2,7 @@ import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import { api } from "@repo/connection/routes";
 import { fetchMutation } from "convex/nextjs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getUserInfo, getVerified } from "./utils";
+import { getUserInfo, getVerified } from "@/app/api/chat/utils";
 
 const quranSurahResult: Awaited<ReturnType<typeof api.contents.getSurah>> = {
   data: {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getLocale } from "../date";
+import { getLocale } from "@/lib/utils/date";
 
 describe("getLocale", () => {
   describe("supported locales", () => {

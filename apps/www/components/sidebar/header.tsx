@@ -1,6 +1,6 @@
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar";
-import { HeaderContainer } from "./header-container";
-import { HeaderSearch } from "./header-search";
+import { HeaderContainer } from "@/components/sidebar/header-container";
+import { HeaderSearch } from "@/components/sidebar/header-search";
 
 export function Header() {
   return (

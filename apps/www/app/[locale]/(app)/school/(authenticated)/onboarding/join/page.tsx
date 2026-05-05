@@ -2,7 +2,7 @@ import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useTranslations } from "next-intl";
-import { SchoolOnboardingJoinForm } from "./form";
+import { SchoolOnboardingJoinForm } from "@/app/[locale]/(app)/school/(authenticated)/onboarding/join/form";
 
 export default function Page() {
   const t = useTranslations("School.Onboarding");

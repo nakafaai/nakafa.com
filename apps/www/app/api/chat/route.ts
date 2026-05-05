@@ -47,10 +47,10 @@ import {
 import { fetchAction, fetchMutation } from "convex/nextjs";
 import { getTranslations } from "next-intl/server";
 import * as z from "zod";
+import { CHAT_ERRORS } from "@/app/api/chat/constants";
+import { loadMessages, saveOrCreateChat } from "@/app/api/chat/persistence";
+import { getUserInfo, getVerified } from "@/app/api/chat/utils";
 import { getToken } from "@/lib/auth/server";
-import { CHAT_ERRORS } from "./constants";
-import { loadMessages, saveOrCreateChat } from "./persistence";
-import { getUserInfo, getVerified } from "./utils";
 
 const ModelIdSchema = z.enum(MODEL_IDS);
 

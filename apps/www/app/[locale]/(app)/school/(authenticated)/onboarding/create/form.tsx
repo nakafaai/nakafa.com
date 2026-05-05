@@ -28,7 +28,7 @@ import {
   schoolCreateDefaultValues,
   schoolCreateFormSchema,
   schoolTypeSchema,
-} from "./schema";
+} from "@/app/[locale]/(app)/school/(authenticated)/onboarding/create/schema";
 
 /** Render the onboarding form for creating a new school. */
 export function SchoolOnboardingCreateForm() {

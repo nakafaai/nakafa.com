@@ -6,7 +6,7 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
-import { AiNeuroNoise } from "./ai.client";
+import { AiNeuroNoise } from "@/components/marketing/about/ai.client";
 
 interface AudienceCardProps {
   ctaHref: string;

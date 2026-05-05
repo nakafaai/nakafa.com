@@ -22,7 +22,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
-import { exercisesMenu } from "./_data/exercises";
+import { exercisesMenu } from "@/components/sidebar/_data/exercises";
 
 /**
  * Renders one exercise category inside the app sidebar.

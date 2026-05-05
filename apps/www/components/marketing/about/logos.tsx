@@ -2,7 +2,7 @@ import { GraduationScrollIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { schools } from "./constants/logos";
+import { schools } from "@/components/marketing/about/constants/logos";
 
 interface SchoolLogoProps {
   school: (typeof schools)[number];

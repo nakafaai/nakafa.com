@@ -12,7 +12,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
-import { articlesMenu } from "./_data/articles";
+import { articlesMenu } from "@/components/sidebar/_data/articles";
 
 function MenuItem() {
   const t = useTranslations("Articles");

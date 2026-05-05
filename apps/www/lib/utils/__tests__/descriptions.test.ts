@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createSEODescription } from "../seo/descriptions";
+import { createSEODescription } from "@/lib/utils/seo/descriptions";
 
 const LETTER_REGEX = /^[a-zA-Z]$/;
 

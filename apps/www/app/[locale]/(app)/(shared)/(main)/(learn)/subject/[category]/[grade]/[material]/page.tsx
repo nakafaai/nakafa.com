@@ -40,7 +40,8 @@ import {
 import { RefContent } from "@/components/shared/ref-content";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
-import { getOgUrl } from "@/lib/utils/metadata";
+import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
+import { createSEODescription } from "@/lib/utils/seo/descriptions";
 import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 
@@ -91,30 +92,29 @@ export async function generateMetadata({
     t(category),
   ]);
   const urlPath = `/${locale}${FilePath}`;
-  const image = {
-    url: ogUrl,
-    width: 1200,
-    height: 630,
-  };
+  const description = createSEODescription([
+    t(material),
+    t(getGradeNonNumeric(grade) ?? "grade", { grade }),
+    t(category),
+    t("grade-description"),
+  ]);
+  const socialMetadata = getSocialMetadata({
+    title,
+    description,
+    locale,
+    path: urlPath,
+    image: ogUrl,
+  });
 
   return {
     title: {
       absolute: title,
     },
+    description,
     alternates: {
       canonical: urlPath,
     },
-    openGraph: {
-      title,
-      url: urlPath,
-      siteName: "Nakafa",
-      locale,
-      type: "website",
-      images: [image],
-    },
-    twitter: {
-      images: [image],
-    },
+    ...socialMetadata,
   };
 }
 

@@ -4,7 +4,7 @@ import {
   getCachedMetadataFromSlug,
   getMetadataFromSlug,
   getStaticParams,
-} from "../system";
+} from "@/lib/utils/system";
 
 const {
   mockCacheLife,

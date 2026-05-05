@@ -2,10 +2,10 @@
 
 import { useDebouncedValue } from "@mantine/hooks";
 import { useQueryStates } from "nuqs";
+import { SearchResults } from "@/components/shared/search-results";
 import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
 import { searchParsers } from "@/lib/nuqs/search";
 import { useSearchQuery } from "@/lib/react-query/use-search";
-import { SearchResults } from "../shared/search-results";
 
 const DEBOUNCE_TIME = 500;
 

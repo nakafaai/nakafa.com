@@ -23,12 +23,12 @@ import { useQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useClass } from "@/lib/context/use-class";
 import {
   type InviteRole,
   inviteRoleList,
   mapInviteCodesByRole,
-} from "./invite-data";
+} from "@/components/school/classes/people/invite-data";
+import { useClass } from "@/lib/context/use-class";
 
 /** Render the class invite flow for teacher and student join codes. */
 export function SchoolClassesPeopleInvite() {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createSEOTitle } from "../seo/titles";
+import { createSEOTitle } from "@/lib/utils/seo/titles";
 
 describe("createSEOTitle", () => {
   describe("basic functionality", () => {

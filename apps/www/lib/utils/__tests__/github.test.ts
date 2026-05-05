@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getGithubUrl, getRawGithubUrl } from "../github";
+import { getGithubUrl, getRawGithubUrl } from "@/lib/utils/github";
 
 describe("getGithubUrl", () => {
   it("returns GitHub URL with default ref", () => {

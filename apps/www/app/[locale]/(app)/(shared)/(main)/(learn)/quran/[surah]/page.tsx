@@ -26,6 +26,7 @@ import { RefContent } from "@/components/shared/ref-content";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
 import { VirtualProvider } from "@/lib/context/use-virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getSocialMetadata } from "@/lib/utils/metadata";
 import {
   fetchSurahContext,
   fetchSurahMetadataContext,
@@ -52,22 +53,6 @@ export async function generateMetadata({
       "text/markdown": `${path}.md`,
     },
   };
-  const image = {
-    url: "/quran.png",
-    width: 1200,
-    height: 630,
-  };
-  const twitter: Metadata["twitter"] = {
-    images: [image],
-  };
-  const openGraph: Metadata["openGraph"] = {
-    url: path,
-    images: [image],
-    type: "book",
-    siteName: "Nakafa",
-    locale,
-  };
-
   const surahNumber = Number(surah);
 
   if (Number.isNaN(surahNumber)) {
@@ -91,6 +76,14 @@ export async function generateMetadata({
     seoContext,
     locale
   );
+  const socialMetadata = getSocialMetadata({
+    title,
+    description,
+    locale,
+    path,
+    image: "/quran.png",
+    type: "book",
+  });
 
   return {
     title: { absolute: title },
@@ -98,8 +91,7 @@ export async function generateMetadata({
     category: t("quran"),
     description,
     keywords,
-    twitter,
-    openGraph,
+    ...socialMetadata,
   };
 }
 

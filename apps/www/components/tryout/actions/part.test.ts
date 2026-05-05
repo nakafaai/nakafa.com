@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { completeTryoutPart, startTryoutPart } from "./part";
+import {
+  completeTryoutPart,
+  startTryoutPart,
+} from "@/components/tryout/actions/part";
 
 type TryoutAttemptId = Parameters<typeof startTryoutPart>[0]["tryoutAttemptId"];
 

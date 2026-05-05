@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { startTryout } from "./tryout";
+import { startTryout } from "@/components/tryout/actions/tryout";
 
 const mocks = vi.hoisted(() => ({
   after: vi.fn(async (callback) => await callback()),

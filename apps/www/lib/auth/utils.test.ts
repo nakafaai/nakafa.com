@@ -1,6 +1,6 @@
 import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
-import { getSafeInternalRedirectPath, isAuthError } from "./utils";
+import { getSafeInternalRedirectPath, isAuthError } from "@/lib/auth/utils";
 
 describe("lib/auth/utils", () => {
   describe("getSafeInternalRedirectPath", () => {

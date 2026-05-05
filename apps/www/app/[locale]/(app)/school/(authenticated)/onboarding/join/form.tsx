@@ -16,7 +16,10 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { schoolJoinDefaultValues, schoolJoinFormSchema } from "./schema";
+import {
+  schoolJoinDefaultValues,
+  schoolJoinFormSchema,
+} from "@/app/[locale]/(app)/school/(authenticated)/onboarding/join/schema";
 
 /** Render the onboarding form for joining an existing school. */
 export function SchoolOnboardingJoinForm() {
