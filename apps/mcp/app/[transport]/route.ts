@@ -1,113 +1,41 @@
-import { api } from "@repo/connection/routes";
+import { NAKAFA_MCP_SERVER_NAME } from "@repo/contents/_lib/agent/constants";
 import { createMcpHandler } from "mcp-handler";
 import { env } from "@/env";
-import type { GetContentsParams } from "@/lib/schema";
-import { tools } from "@/lib/tools";
-import { buildContentSlug } from "@/lib/utils";
+import { withMcpOriginGuard } from "@/lib/mcp/origin";
+import { registerNakafaMcpServer } from "@/lib/mcp/server";
+import packageJson from "@/package.json";
 
-const handler = createMcpHandler(
-  (server) => {
-    server.registerTool(
-      "get_contents",
-      {
-        title: tools.getContents.name,
-        description: tools.getContents.description,
-        inputSchema: tools.getContents.parameters,
-      },
-      async ({ locale, filters }: GetContentsParams) => {
-        const cleanSlug = buildContentSlug({ locale, filters });
-
-        const { data, error } = await api.contents.getContents({
-          slug: cleanSlug,
-        });
-
-        if (error) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Error: ${error.message}`,
-              },
-            ],
-          };
-        }
-
-        const contents = data.map((item) => ({
-          ...item.metadata,
-          url: item.url,
-          slug: item.slug,
-        }));
-
-        if (contents.length === 0) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "No contents found. Please try again with different parameters.",
-              },
-            ],
-          };
-        }
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Found ${contents.length} contents:
-              
-              ${JSON.stringify(contents, null, 2)}
-              `,
-            },
-          ],
-        };
-      }
-    );
-
-    server.registerTool(
-      "get_content",
-      {
-        title: tools.getContent.name,
-        description: tools.getContent.description,
-        inputSchema: tools.getContent.parameters,
-      },
-      async ({ slug }: { slug: string }) => {
-        const { data, error } = await api.contents.getContent({ slug });
-
-        if (error) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Error: ${error.message}. You can try to get the slug from the 'get_contents' tool.`,
-              },
-            ],
-          };
-        }
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: data?.raw ?? "",
-            },
-          ],
-        };
-      }
-    );
-  },
+const mcpHandler = createMcpHandler(
+  registerNakafaMcpServer,
   {
     capabilities: {
+      prompts: {
+        listChanged: true,
+      },
+      resources: {
+        listChanged: true,
+      },
       tools: {
         listChanged: true,
       },
     },
+    serverInfo: {
+      name: NAKAFA_MCP_SERVER_NAME,
+      version: packageJson.version,
+    },
   },
   {
-    redisUrl: env.REDIS_URL,
     basePath: "",
-    verboseLogs: true,
+    disableSse: true,
     maxDuration: 60,
+    redisUrl: env.REDIS_URL,
+    verboseLogs: false,
   }
 );
 
-export { handler as GET, handler as POST, handler as DELETE };
+const handler = withMcpOriginGuard(mcpHandler, env.MCP_ALLOWED_ORIGINS);
+
+export const GET = handler;
+export const POST = handler;
+export const DELETE = handler;
+export const OPTIONS = handler;

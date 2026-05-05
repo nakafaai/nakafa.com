@@ -1,3 +1,4 @@
+import { NAKAFA_MCP_RECOMMENDED_ENDPOINT } from "@repo/contents/_lib/agent/constants";
 import { routing } from "@repo/internationalization/src/routing";
 import { cacheLife } from "next/cache";
 import { hasLocale, type Locale } from "next-intl";
@@ -32,7 +33,7 @@ export function buildRootLlmsIndexText() {
     "",
     "## References",
     "",
-    `- MCP endpoint: \`${BASE_URL}/mcp\` for tools that support Streamable HTTP MCP.`,
+    `- MCP endpoint: \`${NAKAFA_MCP_RECOMMENDED_ENDPOINT}\` with tools \`nakafa_search_content\`, \`nakafa_get_content\`, \`nakafa_get_taxonomy\`, \`nakafa_get_exercise\`, and \`nakafa_get_quran_reference\`.`,
     `- Full corpus map: \`${BASE_URL}/llms-full.txt\`; shard manifest: \`${BASE_URL}/llms-full/index.json\` for locale, section, topic, set, and Quran full-content files.`,
     `- Sitemap: \`${BASE_URL}/sitemap.xml\`, used to generate these indexes.`,
     "",

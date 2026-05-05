@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { NAKAFA_MCP_RECOMMENDED_ENDPOINT } from "@repo/contents/_lib/agent/constants";
 
 export const NAKAFA_SKILL_NAME = "nakafa";
 export const NAKAFA_SKILL_DESCRIPTION =
@@ -30,7 +31,9 @@ export function getNakafaSkillText() {
     "- Use `https://nakafa.com/llms-full/index.json` to choose smaller locale, section, topic, set, or Quran full-content shards.",
     "- Prefer same-origin `.md` URLs from `llms.txt` for focused page retrieval.",
     "- Send `Accept: text/markdown` when requesting normal content URLs.",
-    "- Use `https://nakafa.com/mcp` when the client supports Streamable HTTP MCP tools.",
+    `- Use \`${NAKAFA_MCP_RECOMMENDED_ENDPOINT}\` when the client supports Streamable HTTP MCP tools.`,
+    "- Prefer `nakafa_search_content` first, then pass returned `content_id` values as `content_ref` to `nakafa_get_content` or `nakafa_get_exercise`.",
+    "- Use `nakafa_get_taxonomy` to inspect supported locales, sections, categories, grades, materials, exercise types, and endpoint guidance.",
     "",
     "## Locale Rules",
     "",

@@ -1,14 +1,25 @@
+import path from "node:path";
 import { config, withAnalyzer } from "@repo/next-config";
 import type { NextConfig } from "next";
 import { env } from "@/env";
 
-let nextConfig: NextConfig = {
+const NAKAFA_CONTENT_TRACE_FILES = [
+  "../../packages/contents/{articles,exercises,subject}/**/*",
+  "../../packages/contents/_data/quran.ts",
+] as const;
+
+const nextConfig = {
   ...config,
-  serverExternalPackages: [...(config.serverExternalPackages ?? []), "express"],
-};
+  // MCP reads filesystem-backed Nakafa content at runtime, so production
+  // output tracing must include those files from the monorepo root.
+  outputFileTracingRoot: path.join(process.cwd(), "../.."),
+  outputFileTracingIncludes: {
+    "/\\[transport\\]": [...NAKAFA_CONTENT_TRACE_FILES],
+  },
+  serverExternalPackages: [...config.serverExternalPackages, "express"],
+} satisfies NextConfig;
 
-if (env.ANALYZE === "true") {
-  nextConfig = withAnalyzer(nextConfig);
-}
+const analyzedConfig =
+  env.ANALYZE === "true" ? withAnalyzer(nextConfig) : nextConfig;
 
-export default nextConfig;
+export default analyzedConfig;

@@ -94,7 +94,7 @@ export function createSecurityHeaders() {
  */
 export const securityHeaders = createSecurityHeaders();
 
-export const config: NextConfig = {
+export const config = {
   reactStrictMode: true,
   typedRoutes: true,
   logging: {
@@ -131,7 +131,7 @@ export const config: NextConfig = {
       },
     ];
   },
-};
+} satisfies NextConfig;
 
 export const withAnalyzer = (sourceConfig: NextConfig): NextConfig =>
   withBundleAnalyzer()(sourceConfig);

@@ -10,17 +10,15 @@
     "test:watch": "NODE_ENV=test vitest watch",
     "test:ui": "NODE_ENV=test vitest --ui",
     "test:coverage": "NODE_ENV=test vitest run --coverage",
-    "test-client": "node scripts/test-client.mjs",
-    "test-streamable-http-client": "node scripts/test-streamable-http-client.mjs",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@repo/connection": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
+    "effect": "^3.21.2",
     "express": "^5.2.1",
     "mcp-handler": "1.1.0",
     "next": "16.2.4",
