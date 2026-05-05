@@ -1,10 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
 import { getNakafaAgentQuranReference } from "@repo/contents/_lib/agent/quran";
-import {
-  type NakafaAgentQuranReferenceOptionsSchema,
-  NakafaAgentQuranReferenceSchema,
-} from "@repo/contents/_lib/agent/schemas";
+import type { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schemas";
 import { Effect, Option } from "effect";
 import type * as z from "zod";
 import {
@@ -12,7 +9,10 @@ import {
   toMcpStructuredResult,
   toMcpToolError,
 } from "@/lib/mcp/result";
-import { NakafaGetQuranReferenceInputSchema } from "@/lib/mcp/schemas";
+import {
+  NakafaGetQuranReferenceInputSchema,
+  NakafaGetQuranReferenceOutputSchema,
+} from "@/lib/mcp/schemas";
 import { NAKAFA_READ_ONLY_TOOL_ANNOTATIONS } from "@/lib/mcp/tool-config";
 
 /** Registers the bounded Quran reference retrieval tool. */
@@ -24,7 +24,7 @@ export function registerNakafaGetQuranReferenceTool(server: McpServer) {
       description:
         "Return bounded Surah and verse data with Arabic text, transliteration, selected translation, optional tafsir, and canonical Nakafa URL.",
       inputSchema: NakafaGetQuranReferenceInputSchema.shape,
-      outputSchema: NakafaAgentQuranReferenceSchema.shape,
+      outputSchema: NakafaGetQuranReferenceOutputSchema,
       title: "Get Nakafa Quran Reference",
     },
     (args) => runNakafaQuranReferenceTool(args)

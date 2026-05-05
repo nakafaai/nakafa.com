@@ -1,4 +1,11 @@
-import { NakafaAgentSectionSchema } from "@repo/contents/_lib/agent/schemas";
+import {
+  NakafaAgentExerciseResultSchema,
+  NakafaAgentMarkdownSchema,
+  NakafaAgentQuranReferenceSchema,
+  NakafaAgentSearchResultSchema,
+  NakafaAgentSectionSchema,
+  NakafaAgentTaxonomySchema,
+} from "@repo/contents/_lib/agent/schemas";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import * as z from "zod";
 
@@ -16,6 +23,51 @@ export const NakafaMcpToolErrorSchema = z
       .describe("Tool execution error details."),
   })
   .describe("Nakafa MCP tool error.");
+
+/** Output schema for `nakafa_search_content` success and error results. */
+export const NakafaSearchContentOutputSchema = z
+  .object({
+    ...NakafaAgentSearchResultSchema.shape,
+    ...NakafaMcpToolErrorSchema.shape,
+  })
+  .partial()
+  .describe("Nakafa content search output.");
+
+/** Output schema for `nakafa_get_content` success and error results. */
+export const NakafaGetContentOutputSchema = z
+  .object({
+    ...NakafaAgentMarkdownSchema.shape,
+    ...NakafaMcpToolErrorSchema.shape,
+  })
+  .partial()
+  .describe("Nakafa content markdown output.");
+
+/** Output schema for `nakafa_get_taxonomy` success and error results. */
+export const NakafaGetTaxonomyOutputSchema = z
+  .object({
+    ...NakafaAgentTaxonomySchema.shape,
+    ...NakafaMcpToolErrorSchema.shape,
+  })
+  .partial()
+  .describe("Nakafa taxonomy output.");
+
+/** Output schema for `nakafa_get_exercise` success and error results. */
+export const NakafaGetExerciseOutputSchema = z
+  .object({
+    ...NakafaAgentExerciseResultSchema.shape,
+    ...NakafaMcpToolErrorSchema.shape,
+  })
+  .partial()
+  .describe("Nakafa exercise output.");
+
+/** Output schema for `nakafa_get_quran_reference` success and error results. */
+export const NakafaGetQuranReferenceOutputSchema = z
+  .object({
+    ...NakafaAgentQuranReferenceSchema.shape,
+    ...NakafaMcpToolErrorSchema.shape,
+  })
+  .partial()
+  .describe("Nakafa Quran reference output.");
 
 /** Input schema for `nakafa_search_content`. */
 export const NakafaSearchContentInputSchema = z

@@ -1,13 +1,15 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercises";
-import { NakafaAgentExerciseResultSchema } from "@repo/contents/_lib/agent/schemas";
 import { Effect, Option } from "effect";
 import {
   toMcpReadModelError,
   toMcpStructuredResult,
   toMcpToolError,
 } from "@/lib/mcp/result";
-import { NakafaGetExerciseInputSchema } from "@/lib/mcp/schemas";
+import {
+  NakafaGetExerciseInputSchema,
+  NakafaGetExerciseOutputSchema,
+} from "@/lib/mcp/schemas";
 import { NAKAFA_READ_ONLY_TOOL_ANNOTATIONS } from "@/lib/mcp/tool-config";
 
 /** Registers the structured exercise retrieval tool. */
@@ -19,7 +21,7 @@ export function registerNakafaGetExerciseTool(server: McpServer) {
       description:
         "Return structured Nakafa exercise questions, choices, answers, explanations, URLs, and metadata for an exercise set or question.",
       inputSchema: NakafaGetExerciseInputSchema.shape,
-      outputSchema: NakafaAgentExerciseResultSchema.shape,
+      outputSchema: NakafaGetExerciseOutputSchema,
       title: "Get Nakafa Exercise",
     },
     ({ content_id_or_url, exercise_number }) =>
