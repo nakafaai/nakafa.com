@@ -27,54 +27,48 @@ export function registerNakafaGetQuranReferenceTool(server: McpServer) {
       outputSchema: NakafaGetQuranReferenceOutputSchema,
       title: "Get Nakafa Quran Reference",
     },
-    (args) => runNakafaQuranReferenceTool(args)
+    (args) => Effect.runPromise(getNakafaQuranReferenceToolResult(args))
   );
 }
 
-/** Runs Quran retrieval after enforcing the MCP range limit. */
-function runNakafaQuranReferenceTool(
+/** Builds a Quran reference tool result after enforcing the MCP range limit. */
+export function getNakafaQuranReferenceToolResult(
   args: z.infer<typeof NakafaAgentQuranReferenceOptionsSchema>
 ) {
   const lastVerse = args.to_verse ?? args.from_verse;
   const requestedVerseCount = lastVerse - args.from_verse + 1;
 
   if (lastVerse < args.from_verse) {
-    return Effect.runPromise(
-      Effect.succeed(
-        toMcpToolError("Invalid Quran verse range.", [
-          "`to_verse` must be greater than or equal to `from_verse`.",
-        ])
-      )
+    return Effect.succeed(
+      toMcpToolError("Invalid Quran verse range.", [
+        "`to_verse` must be greater than or equal to `from_verse`.",
+      ])
     );
   }
 
   if (requestedVerseCount > NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES) {
-    return Effect.runPromise(
-      Effect.succeed(
-        toMcpToolError("Quran reference range is too large.", [
-          `Request at most ${NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES} verses at a time.`,
-          "Use `nakafa_get_content` with `https://nakafa.com/en/quran/{surah}` when you need a full surah.",
-        ])
-      )
+    return Effect.succeed(
+      toMcpToolError("Quran reference range is too large.", [
+        `Request at most ${NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES} verses at a time.`,
+        "Use `nakafa_get_content` with `https://nakafa.com/en/quran/{surah}` when you need a full surah.",
+      ])
     );
   }
 
-  return Effect.runPromise(
-    getNakafaAgentQuranReference(args).pipe(
-      Effect.map(
-        Option.match({
-          onNone: () =>
-            toMcpToolError("Nakafa Quran reference was not found.", [
-              "Check that the surah number is between 1 and 114.",
-              "Check that the requested verse numbers exist in the selected surah.",
-            ]),
-          onSome: toMcpStructuredResult,
-        })
-      ),
-      Effect.catchTags({
-        NakafaAgentInputError: (error) =>
-          Effect.succeed(toMcpReadModelError(error)),
+  return getNakafaAgentQuranReference(args).pipe(
+    Effect.map(
+      Option.match({
+        onNone: () =>
+          toMcpToolError("Nakafa Quran reference was not found.", [
+            "Check that the surah number is between 1 and 114.",
+            "Check that the requested verse numbers exist in the selected surah.",
+          ]),
+        onSome: toMcpStructuredResult,
       })
-    )
+    ),
+    Effect.catchTags({
+      NakafaAgentInputError: (error) =>
+        Effect.succeed(toMcpReadModelError(error)),
+    })
   );
 }
