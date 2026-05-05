@@ -50,12 +50,18 @@ function createAppRewrites() {
   const llmDestination = "/llms.mdx/:path*";
   const ogSource = ["/:path*.png", "/:path*.og", "/:path*/image.png"];
   const ogDestination = "/og/:path*";
+  const ogRouteRewrites = [
+    {
+      source: "/:locale/og/:path*/image.png",
+      destination: "/:locale/og/:path*/image.png",
+    },
+    {
+      source: "/og/:path*/image.png",
+      destination: "/og/:path*/image.png",
+    },
+  ];
 
-  return [
-    // PostHog requires the specific static and array rewrites to come before the
-    // catch-all analytics rewrite so asset cache headers are preserved.
-    ...createPostHogProxyRewrites(env.POSTHOG_PROXY_HOST),
-    ...agentDiscoveryRewrites,
+  const seoAssetRewrites = [
     ...llmSource.map((source) => ({
       source,
       destination: llmDestination,
@@ -65,6 +71,20 @@ function createAppRewrites() {
       destination: ogDestination,
     })),
   ];
+
+  return {
+    // PostHog requires the specific static and array rewrites to come before the
+    // catch-all analytics rewrite so asset cache headers are preserved.
+    afterFiles: [
+      ...createPostHogProxyRewrites(env.POSTHOG_PROXY_HOST),
+      ...agentDiscoveryRewrites,
+      // Keep canonical OG image routes out of the broad extension rewrites.
+      // After a pass-through match, Next checks the localized dynamic route
+      // before continuing through the remaining `afterFiles` entries.
+      ...ogRouteRewrites,
+      ...seoAssetRewrites,
+    ],
+  };
 }
 
 /**
