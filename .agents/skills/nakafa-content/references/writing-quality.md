@@ -31,6 +31,7 @@ For actual content:
 - Do not force `###` into every lesson.
 - Do not put math, symbols, or parenthesized numbers in headings.
 - Use headings that are specific to the lesson, not reusable labels that could appear unchanged in every nearby lesson.
+- Keep headings concise and non-redundant. Prefer the actual concept or case name over generic wrappers like "Condition:", "Case", "Step", or "Example" when the surrounding section already establishes that role.
 
 ## Prose and Lists
 

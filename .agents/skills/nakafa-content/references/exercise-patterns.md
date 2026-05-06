@@ -89,6 +89,8 @@ Rules:
 - Use `#####` when an answer needs a real nested subsection under a `####` section, for example option-by-option analysis.
 - Use descriptive headings, not "Step 1".
 - Do not put math, symbols, or parenthesized numbers in headings.
+- For statement-based answer headings, use words such as "First Statement" or "Pernyataan Pertama"; keep the numbered statement reference in the body with `<InlineMath />`.
+- Avoid redundant heading wrappers such as "Case" or "Condition" when the heading can directly name the case or rule.
 - Do not refer to option letters such as `(A)`, `(B)`, or `(C)` in explanations.
 - State the final answer by content, not by option letter.
 - Keep notation consistent with the question.
