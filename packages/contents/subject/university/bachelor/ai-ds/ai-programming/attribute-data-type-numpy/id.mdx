@@ -50,19 +50,19 @@ NumPy menyediakan kontrol presisi yang detail dengan berbagai ukuran tipe data n
 
 | Kategori | Tipe Data | Deskripsi | Rentang Nilai |
 |----------|-----------|-----------|---------------|
-| **Integer Signed** | `int8` | 8-bit signed integer | -128 hingga 127 |
-| | `int16` | 16-bit signed integer | -32768 hingga 32767 |
-| | `int32` | 32-bit signed integer | -2147483648 hingga 2147483647 |
-| | `int64` | 64-bit signed integer | Rentang sangat besar |
-| **Integer Unsigned** | `uint8` | 8-bit unsigned integer | 0 hingga 255 |
-| | `uint16` | 16-bit unsigned integer | 0 hingga 65535 |
-| | `uint32` | 32-bit unsigned integer | 0 hingga 4294967295 |
-| | `uint64` | 64-bit unsigned integer | Rentang sangat besar positif |
-| **Float** | `float16` | Half-precision float | 5 bit eksponen, 10 bit mantissa |
-| | `float32` | Single-precision float | 8 bit eksponen, 23 bit mantissa |
-| | `float64` | Double-precision float | 11 bit eksponen, 52 bit mantissa |
-| **Complex** | `complex64` | Complex number | Dua 32-bit float |
-| | `complex128` | Complex number | Dua 64-bit float |
+| **Integer Signed** | `int8` | <InlineMath math="8" />-bit signed integer | <InlineMath math="-128 \text{ hingga } 127" /> |
+| | `int16` | <InlineMath math="16" />-bit signed integer | <InlineMath math="-32768 \text{ hingga } 32767" /> |
+| | `int32` | <InlineMath math="32" />-bit signed integer | <InlineMath math="-2147483648 \text{ hingga } 2147483647" /> |
+| | `int64` | <InlineMath math="64" />-bit signed integer | Rentang sangat besar |
+| **Integer Unsigned** | `uint8` | <InlineMath math="8" />-bit unsigned integer | <InlineMath math="0 \text{ hingga } 255" /> |
+| | `uint16` | <InlineMath math="16" />-bit unsigned integer | <InlineMath math="0 \text{ hingga } 65535" /> |
+| | `uint32` | <InlineMath math="32" />-bit unsigned integer | <InlineMath math="0 \text{ hingga } 4294967295" /> |
+| | `uint64` | <InlineMath math="64" />-bit unsigned integer | Rentang sangat besar positif |
+| **Float** | `float16` | Half-precision float | <InlineMath math="5 \text{ bit eksponen}" />, <InlineMath math="10 \text{ bit mantissa}" /> |
+| | `float32` | Single-precision float | <InlineMath math="8 \text{ bit eksponen}" />, <InlineMath math="23 \text{ bit mantissa}" /> |
+| | `float64` | Double-precision float | <InlineMath math="11 \text{ bit eksponen}" />, <InlineMath math="52 \text{ bit mantissa}" /> |
+| **Complex** | `complex64` | Complex number | Dua <InlineMath math="32" />-bit float |
+| | `complex128` | Complex number | Dua <InlineMath math="64" />-bit float |
 
 ### Menentukan Tipe Data
 
@@ -160,9 +160,9 @@ print("Data pointer:", a.data)  # Output: Data pointer: <memory at 0x...>`
 
 | Atribut | Fungsi | Contoh Hasil |
 |---------|---------|--------------|
-| `ndarray.shape` | Jumlah elemen di setiap axis | `(2, 3)` untuk array 2x3 |
-| `ndarray.ndim` | Jumlah axis/dimensi | `2` untuk array 2D |
-| `ndarray.size` | Total jumlah elemen | `6` untuk array 2x3 |
+| `ndarray.shape` | Jumlah elemen di setiap axis | `(2, 3)` untuk array <InlineMath math="2 \times 3" /> |
+| `ndarray.ndim` | Jumlah axis/dimensi | `2` untuk array dua dimensi |
+| `ndarray.size` | Total jumlah elemen | `6` untuk array <InlineMath math="2 \times 3" /> |
 | `ndarray.dtype` | Tipe data elemen | `int64`, `float64`, dll |
 | `ndarray.data` | Pointer ke awal data array | Memory address |
 

@@ -39,7 +39,7 @@ If <InlineMath math="Q_1" /> is completed with <InlineMath math="m - n" /> addit
 
 ## Full and Economical QR Decomposition
 
-When we have a matrix <InlineMath math="A \in \mathbb{R}^{m \times n}" /> with <InlineMath math="m \geq n" />, 
+When we have a matrix <InlineMath math="A \in \mathbb{R}^{m \times n}" /> with <InlineMath math="m \geq n" />,
 there are two ways to represent the QR decomposition. The difference lies in the size of the matrices used.
 
 ### Full QR Decomposition
@@ -48,79 +48,79 @@ Full QR decomposition uses full-sized matrices:
 
 <BlockMath math="A = Q \cdot R" />
 
-with <InlineMath math="Q \in \mathbb{R}^{m \times m}" /> being a full-sized orthogonal matrix and 
+with <InlineMath math="Q \in \mathbb{R}^{m \times m}" /> being a full-sized orthogonal matrix and
 <InlineMath math="R \in \mathbb{R}^{m \times n}" /> being an upper triangular matrix.
 
 ### Economical QR Decomposition
 
-Since the lower part of matrix <InlineMath math="R" /> only contains zeros, we can save storage and computation. 
+Since the lower part of matrix <InlineMath math="R" /> only contains zeros, we can save storage and computation.
 Economical QR decomposition only uses the parts that are actually needed:
 
 <BlockMath math="A = Q \cdot R = (Q_1 \quad Q_2) \cdot \begin{pmatrix} R_1 \\ 0 \end{pmatrix} = Q_1 \cdot R_1" />
 
-Here <InlineMath math="Q_1 \in \mathbb{R}^{m \times n}" /> only takes the first through <InlineMath math="n" />-th columns 
+Here <InlineMath math="Q_1 \in \mathbb{R}^{m \times n}" /> only takes the first through <InlineMath math="n" />-th columns
 from <InlineMath math="Q" />, and <InlineMath math="R_1 \in \mathbb{R}^{n \times n}" /> is a square upper triangular matrix.
 
-Why is it called economical? Because we save storage space and computational time. 
-Instead of storing matrix <InlineMath math="Q" /> of size <InlineMath math="m \times m" /> which can be very large, 
+Why is it called economical? Because we save storage space and computational time.
+Instead of storing matrix <InlineMath math="Q" /> of size <InlineMath math="m \times m" /> which can be very large,
 we only need <InlineMath math="Q_1" /> of size <InlineMath math="m \times n" />.
 
-The columns of matrix <InlineMath math="Q_2 \in \mathbb{R}^{m \times (m-n)}" /> that we don't use form 
+The columns of matrix <InlineMath math="Q_2 \in \mathbb{R}^{m \times (m-n)}" /> that we don't use form
 an orthonormal basis of <InlineMath math="\text{Kernel}A^T" />:
 
 <BlockMath math="A^T Q_2 = R_1^T Q_1^T Q_2 = 0" />
 
 ### Uniqueness Property
 
-The economical QR decomposition <InlineMath math="A = Q_1 \cdot R_1" /> with condition <InlineMath math="r_{ii} > 0" /> 
-for all <InlineMath math="i = 1, \ldots, n" /> is unique for matrix <InlineMath math="A" /> 
+The economical QR decomposition <InlineMath math="A = Q_1 \cdot R_1" /> with condition <InlineMath math="r_{ii} > 0" />
+for all <InlineMath math="i = 1, \ldots, n" /> is unique for matrix <InlineMath math="A" />
 that has full rank.
 
 ## Householder Method for QR Decomposition
 
-Although the Gram-Schmidt process provides an elegant theoretical way to obtain QR decomposition, 
-this method is not suitable for practical computation. The main problem is numerical instability due to cancellation, 
+Although the Gram-Schmidt process provides an elegant theoretical way to obtain QR decomposition,
+this method is not suitable for practical computation. The main problem is numerical instability due to cancellation,
 orthogonality of columns is quickly lost during computation.
 
-To overcome this problem, we need a method that is more numerically stable. 
-One of the most successful approaches is the Householder procedure, 
+To overcome this problem, we need a method that is more numerically stable.
+One of the most successful approaches is the Householder procedure,
 which uses orthogonal reflection transformations. Another alternative is the Givens procedure with rotation transformations.
 
 ### Householder Transformation
 
-For a vector <InlineMath math="v \in \mathbb{R}^m" /> with <InlineMath math="\|v\|_2 = 1" />, 
+For a vector <InlineMath math="v \in \mathbb{R}^m" /> with <InlineMath math="\|v\|_2 = 1" />,
 we can define the Householder transformation matrix:
 
 <BlockMath math="S = I - 2vv^T \in \mathbb{R}^{m \times m}" />
 
-Note that <InlineMath math="vv^T" /> is a dyadic product, which is the multiplication of column vector 
-<InlineMath math="v \in \mathbb{R}^{m \times 1}" /> with row vector <InlineMath math="v^T \in \mathbb{R}^{1 \times m}" />. 
-The result of this multiplication is an <InlineMath math="m \times m" /> matrix with rank 1 for <InlineMath math="v \neq 0" />. 
+Note that <InlineMath math="vv^T" /> is a dyadic product, which is the multiplication of column vector
+<InlineMath math="v \in \mathbb{R}^{m \times 1}" /> with row vector <InlineMath math="v^T \in \mathbb{R}^{1 \times m}" />.
+The result of this multiplication is an <InlineMath math="m \times m" /> matrix with rank <InlineMath math="1" /> for <InlineMath math="v \neq 0" />.
 Don't confuse this with scalar multiplication <InlineMath math="v^T v \in \mathbb{R}" />.
 
 ## Properties of Householder Transformation
 
-Let <InlineMath math="S = I - 2vv^T \in \mathbb{R}^{m \times m}" /> be a Householder transformation matrix 
+Let <InlineMath math="S = I - 2vv^T \in \mathbb{R}^{m \times m}" /> be a Householder transformation matrix
 for vector <InlineMath math="v \in \mathbb{R}^m" /> with <InlineMath math="\|v\|_2 = 1" />. Then it holds:
 
 1. <InlineMath math="S" /> is symmetric: <InlineMath math="S^T = S" />
 
 2. <InlineMath math="S" /> is an orthogonal matrix: <InlineMath math="S^T S = I" />
 
-3. Multiplication <InlineMath math="S \cdot x" /> of <InlineMath math="S" /> from the left with vector <InlineMath math="x \in \mathbb{R}^n" /> 
-   causes reflection of <InlineMath math="x" /> in the subspace <InlineMath math="\text{Span}(v)^{\perp}" />, 
+3. Multiplication <InlineMath math="S \cdot x" /> of <InlineMath math="S" /> from the left with vector <InlineMath math="x \in \mathbb{R}^n" />
+   causes reflection of <InlineMath math="x" /> in the subspace <InlineMath math="\text{Span}(v)^{\perp}" />,
    that is, in the hyperplane with normal vector <InlineMath math="v" />
 
 4. <InlineMath math="\text{cond}_2(S) = 1" />
 
 ## Householder Procedure
 
-Given matrix <InlineMath math="A \in \mathbb{R}^{m \times n}" /> with <InlineMath math="m \geq n" /> 
-and <InlineMath math="\text{Rank}A = n" />. For QR decomposition computation, 
-matrix <InlineMath math="A" /> is transformed column by column through Householder reflections 
+Given matrix <InlineMath math="A \in \mathbb{R}^{m \times n}" /> with <InlineMath math="m \geq n" />
+and <InlineMath math="\text{Rank}A = n" />. For QR decomposition computation,
+matrix <InlineMath math="A" /> is transformed column by column through Householder reflections
 into upper triangular form.
 
-Start with <InlineMath math="A_1 = A" /> and reflect the first column of <InlineMath math="A_1" /> 
+Start with <InlineMath math="A_1 = A" /> and reflect the first column of <InlineMath math="A_1" />
 with respect to a vector using reflection plane with:
 
 <MathContainer>
@@ -230,7 +230,7 @@ Finally we obtain:
 
 ### Computational Complexity
 
-The numerical complexity for computing QR decomposition of matrix <InlineMath math="A \in \mathbb{R}^{m \times n}" /> 
+The numerical complexity for computing QR decomposition of matrix <InlineMath math="A \in \mathbb{R}^{m \times n}" />
 with Householder procedure is essentially:
 
 <MathContainer>
@@ -242,9 +242,9 @@ with Householder procedure is essentially:
 
 1. Due to orthogonal transformation, it holds that <InlineMath math="\text{cond}_2(R) = \text{cond}_2(A)" />
 
-2. The diagonal elements of <InlineMath math="R" /> are the numbers <InlineMath math="\pm\|\tilde{a}_i\|_2" /> 
-   from the <InlineMath math="i" />-th step. Choosing the transformation so that all are positive gives the QR decomposition. 
-   If <InlineMath math="\|\tilde{a}_i\|_2 = 0" />, <InlineMath math="A" /> does not have full rank 
+2. The diagonal elements of <InlineMath math="R" /> are the numbers <InlineMath math="\pm\|\tilde{a}_i\|_2" />
+   from the <InlineMath math="i" />-th step. Choosing the transformation so that all are positive gives the QR decomposition.
+   If <InlineMath math="\|\tilde{a}_i\|_2 = 0" />, <InlineMath math="A" /> does not have full rank
    and the algorithm stops.
 
    For numerical reasons choose the sign so that cancellation is avoided:
@@ -254,7 +254,7 @@ with Householder procedure is essentially:
    <BlockMath math="u_i = \tilde{a}_i + \text{sgn}(\tilde{a}_i) \cdot \|\tilde{a}_i\|_2 \cdot e_1 \text{ (optimal sign choice)}" />
    </MathContainer>
 
-3. Instead of constructing <InlineMath math="Q" />, in compact storage one can also store 
+3. Instead of constructing <InlineMath math="Q" />, in compact storage one can also store
    only the information needed for the transformation:
 
    <BlockMath math="\text{Store vector } \tilde{a}_i \mp \|\tilde{a}_i\|_2 \cdot e_1" />

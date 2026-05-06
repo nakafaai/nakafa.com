@@ -197,7 +197,7 @@ For each row <InlineMath math="i = 1, \ldots, m" />, we calculate:
 
 <BlockMath math="y_i := \frac{1}{l_{ii}} \cdot \left( c_i - \sum_{j=1}^{i-1} l_{ij} \cdot y_j \right)" />
 
-This algorithm is efficient because we only need to calculate one value at each step. The diagonal element <InlineMath math="l_{ii}" /> is always 1 for matrix <InlineMath math="L" /> from LU decomposition, so division becomes simple.
+This algorithm is efficient because we only need to calculate one value at each step. The diagonal element <InlineMath math="l_{ii}" /> is always <InlineMath math="1" /> for matrix <InlineMath math="L" /> from LU decomposition, so division becomes simple.
 
 ### Backward Substitution
 
@@ -258,7 +258,7 @@ Let's see how LU decomposition is used to solve linear systems concretely. Suppo
 
    <BlockMath math="y = L^{-1} \cdot c = \begin{pmatrix} 3 \\ 4 \\ 0 \end{pmatrix}" />
 
-3. **The third step** is backward substitution to solve <InlineMath math="U \cdot x = y" />. Matrix <InlineMath math="U" /> in row echelon form has pivots in columns 1, 2, and 4. Column 3 has no pivot so it becomes a free variable.
+3. **The third step** is backward substitution to solve <InlineMath math="U \cdot x = y" />. Matrix <InlineMath math="U" /> in row echelon form has pivots in columns <InlineMath math="1, 2, 4" />. Column <InlineMath math="3" /> has no pivot so it becomes a free variable.
 
    From the backward substitution process, we obtain the particular solution:
 

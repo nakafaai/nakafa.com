@@ -8,11 +8,11 @@ export const metadata = {
 
 ## What Are Percentiles?
 
-You're already familiar with [quartiles](/subject/high-school/10/mathematics/statistics/quartile-data-group), which divide data into 4 equal parts, right? Well, **percentiles** are like quartiles' sibling, but they're even more detailed!
+You're already familiar with [quartiles](/subject/high-school/10/mathematics/statistics/quartile-data-group), which divide data into <InlineMath math="4" /> equal parts, right? Well, **percentiles** are like quartiles' sibling, but they're even more detailed!
 
-If quartiles divide data into 4 chunks, percentiles divide ordered data into **100 equal chunks**. That's a lot, huh? Like dividing a chocolate bar into 100 tiny squares.
+If quartiles divide data into <InlineMath math="4" /> chunks, percentiles divide ordered data into <InlineMath math="100" /> equal chunks. That's a lot, huh? Like dividing a chocolate bar into <InlineMath math="100" /> tiny squares.
 
-Each chunk is separated by a percentile value. There are 99 percentile values, starting from <InlineMath math="P_1" />, <InlineMath math="P_2" />, <InlineMath math="P_3" />, ..., up to <InlineMath math="P_{99}" />.
+Each chunk is separated by a percentile value. There are <InlineMath math="99" /> percentile values, starting from <InlineMath math="P_1" />, <InlineMath math="P_2" />, <InlineMath math="P_3" />, ..., up to <InlineMath math="P_{99}" />.
 
 - <InlineMath math="P_{10}" /> (<InlineMath math="10" />th Percentile) means this value separates the smallest
   <InlineMath math="10\%" /> of the data from the remaining <InlineMath math="90\%" />.
@@ -36,7 +36,7 @@ First, we determine which data point corresponds to the i-th percentile. The for
 
 <BlockMath math="\text{Position of } P_i = \text{the } \frac{i}{100} \times n \text{-th data point}" />
 
-- <InlineMath math="i" /> = Which percentile are we looking for? (e.g., 10, 50, 85)
+- <InlineMath math="i" /> = Which percentile are we looking for? (e.g., <InlineMath math="10, 50, 85" />)
 - <InlineMath math="n" /> = Total number of data points
 
 Once we have the position, we look at the cumulative frequency table (<InlineMath math="F_k" />) to find out which class interval this percentile falls into.
@@ -51,7 +51,7 @@ Where:
 
 - <InlineMath math="P_i" /> = Value of the i-th Percentile (what we're looking for)
 - <InlineMath math="T_b" /> = Lower boundary of the i-th percentile class
-- <InlineMath math="i" /> = Which percentile (e.g., 10, 85)
+- <InlineMath math="i" /> = Which percentile (e.g., <InlineMath math="10, 85" />)
 - <InlineMath math="n" /> = Total frequency
 - <InlineMath math="F_{kum}" /> = Cumulative frequency **BEFORE** the i-th percentile
   class
@@ -123,9 +123,9 @@ Look at <InlineMath math="F_k" />. The <InlineMath math="8" />th data point is i
     - <InlineMath math="T_b = 70.5" />
     - <InlineMath math="i = 20" />
     - <InlineMath math="n = 40" />
-    - <InlineMath math="F_{kum}" /> = 4
-    - <InlineMath math="f_{20}" /> = 10
-    - <InlineMath math="p" /> = 10
+    - <InlineMath math="F_{kum} = 4" />
+    - <InlineMath math="f_{20} = 10" />
+    - <InlineMath math="p = 10" />
 
 4.  **Calculate <InlineMath math="P_{20}" />:**
 
@@ -137,4 +137,4 @@ Look at <InlineMath math="F_k" />. The <InlineMath math="8" />th data point is i
       <BlockMath math="P_{20} = 74.5" />
     </MathContainer>
 
-The <InlineMath math="20" />th Percentile value is 74.5.
+The <InlineMath math="20" />th Percentile value is <InlineMath math="74.5" />.

@@ -44,10 +44,10 @@ If events <InlineMath math="A" /> and <InlineMath math="B" /> are mutually exclu
 
 Using the two-dice roll from before:
 
-- Probability of sum being 7 (<InlineMath math="P(S=7)" />) = There are 6 pairs out of <InlineMath math="36" /> total is <InlineMath math="6/36" />
-- Probability of getting doubles (<InlineMath math="P(\text{Doubles})" />) = There are 6 pairs out of <InlineMath math="36" /> total is <InlineMath math="6/36" />
+- Probability of sum being <InlineMath math="7" /> (<InlineMath math="P(S=7)" />): there are <InlineMath math="6" /> pairs out of <InlineMath math="36" /> total, so the probability is <InlineMath math="6/36" />
+- Probability of getting doubles (<InlineMath math="P(\text{Doubles})" />): there are <InlineMath math="6" /> pairs out of <InlineMath math="36" /> total, so the probability is <InlineMath math="6/36" />
 
-So, the probability of getting a sum of 7 OR doubles is:
+So, the probability of getting a sum of <InlineMath math="7" /> OR doubles is:
 
 <BlockMath math="P(S=7 \text{ or Doubles}) = P(S=7) + P(\text{Doubles}) = \frac{6}{36} + \frac{6}{36} = \frac{12}{36} = \frac{1}{3}" />
 
@@ -67,10 +67,10 @@ Not Mutually Exclusive events mean two events that **CAN happen at the same time
 
 If we just add <InlineMath math="P(A) + P(B)" /> for non-mutually exclusive events, we'll count something twice! That something is the part where <InlineMath math="A" /> and <InlineMath math="B" /> happen together (their intersection).
 
-Like in the sum 8 OR doubles example:
+Like in the sum <InlineMath math="8" /> OR doubles example:
 
-- <InlineMath math="P(S=8)" /> = There are 5 pairs is <InlineMath math="5/36" />
-- <InlineMath math="P(\text{Doubles})" /> = There are 6 pairs is <InlineMath math="6/36" />
+- <InlineMath math="P(S=8)" />: there are <InlineMath math="5" /> pairs, so the probability is <InlineMath math="5/36" />
+- <InlineMath math="P(\text{Doubles})" /> is <InlineMath math="6" /> pairs, namely <InlineMath math="6/36" />
 
 If we just add them: <InlineMath math="5/36 + 6/36 = 11/36" />. The pair <InlineMath math="(4,4)" /> was counted in the "Sum is 8" group AND counted again in the "Doubles" group. **So it was counted twice**!
 
@@ -90,7 +90,7 @@ Let's continue the sum 8 OR doubles example:
 - <InlineMath math="P(\text{Doubles}) = 6/36" />
 - The probability of the event "sum is 8 AND doubles" (<InlineMath math="P(S=8 \text{ and Doubles})" />) is just one outcome: the pair <InlineMath math="(4, 4)" />. So its probability is <InlineMath math="1/36" />.
 
-Therefore, the probability of getting a sum of 8 OR doubles is:
+Therefore, the probability of getting a sum of <InlineMath math="8" /> OR doubles is:
 
 <MathContainer>
   <BlockMath math="P(S=8 \text{ or Doubles}) = P(S=8) + P(\text{Doubles}) - P(S=8 \text{ and Doubles})" />

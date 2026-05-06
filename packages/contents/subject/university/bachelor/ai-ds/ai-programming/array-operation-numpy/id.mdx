@@ -70,7 +70,7 @@ print(f"Hasil a + b: {hasil}")
   ]}
 />
 
-### Array 2D dengan 1D
+### Array Dua Dimensi dengan Array Satu Dimensi
 
 Ketika kamu bekerja dengan array yang memiliki dimensi berbeda, NumPy akan mencoba menyesuaikan bentuknya secara otomatis. Proses ini sangat berguna saat kamu ingin menerapkan operasi yang sama pada setiap baris atau kolom dari matriks.
 
@@ -264,7 +264,7 @@ print(f"Standar deviasi: {np.std(data):.2f}")
 
 ### Operasi dengan Sumbu
 
-Konsep sumbu (axis) dalam NumPy sangat penting. Untuk array 2D, `axis=0` berarti operasi dilakukan sepanjang baris (menghasilkan nilai untuk setiap kolom), sedangkan `axis=1` berarti operasi dilakukan sepanjang kolom (menghasilkan nilai untuk setiap baris).
+Konsep sumbu (axis) dalam NumPy sangat penting. Untuk array dua dimensi, `axis=0` berarti operasi dilakukan sepanjang baris (menghasilkan nilai untuk setiap kolom), sedangkan `axis=1` berarti operasi dilakukan sepanjang kolom (menghasilkan nilai untuk setiap baris).
 
 Pemahaman tentang sumbu ini membantu kamu mengontrol bagaimana fungsi statistik bekerja pada data multidimensi. Misalnya, jika kamu punya data penjualan per bulan untuk berbagai produk, kamu bisa menghitung total penjualan per produk atau per bulan.
 
@@ -328,7 +328,7 @@ print(f"Disimpan dalam memori sebagai: {a.ravel()}")
 
 ### Flatten dan Ravel
 
-Fungsi `flatten()` dan `ravel()` keduanya mengubah array multidimensi menjadi array 1D, tetapi dengan cara yang berbeda. Flatten membuat salinan baru dari data, sedangkan ravel mencoba membuat view yang lebih efisien dari segi memori.
+Fungsi `flatten()` dan `ravel()` keduanya mengubah array multidimensi menjadi array satu dimensi, tetapi dengan cara yang berbeda. Flatten membuat salinan baru dari data, sedangkan ravel mencoba membuat view yang lebih efisien dari segi memori.
 
 <CodeBlock
   data={[

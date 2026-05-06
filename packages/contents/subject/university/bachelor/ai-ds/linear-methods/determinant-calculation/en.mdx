@@ -12,7 +12,7 @@ After understanding the [basic concepts of determinant](/subject/university/bach
 
 For small matrices, we can use direct formulas. However, for larger matrices, we need more efficient strategies.
 
-## Basic Case of 1×1 Matrix
+## Basic Case of an Order-One Matrix
 
 For matrices of size <InlineMath math="1 \times 1" />, the determinant is very simple. If <InlineMath math="A \in \mathbb{R}^{1 \times 1}" /> with <InlineMath math="A = (a_{11})" />, then:
 
@@ -56,9 +56,9 @@ for a fixed and freely chosen column <InlineMath math="j" />.
 
 In this formula, the term <InlineMath math="(-1)^{i+j} \cdot \det A_{ij}" /> is called the **cofactor** of element <InlineMath math="a_{ij}" />. The sign <InlineMath math="(-1)^{i+j}" /> provides a checkerboard pattern to determine positive or negative signs.
 
-### Example of 3×3 Cofactor Expansion
+### Example of Third-Order Cofactor Expansion
 
-Let's look at an example of cofactor expansion for a 3×3 matrix:
+Let's look at an example of cofactor expansion for a <InlineMath math="3 \times 3" /> matrix:
 
 <BlockMath math="A = \begin{pmatrix} 2 & 1 & 3 \\ 0 & 4 & 1 \\ 1 & 2 & 0 \end{pmatrix}" />
 
@@ -133,11 +133,11 @@ Elementary matrices are matrices obtained from the identity matrix with one elem
 
     <BlockMath math="\det Q_i^j(\lambda) = 1" />
 
-3. **Transvection matrix** <InlineMath math="P_i^j" /> that adds a multiple of row j to row i:
+3. **Transvection matrix** <InlineMath math="P_i^j" /> that adds a multiple of row <InlineMath math="j" /> to row <InlineMath math="i" />:
 
     <BlockMath math="\det P_i^j = -1" />
 
-Note that permutation matrices have determinant 1, not -1 as often mistaken. The negative sign appears when we **perform** row swap operations on other matrices.
+Note that permutation matrices have determinant <InlineMath math="1" />, not <InlineMath math="-1" /> as often mistaken. The negative sign appears when we **perform** row swap operations on other matrices.
 
 ## Gaussian Elimination for Determinant Calculation
 
@@ -169,15 +169,15 @@ Let's look at an example of determinant calculation using Gaussian elimination:
 
 <BlockMath math="A = \begin{pmatrix} 0 & 3 & 3 \\ 2 & 2 & 0 \\ 1 & 0 & 1 \end{pmatrix}" />
 
-**Step 1**: Swap rows 1 and 3 to get a non-zero pivot:
+**Step 1**: Swap rows <InlineMath math="1" /> and <InlineMath math="3" /> to get a non-zero pivot:
 
 <BlockMath math="\begin{pmatrix} 1 & 0 & 1 \\ 2 & 2 & 0 \\ 0 & 3 & 3 \end{pmatrix}" />
 
-**Step 2**: Eliminate the first column by subtracting 2 times row 1 from row 2:
+**Step <InlineMath math="2" />**: Eliminate the first column by subtracting <InlineMath math="2" /> times row <InlineMath math="1" /> from row <InlineMath math="2" />:
 
 <BlockMath math="\begin{pmatrix} 1 & 0 & 1 \\ 0 & 2 & -2 \\ 0 & 3 & 3 \end{pmatrix}" />
 
-**Step 3**: Eliminate the second column by subtracting 1.5 times row 2 from row 3:
+**Step <InlineMath math="3" />**: Eliminate the second column by subtracting <InlineMath math="1.5" /> times row <InlineMath math="2" /> from row <InlineMath math="3" />:
 
 <BlockMath math="\begin{pmatrix} 1 & 0 & 1 \\ 0 & 2 & -2 \\ 0 & 0 & 6 \end{pmatrix} = R" />
 

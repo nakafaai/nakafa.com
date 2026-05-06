@@ -122,9 +122,9 @@ print("Axis 2 (columns):", a.shape[2])  # Output: Axis 2 (columns): 3`
 
 | Dimension | Shape | Structure | Example | Axis |
 |-----------|-------|-----------|---------|------|
-| **1D** | `(4,)` | Number sequence in single row | `[0, 1, 2, 3]` | Axis 0 for element index |
-| **2D** | `(2, 2)` | Table with rows and columns | `[[0, 1], [2, 3]]` | Axis 0 for rows, Axis 1 for columns |
-| **3D** | `(2, 2, 3)` | Stack of tables (planes) | 2 planes, each plane 2x3 | Axis 0 depth, Axis 1 height, Axis 2 width |
+| **One-dimensional** | `(4,)` | Number sequence in single row | `[0, 1, 2, 3]` | Axis 0 for element index |
+| **Two-dimensional** | `(2, 2)` | Table with rows and columns | `[[0, 1], [2, 3]]` | Axis 0 for rows, Axis 1 for columns |
+| **Three-dimensional** | `(2, 2, 3)` | Stack of tables (planes) | <InlineMath math="2" /> planes, each plane <InlineMath math="2 \times 3" /> | Axis 0 depth, Axis 1 height, Axis 2 width |
 
 The higher the array dimension, the more complex the data structure, but the basic principle remains the same. Each axis represents one dimension of data organization.
 

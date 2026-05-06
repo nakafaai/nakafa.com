@@ -16,7 +16,7 @@ Container dalam Python memiliki karakteristik utama yaitu dapat menyimpan berbag
 Python menyediakan lima jenis container utama dengan karakteristik berbeda:
 
 - **String** - urutan karakter yang tidak dapat diubah
-- **List** - urutan item yang dapat diubah dan diindeks  
+- **List** - urutan item yang dapat diubah dan diindeks
 - **Tuple** - urutan item yang tidak dapat diubah
 - **Dictionary** - pasangan kunci-nilai
 - **Set** - kumpulan item unik tanpa urutan
@@ -47,7 +47,7 @@ List dibuat menggunakan tanda kurung siku dengan elemen dipisahkan koma. List da
       filename: "list_creation.py",
       code: `# Berbagai jenis list berdasarkan tipe data
 a = [True, False, True]              # Output: [True, False, True] # list of bools
-b = [1, 2, 3]                        # Output: [1, 2, 3] # list of ints  
+b = [1, 2, 3]                        # Output: [1, 2, 3] # list of ints
 c = [1.5, 2.5, 3.5]                  # Output: [1.5, 2.5, 3.5] # list of floats
 d = ['red', 'green', 'blue']         # Output: ['red', 'green', 'blue'] # list of strings
 
@@ -71,8 +71,8 @@ Indexing adalah cara mengakses elemen individual dalam list menggunakan nomor po
 
 Indexing dalam Python memiliki aturan khusus yang perlu dipahami:
 
-- **Indeks positif** dimulai dari 0 untuk elemen pertama
-- **Indeks negatif** dimulai dari -1 untuk elemen terakhir  
+- **Indeks positif** dimulai dari <InlineMath math="0" /> untuk elemen pertama
+- **Indeks negatif** dimulai dari <InlineMath math="-1" /> untuk elemen terakhir
 - **Indeks di luar range** akan menghasilkan IndexError
 
 <CodeBlock
@@ -106,7 +106,7 @@ Slicing adalah teknik untuk mengambil sebagian elemen dari list. Stride memungki
 
 Sintaks lengkap slicing adalah `list[start:stop:step]` dimana:
 - `start` adalah indeks awal (inclusive)
-- `stop` adalah indeks akhir (exclusive)  
+- `stop` adalah indeks akhir (exclusive)
 - `step` adalah interval pengambilan elemen
 
 <CodeBlock
@@ -133,7 +133,7 @@ print('x[::-1] =', x[::-1])                  # Output: x[::-1] = [5, 4, 3, 2, 1,
   ]}
 />
 
-Slicing seperti memotong roti tawar. Jika kamu punya 6 lembar roti (indeks 0-5), maka `x[1:4]` berarti mengambil lembar ke-2 sampai ke-4 (tidak termasuk lembar ke-5). Sedangkan `x[1:4:2]` berarti mengambil lembar ke-2 dan ke-4 saja (melompati 1 lembar).
+Slicing seperti memotong roti tawar. Jika kamu punya <InlineMath math="6" /> lembar roti (indeks <InlineMath math="0\text{-}5" />), maka `x[1:4]` berarti mengambil lembar ke-<InlineMath math="2" /> sampai ke-<InlineMath math="4" /> (tidak termasuk lembar ke-<InlineMath math="5" />). Sedangkan `x[1:4:2]` berarti mengambil lembar ke-<InlineMath math="2" /> dan ke-<InlineMath math="4" /> saja (melompati <InlineMath math="1" /> lembar).
 
 ## Operasi dan Kesamaan dengan String
 
@@ -151,7 +151,7 @@ nested = [1, [2.5, False, 'red'], 3.5, 'blue']
 print('nested =', nested)
 # Output: nested = [1, [2.5, False, 'red'], 3.5, 'blue']
 
-# Menampilkan tanpa assignment  
+# Menampilkan tanpa assignment
 print(nested)
 # Output: [1, [2.5, False, 'red'], 3.5, 'blue']
 
@@ -178,7 +178,7 @@ Perbedaan utama adalah string bersifat immutable (tidak dapat diubah) sedangkan 
         A[List Methods] --> B[Adding]
         A --> C[Removing]
         A --> D[Organizing]
-        
+
         B --> E[append]
         B --> F[extend]
         B --> G[insert]
@@ -283,7 +283,7 @@ mixed = [False, 2, 3.5, 'blue']             # Output: [False, 2, 3.5, 'blue']
 nested = [1, [2.5, False, 'red'], 3.5, 'blue']  # Output: [1, [2.5, False, 'red'], 3.5, 'blue']
 
 print('Empty list 1:', a)
-print('Empty list 2:', b) 
+print('Empty list 2:', b)
 print('Mixed types:', mixed)
 print('Nested structure:', nested)`
     }
@@ -411,4 +411,4 @@ print('genap & ganjil =', genap & ganjil)    # Output: genap & ganjil = set()`
 | **Dictionary** | `{'a': 1}` | Ya* | Ya | Tidak (kunci) | Mapping kunci-nilai |
 | **Set** | `{1, 2, 3}` | Tidak | Ya | Tidak | Elemen unik, operasi himpunan |
 
-> Dictionary mempertahankan urutan insertion sejak Python 3.7+
+> Dictionary mempertahankan urutan insertion sejak Python `3.7+`

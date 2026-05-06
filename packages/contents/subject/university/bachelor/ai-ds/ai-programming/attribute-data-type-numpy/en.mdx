@@ -50,19 +50,19 @@ NumPy provides detailed precision control with various sizes of numeric data typ
 
 | Category | Data Type | Description | Value Range |
 |----------|-----------|-------------|-------------|
-| **Signed Integer** | `int8` | 8-bit signed integer | -128 to 127 |
-| | `int16` | 16-bit signed integer | -32768 to 32767 |
-| | `int32` | 32-bit signed integer | -2147483648 to 2147483647 |
-| | `int64` | 64-bit signed integer | Very large range |
-| **Unsigned Integer** | `uint8` | 8-bit unsigned integer | 0 to 255 |
-| | `uint16` | 16-bit unsigned integer | 0 to 65535 |
-| | `uint32` | 32-bit unsigned integer | 0 to 4294967295 |
-| | `uint64` | 64-bit unsigned integer | Very large positive range |
-| **Float** | `float16` | Half-precision float | 5 bit exponent, 10 bit mantissa |
-| | `float32` | Single-precision float | 8 bit exponent, 23 bit mantissa |
-| | `float64` | Double-precision float | 11 bit exponent, 52 bit mantissa |
-| **Complex** | `complex64` | Complex number | Two 32-bit floats |
-| | `complex128` | Complex number | Two 64-bit floats |
+| **Signed Integer** | `int8` | <InlineMath math="8" />-bit signed integer | <InlineMath math="-128 \text{ to } 127" /> |
+| | `int16` | <InlineMath math="16" />-bit signed integer | <InlineMath math="-32768 \text{ to } 32767" /> |
+| | `int32` | <InlineMath math="32" />-bit signed integer | <InlineMath math="-2147483648 \text{ to } 2147483647" /> |
+| | `int64` | <InlineMath math="64" />-bit signed integer | Very large range |
+| **Unsigned Integer** | `uint8` | <InlineMath math="8" />-bit unsigned integer | <InlineMath math="0 \text{ to } 255" /> |
+| | `uint16` | <InlineMath math="16" />-bit unsigned integer | <InlineMath math="0 \text{ to } 65535" /> |
+| | `uint32` | <InlineMath math="32" />-bit unsigned integer | <InlineMath math="0 \text{ to } 4294967295" /> |
+| | `uint64` | <InlineMath math="64" />-bit unsigned integer | Very large positive range |
+| **Float** | `float16` | Half-precision float | <InlineMath math="5 \text{ bit exponent}" />, <InlineMath math="10 \text{ bit mantissa}" /> |
+| | `float32` | Single-precision float | <InlineMath math="8 \text{ bit exponent}" />, <InlineMath math="23 \text{ bit mantissa}" /> |
+| | `float64` | Double-precision float | <InlineMath math="11 \text{ bit exponent}" />, <InlineMath math="52 \text{ bit mantissa}" /> |
+| **Complex** | `complex64` | Complex number | Two <InlineMath math="32" />-bit floats |
+| | `complex128` | Complex number | Two <InlineMath math="64" />-bit floats |
 
 ### Specifying Data Types
 
@@ -160,9 +160,9 @@ print("Data pointer:", a.data)  # Output: Data pointer: <memory at 0x...>`
 
 | Attribute | Function | Example Result |
 |-----------|----------|----------------|
-| `ndarray.shape` | Number of elements in each axis | `(2, 3)` for 2x3 array |
-| `ndarray.ndim` | Number of axes/dimensions | `2` for 2D array |
-| `ndarray.size` | Total number of elements | `6` for 2x3 array |
+| `ndarray.shape` | Number of elements in each axis | `(2, 3)` for <InlineMath math="2 \times 3" /> array |
+| `ndarray.ndim` | Number of axes/dimensions | `2` for two-dimensional array |
+| `ndarray.size` | Total number of elements | `6` for <InlineMath math="2 \times 3" /> array |
 | `ndarray.dtype` | Element data type | `int64`, `float64`, etc |
 | `ndarray.data` | Pointer to array data start | Memory address |
 

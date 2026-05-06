@@ -197,7 +197,7 @@ Untuk setiap baris <InlineMath math="i = 1, \ldots, m" />, kita menghitung:
 
 <BlockMath math="y_i := \frac{1}{l_{ii}} \cdot \left( c_i - \sum_{j=1}^{i-1} l_{ij} \cdot y_j \right)" />
 
-Algoritma ini efisien karena kita hanya perlu menghitung satu nilai di setiap langkah. Elemen diagonal <InlineMath math="l_{ii}" /> selalu bernilai 1 untuk matriks <InlineMath math="L" /> dari dekomposisi LU, sehingga pembagian menjadi sederhana.
+Algoritma ini efisien karena kita hanya perlu menghitung satu nilai di setiap langkah. Elemen diagonal <InlineMath math="l_{ii}" /> selalu bernilai <InlineMath math="1" /> untuk matriks <InlineMath math="L" /> dari dekomposisi LU, sehingga pembagian menjadi sederhana.
 
 ### Substitusi Mundur
 
@@ -258,7 +258,7 @@ Mari kita lihat bagaimana dekomposisi LU digunakan untuk menyelesaikan sistem li
 
    <BlockMath math="y = L^{-1} \cdot c = \begin{pmatrix} 3 \\ 4 \\ 0 \end{pmatrix}" />
 
-3. **Langkah ketiga** adalah substitusi mundur untuk menyelesaikan <InlineMath math="U \cdot x = y" />. Matriks <InlineMath math="U" /> dalam bentuk baris bertingkat memiliki pivot pada kolom 1, 2, dan 4. Kolom 3 tidak memiliki pivot sehingga menjadi variabel bebas.
+3. **Langkah ketiga** adalah substitusi mundur untuk menyelesaikan <InlineMath math="U \cdot x = y" />. Matriks <InlineMath math="U" /> dalam bentuk baris bertingkat memiliki pivot pada kolom <InlineMath math="1, 2, 4" />. Kolom <InlineMath math="3" /> tidak memiliki pivot sehingga menjadi variabel bebas.
 
    Dari proses substitusi mundur, kita memperoleh solusi khusus:
 

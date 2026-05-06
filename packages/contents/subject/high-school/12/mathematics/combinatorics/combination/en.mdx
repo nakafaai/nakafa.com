@@ -8,7 +8,7 @@ export const metadata = {
 
 ## Understanding Combination
 
-Imagine you are asked to choose 3 friends to join a futsal team. Does the order of selection matter? Of course not! What matters is **who** is selected, not the order in which they are chosen.
+Imagine you are asked to choose <InlineMath math="3 \text{ friends}" /> to join a futsal team. Does the order of selection matter? Of course not! What matters is **who** is selected, not the order in which they are chosen.
 
 This is the fundamental difference between combination and permutation. **Combination** is a way to select a certain number of objects from a larger collection of objects, where **order is not considered**.
 
@@ -44,7 +44,7 @@ Division by <InlineMath math="k!" /> is done because in combinations, we **don't
 
 **Sports Team Formation:**
 
-From 10 available students, how many ways can we select <InlineMath math="5 \text{ students}" /> for a basketball team?
+From <InlineMath math="10 \text{ available students}" />, how many ways can we select <InlineMath math="5 \text{ students}" /> for a basketball team?
 
 <MathContainer>
 <BlockMath math="C(10,5) = \frac{10!}{5! \times 5!}" />
@@ -53,7 +53,7 @@ From 10 available students, how many ways can we select <InlineMath math="5 \tex
 
 **Food Menu Selection:**
 
-A restaurant offers 8 types of food and you can choose 3 types. How many possible combination choices are there?
+A restaurant offers <InlineMath math="8 \text{ types of food}" /> and you can choose <InlineMath math="3 \text{ types}" />. How many possible combination choices are there?
 
 <MathContainer>
 <BlockMath math="C(8,3) = \frac{8!}{5! \times 3!}" />
@@ -62,30 +62,30 @@ A restaurant offers 8 types of food and you can choose 3 types. How many possibl
 
 **Situations with Special Conditions:**
 
-Sometimes there are **certain restrictions** in selection. For example, from <InlineMath math="12 \text{ students}" /> (7 males and 5 females), we must select <InlineMath math="4 \text{ students}" /> with the condition of at least 2 females.
+Sometimes there are **certain restrictions** in selection. For example, from <InlineMath math="12 \text{ students}" /> (<InlineMath math="7 \text{ males}" /> and <InlineMath math="5 \text{ females}" />), we must select <InlineMath math="4 \text{ students}" /> with the condition of at least <InlineMath math="2 \text{ females}" />.
 
 **Solution strategy:**
 1. **Count all possibilities** that meet the conditions
-2. **Separate based on conditions:** 2 females + 2 males, 3 females + 1 male, or 4 females
+2. **Separate based on conditions:** <InlineMath math="2 \text{ females} + 2 \text{ males}" />, <InlineMath math="3 \text{ females} + 1 \text{ male}" />, or <InlineMath math="4 \text{ females}" />
 3. **Sum** all possibilities
 
 **Detailed calculations:**
 
-**Case 1:** 2 females + 2 males
+**Case** <InlineMath math="1" />: <InlineMath math="2 \text{ females} + 2 \text{ males}" />
 
 <MathContainer>
 <BlockMath math="C(5,2) \times C(7,2) = \frac{5!}{3! \times 2!} \times \frac{7!}{5! \times 2!}" />
 <BlockMath math="= \frac{5 \times 4}{2 \times 1} \times \frac{7 \times 6}{2 \times 1} = 10 \times 21 = 210" />
 </MathContainer>
 
-**Case 2:** 3 females + 1 male
+**Case** <InlineMath math="2" />: <InlineMath math="3 \text{ females} + 1 \text{ male}" />
 
 <MathContainer>
 <BlockMath math="C(5,3) \times C(7,1) = \frac{5!}{2! \times 3!} \times \frac{7!}{6! \times 1!}" />
 <BlockMath math="= \frac{5 \times 4}{2 \times 1} \times 7 = 10 \times 7 = 70" />
 </MathContainer>
 
-**Case 3:** 4 females + 0 males
+**Case** <InlineMath math="3" />: <InlineMath math="4 \text{ females} + 0 \text{ males}" />
 
 <MathContainer>
 <BlockMath math="C(5,4) = \frac{5!}{1! \times 4!} = \frac{5}{1} = 5" />
@@ -95,13 +95,13 @@ Sometimes there are **certain restrictions** in selection. For example, from <In
 
 ## Practice Problems
 
-1. From 8 different books, how many ways can you choose 3 books to read during vacation?
+1. From <InlineMath math="8 \text{ different books}" />, how many ways can you choose <InlineMath math="3 \text{ books}" /> to read during vacation?
 
-2. A futsal team has 12 players. How many ways can they select 5 players to play on the field?
+2. A futsal team has <InlineMath math="12 \text{ players}" />. How many ways can they select <InlineMath math="5 \text{ players}" /> to play on the field?
 
-3. In a box there are 6 red balls and 4 blue balls. How many ways can you take <InlineMath math="5 \text{ balls}" /> with the condition of at least 3 red balls?
+3. In a box there are <InlineMath math="6 \text{ red balls}" /> and <InlineMath math="4 \text{ blue balls}" />. How many ways can you take <InlineMath math="5 \text{ balls}" /> with the condition of at least <InlineMath math="3 \text{ red balls}" />?
 
-4. A student must choose 4 subjects from 10 available subjects. If 6 subjects are mandatory and 4 subjects are elective, how many ways can they choose if there must be at least 2 mandatory subjects?
+4. A student must choose <InlineMath math="4 \text{ subjects}" /> from <InlineMath math="10 \text{ available subjects}" />. If <InlineMath math="6 \text{ subjects}" /> are mandatory and <InlineMath math="4 \text{ subjects}" /> are elective, how many ways can they choose if there must be at least <InlineMath math="2 \text{ mandatory subjects}" />?
 
 ### Answer Key
 
@@ -118,7 +118,7 @@ Sometimes there are **certain restrictions** in selection. For example, from <In
       <BlockMath math="C(8,3) = \frac{8!}{5! \times 3!} = \frac{8 \times 7 \times 6}{3 \times 2 \times 1} = \frac{336}{6} = 56" />
    </MathContainer>
    
-   Therefore, there are <InlineMath math="56 \text{ ways}" /> to choose 3 books from 8 available books.
+   Therefore, there are <InlineMath math="56 \text{ ways}" /> to choose <InlineMath math="3 \text{ books}" /> from <InlineMath math="8 \text{ available books}" />.
 
 2. **Answer: <InlineMath math="792 \text{ ways}" />**
    
@@ -133,33 +133,33 @@ Sometimes there are **certain restrictions** in selection. For example, from <In
       <BlockMath math="C(12,5) = \frac{12 \times 11 \times 10 \times 9 \times 8}{5 \times 4 \times 3 \times 2 \times 1} = \frac{95.040}{120} = 792" />
    </MathContainer>
    
-   The futsal team can select 5 players from 12 players in 792 different ways.
+   The futsal team can select <InlineMath math="5 \text{ players}" /> from <InlineMath math="12 \text{ players}" /> in <InlineMath math="792 \text{ different ways}" />.
 
 3. **Answer: <InlineMath math="186 \text{ ways}" />**
    
    Solution steps (**case method**):
    
-   Total balls: 6 red + 4 blue is <InlineMath math="10 \text{ balls}" />
+   Total balls: <InlineMath math="6 \text{ red} + 4 \text{ blue}" /> is <InlineMath math="10 \text{ balls}" />
    
    Take <InlineMath math="5 \text{ balls}" /> with at least 3 red balls
    
    **Detailed calculation for each case:**
    
-   **Case 1:** 3 red + 2 blue
+   **Case** <InlineMath math="1" />: <InlineMath math="3 \text{ red} + 2 \text{ blue}" />
 
    <MathContainer>
    <BlockMath math="C(6,3) \times C(4,2) = \frac{6!}{3! \times 3!} \times \frac{4!}{2! \times 2!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4}{3 \times 2 \times 1} \times \frac{4 \times 3}{2 \times 1} = 20 \times 6 = 120" />
    </MathContainer>
    
-   **Case 2:** 4 red + 1 blue
+   **Case** <InlineMath math="2" />: <InlineMath math="4 \text{ red} + 1 \text{ blue}" />
 
    <MathContainer>
    <BlockMath math="C(6,4) \times C(4,1) = \frac{6!}{2! \times 4!} \times \frac{4!}{3! \times 1!}" />
    <BlockMath math="= \frac{6 \times 5}{2 \times 1} \times 4 = 15 \times 4 = 60" />
    </MathContainer>
    
-   **Case 3:** 5 red + 0 blue
+   **Case** <InlineMath math="3" />: <InlineMath math="5 \text{ red} + 0 \text{ blue}" />
 
    <MathContainer>
    <BlockMath math="C(6,5) \times C(4,0) = \frac{6!}{1! \times 5!} \times \frac{4!}{4! \times 0!}" />
@@ -174,27 +174,27 @@ Sometimes there are **certain restrictions** in selection. For example, from <In
    
    Solution steps (**case method**):
    
-   Mandatory subjects: 6, elective subjects: 4
+   Mandatory subjects: <InlineMath math="6" />, elective subjects: <InlineMath math="4" />
    
-   Choose 4 subjects with at least 2 mandatory
+   Choose <InlineMath math="4 \text{ subjects}" /> with at least <InlineMath math="2 \text{ mandatory}" />
    
    **Detailed calculation for each case:**
    
-   **Case 1:** 2 mandatory + 2 elective
+   **Case** <InlineMath math="1" />: <InlineMath math="2 \text{ mandatory} + 2 \text{ elective}" />
 
    <MathContainer>
    <BlockMath math="C(6,2) \times C(4,2) = \frac{6!}{4! \times 2!} \times \frac{4!}{2! \times 2!}" />
    <BlockMath math="= \frac{6 \times 5}{2 \times 1} \times \frac{4 \times 3}{2 \times 1} = 15 \times 6 = 90" />
    </MathContainer>
    
-   **Case 2:** 3 mandatory + 1 elective
+   **Case** <InlineMath math="2" />: <InlineMath math="3 \text{ mandatory} + 1 \text{ elective}" />
 
    <MathContainer>
    <BlockMath math="C(6,3) \times C(4,1) = \frac{6!}{3! \times 3!} \times \frac{4!}{3! \times 1!}" />
    <BlockMath math="= \frac{6 \times 5 \times 4}{3 \times 2 \times 1} \times 4 = 20 \times 4 = 80" />
    </MathContainer>
    
-   **Case 3:** 4 mandatory + 0 elective
+   **Case** <InlineMath math="3" />: <InlineMath math="4 \text{ mandatory} + 0 \text{ elective}" />
 
    <MathContainer>
    <BlockMath math="C(6,4) \times C(4,0) = \frac{6!}{2! \times 4!} \times \frac{4!}{4! \times 0!}" />

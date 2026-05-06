@@ -12,7 +12,7 @@ Indexing dan slicing adalah alat untuk mengekstrak data spesifik dari array NumP
 
 Perilaku berbagi memori ini membuat NumPy sangat efisien tetapi memerlukan perhatian khusus untuk menghindari modifikasi yang tidak diinginkan. [Dokumentasi indexing NumPy](https://numpy.org/doc/stable/user/basics.indexing.html) menyediakan contoh ekstensif pola indexing lanjutan ketika kamu butuh seleksi data yang lebih canggih.
 
-## Operasi Array 1D
+## Operasi Array Satu Dimensi
 
 Array satu dimensi menggunakan sintaks yang sama dengan list Python. Slicing mengembalikan view dari data, bukan copy, sehingga perubahan pada view akan mempengaruhi array asli.
 
@@ -152,16 +152,16 @@ print(a[:, ::2])
   ]}
 />
 
-### Ringkasan Operasi 2D
+### Ringkasan Operasi Dua Dimensi
 
 | Operasi | Deskripsi | Contoh Hasil |
 |---------|-----------|--------------|
 | `a[2,1]` | Elemen baris 2, kolom 1 | Satu nilai: `8.0` |
-| `a[1,:]` | Seluruh baris 1 | Array 1D: `[4. 5. 6.]` |
-| `a[:,2]` | Seluruh kolom 2 | Array 1D: `[3. 6. 9. 12.]` |
-| `a[1:3, 0:2]` | Subarray baris 1-2, kolom 0-1 | Array 2D: `[[4. 5.], [7. 8.]]` |
-| `a[::2, :]` | Setiap baris kedua | Array 2D dengan baris 0, 2 |
-| `a[:, ::2]` | Setiap kolom kedua | Array 2D dengan kolom 0, 2 |
+| `a[1,:]` | Seluruh baris 1 | Array satu dimensi: `[4. 5. 6.]` |
+| `a[:,2]` | Seluruh kolom 2 | Array satu dimensi: `[3. 6. 9. 12.]` |
+| `a[1:3, 0:2]` | Subarray baris <InlineMath math="1\text{-}2" />, kolom <InlineMath math="0\text{-}1" /> | Array dua dimensi: `[[4. 5.], [7. 8.]]` |
+| `a[::2, :]` | Setiap baris kedua | Array dua dimensi dengan baris <InlineMath math="0, 2" /> |
+| `a[:, ::2]` | Setiap kolom kedua | Array dua dimensi dengan kolom <InlineMath math="0, 2" /> |
 
 ## Advanced Indexing
 
@@ -375,7 +375,7 @@ print("a[even_and_greater_than_1]:", a[even_and_greater_than_1])  # Output: a[ev
   ]}
 />
 
-Boolean indexing pada array 2D dapat diterapkan untuk filtering elemen berdasarkan kondisi:
+Boolean indexing pada array dua dimensi dapat diterapkan untuk filtering elemen berdasarkan kondisi:
 
 <CodeBlock
   data={[
@@ -457,7 +457,7 @@ print(a[indices_2d])
   ]}
 />
 
-Fancy indexing pada array 2D memungkinkan seleksi baris dan kolom dengan pola yang kompleks:
+Fancy indexing pada array dua dimensi memungkinkan seleksi baris dan kolom dengan pola yang kompleks:
 
 <CodeBlock
   data={[
