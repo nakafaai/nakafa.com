@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { registerNakafaMcpServer } from "@/lib/mcp/server";
 
 describe("registerNakafaMcpServer", () => {
-  it("passes SDK output validation for success and structured error results", async () => {
+  it("passes SDK output validation for success and structured failure results", async () => {
     const client = new Client({
       name: "vitest",
       version: "1.0.0",
@@ -22,13 +22,15 @@ describe("registerNakafaMcpServer", () => {
     await client.connect(clientTransport);
 
     const tools = await client.listTools();
-    const search = await client.callTool({
+    const quranReference = await client.callTool({
       arguments: {
-        limit: 1,
+        from_verse: 1,
+        include_tafsir: false,
         locale: "en",
-        section: "exercises",
+        surah: 1,
+        to_verse: 1,
       },
-      name: "nakafa_search_content",
+      name: "nakafa_get_quran_reference",
     });
     const missingContent = await client.callTool({
       arguments: {
@@ -48,11 +50,11 @@ describe("registerNakafaMcpServer", () => {
     await server.close();
 
     expect(tools.tools.every((tool) => Boolean(tool.outputSchema))).toBe(true);
-    expect(search.structuredContent).toMatchObject({
-      count: 1,
-      items: [
+    expect(quranReference.structuredContent).toMatchObject({
+      content_id: "en/quran/1",
+      verses: [
         expect.objectContaining({
-          content_id: expect.any(String),
+          number: 1,
         }),
       ],
     });
