@@ -9,11 +9,11 @@ const choices: ExercisesChoices = {
     { label: "$$y = x^2 + 200x + 60.000$$", value: false },
   ],
   en: [
-    { label: "$$y = -x^2 + 150x + 60,000$$", value: false },
-    { label: "$$y = x^2 + 150x + 60,000$$", value: true },
-    { label: "$$y = -x^2 - 150x + 60,000$$", value: false },
-    { label: "$$y = x^2 - 150x + 60,000$$", value: false },
-    { label: "$$y = x^2 + 200x + 60,000$$", value: false },
+    { label: "$$y = -x^2 + 150x + 60{,}000$$", value: false },
+    { label: "$$y = x^2 + 150x + 60{,}000$$", value: true },
+    { label: "$$y = -x^2 - 150x + 60{,}000$$", value: false },
+    { label: "$$y = x^2 - 150x + 60{,}000$$", value: false },
+    { label: "$$y = x^2 + 200x + 60{,}000$$", value: false },
   ],
 };
 

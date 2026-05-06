@@ -4,9 +4,9 @@ const choices: ExercisesChoices = {
   id: [
     { label: "$$57$$ kal", value: false },
     { label: "$$70$$ kal", value: false },
-    { label: "$$71,25$$ kal", value: true },
+    { label: "$$71{,}25$$ kal", value: true },
     { label: "$$72$$ kal", value: false },
-    { label: "$$87,72$$ kal", value: false },
+    { label: "$$87{,}72$$ kal", value: false },
   ],
   en: [
     { label: "$$57$$ cal", value: false },

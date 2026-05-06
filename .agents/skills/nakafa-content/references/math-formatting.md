@@ -23,8 +23,10 @@ x &= 4
 - Use math components for every mathematical expression, variable, quantity, unit, coordinate, equation, inequality, numbered math reference, and calculated value.
 - Do not write mathematical values as plain text when they are part of the concept, example, question, solution, chart title, chart description, label, or caption.
 - If a concept is written with math notation in one place, use math notation everywhere that same concept appears.
+- Keep non-math identifiers plain text. Product or version names, disease names such as COVID-19, legal citations, calendar dates, URLs, and code syntax are context, not math notation.
 - Years can be plain text when they are calendar context.
 - Years must use math when they are formula values, table values, calculations, axis values, or data points.
+- Do not remove or rewrite title context just to avoid math in headings. Contextual heading numbers, legal references, years, and counts may remain plain text when they are part of the title.
 
 ## Numbers and Units
 

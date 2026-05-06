@@ -38,12 +38,12 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "The $$1,400$$-year-old genetic information plays an important role because it teaches us about the evolutionary history of the variola virus that causes smallpox.",
+        "The $$1{,}400$$-year-old genetic information plays an important role because it teaches us about the evolutionary history of the variola virus that causes smallpox.",
       value: true,
     },
     {
       label:
-        "The discovery of viral DNA from ancient smallpox provides evidence that the origin emerged more than $$1,400$$ years earlier.",
+        "The discovery of viral DNA from ancient smallpox provides evidence that the origin emerged more than $$1{,}400$$ years earlier.",
       value: false,
     },
     {

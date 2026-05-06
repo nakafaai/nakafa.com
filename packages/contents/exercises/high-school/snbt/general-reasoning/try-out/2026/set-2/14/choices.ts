@@ -24,7 +24,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Transaksi penjualan gabah di $$30$$ provinsi selama April $$2019$$ turun $$5,37\\%$$ sangat kontras dengan kenaikan harga kebutuhan",
+        "Transaksi penjualan gabah di $$30$$ provinsi selama April $$2019$$ turun $$5{,}37\\%$$ sangat kontras dengan kenaikan harga kebutuhan",
       value: false,
     },
   ],

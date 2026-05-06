@@ -4,7 +4,7 @@ const choices: ExercisesChoices = {
   id: [
     {
       label:
-        "Meskipun pertumbuhan PDB Indonesia anjlok hingga $$4,88$$ persen, kondisi perekonomian Indonesia tetap dalam batas menggembirakan",
+        "Meskipun pertumbuhan PDB Indonesia anjlok hingga $$4{,}88$$ persen, kondisi perekonomian Indonesia tetap dalam batas menggembirakan",
       value: true,
     },
     {
@@ -24,7 +24,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Pada tahun $$2018$$, pertumbuhan perekonomian Indonesia melanjutkan tren perbaikan dalam lima tahun terakhir, yakni sebesar $$5,7$$ persen",
+        "Pada tahun $$2018$$, pertumbuhan perekonomian Indonesia melanjutkan tren perbaikan dalam lima tahun terakhir, yakni sebesar $$5{,}7$$ persen",
       value: false,
     },
   ],

@@ -19,12 +19,12 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Kandungan protein dalam tempe lebih besar $$3,3 \\%$$ dibandingkan kandungan protein dalam daging sapi",
+        "Kandungan protein dalam tempe lebih besar $$3{,}3 \\%$$ dibandingkan kandungan protein dalam daging sapi",
       value: true,
     },
     {
       label:
-        "Kandungan lemak dalam sapi lebih besar $$12,2 \\%$$ dibandingkan kandungan lemak dalam tempe",
+        "Kandungan lemak dalam sapi lebih besar $$12{,}2 \\%$$ dibandingkan kandungan lemak dalam tempe",
       value: false,
     },
   ],

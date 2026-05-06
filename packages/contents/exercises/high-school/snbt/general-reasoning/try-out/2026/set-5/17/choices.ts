@@ -14,7 +14,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Sumbangan sektor konsumsi rumah tangga terhadap pertumbuhan ekonomi Indonesia tidak akan mencapai $$2,74$$ persen",
+        "Sumbangan sektor konsumsi rumah tangga terhadap pertumbuhan ekonomi Indonesia tidak akan mencapai $$2{,}74$$ persen",
       value: true,
     },
     {

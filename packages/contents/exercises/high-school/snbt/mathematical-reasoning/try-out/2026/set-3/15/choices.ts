@@ -2,11 +2,11 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 
 const choices: ExercisesChoices = {
   id: [
-    { label: "$$0,15$$ bagian", value: false },
-    { label: "$$0,3$$ bagian", value: false },
-    { label: "$$0,45$$ bagian", value: false },
-    { label: "$$0,6$$ bagian", value: false },
-    { label: "$$0,75$$ bagian", value: true },
+    { label: "$$0{,}15$$ bagian", value: false },
+    { label: "$$0{,}3$$ bagian", value: false },
+    { label: "$$0{,}45$$ bagian", value: false },
+    { label: "$$0{,}6$$ bagian", value: false },
+    { label: "$$0{,}75$$ bagian", value: true },
   ],
   en: [
     { label: "$$0.15$$ part", value: false },

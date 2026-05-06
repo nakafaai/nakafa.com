@@ -3,7 +3,8 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 const choices: ExercisesChoices = {
   id: [
     {
-      label: "Pertumbuhan pasar ekspor pakaian jadi Indonesia naik $$9,3\\%$$.",
+      label:
+        "Pertumbuhan pasar ekspor pakaian jadi Indonesia naik $$9{,}3\\%$$.",
       value: false,
     },
     {

@@ -26,12 +26,15 @@ const choices: ExercisesChoices = {
     },
   ],
   en: [
-    { label: "Factory X motorcycle sales of $$500,000$$ units", value: false },
     {
-      label: "Factory Y motorcycle sales of $$5,200,000$$ units",
+      label: "Factory X motorcycle sales of $$500{,}000$$ units",
       value: false,
     },
-    { label: "Factory Z motorcycle sales of $$250,000$$ units", value: true },
+    {
+      label: "Factory Y motorcycle sales of $$5{,}200{,}000$$ units",
+      value: false,
+    },
+    { label: "Factory Z motorcycle sales of $$250{,}000$$ units", value: true },
     {
       label:
         "Factory Y motorcycle sales are four times Factory X sales in $$2016$$",
@@ -39,7 +42,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "The difference in Factory X motorcycle sales is $$800,000$$ units",
+        "The difference in Factory X motorcycle sales is $$800{,}000$$ units",
       value: false,
     },
   ],

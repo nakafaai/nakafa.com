@@ -143,7 +143,7 @@ The first row (<InlineMath math="\begin{bmatrix} 15 & 12 & 20 \end{bmatrix}" />)
 
 The price for each jar of chips (in rupiah) is stated in the column matrix <InlineMath math="Q" /> below:
 
-<BlockMath math="Q = \begin{bmatrix} 20,000 \\ 15,000 \\ 30,000 \end{bmatrix} \begin{matrix} \text{Price of Tempeh Chips} \\ \text{Price of Banana Chips} \\ \text{Price of Potato Chips} \end{matrix}" />
+<BlockMath math="Q = \begin{bmatrix} 20{,}000 \\ 15{,}000 \\ 30{,}000 \end{bmatrix} \begin{matrix} \text{Price of Tempeh Chips} \\ \text{Price of Banana Chips} \\ \text{Price of Potato Chips} \end{matrix}" />
 
 To determine the total revenue from each type of chip across all places, we can multiply matrix <InlineMath math="P" /> by matrix <InlineMath math="Q" />.
 
@@ -152,30 +152,30 @@ However, pay attention to the order of the matrices. Matrix <InlineMath math="P"
 Matrix <InlineMath math="R = PQ" /> will show the total revenue for each type of chip.
 
 <MathContainer>
-  <BlockMath math="R = PQ = \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix} \begin{bmatrix} 20,000 \\ 15,000 \\ 30,000 \end{bmatrix}" />
-  <BlockMath math="R = \begin{bmatrix} (15)(20,000) + (12)(15,000) + (20)(30,000) \\ (25)(20,000) + (10)(15,000) + (15)(30,000) \\ (15)(20,000) + (15)(15,000) + (20)(30,000) \end{bmatrix}" />
-  <BlockMath math="R = \begin{bmatrix} 300,000 + 180,000 + 600,000 \\ 500,000 + 150,000 + 450,000 \\ 300,000 + 225,000 + 600,000 \end{bmatrix}" />
-  <BlockMath math="R = \begin{bmatrix} 1,080,000 \\ 1,100,000 \\ 1,125,000 \end{bmatrix} \begin{matrix} \text{Total Revenue from Tempeh Chips} \\ \text{Total Revenue from Banana Chips} \\ \text{Total Revenue from Potato Chips} \end{matrix}" />
+  <BlockMath math="R = PQ = \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix} \begin{bmatrix} 20{,}000 \\ 15{,}000 \\ 30{,}000 \end{bmatrix}" />
+  <BlockMath math="R = \begin{bmatrix} (15)(20{,}000) + (12)(15{,}000) + (20)(30{,}000) \\ (25)(20{,}000) + (10)(15{,}000) + (15)(30{,}000) \\ (15)(20{,}000) + (15)(15{,}000) + (20)(30{,}000) \end{bmatrix}" />
+  <BlockMath math="R = \begin{bmatrix} 300{,}000 + 180{,}000 + 600{,}000 \\ 500{,}000 + 150{,}000 + 450{,}000 \\ 300{,}000 + 225{,}000 + 600{,}000 \end{bmatrix}" />
+  <BlockMath math="R = \begin{bmatrix} 1{,}080{,}000 \\ 1{,}100{,}000 \\ 1{,}125{,}000 \end{bmatrix} \begin{matrix} \text{Total Revenue from Tempeh Chips} \\ \text{Total Revenue from Banana Chips} \\ \text{Total Revenue from Potato Chips} \end{matrix}" />
 </MathContainer>
 
-From matrix <InlineMath math="R" />, we can see that the total revenue from the sale of tempeh chips is <InlineMath math="\text{Rp}1,080,000" />, banana chips <InlineMath math="\text{Rp}1,100,000" />, and potato chips <InlineMath math="\text{Rp}1,125,000" />.
+From matrix <InlineMath math="R" />, we can see that the total revenue from the sale of tempeh chips is <InlineMath math="\text{Rp}1{,}080{,}000" />, banana chips <InlineMath math="\text{Rp}1{,}100{,}000" />, and potato chips <InlineMath math="\text{Rp}1{,}125{,}000" />.
 
 If the question is "determine the revenue matrix for each place", then we need to arrange the price matrix <InlineMath math="Q" /> differently or perform multiplication with the transpose of <InlineMath math="P" />.
 
-Suppose we want to find the total revenue in Place A, Place B, and Place C. We can use the price matrix as a row matrix <InlineMath math="Q^T = \begin{bmatrix} 20,000 & 15,000 & 30,000 \end{bmatrix}" /> and multiply it by matrix <InlineMath math="P" />: <InlineMath math="S = Q^T P" />.
+Suppose we want to find the total revenue in Place A, Place B, and Place C. We can use the price matrix as a row matrix <InlineMath math="Q^T = \begin{bmatrix} 20{,}000 & 15{,}000 & 30{,}000 \end{bmatrix}" /> and multiply it by matrix <InlineMath math="P" />: <InlineMath math="S = Q^T P" />.
 
 Matrix <InlineMath math="Q^T" /> has an order of <InlineMath math="1 \times 3" /> and <InlineMath math="P" /> has an order of <InlineMath math="3 \times 3" />. The result <InlineMath math="S" /> will have an order of <InlineMath math="1 \times 3" />.
 
 <MathContainer>
-  <BlockMath math="S = \begin{bmatrix} 20,000 & 15,000 & 30,000 \end{bmatrix} \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix}" />
-  <BlockMath math="s_{11} = (20,000)(15) + (15,000)(25) + (30,000)(15) = 300,000 + 375,000 + 450,000 = 1,125,000" />
-  <BlockMath math="s_{12} = (20,000)(12) + (15,000)(10) + (30,000)(15) = 240,000 + 150,000 + 450,000 = 840,000" />
-  <BlockMath math="s_{13} = (20,000)(20) + (15,000)(15) + (30,000)(20) = 400,000 + 225,000 + 600,000 = 1,225,000" />
+  <BlockMath math="S = \begin{bmatrix} 20{,}000 & 15{,}000 & 30{,}000 \end{bmatrix} \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix}" />
+  <BlockMath math="s_{11} = (20{,}000)(15) + (15{,}000)(25) + (30{,}000)(15) = 300{,}000 + 375{,}000 + 450{,}000 = 1{,}125{,}000" />
+  <BlockMath math="s_{12} = (20{,}000)(12) + (15{,}000)(10) + (30{,}000)(15) = 240{,}000 + 150{,}000 + 450{,}000 = 840{,}000" />
+  <BlockMath math="s_{13} = (20{,}000)(20) + (15{,}000)(15) + (30{,}000)(20) = 400{,}000 + 225{,}000 + 600{,}000 = 1{,}225{,}000" />
 </MathContainer>
 
-Thus, <InlineMath math="S = \begin{bmatrix} 1,125,000 & 840,000 & 1,225,000 \end{bmatrix}" />.
+Thus, <InlineMath math="S = \begin{bmatrix} 1{,}125{,}000 & 840{,}000 & 1{,}225{,}000 \end{bmatrix}" />.
 
-This means the total revenue from Place A is <InlineMath math="\text{Rp}1,125,000" />, from Place B is <InlineMath math="\text{Rp}840,000" />, and from Place C is <InlineMath math="\text{Rp}1,225,000" />.
+This means the total revenue from Place A is <InlineMath math="\text{Rp}1{,}125{,}000" />, from Place B is <InlineMath math="\text{Rp}840{,}000" />, and from Place C is <InlineMath math="\text{Rp}1{,}225{,}000" />.
 
 The interpretation of the elements of the resulting matrix greatly depends on how the initial matrices are defined and how the multiplication is performed.
 

@@ -70,10 +70,10 @@ Misalnya, kita punya data nilai ujian matematika <InlineMath math="40 \text{ sis
 
 | Nilai Ujian | Frekuensi (<InlineMath math="f" />) | Frekuensi Kumulatif (<InlineMath math="F_k" />) | Tepi Bawah (<InlineMath math="T_b" />) | Panjang Kelas (<InlineMath math="p" />) |
 | :---------: | :---------------------------------: | :---------------------------------------------: | :------------------------------------: | :-------------------------------------: |
-| <InlineMath math="61\text{-}70" />  | <InlineMath math="4" />  | <InlineMath math="4" />  | <InlineMath math="60,5" /> | <InlineMath math="10" /> |
-| <InlineMath math="71\text{-}80" />  | <InlineMath math="10" /> | <InlineMath math="14" /> | <InlineMath math="70,5" /> | <InlineMath math="10" /> |
-| <InlineMath math="81\text{-}90" />  | <InlineMath math="16" /> | <InlineMath math="30" /> | <InlineMath math="80,5" /> | <InlineMath math="10" /> |
-| <InlineMath math="91\text{-}100" /> | <InlineMath math="10" /> | <InlineMath math="40" /> | <InlineMath math="90,5" /> | <InlineMath math="10" /> |
+| <InlineMath math="61\text{-}70" />  | <InlineMath math="4" />  | <InlineMath math="4" />  | <InlineMath math="60{,}5" /> | <InlineMath math="10" /> |
+| <InlineMath math="71\text{-}80" />  | <InlineMath math="10" /> | <InlineMath math="14" /> | <InlineMath math="70{,}5" /> | <InlineMath math="10" /> |
+| <InlineMath math="81\text{-}90" />  | <InlineMath math="16" /> | <InlineMath math="30" /> | <InlineMath math="80{,}5" /> | <InlineMath math="10" /> |
+| <InlineMath math="91\text{-}100" /> | <InlineMath math="10" /> | <InlineMath math="40" /> | <InlineMath math="90{,}5" /> | <InlineMath math="10" /> |
 | **Jumlah**  | <InlineMath math="40" /> |                                                 |                                        |                                         |
 
 Kita mau cari nilai Persentil ke-<InlineMath math="85" /> (<InlineMath math="P_{85}" />).
@@ -88,7 +88,7 @@ Lihat kolom <InlineMath math="F_k" />. Data ke-<InlineMath math="34" /> ada di m
 
 3.  **Kumpulkan Bahan untuk Rumus:**
 
-    - <InlineMath math="T_b" /> (Tepi bawah kelas <InlineMath math="91\text{-}100" />) adalah <InlineMath math="90,5" />
+    - <InlineMath math="T_b" /> (Tepi bawah kelas <InlineMath math="91\text{-}100" />) adalah <InlineMath math="90{,}5" />
     - <InlineMath math="i = 85" />
     - <InlineMath math="n = 40" />
     - <InlineMath math="F_{kum}" /> (Frekuensi kumulatif sebelum kelas <InlineMath math="91\text{-}100" />) =
@@ -100,13 +100,13 @@ Lihat kolom <InlineMath math="F_k" />. Data ke-<InlineMath math="34" /> ada di m
 
     <MathContainer>
       <BlockMath math="P_{85} = T_b + \left( \frac{\frac{85}{100}n - F_{kum}}{f_{85}} \right) p" />
-      <BlockMath math="P_{85} = 90,5 + \left( \frac{34 - 30}{10} \right) 10" />
-      <BlockMath math="P_{85} = 90,5 + \left( \frac{4}{10} \right) 10" />
-      <BlockMath math="P_{85} = 90,5 + 4" />
-      <BlockMath math="P_{85} = 94,5" />
+      <BlockMath math="P_{85} = 90{,}5 + \left( \frac{34 - 30}{10} \right) 10" />
+      <BlockMath math="P_{85} = 90{,}5 + \left( \frac{4}{10} \right) 10" />
+      <BlockMath math="P_{85} = 90{,}5 + 4" />
+      <BlockMath math="P_{85} = 94{,}5" />
     </MathContainer>
 
-Jadi, nilai Persentil ke-<InlineMath math="85" /> adalah <InlineMath math="94,5" />. Artinya, <InlineMath math="85\%" /> siswa mendapat nilai <InlineMath math="94,5" /> atau kurang, dan <InlineMath math="15\%" /> siswa mendapat nilai di atas <InlineMath math="94,5" />.
+Jadi, nilai Persentil ke-<InlineMath math="85" /> adalah <InlineMath math="94{,}5" />. Artinya, <InlineMath math="85\%" /> siswa mendapat nilai <InlineMath math="94{,}5" /> atau kurang, dan <InlineMath math="15\%" /> siswa mendapat nilai di atas <InlineMath math="94{,}5" />.
 
 ## Latihan
 
@@ -124,7 +124,7 @@ Lihat <InlineMath math="F_k" />. Data ke-<InlineMath math="8" /> ada di kelas <I
 
 3.  **Bahan Rumus:**
 
-    - <InlineMath math="T_b = 70,5" />
+    - <InlineMath math="T_b = 70{,}5" />
     - <InlineMath math="i = 20" />
     - <InlineMath math="n = 40" />
     - <InlineMath math="F_{kum} = 4" />
@@ -135,10 +135,10 @@ Lihat <InlineMath math="F_k" />. Data ke-<InlineMath math="8" /> ada di kelas <I
 
     <MathContainer>
       <BlockMath math="P_{20} = T_b + \left( \frac{\frac{20}{100}n - F_{kum}}{f_{20}} \right) p" />
-      <BlockMath math="P_{20} = 70,5 + \left( \frac{8 - 4}{10} \right) 10" />
-      <BlockMath math="P_{20} = 70,5 + \left( \frac{4}{10} \right) 10" />
-      <BlockMath math="P_{20} = 70,5 + 4" />
-      <BlockMath math="P_{20} = 74,5" />
+      <BlockMath math="P_{20} = 70{,}5 + \left( \frac{8 - 4}{10} \right) 10" />
+      <BlockMath math="P_{20} = 70{,}5 + \left( \frac{4}{10} \right) 10" />
+      <BlockMath math="P_{20} = 70{,}5 + 4" />
+      <BlockMath math="P_{20} = 74{,}5" />
     </MathContainer>
 
-Nilai Persentil ke-<InlineMath math="20" /> adalah <InlineMath math="74,5" />.
+Nilai Persentil ke-<InlineMath math="20" /> adalah <InlineMath math="74{,}5" />.

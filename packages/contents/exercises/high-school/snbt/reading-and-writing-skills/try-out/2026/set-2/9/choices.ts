@@ -4,27 +4,27 @@ const choices: ExercisesChoices = {
   id: [
     {
       label:
-        "Pada triwulan pertama $$2020$$ ini, pertumbuhan ekonomi di sejumlah negara mitra dagang Indonesia tumbuh negatif: Singapura $$-2,2$$, Hongkong $$-8,9$$, Uni Eropa $$-2,7$$, dan China mengalami penurunan sampai $$-6,8$$.",
+        "Pada triwulan pertama $$2020$$ ini, pertumbuhan ekonomi di sejumlah negara mitra dagang Indonesia tumbuh negatif: Singapura $$-2{,}2$$, Hongkong $$-8{,}9$$, Uni Eropa $$-2{,}7$$, dan China mengalami penurunan sampai $$-6{,}8$$.",
       value: true,
     },
     {
       label:
-        "Pada triwulan pertama $$2020$$ ini, pertumbuhan ekonomi di sejumlah negara mitra dagang Indonesia tumbuh negatif seperti; Singapura $$-2,2$$, Hongkong $$-8,9$$, Uni Eropa $$-2,7$$ maupun China mengalami penurunan sampai $$-6,8$$.",
+        "Pada triwulan pertama $$2020$$ ini, pertumbuhan ekonomi di sejumlah negara mitra dagang Indonesia tumbuh negatif seperti; Singapura $$-2{,}2$$, Hongkong $$-8{,}9$$, Uni Eropa $$-2{,}7$$ maupun China mengalami penurunan sampai $$-6{,}8$$.",
       value: false,
     },
     {
       label:
-        "Pada triwulan pertama $$2020$$ ini, pertumbuhan ekonomi di sejumlah negara mitra dagang Indonesia tumbuh negatif, seperti Singapura $$-2,2$$, Hongkong $$-8,9$$, Uni Eropa $$-2,7$$ dan China mengalami penurunan sampai $$-6,8$$.",
+        "Pada triwulan pertama $$2020$$ ini, pertumbuhan ekonomi di sejumlah negara mitra dagang Indonesia tumbuh negatif, seperti Singapura $$-2{,}2$$, Hongkong $$-8{,}9$$, Uni Eropa $$-2{,}7$$ dan China mengalami penurunan sampai $$-6{,}8$$.",
       value: false,
     },
     {
       label:
-        "Pada triwulan pertama $$2020$$ ini, pertumbuhan ekonomi di sejumlah negara mitra dagang Indonesia tumbuh negatif, seperti: Singapura $$-2,2$$ Hongkong $$-8,9$$ Uni Eropa $$-2,7$$, dan China mengalami penurunan sampai $$-6,8$$.",
+        "Pada triwulan pertama $$2020$$ ini, pertumbuhan ekonomi di sejumlah negara mitra dagang Indonesia tumbuh negatif, seperti: Singapura $$-2{,}2$$ Hongkong $$-8{,}9$$ Uni Eropa $$-2{,}7$$, dan China mengalami penurunan sampai $$-6{,}8$$.",
       value: false,
     },
     {
       label:
-        "Pada triwulan pertama $$2020$$ ini, pertumbuhan ekonomi di sejumlah negara mitra dagang Indonesia tumbuh negatif, seperti Singapura $$-2,2$$; Hongkong $$-8,9$$; Uni Eropa $$-2,7$$; dan China mengalami penurunan sampai $$-6,8$$.",
+        "Pada triwulan pertama $$2020$$ ini, pertumbuhan ekonomi di sejumlah negara mitra dagang Indonesia tumbuh negatif, seperti Singapura $$-2{,}2$$; Hongkong $$-8{,}9$$; Uni Eropa $$-2{,}7$$; dan China mengalami penurunan sampai $$-6{,}8$$.",
       value: false,
     },
   ],

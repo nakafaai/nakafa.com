@@ -23,7 +23,7 @@ Sebelum membahas lebih lanjut, penting untuk memahami perbedaan mendasar antara 
 
 <LineEquation
   title="Busur Lingkaran"
-  description={<>Busur adalah garis lengkung di keliling lingkaran yang menghubungkan dua titik. Busur hanya memiliki panjang (1 dimensi) dan tidak memiliki luas.</>}
+  description={<>Busur adalah garis lengkung di keliling lingkaran yang menghubungkan dua titik. Busur hanya memiliki panjang dalam satu dimensi dan tidak memiliki luas.</>}
   cameraPosition={[0, 0, 12]}
   showZAxis={false}
   data={[
@@ -86,7 +86,7 @@ Sebelum membahas lebih lanjut, penting untuk memahami perbedaan mendasar antara 
 
 <LineEquation
   title="Tembereng Lingkaran"
-  description={<>Tembereng adalah daerah (area) di dalam lingkaran yang dibatasi oleh busur dan tali busur. Tembereng memiliki luas (2 dimensi) dan dapat diisi warna.</>}
+  description={<>Tembereng adalah daerah (area) di dalam lingkaran yang dibatasi oleh busur dan tali busur. Tembereng memiliki luas dalam dua dimensi dan dapat diisi warna.</>}
   cameraPosition={[0, 0, 12]}
   showZAxis={false}
   data={[
@@ -649,7 +649,7 @@ Untuk memahami cara menghitung luas tembereng, mari kita gunakan contoh dengan s
 <BlockMath math="\text{Luas Juring} = \frac{90^\circ}{360^\circ} \times \pi r^2" />
 <BlockMath math="= \frac{1}{4} \times \pi \times 10^2" />
 <BlockMath math="= \frac{1}{4} \times \pi \times 100" />
-<BlockMath math="= 25\pi \text{ cm}^2 = 78,5398 \text{ cm}^2" />
+<BlockMath math="= 25\pi \text{ cm}^2 = 78{,}5398 \text{ cm}^2" />
 </MathContainer>
 
 **Langkah** <InlineMath math="2" />: Menghitung Luas Segitiga
@@ -668,8 +668,8 @@ Untuk sudut <InlineMath math="90^\circ" />, segitiga yang terbentuk adalah segit
 <MathContainer>
 <BlockMath math="\text{Luas Tembereng} = \text{Luas Juring} - \text{Luas Segitiga}" />
 <BlockMath math="= 25\pi - 50" />
-<BlockMath math="= 78,5398 - 50" />
-<BlockMath math="= 28,5398 \text{ cm}^2" />
+<BlockMath math="= 78{,}5398 - 50" />
+<BlockMath math="= 28{,}5398 \text{ cm}^2" />
 </MathContainer>
 
 ## Latihan
@@ -706,7 +706,7 @@ Untuk sudut <InlineMath math="90^\circ" />, segitiga yang terbentuk adalah segit
 
    <MathContainer>
    <BlockMath math="\text{Luas Tembereng} = \frac{49\pi}{6} - \frac{49\sqrt{3}}{4}" />
-   <BlockMath math="= 25,6563 - 21,2176 = 4,4387 \text{ cm}^2" />
+   <BlockMath math="= 25{,}6563 - 21{,}2176 = 4{,}4387 \text{ cm}^2" />
    </MathContainer>
 
 2. **Langkah Penyelesaian:**
@@ -723,23 +723,23 @@ Untuk sudut <InlineMath math="90^\circ" />, segitiga yang terbentuk adalah segit
    <MathContainer>
    <BlockMath math="\text{Luas Juring} = \frac{120^\circ}{360^\circ} \times \pi \times 25 = \frac{25\pi}{3}" />
    <BlockMath math="\text{Luas Segitiga} = \frac{1}{2} \times 25 \times \sin 120^\circ = \frac{25\sqrt{3}}{4}" />
-   <BlockMath math="\text{Luas Tembereng} = \frac{25\pi}{3} - \frac{25\sqrt{3}}{4} \approx 26,1799 - 10,8253 = 15,3546 \text{ cm}^2" />
+   <BlockMath math="\text{Luas Tembereng} = \frac{25\pi}{3} - \frac{25\sqrt{3}}{4} \approx 26{,}1799 - 10{,}8253 = 15{,}3546 \text{ cm}^2" />
    </MathContainer>
    
-   Hasil perhitungan (<InlineMath math="15,3546 \text{ cm}^2" />) sedikit berbeda dengan yang diberikan di soal (<InlineMath math="15,7 \text{ cm}^2" />). Perbedaan ini disebabkan oleh presisi nilai <InlineMath math="\pi" /> dan <InlineMath math="\sqrt{3}" /> yang digunakan. Dalam matematika, hasil perhitungan <InlineMath math="15,3546 \text{ cm}^2" /> adalah yang paling akurat.
+   Hasil perhitungan (<InlineMath math="15{,}3546 \text{ cm}^2" />) sedikit berbeda dengan yang diberikan di soal (<InlineMath math="15{,}7 \text{ cm}^2" />). Perbedaan ini disebabkan oleh presisi nilai <InlineMath math="\pi" /> dan <InlineMath math="\sqrt{3}" /> yang digunakan. Dalam matematika, hasil perhitungan <InlineMath math="15{,}3546 \text{ cm}^2" /> adalah yang paling akurat.
 
 3. **Langkah Penyelesaian:**
 
-   Diketahui: jari-jari tangki = <InlineMath math="2 \text{ m}" />, kedalaman air = <InlineMath math="1,5 \text{ m}" />
+   Diketahui: jari-jari tangki = <InlineMath math="2 \text{ m}" />, kedalaman air = <InlineMath math="1{,}5 \text{ m}" />
    
-   Karena kedalaman air (<InlineMath math="1,5 \text{ m}" />) kurang dari jari-jari (<InlineMath math="2 \text{ m}" />), permukaan air berbentuk tembereng.
+   Karena kedalaman air (<InlineMath math="1{,}5 \text{ m}" />) kurang dari jari-jari (<InlineMath math="2 \text{ m}" />), permukaan air berbentuk tembereng.
    
    Untuk tangki silinder horizontal, kita menggunakan rumus khusus tembereng dengan tinggi tertentu.
    
    Menentukan tinggi tembereng dari dasar tangki:
 
    <MathContainer>
-   <BlockMath math="h = 1,5 \text{ m (tinggi air dari dasar)}" />
+   <BlockMath math="h = 1{,}5 \text{ m (tinggi air dari dasar)}" />
    </MathContainer>
    
    Menggunakan rumus luas tembereng untuk segmen air pada tangki horizontal:
@@ -751,15 +751,15 @@ Untuk sudut <InlineMath math="90^\circ" />, segitiga yang terbentuk adalah segit
    Substitusi nilai:
 
    <MathContainer>
-   <BlockMath math="\frac{r-h}{r} = \frac{2-1,5}{2} = 0,25" />
-   <BlockMath math="\arccos(0,25) = 1,3181 \text{ radian}" />
-   <BlockMath math="\sqrt{1-0,25^2} = \sqrt{0,9375} = 0,9682" />
+   <BlockMath math="\frac{r-h}{r} = \frac{2-1{,}5}{2} = 0{,}25" />
+   <BlockMath math="\arccos(0{,}25) = 1{,}3181 \text{ radian}" />
+   <BlockMath math="\sqrt{1-0{,}25^2} = \sqrt{0{,}9375} = 0{,}9682" />
    </MathContainer>
    
    Menghitung luas permukaan air:
 
    <MathContainer>
-   <BlockMath math="\text{Luas} = 4 \times [1,3181 - 0,25 \times 0,9682]" />
-   <BlockMath math="= 4 \times [1,3181 - 0,2421]" />
-   <BlockMath math="= 4 \times 1,0760 = 4,3040 \text{ m}^2" />
+   <BlockMath math="\text{Luas} = 4 \times [1{,}3181 - 0{,}25 \times 0{,}9682]" />
+   <BlockMath math="= 4 \times [1{,}3181 - 0{,}2421]" />
+   <BlockMath math="= 4 \times 1{,}0760 = 4{,}3040 \text{ m}^2" />
    </MathContainer>

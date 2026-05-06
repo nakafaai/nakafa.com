@@ -51,7 +51,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "The highest increase was dominated by marine fishing, which was from $$4,383,103$$ tons in $$2003$$ to $$4,647,730$$ tons in $$2007$$.",
+        "The highest increase was dominated by marine fishing, which was from $$4{,}383{,}103$$ tons in $$2003$$ to $$4{,}647{,}730$$ tons in $$2007$$.",
       value: false,
     },
   ],

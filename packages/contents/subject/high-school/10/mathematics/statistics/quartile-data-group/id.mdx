@@ -32,16 +32,16 @@ Misalnya, ini tabel penjualan sepatu:
 
 | Ukuran Sepatu | Frekuensi (<InlineMath math="f" />) | Frekuensi Kumulatif (<InlineMath math="F_k" />) | Tepi Bawah (<InlineMath math="T_b" />) | Tepi Atas (<InlineMath math="T_a" />) | Panjang Kelas (<InlineMath math="p" />) |
 | :-----------: | :---------------------------------: | :---------------------------------------------: | :------------------------------------: | :-----------------------------------: | :-------------------------------------: |
-| <InlineMath math="37\text{-}39" /> | <InlineMath math="2" />  | <InlineMath math="2" />  | <InlineMath math="36,5" /> | <InlineMath math="39,5" /> | <InlineMath math="3" /> |
-| <InlineMath math="40\text{-}42" /> | <InlineMath math="11" /> | <InlineMath math="13" /> | <InlineMath math="39,5" /> | <InlineMath math="42,5" /> | <InlineMath math="3" /> |
-| <InlineMath math="43\text{-}45" /> | <InlineMath math="10" /> | <InlineMath math="23" /> | <InlineMath math="42,5" /> | <InlineMath math="45,5" /> | <InlineMath math="3" /> |
-| <InlineMath math="46\text{-}48" /> | <InlineMath math="5" />  | <InlineMath math="28" /> | <InlineMath math="45,5" /> | <InlineMath math="48,5" /> | <InlineMath math="3" /> |
-| <InlineMath math="49\text{-}51" /> | <InlineMath math="2" />  | <InlineMath math="30" /> | <InlineMath math="48,5" /> | <InlineMath math="51,5" /> | <InlineMath math="3" /> |
+| <InlineMath math="37\text{-}39" /> | <InlineMath math="2" />  | <InlineMath math="2" />  | <InlineMath math="36{,}5" /> | <InlineMath math="39{,}5" /> | <InlineMath math="3" /> |
+| <InlineMath math="40\text{-}42" /> | <InlineMath math="11" /> | <InlineMath math="13" /> | <InlineMath math="39{,}5" /> | <InlineMath math="42{,}5" /> | <InlineMath math="3" /> |
+| <InlineMath math="43\text{-}45" /> | <InlineMath math="10" /> | <InlineMath math="23" /> | <InlineMath math="42{,}5" /> | <InlineMath math="45{,}5" /> | <InlineMath math="3" /> |
+| <InlineMath math="46\text{-}48" /> | <InlineMath math="5" />  | <InlineMath math="28" /> | <InlineMath math="45{,}5" /> | <InlineMath math="48{,}5" /> | <InlineMath math="3" /> |
+| <InlineMath math="49\text{-}51" /> | <InlineMath math="2" />  | <InlineMath math="30" /> | <InlineMath math="48{,}5" /> | <InlineMath math="51{,}5" /> | <InlineMath math="3" /> |
 |  **Jumlah**   | <InlineMath math="30" /> |                                                 |                                        |                                       |                                         |
 
-<InlineMath math="\text{Tepi bawah} = \text{batas bawah} - 0,5" />
+<InlineMath math="\text{Tepi bawah} = \text{batas bawah} - 0{,}5" />
 
-<InlineMath math="\text{Tepi atas} = \text{batas atas} + 0,5" />
+<InlineMath math="\text{Tepi atas} = \text{batas atas} + 0{,}5" />
 
 <InlineMath math="\text{Panjang kelas} = \text{tepi atas} - \text{tepi bawah}" />
 
@@ -51,17 +51,17 @@ Kita cari dulu posisi data ke berapa si kuartil itu.
 
 Total data (<InlineMath math="n" />) adalah <InlineMath math="30" />.
 
-- **Letak <InlineMath math="Q_1" />:** data ke <InlineMath math="\frac{1}{4} \times 30 = 7,5" />.
+- **Letak <InlineMath math="Q_1" />:** data ke <InlineMath math="\frac{1}{4} \times 30 = 7{,}5" />.
 
-  Lihat kolom <InlineMath math="F_k" />. Data ke-<InlineMath math="7,5" /> ada di kelas mana? Kelas pertama memiliki <InlineMath math="F_k = 2" /> (belum cukup). Kelas kedua memiliki <InlineMath math="F_k = 13" /> (data ke-<InlineMath math="3" /> sampai ke-<InlineMath math="13" /> ada di sini). Nah, berarti data ke-<InlineMath math="7,5" /> ada di kelas <InlineMath math="40\text{-}42" />.
+  Lihat kolom <InlineMath math="F_k" />. Data ke-<InlineMath math="7{,}5" /> ada di kelas mana? Kelas pertama memiliki <InlineMath math="F_k = 2" /> (belum cukup). Kelas kedua memiliki <InlineMath math="F_k = 13" /> (data ke-<InlineMath math="3" /> sampai ke-<InlineMath math="13" /> ada di sini). Nah, berarti data ke-<InlineMath math="7{,}5" /> ada di kelas <InlineMath math="40\text{-}42" />.
 
 - **Letak <InlineMath math="Q_2" /> (Median):** data ke <InlineMath math="\frac{1}{2} \times 30 = 15" />.
 
   Lihat <InlineMath math="F_k" />. Data ke-<InlineMath math="15" /> ada di kelas <InlineMath math="43\text{-}45" /> (karena <InlineMath math="F_k" /> sebelumnya <InlineMath math="13" />, dan <InlineMath math="F_k" /> kelas ini <InlineMath math="23" />).
 
-- **Letak <InlineMath math="Q_3" />:** data ke <InlineMath math="\frac{3}{4} \times 30 = 22,5" />.
+- **Letak <InlineMath math="Q_3" />:** data ke <InlineMath math="\frac{3}{4} \times 30 = 22{,}5" />.
 
-  Lihat <InlineMath math="F_k" />. Data ke-<InlineMath math="22,5" /> ada di kelas <InlineMath math="43\text{-}45" /> juga (karena <InlineMath math="F_k" /> sebelumnya <InlineMath math="13" />, dan <InlineMath math="F_k" /> kelas ini <InlineMath math="23" />).
+  Lihat <InlineMath math="F_k" />. Data ke-<InlineMath math="22{,}5" /> ada di kelas <InlineMath math="43\text{-}45" /> juga (karena <InlineMath math="F_k" /> sebelumnya <InlineMath math="13" />, dan <InlineMath math="F_k" /> kelas ini <InlineMath math="23" />).
 
 ### Hitung Nilai Kuartil dengan Rumus Interpolasi
 
@@ -82,10 +82,10 @@ Di mana:
 
 Kita hitung <InlineMath math="Q_1" /> dari tabel di atas.
 
-1.  **Letak <InlineMath math="Q_1" />:** Data ke-<InlineMath math="7,5" />.
+1.  **Letak <InlineMath math="Q_1" />:** Data ke-<InlineMath math="7{,}5" />.
 2.  **Kelas <InlineMath math="Q_1" />:** <InlineMath math="40\text{-}42" />.
 3.  **Kita kumpulkan bahan-bahannya:**
-    - Tepi bawah kelas <InlineMath math="Q_1" /> (<InlineMath math="T_b" />) adalah <InlineMath math="39,5" />
+    - Tepi bawah kelas <InlineMath math="Q_1" /> (<InlineMath math="T_b" />) adalah <InlineMath math="39{,}5" />
     - Jumlah data (<InlineMath math="n" />) adalah <InlineMath math="30" />
     - Frekuensi kumulatif sebelum kelas <InlineMath math="Q_1" /> (<InlineMath math="F_{kum}" />) adalah <InlineMath math="2" /> (lihat <InlineMath math="F_k" /> kelas <InlineMath math="37\text{-}39" />)
     - Frekuensi kelas <InlineMath math="Q_1" /> (<InlineMath math="f_1" />) adalah <InlineMath math="11" />
@@ -94,10 +94,10 @@ Kita hitung <InlineMath math="Q_1" /> dari tabel di atas.
 
     <MathContainer>
       <BlockMath math="Q_1 = T_b + \left( \frac{\frac{1}{4}n - F_{kum}}{f_1} \right) p" />
-      <BlockMath math="Q_1 = 39,5 + \left( \frac{7,5 - 2}{11} \right) 3" />
-      <BlockMath math="Q_1 = 39,5 + \left( \frac{5,5}{11} \right) 3" />
-      <BlockMath math="Q_1 = 39,5 + (0,5) \times 3" />
-      <BlockMath math="Q_1 = 39,5 + 1,5" />
+      <BlockMath math="Q_1 = 39{,}5 + \left( \frac{7{,}5 - 2}{11} \right) 3" />
+      <BlockMath math="Q_1 = 39{,}5 + \left( \frac{5{,}5}{11} \right) 3" />
+      <BlockMath math="Q_1 = 39{,}5 + (0{,}5) \times 3" />
+      <BlockMath math="Q_1 = 39{,}5 + 1{,}5" />
       <BlockMath math="Q_1 = 41" />
     </MathContainer>
 
@@ -111,11 +111,11 @@ Setelah dapat hasilnya, coba bandingkan dengan kuartil data tunggal. Kira-kira a
 
 ### Kunci Jawaban
 
-1.  **Letak <InlineMath math="Q_3" />:** Data ke-<InlineMath math="22,5" />.
+1.  **Letak <InlineMath math="Q_3" />:** Data ke-<InlineMath math="22{,}5" />.
 2.  **Kelas <InlineMath math="Q_3" />:** <InlineMath math="43\text{-}45" />.
 3.  **Kumpulkan bahan:**
 
-    - <InlineMath math="T_b = 42,5" /> (tepi bawah kelas <InlineMath math="Q_3" />
+    - <InlineMath math="T_b = 42{,}5" /> (tepi bawah kelas <InlineMath math="Q_3" />
       )
     - <InlineMath math="n = 30" /> (jumlah data)
     - <InlineMath math="F_{kum} = 13" /> (lihat <InlineMath math="F_k" /> kelas <InlineMath math="40\text{-}42" />)
@@ -126,14 +126,14 @@ Setelah dapat hasilnya, coba bandingkan dengan kuartil data tunggal. Kira-kira a
 
     <MathContainer>
       <BlockMath math="Q_3 = T_b + \left( \frac{\frac{3}{4}n - F_{kum}}{f_3} \right) p" />
-      <BlockMath math="Q_3 = 42,5 + \left( \frac{22,5 - 13}{10} \right) 3" />
-      <BlockMath math="Q_3 = 42,5 + \left( \frac{9,5}{10} \right) 3" />
-      <BlockMath math="Q_3 = 42,5 + (0,95) \times 3" />
-      <BlockMath math="Q_3 = 42,5 + 2,85" />
-      <BlockMath math="Q_3 = 45,35" />
+      <BlockMath math="Q_3 = 42{,}5 + \left( \frac{22{,}5 - 13}{10} \right) 3" />
+      <BlockMath math="Q_3 = 42{,}5 + \left( \frac{9{,}5}{10} \right) 3" />
+      <BlockMath math="Q_3 = 42{,}5 + (0{,}95) \times 3" />
+      <BlockMath math="Q_3 = 42{,}5 + 2{,}85" />
+      <BlockMath math="Q_3 = 45{,}35" />
     </MathContainer>
 
-Jadi, nilai <InlineMath math="Q_3" /> adalah <InlineMath math="45,35" />. Artinya, sekitar <InlineMath math="75\%" /> sepatu yang terjual ukurannya <InlineMath math="45,35" /> atau lebih kecil (atau <InlineMath math="25\%" /> terjual ukurannya lebih besar dari <InlineMath math="45,35" />).
+Jadi, nilai <InlineMath math="Q_3" /> adalah <InlineMath math="45{,}35" />. Artinya, sekitar <InlineMath math="75\%" /> sepatu yang terjual ukurannya <InlineMath math="45{,}35" /> atau lebih kecil (atau <InlineMath math="25\%" /> terjual ukurannya lebih besar dari <InlineMath math="45{,}35" />).
 
 **Perbandingan dengan Data Tunggal:**
 
