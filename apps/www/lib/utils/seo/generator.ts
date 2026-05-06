@@ -146,6 +146,17 @@ const translateArticleCategory = Effect.fn("SEO.translateArticleCategory")(
     })
 );
 
+/** Returns the hand-written content description when it is present. */
+function getContentDescription(data: ContentSEOData) {
+  const description = data.description?.trim();
+
+  if (!description) {
+    return null;
+  }
+
+  return description;
+}
+
 /**
  * Generates SEO metadata for subject content.
  */
@@ -172,12 +183,14 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
           material: materialDisplayName,
           grade: gradeDisplay,
         }),
-        description: t("subject.description", {
-          title: effectiveTitle,
-          chapter: chapterValue,
-          material: materialDisplayName,
-          grade: gradeDisplay,
-        }),
+        description:
+          getContentDescription(data) ??
+          t("subject.description", {
+            title: effectiveTitle,
+            chapter: chapterValue,
+            material: materialDisplayName,
+            grade: gradeDisplay,
+          }),
         keywords: t("subject.keywords", {
           title: effectiveTitle,
           chapter: chapterValue,
@@ -264,10 +277,12 @@ const generateArticleMetadata = Effect.fn("SEO.generateArticleMetadata")(
           title: effectiveTitle,
           category: categoryDisplayName,
         }),
-        description: t("article.description", {
-          title: effectiveTitle,
-          category: categoryDisplayName,
-        }),
+        description:
+          getContentDescription(data) ??
+          t("article.description", {
+            title: effectiveTitle,
+            category: categoryDisplayName,
+          }),
         keywords: t("article.keywords", {
           title: effectiveTitle,
           category: categoryDisplayName,
@@ -334,23 +349,19 @@ export async function generateSEOMetadata(
   const { type } = context;
 
   const effect = Effect.gen(function* () {
-    switch (type) {
-      case "subject": {
-        return yield* generateSubjectMetadata(context, locale);
-      }
-      case "exercise": {
-        return yield* generateExerciseMetadata(context, locale);
-      }
-      case "article": {
-        return yield* generateArticleMetadata(context, locale);
-      }
-      case "quran": {
-        return yield* generateQuranMetadata(context, locale);
-      }
-      default: {
-        return yield* Effect.sync(() => generateFallbackMetadata(context));
-      }
+    if (type === "subject") {
+      return yield* generateSubjectMetadata(context, locale);
     }
+
+    if (type === "exercise") {
+      return yield* generateExerciseMetadata(context, locale);
+    }
+
+    if (type === "article") {
+      return yield* generateArticleMetadata(context, locale);
+    }
+
+    return yield* generateQuranMetadata(context, locale);
   });
 
   return Effect.runPromise(

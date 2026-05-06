@@ -18,6 +18,7 @@ Use this file as the routing map. Load only the references needed for the curren
 ## Reference Map
 
 - New or edited subject lessons: read `references/source-workflow.md`, `references/writing-quality.md`, and `references/math-formatting.md`.
+- SEO, metadata, search discovery, and crawlability checks: read `references/seo.md`.
 - MDX component contracts and import examples: read `references/mdx-components.md`.
 - Visual content, custom TSX, R3F, Three.js, layout, and colors: read `references/visualization.md`.
 - Exercises, choices, answer explanations, and self-checks: read `references/exercise-patterns.md` and use `templates/exercise-template.md` when scaffolding.
@@ -27,6 +28,7 @@ Use this file as the routing map. Load only the references needed for the curren
 
 - Lessons stand alone for direct visits. Define terms, symbols, abbreviations, and prerequisites on first use in each locale.
 - Localized content uses natural teacher voice for that locale; Indonesian lessons should feel like a teacher speaking to students, not formal textbook prose.
+- SEO must support the lesson, not distort it: keep titles, descriptions, headings, and visible content accurate, helpful, and natural for students.
 - Use concrete examples or comparisons only when they immediately clarify the concept. Avoid meta-labels before comparisons; phrase them naturally.
 - Do not add activities, Mermaid diagrams, visuals, or closing sections unless they improve understanding.
 - Prefer show-over-tell visuals: avoid oversized explanatory scene titles or dense overlays when the model, interaction, and short captions can carry the concept.

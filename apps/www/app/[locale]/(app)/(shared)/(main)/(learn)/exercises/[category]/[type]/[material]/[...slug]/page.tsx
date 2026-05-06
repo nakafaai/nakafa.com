@@ -15,6 +15,7 @@ import { YearGroupPage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exer
 import { ExerciseSetPage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/set";
 import { SingleExercisePage } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/single";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
@@ -114,12 +115,11 @@ export async function generateMetadata({
     },
     description,
     keywords,
-    alternates: {
-      canonical: urlPath,
+    alternates: createLocalizedAlternates(urlPath, {
       types: {
         "text/markdown": `${urlPath}.md`,
       },
-    },
+    }),
     ...socialMetadata,
   };
 }

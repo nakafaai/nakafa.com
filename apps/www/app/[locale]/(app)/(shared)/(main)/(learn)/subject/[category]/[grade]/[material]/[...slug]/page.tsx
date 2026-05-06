@@ -3,6 +3,7 @@ import { importContentModule } from "@repo/contents/_lib/module";
 import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
 import {
   getGradeNonNumeric,
+  getGradePath,
   parseGrade,
 } from "@repo/contents/_lib/subject/grade";
 import {
@@ -51,6 +52,8 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { getContentMetadataContext } from "@/lib/utils/pages/subject";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
@@ -103,12 +106,11 @@ export async function generateMetadata({
     notFound();
   }
 
-  const alternates = {
-    canonical: path,
+  const alternates = createLocalizedAlternates(path, {
     types: {
       "text/markdown": `${path}.md`,
     },
-  };
+  });
   // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
   // Source: https://developers.google.com/search/docs/appearance/title-link
   const seoContext: SEOContext = {
@@ -351,13 +353,17 @@ async function CachedSubjectShell({
   return (
     <>
       <BreadcrumbJsonLd
-        breadcrumbItems={headings.map((heading, index) => ({
-          "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}${FilePath}${heading.href}`,
-          position: index + 1,
-          name: heading.label,
-          item: `https://nakafa.com/${locale}${FilePath}${heading.href}`,
-        }))}
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: tCommon("subject"), path: "/subject" },
+          { name: tSubject(category), path: `/subject/${category}` },
+          {
+            name: tSubject(getGradeNonNumeric(grade) ?? "grade", { grade }),
+            path: getGradePath(category, grade),
+          },
+          { name: tSubject(material), path: materialPath },
+          { name: metadata.title, path: FilePath },
+        ])}
       />
       <ArticleJsonLd
         author={metadata.authors.map((author: { name: string }) => ({

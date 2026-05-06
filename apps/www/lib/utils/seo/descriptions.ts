@@ -28,6 +28,8 @@
  * @param options.maxLength - Maximum length (default: 160)
  * @returns Optimized description string, clean without ellipsis
  */
+const SENTENCE_END_REGEX = /[.!?]$/;
+
 export function createSEODescription(
   parts: (string | null | undefined)[],
   options: { maxLength?: number } = {}
@@ -43,8 +45,15 @@ export function createSEODescription(
     return "";
   }
 
-  // Join all parts with ". " separator
-  const joined = validParts.join(". ");
+  // Join all parts with sentence spacing without duplicating punctuation.
+  const joined = validParts.reduce((description, part) => {
+    if (!description) {
+      return part;
+    }
+
+    const separator = SENTENCE_END_REGEX.test(description) ? " " : ". ";
+    return `${description}${separator}${part}`;
+  }, "");
 
   // If under maxLength, return as-is
   if (joined.length <= maxLength) {

@@ -32,6 +32,8 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { fetchArticleMetadataContext } from "@/lib/utils/pages/article";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 import { getStaticParams } from "@/lib/utils/system";
@@ -69,12 +71,11 @@ export async function generateMetadata({
   }
 
   const path = `/${locale}${filePath}`;
-  const alternates = {
-    canonical: path,
+  const alternates = createLocalizedAlternates(path, {
     types: {
       "text/markdown": `${path}.md`,
     },
-  };
+  });
   const { metadata } = content;
 
   // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
@@ -261,13 +262,12 @@ async function CachedArticleShell({
   return (
     <>
       <BreadcrumbJsonLd
-        breadcrumbItems={headings.map((heading, index) => ({
-          "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}${FilePath}${heading.href}`,
-          position: index + 1,
-          name: heading.label,
-          item: `https://nakafa.com/${locale}${FilePath}${heading.href}`,
-        }))}
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: tCommon("articles"), path: "/articles" },
+          { name: tArticles(category), path: `/articles/${category}` },
+          { name: metadata.title, path: FilePath },
+        ])}
       />
       <ArticleJsonLd
         author={metadata.authors.map((author: { name: string }) => ({

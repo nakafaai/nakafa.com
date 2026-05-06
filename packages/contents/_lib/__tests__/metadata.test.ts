@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
 import {
   extractMetadata,
   getContentMetadata,
@@ -43,6 +45,38 @@ export const metadata = {
 
 # ${title}
 `;
+
+const localeFileNames = new Set(["en.mdx", "id.mdx"]);
+const seoContentRoots = ["articles", "subject"] as const;
+
+/** Returns the package root whether Vitest runs from the workspace or repo root. */
+function getContentsRoot() {
+  if (process.cwd().endsWith("packages/contents")) {
+    return process.cwd();
+  }
+
+  return path.join(process.cwd(), "packages/contents");
+}
+
+/** Collects localized MDX files below a content directory. */
+function collectLocalizedMdxFiles(directory: string): string[] {
+  const files: string[] = [];
+
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const entryPath = path.join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      files.push(...collectLocalizedMdxFiles(entryPath));
+      continue;
+    }
+
+    if (entry.isFile() && localeFileNames.has(entry.name)) {
+      files.push(entryPath);
+    }
+  }
+
+  return files;
+}
 
 beforeEach(() => {
   mockReadFile.mockResolvedValue(createRawMetadata("Default"));
@@ -108,6 +142,60 @@ export const metadata = {
 `);
 
     expect(Option.isNone(result)).toBe(true);
+  });
+});
+
+describe("content SEO metadata", () => {
+  it("keeps subject and article metadata complete and unique", () => {
+    const contentsRoot = getContentsRoot();
+    const descriptions = new Map<string, string>();
+    const failures: string[] = [];
+
+    for (const root of seoContentRoots) {
+      const files = collectLocalizedMdxFiles(path.join(contentsRoot, root));
+
+      for (const file of files) {
+        const raw = readFileSync(file, "utf8");
+        const metadata = extractMetadata(raw);
+        const label = path.relative(contentsRoot, file);
+
+        if (Option.isNone(metadata)) {
+          failures.push(`${label} metadata cannot be parsed`);
+          continue;
+        }
+
+        const { title, description, authors } = metadata.value;
+        const trimmedTitle = title.trim();
+        const trimmedDescription = description?.trim();
+
+        if (!trimmedTitle) {
+          failures.push(`${label} title is empty`);
+        }
+
+        if (!trimmedDescription) {
+          failures.push(`${label} description is empty`);
+        }
+
+        if (authors.length === 0) {
+          failures.push(`${label} authors are empty`);
+        }
+
+        if (!trimmedDescription) {
+          continue;
+        }
+
+        const duplicate = descriptions.get(trimmedDescription);
+
+        if (duplicate) {
+          failures.push(`${label} repeats description from ${duplicate}`);
+          continue;
+        }
+
+        descriptions.set(trimmedDescription, label);
+      }
+    }
+
+    expect(failures).toEqual([]);
   });
 });
 

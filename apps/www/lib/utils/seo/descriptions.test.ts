@@ -15,6 +15,11 @@ describe("createSEODescription", () => {
       expect(result).toBe("First part. Second part");
     });
 
+    it("does not duplicate punctuation between sentence parts", () => {
+      const result = createSEODescription(["First part.", "Second part"]);
+      expect(result).toBe("First part. Second part");
+    });
+
     it("joins three or more parts", () => {
       const result = createSEODescription(["A", "B", "C"]);
       expect(result).toBe("A. B. C");
