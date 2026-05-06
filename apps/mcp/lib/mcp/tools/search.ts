@@ -1,7 +1,10 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { searchNakafaAgentContent } from "@repo/contents/_lib/agent/search";
 import { Effect } from "effect";
-import { toMcpReadModelError, toMcpStructuredResult } from "@/lib/mcp/result";
+import {
+  succeedMcpReadModelError,
+  toMcpStructuredResult,
+} from "@/lib/mcp/result";
 import {
   NakafaSearchContentInputSchema,
   NakafaSearchContentOutputSchema,
@@ -20,15 +23,16 @@ export function registerNakafaSearchContentTool(server: McpServer) {
       outputSchema: NakafaSearchContentOutputSchema,
       title: "Search Nakafa Content",
     },
-    (args) =>
-      Effect.runPromise(
-        searchNakafaAgentContent(args).pipe(
-          Effect.map(toMcpStructuredResult),
-          Effect.catchTags({
-            NakafaAgentInputError: (error) =>
-              Effect.succeed(toMcpReadModelError(error)),
-          })
-        )
-      )
+    (args) => Effect.runPromise(getNakafaSearchContentToolResult(args))
+  );
+}
+
+/** Builds a search tool result from untrusted MCP arguments. */
+export function getNakafaSearchContentToolResult(args: unknown) {
+  return searchNakafaAgentContent(args).pipe(
+    Effect.map(toMcpStructuredResult),
+    Effect.catchTags({
+      NakafaAgentInputError: succeedMcpReadModelError,
+    })
   );
 }

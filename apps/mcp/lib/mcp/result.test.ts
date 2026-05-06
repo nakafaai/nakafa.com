@@ -2,15 +2,17 @@ import {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 import {
+  succeedMcpReadModelError,
   toMcpReadModelError,
   toMcpStructuredResult,
   toMcpToolError,
 } from "@/lib/mcp/result";
 
 describe("MCP result helpers", () => {
-  it("formats structured success and actionable errors", () => {
+  it("formats structured success and actionable errors", async () => {
     const success = toMcpStructuredResult({ ok: true });
     const explicitError = toMcpToolError("Missing content.", ["Search first."]);
     const inputError = toMcpReadModelError(
@@ -24,6 +26,14 @@ describe("MCP result helpers", () => {
         message: "Read failed.",
       })
     );
+    const liftedError = await Effect.runPromise(
+      succeedMcpReadModelError(
+        new NakafaAgentDataReadError({
+          cause: "Disk unavailable.",
+          message: "Read failed.",
+        })
+      )
+    );
 
     expect(success.structuredContent).toStrictEqual({ ok: true });
     expect(explicitError.isError).toBe(true);
@@ -33,5 +43,8 @@ describe("MCP result helpers", () => {
     expect(dataError.structuredContent.error.suggestions[0]).toContain(
       "nakafa_get_taxonomy"
     );
+    expect(liftedError.structuredContent.error.suggestions).toStrictEqual([
+      "Disk unavailable.",
+    ]);
   });
 });

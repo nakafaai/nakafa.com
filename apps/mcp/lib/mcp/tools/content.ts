@@ -2,7 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getNakafaAgentMarkdown } from "@repo/contents/_lib/agent/markdown";
 import { Effect, Option } from "effect";
 import {
-  toMcpReadModelError,
+  succeedMcpReadModelError,
   toMcpStructuredResult,
   toMcpToolError,
 } from "@/lib/mcp/result";
@@ -25,25 +25,26 @@ export function registerNakafaGetContentTool(server: McpServer) {
       title: "Get Nakafa Content",
     },
     ({ content_ref }) =>
-      Effect.runPromise(
-        getNakafaAgentMarkdown(content_ref).pipe(
-          Effect.map(
-            Option.match({
-              onNone: () =>
-                toMcpToolError("Nakafa content was not found.", [
-                  "Call `nakafa_search_content` first and pass back the exact returned `content_id` as `content_ref`.",
-                  "Use a canonical Nakafa URL such as `https://nakafa.com/en/quran/1`.",
-                ]),
-              onSome: toMcpStructuredResult,
-            })
-          ),
-          Effect.catchTags({
-            NakafaAgentDataReadError: (error) =>
-              Effect.succeed(toMcpReadModelError(error)),
-            NakafaAgentInputError: (error) =>
-              Effect.succeed(toMcpReadModelError(error)),
-          })
-        )
-      )
+      Effect.runPromise(getNakafaContentToolResult(content_ref))
+  );
+}
+
+/** Builds a full-content tool result for one Nakafa content reference. */
+export function getNakafaContentToolResult(contentRef: string) {
+  return getNakafaAgentMarkdown(contentRef).pipe(
+    Effect.map(
+      Option.match({
+        onNone: () =>
+          toMcpToolError("Nakafa content was not found.", [
+            "Call `nakafa_search_content` first and pass back the exact returned `content_id` as `content_ref`.",
+            "Use a canonical Nakafa URL such as `https://nakafa.com/en/quran/1`.",
+          ]),
+        onSome: toMcpStructuredResult,
+      })
+    ),
+    Effect.catchTags({
+      NakafaAgentDataReadError: succeedMcpReadModelError,
+      NakafaAgentInputError: succeedMcpReadModelError,
+    })
   );
 }

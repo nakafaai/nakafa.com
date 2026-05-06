@@ -5,7 +5,7 @@ import type { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib
 import { Effect, Option } from "effect";
 import type * as z from "zod";
 import {
-  toMcpReadModelError,
+  succeedMcpReadModelError,
   toMcpStructuredResult,
   toMcpToolError,
 } from "@/lib/mcp/result";
@@ -67,8 +67,7 @@ export function getNakafaQuranReferenceToolResult(
       })
     ),
     Effect.catchTags({
-      NakafaAgentInputError: (error) =>
-        Effect.succeed(toMcpReadModelError(error)),
+      NakafaAgentInputError: succeedMcpReadModelError,
     })
   );
 }

@@ -2,7 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercises";
 import { Effect, Option } from "effect";
 import {
-  toMcpReadModelError,
+  succeedMcpReadModelError,
   toMcpStructuredResult,
   toMcpToolError,
 } from "@/lib/mcp/result";
@@ -26,22 +26,29 @@ export function registerNakafaGetExerciseTool(server: McpServer) {
     },
     ({ content_ref, exercise_number }) =>
       Effect.runPromise(
-        getNakafaAgentExercise(content_ref, exercise_number).pipe(
-          Effect.map(
-            Option.match({
-              onNone: () =>
-                toMcpToolError("Nakafa exercise content was not found.", [
-                  'Call `nakafa_search_content` with `section: "exercises"` and reuse the returned `content_id` as `content_ref`.',
-                  "If requesting one question, verify `exercise_number` exists in the exercise set.",
-                ]),
-              onSome: toMcpStructuredResult,
-            })
-          ),
-          Effect.catchTags({
-            NakafaAgentDataReadError: (error) =>
-              Effect.succeed(toMcpReadModelError(error)),
-          })
-        )
+        getNakafaExerciseToolResult(content_ref, exercise_number)
       )
+  );
+}
+
+/** Builds an exercise tool result for one set or question reference. */
+export function getNakafaExerciseToolResult(
+  contentRef: string,
+  exerciseNumber?: number
+) {
+  return getNakafaAgentExercise(contentRef, exerciseNumber).pipe(
+    Effect.map(
+      Option.match({
+        onNone: () =>
+          toMcpToolError("Nakafa exercise content was not found.", [
+            'Call `nakafa_search_content` with `section: "exercises"` and reuse the returned `content_id` as `content_ref`.',
+            "If requesting one question, verify `exercise_number` exists in the exercise set.",
+          ]),
+        onSome: toMcpStructuredResult,
+      })
+    ),
+    Effect.catchTags({
+      NakafaAgentDataReadError: succeedMcpReadModelError,
+    })
   );
 }

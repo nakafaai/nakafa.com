@@ -2,6 +2,7 @@ import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
+import { Effect } from "effect";
 
 /** Converts structured content into a modern MCP tool result. */
 export function toMcpStructuredResult<
@@ -47,4 +48,11 @@ export function toMcpReadModelError(
     error.cause ??
       "Call `nakafa_get_taxonomy` and retry with supported values.",
   ]);
+}
+
+/** Lifts a typed read-model failure into a successful MCP error result. */
+export function succeedMcpReadModelError(
+  error: Parameters<typeof toMcpReadModelError>[0]
+) {
+  return Effect.succeed(toMcpReadModelError(error));
 }
