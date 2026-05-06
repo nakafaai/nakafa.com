@@ -36,7 +36,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "There are Jakarta residents over 17 years old who do not have a birth certificate but have an ID card (KTP)",
+        "There are Jakarta residents over $$17$$ years old who do not have a birth certificate but have an ID card (KTP)",
       value: false,
     },
     {

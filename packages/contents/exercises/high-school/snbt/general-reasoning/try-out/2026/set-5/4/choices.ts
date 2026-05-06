@@ -14,7 +14,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Persentase penurunan penjualan sepeda motor tertinggi salah satunya di pabrik Z pada tahun 2015-2016",
+        "Persentase penurunan penjualan sepeda motor tertinggi salah satunya di pabrik Z pada tahun $$2015\\text{-}2016$$",
       value: false,
     },
     {
@@ -24,7 +24,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Persentase penurunan penjualan sepeda motor di pabrik X tertinggi pada tahun 2014-2015",
+        "Persentase penurunan penjualan sepeda motor di pabrik X tertinggi pada tahun $$2014\\text{-}2015$$",
       value: true,
     },
   ],
@@ -41,7 +41,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "One of the highest percentage decreases in motorcycle sales occurred at factory Z in 2015-2016",
+        "One of the highest percentage decreases in motorcycle sales occurred at factory Z in $$2015\\text{-}2016$$",
       value: false,
     },
     {
@@ -51,7 +51,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "The highest percentage decrease in motorcycle sales at factory X occurred in 2014-2015",
+        "The highest percentage decrease in motorcycle sales at factory X occurred in $$2014\\text{-}2015$$",
       value: true,
     },
   ],

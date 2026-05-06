@@ -9,11 +9,11 @@ const choices: ExercisesChoices = {
     { label: "Tahun ke-5", value: false },
   ],
   en: [
-    { label: "Year 1", value: true },
-    { label: "Year 2", value: false },
-    { label: "Year 3", value: false },
-    { label: "Year 4", value: false },
-    { label: "Year 5", value: false },
+    { label: "Year $$1$$", value: true },
+    { label: "Year $$2$$", value: false },
+    { label: "Year $$3$$", value: false },
+    { label: "Year $$4$$", value: false },
+    { label: "Year $$5$$", value: false },
   ],
 };
 

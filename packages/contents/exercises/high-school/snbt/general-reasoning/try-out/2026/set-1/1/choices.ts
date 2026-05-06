@@ -4,7 +4,7 @@ const choices: ExercisesChoices = {
   id: [
     {
       label:
-        "Kebun Instalasi Penelitian Pengembangan Teknologi Pertanian Cukurgondang Kemtan berdiri tahun 1941 dan memiliki luas tiga belas hektare.",
+        "Kebun Instalasi Penelitian Pengembangan Teknologi Pertanian Cukurgondang Kemtan berdiri tahun $$1941$$ dan memiliki luas tiga belas hektare.",
       value: false,
     },
     {
@@ -24,14 +24,14 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Kebun Instalasi Penelitian Pengembangan Teknologi Pertanian Cukurgondang awalnya hanya memiliki 208 varietas mangga dengan 289 aksesi.",
+        "Kebun Instalasi Penelitian Pengembangan Teknologi Pertanian Cukurgondang awalnya hanya memiliki $$208$$ varietas mangga dengan $$289$$ aksesi.",
       value: false,
     },
   ],
   en: [
     {
       label:
-        "The Cukurgondang Kemtan Agricultural Technology Research and Development Installation Garden was established in 1941 and has an area of thirteen hectares.",
+        "The Cukurgondang Kemtan Agricultural Technology Research and Development Installation Garden was established in $$1941$$ and has an area of thirteen hectares.",
       value: false,
     },
     {
@@ -51,7 +51,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "The Cukurgondang Kemtan Agricultural Technology Research and Development Installation Garden initially only had 208 mango varieties with 289 accessions.",
+        "The Cukurgondang Kemtan Agricultural Technology Research and Development Installation Garden initially only had $$208$$ mango varieties with $$289$$ accessions.",
       value: false,
     },
   ],

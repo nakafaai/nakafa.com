@@ -4,17 +4,17 @@ const choices: ExercisesChoices = {
   id: [
     {
       label:
-        "Penjualan tertinggi untuk semua jenis rempah terjadi pada bulan November 2020.",
+        "Penjualan tertinggi untuk semua jenis rempah terjadi pada bulan November $$2020$$.",
       value: false,
     },
     {
       label:
-        "Penjualan bawang merah pada bulan Januari 2021 diprediksi sebesar $$76$$ ton.",
+        "Penjualan bawang merah pada bulan Januari $$2021$$ diprediksi sebesar $$76$$ ton.",
       value: false,
     },
     {
       label:
-        "Penjualan bawang putih pada bulan Januari 2021 akan melebihi $$100$$ ton.",
+        "Penjualan bawang putih pada bulan Januari $$2021$$ akan melebihi $$100$$ ton.",
       value: true,
     },
     {
@@ -30,15 +30,16 @@ const choices: ExercisesChoices = {
   en: [
     {
       label:
-        "The highest sales for all types of spices occurred in November 2020.",
+        "The highest sales for all types of spices occurred in November $$2020$$.",
       value: false,
     },
     {
-      label: "Shallot sales in January 2021 are predicted to be $$76$$ tons.",
+      label:
+        "Shallot sales in January $$2021$$ are predicted to be $$76$$ tons.",
       value: false,
     },
     {
-      label: "Garlic sales in January 2021 will exceed $$100$$ tons.",
+      label: "Garlic sales in January $$2021$$ will exceed $$100$$ tons.",
       value: true,
     },
     {

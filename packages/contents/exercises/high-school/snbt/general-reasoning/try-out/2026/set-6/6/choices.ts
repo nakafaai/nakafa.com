@@ -7,11 +7,11 @@ const choices: ExercisesChoices = {
       value: false,
     },
     {
-      label: "Jumlah siswa gemar seni peran adalah 65 siswa",
+      label: "Jumlah siswa gemar seni peran adalah $$65$$ siswa",
       value: false,
     },
     {
-      label: "Jumlah siswa kelas XII sesuai kegemaran adalah 306",
+      label: "Jumlah siswa kelas XII sesuai kegemaran adalah $$306$$",
       value: false,
     },
     {
@@ -19,7 +19,7 @@ const choices: ExercisesChoices = {
       value: false,
     },
     {
-      label: "Jumlah siswa gemar melukis adalah 160",
+      label: "Jumlah siswa gemar melukis adalah $$160$$",
       value: true,
     },
   ],
@@ -29,11 +29,12 @@ const choices: ExercisesChoices = {
       value: false,
     },
     {
-      label: "The number of students who like acting is 65",
+      label: "The number of students who like acting is $$65$$",
       value: false,
     },
     {
-      label: "The total number of Grade XII students based on hobbies is 306",
+      label:
+        "The total number of Grade XII students based on hobbies is $$306$$",
       value: false,
     },
     {
@@ -41,7 +42,7 @@ const choices: ExercisesChoices = {
       value: false,
     },
     {
-      label: "The number of students who like painting is 160",
+      label: "The number of students who like painting is $$160$$",
       value: true,
     },
   ],

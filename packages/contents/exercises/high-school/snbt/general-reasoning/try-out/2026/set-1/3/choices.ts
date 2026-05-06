@@ -24,7 +24,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Rencana penambahan 27 GW PLTU Batubara baru sebagai tambahan 28 GW PLTU akan menghasilkan 200 juta ton emisi karbon per tahun.",
+        "Rencana penambahan $$27$$ GW PLTU Batubara baru sebagai tambahan $$28$$ GW PLTU akan menghasilkan $$200$$ juta ton emisi karbon per tahun.",
       value: false,
     },
   ],
@@ -51,7 +51,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "The plan to add 27 GW of new Coal Power Plants as an addition to 28 GW of PLTU will produce 200 million tons of carbon emissions per year.",
+        "The plan to add $$27$$ GW of new Coal Power Plants as an addition to $$28$$ GW of PLTU will produce $$200$$ million tons of carbon emissions per year.",
       value: false,
     },
   ],
