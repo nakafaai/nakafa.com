@@ -28,7 +28,7 @@ Suppose we have a <InlineMath math="3 \times 3" /> matrix <InlineMath math="A" /
 
 The element <InlineMath math="a_{ij}" /> is the element in the <InlineMath math="i" />-th row and <InlineMath math="j" />-th column.
 
-**Step 1: Copy the First Two Columns**
+**Step** <InlineMath math="1" />: Copy the First Two Columns
 
 Rewrite the first two columns of matrix <InlineMath math="A" /> to the right of the third column:
 
@@ -36,7 +36,7 @@ Rewrite the first two columns of matrix <InlineMath math="A" /> to the right of 
 
 This helps us visualize the diagonals that will be multiplied.
 
-**Step 2: Calculate the Sum of the Products of the Positive Diagonals**
+**Step** <InlineMath math="2" />: Calculate the Sum of the Products of the Positive Diagonals
 
 Multiply the elements along the three diagonals from the top-left to the bottom-right. Sum these products, let's call it <InlineMath math="D_{\text{positive}}" />.
 
@@ -46,7 +46,7 @@ Multiply the elements along the three diagonals from the top-left to the bottom-
 
 The first term is the product of the main diagonal. The second and third terms are products of parallel diagonals involving elements from the copied columns.
 
-**Step 3: Calculate the Sum of the Products of the Negative Diagonals**
+**Step** <InlineMath math="3" />: Calculate the Sum of the Products of the Negative Diagonals
 
 Multiply the elements along the three diagonals from the top-right to the bottom-left. Sum these products, let's call it <InlineMath math="D_{\text{negative}}" />.
 
@@ -56,7 +56,7 @@ Multiply the elements along the three diagonals from the top-right to the bottom
 
 The first term is the product of the secondary diagonal (anti-diagonal). The second and third terms are products of parallel diagonals involving elements from the copied columns, moving towards the bottom-left.
 
-**Step 4: Calculate the Final Determinant**
+**Step** <InlineMath math="4" />: Calculate the Final Determinant
 
 The determinant of matrix <InlineMath math="A" />, <InlineMath math="\det(A)" />, is the difference between <InlineMath math="D_{\text{positive}}" /> and <InlineMath math="D_{\text{negative}}" />:
 

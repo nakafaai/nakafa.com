@@ -28,14 +28,14 @@ Let's look at an example for a <InlineMath math="3 \times 3" /> matrix. Suppose 
 
 <BlockMath math="A = \begin{pmatrix} a_{11} & a_{12} & a_{13} \\ a_{21} & a_{22} & a_{23} \\ a_{31} & a_{32} & a_{33} \end{pmatrix}" />
 
-To get submatrix <InlineMath math="A_{12}" />, we remove row 1 and column 2:
+To get submatrix <InlineMath math="A_{12}" />, we remove row <InlineMath math="1" /> and column <InlineMath math="2" />:
 
 <MathContainer>
 <BlockMath math="A_{12} = \begin{pmatrix} \cancel{a_{11}} & \cancel{a_{12}} & \cancel{a_{13}} \\ a_{21} & \cancel{a_{22}} & a_{23} \\ a_{31} & \cancel{a_{32}} & a_{33} \end{pmatrix}" />
 <BlockMath math="= \begin{pmatrix} a_{21} & a_{23} \\ a_{31} & a_{33} \end{pmatrix}" />
 </MathContainer>
 
-For submatrix <InlineMath math="A_{23}" />, we remove row 2 and column 3:
+For submatrix <InlineMath math="A_{23}" />, we remove row <InlineMath math="2" /> and column <InlineMath math="3" />:
 
 <MathContainer>
 <BlockMath math="A_{23} = \begin{pmatrix} a_{11} & a_{12} & \cancel{a_{13}} \\ \cancel{a_{21}} & \cancel{a_{22}} & \cancel{a_{23}} \\ a_{31} & a_{32} & \cancel{a_{33}} \end{pmatrix}" />
@@ -169,7 +169,7 @@ Let's look at an example of determinant calculation using Gaussian elimination:
 
 <BlockMath math="A = \begin{pmatrix} 0 & 3 & 3 \\ 2 & 2 & 0 \\ 1 & 0 & 1 \end{pmatrix}" />
 
-**Step 1**: Swap rows <InlineMath math="1" /> and <InlineMath math="3" /> to get a non-zero pivot:
+**Step** <InlineMath math="1" />: Swap rows <InlineMath math="1" /> and <InlineMath math="3" /> to get a non-zero pivot:
 
 <BlockMath math="\begin{pmatrix} 1 & 0 & 1 \\ 2 & 2 & 0 \\ 0 & 3 & 3 \end{pmatrix}" />
 

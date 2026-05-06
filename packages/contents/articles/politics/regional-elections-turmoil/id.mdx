@@ -1,23 +1,32 @@
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { RulingTable } from "./table";
 
 export const tableData = [
   {
     category: "Ambang Batas Pencalonan",
-    electionLaw: "20% kursi DPRD atau 25% suara sah",
-    courtDecision: "6,5%-10% berdasarkan populasi",
+    electionLaw: (
+      <>
+        <InlineMath math="20\%" /> kursi DPRD atau <InlineMath math="25\%" /> suara sah
+      </>
+    ),
+    courtDecision: (
+      <>
+        <InlineMath math="6,5\%\text{-}10\%" /> berdasarkan populasi
+      </>
+    ),
     dprDecision: "Hanya berlaku untuk partai tanpa kursi DPRD",
   },
   {
     category: "Persyaratan Usia Gubernur",
-    electionLaw: "Minimal 30 tahun",
-    courtDecision: "Minimal 30 tahun saat terdaftar sebagai calon",
-    dprDecision: "Minimal 30 tahun saat dilantik",
+    electionLaw: <>Minimal <InlineMath math="30 \text{ tahun}" /></>,
+    courtDecision: <>Minimal <InlineMath math="30 \text{ tahun}" /> saat terdaftar sebagai calon</>,
+    dprDecision: <>Minimal <InlineMath math="30 \text{ tahun}" /> saat dilantik</>,
   },
   {
     category: "Persyaratan Usia Bupati/Walikota",
-    electionLaw: "Minimal 25 tahun",
-    courtDecision: "Minimal 25 tahun saat terdaftar sebagai calon",
-    dprDecision: "Minimal 25 tahun saat dilantik",
+    electionLaw: <>Minimal <InlineMath math="25 \text{ tahun}" /></>,
+    courtDecision: <>Minimal <InlineMath math="25 \text{ tahun}" /> saat terdaftar sebagai calon</>,
+    dprDecision: <>Minimal <InlineMath math="25 \text{ tahun}" /> saat dilantik</>,
   },
 ];
 
@@ -92,7 +101,7 @@ daerah (Mantelan & Ramadhan, 2024).
 
 Mahkamah Konstitusi memutuskan bahwa ambang batas pencalonan untuk kandidat kepala daerah akan
 disamakan dengan ambang batas untuk kandidat independen. Keputusan ini didasarkan pada fakta bahwa
-ambang batas sebelumnya sebesar 20% kursi DPRD atau 25% suara tidak memberikan kesempatan yang cukup
+ambang batas sebelumnya sebesar <InlineMath math="20\%" /> kursi DPRD atau <InlineMath math="25\%" /> suara tidak memberikan kesempatan yang cukup
 bagi warga negara untuk berpartisipasi melalui partai politik dengan ambang batas di bawah batas tersebut.
 Selain itu, regulasi tersebut tidak lagi sejalan dengan amanat Pasal 18 ayat (4) UUD 1945, yang
 menghendaki pemilihan daerah yang demokratis. Ini berarti kesempatan seluas-luasnya harus diberikan
@@ -143,8 +152,8 @@ untuk pilkada, sebagaimana dirangkum dalam siaran rapat DPR (BeritaSatu, 2024).
 ### Ambang Batas Partai dalam Pencalonan Kepala Daerah
 
 Terdapat perubahan dalam Pasal 11 Ayat (1) PKPU Nomor 8 Tahun 2024, yang menyatakan bahwa Partai Politik
-atau Koalisi Partai Politik dapat mendaftarkan Calon jika telah memperoleh minimal 20% kursi DPRD atau
-25% dari total suara sah dalam pemilihan DPRD di wilayah terkait. Ayat pertama Pasal 11 telah diubah
+atau Koalisi Partai Politik dapat mendaftarkan Calon jika telah memperoleh minimal <InlineMath math="20\%" /> kursi DPRD atau
+<InlineMath math="25\%" /> dari total suara sah dalam pemilihan DPRD di wilayah terkait. Ayat pertama Pasal 11 telah diubah
 berdasarkan Putusan Mahkamah Konstitusi Nomor 60/PUU-XXII/2024, yang menyatakan bahwa Partai Politik
 atau Koalisi Partai Politik dapat mendaftarkan Calon jika memenuhi persyaratan akumulasi suara sah
 dalam pemilihan DPRD di wilayah terkait dengan ketentuan sebagai berikut:
@@ -152,24 +161,24 @@ dalam pemilihan DPRD di wilayah terkait dengan ketentuan sebagai berikut:
 **Untuk mengusulkan calon gubernur dan wakil gubernur**
 
 - Provinsi dengan pemilih terdaftar hingga dua juta, partai politik, atau koalisi partai politik
-  harus memperoleh minimal 10% suara sah di provinsi tersebut.
+  harus memperoleh minimal <InlineMath math="10\%" /> suara sah di provinsi tersebut.
 - Provinsi dengan pemilih terdaftar lebih dari dua juta hingga enam juta, partai politik, atau
-  koalisi partai politik harus memperoleh minimal 8,5% suara sah di provinsi tersebut.
+  koalisi partai politik harus memperoleh minimal <InlineMath math="8,5\%" /> suara sah di provinsi tersebut.
 - Provinsi dengan pemilih terdaftar lebih dari enam juta hingga dua belas juta, partai politik,
-  atau koalisi partai politik harus memperoleh minimal 7,5% suara sah di provinsi tersebut.
+  atau koalisi partai politik harus memperoleh minimal <InlineMath math="7,5\%" /> suara sah di provinsi tersebut.
 - Provinsi dengan pemilih terdaftar lebih dari dua belas juta, partai politik, atau koalisi
-  partai politik harus memperoleh minimal 6,5% suara sah di provinsi tersebut.
+  partai politik harus memperoleh minimal <InlineMath math="6,5\%" /> suara sah di provinsi tersebut.
 
 **Untuk mengusulkan calon bupati dan wakil bupati atau walikota dan wakil walikota**
 
 - Kabupaten/kota dengan pemilih terdaftar hingga 250.000, partai politik, atau koalisi partai politik
-  harus memperoleh minimal 10% suara sah di kabupaten/kota tersebut.
+  harus memperoleh minimal <InlineMath math="10\%" /> suara sah di kabupaten/kota tersebut.
 - Kabupaten/kota dengan pemilih terdaftar lebih dari 250.000 hingga 500.000, partai politik, atau
-  koalisi partai politik harus memperoleh minimal 8,5% suara sah di kabupaten/kota tersebut.
+  koalisi partai politik harus memperoleh minimal <InlineMath math="8,5\%" /> suara sah di kabupaten/kota tersebut.
 - Kabupaten/kota dengan pemilih terdaftar lebih dari 500.000 hingga satu juta, partai politik, atau
-  koalisi partai politik harus memperoleh minimal 7,5% suara sah di kabupaten/kota tersebut.
+  koalisi partai politik harus memperoleh minimal <InlineMath math="7,5\%" /> suara sah di kabupaten/kota tersebut.
 - Kabupaten/kota dengan pemilih terdaftar lebih dari satu juta, partai politik, atau koalisi partai
-  politik harus memperoleh minimal 6,5% suara sah di kabupaten/kota tersebut.
+  politik harus memperoleh minimal <InlineMath math="6,5\%" /> suara sah di kabupaten/kota tersebut.
 
 **Penetapan Usia Calon Kepala Daerah**
 

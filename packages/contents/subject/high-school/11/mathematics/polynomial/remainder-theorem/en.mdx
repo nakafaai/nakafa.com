@@ -27,9 +27,9 @@ This theorem stems directly from the polynomial division algorithm we already kn
 Where:
 
 - <InlineMath math="P(x)" /> is the dividend polynomial.
-- <InlineMath math="(x - c)" /> is the divisor polynomial (degree 1).
+- <InlineMath math="(x - c)" /> is the divisor polynomial (degree <InlineMath math="1" />).
 - <InlineMath math="H(x)" /> is the quotient.
-- <InlineMath math="S" /> is the remainder (a constant, since the divisor is degree 1).
+- <InlineMath math="S" /> is the remainder (a constant, since the divisor is degree <InlineMath math="1" />).
 
 Now, let's substitute <InlineMath math="x = c" /> into the division algorithm equation:
 
@@ -86,7 +86,7 @@ Let's calculate <InlineMath math="P(-4)" />:
   <BlockMath math="P(-4) = 6" />
 </MathContainer>
 
-The result is the same! Using the Remainder Theorem, we found the remainder is 6, just like with Horner's method, but without performing the full division process.
+The result is the same! Using the Remainder Theorem, we found the remainder is <InlineMath math="6" />, just like with Horner's method, but without performing the full division process.
 
 This shows that evaluating <InlineMath math="P(c)" /> is another way to find the remainder of division by <InlineMath math="(x-c)" />.
 

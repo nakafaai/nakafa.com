@@ -28,7 +28,7 @@ Misalkan kita memiliki matriks <InlineMath math="A" /> berordo <InlineMath math=
 
 Elemen <InlineMath math="a_{ij}" /> adalah elemen pada baris ke-<InlineMath math="i" /> dan kolom ke-<InlineMath math="j" />.
 
-**Langkah 1: Salin Dua Kolom Pertama**
+**Langkah** <InlineMath math="1" />: Salin Dua Kolom Pertama
 
 Tuliskan kembali dua kolom pertama matriks <InlineMath math="A" /> di sebelah kanan kolom ketiga:
 
@@ -36,7 +36,7 @@ Tuliskan kembali dua kolom pertama matriks <InlineMath math="A" /> di sebelah ka
 
 Ini membantu kita memvisualisasikan diagonal-diagonal yang akan dikalikan.
 
-**Langkah 2: Hitung Jumlah Hasil Perkalian Diagonal Positif**
+**Langkah** <InlineMath math="2" />: Hitung Jumlah Hasil Perkalian Diagonal Positif
 
 Kalikan elemen-elemen di sepanjang tiga diagonal dari kiri atas ke kanan bawah. Jumlahkan hasil perkalian ini, kita sebut <InlineMath math="D_{\text{positif}}" />.
 
@@ -46,7 +46,7 @@ Kalikan elemen-elemen di sepanjang tiga diagonal dari kiri atas ke kanan bawah. 
 
 Suku pertama adalah perkalian diagonal utama. Suku kedua dan ketiga adalah perkalian diagonal sejajar yang melibatkan elemen dari kolom yang disalin.
 
-**Langkah 3: Hitung Jumlah Hasil Perkalian Diagonal Negatif**
+**Langkah** <InlineMath math="3" />: Hitung Jumlah Hasil Perkalian Diagonal Negatif
 
 Kalikan elemen-elemen di sepanjang tiga diagonal dari kanan atas ke kiri bawah. Jumlahkan hasil perkalian ini, kita sebut <InlineMath math="D_{\text{negatif}}" />.
 
@@ -56,7 +56,7 @@ Kalikan elemen-elemen di sepanjang tiga diagonal dari kanan atas ke kiri bawah. 
 
 Suku pertama adalah perkalian diagonal sekunder (anti-diagonal). Suku kedua dan ketiga adalah perkalian diagonal sejajar yang melibatkan elemen dari kolom yang disalin, bergerak ke arah kiri bawah.
 
-**Langkah 4: Hitung Determinan Akhir**
+**Langkah** <InlineMath math="4" />: Hitung Determinan Akhir
 
 Determinan matriks <InlineMath math="A" />, <InlineMath math="\det(A)" />, adalah selisih antara <InlineMath math="D_{\text{positif}}" /> dan <InlineMath math="D_{\text{negatif}}" />:
 

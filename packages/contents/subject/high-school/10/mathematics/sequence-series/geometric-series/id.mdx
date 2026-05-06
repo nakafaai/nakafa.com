@@ -8,7 +8,7 @@ export const metadata = {
 
 ## Konsep Deret Geometri
 
-Perhatikan data jumlah pasien terinfeksi Covid-19 dalam tabel berikut:
+Perhatikan data jumlah pasien terinfeksi Covid-<InlineMath math="19" /> dalam tabel berikut:
 
 | Bulan         | Januari | Februari | Maret | April | Mei |
 | :------------ | :------ | :------- | :---- | :---- | :-- |
@@ -18,9 +18,9 @@ Data di atas menunjukkan pola peningkatan jumlah pasien setiap bulannya. Jika ki
 
 Deret Geometri adalah jumlahan suku-suku dari suatu barisan geometri. Barisan geometri adalah barisan bilangan yang perbandingan antara dua suku berurutan selalu tetap (konstan). Perbandingan ini disebut **rasio** (dilambangkan dengan <InlineMath math="r" />).
 
-Pada data pasien Covid-19:
+Pada data pasien Covid-<InlineMath math="19" />:
 
-- Suku pertama (<InlineMath math="a" /> atau <InlineMath math="U_1" />) adalah 4.
+- Suku pertama (<InlineMath math="a" /> atau <InlineMath math="U_1" />) adalah <InlineMath math="4" />.
 - Rasio <InlineMath math="(r) = \frac{12}{4} = \frac{36}{12} = \frac{108}{36} = \frac{324}{108} = 3" />.
 
 Jadi, barisan jumlah pasiennya adalah <InlineMath math="4, 12, 36, 108, 324" />.
@@ -78,7 +78,7 @@ atau
 
 ## Contoh Penerapan
 
-Sebuah perusahaan sepeda pada tahun 2020 meningkat setiap bulannya dan membentuk barisan geometri. Produksi pada bulan Januari sebanyak <InlineMath math="120 \text{ unit}" />. Pada bulan April, hasil produksi mencapai <InlineMath math="3.240 \text{ unit}" />. Berapakah total hasil produksi sepeda hingga bulan Mei?
+Sebuah perusahaan sepeda pada tahun <InlineMath math="2020" /> meningkat setiap bulannya dan membentuk barisan geometri. Produksi pada bulan Januari sebanyak <InlineMath math="120 \text{ unit}" />. Pada bulan April, hasil produksi mencapai <InlineMath math="3.240 \text{ unit}" />. Berapakah total hasil produksi sepeda hingga bulan Mei?
 
 **Penyelesaian:**
 
@@ -86,7 +86,7 @@ Sebuah perusahaan sepeda pada tahun 2020 meningkat setiap bulannya dan membentuk
 - Produksi April <InlineMath math="(U_4) = 3.240" />
 - Ditanya: Total produksi hingga Mei <InlineMath math="(S_5)" />
 
-**Langkah 1**: Cari rasio <InlineMath math="(r)" />
+**Langkah** <InlineMath math="1" />: Cari rasio <InlineMath math="(r)" />
 
 <MathContainer>
   <BlockMath math="U_4 = ar^{4-1} = ar^3" />
@@ -96,7 +96,7 @@ Sebuah perusahaan sepeda pada tahun 2020 meningkat setiap bulannya dan membentuk
   <BlockMath math="r = \sqrt[3]{27} = 3" />
 </MathContainer>
 
-**Langkah 2**: Hitung <InlineMath math="S_5" /> Karena <InlineMath math="r = 3 > 1" />, gunakan rumus:
+**Langkah** <InlineMath math="2" />: Hitung <InlineMath math="S_5" /> Karena <InlineMath math="r = 3 > 1" />, gunakan rumus:
 
 <MathContainer>
   <BlockMath math="S_n = \frac{a(r^n - 1)}{r - 1}" />

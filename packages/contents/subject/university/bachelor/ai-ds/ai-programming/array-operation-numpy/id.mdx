@@ -39,9 +39,9 @@ Broadcasting adalah sistem aturan yang memungkinkan NumPy melakukan operasi pada
 
 Terdapat tiga aturan utama dalam broadcasting:
 
-1. **Aturan 1**: Jika dimensi berbeda, tambahkan dimensi dengan ukuran 1 dari sebelah kiri pada array yang dimensinya lebih kecil
-2. **Aturan 2**: Regangkan dimensi berukuran 1 agar sesuai dengan nilai dimensi yang bersesuaian pada array lain  
-3. **Aturan 3**: Jika bentuk tidak kompatibel, akan muncul error
+1. **Aturan** <InlineMath math="1" />: Jika dimensi berbeda, tambahkan dimensi dengan ukuran <InlineMath math="1" /> dari sebelah kiri pada array yang dimensinya lebih kecil
+2. **Aturan** <InlineMath math="2" />: Regangkan dimensi berukuran <InlineMath math="1" /> agar sesuai dengan nilai dimensi yang bersesuaian pada array lain
+3. **Aturan** <InlineMath math="3" />: Jika bentuk tidak kompatibel, akan muncul error
 
 ### Array dengan Skalar
 
@@ -436,7 +436,7 @@ print("Apakah transpose adalah view?", np.shares_memory(a, b))`
 
 ## Standardisasi Data dengan Z-Transform
 
-Z-Transform adalah teknik standardisasi yang mengubah data agar memiliki rata-rata 0 dan standar deviasi 1. Teknik ini sangat berguna dalam machine learning untuk memastikan semua fitur memiliki skala yang sama.
+Z-Transform adalah teknik standardisasi yang mengubah data agar memiliki rata-rata <InlineMath math="0" /> dan standar deviasi <InlineMath math="1" />. Teknik ini sangat berguna dalam machine learning untuk memastikan semua fitur memiliki skala yang sama.
 
 Formula Z-Transform adalah <InlineMath math="Z = \frac{X - \mu}{\sigma}" />, dimana:
 - <InlineMath math="X" /> adalah matriks fitur berukuran <InlineMath math="n \times k" />

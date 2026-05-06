@@ -37,7 +37,7 @@ Therefore, for the joint probability of both events:
 
 ### Red Card and Heart Scenario
 
-A standard deck of cards has <InlineMath math="52 \text{ cards}" />. There are <InlineMath math="26 \text{ red cards}" /> and 13 heart cards. If we draw two cards sequentially without replacement, how do we calculate the probability of getting a red card first and a heart card second?
+A standard deck of cards has <InlineMath math="52 \text{ cards}" />. There are <InlineMath math="26 \text{ red cards}" /> and <InlineMath math="13" /> heart cards. If we draw two cards sequentially without replacement, how do we calculate the probability of getting a red card first and a heart card second?
 
 **Step-by-step analysis:**
 
@@ -53,7 +53,7 @@ Probability calculation:
 <BlockMath math="P(C \cap D) = P(C) \times P(D|C) = \frac{26}{52} \times \frac{13}{51} = \frac{1}{2} \times \frac{13}{51} = \frac{13}{102}" />
 </MathContainer>
 
-After drawing one red card, there are <InlineMath math="51 \text{ cards}" /> remaining in total. The number of heart cards remains 13 because heart cards are part of red cards, so the probability of drawing a heart card becomes <InlineMath math="\frac{13}{51}" />.
+After drawing one red card, there are <InlineMath math="51 \text{ cards}" /> remaining in total. The number of heart cards remains <InlineMath math="13" /> because heart cards are part of red cards, so the probability of drawing a heart card becomes <InlineMath math="\frac{13}{51}" />.
 
 ### Specific Heart Card Calculation
 
@@ -85,7 +85,7 @@ From this data, the company wants to analyze the probability in a **random selec
 <BlockMath math="P(L_1 \cap L_2) = \frac{200}{600} \times \frac{199}{599} = \frac{1}{3} \times \frac{199}{599} = \frac{199}{1797}" />
 </MathContainer>
 
-After selecting one male manager, there are 599 total managers remaining with 199 male managers, so the probability of selecting a second male manager decreases to <InlineMath math="\frac{199}{599}" />.
+After selecting one male manager, there are <InlineMath math="599" /> total managers remaining with <InlineMath math="199" /> male managers, so the probability of selecting a second male manager decreases to <InlineMath math="\frac{199}{599}" />.
 
 ## Problem Solving Strategy
 
@@ -168,4 +168,4 @@ Conditional probability gives a **smaller** result because after drawing one Ace
    <BlockMath math="P(A \cap K \cap Q) = \frac{4}{52} \times \frac{4}{51} \times \frac{4}{50} = \frac{1}{13} \times \frac{4}{51} \times \frac{2}{25} = \frac{8}{16575}" />
    </MathContainer>
    
-   Each draw reduces the total cards (52→51→50), but the number of Aces, Kings, and Queens each remains 4 because the types of cards drawn are different at each step.
+   Each draw reduces the total cards (<InlineMath math="52" />→<InlineMath math="51" />→<InlineMath math="50" />), but the number of Aces, Kings, and Queens each remains <InlineMath math="4" /> because the types of cards drawn are different at each step.

@@ -7,12 +7,13 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
+import type { ReactNode } from "react";
 
 export interface TableRowData {
   category: string;
-  courtDecision: string;
-  dprDecision: string;
-  electionLaw: string;
+  courtDecision: ReactNode;
+  dprDecision: ReactNode;
+  electionLaw: ReactNode;
 }
 
 interface Props {

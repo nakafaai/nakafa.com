@@ -40,7 +40,7 @@ This form shows how a matrix can be organized into simpler blocks, where each bl
 
 ## Jordan Block Structure
 
-For each <InlineMath math="i = 1, \ldots, k" />, the Jordan block <InlineMath math="\lambda_i \cdot I_{r_i} + N_i" /> has a very distinctive structure. Imagine it like an almost perfect staircase, where each step has the same value (namely the eigenvalue <InlineMath math="\lambda_i" />), but there are "connectors" in the form of the number 1 at certain positions that make this structure unique.
+For each <InlineMath math="i = 1, \ldots, k" />, the Jordan block <InlineMath math="\lambda_i \cdot I_{r_i} + N_i" /> has a very distinctive structure. Imagine it like an almost perfect staircase, where each step has the same value (namely the eigenvalue <InlineMath math="\lambda_i" />), but there are "connectors" in the form of the number <InlineMath math="1" /> at certain positions that make this structure unique.
 
 <MathContainer>
 <BlockMath math="\lambda_i \cdot I_{r_i} + N_i = \begin{pmatrix} \lambda_i & 1 & & & \\ & \ddots & \ddots & & \\ & & \ddots & 1 & \\ & & & \lambda_i & 0 \\ & & & & \lambda_i & 1 \\ & & & & & \ddots & \ddots \\ & & & & & & \ddots & 1 \\ & & & & & & & \lambda_i & 0 \\ & & & & & & & & \ddots & \ddots \\ & & & & & & & & & \ddots & 0 \\ & & & & & & & & & & \lambda_i \end{pmatrix} \in \mathbb{K}^{r_i \times r_i}" />

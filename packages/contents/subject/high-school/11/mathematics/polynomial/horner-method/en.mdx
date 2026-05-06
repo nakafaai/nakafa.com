@@ -56,11 +56,11 @@ Before performing division with Horner's method, there are several preparation s
 
 1.  **Identify Coefficients of the Dividend (<InlineMath math="P(x)" />):**
 
-    Write down all coefficients of the polynomial to be divided in order, starting from the term with the highest power down to the constant. Ensure no power is skipped. If a term with a certain power is missing, its coefficient is written as 0.
+    Write down all coefficients of the polynomial to be divided in order, starting from the term with the highest power down to the constant. Ensure no power is skipped. If a term with a certain power is missing, its coefficient is written as <InlineMath math="0" />.
     
     **Example:**
     
-    For <InlineMath math="P(x) = 2x^3 + 5x^2 + 6" />, the coefficient of the <InlineMath math="x" /> term is 0. So, the coefficients we write in order are: <InlineMath math="2, 5, 0, 6" />.
+    For <InlineMath math="P(x) = 2x^3 + 5x^2 + 6" />, the coefficient of the <InlineMath math="x" /> term is <InlineMath math="0" />. So, the coefficients we write in order are: <InlineMath math="2, 5, 0, 6" />.
 
 2.  **Identify the Value <InlineMath math="c" /> from the Divisor (<InlineMath math="x-c" />):**
 
@@ -81,7 +81,7 @@ Here are the steps to perform division using the Horner scheme:
 1.  **Bring Down the First Coefficient:** Bring down the first coefficient (<InlineMath math="a_n" />) directly to the result row (the bottom row).
 2.  **Multiply and Place:** Multiply the coefficient just brought down by the value <InlineMath math="c" />. Place the result under the second coefficient (<InlineMath math="a_{n-1}" />).
 3.  **Add:** Add the second coefficient (<InlineMath math="a_{n-1}" />) to the result from the previous step. Write the sum in the result row, directly below it.
-4.  **Repeat:** Repeat step 2 (multiply by <InlineMath math="c" />) and step 3 (add to the coefficient above it) for all remaining coefficients.
+4.  **Repeat:** Repeat step <InlineMath math="2" /> (multiply by <InlineMath math="c" />) and step <InlineMath math="3" /> (add to the coefficient above it) for all remaining coefficients.
 5.  **Final Result:** The last number in the result row is the **remainder (<InlineMath math="S" />)**. The other numbers in the result row, from left to right, are the **coefficients of the quotient polynomial (<InlineMath math="H(x)" />)**, starting from the power <InlineMath math="n-1" />.
 
 ## Using Horner's Method

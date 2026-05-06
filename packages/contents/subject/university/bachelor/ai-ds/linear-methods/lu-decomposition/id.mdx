@@ -48,7 +48,7 @@ Dari eliminasi Gauss dengan langkah-langkah <InlineMath math="j_1, \ldots, j_r" 
 Matriks <InlineMath math="P" /> diperoleh dari penerapan vektor permutasi <InlineMath math="p" /> pada baris-baris matriks identitas. Ketiga matriks memiliki sifat:
 
 1. <InlineMath math="U" /> adalah matriks segitiga atas dalam bentuk baris bertingkat dengan peringkat <InlineMath math="r" />
-2. <InlineMath math="L" /> adalah matriks segitiga bawah reguler dengan 1 pada diagonal
+2. <InlineMath math="L" /> adalah matriks segitiga bawah reguler dengan <InlineMath math="1" /> pada diagonal
 3. <InlineMath math="P" /> adalah matriks permutasi dengan <InlineMath math="P^{-1} = P^T" />
 
 ## Langkah Eliminasi Gauss
@@ -217,7 +217,7 @@ Algoritma bekerja mundur dari kolom <InlineMath math="j = n" /> hingga <InlineMa
    
    <BlockMath math="K_{jq} := \frac{1}{u_{ij}} \cdot \left( - \sum_{l=j+1}^n u_{il} \cdot K_{lq} \right)" />
 
-   untuk <InlineMath math="q = 1, \ldots, n - r" />, kemudian kita kurangi <InlineMath math="i" /> dengan 1.
+   untuk <InlineMath math="q = 1, \ldots, n - r" />, kemudian kita kurangi <InlineMath math="i" /> dengan <InlineMath math="1" />.
 
 2. **Jika kolom j bukan langkah pivot**, artinya tidak ada pivot pada kolom tersebut, maka variabel <InlineMath math="x_j" /> adalah variabel bebas. Kita set:
    - <InlineMath math="k := k + 1" />

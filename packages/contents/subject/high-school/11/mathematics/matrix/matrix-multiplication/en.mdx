@@ -30,7 +30,7 @@ Mathematically, if <InlineMath math="A = [a_{ik}]" /> and <InlineMath math="B = 
 
 The notation <InlineMath math="\sum" /> (sigma) means summation.
 
-In the formula above, we sum the products <InlineMath math="a_{ik}b_{kj}" /> for all values of <InlineMath math="k" /> from 1 to <InlineMath math="n" />.
+In the formula above, we sum the products <InlineMath math="a_{ik}b_{kj}" /> for all values of <InlineMath math="k" /> from <InlineMath math="1" /> to <InlineMath math="n" />.
 
 ## Steps to Multiply Matrices
 
@@ -38,7 +38,7 @@ Let's look at a simple example to understand the process.
 
 Suppose we have matrices <InlineMath math="P = \begin{bmatrix} p_{11} & p_{12} \\ p_{21} & p_{22} \end{bmatrix}" /> and <InlineMath math="Q = \begin{bmatrix} q_{11} & q_{12} \\ q_{21} & q_{22} \end{bmatrix}" />.
 
-Matrix <InlineMath math="P" /> has an order of <InlineMath math="2 \times 2" /> and matrix <InlineMath math="Q" /> also has an order of <InlineMath math="2 \times 2" />. The number of columns in <InlineMath math="P" /> (which is 2) is equal to the number of rows in <InlineMath math="Q" /> (which is 2), so we can multiply them. The result, <InlineMath math="R = PQ" />, will have an order of <InlineMath math="2 \times 2" />.
+Matrix <InlineMath math="P" /> has an order of <InlineMath math="2 \times 2" /> and matrix <InlineMath math="Q" /> also has an order of <InlineMath math="2 \times 2" />. The number of columns in <InlineMath math="P" /> (which is <InlineMath math="2" />) is equal to the number of rows in <InlineMath math="Q" /> (which is <InlineMath math="2" />), so we can multiply them. The result, <InlineMath math="R = PQ" />, will have an order of <InlineMath math="2 \times 2" />.
 
 <BlockMath math="R = \begin{bmatrix} r_{11} & r_{12} \\ r_{21} & r_{22} \end{bmatrix}" />
 
@@ -62,7 +62,7 @@ Given two matrices:
 
 Matrix <InlineMath math="A" /> has an order of <InlineMath math="3 \times 3" /> and matrix <InlineMath math="B" /> has an order of <InlineMath math="3 \times 2" />.
 
-The number of columns in matrix <InlineMath math="A" /> (which is 3) is equal to the number of rows in matrix <InlineMath math="B" /> (which is 3).
+The number of columns in matrix <InlineMath math="A" /> (which is <InlineMath math="3" />) is equal to the number of rows in matrix <InlineMath math="B" /> (which is <InlineMath math="3" />).
 
 So, <InlineMath math="AB" /> can be calculated and will result in a matrix of order <InlineMath math="3 \times 2" />.
 
@@ -86,7 +86,7 @@ Now, what about <InlineMath math="BA" />?
 
 Matrix <InlineMath math="B" /> has an order of <InlineMath math="3 \times 2" /> and matrix <InlineMath math="A" /> has an order of <InlineMath math="3 \times 3" />.
 
-The number of columns in matrix <InlineMath math="B" /> (which is 2) is **not equal** to the number of rows in matrix <InlineMath math="A" /> (which is 3).
+The number of columns in matrix <InlineMath math="B" /> (which is <InlineMath math="2" />) is **not equal** to the number of rows in matrix <InlineMath math="A" /> (which is <InlineMath math="3" />).
 
 Therefore, the multiplication <InlineMath math="BA" /> is **undefined**. This illustrates one of the important properties of matrix multiplication.
 
@@ -119,7 +119,7 @@ Matrix multiplication has several important properties:
 
     <BlockMath math="AI = IA = A" />
 
-    The identity matrix acts like the number 1 in ordinary number multiplication.
+    The identity matrix acts like the number <InlineMath math="1" /> in ordinary number multiplication.
 
 5.  **Multiplication by a Scalar (<InlineMath math="k" />)**:
 
@@ -139,7 +139,7 @@ The number of chips (in jars) sold in each place is presented in matrix <InlineM
 
 <BlockMath math="P = \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix} \begin{matrix} \text{Tempeh Chips} \\ \text{Banana Chips} \\ \text{Potato Chips} \end{matrix}" />
 
-The first row (<InlineMath math="\begin{bmatrix} 15 & 12 & 20 \end{bmatrix}" />) means 15 jars of tempeh chips were sold in Place A, 12 in Place B, and 20 in Place C.
+The first row (<InlineMath math="\begin{bmatrix} 15 & 12 & 20 \end{bmatrix}" />) means <InlineMath math="15" /> jars of tempeh chips were sold in Place A, <InlineMath math="12" /> in Place B, and <InlineMath math="20" /> in Place C.
 
 The price for each jar of chips (in rupiah) is stated in the column matrix <InlineMath math="Q" /> below:
 
@@ -147,7 +147,7 @@ The price for each jar of chips (in rupiah) is stated in the column matrix <Inli
 
 To determine the total revenue from each type of chip across all places, we can multiply matrix <InlineMath math="P" /> by matrix <InlineMath math="Q" />.
 
-However, pay attention to the order of the matrices. Matrix <InlineMath math="P" /> has an order of <InlineMath math="3 \times 3" /> and matrix <InlineMath math="Q" /> has an order of <InlineMath math="3 \times 1" />. The number of columns in <InlineMath math="P" /> (3) is equal to the number of rows in <InlineMath math="Q" /> (3), so <InlineMath math="PQ" /> can be calculated and will result in a matrix <InlineMath math="R" /> of order <InlineMath math="3 \times 1" />.
+However, pay attention to the order of the matrices. Matrix <InlineMath math="P" /> has an order of <InlineMath math="3 \times 3" /> and matrix <InlineMath math="Q" /> has an order of <InlineMath math="3 \times 1" />. The number of columns in <InlineMath math="P" /> (<InlineMath math="3" />) is equal to the number of rows in <InlineMath math="Q" /> (<InlineMath math="3" />), so <InlineMath math="PQ" /> can be calculated and will result in a matrix <InlineMath math="R" /> of order <InlineMath math="3 \times 1" />.
 
 Matrix <InlineMath math="R = PQ" /> will show the total revenue for each type of chip.
 

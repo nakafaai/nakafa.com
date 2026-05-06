@@ -122,9 +122,9 @@ print("Axis 2 (columns):", a.shape[2])  # Output: Axis 2 (columns): 3`
 
 | Dimension | Shape | Structure | Example | Axis |
 |-----------|-------|-----------|---------|------|
-| **One-dimensional** | `(4,)` | Number sequence in single row | `[0, 1, 2, 3]` | Axis 0 for element index |
-| **Two-dimensional** | `(2, 2)` | Table with rows and columns | `[[0, 1], [2, 3]]` | Axis 0 for rows, Axis 1 for columns |
-| **Three-dimensional** | `(2, 2, 3)` | Stack of tables (planes) | <InlineMath math="2" /> planes, each plane <InlineMath math="2 \times 3" /> | Axis 0 depth, Axis 1 height, Axis 2 width |
+| **One-dimensional** | `(4,)` | Number sequence in single row | `[0, 1, 2, 3]` | Axis <InlineMath math="0" /> for element index |
+| **Two-dimensional** | `(2, 2)` | Table with rows and columns | `[[0, 1], [2, 3]]` | Axis <InlineMath math="0" /> for rows, Axis <InlineMath math="1" /> for columns |
+| **Three-dimensional** | `(2, 2, 3)` | Stack of tables (planes) | <InlineMath math="2" /> planes, each plane <InlineMath math="2 \times 3" /> | Axis <InlineMath math="0" /> depth, Axis <InlineMath math="1" /> height, Axis <InlineMath math="2" /> width |
 
 The higher the array dimension, the more complex the data structure, but the basic principle remains the same. Each axis represents one dimension of data organization.
 
@@ -159,7 +159,7 @@ NumPy provides various specialized functions for creating arrays with specific p
 
 ### Constant Value Functions
 
-The `np.ones()` function creates arrays filled with the number 1. Useful when you need initialization with base values.
+The `np.ones()` function creates arrays filled with the number <InlineMath math="1" />. Useful when you need initialization with base values.
 
 <CodeBlock
   data={[

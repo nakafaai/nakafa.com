@@ -56,11 +56,11 @@ Sebelum melakukan pembagian dengan metode Horner, ada beberapa langkah persiapan
 
 1.  **Identifikasi Koefisien Polinomial yang Dibagi (<InlineMath math="P(x)" />):**
 
-    Tuliskan semua koefisien dari polinomial yang akan dibagi secara berurutan, dimulai dari suku dengan pangkat tertinggi hingga konstanta. Pastikan tidak ada pangkat yang terlewat. Jika ada suku dengan pangkat tertentu yang tidak ada, koefisiennya ditulis sebagai 0.
+    Tuliskan semua koefisien dari polinomial yang akan dibagi secara berurutan, dimulai dari suku dengan pangkat tertinggi hingga konstanta. Pastikan tidak ada pangkat yang terlewat. Jika ada suku dengan pangkat tertentu yang tidak ada, koefisiennya ditulis sebagai <InlineMath math="0" />.
     
     **Contoh:**
     
-    Untuk <InlineMath math="P(x) = 2x^3 + 5x^2 + 6" />, koefisien suku <InlineMath math="x" /> adalah 0. Maka, koefisien yang kita tulis berurutan adalah: <InlineMath math="2, 5, 0, 6" />.
+    Untuk <InlineMath math="P(x) = 2x^3 + 5x^2 + 6" />, koefisien suku <InlineMath math="x" /> adalah <InlineMath math="0" />. Maka, koefisien yang kita tulis berurutan adalah: <InlineMath math="2, 5, 0, 6" />.
 
 2.  **Identifikasi Nilai <InlineMath math="c" /> dari Pembagi (<InlineMath math="x-c" />):**
 
@@ -81,7 +81,7 @@ Berikut adalah langkah-langkah melakukan pembagian menggunakan skema Horner:
 1.  **Turunkan Koefisien Pertama:** Turunkan koefisien pertama (<InlineMath math="a_n" />) langsung ke baris hasil (baris paling bawah).
 2.  **Kali dan Letakkan:** Kalikan koefisien yang baru saja diturunkan dengan nilai <InlineMath math="c" />. Letakkan hasilnya di bawah koefisien kedua (<InlineMath math="a_{n-1}" />).
 3.  **Jumlahkan:** Jumlahkan koefisien kedua (<InlineMath math="a_{n-1}" />) dengan hasil perkalian dari langkah sebelumnya. Tuliskan hasilnya di baris hasil, tepat di bawahnya.
-4.  **Ulangi:** Ulangi langkah 2 (kali dengan <InlineMath math="c" />) dan langkah 3 (jumlahkan dengan koefisien di atasnya) untuk semua koefisien yang tersisa.
+4.  **Ulangi:** Ulangi langkah <InlineMath math="2" /> (kali dengan <InlineMath math="c" />) dan langkah <InlineMath math="3" /> (jumlahkan dengan koefisien di atasnya) untuk semua koefisien yang tersisa.
 5.  **Hasil Akhir:** Angka terakhir di baris hasil adalah **sisa pembagian (<InlineMath math="S" />)**. Angka-angka lainnya di baris hasil, dari kiri ke kanan, adalah **koefisien dari polinomial hasil bagi (<InlineMath math="H(x)" />)**, dimulai dari pangkat <InlineMath math="n-1" />.
 
 ## Penggunaan Metode Horner

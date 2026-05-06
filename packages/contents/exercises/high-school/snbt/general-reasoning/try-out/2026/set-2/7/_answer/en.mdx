@@ -6,16 +6,16 @@ export const metadata = {
 
 We will determine the number of password arrangements based on the position rules shown in the following table:
 
-| Even Digit | First Letter (Not E) | Digit from <InlineMath math="\{5, 6, 7\}" /> | Second Letter (U) |
+| Even Digit | First Letter (Not <InlineMath math="\mathrm{E}" />) | Digit from <InlineMath math="\{5, 6, 7\}" /> | Second Letter (<InlineMath math="\mathrm{U}" />) |
 | :---: | :---: | :---: | :---: |
-| <InlineMath math="2, 4, 6, 8" /> | A, I, U, O | <InlineMath math="5, 6, 7" /> | U |
+| <InlineMath math="2, 4, 6, 8" /> | <InlineMath math="\{\mathrm{A}, \mathrm{I}, \mathrm{U}, \mathrm{O}\}" /> | <InlineMath math="5, 6, 7" /> | <InlineMath math="\mathrm{U}" /> |
 | <InlineMath math="4" /> | <InlineMath math="4" /> | <InlineMath math="3" /> | <InlineMath math="1" /> |
 
 From the table above, we get the number of choices for each position:
-- **Position 1**: Even digits (2, 4, 6, 8) have <InlineMath math="4" /> choices.
-- **Position 2**: Vowels except E (A, I, U, O) have <InlineMath math="4" /> choices.
-- **Position 3**: Digits from set <InlineMath math="\{5, 6, 7\}" /> have <InlineMath math="3" /> choices.
-- **Position 4**: Letter U has only <InlineMath math="1" /> choice.
+- **Position** <InlineMath math="1" />: Even digits (<InlineMath math="2, 4, 6, 8" />) have <InlineMath math="4" /> choices.
+- **Position** <InlineMath math="2" />: Vowels except <InlineMath math="\mathrm{E}" /> (<InlineMath math="\{\mathrm{A}, \mathrm{I}, \mathrm{U}, \mathrm{O}\}" />) have <InlineMath math="4" /> choices.
+- **Position** <InlineMath math="3" />: Digits from set <InlineMath math="\{5, 6, 7\}" /> have <InlineMath math="3" /> choices.
+- **Position** <InlineMath math="4" />: Letter <InlineMath math="\mathrm{U}" /> has only <InlineMath math="1" /> choice.
 
 Since each position must be filled simultaneously, we use the multiplication rule:
 

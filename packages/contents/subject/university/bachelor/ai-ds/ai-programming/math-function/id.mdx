@@ -162,7 +162,7 @@ Untuk bilangan kompleks, fungsi `abs()` menghitung modulus atau jarak dari titik
 
 ### Fungsi Pembulatan
 
-Fungsi `round()` membulatkan bilangan floating-point ke bilangan bulat terdekat menggunakan sistem Banker's rounding. Dalam sistem ini, angka yang berada tepat di tengah (seperti 0.5) dibulatkan ke bilangan genap terdekat.
+Fungsi `round()` membulatkan bilangan floating-point ke bilangan bulat terdekat menggunakan sistem Banker's rounding. Dalam sistem ini, angka yang berada tepat di tengah (seperti <InlineMath math="0.5" />) dibulatkan ke bilangan genap terdekat.
 
 <CodeBlock
   data={[
@@ -181,7 +181,7 @@ print(round(1234.4321, -2))         # Output: 1200.0`
   ]}
 />
 
-Perhatikan bahwa `round(4.5)` menghasilkan 4, bukan 5. Ini karena Python menggunakan Banker's rounding yang membulatkan ke bilangan genap terdekat untuk kasus tepat di tengah. Fungsi `round()` juga menerima parameter kedua untuk menentukan jumlah digit desimal atau posisi pembulatan.
+Perhatikan bahwa `round(4.5)` menghasilkan <InlineMath math="4" />, bukan <InlineMath math="5" />. Ini karena Python menggunakan Banker's rounding yang membulatkan ke bilangan genap terdekat untuk kasus tepat di tengah. Fungsi `round()` juga menerima parameter kedua untuk menentukan jumlah digit desimal atau posisi pembulatan.
 
 ## Fungsi dan Konstanta dalam Modul math
 
