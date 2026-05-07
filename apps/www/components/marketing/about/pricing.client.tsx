@@ -8,11 +8,12 @@ import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useAction } from "convex/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useTransition } from "react";
 import { getColorFront } from "@/components/marketing/about/utils";
 import { authClient } from "@/lib/auth/client";
+import { getAuthCallbackPath } from "@/lib/auth/utils";
 import { useUser } from "@/lib/context/use-user";
 
 export function PricingDithering({ ...props }: DitheringProps) {
@@ -37,6 +38,7 @@ export function PricingDithering({ ...props }: DitheringProps) {
 }
 
 export function ProButton() {
+  const locale = useLocale();
   const t = useTranslations("Pricing");
 
   const [isPending, startTransition] = useTransition();
@@ -59,7 +61,7 @@ export function ProButton() {
       if (!currentUser) {
         await authClient.signIn.social({
           provider: "google",
-          callbackURL: "/",
+          callbackURL: getAuthCallbackPath(null, locale),
         });
         return;
       }
