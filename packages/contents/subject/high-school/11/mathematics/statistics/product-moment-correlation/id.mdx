@@ -20,7 +20,7 @@ Cara paling intuitif memahami nilai <InlineMath math="r" /> adalah dengan meliha
 
 ### Korelasi Positif Kuat
 
-<InlineMath math="r" /> mendekati +1 berarti kedua variabel cenderung bergerak ke
+<InlineMath math="r" /> mendekati <InlineMath math="+1" /> berarti kedua variabel cenderung bergerak ke
 arah yang sama.
 
 <ScatterDiagram
@@ -49,11 +49,11 @@ arah yang sama.
   regressionLineStyle={{ color: "var(--chart-4)" }}
 />
 
-Jika titik-titik data kamu terlihat seperti ini (naik dari kiri bawah ke kanan atas dan sangat rapat membentuk garis), nilai <InlineMath math="r" />-nya akan mendekati +1.
+Jika titik-titik data kamu terlihat seperti ini (naik dari kiri bawah ke kanan atas dan sangat rapat membentuk garis), nilai <InlineMath math="r" />-nya akan mendekati <InlineMath math="+1" />.
 
 ### Korelasi Positif Lemah
 
-<InlineMath math="r" /> positif tapi mendekati 0 berarti kedua variabel cenderung
+<InlineMath math="r" /> positif tapi mendekati <InlineMath math="0" /> berarti kedua variabel cenderung
 bergerak ke arah yang sama, tapi tidak terlalu kuat.
 
 <ScatterDiagram
@@ -82,11 +82,11 @@ bergerak ke arah yang sama, tapi tidak terlalu kuat.
   regressionLineStyle={{ color: "var(--chart-4)" }}
 />
 
-Kalau titik-titiknya masih menunjukkan kecenderungan naik tapi lebih menyebar seperti ini, nilai <InlineMath math="r" />-nya positif, tapi lebih kecil (mendekati 0).
+Kalau titik-titiknya masih menunjukkan kecenderungan naik tapi lebih menyebar seperti ini, nilai <InlineMath math="r" />-nya positif, tapi lebih kecil (mendekati <InlineMath math="0" />).
 
 ### Korelasi Negatif Kuat
 
-<InlineMath math="r" /> mendekati -1 berarti kedua variabel cenderung bergerak ke
+<InlineMath math="r" /> mendekati <InlineMath math="-1" /> berarti kedua variabel cenderung bergerak ke
 arah yang berlawanan.
 
 <ScatterDiagram
@@ -115,7 +115,7 @@ arah yang berlawanan.
   regressionLineStyle={{ color: "var(--chart-4)" }}
 />
 
-Jika titik-titiknya turun dari kiri atas ke kanan bawah dan sangat rapat, nilai <InlineMath math="r" />-nya akan mendekati -1.
+Jika titik-titiknya turun dari kiri atas ke kanan bawah dan sangat rapat, nilai <InlineMath math="r" />-nya akan mendekati <InlineMath math="-1" />.
 
 ### Tidak Ada Korelasi Linear
 
@@ -148,7 +148,7 @@ linear.
   regressionLineStyle={{ color: "var(--chart-4)" }}
 />
 
-Ketika titik-titik menyebar acak tanpa pola lurus yang jelas, nilai <InlineMath math="r" />-nya akan mendekati 0.
+Ketika titik-titik menyebar acak tanpa pola lurus yang jelas, nilai <InlineMath math="r" />-nya akan mendekati <InlineMath math="0" />.
 
 ## Bagaimana Menghitung Koefisien Korelasi?
 
@@ -176,7 +176,7 @@ Koefisien korelasi Pearson (<InlineMath math="r" />) pada dasarnya mengukur sebe
 
     <BlockMath math="r = \frac{\text{Seberapa banyak X dan Y bervariasi bersama}}{\text{Ukuran standar dari variasi X dan Y masing-masing}} = \frac{SS_{xy}}{\sqrt{SS_{xx} SS_{yy}}}" />
 
-Hasil pembagian inilah yang menjadi **<InlineMath math="r" />**, Koefisien Korelasi Pearson. Karena sudah distandarkan, nilainya akan selalu antara -1 dan +1, tidak peduli satuan asli datanya. Ini memungkinkan kita membandingkan kekuatan hubungan linear antar variabel yang berbeda-beda.
+Hasil pembagian inilah yang menjadi **<InlineMath math="r" />**, Koefisien Korelasi Pearson. Karena sudah distandarkan, nilainya akan selalu antara <InlineMath math="-1" /> dan <InlineMath math="+1" />, tidak peduli satuan asli datanya. Ini memungkinkan kita membandingkan kekuatan hubungan linear antar variabel yang berbeda-beda.
 
 Jadi, nilai <InlineMath math="r" /> ditentukan dengan membandingkan seberapa kuat <InlineMath math="X" /> dan <InlineMath math="Y" /> bergerak bersama, relatif terhadap seberapa banyak mereka bergerak secara individual.
 

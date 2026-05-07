@@ -16,7 +16,7 @@ Containers in Python have the main characteristic of being able to store various
 Python provides five main container types with different characteristics:
 
 - **String** - sequence of characters that cannot be changed
-- **List** - sequence of items that can be changed and indexed  
+- **List** - sequence of items that can be changed and indexed
 - **Tuple** - sequence of items that cannot be changed
 - **Dictionary** - key-value pairs
 - **Set** - collection of unique items without order
@@ -47,7 +47,7 @@ Lists are created using square brackets with elements separated by commas. Lists
       filename: "list_creation.py",
       code: `# Various list types based on data types
 a = [True, False, True]              # Output: [True, False, True] # list of bools
-b = [1, 2, 3]                        # Output: [1, 2, 3] # list of ints  
+b = [1, 2, 3]                        # Output: [1, 2, 3] # list of ints
 c = [1.5, 2.5, 3.5]                  # Output: [1.5, 2.5, 3.5] # list of floats
 d = ['red', 'green', 'blue']         # Output: ['red', 'green', 'blue'] # list of strings
 
@@ -66,13 +66,13 @@ nested = [1, [2.5, False, 'red'], 3.5, 'blue']  # Output: [1, [2.5, False, 'red'
 
 ## List Indexing
 
-Indexing is a way to access individual elements in a list using position numbers. Python uses zero-based indexing, meaning the first element has index 0.
+Indexing is a way to access individual elements in a list using position numbers. Python uses zero-based indexing, meaning the first element has index <InlineMath math="0" />.
 
 
 Indexing in Python has special rules that need to be understood:
 
-- **Positive indices** start from 0 for the first element
-- **Negative indices** start from -1 for the last element  
+- **Positive indices** start from <InlineMath math="0" /> for the first element
+- **Negative indices** start from <InlineMath math="-1" /> for the last element
 - **Indices out of range** will result in IndexError
 
 <CodeBlock
@@ -106,7 +106,7 @@ Slicing is a technique to take part of elements from a list. Stride allows us to
 
 Complete slicing syntax is `list[start:stop:step]` where:
 - `start` is the starting index (inclusive)
-- `stop` is the ending index (exclusive)  
+- `stop` is the ending index (exclusive)
 - `step` is the interval for taking elements
 
 <CodeBlock
@@ -133,7 +133,7 @@ print('x[::-1] =', x[::-1])                  # Output: x[::-1] = [5, 4, 3, 2, 1,
   ]}
 />
 
-Slicing is like cutting bread slices. If you have 6 bread slices (indices 0-5), then `x[1:4]` means taking slices 2 to 4 (not including slice 5). While `x[1:4:2]` means taking only slices 2 and 4 (skipping 1 slice).
+Slicing is like cutting bread slices. If you have <InlineMath math="6" /> bread slices (indices <InlineMath math="0\text{-}5" />), then `x[1:4]` means taking slices <InlineMath math="2" /> to <InlineMath math="4" /> (not including slice <InlineMath math="5" />). While `x[1:4:2]` means taking only slices <InlineMath math="2" /> and <InlineMath math="4" /> (skipping <InlineMath math="1" /> slice).
 
 ## Operations and Similarities with Strings
 
@@ -151,7 +151,7 @@ nested = [1, [2.5, False, 'red'], 3.5, 'blue']
 print('nested =', nested)
 # Output: nested = [1, [2.5, False, 'red'], 3.5, 'blue']
 
-# Display without assignment  
+# Display without assignment
 print(nested)
 # Output: [1, [2.5, False, 'red'], 3.5, 'blue']
 
@@ -178,7 +178,7 @@ The main difference is that strings are immutable (cannot be changed) while list
         A[List Methods] --> B[Adding]
         A --> C[Removing]
         A --> D[Organizing]
-        
+
         B --> E[append]
         B --> F[extend]
         B --> G[insert]
@@ -283,7 +283,7 @@ mixed = [False, 2, 3.5, 'blue']             # Output: [False, 2, 3.5, 'blue']
 nested = [1, [2.5, False, 'red'], 3.5, 'blue']  # Output: [1, [2.5, False, 'red'], 3.5, 'blue']
 
 print('Empty list 1:', a)
-print('Empty list 2:', b) 
+print('Empty list 2:', b)
 print('Mixed types:', mixed)
 print('Nested structure:', nested)`
     }
@@ -411,4 +411,4 @@ print('genap & ganjil =', genap & ganjil)    # Output: genap & ganjil = set()`
 | **Dictionary** | `{'a': 1}` | Yes* | Yes | No (keys) | Key-value mapping |
 | **Set** | `{1, 2, 3}` | No | Yes | No | Unique elements, set operations |
 
-> Dictionary maintains insertion order since Python 3.7+
+> Dictionary maintains insertion order since Python `3.7+`

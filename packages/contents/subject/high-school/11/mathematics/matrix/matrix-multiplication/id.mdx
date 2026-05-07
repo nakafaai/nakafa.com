@@ -30,7 +30,7 @@ Secara matematis, jika <InlineMath math="A = [a_{ik}]" /> dan <InlineMath math="
 
 Notasi <InlineMath math="\sum" /> (sigma) berarti penjumlahan.
 
-Dalam rumus di atas, kita menjumlahkan hasil perkalian <InlineMath math="a_{ik}b_{kj}" /> untuk semua nilai <InlineMath math="k" /> dari 1 sampai <InlineMath math="n" />.
+Dalam rumus di atas, kita menjumlahkan hasil perkalian <InlineMath math="a_{ik}b_{kj}" /> untuk semua nilai <InlineMath math="k" /> dari <InlineMath math="1" /> sampai <InlineMath math="n" />.
 
 ## Langkah-Langkah Mengalikan Matriks
 
@@ -38,7 +38,7 @@ Mari kita lihat contoh sederhana untuk memahami prosesnya.
 
 Misalkan kita punya matriks <InlineMath math="P = \begin{bmatrix} p_{11} & p_{12} \\ p_{21} & p_{22} \end{bmatrix}" /> dan <InlineMath math="Q = \begin{bmatrix} q_{11} & q_{12} \\ q_{21} & q_{22} \end{bmatrix}" />.
 
-Matriks <InlineMath math="P" /> berordo <InlineMath math="2 \times 2" /> dan matriks <InlineMath math="Q" /> juga berordo <InlineMath math="2 \times 2" />. Jumlah kolom <InlineMath math="P" /> (yaitu 2) sama dengan jumlah baris <InlineMath math="Q" /> (yaitu 2), jadi kita bisa mengalikannya. Hasilnya, <InlineMath math="R = PQ" />, akan berordo <InlineMath math="2 \times 2" />.
+Matriks <InlineMath math="P" /> berordo <InlineMath math="2 \times 2" /> dan matriks <InlineMath math="Q" /> juga berordo <InlineMath math="2 \times 2" />. Jumlah kolom <InlineMath math="P" /> (yaitu <InlineMath math="2" />) sama dengan jumlah baris <InlineMath math="Q" /> (yaitu <InlineMath math="2" />), jadi kita bisa mengalikannya. Hasilnya, <InlineMath math="R = PQ" />, akan berordo <InlineMath math="2 \times 2" />.
 
 <BlockMath math="R = \begin{bmatrix} r_{11} & r_{12} \\ r_{21} & r_{22} \end{bmatrix}" />
 
@@ -62,7 +62,7 @@ Diberikan dua matriks:
 
 Matriks <InlineMath math="A" /> berordo <InlineMath math="3 \times 3" /> dan matriks <InlineMath math="B" /> berordo <InlineMath math="3 \times 2" />.
 
-Jumlah kolom matriks <InlineMath math="A" /> (yaitu 3) sama dengan jumlah baris matriks <InlineMath math="B" /> (yaitu 3).
+Jumlah kolom matriks <InlineMath math="A" /> (yaitu <InlineMath math="3" />) sama dengan jumlah baris matriks <InlineMath math="B" /> (yaitu <InlineMath math="3" />).
 
 Jadi, <InlineMath math="AB" /> dapat dihitung dan akan menghasilkan matriks berordo <InlineMath math="3 \times 2" />.
 
@@ -86,7 +86,7 @@ Sekarang, bagaimana dengan <InlineMath math="BA" />?
 
 Matriks <InlineMath math="B" /> berordo <InlineMath math="3 \times 2" /> dan matriks <InlineMath math="A" /> berordo <InlineMath math="3 \times 3" />.
 
-Jumlah kolom matriks <InlineMath math="B" /> (yaitu 2) **tidak sama** dengan jumlah baris matriks <InlineMath math="A" /> (yaitu 3).
+Jumlah kolom matriks <InlineMath math="B" /> (yaitu <InlineMath math="2" />) **tidak sama** dengan jumlah baris matriks <InlineMath math="A" /> (yaitu <InlineMath math="3" />).
 
 Oleh karena itu, perkalian <InlineMath math="BA" /> **tidak terdefinisi**. Ini menunjukkan salah satu sifat penting perkalian matriks.
 
@@ -119,7 +119,7 @@ Perkalian matriks memiliki beberapa sifat penting:
 
     <BlockMath math="AI = IA = A" />
 
-    Matriks identitas berperan seperti angka 1 dalam perkalian bilangan biasa.
+    Matriks identitas berperan seperti angka <InlineMath math="1" /> dalam perkalian bilangan biasa.
 
 5.  **Perkalian dengan Skalar (<InlineMath math="k" />)**:
 
@@ -139,7 +139,7 @@ Banyaknya keripik (dalam toples) yang terjual di setiap tempat disajikan dalam m
 
 <BlockMath math="P = \begin{bmatrix} 15 & 12 & 20 \\ 25 & 10 & 15 \\ 15 & 15 & 20 \end{bmatrix} \begin{matrix} \text{Keripik Tempe} \\ \text{Keripik Pisang} \\ \text{Keripik Kentang} \end{matrix}" />
 
-Baris pertama (<InlineMath math="\begin{bmatrix} 15 & 12 & 20 \end{bmatrix}" />) berarti 15 toples keripik tempe terjual di Tempat A, 12 di Tempat B, dan 20 di Tempat C.
+Baris pertama (<InlineMath math="\begin{bmatrix} 15 & 12 & 20 \end{bmatrix}" />) berarti <InlineMath math="15" /> toples keripik tempe terjual di Tempat A, <InlineMath math="12" /> di Tempat B, dan <InlineMath math="20" /> di Tempat C.
 
 Harga untuk setiap toples keripik (dalam rupiah) dinyatakan dalam matriks kolom <InlineMath math="Q" /> berikut:
 
@@ -147,7 +147,7 @@ Harga untuk setiap toples keripik (dalam rupiah) dinyatakan dalam matriks kolom 
 
 Untuk menentukan total pendapatan dari setiap jenis keripik di semua tempat, kita bisa mengalikan matriks <InlineMath math="P" /> dengan matriks <InlineMath math="Q" />.
 
-Namun, perhatikan ordo matriks. Matriks <InlineMath math="P" /> berordo <InlineMath math="3 \times 3" /> dan matriks <InlineMath math="Q" /> berordo <InlineMath math="3 \times 1" />. Jumlah kolom <InlineMath math="P" /> (3) sama dengan jumlah baris <InlineMath math="Q" /> (3), sehingga <InlineMath math="PQ" /> dapat dihitung dan akan menghasilkan matriks <InlineMath math="R" /> berordo <InlineMath math="3 \times 1" />.
+Namun, perhatikan ordo matriks. Matriks <InlineMath math="P" /> berordo <InlineMath math="3 \times 3" /> dan matriks <InlineMath math="Q" /> berordo <InlineMath math="3 \times 1" />. Jumlah kolom <InlineMath math="P" /> (<InlineMath math="3" />) sama dengan jumlah baris <InlineMath math="Q" /> (<InlineMath math="3" />), sehingga <InlineMath math="PQ" /> dapat dihitung dan akan menghasilkan matriks <InlineMath math="R" /> berordo <InlineMath math="3 \times 1" />.
 
 Matriks <InlineMath math="R = PQ" /> akan menunjukkan total pendapatan untuk setiap jenis keripik.
 

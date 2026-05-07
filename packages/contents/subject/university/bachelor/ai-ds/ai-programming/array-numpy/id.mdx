@@ -122,9 +122,9 @@ print("Axis 2 (columns):", a.shape[2])  # Output: Axis 2 (columns): 3`
 
 | Dimensi | Shape | Struktur | Contoh | Axis |
 |---------|--------|----------|---------|------|
-| **1D** | `(4,)` | Barisan angka dalam satu baris | `[0, 1, 2, 3]` | Axis 0 untuk indeks elemen |
-| **2D** | `(2, 2)` | Tabel dengan baris dan kolom | `[[0, 1], [2, 3]]` | Axis 0 untuk baris, Axis 1 untuk kolom |
-| **3D** | `(2, 2, 3)` | Tumpukan tabel (planes) | 2 planes, setiap plane 2x3 | Axis 0 kedalaman, Axis 1 tinggi, Axis 2 lebar |
+| **Satu dimensi** | `(4,)` | Barisan angka dalam satu baris | `[0, 1, 2, 3]` | Axis <InlineMath math="0" /> untuk indeks elemen |
+| **Dua dimensi** | `(2, 2)` | Tabel dengan baris dan kolom | `[[0, 1], [2, 3]]` | Axis <InlineMath math="0" /> untuk baris, Axis <InlineMath math="1" /> untuk kolom |
+| **Tiga dimensi** | `(2, 2, 3)` | Tumpukan tabel (planes) | <InlineMath math="2" /> planes, setiap plane <InlineMath math="2 \times 3" /> | Axis <InlineMath math="0" /> kedalaman, Axis <InlineMath math="1" /> tinggi, Axis <InlineMath math="2" /> lebar |
 
 Semakin tinggi dimensi array, semakin kompleks struktur datanya, tetapi prinsip dasarnya tetap sama. Setiap axis mewakili satu dimensi pengorganisasian data.
 
@@ -159,7 +159,7 @@ NumPy menyediakan berbagai fungsi khusus untuk membuat array dengan pola atau ni
 
 ### Fungsi Nilai Konstan
 
-Fungsi `np.ones()` membuat array yang diisi dengan angka 1. Berguna ketika kamu perlu inisialisasi dengan nilai dasar.
+Fungsi `np.ones()` membuat array yang diisi dengan angka <InlineMath math="1" />. Berguna ketika kamu perlu inisialisasi dengan nilai dasar.
 
 <CodeBlock
   data={[

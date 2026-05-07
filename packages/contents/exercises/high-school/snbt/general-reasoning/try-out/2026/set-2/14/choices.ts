@@ -14,7 +14,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Pihak terkait harus merevisi Peraturan Presiden Nomor 63 Tahun 2017 tentang Penyaluran Bantuan Sosial secara Nontunai",
+        "Pihak terkait harus merevisi Peraturan Presiden Nomor $$63$$ Tahun $$2017$$ tentang Penyaluran Bantuan Sosial secara Nontunai",
       value: false,
     },
     {
@@ -24,7 +24,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Transaksi penjualan gabah di 30 provinsi selama April 2019 turun 5,37 persen sangat kontras dengan kenaikan harga kebutuhan",
+        "Transaksi penjualan gabah di $$30$$ provinsi selama April $$2019$$ turun $$5{,}37\\%$$ sangat kontras dengan kenaikan harga kebutuhan",
       value: false,
     },
   ],
@@ -41,7 +41,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Related parties must revise Presidential Regulation Number 63 of 2017 regarding Non-Cash Social Assistance Distribution",
+        "Related parties must revise Presidential Regulation Number $$63$$ of $$2017$$ regarding Non-Cash Social Assistance Distribution",
       value: false,
     },
     {
@@ -51,7 +51,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Grain sales transactions in 30 provinces during April 2019 fell 5.37 percent, in stark contrast to the increase in prices of basic needs",
+        "Grain sales transactions in $$30$$ provinces during April $$2019$$ fell $$5.37\\%$$, in stark contrast to the increase in prices of basic needs",
       value: false,
     },
   ],

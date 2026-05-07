@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { ChartContainer } from "@repo/design-system/components/ui/chart";
+import type { ReactNode } from "react";
 import {
   CartesianGrid,
   Label,
@@ -19,7 +20,7 @@ import {
 } from "recharts";
 
 interface Props {
-  description: string;
+  description: ReactNode;
   title: string;
 }
 

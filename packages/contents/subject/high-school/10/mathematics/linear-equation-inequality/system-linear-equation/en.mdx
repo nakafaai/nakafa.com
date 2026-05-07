@@ -51,19 +51,19 @@ The substitution method works by replacing one variable with another. Let's solv
 
 <BlockMath math="\begin{cases} 2x + 3y = 21 & \ldots (1) \\ x + y = 10 & \ldots (2) \end{cases}" />
 
-**Step 1**: Express one variable from the simpler equation.
+**Step** <InlineMath math="1" />: Express one variable from the simpler equation.
 
-From equation (2): <InlineMath math="x + y = 10" />, we express <InlineMath math="x" /> in terms of <InlineMath math="y" />:
+From equation (<InlineMath math="2" />): <InlineMath math="x + y = 10" />, we express <InlineMath math="x" /> in terms of <InlineMath math="y" />:
 
 <BlockMath math="x = 10 - y \ldots (3)" />
 
-**Step 2**: Substitute into the other equation.
+**Step** <InlineMath math="2" />: Substitute into the other equation.
 
-Insert equation (3) into equation (1):
+Insert equation (<InlineMath math="3" />) into equation (<InlineMath math="1" />):
 
 <BlockMath math="2(10 - y) + 3y = 21" />
 
-**Step 3**: Solve the resulting equation.
+**Step** <InlineMath math="3" />: Solve the resulting equation.
 
 <MathContainer>
   <BlockMath math="20 - 2y + 3y = 21" />
@@ -71,9 +71,9 @@ Insert equation (3) into equation (1):
   <BlockMath math="y = 1 \ldots (4)" />
 </MathContainer>
 
-**Step 4**: Back-substitute to find the other variable.
+**Step** <InlineMath math="4" />: Back-substitute to find the other variable.
 
-Substitute the value <InlineMath math="y = 1" /> from equation (4) into equation (3):
+Substitute the value <InlineMath math="y = 1" /> from equation (<InlineMath math="4" />) into equation (<InlineMath math="3" />):
 
 <BlockMath math="x = 10 - y = 10 - 1 = 9" />
 
@@ -85,22 +85,22 @@ The elimination method works by eliminating one variable. Let's solve the same e
 
 <BlockMath math="\begin{cases} 2x + 3y = 21 & \ldots (1) \\ x + y = 10 & \ldots (2) \end{cases}" />
 
-**Step 1**: Match the coefficients of one variable.
+**Step** <InlineMath math="1" />: Match the coefficients of one variable.
 
-Multiply equation (2) by 2 to match the coefficient of <InlineMath math="x" />:
+Multiply equation (<InlineMath math="2" />) by <InlineMath math="2" /> to match the coefficient of <InlineMath math="x" />:
 
 <BlockMath math="\begin{cases} 2x + 3y = 21 & \ldots (1) \\ 2x + 2y = 20 & \ldots (3) \end{cases}" />
 
-**Step 2**: Eliminate the variable by subtracting the equations.
+**Step** <InlineMath math="2" />: Eliminate the variable by subtracting the equations.
 
 <MathContainer>
   <BlockMath math="(1) - (3): (2x + 3y) - (2x + 2y) = 21 - 20" />
   <BlockMath math="y = 1 \ldots (4)" />
 </MathContainer>
 
-**Step 3**: Use the value of <InlineMath math="y" /> to find <InlineMath math="x" />.
+**Step** <InlineMath math="3" />: Use the value of <InlineMath math="y" /> to find <InlineMath math="x" />.
 
-Substitute the value <InlineMath math="y = 1" /> from equation (4) into equation (2):
+Substitute the value <InlineMath math="y = 1" /> from equation (<InlineMath math="4" />) into equation (<InlineMath math="2" />):
 
 <MathContainer>
   <BlockMath math="x + 1 = 10" />
@@ -111,8 +111,8 @@ Therefore, the solution is <InlineMath math="x = 9" /> and <InlineMath math="y =
 
 Verify:
 
-- Equation (1): <InlineMath math="2(9) + 3(1) = 18 + 3 = 21" /> ✓
-- Equation (2): <InlineMath math="9 + 1 = 10" /> ✓
+- Equation (<InlineMath math="1" />): <InlineMath math="2(9) + 3(1) = 18 + 3 = 21" /> ✓
+- Equation (<InlineMath math="2" />): <InlineMath math="9 + 1 = 10" /> ✓
 
 ## Real-Life Applications
 
@@ -132,9 +132,9 @@ In basketball, there are three types of shots with different point values: free 
 
 Let's define:
 
-- <InlineMath math="a" /> = number of 1-point shots
-- <InlineMath math="b" /> = number of 2-point shots
-- <InlineMath math="c" /> = number of 3-point shots
+- <InlineMath math="a" /> = number of <InlineMath math="1\text{-point}" /> shots
+- <InlineMath math="b" /> = number of <InlineMath math="2\text{-point}" /> shots
+- <InlineMath math="c" /> = number of <InlineMath math="3\text{-point}" /> shots
 
 If Wijaya scored <InlineMath math="27" /> points, made <InlineMath math="16" /> shots total with <InlineMath math="6" /> of them being free throws, then:
 
@@ -160,7 +160,7 @@ From these two equations:
 
 Using elimination or substitution, we get <InlineMath math="b = 9" /> and <InlineMath math="c = 1" />.
 
-Therefore, Wijaya made 6 free throws, 9 two-point shots, and 1 three-point shot.
+Therefore, Wijaya made <InlineMath math="6" /> free throws, <InlineMath math="9" /> two-point shots, and <InlineMath math="1" /> three-point shot.
 
 ## Interpreting Solutions
 

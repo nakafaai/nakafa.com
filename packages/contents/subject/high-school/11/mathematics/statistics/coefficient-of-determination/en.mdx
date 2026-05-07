@@ -20,7 +20,7 @@ Simply put, <InlineMath math="r^2" /> tells us the **proportion or percentage** 
 
 The value of <InlineMath math="r^2" /> is closely related to how tightly the data points cluster around the regression line:
 
-1. **High <InlineMath math="r^2" /> (approaching 1 or <InlineMath math="100\%" />)**
+1. **High <InlineMath math="r^2" /> (approaching <InlineMath math="1" /> or <InlineMath math="100\%" />)**
 
    <ScatterDiagram
      title={
@@ -52,9 +52,9 @@ The value of <InlineMath math="r^2" /> is closely related to how tightly the dat
      regressionLineStyle={{ color: "var(--chart-4)" }}
    />
 
-   See how the data points above are very tightly packed and close to the regression line? This indicates a high <InlineMath math="r^2" /> value (for example, maybe around 0.95 or <InlineMath math="95\%" />). This means that most of the variation in <InlineMath math="Y" /> values _can be explained_ well by the regression line (or by variable <InlineMath math="X" />).
+   See how the data points above are very tightly packed and close to the regression line? This indicates a high <InlineMath math="r^2" /> value (for example, maybe around <InlineMath math="0.95" /> or <InlineMath math="95\%" />). This means that most of the variation in <InlineMath math="Y" /> values _can be explained_ well by the regression line (or by variable <InlineMath math="X" />).
 
-2. **Low <InlineMath math="r^2" /> (approaching 0 or <InlineMath math="0\%" />)**
+2. **Low <InlineMath math="r^2" /> (approaching <InlineMath math="0" /> or <InlineMath math="0\%" />)**
 
    <ScatterDiagram
      title={
@@ -86,7 +86,7 @@ The value of <InlineMath math="r^2" /> is closely related to how tightly the dat
      regressionLineStyle={{ color: "var(--chart-4)" }}
    />
 
-   Compare this with this diagram. The points are more spread out from the regression line (the residual lines are longer). This indicates a low <InlineMath math="r^2" /> value (for example, maybe around 0.40 or <InlineMath math="40\%" />). This means that this regression line is _not very good_ at explaining the variation in <InlineMath math="Y" /> values; only a small portion of the variation in <InlineMath math="Y" /> can be explained by <InlineMath math="X" /> through this model.
+   Compare this with this diagram. The points are more spread out from the regression line (the residual lines are longer). This indicates a low <InlineMath math="r^2" /> value (for example, maybe around <InlineMath math="0.40" /> or <InlineMath math="40\%" />). This means that this regression line is _not very good_ at explaining the variation in <InlineMath math="Y" /> values; only a small portion of the variation in <InlineMath math="Y" /> can be explained by <InlineMath math="X" /> through this model.
 
 ## Calculating the Coefficient of Determination
 
@@ -96,7 +96,7 @@ The easiest way to calculate <InlineMath math="r^2" /> is by **squaring the Corr
 
 So, if you've already calculated the value of <InlineMath math="r" />, just square it!
 
-Since the value of <InlineMath math="r" /> is always between -1 and +1 (<InlineMath math="-1 \le r \le 1" />), the value of <InlineMath math="r^2" /> will always be between 0 and 1.
+Since the value of <InlineMath math="r" /> is always between <InlineMath math="-1" /> and <InlineMath math="+1" /> (<InlineMath math="-1 \le r \le 1" />), the value of <InlineMath math="r^2" /> will always be between <InlineMath math="0" /> and <InlineMath math="1" />.
 
 <BlockMath math="0 \le r^2 \le 1" />
 
@@ -108,7 +108,7 @@ The value of <InlineMath math="r^2" /> can also be calculated directly using the
 
 ## Interpretation as a Percentage
 
-The value of <InlineMath math="r^2" /> is often converted into a percentage (by multiplying by 100) for easier interpretation.
+The value of <InlineMath math="r^2" /> is often converted into a percentage (by multiplying by <InlineMath math="100" />) for easier interpretation.
 
 - If <InlineMath math="r^2 = 0.81" />, it means that **<InlineMath math="81\%" />** of the total variation in variable <InlineMath math="Y" /> can be explained by the variation in variable <InlineMath math="X" /> through the linear regression model.
 - The remaining variation (<InlineMath math="1 - r^2" /> or <InlineMath math="19\%" /> in this example) is explained by other factors not included in the model (could be other variables, or _random error_).

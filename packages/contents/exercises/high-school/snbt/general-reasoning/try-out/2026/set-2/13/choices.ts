@@ -24,7 +24,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Solusi merevisi Peraturan Presiden Nomor 63 Tahun 2017 akan mengubah alokasi anggaran",
+        "Solusi merevisi Peraturan Presiden Nomor $$63$$ Tahun $$2017$$ akan mengubah alokasi anggaran",
       value: false,
     },
   ],
@@ -51,7 +51,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "The solution of revising Presidential Regulation Number 63 of 2017 will change budget allocations",
+        "The solution of revising Presidential Regulation Number $$63$$ of $$2017$$ will change budget allocations",
       value: false,
     },
   ],

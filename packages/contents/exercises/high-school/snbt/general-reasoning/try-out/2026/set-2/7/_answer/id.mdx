@@ -6,16 +6,16 @@ export const metadata = {
 
 Kita akan menentukan banyaknya susunan *password* berdasarkan aturan posisi yang diberikan dalam tabel berikut:
 
-| Angka Genap | Huruf Pertama (Bukan E) | Angka dari <InlineMath math="\{5, 6, 7\}" /> | Huruf Kedua (U) |
+| Angka Genap | Huruf Pertama (Bukan <InlineMath math="\mathrm{E}" />) | Angka dari <InlineMath math="\{5, 6, 7\}" /> | Huruf Kedua (<InlineMath math="\mathrm{U}" />) |
 | :---: | :---: | :---: | :---: |
-| <InlineMath math="2, 4, 6, 8" /> | A, I, U, O | <InlineMath math="5, 6, 7" /> | U |
+| <InlineMath math="2, 4, 6, 8" /> | <InlineMath math="\{\mathrm{A}, \mathrm{I}, \mathrm{U}, \mathrm{O}\}" /> | <InlineMath math="5, 6, 7" /> | <InlineMath math="\mathrm{U}" /> |
 | <InlineMath math="4" /> | <InlineMath math="4" /> | <InlineMath math="3" /> | <InlineMath math="1" /> |
 
 Dari tabel di atas, kita peroleh jumlah pilihan untuk setiap posisi:
-- **Posisi 1**: Angka genap (2, 4, 6, 8) ada <InlineMath math="4" /> pilihan.
-- **Posisi 2**: Huruf vokal selain E (A, I, U, O) ada <InlineMath math="4" /> pilihan.
-- **Posisi 3**: Angka dari himpunan <InlineMath math="\{5, 6, 7\}" /> ada <InlineMath math="3" /> pilihan.
-- **Posisi 4**: Huruf U hanya ada <InlineMath math="1" /> pilihan.
+- **Posisi** <InlineMath math="1" />: Angka genap (<InlineMath math="2, 4, 6, 8" />) ada <InlineMath math="4" /> pilihan.
+- **Posisi** <InlineMath math="2" />: Huruf vokal selain <InlineMath math="\mathrm{E}" /> (<InlineMath math="\{\mathrm{A}, \mathrm{I}, \mathrm{U}, \mathrm{O}\}" />) ada <InlineMath math="4" /> pilihan.
+- **Posisi** <InlineMath math="3" />: Angka dari himpunan <InlineMath math="\{5, 6, 7\}" /> ada <InlineMath math="3" /> pilihan.
+- **Posisi** <InlineMath math="4" />: Huruf <InlineMath math="\mathrm{U}" /> hanya ada <InlineMath math="1" /> pilihan.
 
 Karena setiap posisi harus diisi secara bersamaan, kita gunakan aturan perkalian:
 

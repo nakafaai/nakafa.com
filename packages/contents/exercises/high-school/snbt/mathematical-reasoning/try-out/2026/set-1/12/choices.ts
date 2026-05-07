@@ -4,23 +4,23 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 const choices: ExercisesChoices = {
   id: [
     {
-      label: "$$44,2$$",
+      label: "$$44{,}2$$",
       value: false,
     },
     {
-      label: "$$51,8$$",
+      label: "$$51{,}8$$",
       value: false,
     },
     {
-      label: "$$56,4$$",
+      label: "$$56{,}4$$",
       value: false,
     },
     {
-      label: "$$63,5$$",
+      label: "$$63{,}5$$",
       value: false,
     },
     {
-      label: "$$67,2$$",
+      label: "$$67{,}2$$",
       value: true,
     },
   ],

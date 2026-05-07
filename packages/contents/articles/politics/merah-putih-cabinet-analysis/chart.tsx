@@ -16,6 +16,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@repo/design-system/components/ui/chart";
+import type { ReactNode } from "react";
 import {
   Bar,
   BarChart,
@@ -29,7 +30,7 @@ const TICK_LABEL_CHAR_LIMIT = 3;
 
 interface SharedProps {
   description: string;
-  footnote: string;
+  footnote: ReactNode;
   title: string;
 }
 

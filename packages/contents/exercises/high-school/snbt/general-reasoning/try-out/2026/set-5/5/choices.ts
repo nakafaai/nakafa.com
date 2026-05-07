@@ -16,7 +16,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Penjualan sepeda motor pabrik Y sebanyak empat kali lipat penjualan sepeda motor X di tahun 2016",
+        "Penjualan sepeda motor pabrik Y sebanyak empat kali lipat penjualan sepeda motor X di tahun $$2016$$",
       value: false,
     },
     {
@@ -26,20 +26,23 @@ const choices: ExercisesChoices = {
     },
   ],
   en: [
-    { label: "Factory X motorcycle sales of $$500,000$$ units", value: false },
     {
-      label: "Factory Y motorcycle sales of $$5,200,000$$ units",
-      value: false,
-    },
-    { label: "Factory Z motorcycle sales of $$250,000$$ units", value: true },
-    {
-      label:
-        "Factory Y motorcycle sales are four times Factory X sales in 2016",
+      label: "Factory X motorcycle sales of $$500{,}000$$ units",
       value: false,
     },
     {
+      label: "Factory Y motorcycle sales of $$5{,}200{,}000$$ units",
+      value: false,
+    },
+    { label: "Factory Z motorcycle sales of $$250{,}000$$ units", value: true },
+    {
       label:
-        "The difference in Factory X motorcycle sales is $$800,000$$ units",
+        "Factory Y motorcycle sales are four times Factory X sales in $$2016$$",
+      value: false,
+    },
+    {
+      label:
+        "The difference in Factory X motorcycle sales is $$800{,}000$$ units",
       value: false,
     },
   ],

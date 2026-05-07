@@ -1,3 +1,5 @@
+import { getExercisesPath } from "@repo/contents/_lib/exercises/route";
+import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { slugify } from "@repo/design-system/lib/utils";
@@ -18,32 +20,38 @@ import {
 } from "@/components/shared/layout-material";
 import { RefContent } from "@/components/shared/ref-content";
 import { getGithubUrl } from "@/lib/utils/github";
+import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
 /** Renders the year-group overview variant for one exercises route. */
 export async function YearGroupPage({
+  category,
   data,
   locale,
   material,
   type,
 }: {
+  category: ExercisesCategory;
   data: Extract<ExerciseRouteData, { kind: "year-group" }>;
   locale: Locale;
   material: ExercisesMaterial;
   type: ExercisesType;
 }) {
-  const t = await getTranslations({ locale, namespace: "Exercises" });
+  const [t, tCommon] = await Promise.all([
+    getTranslations({ locale, namespace: "Exercises" }),
+    getTranslations({ locale, namespace: "Common" }),
+  ]);
+  const typePath = getExercisesPath(category, type);
   const headingId = slugify(data.currentMaterial.title);
 
   return (
     <>
       <BreadcrumbJsonLd
-        breadcrumbItems={data.currentMaterial.items.map((item, index) => ({
-          "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}${item.href}`,
-          position: index + 1,
-          name: item.title,
-          item: `https://nakafa.com/${locale}${item.href}`,
-        }))}
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: t(type), path: typePath },
+          { name: t(material), path: data.materialPath },
+          { name: data.currentMaterial.title, path: data.pagePath },
+        ])}
       />
       <CollectionPageJsonLd
         description={data.currentMaterial.description ?? t(type)}

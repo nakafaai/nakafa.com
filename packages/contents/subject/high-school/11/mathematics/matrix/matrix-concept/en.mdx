@@ -31,7 +31,7 @@ Or it can also be written with parentheses:
 
 <BlockMath math="A = \begin{pmatrix} 80 & 75 \\ 70 & 95 \\ 95 & 75 \end{pmatrix}" />
 
-In this example, the numbers 80, 75, 70, 95, 95, and 75 are the elements of matrix <InlineMath math="A" />.
+In this example, the numbers <InlineMath math="80, 75, 70, 95, 95, 75" /> are the elements of matrix <InlineMath math="A" />.
 
 ## Rows, Columns, and Matrix Elements
 
@@ -45,29 +45,23 @@ Let's look back at matrix <InlineMath math="A" /> from the previous example:
 
 <BlockMath math="A = \begin{bmatrix} 80 & 75 \\ 70 & 95 \\ 95 & 75 \end{bmatrix}" />
 
-- **Row 1** is <InlineMath math="[80 \ 75]" />
-- **Row 2** is <InlineMath math="[70 \ 95]" />
-- **Row 3** is <InlineMath math="[95 \ 75]" />
+- **Row** <InlineMath math="1" /> is <InlineMath math="[80 \ 75]" />
+- **Row** <InlineMath math="2" /> is <InlineMath math="[70 \ 95]" />
+- **Row** <InlineMath math="3" /> is <InlineMath math="[95 \ 75]" />
 
-- **Column 1** is <InlineMath math="\begin{bmatrix} 80 \\ 70 \\ 95 \end{bmatrix}" />
-- **Column 2** is <InlineMath math="\begin{bmatrix} 75 \\ 95 \\ 75 \end{bmatrix}" />
+- **Column** <InlineMath math="1" /> is <InlineMath math="\begin{bmatrix} 80 \\ 70 \\ 95 \end{bmatrix}" />
+- **Column** <InlineMath math="2" /> is <InlineMath math="\begin{bmatrix} 75 \\ 95 \\ 75 \end{bmatrix}" />
 
 Matrix elements are usually denoted by a lowercase letter corresponding to the matrix name, with two indices, for example <InlineMath math="a_{ij}" />. The first index (<InlineMath math="i" />) indicates the row position, and the second index (<InlineMath math="j" />) indicates the column position.
 
 So, for matrix <InlineMath math="A" /> above:
 
-- <InlineMath math="a_{11}" /> is the element in the <InlineMath math="1" />st row, <InlineMath math="1" />st column, which is
-  80.
-- <InlineMath math="a_{12}" /> is the element in the <InlineMath math="1" />st row, <InlineMath math="2" />nd column, which is
-  75.
-- <InlineMath math="a_{21}" /> is the element in the <InlineMath math="2" />nd row, <InlineMath math="1" />st column, which is
-  70.
-- <InlineMath math="a_{22}" /> is the element in the <InlineMath math="2" />nd row, <InlineMath math="2" />nd column, which is
-  95.
-- <InlineMath math="a_{31}" /> is the element in the <InlineMath math="3" />rd row, <InlineMath math="1" />st column, which is
-  95.
-- <InlineMath math="a_{32}" /> is the element in the <InlineMath math="3" />rd row, <InlineMath math="2" />nd column, which is
-  75.
+- <InlineMath math="a_{11}" /> is the element in the <InlineMath math="1" />st row, <InlineMath math="1" />st column, which is <InlineMath math="80" />.
+- <InlineMath math="a_{12}" /> is the element in the <InlineMath math="1" />st row, <InlineMath math="2" />nd column, which is <InlineMath math="75" />.
+- <InlineMath math="a_{21}" /> is the element in the <InlineMath math="2" />nd row, <InlineMath math="1" />st column, which is <InlineMath math="70" />.
+- <InlineMath math="a_{22}" /> is the element in the <InlineMath math="2" />nd row, <InlineMath math="2" />nd column, which is <InlineMath math="95" />.
+- <InlineMath math="a_{31}" /> is the element in the <InlineMath math="3" />rd row, <InlineMath math="1" />st column, which is <InlineMath math="95" />.
+- <InlineMath math="a_{32}" /> is the element in the <InlineMath math="3" />rd row, <InlineMath math="2" />nd column, which is <InlineMath math="75" />.
 
 ## Order of a Matrix
 
@@ -77,7 +71,7 @@ Consider our matrix <InlineMath math="A" /> again:
 
 <BlockMath math="A = \underbrace{\begin{bmatrix} 80 & 75 \\ 70 & 95 \\ 95 & 75 \end{bmatrix}}_{\text{2 columns}} \hspace{0.1em} \left. \vphantom{\begin{bmatrix} 80 \\ 70 \\ 95 \end{bmatrix}} \right\} \hspace{0.1em} \text{3 rows}" />
 
-Matrix <InlineMath math="A" /> has 3 rows (indicated by the curly brace on the right) and 2 columns (indicated by the curly brace below). So, the order of matrix <InlineMath math="A" /> is <InlineMath math="3 \times 2" />. We can write it as <InlineMath math="A_{3 \times 2}" />.
+Matrix <InlineMath math="A" /> has <InlineMath math="3" /> rows (indicated by the curly brace on the right) and <InlineMath math="2" /> columns (indicated by the curly brace below). So, the order of matrix <InlineMath math="A" /> is <InlineMath math="3 \times 2" />. We can write it as <InlineMath math="A_{3 \times 2}" />.
 
 **Another Example:**
 
@@ -93,13 +87,13 @@ If we convert this into matrix <InlineMath math="B" />:
 
 <BlockMath math="B = \underbrace{\begin{bmatrix} 2 & 1 & 0 \\ 3 & 1 & 1 \\ 1 & 2 & 1 \end{bmatrix}}_{\text{3 columns}} \hspace{0.1em} \left. \vphantom{\begin{bmatrix} 2 \\ 3 \\ 1 \end{bmatrix}} \right\} \hspace{0.1em} \text{3 rows}" />
 
-Matrix <InlineMath math="B" /> has 3 rows (indicated by the curly brace on the right) and 3 columns (indicated by the curly brace below). Thus, the order of matrix <InlineMath math="B" /> is <InlineMath math="3 \times 3" />. We can write it as <InlineMath math="B_{3 \times 3}" />.
+Matrix <InlineMath math="B" /> has <InlineMath math="3" /> rows (indicated by the curly brace on the right) and <InlineMath math="3" /> columns (indicated by the curly brace below). Thus, the order of matrix <InlineMath math="B" /> is <InlineMath math="3 \times 3" />. We can write it as <InlineMath math="B_{3 \times 3}" />.
 
 Elements of matrix <InlineMath math="B" />, for example:
 
-- <InlineMath math="b_{11} = 2" /> (element row 1, column 1)
-- <InlineMath math="b_{23} = 1" /> (element row 2, column 3)
-- <InlineMath math="b_{32} = 2" /> (element row 3, column 2)
+- <InlineMath math="b_{11} = 2" /> (element row <InlineMath math="1" />, column <InlineMath math="1" />)
+- <InlineMath math="b_{23} = 1" /> (element row <InlineMath math="2" />, column <InlineMath math="3" />)
+- <InlineMath math="b_{32} = 2" /> (element row <InlineMath math="3" />, column <InlineMath math="2" />)
 
 ## General Notation of a Matrix
 

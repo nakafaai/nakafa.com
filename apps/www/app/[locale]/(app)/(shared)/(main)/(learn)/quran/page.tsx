@@ -12,6 +12,8 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getSocialMetadata } from "@/lib/utils/metadata";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
 export async function generateMetadata({
   params,
@@ -24,12 +26,11 @@ export async function generateMetadata({
 
   const path = `/${locale}/quran`;
 
-  const alternates = {
-    canonical: path,
+  const alternates = createLocalizedAlternates(path, {
     types: {
       "text/markdown": `${path}.md`,
     },
-  };
+  });
   const title = t("quran");
   const description = t("quran-description");
   const socialMetadata = getSocialMetadata({
@@ -60,19 +61,17 @@ export default function Page(props: PageProps<"/[locale]/quran">) {
 
 function PageContent({ locale }: { locale: Locale }) {
   const t = useTranslations("Holy");
+  const tCommon = useTranslations("Common");
 
   const surahs = getAllSurah();
 
   return (
     <>
       <BreadcrumbJsonLd
-        breadcrumbItems={surahs.map((surah, index) => ({
-          "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}/quran/${surah.number}`,
-          position: index + 1,
-          name: getSurahName({ locale, name: surah.name }),
-          item: `https://nakafa.com/${locale}/quran/${surah.number}`,
-        }))}
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: t("quran"), path: "/quran" },
+        ])}
       />
       <HeaderContent
         description={t("quran-description")}

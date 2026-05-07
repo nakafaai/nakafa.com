@@ -19,12 +19,12 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Penurunan produksi pangan tidak mempengaruhi pertumbuhan populasi manusia 50 tahun ke depan",
+        "Penurunan produksi pangan tidak mempengaruhi pertumbuhan populasi manusia $$50$$ tahun ke depan",
       value: false,
     },
     {
       label:
-        "Populasi manusia dalam 50 tahun ke depan sangat dipengaruhi oleh penurunan produksi pangan",
+        "Populasi manusia dalam $$50$$ tahun ke depan sangat dipengaruhi oleh penurunan produksi pangan",
       value: false,
     },
   ],
@@ -46,12 +46,12 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "The decline in food production does not affect human population growth in the next 50 years",
+        "The decline in food production does not affect human population growth in the next $$50$$ years",
       value: false,
     },
     {
       label:
-        "Human population in the next 50 years is strongly influenced by the decline in food production",
+        "Human population in the next $$50$$ years is strongly influenced by the decline in food production",
       value: false,
     },
   ],

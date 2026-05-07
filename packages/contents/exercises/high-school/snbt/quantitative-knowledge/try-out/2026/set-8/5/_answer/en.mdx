@@ -6,12 +6,12 @@ export const metadata = {
 
 Let:
 
-- <InlineMath math="P(h_1) =" /> Probability of black in box 1
-- <InlineMath math="P(h_2) =" /> Probability of black in box 2
-- <InlineMath math="P(p_1) =" /> Probability of white in box 1
-- <InlineMath math="P(p_2) =" /> Probability of white in box 2
+- <InlineMath math="P(h_1) =" /> Probability of black in box <InlineMath math="1" />
+- <InlineMath math="P(h_2) =" /> Probability of black in box <InlineMath math="2" />
+- <InlineMath math="P(p_1) =" /> Probability of white in box <InlineMath math="1" />
+- <InlineMath math="P(p_2) =" /> Probability of white in box <InlineMath math="2" />
 
-Given the probability of getting black balls from both boxes is <InlineMath math="\frac{3}{10}" />. Since taking balls from box 1 and box 2 are independent events:
+Given the probability of getting black balls from both boxes is <InlineMath math="\frac{3}{10}" />. Since taking balls from box <InlineMath math="1" /> and box <InlineMath math="2" /> are independent events:
 
 <MathContainer>
   <BlockMath math="\begin{aligned} P(h_1 \cap h_2) &= P(h_1) \times P(h_2) \\ \frac{3}{10} &= \frac{n(h_1)}{20} \times \frac{n(h_2)}{20} \\ \frac{3}{10} &= \frac{n(h_1) \times n(h_2)}{400} \\ n(h_1) \times n(h_2) &= 120 \end{aligned}" />
@@ -21,8 +21,8 @@ We need to find a pair of factors of <InlineMath math="120" /> where both are le
 
 Then the number of white balls is:
 
-- Box 1: <InlineMath math="20 - 12 = 8" /> white balls
-- Box 2: <InlineMath math="20 - 10 = 10" /> white balls
+- Box <InlineMath math="1" />: <InlineMath math="20 - 12 = 8" /> white balls
+- Box <InlineMath math="2" />: <InlineMath math="20 - 10 = 10" /> white balls
 
 The probability that both balls are white is:
 

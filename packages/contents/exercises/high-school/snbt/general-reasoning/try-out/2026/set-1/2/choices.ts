@@ -9,7 +9,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Jenis 65 F1 diperoleh melalui eksplorasi mangga dengan metode seleksi dan metode persilangan oleh petani setempat.",
+        "Jenis $$65$$ F1 diperoleh melalui eksplorasi mangga dengan metode seleksi dan metode persilangan oleh petani setempat.",
       value: false,
     },
     {
@@ -36,7 +36,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Type 65 F1 was obtained through mango exploration with selection methods and crossbreeding methods by local farmers.",
+        "Type $$65$$ F1 was obtained through mango exploration with selection methods and crossbreeding methods by local farmers.",
       value: false,
     },
     {

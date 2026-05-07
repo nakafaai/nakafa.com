@@ -24,7 +24,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Peningkatan tertinggi didominasi penangkapan ikan di laut, yaitu dari 4.383.103 ton pada tahun 2003 menjadi 4.647.730 ton pada tahun 2007.",
+        "Peningkatan tertinggi didominasi penangkapan ikan di laut, yaitu dari $$4.383.103$$ ton pada tahun $$2003$$ menjadi $$4.647.730$$ ton pada tahun $$2007$$.",
       value: false,
     },
   ],
@@ -51,7 +51,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "The highest increase was dominated by marine fishing, which was from 4,383,103 tons in 2003 to 4,647,730 tons in 2007.",
+        "The highest increase was dominated by marine fishing, which was from $$4{,}383{,}103$$ tons in $$2003$$ to $$4{,}647{,}730$$ tons in $$2007$$.",
       value: false,
     },
   ],

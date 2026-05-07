@@ -11,7 +11,7 @@ export const metadata = {
 
 ## Pengenalan Tiga Serangkai Perbandingan Trigonometri
 
-Ketika matematikawan zaman kuno mempelajari segitiga, mereka menemukan pola perbandingan (rasio) panjang sisi segitiga siku-siku yang sangat bermanfaat. Ada tiga perbandingan trigonometri utama yang akan kita pelajari yaitu sinus (sin), cosinus (cos), dan tangen (tan).
+Ketika matematikawan zaman kuno mempelajari segitiga, mereka menemukan pola perbandingan (rasio) panjang sisi segitiga siku-siku yang sangat bermanfaat. Ada tiga perbandingan trigonometri utama yang akan kita pelajari yaitu sinus (<InlineMath math="\sin" />), cosinus (<InlineMath math="\cos" />), dan tangen (<InlineMath math="\tan" />).
 
 <MathContainer>
   <BlockMath math="\sin \theta = \frac{\text{sisi depan}}{\text{sisi miring}}" />
@@ -53,7 +53,7 @@ Sinus dari sudut <InlineMath math="\theta" /> adalah perbandingan antara panjang
         Visualisasi Sinus (<InlineMath math="\sin \theta" />)
       </>
     }
-    description="Perhatikan bagaimana nilai sinus berubah saat sudut berubah."
+    description={<>Perhatikan bagaimana nilai <InlineMath math="\sin" /> berubah saat sudut berubah.</>}
     angle={30}
     labels={{
       opposite: "Sisi Depan (menentukan nilai sinus)",
@@ -68,9 +68,9 @@ Sinus dari sudut <InlineMath math="\theta" /> adalah perbandingan antara panjang
 | Sudut                     | Nilai Sinus                              | Nilai Desimal              |
 | ------------------------- | ---------------------------------------- | -------------------------- |
 | <InlineMath math="0^\circ" />  | <InlineMath math="0" />                  | <InlineMath math="0" />    |
-| <InlineMath math="30^\circ" /> | <InlineMath math="\frac{1}{2}" />        | <InlineMath math="0,5" />  |
-| <InlineMath math="45^\circ" /> | <InlineMath math="\frac{\sqrt{2}}{2}" /> | <InlineMath math="0,71" /> |
-| <InlineMath math="60^\circ" /> | <InlineMath math="\frac{\sqrt{3}}{2}" /> | <InlineMath math="0,87" /> |
+| <InlineMath math="30^\circ" /> | <InlineMath math="\frac{1}{2}" />        | <InlineMath math="0{,}5" />  |
+| <InlineMath math="45^\circ" /> | <InlineMath math="\frac{\sqrt{2}}{2}" /> | <InlineMath math="0{,}71" /> |
+| <InlineMath math="60^\circ" /> | <InlineMath math="\frac{\sqrt{3}}{2}" /> | <InlineMath math="0{,}87" /> |
 | <InlineMath math="90^\circ" /> | <InlineMath math="1" />                  | <InlineMath math="1" />    |
 
 ## Cosinus
@@ -86,7 +86,7 @@ Cosinus dari sudut <InlineMath math="\theta" /> adalah perbandingan antara panja
         Visualisasi Cosinus (<InlineMath math="\cos \theta" />)
       </>
     }
-    description="Perhatikan bagaimana nilai cosinus berubah saat sudut berubah."
+    description={<>Perhatikan bagaimana nilai <InlineMath math="\cos" /> berubah saat sudut berubah.</>}
     angle={60}
     labels={{
       opposite: "Sisi Depan",
@@ -101,9 +101,9 @@ Cosinus dari sudut <InlineMath math="\theta" /> adalah perbandingan antara panja
 | Sudut                     | Nilai Cosinus                            | Nilai Desimal              |
 | ------------------------- | ---------------------------------------- | -------------------------- |
 | <InlineMath math="0^\circ" />  | <InlineMath math="1" />                  | <InlineMath math="1" />    |
-| <InlineMath math="30^\circ" /> | <InlineMath math="\frac{\sqrt{3}}{2}" /> | <InlineMath math="0,87" /> |
-| <InlineMath math="45^\circ" /> | <InlineMath math="\frac{\sqrt{2}}{2}" /> | <InlineMath math="0,71" /> |
-| <InlineMath math="60^\circ" /> | <InlineMath math="\frac{1}{2}" />        | <InlineMath math="0,5" />  |
+| <InlineMath math="30^\circ" /> | <InlineMath math="\frac{\sqrt{3}}{2}" /> | <InlineMath math="0{,}87" /> |
+| <InlineMath math="45^\circ" /> | <InlineMath math="\frac{\sqrt{2}}{2}" /> | <InlineMath math="0{,}71" /> |
+| <InlineMath math="60^\circ" /> | <InlineMath math="\frac{1}{2}" />        | <InlineMath math="0{,}5" />  |
 | <InlineMath math="90^\circ" /> | <InlineMath math="0" />                  | <InlineMath math="0" />    |
 
 ## Tangen
@@ -119,7 +119,7 @@ Tangen dari sudut <InlineMath math="\theta" /> adalah perbandingan antara panjan
         Visualisasi Tangen (<InlineMath math="\tan \theta" />)
       </>
     }
-    description="Perhatikan bagaimana nilai tangen berubah saat sudut berubah."
+    description={<>Perhatikan bagaimana nilai <InlineMath math="\tan" /> berubah saat sudut berubah.</>}
     angle={45}
     labels={{
       opposite: "Sisi Depan (pembilang)",
@@ -134,18 +134,18 @@ Tangen dari sudut <InlineMath math="\theta" /> adalah perbandingan antara panjan
 | Sudut                     | Nilai Tangen                             | Nilai Desimal              |
 | ------------------------- | ---------------------------------------- | -------------------------- |
 | <InlineMath math="0^\circ" />  | <InlineMath math="0" />                  | <InlineMath math="0" />    |
-| <InlineMath math="30^\circ" /> | <InlineMath math="\frac{1}{\sqrt{3}}" /> | <InlineMath math="0,58" /> |
+| <InlineMath math="30^\circ" /> | <InlineMath math="\frac{1}{\sqrt{3}}" /> | <InlineMath math="0{,}58" /> |
 | <InlineMath math="45^\circ" /> | <InlineMath math="1" />                  | <InlineMath math="1" />    |
-| <InlineMath math="60^\circ" /> | <InlineMath math="\sqrt{3}" />           | <InlineMath math="1,73" /> |
+| <InlineMath math="60^\circ" /> | <InlineMath math="\sqrt{3}" />           | <InlineMath math="1{,}73" /> |
 | <InlineMath math="90^\circ" /> | Tidak terdefinisi                        | Tidak terdefinisi          |
 
 ## Hubungan antara Sin, Cos, dan Tan dalam Lingkaran Satuan
 
-Untuk memahami bagaimana perbandingan trigonometri ini bekerja untuk semua sudut, kita bisa menggunakan konsep lingkaran satuan (lingkaran dengan jari-jari 1).
+Untuk memahami bagaimana perbandingan trigonometri ini bekerja untuk semua sudut, kita bisa menggunakan konsep lingkaran satuan (lingkaran dengan jari-jari <InlineMath math="1" />).
 
 <UnitCircle
   title="Lingkaran Satuan dan Perbandingan Trigonometri"
-  description="Geser slider untuk melihat bagaimana nilai sinus, cosinus, dan tangen berubah di lingkaran satuan."
+  description={<>Geser slider untuk melihat bagaimana nilai <InlineMath math="\sin" />, <InlineMath math="\cos" />, dan <InlineMath math="\tan" /> berubah di lingkaran satuan.</>}
   angle={45}
 />
 
@@ -183,12 +183,12 @@ Perhatikan segitiga berikut dengan sudut <InlineMath math="30^\circ" />:
   labels={{
     opposite: "Sisi Depan",
     adjacent: "Sisi Samping",
-    hypotenuse: "Sisi Miring (= 1)",
+    hypotenuse: "Sisi Miring",
   }}
 />
 
-Jika panjang sisi miring adalah 1, maka:
+Jika panjang sisi miring adalah <InlineMath math="1" />, maka:
 
-- Nilai <InlineMath math="\sin 30^\circ" /> = panjang sisi depan adalah <InlineMath math="0,5" />
-- Nilai <InlineMath math="\cos 30^\circ" /> = panjang sisi samping adalah <InlineMath math="0,87" />
-- Nilai <InlineMath math="\tan 30^\circ = \frac{\sin 30^\circ}{\cos 30^\circ} = \frac{0,5}{0,87} = 0,58" />
+- Nilai <InlineMath math="\sin 30^\circ" /> adalah panjang sisi depan, yaitu <InlineMath math="0{,}5" />
+- Nilai <InlineMath math="\cos 30^\circ" /> adalah panjang sisi samping, yaitu <InlineMath math="0{,}87" />
+- Nilai <InlineMath math="\tan 30^\circ = \frac{\sin 30^\circ}{\cos 30^\circ} = \frac{0{,}5}{0{,}87} = 0{,}58" />

@@ -11,7 +11,7 @@ export const metadata = {
 
 ## Introduction to the Three Primary Trigonometric Ratios
 
-When ancient mathematicians studied triangles, they discovered useful patterns in the ratio of sides in right triangles. There are three primary trigonometric ratios that we will learn: sine (sin), cosine (cos), and tangent (tan).
+When ancient mathematicians studied triangles, they discovered useful patterns in the ratio of sides in right triangles. There are three primary trigonometric ratios that we will learn: sine (<InlineMath math="\sin" />), cosine (<InlineMath math="\cos" />), and tangent (<InlineMath math="\tan" />).
 
 <MathContainer>
   <BlockMath math="\sin \theta = \frac{\text{opposite side}}{\text{hypotenuse}}" />
@@ -53,7 +53,7 @@ The sine of angle <InlineMath math="\theta" /> is the ratio between the length o
         Visualization of Sine (<InlineMath math="\sin \theta" />)
       </>
     }
-    description="Notice how the sine value changes as the angle changes."
+    description={<>Notice how the <InlineMath math="\sin" /> value changes as the angle changes.</>}
     angle={30}
     labels={{
       opposite: "Opposite Side (determines sine value)",
@@ -86,7 +86,7 @@ The cosine of angle <InlineMath math="\theta" /> is the ratio between the length
         Visualization of Cosine (<InlineMath math="\cos \theta" />)
       </>
     }
-    description="Notice how the cosine value changes as the angle changes."
+    description={<>Notice how the <InlineMath math="\cos" /> value changes as the angle changes.</>}
     angle={60}
     labels={{
       opposite: "Opposite Side",
@@ -119,7 +119,7 @@ The tangent of angle <InlineMath math="\theta" /> is the ratio between the lengt
         Visualization of Tangent (<InlineMath math="\tan \theta" />)
       </>
     }
-    description="Notice how the tangent value changes as the angle changes."
+    description={<>Notice how the <InlineMath math="\tan" /> value changes as the angle changes.</>}
     angle={45}
     labels={{
       opposite: "Opposite Side (numerator)",
@@ -141,11 +141,11 @@ The tangent of angle <InlineMath math="\theta" /> is the ratio between the lengt
 
 ## Relationship between Sin, Cos, and Tan in the Unit Circle
 
-To understand how these trigonometric ratios work for all angles, we can use the concept of the unit circle (a circle with radius 1).
+To understand how these trigonometric ratios work for all angles, we can use the concept of the unit circle (a circle with radius <InlineMath math="1" />).
 
 <UnitCircle
   title="Unit Circle and Trigonometric Ratios"
-  description="Move the slider to see how the values of sine, cosine, and tangent change on the unit circle."
+  description={<>Move the slider to see how the values of <InlineMath math="\sin" />, <InlineMath math="\cos" />, and <InlineMath math="\tan" /> change on the unit circle.</>}
   angle={45}
 />
 
@@ -183,12 +183,12 @@ Consider the following triangle with a <InlineMath math="30^\circ" /> angle:
   labels={{
     opposite: "Opposite Side",
     adjacent: "Adjacent Side",
-    hypotenuse: "Hypotenuse (= 1)",
+    hypotenuse: "Hypotenuse",
   }}
 />
 
-If the length of the hypotenuse is 1, then:
+If the length of the hypotenuse is <InlineMath math="1" />, then:
 
-- The value of <InlineMath math="\sin 30^\circ" /> = length of opposite side is <InlineMath math="0.5" />
-- The value of <InlineMath math="\cos 30^\circ" /> = length of adjacent side is <InlineMath math="0.87" />
+- The value of <InlineMath math="\sin 30^\circ" /> is the opposite-side length, <InlineMath math="0.5" />
+- The value of <InlineMath math="\cos 30^\circ" /> is the adjacent-side length, <InlineMath math="0.87" />
 - The value of <InlineMath math="\tan 30^\circ = \frac{\sin 30^\circ}{\cos 30^\circ} = \frac{0.5}{0.87} = 0.58" />

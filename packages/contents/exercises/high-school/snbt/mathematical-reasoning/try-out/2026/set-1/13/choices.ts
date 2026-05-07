@@ -4,7 +4,7 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 const choices: ExercisesChoices = {
   id: [
     {
-      label: "$$3,5$$",
+      label: "$$3{,}5$$",
       value: true,
     },
     {
@@ -12,7 +12,7 @@ const choices: ExercisesChoices = {
       value: false,
     },
     {
-      label: "$$4,5$$",
+      label: "$$4{,}5$$",
       value: false,
     },
     {
@@ -20,7 +20,7 @@ const choices: ExercisesChoices = {
       value: false,
     },
     {
-      label: "$$5,5$$",
+      label: "$$5{,}5$$",
       value: false,
     },
   ],

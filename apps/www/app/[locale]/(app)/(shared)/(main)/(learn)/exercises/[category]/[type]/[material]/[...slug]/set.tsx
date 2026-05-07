@@ -1,6 +1,8 @@
+import { getExercisesPath } from "@repo/contents/_lib/exercises/route";
 import { getExercisesPagination } from "@repo/contents/_lib/exercises/slug";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
+import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
@@ -25,20 +27,27 @@ import {
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
 import { getOgUrl } from "@/lib/utils/metadata";
+import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
 /** Renders the exercise-set variant for one learn route. */
 export async function ExerciseSetPage({
   category,
   data,
   locale,
+  material,
   type,
 }: {
   category: ExercisesCategory;
   data: Extract<ExerciseRouteData, { kind: "set" }>;
   locale: Locale;
+  material: ExercisesMaterial;
   type: ExercisesType;
 }) {
-  const t = await getTranslations({ locale, namespace: "Exercises" });
+  const [t, tCommon] = await Promise.all([
+    getTranslations({ locale, namespace: "Exercises" }),
+    getTranslations({ locale, namespace: "Common" }),
+  ]);
+  const typePath = getExercisesPath(category, type);
   const pagination = getExercisesPagination(data.pagePath, data.materials);
   const headings: ParsedHeading[] = data.exercises.map((exercise) => ({
     label: t("number-count", { count: exercise.number }),
@@ -54,13 +63,13 @@ export async function ExerciseSetPage({
   return (
     <>
       <BreadcrumbJsonLd
-        breadcrumbItems={headings.map((heading, index) => ({
-          "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}${data.pagePath}${heading.href}`,
-          position: index + 1,
-          name: heading.label,
-          item: `https://nakafa.com/${locale}${data.pagePath}${heading.href}`,
-        }))}
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: t(type), path: typePath },
+          { name: t(material), path: data.materialPath },
+          { name: data.currentMaterial.title, path: data.currentMaterial.href },
+          { name: data.currentMaterialItem.title, path: data.pagePath },
+        ])}
       />
       <LearningResourceJsonLd
         author={FOUNDER}

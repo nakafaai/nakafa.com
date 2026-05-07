@@ -3,45 +3,45 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 const choices: ExercisesChoices = {
   id: [
     {
-      label: "3.",
+      label: "$$3$$.",
       value: false,
     },
     {
-      label: "4.",
+      label: "$$4$$.",
       value: false,
     },
     {
-      label: "5.",
+      label: "$$5$$.",
       value: false,
     },
     {
-      label: "6.",
+      label: "$$6$$.",
       value: true,
     },
     {
-      label: "7.",
+      label: "$$7$$.",
       value: false,
     },
   ],
   en: [
     {
-      label: "3.",
+      label: "$$3$$.",
       value: false,
     },
     {
-      label: "4.",
+      label: "$$4$$.",
       value: false,
     },
     {
-      label: "5.",
+      label: "$$5$$.",
       value: false,
     },
     {
-      label: "6.",
+      label: "$$6$$.",
       value: true,
     },
     {
-      label: "7.",
+      label: "$$7$$.",
       value: false,
     },
   ],

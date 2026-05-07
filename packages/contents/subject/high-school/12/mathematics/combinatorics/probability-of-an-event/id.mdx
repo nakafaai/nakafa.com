@@ -10,10 +10,10 @@ export const metadata = {
 
 Pernahkah kamu bertanya-tanya berapa kemungkinan hujan turun hari ini? Atau berapa peluang tim favoritmu menang dalam pertandingan? Dalam kehidupan sehari-hari, kita sering berhadapan dengan situasi yang tidak pasti, dan di sinilah konsep **peluang** menjadi penting.
 
-**Peluang** adalah ukuran kemungkinan terjadinya suatu kejadian. Peluang memberikan nilai numerik antara 0 dan 1, dimana:
-- Peluang 0 berarti kejadian tersebut **mustahil** terjadi
-- Peluang 1 berarti kejadian tersebut **pasti** terjadi
-- Peluang 0.5 berarti kejadian tersebut memiliki kemungkinan **sama besar** untuk terjadi atau tidak
+**Peluang** adalah ukuran kemungkinan terjadinya suatu kejadian. Peluang memberikan nilai numerik antara <InlineMath math="0" /> dan <InlineMath math="1" />, dimana:
+- Peluang <InlineMath math="0" /> berarti kejadian tersebut **mustahil** terjadi
+- Peluang <InlineMath math="1" /> berarti kejadian tersebut **pasti** terjadi
+- Peluang <InlineMath math="0.5" /> berarti kejadian tersebut memiliki kemungkinan **sama besar** untuk terjadi atau tidak
 
 Konsep peluang membantu kita membuat keputusan berdasarkan data dan analisis, bukan hanya berdasarkan intuisi semata.
 
@@ -25,7 +25,7 @@ Sebelum menghitung peluang, kita perlu memahami dua konsep fundamental:
 
 **Kejadian (A)** adalah himpunan bagian dari ruang sampel yang merepresentasikan hasil yang kita inginkan atau hasil yang sedang kita tinjau.
 
-**Contoh konkret:** ketika melempar dua koin secara bersamaan, ruang sampelnya adalah <InlineMath math="\{AA, AG, GA, GG\}" />, dimana <InlineMath math="A" /> = Angka dan <InlineMath math="G" /> = Gambar. Jika kita ingin mengetahui peluang munculnya minimal satu gambar, maka kejadian <InlineMath math="A = \{AG, GA, GG\}" />.
+**Contoh konkret:** ketika melempar dua koin secara bersamaan, ruang sampelnya adalah <InlineMath math="\{AA, AG, GA, GG\}" />, dengan <InlineMath math="A" /> mewakili angka dan <InlineMath math="G" /> mewakili gambar. Jika kita ingin mengetahui peluang munculnya minimal satu gambar, maka kejadian <InlineMath math="A = \{AG, GA, GG\}" />.
 
 ## Formula Peluang
 
@@ -41,7 +41,7 @@ Dimana:
 **Syarat penting:** Rumus ini berlaku ketika semua hasil dalam ruang sampel memiliki **peluang yang sama** untuk terjadi (equiprobable).
 
 **Sifat-sifat fundamental peluang:**
-- <InlineMath math="0 \leq P(A) \leq 1" /> (peluang selalu antara 0 dan 1)
+- <InlineMath math="0 \leq P(A) \leq 1" /> (peluang selalu antara <InlineMath math="0" /> dan <InlineMath math="1" />)
 - <InlineMath math="P(A) + P(A') = 1" />, dimana <InlineMath math="A'" /> adalah **komplemen** dari kejadian <InlineMath math="A" />
 
 **Konsep Komplemen:** Komplemen kejadian <InlineMath math="A" /> adalah semua hasil dalam ruang sampel yang **bukan** termasuk kejadian <InlineMath math="A" />. Misalnya, jika <InlineMath math="A" /> adalah "mendapat angka genap", maka <InlineMath math="A'" /> adalah "mendapat angka ganjil".
@@ -50,11 +50,11 @@ Dimana:
 
 **Analisis Pelemparan Dua Dadu:**
 
-Ketika melempar dua buah dadu, total kemungkinan hasil adalah <InlineMath math="6 \times 6 = 36" /> pasangan. Mari kita analisis peluang mendapatkan jumlah mata dadu 9:
+Ketika melempar dua buah dadu, total kemungkinan hasil adalah <InlineMath math="6 \times 6 = 36" /> pasangan. Mari kita analisis peluang mendapatkan jumlah mata dadu <InlineMath math="9" />:
 
 **Langkah sistematis:**
 
-1. Identifikasi semua cara mendapat jumlah 9:
+1. Identifikasi semua cara mendapat jumlah <InlineMath math="9" />:
    - Dadu pertama <InlineMath math="3" />, dadu kedua <InlineMath math="6" />: <InlineMath math="(3,6)" />
    - Dadu pertama <InlineMath math="4" />, dadu kedua <InlineMath math="5" />: <InlineMath math="(4,5)" />
    - Dadu pertama <InlineMath math="5" />, dadu kedua <InlineMath math="4" />: <InlineMath math="(5,4)" />
@@ -70,14 +70,14 @@ Ketika melempar dua buah dadu, total kemungkinan hasil adalah <InlineMath math="
 
 Sebuah perusahaan minuman mengadakan program hadiah dengan memasukkan kupon dalam setiap kotak susu. Berdasarkan data historis, peluang seseorang membeli kotak susu yang mengandung hadiah adalah <InlineMath math="\frac{3}{32}" />.
 
-**Interpretasi praktis:** Dari setiap 32 kotak susu yang diproduksi, rata-rata 3 kotak berisi hadiah. Informasi ini membantu perusahaan:
+**Interpretasi praktis:** Dari setiap <InlineMath math="32" /> kotak susu yang diproduksi, rata-rata <InlineMath math="3" /> kotak berisi hadiah. Informasi ini membantu perusahaan:
 - Merencanakan anggaran promosi
 - Memperkirakan respons konsumen  
 - Menentukan target penjualan
 
 **Permainan Strategis:**
 
-Dalam permainan dadu tradisional, pemain sering menggunakan pemahaman peluang untuk membuat keputusan. Misalnya, peluang mendapatkan jumlah 7 (yang paling sering muncul) adalah:
+Dalam permainan dadu tradisional, pemain sering menggunakan pemahaman peluang untuk membuat keputusan. Misalnya, peluang mendapatkan jumlah <InlineMath math="7" /> (yang paling sering muncul) adalah:
 
 Cara mendapat jumlah <InlineMath math="7" />: <InlineMath math="(1,6), (2,5), (3,4), (4,3), (5,2), (6,1) = 6 \text{ cara}" />
 

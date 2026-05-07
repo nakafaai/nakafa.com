@@ -8,7 +8,10 @@ const choices: ExercisesChoices = {
         "Produksi, konsumsi, dan impor BBM selalu mengalami kenaikan tiap tahunnya.",
       value: false,
     },
-    { label: "Konsumsi BBM tertinggi terjadi pada tahun 2005.", value: false },
+    {
+      label: "Konsumsi BBM tertinggi terjadi pada tahun $$2005$$.",
+      value: false,
+    },
     {
       label:
         "Konsumsi BBM selalu lebih tinggi daripada produksi sehingga dilakukan impor.",
@@ -26,7 +29,10 @@ const choices: ExercisesChoices = {
         "Production, consumption, and fuel imports always increase every year.",
       value: false,
     },
-    { label: "The highest fuel consumption occurred in 2005.", value: false },
+    {
+      label: "The highest fuel consumption occurred in $$2005$$.",
+      value: false,
+    },
     {
       label:
         "Fuel consumption is always higher than production, so imports are carried out.",

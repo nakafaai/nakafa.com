@@ -10,25 +10,25 @@ export const metadata = {
 
 Kita akan membahas sifat-sifat eksponen dan pembuktiannya. Sifat-sifat ini sangat penting untuk dipahami karena menjadi dasar dalam menyelesaikan berbagai persoalan eksponen dan logaritma.
 
-### Sifat 1
+### Sifat Pertama
 
 <InlineMath math="a^m \cdot a^n = a^{m+n}" />
 
 Untuk setiap <InlineMath math="a \neq 0" /> dan <InlineMath math="m, n" /> bilangan real.
 
-### Sifat 2
+### Sifat Kedua
 
 <InlineMath math="\frac{a^m}{a^n} = a^{m-n}" />
 
 Untuk setiap <InlineMath math="a \neq 0" /> dan <InlineMath math="m, n" /> bilangan real.
 
-### Sifat 3
+### Sifat Ketiga
 
 <InlineMath math="(a^m)^n = a^{m \cdot n}" />
 
 Untuk setiap <InlineMath math="a \neq 0" /> dan <InlineMath math="m, n" /> bilangan real.
 
-### Sifat 4
+### Sifat Keempat
 
 <InlineMath math="(ab)^m = a^m \cdot b^m" />
 
@@ -36,7 +36,7 @@ Untuk setiap <InlineMath math="a, b \neq 0" /> dan <InlineMath math="m" /> bilan
 
 **Pembuktian:**
 
-_Metode 1:_
+_Metode pertama:_
 
 <MathContainer>
   <BlockMath math="(ab)^m = \underbrace{ab \times ab \times ab \times \ldots \times ab}_{m\text{ faktor}}" />
@@ -44,7 +44,7 @@ _Metode 1:_
   <BlockMath math="(ab)^m = a^m \times b^m" />
 </MathContainer>
 
-_Metode 2:_
+_Metode kedua:_
 
 Kita dapat mengambil beberapa contoh dengan nilai <InlineMath math="m, a" /> dan <InlineMath math="b" /> tertentu
 untuk melihat pola yang terbentuk. Misalnya dengan <InlineMath math="m=2, a=3, b=4" />:
@@ -54,7 +54,7 @@ untuk melihat pola yang terbentuk. Misalnya dengan <InlineMath math="m=2, a=3, b
   <BlockMath math="3^2 \cdot 4^2 = 9 \cdot 16 = 144" />
 </MathContainer>
 
-### Sifat 5
+### Sifat Kelima
 
 <InlineMath math="\left(\frac{a}{b}\right)^m = \frac{a^m}{b^m}" />
 
@@ -68,7 +68,7 @@ Untuk setiap <InlineMath math="a \neq 0, b \neq 0" /> dan <InlineMath math="m" /
   <BlockMath math="\left(\frac{a}{b}\right)^m = \frac{a^m}{b^m}" />
 </MathContainer>
 
-### Sifat 6
+### Sifat Keenam
 
 <InlineMath math="(a^{\frac{m}{n}})(a^{\frac{p}{n}}) = a^{\frac{m+p}{n}}" />
 
@@ -76,14 +76,14 @@ Untuk setiap <InlineMath math="a > 0" />, <InlineMath math="\frac{m}{n}" /> dan 
 
 **Pembuktian:**
 
-Dengan menggunakan Sifat 1, kita memperoleh:
+Dengan menggunakan Sifat <InlineMath math="1" />, kita memperoleh:
 
 <MathContainer>
   <BlockMath math="(a^{\frac{m}{n}})(a^{\frac{p}{n}}) = a^{\frac{m}{n} + \frac{p}{n}}" />
   <BlockMath math="(a^{\frac{m}{n}})(a^{\frac{p}{n}}) = a^{\frac{m+p}{n}}" />
 </MathContainer>
 
-### Sifat 7
+### Sifat Ketujuh
 
 <InlineMath math="(a^{\frac{m}{n}})(a^{\frac{p}{q}}) = a^{\frac{mq + pn}{nq}}" />
 
@@ -91,7 +91,7 @@ Untuk setiap <InlineMath math="a > 0" />, <InlineMath math="\frac{m}{n}" /> dan 
 
 **Pembuktian:**
 
-Dengan menggunakan Sifat 1, kita perlu menyamakan penyebut dari pangkat:
+Dengan menggunakan Sifat <InlineMath math="1" />, kita perlu menyamakan penyebut dari pangkat:
 
 <MathContainer>
   <BlockMath math="(a^{\frac{m}{n}})(a^{\frac{p}{q}}) = a^{\frac{m}{n} + \frac{p}{q}}" />

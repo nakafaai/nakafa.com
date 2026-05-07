@@ -2,6 +2,7 @@ import { AllahIcon } from "@hugeicons/core-free-icons";
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { cn, slugify } from "@repo/design-system/lib/utils";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
+import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { Effect } from "effect";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
@@ -32,6 +33,8 @@ import {
   fetchSurahMetadataContext,
   getQuranPagination,
 } from "@/lib/utils/pages/quran";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
 
@@ -43,16 +46,15 @@ export async function generateMetadata({
   const { locale: rawLocale, surah } = await params;
   const locale = getLocaleOrThrow(rawLocale);
 
-  const t = await getTranslations("Holy");
+  const t = await getTranslations({ locale, namespace: "Holy" });
 
   const path = `/${locale}/quran/${surah}`;
 
-  const alternates = {
-    canonical: path,
+  const alternates = createLocalizedAlternates(path, {
     types: {
       "text/markdown": `${path}.md`,
     },
-  };
+  });
   const surahNumber = Number(surah);
 
   if (Number.isNaN(surahNumber)) {
@@ -153,7 +155,10 @@ async function CachedSurahShell({
 
   cacheLife("max");
 
-  const t = await getTranslations("Holy");
+  const [t, tCommon] = await Promise.all([
+    getTranslations({ locale, namespace: "Holy" }),
+    getTranslations({ locale, namespace: "Common" }),
+  ]);
 
   const surahNumber = Number(surah);
 
@@ -216,6 +221,13 @@ async function CachedSurahShell({
 
   return (
     <>
+      <BreadcrumbJsonLd
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: t("quran"), path: "/quran" },
+          { name: title, path: `/quran/${surah}` },
+        ])}
+      />
       <BookJsonLd
         author={{ "@type": "Person", name: "Allah" }}
         description={translation}

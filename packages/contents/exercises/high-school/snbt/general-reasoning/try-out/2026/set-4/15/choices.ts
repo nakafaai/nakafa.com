@@ -8,7 +8,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Kenaikan harga Mie B pada tahun 2019—2020 lebih tinggi dibandingkan kenaikan harga Mie B dari tahun 2017—2019",
+        "Kenaikan harga Mie B pada tahun $$2019\\text{-}2020$$ lebih tinggi dibandingkan kenaikan harga Mie B dari tahun $$2017\\text{-}2019$$",
       value: false,
     },
     {
@@ -32,7 +32,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "The price increase of Noodle B in 2019—2020 was higher than the price increase of Noodle B from 2017—2019",
+        "The price increase of Noodle B in $$2019\\text{-}2020$$ was higher than the price increase of Noodle B from $$2017\\text{-}2019$$",
       value: false,
     },
     {

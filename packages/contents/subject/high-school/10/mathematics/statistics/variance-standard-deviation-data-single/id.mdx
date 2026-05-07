@@ -44,16 +44,16 @@ Kedua ukuran ini memberi tahu kita seberapa jauh, rata-rata, setiap data menyimp
 
 ## Membandingkan Varian Umur Dua Kelompok
 
-Mari kita gunakan contoh dua kelompok data umur berikut untuk melihat bagaimana varian dan simpangan baku bekerja. Kedua kelompok ini menarik karena memiliki **mean (<InlineMath math="\bar{x}" />) yang sama, yaitu 16**, namun sebaran datanya berbeda.
+Mari kita gunakan contoh dua kelompok data umur berikut untuk melihat bagaimana varian dan simpangan baku bekerja. Kedua kelompok ini menarik karena memiliki **mean (<InlineMath math="\bar{x}" />) yang sama, yaitu <InlineMath math="16" />**, namun sebaran datanya berbeda.
 
-- **Kelompok Pertama (<InlineMath math="n=12" />):** 13, 14, 15, 15, 16, 16, 17, 17, 17, 17, 17, 18
-- **Kelompok Kedua (<InlineMath math="n=12" />):** 1, 3, 4, 5, 7, 8, 12, 27, 28, 29, 32, 36
+- **Kelompok Pertama (<InlineMath math="n=12" />):** <InlineMath math="13, 14, 15, 15, 16, 16, 17, 17, 17, 17, 17, 18" />
+- **Kelompok Kedua (<InlineMath math="n=12" />):** <InlineMath math="1, 3, 4, 5, 7, 8, 12, 27, 28, 29, 32, 36" />
 
 Sekarang, kita hitung Varian dan Simpangan Baku untuk masing-masing kelompok.
 
-### Perhitungan Kelompok 1
+### Perhitungan Kelompok Pertama
 
-Kita hitung <InlineMath math="(x_i - \bar{x})^2" /> untuk setiap data di Kelompok 1 (<InlineMath math="\bar{x}=16" />):
+Kita hitung <InlineMath math="(x_i - \bar{x})^2" /> untuk setiap data di Kelompok <InlineMath math="1" /> (<InlineMath math="\bar{x}=16" />):
 
 - <InlineMath math="(13-16)^2 = (-3)^2 = 9" />
 - <InlineMath math="(14-16)^2 = (-2)^2 = 4" />
@@ -72,11 +72,11 @@ Hitung Variannya:
 
 Hitung Simpangan Bakunya:
 
-<BlockMath math="\sigma_{\text{Kelompok 1}} = \sqrt{2} \approx 1,41" />
+<BlockMath math="\sigma_{\text{Kelompok 1}} = \sqrt{2} \approx 1{,}41" />
 
-### Perhitungan Kelompok 2
+### Perhitungan Kelompok Kedua
 
-Kita hitung <InlineMath math="(x_i - \bar{x})^2" /> untuk setiap data di Kelompok 2 (<InlineMath math="\bar{x}=16" />):
+Kita hitung <InlineMath math="(x_i - \bar{x})^2" /> untuk setiap data di Kelompok <InlineMath math="2" /> (<InlineMath math="\bar{x}=16" />):
 
 - <InlineMath math="(1-16)^2 = (-15)^2 = 225" />
 - <InlineMath math="(3-16)^2 = (-13)^2 = 169" />
@@ -97,18 +97,18 @@ Jumlahkan semua hasil kuadrat itu (<InlineMath math="\sum(x_i - \bar{x})^2" />):
 
 Hitung Variannya:
 
-<BlockMath math="\sigma^2_{\text{Kelompok 2}} = \frac{\sum(x_i - \bar{x})^2}{n} = \frac{1910}{12} \approx 159,17" />
+<BlockMath math="\sigma^2_{\text{Kelompok 2}} = \frac{\sum(x_i - \bar{x})^2}{n} = \frac{1910}{12} \approx 159{,}17" />
 
 Hitung Simpangan Bakunya:
 
-<BlockMath math="\sigma_{\text{Kelompok 2}} = \sqrt{159,17} \approx 12,62" />
+<BlockMath math="\sigma_{\text{Kelompok 2}} = \sqrt{159{,}17} \approx 12{,}62" />
 
 ### Interpretasi Hasil
 
-- Varian Kelompok 1 (<InlineMath math="\sigma^2 = 2" />) **jauh lebih kecil** dari Varian Kelompok 2 (<InlineMath math="\sigma^2 \approx 159,17" />).
-- Simpangan Baku Kelompok 1 (<InlineMath math="\sigma \approx 1,41" />) juga **jauh lebih kecil** dari Simpangan Baku Kelompok 2 (<InlineMath math="\sigma \approx 12,62" />).
+- Varian Kelompok <InlineMath math="1" /> (<InlineMath math="\sigma^2 = 2" />) **jauh lebih kecil** dari Varian Kelompok <InlineMath math="2" /> (<InlineMath math="\sigma^2 \approx 159{,}17" />).
+- Simpangan Baku Kelompok <InlineMath math="1" /> (<InlineMath math="\sigma \approx 1{,}41" />) juga **jauh lebih kecil** dari Simpangan Baku Kelompok <InlineMath math="2" /> (<InlineMath math="\sigma \approx 12{,}62" />).
 
-Hasil ini menunjukkan bahwa data umur di **Kelompok 1 sangat rapat dan seragam** di sekitar mean 16, sedangkan data umur di **Kelompok 2 sangat menyebar jauh** dari mean 16.
+Hasil ini menunjukkan bahwa data umur di **Kelompok <InlineMath math="1" /> sangat rapat dan seragam** di sekitar mean <InlineMath math="16" />, sedangkan data umur di **Kelompok <InlineMath math="2" /> sangat menyebar jauh** dari mean <InlineMath math="16" />.
 
 ## Rumus Alternatif untuk Varian
 
@@ -120,16 +120,16 @@ Rumus ini bilang:
 
 "Hitung kuadrat setiap data lalu jumlahkan (<InlineMath math="\sum x_i^2" />), bagi dengan <InlineMath math="n" />. Lalu kurangi dengan kuadrat dari mean (<InlineMath math="(\bar{x})^2 = (\frac{\sum x_i}{n})^2" />)".
 
-Mari kita coba hitung ulang varian Kelompok 1 pakai rumus ini:
+Mari kita coba hitung ulang varian Kelompok <InlineMath math="1" /> pakai rumus ini:
 
-1.  Hitung <InlineMath math="\sum x_i^2" /> untuk Kelompok 1:
+1.  Hitung <InlineMath math="\sum x_i^2" /> untuk Kelompok <InlineMath math="1" />:
 
     <MathContainer>
       <BlockMath math="13^2 + 14^2 + 15^2 + 15^2 + 16^2 + 16^2 + 17^2 + 17^2 + 17^2 + 17^2 + 17^2 + 18^2" />
       <BlockMath math="= 169 + 196 + 225 + 225 + 256 + 256 + 289 + 289 + 289 + 289 + 289 + 324 = 3096" />
     </MathContainer>
 
-2.  Hitung <InlineMath math="\sum x_i" /> untuk Kelompok 1:
+2.  Hitung <InlineMath math="\sum x_i" /> untuk Kelompok <InlineMath math="1" />:
 
     <MathContainer>
       <BlockMath math="13 + 14 + 15 + 15 + 16 + 16 + 17 + 17 + 17 + 17 + 17 + 18" />

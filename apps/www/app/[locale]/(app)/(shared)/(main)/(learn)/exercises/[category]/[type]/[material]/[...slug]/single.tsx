@@ -1,6 +1,8 @@
+import { getExercisesPath } from "@repo/contents/_lib/exercises/route";
 import { getExerciseNumberPagination } from "@repo/contents/_lib/exercises/slug";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
+import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { slugify } from "@repo/design-system/lib/utils";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
@@ -24,20 +26,27 @@ import {
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
 import { getOgUrl } from "@/lib/utils/metadata";
+import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
 /** Renders the standalone single-exercise variant for one learn route. */
 export async function SingleExercisePage({
   category,
   data,
   locale,
+  material,
   type,
 }: {
   category: ExercisesCategory;
   data: Extract<ExerciseRouteData, { kind: "single" }>;
   locale: Locale;
+  material: ExercisesMaterial;
   type: ExercisesType;
 }) {
-  const t = await getTranslations({ locale, namespace: "Exercises" });
+  const [t, tCommon] = await Promise.all([
+    getTranslations({ locale, namespace: "Exercises" }),
+    getTranslations({ locale, namespace: "Common" }),
+  ]);
+  const typePath = getExercisesPath(category, type);
   const exerciseLabel = t("number-count", { count: data.exercise.number });
   const exerciseId = slugify(exerciseLabel);
   const description = `${t("exercises")} - ${data.exercise.question.metadata.title} - ${data.currentMaterialItem.title}`;
@@ -55,22 +64,17 @@ export async function SingleExercisePage({
   return (
     <>
       <BreadcrumbJsonLd
-        breadcrumbItems={[
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: t(type), path: typePath },
+          { name: t(material), path: data.materialPath },
+          { name: data.currentMaterial.title, path: data.currentMaterial.href },
+          { name: data.currentMaterialItem.title, path: data.setPath },
           {
-            "@type": "ListItem",
-            "@id": `https://nakafa.com/${locale}${data.setPath}`,
-            position: 1,
-            name: data.currentMaterialItem.title,
-            item: `https://nakafa.com/${locale}${data.setPath}`,
-          },
-          {
-            "@type": "ListItem",
-            "@id": `https://nakafa.com/${locale}${data.exerciseFilePath}`,
-            position: 2,
             name: data.exercise.question.metadata.title,
-            item: `https://nakafa.com/${locale}${data.exerciseFilePath}`,
+            path: data.exerciseFilePath,
           },
-        ]}
+        ])}
       />
       <LearningResourceJsonLd
         author={FOUNDER}

@@ -1,23 +1,32 @@
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { RulingTable } from "./table";
 
 export const tableData = [
   {
     category: "Candidacy Threshold",
-    electionLaw: "20% of DPRD seats or 25% of valid votes",
-    courtDecision: "6.5%-10% based on population",
+    electionLaw: (
+      <>
+        <InlineMath math="20\%" /> of DPRD seats or <InlineMath math="25\%" /> of valid votes
+      </>
+    ),
+    courtDecision: (
+      <>
+        <InlineMath math="6.5\%\text{-}10\%" /> based on population
+      </>
+    ),
     dprDecision: "Only applies to parties without DPRD seats",
   },
   {
     category: "Governor Age Requirement",
-    electionLaw: "Minimum 30 years old",
-    courtDecision: "At least 30 years when registered as candidate",
-    dprDecision: "At least 30 years when appointed",
+    electionLaw: <>Minimum <InlineMath math="30 \text{ years}" /> old</>,
+    courtDecision: <>At least <InlineMath math="30 \text{ years}" /> when registered as candidate</>,
+    dprDecision: <>At least <InlineMath math="30 \text{ years}" /> when appointed</>,
   },
   {
     category: "Regent/Mayor Age Requirement",
-    electionLaw: "Minimum 25 years old",
-    courtDecision: "At least 25 years when registered as candidate",
-    dprDecision: "At least 25 years when appointed",
+    electionLaw: <>Minimum <InlineMath math="25 \text{ years}" /> old</>,
+    courtDecision: <>At least <InlineMath math="25 \text{ years}" /> when registered as candidate</>,
+    dprDecision: <>At least <InlineMath math="25 \text{ years}" /> when appointed</>,
   },
 ];
 
@@ -50,11 +59,11 @@ held to achieve people's sovereignty and apply the principles and values of demo
 can increase political awareness and encourage active participation in realizing the democratic aspirations
 of Indonesian society (Yusuf et al., 2024). Indonesia is one of the countries that adheres to a democratic system
 where leaders and representatives are directly elected by the people through elections. Elections are held
-simultaneously every 5 years, including the election of the President, Vice President, members of the Regional
+simultaneously every <InlineMath math="5 \text{ years}" />, including the election of the President, Vice President, members of the Regional
 Representatives Council (DPD), House of Representatives (DPR), and Regional Legislative Councils (DPRD) at the
 provincial and district/city levels. The 2024 Presidential Election was already conducted in February 2024.
 One of the most controversial issues in this election was the eligibility of Gibran as a vice-presidential candidate.
-Gibran, the son of President Joko Widodo, was under 40 years old when he was nominated. This situation sparked
+Gibran, the son of President Joko Widodo, was under <InlineMath math="40 \text{ years old}" /> when he was nominated. This situation sparked
 political and legal disputes within the public. Overall, the debate on the minimum age requirement for a
 vice-presidential candidate highlights the importance of legal integrity and transparency in the political process.
 Political decisions must always be based on the constitution and public interest, rather than individual or group interests.
@@ -92,7 +101,7 @@ requirement for regional head candidates (Mantelan & Ramadhan, 2024).
 
 The Constitutional Court decided that the nomination threshold for regional head candidates would
 be made equal to that for independent candidates. This decision was based on the fact that the
-previous threshold of 20% of DPRD seats or 25% of votes did not allow sufficient opportunity for
+previous threshold of <InlineMath math="20\%" /> of DPRD seats or <InlineMath math="25\%" /> of votes did not allow sufficient opportunity for
 citizens to participate through political parties with thresholds below that limit. Moreover, the
 regulation was no longer in line with the mandate of Article 18 paragraph (4) of the 1945 Constitution,
 which calls for democratic regional elections. This means that the widest possible opportunity must
@@ -144,8 +153,8 @@ for regional elections, as summarized in the DPR meeting broadcast (BeritaSatu, 
 ### Party Threshold in Regional Head Nominations
 
 There is a change in Article 11 Paragraph (1) of PKPU Number 8 of 2024, which states that Political Parties
-or Political Party Coalitions can register Candidates if they have obtained at least 20% of the DPRD seats
-or 25% of the total valid votes in the DPRD elections in the relevant area. The first paragraph of Article
+or Political Party Coalitions can register Candidates if they have obtained at least <InlineMath math="20\%" /> of the DPRD seats
+or <InlineMath math="25\%" /> of the total valid votes in the DPRD elections in the relevant area. The first paragraph of Article
 11 has been amended under the Constitutional Court's Decision Number 60/PUU-XXII/2024, which states that
 Political Parties or Political Party Coalitions can register Candidates if they meet the valid vote
 accumulation requirements in the DPRD elections in the relevant area with the following provisions:
@@ -153,33 +162,33 @@ accumulation requirements in the DPRD elections in the relevant area with the fo
 **To propose candidates for governor and deputy governor**
 
 - Provinces with up to two million registered voters, political parties, or political party
-  coalitions must obtain at least 10% of valid votes in that province.
+  coalitions must obtain at least <InlineMath math="10\%" /> of valid votes in that province.
 - Provinces with more than two million but up to six million registered voters, political parties,
-  or political party coalitions must obtain at least 8.5% of valid votes in that province.
+  or political party coalitions must obtain at least <InlineMath math="8.5\%" /> of valid votes in that province.
 - Provinces with more than six million but up to twelve million registered voters, political
-  parties, or political party coalitions must obtain at least 7.5% of valid votes in that province.
+  parties, or political party coalitions must obtain at least <InlineMath math="7.5\%" /> of valid votes in that province.
 - Provinces with more than twelve million registered voters, political parties, or political
-  party coalitions must obtain at least 6.5% of valid votes in that province.
+  party coalitions must obtain at least <InlineMath math="6.5\%" /> of valid votes in that province.
 
 **To propose candidates for regent and deputy regent or mayor and deputy mayor**
 
-- Districts/cities with up to 250,000 registered voters, political parties, or political party
-  coalitions must obtain at least 10% of valid votes in that district/city.
-- Districts/cities with more than 250,000 but up to 500,000 registered voters, political parties,
-  or political party coalitions must obtain at least 8.5% of valid votes in that district/city.
-- Districts/cities with more than 500,000 but up to one million registered voters, political parties,
-  or political party coalitions must obtain at least 7.5% of valid votes in that district/city.
+- Districts/cities with up to <InlineMath math="250{,}000" /> registered voters, political parties, or political party
+  coalitions must obtain at least <InlineMath math="10\%" /> of valid votes in that district/city.
+- Districts/cities with more than <InlineMath math="250{,}000" /> but up to <InlineMath math="500{,}000" /> registered voters, political parties,
+  or political party coalitions must obtain at least <InlineMath math="8.5\%" /> of valid votes in that district/city.
+- Districts/cities with more than <InlineMath math="500{,}000" /> but up to one million registered voters, political parties,
+  or political party coalitions must obtain at least <InlineMath math="7.5\%" /> of valid votes in that district/city.
 - Districts/cities with more than one million registered voters, political parties, or political
-  party coalitions must obtain at least 6.5% of valid votes in that district/city.
+  party coalitions must obtain at least <InlineMath math="6.5\%" /> of valid votes in that district/city.
 
 **Determination of Regional Head Candidates' Age**
 
 Regarding the age requirement for regional head candidates, Article 15 of PKPU Number 8 of 2024
-stipulates that the minimum age for selected candidates must be 30 years for governor and deputy
-governor candidates, 25 years for regent and deputy regent candidates, and 30 years for mayor and
+stipulates that the minimum age for selected candidates must be <InlineMath math="30 \text{ years}" /> for governor and deputy
+governor candidates, <InlineMath math="25 \text{ years}" /> for regent and deputy regent candidates, and <InlineMath math="30 \text{ years}" /> for mayor and
 deputy mayor candidates, as stated in Article 14 Paragraph (2) letter d, effective from the
 inauguration of the selected candidates. The amendment specifies that the minimum age requirement
-is 30 years for governor and deputy governor candidates and 25 years for regent and deputy regent
+is <InlineMath math="30 \text{ years}" /> for governor and deputy governor candidates and <InlineMath math="25 \text{ years}" /> for regent and deputy regent
 or mayor and deputy mayor candidates, as stated in Article 14 Paragraph (2) letter d, effective
 from the establishment of the candidates.
 

@@ -100,22 +100,22 @@ Now, substitute <InlineMath math="u" /> and <InlineMath math="v" /> back in step
 
 1.  **Solution for <InlineMath math="y = (3x^2 - 1)^3" />**
 
-    **Step 1: Identify the functions**
+    **Step** <InlineMath math="1" />: Identify the functions
     -   Inner function: <InlineMath math="u = 3x^2 - 1" />
     -   Outer function: <InlineMath math="y = u^3" />
 
-    **Step 2: Find the derivative of each**
+    **Step** <InlineMath math="2" />: Find the derivative of each
     -   <InlineMath math="\frac{du}{dx} = 6x" />
     -   <InlineMath math="\frac{dy}{du} = 3u^2" />
 
-    **Step 3: Combine with the chain rule**
+    **Step** <InlineMath math="3" />: Combine with the chain rule
 
     <MathContainer>
         <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dx}" />
         <BlockMath math="\frac{dy}{dx} = 3u^2 \cdot 6x = 18x \cdot u^2" />
     </MathContainer>
     
-    **Step 4: Don't forget to substitute back**
+    **Step** <InlineMath math="4" />: Don't forget to substitute back
 
     <BlockMath math="\frac{dy}{dx} = 18x(3x^2 - 1)^2" />
 
@@ -123,24 +123,24 @@ Now, substitute <InlineMath math="u" /> and <InlineMath math="v" /> back in step
 
     This function is <InlineMath math="y = (\sin(2x))^3" />. We'll use the multi-layered chain rule.
 
-    **Step 1: Identify the functions**
+    **Step** <InlineMath math="1" />: Identify the functions
     -   Innermost function: <InlineMath math="v = 2x" />
     -   Middle function: <InlineMath math="u = \sin(v)" />
     -   Outermost function: <InlineMath math="y = u^3" />
 
-    **Step 2: Find the derivative of each**
+    **Step** <InlineMath math="2" />: Find the derivative of each
     -   <InlineMath math="\frac{dv}{dx} = 2" />
     -   <InlineMath math="\frac{du}{dv} = \cos(v)" />
     -   <InlineMath math="\frac{dy}{du} = 3u^2" />
 
-    **Step 3: Combine with the chain rule**
+    **Step** <InlineMath math="3" />: Combine with the chain rule
 
     <MathContainer>
         <BlockMath math="\frac{dy}{dx} = \frac{dy}{du} \cdot \frac{du}{dv} \cdot \frac{dv}{dx}" />
         <BlockMath math="\frac{dy}{dx} = (3u^2) \cdot (\cos(v)) \cdot (2)" />
     </MathContainer>
 
-    **Step 4: Substitute back and simplify**
+    **Step** <InlineMath math="4" />: Substitute back and simplify
 
     <MathContainer>
         <BlockMath math="\frac{dy}{dx} = 6u^2 \cos(v)" />

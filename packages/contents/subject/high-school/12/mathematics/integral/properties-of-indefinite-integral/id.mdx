@@ -65,28 +65,28 @@ Ini sering disebut juga sebagai **substitusi u**. Metode ini sangat ampuh untuk 
 
 1.  Untuk menyelesaikan <InlineMath math="\int 6x^2 \, dx" />, kita bisa menggunakan **Aturan Kelipatan Konstanta** dan **Aturan Pangkat**.
     
-    **Langkah 1:** Keluarkan konstanta 6 dari integral.
+    **Langkah** <InlineMath math="1" />: Keluarkan konstanta <InlineMath math="6" /> dari integral.
     
     <BlockMath math="\int 6x^2 \, dx = 6 \int x^2 \, dx" />
     
-    **Langkah 2:** Gunakan aturan pangkat pada <InlineMath math="\int x^2 \, dx" />, di mana <InlineMath math="n=2" />.
+    **Langkah** <InlineMath math="2" />: Gunakan aturan pangkat pada <InlineMath math="\int x^2 \, dx" />, di mana <InlineMath math="n=2" />.
     
     <MathContainer>
     <BlockMath math="6 \left( \frac{1}{2+1}x^{2+1} \right) + C" />
     <BlockMath math="= 6 \left( \frac{1}{3}x^3 \right) + C" />
     </MathContainer>
     
-    **Langkah 3:** Kalikan konstantanya untuk mendapatkan hasil akhir.
+    **Langkah** <InlineMath math="3" />: Kalikan konstantanya untuk mendapatkan hasil akhir.
     
     <BlockMath math="= 2x^3 + C" />
 
 2.  Untuk integral <InlineMath math="\int (3x^2 + 2x - 5) \, dx" />, kita gunakan **Aturan Penjumlahan dan Pengurangan** untuk memecahnya menjadi tiga integral terpisah.
     
-    **Langkah 1:** Pisahkan setiap suku menjadi integralnya sendiri.
+    **Langkah** <InlineMath math="1" />: Pisahkan setiap suku menjadi integralnya sendiri.
     
     <BlockMath math="\int 3x^2 \, dx + \int 2x \, dx - \int 5 \, dx" />
     
-    **Langkah 2:** Selesaikan setiap integral satu per satu menggunakan aturan pangkat dan konstanta.
+    **Langkah** <InlineMath math="2" />: Selesaikan setiap integral satu per satu menggunakan aturan pangkat dan konstanta.
     
     <MathContainer>
     <BlockMath math="= 3\left(\frac{1}{3}x^3\right) + 2\left(\frac{1}{2}x^2\right) - 5x + C" />
@@ -97,25 +97,25 @@ Ini sering disebut juga sebagai **substitusi u**. Metode ini sangat ampuh untuk 
 
 3.  Integral <InlineMath math="\int 2x(x^2 + 3)^4 \, dx" /> adalah contoh klasik untuk **Aturan Substitusi**.
     
-    **Langkah 1:** Pilih bagian dari fungsi untuk dijadikan <InlineMath math="u" />. Pilihan yang baik adalah bagian dalam kurung.
+    **Langkah** <InlineMath math="1" />: Pilih bagian dari fungsi untuk dijadikan <InlineMath math="u" />. Pilihan yang baik adalah bagian dalam kurung.
     
     Misalkan: <InlineMath math="u = x^2 + 3" />.
     
-    **Langkah 2:** Cari turunan dari <InlineMath math="u" /> terhadap <InlineMath math="x" />, yaitu <InlineMath math="du/dx" />.
+    **Langkah** <InlineMath math="2" />: Cari turunan dari <InlineMath math="u" /> terhadap <InlineMath math="x" />, yaitu <InlineMath math="du/dx" />.
     
     <BlockMath math="\frac{du}{dx} = 2x" />
     
     Dari sini, kita bisa menulis <InlineMath math="du = 2x \, dx" />.
     
-    **Langkah 3:** Lakukan substitusi. Ganti <InlineMath math="x^2+3" /> dengan <InlineMath math="u" /> dan <InlineMath math="2x \, dx" /> dengan <InlineMath math="du" />.
+    **Langkah** <InlineMath math="3" />: Lakukan substitusi. Ganti <InlineMath math="x^2+3" /> dengan <InlineMath math="u" /> dan <InlineMath math="2x \, dx" /> dengan <InlineMath math="du" />.
     
     <BlockMath math="\int (x^2 + 3)^4 (2x \, dx) = \int u^4 \, du" />
     
-    **Langkah 4:** Selesaikan integral yang sudah disederhanakan menggunakan aturan pangkat.
+    **Langkah** <InlineMath math="4" />: Selesaikan integral yang sudah disederhanakan menggunakan aturan pangkat.
     
     <BlockMath math="\int u^4 \, du = \frac{1}{5}u^5 + C" />
     
-    **Langkah 5:** Kembalikan <InlineMath math="u" /> ke bentuk aslinya.
+    **Langkah** <InlineMath math="5" />: Kembalikan <InlineMath math="u" /> ke bentuk aslinya.
     
     <BlockMath math="= \frac{1}{5}(x^2 + 3)^5 + C" />
     

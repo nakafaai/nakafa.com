@@ -4,12 +4,12 @@ const choices: ExercisesChoices = {
   id: [
     {
       label:
-        "adanya upaya serius dan komitmen kuat pemerintah tecermin dari total belanja sarana dan prasarana produksi pertanian yang mencapai 70 persen dari total anggaran Kemtan.",
+        "adanya upaya serius dan komitmen kuat pemerintah tecermin dari total belanja sarana dan prasarana produksi pertanian yang mencapai $$70\\%$$ dari total anggaran Kemtan.",
       value: true,
     },
     {
       label:
-        "harus ada upaya menyeluruh antara pemerintah dan petani dalam menyelaraskan komitmen yang kuat hingga mampu melebihi 70 persen.",
+        "harus ada upaya menyeluruh antara pemerintah dan petani dalam menyelaraskan komitmen yang kuat hingga mampu melebihi $$70\\%$$.",
       value: false,
     },
     {
@@ -31,12 +31,12 @@ const choices: ExercisesChoices = {
   en: [
     {
       label:
-        "there are serious efforts and strong commitment from the government reflected in the total expenditure on agricultural production facilities and infrastructure reaching 70 percent of the total Ministry of Agriculture budget.",
+        "there are serious efforts and strong commitment from the government reflected in the total expenditure on agricultural production facilities and infrastructure reaching $$70\\%$$ of the total Ministry of Agriculture budget.",
       value: true,
     },
     {
       label:
-        "there must be a comprehensive effort between the government and farmers in aligning strong commitments to be able to exceed 70 percent.",
+        "there must be a comprehensive effort between the government and farmers in aligning strong commitments to be able to exceed $$70\\%$$.",
       value: false,
     },
     {

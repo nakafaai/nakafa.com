@@ -39,11 +39,11 @@ Notasi sigma (<InlineMath math="\sum" />) ini secara sederhana berarti "jumlahka
 
 Mari kita terapkan konsep ini pada sebuah contoh.
 
-**Soal:** Tentukan Jumlahan Riemann dari fungsi <InlineMath math="f(x) = x" /> pada interval <InlineMath math="[0, 7]" /> dengan membaginya menjadi 7 subinterval sama panjang dan menggunakan **titik ujung kiri** sebagai titik sampel.
+**Soal:** Tentukan Jumlahan Riemann dari fungsi <InlineMath math="f(x) = x" /> pada interval <InlineMath math="[0, 7]" /> dengan membaginya menjadi <InlineMath math="7" /> subinterval sama panjang dan menggunakan **titik ujung kiri** sebagai titik sampel.
 
 <LineEquation
   title="Visualisasi Jumlahan Riemann"
-  description={<>Grafik fungsi <InlineMath math="f(x)=x" /> dengan 7 partisi persegi panjang menggunakan titik ujung kiri.</>}
+  description={<>Grafik fungsi <InlineMath math="f(x)=x" /> dengan <InlineMath math="7" /> partisi persegi panjang menggunakan titik ujung kiri.</>}
   showZAxis={false}
   data={[
     {
@@ -83,7 +83,7 @@ Mari kita terapkan konsep ini pada sebuah contoh.
 
     <BlockMath math="\Delta x = \frac{7 - 0}{7} = 1" />
 
-    Setiap persegi panjang akan memiliki lebar 1.
+    Setiap persegi panjang akan memiliki lebar <InlineMath math="1" />.
 
 3.  **Tentukan Titik Sampel (Ujung Kiri):**
 
@@ -120,13 +120,13 @@ Mari kita terapkan konsep ini pada sebuah contoh.
     <BlockMath math="= 21" />
     </MathContainer>
 
-    Jadi, perkiraan luas daerah di bawah kurva <InlineMath math="f(x)=x" /> dari 0 sampai 7 adalah **21**.
+    Jadi, perkiraan luas daerah di bawah kurva <InlineMath math="f(x)=x" /> dari <InlineMath math="0" /> sampai <InlineMath math="7" /> adalah <InlineMath math="21" />.
 
 > Perhatikan bahwa karena fungsi <InlineMath math="f(x)=x" /> terus naik (monoton naik), penggunaan titik ujung kiri akan selalu menghasilkan persegi panjang yang berada di bawah kurva, sehingga perkiraan luasnya lebih kecil dari luas sebenarnya (underestimate). Sebaliknya, jika kita menggunakan titik ujung kanan pada fungsi yang monoton naik, hasilnya akan selalu menjadi overestimate.
 
 ## Latihan
 
-1.  Hitung Jumlahan Riemann untuk fungsi <InlineMath math="f(x) = x^2 + 1" /> pada interval <InlineMath math="[0, 4]" /> menggunakan 4 subinterval dengan lebar yang sama dan titik sampel berupa **titik ujung kanan**.
+1.  Hitung Jumlahan Riemann untuk fungsi <InlineMath math="f(x) = x^2 + 1" /> pada interval <InlineMath math="[0, 4]" /> menggunakan <InlineMath math="4" /> subinterval dengan lebar yang sama dan titik sampel berupa **titik ujung kanan**.
 
 ### Kunci Jawaban
 
@@ -134,7 +134,7 @@ Mari kita terapkan konsep ini pada sebuah contoh.
 
     <LineEquation
     title="Visualisasi Latihan Jumlahan Riemann"
-    description={<>Grafik fungsi <InlineMath math="f(x)=x^2+1" /> dengan 4 partisi persegi panjang menggunakan titik ujung kanan.</>}
+    description={<>Grafik fungsi <InlineMath math="f(x)=x^2+1" /> dengan <InlineMath math="4" /> partisi persegi panjang menggunakan titik ujung kanan.</>}
     cameraPosition={[10, 10, 10]}
     showZAxis={false}
     data={[
@@ -168,17 +168,17 @@ Mari kita terapkan konsep ini pada sebuah contoh.
     ]}
     />
 
-    **Langkah 1: Tentukan komponen utama.**
+    **Langkah** <InlineMath math="1" />: Tentukan komponen utama.
     -   Fungsi: <InlineMath math="f(x) = x^2 + 1" />
     -   Interval: <InlineMath math="a=0, b=4" />
     -   Jumlah partisi: <InlineMath math="n=4" />
     -   Titik sampel: Ujung kanan
 
-    **Langkah 2: Hitung lebar subinterval.**
+    **Langkah** <InlineMath math="2" />: Hitung lebar subinterval.
 
     <BlockMath math="\Delta x = \frac{b-a}{n} = \frac{4-0}{4} = 1" />
 
-    **Langkah 3: Tentukan titik sampel ujung kanan.**
+    **Langkah** <InlineMath math="3" />: Tentukan titik sampel ujung kanan.
 
     Subintervalnya adalah:
     
@@ -188,7 +188,7 @@ Mari kita terapkan konsep ini pada sebuah contoh.
 
     <BlockMath math="x_1=1, x_2=2, x_3=3, x_4=4" />
 
-    **Langkah 4: Hitung tinggi setiap persegi panjang.**
+    **Langkah** <InlineMath math="4" />: Hitung tinggi setiap persegi panjang.
 
     Tinggi setiap persegi panjang ditentukan oleh nilai fungsi <InlineMath math="f(x) = x^2 + 1" /> di titik sampel ujung kanan:
 
@@ -199,7 +199,7 @@ Mari kita terapkan konsep ini pada sebuah contoh.
     <BlockMath math="f(x_4) = f(4) = 4^2 + 1 = 17" />
     </MathContainer>
 
-    **Langkah 5: Hitung total Jumlahan Riemann.**
+    **Langkah** <InlineMath math="5" />: Hitung total Jumlahan Riemann.
 
     Sekarang kita jumlahkan luas semua persegi panjang (<InlineMath math="\text{tinggi} \times \text{lebar}" />):
 
@@ -210,4 +210,4 @@ Mari kita terapkan konsep ini pada sebuah contoh.
     <BlockMath math="= 34" />
     </MathContainer>
 
-    Jadi, Jumlahan Riemann untuk fungsi tersebut adalah **34**.
+    Jadi, Jumlahan Riemann untuk fungsi tersebut adalah <InlineMath math="34" />.

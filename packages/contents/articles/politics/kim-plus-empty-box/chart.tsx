@@ -16,6 +16,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@repo/design-system/components/ui/chart";
+import type { ReactNode } from "react";
 import {
   Bar,
   BarChart,
@@ -27,7 +28,7 @@ import {
 
 interface Props {
   description: string;
-  footnote: string;
+  footnote: ReactNode;
   labels: {
     electability: string;
     notAnswering: string;

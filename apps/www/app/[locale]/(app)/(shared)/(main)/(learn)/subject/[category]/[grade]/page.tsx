@@ -26,6 +26,8 @@ import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
 
@@ -91,9 +93,7 @@ export async function generateMetadata({
       absolute: title,
     },
     description,
-    alternates: {
-      canonical: path,
-    },
+    alternates: createLocalizedAlternates(path),
     ...socialMetadata,
   };
 }
@@ -145,13 +145,14 @@ async function PageContent({
   return (
     <>
       <BreadcrumbJsonLd
-        breadcrumbItems={subjects.map((subject, index) => ({
-          "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}${subject.href}`,
-          position: index + 1,
-          name: tSubject(subject.label),
-          item: `https://nakafa.com/${locale}${subject.href}`,
-        }))}
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: tCommon("subject"), path: "/subject" },
+          {
+            name: tSubject(getGradeNonNumeric(grade) ?? "grade", { grade }),
+            path: FilePath,
+          },
+        ])}
       />
       <HeaderContent
         description={tSubject("grade-description")}

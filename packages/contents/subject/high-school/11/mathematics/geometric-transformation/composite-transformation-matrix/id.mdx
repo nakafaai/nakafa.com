@@ -55,7 +55,7 @@ Matriks untuk <InlineMath math="T_1" /> (pencerminan sumbu <InlineMath math="y" 
 
 Matriks untuk <InlineMath math="T_2" /> (rotasi <InlineMath math="90^\circ" />) adalah <InlineMath math="M_2 = \begin{pmatrix} \cos 90^\circ & -\sin 90^\circ \\ \sin 90^\circ & \cos 90^\circ \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}" />.
 
-**Cara 1: Transformasi Berurutan pada Titik**
+**Cara <InlineMath math="1" />: Transformasi Berurutan pada Titik**
 
 - Peta <InlineMath math="P(x,y)" /> oleh <InlineMath math="T_1" />:
 
@@ -69,7 +69,7 @@ Matriks untuk <InlineMath math="T_2" /> (rotasi <InlineMath math="90^\circ" />) 
 
 - Peta akhirnya adalah <InlineMath math="P''(-y,-x)" />.
 
-**Cara 2: Matriks Komposisi Terlebih Dahulu**
+**Cara <InlineMath math="2" />: Matriks Komposisi Terlebih Dahulu**
 
 - Matriks komposisi <InlineMath math="M = M_2 M_1" />:
 
@@ -196,11 +196,11 @@ Misalkan:
 
 Komposisi transformasi adalah <InlineMath math="T_3 \circ T_2 \circ T_1" />. Matriksnya adalah <InlineMath math="M = M_3 M_2 M_1" />.
 
-**Langkah 1:** Hitung <InlineMath math="M_2 M_1" />.
+**Langkah** <InlineMath math="1" />: Hitung <InlineMath math="M_2 M_1" />.
 
 <BlockMath math="M_2 M_1 = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix} = \begin{pmatrix} (-1)(-1)+(0)(0) & (-1)(0)+(0)(1) \\ (0)(-1)+(-1)(0) & (0)(0)+(-1)(1) \end{pmatrix} = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
 
-**Langkah 2:** Hitung <InlineMath math="M = M_3 (M_2 M_1)" />.
+**Langkah** <InlineMath math="2" />: Hitung <InlineMath math="M = M_3 (M_2 M_1)" />.
 
 <BlockMath math="M = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} = \begin{pmatrix} (0)(1)+(1)(0) & (0)(0)+(1)(-1) \\ (1)(1)+(0)(0) & (1)(0)+(0)(-1) \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}" />
 

@@ -164,12 +164,12 @@ The function <InlineMath math="y = \sin x" /> is a periodic function with period
 **Characteristics of** <InlineMath math="y = \sin x" /> **graph**:
 
 - **Period**: <InlineMath math="2\pi" /> (graph repeats every <InlineMath math="2\pi \text{ units}" />)
-- **Amplitude**: 1 (maximum - minimum value divided by 2)
+- **Amplitude**: <InlineMath math="1" /> (maximum value minus minimum value, then divided by <InlineMath math="2" />)
 - **Domain**: All real numbers
 - **Range**: <InlineMath math="[-1, 1]" />
 - **x-intercepts**: <InlineMath math="x = n\pi" /> where <InlineMath math="n" /> is an integer
-- **Maximum value**: 1 at <InlineMath math="x = \frac{\pi}{2} + 2n\pi" />
-- **Minimum value**: -1 at <InlineMath math="x = \frac{3\pi}{2} + 2n\pi" />
+- **Maximum value**: <InlineMath math="1" /> at <InlineMath math="x = \frac{\pi}{2} + 2n\pi" />
+- **Minimum value**: <InlineMath math="-1" /> at <InlineMath math="x = \frac{3\pi}{2} + 2n\pi" />
 
 ## Cosine Function Graph
 
@@ -181,7 +181,7 @@ The function <InlineMath math="y = \cos x" /> has a shape similar to sine, but s
       Graph of <InlineMath math="y = \cos x" />
     </>
   }
-  description="Compare with the sine graph. Notice the shift."
+  description={<>Compare with the <InlineMath math="\sin" /> graph. Notice the shift.</>}
   data={[
     {
       points: Array.from({ length: 100 }, (_, i) => {
@@ -200,17 +200,17 @@ The function <InlineMath math="y = \cos x" /> has a shape similar to sine, but s
 **Characteristics of** <InlineMath math="y = \cos x" /> **graph**:
 
 - **Period**: <InlineMath math="2\pi" />
-- **Amplitude**: 1
+- **Amplitude**: <InlineMath math="1" />
 - **Domain**: All real numbers
 - **Range**: <InlineMath math="[-1, 1]" />
 - **x-intercepts**: <InlineMath math="x = \frac{\pi}{2} + n\pi" />
-- **Maximum value**: 1 at <InlineMath math="x = 2n\pi" />
-- **Minimum value**: -1 at <InlineMath math="x = \pi + 2n\pi" />
+- **Maximum value**: <InlineMath math="1" /> at <InlineMath math="x = 2n\pi" />
+- **Minimum value**: <InlineMath math="-1" /> at <InlineMath math="x = \pi + 2n\pi" />
 
 ### Comparison of Sin and Cos
 
 <LineEquation
-  title="Comparison of Sin and Cos Graphs"
+  title={<>Comparison of <InlineMath math="\sin" /> and <InlineMath math="\cos" /> Graphs</>}
   description={
     <>
       Notice that <InlineMath math="\cos x = \sin(x + \frac{\pi}{2})" />.
@@ -460,7 +460,7 @@ Notice the horizontal and vertical shifts of the graph:
 
 5. Determine the equation of a trigonometric function that has:
 
-   - Amplitude 3
+   - Amplitude <InlineMath math="3" />
    - Period <InlineMath math="\pi" />
    - Shifted <InlineMath math="\frac{\pi}{4}" /> to the right
    - Shifted <InlineMath math="2 \text{ units}" /> up
@@ -474,12 +474,12 @@ Notice the horizontal and vertical shifts of the graph:
 
 2. Period and amplitude:
 
-   - <InlineMath math="y = 3 \sin(2x)" />: Amplitude = 3, Period is <InlineMath math="\frac{2\pi}{2} = \pi" />
-   - <InlineMath math="y = -2 \cos(\frac{x}{3})" />: Amplitude = 2, Period is <InlineMath math="\frac{2\pi}{1/3} = 6\pi" />
+   - <InlineMath math="y = 3 \sin(2x)" />: amplitude <InlineMath math="3" />, period <InlineMath math="\frac{2\pi}{2} = \pi" />
+   - <InlineMath math="y = -2 \cos(\frac{x}{3})" />: amplitude <InlineMath math="2" />, period <InlineMath math="\frac{2\pi}{1/3} = 6\pi" />
 
 3. For <InlineMath math="y = 2 \sin(x + \frac{\pi}{3}) - 1" />:
 
-   - Amplitude: 2
+   - Amplitude: <InlineMath math="2" />
    - Period: <InlineMath math="2\pi" />
    - Phase shift: <InlineMath math="\frac{\pi}{3}" /> to the left
    - Vertical shift: <InlineMath math="1 \text{ unit}" /> down

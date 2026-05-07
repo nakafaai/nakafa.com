@@ -55,7 +55,7 @@ The matrix for <InlineMath math="T_1" /> (reflection across the <InlineMath math
 
 The matrix for <InlineMath math="T_2" /> (rotation <InlineMath math="90^\circ" />) is <InlineMath math="M_2 = \begin{pmatrix} \cos 90^\circ & -\sin 90^\circ \\ \sin 90^\circ & \cos 90^\circ \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}" />.
 
-**Method 1: Sequential Transformation on the Point**
+**Method <InlineMath math="1" />: Sequential Transformation on the Point**
 
 - Image of <InlineMath math="P(x,y)" /> under <InlineMath math="T_1" />:
 
@@ -69,7 +69,7 @@ The matrix for <InlineMath math="T_2" /> (rotation <InlineMath math="90^\circ" /
 
 - The final image is <InlineMath math="P''(-y,-x)" />.
 
-**Method 2: Composite Matrix First**
+**Method <InlineMath math="2" />: Composite Matrix First**
 
 - Composite matrix <InlineMath math="M = M_2 M_1" />:
 
@@ -196,11 +196,11 @@ Let:
 
 The composition of transformations is <InlineMath math="T_3 \circ T_2 \circ T_1" />. Its matrix is <InlineMath math="M = M_3 M_2 M_1" />.
 
-**Step 1:** Calculate <InlineMath math="M_2 M_1" />.
+**Step** <InlineMath math="1" />: Calculate <InlineMath math="M_2 M_1" />.
 
 <BlockMath math="M_2 M_1 = \begin{pmatrix} -1 & 0 \\ 0 & -1 \end{pmatrix} \begin{pmatrix} -1 & 0 \\ 0 & 1 \end{pmatrix} = \begin{pmatrix} (-1)(-1)+(0)(0) & (-1)(0)+(0)(1) \\ (0)(-1)+(-1)(0) & (0)(0)+(-1)(1) \end{pmatrix} = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}" />
 
-**Step 2:** Calculate <InlineMath math="M = M_3 (M_2 M_1)" />.
+**Step** <InlineMath math="2" />: Calculate <InlineMath math="M = M_3 (M_2 M_1)" />.
 
 <BlockMath math="M = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix} \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} = \begin{pmatrix} (0)(1)+(1)(0) & (0)(0)+(1)(-1) \\ (1)(1)+(0)(0) & (1)(0)+(0)(-1) \end{pmatrix} = \begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}" />
 

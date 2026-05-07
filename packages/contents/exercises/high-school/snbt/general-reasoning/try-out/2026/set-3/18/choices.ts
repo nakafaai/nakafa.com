@@ -8,12 +8,12 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Semua anak di bawah 5 tahun mengkonsumsi teh dengan tambahan gula.",
+        "Semua anak di bawah $$5$$ tahun mengkonsumsi teh dengan tambahan gula.",
       value: false,
     },
     {
       label:
-        "Beberapa anak di bawah 5 tahun mengkonsumsi teh dengan tambahan gula.",
+        "Beberapa anak di bawah $$5$$ tahun mengkonsumsi teh dengan tambahan gula.",
       value: false,
     },
     {
@@ -25,11 +25,12 @@ const choices: ExercisesChoices = {
   en: [
     { label: "All people consume tea with added sugar.", value: false },
     {
-      label: "All children under 5 years old consume tea with added sugar.",
+      label: "All children under $$5$$ years old consume tea with added sugar.",
       value: false,
     },
     {
-      label: "Some children under 5 years old consume tea with added sugar.",
+      label:
+        "Some children under $$5$$ years old consume tea with added sugar.",
       value: false,
     },
     { label: "Some people consume tea without added sugar.", value: true },

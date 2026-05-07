@@ -9,7 +9,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "Penyebaran obat herbal di Indonesia diatur Undang-undang Nomor 36 Pasal 2 angka 9",
+        "Penyebaran obat herbal di Indonesia diatur Undang-undang Nomor $$36$$ Pasal $$2$$ angka $$9$$",
       value: false,
     },
     {
@@ -36,7 +36,7 @@ const choices: ExercisesChoices = {
     },
     {
       label:
-        "The distribution of herbal medicines in Indonesia is regulated by Law Number 36 Article 2 Number 9",
+        "The distribution of herbal medicines in Indonesia is regulated by Law Number $$36$$ Article $$2$$ Number $$9$$",
       value: false,
     },
     {

@@ -6,15 +6,15 @@ export const metadata = {
 
 We will determine the number of possible passwords using the multiplication rule of combinatorics.
 
-Password structure: **Digit - Letter - Digit - Letter** (starts with a digit and alternates).
+Password structure: <InlineMath math="\text{Digit} - \text{Letter} - \text{Digit} - \text{Letter}" /> (starts with a digit and alternates).
 
-#### Counting Choices for Position 1 (First Digit)
+#### Counting Choices for Position One (First Digit)
 
 The first digit is an odd number (<InlineMath math="1, 3, 5, 7, 9" />).
 
 Number of choices is <InlineMath math="5" />.
 
-#### Counting Choices for Position 2 (First Letter)
+#### Counting Choices for Position Two (First Letter)
 
 Vowels: <InlineMath math="A, E, I, O, U" /> (total <InlineMath math="5" /> vowels).
 
@@ -22,7 +22,7 @@ The first letter is not the letter <InlineMath math="A" />, so the remaining cho
 
 Number of choices is <InlineMath math="4" />.
 
-#### Counting Choices for Position 3 (Second Digit)
+#### Counting Choices for Position Three (Second Digit)
 
 The second digit is chosen from <InlineMath math="2, 4, 6, 8" /> (total <InlineMath math="4" /> choices).
 
@@ -30,7 +30,7 @@ Since digits cannot repeat, we must ensure the second digit is different from th
 
 Number of choices is <InlineMath math="4" />.
 
-#### Counting Choices for Position 4 (Second Letter)
+#### Counting Choices for Position Four (Second Letter)
 
 The second letter is the letter <InlineMath math="O" /> (fixed).
 
@@ -60,4 +60,3 @@ So:
 </MathContainer>
 
 So, the number of passwords that can be formed is <InlineMath math="60" />.
-
