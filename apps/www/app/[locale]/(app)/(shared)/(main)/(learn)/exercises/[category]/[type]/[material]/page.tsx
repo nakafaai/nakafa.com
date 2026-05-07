@@ -36,6 +36,8 @@ import { RefContent } from "@/components/shared/ref-content";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { createSEODescription } from "@/lib/utils/seo/descriptions";
 import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
@@ -104,9 +106,7 @@ export async function generateMetadata({
       absolute: title,
     },
     description,
-    alternates: {
-      canonical: urlPath,
-    },
+    alternates: createLocalizedAlternates(urlPath),
     ...socialMetadata,
   };
 }
@@ -161,9 +161,10 @@ async function PageContent({
   const typePath = getExercisesPath(category, type);
   const FilePath = getMaterialPath(category, type, material);
 
-  const [materials, t] = await Promise.all([
+  const [materials, t, tCommon] = await Promise.all([
     getMaterials(FilePath, locale),
     getTranslations({ locale, namespace: "Exercises" }),
+    getTranslations({ locale, namespace: "Common" }),
   ]);
 
   const chapters: ParsedHeading[] = materials.map((mat) => ({
@@ -175,13 +176,11 @@ async function PageContent({
   return (
     <>
       <BreadcrumbJsonLd
-        breadcrumbItems={materials.map((mat, index) => ({
-          "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}${mat.href}`,
-          position: index + 1,
-          name: mat.title,
-          item: `https://nakafa.com/${locale}${mat.href}`,
-        }))}
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: t(type), path: typePath },
+          { name: t(material), path: FilePath },
+        ])}
       />
       <CollectionPageJsonLd
         description={t(type)}

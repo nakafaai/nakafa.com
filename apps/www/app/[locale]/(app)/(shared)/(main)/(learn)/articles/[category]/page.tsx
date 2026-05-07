@@ -22,6 +22,8 @@ import { RefContent } from "@/components/shared/ref-content";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { getStaticParams } from "@/lib/utils/system";
 
 async function getResolvedParams(
@@ -70,9 +72,7 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: {
-      canonical: path,
-    },
+    alternates: createLocalizedAlternates(path),
     ...socialMetadata,
   };
 }
@@ -129,18 +129,19 @@ async function PageArticles({
   header: React.ReactNode;
 }) {
   const articles = await getCategoryArticles(category, locale);
-  const t = await getTranslations({ locale, namespace: "Articles" });
+  const [t, tCommon] = await Promise.all([
+    getTranslations({ locale, namespace: "Articles" }),
+    getTranslations({ locale, namespace: "Common" }),
+  ]);
 
   return (
     <>
       <BreadcrumbJsonLd
-        breadcrumbItems={articles.map((article, index) => ({
-          "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}${FilePath}/${article.slug}`,
-          position: index + 1,
-          name: article.title,
-          item: `https://nakafa.com/${locale}${FilePath}/${article.slug}`,
-        }))}
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: tCommon("articles"), path: "/articles" },
+          { name: t(category), path: FilePath },
+        ])}
       />
       <CollectionPageJsonLd
         description={t("description")}
