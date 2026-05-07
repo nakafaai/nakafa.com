@@ -59,7 +59,7 @@ export function ProButton() {
       if (!currentUser) {
         await authClient.signIn.social({
           provider: "google",
-          callbackURL: "/about",
+          callbackURL: "/",
         });
         return;
       }

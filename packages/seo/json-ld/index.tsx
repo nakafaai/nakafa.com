@@ -1,5 +1,4 @@
 import { createStableId } from "@repo/utilities/helper";
-import Script from "next/script";
 import type { Thing, WithContext } from "schema-dts";
 
 interface JsonLdProps<T extends Thing = Thing> {
@@ -7,13 +6,13 @@ interface JsonLdProps<T extends Thing = Thing> {
 }
 
 /**
- * Renders escaped JSON-LD through Next.js Script with a deterministic inline id.
+ * Renders escaped JSON-LD in the initial server HTML with a deterministic id.
  */
 export function JsonLd<T extends Thing>({ jsonLd }: JsonLdProps<T>) {
   const serializedJsonLd = JSON.stringify(jsonLd).replace(/</g, "\\u003c");
 
   return (
-    <Script
+    <script
       // biome-ignore lint/security/noDangerouslySetInnerHtml: This is a JSON-LD script, not user-generated content.
       dangerouslySetInnerHTML={{
         __html: serializedJsonLd,

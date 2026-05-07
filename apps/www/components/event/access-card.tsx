@@ -33,7 +33,7 @@ export function EventAccessLayout({ children }: EventAccessLayoutProps) {
         <Button
           nativeButton={false}
           render={
-            <NavigationLink href="/">
+            <NavigationLink href="/home">
               <HugeIcons icon={ArrowLeft02Icon} />
               {tCommon("home")}
             </NavigationLink>

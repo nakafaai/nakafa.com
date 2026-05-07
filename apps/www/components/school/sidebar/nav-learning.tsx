@@ -32,7 +32,7 @@ export function SchoolSidebarNavLearning() {
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <NavigationLink
-                href="/"
+                href="/home"
                 rel="noopener noreferrer"
                 target="_blank"
                 title={t("nakafa-materials")}

@@ -13,7 +13,7 @@ export function LogoCta() {
   return (
     <Link
       className="flex items-center gap-2"
-      href={currentUser ? "/" : "/auth"}
+      href={currentUser ? "/home" : "/"}
     >
       <Image
         alt="Nakafa"
@@ -36,7 +36,7 @@ export function HeaderCta() {
     return (
       <Button
         nativeButton={false}
-        render={<NavigationLink href="/">{t("try-nakafa")}</NavigationLink>}
+        render={<NavigationLink href="/home">{t("try-nakafa")}</NavigationLink>}
       />
     );
   }

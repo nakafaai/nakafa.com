@@ -1,29 +1,20 @@
-import { redirect } from "next/navigation";
+import { redirect } from "@repo/internationalization/src/navigation";
 import { HomeContinueLearning } from "@/components/home/continue-learning";
 import { HomeExplore } from "@/components/home/explore";
 import { HomeHeader } from "@/components/home/header";
 import { HomeTrending } from "@/components/home/trending";
 import { getToken } from "@/lib/auth/server";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-export default async function Page(props: PageProps<"/[locale]">) {
-  const { searchParams } = props;
-  const [searchParamsValue, token] = await Promise.all([
-    searchParams,
+export default async function Page(props: PageProps<"/[locale]/home">) {
+  const [{ locale: rawLocale }, token] = await Promise.all([
+    props.params,
     getToken(),
   ]);
-  const from =
-    typeof searchParamsValue?.from === "string"
-      ? searchParamsValue.from
-      : undefined;
+  const locale = getLocaleOrThrow(rawLocale);
 
-  // If no user token and from about page, goes to auth
-  if (!token && from === "/about") {
-    redirect("/auth");
-  }
-
-  // if just no user token
   if (!token) {
-    redirect("/about");
+    redirect({ href: "/auth", locale });
   }
 
   return (
