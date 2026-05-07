@@ -7,7 +7,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "next": "16.2.5",
+    "next": "16.2.6",
     "next-intl": "^4.11.0"
   },
   "devDependencies": {
