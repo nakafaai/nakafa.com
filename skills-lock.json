@@ -9,6 +9,7 @@
     "audit-website": {
       "source": "squirrelscan/skills",
       "sourceType": "github",
+      "skillPath": "audit-website/SKILL.md",
       "computedHash": "2c060290f90340e8bb6009502ec936b8ebb3ff889332a43e24bf210528ebba9f"
     },
     "convex": {
