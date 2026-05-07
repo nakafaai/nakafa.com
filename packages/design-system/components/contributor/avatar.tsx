@@ -1,5 +1,3 @@
-"use client";
-
 import {
   GithubIcon,
   Linkedin02Icon,
@@ -16,6 +14,7 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
+  DrawerTrigger,
 } from "@repo/design-system/components/ui/drawer";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -25,7 +24,6 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 
 interface Props {
   contributor: Contributor;
@@ -34,19 +32,16 @@ interface Props {
 
 export function Avatar({ contributor, size = "md" }: Props) {
   const t = useTranslations("Common");
-  const [open, setOpen] = useState(false);
 
   return (
-    <Drawer onOpenChange={setOpen} open={open}>
+    <Drawer>
       <Tooltip>
         <TooltipTrigger
           render={
-            <button
+            <DrawerTrigger
               aria-label={`${t("open")} ${contributor.name}`}
-              className="cursor-pointer rounded-full border-0 bg-transparent p-0"
-              onClick={() => setOpen(true)}
+              className="cursor-pointer"
               title={contributor.name}
-              type="button"
             >
               <Character
                 className={cn(
@@ -56,7 +51,7 @@ export function Avatar({ contributor, size = "md" }: Props) {
                 )}
                 name={`${contributor.name} - ${contributor.username}`}
               />
-            </button>
+            </DrawerTrigger>
           }
         />
         <TooltipContent>

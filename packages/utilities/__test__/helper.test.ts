@@ -1,5 +1,7 @@
-import { cleanSlug } from "@repo/utilities/helper";
+import { cleanSlug, createStableId } from "@repo/utilities/helper";
 import { describe, expect, it } from "vitest";
+
+const STABLE_JSON_LD_ID_PATTERN = /^json-ld-[a-z0-9]+$/;
 
 describe("cleanSlug", () => {
   describe("Happy Paths", () => {
@@ -199,5 +201,27 @@ describe("cleanSlug", () => {
     it("should handle single character paths", () => {
       expect(cleanSlug("/a/")).toBe("a");
     });
+  });
+});
+
+describe("createStableId", () => {
+  it("returns the same id for the same prefix and payload", () => {
+    const payload = JSON.stringify({ "@type": "WebSite", name: "Nakafa" });
+
+    expect(createStableId("json-ld", payload)).toBe(
+      createStableId("json-ld", payload)
+    );
+  });
+
+  it("keeps the caller-provided prefix readable", () => {
+    expect(createStableId("json-ld", "Nakafa")).toMatch(
+      STABLE_JSON_LD_ID_PATTERN
+    );
+  });
+
+  it("returns different ids for different payloads", () => {
+    expect(createStableId("json-ld", "Nakafa")).not.toBe(
+      createStableId("json-ld", "Nakafa AI")
+    );
   });
 });

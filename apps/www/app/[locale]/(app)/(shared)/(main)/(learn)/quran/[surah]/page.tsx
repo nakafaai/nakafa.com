@@ -114,14 +114,51 @@ async function ResolvedSurahPage({
 }) {
   const { locale: rawLocale, surah } = await params;
   const locale = getLocaleOrThrow(rawLocale);
+  const surahNumber = Number(surah);
+
+  if (Number.isNaN(surahNumber)) {
+    notFound();
+  }
+
+  const [t, tCommon, surahData] = await Promise.all([
+    getTranslations({ locale, namespace: "Holy" }),
+    getTranslations({ locale, namespace: "Common" }),
+    getSurahMetadataData({ surah: surahNumber }),
+  ]);
+
+  if (!surahData) {
+    notFound();
+  }
+
+  const translation = surahData.name.translation[locale];
+  const title = getSurahName({ locale, name: surahData.name });
 
   return (
-    <CachedSurahShell
-      footer={<RefContent key={`refs:${surah}`} />}
-      locale={locale}
-      surah={surah}
-      toolbar={<DeferredAiSheetOpen key={`audio:${surah}`} />}
-    />
+    <>
+      <BreadcrumbJsonLd
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: t("quran"), path: "/quran" },
+          { name: title, path: `/quran/${surah}` },
+        ])}
+      />
+      <BookJsonLd
+        author={{ "@type": "Person", name: "Allah" }}
+        description={translation}
+        inLanguage={locale}
+        name={title}
+        position={surahNumber}
+        totalPages={surahData.verses.length}
+        url={`https://nakafa.com/${locale}/quran/${surah}`}
+      />
+      <CachedSurahShell
+        footer={<RefContent key={`refs:${surah}`} />}
+        locale={locale}
+        surah={surah}
+        surahNumber={surahNumber}
+        toolbar={<DeferredAiSheetOpen key={`audio:${surah}`} />}
+      />
+    </>
   );
 }
 
@@ -143,11 +180,13 @@ async function getSurahMetadataData({ surah }: { surah: number }) {
 async function CachedSurahShell({
   locale,
   surah,
+  surahNumber,
   footer,
   toolbar,
 }: {
   locale: Locale;
   surah: string;
+  surahNumber: number;
   footer: ReactNode;
   toolbar: ReactNode;
 }) {
@@ -155,16 +194,7 @@ async function CachedSurahShell({
 
   cacheLife("max");
 
-  const [t, tCommon] = await Promise.all([
-    getTranslations({ locale, namespace: "Holy" }),
-    getTranslations({ locale, namespace: "Common" }),
-  ]);
-
-  const surahNumber = Number(surah);
-
-  if (Number.isNaN(surahNumber)) {
-    notFound();
-  }
+  const t = await getTranslations({ locale, namespace: "Holy" });
 
   const result = await Effect.runPromise(
     Effect.match(fetchSurahContext({ surah: surahNumber }), {
@@ -220,125 +250,105 @@ async function CachedSurahShell({
   };
 
   return (
-    <>
-      <BreadcrumbJsonLd
-        breadcrumbItems={createBreadcrumbItems(locale, [
-          { name: tCommon("home"), path: "" },
-          { name: t("quran"), path: "/quran" },
-          { name: title, path: `/quran/${surah}` },
-        ])}
-      />
-      <BookJsonLd
-        author={{ "@type": "Person", name: "Allah" }}
-        description={translation}
-        inLanguage={locale}
-        name={title}
-        position={surahNumber}
-        totalPages={surahData.verses.length}
-        url={`https://nakafa.com/${locale}/quran/${surah}`}
-      />
-      <VirtualProvider>
-        <LayoutMaterial>
-          <LayoutMaterialContent>
-            <LayoutMaterialHeader
-              description={translation}
-              icon={AllahIcon}
-              link={{
-                href: "/quran",
-                label: t("quran"),
-              }}
-              title={title}
-            />
-            <LayoutMaterialMain>
-              {!!preBismillah && (
-                <div className="mb-20 flex flex-col items-center gap-4 rounded-xl border bg-card p-6 text-center shadow-sm">
-                  <QuranText>{preBismillah.text.arab}</QuranText>
-                  <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
-                    {preBismillah.translation[locale] ??
-                      preBismillah.translation.en}
-                  </p>
-                </div>
-              )}
+    <VirtualProvider>
+      <LayoutMaterial>
+        <LayoutMaterialContent>
+          <LayoutMaterialHeader
+            description={translation}
+            icon={AllahIcon}
+            link={{
+              href: "/quran",
+              label: t("quran"),
+            }}
+            title={title}
+          />
+          <LayoutMaterialMain>
+            {!!preBismillah && (
+              <div className="mb-20 flex flex-col items-center gap-4 rounded-xl border bg-card p-6 text-center shadow-sm">
+                <QuranText>{preBismillah.text.arab}</QuranText>
+                <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
+                  {preBismillah.translation[locale] ??
+                    preBismillah.translation.en}
+                </p>
+              </div>
+            )}
 
-              <WindowVirtualized ssrCount={surahData.verses.length}>
-                {surahData.verses.map((verse, index) => {
-                  const transliteration = verse.text.transliteration.en;
-                  const translate =
-                    verse.translation[locale] ?? verse.translation.en;
+            <WindowVirtualized ssrCount={surahData.verses.length}>
+              {surahData.verses.map((verse, index) => {
+                const transliteration = verse.text.transliteration.en;
+                const translate =
+                  verse.translation[locale] ?? verse.translation.en;
 
-                  const id = slugify(
-                    t("verse-count", { count: verse.number.inSurah })
-                  );
+                const id = slugify(
+                  t("verse-count", { count: verse.number.inSurah })
+                );
 
-                  return (
-                    <div
-                      className={cn(
-                        "mb-6 space-y-6 border-b pb-6",
-                        index === surahData.verses.length - 1 &&
-                          "mb-0 border-b-0 pb-0"
-                      )}
-                      key={verse.number.inQuran}
-                    >
-                      <div className="flex items-center gap-4">
-                        <a
-                          className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
-                          href={`#${id}`}
-                          id={id}
-                        >
-                          <div className="flex size-9 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
-                            <span className="font-mono text-xs tracking-tighter">
-                              {verse.number.inSurah}
-                            </span>
-                            <h2 className="sr-only">
-                              {t("verse-count", {
-                                count: verse.number.inSurah,
-                              })}
-                            </h2>
-                          </div>
-                        </a>
-
-                        <div className="flex items-center gap-2">
-                          <QuranAudio audio={verse.audio} />
-                          {locale === "id" && (
-                            <QuranInterpretation
-                              interpretation={verse.tafsir.id.short}
-                            />
-                          )}
+                return (
+                  <div
+                    className={cn(
+                      "mb-6 space-y-6 border-b pb-6",
+                      index === surahData.verses.length - 1 &&
+                        "mb-0 border-b-0 pb-0"
+                    )}
+                    key={verse.number.inQuran}
+                  >
+                    <div className="flex items-center gap-4">
+                      <a
+                        className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
+                        href={`#${id}`}
+                        id={id}
+                      >
+                        <div className="flex size-9 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
+                          <span className="font-mono text-xs tracking-tighter">
+                            {verse.number.inSurah}
+                          </span>
+                          <h2 className="sr-only">
+                            {t("verse-count", {
+                              count: verse.number.inSurah,
+                            })}
+                          </h2>
                         </div>
-                      </div>
-                      <QuranText>{verse.text.arab}</QuranText>
-                      <div className="flex flex-col gap-2">
-                        <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
-                          {transliteration}
-                        </p>
-                        <p className="text-pretty leading-relaxed">
-                          {translate}
-                        </p>
+                      </a>
+
+                      <div className="flex items-center gap-2">
+                        <QuranAudio audio={verse.audio} />
+                        {locale === "id" && (
+                          <QuranInterpretation
+                            interpretation={verse.tafsir.id.short}
+                          />
+                        )}
                       </div>
                     </div>
-                  );
-                })}
-              </WindowVirtualized>
-            </LayoutMaterialMain>
-            <LayoutMaterialPagination
-              pagination={paginationWithLocalizedTitles}
-            />
-            <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
-            {toolbar}
-          </LayoutMaterialContent>
-          <LayoutMaterialToc
-            chapters={{
-              label: t("verse"),
-              data: headings,
-            }}
-            header={{
-              title,
-              href: `/quran/${surah}`,
-              description: translation,
-            }}
+                    <QuranText>{verse.text.arab}</QuranText>
+                    <div className="flex flex-col gap-2">
+                      <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
+                        {transliteration}
+                      </p>
+                      <p className="text-pretty leading-relaxed">{translate}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </WindowVirtualized>
+          </LayoutMaterialMain>
+          <LayoutMaterialPagination
+            pagination={paginationWithLocalizedTitles}
           />
-        </LayoutMaterial>
-      </VirtualProvider>
-    </>
+          <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
+          {toolbar}
+        </LayoutMaterialContent>
+        <LayoutMaterialToc
+          chapters={{
+            label: t("verse"),
+            data: headings,
+          }}
+          header={{
+            title,
+            href: `/quran/${surah}`,
+            description: translation,
+          }}
+        />
+      </LayoutMaterial>
+    </VirtualProvider>
   );
 }

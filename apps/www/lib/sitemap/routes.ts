@@ -53,7 +53,6 @@ export function clearSitemapRouteCache() {
 
 /** Static top-level routes that should always be present in the sitemap. */
 export const baseRoutes = [
-  "/",
   "/search",
   "/contributor",
   quranRootRoute,

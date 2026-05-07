@@ -30,7 +30,6 @@ vi.mock("@repo/internationalization/src/routing", () => ({
 
 vi.mock("@/lib/sitemap/routes", () => ({
   baseRoutes: [
-    "/",
     "/search",
     "/contributor",
     "/quran",
@@ -41,8 +40,8 @@ vi.mock("@/lib/sitemap/routes", () => ({
     "/security-policy",
   ],
   getSitemapRoutes: () => [
-    "/",
     "/search",
+    "/about",
     "/articles/politics/dynastic-politics-asian-values",
     "/quran/1",
     "/subject/high-school/10",
@@ -213,7 +212,8 @@ describe("sitemap entries", () => {
     const urls = entries.map((entry) => entry.url);
 
     expect(new Set(urls).size).toBe(urls.length);
-    expect(urls).toContain("https://nakafa.com/en");
+    expect(urls).not.toContain("https://nakafa.com/en");
+    expect(urls).toContain("https://nakafa.com/en/about");
     expect(urls).toContain("https://nakafa.com/id/subject/high-school/10");
   });
 });
