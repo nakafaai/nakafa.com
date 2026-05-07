@@ -20,7 +20,7 @@
     "ky": "^2.0.2",
     "motion": "^12.38.0",
     "next-intl": "^4.11.0",
-    "react": "19.2.5",
+    "react": "19.2.6",
     "react-aria-components": "^1.17.0",
     "recharts": "^2.15.4",
     "zod": "^4.4.3"
