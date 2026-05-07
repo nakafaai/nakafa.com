@@ -8,7 +8,6 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from "@repo/design-system/components/ui/drawer";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
@@ -38,12 +37,15 @@ export function QuranInterpretation({ interpretation }: Props) {
 
   return (
     <Drawer onOpenChange={set} open={open}>
-      <DrawerTrigger asChild className="cursor-pointer">
-        <Button size="icon" variant="outline">
-          <HugeIcons icon={BookOpen02Icon} />
-          <span className="sr-only">{t("interpretation")}</span>
-        </Button>
-      </DrawerTrigger>
+      <Button
+        className="cursor-pointer"
+        onClick={() => set(true)}
+        size="icon"
+        variant="outline"
+      >
+        <HugeIcons icon={BookOpen02Icon} />
+        <span className="sr-only">{t("interpretation")}</span>
+      </Button>
 
       <DrawerContent className="mx-auto sm:max-w-3xl">
         <DrawerHeader className="border-b">

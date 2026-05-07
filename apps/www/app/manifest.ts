@@ -11,7 +11,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
   });
 
   return {
-    name: t("title"),
+    name: "Nakafa",
     short_name: "Nakafa",
     description: t("description"),
     start_url: "/",

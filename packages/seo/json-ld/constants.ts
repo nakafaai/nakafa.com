@@ -2,7 +2,8 @@ import type { Organization, Person } from "schema-dts";
 
 export const ORGANIZATION_URL = "https://nakafa.com";
 export const ORGANIZATION_LOGO = "https://nakafa.com/logo.svg";
-export const ORGANIZATION_NAME = "PT. Nakafa Tekno Kreatif";
+export const ORGANIZATION_NAME = "Nakafa";
+export const ORGANIZATION_LEGAL_NAME = "PT. Nakafa Tekno Kreatif";
 
 export const SAME_AS_LINKS = [
   "https://twitter.com/nabilfatih_",
@@ -13,6 +14,7 @@ export const SAME_AS_LINKS = [
 export const ORGANIZATION: Organization = {
   "@type": "Organization",
   name: ORGANIZATION_NAME,
+  legalName: ORGANIZATION_LEGAL_NAME,
   url: ORGANIZATION_URL,
   logo: ORGANIZATION_LOGO,
   sameAs: [...SAME_AS_LINKS],

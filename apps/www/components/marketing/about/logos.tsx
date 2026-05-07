@@ -21,11 +21,11 @@ function SchoolLogo({ school }: SchoolLogoProps) {
         <div className="relative aspect-square size-12 shrink-0">
           <Image
             alt={school.alt}
-            className="object-contain"
-            fill
-            sizes="48px"
+            className="size-12 object-contain"
+            height={48}
             src={school.logo}
             title={school.name}
+            width={48}
           />
         </div>
         <span className="text-balance font-medium text-sm">{school.name}</span>

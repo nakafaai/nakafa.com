@@ -1,6 +1,5 @@
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
-import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import type { ListItem } from "@repo/seo/types";
 import type { Metadata } from "next";
@@ -19,6 +18,7 @@ import { Blocker } from "@/components/marketing/shared/blocker";
 import { exercisesMenu } from "@/components/sidebar/_data/exercises";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 
 export async function generateMetadata({
   params,
@@ -27,15 +27,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const locale = getLocaleOrThrow((await params).locale);
   const t = await getTranslations({ locale, namespace: "About" });
+  const path = `/${locale}/about`;
 
   return {
     title: {
       absolute: t("meta-title"),
     },
     description: t("description"),
-    alternates: {
-      canonical: `/${locale}/about`,
-    },
+    alternates: createLocalizedAlternates(path),
     twitter: {
       card: "summary_large_image",
       title: t("meta-title"),
@@ -54,7 +53,7 @@ export async function generateMetadata({
     openGraph: {
       title: t("meta-title"),
       description: t("description"),
-      url: `https://nakafa.com/${locale}/about`,
+      url: `https://nakafa.com${path}`,
       siteName: "Nakafa",
       locale,
       type: "website",
@@ -143,7 +142,6 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
   return (
     <>
       <BreadcrumbJsonLd breadcrumbItems={breadcrumbItems} />
-      <EducationalOrgJsonLd />
       <CollectionPageJsonLd
         description={t("description")}
         items={collectionItems}

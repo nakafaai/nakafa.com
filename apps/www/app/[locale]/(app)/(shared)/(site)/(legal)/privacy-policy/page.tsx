@@ -5,6 +5,7 @@ import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { use } from "react";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 
 export async function generateMetadata({
   params,
@@ -13,13 +14,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const locale = getLocaleOrThrow((await params).locale);
   const t = await getTranslations({ locale, namespace: "Legal" });
+  const path = `/${locale}/privacy-policy`;
 
   return {
     title: t("privacy-policy"),
     description: t("privacy-policy-description"),
-    alternates: {
-      canonical: `/${locale}/privacy-policy`,
-    },
+    alternates: createLocalizedAlternates(path),
   };
 }
 
