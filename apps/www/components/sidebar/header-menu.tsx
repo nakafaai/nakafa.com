@@ -18,7 +18,7 @@ export function HeaderMenu() {
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton asChild size="lg">
-          <NavigationLink href={currentUser ? "/" : "/about"} title="Nakafa">
+          <NavigationLink href={currentUser ? "/home" : "/"} title="Nakafa">
             <div className="relative aspect-square size-8">
               <Image
                 alt="Nakafa"

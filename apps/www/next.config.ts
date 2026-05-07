@@ -91,6 +91,18 @@ function createAppRewrites() {
  * Build the localized redirect list shared by all supported locales.
  */
 function createLocalizedRedirects() {
+  const rootRedirects = [
+    {
+      source: "/about",
+      destination: "/",
+      permanent: true,
+    },
+    {
+      source: "/:locale/about",
+      destination: "/:locale",
+      permanent: true,
+    },
+  ];
   const redirects = [
     {
       source: "/subject/junior-high-school/:path*",
@@ -119,21 +131,24 @@ function createLocalizedRedirects() {
     },
   ];
 
-  return redirects.flatMap(({ source, destination, permanent }) => {
-    const isExternal = destination.startsWith("http");
-    return [
-      {
-        source,
-        destination,
-        permanent,
-      },
-      {
-        source: `/:locale${source}`,
-        destination: isExternal ? destination : `/:locale${destination}`,
-        permanent,
-      },
-    ];
-  });
+  return [
+    ...rootRedirects,
+    ...redirects.flatMap(({ source, destination, permanent }) => {
+      const isExternal = destination.startsWith("http");
+      return [
+        {
+          source,
+          destination,
+          permanent,
+        },
+        {
+          source: `/:locale${source}`,
+          destination: isExternal ? destination : `/:locale${destination}`,
+          permanent,
+        },
+      ];
+    }),
+  ];
 }
 
 /**

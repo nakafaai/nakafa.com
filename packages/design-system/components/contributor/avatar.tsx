@@ -38,7 +38,11 @@ export function Avatar({ contributor, size = "md" }: Props) {
       <Tooltip>
         <TooltipTrigger
           render={
-            <DrawerTrigger className="cursor-pointer">
+            <DrawerTrigger
+              aria-label={`${t("open")} ${contributor.name}`}
+              className="cursor-pointer"
+              title={contributor.name}
+            >
               <Character
                 className={cn(
                   "size-16 shadow-sm",

@@ -606,7 +606,7 @@
   },
   "AiSection": {
     "headline": "Dibuat untuk manusia. <mark>Dioptimalkan untuk AI.</mark>",
-    "description": "Belajar di HP tengah malam. Bimbingan AI. Integrasi ke LMS. Setiap materi di Nakafa langsung bisa diakses dalam format apa saja.",
+    "description": "Akses materi gratis berkualitas, latihan soal, artikel, dan tutor AI untuk sekolah, kuliah, dan persiapan ujian.",
     "feature-description": "Cukup tambahkan <mark>.md</mark> di URL halaman mana pun untuk mendapatkan markdown terstruktur. Bangun aplikasi, latih model, atau integrasikan dengan alatmu. Tanpa perlu API.",
     "students-title": "Untuk Siswa",
     "students-description": "Belajar bareng Nina. Akses GPT, Claude, Gemini, dan 15+ model AI. Semua dalam satu tempat.",
@@ -619,8 +619,8 @@
     "cta-schools": "Hubungi founder"
   },
   "About": {
-    "meta-title": "Fck Pendidikan Tertutup, Nikmati Pendidikan Terbuka Gratis",
-    "title": "Fck pendidikan tertutup, nikmati <mark>pendidikan terbuka gratis</mark>",
+    "meta-title": "Tolak Pendidikan Tertutup, Nikmati Pendidikan Terbuka Gratis",
+    "title": "Tolak pendidikan tertutup, nikmati <mark>pendidikan terbuka gratis</mark>",
     "description": "Misi inti kami adalah menyediakan konten edukasi berkualitas tinggi dan komprehensif di berbagai spektrum subjek dan topik.",
     "contribute": "Kontribusi",
     "start-learning": "Mulai belajar",

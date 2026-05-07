@@ -7,6 +7,7 @@ import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { contributors } from "@/lib/data/contributor";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 
 export async function generateMetadata({
   params,
@@ -15,13 +16,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const locale = getLocaleOrThrow((await params).locale);
   const t = await getTranslations({ locale, namespace: "Contributor" });
+  const path = `/${locale}/contributor`;
 
   return {
     title: t("title"),
     description: t("description"),
-    alternates: {
-      canonical: `/${locale}/contributor`,
-    },
+    alternates: createLocalizedAlternates(path),
   };
 }
 

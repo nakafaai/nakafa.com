@@ -1,8 +1,5 @@
-import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
-import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
-import type { ListItem } from "@repo/seo/types";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -19,31 +16,31 @@ import { Blocker } from "@/components/marketing/shared/blocker";
 import { exercisesMenu } from "@/components/sidebar/_data/exercises";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 
 export async function generateMetadata({
   params,
 }: {
-  params: PageProps<"/[locale]/about">["params"];
+  params: PageProps<"/[locale]">["params"];
 }): Promise<Metadata> {
   const locale = getLocaleOrThrow((await params).locale);
-  const t = await getTranslations({ locale, namespace: "About" });
+  const t = await getTranslations({ locale, namespace: "Metadata" });
+  const path = `/${locale}`;
 
   return {
     title: {
-      absolute: t("meta-title"),
+      absolute: t("title"),
     },
     description: t("description"),
-    alternates: {
-      canonical: `/${locale}/about`,
-    },
+    alternates: createLocalizedAlternates(path),
     twitter: {
       card: "summary_large_image",
-      title: t("meta-title"),
+      title: t("title"),
       description: t("description"),
       images: [
         {
           url: `/open-graph/${locale}-about.png`,
-          alt: t("meta-title"),
+          alt: t("title"),
           width: 1200,
           height: 630,
         },
@@ -52,16 +49,16 @@ export async function generateMetadata({
       site: "@nabilfatih_",
     },
     openGraph: {
-      title: t("meta-title"),
+      title: t("title"),
       description: t("description"),
-      url: `https://nakafa.com/${locale}/about`,
+      url: `https://nakafa.com${path}`,
       siteName: "Nakafa",
       locale,
       type: "website",
       images: [
         {
           url: `/open-graph/${locale}-about.png`,
-          alt: t("meta-title"),
+          alt: t("title"),
           width: 1200,
           height: 630,
         },
@@ -70,37 +67,20 @@ export async function generateMetadata({
   };
 }
 
-export default function Page(props: PageProps<"/[locale]/about">) {
-  const { params } = props;
-  const { locale: rawLocale } = use(params);
+export default function Page(props: PageProps<"/[locale]">) {
+  const { locale: rawLocale } = use(props.params);
   const locale = getLocaleOrThrow(rawLocale);
 
-  return <AboutPageContent locale={locale} />;
+  return <MarketingHomePageContent locale={locale} />;
 }
 
-async function AboutPageContent({ locale }: { locale: Locale }) {
-  const [t, tCommon, tSubject, tExercises, tFaq] = await Promise.all([
-    getTranslations({ locale, namespace: "About" }),
-    getTranslations({ locale, namespace: "Common" }),
+async function MarketingHomePageContent({ locale }: { locale: Locale }) {
+  const [tMetadata, tSubject, tExercises, tFaq] = await Promise.all([
+    getTranslations({ locale, namespace: "Metadata" }),
     getTranslations({ locale, namespace: "Subject" }),
     getTranslations({ locale, namespace: "Exercises" }),
     getTranslations({ locale, namespace: "Faq" }),
   ]);
-
-  const breadcrumbItems: ListItem[] = [
-    {
-      "@type": "ListItem",
-      position: 1,
-      name: tCommon("home"),
-      item: `https://nakafa.com/${locale}`,
-    },
-    {
-      "@type": "ListItem",
-      position: 2,
-      name: t("meta-title"),
-      item: `https://nakafa.com/${locale}/about`,
-    },
-  ];
 
   const collectionItems = [
     ...subjectMenu.flatMap((category) =>
@@ -140,15 +120,15 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
     { question: tFaq("q7"), answer: tFaq("a7") },
   ];
 
+  const url = `https://nakafa.com/${locale}`;
+
   return (
     <>
-      <BreadcrumbJsonLd breadcrumbItems={breadcrumbItems} />
-      <EducationalOrgJsonLd />
       <CollectionPageJsonLd
-        description={t("description")}
+        description={tMetadata("description")}
         items={collectionItems}
-        name={t("meta-title")}
-        url={`https://nakafa.com/${locale}/about`}
+        name={tMetadata("title")}
+        url={url}
       />
       <FAQPageJsonLd
         inLanguage={locale}
@@ -159,7 +139,7 @@ async function AboutPageContent({ locale }: { locale: Locale }) {
             text: item.answer,
           },
         }))}
-        url={`https://nakafa.com/${locale}/about`}
+        url={url}
       />
       <div className="relative grid">
         <Hero />

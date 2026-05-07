@@ -191,29 +191,83 @@ export default async function Page({
   const contentMetadata = ContentMetadataSchema.safeParse(
     content?.metadata
   ).data;
+  if (!contentMetadata) {
+    notFound();
+  }
+
+  const [tCommon, tSubject] = await Promise.all([
+    getTranslations("Common"),
+    getTranslations("Subject"),
+  ]);
+  const materialPath = getMaterialPath(category, grade, material);
+  const gradeLabel = tSubject(getGradeNonNumeric(grade) ?? "grade", { grade });
+  const publishedAt =
+    formatContentDateISO(contentMetadata.date) ?? contentMetadata.date;
+  const authorJsonLd = contentMetadata.authors.map((author) => ({
+    "@type": "Person" as const,
+    name: author.name,
+    url: `https://nakafa.com/${locale}/contributor`,
+  }));
 
   return (
-    <CachedSubjectShell
-      category={category}
-      footer={<DeferredComments key={`comments:${filePath}`} slug={filePath} />}
-      grade={grade}
-      locale={locale}
-      material={material}
-      slug={slug}
-      toolbar={
-        <DeferredAiSheetOpen
-          audio={{
-            locale,
-            slug: filePath,
-            contentType: "subject",
-          }}
-          contextTitle={contentMetadata?.title}
-          key={`audio:${filePath}`}
-        />
-      }
-    >
-      <Content />
-    </CachedSubjectShell>
+    <>
+      <BreadcrumbJsonLd
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: tCommon("subject"), path: "/subject" },
+          {
+            name: gradeLabel,
+            path: getGradePath(category, grade),
+          },
+          { name: tSubject(material), path: materialPath },
+          { name: contentMetadata.title, path: filePath },
+        ])}
+      />
+      <ArticleJsonLd
+        author={authorJsonLd}
+        datePublished={publishedAt}
+        description={
+          contentMetadata.description ?? contentMetadata.subject ?? ""
+        }
+        headline={contentMetadata.title}
+        image={getOgUrl(locale, filePath)}
+        url={`/${locale}${filePath}`}
+      />
+      <LearningResourceJsonLd
+        author={authorJsonLd}
+        datePublished={publishedAt}
+        description={
+          contentMetadata.description ?? contentMetadata.subject ?? ""
+        }
+        educationalLevel={gradeLabel}
+        name={contentMetadata.title}
+      />
+      <CachedSubjectShell
+        category={category}
+        filePath={filePath}
+        footer={
+          <DeferredComments key={`comments:${filePath}`} slug={filePath} />
+        }
+        grade={grade}
+        locale={locale}
+        material={material}
+        materialPath={materialPath}
+        slug={slug}
+        toolbar={
+          <DeferredAiSheetOpen
+            audio={{
+              locale,
+              slug: filePath,
+              contentType: "subject",
+            }}
+            contextTitle={contentMetadata.title}
+            key={`audio:${filePath}`}
+          />
+        }
+      >
+        <Content />
+      </CachedSubjectShell>
+    </>
   );
 }
 
@@ -281,6 +335,8 @@ async function CachedSubjectShell({
   grade,
   material,
   slug,
+  filePath,
+  materialPath,
   children,
   footer,
   toolbar,
@@ -290,6 +346,8 @@ async function CachedSubjectShell({
   grade: Grade;
   material: Material;
   slug: string[];
+  filePath: string;
+  materialPath: string;
   children: ReactNode;
   footer: ReactNode;
   toolbar: ReactNode;
@@ -298,20 +356,14 @@ async function CachedSubjectShell({
 
   cacheLife("max");
 
-  const [tCommon, tSubject] = await Promise.all([
-    getTranslations("Common"),
-    getTranslations("Subject"),
-  ]);
-
-  const FilePath = getSlugPath(category, grade, material, slug);
-  const materialPath = getMaterialPath(category, grade, material);
+  const tCommon = await getTranslations("Common");
 
   const [content, materials] = await Promise.all([
     Effect.runPromise(
       Effect.match(
         getContentMetadataContext({ locale, category, grade, material, slug }),
         {
-          onFailure: () => ({ content: null, FilePath }),
+          onFailure: () => ({ content: null, FilePath: filePath }),
           onSuccess: (data) => data,
         }
       )
@@ -344,87 +396,47 @@ async function CachedSubjectShell({
   }
 
   const { metadata, raw } = content.content;
-  const publishedAt = formatContentDateISO(metadata.date) ?? metadata.date;
 
-  const pagination = getMaterialsPagination(FilePath, materials);
+  const pagination = getMaterialsPagination(filePath, materials);
 
   const headings = getHeadings(raw);
 
   return (
-    <>
-      <BreadcrumbJsonLd
-        breadcrumbItems={createBreadcrumbItems(locale, [
-          { name: tCommon("home"), path: "" },
-          { name: tCommon("subject"), path: "/subject" },
-          {
-            name: tSubject(getGradeNonNumeric(grade) ?? "grade", { grade }),
-            path: getGradePath(category, grade),
-          },
-          { name: tSubject(material), path: materialPath },
-          { name: metadata.title, path: FilePath },
-        ])}
-      />
-      <ArticleJsonLd
-        author={metadata.authors.map((author: { name: string }) => ({
-          "@type": "Person",
-          name: author.name,
-          url: `https://nakafa.com/${locale}/contributor`,
-        }))}
-        datePublished={publishedAt}
-        description={metadata.description ?? metadata.subject ?? ""}
-        headline={metadata.title}
-        image={getOgUrl(locale, FilePath)}
-        url={`/${locale}${FilePath}`}
-      />
-      <LearningResourceJsonLd
-        author={metadata.authors.map((author: { name: string }) => ({
-          "@type": "Person",
-          name: author.name,
-          url: `https://nakafa.com/${locale}/contributor`,
-        }))}
-        datePublished={publishedAt}
-        description={metadata.description ?? metadata.subject ?? ""}
-        educationalLevel={tSubject(getGradeNonNumeric(grade) ?? "grade", {
-          grade,
-        })}
-        name={metadata.title}
-      />
-      <LayoutMaterial>
-        <LayoutMaterialContent>
-          <LayoutMaterialHeader
-            content={raw}
-            icon={getMaterialIcon(material)}
-            link={{
-              href: `${materialPath}#${slugify(metadata.subject ?? "")}`,
-              label: metadata.subject ?? "",
-            }}
-            slug={`/${locale}${FilePath}`}
-            title={metadata.title}
-          />
-          <LayoutMaterialMain>
-            {headings.length === 0 && <ComingSoon />}
-            {headings.length > 0 ? children : null}
-          </LayoutMaterialMain>
-          <LayoutMaterialPagination pagination={pagination} />
-          <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
-          {toolbar}
-        </LayoutMaterialContent>
-        <LayoutMaterialToc
-          chapters={{
-            label: tCommon("on-this-page"),
-            data: headings,
+    <LayoutMaterial>
+      <LayoutMaterialContent>
+        <LayoutMaterialHeader
+          content={raw}
+          icon={getMaterialIcon(material)}
+          link={{
+            href: `${materialPath}#${slugify(metadata.subject ?? "")}`,
+            label: metadata.subject ?? "",
           }}
-          githubUrl={getGithubUrl({
-            path: `/packages/contents${FilePath}`,
-          })}
-          header={{
-            title: metadata.title,
-            href: FilePath,
-            description: metadata.description ?? metadata.subject,
-          }}
-          showComments
+          slug={`/${locale}${filePath}`}
+          title={metadata.title}
         />
-      </LayoutMaterial>
-    </>
+        <LayoutMaterialMain>
+          {headings.length === 0 && <ComingSoon />}
+          {headings.length > 0 ? children : null}
+        </LayoutMaterialMain>
+        <LayoutMaterialPagination pagination={pagination} />
+        <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
+        {toolbar}
+      </LayoutMaterialContent>
+      <LayoutMaterialToc
+        chapters={{
+          label: tCommon("on-this-page"),
+          data: headings,
+        }}
+        githubUrl={getGithubUrl({
+          path: `/packages/contents${filePath}`,
+        })}
+        header={{
+          title: metadata.title,
+          href: filePath,
+          description: metadata.description ?? metadata.subject,
+        }}
+        showComments
+      />
+    </LayoutMaterial>
   );
 }

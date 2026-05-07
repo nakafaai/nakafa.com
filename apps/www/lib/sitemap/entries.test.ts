@@ -35,7 +35,6 @@ vi.mock("@/lib/sitemap/routes", () => ({
     "/contributor",
     "/quran",
     "/subject",
-    "/about",
     "/terms-of-service",
     "/privacy-policy",
     "/security-policy",
@@ -110,13 +109,15 @@ describe("sitemap entries", () => {
 
   it("assigns SEO settings for known route families", async () => {
     await expect(getEntries("/")).resolves.toContainEqual(
-      expect.objectContaining({ changeFrequency: "monthly", priority: 1 })
+      expect.objectContaining({
+        changeFrequency: "monthly",
+        lastModified: new Date("2025-01-01"),
+        priority: 1,
+        url: "https://nakafa.com/en",
+      })
     );
     await expect(getEntries("/quran/1")).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "yearly", priority: 0.6 })
-    );
-    await expect(getEntries("/about")).resolves.toContainEqual(
-      expect.objectContaining({ changeFrequency: "weekly", priority: 0.8 })
     );
     await expect(getEntries("/contributor")).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "weekly", priority: 0.8 })
@@ -214,6 +215,9 @@ describe("sitemap entries", () => {
 
     expect(new Set(urls).size).toBe(urls.length);
     expect(urls).toContain("https://nakafa.com/en");
+    expect(urls).toContain("https://nakafa.com/id");
+    expect(urls).not.toContain("https://nakafa.com/en/about");
+    expect(urls).not.toContain("https://nakafa.com/id/about");
     expect(urls).toContain("https://nakafa.com/id/subject/high-school/10");
   });
 });

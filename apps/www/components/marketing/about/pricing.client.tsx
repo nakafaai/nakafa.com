@@ -8,7 +8,7 @@ import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useAction } from "convex/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useTransition } from "react";
 import { getColorFront } from "@/components/marketing/about/utils";
@@ -37,7 +37,9 @@ export function PricingDithering({ ...props }: DitheringProps) {
 }
 
 export function ProButton() {
+  const locale = useLocale();
   const t = useTranslations("Pricing");
+  const pricingCallbackURL = `/${locale}/#pricing`;
 
   const [isPending, startTransition] = useTransition();
 
@@ -59,7 +61,7 @@ export function ProButton() {
       if (!currentUser) {
         await authClient.signIn.social({
           provider: "google",
-          callbackURL: "/about",
+          callbackURL: pricingCallbackURL,
         });
         return;
       }

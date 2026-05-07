@@ -88,6 +88,7 @@ describe("sitemap route discovery", () => {
     );
     expect(routes).not.toContain("/unknown");
     expect(routes).toContain("/");
+    expect(routes).not.toContain("/about");
     expect(routes).toContain("/subject");
     expect(routes).toContain("/quran/114");
     expect(routes).toContain("/articles/politics");
@@ -165,6 +166,7 @@ describe("sitemap route discovery", () => {
     const routes = getSitemapRoutes();
 
     expect(routes).toContain("/");
+    expect(routes).not.toContain("/about");
     expect(routes).toContain("/subject");
     expect(routes).toContain("/quran/114");
     expect(routes).not.toContain("/articles/not-a-category");
@@ -203,6 +205,7 @@ describe("sitemap route discovery", () => {
     const routes = getSitemapRoutes();
 
     expect(routes).toContain("/");
+    expect(routes).not.toContain("/about");
     expect(routes).toContain("/subject");
     expect(routes).toContain("/articles/politics");
     expect(routes).not.toContain("/subject/high-school/10/biology");

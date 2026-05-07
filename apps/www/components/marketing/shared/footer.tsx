@@ -93,7 +93,7 @@ export function Footer() {
               </span>
               <ul className="flex flex-col gap-2">
                 <li>
-                  <LinkItem href="/about" label={t("about-us")} />
+                  <LinkItem href="/" label={t("about-us")} />
                 </li>
                 <li>
                   <LinkItem href="/events" label={t("events")} />
@@ -138,7 +138,7 @@ export function Footer() {
 
       <NavigationLink
         className="mx-auto flex w-full max-w-7xl px-6 py-16 transition-colors ease-out hover:text-primary"
-        href="/?from=/about"
+        href="/home"
         rel="noopener noreferrer"
         target="_blank"
       >

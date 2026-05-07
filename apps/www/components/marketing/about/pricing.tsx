@@ -95,7 +95,7 @@ export function Pricing() {
                   nativeButton={false}
                   render={
                     <NavigationLink
-                      href="/?from=/about"
+                      href="/home"
                       rel="noopener noreferrer"
                       target="_blank"
                     >

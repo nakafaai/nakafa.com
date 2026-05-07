@@ -2,12 +2,12 @@ packages:
   - apps/*
   - packages/*
 
-onlyBuiltDependencies:
-  - '@parcel/watcher'
-  - '@swc/core'
-  - core-js
-  - core-js-pure
-  - esbuild
-  - msw
-  - protobufjs
-  - sharp
+allowBuilds:
+  '@parcel/watcher': true
+  '@swc/core': true
+  core-js: true
+  core-js-pure: true
+  esbuild: true
+  msw: true
+  protobufjs: true
+  sharp: true

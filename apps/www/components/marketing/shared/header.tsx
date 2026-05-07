@@ -15,24 +15,20 @@ export function Header() {
         <nav className="hidden items-center gap-1 md:flex">
           <Button
             nativeButton={false}
-            render={<NavigationLink href="/about">{t("about")}</NavigationLink>}
+            render={<NavigationLink href="/">{t("about")}</NavigationLink>}
             variant="ghost"
           />
           <Button
             nativeButton={false}
             render={
-              <NavigationLink href="/about#features">
-                {t("features")}
-              </NavigationLink>
+              <NavigationLink href="/#features">{t("features")}</NavigationLink>
             }
             variant="ghost"
           />
           <Button
             nativeButton={false}
             render={
-              <NavigationLink href="/about#pricing">
-                {t("pricing")}
-              </NavigationLink>
+              <NavigationLink href="/#pricing">{t("pricing")}</NavigationLink>
             }
             variant="ghost"
           />

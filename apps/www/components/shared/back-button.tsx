@@ -11,10 +11,7 @@ interface BackButtonProps extends ComponentProps<typeof Button> {
   defaultHref?: string;
 }
 
-export function BackButton({
-  defaultHref = "/about",
-  ...props
-}: BackButtonProps) {
+export function BackButton({ defaultHref = "/", ...props }: BackButtonProps) {
   const t = useTranslations("Common");
   const router = useRouter();
 
@@ -26,7 +23,7 @@ export function BackButton({
       typeof window !== "undefined" &&
       (window.history.length <= 2 || document.referrer === "")
     ) {
-      // Navigate to about page instead of going back to avoid redirect loop
+      // Navigate to the public homepage instead of going back to avoid redirect loops.
       router.push(defaultHref);
     } else {
       router.back();

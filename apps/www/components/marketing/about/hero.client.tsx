@@ -15,7 +15,7 @@ export function HeroCta() {
     <Button
       nativeButton={false}
       render={
-        <NavigationLink href={user ? "/" : "/auth"}>
+        <NavigationLink href={user ? "/home" : "/auth"}>
           <HugeIcons icon={ArrowUpRight01Icon} />
           {t("start-learning")}
         </NavigationLink>

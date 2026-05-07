@@ -56,9 +56,9 @@ export async function getEntries(
       );
       lastModified = threeMonthsAgo;
     }
-  } else if (routeString.startsWith("/quran")) {
+  } else if (routeString === "/") {
     lastModified = new Date("2025-01-01");
-  } else if (routeString.startsWith("/about")) {
+  } else if (routeString.startsWith("/quran")) {
     lastModified = new Date("2025-01-01");
   } else if (routeString.startsWith("/contributor")) {
     lastModified = new Date("2025-01-01");

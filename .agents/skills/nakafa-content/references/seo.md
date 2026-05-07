@@ -9,6 +9,7 @@ Use this reference when work touches content metadata, search snippets, sitemap 
 - Do not keyword-stuff titles, descriptions, headings, alt text, or visible prose.
 - Do not create shallow pages only to target search queries. Prefer one complete, teachable page over many thin pages.
 - AI-assisted content is acceptable only after checking facts, math, sources, grammar, locale quality, and student usefulness.
+- Visible summaries matter because search snippets may come from page content instead of meta descriptions. Keep hero copy, intro copy, headings, and descriptions aligned.
 
 ## Metadata
 
@@ -17,6 +18,12 @@ Use this reference when work touches content metadata, search snippets, sitemap 
 - Keep `id` and `en` metadata natural for their locale. Translate intent, not word order.
 - Exercise question and answer files do not need per-file descriptions; route metadata may describe the exam, material, set, and question count.
 - Metadata must match the visible content. Do not promise examples, visuals, sources, or solutions that are not present.
+- Use stable brand names for site and organization structured data. Put page-specific value propositions in titles, descriptions, or alternate names.
+
+## Structured Data
+
+- Breadcrumb JSON-LD must describe the actual page hierarchy. Do not use homepage navigation, cards, or shortcut groups as breadcrumbs.
+- Structured data must be visible-truthful: every marked-up entity or hierarchy should be supported by the rendered page and route structure.
 
 ## Visuals and Media
 
@@ -35,6 +42,6 @@ Use this reference when work touches content metadata, search snippets, sitemap 
 
 - Route metadata: `apps/www/lib/utils/seo/`.
 - Page metadata and structured data: `apps/www/app/[locale]/(app)/(shared)/(main)/(learn)/`.
+- Site metadata and global JSON-LD: `apps/www/app/[locale]/layout.tsx`, `apps/www/app/manifest.ts`, and `packages/seo/json-ld/`.
 - Sitemap discovery: `apps/www/lib/sitemap/`.
-- JSON-LD components: `packages/seo/json-ld/`.
 - Content metadata schema and readers: `packages/contents/_types/content.ts` and `packages/contents/_lib/metadata.ts`.

@@ -173,27 +173,70 @@ export default async function Page({
   const contentMetadata = ContentMetadataSchema.safeParse(
     content?.metadata
   ).data;
+  if (!contentMetadata) {
+    notFound();
+  }
+
+  const [tCommon, tArticles] = await Promise.all([
+    getTranslations("Common"),
+    getTranslations("Articles"),
+  ]);
+  const publishedAt =
+    formatContentDateISO(contentMetadata.date) ?? contentMetadata.date;
+  const authorJsonLd = contentMetadata.authors.map((author) => ({
+    "@type": "Person" as const,
+    name: author.name,
+    url: `https://nakafa.com/${locale}/contributor`,
+  }));
 
   return (
-    <CachedArticleShell
-      category={category}
-      footer={<DeferredComments key={`comments:${filePath}`} slug={filePath} />}
-      locale={locale}
-      slug={slug}
-      toolbar={
-        <DeferredAiSheetOpen
-          audio={{
-            locale,
-            slug: filePath,
-            contentType: "article",
-          }}
-          contextTitle={contentMetadata?.title}
-          key={`audio:${filePath}`}
-        />
-      }
-    >
-      <Content />
-    </CachedArticleShell>
+    <>
+      <BreadcrumbJsonLd
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: tCommon("articles"), path: "/articles" },
+          { name: tArticles(category), path: `/articles/${category}` },
+          { name: contentMetadata.title, path: filePath },
+        ])}
+      />
+      <ArticleJsonLd
+        author={authorJsonLd}
+        datePublished={publishedAt}
+        description={contentMetadata.description ?? ""}
+        headline={contentMetadata.title}
+        image={getOgUrl(locale, filePath)}
+        url={`/${locale}${filePath}`}
+      />
+      <LearningResourceJsonLd
+        author={authorJsonLd}
+        datePublished={publishedAt}
+        description={contentMetadata.description ?? ""}
+        educationalLevel={tArticles(category)}
+        name={contentMetadata.title}
+      />
+      <CachedArticleShell
+        category={category}
+        filePath={filePath}
+        footer={
+          <DeferredComments key={`comments:${filePath}`} slug={filePath} />
+        }
+        locale={locale}
+        slug={slug}
+        toolbar={
+          <DeferredAiSheetOpen
+            audio={{
+              locale,
+              slug: filePath,
+              contentType: "article",
+            }}
+            contextTitle={contentMetadata.title}
+            key={`audio:${filePath}`}
+          />
+        }
+      >
+        <Content />
+      </CachedArticleShell>
+    </>
   );
 }
 
@@ -201,6 +244,7 @@ async function CachedArticleShell({
   locale,
   category,
   slug,
+  filePath,
   children,
   footer,
   toolbar,
@@ -208,6 +252,7 @@ async function CachedArticleShell({
   locale: Locale;
   category: ArticleCategory;
   slug: string;
+  filePath: string;
   children: ReactNode;
   footer: ReactNode;
   toolbar: ReactNode;
@@ -221,17 +266,15 @@ async function CachedArticleShell({
     getTranslations("Articles"),
   ]);
 
-  const FilePath = getSlugPath(category, slug);
-
   const [content, references] = await Promise.all([
     Effect.runPromise(
       Effect.match(fetchArticleMetadataContext({ locale, category, slug }), {
-        onFailure: () => ({ content: null, FilePath }),
+        onFailure: () => ({ content: null, FilePath: filePath }),
         onSuccess: (data) => data,
       })
     ),
     Effect.runPromise(
-      Effect.match(getArticleReferences(FilePath), {
+      Effect.match(getArticleReferences(filePath), {
         onFailure: () => [],
         onSuccess: (data) => data,
       })
@@ -255,82 +298,48 @@ async function CachedArticleShell({
   }
 
   const { metadata, raw } = content.content;
-  const publishedAt = formatContentDateISO(metadata.date) ?? metadata.date;
 
   const headings = getHeadings(raw);
 
   return (
-    <>
-      <BreadcrumbJsonLd
-        breadcrumbItems={createBreadcrumbItems(locale, [
-          { name: tCommon("home"), path: "" },
-          { name: tCommon("articles"), path: "/articles" },
-          { name: tArticles(category), path: `/articles/${category}` },
-          { name: metadata.title, path: FilePath },
-        ])}
-      />
-      <ArticleJsonLd
-        author={metadata.authors.map((author: { name: string }) => ({
-          "@type": "Person",
-          name: author.name,
-          url: `https://nakafa.com/${locale}/contributor`,
-        }))}
-        datePublished={publishedAt}
-        description={metadata.description ?? ""}
-        headline={metadata.title}
-        image={getOgUrl(locale, FilePath)}
-        url={`/${locale}${FilePath}`}
-      />
-      <LearningResourceJsonLd
-        author={metadata.authors.map((author: { name: string }) => ({
-          "@type": "Person",
-          name: author.name,
-          url: `https://nakafa.com/${locale}/contributor`,
-        }))}
-        datePublished={publishedAt}
-        description={metadata.description ?? ""}
-        educationalLevel={tArticles(category)}
-        name={metadata.title}
-      />
-      <LayoutMaterial>
-        <LayoutMaterialContent>
-          <LayoutMaterialHeader
-            content={raw}
-            description={metadata.description}
-            link={{
-              href: `/articles/${category}`,
-              label: tArticles(category),
-            }}
-            slug={`/${locale}${FilePath}`}
-            title={metadata.title}
-          />
-          <LayoutMaterialMain>
-            {headings.length === 0 && <ComingSoon />}
-            {headings.length > 0 ? children : null}
-          </LayoutMaterialMain>
-          <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
-          {toolbar}
-        </LayoutMaterialContent>
-        <LayoutMaterialToc
-          chapters={{
-            label: tCommon("on-this-page"),
-            data: headings,
+    <LayoutMaterial>
+      <LayoutMaterialContent>
+        <LayoutMaterialHeader
+          content={raw}
+          description={metadata.description}
+          link={{
+            href: `/articles/${category}`,
+            label: tArticles(category),
           }}
-          githubUrl={getGithubUrl({
-            path: `/packages/contents${FilePath}`,
-          })}
-          header={{
-            title: metadata.title,
-            href: FilePath,
-            description: metadata.description,
-          }}
-          references={{
-            title: metadata.title,
-            data: references,
-          }}
-          showComments
+          slug={`/${locale}${filePath}`}
+          title={metadata.title}
         />
-      </LayoutMaterial>
-    </>
+        <LayoutMaterialMain>
+          {headings.length === 0 && <ComingSoon />}
+          {headings.length > 0 ? children : null}
+        </LayoutMaterialMain>
+        <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
+        {toolbar}
+      </LayoutMaterialContent>
+      <LayoutMaterialToc
+        chapters={{
+          label: tCommon("on-this-page"),
+          data: headings,
+        }}
+        githubUrl={getGithubUrl({
+          path: `/packages/contents${filePath}`,
+        })}
+        header={{
+          title: metadata.title,
+          href: filePath,
+          description: metadata.description,
+        }}
+        references={{
+          title: metadata.title,
+          data: references,
+        }}
+        showComments
+      />
+    </LayoutMaterial>
   );
 }

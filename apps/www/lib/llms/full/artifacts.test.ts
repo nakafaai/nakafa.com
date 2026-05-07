@@ -97,11 +97,11 @@ const localizedEntries = [
   },
   {
     description: "Site description",
-    href: "https://nakafa.com/en/about",
-    route: "/about",
+    href: "https://nakafa.com/en",
+    route: "/",
     section: "site",
-    segments: ["site", "about"],
-    title: "About",
+    segments: ["site"],
+    title: "Home",
   },
   {
     description: "Missing description",
@@ -230,11 +230,11 @@ describe("llms full document", () => {
     mockGetLocalizedLlmsEntries.mockResolvedValue([
       {
         description: "Site description",
-        href: "https://nakafa.com/en/about",
-        route: "/about",
+        href: "https://nakafa.com/en",
+        route: "/",
         section: "site",
-        segments: ["site", "about"],
-        title: "About",
+        segments: ["site"],
+        title: "Home",
       },
     ]);
 

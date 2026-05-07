@@ -21,7 +21,7 @@
     "effect": "^3.21.2",
     "express": "^5.2.1",
     "mcp-handler": "1.1.0",
-    "next": "16.2.5",
+    "next": "16.2.6",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "redis": "^5.12.1",
@@ -30,7 +30,7 @@
   "devDependencies": {
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.6.0",
+    "@types/node": "25.6.1",
     "@types/react": "19.2.14",
     "@vitest/coverage-istanbul": "^4.1.5",
     "@vitest/ui": "^4.1.5",

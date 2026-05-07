@@ -6,6 +6,7 @@ import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
 import { BackButton } from "@/components/shared/back-button";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 
 export async function generateMetadata({
   params,
@@ -14,13 +15,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const locale = getLocaleOrThrow((await params).locale);
   const t = await getTranslations({ locale, namespace: "Utils" });
+  const path = `/${locale}/search`;
 
   return {
     title: t("search-title"),
     description: t("search-description"),
-    alternates: {
-      canonical: `/${locale}/search`,
-    },
+    alternates: createLocalizedAlternates(path),
   };
 }
 
