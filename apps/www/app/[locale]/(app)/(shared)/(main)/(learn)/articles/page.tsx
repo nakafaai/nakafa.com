@@ -1,8 +1,91 @@
-import { notFound } from "next/navigation";
+import { BookOpen02Icon } from "@hugeicons/core-free-icons";
+import {
+  getCategoryIcon,
+  getCategoryPath,
+} from "@repo/contents/_lib/articles/category";
+import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
+import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import type { Metadata } from "next";
+import type { Locale } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { use } from "react";
+import { HeaderContent } from "@/components/shared/header-content";
+import { LayoutContent } from "@/components/shared/layout-content";
+import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
-export default function Page() {
-  // Return 404 for empty articles index page
-  // This prevents soft 404s and tells Google this page doesn't exist
-  // Source: https://developers.google.com/search/docs/crawling-indexing/soft-404s
-  notFound();
+export async function generateMetadata({
+  params,
+}: {
+  params: PageProps<"/[locale]/articles">["params"];
+}): Promise<Metadata> {
+  const locale = getLocaleOrThrow((await params).locale);
+  const [tCommon, tArticles] = await Promise.all([
+    getTranslations({ locale, namespace: "Common" }),
+    getTranslations({ locale, namespace: "Articles" }),
+  ]);
+
+  const path = `/${locale}/articles`;
+  const title = tCommon("articles");
+  const description = tArticles("description");
+  const socialMetadata = getSocialMetadata({
+    title,
+    description,
+    locale,
+    path,
+    image: getOgUrl(locale, "/articles"),
+  });
+
+  return {
+    title,
+    description,
+    alternates: createLocalizedAlternates(path),
+    ...socialMetadata,
+  };
+}
+
+export default function Page(props: PageProps<"/[locale]/articles">) {
+  const { locale: rawLocale } = use(props.params);
+  const locale = getLocaleOrThrow(rawLocale);
+
+  return <PageContent locale={locale} />;
+}
+
+async function PageContent({ locale }: { locale: Locale }) {
+  const categories = ArticleCategorySchema.options;
+  const [tCommon, tArticles] = await Promise.all([
+    getTranslations({ locale, namespace: "Common" }),
+    getTranslations({ locale, namespace: "Articles" }),
+  ]);
+
+  return (
+    <>
+      <BreadcrumbJsonLd
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: tCommon("articles"), path: "/articles" },
+        ])}
+      />
+      <HeaderContent
+        description={tArticles("description")}
+        icon={BookOpen02Icon}
+        title={tCommon("articles")}
+      />
+      <LayoutContent>
+        <SubjectList>
+          {categories.map((category) => (
+            <SubjectItem
+              href={getCategoryPath(category)}
+              icon={getCategoryIcon(category)}
+              key={category}
+              label={tArticles(category)}
+            />
+          ))}
+        </SubjectList>
+      </LayoutContent>
+    </>
+  );
 }

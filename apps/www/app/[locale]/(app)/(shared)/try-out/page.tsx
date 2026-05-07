@@ -6,6 +6,9 @@ import { getTranslations } from "next-intl/server";
 import { use } from "react";
 import { TryoutHubPage } from "@/components/tryout/hub-page";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
 export async function generateMetadata({
   params,
@@ -22,21 +25,19 @@ export async function generateMetadata({
   const path = `/${locale}/try-out`;
   const title = tCommon("try-out");
   const description = tTryouts("description");
+  const socialMetadata = getSocialMetadata({
+    title,
+    description,
+    locale,
+    path,
+    image: getOgUrl(locale, "/try-out"),
+  });
 
   return {
     title,
     description,
-    alternates: {
-      canonical: path,
-    },
-    openGraph: {
-      title,
-      description,
-      url: path,
-      siteName: "Nakafa",
-      locale,
-      type: "website",
-    },
+    alternates: createLocalizedAlternates(path),
+    ...socialMetadata,
   };
 }
 
@@ -56,20 +57,10 @@ function PageBreadcrumb({ locale }: { locale: Locale }) {
 
   return (
     <BreadcrumbJsonLd
-      breadcrumbItems={[
-        {
-          "@type": "ListItem",
-          position: 1,
-          name: tCommon("home"),
-          item: `https://nakafa.com/${locale}`,
-        },
-        {
-          "@type": "ListItem",
-          position: 2,
-          name: tCommon("try-out"),
-          item: `https://nakafa.com/${locale}/try-out`,
-        },
-      ]}
+      breadcrumbItems={createBreadcrumbItems(locale, [
+        { name: tCommon("home"), path: "" },
+        { name: tCommon("try-out"), path: "/try-out" },
+      ])}
     />
   );
 }

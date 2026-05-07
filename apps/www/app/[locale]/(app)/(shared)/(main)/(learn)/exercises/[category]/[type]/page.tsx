@@ -23,6 +23,8 @@ import { SubjectItem, SubjectList } from "@/components/shared/subject-list";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getGithubUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
+import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { createSEODescription } from "@/lib/utils/seo/descriptions";
 import { createSEOTitle } from "@/lib/utils/seo/titles";
 import { getStaticParams } from "@/lib/utils/system";
@@ -85,9 +87,7 @@ export async function generateMetadata({
       absolute: title,
     },
     description,
-    alternates: {
-      canonical: path,
-    },
+    alternates: createLocalizedAlternates(path),
     ...socialMetadata,
   };
 }
@@ -131,18 +131,18 @@ async function PageContent({
   const FilePath = getExercisesPath(category, type);
 
   const subjects = getSubjects(category, type);
-  const t = await getTranslations({ locale, namespace: "Exercises" });
+  const [t, tCommon] = await Promise.all([
+    getTranslations({ locale, namespace: "Exercises" }),
+    getTranslations({ locale, namespace: "Common" }),
+  ]);
 
   return (
     <>
       <BreadcrumbJsonLd
-        breadcrumbItems={subjects.map((subject, index) => ({
-          "@type": "ListItem",
-          "@id": `https://nakafa.com/${locale}${subject.href}`,
-          position: index + 1,
-          name: t(subject.label),
-          item: `https://nakafa.com/${locale}${subject.href}`,
-        }))}
+        breadcrumbItems={createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: t(type), path: FilePath },
+        ])}
       />
       <HeaderContent
         description={t("type-description")}

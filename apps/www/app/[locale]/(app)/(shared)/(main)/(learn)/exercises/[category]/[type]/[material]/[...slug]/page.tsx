@@ -174,6 +174,7 @@ export default async function Page({
           category={category}
           data={data}
           locale={locale}
+          material={material}
           type={type}
         />
       );
@@ -183,12 +184,14 @@ export default async function Page({
           category={category}
           data={data}
           locale={locale}
+          material={material}
           type={type}
         />
       );
     case "year-group":
       return (
         <YearGroupPage
+          category={category}
           data={data}
           locale={locale}
           material={material}

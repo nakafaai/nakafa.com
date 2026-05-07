@@ -356,7 +356,6 @@ async function CachedSubjectShell({
         breadcrumbItems={createBreadcrumbItems(locale, [
           { name: tCommon("home"), path: "" },
           { name: tCommon("subject"), path: "/subject" },
-          { name: tSubject(category), path: `/subject/${category}` },
           {
             name: tSubject(getGradeNonNumeric(grade) ?? "grade", { grade }),
             path: getGradePath(category, grade),
