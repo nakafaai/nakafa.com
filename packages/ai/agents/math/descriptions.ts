@@ -1,8 +1,7 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
 
-export function nakafaCalculator() {
-  return createPrompt({
-    taskContext: `
+export const nakafaCalculator = createPrompt({
+  taskContext: `
       # calculator Tool
 
       Use this tool to calculate the user's question or our internal calculations using calculator.
@@ -11,7 +10,7 @@ export function nakafaCalculator() {
       If user query is a story question or complex calculation, break down the question into smaller parts and calculate each part using this tool.
     `,
 
-    toolUsageGuidelines: `
+  toolUsageGuidelines: `
       ## When to use this tool
 
       1. The user asks to calculate something
@@ -32,7 +31,7 @@ export function nakafaCalculator() {
       - 100% correct result and to be sure that the calculation is correct
     `,
 
-    detailedTaskInstructions: `
+  detailedTaskInstructions: `
       ## Best Practices
 
       - EVERY calculation should be done using this tool, even though it is simple arithmetic like 2+2
@@ -40,7 +39,7 @@ export function nakafaCalculator() {
       - Explain every calculation step by step to the user
     `,
 
-    examples: `
+  examples: `
       ## Examples of When to Use This Tool
 
       <example>
@@ -50,12 +49,11 @@ export function nakafaCalculator() {
       </example>
     `,
 
-    finalRequest: `
+  finalRequest: `
       ## Summary
 
       Use calculator tool when the user asks to calculate something or you want to calculate something using our internal calculations.
       Treat the result of the calculation as a source of information to tell the users the result of the calculation.
       Break down story questions or complex calculations into smaller parts and calculate each part using this tool.
     `,
-  });
-}
+});

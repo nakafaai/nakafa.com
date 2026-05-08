@@ -4,7 +4,7 @@ import {
   News01Icon,
   Sad02Icon,
 } from "@hugeicons/core-free-icons";
-import type { DataPart } from "@repo/ai/schema/data-parts";
+import type { DataPart } from "@repo/ai/schema/data";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";

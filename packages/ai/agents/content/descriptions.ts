@@ -1,8 +1,7 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
 
-export function nakafaArticles() {
-  return createPrompt({
-    taskContext: `
+export const nakafaArticles = createPrompt({
+  taskContext: `
       # getArticles Tool
 
       Use this tool to get list of articles from Nakafa Platform. All articles created by Nakafa Team based on scientific research.
@@ -11,7 +10,7 @@ export function nakafaArticles() {
       Each element is unique and can be used for getContent tool by using the locale and slug for getting the content.
     `,
 
-    toolUsageGuidelines: `
+  toolUsageGuidelines: `
       ## When to use this tool
 
       1. You are in a page where the slug contains \`articles\`
@@ -33,7 +32,7 @@ export function nakafaArticles() {
       - Tell helpful information about the articles to the user
     `,
 
-    detailedTaskInstructions: `
+  detailedTaskInstructions: `
       ## Best Practices
 
       - Get the list of articles from Nakafa Platform before using getContent tool or when user asks to find articles from Nakafa Platform
@@ -42,7 +41,7 @@ export function nakafaArticles() {
       - If list returned is empty, tell the users that Nakafa does not have any articles that match the user's question
     `,
 
-    examples: `
+  examples: `
       ## Examples of When to Use This Tool
 
       <example>
@@ -52,25 +51,23 @@ export function nakafaArticles() {
       </example>
     `,
 
-    finalRequest: `
+  finalRequest: `
       ## Summary
 
       Use getArticles tool when you are in a page where the slug contains \`articles\` and the user asks to find articles from Nakafa Platform.
       Treat the articles as a source of information to use the getContent tool for the user's question.
     `,
-  });
-}
+});
 
-export function nakafaContent() {
-  return createPrompt({
-    taskContext: `
+export const nakafaContent = createPrompt({
+  taskContext: `
       # getContent Tool
 
       Use this tool to get the full content from Nakafa Platform. All content created by Nakafa Team.
       These content provides a string of the content.
     `,
 
-    toolUsageGuidelines: `
+  toolUsageGuidelines: `
       ## When to use this tool
 
       1. You are in a verified page or already get the verified slug from getSubjects or getArticles tool
@@ -90,7 +87,7 @@ export function nakafaContent() {
       - Explain the content to the user in a way that is easy to understand
     `,
 
-    detailedTaskInstructions: `
+  detailedTaskInstructions: `
       ## Best Practices
 
       - Get the full content from Nakafa Platform ONLY when you are in a verified page or already get the verified slug from getSubjects or getArticles tool
@@ -98,7 +95,7 @@ export function nakafaContent() {
       - If the content is not related to the user's question, tell the users that Nakafa does not have any content that match the user's question
     `,
 
-    examples: `
+  examples: `
       ## Examples of When to Use This Tool
 
       <example>
@@ -108,18 +105,16 @@ export function nakafaContent() {
       </example>
     `,
 
-    finalRequest: `
+  finalRequest: `
       ## Summary
 
       Use getContent tool when you are in a verified page or already get the verified slug from getSubjects or getArticles tool and the user asks something related to the current page information.
       Treat the content as a source of information to explain the content to the user.
     `,
-  });
-}
+});
 
-export function nakafaSubjects() {
-  return createPrompt({
-    taskContext: `
+export const nakafaSubjects = createPrompt({
+  taskContext: `
       # getSubjects Tool
 
       Use this tool to get list of subjects from Nakafa Platform. All subjects are about K-12 to university level created by Nakafa Team.
@@ -127,7 +122,7 @@ export function nakafaSubjects() {
       Each element is unique and can be used for getContent tool by using the locale and slug for getting the content.
     `,
 
-    toolUsageGuidelines: `
+  toolUsageGuidelines: `
       ## When to use this tool
 
       1. You are in a page where the slug contains \`subject\`
@@ -149,7 +144,7 @@ export function nakafaSubjects() {
       - Tell helpful information about the subjects to the user
     `,
 
-    detailedTaskInstructions: `
+  detailedTaskInstructions: `
       ## Best Practices
 
       - Get the list of subjects from Nakafa Platform before using getContent tool or when user asks to find subjects from Nakafa Platform
@@ -158,7 +153,7 @@ export function nakafaSubjects() {
       - If list returned is empty, tell the users that Nakafa does not have any subjects that match the user's question
     `,
 
-    examples: `
+  examples: `
       ## Examples of When to Use This Tool
 
       <example>
@@ -168,11 +163,10 @@ export function nakafaSubjects() {
       </example>
     `,
 
-    finalRequest: `
+  finalRequest: `
       ## Summary
 
       Use getSubjects tool when you are in a page where the slug contains \`subject\` and the user asks to find subjects from Nakafa Platform.
       Treat the subjects as a source of information to use the getContent tool for the user's question.
     `,
-  });
-}
+});

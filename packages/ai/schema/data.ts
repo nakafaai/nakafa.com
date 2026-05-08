@@ -1,11 +1,11 @@
 import {
   getArticlesInputSchema,
   getSubjectsInputSchema,
-} from "@repo/ai/agents/content-access/schema";
+} from "@repo/ai/agents/content/schema";
 import * as z from "zod";
 
 /**
- * Schema for content items (articles or subjects)
+ * Schema for content items used by content-list data parts.
  */
 export const contentsSchema = z.object({
   title: z.string(),
@@ -15,7 +15,7 @@ export const contentsSchema = z.object({
 });
 
 /**
- * Schema for data parts used in UI messages
+ * Schema for UI data parts written by Nina agents.
  */
 export const dataPartSchema = z.object({
   suggestions: z.object({

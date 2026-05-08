@@ -1,5 +1,4 @@
 import type { ModelId } from "@repo/ai/config/models";
-import type { AccumulatedTokenUsage } from "@repo/ai/lib/usage";
 import type { ToolName } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
@@ -7,6 +6,7 @@ import type { UserRole } from "@repo/backend/convex/users/schema";
 import type { LanguageModelUsage, UIMessageStreamWriter } from "ai";
 
 export interface AgentContext {
+  needsPageFetch: boolean;
   slug: string;
   url: string;
   userRole?: UserRole;
@@ -35,7 +35,6 @@ export interface TaskAgentParams extends BaseAgentParams {
  */
 export interface UsageAccumulator {
   addUsage: (component: ToolName, usage: LanguageModelUsage) => void;
-  getTotal: () => AccumulatedTokenUsage;
 }
 
 /**
@@ -48,6 +47,6 @@ export interface OrchestratorToolParams extends BaseAgentParams {
 /**
  * Agent parameter exports.
  */
-export type ContentAccessAgentParams = TaskAgentParams;
+export type ContentAgentParams = TaskAgentParams;
 export type MathAgentParams = TaskAgentParams;
 export type ResearchAgentParams = TaskAgentParams;

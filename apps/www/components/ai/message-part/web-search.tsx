@@ -1,7 +1,7 @@
 "use client";
 
 import { Sad02Icon, Search01Icon } from "@hugeicons/core-free-icons";
-import type { DataPart } from "@repo/ai/schema/data-parts";
+import type { DataPart } from "@repo/ai/schema/data";
 import {
   Source,
   SourceContent,

@@ -57,6 +57,7 @@ describe("tryoutAccess/mutations/redeem", () => {
 
   it("redeems access-pass access using the configured grant duration", async () => {
     const t = createTryoutTestConvex();
+    const grantDurationMs = 7 * 24 * 60 * 60 * 1000;
     const identity = await t.mutation(async (ctx) => {
       const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
@@ -87,10 +88,10 @@ describe("tryoutAccess/mutations/redeem", () => {
 
       return {
         ...identity,
-        earliestEndsAt: currentTime + 7 * 24 * 60 * 60 * 1000,
       };
     });
 
+    const redeemStartedAt = Date.now();
     const result = await t
       .withIdentity({
         subject: identity.authUserId,
@@ -99,10 +100,15 @@ describe("tryoutAccess/mutations/redeem", () => {
       .mutation(api.tryoutAccess.mutations.redeem.redeemEventAccess, {
         code: "redeem-access-pass",
       });
+    const redeemFinishedAt = Date.now();
 
     expect(result.kind).toBe("active");
-    expect(result.endsAt).toBeGreaterThanOrEqual(identity.earliestEndsAt);
-    expect(result.endsAt).toBeLessThan(identity.earliestEndsAt + 5000);
+    expect(result.endsAt).toBeGreaterThanOrEqual(
+      redeemStartedAt + grantDurationMs
+    );
+    expect(result.endsAt).toBeLessThanOrEqual(
+      redeemFinishedAt + grantDurationMs
+    );
   });
 
   it("returns already-active when the current user already has an active grant", async () => {

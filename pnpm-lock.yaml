@@ -492,6 +492,9 @@ importers:
       dedent:
         specifier: ^1.7.2
         version: 1.7.2(babel-plugin-macros@3.1.0)
+      effect:
+        specifier: ^3.21.2
+        version: 3.21.2
       gpt-tokenizer:
         specifier: ^3.4.0
         version: 3.4.0
@@ -520,6 +523,12 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.14)
+      '@vitest/coverage-istanbul':
+        specifier: ^4.1.5
+        version: 4.1.5(vitest@4.1.5)
+      vitest:
+        specifier: ^4.1.5
+        version: 4.1.5(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.0)(@types/node@25.6.1)(@vitest/coverage-istanbul@4.1.5)(@vitest/ui@4.1.5)(jsdom@29.1.1(@noble/hashes@2.0.1))(msw@2.12.7(@types/node@25.6.1)(typescript@6.0.3))(vite@8.0.11(@types/node@25.6.1)(esbuild@0.28.0)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.4))
 
   packages/analytics:
     dependencies:

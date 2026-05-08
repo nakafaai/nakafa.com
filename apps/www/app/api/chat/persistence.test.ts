@@ -34,7 +34,7 @@ const message = {
 } satisfies MyUIMessage;
 
 /** Returns one typed chat ID through the public persistence path. */
-async function createTypedChatId() {
+async function savedChatId() {
   mocks.fetchMutation.mockResolvedValueOnce({ chatId: "chat_existing" });
 
   const chatId = await saveOrCreateChat({
@@ -88,7 +88,7 @@ describe("app/api/chat/persistence", () => {
   });
 
   it("passes the selected model when saving a message to an existing chat", async () => {
-    const chatId = await createTypedChatId();
+    const chatId = await savedChatId();
     mocks.fetchQuery.mockResolvedValue(null);
 
     const result = await saveOrCreateChat({
@@ -115,7 +115,7 @@ describe("app/api/chat/persistence", () => {
   });
 
   it("deletes an existing message rewrite batch before saving the replacement", async () => {
-    const chatId = await createTypedChatId();
+    const chatId = await savedChatId();
     mocks.fetchQuery.mockResolvedValue({ creationTime: 123 });
     mocks.fetchMutation
       .mockResolvedValueOnce({ hasMore: true })
@@ -161,7 +161,7 @@ describe("app/api/chat/persistence", () => {
   });
 
   it("loads paginated messages until the page stream is done", async () => {
-    const chatId = await createTypedChatId();
+    const chatId = await savedChatId();
     const newerMessage = { ...message, id: "newer" };
     const olderMessage = { ...message, id: "older" };
     mocks.fetchQuery
@@ -206,7 +206,7 @@ describe("app/api/chat/persistence", () => {
   });
 
   it("stops loading when compression trims the retained transcript", async () => {
-    const chatId = await createTypedChatId();
+    const chatId = await savedChatId();
     mocks.fetchQuery.mockResolvedValue({
       continueCursor: "cursor-1",
       isDone: false,

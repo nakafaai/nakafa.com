@@ -4,6 +4,9 @@ import { routing } from "@repo/internationalization/src/routing";
 import { cleanSlug } from "@repo/utilities/helper";
 import { fetchMutation } from "convex/nextjs";
 
+/**
+ * Removes a supported locale prefix from a URL slug.
+ */
 function stripLocalePrefix(slug: string) {
   const slugParts = cleanSlug(slug).split("/");
   const firstSegment = slugParts[0];

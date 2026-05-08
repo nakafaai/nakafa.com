@@ -1,99 +1,113 @@
-import { nakafaScrape } from "@repo/ai/agents/research/descriptions";
-import {
-  type ScrapeOutput,
-  scrapeInputSchema,
-} from "@repo/ai/agents/research/schema";
+import type { ScrapeOutput } from "@repo/ai/agents/research/schema";
 import { firecrawlApp } from "@repo/ai/config/firecrawl";
-import { selectRelevantContent } from "@repo/ai/lib/content-selection";
+import { selectRelevantContent } from "@repo/ai/lib/selection";
 import { dedentString } from "@repo/ai/lib/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { tool, type UIMessageStreamWriter } from "ai";
-import * as z from "zod";
+import type { UIMessageStreamWriter } from "ai";
+import { Effect } from "effect";
 
-interface Params {
+/**
+ * Scrapes one URL and writes the scrape UI data part.
+ */
+export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
+  toolCallId,
+  url,
+  writer,
+}: {
+  toolCallId: string;
+  url: string;
   writer: UIMessageStreamWriter<MyUIMessage>;
-}
+}) {
+  yield* Effect.sync(() =>
+    writer.write({
+      id: toolCallId,
+      type: "data-scrape-url",
+      data: { url, status: "loading", content: "" },
+    })
+  );
 
-export const createScrape = ({ writer }: Params) =>
-  tool({
-    description: nakafaScrape(),
-    inputSchema: scrapeInputSchema,
-    outputSchema: z.string(),
-    execute: async ({ urlToCrawl }, { toolCallId }) => {
-      const url = urlToCrawl;
+  const scrapeResult = yield* Effect.tryPromise({
+    try: () =>
+      firecrawlApp.scrape(url, {
+        formats: ["markdown"],
+        timeout: 5000,
+      }),
+    catch: (error) => new Error(`Failed to crawl: ${error}`),
+  }).pipe(
+    Effect.match({
+      onFailure: (error) => ({ error: error.message }),
+      onSuccess: (response) => ({ response }),
+    })
+  );
 
+  if ("error" in scrapeResult) {
+    yield* Effect.sync(() =>
       writer.write({
         id: toolCallId,
         type: "data-scrape-url",
-        data: { url, status: "loading", content: "" },
-      });
+        data: {
+          url,
+          status: "error",
+          content: "",
+          error: scrapeResult.error,
+        },
+      })
+    );
 
-      try {
-        const response = await firecrawlApp.scrape(url, {
-          formats: ["markdown"],
-          timeout: 5000,
-        });
+    return formatOutput({
+      output: { data: { url, content: "" }, error: scrapeResult.error },
+    });
+  }
 
-        const markdown = response.markdown;
+  const markdown = scrapeResult.response.markdown;
 
-        if (!markdown) {
-          writer.write({
-            id: toolCallId,
-            type: "data-scrape-url",
-            data: {
-              url,
-              status: "error",
-              content: "",
-              error: "No content found.",
-            },
-          });
+  if (!markdown) {
+    yield* Effect.sync(() =>
+      writer.write({
+        id: toolCallId,
+        type: "data-scrape-url",
+        data: {
+          url,
+          status: "error",
+          content: "",
+          error: "No content found.",
+        },
+      })
+    );
 
-          return createOutput({
-            output: { data: { url, content: "" }, error: "No content found." },
-          });
-        }
+    return formatOutput({
+      output: { data: { url, content: "" }, error: "No content found." },
+    });
+  }
 
-        const processedContent = selectRelevantContent({
-          content: markdown,
-          maxLength: 3000,
-        });
-
-        writer.write({
-          id: toolCallId,
-          type: "data-scrape-url",
-          data: { url, status: "done", content: processedContent },
-        });
-
-        return createOutput({
-          output: {
-            data: {
-              url,
-              content: processedContent,
-            },
-            error: undefined,
-          },
-        });
-      } catch (error) {
-        const errorMessage = `Failed to crawl: ${error}`;
-        writer.write({
-          id: toolCallId,
-          type: "data-scrape-url",
-          data: {
-            url,
-            status: "error",
-            content: "",
-            error: errorMessage,
-          },
-        });
-
-        return createOutput({
-          output: { data: { url, content: "" }, error: errorMessage },
-        });
-      }
-    },
+  const processedContent = selectRelevantContent({
+    content: markdown,
+    maxLength: 3000,
   });
 
-function createOutput({ output }: { output: ScrapeOutput }): string {
+  yield* Effect.sync(() =>
+    writer.write({
+      id: toolCallId,
+      type: "data-scrape-url",
+      data: { url, status: "done", content: processedContent },
+    })
+  );
+
+  return formatOutput({
+    output: {
+      data: {
+        url,
+        content: processedContent,
+      },
+      error: undefined,
+    },
+  });
+});
+
+/**
+ * Formats scrape output as markdown for the research agent.
+ */
+function formatOutput({ output }: { output: ScrapeOutput }) {
   return dedentString(`
     # Scrape Result
     - URL: ${output.data.url}

@@ -1,5 +1,6 @@
 import { DEFAULT_LIMIT, isWithinLimit } from "@repo/ai/lib/tokens";
-import type { MyUIMessage, MyUITools } from "@repo/ai/types/message";
+import type { MyUITools } from "@repo/ai/schema/tools";
+import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import type { UIDataTypes, UIMessagePart } from "ai";
 import dedent from "dedent";

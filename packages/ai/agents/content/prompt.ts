@@ -2,15 +2,12 @@ import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 
-interface ContentAccessPromptProps {
+interface ContentPromptProps {
   context: AgentContext;
   locale: Locale;
 }
 
-export function contentAccessPrompt({
-  locale,
-  context,
-}: ContentAccessPromptProps) {
+export function contentPrompt({ locale, context }: ContentPromptProps) {
   return createPrompt({
     taskContext: `
       You are a specialized content access agent for Nakafa, an educational platform.

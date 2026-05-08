@@ -1,8 +1,7 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
 
-export function nakafaWebSearch() {
-  return createPrompt({
-    taskContext: `
+export const nakafaWebSearch = createPrompt({
+  taskContext: `
       # webSearch Tool
 
       Use this tool to search the web for up-to-date information and as universal fallback for ANY topic when Nakafa content is insufficient.
@@ -12,7 +11,7 @@ export function nakafaWebSearch() {
       CRITICAL: Always use link markdown syntax [text](url), NEVER use image markdown syntax ![alt](url).
     `,
 
-    toolUsageGuidelines: `
+  toolUsageGuidelines: `
       ## When to use this tool
 
       1. The user asks to search the web for up-to-date information
@@ -34,7 +33,7 @@ export function nakafaWebSearch() {
       - IMPORTANT: Citations must be links [text](url), NOT images ![alt](url)
     `,
 
-    detailedTaskInstructions: `
+  detailedTaskInstructions: `
       ## Best Practices
 
       - Search the web for up-to-date information
@@ -47,13 +46,13 @@ export function nakafaWebSearch() {
 
       ALWAYS include date/time context in search queries:
 
-      - For current events: "latest", "${new Date().getFullYear()}", "today", "current", "recent"
+      - For current events: "latest", "current year", "today", "current", "recent"
       - For historical info: specific years or date ranges
-      - For time-sensitive topics: "newest", "updated", "${new Date().getFullYear()}"
+      - For time-sensitive topics: "newest", "updated", "current year"
       - NO TEMPORAL ASSUMPTIONS: Never assume time periods - always be explicit about dates/years
 
       <example>
-        Query: "latest AI news ${new Date().getFullYear()}"
+        Query: "latest AI news current year"
       </example>
 
       <example>
@@ -61,11 +60,11 @@ export function nakafaWebSearch() {
       </example>
 
       <example>
-        Query: "recent developments in ${new Date().getFullYear()}"
+        Query: "recent developments in current year"
       </example>
     `,
 
-    examples: `
+  examples: `
       ## Examples of When to Use This Tool
 
       <example>
@@ -87,7 +86,7 @@ export function nakafaWebSearch() {
       </bad-example>
     `,
 
-    finalRequest: `
+  finalRequest: `
       ## Summary
 
       Use webSearch tool when the user asks to search the web for up-to-date information.
@@ -95,19 +94,17 @@ export function nakafaWebSearch() {
       Write inline citations as LINKS before the period at the end of every sentence.
       NEVER use image markdown syntax ![alt](url) for citations - always use link syntax [text](url).
     `,
-  });
-}
+});
 
-export function nakafaScrape() {
-  return createPrompt({
-    taskContext: `
+export const nakafaScrape = createPrompt({
+  taskContext: `
       # scrape Tool
 
       Use this tool to scrape a URL and return the content. Use this for specific URLs to get the content of the url.
       The tool uses Mendable's Firecrawl API under the hood.
     `,
 
-    toolUsageGuidelines: `
+  toolUsageGuidelines: `
       ## When to use this tool
 
       1. The user asks to scrape a URL or asks you to explain the content of the url
@@ -127,7 +124,7 @@ export function nakafaScrape() {
       - Explain the content to the user in a way that is easy to understand
     `,
 
-    detailedTaskInstructions: `
+  detailedTaskInstructions: `
       ## Best Practices
 
       - Scrape the URL to get the content of the url
@@ -135,7 +132,7 @@ export function nakafaScrape() {
       - If the content is not related to the user's question, tell the users that the content is not related to the user's question
     `,
 
-    examples: `
+  examples: `
       ## Examples of When to Use This Tool
 
       <example>
@@ -145,11 +142,10 @@ export function nakafaScrape() {
       </example>
     `,
 
-    finalRequest: `
+  finalRequest: `
       ## Summary
 
       Use scrape tool when the user asks to scrape a URL or asks you to explain the content of the url.
       Treat the content as a source of information to explain the content to the user.
     `,
-  });
-}
+});
