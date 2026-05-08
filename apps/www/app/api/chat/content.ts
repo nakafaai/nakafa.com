@@ -22,7 +22,11 @@ export const hasFetchedCurrentPageContent = Effect.fn(
   return yield* Effect.sync(() =>
     messages.some((message) =>
       message.parts.some((part) => {
-        if (part.type !== "data-get-content") {
+        if (part.type !== "data-nakafa") {
+          return false;
+        }
+
+        if (part.data.kind !== "content") {
           return false;
         }
 
@@ -30,7 +34,7 @@ export const hasFetchedCurrentPageContent = Effect.fn(
           return false;
         }
 
-        return normalizeContentUrl(part.data.url) === currentUrl;
+        return normalizeContentUrl(part.data.result.url) === currentUrl;
       })
     )
   );

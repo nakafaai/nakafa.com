@@ -1,11 +1,5 @@
 import { MODEL_IDS } from "@repo/ai/config/models";
-import {
-  articleCategoryValidator,
-  gradeValidator,
-  localeValidator,
-  materialValidator,
-  subjectCategoryValidator,
-} from "@repo/backend/convex/lib/validators/contents";
+import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable, paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -109,25 +103,201 @@ export const partTypeValidator = literals(
   "file",
   "step-start",
   // Orchestrator tools
-  "tool-contentAccess",
+  "tool-nakafa",
   "tool-deepResearch",
   "tool-mathCalculation",
   // Data parts
   "data-suggestions",
-  "data-get-articles",
-  "data-get-subjects",
-  "data-get-content",
+  "data-nakafa",
   "data-calculator",
   "data-scrape-url",
   "data-web-search"
 );
 
-export const contentItemValidator = v.object({
-  title: v.string(),
+export const nakafaSectionValidator = literals(
+  "articles",
+  "subject",
+  "exercises",
+  "quran"
+);
+
+export const nakafaContentRefValidator = v.object({
+  content_id: v.string(),
+  locale: localeValidator,
+  markdown_url: v.string(),
+  route: v.string(),
+  section: nakafaSectionValidator,
   url: v.string(),
-  slug: v.string(),
+});
+
+export const nakafaContentSummaryValidator = v.object({
+  ...nakafaContentRefValidator.fields,
+  description: v.string(),
+  title: v.string(),
+});
+
+export const nakafaSearchInputValidator = v.object({
+  limit: v.number(),
+  locale: localeValidator,
+  offset: v.number(),
+  query: v.optional(v.string()),
+  section: v.optional(nakafaSectionValidator),
+});
+
+export const nakafaSearchResultValidator = v.object({
+  count: v.number(),
+  has_more: v.boolean(),
+  items: v.array(nakafaContentSummaryValidator),
+  limit: v.number(),
+  next_offset: v.union(v.number(), v.null()),
+  offset: v.number(),
+  total_count: v.number(),
+});
+
+export const nakafaReadInputValidator = v.object({
+  content_ref: v.string(),
+});
+
+export const nakafaExerciseInputValidator = v.object({
+  content_ref: v.string(),
+  exercise_number: v.optional(v.number()),
+});
+
+export const nakafaQuranInputValidator = v.object({
+  from_verse: v.number(),
+  include_tafsir: v.boolean(),
+  locale: localeValidator,
+  surah: v.number(),
+  to_verse: v.optional(v.number()),
+});
+
+export const nakafaTaxonomyInputValidator = v.object({
   locale: localeValidator,
 });
+
+export const nakafaContentPreviewValidator = v.object({
+  ...nakafaContentRefValidator.fields,
+  description: v.string(),
+  title: v.string(),
+});
+
+export const nakafaExercisePreviewValidator = v.object({
+  ...nakafaContentRefValidator.fields,
+  count: v.number(),
+  exercise_number: v.union(v.number(), v.null()),
+  numbers: v.array(v.number()),
+  title: v.string(),
+});
+
+export const nakafaQuranPreviewValidator = v.object({
+  ...nakafaContentRefValidator.fields,
+  from_verse: v.number(),
+  name: v.string(),
+  revelation: v.string(),
+  to_verse: v.number(),
+  translation: v.string(),
+  verse_count: v.number(),
+});
+
+export const nakafaTaxonomyPreviewValidator = v.object({
+  content_counts: v.array(
+    v.object({
+      count: v.number(),
+      locale: localeValidator,
+    })
+  ),
+  locale: localeValidator,
+  sections: v.array(nakafaSectionValidator),
+  tools: v.array(v.string()),
+});
+
+export const nakafaDataValidator = v.union(
+  v.object({
+    kind: v.literal("search"),
+    status: v.literal("loading"),
+    input: nakafaSearchInputValidator,
+  }),
+  v.object({
+    kind: v.literal("search"),
+    status: v.literal("done"),
+    input: nakafaSearchInputValidator,
+    result: nakafaSearchResultValidator,
+  }),
+  v.object({
+    kind: v.literal("search"),
+    status: v.literal("error"),
+    input: nakafaSearchInputValidator,
+    error: v.string(),
+  }),
+  v.object({
+    kind: v.literal("content"),
+    status: v.literal("loading"),
+    input: nakafaReadInputValidator,
+  }),
+  v.object({
+    kind: v.literal("content"),
+    status: v.literal("done"),
+    input: nakafaReadInputValidator,
+    result: nakafaContentPreviewValidator,
+  }),
+  v.object({
+    kind: v.literal("content"),
+    status: v.literal("error"),
+    input: nakafaReadInputValidator,
+    error: v.string(),
+  }),
+  v.object({
+    kind: v.literal("exercise"),
+    status: v.literal("loading"),
+    input: nakafaExerciseInputValidator,
+  }),
+  v.object({
+    kind: v.literal("exercise"),
+    status: v.literal("done"),
+    input: nakafaExerciseInputValidator,
+    result: nakafaExercisePreviewValidator,
+  }),
+  v.object({
+    kind: v.literal("exercise"),
+    status: v.literal("error"),
+    input: nakafaExerciseInputValidator,
+    error: v.string(),
+  }),
+  v.object({
+    kind: v.literal("quran"),
+    status: v.literal("loading"),
+    input: nakafaQuranInputValidator,
+  }),
+  v.object({
+    kind: v.literal("quran"),
+    status: v.literal("done"),
+    input: nakafaQuranInputValidator,
+    result: nakafaQuranPreviewValidator,
+  }),
+  v.object({
+    kind: v.literal("quran"),
+    status: v.literal("error"),
+    input: nakafaQuranInputValidator,
+    error: v.string(),
+  }),
+  v.object({
+    kind: v.literal("taxonomy"),
+    status: v.literal("loading"),
+    input: nakafaTaxonomyInputValidator,
+  }),
+  v.object({
+    kind: v.literal("taxonomy"),
+    status: v.literal("done"),
+    input: nakafaTaxonomyInputValidator,
+    result: nakafaTaxonomyPreviewValidator,
+  }),
+  v.object({
+    kind: v.literal("taxonomy"),
+    status: v.literal("error"),
+    input: nakafaTaxonomyInputValidator,
+    error: v.string(),
+  })
+);
 
 export const webSearchSourceValidator = v.object({
   title: v.string(),
@@ -191,8 +361,8 @@ export const partValidator = v.object({
   toolErrorText: v.optional(v.string()),
 
   // Orchestrator tool fields
-  toolContentAccessInput: v.optional(v.string()),
-  toolContentAccessOutput: v.optional(v.string()),
+  toolNakafaInput: v.optional(v.string()),
+  toolNakafaOutput: v.optional(v.string()),
   toolMathCalculationInput: v.optional(v.string()),
   toolMathCalculationOutput: v.optional(v.string()),
   toolDeepResearchInput: v.optional(v.string()),
@@ -201,30 +371,8 @@ export const partValidator = v.object({
   dataSuggestionsId: v.optional(v.string()),
   dataSuggestionsData: v.optional(v.array(v.string())),
 
-  dataGetArticlesId: v.optional(v.string()),
-  dataGetArticlesBaseUrl: v.optional(v.string()),
-  dataGetArticlesInputLocale: v.optional(localeValidator),
-  dataGetArticlesInputCategory: v.optional(articleCategoryValidator),
-  dataGetArticlesArticles: v.optional(v.array(contentItemValidator)),
-  dataGetArticlesStatus: v.optional(dataStatusValidator),
-  dataGetArticlesError: v.optional(v.string()),
-
-  dataGetSubjectsId: v.optional(v.string()),
-  dataGetSubjectsBaseUrl: v.optional(v.string()),
-  dataGetSubjectsInputLocale: v.optional(localeValidator),
-  dataGetSubjectsInputCategory: v.optional(subjectCategoryValidator),
-  dataGetSubjectsInputGrade: v.optional(gradeValidator),
-  dataGetSubjectsInputMaterial: v.optional(materialValidator),
-  dataGetSubjectsSubjects: v.optional(v.array(contentItemValidator)),
-  dataGetSubjectsStatus: v.optional(dataStatusValidator),
-  dataGetSubjectsError: v.optional(v.string()),
-
-  dataGetContentId: v.optional(v.string()),
-  dataGetContentUrl: v.optional(v.string()),
-  dataGetContentTitle: v.optional(v.string()),
-  dataGetContentDescription: v.optional(v.string()),
-  dataGetContentStatus: v.optional(dataStatusValidator),
-  dataGetContentError: v.optional(v.string()),
+  dataNakafaId: v.optional(v.string()),
+  dataNakafaData: v.optional(nakafaDataValidator),
 
   dataCalculatorId: v.optional(v.string()),
   dataCalculatorOriginal: v.optional(calculatorExpressionValidator),

@@ -21,7 +21,7 @@ export const nakafaWebSearch = createPrompt({
 
       Skip using this tool when:
 
-      1. You have enough information from Nakafa content, typically from getContent tool
+      1. You have enough information from the Nakafa agent or current-page content
       2. The user asks to search the web for up-to-date information but you already have the information
 
       ## webSearch tool capabilities

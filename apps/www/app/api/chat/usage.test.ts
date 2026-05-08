@@ -34,8 +34,8 @@ describe("app/api/chat/usage", () => {
   it("tracks sub-agent usage and creates final metadata", () => {
     const usage = trackUsage();
 
-    usage.addUsage("contentAccess", usageRow({ input: 2, output: 3 }));
-    usage.addUsage("contentAccess", usageRow({ input: 5, output: 7 }));
+    usage.addUsage("nakafa", usageRow({ input: 2, output: 3 }));
+    usage.addUsage("nakafa", usageRow({ input: 5, output: 7 }));
     usage.addUsage("deepResearch", usageRow({ input: 11, output: 13 }));
 
     expect(
@@ -53,7 +53,7 @@ describe("app/api/chat/usage", () => {
         breakdown: {
           main: { input: 17, output: 19 },
           subAgents: {
-            contentAccess: { input: 7, output: 10 },
+            nakafa: { input: 7, output: 10 },
             deepResearch: { input: 11, output: 13 },
           },
         },

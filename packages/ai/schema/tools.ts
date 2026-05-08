@@ -1,21 +1,17 @@
 import { type InferUITools, tool } from "ai";
 import * as z from "zod";
 
-const toolNameSchema = z.enum([
-  "contentAccess",
-  "deepResearch",
-  "mathCalculation",
-]);
+const toolNameSchema = z.enum(["nakafa", "deepResearch", "mathCalculation"]);
 export type ToolName = z.infer<typeof toolNameSchema>;
 
 /**
- * Input schema for the content access orchestrator tool.
+ * Input schema for the Nakafa orchestrator tool.
  */
-export const contentToolInputSchema = z.object({
+export const nakafaToolInputSchema = z.object({
   query: z
     .string()
     .describe(
-      "The specific content request or question about Nakafa content. IMPORTANT: Include full context such as: current page URL/slug, whether the page is verified, what specific content the user is asking about, and any relevant details that would help retrieve the right content efficiently."
+      "The specific request or question about Nakafa content. Include the current URL, verified status, user goal, and enough subject/article/exercise/Quran context to search or read the right Nakafa source."
     ),
 });
 
@@ -44,8 +40,8 @@ export const mathToolInputSchema = z.object({
 const textOutputSchema = z.string();
 
 const uiTools = {
-  contentAccess: tool({
-    inputSchema: contentToolInputSchema,
+  nakafa: tool({
+    inputSchema: nakafaToolInputSchema,
     outputSchema: textOutputSchema,
   }),
   deepResearch: tool({

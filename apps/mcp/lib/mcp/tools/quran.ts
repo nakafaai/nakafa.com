@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
-import { getNakafaAgentQuranReference } from "@repo/contents/_lib/agent/quran";
 import type { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schemas";
+import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { Effect, Option } from "effect";
 import type * as z from "zod";
 import {
@@ -55,7 +55,8 @@ export function getNakafaQuranReferenceToolResult(
     );
   }
 
-  return getNakafaAgentQuranReference(args).pipe(
+  return Nakafa.quran(args).pipe(
+    Effect.provide(Nakafa.Default),
     Effect.map(
       Option.match({
         onNone: () =>

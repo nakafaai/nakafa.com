@@ -1,55 +1,25 @@
 "use client";
 
-import {
-  ArrowDown01Icon,
-  BookOpen02Icon,
-  Sad02Icon,
-} from "@hugeicons/core-free-icons";
-import type { DataPart } from "@repo/ai/schema/data";
+import { ArrowDown01Icon, BookOpen02Icon } from "@hugeicons/core-free-icons";
+import type { NakafaDataPart } from "@repo/ai/schema/data";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { memo, useState } from "react";
 
 interface Props {
-  message: DataPart["get-content"];
+  message: Extract<NakafaDataPart, { kind: "content"; status: "done" }>;
 }
 
+/** Renders a bounded preview for one retrieved Nakafa content page. */
 export const ContentPart = memo(({ message }: Props) => {
   const t = useTranslations("Ai");
-
-  const isLoading = message.status === "loading";
-  const isError = message.status === "error";
-
   const [open, setOpen] = useState(true);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-2">
-        <Spinner className="size-4 text-muted-foreground" />
-        <p className="text-muted-foreground text-sm">
-          {t("get-content-loading")}
-        </p>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex items-center gap-2">
-        <HugeIcons className="size-4 text-destructive" icon={Sad02Icon} />
-        <span className="text-muted-foreground text-sm">
-          {t("get-content-error")}
-        </span>
-      </div>
-    );
-  }
 
   return (
     <Collapsible
@@ -58,13 +28,13 @@ export const ContentPart = memo(({ message }: Props) => {
       open={open}
     >
       <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between bg-muted/80 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <HugeIcons className="size-4" icon={BookOpen02Icon} />
-          <span className="text-sm">{t("get-content")}</span>
+        <div className="flex min-w-0 items-center gap-2">
+          <HugeIcons className="size-4 shrink-0" icon={BookOpen02Icon} />
+          <span className="truncate text-sm">{t("nakafa-content")}</span>
         </div>
         <HugeIcons
           className={cn(
-            "size-4 transition-transform ease-out",
+            "size-4 shrink-0 transition-transform ease-out",
             open ? "rotate-180" : "rotate-0"
           )}
           icon={ArrowDown01Icon}
@@ -73,14 +43,14 @@ export const ContentPart = memo(({ message }: Props) => {
       <CollapsibleContent className="border-t bg-muted/40">
         <a
           className="grid gap-2 p-4"
-          href={message.url}
+          href={message.result.url}
           rel="noopener noreferrer"
           target="_blank"
-          title={message.url}
+          title={message.result.url}
         >
-          <p className="text-sm">{message.title}</p>
+          <p className="text-sm">{message.result.title}</p>
           <span className="text-muted-foreground text-sm">
-            {message.description}
+            {message.result.description}
           </span>
         </a>
       </CollapsibleContent>

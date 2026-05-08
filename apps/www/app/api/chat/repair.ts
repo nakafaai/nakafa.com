@@ -54,11 +54,11 @@ export const repairChatToolCall = Effect.fn("chat.repairChatToolCall")(
 
     if (
       needsPageFetch &&
-      toolCall.toolName === TOOL_NAMES.contentAccess &&
+      toolCall.toolName === TOOL_NAMES.nakafa &&
       InvalidToolInputError.isInstance(error)
     ) {
       yield* Effect.sync(() =>
-        sessionLogger.info("Using server-derived content access input")
+        sessionLogger.info("Using server-derived Nakafa input")
       );
       return {
         ...toolCall,

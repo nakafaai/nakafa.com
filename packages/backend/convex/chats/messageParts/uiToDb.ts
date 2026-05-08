@@ -73,14 +73,14 @@ function mapUIMessagePartToDBPart(
         ...baseFields,
         type: part.type,
       };
-    case "tool-contentAccess":
+    case "tool-nakafa":
       return {
         ...baseFields,
         type: part.type,
         toolToolCallId: part.toolCallId,
         toolState: requirePersistableToolState(part.state),
-        toolContentAccessInput: part.input?.query,
-        toolContentAccessOutput: part.output,
+        toolNakafaInput: part.input?.query,
+        toolNakafaOutput: part.output,
         toolErrorText: part.errorText,
       };
     case "tool-deepResearch":
@@ -110,42 +110,12 @@ function mapUIMessagePartToDBPart(
         dataSuggestionsId: part.id,
         dataSuggestionsData: part.data.data,
       };
-    case "data-get-articles":
+    case "data-nakafa":
       return {
         ...baseFields,
         type: part.type,
-        dataGetArticlesId: part.id,
-        dataGetArticlesBaseUrl: part.data.baseUrl,
-        dataGetArticlesInputLocale: part.data.input.locale,
-        dataGetArticlesInputCategory: part.data.input.category,
-        dataGetArticlesArticles: part.data.articles,
-        dataGetArticlesStatus: part.data.status,
-        dataGetArticlesError: part.data.error,
-      };
-    case "data-get-subjects":
-      return {
-        ...baseFields,
-        type: part.type,
-        dataGetSubjectsId: part.id,
-        dataGetSubjectsBaseUrl: part.data.baseUrl,
-        dataGetSubjectsInputLocale: part.data.input.locale,
-        dataGetSubjectsInputCategory: part.data.input.category,
-        dataGetSubjectsInputGrade: part.data.input.grade,
-        dataGetSubjectsInputMaterial: part.data.input.material,
-        dataGetSubjectsSubjects: part.data.subjects,
-        dataGetSubjectsStatus: part.data.status,
-        dataGetSubjectsError: part.data.error,
-      };
-    case "data-get-content":
-      return {
-        ...baseFields,
-        type: part.type,
-        dataGetContentId: part.id,
-        dataGetContentUrl: part.data.url,
-        dataGetContentTitle: part.data.title,
-        dataGetContentDescription: part.data.description,
-        dataGetContentStatus: part.data.status,
-        dataGetContentError: part.data.error,
+        dataNakafaId: part.id,
+        dataNakafaData: part.data,
       };
     case "data-calculator":
       return {

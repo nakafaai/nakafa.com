@@ -70,6 +70,45 @@ export const NakafaAgentSearchOptionsSchema = z
   })
   .describe("Nakafa content search options.");
 
+/** Shared content reference input accepted by Nakafa agent lookup tools. */
+export const NakafaAgentContentRefInputSchema = z
+  .string()
+  .min(1)
+  .describe(
+    "Nakafa content reference: a content_id returned by search, a canonical Nakafa URL, or a nakafa://content/... resource URI."
+  );
+
+/** Runtime schema for full content read input. */
+export const NakafaAgentReadOptionsSchema = z
+  .object({
+    content_ref: NakafaAgentContentRefInputSchema,
+  })
+  .strict()
+  .describe("Nakafa content read options.");
+
+/** Runtime schema for exercise read input. */
+export const NakafaAgentExerciseOptionsSchema = z
+  .object({
+    content_ref: NakafaAgentContentRefInputSchema,
+    exercise_number: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe("Optional exercise number inside the set."),
+  })
+  .strict()
+  .describe("Nakafa exercise read options.");
+
+/** Runtime schema for taxonomy input. */
+export const NakafaAgentTaxonomyOptionsSchema = z
+  .object({
+    locale: LocaleSchema.default("en").describe(
+      "Locale used for localized labels and content counts."
+    ),
+  })
+  .describe("Nakafa taxonomy options.");
+
 /** Runtime schema for paginated Nakafa content search output. */
 export const NakafaAgentSearchResultSchema = z
   .object({
@@ -267,6 +306,18 @@ export type NakafaAgentContentSummary = z.infer<
 >;
 export type NakafaAgentSearchOptions = z.input<
   typeof NakafaAgentSearchOptionsSchema
+>;
+export type NakafaAgentSearchInput = z.output<
+  typeof NakafaAgentSearchOptionsSchema
+>;
+export type NakafaAgentReadOptions = z.infer<
+  typeof NakafaAgentReadOptionsSchema
+>;
+export type NakafaAgentExerciseOptions = z.infer<
+  typeof NakafaAgentExerciseOptionsSchema
+>;
+export type NakafaAgentTaxonomyOptions = z.output<
+  typeof NakafaAgentTaxonomyOptionsSchema
 >;
 export type NakafaAgentSearchResult = z.infer<
   typeof NakafaAgentSearchResultSchema

@@ -47,6 +47,6 @@ export interface OrchestratorToolParams extends BaseAgentParams {
 /**
  * Agent parameter exports.
  */
-export type ContentAgentParams = TaskAgentParams;
+export type NakafaAgentParams = TaskAgentParams;
 export type MathAgentParams = TaskAgentParams;
 export type ResearchAgentParams = TaskAgentParams;

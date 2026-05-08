@@ -110,7 +110,7 @@ export function nakafaPrompt({
     backgroundData: `
       # Current Page Information
 
-      The current page is the page that the user is on. locale is the language of the page. slug is the slug of the page (without locale). verified is whether the page has been verified to exist in the content system (It means you are allowed to use getContent tool).
+      The current page is the page that the user is on. locale is the language of the page. slug is the slug of the page (without locale). verified means the page exists in Nakafa content and can be read by the Nakafa tool.
 
       url: ${url}
       locale: ${currentPage.locale}
@@ -133,10 +133,10 @@ export function nakafaPrompt({
 
       You are equipped with the following tools. Each tool is a specialized agent that handles specific tasks:
 
-      1. **contentAccess**:
+      1. **nakafa**:
       
-        - A specialized agent that retrieves educational content from the Nakafa platform (subjects, articles, Quran, exercises).
-        - This agent internally uses getContent, getSubjects, and getArticles tools to fetch the right content.
+        - A specialized agent that retrieves Nakafa-owned educational content: subjects, articles, Quran references, and exercises.
+        - This agent mirrors the public Nakafa MCP workflow: search, read, exercise, Quran, and taxonomy.
         - CRITICAL: In the query parameter, include FULL CONTEXT:
           * What specific content the user is asking about
           * Current page slug and whether it's verified (from the context provided)
@@ -147,7 +147,7 @@ export function nakafaPrompt({
           * "Find articles about photosynthesis. Current page not related. User wants to learn about photosynthesis process."
           * "Fetch Quran Surah Al-Baqarah content. Current page: /id/quran/2 (verified: yes). User wants explanation of verses."
         - The agent will return the content in a structured format with all relevant details.
-        - CRITICAL: NEVER use with guessed, assumed, or unverified slugs. Use this when you need Nakafa educational content.
+        - CRITICAL: NEVER use guessed content references. Search first when the exact Nakafa reference is not known.
       
       2. **deepResearch**:
 

@@ -1,18 +1,134 @@
 import {
-  getArticlesInputSchema,
-  getSubjectsInputSchema,
-} from "@repo/ai/agents/content/schema";
+  NakafaAgentContentRefSchema,
+  NakafaAgentExerciseOptionsSchema,
+  NakafaAgentQuranReferenceOptionsSchema,
+  NakafaAgentReadOptionsSchema,
+  NakafaAgentSearchOptionsSchema,
+  NakafaAgentSearchResultSchema,
+  NakafaAgentTaxonomyOptionsSchema,
+} from "@repo/contents/_lib/agent/schemas";
 import * as z from "zod";
 
-/**
- * Schema for content items used by content-list data parts.
- */
-export const contentsSchema = z.object({
+const nakafaContentPreviewSchema = NakafaAgentContentRefSchema.extend({
+  description: z.string(),
   title: z.string(),
-  url: z.string(),
-  slug: z.string(),
-  locale: z.enum(["en", "id"]),
 });
+
+const nakafaExercisePreviewSchema = NakafaAgentContentRefSchema.extend({
+  count: z.number().int().min(1),
+  exercise_number: z.number().int().min(1).nullable(),
+  numbers: z.array(z.number().int().min(1)).min(1),
+  title: z.string(),
+});
+
+const nakafaQuranPreviewSchema = NakafaAgentContentRefSchema.extend({
+  from_verse: z.number().int().min(1),
+  name: z.string(),
+  revelation: z.string(),
+  to_verse: z.number().int().min(1),
+  translation: z.string(),
+  verse_count: z.number().int().min(1),
+});
+
+const nakafaTaxonomyPreviewSchema = z.object({
+  content_counts: z.array(
+    z.object({
+      count: z.number().int().min(0),
+      locale: z.enum(["en", "id"]),
+    })
+  ),
+  locale: z.enum(["en", "id"]),
+  sections: z.array(z.enum(["articles", "subject", "exercises", "quran"])),
+  tools: z.array(z.string()),
+});
+
+const nakafaSearchLoadingSchema = z.object({
+  kind: z.literal("search"),
+  status: z.literal("loading"),
+  input: NakafaAgentSearchOptionsSchema,
+});
+const nakafaSearchDoneSchema = nakafaSearchLoadingSchema.extend({
+  status: z.literal("done"),
+  result: NakafaAgentSearchResultSchema,
+});
+const nakafaSearchErrorSchema = nakafaSearchLoadingSchema.extend({
+  status: z.literal("error"),
+  error: z.string(),
+});
+
+const nakafaContentLoadingSchema = z.object({
+  kind: z.literal("content"),
+  status: z.literal("loading"),
+  input: NakafaAgentReadOptionsSchema,
+});
+const nakafaContentDoneSchema = nakafaContentLoadingSchema.extend({
+  status: z.literal("done"),
+  result: nakafaContentPreviewSchema,
+});
+const nakafaContentErrorSchema = nakafaContentLoadingSchema.extend({
+  status: z.literal("error"),
+  error: z.string(),
+});
+
+const nakafaExerciseLoadingSchema = z.object({
+  kind: z.literal("exercise"),
+  status: z.literal("loading"),
+  input: NakafaAgentExerciseOptionsSchema,
+});
+const nakafaExerciseDoneSchema = nakafaExerciseLoadingSchema.extend({
+  status: z.literal("done"),
+  result: nakafaExercisePreviewSchema,
+});
+const nakafaExerciseErrorSchema = nakafaExerciseLoadingSchema.extend({
+  status: z.literal("error"),
+  error: z.string(),
+});
+
+const nakafaQuranLoadingSchema = z.object({
+  kind: z.literal("quran"),
+  status: z.literal("loading"),
+  input: NakafaAgentQuranReferenceOptionsSchema,
+});
+const nakafaQuranDoneSchema = nakafaQuranLoadingSchema.extend({
+  status: z.literal("done"),
+  result: nakafaQuranPreviewSchema,
+});
+const nakafaQuranErrorSchema = nakafaQuranLoadingSchema.extend({
+  status: z.literal("error"),
+  error: z.string(),
+});
+
+const nakafaTaxonomyLoadingSchema = z.object({
+  kind: z.literal("taxonomy"),
+  status: z.literal("loading"),
+  input: NakafaAgentTaxonomyOptionsSchema,
+});
+const nakafaTaxonomyDoneSchema = nakafaTaxonomyLoadingSchema.extend({
+  status: z.literal("done"),
+  result: nakafaTaxonomyPreviewSchema,
+});
+const nakafaTaxonomyErrorSchema = nakafaTaxonomyLoadingSchema.extend({
+  status: z.literal("error"),
+  error: z.string(),
+});
+
+export const nakafaDataSchema = z.union([
+  nakafaSearchLoadingSchema,
+  nakafaSearchDoneSchema,
+  nakafaSearchErrorSchema,
+  nakafaContentLoadingSchema,
+  nakafaContentDoneSchema,
+  nakafaContentErrorSchema,
+  nakafaExerciseLoadingSchema,
+  nakafaExerciseDoneSchema,
+  nakafaExerciseErrorSchema,
+  nakafaQuranLoadingSchema,
+  nakafaQuranDoneSchema,
+  nakafaQuranErrorSchema,
+  nakafaTaxonomyLoadingSchema,
+  nakafaTaxonomyDoneSchema,
+  nakafaTaxonomyErrorSchema,
+]);
 
 /**
  * Schema for UI data parts written by Nina agents.
@@ -21,27 +137,7 @@ export const dataPartSchema = z.object({
   suggestions: z.object({
     data: z.array(z.string()),
   }),
-  "get-articles": z.object({
-    baseUrl: z.string(),
-    input: getArticlesInputSchema,
-    articles: z.array(contentsSchema),
-    status: z.enum(["loading", "done", "error"]),
-    error: z.string().optional(),
-  }),
-  "get-subjects": z.object({
-    baseUrl: z.string(),
-    input: getSubjectsInputSchema,
-    subjects: z.array(contentsSchema),
-    status: z.enum(["loading", "done", "error"]),
-    error: z.string().optional(),
-  }),
-  "get-content": z.object({
-    url: z.string(),
-    title: z.string(),
-    description: z.string(),
-    status: z.enum(["loading", "done", "error"]),
-    error: z.string().optional(),
-  }),
+  nakafa: nakafaDataSchema,
   calculator: z.object({
     original: z.object({
       expression: z.string(),
@@ -78,3 +174,4 @@ export const dataPartSchema = z.object({
 });
 
 export type DataPart = z.infer<typeof dataPartSchema>;
+export type NakafaDataPart = z.infer<typeof nakafaDataSchema>;

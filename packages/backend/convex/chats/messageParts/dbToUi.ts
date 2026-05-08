@@ -9,7 +9,7 @@ import { ConvexError } from "convex/values";
 function requireToolInputQuery(
   part: Doc<"parts">,
   fieldName:
-    | "toolContentAccessInput"
+    | "toolNakafaInput"
     | "toolDeepResearchInput"
     | "toolMathCalculationInput"
 ) {
@@ -118,9 +118,9 @@ export function mapDBPartToUIMessagePart({
       return {
         type: part.type,
       };
-    case "tool-contentAccess": {
+    case "tool-nakafa": {
       const toolState = requireToolState(part);
-      const input = { query: part.toolContentAccessInput ?? "" };
+      const input = { query: part.toolNakafaInput ?? "" };
 
       switch (toolState) {
         case "input-streaming":
@@ -143,7 +143,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireToolInputQuery(part, "toolContentAccessInput"),
+            input: requireToolInputQuery(part, "toolNakafaInput"),
           };
         case "output-available":
           return {
@@ -154,10 +154,10 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireToolInputQuery(part, "toolContentAccessInput"),
+            input: requireToolInputQuery(part, "toolNakafaInput"),
             output: requirePartField({
-              value: part.toolContentAccessOutput,
-              fieldName: "toolContentAccessOutput",
+              value: part.toolNakafaOutput,
+              fieldName: "toolNakafaOutput",
               partType: part.type,
             }),
           };
@@ -170,7 +170,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireToolInputQuery(part, "toolContentAccessInput"),
+            input: requireToolInputQuery(part, "toolNakafaInput"),
             errorText: requirePartField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",
@@ -332,125 +332,19 @@ export function mapDBPartToUIMessagePart({
           }),
         },
       };
-    case "data-get-articles":
+    case "data-nakafa":
       return {
         type: part.type,
         id: requirePartField({
-          value: part.dataGetArticlesId,
-          fieldName: "dataGetArticlesId",
+          value: part.dataNakafaId,
+          fieldName: "dataNakafaId",
           partType: part.type,
         }),
-        data: {
-          baseUrl: requirePartField({
-            value: part.dataGetArticlesBaseUrl,
-            fieldName: "dataGetArticlesBaseUrl",
-            partType: part.type,
-          }),
-          input: {
-            locale: requirePartField({
-              value: part.dataGetArticlesInputLocale,
-              fieldName: "dataGetArticlesInputLocale",
-              partType: part.type,
-            }),
-            category: requirePartField({
-              value: part.dataGetArticlesInputCategory,
-              fieldName: "dataGetArticlesInputCategory",
-              partType: part.type,
-            }),
-          },
-          articles: requirePartField({
-            value: part.dataGetArticlesArticles,
-            fieldName: "dataGetArticlesArticles",
-            partType: part.type,
-          }),
-          status: requirePartField({
-            value: part.dataGetArticlesStatus,
-            fieldName: "dataGetArticlesStatus",
-            partType: part.type,
-          }),
-          error: part.dataGetArticlesError,
-        },
-      };
-    case "data-get-subjects":
-      return {
-        type: part.type,
-        id: requirePartField({
-          value: part.dataGetSubjectsId,
-          fieldName: "dataGetSubjectsId",
+        data: requirePartField({
+          value: part.dataNakafaData,
+          fieldName: "dataNakafaData",
           partType: part.type,
         }),
-        data: {
-          baseUrl: requirePartField({
-            value: part.dataGetSubjectsBaseUrl,
-            fieldName: "dataGetSubjectsBaseUrl",
-            partType: part.type,
-          }),
-          input: {
-            locale: requirePartField({
-              value: part.dataGetSubjectsInputLocale,
-              fieldName: "dataGetSubjectsInputLocale",
-              partType: part.type,
-            }),
-            category: requirePartField({
-              value: part.dataGetSubjectsInputCategory,
-              fieldName: "dataGetSubjectsInputCategory",
-              partType: part.type,
-            }),
-            grade: requirePartField({
-              value: part.dataGetSubjectsInputGrade,
-              fieldName: "dataGetSubjectsInputGrade",
-              partType: part.type,
-            }),
-            material: requirePartField({
-              value: part.dataGetSubjectsInputMaterial,
-              fieldName: "dataGetSubjectsInputMaterial",
-              partType: part.type,
-            }),
-          },
-          subjects: requirePartField({
-            value: part.dataGetSubjectsSubjects,
-            fieldName: "dataGetSubjectsSubjects",
-            partType: part.type,
-          }),
-          status: requirePartField({
-            value: part.dataGetSubjectsStatus,
-            fieldName: "dataGetSubjectsStatus",
-            partType: part.type,
-          }),
-          error: part.dataGetSubjectsError,
-        },
-      };
-    case "data-get-content":
-      return {
-        type: part.type,
-        id: requirePartField({
-          value: part.dataGetContentId,
-          fieldName: "dataGetContentId",
-          partType: part.type,
-        }),
-        data: {
-          url: requirePartField({
-            value: part.dataGetContentUrl,
-            fieldName: "dataGetContentUrl",
-            partType: part.type,
-          }),
-          title: requirePartField({
-            value: part.dataGetContentTitle,
-            fieldName: "dataGetContentTitle",
-            partType: part.type,
-          }),
-          description: requirePartField({
-            value: part.dataGetContentDescription,
-            fieldName: "dataGetContentDescription",
-            partType: part.type,
-          }),
-          status: requirePartField({
-            value: part.dataGetContentStatus,
-            fieldName: "dataGetContentStatus",
-            partType: part.type,
-          }),
-          error: part.dataGetContentError,
-        },
       };
     case "data-calculator":
       return {

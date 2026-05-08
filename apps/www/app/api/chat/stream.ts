@@ -1,4 +1,5 @@
-import { runContent } from "@repo/ai/agents/orchestrator/content";
+import { runNakafaAgent } from "@repo/ai/agents/nakafa/agent";
+import { read as readNakafa } from "@repo/ai/agents/nakafa/tools/read";
 import { runMath } from "@repo/ai/agents/orchestrator/math";
 import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
 import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
@@ -12,8 +13,8 @@ import {
 } from "@repo/ai/config/vercel";
 import { generateTitle } from "@repo/ai/features/title";
 import {
-  contentToolInputSchema,
   mathToolInputSchema,
+  nakafaToolInputSchema,
   researchToolInputSchema,
 } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
@@ -21,6 +22,7 @@ import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { cleanSlug } from "@repo/utilities/helper";
 import { type createChildLogger, logError } from "@repo/utilities/logging";
 import { waitUntil } from "@vercel/functions";
@@ -36,7 +38,7 @@ import { fetchAction, fetchMutation } from "convex/nextjs";
 import { Effect } from "effect";
 import type { getTranslations } from "next-intl/server";
 import { repairChatToolCall } from "@/app/api/chat/repair";
-import { prepareContentStep } from "@/app/api/chat/step";
+import { prepareNakafaStep } from "@/app/api/chat/step";
 import { writeSuggestions } from "@/app/api/chat/suggestions";
 import { trackUsage } from "@/app/api/chat/usage";
 import type { getUserInfo } from "@/app/api/chat/utils";
@@ -201,11 +203,11 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             messages: chat.finalMessages,
             stopWhen: stepCountIs(MAX_STEPS),
             tools: {
-              [TOOL_NAMES.contentAccess]: tool({
+              [TOOL_NAMES.nakafa]: tool({
                 description:
-                  "Access Nakafa educational content including articles, subjects, Quran chapters, and exercises. Use this for retrieving content from the Nakafa platform.",
-                inputSchema: contentToolInputSchema,
-                execute: ({ query }) => {
+                  "Access Nakafa-owned educational content including articles, subjects, Quran references, and exercises.",
+                inputSchema: nakafaToolInputSchema,
+                execute: ({ query }, { toolCallId }) => {
                   const needsPageFetch = context.needsPageFetch && !fetchedPage;
 
                   if (needsPageFetch) {
@@ -213,13 +215,28 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                   }
 
                   return Effect.runPromise(
-                    runContent({
-                      context: { ...context, needsPageFetch },
-                      locale: page.locale,
-                      modelId: runtime.modelId,
-                      query,
-                      usageAccumulator: usage,
-                      writer,
+                    Effect.gen(function* () {
+                      if (needsPageFetch) {
+                        return yield* readNakafa({
+                          input: { content_ref: context.url },
+                          toolCallId,
+                          writer,
+                        }).pipe(Effect.provide(Nakafa.Default));
+                      }
+
+                      const result = yield* runNakafaAgent({
+                        context: { ...context, needsPageFetch },
+                        locale: page.locale,
+                        modelId: runtime.modelId,
+                        task: query,
+                        writer,
+                      });
+
+                      yield* Effect.sync(() =>
+                        usage.addUsage(TOOL_NAMES.nakafa, result.usage)
+                      );
+
+                      return result.text;
                     })
                   );
                 },
@@ -259,7 +276,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             },
             prepareStep: ({ stepNumber }) =>
               Effect.runSync(
-                prepareContentStep({
+                prepareNakafaStep({
                   needsPageFetch: page.needsFetch,
                   stepNumber,
                 })

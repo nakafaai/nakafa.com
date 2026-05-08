@@ -1,3 +1,4 @@
+import type { NakafaDataPart } from "@repo/ai/schema/data";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
@@ -9,10 +10,7 @@ import {
 const currentContentUrl =
   "/id/subject/high-school/11/mathematics/function-modeling/rational-function";
 
-type ContentFetchPart = Extract<
-  MyUIMessage["parts"][number],
-  { type: "data-get-content" }
->;
+type ContentStatus = Extract<NakafaDataPart, { kind: "content" }>["status"];
 
 /**
  * Returns a retained assistant message with one content-fetch data part.
@@ -22,20 +20,68 @@ function contentMessage({
   status,
 }: {
   url: string;
-  status: ContentFetchPart["data"]["status"];
+  status: ContentStatus;
 }) {
+  if (status === "loading") {
+    return {
+      id: `message-${status}`,
+      role: "assistant",
+      parts: [
+        {
+          id: `content-${status}`,
+          type: "data-nakafa",
+          data: {
+            kind: "content",
+            input: { content_ref: url },
+            status,
+          },
+        },
+      ],
+    } satisfies MyUIMessage;
+  }
+
+  if (status === "error") {
+    return {
+      id: `message-${status}`,
+      role: "assistant",
+      parts: [
+        {
+          id: `content-${status}`,
+          type: "data-nakafa",
+          data: {
+            kind: "content",
+            input: { content_ref: url },
+            status,
+            error: "Not found",
+          },
+        },
+      ],
+    } satisfies MyUIMessage;
+  }
+
   return {
     id: `message-${status}`,
     role: "assistant",
     parts: [
       {
         id: `content-${status}`,
-        type: "data-get-content",
+        type: "data-nakafa",
         data: {
-          url,
-          title: "Rational Function",
-          description: "",
+          kind: "content",
+          input: { content_ref: url },
           status,
+          result: {
+            content_id:
+              "id/subject/high-school/11/mathematics/function-modeling/rational-function",
+            locale: "id",
+            markdown_url: `${url}.md`,
+            route:
+              "subject/high-school/11/mathematics/function-modeling/rational-function",
+            section: "subject",
+            title: "Rational Function",
+            description: "",
+            url,
+          },
         },
       },
     ],
@@ -75,6 +121,37 @@ describe("app/api/chat/content", () => {
         id: "assistant-text",
         role: "assistant",
         parts: [{ type: "text", text: "Previous answer" }],
+      },
+    ] satisfies MyUIMessage[];
+
+    expect(
+      Effect.runSync(
+        hasFetchedCurrentPageContent({ messages, url: currentContentUrl })
+      )
+    ).toBe(false);
+  });
+
+  it("ignores Nakafa data parts for other kinds", () => {
+    const messages = [
+      {
+        id: "assistant-search",
+        role: "assistant",
+        parts: [
+          {
+            id: "search-1",
+            type: "data-nakafa",
+            data: {
+              kind: "search",
+              input: {
+                limit: 1,
+                locale: "id",
+                offset: 0,
+                query: "function",
+              },
+              status: "loading",
+            },
+          },
+        ],
       },
     ] satisfies MyUIMessage[];
 

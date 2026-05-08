@@ -2,12 +2,12 @@ import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
 import { Effect } from "effect";
 
 /**
- * Forces the orchestrator into content access only for the first page-fetch step.
+ * Forces the orchestrator into Nakafa only for the first verified page fetch.
  *
  * @see https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
  * @see https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text
  */
-export const prepareContentStep = Effect.fn("chat.prepareContentStep")(
+export const prepareNakafaStep = Effect.fn("chat.prepareNakafaStep")(
   ({
     needsPageFetch,
     stepNumber,
@@ -20,10 +20,10 @@ export const prepareContentStep = Effect.fn("chat.prepareContentStep")(
     }
 
     return Effect.succeed({
-      activeTools: [TOOL_NAMES.contentAccess],
+      activeTools: [TOOL_NAMES.nakafa],
       toolChoice: {
         type: "tool" as const,
-        toolName: TOOL_NAMES.contentAccess,
+        toolName: TOOL_NAMES.nakafa,
       },
     });
   }
