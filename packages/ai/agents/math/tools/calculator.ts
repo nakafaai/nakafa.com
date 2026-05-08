@@ -1,7 +1,7 @@
 import type { CalculatorOutput } from "@repo/ai/agents/math/schema";
-import { dedentString } from "@repo/ai/lib/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { UIMessageStreamWriter } from "ai";
+import dedent from "dedent";
 import { Effect } from "effect";
 import * as math from "mathjs";
 
@@ -123,7 +123,7 @@ export const calculate = Effect.fn("math.calculate")(function* ({
  * Formats calculator output as markdown for the math agent.
  */
 function formatOutput({ output }: { output: CalculatorOutput }) {
-  return dedentString(`
+  return dedent(`
     # Calculator Result
 
     ## Original Expression

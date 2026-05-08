@@ -7,17 +7,15 @@ decision.
 It is a map for engineering, support, and product debugging. The code remains
 the source of truth.
 
-## Related Docs
+## References
 
 - AI SDK tool calling:
   `packages/ai/node_modules/ai/docs/03-ai-sdk-core/15-tools-and-tool-calling.mdx`
 - Effect patterns:
   `nakafa.com/.agents/skills/effect-best-practices/SKILL.md`
-- Effect async boundaries:
-  https://effect.website/docs/getting-started/running-effects/
-- Effect generator flow:
-  https://effect.website/docs/getting-started/using-generators/
 - Chat route: `apps/www/app/api/chat/route.ts`
+- MCP Nakafa tools: `apps/mcp/lib/mcp/server.ts`
+- Shared content agent APIs: `packages/contents/_lib/agent/`
 - Convex chat part persistence:
   `packages/backend/convex/chats/messageParts/uiToDb.ts`
 - Convex chat part hydration:
@@ -50,7 +48,8 @@ This is deterministic because the route and content agent use AI SDK
 | `/api/chat/step.ts` | force `contentAccess` for main step `0` when needed |
 | `/api/chat/stream.ts` | create the AI SDK stream and orchestrator tools |
 | `agents/orchestrator/` | expose top-level tools: content, research, math |
-| `agents/content/` | retrieve Nakafa content with `getContent`, `getSubjects`, `getArticles` |
+| `agents/content/` | retrieve Nakafa content from `@repo/contents` |
+| `apps/mcp/` | expose the same Nakafa content surface to MCP clients |
 | `agents/research/` | search and scrape external web sources |
 | `agents/math/` | run calculator work |
 | `backend/convex/chats/messageParts/` | persist and hydrate AI SDK message parts |
@@ -74,9 +73,11 @@ flowchart TD
     H --> J["Research agent"]
     H --> K["Math agent"]
 
-    I --> L["getContent"]
-    I --> M["getSubjects / getArticles"]
-    J --> N["webSearch / scrape"]
+    I --> L["@repo/contents"]
+    L --> M["page / exercises / Quran"]
+    L --> N["subjects / articles"]
+    P["MCP Nakafa tools"] --> L
+    J --> Q["webSearch / scrape"]
     K --> O["calculator"]
 ```
 
@@ -152,6 +153,26 @@ The existing persisted parts are already enough:
 
 The route only reads retained hydrated UI parts. It does not need a separate
 database marker.
+
+## MCP Parity
+
+MCP already treats Nakafa content as a first-class content surface:
+
+- search Nakafa content
+- fetch a content page
+- fetch taxonomy
+- fetch one exercise
+- fetch Quran references
+
+Nina reads `@repo/contents` directly, so the runtime dependency graph is aligned
+with MCP. The next architectural cleanup is to make Nina's content agent use the
+same `packages/contents/_lib/agent/` contract that MCP uses, so search and
+retrieval behavior cannot drift.
+
+Renaming `contentAccess` to a better name, such as a Nakafa agent, should be a
+separate migration. Convex persists `tool-contentAccess`, so a rename needs an
+intentional compatibility plan for old chat parts instead of a hidden schema
+change inside this refactor.
 
 ## Effect Boundary
 

@@ -45,12 +45,3 @@ export const normalizeMaterialSlug = Effect.fn("content.normalizeMaterialSlug")(
     return cleanedSlug.slice(locale.length + 1);
   }
 );
-
-/**
- * Checks whether a slug segment is exactly an integer string.
- */
-export function isNumericString(str: string) {
-  return (
-    str.trim() !== "" && Number.parseInt(str, 10).toString() === str.trim()
-  );
-}

@@ -260,9 +260,6 @@ importers:
       '@repo/backend':
         specifier: workspace:*
         version: link:../../packages/backend
-      '@repo/connection':
-        specifier: workspace:*
-        version: link:../../packages/connection
       '@repo/contents':
         specifier: workspace:*
         version: link:../../packages/contents
@@ -477,6 +474,9 @@ importers:
       '@mendable/firecrawl-js':
         specifier: ^4.22.2
         version: 4.22.2
+      '@repo/contents':
+        specifier: workspace:*
+        version: link:../contents
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
@@ -663,31 +663,6 @@ importers:
       vitest:
         specifier: ^4.1.5
         version: 4.1.5(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.0)(@types/node@25.6.1)(@vitest/coverage-istanbul@4.1.5)(@vitest/ui@4.1.5)(jsdom@29.1.1(@noble/hashes@2.0.1))(msw@2.12.7(@types/node@25.6.1)(typescript@6.0.3))(vite@8.0.11(@types/node@25.6.1)(esbuild@0.28.0)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.4))
-
-  packages/connection:
-    dependencies:
-      '@repo/utilities':
-        specifier: workspace:*
-        version: link:../utilities
-      '@t3-oss/env-nextjs':
-        specifier: ^0.13.11
-        version: 0.13.11(typescript@6.0.3)(zod@4.4.3)
-      effect:
-        specifier: ^3.21.2
-        version: 3.21.2
-      ky:
-        specifier: ^2.0.2
-        version: 2.0.2
-      server-only:
-        specifier: ^0.0.1
-        version: 0.0.1
-      zod:
-        specifier: ^4.4.3
-        version: 4.4.3
-    devDependencies:
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../typescript-config
 
   packages/contents:
     dependencies:

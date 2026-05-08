@@ -1,14 +1,14 @@
 import type { GetContentOutput } from "@repo/ai/agents/content/schema";
-import { dedentString } from "@repo/ai/lib/utils";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import type { ExerciseWithoutDefaults } from "@repo/contents/_types/exercises/shared";
 import type { Surah } from "@repo/contents/_types/quran";
+import dedent from "dedent";
 
 /**
  * Formats fetched content for the model as source-backed markdown.
  */
 export function formatOutput({ output }: { output: GetContentOutput }) {
-  return dedentString(`
+  return dedent(`
     # Source
     - URL: ${output.url}
 
@@ -27,7 +27,7 @@ export function formatExercises({
   output: ExerciseWithoutDefaults[];
   locale: Locale;
 }) {
-  return dedentString(`
+  return dedent(`
     # Exercises
     ${output
       .map(
@@ -62,7 +62,7 @@ export function formatQuran({
   output: Surah;
   locale: Locale;
 }) {
-  return dedentString(`
+  return dedent(`
     # Surah ${output.number}
 
     ## Info

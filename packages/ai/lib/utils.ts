@@ -1,53 +1,8 @@
 import { DEFAULT_LIMIT, isWithinLimit } from "@repo/ai/lib/tokens";
 import type { MyUITools } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import type { UIDataTypes, UIMessagePart } from "ai";
-import dedent from "dedent";
 import { fromUrl, ParseResultType, parseDomain } from "parse-domain";
-
-/**
- * Build a content slug
- * @param params - The parameters to build the slug
- * @returns The built slug
- */
-export function buildContentSlug(params: {
-  locale: Locale;
-  filters: {
-    type: "articles" | "subject";
-    category?: string | null;
-    grade?: string | null;
-    material?: string | null;
-  };
-}): string {
-  const { locale, filters } = params;
-  const { type, category, grade, material } = filters;
-
-  const segments: string[] = [locale, type];
-
-  if (category) {
-    segments.push(category);
-
-    if (type === "subject" && grade) {
-      segments.push(grade);
-
-      if (material) {
-        segments.push(material);
-      }
-    }
-  }
-
-  return segments.join("/");
-}
-
-/**
- * Dedent a string
- * @param text - The text to dedent
- * @returns The dedented text
- */
-export function dedentString(text: string): string {
-  return dedent(text);
-}
 
 /**
  * Extract the domain from a URL

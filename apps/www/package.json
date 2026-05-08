@@ -33,7 +33,6 @@
     "@repo/ai": "workspace:*",
     "@repo/analytics": "workspace:*",
     "@repo/backend": "workspace:*",
-    "@repo/connection": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",

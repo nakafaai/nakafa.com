@@ -1,22 +1,37 @@
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
-import { api } from "@repo/connection/routes";
-import { routing } from "@repo/internationalization/src/routing";
+import { getContent } from "@repo/contents/_lib/content";
+import {
+  getExerciseByNumber,
+  getExercisesContent,
+} from "@repo/contents/_lib/exercises/set";
+import { getExerciseSetTarget } from "@repo/contents/_lib/exercises/slug";
+import { getSurah } from "@repo/contents/_lib/quran";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { fetchMutation } from "convex/nextjs";
-import { Effect } from "effect";
+import { Effect, Either, Option } from "effect";
 
 /**
- * Removes a supported locale prefix from a URL slug.
+ * Parses a chat page URL into the locale and content path used by the contents
+ * package.
+ *
+ * @see https://effect.website/docs/data-types/option/
  */
-function stripLocalePrefix(slug: string) {
-  const slugParts = cleanSlug(slug).split("/");
-  const firstSegment = slugParts[0];
+function getContentRoute(url: string) {
+  const slugParts = cleanSlug(url).split("/").filter(Boolean);
+  const localeResult = LocaleSchema.safeParse(slugParts[0]);
 
-  if (!routing.locales.some((locale) => locale === firstSegment)) {
-    return slugParts;
+  if (!localeResult.success) {
+    return Option.none();
   }
 
-  return slugParts.slice(1);
+  const segments = slugParts.slice(1);
+
+  return Option.some({
+    locale: localeResult.data,
+    path: segments.join("/"),
+    segments,
+  });
 }
 
 /**
@@ -28,11 +43,16 @@ function stripLocalePrefix(slug: string) {
 export const getVerified = Effect.fn("chat.getVerified")(function* (
   url: string
 ) {
-  const cleanedUrl = cleanSlug(url);
-  const slugParts = stripLocalePrefix(cleanedUrl);
+  const route = getContentRoute(url);
 
-  if (slugParts[0] === "quran") {
-    const [, surah, ...extraSegments] = slugParts;
+  if (Option.isNone(route)) {
+    return false;
+  }
+
+  const { locale, path, segments } = route.value;
+
+  if (segments[0] === "quran") {
+    const [, surah, ...extraSegments] = segments;
 
     if (!(surah && extraSegments.length === 0)) {
       return false;
@@ -44,43 +64,49 @@ export const getVerified = Effect.fn("chat.getVerified")(function* (
       return false;
     }
 
-    const { data: surahData, error: surahError } = yield* Effect.tryPromise(
-      () =>
-        api.contents.getSurah({
-          surah: surahNumber,
-        })
-    );
-    if (surahError) {
-      return false;
-    }
-    return surahData !== null;
+    const surahData = yield* Effect.either(getSurah(surahNumber));
+    return Either.isRight(surahData);
   }
 
-  if (slugParts[0] === "exercises") {
-    const { data: exercisesData, error: exercisesError } =
-      yield* Effect.tryPromise(() =>
-        api.contents.getExercises({
-          slug: cleanedUrl,
-        })
-      );
-    if (exercisesError) {
-      return false;
-    }
-    return exercisesData !== null;
-  }
-
-  const { data: contentData, error: contentError } = yield* Effect.tryPromise(
-    () =>
-      api.contents.getContent({
-        slug: cleanedUrl,
+  if (segments[0] === "exercises") {
+    const target = getExerciseSetTarget(path);
+    const exercisesData = yield* Effect.either(
+      Option.match(target.exerciseNumber, {
+        onNone: () =>
+          getExercisesContent({
+            locale,
+            filePath: target.filePath,
+            includeMDX: false,
+          }),
+        onSome: (exerciseNumber) =>
+          getExerciseByNumber(
+            locale,
+            target.filePath,
+            exerciseNumber,
+            false
+          ).pipe(
+            Effect.map((exercise) =>
+              Option.match(exercise, {
+                onNone: () => [],
+                onSome: (item) => [item],
+              })
+            )
+          ),
       })
+    );
+
+    if (Either.isLeft(exercisesData)) {
+      return false;
+    }
+
+    return exercisesData.right.length > 0;
+  }
+
+  const contentData = yield* Effect.either(
+    getContent(locale, path, { includeMDX: false })
   );
 
-  if (contentError) {
-    return false;
-  }
-
-  return contentData !== null;
+  return Either.isRight(contentData);
 });
 
 /**

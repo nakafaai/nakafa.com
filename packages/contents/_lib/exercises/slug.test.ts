@@ -1,12 +1,15 @@
 import {
   getExerciseNumberPagination,
+  getExerciseSetTarget,
   getExercisesPagination,
   getSlugPath,
   hasInvalidTryOutYearSlug,
+  isExerciseNumberSegment,
   isTryOutCollectionSlug,
   isYearlessTryOutCollectionSlug,
   LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
 } from "@repo/contents/_lib/exercises/slug";
+import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("exercise slug helpers", () => {
@@ -28,6 +31,36 @@ describe("exercise slug helpers", () => {
     expect(hasInvalidTryOutYearSlug(["try-out", "set-1"])).toBe(true);
     expect(hasInvalidTryOutYearSlug(["try-out", "2026"])).toBe(false);
     expect(hasInvalidTryOutYearSlug(["semester-1", "set-1"])).toBe(false);
+  });
+
+  it.each([
+    ["10", true],
+    [" 10 ", true],
+    ["0", false],
+    ["01", false],
+    ["10a", false],
+    ["", false],
+    [undefined, false],
+  ] as const)("checks exercise number segment %s", (value, expected) => {
+    expect(isExerciseNumberSegment(value)).toBe(expected);
+  });
+
+  it("splits exercise set paths from optional exercise numbers", () => {
+    const setTarget = getExerciseSetTarget(
+      "/exercises/high-school/snbt/general-reasoning/try-out/2026/set-10"
+    );
+    const numberTarget = getExerciseSetTarget(
+      "/exercises/high-school/snbt/general-reasoning/try-out/2026/set-10/1"
+    );
+
+    expect(setTarget.filePath).toBe(
+      "exercises/high-school/snbt/general-reasoning/try-out/2026/set-10"
+    );
+    expect(Option.isNone(setTarget.exerciseNumber)).toBe(true);
+    expect(numberTarget.filePath).toBe(
+      "exercises/high-school/snbt/general-reasoning/try-out/2026/set-10"
+    );
+    expect(Option.getOrUndefined(numberTarget.exerciseNumber)).toBe(1);
   });
 
   it("builds collection pagination links", () => {

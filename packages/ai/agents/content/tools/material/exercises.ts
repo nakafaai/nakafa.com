@@ -1,15 +1,18 @@
-import { isNumericString } from "@repo/ai/agents/content/tools/material/input";
 import {
   formatExercises,
   formatOutput,
 } from "@repo/ai/agents/content/tools/material/output";
 import type { RouteParams } from "@repo/ai/agents/content/tools/material/types";
-import { api } from "@repo/connection/routes";
 import {
   getCurrentMaterial,
   getMaterials,
 } from "@repo/contents/_lib/exercises/material";
-import { Effect } from "effect";
+import {
+  getExerciseByNumber,
+  getExercisesContent,
+} from "@repo/contents/_lib/exercises/set";
+import { getExerciseSetTarget } from "@repo/contents/_lib/exercises/slug";
+import { Effect, Either, Option } from "effect";
 
 /**
  * Fetches exercise content and writes the matching UI data part state.
@@ -21,15 +24,36 @@ export const fetchExercises = Effect.fn("content.fetchExercises")(function* ({
   url,
   writer,
 }: RouteParams) {
-  const { data: exercisesData, error: exercisesError } =
-    yield* Effect.tryPromise(() =>
-      api.contents.getExercises({
-        slug: `${contentInput.locale}/${cleanedSlug}`,
-        withRaw: true,
-      })
-    );
+  const target = getExerciseSetTarget(cleanedSlug);
+  const exercisesData = yield* Effect.either(
+    Option.match(target.exerciseNumber, {
+      onNone: () =>
+        getExercisesContent({
+          locale: contentInput.locale,
+          filePath: target.filePath,
+          includeMDX: false,
+        }),
+      onSome: (exerciseNumber) =>
+        getExerciseByNumber(
+          contentInput.locale,
+          target.filePath,
+          exerciseNumber,
+          false
+        ).pipe(
+          Effect.map((exercise) =>
+            Option.match(exercise, {
+              onNone: () => [],
+              onSome: (item) => [item],
+            })
+          )
+        ),
+    })
+  );
 
-  if (exercisesError) {
+  if (Either.isLeft(exercisesData)) {
+    const message =
+      "Exercises not found. Maybe not available or still in development.";
+
     yield* Effect.sync(() =>
       writer.write({
         id: toolCallId,
@@ -39,17 +63,17 @@ export const fetchExercises = Effect.fn("content.fetchExercises")(function* ({
           title: "",
           description: "",
           status: "error",
-          error: exercisesError.message,
+          error: message,
         },
       })
     );
 
     return formatOutput({
-      output: { url, content: exercisesError.message },
+      output: { url, content: message },
     });
   }
 
-  if (!exercisesData || exercisesData.length === 0) {
+  if (exercisesData.right.length === 0) {
     yield* Effect.sync(() =>
       writer.write({
         id: toolCallId,
@@ -95,14 +119,9 @@ export const fetchExercises = Effect.fn("content.fetchExercises")(function* ({
   const materials = yield* Effect.tryPromise(() =>
     getMaterials(materialPath, contentInput.locale)
   );
-  const lastSlug = slugParts.at(-1);
-  const filePath =
-    lastSlug && isNumericString(lastSlug)
-      ? slugParts.slice(0, -1).join("/")
-      : cleanedSlug;
 
   const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
-    filePath,
+    target.filePath,
     materials
   );
 
@@ -123,7 +142,7 @@ export const fetchExercises = Effect.fn("content.fetchExercises")(function* ({
     output: {
       url,
       content: formatExercises({
-        output: exercisesData,
+        output: exercisesData.right,
         locale: contentInput.locale,
       }),
     },

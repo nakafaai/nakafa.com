@@ -2,10 +2,10 @@ import type {
   GetSubjectsInput,
   GetSubjectsOutput,
 } from "@repo/ai/agents/content/schema";
-import { buildContentSlug, dedentString } from "@repo/ai/lib/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { api } from "@repo/connection/routes";
+import { getSubjectContents } from "@repo/contents/_lib/subject/content";
 import type { UIMessageStreamWriter } from "ai";
+import dedent from "dedent";
 import { Effect } from "effect";
 
 /**
@@ -21,11 +21,8 @@ export const getSubjects = Effect.fn("content.getSubjects")(function* ({
   writer: UIMessageStreamWriter<MyUIMessage>;
 }) {
   const { locale, category, grade, material } = input;
-  const slug = buildContentSlug({
-    locale,
-    filters: { type: "subject", category, grade, material },
-  });
-  const baseUrl = `/${slug}`;
+  const basePath = ["subject", category, grade, material].join("/");
+  const baseUrl = `/${locale}/${basePath}`;
 
   yield* Effect.sync(() =>
     writer.write({
@@ -40,29 +37,12 @@ export const getSubjects = Effect.fn("content.getSubjects")(function* ({
     })
   );
 
-  const { data, error } = yield* Effect.tryPromise(() =>
-    api.contents.getContents({ slug })
-  );
-
-  if (error) {
-    yield* Effect.sync(() =>
-      writer.write({
-        id: toolCallId,
-        type: "data-get-subjects",
-        data: {
-          baseUrl,
-          input: { locale, category, grade, material },
-          subjects: [],
-          status: "error",
-          error: error.message,
-        },
-      })
-    );
-
-    return formatOutput({ output: { baseUrl, subjects: [] } });
-  }
-
-  const subjects = data.map((item) => ({
+  const contents = yield* getSubjectContents({
+    locale,
+    basePath,
+    includeMDX: false,
+  });
+  const subjects = contents.map((item) => ({
     title: item.metadata.title,
     url: item.url,
     slug: item.slug,
@@ -89,7 +69,7 @@ export const getSubjects = Effect.fn("content.getSubjects")(function* ({
  * Formats subject index data as source-backed markdown for the model.
  */
 function formatOutput({ output }: { output: GetSubjectsOutput }) {
-  return dedentString(`
+  return dedent(`
     # Subjects List
     - Base URL: ${output.baseUrl}
 

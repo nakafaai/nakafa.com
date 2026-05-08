@@ -1,4 +1,4 @@
-import { dedentString } from "@repo/ai/lib/utils";
+import dedent from "dedent";
 
 export function createPrompt(opts: {
   // The context of the task
@@ -22,7 +22,7 @@ export function createPrompt(opts: {
   // "Reply in <response></response> tags"
   outputFormatting?: string;
 }): string {
-  return dedentString(
+  return dedent(
     [
       opts.taskContext,
       opts.toneContext,

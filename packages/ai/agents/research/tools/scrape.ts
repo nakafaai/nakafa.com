@@ -1,9 +1,9 @@
 import type { ScrapeOutput } from "@repo/ai/agents/research/schema";
 import { firecrawlApp } from "@repo/ai/config/firecrawl";
 import { selectRelevantContent } from "@repo/ai/lib/selection";
-import { dedentString } from "@repo/ai/lib/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { UIMessageStreamWriter } from "ai";
+import dedent from "dedent";
 import { Effect } from "effect";
 
 /**
@@ -108,7 +108,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
  * Formats scrape output as markdown for the research agent.
  */
 function formatOutput({ output }: { output: ScrapeOutput }) {
-  return dedentString(`
+  return dedent(`
     # Scrape Result
     - URL: ${output.data.url}
     ${output.error ? `- Error: ${output.error}` : ""}

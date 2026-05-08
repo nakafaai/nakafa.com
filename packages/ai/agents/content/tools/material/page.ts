@@ -1,7 +1,7 @@
 import { formatOutput } from "@repo/ai/agents/content/tools/material/output";
 import type { RouteParams } from "@repo/ai/agents/content/tools/material/types";
-import { api } from "@repo/connection/routes";
-import { Effect } from "effect";
+import { getContent } from "@repo/contents/_lib/content";
+import { Effect, Either } from "effect";
 
 /**
  * Fetches a normal content page and writes the matching UI data part state.
@@ -13,13 +13,14 @@ export const fetchPage = Effect.fn("content.fetchPage")(function* ({
   url,
   writer,
 }: RouteParams) {
-  const { data, error } = yield* Effect.tryPromise(() =>
-    api.contents.getContent({
-      slug: `${contentInput.locale}/${cleanedSlug}`,
-    })
+  const content = yield* Effect.either(
+    getContent(contentInput.locale, cleanedSlug, { includeMDX: false })
   );
 
-  if (error) {
+  if (Either.isLeft(content)) {
+    const message =
+      "Content not found. Maybe not available or still in development.";
+
     yield* Effect.sync(() =>
       writer.write({
         id: toolCallId,
@@ -29,29 +30,12 @@ export const fetchPage = Effect.fn("content.fetchPage")(function* ({
           title: "",
           description: "",
           status: "error",
-          error: error.message,
+          error: message,
         },
       })
     );
 
-    return formatOutput({ output: { url, content: error.message } });
-  }
-
-  if (!data) {
-    yield* Effect.sync(() =>
-      writer.write({
-        id: toolCallId,
-        type: "data-get-content",
-        data: {
-          url,
-          title: "",
-          description: "",
-          status: "error",
-        },
-      })
-    );
-
-    return formatOutput({ output: { url, content: "" } });
+    return formatOutput({ output: { url, content: message } });
   }
 
   yield* Effect.sync(() =>
@@ -60,12 +44,12 @@ export const fetchPage = Effect.fn("content.fetchPage")(function* ({
       type: "data-get-content",
       data: {
         url,
-        title: data.metadata.title,
-        description: data.metadata.description || "",
+        title: content.right.metadata.title,
+        description: content.right.metadata.description || "",
         status: "done",
       },
     })
   );
 
-  return formatOutput({ output: { url, content: data.raw } });
+  return formatOutput({ output: { url, content: content.right.raw } });
 });

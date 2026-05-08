@@ -2,10 +2,10 @@ import type {
   GetArticlesInput,
   GetArticlesOutput,
 } from "@repo/ai/agents/content/schema";
-import { buildContentSlug, dedentString } from "@repo/ai/lib/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { api } from "@repo/connection/routes";
+import { getArticleContents } from "@repo/contents/_lib/articles/content";
 import type { UIMessageStreamWriter } from "ai";
+import dedent from "dedent";
 import { Effect } from "effect";
 
 /**
@@ -21,11 +21,8 @@ export const getArticles = Effect.fn("content.getArticles")(function* ({
   writer: UIMessageStreamWriter<MyUIMessage>;
 }) {
   const { locale, category } = input;
-  const slug = buildContentSlug({
-    locale,
-    filters: { type: "articles", category },
-  });
-  const baseUrl = `/${slug}`;
+  const basePath = ["articles", category].join("/");
+  const baseUrl = `/${locale}/${basePath}`;
 
   yield* Effect.sync(() =>
     writer.write({
@@ -40,29 +37,12 @@ export const getArticles = Effect.fn("content.getArticles")(function* ({
     })
   );
 
-  const { data, error } = yield* Effect.tryPromise(() =>
-    api.contents.getContents({ slug })
-  );
-
-  if (error) {
-    yield* Effect.sync(() =>
-      writer.write({
-        id: toolCallId,
-        type: "data-get-articles",
-        data: {
-          baseUrl,
-          input: { locale, category },
-          articles: [],
-          status: "error",
-          error: error.message,
-        },
-      })
-    );
-
-    return formatOutput({ output: { baseUrl, articles: [] } });
-  }
-
-  const articles = data.map((item) => ({
+  const contents = yield* getArticleContents({
+    locale,
+    basePath,
+    includeMDX: false,
+  });
+  const articles = contents.map((item) => ({
     title: item.metadata.title,
     url: item.url,
     slug: item.slug,
@@ -89,7 +69,7 @@ export const getArticles = Effect.fn("content.getArticles")(function* ({
  * Formats article index data as source-backed markdown for the model.
  */
 function formatOutput({ output }: { output: GetArticlesOutput }) {
-  return dedentString(`
+  return dedent(`
     # Articles List
     - Base URL: ${output.baseUrl}
 

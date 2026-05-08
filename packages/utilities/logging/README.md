@@ -203,13 +203,13 @@ export const apiLogger = createServiceLogger('api')
 ### In Shared Packages
 
 ```typescript
-// packages/connection/lib/logger.ts
+// packages/contents/_lib/logger.ts
 import { createServiceLogger } from '@repo/utilities/logging'
-export const connectionLogger = createServiceLogger('connection')
+export const contentsLogger = createServiceLogger('contents')
 
 // Usage in the package
-import { connectionLogger } from './logger'
-connectionLogger.info('Making API request')
+import { contentsLogger } from '@repo/contents/_lib/logger'
+contentsLogger.info('Loading content')
 ```
 
 ## Examples

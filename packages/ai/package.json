@@ -18,6 +18,7 @@
     "@ai-sdk/openai": "^3.0.62",
     "@ai-sdk/react": "^3.0.177",
     "@mendable/firecrawl-js": "^4.22.2",
+    "@repo/contents": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "ai": "^6.0.175",

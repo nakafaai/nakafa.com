@@ -30,7 +30,6 @@
 - Updated dependencies [[`c50d754`](https://github.com/nakafaai/nakafa.com/commit/c50d75406a756286ee038066c541752c8d9d10c5), [`c50d754`](https://github.com/nakafaai/nakafa.com/commit/c50d75406a756286ee038066c541752c8d9d10c5)]:
   - @repo/internationalization@0.2.0
   - @repo/design-system@0.2.0
-  - @repo/connection@0.1.0
   - @repo/utilities@0.1.0
   - @repo/contents@0.1.0
   - @repo/security@0.1.0

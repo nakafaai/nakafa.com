@@ -3,8 +3,8 @@ import {
   formatQuran,
 } from "@repo/ai/agents/content/tools/material/output";
 import type { RouteParams } from "@repo/ai/agents/content/tools/material/types";
-import { api } from "@repo/connection/routes";
-import { Effect } from "effect";
+import { getSurah } from "@repo/contents/_lib/quran";
+import { Effect, Either } from "effect";
 
 const QURAN_SLUG_PARTS_COUNT = 2;
 
@@ -40,13 +40,12 @@ export const fetchQuran = Effect.fn("content.fetchQuran")(function* ({
   }
 
   const surah = slugParts[1];
-  const { data: surahData, error: surahError } = yield* Effect.tryPromise(() =>
-    api.contents.getSurah({
-      surah: Number.parseInt(surah, 10),
-    })
-  );
+  const surahData = yield* Effect.either(getSurah(Number.parseInt(surah, 10)));
 
-  if (surahError) {
+  if (Either.isLeft(surahData)) {
+    const message =
+      "Surah not found. Maybe not available or still in development.";
+
     yield* Effect.sync(() =>
       writer.write({
         id: toolCallId,
@@ -56,33 +55,14 @@ export const fetchQuran = Effect.fn("content.fetchQuran")(function* ({
           title: "",
           description: "",
           status: "error",
-          error: surahError.message,
+          error: message,
         },
       })
     );
 
     return formatOutput({
-      output: { url, content: surahError.message },
+      output: { url, content: message },
     });
-  }
-
-  if (!surahData) {
-    yield* Effect.sync(() =>
-      writer.write({
-        id: toolCallId,
-        type: "data-get-content",
-        data: {
-          url,
-          title: "",
-          description: "",
-          status: "error",
-          error:
-            "Surah not found. Maybe not available or still in development.",
-        },
-      })
-    );
-
-    return formatOutput({ output: { url, content: "" } });
   }
 
   yield* Effect.sync(() =>
@@ -92,11 +72,11 @@ export const fetchQuran = Effect.fn("content.fetchQuran")(function* ({
       data: {
         url,
         title:
-          surahData.name.translation[contentInput.locale] ||
-          surahData.name.short,
+          surahData.right.name.translation[contentInput.locale] ||
+          surahData.right.name.short,
         description:
-          surahData.revelation[contentInput.locale] ||
-          surahData.revelation.arab,
+          surahData.right.revelation[contentInput.locale] ||
+          surahData.right.revelation.arab,
         status: "done",
       },
     })
@@ -106,7 +86,7 @@ export const fetchQuran = Effect.fn("content.fetchQuran")(function* ({
     output: {
       url,
       content: formatQuran({
-        output: surahData,
+        output: surahData.right,
         locale: contentInput.locale,
       }),
     },

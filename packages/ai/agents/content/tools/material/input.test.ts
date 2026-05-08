@@ -1,5 +1,4 @@
 import {
-  isNumericString,
   normalizeMaterialSlug,
   resolveMaterialInput,
 } from "@repo/ai/agents/content/tools/material/input";
@@ -54,15 +53,5 @@ describe("material/input", () => {
     expect(Effect.runSync(normalizeMaterialSlug({ slug, locale: "id" }))).toBe(
       expected
     );
-  });
-
-  it.each([
-    ["10", true],
-    [" 10 ", true],
-    ["01", false],
-    ["10a", false],
-    ["", false],
-  ] as const)("checks numeric slug segment %s", (value, expected) => {
-    expect(isNumericString(value)).toBe(expected);
   });
 });

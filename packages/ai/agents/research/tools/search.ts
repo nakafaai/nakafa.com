@@ -1,9 +1,10 @@
 import type { WebSearchOutput } from "@repo/ai/agents/research/schema";
 import { firecrawlApp } from "@repo/ai/config/firecrawl";
 import { selectRelevantContent } from "@repo/ai/lib/selection";
-import { dedentString, extractDomain } from "@repo/ai/lib/utils";
+import { extractDomain } from "@repo/ai/lib/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { UIMessageStreamWriter } from "ai";
+import dedent from "dedent";
 import { Effect } from "effect";
 
 /**
@@ -140,7 +141,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
  * Formats web search output as markdown for the research agent.
  */
 function formatOutput({ output }: { output: WebSearchOutput }) {
-  return dedentString(`
+  return dedent(`
     # Web Search Results
     ${output.error ? `- Error: ${output.error}` : ""}
 
