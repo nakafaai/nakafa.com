@@ -23,6 +23,9 @@ interface Params {
 
 /**
  * Streams follow-up suggestions after the assistant response is complete.
+ *
+ * @see https://ai-sdk.dev/docs/reference/ai-sdk-core/output#output-object
+ * @see https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text
  */
 export const writeSuggestions = Effect.fn("chat.writeSuggestions")(function* ({
   messages,

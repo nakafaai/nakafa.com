@@ -1,7 +1,7 @@
+import { formatOutput } from "@repo/ai/agents/content/tools/material/output";
+import type { RouteParams } from "@repo/ai/agents/content/tools/material/types";
 import { api } from "@repo/connection/routes";
 import { Effect } from "effect";
-import { formatOutput } from "./output";
-import type { RouteParams } from "./types";
 
 /**
  * Fetches a normal content page and writes the matching UI data part state.

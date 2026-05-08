@@ -46,7 +46,7 @@ const MAX_STEPS = 10;
 type Logger = ReturnType<typeof createChildLogger>;
 type Location = Parameters<typeof nakafaPrompt>[0]["userLocation"];
 type Translator = Awaited<ReturnType<typeof getTranslations>>;
-type UserInfo = Awaited<ReturnType<typeof getUserInfo>>;
+type UserInfo = Effect.Effect.Success<ReturnType<typeof getUserInfo>>;
 
 interface Params {
   chat: {
@@ -78,6 +78,9 @@ interface Params {
 
 /**
  * Streams one chat turn through the AI SDK UI message stream.
+ *
+ * @see https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#streaming-tool-calls
+ * @see https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text#to-ui-message-stream
  */
 export function streamChat({ chat, page, runtime, user }: Params) {
   return createUIMessageStream<MyUIMessage>({
@@ -102,221 +105,242 @@ export function streamChat({ chat, page, runtime, user }: Params) {
     onFinish: ({ messages: updatedMessages, responseMessage }) => {
       if (chat.isFirstMessage) {
         waitUntil(
-          generateTitle({ messages: updatedMessages })
-            .then((title) =>
-              fetchMutation(
-                convexApi.chats.mutations.updateChatTitle,
-                { chatId: chat.id, title },
-                { token: chat.token }
+          Effect.runPromise(
+            Effect.gen(function* () {
+              const title = yield* generateTitle({ messages: updatedMessages });
+
+              yield* Effect.tryPromise(() =>
+                fetchMutation(
+                  convexApi.chats.mutations.updateChatTitle,
+                  { chatId: chat.id, title },
+                  { token: chat.token }
+                )
+              );
+            }).pipe(
+              Effect.catchAll((error) =>
+                Effect.sync(() => {
+                  runtime.reportError(error, "chat-api-generate-title");
+
+                  logError(
+                    runtime.logger,
+                    error instanceof Error ? error : new Error(String(error)),
+                    { errorLocation: "generateTitle/updateChatTitle" }
+                  );
+                })
               )
             )
-            .catch((error) => {
-              runtime.reportError(error, "chat-api-generate-title");
-
-              logError(
-                runtime.logger,
-                error instanceof Error ? error : new Error(String(error)),
-                { errorLocation: "generateTitle/updateChatTitle" }
-              );
-            })
+          )
         );
       }
 
       const tokenData = responseMessage.metadata?.tokens;
 
       waitUntil(
-        fetchAction(
-          convexApi.chats.actions.scheduleSaveAssistantResponse,
-          {
-            message: {
-              chatId: chat.id,
-              role: responseMessage.role,
-              identifier: responseMessage.id,
-              modelId: runtime.modelId,
-              inputTokens: tokenData?.input ?? 0,
-              outputTokens: tokenData?.output ?? 0,
-              totalTokens: tokenData?.total ?? 0,
-            },
-            parts: mapUIMessagePartsToDBParts({
-              messageParts: responseMessage.parts,
-            }),
-          },
-          { token: chat.token }
-        ).catch((error) => {
-          runtime.reportError(error, "chat-api-save-assistant-response");
+        Effect.runPromise(
+          Effect.tryPromise(() =>
+            fetchAction(
+              convexApi.chats.actions.scheduleSaveAssistantResponse,
+              {
+                message: {
+                  chatId: chat.id,
+                  role: responseMessage.role,
+                  identifier: responseMessage.id,
+                  modelId: runtime.modelId,
+                  inputTokens: tokenData?.input ?? 0,
+                  outputTokens: tokenData?.output ?? 0,
+                  totalTokens: tokenData?.total ?? 0,
+                },
+                parts: mapUIMessagePartsToDBParts({
+                  messageParts: responseMessage.parts,
+                }),
+              },
+              { token: chat.token }
+            )
+          ).pipe(
+            Effect.catchAll((error) =>
+              Effect.sync(() => {
+                runtime.reportError(error, "chat-api-save-assistant-response");
 
-          logError(
-            runtime.logger,
-            error instanceof Error ? error : new Error(String(error)),
-            { errorLocation: "saveAssistantResponse" }
-          );
-        })
+                logError(
+                  runtime.logger,
+                  error instanceof Error ? error : new Error(String(error)),
+                  { errorLocation: "saveAssistantResponse" }
+                );
+              })
+            )
+          )
+        )
       );
     },
-    execute: async ({ writer }) => {
-      const usage = trackUsage();
-      const context = {
-        url: page.url,
-        slug: cleanSlug(page.slug),
-        verified: page.verified,
-        needsPageFetch: page.needsFetch,
-        userRole: user.info.role,
-      };
-      let fetchedPage = false;
-
-      const streamTextResult = streamText({
-        model: model.languageModel(runtime.modelId),
-        system: nakafaPrompt({
-          url: page.url,
-          currentPage: {
-            locale: page.locale,
-            slug: page.slug,
+    execute: ({ writer }) =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const usage = trackUsage();
+          const context = {
+            url: page.url,
+            slug: cleanSlug(page.slug),
             verified: page.verified,
-          },
-          currentDate: runtime.currentDate,
-          userLocation: user.location,
-          userRole: user.info.role ?? undefined,
-        }),
-        messages: chat.finalMessages,
-        stopWhen: stepCountIs(MAX_STEPS),
-        tools: {
-          [TOOL_NAMES.contentAccess]: tool({
-            description:
-              "Access Nakafa educational content including articles, subjects, Quran chapters, and exercises. Use this for retrieving content from the Nakafa platform.",
-            inputSchema: contentToolInputSchema,
-            execute: ({ query }) => {
-              const needsPageFetch = context.needsPageFetch && !fetchedPage;
+            needsPageFetch: page.needsFetch,
+            userRole: user.info.role,
+          };
+          let fetchedPage = false;
 
-              if (needsPageFetch) {
-                fetchedPage = true;
-              }
-
-              return Effect.runPromise(
-                runContent({
-                  context: { ...context, needsPageFetch },
-                  locale: page.locale,
-                  modelId: runtime.modelId,
-                  query,
-                  usageAccumulator: usage,
-                  writer,
-                })
-              );
-            },
-          }),
-          [TOOL_NAMES.deepResearch]: tool({
-            description:
-              "Conduct deep research on any topic by searching the web and analyzing sources. Use this for up-to-date information, general knowledge questions, and external research.",
-            inputSchema: researchToolInputSchema,
-            execute: ({ query }) =>
-              Effect.runPromise(
-                runResearch({
-                  context,
-                  locale: page.locale,
-                  modelId: runtime.modelId,
-                  query,
-                  usageAccumulator: usage,
-                  writer,
-                })
-              ),
-          }),
-          [TOOL_NAMES.mathCalculation]: tool({
-            description:
-              "Perform mathematical calculations and solve math problems. Use this for ANY mathematical computation - from simple arithmetic to complex expressions.",
-            inputSchema: mathToolInputSchema,
-            execute: ({ query }) =>
-              Effect.runPromise(
-                runMath({
-                  context,
-                  locale: page.locale,
-                  modelId: runtime.modelId,
-                  query,
-                  usageAccumulator: usage,
-                  writer,
-                })
-              ),
-          }),
-        },
-        prepareStep: ({ stepNumber }) =>
-          Effect.runSync(
-            prepareContentStep({
-              needsPageFetch: page.needsFetch,
-              stepNumber,
-            })
-          ),
-        experimental_repairToolCall: (options) =>
-          Effect.runPromise(
-            repairChatToolCall({
-              ...options,
-              needsPageFetch: page.needsFetch,
-              sessionLogger: runtime.logger,
+          const streamTextResult = streamText({
+            model: model.languageModel(runtime.modelId),
+            system: nakafaPrompt({
               url: page.url,
-            })
-          ),
-        experimental_transform: smoothStream({
-          delayInMs: 20,
-          chunking: "word",
-        }),
-        providerOptions: {
-          gateway: { order },
-          openai: {
-            include: ["reasoning.encrypted_content"],
-            reasoningSummary: "detailed",
-            serviceTier: "priority",
-          } satisfies OpenAIProvider,
-          google: {
-            thinkingConfig: {
-              thinkingBudget: -1,
-              includeThoughts: true,
+              currentPage: {
+                locale: page.locale,
+                slug: page.slug,
+                verified: page.verified,
+              },
+              currentDate: runtime.currentDate,
+              userLocation: user.location,
+              userRole: user.info.role ?? undefined,
+            }),
+            messages: chat.finalMessages,
+            stopWhen: stepCountIs(MAX_STEPS),
+            tools: {
+              [TOOL_NAMES.contentAccess]: tool({
+                description:
+                  "Access Nakafa educational content including articles, subjects, Quran chapters, and exercises. Use this for retrieving content from the Nakafa platform.",
+                inputSchema: contentToolInputSchema,
+                execute: ({ query }) => {
+                  const needsPageFetch = context.needsPageFetch && !fetchedPage;
+
+                  if (needsPageFetch) {
+                    fetchedPage = true;
+                  }
+
+                  return Effect.runPromise(
+                    runContent({
+                      context: { ...context, needsPageFetch },
+                      locale: page.locale,
+                      modelId: runtime.modelId,
+                      query,
+                      usageAccumulator: usage,
+                      writer,
+                    })
+                  );
+                },
+              }),
+              [TOOL_NAMES.deepResearch]: tool({
+                description:
+                  "Conduct deep research on any topic by searching the web and analyzing sources. Use this for up-to-date information, general knowledge questions, and external research.",
+                inputSchema: researchToolInputSchema,
+                execute: ({ query }) =>
+                  Effect.runPromise(
+                    runResearch({
+                      context,
+                      locale: page.locale,
+                      modelId: runtime.modelId,
+                      query,
+                      usageAccumulator: usage,
+                      writer,
+                    })
+                  ),
+              }),
+              [TOOL_NAMES.mathCalculation]: tool({
+                description:
+                  "Perform mathematical calculations and solve math problems. Use this for ANY mathematical computation - from simple arithmetic to complex expressions.",
+                inputSchema: mathToolInputSchema,
+                execute: ({ query }) =>
+                  Effect.runPromise(
+                    runMath({
+                      context,
+                      locale: page.locale,
+                      modelId: runtime.modelId,
+                      query,
+                      usageAccumulator: usage,
+                      writer,
+                    })
+                  ),
+              }),
             },
-          } satisfies GoogleProvider,
-        },
-      });
+            prepareStep: ({ stepNumber }) =>
+              Effect.runSync(
+                prepareContentStep({
+                  needsPageFetch: page.needsFetch,
+                  stepNumber,
+                })
+              ),
+            experimental_repairToolCall: (options) =>
+              Effect.runPromise(
+                repairChatToolCall({
+                  ...options,
+                  needsPageFetch: context.needsPageFetch && !fetchedPage,
+                  sessionLogger: runtime.logger,
+                  url: page.url,
+                })
+              ),
+            experimental_transform: smoothStream({
+              delayInMs: 20,
+              chunking: "word",
+            }),
+            providerOptions: {
+              gateway: { order },
+              openai: {
+                include: ["reasoning.encrypted_content"],
+                reasoningSummary: "detailed",
+                serviceTier: "priority",
+              } satisfies OpenAIProvider,
+              google: {
+                thinkingConfig: {
+                  thinkingBudget: -1,
+                  includeThoughts: true,
+                },
+              } satisfies GoogleProvider,
+            },
+          });
 
-      writer.merge(
-        streamTextResult.toUIMessageStream({
-          sendReasoning: true,
-          sendStart: false,
-          messageMetadata: ({ part }) => {
-            if (part.type === "start") {
-              return { model: runtime.modelId };
-            }
+          writer.merge(
+            streamTextResult.toUIMessageStream({
+              sendReasoning: true,
+              sendStart: false,
+              messageMetadata: ({ part }) => {
+                if (part.type === "start") {
+                  return { model: runtime.modelId };
+                }
 
-            if (part.type === "finish") {
-              return usage.metadata({
-                mainUsage: part.totalUsage,
-                modelId: runtime.modelId,
-              });
-            }
-          },
-          onError: (error) => {
-            runtime.reportError(error, "chat-api-message-stream");
+                if (part.type === "finish") {
+                  return usage.metadata({
+                    mainUsage: part.totalUsage,
+                    modelId: runtime.modelId,
+                  });
+                }
+              },
+              onError: (error) => {
+                runtime.reportError(error, "chat-api-message-stream");
 
-            if (error instanceof Error) {
-              logError(runtime.logger, error, {
-                errorLocation: "toUIMessageStream",
-                errorType: error.name,
-              });
-              if (error.message.includes("Rate limit")) {
-                runtime.logger.warn("Rate limit exceeded in message stream");
-                return runtime.translate("rate-limit-message");
-              }
-              return error.message;
-            }
-            runtime.logger.error("Unknown error in message stream");
-            return runtime.translate("error-message");
-          },
+                if (error instanceof Error) {
+                  logError(runtime.logger, error, {
+                    errorLocation: "toUIMessageStream",
+                    errorType: error.name,
+                  });
+                  if (error.message.includes("Rate limit")) {
+                    runtime.logger.warn(
+                      "Rate limit exceeded in message stream"
+                    );
+                    return runtime.translate("rate-limit-message");
+                  }
+                  return error.message;
+                }
+                runtime.logger.error("Unknown error in message stream");
+                return runtime.translate("error-message");
+              },
+            })
+          );
+
+          yield* Effect.tryPromise(() => streamTextResult.consumeStream());
+
+          const response = yield* Effect.tryPromise(
+            () => streamTextResult.response
+          );
+          yield* writeSuggestions({
+            messages: [...chat.finalMessages, ...response.messages],
+            writer,
+          });
         })
-      );
-
-      await streamTextResult.consumeStream();
-
-      const messagesFromResponse = (await streamTextResult.response).messages;
-      await Effect.runPromise(
-        writeSuggestions({
-          messages: [...chat.finalMessages, ...messagesFromResponse],
-          writer,
-        })
-      );
-    },
+      ),
   });
 }

@@ -1,5 +1,5 @@
+import { routing } from "@repo/internationalization/src/routing";
 import { hasLocale } from "next-intl";
-import { routing } from "./routing";
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//;
 const HASH_ONLY_REGEX = /^#/;

@@ -22,6 +22,9 @@ interface Params extends ChatRepairOptions {
 
 /**
  * Repairs invalid chat tool calls with deterministic page-fetch input when needed.
+ *
+ * @see https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#tool-call-repair
+ * @see https://ai-sdk.dev/docs/reference/ai-sdk-core/output#output-object
  */
 export const repairChatToolCall = Effect.fn("chat.repairChatToolCall")(
   function* ({

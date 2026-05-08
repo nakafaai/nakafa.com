@@ -1,4 +1,5 @@
 import type { MyUIMessage } from "@repo/ai/types/message";
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadMessages, saveOrCreateChat } from "@/app/api/chat/persistence";
 
@@ -37,12 +38,14 @@ const message = {
 async function savedChatId() {
   mocks.fetchMutation.mockResolvedValueOnce({ chatId: "chat_existing" });
 
-  const chatId = await saveOrCreateChat({
-    chatId: undefined,
-    message,
-    modelId: "gpt-5-nano",
-    token: "session-token",
-  });
+  const chatId = await Effect.runPromise(
+    saveOrCreateChat({
+      chatId: undefined,
+      message,
+      modelId: "gpt-5-nano",
+      token: "session-token",
+    })
+  );
 
   vi.clearAllMocks();
   mocks.mapUIMessagePartsToDBParts.mockReturnValue([]);
@@ -64,12 +67,14 @@ describe("app/api/chat/persistence", () => {
   it("passes the selected model when creating a chat with the first user message", async () => {
     mocks.fetchMutation.mockResolvedValue({ chatId: "chat_new" });
 
-    const chatId = await saveOrCreateChat({
-      chatId: undefined,
-      message,
-      modelId: "gpt-5-nano",
-      token: "session-token",
-    });
+    const chatId = await Effect.runPromise(
+      saveOrCreateChat({
+        chatId: undefined,
+        message,
+        modelId: "gpt-5-nano",
+        token: "session-token",
+      })
+    );
 
     expect(chatId).toBe("chat_new");
     expect(mocks.fetchMutation).toHaveBeenCalledWith(
@@ -91,12 +96,14 @@ describe("app/api/chat/persistence", () => {
     const chatId = await savedChatId();
     mocks.fetchQuery.mockResolvedValue(null);
 
-    const result = await saveOrCreateChat({
-      chatId,
-      message,
-      modelId: "gpt-5-nano",
-      token: "session-token",
-    });
+    const result = await Effect.runPromise(
+      saveOrCreateChat({
+        chatId,
+        message,
+        modelId: "gpt-5-nano",
+        token: "session-token",
+      })
+    );
 
     expect(result).toBe(chatId);
     expect(mocks.fetchMutation).toHaveBeenCalledWith(
@@ -122,12 +129,14 @@ describe("app/api/chat/persistence", () => {
       .mockResolvedValueOnce({ hasMore: false })
       .mockResolvedValueOnce({});
 
-    await saveOrCreateChat({
-      chatId,
-      message,
-      modelId: "gpt-5-nano",
-      token: "session-token",
-    });
+    await Effect.runPromise(
+      saveOrCreateChat({
+        chatId,
+        message,
+        modelId: "gpt-5-nano",
+        token: "session-token",
+      })
+    );
 
     expect(mocks.fetchMutation).toHaveBeenNthCalledWith(
       1,
@@ -176,7 +185,9 @@ describe("app/api/chat/persistence", () => {
         page: [olderMessage],
       });
 
-    const messages = await loadMessages({ chatId, token: "session-token" });
+    const messages = await Effect.runPromise(
+      loadMessages({ chatId, token: "session-token" })
+    );
 
     expect(messages).toEqual([olderMessage, newerMessage]);
     expect(mocks.fetchQuery).toHaveBeenNthCalledWith(
@@ -214,7 +225,9 @@ describe("app/api/chat/persistence", () => {
     });
     mocks.compressMessages.mockReturnValue({ messages: [], tokens: 0 });
 
-    const messages = await loadMessages({ chatId, token: "session-token" });
+    const messages = await Effect.runPromise(
+      loadMessages({ chatId, token: "session-token" })
+    );
 
     expect(messages).toEqual([]);
     expect(mocks.fetchQuery).toHaveBeenCalledTimes(1);

@@ -3,6 +3,7 @@ import { api } from "@repo/connection/routes";
 import { routing } from "@repo/internationalization/src/routing";
 import { cleanSlug } from "@repo/utilities/helper";
 import { fetchMutation } from "convex/nextjs";
+import { Effect } from "effect";
 
 /**
  * Removes a supported locale prefix from a URL slug.
@@ -24,7 +25,9 @@ function stripLocalePrefix(slug: string) {
  *
  * @returns `true` if the content exists and is verified, `false` otherwise.
  */
-export async function getVerified(url: string) {
+export const getVerified = Effect.fn("chat.getVerified")(function* (
+  url: string
+) {
   const cleanedUrl = cleanSlug(url);
   const slugParts = stripLocalePrefix(cleanedUrl);
 
@@ -41,9 +44,12 @@ export async function getVerified(url: string) {
       return false;
     }
 
-    const { data: surahData, error: surahError } = await api.contents.getSurah({
-      surah: surahNumber,
-    });
+    const { data: surahData, error: surahError } = yield* Effect.tryPromise(
+      () =>
+        api.contents.getSurah({
+          surah: surahNumber,
+        })
+    );
     if (surahError) {
       return false;
     }
@@ -52,38 +58,45 @@ export async function getVerified(url: string) {
 
   if (slugParts[0] === "exercises") {
     const { data: exercisesData, error: exercisesError } =
-      await api.contents.getExercises({
-        slug: cleanedUrl,
-      });
+      yield* Effect.tryPromise(() =>
+        api.contents.getExercises({
+          slug: cleanedUrl,
+        })
+      );
     if (exercisesError) {
       return false;
     }
     return exercisesData !== null;
   }
 
-  const { data: contentData, error: contentError } =
-    await api.contents.getContent({
-      slug: cleanedUrl,
-    });
+  const { data: contentData, error: contentError } = yield* Effect.tryPromise(
+    () =>
+      api.contents.getContent({
+        slug: cleanedUrl,
+      })
+  );
 
   if (contentError) {
     return false;
   }
 
   return contentData !== null;
-}
+});
 
 /**
  * Fetches the authenticated user's role and credit balance from Convex,
  * used for access control and credit gating before the chat stream starts.
  */
-export async function getUserInfo(token: string) {
-  const userInfo = await fetchMutation(
-    convexApi.users.mutations.syncUserInfoForChat,
-    {},
-    {
-      token,
-    }
+export const getUserInfo = Effect.fn("chat.getUserInfo")(function* (
+  token: string
+) {
+  return yield* Effect.tryPromise(() =>
+    fetchMutation(
+      convexApi.users.mutations.syncUserInfoForChat,
+      {},
+      {
+        token,
+      }
+    )
   );
-  return userInfo;
-}
+});

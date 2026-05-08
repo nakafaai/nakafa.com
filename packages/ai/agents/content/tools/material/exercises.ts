@@ -1,12 +1,15 @@
 import { isNumericString } from "@repo/ai/agents/content/tools/material/input";
+import {
+  formatExercises,
+  formatOutput,
+} from "@repo/ai/agents/content/tools/material/output";
+import type { RouteParams } from "@repo/ai/agents/content/tools/material/types";
 import { api } from "@repo/connection/routes";
 import {
   getCurrentMaterial,
   getMaterials,
 } from "@repo/contents/_lib/exercises/material";
 import { Effect } from "effect";
-import { formatExercises, formatOutput } from "./output";
-import type { RouteParams } from "./types";
 
 /**
  * Fetches exercise content and writes the matching UI data part state.

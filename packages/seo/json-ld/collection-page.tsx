@@ -1,6 +1,6 @@
+import { JsonLd } from "@repo/seo/json-ld";
+import { ORGANIZATION } from "@repo/seo/json-ld/constants";
 import type { CollectionPage, CreativeWork, WithContext } from "schema-dts";
-import { JsonLd } from ".";
-import { ORGANIZATION } from "./constants";
 
 interface Props {
   datePublished?: string;

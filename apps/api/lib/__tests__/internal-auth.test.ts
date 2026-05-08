@@ -1,6 +1,6 @@
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
-import { timingSafeEqual } from "../internal-auth";
+import { timingSafeEqual } from "@/lib/internal-auth";
 
 const KEY_LENGTH = 32;
 const CHARSET =

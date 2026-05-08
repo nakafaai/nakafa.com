@@ -84,7 +84,13 @@ export const runContentAgent = Effect.fn("content.runContentAgent")(function* ({
       stopWhen: stepCountIs(10),
       experimental_repairToolCall: ({ toolCall, error }) =>
         Effect.runPromise(
-          repairPageFetchToolCall({ context, error, locale, toolCall })
+          repairPageFetchToolCall({
+            error,
+            locale,
+            needsPageFetch: pageFetchPending,
+            slug: context.slug,
+            toolCall,
+          })
         ),
       prepareStep: ({ stepNumber }) =>
         Effect.runSync(
@@ -104,16 +110,22 @@ export const runContentAgent = Effect.fn("content.runContentAgent")(function* ({
 
 /**
  * Repairs only the forced getContent call with server-derived page input.
+ *
+ * @see https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#tool-call-repair
  */
 const repairPageFetchToolCall = Effect.fn("content.repairPageFetchToolCall")(
   ({
-    context,
     error,
     locale,
+    needsPageFetch,
+    slug,
     toolCall,
   }: Pick<RepairOptions, "error" | "toolCall"> &
-    Pick<ContentAgentParams, "context" | "locale">) => {
-    if (!context.needsPageFetch) {
+    Pick<ContentAgentParams, "locale"> & {
+      needsPageFetch: boolean;
+      slug: string;
+    }) => {
+    if (!needsPageFetch) {
       return Effect.succeed(null);
     }
 
@@ -127,7 +139,7 @@ const repairPageFetchToolCall = Effect.fn("content.repairPageFetchToolCall")(
 
     return Effect.succeed({
       ...toolCall,
-      input: JSON.stringify({ locale, slug: context.slug }, null, 2),
+      input: JSON.stringify({ locale, slug }, null, 2),
     });
   }
 );

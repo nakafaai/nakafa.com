@@ -1,7 +1,11 @@
+import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
 import { Effect } from "effect";
 
 /**
  * Forces the orchestrator into content access only for the first page-fetch step.
+ *
+ * @see https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
+ * @see https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text
  */
 export const prepareContentStep = Effect.fn("chat.prepareContentStep")(
   ({
@@ -16,10 +20,10 @@ export const prepareContentStep = Effect.fn("chat.prepareContentStep")(
     }
 
     return Effect.succeed({
-      activeTools: ["contentAccess" as const],
+      activeTools: [TOOL_NAMES.contentAccess],
       toolChoice: {
         type: "tool" as const,
-        toolName: "contentAccess" as const,
+        toolName: TOOL_NAMES.contentAccess,
       },
     });
   }

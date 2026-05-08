@@ -25,9 +25,6 @@ import { getToken } from "@/lib/auth/server";
 
 const ModelIdSchema = z.enum(MODEL_IDS);
 
-// Allow streaming responses up to 60 seconds
-export const maxDuration = 60;
-
 const corsValidator = new CorsValidator();
 
 const possibleVerifiedUrls = [
@@ -47,185 +44,205 @@ const possibleVerifiedUrls = [
  * After the stream finishes, two fire-and-forget tasks run via `waitUntil`:
  * - Title generation (first message only)
  * - Assistant response persistence and credit deduction
+ *
+ * @see https://ai-sdk.dev/docs/reference/ai-sdk-ui/convert-to-model-messages
+ * @see https://ai-sdk.dev/docs/reference/ai-sdk-ui/create-ui-message-stream-response
  */
-export async function POST(req: Request) {
-  if (!corsValidator.isRequestFromAllowedDomain(req)) {
-    return corsValidator.createForbiddenResponse();
-  }
+export function POST(req: Request) {
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      if (!corsValidator.isRequestFromAllowedDomain(req)) {
+        return corsValidator.createForbiddenResponse();
+      }
 
-  const {
-    message,
-    id,
-    locale: rawLocale,
-    slug,
-    model: rawModel,
-  }: {
-    message: MyUIMessage | undefined;
-    id: Id<"chats"> | undefined;
-    locale: unknown;
-    slug: string;
-    model: unknown;
-  } = await req.json();
+      const {
+        message,
+        id,
+        locale: rawLocale,
+        slug,
+        model: rawModel,
+      }: {
+        message: MyUIMessage | undefined;
+        id: Id<"chats"> | undefined;
+        locale: unknown;
+        slug: string;
+        model: unknown;
+      } = yield* Effect.tryPromise(() => req.json());
 
-  const localeResult = LocaleSchema.safeParse(rawLocale);
-  if (!localeResult.success) {
-    return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
-      status: CHAT_ERRORS.BAD_REQUEST.status,
-    });
-  }
-  const locale = localeResult.data;
+      const localeResult = LocaleSchema.safeParse(rawLocale);
+      if (!localeResult.success) {
+        return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
+          status: CHAT_ERRORS.BAD_REQUEST.status,
+        });
+      }
+      const locale = localeResult.data;
 
-  const modelResult = ModelIdSchema.safeParse(rawModel);
-  if (!modelResult.success) {
-    return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
-      status: CHAT_ERRORS.BAD_REQUEST.status,
-    });
-  }
-  const selectedModel = modelResult.data;
+      const modelResult = ModelIdSchema.safeParse(rawModel);
+      if (!modelResult.success) {
+        return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
+          status: CHAT_ERRORS.BAD_REQUEST.status,
+        });
+      }
+      const selectedModel = modelResult.data;
 
-  const token = await getToken();
-  if (!token) {
-    return new Response(CHAT_ERRORS.UNAUTHORIZED.code, {
-      status: CHAT_ERRORS.UNAUTHORIZED.status,
-    });
-  }
+      const token = yield* Effect.tryPromise(() => getToken());
+      if (!token) {
+        return new Response(CHAT_ERRORS.UNAUTHORIZED.code, {
+          status: CHAT_ERRORS.UNAUTHORIZED.status,
+        });
+      }
 
-  if (!message) {
-    return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
-      status: CHAT_ERRORS.BAD_REQUEST.status,
-    });
-  }
+      if (!message) {
+        return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
+          status: CHAT_ERRORS.BAD_REQUEST.status,
+        });
+      }
 
-  const url = `/${locale}/${cleanSlug(slug)}`;
-  const shouldVerify = possibleVerifiedUrls.some((segment) =>
-    url.includes(segment)
-  );
+      const url = `/${locale}/${cleanSlug(slug)}`;
+      const shouldVerify = possibleVerifiedUrls.some((segment) =>
+        url.includes(segment)
+      );
 
-  const currentDate = new Date().toLocaleString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    timeZoneName: "short",
-  });
+      const currentDate = new Date().toLocaleString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        timeZoneName: "short",
+      });
 
-  const geo = geolocation(req);
-  const userLocation = {
-    latitude: geo.latitude ?? DEFAULT_LATITUDE,
-    longitude: geo.longitude ?? DEFAULT_LONGITUDE,
-    city: geo.city ?? "Unknown",
-    countryRegion: geo.countryRegion ?? "Unknown",
-    country: geo.country ?? "Unknown",
-  };
+      const geo = geolocation(req);
+      const userLocation = {
+        latitude: geo.latitude ?? DEFAULT_LATITUDE,
+        longitude: geo.longitude ?? DEFAULT_LONGITUDE,
+        city: geo.city ?? "Unknown",
+        countryRegion: geo.countryRegion ?? "Unknown",
+        country: geo.country ?? "Unknown",
+      };
 
-  const [verified, userInfo] = await Promise.all([
-    shouldVerify ? getVerified(url) : Promise.resolve(false),
-    getUserInfo(token),
-  ]);
+      const [verified, userInfo] = yield* Effect.all([
+        shouldVerify ? getVerified(url) : Effect.succeed(false),
+        getUserInfo(token),
+      ]);
 
-  if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
-    return new Response(CHAT_ERRORS.INSUFFICIENT_CREDITS.code, {
-      status: CHAT_ERRORS.INSUFFICIENT_CREDITS.status,
-    });
-  }
+      if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
+        return new Response(CHAT_ERRORS.INSUFFICIENT_CREDITS.code, {
+          status: CHAT_ERRORS.INSUFFICIENT_CREDITS.status,
+        });
+      }
 
-  const sessionLogger = createChildLogger({
-    service: "chat-api",
-    currentPage: {
-      locale,
-      slug: cleanSlug(slug),
-      url,
-      verified,
-    },
-    currentDate,
-    userLocation,
-    userRole: userInfo.role,
-    url,
-  });
+      const sessionLogger = createChildLogger({
+        service: "chat-api",
+        currentPage: {
+          locale,
+          slug: cleanSlug(slug),
+          url,
+          verified,
+        },
+        currentDate,
+        userLocation,
+        userRole: userInfo.role,
+        url,
+      });
 
-  /**
-   * Forward one chat-route runtime error to PostHog without interrupting the
-   * user-facing stream or background persistence flow.
-   *
-   * Related docs:
-   * https://posthog.com/docs/error-tracking/capture
-   * https://posthog.com/docs/error-tracking/installation/nextjs
-   */
-  function reportChatErrorToPostHog(error: unknown, source: string) {
-    captureServerException(error, userInfo.userId, { source }).catch(
-      (captureError) => {
-        logError(
-          sessionLogger,
-          captureError instanceof Error
-            ? captureError
-            : new Error(String(captureError)),
-          {
-            errorLocation: "posthog-capture",
-            source,
-          }
+      /**
+       * Forward one chat-route runtime error to PostHog without interrupting the
+       * user-facing stream or background persistence flow.
+       *
+       * Related docs:
+       * https://posthog.com/docs/error-tracking/capture
+       * https://posthog.com/docs/error-tracking/installation/nextjs
+       */
+      function reportChatErrorToPostHog(error: unknown, source: string) {
+        Effect.runFork(
+          Effect.tryPromise(() =>
+            captureServerException(error, userInfo.userId, { source })
+          ).pipe(
+            Effect.catchAll((captureError) =>
+              Effect.sync(() =>
+                logError(
+                  sessionLogger,
+                  captureError instanceof Error
+                    ? captureError
+                    : new Error(String(captureError)),
+                  {
+                    errorLocation: "posthog-capture",
+                    source,
+                  }
+                )
+              )
+            )
+          )
         );
       }
-    );
-  }
 
-  const chatId = await saveOrCreateChat({
-    chatId: id,
-    message,
-    modelId: selectedModel,
-    token,
-  });
-  const messages = await loadMessages({ chatId, token });
-  const isFirstMessage = messages.length === 1;
+      const chatId = yield* saveOrCreateChat({
+        chatId: id,
+        message,
+        modelId: selectedModel,
+        token,
+      });
+      const messages = yield* loadMessages({ chatId, token });
+      const isFirstMessage = messages.length === 1;
 
-  const originalMessageCount = messages.length;
-  const { messages: compressedMessages, tokens } = compressMessages(messages);
-  const needsPageFetch = Effect.runSync(
-    determinePageFetchNeed({ messages: compressedMessages, url, verified })
+      const originalMessageCount = messages.length;
+      const { messages: compressedMessages, tokens } =
+        compressMessages(messages);
+      const needsPageFetch = yield* determinePageFetchNeed({
+        messages: compressedMessages,
+        url,
+        verified,
+      });
+
+      if (compressedMessages.length < originalMessageCount) {
+        sessionLogger.warn(
+          `Messages compressed from ${originalMessageCount} to ${compressedMessages.length} messages (${tokens} tokens) to stay within token limit`
+        );
+      } else {
+        sessionLogger.info(
+          `All ${originalMessageCount} messages fit within token limit (${tokens} tokens)`
+        );
+      }
+
+      const finalMessages = yield* Effect.tryPromise(() =>
+        convertToModelMessages(compressedMessages)
+      );
+
+      sessionLogger.info("Chat session started");
+
+      const translate = yield* Effect.tryPromise(() =>
+        getTranslations({ locale, namespace: "Ai" })
+      );
+      const chat = {
+        finalMessages,
+        id: chatId,
+        isFirstMessage,
+        messages: compressedMessages,
+        token,
+      };
+      const page = {
+        locale,
+        needsFetch: needsPageFetch,
+        slug,
+        url,
+        verified,
+      };
+      const runtime = {
+        currentDate,
+        logger: sessionLogger,
+        modelId: selectedModel,
+        reportError: reportChatErrorToPostHog,
+        translate,
+      };
+      const user = {
+        info: userInfo,
+        location: userLocation,
+      };
+      const stream = streamChat({ chat, page, runtime, user });
+
+      return createUIMessageStreamResponse({ stream });
+    })
   );
-
-  if (compressedMessages.length < originalMessageCount) {
-    sessionLogger.warn(
-      `Messages compressed from ${originalMessageCount} to ${compressedMessages.length} messages (${tokens} tokens) to stay within token limit`
-    );
-  } else {
-    sessionLogger.info(
-      `All ${originalMessageCount} messages fit within token limit (${tokens} tokens)`
-    );
-  }
-
-  const finalMessages = await convertToModelMessages(compressedMessages);
-
-  sessionLogger.info("Chat session started");
-
-  const translate = await getTranslations({ locale, namespace: "Ai" });
-  const chat = {
-    finalMessages,
-    id: chatId,
-    isFirstMessage,
-    messages: compressedMessages,
-    token,
-  };
-  const page = {
-    locale,
-    needsFetch: needsPageFetch,
-    slug,
-    url,
-    verified,
-  };
-  const runtime = {
-    currentDate,
-    logger: sessionLogger,
-    modelId: selectedModel,
-    reportError: reportChatErrorToPostHog,
-    translate,
-  };
-  const user = {
-    info: userInfo,
-    location: userLocation,
-  };
-  const stream = streamChat({ chat, page, runtime, user });
-
-  return createUIMessageStreamResponse({ stream });
 }

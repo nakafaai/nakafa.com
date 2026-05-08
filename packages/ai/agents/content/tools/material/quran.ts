@@ -1,7 +1,10 @@
+import {
+  formatOutput,
+  formatQuran,
+} from "@repo/ai/agents/content/tools/material/output";
+import type { RouteParams } from "@repo/ai/agents/content/tools/material/types";
 import { api } from "@repo/connection/routes";
 import { Effect } from "effect";
-import { formatOutput, formatQuran } from "./output";
-import type { RouteParams } from "./types";
 
 const QURAN_SLUG_PARTS_COUNT = 2;
 

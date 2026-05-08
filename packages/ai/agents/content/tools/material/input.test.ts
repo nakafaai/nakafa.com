@@ -1,11 +1,11 @@
-import type { AgentContext } from "@repo/ai/types/agents";
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 import {
   isNumericString,
   normalizeMaterialSlug,
   resolveMaterialInput,
-} from "./input";
+} from "@repo/ai/agents/content/tools/material/input";
+import type { AgentContext } from "@repo/ai/types/agents";
+import { Effect } from "effect";
+import { describe, expect, it } from "vitest";
 
 const context = {
   needsPageFetch: true,

@@ -1,6 +1,6 @@
+import { preparePageFetchStep } from "@repo/ai/agents/content/step";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
-import { preparePageFetchStep } from "./step";
 
 describe("content/step", () => {
   it("forces the existing getContent tool on the first page-fetch step", () => {

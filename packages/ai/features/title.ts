@@ -7,16 +7,23 @@ import {
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { generateText } from "ai";
+import { Effect } from "effect";
 
 /**
- * Generate a title for a chat based on conversation messages
+ * Generates a title for a chat based on conversation messages.
+ *
  * @param params - Object containing messages to generate a title from
  * @param params.messages - Array of UI messages to analyze for title generation
  * @returns Generated title string, or default title if generation fails
+ * @see https://ai-sdk.dev/docs/reference/ai-sdk-core/generate-text
  */
-export async function generateTitle({ messages }: { messages: MyUIMessage[] }) {
-  try {
-    const { text } = await generateText({
+export const generateTitle = Effect.fn("features.generateTitle")(function* ({
+  messages,
+}: {
+  messages: MyUIMessage[];
+}) {
+  const { text } = yield* Effect.tryPromise(() =>
+    generateText({
       model: model.languageModel("grok-4.1-fast-non-reasoning"),
       prompt: JSON.stringify(messages, null, 2),
       system: createPrompt({
@@ -31,17 +38,14 @@ export async function generateTitle({ messages }: { messages: MyUIMessage[] }) {
           - Do not use quotes or colons`,
         outputFormatting: "Output only the title, nothing else",
       }),
-    });
+    })
+  ).pipe(Effect.catchAll(() => Effect.succeed({ text: DEFAULT_TITLE })));
 
-    const cleanedTitle = text.replace(/^["']|["']$/g, "");
+  const cleanedTitle = text.replace(/^["']|["']$/g, "");
 
-    const finalTitle =
-      cleanedTitle.length > MAX_TITLE_LENGTH
-        ? `${cleanedTitle.slice(0, TRUNCATED_TITLE_LENGTH)}...`
-        : cleanedTitle;
-
-    return finalTitle;
-  } catch {
-    return DEFAULT_TITLE;
+  if (cleanedTitle.length <= MAX_TITLE_LENGTH) {
+    return cleanedTitle;
   }
-}
+
+  return `${cleanedTitle.slice(0, TRUNCATED_TITLE_LENGTH)}...`;
+});

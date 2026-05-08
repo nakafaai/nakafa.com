@@ -10,13 +10,18 @@ the source of truth.
 ## Related Docs
 
 - AI SDK tool calling:
-  `../../node_modules/ai/docs/03-ai-sdk-core/15-tools-and-tool-calling.mdx`
-- Effect patterns: `../../../../.agents/skills/effect-best-practices/SKILL.md`
-- Chat route: `../../../../apps/www/app/api/chat/route.ts`
+  `packages/ai/node_modules/ai/docs/03-ai-sdk-core/15-tools-and-tool-calling.mdx`
+- Effect patterns:
+  `nakafa.com/.agents/skills/effect-best-practices/SKILL.md`
+- Effect async boundaries:
+  https://effect.website/docs/getting-started/running-effects/
+- Effect generator flow:
+  https://effect.website/docs/getting-started/using-generators/
+- Chat route: `apps/www/app/api/chat/route.ts`
 - Convex chat part persistence:
-  `../../../backend/convex/chats/messageParts/uiToDb.ts`
+  `packages/backend/convex/chats/messageParts/uiToDb.ts`
 - Convex chat part hydration:
-  `../../../backend/convex/chats/messageParts/dbToUi.ts`
+  `packages/backend/convex/chats/messageParts/dbToUi.ts`
 
 ## Summary
 

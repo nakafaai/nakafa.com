@@ -1,6 +1,7 @@
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import { api } from "@repo/connection/routes";
 import { fetchMutation } from "convex/nextjs";
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getUserInfo, getVerified } from "@/app/api/chat/utils";
 
@@ -69,14 +70,18 @@ describe("app/api/chat/utils", () => {
   });
 
   it("returns false for invalid quran slugs", async () => {
-    const isVerified = await getVerified("/id/quran/1/al-fatihah");
+    const isVerified = await Effect.runPromise(
+      getVerified("/id/quran/1/al-fatihah")
+    );
 
     expect(isVerified).toBe(false);
     expect(api.contents.getSurah).not.toHaveBeenCalled();
   });
 
   it("returns false for nonnumeric quran slugs", async () => {
-    const isVerified = await getVerified("/id/quran/not-a-number");
+    const isVerified = await Effect.runPromise(
+      getVerified("/id/quran/not-a-number")
+    );
 
     expect(isVerified).toBe(false);
     expect(api.contents.getSurah).not.toHaveBeenCalled();
@@ -85,7 +90,7 @@ describe("app/api/chat/utils", () => {
   it("verifies valid quran slugs", async () => {
     vi.mocked(api.contents.getSurah).mockResolvedValue(quranSurahResult);
 
-    const isVerified = await getVerified("/id/quran/1");
+    const isVerified = await Effect.runPromise(getVerified("/id/quran/1"));
 
     expect(isVerified).toBe(true);
     expect(api.contents.getSurah).toHaveBeenCalledWith({ surah: 1 });
@@ -97,7 +102,7 @@ describe("app/api/chat/utils", () => {
       error: { message: "not found", status: 404 },
     });
 
-    const isVerified = await getVerified("/quran/1");
+    const isVerified = await Effect.runPromise(getVerified("/quran/1"));
 
     expect(isVerified).toBe(false);
   });
@@ -108,8 +113,10 @@ describe("app/api/chat/utils", () => {
       error: null,
     });
 
-    const isVerified = await getVerified(
-      "/exercises/high-school/snbt/general-reasoning/try-out/2026/set-10/1"
+    const isVerified = await Effect.runPromise(
+      getVerified(
+        "/exercises/high-school/snbt/general-reasoning/try-out/2026/set-10/1"
+      )
     );
 
     expect(isVerified).toBe(true);
@@ -124,8 +131,10 @@ describe("app/api/chat/utils", () => {
       error: { message: "missing", status: 404 },
     });
 
-    const isVerified = await getVerified(
-      "/exercises/high-school/snbt/general-reasoning/try-out/2026/set-10/1"
+    const isVerified = await Effect.runPromise(
+      getVerified(
+        "/exercises/high-school/snbt/general-reasoning/try-out/2026/set-10/1"
+      )
     );
 
     expect(isVerified).toBe(false);
@@ -134,8 +143,10 @@ describe("app/api/chat/utils", () => {
   it("verifies real content slugs", async () => {
     vi.mocked(api.contents.getContent).mockResolvedValue(contentResult);
 
-    const isVerified = await getVerified(
-      "/subject/high-school/10/mathematics/vector-operations/vector-addition"
+    const isVerified = await Effect.runPromise(
+      getVerified(
+        "/subject/high-school/10/mathematics/vector-operations/vector-addition"
+      )
     );
 
     expect(isVerified).toBe(true);
@@ -150,8 +161,10 @@ describe("app/api/chat/utils", () => {
       error: { message: "missing", status: 404 },
     });
 
-    const isVerified = await getVerified(
-      "/subject/high-school/10/mathematics/vector-operations/vector-addition"
+    const isVerified = await Effect.runPromise(
+      getVerified(
+        "/subject/high-school/10/mathematics/vector-operations/vector-addition"
+      )
     );
 
     expect(isVerified).toBe(false);
@@ -164,7 +177,7 @@ describe("app/api/chat/utils", () => {
       userId: "user_123",
     });
 
-    const userInfo = await getUserInfo("test-token");
+    const userInfo = await Effect.runPromise(getUserInfo("test-token"));
 
     expect(userInfo).toEqual({
       role: "student",
