@@ -6,19 +6,19 @@ import type {
 } from "@repo/backend/scripts/sync-content/types";
 
 export const log = (message: string): void => {
-  console.log(message);
+  process.stdout.write(`${message}\n`);
 };
 
 export const logError = (message: string): void => {
-  console.error(`ERROR: ${message}`);
+  process.stderr.write(`ERROR: ${message}\n`);
 };
 
 export const logWarning = (message: string): void => {
-  console.warn(`WARNING: ${message}`);
+  process.stderr.write(`WARNING: ${message}\n`);
 };
 
 export const logSuccess = (message: string): void => {
-  console.log(`OK: ${message}`);
+  process.stdout.write(`OK: ${message}\n`);
 };
 
 export const formatDuration = (ms: number): string => {

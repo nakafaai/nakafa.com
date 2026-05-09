@@ -6,7 +6,7 @@ import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import {
   NakafaAgentQuranReferenceOptionsSchema,
   NakafaAgentQuranReferenceSchema,
-} from "@repo/contents/_lib/agent/schemas";
+} from "@repo/contents/_lib/agent/schema/quran";
 import { getSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { Effect, Option } from "effect";
 

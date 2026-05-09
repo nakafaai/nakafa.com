@@ -1,5 +1,13 @@
 import { MODEL_IDS } from "@repo/ai/config/models";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import {
+  contentSearchInputValidator,
+  contentSearchRefValidator,
+  contentSearchResultValidator,
+} from "@repo/backend/convex/contents/search/schema";
+import {
+  localeValidator,
+  nakafaSectionValidator,
+} from "@repo/backend/convex/lib/validators/contents";
 import { defineTable, paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -114,46 +122,6 @@ export const partTypeValidator = literals(
   "data-web-search"
 );
 
-export const nakafaSectionValidator = literals(
-  "articles",
-  "subject",
-  "exercises",
-  "quran"
-);
-
-export const nakafaContentRefValidator = v.object({
-  content_id: v.string(),
-  locale: localeValidator,
-  markdown_url: v.string(),
-  route: v.string(),
-  section: nakafaSectionValidator,
-  url: v.string(),
-});
-
-export const nakafaContentSummaryValidator = v.object({
-  ...nakafaContentRefValidator.fields,
-  description: v.string(),
-  title: v.string(),
-});
-
-export const nakafaSearchInputValidator = v.object({
-  limit: v.number(),
-  locale: localeValidator,
-  offset: v.number(),
-  query: v.optional(v.string()),
-  section: v.optional(nakafaSectionValidator),
-});
-
-export const nakafaSearchResultValidator = v.object({
-  count: v.number(),
-  has_more: v.boolean(),
-  items: v.array(nakafaContentSummaryValidator),
-  limit: v.number(),
-  next_offset: v.union(v.number(), v.null()),
-  offset: v.number(),
-  total_count: v.number(),
-});
-
 export const nakafaReadInputValidator = v.object({
   content_ref: v.string(),
 });
@@ -176,13 +144,13 @@ export const nakafaTaxonomyInputValidator = v.object({
 });
 
 export const nakafaContentPreviewValidator = v.object({
-  ...nakafaContentRefValidator.fields,
+  ...contentSearchRefValidator.fields,
   description: v.string(),
   title: v.string(),
 });
 
 export const nakafaExercisePreviewValidator = v.object({
-  ...nakafaContentRefValidator.fields,
+  ...contentSearchRefValidator.fields,
   count: v.number(),
   exercise_number: v.union(v.number(), v.null()),
   numbers: v.array(v.number()),
@@ -190,7 +158,7 @@ export const nakafaExercisePreviewValidator = v.object({
 });
 
 export const nakafaQuranPreviewValidator = v.object({
-  ...nakafaContentRefValidator.fields,
+  ...contentSearchRefValidator.fields,
   from_verse: v.number(),
   name: v.string(),
   revelation: v.string(),
@@ -215,18 +183,18 @@ export const nakafaDataValidator = v.union(
   v.object({
     kind: v.literal("search"),
     status: v.literal("loading"),
-    input: nakafaSearchInputValidator,
+    input: contentSearchInputValidator,
   }),
   v.object({
     kind: v.literal("search"),
     status: v.literal("done"),
-    input: nakafaSearchInputValidator,
-    result: nakafaSearchResultValidator,
+    input: contentSearchInputValidator,
+    result: contentSearchResultValidator,
   }),
   v.object({
     kind: v.literal("search"),
     status: v.literal("error"),
-    input: nakafaSearchInputValidator,
+    input: contentSearchInputValidator,
     error: v.string(),
   }),
   v.object({

@@ -1,8 +1,8 @@
 import type { ModelId } from "@repo/ai/config/models";
 import type { ToolName } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-import type { UserRole } from "@repo/backend/convex/users/schema";
+import type { Locale } from "@repo/utilities/locales";
+import type { UserRole } from "@repo/utilities/roles";
 import type { LanguageModelUsage, UIMessageStreamWriter } from "ai";
 
 export interface AgentContext {

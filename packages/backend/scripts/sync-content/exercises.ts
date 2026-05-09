@@ -11,7 +11,7 @@ import {
   getExerciseDir,
   parseExercisePath,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
-import { runConvexMutation } from "@repo/backend/scripts/sync-content/convexApi";
+import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
   log,
@@ -28,12 +28,14 @@ import {
   BATCH_SIZES,
   LOCALE_MATERIAL_FILE_REGEX,
   parseLocale,
+  SyncResultSchema,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
+import { Effect } from "effect";
 
 interface ExerciseSetPayload {
   category: string;
@@ -75,10 +77,11 @@ interface ExerciseQuestionPayload {
   type: string;
 }
 
-export const syncExerciseSets = async (
+/** Syncs exercise set metadata from material files into Convex. */
+export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
   config: ConvexConfig,
   options: SyncOptions
-): Promise<SyncResult> => {
+) {
   const startTime = performance.now();
   if (!options.quiet) {
     log("\n--- EXERCISE SETS ---\n");
@@ -87,7 +90,7 @@ export const syncExerciseSets = async (
   const pattern = options.locale
     ? `exercises/**/_data/${options.locale}-material.ts`
     : "exercises/**/_data/*-material.ts";
-  const materialFiles = await globFiles(pattern);
+  const materialFiles = yield* globFiles(pattern);
 
   if (!options.quiet) {
     log(`Material files found: ${materialFiles.length}`);
@@ -97,57 +100,77 @@ export const syncExerciseSets = async (
   const sets: ExerciseSetPayload[] = [];
   const errors: string[] = [];
 
-  const questionFiles = await globFiles("exercises/**/_question/*.mdx");
+  const questionFiles = yield* globFiles("exercises/**/_question/*.mdx");
   const questionCountByLocaleSlug = new Map<string, number>();
   for (const questionFile of questionFiles) {
-    try {
-      const pathInfo = parseExercisePath(questionFile);
-      const setSlug = buildExerciseSetSlug({
-        category: pathInfo.category,
-        examType: pathInfo.examType,
-        material: pathInfo.material,
-        exerciseType: pathInfo.exerciseType,
-        setName: pathInfo.setName,
-        year: pathInfo.year,
-      });
-      const countKey = `${pathInfo.locale}:${setSlug}`;
-      questionCountByLocaleSlug.set(
-        countKey,
-        (questionCountByLocaleSlug.get(countKey) || 0) + 1
-      );
-    } catch {
-      // Ignore question files that cannot be parsed for set counts.
+    const pathResult = yield* Effect.either(
+      Effect.try({
+        try: () => parseExercisePath(questionFile),
+        catch: (error) => error,
+      })
+    );
+
+    if (pathResult._tag === "Left") {
+      continue;
     }
+
+    const pathInfo = pathResult.right;
+    const setSlug = buildExerciseSetSlug({
+      category: pathInfo.category,
+      examType: pathInfo.examType,
+      material: pathInfo.material,
+      exerciseType: pathInfo.exerciseType,
+      setName: pathInfo.setName,
+      year: pathInfo.year,
+    });
+    const countKey = `${pathInfo.locale}:${setSlug}`;
+    questionCountByLocaleSlug.set(
+      countKey,
+      (questionCountByLocaleSlug.get(countKey) || 0) + 1
+    );
   }
 
   for (const materialFile of materialFiles) {
-    try {
-      const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
-      if (!localeMatch) {
-        continue;
-      }
+    const result = yield* Effect.either(
+      Effect.gen(function* () {
+        const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
+        if (!localeMatch) {
+          return [];
+        }
 
-      const locale = parseLocale(localeMatch[1], materialFile);
-      const parsedSets = await parseExerciseMaterialFile(materialFile, locale);
+        const locale = parseLocale(localeMatch[1], materialFile);
+        const parsedSets = yield* parseExerciseMaterialFile(
+          materialFile,
+          locale
+        );
 
-      for (const set of parsedSets) {
-        const countKey = `${set.locale}:${set.slug}`;
-        sets.push({
-          locale: set.locale,
-          slug: set.slug,
-          category: set.category,
-          type: set.type,
-          material: set.material,
-          exerciseType: set.exerciseType,
-          setName: set.setName,
-          title: set.title,
-          description: set.description,
-          questionCount: questionCountByLocaleSlug.get(countKey) || 0,
+        return parsedSets.map((set) => {
+          const countKey = `${set.locale}:${set.slug}`;
+
+          return {
+            locale: set.locale,
+            slug: set.slug,
+            category: set.category,
+            type: set.type,
+            material: set.material,
+            exerciseType: set.exerciseType,
+            setName: set.setName,
+            title: set.title,
+            description: set.description,
+            questionCount: questionCountByLocaleSlug.get(countKey) || 0,
+          };
         });
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      })
+    );
+
+    if (result._tag === "Left") {
+      const message =
+        result.left instanceof Error
+          ? result.left.message
+          : String(result.left);
       errors.push(`${materialFile}: ${message}`);
+    } else {
+      sets.push(...result.right);
     }
   }
 
@@ -173,10 +196,12 @@ export const syncExerciseSets = async (
       log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
     }
 
-    const result = await runConvexMutation(
+    const result = yield* callConvex(
       config,
+      "mutation",
       "contentSync/mutations/exercises:bulkSyncExerciseSets",
-      { sets: batch }
+      { sets: batch },
+      SyncResultSchema
     );
 
     totals.created += result.created;
@@ -205,25 +230,25 @@ export const syncExerciseSets = async (
   }
 
   return { ...totals, durationMs, itemsPerSecond };
-};
+});
 
-const parseQuestionFile = async (
+const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
   questionFile: string
-): Promise<ExerciseQuestionPayload> => {
+) {
   const pathInfo = parseExercisePath(questionFile);
   const exerciseDir = getExerciseDir(questionFile);
   const answerFile = questionFile.replace("_question", "_answer");
-  const questionParsed = await readMdxFile(questionFile);
+  const questionParsed = yield* readMdxFile(questionFile);
 
   let answerBody = "";
-  try {
-    const answerParsed = await readMdxFile(answerFile);
+  const answerResult = yield* Effect.either(readMdxFile(answerFile));
+
+  if (answerResult._tag === "Right") {
+    const answerParsed = answerResult.right;
     answerBody = answerParsed.body;
-  } catch {
-    answerBody = "";
   }
 
-  const choicesData = await readExerciseChoices(exerciseDir);
+  const choicesData = yield* readExerciseChoices(exerciseDir);
   const localeChoices = choicesData?.[pathInfo.locale] || [];
   const choices = localeChoices.map((choice, index) => ({
     optionKey: String.fromCharCode(65 + index),
@@ -265,68 +290,77 @@ const parseQuestionFile = async (
     authors: questionParsed.metadata.authors,
     choices,
   };
-};
+});
 
-const processQuestionBatches = async (
-  config: ConvexConfig,
-  questions: ExerciseQuestionPayload[],
-  options: SyncOptions
-): Promise<SyncResult> => {
-  const totals: SyncResult = {
-    created: 0,
-    updated: 0,
-    unchanged: 0,
-    choicesCreated: 0,
-    authorLinksCreated: 0,
-    skipped: 0,
-    skippedSetSlugs: [],
-  };
-
-  const totalBatches = Math.ceil(
-    questions.length / BATCH_SIZES.exerciseQuestions
-  );
-  const progress = createBatchProgress(
-    questions.length,
-    BATCH_SIZES.exerciseQuestions
-  );
-
-  for (
-    let index = 0;
-    index < questions.length;
-    index += BATCH_SIZES.exerciseQuestions
+const processQuestionBatches = Effect.fn("sync.processQuestionBatches")(
+  function* (
+    config: ConvexConfig,
+    questions: ExerciseQuestionPayload[],
+    options: SyncOptions
   ) {
-    const batch = questions.slice(index, index + BATCH_SIZES.exerciseQuestions);
-    const batchNum = Math.floor(index / BATCH_SIZES.exerciseQuestions) + 1;
+    const totals: SyncResult = {
+      created: 0,
+      updated: 0,
+      unchanged: 0,
+      choicesCreated: 0,
+      authorLinksCreated: 0,
+      skipped: 0,
+      skippedSetSlugs: [],
+    };
 
-    if (!options.quiet) {
-      log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
-    }
-
-    const result = await runConvexMutation(
-      config,
-      "contentSync/mutations/exercises:bulkSyncExerciseQuestions",
-      { questions: batch }
+    const totalBatches = Math.ceil(
+      questions.length / BATCH_SIZES.exerciseQuestions
+    );
+    const progress = createBatchProgress(
+      questions.length,
+      BATCH_SIZES.exerciseQuestions
     );
 
-    totals.created += result.created;
-    totals.updated += result.updated;
-    totals.unchanged += result.unchanged;
-    totals.choicesCreated =
-      (totals.choicesCreated || 0) + (result.choicesCreated || 0);
-    totals.authorLinksCreated =
-      (totals.authorLinksCreated || 0) + (result.authorLinksCreated || 0);
-    totals.skipped = (totals.skipped || 0) + (result.skipped || 0);
-    if (result.skippedSetSlugs && result.skippedSetSlugs.length > 0) {
-      totals.skippedSetSlugs = [
-        ...(totals.skippedSetSlugs || []),
-        ...result.skippedSetSlugs,
-      ];
-    }
-    updateBatchProgress(progress, batch.length);
-  }
+    for (
+      let index = 0;
+      index < questions.length;
+      index += BATCH_SIZES.exerciseQuestions
+    ) {
+      const batch = questions.slice(
+        index,
+        index + BATCH_SIZES.exerciseQuestions
+      );
+      const batchNum = Math.floor(index / BATCH_SIZES.exerciseQuestions) + 1;
 
-  return totals;
-};
+      if (!options.quiet) {
+        log(
+          formatBatchProgress(progress, batchNum, totalBatches, batch.length)
+        );
+      }
+
+      const result = yield* callConvex(
+        config,
+        "mutation",
+        "contentSync/mutations/exercises:bulkSyncExerciseQuestions",
+        { questions: batch },
+        SyncResultSchema
+      );
+
+      totals.created += result.created;
+      totals.updated += result.updated;
+      totals.unchanged += result.unchanged;
+      totals.choicesCreated =
+        (totals.choicesCreated || 0) + (result.choicesCreated || 0);
+      totals.authorLinksCreated =
+        (totals.authorLinksCreated || 0) + (result.authorLinksCreated || 0);
+      totals.skipped = (totals.skipped || 0) + (result.skipped || 0);
+      if (result.skippedSetSlugs && result.skippedSetSlugs.length > 0) {
+        totals.skippedSetSlugs = [
+          ...(totals.skippedSetSlugs || []),
+          ...result.skippedSetSlugs,
+        ];
+      }
+      updateBatchProgress(progress, batch.length);
+    }
+
+    return totals;
+  }
+);
 
 const reportQuestionSyncResults = (
   totals: SyncResult,
@@ -377,57 +411,62 @@ const reportQuestionSyncResults = (
   }
 };
 
-export const syncExerciseQuestions = async (
-  config: ConvexConfig,
-  options: SyncOptions
-): Promise<SyncResult> => {
-  const startTime = performance.now();
-  if (!options.quiet) {
-    log("\n--- EXERCISE QUESTIONS ---\n");
-  }
-
-  const pattern = options.locale
-    ? `exercises/**/_question/${options.locale}.mdx`
-    : "exercises/**/_question/*.mdx";
-  const questionFiles = await globFiles(pattern);
-
-  if (!options.quiet) {
-    log(`Files found: ${questionFiles.length} (question files only)`);
-  }
-
-  const questions: ExerciseQuestionPayload[] = [];
-  const errors: string[] = [];
-
-  for (const questionFile of questionFiles) {
-    try {
-      questions.push(await parseQuestionFile(questionFile));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      errors.push(`${questionFile}: ${message}`);
+/** Syncs exercise question and answer MDX files into Convex. */
+export const syncExerciseQuestions = Effect.fn("sync.exerciseQuestions")(
+  function* (config: ConvexConfig, options: SyncOptions) {
+    const startTime = performance.now();
+    if (!options.quiet) {
+      log("\n--- EXERCISE QUESTIONS ---\n");
     }
-  }
 
-  if (errors.length > 0 && !options.quiet) {
-    log(`Parse errors: ${errors.length}`);
-    for (const error of errors) {
-      logError(error);
+    const pattern = options.locale
+      ? `exercises/**/_question/${options.locale}.mdx`
+      : "exercises/**/_question/*.mdx";
+    const questionFiles = yield* globFiles(pattern);
+
+    if (!options.quiet) {
+      log(`Files found: ${questionFiles.length} (question files only)`);
     }
+
+    const questions: ExerciseQuestionPayload[] = [];
+    const errors: string[] = [];
+
+    for (const questionFile of questionFiles) {
+      const result = yield* Effect.either(parseQuestionFile(questionFile));
+
+      if (result._tag === "Left") {
+        const message =
+          result.left instanceof Error
+            ? result.left.message
+            : String(result.left);
+        errors.push(`${questionFile}: ${message}`);
+      } else {
+        questions.push(result.right);
+      }
+    }
+
+    if (errors.length > 0 && !options.quiet) {
+      log(`Parse errors: ${errors.length}`);
+      for (const error of errors) {
+        logError(error);
+      }
+    }
+
+    const totals = yield* processQuestionBatches(config, questions, options);
+    const durationMs = performance.now() - startTime;
+    reportQuestionSyncResults(
+      totals,
+      questionFiles.length,
+      questions.length,
+      durationMs,
+      options
+    );
+
+    const processed = totals.created + totals.updated + totals.unchanged;
+    return {
+      ...totals,
+      durationMs,
+      itemsPerSecond: durationMs > 0 ? (processed / durationMs) * 1000 : 0,
+    };
   }
-
-  const totals = await processQuestionBatches(config, questions, options);
-  const durationMs = performance.now() - startTime;
-  reportQuestionSyncResults(
-    totals,
-    questionFiles.length,
-    questions.length,
-    durationMs,
-    options
-  );
-
-  const processed = totals.created + totals.updated + totals.unchanged;
-  return {
-    ...totals,
-    durationMs,
-    itemsPerSecond: durationMs > 0 ? (processed / durationMs) * 1000 : 0,
-  };
-};
+);

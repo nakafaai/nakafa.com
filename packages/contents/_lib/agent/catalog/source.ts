@@ -1,14 +1,6 @@
-import {
-  getUnknownErrorMessage,
-  NakafaAgentInputError,
-} from "@repo/contents/_lib/agent/errors";
 import { formatNakafaRouteTitle } from "@repo/contents/_lib/agent/format";
 import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
-import type { NakafaAgentContentSummary } from "@repo/contents/_lib/agent/schemas";
-import {
-  NakafaAgentSearchOptionsSchema,
-  NakafaAgentSearchResultSchema,
-} from "@repo/contents/_lib/agent/schemas";
+import type { NakafaAgentContentSummary } from "@repo/contents/_lib/agent/schema/ref";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import {
   getExerciseQuestionNumbers,
@@ -40,43 +32,14 @@ export const getNakafaAgentContentIndex = Effect.fn(
   );
 });
 
-/** Searches the Nakafa content index with bounded offset pagination. */
-export const searchNakafaAgentContent = Effect.fn("NakafaAgent.searchContent")(
-  function* (options: unknown = {}) {
-    const parsedOptions = yield* parseNakafaSearchOptions(options);
-    const query = parsedOptions.query?.toLowerCase();
-    const index = yield* getNakafaAgentContentIndex(parsedOptions.locale);
-    const filtered = index.filter((item) =>
-      matchesNakafaSearchItem(item, query, parsedOptions.section)
-    );
-    const items = filtered.slice(
-      parsedOptions.offset,
-      parsedOptions.offset + parsedOptions.limit
-    );
-    const nextOffset = parsedOptions.offset + items.length;
-
-    return NakafaAgentSearchResultSchema.parse({
-      count: items.length,
-      has_more: nextOffset < filtered.length,
-      items,
-      limit: parsedOptions.limit,
-      next_offset: nextOffset < filtered.length ? nextOffset : null,
-      offset: parsedOptions.offset,
-      total_count: filtered.length,
-    });
-  }
-);
-
-/** Parses and validates untrusted search options with the shared Zod schema. */
-function parseNakafaSearchOptions(options: unknown) {
-  return Effect.try({
-    try: () => NakafaAgentSearchOptionsSchema.parse(options),
-    catch: (error) =>
-      new NakafaAgentInputError({
-        cause: getUnknownErrorMessage(error),
-        message: "Invalid Nakafa content search options.",
-      }),
-  });
+/** Provides stable ordering across mixed content sections. */
+function compareNakafaContentSummaries(
+  left: NakafaAgentContentSummary,
+  right: NakafaAgentContentSummary
+) {
+  return `${left.section}:${left.title}`.localeCompare(
+    `${right.section}:${right.title}`
+  );
 }
 
 /** Builds searchable summaries for articles and subject content. */
@@ -144,35 +107,5 @@ function isCanonicalNakafaExerciseSetPath(route: string) {
 
   return !(
     isYearlessTryOutCollectionSlug(setSlug) || hasInvalidTryOutYearSlug(setSlug)
-  );
-}
-
-/** Checks whether one summary matches the requested query and section. */
-function matchesNakafaSearchItem(
-  item: NakafaAgentContentSummary,
-  query: string | undefined,
-  section: string | undefined
-) {
-  if (section && item.section !== section) {
-    return false;
-  }
-
-  if (!query) {
-    return true;
-  }
-
-  return [item.content_id, item.title, item.description, item.url]
-    .join(" ")
-    .toLowerCase()
-    .includes(query);
-}
-
-/** Provides stable ordering across mixed content sections. */
-function compareNakafaContentSummaries(
-  left: NakafaAgentContentSummary,
-  right: NakafaAgentContentSummary
-) {
-  return `${left.section}:${left.title}`.localeCompare(
-    `${right.section}:${right.title}`
   );
 }

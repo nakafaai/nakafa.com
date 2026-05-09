@@ -10,6 +10,7 @@ import type {
   ConvexConfig,
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/types";
+import { Effect } from "effect";
 
 const logIntegrityList = (
   title: string,
@@ -31,10 +32,11 @@ const logIntegrityList = (
   return true;
 };
 
-export const verify = async (
+/** Verifies filesystem content counts against Convex read models. */
+export const verify = Effect.fn("sync.verify")(function* (
   config: ConvexConfig,
   options: SyncOptions = {}
-): Promise<void> => {
+) {
   log("=== VERIFY CONTENT ===\n");
 
   const [
@@ -46,7 +48,7 @@ export const verify = async (
     answerFiles,
     choicesFiles,
     refFiles,
-  ] = await Promise.all([
+  ] = yield* Effect.all([
     globFiles("articles/**/*.mdx"),
     globFiles("subject/**/*.mdx"),
     globFiles("subject/**/_data/*-material.ts"),
@@ -100,7 +102,7 @@ export const verify = async (
   log("\n=== DATABASE ===\n");
 
   try {
-    const counts = await getContentCounts(config);
+    const counts = yield* getContentCounts(config);
 
     log("Content tables:");
     log(`  articleContents:     ${counts.articles}`);
@@ -108,6 +110,7 @@ export const verify = async (
     log(`  subjectSections:     ${counts.subjectSections}`);
     log(`  exerciseSets:        ${counts.exerciseSets}`);
     log(`  exerciseQuestions:   ${counts.exerciseQuestions}`);
+    log(`  contentSearch: ${counts.contentSearch}`);
     log(`  tryouts:             ${counts.tryouts}`);
 
     log("\nRelated tables:");
@@ -177,7 +180,7 @@ export const verify = async (
     }
 
     log("\n=== DATA INTEGRITY ===\n");
-    const integrity = await getDataIntegrity(config);
+    const integrity = yield* getDataIntegrity(config);
 
     allMatch =
       !logIntegrityList(
@@ -218,6 +221,7 @@ export const verify = async (
       log(`  - ${counts.subjectSections} subject sections`);
       log(`  - ${counts.exerciseSets} exercise sets`);
       log(`  - ${counts.exerciseQuestions} exercise questions`);
+      log(`  - ${counts.contentSearch} content search rows`);
       log(`  - ${counts.tryouts} tryouts`);
       log(`  - ${counts.articleReferences} references`);
       log(`  - ${counts.exerciseChoices} choices`);
@@ -241,4 +245,4 @@ export const verify = async (
     logError(`Failed to query database: ${message}`);
     process.exit(1);
   }
-};
+});

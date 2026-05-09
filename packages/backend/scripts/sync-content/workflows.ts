@@ -4,7 +4,7 @@ import {
   syncAuthors,
 } from "@repo/backend/scripts/sync-content/authors";
 import { clean } from "@repo/backend/scripts/sync-content/clean";
-import { runConvexMutationGeneric } from "@repo/backend/scripts/sync-content/convexApi";
+import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
   syncExerciseQuestions,
   syncExerciseSets,
@@ -34,6 +34,7 @@ import {
   AuthorSyncResultSchema,
   BATCH_SIZES,
 } from "@repo/backend/scripts/sync-content/schemas";
+import { syncQuranSearch } from "@repo/backend/scripts/sync-content/search";
 import {
   syncSubjectSections,
   syncSubjectTopics,
@@ -45,6 +46,7 @@ import type {
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
 import { verify } from "@repo/backend/scripts/sync-content/verify";
+import { Effect } from "effect";
 
 const logSyncSummary = (
   authorResult: { created: number },
@@ -53,6 +55,7 @@ const logSyncSummary = (
   subjectSectionResult: SyncResult,
   exerciseSetResult: SyncResult,
   exerciseQuestionResult: SyncResult,
+  quranSearchResult: SyncResult,
   tryoutResult: SyncResult
 ): void => {
   const totalCreated =
@@ -61,6 +64,7 @@ const logSyncSummary = (
     subjectSectionResult.created +
     exerciseSetResult.created +
     exerciseQuestionResult.created +
+    quranSearchResult.created +
     tryoutResult.created;
   const totalUpdated =
     articleResult.updated +
@@ -68,6 +72,7 @@ const logSyncSummary = (
     subjectSectionResult.updated +
     exerciseSetResult.updated +
     exerciseQuestionResult.updated +
+    quranSearchResult.updated +
     tryoutResult.updated;
   const total =
     totalCreated +
@@ -77,6 +82,7 @@ const logSyncSummary = (
     subjectSectionResult.unchanged +
     exerciseSetResult.unchanged +
     exerciseQuestionResult.unchanged +
+    quranSearchResult.unchanged +
     tryoutResult.unchanged;
   const totalAuthorLinksCreated =
     (articleResult.authorLinksCreated || 0) +
@@ -99,6 +105,9 @@ const logSyncSummary = (
   );
   log(
     `  Exercise Questions: ${exerciseQuestionResult.created + exerciseQuestionResult.updated + exerciseQuestionResult.unchanged} (${exerciseQuestionResult.created} new, ${exerciseQuestionResult.updated} updated)`
+  );
+  log(
+    `  Quran Search:       ${quranSearchResult.created + quranSearchResult.updated + quranSearchResult.unchanged} (${quranSearchResult.created} new, ${quranSearchResult.updated} updated)`
   );
   log(
     `  Tryouts:            ${tryoutResult.created + tryoutResult.updated + tryoutResult.unchanged} (${tryoutResult.created} new, ${tryoutResult.updated} updated)`
@@ -129,10 +138,11 @@ const logSyncSummary = (
   }
 };
 
-export const syncAll = async (
+/** Runs the complete content sync in dependency-safe phases. */
+export const syncAll = Effect.fn("sync.all")(function* (
   config: ConvexConfig,
   options: SyncOptions
-): Promise<void> => {
+) {
   const metrics = createMetrics();
   log("=== CONTENT SYNC ===\n");
 
@@ -144,7 +154,7 @@ export const syncAll = async (
   }
 
   log("Phase 0: Pre-syncing authors...");
-  const authorResult = await syncAuthors(config, { ...options, quiet: true });
+  const authorResult = yield* syncAuthors(config, { ...options, quiet: true });
   log(
     `  Authors: ${authorResult.created} new, ${authorResult.existing} existing`
   );
@@ -155,18 +165,19 @@ export const syncAll = async (
   let subjectSectionResult: SyncResult;
   let exerciseSetResult: SyncResult;
   let exerciseQuestionResult: SyncResult;
+  let quranSearchResult: SyncResult;
   let tryoutResult: SyncResult;
 
   if (options.sequential) {
     const articlePhase = startPhase(metrics, "Articles");
-    articleResult = await syncArticles(config, options);
+    articleResult = yield* syncArticles(config, options);
     endPhase(
       articlePhase,
       articleResult.created + articleResult.updated + articleResult.unchanged
     );
 
     const topicPhase = startPhase(metrics, "Subject Topics");
-    subjectTopicResult = await syncSubjectTopics(config, options);
+    subjectTopicResult = yield* syncSubjectTopics(config, options);
     endPhase(
       topicPhase,
       subjectTopicResult.created +
@@ -175,7 +186,7 @@ export const syncAll = async (
     );
 
     const sectionPhase = startPhase(metrics, "Subject Sections");
-    subjectSectionResult = await syncSubjectSections(config, options);
+    subjectSectionResult = yield* syncSubjectSections(config, options);
     endPhase(
       sectionPhase,
       subjectSectionResult.created +
@@ -184,7 +195,7 @@ export const syncAll = async (
     );
 
     const setPhase = startPhase(metrics, "Exercise Sets");
-    exerciseSetResult = await syncExerciseSets(config, options);
+    exerciseSetResult = yield* syncExerciseSets(config, options);
     endPhase(
       setPhase,
       exerciseSetResult.created +
@@ -193,7 +204,7 @@ export const syncAll = async (
     );
 
     const questionPhase = startPhase(metrics, "Exercise Questions");
-    exerciseQuestionResult = await syncExerciseQuestions(config, options);
+    exerciseQuestionResult = yield* syncExerciseQuestions(config, options);
     endPhase(
       questionPhase,
       exerciseQuestionResult.created +
@@ -201,8 +212,17 @@ export const syncAll = async (
         exerciseQuestionResult.unchanged
     );
 
+    const quranSearchPhase = startPhase(metrics, "Quran Search");
+    quranSearchResult = yield* syncQuranSearch(config, options);
+    endPhase(
+      quranSearchPhase,
+      quranSearchResult.created +
+        quranSearchResult.updated +
+        quranSearchResult.unchanged
+    );
+
     const tryoutPhase = startPhase(metrics, "Tryouts");
-    tryoutResult = await syncTryouts(config, options);
+    tryoutResult = yield* syncTryouts(config, options);
     endPhase(
       tryoutPhase,
       tryoutResult.created + tryoutResult.updated + tryoutResult.unchanged
@@ -212,7 +232,7 @@ export const syncAll = async (
 
     log("Phase 1: Syncing articles, topics, and sets...");
     const phase1Start = performance.now();
-    [articleResult, subjectTopicResult, exerciseSetResult] = await Promise.all([
+    [articleResult, subjectTopicResult, exerciseSetResult] = yield* Effect.all([
       syncArticles(config, quietOptions),
       syncSubjectTopics(config, quietOptions),
       syncExerciseSets(config, quietOptions),
@@ -224,7 +244,7 @@ export const syncAll = async (
 
     log("Phase 2: Syncing sections and questions...");
     const phase2Start = performance.now();
-    [subjectSectionResult, exerciseQuestionResult] = await Promise.all([
+    [subjectSectionResult, exerciseQuestionResult] = yield* Effect.all([
       syncSubjectSections(config, quietOptions),
       syncExerciseQuestions(config, quietOptions),
     ]);
@@ -232,17 +252,24 @@ export const syncAll = async (
     log(`  Exercise Questions: ${formatSyncResult(exerciseQuestionResult)}`);
     log(`  Duration: ${formatDuration(performance.now() - phase2Start)}`);
 
-    log("Phase 3: Syncing tryouts...");
+    log("Phase 3: Syncing Quran search...");
     const phase3Start = performance.now();
-    tryoutResult = await syncTryouts(config, options);
-    log(`  Tryouts:            ${formatSyncResult(tryoutResult)}`);
+    quranSearchResult = yield* syncQuranSearch(config, quietOptions);
+    log(`  Quran Search:       ${formatSyncResult(quranSearchResult)}`);
     log(`  Duration: ${formatDuration(performance.now() - phase3Start)}`);
+
+    log("Phase 4: Syncing tryouts...");
+    const phase4Start = performance.now();
+    tryoutResult = yield* syncTryouts(config, options);
+    log(`  Tryouts:            ${formatSyncResult(tryoutResult)}`);
+    log(`  Duration: ${formatDuration(performance.now() - phase4Start)}`);
 
     addPhaseMetrics(metrics, "Articles", articleResult);
     addPhaseMetrics(metrics, "Subject Topics", subjectTopicResult);
     addPhaseMetrics(metrics, "Subject Sections", subjectSectionResult);
     addPhaseMetrics(metrics, "Exercise Sets", exerciseSetResult);
     addPhaseMetrics(metrics, "Exercise Questions", exerciseQuestionResult);
+    addPhaseMetrics(metrics, "Quran Search", quranSearchResult);
     addPhaseMetrics(metrics, "Tryouts", tryoutResult);
   }
 
@@ -254,25 +281,27 @@ export const syncAll = async (
     subjectSectionResult,
     exerciseSetResult,
     exerciseQuestionResult,
+    quranSearchResult,
     tryoutResult
   );
   logSyncMetrics(metrics);
-};
+});
 
-export const syncIncremental = async (
+/** Runs a content sync limited to changed content files when possible. */
+export const syncIncremental = Effect.fn("sync.incremental")(function* (
   config: ConvexConfig,
   options: SyncOptions
-): Promise<void> => {
+) {
   const metrics = createMetrics();
   log("=== INCREMENTAL SYNC ===\n");
 
-  const syncState = loadSyncState(options.prod ?? false);
-  const currentCommit = getCurrentGitCommit();
+  const syncState = yield* loadSyncState(options.prod ?? false);
+  const currentCommit = yield* getCurrentGitCommit();
 
   if (!syncState?.lastSyncCommit) {
     log("No previous sync state found. Running full sync...\n");
-    await syncAll(config, options);
-    saveSyncState(
+    yield* syncAll(config, options);
+    yield* saveSyncState(
       { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
       options.prod ?? false
     );
@@ -281,7 +310,7 @@ export const syncIncremental = async (
 
   if (!currentCommit) {
     log("Git not available. Running full sync...\n");
-    await syncAll(config, options);
+    yield* syncAll(config, options);
     return;
   }
 
@@ -289,10 +318,10 @@ export const syncIncremental = async (
   log(`Last commit: ${syncState.lastSyncCommit.slice(0, 8)}`);
   log(`Current commit: ${currentCommit.slice(0, 8)}\n`);
 
-  const changedFiles = getChangedFilesSince(syncState.lastSyncCommit);
+  const changedFiles = yield* getChangedFilesSince(syncState.lastSyncCommit);
   if (changedFiles.size === 0) {
     logSuccess("No tracked or untracked content files changed. Nothing to do!");
-    saveSyncState(
+    yield* saveSyncState(
       { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
       options.prod ?? false
     );
@@ -302,7 +331,7 @@ export const syncIncremental = async (
   log(`Changed files: ${changedFiles.size}\n`);
   const changedFilesArray = [...changedFiles];
   const changedAuthorNames =
-    await collectAuthorNamesFromFiles(changedFilesArray);
+    yield* collectAuthorNamesFromFiles(changedFilesArray);
 
   if (changedAuthorNames.length > 0) {
     log("Phase 0: Pre-syncing authors from changed files...");
@@ -318,8 +347,9 @@ export const syncIncremental = async (
         index,
         index + BATCH_SIZES.authors
       );
-      const authorResult = await runConvexMutationGeneric(
+      const authorResult = yield* callConvex(
         config,
+        "mutation",
         "contentSync/mutations/authors:bulkSyncAuthors",
         { authorNames: batch },
         AuthorSyncResultSchema
@@ -355,10 +385,11 @@ export const syncIncremental = async (
     updated: 0,
     unchanged: 0,
   };
+  let quranSearchResult: SyncResult = { created: 0, updated: 0, unchanged: 0 };
 
   if (hasArticleChanges) {
     log("Articles changed - syncing...");
-    articleResult = await syncArticles(config, options);
+    articleResult = yield* syncArticles(config, options);
     addPhaseMetrics(metrics, "Articles", articleResult);
   } else {
     log("Articles: no changes");
@@ -366,8 +397,8 @@ export const syncIncremental = async (
 
   if (hasSubjectChanges) {
     log("Subjects changed - syncing...");
-    subjectTopicResult = await syncSubjectTopics(config, options);
-    subjectSectionResult = await syncSubjectSections(config, options);
+    subjectTopicResult = yield* syncSubjectTopics(config, options);
+    subjectSectionResult = yield* syncSubjectSections(config, options);
     addPhaseMetrics(metrics, "Subject Topics", subjectTopicResult);
     addPhaseMetrics(metrics, "Subject Sections", subjectSectionResult);
   } else {
@@ -376,13 +407,19 @@ export const syncIncremental = async (
 
   if (hasExerciseChanges) {
     log("Exercises changed - syncing...");
-    exerciseSetResult = await syncExerciseSets(config, options);
-    exerciseQuestionResult = await syncExerciseQuestions(config, options);
+    exerciseSetResult = yield* syncExerciseSets(config, options);
+    exerciseQuestionResult = yield* syncExerciseQuestions(config, options);
     addPhaseMetrics(metrics, "Exercise Sets", exerciseSetResult);
     addPhaseMetrics(metrics, "Exercise Questions", exerciseQuestionResult);
   } else {
     log("Exercises: no changes");
   }
+
+  quranSearchResult = yield* syncQuranSearch(config, {
+    ...options,
+    quiet: true,
+  });
+  addPhaseMetrics(metrics, "Quran Search", quranSearchResult);
 
   finalizeMetrics(metrics);
   log("\n=== SUMMARY ===\n");
@@ -392,13 +429,15 @@ export const syncIncremental = async (
     subjectTopicResult.created +
     subjectSectionResult.created +
     exerciseSetResult.created +
-    exerciseQuestionResult.created;
+    exerciseQuestionResult.created +
+    quranSearchResult.created;
   const totalUpdated =
     articleResult.updated +
     subjectTopicResult.updated +
     subjectSectionResult.updated +
     exerciseSetResult.updated +
-    exerciseQuestionResult.updated;
+    exerciseQuestionResult.updated +
+    quranSearchResult.updated;
   if (totalCreated > 0 || totalUpdated > 0) {
     log(`Changes: ${totalCreated} created, ${totalUpdated} updated`);
   } else {
@@ -406,30 +445,31 @@ export const syncIncremental = async (
   }
 
   logSyncMetrics(metrics);
-  saveSyncState(
+  yield* saveSyncState(
     { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
     options.prod ?? false
   );
   log("\n=== INCREMENTAL SYNC COMPLETE ===");
   logSuccess("Sync state saved for next incremental sync");
-};
+});
 
-export const syncFull = async (
+/** Runs sync, stale cleanup, verification, and incremental-state save. */
+export const syncFull = Effect.fn("sync.full")(function* (
   config: ConvexConfig,
   options: SyncOptions = {}
-): Promise<void> => {
+) {
   log("=== FULL SYNC ===\n");
   log(
     "This command will: sync all content, clean stale content, verify data\n"
   );
 
-  const currentCommit = getCurrentGitCommit();
+  const currentCommit = yield* getCurrentGitCommit();
 
   try {
-    await syncAll(config, options);
+    yield* syncAll(config, options);
     log("\n");
 
-    const cleanResult = await clean(config, {
+    const cleanResult = yield* clean(config, {
       ...options,
       force: true,
       authors: true,
@@ -439,8 +479,8 @@ export const syncFull = async (
     }
 
     log("\n");
-    await verify(config, options);
-    saveSyncState(
+    yield* verify(config, options);
+    yield* saveSyncState(
       { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
       options.prod ?? false
     );
@@ -453,4 +493,4 @@ export const syncFull = async (
     logError(`Full sync failed: ${message}`);
     process.exit(1);
   }
-};
+});

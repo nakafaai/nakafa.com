@@ -1,11 +1,14 @@
+import path from "node:path";
 import { config, withAnalyzer, withMDX } from "@repo/next-config";
 import type { NextConfig } from "next";
 import { env } from "@/env";
 
-let nextConfig: NextConfig = config;
+const nextConfig = {
+  ...config,
+  outputFileTracingRoot: path.join(process.cwd(), "../.."),
+} satisfies NextConfig;
 
-if (env.ANALYZE === "true") {
-  nextConfig = withAnalyzer(nextConfig);
-}
+const analyzedConfig =
+  env.ANALYZE === "true" ? withAnalyzer(nextConfig) : nextConfig;
 
-export default withMDX(nextConfig);
+export default withMDX(analyzedConfig);

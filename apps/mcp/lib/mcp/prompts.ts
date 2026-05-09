@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { LocaleSchema } from "@repo/contents/_types/content";
+import { routing } from "@repo/internationalization/src/routing";
 import * as z from "zod";
 import { NakafaMcpContentRefInputSchema } from "@/lib/mcp/schemas";
 
@@ -17,7 +18,7 @@ function registerFindLessonPrompt(server: McpServer) {
     "nakafa_find_lesson",
     {
       argsSchema: {
-        locale: LocaleSchema.default("en").describe(
+        locale: LocaleSchema.default(routing.defaultLocale).describe(
           "Preferred content locale."
         ),
         query: z
@@ -128,7 +129,9 @@ function registerQuranReferencePrompt(server: McpServer) {
           .string()
           .default("1")
           .describe("First verse number to include."),
-        locale: LocaleSchema.default("en").describe("Translation locale."),
+        locale: LocaleSchema.default(routing.defaultLocale).describe(
+          "Translation locale."
+        ),
         question: z
           .string()
           .optional()

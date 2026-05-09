@@ -8,6 +8,11 @@ import {
   replaceArticleReferences,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
+import { buildContentSearchRef } from "@repo/backend/convex/contents/search/documents";
+import {
+  deleteContentSearch,
+  syncContentSearch,
+} from "@repo/backend/convex/contents/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   articleCategoryValidator,
@@ -84,6 +89,17 @@ export const bulkSyncArticles = internalMutation({
           q.eq("locale", article.locale).eq("slug", article.slug)
         )
         .unique();
+
+      await syncContentSearch(ctx, {
+        contentHash: article.contentHash,
+        description: article.description,
+        locale: article.locale,
+        route: article.slug,
+        section: "articles",
+        syncedAt: now,
+        text: article.body,
+        title: article.title,
+      });
 
       if (existingArticle?.contentHash === article.contentHash) {
         unchanged++;
@@ -190,9 +206,15 @@ export const deleteStaleArticles = internalMutation({
       }
 
       const articleId = args.articleIds[index];
+      const searchRef = buildContentSearchRef({
+        locale: article.locale,
+        route: article.slug,
+        section: "articles",
+      });
 
       await deleteContentAuthorLinks(ctx, articleId, "article");
       await deleteArticleReferencesForArticle(ctx, articleId);
+      await deleteContentSearch(ctx, searchRef.content_id);
       await ctx.db.delete("articleContents", articleId);
       deleted++;
     }

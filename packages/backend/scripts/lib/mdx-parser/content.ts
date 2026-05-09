@@ -8,10 +8,7 @@ import {
   MULTIPLE_NEWLINES_REGEX,
   REFERENCES_REGEX,
 } from "@repo/backend/scripts/lib/mdx-parser/constants";
-import type {
-  ExerciseChoicesByLocale,
-  ParsedMdx,
-} from "@repo/backend/scripts/lib/mdx-parser/types";
+import type { ParsedMdx } from "@repo/backend/scripts/lib/mdx-parser/types";
 import { parseContentDate } from "@repo/contents/_shared/date";
 import {
   ContentMetadataSchema,
@@ -19,6 +16,11 @@ import {
   ReferenceSchema,
 } from "@repo/contents/_types/content";
 import { ExercisesChoicesSchema } from "@repo/contents/_types/exercises/choices";
+import { Effect, Schema } from "effect";
+
+class MdxReadError extends Schema.TaggedError<MdxReadError>()("MdxReadError", {
+  message: Schema.String,
+}) {}
 
 function normalizeWhitespace(content: string) {
   return content.replace(MULTIPLE_NEWLINES_REGEX, "\n\n").trim();
@@ -61,81 +63,132 @@ export function parseMdxContent(content: string): ParsedMdx {
   };
 }
 
-export async function readMdxFile(
+/** Reads and parses one MDX file through an Effect filesystem boundary. */
+export const readMdxFile = Effect.fn("mdx.readMdxFile")(function* (
   filePath: string
-): Promise<ParsedMdx & { filePath: string }> {
-  const content = await fs.readFile(filePath, "utf8");
+) {
+  const content = yield* Effect.tryPromise({
+    try: () => fs.readFile(filePath, "utf8"),
+    catch: (error) =>
+      new MdxReadError({
+        message: error instanceof Error ? error.message : String(error),
+      }),
+  });
+  const parsed = yield* Effect.try({
+    try: () => parseMdxContent(content),
+    catch: (error) =>
+      new MdxReadError({
+        message: error instanceof Error ? error.message : String(error),
+      }),
+  });
+
   return {
-    ...parseMdxContent(content),
+    ...parsed,
     filePath,
   };
-}
+});
 
-export async function readExerciseChoices(
-  exerciseDir: string
-): Promise<ExerciseChoicesByLocale | null> {
-  const choicesPath = path.join(exerciseDir, "choices.ts");
+/** Reads optional exercise choices, returning null when no valid choices exist. */
+export const readExerciseChoices = Effect.fn("mdx.readExerciseChoices")(
+  function* (exerciseDir: string) {
+    const choicesPath = path.join(exerciseDir, "choices.ts");
+    const file = yield* Effect.either(
+      Effect.tryPromise({
+        try: () => fs.readFile(choicesPath, "utf8"),
+        catch: (error) =>
+          new MdxReadError({
+            message: error instanceof Error ? error.message : String(error),
+          }),
+      })
+    );
 
-  try {
-    const content = await fs.readFile(choicesPath, "utf8");
+    if (file._tag === "Left") {
+      return null;
+    }
+
     const objectMatch =
-      content.match(DEFAULT_EXPORT_REGEX) ?? content.match(CONST_CHOICES_REGEX);
+      file.right.match(DEFAULT_EXPORT_REGEX) ??
+      file.right.match(CONST_CHOICES_REGEX);
 
     if (!objectMatch) {
       return null;
     }
 
-    const choicesObject = new Function(`return ${objectMatch[1]}`)();
-    const parseResult = ExercisesChoicesSchema.safeParse(choicesObject);
+    const choicesObject = yield* Effect.either(
+      Effect.try({
+        try: () => new Function(`return ${objectMatch[1]}`)(),
+        catch: (error) =>
+          new MdxReadError({
+            message: error instanceof Error ? error.message : String(error),
+          }),
+      })
+    );
+
+    if (choicesObject._tag === "Left") {
+      return null;
+    }
+
+    const parseResult = ExercisesChoicesSchema.safeParse(choicesObject.right);
 
     if (!parseResult.success) {
-      console.warn(
-        `Invalid choices at ${choicesPath}: ${parseResult.error.message}`
-      );
       return null;
     }
 
     return parseResult.data;
-  } catch {
-    return null;
   }
-}
+);
 
-export async function readArticleReferences(
-  articleDir: string
-): Promise<Reference[]> {
-  const refPath = path.join(articleDir, "ref.ts");
+/** Reads optional article references, dropping invalid entries instead of failing sync. */
+export const readArticleReferences = Effect.fn("mdx.readArticleReferences")(
+  function* (articleDir: string) {
+    const refPath = path.join(articleDir, "ref.ts");
+    const file = yield* Effect.either(
+      Effect.tryPromise({
+        try: () => fs.readFile(refPath, "utf8"),
+        catch: (error) =>
+          new MdxReadError({
+            message: error instanceof Error ? error.message : String(error),
+          }),
+      })
+    );
 
-  try {
-    const content = await fs.readFile(refPath, "utf8");
-    const match = content.match(REFERENCES_REGEX);
+    if (file._tag === "Left") {
+      return [];
+    }
+
+    const match = file.right.match(REFERENCES_REGEX);
 
     if (!match) {
       return [];
     }
 
-    const referencesArray = new Function(`return ${match[1]}`)();
+    const referencesArray = yield* Effect.either(
+      Effect.try({
+        try: () => new Function(`return ${match[1]}`)(),
+        catch: (error) =>
+          new MdxReadError({
+            message: error instanceof Error ? error.message : String(error),
+          }),
+      })
+    );
 
-    if (!Array.isArray(referencesArray)) {
+    if (
+      referencesArray._tag === "Left" ||
+      !Array.isArray(referencesArray.right)
+    ) {
       return [];
     }
 
     const validReferences: Reference[] = [];
 
-    for (const reference of referencesArray) {
+    for (const reference of referencesArray.right) {
       const parseResult = ReferenceSchema.safeParse(reference);
 
       if (parseResult.success) {
         validReferences.push(parseResult.data);
-      } else {
-        console.warn(
-          `Invalid reference in ${refPath}: ${parseResult.error.message}`
-        );
       }
     }
 
     return validReferences;
-  } catch {
-    return [];
   }
-}
+);

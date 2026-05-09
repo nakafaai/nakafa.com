@@ -1,5 +1,5 @@
 import { previewQuran } from "@repo/ai/agents/nakafa/preview";
-import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schemas";
+import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran";
 import { describe, expect, it } from "vitest";
 
 describe("nakafa previews", () => {

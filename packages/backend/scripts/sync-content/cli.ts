@@ -1,7 +1,7 @@
 import { syncArticles } from "@repo/backend/scripts/sync-content/articles";
 import { syncAuthors } from "@repo/backend/scripts/sync-content/authors";
 import { clean } from "@repo/backend/scripts/sync-content/clean";
-import { getConvexConfig } from "@repo/backend/scripts/sync-content/convexApi";
+import { getConvexConfig } from "@repo/backend/scripts/sync-content/convex";
 import {
   syncExerciseQuestions,
   syncExerciseSets,
@@ -21,6 +21,7 @@ import {
   syncFull,
   syncIncremental,
 } from "@repo/backend/scripts/sync-content/workflows";
+import { Effect } from "effect";
 
 /** Parses one sync-content CLI invocation into a command and option bag. */
 const parseArgs = (): { options: SyncOptions; type: string } => {
@@ -101,78 +102,78 @@ const printUsage = (): void => {
 };
 
 /** Dispatches one parsed sync-content command to the matching workflow. */
-export const runCommand = async (
+export const runCommand = Effect.fn("sync.runCommand")(function* (
   type: string,
   options: SyncOptions
-): Promise<void> => {
+) {
   if (type === "validate") {
-    await validate();
+    yield* validate();
     return;
   }
 
-  const config = getConvexConfig(options);
+  const config = yield* getConvexConfig(options);
 
   switch (type) {
     case "articles":
-      await syncAuthors(config, options);
-      await syncArticles(config, options);
+      yield* syncAuthors(config, options);
+      yield* syncArticles(config, options);
       return;
     case "subjects":
-      await syncAuthors(config, options);
-      await syncSubjectTopics(config, options);
-      await syncSubjectSections(config, options);
+      yield* syncAuthors(config, options);
+      yield* syncSubjectTopics(config, options);
+      yield* syncSubjectSections(config, options);
       return;
     case "subject-topics":
-      await syncAuthors(config, options);
-      await syncSubjectTopics(config, options);
+      yield* syncAuthors(config, options);
+      yield* syncSubjectTopics(config, options);
       return;
     case "subject-sections":
-      await syncAuthors(config, options);
-      await syncSubjectSections(config, options);
+      yield* syncAuthors(config, options);
+      yield* syncSubjectSections(config, options);
       return;
     case "exercise-sets":
-      await syncAuthors(config, options);
-      await syncExerciseSets(config, options);
+      yield* syncAuthors(config, options);
+      yield* syncExerciseSets(config, options);
       return;
     case "exercise-questions":
-      await syncAuthors(config, options);
-      await syncExerciseQuestions(config, options);
+      yield* syncAuthors(config, options);
+      yield* syncExerciseQuestions(config, options);
       return;
     case "exercises":
-      await syncAuthors(config, options);
-      await syncExerciseSets(config, options);
-      await syncExerciseQuestions(config, options);
+      yield* syncAuthors(config, options);
+      yield* syncExerciseSets(config, options);
+      yield* syncExerciseQuestions(config, options);
       return;
     case "all":
-      await syncAll(config, options);
+      yield* syncAll(config, options);
       return;
     case "incremental":
-      await syncIncremental(config, options);
+      yield* syncIncremental(config, options);
       return;
     case "verify":
-      await verify(config, options);
+      yield* verify(config, options);
       return;
     case "clean":
-      await clean(config, options);
+      yield* clean(config, options);
       return;
     case "full":
-      await syncFull(config, options);
+      yield* syncFull(config, options);
       return;
     case "reset":
-      await reset(config, options);
+      yield* reset(config, options);
       return;
     case "reset-tryouts":
-      await resetTryouts(config, options);
+      yield* resetTryouts(config, options);
       return;
     default:
       logError(`Unknown command: ${type}`);
       printUsage();
       process.exit(1);
   }
-};
+});
 
 /** Parses process arguments and runs the selected sync-content workflow. */
-export const parseAndRun = async (): Promise<void> => {
+export const parseAndRun = Effect.fn("sync.parseAndRun")(function* () {
   const { type, options } = parseArgs();
-  await runCommand(type, options);
-};
+  yield* runCommand(type, options);
+});

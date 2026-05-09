@@ -93,7 +93,6 @@ describe("nakafa exercise tool", () => {
               ),
             quran: () => Effect.die("unused"),
             read: () => Effect.die("unused"),
-            search: () => Effect.die("unused"),
             taxonomy: () => Effect.die("unused"),
             verify: () => Effect.succeed(false),
           })

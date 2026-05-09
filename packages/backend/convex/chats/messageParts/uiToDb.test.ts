@@ -1,6 +1,6 @@
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
-import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schemas";
+import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { describe, expect, it } from "vitest";
 
 const ref = {

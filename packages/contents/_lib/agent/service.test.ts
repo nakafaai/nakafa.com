@@ -8,15 +8,9 @@ const EXERCISE_CONTENT_ID =
   "en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2";
 
 describe("Nakafa service", () => {
-  it("exposes the shared search, read, exercise, Quran, taxonomy, and verify contract", async () => {
+  it("exposes the shared read, exercise, Quran, taxonomy, and verify contract", async () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {
-        const search = yield* Nakafa.search({
-          limit: 1,
-          locale: "en",
-          query: "dynastic",
-          section: "articles",
-        });
         const read = yield* Nakafa.read(ARTICLE_CONTENT_ID);
         const exercise = yield* Nakafa.exercise(EXERCISE_CONTENT_ID);
         const quran = yield* Nakafa.quran({
@@ -42,7 +36,6 @@ describe("Nakafa service", () => {
           invalidPage,
           quran,
           read,
-          search,
           taxonomy,
           invalidExercise,
           validExercise,
@@ -53,7 +46,6 @@ describe("Nakafa service", () => {
       }).pipe(Effect.provide(Nakafa.Default))
     );
 
-    expect(result.search.items).toHaveLength(1);
     expect(Option.isSome(result.read)).toBe(true);
     expect(Option.isSome(result.exercise)).toBe(true);
     expect(Option.isSome(result.quran)).toBe(true);
@@ -86,7 +78,7 @@ describe("Nakafa service", () => {
 
   it("returns false when exercise verification cannot read the set", async () => {
     vi.resetModules();
-    vi.doMock("@repo/contents/_lib/agent/exercises", () => ({
+    vi.doMock("@repo/contents/_lib/agent/exercise/read", () => ({
       getNakafaAgentExercise: () => Effect.fail(new Error("broken")),
     }));
 
@@ -96,7 +88,7 @@ describe("Nakafa service", () => {
     );
 
     expect(verified).toBe(false);
-    vi.doUnmock("@repo/contents/_lib/agent/exercises");
+    vi.doUnmock("@repo/contents/_lib/agent/exercise/read");
     vi.resetModules();
   });
 });

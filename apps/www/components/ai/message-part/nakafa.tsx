@@ -10,7 +10,6 @@ import { ContentPart } from "@/components/ai/message-part/nakafa/content";
 import { ExercisePart } from "@/components/ai/message-part/nakafa/exercise";
 import { QuranPart } from "@/components/ai/message-part/nakafa/quran";
 import { SearchPart } from "@/components/ai/message-part/nakafa/search";
-import { TaxonomyPart } from "@/components/ai/message-part/nakafa/taxonomy";
 
 interface Props {
   message: NakafaDataPart;
@@ -19,6 +18,11 @@ interface Props {
 /** Renders one persisted Nakafa data envelope through its kind-specific UI. */
 export const NakafaPart = memo(({ message }: Props) => {
   const t = useTranslations("Ai");
+
+  if (message.kind === "taxonomy") {
+    return null;
+  }
+
   const kind = getKindLabel(message.kind, t);
 
   if (message.status === "loading") {
@@ -52,8 +56,6 @@ export const NakafaPart = memo(({ message }: Props) => {
       return <ExercisePart message={message} />;
     case "quran":
       return <QuranPart message={message} />;
-    case "taxonomy":
-      return <TaxonomyPart message={message} />;
     default:
       return null;
   }
@@ -74,8 +76,6 @@ function getKindLabel(
       return t("nakafa-exercise");
     case "quran":
       return t("nakafa-quran");
-    case "taxonomy":
-      return t("nakafa-taxonomy");
     default:
       return t("nakafa");
   }

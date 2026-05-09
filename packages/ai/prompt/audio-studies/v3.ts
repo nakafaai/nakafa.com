@@ -1,5 +1,5 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type { Locale } from "@repo/utilities/locales";
 
 interface PodcastScriptProps {
   /**

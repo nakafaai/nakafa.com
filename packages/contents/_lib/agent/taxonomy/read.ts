@@ -1,11 +1,11 @@
+import { getNakafaAgentContentIndex } from "@repo/contents/_lib/agent/catalog/source";
 import {
   NAKAFA_AGENT_SECTIONS,
   NAKAFA_MCP_DIRECT_ENDPOINT,
   NAKAFA_MCP_INFORMATIONAL_ROOT,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
-import { NakafaAgentTaxonomySchema } from "@repo/contents/_lib/agent/schemas";
-import { getNakafaAgentContentIndex } from "@repo/contents/_lib/agent/search";
+import { NakafaAgentTaxonomySchema } from "@repo/contents/_lib/agent/schema/taxonomy";
 import { getAllSurah } from "@repo/contents/_lib/quran";
 import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
 import type { Locale } from "@repo/contents/_types/content";

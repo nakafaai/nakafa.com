@@ -1,5 +1,6 @@
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import * as z from "zod";
 
 export const BATCH_SIZES = {
@@ -9,6 +10,7 @@ export const BATCH_SIZES = {
   subjectSections: CONTENT_SYNC_BATCH_LIMITS.subjectSections,
   exerciseSets: CONTENT_SYNC_BATCH_LIMITS.exerciseSets,
   exerciseQuestions: CONTENT_SYNC_BATCH_LIMITS.exerciseQuestions,
+  quranSearchDocuments: CONTENT_SYNC_BATCH_LIMITS.quranSearchDocuments,
   staleArticles: CONTENT_SYNC_BATCH_LIMITS.staleArticles,
   staleSubjectTopics: CONTENT_SYNC_BATCH_LIMITS.staleSubjectTopics,
   staleSubjectSections: CONTENT_SYNC_BATCH_LIMITS.staleSubjectSections,
@@ -20,14 +22,12 @@ export const BATCH_SIZES = {
 export const LOCALE_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
 export const LOCALE_SUBJECT_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
 
-const LocaleSchema = z.union([z.literal("en"), z.literal("id")]);
-
 /** Parses one CLI locale flag into the supported Convex content locale. */
 export const parseLocale = (value: string, context: string): Locale => {
   const result = LocaleSchema.safeParse(value);
   if (!result.success) {
     throw new Error(
-      `Invalid locale "${value}" in ${context}. Expected: en, id`
+      `Invalid locale "${value}" in ${context}. Expected: ${LocaleSchema.options.join(", ")}`
     );
   }
   return result.data;
@@ -95,6 +95,7 @@ export const ContentCountsSchema = z.object({
   irtScalePublicationQueue: z.number(),
   irtScaleVersions: z.number(),
   irtScaleVersionItems: z.number(),
+  contentSearch: z.number(),
   authors: z.number(),
   contentAuthors: z.number(),
   articleReferences: z.number(),
@@ -118,7 +119,7 @@ export const TryoutScaleIntegritySchema = z.object({
   page: z.array(
     z.object({
       cycleKey: z.string(),
-      locale: z.enum(["en", "id"]),
+      locale: LocaleSchema,
       product: z.string(),
       slug: z.string(),
     })
@@ -128,7 +129,7 @@ export const TryoutScaleIntegritySchema = z.object({
 const StaleItemSchema = z.object({
   id: z.string(),
   slug: z.string(),
-  locale: z.enum(["en", "id"]),
+  locale: LocaleSchema,
 });
 
 const PaginationPageSchema = z.object({
@@ -181,7 +182,7 @@ export const ArticleReferenceIntegrityPageSchema = PaginationPageSchema.extend({
 export const SubjectSectionIntegrityPageSchema = PaginationPageSchema.extend({
   page: z.array(
     z.object({
-      locale: z.enum(["en", "id"]),
+      locale: LocaleSchema,
       slug: z.string(),
       topicId: z.string().optional(),
     })

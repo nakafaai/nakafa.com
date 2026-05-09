@@ -71,7 +71,6 @@ describe("nakafa read tool", () => {
                   message: "Read failed.",
                 })
               ),
-            search: () => Effect.die("unused"),
             taxonomy: () => Effect.die("unused"),
             verify: () => Effect.succeed(false),
           })

@@ -1,8 +1,10 @@
 import {
+  callConvex,
   getConvexConfig,
-  runConvexQueryWithArgs,
-} from "@repo/backend/scripts/sync-content/convexApi";
-import { loadEnvFile } from "@repo/backend/scripts/sync-content/runtime";
+} from "@repo/backend/scripts/sync-content/convex";
+import { log, logError } from "@repo/backend/scripts/sync-content/logging";
+import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
+import { Effect } from "effect";
 import * as z from "zod";
 
 const CUSTOMER_PAGE_SIZE = 100;
@@ -46,49 +48,54 @@ const customerIntegritySubscriptionPageSchema = z.object({
 });
 
 /** Reads every page from one bounded internal customer-integrity query. */
-async function collectIntegrityPages<T>(
-  prod: boolean,
-  functionPath: string,
-  schema: z.ZodType<{
-    continueCursor: string;
-    isDone: boolean;
-    page: T[];
-  }>
-) {
-  const config = getConvexConfig({ prod });
-  const rows: T[] = [];
-  let continueCursor: string | null = null;
-
-  while (true) {
-    const result: {
+const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
+  function* <T>(
+    prod: boolean,
+    functionPath: string,
+    schema: z.ZodType<{
       continueCursor: string;
       isDone: boolean;
       page: T[];
-    } = await runConvexQueryWithArgs(
-      config,
-      functionPath,
-      {
-        paginationOpts: {
-          cursor: continueCursor,
-          numItems: CUSTOMER_PAGE_SIZE,
+    }>
+  ) {
+    const config = yield* getConvexConfig({ prod });
+    const rows: T[] = [];
+    let continueCursor: string | null = null;
+
+    while (true) {
+      const result: {
+        continueCursor: string;
+        isDone: boolean;
+        page: T[];
+      } = yield* callConvex(
+        config,
+        "query",
+        functionPath,
+        {
+          paginationOpts: {
+            cursor: continueCursor,
+            numItems: CUSTOMER_PAGE_SIZE,
+          },
         },
-      },
-      schema
-    );
+        schema
+      );
 
-    rows.push(...result.page);
+      rows.push(...result.page);
 
-    if (result.isDone) {
-      return rows;
+      if (result.isDone) {
+        return rows;
+      }
+
+      continueCursor = result.continueCursor;
     }
-
-    continueCursor = result.continueCursor;
   }
-}
+);
 
 /** Builds the current customer cohesion report from live Convex data. */
-async function getCustomerIntegrityReport(prod: boolean) {
-  const [users, customers, subscriptions] = await Promise.all([
+const getCustomerIntegrityReport = Effect.fn(
+  "customers.getCustomerIntegrityReport"
+)(function* (prod: boolean) {
+  const [users, customers, subscriptions] = yield* Effect.all([
     collectIntegrityPages(
       prod,
       "customers/queries/internal/maintenance:listUsersForCustomerIntegrity",
@@ -139,16 +146,14 @@ async function getCustomerIntegrityReport(prod: boolean) {
     userCount: users.length,
     usersWithoutCustomer,
   };
-}
+});
 
 /** Prints the current customer cohesion report for one deployment. */
-async function main() {
-  loadEnvFile();
-
+const main = Effect.fn("customers.verify")(function* () {
   const prod = process.argv.includes("--prod");
-  const report = await getCustomerIntegrityReport(prod);
+  const report = yield* getCustomerIntegrityReport(prod);
 
-  console.log(
+  log(
     JSON.stringify(
       {
         customerCount: report.customerCount,
@@ -179,9 +184,14 @@ async function main() {
       ? 1
       : 0
   );
-}
+});
 
-main().catch((error) => {
-  console.error(error);
+Effect.runPromise(
+  Effect.gen(function* () {
+    const provider = yield* loadEnvProvider();
+    yield* main().pipe(Effect.withConfigProvider(provider));
+  })
+).catch((error: unknown) => {
+  logError(error instanceof Error ? error.message : String(error));
   process.exit(1);
 });

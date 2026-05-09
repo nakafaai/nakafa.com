@@ -10,6 +10,7 @@ describe("nakafa taxonomy tool", () => {
     const output = await Effect.runPromise(
       taxonomy({
         input: { locale: "en" },
+        locale: "id",
         toolCallId: "taxonomy-1",
         writer,
       }).pipe(Effect.provide(Nakafa.Default))
@@ -20,12 +21,14 @@ describe("nakafa taxonomy tool", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           kind: "taxonomy",
+          input: { locale: "id" },
           status: "loading",
         }),
       }),
       expect.objectContaining({
         data: expect.objectContaining({
           kind: "taxonomy",
+          input: { locale: "id" },
           status: "done",
           result: expect.objectContaining({
             sections: expect.arrayContaining(["articles"]),

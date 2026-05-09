@@ -1,4 +1,4 @@
-import { runConvexMutationGeneric } from "@repo/backend/scripts/sync-content/convexApi";
+import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import { getContentCounts } from "@repo/backend/scripts/sync-content/counts";
 import {
   formatDuration,
@@ -12,6 +12,7 @@ import type {
   ConvexConfig,
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/types";
+import { Effect } from "effect";
 
 interface ResetStep {
   label: string;
@@ -151,50 +152,49 @@ const RESET_TRYOUT_STEPS: ResetStep[] = [
 ];
 
 /** Deletes every row reachable by one batch maintenance mutation. */
-const deleteAllBatched = async (
-  config: ConvexConfig,
-  mutationPath: string,
-  label: string
-) => {
-  let totalDeleted = 0;
-  let batchNumber = 1;
-  let hasMore = true;
+const deleteAllBatched = Effect.fn("sync.resetTryouts.deleteAllBatched")(
+  function* (config: ConvexConfig, mutationPath: string, label: string) {
+    let totalDeleted = 0;
+    let batchNumber = 1;
+    let hasMore = true;
 
-  while (hasMore) {
-    const result = await runConvexMutationGeneric(
-      config,
-      mutationPath,
-      {},
-      BatchDeleteResultSchema
-    );
-    totalDeleted += result.deleted;
-    hasMore = result.hasMore;
+    while (hasMore) {
+      const result = yield* callConvex(
+        config,
+        "mutation",
+        mutationPath,
+        {},
+        BatchDeleteResultSchema
+      );
+      totalDeleted += result.deleted;
+      hasMore = result.hasMore;
 
-    if (result.deleted === 0) {
-      continue;
+      if (result.deleted === 0) {
+        continue;
+      }
+
+      process.stdout.write(
+        `\r  Batch ${batchNumber}: deleted ${totalDeleted} ${label}...`
+      );
+      batchNumber += 1;
     }
 
-    process.stdout.write(
-      `\r  Batch ${batchNumber}: deleted ${totalDeleted} ${label}...`
-    );
-    batchNumber += 1;
-  }
+    if (totalDeleted > 0) {
+      process.stdout.write("\n");
+    }
 
-  if (totalDeleted > 0) {
-    process.stdout.write("\n");
+    return totalDeleted;
   }
-
-  return totalDeleted;
-};
+);
 
 /**
  * Deletes the tryout and IRT content/runtime tables that must be rebuilt from a
  * fresh full sync, then clears incremental sync state.
  */
-export const resetTryouts = async (
+export const resetTryouts = Effect.fn("sync.resetTryouts")(function* (
   config: ConvexConfig,
   options: SyncOptions
-): Promise<void> => {
+) {
   log("=== RESET TRYOUTS + IRT ===\n");
   log(
     "This deletes tryout definitions, access rows, entitlements, catalog metadata, attempts, leaderboard rows, and frozen IRT scale data."
@@ -214,7 +214,7 @@ export const resetTryouts = async (
     log("DRY RUN MODE (use --force to actually delete)\n");
   }
 
-  const counts = await getContentCounts(config);
+  const counts = yield* getContentCounts(config);
 
   log("Current tryout + IRT database contents:\n");
   log(`  Tryout Access Campaigns: ${counts.tryoutAccessCampaigns}`);
@@ -268,7 +268,7 @@ export const resetTryouts = async (
 
   if (totalTryoutAndIrtRows === 0) {
     logSuccess("\nTryout and IRT sync-managed data is already empty.");
-    clearSyncState(options.prod ?? false);
+    yield* clearSyncState(options.prod ?? false);
     log("Cleared sync state file");
     return;
   }
@@ -289,7 +289,7 @@ export const resetTryouts = async (
 
   for (const [index, step] of RESET_TRYOUT_STEPS.entries()) {
     log(`${index + 1}/${RESET_TRYOUT_STEPS.length} ${step.label}`);
-    const deleted = await deleteAllBatched(
+    const deleted = yield* deleteAllBatched(
       config,
       step.mutationPath,
       step.resultLabel
@@ -303,7 +303,7 @@ export const resetTryouts = async (
     `Deleted ${totalDeleted} tryout/IRT rows across sync-managed tables`
   );
   log(`Duration: ${formatDuration(performance.now() - startTime)}`);
-  clearSyncState(options.prod ?? false);
+  yield* clearSyncState(options.prod ?? false);
   log("Cleared sync state file");
 
   log("\nRun a full sync next:");
@@ -314,4 +314,4 @@ export const resetTryouts = async (
   }
 
   log("  pnpm --filter @repo/backend sync");
-};
+});

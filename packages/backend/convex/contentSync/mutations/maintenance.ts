@@ -34,6 +34,7 @@ type ResettableTableName =
   | "irtScalePublicationQueue"
   | "irtScaleVersionItems"
   | "irtScaleVersions"
+  | "contentSearch"
   | "subjectSections"
   | "subjectTopics"
   | "tryoutAttempts"
@@ -128,6 +129,8 @@ function makeBatchDeleteMutation(tableName: ResettableTableName) {
 
 export const deleteContentAuthorsBatch =
   makeBatchDeleteMutation("contentAuthors");
+export const deleteContentSearchBatch =
+  makeBatchDeleteMutation("contentSearch");
 export const deleteArticleReferencesBatch =
   makeBatchDeleteMutation("articleReferences");
 export const deleteExerciseChoicesBatch =

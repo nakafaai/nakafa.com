@@ -1,5 +1,5 @@
 import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
-import { getNakafaAgentQuranReference } from "@repo/contents/_lib/agent/quran";
+import { getNakafaAgentQuranReference } from "@repo/contents/_lib/agent/quran/read";
 import { Effect, Option } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
@@ -71,7 +71,7 @@ describe("Nakafa agent Quran references", () => {
     }));
 
     const { getNakafaAgentQuranReference } = await import(
-      "@repo/contents/_lib/agent/quran"
+      "@repo/contents/_lib/agent/quran/read"
     );
     const reference = await Effect.runPromise(
       getNakafaAgentQuranReference({
@@ -116,7 +116,7 @@ describe("Nakafa agent Quran references", () => {
     }));
 
     const { getNakafaAgentQuranReference } = await import(
-      "@repo/contents/_lib/agent/quran"
+      "@repo/contents/_lib/agent/quran/read"
     );
     const reference = await Effect.runPromise(
       getNakafaAgentQuranReference({

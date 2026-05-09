@@ -154,6 +154,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.29.0
         version: 1.29.0(zod@4.4.3)
+      '@repo/backend':
+        specifier: workspace:*
+        version: link:../../packages/backend
       '@repo/contents':
         specifier: workspace:*
         version: link:../../packages/contents
@@ -163,6 +166,9 @@ importers:
       '@t3-oss/env-nextjs':
         specifier: ^0.13.11
         version: 0.13.11(typescript@6.0.3)(zod@4.4.3)
+      convex:
+        specifier: ^1.37.0
+        version: 1.37.0(react@19.2.6)
       effect:
         specifier: ^3.21.2
         version: 3.21.2
@@ -620,6 +626,9 @@ importers:
       convex-helpers:
         specifier: ^0.1.116
         version: 0.1.116(@standard-schema/spec@1.1.0)(convex@1.37.0(react@19.2.6))(hono@4.12.18)(react@19.2.6)(typescript@6.0.3)(zod@4.4.3)
+      effect:
+        specifier: ^3.21.2
+        version: 3.21.2
       hono:
         specifier: ^4.12.18
         version: 4.12.18
@@ -1029,6 +1038,9 @@ importers:
 
   packages/internationalization:
     dependencies:
+      '@repo/utilities':
+        specifier: workspace:*
+        version: link:../utilities
       next:
         specifier: 16.2.6
         version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.59.1)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)

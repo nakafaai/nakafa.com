@@ -1,4 +1,4 @@
-import { runConvexQueryWithArgs } from "@repo/backend/scripts/sync-content/convexApi";
+import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
   ArticleReferenceIntegrityPageSchema,
   AuthorPageSchema,
@@ -16,11 +16,12 @@ import type {
   ConvexConfig,
   FilesystemSlugs,
 } from "@repo/backend/scripts/sync-content/types";
+import { Effect } from "effect";
 import type * as z from "zod";
 
 const PAGE_SIZE = 1000;
 
-async function collectPages<T>(
+const collectPages = Effect.fn("sync.collectPages")(function* <T>(
   config: ConvexConfig,
   functionPath: string,
   args: Record<string, unknown>,
@@ -36,8 +37,9 @@ async function collectPages<T>(
   let page: T[] = [];
 
   while (!isDone) {
-    ({ continueCursor, isDone, page } = await runConvexQueryWithArgs(
+    ({ continueCursor, isDone, page } = yield* callConvex(
       config,
+      "query",
       functionPath,
       {
         ...args,
@@ -53,9 +55,9 @@ async function collectPages<T>(
   }
 
   return rows;
-}
+});
 
-export async function getStaleContent(
+export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
   config: ConvexConfig,
   filesystemSlugs: FilesystemSlugs
 ) {
@@ -72,7 +74,7 @@ export async function getStaleContent(
     subjectSections,
     exerciseSets,
     exerciseQuestions,
-  ] = await Promise.all([
+  ] = yield* Effect.all([
     collectPages(
       config,
       "contentSync/queries/stale:listStaleContentPage",
@@ -120,9 +122,11 @@ export async function getStaleContent(
       (item) => !exerciseQuestionSlugSet.has(item.slug)
     ),
   });
-}
+});
 
-export async function getDataIntegrity(config: ConvexConfig) {
+export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
+  config: ConvexConfig
+) {
   const [
     questions,
     choices,
@@ -131,7 +135,7 @@ export async function getDataIntegrity(config: ConvexConfig) {
     articles,
     sections,
     tryoutScaleIntegrity,
-  ] = await Promise.all([
+  ] = yield* Effect.all([
     collectPages(
       config,
       "contentSync/queries/integrity:listIntegrityExerciseQuestionsPage",
@@ -207,10 +211,12 @@ export async function getDataIntegrity(config: ConvexConfig) {
     totalArticles: articles.length,
     totalSections: sections.length,
   });
-}
+});
 
-export async function getUnusedAuthors(config: ConvexConfig) {
-  const [authors, contentAuthors] = await Promise.all([
+export const getUnusedAuthors = Effect.fn("sync.getUnusedAuthors")(function* (
+  config: ConvexConfig
+) {
+  const [authors, contentAuthors] = yield* Effect.all([
     collectPages(
       config,
       "contentSync/queries/authors:listAuthorsPage",
@@ -233,4 +239,4 @@ export async function getUnusedAuthors(config: ConvexConfig) {
       (author) => !authorIdsWithContent.has(author.id)
     ),
   });
-}
+});

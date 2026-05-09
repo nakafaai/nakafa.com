@@ -7,6 +7,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@repo/utilities": "workspace:*",
     "next": "16.2.6",
     "next-intl": "^4.11.0"
   },

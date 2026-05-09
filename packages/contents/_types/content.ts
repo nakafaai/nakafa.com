@@ -1,9 +1,10 @@
 import { isContentDateString } from "@repo/contents/_shared/date";
+import { locales } from "@repo/utilities/locales";
 import type React from "react";
 import * as z from "zod";
 
 /** Locale validation schema - single source of truth */
-export const LocaleSchema = z.enum(["en", "id"]);
+export const LocaleSchema = z.enum(locales);
 export type Locale = z.infer<typeof LocaleSchema>;
 
 /** Supported top-level content roots under `packages/contents/`. */

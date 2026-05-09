@@ -1,9 +1,7 @@
+import { defaultLocale, locales } from "@repo/utilities/locales";
 import { defineRouting } from "next-intl/routing";
 
 export const routing = defineRouting({
-  // A list of all locales that are supported
-  locales: ["en", "id"] as const,
-
-  // Used when no locale matches
-  defaultLocale: "en",
+  locales,
+  defaultLocale,
 });

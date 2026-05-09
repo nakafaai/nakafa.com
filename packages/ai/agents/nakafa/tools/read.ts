@@ -1,7 +1,7 @@
 import { formatRead } from "@repo/ai/agents/nakafa/format";
 import { previewRead } from "@repo/ai/agents/nakafa/preview";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { NakafaAgentReadOptions } from "@repo/contents/_lib/agent/schemas";
+import type { NakafaAgentReadOptions } from "@repo/contents/_lib/agent/schema/read";
 import { Nakafa } from "@repo/contents/_lib/agent/service";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Either, Option } from "effect";

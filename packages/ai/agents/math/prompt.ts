@@ -1,6 +1,6 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type { Locale } from "@repo/utilities/locales";
 
 interface MathPromptProps {
   context: AgentContext;

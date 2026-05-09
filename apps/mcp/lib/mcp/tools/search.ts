@@ -1,5 +1,11 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
+import { api as convexApi } from "@repo/backend/convex/_generated/api";
+import {
+  getUnknownErrorMessage,
+  NakafaAgentDataReadError,
+  NakafaAgentInputError,
+} from "@repo/contents/_lib/agent/errors";
+import { fetchQuery } from "convex/nextjs";
 import { Effect } from "effect";
 import {
   succeedMcpReadModelError,
@@ -29,10 +35,28 @@ export function registerNakafaSearchContentTool(server: McpServer) {
 
 /** Builds a search tool result from untrusted MCP arguments. */
 export function getNakafaSearchContentToolResult(args: unknown) {
-  return Nakafa.search(args).pipe(
-    Effect.provide(Nakafa.Default),
-    Effect.map(toMcpStructuredResult),
+  return Effect.gen(function* () {
+    const input = yield* Effect.try({
+      try: () => NakafaSearchContentInputSchema.parse(args),
+      catch: (error) =>
+        new NakafaAgentInputError({
+          cause: getUnknownErrorMessage(error),
+          message: "Invalid Nakafa content search options.",
+        }),
+    });
+    const result = yield* Effect.tryPromise({
+      try: () => fetchQuery(convexApi.contents.queries.search.search, input),
+      catch: (error) =>
+        new NakafaAgentDataReadError({
+          cause: getUnknownErrorMessage(error),
+          message: "Unable to search Nakafa content.",
+        }),
+    });
+
+    return toMcpStructuredResult(result);
+  }).pipe(
     Effect.catchTags({
+      NakafaAgentDataReadError: succeedMcpReadModelError,
       NakafaAgentInputError: succeedMcpReadModelError,
     })
   );

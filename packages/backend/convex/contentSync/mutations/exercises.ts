@@ -6,6 +6,7 @@ import {
   replaceExerciseChoices,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
+import { syncContentSearch } from "@repo/backend/convex/contents/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   exercisesCategoryValidator,
@@ -201,6 +202,27 @@ export const bulkSyncExerciseQuestions = internalMutation({
           q.eq("locale", question.locale).eq("slug", question.slug)
         )
         .unique();
+
+      await syncContentSearch(ctx, {
+        contentHash: question.contentHash,
+        description: question.description,
+        locale: question.locale,
+        route: question.slug,
+        section: "exercises",
+        syncedAt: now,
+        text: [
+          question.category,
+          question.type,
+          question.material,
+          question.exerciseType,
+          question.setName,
+          question.questionBody,
+          question.answerBody,
+        ]
+          .filter(Boolean)
+          .join(" "),
+        title: question.title,
+      });
 
       if (existingQuestion?.contentHash === question.contentHash) {
         unchanged++;

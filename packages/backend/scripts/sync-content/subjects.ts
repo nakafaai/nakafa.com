@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/scripts/lib/mdx-parser/content";
 import { parseSubjectMaterialFile } from "@repo/backend/scripts/lib/mdx-parser/materials";
 import { parseSubjectPath } from "@repo/backend/scripts/lib/mdx-parser/paths";
-import { runConvexMutation } from "@repo/backend/scripts/sync-content/convexApi";
+import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
   log,
@@ -23,12 +23,14 @@ import {
   BATCH_SIZES,
   LOCALE_SUBJECT_MATERIAL_FILE_REGEX,
   parseLocale,
+  SyncResultSchema,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
+import { Effect } from "effect";
 
 interface SubjectTopicPayload {
   category: string;
@@ -60,10 +62,11 @@ interface SubjectSectionPayload {
   topicSlug: string;
 }
 
-export const syncSubjectTopics = async (
+/** Syncs subject topic metadata from material files into Convex. */
+export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (
   config: ConvexConfig,
   options: SyncOptions
-): Promise<SyncResult> => {
+) {
   const startTime = performance.now();
   if (!options.quiet) {
     log("\n--- SUBJECT TOPICS ---\n");
@@ -72,7 +75,7 @@ export const syncSubjectTopics = async (
   const pattern = options.locale
     ? `subject/**/_data/${options.locale}-material.ts`
     : "subject/**/_data/*-material.ts";
-  const materialFiles = await globFiles(pattern);
+  const materialFiles = yield* globFiles(pattern);
 
   if (!options.quiet) {
     log(`Material files found: ${materialFiles.length}`);
@@ -83,18 +86,22 @@ export const syncSubjectTopics = async (
   const errors: string[] = [];
 
   for (const materialFile of materialFiles) {
-    try {
-      const localeMatch = materialFile.match(
-        LOCALE_SUBJECT_MATERIAL_FILE_REGEX
-      );
-      if (!localeMatch) {
-        continue;
-      }
+    const result = yield* Effect.either(
+      Effect.gen(function* () {
+        const localeMatch = materialFile.match(
+          LOCALE_SUBJECT_MATERIAL_FILE_REGEX
+        );
+        if (!localeMatch) {
+          return [];
+        }
 
-      const locale = parseLocale(localeMatch[1], materialFile);
-      const parsedTopics = await parseSubjectMaterialFile(materialFile, locale);
-      for (const topic of parsedTopics) {
-        topics.push({
+        const locale = parseLocale(localeMatch[1], materialFile);
+        const parsedTopics = yield* parseSubjectMaterialFile(
+          materialFile,
+          locale
+        );
+
+        return parsedTopics.map((topic) => ({
           locale: topic.locale,
           slug: topic.slug,
           category: topic.category,
@@ -104,11 +111,18 @@ export const syncSubjectTopics = async (
           title: topic.title,
           description: topic.description,
           sectionCount: topic.sectionCount,
-        });
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+        }));
+      })
+    );
+
+    if (result._tag === "Left") {
+      const message =
+        result.left instanceof Error
+          ? result.left.message
+          : String(result.left);
       errors.push(`${materialFile}: ${message}`);
+    } else {
+      topics.push(...result.right);
     }
   }
 
@@ -141,10 +155,12 @@ export const syncSubjectTopics = async (
       log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
     }
 
-    const result = await runConvexMutation(
+    const result = yield* callConvex(
       config,
+      "mutation",
       "contentSync/mutations/subjects:bulkSyncSubjectTopics",
-      { topics: batch }
+      { topics: batch },
+      SyncResultSchema
     );
 
     totals.created += result.created;
@@ -173,12 +189,13 @@ export const syncSubjectTopics = async (
   }
 
   return { ...totals, durationMs, itemsPerSecond };
-};
+});
 
-export const syncSubjectSections = async (
+/** Syncs subject lesson MDX files into Convex. */
+export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
   config: ConvexConfig,
   options: SyncOptions
-): Promise<SyncResult> => {
+) {
   const startTime = performance.now();
   if (!options.quiet) {
     log("\n--- SUBJECT SECTIONS ---\n");
@@ -187,7 +204,7 @@ export const syncSubjectSections = async (
   const pattern = options.locale
     ? `subject/**/${options.locale}.mdx`
     : "subject/**/*.mdx";
-  const files = await globFiles(pattern);
+  const files = yield* globFiles(pattern);
 
   if (!options.quiet) {
     log(`Files found: ${files.length}`);
@@ -203,31 +220,43 @@ export const syncSubjectSections = async (
   const errors: string[] = [];
 
   for (const file of files) {
-    try {
-      const pathInfo = parseSubjectPath(file);
-      const { metadata, body } = await readMdxFile(file);
-      const topicSlug = `subject/${pathInfo.category}/${pathInfo.grade}/${pathInfo.material}/${pathInfo.topic}`;
+    const result = yield* Effect.either(
+      Effect.gen(function* () {
+        const pathInfo = yield* Effect.try({
+          try: () => parseSubjectPath(file),
+          catch: (error) => error,
+        });
+        const { metadata, body } = yield* readMdxFile(file);
+        const topicSlug = `subject/${pathInfo.category}/${pathInfo.grade}/${pathInfo.material}/${pathInfo.topic}`;
 
-      sections.push({
-        locale: pathInfo.locale,
-        slug: pathInfo.slug,
-        topicSlug,
-        category: pathInfo.category,
-        grade: pathInfo.grade,
-        material: pathInfo.material,
-        topic: pathInfo.topic,
-        section: pathInfo.section,
-        title: metadata.title,
-        description: metadata.description,
-        date: parseDateToEpoch(metadata.date),
-        subject: metadata.subject,
-        body,
-        contentHash: computeHash(body + JSON.stringify(metadata.authors)),
-        authors: metadata.authors,
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+        return {
+          locale: pathInfo.locale,
+          slug: pathInfo.slug,
+          topicSlug,
+          category: pathInfo.category,
+          grade: pathInfo.grade,
+          material: pathInfo.material,
+          topic: pathInfo.topic,
+          section: pathInfo.section,
+          title: metadata.title,
+          description: metadata.description,
+          date: parseDateToEpoch(metadata.date),
+          subject: metadata.subject,
+          body,
+          contentHash: computeHash(body + JSON.stringify(metadata.authors)),
+          authors: metadata.authors,
+        };
+      })
+    );
+
+    if (result._tag === "Left") {
+      const message =
+        result.left instanceof Error
+          ? result.left.message
+          : String(result.left);
       errors.push(`${file}: ${message}`);
+    } else {
+      sections.push(result.right);
     }
   }
 
@@ -256,10 +285,12 @@ export const syncSubjectSections = async (
       log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
     }
 
-    const result = await runConvexMutation(
+    const result = yield* callConvex(
       config,
+      "mutation",
       "contentSync/mutations/subjects:bulkSyncSubjectSections",
-      { sections: batch }
+      { sections: batch },
+      SyncResultSchema
     );
 
     totals.created += result.created;
@@ -298,4 +329,4 @@ export const syncSubjectSections = async (
   }
 
   return { ...totals, durationMs, itemsPerSecond };
-};
+});

@@ -3,6 +3,8 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { ContentAuthorContentId } from "@repo/backend/convex/authors/schema";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
+import { buildContentSearchRef } from "@repo/backend/convex/contents/search/documents";
+import { deleteContentSearch } from "@repo/backend/convex/contents/search/write";
 import type {
   ContentType,
   Locale,
@@ -264,6 +266,17 @@ export async function deleteExerciseQuestion(
   ctx: MutationCtx,
   questionId: Id<"exerciseQuestions">
 ) {
+  const question = await ctx.db.get(questionId);
+
+  if (question) {
+    const searchRef = buildContentSearchRef({
+      locale: question.locale,
+      route: question.slug,
+      section: "exercises",
+    });
+    await deleteContentSearch(ctx, searchRef.content_id);
+  }
+
   await deleteContentAuthorLinks(ctx, questionId, "exercise");
   await deleteExerciseChoicesForQuestion(ctx, questionId);
   await ctx.db.delete("exerciseQuestions", questionId);
@@ -274,6 +287,17 @@ export async function deleteSubjectSection(
   ctx: MutationCtx,
   sectionId: Id<"subjectSections">
 ) {
+  const section = await ctx.db.get(sectionId);
+
+  if (section) {
+    const searchRef = buildContentSearchRef({
+      locale: section.locale,
+      route: section.slug,
+      section: "subject",
+    });
+    await deleteContentSearch(ctx, searchRef.content_id);
+  }
+
   await deleteContentAuthorLinks(ctx, sectionId, "subject");
   await ctx.db.delete("subjectSections", sectionId);
 }

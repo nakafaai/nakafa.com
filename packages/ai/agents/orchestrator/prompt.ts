@@ -1,5 +1,6 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type { Locale } from "@repo/utilities/locales";
+import type { UserRole } from "@repo/utilities/roles";
 
 interface SystemPromptProps {
   /**
@@ -55,7 +56,7 @@ interface SystemPromptProps {
   /**
    * The role of the user.
    */
-  userRole?: "teacher" | "student" | "parent" | "administrator" | undefined;
+  userRole?: UserRole;
 }
 
 export function nakafaPrompt({

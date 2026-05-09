@@ -1,7 +1,7 @@
 import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/messageParts/dbToUi";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schemas";
+import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 

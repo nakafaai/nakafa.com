@@ -1,8 +1,20 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import * as z from "zod";
 
+/** Defines the Convex URL required by Next.js server adapters such as `convex/nextjs`. */
+export const convexKeys = () =>
+  createEnv({
+    client: {
+      NEXT_PUBLIC_CONVEX_URL: z.string(),
+    },
+    runtimeEnv: {
+      NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
+    },
+  });
+
 export const keys = () =>
   createEnv({
+    extends: [convexKeys()],
     server: {
       CONVEX_URL: z.string(),
       CONVEX_SITE_URL: z.url(),
@@ -15,7 +27,6 @@ export const keys = () =>
       INTERNAL_CONTENT_API_KEY: z.string().min(1),
     },
     client: {
-      NEXT_PUBLIC_CONVEX_URL: z.string(),
       NEXT_PUBLIC_CONVEX_SITE_URL: z.url(),
       NEXT_PUBLIC_POLAR_SERVER: z.enum(["production", "sandbox"]),
     },
@@ -27,7 +38,6 @@ export const keys = () =>
       AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
       POLAR_ACCESS_TOKEN: process.env.POLAR_ACCESS_TOKEN,
       POLAR_WEBHOOK_SECRET: process.env.POLAR_WEBHOOK_SECRET,
-      NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
       NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
       NEXT_PUBLIC_POLAR_SERVER: process.env.NEXT_PUBLIC_POLAR_SERVER,
       BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,

@@ -1,4 +1,5 @@
 import { runNakafaAgent } from "@repo/ai/agents/nakafa/agent";
+import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
 import { read as readNakafa } from "@repo/ai/agents/nakafa/tools/read";
 import { runMath } from "@repo/ai/agents/orchestrator/math";
 import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
@@ -37,6 +38,7 @@ import {
 import { fetchAction, fetchMutation } from "convex/nextjs";
 import { Effect } from "effect";
 import type { getTranslations } from "next-intl/server";
+import { search as nakafaSearch } from "@/app/api/chat/nakafa";
 import { repairChatToolCall } from "@/app/api/chat/repair";
 import { prepareNakafaStep } from "@/app/api/chat/step";
 import { writeSuggestions } from "@/app/api/chat/suggestions";
@@ -183,7 +185,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             slug: cleanSlug(page.slug),
             verified: page.verified,
             needsPageFetch: page.needsFetch,
-            userRole: user.info.role,
+            userRole: user.info.role ?? undefined,
           };
           let fetchedPage = false;
 
@@ -230,7 +232,9 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                         modelId: runtime.modelId,
                         task: query,
                         writer,
-                      });
+                      }).pipe(
+                        Effect.provideService(NakafaSearch, nakafaSearch)
+                      );
 
                       yield* Effect.sync(() =>
                         usage.addUsage(TOOL_NAMES.nakafa, result.usage)

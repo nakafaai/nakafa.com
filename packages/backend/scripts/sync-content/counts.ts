@@ -1,9 +1,10 @@
-import { runConvexQueryWithArgs } from "@repo/backend/scripts/sync-content/convexApi";
+import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
   ContentCountsSchema,
   CountTablePageSchema,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type { ConvexConfig } from "@repo/backend/scripts/sync-content/types";
+import { Effect } from "effect";
 import type * as z from "zod";
 
 const COUNT_PAGE_SIZE = 1000;
@@ -61,6 +62,7 @@ const countTableSpecs: Array<{
   },
   { field: "irtScaleVersions", tableName: "irtScaleVersions" },
   { field: "irtScaleVersionItems", tableName: "irtScaleVersionItems" },
+  { field: "contentSearch", tableName: "contentSearch" },
   { field: "authors", tableName: "authors" },
   { field: "contentAuthors", tableName: "contentAuthors" },
   { field: "articleReferences", tableName: "articleReferences" },
@@ -68,15 +70,19 @@ const countTableSpecs: Array<{
 ];
 
 /** Counts every document in one Convex table through bounded paginated reads. */
-const countTableDocuments = async (config: ConvexConfig, tableName: string) => {
+const countTableDocuments = Effect.fn("sync.countTableDocuments")(function* (
+  config: ConvexConfig,
+  tableName: string
+) {
   let count = 0;
   let continueCursor: string | null = null;
   let isDone = false;
   let pageSize = 0;
 
   while (!isDone) {
-    ({ continueCursor, isDone, pageSize } = await runConvexQueryWithArgs(
+    ({ continueCursor, isDone, pageSize } = yield* callConvex(
       config,
+      "query",
       "contentSync/queries/counts:countTablePage",
       {
         tableName,
@@ -92,20 +98,20 @@ const countTableDocuments = async (config: ConvexConfig, tableName: string) => {
   }
 
   return count;
-};
+});
 
 /** Loads the current row counts for every sync-managed content/runtime table. */
-export const getContentCounts = async (
+export const getContentCounts = Effect.fn("sync.getContentCounts")(function* (
   config: ConvexConfig
-): Promise<ContentCounts> => {
+) {
   const entries: [keyof ContentCounts, number][] = [];
 
   for (const spec of countTableSpecs) {
     entries.push([
       spec.field,
-      await countTableDocuments(config, spec.tableName),
+      yield* countTableDocuments(config, spec.tableName),
     ]);
   }
 
   return ContentCountsSchema.parse(Object.fromEntries(entries));
-};
+});

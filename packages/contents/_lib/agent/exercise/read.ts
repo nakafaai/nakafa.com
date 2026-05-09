@@ -6,8 +6,9 @@ import {
   buildNakafaContentRef,
   parseNakafaContentRef,
 } from "@repo/contents/_lib/agent/refs";
-import { NakafaAgentExerciseResultSchema } from "@repo/contents/_lib/agent/schemas";
+import { NakafaAgentExerciseResultSchema } from "@repo/contents/_lib/agent/schema/exercise";
 import { getRenderableExercisesContent } from "@repo/contents/_lib/exercises/renderable";
+import type { Locale } from "@repo/contents/_types/content";
 import { Effect, Option } from "effect";
 
 const EXERCISE_NUMBER_SEGMENT_PATTERN = /^\d+$/;
@@ -67,7 +68,7 @@ export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
 );
 
 /** Reads renderable exercises through Effect so failures stay typed. */
-function readRenderableNakafaExercises(locale: "en" | "id", route: string) {
+function readRenderableNakafaExercises(locale: Locale, route: string) {
   return Effect.tryPromise({
     try: () => getRenderableExercisesContent(locale, route),
     catch: (error) =>

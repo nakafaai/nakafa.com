@@ -1,9 +1,10 @@
 import {
+  callConvex,
   getConvexConfig,
-  runConvexActionWithArgs,
-  runConvexQueryWithArgs,
-} from "@repo/backend/scripts/sync-content/convexApi";
-import { loadEnvFile } from "@repo/backend/scripts/sync-content/runtime";
+} from "@repo/backend/scripts/sync-content/convex";
+import { log, logError } from "@repo/backend/scripts/sync-content/logging";
+import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
+import { Effect } from "effect";
 import * as z from "zod";
 
 const CUSTOMER_PAGE_SIZE = 100;
@@ -101,49 +102,54 @@ function getOptionalStringFlag(flag: string) {
 }
 
 /** Reads every page from one bounded internal customer-integrity query. */
-async function collectIntegrityPages<T>(
-  prod: boolean,
-  functionPath: string,
-  schema: z.ZodType<{
-    continueCursor: string;
-    isDone: boolean;
-    page: T[];
-  }>
-) {
-  const config = getConvexConfig({ prod });
-  const rows: T[] = [];
-  let continueCursor: string | null = null;
-
-  while (true) {
-    const result: {
+const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
+  function* <T>(
+    prod: boolean,
+    functionPath: string,
+    schema: z.ZodType<{
       continueCursor: string;
       isDone: boolean;
       page: T[];
-    } = await runConvexQueryWithArgs(
-      config,
-      functionPath,
-      {
-        paginationOpts: {
-          cursor: continueCursor,
-          numItems: CUSTOMER_PAGE_SIZE,
+    }>
+  ) {
+    const config = yield* getConvexConfig({ prod });
+    const rows: T[] = [];
+    let continueCursor: string | null = null;
+
+    while (true) {
+      const result: {
+        continueCursor: string;
+        isDone: boolean;
+        page: T[];
+      } = yield* callConvex(
+        config,
+        "query",
+        functionPath,
+        {
+          paginationOpts: {
+            cursor: continueCursor,
+            numItems: CUSTOMER_PAGE_SIZE,
+          },
         },
-      },
-      schema
-    );
+        schema
+      );
 
-    rows.push(...result.page);
+      rows.push(...result.page);
 
-    if (result.isDone) {
-      return rows;
+      if (result.isDone) {
+        return rows;
+      }
+
+      continueCursor = result.continueCursor;
     }
-
-    continueCursor = result.continueCursor;
   }
-}
+);
 
 /** Builds the current customer cohesion report from live Convex data. */
-async function getCustomerIntegrityReport(prod: boolean) {
-  const [users, customers, subscriptions] = await Promise.all([
+const getCustomerIntegrityReport = Effect.fn(
+  "customers.getCustomerIntegrityReport"
+)(function* (prod: boolean) {
+  const [users, customers, subscriptions] = yield* Effect.all([
     collectIntegrityPages(
       prod,
       "customers/queries/internal/maintenance:listUsersForCustomerIntegrity",
@@ -182,22 +188,27 @@ async function getCustomerIntegrityReport(prod: boolean) {
       (user) => !customerByUserId.has(user.userId)
     ),
   };
-}
+});
 
 /** Repairs one user by rerunning the backend-owned customer sync action. */
-async function repairCustomerForUser(prod: boolean, userId: string) {
-  const config = getConvexConfig({ prod });
+const repairCustomerForUser = Effect.fn("customers.repairCustomerForUser")(
+  function* (prod: boolean, userId: string) {
+    const config = yield* getConvexConfig({ prod });
 
-  return await runConvexActionWithArgs(
-    config,
-    "customers/actions/internal:repairCustomer",
-    { userId },
-    repairCustomerResultSchema
-  );
-}
+    return yield* callConvex(
+      config,
+      "action",
+      "customers/actions/internal:repairCustomer",
+      { userId },
+      repairCustomerResultSchema
+    );
+  }
+);
 
 /** Deletes one safe stale Polar customer from Polar and the local database. */
-async function cleanupStalePolarCustomer(
+const cleanupStalePolarCustomer = Effect.fn(
+  "customers.cleanupStalePolarCustomer"
+)(function* (
   prod: boolean,
   {
     existingExternalId,
@@ -207,26 +218,25 @@ async function cleanupStalePolarCustomer(
     polarCustomerId: string;
   }
 ) {
-  const config = getConvexConfig({ prod });
+  const config = yield* getConvexConfig({ prod });
 
-  return await runConvexActionWithArgs(
+  return yield* callConvex(
     config,
+    "action",
     "customers/actions/internal:cleanupStalePolarCustomer",
     { existingExternalId, polarCustomerId },
     nullSchema
   );
-}
+});
 
 /** Repairs missing customer rows and optionally cleans safe stale Polar customers. */
-async function main() {
-  loadEnvFile();
-
+const main = Effect.fn("customers.repair")(function* () {
   const prod = process.argv.includes("--prod");
   const force = process.argv.includes("--force");
   const cleanupOrphans = process.argv.includes("--cleanup-orphans");
   const limit = getOptionalNumericFlag("--limit") ?? DEFAULT_REPAIR_LIMIT;
   const userId = getOptionalStringFlag("--user");
-  const report = await getCustomerIntegrityReport(prod);
+  const report = yield* getCustomerIntegrityReport(prod);
   const usersToRepair = userId
     ? report.usersWithoutCustomer.filter((user) => user.userId === userId)
     : report.usersWithoutCustomer.slice(0, limit);
@@ -241,7 +251,7 @@ async function main() {
     : [];
 
   if (!force) {
-    console.log(
+    log(
       JSON.stringify(
         {
           cleanupOrphans,
@@ -265,7 +275,7 @@ async function main() {
   const deletedOrphans: string[] = [];
 
   for (const orphan of safeOrphans) {
-    await cleanupStalePolarCustomer(prod, {
+    yield* cleanupStalePolarCustomer(prod, {
       existingExternalId: orphan.externalId,
       polarCustomerId: orphan.polarCustomerId,
     });
@@ -276,36 +286,44 @@ async function main() {
   const failed: Array<{ error: string; userId: string }> = [];
 
   for (const user of usersToRepair) {
-    try {
-      const result = await repairCustomerForUser(prod, user.userId);
+    const repairResult = yield* Effect.either(
+      Effect.gen(function* () {
+        const result = yield* repairCustomerForUser(prod, user.userId);
 
-      if (result.status === "conflict" && cleanupOrphans) {
-        await cleanupStalePolarCustomer(prod, {
-          existingExternalId: result.existingExternalId,
-          polarCustomerId: result.polarCustomerId,
-        });
+        if (result.status === "conflict" && cleanupOrphans) {
+          yield* cleanupStalePolarCustomer(prod, {
+            existingExternalId: result.existingExternalId,
+            polarCustomerId: result.polarCustomerId,
+          });
 
-        const retried = await repairCustomerForUser(prod, user.userId);
+          const retried = yield* repairCustomerForUser(prod, user.userId);
 
-        if (retried.status === "conflict") {
-          throw new Error(
-            `Customer conflict remained after cleanup for ${user.userId}`
-          );
+          if (retried.status === "conflict") {
+            return yield* Effect.fail(
+              new Error(
+                `Customer conflict remained after cleanup for ${user.userId}`
+              )
+            );
+          }
         }
-      }
 
-      repaired.push(user.userId);
-    } catch (error) {
+        return user.userId;
+      })
+    );
+
+    if (repairResult._tag === "Left") {
       failed.push({
-        error: String(error),
+        error: String(repairResult.left),
         userId: user.userId,
       });
+    } else {
+      repaired.push(repairResult.right);
     }
   }
 
-  const nextReport = await getCustomerIntegrityReport(prod);
+  const nextReport = yield* getCustomerIntegrityReport(prod);
 
-  console.log(
+  log(
     JSON.stringify(
       {
         deletedOrphans,
@@ -324,9 +342,14 @@ async function main() {
   );
 
   process.exit(failed.length > 0 ? 1 : 0);
-}
+});
 
-main().catch((error) => {
-  console.error(error);
+Effect.runPromise(
+  Effect.gen(function* () {
+    const provider = yield* loadEnvProvider();
+    yield* main().pipe(Effect.withConfigProvider(provider));
+  })
+).catch((error: unknown) => {
+  logError(error instanceof Error ? error.message : String(error));
   process.exit(1);
 });

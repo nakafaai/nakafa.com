@@ -1,12 +1,16 @@
+import { NakafaAgentExerciseOptionsSchema } from "@repo/contents/_lib/agent/schema/exercise";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
+import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/read";
 import {
   NakafaAgentContentRefSchema,
-  NakafaAgentExerciseOptionsSchema,
-  NakafaAgentQuranReferenceOptionsSchema,
-  NakafaAgentReadOptionsSchema,
+  NakafaAgentSectionSchema,
+} from "@repo/contents/_lib/agent/schema/ref";
+import {
   NakafaAgentSearchOptionsSchema,
   NakafaAgentSearchResultSchema,
-  NakafaAgentTaxonomyOptionsSchema,
-} from "@repo/contents/_lib/agent/schemas";
+} from "@repo/contents/_lib/agent/schema/search";
+import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import * as z from "zod";
 
 const nakafaContentPreviewSchema = NakafaAgentContentRefSchema.extend({
@@ -34,11 +38,11 @@ const nakafaTaxonomyPreviewSchema = z.object({
   content_counts: z.array(
     z.object({
       count: z.number().int().min(0),
-      locale: z.enum(["en", "id"]),
+      locale: LocaleSchema,
     })
   ),
-  locale: z.enum(["en", "id"]),
-  sections: z.array(z.enum(["articles", "subject", "exercises", "quran"])),
+  locale: LocaleSchema,
+  sections: z.array(NakafaAgentSectionSchema),
   tools: z.array(z.string()),
 });
 

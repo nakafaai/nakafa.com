@@ -16,6 +16,7 @@ describe("nakafa Quran tool", () => {
           surah: 1,
           to_verse: 1,
         },
+        locale: "en",
         toolCallId: "quran-1",
         writer,
       }).pipe(Effect.provide(Nakafa.Default))
@@ -41,6 +42,7 @@ describe("nakafa Quran tool", () => {
           include_tafsir: true,
           surah: 1,
         },
+        locale: "id",
         toolCallId: "quran-defaults",
         writer,
       }).pipe(Effect.provide(Nakafa.Default))
@@ -53,7 +55,7 @@ describe("nakafa Quran tool", () => {
           input: {
             from_verse: 1,
             include_tafsir: true,
-            locale: "en",
+            locale: "id",
             surah: 1,
           },
         }),
@@ -87,6 +89,7 @@ describe("nakafa Quran tool", () => {
     const output = await Effect.runPromise(
       quran({
         input,
+        locale: "en",
         toolCallId: "quran-error",
         writer,
       }).pipe(Effect.provide(Nakafa.Default))

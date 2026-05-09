@@ -60,6 +60,7 @@
     "buffer": "^6.0.3",
     "convex": "^1.37.0",
     "convex-helpers": "^0.1.116",
+    "effect": "^3.21.2",
     "hono": "^4.12.18",
     "jsonrepair": "^3.14.0",
     "nanoid": "^5.1.11",

@@ -4,6 +4,7 @@ import {
   type ArticleCategory,
   ArticleCategorySchema,
 } from "@repo/contents/_types/articles/category";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import {
   type ExercisesCategory,
   ExercisesCategorySchema,
@@ -25,9 +26,7 @@ import {
   type Material,
   MaterialSchema,
 } from "@repo/contents/_types/subject/material";
-import * as z from "zod";
-
-const LocaleSchema = z.union([z.literal("en"), z.literal("id")]);
+import type * as z from "zod";
 
 function parseWithSchema<T>(
   schema: z.ZodType<T>,

@@ -1,7 +1,7 @@
 import { formatExercise } from "@repo/ai/agents/nakafa/format";
 import { previewExercise } from "@repo/ai/agents/nakafa/preview";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { NakafaAgentExerciseOptions } from "@repo/contents/_lib/agent/schemas";
+import type { NakafaAgentExerciseOptions } from "@repo/contents/_lib/agent/schema/exercise";
 import { Nakafa } from "@repo/contents/_lib/agent/service";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Either, Option } from "effect";

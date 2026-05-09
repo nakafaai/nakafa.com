@@ -3,7 +3,7 @@ import {
   NAKAFA_MCP_INFORMATIONAL_ROOT,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
-import { getNakafaAgentTaxonomy } from "@repo/contents/_lib/agent/taxonomy";
+import { getNakafaAgentTaxonomy } from "@repo/contents/_lib/agent/taxonomy/read";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 

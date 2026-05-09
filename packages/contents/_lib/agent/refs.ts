@@ -5,11 +5,11 @@ import {
 import type {
   NakafaAgentContentRef,
   NakafaAgentSection,
-} from "@repo/contents/_lib/agent/schemas";
+} from "@repo/contents/_lib/agent/schema/ref";
 import {
   NakafaAgentContentRefSchema,
   NakafaAgentSectionSchema,
-} from "@repo/contents/_lib/agent/schemas";
+} from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/contents/_types/content";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";

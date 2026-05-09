@@ -4,6 +4,8 @@ export const nakafaSearch = createPrompt({
   taskContext: `
     Search Nakafa's public content index across articles, subjects, exercises, and Quran.
     Use this when you need to discover stable content references before reading details.
+    For school lessons, materials, class or grade topics, use the subject section.
+    Use articles only when the user explicitly asks for articles, news, essays, analysis, or editorial content.
   `,
 });
 

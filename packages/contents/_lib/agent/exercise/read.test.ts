@@ -1,4 +1,4 @@
-import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercises";
+import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercise/read";
 import { Effect, Option } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
@@ -68,7 +68,7 @@ describe("Nakafa agent exercises", () => {
       "@repo/contents/_lib/agent/errors"
     );
     const { getNakafaAgentExercise } = await import(
-      "@repo/contents/_lib/agent/exercises"
+      "@repo/contents/_lib/agent/exercise/read"
     );
     const error = await Effect.runPromise(
       Effect.match(getNakafaAgentExercise(EXERCISE_CONTENT_ID), {

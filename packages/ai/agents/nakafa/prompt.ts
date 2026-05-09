@@ -1,6 +1,6 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type { Locale } from "@repo/utilities/locales";
 
 interface Props {
   context: AgentContext;
@@ -25,6 +25,8 @@ export function nakafaAgentPrompt({ locale, context }: Props) {
     `,
     toolUsageGuidelines: `
       - Use search when the task names a topic but does not provide an exact content_ref.
+      - Search subject for lessons, school materials, class or grade topics, and study content.
+      - Search articles only when the user explicitly asks for articles, news, essays, analysis, or editorial content.
       - Use read when the task already has a content_id, Nakafa URL, markdown URL, or nakafa:// resource URI.
       - Use exercise for structured exercise questions and answers.
       - Use quran for focused verse ranges.

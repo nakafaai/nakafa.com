@@ -1,10 +1,8 @@
 import { formatNakafaRouteTitle } from "@repo/contents/_lib/agent/format";
-import type {
-  NakafaAgentExerciseResult,
-  NakafaAgentMarkdown,
-  NakafaAgentQuranReference,
-  NakafaAgentTaxonomy,
-} from "@repo/contents/_lib/agent/schemas";
+import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
+import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran";
+import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
+import type { NakafaAgentTaxonomy } from "@repo/contents/_lib/agent/schema/taxonomy";
 
 /** Builds the bounded UI preview for a full content read. */
 export function previewRead(result: NakafaAgentMarkdown) {

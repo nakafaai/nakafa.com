@@ -1,16 +1,24 @@
 import {
-  NakafaAgentContentRefInputSchema,
   NakafaAgentExerciseOptionsSchema,
   NakafaAgentExerciseResultSchema,
-  NakafaAgentMarkdownSchema,
+} from "@repo/contents/_lib/agent/schema/exercise";
+import {
   NakafaAgentQuranReferenceOptionsSchema,
   NakafaAgentQuranReferenceSchema,
+} from "@repo/contents/_lib/agent/schema/quran";
+import {
+  NakafaAgentContentRefInputSchema,
+  NakafaAgentMarkdownSchema,
   NakafaAgentReadOptionsSchema,
+} from "@repo/contents/_lib/agent/schema/read";
+import {
   NakafaAgentSearchOptionsSchema,
   NakafaAgentSearchResultSchema,
+} from "@repo/contents/_lib/agent/schema/search";
+import {
   NakafaAgentTaxonomyOptionsSchema,
   NakafaAgentTaxonomySchema,
-} from "@repo/contents/_lib/agent/schemas";
+} from "@repo/contents/_lib/agent/schema/taxonomy";
 import * as z from "zod";
 
 /** Shared tool-error schema used in `structuredContent` for failed calls. */

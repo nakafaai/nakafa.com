@@ -1,18 +1,44 @@
 import { getNakafaContentResourceUri } from "@repo/contents/_lib/agent/refs";
-import {
-  NakafaAgentExerciseResultSchema,
-  NakafaAgentMarkdownSchema,
-  NakafaAgentQuranReferenceSchema,
-  NakafaAgentSearchResultSchema,
-} from "@repo/contents/_lib/agent/schemas";
+import { NakafaAgentExerciseResultSchema } from "@repo/contents/_lib/agent/schema/exercise";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran";
+import { NakafaAgentMarkdownSchema } from "@repo/contents/_lib/agent/schema/read";
+import { NakafaAgentSearchResultSchema } from "@repo/contents/_lib/agent/schema/search";
 import { describe, expect, it, vi } from "vitest";
 import * as z from "zod";
+import { GET, OPTIONS, POST } from "@/app/[transport]/route";
 
 vi.mock("@/env", () => ({
   env: {
     MCP_ALLOWED_ORIGINS: "https://agent.example.com",
     REDIS_URL: "redis://localhost:6379",
   },
+}));
+
+vi.mock("convex/nextjs", () => ({
+  fetchQuery: vi.fn(() =>
+    Promise.resolve({
+      count: 1,
+      has_more: false,
+      items: [
+        {
+          content_id:
+            "en/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
+          description: "A synced exercise set.",
+          locale: "en",
+          markdown_url:
+            "https://nakafa.com/en/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1.md",
+          route:
+            "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
+          section: "exercises",
+          title: "Set 1",
+          url: "https://nakafa.com/en/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
+        },
+      ],
+      limit: 1,
+      next_offset: null,
+      offset: 0,
+    })
+  ),
 }));
 
 const JsonRpcResponseSchema = z.object({
@@ -28,7 +54,6 @@ const JsonRpcResponseSchema = z.object({
 
 /** Posts one JSON-RPC request to the local MCP route. */
 async function postMcp(method: string, params: Record<string, unknown> = {}) {
-  const { POST } = await import("@/app/[transport]/route");
   const response = await POST(
     new Request("https://mcp.nakafa.com/mcp", {
       body: JSON.stringify({
@@ -351,7 +376,6 @@ describe("Nakafa MCP route", () => {
   });
 
   it("guards browser origins while allowing desktop clients without Origin", async () => {
-    const { GET, OPTIONS, POST } = await import("@/app/[transport]/route");
     const noOrigin = await GET(new Request("https://mcp.nakafa.com/mcp"));
     const allowedOptions = await OPTIONS(
       new Request("https://mcp.nakafa.com/mcp", {

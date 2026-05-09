@@ -1,9 +1,8 @@
-import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercises";
-import { getNakafaAgentMarkdown } from "@repo/contents/_lib/agent/markdown";
-import { getNakafaAgentQuranReference } from "@repo/contents/_lib/agent/quran";
+import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercise/read";
+import { getNakafaAgentQuranReference } from "@repo/contents/_lib/agent/quran/read";
+import { getNakafaAgentMarkdown } from "@repo/contents/_lib/agent/read/markdown";
 import { parseNakafaContentRef } from "@repo/contents/_lib/agent/refs";
-import { searchNakafaAgentContent } from "@repo/contents/_lib/agent/search";
-import { getNakafaAgentTaxonomy } from "@repo/contents/_lib/agent/taxonomy";
+import { getNakafaAgentTaxonomy } from "@repo/contents/_lib/agent/taxonomy/read";
 import { getSurah } from "@repo/contents/_lib/quran";
 import { Effect, Either, Option } from "effect";
 
@@ -62,7 +61,6 @@ export class Nakafa extends Effect.Service<Nakafa>()("Nakafa", {
     exercise: getNakafaAgentExercise,
     quran: getNakafaAgentQuranReference,
     read: getNakafaAgentMarkdown,
-    search: searchNakafaAgentContent,
     taxonomy: getNakafaAgentTaxonomy,
     verify: verifyNakafaContent,
   },

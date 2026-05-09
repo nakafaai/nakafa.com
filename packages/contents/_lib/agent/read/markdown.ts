@@ -1,11 +1,9 @@
-import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercises";
+import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercise/read";
 import { formatNakafaRouteTitle } from "@repo/contents/_lib/agent/format";
-import { getNakafaAgentQuranReference } from "@repo/contents/_lib/agent/quran";
+import { getNakafaAgentQuranReference } from "@repo/contents/_lib/agent/quran/read";
 import { parseNakafaContentRef } from "@repo/contents/_lib/agent/refs";
-import {
-  type NakafaAgentContentRef,
-  NakafaAgentMarkdownSchema,
-} from "@repo/contents/_lib/agent/schemas";
+import { NakafaAgentMarkdownSchema } from "@repo/contents/_lib/agent/schema/read";
+import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import { getSurah } from "@repo/contents/_lib/quran";
 import { Effect, Option } from "effect";

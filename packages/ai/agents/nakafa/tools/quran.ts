@@ -2,8 +2,9 @@ import { formatQuran } from "@repo/ai/agents/nakafa/format";
 import { previewQuran } from "@repo/ai/agents/nakafa/preview";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
-import type { NakafaAgentQuranReferenceOptions } from "@repo/contents/_lib/agent/schemas";
+import type { NakafaAgentQuranReferenceOptions } from "@repo/contents/_lib/agent/schema/quran";
 import { Nakafa } from "@repo/contents/_lib/agent/service";
+import type { Locale } from "@repo/contents/_types/content";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Either, Option } from "effect";
 
@@ -11,6 +12,7 @@ type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
 
 interface Params {
   input: NakafaAgentQuranReferenceOptions;
+  locale: Locale;
   toolCallId: string;
   writer: Writer;
 }
@@ -22,10 +24,11 @@ const oversizedRangeMessage = "Quran reference range is too large.";
 /** Reads a bounded Nakafa Quran reference and writes a preview UI part. */
 export const quran = Effect.fn("nakafa.quran")(function* ({
   input,
+  locale,
   toolCallId,
   writer,
 }: Params) {
-  const dataInput = normalizeQuranInput(input);
+  const dataInput = normalizeQuranInput(input, locale);
 
   yield* Effect.sync(() =>
     writer.write({
@@ -77,7 +80,7 @@ export const quran = Effect.fn("nakafa.quran")(function* ({
     return oversizedRangeMessage;
   }
 
-  const result = yield* Effect.either(Nakafa.quran(input));
+  const result = yield* Effect.either(Nakafa.quran(dataInput));
 
   if (Either.isLeft(result)) {
     yield* Effect.sync(() =>
@@ -134,12 +137,15 @@ export const quran = Effect.fn("nakafa.quran")(function* ({
 });
 
 /** Applies Quran input defaults before writing persistent UI data. */
-function normalizeQuranInput(input: NakafaAgentQuranReferenceOptions) {
+function normalizeQuranInput(
+  input: NakafaAgentQuranReferenceOptions,
+  locale: Locale
+) {
   return {
     from_verse: input.from_verse ?? 1,
     include_tafsir: input.include_tafsir ?? false,
-    locale: input.locale ?? "en",
+    locale,
     surah: input.surah,
-    ...(input.to_verse ? { to_verse: input.to_verse } : {}),
+    ...(input.to_verse === undefined ? {} : { to_verse: input.to_verse }),
   };
 }

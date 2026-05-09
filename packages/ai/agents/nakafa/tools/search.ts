@@ -1,7 +1,8 @@
 import { formatSearch } from "@repo/ai/agents/nakafa/format";
+import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { NakafaAgentSearchInput } from "@repo/contents/_lib/agent/schemas";
-import { Nakafa } from "@repo/contents/_lib/agent/service";
+import type { NakafaAgentSearchInput } from "@repo/contents/_lib/agent/schema/search";
+import type { Locale } from "@repo/contents/_types/content";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Either } from "effect";
 
@@ -9,6 +10,7 @@ type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
 
 interface Params {
   input: NakafaAgentSearchInput;
+  locale: Locale;
   toolCallId: string;
   writer: Writer;
 }
@@ -16,22 +18,26 @@ interface Params {
 /** Searches Nakafa content and writes a bounded `data-nakafa` UI part. */
 export const search = Effect.fn("nakafa.search")(function* ({
   input,
+  locale,
   toolCallId,
   writer,
 }: Params) {
+  const dataInput = getSearchInput(input, locale);
+
   yield* Effect.sync(() =>
     writer.write({
       id: toolCallId,
       type: "data-nakafa",
       data: {
         kind: "search",
-        input,
+        input: dataInput,
         status: "loading",
       },
     })
   );
 
-  const result = yield* Effect.either(Nakafa.search(input));
+  const nakafaSearch = yield* NakafaSearch;
+  const result = yield* Effect.either(nakafaSearch.search(dataInput));
 
   if (Either.isLeft(result)) {
     yield* Effect.sync(() =>
@@ -40,7 +46,7 @@ export const search = Effect.fn("nakafa.search")(function* ({
         type: "data-nakafa",
         data: {
           kind: "search",
-          input,
+          input: dataInput,
           status: "error",
           error: result.left.message,
         },
@@ -56,7 +62,7 @@ export const search = Effect.fn("nakafa.search")(function* ({
       type: "data-nakafa",
       data: {
         kind: "search",
-        input,
+        input: dataInput,
         status: "done",
         result: result.right,
       },
@@ -65,3 +71,14 @@ export const search = Effect.fn("nakafa.search")(function* ({
 
   return formatSearch(result.right);
 });
+
+/** Applies server-owned locale before calling the Convex-backed search adapter. */
+function getSearchInput(input: NakafaAgentSearchInput, locale: Locale) {
+  return {
+    limit: input.limit,
+    locale,
+    offset: input.offset,
+    ...(input.query === undefined ? {} : { query: input.query }),
+    ...(input.section === undefined ? {} : { section: input.section }),
+  };
+}

@@ -1,10 +1,8 @@
-import type {
-  NakafaAgentExerciseResult,
-  NakafaAgentMarkdown,
-  NakafaAgentQuranReference,
-  NakafaAgentSearchResult,
-  NakafaAgentTaxonomy,
-} from "@repo/contents/_lib/agent/schemas";
+import type { NakafaAgentExerciseResult } from "@repo/contents/_lib/agent/schema/exercise";
+import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran";
+import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
+import type { NakafaAgentSearchResult } from "@repo/contents/_lib/agent/schema/search";
+import type { NakafaAgentTaxonomy } from "@repo/contents/_lib/agent/schema/taxonomy";
 import dedent from "dedent";
 
 /** Formats Nakafa search results as compact source-backed markdown. */
@@ -12,7 +10,6 @@ export function formatSearch(result: NakafaAgentSearchResult) {
   return dedent(`
     # Nakafa Search
     - Count: ${result.count}
-    - Total: ${result.total_count}
     - Offset: ${result.offset}
     - Next offset: ${result.next_offset ?? "none"}
 

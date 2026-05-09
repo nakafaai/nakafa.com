@@ -1,16 +1,18 @@
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutProducts } from "@repo/backend/convex/tryouts/products";
-import { runConvexMutation } from "@repo/backend/scripts/sync-content/convexApi";
+import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
   log,
 } from "@repo/backend/scripts/sync-content/logging";
+import { SyncResultSchema } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
 import { getSubjects } from "@repo/contents/_lib/exercises/type";
+import { LocaleSchema } from "@repo/contents/_types/content";
+import { Effect } from "effect";
 
 const tryoutPartKeyReaders = {
   snbt: () =>
@@ -31,24 +33,27 @@ function getTryoutPartKeys(product: (typeof tryoutProducts)[number]) {
   return partKeys;
 }
 
-export const syncTryouts = async (
+/** Syncs tryout product metadata derived from content folders. */
+export const syncTryouts = Effect.fn("sync.tryouts")(function* (
   config: ConvexConfig,
   options: SyncOptions
-): Promise<SyncResult> => {
+) {
   const startTime = performance.now();
   if (!options.quiet) {
     log("\n--- TRYOUTS ---\n");
   }
 
-  const locales: Locale[] = options.locale ? [options.locale] : ["en", "id"];
+  const locales = options.locale ? [options.locale] : LocaleSchema.options;
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
 
   for (const product of tryoutProducts) {
     for (const locale of locales) {
-      const result = await runConvexMutation(
+      const result = yield* callConvex(
         config,
+        "mutation",
         "contentSync/mutations/tryouts:bulkSyncTryouts",
-        { product, locale, requiredPartKeys: getTryoutPartKeys(product) }
+        { product, locale, requiredPartKeys: getTryoutPartKeys(product) },
+        SyncResultSchema
       );
 
       totals.created += result.created;
@@ -78,4 +83,4 @@ export const syncTryouts = async (
     durationMs,
     itemsPerSecond: durationMs > 0 ? (processed / durationMs) * 1000 : 0,
   };
-};
+});
