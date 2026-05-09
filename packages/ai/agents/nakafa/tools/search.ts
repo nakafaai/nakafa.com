@@ -53,7 +53,10 @@ export const search = Effect.fn("nakafa.search")(function* ({
       })
     );
 
-    return result.left.message;
+    return {
+      result: null,
+      text: result.left.message,
+    };
   }
 
   yield* Effect.sync(() =>
@@ -69,7 +72,10 @@ export const search = Effect.fn("nakafa.search")(function* ({
     })
   );
 
-  return formatSearch(result.right);
+  return {
+    result: result.right,
+    text: formatSearch(result.right),
+  };
 });
 
 /** Applies server-owned locale before calling the Convex-backed search adapter. */

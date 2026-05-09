@@ -7,6 +7,10 @@ import {
 } from "@repo/ai/agents/nakafa/descriptions";
 import { nakafaAgentPrompt } from "@repo/ai/agents/nakafa/prompt";
 import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
+import {
+  prepareExerciseStep,
+  selectExerciseRef,
+} from "@repo/ai/agents/nakafa/step";
 import { exercise } from "@repo/ai/agents/nakafa/tools/exercise";
 import { quran } from "@repo/ai/agents/nakafa/tools/quran";
 import { read } from "@repo/ai/agents/nakafa/tools/read";
@@ -21,7 +25,7 @@ import { NakafaAgentSearchOptionsSchema } from "@repo/contents/_lib/agent/schema
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
 import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { generateText, stepCountIs, tool } from "ai";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import * as z from "zod";
 
 /** Runs the Nakafa agent through MCP-equivalent content tools. */
@@ -33,6 +37,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   context,
 }: NakafaAgentParams) {
   const searchService = yield* NakafaSearch;
+  let pendingExerciseRef = Option.none<string>();
   const result = yield* Effect.tryPromise(() =>
     generateText({
       model: model.languageModel(modelId),
@@ -44,12 +49,19 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
           description: nakafaSearch,
           inputSchema: NakafaAgentSearchOptionsSchema,
           outputSchema: z.string(),
-          execute: (input, { toolCallId }) =>
-            Effect.runPromise(
+          execute: async (input, { toolCallId }) => {
+            const output = await Effect.runPromise(
               search({ input, locale, toolCallId, writer }).pipe(
                 Effect.provideService(NakafaSearch, searchService)
               )
-            ),
+            );
+
+            if (input.section === "exercises") {
+              pendingExerciseRef = selectExerciseRef(input, output.result);
+            }
+
+            return output.text;
+          },
         }),
         read: tool({
           description: nakafaRead,
@@ -66,12 +78,15 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
           description: nakafaExercise,
           inputSchema: NakafaAgentExerciseOptionsSchema,
           outputSchema: z.string(),
-          execute: (input, { toolCallId }) =>
-            Effect.runPromise(
+          execute: (input, { toolCallId }) => {
+            pendingExerciseRef = Option.none();
+
+            return Effect.runPromise(
               exercise({ input, toolCallId, writer }).pipe(
                 Effect.provide(Nakafa.Default)
               )
-            ),
+            );
+          },
         }),
         quran: tool({
           description: nakafaQuran,
@@ -95,6 +110,30 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
               )
             ),
         }),
+      },
+      /**
+       * Reference: AI SDK `prepareStep` supports per-step `toolChoice`,
+       * `activeTools`, and message overrides.
+       * https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
+       */
+      prepareStep: ({ messages, steps }) => {
+        if (Option.isNone(pendingExerciseRef)) {
+          return;
+        }
+
+        const hasExerciseToolCall = steps.some((step) =>
+          step.toolCalls.some((toolCall) => toolCall.toolName === "exercise")
+        );
+
+        if (hasExerciseToolCall) {
+          pendingExerciseRef = Option.none();
+        }
+
+        return prepareExerciseStep(
+          pendingExerciseRef,
+          messages,
+          hasExerciseToolCall
+        );
       },
       stopWhen: stepCountIs(10),
     })

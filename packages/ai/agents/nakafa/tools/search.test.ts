@@ -46,7 +46,8 @@ describe("nakafa search tool", () => {
       )
     );
 
-    expect(output).toContain("# Nakafa Search");
+    expect(output.text).toContain("# Nakafa Search");
+    expect(output.result).toEqual(expect.objectContaining({ count: 1 }));
     expect(parts).toEqual([
       expect.objectContaining({
         type: "data-nakafa",
@@ -87,7 +88,10 @@ describe("nakafa search tool", () => {
       )
     );
 
-    expect(output).toBe("Unable to search Nakafa content.");
+    expect(output).toEqual({
+      result: null,
+      text: "Unable to search Nakafa content.",
+    });
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
         data: expect.objectContaining({ kind: "search", status: "error" }),
@@ -123,7 +127,7 @@ describe("nakafa search tool", () => {
       )
     );
 
-    expect(output).toContain("- Next offset: none");
+    expect(output.text).toContain("- Next offset: none");
   });
 
   it("uses the server locale instead of the model-provided locale", async () => {
@@ -169,7 +173,7 @@ describe("nakafa search tool", () => {
       )
     );
 
-    expect(output).toContain("Fungsi Rasional");
+    expect(output.text).toContain("Fungsi Rasional");
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -225,7 +229,7 @@ describe("nakafa search tool", () => {
       )
     );
 
-    expect(output).toContain("Artikel Politik");
+    expect(output.text).toContain("Artikel Politik");
     expect(parts.at(0)).toEqual(
       expect.objectContaining({
         data: expect.objectContaining({

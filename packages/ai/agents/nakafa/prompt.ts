@@ -38,6 +38,8 @@ export function nakafaAgentPrompt({ locale, context }: Props) {
     outputFormatting: `
       Return compact markdown with source URLs, content IDs, and the retrieved data.
       Keep the response factual and tool-result oriented.
+      Never invent exercise choices, answers, or explanations from lesson text.
+      If structured exercise data is unavailable, say Nakafa does not provide structured exercise data for that request.
     `,
   });
 }
