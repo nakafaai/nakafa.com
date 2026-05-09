@@ -1,0 +1,6 @@
+{
+  "extends": "@repo/typescript-config/base.json",
+  "compilerOptions": {},
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "coverage", "vitest.config.ts"]
+}

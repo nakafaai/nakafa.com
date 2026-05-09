@@ -19,6 +19,7 @@
     "@ai-sdk/react": "^3.0.177",
     "@mendable/firecrawl-js": "^4.22.2",
     "@repo/contents": "workspace:*",
+    "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "ai": "^6.0.175",
@@ -27,7 +28,6 @@
     "effect": "^3.21.2",
     "gpt-tokenizer": "^3.4.0",
     "ky": "^2.0.2",
-    "mathjs": "^15.2.0",
     "parse-domain": "^8.3.0",
     "zod": "^4.4.3"
   },

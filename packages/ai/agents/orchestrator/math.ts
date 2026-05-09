@@ -27,7 +27,7 @@ export const runMath = Effect.fn("orchestrator.runMath")(function* ({
   });
 
   yield* Effect.sync(() =>
-    usageAccumulator.addUsage(TOOL_NAMES.mathCalculation, result.usage)
+    usageAccumulator.addUsage(TOOL_NAMES.math, result.usage)
   );
 
   return result.text;

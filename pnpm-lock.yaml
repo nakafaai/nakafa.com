@@ -486,6 +486,9 @@ importers:
       '@repo/contents':
         specifier: workspace:*
         version: link:../contents
+      '@repo/math':
+        specifier: workspace:*
+        version: link:../math
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
@@ -510,9 +513,6 @@ importers:
       ky:
         specifier: ^2.0.2
         version: 2.0.2
-      mathjs:
-        specifier: ^15.2.0
-        version: 15.2.0
       parse-domain:
         specifier: ^8.3.0
         version: 8.3.0
@@ -1054,6 +1054,31 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+
+  packages/math:
+    dependencies:
+      effect:
+        specifier: ^3.21.2
+        version: 3.21.2
+      mathjs:
+        specifier: ^15.2.0
+        version: 15.2.0
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/node':
+        specifier: 25.6.1
+        version: 25.6.1
+      '@vitest/coverage-istanbul':
+        specifier: ^4.1.5
+        version: 4.1.5(vitest@4.1.5)
+      vitest:
+        specifier: ^4.1.5
+        version: 4.1.5(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.0)(@types/node@25.6.1)(@vitest/coverage-istanbul@4.1.5)(@vitest/ui@4.1.5)(jsdom@29.1.1(@noble/hashes@2.0.1))(msw@2.12.7(@types/node@25.6.1)(typescript@6.0.3))(vite@8.0.11(@types/node@25.6.1)(esbuild@0.28.0)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.4))
 
   packages/next-config:
     dependencies:
@@ -5857,9 +5882,6 @@ packages:
 
   '@types/node@12.20.55':
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
-
-  '@types/node@25.6.0':
-    resolution: {integrity: sha512-+qIYRKdNYJwY3vRCZMdJbPLJAtGjQBudzZzdzwQYkEPQd+PJGixUL5QfvCLDaULoLv+RhT3LDkwEfKaAkgSmNQ==}
 
   '@types/node@25.6.1':
     resolution: {integrity: sha512-coJCN8O1q4AGyyqCAUSP06P+SrMTu18BkEj3NVAK07q6QUneD2wzj3CLv9+yP+BMeZQlMvneXqqvDe3w+xcq7g==}
@@ -15135,7 +15157,7 @@ snapshots:
 
   '@types/cors@2.8.19':
     dependencies:
-      '@types/node': 25.6.0
+      '@types/node': 25.6.1
 
   '@types/d3-array@3.2.2': {}
 
@@ -15299,10 +15321,6 @@ snapshots:
   '@types/ms@2.1.0': {}
 
   '@types/node@12.20.55': {}
-
-  '@types/node@25.6.0':
-    dependencies:
-      undici-types: 7.19.2
 
   '@types/node@25.6.1':
     dependencies:
@@ -16488,7 +16506,7 @@ snapshots:
   engine.io@6.6.5:
     dependencies:
       '@types/cors': 2.8.19
-      '@types/node': 25.6.0
+      '@types/node': 25.6.1
       accepts: 1.3.8
       base64id: 2.0.0
       cookie: 0.7.2
@@ -19022,7 +19040,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 25.6.0
+      '@types/node': 25.6.1
       long: 5.3.2
 
   proxy-addr@2.0.7:

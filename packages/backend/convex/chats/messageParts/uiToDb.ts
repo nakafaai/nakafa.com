@@ -93,14 +93,14 @@ function mapUIMessagePartToDBPart(
         toolDeepResearchOutput: part.output,
         toolErrorText: part.errorText,
       };
-    case "tool-mathCalculation":
+    case "tool-math":
       return {
         ...baseFields,
         type: part.type,
         toolToolCallId: part.toolCallId,
         toolState: requirePersistableToolState(part.state),
-        toolMathCalculationInput: part.input?.query,
-        toolMathCalculationOutput: part.output,
+        toolMathInput: part.input?.query,
+        toolMathOutput: part.output,
         toolErrorText: part.errorText,
       };
     case "data-suggestions":
@@ -117,15 +117,12 @@ function mapUIMessagePartToDBPart(
         dataNakafaId: part.id,
         dataNakafaData: part.data,
       };
-    case "data-calculator":
+    case "data-math":
       return {
         ...baseFields,
         type: part.type,
-        dataCalculatorId: part.id,
-        dataCalculatorOriginal: part.data.original,
-        dataCalculatorResult: part.data.result,
-        dataCalculatorStatus: part.data.status,
-        dataCalculatorError: part.data.error,
+        dataMathId: part.id,
+        dataMathData: part.data,
       };
     case "data-scrape-url":
       return {

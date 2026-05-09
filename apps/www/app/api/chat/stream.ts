@@ -261,9 +261,9 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                     })
                   ),
               }),
-              [TOOL_NAMES.mathCalculation]: tool({
+              [TOOL_NAMES.math]: tool({
                 description:
-                  "Perform mathematical calculations and solve math problems. Use this for ANY mathematical computation - from simple arithmetic to complex expressions.",
+                  "Verify math work with deterministic evidence. Use this for numeric evaluation, simplification, derivatives, and expression comparison.",
                 inputSchema: mathToolInputSchema,
                 execute: ({ query }) =>
                   Effect.runPromise(

@@ -10,7 +10,7 @@ import {
 import { Response } from "@repo/design-system/components/ai/response";
 import { memo } from "react";
 import { useMessage } from "@/components/ai/context/use-message";
-import { CalculatorPart } from "@/components/ai/message-part/calculator";
+import { MathPart } from "@/components/ai/message-part/math";
 import { NakafaPart } from "@/components/ai/message-part/nakafa";
 import { WebSearchPart } from "@/components/ai/message-part/web-search";
 
@@ -50,8 +50,8 @@ export const AiMessagePart = memo(({ part, partIndex }: Props) => {
       return <WebSearchPart message={part.data} />;
     case "data-suggestions":
       return null;
-    case "data-calculator":
-      return <CalculatorPart message={part.data} />;
+    case "data-math":
+      return <MathPart message={part.data} />;
     case "data-nakafa":
       return <NakafaPart message={part.data} />;
     default:

@@ -24,6 +24,33 @@ describe("mapUIMessagePartsToDBParts", () => {
         output: "done",
       },
       {
+        type: "tool-math",
+        toolCallId: "math-tool-1",
+        state: "output-available",
+        input: { query: "simplify 2x + 3x" },
+        output: "verified",
+      },
+      {
+        id: "math-1",
+        type: "data-math",
+        data: {
+          kind: "simplify",
+          status: "verified",
+          input: { expression: "2 * x + 3 * x" },
+          result: {
+            input: {
+              expression: "2 * x + 3 * x",
+              latex: "2x+3x",
+            },
+            output: {
+              expression: "5 * x",
+              latex: "5x",
+            },
+          },
+          summary: "Verified simplification: 5 * x",
+        },
+      },
+      {
         id: "content-1",
         type: "data-nakafa",
         data: {
@@ -72,6 +99,19 @@ describe("mapUIMessagePartsToDBParts", () => {
         type: "tool-nakafa",
         toolNakafaInput: "current page",
         toolNakafaOutput: "done",
+      }),
+      expect.objectContaining({
+        type: "tool-math",
+        toolMathInput: "simplify 2x + 3x",
+        toolMathOutput: "verified",
+      }),
+      expect.objectContaining({
+        type: "data-math",
+        dataMathData: expect.objectContaining({
+          kind: "simplify",
+          status: "verified",
+        }),
+        dataMathId: "math-1",
       }),
       expect.objectContaining({
         type: "data-nakafa",

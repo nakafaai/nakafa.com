@@ -113,11 +113,11 @@ export const partTypeValidator = literals(
   // Orchestrator tools
   "tool-nakafa",
   "tool-deepResearch",
-  "tool-mathCalculation",
+  "tool-math",
   // Data parts
   "data-suggestions",
   "data-nakafa",
-  "data-calculator",
+  "data-math",
   "data-scrape-url",
   "data-web-search"
 );
@@ -275,16 +275,143 @@ export const webSearchSourceValidator = v.object({
   citation: v.string(),
 });
 
-export const calculatorExpressionValidator = v.object({
+export const mathExpressionValidator = v.object({
   expression: v.string(),
   latex: v.string(),
 });
 
-export const calculatorResultValidator = v.object({
+export const mathEvaluateInputValidator = v.object({
   expression: v.string(),
-  latex: v.string(),
-  value: v.string(),
 });
+
+export const mathSimplifyInputValidator = v.object({
+  expression: v.string(),
+});
+
+export const mathDifferentiateInputValidator = v.object({
+  expression: v.string(),
+  variable: v.string(),
+});
+
+export const mathCompareInputValidator = v.object({
+  left: v.string(),
+  right: v.string(),
+});
+
+export const mathSampleValidator = v.object({
+  left: v.string(),
+  right: v.string(),
+  scope: v.record(v.string(), v.number()),
+});
+
+export const mathEvaluateResultValidator = v.object({
+  input: mathExpressionValidator,
+  output: v.object({
+    expression: v.string(),
+    latex: v.string(),
+    value: v.string(),
+  }),
+});
+
+export const mathSimplifyResultValidator = v.object({
+  input: mathExpressionValidator,
+  output: mathExpressionValidator,
+});
+
+export const mathDifferentiateResultValidator = v.object({
+  input: mathExpressionValidator,
+  output: mathExpressionValidator,
+  variable: v.string(),
+});
+
+export const mathConfidenceValidator = literals(
+  "verified",
+  "contradicted",
+  "inconclusive"
+);
+
+export const mathCompareResultValidator = v.object({
+  left: mathExpressionValidator,
+  reason: v.string(),
+  right: mathExpressionValidator,
+  samples: v.array(mathSampleValidator),
+  status: mathConfidenceValidator,
+});
+
+export const mathDataValidator = v.union(
+  v.object({
+    kind: v.literal("evaluate"),
+    status: v.literal("loading"),
+    input: mathEvaluateInputValidator,
+  }),
+  v.object({
+    kind: v.literal("evaluate"),
+    status: v.literal("verified"),
+    input: mathEvaluateInputValidator,
+    result: mathEvaluateResultValidator,
+    summary: v.string(),
+  }),
+  v.object({
+    kind: v.literal("evaluate"),
+    status: v.literal("error"),
+    input: mathEvaluateInputValidator,
+    error: v.string(),
+  }),
+  v.object({
+    kind: v.literal("simplify"),
+    status: v.literal("loading"),
+    input: mathSimplifyInputValidator,
+  }),
+  v.object({
+    kind: v.literal("simplify"),
+    status: v.literal("verified"),
+    input: mathSimplifyInputValidator,
+    result: mathSimplifyResultValidator,
+    summary: v.string(),
+  }),
+  v.object({
+    kind: v.literal("simplify"),
+    status: v.literal("error"),
+    input: mathSimplifyInputValidator,
+    error: v.string(),
+  }),
+  v.object({
+    kind: v.literal("differentiate"),
+    status: v.literal("loading"),
+    input: mathDifferentiateInputValidator,
+  }),
+  v.object({
+    kind: v.literal("differentiate"),
+    status: v.literal("verified"),
+    input: mathDifferentiateInputValidator,
+    result: mathDifferentiateResultValidator,
+    summary: v.string(),
+  }),
+  v.object({
+    kind: v.literal("differentiate"),
+    status: v.literal("error"),
+    input: mathDifferentiateInputValidator,
+    error: v.string(),
+  }),
+  v.object({
+    kind: v.literal("compare"),
+    status: v.literal("loading"),
+    input: mathCompareInputValidator,
+  }),
+  v.object({
+    kind: v.literal("compare"),
+    status: mathConfidenceValidator,
+    input: mathCompareInputValidator,
+    result: mathCompareResultValidator,
+    summary: v.string(),
+  }),
+  v.object({
+    kind: v.literal("compare"),
+    status: v.literal("error"),
+    input: mathCompareInputValidator,
+    error: v.string(),
+  })
+);
 
 /**
  * Provider metadata validator.
@@ -331,8 +458,8 @@ export const partValidator = v.object({
   // Orchestrator tool fields
   toolNakafaInput: v.optional(v.string()),
   toolNakafaOutput: v.optional(v.string()),
-  toolMathCalculationInput: v.optional(v.string()),
-  toolMathCalculationOutput: v.optional(v.string()),
+  toolMathInput: v.optional(v.string()),
+  toolMathOutput: v.optional(v.string()),
   toolDeepResearchInput: v.optional(v.string()),
   toolDeepResearchOutput: v.optional(v.string()),
 
@@ -342,11 +469,8 @@ export const partValidator = v.object({
   dataNakafaId: v.optional(v.string()),
   dataNakafaData: v.optional(nakafaDataValidator),
 
-  dataCalculatorId: v.optional(v.string()),
-  dataCalculatorOriginal: v.optional(calculatorExpressionValidator),
-  dataCalculatorResult: v.optional(calculatorResultValidator),
-  dataCalculatorStatus: v.optional(literals("done", "error")),
-  dataCalculatorError: v.optional(v.string()),
+  dataMathId: v.optional(v.string()),
+  dataMathData: v.optional(mathDataValidator),
 
   dataScrapeUrlId: v.optional(v.string()),
   dataScrapeUrlUrl: v.optional(v.string()),

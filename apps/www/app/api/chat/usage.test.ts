@@ -64,10 +64,7 @@ describe("app/api/chat/usage", () => {
   it("defaults missing usage tokens to zero", () => {
     const usage = trackUsage();
 
-    usage.addUsage(
-      "mathCalculation",
-      usageRow({ input: undefined, output: undefined })
-    );
+    usage.addUsage("math", usageRow({ input: undefined, output: undefined }));
 
     expect(
       usage.metadata({
@@ -81,7 +78,7 @@ describe("app/api/chat/usage", () => {
       breakdown: {
         main: { input: 0, output: 0 },
         subAgents: {
-          mathCalculation: { input: 0, output: 0 },
+          math: { input: 0, output: 0 },
         },
       },
     });

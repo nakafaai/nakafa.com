@@ -6,5 +6,5 @@ import type { ToolName } from "@repo/ai/schema/tools";
 export const TOOL_NAMES = {
   nakafa: "nakafa",
   deepResearch: "deepResearch",
-  mathCalculation: "mathCalculation",
+  math: "math",
 } satisfies Record<ToolName, ToolName>;

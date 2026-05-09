@@ -52,17 +52,17 @@ describe("nakafaPrompt", () => {
     expect(prompt).not.toContain("Hold nothing back");
   });
 
-  it("routes only concrete numeric calculations to mathCalculation", () => {
+  it("routes math requests through deterministic math evidence", () => {
     const prompt = nakafaPrompt({
       ...base,
       userRole: "student",
     });
 
     expect(prompt).toContain(
-      "Use for concrete numeric calculations and expressions that Math.js can evaluate."
+      "Use for math that needs deterministic evidence: numeric evaluation, simplification, derivatives, or expression comparison."
     );
     expect(prompt).toContain(
-      "Do not send symbolic algebra, proof, or variable-only manipulation to this tool."
+      "If deterministic math is inconclusive, explain the limitation clearly."
     );
   });
 

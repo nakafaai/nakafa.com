@@ -1,59 +1,20 @@
-import { createPrompt } from "@repo/ai/prompt/utils";
+/**
+ * Describes the deterministic math operations exposed to Nina.
+ *
+ * References:
+ * - AI SDK tool descriptions:
+ *   https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling
+ * - Math.js algebra support:
+ *   https://mathjs.org/docs/expressions/algebra.html
+ */
+export const mathEvaluate =
+  "Evaluate a concrete numeric Math.js expression. Use when the expression has no unresolved variables and the user needs a deterministic value.";
 
-export const nakafaCalculator = createPrompt({
-  taskContext: `
-      # calculator Tool
+export const mathSimplify =
+  "Simplify an algebraic Math.js expression. Use for symbolic rewriting, not for proving domain-sensitive equivalence.";
 
-      Use this tool to calculate the user's question or our internal calculations using calculator.
-      The tool uses Math.js under the hood to evaluate expressions. It will not work with algebraic variables like x, y, a, b.
-      EVERYTHING should be calculated using this tool. DO NOT calculate manually. Even though it is simple arithmetic like 2+2.
-      If user query is a story question or complex calculation, break down the question into smaller parts and calculate each part using this tool.
-    `,
+export const mathDifferentiate =
+  "Differentiate a Math.js expression with respect to one variable.";
 
-  toolUsageGuidelines: `
-      ## When to use this tool
-
-      1. The user asks to calculate something
-      2. You want to calculate something using our internal calculations
-
-      ## When NOT to use this tool
-
-      Skip using this tool when:
-
-      1. There is no mathematical expression in the user's question or our internal calculations
-      2. There are algebraic variables in the user's question or our internal calculations
-
-      ## calculator tool capabilities
-
-      After calculating the user's question or our internal calculations, the calculator allows you to:
-
-      - Know the result of the calculation
-      - 100% correct result and to be sure that the calculation is correct
-    `,
-
-  detailedTaskInstructions: `
-      ## Best Practices
-
-      - EVERY calculation should be done using this tool, even though it is simple arithmetic like 2+2
-      - Break down story questions or complex calculations into smaller parts and calculate each part using this tool
-      - Explain every calculation step by step to the user
-    `,
-
-  examples: `
-      ## Examples of When to Use This Tool
-
-      <example>
-        User: Calculate 2+2
-        Assistant: Let me use the calculator tool to calculate 2+2
-        *Calls calculator tool*
-      </example>
-    `,
-
-  finalRequest: `
-      ## Summary
-
-      Use calculator tool when the user asks to calculate something or you want to calculate something using our internal calculations.
-      Treat the result of the calculation as a source of information to tell the users the result of the calculation.
-      Break down story questions or complex calculations into smaller parts and calculate each part using this tool.
-    `,
-});
+export const mathCompare =
+  "Compare two Math.js expressions. Returns verified, contradicted, or inconclusive based on symbolic checks and deterministic numeric counterexamples.";

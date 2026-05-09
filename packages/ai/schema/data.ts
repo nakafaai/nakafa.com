@@ -11,6 +11,7 @@ import {
 } from "@repo/contents/_lib/agent/schema/search";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
 import { LocaleSchema } from "@repo/contents/_types/content";
+import { MathDataSchema } from "@repo/math/schema";
 import * as z from "zod";
 
 const nakafaContentPreviewSchema = NakafaAgentContentRefSchema.extend({
@@ -142,19 +143,7 @@ export const dataPartSchema = z.object({
     data: z.array(z.string()),
   }),
   nakafa: nakafaDataSchema,
-  calculator: z.object({
-    original: z.object({
-      expression: z.string(),
-      latex: z.string(),
-    }),
-    result: z.object({
-      expression: z.string(),
-      latex: z.string(),
-      value: z.string(),
-    }),
-    status: z.enum(["done", "error"]),
-    error: z.string().optional(),
-  }),
+  math: MathDataSchema,
   "scrape-url": z.object({
     url: z.string(),
     content: z.string(),

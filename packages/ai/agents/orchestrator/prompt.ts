@@ -129,11 +129,11 @@ export function nakafaPrompt({
       Include the research question, why the user needs it, current page context, user role, and any required recency.
       Use source-backed findings only. If sources are missing or weak, say that clearly.
 
-      ## mathCalculation
+      ## math
 
-      Use for concrete numeric calculations and expressions that Math.js can evaluate.
-      Include the complete expression and relevant context.
-      Do not send symbolic algebra, proof, or variable-only manipulation to this tool. Explain those directly or use Nakafa content when the user needs learning material.
+      Use for math that needs deterministic evidence: numeric evaluation, simplification, derivatives, or expression comparison.
+      Include the complete expression, the target operation, variables when relevant, and the user's learning goal.
+      Do not ask it to solve unsupported equation systems. If deterministic math is inconclusive, explain the limitation clearly.
     `,
 
     chainOfThought: `

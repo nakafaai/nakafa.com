@@ -22,7 +22,7 @@ flowchart LR
   Mcp["apps/mcp"] --> Search
   Mcp --> Content
   Research --> Web["web search and scrape"]
-  Math --> Calculator["calculator"]
+  Math --> Evidence["evaluate / simplify / differentiate / compare"]
 ```
 
 ## Current Page

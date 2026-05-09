@@ -1,7 +1,7 @@
 import { type InferUITools, tool } from "ai";
 import * as z from "zod";
 
-const toolNameSchema = z.enum(["nakafa", "deepResearch", "mathCalculation"]);
+const toolNameSchema = z.enum(["nakafa", "deepResearch", "math"]);
 export type ToolName = z.infer<typeof toolNameSchema>;
 
 /**
@@ -27,13 +27,13 @@ export const researchToolInputSchema = z.object({
 });
 
 /**
- * Input schema for the math calculation orchestrator tool.
+ * Input schema for the deterministic math orchestrator tool.
  */
 export const mathToolInputSchema = z.object({
   query: z
     .string()
     .describe(
-      "The concrete numeric expression to calculate. Use only for expressions Math.js can evaluate, not symbolic algebra or proof-style explanations."
+      "The math request to verify through deterministic evidence. Include expressions, target operation, variable for derivatives, and whether the user asks for evaluation, simplification, differentiation, or comparison."
     ),
 });
 
@@ -48,7 +48,7 @@ const uiTools = {
     inputSchema: researchToolInputSchema,
     outputSchema: textOutputSchema,
   }),
-  mathCalculation: tool({
+  math: tool({
     inputSchema: mathToolInputSchema,
     outputSchema: textOutputSchema,
   }),
