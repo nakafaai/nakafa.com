@@ -1,7 +1,5 @@
 import * as z from "zod";
 
-const MAX_URL_LENGTH = 100;
-
 /**
  * Input schema for scrape tool
  */
@@ -10,7 +8,6 @@ export const scrapeInputSchema = z
     urlToCrawl: z
       .url()
       .min(1)
-      .max(MAX_URL_LENGTH)
       .describe("The URL to scrape (including http:// or https://)"),
   })
   .describe("Get the content of a URL");

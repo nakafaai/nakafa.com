@@ -38,6 +38,34 @@ describe("nakafaPrompt", () => {
     );
   });
 
+  it("keeps one stable Nina persona without conflicting harsh-advisor rules", () => {
+    const prompt = nakafaPrompt({
+      ...base,
+      userRole: "student",
+    });
+
+    expect(prompt).toContain(
+      "Be friendly, direct, source-grounded, concise, and age-appropriate."
+    );
+    expect(prompt).not.toContain("brutally honest");
+    expect(prompt).not.toContain("DON'T soften the truth");
+    expect(prompt).not.toContain("Hold nothing back");
+  });
+
+  it("routes only concrete numeric calculations to mathCalculation", () => {
+    const prompt = nakafaPrompt({
+      ...base,
+      userRole: "student",
+    });
+
+    expect(prompt).toContain(
+      "Use for concrete numeric calculations and expressions that Math.js can evaluate."
+    );
+    expect(prompt).toContain(
+      "Do not send symbolic algebra, proof, or variable-only manipulation to this tool."
+    );
+  });
+
   it.each([
     "teacher",
     "student",

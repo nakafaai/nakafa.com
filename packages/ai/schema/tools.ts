@@ -33,7 +33,7 @@ export const mathToolInputSchema = z.object({
   query: z
     .string()
     .describe(
-      "The mathematical expression or problem to solve (e.g., 'calculate 2+2', 'solve the quadratic equation x^2 + 5x + 6'). IMPORTANT: Include the full mathematical problem with all necessary context and variables."
+      "The concrete numeric expression to calculate. Use only for expressions Math.js can evaluate, not symbolic algebra or proof-style explanations."
     ),
 });
 

@@ -61,9 +61,15 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
       })
     );
 
-    return formatOutput({
-      output: { sources: [], error: searchResult.error },
-    });
+    const output = {
+      sources: [],
+      error: searchResult.error,
+    } satisfies WebSearchOutput;
+
+    return {
+      result: output,
+      text: formatOutput({ output }),
+    };
   }
 
   const web =
@@ -89,29 +95,31 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
 
   const webUrls = new Set(web.map((item) => item.url).filter(Boolean));
   const news =
-    searchResult.response.news
-      ?.filter((result) => {
-        const url = ("url" in result ? result.url : "") || "";
-        return url && !webUrls.has(url);
-      })
-      .map((result) => {
-        const title = ("title" in result ? result.title : "") || "";
-        const description = ("snippet" in result ? result.snippet : "") || "";
-        const url = ("url" in result ? result.url : "") || "";
+    searchResult.response.news?.flatMap((result) => {
+      const url = ("url" in result ? result.url : "") || "";
 
-        const processedContent = selectRelevantContent({
-          content: ("markdown" in result ? result.markdown : "") || "",
-          query,
-          preserveStructure: false,
-        });
+      if (!url || webUrls.has(url)) {
+        return [];
+      }
 
-        return {
+      const title = ("title" in result ? result.title : "") || "";
+      const description = ("snippet" in result ? result.snippet : "") || "";
+
+      const processedContent = selectRelevantContent({
+        content: ("markdown" in result ? result.markdown : "") || "",
+        query,
+        preserveStructure: false,
+      });
+
+      return [
+        {
           title,
           description,
           url,
           content: processedContent,
-        };
-      }) || [];
+        },
+      ];
+    }) || [];
 
   const sources = [...web, ...news];
   const sourcesWithCitation = sources
@@ -132,9 +140,15 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
     })
   );
 
-  return formatOutput({
-    output: { sources: sourcesWithCitation, error: undefined },
-  });
+  const output = {
+    sources: sourcesWithCitation,
+    error: undefined,
+  } satisfies WebSearchOutput;
+
+  return {
+    result: output,
+    text: formatOutput({ output }),
+  };
 });
 
 /**

@@ -17,18 +17,19 @@ export function researchPrompt({ locale, context }: ResearchPromptProps) {
       1. **webSearch**: Searches the web for up-to-date information on any topic
       2. **scrape**: Fetches and extracts content from specific URLs for detailed analysis
 
-      Your workflow:
-      1. Analyze the research task
-      2. Use webSearch to find relevant sources and information
-      3. Use scrape to extract detailed content from promising URLs if needed
-      4. Compile findings into a structured data summary
+	      Your workflow:
+	      1. Analyze the research task
+	      2. Use webSearch to find relevant sources and information
+	      3. Use scrape to extract detailed content from the strongest source URL
+	      4. Compile findings into a structured data summary
 
-      IMPORTANT:
-      - Search thoroughly and use multiple queries if needed
-      - Prioritize credible and authoritative sources
-      - Extract key facts, data, and insights
-      - Return ONLY the research findings - DO NOT generate user-facing explanations
-    `,
+	      IMPORTANT:
+	      - Search thoroughly and use multiple queries if needed
+	      - Prioritize credible and authoritative sources
+	      - Extract key facts, data, and insights
+	      - If scraped content is unavailable or weak, state the limitation clearly
+	      - Return ONLY the research findings - DO NOT generate user-facing explanations
+	    `,
     backgroundData: `
       Locale: ${locale}
       Platform: Nakafa (Educational Platform for K-12 through University)
