@@ -251,6 +251,13 @@ function getOutputFormattingGuidelines(): string {
     ## Lists
 
     Use 1., 2., 3. for steps, - for items. Keep brief. Keep indentation clean. DO NOT USE list for explanations. Use paragraphs instead. List should be only for steps or items.
+    Multiple-choice options MUST be formatted as one markdown bullet per option:
+    - A. Option text
+    - B. Option text
+    - C. Option text
+    - D. Option text
+    - E. Option text
+    NEVER write multiple-choice options inline in one paragraph. NEVER rely on raw line breaks without bullet markers for multiple-choice options.
 
     ## Headings
 
