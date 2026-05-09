@@ -1,8 +1,9 @@
 "use client";
 
 import {
+  ArrowDown01Icon,
+  ArrowUp01Icon,
   ArrowUpRight01Icon,
-  LayerIcon,
   Search02Icon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
@@ -22,7 +23,7 @@ interface Props {
 /** Renders Nakafa search results with a bounded default list. */
 export const SearchPart = memo(({ message }: Props) => {
   const t = useTranslations("Ai");
-  const [expanded, { open }] = useDisclosure(false);
+  const [expanded, { toggle }] = useDisclosure(false);
   const items = expanded
     ? message.result.items
     : message.result.items.slice(0, MAX_SHOWN_RESULTS);
@@ -62,10 +63,10 @@ export const SearchPart = memo(({ message }: Props) => {
               variant="outline"
             />
           ))}
-          {message.result.items.length > MAX_SHOWN_RESULTS && !expanded ? (
-            <Button onClick={open} size="sm" variant="outline">
-              {t("view-all")}
-              <HugeIcons icon={LayerIcon} />
+          {message.result.items.length > MAX_SHOWN_RESULTS ? (
+            <Button onClick={toggle} size="sm" variant="outline">
+              {expanded ? t("show-less") : t("show-more")}
+              <HugeIcons icon={expanded ? ArrowUp01Icon : ArrowDown01Icon} />
             </Button>
           ) : null}
         </div>

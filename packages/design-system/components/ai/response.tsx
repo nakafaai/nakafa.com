@@ -9,7 +9,6 @@ import hardenReactMarkdown from "harden-react-markdown";
 import type { ComponentProps } from "react";
 import { memo, useCallback, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkRehype from "remark-rehype";
@@ -56,12 +55,12 @@ const Block = memo(
     return (
       <MemoizedHardenedMarkdown
         components={reactMdxComponents}
-        rehypePlugins={[rehypeRaw]}
         remarkPlugins={[
           remarkGfm,
           [remarkMath, { singleDollarTextMath: false }],
           remarkRehype,
         ]}
+        skipHtml
         {...props}
       >
         {parsedContent}
