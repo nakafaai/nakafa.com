@@ -100,10 +100,6 @@ function calculateRelevanceScore(
   paragraph: string,
   keywords: string[]
 ): number {
-  if (keywords.length === 0) {
-    return 0;
-  }
-
   const lowerParagraph = paragraph.toLowerCase();
   let score = 0;
 
@@ -271,6 +267,10 @@ export function selectRelevantContent(
   }
 
   // Combine and ensure final length constraint
+  if (selectedParts.length === 0) {
+    return truncateAtBoundary(content, maxLength);
+  }
+
   const result = selectedParts.join("\n\n");
   return truncateAtBoundary(result, maxLength);
 }

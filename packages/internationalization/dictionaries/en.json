@@ -470,6 +470,7 @@
     "nakafa-content": "Material",
     "nakafa-exercise": "Exercises",
     "nakafa-quran": "Quran",
+    "question-number": "Question {number}",
     "nakafa-loading": "Reading {kind}...",
     "nakafa-error": "Couldn't read {kind}.",
     "get-contents": "Contents",

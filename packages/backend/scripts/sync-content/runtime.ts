@@ -32,7 +32,7 @@ export const loadEnvProvider = Effect.fn("scripts.loadEnvProvider")(
       return env;
     }
 
-    return ConfigProvider.orElse(ConfigProvider.fromMap(map), () => env);
+    return ConfigProvider.orElse(env, () => ConfigProvider.fromMap(map));
   }
 );
 

@@ -160,6 +160,9 @@ importers:
       '@repo/contents':
         specifier: workspace:*
         version: link:../../packages/contents
+      '@repo/internationalization':
+        specifier: workspace:*
+        version: link:../../packages/internationalization
       '@repo/next-config':
         specifier: workspace:*
         version: link:../../packages/next-config

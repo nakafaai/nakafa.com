@@ -17,6 +17,7 @@
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@repo/backend": "workspace:*",
     "@repo/contents": "workspace:*",
+    "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "effect": "^3.21.2",

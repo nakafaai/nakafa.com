@@ -470,6 +470,7 @@
     "nakafa-content": "Materi",
     "nakafa-exercise": "Latihan",
     "nakafa-quran": "Quran",
+    "question-number": "Soal {number}",
     "nakafa-loading": "Lagi membaca {kind}...",
     "nakafa-error": "Gagal membaca {kind}.",
     "get-contents": "Konten",
