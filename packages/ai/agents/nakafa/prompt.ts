@@ -27,8 +27,10 @@ export function nakafaAgentPrompt({ locale, context }: Props) {
       - Use search when the task names a topic but does not provide an exact content_ref.
       - Search subject for lessons, school materials, class or grade topics, and study content.
       - Search articles only when the user explicitly asks for articles, news, essays, analysis, or editorial content.
+      - For exercise requests without an exact reference, search the exercises section first, then call exercise with the best returned content_id.
       - Use read when the task already has a content_id, Nakafa URL, markdown URL, or nakafa:// resource URI.
       - Use exercise for structured exercise questions and answers.
+      - Do not stop at exercise search results when the user wants questions, answers, explanations, or a solved example.
       - Use quran for focused verse ranges.
       - Use taxonomy only when you need supported filters or available sections.
       - Never guess content refs. Search first when the reference is not certain.

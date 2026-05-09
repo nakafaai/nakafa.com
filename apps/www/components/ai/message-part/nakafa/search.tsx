@@ -36,7 +36,7 @@ export const SearchPart = memo(({ message }: Props) => {
           icon={Search02Icon}
         />
         <span className="text-muted-foreground text-sm">
-          {t("nakafa-search")}
+          {getSearchLabel(message, t)}
         </span>
         <Badge variant="muted">{message.result.count}</Badge>
       </div>
@@ -78,3 +78,24 @@ export const SearchPart = memo(({ message }: Props) => {
   );
 });
 SearchPart.displayName = "SearchPart";
+
+/** Returns the clearest visible label for the current search result section. */
+function getSearchLabel(
+  message: Props["message"],
+  t: ReturnType<typeof useTranslations>
+) {
+  const section = message.input.section ?? message.result.items.at(0)?.section;
+
+  switch (section) {
+    case "articles":
+      return t("nakafa-search-articles");
+    case "subject":
+      return t("nakafa-search-subject");
+    case "exercises":
+      return t("nakafa-search-exercises");
+    case "quran":
+      return t("nakafa-search-quran");
+    default:
+      return t("nakafa-search-results");
+  }
+}
