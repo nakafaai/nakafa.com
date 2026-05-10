@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const provider = ConfigProvider.fromMap(
   new Map([
     ["MATH_CAS_API_KEY", "secret"],
-    ["MATH_CAS_URL", "https://cas.nakafa.test"],
+    ["NEXT_PUBLIC_CAS_URL", "https://cas.nakafa.test"],
   ])
 );
 
@@ -16,17 +16,17 @@ describe("math keys", () => {
 
   it("validates the CAS env contract with T3 Env Core", () => {
     vi.stubEnv("MATH_CAS_API_KEY", "secret");
-    vi.stubEnv("MATH_CAS_URL", "https://cas.nakafa.test");
+    vi.stubEnv("NEXT_PUBLIC_CAS_URL", "https://cas.nakafa.test");
 
     expect(keys()).toMatchObject({
       MATH_CAS_API_KEY: "secret",
-      MATH_CAS_URL: "https://cas.nakafa.test",
+      NEXT_PUBLIC_CAS_URL: "https://cas.nakafa.test",
     });
   });
 
   it("rejects empty CAS values", () => {
     vi.stubEnv("MATH_CAS_API_KEY", "");
-    vi.stubEnv("MATH_CAS_URL", "");
+    vi.stubEnv("NEXT_PUBLIC_CAS_URL", "");
 
     expect(() => keys()).toThrow();
   });

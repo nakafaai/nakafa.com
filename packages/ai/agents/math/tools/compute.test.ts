@@ -35,7 +35,7 @@ const result = {
 const provider = ConfigProvider.fromMap(
   new Map([
     ["MATH_CAS_API_KEY", "secret"],
-    ["MATH_CAS_URL", "https://cas.nakafa.test"],
+    ["NEXT_PUBLIC_CAS_URL", "https://cas.nakafa.test"],
   ])
 );
 

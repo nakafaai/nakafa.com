@@ -3,7 +3,7 @@ import { Config, Schema } from "effect";
 
 const CAS_ENV = {
   apiKey: "MATH_CAS_API_KEY",
-  url: "MATH_CAS_URL",
+  url: "NEXT_PUBLIC_CAS_URL",
 } as const;
 
 const casUrlSchema = Schema.NonEmptyTrimmedString.pipe(

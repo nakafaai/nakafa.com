@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const provider = ConfigProvider.fromMap(
   new Map([
     ["MATH_CAS_API_KEY", "secret"],
-    ["MATH_CAS_URL", "https://cas.nakafa.test"],
+    ["NEXT_PUBLIC_CAS_URL", "https://cas.nakafa.test"],
   ])
 );
 
@@ -89,6 +89,118 @@ describe("MathService", () => {
     }
 
     expect(exit.cause.toString()).toContain(MathCasRequestError.name);
+  });
+
+  it("keeps CAS JSON error details readable", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      Response.json({ detail: "Invalid expression." }, { status: 422 })
+    );
+
+    const exit = await Effect.runPromiseExit(
+      MathService.compute({
+        expression: "x +",
+        kind: "math",
+        operation: "evaluate",
+      }).pipe(
+        Effect.provide(MathService.Default),
+        Effect.withConfigProvider(provider)
+      )
+    );
+
+    expect(Exit.isFailure(exit)).toBe(true);
+    if (Exit.isSuccess(exit)) {
+      return;
+    }
+
+    expect(exit.cause.toString()).toContain("Invalid expression.");
+  });
+
+  it("keeps CAS validation issues readable", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      Response.json(
+        {
+          detail: [{ msg: "Expression is required." }],
+        },
+        { status: 422 }
+      )
+    );
+
+    const exit = await Effect.runPromiseExit(
+      MathService.compute({
+        expression: "",
+        kind: "math",
+        operation: "evaluate",
+      }).pipe(
+        Effect.provide(MathService.Default),
+        Effect.withConfigProvider(provider)
+      )
+    );
+
+    expect(Exit.isFailure(exit)).toBe(true);
+    if (Exit.isSuccess(exit)) {
+      return;
+    }
+
+    expect(exit.cause.toString()).toContain("Expression is required.");
+  });
+
+  it("uses a status message when CAS returns malformed JSON errors", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response("{", {
+        headers: { "content-type": "application/json" },
+        status: 500,
+      })
+    );
+
+    const exit = await Effect.runPromiseExit(
+      MathService.compute({
+        expression: "2 + 2",
+        kind: "math",
+        operation: "evaluate",
+      }).pipe(
+        Effect.provide(MathService.Default),
+        Effect.withConfigProvider(provider)
+      )
+    );
+
+    expect(Exit.isFailure(exit)).toBe(true);
+    if (Exit.isSuccess(exit)) {
+      return;
+    }
+
+    expect(exit.cause.toString()).toContain(
+      "CAS request failed with status 500."
+    );
+  });
+
+  it("does not leak HTML error pages into math evidence", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response("<!DOCTYPE html><html><body>404</body></html>", {
+        headers: { "content-type": "text/html; charset=utf-8" },
+        status: 404,
+      })
+    );
+
+    const exit = await Effect.runPromiseExit(
+      MathService.compute({
+        expression: "2 + 2",
+        kind: "math",
+        operation: "evaluate",
+      }).pipe(
+        Effect.provide(MathService.Default),
+        Effect.withConfigProvider(provider)
+      )
+    );
+
+    expect(Exit.isFailure(exit)).toBe(true);
+    if (Exit.isSuccess(exit)) {
+      return;
+    }
+
+    expect(exit.cause.toString()).toContain(
+      "CAS request failed with status 404."
+    );
+    expect(exit.cause.toString()).not.toContain("<!DOCTYPE html>");
   });
 
   it("keeps network failures typed", async () => {

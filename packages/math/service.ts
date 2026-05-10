@@ -5,6 +5,20 @@ import { MathResultSchema } from "@repo/math/schema";
 import { Effect, Redacted, Schema } from "effect";
 
 const CAS_MATH_PATH = "/api/math";
+const JSON_CONTENT_TYPE = "application/json";
+
+const CasErrorBodySchema = Schema.Union(
+  Schema.Struct({
+    detail: Schema.String,
+  }),
+  Schema.Struct({
+    detail: Schema.Array(
+      Schema.Struct({
+        msg: Schema.String,
+      })
+    ),
+  })
+);
 
 /**
  * Deterministic CAS-backed math service used by Nina.
@@ -72,7 +86,7 @@ export class MathService extends Effect.Service<MathService>()(
   }
 ) {}
 
-/** Reads CAS error text while preserving the original HTTP status. */
+/** Reads CAS JSON errors without leaking framework HTML pages into chat. */
 const readResponseError = Effect.fn("Math.readResponseError")(function* (
   response: Response
 ) {
@@ -91,5 +105,21 @@ const readResponseError = Effect.fn("Math.readResponseError")(function* (
     return `CAS request failed with status ${response.status}.`;
   }
 
-  return body.right;
+  if (!response.headers.get("content-type")?.includes(JSON_CONTENT_TYPE)) {
+    return `CAS request failed with status ${response.status}.`;
+  }
+
+  const decoded = yield* Effect.either(
+    Schema.decodeUnknown(Schema.parseJson(CasErrorBodySchema))(body.right)
+  );
+
+  if (decoded._tag === "Left") {
+    return `CAS request failed with status ${response.status}.`;
+  }
+
+  if (typeof decoded.right.detail === "string") {
+    return decoded.right.detail;
+  }
+
+  return decoded.right.detail.map((issue) => issue.msg).join(" ");
 });
