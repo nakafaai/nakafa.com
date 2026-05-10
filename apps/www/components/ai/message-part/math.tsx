@@ -1,16 +1,15 @@
 "use client";
 
 import {
-  AlertCircleIcon,
+  ApproximatelyEqualIcon,
   ArrowDown01Icon,
-  CheckmarkCircle02Icon,
-  EqualSignIcon,
+  CalculateIcon,
+  CongruentToIcon,
   FunctionOfXIcon,
-  MathIcon,
-  NotEqualSignIcon,
 } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import type { DataPart } from "@repo/ai/schema/data";
-import { BlockMathKatex } from "@repo/design-system/components/markdown/math";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   Collapsible,
   CollapsibleContent,
@@ -18,58 +17,37 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import { cva } from "class-variance-authority";
 import { useTranslations } from "next-intl";
-import { memo, useState } from "react";
+import { memo, type ReactNode } from "react";
 
 interface Props {
   message: DataPart["math"];
 }
 
-const iconVariants = cva("size-4 shrink-0", {
-  variants: {
-    status: {
-      contradicted: "text-destructive",
-      error: "text-destructive",
-      inconclusive: "text-secondary",
-      loading: "text-muted-foreground",
-      verified: "text-primary",
-    },
-  },
-});
-
 export const MathPart = memo(({ message }: Props) => {
   const t = useTranslations("Ai");
-  const [open, setOpen] = useState(message.status !== "loading");
-
-  const icon = getIcon(message);
+  const [expanded, { set }] = useDisclosure(
+    message.status === "loading" || message.status === "error"
+  );
 
   return (
     <Collapsible
-      className="overflow-hidden rounded-md border"
-      onOpenChange={setOpen}
-      open={open}
+      className="flex max-w-full flex-col gap-2"
+      onOpenChange={set}
+      open={expanded}
     >
-      <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between bg-muted/80 px-4 py-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <HugeIcons
-            className={iconVariants({ status: message.status })}
-            icon={icon}
-          />
-          <span className="truncate text-sm">{getTitle(t, message)}</span>
-          <span className="rounded-full bg-background px-2 py-0.5 text-muted-foreground text-xs">
-            {t(`math-status-${message.status}`)}
-          </span>
-        </div>
+      <CollapsibleTrigger className="flex w-fit max-w-full cursor-pointer items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground">
+        <HugeIcons className="size-4 shrink-0" icon={getIcon(message)} />
+        <span className="truncate">{getTitle(t, message)}</span>
         <HugeIcons
           className={cn(
             "size-4 shrink-0 transition-transform",
-            open ? "rotate-180" : "rotate-0"
+            expanded ? "rotate-180" : "rotate-0"
           )}
           icon={ArrowDown01Icon}
         />
       </CollapsibleTrigger>
-      <CollapsibleContent className="border-t bg-muted/40 px-4 py-3 text-sm">
+      <CollapsibleContent className="max-w-full overflow-hidden text-muted-foreground text-sm">
         <MathEvidence message={message} />
       </CollapsibleContent>
     </Collapsible>
@@ -86,62 +64,113 @@ function MathEvidence({ message }: Props) {
   }
 
   if (message.status === "error") {
-    return <p className="text-destructive">{message.error}</p>;
+    return <p className="text-destructive text-sm">{message.error}</p>;
   }
 
   if (message.kind === "compare") {
-    return (
-      <div className="space-y-3">
-        <MathPair
-          left={message.result.left.latex}
-          right={message.result.right.latex}
-        />
-        <p className="text-muted-foreground">{message.result.reason}</p>
-      </div>
-    );
+    return <CompareEvidence message={message} />;
+  }
+
+  if (message.kind === "differentiate") {
+    return <DerivativeEvidence message={message} />;
   }
 
   return (
-    <MathPair
+    <MathRelation
       left={message.result.input.latex}
+      relation={<InlineMath>=</InlineMath>}
       right={message.result.output.latex}
     />
   );
 }
 
-/** Renders two mathematical expressions with an equality marker. */
-function MathPair({ left, right }: { left: string; right: string }) {
+/** Renders derivative evidence without pretending the operation is binary. */
+function DerivativeEvidence({ message }: Props) {
+  const t = useTranslations("Ai");
+
+  if (message.kind !== "differentiate" || message.status !== "verified") {
+    return null;
+  }
+
   return (
-    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-      <BlockMathKatex>{left}</BlockMathKatex>
-      <HugeIcons
-        className="size-4 text-muted-foreground"
-        icon={EqualSignIcon}
-      />
-      <BlockMathKatex>{right}</BlockMathKatex>
+    <MathRelation
+      left={message.result.input.latex}
+      relation={t("math-derivative-relation")}
+      right={message.result.output.latex}
+    />
+  );
+}
+
+/** Renders equivalence evidence without implying a result the engine did not prove. */
+function CompareEvidence({ message }: Props) {
+  const t = useTranslations("Ai");
+
+  if (
+    message.kind !== "compare" ||
+    message.status === "loading" ||
+    message.status === "error"
+  ) {
+    return null;
+  }
+
+  return (
+    <MathRelation
+      left={message.result.left.latex}
+      relation={getCompareText(t, message.status)}
+      right={message.result.right.latex}
+    />
+  );
+}
+
+/** Renders one readable relation without table-like labels. */
+function MathRelation({
+  left,
+  relation,
+  right,
+}: {
+  left: string;
+  relation: ReactNode;
+  right: string;
+}) {
+  return (
+    <div className="flex w-fit max-w-full items-center gap-2 overflow-x-auto py-1 text-sm">
+      <span className="shrink-0">
+        <InlineMath>{left}</InlineMath>
+      </span>
+      <span className="shrink-0 text-muted-foreground">{relation}</span>
+      <span className="shrink-0">
+        <InlineMath>{right}</InlineMath>
+      </span>
     </div>
   );
 }
 
-/** Selects the icon that best matches the math evidence state. */
+/** Selects localized comparison evidence text without badge-like status noise. */
+function getCompareText(
+  t: ReturnType<typeof useTranslations>,
+  status: Props["message"]["status"]
+) {
+  if (status === "contradicted") {
+    return t("math-compare-contradicted");
+  }
+
+  if (status === "inconclusive") {
+    return t("math-compare-inconclusive");
+  }
+
+  return t("math-compare-verified");
+}
+
+/** Selects the icon that best matches the math operation. */
 function getIcon(message: DataPart["math"]) {
-  if (message.status === "error" || message.status === "inconclusive") {
-    return AlertCircleIcon;
-  }
+  const icon = {
+    compare: CongruentToIcon,
+    differentiate: FunctionOfXIcon,
+    evaluate: CalculateIcon,
+    simplify: ApproximatelyEqualIcon,
+  };
 
-  if (message.status === "contradicted") {
-    return NotEqualSignIcon;
-  }
-
-  if (message.kind === "differentiate") {
-    return FunctionOfXIcon;
-  }
-
-  if (message.status === "verified") {
-    return CheckmarkCircle02Icon;
-  }
-
-  return MathIcon;
+  return icon[message.kind];
 }
 
 /** Selects a localized title for the math evidence kind. */

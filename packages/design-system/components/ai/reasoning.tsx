@@ -118,10 +118,10 @@ export type ReasoningTriggerProps = ComponentProps<typeof CollapsibleTrigger>;
 const ThinkingMessage = memo(
   ({ isStreaming, duration }: { isStreaming: boolean; duration?: number }) => {
     const t = useTranslations("Ai");
-    if (isStreaming || duration === 0) {
+    if (isStreaming) {
       return <p>{t("thinking")}</p>;
     }
-    if (duration === undefined) {
+    if (duration === undefined || duration === 0) {
       return <p>{t("thought-for-a-few-seconds")}</p>;
     }
     return <p>{t("thought-for", { duration })}</p>;

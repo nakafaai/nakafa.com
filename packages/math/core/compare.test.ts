@@ -70,6 +70,25 @@ describe("compare", () => {
     });
   });
 
+  it("does not use undefined samples as counterexamples", async () => {
+    const exit = await Effect.runPromiseExit(
+      compare({
+        left: "(x^2 - 9) / (x - 3)",
+        right: "x + 3",
+      })
+    );
+
+    expect(Exit.isSuccess(exit)).toBe(true);
+    if (Exit.isFailure(exit)) {
+      return;
+    }
+
+    expect(exit.value).toMatchObject({
+      samples: [],
+      status: "inconclusive",
+    });
+  });
+
   it("contradicts numeric expressions without variables", async () => {
     const exit = await Effect.runPromiseExit(
       compare({

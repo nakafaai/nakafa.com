@@ -75,5 +75,9 @@ export const evaluateSample = Effect.fn("Math.evaluateSample")(function* ({
     return Option.none();
   }
 
+  if (typeof result.right === "number" && !Number.isFinite(result.right)) {
+    return Option.none();
+  }
+
   return Option.some(result.right);
 });
