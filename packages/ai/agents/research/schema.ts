@@ -55,6 +55,22 @@ export const WebSearchOutputSchema = Schema.Struct({
 export const scrapeInputSchema = createEffectSchema(ScrapeInputSchema);
 export const webSearchInputSchema = createEffectSchema(WebSearchInputSchema);
 
+/** Search provider failed before returning usable source data. */
+export class ResearchSearchError extends Schema.TaggedError<ResearchSearchError>()(
+  "ResearchSearchError",
+  {
+    message: Schema.String,
+  }
+) {}
+
+/** Scrape provider failed before returning usable page content. */
+export class ResearchScrapeError extends Schema.TaggedError<ResearchScrapeError>()(
+  "ResearchScrapeError",
+  {
+    message: Schema.String,
+  }
+) {}
+
 export type ScrapeInput = Schema.Schema.Type<typeof ScrapeInputSchema>;
 export type ScrapeOutput = Schema.Schema.Type<typeof ScrapeOutputSchema>;
 export type WebSearchInput = Schema.Schema.Type<typeof WebSearchInputSchema>;

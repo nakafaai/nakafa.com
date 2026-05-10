@@ -1,5 +1,5 @@
 import { jsonSchema } from "ai";
-import { Effect, JSONSchema, Schema } from "effect";
+import { Either, JSONSchema, Schema } from "effect";
 
 /**
  * Converts an Effect schema into an AI SDK schema.
@@ -16,11 +16,9 @@ import { Effect, JSONSchema, Schema } from "effect";
 export const createEffectSchema = <A, I>(schema: Schema.Schema<A, I, never>) =>
   jsonSchema<A>(JSONSchema.make(schema), {
     validate: (value) => {
-      const decoded = Effect.runSync(
-        Schema.decodeUnknown(schema)(value).pipe(Effect.either)
-      );
+      const decoded = Schema.decodeUnknownEither(schema)(value);
 
-      if (decoded._tag === "Right") {
+      if (Either.isRight(decoded)) {
         return { success: true, value: decoded.right };
       }
 

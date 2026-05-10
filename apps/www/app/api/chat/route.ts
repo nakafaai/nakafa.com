@@ -10,7 +10,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
-import { createChildLogger, logError } from "@repo/utilities/logging";
+import { logError } from "@repo/utilities/logging/effect";
 import { geolocation } from "@vercel/functions";
 import { convertToModelMessages, createUIMessageStreamResponse } from "ai";
 import { Effect } from "effect";
@@ -133,7 +133,7 @@ export function POST(req: Request) {
         });
       }
 
-      const sessionLogger = createChildLogger({
+      const logContext = {
         service: "chat-api",
         currentPage: {
           locale,
@@ -145,7 +145,7 @@ export function POST(req: Request) {
         userLocation,
         userRole: userInfo.role,
         url,
-      });
+      };
 
       /**
        * Forward one chat-route runtime error to PostHog without interrupting the
@@ -161,17 +161,15 @@ export function POST(req: Request) {
             captureServerException(error, userInfo.userId, { source })
           ).pipe(
             Effect.catchAll((captureError) =>
-              Effect.sync(() =>
-                logError(
-                  sessionLogger,
-                  captureError instanceof Error
-                    ? captureError
-                    : new Error(String(captureError)),
-                  {
-                    errorLocation: "posthog-capture",
-                    source,
-                  }
-                )
+              logError(
+                captureError instanceof Error
+                  ? captureError
+                  : new Error(String(captureError)),
+                {
+                  ...logContext,
+                  errorLocation: "posthog-capture",
+                  source,
+                }
               )
             )
           )
@@ -197,20 +195,22 @@ export function POST(req: Request) {
       });
 
       if (compressedMessages.length < originalMessageCount) {
-        sessionLogger.warn(
+        yield* Effect.logWarning(
           `Messages compressed from ${originalMessageCount} to ${compressedMessages.length} messages (${tokens} tokens) to stay within token limit`
-        );
+        ).pipe(Effect.annotateLogs(logContext));
       } else {
-        sessionLogger.info(
+        yield* Effect.logInfo(
           `All ${originalMessageCount} messages fit within token limit (${tokens} tokens)`
-        );
+        ).pipe(Effect.annotateLogs(logContext));
       }
 
       const finalMessages = yield* Effect.tryPromise(() =>
         convertToModelMessages(compressedMessages)
       );
 
-      sessionLogger.info("Chat session started");
+      yield* Effect.logInfo("Chat session started").pipe(
+        Effect.annotateLogs(logContext)
+      );
 
       const translate = yield* Effect.tryPromise(() =>
         getTranslations({ locale, namespace: "Ai" })
@@ -231,7 +231,7 @@ export function POST(req: Request) {
       };
       const runtime = {
         currentDate,
-        logger: sessionLogger,
+        logContext,
         modelId: selectedModel,
         reportError: reportChatErrorToPostHog,
         translate,

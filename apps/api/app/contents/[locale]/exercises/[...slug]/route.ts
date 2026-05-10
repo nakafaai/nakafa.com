@@ -18,13 +18,12 @@ import {
 } from "@repo/contents/_shared/error";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
-import { createServiceLogger, logError } from "@repo/utilities/logging";
+import { logError } from "@repo/utilities/logging/effect";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
 
 export const revalidate = false;
 
-const logger = createServiceLogger("api-exercises");
 const EXERCISE_PREFIX_LEN = 3;
 const EXERCISE_TYPE_INDEX = 0;
 const LEGACY_TRY_OUT_SUFFIX_INDEX = 1;
@@ -136,41 +135,49 @@ export async function GET(
   if (isQuestionOrAnswer && exerciseNumber !== null) {
     const mdxPath = `exercises/${basePath}/${exerciseNumber}/${slug.at(-1)}`;
 
-    const program = Effect.match(getExerciseContent(validLocale, mdxPath), {
-      onFailure: (error: unknown) => {
-        logError(
-          logger,
-          error instanceof Error ? error : new Error(String(error)),
-          {
-            locale: validLocale,
-            mdxPath,
-            message: "Failed to fetch MDX content.",
+    const program = getExerciseContent(validLocale, mdxPath).pipe(
+      Effect.matchEffect({
+        onFailure: (error: unknown) =>
+          Effect.gen(function* () {
+            const err =
+              error instanceof Error ? error : new Error(String(error));
+
+            yield* logError(err, {
+              service: "api-exercises",
+              locale: validLocale,
+              mdxPath,
+              message: "Failed to fetch MDX content.",
+            });
+
+            const statusCode =
+              error instanceof InvalidPathError ||
+              error instanceof FileReadError ||
+              error instanceof MetadataParseError ||
+              error instanceof GitHubFetchError
+                ? 404
+                : 500;
+
+            return yield* Effect.succeed<Response>(
+              NextResponse.json(
+                { error: "Failed to fetch MDX content." },
+                { status: statusCode }
+              )
+            );
+          }),
+        onSuccess: (data) => {
+          if (!data) {
+            return Effect.succeed<Response>(
+              NextResponse.json(
+                { error: "MDX content not found." },
+                { status: 404 }
+              )
+            );
           }
-        );
 
-        const statusCode =
-          error instanceof InvalidPathError ||
-          error instanceof FileReadError ||
-          error instanceof MetadataParseError ||
-          error instanceof GitHubFetchError
-            ? 404
-            : 500;
-
-        return NextResponse.json(
-          { error: "Failed to fetch MDX content." },
-          { status: statusCode }
-        );
-      },
-      onSuccess: (data) => {
-        if (!data) {
-          return NextResponse.json(
-            { error: "MDX content not found." },
-            { status: 404 }
-          );
-        }
-        return NextResponse.json([data]);
-      },
-    });
+          return Effect.succeed<Response>(NextResponse.json([data]));
+        },
+      })
+    );
 
     return Effect.runPromise(program);
   }
@@ -178,35 +185,39 @@ export async function GET(
   // Otherwise, fetch exercises data using the original logic
   const cleanPath = `exercises/${basePath}` as const;
 
-  const program = Effect.match(
+  const program = Effect.matchEffect(
     getExercisesContent({
       locale: validLocale,
       filePath: cleanPath,
       includeMDX: false,
     }),
     {
-      onFailure: (error: unknown) => {
-        logError(
-          logger,
-          error instanceof Error ? error : new Error(String(error)),
-          {
+      onFailure: (error: unknown) =>
+        Effect.gen(function* () {
+          const err = error instanceof Error ? error : new Error(String(error));
+
+          yield* logError(err, {
+            service: "api-exercises",
             locale: validLocale,
             basePath: basePath || "/",
             slugLength: slug.length,
             message: "Failed to fetch content.",
-          }
-        );
+          });
 
-        return NextResponse.json(
-          { error: "Failed to fetch exercises content." },
-          { status: 500 }
-        );
-      },
+          return yield* Effect.succeed<Response>(
+            NextResponse.json(
+              { error: "Failed to fetch exercises content." },
+              { status: 500 }
+            )
+          );
+        }),
       onSuccess: (content) => {
         if (content.length === 0) {
-          return NextResponse.json(
-            { error: "Exercises content not found." },
-            { status: 404 }
+          return Effect.succeed<Response>(
+            NextResponse.json(
+              { error: "Exercises content not found." },
+              { status: 404 }
+            )
           );
         }
 
@@ -216,13 +227,12 @@ export async function GET(
             : content.filter((exercise) => exercise.number === exerciseNumber);
 
         if (exerciseNumber !== null && result.length === 0) {
-          return NextResponse.json(
-            { error: "Exercise not found." },
-            { status: 404 }
+          return Effect.succeed<Response>(
+            NextResponse.json({ error: "Exercise not found." }, { status: 404 })
           );
         }
 
-        return NextResponse.json(result);
+        return Effect.succeed<Response>(NextResponse.json(result));
       },
     }
   );

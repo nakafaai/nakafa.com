@@ -1,4 +1,7 @@
-import type { ScrapeOutput } from "@repo/ai/agents/research/schema";
+import {
+  ResearchScrapeError,
+  type ScrapeOutput,
+} from "@repo/ai/agents/research/schema";
 import { firecrawlApp } from "@repo/ai/config/firecrawl";
 import { selectRelevantContent } from "@repo/ai/lib/selection";
 import type { MyUIMessage } from "@repo/ai/types/message";
@@ -32,7 +35,8 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
         formats: ["markdown"],
         timeout: 5000,
       }),
-    catch: (error) => new Error(`Failed to crawl: ${error}`),
+    catch: (error) =>
+      new ResearchScrapeError({ message: `Failed to crawl: ${error}` }),
   }).pipe(
     Effect.match({
       onFailure: (error) => ({ error: error.message }),

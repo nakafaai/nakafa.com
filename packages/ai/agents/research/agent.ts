@@ -35,15 +35,17 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
             description: nakafaWebSearch,
             inputSchema: webSearchInputSchema,
             outputSchema: textOutputSchema,
-            execute: async ({ query }, { toolCallId }) => {
-              const output = await Effect.runPromise(
-                searchWeb({ query, toolCallId, writer })
-              );
-
-              pendingScrapeUrl = selectScrapeUrl(output.result);
-
-              return output.text;
-            },
+            execute: ({ query }, { toolCallId }) =>
+              Effect.runPromise(
+                searchWeb({ query, toolCallId, writer }).pipe(
+                  Effect.tap((output) =>
+                    Effect.sync(() => {
+                      pendingScrapeUrl = selectScrapeUrl(output.result);
+                    })
+                  ),
+                  Effect.map((output) => output.text)
+                )
+              ),
           }),
           scrape: tool({
             description: nakafaScrape,

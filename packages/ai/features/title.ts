@@ -7,7 +7,15 @@ import {
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { generateText } from "ai";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
+
+/** Title generation failed before a usable model response was returned. */
+export class TitleGenerationError extends Schema.TaggedError<TitleGenerationError>()(
+  "TitleGenerationError",
+  {
+    message: Schema.String,
+  }
+) {}
 
 /**
  * Generates a title for a chat based on conversation messages.
@@ -22,24 +30,33 @@ export const generateTitle = Effect.fn("features.generateTitle")(function* ({
 }: {
   messages: MyUIMessage[];
 }) {
-  const { text } = yield* Effect.tryPromise(() =>
-    generateText({
-      model: model.languageModel("grok-4.1-fast-non-reasoning"),
-      prompt: JSON.stringify(messages, null, 2),
-      system: createPrompt({
-        taskContext:
-          "You are an expert title generator. You are given a message in prompt and you need to generate a short, descriptive title based on it.",
-        detailedTaskInstructions: `
+  const { text } = yield* Effect.tryPromise({
+    try: () =>
+      generateText({
+        model: model.languageModel("grok-4.1-fast-non-reasoning"),
+        prompt: JSON.stringify(messages, null, 2),
+        system: createPrompt({
+          taskContext:
+            "You are an expert title generator. You are given a message in prompt and you need to generate a short, descriptive title based on it.",
+          detailedTaskInstructions: `
           - Focus on the main topic or question being asked
           - Keep it between 3-5 words
           - Ensure it is not more than ${MAX_TITLE_LENGTH} characters long
           - The title should be creative and unique
           - The title should be a summary of the user's message
           - Do not use quotes or colons`,
-        outputFormatting: "Output only the title, nothing else",
+          outputFormatting: "Output only the title, nothing else",
+        }),
       }),
-    })
-  ).pipe(Effect.catchAll(() => Effect.succeed({ text: DEFAULT_TITLE })));
+    catch: (error) =>
+      new TitleGenerationError({
+        message: `Unable to generate title: ${error}`,
+      }),
+  }).pipe(
+    Effect.catchTag("TitleGenerationError", () =>
+      Effect.succeed({ text: DEFAULT_TITLE })
+    )
+  );
 
   const cleanedTitle = text.replace(/^["']|["']$/g, "");
 

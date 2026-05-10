@@ -49,19 +49,25 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
           description: nakafaSearch,
           inputSchema: NakafaAgentSearchOptionsSchema,
           outputSchema: textOutputSchema,
-          execute: async (input, { toolCallId }) => {
-            const output = await Effect.runPromise(
+          execute: (input, { toolCallId }) =>
+            Effect.runPromise(
               search({ input, locale, toolCallId, writer }).pipe(
-                Effect.provideService(NakafaSearch, searchService)
+                Effect.provideService(NakafaSearch, searchService),
+                Effect.tap((output) =>
+                  Effect.sync(() => {
+                    if (input.section !== "exercises") {
+                      return;
+                    }
+
+                    pendingExerciseRef = selectExerciseRef(
+                      input,
+                      output.result
+                    );
+                  })
+                ),
+                Effect.map((output) => output.text)
               )
-            );
-
-            if (input.section === "exercises") {
-              pendingExerciseRef = selectExerciseRef(input, output.result);
-            }
-
-            return output.text;
-          },
+            ),
         }),
         read: tool({
           description: nakafaRead,

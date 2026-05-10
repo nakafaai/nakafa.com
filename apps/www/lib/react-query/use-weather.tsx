@@ -1,8 +1,9 @@
 import type { getWeather } from "@repo/ai/clients/weather/client";
 import { useQuery } from "@tanstack/react-query";
+import type { Effect } from "effect";
 import ky from "ky";
 
-type Weather = Awaited<ReturnType<typeof getWeather>>;
+type Weather = Effect.Effect.Success<ReturnType<typeof getWeather>>;
 
 async function fetchWeather() {
   return await ky.post<Weather>("/api/weather").json();

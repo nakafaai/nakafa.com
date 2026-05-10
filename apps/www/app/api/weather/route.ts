@@ -8,85 +8,101 @@ import {
   extractDistinctIdFromPostHogCookie,
 } from "@repo/analytics/posthog/server";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
-import {
-  createServiceLogger,
-  createTimer,
-  logError,
-  logHttpRequest,
-} from "@repo/utilities/logging";
+import { logError, logHttpRequest } from "@repo/utilities/logging/effect";
 import { geolocation } from "@vercel/functions";
+import { Cause, Effect } from "effect";
 import { after, NextResponse } from "next/server";
 
 const corsValidator = new CorsValidator();
 
-const apiLogger = createServiceLogger("weather-api");
+export function POST(req: Request) {
+  const startedAt = performance.now();
+  const context = {
+    service: "weather-api",
+    endpoint: "/api/weather",
+  };
 
-export async function POST(req: Request) {
-  // Only allow requests from allowed domain
-  if (!corsValidator.isRequestFromAllowedDomain(req)) {
-    return corsValidator.createForbiddenResponse();
-  }
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      if (!corsValidator.isRequestFromAllowedDomain(req)) {
+        return corsValidator.createForbiddenResponse();
+      }
 
-  const endTimer = createTimer(apiLogger, "weather_api_request");
+      const geo = geolocation(req);
+      let latitude = geo.latitude;
+      let longitude = geo.longitude;
 
-  try {
-    // Get geolocation from Vercel (works in production only)
-    const geo = geolocation(req);
-    let latitude = geo.latitude;
-    let longitude = geo.longitude;
+      if (!(latitude && longitude)) {
+        latitude = DEFAULT_LATITUDE;
+        longitude = DEFAULT_LONGITUDE;
 
-    // If geolocation is not available (local dev), use fallback coordinates
-    if (!(latitude && longitude)) {
-      // Use Jakarta, Indonesia as default coordinates for development
-      latitude = DEFAULT_LATITUDE;
-      longitude = DEFAULT_LONGITUDE;
-      apiLogger.info(
-        { env: process.env.NODE_ENV },
-        "Geolocation unavailable, using default coordinates (Jakarta, Indonesia)"
+        yield* Effect.logInfo(
+          "Geolocation unavailable, using default coordinates."
+        ).pipe(
+          Effect.annotateLogs({
+            ...context,
+            latitude,
+            longitude,
+          })
+        );
+      }
+
+      yield* Effect.logInfo("Processing weather request").pipe(
+        Effect.annotateLogs({
+          ...context,
+          latitude,
+          longitude,
+        })
       );
-    }
 
-    apiLogger.info({ latitude, longitude }, "Processing weather request");
+      const weather = yield* getWeather({ latitude, longitude });
+      const duration = Math.round(performance.now() - startedAt);
 
-    const weather = await getWeather({ latitude, longitude });
-    const duration = endTimer();
-
-    logHttpRequest(apiLogger, {
-      method: "POST",
-      url: "/api/weather",
-      statusCode: 200,
-      duration,
-    });
-
-    return NextResponse.json(weather);
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    after(async () => {
-      await captureServerException(
-        err,
-        extractDistinctIdFromPostHogCookie(req.headers.get("cookie")),
+      yield* logHttpRequest(
         {
-          source: "weather-api",
-        }
+          method: "POST",
+          url: "/api/weather",
+          statusCode: 200,
+          duration,
+        },
+        context
       );
-    });
 
-    logError(apiLogger, err, {
-      context: "weather_api",
-      endpoint: "/api/weather",
-    });
+      return NextResponse.json(weather);
+    }).pipe(
+      Effect.catchAllCause((cause) =>
+        Effect.gen(function* () {
+          const error = Cause.squash(cause);
+          const err = error instanceof Error ? error : new Error(String(error));
+          const duration = Math.round(performance.now() - startedAt);
 
-    const duration = endTimer();
-    logHttpRequest(apiLogger, {
-      method: "POST",
-      url: "/api/weather",
-      statusCode: 500,
-      duration,
-    });
+          after(async () => {
+            await captureServerException(
+              err,
+              extractDistinctIdFromPostHogCookie(req.headers.get("cookie")),
+              {
+                source: "weather-api",
+              }
+            );
+          });
 
-    return NextResponse.json(
-      { error: "Failed to fetch weather data" },
-      { status: 500 }
-    );
-  }
+          yield* logError(err, context);
+          yield* logHttpRequest(
+            {
+              method: "POST",
+              url: "/api/weather",
+              statusCode: 500,
+              duration,
+            },
+            context
+          );
+
+          return NextResponse.json(
+            { error: "Failed to fetch weather data" },
+            { status: 500 }
+          );
+        })
+      )
+    )
+  );
 }

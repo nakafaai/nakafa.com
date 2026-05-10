@@ -1,7 +1,8 @@
 import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
 import { defaultModel } from "@repo/ai/config/models";
 import { type GoogleProvider, model, order } from "@repo/ai/config/vercel";
-import { type createChildLogger, logError } from "@repo/utilities/logging";
+import { logError } from "@repo/utilities/logging/effect";
+import type { LogContext } from "@repo/utilities/logging/types";
 import {
   generateText,
   InvalidToolInputError,
@@ -16,7 +17,7 @@ type ChatRepairOptions = Parameters<ToolCallRepairFunction<ToolSet>>[0];
 
 interface Params extends ChatRepairOptions {
   needsPageFetch: boolean;
-  sessionLogger: ReturnType<typeof createChildLogger>;
+  sessionLogger: LogContext;
   url: string;
 }
 
@@ -36,18 +37,17 @@ export const repairChatToolCall = Effect.fn("chat.repairChatToolCall")(
     tools,
     url,
   }: Params) {
-    yield* Effect.sync(() =>
-      logError(sessionLogger, error, {
-        errorLocation: "experimental_repairToolCall",
-        toolName: toolCall.toolName,
-        toolInput: toolCall.input,
-        errorType: error.name,
-      })
-    );
+    yield* logError(error, {
+      ...sessionLogger,
+      errorLocation: "experimental_repairToolCall",
+      toolName: toolCall.toolName,
+      toolInput: toolCall.input,
+      errorType: error.name,
+    });
 
     if (NoSuchToolError.isInstance(error)) {
-      yield* Effect.sync(() =>
-        sessionLogger.warn("Invalid tool name, not attempting repair")
+      yield* Effect.logWarning("Invalid tool name, not attempting repair").pipe(
+        Effect.annotateLogs(sessionLogger)
       );
       return null;
     }
@@ -57,8 +57,8 @@ export const repairChatToolCall = Effect.fn("chat.repairChatToolCall")(
       toolCall.toolName === TOOL_NAMES.nakafa &&
       InvalidToolInputError.isInstance(error)
     ) {
-      yield* Effect.sync(() =>
-        sessionLogger.info("Using server-derived Nakafa input")
+      yield* Effect.logInfo("Using server-derived Nakafa input").pipe(
+        Effect.annotateLogs(sessionLogger)
       );
       return {
         ...toolCall,
@@ -68,9 +68,9 @@ export const repairChatToolCall = Effect.fn("chat.repairChatToolCall")(
 
     const tool = tools[toolCall.toolName];
     if (!tool) {
-      yield* Effect.sync(() =>
-        sessionLogger.warn("Tool is unavailable, not attempting repair")
-      );
+      yield* Effect.logWarning(
+        "Tool is unavailable, not attempting repair"
+      ).pipe(Effect.annotateLogs(sessionLogger));
       return null;
     }
 
@@ -99,8 +99,8 @@ export const repairChatToolCall = Effect.fn("chat.repairChatToolCall")(
       })
     );
 
-    yield* Effect.sync(() =>
-      sessionLogger.info("Tool call successfully repaired")
+    yield* Effect.logInfo("Tool call successfully repaired").pipe(
+      Effect.annotateLogs(sessionLogger)
     );
     return {
       ...toolCall,

@@ -1,4 +1,7 @@
-import type { WebSearchOutput } from "@repo/ai/agents/research/schema";
+import {
+  ResearchSearchError,
+  type WebSearchOutput,
+} from "@repo/ai/agents/research/schema";
 import { firecrawlApp } from "@repo/ai/config/firecrawl";
 import { selectRelevantContent } from "@repo/ai/lib/selection";
 import { extractDomain } from "@repo/ai/lib/utils";
@@ -39,7 +42,8 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
         },
         timeout: 10_000,
       }),
-    catch: (error) => new Error(`Failed to search: ${error}`),
+    catch: (error) =>
+      new ResearchSearchError({ message: `Failed to search: ${error}` }),
   }).pipe(
     Effect.match({
       onFailure: (error) => ({ error: error.message }),

@@ -25,7 +25,8 @@ import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messagePa
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { cleanSlug } from "@repo/utilities/helper";
-import { type createChildLogger, logError } from "@repo/utilities/logging";
+import { logError } from "@repo/utilities/logging/effect";
+import type { LogContext } from "@repo/utilities/logging/types";
 import { waitUntil } from "@vercel/functions";
 import {
   createUIMessageStream,
@@ -47,7 +48,6 @@ import type { getUserInfo } from "@/app/api/chat/utils";
 
 const MAX_STEPS = 10;
 
-type Logger = ReturnType<typeof createChildLogger>;
 type Location = Parameters<typeof nakafaPrompt>[0]["userLocation"];
 type Translator = Awaited<ReturnType<typeof getTranslations>>;
 type UserInfo = Effect.Effect.Success<ReturnType<typeof getUserInfo>>;
@@ -69,7 +69,7 @@ interface Params {
   };
   runtime: {
     currentDate: string;
-    logger: Logger;
+    logContext: LogContext;
     modelId: ModelId;
     reportError: (error: unknown, source: string) => void;
     translate: Translator;
@@ -92,17 +92,28 @@ export function streamChat({ chat, page, runtime, user }: Params) {
       runtime.reportError(error, "chat-api-stream");
 
       if (error instanceof Error) {
-        logError(runtime.logger, error, {
-          errorLocation: "createUIMessageStream",
-          errorType: error.name,
-        });
+        Effect.runFork(
+          logError(error, {
+            ...runtime.logContext,
+            errorLocation: "createUIMessageStream",
+            errorType: error.name,
+          })
+        );
         if (error.message.includes("Rate limit")) {
-          runtime.logger.warn("Rate limit exceeded in chat stream");
+          Effect.runFork(
+            Effect.logWarning("Rate limit exceeded in chat stream").pipe(
+              Effect.annotateLogs(runtime.logContext)
+            )
+          );
           return runtime.translate("rate-limit-message");
         }
         return error.message;
       }
-      runtime.logger.error("Unknown error in chat stream");
+      Effect.runFork(
+        Effect.logError("Unknown error in chat stream").pipe(
+          Effect.annotateLogs(runtime.logContext)
+        )
+      );
       return runtime.translate("error-message");
     },
     originalMessages: chat.messages,
@@ -122,13 +133,15 @@ export function streamChat({ chat, page, runtime, user }: Params) {
               );
             }).pipe(
               Effect.catchAll((error) =>
-                Effect.sync(() => {
+                Effect.gen(function* () {
                   runtime.reportError(error, "chat-api-generate-title");
 
-                  logError(
-                    runtime.logger,
+                  yield* logError(
                     error instanceof Error ? error : new Error(String(error)),
-                    { errorLocation: "generateTitle/updateChatTitle" }
+                    {
+                      ...runtime.logContext,
+                      errorLocation: "generateTitle/updateChatTitle",
+                    }
                   );
                 })
               )
@@ -162,13 +175,15 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             )
           ).pipe(
             Effect.catchAll((error) =>
-              Effect.sync(() => {
+              Effect.gen(function* () {
                 runtime.reportError(error, "chat-api-save-assistant-response");
 
-                logError(
-                  runtime.logger,
+                yield* logError(
                   error instanceof Error ? error : new Error(String(error)),
-                  { errorLocation: "saveAssistantResponse" }
+                  {
+                    ...runtime.logContext,
+                    errorLocation: "saveAssistantResponse",
+                  }
                 );
               })
             )
@@ -290,7 +305,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 repairChatToolCall({
                   ...options,
                   needsPageFetch: context.needsPageFetch && !fetchedPage,
-                  sessionLogger: runtime.logger,
+                  sessionLogger: runtime.logContext,
                   url: page.url,
                 })
               ),
@@ -334,19 +349,28 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 runtime.reportError(error, "chat-api-message-stream");
 
                 if (error instanceof Error) {
-                  logError(runtime.logger, error, {
-                    errorLocation: "toUIMessageStream",
-                    errorType: error.name,
-                  });
+                  Effect.runFork(
+                    logError(error, {
+                      ...runtime.logContext,
+                      errorLocation: "toUIMessageStream",
+                      errorType: error.name,
+                    })
+                  );
                   if (error.message.includes("Rate limit")) {
-                    runtime.logger.warn(
-                      "Rate limit exceeded in message stream"
+                    Effect.runFork(
+                      Effect.logWarning(
+                        "Rate limit exceeded in message stream"
+                      ).pipe(Effect.annotateLogs(runtime.logContext))
                     );
                     return runtime.translate("rate-limit-message");
                   }
                   return error.message;
                 }
-                runtime.logger.error("Unknown error in message stream");
+                Effect.runFork(
+                  Effect.logError("Unknown error in message stream").pipe(
+                    Effect.annotateLogs(runtime.logContext)
+                  )
+                );
                 return runtime.translate("error-message");
               },
             })

@@ -131,9 +131,12 @@ export const AirPollutionResponseSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 
 /** Geographic data used by Nina weather context. */
-export interface GeoData {
-  city: string;
-  country: string;
-  latitude: string;
-  longitude: string;
-}
+export const GeoDataSchema = Schema.Struct({
+  city: Schema.String,
+  country: Schema.String,
+  latitude: Schema.String,
+  longitude: Schema.String,
+});
+
+/** Geographic data used by Nina weather context. */
+export type GeoData = Schema.Schema.Type<typeof GeoDataSchema>;
