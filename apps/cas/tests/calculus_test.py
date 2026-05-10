@@ -17,6 +17,21 @@ def test_differentiate_polynomial() -> None:
     assert result.secondary.expression == "3*x**2 - 8*x + 2"
 
 
+def test_differentiate_lowercase_e_exponential() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="differentiate",
+            expression="e^x",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "exp(x)"
+
+
 def test_integrate_polynomial() -> None:
     result = run(
         MathRequest(

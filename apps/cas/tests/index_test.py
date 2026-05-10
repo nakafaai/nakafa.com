@@ -39,6 +39,7 @@ def test_api_accepts_auth(monkeypatch) -> None:
     )
 
     assert response.status_code == 200
+    assert "distribution" not in response.json()["input"]
     assert response.json()["secondary"]["expression"] == "4"
 
 

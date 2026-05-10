@@ -19,6 +19,7 @@ TRANSFORMATIONS = standard_transformations + (
 FUNCTIONS = {
     "Abs": sp.Abs,
     "E": sp.E,
+    "e": sp.E,
     "I": sp.I,
     "acos": sp.acos,
     "asin": sp.asin,

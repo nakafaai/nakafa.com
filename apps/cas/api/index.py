@@ -25,7 +25,12 @@ def value_error_handler(_request: Request, error: ValueError) -> JSONResponse:
     return JSONResponse(status_code=422, content={"detail": str(error)})
 
 
-@app.post("/api/math", dependencies=[Depends(require_api_key)])
+@app.post(
+    "/api/math",
+    dependencies=[Depends(require_api_key)],
+    response_model=MathResult,
+    response_model_exclude_none=True,
+)
 def math(request: MathRequest) -> MathResult:
     """Run one fixed CAS operation after bearer-token authentication."""
     return run(request)

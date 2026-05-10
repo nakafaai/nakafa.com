@@ -1,4 +1,5 @@
 import pytest
+import sympy as sp
 
 from cas import parse
 
@@ -22,3 +23,9 @@ def test_parse_defaults_and_errors() -> None:
 )
 def test_parse_equation_variants(equation: str) -> None:
     assert parse.equation(equation) is not None
+
+
+def test_parse_lowercase_e_as_euler_constant() -> None:
+    x = sp.Symbol("x")
+
+    assert parse.expression("e^x") == sp.E**x
