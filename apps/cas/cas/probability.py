@@ -45,10 +45,14 @@ def _distribution(request: MathRequest, variable: sp.Symbol) -> object:
             parse.expression(parameters.get("p", "1/2")),
         )
     if name == "normal":
+        standard_deviation = parameters.get(
+            "standard_deviation", parameters.get("standardDeviation", "1")
+        )
+
         return Normal(
             str(variable),
             parse.expression(parameters.get("mean", "0")),
-            parse.expression(parameters.get("standard_deviation", "1")),
+            parse.expression(standard_deviation),
         )
     if name == "poisson":
         return Poisson(str(variable), parse.expression(parameters.get("lambda", "1")))

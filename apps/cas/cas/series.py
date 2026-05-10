@@ -11,9 +11,11 @@ def expand(request: MathRequest) -> MathResult:
     """Expand a Taylor series around the requested point."""
     expr = parse.first_expression(request)
     variable = parse.symbol(request.variable)
-    point = int(parse.expression(request.point or "0"))
+    point = parse.expression(request.point or "0")
     order = request.order or 6
-    output = sp.series(expr, variable, point, order)
+    offset = sp.Dummy("offset")
+    shifted = expr.subs(variable, point + offset)
+    output = shifted.series(offset, 0, order).subs(offset, variable - point)
 
     return result(
         request,

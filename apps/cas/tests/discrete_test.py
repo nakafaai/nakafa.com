@@ -1,0 +1,36 @@
+import pytest
+
+from cas import discrete
+from cas.engine import run
+from cas.schema import MathRequest
+
+
+@pytest.mark.parametrize(
+    ("math_request", "expected"),
+    [
+        (MathRequest(kind="math", k="2", n="5", operation="combination"), "10"),
+        (MathRequest(kind="math", operation="gcd", values=["18", "24"]), "6"),
+        (MathRequest(kind="math", n="17", operation="is_prime"), "True"),
+        (MathRequest(kind="math", operation="lcm", values=["6", "8"]), "24"),
+        (MathRequest(kind="math", modulus="5", n="17", operation="modular"), "2"),
+        (MathRequest(kind="math", k="2", n="5", operation="permutation"), "20"),
+    ],
+)
+def test_discrete_outputs(math_request: MathRequest, expected: str) -> None:
+    result = run(math_request)
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == expected
+
+
+def test_prime_factorization() -> None:
+    result = run(MathRequest(kind="math", n="84", operation="prime_factorization"))
+
+    assert result.items
+    assert [entry.value for entry in result.items] == ["2^2", "3^1", "7^1"]
+
+
+def test_unknown_discrete_operation_raises() -> None:
+    with pytest.raises(ValueError, match="Unsupported discrete operation"):
+        discrete.run(MathRequest(kind="math", operation="unknown"))

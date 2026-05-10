@@ -265,7 +265,7 @@ export const MathProbabilityInputSchema = Schema.Struct({
     .pipe(Schema.mutable)
     .annotations({
       description:
-        "Distribution parameters by name, for example mean, standardDeviation, n, or p.",
+        "Distribution parameters by name, for example mean, standard_deviation, n, or p.",
     }),
   variable: Schema.optional(variableInputSchema),
 })
