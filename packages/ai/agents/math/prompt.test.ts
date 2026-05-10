@@ -25,13 +25,13 @@ describe("mathPrompt", () => {
     expect(prompt).toContain("verified, contradicted, inconclusive, or error");
   });
 
-  it("does not claim general equation solving support", () => {
+  it("routes broad math groups through CAS tools", () => {
     const prompt = mathPrompt(base);
 
-    expect(prompt).toContain(
-      "Math.js does not provide a general equation solver here."
-    );
-    expect(prompt).not.toContain("calculator");
+    expect(prompt).toContain("equation: solving equations");
+    expect(prompt).toContain("matrix: linear algebra operations");
+    expect(prompt).toContain("discrete: number theory and combinatorics");
+    expect(prompt).not.toContain("Math.js");
   });
 
   it("includes fallback context for unverified pages and unknown roles", () => {

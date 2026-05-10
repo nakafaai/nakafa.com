@@ -36,16 +36,31 @@ describe("mapUIMessagePartsToDBParts", () => {
         data: {
           kind: "simplify",
           status: "verified",
-          input: { expression: "2 * x + 3 * x" },
+          input: {
+            expression: "2 * x + 3 * x",
+            kind: "math",
+            operation: "simplify",
+          },
           result: {
+            conditions: [],
             input: {
+              expression: "2 * x + 3 * x",
+              kind: "math",
+              operation: "simplify",
+            },
+            items: [],
+            kind: "simplify",
+            operation: "simplify",
+            primary: {
               expression: "2 * x + 3 * x",
               latex: "2x+3x",
             },
-            output: {
+            reason: "SymPy applied simplify to the expression.",
+            secondary: {
               expression: "5 * x",
               latex: "5x",
             },
+            status: "verified",
           },
           summary: "Verified simplification: 5 * x",
         },

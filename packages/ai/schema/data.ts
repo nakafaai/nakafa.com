@@ -1,170 +1,256 @@
-import { NakafaAgentExerciseOptionsSchema } from "@repo/contents/_lib/agent/schema/exercise";
-import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
-import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/read";
-import {
-  NakafaAgentContentRefSchema,
-  NakafaAgentSectionSchema,
-} from "@repo/contents/_lib/agent/schema/ref";
-import {
-  NakafaAgentSearchOptionsSchema,
-  NakafaAgentSearchResultSchema,
-} from "@repo/contents/_lib/agent/schema/search";
-import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
-import { LocaleSchema } from "@repo/contents/_types/content";
 import { MathDataSchema } from "@repo/math/schema";
-import * as z from "zod";
+import { locales } from "@repo/utilities/locales";
+import { nakafaSections } from "@repo/utilities/nakafa";
+import { Schema } from "effect";
 
-const nakafaContentPreviewSchema = NakafaAgentContentRefSchema.extend({
-  description: z.string(),
-  title: z.string(),
-});
+const LocaleSchema = Schema.Literal(...locales);
+const NakafaSectionSchema = Schema.Literal(...nakafaSections);
+const StatusSchema = Schema.Literal("loading", "done", "error");
 
-const nakafaExercisePreviewSchema = NakafaAgentContentRefSchema.extend({
-  count: z.number().int().min(1),
-  exercise_number: z.number().int().min(1).nullable(),
-  numbers: z.array(z.number().int().min(1)).min(1),
-  title: z.string(),
-});
-
-const nakafaQuranPreviewSchema = NakafaAgentContentRefSchema.extend({
-  from_verse: z.number().int().min(1),
-  name: z.string(),
-  revelation: z.string(),
-  to_verse: z.number().int().min(1),
-  translation: z.string(),
-  verse_count: z.number().int().min(1),
-});
-
-const nakafaTaxonomyPreviewSchema = z.object({
-  content_counts: z.array(
-    z.object({
-      count: z.number().int().min(0),
-      locale: LocaleSchema,
-    })
-  ),
+const contentRefFields = {
+  content_id: Schema.String,
   locale: LocaleSchema,
-  sections: z.array(NakafaAgentSectionSchema),
-  tools: z.array(z.string()),
-});
+  markdown_url: Schema.String,
+  route: Schema.String,
+  section: NakafaSectionSchema,
+  url: Schema.String,
+};
 
-const nakafaSearchLoadingSchema = z.object({
-  kind: z.literal("search"),
-  status: z.literal("loading"),
-  input: NakafaAgentSearchOptionsSchema,
-});
-const nakafaSearchDoneSchema = nakafaSearchLoadingSchema.extend({
-  status: z.literal("done"),
-  result: NakafaAgentSearchResultSchema,
-});
-const nakafaSearchErrorSchema = nakafaSearchLoadingSchema.extend({
-  status: z.literal("error"),
-  error: z.string(),
-});
+const ContentSummarySchema = Schema.Struct({
+  ...contentRefFields,
+  description: Schema.String,
+  title: Schema.String,
+}).pipe(Schema.mutable);
 
-const nakafaContentLoadingSchema = z.object({
-  kind: z.literal("content"),
-  status: z.literal("loading"),
-  input: NakafaAgentReadOptionsSchema,
-});
-const nakafaContentDoneSchema = nakafaContentLoadingSchema.extend({
-  status: z.literal("done"),
-  result: nakafaContentPreviewSchema,
-});
-const nakafaContentErrorSchema = nakafaContentLoadingSchema.extend({
-  status: z.literal("error"),
-  error: z.string(),
-});
+const SearchInputSchema = Schema.Struct({
+  limit: Schema.Number,
+  locale: LocaleSchema,
+  offset: Schema.Number,
+  query: Schema.optional(Schema.String),
+  section: Schema.optional(NakafaSectionSchema),
+}).pipe(Schema.mutable);
 
-const nakafaExerciseLoadingSchema = z.object({
-  kind: z.literal("exercise"),
-  status: z.literal("loading"),
-  input: NakafaAgentExerciseOptionsSchema,
-});
-const nakafaExerciseDoneSchema = nakafaExerciseLoadingSchema.extend({
-  status: z.literal("done"),
-  result: nakafaExercisePreviewSchema,
-});
-const nakafaExerciseErrorSchema = nakafaExerciseLoadingSchema.extend({
-  status: z.literal("error"),
-  error: z.string(),
-});
+const SearchResultSchema = Schema.Struct({
+  count: Schema.Number,
+  has_more: Schema.Boolean,
+  items: Schema.Array(ContentSummarySchema).pipe(Schema.mutable),
+  limit: Schema.Number,
+  next_offset: Schema.NullOr(Schema.Number),
+  offset: Schema.Number,
+}).pipe(Schema.mutable);
 
-const nakafaQuranLoadingSchema = z.object({
-  kind: z.literal("quran"),
-  status: z.literal("loading"),
-  input: NakafaAgentQuranReferenceOptionsSchema,
-});
-const nakafaQuranDoneSchema = nakafaQuranLoadingSchema.extend({
-  status: z.literal("done"),
-  result: nakafaQuranPreviewSchema,
-});
-const nakafaQuranErrorSchema = nakafaQuranLoadingSchema.extend({
-  status: z.literal("error"),
-  error: z.string(),
-});
+const ReadInputSchema = Schema.Struct({
+  content_ref: Schema.String,
+}).pipe(Schema.mutable);
 
-const nakafaTaxonomyLoadingSchema = z.object({
-  kind: z.literal("taxonomy"),
-  status: z.literal("loading"),
-  input: NakafaAgentTaxonomyOptionsSchema,
-});
-const nakafaTaxonomyDoneSchema = nakafaTaxonomyLoadingSchema.extend({
-  status: z.literal("done"),
-  result: nakafaTaxonomyPreviewSchema,
-});
-const nakafaTaxonomyErrorSchema = nakafaTaxonomyLoadingSchema.extend({
-  status: z.literal("error"),
-  error: z.string(),
-});
+const ExerciseInputSchema = Schema.Struct({
+  content_ref: Schema.String,
+  exercise_number: Schema.optional(Schema.Number),
+}).pipe(Schema.mutable);
 
-export const nakafaDataSchema = z.union([
-  nakafaSearchLoadingSchema,
-  nakafaSearchDoneSchema,
-  nakafaSearchErrorSchema,
-  nakafaContentLoadingSchema,
-  nakafaContentDoneSchema,
-  nakafaContentErrorSchema,
-  nakafaExerciseLoadingSchema,
-  nakafaExerciseDoneSchema,
-  nakafaExerciseErrorSchema,
-  nakafaQuranLoadingSchema,
-  nakafaQuranDoneSchema,
-  nakafaQuranErrorSchema,
-  nakafaTaxonomyLoadingSchema,
-  nakafaTaxonomyDoneSchema,
-  nakafaTaxonomyErrorSchema,
-]);
+const ExercisePreviewSchema = Schema.Struct({
+  ...contentRefFields,
+  count: Schema.Number,
+  exercise_number: Schema.NullOr(Schema.Number),
+  numbers: Schema.Array(Schema.Number).pipe(Schema.mutable),
+  title: Schema.String,
+}).pipe(Schema.mutable);
+
+const QuranInputSchema = Schema.Struct({
+  from_verse: Schema.Number,
+  include_tafsir: Schema.Boolean,
+  locale: LocaleSchema,
+  surah: Schema.Number,
+  to_verse: Schema.optional(Schema.Number),
+}).pipe(Schema.mutable);
+
+const QuranPreviewSchema = Schema.Struct({
+  ...contentRefFields,
+  from_verse: Schema.Number,
+  name: Schema.String,
+  revelation: Schema.String,
+  to_verse: Schema.Number,
+  translation: Schema.String,
+  verse_count: Schema.Number,
+}).pipe(Schema.mutable);
+
+const TaxonomyInputSchema = Schema.Struct({
+  locale: LocaleSchema,
+}).pipe(Schema.mutable);
+
+const TaxonomyPreviewSchema = Schema.Struct({
+  content_counts: Schema.Array(
+    Schema.Struct({
+      count: Schema.Number,
+      locale: LocaleSchema,
+    }).pipe(Schema.mutable)
+  ).pipe(Schema.mutable),
+  locale: LocaleSchema,
+  sections: Schema.Array(NakafaSectionSchema).pipe(Schema.mutable),
+  tools: Schema.Array(Schema.String).pipe(Schema.mutable),
+}).pipe(Schema.mutable);
+
+const nakafaSearchLoadingFields = {
+  input: SearchInputSchema,
+  kind: Schema.Literal("search"),
+  status: Schema.Literal("loading"),
+};
+
+const NakafaSearchLoadingSchema = Schema.Struct(nakafaSearchLoadingFields).pipe(
+  Schema.mutable
+);
+
+const NakafaSearchDoneSchema = Schema.Struct({
+  ...nakafaSearchLoadingFields,
+  result: SearchResultSchema,
+  status: Schema.Literal("done"),
+}).pipe(Schema.mutable);
+
+const NakafaSearchErrorSchema = Schema.Struct({
+  ...nakafaSearchLoadingFields,
+  error: Schema.String,
+  status: Schema.Literal("error"),
+}).pipe(Schema.mutable);
+
+const nakafaContentLoadingFields = {
+  input: ReadInputSchema,
+  kind: Schema.Literal("content"),
+  status: Schema.Literal("loading"),
+};
+
+const NakafaContentLoadingSchema = Schema.Struct(
+  nakafaContentLoadingFields
+).pipe(Schema.mutable);
+
+const NakafaContentDoneSchema = Schema.Struct({
+  ...nakafaContentLoadingFields,
+  result: ContentSummarySchema,
+  status: Schema.Literal("done"),
+}).pipe(Schema.mutable);
+
+const NakafaContentErrorSchema = Schema.Struct({
+  ...nakafaContentLoadingFields,
+  error: Schema.String,
+  status: Schema.Literal("error"),
+}).pipe(Schema.mutable);
+
+const nakafaExerciseLoadingFields = {
+  input: ExerciseInputSchema,
+  kind: Schema.Literal("exercise"),
+  status: Schema.Literal("loading"),
+};
+
+const NakafaExerciseLoadingSchema = Schema.Struct(
+  nakafaExerciseLoadingFields
+).pipe(Schema.mutable);
+
+const NakafaExerciseDoneSchema = Schema.Struct({
+  ...nakafaExerciseLoadingFields,
+  result: ExercisePreviewSchema,
+  status: Schema.Literal("done"),
+}).pipe(Schema.mutable);
+
+const NakafaExerciseErrorSchema = Schema.Struct({
+  ...nakafaExerciseLoadingFields,
+  error: Schema.String,
+  status: Schema.Literal("error"),
+}).pipe(Schema.mutable);
+
+const nakafaQuranLoadingFields = {
+  input: QuranInputSchema,
+  kind: Schema.Literal("quran"),
+  status: Schema.Literal("loading"),
+};
+
+const NakafaQuranLoadingSchema = Schema.Struct(nakafaQuranLoadingFields).pipe(
+  Schema.mutable
+);
+
+const NakafaQuranDoneSchema = Schema.Struct({
+  ...nakafaQuranLoadingFields,
+  result: QuranPreviewSchema,
+  status: Schema.Literal("done"),
+}).pipe(Schema.mutable);
+
+const NakafaQuranErrorSchema = Schema.Struct({
+  ...nakafaQuranLoadingFields,
+  error: Schema.String,
+  status: Schema.Literal("error"),
+}).pipe(Schema.mutable);
+
+const nakafaTaxonomyLoadingFields = {
+  input: TaxonomyInputSchema,
+  kind: Schema.Literal("taxonomy"),
+  status: Schema.Literal("loading"),
+};
+
+const NakafaTaxonomyLoadingSchema = Schema.Struct(
+  nakafaTaxonomyLoadingFields
+).pipe(Schema.mutable);
+
+const NakafaTaxonomyDoneSchema = Schema.Struct({
+  ...nakafaTaxonomyLoadingFields,
+  result: TaxonomyPreviewSchema,
+  status: Schema.Literal("done"),
+}).pipe(Schema.mutable);
+
+const NakafaTaxonomyErrorSchema = Schema.Struct({
+  ...nakafaTaxonomyLoadingFields,
+  error: Schema.String,
+  status: Schema.Literal("error"),
+}).pipe(Schema.mutable);
 
 /**
- * Schema for UI data parts written by Nina agents.
+ * UI data payloads written by Nakafa sub-tools.
  */
-export const dataPartSchema = z.object({
-  suggestions: z.object({
-    data: z.array(z.string()),
-  }),
-  nakafa: nakafaDataSchema,
-  math: MathDataSchema,
-  "scrape-url": z.object({
-    url: z.string(),
-    content: z.string(),
-    status: z.enum(["loading", "done", "error"]),
-    error: z.string().optional(),
-  }),
-  "web-search": z.object({
-    query: z.string(),
-    sources: z.array(
-      z.object({
-        title: z.string(),
-        description: z.string(),
-        url: z.string(),
-        content: z.string(),
-        citation: z.string(),
-      })
-    ),
-    status: z.enum(["loading", "done", "error"]),
-    error: z.string().optional(),
-  }),
-});
+export const NakafaDataSchema = Schema.Union(
+  NakafaSearchLoadingSchema,
+  NakafaSearchDoneSchema,
+  NakafaSearchErrorSchema,
+  NakafaContentLoadingSchema,
+  NakafaContentDoneSchema,
+  NakafaContentErrorSchema,
+  NakafaExerciseLoadingSchema,
+  NakafaExerciseDoneSchema,
+  NakafaExerciseErrorSchema,
+  NakafaQuranLoadingSchema,
+  NakafaQuranDoneSchema,
+  NakafaQuranErrorSchema,
+  NakafaTaxonomyLoadingSchema,
+  NakafaTaxonomyDoneSchema,
+  NakafaTaxonomyErrorSchema
+);
 
-export type DataPart = z.infer<typeof dataPartSchema>;
-export type NakafaDataPart = z.infer<typeof nakafaDataSchema>;
+/**
+ * UI data parts written by Nina agents.
+ */
+export const DataPartSchema = Schema.Struct({
+  math: MathDataSchema,
+  nakafa: NakafaDataSchema,
+  "scrape-url": Schema.Struct({
+    content: Schema.String,
+    error: Schema.optional(Schema.String),
+    status: StatusSchema,
+    url: Schema.String,
+  }).pipe(Schema.mutable),
+  suggestions: Schema.Struct({
+    data: Schema.Array(Schema.String).pipe(Schema.mutable),
+  }).pipe(Schema.mutable),
+  "web-search": Schema.Struct({
+    error: Schema.optional(Schema.String),
+    query: Schema.String,
+    sources: Schema.Array(
+      Schema.Struct({
+        citation: Schema.String,
+        content: Schema.String,
+        description: Schema.String,
+        title: Schema.String,
+        url: Schema.String,
+      }).pipe(Schema.mutable)
+    ).pipe(Schema.mutable),
+    status: StatusSchema,
+  }).pipe(Schema.mutable),
+}).pipe(Schema.mutable);
+
+export type DataPart = Schema.Schema.Type<typeof DataPartSchema>;
+export type NakafaDataPart = Schema.Schema.Type<typeof NakafaDataSchema>;

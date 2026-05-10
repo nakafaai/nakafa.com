@@ -58,11 +58,32 @@ describe("nakafaPrompt", () => {
       userRole: "student",
     });
 
+    expect(prompt).toContain("Use for math that needs deterministic evidence.");
     expect(prompt).toContain(
-      "Use for math that needs deterministic evidence: numeric evaluation, simplification, derivatives, or expression comparison."
+      "It can handle arithmetic, algebra, equations, inequalities, calculus, series, matrices, statistics, probability, geometry, and discrete math."
     );
     expect(prompt).toContain(
       "If deterministic math is inconclusive, explain the limitation clearly."
+    );
+  });
+
+  it("teaches Nina to combine specialized agents when evidence spans domains", () => {
+    const prompt = nakafaPrompt({
+      ...base,
+      userRole: "student",
+    });
+
+    expect(prompt).toContain(
+      "Use more than one specialized agent when the answer needs more than one kind of evidence."
+    );
+    expect(prompt).toContain(
+      "Use math after Nakafa when retrieved content includes calculations, formulas, answers, or equivalence checks that need deterministic verification."
+    );
+    expect(prompt).toContain(
+      "Use math after deepResearch when researched numbers or claims need calculation, comparison, statistics, or verification."
+    );
+    expect(prompt).toContain(
+      "Never invent source-specific content, current facts, exercise choices, citations, or verified math without the relevant evidence."
     );
   });
 

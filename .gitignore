@@ -22,6 +22,14 @@ Icon
 # pagefind
 _pagefind
 
+# Python
+.coverage
+.pytest_cache/
+.ruff_cache/
+.venv/
+__pycache__/
+*.py[cod]
+
 # generated agent files
 apps/www/public/llms-full.txt
 apps/www/public/llms-full/
@@ -55,6 +63,7 @@ Temporary Items
 ### NextJS ###
 # dependencies
 /node_modules
+/.pnpm-store
 /.pnp
 .pnp.js
 

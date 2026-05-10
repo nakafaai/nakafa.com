@@ -1,8 +1,8 @@
 import {
-  airPollutionResponseSchema,
+  AirPollutionResponseSchema,
   type GeoData,
-  reverseGeocodeSchema,
-  weatherResponseSchema,
+  ReverseGeocodeSchema,
+  WeatherResponseSchema,
 } from "@repo/ai/clients/weather/schema";
 import { keys } from "@repo/ai/keys";
 import {
@@ -11,6 +11,7 @@ import {
   createTimer,
   logError,
 } from "@repo/utilities/logging";
+import { Either, Schema } from "effect";
 import ky from "ky";
 
 const apiKey = keys().OPENWEATHER_API_KEY;
@@ -106,9 +107,9 @@ async function fetchGeoData(
       })
       .json();
 
-    const result = reverseGeocodeSchema.safeParse(response);
+    const result = Schema.decodeUnknownEither(ReverseGeocodeSchema)(response);
 
-    if (!result.success || result.data.length === 0) {
+    if (Either.isLeft(result) || result.right.length === 0) {
       weatherLogger.warn(
         {
           latitude,
@@ -124,7 +125,7 @@ async function fetchGeoData(
       };
     }
 
-    const location = result.data[0];
+    const location = result.right[0];
     return {
       city: location.name,
       country: location.country,
@@ -167,8 +168,8 @@ async function fetchWeatherForecast(latitude: string, longitude: string) {
       })
       .json();
 
-    const result = weatherResponseSchema.safeParse(response);
-    if (!result.success) {
+    const result = Schema.decodeUnknownEither(WeatherResponseSchema)(response);
+    if (Either.isLeft(result)) {
       weatherLogger.warn(
         {
           latitude,
@@ -177,7 +178,7 @@ async function fetchWeatherForecast(latitude: string, longitude: string) {
         "Weather forecast validation failed"
       );
     }
-    return result.success ? result.data : null;
+    return Either.isRight(result) ? result.right : null;
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
     logError(weatherLogger, err, {
@@ -209,8 +210,10 @@ async function fetchAirPollution(latitude: string, longitude: string) {
       })
       .json();
 
-    const result = airPollutionResponseSchema.safeParse(response);
-    if (!result.success) {
+    const result = Schema.decodeUnknownEither(AirPollutionResponseSchema)(
+      response
+    );
+    if (Either.isLeft(result)) {
       weatherLogger.warn(
         {
           latitude,
@@ -219,8 +222,8 @@ async function fetchAirPollution(latitude: string, longitude: string) {
         "Air pollution validation failed"
       );
     }
-    return result.success
-      ? result.data
+    return Either.isRight(result)
+      ? result.right
       : { coord: { lon: longitude, lat: latitude }, list: [] };
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
@@ -259,8 +262,10 @@ async function fetchAirPollutionForecast(latitude: string, longitude: string) {
       })
       .json();
 
-    const result = airPollutionResponseSchema.safeParse(response);
-    if (!result.success) {
+    const result = Schema.decodeUnknownEither(AirPollutionResponseSchema)(
+      response
+    );
+    if (Either.isLeft(result)) {
       weatherLogger.warn(
         {
           latitude,
@@ -269,8 +274,8 @@ async function fetchAirPollutionForecast(latitude: string, longitude: string) {
         "Air pollution forecast validation failed"
       );
     }
-    return result.success
-      ? result.data
+    return Either.isRight(result)
+      ? result.right
       : { coord: { lon: longitude, lat: latitude }, list: [] };
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));

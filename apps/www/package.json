@@ -36,6 +36,7 @@
     "@repo/contents": "workspace:*",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
+    "@repo/math": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@repo/security": "workspace:*",
     "@repo/seo": "workspace:*",

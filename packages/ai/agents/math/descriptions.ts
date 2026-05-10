@@ -1,20 +1,38 @@
 /**
- * Describes the deterministic math operations exposed to Nina.
+ * Describes Nina's deterministic CAS-backed math tools.
  *
  * References:
  * - AI SDK tool descriptions:
  *   https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling
- * - Math.js algebra support:
- *   https://mathjs.org/docs/expressions/algebra.html
+ * - SymPy capabilities:
+ *   https://docs.sympy.org/latest/index.html
  */
-export const mathEvaluate =
-  "Evaluate a concrete numeric Math.js expression. Use when the expression has no unresolved variables and the user needs a deterministic value.";
+export const mathArithmetic =
+  "Use for exact arithmetic and concrete numeric evaluation. Do not use for unresolved symbolic equations.";
 
-export const mathSimplify =
-  "Simplify an algebraic Math.js expression. Use for symbolic rewriting, not for proving domain-sensitive equivalence.";
+export const mathAlgebra =
+  "Use for symbolic algebra: simplify, factor, expand, cancel, combine fractions, partial fractions, rationalize, domain restrictions, and expression equality checks.";
 
-export const mathDifferentiate =
-  "Differentiate a Math.js expression with respect to one variable.";
+export const mathEquation =
+  "Use for solving equations, systems, inequalities, and polynomial roots. Provide explicit variables when the user names them.";
 
-export const mathCompare =
-  "Compare two Math.js expressions. Returns verified, contradicted, or inconclusive based on symbolic checks and deterministic numeric counterexamples.";
+export const mathCalculus =
+  "Use for derivatives, integrals, and limits. Provide the variable, and provide bounds or limit point when needed.";
+
+export const mathSeries =
+  "Use for Taylor or asymptotic series, finite or symbolic summations, and finite or symbolic products.";
+
+export const mathMatrix =
+  "Use for linear algebra: determinant, inverse, rank, RREF, eigenvalues, eigenvectors, matrix multiplication, and linear systems.";
+
+export const mathStatistics =
+  "Use for descriptive statistics: mean, median, mode, variance, standard deviation, quartiles, and z-score.";
+
+export const mathProbability =
+  "Use for probability distributions supported by the CAS, including expected value and variance for named distributions.";
+
+export const mathGeometry =
+  "Use for coordinate geometry: distance, midpoint, slope, line equations, circle equations, and intersections.";
+
+export const mathDiscrete =
+  "Use for discrete math and number theory: gcd, lcm, prime factorization, primality, modular arithmetic, permutations, and combinations.";

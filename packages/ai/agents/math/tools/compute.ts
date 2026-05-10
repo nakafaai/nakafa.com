@@ -1,68 +1,68 @@
 import { formatMathData } from "@repo/ai/agents/math/format";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { MathData, MathDifferentiateInput } from "@repo/math/schema";
+import type { MathData, MathRequest } from "@repo/math/schema";
 import { MathService } from "@repo/math/service";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";
 
-/** Differentiates one expression and writes deterministic math evidence. */
-export function differentiate({
+/** Runs one CAS request and writes the math evidence data part. */
+export function compute({
   input,
   toolCallId,
   writer,
 }: {
-  input: MathDifferentiateInput;
+  input: MathRequest;
   toolCallId: string;
   writer: UIMessageStreamWriter<MyUIMessage>;
 }) {
   return Effect.gen(function* () {
     yield* Effect.sync(() =>
       writer.write({
+        data: {
+          input,
+          kind: input.operation,
+          status: "loading",
+        },
         id: toolCallId,
         type: "data-math",
-        data: {
-          kind: "differentiate",
-          status: "loading",
-          input,
-        },
       })
     );
 
-    const data = yield* MathService.differentiate(input).pipe(
+    const data = yield* MathService.compute(input).pipe(
       Effect.map((result) => {
         const data = {
-          kind: "differentiate",
-          status: "verified",
           input,
+          kind: result.operation,
           result,
-          summary: `Verified derivative: ${result.output.expression}`,
+          status: result.status,
+          summary: result.reason,
         } satisfies MathData;
 
         return data;
       }),
       Effect.catchTags({
-        MathExpressionParseError: (error) =>
+        MathCasRequestError: (error) =>
           Effect.succeed({
-            kind: "differentiate",
-            status: "error",
-            input,
             error: error.message,
+            input,
+            kind: input.operation,
+            status: "error",
           } satisfies MathData),
-        MathUnsupportedError: (error) =>
+        MathCasResponseError: (error) =>
           Effect.succeed({
-            kind: "differentiate",
-            status: "error",
-            input,
             error: error.message,
+            input,
+            kind: input.operation,
+            status: "error",
           } satisfies MathData),
       })
     );
 
     yield* Effect.sync(() =>
       writer.write({
+        data,
         id: toolCallId,
         type: "data-math",
-        data,
       })
     );
 

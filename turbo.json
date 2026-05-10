@@ -9,6 +9,8 @@
     "BING_WEBMASTER_API_KEY",
     "AI_GATEWAY_API_KEY",
     "FIRECRAWL_API_KEY",
+    "MATH_CAS_API_KEY",
+    "MATH_CAS_URL",
     "OPENWEATHER_API_KEY",
     "SITE_URL",
     "AUTH_GOOGLE_ID",
@@ -49,6 +51,19 @@
     "test:coverage": {
       "dependsOn": ["^test:coverage"],
       "outputs": ["coverage/**"]
+    },
+    "format": {
+      "dependsOn": ["^format"],
+      "cache": false,
+      "outputs": []
+    },
+    "lint": {
+      "dependsOn": ["^lint"],
+      "outputs": []
+    },
+    "bump-deps": {
+      "cache": false,
+      "outputs": ["uv.lock"]
     },
     "analyze": {
       "dependsOn": ["^analyze"]

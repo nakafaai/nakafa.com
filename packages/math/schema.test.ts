@@ -1,45 +1,60 @@
 import {
-  MathCompareInputSchema,
   MathDataSchema,
-  MathDifferentiateInputSchema,
-  MathEvaluateInputSchema,
-  MathSimplifyInputSchema,
+  MathRequestSchema,
+  MathResultSchema,
 } from "@repo/math/schema";
+import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("math schemas", () => {
-  it("validates operation inputs", () => {
-    expect(MathEvaluateInputSchema.parse({ expression: "2 + 2" })).toEqual({
-      expression: "2 + 2",
-    });
-    expect(MathSimplifyInputSchema.parse({ expression: "x + x" })).toEqual({
-      expression: "x + x",
-    });
+  it("decodes a CAS request", () => {
     expect(
-      MathDifferentiateInputSchema.parse({
-        expression: "x^2",
-        variable: "x",
+      Schema.decodeUnknownSync(MathRequestSchema)({
+        expression: "2 + 2",
+        kind: "math",
+        operation: "evaluate",
       })
     ).toEqual({
-      expression: "x^2",
-      variable: "x",
+      expression: "2 + 2",
+      kind: "math",
+      operation: "evaluate",
     });
-    expect(
-      MathCompareInputSchema.parse({ left: "x + 1", right: "1 + x" })
-    ).toEqual({ left: "x + 1", right: "1 + x" });
   });
 
-  it("validates math data parts", () => {
-    expect(
-      MathDataSchema.parse({
-        kind: "evaluate",
-        status: "loading",
-        input: { expression: "2 + 2" },
-      })
-    ).toEqual({
+  it("decodes CAS results and data parts", () => {
+    const result = Schema.decodeUnknownSync(MathResultSchema)({
+      conditions: [],
+      input: {
+        expression: "2 + 2",
+        kind: "math",
+        operation: "evaluate",
+      },
+      items: [],
       kind: "evaluate",
-      status: "loading",
-      input: { expression: "2 + 2" },
+      operation: "evaluate",
+      primary: {
+        expression: "2 + 2",
+        latex: "2 + 2",
+      },
+      reason: "Exact arithmetic was evaluated by SymPy.",
+      secondary: {
+        expression: "4",
+        latex: "4",
+      },
+      status: "verified",
+    });
+
+    expect(
+      Schema.decodeUnknownSync(MathDataSchema)({
+        input: result.input,
+        kind: result.operation,
+        result,
+        status: result.status,
+        summary: result.reason,
+      })
+    ).toMatchObject({
+      kind: "evaluate",
+      status: "verified",
     });
   });
 });

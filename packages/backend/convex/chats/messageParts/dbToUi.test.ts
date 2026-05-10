@@ -69,26 +69,37 @@ describe("mapDBPartToUIMessagePart", () => {
           kind: "compare",
           status: "contradicted",
           input: {
+            kind: "math",
             left: "x + 1",
+            operation: "compare",
             right: "x + 2",
           },
           result: {
-            left: {
+            conditions: [],
+            input: {
+              kind: "math",
+              left: "x + 1",
+              operation: "compare",
+              right: "x + 2",
+            },
+            items: [
+              {
+                label: "counterexample",
+                latex: "\\left\\{ x : -3\\right\\}",
+                value: "{x: -3}",
+              },
+            ],
+            kind: "compare",
+            operation: "compare",
+            primary: {
               expression: "x + 1",
               latex: "x+1",
             },
             reason: "A deterministic numeric counterexample was found.",
-            right: {
+            secondary: {
               expression: "x + 2",
               latex: "x+2",
             },
-            samples: [
-              {
-                left: "-2",
-                right: "-1",
-                scope: { x: -3 },
-              },
-            ],
             status: "contradicted",
           },
           summary: "A deterministic numeric counterexample was found.",
@@ -125,6 +136,22 @@ describe("mapDBPartToUIMessagePart", () => {
             sections: ["articles", "quran"],
             tools: ["nakafa_search_content", "nakafa_get_content"],
           },
+        },
+      });
+      await ctx.db.insert("parts", {
+        messageId,
+        order: 5,
+        type: "data-math",
+        dataMathId: "previous-math-1",
+        dataMathData: {
+          input: { expression: "2 + 2" },
+          kind: "evaluate",
+          result: {
+            input: { expression: "2 + 2", latex: "2+2" },
+            output: { expression: "4", latex: "4", value: "4" },
+          },
+          status: "verified",
+          summary: "2 + 2 = 4",
         },
       });
 
@@ -169,6 +196,15 @@ describe("mapDBPartToUIMessagePart", () => {
         data: expect.objectContaining({
           kind: "taxonomy",
           status: "done",
+        }),
+      }),
+      expect.objectContaining({
+        type: "data-math",
+        id: "previous-math-1",
+        data: expect.objectContaining({
+          input: expect.objectContaining({ kind: "math" }),
+          kind: "evaluate",
+          status: "verified",
         }),
       }),
     ]);

@@ -1,27 +1,37 @@
 import {
-  mathCompare,
-  mathDifferentiate,
-  mathEvaluate,
-  mathSimplify,
+  mathAlgebra,
+  mathArithmetic,
+  mathCalculus,
+  mathDiscrete,
+  mathEquation,
+  mathGeometry,
+  mathMatrix,
+  mathProbability,
+  mathSeries,
+  mathStatistics,
 } from "@repo/ai/agents/math/descriptions";
 import { mathPrompt } from "@repo/ai/agents/math/prompt";
-import { prepareMathStep } from "@repo/ai/agents/math/step";
-import { compare } from "@repo/ai/agents/math/tools/compare";
-import { differentiate } from "@repo/ai/agents/math/tools/differentiate";
-import { evaluate } from "@repo/ai/agents/math/tools/evaluate";
-import { simplify } from "@repo/ai/agents/math/tools/simplify";
-import { model } from "@repo/ai/config/vercel";
-import type { MathAgentParams } from "@repo/ai/types/agents";
+import { createMathRequest } from "@repo/ai/agents/math/request";
 import {
-  MathCompareInputSchema,
-  MathDifferentiateInputSchema,
-  MathEvaluateInputSchema,
-  MathSimplifyInputSchema,
-} from "@repo/math/schema";
+  mathAlgebraInput,
+  mathArithmeticInput,
+  mathCalculusInput,
+  mathDiscreteInput,
+  mathEquationInput,
+  mathGeometryInput,
+  mathMatrixInput,
+  mathProbabilityInput,
+  mathSeriesInput,
+  mathStatisticsInput,
+} from "@repo/ai/agents/math/schema";
+import { prepareMathStep } from "@repo/ai/agents/math/step";
+import { compute } from "@repo/ai/agents/math/tools/compute";
+import { model } from "@repo/ai/config/vercel";
+import { textOutputSchema } from "@repo/ai/schema/tools";
+import type { MathAgentParams } from "@repo/ai/types/agents";
 import { MathService } from "@repo/math/service";
 import { generateText, stepCountIs, tool } from "ai";
 import { Effect } from "effect";
-import * as z from "zod";
 
 /**
  * Runs the math agent and returns text with token usage.
@@ -39,57 +49,143 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
 }: MathAgentParams) {
   const result = yield* Effect.tryPromise(() =>
     generateText({
-      model: model.languageModel(modelId),
-      system: mathPrompt({ locale, context }),
       messages: [{ role: "user", content: task }],
+      model: model.languageModel(modelId),
+      prepareStep: prepareMathStep,
+      stopWhen: stepCountIs(12),
+      system: mathPrompt({ locale, context }),
       tools: {
-        evaluate: tool({
-          description: mathEvaluate,
-          inputSchema: MathEvaluateInputSchema,
-          outputSchema: z.string(),
+        algebra: tool({
+          description: mathAlgebra,
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
-              evaluate({ input, toolCallId, writer }).pipe(
-                Effect.provide(MathService.Default)
-              )
+              compute({
+                input: createMathRequest(input),
+                toolCallId,
+                writer,
+              }).pipe(Effect.provide(MathService.Default))
             ),
+          inputSchema: mathAlgebraInput,
+          outputSchema: textOutputSchema,
         }),
-        simplify: tool({
-          description: mathSimplify,
-          inputSchema: MathSimplifyInputSchema,
-          outputSchema: z.string(),
+        arithmetic: tool({
+          description: mathArithmetic,
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
-              simplify({ input, toolCallId, writer }).pipe(
-                Effect.provide(MathService.Default)
-              )
+              compute({
+                input: createMathRequest(input),
+                toolCallId,
+                writer,
+              }).pipe(Effect.provide(MathService.Default))
             ),
+          inputSchema: mathArithmeticInput,
+          outputSchema: textOutputSchema,
         }),
-        differentiate: tool({
-          description: mathDifferentiate,
-          inputSchema: MathDifferentiateInputSchema,
-          outputSchema: z.string(),
+        calculus: tool({
+          description: mathCalculus,
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
-              differentiate({ input, toolCallId, writer }).pipe(
-                Effect.provide(MathService.Default)
-              )
+              compute({
+                input: createMathRequest(input),
+                toolCallId,
+                writer,
+              }).pipe(Effect.provide(MathService.Default))
             ),
+          inputSchema: mathCalculusInput,
+          outputSchema: textOutputSchema,
         }),
-        compare: tool({
-          description: mathCompare,
-          inputSchema: MathCompareInputSchema,
-          outputSchema: z.string(),
+        discrete: tool({
+          description: mathDiscrete,
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
-              compare({ input, toolCallId, writer }).pipe(
-                Effect.provide(MathService.Default)
-              )
+              compute({
+                input: createMathRequest(input),
+                toolCallId,
+                writer,
+              }).pipe(Effect.provide(MathService.Default))
             ),
+          inputSchema: mathDiscreteInput,
+          outputSchema: textOutputSchema,
+        }),
+        equation: tool({
+          description: mathEquation,
+          execute: (input, { toolCallId }) =>
+            Effect.runPromise(
+              compute({
+                input: createMathRequest(input),
+                toolCallId,
+                writer,
+              }).pipe(Effect.provide(MathService.Default))
+            ),
+          inputSchema: mathEquationInput,
+          outputSchema: textOutputSchema,
+        }),
+        geometry: tool({
+          description: mathGeometry,
+          execute: (input, { toolCallId }) =>
+            Effect.runPromise(
+              compute({
+                input: createMathRequest(input),
+                toolCallId,
+                writer,
+              }).pipe(Effect.provide(MathService.Default))
+            ),
+          inputSchema: mathGeometryInput,
+          outputSchema: textOutputSchema,
+        }),
+        matrix: tool({
+          description: mathMatrix,
+          execute: (input, { toolCallId }) =>
+            Effect.runPromise(
+              compute({
+                input: createMathRequest(input),
+                toolCallId,
+                writer,
+              }).pipe(Effect.provide(MathService.Default))
+            ),
+          inputSchema: mathMatrixInput,
+          outputSchema: textOutputSchema,
+        }),
+        probability: tool({
+          description: mathProbability,
+          execute: (input, { toolCallId }) =>
+            Effect.runPromise(
+              compute({
+                input: createMathRequest(input),
+                toolCallId,
+                writer,
+              }).pipe(Effect.provide(MathService.Default))
+            ),
+          inputSchema: mathProbabilityInput,
+          outputSchema: textOutputSchema,
+        }),
+        series: tool({
+          description: mathSeries,
+          execute: (input, { toolCallId }) =>
+            Effect.runPromise(
+              compute({
+                input: createMathRequest(input),
+                toolCallId,
+                writer,
+              }).pipe(Effect.provide(MathService.Default))
+            ),
+          inputSchema: mathSeriesInput,
+          outputSchema: textOutputSchema,
+        }),
+        statistics: tool({
+          description: mathStatistics,
+          execute: (input, { toolCallId }) =>
+            Effect.runPromise(
+              compute({
+                input: createMathRequest(input),
+                toolCallId,
+                writer,
+              }).pipe(Effect.provide(MathService.Default))
+            ),
+          inputSchema: mathStatisticsInput,
+          outputSchema: textOutputSchema,
         }),
       },
-      prepareStep: prepareMathStep,
-      stopWhen: stepCountIs(8),
     })
   );
 

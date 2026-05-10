@@ -1,4 +1,4 @@
-import type { MathData } from "@repo/math/schema";
+import type { MathData, MathItem, MathResult } from "@repo/math/schema";
 import dedent from "dedent";
 
 /** Formats deterministic math evidence as model-readable markdown. */
@@ -12,42 +12,8 @@ export function formatMathData(data: MathData) {
       # Math Evidence
 
       - Status: error
-      - Kind: ${data.kind}
+      - Operation: ${data.kind}
       - Error: ${data.error}
-    `);
-  }
-
-  if (data.kind === "evaluate") {
-    return dedent(`
-      # Math Evidence
-
-      - Status: verified
-      - Kind: evaluate
-      - Input: ${data.result.input.expression}
-      - Result: ${data.result.output.value}
-    `);
-  }
-
-  if (data.kind === "simplify") {
-    return dedent(`
-      # Math Evidence
-
-      - Status: verified
-      - Kind: simplify
-      - Input: ${data.result.input.expression}
-      - Result: ${data.result.output.expression}
-    `);
-  }
-
-  if (data.kind === "differentiate") {
-    return dedent(`
-      # Math Evidence
-
-      - Status: verified
-      - Kind: differentiate
-      - Variable: ${data.result.variable}
-      - Input: ${data.result.input.expression}
-      - Result: ${data.result.output.expression}
     `);
   }
 
@@ -55,9 +21,38 @@ export function formatMathData(data: MathData) {
     # Math Evidence
 
     - Status: ${data.status}
-    - Kind: compare
-    - Left: ${data.result.left.expression}
-    - Right: ${data.result.right.expression}
+    - Operation: ${data.result.operation}
+    - Primary: ${data.result.primary.expression}
+    ${formatSecondary(data.result)}
+    ${formatItems(data.result.items)}
+    ${formatConditions(data.result.conditions)}
     - Reason: ${data.result.reason}
   `);
+}
+
+/** Formats the optional second expression in the CAS result. */
+function formatSecondary(result: MathResult) {
+  if (!result.secondary) {
+    return "";
+  }
+
+  return `- Secondary: ${result.secondary.expression}`;
+}
+
+/** Formats supporting CAS rows as model-readable markdown bullets. */
+function formatItems(items: readonly MathItem[]) {
+  if (items.length === 0) {
+    return "";
+  }
+
+  return items.map((item) => `- ${item.label}: ${item.value}`).join("\n");
+}
+
+/** Formats CAS conditions such as domain restrictions. */
+function formatConditions(conditions: readonly string[]) {
+  if (conditions.length === 0) {
+    return "";
+  }
+
+  return conditions.map((condition) => `- Condition: ${condition}`).join("\n");
 }

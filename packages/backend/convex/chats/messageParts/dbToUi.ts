@@ -4,7 +4,13 @@ import {
   requirePartField,
   requireToolState,
 } from "@repo/backend/convex/chats/messageParts/shared";
+import {
+  type MathData,
+  MathDataSchema,
+  type MathRequest,
+} from "@repo/math/schema";
 import { ConvexError } from "convex/values";
+import { Schema } from "effect";
 
 function requireToolInputQuery(
   part: Doc<"parts">,
@@ -17,6 +23,112 @@ function requireToolInputQuery(
       partType: part.type,
     }),
   };
+}
+
+const isCurrentMathData = Schema.is(MathDataSchema);
+
+function normalizeMathData(data: NonNullable<Doc<"parts">["dataMathData"]>) {
+  if (isCurrentMathData(data)) {
+    return data;
+  }
+
+  if (data.status === "loading") {
+    return {
+      input: toMathRequest(data),
+      kind: data.kind,
+      status: data.status,
+    } satisfies MathData;
+  }
+
+  if (data.status === "error") {
+    return {
+      error: data.error,
+      input: toMathRequest(data),
+      kind: data.kind,
+      status: data.status,
+    } satisfies MathData;
+  }
+
+  if (data.kind === "compare") {
+    return normalizePreviousCompareMathData(data);
+  }
+
+  const input = toMathRequest(data);
+  const primary = data.result.input;
+  const secondary = data.result.output;
+
+  return {
+    input,
+    kind: data.kind,
+    result: {
+      conditions: [],
+      input,
+      items: [],
+      kind: data.kind,
+      operation: data.kind,
+      primary,
+      reason: data.summary,
+      secondary,
+      status: data.status,
+    },
+    status: data.status,
+    summary: data.summary,
+  } satisfies MathData;
+}
+
+function normalizePreviousCompareMathData(
+  data: Extract<
+    NonNullable<Doc<"parts">["dataMathData"]>,
+    { kind: "compare"; result: object }
+  >
+) {
+  const input = toMathRequest(data);
+
+  return {
+    input,
+    kind: data.kind,
+    result: {
+      conditions: [],
+      input,
+      items: data.result.samples.map((sample) => ({
+        label: "counterexample",
+        value: `${sample.left} != ${sample.right}`,
+      })),
+      kind: data.kind,
+      operation: data.kind,
+      primary: data.result.left,
+      reason: data.result.reason,
+      secondary: data.result.right,
+      status: data.status,
+    },
+    status: data.status,
+    summary: data.summary,
+  } satisfies MathData;
+}
+
+function toMathRequest(data: NonNullable<Doc<"parts">["dataMathData"]>) {
+  switch (data.kind) {
+    case "compare":
+      return {
+        kind: "math",
+        left: data.input.left,
+        operation: data.kind,
+        right: data.input.right,
+      } satisfies MathRequest;
+    case "differentiate":
+      return {
+        expression: data.input.expression,
+        kind: "math",
+        operation: data.kind,
+        variable: data.input.variable,
+      } satisfies MathRequest;
+    default:
+      return {
+        expression: data.input.expression,
+        kind: "math",
+        operation: data.kind,
+      } satisfies MathRequest;
+  }
 }
 
 /** Rebuild one UI message part from the flattened persisted part row. */
@@ -351,11 +463,13 @@ export function mapDBPartToUIMessagePart({
           fieldName: "dataMathId",
           partType: part.type,
         }),
-        data: requirePartField({
-          value: part.dataMathData,
-          fieldName: "dataMathData",
-          partType: part.type,
-        }),
+        data: normalizeMathData(
+          requirePartField({
+            value: part.dataMathData,
+            fieldName: "dataMathData",
+            partType: part.type,
+          })
+        ),
       };
     case "data-scrape-url":
       return {

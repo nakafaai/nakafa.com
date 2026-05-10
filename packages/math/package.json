@@ -2,12 +2,6 @@
   "name": "@repo/math",
   "version": "0.1.0",
   "private": true,
-  "exports": {
-    "./core/*": "./core/*.ts",
-    "./errors": "./errors.ts",
-    "./schema": "./schema.ts",
-    "./service": "./service.ts"
-  },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
@@ -16,9 +10,8 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "effect": "^3.21.2",
-    "mathjs": "^15.2.0",
-    "zod": "^4.4.3"
+    "@t3-oss/env-core": "^0.13.11",
+    "effect": "^3.21.2"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

@@ -1,43 +1,52 @@
+import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { type InferUITools, tool } from "ai";
-import * as z from "zod";
+import { Schema } from "effect";
 
-const toolNameSchema = z.enum(["nakafa", "deepResearch", "math"]);
-export type ToolName = z.infer<typeof toolNameSchema>;
+export const ToolNameSchema = Schema.Literal("nakafa", "deepResearch", "math");
+export type ToolName = Schema.Schema.Type<typeof ToolNameSchema>;
 
 /**
  * Input schema for the Nakafa orchestrator tool.
  */
-export const nakafaToolInputSchema = z.object({
-  query: z
-    .string()
-    .describe(
-      "The specific request or question about Nakafa content. Include the current URL, verified status, user goal, and enough subject/article/exercise/Quran context to search or read the right Nakafa source."
-    ),
-});
+export const NakafaToolInputSchema = Schema.Struct({
+  query: Schema.NonEmptyString.annotations({
+    description:
+      "The specific request about Nakafa-owned content. Include the current URL, verified status, user goal, and enough subject, article, exercise, Quran, or current-page context to search or read the right Nakafa source.",
+  }),
+})
+  .pipe(Schema.mutable)
+  .annotations({ description: "Nakafa content retrieval request." });
 
 /**
  * Input schema for the deep research orchestrator tool.
  */
-export const researchToolInputSchema = z.object({
-  query: z
-    .string()
-    .describe(
-      "The research question or topic to investigate. IMPORTANT: Include full context such as: what the user is asking about, why they need this information, and any relevant background that would help focus the research."
-    ),
-});
+export const ResearchToolInputSchema = Schema.Struct({
+  query: Schema.NonEmptyString.annotations({
+    description:
+      "The external or current-information research task. Include what the user is asking, why they need it, current page context, recency needs, and any background that helps focus source selection.",
+  }),
+})
+  .pipe(Schema.mutable)
+  .annotations({ description: "External research request." });
 
 /**
  * Input schema for the deterministic math orchestrator tool.
  */
-export const mathToolInputSchema = z.object({
-  query: z
-    .string()
-    .describe(
-      "The math request to verify through deterministic evidence. Include expressions, target operation, variable for derivatives, and whether the user asks for evaluation, simplification, differentiation, or comparison."
-    ),
-});
+export const MathToolInputSchema = Schema.Struct({
+  query: Schema.NonEmptyString.annotations({
+    description:
+      "The math request to verify through deterministic CAS evidence. Include expressions or data, target operation, variables, assumptions, and whether the user needs arithmetic, algebra, equations, calculus, series, matrices, statistics, probability, geometry, or discrete math.",
+  }),
+})
+  .pipe(Schema.mutable)
+  .annotations({ description: "Deterministic math verification request." });
 
-const textOutputSchema = z.string();
+export const nakafaToolInputSchema = createEffectSchema(NakafaToolInputSchema);
+export const researchToolInputSchema = createEffectSchema(
+  ResearchToolInputSchema
+);
+export const mathToolInputSchema = createEffectSchema(MathToolInputSchema);
+export const textOutputSchema = createEffectSchema(Schema.String);
 
 const uiTools = {
   nakafa: tool({

@@ -59,6 +59,7 @@ interface SystemPromptProps {
   userRole?: UserRole;
 }
 
+/** Builds Nina's orchestrator prompt with routing rules for specialist agents. */
 export function nakafaPrompt({
   url,
   currentPage,
@@ -131,9 +132,20 @@ export function nakafaPrompt({
 
       ## math
 
-      Use for math that needs deterministic evidence: numeric evaluation, simplification, derivatives, or expression comparison.
-      Include the complete expression, the target operation, variables when relevant, and the user's learning goal.
-      Do not ask it to solve unsupported equation systems. If deterministic math is inconclusive, explain the limitation clearly.
+      Use for math that needs deterministic evidence.
+      It can handle arithmetic, algebra, equations, inequalities, calculus, series, matrices, statistics, probability, geometry, and discrete math.
+      Include the complete expression or data, the target operation, variables when relevant, and the user's learning goal.
+      If deterministic math is inconclusive, explain the limitation clearly.
+
+      ## Combining agents
+
+      Use more than one specialized agent when the answer needs more than one kind of evidence.
+      Use Nakafa first when the user asks about Nakafa lessons, exercises, Quran, articles, or the current verified page.
+      Use math after Nakafa when retrieved content includes calculations, formulas, answers, or equivalence checks that need deterministic verification.
+      Use deepResearch when the user asks for current, external, or source-backed information beyond Nakafa content.
+      Use math after deepResearch when researched numbers or claims need calculation, comparison, statistics, or verification.
+      Use all relevant agents before the final answer when the user asks for a source-grounded educational answer that also needs outside evidence or deterministic math.
+      Never invent source-specific content, current facts, exercise choices, citations, or verified math without the relevant evidence.
     `,
 
     chainOfThought: `
@@ -153,7 +165,8 @@ export function nakafaPrompt({
   });
 }
 
-function getOutputFormattingGuidelines(): string {
+/** Returns Nina's shared markdown, math, link, and list formatting rules. */
+function getOutputFormattingGuidelines() {
   return `
     # Output Formatting Guidelines
 
@@ -215,6 +228,7 @@ function getOutputFormattingGuidelines(): string {
   `;
 }
 
+/** Builds user-role-specific behavior context without changing tool contracts. */
 function getUserRoleContext(userRole: SystemPromptProps["userRole"]) {
   switch (userRole) {
     case "teacher":

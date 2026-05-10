@@ -28,8 +28,7 @@
     "effect": "^3.21.2",
     "gpt-tokenizer": "^3.4.0",
     "ky": "^2.0.2",
-    "parse-domain": "^8.3.0",
-    "zod": "^4.4.3"
+    "parse-domain": "^8.3.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

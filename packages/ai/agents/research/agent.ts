@@ -14,10 +14,10 @@ import {
 import { scrapeUrl } from "@repo/ai/agents/research/tools/scrape";
 import { searchWeb } from "@repo/ai/agents/research/tools/search";
 import { model } from "@repo/ai/config/vercel";
+import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { ResearchAgentParams } from "@repo/ai/types/agents";
 import { generateText, stepCountIs, tool } from "ai";
 import { Effect, Option } from "effect";
-import * as z from "zod";
 
 /**
  * Runs the research agent and returns text with token usage.
@@ -34,7 +34,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           webSearch: tool({
             description: nakafaWebSearch,
             inputSchema: webSearchInputSchema,
-            outputSchema: z.string(),
+            outputSchema: textOutputSchema,
             execute: async ({ query }, { toolCallId }) => {
               const output = await Effect.runPromise(
                 searchWeb({ query, toolCallId, writer })
@@ -48,7 +48,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           scrape: tool({
             description: nakafaScrape,
             inputSchema: scrapeInputSchema,
-            outputSchema: z.string(),
+            outputSchema: textOutputSchema,
             execute: ({ urlToCrawl }, { toolCallId }) => {
               pendingScrapeUrl = Option.none();
 

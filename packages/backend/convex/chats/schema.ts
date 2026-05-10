@@ -280,137 +280,257 @@ export const mathExpressionValidator = v.object({
   latex: v.string(),
 });
 
-export const mathEvaluateInputValidator = v.object({
-  expression: v.string(),
-});
+export const mathOperationValidator = literals(
+  "apart",
+  "cancel",
+  "circle",
+  "combination",
+  "compare",
+  "determinant",
+  "differentiate",
+  "distance",
+  "distribution",
+  "domain",
+  "eigenvalues",
+  "eigenvectors",
+  "evaluate",
+  "expected_value",
+  "expand",
+  "factor",
+  "gcd",
+  "integrate",
+  "intersection",
+  "inverse",
+  "is_prime",
+  "lcm",
+  "limit",
+  "line",
+  "linear_system",
+  "matrix_multiply",
+  "mean",
+  "median",
+  "midpoint",
+  "mode",
+  "modular",
+  "permutation",
+  "prime_factorization",
+  "product",
+  "quartiles",
+  "rank",
+  "rationalize",
+  "roots",
+  "rref",
+  "series",
+  "simplify",
+  "slope",
+  "solve",
+  "standard_deviation",
+  "summation",
+  "together",
+  "variance",
+  "variance_probability",
+  "z_score"
+);
 
-export const mathSimplifyInputValidator = v.object({
-  expression: v.string(),
-});
-
-export const mathDifferentiateInputValidator = v.object({
-  expression: v.string(),
-  variable: v.string(),
-});
-
-export const mathCompareInputValidator = v.object({
-  left: v.string(),
-  right: v.string(),
-});
-
-export const mathSampleValidator = v.object({
-  left: v.string(),
-  right: v.string(),
-  scope: v.record(v.string(), v.number()),
-});
-
-export const mathEvaluateResultValidator = v.object({
-  input: mathExpressionValidator,
-  output: v.object({
-    expression: v.string(),
-    latex: v.string(),
-    value: v.string(),
-  }),
-});
-
-export const mathSimplifyResultValidator = v.object({
-  input: mathExpressionValidator,
-  output: mathExpressionValidator,
-});
-
-export const mathDifferentiateResultValidator = v.object({
-  input: mathExpressionValidator,
-  output: mathExpressionValidator,
-  variable: v.string(),
-});
-
-export const mathConfidenceValidator = literals(
+export const mathStatusValidator = literals(
   "verified",
   "contradicted",
   "inconclusive"
 );
 
-export const mathCompareResultValidator = v.object({
+export const mathPointValidator = v.object({
+  x: v.string(),
+  y: v.string(),
+});
+
+export const mathRequestValidator = v.object({
+  distribution: v.optional(v.string()),
+  expression: v.optional(v.string()),
+  expressions: v.optional(v.array(v.string())),
+  k: v.optional(v.string()),
+  kind: v.literal("math"),
+  left: v.optional(v.string()),
+  lower: v.optional(v.string()),
+  matrix: v.optional(v.array(v.array(v.string()))),
+  modulus: v.optional(v.string()),
+  n: v.optional(v.string()),
+  operation: mathOperationValidator,
+  order: v.optional(v.number()),
+  parameters: v.optional(v.record(v.string(), v.string())),
+  point: v.optional(v.string()),
+  points: v.optional(v.array(mathPointValidator)),
+  right: v.optional(v.string()),
+  right_matrix: v.optional(v.array(v.array(v.string()))),
+  upper: v.optional(v.string()),
+  values: v.optional(v.array(v.string())),
+  variable: v.optional(v.string()),
+  variables: v.optional(v.array(v.string())),
+  vector: v.optional(v.array(v.string())),
+});
+
+const previousMathEvaluateInputValidator = v.object({
+  expression: v.string(),
+});
+
+const previousMathSimplifyInputValidator = v.object({
+  expression: v.string(),
+});
+
+const previousMathDifferentiateInputValidator = v.object({
+  expression: v.string(),
+  variable: v.string(),
+});
+
+const previousMathCompareInputValidator = v.object({
+  left: v.string(),
+  right: v.string(),
+});
+
+const previousMathSampleValidator = v.object({
+  left: v.string(),
+  right: v.string(),
+  scope: v.record(v.string(), v.number()),
+});
+
+const previousMathCompareResultValidator = v.object({
   left: mathExpressionValidator,
   reason: v.string(),
   right: mathExpressionValidator,
-  samples: v.array(mathSampleValidator),
-  status: mathConfidenceValidator,
+  samples: v.array(previousMathSampleValidator),
+  status: mathStatusValidator,
 });
 
-export const mathDataValidator = v.union(
+export const mathItemValidator = v.object({
+  label: v.string(),
+  latex: v.optional(v.string()),
+  value: v.string(),
+});
+
+export const mathResultValidator = v.object({
+  conditions: v.array(v.string()),
+  input: mathRequestValidator,
+  items: v.array(mathItemValidator),
+  kind: mathOperationValidator,
+  operation: mathOperationValidator,
+  primary: mathExpressionValidator,
+  reason: v.string(),
+  secondary: v.optional(mathExpressionValidator),
+  status: mathStatusValidator,
+});
+
+const currentMathDataValidator = v.union(
   v.object({
-    kind: v.literal("evaluate"),
+    kind: mathOperationValidator,
     status: v.literal("loading"),
-    input: mathEvaluateInputValidator,
+    input: mathRequestValidator,
   }),
   v.object({
-    kind: v.literal("evaluate"),
-    status: v.literal("verified"),
-    input: mathEvaluateInputValidator,
-    result: mathEvaluateResultValidator,
+    kind: mathOperationValidator,
+    status: mathStatusValidator,
+    input: mathRequestValidator,
+    result: mathResultValidator,
     summary: v.string(),
   }),
   v.object({
-    kind: v.literal("evaluate"),
+    kind: mathOperationValidator,
     status: v.literal("error"),
-    input: mathEvaluateInputValidator,
-    error: v.string(),
-  }),
-  v.object({
-    kind: v.literal("simplify"),
-    status: v.literal("loading"),
-    input: mathSimplifyInputValidator,
-  }),
-  v.object({
-    kind: v.literal("simplify"),
-    status: v.literal("verified"),
-    input: mathSimplifyInputValidator,
-    result: mathSimplifyResultValidator,
-    summary: v.string(),
-  }),
-  v.object({
-    kind: v.literal("simplify"),
-    status: v.literal("error"),
-    input: mathSimplifyInputValidator,
-    error: v.string(),
-  }),
-  v.object({
-    kind: v.literal("differentiate"),
-    status: v.literal("loading"),
-    input: mathDifferentiateInputValidator,
-  }),
-  v.object({
-    kind: v.literal("differentiate"),
-    status: v.literal("verified"),
-    input: mathDifferentiateInputValidator,
-    result: mathDifferentiateResultValidator,
-    summary: v.string(),
-  }),
-  v.object({
-    kind: v.literal("differentiate"),
-    status: v.literal("error"),
-    input: mathDifferentiateInputValidator,
-    error: v.string(),
-  }),
-  v.object({
-    kind: v.literal("compare"),
-    status: v.literal("loading"),
-    input: mathCompareInputValidator,
-  }),
-  v.object({
-    kind: v.literal("compare"),
-    status: mathConfidenceValidator,
-    input: mathCompareInputValidator,
-    result: mathCompareResultValidator,
-    summary: v.string(),
-  }),
-  v.object({
-    kind: v.literal("compare"),
-    status: v.literal("error"),
-    input: mathCompareInputValidator,
+    input: mathRequestValidator,
     error: v.string(),
   })
+);
+
+const previousMathDataValidator = v.union(
+  v.object({
+    kind: v.literal("evaluate"),
+    status: v.literal("loading"),
+    input: previousMathEvaluateInputValidator,
+  }),
+  v.object({
+    kind: v.literal("evaluate"),
+    status: v.literal("verified"),
+    input: previousMathEvaluateInputValidator,
+    result: v.object({
+      input: mathExpressionValidator,
+      output: v.object({
+        expression: v.string(),
+        latex: v.string(),
+        value: v.string(),
+      }),
+    }),
+    summary: v.string(),
+  }),
+  v.object({
+    kind: v.literal("evaluate"),
+    status: v.literal("error"),
+    input: previousMathEvaluateInputValidator,
+    error: v.string(),
+  }),
+  v.object({
+    kind: v.literal("simplify"),
+    status: v.literal("loading"),
+    input: previousMathSimplifyInputValidator,
+  }),
+  v.object({
+    kind: v.literal("simplify"),
+    status: v.literal("verified"),
+    input: previousMathSimplifyInputValidator,
+    result: v.object({
+      input: mathExpressionValidator,
+      output: mathExpressionValidator,
+    }),
+    summary: v.string(),
+  }),
+  v.object({
+    kind: v.literal("simplify"),
+    status: v.literal("error"),
+    input: previousMathSimplifyInputValidator,
+    error: v.string(),
+  }),
+  v.object({
+    kind: v.literal("differentiate"),
+    status: v.literal("loading"),
+    input: previousMathDifferentiateInputValidator,
+  }),
+  v.object({
+    kind: v.literal("differentiate"),
+    status: v.literal("verified"),
+    input: previousMathDifferentiateInputValidator,
+    result: v.object({
+      input: mathExpressionValidator,
+      output: mathExpressionValidator,
+      variable: v.string(),
+    }),
+    summary: v.string(),
+  }),
+  v.object({
+    kind: v.literal("differentiate"),
+    status: v.literal("error"),
+    input: previousMathDifferentiateInputValidator,
+    error: v.string(),
+  }),
+  v.object({
+    kind: v.literal("compare"),
+    status: v.literal("loading"),
+    input: previousMathCompareInputValidator,
+  }),
+  v.object({
+    kind: v.literal("compare"),
+    status: mathStatusValidator,
+    input: previousMathCompareInputValidator,
+    result: previousMathCompareResultValidator,
+    summary: v.string(),
+  }),
+  v.object({
+    kind: v.literal("compare"),
+    status: v.literal("error"),
+    input: previousMathCompareInputValidator,
+    error: v.string(),
+  })
+);
+
+export const mathDataValidator = v.union(
+  currentMathDataValidator,
+  previousMathDataValidator
 );
 
 /**

@@ -207,7 +207,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             tools: {
               [TOOL_NAMES.nakafa]: tool({
                 description:
-                  "Access Nakafa-owned educational content including articles, subjects, Quran references, and exercises.",
+                  "Retrieve Nakafa-owned educational content: current pages, lessons, articles, Quran references, and structured exercises.",
                 inputSchema: nakafaToolInputSchema,
                 execute: ({ query }, { toolCallId }) => {
                   const needsPageFetch = context.needsPageFetch && !fetchedPage;
@@ -247,7 +247,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
               }),
               [TOOL_NAMES.deepResearch]: tool({
                 description:
-                  "Conduct deep research on any topic by searching the web and analyzing sources. Use this for up-to-date information, general knowledge questions, and external research.",
+                  "Research external or current information with source-backed web search and source analysis.",
                 inputSchema: researchToolInputSchema,
                 execute: ({ query }) =>
                   Effect.runPromise(
@@ -263,7 +263,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
               }),
               [TOOL_NAMES.math]: tool({
                 description:
-                  "Verify math work with deterministic evidence. Use this for numeric evaluation, simplification, derivatives, and expression comparison.",
+                  "Verify math with deterministic CAS evidence for arithmetic, algebra, equations, calculus, series, matrices, statistics, probability, geometry, and discrete math.",
                 inputSchema: mathToolInputSchema,
                 execute: ({ query }) =>
                   Effect.runPromise(

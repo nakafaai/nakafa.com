@@ -1,37 +1,28 @@
-import {
-  MathEvaluationError,
-  MathExpressionParseError,
-  MathUnsupportedError,
-} from "@repo/math/errors";
+import { MathCasRequestError, MathCasResponseError } from "@repo/math/errors";
 import { describe, expect, it } from "vitest";
 
 describe("math errors", () => {
-  it("keeps parse errors tagged", () => {
-    const error = new MathExpressionParseError({
-      cause: "Unexpected end",
-      expression: "2 +",
-      message: "The expression could not be parsed.",
+  it("keeps request failures tagged", () => {
+    expect(
+      new MathCasRequestError({
+        message: "CAS failed.",
+        status: 500,
+      })
+    ).toMatchObject({
+      _tag: "MathCasRequestError",
+      message: "CAS failed.",
+      status: 500,
     });
-
-    expect(error._tag).toBe("MathExpressionParseError");
   });
 
-  it("keeps evaluation errors tagged", () => {
-    const error = new MathEvaluationError({
-      cause: "Undefined symbol x",
-      expression: "x",
-      message: "The expression could not be evaluated numerically.",
+  it("keeps response failures tagged", () => {
+    expect(
+      new MathCasResponseError({
+        message: "Invalid payload.",
+      })
+    ).toMatchObject({
+      _tag: "MathCasResponseError",
+      message: "Invalid payload.",
     });
-
-    expect(error._tag).toBe("MathEvaluationError");
-  });
-
-  it("keeps unsupported errors tagged", () => {
-    const error = new MathUnsupportedError({
-      expression: "solve(x = 1)",
-      message: "The operation is not supported.",
-    });
-
-    expect(error._tag).toBe("MathUnsupportedError");
   });
 });
