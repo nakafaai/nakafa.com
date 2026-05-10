@@ -56,7 +56,7 @@ def test_compare_tracks_domain_conditions() -> None:
     )
 
     assert result.status == "verified"
-    assert "x != 3" in result.conditions
+    assert "x \\neq 3" in result.conditions
 
 
 def test_trig_identity_is_verified() -> None:
@@ -117,4 +117,4 @@ def test_domain_returns_denominator_restrictions() -> None:
     )
 
     assert result.status == "verified"
-    assert result.conditions == ["x != -1", "x != 1"]
+    assert result.conditions == ["x \\neq -1", "x \\neq 1"]

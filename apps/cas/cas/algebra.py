@@ -50,7 +50,7 @@ def domain(request: MathRequest) -> MathResult:
     denominator = sp.denom(sp.together(expr))
     excluded = sp.solve(sp.Eq(denominator, 0), variable)
 
-    conditions = [f"{variable} != {value}" for value in excluded]
+    conditions = [sp.latex(sp.Ne(variable, value)) for value in excluded]
 
     return result(
         request,
@@ -119,7 +119,7 @@ def _comparison_conditions(left: sp.Expr, right: sp.Expr) -> list[str]:
         denominator = sp.denom(sp.together(expr))
         for symbol in symbols:
             for excluded in sp.solve(sp.Eq(denominator, 0), symbol):
-                conditions.append(f"{symbol} != {excluded}")
+                conditions.append(sp.latex(sp.Ne(symbol, excluded)))
 
     return sorted(set(conditions))
 

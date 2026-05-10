@@ -34,7 +34,7 @@ interface Props {
 /** Renders one deterministic math evidence part in the chat transcript. */
 export const MathPart = memo(({ message }: Props) => {
   const t = useTranslations("Ai");
-  const [expanded, { set }] = useDisclosure(message.status === "loading");
+  const [expanded, { set }] = useDisclosure(false);
 
   return (
     <Collapsible
@@ -172,12 +172,7 @@ function ConditionList({ conditions }: { conditions: readonly string[] }) {
     <div className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-1">
       <span>{t("math-condition")}</span>
       {conditions.map((condition) => (
-        <span
-          className="max-w-full overflow-x-auto text-muted-foreground"
-          key={condition}
-        >
-          {condition}
-        </span>
+        <Expression key={condition} value={condition} />
       ))}
     </div>
   );

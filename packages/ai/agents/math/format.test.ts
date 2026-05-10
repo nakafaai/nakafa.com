@@ -54,7 +54,7 @@ describe("math data formatter", () => {
       kind: "evaluate",
       result: {
         ...result,
-        conditions: ["x != 3"],
+        conditions: ["x \\neq 3"],
         items: [
           {
             label: "counterexample",
@@ -71,7 +71,7 @@ describe("math data formatter", () => {
 
     expect(output).toContain("- Secondary: 42");
     expect(output).toContain("- counterexample: {x: 1}");
-    expect(output).toContain("- Condition: x != 3");
+    expect(output).toContain("- Condition: x \\neq 3");
   });
 
   it("formats complete data without optional secondary details", () => {
