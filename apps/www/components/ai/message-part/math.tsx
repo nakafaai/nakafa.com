@@ -3,15 +3,55 @@
 import {
   AbacusIcon,
   ApproximatelyEqualIcon,
+  ArrangeByNumbersOneNineIcon,
+  ArrowDataTransferDiagonalIcon,
+  ArrowDataTransferHorizontalIcon,
   ArrowDown01Icon,
+  ArrowExpand02Icon,
   CalculateIcon,
+  CancelCircleIcon,
   ChartAverageIcon,
+  ChartBarLineIcon,
+  ChartEvaluationIcon,
+  ChartHistogramIcon,
+  ChartLineData01Icon,
+  ChartMaximumIcon,
+  ChartMediumIcon,
+  CircleIcon,
+  CongruentToCircleIcon,
+  Coordinate01Icon,
+  DiceFacesIcon,
   DiceIcon,
-  DrawingCompassIcon,
-  FunctionIcon,
+  DistributionIcon,
+  DivideSignCircleIcon,
+  FunctionCircleIcon,
+  FunctionOfXIcon,
+  FunctionSquareIcon,
+  GridTableIcon,
+  GroupIcon,
+  GroupItemsIcon,
+  HierarchySquare03Icon,
+  Infinity01Icon,
+  LineIcon,
   MatrixIcon,
+  MultiplicationSignCircleIcon,
+  MultiplicationSignSquareIcon,
   NThRootIcon,
+  PathfinderIntersectIcon,
+  PiCircleIcon,
+  PiIcon,
+  PlusMinusCircle01Icon,
+  RankingIcon,
+  RootCircleIcon,
+  RulerIcon,
+  SecondBracketIcon,
+  SquareRootSquareIcon,
+  Summation01Icon,
   SummationCircleIcon,
+  TextNumberSignIcon,
+  TriangleIcon,
+  UngroupItemsIcon,
+  XVariableSquareIcon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import type { DataPart } from "@repo/ai/schema/data";
@@ -23,7 +63,13 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import type { MathItem, MathOperation, MathResult } from "@repo/math/schema";
+import type {
+  MathExpression,
+  MathItem,
+  MathOperation,
+  MathResult,
+  MathStep,
+} from "@repo/math/schema";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 
@@ -75,9 +121,39 @@ function MathEvidence({ message }: Props) {
 
   return (
     <div className="flex max-w-full flex-col gap-2">
+      <StepList steps={message.result.steps} />
       <ResultLine result={message.result} />
       <ItemList items={message.result.items} />
       <ConditionList conditions={message.result.conditions} />
+    </div>
+  );
+}
+
+/** Renders deterministic CAS steps before the final result. */
+function StepList({ steps }: { steps: readonly MathStep[] }) {
+  if (steps.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex max-w-full flex-col gap-1">
+      {steps.map((step) => (
+        <StepRow
+          key={`${step.action}-${step.primary.expression}-${step.relation?.expression ?? ""}-${step.secondary?.expression ?? ""}`}
+          step={step}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Renders one CAS derivation step using the relation supplied by CAS. */
+function StepRow({ step }: { step: MathStep }) {
+  return (
+    <div className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-1">
+      <Expression value={step.primary.latex} />
+      {step.relation ? <Expression value={step.relation.latex} /> : null}
+      {step.secondary ? <Expression value={step.secondary.latex} /> : null}
     </div>
   );
 }
@@ -161,7 +237,11 @@ function ItemRow({ item }: { item: MathItem }) {
 }
 
 /** Renders domain restrictions and other required math conditions. */
-function ConditionList({ conditions }: { conditions: readonly string[] }) {
+function ConditionList({
+  conditions,
+}: {
+  conditions: readonly MathExpression[];
+}) {
   const t = useTranslations("Ai");
 
   if (conditions.length === 0) {
@@ -172,7 +252,7 @@ function ConditionList({ conditions }: { conditions: readonly string[] }) {
     <div className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-1">
       <span>{t("math-condition")}</span>
       {conditions.map((condition) => (
-        <Expression key={condition} value={condition} />
+        <Expression key={condition.expression} value={condition.latex} />
       ))}
     </div>
   );
@@ -213,65 +293,103 @@ function getIcon(operation: MathOperation) {
   switch (operation) {
     case "evaluate":
       return CalculateIcon;
-    case "apart":
-    case "cancel":
-    case "domain":
-    case "expand":
-    case "factor":
-    case "rationalize":
     case "simplify":
-    case "together":
       return ApproximatelyEqualIcon;
+    case "factor":
+      return SecondBracketIcon;
+    case "expand":
+      return ArrowExpand02Icon;
+    case "cancel":
+      return CancelCircleIcon;
+    case "together":
+      return GroupItemsIcon;
+    case "apart":
+      return UngroupItemsIcon;
+    case "rationalize":
+      return SquareRootSquareIcon;
+    case "domain":
+      return XVariableSquareIcon;
     case "compare":
-      return AbacusIcon;
-    case "roots":
+      return CongruentToCircleIcon;
     case "solve":
+      return RootCircleIcon;
+    case "roots":
       return NThRootIcon;
     case "differentiate":
+      return FunctionOfXIcon;
     case "integrate":
+      return FunctionCircleIcon;
     case "limit":
-      return FunctionIcon;
-    case "product":
+      return Infinity01Icon;
     case "series":
-    case "summation":
       return SummationCircleIcon;
+    case "summation":
+      return Summation01Icon;
+    case "product":
+      return MultiplicationSignCircleIcon;
     case "determinant":
-    case "eigenvalues":
-    case "eigenvectors":
-    case "inverse":
-    case "linear_system":
-    case "matrix_multiply":
-    case "rank":
-    case "rref":
       return MatrixIcon;
+    case "inverse":
+      return ArrowDataTransferHorizontalIcon;
+    case "rank":
+      return RankingIcon;
+    case "rref":
+      return GridTableIcon;
+    case "eigenvalues":
+      return FunctionSquareIcon;
+    case "eigenvectors":
+      return ArrowDataTransferDiagonalIcon;
+    case "linear_system":
+      return HierarchySquare03Icon;
+    case "matrix_multiply":
+      return MultiplicationSignSquareIcon;
     case "mean":
-    case "median":
-    case "mode":
-    case "quartiles":
-    case "standard_deviation":
-    case "variance":
-    case "z_score":
       return ChartAverageIcon;
+    case "median":
+      return ChartMediumIcon;
+    case "mode":
+      return ChartMaximumIcon;
+    case "quartiles":
+      return ChartHistogramIcon;
+    case "standard_deviation":
+      return ChartLineData01Icon;
+    case "variance":
+      return ChartBarLineIcon;
+    case "z_score":
+      return ChartEvaluationIcon;
     case "distribution":
+      return DistributionIcon;
     case "expected_value":
-    case "variance_probability":
       return DiceIcon;
+    case "variance_probability":
+      return DiceFacesIcon;
     case "circle":
+      return CircleIcon;
     case "distance":
+      return RulerIcon;
     case "intersection":
+      return PathfinderIntersectIcon;
     case "line":
+      return LineIcon;
     case "midpoint":
+      return Coordinate01Icon;
     case "slope":
-      return DrawingCompassIcon;
+      return TriangleIcon;
     case "combination":
-    case "gcd":
-    case "is_prime":
-    case "lcm":
-    case "modular":
+      return GroupIcon;
     case "permutation":
+      return ArrangeByNumbersOneNineIcon;
+    case "gcd":
+      return AbacusIcon;
+    case "lcm":
+      return PlusMinusCircle01Icon;
+    case "is_prime":
+      return PiIcon;
+    case "modular":
+      return DivideSignCircleIcon;
     case "prime_factorization":
-      return AbacusIcon;
+      return TextNumberSignIcon;
     default:
-      return AbacusIcon;
+      return PiCircleIcon;
   }
 }

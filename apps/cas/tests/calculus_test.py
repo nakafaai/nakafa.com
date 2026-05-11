@@ -15,6 +15,14 @@ def test_differentiate_polynomial() -> None:
     assert result.status == "verified"
     assert result.secondary
     assert result.secondary.expression == "3*x**2 - 8*x + 2"
+    assert result.stepStatus == "complete"
+    assert [step.action for step in result.steps] == [
+        "differentiate-term",
+        "differentiate-term",
+        "differentiate-term",
+        "differentiate",
+    ]
+    assert result.steps[0].primary.expression == "Derivative(x**3, x)"
 
 
 def test_differentiate_lowercase_e_exponential() -> None:
@@ -45,6 +53,8 @@ def test_integrate_polynomial() -> None:
     assert result.status == "verified"
     assert result.secondary
     assert result.secondary.expression == "x**2"
+    assert result.stepStatus == "partial"
+    assert result.steps[0].primary.expression == "Integral(2*x, x)"
 
 
 def test_integrate_with_bounds() -> None:
@@ -62,6 +72,7 @@ def test_integrate_with_bounds() -> None:
     assert result.status == "verified"
     assert result.secondary
     assert result.secondary.expression == "2"
+    assert result.steps[0].primary.expression == "Integral(x, (x, 0, 2))"
 
 
 def test_limit_rational_expression() -> None:
@@ -78,3 +89,5 @@ def test_limit_rational_expression() -> None:
     assert result.status == "verified"
     assert result.secondary
     assert result.secondary.expression == "1"
+    assert result.stepStatus == "partial"
+    assert result.steps[0].primary.expression == "Limit(sin(x)/x, x, 0, dir='+')"

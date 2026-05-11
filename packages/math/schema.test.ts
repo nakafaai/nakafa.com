@@ -41,6 +41,25 @@ describe("math schemas", () => {
         expression: "4",
         latex: "4",
       },
+      stepStatus: "complete",
+      steps: [
+        {
+          action: "evaluate",
+          items: [],
+          primary: {
+            expression: "2 + 2",
+            latex: "2 + 2",
+          },
+          relation: {
+            expression: "equals",
+            latex: "=",
+          },
+          secondary: {
+            expression: "4",
+            latex: "4",
+          },
+        },
+      ],
       status: "verified",
     });
 

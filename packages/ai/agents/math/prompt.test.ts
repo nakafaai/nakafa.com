@@ -22,6 +22,9 @@ describe("mathPrompt", () => {
     expect(prompt).toContain(
       "Never label math as verified unless a tool result says verified."
     );
+    expect(prompt).toContain(
+      "Do not repeat every CAS step in prose after the math evidence has rendered it."
+    );
     expect(prompt).toContain("verified, contradicted, inconclusive, or error");
   });
 

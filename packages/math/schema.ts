@@ -83,6 +83,15 @@ export const MathStatusSchema = Schema.Literal(
   "inconclusive"
 );
 
+export const MathStepStatusSchema = Schema.Literal(
+  "complete",
+  "partial",
+  "unavailable"
+).annotations({
+  description:
+    "Whether the CAS could provide complete, partial, or unavailable derivation steps.",
+});
+
 export const MathExpressionSchema = Schema.Struct({
   expression: expressionInputSchema,
   latex: Schema.String.annotations({
@@ -101,6 +110,22 @@ export const MathItemSchema = Schema.Struct({
   ),
   value: valueInputSchema,
 }).pipe(Schema.mutable);
+
+export const MathStepSchema = Schema.Struct({
+  action: Schema.NonEmptyString.annotations({
+    description:
+      "CAS step action, for example divide, factor, cancel, or compare.",
+  }),
+  items: Schema.Array(MathItemSchema).pipe(Schema.mutable),
+  primary: MathExpressionSchema,
+  relation: Schema.optional(MathExpressionSchema),
+  secondary: Schema.optional(MathExpressionSchema),
+})
+  .pipe(Schema.mutable)
+  .annotations({
+    description:
+      "One deterministic math step emitted by the CAS for student-facing evidence.",
+  });
 
 export const MathPointSchema = Schema.Struct({
   x: valueInputSchema,
@@ -341,7 +366,7 @@ export const MathRequestSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 
 export const MathResultSchema = Schema.Struct({
-  conditions: stringArraySchema,
+  conditions: Schema.Array(MathExpressionSchema).pipe(Schema.mutable),
   input: MathRequestSchema,
   items: Schema.Array(MathItemSchema).pipe(Schema.mutable),
   kind: MathOperationSchema,
@@ -349,6 +374,8 @@ export const MathResultSchema = Schema.Struct({
   primary: MathExpressionSchema,
   reason: Schema.String,
   secondary: Schema.optional(MathExpressionSchema),
+  stepStatus: MathStepStatusSchema,
+  steps: Schema.Array(MathStepSchema).pipe(Schema.mutable),
   status: MathStatusSchema,
 }).pipe(Schema.mutable);
 
@@ -385,4 +412,6 @@ export type MathItem = Schema.Schema.Type<typeof MathItemSchema>;
 export type MathOperation = Schema.Schema.Type<typeof MathOperationSchema>;
 export type MathRequest = Schema.Schema.Type<typeof MathRequestSchema>;
 export type MathResult = Schema.Schema.Type<typeof MathResultSchema>;
+export type MathStep = Schema.Schema.Type<typeof MathStepSchema>;
+export type MathStepStatus = Schema.Schema.Type<typeof MathStepStatusSchema>;
 export type MathStatus = Schema.Schema.Type<typeof MathStatusSchema>;

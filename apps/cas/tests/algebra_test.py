@@ -29,6 +29,72 @@ def test_evaluate_exact_arithmetic() -> None:
     assert result.status == "verified"
     assert result.secondary
     assert result.secondary.expression == "42"
+    assert result.stepStatus == "complete"
+    assert result.steps[0].secondary
+    assert result.steps[0].secondary.expression == "42"
+
+
+def test_evaluate_keeps_original_expression_steps() -> None:
+    result = run(
+        MathRequest(kind="math", operation="evaluate", expression="125 * 48 / 6")
+    )
+
+    assert result.primary.expression == "125*48/6"
+    assert result.secondary
+    assert result.secondary.expression == "1000"
+    assert [step.action for step in result.steps] == ["divide", "evaluate"]
+    assert result.steps[0].primary.expression == "48/6"
+    assert result.steps[0].secondary
+    assert result.steps[0].secondary.expression == "8"
+
+
+def test_evaluate_omits_redundant_steps_for_unchanged_expression() -> None:
+    result = run(MathRequest(kind="math", operation="evaluate", expression="42"))
+
+    assert result.secondary
+    assert result.secondary.expression == "42"
+    assert result.stepStatus == "unavailable"
+    assert result.steps == []
+
+
+def test_evaluate_falls_back_for_symbolic_simplification() -> None:
+    result = run(
+        MathRequest(kind="math", operation="evaluate", expression="(x + 1) + (x + 2)")
+    )
+
+    assert result.secondary
+    assert result.secondary.expression == "2*x + 3"
+    assert result.steps[0].action == "evaluate"
+
+
+def test_evaluate_reduces_rational_numeric_reciprocal() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="evaluate",
+            expression="Rational(1, 3) * 12",
+        )
+    )
+
+    assert result.secondary
+    assert result.secondary.expression == "4"
+    assert result.steps[0].primary.expression == "12/3"
+    assert result.steps[0].secondary
+    assert result.steps[0].secondary.expression == "4"
+
+
+def test_evaluate_falls_back_without_numeric_division_numerator() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="evaluate",
+            expression="x * Rational(1, 3)",
+        )
+    )
+
+    assert result.secondary
+    assert result.secondary.expression == "x/3"
+    assert result.steps[0].action == "evaluate"
 
 
 def test_cancel_verifies_rational_simplification() -> None:
@@ -43,6 +109,7 @@ def test_cancel_verifies_rational_simplification() -> None:
     assert result.status == "verified"
     assert result.secondary
     assert result.secondary.expression == "x + 3"
+    assert [step.action for step in result.steps] == ["factor", "cancel"]
 
 
 def test_compare_tracks_domain_conditions() -> None:
@@ -56,7 +123,7 @@ def test_compare_tracks_domain_conditions() -> None:
     )
 
     assert result.status == "verified"
-    assert "x \\neq 3" in result.conditions
+    assert result.conditions[0].latex == "x \\neq 3"
 
 
 def test_trig_identity_is_verified() -> None:
@@ -117,4 +184,7 @@ def test_domain_returns_denominator_restrictions() -> None:
     )
 
     assert result.status == "verified"
-    assert result.conditions == ["x \\neq -1", "x \\neq 1"]
+    assert [condition.latex for condition in result.conditions] == [
+        "x \\neq -1",
+        "x \\neq 1",
+    ]

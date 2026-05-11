@@ -31,6 +31,16 @@ def test_prime_factorization() -> None:
     assert [entry.value for entry in result.items] == ["2^2", "3^1", "7^1"]
 
 
+def test_gcd_with_more_than_two_values_stays_verified_without_steps() -> None:
+    result = run(MathRequest(kind="math", operation="gcd", values=["84", "30", "6"]))
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "6"
+    assert result.stepStatus == "unavailable"
+    assert result.steps == []
+
+
 def test_unknown_discrete_operation_raises() -> None:
     with pytest.raises(ValueError, match="Unsupported discrete operation"):
         discrete.run(MathRequest(kind="math", operation="unknown"))

@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 MathStatus = Literal["verified", "contradicted", "inconclusive"]
 MathSource = Literal["math"]
+MathStepStatus = Literal["complete", "partial", "unavailable"]
 
 
 class PointInput(BaseModel):
@@ -65,6 +66,18 @@ class MathItem(BaseModel):
     latex: str | None = None
 
 
+class MathStep(BaseModel):
+    """One deterministic transformation step produced by the CAS engine."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    action: str
+    primary: MathExpression
+    relation: MathExpression | None = None
+    secondary: MathExpression | None = None
+    items: list[MathItem] = Field(default_factory=list)
+
+
 class MathResult(BaseModel):
     """Deterministic CAS result returned to the TypeScript math service."""
 
@@ -77,5 +90,7 @@ class MathResult(BaseModel):
     primary: MathExpression
     secondary: MathExpression | None = None
     items: list[MathItem] = Field(default_factory=list)
-    conditions: list[str] = Field(default_factory=list)
+    conditions: list[MathExpression] = Field(default_factory=list)
+    steps: list[MathStep] = Field(default_factory=list)
+    stepStatus: MathStepStatus = "unavailable"
     reason: str

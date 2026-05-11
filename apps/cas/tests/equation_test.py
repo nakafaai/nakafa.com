@@ -15,6 +15,24 @@ def test_solve_equation() -> None:
     assert result.status == "verified"
     assert result.secondary
     assert result.secondary.expression == "[-3, 3]"
+    assert result.stepStatus == "partial"
+    assert result.steps
+
+
+def test_solve_linear_equation_uses_direct_step() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="solve",
+            expression="x + 1 = 0",
+            variables=["x"],
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "[-1]"
+    assert result.steps[0].action == "solve"
 
 
 def test_solve_inequality() -> None:

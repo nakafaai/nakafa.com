@@ -60,6 +60,25 @@ describe("mapUIMessagePartsToDBParts", () => {
               expression: "5 * x",
               latex: "5x",
             },
+            stepStatus: "complete",
+            steps: [
+              {
+                action: "simplify",
+                items: [],
+                primary: {
+                  expression: "2 * x + 3 * x",
+                  latex: "2x+3x",
+                },
+                relation: {
+                  expression: "equals",
+                  latex: "=",
+                },
+                secondary: {
+                  expression: "5 * x",
+                  latex: "5x",
+                },
+              },
+            ],
             status: "verified",
           },
           summary: "Verified simplification: 5 * x",

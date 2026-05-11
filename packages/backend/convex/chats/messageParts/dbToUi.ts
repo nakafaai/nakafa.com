@@ -7,7 +7,12 @@ import {
 import {
   type MathData,
   MathDataSchema,
+  MathExpressionSchema,
+  MathItemSchema,
+  MathOperationSchema,
   type MathRequest,
+  MathRequestSchema,
+  MathStatusSchema,
 } from "@repo/math/schema";
 import { ConvexError } from "convex/values";
 import { Schema } from "effect";
@@ -27,7 +32,82 @@ function requireToolInputQuery(
 
 const isCurrentMathData = Schema.is(MathDataSchema);
 
-function normalizeMathData(data: NonNullable<Doc<"parts">["dataMathData"]>) {
+const legacyCurrentMathResultSchema = Schema.Struct({
+  conditions: Schema.Array(Schema.String).pipe(Schema.mutable),
+  input: MathRequestSchema,
+  items: Schema.Array(MathItemSchema).pipe(Schema.mutable),
+  kind: MathOperationSchema,
+  operation: MathOperationSchema,
+  primary: MathExpressionSchema,
+  reason: Schema.String,
+  secondary: Schema.optional(MathExpressionSchema),
+  status: MathStatusSchema,
+}).pipe(Schema.mutable);
+
+const legacyCurrentMathDataSchema = Schema.Struct({
+  input: MathRequestSchema,
+  kind: MathOperationSchema,
+  result: legacyCurrentMathResultSchema,
+  status: MathStatusSchema,
+  summary: Schema.String,
+}).pipe(Schema.mutable);
+
+const isLegacyCurrentMathData = Schema.is(legacyCurrentMathDataSchema);
+
+const previousMathExpressionInputSchema = Schema.Struct({
+  expression: Schema.String,
+  variable: Schema.optional(Schema.String),
+}).pipe(Schema.mutable);
+
+const previousMathOutputSchema = Schema.Struct({
+  expression: Schema.String,
+  latex: Schema.String,
+  value: Schema.optional(Schema.String),
+}).pipe(Schema.mutable);
+
+const previousExpressionMathDataSchema = Schema.Struct({
+  input: previousMathExpressionInputSchema,
+  kind: Schema.Literal("evaluate", "simplify", "differentiate"),
+  result: Schema.Struct({
+    input: MathExpressionSchema,
+    output: previousMathOutputSchema,
+    variable: Schema.optional(Schema.String),
+  }).pipe(Schema.mutable),
+  status: Schema.Literal("verified"),
+  summary: Schema.String,
+}).pipe(Schema.mutable);
+
+const previousMathSampleSchema = Schema.Struct({
+  left: Schema.String,
+  right: Schema.String,
+  scope: Schema.Record({ key: Schema.String, value: Schema.Number }),
+}).pipe(Schema.mutable);
+
+const previousCompareMathDataSchema = Schema.Struct({
+  input: Schema.Struct({
+    left: Schema.String,
+    right: Schema.String,
+  }).pipe(Schema.mutable),
+  kind: Schema.Literal("compare"),
+  result: Schema.Struct({
+    left: MathExpressionSchema,
+    reason: Schema.String,
+    right: MathExpressionSchema,
+    samples: Schema.Array(previousMathSampleSchema).pipe(Schema.mutable),
+    status: MathStatusSchema,
+  }).pipe(Schema.mutable),
+  status: MathStatusSchema,
+  summary: Schema.String,
+}).pipe(Schema.mutable);
+
+const isPreviousExpressionMathData = Schema.is(
+  previousExpressionMathDataSchema
+);
+const isPreviousCompareMathData = Schema.is(previousCompareMathDataSchema);
+
+function normalizeMathData(
+  data: NonNullable<Doc<"parts">["dataMathData"]>
+): MathData {
   if (isCurrentMathData(data)) {
     return data;
   }
@@ -49,38 +129,57 @@ function normalizeMathData(data: NonNullable<Doc<"parts">["dataMathData"]>) {
     } satisfies MathData;
   }
 
-  if (data.kind === "compare") {
+  if (isLegacyCurrentMathData(data)) {
+    return {
+      input: data.input,
+      kind: data.kind,
+      result: {
+        ...data.result,
+        conditions: data.result.conditions.map(toMathExpression),
+        stepStatus: "unavailable",
+        steps: [],
+      },
+      status: data.status,
+      summary: data.summary,
+    } satisfies MathData;
+  }
+
+  if (isPreviousCompareMathData(data)) {
     return normalizePreviousCompareMathData(data);
   }
 
-  const input = toMathRequest(data);
-  const primary = data.result.input;
-  const secondary = data.result.output;
+  if (isPreviousExpressionMathData(data)) {
+    const input = toMathRequest(data);
 
-  return {
-    input,
-    kind: data.kind,
-    result: {
-      conditions: [],
+    return {
       input,
-      items: [],
       kind: data.kind,
-      operation: data.kind,
-      primary,
-      reason: data.summary,
-      secondary,
       status: data.status,
-    },
-    status: data.status,
-    summary: data.summary,
-  } satisfies MathData;
+      result: {
+        conditions: [],
+        input,
+        items: [],
+        kind: data.kind,
+        operation: data.kind,
+        primary: data.result.input,
+        reason: data.summary,
+        secondary: data.result.output,
+        stepStatus: "unavailable",
+        steps: [],
+        status: data.status,
+      },
+      summary: data.summary,
+    } satisfies MathData;
+  }
+
+  throw new ConvexError({
+    code: "CHAT_MATH_DATA_UNSUPPORTED",
+    message: "Unsupported persisted math data shape.",
+  });
 }
 
 function normalizePreviousCompareMathData(
-  data: Extract<
-    NonNullable<Doc<"parts">["dataMathData"]>,
-    { kind: "compare"; result: object }
-  >
+  data: Schema.Schema.Type<typeof previousCompareMathDataSchema>
 ) {
   const input = toMathRequest(data);
 
@@ -99,6 +198,8 @@ function normalizePreviousCompareMathData(
       primary: data.result.left,
       reason: data.result.reason,
       secondary: data.result.right,
+      stepStatus: "unavailable",
+      steps: [],
       status: data.status,
     },
     status: data.status,
@@ -129,6 +230,13 @@ function toMathRequest(data: NonNullable<Doc<"parts">["dataMathData"]>) {
         operation: data.kind,
       } satisfies MathRequest;
   }
+}
+
+function toMathExpression(value: string) {
+  return {
+    expression: value,
+    latex: value,
+  };
 }
 
 /** Rebuild one UI message part from the flattened persisted part row. */

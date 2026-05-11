@@ -1,11 +1,11 @@
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
-import { prepareNakafaStep } from "@/app/api/chat/step";
+import { prepareChatStep } from "@/app/api/chat/step";
 
 describe("app/api/chat/step", () => {
   it("forces Nakafa on the first page-fetch step", () => {
     const step = Effect.runSync(
-      prepareNakafaStep({
+      prepareChatStep({
         needsPageFetch: true,
         stepNumber: 0,
       })
@@ -19,7 +19,7 @@ describe("app/api/chat/step", () => {
 
   it("keeps normal tool choice after the first page-fetch step", () => {
     const step = Effect.runSync(
-      prepareNakafaStep({
+      prepareChatStep({
         needsPageFetch: true,
         stepNumber: 1,
       })
@@ -28,11 +28,24 @@ describe("app/api/chat/step", () => {
     expect(step).toBeUndefined();
   });
 
-  it("keeps normal tool choice when no page fetch is needed", () => {
+  it("requires a specialist tool on the first non-page-fetch step", () => {
     const step = Effect.runSync(
-      prepareNakafaStep({
+      prepareChatStep({
         needsPageFetch: false,
         stepNumber: 0,
+      })
+    );
+
+    expect(step).toEqual({
+      toolChoice: "required",
+    });
+  });
+
+  it("keeps normal tool choice after the first non-page-fetch step", () => {
+    const step = Effect.runSync(
+      prepareChatStep({
+        needsPageFetch: false,
+        stepNumber: 1,
       })
     );
 

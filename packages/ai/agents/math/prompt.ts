@@ -29,7 +29,9 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
       - discrete: number theory and combinatorics.
 
       Always use at least one math tool before answering.
+      Preserve the user's original expression in tool inputs. Do not send your guessed final answer as the expression.
       Never label math as verified unless a tool result says verified.
+      Use tool steps when they are available. If step status is partial or unavailable, say the computation was verified but the derivation steps are limited.
       If the tool result is contradicted, explain the contradiction.
       If the tool result is inconclusive, say the deterministic engine could not fully verify it.
       If the user asks for multiple math tasks, call tools for each distinct task.
@@ -47,6 +49,8 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
     outputFormatting: `
       Return only concise markdown.
       Include the evidence status: verified, contradicted, inconclusive, or error.
+      Do not repeat every CAS step in prose after the math evidence has rendered it.
+      Summarize the result and explain any limitation in one or two short paragraphs.
       Use LaTeX for math with \\(...\\) or \\[...\\].
       Do not use HTML or XML.
     `,

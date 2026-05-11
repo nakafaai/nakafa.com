@@ -3,8 +3,10 @@
 import sympy as sp
 
 from cas import parse
-from cas.format import item, result
+from cas.format import expression_text, item, result, step
 from cas.schema import MathRequest, MathResult
+
+EQUALS = expression_text("equals", "=")
 
 
 def run(request: MathRequest) -> MathResult:
@@ -12,9 +14,12 @@ def run(request: MathRequest) -> MathResult:
     operation = request.operation
 
     if operation == "gcd":
-        output = sp.gcd_list([int(parse.expression(value)) for value in request.values])
+        values = [int(parse.expression(value)) for value in request.values]
+        output = sp.gcd_list(values)
+        steps = _gcd_steps(values, output)
     elif operation == "lcm":
         output = sp.lcm_list([int(parse.expression(value)) for value in request.values])
+        steps = []
     elif operation == "prime_factorization":
         return result(
             request,
@@ -30,16 +35,20 @@ def run(request: MathRequest) -> MathResult:
         )
     elif operation == "is_prime":
         output = sp.isprime(int(parse.expression(request.n)))
+        steps = []
     elif operation == "modular":
         output = int(parse.expression(request.n)) % int(
             parse.expression(request.modulus)
         )
+        steps = []
     elif operation == "permutation":
         output = sp.factorial(parse.expression(request.n)) / sp.factorial(
             parse.expression(request.n) - parse.expression(request.k)
         )
+        steps = []
     elif operation == "combination":
         output = sp.binomial(parse.expression(request.n), parse.expression(request.k))
+        steps = []
     else:
         raise ValueError(f"Unsupported discrete operation: {operation}")
 
@@ -49,4 +58,42 @@ def run(request: MathRequest) -> MathResult:
         primary=request.values or request.n or operation,
         secondary=output,
         reason="SymPy completed the discrete math operation.",
+        steps=steps,
+        stepStatus="complete" if steps else "unavailable",
     )
+
+
+def _gcd_steps(values: list[int], output: object) -> list:
+    """Create Euclidean algorithm steps for two positive integers."""
+    if len(values) != 2:
+        return []
+
+    left, right = sorted((abs(values[0]), abs(values[1])), reverse=True)
+    steps = []
+
+    while right != 0:
+        quotient, remainder = divmod(left, right)
+        steps.append(
+            step(
+                "gcd",
+                primary=expression_text(
+                    f"{left} = {quotient}*{right} + {remainder}",
+                    f"{left} = {quotient} \\cdot {right} + {remainder}",
+                ),
+            )
+        )
+        left, right = right, remainder
+
+    steps.append(
+        step(
+            "gcd",
+            primary=expression_text(
+                f"gcd({values[0]}, {values[1]})",
+                f"\\gcd\\left({values[0]}, {values[1]}\\right)",
+            ),
+            relation=EQUALS,
+            secondary=output,
+        )
+    )
+
+    return steps

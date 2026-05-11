@@ -29,6 +29,25 @@ const result = {
     expression: "42",
     latex: "42",
   },
+  stepStatus: "complete",
+  steps: [
+    {
+      action: "evaluate",
+      items: [],
+      primary: {
+        expression: "6 * 7",
+        latex: "6 \\cdot 7",
+      },
+      relation: {
+        expression: "equals",
+        latex: "=",
+      },
+      secondary: {
+        expression: "42",
+        latex: "42",
+      },
+    },
+  ],
   status: "verified",
 } satisfies MathResult;
 

@@ -41,7 +41,7 @@ import { Effect } from "effect";
 import type { getTranslations } from "next-intl/server";
 import { search as nakafaSearch } from "@/app/api/chat/nakafa";
 import { repairChatToolCall } from "@/app/api/chat/repair";
-import { prepareNakafaStep } from "@/app/api/chat/step";
+import { prepareChatStep } from "@/app/api/chat/step";
 import { writeSuggestions } from "@/app/api/chat/suggestions";
 import { trackUsage } from "@/app/api/chat/usage";
 import type { getUserInfo } from "@/app/api/chat/utils";
@@ -295,7 +295,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             },
             prepareStep: ({ stepNumber }) =>
               Effect.runSync(
-                prepareNakafaStep({
+                prepareChatStep({
                   needsPageFetch: page.needsFetch,
                   stepNumber,
                 })

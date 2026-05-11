@@ -3,8 +3,11 @@
 import sympy as sp
 
 from cas import parse
-from cas.format import item, result
+from cas.format import expression_text, item, result, step
 from cas.schema import MathRequest, MathResult
+
+EQUALS = expression_text("equals", "=")
+IMPLIES = expression_text("becomes", "\\Rightarrow")
 
 
 def solve(request: MathRequest) -> MathResult:
@@ -19,8 +22,12 @@ def solve(request: MathRequest) -> MathResult:
 
         if isinstance(relation, sp.Equality):
             solved = sp.solve(relation, variable)
+            steps = _solve_equality_steps(relation, solved)
         else:
             solved = sp.solve_univariate_inequality(relation, variable)
+            steps = [
+                step("solve", primary=relation, relation=IMPLIES, secondary=solved)
+            ]
 
         return result(
             request,
@@ -28,6 +35,8 @@ def solve(request: MathRequest) -> MathResult:
             primary=relation,
             secondary=solved,
             reason="SymPy solved the equation or inequality.",
+            steps=steps,
+            stepStatus="partial" if steps else "unavailable",
         )
 
     solved = sp.solve(parsed, variables, dict=True)
@@ -39,6 +48,27 @@ def solve(request: MathRequest) -> MathResult:
         reason="SymPy solved the system.",
         items=[item("solution", solution) for solution in solved],
     )
+
+
+def _solve_equality_steps(relation: sp.Equality, solved: list) -> list:
+    """Create compact factoring evidence for one-variable polynomial equations."""
+    left = parse.expression(str(relation.lhs))
+    right = parse.expression(str(relation.rhs))
+    expression = sp.expand(left - right)
+    factored = sp.factor(expression)
+
+    if factored == expression:
+        return [step("solve", primary=relation, relation=IMPLIES, secondary=solved)]
+
+    return [
+        step("factor", primary=expression, relation=EQUALS, secondary=factored),
+        step(
+            "solve",
+            primary=sp.Eq(factored, 0, evaluate=False),
+            relation=IMPLIES,
+            secondary=solved,
+        ),
+    ]
 
 
 def roots(request: MathRequest) -> MathResult:

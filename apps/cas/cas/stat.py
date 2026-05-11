@@ -5,8 +5,10 @@ from collections import Counter
 import sympy as sp
 
 from cas import parse
-from cas.format import item, result
+from cas.format import expression_text, item, result, step
 from cas.schema import MathRequest, MathResult
+
+EQUALS = expression_text("equals", "=")
 
 
 def run(request: MathRequest) -> MathResult:
@@ -20,8 +22,10 @@ def run(request: MathRequest) -> MathResult:
 
     if operation == "mean":
         output = sum(values) / len(values)
+        steps = [_mean_step(values, output)]
     elif operation == "median":
         output = _median(sorted_values)
+        steps = []
     elif operation == "mode":
         return result(
             request,
@@ -33,10 +37,23 @@ def run(request: MathRequest) -> MathResult:
     elif operation == "variance":
         mean = sum(values) / len(values)
         output = sum((value - mean) ** 2 for value in values) / len(values)
+        steps = [_mean_step(values, mean), *_variance_steps(values, mean, output)]
     elif operation == "standard_deviation":
         mean = sum(values) / len(values)
         variance = sum((value - mean) ** 2 for value in values) / len(values)
         output = sp.sqrt(variance)
+        steps = [
+            _mean_step(values, mean),
+            *_variance_steps(values, mean, variance),
+            step(
+                "standard-deviation",
+                primary=expression_text(
+                    f"sqrt({variance})", f"\\sqrt{{{sp.latex(variance)}}}"
+                ),
+                relation=EQUALS,
+                secondary=output,
+            ),
+        ]
     elif operation == "quartiles":
         return result(
             request,
@@ -54,6 +71,7 @@ def run(request: MathRequest) -> MathResult:
         mean = sum(values) / len(values)
         variance = sum((value - mean) ** 2 for value in values) / len(values)
         output = (target - mean) / sp.sqrt(variance)
+        steps = []
     else:
         raise ValueError(f"Unsupported statistics operation: {operation}")
 
@@ -63,7 +81,33 @@ def run(request: MathRequest) -> MathResult:
         primary=values,
         secondary=output,
         reason="SymPy computed the statistic from exact values.",
+        steps=steps,
+        stepStatus="complete" if steps else "unavailable",
     )
+
+
+def _mean_step(values: list[sp.Expr], output: object):
+    """Create the arithmetic mean formula step."""
+    total = sum(values)
+    formula = expression_text(
+        f"({total})/{len(values)}",
+        f"\\frac{{{sp.latex(total)}}}{{{len(values)}}}",
+    )
+
+    return step("mean", primary=formula, relation=EQUALS, secondary=output)
+
+
+def _variance_steps(values: list[sp.Expr], mean: object, output: object) -> list:
+    """Create a compact population variance formula step."""
+    mean_expr = sp.sympify(mean)
+    squared_distances = [sp.expand((value - mean_expr) ** 2) for value in values]
+    total = sum(squared_distances)
+    formula = expression_text(
+        f"({total})/{len(values)}",
+        f"\\frac{{{sp.latex(total)}}}{{{len(values)}}}",
+    )
+
+    return [step("variance", primary=formula, relation=EQUALS, secondary=output)]
 
 
 def _median(values: list[sp.Expr]) -> sp.Expr:

@@ -17,6 +17,24 @@ def test_matrix_determinant() -> None:
     assert result.status == "verified"
     assert result.secondary
     assert result.secondary.expression == "-2"
+    assert result.stepStatus == "complete"
+    assert result.steps[0].primary.expression == "1*4 - 2*3"
+
+
+def test_large_matrix_determinant_stays_verified_without_steps() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            matrix=[["1", "0", "0"], ["0", "1", "0"], ["0", "0", "1"]],
+            operation="determinant",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "1"
+    assert result.stepStatus == "unavailable"
+    assert result.steps == []
 
 
 def test_matrix_multiply() -> None:

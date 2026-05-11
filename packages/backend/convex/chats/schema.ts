@@ -338,6 +338,12 @@ export const mathStatusValidator = literals(
   "inconclusive"
 );
 
+export const mathStepStatusValidator = literals(
+  "complete",
+  "partial",
+  "unavailable"
+);
+
 export const mathPointValidator = v.object({
   x: v.string(),
   y: v.string(),
@@ -406,7 +412,15 @@ export const mathItemValidator = v.object({
   value: v.string(),
 });
 
-export const mathResultValidator = v.object({
+export const mathStepValidator = v.object({
+  action: v.string(),
+  items: v.array(mathItemValidator),
+  primary: mathExpressionValidator,
+  relation: v.optional(mathExpressionValidator),
+  secondary: v.optional(mathExpressionValidator),
+});
+
+const legacyCurrentMathResultValidator = v.object({
   conditions: v.array(v.string()),
   input: mathRequestValidator,
   items: v.array(mathItemValidator),
@@ -415,6 +429,20 @@ export const mathResultValidator = v.object({
   primary: mathExpressionValidator,
   reason: v.string(),
   secondary: v.optional(mathExpressionValidator),
+  status: mathStatusValidator,
+});
+
+export const mathResultValidator = v.object({
+  conditions: v.array(mathExpressionValidator),
+  input: mathRequestValidator,
+  items: v.array(mathItemValidator),
+  kind: mathOperationValidator,
+  operation: mathOperationValidator,
+  primary: mathExpressionValidator,
+  reason: v.string(),
+  secondary: v.optional(mathExpressionValidator),
+  stepStatus: mathStepStatusValidator,
+  steps: v.array(mathStepValidator),
   status: mathStatusValidator,
 });
 
@@ -428,7 +456,7 @@ const currentMathDataValidator = v.union(
     kind: mathOperationValidator,
     status: mathStatusValidator,
     input: mathRequestValidator,
-    result: mathResultValidator,
+    result: v.union(mathResultValidator, legacyCurrentMathResultValidator),
     summary: v.string(),
   }),
   v.object({

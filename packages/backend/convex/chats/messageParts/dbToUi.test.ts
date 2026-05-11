@@ -100,6 +100,25 @@ describe("mapDBPartToUIMessagePart", () => {
               expression: "x + 2",
               latex: "x+2",
             },
+            stepStatus: "partial",
+            steps: [
+              {
+                action: "compare",
+                items: [],
+                primary: {
+                  expression: "x + 1",
+                  latex: "x+1",
+                },
+                relation: {
+                  expression: "not equal",
+                  latex: "\\not=",
+                },
+                secondary: {
+                  expression: "x + 2",
+                  latex: "x+2",
+                },
+              },
+            ],
             status: "contradicted",
           },
           summary: "A deterministic numeric counterexample was found.",

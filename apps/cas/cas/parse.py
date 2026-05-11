@@ -37,8 +37,11 @@ FUNCTIONS = {
 
 GLOBALS = {
     "__builtins__": {},
+    "Add": sp.Add,
     "Float": sp.Float,
     "Integer": sp.Integer,
+    "Mul": sp.Mul,
+    "Pow": sp.Pow,
     "Rational": sp.Rational,
     "Symbol": sp.Symbol,
 }
@@ -57,7 +60,7 @@ def symbols(names: list[str]) -> list[sp.Symbol]:
     return [sp.Symbol(name) for name in names]
 
 
-def expression(value: str | None) -> sp.Expr:
+def expression(value: str | None, *, evaluate: bool = True) -> sp.Expr:
     """Parse a SymPy expression with a restricted global namespace."""
     if not value:
         raise ValueError("Expression is required.")
@@ -67,7 +70,7 @@ def expression(value: str | None) -> sp.Expr:
         global_dict=GLOBALS,
         local_dict=FUNCTIONS,
         transformations=TRANSFORMATIONS,
-        evaluate=True,
+        evaluate=evaluate,
     )
 
 

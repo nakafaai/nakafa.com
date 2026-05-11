@@ -3,8 +3,10 @@
 import sympy as sp
 
 from cas import parse
-from cas.format import result
+from cas.format import expression_text, result, step
 from cas.schema import MathRequest, MathResult
+
+EQUALS = expression_text("equals", "=")
 
 
 def expand(request: MathRequest) -> MathResult:
@@ -23,6 +25,8 @@ def expand(request: MathRequest) -> MathResult:
         primary=expr,
         secondary=output,
         reason="SymPy computed the requested series expansion.",
+        steps=[step("series", primary=expr, relation=EQUALS, secondary=output)],
+        stepStatus="partial",
     )
 
 
@@ -40,6 +44,15 @@ def summation(request: MathRequest) -> MathResult:
         primary=expr,
         secondary=output,
         reason="SymPy computed the summation.",
+        steps=[
+            step(
+                "summation",
+                primary=sp.Sum(expr, (variable, lower, upper)),
+                relation=EQUALS,
+                secondary=output,
+            )
+        ],
+        stepStatus="partial",
     )
 
 
@@ -57,4 +70,13 @@ def product(request: MathRequest) -> MathResult:
         primary=expr,
         secondary=output,
         reason="SymPy computed the product.",
+        steps=[
+            step(
+                "product",
+                primary=sp.Product(expr, (variable, lower, upper)),
+                relation=EQUALS,
+                secondary=output,
+            )
+        ],
+        stepStatus="partial",
     )

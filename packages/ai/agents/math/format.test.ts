@@ -23,6 +23,25 @@ const result = {
     expression: "42",
     latex: "42",
   },
+  stepStatus: "complete",
+  steps: [
+    {
+      action: "evaluate",
+      items: [],
+      primary: {
+        expression: "6 * 7",
+        latex: "6 \\cdot 7",
+      },
+      relation: {
+        expression: "equals",
+        latex: "=",
+      },
+      secondary: {
+        expression: "42",
+        latex: "42",
+      },
+    },
+  ],
   status: "verified",
 } satisfies MathResult;
 
@@ -54,7 +73,12 @@ describe("math data formatter", () => {
       kind: "evaluate",
       result: {
         ...result,
-        conditions: ["x \\neq 3"],
+        conditions: [
+          {
+            expression: "Ne(x, 3)",
+            latex: "x \\neq 3",
+          },
+        ],
         items: [
           {
             label: "counterexample",
@@ -70,8 +94,9 @@ describe("math data formatter", () => {
     const output = formatMathData(data);
 
     expect(output).toContain("- Secondary: 42");
+    expect(output).toContain("- Step (evaluate): 6 * 7 equals 42");
     expect(output).toContain("- counterexample: {x: 1}");
-    expect(output).toContain("- Condition: x \\neq 3");
+    expect(output).toContain("- Condition: Ne(x, 3)");
   });
 
   it("formats complete data without optional secondary details", () => {
@@ -83,6 +108,7 @@ describe("math data formatter", () => {
         conditions: [],
         items: [],
         secondary: undefined,
+        steps: [],
       },
       status: "verified",
       summary: result.reason,
@@ -92,5 +118,33 @@ describe("math data formatter", () => {
 
     expect(output).not.toContain("Secondary");
     expect(output).not.toContain("Condition");
+  });
+
+  it("formats step data without optional relation or secondary", () => {
+    const data = {
+      input,
+      kind: "evaluate",
+      result: {
+        ...result,
+        steps: [
+          {
+            action: "domain",
+            items: [],
+            primary: {
+              expression: "x",
+              latex: "x",
+            },
+            relation: undefined,
+            secondary: undefined,
+          },
+        ],
+      },
+      status: "verified",
+      summary: result.reason,
+    } satisfies MathData;
+
+    const output = formatMathData(data);
+
+    expect(output).toContain("- Step (domain): x");
   });
 });
