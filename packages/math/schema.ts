@@ -134,11 +134,26 @@ export const MathPointSchema = Schema.Struct({
 
 const stringArraySchema = Schema.Array(valueInputSchema).pipe(Schema.mutable);
 
+const nonEmptyStringArraySchema = Schema.Array(valueInputSchema).pipe(
+  Schema.minItems(1),
+  Schema.mutable
+);
+
 const pointArraySchema = Schema.Array(MathPointSchema).pipe(Schema.mutable);
 
-const matrixSchema = Schema.Array(
-  Schema.Array(valueInputSchema).pipe(Schema.mutable)
-)
+const nonEmptyPointArraySchema = Schema.Array(MathPointSchema).pipe(
+  Schema.minItems(1),
+  Schema.mutable
+);
+
+const matrixRowSchema = Schema.Array(valueInputSchema).pipe(
+  Schema.minItems(1),
+  Schema.mutable
+);
+
+const matrixSchema = Schema.Array(matrixRowSchema)
+  .pipe(Schema.mutable)
+  .pipe(Schema.minItems(1))
   .pipe(Schema.mutable)
   .annotations({
     description:
@@ -154,13 +169,11 @@ export const MathArithmeticInputSchema = Schema.Struct({
   .pipe(Schema.mutable)
   .annotations({ description: "Exact arithmetic tool input." });
 
-export const MathAlgebraInputSchema = Schema.Struct({
-  expression: Schema.optional(expressionInputSchema),
-  left: Schema.optional(expressionInputSchema),
+const MathAlgebraExpressionInputSchema = Schema.Struct({
+  expression: expressionInputSchema,
   operation: Schema.Literal(
     "apart",
     "cancel",
-    "compare",
     "domain",
     "expand",
     "factor",
@@ -168,24 +181,34 @@ export const MathAlgebraInputSchema = Schema.Struct({
     "simplify",
     "together"
   ).annotations({
-    description:
-      "Choose the algebra operation: simplify, factor, expand, cancel, combine, rationalize, domain, or compare.",
+    description: "Choose the algebra operation for the provided expression.",
   }),
-  right: Schema.optional(expressionInputSchema),
   variable: Schema.optional(variableInputSchema),
-})
-  .pipe(Schema.mutable)
-  .annotations({ description: "Symbolic algebra tool input." });
+}).pipe(Schema.mutable);
 
-export const MathEquationInputSchema = Schema.Struct({
-  expression: Schema.optional(expressionInputSchema),
-  expressions: Schema.optional(
-    stringArraySchema.annotations({
-      description: "Equations or inequalities for systems.",
-    })
-  ),
+const MathAlgebraCompareInputSchema = Schema.Struct({
+  left: expressionInputSchema,
+  operation: Schema.Literal("compare").annotations({
+    description: "Compare the left and right expressions for equivalence.",
+  }),
+  right: expressionInputSchema,
+  variable: Schema.optional(variableInputSchema),
+}).pipe(Schema.mutable);
+
+export const MathAlgebraInputSchema = Schema.Union(
+  MathAlgebraExpressionInputSchema,
+  MathAlgebraCompareInputSchema
+)
+  .pipe(Schema.mutable)
+  .annotations({
+    description:
+      "Symbolic algebra tool input. Use expression for all algebra operations except compare; use left and right for compare.",
+  });
+
+const MathEquationSingleInputSchema = Schema.Struct({
+  expression: expressionInputSchema,
   operation: Schema.Literal("roots", "solve").annotations({
-    description: "Solve equations, systems, inequalities, or polynomial roots.",
+    description: "Solve one equation, inequality, or polynomial expression.",
   }),
   variable: Schema.optional(variableInputSchema),
   variables: Schema.optional(
@@ -193,85 +216,233 @@ export const MathEquationInputSchema = Schema.Struct({
       description: "Variables to solve for, for example [x, y].",
     })
   ),
-})
-  .pipe(Schema.mutable)
-  .annotations({ description: "Equation solving tool input." });
+}).pipe(Schema.mutable);
 
-export const MathCalculusInputSchema = Schema.Struct({
-  expression: expressionInputSchema,
-  lower: Schema.optional(boundInputSchema),
-  operation: Schema.Literal("differentiate", "integrate", "limit").annotations({
-    description: "Differentiate, integrate, or find a limit.",
+const MathEquationSystemInputSchema = Schema.Struct({
+  expressions: nonEmptyStringArraySchema.annotations({
+    description: "Equations or inequalities for systems.",
   }),
-  point: Schema.optional(pointInputSchema),
-  upper: Schema.optional(boundInputSchema),
-  variable: Schema.optional(variableInputSchema),
-})
-  .pipe(Schema.mutable)
-  .annotations({ description: "Calculus tool input." });
-
-export const MathSeriesInputSchema = Schema.Struct({
-  expression: expressionInputSchema,
-  lower: Schema.optional(boundInputSchema),
-  operation: Schema.Literal("product", "series", "summation").annotations({
-    description: "Compute a series expansion, summation, or product.",
+  operation: Schema.Literal("solve").annotations({
+    description: "Solve a system of equations or inequalities.",
   }),
-  order: Schema.optional(
-    Schema.Number.annotations({
-      description: "Series expansion order when operation is series.",
+  variables: Schema.optional(
+    stringArraySchema.annotations({
+      description: "Variables to solve for, for example [x, y].",
     })
   ),
-  point: Schema.optional(pointInputSchema),
-  upper: Schema.optional(boundInputSchema),
-  variable: Schema.optional(variableInputSchema),
-})
-  .pipe(Schema.mutable)
-  .annotations({ description: "Series, summation, and product tool input." });
+}).pipe(Schema.mutable);
 
-export const MathMatrixInputSchema = Schema.Struct({
+export const MathEquationInputSchema = Schema.Union(
+  MathEquationSingleInputSchema,
+  MathEquationSystemInputSchema
+)
+  .pipe(Schema.mutable)
+  .annotations({
+    description:
+      "Equation solving tool input. Use expression for one equation or expressions for a system.",
+  });
+
+const MathGeometryPointsInputSchema = Schema.Struct({
+  operation: Schema.Literal(
+    "circle",
+    "distance",
+    "line",
+    "midpoint",
+    "slope"
+  ).annotations({
+    description: "Choose the coordinate geometry operation for points.",
+  }),
+  points: nonEmptyPointArraySchema.annotations({
+    description: "Coordinate points for geometry operations.",
+  }),
+}).pipe(Schema.mutable);
+
+const MathGeometryIntersectionExpressionsInputSchema = Schema.Struct({
+  expressions: nonEmptyStringArraySchema.annotations({
+    description: "Equations whose intersections should be found.",
+  }),
+  operation: Schema.Literal("intersection").annotations({
+    description: "Find intersections from equations.",
+  }),
+}).pipe(Schema.mutable);
+
+const MathGeometryIntersectionPointsInputSchema = Schema.Struct({
+  operation: Schema.Literal("intersection").annotations({
+    description: "Find intersections from point-defined lines.",
+  }),
+  points: nonEmptyPointArraySchema.annotations({
+    description:
+      "Four points defining two lines, where points 1-2 form the first line and points 3-4 form the second.",
+  }),
+}).pipe(Schema.mutable);
+
+export const MathGeometryInputSchema = Schema.Union(
+  MathGeometryPointsInputSchema,
+  MathGeometryIntersectionExpressionsInputSchema,
+  MathGeometryIntersectionPointsInputSchema
+)
+  .pipe(Schema.mutable)
+  .annotations({
+    description:
+      "Coordinate geometry tool input. Use points for point-based geometry and expressions for equation intersections.",
+  });
+
+const MathDiscreteValuesInputSchema = Schema.Struct({
+  operation: Schema.Literal("gcd", "lcm").annotations({
+    description: "Compute a result from a list of integers.",
+  }),
+  values: nonEmptyStringArraySchema.annotations({
+    description: "Integer values, for example [84, 30].",
+  }),
+}).pipe(Schema.mutable);
+
+const MathDiscreteIntegerInputSchema = Schema.Struct({
+  n: valueInputSchema,
+  operation: Schema.Literal("is_prime", "prime_factorization").annotations({
+    description: "Inspect one integer.",
+  }),
+}).pipe(Schema.mutable);
+
+const MathDiscreteModularInputSchema = Schema.Struct({
+  modulus: valueInputSchema,
+  n: valueInputSchema,
+  operation: Schema.Literal("modular").annotations({
+    description: "Compute n modulo modulus.",
+  }),
+}).pipe(Schema.mutable);
+
+const MathDiscreteCountInputSchema = Schema.Struct({
+  k: valueInputSchema,
+  n: valueInputSchema,
+  operation: Schema.Literal("combination", "permutation").annotations({
+    description: "Compute combinations or permutations from n and k.",
+  }),
+}).pipe(Schema.mutable);
+
+export const MathDiscreteInputSchema = Schema.Union(
+  MathDiscreteValuesInputSchema,
+  MathDiscreteIntegerInputSchema,
+  MathDiscreteModularInputSchema,
+  MathDiscreteCountInputSchema
+)
+  .pipe(Schema.mutable)
+  .annotations({
+    description:
+      "Discrete math and number theory tool input. Required fields depend on the selected operation.",
+  });
+
+const MathMatrixUnaryInputSchema = Schema.Struct({
   matrix: matrixSchema,
   operation: Schema.Literal(
     "determinant",
     "eigenvalues",
     "eigenvectors",
     "inverse",
-    "linear_system",
-    "matrix_multiply",
     "rank",
     "rref"
   ).annotations({
-    description:
-      "Choose the linear algebra operation for the provided matrix data.",
+    description: "Choose the linear algebra operation for one matrix.",
   }),
-  right_matrix: Schema.optional(matrixSchema),
-  vector: Schema.optional(
-    stringArraySchema.annotations({
-      description: "Right-hand side vector for a linear system.",
+}).pipe(Schema.mutable);
+
+const MathMatrixMultiplyInputSchema = Schema.Struct({
+  matrix: matrixSchema,
+  operation: Schema.Literal("matrix_multiply").annotations({
+    description: "Multiply two matrices.",
+  }),
+  right_matrix: matrixSchema,
+}).pipe(Schema.mutable);
+
+const MathLinearSystemInputSchema = Schema.Struct({
+  matrix: matrixSchema,
+  operation: Schema.Literal("linear_system").annotations({
+    description: "Solve a linear system from coefficient matrix and vector.",
+  }),
+  vector: nonEmptyStringArraySchema.annotations({
+    description: "Right-hand side vector for a linear system.",
+  }),
+}).pipe(Schema.mutable);
+
+export const MathMatrixInputSchema = Schema.Union(
+  MathMatrixUnaryInputSchema,
+  MathMatrixMultiplyInputSchema,
+  MathLinearSystemInputSchema
+)
+  .pipe(Schema.mutable)
+  .annotations({
+    description:
+      "Linear algebra tool input. Matrix multiplication requires right_matrix; linear systems require vector.",
+  });
+
+const MathSeriesExpansionInputSchema = Schema.Struct({
+  expression: expressionInputSchema,
+  operation: Schema.Literal("series").annotations({
+    description: "Compute a series expansion.",
+  }),
+  order: Schema.optional(
+    Schema.Number.annotations({
+      description: "Series expansion order.",
     })
   ),
-})
-  .pipe(Schema.mutable)
-  .annotations({ description: "Linear algebra tool input." });
+  point: Schema.optional(pointInputSchema),
+  variable: Schema.optional(variableInputSchema),
+}).pipe(Schema.mutable);
 
-export const MathStatisticsInputSchema = Schema.Struct({
-  expression: Schema.optional(expressionInputSchema),
+const MathSeriesRangeInputSchema = Schema.Struct({
+  expression: expressionInputSchema,
+  lower: boundInputSchema,
+  operation: Schema.Literal("product", "summation").annotations({
+    description: "Compute a finite or symbolic range operation.",
+  }),
+  upper: boundInputSchema,
+  variable: Schema.optional(variableInputSchema),
+}).pipe(Schema.mutable);
+
+export const MathSeriesInputSchema = Schema.Union(
+  MathSeriesExpansionInputSchema,
+  MathSeriesRangeInputSchema
+)
+  .pipe(Schema.mutable)
+  .annotations({
+    description:
+      "Series, summation, and product tool input. Summation and product require lower and upper bounds.",
+  });
+
+const MathStatisticsDatasetInputSchema = Schema.Struct({
   operation: Schema.Literal(
     "mean",
     "median",
     "mode",
     "quartiles",
     "standard_deviation",
-    "variance",
-    "z_score"
+    "variance"
   ).annotations({
     description: "Choose the descriptive statistics operation.",
   }),
-  values: stringArraySchema.annotations({
+  values: nonEmptyStringArraySchema.annotations({
     description: "Dataset values as exact strings.",
   }),
-})
+}).pipe(Schema.mutable);
+
+const MathZScoreInputSchema = Schema.Struct({
+  expression: expressionInputSchema,
+  operation: Schema.Literal("z_score").annotations({
+    description: "Compute a z-score for one target value in a dataset.",
+  }),
+  values: nonEmptyStringArraySchema.annotations({
+    description: "Dataset values as exact strings.",
+  }),
+}).pipe(Schema.mutable);
+
+export const MathStatisticsInputSchema = Schema.Union(
+  MathStatisticsDatasetInputSchema,
+  MathZScoreInputSchema
+)
   .pipe(Schema.mutable)
-  .annotations({ description: "Statistics tool input." });
+  .annotations({
+    description:
+      "Statistics tool input. z_score requires both a target expression and dataset values.",
+  });
 
 export const MathProbabilityInputSchema = Schema.Struct({
   distribution: Schema.NonEmptyString.annotations({
@@ -297,46 +468,18 @@ export const MathProbabilityInputSchema = Schema.Struct({
   .pipe(Schema.mutable)
   .annotations({ description: "Probability distribution tool input." });
 
-export const MathGeometryInputSchema = Schema.Struct({
-  expressions: Schema.optional(stringArraySchema),
-  operation: Schema.Literal(
-    "circle",
-    "distance",
-    "intersection",
-    "line",
-    "midpoint",
-    "slope"
-  ).annotations({
-    description: "Choose the coordinate geometry operation.",
+export const MathCalculusInputSchema = Schema.Struct({
+  expression: expressionInputSchema,
+  lower: Schema.optional(boundInputSchema),
+  operation: Schema.Literal("differentiate", "integrate", "limit").annotations({
+    description: "Differentiate, integrate, or find a limit.",
   }),
-  points: Schema.optional(
-    pointArraySchema.annotations({
-      description: "Coordinate points for geometry operations.",
-    })
-  ),
+  point: Schema.optional(pointInputSchema),
+  upper: Schema.optional(boundInputSchema),
+  variable: Schema.optional(variableInputSchema),
 })
   .pipe(Schema.mutable)
-  .annotations({ description: "Coordinate geometry tool input." });
-
-export const MathDiscreteInputSchema = Schema.Struct({
-  k: Schema.optional(valueInputSchema),
-  modulus: Schema.optional(valueInputSchema),
-  n: Schema.optional(valueInputSchema),
-  operation: Schema.Literal(
-    "combination",
-    "gcd",
-    "is_prime",
-    "lcm",
-    "modular",
-    "permutation",
-    "prime_factorization"
-  ).annotations({
-    description: "Choose the discrete math or number theory operation.",
-  }),
-  values: Schema.optional(stringArraySchema),
-})
-  .pipe(Schema.mutable)
-  .annotations({ description: "Discrete math and number theory tool input." });
+  .annotations({ description: "Calculus tool input." });
 
 export const MathRequestSchema = Schema.Struct({
   distribution: Schema.optional(Schema.String),
