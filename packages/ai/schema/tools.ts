@@ -35,7 +35,7 @@ export const ResearchToolInputSchema = Schema.Struct({
 export const MathToolInputSchema = Schema.Struct({
   query: Schema.NonEmptyString.annotations({
     description:
-      "The math request to verify through deterministic CAS evidence. Include expressions or data, target operation, variables, assumptions, and whether the user needs arithmetic, algebra, equations, calculus, series, matrices, statistics, probability, geometry, or discrete math.",
+      "The math request to verify through deterministic math evidence. Include expressions or data, target operation, variables, assumptions, and whether the user needs arithmetic, algebra, equations, calculus, series, matrices, statistics, probability, geometry, or discrete math.",
   }),
 })
   .pipe(Schema.mutable)

@@ -92,7 +92,13 @@ def compare(request: MathRequest) -> MathResult:
                     primary=left - right,
                     relation=EQUALS,
                     secondary=difference,
-                )
+                ),
+                step(
+                    "compare",
+                    primary=left,
+                    relation=expression_text("same as", "\\equiv"),
+                    secondary=right,
+                ),
             ],
             stepStatus="complete",
         )

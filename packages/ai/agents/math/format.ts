@@ -7,15 +7,15 @@ import type {
 } from "@repo/math/schema";
 import dedent from "dedent";
 
-/** Formats deterministic math evidence as model-readable markdown. */
+/** Formats deterministic checked work as model-readable markdown. */
 export function formatMathData(data: MathData) {
   if (data.status === "loading") {
-    return "Math evidence is loading.";
+    return "Checked math work is loading.";
   }
 
   if (data.status === "error") {
     return dedent(`
-      # Math Evidence
+      # Checked Math Work
 
       - Status: error
       - Operation: ${data.kind}
@@ -24,22 +24,25 @@ export function formatMathData(data: MathData) {
   }
 
   return dedent(`
-    # Math Evidence
+    # Checked Math Work
 
     - Status: ${data.status}
-    - Operation: ${data.result.operation}
-    - Step status: ${data.result.stepStatus}
-    - Primary: ${data.result.primary.expression}
+      - Operation: ${data.result.operation}
+      - Step status: ${data.result.stepStatus}
+      - Primary: ${data.result.primary.expression}
     ${formatSecondary(data.result)}
     ${formatSteps(data.result.steps)}
     ${formatItems(data.result.items)}
     ${formatConditions(data.result.conditions)}
-    - Reason: ${data.result.reason}
   `);
 }
 
-/** Formats the optional second expression in the CAS result. */
+/** Formats the optional second expression in the math result. */
 function formatSecondary(result: MathResult) {
+  if (result.steps.length > 0) {
+    return "";
+  }
+
   if (!result.secondary) {
     return "";
   }
@@ -47,7 +50,7 @@ function formatSecondary(result: MathResult) {
   return `- Secondary: ${result.secondary.expression}`;
 }
 
-/** Formats deterministic CAS derivation steps as model-readable bullets. */
+/** Formats deterministic math derivation steps as model-readable bullets. */
 function formatSteps(steps: readonly MathStep[]) {
   if (steps.length === 0) {
     return "";
@@ -62,7 +65,7 @@ function formatSteps(steps: readonly MathStep[]) {
     .join("\n");
 }
 
-/** Formats supporting CAS rows as model-readable markdown bullets. */
+/** Formats supporting math rows as model-readable markdown bullets. */
 function formatItems(items: readonly MathItem[]) {
   if (items.length === 0) {
     return "";
@@ -71,7 +74,7 @@ function formatItems(items: readonly MathItem[]) {
   return items.map((item) => `- ${item.label}: ${item.value}`).join("\n");
 }
 
-/** Formats CAS conditions such as domain restrictions. */
+/** Formats math conditions such as domain restrictions. */
 function formatConditions(conditions: readonly MathExpression[]) {
   if (conditions.length === 0) {
     return "";

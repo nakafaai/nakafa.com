@@ -23,12 +23,21 @@ describe("mathPrompt", () => {
       "Never label math as verified unless a tool result says verified."
     );
     expect(prompt).toContain(
-      "Do not repeat every CAS step in prose after the math evidence has rendered it."
+      "Teach from the checked work. Treat the math steps as a worked example for a short student-friendly explanation."
     );
-    expect(prompt).toContain("verified, contradicted, inconclusive, or error");
+    expect(prompt).toContain(
+      "what we are finding, why the next step is valid, and what result follows"
+    );
+    expect(prompt).toContain("Use the user's locale");
+    expect(prompt).toContain(
+      "Do not invent derivation steps that are not present in the checked work."
+    );
+    expect(prompt).toContain("Do not mention internal system names");
+    expect(prompt).toContain("normal classroom language");
+    expect(prompt).toContain("check status");
   });
 
-  it("routes broad math groups through CAS tools", () => {
+  it("routes broad math groups through deterministic math tools", () => {
     const prompt = mathPrompt(base);
 
     expect(prompt).toContain("equation: solving equations");

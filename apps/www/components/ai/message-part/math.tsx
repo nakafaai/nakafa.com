@@ -107,7 +107,7 @@ export const MathPart = memo(({ message }: Props) => {
 });
 MathPart.displayName = "MathPart";
 
-/** Renders deterministic CAS evidence without extra card chrome. */
+/** Renders deterministic math evidence without extra card chrome. */
 function MathEvidence({ message }: Props) {
   const t = useTranslations("Ai");
 
@@ -122,14 +122,16 @@ function MathEvidence({ message }: Props) {
   return (
     <div className="flex max-w-full flex-col gap-2">
       <StepList steps={message.result.steps} />
-      <ResultLine result={message.result} />
+      {message.result.steps.length === 0 ? (
+        <ResultLine result={message.result} />
+      ) : null}
       <ItemList items={message.result.items} />
       <ConditionList conditions={message.result.conditions} />
     </div>
   );
 }
 
-/** Renders deterministic CAS steps before the final result. */
+/** Renders deterministic math steps before the final result. */
 function StepList({ steps }: { steps: readonly MathStep[] }) {
   if (steps.length === 0) {
     return null;
@@ -147,7 +149,7 @@ function StepList({ steps }: { steps: readonly MathStep[] }) {
   );
 }
 
-/** Renders one CAS derivation step using the relation supplied by CAS. */
+/** Renders one derivation step using the relation supplied by math evidence. */
 function StepRow({ step }: { step: MathStep }) {
   return (
     <div className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-1">
@@ -158,7 +160,7 @@ function StepRow({ step }: { step: MathStep }) {
   );
 }
 
-/** Renders the main CAS result in a sentence-like shape students can scan. */
+/** Renders the main math result in a sentence-like shape students can scan. */
 function ResultLine({ result }: { result: MathResult }) {
   if (!result.secondary) {
     return <Expression value={result.primary.latex} />;
@@ -205,7 +207,7 @@ function Expression({ value }: { value: string }) {
   );
 }
 
-/** Renders extra CAS rows, such as roots, modes, or eigenvalues. */
+/** Renders extra math rows, such as roots, modes, or eigenvalues. */
 function ItemList({ items }: { items: readonly MathItem[] }) {
   if (items.length === 0) {
     return null;
@@ -220,7 +222,7 @@ function ItemList({ items }: { items: readonly MathItem[] }) {
   );
 }
 
-/** Renders one supporting CAS item with a localized student-facing label. */
+/** Renders one supporting math item with a localized student-facing label. */
 function ItemRow({ item }: { item: MathItem }) {
   const t = useTranslations("Ai");
 
@@ -258,7 +260,7 @@ function ConditionList({
   );
 }
 
-/** Maps CAS item labels to stable translation keys. */
+/** Maps math item labels to stable translation keys. */
 function getItemLabelKey(label: string) {
   switch (label) {
     case "counterexample":
@@ -288,7 +290,7 @@ function getItemLabelKey(label: string) {
   }
 }
 
-/** Selects the math-specific icon for each CAS operation group. */
+/** Selects the math-specific icon for each operation group. */
 function getIcon(operation: MathOperation) {
   switch (operation) {
     case "evaluate":

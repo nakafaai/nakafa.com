@@ -5,7 +5,7 @@ import { MathService } from "@repo/math/service";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";
 
-/** Runs one CAS request and writes the math evidence data part. */
+/** Runs one deterministic math request and writes the math evidence data part. */
 export function compute({
   input,
   toolCallId,
@@ -35,7 +35,7 @@ export function compute({
           kind: result.operation,
           result,
           status: result.status,
-          summary: result.reason,
+          summary: result.status,
         } satisfies MathData;
 
         return data;

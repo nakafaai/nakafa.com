@@ -188,7 +188,7 @@ describe("MathService", () => {
     }
 
     expect(exit.cause.toString()).toContain(
-      "CAS request failed with status 500."
+      "Math request failed with status 500."
     );
   });
 
@@ -217,7 +217,7 @@ describe("MathService", () => {
     }
 
     expect(exit.cause.toString()).toContain(
-      "CAS request failed with status 404."
+      "Math request failed with status 404."
     );
     expect(exit.cause.toString()).not.toContain("<!DOCTYPE html>");
   });
@@ -242,7 +242,7 @@ describe("MathService", () => {
     }
 
     expect(exit.cause.toString()).toContain(
-      "Unable to reach the Nakafa CAS service."
+      "Unable to reach the Nakafa math service."
     );
   });
 
@@ -266,7 +266,7 @@ describe("MathService", () => {
     }
 
     expect(exit.cause.toString()).toContain(
-      "CAS returned an unreadable JSON response."
+      "Math service returned an unreadable JSON response."
     );
   });
 
@@ -316,7 +316,7 @@ describe("MathService", () => {
     }
 
     expect(exit.cause.toString()).toContain(
-      "CAS request failed with status 500."
+      "Math request failed with status 500."
     );
   });
 
@@ -348,7 +348,7 @@ describe("MathService", () => {
     }
 
     expect(exit.cause.toString()).toContain(
-      "CAS request failed with status 500."
+      "Math request failed with status 500."
     );
   });
 });

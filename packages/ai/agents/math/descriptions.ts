@@ -1,5 +1,5 @@
 /**
- * Describes Nina's deterministic CAS-backed math tools.
+ * Describes Nina's deterministic math tools.
  *
  * References:
  * - AI SDK tool descriptions:
@@ -29,7 +29,7 @@ export const mathStatistics =
   "Use for descriptive statistics: mean, median, mode, variance, standard deviation, quartiles, and z-score.";
 
 export const mathProbability =
-  "Use for probability distributions supported by the CAS, including expected value and variance for named distributions.";
+  "Use for supported probability distributions, including expected value and variance for named distributions.";
 
 export const mathGeometry =
   "Use for coordinate geometry: distance, midpoint, slope, line equations, circle equations, and intersections.";

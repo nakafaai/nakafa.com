@@ -89,7 +89,7 @@ export const MathStepStatusSchema = Schema.Literal(
   "unavailable"
 ).annotations({
   description:
-    "Whether the CAS could provide complete, partial, or unavailable derivation steps.",
+    "Whether the verified math evidence includes complete, partial, or unavailable derivation steps.",
 });
 
 export const MathExpressionSchema = Schema.Struct({
@@ -114,7 +114,7 @@ export const MathItemSchema = Schema.Struct({
 export const MathStepSchema = Schema.Struct({
   action: Schema.NonEmptyString.annotations({
     description:
-      "CAS step action, for example divide, factor, cancel, or compare.",
+      "Math step action, for example divide, factor, cancel, or compare.",
   }),
   items: Schema.Array(MathItemSchema).pipe(Schema.mutable),
   primary: MathExpressionSchema,
@@ -124,7 +124,7 @@ export const MathStepSchema = Schema.Struct({
   .pipe(Schema.mutable)
   .annotations({
     description:
-      "One deterministic math step emitted by the CAS for student-facing evidence.",
+      "One deterministic math step emitted for student-facing evidence.",
   });
 
 export const MathPointSchema = Schema.Struct({

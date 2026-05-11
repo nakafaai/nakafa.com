@@ -30,6 +30,7 @@ def test_evaluate_exact_arithmetic() -> None:
     assert result.secondary
     assert result.secondary.expression == "42"
     assert result.stepStatus == "complete"
+    assert result.steps[0].action == "evaluate"
     assert result.steps[0].secondary
     assert result.steps[0].secondary.expression == "42"
 
@@ -124,6 +125,7 @@ def test_compare_tracks_domain_conditions() -> None:
 
     assert result.status == "verified"
     assert result.conditions[0].latex == "x \\neq 3"
+    assert [step.action for step in result.steps] == ["compare", "compare"]
 
 
 def test_trig_identity_is_verified() -> None:
@@ -146,6 +148,7 @@ def test_compare_finds_counterexample() -> None:
 
     assert result.status == "contradicted"
     assert result.items[0].label == "counterexample"
+    assert result.steps[0].action == "compare"
 
 
 def test_compare_can_be_inconclusive() -> None:

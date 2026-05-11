@@ -90,7 +90,7 @@ describe("math compute tool", () => {
       )
     );
 
-    expect(output).toContain("# Math Evidence");
+    expect(output).toContain("# Checked Math Work");
     expect(output).toContain("- Status: verified");
     expect(parts).toEqual([
       expect.objectContaining({
@@ -108,7 +108,7 @@ describe("math compute tool", () => {
           kind: "evaluate",
           result,
           status: "verified",
-          summary: result.reason,
+          summary: "verified",
         }),
         id: "math-1",
         type: "data-math",
@@ -116,7 +116,7 @@ describe("math compute tool", () => {
     ]);
   });
 
-  it("writes an error data part for CAS request failures", async () => {
+  it("writes an error data part for math request failures", async () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
     const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
@@ -132,12 +132,12 @@ describe("math compute tool", () => {
 
     expect(output).toContain("- Status: error");
     expect(output).toContain(
-      "- Error: Unable to reach the Nakafa CAS service."
+      "- Error: Unable to reach the Nakafa math service."
     );
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
         data: expect.objectContaining({
-          error: "Unable to reach the Nakafa CAS service.",
+          error: "Unable to reach the Nakafa math service.",
           input,
           kind: "evaluate",
           status: "error",
@@ -148,7 +148,7 @@ describe("math compute tool", () => {
     );
   });
 
-  it("writes an error data part for CAS response failures", async () => {
+  it("writes an error data part for math response failures", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       Response.json({ status: "verified" })
     );

@@ -278,7 +278,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
               }),
               [TOOL_NAMES.math]: tool({
                 description:
-                  "Verify math with deterministic CAS evidence for arithmetic, algebra, equations, calculus, series, matrices, statistics, probability, geometry, and discrete math.",
+                  "Verify math with deterministic evidence for arithmetic, algebra, equations, calculus, series, matrices, statistics, probability, geometry, and discrete math.",
                 inputSchema: mathToolInputSchema,
                 execute: ({ query }) =>
                   Effect.runPromise(

@@ -21,7 +21,7 @@ const CasErrorBodySchema = Schema.Union(
 );
 
 /**
- * Deterministic CAS-backed math service used by Nina.
+ * Deterministic math service used by Nina.
  *
  * References:
  * - Effect services: https://effect.website/docs/requirements-management/services/
@@ -51,7 +51,7 @@ export class MathService extends Effect.Service<MathService>()(
                 }),
               catch: () =>
                 new MathCasRequestError({
-                  message: "Unable to reach the Nakafa CAS service.",
+                  message: "Unable to reach the Nakafa math service.",
                 }),
             });
 
@@ -68,7 +68,7 @@ export class MathService extends Effect.Service<MathService>()(
               try: () => response.json(),
               catch: () =>
                 new MathCasResponseError({
-                  message: "CAS returned an unreadable JSON response.",
+                  message: "Math service returned an unreadable JSON response.",
                 }),
             });
 
@@ -86,7 +86,7 @@ export class MathService extends Effect.Service<MathService>()(
   }
 ) {}
 
-/** Reads CAS JSON errors without leaking framework HTML pages into chat. */
+/** Reads math service JSON errors without leaking framework HTML pages into chat. */
 const readResponseError = Effect.fn("Math.readResponseError")(function* (
   response: Response
 ) {
@@ -95,18 +95,18 @@ const readResponseError = Effect.fn("Math.readResponseError")(function* (
       try: () => response.text(),
       catch: () =>
         new MathCasRequestError({
-          message: "CAS returned an unreadable error response.",
+          message: "Math service returned an unreadable error response.",
           status: response.status,
         }),
     })
   );
 
   if (body._tag === "Left" || body.right.length === 0) {
-    return `CAS request failed with status ${response.status}.`;
+    return `Math request failed with status ${response.status}.`;
   }
 
   if (!response.headers.get("content-type")?.includes(JSON_CONTENT_TYPE)) {
-    return `CAS request failed with status ${response.status}.`;
+    return `Math request failed with status ${response.status}.`;
   }
 
   const decoded = yield* Effect.either(
@@ -114,7 +114,7 @@ const readResponseError = Effect.fn("Math.readResponseError")(function* (
   );
 
   if (decoded._tag === "Left") {
-    return `CAS request failed with status ${response.status}.`;
+    return `Math request failed with status ${response.status}.`;
   }
 
   if (typeof decoded.right.detail === "string") {

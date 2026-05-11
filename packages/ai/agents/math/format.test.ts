@@ -53,21 +53,21 @@ describe("math data formatter", () => {
       status: "loading",
     } satisfies MathData;
 
-    expect(formatMathData(data)).toBe("Math evidence is loading.");
+    expect(formatMathData(data)).toBe("Checked math work is loading.");
   });
 
   it("formats error data", () => {
     const data = {
-      error: "CAS is offline.",
+      error: "Math service is offline.",
       input,
       kind: "evaluate",
       status: "error",
     } satisfies MathData;
 
-    expect(formatMathData(data)).toContain("- Error: CAS is offline.");
+    expect(formatMathData(data)).toContain("- Error: Math service is offline.");
   });
 
-  it("formats complete data with secondary value, items, and conditions", () => {
+  it("formats complete data with steps, items, and conditions", () => {
     const data = {
       input,
       kind: "evaluate",
@@ -93,10 +93,27 @@ describe("math data formatter", () => {
 
     const output = formatMathData(data);
 
-    expect(output).toContain("- Secondary: 42");
+    expect(output).not.toContain("- Secondary: 42");
+    expect(output).not.toContain("Reason");
+    expect(output).not.toContain("SymPy");
     expect(output).toContain("- Step (evaluate): 6 * 7 equals 42");
     expect(output).toContain("- counterexample: {x: 1}");
     expect(output).toContain("- Condition: Ne(x, 3)");
+  });
+
+  it("formats secondary value when no derivation steps are available", () => {
+    const data = {
+      input,
+      kind: "evaluate",
+      result: {
+        ...result,
+        steps: [],
+      },
+      status: "verified",
+      summary: result.reason,
+    } satisfies MathData;
+
+    expect(formatMathData(data)).toContain("- Secondary: 42");
   });
 
   it("formats complete data without optional secondary details", () => {
