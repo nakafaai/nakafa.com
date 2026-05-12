@@ -11,7 +11,6 @@ import { memo, useCallback, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
-import remarkRehype from "remark-rehype";
 
 export interface HardenedMarkdownProps {
   allowedImagePrefixes?: ComponentProps<
@@ -58,7 +57,6 @@ const Block = memo(
         remarkPlugins={[
           remarkGfm,
           [remarkMath, { singleDollarTextMath: false }],
-          remarkRehype,
         ]}
         skipHtml
         {...props}
