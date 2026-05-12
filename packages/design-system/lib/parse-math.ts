@@ -26,7 +26,7 @@ const CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN =
   /```(?:\s*\n)?\s*\$\s*([\s\S]*?)\s*\$\s*(?:\n\s*)?```/g;
 const TRIPLE_BACKTICK_LENGTH = 3;
 const NUMBERED_LIST_PATTERN = /^(\s*)(\d+)\.\s+/;
-const BULLET_LIST_PATTERN = /^(\s*)[-]\s+/;
+const BULLET_LIST_PATTERN = /^(\s*)[-*+]\s+/;
 const NON_WHITESPACE_START_PATTERN = /^\S/;
 
 /**
@@ -93,14 +93,14 @@ function getListContext(
     // Check for numbered list (1., 2., etc.)
     const numberedMatch = line.match(NUMBERED_LIST_PATTERN);
     if (numberedMatch) {
-      const indentation = `${numberedMatch[1]}    `; // Base indentation + 4 spaces for content
+      const indentation = " ".repeat(numberedMatch[0].length);
       return { isInList: true, indentation };
     }
 
     // Check for bullet list (-, *, +)
     const bulletMatch = line.match(BULLET_LIST_PATTERN);
     if (bulletMatch) {
-      const indentation = `${bulletMatch[1]}  `; // Base indentation + 2 spaces for content
+      const indentation = " ".repeat(bulletMatch[0].length);
       return { isInList: true, indentation };
     }
 
