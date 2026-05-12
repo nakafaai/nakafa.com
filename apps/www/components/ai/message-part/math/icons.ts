@@ -21,27 +21,27 @@ import {
   DiceIcon,
   DistributionIcon,
   DivideSignCircleIcon,
+  EqualSignCircleIcon,
+  FirstBracketIcon,
   FunctionCircleIcon,
   FunctionOfXIcon,
   FunctionSquareIcon,
   GridTableIcon,
-  GroupIcon,
   GroupItemsIcon,
   HierarchySquare03Icon,
   Infinity01Icon,
-  LineIcon,
   MatrixIcon,
   MultiplicationSignCircleIcon,
   MultiplicationSignSquareIcon,
-  NThRootIcon,
+  NThRootCircleIcon,
   PathfinderIntersectIcon,
   PiCircleIcon,
   PiIcon,
   PlusMinusCircle01Icon,
   RankingIcon,
-  RootCircleIcon,
   RulerIcon,
   SecondBracketIcon,
+  SolidLine01Icon,
   SquareRootSquareIcon,
   Summation01Icon,
   SummationCircleIcon,
@@ -76,9 +76,9 @@ export function getMathIcon(operation: MathOperation) {
     case "compare":
       return CongruentToCircleIcon;
     case "solve":
-      return RootCircleIcon;
+      return EqualSignCircleIcon;
     case "roots":
-      return NThRootIcon;
+      return NThRootCircleIcon;
     case "differentiate":
       return FunctionOfXIcon;
     case "integrate":
@@ -134,13 +134,13 @@ export function getMathIcon(operation: MathOperation) {
     case "intersection":
       return PathfinderIntersectIcon;
     case "line":
-      return LineIcon;
+      return SolidLine01Icon;
     case "midpoint":
       return Coordinate01Icon;
     case "slope":
       return TriangleIcon;
     case "combination":
-      return GroupIcon;
+      return FirstBracketIcon;
     case "permutation":
       return ArrangeByNumbersOneNineIcon;
     case "gcd":

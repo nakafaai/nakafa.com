@@ -32,7 +32,7 @@ const pointInputSchema = Schema.NonEmptyString.annotations({
     "The point where the operation is evaluated, for example 0, oo, or pi.",
 });
 
-export const MathOperationSchema = Schema.Literal(
+export const mathOperations = [
   "apart",
   "cancel",
   "circle",
@@ -81,8 +81,10 @@ export const MathOperationSchema = Schema.Literal(
   "together",
   "variance",
   "variance_probability",
-  "z_score"
-);
+  "z_score",
+] as const;
+
+export const MathOperationSchema = Schema.Literal(...mathOperations);
 
 export const MathStatusSchema = Schema.Literal(
   "verified",

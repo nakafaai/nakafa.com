@@ -29,9 +29,12 @@ import { compute } from "@repo/ai/agents/math/tools/compute";
 import { model } from "@repo/ai/config/vercel";
 import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { MathAgentParams } from "@repo/ai/types/agents";
+import { mathOperations } from "@repo/math/schema";
 import { MathService } from "@repo/math/service";
 import { generateText, stepCountIs, tool } from "ai";
 import { Effect } from "effect";
+
+const MAX_MATH_STEPS = mathOperations.length;
 
 /**
  * Runs the math agent and returns text with token usage.
@@ -60,7 +63,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           })
         ),
       prepareStep: prepareMathStep,
-      stopWhen: stepCountIs(12),
+      stopWhen: stepCountIs(MAX_MATH_STEPS),
       system: mathPrompt({ locale, context }),
       tools: {
         algebra: tool({

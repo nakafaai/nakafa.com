@@ -41,7 +41,7 @@ import { writeSuggestions } from "@/app/api/chat/suggestions";
 import { trackUsage } from "@/app/api/chat/usage";
 import type { getUserInfo } from "@/app/api/chat/utils";
 
-const MAX_STEPS = 10;
+const MAX_ORCHESTRATOR_STEPS = 20;
 
 type Location = Parameters<typeof nakafaPrompt>[0]["userLocation"];
 type Translator = Awaited<ReturnType<typeof getTranslations>>;
@@ -213,7 +213,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
               userRole: user.info.role ?? undefined,
             }),
             messages: chat.finalMessages,
-            stopWhen: stepCountIs(MAX_STEPS),
+            stopWhen: stepCountIs(MAX_ORCHESTRATOR_STEPS),
             tools: {
               [TOOL_NAMES.nakafa]: tool({
                 description:
