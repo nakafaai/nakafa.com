@@ -36,6 +36,9 @@ export const nakafaWebSearch = createPrompt({
   detailedTaskInstructions: `
       ## Best Practices
 
+      - Preserve official-source, domain, URL, and recency constraints from the user task
+      - For official documentation requests, include the product name and official domain in the query
+      - Do not broaden a specific documentation request into a generic industry trend search
       - Search the web for up-to-date information
       - Explain the content to the user in a way that is easy to understand
       - Use exactly the citation field for inline citations as LINKS (not images)
@@ -127,6 +130,8 @@ export const nakafaScrape = createPrompt({
   detailedTaskInstructions: `
       ## Best Practices
 
+      - Scrape the exact URL when the user or prior search result points to an official source
+      - Prefer primary documentation, standards, papers, and vendor pages over social/video/listicle pages
       - Scrape the URL to get the content of the url
       - Explain the content to the user in a way that is easy to understand
       - If the content is not related to the user's question, tell the users that the content is not related to the user's question

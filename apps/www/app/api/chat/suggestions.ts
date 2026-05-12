@@ -5,21 +5,32 @@ import {
   model,
   order,
 } from "@repo/ai/config/vercel";
+import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import type { MyUIMessage } from "@repo/ai/types/message";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import {
   type ModelMessage,
   Output,
   streamText,
   type UIMessageStreamWriter,
 } from "ai";
-import { Effect } from "effect";
-import * as z from "zod";
+import { Effect, Schema } from "effect";
 
 interface Params {
+  locale: Locale;
   messages: ModelMessage[];
   writer: UIMessageStreamWriter<MyUIMessage>;
 }
+
+const SuggestionsOutputSchema = createEffectSchema(
+  Schema.Struct({
+    suggestions: Schema.Array(Schema.String).annotations({
+      description:
+        "Exactly 5 natural follow-up questions or requests from the student's perspective.",
+    }),
+  })
+);
 
 /**
  * Streams follow-up suggestions after the assistant response is complete.
@@ -28,21 +39,16 @@ interface Params {
  * @see https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text
  */
 export const writeSuggestions = Effect.fn("chat.writeSuggestions")(function* ({
+  locale,
   messages,
   writer,
 }: Params) {
   const suggestionsStream = streamText({
     model: model.languageModel(defaultModel),
-    system: nakafaSuggestions(),
+    system: nakafaSuggestions({ locale }),
     messages,
     output: Output.object({
-      schema: z.object({
-        suggestions: z
-          .array(z.string())
-          .describe(
-            "An array of suggested questions or statements that a user would want to ask or tell next"
-          ),
-      }),
+      schema: SuggestionsOutputSchema,
     }),
     providerOptions: {
       gateway: { order } satisfies GatewayProvider,

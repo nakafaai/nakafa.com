@@ -8,16 +8,16 @@
  *   https://docs.sympy.org/latest/index.html
  */
 export const mathArithmetic =
-  "Use for exact arithmetic and concrete numeric evaluation. Do not use for unresolved symbolic equations.";
+  "Use for exact arithmetic and concrete numeric evaluation. Send operation evaluate with expression copied from the user, for example 125 * 48 / 6. Do not use for unresolved symbolic equations.";
 
 export const mathAlgebra =
-  "Use for symbolic algebra. Send expression for simplify, factor, expand, cancel, together, apart, rationalize, or domain. Send left and right only for compare.";
+  "Use for symbolic algebra. Send expression for simplify, factor, expand, cancel, together, apart, rationalize, or domain. Use cancel specifically when the user asks to cancel, coret, mencoret, or membatalkan a common factor in a rational expression. For validity or equivalence questions like A = B, send operation compare with left as A and right as B.";
 
 export const mathEquation =
-  "Use for solving equations, systems, inequalities, and polynomial roots. Provide explicit variables when the user names them.";
+  "Use for solving equations, systems, inequalities, and polynomial roots. Send expression for one equation, expressions for a system, and provide explicit variables when the user names them.";
 
 export const mathCalculus =
-  "Use for derivatives, integrals, and limits. Provide the variable, and provide bounds or limit point when needed.";
+  "Use for derivatives, integrals, and limits. Send expression copied from the user, use variable x when the user does not name another variable, and provide bounds or limit point when needed.";
 
 export const mathSeries =
   "Use for Taylor or asymptotic series, finite or symbolic summations, and finite or symbolic products. Summation and product need expression, lower, and upper.";
@@ -26,13 +26,13 @@ export const mathMatrix =
   "Use for linear algebra: determinant, inverse, rank, RREF, eigenvalues, eigenvectors, matrix multiplication, and linear systems. Multiplication needs right_matrix; linear systems need vector.";
 
 export const mathStatistics =
-  "Use for descriptive statistics: mean, median, mode, variance, standard deviation, quartiles, and z-score. z-score needs the target expression and the dataset values.";
+  "Use for descriptive statistics: mean, median, mode, variance, standard deviation, quartiles, and z-score. Send values as the dataset; z-score also needs the target expression.";
 
 export const mathProbability =
-  "Use for supported probability distributions, including expected value and variance for named distributions.";
+  "Use for supported probability distributions. Use distribution when the user asks to inspect, check, or validate a named distribution and its parameters. Use expected_value or variance_probability only when the user asks for expectation or variance.";
 
 export const mathGeometry =
-  "Use for coordinate geometry: distance, midpoint, slope, line equations, circle equations, and intersections. Point-based operations need points; equation intersections need expressions.";
+  "Use for coordinate geometry: distance, midpoint, slope, line equations, circle equations, and intersections. Send points for point-based operations; send expressions for equation intersections.";
 
 export const mathDiscrete =
   "Use for discrete math and number theory: gcd, lcm, prime factorization, primality, modular arithmetic, permutations, and combinations. gcd and lcm need values; modular needs n and modulus; permutation and combination need n and k.";

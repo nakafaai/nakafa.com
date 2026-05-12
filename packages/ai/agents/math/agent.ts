@@ -11,7 +11,7 @@ import {
   mathStatistics,
 } from "@repo/ai/agents/math/descriptions";
 import { mathPrompt } from "@repo/ai/agents/math/prompt";
-import { createMathRequest } from "@repo/ai/agents/math/request";
+import { repairMathToolCall } from "@repo/ai/agents/math/repair";
 import {
   mathAlgebraInput,
   mathArithmeticInput,
@@ -51,6 +51,14 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
     generateText({
       messages: [{ role: "user", content: task }],
       model: model.languageModel(modelId),
+      experimental_repairToolCall: (options) =>
+        Effect.runPromise(
+          repairMathToolCall({
+            ...options,
+            modelId,
+            task,
+          })
+        ),
       prepareStep: prepareMathStep,
       stopWhen: stepCountIs(12),
       system: mathPrompt({ locale, context }),
@@ -60,7 +68,8 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
               compute({
-                input: createMathRequest(input),
+                input,
+                locale,
                 toolCallId,
                 writer,
               }).pipe(Effect.provide(MathService.Default))
@@ -73,7 +82,8 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
               compute({
-                input: createMathRequest(input),
+                input,
+                locale,
                 toolCallId,
                 writer,
               }).pipe(Effect.provide(MathService.Default))
@@ -86,7 +96,8 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
               compute({
-                input: createMathRequest(input),
+                input,
+                locale,
                 toolCallId,
                 writer,
               }).pipe(Effect.provide(MathService.Default))
@@ -99,7 +110,8 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
               compute({
-                input: createMathRequest(input),
+                input,
+                locale,
                 toolCallId,
                 writer,
               }).pipe(Effect.provide(MathService.Default))
@@ -112,7 +124,8 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
               compute({
-                input: createMathRequest(input),
+                input,
+                locale,
                 toolCallId,
                 writer,
               }).pipe(Effect.provide(MathService.Default))
@@ -125,7 +138,8 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
               compute({
-                input: createMathRequest(input),
+                input,
+                locale,
                 toolCallId,
                 writer,
               }).pipe(Effect.provide(MathService.Default))
@@ -138,7 +152,8 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
               compute({
-                input: createMathRequest(input),
+                input,
+                locale,
                 toolCallId,
                 writer,
               }).pipe(Effect.provide(MathService.Default))
@@ -151,7 +166,8 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
               compute({
-                input: createMathRequest(input),
+                input,
+                locale,
                 toolCallId,
                 writer,
               }).pipe(Effect.provide(MathService.Default))
@@ -164,7 +180,8 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
               compute({
-                input: createMathRequest(input),
+                input,
+                locale,
                 toolCallId,
                 writer,
               }).pipe(Effect.provide(MathService.Default))
@@ -177,7 +194,8 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
               compute({
-                input: createMathRequest(input),
+                input,
+                locale,
                 toolCallId,
                 writer,
               }).pipe(Effect.provide(MathService.Default))

@@ -55,7 +55,7 @@ describe("mapUIMessagePartsToDBParts", () => {
               expression: "2 * x + 3 * x",
               latex: "2x+3x",
             },
-            reason: "SymPy applied simplify to the expression.",
+            reason: "The simplify transformation was checked.",
             secondary: {
               expression: "5 * x",
               latex: "5x",

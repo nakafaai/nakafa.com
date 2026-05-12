@@ -6,6 +6,7 @@
   "globalEnv": ["ANALYZE", "NEXT_RUNTIME"],
   "globalPassThroughEnv": [
     "REDIS_URL",
+    "AI_SDK_DEVTOOLS",
     "BING_WEBMASTER_API_KEY",
     "AI_GATEWAY_API_KEY",
     "FIRECRAWL_API_KEY",

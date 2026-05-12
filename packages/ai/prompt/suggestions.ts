@@ -1,6 +1,39 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
+import type { Locale } from "@repo/utilities/locales";
 
-export function nakafaSuggestions() {
+interface Params {
+  locale: Locale;
+}
+
+const localeInstructions = {
+  en: {
+    language: "English",
+    example: `
+      ## After Nina solves an algebra problem:
+      - "Give me another similar problem to practice"
+      - "How do I know which method to use?"
+      - "What happens if I change these numbers?"
+      - "Show me where this is used in real life"
+      - "Explain the steps more slowly"
+    `,
+  },
+  id: {
+    language: "Indonesian",
+    example: `
+      ## Setelah Nina menyelesaikan soal aljabar:
+      - "Beri aku soal mirip untuk latihan"
+      - "Bagaimana cara tahu metode mana yang harus dipakai?"
+      - "Apa yang terjadi kalau angkanya diganti?"
+      - "Tunjukkan contoh penggunaannya di kehidupan sehari-hari"
+      - "Jelaskan langkahnya lebih pelan"
+    `,
+  },
+} satisfies Record<Locale, { example: string; language: string }>;
+
+/** Builds follow-up suggestion instructions for the active conversation locale. */
+export function nakafaSuggestions({ locale }: Params) {
+  const instruction = localeInstructions[locale];
+
   return createPrompt({
     // Core identity and role definition
     taskContext: `
@@ -18,7 +51,8 @@ export function nakafaSuggestions() {
       Use conversational language that real students actually use.
       CRITICAL: All suggestions must be from the student's perspective asking Nina questions or making requests to Nina.
       Never suggest what Nina should ask the student - only what the student would ask Nina.
-      MANDATORY: Always respond in the exact same language as the conversation.
+      MANDATORY: Always respond in ${instruction.language}.
+      Never switch languages inside a suggestion.
     `,
 
     // Suggestion guidelines and content focus
@@ -60,33 +94,7 @@ export function nakafaSuggestions() {
     examples: `
       # Examples
 
-      ## After Nina explains photosynthesis:
-      - "How do plants make food at night?"
-      - "Show me what happens when plants don't get sunlight"
-      - "Can plants survive without green leaves?"
-      - "Give me examples of photosynthesis in my garden"
-      - "Explain how this affects the air we breathe"
-
-      ## After Nina solves an algebra problem:
-      - "Give me another similar problem to practice"
-      - "How do I know which method to use?"
-      - "What happens if I change these numbers?"
-      - "Show me where this is used in real life"
-      - "Explain the steps more slowly"
-
-      ## After Nina helps with a job application email:
-      - "What should I include in the subject line?"
-      - "How do I follow up if they don't respond?"
-      - "Can you help me prepare for the interview?"
-      - "What questions should I ask them?"
-      - "How do I showcase my portfolio better?"
-
-      ## After Nina explains machine learning concepts:
-      - "What's the difference between supervised and unsupervised learning?"
-      - "Can you show me a real example of neural networks?"
-      - "How is AI being used in healthcare today?"
-      - "What programming languages are best for machine learning?"
-      - "Explain how deep learning works"
+      ${instruction.example}
 
       ## Bad Examples (FORBIDDEN):
       - "How do you create these suggestions?"

@@ -2,7 +2,11 @@ import {
   mathAlgebraInput,
   mathArithmeticInput,
   mathDiscreteInput,
+  mathEquationInput,
+  mathGeometryInput,
   mathMatrixInput,
+  mathSeriesInput,
+  mathStatisticsInput,
 } from "@repo/ai/agents/math/schema";
 import { asSchema } from "ai";
 import { describe, expect, it } from "vitest";
@@ -211,6 +215,136 @@ describe("math AI input schemas", () => {
         operation: "matrix_multiply",
         right_matrix: [["2"]],
       },
+    });
+  });
+
+  it("rejects malformed geometry points before tool execution", async () => {
+    const schema = asSchema(mathGeometryInput);
+    const validate = schema.validate;
+
+    if (!validate) {
+      throw new Error("Math geometry schema must validate model tool input.");
+    }
+
+    await expect(
+      Promise.resolve(
+        validate({
+          operation: "midpoint",
+          points: [
+            { x: "1", y: "2" },
+            { x: "4,y:", y: "6" },
+          ],
+        })
+      )
+    ).resolves.toMatchObject({
+      success: false,
+    });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          operation: "midpoint",
+          points: [
+            { x: "1", y: "2" },
+            { x: "4", y: "6" },
+          ],
+        })
+      )
+    ).resolves.toEqual({
+      success: true,
+      value: {
+        operation: "midpoint",
+        points: [
+          { x: "1", y: "2" },
+          { x: "4", y: "6" },
+        ],
+      },
+    });
+  });
+
+  it("keeps geometry model metadata clear for two-point and four-point operations", async () => {
+    const schema = asSchema(mathGeometryInput);
+    const jsonSchema = await Promise.resolve(schema.jsonSchema);
+
+    if (!("properties" in jsonSchema && jsonSchema.properties)) {
+      throw new Error("Math geometry schema must expose object properties.");
+    }
+
+    const { properties } = jsonSchema;
+
+    expect(jsonSchema).toMatchObject({
+      properties: {
+        operation: {
+          enum: expect.arrayContaining([
+            "distance",
+            "midpoint",
+            "slope",
+            "line",
+            "intersection",
+          ]),
+        },
+        points: {
+          description: expect.stringContaining("Exactly two coordinate points"),
+          maxItems: 4,
+          minItems: 2,
+        },
+      },
+    });
+    expect(properties.points).not.toHaveProperty("title");
+    expect(jsonSchema).toMatchObject({
+      properties: {
+        points: {
+          description: expect.stringContaining("Exactly four points"),
+        },
+      },
+    });
+  });
+
+  it("exposes grouped tool schemas as provider-compatible objects", async () => {
+    const jsonSchemas = [
+      await Promise.resolve(asSchema(mathAlgebraInput).jsonSchema),
+      await Promise.resolve(asSchema(mathEquationInput).jsonSchema),
+      await Promise.resolve(asSchema(mathGeometryInput).jsonSchema),
+      await Promise.resolve(asSchema(mathDiscreteInput).jsonSchema),
+      await Promise.resolve(asSchema(mathMatrixInput).jsonSchema),
+      await Promise.resolve(asSchema(mathSeriesInput).jsonSchema),
+      await Promise.resolve(asSchema(mathStatisticsInput).jsonSchema),
+    ];
+
+    for (const jsonSchema of jsonSchemas) {
+      expect(jsonSchema).not.toHaveProperty("anyOf");
+      expect(jsonSchema).toMatchObject({ type: "object" });
+    }
+  });
+
+  it("keeps model-facing field metadata for grouped algebra tools", async () => {
+    const schema = asSchema(mathAlgebraInput);
+    const jsonSchema = await Promise.resolve(schema.jsonSchema);
+
+    expect(jsonSchema).toMatchObject({
+      properties: {
+        expression: {
+          description:
+            "A math expression in plain text syntax, for example (x^2 - 9)/(x - 3).",
+          type: "string",
+        },
+        left: {
+          description:
+            "A math expression in plain text syntax, for example (x^2 - 9)/(x - 3).",
+          type: "string",
+        },
+        operation: {
+          enum: expect.arrayContaining(["simplify", "domain", "compare"]),
+          type: "string",
+        },
+        right: {
+          description:
+            "A math expression in plain text syntax, for example (x^2 - 9)/(x - 3).",
+          type: "string",
+        },
+      },
+      required: [],
+      type: "object",
     });
   });
 });

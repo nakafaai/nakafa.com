@@ -10,6 +10,14 @@ const exerciseToolChoice = {
   toolName: "exercise",
   type: "tool",
 } satisfies { toolName: "exercise"; type: "tool" };
+const answerToolChoice = "none" as const;
+const maxDiscoverySearchCalls = 4;
+
+interface ToolStep {
+  toolCalls: readonly {
+    toolName: string;
+  }[];
+}
 
 /**
  * Selects the exercise reference to read after an exercise-scoped search.
@@ -64,5 +72,41 @@ export function prepareExerciseStep(
     activeTools: exerciseActiveTools,
     messages: [...messages, message],
     toolChoice: exerciseToolChoice,
+  };
+}
+
+/**
+ * Detects when the content agent has enough retrieval evidence and should stop
+ * searching instead of spending the remaining loop budget on repeated discovery.
+ */
+export function shouldAnswerFromNakafaEvidence(steps: readonly ToolStep[]) {
+  const searchCalls = steps.flatMap((step) =>
+    step.toolCalls.filter((toolCall) => toolCall.toolName === "search")
+  );
+
+  return searchCalls.length >= maxDiscoverySearchCalls;
+}
+
+/**
+ * Builds the AI SDK step override that turns off tools and asks the model to
+ * answer from the Nakafa evidence already present in the conversation.
+ */
+export function prepareAnswerFromNakafaEvidenceStep(
+  messages: ModelMessage[],
+  steps: readonly ToolStep[]
+) {
+  if (!shouldAnswerFromNakafaEvidence(steps)) {
+    return;
+  }
+
+  const message = {
+    role: "user",
+    content:
+      "Use the Nakafa tool results already in this conversation. Do not call another Nakafa tool. Write the final source-backed answer now. If a requested item is still missing, say that Nakafa did not return enough data for that item.",
+  } satisfies ModelMessage;
+
+  return {
+    messages: [...messages, message],
+    toolChoice: answerToolChoice,
   };
 }

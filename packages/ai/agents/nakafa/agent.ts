@@ -8,6 +8,7 @@ import {
 import { nakafaAgentPrompt } from "@repo/ai/agents/nakafa/prompt";
 import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
 import {
+  prepareAnswerFromNakafaEvidenceStep,
   prepareExerciseStep,
   selectExerciseRef,
 } from "@repo/ai/agents/nakafa/step";
@@ -135,11 +136,17 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
           pendingExerciseRef = Option.none();
         }
 
-        return prepareExerciseStep(
+        const exerciseStep = prepareExerciseStep(
           pendingExerciseRef,
           messages,
           hasExerciseToolCall
         );
+
+        if (exerciseStep) {
+          return exerciseStep;
+        }
+
+        return prepareAnswerFromNakafaEvidenceStep(messages, steps);
       },
       stopWhen: stepCountIs(10),
     })

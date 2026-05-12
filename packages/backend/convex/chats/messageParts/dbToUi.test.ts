@@ -157,23 +157,6 @@ describe("mapDBPartToUIMessagePart", () => {
           },
         },
       });
-      await ctx.db.insert("parts", {
-        messageId,
-        order: 5,
-        type: "data-math",
-        dataMathId: "previous-math-1",
-        dataMathData: {
-          input: { expression: "2 + 2" },
-          kind: "evaluate",
-          result: {
-            input: { expression: "2 + 2", latex: "2+2" },
-            output: { expression: "4", latex: "4", value: "4" },
-          },
-          status: "verified",
-          summary: "2 + 2 = 4",
-        },
-      });
-
       return await ctx.db
         .query("parts")
         .withIndex("by_messageId_and_order", (q) =>
@@ -215,15 +198,6 @@ describe("mapDBPartToUIMessagePart", () => {
         data: expect.objectContaining({
           kind: "taxonomy",
           status: "done",
-        }),
-      }),
-      expect.objectContaining({
-        type: "data-math",
-        id: "previous-math-1",
-        data: expect.objectContaining({
-          input: expect.objectContaining({ kind: "math" }),
-          kind: "evaluate",
-          status: "verified",
         }),
       }),
     ]);

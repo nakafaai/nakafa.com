@@ -146,6 +146,7 @@ export function nakafaPrompt({
       Use math after deepResearch when researched numbers or claims need calculation, comparison, statistics, or verification.
       Use all relevant agents before the final answer when the user asks for a source-grounded educational answer that also needs outside evidence or deterministic math.
       Never invent source-specific content, current facts, exercise choices, citations, or verified math without the relevant evidence.
+      Preserve source constraints in the final answer. If the user asks for one product, domain, document, or official source, keep that section scoped to the requested source and do not add adjacent frameworks or generic alternatives unless the user asks for comparisons.
     `,
 
     chainOfThought: `

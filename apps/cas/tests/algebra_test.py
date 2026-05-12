@@ -98,6 +98,17 @@ def test_evaluate_falls_back_without_numeric_division_numerator() -> None:
     assert result.steps[0].action == "evaluate"
 
 
+def test_evaluate_rejects_tuple_expressions() -> None:
+    with pytest.raises(ValueError, match="one mathematical value"):
+        run(
+            MathRequest(
+                kind="math",
+                operation="evaluate",
+                expression="((1 + 4) / 2, (2 + 6) / 2)",
+            )
+        )
+
+
 def test_cancel_verifies_rational_simplification() -> None:
     result = run(
         MathRequest(

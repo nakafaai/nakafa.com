@@ -382,6 +382,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             () => streamTextResult.response
           );
           yield* writeSuggestions({
+            locale: page.locale,
             messages: [...chat.finalMessages, ...response.messages],
             writer,
           });

@@ -21,7 +21,7 @@ def differentiate(request: MathRequest) -> MathResult:
         status="verified",
         primary=expr,
         secondary=output,
-        reason="SymPy computed the derivative.",
+        reason="The derivative was checked exactly.",
         steps=steps,
         stepStatus="complete" if steps else "partial",
     )
@@ -49,7 +49,7 @@ def integrate(request: MathRequest) -> MathResult:
         status="verified",
         primary=primary,
         secondary=output,
-        reason="SymPy computed the integral.",
+        reason="The integral was checked exactly.",
         steps=[step("integrate", primary=primary, relation=EQUALS, secondary=output)],
         stepStatus="partial",
     )
@@ -69,7 +69,7 @@ def limit(request: MathRequest) -> MathResult:
         status="verified",
         primary=primary,
         secondary=output,
-        reason="SymPy computed the limit.",
+        reason="The limit was checked exactly.",
         steps=[step("limit", primary=primary, relation=EQUALS, secondary=output)],
         stepStatus="partial",
     )

@@ -34,7 +34,7 @@ def solve(request: MathRequest) -> MathResult:
             status="verified",
             primary=relation,
             secondary=solved,
-            reason="SymPy solved the equation or inequality.",
+            reason="The equation or inequality was solved exactly.",
             steps=steps,
             stepStatus="partial" if steps else "unavailable",
         )
@@ -45,7 +45,7 @@ def solve(request: MathRequest) -> MathResult:
         request,
         status="verified",
         primary=parsed,
-        reason="SymPy solved the system.",
+        reason="The system was solved exactly.",
         items=[item("solution", solution) for solution in solved],
     )
 
@@ -74,14 +74,22 @@ def _solve_equality_steps(relation: sp.Equality, solved: list) -> list:
 def roots(request: MathRequest) -> MathResult:
     """Find polynomial roots and multiplicities."""
     variable = parse.symbol(request.variable)
-    expr = parse.first_expression(request)
+    parsed = parse.equation(request.expression)
+
+    if isinstance(parsed, sp.Equality):
+        left = parse.expression(str(parsed.lhs))
+        right = parse.expression(str(parsed.rhs))
+        expr = sp.expand(left - right)
+    else:
+        raise ValueError("Roots require an expression or equation.")
+
     roots_result = sp.roots(expr, variable)
 
     return result(
         request,
         status="verified",
         primary=expr,
-        reason="SymPy found polynomial roots and multiplicities.",
+        reason="Polynomial roots and multiplicities were checked exactly.",
         items=[
             item("root", f"{root}: {multiplicity}")
             for root, multiplicity in roots_result.items()

@@ -80,7 +80,7 @@ def run(request: MathRequest) -> MathResult:
         status="verified",
         primary=values,
         secondary=output,
-        reason="SymPy computed the statistic from exact values.",
+        reason="The statistic was checked from exact values.",
         steps=steps,
         stepStatus="complete" if steps else "unavailable",
     )

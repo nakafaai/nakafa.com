@@ -1,6 +1,8 @@
 import {
+  prepareAnswerFromNakafaEvidenceStep,
   prepareExerciseStep,
   selectExerciseRef,
+  shouldAnswerFromNakafaEvidence,
 } from "@repo/ai/agents/nakafa/step";
 import type { NakafaAgentSearchResult } from "@repo/contents/_lib/agent/schema/search";
 import { Option } from "effect";
@@ -129,5 +131,46 @@ describe("Nakafa agent step state", () => {
 
     expect(missingRef).toBeUndefined();
     expect(alreadyRan).toBeUndefined();
+  });
+
+  it("turns off tools after repeated content search calls", () => {
+    const steps = [
+      { toolCalls: [{ toolName: "search" }] },
+      { toolCalls: [{ toolName: "taxonomy" }] },
+      { toolCalls: [{ toolName: "search" }] },
+      { toolCalls: [{ toolName: "search" }] },
+      { toolCalls: [{ toolName: "search" }] },
+    ];
+
+    const answerStep = prepareAnswerFromNakafaEvidenceStep(
+      [{ role: "user", content: "cari materi fungsi rasional" }],
+      steps
+    );
+
+    if (!answerStep) {
+      throw new Error("Expected a final answer step.");
+    }
+
+    expect(shouldAnswerFromNakafaEvidence(steps)).toBe(true);
+    expect(answerStep.toolChoice).toBe("none");
+    expect(answerStep.messages.at(-1)).toEqual(
+      expect.objectContaining({
+        content: expect.stringContaining("Do not call another Nakafa tool"),
+        role: "user",
+      })
+    );
+  });
+
+  it("keeps tools available while discovery is still below the loop guard", () => {
+    const answerStep = prepareAnswerFromNakafaEvidenceStep(
+      [{ role: "user", content: "cari materi fungsi rasional" }],
+      [
+        { toolCalls: [{ toolName: "search" }] },
+        { toolCalls: [{ toolName: "taxonomy" }] },
+        { toolCalls: [{ toolName: "search" }] },
+      ]
+    );
+
+    expect(answerStep).toBeUndefined();
   });
 });

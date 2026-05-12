@@ -23,7 +23,10 @@ describe("mathPrompt", () => {
       "Never label math as verified unless a tool result says verified."
     );
     expect(prompt).toContain(
-      "Teach from the checked work. Treat the math steps as a worked example for a short student-friendly explanation."
+      "Teach from the checked work. Treat the math steps as a worked example for a short role-appropriate explanation."
+    );
+    expect(prompt).toContain(
+      "Adapt explanations to the user role in the context."
     );
     expect(prompt).toContain(
       "what we are finding, why the next step is valid, and what result follows"
@@ -34,7 +37,8 @@ describe("mathPrompt", () => {
     );
     expect(prompt).toContain("Do not mention internal system names");
     expect(prompt).toContain("normal classroom language");
-    expect(prompt).toContain("check status");
+    expect(prompt).toContain("Describe the check status");
+    expect(prompt).not.toContain("student-friendly");
   });
 
   it("routes broad math groups through deterministic math tools", () => {

@@ -11,12 +11,29 @@ export const gateway = createGateway({
   },
 });
 
+/** Enables AI SDK DevTools only for local development workflows. */
+function shouldUseDevTools() {
+  const env = keys();
+
+  if (env.NODE_ENV === "production") {
+    return false;
+  }
+
+  return env.AI_SDK_DEVTOOLS === "true";
+}
+
+/**
+ * Creates the Gateway-backed language model used by all Nina model configs.
+ *
+ * AI SDK DevTools is intentionally local-only because it stores prompts,
+ * tool inputs, and outputs in plain text under `.devtools`.
+ */
 export function createWrappedLanguageModel(
   modelId: Parameters<typeof gateway>[number]
 ) {
   const model = gateway(modelId);
 
-  if (keys().NODE_ENV === "development") {
+  if (shouldUseDevTools()) {
     return wrapLanguageModel({
       model,
       middleware: devToolsMiddleware(),

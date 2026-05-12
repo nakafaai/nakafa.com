@@ -374,38 +374,6 @@ export const mathRequestValidator = v.object({
   vector: v.optional(v.array(v.string())),
 });
 
-const previousMathEvaluateInputValidator = v.object({
-  expression: v.string(),
-});
-
-const previousMathSimplifyInputValidator = v.object({
-  expression: v.string(),
-});
-
-const previousMathDifferentiateInputValidator = v.object({
-  expression: v.string(),
-  variable: v.string(),
-});
-
-const previousMathCompareInputValidator = v.object({
-  left: v.string(),
-  right: v.string(),
-});
-
-const previousMathSampleValidator = v.object({
-  left: v.string(),
-  right: v.string(),
-  scope: v.record(v.string(), v.number()),
-});
-
-const previousMathCompareResultValidator = v.object({
-  left: mathExpressionValidator,
-  reason: v.string(),
-  right: mathExpressionValidator,
-  samples: v.array(previousMathSampleValidator),
-  status: mathStatusValidator,
-});
-
 export const mathItemValidator = v.object({
   label: v.string(),
   latex: v.optional(v.string()),
@@ -418,18 +386,6 @@ export const mathStepValidator = v.object({
   primary: mathExpressionValidator,
   relation: v.optional(mathExpressionValidator),
   secondary: v.optional(mathExpressionValidator),
-});
-
-const legacyCurrentMathResultValidator = v.object({
-  conditions: v.array(v.string()),
-  input: mathRequestValidator,
-  items: v.array(mathItemValidator),
-  kind: mathOperationValidator,
-  operation: mathOperationValidator,
-  primary: mathExpressionValidator,
-  reason: v.string(),
-  secondary: v.optional(mathExpressionValidator),
-  status: mathStatusValidator,
 });
 
 export const mathResultValidator = v.object({
@@ -456,7 +412,7 @@ const currentMathDataValidator = v.union(
     kind: mathOperationValidator,
     status: mathStatusValidator,
     input: mathRequestValidator,
-    result: v.union(mathResultValidator, legacyCurrentMathResultValidator),
+    result: mathResultValidator,
     summary: v.string(),
   }),
   v.object({
@@ -467,99 +423,7 @@ const currentMathDataValidator = v.union(
   })
 );
 
-const previousMathDataValidator = v.union(
-  v.object({
-    kind: v.literal("evaluate"),
-    status: v.literal("loading"),
-    input: previousMathEvaluateInputValidator,
-  }),
-  v.object({
-    kind: v.literal("evaluate"),
-    status: v.literal("verified"),
-    input: previousMathEvaluateInputValidator,
-    result: v.object({
-      input: mathExpressionValidator,
-      output: v.object({
-        expression: v.string(),
-        latex: v.string(),
-        value: v.string(),
-      }),
-    }),
-    summary: v.string(),
-  }),
-  v.object({
-    kind: v.literal("evaluate"),
-    status: v.literal("error"),
-    input: previousMathEvaluateInputValidator,
-    error: v.string(),
-  }),
-  v.object({
-    kind: v.literal("simplify"),
-    status: v.literal("loading"),
-    input: previousMathSimplifyInputValidator,
-  }),
-  v.object({
-    kind: v.literal("simplify"),
-    status: v.literal("verified"),
-    input: previousMathSimplifyInputValidator,
-    result: v.object({
-      input: mathExpressionValidator,
-      output: mathExpressionValidator,
-    }),
-    summary: v.string(),
-  }),
-  v.object({
-    kind: v.literal("simplify"),
-    status: v.literal("error"),
-    input: previousMathSimplifyInputValidator,
-    error: v.string(),
-  }),
-  v.object({
-    kind: v.literal("differentiate"),
-    status: v.literal("loading"),
-    input: previousMathDifferentiateInputValidator,
-  }),
-  v.object({
-    kind: v.literal("differentiate"),
-    status: v.literal("verified"),
-    input: previousMathDifferentiateInputValidator,
-    result: v.object({
-      input: mathExpressionValidator,
-      output: mathExpressionValidator,
-      variable: v.string(),
-    }),
-    summary: v.string(),
-  }),
-  v.object({
-    kind: v.literal("differentiate"),
-    status: v.literal("error"),
-    input: previousMathDifferentiateInputValidator,
-    error: v.string(),
-  }),
-  v.object({
-    kind: v.literal("compare"),
-    status: v.literal("loading"),
-    input: previousMathCompareInputValidator,
-  }),
-  v.object({
-    kind: v.literal("compare"),
-    status: mathStatusValidator,
-    input: previousMathCompareInputValidator,
-    result: previousMathCompareResultValidator,
-    summary: v.string(),
-  }),
-  v.object({
-    kind: v.literal("compare"),
-    status: v.literal("error"),
-    input: previousMathCompareInputValidator,
-    error: v.string(),
-  })
-);
-
-export const mathDataValidator = v.union(
-  currentMathDataValidator,
-  previousMathDataValidator
-);
+export const mathDataValidator = currentMathDataValidator;
 
 /**
  * Provider metadata validator.

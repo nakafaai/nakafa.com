@@ -65,13 +65,21 @@ def expression(value: str | None, *, evaluate: bool = True) -> sp.Expr:
     if not value:
         raise ValueError("Expression is required.")
 
-    return parse_expr(
-        value,
-        global_dict=GLOBALS,
-        local_dict=FUNCTIONS,
-        transformations=TRANSFORMATIONS,
-        evaluate=evaluate,
-    )
+    try:
+        parsed = parse_expr(
+            value,
+            global_dict=GLOBALS,
+            local_dict=FUNCTIONS,
+            transformations=TRANSFORMATIONS,
+            evaluate=evaluate,
+        )
+    except (SyntaxError, TypeError, ValueError) as error:
+        raise ValueError("Expression could not be parsed.") from error
+
+    if not isinstance(parsed, sp.Expr):
+        raise ValueError("Expression must be one mathematical value.")
+
+    return parsed
 
 
 def equation(value: str | None) -> sp.Expr | sp.Equality | Relational:

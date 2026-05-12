@@ -27,7 +27,7 @@ def run(request: MathRequest) -> MathResult:
         status="verified",
         primary=distribution,
         secondary=output,
-        reason="SymPy evaluated the probability distribution.",
+        reason="The probability distribution was checked exactly.",
     )
 
 

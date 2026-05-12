@@ -84,7 +84,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
             hasScrapeToolCall
           );
         },
-        stopWhen: stepCountIs(3),
+        stopWhen: stepCountIs(5),
       })
     );
 

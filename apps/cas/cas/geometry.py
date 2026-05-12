@@ -4,7 +4,7 @@ import sympy as sp
 
 from cas import parse
 from cas.format import expression_text, result, step
-from cas.schema import MathRequest, MathResult
+from cas.schema import MathExpression, MathRequest, MathResult
 
 EQUALS = expression_text("equals", "=")
 
@@ -45,12 +45,56 @@ def run(request: MathRequest) -> MathResult:
     return result(
         request,
         status="verified",
-        primary=points or request.expressions,
-        secondary=output,
-        reason="SymPy completed the geometry operation.",
+        primary=_display_input(points, request.expressions),
+        secondary=_display_output(output),
+        reason="The geometry operation was checked exactly.",
         steps=steps,
         stepStatus="complete" if steps else "unavailable",
     )
+
+
+def _display_input(points: list[sp.Point2D], expressions: list[str]) -> MathExpression:
+    """Render geometry inputs without exposing internal SymPy object names."""
+    if points:
+        return _display_points(points)
+
+    return expression_text(", ".join(expressions), ", ".join(expressions))
+
+
+def _display_output(value: object) -> object:
+    """Render geometry outputs without exposing internal SymPy object names."""
+    if isinstance(value, sp.Point2D):
+        return _display_point(value)
+
+    if isinstance(value, list) and all(
+        isinstance(point, sp.Point2D) for point in value
+    ):
+        return _display_points(value)
+
+    return value
+
+
+def _display_points(points: list[sp.Point2D]) -> MathExpression:
+    """Render one or more points in coordinate notation."""
+    return expression_text(
+        ", ".join(_point_text(point) for point in points),
+        ", ".join(_point_latex(point) for point in points),
+    )
+
+
+def _display_point(point: sp.Point2D) -> MathExpression:
+    """Render a single point in coordinate notation."""
+    return expression_text(_point_text(point), _point_latex(point))
+
+
+def _point_text(point: sp.Point2D) -> str:
+    """Render point coordinates as plain text."""
+    return f"({point.x}, {point.y})"
+
+
+def _point_latex(point: sp.Point2D) -> str:
+    """Render point coordinates as LaTeX."""
+    return f"\\left({sp.latex(point.x)}, {sp.latex(point.y)}\\right)"
 
 
 def _distance_steps(start: sp.Point2D, end: sp.Point2D, output: sp.Expr) -> list:

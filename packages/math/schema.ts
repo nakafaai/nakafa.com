@@ -20,6 +20,13 @@ const valueInputSchema = Schema.NonEmptyString.annotations({
     "A numeric or symbolic value represented as text so exact math is preserved.",
 });
 
+const coordinateInputSchema = valueInputSchema.pipe(
+  Schema.pattern(/^[A-Za-z0-9_+\-*/^().\s]+$/, {
+    description:
+      "A point coordinate written as one math value, for example 1, 4, x, or pi/2.",
+  })
+);
+
 const pointInputSchema = Schema.NonEmptyString.annotations({
   description:
     "The point where the operation is evaluated, for example 0, oo, or pi.",
@@ -128,8 +135,8 @@ export const MathStepSchema = Schema.Struct({
   });
 
 export const MathPointSchema = Schema.Struct({
-  x: valueInputSchema,
-  y: valueInputSchema,
+  x: coordinateInputSchema,
+  y: coordinateInputSchema,
 }).pipe(Schema.mutable);
 
 const stringArraySchema = Schema.Array(valueInputSchema).pipe(Schema.mutable);
@@ -141,8 +148,13 @@ const nonEmptyStringArraySchema = Schema.Array(valueInputSchema).pipe(
 
 const pointArraySchema = Schema.Array(MathPointSchema).pipe(Schema.mutable);
 
-const nonEmptyPointArraySchema = Schema.Array(MathPointSchema).pipe(
-  Schema.minItems(1),
+const twoPointArraySchema = Schema.Array(MathPointSchema).pipe(
+  Schema.itemsCount(2),
+  Schema.mutable
+);
+
+const fourPointArraySchema = Schema.Array(MathPointSchema).pipe(
+  Schema.itemsCount(4),
   Schema.mutable
 );
 
@@ -250,17 +262,22 @@ const MathGeometryPointsInputSchema = Schema.Struct({
     "midpoint",
     "slope"
   ).annotations({
-    description: "Choose the coordinate geometry operation for points.",
+    description:
+      "Choose a point-based coordinate geometry operation. Use exactly two points.",
   }),
-  points: nonEmptyPointArraySchema.annotations({
-    description: "Coordinate points for geometry operations.",
+  points: twoPointArraySchema.annotations({
+    description:
+      "Exactly two coordinate points, for example [{ x: '1', y: '2' }, { x: '4', y: '6' }].",
   }),
 }).pipe(Schema.mutable);
 
 const MathGeometryIntersectionExpressionsInputSchema = Schema.Struct({
-  expressions: nonEmptyStringArraySchema.annotations({
-    description: "Equations whose intersections should be found.",
-  }),
+  expressions: Schema.Array(valueInputSchema)
+    .pipe(Schema.minItems(2), Schema.mutable)
+    .annotations({
+      description:
+        "At least two equations whose intersections should be found.",
+    }),
   operation: Schema.Literal("intersection").annotations({
     description: "Find intersections from equations.",
   }),
@@ -270,9 +287,9 @@ const MathGeometryIntersectionPointsInputSchema = Schema.Struct({
   operation: Schema.Literal("intersection").annotations({
     description: "Find intersections from point-defined lines.",
   }),
-  points: nonEmptyPointArraySchema.annotations({
+  points: fourPointArraySchema.annotations({
     description:
-      "Four points defining two lines, where points 1-2 form the first line and points 3-4 form the second.",
+      "Exactly four points defining two lines, where points 1-2 form the first line and points 3-4 form the second.",
   }),
 }).pipe(Schema.mutable);
 
@@ -481,6 +498,24 @@ export const MathCalculusInputSchema = Schema.Struct({
   .pipe(Schema.mutable)
   .annotations({ description: "Calculus tool input." });
 
+export const MathToolInputSchema = Schema.Union(
+  MathArithmeticInputSchema,
+  MathAlgebraInputSchema,
+  MathEquationInputSchema,
+  MathGeometryInputSchema,
+  MathDiscreteInputSchema,
+  MathMatrixInputSchema,
+  MathSeriesInputSchema,
+  MathStatisticsInputSchema,
+  MathProbabilityInputSchema,
+  MathCalculusInputSchema
+)
+  .pipe(Schema.mutable)
+  .annotations({
+    description:
+      "Strict math tool input shape accepted before deterministic math evidence is requested.",
+  });
+
 export const MathRequestSchema = Schema.Struct({
   distribution: Schema.optional(Schema.String),
   expression: Schema.optional(Schema.String),
@@ -558,3 +593,4 @@ export type MathResult = Schema.Schema.Type<typeof MathResultSchema>;
 export type MathStep = Schema.Schema.Type<typeof MathStepSchema>;
 export type MathStepStatus = Schema.Schema.Type<typeof MathStepStatusSchema>;
 export type MathStatus = Schema.Schema.Type<typeof MathStatusSchema>;
+export type MathToolInput = Schema.Schema.Type<typeof MathToolInputSchema>;

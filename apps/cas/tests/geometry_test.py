@@ -16,7 +16,7 @@ def test_geometry_point_operations() -> None:
     assert distance.secondary
     assert distance.secondary.expression == "5"
     assert midpoint.secondary
-    assert midpoint.secondary.expression == "Point2D(3/2, 2)"
+    assert midpoint.secondary.expression == "(3/2, 2)"
     assert slope.secondary
     assert slope.secondary.expression == "4/3"
     assert line.secondary
@@ -47,9 +47,9 @@ def test_geometry_intersections() -> None:
     )
 
     assert equations.secondary
-    assert equations.secondary.expression == "[Point2D(2, 1)]"
+    assert equations.secondary.expression == "(2, 1)"
     assert points.secondary
-    assert points.secondary.expression == "[Point2D(1/2, 1/2)]"
+    assert points.secondary.expression == "(1/2, 1/2)"
 
 
 def test_geometry_requires_enough_points() -> None:

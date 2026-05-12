@@ -25,7 +25,7 @@ def run(request: MathRequest) -> MathResult:
             request,
             status="verified",
             primary=parse.expression(request.n),
-            reason="SymPy computed the prime factorization.",
+            reason="The prime factorization was checked exactly.",
             items=[
                 item("factor", f"{prime}^{power}")
                 for prime, power in sp.factorint(
@@ -57,7 +57,7 @@ def run(request: MathRequest) -> MathResult:
         status="verified",
         primary=request.values or request.n or operation,
         secondary=output,
-        reason="SymPy completed the discrete math operation.",
+        reason="The discrete math operation was checked exactly.",
         steps=steps,
         stepStatus="complete" if steps else "unavailable",
     )

@@ -32,7 +32,7 @@ def run(request: MathRequest) -> MathResult:
             request,
             status="verified",
             primary=matrix,
-            reason="SymPy computed eigenvalues.",
+            reason="Eigenvalues were checked exactly.",
             items=[item("eigenvalue", value) for value in eigenvalues],
         )
     elif operation == "eigenvectors":
@@ -40,7 +40,7 @@ def run(request: MathRequest) -> MathResult:
             request,
             status="verified",
             primary=matrix,
-            reason="SymPy computed eigenvectors.",
+            reason="Eigenvectors were checked exactly.",
             items=[item("eigenvector", vector) for vector in matrix.eigenvects()],
         )
     elif operation == "matrix_multiply":
@@ -57,7 +57,7 @@ def run(request: MathRequest) -> MathResult:
         status="verified",
         primary=matrix,
         secondary=output,
-        reason="SymPy completed the matrix operation.",
+        reason="The matrix operation was checked exactly.",
         steps=steps,
         stepStatus="complete" if steps else "unavailable",
     )

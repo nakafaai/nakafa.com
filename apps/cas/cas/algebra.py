@@ -21,7 +21,7 @@ def evaluate(request: MathRequest) -> MathResult:
         status="verified",
         primary=original,
         secondary=value,
-        reason="Exact arithmetic was evaluated by SymPy.",
+        reason="Exact arithmetic was checked.",
         steps=steps,
         stepStatus="complete" if steps else "unavailable",
     )
@@ -47,7 +47,7 @@ def transform(request: MathRequest) -> MathResult:
         status="verified",
         primary=expr,
         secondary=output,
-        reason=f"SymPy applied {operation} to the expression.",
+        reason=f"The {operation} transformation was checked.",
         steps=steps,
         stepStatus="complete" if steps else "unavailable",
     )
@@ -84,7 +84,7 @@ def compare(request: MathRequest) -> MathResult:
             status="verified",
             primary=left,
             secondary=right,
-            reason="SymPy simplified the difference to zero.",
+            reason="The difference simplified to zero.",
             conditions=_comparison_conditions(left, right),
             steps=[
                 step(
@@ -141,7 +141,7 @@ def compare(request: MathRequest) -> MathResult:
         status="inconclusive",
         primary=left,
         secondary=right,
-        reason="SymPy did not prove equality or find a counterexample.",
+        reason="Equality was not proven and no counterexample was found.",
     )
 
 

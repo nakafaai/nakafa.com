@@ -31,7 +31,7 @@ describe("MathService", () => {
           expression: "6 * 7",
           latex: "6 \\cdot 7",
         },
-        reason: "Exact arithmetic was evaluated by SymPy.",
+        reason: "Exact arithmetic was checked.",
         secondary: {
           expression: "42",
           latex: "42",

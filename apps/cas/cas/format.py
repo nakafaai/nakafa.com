@@ -25,9 +25,19 @@ def expression_text(value: str, latex: str | None = None) -> MathExpression:
     return MathExpression(expression=value, latex=latex or value)
 
 
+def math_expression(value: object) -> MathExpression:
+    """Keep display-safe expressions intact and render all other CAS values."""
+    if isinstance(value, MathExpression):
+        return value
+
+    return expression(value)
+
+
 def item(label: str, value: object) -> MathItem:
     """Render a labeled supporting CAS value."""
-    return MathItem(label=label, value=str(value), latex=sp.latex(value))
+    rendered = math_expression(value)
+
+    return MathItem(label=label, value=rendered.expression, latex=rendered.latex)
 
 
 def step(
@@ -41,9 +51,9 @@ def step(
     """Build one deterministic math evidence step."""
     return MathStep(
         action=action,
-        primary=primary if isinstance(primary, MathExpression) else expression(primary),
+        primary=math_expression(primary),
         relation=relation,
-        secondary=expression(secondary) if secondary is not None else None,
+        secondary=math_expression(secondary) if secondary is not None else None,
         items=list(items or []),
     )
 
@@ -66,8 +76,8 @@ def result(
         operation=request.operation,
         status=status,
         input=request,
-        primary=expression(primary),
-        secondary=expression(secondary) if secondary is not None else None,
+        primary=math_expression(primary),
+        secondary=math_expression(secondary) if secondary is not None else None,
         items=list(items or []),
         conditions=[
             condition

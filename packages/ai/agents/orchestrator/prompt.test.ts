@@ -85,6 +85,9 @@ describe("nakafaPrompt", () => {
     expect(prompt).toContain(
       "Never invent source-specific content, current facts, exercise choices, citations, or verified math without the relevant evidence."
     );
+    expect(prompt).toContain(
+      "If the user asks for one product, domain, document, or official source, keep that section scoped to the requested source"
+    );
   });
 
   it.each([

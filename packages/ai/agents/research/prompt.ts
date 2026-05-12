@@ -25,6 +25,12 @@ export function researchPrompt({ locale, context }: ResearchPromptProps) {
 
 	      IMPORTANT:
 	      - Search thoroughly and use multiple queries if needed
+	      - Preserve source constraints from the task. If the task asks for official docs,
+	        official sources, a named domain, or a specific URL, search and scrape that
+	        source before broadening the query.
+	      - Do not rewrite a specific source request into a generic trends query.
+	      - Avoid YouTube, social posts, and listicles unless the task explicitly asks
+	        for those sources or no primary source exists.
 	      - Prioritize credible and authoritative sources
 	      - Extract key facts, data, and insights
 	      - If scraped content is unavailable or weak, state the limitation clearly

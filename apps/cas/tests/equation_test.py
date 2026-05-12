@@ -1,3 +1,5 @@
+import pytest
+
 from cas.engine import run
 from cas.schema import MathRequest
 
@@ -76,3 +78,29 @@ def test_roots_quartic() -> None:
 
     assert result.status == "verified"
     assert len(result.items) == 4
+
+
+def test_roots_accepts_equation_form() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="roots",
+            expression="x^3 - 6*x^2 + 11*x - 6 = 0",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert {root.value for root in result.items} == {"1: 1", "2: 1", "3: 1"}
+
+
+def test_roots_rejects_inequality() -> None:
+    with pytest.raises(ValueError, match="Roots require an expression or equation."):
+        run(
+            MathRequest(
+                kind="math",
+                operation="roots",
+                expression="x > 0",
+                variable="x",
+            )
+        )

@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 MathStatus = Literal["verified", "contradicted", "inconclusive"]
 MathSource = Literal["math"]
@@ -94,3 +94,8 @@ class MathResult(BaseModel):
     steps: list[MathStep] = Field(default_factory=list)
     stepStatus: MathStepStatus = "unavailable"
     reason: str
+
+    @field_serializer("input")
+    def compact_input(self, request: MathRequest) -> dict[str, object]:
+        """Serialize only the request fields the caller intentionally sent."""
+        return request.model_dump(exclude_defaults=True, exclude_none=True)

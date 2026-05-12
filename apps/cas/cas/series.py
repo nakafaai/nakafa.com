@@ -24,7 +24,7 @@ def expand(request: MathRequest) -> MathResult:
         status="verified",
         primary=expr,
         secondary=output,
-        reason="SymPy computed the requested series expansion.",
+        reason="The requested series expansion was checked exactly.",
         steps=[step("series", primary=expr, relation=EQUALS, secondary=output)],
         stepStatus="partial",
     )
@@ -43,7 +43,7 @@ def summation(request: MathRequest) -> MathResult:
         status="verified",
         primary=expr,
         secondary=output,
-        reason="SymPy computed the summation.",
+        reason="The summation was checked exactly.",
         steps=[
             step(
                 "summation",
@@ -69,7 +69,7 @@ def product(request: MathRequest) -> MathResult:
         status="verified",
         primary=expr,
         secondary=output,
-        reason="SymPy computed the product.",
+        reason="The product was checked exactly.",
         steps=[
             step(
                 "product",

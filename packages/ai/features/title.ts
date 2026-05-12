@@ -44,6 +44,7 @@ export const generateTitle = Effect.fn("features.generateTitle")(function* ({
           - Ensure it is not more than ${MAX_TITLE_LENGTH} characters long
           - The title should be creative and unique
           - The title should be a summary of the user's message
+          - Do not mention internal system names such as CAS, SymPy, agent, tool, engine, or service
           - Do not use quotes or colons`,
           outputFormatting: "Output only the title, nothing else",
         }),
