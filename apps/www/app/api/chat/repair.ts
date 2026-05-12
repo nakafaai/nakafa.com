@@ -1,6 +1,6 @@
 import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
 import { defaultModel } from "@repo/ai/config/models";
-import { type GoogleProvider, model, order } from "@repo/ai/config/vercel";
+import { model, order } from "@repo/ai/config/vercel";
 import { logError } from "@repo/utilities/logging/effect";
 import type { LogContext } from "@repo/utilities/logging/types";
 import {
@@ -89,12 +89,6 @@ export const repairChatToolCall = Effect.fn("chat.repairChatToolCall")(
         ].join("\n"),
         providerOptions: {
           gateway: { order },
-          google: {
-            thinkingConfig: {
-              thinkingBudget: 0,
-              includeThoughts: false,
-            },
-          } satisfies GoogleProvider,
         },
       })
     );

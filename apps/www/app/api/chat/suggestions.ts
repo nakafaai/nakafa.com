@@ -1,10 +1,5 @@
 import { defaultModel } from "@repo/ai/config/models";
-import {
-  type GatewayProvider,
-  type GoogleProvider,
-  model,
-  order,
-} from "@repo/ai/config/vercel";
+import { type GatewayProvider, model, order } from "@repo/ai/config/vercel";
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import type { MyUIMessage } from "@repo/ai/types/message";
@@ -52,12 +47,6 @@ export const writeSuggestions = Effect.fn("chat.writeSuggestions")(function* ({
     }),
     providerOptions: {
       gateway: { order } satisfies GatewayProvider,
-      google: {
-        thinkingConfig: {
-          thinkingBudget: 0,
-          includeThoughts: false,
-        },
-      } satisfies GoogleProvider,
     },
   });
 

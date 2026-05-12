@@ -6,12 +6,7 @@ import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
 import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
 import { runResearch } from "@repo/ai/agents/orchestrator/research";
 import type { ModelId } from "@repo/ai/config/models";
-import {
-  type GoogleProvider,
-  model,
-  type OpenAIProvider,
-  order,
-} from "@repo/ai/config/vercel";
+import { model, type OpenAIProvider, order } from "@repo/ai/config/vercel";
 import { generateTitle } from "@repo/ai/features/title";
 import {
   mathToolInputSchema,
@@ -320,12 +315,6 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 reasoningSummary: "detailed",
                 serviceTier: "priority",
               } satisfies OpenAIProvider,
-              google: {
-                thinkingConfig: {
-                  thinkingBudget: -1,
-                  includeThoughts: true,
-                },
-              } satisfies GoogleProvider,
             },
           });
 

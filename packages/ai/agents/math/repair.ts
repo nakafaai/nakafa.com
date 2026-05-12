@@ -1,4 +1,4 @@
-import { type GoogleProvider, model, order } from "@repo/ai/config/vercel";
+import { model, order } from "@repo/ai/config/vercel";
 import {
   generateText,
   NoSuchToolError,
@@ -88,12 +88,6 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
       ].join("\n"),
       providerOptions: {
         gateway: { order },
-        google: {
-          thinkingConfig: {
-            includeThoughts: false,
-            thinkingBudget: 0,
-          },
-        } satisfies GoogleProvider,
       },
       system,
     })
