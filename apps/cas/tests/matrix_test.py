@@ -52,6 +52,18 @@ def test_matrix_multiply() -> None:
     assert result.secondary.expression == "Matrix([[11]])"
 
 
+def test_matrix_multiply_rejects_incompatible_dimensions() -> None:
+    with pytest.raises(ValueError, match="matching inner dimensions"):
+        run(
+            MathRequest(
+                kind="math",
+                matrix=[["1", "2", "3"]],
+                operation="matrix_multiply",
+                right_matrix=[["1", "2"], ["3", "4"]],
+            )
+        )
+
+
 def test_matrix_inverse_rank_rref_and_eigen_data() -> None:
     inverse = run(
         MathRequest(
@@ -97,6 +109,28 @@ def test_matrix_inverse_rank_rref_and_eigen_data() -> None:
     assert rref.secondary.expression == "Matrix([[1, 2], [0, 0]])"
     assert eigenvalues.items
     assert eigenvectors.items
+
+
+def test_matrix_inverse_rejects_singular_matrix() -> None:
+    with pytest.raises(ValueError, match="nonsingular matrix"):
+        run(
+            MathRequest(
+                kind="math",
+                matrix=[["1", "2"], ["2", "4"]],
+                operation="inverse",
+            )
+        )
+
+
+def test_matrix_determinant_rejects_rectangular_matrix() -> None:
+    with pytest.raises(ValueError, match="square matrix"):
+        run(
+            MathRequest(
+                kind="math",
+                matrix=[["1", "2", "3"], ["4", "5", "6"]],
+                operation="determinant",
+            )
+        )
 
 
 def test_linear_system() -> None:

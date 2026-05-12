@@ -74,7 +74,7 @@ function StepList({ steps }: StepListProps) {
   }
 
   return (
-    <div className="flex max-w-full flex-col gap-1">
+    <div className="flex max-w-full flex-col gap-2">
       {steps.map((step, index) => (
         <StepRow
           key={`${step.action}-${step.primary.expression}-${step.relation?.expression ?? ""}-${step.secondary?.expression ?? ""}`}
@@ -150,7 +150,7 @@ function ItemList({ items }: ItemListProps) {
   }
 
   return (
-    <div className="flex max-w-full flex-col gap-1">
+    <div className="flex max-w-full flex-col gap-2">
       {items.map((item) => (
         <ItemRow item={item} key={`${item.label}-${item.value}`} />
       ))}

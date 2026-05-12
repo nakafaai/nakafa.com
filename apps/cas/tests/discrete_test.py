@@ -70,6 +70,35 @@ def test_gcd_with_more_than_two_values_uses_function_notation() -> None:
     assert result.steps[0].primary.expression == "gcd(84, 30, 6)"
 
 
+@pytest.mark.parametrize(
+    "math_request",
+    [
+        MathRequest(kind="math", n="2.9", operation="is_prime"),
+        MathRequest(kind="math", operation="gcd", values=["3/2", "2"]),
+    ],
+)
+def test_discrete_operands_reject_non_integers(math_request: MathRequest) -> None:
+    with pytest.raises(ValueError, match="must be integers"):
+        run(math_request)
+
+
+def test_modular_rejects_zero_modulus() -> None:
+    with pytest.raises(ValueError, match="Modulus must be nonzero"):
+        run(MathRequest(kind="math", modulus="0", n="84", operation="modular"))
+
+
+@pytest.mark.parametrize(
+    "math_request",
+    [
+        MathRequest(kind="math", k="5", n="3", operation="permutation"),
+        MathRequest(kind="math", k="-1", n="3", operation="permutation"),
+    ],
+)
+def test_permutation_rejects_invalid_bounds(math_request: MathRequest) -> None:
+    with pytest.raises(ValueError, match="0 <= k <= n"):
+        run(math_request)
+
+
 def test_unknown_discrete_operation_raises() -> None:
     with pytest.raises(ValueError, match="Unsupported discrete operation"):
         discrete.run(MathRequest(kind="math", operation="unknown"))

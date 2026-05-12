@@ -10,18 +10,18 @@
   "dependencies": {
     "@t3-oss/env-nextjs": "^0.13.11",
     "@vercel/analytics": "^2.0.1",
-    "posthog-js": "^1.372.10",
-    "posthog-node": "^5.33.4",
+    "posthog-js": "^1.373.3",
+    "posthog-node": "^5.34.0",
     "react": "^19.2.6",
     "server-only": "^0.0.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.6.2",
+    "@types/node": "25.7.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "@vitest/coverage-istanbul": "^4.1.5",
-    "vitest": "^4.1.5"
+    "@vitest/coverage-istanbul": "^4.1.6",
+    "vitest": "^4.1.6"
   }
 }

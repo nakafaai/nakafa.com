@@ -38,6 +38,18 @@ def run(request: MathRequest) -> MathResult:
         steps = []
     elif operation == "intersection":
         output = _intersection(request)
+        if output is None:
+            return result(
+                request,
+                status="inconclusive",
+                primary=_display_input(points, request.expressions),
+                secondary=expression_text(
+                    "infinitely many intersections",
+                    "\\text{infinitely many intersections}",
+                ),
+                reason="The equations do not determine a finite intersection point.",
+            )
+
         steps = []
     else:
         raise ValueError(f"Unsupported geometry operation: {operation}")
@@ -112,7 +124,7 @@ def _distance_steps(start: sp.Point2D, end: sp.Point2D, output: sp.Expr) -> list
     return [step("distance", primary=formula, relation=EQUALS, secondary=output)]
 
 
-def _intersection(request: MathRequest) -> list[sp.Point]:
+def _intersection(request: MathRequest) -> list[sp.Point] | None:
     """Find intersections from equations or two point-defined lines."""
     x, y = sp.symbols("x y")
 
@@ -120,7 +132,7 @@ def _intersection(request: MathRequest) -> list[sp.Point]:
         equations = [parse.equation(value) for value in request.expressions]
         solved = sp.solve(equations, [x, y], dict=True)
 
-        return [sp.Point(solution[x], solution[y]) for solution in solved]
+        return _intersection_points(solved, x, y)
 
     points = [parse.point(point) for point in request.points]
     _require_points(points, 4)
@@ -130,7 +142,21 @@ def _intersection(request: MathRequest) -> list[sp.Point]:
     ]
     solved = sp.solve(equations, [x, y], dict=True)
 
-    return [sp.Point(solution[x], solution[y]) for solution in solved]
+    return _intersection_points(solved, x, y)
+
+
+def _intersection_points(
+    solved: list[dict[sp.Symbol, sp.Expr]], x: sp.Symbol, y: sp.Symbol
+) -> list[sp.Point] | None:
+    """Render only finite point intersections from solved coordinate dictionaries."""
+    points = []
+    for solution in solved:
+        if x not in solution or y not in solution:
+            return None
+
+        points.append(sp.Point(solution[x], solution[y]))
+
+    return points
 
 
 def _require_points(points: list[sp.Point2D], count: int) -> None:
@@ -143,6 +169,8 @@ def _slope(start: sp.Point2D, end: sp.Point2D) -> sp.Expr:
     """Compute slope from two points."""
     dy = _difference(end.y, start.y)
     dx = _difference(end.x, start.x)
+    if dx == 0:
+        raise ValueError("Slope is undefined for a vertical line.")
 
     return sp.simplify(sp.Mul(dy, sp.Pow(dx, -1)))
 

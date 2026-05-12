@@ -93,7 +93,8 @@ export const search = query({
           url: document.url,
         }));
       const nextOffset = args.offset + items.length;
-      const hasMore = ranked.length > nextOffset;
+      const hasMore =
+        ranked.length > nextOffset && nextOffset <= nakafaSearchMaxOffset;
 
       return {
         count: items.length,
@@ -130,7 +131,8 @@ export const search = query({
         url: document.url,
       }));
     const nextOffset = args.offset + items.length;
-    const hasMore = ranked.length > nextOffset;
+    const hasMore =
+      ranked.length > nextOffset && nextOffset <= nakafaSearchMaxOffset;
 
     return {
       count: items.length,

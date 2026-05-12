@@ -12,7 +12,7 @@ IMPLIES = expression_text("becomes", "\\Rightarrow")
 
 def solve(request: MathRequest) -> MathResult:
     """Solve equations, inequalities, or systems for requested variables."""
-    variables = parse.symbols(request.variables)
+    variables = _solve_variables(request)
     equations = request.expressions or [request.expression or ""]
     parsed = [parse.equation(value) for value in equations]
 
@@ -48,6 +48,14 @@ def solve(request: MathRequest) -> MathResult:
         reason="The system was solved exactly.",
         items=[item("solution", solution) for solution in solved],
     )
+
+
+def _solve_variables(request: MathRequest) -> list[sp.Symbol]:
+    """Use explicit solve variables, including the single-variable field."""
+    if request.variables:
+        return parse.symbols(request.variables)
+
+    return [parse.symbol(request.variable)]
 
 
 def _solve_equality_steps(relation: sp.Equality, solved: list) -> list:

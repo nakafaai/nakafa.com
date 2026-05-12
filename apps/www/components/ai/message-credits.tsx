@@ -19,6 +19,7 @@ import {
 import { useTranslations } from "next-intl";
 import { memo, useState } from "react";
 import { useMessage } from "@/components/ai/context/use-message";
+import { BrandIcon } from "@/components/shared/brand-icon";
 import { aiModels } from "@/lib/data/models";
 
 export const AiChatMessageCredits = memo(() => {
@@ -36,7 +37,7 @@ export const AiChatMessageCredits = memo(() => {
   }
 
   const model = aiModels.find((m) => m.value === modelId);
-  const ModelIcon = model?.icon;
+  const modelIconSrc = model?.iconSrc;
 
   return (
     <Popover onOpenChange={setOpen} open={open}>
@@ -55,7 +56,7 @@ export const AiChatMessageCredits = memo(() => {
               <span className="text-muted-foreground">{t("model")}</span>
             </div>
             <p className="flex items-center gap-2">
-              {ModelIcon && <ModelIcon />}
+              {modelIconSrc && <BrandIcon src={modelIconSrc} />}
               {model?.label ?? modelId}
             </p>
           </div>

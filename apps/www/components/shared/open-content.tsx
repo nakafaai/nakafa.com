@@ -6,7 +6,6 @@ import {
   LinkSquare02Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { Claude, Gemini, Github, OpenAI } from "@lobehub/icons";
 import { useClipboard, useDisclosure } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -21,6 +20,7 @@ import { Link } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
 import { toast } from "sonner";
+import { BrandIcon } from "@/components/shared/brand-icon";
 import { getGithubUrl } from "@/lib/utils/github";
 
 /**
@@ -67,21 +67,25 @@ export function OpenContent({
   });
 
   const links = [
-    { title: t("open-in-github"), href: githubUrl, icon: Github },
+    {
+      title: t("open-in-github"),
+      href: githubUrl,
+      iconSrc: "/ai-logos/github.svg",
+    },
     {
       title: t("open-in-chatgpt"),
       href: `https://chatgpt.com/?${new URLSearchParams({ hints: "search", q })}`,
-      icon: OpenAI,
+      iconSrc: "/ai-logos/openai.svg",
     },
     {
       title: t("open-in-gemini"),
       href: `https://gemini.google.com/app?${new URLSearchParams({ q })}`,
-      icon: Gemini,
+      iconSrc: "/ai-logos/gemini.svg",
     },
     {
       title: t("open-in-claude"),
       href: `https://claude.ai/new?${new URLSearchParams({ q })}`,
-      icon: Claude,
+      iconSrc: "/ai-logos/claude.svg",
     },
   ];
 
@@ -124,7 +128,7 @@ export function OpenContent({
               key={item.title}
             >
               <Link href={item.href} rel="noopener noreferrer" target="_blank">
-                <item.icon />
+                <BrandIcon src={item.iconSrc} />
                 {item.title}
                 <HugeIcons
                   className="ms-auto size-3.5"

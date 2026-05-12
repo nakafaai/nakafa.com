@@ -55,21 +55,26 @@ def run(request: MathRequest) -> MathResult:
             ),
         ]
     elif operation == "quartiles":
+        q1, q2, q3 = _quartiles(sorted_values)
+
         return result(
             request,
             status="verified",
             primary=values,
             reason="Quartiles were computed from the sorted values.",
             items=[
-                item("q1", _median(sorted_values[: len(sorted_values) // 2])),
-                item("q2", _median(sorted_values)),
-                item("q3", _median(sorted_values[(len(sorted_values) + 1) // 2 :])),
+                item("q1", q1),
+                item("q2", q2),
+                item("q3", q3),
             ],
         )
     elif operation == "z_score":
         target = parse.expression(request.expression)
         mean = sum(values) / len(values)
         variance = sum((value - mean) ** 2 for value in values) / len(values)
+        if variance == 0:
+            raise ValueError("Z-score is undefined when variance is zero.")
+
         output = (target - mean) / sp.sqrt(variance)
         steps = []
     else:
@@ -112,12 +117,26 @@ def _variance_steps(values: list[sp.Expr], mean: object, output: object) -> list
 
 def _median(values: list[sp.Expr]) -> sp.Expr:
     """Compute the median of a sorted exact-value list."""
+    if not values:
+        raise ValueError("Median requires at least one value.")
+
     middle = len(values) // 2
 
     if len(values) % 2 == 1:
         return values[middle]
 
     return (values[middle - 1] + values[middle]) / 2
+
+
+def _quartiles(values: list[sp.Expr]) -> tuple[sp.Expr, sp.Expr, sp.Expr]:
+    """Compute Tukey-style quartiles for a sorted exact-value list."""
+    if len(values) == 1:
+        return values[0], values[0], values[0]
+
+    lower = values[: len(values) // 2]
+    upper = values[(len(values) + 1) // 2 :]
+
+    return _median(lower), _median(values), _median(upper)
 
 
 def _modes(values: list[sp.Expr]) -> list[sp.Expr]:

@@ -35,6 +35,7 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useAi } from "@/components/ai/context/use-ai";
+import { BrandIcon } from "@/components/shared/brand-icon";
 import { useUser } from "@/lib/context/use-user";
 import { aiModels, getFreeModels, getPremiumModels } from "@/lib/data/models";
 
@@ -60,7 +61,7 @@ export function AiChatModel() {
 
   const [openModelMenu, setOpenModelMenu] = useState(false);
 
-  const Icon = aiModels.find((m) => m.value === model)?.icon;
+  const iconSrc = aiModels.find((m) => m.value === model)?.iconSrc;
   const label = aiModels.find((m) => m.value === model)?.label;
 
   const handleOnChange = (value: ModelId) => {
@@ -124,8 +125,8 @@ export function AiChatModel() {
       <PopoverTrigger asChild>
         <Button disabled={isPending} variant="ghost">
           {isPending && <Spinner />}
-          {!isPending && Icon && <Icon />}
-          {!(isPending || Icon) && <HugeIcons icon={BrainIcon} />}
+          {!isPending && iconSrc && <BrandIcon src={iconSrc} />}
+          {!(isPending || iconSrc) && <HugeIcons icon={BrainIcon} />}
           {label}
           <HugeIcons
             className={cn(
@@ -151,7 +152,7 @@ export function AiChatModel() {
                     setOpenModelMenu(false);
                   }}
                 >
-                  <m.icon />
+                  <BrandIcon src={m.iconSrc} />
                   {m.label}
                   <HugeIcons
                     className={cn(
@@ -173,7 +174,7 @@ export function AiChatModel() {
                     setOpenModelMenu(false);
                   }}
                 >
-                  <m.icon />
+                  <BrandIcon src={m.iconSrc} />
                   {m.label}
                   <HugeIcons
                     className={cn(

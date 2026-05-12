@@ -14,15 +14,15 @@ def run(request: MathRequest) -> MathResult:
     operation = request.operation
 
     if operation == "gcd":
-        values = [int(parse.expression(value)) for value in request.values]
+        values = [_integer(value) for value in request.values]
         output = sp.gcd_list(values)
         steps = _gcd_steps(values, output)
     elif operation == "lcm":
-        values = [int(parse.expression(value)) for value in request.values]
+        values = [_integer(value) for value in request.values]
         output = sp.lcm_list(values)
         steps = _operation_steps("lcm", values, output)
     elif operation == "prime_factorization":
-        value = int(parse.expression(request.n))
+        value = _integer(request.n)
         factors = sp.factorint(value)
         factorization = _factorization_expression(factors)
 
@@ -46,7 +46,7 @@ def run(request: MathRequest) -> MathResult:
             stepStatus="complete",
         )
     elif operation == "is_prime":
-        value = int(parse.expression(request.n))
+        value = _integer(request.n)
         output = sp.isprime(value)
         steps = [
             step(
@@ -60,22 +60,20 @@ def run(request: MathRequest) -> MathResult:
             )
         ]
     elif operation == "modular":
-        value = int(parse.expression(request.n))
-        modulus = int(parse.expression(request.modulus))
+        value = _integer(request.n)
+        modulus = _nonzero_integer(request.modulus)
         primary = _modular_expression(value, modulus)
         output = value % modulus
         steps = [step("modular", primary=primary, relation=EQUALS, secondary=output)]
     elif operation == "permutation":
-        n = parse.expression(request.n)
-        k = parse.expression(request.k)
+        n, k = _bounded_count(request.n, request.k, "Permutation")
         primary = _permutation_expression(n, k)
         output = sp.factorial(n) / sp.factorial(n - k)
         steps = [
             step("permutation", primary=primary, relation=EQUALS, secondary=output)
         ]
     elif operation == "combination":
-        n = parse.expression(request.n)
-        k = parse.expression(request.k)
+        n, k = _bounded_count(request.n, request.k, "Combination")
         primary = _combination_expression(n, k)
         output = sp.binomial(n, k)
         steps = [
@@ -95,6 +93,36 @@ def run(request: MathRequest) -> MathResult:
         steps=steps,
         stepStatus="complete" if steps else "unavailable",
     )
+
+
+def _integer(value: str | None) -> int:
+    """Parse an exact integer operand without silently truncating values."""
+    parsed = parse.expression(value)
+    if parsed.is_integer is not True:
+        raise ValueError("Discrete operands must be integers.")
+
+    return int(parsed)
+
+
+def _nonzero_integer(value: str | None) -> int:
+    """Parse an integer operand that cannot be zero."""
+    parsed = _integer(value)
+    if parsed == 0:
+        raise ValueError("Modulus must be nonzero.")
+
+    return parsed
+
+
+def _bounded_count(
+    n_value: str | None, k_value: str | None, name: str
+) -> tuple[int, int]:
+    """Parse finite counting operands with the standard 0 <= k <= n bound."""
+    n = _integer(n_value)
+    k = _integer(k_value)
+    if n < 0 or k < 0 or k > n:
+        raise ValueError(f"{name} requires integer operands with 0 <= k <= n.")
+
+    return n, k
 
 
 def _operation_steps(name: str, values: list[int], output: object) -> list:

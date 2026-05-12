@@ -1,5 +1,6 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import { nakafaSearchMaxOffset } from "@repo/utilities/nakafa";
 import { describe, expect, it } from "vitest";
 
 describe("contents/queries/search:search", () => {
@@ -129,6 +130,56 @@ describe("contents/queries/search:search", () => {
       next_offset: 1,
     });
     expect(result.items[0].title).toBe("Alpha");
+  });
+
+  it("does not return a follow-up offset beyond the accepted maximum", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await t.mutation(async (ctx) => {
+      for (let index = 0; index <= nakafaSearchMaxOffset + 10; index += 1) {
+        const title = `Search Cap ${index.toString().padStart(4, "0")}`;
+
+        await ctx.db.insert("contentSearch", {
+          contentHash: `hash-search-cap-${index}`,
+          content_id: `id/articles/search-cap/${index}`,
+          description: "",
+          locale: "id",
+          markdown_url: `https://nakafa.com/id/articles/search-cap/${index}.md`,
+          route: `articles/search-cap/${index}`,
+          section: "articles",
+          syncedAt: 1,
+          text: "searchcap pagination",
+          title,
+          url: `https://nakafa.com/id/articles/search-cap/${index}`,
+        });
+      }
+    });
+
+    const offset = nakafaSearchMaxOffset - 10;
+    const browseResult = await t.query(api.contents.queries.search.search, {
+      limit: 20,
+      locale: "id",
+      offset,
+      section: "articles",
+    });
+    const queryResult = await t.query(api.contents.queries.search.search, {
+      limit: 20,
+      locale: "id",
+      offset,
+      query: "searchcap",
+      section: "articles",
+    });
+
+    expect(browseResult).toMatchObject({
+      count: 20,
+      has_more: false,
+      next_offset: null,
+    });
+    expect(queryResult).toMatchObject({
+      count: 20,
+      has_more: false,
+      next_offset: null,
+    });
   });
 
   it("removes article search rows when stale synced content is deleted", async () => {

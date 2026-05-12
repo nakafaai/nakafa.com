@@ -37,6 +37,21 @@ def test_solve_linear_equation_uses_direct_step() -> None:
     assert result.steps[0].action == "solve"
 
 
+def test_solve_uses_single_requested_variable() -> None:
+    result = run(
+        MathRequest(
+            expression="y^2 = 4",
+            kind="math",
+            operation="solve",
+            variable="y",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "[-2, 2]"
+
+
 def test_solve_inequality() -> None:
     result = run(
         MathRequest(

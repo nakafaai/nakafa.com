@@ -15,9 +15,12 @@ def run(request: MathRequest) -> MathResult:
     operation = request.operation
 
     if operation == "determinant":
+        _require_square(matrix, "Determinant")
         output = matrix.det()
         steps = _determinant_steps(matrix, output)
     elif operation == "inverse":
+        _require_square(matrix, "Inverse")
+        _require_invertible(matrix)
         output = matrix.inv()
         steps = []
     elif operation == "rank":
@@ -44,7 +47,9 @@ def run(request: MathRequest) -> MathResult:
             items=[item("eigenvector", vector) for vector in matrix.eigenvects()],
         )
     elif operation == "matrix_multiply":
-        output = matrix * parse.matrix(request.right_matrix)
+        right_matrix = parse.matrix(request.right_matrix)
+        _require_multipliable(matrix, right_matrix)
+        output = matrix * right_matrix
         steps = []
     elif operation == "linear_system":
         output = sp.linsolve((matrix, parse.vector(request.vector)))
@@ -61,6 +66,24 @@ def run(request: MathRequest) -> MathResult:
         steps=steps,
         stepStatus="complete" if steps else "unavailable",
     )
+
+
+def _require_square(matrix: sp.Matrix, name: str) -> None:
+    """Ensure an operation receives a square matrix."""
+    if matrix.rows != matrix.cols:
+        raise ValueError(f"{name} requires a square matrix.")
+
+
+def _require_invertible(matrix: sp.Matrix) -> None:
+    """Ensure an inverse request receives a nonsingular matrix."""
+    if matrix.det() == 0:
+        raise ValueError("Inverse requires a nonsingular matrix.")
+
+
+def _require_multipliable(left: sp.Matrix, right: sp.Matrix) -> None:
+    """Ensure matrix multiplication dimensions are compatible."""
+    if left.cols != right.rows:
+        raise ValueError("Matrix multiplication requires matching inner dimensions.")
 
 
 def _determinant_steps(matrix: sp.Matrix, output: object) -> list:
