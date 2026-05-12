@@ -1,7 +1,9 @@
 "use client";
 
+import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { DataPart } from "@repo/ai/schema/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type {
   MathExpression,
   MathItem,
@@ -89,11 +91,12 @@ function StepRow({ number, step }: StepRowProps) {
   const t = useTranslations("Ai");
 
   return (
-    <div className="grid max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-1">
-      <span className="shrink-0 text-muted-foreground/80">
-        {t("math-step", { number })}
+    <div className="grid max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2 gap-y-1">
+      <span className="flex shrink-0 items-center gap-2 text-muted-foreground/80">
+        <span>{t("math-step", { number })}</span>
+        <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
       </span>
-      <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-3 gap-y-1 overflow-x-auto overflow-y-hidden pb-1">
+      <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden">
         <Expression value={step.primary.latex} />
         {step.relation ? <Expression value={step.relation.latex} /> : null}
         {step.secondary ? <Expression value={step.secondary.latex} /> : null}
@@ -109,7 +112,7 @@ function ResultLine({ result }: ResultLineProps) {
   }
 
   return (
-    <div className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-1 overflow-x-auto overflow-y-hidden pb-1">
+    <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden">
       <Expression value={result.primary.latex} />
       <Relation result={result} />
       <Expression value={result.secondary.latex} />
@@ -160,7 +163,7 @@ function ItemRow({ item }: ItemRowProps) {
   const t = useTranslations("Ai");
 
   return (
-    <div className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-1 overflow-x-auto overflow-y-hidden pb-1">
+    <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden">
       <span className="shrink-0">{t(getItemLabelKey(item.label))}</span>
       {item.latex ? (
         <Expression value={item.latex} />
@@ -180,7 +183,7 @@ function ConditionList({ conditions }: ConditionListProps) {
   }
 
   return (
-    <div className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-1 overflow-x-auto overflow-y-hidden pb-1">
+    <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden">
       <span>{t("math-condition")}</span>
       {conditions.map((condition) => (
         <Expression key={condition.expression} value={condition.latex} />
