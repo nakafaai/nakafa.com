@@ -76,6 +76,9 @@ def _display_output(value: object) -> object:
 
 def _display_points(points: list[sp.Point2D]) -> MathExpression:
     """Render one or more points in coordinate notation."""
+    if not points:
+        return expression_text("empty set", "\\varnothing")
+
     return expression_text(
         ", ".join(_point_text(point) for point in points),
         ", ".join(_point_latex(point) for point in points),

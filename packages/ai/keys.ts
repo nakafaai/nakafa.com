@@ -7,6 +7,9 @@ const nodeEnvSchema = Schema.UndefinedOr(
 
 const booleanStringSchema = Schema.UndefinedOr(Schema.Literal("true", "false"));
 const secretSchema = Schema.standardSchemaV1(Schema.NonEmptyTrimmedString);
+const vercelEnvSchema = Schema.standardSchemaV1(
+  Schema.UndefinedOr(Schema.Literal("development", "preview", "production"))
+);
 
 /**
  * Validates AI package environment variables through Standard Schema.
@@ -24,6 +27,7 @@ export const keys = () =>
       FIRECRAWL_API_KEY: secretSchema,
       NODE_ENV: Schema.standardSchemaV1(nodeEnvSchema),
       OPENWEATHER_API_KEY: secretSchema,
+      VERCEL_ENV: vercelEnvSchema,
     },
     runtimeEnv: {
       AI_GATEWAY_API_KEY: process.env.AI_GATEWAY_API_KEY,
@@ -32,5 +36,6 @@ export const keys = () =>
       FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY,
       NODE_ENV: process.env.NODE_ENV,
       OPENWEATHER_API_KEY: process.env.OPENWEATHER_API_KEY,
+      VERCEL_ENV: process.env.VERCEL_ENV,
     },
   });

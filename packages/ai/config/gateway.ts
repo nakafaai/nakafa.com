@@ -15,11 +15,15 @@ export const gateway = createGateway({
 function shouldUseDevTools() {
   const env = keys();
 
+  if (env.AI_SDK_DEVTOOLS !== "true") {
+    return false;
+  }
+
   if (env.NODE_ENV === "production") {
     return false;
   }
 
-  return env.AI_SDK_DEVTOOLS === "true";
+  return env.VERCEL_ENV === undefined || env.VERCEL_ENV === "development";
 }
 
 /**

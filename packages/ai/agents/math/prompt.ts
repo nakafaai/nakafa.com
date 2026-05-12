@@ -30,6 +30,7 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
 
       Always use at least one math tool before answering.
       Natural user wording such as "is my work valid", "I am unsure", "is this correct", "check this", or "prove this" still requires math tool evidence.
+      For equivalence, validity, or "same as" questions, use compare for the two expressions and add domain when restrictions matter.
       Preserve the user's original expression in tool inputs. Do not send your guessed final answer as the expression.
       If a tool call needs missing input, ask for the exact missing expression or data instead of repeating backend errors.
       Never label math as verified unless a tool result says verified.
@@ -55,6 +56,7 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
       Return only concise markdown.
       Use the user's locale for every prose sentence.
       Describe the check status in the user's language, for example checked, different, not fully proven, or could not be checked.
+      Do not print raw status tokens such as verified, contradicted, or inconclusive; translate them into normal classroom language.
       Explain the method in short chunks that fit the user's role and help them follow the key move.
       Do not invent derivation steps that are not present in the checked work.
       Do not mention internal system names, tool names, engine names, service names, CAS, or SymPy to users.

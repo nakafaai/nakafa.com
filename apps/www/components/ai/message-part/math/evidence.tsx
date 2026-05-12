@@ -89,13 +89,15 @@ function StepRow({ number, step }: StepRowProps) {
   const t = useTranslations("Ai");
 
   return (
-    <div className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-1">
+    <div className="grid max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-1">
       <span className="shrink-0 text-muted-foreground/80">
         {t("math-step", { number })}
       </span>
-      <Expression value={step.primary.latex} />
-      {step.relation ? <Expression value={step.relation.latex} /> : null}
-      {step.secondary ? <Expression value={step.secondary.latex} /> : null}
+      <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-3 gap-y-1 overflow-x-auto overflow-y-hidden pb-1">
+        <Expression value={step.primary.latex} />
+        {step.relation ? <Expression value={step.relation.latex} /> : null}
+        {step.secondary ? <Expression value={step.secondary.latex} /> : null}
+      </span>
     </div>
   );
 }
@@ -107,7 +109,7 @@ function ResultLine({ result }: ResultLineProps) {
   }
 
   return (
-    <div className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-1">
+    <div className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-1 overflow-x-auto overflow-y-hidden pb-1">
       <Expression value={result.primary.latex} />
       <Relation result={result} />
       <Expression value={result.secondary.latex} />
@@ -158,7 +160,7 @@ function ItemRow({ item }: ItemRowProps) {
   const t = useTranslations("Ai");
 
   return (
-    <div className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-1">
+    <div className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-1 overflow-x-auto overflow-y-hidden pb-1">
       <span className="shrink-0">{t(getItemLabelKey(item.label))}</span>
       {item.latex ? (
         <Expression value={item.latex} />
@@ -178,7 +180,7 @@ function ConditionList({ conditions }: ConditionListProps) {
   }
 
   return (
-    <div className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-1">
+    <div className="flex max-w-full flex-wrap items-center gap-x-3 gap-y-1 overflow-x-auto overflow-y-hidden pb-1">
       <span>{t("math-condition")}</span>
       {conditions.map((condition) => (
         <Expression key={condition.expression} value={condition.latex} />

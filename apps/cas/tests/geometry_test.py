@@ -52,6 +52,20 @@ def test_geometry_intersections() -> None:
     assert points.secondary.expression == "(1/2, 1/2)"
 
 
+def test_geometry_empty_intersection_is_display_safe() -> None:
+    result = run(
+        MathRequest(
+            expressions=["x + y = 1", "x + y = 2"],
+            kind="math",
+            operation="intersection",
+        )
+    )
+
+    assert result.secondary
+    assert result.secondary.expression == "empty set"
+    assert result.secondary.latex == "\\varnothing"
+
+
 def test_geometry_requires_enough_points() -> None:
     with pytest.raises(ValueError, match="At least 2 points are required"):
         run(
