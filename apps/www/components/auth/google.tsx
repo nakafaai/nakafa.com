@@ -1,9 +1,9 @@
 "use client";
 
+import { BrandLogo } from "@repo/design-system/components/logos";
 import { Button } from "@repo/design-system/components/ui/button";
 import { useLocale, useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
-import { BrandIcon } from "@/components/shared/brand-icon";
 import { authClient } from "@/lib/auth/client";
 import { getAuthCallbackPath } from "@/lib/auth/utils";
 
@@ -30,7 +30,7 @@ export function AuthGoogle({ redirect }: Props) {
 
   return (
     <Button onClick={handleGoogleSignIn}>
-      <BrandIcon src="/ai-logos/google.svg" />
+      <BrandLogo name="google" />
       {t("continue-with-google")}
     </Button>
   );

@@ -91,6 +91,9 @@ def roots(request: MathRequest) -> MathResult:
     else:
         raise ValueError("Roots require an expression or equation.")
 
+    if not expr.is_polynomial(variable):
+        raise ValueError("Roots require a polynomial expression or equation.")
+
     roots_result = sp.roots(expr, variable)
 
     return result(

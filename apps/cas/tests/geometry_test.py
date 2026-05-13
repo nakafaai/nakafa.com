@@ -91,6 +91,17 @@ def test_geometry_vertical_slope_is_undefined() -> None:
         )
 
 
+def test_line_rejects_duplicate_points() -> None:
+    with pytest.raises(ValueError, match="two distinct points"):
+        run(
+            MathRequest(
+                kind="math",
+                operation="line",
+                points=[PointInput(x="1", y="2"), PointInput(x="1", y="2")],
+            )
+        )
+
+
 def test_geometry_requires_enough_points() -> None:
     with pytest.raises(ValueError, match="At least 2 points are required"):
         run(

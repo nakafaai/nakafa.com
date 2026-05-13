@@ -7,6 +7,10 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useClipboard, useDisclosure } from "@mantine/hooks";
+import {
+  BrandLogo,
+  type BrandLogoName,
+} from "@repo/design-system/components/logos";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -20,7 +24,6 @@ import { Link } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
 import { toast } from "sonner";
-import { BrandIcon } from "@/components/shared/brand-icon";
 import { getGithubUrl } from "@/lib/utils/github";
 
 /**
@@ -70,24 +73,28 @@ export function OpenContent({
     {
       title: t("open-in-github"),
       href: githubUrl,
-      iconSrc: "/ai-logos/github.svg",
+      logo: "github",
     },
     {
       title: t("open-in-chatgpt"),
       href: `https://chatgpt.com/?${new URLSearchParams({ hints: "search", q })}`,
-      iconSrc: "/ai-logos/openai.svg",
+      logo: "openai",
     },
     {
       title: t("open-in-gemini"),
       href: `https://gemini.google.com/app?${new URLSearchParams({ q })}`,
-      iconSrc: "/ai-logos/gemini.svg",
+      logo: "gemini",
     },
     {
       title: t("open-in-claude"),
       href: `https://claude.ai/new?${new URLSearchParams({ q })}`,
-      iconSrc: "/ai-logos/claude.svg",
+      logo: "claude",
     },
-  ];
+  ] as const satisfies readonly {
+    href: string;
+    logo: BrandLogoName;
+    title: string;
+  }[];
 
   return (
     <div className="inline-flex divide-x divide-secondary-foreground/20 rounded-md shadow-xs rtl:space-x-reverse">
@@ -128,7 +135,7 @@ export function OpenContent({
               key={item.title}
             >
               <Link href={item.href} rel="noopener noreferrer" target="_blank">
-                <BrandIcon src={item.iconSrc} />
+                <BrandLogo name={item.logo} />
                 {item.title}
                 <HugeIcons
                   className="ms-auto size-3.5"

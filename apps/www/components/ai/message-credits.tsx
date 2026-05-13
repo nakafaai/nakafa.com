@@ -9,6 +9,7 @@ import {
   Summation01Icon,
   TextAllCapsIcon,
 } from "@hugeicons/core-free-icons";
+import { BrandLogo } from "@repo/design-system/components/logos";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -19,7 +20,6 @@ import {
 import { useTranslations } from "next-intl";
 import { memo, useState } from "react";
 import { useMessage } from "@/components/ai/context/use-message";
-import { BrandIcon } from "@/components/shared/brand-icon";
 import { aiModels } from "@/lib/data/models";
 
 export const AiChatMessageCredits = memo(() => {
@@ -37,7 +37,7 @@ export const AiChatMessageCredits = memo(() => {
   }
 
   const model = aiModels.find((m) => m.value === modelId);
-  const modelIconSrc = model?.iconSrc;
+  const logo = model?.logo;
 
   return (
     <Popover onOpenChange={setOpen} open={open}>
@@ -56,7 +56,7 @@ export const AiChatMessageCredits = memo(() => {
               <span className="text-muted-foreground">{t("model")}</span>
             </div>
             <p className="flex items-center gap-2">
-              {modelIconSrc && <BrandIcon src={modelIconSrc} />}
+              {logo && <BrandLogo name={logo} />}
               {model?.label ?? modelId}
             </p>
           </div>

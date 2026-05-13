@@ -29,6 +29,7 @@ def run(request: MathRequest) -> MathResult:
         steps = []
     elif operation == "line":
         _require_points(points, 2)
+        _require_distinct_points(points[0], points[1], "Line")
         output = _line_equation(points[0], points[1], x, y)
         steps = []
     elif operation == "circle":
@@ -163,6 +164,12 @@ def _require_points(points: list[sp.Point2D], count: int) -> None:
     """Ensure a geometry operation received enough points."""
     if len(points) < count:
         raise ValueError(f"At least {count} points are required.")
+
+
+def _require_distinct_points(start: sp.Point2D, end: sp.Point2D, name: str) -> None:
+    """Ensure a two-point operation can determine a unique object."""
+    if start == end:
+        raise ValueError(f"{name} requires two distinct points.")
 
 
 def _slope(start: sp.Point2D, end: sp.Point2D) -> sp.Expr:

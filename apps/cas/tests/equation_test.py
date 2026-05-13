@@ -119,3 +119,15 @@ def test_roots_rejects_inequality() -> None:
                 variable="x",
             )
         )
+
+
+def test_roots_rejects_non_polynomial_equation() -> None:
+    with pytest.raises(ValueError, match="polynomial expression or equation"):
+        run(
+            MathRequest(
+                kind="math",
+                operation="roots",
+                expression="sin(x) = 0",
+                variable="x",
+            )
+        )

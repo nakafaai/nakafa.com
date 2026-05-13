@@ -8,6 +8,7 @@ import {
 import type { ModelId } from "@repo/ai/config/models";
 import { api } from "@repo/backend/convex/_generated/api";
 import { products } from "@repo/backend/convex/utils/polar/products";
+import { BrandLogo } from "@repo/design-system/components/logos";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Command,
@@ -35,7 +36,6 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useAi } from "@/components/ai/context/use-ai";
-import { BrandIcon } from "@/components/shared/brand-icon";
 import { useUser } from "@/lib/context/use-user";
 import { aiModels, getFreeModels, getPremiumModels } from "@/lib/data/models";
 
@@ -61,7 +61,7 @@ export function AiChatModel() {
 
   const [openModelMenu, setOpenModelMenu] = useState(false);
 
-  const iconSrc = aiModels.find((m) => m.value === model)?.iconSrc;
+  const logo = aiModels.find((m) => m.value === model)?.logo;
   const label = aiModels.find((m) => m.value === model)?.label;
 
   const handleOnChange = (value: ModelId) => {
@@ -125,8 +125,8 @@ export function AiChatModel() {
       <PopoverTrigger asChild>
         <Button disabled={isPending} variant="ghost">
           {isPending && <Spinner />}
-          {!isPending && iconSrc && <BrandIcon src={iconSrc} />}
-          {!(isPending || iconSrc) && <HugeIcons icon={BrainIcon} />}
+          {!isPending && logo && <BrandLogo name={logo} />}
+          {!(isPending || logo) && <HugeIcons icon={BrainIcon} />}
           {label}
           <HugeIcons
             className={cn(
@@ -152,7 +152,7 @@ export function AiChatModel() {
                     setOpenModelMenu(false);
                   }}
                 >
-                  <BrandIcon src={m.iconSrc} />
+                  <BrandLogo name={m.logo} />
                   {m.label}
                   <HugeIcons
                     className={cn(
@@ -174,7 +174,7 @@ export function AiChatModel() {
                     setOpenModelMenu(false);
                   }}
                 >
-                  <BrandIcon src={m.iconSrc} />
+                  <BrandLogo name={m.logo} />
                   {m.label}
                   <HugeIcons
                     className={cn(
