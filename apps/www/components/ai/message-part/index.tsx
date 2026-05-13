@@ -12,6 +12,7 @@ import { memo } from "react";
 import { useMessage } from "@/components/ai/context/use-message";
 import { MathPart } from "@/components/ai/message-part/math";
 import { NakafaPart } from "@/components/ai/message-part/nakafa";
+import { ScrapeUrlPart } from "@/components/ai/message-part/scrape-url";
 import { WebSearchPart } from "@/components/ai/message-part/web-search";
 
 interface Props {
@@ -48,6 +49,8 @@ export const AiMessagePart = memo(({ part, partIndex }: Props) => {
       );
     case "data-web-search":
       return <WebSearchPart message={part.data} />;
+    case "data-scrape-url":
+      return <ScrapeUrlPart message={part.data} />;
     case "data-suggestions":
       return null;
     case "data-math":

@@ -11,6 +11,7 @@ import {
 } from "@repo/ai/agents/research/schema";
 import {
   prepareScrapeStep,
+  prepareWebSearchStep,
   selectScrapeUrl,
 } from "@repo/ai/agents/research/step";
 import { scrapeUrl } from "@repo/ai/agents/research/tools/scrape";
@@ -80,8 +81,12 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
          * https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
          */
         prepareStep: ({ messages, steps }) => {
+          const hasWebSearchToolCall = steps.some((step) =>
+            step.toolCalls.some((toolCall) => toolCall.toolName === "webSearch")
+          );
+
           if (Option.isNone(pendingScrapeUrl)) {
-            return;
+            return prepareWebSearchStep(hasWebSearchToolCall);
           }
 
           const hasScrapeToolCall = steps.some((step) =>

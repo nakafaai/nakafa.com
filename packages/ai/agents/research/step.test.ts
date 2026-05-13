@@ -1,6 +1,7 @@
 import type { WebSearchOutput } from "@repo/ai/agents/research/schema";
 import {
   prepareScrapeStep,
+  prepareWebSearchStep,
   selectScrapeUrl,
 } from "@repo/ai/agents/research/step";
 import { Option } from "effect";
@@ -81,5 +82,15 @@ describe("research agent step state", () => {
 
     expect(missingUrl).toBeUndefined();
     expect(alreadyRan).toBeUndefined();
+  });
+
+  it("starts with inspectable web search before provider-only grounding", () => {
+    const step = prepareWebSearchStep(false);
+
+    expect(step).toEqual({
+      activeTools: ["webSearch"],
+      toolChoice: { toolName: "webSearch", type: "tool" },
+    });
+    expect(prepareWebSearchStep(true)).toBeUndefined();
   });
 });

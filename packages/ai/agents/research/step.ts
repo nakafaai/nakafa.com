@@ -7,6 +7,11 @@ const scrapeToolChoice = {
   toolName: "scrape",
   type: "tool",
 } satisfies { toolName: "scrape"; type: "tool" };
+const webSearchActiveTools = ["webSearch"] satisfies "webSearch"[];
+const webSearchToolChoice = {
+  toolName: "webSearch",
+  type: "tool",
+} satisfies { toolName: "webSearch"; type: "tool" };
 
 /**
  * Selects the first ranked source URL returned by web search.
@@ -53,5 +58,21 @@ export function prepareScrapeStep(
     activeTools: scrapeActiveTools,
     messages: [...messages, message],
     toolChoice: scrapeToolChoice,
+  };
+}
+
+/**
+ * Starts research with inspectable web evidence before provider grounding.
+ *
+ * @see https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
+ */
+export function prepareWebSearchStep(hasWebSearchToolCall: boolean) {
+  if (hasWebSearchToolCall) {
+    return;
+  }
+
+  return {
+    activeTools: webSearchActiveTools,
+    toolChoice: webSearchToolChoice,
   };
 }

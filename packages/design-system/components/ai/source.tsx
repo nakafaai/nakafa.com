@@ -32,17 +32,64 @@ function getSourceDomain(href: string) {
 }
 
 /**
- * Google Search grounding sources may use redirect URLs that do not expose a
- * stable favicon. Rendering those through Next Image produces noisy 404 logs.
+ * Google Search grounding can return Vertex redirect URLs. When the grounded
+ * source title is a domain, use that domain for the favicon instead.
  */
-function getFaviconUrl(href: string, domain: string) {
-  if (domain === "vertexaisearch.cloud.google.com") {
+function getFaviconUrl({
+  href,
+  domain,
+  label,
+}: {
+  href: string;
+  domain: string;
+  label?: string | number;
+}) {
+  const sourceHref = getFaviconSourceHref({ href, domain, label });
+
+  if (!sourceHref) {
     return null;
   }
 
   return `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(
-    href
+    sourceHref
   )}`;
+}
+
+/** Selects the URL used for favicon lookup without leaking redirect hosts. */
+function getFaviconSourceHref({
+  href,
+  domain,
+  label,
+}: {
+  href: string;
+  domain: string;
+  label?: string | number;
+}) {
+  if (domain !== "vertexaisearch.cloud.google.com") {
+    return href;
+  }
+
+  if (typeof label !== "string") {
+    return null;
+  }
+
+  const sourceDomain = label.trim();
+
+  if (
+    !sourceDomain ||
+    sourceDomain.includes("/") ||
+    sourceDomain.includes(" ")
+  ) {
+    return null;
+  }
+
+  const sourceHref = `https://${sourceDomain}`;
+
+  if (typeof URL.canParse === "function" && URL.canParse(sourceHref)) {
+    return sourceHref;
+  }
+
+  return null;
 }
 
 /**
@@ -94,7 +141,7 @@ export function SourceTrigger({
 }: SourceTriggerProps) {
   const { href, domain } = useSourceContext();
   const labelToShow = label ?? domain.replace("www.", "");
-  const faviconUrl = getFaviconUrl(href, domain);
+  const faviconUrl = getFaviconUrl({ href, domain, label });
 
   return (
     <HoverCardTrigger asChild>
@@ -138,8 +185,10 @@ export function SourceContent({
   className,
 }: SourceContentProps) {
   const { href, domain } = useSourceContext();
-  const faviconUrl = getFaviconUrl(href, domain);
+  const faviconUrl = getFaviconUrl({ href, domain, label: title });
   const domainLabel = getDomainLabel({ domain, title });
+  const cleanTitle = title.trim();
+  const shouldShowTitle = cleanTitle && cleanTitle !== domainLabel;
 
   return (
     <HoverCardContent className={cn("w-80 p-0 shadow-xs", className)}>
@@ -161,7 +210,9 @@ export function SourceContent({
           ) : null}
           <div className="truncate text-primary text-sm">{domainLabel}</div>
         </div>
-        <div className="line-clamp-2 font-medium text-sm">{title}</div>
+        {shouldShowTitle ? (
+          <div className="line-clamp-2 font-medium text-sm">{cleanTitle}</div>
+        ) : null}
         {!!description && (
           <div className="line-clamp-2 text-muted-foreground text-sm">
             {description}
