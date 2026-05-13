@@ -6,10 +6,15 @@ import type { ModelMessage } from "ai";
 import { Option } from "effect";
 
 const exerciseActiveTools = ["exercise"] satisfies "exercise"[];
+const readActiveTools = ["read"] satisfies "read"[];
 const exerciseToolChoice = {
   toolName: "exercise",
   type: "tool",
 } satisfies { toolName: "exercise"; type: "tool" };
+const readToolChoice = {
+  toolName: "read",
+  type: "tool",
+} satisfies { toolName: "read"; type: "tool" };
 const answerToolChoice = "none" as const;
 const maxDiscoverySearchCalls = 4;
 
@@ -72,6 +77,55 @@ export function prepareExerciseStep(
     activeTools: exerciseActiveTools,
     messages: [...messages, message],
     toolChoice: exerciseToolChoice,
+  };
+}
+
+/**
+ * Detects search results that need a full content read before Nina answers.
+ */
+export function shouldReadAfterSearch(
+  input: NakafaAgentSearchInput,
+  result: NakafaAgentSearchResult | null
+) {
+  if (result === null) {
+    return false;
+  }
+
+  if (input.section === "exercises" || input.section === "quran") {
+    return false;
+  }
+
+  return result.items.some(
+    (item) => item.section === "articles" || item.section === "subject"
+  );
+}
+
+/**
+ * Builds the AI SDK step override that completes discovery -> content read.
+ */
+export function prepareReadStep(
+  hasPendingRead: boolean,
+  messages: ModelMessage[],
+  hasReadToolCall: boolean
+) {
+  if (!hasPendingRead) {
+    return;
+  }
+
+  if (hasReadToolCall) {
+    return;
+  }
+
+  const message = {
+    role: "user",
+    content:
+      "Call the read tool now with the single most relevant content_id from the Nakafa search results already in this conversation. Use that full content before answering. Do not call search again before reading.",
+  } satisfies ModelMessage;
+
+  return {
+    activeTools: readActiveTools,
+    messages: [...messages, message],
+    toolChoice: readToolChoice,
   };
 }
 

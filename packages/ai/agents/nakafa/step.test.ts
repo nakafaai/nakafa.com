@@ -1,8 +1,10 @@
 import {
   prepareAnswerFromNakafaEvidenceStep,
   prepareExerciseStep,
+  prepareReadStep,
   selectExerciseRef,
   shouldAnswerFromNakafaEvidence,
+  shouldReadAfterSearch,
 } from "@repo/ai/agents/nakafa/step";
 import type { NakafaAgentSearchResult } from "@repo/contents/_lib/agent/schema/search";
 import { Option } from "effect";
@@ -24,6 +26,29 @@ const exerciseResult = {
       section: "exercises",
       title: "Soal 11",
       url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
+    },
+  ],
+  limit: 1,
+  next_offset: null,
+  offset: 0,
+} satisfies NakafaAgentSearchResult;
+
+const subjectResult = {
+  count: 1,
+  has_more: false,
+  items: [
+    {
+      content_id:
+        "id/subject/high-school/11/mathematics/function-modeling/rational-function",
+      description: "Pelajari fungsi rasional.",
+      locale: "id",
+      markdown_url:
+        "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function.md",
+      route:
+        "subject/high-school/11/mathematics/function-modeling/rational-function",
+      section: "subject",
+      title: "Fungsi Rasional",
+      url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function",
     },
   ],
   limit: 1,
@@ -130,6 +155,118 @@ describe("Nakafa agent step state", () => {
     );
 
     expect(missingRef).toBeUndefined();
+    expect(alreadyRan).toBeUndefined();
+  });
+
+  it("requires full content reads after lesson search results", () => {
+    const shouldReadSubject = shouldReadAfterSearch(
+      {
+        limit: 1,
+        locale: "id",
+        offset: 0,
+        query: "fungsi rasional",
+        section: "subject",
+      },
+      subjectResult
+    );
+    const shouldReadBroad = shouldReadAfterSearch(
+      {
+        limit: 1,
+        locale: "id",
+        offset: 0,
+        query: "fungsi rasional",
+      },
+      subjectResult
+    );
+
+    expect(shouldReadSubject).toBe(true);
+    expect(shouldReadBroad).toBe(true);
+  });
+
+  it("does not require content reads for exercise, quran, empty, or failed searches", () => {
+    const exerciseSearch = shouldReadAfterSearch(
+      {
+        limit: 1,
+        locale: "id",
+        offset: 0,
+        query: "fungsi rasional",
+        section: "exercises",
+      },
+      exerciseResult
+    );
+    const quranSearch = shouldReadAfterSearch(
+      {
+        limit: 1,
+        locale: "id",
+        offset: 0,
+        query: "al fatihah",
+        section: "quran",
+      },
+      {
+        ...subjectResult,
+        items: [{ ...subjectResult.items[0], section: "quran" }],
+      }
+    );
+    const emptySearch = shouldReadAfterSearch(
+      {
+        limit: 1,
+        locale: "id",
+        offset: 0,
+        query: "tidak ada",
+        section: "subject",
+      },
+      {
+        ...subjectResult,
+        count: 0,
+        items: [],
+      }
+    );
+    const failedSearch = shouldReadAfterSearch(
+      {
+        limit: 1,
+        locale: "id",
+        offset: 0,
+        query: "tidak ada",
+        section: "subject",
+      },
+      null
+    );
+
+    expect(exerciseSearch).toBe(false);
+    expect(quranSearch).toBe(false);
+    expect(emptySearch).toBe(false);
+    expect(failedSearch).toBe(false);
+  });
+
+  it("forces read for one step when content search evidence is pending", () => {
+    const step = prepareReadStep(
+      true,
+      [{ role: "user", content: "jelaskan fungsi rasional" }],
+      false
+    );
+
+    if (!step) {
+      throw new Error("Expected a forced read step.");
+    }
+
+    expect(step.activeTools).toEqual(["read"]);
+    expect(step.toolChoice).toEqual({ toolName: "read", type: "tool" });
+    expect(step.messages.at(-1)).toEqual(
+      expect.objectContaining({
+        content: expect.stringContaining("Call the read tool now"),
+        role: "user",
+      })
+    );
+  });
+
+  it("does not force read when there is no pending content or read already ran", () => {
+    const messages = [
+      { role: "user", content: "jelaskan fungsi rasional" },
+    ] satisfies Parameters<typeof prepareReadStep>[1];
+    const missingContent = prepareReadStep(false, messages, false);
+    const alreadyRan = prepareReadStep(true, messages, true);
+
+    expect(missingContent).toBeUndefined();
     expect(alreadyRan).toBeUndefined();
   });
 

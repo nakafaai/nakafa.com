@@ -10,7 +10,9 @@ import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
 import {
   prepareAnswerFromNakafaEvidenceStep,
   prepareExerciseStep,
+  prepareReadStep,
   selectExerciseRef,
+  shouldReadAfterSearch,
 } from "@repo/ai/agents/nakafa/step";
 import { exercise } from "@repo/ai/agents/nakafa/tools/exercise";
 import { quran } from "@repo/ai/agents/nakafa/tools/quran";
@@ -41,6 +43,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
 }: NakafaAgentParams) {
   const searchService = yield* NakafaSearch;
   let pendingExerciseRef = Option.none<string>();
+  let hasPendingContentRead = false;
   const result = yield* Effect.tryPromise(() =>
     generateText({
       model: model.languageModel(modelId),
@@ -63,6 +66,9 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
                 Effect.tap((output) =>
                   Effect.sync(() => {
                     if (input.section !== "exercises") {
+                      hasPendingContentRead =
+                        hasPendingContentRead ||
+                        shouldReadAfterSearch(input, output.result);
                       return;
                     }
 
@@ -80,12 +86,15 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
           description: nakafaRead,
           inputSchema: NakafaAgentReadOptionsSchema,
           outputSchema: textOutputSchema,
-          execute: (input, { toolCallId }) =>
-            Effect.runPromise(
+          execute: (input, { toolCallId }) => {
+            hasPendingContentRead = false;
+
+            return Effect.runPromise(
               read({ input, toolCallId, writer }).pipe(
                 Effect.provide(Nakafa.Default)
               )
-            ),
+            );
+          },
         }),
         exercise: tool({
           description: nakafaExercise,
@@ -133,9 +142,16 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
         const hasExerciseToolCall = steps.some((step) =>
           step.toolCalls.some((toolCall) => toolCall.toolName === "exercise")
         );
+        const hasReadToolCall = steps.some((step) =>
+          step.toolCalls.some((toolCall) => toolCall.toolName === "read")
+        );
 
         if (hasExerciseToolCall) {
           pendingExerciseRef = Option.none();
+        }
+
+        if (hasReadToolCall) {
+          hasPendingContentRead = false;
         }
 
         const exerciseStep = prepareExerciseStep(
@@ -146,6 +162,16 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
 
         if (exerciseStep) {
           return exerciseStep;
+        }
+
+        const readStep = prepareReadStep(
+          hasPendingContentRead,
+          messages,
+          hasReadToolCall
+        );
+
+        if (readStep) {
+          return readStep;
         }
 
         return prepareAnswerFromNakafaEvidenceStep(messages, steps);
