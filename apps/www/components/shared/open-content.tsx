@@ -13,8 +13,13 @@ import {
 } from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
+  ButtonGroup,
+  ButtonGroupSeparator,
+} from "@repo/design-system/components/ui/button-group";
+import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
@@ -97,61 +102,48 @@ export function OpenContent({
   }[];
 
   return (
-    <div className="inline-flex divide-x divide-secondary-foreground/20 rounded-md shadow-xs rtl:space-x-reverse">
-      <Button
-        className="rounded-none shadow-none first:rounded-s-md last:rounded-e-md focus-visible:z-10"
-        disabled={!content}
-        onClick={handleCopy}
-        variant="secondary"
-      >
+    <ButtonGroup>
+      <Button disabled={!content} onClick={handleCopy} variant="secondary">
         <HugeIcons icon={clipboard.copied ? Tick01Icon : Copy01Icon} />
         {t("copy-content")}
       </Button>
 
+      <ButtonGroupSeparator />
+
       <DropdownMenu onOpenChange={set} open={open}>
         <DropdownMenuTrigger
           render={
-            <Button
-              aria-label={t("open")}
-              className="rounded-none shadow-none first:rounded-s-md last:rounded-e-md focus-visible:z-10"
-              size="icon"
-              variant="secondary"
-            >
-              <span className="sr-only">{t("open")}</span>
-              <HugeIcons
-                className={cn(
-                  "size-4 transition-transform",
-                  open && "rotate-180"
-                )}
-                icon={ArrowDown01Icon}
-              />
-            </Button>
+            <Button aria-label={t("open")} size="icon" variant="secondary" />
           }
-        />
+        >
+          <span className="sr-only">{t("open")}</span>
+          <HugeIcons
+            className={cn("transition-transform", open && "rotate-180")}
+            icon={ArrowDown01Icon}
+          />
+        </DropdownMenuTrigger>
 
         <DropdownMenuContent className="w-56">
-          {links.map((item) => (
-            <DropdownMenuItem
-              className="cursor-pointer"
-              key={item.title}
-              render={
-                <Link
-                  href={item.href}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <BrandLogo name={item.logo} />
-                  {item.title}
-                  <HugeIcons
-                    className="ms-auto size-3.5"
-                    icon={LinkSquare02Icon}
-                  />
-                </Link>
-              }
-            />
-          ))}
+          <DropdownMenuGroup>
+            {links.map((item) => (
+              <DropdownMenuItem
+                key={item.title}
+                render={
+                  <Link
+                    href={item.href}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <BrandLogo name={item.logo} />
+                    {item.title}
+                    <HugeIcons className="ms-auto" icon={LinkSquare02Icon} />
+                  </Link>
+                }
+              />
+            ))}
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
-    </div>
+    </ButtonGroup>
   );
 }
