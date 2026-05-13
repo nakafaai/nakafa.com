@@ -1,5 +1,5 @@
 import type { ModelId } from "@repo/ai/config/models";
-import type { BrandLogoName } from "@repo/design-system/components/logos";
+import type { BrandLogoName } from "@repo/design-system/components/logos/brand";
 
 interface Model {
   label: string;

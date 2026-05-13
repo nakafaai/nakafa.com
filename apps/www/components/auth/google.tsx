@@ -1,6 +1,6 @@
 "use client";
 
-import { BrandLogo } from "@repo/design-system/components/logos";
+import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
 import { useLocale, useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";

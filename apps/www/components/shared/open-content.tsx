@@ -10,7 +10,7 @@ import { useClipboard, useDisclosure } from "@mantine/hooks";
 import {
   BrandLogo,
   type BrandLogoName,
-} from "@repo/design-system/components/logos";
+} from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,

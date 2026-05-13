@@ -9,7 +9,7 @@ import {
   Summation01Icon,
   TextAllCapsIcon,
 } from "@hugeicons/core-free-icons";
-import { BrandLogo } from "@repo/design-system/components/logos";
+import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {

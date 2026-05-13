@@ -8,7 +8,7 @@ import {
 import type { ModelId } from "@repo/ai/config/models";
 import { api } from "@repo/backend/convex/_generated/api";
 import { products } from "@repo/backend/convex/utils/polar/products";
-import { BrandLogo } from "@repo/design-system/components/logos";
+import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Command,
