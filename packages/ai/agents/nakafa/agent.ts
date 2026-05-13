@@ -124,10 +124,6 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
        * https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
        */
       prepareStep: ({ messages, steps }) => {
-        if (Option.isNone(pendingExerciseRef)) {
-          return;
-        }
-
         const hasExerciseToolCall = steps.some((step) =>
           step.toolCalls.some((toolCall) => toolCall.toolName === "exercise")
         );
