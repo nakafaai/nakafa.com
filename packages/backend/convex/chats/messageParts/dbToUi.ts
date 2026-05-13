@@ -66,51 +66,6 @@ export function mapDBPartToUIMessagePart({
           partType: part.type,
         }),
       };
-    case "source-document":
-      return {
-        type: part.type,
-        sourceId: requirePartField({
-          value: part.sourceDocumentSourceId,
-          fieldName: "sourceDocumentSourceId",
-          partType: part.type,
-        }),
-        mediaType: requirePartField({
-          value: part.sourceDocumentMediaType,
-          fieldName: "sourceDocumentMediaType",
-          partType: part.type,
-        }),
-        title: requirePartField({
-          value: part.sourceDocumentTitle,
-          fieldName: "sourceDocumentTitle",
-          partType: part.type,
-        }),
-        filename: requirePartField({
-          value: part.sourceDocumentFilename,
-          fieldName: "sourceDocumentFilename",
-          partType: part.type,
-        }),
-        providerMetadata: part.providerMetadata,
-      };
-    case "source-url":
-      return {
-        type: part.type,
-        sourceId: requirePartField({
-          value: part.sourceUrlSourceId,
-          fieldName: "sourceUrlSourceId",
-          partType: part.type,
-        }),
-        url: requirePartField({
-          value: part.sourceUrlUrl,
-          fieldName: "sourceUrlUrl",
-          partType: part.type,
-        }),
-        title: requirePartField({
-          value: part.sourceUrlTitle,
-          fieldName: "sourceUrlTitle",
-          partType: part.type,
-        }),
-        providerMetadata: part.providerMetadata,
-      };
     case "step-start":
       return {
         type: part.type,

@@ -149,6 +149,9 @@ def _function_expression(name: str, values: list[int]) -> MathExpression:
 
 def _factorization_expression(factors: dict[int, int]) -> MathExpression:
     """Render a prime factorization as one multiplication expression."""
+    if not factors:
+        return expression_text("1", "1")
+
     pieces = [
         f"{prime}^{power}" if power > 1 else str(prime)
         for prime, power in factors.items()

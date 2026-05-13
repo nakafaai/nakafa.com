@@ -1,5 +1,6 @@
 import { execSync } from "node:child_process";
 import * as fs from "node:fs";
+import { parseEnv } from "node:util";
 import {
   CONTENTS_DIR,
   getBackendEnvFilePath,
@@ -48,22 +49,21 @@ const readEnvFileMap = Effect.gen(function* () {
     catch: (error) =>
       new RuntimeFileError({ message: getUnknownMessage(error) }),
   });
-  const values = new Map<string, string>();
+  return yield* Effect.try({
+    try: () => {
+      const values = new Map<string, string>();
 
-  for (const line of content.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) {
-      continue;
-    }
+      for (const [key, value] of Object.entries(parseEnv(content))) {
+        if (value !== undefined) {
+          values.set(key, value);
+        }
+      }
 
-    const [key, ...valueParts] = trimmed.split("=");
-    const value = valueParts.join("=");
-    if (key && value) {
-      values.set(key, value);
-    }
-  }
-
-  return values;
+      return values;
+    },
+    catch: (error) =>
+      new RuntimeFileError({ message: getUnknownMessage(error) }),
+  });
 });
 
 /** Reads the last successful content-sync state when it exists. */

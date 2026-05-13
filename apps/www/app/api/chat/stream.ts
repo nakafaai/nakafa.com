@@ -260,13 +260,14 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 description:
                   "Research external or current information with source-backed web search and source analysis.",
                 inputSchema: researchToolInputSchema,
-                execute: ({ query }) =>
+                execute: ({ query }, { toolCallId }) =>
                   Effect.runPromise(
                     runResearch({
                       context,
                       locale: page.locale,
                       modelId: runtime.modelId,
                       query,
+                      toolCallId,
                       usageAccumulator: usage,
                       writer,
                     })
@@ -318,7 +319,6 @@ export function streamChat({ chat, page, runtime, user }: Params) {
           writer.merge(
             streamTextResult.toUIMessageStream({
               sendReasoning: true,
-              sendSources: true,
               sendStart: false,
               messageMetadata: ({ part }) => {
                 if (part.type === "start") {

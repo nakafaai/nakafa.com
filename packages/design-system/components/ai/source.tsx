@@ -45,6 +45,17 @@ function getFaviconUrl(href: string, domain: string) {
   )}`;
 }
 
+/**
+ * Uses the grounded page title when Google returns a Vertex redirect domain.
+ */
+function getDomainLabel({ domain, title }: { domain: string; title: string }) {
+  if (domain === "vertexaisearch.cloud.google.com" && title.trim()) {
+    return title.trim();
+  }
+
+  return domain.replace("www.", "");
+}
+
 function useSourceContext() {
   const ctx = useContext(SourceContext);
   if (!ctx) {
@@ -128,6 +139,7 @@ export function SourceContent({
 }: SourceContentProps) {
   const { href, domain } = useSourceContext();
   const faviconUrl = getFaviconUrl(href, domain);
+  const domainLabel = getDomainLabel({ domain, title });
 
   return (
     <HoverCardContent className={cn("w-80 p-0 shadow-xs", className)}>
@@ -147,9 +159,7 @@ export function SourceContent({
               width={16}
             />
           ) : null}
-          <div className="truncate text-primary text-sm">
-            {domain.replace("www.", "")}
-          </div>
+          <div className="truncate text-primary text-sm">{domainLabel}</div>
         </div>
         <div className="line-clamp-2 font-medium text-sm">{title}</div>
         {!!description && (

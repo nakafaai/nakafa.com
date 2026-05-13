@@ -3,6 +3,7 @@ import {
   nakafaScrape,
   nakafaWebSearch,
 } from "@repo/ai/agents/research/descriptions";
+import { createGroundingWebSearchData } from "@repo/ai/agents/research/grounding";
 import { researchPrompt } from "@repo/ai/agents/research/prompt";
 import {
   scrapeInputSchema,
@@ -26,7 +27,14 @@ import { Effect, Option } from "effect";
  * Runs the research agent and returns text with token usage.
  */
 export const runResearchAgent = Effect.fn("research.runResearchAgent")(
-  function* ({ task, modelId, locale, context, writer }: ResearchAgentParams) {
+  function* ({
+    task,
+    modelId,
+    locale,
+    context,
+    toolCallId,
+    writer,
+  }: ResearchAgentParams) {
     let pendingScrapeUrl = Option.none<string>();
     const result = yield* Effect.tryPromise(() =>
       generateText({
@@ -98,25 +106,17 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       })
     );
 
-    for (const source of result.sources) {
-      if (source.sourceType === "url") {
-        writer.write({
-          type: "source-url",
-          sourceId: source.id,
-          title: source.title,
-          url: source.url,
-          providerMetadata: source.providerMetadata,
-        });
-        continue;
-      }
+    const groundedSearchData = createGroundingWebSearchData({
+      providerMetadata: result.providerMetadata,
+      query: task,
+      sources: result.sources,
+    });
 
+    if (groundedSearchData) {
       writer.write({
-        type: "source-document",
-        filename: source.filename,
-        mediaType: source.mediaType,
-        sourceId: source.id,
-        title: source.title,
-        providerMetadata: source.providerMetadata,
+        id: `${toolCallId}-grounding`,
+        type: "data-web-search",
+        data: groundedSearchData,
       });
     }
 

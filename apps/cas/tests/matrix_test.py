@@ -133,6 +133,17 @@ def test_matrix_determinant_rejects_rectangular_matrix() -> None:
         )
 
 
+def test_matrix_eigenvalues_reject_rectangular_matrix() -> None:
+    with pytest.raises(ValueError, match="square matrix"):
+        run(
+            MathRequest(
+                kind="math",
+                matrix=[["1", "2", "3"], ["4", "5", "6"]],
+                operation="eigenvalues",
+            )
+        )
+
+
 def test_linear_system() -> None:
     result = run(
         MathRequest(
@@ -146,6 +157,18 @@ def test_linear_system() -> None:
     assert result.status == "verified"
     assert result.secondary
     assert result.secondary.expression == "{(2, 1)}"
+
+
+def test_linear_system_rejects_mismatched_vector_length() -> None:
+    with pytest.raises(ValueError, match="vector length must match matrix rows"):
+        run(
+            MathRequest(
+                kind="math",
+                matrix=[["1", "1"], ["1", "-1"]],
+                operation="linear_system",
+                vector=["3"],
+            )
+        )
 
 
 def test_unknown_matrix_operation_raises() -> None:

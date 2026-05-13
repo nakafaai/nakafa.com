@@ -12,7 +12,6 @@ export const modelRegistry = {
   "nakafa-lite": {
     credits: 1,
     gatewayId: "google/gemini-3.1-flash-lite",
-    label: "Nakafa Lite",
     thinking: {
       thinkingConfig: {
         includeThoughts: true,
@@ -23,7 +22,6 @@ export const modelRegistry = {
   "nakafa-pro": {
     credits: 3,
     gatewayId: "google/gemini-3-pro-preview",
-    label: "Nakafa Pro",
     thinking: {
       thinkingConfig: {
         includeThoughts: true,
@@ -36,7 +34,6 @@ export const modelRegistry = {
   {
     credits: number;
     gatewayId: GatewayModelId;
-    label: string;
     thinking: GoogleLanguageModelOptions;
   }
 >;

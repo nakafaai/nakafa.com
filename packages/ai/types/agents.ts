@@ -30,6 +30,11 @@ export interface TaskAgentParams extends BaseAgentParams {
   task: string;
 }
 
+/** Parameters for the external research subagent. */
+export interface ResearchAgentParams extends TaskAgentParams {
+  toolCallId: string;
+}
+
 /**
  * Token usage accumulator for tracking across sub-agents.
  */
@@ -49,4 +54,3 @@ export interface OrchestratorToolParams extends BaseAgentParams {
  */
 export type NakafaAgentParams = TaskAgentParams;
 export type MathAgentParams = TaskAgentParams;
-export type ResearchAgentParams = TaskAgentParams;

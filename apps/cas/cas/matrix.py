@@ -30,6 +30,7 @@ def run(request: MathRequest) -> MathResult:
         output = matrix.rref()[0]
         steps = []
     elif operation == "eigenvalues":
+        _require_square(matrix, "Eigenvalues")
         eigenvalues = matrix.eigenvals(multiple=True)
         return result(
             request,
@@ -39,6 +40,7 @@ def run(request: MathRequest) -> MathResult:
             items=[item("eigenvalue", value) for value in eigenvalues],
         )
     elif operation == "eigenvectors":
+        _require_square(matrix, "Eigenvectors")
         return result(
             request,
             status="verified",
@@ -52,7 +54,9 @@ def run(request: MathRequest) -> MathResult:
         output = matrix * right_matrix
         steps = []
     elif operation == "linear_system":
-        output = sp.linsolve((matrix, parse.vector(request.vector)))
+        vector = parse.vector(request.vector)
+        _require_linear_system_dimensions(matrix, vector)
+        output = sp.linsolve((matrix, vector))
         steps = []
     else:
         raise ValueError(f"Unsupported matrix operation: {operation}")
@@ -84,6 +88,12 @@ def _require_multipliable(left: sp.Matrix, right: sp.Matrix) -> None:
     """Ensure matrix multiplication dimensions are compatible."""
     if left.cols != right.rows:
         raise ValueError("Matrix multiplication requires matching inner dimensions.")
+
+
+def _require_linear_system_dimensions(matrix: sp.Matrix, vector: sp.Matrix) -> None:
+    """Ensure a linear system has one vector value per matrix row."""
+    if matrix.rows != vector.rows:
+        raise ValueError("Linear system vector length must match matrix rows.")
 
 
 def _determinant_steps(matrix: sp.Matrix, output: object) -> list:

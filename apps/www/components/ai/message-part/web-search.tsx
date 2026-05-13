@@ -88,7 +88,7 @@ const WebSearchPartPreview = memo(
         {results.map((item, index) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: URL may appear multiple times, need index for uniqueness
           <Source href={item.url} key={`${item.url}-${index}`}>
-            <SourceTrigger showFavicon />
+            <SourceTrigger label={getSourceLabel(item)} showFavicon />
             <SourceContent description={item.description} title={item.title} />
           </Source>
         ))}
@@ -97,3 +97,20 @@ const WebSearchPartPreview = memo(
   }
 );
 WebSearchPartPreview.displayName = "WebSearchPartPreview";
+
+/**
+ * Uses the grounded page title for Vertex redirect URLs.
+ */
+function getSourceLabel(item: DataPart["web-search"]["sources"][number]) {
+  if (typeof URL.canParse !== "function" || !URL.canParse(item.url)) {
+    return;
+  }
+
+  const domain = new URL(item.url).hostname;
+
+  if (domain !== "vertexaisearch.cloud.google.com") {
+    return;
+  }
+
+  return item.title.trim() || undefined;
+}

@@ -106,8 +106,6 @@ export type ToolState = Infer<typeof toolStateValidator>;
 export const partTypeValidator = literals(
   "text",
   "reasoning",
-  "source-url",
-  "source-document",
   "file",
   "step-start",
   // Orchestrator tools
@@ -452,15 +450,6 @@ export const partValidator = v.object({
   fileMediaType: v.optional(v.string()),
   fileFilename: v.optional(v.string()),
   fileUrl: v.optional(v.string()),
-
-  sourceUrlSourceId: v.optional(v.string()),
-  sourceUrlUrl: v.optional(v.string()),
-  sourceUrlTitle: v.optional(v.string()),
-
-  sourceDocumentSourceId: v.optional(v.string()),
-  sourceDocumentMediaType: v.optional(v.string()),
-  sourceDocumentTitle: v.optional(v.string()),
-  sourceDocumentFilename: v.optional(v.string()),
 
   toolToolCallId: v.optional(v.string()),
   toolState: v.optional(toolStateValidator),

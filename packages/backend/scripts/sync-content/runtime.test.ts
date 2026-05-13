@@ -20,19 +20,21 @@ afterEach(() => {
 describe("sync-content runtime", () => {
   it.each([
     {
+      content: "CONVEX_URL=file-url\n",
       expected: "shell-url",
       name: "keeps explicit shell environment above backend .env.local",
       shell: "shell-url",
     },
     {
+      content: 'CONVEX_URL="file-url"\n',
       expected: "file-url",
-      name: "falls back to backend .env.local when the shell is missing",
+      name: "falls back to dotenv-quoted backend .env.local",
       shell: null,
     },
-  ])("$name", async ({ expected, shell }) => {
+  ])("$name", async ({ content, expected, shell }) => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), "nakafa-sync-"));
     const envFile = path.join(directory, ".env.local");
-    fs.writeFileSync(envFile, "CONVEX_URL=file-url\n");
+    fs.writeFileSync(envFile, content);
 
     try {
       if (shell) {

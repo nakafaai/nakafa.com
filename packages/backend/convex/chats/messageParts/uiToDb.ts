@@ -68,25 +68,6 @@ function mapUIMessagePartToDBPart(
         fileFilename: part.filename,
         fileUrl: part.url,
       };
-    case "source-document":
-      return {
-        ...baseFields,
-        type: part.type,
-        sourceDocumentSourceId: part.sourceId,
-        sourceDocumentMediaType: part.mediaType,
-        sourceDocumentTitle: part.title,
-        sourceDocumentFilename: part.filename,
-        providerMetadata: part.providerMetadata,
-      };
-    case "source-url":
-      return {
-        ...baseFields,
-        type: part.type,
-        sourceUrlSourceId: part.sourceId,
-        sourceUrlUrl: part.url,
-        sourceUrlTitle: part.title,
-        providerMetadata: part.providerMetadata,
-      };
     case "step-start":
       return {
         ...baseFields,

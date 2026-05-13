@@ -60,6 +60,14 @@ def test_prime_factorization() -> None:
     assert [entry.value for entry in result.items] == ["2^2", "3^1", "7^1"]
 
 
+def test_prime_factorization_of_one() -> None:
+    result = run(MathRequest(kind="math", n="1", operation="prime_factorization"))
+
+    assert result.secondary
+    assert result.secondary.expression == "1"
+    assert result.secondary.latex == "1"
+
+
 def test_gcd_with_more_than_two_values_uses_function_notation() -> None:
     result = run(MathRequest(kind="math", operation="gcd", values=["84", "30", "6"]))
 

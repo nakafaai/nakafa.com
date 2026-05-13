@@ -8,11 +8,6 @@ import {
   ReasoningTrigger,
 } from "@repo/design-system/components/ai/reasoning";
 import { Response } from "@repo/design-system/components/ai/response";
-import {
-  Source,
-  SourceContent,
-  SourceTrigger,
-} from "@repo/design-system/components/ai/source";
 import { memo } from "react";
 import { useMessage } from "@/components/ai/context/use-message";
 import { MathPart } from "@/components/ai/message-part/math";
@@ -53,15 +48,6 @@ export const AiMessagePart = memo(({ part, partIndex }: Props) => {
       );
     case "data-web-search":
       return <WebSearchPart message={part.data} />;
-    case "source-url":
-      return (
-        <Source href={part.url}>
-          <SourceTrigger showFavicon />
-          <SourceContent title={part.title ?? part.url} />
-        </Source>
-      );
-    case "source-document":
-      return null;
     case "data-suggestions":
       return null;
     case "data-math":
