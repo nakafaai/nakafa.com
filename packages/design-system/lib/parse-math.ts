@@ -28,6 +28,7 @@ const TRIPLE_BACKTICK_LENGTH = 3;
 const NUMBERED_LIST_PATTERN = /^(\s*)(\d+)\.\s+/;
 const BULLET_LIST_PATTERN = /^(\s*)[-*+]\s+/;
 const NON_WHITESPACE_START_PATTERN = /^\S/;
+const BLOCKQUOTE_PREFIX_PATTERN = /^(\s*(?:>\s*)+)\s*$/;
 
 /**
  * Applies a transform only to segments that are OUTSIDE of fenced code blocks (``` ... ```)
@@ -114,6 +115,18 @@ function getListContext(
 }
 
 /**
+ * Returns the Markdown quote prefix when display math is the only content on a
+ * blockquote line.
+ */
+function getBlockquotePrefix(text: string, position: number) {
+  const lineStart = text.lastIndexOf("\n", position - 1) + 1;
+  const linePrefix = text.slice(lineStart, position);
+  const match = linePrefix.match(BLOCKQUOTE_PREFIX_PATTERN);
+
+  return match?.[1];
+}
+
+/**
  * Creates a fenced math block with appropriate newlines based on context.
  * Adds LaTeX line breaks (\\) only when multi-line content lacks them.
  * @param inner - The math content
@@ -126,9 +139,18 @@ function createFencedMathBlock(
   fullText: string,
   matchStart: number
 ): string {
+  const blockquotePrefix = getBlockquotePrefix(fullText, matchStart);
   const context = getListContext(fullText, matchStart);
-
   const mathContent = inner.trim();
+
+  if (blockquotePrefix) {
+    const quotedMath = mathContent
+      .split("\n")
+      .map((line) => `${blockquotePrefix}${line}`)
+      .join("\n");
+
+    return `\`\`\`math\n${quotedMath}\n${blockquotePrefix}\`\`\``;
+  }
 
   if (context.isInList) {
     // In a list: use single newline and preserve indentation

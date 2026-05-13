@@ -530,6 +530,7 @@
     "math-compare-verified": "same as",
     "math-compare-contradicted": "different from",
     "math-compare-inconclusive": "not proven same as",
+    "math-input": "Given",
     "math-condition": "Condition",
     "math-item-counterexample": "Counterexample",
     "math-item-domain": "Domain",

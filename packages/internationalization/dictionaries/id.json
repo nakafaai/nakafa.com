@@ -530,6 +530,7 @@
     "math-compare-verified": "sama dengan",
     "math-compare-contradicted": "berbeda dengan",
     "math-compare-inconclusive": "belum terbukti sama dengan",
+    "math-input": "Diketahui",
     "math-condition": "Syarat",
     "math-item-counterexample": "Contoh pembeda",
     "math-item-domain": "Domain",

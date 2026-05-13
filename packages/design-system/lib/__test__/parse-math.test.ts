@@ -32,6 +32,21 @@ describe("preprocessLaTeX", () => {
     );
   });
 
+  it("keeps display math inside blockquotes", () => {
+    const markdown = [
+      "> **Rumus Hubungannya:**",
+      "> \\[w = m \\cdot g\\]",
+      "> (\\(w\\) = berat, \\(m\\) = massa, \\(g\\) = percepatan gravitasi)",
+    ].join("\n");
+
+    const output = preprocessLaTeX(markdown);
+    const tokens = Lexer.lex(output, { gfm: true });
+
+    expect(output).toContain("> ```math\n> w = m \\cdot g\n> ```");
+    expect(tokens).toHaveLength(1);
+    expect(tokens[0]?.type).toBe("blockquote");
+  });
+
   it("ignores indented prose that is not part of a list", () => {
     const markdown = ["Intro", "  continued", "  \\[x\\]"].join("\n");
 
