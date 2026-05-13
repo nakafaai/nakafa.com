@@ -144,6 +144,17 @@ def test_matrix_eigenvalues_reject_rectangular_matrix() -> None:
         )
 
 
+def test_matrix_eigenvectors_reject_rectangular_matrix() -> None:
+    with pytest.raises(ValueError, match="square matrix"):
+        run(
+            MathRequest(
+                kind="math",
+                matrix=[["1", "2", "3"], ["4", "5", "6"]],
+                operation="eigenvectors",
+            )
+        )
+
+
 def test_linear_system() -> None:
     result = run(
         MathRequest(

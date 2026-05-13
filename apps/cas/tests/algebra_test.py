@@ -108,6 +108,12 @@ def test_evaluate_falls_back_without_numeric_division_numerator() -> None:
     assert result.steps[0].action == "evaluate"
 
 
+@pytest.mark.parametrize("expression", ["1/0", "0/0", "oo", "-oo", "x/0"])
+def test_evaluate_rejects_non_finite_results(expression: str) -> None:
+    with pytest.raises(ValueError, match="finite value"):
+        run(MathRequest(kind="math", operation="evaluate", expression=expression))
+
+
 def test_evaluate_rejects_tuple_expressions() -> None:
     with pytest.raises(ValueError, match="one mathematical value"):
         run(

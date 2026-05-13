@@ -31,8 +31,13 @@ def integrate(request: MathRequest) -> MathResult:
     """Integrate an expression, using bounds when both are provided."""
     expr = parse.first_expression(request)
     variable = parse.symbol(request.variable)
+    has_lower = request.lower is not None
+    has_upper = request.upper is not None
 
-    if request.lower is not None and request.upper is not None:
+    if has_lower != has_upper:
+        raise ValueError("Definite integrals require both lower and upper bounds.")
+
+    if has_lower and has_upper:
         lower = parse.expression(request.lower)
         upper = parse.expression(request.upper)
         output = sp.integrate(
@@ -56,13 +61,17 @@ def integrate(request: MathRequest) -> MathResult:
 
 
 def limit(request: MathRequest) -> MathResult:
-    """Compute a one-variable limit at the requested point."""
+    """Compute an ordinary two-sided limit at the requested point."""
     expr = parse.first_expression(request)
     variable = parse.symbol(request.variable)
     point = parse.expression(request.point)
-    output = sp.limit(expr, variable, point)
+    left = sp.limit(expr, variable, point, dir="-")
+    right = sp.limit(expr, variable, point, dir="+")
+    if left != right and sp.simplify(left - right) != 0:
+        raise ValueError("Two-sided limit does not exist at the requested point.")
 
-    primary = sp.Limit(expr, variable, point)
+    output = right
+    primary = sp.Limit(expr, variable, point, dir="+-")
 
     return result(
         request,

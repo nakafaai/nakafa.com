@@ -1,3 +1,5 @@
+import pytest
+
 from cas.engine import run
 from cas.schema import MathRequest
 
@@ -75,6 +77,19 @@ def test_integrate_with_bounds() -> None:
     assert result.steps[0].primary.expression == "Integral(x, (x, 0, 2))"
 
 
+def test_integrate_rejects_one_sided_bounds() -> None:
+    with pytest.raises(ValueError, match="lower and upper bounds"):
+        run(
+            MathRequest(
+                expression="x",
+                kind="math",
+                lower="0",
+                operation="integrate",
+                variable="x",
+            )
+        )
+
+
 def test_limit_rational_expression() -> None:
     result = run(
         MathRequest(
@@ -90,4 +105,17 @@ def test_limit_rational_expression() -> None:
     assert result.secondary
     assert result.secondary.expression == "1"
     assert result.stepStatus == "partial"
-    assert result.steps[0].primary.expression == "Limit(sin(x)/x, x, 0, dir='+')"
+    assert result.steps[0].primary.expression == "Limit(sin(x)/x, x, 0, dir='+-')"
+
+
+def test_limit_rejects_different_one_sided_limits() -> None:
+    with pytest.raises(ValueError, match="Two-sided limit does not exist"):
+        run(
+            MathRequest(
+                kind="math",
+                operation="limit",
+                expression="1/x",
+                point="0",
+                variable="x",
+            )
+        )

@@ -14,6 +14,7 @@ def evaluate(request: MathRequest) -> MathResult:
     """Evaluate exact arithmetic or symbolic expressions."""
     original = parse.expression(request.expression, evaluate=False)
     value = sp.simplify(parse.first_expression(request))
+    _require_finite(value)
     steps = _evaluate_steps(original, value)
 
     return result(
@@ -157,6 +158,19 @@ def _comparison_conditions(left: sp.Expr, right: sp.Expr) -> list[object]:
                 conditions.append(sp.Ne(symbol, excluded))
 
     return sorted(set(conditions), key=str)
+
+
+def _require_finite(value: sp.Expr) -> None:
+    """Reject undefined arithmetic before it becomes verified evidence."""
+    if value.is_finite is False:
+        raise ValueError("Evaluation requires a finite value.")
+
+    non_finite_values = (sp.oo, -sp.oo, sp.zoo, sp.nan)
+    if value in non_finite_values:
+        raise ValueError("Evaluation requires a finite value.")
+
+    if any(value.has(non_finite_value) for non_finite_value in non_finite_values):
+        raise ValueError("Evaluation requires a finite value.")
 
 
 def _evaluate_steps(original: sp.Expr, value: sp.Expr) -> list:
