@@ -1,4 +1,6 @@
-import { model, order } from "@repo/ai/config/vercel";
+import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
+import { getModelProviderOptions, type ModelId } from "@repo/ai/config/models";
+import { model } from "@repo/ai/config/vercel";
 import {
   generateText,
   NoSuchToolError,
@@ -11,7 +13,7 @@ import { Effect, Schema } from "effect";
 type MathRepairOptions = Parameters<ToolCallRepairFunction<ToolSet>>[0];
 
 interface RepairMathToolCallParams extends MathRepairOptions {
-  modelId: string;
+  modelId: ModelId;
   task: string;
 }
 
@@ -87,7 +89,8 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
         error.message,
       ].join("\n"),
       providerOptions: {
-        gateway: { order },
+        gateway: gatewayProviderOptions,
+        google: getModelProviderOptions(modelId),
       },
       system,
     })

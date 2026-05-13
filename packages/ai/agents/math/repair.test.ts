@@ -8,10 +8,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const generateText = vi.hoisted(() => vi.fn());
 
 vi.mock("@repo/ai/config/vercel", () => ({
+  gatewayProviderOptions: { sort: "ttft" },
   model: {
     languageModel: (modelId: string) => modelId,
   },
-  order: ["google"],
 }));
 
 vi.mock("ai", async (importOriginal) => {
@@ -74,7 +74,7 @@ describe("math tool repair", () => {
         error: invalidInputError,
         inputSchema,
         messages: [],
-        modelId: "gemini-test",
+        modelId: "nakafa-lite",
         system: "system",
         task: "Sederhanakan (x^2 - 9)/(x - 3)",
         toolCall,
@@ -95,7 +95,7 @@ describe("math tool repair", () => {
     });
     expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: "gemini-test",
+        model: "nakafa-lite",
         prompt: expect.stringContaining("Original user request:"),
         system: "system",
       })
@@ -121,7 +121,7 @@ describe("math tool repair", () => {
         error: invalidInputError,
         inputSchema,
         messages: [],
-        modelId: "gemini-test",
+        modelId: "nakafa-lite",
         system: "system",
         task: "Sederhanakan (x^2 - 9)/(x - 3)",
         toolCall,
@@ -150,7 +150,7 @@ describe("math tool repair", () => {
         error: invalidInputError,
         inputSchema,
         messages: [],
-        modelId: "gemini-test",
+        modelId: "nakafa-lite",
         system: "system",
         task: "Sederhanakan x",
         toolCall,
@@ -179,7 +179,7 @@ describe("math tool repair", () => {
         error: invalidInputError,
         inputSchema,
         messages: [],
-        modelId: "gemini-test",
+        modelId: "nakafa-lite",
         system: "system",
         task: "Sederhanakan (x^2 - 9)/(x - 3)",
         toolCall: incompleteToolCall,
@@ -206,7 +206,7 @@ describe("math tool repair", () => {
         error: new NoSuchToolError({ toolName: "unknown" }),
         inputSchema,
         messages: [],
-        modelId: "gemini-test",
+        modelId: "nakafa-lite",
         system: "system",
         task: "Sederhanakan x",
         toolCall: { ...toolCall, toolName: "unknown" },
@@ -224,7 +224,7 @@ describe("math tool repair", () => {
         error: invalidInputError,
         inputSchema,
         messages: [],
-        modelId: "gemini-test",
+        modelId: "nakafa-lite",
         system: "system",
         task: "Sederhanakan x",
         toolCall,
@@ -242,7 +242,7 @@ describe("math tool repair", () => {
         error: invalidInputError,
         inputSchema: () => Promise.reject(new Error("schema unavailable")),
         messages: [],
-        modelId: "gemini-test",
+        modelId: "nakafa-lite",
         system: "system",
         task: "Sederhanakan x",
         toolCall,
@@ -262,7 +262,7 @@ describe("math tool repair", () => {
         error: invalidInputError,
         inputSchema,
         messages: [],
-        modelId: "gemini-test",
+        modelId: "nakafa-lite",
         system: "system",
         task: "Sederhanakan x",
         toolCall,

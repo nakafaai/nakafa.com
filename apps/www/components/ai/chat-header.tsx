@@ -186,29 +186,31 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
       <Activity mode={isOwner ? "visible" : "hidden"}>
         <HeaderGroup>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                aria-label="More actions"
-                disabled={isPending}
-                size="icon-sm"
-                variant="ghost"
-              >
-                <HugeIcons icon={MoreHorizontalIcon} />
-                <span className="sr-only">More actions</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  aria-label="More actions"
+                  disabled={isPending}
+                  size="icon-sm"
+                  variant="ghost"
+                >
+                  <HugeIcons icon={MoreHorizontalIcon} />
+                  <span className="sr-only">More actions</span>
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuGroup>
                 <DropdownMenuItem
                   className="cursor-pointer"
-                  onSelect={handleEdit}
+                  onClick={handleEdit}
                 >
                   <HugeIcons icon={Edit01Icon} />
                   {t("rename-chat")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="cursor-pointer"
-                  onSelect={() => setConfirmShare(true)}
+                  onClick={() => setConfirmShare(true)}
                 >
                   <HugeIcons icon={LinkForwardIcon} />
                   {t("share-chat")}
@@ -218,7 +220,7 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
               <DropdownMenuGroup>
                 <DropdownMenuItem
                   className="cursor-pointer"
-                  onSelect={() => setConfirmDelete(true)}
+                  onClick={() => setConfirmDelete(true)}
                   variant="destructive"
                 >
                   <HugeIcons icon={Delete02Icon} />

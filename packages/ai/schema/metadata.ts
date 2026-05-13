@@ -1,3 +1,4 @@
+import { MODEL_IDS } from "@repo/ai/config/models";
 import { Schema } from "effect";
 
 const ComponentUsageSchema = Schema.Struct({
@@ -10,7 +11,7 @@ const ComponentUsageSchema = Schema.Struct({
  */
 export const MetadataSchema = Schema.Struct({
   credits: Schema.optional(Schema.Number),
-  model: Schema.String,
+  model: Schema.Literal(...MODEL_IDS),
   tokens: Schema.optional(
     Schema.Struct({
       breakdown: Schema.optional(

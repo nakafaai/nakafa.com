@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  AiBrain02Icon,
   ArrowLeft02Icon,
   ArrowRight02Icon,
   Coins01Icon,
@@ -9,7 +8,6 @@ import {
   Summation01Icon,
   TextAllCapsIcon,
 } from "@hugeicons/core-free-icons";
-import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -20,7 +18,7 @@ import {
 import { useTranslations } from "next-intl";
 import { memo, useState } from "react";
 import { useMessage } from "@/components/ai/context/use-message";
-import { aiModels } from "@/lib/data/models";
+import { getAiModel } from "@/lib/data/models";
 
 export const AiChatMessageCredits = memo(() => {
   const t = useTranslations("Ai");
@@ -36,8 +34,11 @@ export const AiChatMessageCredits = memo(() => {
     return null;
   }
 
-  const model = aiModels.find((m) => m.value === modelId);
-  const logo = model?.logo;
+  if (!modelId) {
+    return null;
+  }
+
+  const model = getAiModel(modelId);
 
   return (
     <Popover onOpenChange={setOpen} open={open}>
@@ -52,13 +53,10 @@ export const AiChatMessageCredits = memo(() => {
           {/* Model */}
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
-              <HugeIcons className="size-4" icon={AiBrain02Icon} />
+              <HugeIcons className="size-4" icon={model.icon} />
               <span className="text-muted-foreground">{t("model")}</span>
             </div>
-            <p className="flex items-center gap-2">
-              {logo && <BrandLogo name={logo} />}
-              {model?.label ?? modelId}
-            </p>
+            <p className="flex items-center gap-2">{model.label}</p>
           </div>
 
           {/* Credits */}

@@ -5,8 +5,9 @@ import { runMath } from "@repo/ai/agents/orchestrator/math";
 import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
 import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
 import { runResearch } from "@repo/ai/agents/orchestrator/research";
-import type { ModelId } from "@repo/ai/config/models";
-import { model, type OpenAIProvider, order } from "@repo/ai/config/vercel";
+import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
+import { getModelProviderOptions, type ModelId } from "@repo/ai/config/models";
+import { model } from "@repo/ai/config/vercel";
 import { generateTitle } from "@repo/ai/features/title";
 import {
   mathToolInputSchema,
@@ -309,18 +310,15 @@ export function streamChat({ chat, page, runtime, user }: Params) {
               chunking: "word",
             }),
             providerOptions: {
-              gateway: { order },
-              openai: {
-                include: ["reasoning.encrypted_content"],
-                reasoningSummary: "detailed",
-                serviceTier: "priority",
-              } satisfies OpenAIProvider,
+              gateway: gatewayProviderOptions,
+              google: getModelProviderOptions(runtime.modelId),
             },
           });
 
           writer.merge(
             streamTextResult.toUIMessageStream({
               sendReasoning: true,
+              sendSources: true,
               sendStart: false,
               messageMetadata: ({ part }) => {
                 if (part.type === "start") {

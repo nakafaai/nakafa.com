@@ -109,40 +109,46 @@ export function OpenContent({
       </Button>
 
       <DropdownMenu onOpenChange={set} open={open}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            aria-label={t("open")}
-            className="rounded-none shadow-none first:rounded-s-md last:rounded-e-md focus-visible:z-10"
-            size="icon"
-            variant="secondary"
-          >
-            <span className="sr-only">{t("open")}</span>
-            <HugeIcons
-              className={cn(
-                "size-4 transition-transform",
-                open && "rotate-180"
-              )}
-              icon={ArrowDown01Icon}
-            />
-          </Button>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={t("open")}
+              className="rounded-none shadow-none first:rounded-s-md last:rounded-e-md focus-visible:z-10"
+              size="icon"
+              variant="secondary"
+            >
+              <span className="sr-only">{t("open")}</span>
+              <HugeIcons
+                className={cn(
+                  "size-4 transition-transform",
+                  open && "rotate-180"
+                )}
+                icon={ArrowDown01Icon}
+              />
+            </Button>
+          }
+        />
 
         <DropdownMenuContent className="w-56">
           {links.map((item) => (
             <DropdownMenuItem
-              asChild
               className="cursor-pointer"
               key={item.title}
-            >
-              <Link href={item.href} rel="noopener noreferrer" target="_blank">
-                <BrandLogo name={item.logo} />
-                {item.title}
-                <HugeIcons
-                  className="ms-auto size-3.5"
-                  icon={LinkSquare02Icon}
-                />
-              </Link>
-            </DropdownMenuItem>
+              render={
+                <Link
+                  href={item.href}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <BrandLogo name={item.logo} />
+                  {item.title}
+                  <HugeIcons
+                    className="ms-auto size-3.5"
+                    icon={LinkSquare02Icon}
+                  />
+                </Link>
+              }
+            />
           ))}
         </DropdownMenuContent>
       </DropdownMenu>

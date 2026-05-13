@@ -58,20 +58,22 @@ export function SchoolClassesPeopleInvite() {
   return (
     <ButtonGroup>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button>
-            <HugeIcons icon={UserAdd01Icon} />
-            {t("invite")}
-          </Button>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <Button>
+              <HugeIcons icon={UserAdd01Icon} />
+              {t("invite")}
+            </Button>
+          }
+        />
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>{t("role")}</DropdownMenuLabel>
           <DropdownMenuGroup>
+            <DropdownMenuLabel>{t("role")}</DropdownMenuLabel>
             {inviteRoleList.map((role) => (
               <DropdownMenuItem
                 className="cursor-pointer"
                 key={role.value}
-                onSelect={() => {
+                onClick={() => {
                   setSelectedRole(role.value);
                   inviteDialogHandlers.open();
                 }}

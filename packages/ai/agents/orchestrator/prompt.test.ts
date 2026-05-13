@@ -74,6 +74,12 @@ describe("nakafaPrompt", () => {
     });
 
     expect(prompt).toContain(
+      "Ground every factual educational answer in the smallest reliable evidence path before the final answer"
+    );
+    expect(prompt).toContain(
+      "Answer directly only for greetings, preferences, simple rewrites, or other requests that do not need factual, source-specific, current, or mathematical evidence."
+    );
+    expect(prompt).toContain(
       "Use more than one specialized agent when the answer needs more than one kind of evidence."
     );
     expect(prompt).toContain(

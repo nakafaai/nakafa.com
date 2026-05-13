@@ -220,31 +220,33 @@ export function SchoolClassesForumNew() {
                       {t("tag-label")}
                     </FieldLabel>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-invalid={isInvalid}
-                          className="w-full font-normal"
-                          id="school-classes-forum-new-tag"
-                          name={field.name}
-                          variant="outline"
-                        >
-                          <HugeIcons icon={currentTag.icon} />
-                          {t(currentTag.value)}
-                          <HugeIcons
-                            className="ml-auto"
-                            icon={ArrowDown01Icon}
-                          />
-                        </Button>
-                      </DropdownMenuTrigger>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button
+                            aria-invalid={isInvalid}
+                            className="w-full font-normal"
+                            id="school-classes-forum-new-tag"
+                            name={field.name}
+                            variant="outline"
+                          >
+                            <HugeIcons icon={currentTag.icon} />
+                            {t(currentTag.value)}
+                            <HugeIcons
+                              className="ml-auto"
+                              icon={ArrowDown01Icon}
+                            />
+                          </Button>
+                        }
+                      />
                       <DropdownMenuContent
                         align="start"
-                        className="w-(--radix-dropdown-menu-trigger-width)"
+                        className="w-(--anchor-width)"
                       >
                         {availableTags.map((tag) => (
                           <DropdownMenuItem
                             className="cursor-pointer"
                             key={tag.value}
-                            onSelect={() => field.handleChange(tag.value)}
+                            onClick={() => field.handleChange(tag.value)}
                           >
                             <HugeIcons icon={tag.icon} />
                             {t(tag.value)}

@@ -16,6 +16,14 @@ const ref = {
   url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
 } satisfies NakafaAgentContentRef;
 
+const toolCallProviderMetadata = {
+  google: { thoughtSignature: "call-signature" },
+};
+
+const toolResultProviderMetadata = {
+  google: { thoughtSignature: "result-signature" },
+};
+
 describe("mapDBPartToUIMessagePart", () => {
   it("hydrates nakafa tool and data parts from the current schema", async () => {
     const t = convexTest(schema, convexModules);
@@ -48,8 +56,10 @@ describe("mapDBPartToUIMessagePart", () => {
         type: "tool-nakafa",
         toolToolCallId: "tool-1",
         toolState: "output-available",
+        toolCallProviderMetadata,
         toolNakafaInput: "current page",
         toolNakafaOutput: "done",
+        toolResultProviderMetadata,
       });
       await ctx.db.insert("parts", {
         messageId,
@@ -57,8 +67,10 @@ describe("mapDBPartToUIMessagePart", () => {
         type: "tool-math",
         toolToolCallId: "math-tool-1",
         toolState: "output-available",
+        toolCallProviderMetadata,
         toolMathInput: "compare x + 1 and x + 2",
         toolMathOutput: "contradicted",
+        toolResultProviderMetadata,
       });
       await ctx.db.insert("parts", {
         messageId,
@@ -168,13 +180,17 @@ describe("mapDBPartToUIMessagePart", () => {
     expect(parts.map((part) => mapDBPartToUIMessagePart({ part }))).toEqual([
       expect.objectContaining({
         type: "tool-nakafa",
+        callProviderMetadata: toolCallProviderMetadata,
         input: { query: "current page" },
         output: "done",
+        resultProviderMetadata: toolResultProviderMetadata,
       }),
       expect.objectContaining({
         type: "tool-math",
+        callProviderMetadata: toolCallProviderMetadata,
         input: { query: "compare x + 1 and x + 2" },
         output: "contradicted",
+        resultProviderMetadata: toolResultProviderMetadata,
       }),
       expect.objectContaining({
         type: "data-math",

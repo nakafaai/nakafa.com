@@ -1,5 +1,3 @@
-import type { GatewayProviderOptions } from "@ai-sdk/gateway";
-import type { OpenAIResponsesProviderOptions } from "@ai-sdk/openai";
 import { createWrappedLanguageModel } from "@repo/ai/config/gateway";
 import { MODEL_IDS, modelRegistry } from "@repo/ai/config/models";
 import { customProvider } from "ai";
@@ -17,8 +15,3 @@ const languageModels: LanguageModelMap = Object.assign(
 export const model = customProvider({
   languageModels,
 });
-
-export const order = ["cerebras", "groq", "baseten", "azure", "vertex"];
-
-export type GatewayProvider = GatewayProviderOptions;
-export type OpenAIProvider = OpenAIResponsesProviderOptions;

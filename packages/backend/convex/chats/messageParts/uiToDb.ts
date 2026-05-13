@@ -19,6 +19,25 @@ function requirePersistableToolState(state: string): ToolState {
   }
 }
 
+/** Returns tool result provider metadata only for tool states that carry it. */
+function getToolResultProviderMetadata(part: MyUIMessagePart) {
+  if (
+    part.type !== "tool-nakafa" &&
+    part.type !== "tool-deepResearch" &&
+    part.type !== "tool-math"
+  ) {
+    return;
+  }
+
+  switch (part.state) {
+    case "output-available":
+    case "output-error":
+      return part.resultProviderMetadata;
+    default:
+      return;
+  }
+}
+
 function mapUIMessagePartToDBPart(
   part: MyUIMessagePart,
   order: number
@@ -79,6 +98,8 @@ function mapUIMessagePartToDBPart(
         type: part.type,
         toolToolCallId: part.toolCallId,
         toolState: requirePersistableToolState(part.state),
+        toolCallProviderMetadata: part.callProviderMetadata,
+        toolResultProviderMetadata: getToolResultProviderMetadata(part),
         toolNakafaInput: part.input?.query,
         toolNakafaOutput: part.output,
         toolErrorText: part.errorText,
@@ -89,6 +110,8 @@ function mapUIMessagePartToDBPart(
         type: part.type,
         toolToolCallId: part.toolCallId,
         toolState: requirePersistableToolState(part.state),
+        toolCallProviderMetadata: part.callProviderMetadata,
+        toolResultProviderMetadata: getToolResultProviderMetadata(part),
         toolDeepResearchInput: part.input?.query,
         toolDeepResearchOutput: part.output,
         toolErrorText: part.errorText,
@@ -99,6 +122,8 @@ function mapUIMessagePartToDBPart(
         type: part.type,
         toolToolCallId: part.toolCallId,
         toolState: requirePersistableToolState(part.state),
+        toolCallProviderMetadata: part.callProviderMetadata,
+        toolResultProviderMetadata: getToolResultProviderMetadata(part),
         toolMathInput: part.input?.query,
         toolMathOutput: part.output,
         toolErrorText: part.errorText,

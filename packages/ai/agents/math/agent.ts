@@ -26,6 +26,8 @@ import {
 } from "@repo/ai/agents/math/schema";
 import { prepareMathStep } from "@repo/ai/agents/math/step";
 import { compute } from "@repo/ai/agents/math/tools/compute";
+import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
+import { getModelProviderOptions } from "@repo/ai/config/models";
 import { model } from "@repo/ai/config/vercel";
 import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { MathAgentParams } from "@repo/ai/types/agents";
@@ -54,6 +56,10 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
     generateText({
       messages: [{ role: "user", content: task }],
       model: model.languageModel(modelId),
+      providerOptions: {
+        gateway: gatewayProviderOptions,
+        google: getModelProviderOptions(modelId),
+      },
       experimental_repairToolCall: (options) =>
         Effect.runPromise(
           repairMathToolCall({

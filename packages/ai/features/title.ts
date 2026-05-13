@@ -1,3 +1,5 @@
+import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
+import { defaultModel, getModelProviderOptions } from "@repo/ai/config/models";
 import { model } from "@repo/ai/config/vercel";
 import {
   DEFAULT_TITLE,
@@ -33,8 +35,12 @@ export const generateTitle = Effect.fn("features.generateTitle")(function* ({
   const { text } = yield* Effect.tryPromise({
     try: () =>
       generateText({
-        model: model.languageModel("grok-4.1-fast-non-reasoning"),
+        model: model.languageModel(defaultModel),
         prompt: JSON.stringify(messages, null, 2),
+        providerOptions: {
+          gateway: gatewayProviderOptions,
+          google: getModelProviderOptions(defaultModel),
+        },
         system: createPrompt({
           taskContext:
             "You are an expert title generator. You are given a message in prompt and you need to generate a short, descriptive title based on it.",

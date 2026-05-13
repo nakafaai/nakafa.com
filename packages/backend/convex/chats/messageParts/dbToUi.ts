@@ -129,6 +129,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
+            callProviderMetadata: part.toolCallProviderMetadata,
             input,
           };
         case "input-available":
@@ -140,6 +141,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
+            callProviderMetadata: part.toolCallProviderMetadata,
             input: requireToolInputQuery(part, "toolNakafaInput"),
           };
         case "output-available":
@@ -151,12 +153,14 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
+            callProviderMetadata: part.toolCallProviderMetadata,
             input: requireToolInputQuery(part, "toolNakafaInput"),
             output: requirePartField({
               value: part.toolNakafaOutput,
               fieldName: "toolNakafaOutput",
               partType: part.type,
             }),
+            resultProviderMetadata: part.toolResultProviderMetadata,
           };
         case "output-error":
           return {
@@ -167,12 +171,14 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
+            callProviderMetadata: part.toolCallProviderMetadata,
             input: requireToolInputQuery(part, "toolNakafaInput"),
             errorText: requirePartField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",
               partType: part.type,
             }),
+            resultProviderMetadata: part.toolResultProviderMetadata,
           };
         default:
           throw new ConvexError({
@@ -195,6 +201,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
+            callProviderMetadata: part.toolCallProviderMetadata,
             input,
           };
         case "input-available":
@@ -206,6 +213,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
+            callProviderMetadata: part.toolCallProviderMetadata,
             input: requireToolInputQuery(part, "toolDeepResearchInput"),
           };
         case "output-available":
@@ -217,12 +225,14 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
+            callProviderMetadata: part.toolCallProviderMetadata,
             input: requireToolInputQuery(part, "toolDeepResearchInput"),
             output: requirePartField({
               value: part.toolDeepResearchOutput,
               fieldName: "toolDeepResearchOutput",
               partType: part.type,
             }),
+            resultProviderMetadata: part.toolResultProviderMetadata,
           };
         case "output-error":
           return {
@@ -233,12 +243,14 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
+            callProviderMetadata: part.toolCallProviderMetadata,
             input: requireToolInputQuery(part, "toolDeepResearchInput"),
             errorText: requirePartField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",
               partType: part.type,
             }),
+            resultProviderMetadata: part.toolResultProviderMetadata,
           };
         default:
           throw new ConvexError({
@@ -261,6 +273,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
+            callProviderMetadata: part.toolCallProviderMetadata,
             input,
           };
         case "input-available":
@@ -272,6 +285,7 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
+            callProviderMetadata: part.toolCallProviderMetadata,
             input: requireToolInputQuery(part, "toolMathInput"),
           };
         case "output-available":
@@ -283,12 +297,14 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
+            callProviderMetadata: part.toolCallProviderMetadata,
             input: requireToolInputQuery(part, "toolMathInput"),
             output: requirePartField({
               value: part.toolMathOutput,
               fieldName: "toolMathOutput",
               partType: part.type,
             }),
+            resultProviderMetadata: part.toolResultProviderMetadata,
           };
         case "output-error":
           return {
@@ -299,12 +315,14 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
+            callProviderMetadata: part.toolCallProviderMetadata,
             input: requireToolInputQuery(part, "toolMathInput"),
             errorText: requirePartField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",
               partType: part.type,
             }),
+            resultProviderMetadata: part.toolResultProviderMetadata,
           };
         default:
           throw new ConvexError({

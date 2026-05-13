@@ -31,6 +31,20 @@ function getSourceDomain(href: string) {
   return href.split("/").pop() || href;
 }
 
+/**
+ * Google Search grounding sources may use redirect URLs that do not expose a
+ * stable favicon. Rendering those through Next Image produces noisy 404 logs.
+ */
+function getFaviconUrl(href: string, domain: string) {
+  if (domain === "vertexaisearch.cloud.google.com") {
+    return null;
+  }
+
+  return `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(
+    href
+  )}`;
+}
+
 function useSourceContext() {
   const ctx = useContext(SourceContext);
   if (!ctx) {
@@ -69,6 +83,7 @@ export function SourceTrigger({
 }: SourceTriggerProps) {
   const { href, domain } = useSourceContext();
   const labelToShow = label ?? domain.replace("www.", "");
+  const faviconUrl = getFaviconUrl(href, domain);
 
   return (
     <HoverCardTrigger asChild>
@@ -82,7 +97,7 @@ export function SourceTrigger({
         rel="noopener noreferrer"
         target="_blank"
       >
-        {!!showFavicon && (
+        {showFavicon && faviconUrl ? (
           <Image
             alt="favicon"
             className="size-3.5 rounded-full"
@@ -90,12 +105,10 @@ export function SourceTrigger({
             height={14}
             loading="eager"
             preload
-            src={`https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(
-              href
-            )}`}
+            src={faviconUrl}
             width={14}
           />
-        )}
+        ) : null}
         <span className="truncate text-center font-normal">{labelToShow}</span>
       </a>
     </HoverCardTrigger>
@@ -114,6 +127,7 @@ export function SourceContent({
   className,
 }: SourceContentProps) {
   const { href, domain } = useSourceContext();
+  const faviconUrl = getFaviconUrl(href, domain);
 
   return (
     <HoverCardContent className={cn("w-80 p-0 shadow-xs", className)}>
@@ -124,15 +138,15 @@ export function SourceContent({
         target="_blank"
       >
         <div className="flex items-center gap-1.5">
-          <Image
-            alt="favicon"
-            className="size-4 rounded-full"
-            height={16}
-            src={`https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(
-              href
-            )}`}
-            width={16}
-          />
+          {faviconUrl ? (
+            <Image
+              alt="favicon"
+              className="size-4 rounded-full"
+              height={16}
+              src={faviconUrl}
+              width={16}
+            />
+          ) : null}
           <div className="truncate text-primary text-sm">
             {domain.replace("www.", "")}
           </div>

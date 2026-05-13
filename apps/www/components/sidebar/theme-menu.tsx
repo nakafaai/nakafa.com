@@ -51,18 +51,20 @@ export function ThemeMenu() {
   return (
     <DropdownMenu onOpenChange={set} open={open}>
       <SidebarMenuItem>
-        <DropdownMenuTrigger asChild>
-          <SidebarMenuButton tooltip={t("theme")}>
-            <HugeIcons icon={PaintBoardIcon} />
-            <span className="truncate">{t("theme")}</span>
+        <DropdownMenuTrigger
+          render={
+            <SidebarMenuButton tooltip={t("theme")}>
+              <HugeIcons icon={PaintBoardIcon} />
+              <span className="truncate">{t("theme")}</span>
 
-            <HugeIcons className="ml-auto" icon={ArrowRight01Icon} />
-          </SidebarMenuButton>
-        </DropdownMenuTrigger>
+              <HugeIcons className="ml-auto" icon={ArrowRight01Icon} />
+            </SidebarMenuButton>
+          }
+        />
 
         <DropdownMenuContent
           align="end"
-          className="max-h-96"
+          className="max-h-96 w-max max-w-[calc(100vw-2rem)]"
           side={isMobile ? "top" : "right"}
         >
           <DropdownMenuGroup>
@@ -70,7 +72,7 @@ export function ThemeMenu() {
               <DropdownMenuItem
                 className="cursor-pointer"
                 key={theme.value}
-                onSelect={() => setTheme(theme.value)}
+                onClick={() => setTheme(theme.value)}
               >
                 <HugeIcons className="shrink-0" icon={theme.icon} />
                 <span className="truncate">{t(theme.value)}</span>
@@ -86,7 +88,7 @@ export function ThemeMenu() {
               <DropdownMenuItem
                 className="cursor-pointer"
                 key={theme.value}
-                onSelect={() => setTheme(theme.value)}
+                onClick={() => setTheme(theme.value)}
               >
                 <HugeIcons className="shrink-0" icon={theme.icon} />
                 <span className="truncate">{t(theme.value)}</span>

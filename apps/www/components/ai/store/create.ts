@@ -1,6 +1,5 @@
 "use client";
 
-import { MODEL_IDS } from "@repo/ai/config/models";
 import { createStore } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
@@ -13,13 +12,7 @@ export const createAiStore = () =>
     persist(
       immer((set, get) => ({
         ...initialState,
-        getModel: () => {
-          const current = get().model;
-          if (MODEL_IDS.includes(current)) {
-            return current;
-          }
-          return initialState.model;
-        },
+        getModel: () => get().model,
         setActiveChatId: (activeChatId) => set({ activeChatId }),
         setChatSession: (chatSession) => set({ chatSession }),
         setContextTitle: (contextTitle) => set({ contextTitle }),

@@ -17,6 +17,8 @@ import { quran } from "@repo/ai/agents/nakafa/tools/quran";
 import { read } from "@repo/ai/agents/nakafa/tools/read";
 import { search } from "@repo/ai/agents/nakafa/tools/search";
 import { taxonomy } from "@repo/ai/agents/nakafa/tools/taxonomy";
+import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
+import { getModelProviderOptions } from "@repo/ai/config/models";
 import { model } from "@repo/ai/config/vercel";
 import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { NakafaAgentParams } from "@repo/ai/types/agents";
@@ -42,6 +44,10 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   const result = yield* Effect.tryPromise(() =>
     generateText({
       model: model.languageModel(modelId),
+      providerOptions: {
+        gateway: gatewayProviderOptions,
+        google: getModelProviderOptions(modelId),
+      },
       system: nakafaAgentPrompt({ locale, context }),
       messages: [{ role: "user", content: task }],
       temperature: 0,

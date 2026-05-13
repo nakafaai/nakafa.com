@@ -48,7 +48,7 @@ describe("chats/mutations", () => {
           chatId,
           role: "assistant",
           identifier: "assistant-1",
-          modelId: "gpt-5-nano",
+          modelId: "nakafa-lite",
           inputTokens: 10,
           outputTokens: 20,
           totalTokens: 30,
@@ -88,7 +88,7 @@ describe("chats/mutations", () => {
           inputTokens: 10,
           outputTokens: 20,
           totalTokens: 30,
-          modelId: "gpt-5-nano",
+          modelId: "nakafa-lite",
         }),
       }),
     ]);
@@ -104,7 +104,7 @@ describe("chats/mutations", () => {
               chat_type: "study",
               credits: 1,
               input_tokens: 10,
-              model_id: "gpt-5-nano",
+              model_id: "nakafa-lite",
               output_tokens: 20,
               total_tokens: 30,
             }),
@@ -131,7 +131,7 @@ describe("chats/mutations", () => {
         message: {
           role: "user",
           identifier: "user-1",
-          modelId: "gpt-5-nano",
+          modelId: "nakafa-lite",
         },
         parts: [],
       });
@@ -150,7 +150,7 @@ describe("chats/mutations", () => {
             event: "chat message sent",
             properties: JSON.stringify({
               chat_type: "study",
-              model_id: "gpt-5-nano",
+              model_id: "nakafa-lite",
             }),
           }),
         ],

@@ -428,8 +428,7 @@ export const mathDataValidator = currentMathDataValidator;
 /**
  * Provider metadata validator.
  * Uses v.any() for the innermost value because this comes from AI SDK
- * and varies by provider (OpenAI, Anthropic, Google, etc.).
- * The shape is defined externally by each AI provider's SDK, not by us.
+ * and the shape is defined externally by the active provider SDK.
  */
 export const providerMetadataValidator = v.optional(
   v.record(v.string(), v.record(v.string(), v.any()))
@@ -466,6 +465,8 @@ export const partValidator = v.object({
   toolToolCallId: v.optional(v.string()),
   toolState: v.optional(toolStateValidator),
   toolErrorText: v.optional(v.string()),
+  toolCallProviderMetadata: providerMetadataValidator,
+  toolResultProviderMetadata: providerMetadataValidator,
 
   // Orchestrator tool fields
   toolNakafaInput: v.optional(v.string()),

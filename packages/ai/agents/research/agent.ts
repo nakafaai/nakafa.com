@@ -1,3 +1,4 @@
+import { google } from "@ai-sdk/google";
 import {
   nakafaScrape,
   nakafaWebSearch,
@@ -13,6 +14,8 @@ import {
 } from "@repo/ai/agents/research/step";
 import { scrapeUrl } from "@repo/ai/agents/research/tools/scrape";
 import { searchWeb } from "@repo/ai/agents/research/tools/search";
+import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
+import { getModelProviderOptions } from "@repo/ai/config/models";
 import { model } from "@repo/ai/config/vercel";
 import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { ResearchAgentParams } from "@repo/ai/types/agents";
@@ -31,6 +34,9 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
         system: researchPrompt({ locale, context }),
         messages: [{ role: "user", content: task }],
         tools: {
+          google_search: google.tools.googleSearch({
+            searchTypes: { webSearch: {} },
+          }),
           webSearch: tool({
             description: nakafaWebSearch,
             inputSchema: webSearchInputSchema,
@@ -84,9 +90,35 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
             hasScrapeToolCall
           );
         },
+        providerOptions: {
+          gateway: gatewayProviderOptions,
+          google: getModelProviderOptions(modelId),
+        },
         stopWhen: stepCountIs(5),
       })
     );
+
+    for (const source of result.sources) {
+      if (source.sourceType === "url") {
+        writer.write({
+          type: "source-url",
+          sourceId: source.id,
+          title: source.title,
+          url: source.url,
+          providerMetadata: source.providerMetadata,
+        });
+        continue;
+      }
+
+      writer.write({
+        type: "source-document",
+        filename: source.filename,
+        mediaType: source.mediaType,
+        sourceId: source.id,
+        title: source.title,
+        providerMetadata: source.providerMetadata,
+      });
+    }
 
     return {
       text: result.text,

@@ -253,36 +253,38 @@ export function StartExerciseButton({
                           {t("time-limit-label")}
                         </FieldLabel>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              aria-invalid={isInvalid}
-                              className="w-full font-normal"
-                              id="time-limit"
-                              name={field.name}
-                              variant="outline"
-                            >
-                              <HugeIcons icon={StopWatchIcon} />
-                              {field.state.value
-                                ? formatDuration(
-                                    { minutes: field.state.value / 60 },
-                                    { locale: getLocale(locale) }
-                                  )
-                                : t("time-limit-placeholder")}
-                              <HugeIcons
-                                className="ml-auto"
-                                icon={ArrowDown01Icon}
-                              />
-                            </Button>
-                          </DropdownMenuTrigger>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button
+                                aria-invalid={isInvalid}
+                                className="w-full font-normal"
+                                id="time-limit"
+                                name={field.name}
+                                variant="outline"
+                              >
+                                <HugeIcons icon={StopWatchIcon} />
+                                {field.state.value
+                                  ? formatDuration(
+                                      { minutes: field.state.value / 60 },
+                                      { locale: getLocale(locale) }
+                                    )
+                                  : t("time-limit-placeholder")}
+                                <HugeIcons
+                                  className="ml-auto"
+                                  icon={ArrowDown01Icon}
+                                />
+                              </Button>
+                            }
+                          />
                           <DropdownMenuContent
                             align="start"
-                            className="max-h-64 w-(--radix-dropdown-menu-trigger-width)"
+                            className="max-h-64 w-(--anchor-width)"
                           >
                             {getTimeLimitList().map((time) => (
                               <DropdownMenuItem
                                 className="cursor-pointer"
                                 key={time}
-                                onSelect={() => field.handleChange(time)}
+                                onClick={() => field.handleChange(time)}
                               >
                                 {formatDuration(
                                   { minutes: time / 60 },

@@ -408,7 +408,8 @@ export const PromptInputActionAddAttachments = ({
   return (
     <DropdownMenuItem
       {...props}
-      onSelect={(e) => {
+      closeOnClick={false}
+      onClick={(e) => {
         e.preventDefault();
         attachments.openFileDialog();
       }}
@@ -938,11 +939,13 @@ export const PromptInputActionMenuTrigger = ({
   children,
   ...props
 }: PromptInputActionMenuTriggerProps) => (
-  <DropdownMenuTrigger asChild>
-    <PromptInputButton className={className} {...props}>
-      {children ?? <HugeIcons className="size-4" icon={Add01Icon} />}
-    </PromptInputButton>
-  </DropdownMenuTrigger>
+  <DropdownMenuTrigger
+    render={
+      <PromptInputButton className={className} {...props}>
+        {children ?? <HugeIcons className="size-4" icon={Add01Icon} />}
+      </PromptInputButton>
+    }
+  />
 );
 
 export type PromptInputActionMenuContentProps = ComponentProps<

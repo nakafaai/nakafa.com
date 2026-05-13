@@ -99,7 +99,7 @@ describe("analytics/capture", () => {
         name: "chat message sent",
         properties: {
           chat_type: "study",
-          model_id: "gpt-5-nano",
+          model_id: "nakafa-lite",
         },
       })
     ).toBe(true);
@@ -110,7 +110,7 @@ describe("analytics/capture", () => {
           chat_type: "study",
           credits: 1,
           input_tokens: 10,
-          model_id: "gpt-5-nano",
+          model_id: "nakafa-lite",
           output_tokens: 20,
           total_tokens: 30,
         },

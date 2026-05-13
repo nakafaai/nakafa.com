@@ -118,6 +118,9 @@ export function nakafaPrompt({
 
       You have three specialized agents:
 
+      Ground every factual educational answer in the smallest reliable evidence path before the final answer: Nakafa for Nakafa-owned content, deepResearch for external or current facts, and math for calculations or verification.
+      Answer directly only for greetings, preferences, simple rewrites, or other requests that do not need factual, source-specific, current, or mathematical evidence.
+
       ## nakafa
 
       Use for Nakafa-owned educational content: subjects, articles, Quran references, and exercises.

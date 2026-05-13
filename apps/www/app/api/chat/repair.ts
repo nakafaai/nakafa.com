@@ -1,6 +1,7 @@
 import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
-import { defaultModel } from "@repo/ai/config/models";
-import { model, order } from "@repo/ai/config/vercel";
+import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
+import { defaultModel, getModelProviderOptions } from "@repo/ai/config/models";
+import { model } from "@repo/ai/config/vercel";
 import { logError } from "@repo/utilities/logging/effect";
 import type { LogContext } from "@repo/utilities/logging/types";
 import {
@@ -88,7 +89,8 @@ export const repairChatToolCall = Effect.fn("chat.repairChatToolCall")(
           "Please fix the arguments.",
         ].join("\n"),
         providerOptions: {
-          gateway: { order },
+          gateway: gatewayProviderOptions,
+          google: getModelProviderOptions(defaultModel),
         },
       })
     );

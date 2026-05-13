@@ -42,7 +42,7 @@ async function savedChatId() {
     saveOrCreateChat({
       chatId: undefined,
       message,
-      modelId: "gpt-5-nano",
+      modelId: "nakafa-lite",
       token: "session-token",
     })
   );
@@ -71,7 +71,7 @@ describe("app/api/chat/persistence", () => {
       saveOrCreateChat({
         chatId: undefined,
         message,
-        modelId: "gpt-5-nano",
+        modelId: "nakafa-lite",
         token: "session-token",
       })
     );
@@ -82,7 +82,7 @@ describe("app/api/chat/persistence", () => {
       {
         message: {
           identifier: "message-1",
-          modelId: "gpt-5-nano",
+          modelId: "nakafa-lite",
           role: "user",
         },
         parts: [],
@@ -100,7 +100,7 @@ describe("app/api/chat/persistence", () => {
       saveOrCreateChat({
         chatId,
         message,
-        modelId: "gpt-5-nano",
+        modelId: "nakafa-lite",
         token: "session-token",
       })
     );
@@ -112,7 +112,7 @@ describe("app/api/chat/persistence", () => {
         message: {
           chatId,
           identifier: "message-1",
-          modelId: "gpt-5-nano",
+          modelId: "nakafa-lite",
           role: "user",
         },
         parts: [],
@@ -133,7 +133,7 @@ describe("app/api/chat/persistence", () => {
       saveOrCreateChat({
         chatId,
         message,
-        modelId: "gpt-5-nano",
+        modelId: "nakafa-lite",
         token: "session-token",
       })
     );
@@ -162,7 +162,7 @@ describe("app/api/chat/persistence", () => {
       expect.objectContaining({
         message: expect.objectContaining({
           chatId,
-          modelId: "gpt-5-nano",
+          modelId: "nakafa-lite",
         }),
       }),
       { token: "session-token" }

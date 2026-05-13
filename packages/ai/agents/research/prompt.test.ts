@@ -38,4 +38,11 @@ describe("research prompt", () => {
     expect(nakafaScrape).toContain("official source");
     expect(nakafaScrape).toContain("primary documentation");
   });
+
+  it("keeps Google Search grounding inside the research agent", () => {
+    const prompt = researchPrompt({ context, locale: "id" });
+
+    expect(prompt).toContain("Google Search grounding");
+    expect(prompt).toContain("Use Google Search grounding or webSearch");
+  });
 });

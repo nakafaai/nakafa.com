@@ -13,6 +13,14 @@ const ref = {
   url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
 } satisfies NakafaAgentContentRef;
 
+const toolCallProviderMetadata = {
+  google: { thoughtSignature: "call-signature" },
+};
+
+const toolResultProviderMetadata = {
+  google: { thoughtSignature: "result-signature" },
+};
+
 describe("mapUIMessagePartsToDBParts", () => {
   it("persists nakafa tool and data parts without old content fields", () => {
     const parts = [
@@ -20,15 +28,19 @@ describe("mapUIMessagePartsToDBParts", () => {
         type: "tool-nakafa",
         toolCallId: "tool-1",
         state: "output-available",
+        callProviderMetadata: toolCallProviderMetadata,
         input: { query: "current page" },
         output: "done",
+        resultProviderMetadata: toolResultProviderMetadata,
       },
       {
         type: "tool-math",
         toolCallId: "math-tool-1",
         state: "output-available",
+        callProviderMetadata: toolCallProviderMetadata,
         input: { query: "simplify 2x + 3x" },
         output: "verified",
+        resultProviderMetadata: toolResultProviderMetadata,
       },
       {
         id: "math-1",
@@ -131,13 +143,17 @@ describe("mapUIMessagePartsToDBParts", () => {
     expect(mapUIMessagePartsToDBParts({ messageParts: parts })).toEqual([
       expect.objectContaining({
         type: "tool-nakafa",
+        toolCallProviderMetadata,
         toolNakafaInput: "current page",
         toolNakafaOutput: "done",
+        toolResultProviderMetadata,
       }),
       expect.objectContaining({
         type: "tool-math",
+        toolCallProviderMetadata,
         toolMathInput: "simplify 2x + 3x",
         toolMathOutput: "verified",
+        toolResultProviderMetadata,
       }),
       expect.objectContaining({
         type: "data-math",
