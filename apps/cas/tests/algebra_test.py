@@ -35,6 +35,16 @@ def test_evaluate_exact_arithmetic() -> None:
     assert result.steps[0].secondary.expression == "42"
 
 
+@pytest.mark.parametrize("expression", ["factorial(5)", "5!"])
+def test_evaluate_factorial(expression: str) -> None:
+    result = run(MathRequest(kind="math", operation="evaluate", expression=expression))
+
+    assert result.status == "verified"
+    assert result.primary.expression == "120"
+    assert result.secondary
+    assert result.secondary.expression == "120"
+
+
 def test_evaluate_keeps_original_expression_steps() -> None:
     result = run(
         MathRequest(kind="math", operation="evaluate", expression="125 * 48 / 6")

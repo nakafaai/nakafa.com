@@ -4,7 +4,9 @@ import sympy as sp
 from sympy.core.relational import Relational
 from sympy.parsing.sympy_parser import (
     convert_xor,
-    implicit_multiplication_application,
+    function_exponentiation,
+    implicit_application,
+    implicit_multiplication,
     parse_expr,
     standard_transformations,
 )
@@ -12,7 +14,9 @@ from sympy.parsing.sympy_parser import (
 from cas.schema import MathRequest, PointInput
 
 TRANSFORMATIONS = standard_transformations + (
-    implicit_multiplication_application,
+    implicit_multiplication,
+    implicit_application,
+    function_exponentiation,
     convert_xor,
 )
 
@@ -26,6 +30,8 @@ FUNCTIONS = {
     "atan": sp.atan,
     "cos": sp.cos,
     "exp": sp.exp,
+    "factorial": sp.factorial,
+    "factorial2": sp.factorial2,
     "ln": sp.log,
     "log": sp.log,
     "oo": sp.oo,
@@ -73,7 +79,7 @@ def expression(value: str | None, *, evaluate: bool = True) -> sp.Expr:
             transformations=TRANSFORMATIONS,
             evaluate=evaluate,
         )
-    except (SyntaxError, TypeError, ValueError) as error:
+    except (NameError, SyntaxError, TypeError, ValueError) as error:
         raise ValueError("Expression could not be parsed.") from error
 
     if not isinstance(parsed, sp.Expr):

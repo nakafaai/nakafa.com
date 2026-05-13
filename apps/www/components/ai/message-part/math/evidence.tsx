@@ -91,7 +91,7 @@ function StepRow({ number, step }: StepRowProps) {
   const t = useTranslations("Ai");
 
   return (
-    <div className="grid max-w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2 gap-y-1">
+    <div className="grid max-w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-1">
       <span className="flex shrink-0 items-center gap-2 text-muted-foreground/80">
         <span>{t("math-step", { number })}</span>
         <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
