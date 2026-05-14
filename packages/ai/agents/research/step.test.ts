@@ -2,10 +2,14 @@ import type { WebSearchOutput } from "@repo/ai/agents/research/schema";
 import {
   hasUsableWebSearchEvidence,
   prepareGoogleGroundingStep,
-  prepareWebSearchStep,
+  prepareResearchEvidenceStep,
 } from "@repo/ai/agents/research/step";
+import type { ModelMessage } from "ai";
 import { describe, expect, it } from "vitest";
 
+const messages = [
+  { role: "user", content: "research latest climate data" },
+] satisfies ModelMessage[];
 const firstSource = {
   citation: "[Example](https://example.com/research)",
   content: "Research content.",
@@ -24,8 +28,7 @@ describe("research agent step state", () => {
   });
 
   it("starts with inspectable web search before provider-only grounding", () => {
-    const step = prepareWebSearchStep({
-      hasSourceReferences: false,
+    const step = prepareResearchEvidenceStep({
       hasWebSearchToolCall: false,
     });
 
@@ -34,22 +37,10 @@ describe("research agent step state", () => {
       toolChoice: { toolName: "webSearch", type: "tool" },
     });
     expect(
-      prepareWebSearchStep({
-        hasSourceReferences: false,
+      prepareResearchEvidenceStep({
         hasWebSearchToolCall: true,
       })
     ).toBeUndefined();
-  });
-
-  it("keeps exact source requests scoped to scrape", () => {
-    expect(
-      prepareWebSearchStep({
-        hasSourceReferences: true,
-        hasWebSearchToolCall: false,
-      })
-    ).toEqual({
-      activeTools: ["scrape"],
-    });
   });
 
   it("requires grounding when Firecrawl returns no usable content", () => {
@@ -75,10 +66,6 @@ describe("research agent step state", () => {
   });
 
   it("enables only Google Search grounding for missing Firecrawl content", () => {
-    const messages = [
-      { role: "user", content: "research latest climate data" },
-    ] satisfies Parameters<typeof prepareGoogleGroundingStep>[0];
-
     const step = prepareGoogleGroundingStep(messages);
 
     expect(step.activeTools).toEqual(["google_search"]);

@@ -77,6 +77,26 @@ describe("lib/source", () => {
     ).toEqual(["https://ai-sdk.dev/docs"]);
   });
 
+  it("extracts multiple sources separated by punctuation", () => {
+    expect(
+      getSourceReferences(
+        "Bandingkan ai-sdk.dev/docs,docs.convex.dev/understanding;https://effect.website/docs."
+      ).map((source) => source.href)
+    ).toEqual([
+      "https://ai-sdk.dev/docs",
+      "https://docs.convex.dev/understanding",
+      "https://effect.website/docs",
+    ]);
+  });
+
+  it("keeps separator characters that belong to one URL", () => {
+    expect(
+      getSourceReferences("Baca https://example.com/search?q=a,b.").map(
+        (source) => source.href
+      )
+    ).toEqual(["https://example.com/search?q=a,b"]);
+  });
+
   it("ignores decimals, emails, and localhost references", () => {
     expect(getSourceReferences("Hitung 3.14 + 2.")).toEqual([]);
     expect(getSourceReferences("Kirim ke nina@example.com.")).toEqual([]);

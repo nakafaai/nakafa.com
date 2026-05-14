@@ -3,7 +3,6 @@ import type { ModelMessage } from "ai";
 
 const googleSearchActiveTools = ["google_search"] satisfies "google_search"[];
 const googleSearchToolChoice = "required" as const;
-const sourceReferenceActiveTools = ["scrape"] satisfies "scrape"[];
 const webSearchActiveTools = ["webSearch"] satisfies "webSearch"[];
 const webSearchToolChoice = {
   toolName: "webSearch",
@@ -50,23 +49,15 @@ export function prepareGoogleGroundingStep(messages: ModelMessage[]) {
 }
 
 /**
- * Starts research with inspectable web evidence before provider grounding.
+ * Starts broad research with inspectable web evidence before provider grounding.
  *
  * @see https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
  */
-export function prepareWebSearchStep({
-  hasSourceReferences,
+export function prepareResearchEvidenceStep({
   hasWebSearchToolCall,
 }: {
-  hasSourceReferences: boolean;
   hasWebSearchToolCall: boolean;
 }) {
-  if (hasSourceReferences) {
-    return {
-      activeTools: sourceReferenceActiveTools,
-    };
-  }
-
   if (hasWebSearchToolCall) {
     return;
   }

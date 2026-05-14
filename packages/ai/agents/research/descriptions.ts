@@ -103,22 +103,21 @@ export const nakafaScrape = createPrompt({
   taskContext: `
       # scrape Tool
 
-      Use this tool to scrape a specific URL and return the content when search evidence is missing, weak, or the user asked about that URL.
+      Use this tool to scrape a specific URL and return the content when search evidence is missing or weak.
       The tool uses Mendable's Firecrawl API under the hood.
     `,
 
   toolUsageGuidelines: `
       ## When to use this tool
 
-      1. The user asks to scrape a URL or asks you to explain the content of the url
-      2. Search found a relevant URL but did not return enough content to answer confidently
-      3. The task includes multiple exact URLs that each need direct inspection
+      1. Search found a relevant URL but did not return enough content to answer confidently
+      2. A selected search source needs direct inspection before you can answer
 
       ## When NOT to use this tool
 
       Skip using this tool when:
 
-      1. The user asks to scrape a URL or asks you to explain the content of the url but you do not have the URL
+      1. You do not have a specific URL to inspect
       2. The URL is not related to the user's question
 
       ## scrape tool capabilities
@@ -131,8 +130,8 @@ export const nakafaScrape = createPrompt({
   detailedTaskInstructions: `
       ## Best Practices
 
-      - Scrape the exact URL when the user asks about that official source or prior search content is too weak
-      - For multiple user-provided URLs, scrape each relevant URL and keep the findings tied to the correct source
+      - Scrape a selected URL when prior search content is too weak
+      - Keep findings tied to the correct source when inspecting multiple selected URLs
       - Prefer primary documentation, standards, papers, and vendor pages over social/video/listicle pages
       - Explain the content to the user in a way that is easy to understand
       - If the content is not related to the user's question, tell the users that the content is not related to the user's question
@@ -142,8 +141,8 @@ export const nakafaScrape = createPrompt({
       ## Examples of When to Use This Tool
 
       <example>
-        User: What is this about? (SOME URL https://...)
-        Assistant: Let me check the content for you.
+        User: Compare the current official docs for this framework.
+        Assistant: The web search result needs direct source reading.
         *Calls scrape tool*
       </example>
     `,
@@ -151,7 +150,7 @@ export const nakafaScrape = createPrompt({
   finalRequest: `
       ## Summary
 
-      Use scrape tool when the user asks to scrape a URL or asks you to explain the content of the url.
+      Use scrape tool when selected search evidence needs deeper source reading.
       Treat the content as a source of information to explain the content to the user.
     `,
 });

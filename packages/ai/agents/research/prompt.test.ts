@@ -35,7 +35,7 @@ describe("research prompt", () => {
   it("guides search and scrape tools toward primary sources", () => {
     expect(nakafaWebSearch).toContain("official domain");
     expect(nakafaWebSearch).toContain("generic industry trend search");
-    expect(nakafaScrape).toContain("official source");
+    expect(nakafaScrape).toContain("selected search evidence");
     expect(nakafaScrape).toContain("primary documentation");
   });
 
@@ -45,5 +45,20 @@ describe("research prompt", () => {
     expect(prompt).toContain("Google Search grounding");
     expect(prompt).toContain("Use webSearch to collect inspectable Firecrawl");
     expect(prompt).toContain("Use Google Search grounding when Firecrawl");
+  });
+
+  it("keeps exact source synthesis away from search tools", () => {
+    const prompt = researchPrompt({
+      context,
+      locale: "id",
+      mode: "exact-source",
+    });
+
+    expect(prompt).toContain(
+      "Exact source evidence has already been retrieved"
+    );
+    expect(prompt).toContain("Do not broaden exact-source requests");
+    expect(prompt).not.toContain("webSearch");
+    expect(prompt).not.toContain("Google Search grounding");
   });
 });

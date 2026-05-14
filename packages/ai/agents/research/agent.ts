@@ -12,7 +12,7 @@ import {
 import {
   hasUsableWebSearchEvidence,
   prepareGoogleGroundingStep,
-  prepareWebSearchStep,
+  prepareResearchEvidenceStep,
 } from "@repo/ai/agents/research/step";
 import { scrapeUrl } from "@repo/ai/agents/research/tools/scrape";
 import { searchWeb } from "@repo/ai/agents/research/tools/search";
@@ -23,8 +23,10 @@ import { getSourceReferences } from "@repo/ai/lib/source";
 import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { ResearchAgentParams } from "@repo/ai/types/agents";
 import { generateText, type ModelMessage, stepCountIs, tool } from "ai";
-import dedent from "dedent";
 import { Effect } from "effect";
+
+// Keep exact user source scraping parallel without allowing unlimited fan-out.
+const exactSourceScrapeConcurrency = 3;
 
 /**
  * Runs the research agent and returns text with token usage.
@@ -45,11 +47,24 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       ...messageSourceReferences,
       ...getSourceReferences(task),
     ]);
+
+    if (sourceReferences.length > 0) {
+      return yield* runExactSourceResearch({
+        context,
+        locale,
+        modelId,
+        sourceReferences,
+        task,
+        toolCallId,
+        writer,
+      });
+    }
+
     const result = yield* Effect.tryPromise(() =>
       generateText({
         model: model.languageModel(modelId),
         system: researchPrompt({ locale, context }),
-        messages: createResearchMessages(task, sourceReferences),
+        messages: [{ role: "user", content: task }],
         tools: {
           google_search: google.tools.googleSearch({
             searchTypes: { webSearch: {} },
@@ -91,13 +106,12 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           const hasWebSearchToolCall = steps.some((step) =>
             step.toolCalls.some((toolCall) => toolCall.toolName === "webSearch")
           );
-          const webSearchStep = prepareWebSearchStep({
-            hasSourceReferences: sourceReferences.length > 0,
+          const evidenceStep = prepareResearchEvidenceStep({
             hasWebSearchToolCall,
           });
 
-          if (webSearchStep) {
-            return webSearchStep;
+          if (evidenceStep) {
+            return evidenceStep;
           }
 
           if (!needsGoogleGrounding) {
@@ -142,29 +156,61 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
 );
 
 /**
- * Adds explicit user source references to the research task without hiding the original request.
+ * Reads exact user sources before asking the model to synthesize findings.
  */
-function createResearchMessages(
-  task: string,
-  sourceReferences: ResearchAgentParams["sourceReferences"]
-) {
-  if (sourceReferences.length === 0) {
-    return [{ role: "user", content: task }] satisfies ModelMessage[];
+const runExactSourceResearch = Effect.fn("research.runExactSourceResearch")(
+  function* ({
+    task,
+    modelId,
+    locale,
+    context,
+    sourceReferences,
+    toolCallId,
+    writer,
+  }: ResearchAgentParams) {
+    const sourceOutputs = yield* Effect.forEach(
+      sourceReferences,
+      (source, index) =>
+        scrapeUrl({
+          toolCallId: `${toolCallId}-source-${index + 1}`,
+          url: source.href,
+          writer,
+        }),
+      { concurrency: exactSourceScrapeConcurrency }
+    );
+
+    const result = yield* Effect.tryPromise(() =>
+      generateText({
+        model: model.languageModel(modelId),
+        system: researchPrompt({ locale, context, mode: "exact-source" }),
+        messages: createExactSourceMessages(task, sourceOutputs),
+        providerOptions: {
+          gateway: gatewayProviderOptions,
+          google: getModelProviderOptions(modelId),
+        },
+      })
+    );
+
+    return {
+      text: result.text,
+      usage: result.totalUsage,
+    };
   }
+);
 
-  const sourceList = sourceReferences
-    .map((source, index) => `${index + 1}. ${source.href}`)
-    .join("\n");
-
+/**
+ * Gives the model already-inspected source evidence without exposing research tools.
+ */
+function createExactSourceMessages(task: string, sourceOutputs: string[]) {
   return [
     {
       role: "user",
-      content: dedent(`
-        ${task}
-
-        Explicit source references from the user's latest message:
-        ${sourceList}
-      `),
+      content: [
+        task,
+        "Exact source evidence has already been retrieved. Use only the evidence below for source-specific claims. Do not broaden to search results.",
+        "# Exact Source Evidence",
+        sourceOutputs.join("\n\n"),
+      ].join("\n\n"),
     },
   ] satisfies ModelMessage[];
 }

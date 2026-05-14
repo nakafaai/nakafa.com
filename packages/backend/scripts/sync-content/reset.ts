@@ -269,6 +269,7 @@ export const reset = Effect.fn("sync.reset")(function* (
   log("Current database contents:\n");
   const counts = yield* getContentCounts(config);
 
+  log(`  Content Search:        ${counts.contentSearch}`);
   log(`  Content Authors:       ${counts.contentAuthors}`);
   log(`  Article References:    ${counts.articleReferences}`);
   log(`  Exercise Choices:      ${counts.exerciseChoices}`);
@@ -338,12 +339,19 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.irtScalePublicationQueue +
     counts.irtScaleVersions +
     counts.irtScaleVersionItems;
+  const totalDerived = counts.contentSearch;
 
   log(`\n  Total content items:  ${totalContent}`);
   log(`  Total related items:  ${totalRelated}`);
   log(`  Total runtime items:  ${totalRuntime}`);
+  log(`  Total derived items:  ${totalDerived}`);
 
-  if (totalContent === 0 && totalRelated === 0 && totalRuntime === 0) {
+  if (
+    totalContent === 0 &&
+    totalRelated === 0 &&
+    totalRuntime === 0 &&
+    totalDerived === 0
+  ) {
     logSuccess("\nDatabase is already empty. Nothing to delete.");
     return;
   }

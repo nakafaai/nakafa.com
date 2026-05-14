@@ -24,7 +24,7 @@
     "@hugeicons/core-free-icons": "^4.1.4",
     "@hugeicons/react": "^1.1.6",
     "@icons-pack/react-simple-icons": "^13.13.0",
-    "@mantine/hooks": "^9.2.0",
+    "@mantine/hooks": "^9.2.1",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@paper-design/shaders-react": "^0.0.76",
@@ -92,7 +92,7 @@
     "remark": "^15.0.1",
     "remark-mdx": "^3.1.1",
     "tailwindcss": "^4.3.0",
-    "tsx": "^4.21.1",
+    "tsx": "^4.22.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.6"
   }

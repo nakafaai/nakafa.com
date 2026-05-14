@@ -15,7 +15,7 @@
     "@hugeicons/core-free-icons": "^4.1.4",
     "@hugeicons/react": "^1.1.6",
     "@icons-pack/react-simple-icons": "^13.13.0",
-    "@mantine/hooks": "^9.2.0",
+    "@mantine/hooks": "^9.2.1",
     "@next/third-parties": "16.2.6",
     "@number-flow/react": "^0.6.0",
     "@radix-ui/react-dropdown-menu": "^2.1.16",

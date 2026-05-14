@@ -1,7 +1,9 @@
-import type { ModelMessage, UserModelMessage } from "ai";
+import { getLatestUserText } from "@repo/ai/lib/user";
+import type { ModelMessage } from "ai";
 import { ParseResultType, parseDomain } from "parse-domain";
 
 const whitespacePattern = /\s+/;
+const sourceSeparators = new Set([",", ";"]);
 const boundaryPunctuation = new Set([
   '"',
   "'",
@@ -33,20 +35,22 @@ export type SourceReference = ReturnType<typeof createSourceReference>;
 export function getSourceReferences(text: string) {
   const seen = new Set<string>();
 
-  return text.split(whitespacePattern).flatMap((token) => {
-    const reference = parseSourceReference(token);
+  return text.split(whitespacePattern).flatMap((token) =>
+    splitSourceToken(token).flatMap((segment) => {
+      const reference = parseSourceReference(segment);
 
-    if (!reference) {
-      return [];
-    }
+      if (!reference) {
+        return [];
+      }
 
-    if (seen.has(reference.href)) {
-      return [];
-    }
+      if (seen.has(reference.href)) {
+        return [];
+      }
 
-    seen.add(reference.href);
-    return [reference];
-  });
+      seen.add(reference.href);
+      return [reference];
+    })
+  );
 }
 
 /**
@@ -63,45 +67,7 @@ export function getSourceReferencesFromMessages(messages: ModelMessage[]) {
 }
 
 /**
- * Reads the latest user-authored text from AI SDK model messages.
- */
-function getLatestUserText(messages: ModelMessage[]) {
-  for (let index = messages.length - 1; index >= 0; index -= 1) {
-    const message = messages[index];
-
-    if (message.role !== "user") {
-      continue;
-    }
-
-    return getUserMessageText(message);
-  }
-
-  return;
-}
-
-/**
- * Converts AI SDK user message text parts into one searchable text buffer.
- */
-function getUserMessageText(message: UserModelMessage) {
-  if (typeof message.content === "string") {
-    return message.content;
-  }
-
-  let text = "";
-
-  for (const part of message.content) {
-    if (part.type !== "text") {
-      continue;
-    }
-
-    text = `${text} ${part.text}`;
-  }
-
-  return text;
-}
-
-/**
- * Parses one whitespace-delimited token into an external source reference.
+ * Parses one candidate segment into an external source reference.
  */
 function parseSourceReference(token: string) {
   const text = isolateSourceText(token);
@@ -131,6 +97,59 @@ function parseSourceReference(token: string) {
   }
 
   return createSourceReference(text, url);
+}
+
+/**
+ * Splits user text like `a.com,b.com` without breaking commas inside one URL.
+ */
+function splitSourceToken(token: string): string[] {
+  const separatorIndex = findSourceSeparator(token);
+
+  if (separatorIndex === undefined) {
+    return [token];
+  }
+
+  return [
+    token.slice(0, separatorIndex),
+    ...splitSourceToken(token.slice(separatorIndex + 1)),
+  ];
+}
+
+/**
+ * Finds the next separator only when another source starts after it.
+ */
+function findSourceSeparator(token: string) {
+  for (let index = 0; index < token.length; index += 1) {
+    if (!sourceSeparators.has(token[index])) {
+      continue;
+    }
+
+    if (startsWithSourceReference(token.slice(index + 1))) {
+      return index;
+    }
+  }
+
+  return;
+}
+
+/**
+ * Checks whether the next separator-delimited segment is a web source.
+ */
+function startsWithSourceReference(text: string) {
+  return Boolean(parseSourceReference(getLeadingSegment(text)));
+}
+
+/**
+ * Reads the next source-sized segment after a comma or semicolon split.
+ */
+function getLeadingSegment(text: string) {
+  for (let index = 0; index < text.length; index += 1) {
+    if (sourceSeparators.has(text[index])) {
+      return text.slice(0, index);
+    }
+  }
+
+  return text;
 }
 
 /**
