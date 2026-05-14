@@ -115,6 +115,7 @@ import type * as contents_mutations_views from "../contents/mutations/views.js";
 import type * as contents_queries_audio from "../contents/queries/audio.js";
 import type * as contents_queries_recent from "../contents/queries/recent.js";
 import type * as contents_queries_search from "../contents/queries/search.js";
+import type * as contents_search_constants from "../contents/search/constants.js";
 import type * as contents_search_documents from "../contents/search/documents.js";
 import type * as contents_search_write from "../contents/search/write.js";
 import type * as contents_validators from "../contents/validators.js";
@@ -406,6 +407,7 @@ declare const fullApi: ApiFromModules<{
   "contents/queries/audio": typeof contents_queries_audio;
   "contents/queries/recent": typeof contents_queries_recent;
   "contents/queries/search": typeof contents_queries_search;
+  "contents/search/constants": typeof contents_search_constants;
   "contents/search/documents": typeof contents_search_documents;
   "contents/search/write": typeof contents_search_write;
   "contents/validators": typeof contents_validators;

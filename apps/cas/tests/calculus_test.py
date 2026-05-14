@@ -108,6 +108,22 @@ def test_limit_rational_expression() -> None:
     assert result.steps[0].primary.expression == "Limit(sin(x)/x, x, 0, dir='+-')"
 
 
+def test_limit_taylor_cancellation_expression() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="limit",
+            expression="(sin(x) - x + x^3/6) / x^5",
+            point="0",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "1/120"
+
+
 def test_limit_rejects_different_one_sided_limits() -> None:
     with pytest.raises(ValueError, match="Two-sided limit does not exist"):
         run(

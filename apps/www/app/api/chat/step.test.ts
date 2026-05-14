@@ -40,7 +40,7 @@ describe("app/api/chat/step", () => {
     expect(step).toBeUndefined();
   });
 
-  it("keeps normal tool choice on the first non-page-fetch step", () => {
+  it("requires grounding on the first non-page-fetch step", () => {
     const step = Effect.runSync(
       prepareChatStep({
         messages: emptyMessages,
@@ -49,7 +49,9 @@ describe("app/api/chat/step", () => {
       })
     );
 
-    expect(step).toBeUndefined();
+    expect(step).toEqual({
+      toolChoice: "required",
+    });
   });
 
   it("keeps normal tool choice after the first non-page-fetch step", () => {

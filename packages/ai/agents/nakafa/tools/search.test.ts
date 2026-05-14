@@ -238,4 +238,61 @@ describe("nakafa search tool", () => {
       })
     );
   });
+
+  it("preserves alternate query variants for one section", async () => {
+    const { parts, writer } = createWriter();
+    const output = await Effect.runPromise(
+      search({
+        input: {
+          limit: 3,
+          locale: "en",
+          offset: 0,
+          queries: ["hukum kekekalan massa", "stoikiometri"],
+          query: "kimia kelas 10",
+          section: "subject",
+        },
+        locale: "id",
+        toolCallId: "search-queries",
+        writer,
+      }).pipe(
+        Effect.provideService(NakafaSearch, {
+          search: (input) =>
+            Effect.succeed({
+              count: 1,
+              has_more: false,
+              items: [
+                {
+                  content_id:
+                    "id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
+                  description: "Pelajari hukum kekekalan massa.",
+                  locale: input.locale,
+                  markdown_url:
+                    "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law.md",
+                  route:
+                    "subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
+                  section: "subject",
+                  title: "Hukum Kekekalan Massa",
+                  url: "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
+                },
+              ],
+              limit: input.limit,
+              next_offset: null,
+              offset: input.offset,
+            }),
+        })
+      )
+    );
+
+    expect(output.text).toContain("Hukum Kekekalan Massa");
+    expect(parts.at(0)).toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          input: expect.objectContaining({
+            queries: ["hukum kekekalan massa", "stoikiometri"],
+            query: "kimia kelas 10",
+          }),
+        }),
+      })
+    );
+  });
 });

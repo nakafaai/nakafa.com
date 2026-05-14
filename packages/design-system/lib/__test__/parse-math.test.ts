@@ -109,6 +109,26 @@ describe("preprocessLaTeX", () => {
     expect(preprocessLaTeX(markdown)).toBe("$$a$$ $$b$$ $$c$$ $$d$$");
   });
 
+  it("normalizes plain single-dollar spans that contain math syntax", () => {
+    const markdown = "Sebanyak $15,00\\ \\text{g}$ besi dan $x^2 + 1$ oksigen.";
+
+    expect(preprocessLaTeX(markdown)).toBe(
+      "Sebanyak $$15,00\\ \\text{g}$$ besi dan $$x^2 + 1$$ oksigen."
+    );
+  });
+
+  it("keeps plain single-dollar currency text unchanged", () => {
+    const markdown = "Harga $15,00$ sekarang, bukan $12 dan $13.";
+
+    expect(preprocessLaTeX(markdown)).toBe(markdown);
+  });
+
+  it("keeps empty single-dollar spans unchanged", () => {
+    const markdown = "Kosong $ $ tetap teks biasa.";
+
+    expect(preprocessLaTeX(markdown)).toBe(markdown);
+  });
+
   it("normalizes HTML math tags", () => {
     expect(preprocessLaTeX("<math>x^2</math>")).toBe(
       ["", "", "```math", "x^2", "```", "", ""].join("\n")

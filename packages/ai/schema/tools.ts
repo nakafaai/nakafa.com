@@ -11,7 +11,7 @@ export type ToolName = Schema.Schema.Type<typeof ToolNameSchema>;
 export const NakafaToolInputSchema = Schema.Struct({
   query: Schema.NonEmptyString.annotations({
     description:
-      "The specific request about Nakafa-owned content. Include the current URL, verified status, user goal, and enough subject, article, exercise, Quran, or current-page context to search or read the right Nakafa source.",
+      "The complete request about Nakafa educational evidence. Preserve every user-requested deliverable, including lesson explanations, summaries, examples, exercises, practice questions, answers, or Quran references, plus enough current-page context to search or read the right Nakafa source.",
   }),
 })
   .pipe(Schema.mutable)

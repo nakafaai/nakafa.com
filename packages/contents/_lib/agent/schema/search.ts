@@ -2,6 +2,7 @@ import {
   NAKAFA_AGENT_DEFAULT_LIMIT,
   NAKAFA_AGENT_MAX_LIMIT,
   NAKAFA_AGENT_MAX_OFFSET,
+  NAKAFA_AGENT_MAX_QUERIES,
 } from "@repo/contents/_lib/agent/constants";
 import {
   NakafaAgentContentSummarySchema,
@@ -37,6 +38,13 @@ export const NakafaAgentSearchOptionsSchema = z
       .optional()
       .describe(
         "Optional query over synced Nakafa title and content text. Keep the user's topic words; do not add section names unless the user used them."
+      ),
+    queries: z
+      .array(z.string().trim().min(1))
+      .max(NAKAFA_AGENT_MAX_QUERIES)
+      .optional()
+      .describe(
+        "Optional unique query variants for the same section and locale. Use separate parallel search tool calls when section filters differ."
       ),
     section: NakafaAgentSectionSchema.optional().describe(
       'Optional section filter. Use "subject" for lessons, school materials, class or grade topics, and study content. Use "articles" only when the user explicitly asks for articles, news, essays, analysis, or editorial content. Use "exercises" for questions, drills, tests, tryouts, or answer explanations. Use "quran" for surah, ayah, tafsir, or Quran references. Omit this filter for broad topic discovery.'

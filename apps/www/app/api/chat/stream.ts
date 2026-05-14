@@ -219,7 +219,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             tools: {
               [TOOL_NAMES.nakafa]: tool({
                 description:
-                  "Retrieve Nakafa-owned educational content: current pages, lessons, articles, Quran references, and structured exercises.",
+                  "Retrieve Nakafa educational evidence for lessons, study topics, current pages, articles, Quran references, and structured exercises. Preserve every requested deliverable in the query.",
                 inputSchema: nakafaToolInputSchema,
                 execute: ({ query }, { toolCallId }) => {
                   const needsPageFetch = context.needsPageFetch && !fetchedPage;

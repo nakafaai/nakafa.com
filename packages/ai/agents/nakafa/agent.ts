@@ -156,6 +156,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
 
         const exerciseStep = prepareExerciseStep(
           pendingExerciseRef,
+          messages,
           hasExerciseToolCall
         );
 

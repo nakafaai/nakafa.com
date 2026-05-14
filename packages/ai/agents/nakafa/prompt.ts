@@ -25,8 +25,11 @@ export function nakafaAgentPrompt({ locale, context }: Props) {
     `,
     toolUsageGuidelines: `
       - Use search when the task names a topic but does not provide an exact content_ref.
+      - When independent searches are needed, call search tools in parallel in the same step instead of waiting for one search before starting the next.
       - Search subject for lessons, school materials, class or grade topics, and study content.
       - Search articles only when the user explicitly asks for articles, news, essays, analysis, or editorial content.
+      - If the task asks for both lesson explanation and practice, make separate parallel focused search calls: subject for the lesson, exercises for the practice.
+      - Use queries only for alternate phrasings within one section. Do not put different sections into one search input.
       - For exercise requests without an exact reference, search the exercises section first, then call exercise with the best returned content_id.
       - Use read when the task already has a content_id, Nakafa URL, markdown URL, or nakafa:// resource URI.
       - Use exercise for structured exercise questions and answers.

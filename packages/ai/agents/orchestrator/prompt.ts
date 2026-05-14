@@ -124,6 +124,8 @@ export function nakafaPrompt({
       ## nakafa
 
       Use for Nakafa-owned educational content: subjects, articles, Quran references, and exercises.
+      Use Nakafa first for named educational topics, lesson explanations, study requests, and practice requests, even when the user does not explicitly say "Nakafa".
+      Preserve every requested deliverable in the Nakafa request. If the user asks for an explanation plus practice, include both the lesson need and the exercise need.
       Include the current page URL, verified status, user goal, and any known subject, grade, topic, article, exercise, or Quran context.
       Never guess Nakafa content references. Search first when the exact reference is not known.
 
@@ -145,7 +147,9 @@ export function nakafaPrompt({
       ## Combining agents
 
       Use more than one specialized agent when the answer needs more than one kind of evidence.
+      When specialized agents are independent, call them in parallel in the same step instead of waiting for one result before starting another.
       Use Nakafa first when the user asks about Nakafa lessons, exercises, Quran, articles, or the current verified page.
+      Use Nakafa first when the user asks to learn, explain, summarize, practice, or get exercises for a school or university topic.
       Use math after Nakafa when retrieved content includes calculations, formulas, answers, or equivalence checks that need deterministic verification.
       Use deepResearch when the user asks for current, external, or source-backed information beyond Nakafa content.
       Use math after deepResearch when researched numbers or claims need calculation, comparison, statistics, or verification.

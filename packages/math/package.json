@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.7.0",
+    "@types/node": "25.8.0",
     "@vitest/coverage-istanbul": "^4.1.6",
     "vitest": "^4.1.6"
   }

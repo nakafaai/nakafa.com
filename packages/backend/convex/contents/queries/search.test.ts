@@ -1,6 +1,6 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
+import { CONTENT_SEARCH_MAX_OFFSET } from "@repo/backend/convex/contents/search/constants";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { nakafaSearchMaxOffset } from "@repo/utilities/nakafa";
 import { describe, expect, it } from "vitest";
 
 describe("contents/queries/search:search", () => {
@@ -85,6 +85,58 @@ describe("contents/queries/search:search", () => {
     ]);
   });
 
+  it("searches multiple unique query variants in one bounded request", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("contentSearch", {
+        contentHash: "hash-mass",
+        content_id:
+          "id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
+        description: "Pelajari hukum kekekalan massa.",
+        locale: "id",
+        markdown_url:
+          "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law.md",
+        route:
+          "subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
+        section: "subject",
+        syncedAt: 1,
+        text: "kimia kelas 10 reaksi tertutup massa zat tetap",
+        title: "Hukum Kekekalan Massa",
+        url: "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-conservation-law",
+      });
+      await ctx.db.insert("contentSearch", {
+        contentHash: "hash-stoichiometry",
+        content_id:
+          "id/subject/high-school/10/chemistry/stoichiometry/introduction",
+        description: "Pelajari stoikiometri.",
+        locale: "id",
+        markdown_url:
+          "https://nakafa.com/id/subject/high-school/10/chemistry/stoichiometry/introduction.md",
+        route: "subject/high-school/10/chemistry/stoichiometry/introduction",
+        section: "subject",
+        syncedAt: 1,
+        text: "perhitungan kimia mol massa reaksi",
+        title: "Stoikiometri",
+        url: "https://nakafa.com/id/subject/high-school/10/chemistry/stoichiometry/introduction",
+      });
+    });
+
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "id",
+      offset: 0,
+      queries: ["hukum kekekalan massa", "stoikiometri"],
+      query: "hukum kekekalan massa",
+      section: "subject",
+    });
+
+    expect(result.items.map((item) => item.title)).toEqual([
+      "Hukum Kekekalan Massa",
+      "Stoikiometri",
+    ]);
+  });
+
   it("browses a stable bounded list when no query is provided", async () => {
     const t = createConvexTestWithBetterAuth();
 
@@ -136,7 +188,7 @@ describe("contents/queries/search:search", () => {
     const t = createConvexTestWithBetterAuth();
 
     await t.mutation(async (ctx) => {
-      for (let index = 0; index <= nakafaSearchMaxOffset + 10; index += 1) {
+      for (let index = 0; index <= CONTENT_SEARCH_MAX_OFFSET + 10; index += 1) {
         const title = `Search Cap ${index.toString().padStart(4, "0")}`;
 
         await ctx.db.insert("contentSearch", {
@@ -155,7 +207,7 @@ describe("contents/queries/search:search", () => {
       }
     });
 
-    const offset = nakafaSearchMaxOffset - 10;
+    const offset = CONTENT_SEARCH_MAX_OFFSET - 10;
     const browseResult = await t.query(api.contents.queries.search.search, {
       limit: 20,
       locale: "id",

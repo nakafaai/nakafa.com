@@ -1,9 +1,9 @@
+import { NAKAFA_CONTENT_BASE_URL } from "@repo/backend/convex/contents/constants";
 import type {
   Locale,
   NakafaSection,
 } from "@repo/backend/convex/lib/validators/contents";
 import { cleanSlug } from "@repo/utilities/helper";
-import { nakafaBaseUrl } from "@repo/utilities/nakafa";
 
 const WHITESPACE_PATTERN = /\s+/g;
 
@@ -35,10 +35,10 @@ export function buildContentSearchRef({
   return {
     content_id: contentId,
     locale,
-    markdown_url: `${nakafaBaseUrl}/${contentId}.md`,
+    markdown_url: `${NAKAFA_CONTENT_BASE_URL}/${contentId}.md`,
     route: cleanRoute,
     section,
-    url: `${nakafaBaseUrl}/${contentId}`,
+    url: `${NAKAFA_CONTENT_BASE_URL}/${contentId}`,
   };
 }
 

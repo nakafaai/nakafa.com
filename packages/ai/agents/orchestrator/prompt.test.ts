@@ -86,6 +86,18 @@ describe("nakafaPrompt", () => {
       "Use math after Nakafa when retrieved content includes calculations, formulas, answers, or equivalence checks that need deterministic verification."
     );
     expect(prompt).toContain(
+      'Use Nakafa first for named educational topics, lesson explanations, study requests, and practice requests, even when the user does not explicitly say "Nakafa".'
+    );
+    expect(prompt).toContain(
+      "Preserve every requested deliverable in the Nakafa request."
+    );
+    expect(prompt).toContain(
+      "Use Nakafa first when the user asks to learn, explain, summarize, practice, or get exercises for a school or university topic."
+    );
+    expect(prompt).toContain(
+      "When specialized agents are independent, call them in parallel in the same step instead of waiting for one result before starting another."
+    );
+    expect(prompt).toContain(
       "Use math after deepResearch when researched numbers or claims need calculation, comparison, statistics, or verification."
     );
     expect(prompt).toContain(

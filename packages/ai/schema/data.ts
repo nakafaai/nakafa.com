@@ -1,10 +1,10 @@
+import { NAKAFA_AGENT_SECTIONS } from "@repo/contents/_lib/agent/constants";
 import { MathDataSchema } from "@repo/math/schema";
 import { locales } from "@repo/utilities/locales";
-import { nakafaSections } from "@repo/utilities/nakafa";
 import { Schema } from "effect";
 
 const LocaleSchema = Schema.Literal(...locales);
-const NakafaSectionSchema = Schema.Literal(...nakafaSections);
+const NakafaSectionSchema = Schema.Literal(...NAKAFA_AGENT_SECTIONS);
 const StatusSchema = Schema.Literal("loading", "done", "error");
 
 const contentRefFields = {
@@ -27,6 +27,7 @@ const SearchInputSchema = Schema.Struct({
   locale: LocaleSchema,
   offset: Schema.Number,
   query: Schema.optional(Schema.String),
+  queries: Schema.optional(Schema.Array(Schema.String).pipe(Schema.mutable)),
   section: Schema.optional(NakafaSectionSchema),
 }).pipe(Schema.mutable);
 

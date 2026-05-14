@@ -125,6 +125,7 @@ describe("Nakafa agent step state", () => {
   it("forces exercise for one step when an exercise reference is pending", () => {
     const step = prepareExerciseStep(
       Option.some(exerciseResult.items[0].content_id),
+      [{ role: "user", content: "beri latihan fungsi rasional" }],
       false
     );
 
@@ -134,6 +135,12 @@ describe("Nakafa agent step state", () => {
 
     expect(step.activeTools).toEqual(["exercise"]);
     expect(step.toolChoice).toEqual({ toolName: "exercise", type: "tool" });
+    expect(step.messages[0]).toEqual(
+      expect.objectContaining({
+        content: "beri latihan fungsi rasional",
+        role: "user",
+      })
+    );
     expect(step.messages.at(-1)).toEqual(
       expect.objectContaining({
         content: expect.stringContaining(exerciseResult.items[0].content_id),
@@ -143,9 +150,13 @@ describe("Nakafa agent step state", () => {
   });
 
   it("does not force exercise when there is no pending ref or exercise already ran", () => {
-    const missingRef = prepareExerciseStep(Option.none(), false);
+    const messages = [
+      { role: "user", content: "beri latihan fungsi rasional" },
+    ] satisfies Parameters<typeof prepareExerciseStep>[1];
+    const missingRef = prepareExerciseStep(Option.none(), messages, false);
     const alreadyRan = prepareExerciseStep(
       Option.some(exerciseResult.items[0].content_id),
+      messages,
       true
     );
 

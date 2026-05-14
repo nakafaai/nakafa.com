@@ -18,6 +18,23 @@ def test_series_expansion() -> None:
     assert "x**3" in result.secondary.expression
 
 
+def test_series_expansion_keeps_needed_taylor_term() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="series",
+            expression="sin(x)",
+            order=6,
+            point="0",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert "x**5/120" in result.secondary.expression
+
+
 def test_series_preserves_fractional_expansion_point() -> None:
     result = run(
         MathRequest(
