@@ -19,7 +19,7 @@
     "google-index": "node --env-file=.env.local --import tsx scripts/google-index.ts"
   },
   "dependencies": {
-    "@ai-sdk/react": "^3.0.182",
+    "@ai-sdk/react": "^3.0.184",
     "@convex-dev/better-auth": "^0.12.2",
     "@hugeicons/core-free-icons": "^4.1.4",
     "@hugeicons/react": "^1.1.6",
@@ -47,7 +47,7 @@
     "@tanstack/react-query-devtools": "^5.100.10",
     "@tanstack/react-virtual": "^3.13.24",
     "@vercel/functions": "^3.5.1",
-    "ai": "^6.0.180",
+    "ai": "^6.0.182",
     "any-ascii": "^0.3.3",
     "babel-plugin-react-compiler": "^1.0.0",
     "better-auth": "~1.6.9",

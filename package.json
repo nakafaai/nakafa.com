@@ -31,7 +31,7 @@
     "boundaries": "turbo run boundaries",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "bump-deps": "pnpm dlx npm-check-updates --deep -u -x recharts,better-auth && turbo run bump-deps --filter=cas",
+    "bump-deps": "pnpm dlx npm-check-updates --deep -u -x recharts,better-auth,@modelcontextprotocol/sdk && turbo run bump-deps --filter=cas",
     "bump-ui": "pnpm dlx shadcn@latest add --all --overwrite -c packages/design-system",
     "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/*/.turbo packages/*/.turbo apps/*/.ruff_cache apps/*/.pytest_cache apps/*/.venv .turbo .next apps/*/.next apps/*/.react-email packages/*/.react-email coverage apps/*/coverage packages/*/coverage && find apps packages -name __pycache__ -type d -prune -exec rm -rf {} +",
     "clean:ts": "find . -name '*.tsbuildinfo' -type f -delete && find . -name 'tsconfig.tsbuildinfo' -type f -delete",
