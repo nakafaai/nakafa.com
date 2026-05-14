@@ -259,7 +259,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
               }),
               [TOOL_NAMES.deepResearch]: tool({
                 description:
-                  "Research external or current information with source-backed web search and source analysis.",
+                  "Research external, official, current, latest, cited, or source-backed information with web search and source analysis.",
                 inputSchema: researchToolInputSchema,
                 execute: ({ query }, { messages, toolCallId }) =>
                   Effect.runPromise(

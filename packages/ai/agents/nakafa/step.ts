@@ -54,7 +54,6 @@ export function selectExerciseRef(
  */
 export function prepareExerciseStep(
   ref: Option.Option<string>,
-  messages: ModelMessage[],
   hasExerciseToolCall: boolean
 ) {
   if (Option.isNone(ref)) {
@@ -75,7 +74,7 @@ export function prepareExerciseStep(
 
   return {
     activeTools: exerciseActiveTools,
-    messages: [...messages, message],
+    messages: [message],
     toolChoice: exerciseToolChoice,
   };
 }

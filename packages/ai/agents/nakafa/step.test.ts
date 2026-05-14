@@ -125,7 +125,6 @@ describe("Nakafa agent step state", () => {
   it("forces exercise for one step when an exercise reference is pending", () => {
     const step = prepareExerciseStep(
       Option.some(exerciseResult.items[0].content_id),
-      [{ role: "user", content: "tampilkan soal fungsi rasional" }],
       false
     );
 
@@ -144,13 +143,9 @@ describe("Nakafa agent step state", () => {
   });
 
   it("does not force exercise when there is no pending ref or exercise already ran", () => {
-    const messages = [
-      { role: "user", content: "tampilkan soal fungsi rasional" },
-    ] satisfies Parameters<typeof prepareExerciseStep>[1];
-    const missingRef = prepareExerciseStep(Option.none(), messages, false);
+    const missingRef = prepareExerciseStep(Option.none(), false);
     const alreadyRan = prepareExerciseStep(
       Option.some(exerciseResult.items[0].content_id),
-      messages,
       true
     );
 

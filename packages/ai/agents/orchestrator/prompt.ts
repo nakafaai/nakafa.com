@@ -130,6 +130,8 @@ export function nakafaPrompt({
       ## deepResearch
 
       Use for external sources, current events, up-to-date information, or when Nakafa content is insufficient.
+      Use deepResearch before answering any request for official documentation, source-backed claims, citations, external links, current or latest information, or named products outside Nakafa. This applies in every user language.
+      Do not answer those requests from memory, even when the topic seems familiar.
       Include the research question, why the user needs it, current page context, user role, and any required recency.
       Use source-backed findings only. If sources are missing or weak, say that clearly.
 
@@ -179,6 +181,7 @@ function getOutputFormattingGuidelines() {
     ## Mathematical format
     
     ALL numbers, variables, expressions MUST use LaTeX format for mathematical content. NEVER USE DOLLAR delimiter format. following math format:
+    When retrieved evidence contains $...$ or $$...$$ math, rewrite it to \\(...\\) or \\[...\\] in your final answer.
 
     - Inline math: \\(...\\). Examples: \\(10 \\text{ meters}\\).
     - Block math: \\[...\\]. Use \\\\ for line breaks. Examples: \\[A = \\left[x^{2} - \\frac{x^{3}}{3}\\right]_{0}^{2} \\\\ = 4 - \\frac{8}{3} \\\\ = \\frac{4}{3}\\], \\[x^2 + y^2 = z^2\\].

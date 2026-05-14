@@ -94,6 +94,21 @@ describe("nakafaPrompt", () => {
     expect(prompt).toContain(
       "If the user asks for one product, domain, document, or official source, keep that section scoped to the requested source"
     );
+    expect(prompt).toContain(
+      "Use deepResearch before answering any request for official documentation, source-backed claims, citations, external links, current or latest information, or named products outside Nakafa."
+    );
+    expect(prompt).toContain("This applies in every user language.");
+  });
+
+  it("requires dollar-delimited evidence math to be rewritten for final answers", () => {
+    const prompt = nakafaPrompt({
+      ...base,
+      userRole: "student",
+    });
+
+    expect(prompt).toContain(
+      "When retrieved evidence contains $...$ or $$...$$ math, rewrite it to"
+    );
   });
 
   it.each([
