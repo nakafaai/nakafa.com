@@ -138,6 +138,18 @@ describe("mapUIMessagePartsToDBParts", () => {
           },
         },
       },
+      {
+        id: "scrape-1",
+        type: "data-scrape-url",
+        data: {
+          content: "# DevTools",
+          description: "Debug and inspect AI SDK applications with DevTools",
+          favicon: "https://ai-sdk.dev/favicon.ico",
+          status: "done",
+          title: "AI SDK Core: DevTools",
+          url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+        },
+      },
     ] satisfies MyUIMessage["parts"];
 
     expect(mapUIMessagePartsToDBParts({ messageParts: parts })).toEqual([
@@ -179,6 +191,17 @@ describe("mapUIMessagePartsToDBParts", () => {
           status: "done",
         }),
         dataNakafaId: "quran-1",
+      }),
+      expect.objectContaining({
+        type: "data-scrape-url",
+        dataScrapeUrlContent: "# DevTools",
+        dataScrapeUrlDescription:
+          "Debug and inspect AI SDK applications with DevTools",
+        dataScrapeUrlFavicon: "https://ai-sdk.dev/favicon.ico",
+        dataScrapeUrlId: "scrape-1",
+        dataScrapeUrlStatus: "done",
+        dataScrapeUrlTitle: "AI SDK Core: DevTools",
+        dataScrapeUrlUrl: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
       }),
     ]);
   });

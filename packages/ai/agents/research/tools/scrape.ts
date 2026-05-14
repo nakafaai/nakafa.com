@@ -2,6 +2,7 @@ import {
   ResearchScrapeError,
   type ScrapeOutput,
 } from "@repo/ai/agents/research/schema";
+import { getDocumentMetadata } from "@repo/ai/agents/research/tools/metadata";
 import { firecrawlApp } from "@repo/ai/config/firecrawl";
 import { selectRelevantContent } from "@repo/ai/lib/selection";
 import type { MyUIMessage } from "@repo/ai/types/message";
@@ -64,6 +65,9 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
   }
 
   const markdown = scrapeResult.response.markdown;
+  const metadata = getDocumentMetadata({
+    metadata: scrapeResult.response.metadata,
+  });
 
   if (!markdown) {
     yield* Effect.sync(() =>
@@ -74,13 +78,17 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
           url,
           status: "error",
           content: "",
+          ...metadata,
           error: "No content found.",
         },
       })
     );
 
     return formatOutput({
-      output: { data: { url, content: "" }, error: "No content found." },
+      output: {
+        data: { url, content: "", ...metadata },
+        error: "No content found.",
+      },
     });
   }
 
@@ -93,7 +101,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
     writer.write({
       id: toolCallId,
       type: "data-scrape-url",
-      data: { url, status: "done", content: processedContent },
+      data: { url, status: "done", content: processedContent, ...metadata },
     })
   );
 
@@ -102,6 +110,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
       data: {
         url,
         content: processedContent,
+        ...metadata,
       },
       error: undefined,
     },
@@ -115,6 +124,8 @@ function formatOutput({ output }: { output: ScrapeOutput }) {
   return dedent(`
     # Scrape Result
     - URL: ${output.data.url}
+    ${output.data.title ? `- Title: ${output.data.title}` : ""}
+    ${output.data.description ? `- Description: ${output.data.description}` : ""}
     ${output.error ? `- Error: ${output.error}` : ""}
 
     ## Content

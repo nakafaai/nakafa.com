@@ -7,7 +7,7 @@ import {
 } from "@repo/design-system/components/ui/hover-card";
 import { cn } from "@repo/design-system/lib/utils";
 import Image from "next/image";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 
 const SourceContext = createContext<{
   href: string;
@@ -130,40 +130,46 @@ export function Source({ href, children }: SourceProps) {
 
 export interface SourceTriggerProps {
   className?: string;
+  faviconUrl?: string;
   label?: string | number;
   showFavicon?: boolean;
 }
 
 export function SourceTrigger({
+  faviconUrl,
   label,
   showFavicon = false,
   className,
 }: SourceTriggerProps) {
   const { href, domain } = useSourceContext();
+  const [failedFaviconUrl, setFailedFaviconUrl] = useState("");
   const labelToShow = label ?? domain.replace("www.", "");
-  const faviconUrl = getFaviconUrl({ href, domain, label });
+  const sourceFaviconUrl =
+    getCustomFaviconUrl(faviconUrl) ?? getFaviconUrl({ href, domain, label });
+  const visibleFaviconUrl =
+    showFavicon && sourceFaviconUrl !== failedFaviconUrl
+      ? sourceFaviconUrl
+      : null;
 
   return (
     <HoverCardTrigger asChild>
       <a
         className={cn(
           "inline-flex h-5 max-w-32 items-center gap-1 overflow-hidden rounded-full border border-transparent bg-muted py-0 text-muted-foreground text-xs leading-none no-underline transition-colors ease-out hover:border-primary hover:bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] hover:text-primary",
-          showFavicon ? "pr-2 pl-1" : "px-1",
+          visibleFaviconUrl ? "pr-2 pl-1" : "px-1",
           className
         )}
         href={href}
         rel="noopener noreferrer"
         target="_blank"
       >
-        {showFavicon && faviconUrl ? (
-          <Image
+        {visibleFaviconUrl ? (
+          <SourceFavicon
             alt="favicon"
             className="size-3.5 rounded-full"
-            fetchPriority="high"
             height={14}
-            loading="eager"
-            preload
-            src={faviconUrl}
+            onUnavailable={() => setFailedFaviconUrl(visibleFaviconUrl)}
+            src={visibleFaviconUrl}
             width={14}
           />
         ) : null}
@@ -176,16 +182,20 @@ export function SourceTrigger({
 export interface SourceContentProps {
   className?: string;
   description?: string;
+  faviconUrl?: string;
   title: string;
 }
 
 export function SourceContent({
   title,
   description,
+  faviconUrl,
   className,
 }: SourceContentProps) {
   const { href, domain } = useSourceContext();
-  const faviconUrl = getFaviconUrl({ href, domain, label: title });
+  const sourceFaviconUrl =
+    getCustomFaviconUrl(faviconUrl) ??
+    getFaviconUrl({ href, domain, label: title });
   const domainLabel = getDomainLabel({ domain, title });
   const cleanTitle = title.trim();
   const shouldShowTitle = cleanTitle && cleanTitle !== domainLabel;
@@ -199,12 +209,12 @@ export function SourceContent({
         target="_blank"
       >
         <div className="flex items-center gap-1.5">
-          {faviconUrl ? (
-            <Image
+          {sourceFaviconUrl ? (
+            <SourceFavicon
               alt="favicon"
               className="size-4 rounded-full"
               height={16}
-              src={faviconUrl}
+              src={sourceFaviconUrl}
               width={16}
             />
           ) : null}
@@ -220,5 +230,59 @@ export function SourceContent({
         )}
       </a>
     </HoverCardContent>
+  );
+}
+
+/** Uses provider favicon metadata only when it is already a valid URL. */
+function getCustomFaviconUrl(faviconUrl?: string) {
+  const value = faviconUrl?.trim();
+
+  if (!value) {
+    return null;
+  }
+
+  if (typeof URL.canParse === "function" && URL.canParse(value)) {
+    return value;
+  }
+
+  return null;
+}
+
+interface SourceFaviconProps {
+  alt: string;
+  className?: string;
+  height: number;
+  onUnavailable?: () => void;
+  src: string;
+  width: number;
+}
+
+function SourceFavicon({
+  alt,
+  className,
+  height,
+  onUnavailable,
+  src,
+  width,
+}: SourceFaviconProps) {
+  const [failedSrc, setFailedSrc] = useState("");
+
+  if (failedSrc === src) {
+    return null;
+  }
+
+  return (
+    <Image
+      alt={alt}
+      className={className}
+      height={height}
+      onError={() => {
+        setFailedSrc(src);
+        onUnavailable?.();
+      }}
+      src={src}
+      unoptimized
+      width={width}
+    />
   );
 }

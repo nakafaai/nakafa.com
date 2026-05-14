@@ -169,6 +169,19 @@ describe("mapDBPartToUIMessagePart", () => {
           },
         },
       });
+      await ctx.db.insert("parts", {
+        messageId,
+        order: 5,
+        type: "data-scrape-url",
+        dataScrapeUrlId: "scrape-1",
+        dataScrapeUrlUrl: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+        dataScrapeUrlContent: "# DevTools",
+        dataScrapeUrlTitle: "AI SDK Core: DevTools",
+        dataScrapeUrlDescription:
+          "Debug and inspect AI SDK applications with DevTools",
+        dataScrapeUrlFavicon: "https://ai-sdk.dev/favicon.ico",
+        dataScrapeUrlStatus: "done",
+      });
       return await ctx.db
         .query("parts")
         .withIndex("by_messageId_and_order", (q) =>
@@ -214,6 +227,18 @@ describe("mapDBPartToUIMessagePart", () => {
         data: expect.objectContaining({
           kind: "taxonomy",
           status: "done",
+        }),
+      }),
+      expect.objectContaining({
+        type: "data-scrape-url",
+        id: "scrape-1",
+        data: expect.objectContaining({
+          content: "# DevTools",
+          description: "Debug and inspect AI SDK applications with DevTools",
+          favicon: "https://ai-sdk.dev/favicon.ico",
+          status: "done",
+          title: "AI SDK Core: DevTools",
+          url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
         }),
       }),
     ]);

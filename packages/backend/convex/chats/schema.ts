@@ -477,6 +477,9 @@ export const partValidator = v.object({
   dataScrapeUrlId: v.optional(v.string()),
   dataScrapeUrlUrl: v.optional(v.string()),
   dataScrapeUrlContent: v.optional(v.string()),
+  dataScrapeUrlTitle: v.optional(v.string()),
+  dataScrapeUrlDescription: v.optional(v.string()),
+  dataScrapeUrlFavicon: v.optional(v.string()),
   dataScrapeUrlStatus: v.optional(dataStatusValidator),
   dataScrapeUrlError: v.optional(v.string()),
 

@@ -11,8 +11,11 @@ flowchart LR
   User["User asks Nina"] --> Route["apps/www /api/chat"]
   Route --> Check{"Verified page missing from retained chat?"}
   Check -- "yes" --> Forced["prepareStep: force nakafa once"]
-  Check -- "no" --> Normal["normal tool choice"]
+  Check -- "no" --> Source{"Latest user text names an external source?"}
+  Source -- "yes" --> ResearchForced["prepareStep: force research once"]
+  Source -- "no" --> Normal["normal tool choice"]
   Forced --> Orchestrator["orchestrator"]
+  ResearchForced --> Orchestrator
   Normal --> Orchestrator
   Orchestrator --> Nakafa["nakafa agent"]
   Orchestrator --> Research["research agent"]
@@ -43,7 +46,12 @@ sequenceDiagram
     Tool->>Content: read current content_ref directly
     Tool-->>Convex: persist data-nakafa kind content
   else unverified or already fetched
-    Route->>Main: normal tool choice
+    Route->>Route: check latest user text for external source reference
+    alt explicit external source
+      Route->>Main: force research on step 0
+    else no explicit external source
+      Route->>Main: normal tool choice
+    end
   end
 ```
 
@@ -58,6 +66,9 @@ sequenceDiagram
   `quran`, or `taxonomy`.
 - Current-page fetch is deterministic through AI SDK `prepareStep`, `toolChoice`,
   and `activeTools`.
+- Explicit external source references are extracted by `@repo/ai/lib/source`.
+  Routing uses them to enter research, and research receives the full ordered
+  source list for exact-source reading.
 
 ## References
 

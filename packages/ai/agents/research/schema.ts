@@ -18,6 +18,9 @@ export const ScrapeInputSchema = Schema.Struct({
 export const ScrapeOutputSchema = Schema.Struct({
   data: Schema.Struct({
     content: Schema.String,
+    description: Schema.optional(Schema.String),
+    favicon: Schema.optional(Schema.String),
+    title: Schema.optional(Schema.String),
     url: Schema.String,
   }).pipe(Schema.mutable),
   error: Schema.optional(Schema.String),

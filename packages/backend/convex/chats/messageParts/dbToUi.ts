@@ -349,6 +349,9 @@ export function mapDBPartToUIMessagePart({
             fieldName: "dataScrapeUrlContent",
             partType: part.type,
           }),
+          title: part.dataScrapeUrlTitle,
+          description: part.dataScrapeUrlDescription,
+          favicon: part.dataScrapeUrlFavicon,
           status: requirePartField({
             value: part.dataScrapeUrlStatus,
             fieldName: "dataScrapeUrlStatus",

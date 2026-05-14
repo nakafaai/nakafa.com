@@ -229,8 +229,11 @@ export const DataPartSchema = Schema.Struct({
   nakafa: NakafaDataSchema,
   "scrape-url": Schema.Struct({
     content: Schema.String,
+    description: Schema.optional(Schema.String),
     error: Schema.optional(Schema.String),
+    favicon: Schema.optional(Schema.String),
     status: StatusSchema,
+    title: Schema.optional(Schema.String),
     url: Schema.String,
   }).pipe(Schema.mutable),
   suggestions: Schema.Struct({

@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   mapUIMessagePartsToDBParts: vi.fn(),
 }));
 
-vi.mock("@repo/ai/lib/utils", () => ({
+vi.mock("@repo/ai/lib/message", () => ({
   compressMessages: mocks.compressMessages,
 }));
 

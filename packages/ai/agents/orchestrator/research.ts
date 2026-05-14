@@ -18,12 +18,14 @@ export const runResearch = Effect.fn("orchestrator.runResearch")(function* ({
   locale,
   modelId,
   query,
+  sourceReferences,
   toolCallId,
   usageAccumulator,
   writer,
 }: ResearchToolParams & { query: string }) {
   const result = yield* runResearchAgent({
     task: query,
+    sourceReferences,
     toolCallId,
     writer,
     modelId,

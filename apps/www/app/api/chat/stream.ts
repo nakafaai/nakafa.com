@@ -9,6 +9,7 @@ import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
 import { getModelProviderOptions, type ModelId } from "@repo/ai/config/models";
 import { model } from "@repo/ai/config/vercel";
 import { generateTitle } from "@repo/ai/features/title";
+import { getSourceReferencesFromMessages } from "@repo/ai/lib/source";
 import {
   mathToolInputSchema,
   nakafaToolInputSchema,
@@ -260,13 +261,15 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 description:
                   "Research external or current information with source-backed web search and source analysis.",
                 inputSchema: researchToolInputSchema,
-                execute: ({ query }, { toolCallId }) =>
+                execute: ({ query }, { messages, toolCallId }) =>
                   Effect.runPromise(
                     runResearch({
                       context,
                       locale: page.locale,
                       modelId: runtime.modelId,
                       query,
+                      sourceReferences:
+                        getSourceReferencesFromMessages(messages),
                       toolCallId,
                       usageAccumulator: usage,
                       writer,
@@ -290,9 +293,10 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                   ),
               }),
             },
-            prepareStep: ({ stepNumber }) =>
+            prepareStep: ({ messages, stepNumber }) =>
               Effect.runSync(
                 prepareChatStep({
+                  messages,
                   needsPageFetch: page.needsFetch,
                   stepNumber,
                 })

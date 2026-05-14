@@ -1,10 +1,19 @@
+import type {
+  Document,
+  SearchResultNews,
+  SearchResultWeb,
+} from "@mendable/firecrawl-js";
 import {
   ResearchSearchError,
   type WebSearchOutput,
 } from "@repo/ai/agents/research/schema";
+import {
+  firstText,
+  getDocumentMetadata,
+} from "@repo/ai/agents/research/tools/metadata";
 import { firecrawlApp } from "@repo/ai/config/firecrawl";
+import { extractDomain } from "@repo/ai/lib/domain";
 import { selectRelevantContent } from "@repo/ai/lib/selection";
-import { extractDomain } from "@repo/ai/lib/utils";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { UIMessageStreamWriter } from "ai";
 import dedent from "dedent";
@@ -77,52 +86,20 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   }
 
   const web =
-    searchResult.response.web?.map((result) => {
-      const title = ("title" in result ? result.title : "") || "";
-      const description =
-        ("description" in result ? result.description : "") || "";
-      const url = ("url" in result ? result.url : "") || "";
-
-      const processedContent = selectRelevantContent({
-        content: ("markdown" in result ? result.markdown : "") || "",
-        query,
-        preserveStructure: false,
-      });
-
-      return {
-        title,
-        description,
-        url,
-        content: processedContent,
-      };
-    }) || [];
+    searchResult.response.web?.map((result) =>
+      getSearchSource({ query, result })
+    ) || [];
 
   const webUrls = new Set(web.map((item) => item.url).filter(Boolean));
   const news =
     searchResult.response.news?.flatMap((result) => {
-      const url = ("url" in result ? result.url : "") || "";
+      const source = getSearchSource({ query, result });
 
-      if (!url || webUrls.has(url)) {
+      if (!source.url || webUrls.has(source.url)) {
         return [];
       }
 
-      const title = ("title" in result ? result.title : "") || "";
-      const description = ("snippet" in result ? result.snippet : "") || "";
-
-      const processedContent = selectRelevantContent({
-        content: ("markdown" in result ? result.markdown : "") || "",
-        query,
-        preserveStructure: false,
-      });
-
-      return [
-        {
-          title,
-          description,
-          url,
-          content: processedContent,
-        },
-      ];
+      return [source];
     }) || [];
 
   const sources = [...web, ...news];
@@ -159,9 +136,17 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
  * Formats web search output as markdown for the research agent.
  */
 function formatOutput({ output }: { output: WebSearchOutput }) {
+  if (output.sources.length === 0) {
+    return dedent(`
+      # Web Search Results
+      ${output.error ? `- Error: ${output.error}` : "- No usable source URLs or page content were returned."}
+
+      Do not cite or describe source evidence from this result.
+    `);
+  }
+
   return dedent(`
     # Web Search Results
-    ${output.error ? `- Error: ${output.error}` : ""}
 
     ${output.sources
       .map(
@@ -176,4 +161,52 @@ function formatOutput({ output }: { output: WebSearchOutput }) {
       )
       .join("\n\n")}
   `);
+}
+
+/** Keeps Firecrawl search metadata when a scraped Document is returned. */
+function getSearchSource({
+  query,
+  result,
+}: {
+  query: string;
+  result: Document | SearchResultNews | SearchResultWeb;
+}) {
+  const metadata = "metadata" in result ? result.metadata : undefined;
+  const sourceMetadata = getDocumentMetadata({
+    description: getSearchDescription(result),
+    metadata,
+    title: "title" in result ? result.title : undefined,
+  });
+  const url = firstText(
+    "url" in result ? result.url : undefined,
+    metadata?.sourceURL,
+    metadata?.url,
+    metadata?.ogUrl
+  );
+
+  return {
+    content: selectRelevantContent({
+      content: "markdown" in result ? result.markdown || "" : "",
+      query,
+      preserveStructure: false,
+    }),
+    description: sourceMetadata.description ?? "",
+    title: sourceMetadata.title ?? "",
+    url: url ?? "",
+  };
+}
+
+/** Reads description text from either search snippets or document metadata. */
+function getSearchDescription(
+  result: Document | SearchResultNews | SearchResultWeb
+) {
+  if ("description" in result && result.description) {
+    return result.description;
+  }
+
+  if ("snippet" in result && result.snippet) {
+    return result.snippet;
+  }
+
+  return;
 }

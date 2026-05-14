@@ -137,6 +137,9 @@ function mapUIMessagePartToDBPart(
         dataScrapeUrlId: part.id,
         dataScrapeUrlUrl: part.data.url,
         dataScrapeUrlContent: part.data.content,
+        dataScrapeUrlTitle: part.data.title,
+        dataScrapeUrlDescription: part.data.description,
+        dataScrapeUrlFavicon: part.data.favicon,
         dataScrapeUrlStatus: part.data.status,
         dataScrapeUrlError: part.data.error,
       };

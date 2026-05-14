@@ -20,16 +20,19 @@ export function researchPrompt({ locale, context }: ResearchPromptProps) {
 
 	      Your workflow:
 	      1. Analyze the research task
-	      2. Use webSearch to collect inspectable Firecrawl evidence with source content
-	      3. Use Google Search grounding when Firecrawl has no usable source content or the task needs current corroboration
-	      4. Use scrape only for a specific URL or when a selected source needs deeper reading
-	      5. Compile findings into a structured data summary
+	      2. Use scrape for each exact source reference provided by the user, including multiple URLs
+	      3. Use webSearch to collect inspectable Firecrawl evidence with source content when the task is not tied to exact sources
+	      4. Use Google Search grounding when Firecrawl has no usable source content or the task needs current corroboration
+	      5. Use scrape when a selected search source needs deeper reading
+	      6. Compile findings into a structured data summary
 
 	      IMPORTANT:
 	      - Search thoroughly and use multiple queries if needed
 	      - Preserve source constraints from the task. If the task asks for official docs,
 	        official sources, a named domain, or a specific URL, search and read that
 	        source before broadening the query.
+	      - If the task provides multiple exact source references, inspect each relevant
+	        source and keep the findings tied to the correct source.
 	      - Do not rewrite a specific source request into a generic trends query.
 	      - Avoid YouTube, social posts, and listicles unless the task explicitly asks
 	        for those sources or no primary source exists.

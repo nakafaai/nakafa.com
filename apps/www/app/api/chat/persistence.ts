@@ -1,5 +1,5 @@
 import type { ModelId } from "@repo/ai/config/models";
-import { compressMessages } from "@repo/ai/lib/utils";
+import { compressMessages } from "@repo/ai/lib/message";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";

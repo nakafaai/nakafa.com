@@ -35,7 +35,7 @@
     "@types/react": "19.2.14",
     "@vitest/coverage-istanbul": "^4.1.6",
     "typescript": "^6.0.3",
-    "vite": "^8.0.12",
+    "vite": "^8.0.13",
     "vitest": "^4.1.6"
   }
 }

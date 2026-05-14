@@ -112,6 +112,7 @@ export const nakafaScrape = createPrompt({
 
       1. The user asks to scrape a URL or asks you to explain the content of the url
       2. Search found a relevant URL but did not return enough content to answer confidently
+      3. The task includes multiple exact URLs that each need direct inspection
 
       ## When NOT to use this tool
 
@@ -131,6 +132,7 @@ export const nakafaScrape = createPrompt({
       ## Best Practices
 
       - Scrape the exact URL when the user asks about that official source or prior search content is too weak
+      - For multiple user-provided URLs, scrape each relevant URL and keep the findings tied to the correct source
       - Prefer primary documentation, standards, papers, and vendor pages over social/video/listicle pages
       - Explain the content to the user in a way that is easy to understand
       - If the content is not related to the user's question, tell the users that the content is not related to the user's question

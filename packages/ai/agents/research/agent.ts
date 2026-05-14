@@ -19,9 +19,11 @@ import { searchWeb } from "@repo/ai/agents/research/tools/search";
 import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
 import { getModelProviderOptions } from "@repo/ai/config/models";
 import { model } from "@repo/ai/config/vercel";
+import { getSourceReferences } from "@repo/ai/lib/source";
 import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { ResearchAgentParams } from "@repo/ai/types/agents";
-import { generateText, stepCountIs, tool } from "ai";
+import { generateText, type ModelMessage, stepCountIs, tool } from "ai";
+import dedent from "dedent";
 import { Effect } from "effect";
 
 /**
@@ -33,16 +35,21 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     modelId,
     locale,
     context,
+    sourceReferences: messageSourceReferences,
     toolCallId,
     writer,
   }: ResearchAgentParams) {
     let needsGoogleGrounding = false;
     let triedGoogleGrounding = false;
+    const sourceReferences = getUniqueSourceReferences([
+      ...messageSourceReferences,
+      ...getSourceReferences(task),
+    ]);
     const result = yield* Effect.tryPromise(() =>
       generateText({
         model: model.languageModel(modelId),
         system: researchPrompt({ locale, context }),
-        messages: [{ role: "user", content: task }],
+        messages: createResearchMessages(task, sourceReferences),
         tools: {
           google_search: google.tools.googleSearch({
             searchTypes: { webSearch: {} },
@@ -84,7 +91,10 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           const hasWebSearchToolCall = steps.some((step) =>
             step.toolCalls.some((toolCall) => toolCall.toolName === "webSearch")
           );
-          const webSearchStep = prepareWebSearchStep(hasWebSearchToolCall);
+          const webSearchStep = prepareWebSearchStep({
+            hasSourceReferences: sourceReferences.length > 0,
+            hasWebSearchToolCall,
+          });
 
           if (webSearchStep) {
             return webSearchStep;
@@ -130,3 +140,49 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     };
   }
 );
+
+/**
+ * Adds explicit user source references to the research task without hiding the original request.
+ */
+function createResearchMessages(
+  task: string,
+  sourceReferences: ResearchAgentParams["sourceReferences"]
+) {
+  if (sourceReferences.length === 0) {
+    return [{ role: "user", content: task }] satisfies ModelMessage[];
+  }
+
+  const sourceList = sourceReferences
+    .map((source, index) => `${index + 1}. ${source.href}`)
+    .join("\n");
+
+  return [
+    {
+      role: "user",
+      content: dedent(`
+        ${task}
+
+        Explicit source references from the user's latest message:
+        ${sourceList}
+      `),
+    },
+  ] satisfies ModelMessage[];
+}
+
+/**
+ * Keeps source references unique while preserving the user's order.
+ */
+function getUniqueSourceReferences(
+  sourceReferences: ResearchAgentParams["sourceReferences"]
+) {
+  const seen = new Set<string>();
+
+  return sourceReferences.flatMap((source) => {
+    if (seen.has(source.href)) {
+      return [];
+    }
+
+    seen.add(source.href);
+    return [source];
+  });
+}

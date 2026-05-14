@@ -22,7 +22,7 @@ vi.mock("@repo/ai/lib/selection", () => ({
   }) => content,
 }));
 
-vi.mock("@repo/ai/lib/utils", () => ({
+vi.mock("@repo/ai/lib/domain", () => ({
   extractDomain: (url: string) => {
     const hostname = new URL(url).hostname;
 
@@ -91,6 +91,21 @@ describe("research web search tool", () => {
         {
           url: "https://example.com/without-metadata",
         },
+        {
+          markdown: "Document content.",
+          metadata: {
+            description: "Document metadata description.",
+            ogTitle: "Document Metadata Title",
+            sourceURL: "https://docs.example.com/document",
+          },
+        },
+        {
+          markdown: undefined,
+          metadata: {
+            sourceURL: "https://docs.example.com/empty",
+            title: "Empty Document",
+          },
+        },
       ],
     });
     const { parts, writer } = createWriter();
@@ -106,9 +121,19 @@ describe("research web search tool", () => {
     expect(output.result.sources.map((source) => source.url)).toEqual([
       "https://example.com/research",
       "https://example.com/without-metadata",
+      "https://docs.example.com/document",
+      "https://docs.example.com/empty",
       "https://news.example.com/update",
       "https://news.example.com/without-title",
     ]);
+    expect(output.result.sources).toContainEqual(
+      expect.objectContaining({
+        content: "Document content.",
+        description: "Document metadata description.",
+        title: "Document Metadata Title",
+        url: "https://docs.example.com/document",
+      })
+    );
     expect(parts).toEqual([
       expect.objectContaining({
         type: "data-web-search",

@@ -1,4 +1,5 @@
 import type { ModelId } from "@repo/ai/config/models";
+import type { SourceReference } from "@repo/ai/lib/source";
 import type { ToolName } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Locale } from "@repo/utilities/locales";
@@ -32,6 +33,7 @@ export interface TaskAgentParams extends BaseAgentParams {
 
 /** Parameters for the external research subagent. */
 export interface ResearchAgentParams extends TaskAgentParams {
+  sourceReferences: SourceReference[];
   toolCallId: string;
 }
 

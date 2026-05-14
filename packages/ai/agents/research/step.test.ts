@@ -24,13 +24,32 @@ describe("research agent step state", () => {
   });
 
   it("starts with inspectable web search before provider-only grounding", () => {
-    const step = prepareWebSearchStep(false);
+    const step = prepareWebSearchStep({
+      hasSourceReferences: false,
+      hasWebSearchToolCall: false,
+    });
 
     expect(step).toEqual({
       activeTools: ["webSearch"],
       toolChoice: { toolName: "webSearch", type: "tool" },
     });
-    expect(prepareWebSearchStep(true)).toBeUndefined();
+    expect(
+      prepareWebSearchStep({
+        hasSourceReferences: false,
+        hasWebSearchToolCall: true,
+      })
+    ).toBeUndefined();
+  });
+
+  it("keeps exact source requests scoped to scrape", () => {
+    expect(
+      prepareWebSearchStep({
+        hasSourceReferences: true,
+        hasWebSearchToolCall: false,
+      })
+    ).toEqual({
+      activeTools: ["scrape"],
+    });
   });
 
   it("requires grounding when Firecrawl returns no usable content", () => {
@@ -63,7 +82,7 @@ describe("research agent step state", () => {
     const step = prepareGoogleGroundingStep(messages);
 
     expect(step.activeTools).toEqual(["google_search"]);
-    expect(step).not.toHaveProperty("toolChoice");
+    expect(step.toolChoice).toBe("required");
     expect(step.messages.at(-1)).toEqual(
       expect.objectContaining({
         content: expect.stringContaining("Google Search grounding"),

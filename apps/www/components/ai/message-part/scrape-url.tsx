@@ -27,7 +27,7 @@ export const ScrapeUrlPart = memo(({ message }: Props) => {
         <span className="text-muted-foreground text-sm">
           {t("scrape-loading")}
         </span>
-        <ScrapeUrlSource url={message.url} />
+        <ScrapeUrlSource message={message} />
       </div>
     );
   }
@@ -39,7 +39,7 @@ export const ScrapeUrlPart = memo(({ message }: Props) => {
         <span className="text-muted-foreground text-sm">
           {t("scrape-error")}
         </span>
-        <ScrapeUrlSource url={message.url} />
+        <ScrapeUrlSource message={message} />
       </div>
     );
   }
@@ -51,22 +51,34 @@ export const ScrapeUrlPart = memo(({ message }: Props) => {
         icon={FileSearchIcon}
       />
       <span className="text-muted-foreground text-sm">{t("scrape-done")}</span>
-      <ScrapeUrlSource url={message.url} />
+      <ScrapeUrlSource message={message} />
     </div>
   );
 });
 ScrapeUrlPart.displayName = "ScrapeUrlPart";
 
-const ScrapeUrlSource = memo(({ url }: { url: string }) => (
-  <Source href={url}>
-    <SourceTrigger showFavicon />
-    <SourceContent title={getSourceTitle(url)} />
+const ScrapeUrlSource = memo(({ message }: Props) => (
+  <Source href={message.url}>
+    <SourceTrigger faviconUrl={message.favicon} showFavicon />
+    <SourceContent
+      description={message.description}
+      faviconUrl={message.favicon}
+      title={getSourceTitle(message)}
+    />
   </Source>
 ));
 ScrapeUrlSource.displayName = "ScrapeUrlSource";
 
 /** Returns a compact source title for hover content. */
-function getSourceTitle(url: string) {
+function getSourceTitle(message: DataPart["scrape-url"]) {
+  const title = message.title?.trim();
+
+  if (title) {
+    return title;
+  }
+
+  const { url } = message;
+
   if (typeof URL.canParse === "function" && URL.canParse(url)) {
     return new URL(url).hostname.replace("www.", "");
   }
