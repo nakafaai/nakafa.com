@@ -1,12 +1,7 @@
 import type { WebSearchOutput } from "@repo/ai/agents/research/schema";
 import type { ModelMessage } from "ai";
-import { Option } from "effect";
 
-const scrapeActiveTools = ["scrape"] satisfies "scrape"[];
-const scrapeToolChoice = {
-  toolName: "scrape",
-  type: "tool",
-} satisfies { toolName: "scrape"; type: "tool" };
+const googleSearchActiveTools = ["google_search"] satisfies "google_search"[];
 const webSearchActiveTools = ["webSearch"] satisfies "webSearch"[];
 const webSearchToolChoice = {
   toolName: "webSearch",
@@ -14,50 +9,40 @@ const webSearchToolChoice = {
 } satisfies { toolName: "webSearch"; type: "tool" };
 
 /**
- * Selects the first ranked source URL returned by web search.
+ * Returns whether Firecrawl search produced source content that can support an answer.
  */
-export function selectScrapeUrl(result: WebSearchOutput) {
+export function hasUsableWebSearchEvidence(result: WebSearchOutput) {
+  if (result.error) {
+    return false;
+  }
+
   for (const source of result.sources) {
     const url = source.url.trim();
+    const content = source.content.trim();
 
-    if (url.length > 0) {
-      return Option.some(url);
+    if (url && content) {
+      return true;
     }
   }
 
-  return Option.none();
+  return false;
 }
 
 /**
- * Builds the AI SDK step override that completes webSearch -> scrape.
+ * Enables Gemini Google Search grounding after Firecrawl has no usable content.
  *
  * @see https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
  */
-export function prepareScrapeStep(
-  url: Option.Option<string>,
-  messages: ModelMessage[],
-  hasScrapeToolCall: boolean
-) {
-  if (Option.isNone(url)) {
-    return;
-  }
-
-  if (hasScrapeToolCall) {
-    return;
-  }
-
-  const input = JSON.stringify({
-    urlToCrawl: url.value,
-  });
+export function prepareGoogleGroundingStep(messages: ModelMessage[]) {
   const message = {
     role: "user",
-    content: `Call the scrape tool now with this exact input and wait for the result before answering.\n\n${input}\n\nDo not call webSearch again for this source.`,
+    content:
+      "Firecrawl did not return usable page content. Use Google Search grounding now to find supporting sources before answering.",
   } satisfies ModelMessage;
 
   return {
-    activeTools: scrapeActiveTools,
+    activeTools: googleSearchActiveTools,
     messages: [...messages, message],
-    toolChoice: scrapeToolChoice,
   };
 }
 

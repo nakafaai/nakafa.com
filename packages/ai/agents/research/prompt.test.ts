@@ -43,6 +43,7 @@ describe("research prompt", () => {
     const prompt = researchPrompt({ context, locale: "id" });
 
     expect(prompt).toContain("Google Search grounding");
-    expect(prompt).toContain("Use Google Search grounding or webSearch");
+    expect(prompt).toContain("Use webSearch to collect inspectable Firecrawl");
+    expect(prompt).toContain("Use Google Search grounding when Firecrawl");
   });
 });

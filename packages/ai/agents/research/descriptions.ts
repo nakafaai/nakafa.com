@@ -4,7 +4,7 @@ export const nakafaWebSearch = createPrompt({
   taskContext: `
       # webSearch Tool
 
-      Use this tool to search the web for up-to-date information and as universal fallback for ANY topic when Nakafa content is insufficient.
+      Use this tool to search the web for up-to-date information and source content when Nakafa content is insufficient.
       The tool uses Mendable's Firecrawl API under the hood.
       Use exactly the citation field for inline citations as LINKS (not images).
       Write inline citations before the period at the end of every sentence.
@@ -103,7 +103,7 @@ export const nakafaScrape = createPrompt({
   taskContext: `
       # scrape Tool
 
-      Use this tool to scrape a URL and return the content. Use this for specific URLs to get the content of the url.
+      Use this tool to scrape a specific URL and return the content when search evidence is missing, weak, or the user asked about that URL.
       The tool uses Mendable's Firecrawl API under the hood.
     `,
 
@@ -111,7 +111,7 @@ export const nakafaScrape = createPrompt({
       ## When to use this tool
 
       1. The user asks to scrape a URL or asks you to explain the content of the url
-      2. You want to scrape a URL to get the content of the url
+      2. Search found a relevant URL but did not return enough content to answer confidently
 
       ## When NOT to use this tool
 
@@ -130,9 +130,8 @@ export const nakafaScrape = createPrompt({
   detailedTaskInstructions: `
       ## Best Practices
 
-      - Scrape the exact URL when the user or prior search result points to an official source
+      - Scrape the exact URL when the user asks about that official source or prior search content is too weak
       - Prefer primary documentation, standards, papers, and vendor pages over social/video/listicle pages
-      - Scrape the URL to get the content of the url
       - Explain the content to the user in a way that is easy to understand
       - If the content is not related to the user's question, tell the users that the content is not related to the user's question
     `,

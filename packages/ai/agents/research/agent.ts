@@ -10,9 +10,9 @@ import {
   webSearchInputSchema,
 } from "@repo/ai/agents/research/schema";
 import {
-  prepareScrapeStep,
+  hasUsableWebSearchEvidence,
+  prepareGoogleGroundingStep,
   prepareWebSearchStep,
-  selectScrapeUrl,
 } from "@repo/ai/agents/research/step";
 import { scrapeUrl } from "@repo/ai/agents/research/tools/scrape";
 import { searchWeb } from "@repo/ai/agents/research/tools/search";
@@ -22,7 +22,7 @@ import { model } from "@repo/ai/config/vercel";
 import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { ResearchAgentParams } from "@repo/ai/types/agents";
 import { generateText, stepCountIs, tool } from "ai";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 
 /**
  * Runs the research agent and returns text with token usage.
@@ -36,7 +36,8 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     toolCallId,
     writer,
   }: ResearchAgentParams) {
-    let pendingScrapeUrl = Option.none<string>();
+    let needsGoogleGrounding = false;
+    let triedGoogleGrounding = false;
     const result = yield* Effect.tryPromise(() =>
       generateText({
         model: model.languageModel(modelId),
@@ -55,7 +56,9 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
                 searchWeb({ query, toolCallId, writer }).pipe(
                   Effect.tap((output) =>
                     Effect.sync(() => {
-                      pendingScrapeUrl = selectScrapeUrl(output.result);
+                      needsGoogleGrounding = !hasUsableWebSearchEvidence(
+                        output.result
+                      );
                     })
                   ),
                   Effect.map((output) => output.text)
@@ -66,13 +69,10 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
             description: nakafaScrape,
             inputSchema: scrapeInputSchema,
             outputSchema: textOutputSchema,
-            execute: ({ urlToCrawl }, { toolCallId }) => {
-              pendingScrapeUrl = Option.none();
-
-              return Effect.runPromise(
+            execute: ({ urlToCrawl }, { toolCallId }) =>
+              Effect.runPromise(
                 scrapeUrl({ toolCallId, url: urlToCrawl, writer })
-              );
-            },
+              ),
           }),
         },
         /**
@@ -84,24 +84,23 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           const hasWebSearchToolCall = steps.some((step) =>
             step.toolCalls.some((toolCall) => toolCall.toolName === "webSearch")
           );
+          const webSearchStep = prepareWebSearchStep(hasWebSearchToolCall);
 
-          if (Option.isNone(pendingScrapeUrl)) {
-            return prepareWebSearchStep(hasWebSearchToolCall);
+          if (webSearchStep) {
+            return webSearchStep;
           }
 
-          const hasScrapeToolCall = steps.some((step) =>
-            step.toolCalls.some((toolCall) => toolCall.toolName === "scrape")
-          );
-
-          if (hasScrapeToolCall) {
-            pendingScrapeUrl = Option.none();
+          if (!needsGoogleGrounding) {
+            return;
           }
 
-          return prepareScrapeStep(
-            pendingScrapeUrl,
-            messages,
-            hasScrapeToolCall
-          );
+          if (triedGoogleGrounding) {
+            return;
+          }
+
+          triedGoogleGrounding = true;
+
+          return prepareGoogleGroundingStep(messages);
         },
         providerOptions: {
           gateway: gatewayProviderOptions,

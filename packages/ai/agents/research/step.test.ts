@@ -1,10 +1,9 @@
 import type { WebSearchOutput } from "@repo/ai/agents/research/schema";
 import {
-  prepareScrapeStep,
+  hasUsableWebSearchEvidence,
+  prepareGoogleGroundingStep,
   prepareWebSearchStep,
-  selectScrapeUrl,
 } from "@repo/ai/agents/research/step";
-import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 const firstSource = {
@@ -20,68 +19,8 @@ const searchOutput = {
 } satisfies WebSearchOutput;
 
 describe("research agent step state", () => {
-  it("selects the first ranked source URL from web search output", () => {
-    const url = selectScrapeUrl(searchOutput);
-
-    if (Option.isNone(url)) {
-      throw new Error("Expected a scrape URL.");
-    }
-
-    expect(url.value).toBe(firstSource.url);
-  });
-
-  it("does not select an empty source URL", () => {
-    const url = selectScrapeUrl({
-      sources: [
-        {
-          citation: "",
-          content: "",
-          description: "",
-          title: "",
-          url: "",
-        },
-      ],
-    });
-
-    expect(Option.isNone(url)).toBe(true);
-  });
-
-  it("forces scrape for one step when a source URL is pending", () => {
-    const step = prepareScrapeStep(
-      Option.some(firstSource.url),
-      [
-        { role: "user", content: "research latest climate data" },
-      ] satisfies Parameters<typeof prepareScrapeStep>[1],
-      false
-    );
-
-    if (!step) {
-      throw new Error("Expected a forced scrape step.");
-    }
-
-    expect(step.activeTools).toEqual(["scrape"]);
-    expect(step.toolChoice).toEqual({ toolName: "scrape", type: "tool" });
-    expect(step.messages.at(-1)).toEqual(
-      expect.objectContaining({
-        content: expect.stringContaining(firstSource.url),
-        role: "user",
-      })
-    );
-  });
-
-  it("does not force scrape when there is no URL or scrape already ran", () => {
-    const messages = [
-      { role: "user", content: "research latest climate data" },
-    ] satisfies Parameters<typeof prepareScrapeStep>[1];
-    const missingUrl = prepareScrapeStep(Option.none(), messages, false);
-    const alreadyRan = prepareScrapeStep(
-      Option.some(firstSource.url),
-      messages,
-      true
-    );
-
-    expect(missingUrl).toBeUndefined();
-    expect(alreadyRan).toBeUndefined();
+  it("treats Firecrawl markdown content as usable evidence", () => {
+    expect(hasUsableWebSearchEvidence(searchOutput)).toBe(true);
   });
 
   it("starts with inspectable web search before provider-only grounding", () => {
@@ -92,5 +31,44 @@ describe("research agent step state", () => {
       toolChoice: { toolName: "webSearch", type: "tool" },
     });
     expect(prepareWebSearchStep(true)).toBeUndefined();
+  });
+
+  it("requires grounding when Firecrawl returns no usable content", () => {
+    const missingContent = {
+      sources: [
+        {
+          citation: "[Example](https://example.com/research)",
+          content: "",
+          description: "Search metadata without markdown.",
+          title: "Research Source",
+          url: "https://example.com/research",
+        },
+      ],
+    } satisfies WebSearchOutput;
+
+    expect(hasUsableWebSearchEvidence(missingContent)).toBe(false);
+    expect(
+      hasUsableWebSearchEvidence({
+        sources: [],
+        error: "Search failed.",
+      })
+    ).toBe(false);
+  });
+
+  it("enables only Google Search grounding for missing Firecrawl content", () => {
+    const messages = [
+      { role: "user", content: "research latest climate data" },
+    ] satisfies Parameters<typeof prepareGoogleGroundingStep>[0];
+
+    const step = prepareGoogleGroundingStep(messages);
+
+    expect(step.activeTools).toEqual(["google_search"]);
+    expect(step).not.toHaveProperty("toolChoice");
+    expect(step.messages.at(-1)).toEqual(
+      expect.objectContaining({
+        content: expect.stringContaining("Google Search grounding"),
+        role: "user",
+      })
+    );
   });
 });
