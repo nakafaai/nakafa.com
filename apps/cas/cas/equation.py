@@ -94,7 +94,9 @@ def roots(request: MathRequest) -> MathResult:
     if not expr.is_polynomial(variable):
         raise ValueError("Roots require a polynomial expression or equation.")
 
-    roots_result = sp.roots(expr, variable)
+    polynomial = sp.Poly(expr, variable)
+    roots_result = sp.roots(polynomial, variable)
+    _require_complete_roots(polynomial, roots_result)
 
     return result(
         request,
@@ -106,3 +108,14 @@ def roots(request: MathRequest) -> MathResult:
             for root, multiplicity in roots_result.items()
         ],
     )
+
+
+def _require_complete_roots(
+    polynomial: sp.Poly, roots_result: dict[sp.Expr, int]
+) -> None:
+    """Reject incomplete symbolic roots before returning verified evidence."""
+    returned_roots = sum(roots_result.values())
+    if returned_roots == polynomial.degree():
+        return
+
+    raise ValueError("Roots could not be expressed exactly.")

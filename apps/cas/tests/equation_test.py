@@ -131,3 +131,27 @@ def test_roots_rejects_non_polynomial_equation() -> None:
                 variable="x",
             )
         )
+
+
+def test_roots_rejects_empty_symbolic_result() -> None:
+    with pytest.raises(ValueError, match="could not be expressed exactly"):
+        run(
+            MathRequest(
+                kind="math",
+                operation="roots",
+                expression="x^7 - 3*x^2 + 1 = 0",
+                variable="x",
+            )
+        )
+
+
+def test_roots_rejects_partial_symbolic_result() -> None:
+    with pytest.raises(ValueError, match="could not be expressed exactly"):
+        run(
+            MathRequest(
+                kind="math",
+                operation="roots",
+                expression="(x - 1) * (x^5 - x + 1) = 0",
+                variable="x",
+            )
+        )

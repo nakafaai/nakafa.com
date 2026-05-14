@@ -28,7 +28,7 @@ describe("app/api/chat/step", () => {
     expect(step).toBeUndefined();
   });
 
-  it("requires a specialist tool on the first non-page-fetch step", () => {
+  it("keeps normal tool choice on the first non-page-fetch step", () => {
     const step = Effect.runSync(
       prepareChatStep({
         needsPageFetch: false,
@@ -36,9 +36,7 @@ describe("app/api/chat/step", () => {
       })
     );
 
-    expect(step).toEqual({
-      toolChoice: "required",
-    });
+    expect(step).toBeUndefined();
   });
 
   it("keeps normal tool choice after the first non-page-fetch step", () => {
