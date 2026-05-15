@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 const base = {
   context: {
+    currentDate: "May 15, 2026",
     needsPageFetch: false,
     slug: "subject/high-school/11/mathematics/function-modeling/rational-function",
     url: "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/rational-function",

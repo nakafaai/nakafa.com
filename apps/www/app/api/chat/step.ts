@@ -1,4 +1,5 @@
 import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
+import { finalAnswerSourcePolicy } from "@repo/ai/agents/orchestrator/prompt";
 import { getSourceReferencesFromMessages } from "@repo/ai/lib/source";
 import type { ModelMessage } from "ai";
 import { Effect } from "effect";
@@ -30,15 +31,19 @@ export const prepareChatStep = Effect.fn("chat.prepareChatStep")(
   ({
     messages,
     needsPageFetch,
+    system,
     stepNumber,
   }: {
     messages: ModelMessage[];
     needsPageFetch: boolean;
+    system: string;
     stepNumber: number;
   }) =>
     Effect.sync(() => {
       if (stepNumber !== firstStepNumber) {
-        return;
+        return {
+          system: [system, finalAnswerSourcePolicy].join("\n\n"),
+        };
       }
 
       if (needsPageFetch) {

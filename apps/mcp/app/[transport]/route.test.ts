@@ -6,6 +6,7 @@ import { NakafaAgentSearchResultSchema } from "@repo/contents/_lib/agent/schema/
 import { Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
 import { GET, OPTIONS, POST } from "@/app/[transport]/route";
+import packageJson from "@/package.json";
 
 vi.mock("@/env", () => ({
   env: {
@@ -133,7 +134,7 @@ describe("Nakafa MCP route", () => {
 
     expect(initialized.result?.serverInfo).toStrictEqual({
       name: "nakafa-mcp-server",
-      version: "0.2.0",
+      version: packageJson.version,
     });
     expect(result.tools.map((tool) => tool.name)).toStrictEqual([
       "nakafa_search_content",

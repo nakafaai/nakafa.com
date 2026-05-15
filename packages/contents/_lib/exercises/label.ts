@@ -13,6 +13,11 @@ const dictionaries = {
   id: idDictionary.Exercises,
 };
 
+const tryoutDictionaries = {
+  en: enDictionary.Tryouts,
+  id: idDictionary.Tryouts,
+};
+
 /** Returns the localized display label for one exercise category. */
 export function getExerciseCategoryLabel(
   locale: Locale,
@@ -40,6 +45,11 @@ export function getExerciseNumberLabel(locale: Locale, number: number) {
     "{count}",
     number.toString()
   );
+}
+
+/** Returns the localized display label for an exercise question count. */
+export function getExerciseQuestionCountLabel(locale: Locale, count: number) {
+  return `${count} ${tryoutDictionaries[locale]["question-unit"]}`;
 }
 
 /** Lists supported exercise categories with localized labels. */

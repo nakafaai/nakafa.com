@@ -24,13 +24,19 @@ flowchart LR
   Nakafa --> Content["contents Effect service"]
   Mcp["apps/mcp"] --> Search
   Mcp --> Content
-  Research --> Web["web search and scrape"]
+  Research --> ResearchEvidence["evidence phase: webSearch / scrape / Google grounding"]
+  ResearchEvidence --> ResearchSynthesis["synthesis phase: Output.object"]
   Math --> Evidence["evaluate / simplify / differentiate / compare"]
+  Nakafa --> CitationEvidence["citation fields: [title](url)"]
+  ResearchSynthesis --> CitationEvidence
+  CitationEvidence --> Final["final answer source contract"]
+  Final --> Inline["inline citations only"]
 ```
 
 ## Docs Map
 
 - [Research citation flow](./research-citations.md)
+- [Query-scoped search UI](./query-scoped-search.md)
 
 When an agent flow changes, update the closest doc here or add a small focused
 doc. Prefer diagrams over long prose so each file stays skimmable.
@@ -71,6 +77,11 @@ sequenceDiagram
 - Nina stores one UI data envelope: `data-nakafa`.
 - `data-nakafa.kind` decides the renderer: `search`, `content`, `exercise`,
   `quran`, or `taxonomy`.
+- Search UI parts are query-scoped: one executed query writes one loading part
+  and reconciles that same part to done or error.
+- Specialist evidence exposes citation links beside the facts they support.
+- Final answers cite sources inline only; terminal source/reference sections are
+  not part of the user-facing contract.
 - Current-page fetch is deterministic through AI SDK `prepareStep`, `toolChoice`,
   and `activeTools`.
 - Explicit external source references are extracted by `@repo/ai/lib/source`.

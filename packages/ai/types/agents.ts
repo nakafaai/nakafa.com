@@ -7,6 +7,7 @@ import type { UserRole } from "@repo/utilities/roles";
 import type { LanguageModelUsage, UIMessageStreamWriter } from "ai";
 
 export interface AgentContext {
+  currentDate: string;
   needsPageFetch: boolean;
   slug: string;
   url: string;

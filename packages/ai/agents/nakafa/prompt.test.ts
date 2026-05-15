@@ -2,6 +2,7 @@ import { nakafaAgentPrompt } from "@repo/ai/agents/nakafa/prompt";
 import { describe, expect, it } from "vitest";
 
 const context = {
+  currentDate: "May 15, 2026",
   needsPageFetch: false,
   slug: "chat",
   url: "/id/chat",
@@ -33,6 +34,7 @@ describe("nakafaAgentPrompt", () => {
   it("includes verified context and unknown roles", () => {
     const prompt = nakafaAgentPrompt({
       context: {
+        currentDate: "May 15, 2026",
         needsPageFetch: true,
         slug: "subject/high-school/10/chemistry",
         url: "/id/subject/high-school/10/chemistry",
@@ -43,5 +45,17 @@ describe("nakafaAgentPrompt", () => {
 
     expect(prompt).toContain("Verified current page: yes");
     expect(prompt).toContain("User role: unknown");
+  });
+
+  it("keeps source presentation as inline citation evidence", () => {
+    const prompt = nakafaAgentPrompt({ context, locale: "id" });
+
+    expect(prompt).toContain("Use citation fields like Citation: [Title](url)");
+    expect(prompt).toContain(
+      "Never write a terminal source, reference, citation, or bibliography section."
+    );
+    expect(prompt).toContain(
+      "Never append a final source, reference, citation, or bibliography section"
+    );
   });
 });

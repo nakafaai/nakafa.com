@@ -49,6 +49,16 @@ function createWriter() {
   return { parts, writer };
 }
 
+function getWebSearchParts(parts: WrittenPart[]) {
+  return parts.flatMap((part) => {
+    if (part.type !== "data-web-search") {
+      return [];
+    }
+
+    return [part.data];
+  });
+}
+
 describe("research web search tool", () => {
   beforeEach(() => {
     firecrawlApp.search.mockReset();
@@ -407,7 +417,7 @@ describe("research web search tool", () => {
     );
   });
 
-  it("searches each optimized query while preserving the visible query list", async () => {
+  it("searches each optimized query with query-scoped visible results", async () => {
     firecrawlApp.search.mockImplementation((query: string) =>
       Promise.resolve({
         web: [
@@ -441,16 +451,26 @@ describe("research web search tool", () => {
       expect.any(Object)
     );
     expect(output.result.sources).toHaveLength(2);
-    expect(parts.at(-1)).toEqual(
+    expect(
+      getWebSearchParts(parts).filter((part) => part.status === "done")
+    ).toEqual([
       expect.objectContaining({
-        data: expect.objectContaining({
-          queries: [
-            "AI SDK DevTools official docs",
-            "AI SDK DevTools release notes",
-          ],
-        }),
-      })
-    );
+        queries: ["AI SDK DevTools official docs"],
+        sources: expect.arrayContaining([
+          expect.objectContaining({
+            url: "https://example.com/ai-sdk-devtools-official-docs",
+          }),
+        ]),
+      }),
+      expect.objectContaining({
+        queries: ["AI SDK DevTools release notes"],
+        sources: expect.arrayContaining([
+          expect.objectContaining({
+            url: "https://example.com/ai-sdk-devtools-release-notes",
+          }),
+        ]),
+      }),
+    ]);
   });
 
   it("keeps distinctive intent terms when optimized queries drift generic", async () => {
@@ -492,17 +512,17 @@ describe("research web search tool", () => {
       "SDK DevTools future of AI software development tools 2026",
       expect.any(Object)
     );
-    expect(parts.at(-1)).toEqual(
+    expect(
+      getWebSearchParts(parts).filter((part) => part.status === "done")
+    ).toEqual([
+      expect.objectContaining({ queries: ["AI SDK DevTools"] }),
       expect.objectContaining({
-        data: expect.objectContaining({
-          queries: [
-            "AI SDK DevTools",
-            "DevTools AI SDK development trends 2026",
-            "SDK DevTools future of AI software development tools 2026",
-          ],
-        }),
-      })
-    );
+        queries: ["DevTools AI SDK development trends 2026"],
+      }),
+      expect.objectContaining({
+        queries: ["SDK DevTools future of AI software development tools 2026"],
+      }),
+    ]);
   });
 
   it("scopes every query result to distinctive intent terms", async () => {
@@ -583,12 +603,22 @@ describe("research web search tool", () => {
     expect(output.result.sources.map((source) => source.url)).toEqual([
       "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
     ]);
-    expect(parts.at(-1)).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({
+    expect(getWebSearchParts(parts)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          queries: ["AI SDK DevTools"],
           status: "done",
+          sources: expect.arrayContaining([
+            expect.objectContaining({
+              url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+            }),
+          ]),
         }),
-      })
+        expect.objectContaining({
+          queries: ["AI SDK DevTools recent updates"],
+          status: "error",
+        }),
+      ])
     );
   });
 

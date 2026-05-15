@@ -1,6 +1,6 @@
 {
   "name": "@repo/ai",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
@@ -21,10 +21,11 @@
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "ai": "^6.0.182",
-    "convex": "^1.38.0",
+    "convex": "^1.39.1",
     "dedent": "^1.7.2",
     "effect": "^3.21.2",
     "gpt-tokenizer": "^3.4.0",
+    "ipaddr.js": "^2.4.0",
     "ky": "^2.0.2",
     "parse-domain": "^8.3.0"
   },

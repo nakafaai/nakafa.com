@@ -2,6 +2,15 @@ import { createPrompt } from "@repo/ai/prompt/utils";
 import type { Locale } from "@repo/utilities/locales";
 import type { UserRole } from "@repo/utilities/roles";
 
+export const finalAnswerSourcePolicy = `
+  Cite sources inline in the exact sentence they support.
+  Use [text](url) links with concise, human-readable text.
+  Never show numeric citation markers such as [1] or [4, 21, 23] to users.
+  Convert any research citation indexes into markdown links using the cited source URLs.
+  Never append a final source, reference, citation, or bibliography section in any language.
+  Do not collect links at the end of the answer.
+`;
+
 interface SystemPromptProps {
   /**
    * The current date.
@@ -213,7 +222,7 @@ function getOutputFormattingGuidelines() {
 
     Use [text](url) for links. [Text] MUST be concise and descriptive that user can understand what the link is about.
     CRITICAL: When research results contain URLs, format them as [domain](url) links where domain is extracted from the URL. Examples: [Aljazeera](https://aljazeera.com), [BBC](https://bbc.com).
-    Never show numeric citation markers such as [1] or [4, 21, 23] to users. Convert any research citation indexes into markdown links using the cited source URLs.
+    ${finalAnswerSourcePolicy}
     
     ## Emphasis
 

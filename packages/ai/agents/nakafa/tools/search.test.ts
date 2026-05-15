@@ -5,6 +5,16 @@ import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
+function getSearchParts(parts: ReturnType<typeof createWriter>["parts"]) {
+  return parts.flatMap((part) => {
+    if (part.type !== "data-nakafa" || part.data.kind !== "search") {
+      return [];
+    }
+
+    return [part.data];
+  });
+}
+
 describe("nakafa search tool", () => {
   it("writes loading and done parts for search results", async () => {
     const { parts, writer } = createWriter();
@@ -128,6 +138,55 @@ describe("nakafa search tool", () => {
     );
 
     expect(output.text).toContain("- Next offset: none");
+  });
+
+  it("formats unscoped search results when no query text is provided", async () => {
+    const { parts, writer } = createWriter();
+    const output = await Effect.runPromise(
+      search({
+        input: {
+          limit: 1,
+          locale: "en",
+          offset: 0,
+        },
+        locale: "en",
+        toolCallId: "search-unscoped",
+        writer,
+      }).pipe(
+        Effect.provideService(NakafaSearch, {
+          search: (input) =>
+            Effect.succeed({
+              count: 1,
+              has_more: false,
+              items: [
+                {
+                  content_id: "en/articles/example",
+                  description: "Example article.",
+                  locale: input.locale,
+                  markdown_url: "https://nakafa.com/en/articles/example.md",
+                  route: "articles/example",
+                  section: "articles",
+                  title: "Example Article",
+                  url: "https://nakafa.com/en/articles/example",
+                },
+              ],
+              limit: input.limit,
+              next_offset: null,
+              offset: input.offset,
+            }),
+        })
+      )
+    );
+
+    expect(output.text).toContain("# Nakafa Search");
+    expect(output.text).not.toContain("# Nakafa Search Query");
+    expect(parts.at(-1)).toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          input: expect.not.objectContaining({ queries: expect.anything() }),
+        }),
+      })
+    );
   });
 
   it("uses the server locale instead of the model-provided locale", async () => {
@@ -283,18 +342,122 @@ describe("nakafa search tool", () => {
     );
 
     expect(output.text).toContain("Hukum Kekekalan Massa");
-    expect(parts.at(0)).toEqual(
+    expect(output.text).toContain("- Query: hukum kekekalan massa");
+    expect(output.result).toEqual(expect.objectContaining({ count: 1 }));
+    expect(
+      getSearchParts(parts)
+        .filter((part) => part.status === "loading")
+        .map((part) => part.input.queries)
+    ).toEqual([
+      ["kimia kelas 10"],
+      ["hukum kekekalan massa"],
+      ["stoikiometri"],
+    ]);
+    expect(
+      getSearchParts(parts)
+        .filter((part) => part.status === "done")
+        .map((part) => part.input.queries)
+    ).toEqual([
+      ["kimia kelas 10"],
+      ["hukum kekekalan massa"],
+      ["stoikiometri"],
+    ]);
+  });
+
+  it("interleaves query results before returning the agent aggregate", async () => {
+    const { writer } = createWriter();
+    const output = await Effect.runPromise(
+      search({
+        input: {
+          limit: 2,
+          locale: "en",
+          offset: 5,
+          queries: ["alpha", "beta", "gamma"],
+          section: "articles",
+        },
+        locale: "en",
+        toolCallId: "search-interleave",
+        writer,
+      }).pipe(
+        Effect.provideService(NakafaSearch, {
+          search: (input) => {
+            if (input.queries?.at(0) === "beta") {
+              return Effect.succeed({
+                count: 1,
+                has_more: true,
+                items: [
+                  {
+                    content_id: "en/articles/a",
+                    description: "Duplicate article.",
+                    locale: input.locale,
+                    markdown_url: "https://nakafa.com/en/articles/a.md",
+                    route: "articles/a",
+                    section: "articles",
+                    title: "Duplicate Article",
+                    url: "https://nakafa.com/en/articles/a",
+                  },
+                ],
+                limit: input.limit,
+                next_offset: 6,
+                offset: input.offset,
+              });
+            }
+
+            if (input.queries?.at(0) === "gamma") {
+              return Effect.succeed({
+                count: 0,
+                has_more: false,
+                items: [],
+                limit: input.limit,
+                next_offset: null,
+                offset: input.offset,
+              });
+            }
+
+            return Effect.succeed({
+              count: 2,
+              has_more: false,
+              items: [
+                {
+                  content_id: "en/articles/a",
+                  description: "First article.",
+                  locale: input.locale,
+                  markdown_url: "https://nakafa.com/en/articles/a.md",
+                  route: "articles/a",
+                  section: "articles",
+                  title: "First Article",
+                  url: "https://nakafa.com/en/articles/a",
+                },
+                {
+                  content_id: "en/articles/b",
+                  description: "Second article.",
+                  locale: input.locale,
+                  markdown_url: "https://nakafa.com/en/articles/b.md",
+                  route: "articles/b",
+                  section: "articles",
+                  title: "Second Article",
+                  url: "https://nakafa.com/en/articles/b",
+                },
+              ],
+              limit: input.limit,
+              next_offset: null,
+              offset: input.offset,
+            });
+          },
+        })
+      )
+    );
+
+    expect(output.result).toEqual(
       expect.objectContaining({
-        data: expect.objectContaining({
-          input: expect.objectContaining({
-            queries: [
-              "kimia kelas 10",
-              "hukum kekekalan massa",
-              "stoikiometri",
-            ],
-          }),
-        }),
+        has_more: true,
+        next_offset: 7,
+        offset: 5,
       })
     );
+    expect(output.result?.items.map((item) => item.content_id)).toEqual([
+      "en/articles/a",
+      "en/articles/b",
+    ]);
   });
 });

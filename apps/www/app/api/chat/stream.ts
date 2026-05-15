@@ -193,6 +193,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
         Effect.gen(function* () {
           const usage = trackUsage();
           const context = {
+            currentDate: runtime.currentDate,
             url: page.url,
             slug: cleanSlug(page.slug),
             verified: page.verified,
@@ -201,19 +202,21 @@ export function streamChat({ chat, page, runtime, user }: Params) {
           };
           let fetchedPage = false;
 
+          const system = nakafaPrompt({
+            url: page.url,
+            currentPage: {
+              locale: page.locale,
+              slug: page.slug,
+              verified: page.verified,
+            },
+            currentDate: runtime.currentDate,
+            userLocation: user.location,
+            userRole: user.info.role ?? undefined,
+          });
+
           const streamTextResult = streamText({
             model: model.languageModel(runtime.modelId),
-            system: nakafaPrompt({
-              url: page.url,
-              currentPage: {
-                locale: page.locale,
-                slug: page.slug,
-                verified: page.verified,
-              },
-              currentDate: runtime.currentDate,
-              userLocation: user.location,
-              userRole: user.info.role ?? undefined,
-            }),
+            system,
             messages: chat.finalMessages,
             stopWhen: stepCountIs(MAX_ORCHESTRATOR_STEPS),
             tools: {
@@ -298,6 +301,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 prepareChatStep({
                   messages,
                   needsPageFetch: page.needsFetch,
+                  system,
                   stepNumber,
                 })
               ),

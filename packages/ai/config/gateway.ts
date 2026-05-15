@@ -29,8 +29,8 @@ function shouldUseDevTools() {
 /**
  * Creates the Gateway-backed language model used by all Nina model configs.
  *
- * AI SDK DevTools is intentionally local-only because it stores prompts,
- * tool inputs, and outputs in plain text under `.devtools`.
+ * AI SDK DevTools is intentionally local development-only because it stores
+ * prompts, tool inputs, and outputs in plain text under `.devtools`.
  */
 export function createWrappedLanguageModel(
   modelId: Parameters<typeof gateway>[number]

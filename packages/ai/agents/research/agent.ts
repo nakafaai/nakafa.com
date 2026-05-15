@@ -1,12 +1,20 @@
 import { google } from "@ai-sdk/google";
-import { normalizeResearchCitations } from "@repo/ai/agents/research/citation";
 import {
   nakafaScrape,
   nakafaWebSearch,
 } from "@repo/ai/agents/research/descriptions";
 import { createGroundingWebSearchData } from "@repo/ai/agents/research/grounding";
-import { researchPrompt } from "@repo/ai/agents/research/prompt";
 import {
+  createResearchMessages,
+  createResearchSynthesisMessages,
+} from "@repo/ai/agents/research/messages";
+import { formatResearchOutput } from "@repo/ai/agents/research/output";
+import {
+  researchEvidencePrompt,
+  researchPrompt,
+} from "@repo/ai/agents/research/prompt";
+import {
+  researchOutputSchema,
   scrapeInputSchema,
   webSearchInputSchema,
 } from "@repo/ai/agents/research/schema";
@@ -23,7 +31,7 @@ import { model } from "@repo/ai/config/vercel";
 import { getSourceReferences } from "@repo/ai/lib/source";
 import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { ResearchAgentParams } from "@repo/ai/types/agents";
-import { generateText, type ModelMessage, stepCountIs, tool } from "ai";
+import { generateText, Output, stepCountIs, tool } from "ai";
 import { Effect } from "effect";
 
 // Keep exact user source scraping parallel without allowing unlimited fan-out.
@@ -49,24 +57,18 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       ...messageSourceReferences,
       ...getSourceReferences(intent),
     ]);
+    const sourceOutputs = yield* scrapeSourceReferences({
+      intent,
+      sourceReferences,
+      toolCallId,
+      writer,
+    });
 
-    if (sourceReferences.length > 0) {
-      return yield* runExactSourceResearch({
-        context,
-        locale,
-        modelId,
-        sourceReferences,
-        intent,
-        toolCallId,
-        writer,
-      });
-    }
-
-    const result = yield* Effect.tryPromise(() =>
+    const evidenceResult = yield* Effect.tryPromise(() =>
       generateText({
         model: model.languageModel(modelId),
-        system: researchPrompt({ locale, context }),
-        messages: [{ role: "user", content: intent }],
+        system: researchEvidencePrompt({ locale, context }),
+        messages: createResearchMessages(intent, sourceOutputs),
         tools: {
           google_search: google.tools.googleSearch({
             searchTypes: { webSearch: {} },
@@ -137,8 +139,8 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     );
 
     const groundedSearchData = createGroundingWebSearchData({
-      providerMetadata: result.providerMetadata,
-      sources: result.sources,
+      providerMetadata: evidenceResult.providerMetadata,
+      sources: evidenceResult.sources,
     });
 
     if (groundedSearchData) {
@@ -149,27 +151,88 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       });
     }
 
+    const synthesisResult = yield* Effect.tryPromise(() =>
+      generateText({
+        model: model.languageModel(modelId),
+        system: researchPrompt({ locale, context }),
+        messages: createResearchSynthesisMessages({
+          evidence: evidenceResult.text,
+          intent,
+          sourceOutputs,
+        }),
+        output: Output.object({
+          description:
+            "Source-backed research findings with citations separated from prose.",
+          name: "research_findings",
+          schema: researchOutputSchema,
+        }),
+        providerOptions: {
+          gateway: gatewayProviderOptions,
+          google: getModelProviderOptions(modelId),
+        },
+      })
+    );
+
+    const output = yield* Effect.fromNullable(synthesisResult.output).pipe(
+      Effect.mapError(
+        () => new Error("Research agent did not return structured output.")
+      )
+    );
+
     return {
-      text: normalizeResearchCitations(result.text),
-      usage: result.totalUsage,
+      text: formatResearchOutput(output),
+      usage: {
+        inputTokens:
+          (evidenceResult.totalUsage.inputTokens ?? 0) +
+          (synthesisResult.totalUsage.inputTokens ?? 0),
+        inputTokenDetails: {
+          cacheReadTokens:
+            (evidenceResult.totalUsage.inputTokenDetails.cacheReadTokens ?? 0) +
+            (synthesisResult.totalUsage.inputTokenDetails.cacheReadTokens ?? 0),
+          cacheWriteTokens:
+            (evidenceResult.totalUsage.inputTokenDetails.cacheWriteTokens ??
+              0) +
+            (synthesisResult.totalUsage.inputTokenDetails.cacheWriteTokens ??
+              0),
+          noCacheTokens:
+            (evidenceResult.totalUsage.inputTokenDetails.noCacheTokens ?? 0) +
+            (synthesisResult.totalUsage.inputTokenDetails.noCacheTokens ?? 0),
+        },
+        outputTokens:
+          (evidenceResult.totalUsage.outputTokens ?? 0) +
+          (synthesisResult.totalUsage.outputTokens ?? 0),
+        outputTokenDetails: {
+          reasoningTokens:
+            (evidenceResult.totalUsage.outputTokenDetails.reasoningTokens ??
+              0) +
+            (synthesisResult.totalUsage.outputTokenDetails.reasoningTokens ??
+              0),
+          textTokens:
+            (evidenceResult.totalUsage.outputTokenDetails.textTokens ?? 0) +
+            (synthesisResult.totalUsage.outputTokenDetails.textTokens ?? 0),
+        },
+        totalTokens:
+          (evidenceResult.totalUsage.totalTokens ?? 0) +
+          (synthesisResult.totalUsage.totalTokens ?? 0),
+      },
     };
   }
 );
 
 /**
- * Reads exact user sources before asking the model to synthesize findings.
+ * Reads user-provided source references in parallel before broad research.
  */
-const runExactSourceResearch = Effect.fn("research.runExactSourceResearch")(
+const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
   function* ({
     intent,
-    modelId,
-    locale,
-    context,
     sourceReferences,
     toolCallId,
     writer,
-  }: ResearchAgentParams) {
-    const sourceOutputs = yield* Effect.forEach(
+  }: Pick<
+    ResearchAgentParams,
+    "intent" | "sourceReferences" | "toolCallId" | "writer"
+  >) {
+    return yield* Effect.forEach(
       sourceReferences,
       (source, index) =>
         scrapeUrl({
@@ -181,42 +244,8 @@ const runExactSourceResearch = Effect.fn("research.runExactSourceResearch")(
         }),
       { concurrency: exactSourceScrapeConcurrency }
     );
-
-    const result = yield* Effect.tryPromise(() =>
-      generateText({
-        model: model.languageModel(modelId),
-        system: researchPrompt({ locale, context, mode: "exact-source" }),
-        messages: createExactSourceMessages(intent, sourceOutputs),
-        providerOptions: {
-          gateway: gatewayProviderOptions,
-          google: getModelProviderOptions(modelId),
-        },
-      })
-    );
-
-    return {
-      text: normalizeResearchCitations(result.text),
-      usage: result.totalUsage,
-    };
   }
 );
-
-/**
- * Gives the model already-inspected source evidence without exposing research tools.
- */
-function createExactSourceMessages(intent: string, sourceOutputs: string[]) {
-  return [
-    {
-      role: "user",
-      content: [
-        intent,
-        "Exact source evidence has already been retrieved. Use only the evidence below for source-specific claims. Do not broaden to search results.",
-        "# Exact Source Evidence",
-        sourceOutputs.join("\n\n"),
-      ].join("\n\n"),
-    },
-  ] satisfies ModelMessage[];
-}
 
 /**
  * Keeps source references unique while preserving the user's order.

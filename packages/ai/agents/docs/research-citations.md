@@ -3,18 +3,23 @@
 Research evidence has two separate surfaces:
 
 - `data-web-search` renders the source tray.
-- Markdown links render inline citations inside assistant text.
+- Firecrawl `data-web-search` parts are query-scoped, so each query renders
+  beside its own returned sources.
+- Structured research output carries citation data.
+- Markdown links are rendered from citation data before Nina sees the research result.
+- Nina's final answer contract keeps citations inline and rejects terminal
+  source sections.
 
 ```mermaid
 flowchart TD
   User["User asks for source-backed answer"] --> Orchestrator["Nina orchestrator"]
   Orchestrator --> Research["deepResearch tool"]
-  Research --> WebSearch["webSearch / Google grounding"]
-  WebSearch --> Sources["Structured sources"]
-  WebSearch --> Draft["Research markdown"]
-  Sources --> Normalize["normalizeResearchCitations()"]
-  Draft --> Normalize
-  Normalize --> Linked["Research markdown with [source](url) links"]
+  Research --> Evidence["Evidence phase (text mode)"]
+  Evidence --> WebSearch["webSearch / scrape / Google grounding"]
+  WebSearch --> Sources["Source evidence"]
+  Sources --> Synthesis["Synthesis phase (Output.object)"]
+  Synthesis --> Render["formatResearchOutput()"]
+  Render --> Linked["Research markdown with inline [source](url) links"]
   Linked --> Orchestrator
   Orchestrator --> Final["Final answer"]
   Final --> Response["Response markdown renderer"]
@@ -24,12 +29,14 @@ flowchart TD
 
 ## Invariants
 
-- Research output passed back to Nina must use markdown links, not numeric
-  markers like `[4, 21, 23]`.
+- Research synthesis uses AI SDK structured output, not free-form citation prose.
+- Forced tool routing happens only during evidence collection, where provider
+  response mode remains text.
+- `Output.object()` happens only during synthesis, where tools are not active.
+- Citation titles and URLs stay in structured fields until deterministic markdown
+  rendering.
 - The UI must not guess citations from arbitrary bracketed text. It renders real
   markdown links and structured `data-*` parts.
-- Numeric citation indexes are normalized only when the same research artifact
-  contains an indexed markdown source list.
 - `data-web-search` remains a source overview; inline citation links remain part
   of markdown text.
 
@@ -38,13 +45,14 @@ flowchart TD
 ```mermaid
 flowchart LR
   Plain["[4, 21, 23] plain text"] --> Broken["User sees confusing numbers"]
-  Link["[ByteByteGo](https://...) markdown"] --> Anchor["Anchor renderer"]
+  Data["{ title, url } citation data"] --> Link["[ByteByteGo](https://...) markdown"]
+  Link --> Anchor["Anchor renderer"]
   Anchor --> Chip["Readable source chip"]
 ```
 
-AI SDK source parts and custom `data-*` parts are separate from text parts, so
-inline citations need explicit markdown links before the response reaches the
-markdown renderer.
+AI SDK source parts and custom `data-*` parts are separate from text parts.
+Research therefore returns structured citation data first, then the AI package
+renders inline markdown links deterministically.
 
 ## References
 

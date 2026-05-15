@@ -4,12 +4,13 @@ import {
 } from "@repo/ai/agents/research/schema";
 import { fetchSourceMarkdown } from "@repo/ai/agents/research/tools/markdown";
 import { getDocumentMetadata } from "@repo/ai/agents/research/tools/metadata";
+import { assertPublicResearchUrl } from "@repo/ai/agents/research/tools/safety";
 import { firecrawlApp } from "@repo/ai/config/firecrawl";
 import { selectRelevantContent } from "@repo/ai/lib/selection";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { UIMessageStreamWriter } from "ai";
 import dedent from "dedent";
-import { Effect } from "effect";
+import { Effect, Either } from "effect";
 
 /**
  * Scrapes one URL and writes the scrape UI data part.
@@ -35,12 +36,35 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
     })
   );
 
+  const safeUrl = yield* Effect.either(assertPublicResearchUrl(url));
+
+  if (Either.isLeft(safeUrl)) {
+    const error = safeUrl.left.message;
+
+    yield* Effect.sync(() =>
+      writer.write({
+        id: toolCallId,
+        type: "data-scrape-url",
+        data: {
+          url,
+          status: "error",
+          content: "",
+          error,
+        },
+      })
+    );
+
+    return formatOutput({
+      output: { data: { url, content: "" }, error },
+    });
+  }
+
   const { nativeMarkdown, scrapeResult } = yield* Effect.all(
     {
-      nativeMarkdown: fetchSourceMarkdown(url),
+      nativeMarkdown: fetchSourceMarkdown(safeUrl.right),
       scrapeResult: Effect.tryPromise({
         try: () =>
-          firecrawlApp.scrape(url, {
+          firecrawlApp.scrape(safeUrl.right, {
             formats: ["markdown"],
             timeout: 5000,
           }),
@@ -62,7 +86,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
         id: toolCallId,
         type: "data-scrape-url",
         data: {
-          url,
+          url: safeUrl.right,
           status: "error",
           content: "",
           error: scrapeResult.error,
@@ -71,7 +95,10 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
     );
 
     return formatOutput({
-      output: { data: { url, content: "" }, error: scrapeResult.error },
+      output: {
+        data: { url: safeUrl.right, content: "" },
+        error: scrapeResult.error,
+      },
     });
   }
 
@@ -86,7 +113,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
         id: toolCallId,
         type: "data-scrape-url",
         data: {
-          url,
+          url: safeUrl.right,
           status: "error",
           content: "",
           ...metadata,
@@ -97,7 +124,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
 
     return formatOutput({
       output: {
-        data: { url, content: "", ...metadata },
+        data: { url: safeUrl.right, content: "", ...metadata },
         error: "No content found.",
       },
     });
@@ -113,14 +140,19 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
     writer.write({
       id: toolCallId,
       type: "data-scrape-url",
-      data: { url, status: "done", content: processedContent, ...metadata },
+      data: {
+        url: safeUrl.right,
+        status: "done",
+        content: processedContent,
+        ...metadata,
+      },
     })
   );
 
   return formatOutput({
     output: {
       data: {
-        url,
+        url: safeUrl.right,
         content: processedContent,
         ...metadata,
       },

@@ -19,6 +19,20 @@ def test_mean() -> None:
     assert result.secondary.expression == "4"
 
 
+def test_mean_accepts_symbolic_values_without_ordering() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="mean",
+            values=["x", "x + 2"],
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "x + 1"
+
+
 @pytest.mark.parametrize(
     ("operation", "expected"),
     [

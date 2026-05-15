@@ -13,7 +13,7 @@ import {
 } from "@repo/ai/agents/research/search/source";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { UIMessageStreamWriter } from "ai";
-import { Effect, Either } from "effect";
+import { Effect } from "effect";
 
 /**
  * Searches the web and writes the web search UI data part.
@@ -32,48 +32,77 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   const searchQueries = getSearchQueries({ queries, intent });
 
   yield* Effect.sync(() =>
-    writer.write({
-      id: toolCallId,
-      type: "data-web-search",
-      data: { queries: searchQueries, status: "loading", sources: [] },
+    searchQueries.forEach((query, index) => {
+      writer.write({
+        id: getWebSearchPartId(toolCallId, index),
+        type: "data-web-search",
+        data: { queries: [query], status: "loading", sources: [] },
+      });
     })
   );
 
   const searchResults = yield* Effect.forEach(
     searchQueries,
-    (query) => Effect.either(searchFirecrawl(query)),
+    (query, index) =>
+      searchFirecrawl(query).pipe(
+        Effect.map(({ response }) => ({
+          error: undefined,
+          sources: dedupeSources(
+            scopeSources({
+              intent,
+              query,
+              sources: readSearchSources({ query, response }),
+            })
+          ),
+        })),
+        Effect.tap(({ sources }) =>
+          Effect.sync(() =>
+            writer.write({
+              id: getWebSearchPartId(toolCallId, index),
+              type: "data-web-search",
+              data: {
+                queries: [query],
+                status: "done",
+                sources: addSourceCitations(sources),
+              },
+            })
+          )
+        ),
+        Effect.catchAll((error) =>
+          Effect.sync(() => {
+            writer.write({
+              id: getWebSearchPartId(toolCallId, index),
+              type: "data-web-search",
+              data: {
+                queries: [query],
+                status: "error",
+                sources: [],
+                error: error.message,
+              },
+            });
+
+            return {
+              error: error.message,
+              sources: [],
+            };
+          })
+        )
+      ),
     { concurrency: webSearchMaxQueries }
   );
-  const successfulResults = searchResults.flatMap((result) => {
-    if (Either.isLeft(result)) {
-      return [];
-    }
-
-    return [result.right];
-  });
   const failedResults = searchResults.flatMap((result) => {
-    if (Either.isRight(result)) {
+    if (!result.error) {
       return [];
     }
 
-    return [result.left.message];
+    return [result.error];
   });
 
-  if (successfulResults.length === 0 && failedResults.length > 0) {
+  if (
+    searchQueries.length > 0 &&
+    failedResults.length === searchQueries.length
+  ) {
     const error = failedResults.join("\n");
-
-    yield* Effect.sync(() =>
-      writer.write({
-        id: toolCallId,
-        type: "data-web-search",
-        data: {
-          queries: searchQueries,
-          status: "error",
-          sources: [],
-          error,
-        },
-      })
-    );
 
     const output = {
       sources: [],
@@ -87,27 +116,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   }
 
   const sources = addSourceCitations(
-    dedupeSources(
-      successfulResults.flatMap(({ query, response }) =>
-        scopeSources({
-          intent,
-          query,
-          sources: readSearchSources({ query, response }),
-        })
-      )
-    )
-  );
-
-  yield* Effect.sync(() =>
-    writer.write({
-      id: toolCallId,
-      type: "data-web-search",
-      data: {
-        queries: searchQueries,
-        status: "done",
-        sources,
-      },
-    })
+    dedupeSources(searchResults.flatMap((result) => result.sources))
   );
 
   const output = {
@@ -120,3 +129,8 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
     text: formatWebSearchOutput(output),
   };
 });
+
+/** Derives the stable UI data-part id for one executed web query. */
+function getWebSearchPartId(toolCallId: string, index: number) {
+  return `${toolCallId}-${index + 1}`;
+}

@@ -1,6 +1,6 @@
 {
   "name": "mcp",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001 --turbopack",
@@ -24,7 +24,7 @@
     "express": "^5.2.1",
     "mcp-handler": "1.1.0",
     "next": "16.2.6",
-    "convex": "^1.38.0",
+    "convex": "^1.39.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "redis": "^5.12.1",

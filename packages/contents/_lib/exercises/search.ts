@@ -2,6 +2,7 @@ import {
   getExerciseCategoryLabel,
   getExerciseMaterialLabel,
   getExerciseNumberLabel,
+  getExerciseQuestionCountLabel,
   getExerciseTypeLabel,
 } from "@repo/contents/_lib/exercises/label";
 import type { Locale } from "@repo/contents/_types/content";
@@ -25,6 +26,20 @@ interface ExerciseSearchSource {
   setName: string;
   setTitle: string;
   title: string;
+  type: ExercisesType;
+  year?: number;
+}
+
+interface ExerciseSetSearchSource {
+  category: ExercisesCategory;
+  description?: string;
+  exerciseType: string;
+  exerciseTypeTitle: string;
+  locale: Locale;
+  material: ExercisesMaterial;
+  questionCount: number;
+  setName: string;
+  setTitle: string;
   type: ExercisesType;
   year?: number;
 }
@@ -73,6 +88,51 @@ export function getExerciseSearchText(source: ExerciseSearchSource) {
     source.description,
     source.questionBody,
     source.answerBody,
+  ]);
+}
+
+/** Builds an agent-friendly title for one exercise set search row. */
+export function getExerciseSetSearchTitle(source: ExerciseSetSearchSource) {
+  return compactText([
+    getExerciseTypeLabel(source.locale, source.type),
+    getExerciseMaterialLabel(source.locale, source.material),
+    source.exerciseTypeTitle,
+    source.setTitle,
+  ]);
+}
+
+/** Builds an agent-friendly summary for one exercise set search row. */
+export function getExerciseSetSearchDescription(
+  source: ExerciseSetSearchSource
+) {
+  return compactText([
+    getExerciseCategoryLabel(source.locale, source.category),
+    getExerciseTypeLabel(source.locale, source.type),
+    getExerciseMaterialLabel(source.locale, source.material),
+    source.exerciseTypeTitle,
+    source.setTitle,
+    getExerciseQuestionCountLabel(source.locale, source.questionCount),
+  ]);
+}
+
+/** Builds the full-text body used by the Nakafa exercise set search read model. */
+export function getExerciseSetSearchText(source: ExerciseSetSearchSource) {
+  return compactText([
+    source.category,
+    getExerciseCategoryLabel(source.locale, source.category),
+    source.type,
+    getExerciseTypeLabel(source.locale, source.type),
+    source.material,
+    getExerciseMaterialLabel(source.locale, source.material),
+    source.exerciseType,
+    getSlugPhrase(source.exerciseType),
+    source.exerciseTypeTitle,
+    source.year?.toString(),
+    source.setName,
+    getSlugPhrase(source.setName),
+    source.setTitle,
+    getExerciseQuestionCountLabel(source.locale, source.questionCount),
+    source.description,
   ]);
 }
 

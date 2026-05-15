@@ -1,3 +1,4 @@
+import { finalAnswerSourcePolicy } from "@repo/ai/agents/orchestrator/prompt";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
 import type { Locale } from "@repo/utilities/locales";
@@ -40,8 +41,11 @@ export function nakafaAgentPrompt({ locale, context }: Props) {
       - Never guess content refs. Search first when the reference is not certain.
     `,
     outputFormatting: `
-      Return compact markdown with source URLs, content IDs, and the retrieved data.
+      Return compact evidence markdown with content IDs, citation fields, and the retrieved data.
       Keep the response factual and tool-result oriented.
+      Use citation fields like Citation: [Title](url) for source evidence.
+      Never write a terminal source, reference, citation, or bibliography section.
+      ${finalAnswerSourcePolicy}
       Never invent exercise choices, answers, or explanations from lesson text.
       If structured exercise data is unavailable, say Nakafa does not provide structured exercise data for that request.
     `,

@@ -2,55 +2,71 @@ import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
 import type { Locale } from "@repo/utilities/locales";
 
-const toolMode = "tools";
-const exactSourceMode = "exact-source";
-
-type ResearchMode = typeof toolMode | typeof exactSourceMode;
-
 interface ResearchPromptProps {
   context: AgentContext;
   locale: Locale;
-  mode?: ResearchMode;
 }
 
 /**
- * Builds the research agent prompt for broad tool use or exact-source synthesis.
+ * Builds the research agent prompt for source evidence collection.
  */
-export function researchPrompt({
+export function researchEvidencePrompt({
   locale,
   context,
-  mode = toolMode,
 }: ResearchPromptProps) {
   return createPrompt({
-    taskContext:
-      mode === exactSourceMode ? exactSourceTaskContext : toolTaskContext,
+    taskContext: evidenceTaskContext,
     backgroundData: `
       Locale: ${locale}
       Platform: Nakafa (Educational Platform for K-12 through University)
 
       Current Context:
+      - Date: ${context.currentDate}
       - URL: ${context.url}
       - Slug: ${context.slug}
       - Verified: ${context.verified ? "yes" : "no"}
       - User Role: ${context.userRole || "unknown"}
     `,
     outputFormatting: `
-      Return a markdown research summary with:
-      - Key findings and data points
-      - Source URLs and markdown link citations
-      - Relevant quotes or excerpts
-      - Any limitations or gaps in the research
-
-      Use markdown links like [source](https://example.com) for citations.
-      Never use numeric citation markers such as [1] or [4, 21, 23].
-
-      DO NOT write user-facing explanations or friendly introductions.
-      Return only the raw research data in a markdown format.
+      Return concise internal evidence notes only.
+      Include source titles and URLs beside each evidence note.
+      Do not write a final user-facing answer.
     `,
   });
 }
 
-const toolTaskContext = `
+/**
+ * Builds the research agent prompt for structured source-backed synthesis.
+ */
+export function researchPrompt({ locale, context }: ResearchPromptProps) {
+  return createPrompt({
+    taskContext: synthesisTaskContext,
+    backgroundData: `
+      Locale: ${locale}
+      Platform: Nakafa (Educational Platform for K-12 through University)
+
+      Current Context:
+      - Date: ${context.currentDate}
+      - URL: ${context.url}
+      - Slug: ${context.slug}
+      - Verified: ${context.verified ? "yes" : "no"}
+      - User Role: ${context.userRole || "unknown"}
+    `,
+    outputFormatting: `
+      Return structured research data through the provided output schema:
+      - findings[].text contains one concise source-backed claim
+      - findings[].citations contains the source title and URL for that claim
+      - limitations contains evidence gaps or caveats
+
+      Do not put markdown links, numeric citation markers, or source-list prose inside finding text.
+
+      DO NOT write user-facing explanations or friendly introductions.
+      Return only the structured research data.
+    `,
+  });
+}
+
+const evidenceTaskContext = `
   You are a specialized research agent for Nakafa, an educational platform.
   Your job is to conduct deep research on topics by searching the web and reading relevant sources.
 
@@ -79,25 +95,20 @@ const toolTaskContext = `
     for those sources or no primary source exists.
   - Prioritize credible and authoritative sources
   - Extract key facts, data, and insights
-  - Cite evidence with markdown links, not numeric bracket markers
+  - Keep source titles and URLs attached to each evidence note
   - If source content is unavailable or weak, state the limitation clearly
-  - Return ONLY the research findings - DO NOT generate user-facing explanations
+  - Return ONLY internal evidence notes - DO NOT generate user-facing explanations
 `;
 
-const exactSourceTaskContext = `
-  You are a specialized research agent for Nakafa, an educational platform.
-  Exact source evidence has already been retrieved before this synthesis step.
-
-  Your workflow:
-  1. Analyze the research task
-  2. Use only the retrieved source evidence from the user message
-  3. Keep findings tied to the correct source
-  4. State any limitation when a retrieved source is unavailable or weak
-  5. Compile findings into a structured data summary
+const synthesisTaskContext = `
+  You are a specialized research synthesis agent for Nakafa, an educational platform.
+  Your job is to turn collected evidence into structured findings with citation data.
 
   IMPORTANT:
-  - Do not broaden exact-source requests into web search results
-  - Do not claim facts that are not supported by the retrieved source evidence
-  - Cite evidence with markdown links, not numeric bracket markers
-  - Return ONLY the research findings - DO NOT generate user-facing explanations
+  - Use only the provided research evidence and source references.
+  - Put source titles and URLs in each finding's citations field.
+  - Keep citation data separate from finding prose.
+  - Do not invent sources.
+  - If evidence is missing or weak, state the limitation clearly.
+  - Return ONLY the research findings - DO NOT generate user-facing explanations.
 `;

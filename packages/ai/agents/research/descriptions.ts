@@ -6,10 +6,8 @@ export const nakafaWebSearch = createPrompt({
 
       Use this tool to search the web for up-to-date information and source content when Nakafa content is insufficient.
       The tool uses Mendable's Firecrawl API under the hood.
-      Use exactly the citation field for inline citations as LINKS (not images).
-      Write inline citations before the period at the end of every sentence.
-      CRITICAL: Always use link markdown syntax [text](url), NEVER use image markdown syntax ![alt](url).
-      NEVER write numeric citation markers like [1] or [4, 21, 23].
+      Use returned titles and URLs as citation data for structured research findings.
+      Keep citation data separate from finding prose.
     `,
 
   toolUsageGuidelines: `
@@ -29,10 +27,9 @@ export const nakafaWebSearch = createPrompt({
 
       After searching the web, the webSearch allows you to:
 
-      - Explain the content to the user in a way that is easy to understand
-      - Use exactly the citation field for inline citations as LINKS before the period at the end of every sentence
-      - IMPORTANT: Citations must be links [text](url), NOT images ![alt](url)
-      - IMPORTANT: Citations must not be numeric markers like [1] or [4, 21, 23]
+      - Read source titles, URLs, descriptions, and relevant content
+      - Use the returned source metadata as citation data
+      - Keep source metadata separate from finding prose
     `,
 
   detailedTaskInstructions: `
@@ -43,31 +40,31 @@ export const nakafaWebSearch = createPrompt({
       - For official documentation requests, include the exact named source and official domain in the queries
       - Do not broaden a specific documentation request into a generic industry trend search
       - Search the web for up-to-date information
-      - Explain the content to the user in a way that is easy to understand
-      - Use exactly the citation field for inline citations as LINKS (not images)
-      - Write inline citations before the period at the end of every sentence
-      - Always use link syntax [text](url), NEVER image syntax ![alt](url)
-      - Never use numeric citation markers like [1] or [4, 21, 23]
+      - Extract source-backed facts, data, and insights
+      - Preserve source titles and URLs for the structured citations field
 
       ## CRITICAL: Temporal Context in Search Queries
 
       ALWAYS include date/time context in search queries:
 
-      - For current events: "latest", "current year", "today", "current", "recent"
+      - For current events: use the actual current date/year from the agent context, plus words like "latest", "today", "current", or "recent"
       - For historical info: specific years or date ranges
-      - For time-sensitive topics: "newest", "updated", "current year"
+      - For time-sensitive topics: use the actual current date/year from the agent context, plus words like "newest", "updated", or "current"
       - NO TEMPORAL ASSUMPTIONS: Never assume time periods - always be explicit about dates/years
 
       <example>
-        Queries: ["latest AI news current year"]
+        Current date: May 15, 2026
+        Queries: ["latest AI news 2026"]
       </example>
 
       <example>
-        Queries: ["current stock prices today"]
+        Current date: May 15, 2026
+        Queries: ["current stock prices May 15 2026"]
       </example>
 
       <example>
-        Queries: ["recent developments in current year"]
+        Current date: May 15, 2026
+        Queries: ["recent developments 2026"]
       </example>
     `,
 
@@ -80,27 +77,17 @@ export const nakafaWebSearch = createPrompt({
         *Calls webSearch tool*
       </example>
 
-      ## Examples of how to write inline citations
+      ## Citation data
 
-      <good-example>
-        DO write citations as links [text](url):
-        Assistant: The stock market is down today [source](https://www.google.com).
-      </good-example>
-
-      <bad-example>
-        DON'T write citations as images ![alt](url):
-        Assistant: The stock market is down today ![source](https://www.google.com).
-      </bad-example>
+      Use returned source titles and URLs as citation data for structured findings.
     `,
 
   finalRequest: `
       ## Summary
 
       Use webSearch tool when the user asks to search the web for up-to-date information.
-      Treat the content as a source of information to explain the content to the user.
-      Write inline citations as LINKS before the period at the end of every sentence.
-      NEVER use image markdown syntax ![alt](url) for citations - always use link syntax [text](url).
-      NEVER use numeric citation markers like [1] or [4, 21, 23].
+      Treat the content as source evidence for structured research findings.
+      Keep source titles and URLs separate from finding prose.
     `,
 });
 

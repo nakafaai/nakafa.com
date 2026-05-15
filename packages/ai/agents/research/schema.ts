@@ -1,11 +1,12 @@
+import { isPublicHttpUrlSyntax } from "@repo/ai/agents/research/url";
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { Schema } from "effect";
 
 export const webSearchMaxQueries = 4;
 
 const urlInputSchema = Schema.NonEmptyString.pipe(
-  Schema.filter((value) => URL.canParse(value), {
-    message: () => "Expected a valid URL.",
+  Schema.filter(isPublicHttpUrlSyntax, {
+    message: () => "Expected a public http(s) URL.",
   })
 ).annotations({
   description: "The URL to scrape, including http:// or https://.",
@@ -64,8 +65,45 @@ export const WebSearchOutputSchema = Schema.Struct({
       "The output schema for web search results. Use the citation field for inline citations.",
   });
 
+export const ResearchCitationSchema = Schema.Struct({
+  title: Schema.NonEmptyString.annotations({
+    description: "Concise citation label shown to the user.",
+  }),
+  url: urlInputSchema.annotations({
+    description: "Canonical source URL for the cited evidence.",
+  }),
+}).pipe(Schema.mutable);
+
+export const ResearchFindingSchema = Schema.Struct({
+  text: Schema.NonEmptyString.annotations({
+    description:
+      "One concise source-backed finding. Do not include markdown links, numeric citation markers, or bibliography text here.",
+  }),
+  citations: Schema.Array(ResearchCitationSchema)
+    .pipe(Schema.minItems(1), Schema.mutable)
+    .annotations({
+      description: "Sources that directly support this finding.",
+    }),
+}).pipe(Schema.mutable);
+
+export const ResearchOutputSchema = Schema.Struct({
+  findings: Schema.Array(ResearchFindingSchema)
+    .pipe(Schema.minItems(1), Schema.mutable)
+    .annotations({
+      description:
+        "Source-backed findings. Keep each finding scoped to the cited sources.",
+    }),
+  limitations: Schema.Array(Schema.NonEmptyString)
+    .pipe(Schema.mutable)
+    .annotations({
+      description:
+        "Evidence gaps or caveats. Use an empty array when there are none.",
+    }),
+}).pipe(Schema.mutable);
+
 export const scrapeInputSchema = createEffectSchema(ScrapeInputSchema);
 export const webSearchInputSchema = createEffectSchema(WebSearchInputSchema);
+export const researchOutputSchema = createEffectSchema(ResearchOutputSchema);
 
 /** Search provider failed before returning usable source data. */
 export class ResearchSearchError extends Schema.TaggedError<ResearchSearchError>()(
@@ -83,7 +121,16 @@ export class ResearchScrapeError extends Schema.TaggedError<ResearchScrapeError>
   }
 ) {}
 
+/** Scrape URL was rejected before any server-side fetch. */
+export class ResearchUnsafeUrlError extends Schema.TaggedError<ResearchUnsafeUrlError>()(
+  "ResearchUnsafeUrlError",
+  {
+    message: Schema.String,
+  }
+) {}
+
 export type ScrapeInput = Schema.Schema.Type<typeof ScrapeInputSchema>;
 export type ScrapeOutput = Schema.Schema.Type<typeof ScrapeOutputSchema>;
+export type ResearchOutput = Schema.Schema.Type<typeof ResearchOutputSchema>;
 export type WebSearchInput = Schema.Schema.Type<typeof WebSearchInputSchema>;
 export type WebSearchOutput = Schema.Schema.Type<typeof WebSearchOutputSchema>;

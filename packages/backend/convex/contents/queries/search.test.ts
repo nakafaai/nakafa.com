@@ -140,6 +140,119 @@ describe("contents/queries/search:search", () => {
     );
   });
 
+  it("indexes exercise sets as set-level refs for broad retrieval", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await t.mutation(
+      internal.contentSync.mutations.exercises.bulkSyncExerciseSets,
+      {
+        sets: [
+          {
+            category: "high-school",
+            contentHash: "hash-set",
+            description: "Kumpulan latihan fungsi rasional.",
+            exerciseType: "try-out",
+            locale: "id",
+            material: "quantitative-knowledge",
+            questionCount: 20,
+            searchDescription:
+              "SMA SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2 20 soal",
+            searchText:
+              "SNBT Pengetahuan Kuantitatif try-out try out 2026 set-2 set 2 fungsi rasional 20 soal",
+            searchTitle: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
+            setName: "set-2",
+            slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+            title: "Set 2",
+            type: "snbt",
+          },
+        ],
+      }
+    );
+
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "id",
+      offset: 0,
+      queries: ["latihan fungsi rasional"],
+      section: "exercises",
+    });
+
+    expect(result.items[0]).toEqual(
+      expect.objectContaining({
+        content_id:
+          "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+        title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
+      })
+    );
+  });
+
+  it("removes exercise set search rows when stale sets are deleted", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await t.mutation(
+      internal.contentSync.mutations.exercises.bulkSyncExerciseSets,
+      {
+        sets: [
+          {
+            category: "high-school",
+            contentHash: "hash-stale-set",
+            description: "Kumpulan latihan fungsi kuadrat.",
+            exerciseType: "try-out",
+            locale: "id",
+            material: "quantitative-knowledge",
+            questionCount: 0,
+            searchDescription:
+              "SMA SNBT Pengetahuan Kuantitatif Try Out 2026 Set 3 0 soal",
+            searchText:
+              "SNBT Pengetahuan Kuantitatif try-out try out 2026 set-3 set 3 fungsi kuadrat 0 soal",
+            searchTitle: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 3",
+            setName: "set-3",
+            slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-3",
+            title: "Set 3",
+            type: "snbt",
+          },
+        ],
+      }
+    );
+
+    const setId = await t.query(async (ctx) => {
+      const exerciseSet = await ctx.db
+        .query("exerciseSets")
+        .withIndex("by_locale_and_slug", (q) =>
+          q
+            .eq("locale", "id")
+            .eq(
+              "slug",
+              "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-3"
+            )
+        )
+        .unique();
+
+      if (!exerciseSet) {
+        throw new Error("Expected synced exercise set.");
+      }
+
+      return exerciseSet._id;
+    });
+
+    await t.mutation(
+      internal.contentSync.mutations.exercises.deleteStaleExerciseSets,
+      {
+        setIds: [setId],
+      }
+    );
+
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "id",
+      offset: 0,
+      queries: ["fungsi kuadrat"],
+      section: "exercises",
+    });
+
+    expect(result.items).toEqual([]);
+  });
+
   it("searches multiple unique query variants in one bounded request", async () => {
     const t = createConvexTestWithBetterAuth();
 

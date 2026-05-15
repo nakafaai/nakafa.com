@@ -17,6 +17,7 @@ export const fetchSourceMarkdown = Effect.fn("research.fetchSourceMarkdown")(
         try: () =>
           fetch(candidate, {
             headers: markdownHeaders,
+            redirect: "manual",
             signal: AbortSignal.timeout(5000),
           }),
         catch: () => undefined,

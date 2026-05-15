@@ -6,7 +6,11 @@ import {
   replaceExerciseChoices,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
-import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
+import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
+import {
+  deleteContentSearch,
+  syncContentSearch,
+} from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   exercisesCategoryValidator,
@@ -20,11 +24,15 @@ import { getAll } from "convex-helpers/server/relationships";
 
 const syncedExerciseSetValidator = v.object({
   category: exercisesCategoryValidator,
+  contentHash: v.string(),
   description: v.optional(v.string()),
   exerciseType: v.string(),
   locale: localeValidator,
   material: exercisesMaterialValidator,
   questionCount: v.number(),
+  searchDescription: v.string(),
+  searchText: v.string(),
+  searchTitle: v.string(),
   setName: v.string(),
   slug: v.string(),
   title: v.string(),
@@ -101,6 +109,17 @@ export const bulkSyncExerciseSets = internalMutation({
     let updated = 0;
 
     for (const set of args.sets) {
+      await syncContentSearch(ctx, {
+        contentHash: set.contentHash,
+        description: set.searchDescription,
+        locale: set.locale,
+        route: set.slug,
+        section: "exercises",
+        syncedAt: now,
+        text: set.searchText,
+        title: set.searchTitle,
+      });
+
       const nextValues = {
         category: set.category,
         description: set.description,
@@ -339,6 +358,13 @@ export const deleteStaleExerciseSets = internalMutation({
         await deleteExerciseQuestion(ctx, question._id);
       }
 
+      const searchRef = buildContentSearchRef({
+        locale: exerciseSet.locale,
+        route: exerciseSet.slug,
+        section: "exercises",
+      });
+
+      await deleteContentSearch(ctx, searchRef.content_id);
       await ctx.db.delete("exerciseSets", setId);
       deleted++;
     }

@@ -18,13 +18,12 @@ def run(request: MathRequest) -> MathResult:
         raise ValueError("Values are required.")
 
     operation = request.operation
-    sorted_values = sorted(values, key=lambda value: float(value))
 
     if operation == "mean":
         output = sum(values) / len(values)
         steps = [_mean_step(values, output)]
     elif operation == "median":
-        output = _median(sorted_values)
+        output = _median(_sort_numeric_values(values))
         steps = []
     elif operation == "mode":
         return result(
@@ -55,7 +54,7 @@ def run(request: MathRequest) -> MathResult:
             ),
         ]
     elif operation == "quartiles":
-        q1, q2, q3 = _quartiles(sorted_values)
+        q1, q2, q3 = _quartiles(_sort_numeric_values(values))
 
         return result(
             request,
@@ -100,6 +99,11 @@ def _mean_step(values: list[sp.Expr], output: object):
     )
 
     return step("mean", primary=formula, relation=EQUALS, secondary=output)
+
+
+def _sort_numeric_values(values: list[sp.Expr]) -> list[sp.Expr]:
+    """Sort values only for order statistics that require numeric ordering."""
+    return sorted(values, key=lambda value: float(value))
 
 
 def _variance_steps(values: list[sp.Expr], mean: object, output: object) -> list:

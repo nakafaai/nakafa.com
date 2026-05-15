@@ -39,16 +39,23 @@ import {
   getExerciseSearchDescription,
   getExerciseSearchText,
   getExerciseSearchTitle,
+  getExerciseSetSearchDescription,
+  getExerciseSetSearchText,
+  getExerciseSetSearchTitle,
 } from "@repo/contents/_lib/exercises/search";
 import { Effect } from "effect";
 
 interface ExerciseSetPayload {
   category: string;
+  contentHash: string;
   description?: string;
   exerciseType: string;
   locale: Locale;
   material: string;
   questionCount: number;
+  searchDescription: string;
+  searchText: string;
+  searchTitle: string;
   setName: string;
   slug: string;
   title: string;
@@ -159,6 +166,24 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
 
         return parsedSets.map((set) => {
           const countKey = `${set.locale}:${set.slug}`;
+          const questionCount = questionCountByLocaleSlug.get(countKey) || 0;
+          const searchSource = {
+            locale: set.locale,
+            category: set.category,
+            type: set.type,
+            material: set.material,
+            exerciseType: set.exerciseType,
+            exerciseTypeTitle: set.exerciseTypeTitle,
+            setName: set.setName,
+            setTitle: set.title,
+            year: set.year,
+            questionCount,
+            description: set.description,
+          };
+          const searchTitle = getExerciseSetSearchTitle(searchSource);
+          const searchDescription =
+            getExerciseSetSearchDescription(searchSource);
+          const searchText = getExerciseSetSearchText(searchSource);
 
           return {
             locale: set.locale,
@@ -170,7 +195,20 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
             setName: set.setName,
             title: set.title,
             description: set.description,
-            questionCount: questionCountByLocaleSlug.get(countKey) || 0,
+            questionCount,
+            searchTitle,
+            searchDescription,
+            searchText,
+            contentHash: computeHash(
+              JSON.stringify({
+                description: set.description,
+                questionCount,
+                searchDescription,
+                searchText,
+                searchTitle,
+                slug: set.slug,
+              })
+            ),
           };
         });
       })

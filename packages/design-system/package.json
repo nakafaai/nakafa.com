@@ -1,6 +1,6 @@
 {
   "name": "@repo/design-system",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
@@ -56,7 +56,7 @@
     "radix-ui": "^1.4.3",
     "react": "19.2.6",
     "react-aria-components": "^1.17.0",
-    "react-day-picker": "^10.0.0",
+    "react-day-picker": "^10.0.1",
     "react-error-boundary": "^6.1.1",
     "react-hotkeys-hook": "^5.3.2",
     "react-katex": "^3.1.0",

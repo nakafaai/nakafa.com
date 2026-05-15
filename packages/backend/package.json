@@ -1,6 +1,6 @@
 {
   "name": "@repo/backend",
-  "version": "1.3.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "convex dev --tail-logs",
@@ -47,11 +47,11 @@
   "dependencies": {
     "@convex-dev/aggregate": "^0.2.1",
     "@convex-dev/better-auth": "^0.12.2",
-    "@convex-dev/resend": "^0.2.3",
+    "@convex-dev/resend": "^0.2.4",
     "@convex-dev/workflow": "^0.3.12",
     "@convex-dev/workpool": "^0.4.6",
     "@polar-sh/sdk": "^0.47.1",
-    "@posthog/convex": "0.2.29",
+    "@posthog/convex": "0.2.30",
     "@repo/ai": "workspace:*",
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
@@ -59,8 +59,8 @@
     "ai": "^6.0.182",
     "better-auth": "~1.6.9",
     "buffer": "^6.0.3",
-    "convex": "^1.38.0",
-    "convex-helpers": "^0.1.117",
+    "convex": "^1.39.1",
+    "convex-helpers": "^0.1.118",
     "effect": "^3.21.2",
     "hono": "^4.12.18",
     "jsonrepair": "^3.14.0",

@@ -130,10 +130,16 @@ describe("nakafaPrompt", () => {
     });
 
     expect(prompt).toContain(
+      "Cite sources inline in the exact sentence they support."
+    );
+    expect(prompt).toContain(
       "Never show numeric citation markers such as [1] or [4, 21, 23] to users."
     );
     expect(prompt).toContain(
       "Convert any research citation indexes into markdown links using the cited source URLs."
+    );
+    expect(prompt).toContain(
+      "Never append a final source, reference, citation, or bibliography section in any language."
     );
   });
 

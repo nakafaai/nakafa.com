@@ -7,12 +7,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const firecrawlApp = vi.hoisted(() => ({
   scrape: vi.fn(),
 }));
+const lookup = vi.hoisted(() => vi.fn());
 const selectRelevantContent = vi.hoisted(() =>
   vi.fn(({ content }: { content: string; query?: string }) => content)
 );
 
 vi.mock("@repo/ai/config/firecrawl", () => ({
   firecrawlApp,
+}));
+
+vi.mock("node:dns/promises", () => ({
+  lookup,
 }));
 
 vi.mock("@repo/ai/lib/selection", () => ({
@@ -37,6 +42,8 @@ function createWriter() {
 describe("research scrape tool", () => {
   beforeEach(() => {
     firecrawlApp.scrape.mockReset();
+    lookup.mockReset();
+    lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
     selectRelevantContent.mockClear();
     vi.stubGlobal(
       "fetch",
@@ -87,6 +94,52 @@ describe("research scrape tool", () => {
         }),
       }),
     ]);
+  });
+
+  it("rejects private scrape targets before fetching or crawling", async () => {
+    const { parts, writer } = createWriter();
+
+    const output = await Effect.runPromise(
+      scrapeUrl({
+        toolCallId: "scrape-localhost",
+        url: "http://localhost:3000/admin",
+        writer,
+      })
+    );
+
+    expect(output).toContain("Only public http(s) URLs can be scraped");
+    expect(fetch).not.toHaveBeenCalled();
+    expect(firecrawlApp.scrape).not.toHaveBeenCalled();
+    expect(parts).toEqual([
+      expect.objectContaining({
+        type: "data-scrape-url",
+        data: expect.objectContaining({ status: "loading" }),
+      }),
+      expect.objectContaining({
+        type: "data-scrape-url",
+        data: expect.objectContaining({
+          content: "",
+          status: "error",
+          url: "http://localhost:3000/admin",
+        }),
+      }),
+    ]);
+  });
+
+  it("rejects public hostnames that resolve to private addresses", async () => {
+    lookup.mockResolvedValue([{ address: "127.0.0.1", family: 4 }]);
+    const { writer } = createWriter();
+
+    await Effect.runPromise(
+      scrapeUrl({
+        toolCallId: "scrape-rebound",
+        url: "https://example.com/internal",
+        writer,
+      })
+    );
+
+    expect(fetch).not.toHaveBeenCalled();
+    expect(firecrawlApp.scrape).not.toHaveBeenCalled();
   });
 
   it("prefers source-native markdown over thin crawler markdown", async () => {
