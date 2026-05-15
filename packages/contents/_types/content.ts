@@ -1,76 +1,89 @@
 import { isContentDateString } from "@repo/contents/_shared/date";
 import { locales } from "@repo/utilities/locales";
+import { Schema } from "effect";
 import type React from "react";
-import * as z from "zod";
 
 /** Locale validation schema - single source of truth */
-export const LocaleSchema = z.enum(locales);
-export type Locale = z.infer<typeof LocaleSchema>;
+export const LocaleSchema = Schema.Literal(...locales);
+export type Locale = Schema.Schema.Type<typeof LocaleSchema>;
 
 /** Supported top-level content roots under `packages/contents/`. */
 export const CONTENT_ROOTS = ["articles", "exercises", "subject"] as const;
 
 /** Runtime validation schema for supported top-level content roots. */
-export const ContentRootSchema = z.enum(CONTENT_ROOTS);
+export const ContentRootSchema = Schema.Literal(...CONTENT_ROOTS);
 
 /** Union of supported top-level content roots. */
-export type ContentRoot = z.infer<typeof ContentRootSchema>;
+export type ContentRoot = Schema.Schema.Type<typeof ContentRootSchema>;
 
-export const ArticleSchema = z.object({
-  title: z.string(),
-  description: z.string(),
-  date: z.string(),
-  slug: z.string(),
-  official: z.boolean(),
-});
-export type Article = z.infer<typeof ArticleSchema>;
+export const ArticleSchema = Schema.Struct({
+  title: Schema.String,
+  description: Schema.String,
+  date: Schema.String,
+  slug: Schema.String,
+  official: Schema.Boolean,
+}).pipe(Schema.mutable);
+export type Article = Schema.Schema.Type<typeof ArticleSchema>;
 
-export const ReferenceSchema = z.object({
-  title: z.string(),
-  authors: z.string(),
-  year: z.number(),
-  url: z.string().optional(),
-  citation: z.string().optional(), // For handling 2024a, 2024b style citations
-  publication: z.string().optional(),
-  details: z.string().optional(),
-});
-export type Reference = z.infer<typeof ReferenceSchema>;
+export const ReferenceSchema = Schema.Struct({
+  title: Schema.String,
+  authors: Schema.String,
+  year: Schema.Number,
+  url: Schema.optional(Schema.String),
+  citation: Schema.optional(Schema.String),
+  publication: Schema.optional(Schema.String),
+  details: Schema.optional(Schema.String),
+}).pipe(Schema.mutable);
+export type Reference = Schema.Schema.Type<typeof ReferenceSchema>;
 
-export const ContentMetadataSchema = z.object({
-  title: z.string(),
-  description: z.string().optional(),
-  authors: z.array(
-    z.object({
-      name: z.string(),
+export const ContentMetadataSchema = Schema.Struct({
+  title: Schema.String,
+  description: Schema.optional(Schema.String),
+  authors: Schema.Array(
+    Schema.Struct({
+      name: Schema.String,
+    }).pipe(Schema.mutable)
+  ).pipe(Schema.mutable),
+  date: Schema.String.pipe(
+    Schema.filter(isContentDateString, {
+      message: () => "Invalid content date. Expected MM/DD/YYYY.",
     })
   ),
-  date: z.string().refine(isContentDateString, {
-    error: "Invalid content date. Expected MM/DD/YYYY.",
-  }),
-  subject: z.string().optional(),
-});
-export type ContentMetadata = z.infer<typeof ContentMetadataSchema>;
+  subject: Schema.optional(Schema.String),
+}).pipe(Schema.mutable);
+export type ContentMetadata = Schema.Schema.Type<typeof ContentMetadataSchema>;
 
-export const ContentPaginationSchema = z.object({
-  prev: z.object({
-    href: z.string(),
-    title: z.string(),
-  }),
-  next: z.object({
-    href: z.string(),
-    title: z.string(),
-  }),
-});
-export type ContentPagination = z.infer<typeof ContentPaginationSchema>;
+const ContentPaginationItemSchema = Schema.Struct({
+  href: Schema.String,
+  title: Schema.String,
+}).pipe(Schema.mutable);
 
-export const ContentSchema = z.object({
+export const ContentPaginationSchema = Schema.Struct({
+  prev: ContentPaginationItemSchema,
+  next: ContentPaginationItemSchema,
+}).pipe(Schema.mutable);
+export type ContentPagination = Schema.Schema.Type<
+  typeof ContentPaginationSchema
+>;
+
+export const ContentSchema = Schema.Struct({
   metadata: ContentMetadataSchema,
-  raw: z.string(),
-  url: z.string(),
+  raw: Schema.String,
+  url: Schema.String,
   locale: LocaleSchema,
-  slug: z.string(),
-});
-export type Content = z.infer<typeof ContentSchema>;
+  slug: Schema.String,
+}).pipe(Schema.mutable);
+export type Content = Schema.Schema.Type<typeof ContentSchema>;
+
+export const ReferenceListSchema = Schema.Array(ReferenceSchema).pipe(
+  Schema.mutable
+);
+
+export const CONTENT_ROOT_VALUES = {
+  articles: "articles",
+  exercises: "exercises",
+  subject: "subject",
+} as const;
 
 export type ContentWithMDX = Omit<Content, "url" | "locale" | "slug"> & {
   default?: React.ComponentType;

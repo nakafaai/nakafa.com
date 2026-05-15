@@ -35,6 +35,11 @@ import type {
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
+import {
+  getExerciseSearchDescription,
+  getExerciseSearchText,
+  getExerciseSearchTitle,
+} from "@repo/contents/_lib/exercises/search";
 import { Effect } from "effect";
 
 interface ExerciseSetPayload {
@@ -70,6 +75,9 @@ interface ExerciseQuestionPayload {
   material: string;
   number: number;
   questionBody: string;
+  searchDescription: string;
+  searchText: string;
+  searchTitle: string;
   setName: string;
   setSlug: string;
   slug: string;
@@ -265,6 +273,20 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
     setName: pathInfo.setName,
     year: pathInfo.year,
   });
+  const searchSource = {
+    locale: pathInfo.locale,
+    category: pathInfo.category,
+    type: pathInfo.examType,
+    material: pathInfo.material,
+    exerciseType: pathInfo.exerciseType,
+    setName: pathInfo.setName,
+    year: pathInfo.year,
+    number: pathInfo.number,
+    title: questionParsed.metadata.title,
+    description: questionParsed.metadata.description,
+    questionBody: questionParsed.body,
+    answerBody,
+  };
 
   return {
     locale: pathInfo.locale,
@@ -281,6 +303,9 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
     date: parseDateToEpoch(questionParsed.metadata.date),
     questionBody: questionParsed.body,
     answerBody,
+    searchDescription: getExerciseSearchDescription(searchSource),
+    searchText: getExerciseSearchText(searchSource),
+    searchTitle: getExerciseSearchTitle(searchSource),
     contentHash: computeHash(
       questionParsed.body +
         answerBody +

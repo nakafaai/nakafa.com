@@ -1,6 +1,6 @@
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
-import { syncContentSearch } from "@repo/backend/convex/contents/search/write";
+import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";

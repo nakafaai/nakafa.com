@@ -26,8 +26,9 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { cn, getAppUrl } from "@repo/design-system/lib/utils";
+import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import { getAppUrl } from "@repo/next-config/app";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import {

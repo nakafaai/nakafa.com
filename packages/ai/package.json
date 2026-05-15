@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@ai-sdk/devtools": "^0.0.17",
+    "@ai-sdk/devtools": "^0.0.18",
     "@ai-sdk/elevenlabs": "^2.0.33",
     "@ai-sdk/gateway": "^3.0.114",
     "@ai-sdk/google": "^3.0.73",

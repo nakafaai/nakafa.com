@@ -1,8 +1,9 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { LocaleSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
 import * as z from "zod";
 import { NakafaMcpContentRefInputSchema } from "@/lib/mcp/schemas";
+
+const LocaleSchema = z.enum(routing.locales);
 
 /** Registers reusable Nakafa prompts for agent clients. */
 export function registerNakafaMcpPrompts(server: McpServer) {

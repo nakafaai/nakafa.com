@@ -11,14 +11,6 @@
  * Set ENABLE_AUDIO_GENERATION=true in the Convex Dashboard deployment settings
  */
 
-import { SUPPORTED_CONTENT_LOCALES } from "@repo/backend/convex/lib/validators/contents";
-
-/**
- * Locales supported for audio generation.
- * Reuses the Convex content locale source so audio generation follows schema support.
- */
-export const SUPPORTED_LOCALES = SUPPORTED_CONTENT_LOCALES;
-
 /**
  * Default maximum content pieces to generate per day (across all locales).
  * Each content piece will be generated for ALL supported locales.

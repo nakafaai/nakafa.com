@@ -3,7 +3,7 @@ import {
   getCategoryPath,
   parseSubjectCategory,
 } from "@repo/contents/_lib/subject/category";
-import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
+import { SUBJECT_CATEGORIES } from "@repo/contents/_types/subject/category";
 import { describe, expect, it } from "vitest";
 
 describe("subject category helpers", () => {
@@ -12,7 +12,7 @@ describe("subject category helpers", () => {
   });
 
   it("resolves every category icon", () => {
-    for (const category of SubjectCategorySchema.options) {
+    for (const category of SUBJECT_CATEGORIES) {
       expect(getCategoryIcon(category)).toBeDefined();
     }
 

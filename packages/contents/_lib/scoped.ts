@@ -19,10 +19,10 @@ import {
   type ContentRoot,
   type ContentWithMDX,
   type Reference,
-  ReferenceSchema,
+  ReferenceListSchema,
 } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 import ky from "ky";
 
 const contentsDir = resolveContentsDir(import.meta.url);
@@ -183,7 +183,8 @@ export function parseModuleMetadata(
     }
 
     return yield* Effect.try({
-      try: () => ContentMetadataSchema.parse(module.metadata),
+      try: () =>
+        Schema.decodeUnknownSync(ContentMetadataSchema)(module.metadata),
       catch: (error: unknown) =>
         new MetadataParseError({
           path: modulePath,
@@ -215,7 +216,7 @@ export function parseReferences(
   rawReferences: unknown[]
 ): Effect.Effect<Reference[], Error> {
   return Effect.try({
-    try: () => ReferenceSchema.array().parse(rawReferences),
+    try: () => Schema.decodeUnknownSync(ReferenceListSchema)(rawReferences),
     catch: (error: unknown) =>
       new Error(`Failed to parse references: ${String(error)}`),
   });

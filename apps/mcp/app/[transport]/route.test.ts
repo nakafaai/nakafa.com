@@ -3,6 +3,7 @@ import { NakafaAgentExerciseResultSchema } from "@repo/contents/_lib/agent/schem
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran";
 import { NakafaAgentMarkdownSchema } from "@repo/contents/_lib/agent/schema/read";
 import { NakafaAgentSearchResultSchema } from "@repo/contents/_lib/agent/schema/search";
+import { Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
 import * as z from "zod";
 import { GET, OPTIONS, POST } from "@/app/[transport]/route";
@@ -165,7 +166,7 @@ describe("Nakafa MCP route", () => {
       locale: "en",
       section: "exercises",
     });
-    const search = NakafaAgentSearchResultSchema.parse(
+    const search = Schema.decodeUnknownSync(NakafaAgentSearchResultSchema)(
       searchResponse.result?.structuredContent
     );
     const contentId = search.items[0].content_id;
@@ -178,10 +179,10 @@ describe("Nakafa MCP route", () => {
     const resourceResponse = await postMcp("resources/read", {
       uri: getNakafaContentResourceUri(contentId),
     });
-    const content = NakafaAgentMarkdownSchema.parse(
+    const content = Schema.decodeUnknownSync(NakafaAgentMarkdownSchema)(
       contentResponse.result?.structuredContent
     );
-    const exercise = NakafaAgentExerciseResultSchema.parse(
+    const exercise = Schema.decodeUnknownSync(NakafaAgentExerciseResultSchema)(
       exerciseResponse.result?.structuredContent
     );
     const resource = z
@@ -285,7 +286,7 @@ describe("Nakafa MCP route", () => {
       })
       .passthrough()
       .parse(taxonomyResponse.result?.structuredContent);
-    const quran = NakafaAgentQuranReferenceSchema.parse(
+    const quran = Schema.decodeUnknownSync(NakafaAgentQuranReferenceSchema)(
       quranResponse.result?.structuredContent
     );
 

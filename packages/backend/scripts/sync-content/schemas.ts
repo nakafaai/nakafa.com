@@ -1,7 +1,9 @@
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-import { LocaleSchema } from "@repo/contents/_types/content";
+import { locales } from "@repo/utilities/locales";
 import * as z from "zod";
+
+const SyncLocaleSchema = z.enum(locales);
 
 export const BATCH_SIZES = {
   articles: CONTENT_SYNC_BATCH_LIMITS.articles,
@@ -24,10 +26,10 @@ export const LOCALE_SUBJECT_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
 
 /** Parses one CLI locale flag into the supported Convex content locale. */
 export const parseLocale = (value: string, context: string): Locale => {
-  const result = LocaleSchema.safeParse(value);
+  const result = SyncLocaleSchema.safeParse(value);
   if (!result.success) {
     throw new Error(
-      `Invalid locale "${value}" in ${context}. Expected: ${LocaleSchema.options.join(", ")}`
+      `Invalid locale "${value}" in ${context}. Expected: ${locales.join(", ")}`
     );
   }
   return result.data;
@@ -119,7 +121,7 @@ export const TryoutScaleIntegritySchema = z.object({
   page: z.array(
     z.object({
       cycleKey: z.string(),
-      locale: LocaleSchema,
+      locale: SyncLocaleSchema,
       product: z.string(),
       slug: z.string(),
     })
@@ -129,7 +131,7 @@ export const TryoutScaleIntegritySchema = z.object({
 const StaleItemSchema = z.object({
   id: z.string(),
   slug: z.string(),
-  locale: LocaleSchema,
+  locale: SyncLocaleSchema,
 });
 
 const PaginationPageSchema = z.object({
@@ -182,7 +184,7 @@ export const ArticleReferenceIntegrityPageSchema = PaginationPageSchema.extend({
 export const SubjectSectionIntegrityPageSchema = PaginationPageSchema.extend({
   page: z.array(
     z.object({
-      locale: LocaleSchema,
+      locale: SyncLocaleSchema,
       slug: z.string(),
       topicId: z.string().optional(),
     })

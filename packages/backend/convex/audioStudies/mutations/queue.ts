@@ -6,18 +6,20 @@ import {
   getMaxContentPerDay,
   isAudioGenerationEnabled,
   QUEUE_TIMEOUT_MS,
-  SUPPORTED_LOCALES,
 } from "@repo/backend/convex/audioStudies/constants";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { audioContentRefValidator } from "@repo/backend/convex/lib/validators/audio";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import {
+  localeValidator,
+  SUPPORTED_CONTENT_LOCALES,
+} from "@repo/backend/convex/lib/validators/contents";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { workflow } from "@repo/backend/convex/workflow";
 import { ConvexError, v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
-const AUDIO_QUEUE_PER_SLUG_LIMIT = SUPPORTED_LOCALES.length + 1;
+const AUDIO_QUEUE_PER_SLUG_LIMIT = SUPPORTED_CONTENT_LOCALES.length + 1;
 
 /** Mark one queue item completed unless it is already terminal. */
 export async function markQueueCompleted(
@@ -204,7 +206,7 @@ export const startWorkflowsForPendingItems = internalMutation({
       )
       .take(AUDIO_QUEUE_PER_SLUG_LIMIT);
 
-    if (contentItems.length > SUPPORTED_LOCALES.length) {
+    if (contentItems.length > SUPPORTED_CONTENT_LOCALES.length) {
       throw new ConvexError({
         code: "AUDIO_QUEUE_LOCALE_COUNT_EXCEEDED",
         message: "Audio queue slug exceeded the supported locale count.",

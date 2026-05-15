@@ -1,12 +1,17 @@
-import * as z from "zod";
+import { Schema } from "effect";
 
-const ParsedHeadingSchema = z.object({
-  label: z.string(),
-  href: z.string(),
-  index: z.number().optional(), // this is used for virtualized list
-  get children() {
-    return z.array(ParsedHeadingSchema);
-  },
-});
+export interface ParsedHeading {
+  children: ParsedHeading[];
+  href: string;
+  index?: number;
+  label: string;
+}
 
-export type ParsedHeading = z.infer<typeof ParsedHeadingSchema>;
+export const ParsedHeadingSchema = Schema.Struct({
+  label: Schema.String,
+  href: Schema.String,
+  index: Schema.optional(Schema.Number),
+  children: Schema.Array(
+    Schema.suspend((): Schema.Schema<ParsedHeading> => ParsedHeadingSchema)
+  ).pipe(Schema.mutable),
+}).pipe(Schema.mutable);

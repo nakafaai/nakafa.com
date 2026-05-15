@@ -22,15 +22,27 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { cn } from "@repo/design-system/lib/utils";
+import { cva, type VariantProps } from "class-variance-authority";
 import { useTranslations } from "next-intl";
 
-interface Props {
-  contributor: Contributor;
-  size?: "sm" | "md" | "lg";
-}
+const avatarVariants = cva("shadow-sm", {
+  defaultVariants: {
+    size: "md",
+  },
+  variants: {
+    size: {
+      lg: "size-18",
+      md: "size-16",
+      sm: "size-14",
+    },
+  },
+});
 
-export function Avatar({ contributor, size = "md" }: Props) {
+type AvatarProps = VariantProps<typeof avatarVariants> & {
+  contributor: Contributor;
+};
+
+export function Avatar({ contributor, size }: AvatarProps) {
   const t = useTranslations("Common");
 
   return (
@@ -44,11 +56,7 @@ export function Avatar({ contributor, size = "md" }: Props) {
               title={contributor.name}
             >
               <Character
-                className={cn(
-                  "size-16 shadow-sm",
-                  size === "sm" && "size-14",
-                  size === "lg" && "size-18"
-                )}
+                className={avatarVariants({ size })}
                 name={`${contributor.name} - ${contributor.username}`}
               />
             </DrawerTrigger>

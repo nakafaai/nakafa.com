@@ -32,14 +32,15 @@ import {
   parseMaterial,
 } from "@repo/contents/_lib/subject/route";
 import { getSlugPath as getSubjectSlugPath } from "@repo/contents/_lib/subject/slug";
-import { ContentRootSchema } from "@repo/contents/_types/content";
+import { CONTENT_ROOT_VALUES } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
 
-const contentRoots = ContentRootSchema.enum;
 const quranRoot = "quran";
-const subjectRootRoute = `/${contentRoots.subject}`;
+const subjectRootRoute = `/${CONTENT_ROOT_VALUES.subject}`;
 const quranRootRoute = `/${quranRoot}`;
-const contentRootRoutes = Object.values(contentRoots).map((root) => `/${root}`);
+const contentRootRoutes = Object.values(CONTENT_ROOT_VALUES).map(
+  (root) => `/${root}`
+);
 const contentRouteSetsCache = new Map<
   "content",
   ReturnType<typeof createContentRouteSets>
@@ -150,7 +151,9 @@ function createContentRouteSets() {
 
 /** Adds exercises type and material pages backed by folder-level listing data. */
 function addExerciseListingRoutes(routes: Set<string>) {
-  for (const rawCategory of getContentFolderNames(contentRoots.exercises)) {
+  for (const rawCategory of getContentFolderNames(
+    CONTENT_ROOT_VALUES.exercises
+  )) {
     const category = parseExercisesCategory(rawCategory);
 
     if (!category) {
@@ -158,7 +161,7 @@ function addExerciseListingRoutes(routes: Set<string>) {
     }
 
     for (const rawType of getContentFolderNames(
-      `${contentRoots.exercises}/${category}`
+      `${CONTENT_ROOT_VALUES.exercises}/${category}`
     )) {
       const type = parseExercisesType(rawType);
 
@@ -169,7 +172,7 @@ function addExerciseListingRoutes(routes: Set<string>) {
       routes.add(getExercisesPath(category, type));
 
       for (const rawMaterial of getContentFolderNames(
-        `${contentRoots.exercises}/${category}/${type}`
+        `${CONTENT_ROOT_VALUES.exercises}/${category}/${type}`
       )) {
         const material = parseExercisesMaterial(rawMaterial);
 
@@ -183,7 +186,9 @@ function addExerciseListingRoutes(routes: Set<string>) {
 
 /** Adds subject grade and material pages backed by folder-level listing data. */
 function addSubjectListingRoutes(routes: Set<string>) {
-  for (const rawCategory of getContentFolderNames(contentRoots.subject)) {
+  for (const rawCategory of getContentFolderNames(
+    CONTENT_ROOT_VALUES.subject
+  )) {
     const category = parseSubjectCategory(rawCategory);
 
     if (!category) {
@@ -191,7 +196,7 @@ function addSubjectListingRoutes(routes: Set<string>) {
     }
 
     for (const rawGrade of getContentFolderNames(
-      `${contentRoots.subject}/${category}`
+      `${CONTENT_ROOT_VALUES.subject}/${category}`
     )) {
       const grade = parseGrade(rawGrade);
 
@@ -202,7 +207,7 @@ function addSubjectListingRoutes(routes: Set<string>) {
       routes.add(getGradePath(category, grade));
 
       for (const rawMaterial of getContentFolderNames(
-        `${contentRoots.subject}/${category}/${grade}`
+        `${CONTENT_ROOT_VALUES.subject}/${category}/${grade}`
       )) {
         const material = parseMaterial(rawMaterial);
 
@@ -223,7 +228,7 @@ function getContentFolderNames(folder: string) {
 function addArticleRoutes(routes: Set<string>, slug: string) {
   const [root, rawCategory, articleSlug] = slug.split("/");
 
-  if (root !== contentRoots.articles || !(rawCategory && articleSlug)) {
+  if (root !== CONTENT_ROOT_VALUES.articles || !(rawCategory && articleSlug)) {
     return;
   }
 
@@ -251,7 +256,7 @@ function addSubjectRoutes(
     ...lessonSlug
   ] = slug.split("/");
 
-  if (root !== contentRoots.subject || lessonSlug.length === 0) {
+  if (root !== CONTENT_ROOT_VALUES.subject || lessonSlug.length === 0) {
     return;
   }
 
@@ -294,7 +299,7 @@ function addExerciseRoutes(routes: Set<string>, slugs: readonly string[]) {
     const [root, rawCategory = "", rawType = "", rawMaterial = "", ...setSlug] =
       setPath.split("/");
 
-    if (root !== contentRoots.exercises || setSlug.length === 0) {
+    if (root !== CONTENT_ROOT_VALUES.exercises || setSlug.length === 0) {
       continue;
     }
 

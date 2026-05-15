@@ -10,7 +10,7 @@ import {
 import type { Locale } from "@repo/contents/_types/content";
 import { ExercisesChoicesSchema } from "@repo/contents/_types/exercises/choices";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Either, Option } from "effect";
+import { Effect, Either, Option, Schema } from "effect";
 import ky from "ky";
 
 const contentsDir = resolveContentsDir(import.meta.url);
@@ -202,8 +202,10 @@ export function readExerciseChoices(choicesPath: string) {
       return null;
     }
 
-    const parsed = ExercisesChoicesSchema.safeParse(choicesObject.right);
-    return parsed.success ? parsed.data : null;
+    const parsed = Schema.decodeUnknownOption(ExercisesChoicesSchema)(
+      choicesObject.right
+    );
+    return Option.isSome(parsed) ? parsed.value : null;
   });
 }
 

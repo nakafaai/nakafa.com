@@ -5,7 +5,8 @@ import {
   withAnalyzer,
   withMDX,
 } from "@repo/next-config";
-import { describe, expect, it, vi } from "vitest";
+import { getAppUrl } from "@repo/next-config/app";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@next/bundle-analyzer", () => ({
   default: () => (sourceConfig: object) => ({
@@ -20,6 +21,10 @@ vi.mock("@next/mdx", () => ({
     mdxConfig,
   }),
 }));
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe("createSecurityHeaders", () => {
   it("builds the default CSP header", () => {
@@ -65,5 +70,14 @@ describe("createSecurityHeaders", () => {
       },
       reactStrictMode: true,
     });
+  });
+
+  it("reads the configured public app URL", () => {
+    vi.stubEnv("INTERNAL_CONTENT_API_KEY", "test-key");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://example.com");
+    vi.stubEnv("NEXT_PUBLIC_MCP_URL", "https://mcp.example.com");
+    vi.stubEnv("NEXT_PUBLIC_VERSION", "test-version");
+
+    expect(getAppUrl()).toBe("https://example.com");
   });
 });

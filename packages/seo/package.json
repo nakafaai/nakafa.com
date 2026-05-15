@@ -7,6 +7,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@repo/next-config": "workspace:*",
     "@repo/utilities": "workspace:*",
     "lodash.merge": "^4.6.2",
     "next": "16.2.6",

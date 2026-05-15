@@ -21,7 +21,6 @@ export function Graph({ title, description }: GraphProps) {
   const DISTANCE = 10;
   const OFFSET = DISTANCE / 2;
   const C1_X = -OFFSET; // -5
-  const C2_X = OFFSET; // 5
 
   // Colors
   const COLOR_CONE_1 = getColor("INDIGO");
@@ -59,23 +58,23 @@ export function Graph({ title, description }: GraphProps) {
     { x: C1_X + R1, y: 0, z: 0 },
   ];
 
-  // Cone 2 Geometry (Center P2 at C2_X, 0, 0)
-  const cone2Base = createCircle(C2_X, 0, R2);
-  const cone2Apex = { x: C2_X, y: H2, z: 0 };
+  // Cone 2 Geometry (Center P2 at OFFSET, 0, 0)
+  const cone2Base = createCircle(OFFSET, 0, R2);
+  const cone2Apex = { x: OFFSET, y: H2, z: 0 };
   const cone2Slants = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2].map(
     (angle) => [
       cone2Apex,
       {
-        x: C2_X + R2 * Math.cos(angle),
+        x: OFFSET + R2 * Math.cos(angle),
         y: 0,
         z: R2 * Math.sin(angle),
       },
     ]
   );
-  const cone2HeightLine = [{ x: C2_X, y: 0, z: 0 }, cone2Apex];
+  const cone2HeightLine = [{ x: OFFSET, y: 0, z: 0 }, cone2Apex];
   const cone2RadiusLine = [
-    { x: C2_X, y: 0, z: 0 },
-    { x: C2_X + R2, y: 0, z: 0 },
+    { x: OFFSET, y: 0, z: 0 },
+    { x: OFFSET + R2, y: 0, z: 0 },
   ];
 
   return (

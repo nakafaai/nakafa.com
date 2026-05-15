@@ -3,7 +3,7 @@ import {
   contentSearchInputValidator,
   contentSearchRefValidator,
   contentSearchResultValidator,
-} from "@repo/backend/convex/contents/search/schema";
+} from "@repo/backend/convex/contents/helpers/search/schema";
 import {
   localeValidator,
   nakafaSectionValidator,

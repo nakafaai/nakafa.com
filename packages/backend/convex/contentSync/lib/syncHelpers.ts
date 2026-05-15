@@ -3,8 +3,8 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { ContentAuthorContentId } from "@repo/backend/convex/authors/schema";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
-import { buildContentSearchRef } from "@repo/backend/convex/contents/search/documents";
-import { deleteContentSearch } from "@repo/backend/convex/contents/search/write";
+import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
+import { deleteContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import type {
   ContentType,
   Locale,

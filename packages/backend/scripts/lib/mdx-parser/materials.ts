@@ -29,7 +29,6 @@ import {
 import { ExercisesMaterialListSchema } from "@repo/contents/_types/exercises/material";
 import { MaterialListSchema } from "@repo/contents/_types/subject/material";
 import { Effect, Schema } from "effect";
-import type * as z from "zod";
 
 class MaterialReadError extends Schema.TaggedError<MaterialReadError>()(
   "MaterialReadError",
@@ -67,13 +66,13 @@ const readBasePath = Effect.fn("mdx.readBasePath")(function* (
   return basePathMatch[1].replace(LEADING_SLASH_REGEX, "");
 });
 
-const readTypedArray = Effect.fn("mdx.readTypedArray")(function* <T>(
+const readTypedArray = Effect.fn("mdx.readTypedArray")(function* <A, I>(
   content: string,
   arrayRegex: RegExp,
   basePath: string,
-  parser: z.ZodType<T>,
+  parser: Schema.Schema<A, I, never>,
   filePath: string,
-  emptyValue: T
+  emptyValue: A
 ) {
   const constMatch = content.match(arrayRegex);
 
@@ -92,17 +91,17 @@ const readTypedArray = Effect.fn("mdx.readTypedArray")(function* <T>(
         message: `Invalid material file ${filePath}: ${getUnknownMessage(error)}`,
       }),
   });
-  const parseResult = parser.safeParse(parsedArray);
+  const parseResult = Schema.decodeUnknownEither(parser)(parsedArray);
 
-  if (!parseResult.success) {
+  if (parseResult._tag === "Left") {
     return yield* Effect.fail(
       new MaterialReadError({
-        message: `Invalid material file ${filePath}: ${parseResult.error.message}`,
+        message: `Invalid material file ${filePath}: ${parseResult.left.message}`,
       })
     );
   }
 
-  return parseResult.data;
+  return parseResult.right;
 });
 
 /** Parses one exercise material module into sync-ready exercise sets. */

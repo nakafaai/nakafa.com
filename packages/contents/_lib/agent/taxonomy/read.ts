@@ -6,23 +6,25 @@ import {
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
 import { NakafaAgentTaxonomySchema } from "@repo/contents/_lib/agent/schema/taxonomy";
-import { getAllSurah } from "@repo/contents/_lib/quran";
-import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
-import type { Locale } from "@repo/contents/_types/content";
-import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
-import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
-import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
-import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
 import {
-  NonNumericGradeSchema,
-  NumericGradeSchema,
+  getExerciseCategoryOptions,
+  getExerciseMaterialOptions,
+  getExerciseTypeOptions,
+} from "@repo/contents/_lib/exercises/label";
+import { getAllSurah } from "@repo/contents/_lib/quran";
+import { ARTICLE_CATEGORIES } from "@repo/contents/_types/articles/category";
+import type { Locale } from "@repo/contents/_types/content";
+import { SUBJECT_CATEGORIES } from "@repo/contents/_types/subject/category";
+import {
+  NON_NUMERIC_GRADES,
+  NUMERIC_GRADES,
 } from "@repo/contents/_types/subject/grade";
 import {
-  MaterialBachelorSchema,
-  MaterialHighSchoolSchema,
+  BACHELOR_MATERIALS,
+  HIGH_SCHOOL_MATERIALS,
 } from "@repo/contents/_types/subject/material";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 /** Retrieves the public Nakafa taxonomy and MCP endpoint guidance. */
 export const getNakafaAgentTaxonomy = Effect.fn("NakafaAgent.getTaxonomy")(
@@ -39,9 +41,9 @@ export const getNakafaAgentTaxonomy = Effect.fn("NakafaAgent.getTaxonomy")(
       { concurrency: "unbounded" }
     );
 
-    return NakafaAgentTaxonomySchema.parse({
+    return Schema.decodeUnknownSync(NakafaAgentTaxonomySchema)({
       articles: {
-        categories: ArticleCategorySchema.options,
+        categories: ARTICLE_CATEGORIES,
       },
       content_counts: contentCounts,
       default_locale: routing.defaultLocale,
@@ -51,9 +53,9 @@ export const getNakafaAgentTaxonomy = Effect.fn("NakafaAgent.getTaxonomy")(
         root_note: `${NAKAFA_MCP_INFORMATIONAL_ROOT} is informational only.`,
       },
       exercises: {
-        categories: ExercisesCategorySchema.options,
-        materials: ExercisesMaterialSchema.options,
-        types: ExercisesTypeSchema.options,
+        categories: getExerciseCategoryOptions(locale),
+        materials: getExerciseMaterialOptions(locale),
+        types: getExerciseTypeOptions(locale),
       },
       locale,
       locales: routing.locales,
@@ -62,15 +64,9 @@ export const getNakafaAgentTaxonomy = Effect.fn("NakafaAgent.getTaxonomy")(
       },
       sections: NAKAFA_AGENT_SECTIONS,
       subject: {
-        categories: SubjectCategorySchema.options,
-        grades: [
-          ...NumericGradeSchema.options,
-          ...NonNumericGradeSchema.options,
-        ],
-        materials: [
-          ...MaterialHighSchoolSchema.options,
-          ...MaterialBachelorSchema.options,
-        ],
+        categories: SUBJECT_CATEGORIES,
+        grades: [...NUMERIC_GRADES, ...NON_NUMERIC_GRADES],
+        materials: [...HIGH_SCHOOL_MATERIALS, ...BACHELOR_MATERIALS],
       },
       tools: [
         "nakafa_search_content",

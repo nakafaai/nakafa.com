@@ -28,9 +28,7 @@ describe("nakafa_get_quran_reference", () => {
       ToolErrorResultSchema.parse(result).structuredContent.error
     ).toStrictEqual({
       message: "Invalid Nakafa Quran reference options.",
-      suggestions: [
-        expect.stringContaining("Too big: expected number to be <=114"),
-      ],
+      suggestions: [expect.stringContaining("Surah number")],
     });
   });
 });

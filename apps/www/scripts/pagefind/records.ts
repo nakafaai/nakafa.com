@@ -7,7 +7,7 @@ import {
 } from "@repo/contents/_lib/exercises/material";
 import { getExercisesContent } from "@repo/contents/_lib/exercises/set";
 import { getAllSurah, getSurah, getSurahName } from "@repo/contents/_lib/quran";
-import { ContentRootSchema } from "@repo/contents/_types/content";
+import { CONTENT_ROOT_VALUES } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { CustomRecord, HTMLFile, PagefindIndex } from "pagefind";
@@ -29,8 +29,7 @@ export async function addArticleRecords(index: PagefindIndex) {
           const parts = slug.split("/");
 
           return (
-            isIndexedMdxRoot(parts) &&
-            parts[0] === ContentRootSchema.enum.articles
+            isIndexedMdxRoot(parts) && parts[0] === CONTENT_ROOT_VALUES.articles
           );
         });
 
@@ -75,8 +74,7 @@ export async function addSubjectRecords(index: PagefindIndex) {
           const parts = slug.split("/");
 
           return (
-            isIndexedMdxRoot(parts) &&
-            parts[0] === ContentRootSchema.enum.subject
+            isIndexedMdxRoot(parts) && parts[0] === CONTENT_ROOT_VALUES.subject
           );
         });
 
@@ -324,7 +322,7 @@ function isIndexedMdxRoot(parts: string[]) {
   const [root] = parts;
 
   return (
-    root === ContentRootSchema.enum.articles ||
-    root === ContentRootSchema.enum.subject
+    root === CONTENT_ROOT_VALUES.articles ||
+    root === CONTENT_ROOT_VALUES.subject
   );
 }

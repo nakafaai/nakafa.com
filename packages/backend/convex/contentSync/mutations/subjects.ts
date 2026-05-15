@@ -6,7 +6,7 @@ import {
   deleteSubjectSection,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
-import { syncContentSearch } from "@repo/backend/convex/contents/search/write";
+import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   gradeValidator,

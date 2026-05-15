@@ -48,16 +48,18 @@ export function parseMdxContent(content: string): ParsedMdx {
   }
 
   const metadataObject = new Function(`return ${match[1]}`)();
-  const parseResult = ContentMetadataSchema.safeParse(metadataObject);
+  const parseResult = Schema.decodeUnknownEither(ContentMetadataSchema)(
+    metadataObject
+  );
 
-  if (!parseResult.success) {
-    throw new Error(`Invalid metadata: ${parseResult.error.message}`);
+  if (parseResult._tag === "Left") {
+    throw new Error(`Invalid metadata: ${parseResult.left.message}`);
   }
 
   const body = normalizeWhitespace(content.replace(METADATA_REGEX, ""));
 
   return {
-    metadata: parseResult.data,
+    metadata: parseResult.right,
     body,
     contentHash: computeHash(body),
   };
@@ -128,13 +130,15 @@ export const readExerciseChoices = Effect.fn("mdx.readExerciseChoices")(
       return null;
     }
 
-    const parseResult = ExercisesChoicesSchema.safeParse(choicesObject.right);
+    const parseResult = Schema.decodeUnknownOption(ExercisesChoicesSchema)(
+      choicesObject.right
+    );
 
-    if (!parseResult.success) {
+    if (parseResult._tag === "None") {
       return null;
     }
 
-    return parseResult.data;
+    return parseResult.value;
   }
 );
 
@@ -182,10 +186,11 @@ export const readArticleReferences = Effect.fn("mdx.readArticleReferences")(
     const validReferences: Reference[] = [];
 
     for (const reference of referencesArray.right) {
-      const parseResult = ReferenceSchema.safeParse(reference);
+      const parseResult =
+        Schema.decodeUnknownOption(ReferenceSchema)(reference);
 
-      if (parseResult.success) {
-        validReferences.push(parseResult.data);
+      if (parseResult._tag === "Some") {
+        validReferences.push(parseResult.value);
       }
     }
 

@@ -1,75 +1,83 @@
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { NakafaAgentContentRefSchema } from "@repo/contents/_lib/agent/schema/ref";
-import * as z from "zod";
+import { Schema } from "effect";
 
 /** Runtime schema for exercise read input. */
-export const NakafaAgentExerciseOptionsSchema = z
-  .object({
-    content_ref: NakafaAgentContentRefInputSchema,
-    exercise_number: z
-      .number()
-      .int()
-      .min(1)
-      .optional()
-      .describe("Optional exercise number inside the set."),
-  })
-  .strict()
-  .describe("Nakafa exercise read options.");
+export const NakafaAgentExerciseOptionsSchema = Schema.Struct({
+  content_ref: NakafaAgentContentRefInputSchema,
+  exercise_number: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
+      description: "Optional exercise number inside the set.",
+    })
+  ),
+})
+  .pipe(Schema.mutable)
+  .annotations({ description: "Nakafa exercise read options." });
 
 /** Runtime schema for one exercise choice. */
-export const NakafaAgentExerciseChoiceSchema = z
-  .object({
-    correct: z.boolean().describe("Whether this choice is the correct answer."),
-    label: z.string().describe("Choice label exactly as published."),
-  })
-  .describe("Nakafa exercise choice.");
+export const NakafaAgentExerciseChoiceSchema = Schema.Struct({
+  correct: Schema.Boolean.annotations({
+    description: "Whether this choice is the correct answer.",
+  }),
+  label: Schema.String.annotations({
+    description: "Choice label exactly as published.",
+  }),
+})
+  .pipe(Schema.mutable)
+  .annotations({ description: "Nakafa exercise choice." });
+
+const NakafaAgentExerciseContentSchema = Schema.Struct({
+  raw: Schema.String,
+  title: Schema.String,
+}).pipe(Schema.mutable);
 
 /** Runtime schema for one exercise question and explanation. */
-export const NakafaAgentExerciseItemSchema = z
-  .object({
-    answer: z
-      .object({
-        raw: z.string().describe("Raw answer and explanation markdown."),
-        title: z.string().describe("Answer metadata title."),
-      })
-      .describe("Published answer and explanation."),
-    choices: z
-      .array(NakafaAgentExerciseChoiceSchema)
-      .describe("Multiple-choice answer options."),
-    number: z.number().int().min(1).describe("Exercise number inside the set."),
-    question: z
-      .object({
-        raw: z.string().describe("Raw question markdown."),
-        title: z.string().describe("Question metadata title."),
-      })
-      .describe("Published question content."),
-  })
-  .describe("Structured Nakafa exercise item.");
+export const NakafaAgentExerciseItemSchema = Schema.Struct({
+  answer: NakafaAgentExerciseContentSchema.annotations({
+    description: "Published answer and explanation.",
+  }),
+  choices: Schema.Array(NakafaAgentExerciseChoiceSchema)
+    .pipe(Schema.mutable)
+    .annotations({ description: "Multiple-choice answer options." }),
+  number: Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
+    description: "Exercise number inside the set.",
+  }),
+  question: NakafaAgentExerciseContentSchema.annotations({
+    description: "Published question content.",
+  }),
+})
+  .pipe(Schema.mutable)
+  .annotations({ description: "Structured Nakafa exercise item." });
 
 /** Runtime schema for exercise retrieval output. */
-export const NakafaAgentExerciseResultSchema =
-  NakafaAgentContentRefSchema.extend({
-    count: z.number().int().min(1).describe("Number of returned exercises."),
-    exercise_number: z
-      .number()
-      .int()
-      .min(1)
-      .nullable()
-      .describe(
-        "Requested exercise number, or null when returning a whole set."
-      ),
-    exercises: z
-      .array(NakafaAgentExerciseItemSchema)
-      .min(1)
-      .describe("Structured exercises."),
-  }).describe("Nakafa exercise set or single exercise result.");
+export const NakafaAgentExerciseResultSchema = NakafaAgentContentRefSchema.pipe(
+  Schema.extend(
+    Schema.Struct({
+      count: Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
+        description: "Number of returned exercises.",
+      }),
+      exercise_number: Schema.NullOr(
+        Schema.Number.pipe(Schema.int(), Schema.positive())
+      ).annotations({
+        description:
+          "Requested exercise number, or null when returning a whole set.",
+      }),
+      exercises: Schema.Array(NakafaAgentExerciseItemSchema)
+        .pipe(Schema.minItems(1), Schema.mutable)
+        .annotations({ description: "Structured exercises." }),
+    })
+  ),
+  Schema.mutable
+).annotations({
+  description: "Nakafa exercise set or single exercise result.",
+});
 
-export type NakafaAgentExerciseOptions = z.infer<
+export type NakafaAgentExerciseOptions = Schema.Schema.Type<
   typeof NakafaAgentExerciseOptionsSchema
 >;
-export type NakafaAgentExerciseItem = z.infer<
+export type NakafaAgentExerciseItem = Schema.Schema.Type<
   typeof NakafaAgentExerciseItemSchema
 >;
-export type NakafaAgentExerciseResult = z.infer<
+export type NakafaAgentExerciseResult = Schema.Schema.Type<
   typeof NakafaAgentExerciseResultSchema
 >;

@@ -1,9 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
-import type { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
 import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { Effect, Option } from "effect";
-import type * as z from "zod";
 import {
   succeedMcpReadModelError,
   toMcpStructuredResult,
@@ -12,6 +10,7 @@ import {
 import {
   NakafaGetQuranReferenceInputSchema,
   NakafaGetQuranReferenceOutputSchema,
+  type NakafaMcpQuranReferenceInput,
 } from "@/lib/mcp/schemas";
 import { NAKAFA_READ_ONLY_TOOL_ANNOTATIONS } from "@/lib/mcp/tool-config";
 
@@ -33,7 +32,7 @@ export function registerNakafaGetQuranReferenceTool(server: McpServer) {
 
 /** Builds a Quran reference tool result after enforcing the MCP range limit. */
 export function getNakafaQuranReferenceToolResult(
-  args: z.infer<typeof NakafaAgentQuranReferenceOptionsSchema>
+  args: NakafaMcpQuranReferenceInput
 ) {
   const lastVerse = args.to_verse ?? args.from_verse;
   const requestedVerseCount = lastVerse - args.from_verse + 1;

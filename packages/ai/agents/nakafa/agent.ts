@@ -22,6 +22,7 @@ import { taxonomy } from "@repo/ai/agents/nakafa/tools/taxonomy";
 import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
 import { getModelProviderOptions } from "@repo/ai/config/models";
 import { model } from "@repo/ai/config/vercel";
+import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { NakafaAgentParams } from "@repo/ai/types/agents";
 import { NakafaAgentExerciseOptionsSchema } from "@repo/contents/_lib/agent/schema/exercise";
@@ -32,6 +33,20 @@ import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/sche
 import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { generateText, stepCountIs, tool } from "ai";
 import { Effect, Option } from "effect";
+
+const nakafaSearchInputSchema = createEffectSchema(
+  NakafaAgentSearchOptionsSchema
+);
+const nakafaReadInputSchema = createEffectSchema(NakafaAgentReadOptionsSchema);
+const nakafaExerciseInputSchema = createEffectSchema(
+  NakafaAgentExerciseOptionsSchema
+);
+const nakafaQuranInputSchema = createEffectSchema(
+  NakafaAgentQuranReferenceOptionsSchema
+);
+const nakafaTaxonomyInputSchema = createEffectSchema(
+  NakafaAgentTaxonomyOptionsSchema
+);
 
 /** Runs the Nakafa agent through MCP-equivalent content tools. */
 export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
@@ -57,7 +72,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
       tools: {
         search: tool({
           description: nakafaSearch,
-          inputSchema: NakafaAgentSearchOptionsSchema,
+          inputSchema: nakafaSearchInputSchema,
           outputSchema: textOutputSchema,
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
@@ -84,7 +99,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
         }),
         read: tool({
           description: nakafaRead,
-          inputSchema: NakafaAgentReadOptionsSchema,
+          inputSchema: nakafaReadInputSchema,
           outputSchema: textOutputSchema,
           execute: (input, { toolCallId }) => {
             hasPendingContentRead = false;
@@ -98,7 +113,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
         }),
         exercise: tool({
           description: nakafaExercise,
-          inputSchema: NakafaAgentExerciseOptionsSchema,
+          inputSchema: nakafaExerciseInputSchema,
           outputSchema: textOutputSchema,
           execute: (input, { toolCallId }) => {
             pendingExerciseRef = Option.none();
@@ -112,7 +127,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
         }),
         quran: tool({
           description: nakafaQuran,
-          inputSchema: NakafaAgentQuranReferenceOptionsSchema,
+          inputSchema: nakafaQuranInputSchema,
           outputSchema: textOutputSchema,
           execute: (input, { toolCallId }) =>
             Effect.runPromise(
@@ -123,7 +138,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
         }),
         taxonomy: tool({
           description: nakafaTaxonomy,
-          inputSchema: NakafaAgentTaxonomyOptionsSchema,
+          inputSchema: nakafaTaxonomyInputSchema,
           outputSchema: textOutputSchema,
           execute: (input, { toolCallId }) =>
             Effect.runPromise(

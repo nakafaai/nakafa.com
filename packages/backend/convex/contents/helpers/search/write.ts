@@ -3,7 +3,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   buildContentSearchDocument,
   type ContentSearchSource,
-} from "@repo/backend/convex/contents/search/documents";
+} from "@repo/backend/convex/contents/helpers/search/documents";
 
 /** Upserts one search row derived from canonical synced content. */
 export async function syncContentSearch(

@@ -41,6 +41,7 @@ export const SearchPart = memo(({ message }: Props) => {
         </span>
         <Badge variant="muted">{message.result.count}</Badge>
       </div>
+      <SearchPartQueries message={message} />
       {hasItems ? (
         <div className="flex flex-wrap items-center gap-2">
           {items.map((item) => (
@@ -79,6 +80,42 @@ export const SearchPart = memo(({ message }: Props) => {
   );
 });
 SearchPart.displayName = "SearchPart";
+
+const SearchPartQueries = memo(({ message }: Props) => {
+  const queries = Array.from(
+    new Set(
+      [message.input.query, ...(message.input.queries ?? [])].flatMap(
+        (query) => {
+          const text = query?.trim();
+
+          if (!text) {
+            return [];
+          }
+
+          return [text];
+        }
+      )
+    )
+  );
+
+  if (queries.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      {queries.map((query) => (
+        <blockquote
+          className="text-muted-foreground text-sm italic"
+          key={query}
+        >
+          "{query}"
+        </blockquote>
+      ))}
+    </div>
+  );
+});
+SearchPartQueries.displayName = "SearchPartQueries";
 
 /** Returns the clearest visible label for the current search result section. */
 function getSearchLabel(

@@ -3,7 +3,7 @@ import {
   isTryoutProduct,
   type TryoutProduct,
 } from "@repo/backend/convex/tryouts/products";
-import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
+import { parseExercisesMaterial } from "@repo/contents/_lib/exercises/route";
 import { fetchQuery, preloadQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -103,16 +103,12 @@ export default async function Page(
           <section className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm">
             <TryoutSetParts
               parts={details.parts.map((part) => {
-                const materialLabel = ExercisesMaterialSchema.safeParse(
-                  part.material
-                );
+                const material = parseExercisesMaterial(part.material);
 
                 return {
                   partIndex: part.partIndex,
                   partKey: part.partKey,
-                  label: materialLabel.success
-                    ? tExercises(materialLabel.data)
-                    : part.partKey,
+                  label: material ? tExercises(material) : part.partKey,
                   material: part.material,
                   questionCount: part.questionCount,
                 };

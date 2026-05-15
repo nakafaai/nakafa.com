@@ -6,7 +6,7 @@ import { NakafaAgentMarkdownSchema } from "@repo/contents/_lib/agent/schema/read
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { getContentMetadataWithRaw } from "@repo/contents/_lib/metadata";
 import { getSurah } from "@repo/contents/_lib/quran";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 const QURAN_ROUTE_SECTION = "quran";
 const QURAN_SURAH_PATTERN = /^\d+$/;
@@ -44,7 +44,7 @@ function renderNakafaMdxMarkdown(ref: NakafaAgentContentRef) {
     }
 
     return Option.some(
-      NakafaAgentMarkdownSchema.parse({
+      Schema.decodeUnknownSync(NakafaAgentMarkdownSchema)({
         ...ref,
         description:
           content.value.metadata.description ??
@@ -74,7 +74,7 @@ function renderNakafaExerciseMarkdown(ref: NakafaAgentContentRef) {
     }
 
     return Option.some(
-      NakafaAgentMarkdownSchema.parse({
+      Schema.decodeUnknownSync(NakafaAgentMarkdownSchema)({
         ...ref,
         description: `${exercise.value.count} exercises`,
         text: [
@@ -135,7 +135,7 @@ function renderNakafaQuranMarkdown(ref: NakafaAgentContentRef) {
     }
 
     return Option.some(
-      NakafaAgentMarkdownSchema.parse({
+      Schema.decodeUnknownSync(NakafaAgentMarkdownSchema)({
         ...ref,
         description: reference.value.translation,
         text: [

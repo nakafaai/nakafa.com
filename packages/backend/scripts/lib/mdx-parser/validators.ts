@@ -26,21 +26,21 @@ import {
   type Material,
   MaterialSchema,
 } from "@repo/contents/_types/subject/material";
-import type * as z from "zod";
+import { Schema } from "effect";
 
-function parseWithSchema<T>(
-  schema: z.ZodType<T>,
+function parseWithSchema<A, I>(
+  schema: Schema.Schema<A, I, never>,
   value: string,
   filePath: string,
   message: string
 ) {
-  const result = schema.safeParse(value);
+  const result = Schema.decodeUnknownEither(schema)(value);
 
-  if (!result.success) {
+  if (result._tag === "Left") {
     throw new Error(`${message} "${value}" in ${filePath}.`);
   }
 
-  return result.data;
+  return result.right;
 }
 
 export function validateLocale(value: string, filePath: string): Locale {

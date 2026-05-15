@@ -1,70 +1,86 @@
-import * as z from "zod";
+import { Schema } from "effect";
 
-export const VerseSchema = z.object({
-  number: z.object({
-    inSurah: z.number(),
-    inQuran: z.number(),
-  }),
-  meta: z.object({
-    juz: z.number(),
-    page: z.number(),
-    manzil: z.number(),
-    ruku: z.number(),
-    hizbQuarter: z.number(),
-    sajda: z.object({
-      recommended: z.boolean(),
-      obligatory: z.boolean(),
-    }),
-  }),
-  text: z.object({
-    arab: z.string(),
-    transliteration: z.object({
-      en: z.string(),
-    }),
-  }),
-  translation: z.object({
-    en: z.string(),
-    id: z.string(),
-  }),
-  audio: z.object({
-    primary: z.string(),
-    secondary: z.array(z.string()),
-  }),
-  tafsir: z.object({
-    id: z.object({
-      short: z.string(),
-      long: z.string(),
-    }),
-  }),
-});
-export type Verse = z.infer<typeof VerseSchema>;
+const VerseNumberSchema = Schema.Struct({
+  inSurah: Schema.Number,
+  inQuran: Schema.Number,
+}).pipe(Schema.mutable);
 
-export const SurahSchema = z.object({
-  number: z.number(),
-  sequence: z.number(),
-  numberOfVerses: z.number(),
-  name: z.object({
-    short: z.string(),
-    long: z.string(),
-    transliteration: z.object({
-      en: z.string(),
-      id: z.string(),
-    }),
-    translation: z.object({
-      en: z.string(),
-      id: z.string(),
-    }),
-  }),
-  revelation: z.object({
-    arab: z.string(),
-    en: z.string(),
-    id: z.string(),
-  }),
-  preBismillah: VerseSchema.pick({
-    text: true,
-    translation: true,
-    audio: true,
-  }).nullish(),
-  verses: z.array(VerseSchema),
-});
-export type Surah = z.infer<typeof SurahSchema>;
+const LocalizedTextSchema = Schema.Struct({
+  en: Schema.String,
+  id: Schema.String,
+}).pipe(Schema.mutable);
+
+const VerseTextSchema = Schema.Struct({
+  arab: Schema.String,
+  transliteration: Schema.Struct({
+    en: Schema.String,
+  }).pipe(Schema.mutable),
+}).pipe(Schema.mutable);
+
+const VerseAudioSchema = Schema.Struct({
+  primary: Schema.String,
+  secondary: Schema.Array(Schema.String).pipe(Schema.mutable),
+}).pipe(Schema.mutable);
+
+export const VerseSchema = Schema.Struct({
+  number: VerseNumberSchema,
+  meta: Schema.Struct({
+    juz: Schema.Number,
+    page: Schema.Number,
+    manzil: Schema.Number,
+    ruku: Schema.Number,
+    hizbQuarter: Schema.Number,
+    sajda: Schema.Struct({
+      recommended: Schema.Boolean,
+      obligatory: Schema.Boolean,
+    }).pipe(Schema.mutable),
+  }).pipe(Schema.mutable),
+  text: VerseTextSchema,
+  translation: LocalizedTextSchema,
+  audio: VerseAudioSchema,
+  tafsir: Schema.Struct({
+    id: Schema.Struct({
+      short: Schema.String,
+      long: Schema.String,
+    }).pipe(Schema.mutable),
+  }).pipe(Schema.mutable),
+}).pipe(Schema.mutable);
+export type Verse = Schema.Schema.Type<typeof VerseSchema>;
+
+export const PreBismillahSchema = Schema.Struct({
+  text: VerseTextSchema,
+  translation: LocalizedTextSchema,
+  audio: VerseAudioSchema,
+}).pipe(Schema.mutable);
+
+const SurahNameSchema = Schema.Struct({
+  short: Schema.String,
+  long: Schema.String,
+  transliteration: LocalizedTextSchema,
+  translation: LocalizedTextSchema,
+}).pipe(Schema.mutable);
+
+const RevelationSchema = Schema.Struct({
+  arab: Schema.String,
+  en: Schema.String,
+  id: Schema.String,
+}).pipe(Schema.mutable);
+
+const surahMetadataFields = {
+  number: Schema.Number,
+  sequence: Schema.Number,
+  numberOfVerses: Schema.Number,
+  name: SurahNameSchema,
+  revelation: RevelationSchema,
+  preBismillah: Schema.optional(Schema.NullOr(PreBismillahSchema)),
+};
+
+export const SurahMetadataSchema = Schema.Struct(surahMetadataFields).pipe(
+  Schema.mutable
+);
+
+export const SurahSchema = Schema.Struct({
+  ...surahMetadataFields,
+  verses: Schema.Array(VerseSchema).pipe(Schema.mutable),
+}).pipe(Schema.mutable);
+export type Surah = Schema.Schema.Type<typeof SurahSchema>;

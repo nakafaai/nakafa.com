@@ -5,6 +5,11 @@ import type { NakafaAgentSearchResult } from "@repo/contents/_lib/agent/schema/s
 import type { NakafaAgentTaxonomy } from "@repo/contents/_lib/agent/schema/taxonomy";
 import dedent from "dedent";
 
+/** Formats one taxonomy value with its canonical ID and localized label. */
+function formatTaxonomyOption(option: { id: string; label: string }) {
+  return `${option.id} (${option.label})`;
+}
+
 /** Formats Nakafa search results as compact source-backed markdown. */
 export function formatSearch(result: NakafaAgentSearchResult) {
   return dedent(`
@@ -117,8 +122,8 @@ export function formatTaxonomy(result: NakafaAgentTaxonomy) {
     - Materials: ${result.subject.materials.join(", ")}
 
     ## Exercises
-    - Categories: ${result.exercises.categories.join(", ")}
-    - Types: ${result.exercises.types.join(", ")}
-    - Materials: ${result.exercises.materials.join(", ")}
+    - Categories: ${result.exercises.categories.map(formatTaxonomyOption).join(", ")}
+    - Types: ${result.exercises.types.map(formatTaxonomyOption).join(", ")}
+    - Materials: ${result.exercises.materials.map(formatTaxonomyOption).join(", ")}
   `);
 }

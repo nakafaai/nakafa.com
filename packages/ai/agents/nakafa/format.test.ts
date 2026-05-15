@@ -131,9 +131,11 @@ describe("Nakafa formatter", () => {
         root_note: "Use /mcp for MCP transport.",
       },
       exercises: {
-        categories: ["high-school"],
-        materials: ["mathematical-reasoning"],
-        types: ["try-out"],
+        categories: [{ id: "high-school", label: "SMA" }],
+        materials: [
+          { id: "mathematical-reasoning", label: "Penalaran Matematika" },
+        ],
+        types: [{ id: "snbt", label: "SNBT" }],
       },
       locale: "id",
       locales: ["id", "en"],
@@ -151,6 +153,7 @@ describe("Nakafa formatter", () => {
 
     expect(text).toContain("# Nakafa Taxonomy");
     expect(text).toContain("nakafa_get_exercise");
+    expect(text).toContain("mathematical-reasoning (Penalaran Matematika)");
     expect(text).toContain("chemistry");
   });
 });

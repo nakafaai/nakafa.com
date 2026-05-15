@@ -10,7 +10,6 @@ describe("tryoutAccess/mutations/redeem", () => {
   it("redeems competition access until the campaign end", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
-      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "redeem-competition",
@@ -25,8 +24,8 @@ describe("tryoutAccess/mutations/redeem", () => {
             targetProducts: ["snbt"],
             campaignKind: "competition",
             enabled: true,
-            startsAt: currentTime - 60 * 1000,
-            endsAt: currentTime + 2 * 24 * 60 * 60 * 1000,
+            startsAt: NOW - 60 * 1000,
+            endsAt: NOW + 2 * 24 * 60 * 60 * 1000,
           },
           link: {
             code: "redeem-competition",
@@ -38,7 +37,7 @@ describe("tryoutAccess/mutations/redeem", () => {
 
       return {
         ...identity,
-        expectedEndsAt: currentTime + 2 * 24 * 60 * 60 * 1000,
+        expectedEndsAt: NOW + 2 * 24 * 60 * 60 * 1000,
       };
     });
 
@@ -59,7 +58,6 @@ describe("tryoutAccess/mutations/redeem", () => {
     const t = createTryoutTestConvex();
     const grantDurationMs = 7 * 24 * 60 * 60 * 1000;
     const identity = await t.mutation(async (ctx) => {
-      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "redeem-access-pass",
@@ -74,8 +72,8 @@ describe("tryoutAccess/mutations/redeem", () => {
             targetProducts: ["snbt"],
             campaignKind: "access-pass",
             enabled: true,
-            startsAt: currentTime - 60 * 1000,
-            endsAt: currentTime + 24 * 60 * 60 * 1000,
+            startsAt: NOW - 60 * 1000,
+            endsAt: NOW + 24 * 60 * 60 * 1000,
             grantDurationDays: 7,
           },
           link: {
@@ -114,7 +112,6 @@ describe("tryoutAccess/mutations/redeem", () => {
   it("returns already-active when the current user already has an active grant", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
-      const currentTime = NOW;
       const state = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "redeem-already-active",
@@ -129,8 +126,8 @@ describe("tryoutAccess/mutations/redeem", () => {
             targetProducts: ["snbt"],
             campaignKind: "competition",
             enabled: true,
-            startsAt: currentTime - 60 * 1000,
-            endsAt: currentTime + 24 * 60 * 60 * 1000,
+            startsAt: NOW - 60 * 1000,
+            endsAt: NOW + 24 * 60 * 60 * 1000,
           },
           link: {
             code: "redeem-already-active",
@@ -167,7 +164,6 @@ describe("tryoutAccess/mutations/redeem", () => {
   it("redeems once the real campaign window has started even if stored redeemStatus is still scheduled", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
-      const currentTime = NOW;
       const state = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "redeem-stale-scheduled",
@@ -181,16 +177,16 @@ describe("tryoutAccess/mutations/redeem", () => {
         resultsStatus: "pending",
         resultsFinalizedAt: null,
         firstRedeemedAt: null,
-        startsAt: currentTime - 60 * 1000,
-        endsAt: currentTime + 24 * 60 * 60 * 1000,
+        startsAt: NOW - 60 * 1000,
+        endsAt: NOW + 24 * 60 * 60 * 1000,
       });
 
       await ctx.db.insert("tryoutAccessCampaignProducts", {
         campaignId,
         campaignKind: "competition",
-        endsAt: currentTime + 24 * 60 * 60 * 1000,
+        endsAt: NOW + 24 * 60 * 60 * 1000,
         product: "snbt",
-        startsAt: currentTime - 60 * 1000,
+        startsAt: NOW - 60 * 1000,
       });
 
       await ctx.db.insert("tryoutAccessLinks", {
@@ -218,7 +214,6 @@ describe("tryoutAccess/mutations/redeem", () => {
   it("rejects once the real campaign window has ended even if stored redeemStatus is still active", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
-      const currentTime = NOW;
       const state = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "redeem-stale-active",
@@ -232,16 +227,16 @@ describe("tryoutAccess/mutations/redeem", () => {
         resultsStatus: "pending",
         resultsFinalizedAt: null,
         firstRedeemedAt: null,
-        startsAt: currentTime - 2 * 24 * 60 * 60 * 1000,
-        endsAt: currentTime - 60 * 1000,
+        startsAt: NOW - 2 * 24 * 60 * 60 * 1000,
+        endsAt: NOW - 60 * 1000,
       });
 
       await ctx.db.insert("tryoutAccessCampaignProducts", {
         campaignId,
         campaignKind: "competition",
-        endsAt: currentTime - 60 * 1000,
+        endsAt: NOW - 60 * 1000,
         product: "snbt",
-        startsAt: currentTime - 2 * 24 * 60 * 60 * 1000,
+        startsAt: NOW - 2 * 24 * 60 * 60 * 1000,
       });
 
       await ctx.db.insert("tryoutAccessLinks", {

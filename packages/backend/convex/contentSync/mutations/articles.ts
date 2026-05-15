@@ -8,11 +8,11 @@ import {
   replaceArticleReferences,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
-import { buildContentSearchRef } from "@repo/backend/convex/contents/search/documents";
+import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
 import {
   deleteContentSearch,
   syncContentSearch,
-} from "@repo/backend/convex/contents/search/write";
+} from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   articleCategoryValidator,

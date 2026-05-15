@@ -219,7 +219,6 @@ describe("tryouts/mutations/attempts", () => {
   it("creates only one counted competition attempt when the same event start races", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "competition-concurrent-start",
@@ -228,7 +227,7 @@ describe("tryouts/mutations/attempts", () => {
         ctx,
         "competition-concurrent-start"
       );
-      const endsAt = currentTime + 6 * 60 * 60 * 1000;
+      const endsAt = NOW + 6 * 60 * 60 * 1000;
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "competition-concurrent-start",
         name: "Competition Concurrent Start",
@@ -238,7 +237,7 @@ describe("tryouts/mutations/attempts", () => {
         redeemStatus: "active",
         resultsStatus: "pending",
         resultsFinalizedAt: null,
-        startsAt: currentTime - 60 * 1000,
+        startsAt: NOW - 60 * 1000,
         endsAt,
       });
       const linkId = await ctx.db.insert("tryoutAccessLinks", {
@@ -252,7 +251,7 @@ describe("tryouts/mutations/attempts", () => {
         endsAt,
         linkId,
         status: "active",
-        syncedAt: currentTime,
+        syncedAt: NOW,
         userId: identity.userId,
       });
 
@@ -398,7 +397,6 @@ describe("tryouts/mutations/attempts", () => {
   it("uses competition event access for the first attempt and clamps expiry to the event end", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "competition-first-attempt",
@@ -407,7 +405,7 @@ describe("tryouts/mutations/attempts", () => {
         ctx,
         "competition-first-attempt"
       );
-      const endsAt = currentTime + 6 * 60 * 60 * 1000;
+      const endsAt = NOW + 6 * 60 * 60 * 1000;
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "competition-first-attempt",
         name: "Competition First Attempt",
@@ -417,7 +415,7 @@ describe("tryouts/mutations/attempts", () => {
         redeemStatus: "active",
         resultsStatus: "pending",
         resultsFinalizedAt: null,
-        startsAt: currentTime - 60 * 1000,
+        startsAt: NOW - 60 * 1000,
         endsAt,
       });
       const linkId = await ctx.db.insert("tryoutAccessLinks", {
@@ -431,7 +429,7 @@ describe("tryouts/mutations/attempts", () => {
         endsAt,
         linkId,
         status: "active",
-        syncedAt: currentTime,
+        syncedAt: NOW,
         userId: identity.userId,
       });
 
@@ -478,13 +476,12 @@ describe("tryouts/mutations/attempts", () => {
   it("falls back to Pro access after the counted competition attempt already exists", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "competition-then-pro",
       });
       const tryout = await insertTryoutSkeleton(ctx, "competition-then-pro");
-      const endsAt = currentTime + 6 * 60 * 60 * 1000;
+      const endsAt = NOW + 6 * 60 * 60 * 1000;
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "competition-then-pro",
         name: "Competition Then Pro",
@@ -494,7 +491,7 @@ describe("tryouts/mutations/attempts", () => {
         redeemStatus: "active",
         resultsStatus: "pending",
         resultsFinalizedAt: null,
-        startsAt: currentTime - 60 * 1000,
+        startsAt: NOW - 60 * 1000,
         endsAt,
       });
       const linkId = await ctx.db.insert("tryoutAccessLinks", {
@@ -508,7 +505,7 @@ describe("tryouts/mutations/attempts", () => {
         endsAt,
         linkId,
         status: "active",
-        syncedAt: currentTime,
+        syncedAt: NOW,
         userId: identity.userId,
       });
       await insertActiveProSubscription(ctx, identity.userId);
@@ -580,7 +577,6 @@ describe("tryouts/mutations/attempts", () => {
   it("rejects another competition attempt when no non-event access remains", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "competition-attempt-used",
@@ -589,7 +585,7 @@ describe("tryouts/mutations/attempts", () => {
         ctx,
         "competition-attempt-used"
       );
-      const endsAt = currentTime + 6 * 60 * 60 * 1000;
+      const endsAt = NOW + 6 * 60 * 60 * 1000;
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "competition-attempt-used",
         name: "Competition Attempt Used",
@@ -599,7 +595,7 @@ describe("tryouts/mutations/attempts", () => {
         redeemStatus: "active",
         resultsStatus: "pending",
         resultsFinalizedAt: null,
-        startsAt: currentTime - 60 * 1000,
+        startsAt: NOW - 60 * 1000,
         endsAt,
       });
       const linkId = await ctx.db.insert("tryoutAccessLinks", {
@@ -613,7 +609,7 @@ describe("tryouts/mutations/attempts", () => {
         endsAt,
         linkId,
         status: "active",
-        syncedAt: currentTime,
+        syncedAt: NOW,
         userId: identity.userId,
       });
       await ctx.db.insert("tryoutAttempts", {
@@ -668,7 +664,6 @@ describe("tryouts/mutations/attempts", () => {
   it("returns access required after the counted competition campaign has ended", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "ended-competition-attempt",
@@ -677,7 +672,7 @@ describe("tryouts/mutations/attempts", () => {
         ctx,
         "ended-competition-attempt"
       );
-      const endedAt = currentTime - 60 * 1000;
+      const endedAt = NOW - 60 * 1000;
       const campaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "ended-competition-attempt",
         name: "Ended Competition Attempt",
@@ -687,7 +682,7 @@ describe("tryouts/mutations/attempts", () => {
         redeemStatus: "ended",
         resultsStatus: "pending",
         resultsFinalizedAt: null,
-        startsAt: currentTime - 2 * 60 * 60 * 1000,
+        startsAt: NOW - 2 * 60 * 60 * 1000,
         endsAt: endedAt,
       });
       const linkId = await ctx.db.insert("tryoutAccessLinks", {
@@ -701,7 +696,7 @@ describe("tryouts/mutations/attempts", () => {
         endsAt: endedAt,
         linkId,
         status: "expired",
-        syncedAt: currentTime,
+        syncedAt: NOW,
         userId: identity.userId,
       });
       await ctx.db.insert("tryoutAttempts", {
@@ -757,7 +752,6 @@ describe("tryouts/mutations/attempts", () => {
   it("ignores stale event entitlements even when the latest row still has campaign provenance", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "stale-event-entitlement",
@@ -772,8 +766,8 @@ describe("tryouts/mutations/attempts", () => {
         redeemStatus: "active",
         resultsStatus: "pending",
         resultsFinalizedAt: null,
-        startsAt: currentTime - 60 * 1000,
-        endsAt: currentTime + 24 * 60 * 60 * 1000,
+        startsAt: NOW - 60 * 1000,
+        endsAt: NOW + 24 * 60 * 60 * 1000,
         grantDurationDays: 30,
       });
       const linkId = await ctx.db.insert("tryoutAccessLinks", {
@@ -787,7 +781,7 @@ describe("tryouts/mutations/attempts", () => {
         linkId,
         userId: identity.userId,
         redeemedAt: NOW,
-        endsAt: currentTime + 24 * 60 * 60 * 1000,
+        endsAt: NOW + 24 * 60 * 60 * 1000,
         status: "active",
       });
 
@@ -821,7 +815,6 @@ describe("tryouts/mutations/attempts", () => {
   it("uses the longest active access-pass window without shortening the tryout expiry", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "longest-access-pass-window",
@@ -830,8 +823,8 @@ describe("tryouts/mutations/attempts", () => {
         ctx,
         "longest-access-pass-window"
       );
-      const shorterEndsAt = currentTime + 30 * 60 * 1000;
-      const longerEndsAt = currentTime + 60 * 60 * 1000;
+      const shorterEndsAt = NOW + 30 * 60 * 1000;
+      const longerEndsAt = NOW + 60 * 60 * 1000;
       const shorterCampaignId = await insertTryoutAccessCampaign(ctx, {
         slug: "shorter-access-pass-window",
         name: "Shorter Access Pass",
@@ -841,8 +834,8 @@ describe("tryouts/mutations/attempts", () => {
         redeemStatus: "active",
         resultsStatus: "pending",
         resultsFinalizedAt: null,
-        startsAt: currentTime - 60 * 1000,
-        endsAt: currentTime + 24 * 60 * 60 * 1000,
+        startsAt: NOW - 60 * 1000,
+        endsAt: NOW + 24 * 60 * 60 * 1000,
         grantDurationDays: 30,
       });
       const longerCampaignId = await insertTryoutAccessCampaign(ctx, {
@@ -854,8 +847,8 @@ describe("tryouts/mutations/attempts", () => {
         redeemStatus: "active",
         resultsStatus: "pending",
         resultsFinalizedAt: null,
-        startsAt: currentTime - 60 * 1000,
-        endsAt: currentTime + 24 * 60 * 60 * 1000,
+        startsAt: NOW - 60 * 1000,
+        endsAt: NOW + 24 * 60 * 60 * 1000,
         grantDurationDays: 30,
       });
       const shorterLinkId = await ctx.db.insert("tryoutAccessLinks", {
@@ -875,7 +868,7 @@ describe("tryouts/mutations/attempts", () => {
         endsAt: shorterEndsAt,
         linkId: shorterLinkId,
         status: "active",
-        syncedAt: currentTime,
+        syncedAt: NOW,
         userId: identity.userId,
       });
       const longerGrantId = await insertTryoutAccessGrant(ctx, {
@@ -883,13 +876,13 @@ describe("tryouts/mutations/attempts", () => {
         endsAt: longerEndsAt,
         linkId: longerLinkId,
         status: "active",
-        syncedAt: currentTime,
+        syncedAt: NOW,
         userId: identity.userId,
       });
 
       return {
         ...identity,
-        earliestAttemptExpiresAt: currentTime + ATTEMPT_WINDOW_MS,
+        earliestAttemptExpiresAt: NOW + ATTEMPT_WINDOW_MS,
         longerCampaignId,
         longerEndsAt,
         longerGrantId,
@@ -933,7 +926,6 @@ describe("tryouts/mutations/attempts", () => {
   it("pages through many active access-pass grants instead of blocking access", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "many-access-pass-grants",
@@ -941,10 +933,10 @@ describe("tryouts/mutations/attempts", () => {
       const tryout = await insertTryoutSkeleton(ctx, "many-access-pass-grants");
       let longestCampaignId = "" as Id<"tryoutAccessCampaigns">;
       let longestGrantId = "" as Id<"tryoutAccessGrants">;
-      let longestEndsAt = currentTime;
+      let longestEndsAt = NOW;
 
       for (let index = 0; index < 55; index += 1) {
-        const endsAt = currentTime + (index + 1) * 60 * 1000;
+        const endsAt = NOW + (index + 1) * 60 * 1000;
         const campaignId = await insertTryoutAccessCampaign(ctx, {
           slug: `many-access-pass-grants-${index}`,
           name: `Many Access Pass ${index}`,
@@ -954,8 +946,8 @@ describe("tryouts/mutations/attempts", () => {
           redeemStatus: "active",
           resultsStatus: "pending",
           resultsFinalizedAt: null,
-          startsAt: currentTime - 60 * 1000,
-          endsAt: currentTime + 24 * 60 * 60 * 1000,
+          startsAt: NOW - 60 * 1000,
+          endsAt: NOW + 24 * 60 * 60 * 1000,
           grantDurationDays: 30,
         });
         const linkId = await ctx.db.insert("tryoutAccessLinks", {
@@ -969,7 +961,7 @@ describe("tryouts/mutations/attempts", () => {
           endsAt,
           linkId,
           status: "active",
-          syncedAt: currentTime,
+          syncedAt: NOW,
           userId: identity.userId,
         });
 
@@ -1127,7 +1119,6 @@ describe("tryouts/mutations/attempts", () => {
   it("reuses an already started part after the current route key changes", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
-      const currentTime = NOW;
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "reuse-renamed-part",
@@ -1154,12 +1145,12 @@ describe("tryouts/mutations/attempts", () => {
         mode: "simulation",
         scope: "set",
         timeLimit: 24 * 60 * 60,
-        startedAt: currentTime,
-        lastActivityAt: currentTime,
+        startedAt: NOW,
+        lastActivityAt: NOW,
         completedAt: null,
         endReason: null,
         status: "in-progress",
-        updatedAt: currentTime,
+        updatedAt: NOW,
         totalExercises: 1,
         answeredCount: 0,
         correctAnswers: 0,
@@ -1186,9 +1177,9 @@ describe("tryouts/mutations/attempts", () => {
         totalQuestions: 0,
         theta: 0,
         thetaSE: 1,
-        startedAt: currentTime,
-        expiresAt: currentTime + ATTEMPT_WINDOW_MS,
-        lastActivityAt: currentTime,
+        startedAt: NOW,
+        expiresAt: NOW + ATTEMPT_WINDOW_MS,
+        lastActivityAt: NOW,
         completedAt: null,
         endReason: null,
       });
@@ -1199,8 +1190,8 @@ describe("tryouts/mutations/attempts", () => {
         questionId,
         isCorrect: false,
         timeSpent: 30,
-        answeredAt: currentTime,
-        updatedAt: currentTime,
+        answeredAt: NOW,
+        updatedAt: NOW,
       });
       await ctx.db.insert("tryoutPartAttempts", {
         tryoutAttemptId,

@@ -6,7 +6,7 @@ import {
   replaceExerciseChoices,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
-import { syncContentSearch } from "@repo/backend/convex/contents/search/write";
+import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   exercisesCategoryValidator,
@@ -51,6 +51,9 @@ const syncedExerciseQuestionValidator = v.object({
   material: exercisesMaterialValidator,
   number: v.number(),
   questionBody: v.string(),
+  searchDescription: v.string(),
+  searchText: v.string(),
+  searchTitle: v.string(),
   setName: v.string(),
   setSlug: v.string(),
   slug: v.string(),
@@ -205,23 +208,13 @@ export const bulkSyncExerciseQuestions = internalMutation({
 
       await syncContentSearch(ctx, {
         contentHash: question.contentHash,
-        description: question.description,
+        description: question.searchDescription,
         locale: question.locale,
         route: question.slug,
         section: "exercises",
         syncedAt: now,
-        text: [
-          question.category,
-          question.type,
-          question.material,
-          question.exerciseType,
-          question.setName,
-          question.questionBody,
-          question.answerBody,
-        ]
-          .filter(Boolean)
-          .join(" "),
-        title: question.title,
+        text: question.searchText,
+        title: question.searchTitle,
       });
 
       if (existingQuestion?.contentHash === question.contentHash) {

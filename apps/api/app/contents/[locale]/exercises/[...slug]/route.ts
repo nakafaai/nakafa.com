@@ -19,7 +19,7 @@ import {
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
 import { logError } from "@repo/utilities/logging/effect";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { NextResponse } from "next/server";
 
 export const revalidate = false;
@@ -58,15 +58,14 @@ export async function GET(
 ) {
   const { locale, slug } = await params;
 
-  const parseResult = LocaleSchema.safeParse(locale);
-  if (!parseResult.success) {
+  const validLocale = Schema.decodeUnknownOption(LocaleSchema)(locale);
+  if (Option.isNone(validLocale)) {
     return NextResponse.json(
       { error: "Invalid locale. Must be 'en' or 'id'." },
       { status: 400 }
     );
   }
 
-  const validLocale = parseResult.data;
   // In this API route, `slug` is the catch-all part after
   // `/contents/{locale}/exercises/`:
   // [category, type, material, ...exerciseSlug]
@@ -92,7 +91,7 @@ export async function GET(
       ...legacyTryOutSuffix,
     ];
 
-    redirectUrl.pathname = `/contents/${validLocale}/exercises/${redirectedSlug.join("/")}`;
+    redirectUrl.pathname = `/contents/${validLocale.value}/exercises/${redirectedSlug.join("/")}`;
     return NextResponse.redirect(redirectUrl, 308);
   }
 
@@ -135,7 +134,7 @@ export async function GET(
   if (isQuestionOrAnswer && exerciseNumber !== null) {
     const mdxPath = `exercises/${basePath}/${exerciseNumber}/${slug.at(-1)}`;
 
-    const program = getExerciseContent(validLocale, mdxPath).pipe(
+    const program = getExerciseContent(validLocale.value, mdxPath).pipe(
       Effect.matchEffect({
         onFailure: (error: unknown) =>
           Effect.gen(function* () {
@@ -144,7 +143,7 @@ export async function GET(
 
             yield* logError(err, {
               service: "api-exercises",
-              locale: validLocale,
+              locale: validLocale.value,
               mdxPath,
               message: "Failed to fetch MDX content.",
             });
@@ -187,7 +186,7 @@ export async function GET(
 
   const program = Effect.matchEffect(
     getExercisesContent({
-      locale: validLocale,
+      locale: validLocale.value,
       filePath: cleanPath,
       includeMDX: false,
     }),
@@ -198,7 +197,7 @@ export async function GET(
 
           yield* logError(err, {
             service: "api-exercises",
-            locale: validLocale,
+            locale: validLocale.value,
             basePath: basePath || "/",
             slugLength: slug.length,
             message: "Failed to fetch content.",

@@ -11,7 +11,7 @@ import type {
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
 import { getSubjects } from "@repo/contents/_lib/exercises/type";
-import { LocaleSchema } from "@repo/contents/_types/content";
+import { locales as contentLocales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
 const tryoutPartKeyReaders = {
@@ -43,7 +43,7 @@ export const syncTryouts = Effect.fn("sync.tryouts")(function* (
     log("\n--- TRYOUTS ---\n");
   }
 
-  const locales = options.locale ? [options.locale] : LocaleSchema.options;
+  const locales = options.locale ? [options.locale] : contentLocales;
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
 
   for (const product of tryoutProducts) {

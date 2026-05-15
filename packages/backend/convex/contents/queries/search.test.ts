@@ -1,5 +1,5 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
-import { CONTENT_SEARCH_MAX_OFFSET } from "@repo/backend/convex/contents/search/constants";
+import { CONTENT_SEARCH_MAX_OFFSET } from "@repo/backend/convex/contents/helpers/search/constants";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { describe, expect, it } from "vitest";
 
@@ -85,6 +85,61 @@ describe("contents/queries/search:search", () => {
     ]);
   });
 
+  it("prioritizes exercise context over generic exercise titles", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("contentSearch", {
+        contentHash: "hash-english-11",
+        content_id:
+          "id/exercises/high-school/snbt/english-language/try-out/2026/set-2/11",
+        description: "",
+        locale: "id",
+        markdown_url:
+          "https://nakafa.com/id/exercises/high-school/snbt/english-language/try-out/2026/set-2/11.md",
+        route:
+          "exercises/high-school/snbt/english-language/try-out/2026/set-2/11",
+        section: "exercises",
+        syncedAt: 1,
+        text: "Soal 11 english-language try-out set-2 reading passage",
+        title: "Soal 11",
+        url: "https://nakafa.com/id/exercises/high-school/snbt/english-language/try-out/2026/set-2/11",
+      });
+      await ctx.db.insert("contentSearch", {
+        contentHash: "hash-quantitative-11",
+        content_id:
+          "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
+        description:
+          "SMA SNBT Pengetahuan Kuantitatif try out 2026 set 2 Nomor 11",
+        locale: "id",
+        markdown_url:
+          "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11.md",
+        route:
+          "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
+        section: "exercises",
+        syncedAt: 1,
+        text: "Soal 11 Nomor 11 quantitative-knowledge Pengetahuan Kuantitatif try-out try out 2026 set-2 set 2 fungsi tangga",
+        title: "Soal 11",
+        url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
+      });
+    });
+
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "id",
+      offset: 0,
+      query: "SNBT Pengetahuan Kuantitatif try out 2026 set 2 nomor 11",
+      section: "exercises",
+    });
+
+    expect(result.items[0]).toEqual(
+      expect.objectContaining({
+        content_id:
+          "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/11",
+      })
+    );
+  });
+
   it("searches multiple unique query variants in one bounded request", async () => {
     const t = createConvexTestWithBetterAuth();
 
@@ -120,10 +175,26 @@ describe("contents/queries/search:search", () => {
         title: "Stoikiometri",
         url: "https://nakafa.com/id/subject/high-school/10/chemistry/stoichiometry/introduction",
       });
+      await ctx.db.insert("contentSearch", {
+        contentHash: "hash-mass-application",
+        content_id:
+          "id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-application",
+        description: "Latihan tambahan hukum kekekalan massa.",
+        locale: "id",
+        markdown_url:
+          "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-application.md",
+        route:
+          "subject/high-school/10/chemistry/basic-chemistry-laws/mass-application",
+        section: "subject",
+        syncedAt: 1,
+        text: "hukum kekekalan massa contoh lanjutan",
+        title: "Aplikasi Massa",
+        url: "https://nakafa.com/id/subject/high-school/10/chemistry/basic-chemistry-laws/mass-application",
+      });
     });
 
     const result = await t.query(api.contents.queries.search.search, {
-      limit: 10,
+      limit: 2,
       locale: "id",
       offset: 0,
       queries: ["hukum kekekalan massa", "stoikiometri"],

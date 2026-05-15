@@ -13,7 +13,7 @@ import { cleanSlug } from "@repo/utilities/helper";
 import { logError } from "@repo/utilities/logging/effect";
 import { geolocation } from "@vercel/functions";
 import { convertToModelMessages, createUIMessageStreamResponse } from "ai";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { getTranslations } from "next-intl/server";
 import * as z from "zod";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
@@ -69,13 +69,13 @@ export function POST(req: Request) {
         model: unknown;
       } = yield* Effect.tryPromise(() => req.json());
 
-      const localeResult = LocaleSchema.safeParse(rawLocale);
-      if (!localeResult.success) {
+      const localeResult = Schema.decodeUnknownOption(LocaleSchema)(rawLocale);
+      if (Option.isNone(localeResult)) {
         return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
           status: CHAT_ERRORS.BAD_REQUEST.status,
         });
       }
-      const locale = localeResult.data;
+      const locale = localeResult.value;
 
       const modelResult = ModelIdSchema.safeParse(rawModel);
       if (!modelResult.success) {

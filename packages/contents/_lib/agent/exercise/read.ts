@@ -9,7 +9,7 @@ import {
 import { NakafaAgentExerciseResultSchema } from "@repo/contents/_lib/agent/schema/exercise";
 import { getRenderableExercisesContent } from "@repo/contents/_lib/exercises/renderable";
 import type { Locale } from "@repo/contents/_types/content";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 const EXERCISE_NUMBER_SEGMENT_PATTERN = /^\d+$/;
 
@@ -43,7 +43,7 @@ export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
     );
 
     return Option.some(
-      NakafaAgentExerciseResultSchema.parse({
+      Schema.decodeUnknownSync(NakafaAgentExerciseResultSchema)({
         ...setRef,
         count: selectedExercises.length,
         exercise_number: target.number,

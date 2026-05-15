@@ -8,7 +8,7 @@ import {
 } from "@repo/contents/_shared/error";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { logError } from "@repo/utilities/logging/effect";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { NextResponse } from "next/server";
 
 export const revalidate = false;
@@ -32,21 +32,20 @@ export async function GET(
 ) {
   const { locale, slug } = await params;
 
-  const parseResult = LocaleSchema.safeParse(locale);
-  if (!parseResult.success) {
+  const validLocale = Schema.decodeUnknownOption(LocaleSchema)(locale);
+  if (Option.isNone(validLocale)) {
     return NextResponse.json(
       { error: "Invalid locale. Must be 'en' or 'id'." },
       { status: 400 }
     );
   }
 
-  const validLocale = parseResult.data;
   const basePath = slug.join("/");
   const cleanPath = `articles/${basePath}` as const;
 
   return Effect.runPromise(
     getArticleContents({
-      locale: validLocale,
+      locale: validLocale.value,
       basePath: cleanPath,
       includeMDX: false,
     }).pipe(

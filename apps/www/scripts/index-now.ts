@@ -180,10 +180,9 @@ async function submitUrlsToIndexNow(
   }
 
   // Split URLs into batches of 100
-  const batchSize = BATCH_SIZE;
   const batches: string[][] = [];
-  for (let i = 0; i < urls.length; i += batchSize) {
-    batches.push(urls.slice(i, i + batchSize));
+  for (let i = 0; i < urls.length; i += BATCH_SIZE) {
+    batches.push(urls.slice(i, i + BATCH_SIZE));
   }
 
   logger.info(`Submitting ${urls.length} URLs to IndexNow...`);

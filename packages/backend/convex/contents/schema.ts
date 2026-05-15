@@ -1,4 +1,4 @@
-import { contentSearchDocumentValidator } from "@repo/backend/convex/contents/search/schema";
+import { contentSearchDocumentValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import {
   contentRefValidator,
   localeValidator,
