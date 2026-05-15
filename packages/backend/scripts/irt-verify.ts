@@ -3,50 +3,49 @@ import {
   getConvexConfig,
 } from "@repo/backend/scripts/sync-content/convex";
 import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
-import { Effect } from "effect";
-import * as z from "zod";
+import { Effect, Schema } from "effect";
 
 const IRT_VERIFY_PAGE_SIZE = 500;
 
-const calibrationCacheIntegrityPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  missingStatsSetCount: z.number(),
-  oversizedSetCount: z.number(),
+const calibrationCacheIntegrityPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  missingStatsSetCount: Schema.Number,
+  oversizedSetCount: Schema.Number,
 });
 
-const scaleQualityIntegrityPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  missingQualityCheckTryoutCount: z.number(),
-  unstartableTryoutCount: z.number(),
+const scaleQualityIntegrityPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  missingQualityCheckTryoutCount: Schema.Number,
+  unstartableTryoutCount: Schema.Number,
 });
 
-const calibrationQueueAttemptIntegrityPageSchema = z.object({
-  continueCursor: z.string(),
-  duplicatePendingAttemptCount: z.number(),
-  isDone: z.boolean(),
-  missingPendingQueueAttemptCount: z.number(),
-  staleAttemptQueueSetCount: z.number(),
+const calibrationQueueAttemptIntegrityPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  duplicatePendingAttemptCount: Schema.Number,
+  isDone: Schema.Boolean,
+  missingPendingQueueAttemptCount: Schema.Number,
+  staleAttemptQueueSetCount: Schema.Number,
 });
 
-const calibrationQueueEntryIntegrityPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  orphanedQueueEntryCount: z.number(),
-  staleQueueEntryCount: z.number(),
+const calibrationQueueEntryIntegrityPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  orphanedQueueEntryCount: Schema.Number,
+  staleQueueEntryCount: Schema.Number,
 });
 
-type CalibrationCacheIntegrityPage = z.infer<
+type CalibrationCacheIntegrityPage = Schema.Schema.Type<
   typeof calibrationCacheIntegrityPageSchema
 >;
-type ScaleQualityIntegrityPage = z.infer<
+type ScaleQualityIntegrityPage = Schema.Schema.Type<
   typeof scaleQualityIntegrityPageSchema
 >;
-type CalibrationQueueAttemptIntegrityPage = z.infer<
+type CalibrationQueueAttemptIntegrityPage = Schema.Schema.Type<
   typeof calibrationQueueAttemptIntegrityPageSchema
 >;
-type CalibrationQueueEntryIntegrityPage = z.infer<
+type CalibrationQueueEntryIntegrityPage = Schema.Schema.Type<
   typeof calibrationQueueEntryIntegrityPageSchema
 >;
 

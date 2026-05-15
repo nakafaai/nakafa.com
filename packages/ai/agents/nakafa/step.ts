@@ -17,6 +17,8 @@ const readToolChoice = {
 } satisfies { toolName: "read"; type: "tool" };
 const answerToolChoice = "none" as const;
 const maxDiscoverySearchCalls = 4;
+const searchTokenPattern = /[\p{L}\p{N}]+/gu;
+const taxonomyToolName = "taxonomy";
 
 interface ToolStep {
   toolCalls: readonly {
@@ -26,11 +28,13 @@ interface ToolStep {
 
 /**
  * Selects the exercise reference to read after an exercise-scoped search.
- * This is based on tool input and search output, not user-query regex.
+ * Search results are re-ranked against the original task and search text so
+ * exact requests like a set/question number do not blindly read the first hit.
  */
 export function selectExerciseRef(
   input: NakafaAgentSearchInput,
-  result: NakafaAgentSearchResult | null
+  result: NakafaAgentSearchResult | null,
+  task?: string
 ) {
   if (result === null) {
     return Option.none();
@@ -40,13 +44,82 @@ export function selectExerciseRef(
     return Option.none();
   }
 
-  const item = result.items.find((item) => item.section === "exercises");
+  const items = result.items.filter((item) => item.section === "exercises");
 
-  if (!item) {
+  if (items.length === 0) {
     return Option.none();
   }
 
-  return Option.some(item.content_id);
+  return Option.fromNullable(
+    rankExerciseItems(items, getExerciseSelectionText(input, task)).at(0)
+  ).pipe(Option.map((item) => item.content_id));
+}
+
+/** Ranks exercise hits by direct task/search-token overlap in title and route. */
+function rankExerciseItems(
+  items: NakafaAgentSearchResult["items"],
+  selectionText: string
+) {
+  const tokens = tokenizeSearchText(selectionText);
+
+  if (tokens.length === 0) {
+    return items;
+  }
+
+  return items
+    .map((item, index) => ({
+      index,
+      item,
+      score: scoreExerciseItem(item, tokens),
+    }))
+    .sort((left, right) => {
+      if (left.score !== right.score) {
+        return right.score - left.score;
+      }
+
+      return left.index - right.index;
+    })
+    .map((ranked) => ranked.item);
+}
+
+/** Combines the user task with actual search query text for local selection. */
+function getExerciseSelectionText(
+  input: NakafaAgentSearchInput,
+  task?: string
+) {
+  return [task, ...(input.queries ?? [])]
+    .flatMap((text) => (text ? [text] : []))
+    .join(" ");
+}
+
+/** Scores one exercise by matching unique search tokens to stable metadata. */
+function scoreExerciseItem(
+  item: NakafaAgentSearchResult["items"][number],
+  tokens: readonly string[]
+) {
+  const itemTokens = new Set(
+    tokenizeSearchText([item.title, item.description, item.route].join(" "))
+  );
+  let score = 0;
+
+  for (const token of tokens) {
+    if (itemTokens.has(token)) {
+      score += 1;
+    }
+  }
+
+  return score;
+}
+
+/** Tokenizes multilingual search text without assuming one user language. */
+function tokenizeSearchText(value: string) {
+  const tokens = value.toLocaleLowerCase().match(searchTokenPattern);
+
+  if (!tokens) {
+    return [];
+  }
+
+  return Array.from(new Set(tokens));
 }
 
 /**
@@ -126,6 +199,41 @@ export function prepareReadStep(
     activeTools: readActiveTools,
     messages: [...messages, message],
     toolChoice: readToolChoice,
+  };
+}
+
+/**
+ * Stops taxonomy-only requests after the taxonomy evidence has been retrieved.
+ */
+export function prepareTaxonomyAnswerStep(
+  messages: ModelMessage[],
+  steps: readonly ToolStep[]
+) {
+  const hasTaxonomyToolCall = steps.some((step) =>
+    step.toolCalls.some((toolCall) => toolCall.toolName === taxonomyToolName)
+  );
+
+  if (!hasTaxonomyToolCall) {
+    return;
+  }
+
+  const hasOtherToolCall = steps.some((step) =>
+    step.toolCalls.some((toolCall) => toolCall.toolName !== taxonomyToolName)
+  );
+
+  if (hasOtherToolCall) {
+    return;
+  }
+
+  const message = {
+    role: "user",
+    content:
+      "Use the Nakafa taxonomy result already in this conversation. Do not call another Nakafa tool. Answer only with supported sections, filters, categories, materials, grades, tools, or paths present in the taxonomy result.",
+  } satisfies ModelMessage;
+
+  return {
+    messages: [...messages, message],
+    toolChoice: answerToolChoice,
   };
 }
 

@@ -4,62 +4,66 @@ import {
 } from "@repo/backend/scripts/sync-content/convex";
 import { log, logError } from "@repo/backend/scripts/sync-content/logging";
 import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
-import { Effect } from "effect";
-import * as z from "zod";
+import { Effect, Schema } from "effect";
 
 const CUSTOMER_PAGE_SIZE = 100;
 const DEFAULT_REPAIR_LIMIT = 25;
 
-const customerIntegrityUserPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  page: z.array(
-    z.object({
-      authId: z.string(),
-      email: z.string(),
-      userId: z.string(),
+interface PageResult<T> {
+  continueCursor: string;
+  isDone: boolean;
+  page: readonly T[];
+}
+
+const customerIntegrityUserPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  page: Schema.Array(
+    Schema.Struct({
+      authId: Schema.String,
+      email: Schema.String,
+      userId: Schema.String,
     })
   ),
 });
 
-const customerIntegrityCustomerPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  page: z.array(
-    z.object({
-      externalId: z.string().nullable(),
-      localCustomerId: z.string(),
-      polarCustomerId: z.string(),
-      userId: z.string(),
+const customerIntegrityCustomerPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  page: Schema.Array(
+    Schema.Struct({
+      externalId: Schema.NullOr(Schema.String),
+      localCustomerId: Schema.String,
+      polarCustomerId: Schema.String,
+      userId: Schema.String,
     })
   ),
 });
 
-const customerIntegritySubscriptionPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  page: z.array(
-    z.object({
-      currentPeriodEnd: z.string().nullable(),
-      customerId: z.string(),
-      status: z.string(),
-      subscriptionId: z.string(),
+const customerIntegritySubscriptionPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  page: Schema.Array(
+    Schema.Struct({
+      currentPeriodEnd: Schema.NullOr(Schema.String),
+      customerId: Schema.String,
+      status: Schema.String,
+      subscriptionId: Schema.String,
     })
   ),
 });
 
-const nullSchema = z.null();
-const repairCustomerResultSchema = z.union([
-  z.object({
-    localCustomerId: z.string(),
-    status: z.literal("synced"),
+const repairCustomerResultSchema = Schema.Union(
+  Schema.Struct({
+    localCustomerId: Schema.String,
+    status: Schema.Literal("synced"),
   }),
-  z.object({
-    existingExternalId: z.string().nullable(),
-    polarCustomerId: z.string(),
-    status: z.literal("conflict"),
-  }),
-]);
+  Schema.Struct({
+    existingExternalId: Schema.NullOr(Schema.String),
+    polarCustomerId: Schema.String,
+    status: Schema.Literal("conflict"),
+  })
+);
 
 /** Parses one optional numeric CLI flag. */
 function getOptionalNumericFlag(flag: string) {
@@ -106,22 +110,14 @@ const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
   function* <T>(
     prod: boolean,
     functionPath: string,
-    schema: z.ZodType<{
-      continueCursor: string;
-      isDone: boolean;
-      page: T[];
-    }>
+    schema: Schema.Schema<PageResult<T>>
   ) {
     const config = yield* getConvexConfig({ prod });
     const rows: T[] = [];
     let continueCursor: string | null = null;
 
     while (true) {
-      const result: {
-        continueCursor: string;
-        isDone: boolean;
-        page: T[];
-      } = yield* callConvex(
+      const result: PageResult<T> = yield* callConvex(
         config,
         "query",
         functionPath,
@@ -225,7 +221,7 @@ const cleanupStalePolarCustomer = Effect.fn(
     "action",
     "customers/actions/internal:cleanupStalePolarCustomer",
     { existingExternalId, polarCustomerId },
-    nullSchema
+    Schema.Null
   );
 });
 

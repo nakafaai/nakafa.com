@@ -89,6 +89,31 @@ def test_unsupported_probability_distribution_raises() -> None:
         )
 
 
+def test_distribution_rejects_missing_parameters() -> None:
+    with pytest.raises(ValueError, match="poisson distribution requires parameter"):
+        run(
+            MathRequest(
+                distribution="poisson",
+                kind="math",
+                operation="expected_value",
+                variable="X",
+            )
+        )
+
+
+def test_distribution_rejects_missing_aliased_parameters() -> None:
+    with pytest.raises(ValueError, match="normal distribution requires parameter"):
+        run(
+            MathRequest(
+                distribution="normal",
+                kind="math",
+                operation="variance_probability",
+                parameters={"mean": "0"},
+                variable="X",
+            )
+        )
+
+
 def test_unknown_probability_operation_raises() -> None:
     with pytest.raises(ValueError, match="Unsupported probability operation"):
         probability.run(

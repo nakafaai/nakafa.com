@@ -6,7 +6,7 @@ import type {
 } from "@repo/ai/types/agents";
 import { Effect } from "effect";
 
-interface ResearchToolParams extends Omit<ResearchAgentParams, "task"> {
+interface ResearchToolParams extends Omit<ResearchAgentParams, "intent"> {
   usageAccumulator: UsageAccumulator;
 }
 
@@ -24,7 +24,7 @@ export const runResearch = Effect.fn("orchestrator.runResearch")(function* ({
   writer,
 }: ResearchToolParams & { query: string }) {
   const result = yield* runResearchAgent({
-    task: query,
+    intent: query,
     sourceReferences,
     toolCallId,
     writer,

@@ -3,25 +3,25 @@ import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
 import { GradeSchema } from "@repo/contents/_types/subject/grade";
 import { MaterialSchema } from "@repo/contents/_types/subject/material";
 import { routing } from "@repo/internationalization/src/routing";
-import * as z from "zod";
+import { Schema } from "effect";
 
-export const ArticleSchema = z.object({
+export const ArticleSchema = Schema.Struct({
   category: ArticleCategorySchema,
-  slug: z.array(z.string()),
-});
-export type Article = z.infer<typeof ArticleSchema>;
+  slug: Schema.Array(Schema.String),
+}).pipe(Schema.mutable);
+export type Article = Schema.Schema.Type<typeof ArticleSchema>;
 
-export const SubjectSchema = z.object({
+export const SubjectSchema = Schema.Struct({
   category: SubjectCategorySchema,
   grade: GradeSchema,
   material: MaterialSchema,
-  slug: z.array(z.string()),
-});
-export type Subject = z.infer<typeof SubjectSchema>;
+  slug: Schema.Array(Schema.String),
+}).pipe(Schema.mutable);
+export type Subject = Schema.Schema.Type<typeof SubjectSchema>;
 
-export const ContentTaskSchema = z.object({
-  locale: z.enum(routing.locales),
-  filePath: z.string(),
-  section: z.string(),
-});
-export type ContentTask = z.infer<typeof ContentTaskSchema>;
+export const ContentTaskSchema = Schema.Struct({
+  locale: Schema.Literal(...routing.locales),
+  filePath: Schema.String,
+  section: Schema.String,
+}).pipe(Schema.mutable);
+export type ContentTask = Schema.Schema.Type<typeof ContentTaskSchema>;

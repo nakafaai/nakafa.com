@@ -2,9 +2,8 @@ import { getContentCounts } from "@repo/backend/scripts/sync-content/counts";
 import { log, logSuccess } from "@repo/backend/scripts/sync-content/logging";
 import { reset } from "@repo/backend/scripts/sync-content/reset";
 import type { ContentCountsSchema } from "@repo/backend/scripts/sync-content/schemas";
-import { Effect } from "effect";
+import { Effect, type Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type * as z from "zod";
 
 vi.mock("@repo/backend/scripts/sync-content/counts", () => ({
   getContentCounts: vi.fn(),
@@ -61,7 +60,7 @@ const emptyCounts = {
   tryouts: 0,
   userTryoutEntitlements: 0,
   userTryoutStats: 0,
-} satisfies z.infer<typeof ContentCountsSchema>;
+} satisfies Schema.Schema.Type<typeof ContentCountsSchema>;
 
 describe("sync-content reset", () => {
   beforeEach(() => {

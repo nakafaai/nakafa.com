@@ -28,6 +28,13 @@ flowchart LR
   Math --> Evidence["evaluate / simplify / differentiate / compare"]
 ```
 
+## Docs Map
+
+- [Research citation flow](./research-citations.md)
+
+When an agent flow changes, update the closest doc here or add a small focused
+doc. Prefer diagrams over long prose so each file stays skimmable.
+
 ## Current Page
 
 ```mermaid

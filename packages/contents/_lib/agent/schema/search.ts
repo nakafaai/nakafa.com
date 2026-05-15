@@ -28,18 +28,12 @@ export const NakafaAgentSearchOptionsSchema = Schema.Struct({
     ),
     { default: () => 0 }
   ).annotations({ description: "Zero-based result offset for pagination." }),
-  query: Schema.optional(
-    Schema.Trim.annotations({
-      description:
-        "Optional query over synced Nakafa title, route, localized labels, and content text. Keep the user's topic words; do not add section names unless the user used them.",
-    })
-  ),
   queries: Schema.optional(
     Schema.Array(Schema.Trim.pipe(Schema.minLength(1)))
       .pipe(Schema.maxItems(NAKAFA_AGENT_MAX_QUERIES), Schema.mutable)
       .annotations({
         description:
-          "Optional unique query variants for the same section and locale. Use separate parallel search tool calls when section filters differ.",
+          "Optional search-engine query strings over synced Nakafa title, route, localized labels, and content text. Use one string for one search, multiple strings for unique alternate phrasings in the same section and locale. Use separate parallel search tool calls when section filters differ.",
       })
   ),
   section: Schema.optional(

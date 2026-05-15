@@ -4,53 +4,52 @@ import {
   getConvexConfig,
 } from "@repo/backend/scripts/sync-content/convex";
 import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
-import { Effect } from "effect";
-import * as z from "zod";
+import { Effect, Schema } from "effect";
 
 const TRYOUT_ACCESS_PAGE_SIZE = 100;
 
-const tryoutAccessCampaignIntegrityPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  overdueActiveCampaignCount: z.number(),
-  overduePendingCompetitionCount: z.number(),
-  overdueScheduledCampaignCount: z.number(),
+const tryoutAccessCampaignIntegrityPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  overdueActiveCampaignCount: Schema.Number,
+  overduePendingCompetitionCount: Schema.Number,
+  overdueScheduledCampaignCount: Schema.Number,
 });
 
-const tryoutAccessGrantIntegrityPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  overdueActiveGrantCount: z.number(),
+const tryoutAccessGrantIntegrityPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  overdueActiveGrantCount: Schema.Number,
 });
 
-const tryoutAccessEntitlementIntegrityPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  overdueEntitlementCount: z.number(),
+const tryoutAccessEntitlementIntegrityPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  overdueEntitlementCount: Schema.Number,
 });
 
-const competitionCampaignProductPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  page: z.array(
-    z.object({
-      campaignId: z.string(),
-      endsAt: z.number(),
-      startsAt: z.number(),
+const competitionCampaignProductPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  page: Schema.Array(
+    Schema.Struct({
+      campaignId: Schema.String,
+      endsAt: Schema.Number,
+      startsAt: Schema.Number,
     })
   ),
 });
 
-type TryoutAccessCampaignIntegrityPage = z.infer<
+type TryoutAccessCampaignIntegrityPage = Schema.Schema.Type<
   typeof tryoutAccessCampaignIntegrityPageSchema
 >;
-type TryoutAccessGrantIntegrityPage = z.infer<
+type TryoutAccessGrantIntegrityPage = Schema.Schema.Type<
   typeof tryoutAccessGrantIntegrityPageSchema
 >;
-type TryoutAccessEntitlementIntegrityPage = z.infer<
+type TryoutAccessEntitlementIntegrityPage = Schema.Schema.Type<
   typeof tryoutAccessEntitlementIntegrityPageSchema
 >;
-type CompetitionCampaignProductPage = z.infer<
+type CompetitionCampaignProductPage = Schema.Schema.Type<
   typeof competitionCampaignProductPageSchema
 >;
 

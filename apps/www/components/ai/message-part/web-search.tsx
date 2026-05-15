@@ -34,7 +34,7 @@ export const WebSearchPart = memo(({ message }: Props) => {
             {t("web-search-loading")}
           </p>
         </div>
-        <WebSearchPartQuery query={message.query} />
+        <WebSearchPartQueries queries={message.queries} />
       </div>
     );
   }
@@ -48,7 +48,7 @@ export const WebSearchPart = memo(({ message }: Props) => {
             {t("web-search-error")}
           </span>
         </div>
-        <WebSearchPartQuery query={message.query} />
+        <WebSearchPartQueries queries={message.queries} />
       </div>
     );
   }
@@ -63,19 +63,32 @@ export const WebSearchPart = memo(({ message }: Props) => {
         <span className="text-muted-foreground text-sm">{t("web-search")}</span>
         <Badge variant="muted">{results.length}</Badge>
       </div>
-      <WebSearchPartQuery query={message.query} />
+      <WebSearchPartQueries queries={message.queries} />
       <WebSearchPartPreview results={results} />
     </div>
   );
 });
 WebSearchPart.displayName = "WebSearchPart";
 
-const WebSearchPartQuery = memo(({ query }: { query: string }) => (
-  <blockquote className="text-muted-foreground text-sm italic">
-    "{query}"
-  </blockquote>
-));
-WebSearchPartQuery.displayName = "WebSearchPartQuery";
+const WebSearchPartQueries = memo(({ queries }: { queries: string[] }) => {
+  if (queries.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      {queries.map((query) => (
+        <blockquote
+          className="text-muted-foreground text-sm italic"
+          key={query}
+        >
+          "{query}"
+        </blockquote>
+      ))}
+    </div>
+  );
+});
+WebSearchPartQueries.displayName = "WebSearchPartQueries";
 
 const WebSearchPartPreview = memo(
   ({ results }: { results: DataPart["web-search"]["sources"] }) => {
@@ -85,9 +98,8 @@ const WebSearchPartPreview = memo(
 
     return (
       <div className="flex flex-wrap items-center gap-2">
-        {results.map((item, index) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: URL may appear multiple times, need index for uniqueness
-          <Source href={item.url} key={`${item.url}-${index}`}>
+        {results.map((item) => (
+          <Source href={item.url} key={item.url}>
             <SourceTrigger label={getSourceLabel(item)} showFavicon />
             <SourceContent description={item.description} title={item.title} />
           </Source>

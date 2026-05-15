@@ -85,6 +85,11 @@ interface ExerciseQuestionPayload {
   type: string;
 }
 
+interface ExerciseSearchLabels {
+  exerciseTypeTitle: string;
+  setTitle: string;
+}
+
 /** Syncs exercise set metadata from material files into Convex. */
 export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
   config: ConvexConfig,
@@ -241,7 +246,8 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
 });
 
 const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
-  questionFile: string
+  questionFile: string,
+  searchLabelsBySet: ReadonlyMap<string, ExerciseSearchLabels>
 ) {
   const pathInfo = parseExercisePath(questionFile);
   const exerciseDir = getExerciseDir(questionFile);
@@ -273,13 +279,25 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
     setName: pathInfo.setName,
     year: pathInfo.year,
   });
+  const searchLabels = searchLabelsBySet.get(`${pathInfo.locale}:${setSlug}`);
+
+  if (!searchLabels) {
+    return yield* Effect.fail(
+      new Error(
+        `Missing exercise search labels for ${pathInfo.locale}:${setSlug}. Add this set to the matching _data material file.`
+      )
+    );
+  }
+
   const searchSource = {
     locale: pathInfo.locale,
     category: pathInfo.category,
     type: pathInfo.examType,
     material: pathInfo.material,
     exerciseType: pathInfo.exerciseType,
+    exerciseTypeTitle: searchLabels.exerciseTypeTitle,
     setName: pathInfo.setName,
+    setTitle: searchLabels.setTitle,
     year: pathInfo.year,
     number: pathInfo.number,
     title: questionParsed.metadata.title,
@@ -316,6 +334,36 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
     choices,
   };
 });
+
+const readExerciseSearchLabels = Effect.fn("sync.readExerciseSearchLabels")(
+  function* (options: SyncOptions) {
+    const pattern = options.locale
+      ? `exercises/**/_data/${options.locale}-material.ts`
+      : "exercises/**/_data/*-material.ts";
+    const materialFiles = yield* globFiles(pattern);
+    const labels = new Map<string, ExerciseSearchLabels>();
+
+    for (const materialFile of materialFiles) {
+      const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
+
+      if (!localeMatch) {
+        continue;
+      }
+
+      const locale = parseLocale(localeMatch[1], materialFile);
+      const sets = yield* parseExerciseMaterialFile(materialFile, locale);
+
+      for (const set of sets) {
+        labels.set(`${set.locale}:${set.slug}`, {
+          exerciseTypeTitle: set.exerciseTypeTitle,
+          setTitle: set.title,
+        });
+      }
+    }
+
+    return labels;
+  }
+);
 
 const processQuestionBatches = Effect.fn("sync.processQuestionBatches")(
   function* (
@@ -455,9 +503,12 @@ export const syncExerciseQuestions = Effect.fn("sync.exerciseQuestions")(
 
     const questions: ExerciseQuestionPayload[] = [];
     const errors: string[] = [];
+    const searchLabelsBySet = yield* readExerciseSearchLabels(options);
 
     for (const questionFile of questionFiles) {
-      const result = yield* Effect.either(parseQuestionFile(questionFile));
+      const result = yield* Effect.either(
+        parseQuestionFile(questionFile, searchLabelsBySet)
+      );
 
       if (result._tag === "Left") {
         const message =

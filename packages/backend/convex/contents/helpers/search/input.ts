@@ -36,12 +36,10 @@ export function validateContentSearchInput(args: ContentSearchInput) {
   return queryTexts;
 }
 
-/** Normalizes primary and alternate query texts without changing wording. */
-function getQueryTexts({ query, queries }: ContentSearchInput) {
+/** Normalizes unique query texts without changing wording. */
+function getQueryTexts({ queries }: ContentSearchInput) {
   const texts: string[] = [];
   const seen = new Set<string>();
-
-  appendQueryText(texts, seen, query);
 
   for (const queryText of queries ?? []) {
     appendQueryText(texts, seen, queryText);

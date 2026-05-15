@@ -37,9 +37,12 @@ export function researchPrompt({
     outputFormatting: `
       Return a markdown research summary with:
       - Key findings and data points
-      - Source URLs and citations
+      - Source URLs and markdown link citations
       - Relevant quotes or excerpts
       - Any limitations or gaps in the research
+
+      Use markdown links like [source](https://example.com) for citations.
+      Never use numeric citation markers such as [1] or [4, 21, 23].
 
       DO NOT write user-facing explanations or friendly introductions.
       Return only the raw research data in a markdown format.
@@ -64,7 +67,10 @@ const toolTaskContext = `
   5. Compile findings into a structured data summary
 
   IMPORTANT:
-  - Search thoroughly and use multiple queries if needed
+  - Search thoroughly and use multiple optimized queries if needed
+  - Keep webSearch queries as search-engine text, not the raw user prompt.
+    Remove answer-formatting instructions such as summary length, tone,
+    output language, and citation style.
   - Preserve source constraints from the task. If the task asks for official docs,
     official sources, or a named domain, search that source before broadening
     the query.
@@ -73,6 +79,7 @@ const toolTaskContext = `
     for those sources or no primary source exists.
   - Prioritize credible and authoritative sources
   - Extract key facts, data, and insights
+  - Cite evidence with markdown links, not numeric bracket markers
   - If source content is unavailable or weak, state the limitation clearly
   - Return ONLY the research findings - DO NOT generate user-facing explanations
 `;
@@ -91,5 +98,6 @@ const exactSourceTaskContext = `
   IMPORTANT:
   - Do not broaden exact-source requests into web search results
   - Do not claim facts that are not supported by the retrieved source evidence
+  - Cite evidence with markdown links, not numeric bracket markers
   - Return ONLY the research findings - DO NOT generate user-facing explanations
 `;

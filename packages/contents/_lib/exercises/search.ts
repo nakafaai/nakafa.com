@@ -17,11 +17,13 @@ interface ExerciseSearchSource {
   category: ExercisesCategory;
   description?: string;
   exerciseType: string;
+  exerciseTypeTitle: string;
   locale: Locale;
   material: ExercisesMaterial;
   number: number;
   questionBody: string;
   setName: string;
+  setTitle: string;
   title: string;
   type: ExercisesType;
   year?: number;
@@ -32,9 +34,8 @@ export function getExerciseSearchTitle(source: ExerciseSearchSource) {
   return compactText([
     getExerciseTypeLabel(source.locale, source.type),
     getExerciseMaterialLabel(source.locale, source.material),
-    getSlugPhrase(source.exerciseType),
-    source.year?.toString(),
-    getSlugPhrase(source.setName),
+    source.exerciseTypeTitle,
+    source.setTitle,
     source.title,
   ]);
 }
@@ -45,9 +46,8 @@ export function getExerciseSearchDescription(source: ExerciseSearchSource) {
     getExerciseCategoryLabel(source.locale, source.category),
     getExerciseTypeLabel(source.locale, source.type),
     getExerciseMaterialLabel(source.locale, source.material),
-    getSlugPhrase(source.exerciseType),
-    source.year?.toString(),
-    getSlugPhrase(source.setName),
+    source.exerciseTypeTitle,
+    source.setTitle,
     getExerciseNumberLabel(source.locale, source.number),
   ]);
 }
@@ -63,9 +63,11 @@ export function getExerciseSearchText(source: ExerciseSearchSource) {
     getExerciseMaterialLabel(source.locale, source.material),
     source.exerciseType,
     getSlugPhrase(source.exerciseType),
+    source.exerciseTypeTitle,
     source.year?.toString(),
     source.setName,
     getSlugPhrase(source.setName),
+    source.setTitle,
     source.title,
     getExerciseNumberLabel(source.locale, source.number),
     source.description,

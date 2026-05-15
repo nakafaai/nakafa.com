@@ -22,19 +22,21 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
+import { Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
 import { toast } from "sonner";
-import * as z from "zod/mini";
 import { useSchool } from "@/lib/context/use-school";
 
-const formSchema = z.object({
-  code: z.string().check(z.minLength(1), z.trim()),
+const form = Schema.Struct({
+  code: Schema.Trim.pipe(Schema.minLength(1)),
 });
 
-const defaultValues: z.infer<typeof formSchema> = {
+const formSchema = Schema.standardSchemaV1(form);
+
+const defaultValues = {
   code: "",
-};
+} satisfies Schema.Schema.Type<typeof form>;
 
 interface Props {
   classId: Id<"schoolClasses">;

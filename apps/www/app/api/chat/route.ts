@@ -15,7 +15,6 @@ import { geolocation } from "@vercel/functions";
 import { convertToModelMessages, createUIMessageStreamResponse } from "ai";
 import { Effect, Option, Schema } from "effect";
 import { getTranslations } from "next-intl/server";
-import * as z from "zod";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
 import { determinePageFetchNeed } from "@/app/api/chat/content";
 import { loadMessages, saveOrCreateChat } from "@/app/api/chat/persistence";
@@ -23,7 +22,7 @@ import { streamChat } from "@/app/api/chat/stream";
 import { getUserInfo, getVerified } from "@/app/api/chat/utils";
 import { getToken } from "@/lib/auth/server";
 
-const ModelIdSchema = z.enum(MODEL_IDS);
+const ModelIdSchema = Schema.Literal(...MODEL_IDS);
 
 const corsValidator = new CorsValidator();
 
@@ -77,13 +76,13 @@ export function POST(req: Request) {
       }
       const locale = localeResult.value;
 
-      const modelResult = ModelIdSchema.safeParse(rawModel);
-      if (!modelResult.success) {
+      const modelResult = Schema.decodeUnknownOption(ModelIdSchema)(rawModel);
+      if (Option.isNone(modelResult)) {
         return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
           status: CHAT_ERRORS.BAD_REQUEST.status,
         });
       }
-      const selectedModel = modelResult.data;
+      const selectedModel = modelResult.value;
 
       const token = yield* Effect.tryPromise(() => getToken());
       if (!token) {

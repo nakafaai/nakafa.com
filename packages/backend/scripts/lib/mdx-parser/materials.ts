@@ -214,6 +214,7 @@ export const parseExerciseMaterialFile = Effect.fn(
         type,
         material,
         exerciseType,
+        exerciseTypeTitle: exerciseTypeGroup.title,
         setName,
         title: setItem.title,
         description: exerciseTypeGroup.description,

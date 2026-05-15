@@ -15,9 +15,10 @@ def expand(request: MathRequest) -> MathResult:
     variable = parse.symbol(request.variable)
     point = parse.expression(request.point or "0")
     order = request.order or 6
+    sympy_order = order + 1
     offset = sp.Dummy("offset")
     shifted = expr.subs(variable, point + offset)
-    output = shifted.series(offset, 0, order).subs(offset, variable - point)
+    output = shifted.series(offset, 0, sympy_order).subs(offset, variable - point)
 
     return result(
         request,

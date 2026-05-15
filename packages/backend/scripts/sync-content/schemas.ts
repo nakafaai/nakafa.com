@@ -1,9 +1,9 @@
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { locales } from "@repo/utilities/locales";
-import * as z from "zod";
+import { Option, Schema } from "effect";
 
-const SyncLocaleSchema = z.enum(locales);
+const SyncLocaleSchema = Schema.Literal(...locales);
 
 export const BATCH_SIZES = {
   articles: CONTENT_SYNC_BATCH_LIMITS.articles,
@@ -26,202 +26,223 @@ export const LOCALE_SUBJECT_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
 
 /** Parses one CLI locale flag into the supported Convex content locale. */
 export const parseLocale = (value: string, context: string): Locale => {
-  const result = SyncLocaleSchema.safeParse(value);
-  if (!result.success) {
+  const result = Schema.decodeUnknownOption(SyncLocaleSchema)(value);
+  if (Option.isNone(result)) {
     throw new Error(
       `Invalid locale "${value}" in ${context}. Expected: ${locales.join(", ")}`
     );
   }
-  return result.data;
+  return result.value;
 };
 
-export const SyncStateSchema = z.object({
-  lastSyncTimestamp: z.number(),
-  lastSyncCommit: z.string(),
+export const SyncStateSchema = Schema.Struct({
+  lastSyncTimestamp: Schema.Number,
+  lastSyncCommit: Schema.String,
 });
 
-export const ConvexAuthConfigSchema = z.object({
-  accessToken: z.string().optional(),
+export const ConvexAuthConfigSchema = Schema.Struct({
+  accessToken: Schema.optional(Schema.String),
 });
 
-export const ConvexResponseSchema = z.object({
-  status: z.string(),
-  value: z.unknown().optional(),
-  errorMessage: z.string().optional(),
-  logLines: z.array(z.string()).optional(),
+export const ConvexResponseSchema = Schema.Struct({
+  status: Schema.Literal("success", "error"),
+  value: Schema.optional(Schema.Unknown),
+  errorMessage: Schema.optional(Schema.String),
+  logLines: Schema.optional(Schema.Array(Schema.String)),
 });
 
-export const SyncResultSchema = z.object({
-  created: z.number(),
-  updated: z.number(),
-  unchanged: z.number(),
-  referencesCreated: z.number().optional(),
-  choicesCreated: z.number().optional(),
-  authorLinksCreated: z.number().optional(),
-  skipped: z.number().optional(),
-  skippedSetSlugs: z.array(z.string()).optional(),
+export const SyncResultSchema = Schema.Struct({
+  created: Schema.Number,
+  updated: Schema.Number,
+  unchanged: Schema.Number,
+  referencesCreated: Schema.optional(Schema.Number),
+  choicesCreated: Schema.optional(Schema.Number),
+  authorLinksCreated: Schema.optional(Schema.Number),
+  skipped: Schema.optional(Schema.Number),
+  skippedSetSlugs: Schema.optional(Schema.Array(Schema.String)),
 });
 
-export const AuthorSyncResultSchema = z.object({
-  created: z.number(),
-  existing: z.number(),
+export const AuthorSyncResultSchema = Schema.Struct({
+  created: Schema.Number,
+  existing: Schema.Number,
 });
 
-export const ContentCountsSchema = z.object({
-  articles: z.number(),
-  subjectTopics: z.number(),
-  subjectSections: z.number(),
-  exerciseSets: z.number(),
-  exerciseQuestions: z.number(),
-  exerciseAttempts: z.number(),
-  exerciseAnswers: z.number(),
-  tryoutAccessCampaigns: z.number(),
-  tryoutAccessCampaignProducts: z.number(),
-  tryoutAccessLinks: z.number(),
-  tryoutAccessGrants: z.number(),
-  tryouts: z.number(),
-  tryoutCatalogMeta: z.number(),
-  userTryoutEntitlements: z.number(),
-  tryoutPartSets: z.number(),
-  tryoutAttempts: z.number(),
-  tryoutPartAttempts: z.number(),
-  tryoutLeaderboardEntries: z.number(),
-  userTryoutStats: z.number(),
-  irtCalibrationQueue: z.number(),
-  irtCalibrationAttempts: z.number(),
-  irtCalibrationCacheStats: z.number(),
-  irtCalibrationRuns: z.number(),
-  irtScaleQualityChecks: z.number(),
-  irtScaleQualityRefreshQueue: z.number(),
-  exerciseItemParameters: z.number(),
-  irtScalePublicationQueue: z.number(),
-  irtScaleVersions: z.number(),
-  irtScaleVersionItems: z.number(),
-  contentSearch: z.number(),
-  authors: z.number(),
-  contentAuthors: z.number(),
-  articleReferences: z.number(),
-  exerciseChoices: z.number(),
+export const ContentCountsSchema = Schema.Struct({
+  articles: Schema.Number,
+  subjectTopics: Schema.Number,
+  subjectSections: Schema.Number,
+  exerciseSets: Schema.Number,
+  exerciseQuestions: Schema.Number,
+  exerciseAttempts: Schema.Number,
+  exerciseAnswers: Schema.Number,
+  tryoutAccessCampaigns: Schema.Number,
+  tryoutAccessCampaignProducts: Schema.Number,
+  tryoutAccessLinks: Schema.Number,
+  tryoutAccessGrants: Schema.Number,
+  tryouts: Schema.Number,
+  tryoutCatalogMeta: Schema.Number,
+  userTryoutEntitlements: Schema.Number,
+  tryoutPartSets: Schema.Number,
+  tryoutAttempts: Schema.Number,
+  tryoutPartAttempts: Schema.Number,
+  tryoutLeaderboardEntries: Schema.Number,
+  userTryoutStats: Schema.Number,
+  irtCalibrationQueue: Schema.Number,
+  irtCalibrationAttempts: Schema.Number,
+  irtCalibrationCacheStats: Schema.Number,
+  irtCalibrationRuns: Schema.Number,
+  irtScaleQualityChecks: Schema.Number,
+  irtScaleQualityRefreshQueue: Schema.Number,
+  exerciseItemParameters: Schema.Number,
+  irtScalePublicationQueue: Schema.Number,
+  irtScaleVersions: Schema.Number,
+  irtScaleVersionItems: Schema.Number,
+  contentSearch: Schema.Number,
+  authors: Schema.Number,
+  contentAuthors: Schema.Number,
+  articleReferences: Schema.Number,
+  exerciseChoices: Schema.Number,
 });
 
-export const DataIntegritySchema = z.object({
-  questionsWithoutChoices: z.array(z.string()),
-  questionsWithoutAuthors: z.array(z.string()),
-  articlesWithoutReferences: z.array(z.string()),
-  sectionsWithoutTopics: z.array(z.string()),
-  activeTryoutsWithoutScale: z.array(z.string()),
-  totalQuestions: z.number(),
-  totalArticles: z.number(),
-  totalSections: z.number(),
+export const DataIntegritySchema = Schema.Struct({
+  questionsWithoutChoices: Schema.Array(Schema.String),
+  questionsWithoutAuthors: Schema.Array(Schema.String),
+  articlesWithoutReferences: Schema.Array(Schema.String),
+  sectionsWithoutTopics: Schema.Array(Schema.String),
+  activeTryoutsWithoutScale: Schema.Array(Schema.String),
+  totalQuestions: Schema.Number,
+  totalArticles: Schema.Number,
+  totalSections: Schema.Number,
 });
 
-export const TryoutScaleIntegritySchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  page: z.array(
-    z.object({
-      cycleKey: z.string(),
+export const TryoutScaleIntegritySchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  page: Schema.Array(
+    Schema.Struct({
+      cycleKey: Schema.String,
       locale: SyncLocaleSchema,
-      product: z.string(),
-      slug: z.string(),
+      product: Schema.String,
+      slug: Schema.String,
     })
   ),
 });
 
-const StaleItemSchema = z.object({
-  id: z.string(),
-  slug: z.string(),
+const StaleItemSchema = Schema.Struct({
+  id: Schema.String,
+  slug: Schema.String,
   locale: SyncLocaleSchema,
 });
 
-const PaginationPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
+const PaginationPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
 });
 
-export const StaleContentSchema = z.object({
-  staleArticles: z.array(StaleItemSchema),
-  staleSubjectTopics: z.array(StaleItemSchema),
-  staleSubjectSections: z.array(StaleItemSchema),
-  staleExerciseSets: z.array(StaleItemSchema),
-  staleExerciseQuestions: z.array(StaleItemSchema),
+export const StaleContentSchema = Schema.Struct({
+  staleArticles: Schema.Array(StaleItemSchema),
+  staleSubjectTopics: Schema.Array(StaleItemSchema),
+  staleSubjectSections: Schema.Array(StaleItemSchema),
+  staleExerciseSets: Schema.Array(StaleItemSchema),
+  staleExerciseQuestions: Schema.Array(StaleItemSchema),
 });
 
-export const StaleContentPageSchema = PaginationPageSchema.extend({
-  page: z.array(StaleItemSchema),
-});
+export const StaleContentPageSchema = Schema.extend(
+  PaginationPageSchema,
+  Schema.Struct({
+    page: Schema.Array(StaleItemSchema),
+  })
+);
 
-export const ExerciseQuestionIntegrityPageSchema = PaginationPageSchema.extend({
-  page: z.array(StaleItemSchema),
-});
+export const ExerciseQuestionIntegrityPageSchema = Schema.extend(
+  PaginationPageSchema,
+  Schema.Struct({
+    page: Schema.Array(StaleItemSchema),
+  })
+);
 
-export const ExerciseChoiceIntegrityPageSchema = PaginationPageSchema.extend({
-  page: z.array(
-    z.object({
-      questionId: z.string(),
+export const ExerciseChoiceIntegrityPageSchema = Schema.extend(
+  PaginationPageSchema,
+  Schema.Struct({
+    page: Schema.Array(
+      Schema.Struct({
+        questionId: Schema.String,
+      })
+    ),
+  })
+);
+
+export const ContentAuthorIntegrityPageSchema = Schema.extend(
+  PaginationPageSchema,
+  Schema.Struct({
+    page: Schema.Array(
+      Schema.Struct({
+        authorId: Schema.String,
+        contentId: Schema.String,
+        contentType: Schema.Literal("article", "subject", "exercise"),
+      })
+    ),
+  })
+);
+
+export const ArticleReferenceIntegrityPageSchema = Schema.extend(
+  PaginationPageSchema,
+  Schema.Struct({
+    page: Schema.Array(
+      Schema.Struct({
+        articleId: Schema.String,
+      })
+    ),
+  })
+);
+
+export const SubjectSectionIntegrityPageSchema = Schema.extend(
+  PaginationPageSchema,
+  Schema.Struct({
+    page: Schema.Array(
+      Schema.Struct({
+        locale: SyncLocaleSchema,
+        slug: Schema.String,
+        topicId: Schema.optional(Schema.String),
+      })
+    ),
+  })
+);
+
+export const AuthorPageSchema = Schema.extend(
+  PaginationPageSchema,
+  Schema.Struct({
+    page: Schema.Array(
+      Schema.Struct({
+        id: Schema.String,
+        name: Schema.String,
+        username: Schema.String,
+      })
+    ),
+  })
+);
+
+export const UnusedAuthorsSchema = Schema.Struct({
+  unusedAuthors: Schema.Array(
+    Schema.Struct({
+      id: Schema.String,
+      name: Schema.String,
+      username: Schema.String,
     })
   ),
 });
 
-export const ContentAuthorIntegrityPageSchema = PaginationPageSchema.extend({
-  page: z.array(
-    z.object({
-      authorId: z.string(),
-      contentId: z.string(),
-      contentType: z.enum(["article", "subject", "exercise"]),
-    })
-  ),
+export const DeleteResultSchema = Schema.Struct({
+  deleted: Schema.Number,
 });
 
-export const ArticleReferenceIntegrityPageSchema = PaginationPageSchema.extend({
-  page: z.array(
-    z.object({
-      articleId: z.string(),
-    })
-  ),
+export const BatchDeleteResultSchema = Schema.Struct({
+  deleted: Schema.Number,
+  hasMore: Schema.Boolean,
 });
 
-export const SubjectSectionIntegrityPageSchema = PaginationPageSchema.extend({
-  page: z.array(
-    z.object({
-      locale: SyncLocaleSchema,
-      slug: z.string(),
-      topicId: z.string().optional(),
-    })
-  ),
-});
-
-export const AuthorPageSchema = PaginationPageSchema.extend({
-  page: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      username: z.string(),
-    })
-  ),
-});
-
-export const UnusedAuthorsSchema = z.object({
-  unusedAuthors: z.array(
-    z.object({
-      id: z.string(),
-      name: z.string(),
-      username: z.string(),
-    })
-  ),
-});
-
-export const DeleteResultSchema = z.object({
-  deleted: z.number(),
-});
-
-export const BatchDeleteResultSchema = z.object({
-  deleted: z.number(),
-  hasMore: z.boolean(),
-});
-
-export const CountTablePageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  pageSize: z.number(),
+export const CountTablePageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  pageSize: Schema.Number,
 });

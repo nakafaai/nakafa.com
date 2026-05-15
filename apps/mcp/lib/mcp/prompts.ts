@@ -22,7 +22,7 @@ function registerFindLessonPrompt(server: McpServer) {
         locale: LocaleSchema.default(routing.defaultLocale).describe(
           "Preferred content locale."
         ),
-        query: z
+        topic: z
           .string()
           .min(1)
           .describe("Learning topic or question to search."),
@@ -31,12 +31,12 @@ function registerFindLessonPrompt(server: McpServer) {
         "Guide an agent to search Nakafa lessons and choose the most relevant public content.",
       title: "Find Nakafa Lesson",
     },
-    ({ locale, query }) => ({
+    ({ locale, topic }) => ({
       messages: [
         {
           content: {
             text: [
-              `Find Nakafa learning content for: ${query}`,
+              `Find Nakafa learning content for: ${topic}`,
               `Preferred locale: ${locale}`,
               "Use `nakafa_search_content`, inspect returned summaries, then cite the best canonical URL.",
             ].join("\n"),

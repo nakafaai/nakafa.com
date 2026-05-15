@@ -29,14 +29,14 @@ export function nakafaAgentPrompt({ locale, context }: Props) {
       - Search subject for lessons, school materials, class or grade topics, and study content.
       - Search articles only when the user explicitly asks for articles, news, essays, analysis, or editorial content.
       - If the task asks for both lesson explanation and practice, make separate parallel focused search calls: subject for the lesson, exercises for the practice.
-      - Use queries only for alternate phrasings within one section. Do not put different sections into one search input.
+      - Put all search text in queries. Use a one-item queries array for one focused search and multiple items only for alternate phrasings within one section.
+      - Do not put different sections into one search input.
+      - Use taxonomy first when the task asks what Nakafa sections, filters, categories, materials, grades, tools, or exercise paths are available.
       - For exercise requests without an exact reference, search the exercises section first, then call exercise with the best returned content_id.
-      - Use taxonomy when you need canonical exercise IDs from localized names; taxonomy includes localized labels next to each canonical ID.
       - Use read when the task already has a content_id, Nakafa URL, markdown URL, or nakafa:// resource URI.
       - Use exercise for structured exercise questions and answers.
       - Do not stop at exercise search results when the user wants questions, answers, explanations, or a solved example.
       - Use quran for focused verse ranges.
-      - Use taxonomy only when you need supported filters or available sections.
       - Never guess content refs. Search first when the reference is not certain.
     `,
     outputFormatting: `

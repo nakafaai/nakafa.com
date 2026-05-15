@@ -11,8 +11,7 @@ import type {
   ConvexConfig,
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/types";
-import { Config, Effect, Schema } from "effect";
-import type * as z from "zod";
+import { Config, Effect, ParseResult, Schema } from "effect";
 
 class ConvexConfigError extends Schema.TaggedError<ConvexConfigError>()(
   "ConvexConfigError",
@@ -59,37 +58,41 @@ const missingConfigMessage = (options: SyncOptions) => {
   return "CONVEX_URL not set. Run: npx convex dev";
 };
 
-const parseConvexResponse = <T>(json: unknown, valueSchema: z.ZodType<T>) =>
+const formatParseError = (error: ParseResult.ParseError) =>
+  ParseResult.TreeFormatter.formatErrorSync(error);
+
+const parseConvexResponse = <A, I>(
+  json: unknown,
+  valueSchema: Schema.Schema<A, I, never>
+) =>
   Effect.gen(function* () {
-    const response = ConvexResponseSchema.safeParse(json);
+    const response = yield* Schema.decodeUnknown(ConvexResponseSchema)(
+      json
+    ).pipe(
+      Effect.mapError(
+        (error) =>
+          new ConvexResponseError({
+            message: `Invalid Convex response: ${formatParseError(error)}`,
+          })
+      )
+    );
 
-    if (!response.success) {
+    if (response.status === "error") {
       return yield* Effect.fail(
         new ConvexResponseError({
-          message: `Invalid Convex response: ${response.error.message}`,
+          message: response.errorMessage || "Unknown Convex error",
         })
       );
     }
 
-    if (response.data.status === "error") {
-      return yield* Effect.fail(
-        new ConvexResponseError({
-          message: response.data.errorMessage || "Unknown Convex error",
-        })
-      );
-    }
-
-    const value = valueSchema.safeParse(response.data.value);
-
-    if (!value.success) {
-      return yield* Effect.fail(
-        new ConvexResponseError({
-          message: `Invalid Convex value: ${value.error.message}`,
-        })
-      );
-    }
-
-    return value.data;
+    return yield* Schema.decodeUnknown(valueSchema)(response.value).pipe(
+      Effect.mapError(
+        (error) =>
+          new ConvexResponseError({
+            message: `Invalid Convex value: ${formatParseError(error)}`,
+          })
+      )
+    );
   });
 
 /**
@@ -123,17 +126,16 @@ export const getConvexConfig = Effect.fn("scripts.getConvexConfig")(function* (
         message: "Invalid Convex config. Run: npx convex dev",
       }),
   });
-  const parsed = ConvexAuthConfigSchema.safeParse(json);
+  const parsed = yield* Schema.decodeUnknown(ConvexAuthConfigSchema)(json).pipe(
+    Effect.mapError(
+      () =>
+        new ConvexAuthError({
+          message: "Invalid Convex config. Run: npx convex dev",
+        })
+    )
+  );
 
-  if (!parsed.success) {
-    return yield* Effect.fail(
-      new ConvexAuthError({
-        message: "Invalid Convex config. Run: npx convex dev",
-      })
-    );
-  }
-
-  if (!parsed.data.accessToken) {
+  if (!parsed.accessToken) {
     return yield* Effect.fail(
       new ConvexAuthError({
         message: "No access token. Run: npx convex dev",
@@ -145,7 +147,7 @@ export const getConvexConfig = Effect.fn("scripts.getConvexConfig")(function* (
     logWarning(`PRODUCTION MODE: Syncing to ${url}`);
   }
 
-  return { accessToken: parsed.data.accessToken, url };
+  return { accessToken: parsed.accessToken, url };
 });
 
 /**
@@ -155,12 +157,12 @@ export const getConvexConfig = Effect.fn("scripts.getConvexConfig")(function* (
  * - Effect async errors: https://effect.website/docs/getting-started/running-effects/
  * - Convex function calls over HTTP: https://docs.convex.dev/http-api/
  */
-export const callConvex = Effect.fn("scripts.callConvex")(function* <T>(
+export const callConvex = Effect.fn("scripts.callConvex")(function* <A, I>(
   config: ConvexConfig,
   endpoint: "action" | "mutation" | "query",
   functionPath: string,
   args: Record<string, unknown>,
-  schema: z.ZodType<T>
+  schema: Schema.Schema<A, I, never>
 ) {
   const response = yield* Effect.tryPromise({
     try: () =>

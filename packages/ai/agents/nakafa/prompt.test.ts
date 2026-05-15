@@ -21,11 +21,12 @@ describe("nakafaAgentPrompt", () => {
     expect(prompt).toContain(
       "When independent searches are needed, call search tools in parallel"
     );
-    expect(prompt).toContain(
-      "Use queries only for alternate phrasings within one section."
-    );
+    expect(prompt).toContain("Put all search text in queries.");
     expect(prompt).toContain(
       "For exercise requests without an exact reference, search the exercises section first, then call exercise"
+    );
+    expect(prompt).toContain(
+      "Use taxonomy first when the task asks what Nakafa sections, filters, categories, materials, grades, tools, or exercise paths are available."
     );
   });
 

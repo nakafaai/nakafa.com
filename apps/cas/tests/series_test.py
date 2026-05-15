@@ -16,6 +16,7 @@ def test_series_expansion() -> None:
     assert result.status == "verified"
     assert result.secondary
     assert "x**3" in result.secondary.expression
+    assert "x**5/120" in result.secondary.expression
 
 
 def test_series_expansion_keeps_needed_taylor_term() -> None:

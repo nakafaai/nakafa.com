@@ -104,7 +104,7 @@ export const logSyncMetrics = (metrics: SyncMetrics): void => {
 
 export const logStaleItems = (
   label: string,
-  items: StaleItem[],
+  items: readonly StaleItem[],
   maxItems = 10
 ): void => {
   if (items.length === 0) {

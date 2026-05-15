@@ -1,18 +1,22 @@
-import * as z from "zod/mini";
+import { Schema } from "effect";
 import { getCurrentAcademicYear } from "@/components/school/classes/header-add-utils";
 
 const MIN_NAME_LENGTH = 3;
 
 /** Validation schema for the school class creation form. */
-export const classCreateFormSchema = z.object({
-  name: z.string().check(z.minLength(MIN_NAME_LENGTH), z.trim()),
-  subject: z.string().check(z.minLength(MIN_NAME_LENGTH), z.trim()),
-  year: z.string().check(z.minLength(MIN_NAME_LENGTH), z.trim()),
-  visibility: z.enum(["public", "private"]),
+const classCreateForm = Schema.Struct({
+  name: Schema.Trim.pipe(Schema.minLength(MIN_NAME_LENGTH)),
+  subject: Schema.Trim.pipe(Schema.minLength(MIN_NAME_LENGTH)),
+  year: Schema.Trim.pipe(Schema.minLength(MIN_NAME_LENGTH)),
+  visibility: Schema.Literal("public", "private"),
 });
 
+export const classCreateFormSchema = Schema.standardSchemaV1(classCreateForm);
+
 /** Default values used by the school class creation form. */
-export const classCreateDefaultValues: z.infer<typeof classCreateFormSchema> = {
+export const classCreateDefaultValues: Schema.Schema.Encoded<
+  typeof classCreateForm
+> = {
   name: "",
   subject: "",
   year: getCurrentAcademicYear(),

@@ -123,6 +123,20 @@ describe("nakafaPrompt", () => {
     );
   });
 
+  it("keeps source citations as user-readable markdown links", () => {
+    const prompt = nakafaPrompt({
+      ...base,
+      userRole: "student",
+    });
+
+    expect(prompt).toContain(
+      "Never show numeric citation markers such as [1] or [4, 21, 23] to users."
+    );
+    expect(prompt).toContain(
+      "Convert any research citation indexes into markdown links using the cited source URLs."
+    );
+  });
+
   it.each([
     "teacher",
     "student",

@@ -1,11 +1,22 @@
 import { createEnv } from "@t3-oss/env-nextjs";
-import * as z from "zod";
+import { Schema } from "effect";
+
+const emailSchema = Schema.standardSchemaV1(
+  Schema.String.pipe(
+    Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, {
+      message: () => "Expected a valid email address.",
+    })
+  )
+);
+const resendTokenSchema = Schema.standardSchemaV1(
+  Schema.String.pipe(Schema.startsWith("re_"))
+);
 
 export const keys = () =>
   createEnv({
     server: {
-      RESEND_FROM: z.email(),
-      RESEND_TOKEN: z.string().startsWith("re_"),
+      RESEND_FROM: emailSchema,
+      RESEND_TOKEN: resendTokenSchema,
     },
     runtimeEnv: {
       RESEND_FROM: process.env.RESEND_FROM,

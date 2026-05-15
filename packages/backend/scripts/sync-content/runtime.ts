@@ -88,9 +88,9 @@ export const loadSyncState = Effect.fn("scripts.loadSyncState")(function* (
         catch: (error) =>
           new RuntimeFileError({ message: getUnknownMessage(error) }),
       });
-      const parsed = SyncStateSchema.safeParse(json);
+      const parsed = Schema.decodeUnknownOption(SyncStateSchema)(json);
 
-      return parsed.success ? parsed.data : null;
+      return parsed._tag === "Some" ? parsed.value : null;
     })
   );
 

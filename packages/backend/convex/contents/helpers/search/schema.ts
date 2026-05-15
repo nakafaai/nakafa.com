@@ -23,7 +23,6 @@ export const contentSearchInputValidator = v.object({
   limit: v.number(),
   locale: localeValidator,
   offset: v.number(),
-  query: v.optional(v.string()),
   queries: v.optional(v.array(v.string())),
   section: v.optional(nakafaSectionValidator),
 });

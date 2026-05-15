@@ -37,30 +37,58 @@ def _distribution(request: MathRequest, variable: sp.Symbol) -> object:
     parameters = request.parameters
 
     if name == "bernoulli":
-        return Bernoulli(str(variable), parse.expression(parameters.get("p", "1/2")))
+        probability = parse.expression(_parameter(name, parameters, "p"))
+        return Bernoulli(str(variable), probability)
     if name == "binomial":
         return Binomial(
             str(variable),
-            parse.expression(parameters.get("n", "1")),
-            parse.expression(parameters.get("p", "1/2")),
+            parse.expression(_parameter(name, parameters, "n")),
+            parse.expression(_parameter(name, parameters, "p")),
         )
     if name == "normal":
-        standard_deviation = parameters.get(
-            "standard_deviation", parameters.get("standardDeviation", "1")
+        standard_deviation = _aliased_parameter(
+            name,
+            parameters,
+            "standard_deviation",
+            "standardDeviation",
         )
 
         return Normal(
             str(variable),
-            parse.expression(parameters.get("mean", "0")),
+            parse.expression(_parameter(name, parameters, "mean")),
             parse.expression(standard_deviation),
         )
     if name == "poisson":
-        return Poisson(str(variable), parse.expression(parameters.get("lambda", "1")))
+        return Poisson(
+            str(variable), parse.expression(_parameter(name, parameters, "lambda"))
+        )
     if name == "uniform":
         return Uniform(
             str(variable),
-            parse.expression(parameters.get("lower", "0")),
-            parse.expression(parameters.get("upper", "1")),
+            parse.expression(_parameter(name, parameters, "lower")),
+            parse.expression(_parameter(name, parameters, "upper")),
         )
 
     raise ValueError(f"Unsupported distribution: {name}")
+
+
+def _parameter(distribution: str, parameters: dict[str, str], name: str) -> str:
+    """Return a required distribution parameter."""
+    value = parameters.get(name)
+
+    if value:
+        return value
+
+    raise ValueError(f"{distribution} distribution requires parameter: {name}")
+
+
+def _aliased_parameter(
+    distribution: str, parameters: dict[str, str], first: str, second: str
+) -> str:
+    """Return a required distribution parameter that accepts one alias."""
+    value = parameters.get(first) or parameters.get(second)
+
+    if value:
+        return value
+
+    raise ValueError(f"{distribution} distribution requires parameter: {first}")

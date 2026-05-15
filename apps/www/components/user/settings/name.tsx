@@ -6,23 +6,22 @@ import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
+import { Schema } from "effect";
 import { useTranslations } from "next-intl";
-import * as z from "zod/mini";
 import { FormBlock } from "@/components/shared/form-block";
 import type { CurrentUser } from "@/lib/context/use-user";
 
 const MAX_NAME_LENGTH = 32;
 const MIN_NAME_LENGTH = 3;
 
-const formSchema = z.object({
-  name: z
-    .string()
-    .check(
-      z.minLength(MIN_NAME_LENGTH),
-      z.maxLength(MAX_NAME_LENGTH),
-      z.trim()
+const formSchema = Schema.standardSchemaV1(
+  Schema.Struct({
+    name: Schema.Trim.pipe(
+      Schema.minLength(MIN_NAME_LENGTH),
+      Schema.maxLength(MAX_NAME_LENGTH)
     ),
-});
+  })
+);
 
 export function UserSettingsName({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");

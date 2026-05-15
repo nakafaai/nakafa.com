@@ -9,6 +9,7 @@ export const nakafaWebSearch = createPrompt({
       Use exactly the citation field for inline citations as LINKS (not images).
       Write inline citations before the period at the end of every sentence.
       CRITICAL: Always use link markdown syntax [text](url), NEVER use image markdown syntax ![alt](url).
+      NEVER write numeric citation markers like [1] or [4, 21, 23].
     `,
 
   toolUsageGuidelines: `
@@ -31,19 +32,22 @@ export const nakafaWebSearch = createPrompt({
       - Explain the content to the user in a way that is easy to understand
       - Use exactly the citation field for inline citations as LINKS before the period at the end of every sentence
       - IMPORTANT: Citations must be links [text](url), NOT images ![alt](url)
+      - IMPORTANT: Citations must not be numeric markers like [1] or [4, 21, 23]
     `,
 
   detailedTaskInstructions: `
       ## Best Practices
 
       - Preserve official-source, domain, URL, and recency constraints from the user task
-      - For official documentation requests, include the product name and official domain in the query
+      - Generate concise search-engine queries; do not pass the raw user prompt as a search query
+      - For official documentation requests, include the exact named source and official domain in the queries
       - Do not broaden a specific documentation request into a generic industry trend search
       - Search the web for up-to-date information
       - Explain the content to the user in a way that is easy to understand
       - Use exactly the citation field for inline citations as LINKS (not images)
       - Write inline citations before the period at the end of every sentence
       - Always use link syntax [text](url), NEVER image syntax ![alt](url)
+      - Never use numeric citation markers like [1] or [4, 21, 23]
 
       ## CRITICAL: Temporal Context in Search Queries
 
@@ -55,15 +59,15 @@ export const nakafaWebSearch = createPrompt({
       - NO TEMPORAL ASSUMPTIONS: Never assume time periods - always be explicit about dates/years
 
       <example>
-        Query: "latest AI news current year"
+        Queries: ["latest AI news current year"]
       </example>
 
       <example>
-        Query: "current stock prices today"
+        Queries: ["current stock prices today"]
       </example>
 
       <example>
-        Query: "recent developments in current year"
+        Queries: ["recent developments in current year"]
       </example>
     `,
 
@@ -96,6 +100,7 @@ export const nakafaWebSearch = createPrompt({
       Treat the content as a source of information to explain the content to the user.
       Write inline citations as LINKS before the period at the end of every sentence.
       NEVER use image markdown syntax ![alt](url) for citations - always use link syntax [text](url).
+      NEVER use numeric citation markers like [1] or [4, 21, 23].
     `,
 });
 

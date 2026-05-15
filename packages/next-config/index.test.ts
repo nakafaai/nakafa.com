@@ -6,6 +6,7 @@ import {
   withMDX,
 } from "@repo/next-config";
 import { getAppUrl } from "@repo/next-config/app";
+import { keys } from "@repo/next-config/keys";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@next/bundle-analyzer", () => ({
@@ -79,5 +80,28 @@ describe("createSecurityHeaders", () => {
     vi.stubEnv("NEXT_PUBLIC_VERSION", "test-version");
 
     expect(getAppUrl()).toBe("https://example.com");
+  });
+
+  it("rejects missing public app URLs", () => {
+    expect(() => getAppUrl()).toThrow("NEXT_PUBLIC_APP_URL is required.");
+  });
+
+  it("rejects invalid required public URLs", () => {
+    vi.stubEnv("INTERNAL_CONTENT_API_KEY", "test-key");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "not a url");
+    vi.stubEnv("NEXT_PUBLIC_MCP_URL", "https://mcp.example.com");
+    vi.stubEnv("NEXT_PUBLIC_VERSION", "test-version");
+
+    expect(() => keys()).toThrow("Invalid environment variables");
+  });
+
+  it("rejects invalid optional public URLs when present", () => {
+    vi.stubEnv("INTERNAL_CONTENT_API_KEY", "test-key");
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "not a url");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://example.com");
+    vi.stubEnv("NEXT_PUBLIC_MCP_URL", "https://mcp.example.com");
+    vi.stubEnv("NEXT_PUBLIC_VERSION", "test-version");
+
+    expect(() => keys()).toThrow("Invalid environment variables");
   });
 });

@@ -26,7 +26,6 @@ const SearchInputSchema = Schema.Struct({
   limit: Schema.Number,
   locale: LocaleSchema,
   offset: Schema.Number,
-  query: Schema.optional(Schema.String),
   queries: Schema.optional(Schema.Array(Schema.String).pipe(Schema.mutable)),
   section: Schema.optional(NakafaSectionSchema),
 }).pipe(Schema.mutable);
@@ -242,7 +241,7 @@ export const DataPartSchema = Schema.Struct({
   }).pipe(Schema.mutable),
   "web-search": Schema.Struct({
     error: Schema.optional(Schema.String),
-    query: Schema.String,
+    queries: Schema.Array(Schema.String).pipe(Schema.mutable),
     sources: Schema.Array(
       Schema.Struct({
         citation: Schema.String,

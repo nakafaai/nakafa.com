@@ -2,6 +2,7 @@ import {
   prepareAnswerFromNakafaEvidenceStep,
   prepareExerciseStep,
   prepareReadStep,
+  prepareTaxonomyAnswerStep,
   selectExerciseRef,
   shouldAnswerFromNakafaEvidence,
   shouldReadAfterSearch,
@@ -63,7 +64,7 @@ describe("Nakafa agent step state", () => {
         limit: 1,
         locale: "id",
         offset: 0,
-        query: "fungsi rasional",
+        queries: ["fungsi rasional"],
         section: "exercises",
       },
       exerciseResult
@@ -82,13 +83,121 @@ describe("Nakafa agent step state", () => {
     expect(ref.value).toBe(exercise.content_id);
   });
 
+  it("selects the exact requested exercise when search ranking returns another set item first", () => {
+    const firstResult = {
+      ...exerciseResult.items[0],
+      content_id:
+        "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/15",
+      markdown_url:
+        "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/15.md",
+      route:
+        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/15",
+      title: "Soal 15",
+      url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/15",
+    };
+    const ref = selectExerciseRef(
+      {
+        limit: 20,
+        locale: "id",
+        offset: 0,
+        queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
+        section: "exercises",
+      },
+      {
+        ...exerciseResult,
+        count: 2,
+        items: [firstResult, exerciseResult.items[0]],
+        limit: 20,
+      },
+      "Aku mau latihan SNBT pengetahuan kuantitatif try out 2026 set 2 nomor 11."
+    );
+
+    if (Option.isNone(ref)) {
+      throw new Error("Expected an exact exercise reference.");
+    }
+
+    expect(ref.value).toBe(exerciseResult.items[0].content_id);
+  });
+
+  it("keeps search order when no selection tokens are available", () => {
+    const ref = selectExerciseRef(
+      {
+        limit: 1,
+        locale: "id",
+        offset: 0,
+        queries: [],
+        section: "exercises",
+      },
+      exerciseResult
+    );
+
+    if (Option.isNone(ref)) {
+      throw new Error("Expected the first exercise reference.");
+    }
+
+    expect(ref.value).toBe(exerciseResult.items[0].content_id);
+  });
+
+  it("keeps search order when the search input does not include query text", () => {
+    const ref = selectExerciseRef(
+      {
+        limit: 1,
+        locale: "id",
+        offset: 0,
+        section: "exercises",
+      },
+      exerciseResult
+    );
+
+    if (Option.isNone(ref)) {
+      throw new Error("Expected the first exercise reference.");
+    }
+
+    expect(ref.value).toBe(exerciseResult.items[0].content_id);
+  });
+
+  it("keeps stable search order when exercise scores tie", () => {
+    const secondResult = {
+      ...exerciseResult.items[0],
+      content_id:
+        "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/12",
+      markdown_url:
+        "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/12.md",
+      route:
+        "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/12",
+      title: "Soal 12",
+      url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2/12",
+    };
+    const ref = selectExerciseRef(
+      {
+        limit: 2,
+        locale: "id",
+        offset: 0,
+        queries: ["SNBT Pengetahuan Kuantitatif"],
+        section: "exercises",
+      },
+      {
+        ...exerciseResult,
+        count: 2,
+        items: [exerciseResult.items[0], secondResult],
+        limit: 2,
+      }
+    );
+
+    if (Option.isNone(ref)) {
+      throw new Error("Expected the first tied exercise reference.");
+    }
+
+    expect(ref.value).toBe(exerciseResult.items[0].content_id);
+  });
+
   it("does not select exercises from broad or empty searches", () => {
     const broadSearch = selectExerciseRef(
       {
         limit: 1,
         locale: "id",
         offset: 0,
-        query: "fungsi rasional",
+        queries: ["fungsi rasional"],
       },
       exerciseResult
     );
@@ -97,7 +206,7 @@ describe("Nakafa agent step state", () => {
         limit: 1,
         locale: "id",
         offset: 0,
-        query: "fungsi rasional",
+        queries: ["fungsi rasional"],
         section: "exercises",
       },
       {
@@ -111,7 +220,7 @@ describe("Nakafa agent step state", () => {
         limit: 1,
         locale: "id",
         offset: 0,
-        query: "fungsi rasional",
+        queries: ["fungsi rasional"],
         section: "exercises",
       },
       null
@@ -170,7 +279,7 @@ describe("Nakafa agent step state", () => {
         limit: 1,
         locale: "id",
         offset: 0,
-        query: "fungsi rasional",
+        queries: ["fungsi rasional"],
         section: "subject",
       },
       subjectResult
@@ -180,7 +289,7 @@ describe("Nakafa agent step state", () => {
         limit: 1,
         locale: "id",
         offset: 0,
-        query: "fungsi rasional",
+        queries: ["fungsi rasional"],
       },
       subjectResult
     );
@@ -195,7 +304,7 @@ describe("Nakafa agent step state", () => {
         limit: 1,
         locale: "id",
         offset: 0,
-        query: "fungsi rasional",
+        queries: ["fungsi rasional"],
         section: "exercises",
       },
       exerciseResult
@@ -205,7 +314,7 @@ describe("Nakafa agent step state", () => {
         limit: 1,
         locale: "id",
         offset: 0,
-        query: "al fatihah",
+        queries: ["al fatihah"],
         section: "quran",
       },
       {
@@ -218,7 +327,7 @@ describe("Nakafa agent step state", () => {
         limit: 1,
         locale: "id",
         offset: 0,
-        query: "tidak ada",
+        queries: ["tidak ada"],
         section: "subject",
       },
       {
@@ -232,7 +341,7 @@ describe("Nakafa agent step state", () => {
         limit: 1,
         locale: "id",
         offset: 0,
-        query: "tidak ada",
+        queries: ["tidak ada"],
         section: "subject",
       },
       null
@@ -315,5 +424,42 @@ describe("Nakafa agent step state", () => {
     );
 
     expect(answerStep).toBeUndefined();
+  });
+
+  it("turns off tools after taxonomy-only evidence is available", () => {
+    const step = prepareTaxonomyAnswerStep(
+      [{ role: "user", content: "struktur latihan yang tersedia" }],
+      [{ toolCalls: [{ toolName: "taxonomy" }] }]
+    );
+
+    if (!step) {
+      throw new Error("Expected a taxonomy answer step.");
+    }
+
+    expect(step.toolChoice).toBe("none");
+    expect(step.messages.at(-1)).toEqual(
+      expect.objectContaining({
+        content: expect.stringContaining("Use the Nakafa taxonomy result"),
+        role: "user",
+      })
+    );
+  });
+
+  it("keeps tools available when taxonomy is not the only evidence", () => {
+    const step = prepareTaxonomyAnswerStep(
+      [{ role: "user", content: "cari latihan snbt" }],
+      [{ toolCalls: [{ toolName: "taxonomy" }, { toolName: "search" }] }]
+    );
+
+    expect(step).toBeUndefined();
+  });
+
+  it("keeps tools available when no taxonomy evidence exists", () => {
+    const step = prepareTaxonomyAnswerStep(
+      [{ role: "user", content: "cari latihan snbt" }],
+      [{ toolCalls: [{ toolName: "search" }] }]
+    );
+
+    expect(step).toBeUndefined();
   });
 });

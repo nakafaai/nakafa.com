@@ -26,7 +26,11 @@ export const QuranPart = memo(({ message }: Props) => {
         <span className="text-muted-foreground text-sm">
           {t("nakafa-quran")}
         </span>
-        <Badge variant="muted">{message.result.verse_count}</Badge>
+        <Badge variant="muted">
+          {t("nakafa-quran-verse-count", {
+            count: message.result.verse_count,
+          })}
+        </Badge>
       </div>
       <Button
         className="max-w-full self-start"

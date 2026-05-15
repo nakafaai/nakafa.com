@@ -14,7 +14,7 @@ import { Effect } from "effect";
 
 const logIntegrityList = (
   title: string,
-  items: string[],
+  items: readonly string[],
   successMessage: string
 ): boolean => {
   if (items.length === 0) {

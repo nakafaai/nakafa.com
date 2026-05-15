@@ -16,25 +16,26 @@ import type {
   ConvexConfig,
   FilesystemSlugs,
 } from "@repo/backend/scripts/sync-content/types";
-import { Effect } from "effect";
-import type * as z from "zod";
+import { Effect, Schema } from "effect";
 
 const PAGE_SIZE = 1000;
+
+interface PageResult<T> {
+  continueCursor: string;
+  isDone: boolean;
+  page: readonly T[];
+}
 
 const collectPages = Effect.fn("sync.collectPages")(function* <T>(
   config: ConvexConfig,
   functionPath: string,
   args: Record<string, unknown>,
-  schema: z.ZodType<{
-    continueCursor: string;
-    isDone: boolean;
-    page: T[];
-  }>
+  schema: Schema.Schema<PageResult<T>>
 ) {
   const rows: T[] = [];
   let continueCursor: string | null = null;
   let isDone = false;
-  let page: T[] = [];
+  let page: readonly T[] = [];
 
   while (!isDone) {
     ({ continueCursor, isDone, page } = yield* callConvex(
@@ -107,7 +108,7 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
     ),
   ]);
 
-  return StaleContentSchema.parse({
+  return Schema.decodeUnknownSync(StaleContentSchema)({
     staleArticles: articles.filter((item) => !articleSlugSet.has(item.slug)),
     staleSubjectTopics: subjectTopics.filter(
       (item) => !subjectTopicSlugSet.has(item.slug)
@@ -191,7 +192,7 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
     references.map((reference) => reference.articleId)
   );
 
-  return DataIntegritySchema.parse({
+  return Schema.decodeUnknownSync(DataIntegritySchema)({
     questionsWithoutChoices: questions
       .filter((question) => !questionIdsWithChoices.has(question.id))
       .map((question) => `${question.slug} (${question.locale})`),
@@ -234,7 +235,7 @@ export const getUnusedAuthors = Effect.fn("sync.getUnusedAuthors")(function* (
     contentAuthors.map((authorLink) => authorLink.authorId)
   );
 
-  return UnusedAuthorsSchema.parse({
+  return Schema.decodeUnknownSync(UnusedAuthorsSchema)({
     unusedAuthors: authors.filter(
       (author) => !authorIdsWithContent.has(author.id)
     ),

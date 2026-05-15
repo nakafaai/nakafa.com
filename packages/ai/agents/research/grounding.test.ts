@@ -15,7 +15,6 @@ describe("research Google Search grounding", () => {
           },
         },
       },
-      query: "fallback query",
       sources: [
         {
           sourceType: "url",
@@ -26,7 +25,7 @@ describe("research Google Search grounding", () => {
     });
 
     expect(data).toEqual({
-      query: "AI SDK DevTools",
+      queries: ["AI SDK DevTools", "DevTools"],
       sources: [
         {
           citation:
@@ -59,7 +58,6 @@ describe("research Google Search grounding", () => {
           },
         },
       },
-      query: "AI SDK DevTools",
       sources: [
         {
           sourceType: "document",
@@ -77,7 +75,7 @@ describe("research Google Search grounding", () => {
         url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
       },
     ]);
-    expect(data?.query).toBe("AI SDK DevTools");
+    expect(data?.queries).toEqual([]);
   });
 
   it("reads Google metadata when no Vertex metadata is present", () => {
@@ -96,7 +94,6 @@ describe("research Google Search grounding", () => {
           },
         },
       },
-      query: "google metadata",
       sources: [],
     });
 
@@ -118,7 +115,6 @@ describe("research Google Search grounding", () => {
           },
         },
       },
-      query: "opaque query",
       sources: "not source parts",
     });
 
@@ -142,7 +138,6 @@ describe("research Google Search grounding", () => {
           },
         },
       },
-      query: "fallback query",
       sources: [
         {
           sourceType: "url",
@@ -155,7 +150,7 @@ describe("research Google Search grounding", () => {
       ],
     });
 
-    expect(data?.query).toBe("fallback query");
+    expect(data?.queries).toEqual([]);
     expect(data?.sources).toEqual([
       {
         citation: "[example.com](https://www.example.com/article)",
@@ -170,7 +165,6 @@ describe("research Google Search grounding", () => {
   it("builds web-search data from source parts without provider metadata", () => {
     const data = createGroundingWebSearchData({
       providerMetadata: {},
-      query: "source-only query",
       sources: [
         {
           sourceType: "url",
@@ -181,7 +175,7 @@ describe("research Google Search grounding", () => {
     });
 
     expect(data).toEqual({
-      query: "source-only query",
+      queries: [],
       sources: [
         {
           citation: "[Source Only](https://example.com/source-only)",
@@ -204,12 +198,11 @@ describe("research Google Search grounding", () => {
           },
         },
       },
-      query: "fallback query",
       sources: [],
     });
 
     expect(data).toEqual({
-      query: "official AI SDK DevTools documentation",
+      queries: ["official AI SDK DevTools documentation"],
       sources: [],
       status: "done",
     });
@@ -219,7 +212,6 @@ describe("research Google Search grounding", () => {
     expect(
       createGroundingWebSearchData({
         providerMetadata: undefined,
-        query: "missing metadata",
         sources: [],
       })
     ).toBeUndefined();
@@ -227,7 +219,6 @@ describe("research Google Search grounding", () => {
     expect(
       createGroundingWebSearchData({
         providerMetadata: {},
-        query: "empty metadata",
         sources: [],
       })
     ).toBeUndefined();
@@ -241,7 +232,6 @@ describe("research Google Search grounding", () => {
             },
           },
         },
-        query: "missing sources",
         sources: [],
       })
     ).toBeUndefined();

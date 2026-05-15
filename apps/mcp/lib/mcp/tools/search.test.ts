@@ -1,7 +1,6 @@
 import { fetchQuery } from "convex/nextjs";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
-import * as z from "zod";
 import { getNakafaSearchContentToolResult } from "@/lib/mcp/tools/search";
 
 vi.mock("convex/nextjs", () => ({
@@ -17,12 +16,12 @@ vi.mock("convex/nextjs", () => ({
   ),
 }));
 
-const ToolErrorResultSchema = z.object({
-  isError: z.literal(true),
-  structuredContent: z.object({
-    error: z.object({
-      message: z.string(),
-      suggestions: z.array(z.string()).min(1),
+const ToolErrorResultSchema = Schema.Struct({
+  isError: Schema.Literal(true),
+  structuredContent: Schema.Struct({
+    error: Schema.Struct({
+      message: Schema.String,
+      suggestions: Schema.NonEmptyArray(Schema.String),
     }),
   }),
 });
@@ -37,7 +36,8 @@ describe("nakafa_search_content", () => {
     );
 
     expect(
-      ToolErrorResultSchema.parse(result).structuredContent.error
+      Schema.decodeUnknownSync(ToolErrorResultSchema)(result).structuredContent
+        .error
     ).toStrictEqual({
       message: "Invalid Nakafa content search options.",
       suggestions: [
@@ -52,12 +52,13 @@ describe("nakafa_search_content", () => {
     const result = await Effect.runPromise(
       getNakafaSearchContentToolResult({
         locale: "en",
-        query: "rational function",
+        queries: ["rational function"],
       })
     );
 
     expect(
-      ToolErrorResultSchema.parse(result).structuredContent.error
+      Schema.decodeUnknownSync(ToolErrorResultSchema)(result).structuredContent
+        .error
     ).toStrictEqual({
       message: "Unable to search Nakafa content.",
       suggestions: ["Convex offline"],

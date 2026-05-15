@@ -146,7 +146,7 @@ describe("app/api/chat/content", () => {
                 limit: 1,
                 locale: "id",
                 offset: 0,
-                query: "function",
+                queries: ["function"],
               },
               status: "loading",
             },

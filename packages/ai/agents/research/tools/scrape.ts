@@ -2,6 +2,7 @@ import {
   ResearchScrapeError,
   type ScrapeOutput,
 } from "@repo/ai/agents/research/schema";
+import { fetchSourceMarkdown } from "@repo/ai/agents/research/tools/markdown";
 import { getDocumentMetadata } from "@repo/ai/agents/research/tools/metadata";
 import { firecrawlApp } from "@repo/ai/config/firecrawl";
 import { selectRelevantContent } from "@repo/ai/lib/selection";
@@ -14,10 +15,14 @@ import { Effect } from "effect";
  * Scrapes one URL and writes the scrape UI data part.
  */
 export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
+  query,
+  maxLength = 3000,
   toolCallId,
   url,
   writer,
 }: {
+  query?: string;
+  maxLength?: number;
   toolCallId: string;
   url: string;
   writer: UIMessageStreamWriter<MyUIMessage>;
@@ -30,19 +35,25 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
     })
   );
 
-  const scrapeResult = yield* Effect.tryPromise({
-    try: () =>
-      firecrawlApp.scrape(url, {
-        formats: ["markdown"],
-        timeout: 5000,
-      }),
-    catch: (error) =>
-      new ResearchScrapeError({ message: `Failed to crawl: ${error}` }),
-  }).pipe(
-    Effect.match({
-      onFailure: (error) => ({ error: error.message }),
-      onSuccess: (response) => ({ response }),
-    })
+  const { nativeMarkdown, scrapeResult } = yield* Effect.all(
+    {
+      nativeMarkdown: fetchSourceMarkdown(url),
+      scrapeResult: Effect.tryPromise({
+        try: () =>
+          firecrawlApp.scrape(url, {
+            formats: ["markdown"],
+            timeout: 5000,
+          }),
+        catch: (error) =>
+          new ResearchScrapeError({ message: `Failed to crawl: ${error}` }),
+      }).pipe(
+        Effect.match({
+          onFailure: (error) => ({ error: error.message }),
+          onSuccess: (response) => ({ response }),
+        })
+      ),
+    },
+    { concurrency: "unbounded" }
   );
 
   if ("error" in scrapeResult) {
@@ -64,7 +75,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
     });
   }
 
-  const markdown = scrapeResult.response.markdown;
+  const markdown = nativeMarkdown ?? scrapeResult.response.markdown;
   const metadata = getDocumentMetadata({
     metadata: scrapeResult.response.metadata,
   });
@@ -94,7 +105,8 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
 
   const processedContent = selectRelevantContent({
     content: markdown,
-    maxLength: 3000,
+    maxLength,
+    query,
   });
 
   yield* Effect.sync(() =>

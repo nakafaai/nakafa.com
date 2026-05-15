@@ -84,7 +84,6 @@ function getSearchInput(input: NakafaAgentSearchInput, locale: Locale) {
     limit: input.limit,
     locale,
     offset: input.offset,
-    ...(input.query === undefined ? {} : { query: input.query }),
     ...(input.queries === undefined ? {} : { queries: input.queries }),
     ...(input.section === undefined ? {} : { section: input.section }),
   };

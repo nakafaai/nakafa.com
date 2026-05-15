@@ -1,4 +1,5 @@
 import { google } from "@ai-sdk/google";
+import { normalizeResearchCitations } from "@repo/ai/agents/research/citation";
 import {
   nakafaScrape,
   nakafaWebSearch,
@@ -27,13 +28,14 @@ import { Effect } from "effect";
 
 // Keep exact user source scraping parallel without allowing unlimited fan-out.
 const exactSourceScrapeConcurrency = 3;
+const exactSourceContentMaxLength = 8000;
 
 /**
  * Runs the research agent and returns text with token usage.
  */
 export const runResearchAgent = Effect.fn("research.runResearchAgent")(
   function* ({
-    task,
+    intent,
     modelId,
     locale,
     context,
@@ -45,7 +47,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     let triedGoogleGrounding = false;
     const sourceReferences = getUniqueSourceReferences([
       ...messageSourceReferences,
-      ...getSourceReferences(task),
+      ...getSourceReferences(intent),
     ]);
 
     if (sourceReferences.length > 0) {
@@ -54,7 +56,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
         locale,
         modelId,
         sourceReferences,
-        task,
+        intent,
         toolCallId,
         writer,
       });
@@ -64,7 +66,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       generateText({
         model: model.languageModel(modelId),
         system: researchPrompt({ locale, context }),
-        messages: [{ role: "user", content: task }],
+        messages: [{ role: "user", content: intent }],
         tools: {
           google_search: google.tools.googleSearch({
             searchTypes: { webSearch: {} },
@@ -73,9 +75,9 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
             description: nakafaWebSearch,
             inputSchema: webSearchInputSchema,
             outputSchema: textOutputSchema,
-            execute: ({ query }, { toolCallId }) =>
+            execute: ({ queries }, { toolCallId }) =>
               Effect.runPromise(
-                searchWeb({ query, toolCallId, writer }).pipe(
+                searchWeb({ queries, intent, toolCallId, writer }).pipe(
                   Effect.tap((output) =>
                     Effect.sync(() => {
                       needsGoogleGrounding = !hasUsableWebSearchEvidence(
@@ -136,7 +138,6 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
 
     const groundedSearchData = createGroundingWebSearchData({
       providerMetadata: result.providerMetadata,
-      query: task,
       sources: result.sources,
     });
 
@@ -149,7 +150,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     }
 
     return {
-      text: result.text,
+      text: normalizeResearchCitations(result.text),
       usage: result.totalUsage,
     };
   }
@@ -160,7 +161,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
  */
 const runExactSourceResearch = Effect.fn("research.runExactSourceResearch")(
   function* ({
-    task,
+    intent,
     modelId,
     locale,
     context,
@@ -172,6 +173,8 @@ const runExactSourceResearch = Effect.fn("research.runExactSourceResearch")(
       sourceReferences,
       (source, index) =>
         scrapeUrl({
+          maxLength: exactSourceContentMaxLength,
+          query: intent,
           toolCallId: `${toolCallId}-source-${index + 1}`,
           url: source.href,
           writer,
@@ -183,7 +186,7 @@ const runExactSourceResearch = Effect.fn("research.runExactSourceResearch")(
       generateText({
         model: model.languageModel(modelId),
         system: researchPrompt({ locale, context, mode: "exact-source" }),
-        messages: createExactSourceMessages(task, sourceOutputs),
+        messages: createExactSourceMessages(intent, sourceOutputs),
         providerOptions: {
           gateway: gatewayProviderOptions,
           google: getModelProviderOptions(modelId),
@@ -192,7 +195,7 @@ const runExactSourceResearch = Effect.fn("research.runExactSourceResearch")(
     );
 
     return {
-      text: result.text,
+      text: normalizeResearchCitations(result.text),
       usage: result.totalUsage,
     };
   }
@@ -201,12 +204,12 @@ const runExactSourceResearch = Effect.fn("research.runExactSourceResearch")(
 /**
  * Gives the model already-inspected source evidence without exposing research tools.
  */
-function createExactSourceMessages(task: string, sourceOutputs: string[]) {
+function createExactSourceMessages(intent: string, sourceOutputs: string[]) {
   return [
     {
       role: "user",
       content: [
-        task,
+        intent,
         "Exact source evidence has already been retrieved. Use only the evidence below for source-specific claims. Do not broaden to search results.",
         "# Exact Source Evidence",
         sourceOutputs.join("\n\n"),

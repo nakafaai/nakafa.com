@@ -38,6 +38,6 @@ export const nakafaTaxonomy = createPrompt({
   taskContext: `
     Read Nakafa taxonomy for supported locales, sections, subject filters, exercise filters, and public MCP tool names.
     Exercise taxonomy values include localized labels so canonical IDs can be matched from user-facing names.
-    Use this when you need to understand available Nakafa content dimensions before searching.
+    Use this first when the user asks what Nakafa content structure, options, categories, filters, materials, grades, tools, or exercise paths are available.
   `,
 });

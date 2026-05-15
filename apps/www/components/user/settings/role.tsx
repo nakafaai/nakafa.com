@@ -13,20 +13,18 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
+import { Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import * as z from "zod/mini";
 import { FormBlock } from "@/components/shared/form-block";
 import type { CurrentUser } from "@/lib/context/use-user";
 import { roles } from "@/lib/data/roles";
 
-const formSchema = z.object({
-  role: z.union([
-    z.literal("teacher"),
-    z.literal("student"),
-    z.literal("parent"),
-  ]),
-});
-const roleSchema = formSchema.shape.role;
+const roleSchema = Schema.Literal("teacher", "student", "parent");
+const formSchema = Schema.standardSchemaV1(
+  Schema.Struct({
+    role: roleSchema,
+  })
+);
 
 export function UserSettingsRole({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
@@ -97,9 +95,9 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
               <Select
                 name={field.name}
                 onValueChange={(value) => {
-                  const parsed = roleSchema.safeParse(value);
-                  if (parsed.success) {
-                    field.handleChange(parsed.data);
+                  const parsed = Schema.decodeUnknownOption(roleSchema)(value);
+                  if (Option.isSome(parsed)) {
+                    field.handleChange(parsed.value);
                   }
                 }}
                 value={field.state.value ?? undefined}

@@ -484,7 +484,7 @@ export const partValidator = v.object({
   dataScrapeUrlError: v.optional(v.string()),
 
   dataWebSearchId: v.optional(v.string()),
-  dataWebSearchQuery: v.optional(v.string()),
+  dataWebSearchQueries: v.optional(v.array(v.string())),
   dataWebSearchSources: v.optional(v.array(webSearchSourceValidator)),
   dataWebSearchStatus: v.optional(dataStatusValidator),
   dataWebSearchError: v.optional(v.string()),

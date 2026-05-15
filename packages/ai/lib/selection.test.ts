@@ -12,6 +12,16 @@ describe("selectRelevantContent", () => {
     );
   });
 
+  it("keeps bounded content intact when a query is present", () => {
+    expect(
+      selectRelevantContent({
+        content: "Intro paragraph.\n\nCaptured data includes tool calls.",
+        maxLength: 100,
+        query: "tool calls",
+      })
+    ).toBe("Intro paragraph.\n\nCaptured data includes tool calls.");
+  });
+
   it("falls back to content truncation when a query has no keywords", () => {
     expect(
       selectRelevantContent({
@@ -88,6 +98,43 @@ describe("selectRelevantContent", () => {
     );
   });
 
+  it("keeps introduction, relevant middle content, and conclusion when selecting from long structured content", () => {
+    const selected = selectRelevantContent({
+      content:
+        "Intro frame.\n\nRational domain detail.\n\nUnrelated filler text.\n\nClosing note.",
+      maxLength: 70,
+      query: "rational",
+    });
+
+    expect(selected).toBe(
+      "Intro frame.\n\nRational domain detail.\n\nClosing note."
+    );
+  });
+
+  it("sorts multiple relevant middle paragraphs back into reading order", () => {
+    const selected = selectRelevantContent({
+      content:
+        "Intro frame.\n\nRational rational domain detail.\n\nLong unrelated filler paragraph that makes the source exceed the selected budget.\n\nRational detail.\n\nClosing note.",
+      maxLength: 100,
+      query: "rational",
+    });
+
+    expect(selected).toBe(
+      "Intro frame.\n\nRational rational domain detail.\n\nRational detail.\n\nClosing note."
+    );
+  });
+
+  it("falls back to truncation when long content has only two paragraphs", () => {
+    expect(
+      selectRelevantContent({
+        content:
+          "First paragraph with enough text to exceed the selected budget.\n\nSecond paragraph with more relevant rational detail.",
+        maxLength: 60,
+        query: "rational",
+      })
+    ).toBe("First paragraph with enough text to exceed the selected...");
+  });
+
   it("skips structured paragraphs that do not fit", () => {
     const selected = selectRelevantContent({
       content:
@@ -103,6 +150,7 @@ describe("selectRelevantContent", () => {
     const selected = selectRelevantContent({
       content:
         "Intro paragraph.\n\nRational function domain detail.\n\nAnother rational function example.\n\nConclusion paragraph.",
+      maxLength: 100,
       preserveStructure: false,
       query: "rational",
     });

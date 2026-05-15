@@ -1,6 +1,8 @@
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { Schema } from "effect";
 
+export const webSearchMaxQueries = 4;
+
 const urlInputSchema = Schema.NonEmptyString.pipe(
   Schema.filter((value) => URL.canParse(value), {
     message: () => "Expected a valid URL.",
@@ -27,14 +29,21 @@ export const ScrapeOutputSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 
 export const WebSearchInputSchema = Schema.Struct({
-  query: Schema.NonEmptyString.annotations({
-    description: "The query to search web for.",
-  }),
+  queries: Schema.Array(Schema.Trim.pipe(Schema.minLength(1)))
+    .pipe(
+      Schema.minItems(1),
+      Schema.maxItems(webSearchMaxQueries),
+      Schema.mutable
+    )
+    .annotations({
+      description:
+        "One or more search-engine queries. Preserve exact named entities, domains, products, APIs, libraries, institutions, and dates from the research task. Omit answer-formatting instructions such as summary length, tone, output language, and citation style.",
+    }),
 })
   .pipe(Schema.mutable)
   .annotations({
     description:
-      "Search the web for up-to-date information using a text query.",
+      "Search the web for up-to-date information using optimized query strings.",
   });
 
 export const WebSearchSourceSchema = Schema.Struct({

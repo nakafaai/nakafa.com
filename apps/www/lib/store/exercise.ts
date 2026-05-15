@@ -1,15 +1,21 @@
-import * as z from "zod/mini";
+import { Option, Schema } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
-const StateSchema = z.object({
-  slug: z.string(),
-  visibleExplanations: z.record(z.number(), z.boolean()),
-  timeSpent: z.record(z.number(), z.number()),
-  showStats: z.boolean(),
-});
-type State = z.infer<typeof StateSchema>;
+const StateSchema = Schema.Struct({
+  slug: Schema.String,
+  visibleExplanations: Schema.Record({
+    key: Schema.NumberFromString,
+    value: Schema.Boolean,
+  }),
+  timeSpent: Schema.Record({
+    key: Schema.NumberFromString,
+    value: Schema.Number,
+  }),
+  showStats: Schema.Boolean,
+}).pipe(Schema.mutable);
+type State = Schema.Schema.Type<typeof StateSchema>;
 
 /**
  * Actions available in the exercise store.
@@ -62,13 +68,18 @@ export const createExerciseStore = ({ slug }: { slug: string }) =>
         storage: createJSONStorage(() => sessionStorage),
         version: 3,
         migrate: (persistedState) => {
-          const { data } = StateSchema.safeParse(persistedState);
-          if (!data?.slug) {
+          const state = Schema.decodeUnknownOption(StateSchema)(persistedState);
+
+          if (Option.isNone(state)) {
             return initialState({ slug });
           }
-          if (!data.timeSpent) {
-            return { ...data, timeSpent: {} };
+
+          const data = state.value;
+
+          if (!data.slug) {
+            return initialState({ slug });
           }
+
           return data;
         },
       }

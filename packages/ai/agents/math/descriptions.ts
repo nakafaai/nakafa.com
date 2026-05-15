@@ -8,7 +8,7 @@
  *   https://docs.sympy.org/latest/index.html
  */
 export const mathArithmetic =
-  "Use for exact arithmetic and concrete numeric evaluation. Send operation evaluate with expression copied from the user, for example 125 * 48 / 6. Do not use for unresolved symbolic equations.";
+  "Use for exact arithmetic and concrete numeric evaluation. Send operation evaluate with expression copied from the user, for example 125 * 48 / 6. Do not use for unresolved symbolic equations, named probability distributions, expected values, or variances.";
 
 export const mathAlgebra =
   "Use for symbolic algebra. Send expression for simplify, factor, expand, cancel, together, apart, rationalize, or domain. Use cancel specifically when the user asks to cancel, coret, mencoret, or membatalkan a common factor in a rational expression. For validity or equivalence questions like A = B, send operation compare with left as A and right as B.";
@@ -29,7 +29,7 @@ export const mathStatistics =
   "Use for descriptive statistics: mean, median, mode, variance, standard deviation, quartiles, and z-score. Send values as the dataset; z-score also needs the target expression.";
 
 export const mathProbability =
-  "Use for supported probability distributions. Use distribution when the user asks to inspect, check, or validate a named distribution and its parameters. Use expected_value or variance_probability only when the user asks for expectation or variance.";
+  "Use for supported named probability distributions such as normal, binomial, or poisson. Prefer this over arithmetic when a distribution and its parameters are given. Always include required parameters: bernoulli p, binomial n and p, normal mean and standard_deviation, poisson lambda, uniform lower and upper. Use distribution when the user asks to inspect, check, or validate the distribution. Use expected_value or variance_probability when the user asks for expectation or variance.";
 
 export const mathGeometry =
   "Use for coordinate geometry: distance, midpoint, slope, line equations, circle equations, and intersections. Send points for point-based operations; send expressions for equation intersections.";

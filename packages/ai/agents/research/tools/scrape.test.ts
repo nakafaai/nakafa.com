@@ -2,18 +2,21 @@ import { scrapeUrl } from "@repo/ai/agents/research/tools/scrape";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const firecrawlApp = vi.hoisted(() => ({
   scrape: vi.fn(),
 }));
+const selectRelevantContent = vi.hoisted(() =>
+  vi.fn(({ content }: { content: string; query?: string }) => content)
+);
 
 vi.mock("@repo/ai/config/firecrawl", () => ({
   firecrawlApp,
 }));
 
 vi.mock("@repo/ai/lib/selection", () => ({
-  selectRelevantContent: ({ content }: { content: string }) => content,
+  selectRelevantContent,
 }));
 
 type WrittenPart = Parameters<UIMessageStreamWriter<MyUIMessage>["write"]>[0];
@@ -34,6 +37,15 @@ function createWriter() {
 describe("research scrape tool", () => {
   beforeEach(() => {
     firecrawlApp.scrape.mockReset();
+    selectRelevantContent.mockClear();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(new Response("", { status: 404 })))
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("keeps Firecrawl metadata in tool text and UI data", async () => {
@@ -75,6 +87,68 @@ describe("research scrape tool", () => {
         }),
       }),
     ]);
+  });
+
+  it("prefers source-native markdown over thin crawler markdown", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((input: Parameters<typeof fetch>[0]) => {
+        if (
+          String(input) === "https://ai-sdk.dev/docs/ai-sdk-core/devtools.md"
+        ) {
+          return Promise.resolve(
+            new Response(
+              [
+                "# DevTools",
+                "",
+                "AI SDK DevTools gives you full visibility over your AI SDK calls with generateText, streamText, and ToolLoopAgent.",
+              ].join("\n"),
+              {
+                headers: { "content-type": "text/markdown" },
+              }
+            )
+          );
+        }
+
+        return Promise.resolve(
+          new Response("<html>docs shell</html>", {
+            headers: { "content-type": "text/html" },
+          })
+        );
+      })
+    );
+    firecrawlApp.scrape.mockResolvedValue({
+      markdown: "Search...\n\n# DevTools\n\n[Sign Up](https://vercel.com)",
+      metadata: {
+        description: "Debug and inspect AI SDK applications with DevTools",
+        title: "AI SDK Core: DevTools",
+      },
+    });
+    const { parts, writer } = createWriter();
+
+    const output = await Effect.runPromise(
+      scrapeUrl({
+        toolCallId: "scrape-native",
+        url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+        writer,
+      })
+    );
+
+    expect(output).toContain("full visibility over your AI SDK calls");
+    expect(output).not.toContain("Sign Up");
+    expect(parts.at(-1)).toEqual(
+      expect.objectContaining({
+        type: "data-scrape-url",
+        data: expect.objectContaining({
+          content: expect.stringContaining(
+            "full visibility over your AI SDK calls"
+          ),
+          description: "Debug and inspect AI SDK applications with DevTools",
+          status: "done",
+          title: "AI SDK Core: DevTools",
+        }),
+      })
+    );
   });
 
   it("falls back to alternate metadata fields when markdown is missing", async () => {
@@ -134,6 +208,53 @@ describe("research scrape tool", () => {
           status: "done",
           url: "https://example.com/plain",
         },
+      })
+    );
+  });
+
+  it("passes the research query to relevant content selection", async () => {
+    firecrawlApp.scrape.mockResolvedValue({
+      markdown: "# DevTools\n\nUse AI SDK DevTools for local debugging.",
+    });
+    const { writer } = createWriter();
+
+    await Effect.runPromise(
+      scrapeUrl({
+        query: "AI SDK DevTools local debugging",
+        toolCallId: "scrape-query",
+        url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+        writer,
+      })
+    );
+
+    expect(selectRelevantContent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        maxLength: 3000,
+        query: "AI SDK DevTools local debugging",
+      })
+    );
+  });
+
+  it("allows exact-source callers to keep more source evidence", async () => {
+    firecrawlApp.scrape.mockResolvedValue({
+      markdown: "# DevTools\n\nUse AI SDK DevTools for local debugging.",
+    });
+    const { writer } = createWriter();
+
+    await Effect.runPromise(
+      scrapeUrl({
+        maxLength: 8000,
+        query: "AI SDK DevTools local debugging",
+        toolCallId: "scrape-long-source",
+        url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+        writer,
+      })
+    );
+
+    expect(selectRelevantContent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        maxLength: 8000,
+        query: "AI SDK DevTools local debugging",
       })
     );
   });

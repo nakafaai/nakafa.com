@@ -84,17 +84,15 @@ SearchPart.displayName = "SearchPart";
 const SearchPartQueries = memo(({ message }: Props) => {
   const queries = Array.from(
     new Set(
-      [message.input.query, ...(message.input.queries ?? [])].flatMap(
-        (query) => {
-          const text = query?.trim();
+      (message.input.queries ?? []).flatMap((query) => {
+        const text = query.trim();
 
-          if (!text) {
-            return [];
-          }
-
-          return [text];
+        if (!text) {
+          return [];
         }
-      )
+
+        return [text];
+      })
     )
   );
 

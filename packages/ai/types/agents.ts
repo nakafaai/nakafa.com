@@ -32,7 +32,8 @@ export interface TaskAgentParams extends BaseAgentParams {
 }
 
 /** Parameters for the external research subagent. */
-export interface ResearchAgentParams extends TaskAgentParams {
+export interface ResearchAgentParams extends BaseAgentParams {
+  intent: string;
   sourceReferences: SourceReference[];
   toolCallId: string;
 }

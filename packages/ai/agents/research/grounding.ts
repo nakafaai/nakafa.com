@@ -37,11 +37,9 @@ const SourceSchema = Schema.Struct({
 /** Converts Gemini Google Search grounding into Nakafa's web-search UI data. */
 export function createGroundingWebSearchData({
   providerMetadata,
-  query,
   sources,
 }: {
   providerMetadata: unknown;
-  query: string;
   sources: unknown;
 }) {
   const groundingMetadata = getGroundingMetadata(providerMetadata);
@@ -55,7 +53,7 @@ export function createGroundingWebSearchData({
   }
 
   return {
-    query: searchQueries[0] ?? query,
+    queries: searchQueries,
     sources: groundedSources,
     status: "done",
   } satisfies DataPart["web-search"];

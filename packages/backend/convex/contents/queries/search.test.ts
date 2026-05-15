@@ -62,14 +62,14 @@ describe("contents/queries/search:search", () => {
       limit: 10,
       locale: "id",
       offset: 0,
-      query: "fungsi rasional kelas 11",
+      queries: ["fungsi rasional kelas 11"],
       section: "subject",
     });
     const bodyResult = await t.query(api.contents.queries.search.search, {
       limit: 10,
       locale: "id",
       offset: 0,
-      query: "batas input output",
+      queries: ["batas input output"],
       section: "subject",
     });
 
@@ -128,7 +128,7 @@ describe("contents/queries/search:search", () => {
       limit: 10,
       locale: "id",
       offset: 0,
-      query: "SNBT Pengetahuan Kuantitatif try out 2026 set 2 nomor 11",
+      queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2 nomor 11"],
       section: "exercises",
     });
 
@@ -198,7 +198,6 @@ describe("contents/queries/search:search", () => {
       locale: "id",
       offset: 0,
       queries: ["hukum kekekalan massa", "stoikiometri"],
-      query: "hukum kekekalan massa",
       section: "subject",
     });
 
@@ -289,7 +288,7 @@ describe("contents/queries/search:search", () => {
       limit: 20,
       locale: "id",
       offset,
-      query: "searchcap",
+      queries: ["searchcap"],
       section: "articles",
     });
 
@@ -352,7 +351,7 @@ describe("contents/queries/search:search", () => {
       limit: 10,
       locale: "id",
       offset: 0,
-      query: "searchable deletion",
+      queries: ["searchable deletion"],
     });
 
     expect(result.items).toEqual([]);
@@ -378,7 +377,7 @@ describe("contents/queries/search:search", () => {
       limit: 10,
       locale: "id",
       offset: 0,
-      query: "petunjuk",
+      queries: ["petunjuk"],
       section: "quran",
     });
 

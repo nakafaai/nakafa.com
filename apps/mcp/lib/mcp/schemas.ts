@@ -71,18 +71,13 @@ export const NakafaSearchContentInputSchema = z
       .max(NAKAFA_AGENT_MAX_OFFSET)
       .default(0)
       .describe("Zero-based result offset for pagination."),
-    query: z
-      .string()
-      .trim()
-      .optional()
-      .describe(
-        "Optional query over synced Nakafa title, route, localized labels, and content text."
-      ),
     queries: z
       .array(z.string().trim().min(1))
       .max(NAKAFA_AGENT_MAX_QUERIES)
       .optional()
-      .describe("Optional unique query variants for one bounded search."),
+      .describe(
+        "Optional search-engine query strings over synced Nakafa title, route, localized labels, and content text."
+      ),
     section: NakafaSectionSchema.optional().describe(
       "Optional top-level content section filter."
     ),

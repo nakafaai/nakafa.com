@@ -182,6 +182,10 @@ export function selectRelevantContent(
     return "";
   }
 
+  if (content.length <= maxLength) {
+    return content;
+  }
+
   // If no query provided, use smart truncation
   if (!query.trim()) {
     return truncateAtBoundary(content, maxLength);

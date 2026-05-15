@@ -11,6 +11,7 @@ import {
   prepareAnswerFromNakafaEvidenceStep,
   prepareExerciseStep,
   prepareReadStep,
+  prepareTaxonomyAnswerStep,
   selectExerciseRef,
   shouldReadAfterSearch,
 } from "@repo/ai/agents/nakafa/step";
@@ -89,7 +90,8 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
 
                     pendingExerciseRef = selectExerciseRef(
                       input,
-                      output.result
+                      output.result,
+                      task
                     );
                   })
                 ),
@@ -187,6 +189,12 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
 
         if (readStep) {
           return readStep;
+        }
+
+        const taxonomyAnswerStep = prepareTaxonomyAnswerStep(messages, steps);
+
+        if (taxonomyAnswerStep) {
+          return taxonomyAnswerStep;
         }
 
         return prepareAnswerFromNakafaEvidenceStep(messages, steps);

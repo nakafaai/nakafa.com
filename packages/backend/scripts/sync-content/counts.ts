@@ -4,12 +4,11 @@ import {
   CountTablePageSchema,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type { ConvexConfig } from "@repo/backend/scripts/sync-content/types";
-import { Effect } from "effect";
-import type * as z from "zod";
+import { Effect, Schema } from "effect";
 
 const COUNT_PAGE_SIZE = 1000;
 
-type ContentCounts = z.infer<typeof ContentCountsSchema>;
+type ContentCounts = Schema.Schema.Type<typeof ContentCountsSchema>;
 
 const countTableSpecs: Array<{
   field: keyof ContentCounts;
@@ -113,5 +112,7 @@ export const getContentCounts = Effect.fn("sync.getContentCounts")(function* (
     ]);
   }
 
-  return ContentCountsSchema.parse(Object.fromEntries(entries));
+  return Schema.decodeUnknownSync(ContentCountsSchema)(
+    Object.fromEntries(entries)
+  );
 });

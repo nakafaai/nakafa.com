@@ -36,7 +36,7 @@ const deleteStaleItems = Effect.fn("sync.deleteStaleItems")(function* (
   config: ConvexConfig,
   mutationPath: string,
   paramName: string,
-  items: StaleItem[],
+  items: readonly StaleItem[],
   successLabel: string,
   batchSize = items.length
 ) {
