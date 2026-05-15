@@ -241,6 +241,7 @@ export const DataPartSchema = Schema.Struct({
   }).pipe(Schema.mutable),
   "web-search": Schema.Struct({
     error: Schema.optional(Schema.String),
+    provider: Schema.optional(Schema.Literal("firecrawl", "google")),
     queries: Schema.Array(Schema.String).pipe(Schema.mutable),
     sources: Schema.Array(
       Schema.Struct({

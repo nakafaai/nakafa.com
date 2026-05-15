@@ -369,6 +369,7 @@ export function mapDBPartToUIMessagePart({
           partType: part.type,
         }),
         data: {
+          provider: part.dataWebSearchProvider,
           queries: requirePartField({
             value: part.dataWebSearchQueries,
             fieldName: "dataWebSearchQueries",

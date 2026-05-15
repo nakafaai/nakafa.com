@@ -129,6 +129,17 @@ export class ResearchUnsafeUrlError extends Schema.TaggedError<ResearchUnsafeUrl
   }
 ) {}
 
+/** Language model generation failed during one research phase. */
+export class ResearchGenerationError extends Schema.TaggedError<ResearchGenerationError>()(
+  "ResearchGenerationError",
+  {
+    cause: Schema.optional(Schema.String),
+    message: Schema.String,
+    phase: Schema.Literal("evidence", "synthesis"),
+    text: Schema.optional(Schema.String),
+  }
+) {}
+
 export type ScrapeInput = Schema.Schema.Type<typeof ScrapeInputSchema>;
 export type ScrapeOutput = Schema.Schema.Type<typeof ScrapeOutputSchema>;
 export type ResearchOutput = Schema.Schema.Type<typeof ResearchOutputSchema>;

@@ -65,7 +65,7 @@ describe("research prompt", () => {
 
     expect(prompt).toContain("Google Search grounding");
     expect(prompt).toContain("Use webSearch to collect inspectable Firecrawl");
-    expect(prompt).toContain("Use Google Search grounding when Firecrawl");
+    expect(prompt).toContain("Use Google Search grounding for current public");
   });
 
   it("keeps research citations structured", () => {

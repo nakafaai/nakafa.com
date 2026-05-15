@@ -273,6 +273,8 @@ export const webSearchSourceValidator = v.object({
   citation: v.string(),
 });
 
+export const webSearchProviderValidator = literals("firecrawl", "google");
+
 export const mathExpressionValidator = v.object({
   expression: v.string(),
   latex: v.string(),
@@ -484,6 +486,7 @@ export const partValidator = v.object({
   dataScrapeUrlError: v.optional(v.string()),
 
   dataWebSearchId: v.optional(v.string()),
+  dataWebSearchProvider: v.optional(webSearchProviderValidator),
   dataWebSearchQueries: v.optional(v.array(v.string())),
   dataWebSearchSources: v.optional(v.array(webSearchSourceValidator)),
   dataWebSearchStatus: v.optional(dataStatusValidator),

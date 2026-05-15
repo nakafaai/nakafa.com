@@ -165,6 +165,7 @@ export function nakafaPrompt({
       Use all relevant agents before the final answer when the user asks for a source-grounded educational answer that also needs outside evidence or deterministic math.
       Never invent source-specific content, current facts, exercise choices, citations, or verified math without the relevant evidence.
       Preserve source constraints in the final answer. If the user asks for one product, domain, document, or official source, keep that section scoped to the requested source and do not add adjacent frameworks or generic alternatives unless the user asks for comparisons.
+      If a specialist agent returns an error, do not call the same specialist again with the same request. Use a different evidence path only when it can add new evidence; otherwise answer with a clear limitation.
     `,
 
     chainOfThought: `

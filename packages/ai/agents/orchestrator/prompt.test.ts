@@ -109,6 +109,9 @@ describe("nakafaPrompt", () => {
     expect(prompt).toContain(
       "Use deepResearch before answering any request for official documentation, source-backed claims, citations, external links, current or latest information, or named products outside Nakafa."
     );
+    expect(prompt).toContain(
+      "If a specialist agent returns an error, do not call the same specialist again with the same request."
+    );
     expect(prompt).toContain("This applies in every user language.");
   });
 

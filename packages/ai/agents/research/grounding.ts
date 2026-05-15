@@ -53,10 +53,16 @@ export function createGroundingWebSearchData({
   }
 
   return {
+    provider: "google",
     queries: searchQueries,
     sources: groundedSources,
     status: "done",
   } satisfies DataPart["web-search"];
+}
+
+/** Checks whether grounding data can be shown as one query-scoped search row. */
+export function hasSingleGroundingQuery(data: DataPart["web-search"]) {
+  return data.queries.length === 1;
 }
 
 /** Reads Gemini grounding metadata from either Vercel Gateway provider shape. */

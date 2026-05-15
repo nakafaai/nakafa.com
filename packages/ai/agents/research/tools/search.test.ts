@@ -152,6 +152,7 @@ describe("research web search tool", () => {
       expect.objectContaining({
         type: "data-web-search",
         data: expect.objectContaining({
+          provider: "firecrawl",
           sources: expect.arrayContaining([
             expect.objectContaining({
               citation: "[example.com](https://example.com/research)",
@@ -180,7 +181,7 @@ describe("research web search tool", () => {
         },
       ],
     });
-    const { writer } = createWriter();
+    const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
       searchWeb({
         queries: ["AI SDK DevTools latest"],
@@ -192,6 +193,19 @@ describe("research web search tool", () => {
     expect(output.result.sources.map((source) => source.url)).toEqual([
       "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
     ]);
+    expect(getWebSearchParts(parts).at(-1)).toEqual(
+      expect.objectContaining({
+        provider: "firecrawl",
+        sources: [
+          expect.objectContaining({
+            url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+          }),
+          expect.objectContaining({
+            url: "https://developer.chrome.com/docs/devtools/ai-assistance",
+          }),
+        ],
+      })
+    );
   });
 
   it("keeps natural multilingual source queries scoped to the named product", async () => {
@@ -638,7 +652,11 @@ describe("research web search tool", () => {
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
         type: "data-web-search",
-        data: expect.objectContaining({ status: "done", sources: [] }),
+        data: expect.objectContaining({
+          provider: "firecrawl",
+          status: "done",
+          sources: [],
+        }),
       })
     );
   });
@@ -660,7 +678,10 @@ describe("research web search tool", () => {
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
         type: "data-web-search",
-        data: expect.objectContaining({ status: "error" }),
+        data: expect.objectContaining({
+          provider: "firecrawl",
+          status: "error",
+        }),
       })
     );
   });

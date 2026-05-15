@@ -148,6 +148,7 @@ function mapUIMessagePartToDBPart(
         ...baseFields,
         type: part.type,
         dataWebSearchId: part.id,
+        dataWebSearchProvider: part.data.provider,
         dataWebSearchQueries: part.data.queries,
         dataWebSearchSources: part.data.sources,
         dataWebSearchStatus: part.data.status,

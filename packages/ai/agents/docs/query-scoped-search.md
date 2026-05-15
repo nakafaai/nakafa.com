@@ -18,16 +18,36 @@ flowchart LR
 
 ## Contracts
 
-- `data-web-search` uses `queries: [query]` for each Firecrawl web search run.
+- `data-web-search` uses `queries: [query]` for each executed search run.
+- `data-web-search.provider` is internal trace data only. The UI does not show
+  provider names to users.
 - `data-nakafa.kind === "search"` uses `input.queries: [query]` for each
   Convex-backed Nakafa search run.
 - The same data-part id is used for loading and terminal state so AI SDK
   reconciliation updates the visible row in place.
-- Agent reasoning may aggregate successful results after streaming. That
-  aggregate is internal and must not become the UI source tray.
+- Firecrawl UI parts render provider-returned sources. Agent reasoning receives
+  the filtered evidence set separately.
 - Google grounding can expose provider-level queries and sources without a
   source-per-query mapping. Do not invent groupings when the provider does not
   return that relationship.
+- Google grounding is rendered as a search row only when it has exactly one
+  search query. Multi-query grounding remains internal evidence because the
+  provider does not expose which sources belong to which query.
+
+```mermaid
+flowchart TD
+  Query["LLM-generated queries[]"] --> Firecrawl["Firecrawl search"]
+  Firecrawl --> Raw["provider-returned sources"]
+  Firecrawl --> Scoped["query/intent-scoped evidence"]
+  Raw --> UI["data-web-search row"]
+  Scoped --> Agent["research evidence notes"]
+  Agent --> Google["Google grounding step"]
+  Google --> Grounded["provider metadata sources"]
+  Grounded --> Decision{"single query?"}
+  Decision -->|yes| UI
+  Decision -->|no| Agent
+  Decision -->|yes| Agent
+```
 
 ```mermaid
 sequenceDiagram
@@ -38,10 +58,11 @@ sequenceDiagram
 
   Tool->>Stream: write id=query-1 loading
   Tool->>Stream: write id=query-2 loading
-  Tool->>Stream: write id=query-1 done with query-1 results
-  Tool->>Stream: write id=query-2 done with query-2 results
+  Tool->>Stream: write id=query-1 done with provider results
+  Tool->>Stream: write id=query-2 done with provider results
   Stream->>UI: render each query beside its own results
-  Tool->>Agent: return aggregated evidence text
+  Tool->>Agent: return scoped evidence text
+  Agent->>Stream: write Google grounding only when it is query-scoped
 ```
 
 ## References

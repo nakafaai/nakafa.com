@@ -64,7 +64,10 @@ export const WebSearchPart = memo(({ message }: Props) => {
         <Badge variant="muted">{results.length}</Badge>
       </div>
       <WebSearchPartQueries queries={message.queries} />
-      <WebSearchPartPreview results={results} />
+      <WebSearchPartPreview
+        emptyLabel={t("web-search-empty")}
+        results={results}
+      />
     </div>
   );
 });
@@ -91,9 +94,15 @@ const WebSearchPartQueries = memo(({ queries }: { queries: string[] }) => {
 WebSearchPartQueries.displayName = "WebSearchPartQueries";
 
 const WebSearchPartPreview = memo(
-  ({ results }: { results: DataPart["web-search"]["sources"] }) => {
+  ({
+    emptyLabel,
+    results,
+  }: {
+    emptyLabel: string;
+    results: DataPart["web-search"]["sources"];
+  }) => {
     if (results.length === 0) {
-      return null;
+      return <p className="text-muted-foreground text-sm">{emptyLabel}</p>;
     }
 
     return (

@@ -30,6 +30,15 @@ describe("research agent messages", () => {
   it("passes collected evidence to structured synthesis", () => {
     const messages = createResearchSynthesisMessages({
       evidence: "AI SDK DevTools captures generateText calls.",
+      groundingSources: [
+        {
+          citation: "[AI SDK](https://ai-sdk.dev/docs)",
+          content: "",
+          description: "",
+          title: "AI SDK",
+          url: "https://ai-sdk.dev/docs",
+        },
+      ],
       intent: "Research AI SDK DevTools.",
       sourceOutputs: ["# Scrape Result\n\nOfficial docs."],
     });
@@ -39,6 +48,8 @@ describe("research agent messages", () => {
     expect(messages[0]?.content).toContain(
       "AI SDK DevTools captures generateText calls."
     );
+    expect(messages[0]?.content).toContain("# Grounding Source References");
+    expect(messages[0]?.content).toContain("https://ai-sdk.dev/docs");
     expect(messages[0]?.content).toContain("# User-Provided Source Evidence");
   });
 

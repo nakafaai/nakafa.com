@@ -24,7 +24,7 @@ flowchart LR
   Nakafa --> Content["contents Effect service"]
   Mcp["apps/mcp"] --> Search
   Mcp --> Content
-  Research --> ResearchEvidence["evidence phase: webSearch / scrape / Google grounding"]
+  Research --> ResearchEvidence["evidence phase: Firecrawl then Google grounding / scrape"]
   ResearchEvidence --> ResearchSynthesis["synthesis phase: Output.object"]
   Math --> Evidence["evaluate / simplify / differentiate / compare"]
   Nakafa --> CitationEvidence["citation fields: [title](url)"]
@@ -79,6 +79,10 @@ sequenceDiagram
   `quran`, or `taxonomy`.
 - Search UI parts are query-scoped: one executed query writes one loading part
   and reconciles that same part to done or error.
+- Research runs Firecrawl first for inspectable source rows, then Google Search
+  grounding for corroboration when grounding metadata is available.
+- Provider identity is stored for traces and debugging, but the chat UI only
+  shows user-relevant queries and sources.
 - Specialist evidence exposes citation links beside the facts they support.
 - Final answers cite sources inline only; terminal source/reference sections are
   not part of the user-facing contract.

@@ -1,4 +1,7 @@
-import { createGroundingWebSearchData } from "@repo/ai/agents/research/grounding";
+import {
+  createGroundingWebSearchData,
+  hasSingleGroundingQuery,
+} from "@repo/ai/agents/research/grounding";
 import { describe, expect, it } from "vitest";
 
 describe("research Google Search grounding", () => {
@@ -25,6 +28,7 @@ describe("research Google Search grounding", () => {
     });
 
     expect(data).toEqual({
+      provider: "google",
       queries: ["AI SDK DevTools", "DevTools"],
       sources: [
         {
@@ -38,6 +42,28 @@ describe("research Google Search grounding", () => {
       ],
       status: "done",
     });
+    expect(data && hasSingleGroundingQuery(data)).toBe(false);
+  });
+
+  it("marks one-query grounding as safe for a query-scoped search row", () => {
+    const data = createGroundingWebSearchData({
+      providerMetadata: {
+        vertex: {
+          groundingMetadata: {
+            webSearchQueries: ["official AI SDK DevTools documentation"],
+          },
+        },
+      },
+      sources: [
+        {
+          sourceType: "url",
+          title: "AI SDK DevTools",
+          url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+        },
+      ],
+    });
+
+    expect(data && hasSingleGroundingQuery(data)).toBe(true);
   });
 
   it("falls back to grounding chunks when source parts are unavailable", () => {
@@ -175,6 +201,7 @@ describe("research Google Search grounding", () => {
     });
 
     expect(data).toEqual({
+      provider: "google",
       queries: [],
       sources: [
         {
@@ -202,6 +229,7 @@ describe("research Google Search grounding", () => {
     });
 
     expect(data).toEqual({
+      provider: "google",
       queries: ["official AI SDK DevTools documentation"],
       sources: [],
       status: "done",

@@ -36,7 +36,12 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
       writer.write({
         id: getWebSearchPartId(toolCallId, index),
         type: "data-web-search",
-        data: { queries: [query], status: "loading", sources: [] },
+        data: {
+          provider: "firecrawl",
+          queries: [query],
+          status: "loading",
+          sources: [],
+        },
       });
     })
   );
@@ -45,25 +50,30 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
     searchQueries,
     (query, index) =>
       searchFirecrawl(query).pipe(
-        Effect.map(({ response }) => ({
-          error: undefined,
-          sources: dedupeSources(
+        Effect.map(({ response }) => {
+          const providerSources = dedupeSources(
+            readSearchSources({ query, response })
+          );
+          const sources = dedupeSources(
             scopeSources({
               intent,
               query,
-              sources: readSearchSources({ query, response }),
+              sources: providerSources,
             })
-          ),
-        })),
-        Effect.tap(({ sources }) =>
+          );
+
+          return { error: undefined, providerSources, sources };
+        }),
+        Effect.tap(({ providerSources }) =>
           Effect.sync(() =>
             writer.write({
               id: getWebSearchPartId(toolCallId, index),
               type: "data-web-search",
               data: {
+                provider: "firecrawl",
                 queries: [query],
                 status: "done",
-                sources: addSourceCitations(sources),
+                sources: addSourceCitations(providerSources),
               },
             })
           )
@@ -74,6 +84,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
               id: getWebSearchPartId(toolCallId, index),
               type: "data-web-search",
               data: {
+                provider: "firecrawl",
                 queries: [query],
                 status: "error",
                 sources: [],
