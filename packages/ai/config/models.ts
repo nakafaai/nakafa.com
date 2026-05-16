@@ -10,7 +10,7 @@ export type ModelId = (typeof MODEL_IDS)[number];
 
 export const modelRegistry = {
   "nakafa-lite": {
-    credits: 1,
+    credits: 2,
     gatewayId: "google/gemini-3.1-flash-lite",
     thinking: {
       thinkingConfig: {
@@ -20,7 +20,7 @@ export const modelRegistry = {
     },
   },
   "nakafa-pro": {
-    credits: 3,
+    credits: 5,
     gatewayId: "google/gemini-3-pro-preview",
     thinking: {
       thinkingConfig: {

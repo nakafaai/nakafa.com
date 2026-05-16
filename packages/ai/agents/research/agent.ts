@@ -48,7 +48,7 @@ import { Effect } from "effect";
 // Keep exact user source scraping parallel without allowing unlimited fan-out.
 const exactSourceScrapeConcurrency = 3;
 const exactSourceContentMaxLength = 8000;
-const synthesisRetryAttempts = 2;
+const synthesisRetryAttempts = 3;
 
 /**
  * Runs the research agent and returns text with token usage.

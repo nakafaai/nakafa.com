@@ -20,10 +20,12 @@ describe("Nakafa model registry", () => {
   });
 
   it("keeps credit costs and gateway mapping explicit", () => {
-    expect(getModelCreditCost("nakafa-lite")).toBe(1);
-    expect(getModelCreditCost("nakafa-pro")).toBe(3);
-    expect(hasEnoughCredits(1, "nakafa-lite")).toBe(true);
-    expect(hasEnoughCredits(2, "nakafa-pro")).toBe(false);
+    expect(getModelCreditCost("nakafa-lite")).toBe(2);
+    expect(getModelCreditCost("nakafa-pro")).toBe(5);
+    expect(hasEnoughCredits(1, "nakafa-lite")).toBe(false);
+    expect(hasEnoughCredits(2, "nakafa-lite")).toBe(true);
+    expect(hasEnoughCredits(4, "nakafa-pro")).toBe(false);
+    expect(hasEnoughCredits(5, "nakafa-pro")).toBe(true);
     expect(getModelGatewayId("nakafa-lite")).toBe(
       "google/gemini-3.1-flash-lite"
     );

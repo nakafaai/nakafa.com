@@ -1,4 +1,5 @@
 import posthogTest from "@posthog/convex/test";
+import { getModelCreditCost } from "@repo/ai/config/models";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import { productAnalyticsEventValidator } from "@repo/backend/convex/analytics/events";
 import schema from "@repo/backend/convex/schema";
@@ -108,7 +109,7 @@ describe("analytics/capture", () => {
         name: "chat response completed",
         properties: {
           chat_type: "study",
-          credits: 1,
+          credits: getModelCreditCost("nakafa-lite"),
           input_tokens: 10,
           model_id: "nakafa-lite",
           output_tokens: 20,
