@@ -27,6 +27,7 @@ class MathRequest(BaseModel):
     operation: str
     expression: str | None = None
     expressions: list[str] = Field(default_factory=list)
+    inclusive: bool | None = None
     left: str | None = None
     right: str | None = None
     variable: str | None = None
@@ -34,7 +35,9 @@ class MathRequest(BaseModel):
     point: str | None = None
     order: int | None = None
     lower: str | None = None
+    lowerInclusive: bool | None = None
     upper: str | None = None
+    upperInclusive: bool | None = None
     matrix: list[list[str]] = Field(default_factory=list)
     right_matrix: list[list[str]] = Field(default_factory=list)
     vector: list[str] = Field(default_factory=list)

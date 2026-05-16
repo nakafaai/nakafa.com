@@ -78,6 +78,7 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
         "For equivalence or validity checks, use compare with left and right expressions.",
         "For simplify, factor, expand, cancel, together, apart, rationalize, or domain, include expression.",
         "For derivative, integral, or limit, include expression and use variable x unless the request names another variable.",
+        "For named probability distributions, include distribution, parameters, and the requested point or event bounds.",
         `Selected tool: ${toolCall.toolName}`,
         "Original user request:",
         task,

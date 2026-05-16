@@ -59,6 +59,104 @@ def test_normal_cumulative_probability() -> None:
     assert result.secondary.expression == "1 - erfc(3*sqrt(2)/4)/2"
 
 
+def test_normal_cumulative_probability_can_be_exclusive() -> None:
+    result = run(
+        MathRequest(
+            distribution="normal",
+            inclusive=False,
+            kind="math",
+            operation="cumulative_probability",
+            parameters={"mean": "70", "standard_deviation": "10"},
+            upper="85",
+            variable="X",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.primary.expression == "P(X < 85)"
+    assert result.secondary
+    assert result.secondary.expression == "1 - erfc(3*sqrt(2)/4)/2"
+
+
+def test_normal_interval_probability() -> None:
+    result = run(
+        MathRequest(
+            distribution="normal",
+            kind="math",
+            lower="60",
+            operation="interval_probability",
+            parameters={"mean": "70", "standard_deviation": "10"},
+            upper="85",
+            variable="X",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.stepStatus == "complete"
+    assert result.primary.expression == "P(60 <= X <= 85)"
+    assert result.secondary
+    assert result.secondary.expression == "erf(sqrt(2)/2)/2 + erf(3*sqrt(2)/4)/2"
+
+
+def test_normal_interval_probability_can_use_open_bounds() -> None:
+    result = run(
+        MathRequest(
+            distribution="normal",
+            kind="math",
+            lower="60",
+            lowerInclusive=False,
+            operation="interval_probability",
+            parameters={"mean": "70", "standard_deviation": "10"},
+            upper="85",
+            upperInclusive=False,
+            variable="X",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.primary.expression == "P(60 < X < 85)"
+    assert result.secondary
+    assert result.secondary.expression == "erf(sqrt(2)/2)/2 + erf(3*sqrt(2)/4)/2"
+
+
+def test_poisson_tail_probability_defaults_to_inclusive() -> None:
+    result = run(
+        MathRequest(
+            distribution="poisson",
+            kind="math",
+            lower="2",
+            operation="tail_probability",
+            parameters={"lambda": "3"},
+            variable="X",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.primary.expression == "P(X >= 2)"
+    assert result.secondary
+    assert result.secondary.expression == "(-4 + exp(3))*exp(-3)"
+
+
+def test_poisson_tail_probability_can_be_exclusive() -> None:
+    result = run(
+        MathRequest(
+            distribution="poisson",
+            inclusive=False,
+            kind="math",
+            lower="2",
+            operation="tail_probability",
+            parameters={"lambda": "3"},
+            variable="X",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.stepStatus == "complete"
+    assert result.primary.expression == "P(X > 2)"
+    assert result.secondary
+    assert result.secondary.expression == "(-17/2 + exp(3))*exp(-3)"
+
+
 @pytest.mark.parametrize(
     ("distribution", "parameters"),
     [

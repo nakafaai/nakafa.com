@@ -31,7 +31,7 @@ import { getModelProviderOptions } from "@repo/ai/config/models";
 import { model } from "@repo/ai/config/vercel";
 import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { MathAgentParams } from "@repo/ai/types/agents";
-import { mathOperations } from "@repo/math/schema";
+import { mathOperations } from "@repo/math/schema/operations";
 import { MathService } from "@repo/math/service";
 import { generateText, stepCountIs, tool } from "ai";
 import { Effect } from "effect";
@@ -71,6 +71,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
       prepareStep: prepareMathStep,
       stopWhen: stepCountIs(MAX_MATH_STEPS),
       system: mathPrompt({ locale, context }),
+      temperature: 0,
       tools: {
         algebra: tool({
           description: mathAlgebra,

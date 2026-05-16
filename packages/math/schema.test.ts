@@ -1,9 +1,7 @@
-import {
-  MathDataSchema,
-  MathRequestSchema,
-  MathResultSchema,
-  MathToolInputSchema,
-} from "@repo/math/schema";
+import { MathDataSchema } from "@repo/math/schema/data";
+import { MathRequestSchema } from "@repo/math/schema/request";
+import { MathResultSchema } from "@repo/math/schema/result";
+import { MathToolInputSchema } from "@repo/math/schema/tool-input";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -143,6 +141,166 @@ describe("math schemas", () => {
           { x: "1", y: "2" },
           { x: "4,y:", y: "6" },
         ],
+      })
+    ).toThrow();
+  });
+
+  it("decodes probability summary input with required distribution parameters", () => {
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        distribution: "poisson",
+        operation: "expected_value",
+        parameters: {
+          lambda: "3",
+        },
+      })
+    ).toEqual({
+      distribution: "poisson",
+      operation: "expected_value",
+      parameters: {
+        lambda: "3",
+      },
+    });
+  });
+
+  it("decodes exact, cumulative, tail, and interval probability events", () => {
+    const decodeMathToolInput = Schema.decodeUnknownSync(MathToolInputSchema);
+
+    expect(
+      decodeMathToolInput({
+        distribution: "binomial",
+        operation: "point_probability",
+        parameters: {
+          n: "10",
+          p: "0.4",
+        },
+        point: "3",
+      })
+    ).toEqual({
+      distribution: "binomial",
+      operation: "point_probability",
+      parameters: {
+        n: "10",
+        p: "0.4",
+      },
+      point: "3",
+    });
+
+    expect(
+      decodeMathToolInput({
+        distribution: "normal",
+        inclusive: false,
+        operation: "cumulative_probability",
+        parameters: {
+          mean: "70",
+          standard_deviation: "10",
+        },
+        upper: "85",
+      })
+    ).toEqual({
+      distribution: "normal",
+      inclusive: false,
+      operation: "cumulative_probability",
+      parameters: {
+        mean: "70",
+        standard_deviation: "10",
+      },
+      upper: "85",
+    });
+
+    expect(
+      decodeMathToolInput({
+        distribution: "poisson",
+        inclusive: false,
+        lower: "4",
+        operation: "tail_probability",
+        parameters: {
+          lambda: "3",
+        },
+      })
+    ).toEqual({
+      distribution: "poisson",
+      inclusive: false,
+      lower: "4",
+      operation: "tail_probability",
+      parameters: {
+        lambda: "3",
+      },
+    });
+
+    expect(
+      decodeMathToolInput({
+        distribution: "uniform",
+        lower: "2",
+        lowerInclusive: false,
+        operation: "interval_probability",
+        parameters: {
+          lower: "0",
+          upper: "10",
+        },
+        upper: "8",
+        upperInclusive: true,
+      })
+    ).toEqual({
+      distribution: "uniform",
+      lower: "2",
+      lowerInclusive: false,
+      operation: "interval_probability",
+      parameters: {
+        lower: "0",
+        upper: "10",
+      },
+      upper: "8",
+      upperInclusive: true,
+    });
+  });
+
+  it("rejects probability events without required event bounds", () => {
+    const decodeMathToolInput = Schema.decodeUnknownSync(MathToolInputSchema);
+
+    expect(() =>
+      decodeMathToolInput({
+        distribution: "normal",
+        operation: "interval_probability",
+        parameters: {
+          mean: "70",
+          standard_deviation: "10",
+        },
+        upper: "85",
+      })
+    ).toThrow();
+
+    expect(() =>
+      decodeMathToolInput({
+        distribution: "poisson",
+        operation: "tail_probability",
+        parameters: {
+          lambda: "3",
+        },
+      })
+    ).toThrow();
+  });
+
+  it("rejects probability inputs without required distribution parameters", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        distribution: "normal",
+        operation: "cumulative_probability",
+        parameters: {
+          mean: "70",
+        },
+        upper: "85",
+      })
+    ).toThrow();
+
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        distribution: "binomial",
+        operation: "point_probability",
+        parameters: {
+          n: "10",
+        },
+        point: "3",
       })
     ).toThrow();
   });

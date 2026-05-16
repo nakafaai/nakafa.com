@@ -291,6 +291,48 @@ describe("math AI input schemas", () => {
         point: "3",
       },
     });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          distribution: "normal",
+          lower: "60",
+          operation: "interval_probability",
+          parameters: { mean: "70", standard_deviation: "10" },
+          upper: "85",
+        })
+      )
+    ).resolves.toEqual({
+      success: true,
+      value: {
+        distribution: "normal",
+        lower: "60",
+        operation: "interval_probability",
+        parameters: { mean: "70", standard_deviation: "10" },
+        upper: "85",
+      },
+    });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          distribution: "poisson",
+          inclusive: false,
+          lower: "2",
+          operation: "tail_probability",
+          parameters: { lambda: "3" },
+        })
+      )
+    ).resolves.toEqual({
+      success: true,
+      value: {
+        distribution: "poisson",
+        inclusive: false,
+        lower: "2",
+        operation: "tail_probability",
+        parameters: { lambda: "3" },
+      },
+    });
   });
 
   it("rejects malformed geometry points before tool execution", async () => {
@@ -391,6 +433,45 @@ describe("math AI input schemas", () => {
       expect(jsonSchema).not.toHaveProperty("anyOf");
       expect(jsonSchema).toMatchObject({ type: "object" });
     }
+  });
+
+  it("keeps probability event fields visible behind one model-facing tool", async () => {
+    const schema = asSchema(mathProbabilityInput);
+    const jsonSchema = await Promise.resolve(schema.jsonSchema);
+
+    expect(jsonSchema).toMatchObject({
+      properties: {
+        distribution: {
+          enum: ["bernoulli", "binomial", "normal", "poisson", "uniform"],
+        },
+        operation: {
+          enum: expect.arrayContaining([
+            "distribution",
+            "expected_value",
+            "variance_probability",
+            "point_probability",
+            "cumulative_probability",
+            "tail_probability",
+            "interval_probability",
+          ]),
+        },
+        parameters: {
+          description: expect.stringContaining(
+            "normal uses mean and standard_deviation"
+          ),
+          properties: {
+            mean: expect.objectContaining({ type: "string" }),
+            standard_deviation: expect.objectContaining({ type: "string" }),
+          },
+          type: "object",
+        },
+        point: expect.objectContaining({ type: "string" }),
+        lower: expect.objectContaining({ type: "string" }),
+        upper: expect.objectContaining({ type: "string" }),
+      },
+      required: [],
+      type: "object",
+    });
   });
 
   it("keeps model-facing field metadata for grouped algebra tools", async () => {

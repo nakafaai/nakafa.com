@@ -8,6 +8,7 @@ import {
   localeValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
+import { mathOperations } from "@repo/math/schema/operations";
 import { defineTable, paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -280,59 +281,7 @@ export const mathExpressionValidator = v.object({
   latex: v.string(),
 });
 
-export const mathOperationValidator = literals(
-  "apart",
-  "cancel",
-  "circle",
-  "combination",
-  "compare",
-  "cumulative_probability",
-  "determinant",
-  "differentiate",
-  "distance",
-  "distribution",
-  "domain",
-  "eigenvalues",
-  "eigenvectors",
-  "evaluate",
-  "expected_value",
-  "expand",
-  "factor",
-  "gcd",
-  "integrate",
-  "intersection",
-  "inverse",
-  "is_prime",
-  "lcm",
-  "limit",
-  "line",
-  "linear_system",
-  "matrix_multiply",
-  "mean",
-  "median",
-  "midpoint",
-  "mode",
-  "modular",
-  "permutation",
-  "point_probability",
-  "prime_factorization",
-  "product",
-  "quartiles",
-  "rank",
-  "rationalize",
-  "roots",
-  "rref",
-  "series",
-  "simplify",
-  "slope",
-  "solve",
-  "standard_deviation",
-  "summation",
-  "together",
-  "variance",
-  "variance_probability",
-  "z_score"
-);
+export const mathOperationValidator = literals(...mathOperations);
 
 export const mathStatusValidator = literals(
   "verified",
@@ -351,25 +300,39 @@ export const mathPointValidator = v.object({
   y: v.string(),
 });
 
+export const mathProbabilityParametersValidator = v.object({
+  lambda: v.optional(v.string()),
+  lower: v.optional(v.string()),
+  mean: v.optional(v.string()),
+  n: v.optional(v.string()),
+  p: v.optional(v.string()),
+  standard_deviation: v.optional(v.string()),
+  standardDeviation: v.optional(v.string()),
+  upper: v.optional(v.string()),
+});
+
 export const mathRequestValidator = v.object({
   distribution: v.optional(v.string()),
   expression: v.optional(v.string()),
   expressions: v.optional(v.array(v.string())),
+  inclusive: v.optional(v.boolean()),
   k: v.optional(v.string()),
   kind: v.literal("math"),
   left: v.optional(v.string()),
   lower: v.optional(v.string()),
+  lowerInclusive: v.optional(v.boolean()),
   matrix: v.optional(v.array(v.array(v.string()))),
   modulus: v.optional(v.string()),
   n: v.optional(v.string()),
   operation: mathOperationValidator,
   order: v.optional(v.number()),
-  parameters: v.optional(v.record(v.string(), v.string())),
+  parameters: v.optional(mathProbabilityParametersValidator),
   point: v.optional(v.string()),
   points: v.optional(v.array(mathPointValidator)),
   right: v.optional(v.string()),
   right_matrix: v.optional(v.array(v.array(v.string()))),
   upper: v.optional(v.string()),
+  upperInclusive: v.optional(v.boolean()),
   values: v.optional(v.array(v.string())),
   variable: v.optional(v.string()),
   variables: v.optional(v.array(v.string())),

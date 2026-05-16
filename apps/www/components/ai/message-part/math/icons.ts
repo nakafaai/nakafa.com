@@ -2,10 +2,8 @@ import {
   AbacusIcon,
   ApproximatelyEqualIcon,
   ArrangeByNumbersOneNineIcon,
-  ArrowDataTransferDiagonalIcon,
   ArrowDataTransferHorizontalIcon,
-  ArrowExpand02Icon,
-  CalculateIcon,
+  Calculator01Icon,
   CancelCircleIcon,
   ChartAverageIcon,
   ChartBarLineIcon,
@@ -16,13 +14,10 @@ import {
   ChartMediumIcon,
   CircleIcon,
   CongruentToCircleIcon,
-  Coordinate01Icon,
-  DiceFacesIcon,
-  DiceIcon,
-  DistributionIcon,
+  Coordinate02Icon,
   DivideSignCircleIcon,
   EqualSignCircleIcon,
-  FirstBracketIcon,
+  FirstBracketCircleIcon,
   FunctionCircleIcon,
   FunctionOfXIcon,
   FunctionSquareIcon,
@@ -31,133 +26,92 @@ import {
   HierarchySquare03Icon,
   Infinity01Icon,
   MatrixIcon,
+  MoreOrLessSquareIcon,
   MultiplicationSignCircleIcon,
   MultiplicationSignSquareIcon,
   NThRootCircleIcon,
+  Parabola01Icon,
   PathfinderIntersectIcon,
-  PiCircleIcon,
+  PercentCircleIcon,
+  PercentIcon,
+  PercentSquareIcon,
+  PieChart04Icon,
   PiIcon,
   PlusMinusCircle01Icon,
+  PlusSignSquareIcon,
   RankingIcon,
   RulerIcon,
-  SecondBracketIcon,
-  SolidLine01Icon,
+  SecondBracketSquareIcon,
+  SegmentIcon,
   SquareRootSquareIcon,
   Summation01Icon,
   SummationCircleIcon,
+  SummationSquareIcon,
   TextNumberSignIcon,
   TriangleIcon,
   UngroupItemsIcon,
+  VectorSquareIcon,
   XVariableSquareIcon,
 } from "@hugeicons/core-free-icons";
-import type { MathOperation } from "@repo/math/schema";
+import type { MathOperation } from "@repo/math/schema/operations";
+
+const mathOperationIcons = {
+  apart: UngroupItemsIcon,
+  cancel: CancelCircleIcon,
+  circle: CircleIcon,
+  combination: FirstBracketCircleIcon,
+  compare: CongruentToCircleIcon,
+  cumulative_probability: PercentCircleIcon,
+  determinant: MatrixIcon,
+  differentiate: FunctionOfXIcon,
+  distance: RulerIcon,
+  distribution: Parabola01Icon,
+  domain: XVariableSquareIcon,
+  eigenvalues: FunctionSquareIcon,
+  eigenvectors: VectorSquareIcon,
+  evaluate: Calculator01Icon,
+  expected_value: SummationSquareIcon,
+  expand: PlusSignSquareIcon,
+  factor: SecondBracketSquareIcon,
+  gcd: AbacusIcon,
+  integrate: FunctionCircleIcon,
+  intersection: PathfinderIntersectIcon,
+  inverse: ArrowDataTransferHorizontalIcon,
+  is_prime: PiIcon,
+  interval_probability: PercentSquareIcon,
+  lcm: PlusMinusCircle01Icon,
+  limit: Infinity01Icon,
+  line: SegmentIcon,
+  linear_system: HierarchySquare03Icon,
+  matrix_multiply: MultiplicationSignSquareIcon,
+  mean: ChartAverageIcon,
+  median: ChartMediumIcon,
+  midpoint: Coordinate02Icon,
+  mode: ChartMaximumIcon,
+  modular: DivideSignCircleIcon,
+  permutation: ArrangeByNumbersOneNineIcon,
+  point_probability: PercentIcon,
+  prime_factorization: TextNumberSignIcon,
+  product: MultiplicationSignCircleIcon,
+  quartiles: ChartHistogramIcon,
+  rank: RankingIcon,
+  rationalize: SquareRootSquareIcon,
+  roots: NThRootCircleIcon,
+  rref: GridTableIcon,
+  series: SummationCircleIcon,
+  simplify: ApproximatelyEqualIcon,
+  slope: TriangleIcon,
+  solve: EqualSignCircleIcon,
+  standard_deviation: ChartLineData01Icon,
+  summation: Summation01Icon,
+  tail_probability: PieChart04Icon,
+  together: GroupItemsIcon,
+  variance: ChartBarLineIcon,
+  variance_probability: MoreOrLessSquareIcon,
+  z_score: ChartEvaluationIcon,
+} satisfies Record<MathOperation, typeof AbacusIcon>;
 
 /** Selects the math-specific icon for each operation group. */
 export function getMathIcon(operation: MathOperation) {
-  switch (operation) {
-    case "evaluate":
-      return CalculateIcon;
-    case "simplify":
-      return ApproximatelyEqualIcon;
-    case "factor":
-      return SecondBracketIcon;
-    case "expand":
-      return ArrowExpand02Icon;
-    case "cancel":
-      return CancelCircleIcon;
-    case "together":
-      return GroupItemsIcon;
-    case "apart":
-      return UngroupItemsIcon;
-    case "rationalize":
-      return SquareRootSquareIcon;
-    case "domain":
-      return XVariableSquareIcon;
-    case "compare":
-      return CongruentToCircleIcon;
-    case "solve":
-      return EqualSignCircleIcon;
-    case "roots":
-      return NThRootCircleIcon;
-    case "differentiate":
-      return FunctionOfXIcon;
-    case "integrate":
-      return FunctionCircleIcon;
-    case "limit":
-      return Infinity01Icon;
-    case "series":
-      return SummationCircleIcon;
-    case "summation":
-      return Summation01Icon;
-    case "product":
-      return MultiplicationSignCircleIcon;
-    case "determinant":
-      return MatrixIcon;
-    case "inverse":
-      return ArrowDataTransferHorizontalIcon;
-    case "rank":
-      return RankingIcon;
-    case "rref":
-      return GridTableIcon;
-    case "eigenvalues":
-      return FunctionSquareIcon;
-    case "eigenvectors":
-      return ArrowDataTransferDiagonalIcon;
-    case "linear_system":
-      return HierarchySquare03Icon;
-    case "matrix_multiply":
-      return MultiplicationSignSquareIcon;
-    case "mean":
-      return ChartAverageIcon;
-    case "median":
-      return ChartMediumIcon;
-    case "mode":
-      return ChartMaximumIcon;
-    case "quartiles":
-      return ChartHistogramIcon;
-    case "standard_deviation":
-      return ChartLineData01Icon;
-    case "variance":
-      return ChartBarLineIcon;
-    case "z_score":
-      return ChartEvaluationIcon;
-    case "distribution":
-      return DistributionIcon;
-    case "expected_value":
-      return DiceIcon;
-    case "variance_probability":
-      return DiceFacesIcon;
-    case "circle":
-      return CircleIcon;
-    case "distance":
-      return RulerIcon;
-    case "intersection":
-      return PathfinderIntersectIcon;
-    case "line":
-      return SolidLine01Icon;
-    case "midpoint":
-      return Coordinate01Icon;
-    case "slope":
-      return TriangleIcon;
-    case "combination":
-      return FirstBracketIcon;
-    case "cumulative_probability":
-      return DistributionIcon;
-    case "permutation":
-      return ArrangeByNumbersOneNineIcon;
-    case "point_probability":
-      return DiceIcon;
-    case "gcd":
-      return AbacusIcon;
-    case "lcm":
-      return PlusMinusCircle01Icon;
-    case "is_prime":
-      return PiIcon;
-    case "modular":
-      return DivideSignCircleIcon;
-    case "prime_factorization":
-      return TextNumberSignIcon;
-    default:
-      return PiCircleIcon;
-  }
+  return mathOperationIcons[operation];
 }

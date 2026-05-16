@@ -17,8 +17,12 @@ def run(request: MathRequest) -> MathResult:
 
     if request.operation == "cumulative_probability":
         return _cumulative_probability(request, distribution, variable)
+    if request.operation == "interval_probability":
+        return _interval_probability(request, distribution, variable)
     if request.operation == "point_probability":
         return _point_probability(request, distribution, variable)
+    if request.operation == "tail_probability":
+        return _tail_probability(request, distribution, variable)
     if request.operation == "expected_value":
         output = E(distribution)
     elif request.operation == "variance_probability":
@@ -40,12 +44,14 @@ def run(request: MathRequest) -> MathResult:
 def _cumulative_probability(
     request: MathRequest, distribution: object, variable: sp.Symbol
 ) -> MathResult:
-    """Compute the probability that a random variable is at most the upper bound."""
+    """Compute the probability that a random variable is below an upper bound."""
     upper = parse.expression(request.upper)
-    output = P(distribution <= upper)
+    inclusive = _inclusive(request.inclusive)
+    output = P(_upper_event(distribution, upper, inclusive))
+    relation = _upper_relation(inclusive)
     primary = expression_text(
-        f"P({variable} <= {upper})",
-        f"P\\left({sp.latex(variable)} \\le {sp.latex(upper)}\\right)",
+        f"P({variable} {relation[0]} {upper})",
+        f"P\\left({sp.latex(variable)} {relation[1]} {sp.latex(upper)}\\right)",
     )
 
     return result(
@@ -58,6 +64,48 @@ def _cumulative_probability(
         steps=[
             step(
                 "cumulative-probability",
+                primary=primary,
+                relation=EQUALS,
+                secondary=output,
+            )
+        ],
+        stepStatus="complete",
+    )
+
+
+def _interval_probability(
+    request: MathRequest, distribution: object, variable: sp.Symbol
+) -> MathResult:
+    """Compute the probability that a random variable falls between two bounds."""
+    lower = parse.expression(request.lower)
+    upper = parse.expression(request.upper)
+    lower_inclusive = _inclusive(request.lowerInclusive)
+    upper_inclusive = _inclusive(request.upperInclusive)
+    output = P(
+        _lower_event(distribution, lower, lower_inclusive)
+        & _upper_event(distribution, upper, upper_inclusive)
+    )
+    lower_relation = _interval_lower_relation(lower_inclusive)
+    upper_relation = _upper_relation(upper_inclusive)
+    latex_probability = (
+        f"P\\left({sp.latex(lower)} {lower_relation[1]} "
+        f"{sp.latex(variable)} {upper_relation[1]} {sp.latex(upper)}\\right)"
+    )
+    primary = expression_text(
+        f"P({lower} {lower_relation[0]} {variable} {upper_relation[0]} {upper})",
+        latex_probability,
+    )
+
+    return result(
+        request,
+        status="verified",
+        primary=primary,
+        secondary=output,
+        reason="The interval probability was checked from the distribution.",
+        items=[item("approximation", sp.N(output))],
+        steps=[
+            step(
+                "interval-probability",
                 primary=primary,
                 relation=EQUALS,
                 secondary=output,
@@ -95,6 +143,83 @@ def _point_probability(
         ],
         stepStatus="complete",
     )
+
+
+def _tail_probability(
+    request: MathRequest, distribution: object, variable: sp.Symbol
+) -> MathResult:
+    """Compute the probability that a random variable is above a lower bound."""
+    lower = parse.expression(request.lower)
+    inclusive = _inclusive(request.inclusive)
+    output = P(_lower_event(distribution, lower, inclusive))
+    relation = _lower_relation(inclusive)
+    primary = expression_text(
+        f"P({variable} {relation[0]} {lower})",
+        f"P\\left({sp.latex(variable)} {relation[1]} {sp.latex(lower)}\\right)",
+    )
+
+    return result(
+        request,
+        status="verified",
+        primary=primary,
+        secondary=output,
+        reason="The tail probability was checked from the distribution.",
+        items=[item("approximation", sp.N(output))],
+        steps=[
+            step(
+                "tail-probability",
+                primary=primary,
+                relation=EQUALS,
+                secondary=output,
+            )
+        ],
+        stepStatus="complete",
+    )
+
+
+def _inclusive(value: bool | None) -> bool:
+    """Default omitted probability bounds to inclusive endpoints."""
+    return True if value is None else value
+
+
+def _lower_event(distribution: object, lower: sp.Expr, inclusive: bool):
+    """Build a lower-bound probability event."""
+    if inclusive:
+        return distribution >= lower
+
+    return distribution > lower
+
+
+def _upper_event(distribution: object, upper: sp.Expr, inclusive: bool):
+    """Build an upper-bound probability event."""
+    if inclusive:
+        return distribution <= upper
+
+    return distribution < upper
+
+
+def _lower_relation(inclusive: bool) -> tuple[str, str]:
+    """Render lower-bound relation text and LaTeX."""
+    if inclusive:
+        return ">=", "\\ge"
+
+    return ">", ">"
+
+
+def _interval_lower_relation(inclusive: bool) -> tuple[str, str]:
+    """Render the lower relation when the bound is printed before the variable."""
+    if inclusive:
+        return "<=", "\\le"
+
+    return "<", "<"
+
+
+def _upper_relation(inclusive: bool) -> tuple[str, str]:
+    """Render upper-bound relation text and LaTeX."""
+    if inclusive:
+        return "<=", "\\le"
+
+    return "<", "<"
 
 
 def _distribution(request: MathRequest, variable: sp.Symbol) -> object:

@@ -1,5 +1,7 @@
 import { formatMathData } from "@repo/ai/agents/math/format";
-import type { MathData, MathRequest, MathResult } from "@repo/math/schema";
+import type { MathData } from "@repo/math/schema/data";
+import type { MathRequest } from "@repo/math/schema/request";
+import type { MathResult } from "@repo/math/schema/result";
 import { describe, expect, it } from "vitest";
 
 const input = {

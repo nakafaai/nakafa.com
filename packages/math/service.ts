@@ -1,7 +1,7 @@
 import { MathCasRequestError, MathCasResponseError } from "@repo/math/errors";
 import { casApiKey, casUrl } from "@repo/math/keys";
-import type { MathRequest } from "@repo/math/schema";
-import { MathResultSchema } from "@repo/math/schema";
+import type { MathRequest } from "@repo/math/schema/request";
+import { MathResultSchema } from "@repo/math/schema/result";
 import { Effect, Redacted, Schema } from "effect";
 
 const CAS_MATH_PATH = "/api/math";

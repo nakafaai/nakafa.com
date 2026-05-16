@@ -30,8 +30,14 @@ describe("mathPrompt", () => {
       "Use calculus for derivative, integral, or limit requests before any arithmetic simplification."
     );
     expect(prompt).toContain(
-      "For named probability distributions such as normal, binomial, or poisson, use probability"
+      "For named probability distributions such as normal, binomial, or poisson, use probability for the original event."
     );
+    expect(prompt).toContain("tail_probability for above or at-least");
+    expect(prompt).toContain("call probability once");
+    expect(prompt).toContain("operation interval_probability");
+    expect(prompt).not.toContain("probabilityInterval");
+    expect(prompt).not.toContain("probabilityTail");
+    expect(prompt).not.toContain("probabilitySummary");
     expect(prompt).toContain(
       "Use arithmetic only for direct numeric evaluation or for simplifying a value after the original target operation has been checked."
     );
@@ -62,11 +68,13 @@ describe("mathPrompt", () => {
     expect(prompt).toContain(
       "what we are finding, why the next step is valid, and what result follows"
     );
+    expect(prompt).toContain("do not imply the user already used steps");
     expect(prompt).toContain("Use the user's locale");
     expect(prompt).toContain(
       "Do not invent derivation steps that are not present in the checked work."
     );
     expect(prompt).toContain("Do not mention internal system names");
+    expect(prompt).toContain("Do not say a tool, helper, backend, or system");
     expect(prompt).toContain("normal classroom language");
     expect(prompt).toContain("Describe the check status");
     expect(prompt).not.toContain("student-friendly");

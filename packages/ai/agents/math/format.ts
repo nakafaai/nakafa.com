@@ -1,10 +1,10 @@
+import type { MathData } from "@repo/math/schema/data";
+import type { MathResult } from "@repo/math/schema/result";
 import type {
-  MathData,
   MathExpression,
   MathItem,
-  MathResult,
   MathStep,
-} from "@repo/math/schema";
+} from "@repo/math/schema/shared";
 import dedent from "dedent";
 
 /** Formats deterministic checked work as model-readable markdown. */

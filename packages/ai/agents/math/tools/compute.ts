@@ -1,10 +1,8 @@
 import { formatMathData } from "@repo/ai/agents/math/format";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import {
-  type MathData,
-  type MathRequest,
-  MathToolInputSchema,
-} from "@repo/math/schema";
+import type { MathData } from "@repo/math/schema/data";
+import type { MathRequest } from "@repo/math/schema/request";
+import { MathToolInputSchema } from "@repo/math/schema/tool-input";
 import { MathService } from "@repo/math/service";
 import type { Locale } from "@repo/utilities/locales";
 import type { UIMessageStreamWriter } from "ai";

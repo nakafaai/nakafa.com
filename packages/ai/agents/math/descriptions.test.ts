@@ -9,10 +9,13 @@ describe("math tool descriptions", () => {
   });
 
   it("routes named distribution event probabilities through probability", () => {
-    expect(mathProbability).toContain("Use point_probability");
-    expect(mathProbability).toContain("Use cumulative_probability");
+    expect(mathProbability).toContain("point_probability");
+    expect(mathProbability).toContain("cumulative_probability");
+    expect(mathProbability).toContain("tail_probability");
+    expect(mathProbability).toContain("interval_probability");
+    expect(mathProbability).toContain("needs lower and upper");
     expect(mathProbability).toContain(
-      "Prefer this over arithmetic or calculus"
+      "Prefer probability over arithmetic or calculus"
     );
   });
 });

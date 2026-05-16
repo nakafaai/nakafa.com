@@ -1,6 +1,8 @@
 import { compute } from "@repo/ai/agents/math/tools/compute";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { MathRequest, MathResult, MathToolInput } from "@repo/math/schema";
+import type { MathRequest } from "@repo/math/schema/request";
+import type { MathResult } from "@repo/math/schema/result";
+import type { MathToolInput } from "@repo/math/schema/tool-input";
 import { MathService } from "@repo/math/service";
 import type { UIMessageStreamWriter } from "ai";
 import { ConfigProvider, Effect } from "effect";

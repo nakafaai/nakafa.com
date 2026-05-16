@@ -1,5 +1,5 @@
 import { NAKAFA_AGENT_SECTIONS } from "@repo/contents/_lib/agent/constants";
-import { MathDataSchema } from "@repo/math/schema";
+import { MathDataSchema } from "@repo/math/schema/data";
 import { locales } from "@repo/utilities/locales";
 import { Schema } from "effect";
 

@@ -4,12 +4,12 @@ import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { DataPart } from "@repo/ai/schema/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import type { MathResult } from "@repo/math/schema/result";
 import type {
   MathExpression,
   MathItem,
-  MathResult,
   MathStep,
-} from "@repo/math/schema";
+} from "@repo/math/schema/shared";
 import { useTranslations } from "next-intl";
 import { Expression } from "@/components/ai/message-part/math/expression";
 import { getItemLabelKey } from "@/components/ai/message-part/math/labels";

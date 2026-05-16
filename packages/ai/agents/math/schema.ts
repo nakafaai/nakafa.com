@@ -2,18 +2,16 @@ import {
   createEffectSchema,
   providerCompatibleObjectSchema,
 } from "@repo/ai/lib/effect-schema";
-import {
-  MathAlgebraInputSchema,
-  MathArithmeticInputSchema,
-  MathCalculusInputSchema,
-  MathDiscreteInputSchema,
-  MathEquationInputSchema,
-  MathGeometryInputSchema,
-  MathMatrixInputSchema,
-  MathProbabilityInputSchema,
-  MathSeriesInputSchema,
-  MathStatisticsInputSchema,
-} from "@repo/math/schema";
+import { MathAlgebraInputSchema } from "@repo/math/schema/tool/algebra";
+import { MathArithmeticInputSchema } from "@repo/math/schema/tool/arithmetic";
+import { MathCalculusInputSchema } from "@repo/math/schema/tool/calculus";
+import { MathDiscreteInputSchema } from "@repo/math/schema/tool/discrete";
+import { MathEquationInputSchema } from "@repo/math/schema/tool/equation";
+import { MathGeometryInputSchema } from "@repo/math/schema/tool/geometry";
+import { MathMatrixInputSchema } from "@repo/math/schema/tool/matrix";
+import { MathProbabilityInputSchema } from "@repo/math/schema/tool/probability";
+import { MathSeriesInputSchema } from "@repo/math/schema/tool/series";
+import { MathStatisticsInputSchema } from "@repo/math/schema/tool/statistics";
 
 export const mathArithmeticInput = createEffectSchema(
   MathArithmeticInputSchema
