@@ -78,7 +78,7 @@ function renderNakafaExerciseMarkdown(ref: NakafaAgentContentRef) {
         ...ref,
         description: `${exercise.value.count} exercises`,
         text: [
-          `# ${formatNakafaRouteTitle(exercise.value.route)}`,
+          `# ${formatNakafaRouteTitle(exercise.value.route, ref.locale)}`,
           "",
           `Source URL: ${exercise.value.url}`,
           `Markdown URL: ${exercise.value.markdown_url}`,
@@ -102,7 +102,7 @@ function renderNakafaExerciseMarkdown(ref: NakafaAgentContentRef) {
             "",
           ]),
         ].join("\n"),
-        title: formatNakafaRouteTitle(exercise.value.route),
+        title: formatNakafaRouteTitle(exercise.value.route, ref.locale),
       })
     );
   });

@@ -136,6 +136,9 @@ describe("nakafaPrompt", () => {
       "Cite sources inline in the exact sentence they support."
     );
     expect(prompt).toContain(
+      "When evidence contains an inline citation field, integrate that link into the supported sentence"
+    );
+    expect(prompt).toContain(
       "Never show numeric citation markers such as [1] or [4, 21, 23] to users."
     );
     expect(prompt).toContain(

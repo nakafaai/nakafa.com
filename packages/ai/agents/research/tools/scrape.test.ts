@@ -78,6 +78,11 @@ describe("research scrape tool", () => {
     expect(output).toContain(
       "- Description: Debug and inspect AI SDK applications with DevTools"
     );
+    expect(fetch).not.toHaveBeenCalled();
+    expect(firecrawlApp.scrape).toHaveBeenCalledWith(
+      "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+      expect.objectContaining({ formats: ["markdown"] })
+    );
     expect(parts).toEqual([
       expect.objectContaining({
         type: "data-scrape-url",
@@ -142,12 +147,12 @@ describe("research scrape tool", () => {
     expect(firecrawlApp.scrape).not.toHaveBeenCalled();
   });
 
-  it("prefers source-native markdown over thin crawler markdown", async () => {
+  it("prefers source-native markdown for IP-literal URLs", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn((input: Parameters<typeof fetch>[0]) => {
         if (
-          String(input) === "https://ai-sdk.dev/docs/ai-sdk-core/devtools.md"
+          String(input) === "https://93.184.216.34/docs/ai-sdk-core/devtools.md"
         ) {
           return Promise.resolve(
             new Response(
@@ -182,7 +187,7 @@ describe("research scrape tool", () => {
     const output = await Effect.runPromise(
       scrapeUrl({
         toolCallId: "scrape-native",
-        url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+        url: "https://93.184.216.34/docs/ai-sdk-core/devtools",
         writer,
       })
     );

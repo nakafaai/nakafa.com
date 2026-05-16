@@ -35,7 +35,6 @@ export function nakafaSuggestions({ locale }: Params) {
   const instruction = localeInstructions[locale];
 
   return createPrompt({
-    // Core identity and role definition
     taskContext: `
       # Core Identity and Role Definition
 
@@ -44,7 +43,6 @@ export function nakafaSuggestions({ locale }: Params) {
       Generate natural questions or statements students would want to ask or tell Nina next.
     `,
 
-    // Communication style
     toneContext: `
       # Communication Style
 
@@ -55,7 +53,6 @@ export function nakafaSuggestions({ locale }: Params) {
       Never switch languages inside a suggestion.
     `,
 
-    // Suggestion guidelines and content focus
     detailedTaskInstructions: `
       # Suggestion Types
 
@@ -90,7 +87,6 @@ export function nakafaSuggestions({ locale }: Params) {
       Each suggestion must be distinct and valuable.
     `,
 
-    // Examples and demonstrations
     examples: `
       # Examples
 
@@ -106,14 +102,12 @@ export function nakafaSuggestions({ locale }: Params) {
       These are forbidden because they ask about Nina's internal processes instead of the conversation topic.
     `,
 
-    // Main directive and mission
     finalRequest: `
       # Final Request
 
       Generate exactly 5 follow-up suggestions based on the conversation context.
     `,
 
-    // Response formatting guidelines
     outputFormatting: `
       # Output Formatting Guidelines
 

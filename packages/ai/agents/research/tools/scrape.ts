@@ -59,12 +59,16 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
     });
   }
 
+  const publicUrl = safeUrl.right.publicUrl;
+
   const { nativeMarkdown, scrapeResult } = yield* Effect.all(
     {
-      nativeMarkdown: fetchSourceMarkdown(safeUrl.right),
+      nativeMarkdown: safeUrl.right.nativeFetchUrl
+        ? fetchSourceMarkdown(safeUrl.right.nativeFetchUrl)
+        : Effect.succeed(undefined),
       scrapeResult: Effect.tryPromise({
         try: () =>
-          firecrawlApp.scrape(safeUrl.right, {
+          firecrawlApp.scrape(publicUrl, {
             formats: ["markdown"],
             timeout: 5000,
           }),
@@ -86,7 +90,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
         id: toolCallId,
         type: "data-scrape-url",
         data: {
-          url: safeUrl.right,
+          url: publicUrl,
           status: "error",
           content: "",
           error: scrapeResult.error,
@@ -96,7 +100,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
 
     return formatOutput({
       output: {
-        data: { url: safeUrl.right, content: "" },
+        data: { url: publicUrl, content: "" },
         error: scrapeResult.error,
       },
     });
@@ -113,7 +117,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
         id: toolCallId,
         type: "data-scrape-url",
         data: {
-          url: safeUrl.right,
+          url: publicUrl,
           status: "error",
           content: "",
           ...metadata,
@@ -124,7 +128,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
 
     return formatOutput({
       output: {
-        data: { url: safeUrl.right, content: "", ...metadata },
+        data: { url: publicUrl, content: "", ...metadata },
         error: "No content found.",
       },
     });
@@ -141,7 +145,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
       id: toolCallId,
       type: "data-scrape-url",
       data: {
-        url: safeUrl.right,
+        url: publicUrl,
         status: "done",
         content: processedContent,
         ...metadata,
@@ -152,7 +156,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
   return formatOutput({
     output: {
       data: {
-        url: safeUrl.right,
+        url: publicUrl,
         content: processedContent,
         ...metadata,
       },

@@ -96,9 +96,48 @@ describe("math data formatter", () => {
     expect(output).not.toContain("- Secondary: 42");
     expect(output).not.toContain("Reason");
     expect(output).not.toContain("SymPy");
+    expect(output).toContain(
+      "- Evidence scope: complete deterministic derivation"
+    );
     expect(output).toContain("- Step (evaluate): 6 * 7 equals 42");
     expect(output).toContain("- counterexample: {x: 1}");
     expect(output).toContain("- Condition: Ne(x, 3)");
+  });
+
+  it("formats partial evidence as limited verification scope", () => {
+    const data = {
+      input,
+      kind: "evaluate",
+      result: {
+        ...result,
+        stepStatus: "partial",
+        steps: [],
+      },
+      status: "verified",
+      summary: result.reason,
+    } satisfies MathData;
+
+    expect(formatMathData(data)).toContain(
+      "- Evidence scope: partial deterministic evidence only; do not describe the final result as fully verified without another complete check"
+    );
+  });
+
+  it("formats unavailable evidence as insufficient proof", () => {
+    const data = {
+      input,
+      kind: "evaluate",
+      result: {
+        ...result,
+        stepStatus: "unavailable",
+        steps: [],
+      },
+      status: "inconclusive",
+      summary: result.reason,
+    } satisfies MathData;
+
+    expect(formatMathData(data)).toContain(
+      "- Evidence scope: unavailable deterministic derivation; say the available evidence is not enough to prove the result"
+    );
   });
 
   it("formats secondary value when no derivation steps are available", () => {

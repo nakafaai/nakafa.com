@@ -26,7 +26,7 @@ export function formatSearch(result: NakafaAgentSearchResult) {
     - Description: ${item.description}
     - Content ID: ${item.content_id}
     - Section: ${item.section}
-    - Citation: [${item.title}](${item.url})`
+    - Inline citation: [${item.title}](${item.url})`
       )
       .join("\n")}
   `);
@@ -39,7 +39,7 @@ export function formatRead(result: NakafaAgentMarkdown) {
     - Title: ${result.title}
     - Description: ${result.description}
     - Content ID: ${result.content_id}
-    - Citation: [${result.title}](${result.url})
+    - Inline citation: [${result.title}](${result.url})
 
     ${result.text}
   `);
@@ -50,7 +50,7 @@ export function formatExercise(result: NakafaAgentExerciseResult) {
   return dedent(`
     # Nakafa Exercises
     - Content ID: ${result.content_id}
-    - Citation: [${result.content_id}](${result.url})
+    - Inline citation: [${result.content_id}](${result.url})
     - Count: ${result.count}
     - Exercise number: ${result.exercise_number ?? "all"}
 
@@ -85,7 +85,7 @@ export function formatQuran(result: NakafaAgentQuranReference) {
     - Translation: ${result.translation}
     - Revelation: ${result.revelation}
     - Content ID: ${result.content_id}
-    - Citation: [${result.name}](${result.url})
+    - Inline citation: [${result.name}](${result.url})
 
     ${result.verses
       .map(

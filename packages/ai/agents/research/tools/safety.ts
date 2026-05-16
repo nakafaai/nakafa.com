@@ -11,7 +11,11 @@ import { Effect } from "effect";
 const unsafeUrlMessage =
   "Only public http(s) URLs can be scraped by the research agent.";
 
-/** Resolves and validates a scrape URL before any server-side fetch happens. */
+/**
+ * Resolves and validates a scrape URL before any server-side fetch happens.
+ * Hostname URLs keep native server fetching disabled so they cannot rebind
+ * between validation and the actual fetch.
+ */
 export const assertPublicResearchUrl = Effect.fn(
   "research.assertPublicResearchUrl"
 )(function* (value: string) {
@@ -23,7 +27,10 @@ export const assertPublicResearchUrl = Effect.fn(
   const hostname = normalizeHostname(url.hostname);
 
   if (isIpAddress(hostname)) {
-    return url.toString();
+    return {
+      nativeFetchUrl: url.toString(),
+      publicUrl: url.toString(),
+    };
   }
 
   const addresses = yield* Effect.tryPromise({
@@ -39,7 +46,10 @@ export const assertPublicResearchUrl = Effect.fn(
     return yield* rejectUnsafeUrl();
   }
 
-  return url.toString();
+  return {
+    nativeFetchUrl: null,
+    publicUrl: url.toString(),
+  };
 });
 
 /** Fails with one public error message for every unsafe scrape target. */

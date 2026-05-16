@@ -1,11 +1,58 @@
+import {
+  getExerciseMaterialLabel,
+  getExerciseTypeLabel,
+} from "@repo/contents/_lib/exercises/label";
+import type { Locale } from "@repo/contents/_types/content";
+import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
+import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
+import { defaultLocale } from "@repo/utilities/locales";
+import { Option, Schema } from "effect";
+
 /** Formats an agent-facing title from a Nakafa route. */
-export function formatNakafaRouteTitle(route: string) {
+export function formatNakafaRouteTitle(
+  route: string,
+  locale: Locale = defaultLocale
+) {
+  const exerciseTitle = formatNakafaExerciseRouteTitle(route, locale);
+
+  if (Option.isSome(exerciseTitle)) {
+    return exerciseTitle.value;
+  }
+
   return route
     .split("/")
     .filter(Boolean)
     .slice(1)
     .map(formatNakafaRouteSegment)
     .join(" / ");
+}
+
+/** Formats exercise routes from localized exercise labels instead of raw slugs. */
+function formatNakafaExerciseRouteTitle(route: string, locale: Locale) {
+  const [section, , rawType, rawMaterial, ...setSlug] = route
+    .split("/")
+    .filter(Boolean);
+
+  if (section !== "exercises" || setSlug.length === 0) {
+    return Option.none();
+  }
+
+  const type = Schema.decodeUnknownOption(ExercisesTypeSchema)(rawType);
+  const material = Schema.decodeUnknownOption(ExercisesMaterialSchema)(
+    rawMaterial
+  );
+
+  if (Option.isNone(type) || Option.isNone(material)) {
+    return Option.none();
+  }
+
+  return Option.some(
+    [
+      getExerciseTypeLabel(locale, type.value),
+      getExerciseMaterialLabel(locale, material.value),
+      ...setSlug.map(formatNakafaRouteSegment),
+    ].join(" ")
+  );
 }
 
 /** Formats one slug segment as a compact display label. */

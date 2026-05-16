@@ -84,7 +84,7 @@ function getNakafaExerciseSummaries(locale: Locale) {
     .map((route) => ({
       ...buildNakafaContentRef(locale, route, "exercises"),
       description: `${getExerciseQuestionNumbers(slugs, route).length} exercises`,
-      title: formatNakafaRouteTitle(route),
+      title: formatNakafaRouteTitle(route, locale),
     }));
 }
 

@@ -27,7 +27,10 @@ describe("assertPublicResearchUrl", () => {
       assertPublicResearchUrl("https://93.184.216.34/docs")
     );
 
-    expect(result).toBe("https://93.184.216.34/docs");
+    expect(result).toEqual({
+      nativeFetchUrl: "https://93.184.216.34/docs",
+      publicUrl: "https://93.184.216.34/docs",
+    });
     expect(lookup).not.toHaveBeenCalled();
   });
 
@@ -61,13 +64,16 @@ describe("assertPublicResearchUrl", () => {
     expect(Either.isLeft(result)).toBe(true);
   });
 
-  it("allows hostnames that resolve to public addresses", async () => {
+  it("allows public hostnames without enabling native server fetches", async () => {
     lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
 
     const result = await Effect.runPromise(
       assertPublicResearchUrl("https://example.com/docs")
     );
 
-    expect(result).toBe("https://example.com/docs");
+    expect(result).toEqual({
+      nativeFetchUrl: null,
+      publicUrl: "https://example.com/docs",
+    });
   });
 });

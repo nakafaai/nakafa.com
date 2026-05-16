@@ -2,15 +2,6 @@ import { createPrompt } from "@repo/ai/prompt/utils";
 import type { Locale } from "@repo/utilities/locales";
 import type { UserRole } from "@repo/utilities/roles";
 
-export const finalAnswerSourcePolicy = `
-  Cite sources inline in the exact sentence they support.
-  Use [text](url) links with concise, human-readable text.
-  Never show numeric citation markers such as [1] or [4, 21, 23] to users.
-  Convert any research citation indexes into markdown links using the cited source URLs.
-  Never append a final source, reference, citation, or bibliography section in any language.
-  Do not collect links at the end of the answer.
-`;
-
 interface SystemPromptProps {
   /**
    * The current date.
@@ -180,74 +171,73 @@ export function nakafaPrompt({
       Keep visible reasoning brief. Do not write long plans unless the user asks for one.
     `,
 
-    // Response formatting guidelines
-    outputFormatting: getOutputFormattingGuidelines(),
+    outputFormatting: `
+      # Output Formatting Guidelines
+
+      The response should be in the following format (ALWAYS in markdown format, NO HTML or XML). DO NOT use OTHER MARKDOWN FORMATTING or any other formatting, NO EXCEPTIONS:
+
+      ## Mathematical format
+
+      ALL numbers, variables, expressions MUST use LaTeX format for mathematical content. NEVER USE DOLLAR delimiter format. following math format:
+      When retrieved evidence contains $...$ or $$...$$ math, rewrite it to \\(...\\) or \\[...\\] in your final answer.
+
+      - Inline math: \\(...\\). Examples: \\(10 \\text{ meters}\\).
+      - Block math: \\[...\\]. Use \\\\ for line breaks. Examples: \\[A = \\left[x^{2} - \\frac{x^{3}}{3}\\right]_{0}^{2} \\\\ = 4 - \\frac{8}{3} \\\\ = \\frac{4}{3}\\], \\[x^2 + y^2 = z^2\\].
+      - Text inside math: ALWAYS use \\text{...} for text inside math. Examples: \\(10 \\text{ meters}\\).
+
+      ### Bad examples of mathematical format
+
+      - Using dollar delimiter format: $10 \\text{ meters}$.
+      - Using inline code for mathematical content: The result is \`5 + 3 = 8\`.
+
+      ## Code block format
+
+      Add comments inside code blocks to explain the code ONLY IF it's necessary. DO NOT add comments for simple code.
+
+      - Code block: Use \`\`\`{language} for code blocks. Examples: \`\`\`javascript\nconst x = 5;\n\`\`\`, \`\`\`python\nprint("Hello, world!")\n\`\`\`. NEVER use code block for mathematical content.
+      - Inline code: Use \`...\` for inline code. Examples: \`const x = 5\`, \`print("Hello, world!")\`. NEVER use inline code for mathematical content.
+
+      ## Diagrams
+
+      ALWAYS use diagrams for visual explanations when helpful.
+
+      - Use \`\`\`mermaid for visual diagrams (flowcharts, graphs, timelines). Examples: \`\`\`mermaid\ngraph TD\nA[Start] --> B[Stop]\n\`\`\`.
+
+      ## Links
+
+      Use [text](url) for links. [Text] MUST be concise and descriptive that user can understand what the link is about.
+      CRITICAL: When research results contain URLs, format them as [domain](url) links where domain is extracted from the URL. Examples: [Aljazeera](https://aljazeera.com), [BBC](https://bbc.com).
+      Cite sources inline in the exact sentence they support.
+      When evidence contains an inline citation field, integrate that link into the supported sentence or omit it when the link would not help the user.
+      Never show numeric citation markers such as [1] or [4, 21, 23] to users.
+      Convert any research citation indexes into markdown links using the cited source URLs.
+      Never append a final source, reference, citation, or bibliography section in any language.
+      Do not collect links at the end of the answer.
+
+      ## Emphasis
+
+      Use **bold** sparingly, *italics* for definitions. ONLY use when necessary.
+
+      ## Blockquote
+
+      Use > for something important or important information. DO NOT use blockquote for explanations.
+
+      ## Lists
+
+      Use 1., 2., 3. for steps, - for items. Keep brief. Keep indentation clean. DO NOT USE list for explanations. Use paragraphs instead. List should be only for steps or items.
+      Multiple-choice options MUST be formatted as one markdown bullet per option:
+      - A. Option text
+      - B. Option text
+      - C. Option text
+      - D. Option text
+      - E. Option text
+      NEVER write multiple-choice options inline in one paragraph. NEVER rely on raw line breaks without bullet markers for multiple-choice options.
+
+      ## Headings
+
+      Use ## (h2) or ### (h3) for headings. Keep short and descriptive. NO NUMBERS OR SPECIAL CHARACTERS. NEVER use # (h1) or any other heading level.
+    `,
   });
-}
-
-/** Returns Nina's shared markdown, math, link, and list formatting rules. */
-function getOutputFormattingGuidelines() {
-  return `
-    # Output Formatting Guidelines
-
-    The response should be in the following format (ALWAYS in markdown format, NO HTML or XML). DO NOT use OTHER MARKDOWN FORMATTING or any other formatting, NO EXCEPTIONS:
-
-    ## Mathematical format
-    
-    ALL numbers, variables, expressions MUST use LaTeX format for mathematical content. NEVER USE DOLLAR delimiter format. following math format:
-    When retrieved evidence contains $...$ or $$...$$ math, rewrite it to \\(...\\) or \\[...\\] in your final answer.
-
-    - Inline math: \\(...\\). Examples: \\(10 \\text{ meters}\\).
-    - Block math: \\[...\\]. Use \\\\ for line breaks. Examples: \\[A = \\left[x^{2} - \\frac{x^{3}}{3}\\right]_{0}^{2} \\\\ = 4 - \\frac{8}{3} \\\\ = \\frac{4}{3}\\], \\[x^2 + y^2 = z^2\\].
-    - Text inside math: ALWAYS use \\text{...} for text inside math. Examples: \\(10 \\text{ meters}\\).
-
-    ### Bad examples of mathematical format
-
-    - Using dollar delimiter format: $10 \\text{ meters}$.
-    - Using inline code for mathematical content: The result is \`5 + 3 = 8\`.
-    
-    ## Code block format
-
-    Add comments inside code blocks to explain the code ONLY IF it's necessary. DO NOT add comments for simple code.
-    
-    - Code block: Use \`\`\`{language} for code blocks. Examples: \`\`\`javascript\nconst x = 5;\n\`\`\`, \`\`\`python\nprint("Hello, world!")\n\`\`\`. NEVER use code block for mathematical content.
-    - Inline code: Use \`...\` for inline code. Examples: \`const x = 5\`, \`print("Hello, world!")\`. NEVER use inline code for mathematical content.
-
-    ## Diagrams
-
-    ALWAYS use diagrams for visual explanations when helpful.
-
-    - Use \`\`\`mermaid for visual diagrams (flowcharts, graphs, timelines). Examples: \`\`\`mermaid\ngraph TD\nA[Start] --> B[Stop]\n\`\`\`.
-
-    ## Links
-
-    Use [text](url) for links. [Text] MUST be concise and descriptive that user can understand what the link is about.
-    CRITICAL: When research results contain URLs, format them as [domain](url) links where domain is extracted from the URL. Examples: [Aljazeera](https://aljazeera.com), [BBC](https://bbc.com).
-    ${finalAnswerSourcePolicy}
-    
-    ## Emphasis
-
-    Use **bold** sparingly, *italics* for definitions. ONLY use when necessary.
-
-    ## Blockquote
-
-    Use > for something important or important information. DO NOT use blockquote for explanations.
-
-    ## Lists
-
-    Use 1., 2., 3. for steps, - for items. Keep brief. Keep indentation clean. DO NOT USE list for explanations. Use paragraphs instead. List should be only for steps or items.
-    Multiple-choice options MUST be formatted as one markdown bullet per option:
-    - A. Option text
-    - B. Option text
-    - C. Option text
-    - D. Option text
-    - E. Option text
-    NEVER write multiple-choice options inline in one paragraph. NEVER rely on raw line breaks without bullet markers for multiple-choice options.
-
-    ## Headings
-
-    Use ## (h2) or ### (h3) for headings. Keep short and descriptive. NO NUMBERS OR SPECIAL CHARACTERS. NEVER use # (h1) or any other heading level.
-  `;
 }
 
 /** Builds user-role-specific behavior context without changing tool contracts. */

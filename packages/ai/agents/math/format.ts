@@ -29,12 +29,26 @@ export function formatMathData(data: MathData) {
     - Status: ${data.status}
       - Operation: ${data.result.operation}
       - Step status: ${data.result.stepStatus}
+      - Evidence scope: ${formatEvidenceScope(data.result)}
       - Primary: ${data.result.primary.expression}
     ${formatSecondary(data.result)}
     ${formatSteps(data.result.steps)}
     ${formatItems(data.result.items)}
     ${formatConditions(data.result.conditions)}
   `);
+}
+
+/** Formats the exact verification scope for the assistant-facing evidence. */
+function formatEvidenceScope(result: MathResult) {
+  if (result.stepStatus === "complete") {
+    return "complete deterministic derivation";
+  }
+
+  if (result.stepStatus === "partial") {
+    return "partial deterministic evidence only; do not describe the final result as fully verified without another complete check";
+  }
+
+  return "unavailable deterministic derivation; say the available evidence is not enough to prove the result";
 }
 
 /** Formats the optional second expression in the math result. */

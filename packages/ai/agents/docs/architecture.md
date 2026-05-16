@@ -37,6 +37,7 @@ flowchart LR
 
 - [Research citation flow](./research-citations.md)
 - [Query-scoped search UI](./query-scoped-search.md)
+- [Math evidence scope](./math-evidence.md)
 
 When an agent flow changes, update the closest doc here or add a small focused
 doc. Prefer diagrams over long prose so each file stays skimmable.
@@ -86,6 +87,8 @@ sequenceDiagram
 - Specialist evidence exposes citation links beside the facts they support.
 - Final answers cite sources inline only; terminal source/reference sections are
   not part of the user-facing contract.
+- Math evidence carries both check status and derivation scope. A verified
+  partial check is not a fully verified final derivation.
 - Current-page fetch is deterministic through AI SDK `prepareStep`, `toolChoice`,
   and `activeTools`.
 - Explicit external source references are extracted by `@repo/ai/lib/source`.

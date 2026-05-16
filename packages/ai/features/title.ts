@@ -42,9 +42,15 @@ export const generateTitle = Effect.fn("features.generateTitle")(function* ({
           google: getModelProviderOptions(defaultModel),
         },
         system: createPrompt({
-          taskContext:
-            "You are an expert title generator. You are given a message in prompt and you need to generate a short, descriptive title based on it.",
+          taskContext: `
+            # Title Task
+
+            You are an expert title generator.
+            Generate a short, descriptive title for the message in the prompt.
+          `,
           detailedTaskInstructions: `
+          # Title Rules
+
           - Focus on the main topic or question being asked
           - Keep it between 3-5 words
           - Ensure it is not more than ${MAX_TITLE_LENGTH} characters long
@@ -52,7 +58,11 @@ export const generateTitle = Effect.fn("features.generateTitle")(function* ({
           - The title should be a summary of the user's message
           - Do not mention internal system names such as CAS, SymPy, agent, tool, engine, or service
           - Do not use quotes or colons`,
-          outputFormatting: "Output only the title, nothing else",
+          outputFormatting: `
+            # Output Format
+
+            Output only the title, nothing else.
+          `,
         }),
       }),
     catch: (error) =>

@@ -144,6 +144,9 @@ describe("research web search tool", () => {
         url: "https://docs.example.com/document",
       })
     );
+    expect(output.text).toContain(
+      "- Inline citation: [example.com](https://example.com/research)"
+    );
     expect(parts).toEqual([
       expect.objectContaining({
         type: "data-web-search",

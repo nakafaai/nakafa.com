@@ -33,7 +33,7 @@ describe("Nakafa formatter", () => {
     expect(text).toContain("# Nakafa Search");
     expect(text).toContain("Contoh Materi");
     expect(text).toContain(
-      "Citation: [Contoh Materi](https://nakafa.com/id/subject/example)"
+      "Inline citation: [Contoh Materi](https://nakafa.com/id/subject/example)"
     );
     expect(text).not.toContain("Markdown URL:");
     expect(text).toContain("Next offset: none");
@@ -54,7 +54,7 @@ describe("Nakafa formatter", () => {
 
     expect(text).toContain("# Nakafa Content");
     expect(text).toContain(
-      "Citation: [Contoh Materi](https://nakafa.com/id/subject/example)"
+      "Inline citation: [Contoh Materi](https://nakafa.com/id/subject/example)"
     );
     expect(text).not.toContain("Markdown URL:");
     expect(text).toContain("Isi materi lengkap.");
@@ -86,7 +86,7 @@ describe("Nakafa formatter", () => {
 
     expect(text).toContain("# Nakafa Exercises");
     expect(text).toContain(
-      "Citation: [id/exercises/example](https://nakafa.com/id/exercises/example)"
+      "Inline citation: [id/exercises/example](https://nakafa.com/id/exercises/example)"
     );
     expect(text).toContain("Exercise number: 2");
     expect(text).toContain("Correct: Yes");
@@ -126,7 +126,7 @@ describe("Nakafa formatter", () => {
 
     expect(text).toContain("# Nakafa Quran Reference");
     expect(text).toContain(
-      "Citation: [Al-Fatihah](https://nakafa.com/id/quran/1)"
+      "Inline citation: [Al-Fatihah](https://nakafa.com/id/quran/1)"
     );
     expect(text).toContain("Tafsir ayat pertama.");
     expect(text).toContain("Segala puji bagi Allah");
@@ -138,7 +138,7 @@ describe("Nakafa formatter", () => {
         categories: ["science"],
       },
       content_counts: [{ count: 12, locale: "id" }],
-      default_locale: "id",
+      default_locale: "en",
       endpoints: {
         direct: "https://mcp.nakafa.com/mcp",
         recommended: "https://nakafa.com/mcp",

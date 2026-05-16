@@ -17,6 +17,9 @@ const readToolChoice = {
 } satisfies { toolName: "read"; type: "tool" };
 const answerToolChoice = "none" as const;
 const maxDiscoverySearchCalls = 4;
+const exerciseQuestionNumberPattern =
+  /\b(?:exercise|no|nomor|number|question|soal)\.?\s*(?:no|nomor|number)?\.?\s*(\d+)\b/giu;
+const exerciseRouteNumberPattern = /^\d+$/u;
 const searchTokenPattern = /[\p{L}\p{N}]+/gu;
 const taxonomyToolName = "taxonomy";
 
@@ -50,9 +53,32 @@ export function selectExerciseRef(
     return Option.none();
   }
 
-  return Option.fromNullable(
-    rankExerciseItems(items, getExerciseSelectionText(input, task)).at(0)
-  ).pipe(Option.map((item) => item.content_id));
+  const selectionText = getExerciseSelectionText(input, task);
+  const ranked = rankExerciseItems(items, selectionText);
+  const requestedNumbers = getRequestedExerciseNumbers(selectionText);
+  const requestedQuestion = ranked.find((item) => {
+    const exerciseNumber = getExerciseNumber(item);
+
+    return exerciseNumber ? requestedNumbers.has(exerciseNumber) : false;
+  });
+
+  if (requestedQuestion) {
+    return Option.some(requestedQuestion.content_id);
+  }
+
+  const exerciseSet = ranked.find((item) => !getExerciseNumber(item));
+
+  if (exerciseSet) {
+    return Option.some(exerciseSet.content_id);
+  }
+
+  const firstItem = ranked.at(0);
+
+  if (!firstItem) {
+    return Option.none();
+  }
+
+  return Option.some(firstItem.content_id);
 }
 
 /** Ranks exercise hits by direct task/search-token overlap in title and route. */
@@ -90,6 +116,31 @@ function getExerciseSelectionText(
   return [task, ...(input.queries ?? [])]
     .flatMap((text) => (text ? [text] : []))
     .join(" ");
+}
+
+/** Reads explicit question-number requests without treating set/year numbers as questions. */
+function getRequestedExerciseNumbers(value: string) {
+  return new Set(
+    Array.from(
+      value.matchAll(exerciseQuestionNumberPattern),
+      (match) => match[1]
+    ).filter((number) => number !== undefined)
+  );
+}
+
+/** Extracts the trailing question number from question-level exercise refs. */
+function getExerciseNumber(item: NakafaAgentSearchResult["items"][number]) {
+  const segment = item.route.split("/").at(-1);
+
+  if (!segment) {
+    return;
+  }
+
+  if (!exerciseRouteNumberPattern.test(segment)) {
+    return;
+  }
+
+  return segment;
 }
 
 /** Scores one exercise by matching unique search tokens to stable metadata. */

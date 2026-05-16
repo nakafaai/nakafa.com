@@ -29,7 +29,7 @@ export function previewExercise(result: NakafaAgentExerciseResult) {
     numbers: result.exercises.map((exercise) => exercise.number),
     route: result.route,
     section: result.section,
-    title: formatNakafaRouteTitle(result.route),
+    title: formatNakafaRouteTitle(result.route, result.locale),
     url: result.url,
   };
 }

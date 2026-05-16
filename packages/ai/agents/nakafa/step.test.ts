@@ -34,6 +34,18 @@ const exerciseResult = {
   offset: 0,
 } satisfies NakafaAgentSearchResult;
 
+const exerciseSetResult = {
+  ...exerciseResult.items[0],
+  content_id:
+    "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+  description: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2.",
+  markdown_url:
+    "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2.md",
+  route: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+  title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
+  url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+};
+
 const subjectResult = {
   count: 1,
   has_more: false,
@@ -117,6 +129,74 @@ describe("Nakafa agent step state", () => {
     }
 
     expect(ref.value).toBe(exerciseResult.items[0].content_id);
+  });
+
+  it("prefers set-level exercise refs for broad exercise requests", () => {
+    const ref = selectExerciseRef(
+      {
+        limit: 20,
+        locale: "id",
+        offset: 0,
+        queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
+        section: "exercises",
+      },
+      {
+        ...exerciseResult,
+        count: 2,
+        items: [exerciseResult.items[0], exerciseSetResult],
+        limit: 20,
+      },
+      "Beri aku beberapa latihan SNBT pengetahuan kuantitatif try out 2026 set 2."
+    );
+
+    if (Option.isNone(ref)) {
+      throw new Error("Expected a set-level exercise reference.");
+    }
+
+    expect(ref.value).toBe(exerciseSetResult.content_id);
+  });
+
+  it("selects the requested exercise subject when search ranking returns other subjects first", () => {
+    const mathematicalReasoning = {
+      ...exerciseResult.items[0],
+      content_id:
+        "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2/11",
+      description: "SMA SNBT Penalaran Matematika Try Out 2026 Set 2 Nomor 11",
+      markdown_url:
+        "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2/11.md",
+      route:
+        "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2/11",
+      title: "SNBT Penalaran Matematika Try Out 2026 Set 2 Soal 11",
+      url: "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2/11",
+    };
+    const quantitativeKnowledge = {
+      ...exerciseResult.items[0],
+      description:
+        "SMA SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2 Nomor 11",
+      title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2 Soal 11",
+    };
+    const ref = selectExerciseRef(
+      {
+        limit: 20,
+        locale: "id",
+        offset: 0,
+        queries: ["SNBT 2026 set 2 nomor 11"],
+        section: "exercises",
+      },
+      {
+        ...exerciseResult,
+        count: 2,
+        items: [mathematicalReasoning, quantitativeKnowledge],
+        limit: 20,
+      },
+      "Aku mau latihan SNBT pengetahuan kuantitatif try out 2026 set 2 nomor 11."
+    );
+
+    if (Option.isNone(ref)) {
+      throw new Error("Expected the requested subject exercise reference.");
+    }
+
+    expect(ref.value).toBe(quantitativeKnowledge.content_id);
   });
 
   it("keeps search order when no selection tokens are available", () => {

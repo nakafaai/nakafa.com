@@ -20,7 +20,7 @@ export function formatWebSearchOutput(output: WebSearchOutput) {
         (source, index) => `
     ## Source ${index + 1}: ${source.title}
     - URL: ${source.url}
-    - Citation: ${source.citation}
+    - Inline citation: ${source.citation}
     - Description: ${source.description}
 
     ### Content

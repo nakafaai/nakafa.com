@@ -50,9 +50,11 @@ describe("nakafaAgentPrompt", () => {
   it("keeps source presentation as inline citation evidence", () => {
     const prompt = nakafaAgentPrompt({ context, locale: "id" });
 
-    expect(prompt).toContain("Use citation fields like Citation: [Title](url)");
     expect(prompt).toContain(
-      "Never write a terminal source, reference, citation, or bibliography section."
+      "Use inline citation fields like Inline citation: [Title](url)"
+    );
+    expect(prompt).toContain(
+      "When evidence contains an inline citation field, integrate that link into the supported sentence"
     );
     expect(prompt).toContain(
       "Never append a final source, reference, citation, or bibliography section"
