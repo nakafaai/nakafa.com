@@ -37,7 +37,10 @@ export const SheetNew = memo(() => {
   const setOpen = useAi((state) => state.setOpen);
   const setText = useAi((state) => state.setText);
 
-  const user = useUser((state) => state.user);
+  const { isPending: isUserPending, user } = useUser((state) => ({
+    isPending: state.isPending,
+    user: state.user,
+  }));
   const createChat = useMutation(api.chats.mutations.createChat);
 
   const [isPending, startTransition] = useTransition();
@@ -48,6 +51,10 @@ export const SheetNew = memo(() => {
       const query = message.text?.trim();
 
       if (!query) {
+        return;
+      }
+
+      if (isUserPending) {
         return;
       }
 
@@ -95,8 +102,8 @@ export const SheetNew = memo(() => {
       </Conversation>
 
       <SheetInput
-        disabled={isPending}
-        isPending={isPending}
+        disabled={isPending || isUserPending}
+        isPending={isPending || isUserPending}
         key="ai-sheet-input"
         onSubmit={handleSubmit}
       />

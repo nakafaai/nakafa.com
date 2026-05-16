@@ -76,7 +76,10 @@ const AiChatToolbar = memo(() => {
 
   const chat = useCurrentChat((s) => s.chat);
 
-  const user = useUser((s) => s.user);
+  const { isPending: isUserPending, user } = useUser((s) => ({
+    isPending: s.isPending,
+    user: s.user,
+  }));
 
   const text = useAi((state) => state.text);
   const setText = useAi((state) => state.setText);
@@ -90,6 +93,10 @@ const AiChatToolbar = memo(() => {
     }
 
     if (!message.text?.trim()) {
+      return;
+    }
+
+    if (isUserPending) {
       return;
     }
 
@@ -127,7 +134,7 @@ const AiChatToolbar = memo(() => {
             <AiChatModel />
           </PromptInputTools>
           <PromptInputSubmit
-            disabled={status === "submitted"}
+            disabled={status === "submitted" || isUserPending}
             status={status}
           />
         </PromptInputToolbar>
