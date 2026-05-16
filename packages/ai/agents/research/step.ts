@@ -1,13 +1,5 @@
 import type { ModelMessage } from "ai";
 
-const googleSearchActiveTools = ["google_search"] satisfies "google_search"[];
-const googleSearchToolChoice = "required" as const;
-const webSearchActiveTools = ["webSearch"] satisfies "webSearch"[];
-const webSearchToolChoice = {
-  toolName: "webSearch",
-  type: "tool",
-} satisfies { toolName: "webSearch"; type: "tool" };
-
 /**
  * Enables Gemini Google Search grounding after inspectable Firecrawl search.
  *
@@ -21,8 +13,8 @@ export function prepareGoogleGroundingStep(messages: ModelMessage[]) {
   } satisfies ModelMessage;
 
   return {
-    activeTools: googleSearchActiveTools,
-    toolChoice: googleSearchToolChoice,
+    activeTools: ["google_search" as const],
+    toolChoice: "required" as const,
     messages: [...messages, message],
   };
 }
@@ -42,7 +34,7 @@ export function prepareResearchEvidenceStep({
   }
 
   return {
-    activeTools: webSearchActiveTools,
-    toolChoice: webSearchToolChoice,
+    activeTools: ["webSearch" as const],
+    toolChoice: { toolName: "webSearch", type: "tool" } as const,
   };
 }

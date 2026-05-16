@@ -42,6 +42,12 @@ describe("mathPrompt", () => {
       "Never say the full final result was verified when the only checked result has partial step status."
     );
     expect(prompt).toContain(
+      "For partial step status, say the computed value was checked"
+    );
+    expect(prompt).toContain(
+      'Reserve words equivalent to "fully verified" for complete step status only.'
+    );
+    expect(prompt).toContain(
       "say that simplification was checked, not the theorem itself."
     );
     expect(prompt).toContain(

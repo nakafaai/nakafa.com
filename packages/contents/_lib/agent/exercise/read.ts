@@ -3,6 +3,10 @@ import {
   NakafaAgentDataReadError,
 } from "@repo/contents/_lib/agent/errors";
 import {
+  getNakafaExerciseRouteNumber,
+  getNakafaExerciseSetRoute,
+} from "@repo/contents/_lib/agent/exercise/ref";
+import {
   buildNakafaContentRef,
   parseNakafaContentRef,
 } from "@repo/contents/_lib/agent/refs";
@@ -10,8 +14,6 @@ import { NakafaAgentExerciseResultSchema } from "@repo/contents/_lib/agent/schem
 import { getRenderableExercisesContent } from "@repo/contents/_lib/exercises/renderable";
 import type { Locale } from "@repo/contents/_types/content";
 import { Effect, Option, Schema } from "effect";
-
-const EXERCISE_NUMBER_SEGMENT_PATTERN = /^\d+$/;
 
 /** Retrieves a structured exercise set or one exercise by content ID or URL. */
 export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
@@ -81,22 +83,18 @@ function readRenderableNakafaExercises(locale: Locale, route: string) {
 
 /** Resolves whether the input route points to a set or a numbered exercise. */
 function getNakafaExerciseTarget(route: string, exerciseNumber?: number) {
-  const parts = route.split("/");
-  const lastPart = parts.at(-1);
-  const routeNumber =
-    lastPart && EXERCISE_NUMBER_SEGMENT_PATTERN.test(lastPart)
-      ? Number.parseInt(lastPart, 10)
-      : null;
+  const routeNumber = getNakafaExerciseRouteNumber(route);
+  const setRoute = getNakafaExerciseSetRoute(route);
 
   if (typeof exerciseNumber === "number") {
     return {
       number: exerciseNumber,
-      setRoute: routeNumber ? parts.slice(0, -1).join("/") : route,
+      setRoute,
     };
   }
 
   return {
     number: routeNumber,
-    setRoute: routeNumber ? parts.slice(0, -1).join("/") : route,
+    setRoute,
   };
 }

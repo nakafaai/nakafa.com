@@ -1,3 +1,5 @@
+import { NAKAFA_AGENT_MAX_QUERIES } from "@repo/contents/_lib/agent/constants";
+import { getNakafaExerciseSetRef } from "@repo/contents/_lib/agent/exercise/ref";
 import type {
   NakafaAgentSearchInput,
   NakafaAgentSearchResult,
@@ -5,39 +7,20 @@ import type {
 import type { ModelMessage } from "ai";
 import { Option } from "effect";
 
-const exerciseActiveTools = ["exercise"] satisfies "exercise"[];
-const readActiveTools = ["read"] satisfies "read"[];
-const exerciseToolChoice = {
-  toolName: "exercise",
-  type: "tool",
-} satisfies { toolName: "exercise"; type: "tool" };
-const readToolChoice = {
-  toolName: "read",
-  type: "tool",
-} satisfies { toolName: "read"; type: "tool" };
-const answerToolChoice = "none" as const;
-const maxDiscoverySearchCalls = 4;
-const exerciseQuestionNumberPattern =
-  /\b(?:exercise|no|nomor|number|question|soal)\.?\s*(?:no|nomor|number)?\.?\s*(\d+)\b/giu;
-const exerciseRouteNumberPattern = /^\d+$/u;
-const searchTokenPattern = /[\p{L}\p{N}]+/gu;
-const taxonomyToolName = "taxonomy";
-
-interface ToolStep {
+interface ToolStep<ToolName extends string> {
   toolCalls: readonly {
-    toolName: string;
+    toolName: ToolName;
   }[];
 }
 
 /**
  * Selects the exercise reference to read after an exercise-scoped search.
- * Search results are re-ranked against the original task and search text so
- * exact requests like a set/question number do not blindly read the first hit.
+ * Exact question numbers stay the model's responsibility through the
+ * `exercise_number` tool input; this state machine only resolves the set ref.
  */
 export function selectExerciseRef(
   input: NakafaAgentSearchInput,
-  result: NakafaAgentSearchResult | null,
-  task?: string
+  result: NakafaAgentSearchResult | null
 ) {
   if (result === null) {
     return Option.none();
@@ -48,129 +31,15 @@ export function selectExerciseRef(
   }
 
   const items = result.items.filter((item) => item.section === "exercises");
-
-  if (items.length === 0) {
-    return Option.none();
-  }
-
-  const selectionText = getExerciseSelectionText(input, task);
-  const ranked = rankExerciseItems(items, selectionText);
-  const requestedNumbers = getRequestedExerciseNumbers(selectionText);
-  const requestedQuestion = ranked.find((item) => {
-    const exerciseNumber = getExerciseNumber(item);
-
-    return exerciseNumber ? requestedNumbers.has(exerciseNumber) : false;
-  });
-
-  if (requestedQuestion) {
-    return Option.some(requestedQuestion.content_id);
-  }
-
-  const exerciseSet = ranked.find((item) => !getExerciseNumber(item));
-
-  if (exerciseSet) {
-    return Option.some(exerciseSet.content_id);
-  }
-
-  const firstItem = ranked.at(0);
+  const firstItem = items.at(0);
 
   if (!firstItem) {
     return Option.none();
   }
 
-  return Option.some(firstItem.content_id);
-}
-
-/** Ranks exercise hits by direct task/search-token overlap in title and route. */
-function rankExerciseItems(
-  items: NakafaAgentSearchResult["items"],
-  selectionText: string
-) {
-  const tokens = tokenizeSearchText(selectionText);
-
-  if (tokens.length === 0) {
-    return items;
-  }
-
-  return items
-    .map((item, index) => ({
-      index,
-      item,
-      score: scoreExerciseItem(item, tokens),
-    }))
-    .sort((left, right) => {
-      if (left.score !== right.score) {
-        return right.score - left.score;
-      }
-
-      return left.index - right.index;
-    })
-    .map((ranked) => ranked.item);
-}
-
-/** Combines the user task with actual search query text for local selection. */
-function getExerciseSelectionText(
-  input: NakafaAgentSearchInput,
-  task?: string
-) {
-  return [task, ...(input.queries ?? [])]
-    .flatMap((text) => (text ? [text] : []))
-    .join(" ");
-}
-
-/** Reads explicit question-number requests without treating set/year numbers as questions. */
-function getRequestedExerciseNumbers(value: string) {
-  return new Set(
-    Array.from(
-      value.matchAll(exerciseQuestionNumberPattern),
-      (match) => match[1]
-    ).filter((number) => number !== undefined)
+  return getNakafaExerciseSetRef(firstItem.content_id).pipe(
+    Option.map((ref) => ref.content_id)
   );
-}
-
-/** Extracts the trailing question number from question-level exercise refs. */
-function getExerciseNumber(item: NakafaAgentSearchResult["items"][number]) {
-  const segment = item.route.split("/").at(-1);
-
-  if (!segment) {
-    return;
-  }
-
-  if (!exerciseRouteNumberPattern.test(segment)) {
-    return;
-  }
-
-  return segment;
-}
-
-/** Scores one exercise by matching unique search tokens to stable metadata. */
-function scoreExerciseItem(
-  item: NakafaAgentSearchResult["items"][number],
-  tokens: readonly string[]
-) {
-  const itemTokens = new Set(
-    tokenizeSearchText([item.title, item.description, item.route].join(" "))
-  );
-  let score = 0;
-
-  for (const token of tokens) {
-    if (itemTokens.has(token)) {
-      score += 1;
-    }
-  }
-
-  return score;
-}
-
-/** Tokenizes multilingual search text without assuming one user language. */
-function tokenizeSearchText(value: string) {
-  const tokens = value.toLocaleLowerCase().match(searchTokenPattern);
-
-  if (!tokens) {
-    return [];
-  }
-
-  return Array.from(new Set(tokens));
 }
 
 /**
@@ -194,13 +63,13 @@ export function prepareExerciseStep(
   });
   const message = {
     role: "user",
-    content: `Call the exercise tool now with this exact input and wait for the result before answering.\n\n${input}\n\nDo not call search again for this exercise.`,
+    content: `Call the exercise tool now with this content_ref and wait for the result before answering.\n\n${input}\n\nInclude exercise_number only when the original user asked for one specific question. Do not call search again for this exercise.`,
   } satisfies ModelMessage;
 
   return {
-    activeTools: exerciseActiveTools,
+    activeTools: ["exercise" as const],
     messages: [...messages, message],
-    toolChoice: exerciseToolChoice,
+    toolChoice: { toolName: "exercise", type: "tool" } as const,
   };
 }
 
@@ -247,21 +116,21 @@ export function prepareReadStep(
   } satisfies ModelMessage;
 
   return {
-    activeTools: readActiveTools,
+    activeTools: ["read" as const],
     messages: [...messages, message],
-    toolChoice: readToolChoice,
+    toolChoice: { toolName: "read", type: "tool" } as const,
   };
 }
 
 /**
  * Stops taxonomy-only requests after the taxonomy evidence has been retrieved.
  */
-export function prepareTaxonomyAnswerStep(
+export function prepareTaxonomyAnswerStep<const ToolName extends string>(
   messages: ModelMessage[],
-  steps: readonly ToolStep[]
+  steps: readonly ToolStep<ToolName>[]
 ) {
   const hasTaxonomyToolCall = steps.some((step) =>
-    step.toolCalls.some((toolCall) => toolCall.toolName === taxonomyToolName)
+    step.toolCalls.some((toolCall) => toolCall.toolName === "taxonomy")
   );
 
   if (!hasTaxonomyToolCall) {
@@ -269,7 +138,7 @@ export function prepareTaxonomyAnswerStep(
   }
 
   const hasOtherToolCall = steps.some((step) =>
-    step.toolCalls.some((toolCall) => toolCall.toolName !== taxonomyToolName)
+    step.toolCalls.some((toolCall) => toolCall.toolName !== "taxonomy")
   );
 
   if (hasOtherToolCall) {
@@ -284,7 +153,7 @@ export function prepareTaxonomyAnswerStep(
 
   return {
     messages: [...messages, message],
-    toolChoice: answerToolChoice,
+    toolChoice: "none" as const,
   };
 }
 
@@ -292,22 +161,23 @@ export function prepareTaxonomyAnswerStep(
  * Detects when the content agent has enough retrieval evidence and should stop
  * searching instead of spending the remaining loop budget on repeated discovery.
  */
-export function shouldAnswerFromNakafaEvidence(steps: readonly ToolStep[]) {
+export function shouldAnswerFromNakafaEvidence<const ToolName extends string>(
+  steps: readonly ToolStep<ToolName>[]
+) {
   const searchCalls = steps.flatMap((step) =>
     step.toolCalls.filter((toolCall) => toolCall.toolName === "search")
   );
 
-  return searchCalls.length >= maxDiscoverySearchCalls;
+  return searchCalls.length >= NAKAFA_AGENT_MAX_QUERIES;
 }
 
 /**
  * Builds the AI SDK step override that turns off tools and asks the model to
  * answer from the Nakafa evidence already present in the conversation.
  */
-export function prepareAnswerFromNakafaEvidenceStep(
-  messages: ModelMessage[],
-  steps: readonly ToolStep[]
-) {
+export function prepareAnswerFromNakafaEvidenceStep<
+  const ToolName extends string,
+>(messages: ModelMessage[], steps: readonly ToolStep<ToolName>[]) {
   if (!shouldAnswerFromNakafaEvidence(steps)) {
     return;
   }
@@ -320,6 +190,6 @@ export function prepareAnswerFromNakafaEvidenceStep(
 
   return {
     messages: [...messages, message],
-    toolChoice: answerToolChoice,
+    toolChoice: "none" as const,
   };
 }

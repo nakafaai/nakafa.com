@@ -90,8 +90,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
 
                     pendingExerciseRef = selectExerciseRef(
                       input,
-                      output.result,
-                      task
+                      output.result
                     );
                   })
                 ),
@@ -204,7 +203,12 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   );
 
   return {
-    text: result.text,
+    text:
+      result.steps
+        .flatMap((step) =>
+          step.toolResults.map((toolResult) => toolResult.output)
+        )
+        .join("\n\n") || result.text,
     usage: result.totalUsage,
   };
 });

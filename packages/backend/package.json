@@ -1,6 +1,6 @@
 {
   "name": "@repo/backend",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": true,
   "scripts": {
     "dev": "convex dev --tail-logs",
@@ -56,7 +56,7 @@
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "ai": "^6.0.182",
+    "ai": "^6.0.184",
     "better-auth": "~1.6.9",
     "buffer": "^6.0.3",
     "convex": "^1.39.1",

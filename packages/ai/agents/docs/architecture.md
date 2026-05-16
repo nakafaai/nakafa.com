@@ -69,6 +69,27 @@ sequenceDiagram
   end
 ```
 
+## Nakafa Evidence
+
+```mermaid
+flowchart LR
+  User["User request"] --> Search["Nakafa search"]
+  Search --> SetRef["exercise set ref"]
+  Search --> ReadRef["content ref"]
+  SetRef --> Exercise["exercise tool"]
+  ReadRef --> Read["read tool"]
+  Exercise --> StepResults["AI SDK step toolResults"]
+  Read --> StepResults
+  StepResults --> Evidence["Nakafa agent evidence text"]
+  Evidence --> Orchestrator["Nina orchestrator synthesis"]
+```
+
+Search can return question-level exercise hits, but the handoff to the exercise
+tool uses the parent set reference. A specific question number remains structured
+tool input (`exercise_number`) instead of local prompt parsing. The Nakafa agent
+returns collected AI SDK tool-result evidence, so user-facing prose is composed
+by Nina from retrieved content rather than invented inside the retrieval agent.
+
 ## Contracts
 
 - `packages/contents/_lib/agent` owns `read`, `exercise`, `quran`, `taxonomy`,
@@ -91,6 +112,10 @@ sequenceDiagram
   partial check is not a fully verified final derivation.
 - Current-page fetch is deterministic through AI SDK `prepareStep`, `toolChoice`,
   and `activeTools`.
+- Nakafa exercise search normalizes question-level refs to parent set refs before
+  the exercise tool runs.
+- Nakafa subagent output is derived from AI SDK step `toolResults`, not from
+  retrieval-agent free-form prose.
 - Explicit external source references are extracted by `@repo/ai/lib/source`.
   Routing uses them to enter research, and research receives the full ordered
   source list for exact-source reading.

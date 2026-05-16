@@ -70,7 +70,7 @@ const subjectResult = {
 } satisfies NakafaAgentSearchResult;
 
 describe("Nakafa agent step state", () => {
-  it("selects the first exercise result after exercise-scoped search", () => {
+  it("selects the parent exercise set after broad exercise-scoped search", () => {
     const ref = selectExerciseRef(
       {
         limit: 1,
@@ -86,16 +86,10 @@ describe("Nakafa agent step state", () => {
       throw new Error("Expected an exercise reference.");
     }
 
-    const exercise = exerciseResult.items[0];
-
-    if (!exercise) {
-      throw new Error("Expected an exercise search result.");
-    }
-
-    expect(ref.value).toBe(exercise.content_id);
+    expect(ref.value).toBe(exerciseSetResult.content_id);
   });
 
-  it("selects the exact requested exercise when search ranking returns another set item first", () => {
+  it("normalizes question-level search hits to their parent exercise set", () => {
     const firstResult = {
       ...exerciseResult.items[0],
       content_id:
@@ -120,15 +114,14 @@ describe("Nakafa agent step state", () => {
         count: 2,
         items: [firstResult, exerciseResult.items[0]],
         limit: 20,
-      },
-      "Aku mau latihan SNBT pengetahuan kuantitatif try out 2026 set 2 nomor 11."
+      }
     );
 
     if (Option.isNone(ref)) {
-      throw new Error("Expected an exact exercise reference.");
+      throw new Error("Expected an exercise set reference.");
     }
 
-    expect(ref.value).toBe(exerciseResult.items[0].content_id);
+    expect(ref.value).toBe(exerciseSetResult.content_id);
   });
 
   it("prefers set-level exercise refs for broad exercise requests", () => {
@@ -145,8 +138,7 @@ describe("Nakafa agent step state", () => {
         count: 2,
         items: [exerciseResult.items[0], exerciseSetResult],
         limit: 20,
-      },
-      "Beri aku beberapa latihan SNBT pengetahuan kuantitatif try out 2026 set 2."
+      }
     );
 
     if (Option.isNone(ref)) {
@@ -156,7 +148,7 @@ describe("Nakafa agent step state", () => {
     expect(ref.value).toBe(exerciseSetResult.content_id);
   });
 
-  it("selects the requested exercise subject when search ranking returns other subjects first", () => {
+  it("keeps search ordering instead of parsing the user request locally", () => {
     const mathematicalReasoning = {
       ...exerciseResult.items[0],
       content_id:
@@ -169,6 +161,8 @@ describe("Nakafa agent step state", () => {
       title: "SNBT Penalaran Matematika Try Out 2026 Set 2 Soal 11",
       url: "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2/11",
     };
+    const mathematicalReasoningSet =
+      "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-2";
     const quantitativeKnowledge = {
       ...exerciseResult.items[0],
       description:
@@ -188,15 +182,14 @@ describe("Nakafa agent step state", () => {
         count: 2,
         items: [mathematicalReasoning, quantitativeKnowledge],
         limit: 20,
-      },
-      "Aku mau latihan SNBT pengetahuan kuantitatif try out 2026 set 2 nomor 11."
+      }
     );
 
     if (Option.isNone(ref)) {
-      throw new Error("Expected the requested subject exercise reference.");
+      throw new Error("Expected the first exercise reference.");
     }
 
-    expect(ref.value).toBe(quantitativeKnowledge.content_id);
+    expect(ref.value).toBe(mathematicalReasoningSet);
   });
 
   it("keeps search order when no selection tokens are available", () => {
@@ -215,7 +208,7 @@ describe("Nakafa agent step state", () => {
       throw new Error("Expected the first exercise reference.");
     }
 
-    expect(ref.value).toBe(exerciseResult.items[0].content_id);
+    expect(ref.value).toBe(exerciseSetResult.content_id);
   });
 
   it("keeps search order when the search input does not include query text", () => {
@@ -233,7 +226,7 @@ describe("Nakafa agent step state", () => {
       throw new Error("Expected the first exercise reference.");
     }
 
-    expect(ref.value).toBe(exerciseResult.items[0].content_id);
+    expect(ref.value).toBe(exerciseSetResult.content_id);
   });
 
   it("keeps stable search order when exercise scores tie", () => {
@@ -268,7 +261,7 @@ describe("Nakafa agent step state", () => {
       throw new Error("Expected the first tied exercise reference.");
     }
 
-    expect(ref.value).toBe(exerciseResult.items[0].content_id);
+    expect(ref.value).toBe(exerciseSetResult.content_id);
   });
 
   it("does not select exercises from broad or empty searches", () => {
@@ -333,6 +326,12 @@ describe("Nakafa agent step state", () => {
     expect(step.messages.at(-1)).toEqual(
       expect.objectContaining({
         content: expect.stringContaining(exerciseResult.items[0].content_id),
+        role: "user",
+      })
+    );
+    expect(step.messages.at(-1)).toEqual(
+      expect.objectContaining({
+        content: expect.stringContaining("Include exercise_number only when"),
         role: "user",
       })
     );

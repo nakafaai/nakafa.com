@@ -1,5 +1,14 @@
 # @repo/ai
 
+## 2.0.1
+
+### Patch Changes
+
+- Refine Nakafa agent evidence routing and exercise reference normalization.
+
+- Updated dependencies []:
+  - @repo/contents@1.0.1
+
 ## 2.0.0
 
 ### Major Changes

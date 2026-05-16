@@ -1,6 +1,6 @@
 {
   "name": "@repo/ai",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
@@ -12,15 +12,15 @@
   "dependencies": {
     "@ai-sdk/devtools": "^0.0.18",
     "@ai-sdk/elevenlabs": "^2.0.33",
-    "@ai-sdk/gateway": "^3.0.114",
-    "@ai-sdk/google": "^3.0.73",
-    "@ai-sdk/react": "^3.0.184",
+    "@ai-sdk/gateway": "^3.0.115",
+    "@ai-sdk/google": "^3.0.75",
+    "@ai-sdk/react": "^3.0.186",
     "@mendable/firecrawl-js": "^4.23.0",
     "@repo/contents": "workspace:*",
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "ai": "^6.0.182",
+    "ai": "^6.0.184",
     "convex": "^1.39.1",
     "dedent": "^1.7.2",
     "effect": "^3.21.2",

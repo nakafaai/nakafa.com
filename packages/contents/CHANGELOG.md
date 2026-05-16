@@ -1,5 +1,11 @@
 # @repo/contents
 
+## 1.0.1
+
+### Patch Changes
+
+- Refine Nakafa agent evidence routing and exercise reference normalization.
+
 ## 1.0.0
 
 ### Major Changes
