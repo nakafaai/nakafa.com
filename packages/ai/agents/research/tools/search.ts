@@ -64,7 +64,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
 
           return { error: undefined, providerSources, sources };
         }),
-        Effect.tap(({ providerSources }) =>
+        Effect.tap(({ sources }) =>
           Effect.sync(() =>
             writer.write({
               id: getWebSearchPartId(toolCallId, index),
@@ -73,7 +73,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
                 provider: "firecrawl",
                 queries: [query],
                 status: "done",
-                sources: addSourceCitations(providerSources),
+                sources: addSourceCitations(sources),
               },
             })
           )

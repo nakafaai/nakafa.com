@@ -29,15 +29,15 @@ export function createResearchMessages(
  * Gives structured synthesis the collected evidence without exposing tools.
  */
 export function createResearchSynthesisMessages({
+  collectedEvidence = [],
   evidence,
   groundingSources = [],
   intent,
-  sourceOutputs,
 }: {
+  collectedEvidence?: string[];
   evidence: string;
   groundingSources?: DataPart["web-search"]["sources"];
   intent: string;
-  sourceOutputs: string[];
 }) {
   return [
     {
@@ -45,10 +45,10 @@ export function createResearchSynthesisMessages({
       content: [
         "# Research Task",
         intent,
-        "# Collected Evidence",
+        "# Research Notes",
         evidence || "No usable evidence was collected.",
         ...formatGroundingSources(groundingSources),
-        ...formatSourceEvidence(sourceOutputs),
+        ...formatSourceEvidence(collectedEvidence),
       ].join("\n\n"),
     },
   ] satisfies ModelMessage[];
@@ -67,12 +67,12 @@ function formatGroundingSources(sources: DataPart["web-search"]["sources"]) {
 }
 
 /**
- * Keeps exact user-provided source evidence explicit in synthesis.
+ * Keeps exact tool source evidence explicit in synthesis.
  */
-function formatSourceEvidence(sourceOutputs: string[]) {
-  if (sourceOutputs.length === 0) {
+function formatSourceEvidence(collectedEvidence: string[]) {
+  if (collectedEvidence.length === 0) {
     return [];
   }
 
-  return ["# User-Provided Source Evidence", sourceOutputs.join("\n\n")];
+  return ["# Source Evidence With URLs", collectedEvidence.join("\n\n")];
 }

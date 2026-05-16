@@ -141,8 +141,12 @@ export function getMathIcon(operation: MathOperation) {
       return TriangleIcon;
     case "combination":
       return FirstBracketIcon;
+    case "cumulative_probability":
+      return DistributionIcon;
     case "permutation":
       return ArrangeByNumbersOneNineIcon;
+    case "point_probability":
+      return DiceIcon;
     case "gcd":
       return AbacusIcon;
     case "lcm":

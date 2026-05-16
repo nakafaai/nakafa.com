@@ -41,6 +41,7 @@ def transform(request: MathRequest) -> MathResult:
         "simplify": lambda: sp.simplify(expr),
         "together": lambda: sp.together(expr),
     }[operation]()
+    _require_finite(output)
     steps = _transform_steps(operation, expr, output)
 
     return result(
@@ -57,7 +58,7 @@ def transform(request: MathRequest) -> MathResult:
 def domain(request: MathRequest) -> MathResult:
     """Derive denominator restrictions for a rational expression."""
     expr = parse.first_expression(request)
-    variable = parse.symbol(request.variable)
+    variable = parse.symbol_from_expression(request.variable, request.expression)
     denominator = sp.denom(sp.together(expr))
     excluded = sp.solve(sp.Eq(denominator, 0), variable)
 

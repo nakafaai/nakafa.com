@@ -30,6 +30,9 @@ describe("mathPrompt", () => {
       "Use calculus for derivative, integral, or limit requests before any arithmetic simplification."
     );
     expect(prompt).toContain(
+      "For named probability distributions such as normal, binomial, or poisson, use probability"
+    );
+    expect(prompt).toContain(
       "Use arithmetic only for direct numeric evaluation or for simplifying a value after the original target operation has been checked."
     );
     expect(prompt).toContain(

@@ -51,6 +51,7 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
       Natural user wording such as "is my work valid", "I am unsure", "is this correct", "check this", or "prove this" still requires math tool evidence.
       For equivalence, validity, or "same as" questions, use compare for the two expressions and add domain when restrictions matter.
       Preserve the user's original expression in tool inputs. Do not send your guessed final answer as the expression.
+      For named probability distributions such as normal, binomial, or poisson, use probability for distribution checks, exact-value probability, cumulative probability, expected value, and variance.
       The first math tool must check the user's original target operation. Use calculus for derivative, integral, or limit requests before any arithmetic simplification.
       Use arithmetic only for direct numeric evaluation or for simplifying a value after the original target operation has been checked.
       For fair dice, cards, or finite equally likely outcomes, use statistics mean or arithmetic over the listed outcomes instead of a named probability distribution.

@@ -21,6 +21,44 @@ def test_binomial_expected_value() -> None:
     assert result.secondary.expression == "5"
 
 
+def test_binomial_point_probability() -> None:
+    result = run(
+        MathRequest(
+            distribution="binomial",
+            kind="math",
+            operation="point_probability",
+            parameters={"n": "10", "p": "1/5"},
+            point="3",
+            variable="X",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.stepStatus == "complete"
+    assert result.primary.expression == "P(X = 3)"
+    assert result.secondary
+    assert result.secondary.expression == "393216/1953125"
+
+
+def test_normal_cumulative_probability() -> None:
+    result = run(
+        MathRequest(
+            distribution="normal",
+            kind="math",
+            operation="cumulative_probability",
+            parameters={"mean": "70", "standard_deviation": "10"},
+            upper="85",
+            variable="X",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.stepStatus == "complete"
+    assert result.primary.expression == "P(X <= 85)"
+    assert result.secondary
+    assert result.secondary.expression == "1 - erfc(3*sqrt(2)/4)/2"
+
+
 @pytest.mark.parametrize(
     ("distribution", "parameters"),
     [

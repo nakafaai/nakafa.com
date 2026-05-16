@@ -76,8 +76,10 @@ GROUPS = {
     ),
     **dict.fromkeys(
         [
+            "cumulative_probability",
             "distribution",
             "expected_value",
+            "point_probability",
             "variance_probability",
         ],
         probability.run,

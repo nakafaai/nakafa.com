@@ -40,7 +40,8 @@ export const mathStatisticsInput = createEffectSchema(
   providerCompatibleObjectSchema(MathStatisticsInputSchema)
 );
 export const mathProbabilityInput = createEffectSchema(
-  MathProbabilityInputSchema
+  MathProbabilityInputSchema,
+  providerCompatibleObjectSchema(MathProbabilityInputSchema)
 );
 export const mathGeometryInput = createEffectSchema(
   MathGeometryInputSchema,

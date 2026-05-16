@@ -7,4 +7,12 @@ describe("math tool descriptions", () => {
       "For fair dice, cards, or any finite equally likely outcome list"
     );
   });
+
+  it("routes named distribution event probabilities through probability", () => {
+    expect(mathProbability).toContain("Use point_probability");
+    expect(mathProbability).toContain("Use cumulative_probability");
+    expect(mathProbability).toContain(
+      "Prefer this over arithmetic or calculus"
+    );
+  });
 });

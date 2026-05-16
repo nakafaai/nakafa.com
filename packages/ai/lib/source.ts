@@ -23,6 +23,11 @@ const boundaryPunctuation = new Set([
   "{",
   "}",
 ]);
+const pairedBoundaryPunctuation = new Map([
+  [")", "("],
+  ["]", "["],
+  ["}", "{"],
+]);
 
 /**
  * Source reference extracted from user-written text.
@@ -213,9 +218,56 @@ function trimBoundaryPunctuation(token: string) {
     start += 1;
   }
 
-  while (end > start && boundaryPunctuation.has(token[end - 1])) {
+  while (end > start && shouldTrimTrailingBoundary(token, start, end)) {
     end -= 1;
   }
 
   return token.slice(start, end);
+}
+
+/**
+ * Strips wrapper punctuation while preserving balanced URL path characters.
+ */
+function shouldTrimTrailingBoundary(token: string, start: number, end: number) {
+  const character = token[end - 1];
+
+  if (!boundaryPunctuation.has(character)) {
+    return false;
+  }
+
+  const opener = pairedBoundaryPunctuation.get(character);
+
+  if (!opener) {
+    return true;
+  }
+
+  return !hasBalancedPair(token.slice(start, end), opener, character);
+}
+
+/**
+ * Detects URL-owned balanced pairs such as `/Function_(mathematics)`.
+ */
+function hasBalancedPair(text: string, opener: string, closer: string) {
+  let depth = 0;
+  let foundPair = false;
+
+  for (const character of text) {
+    if (character === opener) {
+      depth += 1;
+      continue;
+    }
+
+    if (character !== closer) {
+      continue;
+    }
+
+    if (depth === 0) {
+      return false;
+    }
+
+    depth -= 1;
+    foundPair = true;
+  }
+
+  return foundPair && depth === 0;
 }

@@ -74,6 +74,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       toolCallId,
       writer,
     });
+    const collectedEvidence = [...sourceOutputs];
 
     const evidenceResult = yield* Effect.tryPromise({
       try: () =>
@@ -92,6 +93,11 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
               execute: ({ queries }, { toolCallId }) =>
                 Effect.runPromise(
                   searchWeb({ queries, intent, toolCallId, writer }).pipe(
+                    Effect.tap(({ text }) =>
+                      Effect.sync(() => {
+                        collectedEvidence.push(text);
+                      })
+                    ),
                     Effect.map((output) => output.text)
                   )
                 ),
@@ -102,7 +108,13 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
               outputSchema: textOutputSchema,
               execute: ({ urlToCrawl }, { toolCallId }) =>
                 Effect.runPromise(
-                  scrapeUrl({ toolCallId, url: urlToCrawl, writer })
+                  scrapeUrl({ toolCallId, url: urlToCrawl, writer }).pipe(
+                    Effect.tap((text) =>
+                      Effect.sync(() => {
+                        collectedEvidence.push(text);
+                      })
+                    )
+                  )
                 ),
             }),
           },
@@ -178,10 +190,10 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           }),
           system: researchPrompt({ locale, context }),
           messages: createResearchSynthesisMessages({
+            collectedEvidence,
             evidence: evidenceResult.text,
             groundingSources: groundedSearchData?.sources,
             intent,
-            sourceOutputs,
           }),
           output: Output.object({
             description:

@@ -1,6 +1,8 @@
 /** Maps math item labels to stable translation keys. */
 export function getItemLabelKey(label: string) {
   switch (label) {
+    case "approximation":
+      return "math-item-approximation";
     case "counterexample":
       return "math-item-counterexample";
     case "domain":

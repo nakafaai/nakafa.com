@@ -52,6 +52,8 @@ GLOBALS = {
     "Symbol": sp.Symbol,
 }
 
+ParsedSymbolSource = sp.Expr | sp.Equality | Relational
+
 
 def symbol(name: str | None) -> sp.Symbol:
     """Parse one symbol name, defaulting to `x` for school algebra."""
@@ -64,6 +66,26 @@ def symbols(names: list[str]) -> list[sp.Symbol]:
         return [sp.Symbol("x")]
 
     return [sp.Symbol(name) for name in names]
+
+
+def symbol_from_expression(name: str | None, value: str | None) -> sp.Symbol:
+    """Use an explicit symbol or infer the only symbol in one expression."""
+    if name:
+        return symbol(name)
+
+    return _single_symbol_or_default([expression(value)])
+
+
+def symbol_from_equations(
+    name: str | None, values: list[str]
+) -> tuple[sp.Symbol, list[sp.Expr | sp.Equality | Relational]]:
+    """Use an explicit symbol or infer the only symbol in parsed equations."""
+    parsed = [equation(value) for value in values]
+
+    if name:
+        return symbol(name), parsed
+
+    return _single_symbol_or_default(parsed), parsed
 
 
 def expression(value: str | None, *, evaluate: bool = True) -> sp.Expr:
@@ -137,3 +159,24 @@ def point(value: PointInput) -> sp.Point2D:
 def first_expression(request: MathRequest) -> sp.Expr:
     """Read and parse the primary expression from a request."""
     return expression(request.expression)
+
+
+def _single_symbol_or_default(values: list[ParsedSymbolSource]) -> sp.Symbol:
+    """Infer one free symbol, default to x, or reject ambiguous input."""
+    symbols = sorted(
+        {
+            symbol
+            for value in values
+            for symbol in value.free_symbols
+            if isinstance(symbol, sp.Symbol)
+        },
+        key=str,
+    )
+
+    if not symbols:
+        return symbol(None)
+
+    if len(symbols) == 1:
+        return symbols[0]
+
+    raise ValueError("Variable is required when multiple symbols are present.")

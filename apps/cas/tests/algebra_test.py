@@ -114,6 +114,11 @@ def test_evaluate_rejects_non_finite_results(expression: str) -> None:
         run(MathRequest(kind="math", operation="evaluate", expression=expression))
 
 
+def test_transform_rejects_non_finite_results() -> None:
+    with pytest.raises(ValueError, match="finite value"):
+        run(MathRequest(kind="math", operation="simplify", expression="1/0"))
+
+
 def test_evaluate_rejects_tuple_expressions() -> None:
     with pytest.raises(ValueError, match="one mathematical value"):
         run(

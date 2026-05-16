@@ -139,6 +139,12 @@ describe("nakafaPrompt", () => {
       "When evidence contains an inline citation field, integrate that link into the supported sentence"
     );
     expect(prompt).toContain(
+      "When specialist evidence contains markdown links, preserve those links in the final answer"
+    );
+    expect(prompt).toContain(
+      "Do not add product homepages, documentation links, or source links from memory."
+    );
+    expect(prompt).toContain(
       "Never show numeric citation markers such as [1] or [4, 21, 23] to users."
     );
     expect(prompt).toContain(

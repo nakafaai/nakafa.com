@@ -97,6 +97,14 @@ describe("lib/source", () => {
     ).toEqual(["https://example.com/search?q=a,b"]);
   });
 
+  it("preserves balanced parentheses that belong to one URL", () => {
+    expect(
+      getSourceReferences(
+        "Baca [Function](https://en.wikipedia.org/wiki/Function_(mathematics))."
+      ).map((source) => source.href)
+    ).toEqual(["https://en.wikipedia.org/wiki/Function_(mathematics)"]);
+  });
+
   it("ignores decimals, emails, and localhost references", () => {
     expect(getSourceReferences("Hitung 3.14 + 2.")).toEqual([]);
     expect(getSourceReferences("Kirim ke nina@example.com.")).toEqual([]);

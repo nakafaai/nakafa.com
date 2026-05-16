@@ -91,9 +91,11 @@ export function researchPrompt({ locale, context }: ResearchPromptProps) {
       # Synthesis Rules
 
       - Use only the provided research evidence and source references.
-      - Put source titles and URLs in each finding's citations field.
+      - Put source titles and URLs from source evidence into each finding's citations field.
+      - Use only URLs explicitly present in Source Evidence With URLs or Grounding Source References.
       - Keep citation data separate from finding prose.
       - Do not invent sources.
+      - Omit any finding that has no explicit source URL.
       - If evidence is missing or weak, state the limitation clearly.
       - Return ONLY the research findings - DO NOT generate user-facing explanations.
     `,

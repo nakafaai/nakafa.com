@@ -42,6 +42,34 @@ def test_differentiate_lowercase_e_exponential() -> None:
     assert result.secondary.expression == "exp(x)"
 
 
+def test_differentiate_infers_single_symbol_when_variable_is_omitted() -> None:
+    result = run(
+        MathRequest(
+            expression="y^3",
+            kind="math",
+            operation="differentiate",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "3*y**2"
+
+
+def test_differentiate_defaults_to_x_for_constant_expressions() -> None:
+    result = run(
+        MathRequest(
+            expression="2",
+            kind="math",
+            operation="differentiate",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "0"
+
+
 def test_integrate_polynomial() -> None:
     result = run(
         MathRequest(

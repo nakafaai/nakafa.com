@@ -52,6 +52,31 @@ def test_solve_uses_single_requested_variable() -> None:
     assert result.secondary.expression == "[-2, 2]"
 
 
+def test_solve_infers_single_symbol_when_variable_is_omitted() -> None:
+    result = run(
+        MathRequest(
+            expression="y^2 = 4",
+            kind="math",
+            operation="solve",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "[-2, 2]"
+
+
+def test_solve_rejects_ambiguous_symbols_when_variable_is_omitted() -> None:
+    with pytest.raises(ValueError, match="Variable is required"):
+        run(
+            MathRequest(
+                expression="x + y = 1",
+                kind="math",
+                operation="solve",
+            )
+        )
+
+
 def test_solve_inequality() -> None:
     result = run(
         MathRequest(
@@ -107,6 +132,19 @@ def test_roots_accepts_equation_form() -> None:
 
     assert result.status == "verified"
     assert {root.value for root in result.items} == {"1: 1", "2: 1", "3: 1"}
+
+
+def test_roots_infers_single_symbol_when_variable_is_omitted() -> None:
+    result = run(
+        MathRequest(
+            expression="y^2 - 4 = 0",
+            kind="math",
+            operation="roots",
+        )
+    )
+
+    assert result.status == "verified"
+    assert {root.value for root in result.items} == {"-2: 1", "2: 1"}
 
 
 def test_roots_rejects_inequality() -> None:

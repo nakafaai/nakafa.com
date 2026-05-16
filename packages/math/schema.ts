@@ -32,12 +32,46 @@ const pointInputSchema = Schema.NonEmptyString.annotations({
     "The point where the operation is evaluated, for example 0, oo, or pi.",
 });
 
+export const mathProbabilityDistributions = [
+  "bernoulli",
+  "binomial",
+  "normal",
+  "poisson",
+  "uniform",
+] as const;
+
+const probabilityDistributionParameters = {
+  bernoulli: ["p"],
+  binomial: ["n", "p"],
+  normal: ["mean", "standard_deviation"],
+  poisson: ["lambda"],
+  uniform: ["lower", "upper"],
+} as const;
+
+const probabilityDistributionSchema = Schema.Literal(
+  ...mathProbabilityDistributions
+).annotations({
+  description:
+    "Supported probability distribution: bernoulli, binomial, normal, poisson, or uniform.",
+});
+
+const probabilityParametersSchema = Schema.Record({
+  key: Schema.String,
+  value: valueInputSchema,
+})
+  .pipe(Schema.mutable)
+  .annotations({
+    description:
+      "Required distribution parameters by name: bernoulli p; binomial n and p; normal mean and standard_deviation; poisson lambda; uniform lower and upper.",
+  });
+
 export const mathOperations = [
   "apart",
   "cancel",
   "circle",
   "combination",
   "compare",
+  "cumulative_probability",
   "determinant",
   "differentiate",
   "distance",
@@ -65,6 +99,7 @@ export const mathOperations = [
   "mode",
   "modular",
   "permutation",
+  "point_probability",
   "prime_factorization",
   "product",
   "quartiles",
@@ -463,11 +498,8 @@ export const MathStatisticsInputSchema = Schema.Union(
       "Statistics tool input. z_score requires both a target expression and dataset values.",
   });
 
-export const MathProbabilityInputSchema = Schema.Struct({
-  distribution: Schema.NonEmptyString.annotations({
-    description:
-      "Named probability distribution, for example normal, binomial, or poisson.",
-  }),
+const MathDistributionInputSchema = Schema.Struct({
+  distribution: probabilityDistributionSchema,
   operation: Schema.Literal(
     "distribution",
     "expected_value",
@@ -476,14 +508,53 @@ export const MathProbabilityInputSchema = Schema.Struct({
     description:
       "Inspect a distribution or compute its expected value or variance.",
   }),
-  parameters: Schema.Record({ key: Schema.String, value: valueInputSchema })
-    .pipe(Schema.mutable)
-    .annotations({
-      description:
-        "Distribution parameters by name, for example mean, standard_deviation, n, or p.",
-    }),
+  parameters: probabilityParametersSchema,
   variable: Schema.optional(variableInputSchema),
-})
+}).pipe(Schema.mutable);
+
+const MathPointProbabilityInputSchema = Schema.Struct({
+  distribution: probabilityDistributionSchema,
+  operation: Schema.Literal("point_probability").annotations({
+    description:
+      "Compute the probability of one exact value, for example P(X = 3).",
+  }),
+  parameters: probabilityParametersSchema,
+  point: pointInputSchema.annotations({
+    description: "The exact value in the probability event, for example 3.",
+  }),
+  variable: Schema.optional(variableInputSchema),
+}).pipe(Schema.mutable);
+
+const MathCumulativeProbabilityInputSchema = Schema.Struct({
+  distribution: probabilityDistributionSchema,
+  operation: Schema.Literal("cumulative_probability").annotations({
+    description:
+      "Compute the cumulative probability up to an upper bound, for example P(X <= 85).",
+  }),
+  parameters: probabilityParametersSchema,
+  upper: boundInputSchema.annotations({
+    description: "The upper bound in the probability event, for example 85.",
+  }),
+  variable: Schema.optional(variableInputSchema),
+}).pipe(Schema.mutable);
+
+export const MathProbabilityInputSchema = Schema.Union(
+  MathDistributionInputSchema,
+  MathPointProbabilityInputSchema,
+  MathCumulativeProbabilityInputSchema
+)
+  .pipe(
+    Schema.filter(
+      (value) =>
+        probabilityDistributionParameters[value.distribution].every(
+          (parameter) => Boolean(value.parameters[parameter])
+        ),
+      {
+        message: () =>
+          "Expected required distribution parameters for the selected probability distribution.",
+      }
+    )
+  )
   .pipe(Schema.mutable)
   .annotations({ description: "Probability distribution tool input." });
 

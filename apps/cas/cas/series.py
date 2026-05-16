@@ -12,7 +12,7 @@ EQUALS = expression_text("equals", "=")
 def expand(request: MathRequest) -> MathResult:
     """Expand a Taylor series around the requested point."""
     expr = parse.first_expression(request)
-    variable = parse.symbol(request.variable)
+    variable = parse.symbol_from_expression(request.variable, request.expression)
     point = parse.expression(request.point or "0")
     order = request.order or 6
     sympy_order = order + 1
@@ -34,7 +34,7 @@ def expand(request: MathRequest) -> MathResult:
 def summation(request: MathRequest) -> MathResult:
     """Compute an exact finite or symbolic summation."""
     expr = parse.first_expression(request)
-    variable = parse.symbol(request.variable)
+    variable = parse.symbol_from_expression(request.variable, request.expression)
     lower = parse.expression(request.lower)
     upper = parse.expression(request.upper)
     output = sp.summation(expr, (variable, lower, upper))
@@ -60,7 +60,7 @@ def summation(request: MathRequest) -> MathResult:
 def product(request: MathRequest) -> MathResult:
     """Compute an exact finite or symbolic product."""
     expr = parse.first_expression(request)
-    variable = parse.symbol(request.variable)
+    variable = parse.symbol_from_expression(request.variable, request.expression)
     lower = parse.expression(request.lower)
     upper = parse.expression(request.upper)
     output = sp.product(expr, (variable, lower, upper))

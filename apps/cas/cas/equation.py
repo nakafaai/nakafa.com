@@ -1,6 +1,7 @@
 """Equation, inequality, and root solving operations backed by SymPy."""
 
 import sympy as sp
+from sympy.core.relational import Relational
 
 from cas import parse
 from cas.format import expression_text, item, result, step
@@ -12,9 +13,8 @@ IMPLIES = expression_text("becomes", "\\Rightarrow")
 
 def solve(request: MathRequest) -> MathResult:
     """Solve equations, inequalities, or systems for requested variables."""
-    variables = _solve_variables(request)
     equations = request.expressions or [request.expression or ""]
-    parsed = [parse.equation(value) for value in equations]
+    variables, parsed = _solve_variables(request, equations)
 
     if len(parsed) == 1 and isinstance(parsed[0], sp.core.relational.Relational):
         relation = parsed[0]
@@ -50,12 +50,17 @@ def solve(request: MathRequest) -> MathResult:
     )
 
 
-def _solve_variables(request: MathRequest) -> list[sp.Symbol]:
-    """Use explicit solve variables, including the single-variable field."""
+def _solve_variables(
+    request: MathRequest, equations: list[str]
+) -> tuple[list[sp.Symbol], list[sp.Expr | sp.Equality | Relational]]:
+    """Use explicit solve variables or infer one unambiguous variable."""
     if request.variables:
-        return parse.symbols(request.variables)
+        return parse.symbols(request.variables), [
+            parse.equation(value) for value in equations
+        ]
 
-    return [parse.symbol(request.variable)]
+    variable, parsed = parse.symbol_from_equations(request.variable, equations)
+    return [variable], parsed
 
 
 def _solve_equality_steps(relation: sp.Equality, solved: list) -> list:
@@ -81,8 +86,10 @@ def _solve_equality_steps(relation: sp.Equality, solved: list) -> list:
 
 def roots(request: MathRequest) -> MathResult:
     """Find polynomial roots and multiplicities."""
-    variable = parse.symbol(request.variable)
-    parsed = parse.equation(request.expression)
+    variable, parsed_values = parse.symbol_from_equations(
+        request.variable, [request.expression or ""]
+    )
+    parsed = parsed_values[0]
 
     if isinstance(parsed, sp.Equality):
         left = parse.expression(str(parsed.lhs))

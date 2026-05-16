@@ -12,7 +12,7 @@ EQUALS = expression_text("equals", "=")
 def differentiate(request: MathRequest) -> MathResult:
     """Differentiate an expression with respect to one variable."""
     expr = parse.first_expression(request)
-    variable = parse.symbol(request.variable)
+    variable = parse.symbol_from_expression(request.variable, request.expression)
     output = sp.diff(expr, variable)
     steps = _differentiate_steps(expr, variable, output)
 
@@ -30,7 +30,7 @@ def differentiate(request: MathRequest) -> MathResult:
 def integrate(request: MathRequest) -> MathResult:
     """Integrate an expression, using bounds when both are provided."""
     expr = parse.first_expression(request)
-    variable = parse.symbol(request.variable)
+    variable = parse.symbol_from_expression(request.variable, request.expression)
     has_lower = request.lower is not None
     has_upper = request.upper is not None
 
@@ -63,7 +63,7 @@ def integrate(request: MathRequest) -> MathResult:
 def limit(request: MathRequest) -> MathResult:
     """Compute an ordinary two-sided limit at the requested point."""
     expr = parse.first_expression(request)
-    variable = parse.symbol(request.variable)
+    variable = parse.symbol_from_expression(request.variable, request.expression)
     point = parse.expression(request.point)
     left = sp.limit(expr, variable, point, dir="-")
     right = sp.limit(expr, variable, point, dir="+")

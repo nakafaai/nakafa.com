@@ -77,6 +77,16 @@ describe("app/api/chat/step", () => {
         "Cite sources inline in the exact sentence they support."
       ),
     });
+    expect(step).toEqual({
+      system: expect.stringContaining(
+        "When specialist evidence contains markdown links, preserve those links in the final answer"
+      ),
+    });
+    expect(step).toEqual({
+      system: expect.stringContaining(
+        "Do not add product homepages, documentation links, or source links from memory."
+      ),
+    });
   });
 
   it("forces research for first-step external URL requests", () => {

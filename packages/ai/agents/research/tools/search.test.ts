@@ -203,9 +203,6 @@ describe("research web search tool", () => {
           expect.objectContaining({
             url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
           }),
-          expect.objectContaining({
-            url: "https://developer.chrome.com/docs/devtools/ai-assistance",
-          }),
         ],
       })
     );

@@ -5,6 +5,7 @@ import {
   mathEquationInput,
   mathGeometryInput,
   mathMatrixInput,
+  mathProbabilityInput,
   mathSeriesInput,
   mathStatisticsInput,
 } from "@repo/ai/agents/math/schema";
@@ -218,6 +219,80 @@ describe("math AI input schemas", () => {
     });
   });
 
+  it("requires event bounds for named probability event operations", async () => {
+    const schema = asSchema(mathProbabilityInput);
+    const validate = schema.validate;
+
+    if (!validate) {
+      throw new Error(
+        "Math probability schema must validate model tool input."
+      );
+    }
+
+    await expect(
+      Promise.resolve(
+        validate({
+          distribution: "normal",
+          operation: "cumulative_probability",
+          parameters: {},
+          upper: "85",
+        })
+      )
+    ).resolves.toMatchObject({
+      success: false,
+    });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          distribution: "normal",
+          operation: "cumulative_probability",
+          parameters: { mean: "70", standard_deviation: "10" },
+        })
+      )
+    ).resolves.toMatchObject({
+      success: false,
+    });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          distribution: "normal",
+          operation: "cumulative_probability",
+          parameters: { mean: "70", standard_deviation: "10" },
+          upper: "85",
+        })
+      )
+    ).resolves.toEqual({
+      success: true,
+      value: {
+        distribution: "normal",
+        operation: "cumulative_probability",
+        parameters: { mean: "70", standard_deviation: "10" },
+        upper: "85",
+      },
+    });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          distribution: "binomial",
+          operation: "point_probability",
+          parameters: { n: "10", p: "1/5" },
+          point: "3",
+        })
+      )
+    ).resolves.toEqual({
+      success: true,
+      value: {
+        distribution: "binomial",
+        operation: "point_probability",
+        parameters: { n: "10", p: "1/5" },
+        point: "3",
+      },
+    });
+  });
+
   it("rejects malformed geometry points before tool execution", async () => {
     const schema = asSchema(mathGeometryInput);
     const validate = schema.validate;
@@ -309,6 +384,7 @@ describe("math AI input schemas", () => {
       await Promise.resolve(asSchema(mathMatrixInput).jsonSchema),
       await Promise.resolve(asSchema(mathSeriesInput).jsonSchema),
       await Promise.resolve(asSchema(mathStatisticsInput).jsonSchema),
+      await Promise.resolve(asSchema(mathProbabilityInput).jsonSchema),
     ];
 
     for (const jsonSchema of jsonSchemas) {

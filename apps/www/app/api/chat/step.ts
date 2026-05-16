@@ -56,6 +56,10 @@ export const prepareChatStep = Effect.fn("chat.prepareChatStep")(
 
                 Cite sources inline in the exact sentence they support.
                 Use [text](url) links with concise, human-readable text.
+                Use only links already present in specialist evidence, current page context, or verified Nakafa content.
+                Do not add product homepages, documentation links, or source links from memory.
+                When specialist evidence contains markdown links, preserve those links in the final answer for every claim that uses that evidence.
+                If the answer has sections or bullets built from source-backed research, each source-backed section or bullet must keep at least one supporting link.
                 When evidence contains an inline citation field, integrate that link into the supported sentence or omit it when the link would not help the user.
                 Never show numeric citation markers such as [1] or [4, 21, 23] to users.
                 Convert any research citation indexes into markdown links using the cited source URLs.

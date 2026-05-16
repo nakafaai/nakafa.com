@@ -29,6 +29,9 @@ describe("research agent messages", () => {
 
   it("passes collected evidence to structured synthesis", () => {
     const messages = createResearchSynthesisMessages({
+      collectedEvidence: [
+        "# Web Search Results\n\n## Source 1: AI SDK\n- URL: https://ai-sdk.dev/docs\n- Inline citation: [AI SDK](https://ai-sdk.dev/docs)",
+      ],
       evidence: "AI SDK DevTools captures generateText calls.",
       groundingSources: [
         {
@@ -40,29 +43,25 @@ describe("research agent messages", () => {
         },
       ],
       intent: "Research AI SDK DevTools.",
-      sourceOutputs: ["# Scrape Result\n\nOfficial docs."],
     });
 
     expect(messages[0]?.content).toContain("# Research Task");
-    expect(messages[0]?.content).toContain("# Collected Evidence");
+    expect(messages[0]?.content).toContain("# Research Notes");
     expect(messages[0]?.content).toContain(
       "AI SDK DevTools captures generateText calls."
     );
     expect(messages[0]?.content).toContain("# Grounding Source References");
     expect(messages[0]?.content).toContain("https://ai-sdk.dev/docs");
-    expect(messages[0]?.content).toContain("# User-Provided Source Evidence");
+    expect(messages[0]?.content).toContain("# Source Evidence With URLs");
   });
 
   it("keeps synthesis explicit when no evidence was collected", () => {
     const messages = createResearchSynthesisMessages({
       evidence: "",
       intent: "Research unavailable source.",
-      sourceOutputs: [],
     });
 
     expect(messages[0]?.content).toContain("No usable evidence was collected.");
-    expect(messages[0]?.content).not.toContain(
-      "# User-Provided Source Evidence"
-    );
+    expect(messages[0]?.content).not.toContain("# Source Evidence With URLs");
   });
 });

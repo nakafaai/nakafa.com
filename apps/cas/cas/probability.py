@@ -1,11 +1,13 @@
 """Probability CAS operations backed by SymPy."""
 
 import sympy as sp
-from sympy.stats import Bernoulli, Binomial, E, Normal, Poisson, Uniform, variance
+from sympy.stats import Bernoulli, Binomial, E, Normal, P, Poisson, Uniform, variance
 
 from cas import parse
-from cas.format import result
+from cas.format import expression_text, item, result, step
 from cas.schema import MathRequest, MathResult
+
+EQUALS = expression_text("equals", "=")
 
 
 def run(request: MathRequest) -> MathResult:
@@ -13,6 +15,10 @@ def run(request: MathRequest) -> MathResult:
     variable = parse.symbol(request.variable)
     distribution = _distribution(request, variable)
 
+    if request.operation == "cumulative_probability":
+        return _cumulative_probability(request, distribution, variable)
+    if request.operation == "point_probability":
+        return _point_probability(request, distribution, variable)
     if request.operation == "expected_value":
         output = E(distribution)
     elif request.operation == "variance_probability":
@@ -28,6 +34,66 @@ def run(request: MathRequest) -> MathResult:
         primary=distribution,
         secondary=output,
         reason="The probability distribution was checked exactly.",
+    )
+
+
+def _cumulative_probability(
+    request: MathRequest, distribution: object, variable: sp.Symbol
+) -> MathResult:
+    """Compute the probability that a random variable is at most the upper bound."""
+    upper = parse.expression(request.upper)
+    output = P(distribution <= upper)
+    primary = expression_text(
+        f"P({variable} <= {upper})",
+        f"P\\left({sp.latex(variable)} \\le {sp.latex(upper)}\\right)",
+    )
+
+    return result(
+        request,
+        status="verified",
+        primary=primary,
+        secondary=output,
+        reason="The cumulative probability was checked from the distribution.",
+        items=[item("approximation", sp.N(output))],
+        steps=[
+            step(
+                "cumulative-probability",
+                primary=primary,
+                relation=EQUALS,
+                secondary=output,
+            )
+        ],
+        stepStatus="complete",
+    )
+
+
+def _point_probability(
+    request: MathRequest, distribution: object, variable: sp.Symbol
+) -> MathResult:
+    """Compute the probability that a random variable equals one value."""
+    point = parse.expression(request.point)
+    output = P(sp.Eq(distribution, point))
+    primary = expression_text(
+        f"P({variable} = {point})",
+        f"P\\left({sp.latex(variable)} = {sp.latex(point)}\\right)",
+    )
+
+    return result(
+        request,
+        status="verified",
+        primary=primary,
+        secondary=output,
+        reason="The point probability was checked from the distribution.",
+        items=[item("approximation", sp.N(output))],
+        steps=[
+            step(
+                "point-probability",
+                primary=primary,
+                relation=EQUALS,
+                secondary=output,
+            )
+        ],
+        stepStatus="complete",
     )
 
 
