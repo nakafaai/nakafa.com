@@ -12,6 +12,10 @@ import { Effect, Either } from "effect";
 type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
 type SearchInput = ReturnType<typeof getSearchInput>;
 
+const searchTokenPattern = /[\p{L}\p{N}]+/gu;
+const exerciseQuestionRoutePattern = /\/\d+$/u;
+const routeSeparatorPattern = /[/_-]+/gu;
+
 interface Params {
   input: NakafaAgentSearchInput;
   locale: Locale;
@@ -28,6 +32,7 @@ export const search = Effect.fn("nakafa.search")(function* ({
 }: Params) {
   const dataInput = getSearchInput(input, locale);
   const searchInputs = getSearchInputs(dataInput);
+  const queryTokens = getSearchTokens(dataInput.queries ?? []);
 
   yield* Effect.sync(() =>
     searchInputs.forEach((searchInput, index) => {
@@ -106,7 +111,8 @@ export const search = Effect.fn("nakafa.search")(function* ({
 
   const result = combineSearchResults(
     dataInput,
-    successfulResults.map(({ result }) => result)
+    successfulResults.map(({ result }) => result),
+    queryTokens
   );
   const text = successfulResults
     .map(({ input, result }) => formatSearchGroup(input, result))
@@ -151,13 +157,18 @@ function getNakafaSearchPartId(toolCallId: string, index: number) {
 /** Builds the combined search result consumed by Nakafa follow-up routing. */
 function combineSearchResults(
   input: SearchInput,
-  results: NakafaAgentSearchResult[]
+  results: NakafaAgentSearchResult[],
+  queryTokens: string[]
 ) {
   if (results.length === 1) {
     return results[0];
   }
 
-  const ranked = interleaveSearchItems(results.map((result) => result.items));
+  const ranked = rankSearchItems(
+    input,
+    interleaveSearchItems(results.map((result) => result.items)),
+    queryTokens
+  );
   const items = ranked.slice(0, input.limit);
   const nextOffset = input.offset + items.length;
   const hasMore =
@@ -195,6 +206,79 @@ function interleaveSearchItems(groups: NakafaAgentSearchResult["items"][]) {
   return ranked;
 }
 
+/** Applies exercise relevance after multi-query merging. */
+function rankSearchItems(
+  input: SearchInput,
+  items: NakafaAgentSearchResult["items"],
+  tokens: string[]
+) {
+  if (input.section !== "exercises") {
+    return items;
+  }
+
+  if (tokens.length === 0) {
+    return items;
+  }
+
+  return [...items].sort((left, right) => {
+    const scoreDelta =
+      getExerciseSearchScore(right, tokens) -
+      getExerciseSearchScore(left, tokens);
+
+    if (scoreDelta !== 0) {
+      return scoreDelta;
+    }
+
+    return getExerciseSetPriority(right) - getExerciseSetPriority(left);
+  });
+}
+
+/** Tokenizes model-provided search text without language-specific rules. */
+function getSearchTokens(queries: string[]) {
+  return [
+    ...new Set(
+      queries.flatMap((query) =>
+        Array.from(query.toLocaleLowerCase().matchAll(searchTokenPattern)).map(
+          ([token]) => token
+        )
+      )
+    ),
+  ];
+}
+
+/** Scores exercise evidence by metadata text that the UI and agent can inspect. */
+function getExerciseSearchScore(
+  item: NakafaAgentSearchResult["items"][number],
+  tokens: string[]
+) {
+  const searchableTokens = new Set(
+    getSearchTokens([
+      item.title,
+      item.description,
+      item.route.replaceAll(routeSeparatorPattern, " "),
+    ])
+  );
+
+  return tokens.reduce((score, token) => {
+    if (searchableTokens.has(token)) {
+      return score + 1;
+    }
+
+    return score;
+  }, 0);
+}
+
+/** Prefers set/material/category rows over question rows for equal matches. */
+function getExerciseSetPriority(
+  item: NakafaAgentSearchResult["items"][number]
+) {
+  if (exerciseQuestionRoutePattern.test(item.route)) {
+    return 0;
+  }
+
+  return 1;
+}
+
 /** Adds query context to the markdown returned to the Nakafa sub-agent. */
 function formatSearchGroup(
   input: SearchInput,
@@ -208,7 +292,7 @@ function formatSearchGroup(
 
   return [
     "# Nakafa Search Query",
-    ...queries.map((query) => `- Query: ${query}`),
+    ...queries.map((query) => `- Query: "${query}"`),
     "",
     formatSearch(result),
   ].join("\n");

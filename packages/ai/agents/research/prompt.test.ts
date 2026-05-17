@@ -16,6 +16,9 @@ const context = {
   userRole: "student" as const,
   verified: false,
 };
+const couldNotConfirmFromDirectSourcesPattern =
+  /could not confirm the request from\s+retrieved direct sources/;
+const noDigitalFootprintPattern = /no\s+digital footprint/;
 
 describe("research prompt", () => {
   it("keeps evidence tool routing under tool usage guidelines", () => {
@@ -125,6 +128,24 @@ describe("research prompt", () => {
     expect(prompt).toContain("Do not put markdown links");
   });
 
+  it("prevents no-source answers from becoming existence claims", () => {
+    const prompt = researchPrompt({ context, locale: "id" });
+
+    expect(prompt).toContain("noEvidenceAnswer must not infer that a person");
+    expect(prompt).toMatch(couldNotConfirmFromDirectSourcesPattern);
+    expect(prompt).toContain("Write noEvidenceAnswer as a process limitation");
+    expect(prompt).toContain('Do not say an item was "not found"');
+    expect(prompt).toContain('has "no official announcement"');
+  });
+
+  it("keeps empty evidence searches from becoming absence evidence", () => {
+    const prompt = researchEvidencePrompt({ context, locale: "id" });
+
+    expect(prompt).toContain("zero usable direct sources");
+    expect(prompt).toContain("Do not infer");
+    expect(prompt).toMatch(noDigitalFootprintPattern);
+  });
+
   it("keeps source constraints while search tools stay available", () => {
     const prompt = researchEvidencePrompt({ context, locale: "id" });
 
@@ -139,6 +160,8 @@ describe("research prompt", () => {
 
     expect(prompt).toContain("Use only the provided research evidence");
     expect(prompt).toContain("Do not invent sources");
+    expect(prompt).toContain("Return only structured output fields");
+    expect(prompt).not.toContain("Return ONLY the research findings");
     expect(prompt).not.toContain("webSearch");
     expect(prompt).not.toContain("Google Search grounding");
     expect(prompt).not.toContain("Grounding Source References");

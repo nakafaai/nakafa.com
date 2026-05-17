@@ -32,10 +32,10 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   writer: UIMessageStreamWriter<MyUIMessage>;
 }) {
   const searchQueries = planSearchQueries({
-    anchor: "always",
     task,
     maxQueries: webSearchMaxQueries,
     queries,
+    scopeByNamedPhrases: true,
   });
 
   yield* Effect.sync(() =>

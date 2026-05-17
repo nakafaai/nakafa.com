@@ -8,13 +8,15 @@ const MathMatrixUnaryInputSchema = Schema.Struct({
   matrix: matrixSchema,
   operation: Schema.Literal(
     "determinant",
+    "eigen_analysis",
     "eigenvalues",
     "eigenvectors",
     "inverse",
     "rank",
     "rref"
   ).annotations({
-    description: "Choose the linear algebra operation for one matrix.",
+    description:
+      "Choose the linear algebra operation for one matrix. Use eigen_analysis for eigenspaces, multiplicities, and diagonalizability evidence.",
   }),
 }).pipe(Schema.mutable);
 

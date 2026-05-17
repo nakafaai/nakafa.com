@@ -5,7 +5,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("research Google Search grounding", () => {
-  it("builds web-search data from Vertex grounding sources", () => {
+  it("drops query-only Google grounding when redirect sources are unusable", () => {
     const data = createGroundingWebSearchData({
       providerMetadata: {
         vertex: {
@@ -27,22 +27,7 @@ describe("research Google Search grounding", () => {
       ],
     });
 
-    expect(data).toEqual({
-      provider: "google",
-      queries: ["AI SDK DevTools", "DevTools"],
-      sources: [
-        {
-          citation:
-            "[ai-sdk.dev](https://vertexaisearch.cloud.google.com/grounding-api-redirect/source)",
-          content: "",
-          description: "",
-          title: "ai-sdk.dev",
-          url: "https://vertexaisearch.cloud.google.com/grounding-api-redirect/source",
-        },
-      ],
-      status: "done",
-    });
-    expect(data && hasSingleGroundingQuery(data)).toBe(false);
+    expect(data).toBeUndefined();
   });
 
   it("marks one-query grounding as safe for a query-scoped search row", () => {
@@ -126,7 +111,7 @@ describe("research Google Search grounding", () => {
     expect(data?.sources[0]?.title).toBe("Google Grounded Source");
   });
 
-  it("keeps opaque source labels when Google omits a parseable URL", () => {
+  it("drops opaque source labels when Google omits a public URL", () => {
     const data = createGroundingWebSearchData({
       providerMetadata: {
         vertex: {
@@ -144,15 +129,7 @@ describe("research Google Search grounding", () => {
       sources: "not source parts",
     });
 
-    expect(data?.sources).toEqual([
-      {
-        citation: "[opaque-grounding-source](opaque-grounding-source)",
-        content: "",
-        description: "",
-        title: "opaque-grounding-source",
-        url: "opaque-grounding-source",
-      },
-    ]);
+    expect(data).toBeUndefined();
   });
 
   it("uses hostnames when Google omits source titles", () => {
@@ -216,7 +193,7 @@ describe("research Google Search grounding", () => {
     });
   });
 
-  it("keeps Google Search activity visible when only search queries are returned", () => {
+  it("does not render query-only Google grounding as source evidence", () => {
     const data = createGroundingWebSearchData({
       providerMetadata: {
         google: {
@@ -228,12 +205,7 @@ describe("research Google Search grounding", () => {
       sources: [],
     });
 
-    expect(data).toEqual({
-      provider: "google",
-      queries: ["official AI SDK DevTools documentation"],
-      sources: [],
-      status: "done",
-    });
+    expect(data).toBeUndefined();
   });
 
   it("returns nothing when no grounded web sources are available", () => {

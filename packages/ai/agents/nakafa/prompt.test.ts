@@ -38,8 +38,13 @@ describe("nakafaAgentPrompt", () => {
     }
 
     expect(toolSection).toContain("Put all search text in queries.");
-    expect(toolSection).not.toContain("Never invent exercise choices");
-    expect(evidenceSection).toContain("Never invent exercise choices");
+    expect(toolSection).not.toContain("Structured exercise questions");
+    expect(evidenceSection).toContain(
+      "Structured exercise questions, choices, answers, and explanations must come from the exercise tool result."
+    );
+    expect(evidenceSection).toContain(
+      "Lesson-provided practice may come from read content"
+    );
     expect(evidenceSection).not.toContain("Do not include public URLs");
     expect(outputSection).toContain("Do not include public URLs");
   });
@@ -58,6 +63,9 @@ describe("nakafaAgentPrompt", () => {
     expect(prompt).toContain("Put all search text in queries.");
     expect(prompt).toContain(
       "For every search, preserve exact identifiers from the request in queries"
+    );
+    expect(prompt).toContain(
+      "For practice, test, tryout, question, answer, solution, or exercise walkthrough requests, search exercises only unless the task explicitly asks for a separate lesson, concept overview, or background material."
     );
     expect(prompt).toContain(
       "For exercise requests without an exact reference, search the exercises section first, then call exercise"

@@ -1,10 +1,38 @@
 import {
+  mathAlgebra,
+  mathArithmetic,
   mathCalculus,
+  mathDiscrete,
+  mathEquation,
+  mathGeometry,
+  mathMatrix,
   mathProbability,
+  mathSeries,
+  mathStatistics,
 } from "@repo/ai/agents/math/descriptions";
+import { mathOperations } from "@repo/math/schema/operations";
 import { describe, expect, it } from "vitest";
 
+const mathToolDescriptions = [
+  mathAlgebra,
+  mathArithmetic,
+  mathCalculus,
+  mathDiscrete,
+  mathEquation,
+  mathGeometry,
+  mathMatrix,
+  mathProbability,
+  mathSeries,
+  mathStatistics,
+].join("\n");
+
 describe("math tool descriptions", () => {
+  it("keeps every math operation literal visible in tool descriptions", () => {
+    for (const operation of mathOperations) {
+      expect(mathToolDescriptions).toContain(operation);
+    }
+  });
+
   it("routes finite equally likely outcomes away from named distributions", () => {
     expect(mathProbability).toContain(
       "For fair dice, cards, or any finite equally likely outcome list"

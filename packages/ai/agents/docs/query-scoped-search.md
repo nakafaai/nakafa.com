@@ -31,8 +31,10 @@ flowchart LR
   source-per-query mapping. Do not invent groupings when the provider does not
   return that relationship.
 - Google grounding is rendered as a search row only when it has exactly one
-  search query. Multi-query grounding remains internal evidence because the
-  provider does not expose which sources belong to which query.
+  search query and at least one usable direct source URL. Query-only grounding
+  remains in DevTools/provider metadata instead of the user-facing source UI.
+  Multi-query grounding remains internal evidence because the provider does not
+  expose which sources belong to which query.
 
 ```mermaid
 flowchart TD
@@ -43,7 +45,7 @@ flowchart TD
   Scoped --> Agent["research evidence notes"]
   Agent --> Google["Google grounding step"]
   Google --> Grounded["provider metadata sources"]
-  Grounded --> Decision{"single query?"}
+  Grounded --> Decision{"single query + source?"}
   Decision -->|yes| UI
   Decision -->|no| Agent
   Decision -->|yes| Agent
@@ -62,7 +64,7 @@ sequenceDiagram
   Tool->>Stream: write id=query-2 done with provider results
   Stream->>UI: render each query beside its own results
   Tool->>Agent: return scoped evidence text
-  Agent->>Stream: write Google grounding only when it is query-scoped
+  Agent->>Stream: write source-backed Google grounding only when it is query-scoped
 ```
 
 ## References

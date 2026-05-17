@@ -1,4 +1,8 @@
-import { scrapeUrl } from "@repo/ai/agents/research/tools/scrape";
+import {
+  formatScrapeOutput,
+  isSuccessfulScrapeOutput,
+  scrapeUrl,
+} from "@repo/ai/agents/research/tools/scrape";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";
@@ -73,9 +77,10 @@ describe("research scrape tool", () => {
         writer,
       })
     );
+    const text = formatScrapeOutput(output);
 
-    expect(output).toContain("- Title: AI SDK Core: DevTools");
-    expect(output).toContain(
+    expect(text).toContain("- Title: AI SDK Core: DevTools");
+    expect(text).toContain(
       "- Description: Debug and inspect AI SDK applications with DevTools"
     );
     expect(fetch).not.toHaveBeenCalled();
@@ -111,8 +116,9 @@ describe("research scrape tool", () => {
         writer,
       })
     );
+    const text = formatScrapeOutput(output);
 
-    expect(output).toContain("Only public http(s) URLs can be scraped");
+    expect(text).toContain("Only public http(s) URLs can be scraped");
     expect(fetch).not.toHaveBeenCalled();
     expect(firecrawlApp.scrape).not.toHaveBeenCalled();
     expect(parts).toEqual([
@@ -191,9 +197,10 @@ describe("research scrape tool", () => {
         writer,
       })
     );
+    const text = formatScrapeOutput(output);
 
-    expect(output).toContain("full visibility over your AI SDK calls");
-    expect(output).not.toContain("Sign Up");
+    expect(text).toContain("full visibility over your AI SDK calls");
+    expect(text).not.toContain("Sign Up");
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
         type: "data-scrape-url",
@@ -225,10 +232,11 @@ describe("research scrape tool", () => {
         writer,
       })
     );
+    const text = formatScrapeOutput(output);
 
-    expect(output).toContain("- Title: Fallback title");
-    expect(output).toContain("- Description: Fallback description");
-    expect(output).toContain("- Error: No content found.");
+    expect(text).toContain("- Title: Fallback title");
+    expect(text).toContain("- Description: Fallback description");
+    expect(text).toContain("- Error: No content found.");
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
         type: "data-scrape-url",
@@ -255,9 +263,10 @@ describe("research scrape tool", () => {
         writer,
       })
     );
+    const text = formatScrapeOutput(output);
 
-    expect(output).not.toContain("- Title:");
-    expect(output).not.toContain("- Description:");
+    expect(text).not.toContain("- Title:");
+    expect(text).not.toContain("- Description:");
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
         type: "data-scrape-url",
@@ -328,14 +337,36 @@ describe("research scrape tool", () => {
         writer,
       })
     );
+    const text = formatScrapeOutput(output);
 
-    expect(output).toContain("Failed to crawl");
-    expect(output).not.toContain("- Title:");
+    expect(text).toContain("Failed to crawl");
+    expect(text).not.toContain("- Title:");
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
         type: "data-scrape-url",
         data: expect.objectContaining({ status: "error" }),
       })
     );
+  });
+
+  it("recognizes successful scrape evidence", () => {
+    expect(
+      isSuccessfulScrapeOutput({
+        data: {
+          content: "# Source",
+          url: "https://example.com/source",
+        },
+        error: undefined,
+      })
+    ).toBe(true);
+    expect(
+      isSuccessfulScrapeOutput({
+        data: {
+          content: "",
+          url: "https://example.com/source",
+        },
+        error: "No content found.",
+      })
+    ).toBe(false);
   });
 });

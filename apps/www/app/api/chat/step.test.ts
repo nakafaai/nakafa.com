@@ -26,6 +26,7 @@ describe("app/api/chat/step", () => {
 
     expect(step).toEqual({
       activeTools: ["nakafa"],
+      messages: [],
       toolChoice: { type: "tool", toolName: "nakafa" },
     });
   });
@@ -41,6 +42,7 @@ describe("app/api/chat/step", () => {
     );
 
     expect(step).toEqual({
+      messages: [],
       system: expect.stringContaining(
         "Never append a final source, reference, citation, or bibliography section"
       ),
@@ -58,6 +60,7 @@ describe("app/api/chat/step", () => {
     );
 
     expect(step).toEqual({
+      messages: [],
       toolChoice: "required",
     });
   });
@@ -73,21 +76,25 @@ describe("app/api/chat/step", () => {
     );
 
     expect(step).toEqual({
+      messages: [],
       system: expect.stringContaining(
         "Cite external research sources inline in the exact sentence they support."
       ),
     });
     expect(step).toEqual({
+      messages: [],
       system: expect.stringContaining(
         "When research evidence contains markdown links, preserve those links in the final answer"
       ),
     });
     expect(step).toEqual({
+      messages: [],
       system: expect.stringContaining(
         "Do not add product homepages, documentation links, or source links from memory."
       ),
     });
     expect(step).toEqual({
+      messages: [],
       system: expect.stringContaining(
         "Do not add Nakafa source labels, Nakafa domain links, or citation-style links for Nakafa-owned content"
       ),
@@ -106,6 +113,7 @@ describe("app/api/chat/step", () => {
 
     expect(step).toEqual({
       activeTools: ["deepResearch"],
+      messages: externalUrlMessages,
       toolChoice: { type: "tool", toolName: "deepResearch" },
     });
   });
@@ -122,7 +130,32 @@ describe("app/api/chat/step", () => {
 
     expect(step).toEqual({
       activeTools: ["nakafa"],
+      messages: externalUrlMessages,
       toolChoice: { type: "tool", toolName: "nakafa" },
     });
+  });
+
+  it("keeps prepared model messages available to later model steps", () => {
+    const messages = [
+      {
+        content: "Cek kabar tryout.",
+        role: "user",
+      },
+      {
+        content: "Jawaban terlihat.",
+        role: "assistant",
+      },
+    ] satisfies ModelMessage[];
+
+    const step = Effect.runSync(
+      prepareChatStep({
+        messages,
+        needsPageFetch: false,
+        system,
+        stepNumber: 1,
+      })
+    );
+
+    expect(step.messages).toEqual(messages);
   });
 });

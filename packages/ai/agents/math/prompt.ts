@@ -35,48 +35,62 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
 
       ## Arithmetic
 
-      Use arithmetic only for direct numeric evaluation or for simplifying a value after the original target operation has been checked.
-      For fair dice, cards, or finite equally likely outcomes, use statistics mean or arithmetic over the listed outcomes instead of a named probability distribution.
+      Use arithmetic for evaluate on exact numeric expressions.
+      Use arithmetic after another math check only to simplify a numeric value; do not use it instead of symbolic, statistical, probability, calculus, or discrete checks.
 
       ## Algebra
 
-      Use algebra for simplification, factoring, expansion, cancellation, domains, and equivalence checks.
-      For equivalence, validity, or "same as" questions, use compare for the two expressions and add domain when restrictions matter.
+      Use algebra for simplify, factor, expand, cancel, together, apart, rationalize, and domain.
+      Use compare for equivalence, validity, or "same as" questions. Add domain when restrictions affect whether expressions are equal for all requested values.
 
       ## Equation
 
-      Use equation for solving equations, systems, inequalities, and roots.
+      Use equation for solve on equations, systems, and inequalities.
+      Use roots when the user asks for polynomial roots.
+      Send one equation as expression. Send systems as expressions and include variables when the user names them.
 
       ## Calculus
 
-      Use calculus for derivative, integral, or limit requests before any arithmetic simplification.
-      If an integral has bounds, include lower and upper in the calculus input, describe it as a definite integral, and never call a bounded integral indefinite.
+      Use calculus for differentiate, integrate, and limit before any arithmetic simplification.
+      Include variable when the expression has parameters or more than one symbol.
+      If an integral has bounds, include lower and upper, describe it as a definite integral, and never call a bounded integral indefinite.
 
       ## Series
 
-      Use series for series expansions, summations, and products.
+      Use series for series expansions.
+      Use summation for finite or symbolic sums, and product for finite or symbolic products.
+      A request containing both an expansion and a closed-form sum or product needs separate tool calls.
 
       ## Matrix
 
-      Use matrix for linear algebra operations, including determinant, inverse, rank, row reduction, eigenvalues, eigenvectors, matrix multiplication, and systems.
+      Use matrix for determinant, inverse, rank, rref, eigenvalues, eigenvectors, eigen_analysis, matrix_multiply, and linear_system.
+      Use eigen_analysis for eigenspaces, algebraic multiplicity, geometric multiplicity, diagonalizability, or Jordan-related conclusions.
+      Use eigenvalues only when the user asks only for eigenvalues.
+      Use matrix_multiply only when the second matrix is available. Use linear_system only when the coefficient matrix and vector are available.
+      Do not state a full Jordan block structure unless that structure was checked by returned evidence. If only eigenspace and multiplicity evidence was checked, say that limitation.
 
       ## Statistics
 
-      Use statistics for descriptive statistics and finite data summaries.
+      Use statistics for mean, median, mode, variance, standard_deviation, quartiles, and z_score.
+      Send the dataset as values. For z_score, also include the target expression.
 
       ## Probability
 
       For named probability distributions such as normal, binomial, or poisson, use probability for the original event.
       Send point_probability for exact values, cumulative_probability for below or at-most, tail_probability for above or at-least, interval_probability for between ranges, and distribution, expected_value, or variance_probability for distribution checks.
       For between-range probability questions, call probability once with operation interval_probability, distribution, parameters, lower, and upper in the same call. Do not decompose the event into two cumulative checks unless interval_probability cannot represent the request.
+      For fair dice, cards, or finite equally likely outcomes, use statistics or arithmetic over the listed outcomes instead of a named probability distribution.
 
       ## Geometry
 
-      Use geometry for coordinate geometry.
+      Use geometry for distance, midpoint, slope, line, circle, and intersection in coordinate geometry.
+      Send points for point-based geometry. Send expressions for equation intersections.
+      For the intersection of two point-defined lines, send exactly four points in order: first line, then second line.
 
       ## Discrete
 
-      Use discrete for number theory and combinatorics.
+      Use discrete for gcd, lcm, is_prime, prime_factorization, modular, permutation, and combination.
+      Send values for gcd and lcm, n for primality and factorization, modulus with n for modular arithmetic, and n with k for permutation or combination.
     `,
     detailedTaskInstructions: `
       # Verification Rules
@@ -86,6 +100,7 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
       Preserve the user's original expression in tool inputs. Do not send your guessed final answer as the expression.
       The first math tool must check the user's original target operation. Use calculus for derivative, integral, or limit requests before any arithmetic simplification.
       If the user asks for multiple math tasks, call tools for each distinct task.
+      Before answering a multi-part request, compare the requested calculations with the returned math evidence. If any requested calculation has no matching tool evidence, call the missing tool before answering or say that specific calculation was not checked.
 
       # Evidence Contract
 

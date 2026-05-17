@@ -12,7 +12,11 @@ import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
 import { logError } from "@repo/utilities/logging/effect";
 import { geolocation } from "@vercel/functions";
-import { convertToModelMessages, createUIMessageStreamResponse } from "ai";
+import {
+  convertToModelMessages,
+  createUIMessageStreamResponse,
+  pruneMessages,
+} from "ai";
 import { Effect, Option, Schema } from "effect";
 import { getTranslations } from "next-intl/server";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
@@ -203,9 +207,19 @@ export function POST(req: Request) {
         ).pipe(Effect.annotateLogs(logContext));
       }
 
-      const finalMessages = yield* Effect.tryPromise(() =>
+      const modelMessages = yield* Effect.tryPromise(() =>
         convertToModelMessages(compressedMessages)
       );
+      // Persist and render reasoning in UI, but do not feed historical
+      // assistant reasoning back into the next LLM call. AI SDK documents this
+      // as the supported way to reduce model context without deleting stored UI
+      // messages.
+      // https://ai-sdk.dev/docs/reference/ai-sdk-ui/prune-messages
+      // https://github.com/vercel/ai/blob/main/packages/ai/src/generate-text/prune-messages.ts
+      const finalMessages = pruneMessages({
+        messages: modelMessages,
+        reasoning: "all",
+      });
 
       yield* Effect.logInfo("Chat session started").pipe(
         Effect.annotateLogs(logContext)

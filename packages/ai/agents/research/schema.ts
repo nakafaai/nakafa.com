@@ -92,10 +92,10 @@ export const ResearchFindingSchema = Schema.Struct({
 
 export const ResearchOutputSchema = Schema.Struct({
   findings: Schema.Array(ResearchFindingSchema)
-    .pipe(Schema.minItems(1), Schema.mutable)
+    .pipe(Schema.mutable)
     .annotations({
       description:
-        "Source-backed findings. Keep each finding scoped to the cited sources.",
+        "Source-backed findings. Keep each finding scoped to the cited sources. Use an empty array when direct citation evidence is unavailable.",
     }),
   limitations: Schema.Array(Schema.NonEmptyString)
     .pipe(Schema.mutable)
@@ -103,6 +103,10 @@ export const ResearchOutputSchema = Schema.Struct({
       description:
         "Evidence gaps or caveats. Use an empty array when there are none.",
     }),
+  noEvidenceAnswer: Schema.NonEmptyString.annotations({
+    description:
+      "A brief user-facing process limitation in the user's locale for cases where no source-backed finding can be returned. Say only that this run could not verify the request from retrieved direct source evidence and what direct channel the user can check next. Do not include factual claims, absence claims, source names, URLs, dates, rules, or recommendations unless they are source-backed findings.",
+  }),
 }).pipe(Schema.mutable);
 
 export const scrapeInputSchema = createEffectSchema(ScrapeInputSchema);

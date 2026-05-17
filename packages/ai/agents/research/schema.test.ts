@@ -81,6 +81,7 @@ describe("research schema", () => {
         },
       ],
       limitations: [],
+      noEvidenceAnswer: "I could not verify this from direct sources.",
     });
     const invalid = Schema.decodeUnknownEither(ResearchOutputSchema)({
       findings: [
@@ -90,9 +91,29 @@ describe("research schema", () => {
         },
       ],
       limitations: [],
+      noEvidenceAnswer: "I could not verify this from direct sources.",
     });
 
     expect(Either.isRight(valid)).toBe(true);
+    expect(Either.isLeft(invalid)).toBe(true);
+  });
+
+  it("allows empty findings when direct citation evidence is unavailable", () => {
+    const valid = Schema.decodeUnknownEither(ResearchOutputSchema)({
+      findings: [],
+      limitations: ["No retrieved direct source supported a citeable claim."],
+      noEvidenceAnswer: "I could not verify this from direct sources.",
+    });
+
+    expect(Either.isRight(valid)).toBe(true);
+  });
+
+  it("requires a generated no-evidence answer", () => {
+    const invalid = Schema.decodeUnknownEither(ResearchOutputSchema)({
+      findings: [],
+      limitations: ["No retrieved direct source supported a citeable claim."],
+    });
+
     expect(Either.isLeft(invalid)).toBe(true);
   });
 });

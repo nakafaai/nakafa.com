@@ -1,5 +1,10 @@
 import { google } from "@ai-sdk/google";
 import {
+  addEligibleCitationUrl,
+  addEligibleSourceUrls,
+  filterResearchOutputCitations,
+} from "@repo/ai/agents/research/citations";
+import {
   nakafaScrape,
   nakafaWebSearch,
 } from "@repo/ai/agents/research/descriptions";
@@ -26,7 +31,11 @@ import {
   prepareGoogleGroundingStep,
   prepareResearchEvidenceStep,
 } from "@repo/ai/agents/research/step";
-import { scrapeUrl } from "@repo/ai/agents/research/tools/scrape";
+import {
+  formatScrapeOutput,
+  isSuccessfulScrapeOutput,
+  scrapeUrl,
+} from "@repo/ai/agents/research/tools/scrape";
 import { searchWeb } from "@repo/ai/agents/research/tools/search";
 import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
 import { getFastModelProviderOptions } from "@repo/ai/config/models";
@@ -75,14 +84,19 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       toolCallId,
       writer,
     });
-    const collectedEvidence = [...sourceOutputs];
+    const collectedEvidence = sourceOutputs.map((output) => output.text);
+    const eligibleCitationUrls = new Set<string>();
+
+    for (const sourceOutput of sourceOutputs) {
+      addEligibleSourceUrls(eligibleCitationUrls, sourceOutput.sources);
+    }
 
     const evidenceResult = yield* Effect.tryPromise({
       try: () =>
         generateText({
           model: model.languageModel(modelId),
           system: researchEvidencePrompt({ locale, context }),
-          messages: createResearchMessages(task, sourceOutputs),
+          messages: createResearchMessages(task, collectedEvidence),
           tools: {
             google_search: google.tools.googleSearch({
               searchTypes: { webSearch: {} },
@@ -100,9 +114,13 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
                     toolCallId,
                     writer,
                   }).pipe(
-                    Effect.tap(({ text }) =>
+                    Effect.tap((output) =>
                       Effect.sync(() => {
-                        collectedEvidence.push(text);
+                        collectedEvidence.push(output.text);
+                        addEligibleSourceUrls(
+                          eligibleCitationUrls,
+                          output.result.sources
+                        );
                       })
                     ),
                     Effect.map((output) => output.text)
@@ -115,12 +133,25 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
               outputSchema: textOutputSchema,
               execute: ({ urlToCrawl }, { toolCallId }) =>
                 Effect.runPromise(
-                  scrapeUrl({ toolCallId, url: urlToCrawl, writer }).pipe(
-                    Effect.tap((text) =>
+                  scrapeUrl({
+                    toolCallId,
+                    url: urlToCrawl,
+                    writer,
+                  }).pipe(
+                    Effect.tap((output) =>
                       Effect.sync(() => {
+                        const text = formatScrapeOutput(output);
                         collectedEvidence.push(text);
+
+                        if (isSuccessfulScrapeOutput(output)) {
+                          addEligibleCitationUrl(
+                            eligibleCitationUrls,
+                            output.data.url
+                          );
+                        }
                       })
-                    )
+                    ),
+                    Effect.map(formatScrapeOutput)
                   )
                 ),
             }),
@@ -189,6 +220,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       });
     }
 
+    const sourceEvidenceAvailable = eligibleCitationUrls.size > 0;
     const synthesisResult = yield* Effect.tryPromise({
       try: () =>
         generateText({
@@ -198,9 +230,8 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           }),
           system: researchPrompt({ locale, context }),
           messages: createResearchSynthesisMessages({
-            collectedEvidence,
-            evidence: evidenceResult.text,
-            groundingSources: groundedSearchData?.sources,
+            collectedEvidence: sourceEvidenceAvailable ? collectedEvidence : [],
+            evidence: sourceEvidenceAvailable ? evidenceResult.text : "",
             task,
           }),
           output: Output.object({
@@ -261,8 +292,15 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     const evidenceUsage = evidenceResult.totalUsage;
     const synthesisUsage = synthesisResult.totalUsage;
 
+    const filteredOutput = filterResearchOutputCitations(
+      output,
+      eligibleCitationUrls
+    );
+    const sourceBacked = filteredOutput.findings.length > 0;
+
     return {
-      text: formatResearchOutput(output),
+      sourceBacked,
+      text: formatResearchOutput(filteredOutput),
       usage: {
         inputTokens:
           (evidenceUsage.inputTokens ?? 0) + (synthesisUsage.inputTokens ?? 0),
@@ -317,7 +355,14 @@ const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
           toolCallId: `${toolCallId}-source-${index + 1}`,
           url: source.href,
           writer,
-        }),
+        }).pipe(
+          Effect.map((output) => ({
+            sources: isSuccessfulScrapeOutput(output)
+              ? [{ url: output.data.url }]
+              : [],
+            text: formatScrapeOutput(output),
+          }))
+        ),
       { concurrency: exactSourceScrapeConcurrency }
     );
   }

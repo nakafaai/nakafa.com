@@ -1,4 +1,5 @@
 import { mathPrompt } from "@repo/ai/agents/math/prompt";
+import { mathOperations } from "@repo/math/schema/operations";
 import { describe, expect, it } from "vitest";
 
 const base = {
@@ -72,6 +73,10 @@ describe("mathPrompt", () => {
       "Use calculus for derivative, integral, or limit requests before any arithmetic simplification."
     );
     expect(prompt).toContain(
+      "Before answering a multi-part request, compare the requested calculations with the returned math evidence."
+    );
+    expect(prompt).toContain("call the missing tool before answering");
+    expect(prompt).toContain(
       "For named probability distributions such as normal, binomial, or poisson, use probability for the original event."
     );
     expect(prompt).toContain("tail_probability for above or at-least");
@@ -81,13 +86,16 @@ describe("mathPrompt", () => {
     expect(prompt).not.toContain("probabilityTail");
     expect(prompt).not.toContain("probabilitySummary");
     expect(prompt).toContain(
-      "Use arithmetic only for direct numeric evaluation or for simplifying a value after the original target operation has been checked."
+      "Use arithmetic for evaluate on exact numeric expressions."
     );
     expect(prompt).toContain(
-      "For fair dice, cards, or finite equally likely outcomes, use statistics mean or arithmetic over the listed outcomes instead of a named probability distribution."
+      "do not use it instead of symbolic, statistical, probability, calculus, or discrete checks."
     );
     expect(prompt).toContain(
-      "If an integral has bounds, include lower and upper in the calculus input"
+      "For fair dice, cards, or finite equally likely outcomes, use statistics or arithmetic over the listed outcomes instead of a named probability distribution."
+    );
+    expect(prompt).toContain(
+      "If an integral has bounds, include lower and upper, describe it as a definite integral"
     );
     expect(prompt).toContain(
       "If a math check returns error and the recovery guidance identifies a correctable input issue"
@@ -135,14 +143,40 @@ describe("mathPrompt", () => {
     const prompt = mathPrompt(base);
 
     expect(prompt).toContain("## Equation");
-    expect(prompt).toContain("Use equation for solving equations");
+    expect(prompt).toContain("Use equation for solve on equations");
+    expect(prompt).toContain(
+      "Use roots when the user asks for polynomial roots"
+    );
+    expect(prompt).toContain("Send systems as expressions");
+    expect(prompt).toContain("Use summation for finite or symbolic sums");
+    expect(prompt).toContain(
+      "A request containing both an expansion and a closed-form sum or product needs separate tool calls."
+    );
     expect(prompt).toContain("## Matrix");
-    expect(prompt).toContain("Use matrix for linear algebra operations");
+    expect(prompt).toContain("Use matrix for determinant");
+    expect(prompt).toContain("Use eigen_analysis for eigenspaces");
+    expect(prompt).toContain("Use eigenvalues only when the user asks only");
+    expect(prompt).toContain("Use matrix_multiply only when");
+    expect(prompt).toContain("Use statistics for mean, median, mode");
+    expect(prompt).toContain("For z_score, also include the target expression");
+    expect(prompt).toContain("For the intersection of two point-defined lines");
+    expect(prompt).toContain("Do not state a full Jordan block structure");
     expect(prompt).toContain("## Discrete");
     expect(prompt).toContain(
-      "Use discrete for number theory and combinatorics"
+      "Use discrete for gcd, lcm, is_prime, prime_factorization, modular, permutation, and combination."
     );
     expect(prompt).not.toContain("Math.js");
+  });
+
+  it("keeps tool routing vocabulary aligned with math operation schemas", () => {
+    const prompt = mathPrompt(base);
+    const toolIndex = prompt.indexOf("# Tool Usage Guidelines");
+    const verificationIndex = prompt.indexOf("# Verification Rules");
+    const toolSection = prompt.slice(toolIndex, verificationIndex);
+
+    for (const operation of mathOperations) {
+      expect(toolSection).toContain(operation);
+    }
   });
 
   it("includes fallback context for unverified pages and unknown roles", () => {

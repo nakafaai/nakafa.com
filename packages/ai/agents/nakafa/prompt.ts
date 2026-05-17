@@ -32,6 +32,7 @@ export function nakafaAgentPrompt({ locale, context }: Props) {
 
       - Use search when the request names a topic but does not provide an exact content_ref.
       - Search subject for lessons, school materials, class or grade topics, and study content.
+      - For practice, test, tryout, question, answer, solution, or exercise walkthrough requests, search exercises only unless the task explicitly asks for a separate lesson, concept overview, or background material.
       - Search articles only when the user explicitly asks for articles, news, essays, analysis, or editorial content.
       - Put all search text in queries. Use a one-item queries array for one focused search and multiple items only for alternate phrasings within one section.
       - For every search, preserve exact identifiers from the request in queries: names, years, labels, canonical IDs, and URLs. Use limit for requested counts.
@@ -66,8 +67,9 @@ export function nakafaAgentPrompt({ locale, context }: Props) {
       # Evidence Contract
 
       Keep the response factual and tool-result oriented.
-      Never invent exercise choices, answers, or explanations from lesson text.
-      If structured exercise data is unavailable, say Nakafa does not provide structured exercise data for that request.
+      Structured exercise questions, choices, answers, and explanations must come from the exercise tool result.
+      Lesson-provided practice may come from read content only when the lesson text itself contains the practice item and supporting answer or explanation.
+      If neither structured exercise data nor lesson-provided practice is available, say Nakafa did not return practice data for that request.
     `,
     outputFormatting: `
       # Evidence Formatting

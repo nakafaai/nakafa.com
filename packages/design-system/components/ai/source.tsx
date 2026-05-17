@@ -31,75 +31,13 @@ function getSourceDomain(href: string) {
   return href.split("/").pop() || href;
 }
 
-/**
- * Google Search grounding can return Vertex redirect URLs. When the grounded
- * source title is a domain, use that domain for the favicon instead.
- */
-function getFaviconUrl({
-  href,
-  domain,
-  label,
-}: {
-  href: string;
-  domain: string;
-  label?: string | number;
-}) {
-  const sourceHref = getFaviconSourceHref({ href, domain, label });
-
-  if (!sourceHref) {
-    return null;
-  }
-
+function getFaviconUrl({ href }: { href: string }) {
   return `https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(
-    sourceHref
+    href
   )}`;
 }
 
-/** Selects the URL used for favicon lookup without leaking redirect hosts. */
-function getFaviconSourceHref({
-  href,
-  domain,
-  label,
-}: {
-  href: string;
-  domain: string;
-  label?: string | number;
-}) {
-  if (domain !== "vertexaisearch.cloud.google.com") {
-    return href;
-  }
-
-  if (typeof label !== "string") {
-    return null;
-  }
-
-  const sourceDomain = label.trim();
-
-  if (
-    !sourceDomain ||
-    sourceDomain.includes("/") ||
-    sourceDomain.includes(" ")
-  ) {
-    return null;
-  }
-
-  const sourceHref = `https://${sourceDomain}`;
-
-  if (typeof URL.canParse === "function" && URL.canParse(sourceHref)) {
-    return sourceHref;
-  }
-
-  return null;
-}
-
-/**
- * Uses the grounded page title when Google returns a Vertex redirect domain.
- */
-function getDomainLabel({ domain, title }: { domain: string; title: string }) {
-  if (domain === "vertexaisearch.cloud.google.com" && title.trim()) {
-    return title.trim();
-  }
-
+function getDomainLabel(domain: string) {
   return domain.replace("www.", "");
 }
 
@@ -145,7 +83,7 @@ export function SourceTrigger({
   const [failedFaviconUrl, setFailedFaviconUrl] = useState("");
   const labelToShow = label ?? domain.replace("www.", "");
   const sourceFaviconUrl =
-    getCustomFaviconUrl(faviconUrl) ?? getFaviconUrl({ href, domain, label });
+    getCustomFaviconUrl(faviconUrl) ?? getFaviconUrl({ href });
   const visibleFaviconUrl =
     showFavicon && sourceFaviconUrl !== failedFaviconUrl
       ? sourceFaviconUrl
@@ -194,9 +132,8 @@ export function SourceContent({
 }: SourceContentProps) {
   const { href, domain } = useSourceContext();
   const sourceFaviconUrl =
-    getCustomFaviconUrl(faviconUrl) ??
-    getFaviconUrl({ href, domain, label: title });
-  const domainLabel = getDomainLabel({ domain, title });
+    getCustomFaviconUrl(faviconUrl) ?? getFaviconUrl({ href });
+  const domainLabel = getDomainLabel(domain);
   const cleanTitle = title.trim();
   const shouldShowTitle = cleanTitle && cleanTitle !== domainLabel;
 

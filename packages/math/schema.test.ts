@@ -122,6 +122,24 @@ describe("math schemas", () => {
     });
   });
 
+  it("accepts matrix eigen analysis tool input", () => {
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        matrix: [
+          ["2", "1"],
+          ["0", "2"],
+        ],
+        operation: "eigen_analysis",
+      })
+    ).toEqual({
+      matrix: [
+        ["2", "1"],
+        ["0", "2"],
+      ],
+      operation: "eigen_analysis",
+    });
+  });
+
   it("requires calculus variables for expressions with parameters", () => {
     const decodeMathToolInput = Schema.decodeUnknownSync(MathToolInputSchema);
 

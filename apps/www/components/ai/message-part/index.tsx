@@ -4,7 +4,6 @@ import type { MyUIMessage } from "@repo/ai/types/message";
 import { MessageContent } from "@repo/design-system/components/ai/message";
 import {
   Reasoning,
-  ReasoningContent,
   ReasoningTrigger,
 } from "@repo/design-system/components/ai/reasoning";
 import { Response } from "@repo/design-system/components/ai/response";
@@ -31,20 +30,14 @@ export const AiMessagePart = memo(({ part, partIndex }: Props) => {
         </MessageContent>
       );
     case "reasoning":
-      if (part.state === "done" && !part.text) {
-        return null;
-      }
-
       return (
         <Reasoning
           className="w-full"
           defaultOpen={false}
+          hasContent={false}
           isStreaming={part.state === "streaming"}
         >
           <ReasoningTrigger />
-          <ReasoningContent id={`${messageId}-part-${partIndex}`}>
-            {part.text}
-          </ReasoningContent>
         </Reasoning>
       );
     case "data-web-search":

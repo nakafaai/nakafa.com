@@ -12,10 +12,11 @@ import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import {
   type ModelMessage,
   Output,
+  pruneMessages,
   streamText,
   type UIMessageStreamWriter,
 } from "ai";
-import { Effect, Schema } from "effect";
+import { Effect, Schema, Stream } from "effect";
 
 interface Params {
   locale: Locale;
@@ -43,10 +44,20 @@ export const writeSuggestions = Effect.fn("chat.writeSuggestions")(function* ({
   messages,
   writer,
 }: Params) {
+  // Suggestions only need the visible conversation and final answer shape.
+  // Keep reasoning stored/rendered elsewhere, but remove it from this secondary
+  // model call so follow-up generation does not spend tokens on internal traces.
+  // https://ai-sdk.dev/docs/reference/ai-sdk-ui/prune-messages
+  const promptMessages = pruneMessages({
+    messages,
+    reasoning: "all",
+    toolCalls: "all",
+  });
+
   const suggestionsStream = streamText({
     model: model.languageModel(defaultModel),
     system: nakafaSuggestions({ locale }),
-    messages,
+    messages: promptMessages,
     output: Output.object({
       schema: SuggestionsOutputSchema,
     }),
@@ -59,18 +70,23 @@ export const writeSuggestions = Effect.fn("chat.writeSuggestions")(function* ({
 
   const dataPartId = crypto.randomUUID();
 
-  yield* Effect.tryPromise(async () => {
-    for await (const chunk of suggestionsStream.partialOutputStream) {
-      writer.write({
-        id: dataPartId,
-        type: "data-suggestions",
-        data: {
-          data:
-            chunk.suggestions?.filter(
-              (suggestion) => suggestion !== undefined
-            ) ?? [],
-        },
-      });
-    }
-  });
+  yield* Stream.fromAsyncIterable(
+    suggestionsStream.partialOutputStream,
+    (cause) => new Error("Failed to stream chat suggestions.", { cause })
+  ).pipe(
+    Stream.runForEach((chunk) =>
+      Effect.sync(() => {
+        writer.write({
+          id: dataPartId,
+          type: "data-suggestions",
+          data: {
+            data:
+              chunk.suggestions?.filter(
+                (suggestion) => suggestion !== undefined
+              ) ?? [],
+          },
+        });
+      })
+    )
+  );
 });

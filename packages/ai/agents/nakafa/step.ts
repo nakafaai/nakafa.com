@@ -63,7 +63,7 @@ export function prepareExerciseStep(
   });
   const message = {
     role: "user",
-    content: `Call the exercise tool now with this content_ref and wait for the result before answering.\n\n${input}\n\nInclude exercise_number only when the original user asked for one specific question. Do not call search again for this exercise.`,
+    content: `Call exactly one exercise tool with this content_ref and wait for the result before answering.\n\n${input}\n\nDo not call exercise with any other content_ref. Include exercise_number only when the original user asked for one specific question.`,
   } satisfies ModelMessage;
 
   return {

@@ -81,17 +81,16 @@ const WebSearchPartQueries = memo(({ queries }: { queries: string[] }) => {
   return (
     <div className="flex flex-col gap-1">
       {queries.map((query) => (
-        <blockquote
-          className="text-muted-foreground text-sm italic"
-          key={query}
-        >
-          "{query}"
-        </blockquote>
+        <WebSearchQueryText key={query} query={query} />
       ))}
     </div>
   );
 });
 WebSearchPartQueries.displayName = "WebSearchPartQueries";
+
+function WebSearchQueryText({ query }: { query: string }) {
+  return <p className="text-muted-foreground text-sm">{`"${query}"`}</p>;
+}
 
 const WebSearchPartPreview = memo(
   ({
@@ -109,7 +108,7 @@ const WebSearchPartPreview = memo(
       <div className="flex flex-wrap items-center gap-2">
         {results.map((item) => (
           <Source href={item.url} key={item.url}>
-            <SourceTrigger label={getSourceLabel(item)} showFavicon />
+            <SourceTrigger showFavicon />
             <SourceContent description={item.description} title={item.title} />
           </Source>
         ))}
@@ -118,20 +117,3 @@ const WebSearchPartPreview = memo(
   }
 );
 WebSearchPartPreview.displayName = "WebSearchPartPreview";
-
-/**
- * Uses the grounded page title for Vertex redirect URLs.
- */
-function getSourceLabel(item: DataPart["web-search"]["sources"][number]) {
-  if (typeof URL.canParse !== "function" || !URL.canParse(item.url)) {
-    return;
-  }
-
-  const domain = new URL(item.url).hostname;
-
-  if (domain !== "vertexaisearch.cloud.google.com") {
-    return;
-  }
-
-  return item.title.trim() || undefined;
-}

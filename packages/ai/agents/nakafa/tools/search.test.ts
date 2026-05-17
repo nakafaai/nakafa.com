@@ -342,7 +342,7 @@ describe("nakafa search tool", () => {
     );
 
     expect(output.text).toContain("Hukum Kekekalan Massa");
-    expect(output.text).toContain("- Query: hukum kekekalan massa");
+    expect(output.text).toContain('- Query: "hukum kekekalan massa"');
     expect(output.result).toEqual(expect.objectContaining({ count: 1 }));
     expect(
       getSearchParts(parts)
@@ -532,6 +532,272 @@ describe("nakafa search tool", () => {
     );
 
     expect(capturedQueries).toEqual([[]]);
+  });
+
+  it("keeps exercise UI query-scoped while aggregate selection stays ranked", async () => {
+    const { parts, writer } = createWriter();
+    const output = await Effect.runPromise(
+      search({
+        input: {
+          limit: 2,
+          locale: "id",
+          offset: 0,
+          queries: ["pola bilangan", "Penalaran Matematika"],
+          section: "exercises",
+        },
+        locale: "id",
+        toolCallId: "search-exercise-combined",
+        writer,
+      }).pipe(
+        Effect.provideService(NakafaSearch, {
+          search: (input) => {
+            if (input.queries?.at(0) === "Penalaran Matematika") {
+              return Effect.succeed({
+                count: 1,
+                has_more: false,
+                items: [
+                  {
+                    content_id:
+                      "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                    description:
+                      "SNBT Penalaran Matematika Try Out 2026 Set 1 pola bilangan",
+                    locale: input.locale,
+                    markdown_url:
+                      "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1.md",
+                    route:
+                      "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                    section: "exercises",
+                    title: "SNBT Penalaran Matematika Try Out 2026 Set 1",
+                    url: "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                  },
+                ],
+                limit: input.limit,
+                next_offset: null,
+                offset: input.offset,
+              });
+            }
+
+            return Effect.succeed({
+              count: 1,
+              has_more: false,
+              items: [
+                {
+                  content_id:
+                    "id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
+                  description:
+                    "Soal Bahasa Indonesia yang menyebut pola bilangan.",
+                  locale: input.locale,
+                  markdown_url:
+                    "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1.md",
+                  route:
+                    "exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
+                  section: "exercises",
+                  title: "Soal 1 Bahasa Indonesia",
+                  url: "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
+                },
+              ],
+              limit: input.limit,
+              next_offset: null,
+              offset: input.offset,
+            });
+          },
+        })
+      )
+    );
+
+    const searchParts = getSearchParts(parts);
+    const doneParts = searchParts.filter((part) => part.status === "done");
+
+    expect(output.result?.items[0]?.content_id).toContain(
+      "mathematical-reasoning"
+    );
+    expect(doneParts).toHaveLength(2);
+    expect(doneParts.map((part) => part.input.queries)).toEqual([
+      ["pola bilangan"],
+      ["Penalaran Matematika"],
+    ]);
+    expect(
+      doneParts.some((part) =>
+        part.result?.items.some(
+          (item) => item.content_id === output.result?.items[0]?.content_id
+        )
+      )
+    ).toBe(true);
+  });
+
+  it("writes query-scoped exercise error parts when every query fails", async () => {
+    const { parts, writer } = createWriter();
+    const output = await Effect.runPromise(
+      search({
+        input: {
+          limit: 2,
+          locale: "id",
+          offset: 0,
+          queries: ["pola bilangan", "Penalaran Matematika"],
+          section: "exercises",
+        },
+        locale: "id",
+        toolCallId: "search-exercise-scoped-error",
+        writer,
+      }).pipe(
+        Effect.provideService(NakafaSearch, {
+          search: () =>
+            Effect.fail(
+              new NakafaAgentDataReadError({
+                message: "Unable to search Nakafa exercises.",
+              })
+            ),
+        })
+      )
+    );
+
+    const searchParts = getSearchParts(parts);
+
+    expect(output).toEqual({
+      result: null,
+      text: [
+        "Unable to search Nakafa exercises.",
+        "Unable to search Nakafa exercises.",
+      ].join("\n"),
+    });
+    expect(
+      searchParts
+        .filter((part) => part.status === "loading")
+        .map((part) => part.input.queries)
+    ).toEqual([["pola bilangan"], ["Penalaran Matematika"]]);
+    expect(
+      searchParts
+        .filter((part) => part.status === "error")
+        .map((part) => part.input.queries)
+    ).toEqual([["pola bilangan"], ["Penalaran Matematika"]]);
+    expect(
+      searchParts
+        .filter((part) => part.status === "error")
+        .map((part) => part.error)
+    ).toEqual([
+      "Unable to search Nakafa exercises.",
+      "Unable to search Nakafa exercises.",
+    ]);
+  });
+
+  it("keeps combined exercise order when query tokens are empty", async () => {
+    const { writer } = createWriter();
+    const output = await Effect.runPromise(
+      search({
+        input: {
+          limit: 2,
+          locale: "id",
+          offset: 0,
+          queries: ["!!!", "???"],
+          section: "exercises",
+        },
+        locale: "id",
+        toolCallId: "search-exercise-empty-tokens",
+        writer,
+      }).pipe(
+        Effect.provideService(NakafaSearch, {
+          search: (input) =>
+            Effect.succeed({
+              count: 1,
+              has_more: false,
+              items: [
+                {
+                  content_id: `id/exercises/${input.queries?.at(0) ?? "empty"}`,
+                  description: "",
+                  locale: input.locale,
+                  markdown_url: "https://nakafa.com/id/exercises/item.md",
+                  route: `exercises/${input.queries?.at(0) ?? "empty"}`,
+                  section: "exercises",
+                  title: input.queries?.at(0) ?? "empty",
+                  url: "https://nakafa.com/id/exercises/item",
+                },
+              ],
+              limit: input.limit,
+              next_offset: null,
+              offset: input.offset,
+            }),
+        })
+      )
+    );
+
+    expect(output.result?.items.map((item) => item.title)).toEqual([
+      "!!!",
+      "???",
+    ]);
+  });
+
+  it("prefers exercise set rows over question rows when combined scores tie", async () => {
+    const { writer } = createWriter();
+    const output = await Effect.runPromise(
+      search({
+        input: {
+          limit: 2,
+          locale: "id",
+          offset: 0,
+          queries: ["pola", "bilangan"],
+          section: "exercises",
+        },
+        locale: "id",
+        toolCallId: "search-exercise-tie",
+        writer,
+      }).pipe(
+        Effect.provideService(NakafaSearch, {
+          search: (input) => {
+            if (input.queries?.at(0) === "bilangan") {
+              return Effect.succeed({
+                count: 1,
+                has_more: false,
+                items: [
+                  {
+                    content_id:
+                      "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                    description: "pola",
+                    locale: input.locale,
+                    markdown_url:
+                      "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1.md",
+                    route:
+                      "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                    section: "exercises",
+                    title: "Set Penalaran Matematika",
+                    url: "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+                  },
+                ],
+                limit: input.limit,
+                next_offset: null,
+                offset: input.offset,
+              });
+            }
+
+            return Effect.succeed({
+              count: 1,
+              has_more: false,
+              items: [
+                {
+                  content_id:
+                    "id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
+                  description: "pola",
+                  locale: input.locale,
+                  markdown_url:
+                    "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1.md",
+                  route:
+                    "exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
+                  section: "exercises",
+                  title: "Soal 1",
+                  url: "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
+                },
+              ],
+              limit: input.limit,
+              next_offset: null,
+              offset: input.offset,
+            });
+          },
+        })
+      )
+    );
+
+    expect(output.result?.items[0]?.content_id).toContain(
+      "mathematical-reasoning"
+    );
   });
 
   it("executes non-exercise queries unchanged", async () => {

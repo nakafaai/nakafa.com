@@ -6,13 +6,7 @@ export function formatResearchOutput(output: ResearchOutput) {
   const limitations = formatLimitations(output.limitations);
 
   if (!findings) {
-    return [
-      "No source-backed findings were available for this research task.",
-      "Do not add unsourced facts, source names, URLs, or recommendations beyond the limitations below.",
-      limitations,
-    ]
-      .filter(Boolean)
-      .join("\n\n");
+    return output.noEvidenceAnswer;
   }
 
   if (!limitations) {
@@ -51,9 +45,5 @@ function formatLimitations(limitations: ResearchOutput["limitations"]) {
     return "";
   }
 
-  return [
-    "## Limitations",
-    "",
-    ...limitations.map((limitation) => `- ${limitation}`),
-  ].join("\n");
+  return limitations.map((limitation) => `- ${limitation}`).join("\n");
 }

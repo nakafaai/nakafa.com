@@ -39,6 +39,9 @@ def run(request: MathRequest) -> MathResult:
             reason="Eigenvalues were checked exactly.",
             items=[item("eigenvalue", value) for value in eigenvalues],
         )
+    elif operation == "eigen_analysis":
+        _require_square(matrix, "Eigen analysis")
+        return _eigen_analysis(request, matrix)
     elif operation == "eigenvectors":
         _require_square(matrix, "Eigenvectors")
         return result(
@@ -94,6 +97,75 @@ def _require_linear_system_dimensions(matrix: sp.Matrix, vector: sp.Matrix) -> N
     """Ensure a linear system has one vector value per matrix row."""
     if matrix.rows != vector.rows:
         raise ValueError("Linear system vector length must match matrix rows.")
+
+
+def _eigen_analysis(request: MathRequest, matrix: sp.Matrix) -> MathResult:
+    """Check eigenvalues, eigenspaces, multiplicities, and diagonalizability."""
+    analysis_items = []
+    total_geometric_multiplicity = 0
+
+    for eigenvalue, algebraic_multiplicity, eigenvectors in matrix.eigenvects():
+        geometric_multiplicity = len(eigenvectors)
+        total_geometric_multiplicity += geometric_multiplicity
+        analysis_items.extend(
+            [
+                item("eigenvalue", eigenvalue),
+                item(
+                    "algebraic_multiplicity",
+                    _eigenvalue_item(eigenvalue, algebraic_multiplicity),
+                ),
+                item(
+                    "geometric_multiplicity",
+                    _eigenvalue_item(eigenvalue, geometric_multiplicity),
+                ),
+                item("eigenbasis", _eigenbasis_item(eigenvalue, eigenvectors)),
+            ]
+        )
+
+    diagonalizable = total_geometric_multiplicity == matrix.rows
+    diagonalizable_value = str(diagonalizable).lower()
+
+    return result(
+        request,
+        status="verified",
+        primary=matrix,
+        reason=(
+            "Eigenvalues, algebraic multiplicities, eigenspace bases, "
+            "geometric multiplicities, and diagonalizability were checked exactly."
+        ),
+        items=[
+            *analysis_items,
+            item(
+                "diagonalizable",
+                expression_text(
+                    diagonalizable_value,
+                    rf"\operatorname{{{diagonalizable_value}}}",
+                ),
+            ),
+        ],
+    )
+
+
+def _eigenvalue_item(eigenvalue: object, value: object) -> object:
+    """Render one eigenvalue-scoped scalar item."""
+    return expression_text(
+        f"lambda = {eigenvalue}: {value}",
+        rf"\lambda = {sp.latex(eigenvalue)}:\;{sp.latex(value)}",
+    )
+
+
+def _eigenbasis_item(eigenvalue: object, eigenvectors: list[sp.Matrix]) -> object:
+    """Render one eigenvalue-scoped eigenspace basis."""
+    vector_text = ", ".join(str(vector) for vector in eigenvectors)
+    vector_latex = ", ".join(sp.latex(vector) for vector in eigenvectors)
+
+    return expression_text(
+        f"lambda = {eigenvalue}: span({vector_text})",
+        (
+            rf"\lambda = {sp.latex(eigenvalue)}:\;"
+            rf"\operatorname{{span}}\left\{{{vector_latex}\right\}}"
+        ),
+    )
 
 
 def _determinant_steps(matrix: sp.Matrix, output: object) -> list:

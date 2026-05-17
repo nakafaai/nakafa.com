@@ -72,7 +72,7 @@ function getMessagesText(messages: MyUIMessage[]) {
  * Reads the text payload from one UI message part.
  */
 function getPartText(part: UIMessagePart<UIDataTypes, MyUITools>) {
-  if (part.type === "text" || part.type === "reasoning") {
+  if (part.type === "text") {
     return part.text || "";
   }
 

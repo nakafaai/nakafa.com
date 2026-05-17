@@ -6,8 +6,8 @@ Research evidence has two separate surfaces:
 - Firecrawl `data-web-search` parts are query-scoped, so each query renders
   beside its own returned sources.
 - Google grounding runs after Firecrawl for corroboration. It writes a
-  `data-web-search` part only when one provider query can be paired with the
-  returned sources.
+  `data-web-search` part only when one provider query can be paired with at
+  least one usable direct source URL.
 - Structured research output carries citation data.
 - Structured synthesis retries inside the research agent. A schema-formatting
   miss must not rerun web search or duplicate source rows.
@@ -23,7 +23,7 @@ flowchart TD
   Evidence --> Firecrawl["webSearch / Firecrawl"]
   Firecrawl --> SearchUI["query-scoped source rows"]
   Firecrawl --> Google["Google grounding"]
-  Google --> GroundingGate{"one query?"}
+  Google --> GroundingGate{"one query + source?"}
   GroundingGate -->|yes| SearchUI
   Firecrawl --> Sources["Source evidence"]
   GroundingGate --> Sources

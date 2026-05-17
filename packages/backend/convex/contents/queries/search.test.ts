@@ -186,6 +186,184 @@ describe("contents/queries/search:search", () => {
     );
   });
 
+  it("does not index empty exercise sets for retrieval", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await t.mutation(
+      internal.contentSync.mutations.exercises.bulkSyncExerciseSets,
+      {
+        sets: [
+          {
+            category: "middle-school",
+            contentHash: "hash-empty-set",
+            description: "Belum ada soal.",
+            exerciseType: "semester-1",
+            locale: "id",
+            material: "mathematics",
+            questionCount: 0,
+            searchDescription: "SMP Kelas 9 Matematika Semester 1 Set 1 0 soal",
+            searchText: "kelas 9 matematika semester 1 0 soal",
+            searchTitle: "Kelas 9 Matematika Semester 1 Set 1",
+            setName: "set-1",
+            slug: "exercises/middle-school/grade-9/mathematics/semester-1/set-1",
+            title: "Set 1",
+            type: "grade-9",
+          },
+        ],
+      }
+    );
+
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "id",
+      offset: 0,
+      queries: ["kelas 9 matematika"],
+      section: "exercises",
+    });
+
+    expect(result.items).toEqual([]);
+  });
+
+  it("prefers exercise set rows over generic question body hits for broad searches", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("contentSearch", {
+        contentHash: "hash-language-question",
+        content_id:
+          "id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
+        description: "",
+        locale: "id",
+        markdown_url:
+          "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1.md",
+        route:
+          "exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
+        section: "exercises",
+        syncedAt: 1,
+        text: "Soal bacaan yang menyebut pola bilangan sebagai contoh.",
+        title: "Soal 1",
+        url: "https://nakafa.com/id/exercises/high-school/snbt/indonesian-language/try-out/2026/set-1/1",
+      });
+      await ctx.db.insert("contentSearch", {
+        contentHash: "hash-math-set",
+        content_id:
+          "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+        description: "SNBT Penalaran Matematika Try Out 2026 Set 1 20 soal",
+        locale: "id",
+        markdown_url:
+          "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1.md",
+        route:
+          "exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+        section: "exercises",
+        syncedAt: 1,
+        text: "Latihan pola bilangan untuk penalaran matematika.",
+        title: "SNBT Penalaran Matematika Try Out 2026 Set 1",
+        url: "https://nakafa.com/id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+      });
+    });
+
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "id",
+      offset: 0,
+      queries: ["pola bilangan"],
+      section: "exercises",
+    });
+
+    expect(result.items[0]).toEqual(
+      expect.objectContaining({
+        content_id:
+          "id/exercises/high-school/snbt/mathematical-reasoning/try-out/2026/set-1",
+      })
+    );
+  });
+
+  it("does not let grade numbers dominate exercise topic searches", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("contentSearch", {
+        contentHash: "hash-question-11",
+        content_id:
+          "id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
+        description: "SMA SNBT Penalaran Umum Try Out 2026 Set 3 Nomor 11",
+        locale: "id",
+        markdown_url:
+          "https://nakafa.com/id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11.md",
+        route:
+          "exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
+        section: "exercises",
+        syncedAt: 1,
+        text: "Soal umum nomor 11.",
+        title: "SNBT Penalaran Umum Try Out 2026 Set 3 Soal 11",
+        url: "https://nakafa.com/id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
+      });
+      await ctx.db.insert("contentSearch", {
+        contentHash: "hash-rational-set",
+        content_id:
+          "id/exercises/high-school/tka/mathematics/try-out/2026/set-1",
+        description: "SMA TKA Matematika Try Out 2026 Set 1 20 soal",
+        locale: "id",
+        markdown_url:
+          "https://nakafa.com/id/exercises/high-school/tka/mathematics/try-out/2026/set-1.md",
+        route: "exercises/high-school/tka/mathematics/try-out/2026/set-1",
+        section: "exercises",
+        syncedAt: 1,
+        text: "Latihan fungsi rasional kelas 11.",
+        title: "TKA Matematika Try Out 2026 Set 1",
+        url: "https://nakafa.com/id/exercises/high-school/tka/mathematics/try-out/2026/set-1",
+      });
+    });
+
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "id",
+      offset: 0,
+      queries: ["fungsi rasional kelas 11"],
+      section: "exercises",
+    });
+
+    expect(result.items[0]).toEqual(
+      expect.objectContaining({
+        content_id:
+          "id/exercises/high-school/tka/mathematics/try-out/2026/set-1",
+      })
+    );
+  });
+
+  it("drops weak exercise hits when only one semantic query token matches", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await t.mutation(async (ctx) => {
+      await ctx.db.insert("contentSearch", {
+        contentHash: "hash-class-question",
+        content_id:
+          "id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
+        description: "SMA SNBT Penalaran Umum Try Out 2026 Set 3 Nomor 11",
+        locale: "id",
+        markdown_url:
+          "https://nakafa.com/id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11.md",
+        route:
+          "exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
+        section: "exercises",
+        syncedAt: 1,
+        text: "Semua siswa kelas 9 mengikuti ujian sekolah.",
+        title: "SNBT Penalaran Umum Try Out 2026 Set 3 Soal 11",
+        url: "https://nakafa.com/id/exercises/high-school/snbt/general-reasoning/try-out/2026/set-3/11",
+      });
+    });
+
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "id",
+      offset: 0,
+      queries: ["fungsi rasional kelas 11"],
+      section: "exercises",
+    });
+
+    expect(result.items).toEqual([]);
+  });
+
   it("removes exercise set search rows when stale sets are deleted", async () => {
     const t = createConvexTestWithBetterAuth();
 

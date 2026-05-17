@@ -66,7 +66,9 @@ describe("math data formatter", () => {
       status: "error",
     } satisfies MathData;
 
-    expect(formatMathData(data)).toContain("- Error: Math service is offline.");
+    expect(formatMathData(data)).toContain(
+      "- Error code: Math service is offline."
+    );
     expect(formatMathData(data)).toContain(
       "- Evidence scope: unavailable deterministic derivation"
     );
@@ -136,16 +138,54 @@ describe("math data formatter", () => {
     } satisfies MathData;
 
     expect(formatMathData(data)).toContain(
-      "- Evidence scope: partial deterministic evidence only; do not describe the final result as fully verified without another complete check"
+      "- Evidence scope: verified deterministic result with partial derivation steps"
     );
   });
 
-  it("formats unavailable evidence as insufficient proof", () => {
+  it("formats partial inconclusive evidence as limited proof", () => {
     const data = {
       input,
       kind: "evaluate",
       result: {
         ...result,
+        status: "inconclusive",
+        stepStatus: "partial",
+        steps: [],
+      },
+      status: "inconclusive",
+      summary: result.reason,
+    } satisfies MathData;
+
+    expect(formatMathData(data)).toContain(
+      "- Evidence scope: partial deterministic evidence only; do not describe the final result as fully verified without another complete check"
+    );
+  });
+
+  it("formats unavailable verified evidence as checked result without derivation steps", () => {
+    const data = {
+      input,
+      kind: "evaluate",
+      result: {
+        ...result,
+        stepStatus: "unavailable",
+        steps: [],
+      },
+      status: "verified",
+      summary: result.reason,
+    } satisfies MathData;
+
+    expect(formatMathData(data)).toContain(
+      "- Evidence scope: verified deterministic result; derivation steps are not included"
+    );
+  });
+
+  it("formats unavailable inconclusive evidence as insufficient proof", () => {
+    const data = {
+      input,
+      kind: "evaluate",
+      result: {
+        ...result,
+        status: "inconclusive",
         stepStatus: "unavailable",
         steps: [],
       },

@@ -8,8 +8,10 @@ flowchart TD
   Route --> Original["check original target operation first"]
   Original --> Evidence{"stepStatus"}
   Evidence -->|complete| Complete["answer may say the checked result is verified"]
-  Evidence -->|partial| Partial["answer must say deterministic evidence is limited"]
-  Evidence -->|unavailable| Missing["answer must say the evidence is insufficient"]
+  Evidence -->|partial + verified| PartialVerified["answer may use the verified result and name the missing derivation"]
+  Evidence -->|partial + not verified| Partial["answer must say deterministic evidence is limited"]
+  Evidence -->|unavailable + verified| VerifiedOnly["answer may use the verified result without claiming visible derivation"]
+  Evidence -->|unavailable + not verified| Missing["answer must say the evidence is insufficient"]
   Partial --> Optional["optional follow-up check"]
   Optional --> Simplify["verify only the follow-up simplification"]
 ```
@@ -68,6 +70,12 @@ flowchart TD
 - A later arithmetic check verifies only the simplification it actually checked.
 - Fair dice, cards, and finite equally likely outcomes use statistics mean or
   arithmetic over the outcome list instead of the named-distribution tool.
+- CAS item labels are stable semantic keys. Variable context belongs in the
+  item value or LaTeX, so the UI can translate labels without parsing English
+  fragments such as `multiplicity for 2`.
+- Boolean CAS items use `true` or `false` values and are localized by the UI;
+  user-facing words such as `yes`, `no`, `ya`, or `tidak` do not belong in CAS
+  evidence.
 
 ## References
 

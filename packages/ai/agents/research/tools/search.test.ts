@@ -481,6 +481,107 @@ describe("research web search tool", () => {
     );
   });
 
+  it("does not clip school-event research queries from the user task", async () => {
+    firecrawlApp.search.mockResolvedValue({});
+    const { parts, writer } = createWriter();
+    await Effect.runPromise(
+      searchWeb({
+        queries: [
+          '"SMA Tirta Lazuardi" tryout matematika nasional 28 Mei 2026',
+          '"SMA Tirta Lazuardi" kegiatan 2026',
+          "apakah SMA Tirta Lazuardi ada tryout matematika nasional 28 Mei 2026",
+        ],
+        sourcePreference: "primary",
+        task: [
+          "# User Request",
+          "Aku dengar SMA Tirta Lazuardi akan adakan tryout matematika nasional pada 28 Mei 2026. Ini benar atau cuma kabar?",
+        ].join("\n\n"),
+        toolCallId: "web-search-school-event",
+        writer,
+      })
+    );
+
+    expect(firecrawlApp.search).not.toHaveBeenCalledWith(
+      "SMA Tirta Lazuardi akan",
+      expect.any(Object)
+    );
+    expect(firecrawlApp.search).toHaveBeenCalledWith(
+      '"SMA Tirta Lazuardi" tryout matematika nasional 28 Mei 2026',
+      expect.any(Object)
+    );
+    expect(firecrawlApp.search).toHaveBeenCalledWith(
+      '"SMA Tirta Lazuardi" kegiatan 2026',
+      expect.any(Object)
+    );
+    expect(firecrawlApp.search).toHaveBeenCalledWith(
+      "apakah SMA Tirta Lazuardi ada tryout matematika nasional 28 Mei 2026",
+      expect.any(Object)
+    );
+    expect(
+      getWebSearchParts(parts).filter((part) => part.status === "done")
+    ).toEqual([
+      expect.objectContaining({
+        queries: [
+          '"SMA Tirta Lazuardi" tryout matematika nasional 28 Mei 2026',
+        ],
+      }),
+      expect.objectContaining({
+        queries: ['"SMA Tirta Lazuardi" kegiatan 2026'],
+      }),
+      expect.objectContaining({
+        queries: [
+          "apakah SMA Tirta Lazuardi ada tryout matematika nasional 28 Mei 2026",
+        ],
+      }),
+    ]);
+  });
+
+  it("does not execute broad school-event query variants without the named school", async () => {
+    firecrawlApp.search.mockResolvedValue({});
+    const { parts, writer } = createWriter();
+    await Effect.runPromise(
+      searchWeb({
+        queries: [
+          '"SMA Tirta Lazuardi"',
+          '"SMA Tirta Lazuardi" tryout matematika nasional 28 Mei 2026',
+          '"tryout matematika nasional" 28 Mei 2026',
+        ],
+        sourcePreference: "primary",
+        task: [
+          "# User Request",
+          "Aku dengar SMA Tirta Lazuardi akan adakan tryout matematika nasional pada 28 Mei 2026. Ini benar atau cuma kabar?",
+        ].join("\n\n"),
+        toolCallId: "web-search-school-event-scope",
+        writer,
+      })
+    );
+
+    expect(firecrawlApp.search).toHaveBeenCalledWith(
+      '"SMA Tirta Lazuardi"',
+      expect.any(Object)
+    );
+    expect(firecrawlApp.search).toHaveBeenCalledWith(
+      '"SMA Tirta Lazuardi" tryout matematika nasional 28 Mei 2026',
+      expect.any(Object)
+    );
+    expect(firecrawlApp.search).not.toHaveBeenCalledWith(
+      '"tryout matematika nasional" 28 Mei 2026',
+      expect.any(Object)
+    );
+    expect(
+      getWebSearchParts(parts).filter((part) => part.status === "done")
+    ).toEqual([
+      expect.objectContaining({
+        queries: ['"SMA Tirta Lazuardi"'],
+      }),
+      expect.objectContaining({
+        queries: [
+          '"SMA Tirta Lazuardi" tryout matematika nasional 28 Mei 2026',
+        ],
+      }),
+    ]);
+  });
+
   it("searches each optimized query with query-scoped visible results", async () => {
     firecrawlApp.search.mockImplementation((query: string) =>
       Promise.resolve({
@@ -509,10 +610,6 @@ describe("research web search tool", () => {
     );
 
     expect(firecrawlApp.search).toHaveBeenCalledWith(
-      "AI SDK DevTools official",
-      expect.any(Object)
-    );
-    expect(firecrawlApp.search).toHaveBeenCalledWith(
       "AI SDK DevTools official docs",
       expect.any(Object)
     );
@@ -520,18 +617,10 @@ describe("research web search tool", () => {
       "AI SDK DevTools release notes",
       expect.any(Object)
     );
-    expect(output.result.sources).toHaveLength(3);
+    expect(output.result.sources).toHaveLength(2);
     expect(
       getWebSearchParts(parts).filter((part) => part.status === "done")
     ).toEqual([
-      expect.objectContaining({
-        queries: ["AI SDK DevTools official"],
-        sources: expect.arrayContaining([
-          expect.objectContaining({
-            url: "https://example.com/ai-sdk-devtools-official",
-          }),
-        ]),
-      }),
       expect.objectContaining({
         queries: ["AI SDK DevTools official docs"],
         sources: expect.arrayContaining([
@@ -579,33 +668,26 @@ describe("research web search tool", () => {
     );
 
     expect(firecrawlApp.search).toHaveBeenCalledWith(
-      "AI SDK DevTools trends",
+      "AI SDK development trends 2026",
       expect.any(Object)
     );
     expect(firecrawlApp.search).toHaveBeenCalledWith(
-      "DevTools AI SDK development trends 2026",
-      expect.any(Object)
-    );
-    expect(firecrawlApp.search).toHaveBeenCalledWith(
-      "SDK DevTools future of AI software development tools 2026",
+      "future of AI software development tools 2026",
       expect.any(Object)
     );
     expect(
       getWebSearchParts(parts).filter((part) => part.status === "done")
     ).toEqual([
       expect.objectContaining({
-        queries: ["AI SDK DevTools trends"],
+        queries: ["AI SDK development trends 2026"],
       }),
       expect.objectContaining({
-        queries: ["DevTools AI SDK development trends 2026"],
-      }),
-      expect.objectContaining({
-        queries: ["SDK DevTools future of AI software development tools 2026"],
+        queries: ["future of AI software development tools 2026"],
       }),
     ]);
   });
 
-  it("scopes every query result to distinctive task terms", async () => {
+  it("does not inject hidden task-anchor searches when a query is provided", async () => {
     firecrawlApp.search.mockImplementation((query: string) => {
       if (query === "AI SDK DevTools") {
         return Promise.resolve({
@@ -648,9 +730,11 @@ describe("research web search tool", () => {
       })
     );
 
-    expect(output.result.sources.map((source) => source.url)).toEqual([
-      "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
-    ]);
+    expect(firecrawlApp.search).not.toHaveBeenCalledWith(
+      "AI SDK DevTools",
+      expect.any(Object)
+    );
+    expect(output.result.sources.map((source) => source.url)).toEqual([]);
   });
 
   it("keeps successful query results when another query fails", async () => {
@@ -673,7 +757,7 @@ describe("research web search tool", () => {
     const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
       searchWeb({
-        queries: ["AI SDK DevTools recent updates"],
+        queries: ["AI SDK DevTools", "AI SDK DevTools recent updates"],
         sourcePreference: "any",
         task: "AI SDK DevTools",
         toolCallId: "web-search-partial-success",

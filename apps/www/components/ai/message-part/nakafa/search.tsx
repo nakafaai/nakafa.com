@@ -103,17 +103,16 @@ const SearchPartQueries = memo(({ message }: Props) => {
   return (
     <div className="flex flex-col gap-1">
       {queries.map((query) => (
-        <blockquote
-          className="text-muted-foreground text-sm italic"
-          key={query}
-        >
-          "{query}"
-        </blockquote>
+        <SearchQueryText key={query} query={query} />
       ))}
     </div>
   );
 });
 SearchPartQueries.displayName = "SearchPartQueries";
+
+function SearchQueryText({ query }: { query: string }) {
+  return <p className="text-muted-foreground text-sm">{`"${query}"`}</p>;
+}
 
 /** Returns the clearest visible label for the current search result section. */
 function getSearchLabel(

@@ -8,22 +8,19 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("search query planning", () => {
-  it("anchors generated queries to exact distinctive task terms", () => {
+  it("keeps generated queries as executable search text", () => {
     expect(
       planSearchQueries({
-        anchor: "empty",
-        includeShortNumbers: true,
         task: "Aku mau latihan SNBT Pengetahuan Kuantitatif try out 2026 set 2.",
         maxQueries: 4,
         queries: ["Pengetahuan Kuantitatif SNBT"],
       })
-    ).toEqual(["2026 2 Pengetahuan Kuantitatif SNBT"]);
+    ).toEqual(["Pengetahuan Kuantitatif SNBT"]);
   });
 
-  it("uses a concise task anchor when configured for empty query lists", () => {
+  it("uses a concise task fallback for empty query lists", () => {
     expect(
       planSearchQueries({
-        anchor: "empty",
         includeShortNumbers: true,
         task: "SNBT 2026 set 2",
         maxQueries: 4,
@@ -35,7 +32,6 @@ describe("search query planning", () => {
   it("does not create an anchor from non-searchable numeric-only tasks", () => {
     expect(
       planSearchQueries({
-        anchor: "empty",
         task: "2026",
         maxQueries: 4,
         queries: [],
@@ -43,35 +39,35 @@ describe("search query planning", () => {
     ).toEqual([]);
   });
 
-  it("keeps research-style task anchors separate from generated queries", () => {
+  it("does not add clipped research task anchors when queries exist", () => {
     expect(
       planSearchQueries({
-        anchor: "always",
-        task: "AI SDK DevTools May 2026",
+        task: "Aku dengar SMA Tirta Lazuardi akan adakan tryout matematika nasional pada 28 Mei 2026.",
         maxQueries: 2,
-        queries: ["AI SDK DevTools", "AI SDK DevTools 2026"],
+        queries: [
+          '"SMA Tirta Lazuardi" tryout matematika nasional 28 Mei 2026',
+          '"SMA Tirta Lazuardi" kegiatan 2026',
+        ],
       })
-    ).toEqual(["AI SDK DevTools May 2026", "2026 AI SDK DevTools"]);
+    ).toEqual([
+      '"SMA Tirta Lazuardi" tryout matematika nasional 28 Mei 2026',
+      '"SMA Tirta Lazuardi" kegiatan 2026',
+    ]);
   });
 
-  it("keeps lower-case feature phrases in compact research anchors", () => {
+  it("keeps lower-case feature queries unchanged", () => {
     expect(
       planSearchQueries({
-        anchor: "always",
         task: "apa yang berubah di next.js 16 cache components buat upgrade?",
         maxQueries: 2,
         queries: ["next.js 16 cache components upgrade"],
       })
-    ).toEqual([
-      "next.js 16 cache components",
-      "next.js 16 cache components upgrade",
-    ]);
+    ).toEqual(["next.js 16 cache components upgrade"]);
   });
 
-  it("does not execute internal markdown section labels as search terms", () => {
+  it("does not execute internal markdown section labels as fallback terms", () => {
     expect(
       planSearchQueries({
-        anchor: "always",
         task: [
           "# User Request",
           "Untuk migrasi Next.js 16, Cache Components berubah apa menurut pihak pembuat Next.js sendiri?",
@@ -79,18 +75,14 @@ describe("search query planning", () => {
           "Find official Next.js 16 Cache Components changes.",
         ].join("\n\n"),
         maxQueries: 2,
-        queries: ["Next.js 16 caching changes official documentation"],
+        queries: [],
       })
-    ).toEqual([
-      "Next.js 16 Cache Components",
-      "Next.js 16 caching changes official documentation",
-    ]);
+    ).toEqual(["Next.js 16"]);
   });
 
   it("falls back to heading text only when a task has no body content", () => {
     expect(
       planSearchQueries({
-        anchor: "always",
         task: "# SNBT",
         maxQueries: 2,
         queries: [],
@@ -101,19 +93,17 @@ describe("search query planning", () => {
   it("can disable executable task anchors while still completing query text", () => {
     expect(
       planSearchQueries({
-        anchor: "never",
+        fallback: "none",
         task: "AI SDK DevTools 2026",
         maxQueries: 4,
         queries: ["AI SDK DevTools", "  ", "ai sdk devtools"],
       })
-    ).toEqual(["2026 AI SDK DevTools"]);
+    ).toEqual(["AI SDK DevTools"]);
   });
 
-  it("can keep existing queries isolated from global task terms", () => {
+  it("keeps existing queries isolated from global task terms", () => {
     expect(
       planSearchQueries({
-        anchor: "empty",
-        complete: "empty-only",
         includeShortNumbers: true,
         task: "Belajar fungsi kuadrat kelas 10 dan latihan SNBT 2026 set 2.",
         maxQueries: 4,
@@ -122,24 +112,117 @@ describe("search query planning", () => {
     ).toEqual(["SNBT Pengetahuan Kuantitatif try out 2026 set 2"]);
   });
 
-  it("completes only queries that already share a distinctive task term", () => {
+  it("deduplicates and limits normalized executable queries", () => {
     expect(
       planSearchQueries({
-        anchor: "empty",
-        complete: "matching",
-        includeShortNumbers: true,
         task: "Aku mau belajar fungsi kuadrat kelas 10 dan latihan SNBT Pengetahuan Kuantitatif try out 2026 set 2.",
-        maxQueries: 4,
+        maxQueries: 2,
         queries: [
-          "fungsi kuadrat kelas 10",
+          "fungsi   kuadrat kelas 10",
           "   ",
+          "fungsi kuadrat kelas 10",
           "SNBT Pengetahuan Kuantitatif",
         ],
       })
+    ).toEqual(["fungsi kuadrat kelas 10", "SNBT Pengetahuan Kuantitatif"]);
+  });
+
+  it("drops unscoped query variants when scoped named-entity queries exist", () => {
+    expect(
+      planSearchQueries({
+        task: "Aku dengar SMA Tirta Lazuardi akan adakan tryout matematika nasional pada 28 Mei 2026.",
+        maxQueries: 4,
+        queries: [
+          '"SMA Tirta Lazuardi"',
+          '"SMA Tirta Lazuardi" tryout matematika nasional 28 Mei 2026',
+          '"tryout matematika nasional" 28 Mei 2026',
+        ],
+        scopeByNamedPhrases: true,
+      })
     ).toEqual([
-      "fungsi kuadrat kelas 10",
-      "2026 2 SNBT Pengetahuan Kuantitatif",
+      '"SMA Tirta Lazuardi"',
+      '"SMA Tirta Lazuardi" tryout matematika nasional 28 Mei 2026',
     ]);
+  });
+
+  it("preserves dropped date context on the strongest scoped query", () => {
+    expect(
+      planSearchQueries({
+        task: "Aku dengar SMA Tirta Lazuardi akan adakan tryout matematika nasional pada 28 Mei 2026.",
+        maxQueries: 4,
+        queries: [
+          '"SMA Tirta Lazuardi"',
+          '"tryout matematika nasional" 28 Mei 2026',
+          '"SMA Tirta Lazuardi" tryout matematika nasional',
+        ],
+        scopeByNamedPhrases: true,
+      })
+    ).toEqual([
+      '"SMA Tirta Lazuardi"',
+      '"SMA Tirta Lazuardi" tryout matematika nasional 28 Mei 2026',
+    ]);
+  });
+
+  it("deduplicates repeated dropped date context before appending it", () => {
+    expect(
+      planSearchQueries({
+        task: "Aku dengar SMA Tirta Lazuardi akan adakan tryout matematika nasional pada 28 Mei 2026.",
+        maxQueries: 4,
+        queries: [
+          '"SMA Tirta Lazuardi" tryout matematika nasional',
+          '"tryout matematika nasional" 28 Mei 2026',
+          "28 2026 tryout nasional",
+        ],
+        scopeByNamedPhrases: true,
+      })
+    ).toEqual(['"SMA Tirta Lazuardi" tryout matematika nasional 28 Mei 2026']);
+  });
+
+  it("preserves title-case date context that appears before a number", () => {
+    expect(
+      planSearchQueries({
+        task: "Aku dengar SMA Tirta Lazuardi akan adakan tryout pada Mei 2026.",
+        maxQueries: 4,
+        queries: ['"SMA Tirta Lazuardi" tryout', '"tryout nasional" Mei 2026'],
+        scopeByNamedPhrases: true,
+      })
+    ).toEqual(['"SMA Tirta Lazuardi" tryout Mei 2026']);
+  });
+
+  it("ignores title-case dropped context without adjacent numbers", () => {
+    expect(
+      planSearchQueries({
+        task: "Aku dengar SMA Tirta Lazuardi akan adakan tryout.",
+        maxQueries: 4,
+        queries: [
+          '"SMA Tirta Lazuardi" tryout',
+          "Kabar tryout",
+          "tryout Kabar",
+        ],
+        scopeByNamedPhrases: true,
+      })
+    ).toEqual(['"SMA Tirta Lazuardi" tryout']);
+  });
+
+  it("keeps generated queries when no query preserves a named task phrase", () => {
+    expect(
+      planSearchQueries({
+        task: "Bandingkan Next.js Cache Components dengan route cache lama.",
+        maxQueries: 4,
+        queries: ["route cache migration", "cache components behavior"],
+      })
+    ).toEqual(["route cache migration", "cache components behavior"]);
+  });
+
+  it("ignores weak and duplicate named phrase runs while scoping variants", () => {
+    expect(
+      planSearchQueries({
+        task: "Budi Santoso bertanya tentang SMA Tirta Lazuardi dan SMA Tirta Lazuardi.",
+        maxQueries: 4,
+        queries: ['"SMA Tirta Lazuardi" profil', "pertanyaan umum"],
+        scopeByNamedPhrases: true,
+      })
+    ).toEqual(['"SMA Tirta Lazuardi" profil']);
   });
 
   it("extracts distinctive terms without language-specific keywords", () => {

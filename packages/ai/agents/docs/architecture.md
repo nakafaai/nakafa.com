@@ -107,7 +107,8 @@ can override or contaminate the search query.
 - Search UI parts are query-scoped: one executed query writes one loading part
   and reconciles that same part to done or error.
 - Research runs Firecrawl first for inspectable source rows, then Google Search
-  grounding for corroboration when grounding metadata is available.
+  grounding for corroboration. Google grounding appears in the source UI only
+  when it has a query-scoped direct source.
 - Provider identity is stored for traces and debugging, but the chat UI only
   shows user-relevant queries and sources.
 - Research evidence exposes citation links beside the facts they support.

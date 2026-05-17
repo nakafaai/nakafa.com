@@ -20,7 +20,7 @@ export function formatMathData(data: MathData, diagnostic?: string) {
       - Status: error
       - Operation: ${data.kind}
       - Evidence scope: unavailable deterministic derivation; do not describe the result as checked or proven
-      - Error: ${data.error}
+      - Error code: ${data.error}
       ${formatDiagnostic(diagnostic)}
     `);
   }
@@ -56,7 +56,15 @@ function formatEvidenceScope(result: MathResult) {
   }
 
   if (result.stepStatus === "partial") {
+    if (result.status === "verified") {
+      return "verified deterministic result with partial derivation steps";
+    }
+
     return "partial deterministic evidence only; do not describe the final result as fully verified without another complete check";
+  }
+
+  if (result.status === "verified") {
+    return "verified deterministic result; derivation steps are not included";
   }
 
   return "unavailable deterministic derivation; say the available evidence is not enough to prove the result";

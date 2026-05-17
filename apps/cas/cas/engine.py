@@ -52,6 +52,7 @@ GROUPS = {
     **dict.fromkeys(
         [
             "determinant",
+            "eigen_analysis",
             "eigenvalues",
             "eigenvectors",
             "inverse",

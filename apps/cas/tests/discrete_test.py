@@ -57,7 +57,8 @@ def test_prime_factorization() -> None:
     assert result.secondary
     assert result.secondary.expression == "2^2*3*7"
     assert result.items
-    assert [entry.value for entry in result.items] == ["2^2", "3^1", "7^1"]
+    assert [entry.value for entry in result.items] == ["2^2", "3", "7"]
+    assert [entry.latex for entry in result.items] == ["2^{2}", "3", "7"]
 
 
 def test_prime_factorization_of_one() -> None:

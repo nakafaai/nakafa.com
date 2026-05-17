@@ -12,7 +12,10 @@ import type {
 } from "@repo/math/schema/shared";
 import { useTranslations } from "next-intl";
 import { Expression } from "@/components/ai/message-part/math/expression";
-import { getItemLabelKey } from "@/components/ai/message-part/math/labels";
+import {
+  getItemLabelKey,
+  getItemValueKey,
+} from "@/components/ai/message-part/math/labels";
 
 interface MathEvidenceProps {
   message: DataPart["math"];
@@ -36,6 +39,10 @@ interface ItemListProps {
 }
 
 interface ItemRowProps {
+  item: MathItem;
+}
+
+interface ItemValueProps {
   item: MathItem;
 }
 
@@ -179,14 +186,26 @@ function ItemRow({ item }: ItemRowProps) {
         <HugeIcons className="size-3.5 shrink-0" icon={ArrowRight02Icon} />
       </span>
       <span className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 overflow-x-auto overflow-y-hidden">
-        {item.latex ? (
-          <Expression value={item.latex} />
-        ) : (
-          <span>{item.value}</span>
-        )}
+        <ItemValue item={item} />
       </span>
     </div>
   );
+}
+
+/** Renders one supporting item value with semantic booleans localized for users. */
+function ItemValue({ item }: ItemValueProps) {
+  const t = useTranslations("Ai");
+  const valueKey = getItemValueKey(item.label, item.value);
+
+  if (valueKey) {
+    return <span>{t(valueKey)}</span>;
+  }
+
+  if (item.latex) {
+    return <Expression value={item.latex} />;
+  }
+
+  return <span>{item.value}</span>;
 }
 
 /** Renders domain restrictions and other required math conditions. */

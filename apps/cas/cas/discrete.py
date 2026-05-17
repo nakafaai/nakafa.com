@@ -33,7 +33,8 @@ def run(request: MathRequest) -> MathResult:
             reason="The prime factorization was checked exactly.",
             secondary=factorization,
             items=[
-                item("factor", f"{prime}^{power}") for prime, power in factors.items()
+                item("factor", _factor_expression(prime, power))
+                for prime, power in factors.items()
             ],
             steps=[
                 step(
@@ -162,6 +163,14 @@ def _factorization_expression(factors: dict[int, int]) -> MathExpression:
     ]
 
     return expression_text("*".join(pieces), " \\cdot ".join(latex_pieces))
+
+
+def _factor_expression(prime: int, power: int) -> MathExpression:
+    """Render one prime factor with exponent-aware LaTeX."""
+    if power == 1:
+        return expression_text(str(prime), str(prime))
+
+    return expression_text(f"{prime}^{power}", f"{prime}^{{{power}}}")
 
 
 def _modular_expression(value: int, modulus: int) -> MathExpression:

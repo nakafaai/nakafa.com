@@ -37,6 +37,7 @@ import {
 import { fetchAction, fetchMutation } from "convex/nextjs";
 import { Effect } from "effect";
 import type { getTranslations } from "next-intl/server";
+import { gateUnsourcedResearchStream } from "@/app/api/chat/evidence";
 import { search as nakafaSearch } from "@/app/api/chat/nakafa";
 import { repairChatToolCall } from "@/app/api/chat/repair";
 import { prepareChatStep } from "@/app/api/chat/step";
@@ -202,6 +203,9 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             userRole: user.info.role ?? undefined,
           };
           let fetchedPage = false;
+          let sawResearch = false;
+          let hasSourceBackedResearch = false;
+          let generatedNoEvidenceAnswer = "";
 
           const system = nakafaPrompt({
             url: page.url,
@@ -277,6 +281,13 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                         writer,
                       });
 
+                      sawResearch = true;
+                      hasSourceBackedResearch =
+                        hasSourceBackedResearch || result.sourceBacked;
+                      if (!result.sourceBacked) {
+                        generatedNoEvidenceAnswer = result.text;
+                      }
+
                       yield* usage.addUsage(
                         TOOL_NAMES.deepResearch,
                         result.usage
@@ -337,8 +348,15 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             timeout: chatStreamTimeout,
           });
 
-          writer.merge(
-            streamTextResult.toUIMessageStream({
+          const evidenceGate = { blocked: false };
+          const gatedStream = gateUnsourcedResearchStream({
+            getNoEvidenceAnswer: () => generatedNoEvidenceAnswer,
+            shouldBlock: () =>
+              sawResearch &&
+              !hasSourceBackedResearch &&
+              generatedNoEvidenceAnswer.length > 0,
+            state: evidenceGate,
+            stream: streamTextResult.toUIMessageStream({
               sendReasoning: true,
               sendStart: false,
               messageMetadata: ({ part }) => {
@@ -383,19 +401,39 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 );
                 return runtime.translate("error-message");
               },
-            })
-          );
+            }),
+          });
 
-          yield* Effect.tryPromise(() => streamTextResult.consumeStream());
+          writer.merge(gatedStream);
 
+          // AI SDK result promises consume the stream as needed; the merged UI
+          // stream is already the client-facing consumer.
+          // https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text
           const response = yield* Effect.tryPromise(
             () => streamTextResult.response
           );
+          const suggestionMessages = evidenceGate.blocked
+            ? [
+                ...chat.finalMessages,
+                {
+                  content: generatedNoEvidenceAnswer,
+                  role: "assistant" as const,
+                },
+              ]
+            : [...chat.finalMessages, ...response.messages];
+
           yield* writeSuggestions({
             locale: page.locale,
-            messages: [...chat.finalMessages, ...response.messages],
+            messages: suggestionMessages,
             writer,
-          });
+          }).pipe(
+            Effect.catchAll((error) =>
+              logError(error, {
+                ...runtime.logContext,
+                errorLocation: "writeSuggestions",
+              })
+            )
+          );
         })
       ),
   });

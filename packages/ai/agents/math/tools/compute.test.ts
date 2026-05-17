@@ -88,7 +88,6 @@ describe("math compute tool", () => {
     const output = await Effect.runPromise(
       compute({
         input,
-        locale: "en",
         toolCallId: "math-1",
         writer,
       }).pipe(
@@ -129,7 +128,6 @@ describe("math compute tool", () => {
     const output = await Effect.runPromise(
       compute({
         input,
-        locale: "en",
         toolCallId: "math-2",
         writer,
       }).pipe(
@@ -142,17 +140,14 @@ describe("math compute tool", () => {
     expect(output).toContain(
       "- Evidence scope: unavailable deterministic derivation"
     );
-    expect(output).toContain(
-      "- Error: This part could not be checked right now. Please try again with the expression or data written clearly."
-    );
+    expect(output).toContain("- Error code: math_check_unavailable");
     expect(output).toContain(
       "Do not present this result as checked. Retry only if the original request gives enough information"
     );
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
         data: expect.objectContaining({
-          error:
-            "This part could not be checked right now. Please try again with the expression or data written clearly.",
+          error: "math_check_unavailable",
           input: request,
           kind: "evaluate",
           status: "error",
@@ -171,7 +166,6 @@ describe("math compute tool", () => {
     const output = await Effect.runPromise(
       compute({
         input,
-        locale: "en",
         toolCallId: "math-3",
         writer,
       }).pipe(
@@ -181,13 +175,11 @@ describe("math compute tool", () => {
     );
 
     expect(output).toContain("- Status: error");
-    expect(output).toContain(
-      "This part could not be checked right now. Please try again"
-    );
+    expect(output).toContain("- Error code: math_check_unavailable");
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
         data: expect.objectContaining({
-          error: expect.stringContaining("could not be checked"),
+          error: "math_check_unavailable",
           input: request,
           kind: "evaluate",
           status: "error",
@@ -215,7 +207,6 @@ describe("math compute tool", () => {
           upper: "oo",
           variable: "x",
         },
-        locale: "en",
         toolCallId: "math-ambiguous-variable",
         writer,
       }).pipe(
@@ -230,21 +221,19 @@ describe("math compute tool", () => {
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
         data: expect.objectContaining({
-          error:
-            "This part could not be checked right now. Please try again with the expression or data written clearly.",
+          error: "math_check_unavailable",
           status: "error",
         }),
       })
     );
   });
 
-  it("returns a safe message before writing data for invalid tool input", async () => {
+  it("returns a model-readable error before writing data for invalid tool input", async () => {
     const fetch = vi.spyOn(globalThis, "fetch");
     const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
       compute({
         input: { operation: "simplify" },
-        locale: "en",
         toolCallId: "math-4",
         writer,
       }).pipe(
@@ -254,18 +243,18 @@ describe("math compute tool", () => {
     );
 
     expect(output).toContain("- Status: error");
-    expect(output).toContain("I need the math expression or data");
+    expect(output).toContain("- Error code: invalid_math_input");
+    expect(output).toContain("Ask the user for the exact missing expression");
     expect(fetch).not.toHaveBeenCalled();
     expect(parts).toEqual([]);
   });
 
-  it("returns a safe Indonesian message for invalid tool input", async () => {
+  it("keeps invalid input errors locale-free", async () => {
     const fetch = vi.spyOn(globalThis, "fetch");
     const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
       compute({
         input: { operation: "domain" },
-        locale: "id",
         toolCallId: "math-5",
         writer,
       }).pipe(
@@ -274,18 +263,17 @@ describe("math compute tool", () => {
       )
     );
 
-    expect(output).toContain("Aku perlu ekspresi atau data matematikanya");
+    expect(output).toContain("- Error code: invalid_math_input");
     expect(fetch).not.toHaveBeenCalled();
     expect(parts).toEqual([]);
   });
 
-  it("writes a safe Indonesian error for math service failures", async () => {
+  it("writes locale-free error data for math service failures", async () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
     const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
       compute({
         input,
-        locale: "id",
         toolCallId: "math-6",
         writer,
       }).pipe(
@@ -294,12 +282,11 @@ describe("math compute tool", () => {
       )
     );
 
-    expect(output).toContain("Bagian ini belum bisa dicek sekarang");
+    expect(output).toContain("- Error code: math_check_unavailable");
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
         data: expect.objectContaining({
-          error:
-            "Bagian ini belum bisa dicek sekarang. Coba tulis ekspresi atau datanya dengan lebih jelas.",
+          error: "math_check_unavailable",
           input: request,
           kind: "evaluate",
           status: "error",

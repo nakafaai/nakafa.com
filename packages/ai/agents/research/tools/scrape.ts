@@ -12,8 +12,16 @@ import type { UIMessageStreamWriter } from "ai";
 import dedent from "dedent";
 import { Effect, Either } from "effect";
 
+interface ScrapeUrlParams {
+  maxLength?: number;
+  selectionQuery?: string;
+  toolCallId: string;
+  url: string;
+  writer: UIMessageStreamWriter<MyUIMessage>;
+}
+
 /**
- * Scrapes one URL and writes the scrape UI data part.
+ * Scrapes one URL and returns structured evidence for citation checks.
  */
 export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
   maxLength = 3000,
@@ -21,13 +29,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
   toolCallId,
   url,
   writer,
-}: {
-  maxLength?: number;
-  selectionQuery?: string;
-  toolCallId: string;
-  url: string;
-  writer: UIMessageStreamWriter<MyUIMessage>;
-}) {
+}: ScrapeUrlParams) {
   yield* Effect.sync(() =>
     writer.write({
       id: toolCallId,
@@ -54,9 +56,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
       })
     );
 
-    return formatOutput({
-      output: { data: { url, content: "" }, error },
-    });
+    return { data: { url, content: "" }, error } satisfies ScrapeOutput;
   }
 
   const publicUrl = safeUrl.right.publicUrl;
@@ -98,12 +98,10 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
       })
     );
 
-    return formatOutput({
-      output: {
-        data: { url: publicUrl, content: "" },
-        error: scrapeResult.error,
-      },
-    });
+    return {
+      data: { url: publicUrl, content: "" },
+      error: scrapeResult.error,
+    } satisfies ScrapeOutput;
   }
 
   const markdown = nativeMarkdown ?? scrapeResult.response.markdown;
@@ -126,12 +124,10 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
       })
     );
 
-    return formatOutput({
-      output: {
-        data: { url: publicUrl, content: "", ...metadata },
-        error: "No content found.",
-      },
-    });
+    return {
+      data: { url: publicUrl, content: "", ...metadata },
+      error: "No content found.",
+    } satisfies ScrapeOutput;
   }
 
   const processedContent = selectRelevantContent({
@@ -153,22 +149,25 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
     })
   );
 
-  return formatOutput({
-    output: {
-      data: {
-        url: publicUrl,
-        content: processedContent,
-        ...metadata,
-      },
-      error: undefined,
+  return {
+    data: {
+      url: publicUrl,
+      content: processedContent,
+      ...metadata,
     },
-  });
+    error: undefined,
+  } satisfies ScrapeOutput;
 });
+
+/** Checks whether a scrape output can be cited by synthesis. */
+export function isSuccessfulScrapeOutput(output: ScrapeOutput) {
+  return !output.error && output.data.content.trim().length > 0;
+}
 
 /**
  * Formats scrape output as markdown for the research agent.
  */
-function formatOutput({ output }: { output: ScrapeOutput }) {
+export function formatScrapeOutput(output: ScrapeOutput) {
   return dedent(`
     # Scrape Result
     - URL: ${output.data.url}

@@ -17,16 +17,16 @@ export const mathEquation =
   "Use for solving equations, systems, inequalities, and polynomial roots. Send expression for one equation, expressions for a system, and provide explicit variables when the user names them.";
 
 export const mathCalculus =
-  "Use for derivatives, integrals, and limits. Send expression copied from the user. Definite or improper integrals must include lower and upper; for example integral from 0 to infinity uses lower 0 and upper oo. Include variable when the expression has parameters or more than one symbol, use variable x when the user does not name another variable, and provide a limit point when needed.";
+  "Use for differentiate, integrate, and limit. Send expression copied from the user. Definite or improper integrals must include lower and upper; for example integral from 0 to infinity uses lower 0 and upper oo. Include variable when the expression has parameters or more than one symbol, use variable x when the user does not name another variable, and provide a limit point when needed.";
 
 export const mathSeries =
   "Use for Taylor or asymptotic series, finite or symbolic summations, and finite or symbolic products. Summation and product need expression, lower, and upper.";
 
 export const mathMatrix =
-  "Use for linear algebra: determinant, inverse, rank, RREF, eigenvalues, eigenvectors, matrix multiplication, and linear systems. Multiplication needs right_matrix; linear systems need vector.";
+  "Use for linear algebra: determinant, inverse, rank, rref, eigenvalues, eigenvectors, eigen_analysis, matrix_multiply, and linear_system. Use eigen_analysis for eigenspaces, algebraic or geometric multiplicity, diagonalizability, and Jordan-related checks. matrix_multiply needs right_matrix; linear_system needs vector.";
 
 export const mathStatistics =
-  "Use for descriptive statistics: mean, median, mode, variance, standard deviation, quartiles, and z-score. Send values as the dataset; z-score also needs the target expression.";
+  "Use for descriptive statistics: mean, median, mode, variance, standard_deviation, quartiles, and z_score. Send values as the dataset; z_score also needs the target expression.";
 
 export const mathProbability =
   "Use for supported named probability distributions such as normal, binomial, or poisson. Prefer probability over arithmetic or calculus when a distribution and its parameters are given. Send operation distribution, expected_value, variance_probability, point_probability, cumulative_probability, tail_probability, or interval_probability. Always include required parameters: bernoulli p, binomial n and p, normal mean and standard_deviation, poisson lambda, uniform lower and upper. Event operations also need their event value: point_probability needs point, cumulative_probability needs upper, tail_probability needs lower, and interval_probability needs lower and upper in the same call. For fair dice, cards, or any finite equally likely outcome list, use statistics mean or arithmetic over the listed outcomes instead.";
@@ -35,4 +35,4 @@ export const mathGeometry =
   "Use for coordinate geometry: distance, midpoint, slope, line equations, circle equations, and intersections. Send points for point-based operations; send expressions for equation intersections.";
 
 export const mathDiscrete =
-  "Use for discrete math and number theory: gcd, lcm, prime factorization, primality, modular arithmetic, permutations, and combinations. gcd and lcm need values; modular needs n and modulus; permutation and combination need n and k.";
+  "Use for discrete math and number theory: gcd, lcm, prime_factorization, is_prime, modular, permutation, and combination. gcd and lcm need values; modular needs n and modulus; permutation and combination need n and k.";

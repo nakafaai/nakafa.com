@@ -42,6 +42,7 @@ export const prepareChatStep = Effect.fn("chat.prepareChatStep")(
     Effect.sync(() => {
       if (stepNumber !== firstStepNumber) {
         return {
+          messages,
           system: [
             system,
             createPrompt({
@@ -72,13 +73,13 @@ export const prepareChatStep = Effect.fn("chat.prepareChatStep")(
       }
 
       if (needsPageFetch) {
-        return nakafaStep;
+        return { ...nakafaStep, messages };
       }
 
       if (getSourceReferencesFromMessages(messages).length > 0) {
-        return researchStep;
+        return { ...researchStep, messages };
       }
 
-      return groundingStep;
+      return { ...groundingStep, messages };
     })
 );

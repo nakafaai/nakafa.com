@@ -109,16 +109,26 @@ export const bulkSyncExerciseSets = internalMutation({
     let updated = 0;
 
     for (const set of args.sets) {
-      await syncContentSearch(ctx, {
-        contentHash: set.contentHash,
-        description: set.searchDescription,
+      const searchRef = buildContentSearchRef({
         locale: set.locale,
         route: set.slug,
         section: "exercises",
-        syncedAt: now,
-        text: set.searchText,
-        title: set.searchTitle,
       });
+
+      if (set.questionCount > 0) {
+        await syncContentSearch(ctx, {
+          contentHash: set.contentHash,
+          description: set.searchDescription,
+          locale: set.locale,
+          route: set.slug,
+          section: "exercises",
+          syncedAt: now,
+          text: set.searchText,
+          title: set.searchTitle,
+        });
+      } else {
+        await deleteContentSearch(ctx, searchRef.content_id);
+      }
 
       const nextValues = {
         category: set.category,

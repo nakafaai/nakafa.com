@@ -12,6 +12,7 @@ export const mathOperations = [
   "distance",
   "distribution",
   "domain",
+  "eigen_analysis",
   "eigenvalues",
   "eigenvectors",
   "evaluate",

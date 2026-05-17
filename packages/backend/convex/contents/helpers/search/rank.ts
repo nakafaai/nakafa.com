@@ -3,6 +3,9 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 type ContentSearchDocument = Doc<"contentSearch">;
 
 const searchTokenPattern = /[\p{L}\p{N}]+/gu;
+const numericTokenPattern = /^\p{N}+$/u;
+const exerciseQuestionRoutePattern = /\/\d+$/u;
+const routeSeparatorPattern = /[/_-]+/g;
 
 /** Re-ranks bounded search candidates by direct query-token evidence. */
 export function rankContentSearchDocuments(
@@ -10,33 +13,63 @@ export function rankContentSearchDocuments(
   queryText: string
 ) {
   const queryTokens = tokenizeSearchText(queryText);
+  const semanticTokens = queryTokens.filter(
+    (token) => !numericTokenPattern.test(token)
+  );
+  const numericTokens = queryTokens.filter((token) =>
+    numericTokenPattern.test(token)
+  );
 
   if (queryTokens.length === 0) {
     return documents;
   }
 
-  return documents
+  const ranked = documents
     .map((document, index) => ({
-      bodyScore: scoreSearchText(document.text, queryTokens),
+      bodyNumericScore: scoreSearchText(document.text, numericTokens),
+      bodySemanticScore: scoreSearchText(document.text, semanticTokens),
       document,
       index,
-      metadataScore: scoreSearchText(
+      metadataNumericScore: scoreSearchText(
         getDocumentMetadataSearchText(document),
-        queryTokens
+        numericTokens
       ),
+      metadataSemanticScore: scoreSearchText(
+        getDocumentMetadataSearchText(document),
+        semanticTokens
+      ),
+      setPriority: getExerciseSetPriority(document),
     }))
     .sort((left, right) => {
-      if (left.metadataScore !== right.metadataScore) {
-        return right.metadataScore - left.metadataScore;
+      if (left.metadataSemanticScore !== right.metadataSemanticScore) {
+        return right.metadataSemanticScore - left.metadataSemanticScore;
       }
 
-      if (left.bodyScore !== right.bodyScore) {
-        return right.bodyScore - left.bodyScore;
+      if (left.setPriority !== right.setPriority) {
+        return right.setPriority - left.setPriority;
+      }
+
+      if (left.bodySemanticScore !== right.bodySemanticScore) {
+        return right.bodySemanticScore - left.bodySemanticScore;
+      }
+
+      if (left.metadataNumericScore !== right.metadataNumericScore) {
+        return right.metadataNumericScore - left.metadataNumericScore;
+      }
+
+      if (left.bodyNumericScore !== right.bodyNumericScore) {
+        return right.bodyNumericScore - left.bodyNumericScore;
       }
 
       return left.index - right.index;
     })
-    .map((ranked) => ranked.document);
+    .filter(
+      (ranked) =>
+        semanticTokens.length <= 1 ||
+        ranked.metadataSemanticScore + ranked.bodySemanticScore >= 2
+    );
+
+  return ranked.map((item) => item.document);
 }
 
 /** Scores text by how many unique query tokens it directly contains. */
@@ -55,7 +88,22 @@ function scoreSearchText(text: string, queryTokens: readonly string[]) {
 
 /** Joins content identity fields before using body text as a tie-breaker. */
 function getDocumentMetadataSearchText(document: ContentSearchDocument) {
-  return [document.title, document.description, document.route].join(" ");
+  return [document.title, document.description, document.route]
+    .join(" ")
+    .replaceAll(routeSeparatorPattern, " ");
+}
+
+/** Prefers set/material exercise rows over question rows for semantic searches. */
+function getExerciseSetPriority(document: ContentSearchDocument) {
+  if (document.section !== "exercises") {
+    return 0;
+  }
+
+  if (exerciseQuestionRoutePattern.test(document.route)) {
+    return 0;
+  }
+
+  return 1;
 }
 
 /** Tokenizes multilingual query and document text for deterministic ranking. */

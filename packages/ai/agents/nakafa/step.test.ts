@@ -305,9 +305,15 @@ describe("Nakafa agent step state", () => {
   });
 
   it("forces exercise for one step when an exercise reference is pending", () => {
+    const previousMessages = [
+      {
+        role: "user",
+        content: "Aku mau soal nomor 11 dari set ini.",
+      },
+    ] satisfies Parameters<typeof prepareExerciseStep>[1];
     const step = prepareExerciseStep(
       Option.some(exerciseResult.items[0].content_id),
-      [{ role: "user", content: "beri latihan fungsi rasional" }],
+      previousMessages,
       false
     );
 
@@ -317,19 +323,29 @@ describe("Nakafa agent step state", () => {
 
     expect(step.activeTools).toEqual(["exercise"]);
     expect(step.toolChoice).toEqual({ toolName: "exercise", type: "tool" });
-    expect(step.messages[0]).toEqual(
-      expect.objectContaining({
-        content: "beri latihan fungsi rasional",
-        role: "user",
-      })
-    );
-    expect(step.messages.at(-1)).toEqual(
+    expect(step.messages).toHaveLength(2);
+    expect(step.messages[0]).toBe(previousMessages[0]);
+    expect(step.messages[1]).toEqual(
       expect.objectContaining({
         content: expect.stringContaining(exerciseResult.items[0].content_id),
         role: "user",
       })
     );
-    expect(step.messages.at(-1)).toEqual(
+    expect(step.messages[1]).toEqual(
+      expect.objectContaining({
+        content: expect.stringContaining("Call exactly one exercise tool"),
+        role: "user",
+      })
+    );
+    expect(step.messages[1]).toEqual(
+      expect.objectContaining({
+        content: expect.stringContaining(
+          "Do not call exercise with any other content_ref"
+        ),
+        role: "user",
+      })
+    );
+    expect(step.messages[1]).toEqual(
       expect.objectContaining({
         content: expect.stringContaining("Include exercise_number only when"),
         role: "user",
@@ -338,13 +354,10 @@ describe("Nakafa agent step state", () => {
   });
 
   it("does not force exercise when there is no pending ref or exercise already ran", () => {
-    const messages = [
-      { role: "user", content: "beri latihan fungsi rasional" },
-    ] satisfies Parameters<typeof prepareExerciseStep>[1];
-    const missingRef = prepareExerciseStep(Option.none(), messages, false);
+    const missingRef = prepareExerciseStep(Option.none(), [], false);
     const alreadyRan = prepareExerciseStep(
       Option.some(exerciseResult.items[0].content_id),
-      messages,
+      [],
       true
     );
 

@@ -6,13 +6,14 @@ const searchableLineBreakPattern = /\r?\n/u;
 const searchWhitespacePattern = /\s+/gu;
 const nonSearchCharacterPattern = /[^\p{L}\p{N}]+/gu;
 const tokenBoundaryPattern = /^[._-]+|[._-]+$/gu;
+const titleCasePattern = /^\p{Lu}[\p{L}\p{N}._-]*$/u;
 
 interface PlanSearchQueriesInput {
-  anchor: "always" | "empty" | "never";
-  complete?: "all" | "empty-only" | "matching";
+  fallback?: "task" | "none";
   includeShortNumbers?: boolean;
   maxQueries: number;
   queries: readonly string[];
+  scopeByNamedPhrases?: boolean;
   task: string;
 }
 
@@ -20,90 +21,51 @@ interface DistinctiveSearchTermOptions {
   includeShortNumbers?: boolean;
 }
 
-/** Plans executable search queries while preserving exact distinctive task terms. */
+interface NamedSearchPhrase {
+  normalized: string;
+  text: string;
+}
+
+/** Plans executable search queries without rewriting model-chosen search text. */
 export function planSearchQueries({
-  anchor,
-  complete = "all",
+  fallback = "task",
   includeShortNumbers = false,
   task,
   maxQueries,
   queries,
+  scopeByNamedPhrases = false,
 }: PlanSearchQueriesInput) {
-  const searchableTask = getSearchableText(task);
-  const taskTerms = getDistinctiveSearchTerms(searchableTask, {
-    includeShortNumbers,
-  });
-  const anchorQuery =
-    anchor === "always"
-      ? getExactPhraseAnchorQuery(searchableTask, taskTerms)
-      : getTaskAnchorQuery(taskTerms);
-  const searchInputs =
-    anchorQuery && shouldUseAnchor(anchor, queries)
-      ? [
-          { complete: false, text: anchorQuery },
-          ...queries.map((query) => ({ complete: true, text: query })),
-        ]
-      : queries.map((query) => ({ complete: true, text: query }));
   const seen = new Set<string>();
-
-  return searchInputs.flatMap((query) => {
-    const text = query.complete
-      ? getExecutableSearchQuery(query.text.trim(), taskTerms, complete)
-      : query.text.trim();
+  const executableQueries = queries.flatMap((query) => {
+    const text = normalizeExecutableSearchQuery(query);
 
     if (!text) {
       return [];
     }
 
-    const key = text.toLocaleLowerCase();
-
-    if (seen.has(key) || seen.size >= maxQueries) {
-      return [];
-    }
-
-    seen.add(key);
     return [text];
   });
-}
-
-/** Applies the configured completion policy to one executable search query. */
-function getExecutableSearchQuery(
-  query: string,
-  taskTerms: ReturnType<typeof getDistinctiveSearchTerms>,
-  complete: NonNullable<PlanSearchQueriesInput["complete"]>
-) {
-  if (complete === "empty-only") {
-    return query;
-  }
-
-  if (complete === "matching") {
-    return completeMatchingSearchQuery(query, taskTerms);
-  }
-
-  return completeSearchQuery(query, taskTerms);
-}
-
-/** Completes a scoped query from the first shared nonnumeric exact term onward. */
-function completeMatchingSearchQuery(
-  query: string,
-  taskTerms: ReturnType<typeof getDistinctiveSearchTerms>
-) {
-  if (!query) {
-    return query;
-  }
-
-  const normalizedQuery = normalizeSearchTerm(query);
-  const firstMatchingTermIndex = taskTerms.findIndex(
-    (term) =>
-      !isNumericTerm(term.text) &&
-      normalizedSearchTextHasTerm(normalizedQuery, term)
+  const namedPhrases = scopeByNamedPhrases ? getNamedSearchPhrases(task) : [];
+  const hasScopedQuery =
+    scopeByNamedPhrases &&
+    executableQueries.some((query) => queryHasNamedPhrase(query, namedPhrases));
+  const scopedQueries = hasScopedQuery
+    ? preserveScopedQueryContext(executableQueries, namedPhrases)
+    : executableQueries;
+  const plannedQueries = scopedQueries.flatMap((text) =>
+    appendSearchQuery({ maxQueries, seen, text })
   );
 
-  if (firstMatchingTermIndex === -1) {
-    return query;
+  if (plannedQueries.length > 0 || fallback === "none") {
+    return plannedQueries;
   }
 
-  return completeSearchQuery(query, taskTerms.slice(firstMatchingTermIndex));
+  const taskTerms = getDistinctiveSearchTerms(getSearchableText(task), {
+    includeShortNumbers,
+  });
+  const taskQuery = getTaskAnchorQuery(taskTerms);
+
+  return appendSearchQuery({ maxQueries, seen, text: taskQuery ?? "" });
 }
 
 /** Extracts exact high-signal search terms without language-specific keywords. */
@@ -185,74 +147,159 @@ function getTaskAnchorQuery(
   return taskTerms.map((term) => term.text).join(" ");
 }
 
-/** Builds a compact research anchor around exact product, feature, and version terms. */
-function getExactPhraseAnchorQuery(
-  task: string,
-  taskTerms: ReturnType<typeof getDistinctiveSearchTerms>
-) {
-  if (!hasSearchableTerms(taskTerms)) {
+/** Extracts exact named phrases that should keep search variants scoped. */
+function getNamedSearchPhrases(task: string) {
+  const tokens = getSearchTokens(getSearchableText(task));
+  const phrases: NamedSearchPhrase[] = [];
+  const seen = new Set<string>();
+  let run: string[] = [];
+
+  for (const token of tokens) {
+    if (isNamedPhraseToken(token)) {
+      run.push(token);
+      continue;
+    }
+
+    appendNamedSearchPhrase({ phrases, run, seen });
+    run = [];
+  }
+
+  appendNamedSearchPhrase({ phrases, run, seen });
+
+  return phrases;
+}
+
+/** Adds a named phrase run when it has enough signal to be source-scoping. */
+function appendNamedSearchPhrase({
+  phrases,
+  run,
+  seen,
+}: {
+  phrases: NamedSearchPhrase[];
+  run: string[];
+  seen: Set<string>;
+}) {
+  if (run.length < 2) {
     return;
   }
 
-  const anchorText = [
-    ...getSearchableLines(task).filter((line) =>
-      hasSearchableTerms(getDistinctiveSearchTerms(line))
-    ),
-    task,
-  ][0];
-  const tokens = getSearchTokens(anchorText);
-  const termIndexes = tokens.flatMap((token, index) => {
-    const normalized = normalizeSearchTerm(token);
-
-    if (taskTerms.some((term) => term.normalized === normalized)) {
-      return [index];
-    }
-
-    return [];
-  });
-
-  const firstIndex = Math.min(...termIndexes);
-  let lastIndex = Math.min(firstIndex + 3, tokens.length - 1);
-  const nextToken = tokens.at(lastIndex + 1);
-
-  if (nextToken && isNumericTerm(nextToken)) {
-    lastIndex += 1;
+  if (!run.some(isSpecificTextToken)) {
+    return;
   }
 
-  return tokens.slice(firstIndex, lastIndex + 1).join(" ");
-}
+  const text = run.join(" ");
+  const normalized = normalizeSearchTerm(text);
 
-/** Decides whether the anchor should be executed as its own search query. */
-function shouldUseAnchor(
-  anchor: PlanSearchQueriesInput["anchor"],
-  queries: readonly string[]
-) {
-  if (anchor === "always") {
-    return true;
+  if (!(normalized && !seen.has(normalized))) {
+    return;
   }
 
-  return anchor === "empty" && queries.length === 0;
+  seen.add(normalized);
+  phrases.push({ normalized, text });
 }
 
-/** Keeps optimized queries anchored to exact high-signal terms from the task. */
-function completeSearchQuery(
+/** Checks whether a query preserves at least one task-level named phrase. */
+function queryHasNamedPhrase(
   query: string,
-  taskTerms: ReturnType<typeof getDistinctiveSearchTerms>
+  namedPhrases: ReturnType<typeof getNamedSearchPhrases>
 ) {
-  if (!(query && hasSearchableTerms(taskTerms))) {
-    return query;
+  if (namedPhrases.length === 0) {
+    return false;
   }
 
   const normalizedQuery = normalizeSearchTerm(query);
-  const missingTerms = taskTerms.filter(
-    (term) => !normalizedSearchTextHasTerm(normalizedQuery, term)
+
+  return namedPhrases.some((phrase) =>
+    ` ${normalizedQuery} `.includes(` ${phrase.normalized} `)
   );
+}
+
+/** Keeps entity-scoped searches from losing numeric/date context. */
+function preserveScopedQueryContext(
+  queries: readonly string[],
+  namedPhrases: ReturnType<typeof getNamedSearchPhrases>
+) {
+  const scopedQueries = queries.filter((query) =>
+    queryHasNamedPhrase(query, namedPhrases)
+  );
+  const droppedQueries = queries.filter(
+    (query) => !queryHasNamedPhrase(query, namedPhrases)
+  );
+  const contextTerms = getDroppedContextTerms(droppedQueries);
+
+  if (contextTerms.length === 0) {
+    return scopedQueries;
+  }
+
+  return scopedQueries.map((query, index) => {
+    if (index !== scopedQueries.length - 1) {
+      return query;
+    }
+
+    return appendMissingContextTerms(query, contextTerms);
+  });
+}
+
+/** Extracts adjacent date-like context without language-specific month names. */
+function getDroppedContextTerms(queries: readonly string[]) {
+  const seen = new Set<string>();
+
+  return queries.flatMap((query) => {
+    const tokens = getSearchTokens(query);
+
+    return tokens.flatMap((text, index) => {
+      if (!isContextToken(text, index, tokens)) {
+        return [];
+      }
+
+      const normalized = normalizeSearchTerm(text);
+
+      if (!normalized || seen.has(normalized)) {
+        return [];
+      }
+
+      seen.add(normalized);
+      return [{ normalized, text }];
+    });
+  });
+}
+
+/** Preserves numbers plus title-case tokens between nearby numbers. */
+function isContextToken(
+  token: string,
+  index: number,
+  tokens: readonly string[]
+) {
+  if (isNumericTerm(token)) {
+    return true;
+  }
+
+  return (
+    titleCasePattern.test(token) &&
+    (isNumericTerm(tokens[index - 1] ?? "") ||
+      isNumericTerm(tokens[index + 1] ?? ""))
+  );
+}
+
+/** Adds only missing context terms to the chosen scoped query. */
+function appendMissingContextTerms(
+  query: string,
+  contextTerms: ReturnType<typeof getDroppedContextTerms>
+) {
+  const normalizedQuery = normalizeSearchTerm(query);
+  const missingTerms = contextTerms.flatMap((term) => {
+    if (normalizedSearchTextHasTerm(normalizedQuery, term)) {
+      return [];
+    }
+
+    return [term.text];
+  });
 
   if (missingTerms.length === 0) {
     return query;
   }
 
-  return `${missingTerms.map((term) => term.text).join(" ")} ${query}`;
+  return `${query} ${missingTerms.join(" ")}`;
 }
 
 /** Extracts normalized token text from multilingual search input. */
@@ -277,12 +324,33 @@ function getSearchableText(value: string) {
   return content;
 }
 
-/** Splits executable search text into non-empty content lines. */
-function getSearchableLines(value: string) {
-  return getSearchableText(value)
-    .split(searchableLineBreakPattern)
-    .map((line) => line.trim())
-    .filter(Boolean);
+/** Normalizes one executable query without changing its meaning. */
+function normalizeExecutableSearchQuery(query: string) {
+  return query.trim().replace(searchWhitespacePattern, " ");
+}
+
+/** Appends one query if it is non-empty, unique, and within the query limit. */
+function appendSearchQuery({
+  maxQueries,
+  seen,
+  text,
+}: {
+  maxQueries: number;
+  seen: Set<string>;
+  text: string;
+}) {
+  if (!text) {
+    return [];
+  }
+
+  const key = text.toLocaleLowerCase();
+
+  if (seen.has(key) || seen.size >= maxQueries) {
+    return [];
+  }
+
+  seen.add(key);
+  return [text];
 }
 
 /** Detects acronym, mixed-case, numeric, dotted, hyphenated, or underscored terms. */
@@ -330,6 +398,11 @@ function isSpecificTextToken(token: string) {
   }
 
   return separatorPattern.test(token) && token.length > 2;
+}
+
+/** Keeps acronym/product tokens plus adjacent title-case words in one phrase. */
+function isNamedPhraseToken(token: string) {
+  return isSpecificTextToken(token) || titleCasePattern.test(token);
 }
 
 /** Checks whether a token is made only of numbers. */

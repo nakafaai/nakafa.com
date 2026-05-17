@@ -28,12 +28,14 @@ describe("nakafaPrompt", () => {
     const toolIndex = prompt.indexOf("# Tool Usage Guidelines");
     const taskIndex = prompt.indexOf("# Task Instructions");
     const workflowIndex = prompt.indexOf("## Typical Session Workflow");
+    const recoveryIndex = prompt.indexOf("## Evidence Recovery");
     const outputIndex = prompt.indexOf("# Output Formatting Guidelines");
 
     expect(toolIndex).toBeGreaterThanOrEqual(0);
     expect(taskIndex).toBeGreaterThan(toolIndex);
     expect(workflowIndex).toBeGreaterThan(taskIndex);
-    expect(outputIndex).toBeGreaterThan(workflowIndex);
+    expect(recoveryIndex).toBeGreaterThan(workflowIndex);
+    expect(outputIndex).toBeGreaterThan(recoveryIndex);
 
     const toolSection = prompt.slice(toolIndex, taskIndex);
     const taskSection = prompt.slice(taskIndex, outputIndex);
@@ -44,6 +46,7 @@ describe("nakafaPrompt", () => {
     );
     expect(toolSection).not.toContain("Typical Session Workflow");
     expect(taskSection).toContain("Understand the user's goal.");
+    expect(taskSection).toContain("source-backed research is the answer gate");
     expect(taskSection).not.toContain("Multiple-choice options MUST");
     expect(outputSection).toContain("Multiple-choice options MUST");
     expect(outputSection).not.toContain("Every specialized agent task MUST");
@@ -95,6 +98,12 @@ describe("nakafaPrompt", () => {
     expect(prompt).toContain(
       "If deterministic math is inconclusive, explain the limitation clearly."
     );
+    expect(prompt).toContain(
+      "For multi-part math requests, enumerate each requested calculation or verification in the math task."
+    );
+    expect(prompt).toContain(
+      'Do not collapse several requested computations into a generic task such as "verify these calculations".'
+    );
   });
 
   it("teaches Nina to combine specialized agents when evidence spans domains", () => {
@@ -130,6 +139,9 @@ describe("nakafaPrompt", () => {
       "Preserve every requested deliverable in the Nakafa request."
     );
     expect(prompt).toContain(
+      "Do not add a lesson, overview, or example deliverable when the user only asks for practice, a question, a solution, or a walkthrough of one exercise."
+    );
+    expect(prompt).toContain(
       "Use Nakafa first when the user asks about Nakafa lessons, exercises, Quran, articles, the current verified page, or school and university learning or practice."
     );
     expect(prompt).toContain(
@@ -157,6 +169,23 @@ describe("nakafaPrompt", () => {
       "If a specialist agent returns an error, do not call the same specialist again with the same request."
     );
     expect(prompt).toContain("This applies in every user language.");
+  });
+
+  it("does not let failed external research fall back to generic Nakafa evidence", () => {
+    const prompt = nakafaPrompt({
+      ...base,
+      userRole: "student",
+    });
+
+    expect(prompt).toContain(
+      "Do not use Nakafa to fill missing evidence for external, current, official, or source-owned verification questions."
+    );
+    expect(prompt).toContain(
+      "After deepResearch returns weak or missing evidence for an external, current, official, or source-owned claim, do not switch to generic Nakafa search just to provide something."
+    );
+    expect(prompt).toContain(
+      "If no source-backed finding is available, give the limitation in the final answer and stop; do not replace it with unrelated Nakafa content."
+    );
   });
 
   it("requires dollar-delimited evidence math to be rewritten for final answers", () => {

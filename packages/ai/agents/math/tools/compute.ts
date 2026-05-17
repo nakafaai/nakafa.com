@@ -4,27 +4,11 @@ import type { MathData } from "@repo/math/schema/data";
 import type { MathRequest } from "@repo/math/schema/request";
 import { MathToolInputSchema } from "@repo/math/schema/tool-input";
 import { MathService } from "@repo/math/service";
-import type { Locale } from "@repo/utilities/locales";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Schema } from "effect";
 
-/** User-facing message for incomplete math tool inputs. */
-function inputErrorMessage(locale: Locale) {
-  if (locale === "id") {
-    return "Aku perlu ekspresi atau data matematikanya ditulis lebih lengkap sebelum bisa mengecek bagian ini.";
-  }
-
-  return "I need the math expression or data written more completely before I can check this part.";
-}
-
-/** User-facing message for math checks that cannot complete right now. */
-function serviceErrorMessage(locale: Locale) {
-  if (locale === "id") {
-    return "Bagian ini belum bisa dicek sekarang. Coba tulis ekspresi atau datanya dengan lebih jelas.";
-  }
-
-  return "This part could not be checked right now. Please try again with the expression or data written clearly.";
-}
+const invalidMathInputError = "invalid_math_input";
+const mathCheckUnavailableError = "math_check_unavailable";
 
 /** Gives the model actionable recovery guidance without exposing raw failures. */
 function recoveryMessage(message: string) {
@@ -38,12 +22,10 @@ function recoveryMessage(message: string) {
 /** Runs one deterministic math request and writes the math evidence data part. */
 export function compute({
   input,
-  locale,
   toolCallId,
   writer,
 }: {
   input: unknown;
-  locale: Locale;
   toolCallId: string;
   writer: UIMessageStreamWriter<MyUIMessage>;
 }) {
@@ -56,7 +38,8 @@ export function compute({
       return [
         "# Checked Math Work",
         "- Status: error",
-        `- Error: ${inputErrorMessage(locale)}`,
+        `- Error code: ${invalidMathInputError}`,
+        "- Recovery: Ask the user for the exact missing expression or data in their language.",
       ].join("\n");
     }
 
@@ -89,7 +72,7 @@ export function compute({
             summary: checked.right.status,
           } satisfies MathData)
         : ({
-            error: serviceErrorMessage(locale),
+            error: mathCheckUnavailableError,
             input: request,
             kind: request.operation,
             status: "error",

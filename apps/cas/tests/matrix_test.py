@@ -111,6 +111,24 @@ def test_matrix_inverse_rank_rref_and_eigen_data() -> None:
     assert eigenvectors.items
 
 
+def test_matrix_eigen_analysis_checks_multiplicity_and_diagonalizability() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            matrix=[["2", "1"], ["0", "2"]],
+            operation="eigen_analysis",
+        )
+    )
+
+    labels = {entry.label: entry.value for entry in result.items}
+
+    assert result.status == "verified"
+    assert labels["algebraic_multiplicity"] == "lambda = 2: 2"
+    assert labels["geometric_multiplicity"] == "lambda = 2: 1"
+    assert labels["eigenbasis"] == "lambda = 2: span(Matrix([[1], [0]]))"
+    assert labels["diagonalizable"] == "false"
+
+
 def test_matrix_inverse_rejects_singular_matrix() -> None:
     with pytest.raises(ValueError, match="nonsingular matrix"):
         run(

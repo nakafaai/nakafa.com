@@ -1,4 +1,3 @@
-import type { DataPart } from "@repo/ai/schema/data";
 import type { ModelMessage } from "ai";
 
 /**
@@ -28,12 +27,10 @@ export function createResearchMessages(task: string, sourceOutputs: string[]) {
 export function createResearchSynthesisMessages({
   collectedEvidence = [],
   evidence,
-  groundingSources = [],
   task,
 }: {
   collectedEvidence?: string[];
   evidence: string;
-  groundingSources?: DataPart["web-search"]["sources"];
   task: string;
 }) {
   return [
@@ -43,24 +40,12 @@ export function createResearchSynthesisMessages({
         "# Research Task",
         task,
         "# Research Notes",
-        evidence || "No usable evidence was collected.",
-        ...formatGroundingSources(groundingSources),
+        evidence ||
+          "No source-backed direct evidence was collected. Do not infer absence or nonexistence from failed or empty search results.",
         ...formatSourceEvidence(collectedEvidence),
       ].join("\n\n"),
     },
   ] satisfies ModelMessage[];
-}
-
-/** Keeps provider grounding references available for structured synthesis. */
-function formatGroundingSources(sources: DataPart["web-search"]["sources"]) {
-  if (sources.length === 0) {
-    return [];
-  }
-
-  return [
-    "# Source References",
-    sources.map((source) => `- ${source.title}: ${source.url}`).join("\n"),
-  ];
 }
 
 /**

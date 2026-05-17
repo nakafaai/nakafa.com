@@ -1,3 +1,4 @@
+import { normalizeResearchCitationUrl } from "@repo/ai/agents/research/citations";
 import type { DataPart } from "@repo/ai/schema/data";
 import { Either, Schema } from "effect";
 
@@ -34,7 +35,7 @@ const SourceSchema = Schema.Struct({
   url: Schema.optional(Schema.String),
 }).pipe(Schema.mutable);
 
-/** Converts Gemini Google Search grounding into Nakafa's web-search UI data. */
+/** Converts source-backed Gemini Google Search grounding into web-search UI data. */
 export function createGroundingWebSearchData({
   providerMetadata,
   sources,
@@ -43,14 +44,15 @@ export function createGroundingWebSearchData({
   sources: unknown;
 }) {
   const groundingMetadata = getGroundingMetadata(providerMetadata);
+  const groundedSources = getGroundedSources({ groundingMetadata, sources });
+
+  if (groundedSources.length === 0) {
+    return;
+  }
+
   const searchQueries = groundingMetadata
     ? getGroundingSearchQueries(groundingMetadata)
     : [];
-  const groundedSources = getGroundedSources({ groundingMetadata, sources });
-
-  if (groundedSources.length === 0 && searchQueries.length === 0) {
-    return;
-  }
 
   return {
     provider: "google",
@@ -60,7 +62,7 @@ export function createGroundingWebSearchData({
   } satisfies DataPart["web-search"];
 }
 
-/** Checks whether grounding data can be shown as one query-scoped search row. */
+/** Checks whether source-backed grounding can be shown as one query-scoped row. */
 export function hasSingleGroundingQuery(data: DataPart["web-search"]) {
   return data.queries.length === 1;
 }
@@ -100,7 +102,7 @@ function getGroundedSources({
         return [];
       }
 
-      return [createWebSearchSource(source.url, source.title)];
+      return createGroundedSource(source.url, source.title);
     });
 
     if (resultSources.length > 0) {
@@ -113,7 +115,7 @@ function getGroundedSources({
       return [];
     }
 
-    return [createWebSearchSource(chunk.web.uri, chunk.web.title)];
+    return createGroundedSource(chunk.web.uri, chunk.web.title);
   });
 }
 
@@ -131,6 +133,34 @@ function getGroundingSearchQueries(
 }
 
 /** Builds the data shape consumed by Nakafa's existing web-search tool UI. */
+function createGroundedSource(url: string, title?: string) {
+  if (isGoogleGroundingRedirectUrl(url)) {
+    return [];
+  }
+
+  const normalized = normalizeResearchCitationUrl(url);
+
+  if (!normalized) {
+    return [];
+  }
+
+  return [createWebSearchSource(normalized, title)];
+}
+
+/** Rejects provider redirect artifacts that are not source-owned URLs. */
+function isGoogleGroundingRedirectUrl(url: string) {
+  if (!URL.canParse(url)) {
+    return false;
+  }
+
+  const parsed = new URL(url);
+
+  return (
+    parsed.hostname === "vertexaisearch.cloud.google.com" ||
+    parsed.pathname.includes("grounding-api-redirect")
+  );
+}
+
 function createWebSearchSource(url: string, title?: string) {
   const sourceTitle = getSourceTitle(url, title);
 
@@ -151,9 +181,5 @@ function getSourceTitle(url: string, title?: string) {
     return cleanTitle;
   }
 
-  if (URL.canParse(url)) {
-    return new URL(url).hostname.replace("www.", "");
-  }
-
-  return url;
+  return new URL(url).hostname.replace("www.", "");
 }
