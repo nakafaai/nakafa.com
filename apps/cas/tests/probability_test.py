@@ -197,13 +197,13 @@ def test_probability_variance() -> None:
     assert result.secondary.expression == "3/2"
 
 
-def test_normal_distribution_accepts_documented_standard_deviation() -> None:
+def test_normal_distribution_accepts_standard_deviation() -> None:
     result = run(
         MathRequest(
             distribution="normal",
             kind="math",
             operation="variance_probability",
-            parameters={"mean": "0", "standardDeviation": "2"},
+            parameters={"mean": "0", "standard_deviation": "2"},
             variable="X",
         )
     )

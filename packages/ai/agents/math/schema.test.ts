@@ -531,6 +531,9 @@ describe("math AI input schemas", () => {
       required: [],
       type: "object",
     });
+    expect(jsonSchema.properties.parameters.properties).not.toHaveProperty(
+      "standardDeviation"
+    );
   });
 
   it("keeps model-facing field metadata for grouped algebra tools", async () => {

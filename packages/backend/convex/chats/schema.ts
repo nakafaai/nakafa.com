@@ -307,7 +307,6 @@ export const mathProbabilityParametersValidator = v.object({
   n: v.optional(v.string()),
   p: v.optional(v.string()),
   standard_deviation: v.optional(v.string()),
-  standardDeviation: v.optional(v.string()),
   upper: v.optional(v.string()),
 });
 

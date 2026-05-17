@@ -237,17 +237,10 @@ def _distribution(request: MathRequest, variable: sp.Symbol) -> object:
             parse.expression(_parameter(name, parameters, "p")),
         )
     if name == "normal":
-        standard_deviation = _aliased_parameter(
-            name,
-            parameters,
-            "standard_deviation",
-            "standardDeviation",
-        )
-
         return Normal(
             str(variable),
             parse.expression(_parameter(name, parameters, "mean")),
-            parse.expression(standard_deviation),
+            parse.expression(_parameter(name, parameters, "standard_deviation")),
         )
     if name == "poisson":
         return Poisson(
@@ -271,15 +264,3 @@ def _parameter(distribution: str, parameters: dict[str, str], name: str) -> str:
         return value
 
     raise ValueError(f"{distribution} distribution requires parameter: {name}")
-
-
-def _aliased_parameter(
-    distribution: str, parameters: dict[str, str], first: str, second: str
-) -> str:
-    """Return a required distribution parameter that accepts one alias."""
-    value = parameters.get(first) or parameters.get(second)
-
-    if value:
-        return value
-
-    raise ValueError(f"{distribution} distribution requires parameter: {first}")

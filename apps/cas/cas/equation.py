@@ -21,8 +21,8 @@ def solve(request: MathRequest) -> MathResult:
         variable = variables[0]
 
         if isinstance(relation, sp.Equality):
-            solved = sp.solve(relation, variable)
-            steps = _solve_equality_steps(relation, solved)
+            solved = _solve_equality(relation, variable)
+            steps = _solve_equality_steps(relation, variable, solved)
         else:
             solved = sp.solve_univariate_inequality(relation, variable)
             steps = [
@@ -63,11 +63,37 @@ def _solve_variables(
     return [variable], parsed
 
 
-def _solve_equality_steps(relation: sp.Equality, solved: list) -> list:
-    """Create compact factoring evidence for one-variable polynomial equations."""
+def _solve_equality(relation: sp.Equality, variable: sp.Symbol):
+    """Solve one equation without marking partial families as verified."""
+    expression = _equality_expression(relation)
+
+    if expression.is_polynomial(variable):
+        return sp.solve(relation, variable)
+
+    solved = sp.solveset(relation, variable, domain=sp.S.Reals)
+    if isinstance(solved, sp.ConditionSet):
+        raise ValueError("Equation solution set could not be determined exactly.")
+
+    return solved
+
+
+def _equality_expression(relation: sp.Equality) -> sp.Expr:
+    """Move one equality to a single expression equal to zero."""
     left = parse.expression(str(relation.lhs))
     right = parse.expression(str(relation.rhs))
-    expression = sp.expand(left - right)
+
+    return sp.expand(left - right)
+
+
+def _solve_equality_steps(
+    relation: sp.Equality, variable: sp.Symbol, solved: object
+) -> list:
+    """Create compact factoring evidence for one-variable polynomial equations."""
+    expression = _equality_expression(relation)
+
+    if not expression.is_polynomial(variable):
+        return [step("solve", primary=relation, relation=IMPLIES, secondary=solved)]
+
     factored = sp.factor(expression)
 
     if factored == expression:
@@ -92,9 +118,7 @@ def roots(request: MathRequest) -> MathResult:
     parsed = parsed_values[0]
 
     if isinstance(parsed, sp.Equality):
-        left = parse.expression(str(parsed.lhs))
-        right = parse.expression(str(parsed.rhs))
-        expr = sp.expand(left - right)
+        expr = _equality_expression(parsed)
     else:
         raise ValueError("Roots require an expression or equation.")
 

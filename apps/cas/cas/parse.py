@@ -1,33 +1,27 @@
 """Safe SymPy parsing helpers for fixed CAS inputs."""
 
+import ast
+import io
 import keyword
 import re
+import tokenize
 
 import sympy as sp
 from sympy.core.relational import Relational
-from sympy.parsing.sympy_parser import (
-    convert_xor,
-    function_exponentiation,
-    implicit_application,
-    implicit_multiplication,
-    parse_expr,
-    standard_transformations,
-)
 
 from cas.schema import MathRequest, PointInput
 
-TRANSFORMATIONS = standard_transformations + (
-    implicit_multiplication,
-    implicit_application,
-    function_exponentiation,
-    convert_xor,
-)
-
-FUNCTIONS = {
-    "Abs": sp.Abs,
+CONSTANTS = {
     "E": sp.E,
     "e": sp.E,
     "I": sp.I,
+    "oo": sp.oo,
+    "pi": sp.pi,
+}
+
+CALLS = {
+    "Abs": sp.Abs,
+    "Rational": sp.Rational,
     "acos": sp.acos,
     "asin": sp.asin,
     "atan": sp.atan,
@@ -37,26 +31,15 @@ FUNCTIONS = {
     "factorial2": sp.factorial2,
     "ln": sp.log,
     "log": sp.log,
-    "oo": sp.oo,
-    "pi": sp.pi,
     "sin": sp.sin,
     "sqrt": sp.sqrt,
     "tan": sp.tan,
 }
 
-GLOBALS = {
-    "__builtins__": {},
-    "Add": sp.Add,
-    "Float": sp.Float,
-    "Integer": sp.Integer,
-    "Mul": sp.Mul,
-    "Pow": sp.Pow,
-    "Rational": sp.Rational,
-    "Symbol": sp.Symbol,
-}
-
 IDENTIFIER_PATTERN = re.compile(r"\b[A-Za-z_]\w*\b")
+FACTORIAL_ATOM_PATTERN = re.compile(r"(\b[A-Za-z_]\w*|\b\d+(?:\.\d+)?|\([^()]*\))!")
 RESERVED_SYMBOL_PREFIX = "__nakafa_symbol_"
+NON_MATH_CONSTANT_NAMES = {"False", "None", "True"}
 
 ParsedSymbolSource = sp.Expr | sp.Equality | Relational
 
@@ -95,21 +78,20 @@ def symbol_from_equations(
 
 
 def expression(value: str | None, *, evaluate: bool = True) -> sp.Expr:
-    """Parse a SymPy expression with a restricted global namespace."""
+    """Parse a user expression with a small math-only AST."""
     if not value:
         raise ValueError("Expression is required.")
 
     normalized_value, symbols = _normalize_reserved_symbols(value)
 
     try:
-        parsed = parse_expr(
-            normalized_value,
-            global_dict=GLOBALS,
-            local_dict={**FUNCTIONS, **symbols},
-            transformations=TRANSFORMATIONS,
-            evaluate=evaluate,
-        )
-    except (NameError, SyntaxError, TypeError, ValueError) as error:
+        # SymPy parse_expr evaluates generated Python code, so user-originated
+        # CAS input stays behind this allowlisted AST parser instead.
+        # https://docs.sympy.org/latest/modules/parsing.html#sympy.parsing.sympy_parser.parse_expr
+        source = _prepare_expression_source(normalized_value)
+        parsed_ast = ast.parse(source, mode="eval")
+        parsed = _parse_node(parsed_ast.body, symbols, evaluate)
+    except (SyntaxError, TypeError, ValueError, tokenize.TokenError) as error:
         raise ValueError("Expression could not be parsed.") from error
 
     if not isinstance(parsed, sp.Expr):
@@ -118,12 +100,225 @@ def expression(value: str | None, *, evaluate: bool = True) -> sp.Expr:
     return parsed
 
 
+def _prepare_expression_source(value: str) -> str:
+    """Normalize math shorthand before Python parses the expression AST."""
+    with_factorials = _replace_factorial_notation(value.strip())
+    with_powers = with_factorials.replace("^", "**")
+
+    return _insert_implicit_multiplication(with_powers)
+
+
+def _replace_factorial_notation(value: str) -> str:
+    """Convert postfix factorial shorthand into an explicit safe call."""
+    current = value
+
+    while True:
+        updated = FACTORIAL_ATOM_PATTERN.sub(r"factorial(\1)", current)
+        if updated == current:
+            break
+
+        current = updated
+
+    if "!" in current:
+        raise ValueError("Factorial notation could not be parsed.")
+
+    return current
+
+
+def _insert_implicit_multiplication(value: str) -> str:
+    """Support compact school notation such as `2x` and `x y`."""
+    tokens = [
+        token
+        for token in tokenize.generate_tokens(io.StringIO(value).readline)
+        if token.type
+        not in {
+            tokenize.ENCODING,
+            tokenize.ENDMARKER,
+            tokenize.NEWLINE,
+            tokenize.NL,
+        }
+    ]
+    pieces: list[str] = []
+    previous: tokenize.TokenInfo | None = None
+
+    for token in tokens:
+        if previous and _needs_multiplication(previous, token):
+            pieces.append("*")
+
+        pieces.append(token.string)
+        previous = token
+
+    return "".join(pieces)
+
+
+def _needs_multiplication(left: tokenize.TokenInfo, right: tokenize.TokenInfo) -> bool:
+    """Detect adjacent expression tokens that mean multiplication."""
+    if _is_call_prefix(left, right):
+        return False
+
+    return _ends_expression(left) and _starts_expression(right)
+
+
+def _is_call_prefix(left: tokenize.TokenInfo, right: tokenize.TokenInfo) -> bool:
+    """Keep real function calls intact while allowing constant multiplication."""
+    if left.type != tokenize.NAME or right.string != "(":
+        return False
+
+    return left.string not in CONSTANTS
+
+
+def _ends_expression(token: tokenize.TokenInfo) -> bool:
+    """Return whether a token can end one expression."""
+    return token.type in {tokenize.NAME, tokenize.NUMBER} or token.string == ")"
+
+
+def _starts_expression(token: tokenize.TokenInfo) -> bool:
+    """Return whether a token can start the next expression."""
+    return token.type in {tokenize.NAME, tokenize.NUMBER} or token.string == "("
+
+
+def _parse_node(node: ast.AST, symbols: dict[str, sp.Symbol], evaluate: bool) -> object:
+    """Build SymPy values from an allowlisted Python expression AST."""
+    if isinstance(node, ast.Constant):
+        return _parse_constant(node.value)
+
+    if isinstance(node, ast.Name):
+        return _parse_name(node.id, symbols)
+
+    if isinstance(node, ast.BinOp):
+        return _parse_binary_operation(node, symbols, evaluate)
+
+    if isinstance(node, ast.UnaryOp):
+        return _parse_unary_operation(node, symbols, evaluate)
+
+    if isinstance(node, ast.Call):
+        return _parse_call(node, symbols, evaluate)
+
+    if isinstance(node, ast.Tuple):
+        return tuple(_parse_node(item, symbols, evaluate) for item in node.elts)
+
+    raise ValueError("Expression node is not allowed.")
+
+
+def _parse_expression_node(
+    node: ast.AST, symbols: dict[str, sp.Symbol], evaluate: bool
+) -> sp.Expr:
+    """Parse a node that must produce one mathematical expression."""
+    parsed = _parse_node(node, symbols, evaluate)
+
+    if isinstance(parsed, sp.Expr):
+        return parsed
+
+    raise ValueError("Expression node must be mathematical.")
+
+
+def _parse_constant(value: object) -> sp.Expr:
+    """Parse one numeric literal."""
+    if isinstance(value, bool):
+        raise ValueError("Boolean values are not mathematical expressions.")
+
+    if isinstance(value, int):
+        return sp.Integer(value)
+
+    if isinstance(value, float):
+        return sp.Float(value)
+
+    raise ValueError("Only numeric literals are allowed.")
+
+
+def _parse_name(name: str, symbols: dict[str, sp.Symbol]) -> sp.Expr:
+    """Parse a constant or symbol name."""
+    if name in symbols:
+        return symbols[name]
+
+    if name in CONSTANTS:
+        return CONSTANTS[name]
+
+    if name.startswith("__"):
+        raise ValueError("Private names are not mathematical symbols.")
+
+    if name in CALLS:
+        raise ValueError("Function names require explicit arguments.")
+
+    return sp.Symbol(name)
+
+
+def _parse_binary_operation(
+    node: ast.BinOp, symbols: dict[str, sp.Symbol], evaluate: bool
+) -> sp.Expr:
+    """Parse arithmetic binary operators."""
+    left = _parse_expression_node(node.left, symbols, evaluate)
+    right = _parse_expression_node(node.right, symbols, evaluate)
+
+    if isinstance(node.op, ast.Add):
+        return sp.Add(left, right, evaluate=evaluate)
+
+    if isinstance(node.op, ast.Sub):
+        negative_right = sp.Mul(-1, right, evaluate=evaluate)
+        return sp.Add(left, negative_right, evaluate=evaluate)
+
+    if isinstance(node.op, ast.Mult):
+        return sp.Mul(left, right, evaluate=evaluate)
+
+    if isinstance(node.op, ast.Div):
+        reciprocal = sp.Pow(right, -1, evaluate=evaluate)
+        if left.is_Mul:
+            return sp.Mul(
+                *[arg for arg in left.args if isinstance(arg, sp.Expr)],
+                reciprocal,
+                evaluate=evaluate,
+            )
+
+        return sp.Mul(left, reciprocal, evaluate=evaluate)
+
+    if isinstance(node.op, ast.Pow):
+        return sp.Pow(left, right, evaluate=evaluate)
+
+    raise ValueError("Operator is not allowed.")
+
+
+def _parse_unary_operation(
+    node: ast.UnaryOp, symbols: dict[str, sp.Symbol], evaluate: bool
+) -> sp.Expr:
+    """Parse unary plus and minus."""
+    operand = _parse_expression_node(node.operand, symbols, evaluate)
+
+    if isinstance(node.op, ast.UAdd):
+        return operand
+
+    if isinstance(node.op, ast.USub):
+        return sp.Mul(-1, operand, evaluate=evaluate)
+
+    raise ValueError("Unary operator is not allowed.")
+
+
+def _parse_call(
+    node: ast.Call, symbols: dict[str, sp.Symbol], evaluate: bool
+) -> sp.Expr:
+    """Parse an allowlisted math function call."""
+    if not isinstance(node.func, ast.Name):
+        raise ValueError("Only direct math function calls are allowed.")
+
+    if node.keywords:
+        raise ValueError("Keyword arguments are not allowed.")
+
+    function = CALLS.get(node.func.id)
+    if function is None:
+        raise ValueError("Function is not allowed.")
+
+    args = [_parse_expression_node(arg, symbols, evaluate) for arg in node.args]
+    return function(*args)
+
+
 def _normalize_reserved_symbols(value: str) -> tuple[str, dict[str, sp.Symbol]]:
     """Allow math variables whose text is reserved by Python syntax."""
     symbols: dict[str, sp.Symbol] = {}
 
     def replace(match: re.Match[str]) -> str:
         name = match[0]
+
+        if name in NON_MATH_CONSTANT_NAMES:
+            return name
 
         if not keyword.iskeyword(name):
             return name

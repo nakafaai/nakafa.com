@@ -252,6 +252,19 @@ describe("math schemas", () => {
     });
   });
 
+  it("requires canonical normal standard_deviation input", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        distribution: "normal",
+        operation: "expected_value",
+        parameters: {
+          mean: "70",
+          standardDeviation: "10",
+        },
+      })
+    ).toThrow();
+  });
+
   it("decodes exact, cumulative, tail, and interval probability events", () => {
     const decodeMathToolInput = Schema.decodeUnknownSync(MathToolInputSchema);
 

@@ -31,6 +31,13 @@ def test_parse_lowercase_e_as_euler_constant() -> None:
     assert parse.expression("e^x") == sp.E**x
 
 
+def test_parse_allows_constant_parenthesis_multiplication() -> None:
+    x = sp.Symbol("x")
+
+    assert parse.expression("pi(x + 1)") == sp.pi * (x + 1)
+    assert parse.expression("e(x + 1)") == sp.E * (x + 1)
+
+
 def test_parse_factorial_notation() -> None:
     assert parse.expression("factorial(5)") == sp.Integer(120)
     assert parse.expression("5!") == sp.Integer(120)
@@ -48,6 +55,44 @@ def test_parse_allows_python_keyword_symbol_names() -> None:
 def test_parse_rejects_unknown_functions() -> None:
     with pytest.raises(ValueError, match="Expression could not be parsed"):
         parse.expression("foo(5)")
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "x + !",
+        "sin((1, 2))",
+        "True",
+        "'x'",
+        "__x",
+        "sin",
+        "5 // 2",
+        "~x",
+        "sin.cos(1)",
+        "sin(x=1)",
+    ],
+)
+def test_parse_rejects_unsupported_math_syntax(value: str) -> None:
+    with pytest.raises(ValueError, match="Expression could not be parsed"):
+        parse.expression(value)
+
+
+def test_parse_allows_unary_plus() -> None:
+    assert parse.expression("+x") == sp.Symbol("x")
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "__import__('os')",
+        "x.__class__",
+        "().__class__",
+        "[1][0]",
+    ],
+)
+def test_parse_rejects_non_math_syntax(value: str) -> None:
+    with pytest.raises(ValueError, match="Expression could not be parsed"):
+        parse.expression(value)
 
 
 def test_parse_keeps_implicit_multiplication_without_splitting_words() -> None:

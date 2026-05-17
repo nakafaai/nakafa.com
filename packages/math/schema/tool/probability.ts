@@ -14,14 +14,6 @@ export const mathProbabilityDistributions = [
   "uniform",
 ] as const;
 
-const probabilityDistributionParameters = {
-  bernoulli: ["p"],
-  binomial: ["n", "p"],
-  normal: ["mean", "standard_deviation"],
-  poisson: ["lambda"],
-  uniform: ["lower", "upper"],
-} as const;
-
 const probabilityDistributionSchema = Schema.Literal(
   ...mathProbabilityDistributions
 ).annotations({
@@ -36,7 +28,6 @@ export const probabilityParametersSchema = Schema.Struct({
   n: Schema.optional(valueInputSchema),
   p: Schema.optional(valueInputSchema),
   standard_deviation: Schema.optional(valueInputSchema),
-  standardDeviation: Schema.optional(valueInputSchema),
   upper: Schema.optional(valueInputSchema),
 })
   .pipe(Schema.mutable)
@@ -58,6 +49,19 @@ const MathProbabilityBaseInputSchema = Schema.Struct({
 
 type ProbabilityBaseInput = Schema.Schema.Type<
   typeof MathProbabilityBaseInputSchema
+>;
+
+type ProbabilityParameter = keyof ProbabilityBaseInput["parameters"];
+
+const probabilityDistributionParameters = {
+  bernoulli: ["p"],
+  binomial: ["n", "p"],
+  normal: ["mean", "standard_deviation"],
+  poisson: ["lambda"],
+  uniform: ["lower", "upper"],
+} satisfies Record<
+  (typeof mathProbabilityDistributions)[number],
+  readonly ProbabilityParameter[]
 >;
 
 /** Checks that the selected named distribution receives all required parameters. */
