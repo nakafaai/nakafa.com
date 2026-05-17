@@ -71,7 +71,8 @@ describe("research agent messages", () => {
     expect(messages[0]?.content).toContain(
       "AI SDK DevTools captures generateText calls."
     );
-    expect(messages[0]?.content).toContain("# Grounding Source References");
+    expect(messages[0]?.content).toContain("# Source References");
+    expect(messages[0]?.content).not.toContain("# Grounding Source References");
     expect(messages[0]?.content).toContain("https://ai-sdk.dev/docs");
     expect(messages[0]?.content).toContain("# Source Evidence With URLs");
   });

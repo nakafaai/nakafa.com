@@ -11,6 +11,39 @@ const context = {
 } as const;
 
 describe("nakafaAgentPrompt", () => {
+  it("keeps Nakafa tool routing under stable tool headings", () => {
+    const prompt = nakafaAgentPrompt({ context, locale: "id" });
+
+    const toolIndex = prompt.indexOf("# Tool Usage Guidelines");
+    const evidenceIndex = prompt.indexOf("# Evidence Contract");
+    const outputIndex = prompt.indexOf("# Evidence Formatting");
+
+    expect(toolIndex).toBeGreaterThanOrEqual(0);
+    expect(evidenceIndex).toBeGreaterThan(toolIndex);
+    expect(outputIndex).toBeGreaterThan(evidenceIndex);
+
+    const toolSection = prompt.slice(toolIndex, evidenceIndex);
+    const evidenceSection = prompt.slice(evidenceIndex, outputIndex);
+    const outputSection = prompt.slice(outputIndex);
+
+    for (const heading of [
+      "## Search",
+      "## Read",
+      "## Exercise",
+      "## Quran",
+      "## Taxonomy",
+      "## Multi-tool Flow",
+    ]) {
+      expect(toolSection).toContain(heading);
+    }
+
+    expect(toolSection).toContain("Put all search text in queries.");
+    expect(toolSection).not.toContain("Never invent exercise choices");
+    expect(evidenceSection).toContain("Never invent exercise choices");
+    expect(evidenceSection).not.toContain("Do not include public URLs");
+    expect(outputSection).toContain("Do not include public URLs");
+  });
+
   it("keeps lesson and exercise retrieval as separate focused searches", () => {
     const prompt = nakafaAgentPrompt({ context, locale: "id" });
 

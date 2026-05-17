@@ -18,6 +18,47 @@ const context = {
 };
 
 describe("research prompt", () => {
+  it("keeps evidence tool routing under tool usage guidelines", () => {
+    const prompt = researchEvidencePrompt({ context, locale: "id" });
+
+    const toolIndex = prompt.indexOf("# Tool Usage Guidelines");
+    const evidenceIndex = prompt.indexOf("# Evidence Collection Contract");
+    const outputIndex = prompt.indexOf("# Evidence Output");
+
+    expect(toolIndex).toBeGreaterThanOrEqual(0);
+    expect(evidenceIndex).toBeGreaterThan(toolIndex);
+    expect(outputIndex).toBeGreaterThan(evidenceIndex);
+
+    const toolSection = prompt.slice(toolIndex, evidenceIndex);
+    const evidenceSection = prompt.slice(evidenceIndex, outputIndex);
+    const outputSection = prompt.slice(outputIndex);
+
+    expect(toolSection).toContain("## Workflow");
+    expect(toolSection).toContain("## Search Rules");
+    expect(toolSection).toContain("webSearch");
+    expect(toolSection).toContain("Google Search grounding");
+    expect(toolSection).toContain(
+      "Every webSearch call must set sourcePreference"
+    );
+    expect(toolSection).not.toContain("Return ONLY internal evidence notes");
+    expect(evidenceSection).toContain("Return ONLY internal evidence notes");
+    expect(outputSection).toContain(
+      "Return concise internal evidence notes only."
+    );
+  });
+
+  it("keeps synthesis prompt free of tool-routing language", () => {
+    const prompt = researchPrompt({ context, locale: "id" });
+
+    expect(prompt).toContain("# Synthesis Rules");
+    expect(prompt).not.toContain("# Tool Usage Guidelines");
+    expect(prompt).not.toContain("## Workflow");
+    expect(prompt).not.toContain("## Search Rules");
+    expect(prompt).not.toContain("webSearch");
+    expect(prompt).not.toContain("Google Search grounding");
+    expect(prompt).not.toContain("Grounding Source References");
+  });
+
   it("keeps official-source requests scoped to authoritative sources", () => {
     const prompt = researchEvidencePrompt({ context, locale: "id" });
 
@@ -100,5 +141,6 @@ describe("research prompt", () => {
     expect(prompt).toContain("Do not invent sources");
     expect(prompt).not.toContain("webSearch");
     expect(prompt).not.toContain("Google Search grounding");
+    expect(prompt).not.toContain("Grounding Source References");
   });
 });

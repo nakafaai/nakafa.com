@@ -58,7 +58,7 @@ function formatGroundingSources(sources: DataPart["web-search"]["sources"]) {
   }
 
   return [
-    "# Grounding Source References",
+    "# Source References",
     sources.map((source) => `- ${source.title}: ${source.url}`).join("\n"),
   ];
 }

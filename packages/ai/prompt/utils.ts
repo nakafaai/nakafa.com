@@ -1,15 +1,15 @@
 import dedent from "dedent";
 
 export function createPrompt(opts: {
-  // The context of the task
+  // Identity, role, and the single job for this prompt only.
   taskContext: string;
-  // Any advice about output tone
+  // User-facing voice, tone, and language style only.
   toneContext?: string;
-  // Background data, documents, etc.
+  // Runtime facts, retrieved context, documents, or other input data only.
   backgroundData?: string;
-  // Tool usage guidelines
+  // Tool catalog, tool selection, required tool inputs, and tool ordering only.
   toolUsageGuidelines?: string;
-  // Detailed task instructions & rules
+  // Evidence contracts, routing consequences, safety, recovery, and teaching rules.
   detailedTaskInstructions?: string;
   // Exemplars of good/bad output
   examples?: string;
@@ -17,9 +17,9 @@ export function createPrompt(opts: {
   conversationHistory?: string;
   // The "ask" for the LLM: "Create an annotated version of the transcript..."
   finalRequest?: string;
-  // "Think about your answer first", if needed
+  // Private planning guidance only, when a prompt truly needs it.
   chainOfThought?: string;
-  // "Reply in <response></response> tags"
+  // Final response shape and formatting constraints only.
   outputFormatting?: string;
 }): string {
   return dedent(

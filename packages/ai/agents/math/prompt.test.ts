@@ -14,6 +14,48 @@ const base = {
 } as const;
 
 describe("mathPrompt", () => {
+  it("keeps math tool routing separate from verification and output rules", () => {
+    const prompt = mathPrompt(base);
+
+    const toolIndex = prompt.indexOf("# Tool Usage Guidelines");
+    const verificationIndex = prompt.indexOf("# Verification Rules");
+    const outputIndex = prompt.indexOf("# Output Formatting");
+
+    expect(toolIndex).toBeGreaterThanOrEqual(0);
+    expect(verificationIndex).toBeGreaterThan(toolIndex);
+    expect(outputIndex).toBeGreaterThan(verificationIndex);
+
+    const toolSection = prompt.slice(toolIndex, verificationIndex);
+    const verificationSection = prompt.slice(verificationIndex, outputIndex);
+    const outputSection = prompt.slice(outputIndex);
+
+    for (const heading of [
+      "## Arithmetic",
+      "## Algebra",
+      "## Equation",
+      "## Calculus",
+      "## Series",
+      "## Matrix",
+      "## Statistics",
+      "## Probability",
+      "## Geometry",
+      "## Discrete",
+    ]) {
+      expect(toolSection).toContain(heading);
+    }
+
+    expect(toolSection).toContain(
+      "For named probability distributions such as normal, binomial, or poisson, use probability for the original event."
+    );
+    expect(toolSection).not.toContain("Never label math as verified");
+    expect(verificationSection).toContain("Never label math as verified");
+    expect(verificationSection).not.toContain(
+      "Do not mention internal system names"
+    );
+    expect(outputSection).toContain("Do not mention internal system names");
+    expect(outputSection).toContain("Use the user's locale");
+  });
+
   it("requires deterministic tool evidence before answering", () => {
     const prompt = mathPrompt(base);
 
@@ -92,9 +134,14 @@ describe("mathPrompt", () => {
   it("routes broad math groups through deterministic math tools", () => {
     const prompt = mathPrompt(base);
 
-    expect(prompt).toContain("equation: solving equations");
-    expect(prompt).toContain("matrix: linear algebra operations");
-    expect(prompt).toContain("discrete: number theory and combinatorics");
+    expect(prompt).toContain("## Equation");
+    expect(prompt).toContain("Use equation for solving equations");
+    expect(prompt).toContain("## Matrix");
+    expect(prompt).toContain("Use matrix for linear algebra operations");
+    expect(prompt).toContain("## Discrete");
+    expect(prompt).toContain(
+      "Use discrete for number theory and combinatorics"
+    );
     expect(prompt).not.toContain("Math.js");
   });
 

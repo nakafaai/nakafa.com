@@ -19,6 +19,36 @@ const base = {
 } as const;
 
 describe("nakafaPrompt", () => {
+  it("keeps tool, task, and output sections separate", () => {
+    const prompt = nakafaPrompt({
+      ...base,
+      userRole: "student",
+    });
+
+    const toolIndex = prompt.indexOf("# Tool Usage Guidelines");
+    const taskIndex = prompt.indexOf("# Task Instructions");
+    const workflowIndex = prompt.indexOf("## Typical Session Workflow");
+    const outputIndex = prompt.indexOf("# Output Formatting Guidelines");
+
+    expect(toolIndex).toBeGreaterThanOrEqual(0);
+    expect(taskIndex).toBeGreaterThan(toolIndex);
+    expect(workflowIndex).toBeGreaterThan(taskIndex);
+    expect(outputIndex).toBeGreaterThan(workflowIndex);
+
+    const toolSection = prompt.slice(toolIndex, taskIndex);
+    const taskSection = prompt.slice(taskIndex, outputIndex);
+    const outputSection = prompt.slice(outputIndex);
+
+    expect(toolSection).toContain(
+      "Every specialized agent task MUST be one concise Markdown brief"
+    );
+    expect(toolSection).not.toContain("Typical Session Workflow");
+    expect(taskSection).toContain("Understand the user's goal.");
+    expect(taskSection).not.toContain("Multiple-choice options MUST");
+    expect(outputSection).toContain("Multiple-choice options MUST");
+    expect(outputSection).not.toContain("Every specialized agent task MUST");
+  });
+
   it("requires markdown bullets for multiple-choice options", () => {
     const prompt = nakafaPrompt({
       ...base,
@@ -100,7 +130,7 @@ describe("nakafaPrompt", () => {
       "Preserve every requested deliverable in the Nakafa request."
     );
     expect(prompt).toContain(
-      "Use Nakafa first when the user asks to learn, explain, summarize, practice, or get exercises for a school or university topic."
+      "Use Nakafa first when the user asks about Nakafa lessons, exercises, Quran, articles, the current verified page, or school and university learning or practice."
     );
     expect(prompt).toContain(
       "When specialized agents are independent, call them in parallel in the same step instead of waiting for one result before starting another."
