@@ -29,7 +29,8 @@ import {
 import { scrapeUrl } from "@repo/ai/agents/research/tools/scrape";
 import { searchWeb } from "@repo/ai/agents/research/tools/search";
 import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
-import { getModelProviderOptions } from "@repo/ai/config/models";
+import { getFastModelProviderOptions } from "@repo/ai/config/models";
+import { subAgentGenerationTimeout } from "@repo/ai/config/timeouts";
 import { model } from "@repo/ai/config/vercel";
 import { getSourceReferences } from "@repo/ai/lib/source";
 import { textOutputSchema } from "@repo/ai/schema/tools";
@@ -55,7 +56,7 @@ const synthesisRetryAttempts = 3;
  */
 export const runResearchAgent = Effect.fn("research.runResearchAgent")(
   function* ({
-    intent,
+    task,
     modelId,
     locale,
     context,
@@ -66,10 +67,10 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     let triedGoogleGrounding = false;
     const sourceReferences = getUniqueSourceReferences([
       ...messageSourceReferences,
-      ...getSourceReferences(intent),
+      ...getSourceReferences(task),
     ]);
     const sourceOutputs = yield* scrapeSourceReferences({
-      intent,
+      task,
       sourceReferences,
       toolCallId,
       writer,
@@ -81,7 +82,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
         generateText({
           model: model.languageModel(modelId),
           system: researchEvidencePrompt({ locale, context }),
-          messages: createResearchMessages(intent, sourceOutputs),
+          messages: createResearchMessages(task, sourceOutputs),
           tools: {
             google_search: google.tools.googleSearch({
               searchTypes: { webSearch: {} },
@@ -90,9 +91,15 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
               description: nakafaWebSearch,
               inputSchema: webSearchInputSchema,
               outputSchema: textOutputSchema,
-              execute: ({ queries }, { toolCallId }) =>
+              execute: ({ queries, sourcePreference }, { toolCallId }) =>
                 Effect.runPromise(
-                  searchWeb({ queries, intent, toolCallId, writer }).pipe(
+                  searchWeb({
+                    queries,
+                    sourcePreference,
+                    task,
+                    toolCallId,
+                    writer,
+                  }).pipe(
                     Effect.tap(({ text }) =>
                       Effect.sync(() => {
                         collectedEvidence.push(text);
@@ -147,9 +154,10 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           },
           providerOptions: {
             gateway: gatewayProviderOptions,
-            google: getModelProviderOptions(modelId),
+            google: getFastModelProviderOptions(modelId),
           },
           stopWhen: stepCountIs(5),
+          timeout: subAgentGenerationTimeout,
         }),
       catch: (error) => {
         let cause = JSON.stringify(error);
@@ -193,7 +201,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
             collectedEvidence,
             evidence: evidenceResult.text,
             groundingSources: groundedSearchData?.sources,
-            intent,
+            task,
           }),
           output: Output.object({
             description:
@@ -203,8 +211,9 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           }),
           providerOptions: {
             gateway: gatewayProviderOptions,
-            google: getModelProviderOptions(modelId),
+            google: getFastModelProviderOptions(modelId),
           },
+          timeout: subAgentGenerationTimeout,
         }),
       catch: (error) => {
         if (NoObjectGeneratedError.isInstance(error)) {
@@ -242,45 +251,45 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
 
     const output = yield* Effect.fromNullable(synthesisResult.output).pipe(
       Effect.mapError(
-        () => new Error("Research agent did not return structured output.")
+        () =>
+          new ResearchGenerationError({
+            message: "Research agent did not return structured output.",
+            phase: "synthesis",
+          })
       )
     );
+    const evidenceUsage = evidenceResult.totalUsage;
+    const synthesisUsage = synthesisResult.totalUsage;
 
     return {
       text: formatResearchOutput(output),
       usage: {
         inputTokens:
-          (evidenceResult.totalUsage.inputTokens ?? 0) +
-          (synthesisResult.totalUsage.inputTokens ?? 0),
+          (evidenceUsage.inputTokens ?? 0) + (synthesisUsage.inputTokens ?? 0),
         inputTokenDetails: {
           cacheReadTokens:
-            (evidenceResult.totalUsage.inputTokenDetails.cacheReadTokens ?? 0) +
-            (synthesisResult.totalUsage.inputTokenDetails.cacheReadTokens ?? 0),
+            (evidenceUsage.inputTokenDetails?.cacheReadTokens ?? 0) +
+            (synthesisUsage.inputTokenDetails?.cacheReadTokens ?? 0),
           cacheWriteTokens:
-            (evidenceResult.totalUsage.inputTokenDetails.cacheWriteTokens ??
-              0) +
-            (synthesisResult.totalUsage.inputTokenDetails.cacheWriteTokens ??
-              0),
+            (evidenceUsage.inputTokenDetails?.cacheWriteTokens ?? 0) +
+            (synthesisUsage.inputTokenDetails?.cacheWriteTokens ?? 0),
           noCacheTokens:
-            (evidenceResult.totalUsage.inputTokenDetails.noCacheTokens ?? 0) +
-            (synthesisResult.totalUsage.inputTokenDetails.noCacheTokens ?? 0),
+            (evidenceUsage.inputTokenDetails?.noCacheTokens ?? 0) +
+            (synthesisUsage.inputTokenDetails?.noCacheTokens ?? 0),
         },
         outputTokens:
-          (evidenceResult.totalUsage.outputTokens ?? 0) +
-          (synthesisResult.totalUsage.outputTokens ?? 0),
+          (evidenceUsage.outputTokens ?? 0) +
+          (synthesisUsage.outputTokens ?? 0),
         outputTokenDetails: {
           reasoningTokens:
-            (evidenceResult.totalUsage.outputTokenDetails.reasoningTokens ??
-              0) +
-            (synthesisResult.totalUsage.outputTokenDetails.reasoningTokens ??
-              0),
+            (evidenceUsage.outputTokenDetails?.reasoningTokens ?? 0) +
+            (synthesisUsage.outputTokenDetails?.reasoningTokens ?? 0),
           textTokens:
-            (evidenceResult.totalUsage.outputTokenDetails.textTokens ?? 0) +
-            (synthesisResult.totalUsage.outputTokenDetails.textTokens ?? 0),
+            (evidenceUsage.outputTokenDetails?.textTokens ?? 0) +
+            (synthesisUsage.outputTokenDetails?.textTokens ?? 0),
         },
         totalTokens:
-          (evidenceResult.totalUsage.totalTokens ?? 0) +
-          (synthesisResult.totalUsage.totalTokens ?? 0),
+          (evidenceUsage.totalTokens ?? 0) + (synthesisUsage.totalTokens ?? 0),
       },
     };
   }
@@ -291,20 +300,20 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
  */
 const scrapeSourceReferences = Effect.fn("research.scrapeSourceReferences")(
   function* ({
-    intent,
+    task,
     sourceReferences,
     toolCallId,
     writer,
   }: Pick<
     ResearchAgentParams,
-    "intent" | "sourceReferences" | "toolCallId" | "writer"
+    "task" | "sourceReferences" | "toolCallId" | "writer"
   >) {
     return yield* Effect.forEach(
       sourceReferences,
       (source, index) =>
         scrapeUrl({
           maxLength: exactSourceContentMaxLength,
-          query: intent,
+          selectionQuery: task,
           toolCallId: `${toolCallId}-source-${index + 1}`,
           url: source.href,
           writer,

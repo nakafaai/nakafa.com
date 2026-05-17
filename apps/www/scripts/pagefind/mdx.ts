@@ -3,6 +3,7 @@ import { remark } from "remark";
 import remarkMdx from "remark-mdx";
 
 const WORD_SEPARATOR = /\s+/;
+const AGENT_CONTEXT_COMPONENT = "AgentContext";
 const mdxParser = remark().use(remarkMdx);
 
 /**
@@ -73,6 +74,10 @@ function renderBlockNode(node: unknown): string {
   }
 
   if (!("type" in current)) {
+    return "";
+  }
+
+  if (isAgentContextNode(current)) {
     return "";
   }
 
@@ -164,6 +169,10 @@ function renderInlineNode(node: unknown): string {
     return "";
   }
 
+  if (isAgentContextNode(current)) {
+    return "";
+  }
+
   if (current.type === "text" && typeof current.value === "string") {
     return escapeHtml(current.value);
   }
@@ -219,6 +228,10 @@ function readNode(node: unknown): string {
   }
 
   if ("type" in current) {
+    if (isAgentContextNode(current)) {
+      return "";
+    }
+
     if (
       current.type === "mdxjsEsm" ||
       current.type === "mdxFlowExpression" ||
@@ -258,6 +271,17 @@ function readNode(node: unknown): string {
  */
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object";
+}
+
+/**
+ * Detects MDX context blocks intended for agent markdown, not user search.
+ */
+function isAgentContextNode(current: Record<string, unknown>) {
+  return (
+    (current.type === "mdxJsxFlowElement" ||
+      current.type === "mdxJsxTextElement") &&
+    current.name === AGENT_CONTEXT_COMPONENT
+  );
 }
 
 /**

@@ -47,13 +47,24 @@ describe("research schema", () => {
   it("validates optimized web-search query arrays", () => {
     const valid = Schema.decodeUnknownEither(WebSearchInputSchema)({
       queries: ["AI SDK DevTools official documentation"],
+      sourcePreference: "primary",
     });
     const invalid = Schema.decodeUnknownEither(WebSearchInputSchema)({
       queries: [],
+      sourcePreference: "any",
+    });
+    const missingPreference = Schema.decodeUnknownEither(WebSearchInputSchema)({
+      queries: ["AI SDK DevTools documentation"],
+    });
+    const invalidPreference = Schema.decodeUnknownEither(WebSearchInputSchema)({
+      queries: ["AI SDK DevTools official documentation"],
+      sourcePreference: "official",
     });
 
     expect(Either.isRight(valid)).toBe(true);
     expect(Either.isLeft(invalid)).toBe(true);
+    expect(Either.isLeft(missingPreference)).toBe(true);
+    expect(Either.isLeft(invalidPreference)).toBe(true);
   });
 
   it("validates structured research findings with citation data", () => {

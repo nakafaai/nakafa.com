@@ -12,8 +12,9 @@ const MathSeriesExpansionInputSchema = Schema.Struct({
     description: "Compute a series expansion.",
   }),
   order: Schema.optional(
-    Schema.Number.annotations({
-      description: "Series expansion order.",
+    Schema.NonNegativeInt.annotations({
+      description:
+        "Taylor polynomial degree. Use 0 only when the user asks for the constant term.",
     })
   ),
   point: Schema.optional(pointInputSchema),

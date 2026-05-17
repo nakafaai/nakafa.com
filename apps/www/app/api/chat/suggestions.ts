@@ -1,5 +1,9 @@
 import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
-import { defaultModel, getModelProviderOptions } from "@repo/ai/config/models";
+import {
+  defaultModel,
+  getFastModelProviderOptions,
+} from "@repo/ai/config/models";
+import { backgroundGenerationTimeout } from "@repo/ai/config/timeouts";
 import { model } from "@repo/ai/config/vercel";
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
@@ -48,8 +52,9 @@ export const writeSuggestions = Effect.fn("chat.writeSuggestions")(function* ({
     }),
     providerOptions: {
       gateway: gatewayProviderOptions,
-      google: getModelProviderOptions(defaultModel),
+      google: getFastModelProviderOptions(defaultModel),
     },
+    timeout: backgroundGenerationTimeout,
   });
 
   const dataPartId = crypto.randomUUID();

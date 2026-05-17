@@ -364,6 +364,213 @@ describe("nakafa search tool", () => {
     ]);
   });
 
+  it("executes the model-provided exercise query unchanged", async () => {
+    const { parts, writer } = createWriter();
+    const capturedQueries: string[][] = [];
+
+    await Effect.runPromise(
+      search({
+        input: {
+          limit: 10,
+          locale: "id",
+          offset: 0,
+          queries: ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
+          section: "exercises",
+        },
+        locale: "id",
+        toolCallId: "search-exercise-set",
+        writer,
+      }).pipe(
+        Effect.provideService(NakafaSearch, {
+          search: (input) => {
+            capturedQueries.push(input.queries ?? []);
+
+            return Effect.succeed({
+              count: 1,
+              has_more: false,
+              items: [
+                {
+                  content_id:
+                    "id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+                  description:
+                    "SMA SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2 20 soal",
+                  locale: input.locale,
+                  markdown_url:
+                    "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2.md",
+                  route:
+                    "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+                  section: "exercises",
+                  title: "SNBT Pengetahuan Kuantitatif Try Out 2026 Set 2",
+                  url: "https://nakafa.com/id/exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-2",
+                },
+              ],
+              limit: input.limit,
+              next_offset: null,
+              offset: input.offset,
+            });
+          },
+        })
+      )
+    );
+
+    expect(capturedQueries).toEqual([
+      ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
+    ]);
+    expect(
+      getSearchParts(parts)
+        .filter((part) => part.status === "loading")
+        .map((part) => part.input.queries)
+    ).toEqual([["SNBT Pengetahuan Kuantitatif try out 2026 set 2"]]);
+  });
+
+  it("does not change an already anchored exercise query", async () => {
+    const { writer } = createWriter();
+    const capturedQueries: string[][] = [];
+    const query = "SNBT 2026 2 aljabar campuran";
+
+    await Effect.runPromise(
+      search({
+        input: {
+          limit: 10,
+          locale: "id",
+          offset: 0,
+          queries: [query],
+          section: "exercises",
+        },
+        locale: "id",
+        toolCallId: "search-exercise-number",
+        writer,
+      }).pipe(
+        Effect.provideService(NakafaSearch, {
+          search: (input) => {
+            capturedQueries.push(input.queries ?? []);
+
+            return Effect.succeed({
+              count: 0,
+              has_more: false,
+              items: [],
+              limit: input.limit,
+              next_offset: null,
+              offset: input.offset,
+            });
+          },
+        })
+      )
+    );
+
+    expect(capturedQueries).toEqual([[query]]);
+  });
+
+  it("leaves exercise search unchanged", async () => {
+    const { writer } = createWriter();
+    const capturedQueries: string[][] = [];
+
+    await Effect.runPromise(
+      search({
+        input: {
+          limit: 10,
+          locale: "id",
+          offset: 0,
+          queries: ["Pengetahuan Kuantitatif SNBT"],
+          section: "exercises",
+        },
+        locale: "id",
+        toolCallId: "search-exercise-query",
+        writer,
+      }).pipe(
+        Effect.provideService(NakafaSearch, {
+          search: (input) => {
+            capturedQueries.push(input.queries ?? []);
+
+            return Effect.succeed({
+              count: 0,
+              has_more: false,
+              items: [],
+              limit: input.limit,
+              next_offset: null,
+              offset: input.offset,
+            });
+          },
+        })
+      )
+    );
+
+    expect(capturedQueries).toEqual([["Pengetahuan Kuantitatif SNBT"]]);
+  });
+
+  it("does not synthesize a query when the model omitted query text", async () => {
+    const { writer } = createWriter();
+    const capturedQueries: string[][] = [];
+
+    await Effect.runPromise(
+      search({
+        input: {
+          limit: 10,
+          locale: "id",
+          offset: 0,
+          section: "exercises",
+        },
+        locale: "id",
+        toolCallId: "search-exercise-without-query",
+        writer,
+      }).pipe(
+        Effect.provideService(NakafaSearch, {
+          search: (input) => {
+            capturedQueries.push(input.queries ?? []);
+
+            return Effect.succeed({
+              count: 0,
+              has_more: false,
+              items: [],
+              limit: input.limit,
+              next_offset: null,
+              offset: input.offset,
+            });
+          },
+        })
+      )
+    );
+
+    expect(capturedQueries).toEqual([[]]);
+  });
+
+  it("executes non-exercise queries unchanged", async () => {
+    const { writer } = createWriter();
+    const capturedQueries: string[][] = [];
+
+    await Effect.runPromise(
+      search({
+        input: {
+          limit: 10,
+          locale: "id",
+          offset: 0,
+          queries: ["fungsi kuadrat"],
+          section: "subject",
+        },
+        locale: "id",
+        toolCallId: "search-exercise-no-hints",
+        writer,
+      }).pipe(
+        Effect.provideService(NakafaSearch, {
+          search: (input) => {
+            capturedQueries.push(input.queries ?? []);
+
+            return Effect.succeed({
+              count: 0,
+              has_more: false,
+              items: [],
+              limit: input.limit,
+              next_offset: null,
+              offset: input.offset,
+            });
+          },
+        })
+      )
+    );
+
+    expect(capturedQueries).toEqual([["fungsi kuadrat"]]);
+  });
+
   it("interleaves query results before returning the agent aggregate", async () => {
     const { writer } = createWriter();
     const output = await Effect.runPromise(

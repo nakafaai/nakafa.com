@@ -21,7 +21,8 @@ import { read } from "@repo/ai/agents/nakafa/tools/read";
 import { search } from "@repo/ai/agents/nakafa/tools/search";
 import { taxonomy } from "@repo/ai/agents/nakafa/tools/taxonomy";
 import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
-import { getModelProviderOptions } from "@repo/ai/config/models";
+import { getFastModelProviderOptions } from "@repo/ai/config/models";
+import { subAgentGenerationTimeout } from "@repo/ai/config/timeouts";
 import { model } from "@repo/ai/config/vercel";
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { textOutputSchema } from "@repo/ai/schema/tools";
@@ -65,7 +66,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
       model: model.languageModel(modelId),
       providerOptions: {
         gateway: gatewayProviderOptions,
-        google: getModelProviderOptions(modelId),
+        google: getFastModelProviderOptions(modelId),
       },
       system: nakafaAgentPrompt({ locale, context }),
       messages: [{ role: "user", content: task }],
@@ -199,6 +200,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
         return prepareAnswerFromNakafaEvidenceStep(messages, steps);
       },
       stopWhen: stepCountIs(10),
+      timeout: subAgentGenerationTimeout,
     })
   );
 

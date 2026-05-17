@@ -36,6 +36,15 @@ def test_parse_factorial_notation() -> None:
     assert parse.expression("5!") == sp.Integer(120)
 
 
+def test_parse_allows_python_keyword_symbol_names() -> None:
+    symbol = sp.Symbol("lambda")
+
+    assert parse.expression("2 - lambda") == 2 - symbol
+    assert parse.matrix([["2-lambda", "1"], ["1", "2-lambda"]]).det() == (
+        sp.expand((2 - symbol) ** 2 - 1)
+    )
+
+
 def test_parse_rejects_unknown_functions() -> None:
     with pytest.raises(ValueError, match="Expression could not be parsed"):
         parse.expression("foo(5)")

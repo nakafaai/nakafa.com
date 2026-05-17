@@ -1,12 +1,13 @@
+import { runMathAgent } from "@repo/ai/agents/math/agent";
 import { runNakafaAgent } from "@repo/ai/agents/nakafa/agent";
 import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
 import { read as readNakafa } from "@repo/ai/agents/nakafa/tools/read";
-import { runMath } from "@repo/ai/agents/orchestrator/math";
 import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
 import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
-import { runResearch } from "@repo/ai/agents/orchestrator/research";
+import { runResearchAgent } from "@repo/ai/agents/research/agent";
 import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
 import { getModelProviderOptions, type ModelId } from "@repo/ai/config/models";
+import { chatStreamTimeout } from "@repo/ai/config/timeouts";
 import { model } from "@repo/ai/config/vercel";
 import { generateTitle } from "@repo/ai/features/title";
 import { getSourceReferencesFromMessages } from "@repo/ai/lib/source";
@@ -191,7 +192,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
     execute: ({ writer }) =>
       Effect.runPromise(
         Effect.gen(function* () {
-          const usage = trackUsage();
+          const usage = yield* trackUsage();
           const context = {
             currentDate: runtime.currentDate,
             url: page.url,
@@ -222,9 +223,9 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             tools: {
               [TOOL_NAMES.nakafa]: tool({
                 description:
-                  "Retrieve Nakafa educational evidence for lessons, study topics, current pages, articles, Quran references, and structured exercises. Preserve every requested deliverable in the query.",
+                  "Retrieve Nakafa educational evidence for lessons, study topics, current pages, articles, Quran references, and structured exercises. Preserve every requested deliverable in the task.",
                 inputSchema: nakafaToolInputSchema,
-                execute: ({ query }, { toolCallId }) => {
+                execute: ({ task }, { toolCallId }) => {
                   const needsPageFetch = context.needsPageFetch && !fetchedPage;
 
                   if (needsPageFetch) {
@@ -245,15 +246,13 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                         context: { ...context, needsPageFetch },
                         locale: page.locale,
                         modelId: runtime.modelId,
-                        task: query,
+                        task,
                         writer,
                       }).pipe(
                         Effect.provideService(NakafaSearch, nakafaSearch)
                       );
 
-                      yield* Effect.sync(() =>
-                        usage.addUsage(TOOL_NAMES.nakafa, result.usage)
-                      );
+                      yield* usage.addUsage(TOOL_NAMES.nakafa, result.usage);
 
                       return result.text;
                     })
@@ -264,18 +263,26 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 description:
                   "Research external, official, current, latest, cited, or source-backed information with web search and source analysis.",
                 inputSchema: researchToolInputSchema,
-                execute: ({ query }, { messages, toolCallId }) =>
+                execute: ({ task }, { messages, toolCallId }) =>
                   Effect.runPromise(
-                    runResearch({
-                      context,
-                      locale: page.locale,
-                      modelId: runtime.modelId,
-                      query,
-                      sourceReferences:
-                        getSourceReferencesFromMessages(messages),
-                      toolCallId,
-                      usageAccumulator: usage,
-                      writer,
+                    Effect.gen(function* () {
+                      const result = yield* runResearchAgent({
+                        context,
+                        locale: page.locale,
+                        modelId: runtime.modelId,
+                        task,
+                        sourceReferences:
+                          getSourceReferencesFromMessages(messages),
+                        toolCallId,
+                        writer,
+                      });
+
+                      yield* usage.addUsage(
+                        TOOL_NAMES.deepResearch,
+                        result.usage
+                      );
+
+                      return result.text;
                     })
                   ),
               }),
@@ -283,15 +290,20 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 description:
                   "Verify math with deterministic evidence for arithmetic, algebra, equations, calculus, series, matrices, statistics, probability, geometry, and discrete math.",
                 inputSchema: mathToolInputSchema,
-                execute: ({ query }) =>
+                execute: ({ task }) =>
                   Effect.runPromise(
-                    runMath({
-                      context,
-                      locale: page.locale,
-                      modelId: runtime.modelId,
-                      query,
-                      usageAccumulator: usage,
-                      writer,
+                    Effect.gen(function* () {
+                      const result = yield* runMathAgent({
+                        context,
+                        locale: page.locale,
+                        modelId: runtime.modelId,
+                        task,
+                        writer,
+                      });
+
+                      yield* usage.addUsage(TOOL_NAMES.math, result.usage);
+
+                      return result.text;
                     })
                   ),
               }),
@@ -322,6 +334,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
               gateway: gatewayProviderOptions,
               google: getModelProviderOptions(runtime.modelId),
             },
+            timeout: chatStreamTimeout,
           });
 
           writer.merge(
@@ -334,10 +347,12 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 }
 
                 if (part.type === "finish") {
-                  return usage.metadata({
-                    mainUsage: part.totalUsage,
-                    modelId: runtime.modelId,
-                  });
+                  return Effect.runSync(
+                    usage.metadata({
+                      mainUsage: part.totalUsage,
+                      modelId: runtime.modelId,
+                    })
+                  );
                 }
               },
               onError: (error) => {

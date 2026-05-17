@@ -7,7 +7,7 @@ export const expressionInputSchema = Schema.NonEmptyString.annotations({
 
 export const variableInputSchema = Schema.NonEmptyString.annotations({
   description:
-    "The variable to use for this operation, for example x, y, or t.",
+    "The variable to use for this operation, for example x, y, or t. Required when the expression has parameters or more than one symbol.",
 });
 
 export const boundInputSchema = Schema.NonEmptyString.annotations({

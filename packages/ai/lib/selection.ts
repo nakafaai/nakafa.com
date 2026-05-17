@@ -1,68 +1,19 @@
-/**
- * Advanced content selection and truncation utilities
- * Combines smart boundary detection with query-based relevance scoring
- */
-
-// Configuration constants
 const DEFAULT_MAX_LENGTH = 2000;
 const MIN_KEYWORD_LENGTH = 3;
 const KEYWORD_BONUS_POINTS = 0.5;
 const PARAGRAPH_LENGTH_DIVISOR = 100;
 const TARGET_LENGTH_BUFFER = 0.9;
 
-// Regex patterns for content processing
-const PUNCTUATION_REGEX = /[^\w\s]/g;
-const WHITESPACE_REGEX = /\s+/;
 const PARAGRAPH_SPLIT_REGEX = /\n\s*\n/;
+const SEARCH_TOKEN_REGEX = /[\p{L}\p{N}][\p{L}\p{N}_-]*/gu;
+const REGEX_SPECIAL_CHARS = /[.*+?^${}()|[\]\\]/g;
 
-// Smart truncation thresholds for boundary detection
 const TRUNCATION_THRESHOLDS = {
-  sentence: 0.7, // Use sentence boundary if 70% or more of max length
-  paragraph: 0.6, // Use paragraph boundary if 60% or more of max length
-  newline: 0.7, // Use newline boundary if 70% or more of max length
-  word: 0.8, // Use word boundary if 80% or more of max length
+  sentence: 0.7,
+  paragraph: 0.6,
+  newline: 0.7,
+  word: 0.8,
 } as const;
-
-// Common stop words to filter out from keyword extraction
-const STOP_WORDS = new Set([
-  "what",
-  "when",
-  "where",
-  "which",
-  "how",
-  "why",
-  "does",
-  "with",
-  "from",
-  "about",
-  "that",
-  "this",
-  "they",
-  "them",
-  "their",
-  "there",
-  "then",
-  "than",
-  "have",
-  "been",
-  "will",
-  "would",
-  "could",
-  "should",
-  "might",
-  "must",
-  "can",
-  "do",
-  "did",
-  "don",
-  "are",
-  "was",
-  "were",
-  "is",
-  "am",
-  "be",
-  "being",
-]);
 
 interface ContentParagraph {
   index: number;
@@ -81,35 +32,38 @@ interface SelectRelevantContentParams {
 }
 
 /**
- * Extract meaningful keywords from a query string
+ * Extracts searchable terms without assuming the user's language.
  */
 function extractKeywords(query: string): string[] {
-  return query
-    .toLowerCase()
-    .replace(PUNCTUATION_REGEX, " ") // Replace punctuation with spaces
-    .split(WHITESPACE_REGEX)
-    .filter((word) => word.length >= MIN_KEYWORD_LENGTH)
-    .filter((word) => !STOP_WORDS.has(word))
-    .filter(Boolean);
+  const seen = new Set<string>();
+
+  return [...query.toLocaleLowerCase().matchAll(SEARCH_TOKEN_REGEX)].flatMap(
+    ([word]) => {
+      if (word.length < MIN_KEYWORD_LENGTH || seen.has(word)) {
+        return [];
+      }
+
+      seen.add(word);
+      return [word];
+    }
+  );
 }
 
 /**
- * Calculate relevance score for a paragraph based on keyword matches
+ * Scores one paragraph based on language-agnostic term matches.
  */
 function calculateRelevanceScore(
   paragraph: string,
   keywords: string[]
 ): number {
-  const lowerParagraph = paragraph.toLowerCase();
+  const lowerParagraph = paragraph.toLocaleLowerCase();
   let score = 0;
 
   for (const keyword of keywords) {
-    // Create regex for this keyword to count occurrences
-    const keywordRegex = new RegExp(keyword, "g");
+    const keywordRegex = new RegExp(escapeRegex(keyword), "gu");
     const matches = (lowerParagraph.match(keywordRegex) || []).length;
     score += matches;
 
-    // Bonus points for exact phrase matches
     if (lowerParagraph.includes(keyword)) {
       score += KEYWORD_BONUS_POINTS;
     }
@@ -120,7 +74,14 @@ function calculateRelevanceScore(
 }
 
 /**
- * Smart truncation with boundary detection
+ * Escapes a search term before using it in a regular expression.
+ */
+function escapeRegex(value: string) {
+  return value.replace(REGEX_SPECIAL_CHARS, "\\$&");
+}
+
+/**
+ * Truncates source text at a readable boundary when possible.
  */
 function truncateAtBoundary(text: string, maxLength: number): string {
   if (text.length <= maxLength) {
@@ -129,7 +90,6 @@ function truncateAtBoundary(text: string, maxLength: number): string {
 
   const truncated = text.slice(0, maxLength);
 
-  // Try different boundaries in order of preference
   const boundaries = [
     {
       type: "sentence",
@@ -159,12 +119,11 @@ function truncateAtBoundary(text: string, maxLength: number): string {
     }
   }
 
-  // Fallback: hard truncation with ellipsis
   return `${truncated}...`;
 }
 
 /**
- * Select and combine the most relevant content based on query and constraints
+ * Selects and combines source paragraphs most relevant to the research query.
  */
 export function selectRelevantContent(
   params: SelectRelevantContentParams
@@ -186,7 +145,6 @@ export function selectRelevantContent(
     return content;
   }
 
-  // If no query provided, use smart truncation
   if (!query.trim()) {
     return truncateAtBoundary(content, maxLength);
   }
@@ -196,7 +154,6 @@ export function selectRelevantContent(
     return truncateAtBoundary(content, maxLength);
   }
 
-  // Split content into paragraphs
   const paragraphs = content
     .split(PARAGRAPH_SPLIT_REGEX)
     .map((p) => p.trim())
@@ -206,7 +163,6 @@ export function selectRelevantContent(
     return truncateAtBoundary(content, maxLength);
   }
 
-  // Analyze paragraphs for relevance
   const analyzedParagraphs: ContentParagraph[] = paragraphs.map(
     (text, index) => ({
       text,
@@ -216,25 +172,21 @@ export function selectRelevantContent(
     })
   );
 
-  // Structure-aware selection
   const selectedParts: string[] = [];
   let currentLength = 0;
-  const targetLength = maxLength * TARGET_LENGTH_BUFFER; // Leave some buffer for ellipsis
+  const targetLength = maxLength * TARGET_LENGTH_BUFFER;
 
   if (preserveStructure) {
-    // Always include introduction (first paragraph)
     const intro = analyzedParagraphs[0];
     selectedParts.push(intro.text);
-    currentLength += intro.length + 2; // +2 for paragraph separator
+    currentLength += intro.length + 2;
 
-    // Select relevant middle paragraphs
     const middleParagraphs = analyzedParagraphs
       .slice(1, -1)
       .filter((p) => p.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, maxRelevantParagraphs);
 
-    // Sort back to original order and add if space allows
     const sortedMiddleParagraphs = middleParagraphs.sort(
       (a, b) => a.index - b.index
     );
@@ -245,7 +197,6 @@ export function selectRelevantContent(
       }
     }
 
-    // Include conclusion if there's space and it exists
     const conclusion = analyzedParagraphs.at(-1);
     if (
       conclusion &&
@@ -256,7 +207,6 @@ export function selectRelevantContent(
       currentLength += conclusion.length + 2;
     }
   } else {
-    // Just select most relevant paragraphs regardless of structure
     const relevantParagraphs = analyzedParagraphs
       .filter((p) => p.score > 0)
       .sort((a, b) => b.score - a.score)
@@ -270,7 +220,6 @@ export function selectRelevantContent(
     }
   }
 
-  // Combine and ensure final length constraint
   if (selectedParts.length === 0) {
     return truncateAtBoundary(content, maxLength);
   }

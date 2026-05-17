@@ -76,4 +76,20 @@ describe("formatResearchOutput", () => {
     );
     expect(markdown).not.toContain("Sources");
   });
+
+  it("keeps empty findings from becoming unsourced final claims", () => {
+    expect(
+      formatResearchOutput({
+        findings: [],
+        limitations: ["No source URLs were available."],
+      })
+    ).toBe(
+      [
+        "No source-backed findings were available for this research task.",
+        "Do not add unsourced facts, source names, URLs, or recommendations beyond the limitations below.",
+        "## Limitations",
+        "- No source URLs were available.",
+      ].join("\n\n")
+    );
+  });
 });

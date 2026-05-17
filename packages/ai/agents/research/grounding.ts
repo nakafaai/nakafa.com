@@ -44,7 +44,7 @@ export function createGroundingWebSearchData({
 }) {
   const groundingMetadata = getGroundingMetadata(providerMetadata);
   const searchQueries = groundingMetadata
-    ? getSearchQueries(groundingMetadata)
+    ? getGroundingSearchQueries(groundingMetadata)
     : [];
   const groundedSources = getGroundedSources({ groundingMetadata, sources });
 
@@ -118,7 +118,7 @@ function getGroundedSources({
 }
 
 /** Normalizes Google Search queries so the UI shows the actual searched term. */
-function getSearchQueries(
+function getGroundingSearchQueries(
   groundingMetadata: Schema.Schema.Type<typeof GroundingMetadataSchema>
 ) {
   return [

@@ -1,6 +1,7 @@
 """Algebraic CAS operations backed by SymPy."""
 
 import sympy as sp
+from sympy.calculus.util import continuous_domain
 
 from cas import parse
 from cas.format import expression_text, item, result, step
@@ -56,21 +57,23 @@ def transform(request: MathRequest) -> MathResult:
 
 
 def domain(request: MathRequest) -> MathResult:
-    """Derive denominator restrictions for a rational expression."""
+    """Derive the exact real-valued domain for an expression."""
     expr = parse.first_expression(request)
     variable = parse.symbol_from_expression(request.variable, request.expression)
-    denominator = sp.denom(sp.together(expr))
-    excluded = sp.solve(sp.Eq(denominator, 0), variable)
 
-    conditions = [sp.Ne(variable, value) for value in excluded]
+    try:
+        domain_set = continuous_domain(expr, variable, sp.S.Reals)
+    except NotImplementedError as error:
+        raise ValueError("Domain could not be determined.") from error
 
     return result(
         request,
         status="verified",
         primary=expr,
-        reason="Denominator restrictions were derived from the expression.",
-        items=[item("domain", f"{variable} in Reals")],
-        conditions=conditions,
+        secondary=domain_set,
+        reason="The real-valued domain was derived from the expression.",
+        items=[item("domain", domain_set)],
+        conditions=_domain_conditions(domain_set, variable),
     )
 
 
@@ -159,6 +162,36 @@ def _comparison_conditions(left: sp.Expr, right: sp.Expr) -> list[object]:
                 conditions.append(sp.Ne(symbol, excluded))
 
     return sorted(set(conditions), key=str)
+
+
+def _domain_conditions(domain_set, variable: sp.Symbol) -> list[object]:
+    """Render a real domain as readable restrictions when possible."""
+    if domain_set == sp.S.Reals:
+        return []
+
+    excluded = sp.S.Reals - domain_set
+    if isinstance(excluded, sp.FiniteSet):
+        return [sp.Ne(variable, value) for value in sorted(excluded, key=str)]
+
+    if isinstance(domain_set, sp.Interval):
+        return _interval_conditions(domain_set, variable)
+
+    return [domain_set.as_relational(variable)]
+
+
+def _interval_conditions(interval: sp.Interval, variable: sp.Symbol) -> list[object]:
+    """Convert one real interval into lower and upper bound conditions."""
+    conditions = []
+
+    if interval.start != -sp.oo:
+        lower = sp.Gt if interval.left_open else sp.Ge
+        conditions.append(lower(variable, interval.start))
+
+    if interval.end != sp.oo:
+        upper = sp.Lt if interval.right_open else sp.Le
+        conditions.append(upper(variable, interval.end))
+
+    return conditions
 
 
 def _require_finite(value: sp.Expr) -> None:

@@ -21,7 +21,7 @@ export const MathRequestSchema = Schema.Struct({
   modulus: Schema.optional(Schema.String),
   n: Schema.optional(Schema.String),
   operation: MathOperationSchema,
-  order: Schema.optional(Schema.Number),
+  order: Schema.optional(Schema.NonNegativeInt),
   parameters: Schema.optional(probabilityParametersSchema),
   point: Schema.optional(Schema.String),
   points: Schema.optional(pointArraySchema),

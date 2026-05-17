@@ -9,9 +9,9 @@ export type ToolName = Schema.Schema.Type<typeof ToolNameSchema>;
  * Input schema for the Nakafa orchestrator tool.
  */
 export const NakafaToolInputSchema = Schema.Struct({
-  query: Schema.NonEmptyString.annotations({
+  task: Schema.NonEmptyString.annotations({
     description:
-      "The complete request about Nakafa educational evidence. Preserve every user-requested deliverable, including lesson explanations, summaries, examples, exercises, practice questions, answers, or Quran references, plus enough current-page context to search or read the right Nakafa source.",
+      "A concise Markdown brief for Nakafa educational evidence. Include '# User Request' with the exact user wording, '# Task' with what Nakafa must retrieve or read, and relevant context or constraints. Preserve every requested deliverable, including lesson explanations, summaries, examples, exercises, practice questions, answers, or Quran references.",
   }),
 })
   .pipe(Schema.mutable)
@@ -21,9 +21,9 @@ export const NakafaToolInputSchema = Schema.Struct({
  * Input schema for the deep research orchestrator tool.
  */
 export const ResearchToolInputSchema = Schema.Struct({
-  query: Schema.NonEmptyString.annotations({
+  task: Schema.NonEmptyString.annotations({
     description:
-      "The external or current-information research task. Include what the user is asking, why they need it, current page context, recency needs, and any background that helps focus source selection.",
+      "A concise Markdown brief for external or current-information research. Include '# User Request' with the exact user wording, '# Task' with the research objective, and relevant context or constraints. Preserve exact user wording for named products, APIs, libraries, features, versions, domains, URLs, source constraints, source-ownership constraints, and document titles. Do not summarize away the user's requested evidence source.",
   }),
 })
   .pipe(Schema.mutable)
@@ -33,9 +33,9 @@ export const ResearchToolInputSchema = Schema.Struct({
  * Input schema for the deterministic math orchestrator tool.
  */
 export const MathToolInputSchema = Schema.Struct({
-  query: Schema.NonEmptyString.annotations({
+  task: Schema.NonEmptyString.annotations({
     description:
-      "The math request to verify through deterministic math evidence. Use this even for natural student wording like checking whether work is valid, correct, equivalent, or proven. Include expressions or data, target operation, variables, assumptions, and whether the user needs arithmetic, algebra, equations, calculus, series, matrices, statistics, probability, geometry, or discrete math.",
+      "A concise Markdown brief for deterministic math verification. Include '# User Request' with the exact user wording, '# Task' with the math objective, and the expressions, data, variables, assumptions, and requested verification. Use this even for natural student wording like checking whether work is valid, correct, equivalent, or proven.",
   }),
 })
   .pipe(Schema.mutable)

@@ -38,7 +38,7 @@ flowchart LR
 flowchart TD
   Query["LLM-generated queries[]"] --> Firecrawl["Firecrawl search"]
   Firecrawl --> Raw["provider-returned sources"]
-  Firecrawl --> Scoped["query/intent-scoped evidence"]
+  Firecrawl --> Scoped["query/task-scoped evidence"]
   Raw --> UI["data-web-search row"]
   Scoped --> Agent["research evidence notes"]
   Agent --> Google["Google grounding step"]

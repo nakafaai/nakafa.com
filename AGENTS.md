@@ -116,6 +116,19 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Keep public function inputs and outputs obvious.
 - Use meaningful names instead of magic values or anonymous tuple-like objects.
 
+## Effect Rules
+
+- Use Effect for effectful TypeScript business logic, especially in `packages/ai`.
+- Model expected failures with `Schema.TaggedError` and specific domain error names.
+- Prefer `Effect.fn("scope.name")` for effectful exported functions and service methods so traces are named.
+- Use `Effect.Service` with declared dependencies for business services; reserve `Context.Tag` for runtime-injected infrastructure boundaries.
+- Use `Effect.try`, `Effect.tryPromise`, `Effect.acquireRelease`, and `Effect.sync` instead of raw `try/catch`, raw async wrappers, or hidden side effects.
+- Handle known errors with `catchTag` or `catchTags`; avoid `catchAll` unless preserving the full cause at an outer boundary.
+- Use `Option.match`, `Option.getOrElse`, or explicit early returns instead of `Option.getOrThrow`.
+- Use `Config.*` for application configuration. Direct `process.env` access is allowed only in dedicated env-schema boundary modules.
+- Use `Effect.log` or the repo logger for production logs; do not use `console.log`.
+- Keep Effect code readable: flat generator flow, early returns for pure branches, no clever pipelines when a named step is clearer.
+
 ## Readability And Errors
 
 - Optimize for code that is easy to skim.

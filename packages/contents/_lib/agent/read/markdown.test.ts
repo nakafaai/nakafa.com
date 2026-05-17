@@ -43,7 +43,12 @@ describe("Nakafa agent markdown", () => {
       getNakafaAgentMarkdown("en/quran/01")
     );
 
-    expect(Option.getOrUndefined(mdxContent)?.text).toContain("Source URL:");
+    expect(Option.getOrUndefined(mdxContent)?.text).not.toContain(
+      "Source URL:"
+    );
+    expect(Option.getOrUndefined(mdxContent)?.text).not.toContain(
+      "Markdown URL:"
+    );
     expect(Option.getOrUndefined(exerciseContent)?.text).toContain(
       "### Choices"
     );

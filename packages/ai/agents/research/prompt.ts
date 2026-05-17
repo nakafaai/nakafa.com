@@ -42,6 +42,13 @@ export function researchEvidencePrompt({
       - Keep webSearch queries as search-engine text, not the raw user prompt.
         Remove answer-formatting instructions such as summary length, tone,
         output language, and citation style.
+      - Keep exact user wording for named products, APIs, libraries, features,
+        versions, domains, URLs, source constraints, and document titles in every
+        query that depends on them. Do not translate or paraphrase those terms.
+      - Every webSearch call must set sourcePreference.
+        Use primary when the task asks for source-owned, first-party, maintainer,
+        vendor, standards-body, paper-author, primary, or official evidence in
+        any language. Use any when broader credible sources are acceptable.
       - Preserve source constraints from the task. If the task asks for official docs,
         official sources, or a named domain, search that source before broadening
         the query.

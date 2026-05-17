@@ -16,14 +16,14 @@ import { Effect, Either } from "effect";
  * Scrapes one URL and writes the scrape UI data part.
  */
 export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
-  query,
   maxLength = 3000,
+  selectionQuery,
   toolCallId,
   url,
   writer,
 }: {
-  query?: string;
   maxLength?: number;
+  selectionQuery?: string;
   toolCallId: string;
   url: string;
   writer: UIMessageStreamWriter<MyUIMessage>;
@@ -137,7 +137,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
   const processedContent = selectRelevantContent({
     content: markdown,
     maxLength,
-    query,
+    query: selectionQuery,
   });
 
   yield* Effect.sync(() =>

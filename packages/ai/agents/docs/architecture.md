@@ -27,10 +27,11 @@ flowchart LR
   Research --> ResearchEvidence["evidence phase: Firecrawl then Google grounding / scrape"]
   ResearchEvidence --> ResearchSynthesis["synthesis phase: Output.object"]
   Math --> Evidence["evaluate / simplify / differentiate / compare"]
-  Nakafa --> CitationEvidence["citation fields: [title](url)"]
-  ResearchSynthesis --> CitationEvidence
-  CitationEvidence --> Final["final answer source contract"]
-  Final --> Inline["inline citations only"]
+  Nakafa --> NakafaEvidence["content IDs and retrieved content"]
+  ResearchSynthesis --> ResearchCitations["external citation links"]
+  NakafaEvidence --> Final["final answer evidence contract"]
+  ResearchCitations --> Final
+  Final --> Inline["research links inline, Nakafa source chips separate"]
 ```
 
 ## Docs Map
@@ -89,6 +90,10 @@ tool uses the parent set reference. A specific question number remains structure
 tool input (`exercise_number`) instead of local prompt parsing. The Nakafa agent
 returns collected AI SDK tool-result evidence, so user-facing prose is composed
 by Nina from retrieved content rather than invented inside the retrieval agent.
+Exercise discovery uses the model-provided search input directly before
+`selectExerciseRef` chooses a parent set. The orchestrator tool query is the
+single Nakafa subagent task; there is no second raw-request planning layer that
+can override or contaminate the search query.
 
 ## Contracts
 
@@ -105,9 +110,11 @@ by Nina from retrieved content rather than invented inside the retrieval agent.
   grounding for corroboration when grounding metadata is available.
 - Provider identity is stored for traces and debugging, but the chat UI only
   shows user-relevant queries and sources.
-- Specialist evidence exposes citation links beside the facts they support.
-- Final answers cite sources inline only; terminal source/reference sections are
-  not part of the user-facing contract.
+- Research evidence exposes citation links beside the facts they support.
+- Nakafa evidence exposes content IDs and retrieved content to the model while
+  source previews render separately in the chat UI.
+- Final answers cite external research inline only; Nakafa-owned content source
+  links stay in the separate source preview UI.
 - Math evidence carries both check status and derivation scope. A verified
   partial check is not a fully verified final derivation.
 - Current-page fetch is deterministic through AI SDK `prepareStep`, `toolChoice`,

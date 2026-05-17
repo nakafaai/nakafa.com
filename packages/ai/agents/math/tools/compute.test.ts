@@ -140,7 +140,13 @@ describe("math compute tool", () => {
 
     expect(output).toContain("- Status: error");
     expect(output).toContain(
+      "- Evidence scope: unavailable deterministic derivation"
+    );
+    expect(output).toContain(
       "- Error: This part could not be checked right now. Please try again with the expression or data written clearly."
+    );
+    expect(output).toContain(
+      "Do not present this result as checked. Retry only if the original request gives enough information"
     );
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
@@ -188,6 +194,46 @@ describe("math compute tool", () => {
         }),
         id: "math-3",
         type: "data-math",
+      })
+    );
+  });
+
+  it("asks the model to retry ambiguous symbolic calculus with the explicit variable", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      Response.json(
+        { detail: "Variable is required when multiple symbols are present." },
+        { status: 422 }
+      )
+    );
+    const { parts, writer } = createWriter();
+    const output = await Effect.runPromise(
+      compute({
+        input: {
+          expression: "x^(a-1) * exp(-x)",
+          lower: "0",
+          operation: "integrate",
+          upper: "oo",
+          variable: "x",
+        },
+        locale: "en",
+        toolCallId: "math-ambiguous-variable",
+        writer,
+      }).pipe(
+        Effect.provide(MathService.Default),
+        Effect.withConfigProvider(provider)
+      )
+    );
+
+    expect(output).toContain(
+      "Retry the same operation with the explicit variable"
+    );
+    expect(parts.at(-1)).toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          error:
+            "This part could not be checked right now. Please try again with the expression or data written clearly.",
+          status: "error",
+        }),
       })
     );
   });

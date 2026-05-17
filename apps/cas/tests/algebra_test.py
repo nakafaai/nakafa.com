@@ -1,5 +1,6 @@
 import pytest
 
+from cas import algebra
 from cas.engine import run
 from cas.schema import MathRequest
 
@@ -223,3 +224,61 @@ def test_domain_returns_denominator_restrictions() -> None:
         "x \\neq -1",
         "x \\neq 1",
     ]
+
+
+@pytest.mark.parametrize(
+    ("expression", "expected_latex"),
+    [
+        ("sqrt(x)", ["x \\geq 0"]),
+        ("log(x)", ["x > 0"]),
+    ],
+)
+def test_domain_returns_real_valued_restrictions(
+    expression: str, expected_latex: list[str]
+) -> None:
+    result = run(MathRequest(kind="math", operation="domain", expression=expression))
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert [condition.latex for condition in result.conditions] == expected_latex
+
+
+def test_domain_returns_no_conditions_for_all_reals() -> None:
+    result = run(MathRequest(kind="math", operation="domain", expression="x^2"))
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "Reals"
+    assert result.conditions == []
+
+
+def test_domain_returns_upper_real_valued_restriction() -> None:
+    result = run(MathRequest(kind="math", operation="domain", expression="sqrt(1 - x)"))
+
+    assert result.status == "verified"
+    assert [condition.latex for condition in result.conditions] == ["x \\leq 1"]
+
+
+def test_domain_keeps_disconnected_real_domains() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="domain",
+            expression="sqrt(x * (x - 1))",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "Union(Interval(-oo, 0), Interval(1, oo))"
+    assert result.conditions
+
+
+def test_domain_reports_unsupported_domain(monkeypatch) -> None:
+    def fail(*_args):
+        raise NotImplementedError
+
+    monkeypatch.setattr(algebra, "continuous_domain", fail)
+
+    with pytest.raises(ValueError, match="Domain could not be determined"):
+        run(MathRequest(kind="math", operation="domain", expression="sqrt(x)"))

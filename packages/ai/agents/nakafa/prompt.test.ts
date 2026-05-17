@@ -15,7 +15,7 @@ describe("nakafaAgentPrompt", () => {
     const prompt = nakafaAgentPrompt({ context, locale: "id" });
 
     expect(prompt).toContain(
-      "If the task asks for both lesson explanation and practice, make separate parallel focused search calls"
+      "If the request asks for both lesson explanation and practice, make separate parallel focused search calls"
     );
     expect(prompt).toContain("subject for the lesson");
     expect(prompt).toContain("exercises for the practice");
@@ -24,10 +24,13 @@ describe("nakafaAgentPrompt", () => {
     );
     expect(prompt).toContain("Put all search text in queries.");
     expect(prompt).toContain(
+      "For every search, preserve exact identifiers from the request in queries"
+    );
+    expect(prompt).toContain(
       "For exercise requests without an exact reference, search the exercises section first, then call exercise"
     );
     expect(prompt).toContain(
-      "Use taxonomy first when the task asks what Nakafa sections, filters, categories, materials, grades, tools, or exercise paths are available."
+      "Use taxonomy first when the request asks what Nakafa sections, filters, categories, materials, grades, tools, or exercise paths are available."
     );
   });
 
@@ -47,17 +50,18 @@ describe("nakafaAgentPrompt", () => {
     expect(prompt).toContain("User role: unknown");
   });
 
-  it("keeps source presentation as inline citation evidence", () => {
+  it("keeps Nakafa sources out of model-facing prose", () => {
     const prompt = nakafaAgentPrompt({ context, locale: "id" });
 
     expect(prompt).toContain(
-      "Use inline citation fields like Inline citation: [Title](url)"
+      "Return compact evidence markdown with content IDs and the retrieved data."
     );
     expect(prompt).toContain(
-      "When evidence contains an inline citation field, integrate that link into the supported sentence"
+      "Do not include public URLs, source labels, citation fields, or markdown links for Nakafa-owned content."
     );
     expect(prompt).toContain(
-      "Never append a final source, reference, citation, or bibliography section"
+      "Nakafa source previews are handled outside the final prose."
     );
+    expect(prompt).not.toContain("Inline citation:");
   });
 });

@@ -1,5 +1,8 @@
 """Safe SymPy parsing helpers for fixed CAS inputs."""
 
+import keyword
+import re
+
 import sympy as sp
 from sympy.core.relational import Relational
 from sympy.parsing.sympy_parser import (
@@ -52,6 +55,9 @@ GLOBALS = {
     "Symbol": sp.Symbol,
 }
 
+IDENTIFIER_PATTERN = re.compile(r"\b[A-Za-z_]\w*\b")
+RESERVED_SYMBOL_PREFIX = "__nakafa_symbol_"
+
 ParsedSymbolSource = sp.Expr | sp.Equality | Relational
 
 
@@ -93,11 +99,13 @@ def expression(value: str | None, *, evaluate: bool = True) -> sp.Expr:
     if not value:
         raise ValueError("Expression is required.")
 
+    normalized_value, symbols = _normalize_reserved_symbols(value)
+
     try:
         parsed = parse_expr(
-            value,
+            normalized_value,
             global_dict=GLOBALS,
-            local_dict=FUNCTIONS,
+            local_dict={**FUNCTIONS, **symbols},
             transformations=TRANSFORMATIONS,
             evaluate=evaluate,
         )
@@ -108,6 +116,24 @@ def expression(value: str | None, *, evaluate: bool = True) -> sp.Expr:
         raise ValueError("Expression must be one mathematical value.")
 
     return parsed
+
+
+def _normalize_reserved_symbols(value: str) -> tuple[str, dict[str, sp.Symbol]]:
+    """Allow math variables whose text is reserved by Python syntax."""
+    symbols: dict[str, sp.Symbol] = {}
+
+    def replace(match: re.Match[str]) -> str:
+        name = match[0]
+
+        if not keyword.iskeyword(name):
+            return name
+
+        alias = f"{RESERVED_SYMBOL_PREFIX}{name}"
+        symbols[alias] = sp.Symbol(name)
+
+        return alias
+
+    return IDENTIFIER_PATTERN.sub(replace, value), symbols
 
 
 def equation(value: str | None) -> sp.Expr | sp.Equality | Relational:

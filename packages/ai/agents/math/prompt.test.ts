@@ -45,10 +45,19 @@ describe("mathPrompt", () => {
       "For fair dice, cards, or finite equally likely outcomes, use statistics mean or arithmetic over the listed outcomes instead of a named probability distribution."
     );
     expect(prompt).toContain(
-      "If an integral has bounds, describe it as a definite integral."
+      "If an integral has bounds, include lower and upper in the calculus input"
+    );
+    expect(prompt).toContain(
+      "If a math check returns error and the recovery guidance identifies a correctable input issue"
+    );
+    expect(prompt).toContain(
+      "If the checked work has status error, do not present the requested result as checked or proven."
     );
     expect(prompt).toContain(
       "Never say the full final result was verified when the only checked result has partial step status."
+    );
+    expect(prompt).toContain(
+      "explicitly separate that theorem-based claim from the failed check."
     );
     expect(prompt).toContain(
       "For partial step status, say the computed value was checked"

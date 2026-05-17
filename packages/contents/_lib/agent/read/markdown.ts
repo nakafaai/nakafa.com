@@ -53,9 +53,6 @@ function renderNakafaMdxMarkdown(ref: NakafaAgentContentRef) {
         text: [
           `# ${content.value.metadata.title}`,
           "",
-          `Source URL: ${ref.url}`,
-          `Markdown URL: ${ref.markdown_url}`,
-          "",
           content.value.raw.trim(),
         ].join("\n"),
         title: content.value.metadata.title,
@@ -79,9 +76,6 @@ function renderNakafaExerciseMarkdown(ref: NakafaAgentContentRef) {
         description: `${exercise.value.count} exercises`,
         text: [
           `# ${formatNakafaRouteTitle(exercise.value.route, ref.locale)}`,
-          "",
-          `Source URL: ${exercise.value.url}`,
-          `Markdown URL: ${exercise.value.markdown_url}`,
           "",
           ...exercise.value.exercises.flatMap((item) => [
             `## Exercise ${item.number}`,
@@ -140,9 +134,6 @@ function renderNakafaQuranMarkdown(ref: NakafaAgentContentRef) {
         description: reference.value.translation,
         text: [
           `# ${reference.value.name}`,
-          "",
-          `Source URL: ${reference.value.url}`,
-          `Markdown URL: ${reference.value.markdown_url}`,
           "",
           `Translation: ${reference.value.translation}`,
           `Revelation: ${reference.value.revelation}`,

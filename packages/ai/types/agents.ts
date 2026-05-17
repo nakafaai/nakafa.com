@@ -1,10 +1,9 @@
 import type { ModelId } from "@repo/ai/config/models";
 import type { SourceReference } from "@repo/ai/lib/source";
-import type { ToolName } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Locale } from "@repo/utilities/locales";
 import type { UserRole } from "@repo/utilities/roles";
-import type { LanguageModelUsage, UIMessageStreamWriter } from "ai";
+import type { UIMessageStreamWriter } from "ai";
 
 export interface AgentContext {
   currentDate: string;
@@ -32,29 +31,17 @@ export interface TaskAgentParams extends BaseAgentParams {
   task: string;
 }
 
+/** Parameters for the Nakafa content retrieval subagent. */
+export type NakafaAgentParams = TaskAgentParams;
+
 /** Parameters for the external research subagent. */
 export interface ResearchAgentParams extends BaseAgentParams {
-  intent: string;
   sourceReferences: SourceReference[];
+  task: string;
   toolCallId: string;
-}
-
-/**
- * Token usage accumulator for tracking across sub-agents.
- */
-export interface UsageAccumulator {
-  addUsage: (component: ToolName, usage: LanguageModelUsage) => void;
-}
-
-/**
- * Parameters for orchestrator tools.
- */
-export interface OrchestratorToolParams extends BaseAgentParams {
-  usageAccumulator: UsageAccumulator;
 }
 
 /**
  * Agent parameter exports.
  */
-export type NakafaAgentParams = TaskAgentParams;
 export type MathAgentParams = TaskAgentParams;

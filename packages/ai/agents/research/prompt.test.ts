@@ -24,6 +24,9 @@ describe("research prompt", () => {
     expect(prompt).toContain("Preserve source constraints");
     expect(prompt).toContain("Do not rewrite a specific source request");
     expect(prompt).toContain("Avoid YouTube, social posts, and listicles");
+    expect(prompt).toContain("Keep exact user wording for named products");
+    expect(prompt).toContain("Do not translate or paraphrase those terms.");
+    expect(prompt).toContain("Every webSearch call must set sourcePreference");
   });
 
   it("includes verified page context when available", () => {
@@ -50,6 +53,8 @@ describe("research prompt", () => {
   it("guides search and scrape tools toward primary sources", () => {
     expect(nakafaWebSearch).toContain("official domain");
     expect(nakafaWebSearch).toContain("generic industry trend search");
+    expect(nakafaWebSearch).toContain("Keep exact named products");
+    expect(nakafaWebSearch).toContain("Always set sourcePreference");
     expect(nakafaWebSearch).toContain(
       "Use returned titles and URLs as citation data"
     );

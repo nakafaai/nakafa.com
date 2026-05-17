@@ -14,7 +14,7 @@ def expand(request: MathRequest) -> MathResult:
     expr = parse.first_expression(request)
     variable = parse.symbol_from_expression(request.variable, request.expression)
     point = parse.expression(request.point or "0")
-    order = request.order or 6
+    order = _series_order(request)
     sympy_order = order + 1
     offset = sp.Dummy("offset")
     shifted = expr.subs(variable, point + offset)
@@ -29,6 +29,17 @@ def expand(request: MathRequest) -> MathResult:
         steps=[step("series", primary=expr, relation=EQUALS, secondary=output)],
         stepStatus="partial",
     )
+
+
+def _series_order(request: MathRequest) -> int:
+    """Read the requested Taylor polynomial degree without truthy fallbacks."""
+    if request.order is None:
+        return 6
+
+    if request.order < 0:
+        raise ValueError("Series order must be non-negative.")
+
+    return request.order
 
 
 def summation(request: MathRequest) -> MathResult:

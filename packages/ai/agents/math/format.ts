@@ -8,7 +8,7 @@ import type {
 import dedent from "dedent";
 
 /** Formats deterministic checked work as model-readable markdown. */
-export function formatMathData(data: MathData) {
+export function formatMathData(data: MathData, diagnostic?: string) {
   if (data.status === "loading") {
     return "Checked math work is loading.";
   }
@@ -19,7 +19,9 @@ export function formatMathData(data: MathData) {
 
       - Status: error
       - Operation: ${data.kind}
+      - Evidence scope: unavailable deterministic derivation; do not describe the result as checked or proven
       - Error: ${data.error}
+      ${formatDiagnostic(diagnostic)}
     `);
   }
 
@@ -36,6 +38,15 @@ export function formatMathData(data: MathData) {
     ${formatItems(data.result.items)}
     ${formatConditions(data.result.conditions)}
   `);
+}
+
+/** Formats optional model-only recovery guidance for failed math checks. */
+function formatDiagnostic(diagnostic?: string) {
+  if (!diagnostic) {
+    return "";
+  }
+
+  return `- Recovery: ${diagnostic}`;
 }
 
 /** Formats the exact verification scope for the assistant-facing evidence. */

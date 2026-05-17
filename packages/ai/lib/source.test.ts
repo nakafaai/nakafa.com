@@ -1,6 +1,9 @@
+import {
+  getSourceReferences,
+  getSourceReferencesFromMessages,
+} from "@repo/ai/lib/source";
 import type { ModelMessage } from "ai";
 import { describe, expect, it } from "vitest";
-import { getSourceReferences, getSourceReferencesFromMessages } from "./source";
 
 const sourceMessages = [
   {

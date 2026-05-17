@@ -67,6 +67,22 @@ describe("math data formatter", () => {
     } satisfies MathData;
 
     expect(formatMathData(data)).toContain("- Error: Math service is offline.");
+    expect(formatMathData(data)).toContain(
+      "- Evidence scope: unavailable deterministic derivation"
+    );
+  });
+
+  it("formats model-only recovery guidance for error data", () => {
+    const data = {
+      error: "Math service is offline.",
+      input,
+      kind: "evaluate",
+      status: "error",
+    } satisfies MathData;
+
+    expect(formatMathData(data, "Retry with a complete expression.")).toContain(
+      "- Recovery: Retry with a complete expression."
+    );
   });
 
   it("formats complete data with steps, items, and conditions", () => {

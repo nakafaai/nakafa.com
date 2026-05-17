@@ -17,7 +17,7 @@ export const mathEquation =
   "Use for solving equations, systems, inequalities, and polynomial roots. Send expression for one equation, expressions for a system, and provide explicit variables when the user names them.";
 
 export const mathCalculus =
-  "Use for derivatives, integrals, and limits. Send expression copied from the user, use variable x when the user does not name another variable, and provide bounds or limit point when needed.";
+  "Use for derivatives, integrals, and limits. Send expression copied from the user. Definite or improper integrals must include lower and upper; for example integral from 0 to infinity uses lower 0 and upper oo. Include variable when the expression has parameters or more than one symbol, use variable x when the user does not name another variable, and provide a limit point when needed.";
 
 export const mathSeries =
   "Use for Taylor or asymptotic series, finite or symbolic summations, and finite or symbolic products. Summation and product need expression, lower, and upper.";

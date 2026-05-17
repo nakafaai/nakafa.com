@@ -1,6 +1,10 @@
 import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
 import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
-import { defaultModel, getModelProviderOptions } from "@repo/ai/config/models";
+import {
+  defaultModel,
+  getFastModelProviderOptions,
+} from "@repo/ai/config/models";
+import { backgroundGenerationTimeout } from "@repo/ai/config/timeouts";
 import { model } from "@repo/ai/config/vercel";
 import { logError } from "@repo/utilities/logging/effect";
 import type { LogContext } from "@repo/utilities/logging/types";
@@ -63,7 +67,7 @@ export const repairChatToolCall = Effect.fn("chat.repairChatToolCall")(
       );
       return {
         ...toolCall,
-        input: JSON.stringify({ query: url }, null, 2),
+        input: JSON.stringify({ task: url }, null, 2),
       };
     }
 
@@ -90,8 +94,9 @@ export const repairChatToolCall = Effect.fn("chat.repairChatToolCall")(
         ].join("\n"),
         providerOptions: {
           gateway: gatewayProviderOptions,
-          google: getModelProviderOptions(defaultModel),
+          google: getFastModelProviderOptions(defaultModel),
         },
+        timeout: backgroundGenerationTimeout,
       })
     );
 

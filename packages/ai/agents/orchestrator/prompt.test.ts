@@ -83,6 +83,14 @@ describe("nakafaPrompt", () => {
       "Use more than one specialized agent when the answer needs more than one kind of evidence."
     );
     expect(prompt).toContain(
+      "Every specialized agent task MUST be one concise Markdown brief"
+    );
+    expect(prompt).toContain("# User Request");
+    expect(prompt).toContain("# Task");
+    expect(prompt).toContain(
+      "Do not split the same meaning across separate parameters."
+    );
+    expect(prompt).toContain(
       "Use math after Nakafa when retrieved content includes calculations, formulas, answers, or equivalence checks that need deterministic verification."
     );
     expect(prompt).toContain(
@@ -110,6 +118,12 @@ describe("nakafaPrompt", () => {
       "Use deepResearch before answering any request for official documentation, source-backed claims, citations, external links, current or latest information, or named products outside Nakafa."
     );
     expect(prompt).toContain(
+      "Preserve the user's exact wording for named products, APIs, libraries, features, versions, domains, URLs, source constraints, and document titles."
+    );
+    expect(prompt).toContain(
+      "Do not summarize away source-ownership constraints."
+    );
+    expect(prompt).toContain(
       "If a specialist agent returns an error, do not call the same specialist again with the same request."
     );
     expect(prompt).toContain("This applies in every user language.");
@@ -126,23 +140,26 @@ describe("nakafaPrompt", () => {
     );
   });
 
-  it("keeps source citations as user-readable markdown links", () => {
+  it("keeps external research citations without exposing Nakafa links", () => {
     const prompt = nakafaPrompt({
       ...base,
       userRole: "student",
     });
 
     expect(prompt).toContain(
-      "Cite sources inline in the exact sentence they support."
+      "Cite external research sources inline in the exact sentence they support."
     );
     expect(prompt).toContain(
-      "When evidence contains an inline citation field, integrate that link into the supported sentence"
-    );
-    expect(prompt).toContain(
-      "When specialist evidence contains markdown links, preserve those links in the final answer"
+      "When research evidence contains markdown links, preserve those links in the final answer"
     );
     expect(prompt).toContain(
       "Do not add product homepages, documentation links, or source links from memory."
+    );
+    expect(prompt).toContain(
+      "preserve them exactly. Do not add parent objects, flags, wrappers, or options that are not present in the evidence."
+    );
+    expect(prompt).toContain(
+      "Do not add Nakafa source labels, Nakafa domain links, or citation-style links for Nakafa-owned content."
     );
     expect(prompt).toContain(
       "Never show numeric citation markers such as [1] or [4, 21, 23] to users."

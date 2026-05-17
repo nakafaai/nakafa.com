@@ -5,6 +5,16 @@ export function formatResearchOutput(output: ResearchOutput) {
   const findings = output.findings.map(formatFinding).join("\n\n");
   const limitations = formatLimitations(output.limitations);
 
+  if (!findings) {
+    return [
+      "No source-backed findings were available for this research task.",
+      "Do not add unsourced facts, source names, URLs, or recommendations beyond the limitations below.",
+      limitations,
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+  }
+
   if (!limitations) {
     return findings;
   }

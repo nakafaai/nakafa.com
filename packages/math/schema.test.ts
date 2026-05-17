@@ -20,6 +20,38 @@ describe("math schemas", () => {
     });
   });
 
+  it("accepts zero-order series requests but rejects invalid series orders", () => {
+    const decodeMathToolInput = Schema.decodeUnknownSync(MathToolInputSchema);
+
+    expect(
+      decodeMathToolInput({
+        expression: "exp(x)",
+        operation: "series",
+        order: 0,
+      })
+    ).toEqual({
+      expression: "exp(x)",
+      operation: "series",
+      order: 0,
+    });
+
+    expect(() =>
+      decodeMathToolInput({
+        expression: "exp(x)",
+        operation: "series",
+        order: -1,
+      })
+    ).toThrow();
+
+    expect(() =>
+      decodeMathToolInput({
+        expression: "exp(x)",
+        operation: "series",
+        order: 1.5,
+      })
+    ).toThrow();
+  });
+
   it("decodes CAS results and data parts", () => {
     const result = Schema.decodeUnknownSync(MathResultSchema)({
       conditions: [],
@@ -87,6 +119,45 @@ describe("math schemas", () => {
       left: "(x^2 - 9)/(x - 3)",
       operation: "compare",
       right: "x + 3",
+    });
+  });
+
+  it("requires calculus variables for expressions with parameters", () => {
+    const decodeMathToolInput = Schema.decodeUnknownSync(MathToolInputSchema);
+
+    expect(
+      decodeMathToolInput({
+        expression: "sin(x) + exp(-x)",
+        operation: "integrate",
+      })
+    ).toEqual({
+      expression: "sin(x) + exp(-x)",
+      operation: "integrate",
+    });
+
+    expect(() =>
+      decodeMathToolInput({
+        expression: "x^(a-1) * exp(-x)",
+        lower: "0",
+        operation: "integrate",
+        upper: "oo",
+      })
+    ).toThrow();
+
+    expect(
+      decodeMathToolInput({
+        expression: "x^(a-1) * exp(-x)",
+        lower: "0",
+        operation: "integrate",
+        upper: "oo",
+        variable: "x",
+      })
+    ).toEqual({
+      expression: "x^(a-1) * exp(-x)",
+      lower: "0",
+      operation: "integrate",
+      upper: "oo",
+      variable: "x",
     });
   });
 

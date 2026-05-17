@@ -1,5 +1,9 @@
 import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
-import { getModelProviderOptions, type ModelId } from "@repo/ai/config/models";
+import {
+  getFastModelProviderOptions,
+  type ModelId,
+} from "@repo/ai/config/models";
+import { backgroundGenerationTimeout } from "@repo/ai/config/timeouts";
 import { model } from "@repo/ai/config/vercel";
 import {
   generateText,
@@ -78,6 +82,7 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
         "For equivalence or validity checks, use compare with left and right expressions.",
         "For simplify, factor, expand, cancel, together, apart, rationalize, or domain, include expression.",
         "For derivative, integral, or limit, include expression and use variable x unless the request names another variable.",
+        "For a definite or improper integral, include lower and upper exactly from the original request.",
         "For named probability distributions, include distribution, parameters, and the requested point or event bounds.",
         `Selected tool: ${toolCall.toolName}`,
         "Original user request:",
@@ -91,9 +96,10 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
       ].join("\n"),
       providerOptions: {
         gateway: gatewayProviderOptions,
-        google: getModelProviderOptions(modelId),
+        google: getFastModelProviderOptions(modelId),
       },
       system,
+      timeout: backgroundGenerationTimeout,
     })
   ).pipe(Effect.either);
 

@@ -1,4 +1,7 @@
-import { mathProbability } from "@repo/ai/agents/math/descriptions";
+import {
+  mathCalculus,
+  mathProbability,
+} from "@repo/ai/agents/math/descriptions";
 import { describe, expect, it } from "vitest";
 
 describe("math tool descriptions", () => {
@@ -16,6 +19,18 @@ describe("math tool descriptions", () => {
     expect(mathProbability).toContain("needs lower and upper");
     expect(mathProbability).toContain(
       "Prefer probability over arithmetic or calculus"
+    );
+  });
+
+  it("requires calculus variables for parameterized expressions", () => {
+    expect(mathCalculus).toContain(
+      "Include variable when the expression has parameters or more than one symbol"
+    );
+  });
+
+  it("requires calculus bounds for definite or improper integrals", () => {
+    expect(mathCalculus).toContain(
+      "Definite or improper integrals must include lower and upper"
     );
   });
 });

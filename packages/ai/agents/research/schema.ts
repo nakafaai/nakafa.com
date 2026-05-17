@@ -38,8 +38,12 @@ export const WebSearchInputSchema = Schema.Struct({
     )
     .annotations({
       description:
-        "One or more search-engine queries. Preserve exact named entities, domains, products, APIs, libraries, institutions, and dates from the research task. Omit answer-formatting instructions such as summary length, tone, output language, and citation style.",
+        "One or more search-engine queries. Preserve exact named entities, domains, products, APIs, libraries, features, versions, institutions, dates, URLs, source constraints, and document titles from the research task. Omit answer-formatting instructions such as summary length, tone, output language, and citation style.",
     }),
+  sourcePreference: Schema.Literal("primary", "any").annotations({
+    description:
+      "Choose primary when the task requires source-owned, first-party, maintainer, vendor, standards-body, or paper-author evidence. Choose any when broader credible sources are acceptable.",
+  }),
 })
   .pipe(Schema.mutable)
   .annotations({

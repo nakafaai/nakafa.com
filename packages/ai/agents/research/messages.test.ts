@@ -21,10 +21,31 @@ describe("research agent messages", () => {
     expect(messages[0]?.content).toContain("Source notes.");
   });
 
-  it("uses the plain intent when no source evidence was prefetched", () => {
+  it("uses the plain task when no source evidence was prefetched", () => {
     expect(createResearchMessages("Find current docs.", [])).toEqual([
       { content: "Find current docs.", role: "user" },
     ]);
+  });
+
+  it("accepts structured markdown as the single research task", () => {
+    const messages = createResearchMessages(
+      [
+        "# User Request",
+        "Cache Components berubah apa menurut pihak pembuat Next.js sendiri?",
+        "# Research Objective",
+        "Find official Next.js 16 Cache Components changes.",
+      ].join("\n\n"),
+      []
+    );
+
+    expect(messages[0]?.content).toContain("# User Request");
+    expect(messages[0]?.content).toContain(
+      "Cache Components berubah apa menurut pihak pembuat Next.js sendiri?"
+    );
+    expect(messages[0]?.content).toContain("# Research Objective");
+    expect(messages[0]?.content).toContain(
+      "Find official Next.js 16 Cache Components changes."
+    );
   });
 
   it("passes collected evidence to structured synthesis", () => {
@@ -42,7 +63,7 @@ describe("research agent messages", () => {
           url: "https://ai-sdk.dev/docs",
         },
       ],
-      intent: "Research AI SDK DevTools.",
+      task: "Research AI SDK DevTools.",
     });
 
     expect(messages[0]?.content).toContain("# Research Task");
@@ -58,7 +79,7 @@ describe("research agent messages", () => {
   it("keeps synthesis explicit when no evidence was collected", () => {
     const messages = createResearchSynthesisMessages({
       evidence: "",
-      intent: "Research unavailable source.",
+      task: "Research unavailable source.",
     });
 
     expect(messages[0]?.content).toContain("No usable evidence was collected.");

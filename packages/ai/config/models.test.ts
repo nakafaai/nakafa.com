@@ -1,6 +1,7 @@
 import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
 import {
   defaultModel,
+  getFastModelProviderOptions,
   getModelCreditCost,
   getModelGatewayId,
   getModelProviderOptions,
@@ -32,7 +33,7 @@ describe("Nakafa model registry", () => {
     expect(getModelGatewayId("nakafa-pro")).toBe("google/gemini-3-pro-preview");
   });
 
-  it("uses high Gemini thinking and keeps Gateway provider fallback open", () => {
+  it("uses interactive and fast Gemini thinking profiles", () => {
     expect(getModelProviderOptions("nakafa-lite")).toEqual({
       thinkingConfig: {
         includeThoughts: true,
@@ -43,6 +44,16 @@ describe("Nakafa model registry", () => {
       thinkingConfig: {
         includeThoughts: true,
         thinkingLevel: "high",
+      },
+    });
+    expect(getFastModelProviderOptions("nakafa-lite")).toEqual({
+      thinkingConfig: {
+        thinkingLevel: "low",
+      },
+    });
+    expect(getFastModelProviderOptions("nakafa-pro")).toEqual({
+      thinkingConfig: {
+        thinkingLevel: "low",
       },
     });
     expect(gatewayProviderOptions).toEqual({ sort: "ttft" });

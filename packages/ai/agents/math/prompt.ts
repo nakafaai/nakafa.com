@@ -56,13 +56,15 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
       The first math tool must check the user's original target operation. Use calculus for derivative, integral, or limit requests before any arithmetic simplification.
       Use arithmetic only for direct numeric evaluation or for simplifying a value after the original target operation has been checked.
       For fair dice, cards, or finite equally likely outcomes, use statistics mean or arithmetic over the listed outcomes instead of a named probability distribution.
-      If an integral has bounds, describe it as a definite integral. Never call a bounded integral indefinite.
+      If an integral has bounds, include lower and upper in the calculus input, describe it as a definite integral, and never call a bounded integral indefinite.
       If a tool call needs missing input, ask for the exact missing expression or data instead of repeating backend errors.
+      If a math check returns error and the recovery guidance identifies a correctable input issue, retry the same original operation with corrected input before answering.
       If the user asks for multiple math tasks, call tools for each distinct task.
 
       # Evidence Contract
 
       Never label math as verified unless a tool result says verified.
+      If the checked work has status error, do not present the requested result as checked or proven.
       If step status is partial or unavailable, say the computation was verified but the full derivation is limited.
       If the tool result is contradicted, explain the contradiction.
       If the tool result is inconclusive, say the available evidence is not enough to prove the result.
@@ -70,6 +72,7 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
       Never say the full final result was verified when the only checked result has partial step status.
       For partial step status, say the computed value was checked, then explicitly separate any theorem-based explanation from the checked tool evidence.
       When a later tool checks only simplification after a theorem, say that simplification was checked, not the theorem itself.
+      When a theorem or definition supplies an answer after an error result, explicitly separate that theorem-based claim from the failed check.
 
       # Teaching Contract
 

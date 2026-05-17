@@ -33,7 +33,7 @@ export const NakafaAgentSearchOptionsSchema = Schema.Struct({
       .pipe(Schema.maxItems(NAKAFA_AGENT_MAX_QUERIES), Schema.mutable)
       .annotations({
         description:
-          "Optional search-engine query strings over synced Nakafa title, route, localized labels, and content text. Use one string for one search, multiple strings for unique alternate phrasings in the same section and locale. Use separate parallel search tool calls when section filters differ.",
+          "Optional search-engine query strings over synced Nakafa title, route, localized labels, and content text. Use one string for one search, multiple strings for unique alternate phrasings in the same section and locale. Preserve exact identifiers such as names, years, labels, canonical IDs, and URLs. Use limit for requested counts. Use separate parallel search tool calls when section filters differ.",
       })
   ),
   section: Schema.optional(

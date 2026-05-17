@@ -1,6 +1,7 @@
 import {
   mathAlgebraInput,
   mathArithmeticInput,
+  mathCalculusInput,
   mathDiscreteInput,
   mathEquationInput,
   mathGeometryInput,
@@ -215,6 +216,64 @@ describe("math AI input schemas", () => {
         matrix: [["1"]],
         operation: "matrix_multiply",
         right_matrix: [["2"]],
+      },
+    });
+  });
+
+  it("requires a calculus variable for parameterized expressions", async () => {
+    const schema = asSchema(mathCalculusInput);
+    const validate = schema.validate;
+
+    if (!validate) {
+      throw new Error("Math calculus schema must validate model tool input.");
+    }
+
+    await expect(
+      Promise.resolve(
+        validate({
+          expression: "x^(a-1) * exp(-x)",
+          lower: "0",
+          operation: "integrate",
+          upper: "oo",
+        })
+      )
+    ).resolves.toMatchObject({
+      success: false,
+    });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          expression: "x^(a-1) * exp(-x)",
+          lower: "0",
+          operation: "integrate",
+          upper: "oo",
+          variable: "x",
+        })
+      )
+    ).resolves.toEqual({
+      success: true,
+      value: {
+        expression: "x^(a-1) * exp(-x)",
+        lower: "0",
+        operation: "integrate",
+        upper: "oo",
+        variable: "x",
+      },
+    });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          expression: "x^2",
+          operation: "differentiate",
+        })
+      )
+    ).resolves.toEqual({
+      success: true,
+      value: {
+        expression: "x^2",
+        operation: "differentiate",
       },
     });
   });

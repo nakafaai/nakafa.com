@@ -37,6 +37,8 @@ export const nakafaWebSearch = createPrompt({
 
       - Preserve official-source, domain, URL, and recency constraints from the user task
       - Generate concise search-engine queries; do not pass the raw user prompt as a search query
+      - Keep exact named products, APIs, libraries, features, versions, domains, URLs, source constraints, and document titles from the user task
+      - Always set sourcePreference. Use primary when the task asks for source-owned, first-party, maintainer, vendor, standards-body, paper-author, primary, or official evidence in any language. Use any when broader credible sources are acceptable
       - For official documentation requests, include the exact named source and official domain in the queries
       - Do not broaden a specific documentation request into a generic industry trend search
       - Search the web for up-to-date information

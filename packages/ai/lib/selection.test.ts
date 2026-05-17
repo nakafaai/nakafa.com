@@ -98,6 +98,19 @@ describe("selectRelevantContent", () => {
     );
   });
 
+  it("selects relevant Unicode paragraphs without language-specific stop words", () => {
+    const selected = selectRelevantContent({
+      content:
+        "導入です。\n\n微分方程式の安定性をリャプノフ関数で確認します。\n\nこれは別の話題で、長く続く無関係な説明です。モデルの検索選択では残すべきではありません。\n\n結論です。",
+      maxLength: 60,
+      query: "微分方程式 安定性",
+    });
+
+    expect(selected).toBe(
+      "導入です。\n\n微分方程式の安定性をリャプノフ関数で確認します。\n\n結論です。"
+    );
+  });
+
   it("keeps introduction, relevant middle content, and conclusion when selecting from long structured content", () => {
     const selected = selectRelevantContent({
       content:

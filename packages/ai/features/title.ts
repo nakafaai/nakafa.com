@@ -1,5 +1,9 @@
 import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
-import { defaultModel, getModelProviderOptions } from "@repo/ai/config/models";
+import {
+  defaultModel,
+  getFastModelProviderOptions,
+} from "@repo/ai/config/models";
+import { backgroundGenerationTimeout } from "@repo/ai/config/timeouts";
 import { model } from "@repo/ai/config/vercel";
 import {
   DEFAULT_TITLE,
@@ -39,7 +43,7 @@ export const generateTitle = Effect.fn("features.generateTitle")(function* ({
         prompt: JSON.stringify(messages, null, 2),
         providerOptions: {
           gateway: gatewayProviderOptions,
-          google: getModelProviderOptions(defaultModel),
+          google: getFastModelProviderOptions(defaultModel),
         },
         system: createPrompt({
           taskContext: `
@@ -64,6 +68,7 @@ export const generateTitle = Effect.fn("features.generateTitle")(function* ({
             Output only the title, nothing else.
           `,
         }),
+        timeout: backgroundGenerationTimeout,
       }),
     catch: (error) =>
       new TitleGenerationError({

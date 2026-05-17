@@ -3,7 +3,6 @@ import {
   webSearchMaxQueries,
 } from "@repo/ai/agents/research/schema";
 import { formatWebSearchOutput } from "@repo/ai/agents/research/search/format";
-import { getSearchQueries } from "@repo/ai/agents/research/search/plan";
 import { searchFirecrawl } from "@repo/ai/agents/research/search/provider";
 import { scopeSources } from "@repo/ai/agents/research/search/scope";
 import {
@@ -11,6 +10,7 @@ import {
   dedupeSources,
   readSearchSources,
 } from "@repo/ai/agents/research/search/source";
+import { planSearchQueries } from "@repo/ai/lib/search-query";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";
@@ -20,16 +20,23 @@ import { Effect } from "effect";
  */
 export const searchWeb = Effect.fn("research.searchWeb")(function* ({
   queries,
-  intent = "",
+  sourcePreference,
+  task,
   toolCallId,
   writer,
 }: {
   queries: readonly string[];
-  intent?: string;
+  sourcePreference: "primary" | "any";
+  task: string;
   toolCallId: string;
   writer: UIMessageStreamWriter<MyUIMessage>;
 }) {
-  const searchQueries = getSearchQueries({ queries, intent });
+  const searchQueries = planSearchQueries({
+    anchor: "always",
+    task,
+    maxQueries: webSearchMaxQueries,
+    queries,
+  });
 
   yield* Effect.sync(() =>
     searchQueries.forEach((query, index) => {
@@ -56,8 +63,9 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
           );
           const sources = dedupeSources(
             scopeSources({
-              intent,
+              task,
               query,
+              sourcePreference,
               sources: providerSources,
             })
           );
@@ -78,7 +86,7 @@ export const searchWeb = Effect.fn("research.searchWeb")(function* ({
             })
           )
         ),
-        Effect.catchAll((error) =>
+        Effect.catchTag("ResearchSearchError", (error) =>
           Effect.sync(() => {
             writer.write({
               id: getWebSearchPartId(toolCallId, index),

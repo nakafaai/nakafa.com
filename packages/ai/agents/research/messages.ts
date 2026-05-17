@@ -4,19 +4,16 @@ import type { ModelMessage } from "ai";
 /**
  * Adds pre-fetched source evidence without disabling normal research tools.
  */
-export function createResearchMessages(
-  intent: string,
-  sourceOutputs: string[]
-) {
+export function createResearchMessages(task: string, sourceOutputs: string[]) {
   if (sourceOutputs.length === 0) {
-    return [{ role: "user", content: intent }] satisfies ModelMessage[];
+    return [{ role: "user", content: task }] satisfies ModelMessage[];
   }
 
   return [
     {
       role: "user",
       content: [
-        intent,
+        task,
         "User-provided source evidence has already been retrieved. Use it for source-specific claims. If the research task also needs current, external, or corroborating evidence, use the search tools before producing findings.",
         "# User-Provided Source Evidence",
         sourceOutputs.join("\n\n"),
@@ -32,19 +29,19 @@ export function createResearchSynthesisMessages({
   collectedEvidence = [],
   evidence,
   groundingSources = [],
-  intent,
+  task,
 }: {
   collectedEvidence?: string[];
   evidence: string;
   groundingSources?: DataPart["web-search"]["sources"];
-  intent: string;
+  task: string;
 }) {
   return [
     {
       role: "user",
       content: [
         "# Research Task",
-        intent,
+        task,
         "# Research Notes",
         evidence || "No usable evidence was collected.",
         ...formatGroundingSources(groundingSources),

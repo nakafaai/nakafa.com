@@ -8,25 +8,34 @@ export const MODEL_IDS = ["nakafa-lite", "nakafa-pro"] as const;
 
 export type ModelId = (typeof MODEL_IDS)[number];
 
+const interactiveProviderOptions = {
+  thinkingConfig: {
+    includeThoughts: true,
+    thinkingLevel: "high",
+  },
+} satisfies GoogleLanguageModelOptions;
+
+const fastProviderOptions = {
+  thinkingConfig: {
+    thinkingLevel: "low",
+  },
+} satisfies GoogleLanguageModelOptions;
+
 export const modelRegistry = {
   "nakafa-lite": {
     credits: 2,
     gatewayId: "google/gemini-3.1-flash-lite",
-    thinking: {
-      thinkingConfig: {
-        includeThoughts: true,
-        thinkingLevel: "high",
-      },
+    providerOptions: {
+      fast: fastProviderOptions,
+      interactive: interactiveProviderOptions,
     },
   },
   "nakafa-pro": {
     credits: 5,
     gatewayId: "google/gemini-3-pro-preview",
-    thinking: {
-      thinkingConfig: {
-        includeThoughts: true,
-        thinkingLevel: "high",
-      },
+    providerOptions: {
+      fast: fastProviderOptions,
+      interactive: interactiveProviderOptions,
     },
   },
 } satisfies Record<
@@ -34,7 +43,10 @@ export const modelRegistry = {
   {
     credits: number;
     gatewayId: GatewayModelId;
-    thinking: GoogleLanguageModelOptions;
+    providerOptions: {
+      fast: GoogleLanguageModelOptions;
+      interactive: GoogleLanguageModelOptions;
+    };
   }
 >;
 
@@ -62,5 +74,10 @@ export function getModelGatewayId(modelId: ModelId) {
 
 /** Returns Gemini provider options for one Nakafa model. */
 export function getModelProviderOptions(modelId: ModelId) {
-  return modelRegistry[modelId].thinking;
+  return modelRegistry[modelId].providerOptions.interactive;
+}
+
+/** Returns Gemini provider options for background and tool-routing calls. */
+export function getFastModelProviderOptions(modelId: ModelId) {
+  return modelRegistry[modelId].providerOptions.fast;
 }

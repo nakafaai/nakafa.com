@@ -6,12 +6,12 @@ import {
 } from "@repo/backend/convex/chats/messageParts/shared";
 import { ConvexError } from "convex/values";
 
-function requireToolInputQuery(
+function requireToolInputTask(
   part: Doc<"parts">,
   fieldName: "toolNakafaInput" | "toolDeepResearchInput" | "toolMathInput"
 ) {
   return {
-    query: requirePartField({
+    task: requirePartField({
       value: part[fieldName],
       fieldName,
       partType: part.type,
@@ -72,7 +72,7 @@ export function mapDBPartToUIMessagePart({
       };
     case "tool-nakafa": {
       const toolState = requireToolState(part);
-      const input = { query: part.toolNakafaInput ?? "" };
+      const input = { task: part.toolNakafaInput ?? "" };
 
       switch (toolState) {
         case "input-streaming":
@@ -97,7 +97,7 @@ export function mapDBPartToUIMessagePart({
               partType: part.type,
             }),
             callProviderMetadata: part.toolCallProviderMetadata,
-            input: requireToolInputQuery(part, "toolNakafaInput"),
+            input: requireToolInputTask(part, "toolNakafaInput"),
           };
         case "output-available":
           return {
@@ -109,7 +109,7 @@ export function mapDBPartToUIMessagePart({
               partType: part.type,
             }),
             callProviderMetadata: part.toolCallProviderMetadata,
-            input: requireToolInputQuery(part, "toolNakafaInput"),
+            input: requireToolInputTask(part, "toolNakafaInput"),
             output: requirePartField({
               value: part.toolNakafaOutput,
               fieldName: "toolNakafaOutput",
@@ -127,7 +127,7 @@ export function mapDBPartToUIMessagePart({
               partType: part.type,
             }),
             callProviderMetadata: part.toolCallProviderMetadata,
-            input: requireToolInputQuery(part, "toolNakafaInput"),
+            input: requireToolInputTask(part, "toolNakafaInput"),
             errorText: requirePartField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",
@@ -144,7 +144,7 @@ export function mapDBPartToUIMessagePart({
     }
     case "tool-deepResearch": {
       const toolState = requireToolState(part);
-      const input = { query: part.toolDeepResearchInput ?? "" };
+      const input = { task: part.toolDeepResearchInput ?? "" };
 
       switch (toolState) {
         case "input-streaming":
@@ -169,7 +169,7 @@ export function mapDBPartToUIMessagePart({
               partType: part.type,
             }),
             callProviderMetadata: part.toolCallProviderMetadata,
-            input: requireToolInputQuery(part, "toolDeepResearchInput"),
+            input: requireToolInputTask(part, "toolDeepResearchInput"),
           };
         case "output-available":
           return {
@@ -181,7 +181,7 @@ export function mapDBPartToUIMessagePart({
               partType: part.type,
             }),
             callProviderMetadata: part.toolCallProviderMetadata,
-            input: requireToolInputQuery(part, "toolDeepResearchInput"),
+            input: requireToolInputTask(part, "toolDeepResearchInput"),
             output: requirePartField({
               value: part.toolDeepResearchOutput,
               fieldName: "toolDeepResearchOutput",
@@ -199,7 +199,7 @@ export function mapDBPartToUIMessagePart({
               partType: part.type,
             }),
             callProviderMetadata: part.toolCallProviderMetadata,
-            input: requireToolInputQuery(part, "toolDeepResearchInput"),
+            input: requireToolInputTask(part, "toolDeepResearchInput"),
             errorText: requirePartField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",
@@ -216,7 +216,7 @@ export function mapDBPartToUIMessagePart({
     }
     case "tool-math": {
       const toolState = requireToolState(part);
-      const input = { query: part.toolMathInput ?? "" };
+      const input = { task: part.toolMathInput ?? "" };
 
       switch (toolState) {
         case "input-streaming":
@@ -241,7 +241,7 @@ export function mapDBPartToUIMessagePart({
               partType: part.type,
             }),
             callProviderMetadata: part.toolCallProviderMetadata,
-            input: requireToolInputQuery(part, "toolMathInput"),
+            input: requireToolInputTask(part, "toolMathInput"),
           };
         case "output-available":
           return {
@@ -253,7 +253,7 @@ export function mapDBPartToUIMessagePart({
               partType: part.type,
             }),
             callProviderMetadata: part.toolCallProviderMetadata,
-            input: requireToolInputQuery(part, "toolMathInput"),
+            input: requireToolInputTask(part, "toolMathInput"),
             output: requirePartField({
               value: part.toolMathOutput,
               fieldName: "toolMathOutput",
@@ -271,7 +271,7 @@ export function mapDBPartToUIMessagePart({
               partType: part.type,
             }),
             callProviderMetadata: part.toolCallProviderMetadata,
-            input: requireToolInputQuery(part, "toolMathInput"),
+            input: requireToolInputTask(part, "toolMathInput"),
             errorText: requirePartField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",

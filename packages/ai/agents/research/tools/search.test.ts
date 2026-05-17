@@ -122,6 +122,8 @@ describe("research web search tool", () => {
     const output = await Effect.runPromise(
       searchWeb({
         queries: ["latest solar energy research"],
+        sourcePreference: "any",
+        task: "latest solar energy research",
         toolCallId: "web-search-1",
         writer,
       })
@@ -188,6 +190,8 @@ describe("research web search tool", () => {
     const output = await Effect.runPromise(
       searchWeb({
         queries: ["AI SDK DevTools latest"],
+        sourcePreference: "any",
+        task: "AI SDK DevTools latest",
         toolCallId: "web-search-scoped",
         writer,
       })
@@ -230,6 +234,8 @@ describe("research web search tool", () => {
     const output = await Effect.runPromise(
       searchWeb({
         queries: ["AI SDK DevTools official documentation terbaru"],
+        sourcePreference: "any",
+        task: "AI SDK DevTools official documentation terbaru",
         toolCallId: "web-search-natural-scoped",
         writer,
       })
@@ -237,6 +243,39 @@ describe("research web search tool", () => {
 
     expect(output.result.sources.map((source) => source.url)).toEqual([
       "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+    ]);
+  });
+
+  it("keeps primary-source requests on first-party product domains", async () => {
+    firecrawlApp.search.mockResolvedValue({
+      web: [
+        {
+          description: "Official React docs for transitions.",
+          markdown: "React 19 transition behavior.",
+          title: "React useTransition",
+          url: "https://react.dev/reference/react/useTransition",
+        },
+        {
+          description: "Community explanation for React 19.",
+          markdown: "React 19 transition behavior.",
+          title: "React 19 Guide",
+          url: "https://example.com/react-19-transitions",
+        },
+      ],
+    });
+    const { writer } = createWriter();
+    const output = await Effect.runPromise(
+      searchWeb({
+        queries: ["React 19 transition docs"],
+        sourcePreference: "primary",
+        task: "React 19 transitions",
+        toolCallId: "web-search-primary-source",
+        writer,
+      })
+    );
+
+    expect(output.result.sources.map((source) => source.url)).toEqual([
+      "https://react.dev/reference/react/useTransition",
     ]);
   });
 
@@ -261,6 +300,8 @@ describe("research web search tool", () => {
     const output = await Effect.runPromise(
       searchWeb({
         queries: ["devTools"],
+        sourcePreference: "any",
+        task: "devTools",
         toolCallId: "web-search-single-mixed-case",
         writer,
       })
@@ -271,7 +312,7 @@ describe("research web search tool", () => {
     ]);
   });
 
-  it("keeps all sources when distinctive query terms do not match the first source", async () => {
+  it("scopes sources to explicit task terms even when generic results rank first", async () => {
     firecrawlApp.search.mockResolvedValue({
       web: [
         {
@@ -292,13 +333,14 @@ describe("research web search tool", () => {
     const output = await Effect.runPromise(
       searchWeb({
         queries: ["AI SDK"],
+        sourcePreference: "any",
+        task: "AI SDK",
         toolCallId: "web-search-first-source-mismatch",
         writer,
       })
     );
 
     expect(output.result.sources.map((source) => source.url)).toEqual([
-      "https://example.com/ai-platform",
       "https://example.com/ai-sdk",
     ]);
   });
@@ -324,6 +366,8 @@ describe("research web search tool", () => {
     const output = await Effect.runPromise(
       searchWeb({
         queries: ["ai-sdk"],
+        sourcePreference: "any",
+        task: "ai-sdk",
         toolCallId: "web-search-hyphenated",
         writer,
       })
@@ -349,6 +393,8 @@ describe("research web search tool", () => {
     const output = await Effect.runPromise(
       searchWeb({
         queries: ["AI AI"],
+        sourcePreference: "any",
+        task: "AI AI",
         toolCallId: "web-search-duplicate-terms",
         writer,
       })
@@ -380,6 +426,8 @@ describe("research web search tool", () => {
     const output = await Effect.runPromise(
       searchWeb({
         queries: ["AI"],
+        sourcePreference: "any",
+        task: "AI",
         toolCallId: "web-search-short-acronym",
         writer,
       })
@@ -406,6 +454,8 @@ describe("research web search tool", () => {
     await Effect.runPromise(
       searchWeb({
         queries: [" AI SDK docs ", "", "ai sdk docs"],
+        sourcePreference: "any",
+        task: "AI SDK docs",
         toolCallId: "web-search-normalized-queries",
         writer,
       })
@@ -451,11 +501,17 @@ describe("research web search tool", () => {
           "AI SDK DevTools official docs",
           "AI SDK DevTools release notes",
         ],
+        sourcePreference: "any",
+        task: "AI SDK DevTools official docs",
         toolCallId: "web-search-queries",
         writer,
       })
     );
 
+    expect(firecrawlApp.search).toHaveBeenCalledWith(
+      "AI SDK DevTools official",
+      expect.any(Object)
+    );
     expect(firecrawlApp.search).toHaveBeenCalledWith(
       "AI SDK DevTools official docs",
       expect.any(Object)
@@ -464,10 +520,18 @@ describe("research web search tool", () => {
       "AI SDK DevTools release notes",
       expect.any(Object)
     );
-    expect(output.result.sources).toHaveLength(2);
+    expect(output.result.sources).toHaveLength(3);
     expect(
       getWebSearchParts(parts).filter((part) => part.status === "done")
     ).toEqual([
+      expect.objectContaining({
+        queries: ["AI SDK DevTools official"],
+        sources: expect.arrayContaining([
+          expect.objectContaining({
+            url: "https://example.com/ai-sdk-devtools-official",
+          }),
+        ]),
+      }),
       expect.objectContaining({
         queries: ["AI SDK DevTools official docs"],
         sources: expect.arrayContaining([
@@ -487,7 +551,7 @@ describe("research web search tool", () => {
     ]);
   });
 
-  it("keeps distinctive intent terms when optimized queries drift generic", async () => {
+  it("keeps distinctive task terms when optimized queries drift generic", async () => {
     firecrawlApp.search.mockImplementation((query: string) =>
       Promise.resolve({
         web: [
@@ -507,15 +571,15 @@ describe("research web search tool", () => {
           "AI SDK development trends 2026",
           "future of AI software development tools 2026",
         ],
-        intent:
-          "latest information about AI SDK DevTools trends and features 2026",
-        toolCallId: "web-search-intent-terms",
+        sourcePreference: "any",
+        task: "latest information about AI SDK DevTools trends and features 2026",
+        toolCallId: "web-search-task-terms",
         writer,
       })
     );
 
     expect(firecrawlApp.search).toHaveBeenCalledWith(
-      "AI SDK DevTools",
+      "AI SDK DevTools trends",
       expect.any(Object)
     );
     expect(firecrawlApp.search).toHaveBeenCalledWith(
@@ -529,7 +593,9 @@ describe("research web search tool", () => {
     expect(
       getWebSearchParts(parts).filter((part) => part.status === "done")
     ).toEqual([
-      expect.objectContaining({ queries: ["AI SDK DevTools"] }),
+      expect.objectContaining({
+        queries: ["AI SDK DevTools trends"],
+      }),
       expect.objectContaining({
         queries: ["DevTools AI SDK development trends 2026"],
       }),
@@ -539,7 +605,7 @@ describe("research web search tool", () => {
     ]);
   });
 
-  it("scopes every query result to distinctive intent terms", async () => {
+  it("scopes every query result to distinctive task terms", async () => {
     firecrawlApp.search.mockImplementation((query: string) => {
       if (query === "AI SDK DevTools") {
         return Promise.resolve({
@@ -575,8 +641,9 @@ describe("research web search tool", () => {
     const output = await Effect.runPromise(
       searchWeb({
         queries: ["SDK DevTools recent major updates LangChain framework"],
-        intent: "AI SDK DevTools",
-        toolCallId: "web-search-intent-scoped-sources",
+        sourcePreference: "any",
+        task: "AI SDK DevTools",
+        toolCallId: "web-search-task-scoped-sources",
         writer,
       })
     );
@@ -607,7 +674,8 @@ describe("research web search tool", () => {
     const output = await Effect.runPromise(
       searchWeb({
         queries: ["AI SDK DevTools recent updates"],
-        intent: "AI SDK DevTools",
+        sourcePreference: "any",
+        task: "AI SDK DevTools",
         toolCallId: "web-search-partial-success",
         writer,
       })
@@ -642,6 +710,8 @@ describe("research web search tool", () => {
     const output = await Effect.runPromise(
       searchWeb({
         queries: ["latest solar energy research"],
+        sourcePreference: "any",
+        task: "latest solar energy research",
         toolCallId: "web-search-empty",
         writer,
       })
@@ -667,6 +737,8 @@ describe("research web search tool", () => {
     const output = await Effect.runPromise(
       searchWeb({
         queries: ["latest solar energy research"],
+        sourcePreference: "any",
+        task: "latest solar energy research",
         toolCallId: "web-search-2",
         writer,
       })

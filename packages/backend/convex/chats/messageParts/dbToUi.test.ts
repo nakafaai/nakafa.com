@@ -194,14 +194,14 @@ describe("mapDBPartToUIMessagePart", () => {
       expect.objectContaining({
         type: "tool-nakafa",
         callProviderMetadata: toolCallProviderMetadata,
-        input: { query: "current page" },
+        input: { task: "current page" },
         output: "done",
         resultProviderMetadata: toolResultProviderMetadata,
       }),
       expect.objectContaining({
         type: "tool-math",
         callProviderMetadata: toolCallProviderMetadata,
-        input: { query: "compare x + 1 and x + 2" },
+        input: { task: "compare x + 1 and x + 2" },
         output: "contradicted",
         resultProviderMetadata: toolResultProviderMetadata,
       }),

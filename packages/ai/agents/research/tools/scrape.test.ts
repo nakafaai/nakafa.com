@@ -270,7 +270,7 @@ describe("research scrape tool", () => {
     );
   });
 
-  it("passes the research query to relevant content selection", async () => {
+  it("passes the selection query to relevant content selection", async () => {
     firecrawlApp.scrape.mockResolvedValue({
       markdown: "# DevTools\n\nUse AI SDK DevTools for local debugging.",
     });
@@ -278,7 +278,7 @@ describe("research scrape tool", () => {
 
     await Effect.runPromise(
       scrapeUrl({
-        query: "AI SDK DevTools local debugging",
+        selectionQuery: "AI SDK DevTools local debugging",
         toolCallId: "scrape-query",
         url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
         writer,
@@ -302,7 +302,7 @@ describe("research scrape tool", () => {
     await Effect.runPromise(
       scrapeUrl({
         maxLength: 8000,
-        query: "AI SDK DevTools local debugging",
+        selectionQuery: "AI SDK DevTools local debugging",
         toolCallId: "scrape-long-source",
         url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
         writer,
