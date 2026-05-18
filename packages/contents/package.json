@@ -16,7 +16,7 @@
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/utilities": "workspace:*",
-    "date-fns": "^4.1.0",
+    "date-fns": "4.1.0",
     "effect": "^3.21.2",
     "ky": "^2.0.2",
     "motion": "^12.38.0",

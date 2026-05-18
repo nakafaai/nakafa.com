@@ -15,7 +15,7 @@
     "@ai-sdk/gateway": "^3.0.115",
     "@ai-sdk/google": "^3.0.75",
     "@ai-sdk/react": "^3.0.186",
-    "@mendable/firecrawl-js": "^4.23.0",
+    "@mendable/firecrawl-js": "^4.24.1",
     "@repo/contents": "workspace:*",
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
