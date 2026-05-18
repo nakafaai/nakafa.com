@@ -81,7 +81,8 @@ function mapUIMessagePartToDBPart(
         toolState: requirePersistableToolState(part.state),
         toolCallProviderMetadata: part.callProviderMetadata,
         toolResultProviderMetadata: getToolResultProviderMetadata(part),
-        toolNakafaInput: part.input?.task,
+        toolNakafaInput:
+          part.state === "input-streaming" ? undefined : part.input,
         toolNakafaOutput: part.output,
         toolErrorText: part.errorText,
       };
@@ -93,7 +94,8 @@ function mapUIMessagePartToDBPart(
         toolState: requirePersistableToolState(part.state),
         toolCallProviderMetadata: part.callProviderMetadata,
         toolResultProviderMetadata: getToolResultProviderMetadata(part),
-        toolDeepResearchInput: part.input?.task,
+        toolDeepResearchInput:
+          part.state === "input-streaming" ? undefined : part.input,
         toolDeepResearchOutput: part.output,
         toolErrorText: part.errorText,
       };
@@ -105,7 +107,8 @@ function mapUIMessagePartToDBPart(
         toolState: requirePersistableToolState(part.state),
         toolCallProviderMetadata: part.callProviderMetadata,
         toolResultProviderMetadata: getToolResultProviderMetadata(part),
-        toolMathInput: part.input?.task,
+        toolMathInput:
+          part.state === "input-streaming" ? undefined : part.input,
         toolMathOutput: part.output,
         toolErrorText: part.errorText,
       };

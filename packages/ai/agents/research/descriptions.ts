@@ -40,7 +40,7 @@ export const nakafaWebSearch = createPrompt({
       - Use returned titles and URLs as citation data for structured research findings
       - Preserve official-source, domain, URL, and recency constraints from the user task
       - Generate concise search-engine queries; do not pass the raw user prompt as a search query
-      - Keep exact wording from the user task for:
+      - Keep task-relevant user-provided strings for:
         - named products, APIs, libraries, and features
         - versions, domains, and URLs
         - source constraints

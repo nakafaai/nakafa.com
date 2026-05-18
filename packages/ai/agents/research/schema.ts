@@ -41,7 +41,7 @@ export const WebSearchInputSchema = Schema.Struct({
       description: dedent(`
         One or more search-engine queries.
 
-        Preserve exact wording for:
+        Preserve task-relevant user-provided strings for:
         - named entities, domains, products, APIs, and libraries.
         - features, versions, institutions, and dates.
         - URLs, source constraints, and document titles.
@@ -131,17 +131,33 @@ export const ResearchOutputSchema = Schema.Struct({
   limitations: Schema.Array(Schema.NonEmptyString)
     .pipe(Schema.mutable)
     .annotations({
-      description:
-        "Evidence gaps or caveats. Use an empty array when there are none.",
+      description: dedent(`
+        Process limitations in the user's locale.
+        Use an empty array when there are none.
+
+        Describe only what this retrieval attempt could not establish.
+        Do not use found or not-found wording.
+        Do not make absence claims.
+        Do not mention a database, corpus, or search index.
+      `),
     }),
   noEvidenceAnswer: Schema.NonEmptyString.annotations({
     description: dedent(`
       A brief user-facing process limitation in the user's locale.
       Use it when no source-backed finding can be returned.
 
-      Say only:
-      - this run could not verify the request from retrieved direct source evidence.
-      - what direct channel the user can check next.
+      Generate a natural one-sentence answer in the user's locale.
+      Communicate only these ideas:
+      - the retrieval attempt did not establish verification from direct sources.
+      - a direct channel the user can check next.
+      - do not copy or translate this schema description verbatim.
+
+      Use first-person process wording.
+      Do not describe the world as lacking official information.
+      Prefer verification wording over search-result wording.
+      Do not say information was found or not found.
+      Do not say evidence, proof, or information is unavailable.
+      Do not mention a database, corpus, or search index.
 
       Do not include unsupported:
       - factual claims.

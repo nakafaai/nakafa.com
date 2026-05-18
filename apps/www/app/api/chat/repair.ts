@@ -67,7 +67,16 @@ export const repairChatToolCall = Effect.fn("chat.repairChatToolCall")(
       );
       return {
         ...toolCall,
-        input: JSON.stringify({ task: url }, null, 2),
+        input: JSON.stringify(
+          {
+            deliverables: ["current page evidence"],
+            objective: "Read the current Nakafa page.",
+            request: url,
+            requirements: ["Use the current page URL."],
+          },
+          null,
+          2
+        ),
       };
     }
 

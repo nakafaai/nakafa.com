@@ -12,6 +12,7 @@ import { model } from "@repo/ai/config/vercel";
 import { generateTitle } from "@repo/ai/features/title";
 import { getSourceReferencesFromMessages } from "@repo/ai/lib/source";
 import {
+  formatSpecialistToolTask,
   mathToolInputSchema,
   nakafaToolInputSchema,
   researchToolInputSchema,
@@ -37,7 +38,6 @@ import {
 import { fetchAction, fetchMutation } from "convex/nextjs";
 import { Effect } from "effect";
 import type { getTranslations } from "next-intl/server";
-import { gateUnsourcedResearchStream } from "@/app/api/chat/evidence";
 import { search as nakafaSearch } from "@/app/api/chat/nakafa";
 import { repairChatToolCall } from "@/app/api/chat/repair";
 import { prepareChatStep } from "@/app/api/chat/step";
@@ -203,9 +203,6 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             userRole: user.info.role ?? undefined,
           };
           let fetchedPage = false;
-          let sawResearch = false;
-          let hasSourceBackedResearch = false;
-          let generatedNoEvidenceAnswer = "";
 
           const system = nakafaPrompt({
             url: page.url,
@@ -227,9 +224,9 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             tools: {
               [TOOL_NAMES.nakafa]: tool({
                 description:
-                  "Retrieve Nakafa educational evidence for lessons, study topics, current pages, articles, Quran references, examples, warmups, review tasks, tryout preparation, and structured exercises. Use this before math when content must be selected. Preserve every requested deliverable in the task.",
+                  "Retrieve Nakafa educational evidence for lessons, study topics, current pages, articles, Quran references, examples, warmups, review tasks, tryout preparation, and structured exercises. Use this before math when content must be selected. Preserve requested deliverables in the structured input.",
                 inputSchema: nakafaToolInputSchema,
-                execute: ({ task }, { toolCallId }) => {
+                execute: (input, { toolCallId }) => {
                   const needsPageFetch = context.needsPageFetch && !fetchedPage;
 
                   if (needsPageFetch) {
@@ -250,7 +247,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                         context: { ...context, needsPageFetch },
                         locale: page.locale,
                         modelId: runtime.modelId,
-                        task,
+                        task: formatSpecialistToolTask(input),
                         writer,
                       }).pipe(
                         Effect.provideService(NakafaSearch, nakafaSearch)
@@ -267,26 +264,19 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 description:
                   "Research external, official, current, latest, cited, or source-backed information with web search and source analysis.",
                 inputSchema: researchToolInputSchema,
-                execute: ({ task }, { messages, toolCallId }) =>
+                execute: (input, { messages, toolCallId }) =>
                   Effect.runPromise(
                     Effect.gen(function* () {
                       const result = yield* runResearchAgent({
                         context,
                         locale: page.locale,
                         modelId: runtime.modelId,
-                        task,
+                        task: formatSpecialistToolTask(input),
                         sourceReferences:
                           getSourceReferencesFromMessages(messages),
                         toolCallId,
                         writer,
                       });
-
-                      sawResearch = true;
-                      hasSourceBackedResearch =
-                        hasSourceBackedResearch || result.sourceBacked;
-                      if (!result.sourceBacked) {
-                        generatedNoEvidenceAnswer = result.text;
-                      }
 
                       yield* usage.addUsage(
                         TOOL_NAMES.deepResearch,
@@ -301,14 +291,14 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 description:
                   "Verify user-provided or retrieved math with deterministic evidence for arithmetic, algebra, equations, calculus, series, matrices, statistics, probability, geometry, and discrete math. Do not use this as the first or only source for educational practice content; use Nakafa first, then math verifies the selected content.",
                 inputSchema: mathToolInputSchema,
-                execute: ({ task }) =>
+                execute: (input) =>
                   Effect.runPromise(
                     Effect.gen(function* () {
                       const result = yield* runMathAgent({
                         context,
                         locale: page.locale,
                         modelId: runtime.modelId,
-                        task,
+                        task: formatSpecialistToolTask(input),
                         writer,
                       });
 
@@ -348,15 +338,8 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             timeout: chatStreamTimeout,
           });
 
-          const evidenceGate = { blocked: false };
-          const gatedStream = gateUnsourcedResearchStream({
-            getNoEvidenceAnswer: () => generatedNoEvidenceAnswer,
-            shouldBlock: () =>
-              sawResearch &&
-              !hasSourceBackedResearch &&
-              generatedNoEvidenceAnswer.length > 0,
-            state: evidenceGate,
-            stream: streamTextResult.toUIMessageStream({
+          writer.merge(
+            streamTextResult.toUIMessageStream({
               sendReasoning: true,
               sendStart: false,
               messageMetadata: ({ part }) => {
@@ -401,10 +384,8 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                 );
                 return runtime.translate("error-message");
               },
-            }),
-          });
-
-          writer.merge(gatedStream);
+            })
+          );
 
           // AI SDK result promises consume the stream as needed; the merged UI
           // stream is already the client-facing consumer.
@@ -412,19 +393,9 @@ export function streamChat({ chat, page, runtime, user }: Params) {
           const response = yield* Effect.tryPromise(
             () => streamTextResult.response
           );
-          const suggestionMessages = evidenceGate.blocked
-            ? [
-                ...chat.finalMessages,
-                {
-                  content: generatedNoEvidenceAnswer,
-                  role: "assistant" as const,
-                },
-              ]
-            : [...chat.finalMessages, ...response.messages];
-
           yield* writeSuggestions({
             locale: page.locale,
-            messages: suggestionMessages,
+            messages: [...chat.finalMessages, ...response.messages],
             writer,
           }).pipe(
             Effect.catchAll((error) =>

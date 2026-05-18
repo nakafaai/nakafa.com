@@ -24,6 +24,20 @@ const toolResultProviderMetadata = {
   google: { thoughtSignature: "result-signature" },
 };
 
+const nakafaInput = {
+  deliverables: ["current page evidence"],
+  objective: "Read the current Nakafa page.",
+  request: "current page",
+  requirements: ["Use the current page URL."],
+};
+
+const mathInput = {
+  given: ["x + 1", "x + 2"],
+  objective: "Compare the expressions.",
+  request: "compare x + 1 and x + 2",
+  requirements: ["Check whether the expressions are equivalent."],
+};
+
 describe("mapDBPartToUIMessagePart", () => {
   it("hydrates nakafa tool and data parts from the current schema", async () => {
     const t = convexTest(schema, convexModules);
@@ -57,7 +71,7 @@ describe("mapDBPartToUIMessagePart", () => {
         toolToolCallId: "tool-1",
         toolState: "output-available",
         toolCallProviderMetadata,
-        toolNakafaInput: "current page",
+        toolNakafaInput: nakafaInput,
         toolNakafaOutput: "done",
         toolResultProviderMetadata,
       });
@@ -68,7 +82,7 @@ describe("mapDBPartToUIMessagePart", () => {
         toolToolCallId: "math-tool-1",
         toolState: "output-available",
         toolCallProviderMetadata,
-        toolMathInput: "compare x + 1 and x + 2",
+        toolMathInput: mathInput,
         toolMathOutput: "contradicted",
         toolResultProviderMetadata,
       });
@@ -194,14 +208,14 @@ describe("mapDBPartToUIMessagePart", () => {
       expect.objectContaining({
         type: "tool-nakafa",
         callProviderMetadata: toolCallProviderMetadata,
-        input: { task: "current page" },
+        input: nakafaInput,
         output: "done",
         resultProviderMetadata: toolResultProviderMetadata,
       }),
       expect.objectContaining({
         type: "tool-math",
         callProviderMetadata: toolCallProviderMetadata,
-        input: { task: "compare x + 1 and x + 2" },
+        input: mathInput,
         output: "contradicted",
         resultProviderMetadata: toolResultProviderMetadata,
       }),

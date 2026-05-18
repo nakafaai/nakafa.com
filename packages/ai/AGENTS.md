@@ -15,7 +15,7 @@
 
 ## Review Checklist
 
-- Top-level specialist delegation uses one `task`; tool-specific `queries` are only executable search strings.
+- Top-level specialist delegation uses compact structured input; internal agent tasks may be formatted from that input behind the tool seam.
 - Search/source scoping must be language-neutral and must not rely on hardcoded user-language keywords.
 - UI data parts must reflect the actual provider call and scoped source set.
 - Final agent output must be backed by retrieved evidence, deterministic math, or a clear limitation.

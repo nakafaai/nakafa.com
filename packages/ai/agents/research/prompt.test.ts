@@ -16,9 +16,6 @@ const context = {
   userRole: "student" as const,
   verified: false,
 };
-const couldNotConfirmFromDirectSourcesPattern =
-  /could not confirm the request from\s+retrieved direct sources/;
-const noDigitalFootprintPattern = /no\s+digital footprint/;
 
 describe("research prompt", () => {
   it("keeps evidence tool routing under tool usage guidelines", () => {
@@ -36,15 +33,15 @@ describe("research prompt", () => {
     const evidenceSection = prompt.slice(evidenceIndex, outputIndex);
     const outputSection = prompt.slice(outputIndex);
 
-    expect(toolSection).toContain("## Workflow");
-    expect(toolSection).toContain("## Search Rules");
+    expect(toolSection).toContain("Workflow:");
+    expect(toolSection).toContain("Search rules:");
     expect(toolSection).toContain("webSearch");
     expect(toolSection).toContain("Google Search grounding");
     expect(toolSection).toContain(
       "Every webSearch call must set sourcePreference"
     );
-    expect(toolSection).not.toContain("Return ONLY internal evidence notes");
-    expect(evidenceSection).toContain("Return ONLY internal evidence notes");
+    expect(toolSection).not.toContain("Do not infer absence");
+    expect(evidenceSection).toContain("Do not infer absence");
     expect(outputSection).toContain(
       "Return concise internal evidence notes only."
     );
@@ -55,49 +52,52 @@ describe("research prompt", () => {
 
     expect(prompt).toContain("# Synthesis Rules");
     expect(prompt).not.toContain("# Tool Usage Guidelines");
-    expect(prompt).not.toContain("## Workflow");
-    expect(prompt).not.toContain("## Search Rules");
+    expect(prompt).not.toContain("Workflow:");
     expect(prompt).not.toContain("webSearch");
     expect(prompt).not.toContain("Google Search grounding");
-    expect(prompt).not.toContain("Grounding Source References");
   });
 
   it("keeps official-source requests scoped to authoritative sources", () => {
     const prompt = researchEvidencePrompt({ context, locale: "id" });
 
-    expect(prompt).toContain("Preserve source constraints");
-    expect(prompt).toContain("Do not rewrite a specific source request");
+    expect(prompt).toContain("Preserve task-relevant user-provided strings");
+    expect(prompt).toContain("Do not translate or paraphrase");
+    expect(prompt).toContain(
+      "Search named or official sources before broadening."
+    );
+    expect(prompt).toContain(
+      "Do not rewrite a specific source request into a generic trends query."
+    );
     expect(prompt).toContain("Avoid YouTube, social posts, and listicles");
-    expect(prompt).toContain("Keep exact user wording for named products");
-    expect(prompt).toContain("Do not translate or paraphrase those terms.");
-    expect(prompt).toContain("Every webSearch call must set sourcePreference");
   });
 
-  it("includes verified page context when available", () => {
-    const prompt = researchPrompt({
-      context: { ...context, userRole: undefined, verified: true },
-      locale: "en",
-    });
-
-    expect(prompt).toContain("- Verified: yes");
-    expect(prompt).toContain("- User Role: unknown");
-  });
-
-  it("includes evidence context without assuming a known role", () => {
+  it("includes runtime context with unknown role fallback", () => {
     const prompt = researchEvidencePrompt({
       context: { ...context, userRole: undefined, verified: true },
       locale: "en",
     });
 
-    expect(prompt).toContain("- Date: May 15, 2026");
-    expect(prompt).toContain("- Verified: yes");
-    expect(prompt).toContain("- User Role: unknown");
+    expect(prompt).toContain("- date: May 15, 2026");
+    expect(prompt).toContain("- verified: yes");
+    expect(prompt).toContain("- user role: unknown");
+  });
+
+  it("includes synthesis runtime context with unknown role fallback", () => {
+    const prompt = researchPrompt({
+      context: { ...context, userRole: undefined, verified: true },
+      locale: "en",
+    });
+
+    expect(prompt).toContain("- verified: yes");
+    expect(prompt).toContain("- user role: unknown");
   });
 
   it("guides search and scrape tools toward primary sources", () => {
     expect(nakafaWebSearch).toContain("official domain");
     expect(nakafaWebSearch).toContain("generic industry trend search");
-    expect(nakafaWebSearch).toContain("Keep exact wording from the user task");
+    expect(nakafaWebSearch).toContain(
+      "Keep task-relevant user-provided strings"
+    );
     expect(nakafaWebSearch).toContain(
       "named products, APIs, libraries, and features"
     );
@@ -112,12 +112,13 @@ describe("research prompt", () => {
     expect(nakafaScrape).toContain("primary documentation");
   });
 
-  it("keeps Google Search grounding inside the research agent", () => {
+  it("keeps Google Search grounding inside the research evidence agent", () => {
     const prompt = researchEvidencePrompt({ context, locale: "id" });
 
-    expect(prompt).toContain("Google Search grounding");
-    expect(prompt).toContain("Use webSearch to collect inspectable Firecrawl");
-    expect(prompt).toContain("Use Google Search grounding for current public");
+    expect(prompt).toContain("Use webSearch for inspectable Firecrawl");
+    expect(prompt).toContain(
+      "Use Google Search grounding for current public corroboration after Firecrawl."
+    );
   });
 
   it("keeps research citations structured", () => {
@@ -126,23 +127,35 @@ describe("research prompt", () => {
     expect(prompt).toContain(
       "Return structured research data through the provided output schema"
     );
-    expect(prompt).toContain("findings[].text contains one concise");
-    expect(prompt).toContain("findings[].citations contains the source");
-    expect(prompt).toContain("Do not put markdown links");
+    expect(prompt).toContain(
+      "findings[].text: one concise source-backed claim."
+    );
+    expect(prompt).toContain(
+      "findings[].citations: source title and URL for that claim."
+    );
+    expect(prompt).toContain("limitations: self-contained process limitations");
+    expect(prompt).toContain(
+      "Do not put markdown links, numeric citation markers, or source-list prose inside finding text."
+    );
   });
 
   it("prevents no-source answers from becoming existence claims", () => {
     const prompt = researchPrompt({ context, locale: "id" });
 
     expect(prompt).toContain(
-      "For empty findings, noEvidenceAnswer must not infer nonexistence for any entity:"
+      "Limitations and empty-findings answers are process statements about this retrieval attempt."
     );
-    expect(prompt).toContain("- Person.");
-    expect(prompt).toMatch(couldNotConfirmFromDirectSourcesPattern);
-    expect(prompt).toContain("Write noEvidenceAnswer as a process limitation");
-    expect(prompt).toContain('Do not say an item was "not found"');
     expect(prompt).toContain(
-      'Do not say an item has "no official announcement"'
+      "entity nonexistence for a person, school, organization, product, policy, or event."
+    );
+    expect(prompt).toContain(
+      "information, evidence, proof, sources, announcements, or official information are available or unavailable."
+    );
+    expect(prompt).toContain(
+      "found/not-found status, public-data absence, announcement absence, or digital-footprint absence."
+    );
+    expect(prompt).not.toContain(
+      "This retrieval run was insufficient to verify the user's claim"
     );
   });
 
@@ -150,28 +163,7 @@ describe("research prompt", () => {
     const prompt = researchEvidencePrompt({ context, locale: "id" });
 
     expect(prompt).toContain("zero usable direct sources");
-    expect(prompt).toContain("Do not infer");
-    expect(prompt).toMatch(noDigitalFootprintPattern);
-  });
-
-  it("keeps source constraints while search tools stay available", () => {
-    const prompt = researchEvidencePrompt({ context, locale: "id" });
-
-    expect(prompt).toContain("Use scrape when a selected search source");
-    expect(prompt).toContain("Preserve source constraints");
-    expect(prompt).toContain("webSearch");
-    expect(prompt).toContain("Google Search grounding");
-  });
-
-  it("keeps synthesis isolated from tool routing", () => {
-    const prompt = researchPrompt({ context, locale: "id" });
-
-    expect(prompt).toContain("Use only the provided research evidence");
-    expect(prompt).toContain("Do not invent sources");
-    expect(prompt).toContain("Return only structured output fields");
-    expect(prompt).not.toContain("Return ONLY the research findings");
-    expect(prompt).not.toContain("webSearch");
-    expect(prompt).not.toContain("Google Search grounding");
-    expect(prompt).not.toContain("Grounding Source References");
+    expect(prompt).toContain("Do not infer absence");
+    expect(prompt).toContain("digital-footprint absence");
   });
 });

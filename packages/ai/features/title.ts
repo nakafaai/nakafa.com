@@ -36,11 +36,13 @@ export const generateTitle = Effect.fn("features.generateTitle")(function* ({
 }: {
   messages: MyUIMessage[];
 }) {
+  const titleSourceText = getTitleSourceText(messages);
+
   const { text } = yield* Effect.tryPromise({
     try: () =>
       generateText({
         model: model.languageModel(defaultModel),
-        prompt: JSON.stringify(messages, null, 2),
+        prompt: titleSourceText,
         providerOptions: {
           gateway: gatewayProviderOptions,
           google: getFastModelProviderOptions(defaultModel),
@@ -88,3 +90,23 @@ export const generateTitle = Effect.fn("features.generateTitle")(function* ({
 
   return `${cleanedTitle.slice(0, TRUNCATED_TITLE_LENGTH)}...`;
 });
+
+/** Reads only the first user-authored text because titles summarize the opening request. */
+function getTitleSourceText(messages: MyUIMessage[]) {
+  const firstUserMessage = messages.find((message) => message.role === "user");
+
+  if (!firstUserMessage) {
+    return "";
+  }
+
+  return firstUserMessage.parts
+    .flatMap((part) => {
+      if (part.type !== "text") {
+        return [];
+      }
+
+      return [part.text];
+    })
+    .join("\n")
+    .trim();
+}

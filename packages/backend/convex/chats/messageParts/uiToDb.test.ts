@@ -21,6 +21,20 @@ const toolResultProviderMetadata = {
   google: { thoughtSignature: "result-signature" },
 };
 
+const nakafaInput = {
+  deliverables: ["current page evidence"],
+  objective: "Read the current Nakafa page.",
+  request: "current page",
+  requirements: ["Use the current page URL."],
+};
+
+const mathInput = {
+  given: ["2x + 3x"],
+  objective: "Simplify the expression.",
+  request: "simplify 2x + 3x",
+  requirements: ["Verify the simplified result."],
+};
+
 describe("mapUIMessagePartsToDBParts", () => {
   it("persists nakafa tool and data parts without old content fields", () => {
     const parts = [
@@ -29,7 +43,7 @@ describe("mapUIMessagePartsToDBParts", () => {
         toolCallId: "tool-1",
         state: "output-available",
         callProviderMetadata: toolCallProviderMetadata,
-        input: { task: "current page" },
+        input: nakafaInput,
         output: "done",
         resultProviderMetadata: toolResultProviderMetadata,
       },
@@ -38,7 +52,7 @@ describe("mapUIMessagePartsToDBParts", () => {
         toolCallId: "math-tool-1",
         state: "output-available",
         callProviderMetadata: toolCallProviderMetadata,
-        input: { task: "simplify 2x + 3x" },
+        input: mathInput,
         output: "verified",
         resultProviderMetadata: toolResultProviderMetadata,
       },
@@ -156,14 +170,14 @@ describe("mapUIMessagePartsToDBParts", () => {
       expect.objectContaining({
         type: "tool-nakafa",
         toolCallProviderMetadata,
-        toolNakafaInput: "current page",
+        toolNakafaInput: nakafaInput,
         toolNakafaOutput: "done",
         toolResultProviderMetadata,
       }),
       expect.objectContaining({
         type: "tool-math",
         toolCallProviderMetadata,
-        toolMathInput: "simplify 2x + 3x",
+        toolMathInput: mathInput,
         toolMathOutput: "verified",
         toolResultProviderMetadata,
       }),

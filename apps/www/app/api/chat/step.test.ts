@@ -100,7 +100,7 @@ describe("app/api/chat/step", () => {
     expect(step).toEqual({
       messages: [],
       system: expect.stringContaining(
-        "The math task must verify the exact example, exercise, answer key, and numeric claims that will appear in the final answer."
+        "The math input must verify the exact example, exercise, answer key, and numeric claims that will appear in the final answer."
       ),
     });
     expect(step).toEqual({
@@ -207,7 +207,10 @@ describe("app/api/chat/step", () => {
           },
           {
             input: {
-              task: "# Task\nResearch current public information.",
+              objective: "Research current public information.",
+              request: "current public information",
+              requirements: [],
+              sourceRequirements: ["current public sources"],
             },
             toolCallId: "research-call",
             toolName: "deepResearch",

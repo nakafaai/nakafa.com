@@ -19,6 +19,9 @@ function shouldUseDevTools() {
     return false;
   }
 
+  // AI SDK DevTools throws in production mode and stores prompts, outputs,
+  // and tool data locally in `.devtools/generations.json`.
+  // Reference: https://ai-sdk.dev/docs/ai-sdk-core/devtools
   if (env.NODE_ENV === "production") {
     return false;
   }

@@ -61,7 +61,7 @@ export const prepareChatStep = Effect.fn("chat.prepareChatStep")(
                 - Nakafa selected educational math content.
                 - The final answer will include calculations, formulas, numeric answers, answer keys, or correctness claims.
 
-                The math task must verify the exact example, exercise, answer key, and numeric claims that will appear in the final answer.
+                The math input must verify the exact example, exercise, answer key, and numeric claims that will appear in the final answer.
 
                 Do not call math after Nakafa when:
                 - The content is a non-math lesson, Quran, article, or definition without calculation.

@@ -398,6 +398,27 @@ export const providerMetadataValidator = v.optional(
   v.record(v.string(), v.record(v.string(), v.any()))
 );
 
+const specialistToolInputFields = {
+  objective: v.string(),
+  request: v.string(),
+  requirements: v.array(v.string()),
+};
+
+export const nakafaToolInputValidator = v.object({
+  ...specialistToolInputFields,
+  deliverables: v.array(v.string()),
+});
+
+export const mathToolInputValidator = v.object({
+  ...specialistToolInputFields,
+  given: v.array(v.string()),
+});
+
+export const researchToolInputValidator = v.object({
+  ...specialistToolInputFields,
+  sourceRequirements: v.array(v.string()),
+});
+
 /**
  * Part base validator (without system fields)
  * Contains all fields for the parts table
@@ -424,11 +445,11 @@ export const partValidator = v.object({
   toolResultProviderMetadata: providerMetadataValidator,
 
   // Orchestrator tool fields
-  toolNakafaInput: v.optional(v.string()),
+  toolNakafaInput: v.optional(nakafaToolInputValidator),
   toolNakafaOutput: v.optional(v.string()),
-  toolMathInput: v.optional(v.string()),
+  toolMathInput: v.optional(mathToolInputValidator),
   toolMathOutput: v.optional(v.string()),
-  toolDeepResearchInput: v.optional(v.string()),
+  toolDeepResearchInput: v.optional(researchToolInputValidator),
   toolDeepResearchOutput: v.optional(v.string()),
 
   dataSuggestionsId: v.optional(v.string()),

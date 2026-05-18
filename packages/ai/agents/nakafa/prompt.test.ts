@@ -11,7 +11,7 @@ const context = {
 } as const;
 
 describe("nakafaAgentPrompt", () => {
-  it("keeps Nakafa tool routing under stable tool headings", () => {
+  it("keeps Nakafa routing, evidence, and output sections separate", () => {
     const prompt = nakafaAgentPrompt({ context, locale: "id" });
 
     const toolIndex = prompt.indexOf("# Tool Usage Guidelines");
@@ -45,7 +45,6 @@ describe("nakafaAgentPrompt", () => {
     expect(evidenceSection).toContain(
       "Lesson-provided practice may come from read content"
     );
-    expect(evidenceSection).not.toContain("Do not include public URLs");
     expect(outputSection).toContain("Do not include public URLs");
   });
 
@@ -53,31 +52,17 @@ describe("nakafaAgentPrompt", () => {
     const prompt = nakafaAgentPrompt({ context, locale: "id" });
 
     expect(prompt).toContain(
-      "If the request asks for both lesson explanation and practice, make separate focused search calls"
+      "If the task asks for both lesson explanation and practice"
     );
     expect(prompt).toContain("subject for the lesson");
     expect(prompt).toContain("exercises for the practice");
-    expect(prompt).toContain(
-      "When independent searches are needed, call search tools in parallel"
-    );
-    expect(prompt).toContain("Put all search text in queries.");
+    expect(prompt).toContain("Call independent searches in parallel");
     expect(prompt).toContain("Preserve exact identifiers in queries");
+    expect(prompt).toContain("warmups");
+    expect(prompt).toContain("starter examples");
+    expect(prompt).toContain("preparation before practice");
     expect(prompt).toContain(
-      "Search exercises only for practice, test, tryout, question, answer, solution, or exercise walkthrough requests."
-    );
-    expect(prompt).toContain("Treat these as part of the exercise request:");
-    expect(prompt).toContain("warmups.");
-    expect(prompt).toContain("starter examples.");
-    expect(prompt).toContain("quick reviews.");
-    expect(prompt).toContain("preparation before practice.");
-    expect(prompt).toContain(
-      "If a practice task also asks for a simple explanation or starter example, use exercise evidence for that setup."
-    );
-    expect(prompt).toContain(
-      "For exercise requests without an exact reference:"
-    );
-    expect(prompt).toContain(
-      "Use taxonomy first when the request asks what Nakafa content structure is available."
+      "Use taxonomy first when the request asks what Nakafa structure is available"
     );
   });
 
@@ -93,15 +78,15 @@ describe("nakafaAgentPrompt", () => {
       locale: "id",
     });
 
-    expect(prompt).toContain("Verified current page: yes");
-    expect(prompt).toContain("User role: unknown");
+    expect(prompt).toContain("- verified current page: yes");
+    expect(prompt).toContain("- user role: unknown");
   });
 
   it("keeps Nakafa sources out of model-facing prose", () => {
     const prompt = nakafaAgentPrompt({ context, locale: "id" });
 
     expect(prompt).toContain(
-      "Return compact evidence markdown with content IDs and the retrieved data."
+      "Return compact evidence markdown with content IDs and retrieved data."
     );
     expect(prompt).toContain(
       "Do not include public URLs, source labels, citation fields, or markdown links for Nakafa-owned content."
