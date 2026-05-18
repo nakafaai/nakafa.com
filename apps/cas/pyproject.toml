@@ -40,6 +40,8 @@ python_files = ["*_test.py"]
 pythonpath = ["."]
 testpaths = ["tests"]
 
+[tool.vercel]
+entrypoint = "api.index:app"
 
 [tool.basedpyright]
 include = ["api", "cas", "tests"]

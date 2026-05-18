@@ -47,6 +47,7 @@
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "^2.9.14",
     "@types/node": "^25.8.0",
+    "@vercel/config": "^0.5.0",
     "depcheck": "^1.4.7",
     "tsup": "^8.5.1",
     "turbo": "^2.9.14",
