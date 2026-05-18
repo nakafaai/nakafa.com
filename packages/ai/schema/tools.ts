@@ -1,5 +1,6 @@
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { type InferUITools, tool } from "ai";
+import dedent from "dedent";
 import { Schema } from "effect";
 
 export const ToolNameSchema = Schema.Literal("nakafa", "deepResearch", "math");
@@ -10,8 +11,22 @@ export type ToolName = Schema.Schema.Type<typeof ToolNameSchema>;
  */
 export const NakafaToolInputSchema = Schema.Struct({
   task: Schema.NonEmptyString.annotations({
-    description:
-      "A concise Markdown brief for Nakafa educational evidence. Include '# User Request' with the exact user wording, '# Task' with what Nakafa must retrieve or read, and relevant context or constraints. Preserve every requested deliverable, including lesson explanations, summaries, examples, exercises, practice questions, answers, or Quran references.",
+    description: dedent(`
+      A concise Markdown brief for Nakafa educational evidence.
+
+      Include:
+      - # User Request with the exact user wording.
+      - # Task with what Nakafa must retrieve or read.
+      - Relevant context or constraints.
+
+      Preserve every requested deliverable:
+      - lesson explanations.
+      - summaries.
+      - examples.
+      - exercises or practice questions.
+      - answers.
+      - Quran references.
+    `),
   }),
 })
   .pipe(Schema.mutable)
@@ -22,8 +37,22 @@ export const NakafaToolInputSchema = Schema.Struct({
  */
 export const ResearchToolInputSchema = Schema.Struct({
   task: Schema.NonEmptyString.annotations({
-    description:
-      "A concise Markdown brief for external or current-information research. Include '# User Request' with the exact user wording, '# Task' with the research objective, and relevant context or constraints. Preserve exact user wording for named products, APIs, libraries, features, versions, domains, URLs, source constraints, source-ownership constraints, and document titles. Do not summarize away the user's requested evidence source.",
+    description: dedent(`
+      A concise Markdown brief for external or current-information research.
+
+      Include:
+      - # User Request with the exact user wording.
+      - # Task with the research objective.
+      - Relevant context or constraints.
+
+      Preserve exact user wording for:
+      - named products, APIs, libraries, and features.
+      - versions, domains, and URLs.
+      - source constraints and source-ownership constraints.
+      - document titles.
+
+      Do not summarize away the user's requested evidence source.
+    `),
   }),
 })
   .pipe(Schema.mutable)
@@ -34,8 +63,27 @@ export const ResearchToolInputSchema = Schema.Struct({
  */
 export const MathToolInputSchema = Schema.Struct({
   task: Schema.NonEmptyString.annotations({
-    description:
-      "A concise Markdown brief for deterministic math verification. Include '# User Request' with the exact user wording, '# Task' with the math objective, and the expressions, data, variables, assumptions, and requested verification. Use this even for natural student wording like checking whether work is valid, correct, equivalent, or proven.",
+    description: dedent(`
+      A concise Markdown brief for deterministic math verification.
+
+      Include:
+      - # User Request with the exact user wording.
+      - # Task with the math objective.
+      - Expressions, data, variables, assumptions, and requested verification.
+
+      Use this for user-provided or retrieved math, including natural student wording like:
+      - valid.
+      - correct.
+      - equivalent.
+      - proven.
+
+      Do not use this as the first or only source for:
+      - educational practice sets.
+      - warmups, quizzes, or tryout preparation.
+      - examples, hints, or review tasks.
+
+      Use Nakafa first for content selection.
+    `),
   }),
 })
   .pipe(Schema.mutable)

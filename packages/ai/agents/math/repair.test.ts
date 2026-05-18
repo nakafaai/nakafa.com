@@ -96,7 +96,7 @@ describe("math tool repair", () => {
     expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({
         model: "nakafa-lite",
-        prompt: expect.stringContaining("Original user request:"),
+        prompt: expect.stringContaining("# Original User Request"),
         system: "system",
       })
     );

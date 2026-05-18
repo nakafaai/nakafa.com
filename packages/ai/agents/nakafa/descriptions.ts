@@ -47,7 +47,11 @@ export const nakafaExercise = createPrompt({
 
     ## Exercise Routing
 
-    Use this after search returns an exercises content_id when the user wants to see, answer, solve, or explain exercises.
+    Use this after search returns an exercises content_id when the user wants to:
+    - see exercises.
+    - answer exercises.
+    - solve exercises.
+    - explain exercises.
 
     The content_ref may point to a full exercise set or to a numbered exercise returned by search.
     Use exercise_number only when the user asks for one specific question.
@@ -79,6 +83,14 @@ export const nakafaTaxonomy = createPrompt({
   toolUsageGuidelines: `
     # Tool Usage Guidelines
 
-    Use this first when the user asks what Nakafa content structure, options, categories, filters, materials, grades, tools, or exercise paths are available.
+    Use this first when the user asks what Nakafa supports:
+    - content structure.
+    - options.
+    - categories.
+    - filters.
+    - materials.
+    - grades.
+    - tools.
+    - exercise paths.
   `,
 });

@@ -12,6 +12,7 @@ import {
   type ToolCallRepairFunction,
   type ToolSet,
 } from "ai";
+import dedent from "dedent";
 import { Effect, Schema } from "effect";
 
 type MathRepairOptions = Parameters<ToolCallRepairFunction<ToolSet>>[0];
@@ -74,26 +75,43 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
     generateText({
       model: model.languageModel(modelId),
       output: Output.object({ schema: tool.inputSchema }),
-      prompt: [
-        "Repair the math tool arguments without changing the selected tool.",
-        "Keep the operation field exactly the same as the failed arguments.",
-        "Copy the exact expression, equation, points, matrix, or dataset from the original user request.",
-        "Do not invent a new math problem.",
-        "For equivalence or validity checks, use compare with left and right expressions.",
-        "For simplify, factor, expand, cancel, together, apart, rationalize, or domain, include expression.",
-        "For derivative, integral, or limit, include expression and use variable x unless the request names another variable.",
-        "For a definite or improper integral, include lower and upper exactly from the original request.",
-        "For named probability distributions, include distribution, parameters, and the requested point or event bounds.",
-        `Selected tool: ${toolCall.toolName}`,
-        "Original user request:",
-        task,
-        "Failed arguments:",
-        JSON.stringify(toolCall.input, null, 2),
-        "Accepted schema:",
-        JSON.stringify(schema.right, null, 2),
-        "Validation error:",
-        error.message,
-      ].join("\n"),
+      prompt: dedent(`
+        # Repair Task
+
+        Repair the math tool arguments without changing the selected tool.
+
+        Rules:
+        - Keep the operation field exactly the same as the failed arguments.
+        - Copy the exact expression, equation, points, matrix, or dataset from the original user request.
+        - Do not invent a new math problem.
+        - For equivalence or validity checks, use compare with left and right expressions.
+        - For simplify, factor, expand, cancel, together, apart, rationalize, or domain, include expression.
+        - For derivative, integral, or limit, include expression.
+        - Use variable x unless the request names another variable.
+        - For a definite or improper integral, include lower and upper exactly from the original request.
+        - For named probability distributions, include distribution and parameters.
+        - Include the requested probability point or event bounds.
+
+        # Selected Tool
+
+        ${toolCall.toolName}
+
+        # Original User Request
+
+        ${task}
+
+        # Failed Arguments
+
+        ${JSON.stringify(toolCall.input, null, 2)}
+
+        # Accepted Schema
+
+        ${JSON.stringify(schema.right, null, 2)}
+
+        # Validation Error
+
+        ${error.message}
+      `),
       providerOptions: {
         gateway: gatewayProviderOptions,
         google: getFastModelProviderOptions(modelId),

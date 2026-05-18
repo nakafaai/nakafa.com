@@ -50,18 +50,25 @@ export function researchEvidencePrompt({
       - Use Google Search grounding for current web corroboration.
       - Use webSearch for inspectable source content and metadata.
       - Use scrape for detailed analysis of a selected URL.
-
-      - Search thoroughly and use multiple optimized queries if needed
+      - Search thoroughly and use multiple optimized queries if needed.
       - Keep webSearch queries as search-engine text, not the raw user prompt.
-        Remove answer-formatting instructions such as summary length, tone,
-        output language, and citation style.
+      - Remove answer-formatting instructions from queries:
+        - Summary length.
+        - Tone.
+        - Output language.
+        - Citation style.
       - Keep exact user wording for named products, APIs, libraries, features,
         versions, domains, URLs, source constraints, and document titles in every
         query that depends on them. Do not translate or paraphrase those terms.
       - Every webSearch call must set sourcePreference.
-        Use primary when the task asks for source-owned, first-party, maintainer,
-        vendor, standards-body, paper-author, primary, or official evidence in
-        any language. Use any when broader credible sources are acceptable.
+      - Use primary sourcePreference when the task asks for source-owned evidence:
+        - first-party.
+        - maintainer.
+        - vendor.
+        - standards body.
+        - paper author.
+        - primary or official source.
+      - Use any sourcePreference when broader credible sources are acceptable.
       - Preserve source constraints from the task. If the task asks for official docs,
         official sources, or a named domain, search that source before broadening
         the query.
@@ -135,21 +142,39 @@ export function researchPrompt({ locale, context }: ResearchPromptProps) {
       - findings[].text contains one concise source-backed claim
       - findings[].citations contains the source title and URL for that claim
       - limitations contains self-contained evidence gaps or caveats in the user's locale
-      - noEvidenceAnswer contains the brief user-facing answer to show if no
-        finding can be cited after validation
+      - noEvidenceAnswer contains the brief user-facing answer to show when validation removes every finding
 
       Do not put markdown links, numeric citation markers, or source-list prose inside finding text.
-      Keep noEvidenceAnswer in the user's locale. It must only explain that
-      direct evidence was unavailable and what the user can do next; it must not
-      include factual claims, source names, URLs, dates, rules, or recommendations.
-      For empty findings, noEvidenceAnswer must not infer that a person,
-      school, organization, product, policy, or event does not exist. Failed
-      search means only that this run could not confirm the request from
-      retrieved direct sources.
-      Write noEvidenceAnswer as a process limitation from this run, not as a
-      fact about the world. Do not say an item was "not found", has "no public
-      data", has "no official announcement", has "no digital footprint", or
-      "does not exist" in any language.
+      Keep noEvidenceAnswer in the user's locale.
+
+      noEvidenceAnswer may explain only:
+      - Direct evidence was unavailable.
+      - What the user can do next.
+
+      noEvidenceAnswer must not include:
+      - Factual claims.
+      - Source names.
+      - URLs.
+      - Dates.
+      - Rules.
+      - Recommendations.
+
+      For empty findings, noEvidenceAnswer must not infer nonexistence for any entity:
+      - Person.
+      - School.
+      - Organization.
+      - Product.
+      - Policy.
+      - Event.
+
+      Failed search means only that this run could not confirm the request from retrieved direct sources:
+      - Write noEvidenceAnswer as a process limitation from this run.
+      - Do not write it as a fact about the world.
+      - Do not say an item was "not found".
+      - Do not say an item has "no public data".
+      - Do not say an item has "no official announcement".
+      - Do not say an item has "no digital footprint".
+      - Do not say an item "does not exist" in any language.
 
       DO NOT write user-facing explanations or friendly introductions.
       Return only the structured research data.

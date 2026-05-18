@@ -67,6 +67,25 @@ export function hasSingleGroundingQuery(data: DataPart["web-search"]) {
   return data.queries.length === 1;
 }
 
+/**
+ * Converts sanitized AI SDK Google grounding sources into synthesis evidence.
+ *
+ * References:
+ * - https://ai-sdk.dev/docs/ai-sdk-core/generating-text#sources
+ * - https://ai-sdk.dev/providers/ai-sdk-providers/google#google-search
+ */
+export function createGroundingEvidence(data: DataPart["web-search"]) {
+  if (data.sources.length === 0) {
+    return;
+  }
+
+  return [
+    "# Google Search Grounding Sources",
+    ...formatGroundingQueries(data.queries),
+    ...data.sources.map(formatGroundingSource),
+  ].join("\n");
+}
+
 /** Reads Gemini grounding metadata from either Vercel Gateway provider shape. */
 function getGroundingMetadata(providerMetadata: unknown) {
   const decoded = Schema.decodeUnknownEither(ProviderMetadataSchema)(
@@ -182,4 +201,20 @@ function getSourceTitle(url: string, title?: string) {
   }
 
   return new URL(url).hostname.replace("www.", "");
+}
+
+function formatGroundingQueries(queries: string[]) {
+  if (queries.length === 0) {
+    return [];
+  }
+
+  return [
+    `Queries: ${queries.map((query) => JSON.stringify(query)).join(", ")}`,
+  ];
+}
+
+function formatGroundingSource(
+  source: DataPart["web-search"]["sources"][number]
+) {
+  return [`- ${source.title}`, `  URL: ${source.url}`].join("\n");
 }

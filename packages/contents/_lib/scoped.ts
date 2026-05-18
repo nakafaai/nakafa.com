@@ -213,7 +213,7 @@ export function extractReferences(module: unknown): unknown[] {
  * Validates one raw references payload with the shared references schema.
  */
 export function parseReferences(
-  rawReferences: unknown[]
+  rawReferences: unknown
 ): Effect.Effect<Reference[], Error> {
   return Effect.try({
     try: () => Schema.decodeUnknownSync(ReferenceListSchema)(rawReferences),

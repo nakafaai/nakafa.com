@@ -29,25 +29,31 @@ describe("nakafaPrompt", () => {
     const taskIndex = prompt.indexOf("# Task Instructions");
     const workflowIndex = prompt.indexOf("## Typical Session Workflow");
     const recoveryIndex = prompt.indexOf("## Evidence Recovery");
+    const examplesIndex = prompt.indexOf("# Task Brief Examples");
     const outputIndex = prompt.indexOf("# Output Formatting Guidelines");
 
     expect(toolIndex).toBeGreaterThanOrEqual(0);
     expect(taskIndex).toBeGreaterThan(toolIndex);
     expect(workflowIndex).toBeGreaterThan(taskIndex);
     expect(recoveryIndex).toBeGreaterThan(workflowIndex);
-    expect(outputIndex).toBeGreaterThan(recoveryIndex);
+    expect(examplesIndex).toBeGreaterThan(recoveryIndex);
+    expect(outputIndex).toBeGreaterThan(examplesIndex);
 
     const toolSection = prompt.slice(toolIndex, taskIndex);
-    const taskSection = prompt.slice(taskIndex, outputIndex);
+    const taskSection = prompt.slice(taskIndex, examplesIndex);
+    const examplesSection = prompt.slice(examplesIndex, outputIndex);
     const outputSection = prompt.slice(outputIndex);
 
     expect(toolSection).toContain(
       "Every specialized agent task MUST be one concise Markdown brief"
     );
+    expect(toolSection).toContain("## Decision standard");
     expect(toolSection).not.toContain("Typical Session Workflow");
     expect(taskSection).toContain("Understand the user's goal.");
     expect(taskSection).toContain("source-backed research is the answer gate");
     expect(taskSection).not.toContain("Multiple-choice options MUST");
+    expect(examplesSection).toContain("## Good task brief");
+    expect(examplesSection).toContain("## Bad task briefs");
     expect(outputSection).toContain("Multiple-choice options MUST");
     expect(outputSection).not.toContain("Every specialized agent task MUST");
   });
@@ -92,14 +98,26 @@ describe("nakafaPrompt", () => {
     });
 
     expect(prompt).toContain("Use for math that needs deterministic evidence.");
+    expect(prompt).toContain("Use math to verify:");
+    expect(prompt).toContain("user-provided expressions.");
+    expect(prompt).toContain("user-provided data.");
     expect(prompt).toContain(
-      "It can handle arithmetic, algebra, equations, inequalities, calculus, series, matrices, statistics, probability, geometry, and discrete math."
+      "math content already retrieved from another evidence path."
     );
+    expect(prompt).toContain(
+      "Do not use math as the first or only source for educational practice sets:"
+    );
+    expect(prompt).toContain(
+      "- Arithmetic, algebra, equations, and inequalities."
+    );
+    expect(prompt).toContain("- Calculus and series.");
+    expect(prompt).toContain("- Geometry and discrete math.");
     expect(prompt).toContain(
       "If deterministic math is inconclusive, explain the limitation clearly."
     );
+    expect(prompt).toContain("For multi-part math requests:");
     expect(prompt).toContain(
-      "For multi-part math requests, enumerate each requested calculation or verification in the math task."
+      "Enumerate each requested calculation or verification in the math task."
     );
     expect(prompt).toContain(
       'Do not collapse several requested computations into a generic task such as "verify these calculations".'
@@ -113,10 +131,10 @@ describe("nakafaPrompt", () => {
     });
 
     expect(prompt).toContain(
-      "Ground every factual educational answer in the smallest reliable evidence path before the final answer"
+      "Ground factual educational answers in the smallest reliable evidence path before the final answer"
     );
     expect(prompt).toContain(
-      "Answer directly only for greetings, preferences, simple rewrites, or other requests that do not need factual, source-specific, current, or mathematical evidence."
+      "Answer directly only when the request does not need factual, source-specific, current, or mathematical evidence:"
     );
     expect(prompt).toContain(
       "Use more than one specialized agent when the answer needs more than one kind of evidence."
@@ -130,45 +148,101 @@ describe("nakafaPrompt", () => {
       "Do not split the same meaning across separate parameters."
     );
     expect(prompt).toContain(
-      "Use math after Nakafa when retrieved content includes calculations, formulas, answers, or equivalence checks that need deterministic verification."
+      "Do not route from content slugs, material names, section labels, or UI labels alone."
     );
     expect(prompt).toContain(
-      'Use Nakafa first for named educational topics, lesson explanations, study requests, and practice requests, even when the user does not explicitly say "Nakafa".'
+      "- Math evidence for calculations, formulas, numeric answers, answer keys, and equivalence checks."
+    );
+    expect(prompt).toContain(
+      "- Math evidence for probability, statistics, matrix properties, geometry, and discrete-counting claims."
+    );
+    expect(prompt).toContain("If a claim lacks the needed evidence:");
+    expect(prompt).toContain("- Call the matching specialist.");
+    expect(prompt).toContain(
+      "Use math after Nakafa when retrieved content includes calculations, formulas, answers, or equivalence checks."
+    );
+    expect(prompt).toContain("- Named educational topics.");
+    expect(prompt).toContain(
+      '- Practice requests, even when the user does not explicitly say "Nakafa".'
+    );
+    expect(prompt).toContain(
+      "- Educational practice sets, warmups, quizzes, and tryout preparation."
+    );
+    expect(prompt).toContain(
+      "- Examples, hints, or review tasks that need content selection before math verification."
+    );
+    expect(prompt).toContain(
+      "Treat practice-adjacent requests as practice deliverables:"
+    );
+    expect(prompt).toContain("- Starter examples.");
+    expect(prompt).toContain("- Preparation before practice.");
+    expect(prompt).toContain(
+      "Do not add a separate lesson or concept overview unless the user asks for one."
+    );
+    expect(prompt).toContain(
+      "For warmups or starter examples followed by practice, ask Nakafa for exercise evidence only."
     );
     expect(prompt).toContain(
       "Preserve every requested deliverable in the Nakafa request."
     );
     expect(prompt).toContain(
-      "Do not add a lesson, overview, or example deliverable when the user only asks for practice, a question, a solution, or a walkthrough of one exercise."
+      "When the user only asks for practice, keep the Nakafa task scoped to exercise retrieval and explanation."
     );
     expect(prompt).toContain(
-      "Use Nakafa first when the user asks about Nakafa lessons, exercises, Quran, articles, the current verified page, or school and university learning or practice."
+      "- Nakafa lessons, exercises, Quran, or articles."
+    );
+    expect(prompt).toContain("- School or university learning and practice.");
+    expect(prompt).toContain("- Nakafa selects the content.");
+    expect(prompt).toContain("- math verifies the selected calculations.");
+    expect(prompt).toContain(
+      "Include the exact example, exercise, answer key, and numeric claims that will appear in the final answer."
+    );
+    expect(prompt).toContain("When specialized agents are independent:");
+    expect(prompt).toContain("Call them in parallel in the same step.");
+    expect(prompt).toContain(
+      "Do not wait for one result before starting another."
     );
     expect(prompt).toContain(
-      "When specialized agents are independent, call them in parallel in the same step instead of waiting for one result before starting another."
+      "Use math after deepResearch when researched numbers or claims need:"
+    );
+    expect(prompt).toContain("calculation.");
+    expect(prompt).toContain("comparison.");
+    expect(prompt).toContain(
+      "Never invent anything without the relevant evidence:"
+    );
+    expect(prompt).toContain("source-specific content.");
+    expect(prompt).toContain("verified math.");
+    expect(prompt).toContain(
+      "Keep one product, domain, document, or official source scoped to the requested source"
     );
     expect(prompt).toContain(
-      "Use math after deepResearch when researched numbers or claims need calculation, comparison, statistics, or verification."
+      "Use deepResearch before answering any request for:"
     );
+    expect(prompt).toContain("- Official documentation.");
     expect(prompt).toContain(
-      "Never invent source-specific content, current facts, exercise choices, citations, or verified math without the relevant evidence."
+      "Preserve the user's exact wording for named entities:"
     );
-    expect(prompt).toContain(
-      "If the user asks for one product, domain, document, or official source, keep that section scoped to the requested source"
-    );
-    expect(prompt).toContain(
-      "Use deepResearch before answering any request for official documentation, source-backed claims, citations, external links, current or latest information, or named products outside Nakafa."
-    );
-    expect(prompt).toContain(
-      "Preserve the user's exact wording for named products, APIs, libraries, features, versions, domains, URLs, source constraints, and document titles."
-    );
+    expect(prompt).toContain("- APIs and libraries.");
     expect(prompt).toContain(
       "Do not summarize away source-ownership constraints."
     );
+    expect(prompt).toContain("If a specialist agent returns an error:");
     expect(prompt).toContain(
-      "If a specialist agent returns an error, do not call the same specialist again with the same request."
+      "Do not call the same specialist again with the same request."
     );
     expect(prompt).toContain("This applies in every user language.");
+    expect(prompt).toContain(
+      "I want a challenging SNBT number-pattern practice question."
+    );
+    expect(prompt).toContain(
+      "Preserve the user's language from runtime context."
+    );
+    expect(prompt).toContain(
+      "Use only the selected exercise evidence. Do not replace the exercise with a different problem."
+    );
+    expect(prompt).toContain(
+      "Routes from metadata instead of the actual request and evidence."
+    );
   });
 
   it("does not let failed external research fall back to generic Nakafa evidence", () => {
@@ -177,14 +251,23 @@ describe("nakafaPrompt", () => {
       userRole: "student",
     });
 
+    expect(prompt).toContain("Do not use Nakafa to fill missing evidence for:");
+    expect(prompt).toContain("external verification questions.");
+    expect(prompt).toContain("current verification questions.");
+    expect(prompt).toContain("official-source verification questions.");
+    expect(prompt).toContain("source-owned verification questions.");
     expect(prompt).toContain(
-      "Do not use Nakafa to fill missing evidence for external, current, official, or source-owned verification questions."
+      "After deepResearch returns weak or missing evidence for an external, current, official, or source-owned claim:"
     );
     expect(prompt).toContain(
-      "After deepResearch returns weak or missing evidence for an external, current, official, or source-owned claim, do not switch to generic Nakafa search just to provide something."
+      "Do not switch to generic Nakafa search just to provide something."
+    );
+    expect(prompt).toContain("If no source-backed finding is available:");
+    expect(prompt).toContain(
+      "Give the limitation in the final answer and stop."
     );
     expect(prompt).toContain(
-      "If no source-backed finding is available, give the limitation in the final answer and stop; do not replace it with unrelated Nakafa content."
+      "Do not replace it with unrelated Nakafa content."
     );
   });
 
@@ -208,14 +291,18 @@ describe("nakafaPrompt", () => {
     expect(prompt).toContain(
       "Cite external research sources inline in the exact sentence they support."
     );
+    expect(prompt).toContain("When research evidence contains markdown links:");
     expect(prompt).toContain(
-      "When research evidence contains markdown links, preserve those links in the final answer"
+      "Preserve those links in the final answer for every claim that uses that evidence."
     );
     expect(prompt).toContain(
       "Do not add product homepages, documentation links, or source links from memory."
     );
     expect(prompt).toContain(
-      "preserve them exactly. Do not add parent objects, flags, wrappers, or options that are not present in the evidence."
+      "When research evidence contains technical details, preserve them exactly:"
+    );
+    expect(prompt).toContain(
+      "Do not add parent objects, flags, wrappers, or options that are not present in the evidence."
     );
     expect(prompt).toContain(
       "Do not add Nakafa source labels, Nakafa domain links, or citation-style links for Nakafa-owned content."

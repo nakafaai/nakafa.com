@@ -60,7 +60,7 @@ function formatEvidenceScope(result: MathResult) {
       return "verified deterministic result with partial derivation steps";
     }
 
-    return "partial deterministic evidence only; do not describe the final result as fully verified without another complete check";
+    return "partial deterministic evidence; do not call the final result fully verified without another complete check";
   }
 
   if (result.status === "verified") {

@@ -1,5 +1,6 @@
 import { isPublicHttpUrlSyntax } from "@repo/ai/agents/research/url";
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
+import dedent from "dedent";
 import { Schema } from "effect";
 
 export const webSearchMaxQueries = 4;
@@ -37,12 +38,32 @@ export const WebSearchInputSchema = Schema.Struct({
       Schema.mutable
     )
     .annotations({
-      description:
-        "One or more search-engine queries. Preserve exact named entities, domains, products, APIs, libraries, features, versions, institutions, dates, URLs, source constraints, and document titles from the research task. Omit answer-formatting instructions such as summary length, tone, output language, and citation style.",
+      description: dedent(`
+        One or more search-engine queries.
+
+        Preserve exact wording for:
+        - named entities, domains, products, APIs, and libraries.
+        - features, versions, institutions, and dates.
+        - URLs, source constraints, and document titles.
+
+        Omit answer-formatting instructions:
+        - summary length.
+        - tone.
+        - output language.
+        - citation style.
+      `),
     }),
   sourcePreference: Schema.Literal("primary", "any").annotations({
-    description:
-      "Choose primary when the task requires source-owned, first-party, maintainer, vendor, standards-body, or paper-author evidence. Choose any when broader credible sources are acceptable.",
+    description: dedent(`
+      Choose primary when the task requires direct evidence from:
+      - a source owner.
+      - a first-party publisher.
+      - a maintainer or vendor.
+      - a standards body.
+      - paper authors.
+
+      Choose any when broader credible sources are acceptable.
+    `),
   }),
 })
   .pipe(Schema.mutable)
@@ -80,8 +101,14 @@ export const ResearchCitationSchema = Schema.Struct({
 
 export const ResearchFindingSchema = Schema.Struct({
   text: Schema.NonEmptyString.annotations({
-    description:
-      "One concise source-backed finding. Do not include markdown links, numeric citation markers, or bibliography text here.",
+    description: dedent(`
+      One concise source-backed finding.
+
+      Do not include:
+      - markdown links.
+      - numeric citation markers.
+      - bibliography text.
+    `),
   }),
   citations: Schema.Array(ResearchCitationSchema)
     .pipe(Schema.minItems(1), Schema.mutable)
@@ -94,8 +121,12 @@ export const ResearchOutputSchema = Schema.Struct({
   findings: Schema.Array(ResearchFindingSchema)
     .pipe(Schema.mutable)
     .annotations({
-      description:
-        "Source-backed findings. Keep each finding scoped to the cited sources. Use an empty array when direct citation evidence is unavailable.",
+      description: dedent(`
+        Source-backed findings.
+
+        Keep each finding scoped to the cited sources.
+        Use an empty array when direct citation evidence is unavailable.
+      `),
     }),
   limitations: Schema.Array(Schema.NonEmptyString)
     .pipe(Schema.mutable)
@@ -104,8 +135,20 @@ export const ResearchOutputSchema = Schema.Struct({
         "Evidence gaps or caveats. Use an empty array when there are none.",
     }),
   noEvidenceAnswer: Schema.NonEmptyString.annotations({
-    description:
-      "A brief user-facing process limitation in the user's locale for cases where no source-backed finding can be returned. Say only that this run could not verify the request from retrieved direct source evidence and what direct channel the user can check next. Do not include factual claims, absence claims, source names, URLs, dates, rules, or recommendations unless they are source-backed findings.",
+    description: dedent(`
+      A brief user-facing process limitation in the user's locale.
+      Use it when no source-backed finding can be returned.
+
+      Say only:
+      - this run could not verify the request from retrieved direct source evidence.
+      - what direct channel the user can check next.
+
+      Do not include unsupported:
+      - factual claims.
+      - absence claims.
+      - source names, URLs, or dates.
+      - rules or recommendations.
+    `),
   }),
 }).pipe(Schema.mutable);
 

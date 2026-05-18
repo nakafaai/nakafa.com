@@ -72,31 +72,35 @@ describe("mathPrompt", () => {
     expect(prompt).toContain(
       "Use calculus for derivative, integral, or limit requests before any arithmetic simplification."
     );
+    expect(prompt).toContain("Before answering a multi-part request:");
     expect(prompt).toContain(
-      "Before answering a multi-part request, compare the requested calculations with the returned math evidence."
+      "Compare the requested calculations with the returned math evidence."
     );
     expect(prompt).toContain("call the missing tool before answering");
     expect(prompt).toContain(
       "For named probability distributions such as normal, binomial, or poisson, use probability for the original event."
     );
     expect(prompt).toContain("tail_probability for above or at-least");
-    expect(prompt).toContain("call probability once");
+    expect(prompt).toContain("Call probability once");
     expect(prompt).toContain("operation interval_probability");
     expect(prompt).not.toContain("probabilityInterval");
     expect(prompt).not.toContain("probabilityTail");
     expect(prompt).not.toContain("probabilitySummary");
+    expect(prompt).toContain("Use arithmetic for:");
+    expect(prompt).toContain("evaluate on exact numeric expressions.");
     expect(prompt).toContain(
-      "Use arithmetic for evaluate on exact numeric expressions."
+      "Do not use arithmetic instead of symbolic, statistical, probability, calculus, or discrete checks."
     );
     expect(prompt).toContain(
-      "do not use it instead of symbolic, statistical, probability, calculus, or discrete checks."
+      "For fair dice, cards, or finite equally likely outcomes:"
     );
     expect(prompt).toContain(
-      "For fair dice, cards, or finite equally likely outcomes, use statistics or arithmetic over the listed outcomes instead of a named probability distribution."
+      "Use statistics or arithmetic over the listed outcomes."
     );
-    expect(prompt).toContain(
-      "If an integral has bounds, include lower and upper, describe it as a definite integral"
-    );
+    expect(prompt).toContain("Do not use a named probability distribution.");
+    expect(prompt).toContain("If an integral has bounds:");
+    expect(prompt).toContain("Include lower and upper.");
+    expect(prompt).toContain("Describe it as a definite integral.");
     expect(prompt).toContain(
       "If a math check returns error and the recovery guidance identifies a correctable input issue"
     );
@@ -107,27 +111,31 @@ describe("mathPrompt", () => {
       "Never say the full final result was verified when the only checked result has partial step status."
     );
     expect(prompt).toContain(
-      "explicitly separate that theorem-based claim from the failed check."
+      "When a theorem or definition supplies an answer after an error result:"
     );
     expect(prompt).toContain(
-      "For partial step status, say the computed value was checked"
+      "Explicitly separate that theorem-based claim from the failed check."
     );
+    expect(prompt).toContain("For partial step status:");
+    expect(prompt).toContain("Say the computed value was checked.");
     expect(prompt).toContain(
       'Reserve words equivalent to "fully verified" for complete step status only.'
     );
     expect(prompt).toContain(
-      "say that simplification was checked, not the theorem itself."
+      "When a later tool checks only simplification after a theorem:"
     );
+    expect(prompt).toContain("Say that simplification was checked.");
+    expect(prompt).toContain("Do not say the theorem itself was checked.");
     expect(prompt).toContain(
       "Teach from the checked work. Treat the math steps as a worked example for a short role-appropriate explanation."
     );
     expect(prompt).toContain(
       "Adapt explanations to the user role in the context."
     );
-    expect(prompt).toContain(
-      "what we are finding, why the next step is valid, and what result follows"
-    );
-    expect(prompt).toContain("do not imply the user already used steps");
+    expect(prompt).toContain("what we are finding.");
+    expect(prompt).toContain("why the next step is valid.");
+    expect(prompt).toContain("what result follows.");
+    expect(prompt).toContain("Do not imply the user already used steps");
     expect(prompt).toContain("Use the user's locale");
     expect(prompt).toContain(
       "Do not invent derivation steps that are not present in the checked work."
@@ -153,8 +161,10 @@ describe("mathPrompt", () => {
       "A request containing both an expansion and a closed-form sum or product needs separate tool calls."
     );
     expect(prompt).toContain("## Matrix");
-    expect(prompt).toContain("Use matrix for determinant");
-    expect(prompt).toContain("Use eigen_analysis for eigenspaces");
+    expect(prompt).toContain("Use matrix for:");
+    expect(prompt).toContain("determinant, inverse, rank, and rref.");
+    expect(prompt).toContain("Use eigen_analysis for:");
+    expect(prompt).toContain("eigenspaces.");
     expect(prompt).toContain("Use eigenvalues only when the user asks only");
     expect(prompt).toContain("Use matrix_multiply only when");
     expect(prompt).toContain("Use statistics for mean, median, mode");

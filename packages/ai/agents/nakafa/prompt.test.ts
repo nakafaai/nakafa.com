@@ -53,7 +53,7 @@ describe("nakafaAgentPrompt", () => {
     const prompt = nakafaAgentPrompt({ context, locale: "id" });
 
     expect(prompt).toContain(
-      "If the request asks for both lesson explanation and practice, make separate parallel focused search calls"
+      "If the request asks for both lesson explanation and practice, make separate focused search calls"
     );
     expect(prompt).toContain("subject for the lesson");
     expect(prompt).toContain("exercises for the practice");
@@ -61,17 +61,23 @@ describe("nakafaAgentPrompt", () => {
       "When independent searches are needed, call search tools in parallel"
     );
     expect(prompt).toContain("Put all search text in queries.");
+    expect(prompt).toContain("Preserve exact identifiers in queries");
     expect(prompt).toContain(
-      "For every search, preserve exact identifiers from the request in queries"
+      "Search exercises only for practice, test, tryout, question, answer, solution, or exercise walkthrough requests."
+    );
+    expect(prompt).toContain("Treat these as part of the exercise request:");
+    expect(prompt).toContain("warmups.");
+    expect(prompt).toContain("starter examples.");
+    expect(prompt).toContain("quick reviews.");
+    expect(prompt).toContain("preparation before practice.");
+    expect(prompt).toContain(
+      "If a practice task also asks for a simple explanation or starter example, use exercise evidence for that setup."
     );
     expect(prompt).toContain(
-      "For practice, test, tryout, question, answer, solution, or exercise walkthrough requests, search exercises only unless the task explicitly asks for a separate lesson, concept overview, or background material."
+      "For exercise requests without an exact reference:"
     );
     expect(prompt).toContain(
-      "For exercise requests without an exact reference, search the exercises section first, then call exercise"
-    );
-    expect(prompt).toContain(
-      "Use taxonomy first when the request asks what Nakafa sections, filters, categories, materials, grades, tools, or exercise paths are available."
+      "Use taxonomy first when the request asks what Nakafa content structure is available."
     );
   });
 

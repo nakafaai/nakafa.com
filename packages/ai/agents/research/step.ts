@@ -1,4 +1,5 @@
 import type { ModelMessage } from "ai";
+import dedent from "dedent";
 
 /**
  * Enables Gemini Google Search grounding after inspectable Firecrawl search.
@@ -8,8 +9,13 @@ import type { ModelMessage } from "ai";
 export function prepareGoogleGroundingStep(messages: ModelMessage[]) {
   const message = {
     role: "user",
-    content:
-      "Firecrawl webSearch is complete. Google Search grounding is now enabled as the only active provider tool. Use it to corroborate current public evidence before answering. Keep source titles and URLs attached to evidence notes. If Google returns no grounding sources, state that limitation and do not cite Google Search.",
+    content: dedent(`
+      Firecrawl webSearch is complete.
+      Google Search grounding is now enabled as the only active provider tool.
+      Use it to corroborate current public evidence before answering.
+      Keep source titles and URLs attached to evidence notes.
+      If Google returns no grounding sources, state that limitation and do not cite Google Search.
+    `),
   } satisfies ModelMessage;
 
   return {

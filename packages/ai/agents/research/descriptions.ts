@@ -13,11 +13,19 @@ export const nakafaWebSearch = createPrompt({
 
       ## Use When
 
-      The task needs up-to-date external information, official documentation, source-owned evidence, current facts, or corroboration beyond Nakafa content.
+      The task needs evidence beyond Nakafa content:
+      - up-to-date external information.
+      - official documentation.
+      - source-owned evidence.
+      - current facts.
+      - corroboration.
 
       ## Skip When
 
-      You already have enough source-backed information from Nakafa content, current-page content, or collected research evidence.
+      You already have enough source-backed information from:
+      - Nakafa content.
+      - current-page content.
+      - collected research evidence.
 
       ## Capabilities
 
@@ -32,21 +40,37 @@ export const nakafaWebSearch = createPrompt({
       - Use returned titles and URLs as citation data for structured research findings
       - Preserve official-source, domain, URL, and recency constraints from the user task
       - Generate concise search-engine queries; do not pass the raw user prompt as a search query
-      - Keep exact named products, APIs, libraries, features, versions, domains, URLs, source constraints, and document titles from the user task
-      - Always set sourcePreference. Use primary when the task asks for source-owned, first-party, maintainer, vendor, standards-body, paper-author, primary, or official evidence in any language. Use any when broader credible sources are acceptable
+      - Keep exact wording from the user task for:
+        - named products, APIs, libraries, and features
+        - versions, domains, and URLs
+        - source constraints
+        - document titles
+      - Always set sourcePreference
+      - Use primary when the task asks for:
+        - source-owned evidence
+        - first-party evidence
+        - maintainer or vendor evidence
+        - standards-body evidence
+        - paper-author evidence
+        - primary or official evidence in any language
+      - Use any when broader credible sources are acceptable
       - For official documentation requests, include the exact named source and official domain in the queries
       - Do not broaden a specific documentation request into a generic industry trend search
       - Search the web for up-to-date information
       - Extract source-backed facts, data, and insights
       - Preserve source titles and URLs for the structured citations field
 
-      ## CRITICAL: Temporal Context in Search Queries
+      ## Temporal Context in Search Queries
 
-      ALWAYS include date/time context in search queries:
+      Include date/time context in search queries:
 
-      - For current events: use the actual current date/year from the agent context, plus words like "latest", "today", "current", or "recent"
+      - For current events:
+        - use the actual current date/year from the agent context
+        - include words like "latest", "today", "current", or "recent"
       - For historical info: specific years or date ranges
-      - For time-sensitive topics: use the actual current date/year from the agent context, plus words like "newest", "updated", or "current"
+      - For time-sensitive topics:
+        - use the actual current date/year from the agent context
+        - include words like "newest", "updated", or "current"
       - NO TEMPORAL ASSUMPTIONS: Never assume time periods - always be explicit about dates/years
 
       <example>
@@ -92,7 +116,9 @@ export const nakafaScrape = createPrompt({
 
       ## Use When
 
-      Use when selected search evidence found a relevant URL but did not return enough content to answer confidently, or a selected search source needs direct inspection before synthesis.
+      Use when:
+      - selected search evidence found a relevant URL but did not return enough content to answer confidently.
+      - a selected search source needs direct inspection before synthesis.
 
       ## Skip When
 

@@ -141,8 +141,9 @@ describe("math compute tool", () => {
       "- Evidence scope: unavailable deterministic derivation"
     );
     expect(output).toContain("- Error code: math_check_unavailable");
+    expect(output).toContain("Do not present this result as checked.");
     expect(output).toContain(
-      "Do not present this result as checked. Retry only if the original request gives enough information"
+      "Retry only if the original request gives enough information"
     );
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({

@@ -9,6 +9,7 @@ import {
   nakafaWebSearch,
 } from "@repo/ai/agents/research/descriptions";
 import {
+  createGroundingEvidence,
   createGroundingWebSearchData,
   hasSingleGroundingQuery,
 } from "@repo/ai/agents/research/grounding";
@@ -211,6 +212,15 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       providerMetadata: evidenceResult.providerMetadata,
       sources: evidenceResult.sources,
     });
+
+    if (groundedSearchData) {
+      const groundingEvidence = createGroundingEvidence(groundedSearchData);
+
+      if (groundingEvidence) {
+        collectedEvidence.push(groundingEvidence);
+        addEligibleSourceUrls(eligibleCitationUrls, groundedSearchData.sources);
+      }
+    }
 
     if (groundedSearchData && hasSingleGroundingQuery(groundedSearchData)) {
       writer.write({

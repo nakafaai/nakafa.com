@@ -5,6 +5,7 @@ import type {
   NakafaAgentSearchResult,
 } from "@repo/contents/_lib/agent/schema/search";
 import type { ModelMessage } from "ai";
+import dedent from "dedent";
 import { Option } from "effect";
 
 interface ToolStep<ToolName extends string> {
@@ -63,7 +64,14 @@ export function prepareExerciseStep(
   });
   const message = {
     role: "user",
-    content: `Call exactly one exercise tool with this content_ref and wait for the result before answering.\n\n${input}\n\nDo not call exercise with any other content_ref. Include exercise_number only when the original user asked for one specific question.`,
+    content: dedent(`
+      Call exactly one exercise tool with this content_ref and wait for the result before answering.
+
+      ${input}
+
+      Do not call exercise with any other content_ref.
+      Include exercise_number only when the original user asked for one specific question.
+    `),
   } satisfies ModelMessage;
 
   return {
@@ -111,8 +119,12 @@ export function prepareReadStep(
 
   const message = {
     role: "user",
-    content:
-      "Call the read tool now with the single most relevant content_id from the Nakafa search results already in this conversation. Use that full content before answering. Do not call search again before reading.",
+    content: dedent(`
+      Call the read tool now with the single most relevant content_id.
+      Use the Nakafa search results already in this conversation.
+      Use that full content before answering.
+      Do not call search again before reading.
+    `),
   } satisfies ModelMessage;
 
   return {
@@ -147,8 +159,18 @@ export function prepareTaxonomyAnswerStep<const ToolName extends string>(
 
   const message = {
     role: "user",
-    content:
-      "Use the Nakafa taxonomy result already in this conversation. Do not call another Nakafa tool. Answer only with supported sections, filters, categories, materials, grades, tools, or paths present in the taxonomy result.",
+    content: dedent(`
+      Use the Nakafa taxonomy result already in this conversation.
+      Do not call another Nakafa tool.
+      Answer only with supported taxonomy data:
+      - sections.
+      - filters.
+      - categories.
+      - materials.
+      - grades.
+      - tools.
+      - paths.
+    `),
   } satisfies ModelMessage;
 
   return {
@@ -184,8 +206,12 @@ export function prepareAnswerFromNakafaEvidenceStep<
 
   const message = {
     role: "user",
-    content:
-      "Use the Nakafa tool results already in this conversation. Do not call another Nakafa tool. Write the final source-backed answer now. If a requested item is still missing, say that Nakafa did not return enough data for that item.",
+    content: dedent(`
+      Use the Nakafa tool results already in this conversation.
+      Do not call another Nakafa tool.
+      Write the final source-backed answer now.
+      If a requested item is still missing, say that Nakafa did not return enough data for that item.
+    `),
   } satisfies ModelMessage;
 
   return {

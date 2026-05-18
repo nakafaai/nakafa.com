@@ -227,7 +227,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
             tools: {
               [TOOL_NAMES.nakafa]: tool({
                 description:
-                  "Retrieve Nakafa educational evidence for lessons, study topics, current pages, articles, Quran references, and structured exercises. Preserve every requested deliverable in the task.",
+                  "Retrieve Nakafa educational evidence for lessons, study topics, current pages, articles, Quran references, examples, warmups, review tasks, tryout preparation, and structured exercises. Use this before math when content must be selected. Preserve every requested deliverable in the task.",
                 inputSchema: nakafaToolInputSchema,
                 execute: ({ task }, { toolCallId }) => {
                   const needsPageFetch = context.needsPageFetch && !fetchedPage;
@@ -299,7 +299,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
               }),
               [TOOL_NAMES.math]: tool({
                 description:
-                  "Verify math with deterministic evidence for arithmetic, algebra, equations, calculus, series, matrices, statistics, probability, geometry, and discrete math.",
+                  "Verify user-provided or retrieved math with deterministic evidence for arithmetic, algebra, equations, calculus, series, matrices, statistics, probability, geometry, and discrete math. Do not use this as the first or only source for educational practice content; use Nakafa first, then math verifies the selected content.",
                 inputSchema: mathToolInputSchema,
                 execute: ({ task }) =>
                   Effect.runPromise(

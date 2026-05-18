@@ -1220,7 +1220,7 @@ describe("parseReferences", () => {
     });
 
     it("should handle references array as non-array by returning error", async () => {
-      const rawReferences = "not an array" as unknown as unknown[];
+      const rawReferences = "not an array";
 
       const result = await Effect.runPromise(
         Effect.match(parseReferences(rawReferences), {

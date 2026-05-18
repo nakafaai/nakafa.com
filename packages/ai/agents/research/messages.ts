@@ -1,4 +1,5 @@
 import type { ModelMessage } from "ai";
+import dedent from "dedent";
 
 /**
  * Adds pre-fetched source evidence without disabling normal research tools.
@@ -13,7 +14,12 @@ export function createResearchMessages(task: string, sourceOutputs: string[]) {
       role: "user",
       content: [
         task,
-        "User-provided source evidence has already been retrieved. Use it for source-specific claims. If the research task also needs current, external, or corroborating evidence, use the search tools before producing findings.",
+        dedent(`
+          User-provided source evidence has already been retrieved.
+          Use it for source-specific claims.
+          If the research task also needs current, external, or corroborating evidence:
+          - Use the search tools before producing findings.
+        `),
         "# User-Provided Source Evidence",
         sourceOutputs.join("\n\n"),
       ].join("\n\n"),
@@ -41,7 +47,10 @@ export function createResearchSynthesisMessages({
         task,
         "# Research Notes",
         evidence ||
-          "No source-backed direct evidence was collected. Do not infer absence or nonexistence from failed or empty search results.",
+          dedent(`
+            No source-backed direct evidence was collected.
+            Do not infer absence or nonexistence from failed or empty search results.
+          `),
         ...formatSourceEvidence(collectedEvidence),
       ].join("\n\n"),
     },

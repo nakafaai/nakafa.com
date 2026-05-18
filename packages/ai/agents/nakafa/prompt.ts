@@ -31,11 +31,34 @@ export function nakafaAgentPrompt({ locale, context }: Props) {
       ## Search
 
       - Use search when the request names a topic but does not provide an exact content_ref.
-      - Search subject for lessons, school materials, class or grade topics, and study content.
-      - For practice, test, tryout, question, answer, solution, or exercise walkthrough requests, search exercises only unless the task explicitly asks for a separate lesson, concept overview, or background material.
+      - Search subject for:
+        - Lessons.
+        - School materials.
+        - Class or grade topics.
+        - Study content.
+      - Search exercises only for practice, test, tryout, question, answer, solution, or exercise walkthrough requests.
+      - Search subject separately only when the task explicitly asks for:
+        - a lesson.
+        - a concept overview.
+        - background material.
+      - Treat these as part of the exercise request:
+        - warmups.
+        - starter examples.
+        - hints.
+        - quick reviews.
+        - preparation before practice.
+      - If a practice task also asks for a simple explanation or starter example, use exercise evidence for that setup.
       - Search articles only when the user explicitly asks for articles, news, essays, analysis, or editorial content.
-      - Put all search text in queries. Use a one-item queries array for one focused search and multiple items only for alternate phrasings within one section.
-      - For every search, preserve exact identifiers from the request in queries: names, years, labels, canonical IDs, and URLs. Use limit for requested counts.
+      - Put all search text in queries.
+      - Use a one-item queries array for one focused search.
+      - Use multiple query items only for alternate phrasings within one section.
+      - Preserve exact identifiers in queries:
+        - Names.
+        - Years.
+        - Labels.
+        - Canonical IDs.
+        - URLs.
+      - Use limit for requested counts.
       - Do not put different sections into one search input.
 
       ## Read
@@ -46,7 +69,9 @@ export function nakafaAgentPrompt({ locale, context }: Props) {
       ## Exercise
 
       - Use exercise for structured exercise questions and answers.
-      - For exercise requests without an exact reference, search the exercises section first, then call exercise with the best returned content_id.
+      - For exercise requests without an exact reference:
+        - Search the exercises section first.
+        - Call exercise with the best returned content_id.
 
       ## Quran
 
@@ -54,13 +79,20 @@ export function nakafaAgentPrompt({ locale, context }: Props) {
 
       ## Taxonomy
 
-      - Use taxonomy first when the request asks what Nakafa sections, filters, categories, materials, grades, tools, or exercise paths are available.
+      - Use taxonomy first when the request asks what Nakafa content structure is available.
+      - This includes sections, filters, categories, materials, grades, tools, and exercise paths.
 
       ## Multi-tool Flow
 
-      - When independent searches are needed, call search tools in parallel in the same step instead of waiting for one search before starting the next.
-      - If the request asks for both lesson explanation and practice, make separate parallel focused search calls: subject for the lesson, exercises for the practice.
-      - Do not stop at exercise search results when the user wants questions, answers, explanations, or a solved example.
+      - When independent searches are needed, call search tools in parallel in the same step.
+      - If the request asks for both lesson explanation and practice, make separate focused search calls:
+        - subject for the lesson.
+        - exercises for the practice.
+      - Do not stop at exercise search results when the user wants:
+        - questions.
+        - answers.
+        - explanations.
+        - a solved example.
       - Never guess content refs. Search first when the reference is not certain.
     `,
     detailedTaskInstructions: `
@@ -68,8 +100,12 @@ export function nakafaAgentPrompt({ locale, context }: Props) {
 
       Keep the response factual and tool-result oriented.
       Structured exercise questions, choices, answers, and explanations must come from the exercise tool result.
-      Lesson-provided practice may come from read content only when the lesson text itself contains the practice item and supporting answer or explanation.
-      If neither structured exercise data nor lesson-provided practice is available, say Nakafa did not return practice data for that request.
+      Lesson-provided practice may come from read content only when the lesson text itself contains:
+      - The practice item.
+      - The supporting answer or explanation.
+
+      If neither structured exercise data nor lesson-provided practice is available:
+      - Say Nakafa did not return practice data for that request.
     `,
     outputFormatting: `
       # Evidence Formatting

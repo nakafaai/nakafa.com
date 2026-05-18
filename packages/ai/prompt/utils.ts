@@ -8,10 +8,12 @@ export function createPrompt(opts: {
   // Runtime facts, retrieved context, documents, or other input data only.
   backgroundData?: string;
   // Tool catalog, tool selection, required tool inputs, and tool ordering only.
+  // Use short paragraphs plus lists when a section has multiple distinct rules.
   toolUsageGuidelines?: string;
   // Evidence contracts, routing consequences, safety, recovery, and teaching rules.
+  // Keep these separate from tool catalogs and final output shape.
   detailedTaskInstructions?: string;
-  // Exemplars of good/bad output
+  // Few-shot good/bad examples only. Do not place runtime facts or tool policy here.
   examples?: string;
   // Conversation history between the user and the assistant
   conversationHistory?: string;

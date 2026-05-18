@@ -5,6 +5,7 @@ import type { MathRequest } from "@repo/math/schema/request";
 import { MathToolInputSchema } from "@repo/math/schema/tool-input";
 import { MathService } from "@repo/math/service";
 import type { UIMessageStreamWriter } from "ai";
+import dedent from "dedent";
 import { Effect, Schema } from "effect";
 
 const invalidMathInputError = "invalid_math_input";
@@ -13,10 +14,17 @@ const mathCheckUnavailableError = "math_check_unavailable";
 /** Gives the model actionable recovery guidance without exposing raw failures. */
 function recoveryMessage(message: string) {
   if (message.includes("Variable is required when multiple symbols")) {
-    return "Retry the same operation with the explicit variable from the user's original math notation. If no variable is clear, ask the user which variable to use.";
+    return dedent(`
+      Retry the same operation with the explicit variable from the user's original math notation.
+      If no variable is clear, ask the user which variable to use.
+    `);
   }
 
-  return "Do not present this result as checked. Retry only if the original request gives enough information to correct the input; otherwise ask for the missing math data.";
+  return dedent(`
+    Do not present this result as checked.
+    Retry only if the original request gives enough information to correct the input.
+    Otherwise ask for the missing math data.
+  `);
 }
 
 /** Runs one deterministic math request and writes the math evidence data part. */

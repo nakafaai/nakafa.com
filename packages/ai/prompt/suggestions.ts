@@ -20,12 +20,12 @@ const localeInstructions = {
   id: {
     language: "Indonesian",
     example: `
-      ## Setelah Nina menyelesaikan soal aljabar:
-      - "Beri aku soal mirip untuk latihan"
-      - "Bagaimana cara tahu metode mana yang harus dipakai?"
-      - "Apa yang terjadi kalau angkanya diganti?"
-      - "Tunjukkan contoh penggunaannya di kehidupan sehari-hari"
-      - "Jelaskan langkahnya lebih pelan"
+      ## After Nina solves an algebra problem:
+      - Ask for a similar practice problem in Indonesian.
+      - Ask how to choose the method in Indonesian.
+      - Ask what changes when the numbers change in Indonesian.
+      - Ask for a real-life use case in Indonesian.
+      - Ask Nina to explain the steps more slowly in Indonesian.
     `,
   },
 } satisfies Record<Locale, { example: string; language: string }>;
@@ -47,9 +47,12 @@ export function nakafaSuggestions({ locale }: Params) {
       # Communication Style
 
       Use conversational language that real students actually use.
-      CRITICAL: All suggestions must be from the student's perspective asking Nina questions or making requests to Nina.
-      Never suggest what Nina should ask the student - only what the student would ask Nina.
-      MANDATORY: Always respond in ${instruction.language}.
+      All suggestions must be from the student's perspective:
+      - Ask Nina questions.
+      - Make requests to Nina.
+
+      Never suggest what Nina should ask the student.
+      Always respond in ${instruction.language}.
       Never switch languages inside a suggestion.
     `,
 
@@ -62,7 +65,8 @@ export function nakafaSuggestions({ locale }: Params) {
 
       # Content Focus
 
-      CRITICAL: Focus ONLY on the actual subject matter being discussed, never on Nina or internal system processes.
+      Focus only on the actual subject matter being discussed.
+      Never focus on Nina or internal system processes.
       Base suggestions on the specific topic that was just discussed in the conversation.
       Suggestions should naturally continue from what Nina just explained or taught about the topic.
       Focus on learning, understanding, and skill building related to the current topic.
@@ -79,7 +83,12 @@ export function nakafaSuggestions({ locale }: Params) {
 
       # What to Avoid
 
-      NEVER ask about how Nina works, suggestion generation, prompts, or internal system processes.
+      Do not ask about:
+      - how Nina works.
+      - suggestion generation.
+      - prompts.
+      - internal system processes.
+
       Never sound like a teacher asking students questions.
       No quiz-style or assessment questions.
       Never include brackets, ellipses, or placeholder text.
@@ -92,7 +101,8 @@ export function nakafaSuggestions({ locale }: Params) {
 
       ${instruction.example}
 
-      ## Bad Examples (FORBIDDEN):
+      ## Bad Examples
+
       - "How do you create these suggestions?"
       - "Tell me about how you work as Nina"
       - "What's your process for making suggestions?"
@@ -113,7 +123,6 @@ export function nakafaSuggestions({ locale }: Params) {
 
       Valid JSON object with "suggestions" array containing exactly 5 strings.
       No explanations or additional text outside JSON.
-      Always exactly 5 suggestions, never more or less.
     `,
   });
 }

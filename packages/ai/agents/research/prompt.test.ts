@@ -97,7 +97,10 @@ describe("research prompt", () => {
   it("guides search and scrape tools toward primary sources", () => {
     expect(nakafaWebSearch).toContain("official domain");
     expect(nakafaWebSearch).toContain("generic industry trend search");
-    expect(nakafaWebSearch).toContain("Keep exact named products");
+    expect(nakafaWebSearch).toContain("Keep exact wording from the user task");
+    expect(nakafaWebSearch).toContain(
+      "named products, APIs, libraries, and features"
+    );
     expect(nakafaWebSearch).toContain("Always set sourcePreference");
     expect(nakafaWebSearch).toContain(
       "Use returned titles and URLs as citation data"
@@ -131,11 +134,16 @@ describe("research prompt", () => {
   it("prevents no-source answers from becoming existence claims", () => {
     const prompt = researchPrompt({ context, locale: "id" });
 
-    expect(prompt).toContain("noEvidenceAnswer must not infer that a person");
+    expect(prompt).toContain(
+      "For empty findings, noEvidenceAnswer must not infer nonexistence for any entity:"
+    );
+    expect(prompt).toContain("- Person.");
     expect(prompt).toMatch(couldNotConfirmFromDirectSourcesPattern);
     expect(prompt).toContain("Write noEvidenceAnswer as a process limitation");
     expect(prompt).toContain('Do not say an item was "not found"');
-    expect(prompt).toContain('has "no official announcement"');
+    expect(prompt).toContain(
+      'Do not say an item has "no official announcement"'
+    );
   });
 
   it("keeps empty evidence searches from becoming absence evidence", () => {

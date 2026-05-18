@@ -13,7 +13,7 @@ describe("research agent messages", () => {
 
     expect(messages).toEqual([
       expect.objectContaining({
-        content: expect.stringContaining("use the search tools"),
+        content: expect.stringContaining("Use the search tools"),
         role: "user",
       }),
     ]);

@@ -157,7 +157,7 @@ describe("math data formatter", () => {
     } satisfies MathData;
 
     expect(formatMathData(data)).toContain(
-      "- Evidence scope: partial deterministic evidence only; do not describe the final result as fully verified without another complete check"
+      "- Evidence scope: partial deterministic evidence; do not call the final result fully verified without another complete check"
     );
   });
 

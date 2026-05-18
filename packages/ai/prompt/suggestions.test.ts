@@ -2,11 +2,14 @@ import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import { describe, expect, it } from "vitest";
 
 describe("nakafaSuggestions", () => {
-  it("keeps Indonesian suggestion instructions in Indonesian", () => {
+  it("keeps Indonesian output instructions without mixed-language examples", () => {
     const prompt = nakafaSuggestions({ locale: "id" });
 
     expect(prompt).toContain("Always respond in Indonesian");
-    expect(prompt).toContain("Beri aku soal mirip untuk latihan");
+    expect(prompt).toContain(
+      "Ask for a similar practice problem in Indonesian"
+    );
+    expect(prompt).not.toContain("Beri aku soal mirip untuk latihan");
     expect(prompt).not.toContain("Give me another similar problem");
   });
 

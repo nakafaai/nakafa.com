@@ -1,4 +1,9 @@
 import {
+  addEligibleSourceUrls,
+  filterResearchOutputCitations,
+} from "@repo/ai/agents/research/citations";
+import {
+  createGroundingEvidence,
   createGroundingWebSearchData,
   hasSingleGroundingQuery,
 } from "@repo/ai/agents/research/grounding";
@@ -191,6 +196,123 @@ describe("research Google Search grounding", () => {
       ],
       status: "done",
     });
+
+    if (!data) {
+      throw new Error("Expected source-only Google grounding data.");
+    }
+
+    expect(createGroundingEvidence(data)).not.toContain("Queries:");
+  });
+
+  it("does not create synthesis evidence without grounded sources", () => {
+    expect(
+      createGroundingEvidence({
+        provider: "google",
+        queries: ["official AI SDK DevTools documentation"],
+        sources: [],
+        status: "done",
+      })
+    ).toBeUndefined();
+  });
+
+  it("creates synthesis evidence from sanitized grounded sources", () => {
+    const data = createGroundingWebSearchData({
+      providerMetadata: {
+        google: {
+          groundingMetadata: {
+            webSearchQueries: ["official AI SDK DevTools documentation"],
+          },
+        },
+      },
+      sources: [
+        {
+          sourceType: "url",
+          title: "AI SDK DevTools",
+          url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+        },
+        {
+          sourceType: "url",
+          title: "Google redirect",
+          url: "https://vertexaisearch.cloud.google.com/grounding-api-redirect/source",
+        },
+      ],
+    });
+
+    if (!data) {
+      throw new Error("Expected direct Google grounding source data.");
+    }
+
+    const evidence = createGroundingEvidence(data);
+
+    expect(evidence).toContain("# Google Search Grounding Sources");
+    expect(evidence).toContain(
+      'Queries: "official AI SDK DevTools documentation"'
+    );
+    expect(evidence).toContain("- AI SDK DevTools");
+    expect(evidence).toContain(
+      "URL: https://ai-sdk.dev/docs/ai-sdk-core/devtools"
+    );
+    expect(evidence).not.toContain("vertexaisearch.cloud.google.com");
+  });
+
+  it("allows only sanitized grounded URLs through the citation gate", () => {
+    const data = createGroundingWebSearchData({
+      providerMetadata: {},
+      sources: [
+        {
+          sourceType: "url",
+          title: "AI SDK DevTools",
+          url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+        },
+        {
+          sourceType: "url",
+          title: "Google redirect",
+          url: "https://vertexaisearch.cloud.google.com/grounding-api-redirect/source",
+        },
+      ],
+    });
+
+    if (!data) {
+      throw new Error("Expected direct Google grounding source data.");
+    }
+
+    const eligibleUrls = new Set<string>();
+    addEligibleSourceUrls(eligibleUrls, data.sources);
+
+    const output = filterResearchOutputCitations(
+      {
+        findings: [
+          {
+            text: "AI SDK DevTools has public documentation.",
+            citations: [
+              {
+                title: "AI SDK DevTools",
+                url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+              },
+              {
+                title: "Google redirect",
+                url: "https://vertexaisearch.cloud.google.com/grounding-api-redirect/source",
+              },
+            ],
+          },
+        ],
+        limitations: [],
+        noEvidenceAnswer: "I could not verify this from direct sources.",
+      },
+      eligibleUrls
+    );
+
+    expect(output.findings).toEqual([
+      {
+        text: "AI SDK DevTools has public documentation.",
+        citations: [
+          {
+            title: "AI SDK DevTools",
+            url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+          },
+        ],
+      },
+    ]);
   });
 
   it("does not render query-only Google grounding as source evidence", () => {

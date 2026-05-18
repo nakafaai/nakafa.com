@@ -837,6 +837,70 @@ describe("nakafa search tool", () => {
     expect(capturedQueries).toEqual([["fungsi kuadrat"]]);
   });
 
+  it("ranks non-exercise UI results by query metadata relevance", async () => {
+    const { parts, writer } = createWriter();
+
+    await Effect.runPromise(
+      search({
+        input: {
+          limit: 2,
+          locale: "id",
+          offset: 0,
+          queries: ["pola bilangan aritmatika dasar"],
+          section: "subject",
+        },
+        locale: "id",
+        toolCallId: "search-subject-ranking",
+        writer,
+      }).pipe(
+        Effect.provideService(NakafaSearch, {
+          search: (input) =>
+            Effect.succeed({
+              count: 2,
+              has_more: false,
+              items: [
+                {
+                  content_id:
+                    "id/subject/high-school/10/mathematics/arithmetic-operators",
+                  description: "Operasi aritmatika dasar.",
+                  locale: input.locale,
+                  markdown_url:
+                    "https://nakafa.com/id/subject/high-school/10/mathematics/arithmetic-operators.md",
+                  route:
+                    "subject/high-school/10/mathematics/arithmetic-operators",
+                  section: "subject",
+                  title: "Operator Aritmatika",
+                  url: "https://nakafa.com/id/subject/high-school/10/mathematics/arithmetic-operators",
+                },
+                {
+                  content_id:
+                    "id/subject/high-school/10/mathematics/sequence/arithmetic-sequence",
+                  description: "Pola bilangan pada barisan aritmatika.",
+                  locale: input.locale,
+                  markdown_url:
+                    "https://nakafa.com/id/subject/high-school/10/mathematics/sequence/arithmetic-sequence.md",
+                  route:
+                    "subject/high-school/10/mathematics/sequence/arithmetic-sequence",
+                  section: "subject",
+                  title: "Barisan Aritmatika",
+                  url: "https://nakafa.com/id/subject/high-school/10/mathematics/sequence/arithmetic-sequence",
+                },
+              ],
+              limit: input.limit,
+              next_offset: null,
+              offset: input.offset,
+            }),
+        })
+      )
+    );
+
+    const donePart = getSearchParts(parts).find(
+      (part) => part.status === "done"
+    );
+
+    expect(donePart?.result?.items[0]?.title).toBe("Barisan Aritmatika");
+  });
+
   it("interleaves query results before returning the agent aggregate", async () => {
     const { writer } = createWriter();
     const output = await Effect.runPromise(

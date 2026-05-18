@@ -52,6 +52,23 @@ export const prepareChatStep = Effect.fn("chat.prepareChatStep")(
                 Continue from the evidence already gathered in earlier steps.
                 Preserve every source constraint from the user request and the specialist evidence.
               `,
+              toolUsageGuidelines: `
+                # Continuation Tool Guidance
+
+                Continue with the model's tool choice, using gathered evidence as the decision source.
+
+                Call math before the final answer when:
+                - Nakafa selected educational math content.
+                - The final answer will include calculations, formulas, numeric answers, answer keys, or correctness claims.
+
+                The math task must verify the exact example, exercise, answer key, and numeric claims that will appear in the final answer.
+
+                Do not call math after Nakafa when:
+                - The content is a non-math lesson, Quran, article, or definition without calculation.
+                - The source summary contains no mathematical verification target.
+
+                After math returns, do not switch to different mathematical content unless you call math again for that replacement content.
+              `,
               outputFormatting: `
                 # User-Facing Citation Format
 

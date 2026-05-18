@@ -50,7 +50,19 @@ export const search = Effect.fn("nakafa.search")(function* ({
 
   const nakafaSearch = yield* NakafaSearch;
   const results = yield* Effect.forEach(searchInputs, (searchInput, index) =>
-    Effect.either(nakafaSearch.search(searchInput)).pipe(
+    Effect.either(
+      nakafaSearch
+        .search(searchInput)
+        .pipe(
+          Effect.map((result) =>
+            rankSearchResult(
+              searchInput,
+              result,
+              getSearchTokens(searchInput.queries ?? [])
+            )
+          )
+        )
+    ).pipe(
       Effect.tap((result) =>
         Effect.sync(() => {
           if (Either.isLeft(result)) {
@@ -206,27 +218,38 @@ function interleaveSearchItems(groups: NakafaAgentSearchResult["items"][]) {
   return ranked;
 }
 
-/** Applies exercise relevance after multi-query merging. */
+/** Applies query relevance before the UI and agent consume search evidence. */
+function rankSearchResult(
+  input: SearchInput,
+  result: NakafaAgentSearchResult,
+  tokens: string[]
+) {
+  return {
+    ...result,
+    items: rankSearchItems(input, result.items, tokens),
+  };
+}
+
+/** Applies query relevance after search and multi-query merging. */
 function rankSearchItems(
   input: SearchInput,
   items: NakafaAgentSearchResult["items"],
   tokens: string[]
 ) {
-  if (input.section !== "exercises") {
-    return items;
-  }
-
   if (tokens.length === 0) {
     return items;
   }
 
   return [...items].sort((left, right) => {
     const scoreDelta =
-      getExerciseSearchScore(right, tokens) -
-      getExerciseSearchScore(left, tokens);
+      getSearchScore(right, tokens) - getSearchScore(left, tokens);
 
     if (scoreDelta !== 0) {
       return scoreDelta;
+    }
+
+    if (input.section !== "exercises") {
+      return 0;
     }
 
     return getExerciseSetPriority(right) - getExerciseSetPriority(left);
@@ -246,8 +269,8 @@ function getSearchTokens(queries: string[]) {
   ];
 }
 
-/** Scores exercise evidence by metadata text that the UI and agent can inspect. */
-function getExerciseSearchScore(
+/** Scores search evidence by metadata text that the UI and agent can inspect. */
+function getSearchScore(
   item: NakafaAgentSearchResult["items"][number],
   tokens: string[]
 ) {

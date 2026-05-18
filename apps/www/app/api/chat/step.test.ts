@@ -83,6 +83,44 @@ describe("app/api/chat/step", () => {
     });
     expect(step).toEqual({
       messages: [],
+      system: expect.stringContaining("Continuation Tool Guidance"),
+    });
+    expect(step).toEqual({
+      messages: [],
+      system: expect.stringContaining(
+        "Call math before the final answer when:"
+      ),
+    });
+    expect(step).toEqual({
+      messages: [],
+      system: expect.stringContaining(
+        "- Nakafa selected educational math content."
+      ),
+    });
+    expect(step).toEqual({
+      messages: [],
+      system: expect.stringContaining(
+        "The math task must verify the exact example, exercise, answer key, and numeric claims that will appear in the final answer."
+      ),
+    });
+    expect(step).toEqual({
+      messages: [],
+      system: expect.stringContaining(
+        "After math returns, do not switch to different mathematical content unless you call math again for that replacement content."
+      ),
+    });
+    expect(step).toEqual({
+      messages: [],
+      system: expect.stringContaining("Do not call math after Nakafa when:"),
+    });
+    expect(step).toEqual({
+      messages: [],
+      system: expect.stringContaining(
+        "- The source summary contains no mathematical verification target."
+      ),
+    });
+    expect(step).toEqual({
+      messages: [],
       system: expect.stringContaining(
         "When research evidence contains markdown links, preserve those links in the final answer"
       ),
@@ -157,5 +195,43 @@ describe("app/api/chat/step", () => {
     );
 
     expect(step.messages).toEqual(messages);
+  });
+
+  it("leaves continuation tool choice to the model", () => {
+    const messages = [
+      {
+        content: [
+          {
+            text: "No Nakafa evidence here.",
+            type: "text",
+          },
+          {
+            input: {
+              task: "# Task\nResearch current public information.",
+            },
+            toolCallId: "research-call",
+            toolName: "deepResearch",
+            type: "tool-call",
+          },
+        ],
+        role: "assistant",
+      },
+    ] satisfies ModelMessage[];
+
+    const step = Effect.runSync(
+      prepareChatStep({
+        messages,
+        needsPageFetch: false,
+        system,
+        stepNumber: 1,
+      })
+    );
+
+    expect(step).toEqual({
+      messages,
+      system: expect.stringContaining("Continuation Source Policy"),
+    });
+    expect(step).not.toHaveProperty("activeTools");
+    expect(step).not.toHaveProperty("toolChoice");
   });
 });
