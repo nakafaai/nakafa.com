@@ -30,6 +30,7 @@ vi.mock("@repo/ai/lib/selection", () => ({
 
 type WrittenPart = Parameters<UIMessageStreamWriter<MyUIMessage>["write"]>[0];
 
+/** Creates a stream writer harness that records scrape data parts for assertions. */
 function createWriter() {
   const parts: WrittenPart[] = [];
   const writer = {

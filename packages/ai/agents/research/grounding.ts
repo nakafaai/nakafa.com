@@ -180,6 +180,7 @@ function isGoogleGroundingRedirectUrl(url: string) {
   );
 }
 
+/** Creates a direct source entry that can be shown as retrieved web evidence. */
 function createWebSearchSource(url: string, title?: string) {
   const sourceTitle = getSourceTitle(url, title);
 
@@ -203,6 +204,7 @@ function getSourceTitle(url: string, title?: string) {
   return new URL(url).hostname.replace("www.", "");
 }
 
+/** Formats provider search queries as compact model-readable evidence. */
 function formatGroundingQueries(queries: string[]) {
   if (queries.length === 0) {
     return [];
@@ -213,6 +215,7 @@ function formatGroundingQueries(queries: string[]) {
   ];
 }
 
+/** Formats one grounded source for the research synthesis evidence block. */
 function formatGroundingSource(
   source: DataPart["web-search"]["sources"][number]
 ) {

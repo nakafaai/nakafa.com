@@ -1,4 +1,7 @@
+from typing import cast
+
 import pytest
+import sympy as sp
 
 from cas import stat
 from cas.engine import run
@@ -94,6 +97,31 @@ def test_single_value_quartiles_use_the_only_value() -> None:
 
     assert result.status == "verified"
     assert [entry.value for entry in result.items] == ["5", "5", "5"]
+
+
+@pytest.mark.parametrize("operation", ["median", "quartiles"])
+def test_order_statistics_reject_symbolic_values(operation: str) -> None:
+    with pytest.raises(ValueError, match="finite real numeric values"):
+        run(MathRequest(kind="math", operation=operation, values=["x", "2"]))
+
+
+@pytest.mark.parametrize("operation", ["median", "quartiles"])
+def test_order_statistics_reject_non_finite_values(operation: str) -> None:
+    with pytest.raises(ValueError, match="finite real numeric values"):
+        run(MathRequest(kind="math", operation=operation, values=["1/0", "2"]))
+
+
+def test_order_statistics_convert_float_failures_to_validation_errors() -> None:
+    class BrokenFloat:
+        is_finite = True
+        is_number = True
+        is_real = True
+
+        def __float__(self) -> float:
+            raise TypeError("broken")
+
+    with pytest.raises(ValueError, match="finite real numeric values"):
+        stat._numeric_order_key(cast(sp.Expr, BrokenFloat()))
 
 
 def test_z_score_rejects_zero_variance() -> None:

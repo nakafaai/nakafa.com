@@ -1,5 +1,6 @@
 import dedent from "dedent";
 
+/** Assembles prompt sections in their declared order with empty sections removed. */
 export function createPrompt(opts: {
   // Identity, role, and the single job for this prompt only.
   taskContext: string;

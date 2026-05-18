@@ -5,6 +5,7 @@ import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
+/** Extracts Nakafa search data parts from a recorded test writer stream. */
 function getSearchParts(parts: ReturnType<typeof createWriter>["parts"]) {
   return parts.flatMap((part) => {
     if (part.type !== "data-nakafa" || part.data.kind !== "search") {

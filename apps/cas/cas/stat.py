@@ -103,7 +103,24 @@ def _mean_step(values: list[sp.Expr], output: object):
 
 def _sort_numeric_values(values: list[sp.Expr]) -> list[sp.Expr]:
     """Sort values only for order statistics that require numeric ordering."""
-    return sorted(values, key=lambda value: float(value))
+    return sorted(values, key=_numeric_order_key)
+
+
+def _numeric_order_key(value: sp.Expr) -> float:
+    """Return a sortable key for finite real values."""
+    if (
+        value.is_number is not True
+        or value.is_real is not True
+        or value.is_finite is not True
+    ):
+        raise ValueError("Median and quartiles require finite real numeric values.")
+
+    try:
+        return float(value)
+    except TypeError as error:
+        raise ValueError(
+            "Median and quartiles require finite real numeric values."
+        ) from error
 
 
 def _variance_steps(values: list[sp.Expr], mean: object, output: object) -> list:

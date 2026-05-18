@@ -64,6 +64,7 @@ const provider = ConfigProvider.fromMap(
   ])
 );
 
+/** Creates a stream writer harness that records math data parts for assertions. */
 function createWriter() {
   const parts: WrittenPart[] = [];
   const writer = {

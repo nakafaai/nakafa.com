@@ -82,3 +82,25 @@ def test_api_returns_validation_error_for_malformed_expression(monkeypatch) -> N
 
     assert response.status_code == 422
     assert response.json()["detail"] == "Expression could not be parsed."
+
+
+def test_api_returns_validation_error_for_symbolic_order_statistics(
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("MATH_CAS_API_KEY", "secret")
+    client = TestClient(app, raise_server_exceptions=False)
+
+    response = client.post(
+        "/api/math",
+        headers={"Authorization": "Bearer secret"},
+        json={
+            "kind": "math",
+            "operation": "median",
+            "values": ["x", "2"],
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == (
+        "Median and quartiles require finite real numeric values."
+    )

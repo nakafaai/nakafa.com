@@ -36,6 +36,7 @@ vi.mock("@repo/ai/lib/domain", () => ({
 
 type WrittenPart = Parameters<UIMessageStreamWriter<MyUIMessage>["write"]>[0];
 
+/** Creates a stream writer harness that records web-search data parts for assertions. */
 function createWriter() {
   const parts: WrittenPart[] = [];
   const writer = {
@@ -49,6 +50,7 @@ function createWriter() {
   return { parts, writer };
 }
 
+/** Extracts web-search data parts from a recorded test writer stream. */
 function getWebSearchParts(parts: WrittenPart[]) {
   return parts.flatMap((part) => {
     if (part.type !== "data-web-search") {
