@@ -3,7 +3,7 @@
 import sympy as sp
 
 from cas import parse
-from cas.format import expression_text, result, step
+from cas.format import expression_text, inconclusive, result, step
 from cas.schema import MathRequest, MathResult, MathStep
 
 EQUALS = expression_text("equals", "=")
@@ -65,9 +65,18 @@ def limit(request: MathRequest) -> MathResult:
     expr = parse.first_expression(request)
     variable = parse.symbol_from_expression(request.variable, request.expression)
     point = parse.expression(request.point)
-    left = sp.limit(expr, variable, point, dir="-")
-    right = sp.limit(expr, variable, point, dir="+")
-    if left != right and sp.simplify(left - right) != 0:
+
+    try:
+        left = sp.limit(expr, variable, point, dir="-")
+        right = sp.limit(expr, variable, point, dir="+")
+        limits_differ = left != right and sp.simplify(left - right) != 0
+    except NotImplementedError:
+        return inconclusive(
+            request,
+            "The two-sided limit could not be determined exactly.",
+        )
+
+    if limits_differ:
         raise ValueError("Two-sided limit does not exist at the requested point.")
 
     output = right

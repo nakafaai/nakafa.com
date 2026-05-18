@@ -1,5 +1,5 @@
 {
-  "extends": "@repo/typescript-config/base.json",
+  "extends": "@repo/typescript-config/library.json",
   "compilerOptions": {
     "paths": {
       "@repo/*": ["../*"],
@@ -8,5 +8,5 @@
     "types": ["node"]
   },
   "include": ["**/*.ts"],
-  "exclude": ["node_modules", "coverage", "vitest.config.ts"]
+  "exclude": ["node_modules", "coverage"]
 }

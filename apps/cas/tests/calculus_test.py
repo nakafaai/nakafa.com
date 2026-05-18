@@ -152,6 +152,21 @@ def test_limit_taylor_cancellation_expression() -> None:
     assert result.secondary.expression == "1/120"
 
 
+def test_limit_returns_inconclusive_for_unsupported_symbolic_case() -> None:
+    result = run(
+        MathRequest(
+            expression="(-1)^(n + 1) / n",
+            kind="math",
+            operation="limit",
+            point="oo",
+            variable="n",
+        )
+    )
+
+    assert result.status == "inconclusive"
+    assert result.reason == "The two-sided limit could not be determined exactly."
+
+
 def test_limit_rejects_different_one_sided_limits() -> None:
     with pytest.raises(ValueError, match="Two-sided limit does not exist"):
         run(
