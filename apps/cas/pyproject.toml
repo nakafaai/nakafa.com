@@ -46,5 +46,3 @@ entrypoint = "api.index:app"
 [tool.basedpyright]
 include = ["api", "cas", "tests"]
 typeCheckingMode = "standard"
-venv = ".venv"
-venvPath = "."
