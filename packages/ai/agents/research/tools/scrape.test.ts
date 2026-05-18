@@ -217,6 +217,41 @@ describe("research scrape tool", () => {
     );
   });
 
+  it("keeps source-native markdown when Firecrawl scrape fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve(
+          new Response("# Native source\n\nDirect markdown evidence.", {
+            headers: { "content-type": "text/markdown" },
+          })
+        )
+      )
+    );
+    firecrawlApp.scrape.mockRejectedValue(new Error("offline"));
+    const { parts, writer } = createWriter();
+
+    const output = await Effect.runPromise(
+      scrapeUrl({
+        toolCallId: "scrape-native-fallback",
+        url: "https://93.184.216.34/docs/current",
+        writer,
+      })
+    );
+
+    expect(output.error).toBeUndefined();
+    expect(output.data.content).toContain("Direct markdown evidence.");
+    expect(parts.at(-1)).toEqual(
+      expect.objectContaining({
+        type: "data-scrape-url",
+        data: expect.objectContaining({
+          content: expect.stringContaining("Direct markdown evidence."),
+          status: "done",
+        }),
+      })
+    );
+  });
+
   it("falls back to alternate metadata fields when markdown is missing", async () => {
     firecrawlApp.scrape.mockResolvedValue({
       metadata: {

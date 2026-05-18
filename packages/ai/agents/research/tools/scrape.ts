@@ -84,7 +84,7 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
     { concurrency: "unbounded" }
   );
 
-  if ("error" in scrapeResult) {
+  if ("error" in scrapeResult && !nativeMarkdown) {
     yield* Effect.sync(() =>
       writer.write({
         id: toolCallId,
@@ -104,10 +104,15 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
     } satisfies ScrapeOutput;
   }
 
-  const markdown = nativeMarkdown ?? scrapeResult.response.markdown;
-  const metadata = getDocumentMetadata({
-    metadata: scrapeResult.response.metadata,
-  });
+  let markdown = nativeMarkdown;
+  let metadata = {};
+
+  if ("response" in scrapeResult) {
+    markdown ??= scrapeResult.response.markdown;
+    metadata = getDocumentMetadata({
+      metadata: scrapeResult.response.metadata,
+    });
+  }
 
   if (!markdown) {
     yield* Effect.sync(() =>
