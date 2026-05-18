@@ -4,7 +4,10 @@ export const MathStatusSchema = Schema.Literal(
   "verified",
   "contradicted",
   "inconclusive"
-);
+).annotations({
+  description:
+    "Verification status for the deterministic math result: verified, contradicted, or inconclusive.",
+});
 
 export const MathStepStatusSchema = Schema.Literal(
   "complete",

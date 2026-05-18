@@ -23,6 +23,10 @@ export const MathResultSchema = Schema.Struct({
   stepStatus: MathStepStatusSchema,
   steps: Schema.Array(MathStepSchema).pipe(Schema.mutable),
   status: MathStatusSchema,
-}).pipe(Schema.mutable);
+})
+  .pipe(Schema.mutable)
+  .annotations({
+    description: "Deterministic CAS math result returned to Nina and the UI.",
+  });
 
 export type MathResult = Schema.Schema.Type<typeof MathResultSchema>;

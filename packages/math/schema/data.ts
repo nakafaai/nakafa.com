@@ -29,6 +29,8 @@ export const MathDataSchema = Schema.Union(
   mathLoadingDataSchema,
   mathDoneDataSchema,
   mathErrorDataSchema
-);
+).annotations({
+  description: "Math evidence data part streamed to the chat UI.",
+});
 
 export type MathData = Schema.Schema.Type<typeof MathDataSchema>;

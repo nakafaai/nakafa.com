@@ -57,6 +57,10 @@ export const mathOperations = [
   "z_score",
 ] as const;
 
-export const MathOperationSchema = Schema.Literal(...mathOperations);
+export const MathOperationSchema = Schema.Literal(
+  ...mathOperations
+).annotations({
+  description: "Supported deterministic math operation.",
+});
 
 export type MathOperation = Schema.Schema.Type<typeof MathOperationSchema>;

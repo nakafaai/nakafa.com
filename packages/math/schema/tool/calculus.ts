@@ -56,7 +56,7 @@ const MathCalculusStructSchema = Schema.Struct({
   point: Schema.optional(pointInputSchema),
   upper: Schema.optional(boundInputSchema),
   variable: Schema.optional(variableInputSchema),
-});
+}).annotations({ description: "Calculus tool input." });
 
 type MathCalculusInput = Schema.Schema.Type<typeof MathCalculusStructSchema>;
 

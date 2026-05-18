@@ -37,7 +37,12 @@ export const MathExpressionSchema = Schema.Struct({
   latex: Schema.String.annotations({
     description: "LaTeX representation of the expression for rendering.",
   }),
-}).pipe(Schema.mutable);
+})
+  .pipe(Schema.mutable)
+  .annotations({
+    description:
+      "A math expression paired with LaTeX for deterministic evidence rendering.",
+  });
 
 export const MathItemSchema = Schema.Struct({
   label: Schema.String.annotations({
@@ -49,7 +54,11 @@ export const MathItemSchema = Schema.Struct({
     })
   ),
   value: valueInputSchema,
-}).pipe(Schema.mutable);
+})
+  .pipe(Schema.mutable)
+  .annotations({
+    description: "One labeled value emitted by a deterministic math result.",
+  });
 
 export const MathStepSchema = Schema.Struct({
   action: Schema.NonEmptyString.annotations({
@@ -70,10 +79,17 @@ export const MathStepSchema = Schema.Struct({
 export const MathPointSchema = Schema.Struct({
   x: coordinateInputSchema,
   y: coordinateInputSchema,
-}).pipe(Schema.mutable);
+})
+  .pipe(Schema.mutable)
+  .annotations({
+    description: "A two-dimensional coordinate point.",
+  });
 
 export const stringArraySchema = Schema.Array(valueInputSchema).pipe(
-  Schema.mutable
+  Schema.mutable,
+  Schema.annotations({
+    description: "Array of exact string values.",
+  })
 );
 
 export const nonEmptyStringArraySchema = Schema.Array(valueInputSchema).pipe(
@@ -82,7 +98,10 @@ export const nonEmptyStringArraySchema = Schema.Array(valueInputSchema).pipe(
 );
 
 export const pointArraySchema = Schema.Array(MathPointSchema).pipe(
-  Schema.mutable
+  Schema.mutable,
+  Schema.annotations({
+    description: "Array of coordinate points.",
+  })
 );
 
 export const twoPointArraySchema = Schema.Array(MathPointSchema).pipe(

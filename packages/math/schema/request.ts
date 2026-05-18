@@ -33,6 +33,11 @@ export const MathRequestSchema = Schema.Struct({
   variable: Schema.optional(Schema.String),
   variables: Schema.optional(stringArraySchema),
   vector: Schema.optional(stringArraySchema),
-}).pipe(Schema.mutable);
+})
+  .pipe(Schema.mutable)
+  .annotations({
+    description:
+      "Canonical request sent to the deterministic CAS math service.",
+  });
 
 export type MathRequest = Schema.Schema.Type<typeof MathRequestSchema>;
