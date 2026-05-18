@@ -83,6 +83,8 @@ describe("createSecurityHeaders", () => {
   });
 
   it("rejects missing public app URLs", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", undefined);
+
     expect(() => getAppUrl()).toThrow("NEXT_PUBLIC_APP_URL is required.");
   });
 
