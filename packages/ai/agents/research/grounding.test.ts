@@ -315,6 +315,56 @@ describe("research Google Search grounding", () => {
     ]);
   });
 
+  it("treats direct Google grounding URLs as citation-eligible evidence", () => {
+    const data = createGroundingWebSearchData({
+      providerMetadata: {
+        google: {
+          groundingMetadata: {
+            webSearchQueries: ["official AI SDK DevTools documentation"],
+          },
+        },
+      },
+      sources: [
+        {
+          sourceType: "url",
+          title: "AI SDK DevTools",
+          url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+        },
+      ],
+    });
+
+    if (!data) {
+      throw new Error("Expected Google grounding source data.");
+    }
+
+    const evidence = createGroundingEvidence(data);
+    const eligibleUrls = new Set<string>();
+    addEligibleSourceUrls(eligibleUrls, data.sources);
+
+    const output = filterResearchOutputCitations(
+      {
+        findings: [
+          {
+            text: "AI SDK DevTools is documented.",
+            citations: [
+              {
+                title: "AI SDK DevTools",
+                url: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+              },
+            ],
+          },
+        ],
+        limitations: [],
+        noEvidenceAnswer: "I could not verify this from direct sources.",
+      },
+      eligibleUrls
+    );
+
+    expect(evidence).toContain("https://ai-sdk.dev/docs/ai-sdk-core/devtools");
+    expect(eligibleUrls.size).toBe(1);
+    expect(output.findings).toHaveLength(1);
+  });
+
   it("does not render query-only Google grounding as source evidence", () => {
     const data = createGroundingWebSearchData({
       providerMetadata: {

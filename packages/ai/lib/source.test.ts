@@ -108,9 +108,18 @@ describe("lib/source", () => {
     ).toEqual(["https://en.wikipedia.org/wiki/Function_(mathematics)"]);
   });
 
-  it("ignores decimals, emails, and localhost references", () => {
+  it("preserves at signs that belong to URL path segments", () => {
+    expect(
+      getSourceReferences(
+        "Baca https://www.npmjs.com/package/@modelcontextprotocol/sdk."
+      ).map((source) => source.href)
+    ).toEqual(["https://www.npmjs.com/package/@modelcontextprotocol/sdk"]);
+  });
+
+  it("ignores decimals, emails, userinfo URLs, and localhost references", () => {
     expect(getSourceReferences("Hitung 3.14 + 2.")).toEqual([]);
     expect(getSourceReferences("Kirim ke nina@example.com.")).toEqual([]);
+    expect(getSourceReferences("Buka https://user@example.com.")).toEqual([]);
     expect(getSourceReferences("Aku sedang di localhost:3000.")).toEqual([]);
     expect(
       getSourceReferences("Token rusak not%url dan suffix co.uk.")

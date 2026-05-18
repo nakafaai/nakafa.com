@@ -81,13 +81,13 @@ function parseSourceReference(token: string) {
     return;
   }
 
-  if (text.includes("@")) {
-    return;
-  }
-
   const url = toWebUrl(text);
 
   if (!url) {
+    return;
+  }
+
+  if (url.username || url.password) {
     return;
   }
 
