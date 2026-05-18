@@ -1,4 +1,4 @@
-import { runConvexMutationGeneric } from "@repo/backend/scripts/sync-content/convexApi";
+import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import { getContentCounts } from "@repo/backend/scripts/sync-content/counts";
 import {
   formatDuration,
@@ -12,6 +12,7 @@ import type {
   ConvexConfig,
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/types";
+import { Effect } from "effect";
 
 interface ResetStep {
   label: string;
@@ -20,6 +21,11 @@ interface ResetStep {
 }
 
 const RESET_STEPS: ResetStep[] = [
+  {
+    label: "Deleting content search rows...",
+    mutationPath: "contentSync/mutations/maintenance:deleteContentSearchBatch",
+    resultLabel: "content search rows",
+  },
   {
     label: "Deleting content authors...",
     mutationPath: "contentSync/mutations/maintenance:deleteContentAuthorsBatch",
@@ -208,18 +214,19 @@ const RESET_STEPS: ResetStep[] = [
 ];
 
 /** Deletes every row exposed by one bounded maintenance mutation. */
-const deleteAllBatched = async (
+const deleteAllBatched = Effect.fn("sync.reset.deleteAllBatched")(function* (
   config: ConvexConfig,
   mutationPath: string,
   label: string
-): Promise<number> => {
+) {
   let totalDeleted = 0;
   let batchNum = 1;
   let hasMore = true;
 
   while (hasMore) {
-    const result = await runConvexMutationGeneric(
+    const result = yield* callConvex(
       config,
+      "mutation",
       mutationPath,
       {},
       BatchDeleteResultSchema
@@ -239,13 +246,13 @@ const deleteAllBatched = async (
     process.stdout.write("\n");
   }
   return totalDeleted;
-};
+});
 
 /** Deletes the full sync-managed content graph and its derived runtime rows. */
-export const reset = async (
+export const reset = Effect.fn("sync.reset")(function* (
   config: ConvexConfig,
   options: SyncOptions
-): Promise<void> => {
+) {
   log("=== RESET CONTENT ===\n");
   log(
     "This will DELETE synced content and the runtime data derived from it.\n"
@@ -260,8 +267,9 @@ export const reset = async (
   }
 
   log("Current database contents:\n");
-  const counts = await getContentCounts(config);
+  const counts = yield* getContentCounts(config);
 
+  log(`  Content Search:        ${counts.contentSearch}`);
   log(`  Content Authors:       ${counts.contentAuthors}`);
   log(`  Article References:    ${counts.articleReferences}`);
   log(`  Exercise Choices:      ${counts.exerciseChoices}`);
@@ -331,12 +339,19 @@ export const reset = async (
     counts.irtScalePublicationQueue +
     counts.irtScaleVersions +
     counts.irtScaleVersionItems;
+  const totalDerived = counts.contentSearch;
 
   log(`\n  Total content items:  ${totalContent}`);
   log(`  Total related items:  ${totalRelated}`);
   log(`  Total runtime items:  ${totalRuntime}`);
+  log(`  Total derived items:  ${totalDerived}`);
 
-  if (totalContent === 0 && totalRelated === 0 && totalRuntime === 0) {
+  if (
+    totalContent === 0 &&
+    totalRelated === 0 &&
+    totalRuntime === 0 &&
+    totalDerived === 0
+  ) {
     logSuccess("\nDatabase is already empty. Nothing to delete.");
     return;
   }
@@ -360,7 +375,7 @@ export const reset = async (
 
   for (const [index, step] of RESET_STEPS.entries()) {
     log(`${index + 1}/${RESET_STEPS.length} ${step.label}`);
-    const deleted = await deleteAllBatched(
+    const deleted = yield* deleteAllBatched(
       config,
       step.mutationPath,
       step.resultLabel
@@ -371,7 +386,7 @@ export const reset = async (
 
   if (options.authors) {
     log("Deleting authors...");
-    const authorsDeleted = await deleteAllBatched(
+    const authorsDeleted = yield* deleteAllBatched(
       config,
       "contentSync/mutations/maintenance:deleteAuthorsBatch",
       "authors"
@@ -386,7 +401,7 @@ export const reset = async (
   logSuccess(
     `Deleted ${totalDeleted} items in ${formatDuration(performance.now() - startTime)}`
   );
-  clearSyncState(options.prod ?? false);
+  yield* clearSyncState(options.prod ?? false);
   log("Cleared sync state file");
 
   log("\nTo re-sync content, run:");
@@ -395,4 +410,4 @@ export const reset = async (
   } else {
     log("  pnpm --filter @repo/backend sync");
   }
-};
+});

@@ -31,7 +31,10 @@ export function ChatNew() {
   const setChatSession = useAi((state) => state.setChatSession);
   const setText = useAi((state) => state.setText);
 
-  const user = useUser((state) => state.user);
+  const { isPending: isUserPending, user } = useUser((state) => ({
+    isPending: state.isPending,
+    user: state.user,
+  }));
   const createChat = useMutation(api.chats.mutations.createChat);
 
   const [isPending, startTransition] = useTransition();
@@ -42,6 +45,10 @@ export function ChatNew() {
       const query = message.text?.trim();
 
       if (!query) {
+        return;
+      }
+
+      if (isUserPending) {
         return;
       }
 
@@ -87,7 +94,10 @@ export function ChatNew() {
         <PromptInputTools>
           <AiChatModel />
         </PromptInputTools>
-        <PromptInputSubmit disabled={isPending} isPending={isPending} />
+        <PromptInputSubmit
+          disabled={isPending || isUserPending}
+          isPending={isPending || isUserPending}
+        />
       </PromptInputToolbar>
     </PromptInput>
   );

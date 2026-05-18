@@ -18,6 +18,7 @@ import { useFileUpload } from "@repo/design-system/hooks/use-file-upload";
 import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
+import { Schema } from "effect";
 import ky from "ky";
 import { useTranslations } from "next-intl";
 import {
@@ -29,7 +30,6 @@ import {
   useRef,
 } from "react";
 import { toast } from "sonner";
-import * as z from "zod/mini";
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";
 import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
@@ -124,9 +124,11 @@ export const ForumPostInput = memo(() => {
   const form = useForm({
     defaultValues: { body: "" },
     validators: {
-      onSubmit: z.object({
-        body: z.string(),
-      }),
+      onSubmit: Schema.standardSchemaV1(
+        Schema.Struct({
+          body: Schema.String,
+        })
+      ),
     },
     onSubmit: async ({ value }) => {
       const hasBody = value.body.trim().length > 0;

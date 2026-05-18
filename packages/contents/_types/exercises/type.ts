@@ -1,4 +1,6 @@
-import * as z from "zod";
+import { Schema } from "effect";
 
-export const ExercisesTypeSchema = z.enum(["grade-9", "tka", "snbt"]);
-export type ExercisesType = z.infer<typeof ExercisesTypeSchema>;
+export const EXERCISES_TYPES = ["grade-9", "tka", "snbt"] as const;
+
+export const ExercisesTypeSchema = Schema.Literal(...EXERCISES_TYPES);
+export type ExercisesType = Schema.Schema.Type<typeof ExercisesTypeSchema>;

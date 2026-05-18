@@ -1,8 +1,8 @@
 import { DiscordIcon } from "@hugeicons/core-free-icons";
-import { Avatar } from "@repo/design-system/components/contributor/avatar";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
+import { Avatar } from "@/components/contributor/avatar";
 import { contributors } from "@/lib/data/contributor";
 
 export function Community() {

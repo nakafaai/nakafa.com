@@ -127,9 +127,6 @@ export function UnitCircle({
   const cos = getCos(angle);
   const tan = getTan(angle);
 
-  // Use precomputed circle outline points (static)
-  const circlePoints = STATIC_CIRCLE_POINTS;
-
   const arcPoints = useMemo(
     () => createArcPoints(ARC_RADIUS, angleInRadians, GRAPH_ANGLE_ARC_SEGMENTS),
     [angleInRadians]
@@ -233,7 +230,7 @@ export function UnitCircle({
           color={circleColor}
           frustumCulled
           lineWidth={2}
-          points={circlePoints}
+          points={STATIC_CIRCLE_POINTS}
         />
 
         {/* Angle arc */}

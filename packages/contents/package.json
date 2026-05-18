@@ -1,6 +1,6 @@
 {
   "name": "@repo/contents",
-  "version": "0.2.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
@@ -10,26 +10,26 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@hugeicons/core-free-icons": "^4.1.2",
+    "@hugeicons/core-free-icons": "^4.1.4",
     "@hugeicons/react": "^1.1.6",
-    "@mantine/hooks": "^9.1.1",
+    "@mantine/hooks": "^9.2.1",
+    "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/utilities": "workspace:*",
-    "date-fns": "^4.1.0",
+    "date-fns": "4.1.0",
     "effect": "^3.21.2",
     "ky": "^2.0.2",
     "motion": "^12.38.0",
-    "next-intl": "^4.11.0",
+    "next-intl": "^4.12.0",
     "react": "19.2.6",
     "react-aria-components": "^1.17.0",
-    "recharts": "^2.15.4",
-    "zod": "^4.4.3"
+    "recharts": "^2.15.4"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.6.1",
+    "@types/node": "25.8.0",
     "@types/react": "^19.2.14",
-    "@vitest/coverage-istanbul": "^4.1.5",
-    "vitest": "^4.1.5"
+    "@vitest/coverage-istanbul": "^4.1.6",
+    "vitest": "^4.1.6"
   }
 }

@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercises";
+import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { Effect, Option } from "effect";
 import {
   succeedMcpReadModelError,
@@ -36,7 +36,8 @@ export function getNakafaExerciseToolResult(
   contentRef: string,
   exerciseNumber?: number
 ) {
-  return getNakafaAgentExercise(contentRef, exerciseNumber).pipe(
+  return Nakafa.exercise(contentRef, exerciseNumber).pipe(
+    Effect.provide(Nakafa.Default),
     Effect.map(
       Option.match({
         onNone: () =>

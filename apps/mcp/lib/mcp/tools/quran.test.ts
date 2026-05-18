@@ -1,14 +1,13 @@
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { describe, expect, it } from "vitest";
-import * as z from "zod";
 import { getNakafaQuranReferenceToolResult } from "@/lib/mcp/tools/quran";
 
-const ToolErrorResultSchema = z.object({
-  isError: z.literal(true),
-  structuredContent: z.object({
-    error: z.object({
-      message: z.string(),
-      suggestions: z.array(z.string()).min(1),
+const ToolErrorResultSchema = Schema.Struct({
+  isError: Schema.Literal(true),
+  structuredContent: Schema.Struct({
+    error: Schema.Struct({
+      message: Schema.String,
+      suggestions: Schema.NonEmptyArray(Schema.String),
     }),
   }),
 });
@@ -25,12 +24,11 @@ describe("nakafa_get_quran_reference", () => {
     );
 
     expect(
-      ToolErrorResultSchema.parse(result).structuredContent.error
+      Schema.decodeUnknownSync(ToolErrorResultSchema)(result).structuredContent
+        .error
     ).toStrictEqual({
       message: "Invalid Nakafa Quran reference options.",
-      suggestions: [
-        expect.stringContaining("Too big: expected number to be <=114"),
-      ],
+      suggestions: [expect.stringContaining("Surah number")],
     });
   });
 });

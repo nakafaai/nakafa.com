@@ -1,10 +1,17 @@
+import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/convex/contents/constants";
+import { locales } from "@repo/utilities/locales";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-/** Supported content languages */
-export const localeValidator = literals("en", "id");
+/** Supported content languages for Convex validators. */
+export const SUPPORTED_CONTENT_LOCALES = locales;
+export const localeValidator = literals(...SUPPORTED_CONTENT_LOCALES);
 export type Locale = Infer<typeof localeValidator>;
+
+/** Public Nakafa content sections exposed to agents and search. */
+export const nakafaSectionValidator = literals(...NAKAFA_CONTENT_SECTIONS);
+export type NakafaSection = Infer<typeof nakafaSectionValidator>;
 
 /** Content types for view tracking and popularity */
 export const contentTypeValidator = literals("article", "subject", "exercise");

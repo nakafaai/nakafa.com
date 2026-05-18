@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { getNakafaAgentTaxonomy } from "@repo/contents/_lib/agent/taxonomy";
+import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { Effect } from "effect";
 import { toMcpStructuredResult } from "@/lib/mcp/result";
 import {
@@ -22,7 +22,10 @@ export function registerNakafaGetTaxonomyTool(server: McpServer) {
     },
     ({ locale }) =>
       Effect.runPromise(
-        getNakafaAgentTaxonomy(locale).pipe(Effect.map(toMcpStructuredResult))
+        Nakafa.taxonomy(locale).pipe(
+          Effect.provide(Nakafa.Default),
+          Effect.map(toMcpStructuredResult)
+        )
       )
   );
 }

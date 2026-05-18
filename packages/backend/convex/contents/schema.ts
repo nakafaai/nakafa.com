@@ -1,3 +1,4 @@
+import { contentSearchDocumentValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import {
   contentRefValidator,
   localeValidator,
@@ -107,6 +108,23 @@ const tables = {
   })
     .index("by_contentId", ["contentId"])
     .index("by_viewCount_and_contentId", ["viewCount", "contentId"]),
+
+  /**
+   * Derived content search read model for Nina and MCP.
+   * Rebuilt from synced articles, subject sections, exercise questions, and Quran.
+   */
+  contentSearch: defineTable(contentSearchDocumentValidator)
+    .index("by_content_id", ["content_id"])
+    .index("by_locale_and_title", ["locale", "title"])
+    .index("by_locale_and_section_and_title", ["locale", "section", "title"])
+    .searchIndex("search_title", {
+      searchField: "title",
+      filterFields: ["locale", "section"],
+    })
+    .searchIndex("search_text", {
+      searchField: "text",
+      filterFields: ["locale", "section"],
+    }),
 };
 
 export default tables;

@@ -5,16 +5,16 @@ import {
 import type {
   NakafaAgentContentRef,
   NakafaAgentSection,
-} from "@repo/contents/_lib/agent/schemas";
+} from "@repo/contents/_lib/agent/schema/ref";
 import {
   NakafaAgentContentRefSchema,
   NakafaAgentSectionSchema,
-} from "@repo/contents/_lib/agent/schemas";
+} from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/contents/_types/content";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Option } from "effect";
+import { Option, Schema } from "effect";
 
 const CONTENT_RESOURCE_PREFIX = "nakafa://content/";
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
@@ -35,25 +35,26 @@ export function parseNakafaContentRef(
     return Option.none<NakafaAgentContentRef>();
   }
 
-  const parsedLeadingLocale = LocaleSchema.safeParse(firstSegment);
-  const locale = parsedLeadingLocale.success
-    ? parsedLeadingLocale.data
-    : fallbackLocale;
-  const routeSegments = parsedLeadingLocale.success
+  const parsedLeadingLocale =
+    Schema.decodeUnknownOption(LocaleSchema)(firstSegment);
+  const locale = Option.getOrElse(parsedLeadingLocale, () => fallbackLocale);
+  const routeSegments = Option.isSome(parsedLeadingLocale)
     ? segments.slice(1)
     : segments;
   const route = routeSegments.join("/");
-  const parsedSection = NakafaAgentSectionSchema.safeParse(routeSegments.at(0));
+  const parsedSection = Schema.decodeUnknownOption(NakafaAgentSectionSchema)(
+    routeSegments.at(0)
+  );
 
   if (!isSafeNakafaRoute(route)) {
     return Option.none<NakafaAgentContentRef>();
   }
 
-  if (!parsedSection.success) {
+  if (Option.isNone(parsedSection)) {
     return Option.none<NakafaAgentContentRef>();
   }
 
-  return Option.some(buildNakafaContentRef(locale, route, parsedSection.data));
+  return Option.some(buildNakafaContentRef(locale, route, parsedSection.value));
 }
 
 /** Builds a canonical content reference from already-normalized route parts. */
@@ -64,7 +65,7 @@ export function buildNakafaContentRef(
 ) {
   const contentId = `${locale}/${route}`;
 
-  return NakafaAgentContentRefSchema.parse({
+  return Schema.decodeUnknownSync(NakafaAgentContentRefSchema)({
     content_id: contentId,
     locale,
     markdown_url: `${NAKAFA_BASE_URL}/${contentId}.md`,

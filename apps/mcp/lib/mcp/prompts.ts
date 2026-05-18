@@ -1,7 +1,9 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { LocaleSchema } from "@repo/contents/_types/content";
+import { routing } from "@repo/internationalization/src/routing";
 import * as z from "zod";
 import { NakafaMcpContentRefInputSchema } from "@/lib/mcp/schemas";
+
+const LocaleSchema = z.enum(routing.locales);
 
 /** Registers reusable Nakafa prompts for agent clients. */
 export function registerNakafaMcpPrompts(server: McpServer) {
@@ -17,10 +19,10 @@ function registerFindLessonPrompt(server: McpServer) {
     "nakafa_find_lesson",
     {
       argsSchema: {
-        locale: LocaleSchema.default("en").describe(
+        locale: LocaleSchema.default(routing.defaultLocale).describe(
           "Preferred content locale."
         ),
-        query: z
+        topic: z
           .string()
           .min(1)
           .describe("Learning topic or question to search."),
@@ -29,12 +31,12 @@ function registerFindLessonPrompt(server: McpServer) {
         "Guide an agent to search Nakafa lessons and choose the most relevant public content.",
       title: "Find Nakafa Lesson",
     },
-    ({ locale, query }) => ({
+    ({ locale, topic }) => ({
       messages: [
         {
           content: {
             text: [
-              `Find Nakafa learning content for: ${query}`,
+              `Find Nakafa learning content for: ${topic}`,
               `Preferred locale: ${locale}`,
               "Use `nakafa_search_content`, inspect returned summaries, then cite the best canonical URL.",
             ].join("\n"),
@@ -128,7 +130,9 @@ function registerQuranReferencePrompt(server: McpServer) {
           .string()
           .default("1")
           .describe("First verse number to include."),
-        locale: LocaleSchema.default("en").describe("Translation locale."),
+        locale: LocaleSchema.default(routing.defaultLocale).describe(
+          "Translation locale."
+        ),
         question: z
           .string()
           .optional()

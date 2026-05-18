@@ -127,8 +127,6 @@ export function Triangle({
   // Font path based on the useMonoFont setting
   const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
 
-  const fontSize = BASE_FONT_SIZE;
-
   // Colors based on theme
   const baseColor =
     resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK;
@@ -191,13 +189,13 @@ export function Triangle({
         // 0-90 degrees
         adjacentLabelPos
           .copy(adjacentMidpoint)
-          .add(new Vector3(0, -fontSize * LABEL_OFFSET_ADJACENT_Y, 0));
+          .add(new Vector3(0, -BASE_FONT_SIZE * LABEL_OFFSET_ADJACENT_Y, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new Vector3(fontSize * LABEL_OFFSET_OPPOSITE_X, 0, 0));
+          .add(new Vector3(BASE_FONT_SIZE * LABEL_OFFSET_OPPOSITE_X, 0, 0));
         hypotenuseLabelPos
           .copy(hypotenuseMidpoint)
-          .add(new Vector3(0, fontSize * LABEL_OFFSET_HYPOTENUSE_Y, 0));
+          .add(new Vector3(0, BASE_FONT_SIZE * LABEL_OFFSET_HYPOTENUSE_Y, 0));
         break;
       }
 
@@ -205,13 +203,13 @@ export function Triangle({
         // 90-180 degrees
         adjacentLabelPos
           .copy(adjacentMidpoint)
-          .add(new Vector3(0, -fontSize * LABEL_OFFSET_ADJACENT_Y, 0));
+          .add(new Vector3(0, -BASE_FONT_SIZE * LABEL_OFFSET_ADJACENT_Y, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new Vector3(-fontSize * LABEL_OFFSET_OPPOSITE_X, 0, 0));
+          .add(new Vector3(-BASE_FONT_SIZE * LABEL_OFFSET_OPPOSITE_X, 0, 0));
         hypotenuseLabelPos
           .copy(hypotenuseMidpoint)
-          .add(new Vector3(0, fontSize * LABEL_OFFSET_HYPOTENUSE_Y, 0));
+          .add(new Vector3(0, BASE_FONT_SIZE * LABEL_OFFSET_HYPOTENUSE_Y, 0));
         break;
       }
 
@@ -219,13 +217,13 @@ export function Triangle({
         // 180-270 degrees
         adjacentLabelPos
           .copy(adjacentMidpoint)
-          .add(new Vector3(0, fontSize * LABEL_OFFSET_ADJACENT_Y, 0));
+          .add(new Vector3(0, BASE_FONT_SIZE * LABEL_OFFSET_ADJACENT_Y, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new Vector3(-fontSize * LABEL_OFFSET_OPPOSITE_X, 0, 0));
+          .add(new Vector3(-BASE_FONT_SIZE * LABEL_OFFSET_OPPOSITE_X, 0, 0));
         hypotenuseLabelPos
           .copy(hypotenuseMidpoint)
-          .add(new Vector3(0, -fontSize * LABEL_OFFSET_HYPOTENUSE_Y, 0));
+          .add(new Vector3(0, -BASE_FONT_SIZE * LABEL_OFFSET_HYPOTENUSE_Y, 0));
         break;
       }
 
@@ -233,13 +231,13 @@ export function Triangle({
         // 270-360 degrees
         adjacentLabelPos
           .copy(adjacentMidpoint)
-          .add(new Vector3(0, fontSize * LABEL_OFFSET_ADJACENT_Y, 0));
+          .add(new Vector3(0, BASE_FONT_SIZE * LABEL_OFFSET_ADJACENT_Y, 0));
         oppositeLabelPos
           .copy(oppositeMidpoint)
-          .add(new Vector3(fontSize * LABEL_OFFSET_OPPOSITE_X, 0, 0));
+          .add(new Vector3(BASE_FONT_SIZE * LABEL_OFFSET_OPPOSITE_X, 0, 0));
         hypotenuseLabelPos
           .copy(hypotenuseMidpoint)
-          .add(new Vector3(0, -fontSize * LABEL_OFFSET_HYPOTENUSE_Y, 0));
+          .add(new Vector3(0, -BASE_FONT_SIZE * LABEL_OFFSET_HYPOTENUSE_Y, 0));
         break;
       }
 
@@ -297,13 +295,13 @@ export function Triangle({
         anchorY="middle"
         color={COLORS.VIOLET}
         font={fontPath}
-        fontSize={fontSize}
+        fontSize={BASE_FONT_SIZE}
         frustumCulled={false}
         material-depthTest={false}
         position={[
           Math.cos(angleInRadians / 2) * angleLabelDistance +
             (angle > DEGREES_IN_HALF_CIRCLE ? -1 : 1) *
-              fontSize *
+              BASE_FONT_SIZE *
               ANGLE_LABEL_POSITION_ADJUSTMENT,
           Math.sin(angleInRadians / 2) * angleLabelDistance,
           0,
@@ -318,7 +316,7 @@ export function Triangle({
         anchorX="center"
         color={COLORS.CYAN}
         font={fontPath}
-        fontSize={fontSize}
+        fontSize={BASE_FONT_SIZE}
         frustumCulled={false}
         material-depthTest={false}
         position={labelPositions.adjacentLabelPos}
@@ -331,7 +329,7 @@ export function Triangle({
         anchorY="middle"
         color={COLORS.ORANGE}
         font={fontPath}
-        fontSize={fontSize}
+        fontSize={BASE_FONT_SIZE}
         frustumCulled={false}
         material-depthTest={false}
         position={labelPositions.oppositeLabelPos}
@@ -345,7 +343,7 @@ export function Triangle({
         anchorY="middle"
         color={COLORS.ROSE}
         font={fontPath}
-        fontSize={fontSize}
+        fontSize={BASE_FONT_SIZE}
         frustumCulled={false}
         material-depthTest={false}
         position={labelPositions.hypotenuseLabelPos}

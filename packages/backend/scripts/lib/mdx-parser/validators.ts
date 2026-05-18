@@ -4,6 +4,7 @@ import {
   type ArticleCategory,
   ArticleCategorySchema,
 } from "@repo/contents/_types/articles/category";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import {
   type ExercisesCategory,
   ExercisesCategorySchema,
@@ -25,23 +26,21 @@ import {
   type Material,
   MaterialSchema,
 } from "@repo/contents/_types/subject/material";
-import * as z from "zod";
+import { Schema } from "effect";
 
-const LocaleSchema = z.union([z.literal("en"), z.literal("id")]);
-
-function parseWithSchema<T>(
-  schema: z.ZodType<T>,
+function parseWithSchema<A, I>(
+  schema: Schema.Schema<A, I, never>,
   value: string,
   filePath: string,
   message: string
 ) {
-  const result = schema.safeParse(value);
+  const result = Schema.decodeUnknownEither(schema)(value);
 
-  if (!result.success) {
+  if (result._tag === "Left") {
     throw new Error(`${message} "${value}" in ${filePath}.`);
   }
 
-  return result.data;
+  return result.right;
 }
 
 export function validateLocale(value: string, filePath: string): Locale {

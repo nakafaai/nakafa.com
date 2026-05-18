@@ -1,8 +1,8 @@
 import { LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
-import { Avatar } from "@repo/design-system/components/contributor/avatar";
 import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import { Avatar } from "@/components/contributor/avatar";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { contributors } from "@/lib/data/contributor";

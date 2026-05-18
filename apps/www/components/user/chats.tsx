@@ -19,7 +19,11 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import { useMutation, usePaginatedQuery } from "convex/react";
+import {
+  type PaginationStatus,
+  useMutation,
+  usePaginatedQuery,
+} from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -51,13 +55,53 @@ export function UserChatsList({
   userId: Id<"users">;
   visibility?: "public" | "private";
 }) {
-  const t = useTranslations("Common");
+  if (canDelete) {
+    return <OwnChatsList />;
+  }
+
+  return <PublicChatsList userId={userId} visibility={visibility} />;
+}
+
+function OwnChatsList() {
   const { results, status } = usePaginatedQuery(
-    api.chats.queries.getChats,
-    { userId, visibility, type: "study" },
+    api.chats.queries.getOwnChats,
+    { type: "study" },
     { initialNumItems: 50 }
   );
 
+  return <ChatList canDelete={true} results={results} status={status} />;
+}
+
+function PublicChatsList({
+  userId,
+  visibility,
+}: {
+  userId: Id<"users">;
+  visibility?: "public" | "private";
+}) {
+  const type = "study" as const;
+  const queryArgs = visibility
+    ? { type, userId, visibility }
+    : { type, userId };
+  const { results, status } = usePaginatedQuery(
+    api.chats.queries.getChats,
+    queryArgs,
+    { initialNumItems: 50 }
+  );
+
+  return <ChatList canDelete={false} results={results} status={status} />;
+}
+
+function ChatList({
+  canDelete,
+  results,
+  status,
+}: {
+  canDelete: boolean;
+  results: Doc<"chats">[];
+  status: PaginationStatus;
+}) {
+  const t = useTranslations("Common");
   const locale = useLocale();
 
   if (status === "LoadingFirstPage") {
@@ -128,22 +172,24 @@ function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          className="z-2 hover:bg-background hover:text-foreground hover:[&_svg]:text-foreground"
-          disabled={isPending}
-          size="icon-sm"
-          variant="ghost"
-        >
-          <HugeIcons icon={MoreHorizontalIcon} />
-          <span className="sr-only">More actions</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuTrigger
+        render={
+          <Button
+            className="z-2 hover:bg-background hover:text-foreground hover:[&_svg]:text-foreground"
+            disabled={isPending}
+            size="icon-sm"
+            variant="ghost"
+          >
+            <HugeIcons icon={MoreHorizontalIcon} />
+            <span className="sr-only">More actions</span>
+          </Button>
+        }
+      />
+      <DropdownMenuContent align="end" className="w-40">
         <DropdownMenuItem
           className="cursor-pointer"
           disabled={isPending}
-          onSelect={handleDelete}
+          onClick={handleDelete}
           variant="destructive"
         >
           <HugeIcons icon={Delete02Icon} />

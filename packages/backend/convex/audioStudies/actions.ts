@@ -1,6 +1,8 @@
 "use node";
 
 import { elevenlabs } from "@repo/ai/config/elevenlabs";
+import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
+import { getModelProviderOptions } from "@repo/ai/config/models";
 import { model } from "@repo/ai/config/vercel";
 import { getDefaultVoiceSettings } from "@repo/ai/config/voices";
 import { podcastScriptPrompt } from "@repo/ai/prompt/audio-studies/v3";
@@ -98,8 +100,12 @@ export const generateScript = internalAction({
       });
 
       const { text: script } = await generateText({
-        model: model.languageModel("gemini-3.1-pro"),
+        model: model.languageModel("nakafa-pro"),
         prompt,
+        providerOptions: {
+          gateway: gatewayProviderOptions,
+          google: getModelProviderOptions("nakafa-pro"),
+        },
       });
 
       logger.info("Script generated", {

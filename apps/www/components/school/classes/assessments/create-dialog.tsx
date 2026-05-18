@@ -324,32 +324,34 @@ function AssessmentDialogShell({
                         {t("assessment-mode-label")}
                       </FieldLabel>
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            aria-invalid={isInvalid}
-                            className="w-full font-normal"
-                            id={`${formId}-mode`}
-                            name={field.name}
-                            type="button"
-                            variant="outline"
-                          >
-                            <HugeIcons icon={currentMode.icon} />
-                            {t(currentMode.labelKey)}
-                            <HugeIcons
-                              className="ml-auto"
-                              icon={ArrowDown01Icon}
-                            />
-                          </Button>
-                        </DropdownMenuTrigger>
+                        <DropdownMenuTrigger
+                          render={
+                            <Button
+                              aria-invalid={isInvalid}
+                              className="w-full font-normal"
+                              id={`${formId}-mode`}
+                              name={field.name}
+                              type="button"
+                              variant="outline"
+                            >
+                              <HugeIcons icon={currentMode.icon} />
+                              {t(currentMode.labelKey)}
+                              <HugeIcons
+                                className="ml-auto"
+                                icon={ArrowDown01Icon}
+                              />
+                            </Button>
+                          }
+                        />
                         <DropdownMenuContent
                           align="start"
-                          className="w-(--radix-dropdown-menu-trigger-width)"
+                          className="w-(--anchor-width)"
                         >
                           {assessmentModeList.map((option) => (
                             <DropdownMenuItem
                               className="cursor-pointer"
                               key={option.value}
-                              onSelect={() => field.handleChange(option.value)}
+                              onClick={() => field.handleChange(option.value)}
                             >
                               <HugeIcons icon={option.icon} />
                               {t(option.labelKey)}
@@ -383,32 +385,34 @@ function AssessmentDialogShell({
                         {t("assessment-status-label")}
                       </FieldLabel>
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            aria-invalid={isInvalid}
-                            className="w-full font-normal"
-                            id={`${formId}-status`}
-                            name={field.name}
-                            type="button"
-                            variant="outline"
-                          >
-                            <HugeIcons icon={currentStatus.icon} />
-                            {t(currentStatus.labelKey)}
-                            <HugeIcons
-                              className="ml-auto"
-                              icon={ArrowDown01Icon}
-                            />
-                          </Button>
-                        </DropdownMenuTrigger>
+                        <DropdownMenuTrigger
+                          render={
+                            <Button
+                              aria-invalid={isInvalid}
+                              className="w-full font-normal"
+                              id={`${formId}-status`}
+                              name={field.name}
+                              type="button"
+                              variant="outline"
+                            >
+                              <HugeIcons icon={currentStatus.icon} />
+                              {t(currentStatus.labelKey)}
+                              <HugeIcons
+                                className="ml-auto"
+                                icon={ArrowDown01Icon}
+                              />
+                            </Button>
+                          }
+                        />
                         <DropdownMenuContent
                           align="start"
-                          className="w-(--radix-dropdown-menu-trigger-width)"
+                          className="w-(--anchor-width)"
                         >
                           {assessmentStatusList.map((option) => (
                             <DropdownMenuItem
                               className="cursor-pointer"
                               key={option.value}
-                              onSelect={() => field.handleChange(option.value)}
+                              onClick={() => field.handleChange(option.value)}
                             >
                               <HugeIcons icon={option.icon} />
                               {t(option.labelKey)}

@@ -28,6 +28,7 @@ import {
 import type { MaterialList } from "@repo/contents/_types/subject/material";
 import { MaterialListSchema } from "@repo/contents/_types/subject/material";
 import { cleanSlug } from "@repo/utilities/helper";
+import { Schema } from "effect";
 import type { Locale } from "next-intl";
 
 /**
@@ -49,7 +50,9 @@ export async function getMaterials(
       `@repo/contents/${cleanPath}/_data/${locale}-material.ts`
     );
 
-    const parsedContent = MaterialListSchema.parse(content.default);
+    const parsedContent = Schema.decodeUnknownSync(MaterialListSchema)(
+      content.default
+    );
 
     return parsedContent;
   } catch {

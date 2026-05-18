@@ -6,6 +6,7 @@ import {
   deleteSubjectSection,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
+import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   gradeValidator,
@@ -187,6 +188,27 @@ export const bulkSyncSubjectSections = internalMutation({
           q.eq("locale", section.locale).eq("slug", section.slug)
         )
         .unique();
+
+      await syncContentSearch(ctx, {
+        contentHash: section.contentHash,
+        description: section.description,
+        locale: section.locale,
+        route: section.slug,
+        section: "subject",
+        syncedAt: now,
+        text: [
+          section.category,
+          section.grade,
+          section.material,
+          section.topic,
+          section.section,
+          section.subject,
+          section.body,
+        ]
+          .filter(Boolean)
+          .join(" "),
+        title: section.title,
+      });
 
       if (existingSection?.contentHash === section.contentHash) {
         unchanged++;

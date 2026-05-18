@@ -1,0 +1,22 @@
+{
+  "name": "@repo/math",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@t3-oss/env-core": "^0.13.11",
+    "effect": "^3.21.2"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "25.8.0",
+    "@vitest/coverage-istanbul": "^4.1.6",
+    "vitest": "^4.1.6"
+  }
+}

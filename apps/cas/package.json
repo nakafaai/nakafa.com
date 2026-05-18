@@ -1,0 +1,17 @@
+{
+  "name": "cas",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "PYTHONDONTWRITEBYTECODE=1 uv run basedpyright",
+    "bump-deps": "uv lock --upgrade",
+    "clean": "rm -rf .coverage .pytest_cache .ruff_cache .turbo .venv && find . -name __pycache__ -type d -prune -exec rm -rf {} +",
+    "dev": "PYTHONDONTWRITEBYTECODE=1 uv run uvicorn api.index:app --host 0.0.0.0 --port 3003 --reload",
+    "format": "uv run ruff check --fix --no-cache . && uv run ruff format --no-cache .",
+    "lint": "uv run ruff check --no-cache .",
+    "setup": "uv sync",
+    "start": "PYTHONDONTWRITEBYTECODE=1 uv run uvicorn api.index:app --host 0.0.0.0 --port 3003",
+    "test": "PYTHONDONTWRITEBYTECODE=1 uv run pytest",
+    "typecheck": "PYTHONDONTWRITEBYTECODE=1 uv run basedpyright"
+  }
+}

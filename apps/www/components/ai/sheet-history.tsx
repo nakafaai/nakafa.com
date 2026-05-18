@@ -7,7 +7,6 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -28,35 +27,40 @@ import { useUser } from "@/lib/context/use-user";
 
 /** Opens the recent Nina chat list when a user is signed in. */
 export const SheetHistory = memo(() => {
-  const user = useUser((state) => state.user);
+  const { isPending, user } = useUser((state) => ({
+    isPending: state.isPending,
+    user: state.user,
+  }));
 
-  if (!user) {
+  if (isPending || !user) {
     return null;
   }
 
   return (
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <Button size="icon-sm" variant="ghost">
-          <HugeIcons icon={ChatSearch01Icon} />
-          <span className="sr-only">History</span>
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button size="icon-sm" variant="ghost">
+            <HugeIcons icon={ChatSearch01Icon} />
+            <span className="sr-only">History</span>
+          </Button>
+        }
+      />
       <Authenticated>
-        <SheetHistoryContent userId={user.appUser._id} />
+        <SheetHistoryContent />
       </Authenticated>
     </DropdownMenu>
   );
 });
 
 /** Renders recent Nina chats in the header menu. */
-const SheetHistoryContent = memo(({ userId }: { userId: Id<"users"> }) => {
+const SheetHistoryContent = memo(() => {
   const t = useTranslations("Ai");
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
   const { results, status } = usePaginatedQuery(
-    api.chats.queries.getChats,
-    { userId, type: "study" },
+    api.chats.queries.getOwnChats,
+    { type: "study" },
     { initialNumItems: 50 }
   );
 
@@ -65,16 +69,16 @@ const SheetHistoryContent = memo(({ userId }: { userId: Id<"users"> }) => {
   }
 
   return (
-    <DropdownMenuContent align="end" className="max-h-64">
-      <DropdownMenuLabel>{t("recent-chats")}</DropdownMenuLabel>
+    <DropdownMenuContent align="end" className="max-h-64 w-72">
       <DropdownMenuGroup>
+        <DropdownMenuLabel>{t("recent-chats")}</DropdownMenuLabel>
         {results.map((chat) => {
           const isPrivate = chat.visibility === "private";
           return (
             <DropdownMenuItem
               className="cursor-pointer"
               key={chat._id}
-              onSelect={() => {
+              onClick={() => {
                 setActiveChatId(chat._id);
               }}
             >

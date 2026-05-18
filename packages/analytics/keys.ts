@@ -1,5 +1,12 @@
 import { createEnv } from "@t3-oss/env-nextjs";
-import * as z from "zod";
+import { Schema } from "effect";
+
+const postHogKeySchema = Schema.standardSchemaV1(
+  Schema.String.pipe(Schema.startsWith("phc_"))
+);
+const urlSchema = Schema.standardSchemaV1(
+  Schema.String.pipe(Schema.filter((value) => URL.canParse(value)))
+);
 
 /**
  * Validate the shared PostHog environment contract used by browser and server
@@ -13,11 +20,11 @@ import * as z from "zod";
 export const keys = () =>
   createEnv({
     server: {
-      POSTHOG_PROXY_HOST: z.url(),
+      POSTHOG_PROXY_HOST: urlSchema,
     },
     client: {
-      NEXT_PUBLIC_POSTHOG_KEY: z.string().startsWith("phc_"),
-      NEXT_PUBLIC_POSTHOG_UI_HOST: z.url(),
+      NEXT_PUBLIC_POSTHOG_KEY: postHogKeySchema,
+      NEXT_PUBLIC_POSTHOG_UI_HOST: urlSchema,
     },
     runtimeEnv: {
       POSTHOG_PROXY_HOST: process.env.POSTHOG_PROXY_HOST,

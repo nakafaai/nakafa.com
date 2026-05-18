@@ -16,6 +16,14 @@ const withNextIntl = createNextIntlPlugin(
   "../../packages/internationalization/src/request.ts"
 );
 
+const CONTENT_TRACE_FILES = [
+  "../../packages/contents/{articles,exercises,subject}/**/*",
+] as const;
+const AGENT_CONTENT_TRACE_FILES = [
+  ...CONTENT_TRACE_FILES,
+  "../../packages/contents/_data/quran.ts",
+] as const;
+
 /**
  * Build the rewrite rules for agent discovery, SEO assets, and the PostHog proxy.
  *
@@ -195,20 +203,14 @@ const nextConfig = {
   // config loading, so walking up two levels targets the monorepo root.
   outputFileTracingRoot: path.join(process.cwd(), "../.."),
   outputFileTracingIncludes: {
-    "/llms.mdx/\\[\\.\\.\\.slug\\]": [
-      "../../packages/contents/{articles,exercises,subject}/**/*",
-      "../../packages/contents/_data/quran.ts",
-    ],
-    "/og/\\[\\.\\.\\.slug\\]": [
-      "../../packages/contents/{articles,exercises,subject}/**/*",
-    ],
-    "/\\[locale\\]/og/\\[\\.\\.\\.slug\\]": [
-      "../../packages/contents/{articles,exercises,subject}/**/*",
-    ],
+    "/api/chat": [...AGENT_CONTENT_TRACE_FILES],
+    "/llms.mdx/\\[\\.\\.\\.slug\\]": [...AGENT_CONTENT_TRACE_FILES],
+    "/og/\\[\\.\\.\\.slug\\]": [...CONTENT_TRACE_FILES],
+    "/\\[locale\\]/og/\\[\\.\\.\\.slug\\]": [...CONTENT_TRACE_FILES],
     "/\\[locale\\]/exercises/\\[category\\]/\\[type\\]/\\[material\\]/\\[\\.\\.\\.slug\\]":
-      ["../../packages/contents/{articles,exercises,subject}/**/*"],
+      [...CONTENT_TRACE_FILES],
     "/\\[locale\\]/try-out/\\[product\\]/\\[slug\\]/part/\\[partKey\\]": [
-      "../../packages/contents/{articles,exercises,subject}/**/*",
+      ...CONTENT_TRACE_FILES,
     ],
   },
   serverExternalPackages: [

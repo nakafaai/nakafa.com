@@ -7,6 +7,7 @@ import { getMaterialPath } from "@repo/contents/_lib/exercises/route";
 import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
+import { Option, Schema } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { BASE_URL, NUMBER_SEGMENT } from "@/lib/llms/constants";
@@ -170,20 +171,26 @@ async function getExerciseSetDescription({
   const category = pathParts.at(1);
   const type = pathParts.at(2);
   const material = pathParts.at(3);
-  const parsedCategory = ExercisesCategorySchema.safeParse(category);
-  const parsedType = ExercisesTypeSchema.safeParse(type);
-  const parsedMaterial = ExercisesMaterialSchema.safeParse(material);
+  const parsedCategory = Schema.decodeUnknownOption(ExercisesCategorySchema)(
+    category
+  );
+  const parsedType = Schema.decodeUnknownOption(ExercisesTypeSchema)(type);
+  const parsedMaterial = Schema.decodeUnknownOption(ExercisesMaterialSchema)(
+    material
+  );
 
   if (
-    !(parsedCategory.success && parsedType.success && parsedMaterial.success)
+    Option.isNone(parsedCategory) ||
+    Option.isNone(parsedType) ||
+    Option.isNone(parsedMaterial)
   ) {
     return "Exercises Content";
   }
 
   const materialPath = getMaterialPath(
-    parsedCategory.data,
-    parsedType.data,
-    parsedMaterial.data
+    parsedCategory.value,
+    parsedType.value,
+    parsedMaterial.value
   );
   const materialsList = await getMaterials(materialPath, locale);
   const { currentMaterial, currentMaterialItem } = getCurrentMaterial(

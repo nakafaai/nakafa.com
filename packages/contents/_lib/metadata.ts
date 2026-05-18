@@ -13,7 +13,7 @@ import {
   ContentMetadataSchema,
 } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 const contentsDir = resolveContentsDir(import.meta.url);
 const METADATA_REGEX = /export const metadata\s*=\s*({[\s\S]*?});/;
@@ -53,7 +53,7 @@ export function extractMetadata(
     }
 
     const metadataObject = new Function(`return ${metadataMatch[1]}`)();
-    return Option.fromNullable(ContentMetadataSchema.parse(metadataObject));
+    return Schema.decodeUnknownOption(ContentMetadataSchema)(metadataObject);
   } catch {
     return Option.none();
   }

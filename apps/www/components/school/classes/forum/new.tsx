@@ -33,28 +33,30 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
+import { Schema } from "effect";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import * as z from "zod/mini";
 import { getTag, getTagsByRole } from "@/components/school/classes/_data/tag";
 import { getSchoolClassesForumHref } from "@/components/school/classes/forum/helpers/routes";
 import { useClass } from "@/lib/context/use-class";
 import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 
-const formSchema = z.object({
-  title: z.string().check(z.minLength(MIN_FORUM_THREAD_TEXT_LENGTH), z.trim()),
-  body: z.string().check(z.minLength(MIN_FORUM_THREAD_TEXT_LENGTH), z.trim()),
-  tag: z.union([
-    z.literal("general"),
-    z.literal("question"),
-    z.literal("announcement"),
-    z.literal("assignment"),
-    z.literal("resource"),
-  ]),
+const form = Schema.Struct({
+  title: Schema.Trim.pipe(Schema.minLength(MIN_FORUM_THREAD_TEXT_LENGTH)),
+  body: Schema.Trim.pipe(Schema.minLength(MIN_FORUM_THREAD_TEXT_LENGTH)),
+  tag: Schema.Literal(
+    "general",
+    "question",
+    "announcement",
+    "assignment",
+    "resource"
+  ),
 });
 
-const defaultValues: z.infer<typeof formSchema> = {
+const formSchema = Schema.standardSchemaV1(form);
+
+const defaultValues: Schema.Schema.Encoded<typeof form> = {
   title: "",
   body: "",
   tag: "general",
@@ -220,31 +222,33 @@ export function SchoolClassesForumNew() {
                       {t("tag-label")}
                     </FieldLabel>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          aria-invalid={isInvalid}
-                          className="w-full font-normal"
-                          id="school-classes-forum-new-tag"
-                          name={field.name}
-                          variant="outline"
-                        >
-                          <HugeIcons icon={currentTag.icon} />
-                          {t(currentTag.value)}
-                          <HugeIcons
-                            className="ml-auto"
-                            icon={ArrowDown01Icon}
-                          />
-                        </Button>
-                      </DropdownMenuTrigger>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button
+                            aria-invalid={isInvalid}
+                            className="w-full font-normal"
+                            id="school-classes-forum-new-tag"
+                            name={field.name}
+                            variant="outline"
+                          >
+                            <HugeIcons icon={currentTag.icon} />
+                            {t(currentTag.value)}
+                            <HugeIcons
+                              className="ml-auto"
+                              icon={ArrowDown01Icon}
+                            />
+                          </Button>
+                        }
+                      />
                       <DropdownMenuContent
                         align="start"
-                        className="w-(--radix-dropdown-menu-trigger-width)"
+                        className="w-(--anchor-width)"
                       >
                         {availableTags.map((tag) => (
                           <DropdownMenuItem
                             className="cursor-pointer"
                             key={tag.value}
-                            onSelect={() => field.handleChange(tag.value)}
+                            onClick={() => field.handleChange(tag.value)}
                           >
                             <HugeIcons icon={tag.icon} />
                             {t(tag.value)}

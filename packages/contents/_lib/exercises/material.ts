@@ -1,6 +1,7 @@
 import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
 import { ExercisesMaterialListSchema } from "@repo/contents/_types/exercises/material";
 import { cleanSlug } from "@repo/utilities/helper";
+import { Schema } from "effect";
 import type { Locale } from "next-intl";
 
 /**
@@ -22,7 +23,9 @@ export async function getMaterials(
       `@repo/contents/${cleanPath}/_data/${locale}-material.ts`
     );
 
-    const parsedContent = ExercisesMaterialListSchema.parse(content.default);
+    const parsedContent = Schema.decodeUnknownSync(ExercisesMaterialListSchema)(
+      content.default
+    );
 
     return parsedContent;
   } catch {

@@ -6,6 +6,11 @@ import {
   replaceExerciseChoices,
   syncContentAuthorsWithCache,
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
+import { buildContentSearchRef } from "@repo/backend/convex/contents/helpers/search/documents";
+import {
+  deleteContentSearch,
+  syncContentSearch,
+} from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
 import {
   exercisesCategoryValidator,
@@ -19,11 +24,15 @@ import { getAll } from "convex-helpers/server/relationships";
 
 const syncedExerciseSetValidator = v.object({
   category: exercisesCategoryValidator,
+  contentHash: v.string(),
   description: v.optional(v.string()),
   exerciseType: v.string(),
   locale: localeValidator,
   material: exercisesMaterialValidator,
   questionCount: v.number(),
+  searchDescription: v.string(),
+  searchText: v.string(),
+  searchTitle: v.string(),
   setName: v.string(),
   slug: v.string(),
   title: v.string(),
@@ -50,6 +59,9 @@ const syncedExerciseQuestionValidator = v.object({
   material: exercisesMaterialValidator,
   number: v.number(),
   questionBody: v.string(),
+  searchDescription: v.string(),
+  searchText: v.string(),
+  searchTitle: v.string(),
   setName: v.string(),
   setSlug: v.string(),
   slug: v.string(),
@@ -97,6 +109,27 @@ export const bulkSyncExerciseSets = internalMutation({
     let updated = 0;
 
     for (const set of args.sets) {
+      const searchRef = buildContentSearchRef({
+        locale: set.locale,
+        route: set.slug,
+        section: "exercises",
+      });
+
+      if (set.questionCount > 0) {
+        await syncContentSearch(ctx, {
+          contentHash: set.contentHash,
+          description: set.searchDescription,
+          locale: set.locale,
+          route: set.slug,
+          section: "exercises",
+          syncedAt: now,
+          text: set.searchText,
+          title: set.searchTitle,
+        });
+      } else {
+        await deleteContentSearch(ctx, searchRef.content_id);
+      }
+
       const nextValues = {
         category: set.category,
         description: set.description,
@@ -201,6 +234,17 @@ export const bulkSyncExerciseQuestions = internalMutation({
           q.eq("locale", question.locale).eq("slug", question.slug)
         )
         .unique();
+
+      await syncContentSearch(ctx, {
+        contentHash: question.contentHash,
+        description: question.searchDescription,
+        locale: question.locale,
+        route: question.slug,
+        section: "exercises",
+        syncedAt: now,
+        text: question.searchText,
+        title: question.searchTitle,
+      });
 
       if (existingQuestion?.contentHash === question.contentHash) {
         unchanged++;
@@ -324,6 +368,13 @@ export const deleteStaleExerciseSets = internalMutation({
         await deleteExerciseQuestion(ctx, question._id);
       }
 
+      const searchRef = buildContentSearchRef({
+        locale: exerciseSet.locale,
+        route: exerciseSet.slug,
+        section: "exercises",
+      });
+
+      await deleteContentSearch(ctx, searchRef.content_id);
       await ctx.db.delete("exerciseSets", setId);
       deleted++;
     }

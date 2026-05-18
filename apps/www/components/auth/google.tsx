@@ -1,6 +1,6 @@
 "use client";
 
-import { Google } from "@lobehub/icons";
+import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
 import { useLocale, useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
@@ -30,7 +30,7 @@ export function AuthGoogle({ redirect }: Props) {
 
   return (
     <Button onClick={handleGoogleSignIn}>
-      <Google />
+      <BrandLogo name="google" />
       {t("continue-with-google")}
     </Button>
   );

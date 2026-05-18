@@ -288,7 +288,6 @@ describe("tryoutAccess/mutations/setup", () => {
 
   it("does not allow changing campaign policy after it has been redeemed", async () => {
     const t = createTryoutTestConvex();
-    const currentTime = NOW;
     const identity = await t.mutation(async (ctx) => {
       const state = await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -304,8 +303,8 @@ describe("tryoutAccess/mutations/setup", () => {
             targetProducts: ["snbt"],
             campaignKind: "access-pass",
             enabled: true,
-            startsAt: currentTime - 60 * 1000,
-            endsAt: currentTime + 24 * 60 * 60 * 1000,
+            startsAt: NOW - 60 * 1000,
+            endsAt: NOW + 24 * 60 * 60 * 1000,
             grantDurationDays: 7,
           },
           link: {
@@ -346,8 +345,8 @@ describe("tryoutAccess/mutations/setup", () => {
           targetProducts: ["snbt"],
           campaignKind: "access-pass",
           enabled: true,
-          startsAt: currentTime - 60 * 1000,
-          endsAt: currentTime + 2 * 24 * 60 * 60 * 1000,
+          startsAt: NOW - 60 * 1000,
+          endsAt: NOW + 2 * 24 * 60 * 60 * 1000,
           grantDurationDays: 14,
         },
         link: {
@@ -361,7 +360,6 @@ describe("tryoutAccess/mutations/setup", () => {
 
   it("keeps campaign policy locked after redeemed grants are cleaned up", async () => {
     const t = createTryoutTestConvex();
-    const currentTime = NOW;
     const identity = await t.mutation(async (ctx) => {
       const state = await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -377,8 +375,8 @@ describe("tryoutAccess/mutations/setup", () => {
             targetProducts: ["snbt"],
             campaignKind: "access-pass",
             enabled: true,
-            startsAt: currentTime - 60 * 1000,
-            endsAt: currentTime + 24 * 60 * 60 * 1000,
+            startsAt: NOW - 60 * 1000,
+            endsAt: NOW + 24 * 60 * 60 * 1000,
             grantDurationDays: 7,
           },
           link: {
@@ -413,8 +411,8 @@ describe("tryoutAccess/mutations/setup", () => {
           targetProducts: ["snbt"],
           campaignKind: "access-pass",
           enabled: true,
-          startsAt: currentTime - 60 * 1000,
-          endsAt: currentTime + 2 * 24 * 60 * 60 * 1000,
+          startsAt: NOW - 60 * 1000,
+          endsAt: NOW + 2 * 24 * 60 * 60 * 1000,
           grantDurationDays: 14,
         },
         link: {

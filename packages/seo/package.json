@@ -1,19 +1,19 @@
 {
   "name": "@repo/seo",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@repo/next-config": "workspace:*",
     "@repo/utilities": "workspace:*",
     "lodash.merge": "^4.6.2",
     "next": "16.2.6",
-    "next-intl": "^4.11.0",
+    "next-intl": "^4.12.0",
     "react": "^19.2.6",
-    "schema-dts": "^2.0.0",
-    "zod": "^4.4.3"
+    "schema-dts": "^2.0.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

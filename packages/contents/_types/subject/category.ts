@@ -1,9 +1,11 @@
-import * as z from "zod";
+import { Schema } from "effect";
 
-export const SubjectCategorySchema = z.enum([
+export const SUBJECT_CATEGORIES = [
   "elementary-school",
   "middle-school",
   "high-school",
   "university",
-]);
-export type SubjectCategory = z.infer<typeof SubjectCategorySchema>;
+] as const;
+
+export const SubjectCategorySchema = Schema.Literal(...SUBJECT_CATEGORIES);
+export type SubjectCategory = Schema.Schema.Type<typeof SubjectCategorySchema>;

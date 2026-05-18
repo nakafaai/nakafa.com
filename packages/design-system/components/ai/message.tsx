@@ -1,14 +1,14 @@
-import type { MyUIMessage } from "@repo/ai/types/message";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@repo/design-system/components/ui/avatar";
 import { cn } from "@repo/design-system/lib/utils";
+import type { UIMessage } from "ai";
 import { type ComponentProps, type HTMLAttributes, memo } from "react";
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
-  from: MyUIMessage["role"];
+  from: UIMessage["role"];
 };
 
 export const Message = memo(({ className, from, ...props }: MessageProps) => (

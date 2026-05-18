@@ -4,6 +4,7 @@ import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
+import { Option, Schema } from "effect";
 
 /**
  * Builds the public path for an exercises category page.
@@ -47,33 +48,37 @@ export function getMaterialPath(
 
 /** Narrows one exercises category route segment to the supported category union. */
 export function parseExercisesCategory(value: string) {
-  const parsedCategory = ExercisesCategorySchema.safeParse(value);
+  const parsedCategory = Schema.decodeUnknownOption(ExercisesCategorySchema)(
+    value
+  );
 
-  if (!parsedCategory.success) {
+  if (Option.isNone(parsedCategory)) {
     return null;
   }
 
-  return parsedCategory.data;
+  return parsedCategory.value;
 }
 
 /** Narrows one exercises type route segment to the supported type union. */
 export function parseExercisesType(value: string) {
-  const parsedType = ExercisesTypeSchema.safeParse(value);
+  const parsedType = Schema.decodeUnknownOption(ExercisesTypeSchema)(value);
 
-  if (!parsedType.success) {
+  if (Option.isNone(parsedType)) {
     return null;
   }
 
-  return parsedType.data;
+  return parsedType.value;
 }
 
 /** Narrows one exercises material route segment to the supported material union. */
 export function parseExercisesMaterial(value: string) {
-  const parsedMaterial = ExercisesMaterialSchema.safeParse(value);
+  const parsedMaterial = Schema.decodeUnknownOption(ExercisesMaterialSchema)(
+    value
+  );
 
-  if (!parsedMaterial.success) {
+  if (Option.isNone(parsedMaterial)) {
     return null;
   }
 
-  return parsedMaterial.data;
+  return parsedMaterial.value;
 }

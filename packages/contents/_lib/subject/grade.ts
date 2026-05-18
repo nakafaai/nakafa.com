@@ -2,26 +2,22 @@ import { getFolderChildNamesSync } from "@repo/contents/_lib/fs";
 import { getCategoryPath } from "@repo/contents/_lib/subject/category";
 import { getMaterialPath } from "@repo/contents/_lib/subject/route";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
-import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
+import { SUBJECT_CATEGORIES } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import {
   GradeSchema,
+  NON_NUMERIC_GRADES,
   NonNumericGradeSchema,
-  NumericGradeSchema,
+  NUMERIC_GRADES,
 } from "@repo/contents/_types/subject/grade";
 import {
-  MaterialBachelorSchema,
-  MaterialHighSchoolSchema,
+  BACHELOR_MATERIALS,
+  HIGH_SCHOOL_MATERIALS,
 } from "@repo/contents/_types/subject/material";
+import { Option, Schema } from "effect";
 
-const orderedGrades = [
-  ...NumericGradeSchema.options,
-  ...NonNumericGradeSchema.options,
-];
-const orderedMaterials = [
-  ...MaterialHighSchoolSchema.options,
-  ...MaterialBachelorSchema.options,
-];
+const orderedGrades = [...NUMERIC_GRADES, ...NON_NUMERIC_GRADES];
+const orderedMaterials = [...HIGH_SCHOOL_MATERIALS, ...BACHELOR_MATERIALS];
 
 /**
  * Builds the public path for a subject grade page.
@@ -41,13 +37,13 @@ export function getGradePath(category: SubjectCategory, grade: Grade) {
  * @returns Non-numeric grade label, or `undefined` for numeric grades
  */
 export function getGradeNonNumeric(grade: Grade) {
-  const parsedGrade = NonNumericGradeSchema.safeParse(grade);
+  const parsedGrade = Schema.decodeUnknownOption(NonNumericGradeSchema)(grade);
 
-  if (!parsedGrade.success) {
+  if (Option.isNone(parsedGrade)) {
     return;
   }
 
-  return parsedGrade.data;
+  return parsedGrade.value;
 }
 
 /**
@@ -96,7 +92,7 @@ export function getGradeSubjects(category: SubjectCategory, grade: Grade) {
 export function getAllGradesWithSubjects(
   categories?: readonly SubjectCategory[]
 ) {
-  const categoriesToFetch = categories ?? SubjectCategorySchema.options;
+  const categoriesToFetch = categories ?? SUBJECT_CATEGORIES;
 
   const gradeEntries = categoriesToFetch.flatMap((category) =>
     getCategoryGrades(category).map((grade) => ({
@@ -116,11 +112,11 @@ export function getAllGradesWithSubjects(
 
 /** Narrows one subject grade route segment to the supported grade union. */
 export function parseGrade(value: string) {
-  const parsedGrade = GradeSchema.safeParse(value);
+  const parsedGrade = Schema.decodeUnknownOption(GradeSchema)(value);
 
-  if (!parsedGrade.success) {
+  if (Option.isNone(parsedGrade)) {
     return null;
   }
 
-  return parsedGrade.data;
+  return parsedGrade.value;
 }

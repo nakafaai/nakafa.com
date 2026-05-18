@@ -1,4 +1,6 @@
-import * as z from "zod";
+import { Schema } from "effect";
 
-export const ArticleCategorySchema = z.enum(["politics"]);
-export type ArticleCategory = z.infer<typeof ArticleCategorySchema>;
+export const ARTICLE_CATEGORIES = ["politics"] as const;
+
+export const ArticleCategorySchema = Schema.Literal(...ARTICLE_CATEGORIES);
+export type ArticleCategory = Schema.Schema.Type<typeof ArticleCategorySchema>;

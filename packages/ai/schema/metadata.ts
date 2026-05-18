@@ -1,27 +1,34 @@
-import * as z from "zod";
+import { MODEL_IDS } from "@repo/ai/config/models";
+import { Schema } from "effect";
 
-const componentUsageSchema = z.object({
-  input: z.number(),
-  output: z.number(),
-});
-export type ComponentUsage = z.infer<typeof componentUsageSchema>;
+const ComponentUsageSchema = Schema.Struct({
+  input: Schema.Number,
+  output: Schema.Number,
+}).pipe(Schema.mutable);
 
-export const metadataSchema = z.object({
-  model: z.string(),
-  credits: z.optional(z.number()),
-  tokens: z.optional(
-    z.object({
-      input: z.optional(z.number()),
-      output: z.optional(z.number()),
-      total: z.optional(z.number()),
-      breakdown: z.optional(
-        z.object({
-          main: componentUsageSchema,
-          subAgents: z.record(z.string(), componentUsageSchema),
-        })
+/**
+ * Metadata stored on Nina UI messages.
+ */
+export const MetadataSchema = Schema.Struct({
+  credits: Schema.optional(Schema.Number),
+  model: Schema.Literal(...MODEL_IDS),
+  tokens: Schema.optional(
+    Schema.Struct({
+      breakdown: Schema.optional(
+        Schema.Struct({
+          main: ComponentUsageSchema,
+          subAgents: Schema.Record({
+            key: Schema.String,
+            value: ComponentUsageSchema,
+          }).pipe(Schema.mutable),
+        }).pipe(Schema.mutable)
       ),
-    })
+      input: Schema.optional(Schema.Number),
+      output: Schema.optional(Schema.Number),
+      total: Schema.optional(Schema.Number),
+    }).pipe(Schema.mutable)
   ),
-});
+}).pipe(Schema.mutable);
 
-export type Metadata = z.infer<typeof metadataSchema>;
+export type ComponentUsage = Schema.Schema.Type<typeof ComponentUsageSchema>;
+export type Metadata = Schema.Schema.Type<typeof MetadataSchema>;

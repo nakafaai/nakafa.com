@@ -22,6 +22,7 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
+import { Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
@@ -228,9 +229,10 @@ export function SchoolOnboardingCreateForm() {
                 <Select
                   name={field.name}
                   onValueChange={(value) => {
-                    const parsed = schoolTypeSchema.safeParse(value);
-                    if (parsed.success) {
-                      field.handleChange(parsed.data);
+                    const parsed =
+                      Schema.decodeUnknownOption(schoolTypeSchema)(value);
+                    if (Option.isSome(parsed)) {
+                      field.handleChange(parsed.value);
                     }
                   }}
                   value={field.state.value ?? undefined}

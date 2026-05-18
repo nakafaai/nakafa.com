@@ -11,22 +11,12 @@
  * Set ENABLE_AUDIO_GENERATION=true in the Convex Dashboard deployment settings
  */
 
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-
-/**
- * Locales supported for audio generation.
- * This is the single source of truth for supported locales.
- * When adding new locales, update this array and the content will be
- * automatically generated for all locales.
- */
-export const SUPPORTED_LOCALES = ["en", "id"] satisfies Locale[];
-
 /**
  * Default maximum content pieces to generate per day (across all locales).
  * Each content piece will be generated for ALL supported locales.
  *
- * Example: MAX_CONTENT_PER_DAY = 1, SUPPORTED_LOCALES = ["en", "id"]
- * Result: 1 content × 2 locales = 2 audio files per day
+ * Example: MAX_CONTENT_PER_DAY = 1 means one generated content item per
+ * supported locale.
  *
  * Override via LIMIT_AUDIO_GENERATION_PER_DAY environment variable.
  */

@@ -251,29 +251,34 @@ export function CreateSchoolClassDialog({
                     {t("year-label")}
                   </FieldLabel>
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        aria-invalid={isInvalid}
-                        className="w-full font-normal"
-                        id="school-classes-header-add-year"
-                        name={field.name}
-                        type="button"
-                        variant="outline"
-                      >
-                        <HugeIcons icon={Calendar03Icon} />
-                        {field.state.value || t("year-placeholder")}
-                        <HugeIcons className="ml-auto" icon={ArrowDown01Icon} />
-                      </Button>
-                    </DropdownMenuTrigger>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          aria-invalid={isInvalid}
+                          className="w-full font-normal"
+                          id="school-classes-header-add-year"
+                          name={field.name}
+                          type="button"
+                          variant="outline"
+                        >
+                          <HugeIcons icon={Calendar03Icon} />
+                          {field.state.value || t("year-placeholder")}
+                          <HugeIcons
+                            className="ml-auto"
+                            icon={ArrowDown01Icon}
+                          />
+                        </Button>
+                      }
+                    />
                     <DropdownMenuContent
                       align="start"
-                      className="w-(--radix-dropdown-menu-trigger-width)"
+                      className="w-(--anchor-width)"
                     >
                       {getAcademicYearList().map((year) => (
                         <DropdownMenuItem
                           className="cursor-pointer"
                           key={year}
-                          onSelect={() => field.handleChange(year)}
+                          onClick={() => field.handleChange(year)}
                         >
                           {year}
                           <HugeIcons
@@ -304,29 +309,34 @@ export function CreateSchoolClassDialog({
                     {t("visibility-label")}
                   </FieldLabel>
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        aria-invalid={isInvalid}
-                        className="w-full font-normal"
-                        id="school-classes-header-add-visibility"
-                        name={field.name}
-                        type="button"
-                        variant="outline"
-                      >
-                        <HugeIcons icon={ViewIcon} />
-                        {t(field.state.value)}
-                        <HugeIcons className="ml-auto" icon={ArrowDown01Icon} />
-                      </Button>
-                    </DropdownMenuTrigger>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          aria-invalid={isInvalid}
+                          className="w-full font-normal"
+                          id="school-classes-header-add-visibility"
+                          name={field.name}
+                          type="button"
+                          variant="outline"
+                        >
+                          <HugeIcons icon={ViewIcon} />
+                          {t(field.state.value)}
+                          <HugeIcons
+                            className="ml-auto"
+                            icon={ArrowDown01Icon}
+                          />
+                        </Button>
+                      }
+                    />
                     <DropdownMenuContent
                       align="start"
-                      className="w-(--radix-dropdown-menu-trigger-width)"
+                      className="w-(--anchor-width)"
                     >
                       {classVisibilityList.map((visibility) => (
                         <DropdownMenuItem
                           className="cursor-pointer"
                           key={visibility}
-                          onSelect={() => field.handleChange(visibility)}
+                          onClick={() => field.handleChange(visibility)}
                         >
                           {t(visibility)}
                           <HugeIcons

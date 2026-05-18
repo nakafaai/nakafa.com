@@ -1,29 +1,34 @@
-import * as z from "zod/mini";
+import { Schema } from "effect";
 
-export const materialStatusSchema = z.union([
-  z.literal("draft"),
-  z.literal("published"),
-  z.literal("scheduled"),
-  z.literal("archived"),
-]);
+export const materialStatusSchema = Schema.Literal(
+  "draft",
+  "published",
+  "scheduled",
+  "archived"
+);
 
-export const materialGroupFormSchema = z
-  .object({
-    name: z.string().check(z.minLength(1), z.trim()),
-    description: z.string().check(z.minLength(1), z.trim()),
-    status: materialStatusSchema,
-    scheduledAt: z.optional(z.number()),
+const materialGroupForm = Schema.Struct({
+  name: Schema.Trim.pipe(Schema.minLength(1)),
+  description: Schema.Trim.pipe(Schema.minLength(1)),
+  status: materialStatusSchema,
+  scheduledAt: Schema.optional(Schema.Number),
+}).pipe(
+  Schema.filter((data) => {
+    if (data.status !== "scheduled") {
+      return true;
+    }
+
+    if (!data.scheduledAt) {
+      return false;
+    }
+
+    return data.scheduledAt > Date.now();
   })
-  .check(
-    z.refine((data) => {
-      if (data.status !== "scheduled") {
-        return true;
-      }
-      if (!data.scheduledAt) {
-        return false;
-      }
-      return data.scheduledAt > Date.now();
-    })
-  );
+);
 
-export type MaterialGroupFormValues = z.infer<typeof materialGroupFormSchema>;
+export const materialGroupFormSchema =
+  Schema.standardSchemaV1(materialGroupForm);
+
+export type MaterialGroupFormValues = Schema.Schema.Type<
+  typeof materialGroupForm
+>;

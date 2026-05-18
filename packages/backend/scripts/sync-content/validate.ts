@@ -27,6 +27,7 @@ import {
   parseLocale,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type { ValidationResult } from "@repo/backend/scripts/sync-content/types";
+import { Effect } from "effect";
 
 const createValidationResult = (): ValidationResult => ({
   valid: 0,
@@ -34,114 +35,165 @@ const createValidationResult = (): ValidationResult => ({
   errors: [],
 });
 
-const validateArticles = async (): Promise<ValidationResult> => {
-  const files = await globFiles("articles/**/*.mdx");
+const validateArticles = Effect.fn("sync.validateArticles")(function* () {
+  const files = yield* globFiles("articles/**/*.mdx");
   const result = createValidationResult();
 
   log(`Validating ${files.length} article files...`);
   for (const file of files) {
-    try {
-      parseArticlePath(file);
-      await readMdxFile(file);
-      await readArticleReferences(getArticleDir(file));
+    const validated = yield* Effect.either(
+      Effect.gen(function* () {
+        yield* Effect.try({
+          try: () => parseArticlePath(file),
+          catch: (error) => error,
+        });
+        yield* readMdxFile(file);
+        yield* readArticleReferences(getArticleDir(file));
+      })
+    );
+
+    if (validated._tag === "Right") {
       result.valid++;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      result.invalid++;
-      result.errors.push({ file, error: message });
+      continue;
     }
+
+    const message =
+      validated.left instanceof Error
+        ? validated.left.message
+        : String(validated.left);
+    result.invalid++;
+    result.errors.push({ file, error: message });
   }
 
   return result;
-};
+});
 
-const validateSubjects = async (): Promise<ValidationResult> => {
-  const files = await globFiles("subject/**/*.mdx");
-  const materialFiles = await globFiles("subject/**/_data/*-material.ts");
+const validateSubjects = Effect.fn("sync.validateSubjects")(function* () {
+  const files = yield* globFiles("subject/**/*.mdx");
+  const materialFiles = yield* globFiles("subject/**/_data/*-material.ts");
   const result = createValidationResult();
 
   log(`Validating ${files.length} subject files...`);
   for (const file of files) {
-    try {
-      parseSubjectPath(file);
-      await readMdxFile(file);
+    const validated = yield* Effect.either(
+      Effect.gen(function* () {
+        yield* Effect.try({
+          try: () => parseSubjectPath(file),
+          catch: (error) => error,
+        });
+        yield* readMdxFile(file);
+      })
+    );
+
+    if (validated._tag === "Right") {
       result.valid++;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      result.invalid++;
-      result.errors.push({ file, error: message });
+      continue;
     }
+
+    const message =
+      validated.left instanceof Error
+        ? validated.left.message
+        : String(validated.left);
+    result.invalid++;
+    result.errors.push({ file, error: message });
   }
 
   log(`Validating ${materialFiles.length} material files...`);
   for (const materialFile of materialFiles) {
-    try {
-      const localeMatch = materialFile.match(
-        LOCALE_SUBJECT_MATERIAL_FILE_REGEX
-      );
-      if (localeMatch) {
-        await parseSubjectMaterialFile(
-          materialFile,
-          parseLocale(localeMatch[1], materialFile)
+    const validated = yield* Effect.either(
+      Effect.gen(function* () {
+        const localeMatch = materialFile.match(
+          LOCALE_SUBJECT_MATERIAL_FILE_REGEX
         );
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+        if (localeMatch) {
+          yield* parseSubjectMaterialFile(
+            materialFile,
+            parseLocale(localeMatch[1], materialFile)
+          );
+        }
+      })
+    );
+
+    if (validated._tag === "Left") {
+      const message =
+        validated.left instanceof Error
+          ? validated.left.message
+          : String(validated.left);
       result.invalid++;
       result.errors.push({ file: materialFile, error: message });
     }
   }
 
   return result;
-};
+});
 
-const validateExercises = async (): Promise<ValidationResult> => {
-  const questionFiles = await globFiles("exercises/**/_question/*.mdx");
-  const materialFiles = await globFiles("exercises/**/_data/*-material.ts");
+const validateExercises = Effect.fn("sync.validateExercises")(function* () {
+  const questionFiles = yield* globFiles("exercises/**/_question/*.mdx");
+  const materialFiles = yield* globFiles("exercises/**/_data/*-material.ts");
   const result = createValidationResult();
 
   log(`Validating ${questionFiles.length} exercise question files...`);
   for (const file of questionFiles) {
-    try {
-      parseExercisePath(file);
-      await readMdxFile(file);
-      await readExerciseChoices(getExerciseDir(file));
+    const validated = yield* Effect.either(
+      Effect.gen(function* () {
+        yield* Effect.try({
+          try: () => parseExercisePath(file),
+          catch: (error) => error,
+        });
+        yield* readMdxFile(file);
+        yield* readExerciseChoices(getExerciseDir(file));
+      })
+    );
+
+    if (validated._tag === "Right") {
       result.valid++;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      result.invalid++;
-      result.errors.push({ file, error: message });
+      continue;
     }
+
+    const message =
+      validated.left instanceof Error
+        ? validated.left.message
+        : String(validated.left);
+    result.invalid++;
+    result.errors.push({ file, error: message });
   }
 
   log(`Validating ${materialFiles.length} material files...`);
   for (const materialFile of materialFiles) {
-    try {
-      const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
-      if (localeMatch) {
-        await parseExerciseMaterialFile(
-          materialFile,
-          parseLocale(localeMatch[1], materialFile)
-        );
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+    const validated = yield* Effect.either(
+      Effect.gen(function* () {
+        const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
+        if (localeMatch) {
+          yield* parseExerciseMaterialFile(
+            materialFile,
+            parseLocale(localeMatch[1], materialFile)
+          );
+        }
+      })
+    );
+
+    if (validated._tag === "Left") {
+      const message =
+        validated.left instanceof Error
+          ? validated.left.message
+          : String(validated.left);
       result.invalid++;
       result.errors.push({ file: materialFile, error: message });
     }
   }
 
   return result;
-};
+});
 
-export const validate = async (): Promise<void> => {
+/** Validates content files without writing to Convex. */
+export const validate = Effect.fn("sync.validate")(function* () {
   log("=== VALIDATE CONTENT ===\n");
   log("Validating all content files without syncing...\n");
 
   const startTime = performance.now();
-  const articleResult = await validateArticles();
-  const subjectResult = await validateSubjects();
-  const exerciseResult = await validateExercises();
+  const articleResult = yield* validateArticles();
+  const subjectResult = yield* validateSubjects();
+  const exerciseResult = yield* validateExercises();
 
   const totalValid =
     articleResult.valid + subjectResult.valid + exerciseResult.valid;
@@ -182,4 +234,4 @@ export const validate = async (): Promise<void> => {
     log(`... and ${allErrors.length - 20} more errors`);
   }
   process.exit(1);
-};
+});

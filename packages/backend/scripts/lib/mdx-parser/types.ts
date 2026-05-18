@@ -56,6 +56,7 @@ export interface ParsedExerciseSet {
   category: ExercisesCategory;
   description?: string;
   exerciseType: string;
+  exerciseTypeTitle: string;
   locale: ParsedLocale;
   material: ExercisesMaterial;
   setName: string;

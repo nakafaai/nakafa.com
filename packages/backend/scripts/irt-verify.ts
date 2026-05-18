@@ -1,64 +1,67 @@
 import {
+  callConvex,
   getConvexConfig,
-  runConvexQueryWithArgs,
-} from "@repo/backend/scripts/sync-content/convexApi";
-import { loadEnvFile } from "@repo/backend/scripts/sync-content/runtime";
-import * as z from "zod";
+} from "@repo/backend/scripts/sync-content/convex";
+import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
+import { Effect, Schema } from "effect";
 
 const IRT_VERIFY_PAGE_SIZE = 500;
 
-const calibrationCacheIntegrityPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  missingStatsSetCount: z.number(),
-  oversizedSetCount: z.number(),
+const calibrationCacheIntegrityPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  missingStatsSetCount: Schema.Number,
+  oversizedSetCount: Schema.Number,
 });
 
-const scaleQualityIntegrityPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  missingQualityCheckTryoutCount: z.number(),
-  unstartableTryoutCount: z.number(),
+const scaleQualityIntegrityPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  missingQualityCheckTryoutCount: Schema.Number,
+  unstartableTryoutCount: Schema.Number,
 });
 
-const calibrationQueueAttemptIntegrityPageSchema = z.object({
-  continueCursor: z.string(),
-  duplicatePendingAttemptCount: z.number(),
-  isDone: z.boolean(),
-  missingPendingQueueAttemptCount: z.number(),
-  staleAttemptQueueSetCount: z.number(),
+const calibrationQueueAttemptIntegrityPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  duplicatePendingAttemptCount: Schema.Number,
+  isDone: Schema.Boolean,
+  missingPendingQueueAttemptCount: Schema.Number,
+  staleAttemptQueueSetCount: Schema.Number,
 });
 
-const calibrationQueueEntryIntegrityPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  orphanedQueueEntryCount: z.number(),
-  staleQueueEntryCount: z.number(),
+const calibrationQueueEntryIntegrityPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  orphanedQueueEntryCount: Schema.Number,
+  staleQueueEntryCount: Schema.Number,
 });
 
-type CalibrationCacheIntegrityPage = z.infer<
+type CalibrationCacheIntegrityPage = Schema.Schema.Type<
   typeof calibrationCacheIntegrityPageSchema
 >;
-type ScaleQualityIntegrityPage = z.infer<
+type ScaleQualityIntegrityPage = Schema.Schema.Type<
   typeof scaleQualityIntegrityPageSchema
 >;
-type CalibrationQueueAttemptIntegrityPage = z.infer<
+type CalibrationQueueAttemptIntegrityPage = Schema.Schema.Type<
   typeof calibrationQueueAttemptIntegrityPageSchema
 >;
-type CalibrationQueueEntryIntegrityPage = z.infer<
+type CalibrationQueueEntryIntegrityPage = Schema.Schema.Type<
   typeof calibrationQueueEntryIntegrityPageSchema
 >;
 
 /** Aggregate paginated calibration-cache integrity totals for one deployment. */
-async function getCalibrationCacheIntegrity(prod: boolean) {
-  const config = getConvexConfig({ prod });
+const getCalibrationCacheIntegrity = Effect.fn(
+  "irt.getCalibrationCacheIntegrity"
+)(function* (prod: boolean) {
+  const config = yield* getConvexConfig({ prod });
   let continueCursor: string | null = null;
   let missingStatsSetCount = 0;
   let oversizedSetCount = 0;
 
   while (true) {
-    const page: CalibrationCacheIntegrityPage = await runConvexQueryWithArgs(
+    const page: CalibrationCacheIntegrityPage = yield* callConvex(
       config,
+      "query",
       "irt/queries/internal/maintenance:getCalibrationCacheIntegrity",
       {
         paginationOpts: {
@@ -81,45 +84,50 @@ async function getCalibrationCacheIntegrity(prod: boolean) {
 
     continueCursor = page.continueCursor;
   }
-}
+});
 
 /** Aggregate paginated scale-quality integrity totals for one deployment. */
-async function getScaleQualityIntegrity(prod: boolean) {
-  const config = getConvexConfig({ prod });
-  let continueCursor: string | null = null;
-  let missingQualityCheckTryoutCount = 0;
-  let unstartableTryoutCount = 0;
+const getScaleQualityIntegrity = Effect.fn("irt.getScaleQualityIntegrity")(
+  function* (prod: boolean) {
+    const config = yield* getConvexConfig({ prod });
+    let continueCursor: string | null = null;
+    let missingQualityCheckTryoutCount = 0;
+    let unstartableTryoutCount = 0;
 
-  while (true) {
-    const page: ScaleQualityIntegrityPage = await runConvexQueryWithArgs(
-      config,
-      "irt/queries/internal/maintenance:getScaleQualityIntegrity",
-      {
-        paginationOpts: {
-          cursor: continueCursor,
-          numItems: IRT_VERIFY_PAGE_SIZE,
+    while (true) {
+      const page: ScaleQualityIntegrityPage = yield* callConvex(
+        config,
+        "query",
+        "irt/queries/internal/maintenance:getScaleQualityIntegrity",
+        {
+          paginationOpts: {
+            cursor: continueCursor,
+            numItems: IRT_VERIFY_PAGE_SIZE,
+          },
         },
-      },
-      scaleQualityIntegrityPageSchema
-    );
+        scaleQualityIntegrityPageSchema
+      );
 
-    missingQualityCheckTryoutCount += page.missingQualityCheckTryoutCount;
-    unstartableTryoutCount += page.unstartableTryoutCount;
+      missingQualityCheckTryoutCount += page.missingQualityCheckTryoutCount;
+      unstartableTryoutCount += page.unstartableTryoutCount;
 
-    if (page.isDone) {
-      return {
-        missingQualityCheckTryoutCount,
-        unstartableTryoutCount,
-      };
+      if (page.isDone) {
+        return {
+          missingQualityCheckTryoutCount,
+          unstartableTryoutCount,
+        };
+      }
+
+      continueCursor = page.continueCursor;
     }
-
-    continueCursor = page.continueCursor;
   }
-}
+);
 
 /** Aggregate paginated queue-integrity totals for one deployment. */
-async function getCalibrationQueueIntegrity(prod: boolean) {
-  const config = getConvexConfig({ prod });
+const getCalibrationQueueIntegrity = Effect.fn(
+  "irt.getCalibrationQueueIntegrity"
+)(function* (prod: boolean) {
+  const config = yield* getConvexConfig({ prod });
   let attemptCursor: string | null = null;
   let duplicatePendingAttemptCount = 0;
   let entryCursor: string | null = null;
@@ -129,18 +137,18 @@ async function getCalibrationQueueIntegrity(prod: boolean) {
   let staleQueueEntryCount = 0;
 
   while (true) {
-    const page: CalibrationQueueAttemptIntegrityPage =
-      await runConvexQueryWithArgs(
-        config,
-        "irt/queries/internal/maintenance:getCalibrationQueueAttemptIntegrity",
-        {
-          paginationOpts: {
-            cursor: attemptCursor,
-            numItems: IRT_VERIFY_PAGE_SIZE,
-          },
+    const page: CalibrationQueueAttemptIntegrityPage = yield* callConvex(
+      config,
+      "query",
+      "irt/queries/internal/maintenance:getCalibrationQueueAttemptIntegrity",
+      {
+        paginationOpts: {
+          cursor: attemptCursor,
+          numItems: IRT_VERIFY_PAGE_SIZE,
         },
-        calibrationQueueAttemptIntegrityPageSchema
-      );
+      },
+      calibrationQueueAttemptIntegrityPageSchema
+    );
 
     duplicatePendingAttemptCount += page.duplicatePendingAttemptCount;
     missingPendingQueueAttemptCount += page.missingPendingQueueAttemptCount;
@@ -154,18 +162,18 @@ async function getCalibrationQueueIntegrity(prod: boolean) {
   }
 
   while (true) {
-    const page: CalibrationQueueEntryIntegrityPage =
-      await runConvexQueryWithArgs(
-        config,
-        "irt/queries/internal/maintenance:getCalibrationQueueEntryIntegrity",
-        {
-          paginationOpts: {
-            cursor: entryCursor,
-            numItems: IRT_VERIFY_PAGE_SIZE,
-          },
+    const page: CalibrationQueueEntryIntegrityPage = yield* callConvex(
+      config,
+      "query",
+      "irt/queries/internal/maintenance:getCalibrationQueueEntryIntegrity",
+      {
+        paginationOpts: {
+          cursor: entryCursor,
+          numItems: IRT_VERIFY_PAGE_SIZE,
         },
-        calibrationQueueEntryIntegrityPageSchema
-      );
+      },
+      calibrationQueueEntryIntegrityPageSchema
+    );
 
     orphanedQueueEntryCount += page.orphanedQueueEntryCount;
     staleQueueEntryCount += page.staleQueueEntryCount;
@@ -182,12 +190,10 @@ async function getCalibrationQueueIntegrity(prod: boolean) {
 
     entryCursor = page.continueCursor;
   }
-}
+});
 
 /** Parse CLI flags and print one IRT integrity summary. */
-async function main() {
-  loadEnvFile();
-
+const main = Effect.fn("irt.verify")(function* () {
   const [kind, ...flags] = process.argv.slice(2);
   const prod = flags.includes("--prod");
 
@@ -200,17 +206,22 @@ async function main() {
   let result: unknown;
 
   if (kind === "cache") {
-    result = await getCalibrationCacheIntegrity(prod);
+    result = yield* getCalibrationCacheIntegrity(prod);
   } else if (kind === "queue") {
-    result = await getCalibrationQueueIntegrity(prod);
+    result = yield* getCalibrationQueueIntegrity(prod);
   } else {
-    result = await getScaleQualityIntegrity(prod);
+    result = yield* getScaleQualityIntegrity(prod);
   }
 
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
-}
+});
 
-main().catch((error) => {
+Effect.runPromise(
+  Effect.gen(function* () {
+    const provider = yield* loadEnvProvider();
+    yield* main().pipe(Effect.withConfigProvider(provider));
+  })
+).catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
   process.stderr.write(`${message}\n`);
   process.exitCode = 1;

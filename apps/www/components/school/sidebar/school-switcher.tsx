@@ -16,6 +16,7 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -66,80 +67,88 @@ export function SchoolSwitcher({
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu onOpenChange={setOpen} open={open}>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton size="lg">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-sm border bg-foreground text-background">
-                <HugeIcons className="size-4" icon={currentSchoolIcon} />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <p className="truncate font-medium">{currentSchool.name}</p>
-                <span className="truncate text-xs">
-                  {t(currentSchool.type)}
-                </span>
-              </div>
-              <HugeIcons className="ml-auto" icon={UnfoldMoreIcon} />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
+          <DropdownMenuTrigger
+            render={
+              <SidebarMenuButton size="lg">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-sm border bg-foreground text-background">
+                  <HugeIcons className="size-4" icon={currentSchoolIcon} />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <p className="truncate font-medium">{currentSchool.name}</p>
+                  <span className="truncate text-xs">
+                    {t(currentSchool.type)}
+                  </span>
+                </div>
+                <HugeIcons className="ml-auto" icon={UnfoldMoreIcon} />
+              </SidebarMenuButton>
+            }
+          />
           <DropdownMenuContent
             align="start"
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+            className="w-(--anchor-width) min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-muted-foreground text-xs">
-              {t("schools")}
-            </DropdownMenuLabel>
-            <div
-              className="max-h-64 overflow-y-auto"
-              onScroll={(event) => {
-                const target = event.currentTarget;
-                const remainingScroll =
-                  target.scrollHeight - target.scrollTop - target.clientHeight;
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-muted-foreground text-xs">
+                {t("schools")}
+              </DropdownMenuLabel>
+              <div
+                className="max-h-64 overflow-y-auto"
+                onScroll={(event) => {
+                  const target = event.currentTarget;
+                  const remainingScroll =
+                    target.scrollHeight -
+                    target.scrollTop -
+                    target.clientHeight;
 
-                if (remainingScroll > 48) {
-                  return;
-                }
+                  if (remainingScroll > 48) {
+                    return;
+                  }
 
-                if (status === "CanLoadMore") {
-                  loadMore(20);
-                }
-              }}
-            >
-              {schools.map((school) => {
-                const schoolIcon = getSchoolIcon(school.type);
+                  if (status === "CanLoadMore") {
+                    loadMore(20);
+                  }
+                }}
+              >
+                {schools.map((school) => {
+                  const schoolIcon = getSchoolIcon(school.type);
 
-                return (
-                  <DropdownMenuItem
-                    asChild
-                    className="cursor-pointer"
-                    key={school._id}
-                  >
-                    <NavigationLink href={`/school/${school.slug}`}>
-                      <HugeIcons className="shrink-0" icon={schoolIcon} />
-                      <span className="truncate">{school.name}</span>
-                      <HugeIcons
-                        className={cn(
-                          "ml-auto size-4 opacity-0 transition-opacity ease-out",
-                          currentSchool._id === school._id && "opacity-100"
-                        )}
-                        icon={Tick01Icon}
-                      />
-                    </NavigationLink>
-                  </DropdownMenuItem>
-                );
-              })}
-            </div>
+                  return (
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      key={school._id}
+                      render={
+                        <NavigationLink href={`/school/${school.slug}`}>
+                          <HugeIcons className="shrink-0" icon={schoolIcon} />
+                          <span className="truncate">{school.name}</span>
+                          <HugeIcons
+                            className={cn(
+                              "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                              currentSchool._id === school._id && "opacity-100"
+                            )}
+                            icon={Tick01Icon}
+                          />
+                        </NavigationLink>
+                      }
+                    />
+                  );
+                })}
+              </div>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onSelect={() => {
-                router.push("/school/onboarding");
-                setOpen(false);
-              }}
-            >
-              <HugeIcons className="shrink-0" icon={Add01Icon} />
-              <span className="truncate">{t("add-school")}</span>
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => {
+                  router.push("/school/onboarding");
+                  setOpen(false);
+                }}
+              >
+                <HugeIcons className="shrink-0" icon={Add01Icon} />
+                <span className="truncate">{t("add-school")}</span>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

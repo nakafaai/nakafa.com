@@ -1,61 +1,63 @@
 import { tryoutProducts } from "@repo/backend/convex/tryouts/products";
 import {
+  callConvex,
   getConvexConfig,
-  runConvexQueryWithArgs,
-} from "@repo/backend/scripts/sync-content/convexApi";
-import { loadEnvFile } from "@repo/backend/scripts/sync-content/runtime";
-import * as z from "zod";
+} from "@repo/backend/scripts/sync-content/convex";
+import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
+import { Effect, Schema } from "effect";
 
 const TRYOUT_ACCESS_PAGE_SIZE = 100;
 
-const tryoutAccessCampaignIntegrityPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  overdueActiveCampaignCount: z.number(),
-  overduePendingCompetitionCount: z.number(),
-  overdueScheduledCampaignCount: z.number(),
+const tryoutAccessCampaignIntegrityPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  overdueActiveCampaignCount: Schema.Number,
+  overduePendingCompetitionCount: Schema.Number,
+  overdueScheduledCampaignCount: Schema.Number,
 });
 
-const tryoutAccessGrantIntegrityPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  overdueActiveGrantCount: z.number(),
+const tryoutAccessGrantIntegrityPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  overdueActiveGrantCount: Schema.Number,
 });
 
-const tryoutAccessEntitlementIntegrityPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  overdueEntitlementCount: z.number(),
+const tryoutAccessEntitlementIntegrityPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  overdueEntitlementCount: Schema.Number,
 });
 
-const competitionCampaignProductPageSchema = z.object({
-  continueCursor: z.string(),
-  isDone: z.boolean(),
-  page: z.array(
-    z.object({
-      campaignId: z.string(),
-      endsAt: z.number(),
-      startsAt: z.number(),
+const competitionCampaignProductPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  page: Schema.Array(
+    Schema.Struct({
+      campaignId: Schema.String,
+      endsAt: Schema.Number,
+      startsAt: Schema.Number,
     })
   ),
 });
 
-type TryoutAccessCampaignIntegrityPage = z.infer<
+type TryoutAccessCampaignIntegrityPage = Schema.Schema.Type<
   typeof tryoutAccessCampaignIntegrityPageSchema
 >;
-type TryoutAccessGrantIntegrityPage = z.infer<
+type TryoutAccessGrantIntegrityPage = Schema.Schema.Type<
   typeof tryoutAccessGrantIntegrityPageSchema
 >;
-type TryoutAccessEntitlementIntegrityPage = z.infer<
+type TryoutAccessEntitlementIntegrityPage = Schema.Schema.Type<
   typeof tryoutAccessEntitlementIntegrityPageSchema
 >;
-type CompetitionCampaignProductPage = z.infer<
+type CompetitionCampaignProductPage = Schema.Schema.Type<
   typeof competitionCampaignProductPageSchema
 >;
 
 /** Reads the full access campaign integrity snapshot. */
-async function getTryoutAccessCampaignIntegrity(prod: boolean) {
-  const config = getConvexConfig({ prod });
+const getTryoutAccessCampaignIntegrity = Effect.fn(
+  "tryout.getTryoutAccessCampaignIntegrity"
+)(function* (prod: boolean) {
+  const config = yield* getConvexConfig({ prod });
   const nowMs = Date.now();
   let continueCursor: string | null = null;
   let overdueActiveCampaignCount = 0;
@@ -63,19 +65,19 @@ async function getTryoutAccessCampaignIntegrity(prod: boolean) {
   let overdueScheduledCampaignCount = 0;
 
   while (true) {
-    const page: TryoutAccessCampaignIntegrityPage =
-      await runConvexQueryWithArgs(
-        config,
-        "tryoutAccess/queries/internal/maintenance:getTryoutAccessCampaignIntegrity",
-        {
-          nowMs,
-          paginationOpts: {
-            cursor: continueCursor,
-            numItems: TRYOUT_ACCESS_PAGE_SIZE,
-          },
+    const page: TryoutAccessCampaignIntegrityPage = yield* callConvex(
+      config,
+      "query",
+      "tryoutAccess/queries/internal/maintenance:getTryoutAccessCampaignIntegrity",
+      {
+        nowMs,
+        paginationOpts: {
+          cursor: continueCursor,
+          numItems: TRYOUT_ACCESS_PAGE_SIZE,
         },
-        tryoutAccessCampaignIntegrityPageSchema
-      );
+      },
+      tryoutAccessCampaignIntegrityPageSchema
+    );
 
     overdueActiveCampaignCount += page.overdueActiveCampaignCount;
     overduePendingCompetitionCount += page.overduePendingCompetitionCount;
@@ -91,18 +93,21 @@ async function getTryoutAccessCampaignIntegrity(prod: boolean) {
 
     continueCursor = page.continueCursor;
   }
-}
+});
 
 /** Reads the full access grant integrity snapshot. */
-async function getTryoutAccessGrantIntegrity(prod: boolean) {
-  const config = getConvexConfig({ prod });
+const getTryoutAccessGrantIntegrity = Effect.fn(
+  "tryout.getTryoutAccessGrantIntegrity"
+)(function* (prod: boolean) {
+  const config = yield* getConvexConfig({ prod });
   const nowMs = Date.now();
   let continueCursor: string | null = null;
   let overdueActiveGrantCount = 0;
 
   while (true) {
-    const page: TryoutAccessGrantIntegrityPage = await runConvexQueryWithArgs(
+    const page: TryoutAccessGrantIntegrityPage = yield* callConvex(
       config,
+      "query",
       "tryoutAccess/queries/internal/maintenance:getTryoutAccessGrantIntegrity",
       {
         nowMs,
@@ -124,29 +129,31 @@ async function getTryoutAccessGrantIntegrity(prod: boolean) {
 
     continueCursor = page.continueCursor;
   }
-}
+});
 
 /** Reads the full access entitlement integrity snapshot. */
-async function getTryoutAccessEntitlementIntegrity(prod: boolean) {
-  const config = getConvexConfig({ prod });
+const getTryoutAccessEntitlementIntegrity = Effect.fn(
+  "tryout.getTryoutAccessEntitlementIntegrity"
+)(function* (prod: boolean) {
+  const config = yield* getConvexConfig({ prod });
   const nowMs = Date.now();
   let continueCursor: string | null = null;
   let overdueEntitlementCount = 0;
 
   while (true) {
-    const page: TryoutAccessEntitlementIntegrityPage =
-      await runConvexQueryWithArgs(
-        config,
-        "tryoutAccess/queries/internal/maintenance:getTryoutAccessEntitlementIntegrity",
-        {
-          nowMs,
-          paginationOpts: {
-            cursor: continueCursor,
-            numItems: TRYOUT_ACCESS_PAGE_SIZE,
-          },
+    const page: TryoutAccessEntitlementIntegrityPage = yield* callConvex(
+      config,
+      "query",
+      "tryoutAccess/queries/internal/maintenance:getTryoutAccessEntitlementIntegrity",
+      {
+        nowMs,
+        paginationOpts: {
+          cursor: continueCursor,
+          numItems: TRYOUT_ACCESS_PAGE_SIZE,
         },
-        tryoutAccessEntitlementIntegrityPageSchema
-      );
+      },
+      tryoutAccessEntitlementIntegrityPageSchema
+    );
 
     overdueEntitlementCount += page.overdueEntitlementCount;
 
@@ -158,11 +165,13 @@ async function getTryoutAccessEntitlementIntegrity(prod: boolean) {
 
     continueCursor = page.continueCursor;
   }
-}
+});
 
 /** Reads the full competition overlap integrity snapshot. */
-async function getCompetitionCampaignProductOverlapIntegrity(prod: boolean) {
-  const config = getConvexConfig({ prod });
+const getCompetitionCampaignProductOverlapIntegrity = Effect.fn(
+  "tryout.getCompetitionCampaignProductOverlapIntegrity"
+)(function* (prod: boolean) {
+  const config = yield* getConvexConfig({ prod });
   let overlappingCompetitionCampaignProductCount = 0;
 
   for (const product of tryoutProducts) {
@@ -171,8 +180,9 @@ async function getCompetitionCampaignProductOverlapIntegrity(prod: boolean) {
       null;
 
     while (true) {
-      const page: CompetitionCampaignProductPage = await runConvexQueryWithArgs(
+      const page: CompetitionCampaignProductPage = yield* callConvex(
         config,
+        "query",
         "tryoutAccess/queries/internal/maintenance:listCompetitionCampaignProductsByProduct",
         {
           product,
@@ -203,15 +213,13 @@ async function getCompetitionCampaignProductOverlapIntegrity(prod: boolean) {
   return {
     overlappingCompetitionCampaignProductCount,
   };
-}
+});
 
 /** Runs access-state verification for dev or prod. */
-async function main() {
-  loadEnvFile();
-
+const main = Effect.fn("tryout.verifyAccess")(function* () {
   const flags = process.argv.slice(2);
   const prod = flags.includes("--prod");
-  const [campaigns, entitlements, grants, overlap] = await Promise.all([
+  const [campaigns, entitlements, grants, overlap] = yield* Effect.all([
     getTryoutAccessCampaignIntegrity(prod),
     getTryoutAccessEntitlementIntegrity(prod),
     getTryoutAccessGrantIntegrity(prod),
@@ -234,9 +242,14 @@ async function main() {
     result.overlappingCompetitionCampaignProductCount > 0
       ? 1
       : 0;
-}
+});
 
-main().catch((error) => {
+Effect.runPromise(
+  Effect.gen(function* () {
+    const provider = yield* loadEnvProvider();
+    yield* main().pipe(Effect.withConfigProvider(provider));
+  })
+).catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
   process.stderr.write(`${message}\n`);
   process.exitCode = 1;

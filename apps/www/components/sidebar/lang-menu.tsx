@@ -36,14 +36,16 @@ export function LangMenu() {
   return (
     <DropdownMenu onOpenChange={set} open={open}>
       <SidebarMenuItem>
-        <DropdownMenuTrigger asChild>
-          <SidebarMenuButton tooltip={t("language")}>
-            <HugeIcons icon={TranslateIcon} />
-            <span className="truncate">{t("language")}</span>
+        <DropdownMenuTrigger
+          render={
+            <SidebarMenuButton tooltip={t("language")}>
+              <HugeIcons icon={TranslateIcon} />
+              <span className="truncate">{t("language")}</span>
 
-            <HugeIcons className="ml-auto" icon={ArrowRight01Icon} />
-          </SidebarMenuButton>
-        </DropdownMenuTrigger>
+              <HugeIcons className="ml-auto" icon={ArrowRight01Icon} />
+            </SidebarMenuButton>
+          }
+        />
 
         <LangMenuSwitcher />
       </SidebarMenuItem>

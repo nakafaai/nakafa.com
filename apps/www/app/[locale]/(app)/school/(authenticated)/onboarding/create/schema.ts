@@ -1,42 +1,41 @@
-import * as z from "zod/mini";
+import { Schema } from "effect";
 
 const MIN_NAME_LENGTH = 3;
 const MAX_NAME_LENGTH = 64;
 
 /** Validation schema for the school creation onboarding form. */
-export const schoolCreateFormSchema = z.object({
-  name: z
-    .string()
-    .check(
-      z.minLength(MIN_NAME_LENGTH),
-      z.maxLength(MAX_NAME_LENGTH),
-      z.trim()
-    ),
-  email: z.string().check(z.email()),
-  phone: z.string().check(z.minLength(1), z.trim()),
-  address: z.string().check(z.minLength(1), z.trim()),
-  city: z.string().check(z.minLength(1), z.trim()),
-  province: z.string().check(z.minLength(1), z.trim()),
-  type: z.union([
-    z.literal("elementary-school"),
-    z.literal("middle-school"),
-    z.literal("high-school"),
-    z.literal("vocational-school"),
-    z.literal("university"),
-    z.literal("other"),
-  ]),
+const schoolCreateForm = Schema.Struct({
+  name: Schema.Trim.pipe(
+    Schema.minLength(MIN_NAME_LENGTH),
+    Schema.maxLength(MAX_NAME_LENGTH)
+  ),
+  email: Schema.String.pipe(Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)),
+  phone: Schema.Trim.pipe(Schema.minLength(1)),
+  address: Schema.Trim.pipe(Schema.minLength(1)),
+  city: Schema.Trim.pipe(Schema.minLength(1)),
+  province: Schema.Trim.pipe(Schema.minLength(1)),
+  type: Schema.Literal(
+    "elementary-school",
+    "middle-school",
+    "high-school",
+    "vocational-school",
+    "university",
+    "other"
+  ),
 });
 
-export const schoolTypeSchema = schoolCreateFormSchema.shape.type;
+export const schoolCreateFormSchema = Schema.standardSchemaV1(schoolCreateForm);
+export const schoolTypeSchema = schoolCreateForm.fields.type;
 
 /** Default values for the school creation onboarding form. */
-export const schoolCreateDefaultValues: z.infer<typeof schoolCreateFormSchema> =
-  {
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    province: "",
-    type: "high-school",
-  };
+export const schoolCreateDefaultValues: Schema.Schema.Encoded<
+  typeof schoolCreateForm
+> = {
+  name: "",
+  email: "",
+  phone: "",
+  address: "",
+  city: "",
+  province: "",
+  type: "high-school",
+};

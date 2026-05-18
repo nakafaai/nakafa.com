@@ -151,24 +151,32 @@ function ClassItem({ cls }: { cls: Doc<"schoolClasses"> }) {
           </Tooltip>
 
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon-sm" variant="ghost">
-                <HugeIcons icon={MoreHorizontalIcon} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild className="cursor-pointer">
-                <NavigationLink href={`${pathname}/${cls._id}/forum`}>
-                  <HugeIcons icon={MessageMultiple02Icon} />
-                  {t("forum")}
-                </NavigationLink>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="cursor-pointer">
-                <NavigationLink href={`${pathname}/${cls._id}/people`}>
-                  <HugeIcons icon={UserMultipleIcon} />
-                  {t("people")}
-                </NavigationLink>
-              </DropdownMenuItem>
+            <DropdownMenuTrigger
+              render={
+                <Button size="icon-sm" variant="ghost">
+                  <HugeIcons icon={MoreHorizontalIcon} />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem
+                className="cursor-pointer"
+                render={
+                  <NavigationLink href={`${pathname}/${cls._id}/forum`}>
+                    <HugeIcons icon={MessageMultiple02Icon} />
+                    {t("forum")}
+                  </NavigationLink>
+                }
+              />
+              <DropdownMenuItem
+                className="cursor-pointer"
+                render={
+                  <NavigationLink href={`${pathname}/${cls._id}/people`}>
+                    <HugeIcons icon={UserMultipleIcon} />
+                    {t("people")}
+                  </NavigationLink>
+                }
+              />
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

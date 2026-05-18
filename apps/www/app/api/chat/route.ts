@@ -1,62 +1,32 @@
-import { orchestratorTools } from "@repo/ai/agents/orchestrator";
-import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
 } from "@repo/ai/clients/weather/client";
-import {
-  defaultModel,
-  getModelCreditCost,
-  hasEnoughCredits,
-  MODEL_IDS,
-} from "@repo/ai/config/models";
-import {
-  type GatewayProvider,
-  type GoogleProvider,
-  model,
-  type OpenAIProvider,
-  order,
-} from "@repo/ai/config/vercel";
-import { generateTitle } from "@repo/ai/features/title-generation";
-import { compressMessages } from "@repo/ai/lib/utils";
-import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
-import type { ComponentUsage } from "@repo/ai/schema/metadata";
-import type { ToolName } from "@repo/ai/schema/tools";
+import { hasEnoughCredits, MODEL_IDS } from "@repo/ai/config/models";
+import { compressMessages } from "@repo/ai/lib/message";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { captureServerException } from "@repo/analytics/posthog/server";
-import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
-import { createChildLogger, logError } from "@repo/utilities/logging";
-import { geolocation, waitUntil } from "@vercel/functions";
+import { logError } from "@repo/utilities/logging/effect";
+import { geolocation } from "@vercel/functions";
 import {
   convertToModelMessages,
-  createUIMessageStream,
   createUIMessageStreamResponse,
-  generateText,
-  NoSuchToolError,
-  Output,
-  smoothStream,
-  stepCountIs,
-  streamText,
+  pruneMessages,
 } from "ai";
-import { fetchAction, fetchMutation } from "convex/nextjs";
+import { Effect, Option, Schema } from "effect";
 import { getTranslations } from "next-intl/server";
-import * as z from "zod";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
+import { determinePageFetchNeed } from "@/app/api/chat/content";
 import { loadMessages, saveOrCreateChat } from "@/app/api/chat/persistence";
+import { streamChat } from "@/app/api/chat/stream";
 import { getUserInfo, getVerified } from "@/app/api/chat/utils";
 import { getToken } from "@/lib/auth/server";
 
-const ModelIdSchema = z.enum(MODEL_IDS);
-
-const MAX_STEPS = 10;
-
-// Allow streaming responses up to 60 seconds
-export const maxDuration = 60;
+const ModelIdSchema = Schema.Literal(...MODEL_IDS);
 
 const corsValidator = new CorsValidator();
 
@@ -77,457 +47,215 @@ const possibleVerifiedUrls = [
  * After the stream finishes, two fire-and-forget tasks run via `waitUntil`:
  * - Title generation (first message only)
  * - Assistant response persistence and credit deduction
+ *
+ * @see https://ai-sdk.dev/docs/reference/ai-sdk-ui/convert-to-model-messages
+ * @see https://ai-sdk.dev/docs/reference/ai-sdk-ui/create-ui-message-stream-response
  */
-export async function POST(req: Request) {
-  if (!corsValidator.isRequestFromAllowedDomain(req)) {
-    return corsValidator.createForbiddenResponse();
-  }
-
-  const {
-    message,
-    id,
-    locale: rawLocale,
-    slug,
-    model: rawModel,
-  }: {
-    message: MyUIMessage | undefined;
-    id: Id<"chats"> | undefined;
-    locale: unknown;
-    slug: string;
-    model: unknown;
-  } = await req.json();
-
-  const localeResult = LocaleSchema.safeParse(rawLocale);
-  if (!localeResult.success) {
-    return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
-      status: CHAT_ERRORS.BAD_REQUEST.status,
-    });
-  }
-  const locale = localeResult.data;
-
-  const modelResult = ModelIdSchema.safeParse(rawModel);
-  if (!modelResult.success) {
-    return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
-      status: CHAT_ERRORS.BAD_REQUEST.status,
-    });
-  }
-  const selectedModel = modelResult.data;
-
-  const token = await getToken();
-  if (!token) {
-    return new Response(CHAT_ERRORS.UNAUTHORIZED.code, {
-      status: CHAT_ERRORS.UNAUTHORIZED.status,
-    });
-  }
-
-  if (!message) {
-    return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
-      status: CHAT_ERRORS.BAD_REQUEST.status,
-    });
-  }
-
-  const url = `/${locale}/${cleanSlug(slug)}`;
-  const shouldVerify = possibleVerifiedUrls.some((segment) =>
-    url.includes(segment)
-  );
-
-  const currentDate = new Date().toLocaleString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    timeZoneName: "short",
-  });
-
-  const geo = geolocation(req);
-  const userLocation = {
-    latitude: geo.latitude ?? DEFAULT_LATITUDE,
-    longitude: geo.longitude ?? DEFAULT_LONGITUDE,
-    city: geo.city ?? "Unknown",
-    countryRegion: geo.countryRegion ?? "Unknown",
-    country: geo.country ?? "Unknown",
-  };
-
-  const [verified, userInfo] = await Promise.all([
-    shouldVerify ? getVerified(url) : Promise.resolve(false),
-    getUserInfo(token),
-  ]);
-
-  if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
-    return new Response(CHAT_ERRORS.INSUFFICIENT_CREDITS.code, {
-      status: CHAT_ERRORS.INSUFFICIENT_CREDITS.status,
-    });
-  }
-
-  const sessionLogger = createChildLogger({
-    service: "chat-api",
-    currentPage: {
-      locale,
-      slug: cleanSlug(slug),
-      url,
-      verified,
-    },
-    currentDate,
-    userLocation,
-    userRole: userInfo.role,
-    url,
-  });
-
-  /**
-   * Forward one chat-route runtime error to PostHog without interrupting the
-   * user-facing stream or background persistence flow.
-   *
-   * Related docs:
-   * https://posthog.com/docs/error-tracking/capture
-   * https://posthog.com/docs/error-tracking/installation/nextjs
-   */
-  function reportChatErrorToPostHog(error: unknown, source: string) {
-    captureServerException(error, userInfo.userId, { source }).catch(
-      (captureError) => {
-        logError(
-          sessionLogger,
-          captureError instanceof Error
-            ? captureError
-            : new Error(String(captureError)),
-          {
-            errorLocation: "posthog-capture",
-            source,
-          }
-        );
+export function POST(req: Request) {
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      if (!corsValidator.isRequestFromAllowedDomain(req)) {
+        return corsValidator.createForbiddenResponse();
       }
-    );
-  }
 
-  const chatId = await saveOrCreateChat({
-    chatId: id,
-    message,
-    modelId: selectedModel,
-    token,
-  });
-  const messages = await loadMessages({ chatId, token });
-  const isFirstMessage = messages.length === 1;
+      const {
+        message,
+        id,
+        locale: rawLocale,
+        slug,
+        model: rawModel,
+      }: {
+        message: MyUIMessage | undefined;
+        id: Id<"chats"> | undefined;
+        locale: unknown;
+        slug: string;
+        model: unknown;
+      } = yield* Effect.tryPromise(() => req.json());
 
-  const originalMessageCount = messages.length;
-  const { messages: compressedMessages, tokens } = compressMessages(messages);
-
-  if (compressedMessages.length < originalMessageCount) {
-    sessionLogger.warn(
-      `Messages compressed from ${originalMessageCount} to ${compressedMessages.length} messages (${tokens} tokens) to stay within token limit`
-    );
-  } else {
-    sessionLogger.info(
-      `All ${originalMessageCount} messages fit within token limit (${tokens} tokens)`
-    );
-  }
-
-  const finalMessages = await convertToModelMessages(compressedMessages);
-
-  sessionLogger.info("Chat session started");
-
-  const t = await getTranslations({ locale, namespace: "Ai" });
-
-  const stream = createUIMessageStream<MyUIMessage>({
-    onError: (error) => {
-      reportChatErrorToPostHog(error, "chat-api-stream");
-
-      if (error instanceof Error) {
-        logError(sessionLogger, error, {
-          errorLocation: "createUIMessageStream",
-          errorType: error.name,
+      const localeResult = Schema.decodeUnknownOption(LocaleSchema)(rawLocale);
+      if (Option.isNone(localeResult)) {
+        return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
+          status: CHAT_ERRORS.BAD_REQUEST.status,
         });
-        if (error.message.includes("Rate limit")) {
-          sessionLogger.warn("Rate limit exceeded in chat stream");
-          return t("rate-limit-message");
-        }
-        return error.message;
       }
-      sessionLogger.error("Unknown error in chat stream");
-      return t("error-message");
-    },
-    originalMessages: compressedMessages,
-    onFinish: ({ messages: updatedMessages, responseMessage }) => {
-      if (isFirstMessage) {
-        waitUntil(
-          generateTitle({ messages: updatedMessages })
-            .then((title) =>
-              fetchMutation(
-                convexApi.chats.mutations.updateChatTitle,
-                { chatId, title },
-                { token }
+      const locale = localeResult.value;
+
+      const modelResult = Schema.decodeUnknownOption(ModelIdSchema)(rawModel);
+      if (Option.isNone(modelResult)) {
+        return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
+          status: CHAT_ERRORS.BAD_REQUEST.status,
+        });
+      }
+      const selectedModel = modelResult.value;
+
+      const token = yield* Effect.tryPromise(() => getToken());
+      if (!token) {
+        return new Response(CHAT_ERRORS.UNAUTHORIZED.code, {
+          status: CHAT_ERRORS.UNAUTHORIZED.status,
+        });
+      }
+
+      if (!message) {
+        return new Response(CHAT_ERRORS.BAD_REQUEST.code, {
+          status: CHAT_ERRORS.BAD_REQUEST.status,
+        });
+      }
+
+      const url = `/${locale}/${cleanSlug(slug)}`;
+      const shouldVerify = possibleVerifiedUrls.some((segment) =>
+        url.includes(segment)
+      );
+
+      const currentDate = new Date().toLocaleString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        timeZoneName: "short",
+      });
+
+      const geo = geolocation(req);
+      const userLocation = {
+        latitude: geo.latitude ?? DEFAULT_LATITUDE,
+        longitude: geo.longitude ?? DEFAULT_LONGITUDE,
+        city: geo.city ?? "Unknown",
+        countryRegion: geo.countryRegion ?? "Unknown",
+        country: geo.country ?? "Unknown",
+      };
+
+      const [verified, userInfo] = yield* Effect.all([
+        shouldVerify ? getVerified(url) : Effect.succeed(false),
+        getUserInfo(token),
+      ]);
+
+      if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
+        return new Response(CHAT_ERRORS.INSUFFICIENT_CREDITS.code, {
+          status: CHAT_ERRORS.INSUFFICIENT_CREDITS.status,
+        });
+      }
+
+      const logContext = {
+        service: "chat-api",
+        currentPage: {
+          locale,
+          slug: cleanSlug(slug),
+          url,
+          verified,
+        },
+        currentDate,
+        userLocation,
+        userRole: userInfo.role,
+        url,
+      };
+
+      /**
+       * Forward one chat-route runtime error to PostHog without interrupting the
+       * user-facing stream or background persistence flow.
+       *
+       * Related docs:
+       * https://posthog.com/docs/error-tracking/capture
+       * https://posthog.com/docs/error-tracking/installation/nextjs
+       */
+      function reportChatErrorToPostHog(error: unknown, source: string) {
+        Effect.runFork(
+          Effect.tryPromise(() =>
+            captureServerException(error, userInfo.userId, { source })
+          ).pipe(
+            Effect.catchAll((captureError) =>
+              logError(
+                captureError instanceof Error
+                  ? captureError
+                  : new Error(String(captureError)),
+                {
+                  ...logContext,
+                  errorLocation: "posthog-capture",
+                  source,
+                }
               )
             )
-            .catch((error) => {
-              reportChatErrorToPostHog(error, "chat-api-generate-title");
-
-              logError(
-                sessionLogger,
-                error instanceof Error ? error : new Error(String(error)),
-                { errorLocation: "generateTitle/updateChatTitle" }
-              );
-            })
+          )
         );
       }
 
-      const tokenData = responseMessage.metadata?.tokens;
+      const chatId = yield* saveOrCreateChat({
+        chatId: id,
+        message,
+        modelId: selectedModel,
+        token,
+      });
+      const messages = yield* loadMessages({ chatId, token });
+      const isFirstMessage = messages.length === 1;
 
-      waitUntil(
-        fetchAction(
-          convexApi.chats.actions.scheduleSaveAssistantResponse,
-          {
-            message: {
-              chatId,
-              role: responseMessage.role,
-              identifier: responseMessage.id,
-              modelId: selectedModel,
-              inputTokens: tokenData?.input ?? 0,
-              outputTokens: tokenData?.output ?? 0,
-              totalTokens: tokenData?.total ?? 0,
-            },
-            parts: mapUIMessagePartsToDBParts({
-              messageParts: responseMessage.parts,
-            }),
-          },
-          { token }
-        ).catch((error) => {
-          reportChatErrorToPostHog(error, "chat-api-save-assistant-response");
-
-          logError(
-            sessionLogger,
-            error instanceof Error ? error : new Error(String(error)),
-            { errorLocation: "saveAssistantResponse" }
-          );
-        })
-      );
-    },
-    execute: async ({ writer }) => {
-      const subAgentUsage = new Map<ToolName, ComponentUsage>();
-
-      const streamTextResult = streamText({
-        model: model.languageModel(selectedModel),
-        system: nakafaPrompt({
-          url,
-          currentPage: { locale, slug, verified },
-          currentDate,
-          userLocation,
-          userRole: userInfo.role ?? undefined,
-        }),
-        messages: finalMessages,
-        stopWhen: stepCountIs(MAX_STEPS),
-        tools: orchestratorTools({
-          writer,
-          modelId: selectedModel,
-          locale,
-          context: {
-            url,
-            slug: cleanSlug(slug),
-            verified,
-            userRole: userInfo.role,
-          },
-          usageAccumulator: {
-            addUsage: (component, usage) => {
-              const input = usage.inputTokens ?? 0;
-              const output = usage.outputTokens ?? 0;
-              const existing = subAgentUsage.get(component);
-              subAgentUsage.set(component, {
-                input: (existing?.input ?? 0) + input,
-                output: (existing?.output ?? 0) + output,
-              });
-            },
-            getTotal: () => {
-              const subAgentsInput = Array.from(subAgentUsage.values()).reduce(
-                (sum, usage) => sum + usage.input,
-                0
-              );
-              const subAgentsOutput = Array.from(subAgentUsage.values()).reduce(
-                (sum, usage) => sum + usage.output,
-                0
-              );
-              return {
-                input: subAgentsInput,
-                output: subAgentsOutput,
-                total: subAgentsInput + subAgentsOutput,
-                breakdown: {
-                  main: { input: 0, output: 0 },
-                  subAgents: Object.fromEntries(subAgentUsage),
-                },
-              };
-            },
-          },
-        }),
-        experimental_repairToolCall: async ({
-          toolCall,
-          tools: availableTools,
-          inputSchema,
-          error,
-        }) => {
-          logError(sessionLogger, error, {
-            errorLocation: "experimental_repairToolCall",
-            toolName: toolCall.toolName,
-            toolInput: toolCall.input,
-            errorType: error.name,
-          });
-
-          if (NoSuchToolError.isInstance(error)) {
-            sessionLogger.warn("Invalid tool name, not attempting repair");
-            return null;
-          }
-
-          const tool = availableTools[toolCall.toolName];
-          if (!tool) {
-            sessionLogger.warn("Tool is unavailable, not attempting repair");
-            return null;
-          }
-
-          const { output: repairedArgs } = await generateText({
-            model: model.languageModel(defaultModel),
-            output: Output.object({ schema: tool.inputSchema }),
-            prompt: [
-              `The model tried to call the tool "${toolCall.toolName}"` +
-                " with the following arguments:",
-              JSON.stringify(toolCall.input, null, 2),
-              "The tool accepts the following schema:",
-              JSON.stringify(inputSchema(toolCall), null, 2),
-              "Please fix the arguments.",
-            ].join("\n"),
-            providerOptions: {
-              gateway: { order },
-              google: {
-                thinkingConfig: {
-                  thinkingBudget: 0,
-                  includeThoughts: false,
-                },
-              } satisfies GoogleProvider,
-            },
-          });
-
-          sessionLogger.info("Tool call successfully repaired");
-          return { ...toolCall, input: JSON.stringify(repairedArgs, null, 2) };
-        },
-        experimental_transform: smoothStream({
-          delayInMs: 20,
-          chunking: "word",
-        }),
-        providerOptions: {
-          gateway: { order },
-          openai: {
-            include: ["reasoning.encrypted_content"],
-            reasoningSummary: "detailed",
-            serviceTier: "priority",
-          } satisfies OpenAIProvider,
-          google: {
-            thinkingConfig: {
-              thinkingBudget: -1,
-              includeThoughts: true,
-            },
-          } satisfies GoogleProvider,
-        },
+      const originalMessageCount = messages.length;
+      const { messages: compressedMessages, tokens } =
+        compressMessages(messages);
+      const needsPageFetch = yield* determinePageFetchNeed({
+        messages: compressedMessages,
+        url,
+        verified,
       });
 
-      writer.merge(
-        streamTextResult.toUIMessageStream({
-          sendReasoning: true,
-          sendStart: false,
-          messageMetadata: ({ part }) => {
-            if (part.type === "start") {
-              return { model: selectedModel };
-            }
-
-            if (part.type === "finish") {
-              const mainInput = part.totalUsage.inputTokens ?? 0;
-              const mainOutput = part.totalUsage.outputTokens ?? 0;
-
-              const subAgentsRecord = Object.fromEntries(subAgentUsage);
-              const subAgentsInput = Array.from(subAgentUsage.values()).reduce(
-                (sum, usage) => sum + usage.input,
-                0
-              );
-              const subAgentsOutput = Array.from(subAgentUsage.values()).reduce(
-                (sum, usage) => sum + usage.output,
-                0
-              );
-
-              return {
-                model: selectedModel,
-                credits: getModelCreditCost(selectedModel),
-                tokens: {
-                  input: mainInput + subAgentsInput,
-                  output: mainOutput + subAgentsOutput,
-                  total:
-                    mainInput + mainOutput + subAgentsInput + subAgentsOutput,
-                  breakdown: {
-                    main: { input: mainInput, output: mainOutput },
-                    subAgents: subAgentsRecord,
-                  },
-                },
-              };
-            }
-          },
-          onError: (error) => {
-            reportChatErrorToPostHog(error, "chat-api-message-stream");
-
-            if (error instanceof Error) {
-              logError(sessionLogger, error, {
-                errorLocation: "toUIMessageStream",
-                errorType: error.name,
-              });
-              if (error.message.includes("Rate limit")) {
-                sessionLogger.warn("Rate limit exceeded in message stream");
-                return t("rate-limit-message");
-              }
-              return error.message;
-            }
-            sessionLogger.error("Unknown error in message stream");
-            return t("error-message");
-          },
-        })
-      );
-
-      await streamTextResult.consumeStream();
-
-      const messagesFromResponse = (await streamTextResult.response).messages;
-
-      const suggestionsStream = streamText({
-        model: model.languageModel(defaultModel),
-        system: nakafaSuggestions(),
-        messages: [...finalMessages, ...messagesFromResponse],
-        output: Output.object({
-          schema: z.object({
-            suggestions: z
-              .array(z.string())
-              .describe(
-                "An array of suggested questions or statements that a user would want to ask or tell next"
-              ),
-          }),
-        }),
-        providerOptions: {
-          gateway: { order } satisfies GatewayProvider,
-          google: {
-            thinkingConfig: {
-              thinkingBudget: 0,
-              includeThoughts: false,
-            },
-          } satisfies GoogleProvider,
-        },
-      });
-
-      const dataPartId = crypto.randomUUID();
-
-      for await (const chunk of suggestionsStream.partialOutputStream) {
-        writer.write({
-          id: dataPartId,
-          type: "data-suggestions",
-          data: {
-            data:
-              chunk.suggestions?.filter(
-                (suggestion) => suggestion !== undefined
-              ) ?? [],
-          },
-        });
+      if (compressedMessages.length < originalMessageCount) {
+        yield* Effect.logWarning(
+          `Messages compressed from ${originalMessageCount} to ${compressedMessages.length} messages (${tokens} tokens) to stay within token limit`
+        ).pipe(Effect.annotateLogs(logContext));
+      } else {
+        yield* Effect.logInfo(
+          `All ${originalMessageCount} messages fit within token limit (${tokens} tokens)`
+        ).pipe(Effect.annotateLogs(logContext));
       }
-    },
-  });
 
-  return createUIMessageStreamResponse({ stream });
+      const modelMessages = yield* Effect.tryPromise(() =>
+        convertToModelMessages(compressedMessages)
+      );
+      // Persist and render reasoning in UI, but do not feed historical
+      // assistant reasoning back into the next LLM call. AI SDK documents this
+      // as the supported way to reduce model context without deleting stored UI
+      // messages.
+      // https://ai-sdk.dev/docs/reference/ai-sdk-ui/prune-messages
+      // https://github.com/vercel/ai/blob/main/packages/ai/src/generate-text/prune-messages.ts
+      const finalMessages = pruneMessages({
+        messages: modelMessages,
+        reasoning: "all",
+      });
+
+      yield* Effect.logInfo("Chat session started").pipe(
+        Effect.annotateLogs(logContext)
+      );
+
+      const translate = yield* Effect.tryPromise(() =>
+        getTranslations({ locale, namespace: "Ai" })
+      );
+      const chat = {
+        finalMessages,
+        id: chatId,
+        isFirstMessage,
+        messages: compressedMessages,
+        token,
+      };
+      const page = {
+        locale,
+        needsFetch: needsPageFetch,
+        slug,
+        url,
+        verified,
+      };
+      const runtime = {
+        currentDate,
+        logContext,
+        modelId: selectedModel,
+        reportError: reportChatErrorToPostHog,
+        translate,
+      };
+      const user = {
+        info: userInfo,
+        location: userLocation,
+      };
+      const stream = streamChat({ chat, page, runtime, user });
+
+      return createUIMessageStreamResponse({ stream });
+    })
+  );
 }

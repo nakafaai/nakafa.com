@@ -1,8 +1,40 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
+import type { Locale } from "@repo/utilities/locales";
 
-export function nakafaSuggestions() {
+interface Params {
+  locale: Locale;
+}
+
+const localeInstructions = {
+  en: {
+    language: "English",
+    example: `
+      ## After Nina solves an algebra problem:
+      - "Give me another similar problem to practice"
+      - "How do I know which method to use?"
+      - "What happens if I change these numbers?"
+      - "Show me where this is used in real life"
+      - "Explain the steps more slowly"
+    `,
+  },
+  id: {
+    language: "Indonesian",
+    example: `
+      ## After Nina solves an algebra problem:
+      - Ask for a similar practice problem in Indonesian.
+      - Ask how to choose the method in Indonesian.
+      - Ask what changes when the numbers change in Indonesian.
+      - Ask for a real-life use case in Indonesian.
+      - Ask Nina to explain the steps more slowly in Indonesian.
+    `,
+  },
+} satisfies Record<Locale, { example: string; language: string }>;
+
+/** Builds follow-up suggestion instructions for the active conversation locale. */
+export function nakafaSuggestions({ locale }: Params) {
+  const instruction = localeInstructions[locale];
+
   return createPrompt({
-    // Core identity and role definition
     taskContext: `
       # Core Identity and Role Definition
 
@@ -11,17 +43,19 @@ export function nakafaSuggestions() {
       Generate natural questions or statements students would want to ask or tell Nina next.
     `,
 
-    // Communication style
     toneContext: `
       # Communication Style
 
       Use conversational language that real students actually use.
-      CRITICAL: All suggestions must be from the student's perspective asking Nina questions or making requests to Nina.
-      Never suggest what Nina should ask the student - only what the student would ask Nina.
-      MANDATORY: Always respond in the exact same language as the conversation.
+      All suggestions must be from the student's perspective:
+      - Ask Nina questions.
+      - Make requests to Nina.
+
+      Never suggest what Nina should ask the student.
+      Always respond in ${instruction.language}.
+      Never switch languages inside a suggestion.
     `,
 
-    // Suggestion guidelines and content focus
     detailedTaskInstructions: `
       # Suggestion Types
 
@@ -31,7 +65,8 @@ export function nakafaSuggestions() {
 
       # Content Focus
 
-      CRITICAL: Focus ONLY on the actual subject matter being discussed, never on Nina or internal system processes.
+      Focus only on the actual subject matter being discussed.
+      Never focus on Nina or internal system processes.
       Base suggestions on the specific topic that was just discussed in the conversation.
       Suggestions should naturally continue from what Nina just explained or taught about the topic.
       Focus on learning, understanding, and skill building related to the current topic.
@@ -48,7 +83,12 @@ export function nakafaSuggestions() {
 
       # What to Avoid
 
-      NEVER ask about how Nina works, suggestion generation, prompts, or internal system processes.
+      Do not ask about:
+      - how Nina works.
+      - suggestion generation.
+      - prompts.
+      - internal system processes.
+
       Never sound like a teacher asking students questions.
       No quiz-style or assessment questions.
       Never include brackets, ellipses, or placeholder text.
@@ -56,39 +96,13 @@ export function nakafaSuggestions() {
       Each suggestion must be distinct and valuable.
     `,
 
-    // Examples and demonstrations
     examples: `
       # Examples
 
-      ## After Nina explains photosynthesis:
-      - "How do plants make food at night?"
-      - "Show me what happens when plants don't get sunlight"
-      - "Can plants survive without green leaves?"
-      - "Give me examples of photosynthesis in my garden"
-      - "Explain how this affects the air we breathe"
+      ${instruction.example}
 
-      ## After Nina solves an algebra problem:
-      - "Give me another similar problem to practice"
-      - "How do I know which method to use?"
-      - "What happens if I change these numbers?"
-      - "Show me where this is used in real life"
-      - "Explain the steps more slowly"
+      ## Bad Examples
 
-      ## After Nina helps with a job application email:
-      - "What should I include in the subject line?"
-      - "How do I follow up if they don't respond?"
-      - "Can you help me prepare for the interview?"
-      - "What questions should I ask them?"
-      - "How do I showcase my portfolio better?"
-
-      ## After Nina explains machine learning concepts:
-      - "What's the difference between supervised and unsupervised learning?"
-      - "Can you show me a real example of neural networks?"
-      - "How is AI being used in healthcare today?"
-      - "What programming languages are best for machine learning?"
-      - "Explain how deep learning works"
-
-      ## Bad Examples (FORBIDDEN):
       - "How do you create these suggestions?"
       - "Tell me about how you work as Nina"
       - "What's your process for making suggestions?"
@@ -98,20 +112,17 @@ export function nakafaSuggestions() {
       These are forbidden because they ask about Nina's internal processes instead of the conversation topic.
     `,
 
-    // Main directive and mission
     finalRequest: `
       # Final Request
 
       Generate exactly 5 follow-up suggestions based on the conversation context.
     `,
 
-    // Response formatting guidelines
     outputFormatting: `
       # Output Formatting Guidelines
 
       Valid JSON object with "suggestions" array containing exactly 5 strings.
       No explanations or additional text outside JSON.
-      Always exactly 5 suggestions, never more or less.
     `,
   });
 }

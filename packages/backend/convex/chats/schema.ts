@@ -1,11 +1,14 @@
 import { MODEL_IDS } from "@repo/ai/config/models";
 import {
-  articleCategoryValidator,
-  gradeValidator,
+  contentSearchInputValidator,
+  contentSearchRefValidator,
+  contentSearchResultValidator,
+} from "@repo/backend/convex/contents/helpers/search/schema";
+import {
   localeValidator,
-  materialValidator,
-  subjectCategoryValidator,
+  nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
+import { mathOperations } from "@repo/math/schema/operations";
 import { defineTable, paginationResultValidator } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -104,30 +107,164 @@ export type ToolState = Infer<typeof toolStateValidator>;
 export const partTypeValidator = literals(
   "text",
   "reasoning",
-  "source-url",
-  "source-document",
   "file",
   "step-start",
   // Orchestrator tools
-  "tool-contentAccess",
+  "tool-nakafa",
   "tool-deepResearch",
-  "tool-mathCalculation",
+  "tool-math",
   // Data parts
   "data-suggestions",
-  "data-get-articles",
-  "data-get-subjects",
-  "data-get-content",
-  "data-calculator",
+  "data-nakafa",
+  "data-math",
   "data-scrape-url",
   "data-web-search"
 );
 
-export const contentItemValidator = v.object({
-  title: v.string(),
-  url: v.string(),
-  slug: v.string(),
+export const nakafaReadInputValidator = v.object({
+  content_ref: v.string(),
+});
+
+export const nakafaExerciseInputValidator = v.object({
+  content_ref: v.string(),
+  exercise_number: v.optional(v.number()),
+});
+
+export const nakafaQuranInputValidator = v.object({
+  from_verse: v.number(),
+  include_tafsir: v.boolean(),
+  locale: localeValidator,
+  surah: v.number(),
+  to_verse: v.optional(v.number()),
+});
+
+export const nakafaTaxonomyInputValidator = v.object({
   locale: localeValidator,
 });
+
+export const nakafaContentPreviewValidator = v.object({
+  ...contentSearchRefValidator.fields,
+  description: v.string(),
+  title: v.string(),
+});
+
+export const nakafaExercisePreviewValidator = v.object({
+  ...contentSearchRefValidator.fields,
+  count: v.number(),
+  exercise_number: v.union(v.number(), v.null()),
+  numbers: v.array(v.number()),
+  title: v.string(),
+});
+
+export const nakafaQuranPreviewValidator = v.object({
+  ...contentSearchRefValidator.fields,
+  from_verse: v.number(),
+  name: v.string(),
+  revelation: v.string(),
+  to_verse: v.number(),
+  translation: v.string(),
+  verse_count: v.number(),
+});
+
+export const nakafaTaxonomyPreviewValidator = v.object({
+  content_counts: v.array(
+    v.object({
+      count: v.number(),
+      locale: localeValidator,
+    })
+  ),
+  locale: localeValidator,
+  sections: v.array(nakafaSectionValidator),
+  tools: v.array(v.string()),
+});
+
+export const nakafaDataValidator = v.union(
+  v.object({
+    kind: v.literal("search"),
+    status: v.literal("loading"),
+    input: contentSearchInputValidator,
+  }),
+  v.object({
+    kind: v.literal("search"),
+    status: v.literal("done"),
+    input: contentSearchInputValidator,
+    result: contentSearchResultValidator,
+  }),
+  v.object({
+    kind: v.literal("search"),
+    status: v.literal("error"),
+    input: contentSearchInputValidator,
+    error: v.string(),
+  }),
+  v.object({
+    kind: v.literal("content"),
+    status: v.literal("loading"),
+    input: nakafaReadInputValidator,
+  }),
+  v.object({
+    kind: v.literal("content"),
+    status: v.literal("done"),
+    input: nakafaReadInputValidator,
+    result: nakafaContentPreviewValidator,
+  }),
+  v.object({
+    kind: v.literal("content"),
+    status: v.literal("error"),
+    input: nakafaReadInputValidator,
+    error: v.string(),
+  }),
+  v.object({
+    kind: v.literal("exercise"),
+    status: v.literal("loading"),
+    input: nakafaExerciseInputValidator,
+  }),
+  v.object({
+    kind: v.literal("exercise"),
+    status: v.literal("done"),
+    input: nakafaExerciseInputValidator,
+    result: nakafaExercisePreviewValidator,
+  }),
+  v.object({
+    kind: v.literal("exercise"),
+    status: v.literal("error"),
+    input: nakafaExerciseInputValidator,
+    error: v.string(),
+  }),
+  v.object({
+    kind: v.literal("quran"),
+    status: v.literal("loading"),
+    input: nakafaQuranInputValidator,
+  }),
+  v.object({
+    kind: v.literal("quran"),
+    status: v.literal("done"),
+    input: nakafaQuranInputValidator,
+    result: nakafaQuranPreviewValidator,
+  }),
+  v.object({
+    kind: v.literal("quran"),
+    status: v.literal("error"),
+    input: nakafaQuranInputValidator,
+    error: v.string(),
+  }),
+  v.object({
+    kind: v.literal("taxonomy"),
+    status: v.literal("loading"),
+    input: nakafaTaxonomyInputValidator,
+  }),
+  v.object({
+    kind: v.literal("taxonomy"),
+    status: v.literal("done"),
+    input: nakafaTaxonomyInputValidator,
+    result: nakafaTaxonomyPreviewValidator,
+  }),
+  v.object({
+    kind: v.literal("taxonomy"),
+    status: v.literal("error"),
+    input: nakafaTaxonomyInputValidator,
+    error: v.string(),
+  })
+);
 
 export const webSearchSourceValidator = v.object({
   title: v.string(),
@@ -137,26 +274,150 @@ export const webSearchSourceValidator = v.object({
   citation: v.string(),
 });
 
-export const calculatorExpressionValidator = v.object({
+export const webSearchProviderValidator = literals("firecrawl", "google");
+
+export const mathExpressionValidator = v.object({
   expression: v.string(),
   latex: v.string(),
 });
 
-export const calculatorResultValidator = v.object({
-  expression: v.string(),
-  latex: v.string(),
+export const mathOperationValidator = literals(...mathOperations);
+
+export const mathStatusValidator = literals(
+  "verified",
+  "contradicted",
+  "inconclusive"
+);
+
+export const mathStepStatusValidator = literals(
+  "complete",
+  "partial",
+  "unavailable"
+);
+
+export const mathPointValidator = v.object({
+  x: v.string(),
+  y: v.string(),
+});
+
+export const mathProbabilityParametersValidator = v.object({
+  lambda: v.optional(v.string()),
+  lower: v.optional(v.string()),
+  mean: v.optional(v.string()),
+  n: v.optional(v.string()),
+  p: v.optional(v.string()),
+  standard_deviation: v.optional(v.string()),
+  upper: v.optional(v.string()),
+});
+
+export const mathRequestValidator = v.object({
+  distribution: v.optional(v.string()),
+  expression: v.optional(v.string()),
+  expressions: v.optional(v.array(v.string())),
+  inclusive: v.optional(v.boolean()),
+  k: v.optional(v.string()),
+  kind: v.literal("math"),
+  left: v.optional(v.string()),
+  lower: v.optional(v.string()),
+  lowerInclusive: v.optional(v.boolean()),
+  matrix: v.optional(v.array(v.array(v.string()))),
+  modulus: v.optional(v.string()),
+  n: v.optional(v.string()),
+  operation: mathOperationValidator,
+  order: v.optional(v.number()),
+  parameters: v.optional(mathProbabilityParametersValidator),
+  point: v.optional(v.string()),
+  points: v.optional(v.array(mathPointValidator)),
+  right: v.optional(v.string()),
+  right_matrix: v.optional(v.array(v.array(v.string()))),
+  upper: v.optional(v.string()),
+  upperInclusive: v.optional(v.boolean()),
+  values: v.optional(v.array(v.string())),
+  variable: v.optional(v.string()),
+  variables: v.optional(v.array(v.string())),
+  vector: v.optional(v.array(v.string())),
+});
+
+export const mathItemValidator = v.object({
+  label: v.string(),
+  latex: v.optional(v.string()),
   value: v.string(),
 });
+
+export const mathStepValidator = v.object({
+  action: v.string(),
+  items: v.array(mathItemValidator),
+  primary: mathExpressionValidator,
+  relation: v.optional(mathExpressionValidator),
+  secondary: v.optional(mathExpressionValidator),
+});
+
+export const mathResultValidator = v.object({
+  conditions: v.array(mathExpressionValidator),
+  input: mathRequestValidator,
+  items: v.array(mathItemValidator),
+  kind: mathOperationValidator,
+  operation: mathOperationValidator,
+  primary: mathExpressionValidator,
+  reason: v.string(),
+  secondary: v.optional(mathExpressionValidator),
+  stepStatus: mathStepStatusValidator,
+  steps: v.array(mathStepValidator),
+  status: mathStatusValidator,
+});
+
+const currentMathDataValidator = v.union(
+  v.object({
+    kind: mathOperationValidator,
+    status: v.literal("loading"),
+    input: mathRequestValidator,
+  }),
+  v.object({
+    kind: mathOperationValidator,
+    status: mathStatusValidator,
+    input: mathRequestValidator,
+    result: mathResultValidator,
+    summary: v.string(),
+  }),
+  v.object({
+    kind: mathOperationValidator,
+    status: v.literal("error"),
+    input: mathRequestValidator,
+    error: v.string(),
+  })
+);
+
+export const mathDataValidator = currentMathDataValidator;
 
 /**
  * Provider metadata validator.
  * Uses v.any() for the innermost value because this comes from AI SDK
- * and varies by provider (OpenAI, Anthropic, Google, etc.).
- * The shape is defined externally by each AI provider's SDK, not by us.
+ * and the shape is defined externally by the active provider SDK.
  */
 export const providerMetadataValidator = v.optional(
   v.record(v.string(), v.record(v.string(), v.any()))
 );
+
+const specialistToolInputFields = {
+  objective: v.string(),
+  request: v.string(),
+  requirements: v.array(v.string()),
+};
+
+export const nakafaToolInputValidator = v.object({
+  ...specialistToolInputFields,
+  deliverables: v.array(v.string()),
+});
+
+export const mathToolInputValidator = v.object({
+  ...specialistToolInputFields,
+  given: v.array(v.string()),
+});
+
+export const researchToolInputValidator = v.object({
+  ...specialistToolInputFields,
+  sourceRequirements: v.array(v.string()),
+});
 
 /**
  * Part base validator (without system fields)
@@ -177,69 +438,41 @@ export const partValidator = v.object({
   fileFilename: v.optional(v.string()),
   fileUrl: v.optional(v.string()),
 
-  sourceUrlSourceId: v.optional(v.string()),
-  sourceUrlUrl: v.optional(v.string()),
-  sourceUrlTitle: v.optional(v.string()),
-
-  sourceDocumentSourceId: v.optional(v.string()),
-  sourceDocumentMediaType: v.optional(v.string()),
-  sourceDocumentTitle: v.optional(v.string()),
-  sourceDocumentFilename: v.optional(v.string()),
-
   toolToolCallId: v.optional(v.string()),
   toolState: v.optional(toolStateValidator),
   toolErrorText: v.optional(v.string()),
+  toolCallProviderMetadata: providerMetadataValidator,
+  toolResultProviderMetadata: providerMetadataValidator,
 
   // Orchestrator tool fields
-  toolContentAccessInput: v.optional(v.string()),
-  toolContentAccessOutput: v.optional(v.string()),
-  toolMathCalculationInput: v.optional(v.string()),
-  toolMathCalculationOutput: v.optional(v.string()),
-  toolDeepResearchInput: v.optional(v.string()),
+  toolNakafaInput: v.optional(nakafaToolInputValidator),
+  toolNakafaOutput: v.optional(v.string()),
+  toolMathInput: v.optional(mathToolInputValidator),
+  toolMathOutput: v.optional(v.string()),
+  toolDeepResearchInput: v.optional(researchToolInputValidator),
   toolDeepResearchOutput: v.optional(v.string()),
 
   dataSuggestionsId: v.optional(v.string()),
   dataSuggestionsData: v.optional(v.array(v.string())),
 
-  dataGetArticlesId: v.optional(v.string()),
-  dataGetArticlesBaseUrl: v.optional(v.string()),
-  dataGetArticlesInputLocale: v.optional(localeValidator),
-  dataGetArticlesInputCategory: v.optional(articleCategoryValidator),
-  dataGetArticlesArticles: v.optional(v.array(contentItemValidator)),
-  dataGetArticlesStatus: v.optional(dataStatusValidator),
-  dataGetArticlesError: v.optional(v.string()),
+  dataNakafaId: v.optional(v.string()),
+  dataNakafaData: v.optional(nakafaDataValidator),
 
-  dataGetSubjectsId: v.optional(v.string()),
-  dataGetSubjectsBaseUrl: v.optional(v.string()),
-  dataGetSubjectsInputLocale: v.optional(localeValidator),
-  dataGetSubjectsInputCategory: v.optional(subjectCategoryValidator),
-  dataGetSubjectsInputGrade: v.optional(gradeValidator),
-  dataGetSubjectsInputMaterial: v.optional(materialValidator),
-  dataGetSubjectsSubjects: v.optional(v.array(contentItemValidator)),
-  dataGetSubjectsStatus: v.optional(dataStatusValidator),
-  dataGetSubjectsError: v.optional(v.string()),
-
-  dataGetContentId: v.optional(v.string()),
-  dataGetContentUrl: v.optional(v.string()),
-  dataGetContentTitle: v.optional(v.string()),
-  dataGetContentDescription: v.optional(v.string()),
-  dataGetContentStatus: v.optional(dataStatusValidator),
-  dataGetContentError: v.optional(v.string()),
-
-  dataCalculatorId: v.optional(v.string()),
-  dataCalculatorOriginal: v.optional(calculatorExpressionValidator),
-  dataCalculatorResult: v.optional(calculatorResultValidator),
-  dataCalculatorStatus: v.optional(literals("done", "error")),
-  dataCalculatorError: v.optional(v.string()),
+  dataMathId: v.optional(v.string()),
+  dataMathData: v.optional(mathDataValidator),
 
   dataScrapeUrlId: v.optional(v.string()),
   dataScrapeUrlUrl: v.optional(v.string()),
   dataScrapeUrlContent: v.optional(v.string()),
+  dataScrapeUrlTitle: v.optional(v.string()),
+  dataScrapeUrlDescription: v.optional(v.string()),
+  dataScrapeUrlFavicon: v.optional(v.string()),
   dataScrapeUrlStatus: v.optional(dataStatusValidator),
   dataScrapeUrlError: v.optional(v.string()),
 
   dataWebSearchId: v.optional(v.string()),
-  dataWebSearchQuery: v.optional(v.string()),
+  dataWebSearchProvider: v.optional(webSearchProviderValidator),
+  dataWebSearchQueries: v.optional(v.array(v.string())),
   dataWebSearchSources: v.optional(v.array(webSearchSourceValidator)),
   dataWebSearchStatus: v.optional(dataStatusValidator),
   dataWebSearchError: v.optional(v.string()),

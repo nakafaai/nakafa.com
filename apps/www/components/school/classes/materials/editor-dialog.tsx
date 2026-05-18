@@ -294,29 +294,34 @@ function MaterialGroupDialogShell({
                     {t("material-status-label")}
                   </FieldLabel>
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        aria-invalid={isInvalid}
-                        className="w-full font-normal"
-                        id={`${formId}-status`}
-                        name={field.name}
-                        type="button"
-                        variant="outline"
-                      >
-                        <HugeIcons icon={currentStatus.icon} />
-                        {t(currentStatus.labelKey)}
-                        <HugeIcons className="ml-auto" icon={ArrowDown01Icon} />
-                      </Button>
-                    </DropdownMenuTrigger>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          aria-invalid={isInvalid}
+                          className="w-full font-normal"
+                          id={`${formId}-status`}
+                          name={field.name}
+                          type="button"
+                          variant="outline"
+                        >
+                          <HugeIcons icon={currentStatus.icon} />
+                          {t(currentStatus.labelKey)}
+                          <HugeIcons
+                            className="ml-auto"
+                            icon={ArrowDown01Icon}
+                          />
+                        </Button>
+                      }
+                    />
                     <DropdownMenuContent
                       align="start"
-                      className="w-(--radix-dropdown-menu-trigger-width)"
+                      className="w-(--anchor-width)"
                     >
                       {materialStatusList.map((status) => (
                         <DropdownMenuItem
                           className="cursor-pointer"
                           key={status.value}
-                          onSelect={() => field.handleChange(status.value)}
+                          onClick={() => field.handleChange(status.value)}
                         >
                           <HugeIcons icon={status.icon} />
                           {t(status.labelKey)}

@@ -1,5 +1,5 @@
 import { readMdxFile } from "@repo/backend/scripts/lib/mdx-parser/content";
-import { runConvexMutationGeneric } from "@repo/backend/scripts/sync-content/convexApi";
+import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
   log,
@@ -10,66 +10,74 @@ import {
   BATCH_SIZES,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type {
-  AuthorSyncResult,
   ConvexConfig,
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/types";
+import { Effect } from "effect";
 
-export const collectAllAuthorNames = async (
-  options: SyncOptions
-): Promise<string[]> => {
-  const authorNames: string[] = [];
-  const patterns = [
-    options.locale ? `articles/**/${options.locale}.mdx` : "articles/**/*.mdx",
-    options.locale ? `subject/**/${options.locale}.mdx` : "subject/**/*.mdx",
-    options.locale
-      ? `exercises/**/_question/${options.locale}.mdx`
-      : "exercises/**/_question/*.mdx",
-  ];
+const readAuthorNames = Effect.fn("sync.readAuthorNames")(function* (
+  file: string
+) {
+  const result = yield* Effect.either(readMdxFile(file));
 
-  for (const pattern of patterns) {
-    const files = await globFiles(pattern);
-    for (const file of files) {
-      try {
-        const { metadata } = await readMdxFile(file);
-        authorNames.push(...metadata.authors.map((author) => author.name));
-      } catch {
-        // Ignore invalid content files while collecting authors.
-      }
-    }
+  if (result._tag === "Left") {
+    return [];
   }
 
-  return [...new Set(authorNames)];
-};
+  return result.right.metadata.authors.map((author) => author.name);
+});
 
-export const collectAuthorNamesFromFiles = async (
-  filePaths: string[]
-): Promise<string[]> => {
+/** Collects all unique content author names for the requested locale. */
+export const collectAllAuthorNames = Effect.fn("sync.collectAllAuthorNames")(
+  function* (options: SyncOptions) {
+    const authorNames: string[] = [];
+    const patterns = [
+      options.locale
+        ? `articles/**/${options.locale}.mdx`
+        : "articles/**/*.mdx",
+      options.locale ? `subject/**/${options.locale}.mdx` : "subject/**/*.mdx",
+      options.locale
+        ? `exercises/**/_question/${options.locale}.mdx`
+        : "exercises/**/_question/*.mdx",
+    ];
+
+    for (const pattern of patterns) {
+      const files = yield* globFiles(pattern);
+
+      for (const file of files) {
+        authorNames.push(...(yield* readAuthorNames(file)));
+      }
+    }
+
+    return [...new Set(authorNames)];
+  }
+);
+
+/** Collects unique author names from a known set of changed content files. */
+export const collectAuthorNamesFromFiles = Effect.fn(
+  "sync.collectAuthorNamesFromFiles"
+)(function* (filePaths: string[]) {
   const authorNames: string[] = [];
 
   for (const file of filePaths) {
-    try {
-      const { metadata } = await readMdxFile(file);
-      authorNames.push(...metadata.authors.map((author) => author.name));
-    } catch {
-      // Ignore files that do not have parsable MDX metadata.
-    }
+    authorNames.push(...(yield* readAuthorNames(file)));
   }
 
   return [...new Set(authorNames)];
-};
+});
 
-export const syncAuthors = async (
+/** Syncs missing content authors before content rows reference them. */
+export const syncAuthors = Effect.fn("sync.authors")(function* (
   config: ConvexConfig,
   options: SyncOptions
-): Promise<AuthorSyncResult> => {
+) {
   const startTime = performance.now();
 
   if (!options.quiet) {
     log("Collecting author names from content files...");
   }
 
-  const authorNames = await collectAllAuthorNames(options);
+  const authorNames = yield* collectAllAuthorNames(options);
 
   if (!options.quiet) {
     log(`Unique authors found: ${authorNames.length}`);
@@ -92,8 +100,9 @@ export const syncAuthors = async (
     index += BATCH_SIZES.authors
   ) {
     const batch = authorNames.slice(index, index + BATCH_SIZES.authors);
-    const result = await runConvexMutationGeneric(
+    const result = yield* callConvex(
       config,
+      "mutation",
       "contentSync/mutations/authors:bulkSyncAuthors",
       { authorNames: batch },
       AuthorSyncResultSchema
@@ -111,4 +120,4 @@ export const syncAuthors = async (
   }
 
   return { created, existing, durationMs };
-};
+});
