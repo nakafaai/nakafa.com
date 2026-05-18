@@ -1,7 +1,6 @@
 import {
   MIN_VIEW_THRESHOLD,
   RETRY_CONFIG,
-  SUPPORTED_LOCALES,
 } from "@repo/backend/convex/audioStudies/constants";
 import {
   getAudioContentLookup,
@@ -9,6 +8,7 @@ import {
 } from "@repo/backend/convex/audioStudies/utils";
 import { popularAudioContentItemValidator } from "@repo/backend/convex/contents/validators";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { SUPPORTED_CONTENT_LOCALES } from "@repo/backend/convex/lib/validators/contents";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { v } from "convex/values";
 
@@ -49,7 +49,7 @@ export const enqueuePopularContentForAudio = internalMutation({
         continue;
       }
 
-      for (const locale of SUPPORTED_LOCALES) {
+      for (const locale of SUPPORTED_CONTENT_LOCALES) {
         const localizedContent = await getLocalizedAudioContentLookup(
           ctx,
           sourceContent,

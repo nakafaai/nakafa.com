@@ -104,7 +104,7 @@ export const config = {
   },
   pageExtensions: ["mdx", "tsx", "ts", "jsx", "js"],
   reactCompiler: true,
-  serverExternalPackages: ["shiki", "pino"],
+  serverExternalPackages: ["shiki"],
   experimental: {
     optimizePackageImports: ["three"],
   },

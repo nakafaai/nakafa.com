@@ -1,14 +1,27 @@
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
-import * as z from "zod";
+import { fetchQuery } from "convex/nextjs";
+import { Effect, Schema } from "effect";
+import { describe, expect, it, vi } from "vitest";
 import { getNakafaSearchContentToolResult } from "@/lib/mcp/tools/search";
 
-const ToolErrorResultSchema = z.object({
-  isError: z.literal(true),
-  structuredContent: z.object({
-    error: z.object({
-      message: z.string(),
-      suggestions: z.array(z.string()).min(1),
+vi.mock("convex/nextjs", () => ({
+  fetchQuery: vi.fn(() =>
+    Promise.resolve({
+      count: 0,
+      has_more: false,
+      items: [],
+      limit: 10,
+      next_offset: null,
+      offset: 0,
+    })
+  ),
+}));
+
+const ToolErrorResultSchema = Schema.Struct({
+  isError: Schema.Literal(true),
+  structuredContent: Schema.Struct({
+    error: Schema.Struct({
+      message: Schema.String,
+      suggestions: Schema.NonEmptyArray(Schema.String),
     }),
   }),
 });
@@ -23,12 +36,32 @@ describe("nakafa_search_content", () => {
     );
 
     expect(
-      ToolErrorResultSchema.parse(result).structuredContent.error
+      Schema.decodeUnknownSync(ToolErrorResultSchema)(result).structuredContent
+        .error
     ).toStrictEqual({
       message: "Invalid Nakafa content search options.",
       suggestions: [
         expect.stringContaining("Too big: expected number to be <=50"),
       ],
+    });
+  });
+
+  it("returns structured read-model data errors", async () => {
+    vi.mocked(fetchQuery).mockRejectedValueOnce(new Error("Convex offline"));
+
+    const result = await Effect.runPromise(
+      getNakafaSearchContentToolResult({
+        locale: "en",
+        queries: ["rational function"],
+      })
+    );
+
+    expect(
+      Schema.decodeUnknownSync(ToolErrorResultSchema)(result).structuredContent
+        .error
+    ).toStrictEqual({
+      message: "Unable to search Nakafa content.",
+      suggestions: ["Convex offline"],
     });
   });
 });

@@ -5,6 +5,7 @@ export const CONTENT_SYNC_BATCH_LIMITS = {
   exerciseChoices: 10,
   exerciseQuestions: 30,
   exerciseSets: 50,
+  quranSearchDocuments: 50,
   staleArticles: 50,
   staleExerciseQuestions: 100,
   staleExerciseSets: 5,

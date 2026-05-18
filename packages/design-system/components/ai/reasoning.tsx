@@ -17,6 +17,7 @@ import { createContext, memo, useContext, useEffect, useState } from "react";
 
 interface ReasoningContextValue {
   duration: number;
+  hasContent: boolean;
   isOpen: boolean;
   isStreaming: boolean;
   setIsOpen: (open: boolean) => void;
@@ -33,6 +34,7 @@ function useReasoning() {
 }
 
 export type ReasoningProps = ComponentProps<typeof Collapsible> & {
+  hasContent?: boolean;
   isStreaming?: boolean;
   open?: boolean;
   defaultOpen?: boolean;
@@ -46,6 +48,7 @@ const MS_IN_S = 1000;
 export const Reasoning = memo(
   ({
     className,
+    hasContent = true,
     isStreaming = false,
     open,
     defaultOpen = true,
@@ -98,7 +101,7 @@ export const Reasoning = memo(
 
     return (
       <ReasoningContext.Provider
-        value={{ isStreaming, isOpen, setIsOpen, duration }}
+        value={{ hasContent, isStreaming, isOpen, setIsOpen, duration }}
       >
         <Collapsible
           className={cn("not-prose flex flex-col gap-2", className)}
@@ -118,10 +121,10 @@ export type ReasoningTriggerProps = ComponentProps<typeof CollapsibleTrigger>;
 const ThinkingMessage = memo(
   ({ isStreaming, duration }: { isStreaming: boolean; duration?: number }) => {
     const t = useTranslations("Ai");
-    if (isStreaming || duration === 0) {
+    if (isStreaming) {
       return <p>{t("thinking")}</p>;
     }
-    if (duration === undefined) {
+    if (duration === undefined || duration === 0) {
       return <p>{t("thought-for-a-few-seconds")}</p>;
     }
     return <p>{t("thought-for", { duration })}</p>;
@@ -131,12 +134,13 @@ ThinkingMessage.displayName = "ThinkingMessage";
 
 export const ReasoningTrigger = memo(
   ({ className, children, ...props }: ReasoningTriggerProps) => {
-    const { isStreaming, isOpen, duration } = useReasoning();
+    const { hasContent, isStreaming, isOpen, duration } = useReasoning();
 
     return (
       <CollapsibleTrigger
         className={cn(
           "flex w-full cursor-pointer items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground",
+          !hasContent && "cursor-default hover:text-muted-foreground",
           className
         )}
         {...props}
@@ -149,13 +153,15 @@ export const ReasoningTrigger = memo(
               isLoading={isStreaming}
             />
             <ThinkingMessage duration={duration} isStreaming={isStreaming} />
-            <HugeIcons
-              className={cn(
-                "size-4 transition-transform",
-                isOpen ? "rotate-180" : "rotate-0"
-              )}
-              icon={ArrowDown01Icon}
-            />
+            {hasContent ? (
+              <HugeIcons
+                className={cn(
+                  "size-4 transition-transform",
+                  isOpen ? "rotate-180" : "rotate-0"
+                )}
+                icon={ArrowDown01Icon}
+              />
+            ) : null}
           </>
         )}
       </CollapsibleTrigger>

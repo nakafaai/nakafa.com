@@ -1,13 +1,15 @@
-import * as z from "zod";
+import { Schema } from "effect";
 
-const ChoicesItemSchema = z.object({
-  label: z.string(),
-  value: z.boolean(),
-});
+const ChoicesItemSchema = Schema.Struct({
+  label: Schema.String,
+  value: Schema.Boolean,
+}).pipe(Schema.mutable);
 
-export const ExercisesChoicesSchema = z.object({
-  id: z.array(ChoicesItemSchema),
-  en: z.array(ChoicesItemSchema),
-});
+export const ExercisesChoicesSchema = Schema.Struct({
+  id: Schema.Array(ChoicesItemSchema).pipe(Schema.mutable),
+  en: Schema.Array(ChoicesItemSchema).pipe(Schema.mutable),
+}).pipe(Schema.mutable);
 
-export type ExercisesChoices = z.infer<typeof ExercisesChoicesSchema>;
+export type ExercisesChoices = Schema.Schema.Type<
+  typeof ExercisesChoicesSchema
+>;

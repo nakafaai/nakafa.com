@@ -7,13 +7,11 @@ import {
   MetadataParseError,
 } from "@repo/contents/_shared/error";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { createServiceLogger, logError } from "@repo/utilities/logging";
-import { Effect } from "effect";
+import { logError } from "@repo/utilities/logging/effect";
+import { Effect, Option, Schema } from "effect";
 import { NextResponse } from "next/server";
 
 export const revalidate = false;
-
-const logger = createServiceLogger("api-contents");
 
 /**
  * Generates all locale-aware article API paths under `/contents/:locale/articles/*`.
@@ -34,55 +32,52 @@ export async function GET(
 ) {
   const { locale, slug } = await params;
 
-  const parseResult = LocaleSchema.safeParse(locale);
-  if (!parseResult.success) {
+  const validLocale = Schema.decodeUnknownOption(LocaleSchema)(locale);
+  if (Option.isNone(validLocale)) {
     return NextResponse.json(
       { error: "Invalid locale. Must be 'en' or 'id'." },
       { status: 400 }
     );
   }
 
-  const validLocale = parseResult.data;
   const basePath = slug.join("/");
-
   const cleanPath = `articles/${basePath}` as const;
 
-  const program = getArticleContents({
-    locale: validLocale,
-    basePath: cleanPath,
-    includeMDX: false,
-  });
+  return Effect.runPromise(
+    getArticleContents({
+      locale: validLocale.value,
+      basePath: cleanPath,
+      includeMDX: false,
+    }).pipe(
+      Effect.matchEffect({
+        onFailure: (error: unknown) =>
+          Effect.gen(function* () {
+            const err =
+              error instanceof Error ? error : new Error(String(error));
 
-  const response = await Effect.runPromise(
-    Effect.match(program, {
-      onFailure: (error: unknown) => {
-        logError(
-          logger,
-          error instanceof Error ? error : new Error(String(error)),
-          {
-            locale,
-            basePath: basePath || "/",
-            slugLength: slug.length,
-            message: "Failed to fetch contents.",
-          }
-        );
+            yield* logError(err, {
+              service: "api-contents",
+              locale,
+              basePath: basePath || "/",
+              slugLength: slug.length,
+              message: "Failed to fetch contents.",
+            });
 
-        const statusCode =
-          error instanceof InvalidPathError ||
-          error instanceof FileReadError ||
-          error instanceof MetadataParseError ||
-          error instanceof GitHubFetchError
-            ? 404
-            : 500;
+            const statusCode =
+              error instanceof InvalidPathError ||
+              error instanceof FileReadError ||
+              error instanceof MetadataParseError ||
+              error instanceof GitHubFetchError
+                ? 404
+                : 500;
 
-        return NextResponse.json(
-          { error: "Failed to fetch contents." },
-          { status: statusCode }
-        );
-      },
-      onSuccess: (data) => NextResponse.json(data),
-    })
+            return NextResponse.json(
+              { error: "Failed to fetch contents." },
+              { status: statusCode }
+            );
+          }),
+        onSuccess: (data) => Effect.succeed(NextResponse.json(data)),
+      })
+    )
   );
-
-  return response;
 }

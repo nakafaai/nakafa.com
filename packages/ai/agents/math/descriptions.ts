@@ -1,61 +1,162 @@
-import { createPrompt } from "@repo/ai/prompt/utils";
+import dedent from "dedent";
 
-export function nakafaCalculator() {
-  return createPrompt({
-    taskContext: `
-      # calculator Tool
+/**
+ * Describes Nina's deterministic math tools.
+ *
+ * References:
+ * - AI SDK tool descriptions:
+ *   https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling
+ * - SymPy capabilities:
+ *   https://docs.sympy.org/latest/index.html
+ */
+export const mathArithmetic = dedent(`
+  Use for exact arithmetic and concrete numeric evaluation.
 
-      Use this tool to calculate the user's question or our internal calculations using calculator.
-      The tool uses Math.js under the hood to evaluate expressions. It will not work with algebraic variables like x, y, a, b.
-      EVERYTHING should be calculated using this tool. DO NOT calculate manually. Even though it is simple arithmetic like 2+2.
-      If user query is a story question or complex calculation, break down the question into smaller parts and calculate each part using this tool.
-    `,
+  Required input:
+  - Send operation evaluate.
+  - Copy the expression from the user, for example 125 * 48 / 6.
 
-    toolUsageGuidelines: `
-      ## When to use this tool
+  Do not use for:
+  - Unresolved symbolic equations.
+  - Named probability distributions.
+  - Expected values or variances.
+`);
 
-      1. The user asks to calculate something
-      2. You want to calculate something using our internal calculations
+export const mathAlgebra = dedent(`
+  Use for symbolic algebra.
 
-      ## When NOT to use this tool
+  Send expression for:
+  - simplify
+  - factor
+  - expand
+  - cancel
+  - together
+  - apart
+  - rationalize
+  - domain
 
-      Skip using this tool when:
+  Use cancel specifically when the user asks to cancel a common factor in a rational expression.
 
-      1. There is no mathematical expression in the user's question or our internal calculations
-      2. There are algebraic variables in the user's question or our internal calculations
+  For validity or equivalence questions like A = B, send operation compare with left as A and right as B.
+`);
 
-      ## calculator tool capabilities
+export const mathEquation = dedent(`
+  Use for solving equations, systems, inequalities, and polynomial roots.
 
-      After calculating the user's question or our internal calculations, the calculator allows you to:
+  Required input:
+  - Send expression for one equation.
+  - Send expressions for a system.
+  - Provide explicit variables when the user names them.
+`);
 
-      - Know the result of the calculation
-      - 100% correct result and to be sure that the calculation is correct
-    `,
+export const mathCalculus = dedent(`
+  Use for differentiate, integrate, and limit.
+  Send expression copied from the user.
 
-    detailedTaskInstructions: `
-      ## Best Practices
+  Definite or improper integrals must include lower and upper.
+  For example, integral from 0 to infinity uses lower 0 and upper oo.
 
-      - EVERY calculation should be done using this tool, even though it is simple arithmetic like 2+2
-      - Break down story questions or complex calculations into smaller parts and calculate each part using this tool
-      - Explain every calculation step by step to the user
-    `,
+  Include variable when the expression has parameters or more than one symbol.
+  Use variable x when the user does not name another variable.
+  Provide a limit point when needed.
+`);
 
-    examples: `
-      ## Examples of When to Use This Tool
+export const mathSeries = dedent(`
+  Use for:
+  - Taylor or asymptotic series.
+  - Finite or symbolic summations.
+  - Finite or symbolic products.
 
-      <example>
-        User: Calculate 2+2
-        Assistant: Let me use the calculator tool to calculate 2+2
-        *Calls calculator tool*
-      </example>
-    `,
+  Summation and product need expression, lower, and upper.
+`);
 
-    finalRequest: `
-      ## Summary
+export const mathMatrix = dedent(`
+  Use for linear algebra:
+  - determinant
+  - inverse
+  - rank
+  - rref
+  - eigenvalues
+  - eigenvectors
+  - eigen_analysis
+  - matrix_multiply
+  - linear_system
 
-      Use calculator tool when the user asks to calculate something or you want to calculate something using our internal calculations.
-      Treat the result of the calculation as a source of information to tell the users the result of the calculation.
-      Break down story questions or complex calculations into smaller parts and calculate each part using this tool.
-    `,
-  });
-}
+  Use eigen_analysis for eigenspaces, algebraic or geometric multiplicity, diagonalizability, and Jordan-related checks.
+  matrix_multiply needs right_matrix.
+  linear_system needs vector.
+`);
+
+export const mathStatistics = dedent(`
+  Use for descriptive statistics:
+  - mean
+  - median
+  - mode
+  - variance
+  - standard_deviation
+  - quartiles
+  - z_score
+
+  Send values as the dataset.
+  z_score also needs the target expression.
+`);
+
+export const mathProbability = dedent(`
+  Use for supported named probability distributions such as normal, binomial, or poisson.
+  Prefer probability over arithmetic or calculus when a distribution and its parameters are given.
+
+  Supported operations:
+  - distribution
+  - expected_value
+  - variance_probability
+  - point_probability
+  - cumulative_probability
+  - tail_probability
+  - interval_probability
+
+  Always include required parameters:
+  - bernoulli needs p.
+  - binomial needs n and p.
+  - normal needs mean and standard_deviation.
+  - poisson needs lambda.
+  - uniform needs lower and upper.
+
+  Event operations also need their event value:
+  - point_probability needs point.
+  - cumulative_probability needs upper.
+  - tail_probability needs lower.
+  - interval_probability needs lower and upper in the same call.
+
+  For fair dice, cards, or any finite equally likely outcome list:
+  - Use statistics mean over the listed outcomes.
+  - Use arithmetic for direct finite counting.
+  - Do not use a named probability distribution.
+`);
+
+export const mathGeometry = dedent(`
+  Use for coordinate geometry:
+  - distance
+  - midpoint
+  - slope
+  - line equations
+  - circle equations
+  - intersections
+
+  Send points for point-based operations.
+  Send expressions for equation intersections.
+`);
+
+export const mathDiscrete = dedent(`
+  Use for discrete math and number theory:
+  - gcd
+  - lcm
+  - prime_factorization
+  - is_prime
+  - modular
+  - permutation
+  - combination
+
+  gcd and lcm need values.
+  modular needs n and modulus.
+  permutation and combination need n and k.
+`);

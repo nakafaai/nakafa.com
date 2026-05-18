@@ -38,10 +38,10 @@ import {
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { formatDuration } from "date-fns";
+import { Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useLayoutEffect } from "react";
 import { toast } from "sonner";
-import * as z from "zod/mini";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
 import { useUser } from "@/lib/context/use-user";
@@ -51,16 +51,18 @@ interface StartExerciseButtonProps {
   totalExercises: number;
 }
 
-const modeSchema = z.object({
-  mode: z.enum(["simulation", "practice"]),
-  timeLimit: z.number(),
+const mode = Schema.Struct({
+  mode: Schema.Literal("simulation", "practice"),
+  timeLimit: Schema.Number,
 });
+
+const modeSchema = Schema.standardSchemaV1(mode);
 
 const defaultValues = ({
   timeLimit,
 }: {
   timeLimit: number;
-}): z.input<typeof modeSchema> => ({
+}): Schema.Schema.Encoded<typeof mode> => ({
   mode: "simulation",
   timeLimit,
 });
@@ -253,36 +255,38 @@ export function StartExerciseButton({
                           {t("time-limit-label")}
                         </FieldLabel>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              aria-invalid={isInvalid}
-                              className="w-full font-normal"
-                              id="time-limit"
-                              name={field.name}
-                              variant="outline"
-                            >
-                              <HugeIcons icon={StopWatchIcon} />
-                              {field.state.value
-                                ? formatDuration(
-                                    { minutes: field.state.value / 60 },
-                                    { locale: getLocale(locale) }
-                                  )
-                                : t("time-limit-placeholder")}
-                              <HugeIcons
-                                className="ml-auto"
-                                icon={ArrowDown01Icon}
-                              />
-                            </Button>
-                          </DropdownMenuTrigger>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button
+                                aria-invalid={isInvalid}
+                                className="w-full font-normal"
+                                id="time-limit"
+                                name={field.name}
+                                variant="outline"
+                              >
+                                <HugeIcons icon={StopWatchIcon} />
+                                {field.state.value
+                                  ? formatDuration(
+                                      { minutes: field.state.value / 60 },
+                                      { locale: getLocale(locale) }
+                                    )
+                                  : t("time-limit-placeholder")}
+                                <HugeIcons
+                                  className="ml-auto"
+                                  icon={ArrowDown01Icon}
+                                />
+                              </Button>
+                            }
+                          />
                           <DropdownMenuContent
                             align="start"
-                            className="max-h-64 w-(--radix-dropdown-menu-trigger-width)"
+                            className="max-h-64 w-(--anchor-width)"
                           >
                             {getTimeLimitList().map((time) => (
                               <DropdownMenuItem
                                 className="cursor-pointer"
                                 key={time}
-                                onSelect={() => field.handleChange(time)}
+                                onClick={() => field.handleChange(time)}
                               >
                                 {formatDuration(
                                   { minutes: time / 60 },

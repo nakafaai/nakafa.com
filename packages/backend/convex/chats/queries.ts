@@ -50,8 +50,16 @@ export const getChat = query({
 });
 
 /**
- * Get all chats by user ID, type, visibility, and search query.
- * Owners can load all of their chats. Everyone else only sees public chats.
+ * Empty paginated chat result for private scopes the viewer cannot read.
+ */
+const emptyChatsPage = {
+  continueCursor: "",
+  isDone: true,
+  page: [],
+};
+
+/**
+ * Get public chats by user ID, type, visibility, and search query.
  */
 export const getChats = query({
   args: {
@@ -62,20 +70,12 @@ export const getChats = query({
     paginationOpts: paginationOptsValidator,
   },
   returns: paginatedChatsValidator,
-  handler: async (ctx, args) => {
+  handler: (ctx, args) => {
     const { userId, q: searchQuery, visibility, type, paginationOpts } = args;
-    const viewer = await getOptionalAppUser(ctx);
-    const viewerUserId = viewer?.appUser._id ?? null;
-    const isOwner = viewerUserId === userId;
 
-    if (!isOwner && visibility === "private") {
-      throw new ConvexError({
-        code: "FORBIDDEN",
-        message: "Private chats are only visible to their owner.",
-      });
+    if (visibility === "private") {
+      return emptyChatsPage;
     }
-
-    const effectiveVisibility = isOwner ? visibility : "public";
 
     if (searchQuery && searchQuery.trim().length > 0) {
       return ctx.db
@@ -83,8 +83,66 @@ export const getChats = query({
         .withSearchIndex("search_title", (q) => {
           let builder = q.search("title", searchQuery).eq("userId", userId);
 
-          if (effectiveVisibility) {
-            builder = builder.eq("visibility", effectiveVisibility);
+          builder = builder.eq("visibility", "public");
+
+          if (type) {
+            builder = builder.eq("type", type);
+          }
+
+          return builder;
+        })
+        .paginate(paginationOpts);
+    }
+
+    if (type) {
+      return ctx.db
+        .query("chats")
+        .withIndex("by_userId_and_visibility_and_type", (q) =>
+          q.eq("userId", userId).eq("visibility", "public").eq("type", type)
+        )
+        .order("desc")
+        .paginate(paginationOpts);
+    }
+
+    return ctx.db
+      .query("chats")
+      .withIndex("by_userId_and_visibility", (q) =>
+        q.eq("userId", userId).eq("visibility", "public")
+      )
+      .order("desc")
+      .paginate(paginationOpts);
+  },
+});
+
+/**
+ * Get the signed-in user's chats, including private chats.
+ */
+export const getOwnChats = query({
+  args: {
+    q: v.optional(v.string()),
+    visibility: v.optional(chatVisibilityValidator),
+    type: v.optional(chatTypeValidator),
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: paginatedChatsValidator,
+  handler: async (ctx, args) => {
+    const { q: searchQuery, visibility, type, paginationOpts } = args;
+    const viewer = await getOptionalAppUser(ctx);
+
+    if (!viewer) {
+      return emptyChatsPage;
+    }
+
+    const userId = viewer.appUser._id;
+
+    if (searchQuery && searchQuery.trim().length > 0) {
+      return ctx.db
+        .query("chats")
+        .withSearchIndex("search_title", (q) => {
+          let builder = q.search("title", searchQuery).eq("userId", userId);
+
+          if (visibility) {
+            builder = builder.eq("visibility", visibility);
           }
 
           if (type) {
@@ -96,14 +154,11 @@ export const getChats = query({
         .paginate(paginationOpts);
     }
 
-    if (effectiveVisibility && type) {
+    if (visibility && type) {
       return ctx.db
         .query("chats")
         .withIndex("by_userId_and_visibility_and_type", (q) =>
-          q
-            .eq("userId", userId)
-            .eq("visibility", effectiveVisibility)
-            .eq("type", type)
+          q.eq("userId", userId).eq("visibility", visibility).eq("type", type)
         )
         .order("desc")
         .paginate(paginationOpts);
@@ -119,11 +174,11 @@ export const getChats = query({
         .paginate(paginationOpts);
     }
 
-    if (effectiveVisibility) {
+    if (visibility) {
       return ctx.db
         .query("chats")
         .withIndex("by_userId_and_visibility", (q) =>
-          q.eq("userId", userId).eq("visibility", effectiveVisibility)
+          q.eq("userId", userId).eq("visibility", visibility)
         )
         .order("desc")
         .paginate(paginationOpts);

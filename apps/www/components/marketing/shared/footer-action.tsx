@@ -83,39 +83,46 @@ function Language() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline">
-          <HugeIcons icon={TranslateIcon} />
-          <span className="truncate">{t("language")}</span>
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button variant="outline">
+            <HugeIcons icon={TranslateIcon} />
+            <span className="truncate">{t("language")}</span>
+          </Button>
+        }
+      />
 
-      <DropdownMenuContent align="end">
-        {languages.map((language) => {
-          const Flag = flagMap[language.value];
-          return (
-            <DropdownMenuItem
-              className="cursor-pointer"
-              disabled={isPending}
-              key={language.value}
-              onFocus={() => handlePrefetch(language.value)}
-              onMouseEnter={() => handlePrefetch(language.value)}
-              onSelect={(event) => {
-                event.stopPropagation();
-                handleChangeLocale(language.value);
-              }}
-            >
-              <Flag className="size-4 shrink-0" />
-              <span className="truncate">{language.label}</span>
-              <IconCircleFilled
-                className={cn(
-                  "ml-auto size-3 text-primary opacity-0 transition-opacity",
-                  currentLocale === language.value && "opacity-100"
-                )}
-              />
-            </DropdownMenuItem>
-          );
-        })}
+      <DropdownMenuContent
+        align="end"
+        className="w-max max-w-[calc(100vw-2rem)]"
+      >
+        <DropdownMenuGroup>
+          {languages.map((language) => {
+            const Flag = flagMap[language.value];
+            return (
+              <DropdownMenuItem
+                className="cursor-pointer"
+                disabled={isPending}
+                key={language.value}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleChangeLocale(language.value);
+                }}
+                onFocus={() => handlePrefetch(language.value)}
+                onMouseEnter={() => handlePrefetch(language.value)}
+              >
+                <Flag className="size-4 shrink-0" />
+                <span className="truncate">{language.label}</span>
+                <IconCircleFilled
+                  className={cn(
+                    "ml-auto size-3 text-primary opacity-0 transition-opacity",
+                    currentLocale === language.value && "opacity-100"
+                  )}
+                />
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -137,20 +144,25 @@ export function Theme({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant={variant}>
-          <HugeIcons icon={PaintBoardIcon} />
-          <span className="truncate">{t("theme")}</span>
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button variant={variant}>
+            <HugeIcons icon={PaintBoardIcon} />
+            <span className="truncate">{t("theme")}</span>
+          </Button>
+        }
+      />
 
-      <DropdownMenuContent align="end" className="max-h-96">
+      <DropdownMenuContent
+        align="end"
+        className="max-h-96 w-max max-w-[calc(100vw-2rem)]"
+      >
         <DropdownMenuGroup>
           {themes.slice(0, BASE_THEMES_COUNT).map((theme) => (
             <DropdownMenuItem
               className="cursor-pointer"
               key={theme.value}
-              onSelect={() => setTheme(theme.value)}
+              onClick={() => setTheme(theme.value)}
             >
               <HugeIcons className="shrink-0" icon={theme.icon} />
               <span className="truncate">{t(theme.value)}</span>
@@ -166,7 +178,7 @@ export function Theme({
             <DropdownMenuItem
               className="cursor-pointer"
               key={theme.value}
-              onSelect={(event) => {
+              onClick={(event) => {
                 event.stopPropagation();
                 setTheme(theme.value);
               }}

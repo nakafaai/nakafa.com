@@ -12,3 +12,14 @@ export const CONTENT_ANALYTICS_PARTITIONS = Array.from(
   { length: CONTENT_ANALYTICS_PARTITION_COUNT },
   (_, partition) => partition
 );
+
+/** Public Nakafa website origin used for canonical content URLs. */
+export const NAKAFA_CONTENT_BASE_URL = "https://nakafa.com";
+
+/** Public content sections persisted in the Convex content search read model. */
+export const NAKAFA_CONTENT_SECTIONS = [
+  "articles",
+  "subject",
+  "exercises",
+  "quran",
+] as const;

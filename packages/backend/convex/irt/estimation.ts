@@ -23,18 +23,19 @@ export interface Response {
   params: ItemParameters;
 }
 
-const THETA_MIN = IRT_ESTIMATION_THETA_MIN;
-const THETA_MAX = IRT_ESTIMATION_THETA_MAX;
-const THETA_POINTS = IRT_ESTIMATION_THETA_POINTS;
 const THETA_GRID = getThetaGrid();
 
 /** Build the fixed theta grid used by every EAP integration pass. */
 function getThetaGrid(): number[] {
   const grid: number[] = [];
-  const step = (THETA_MAX - THETA_MIN) / (THETA_POINTS - 1);
-  for (let i = 0; i < THETA_POINTS; i++) {
-    grid.push(THETA_MIN + i * step);
+  const step =
+    (IRT_ESTIMATION_THETA_MAX - IRT_ESTIMATION_THETA_MIN) /
+    (IRT_ESTIMATION_THETA_POINTS - 1);
+
+  for (let i = 0; i < IRT_ESTIMATION_THETA_POINTS; i++) {
+    grid.push(IRT_ESTIMATION_THETA_MIN + i * step);
   }
+
   return grid;
 }
 

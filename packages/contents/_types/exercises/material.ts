@@ -1,21 +1,25 @@
-import * as z from "zod";
+import { Schema } from "effect";
 
-export const ExercisesMaterialListSchema = z.array(
-  z.object({
-    title: z.string(),
-    description: z.string().optional(),
-    href: z.string(),
-    items: z.array(
-      z.object({
-        title: z.string(),
-        href: z.string(),
-      })
-    ),
-  })
-);
-export type ExercisesMaterialList = z.infer<typeof ExercisesMaterialListSchema>;
+const ExercisesMaterialListItemSchema = Schema.Struct({
+  title: Schema.String,
+  description: Schema.optional(Schema.String),
+  href: Schema.String,
+  items: Schema.Array(
+    Schema.Struct({
+      title: Schema.String,
+      href: Schema.String,
+    }).pipe(Schema.mutable)
+  ).pipe(Schema.mutable),
+}).pipe(Schema.mutable);
 
-export const ExercisesMaterialSchema = z.enum([
+export const ExercisesMaterialListSchema = Schema.Array(
+  ExercisesMaterialListItemSchema
+).pipe(Schema.mutable);
+export type ExercisesMaterialList = Schema.Schema.Type<
+  typeof ExercisesMaterialListSchema
+>;
+
+export const EXERCISES_MATERIALS = [
   "mathematics",
   "quantitative-knowledge",
   "mathematical-reasoning",
@@ -24,5 +28,9 @@ export const ExercisesMaterialSchema = z.enum([
   "english-language",
   "general-knowledge",
   "reading-and-writing-skills",
-]);
-export type ExercisesMaterial = z.infer<typeof ExercisesMaterialSchema>;
+] as const;
+
+export const ExercisesMaterialSchema = Schema.Literal(...EXERCISES_MATERIALS);
+export type ExercisesMaterial = Schema.Schema.Type<
+  typeof ExercisesMaterialSchema
+>;

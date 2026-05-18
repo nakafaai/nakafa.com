@@ -29,7 +29,7 @@ import { slugify } from "@repo/design-system/lib/utils";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { notFound, redirect } from "next/navigation";
@@ -188,12 +188,13 @@ export default async function Page({
     notFound();
   }
 
-  const contentMetadata = ContentMetadataSchema.safeParse(
+  const parsedMetadata = Schema.decodeUnknownOption(ContentMetadataSchema)(
     content?.metadata
-  ).data;
-  if (!contentMetadata) {
+  );
+  if (Option.isNone(parsedMetadata)) {
     notFound();
   }
+  const contentMetadata = parsedMetadata.value;
 
   const [tCommon, tSubject] = await Promise.all([
     getTranslations("Common"),

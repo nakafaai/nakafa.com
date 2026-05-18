@@ -10,10 +10,6 @@ import {
   InvalidPathError,
   MetadataParseError,
 } from "@repo/contents/_shared/error";
-import {
-  ContentMetadataSchema,
-  ReferenceSchema,
-} from "@repo/contents/_types/content";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -1224,7 +1220,7 @@ describe("parseReferences", () => {
     });
 
     it("should handle references array as non-array by returning error", async () => {
-      const rawReferences = "not an array" as unknown as unknown[];
+      const rawReferences = "not an array";
 
       const result = await Effect.runPromise(
         Effect.match(parseReferences(rawReferences), {
@@ -1536,13 +1532,7 @@ describe("parseModuleMetadata", () => {
     expect(result).toBeInstanceOf(Error);
   });
 
-  it("should stringify non-Error parse failures", async () => {
-    const parseSpy = vi
-      .spyOn(ContentMetadataSchema, "parse")
-      .mockImplementation(
-        () => Function("throw 'plain metadata failure'")() as never
-      );
-
+  it("should report metadata parse failures", async () => {
     const result = await Effect.runPromise(
       Effect.match(
         parseModuleMetadata({
@@ -1550,7 +1540,7 @@ describe("parseModuleMetadata", () => {
             title: "Valid",
             description: "Valid",
             authors: [{ name: "Author" }],
-            date: "01/01/2024",
+            date: "not-a-date",
           },
         }),
         {
@@ -1560,20 +1550,13 @@ describe("parseModuleMetadata", () => {
       )
     );
 
-    expect(parseSpy).toHaveBeenCalled();
     expect(result).toBeInstanceOf(MetadataParseError);
     expect((result as MetadataParseError).reason).toContain(
-      "plain metadata failure"
+      "Invalid content date"
     );
   });
 
-  it("should stringify non-Error reference parse failures", async () => {
-    const arraySpy = vi.spyOn(ReferenceSchema, "array").mockReturnValue({
-      parse() {
-        return Function("throw 'plain reference failure'")() as never;
-      },
-    } as never);
-
+  it("should report reference parse failures", async () => {
     const result = await Effect.runPromise(
       Effect.match(parseReferences([{ title: "Example" }]), {
         onSuccess: () => null,
@@ -1581,8 +1564,7 @@ describe("parseModuleMetadata", () => {
       })
     );
 
-    expect(arraySpy).toHaveBeenCalled();
     expect(result).toBeInstanceOf(Error);
-    expect((result as Error).message).toContain("plain reference failure");
+    expect((result as Error).message).toContain("Failed to parse references");
   });
 });

@@ -73,7 +73,10 @@ const SheetConversation = memo(() => {
   const messages = useChat((state) => state.chat.messages);
   const setText = useAi((state) => state.setText);
 
-  const user = useUser((state) => state.user);
+  const { isPending: isUserPending, user } = useUser((state) => ({
+    isPending: state.isPending,
+    user: state.user,
+  }));
   const { sendMessage, status, stop } = useChat((state) => state.chat);
 
   /** Sends a message or stops the current stream from the sheet input. */
@@ -84,6 +87,10 @@ const SheetConversation = memo(() => {
     }
 
     if (!message.text?.trim()) {
+      return;
+    }
+
+    if (isUserPending) {
       return;
     }
 
@@ -123,7 +130,7 @@ const SheetConversation = memo(() => {
       </Conversation>
 
       <SheetInput
-        disabled={status === "submitted"}
+        disabled={status === "submitted" || isUserPending}
         key="ai-sheet-input"
         onSubmit={handleSubmit}
         status={status}

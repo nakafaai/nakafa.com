@@ -26,11 +26,10 @@ export function Graph(
 
   // Diagonal 2 (Top-Right to Bottom-Left)
   // Angle is 40 degrees
-  const d2Angle = ANGLE;
   const d2PointsWithCenter = [
-    { x: LENGTH * Math.cos(d2Angle), y: LENGTH * Math.sin(d2Angle), z: 0 },
+    { x: LENGTH * Math.cos(ANGLE), y: LENGTH * Math.sin(ANGLE), z: 0 },
     { x: 0, y: 0, z: 0 },
-    { x: -LENGTH * Math.cos(d2Angle), y: -LENGTH * Math.sin(d2Angle), z: 0 },
+    { x: -LENGTH * Math.cos(ANGLE), y: -LENGTH * Math.sin(ANGLE), z: 0 },
   ];
 
   const refinedData: ComponentProps<typeof LineEquation>["data"] = [

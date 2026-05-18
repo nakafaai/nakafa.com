@@ -1,6 +1,6 @@
 {
   "name": "nakafa",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "license": "SEE LICENSE IN LICENSE",
   "bin": {
@@ -15,12 +15,12 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev --filter=www --filter=@repo/backend",
-    "dev:web": "turbo run dev --filter=www --filter=@repo/backend",
+    "dev": "turbo run dev --filter=www --filter=@repo/backend --filter=cas",
+    "dev:web": "turbo run dev --filter=www --filter=@repo/backend --filter=cas",
     "dev:all": "turbo run dev",
     "start": "turbo run start",
-    "lint": "ultracite check",
-    "format": "ultracite fix",
+    "lint": "ultracite check && turbo run lint --filter=cas",
+    "format": "ultracite fix && turbo run format --filter=cas",
     "format:doctor": "ultracite doctor",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
@@ -28,34 +28,34 @@
     "test:coverage": "turbo run test:coverage",
     "analyze": "turbo run analyze",
     "translate": "turbo run translate",
-    "boundaries": "turbo run boundaries",
+    "boundaries": "turbo boundaries",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "bump-deps": "pnpm dlx npm-check-updates --deep -u -x recharts,better-auth",
+    "bump-deps": "pnpm dlx npm-check-updates --deep -u -x recharts,better-auth,@modelcontextprotocol/sdk,date-fns && turbo run bump-deps --filter=cas",
     "bump-ui": "pnpm dlx shadcn@latest add --all --overwrite -c packages/design-system",
-    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/*/.turbo packages/*/.turbo .turbo .next apps/*/.next apps/*/.react-email packages/*/.react-email coverage apps/*/coverage packages/*/coverage",
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/*/.cache packages/*/.cache apps/*/.turbo packages/*/.turbo apps/*/.ruff_cache apps/*/.pytest_cache apps/*/.venv .turbo .next apps/*/.next apps/*/.react-email packages/*/.react-email coverage apps/*/coverage packages/*/coverage && find apps packages -name __pycache__ -type d -prune -exec rm -rf {} +",
     "clean:ts": "find . -name '*.tsbuildinfo' -type f -delete && find . -name 'tsconfig.tsbuildinfo' -type f -delete",
     "deps-check-www": "cd apps/www && depcheck --ignore-dirs=node_modules || true",
     "deps-check-api": "cd apps/api && depcheck --ignore-dirs=node_modules || true",
     "deps-check-mcp": "cd apps/mcp && depcheck --ignore-dirs=node_modules || true"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.14",
+    "@biomejs/biome": "2.4.15",
     "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.31.0",
-    "@effect/language-service": "^0.85.1",
+    "@effect/language-service": "^0.86.1",
     "@repo/typescript-config": "workspace:*",
-    "@turbo/gen": "^2.9.10",
-    "@types/node": "^25.6.1",
+    "@turbo/gen": "^2.9.14",
+    "@types/node": "^25.8.0",
     "depcheck": "^1.4.7",
     "tsup": "^8.5.1",
-    "turbo": "^2.9.10",
+    "turbo": "^2.9.14",
     "typescript": "^6.0.3",
-    "ultracite": "^7.6.3"
+    "ultracite": "^7.7.0"
   },
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@11.0.8",
+  "packageManager": "pnpm@11.1.2",
   "type": "module"
 }

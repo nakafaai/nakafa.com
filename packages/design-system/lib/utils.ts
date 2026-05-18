@@ -49,17 +49,6 @@ export function removeLeadingSlash(path: string): string {
   return path.startsWith("/") ? path.slice(1) : path;
 }
 
-import { keys as coreKeys } from "@repo/next-config/keys";
-
-/**
- * Gets the app URL
- * @returns The app URL, defaults to https://nakafa.com
- */
-export function getAppUrl(): string {
-  const { NEXT_PUBLIC_APP_URL } = coreKeys();
-  return NEXT_PUBLIC_APP_URL ?? "https://nakafa.com";
-}
-
 /**
  * Slugifies a text
  * @param text - The text to slugify

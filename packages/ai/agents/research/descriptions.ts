@@ -1,155 +1,150 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
 
-export function nakafaWebSearch() {
-  return createPrompt({
-    taskContext: `
+export const nakafaWebSearch = createPrompt({
+  taskContext: `
       # webSearch Tool
 
-      Use this tool to search the web for up-to-date information and as universal fallback for ANY topic when Nakafa content is insufficient.
+      Use this tool to search the web for up-to-date information and source content when Nakafa content is insufficient.
       The tool uses Mendable's Firecrawl API under the hood.
-      Use exactly the citation field for inline citations as LINKS (not images).
-      Write inline citations before the period at the end of every sentence.
-      CRITICAL: Always use link markdown syntax [text](url), NEVER use image markdown syntax ![alt](url).
     `,
 
-    toolUsageGuidelines: `
-      ## When to use this tool
+  toolUsageGuidelines: `
+      # Tool Usage Guidelines
 
-      1. The user asks to search the web for up-to-date information
-      2. You want to search the web for up-to-date information
+      ## Use When
 
-      ## When NOT to use this tool
+      The task needs evidence beyond Nakafa content:
+      - up-to-date external information.
+      - official documentation.
+      - source-owned evidence.
+      - current facts.
+      - corroboration.
 
-      Skip using this tool when:
+      ## Skip When
 
-      1. You have enough information from Nakafa content, typically from getContent tool
-      2. The user asks to search the web for up-to-date information but you already have the information
+      You already have enough source-backed information from:
+      - Nakafa content.
+      - current-page content.
+      - collected research evidence.
 
-      ## webSearch tool capabilities
+      ## Capabilities
 
-      After searching the web, the webSearch allows you to:
-
-      - Explain the content to the user in a way that is easy to understand
-      - Use exactly the citation field for inline citations as LINKS before the period at the end of every sentence
-      - IMPORTANT: Citations must be links [text](url), NOT images ![alt](url)
+      - Search the web for source titles, URLs, descriptions, and relevant content.
+      - Use the returned source metadata as citation data
+      - Keep source titles and URLs separate from finding prose.
     `,
 
-    detailedTaskInstructions: `
+  detailedTaskInstructions: `
       ## Best Practices
 
+      - Use returned titles and URLs as citation data for structured research findings
+      - Preserve official-source, domain, URL, and recency constraints from the user task
+      - Generate concise search-engine queries; do not pass the raw user prompt as a search query
+      - Keep task-relevant user-provided strings for:
+        - named products, APIs, libraries, and features
+        - versions, domains, and URLs
+        - source constraints
+        - document titles
+      - Always set sourcePreference
+      - Use primary when the task asks for:
+        - source-owned evidence
+        - first-party evidence
+        - maintainer or vendor evidence
+        - standards-body evidence
+        - paper-author evidence
+        - primary or official evidence in any language
+      - Use any when broader credible sources are acceptable
+      - For official documentation requests, include the exact named source and official domain in the queries
+      - Do not broaden a specific documentation request into a generic industry trend search
       - Search the web for up-to-date information
-      - Explain the content to the user in a way that is easy to understand
-      - Use exactly the citation field for inline citations as LINKS (not images)
-      - Write inline citations before the period at the end of every sentence
-      - Always use link syntax [text](url), NEVER image syntax ![alt](url)
+      - Extract source-backed facts, data, and insights
+      - Preserve source titles and URLs for the structured citations field
 
-      ## CRITICAL: Temporal Context in Search Queries
+      ## Temporal Context in Search Queries
 
-      ALWAYS include date/time context in search queries:
+      Include date/time context in search queries:
 
-      - For current events: "latest", "${new Date().getFullYear()}", "today", "current", "recent"
+      - For current events:
+        - use the actual current date/year from the agent context
+        - include words like "latest", "today", "current", or "recent"
       - For historical info: specific years or date ranges
-      - For time-sensitive topics: "newest", "updated", "${new Date().getFullYear()}"
+      - For time-sensitive topics:
+        - use the actual current date/year from the agent context
+        - include words like "newest", "updated", or "current"
       - NO TEMPORAL ASSUMPTIONS: Never assume time periods - always be explicit about dates/years
 
       <example>
-        Query: "latest AI news ${new Date().getFullYear()}"
+        Current date: May 15, 2026
+        Queries: ["latest AI news 2026"]
       </example>
 
       <example>
-        Query: "current stock prices today"
+        Current date: May 15, 2026
+        Queries: ["current stock prices May 15 2026"]
       </example>
 
       <example>
-        Query: "recent developments in ${new Date().getFullYear()}"
+        Current date: May 15, 2026
+        Queries: ["recent developments 2026"]
       </example>
     `,
 
-    examples: `
-      ## Examples of When to Use This Tool
+  examples: `
+      ## Examples
 
       <example>
         User: what is the latest news about the stock market?
-        Assistant: I'll find the latest news about the stock market for you.
         *Calls webSearch tool*
       </example>
 
-      ## Examples of how to write inline citations
+      ## Citation data
 
-      <good-example>
-        DO write citations as links [text](url):
-        Assistant: The stock market is down today [source](https://www.google.com).
-      </good-example>
-
-      <bad-example>
-        DON'T write citations as images ![alt](url):
-        Assistant: The stock market is down today ![source](https://www.google.com).
-      </bad-example>
+      Use returned source titles and URLs as citation data for structured findings.
     `,
+});
 
-    finalRequest: `
-      ## Summary
-
-      Use webSearch tool when the user asks to search the web for up-to-date information.
-      Treat the content as a source of information to explain the content to the user.
-      Write inline citations as LINKS before the period at the end of every sentence.
-      NEVER use image markdown syntax ![alt](url) for citations - always use link syntax [text](url).
-    `,
-  });
-}
-
-export function nakafaScrape() {
-  return createPrompt({
-    taskContext: `
+export const nakafaScrape = createPrompt({
+  taskContext: `
       # scrape Tool
 
-      Use this tool to scrape a URL and return the content. Use this for specific URLs to get the content of the url.
+      Use this tool to scrape a specific URL and return the content when search evidence is missing or weak.
       The tool uses Mendable's Firecrawl API under the hood.
     `,
 
-    toolUsageGuidelines: `
-      ## When to use this tool
+  toolUsageGuidelines: `
+      # Tool Usage Guidelines
 
-      1. The user asks to scrape a URL or asks you to explain the content of the url
-      2. You want to scrape a URL to get the content of the url
+      ## Use When
 
-      ## When NOT to use this tool
+      Use when:
+      - selected search evidence found a relevant URL but did not return enough content to answer confidently.
+      - a selected search source needs direct inspection before synthesis.
 
-      Skip using this tool when:
+      ## Skip When
 
-      1. The user asks to scrape a URL or asks you to explain the content of the url but you do not have the URL
-      2. The URL is not related to the user's question
+      You do not have a specific related URL to inspect.
 
-      ## scrape tool capabilities
+      ## Capabilities
 
-      After scraping the URL, the scrape allows you to:
-
-      - Explain the content to the user in a way that is easy to understand
+      Read a selected source URL so findings can stay tied to direct source content.
     `,
 
-    detailedTaskInstructions: `
+  detailedTaskInstructions: `
       ## Best Practices
 
-      - Scrape the URL to get the content of the url
-      - Explain the content to the user in a way that is easy to understand
-      - If the content is not related to the user's question, tell the users that the content is not related to the user's question
+      - Scrape a selected URL when prior search content is too weak
+      - Keep findings tied to the correct source when inspecting multiple selected URLs
+      - Prefer primary documentation, standards, papers, and vendor pages over social/video/listicle pages
+      - If the content is not related to the user's question, state that limitation
     `,
 
-    examples: `
-      ## Examples of When to Use This Tool
+  examples: `
+      ## Examples
 
       <example>
-        User: What is this about? (SOME URL https://...)
-        Assistant: Let me check the content for you.
+        User: Compare the current official docs for this framework.
+        Assistant: The web search result needs direct source reading.
         *Calls scrape tool*
       </example>
     `,
-
-    finalRequest: `
-      ## Summary
-
-      Use scrape tool when the user asks to scrape a URL or asks you to explain the content of the url.
-      Treat the content as a source of information to explain the content to the user.
-    `,
-  });
-}
+});

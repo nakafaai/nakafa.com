@@ -3,8 +3,8 @@ import {
   type TryoutProduct,
   tryoutProductPolicies,
 } from "@repo/backend/convex/tryouts/products";
+import { parseExercisesMaterial } from "@repo/contents/_lib/exercises/route";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
-import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { preloadedQueryResult, preloadQuery } from "convex/nextjs";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -124,13 +124,9 @@ export async function TryoutPartBody({
     notFound();
   }
 
-  const material = ExercisesMaterialSchema.safeParse(contentPart.material);
-  const partIcon = material.success
-    ? getMaterialIcon(material.data)
-    : undefined;
-  const partLabel = material.success
-    ? tExercises(material.data)
-    : contentPart.partKey;
+  const material = parseExercisesMaterial(contentPart.material);
+  const partIcon = material ? getMaterialIcon(material) : undefined;
+  const partLabel = material ? tExercises(material) : contentPart.partKey;
   const timeLimitSeconds = tryoutProductPolicies[
     product
   ].getPartTimeLimitSeconds(contentPart.questionCount);

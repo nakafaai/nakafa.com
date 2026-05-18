@@ -1,5 +1,11 @@
 # @repo/utilities
 
+## 0.2.0
+
+### Minor Changes
+
+- [`aa179b9`](https://github.com/nakafaai/nakafa.com/commit/aa179b9e3a196cc6117d997246a150e1561b7442) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Add exercise tracking, get results, timer
+
 ## 0.1.0
 
 ### Minor Changes

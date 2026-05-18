@@ -1,21 +1,42 @@
-import { vercel } from "@t3-oss/env-core/presets-zod";
 import { createEnv } from "@t3-oss/env-nextjs";
-import * as z from "zod";
+import { Schema } from "effect";
+
+const optionalStringSchema = Schema.standardSchemaV1(
+  Schema.UndefinedOr(Schema.String)
+);
+const requiredStringSchema = Schema.standardSchemaV1(Schema.String);
+const optionalUrlSchema = Schema.standardSchemaV1(
+  Schema.UndefinedOr(
+    Schema.String.pipe(
+      Schema.filter((value) => URL.canParse(value), {
+        message: () => "Expected a valid URL.",
+      })
+    )
+  )
+);
+const requiredUrlSchema = Schema.standardSchemaV1(
+  Schema.String.pipe(
+    Schema.filter((value) => URL.canParse(value), {
+      message: () => "Expected a valid URL.",
+    })
+  )
+);
 
 export const keys = () =>
   createEnv({
-    extends: [vercel()],
     server: {
-      ANALYZE: z.string().optional(),
+      ANALYZE: optionalStringSchema,
       // Added by Vercel
-      NEXT_RUNTIME: z.enum(["nodejs", "edge"]).optional(),
-      INTERNAL_CONTENT_API_KEY: z.string(),
+      NEXT_RUNTIME: Schema.standardSchemaV1(
+        Schema.UndefinedOr(Schema.Literal("nodejs", "edge"))
+      ),
+      INTERNAL_CONTENT_API_KEY: requiredStringSchema,
     },
     client: {
-      NEXT_PUBLIC_VERSION: z.string(),
-      NEXT_PUBLIC_APP_URL: z.url(),
-      NEXT_PUBLIC_API_URL: z.url().optional(),
-      NEXT_PUBLIC_MCP_URL: z.url(),
+      NEXT_PUBLIC_VERSION: requiredStringSchema,
+      NEXT_PUBLIC_APP_URL: requiredUrlSchema,
+      NEXT_PUBLIC_API_URL: optionalUrlSchema,
+      NEXT_PUBLIC_MCP_URL: requiredUrlSchema,
     },
     runtimeEnv: {
       INTERNAL_CONTENT_API_KEY: process.env.INTERNAL_CONTENT_API_KEY,

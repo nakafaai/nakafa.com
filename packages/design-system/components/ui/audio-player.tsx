@@ -621,17 +621,19 @@ export function AudioPlayerSpeed({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          aria-label="Playback speed"
-          className={cn(className)}
-          size={size}
-          variant={variant}
-          {...props}
-        >
-          <HugeIcons className="size-4" icon={Settings01Icon} />
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            aria-label="Playback speed"
+            className={cn(className)}
+            size={size}
+            variant={variant}
+            {...props}
+          >
+            <HugeIcons className="size-4" icon={Settings01Icon} />
+          </Button>
+        }
+      />
       <DropdownMenuContent align="end" className="min-w-30">
         {speeds.map((speed) => (
           <DropdownMenuItem

@@ -1,102 +1,183 @@
-import { nakafaScrape } from "@repo/ai/agents/research/descriptions";
 import {
+  ResearchScrapeError,
   type ScrapeOutput,
-  scrapeInputSchema,
 } from "@repo/ai/agents/research/schema";
+import { fetchSourceMarkdown } from "@repo/ai/agents/research/tools/markdown";
+import { getDocumentMetadata } from "@repo/ai/agents/research/tools/metadata";
+import { assertPublicResearchUrl } from "@repo/ai/agents/research/tools/safety";
 import { firecrawlApp } from "@repo/ai/config/firecrawl";
-import { selectRelevantContent } from "@repo/ai/lib/content-selection";
-import { dedentString } from "@repo/ai/lib/utils";
+import { selectRelevantContent } from "@repo/ai/lib/selection";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { tool, type UIMessageStreamWriter } from "ai";
-import * as z from "zod";
+import type { UIMessageStreamWriter } from "ai";
+import dedent from "dedent";
+import { Effect, Either } from "effect";
 
-interface Params {
+interface ScrapeUrlParams {
+  maxLength?: number;
+  selectionQuery?: string;
+  toolCallId: string;
+  url: string;
   writer: UIMessageStreamWriter<MyUIMessage>;
 }
 
-export const createScrape = ({ writer }: Params) =>
-  tool({
-    description: nakafaScrape(),
-    inputSchema: scrapeInputSchema,
-    outputSchema: z.string(),
-    execute: async ({ urlToCrawl }, { toolCallId }) => {
-      const url = urlToCrawl;
+/**
+ * Scrapes one URL and returns structured evidence for citation checks.
+ */
+export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
+  maxLength = 3000,
+  selectionQuery,
+  toolCallId,
+  url,
+  writer,
+}: ScrapeUrlParams) {
+  yield* Effect.sync(() =>
+    writer.write({
+      id: toolCallId,
+      type: "data-scrape-url",
+      data: { url, status: "loading", content: "" },
+    })
+  );
 
+  const safeUrl = yield* Effect.either(assertPublicResearchUrl(url));
+
+  if (Either.isLeft(safeUrl)) {
+    const error = safeUrl.left.message;
+
+    yield* Effect.sync(() =>
       writer.write({
         id: toolCallId,
         type: "data-scrape-url",
-        data: { url, status: "loading", content: "" },
-      });
+        data: {
+          url,
+          status: "error",
+          content: "",
+          error,
+        },
+      })
+    );
 
-      try {
-        const response = await firecrawlApp.scrape(url, {
-          formats: ["markdown"],
-          timeout: 5000,
-        });
+    return { data: { url, content: "" }, error } satisfies ScrapeOutput;
+  }
 
-        const markdown = response.markdown;
+  const publicUrl = safeUrl.right.publicUrl;
 
-        if (!markdown) {
-          writer.write({
-            id: toolCallId,
-            type: "data-scrape-url",
-            data: {
-              url,
-              status: "error",
-              content: "",
-              error: "No content found.",
-            },
-          });
-
-          return createOutput({
-            output: { data: { url, content: "" }, error: "No content found." },
-          });
-        }
-
-        const processedContent = selectRelevantContent({
-          content: markdown,
-          maxLength: 3000,
-        });
-
-        writer.write({
-          id: toolCallId,
-          type: "data-scrape-url",
-          data: { url, status: "done", content: processedContent },
-        });
-
-        return createOutput({
-          output: {
-            data: {
-              url,
-              content: processedContent,
-            },
-            error: undefined,
-          },
-        });
-      } catch (error) {
-        const errorMessage = `Failed to crawl: ${error}`;
-        writer.write({
-          id: toolCallId,
-          type: "data-scrape-url",
-          data: {
-            url,
-            status: "error",
-            content: "",
-            error: errorMessage,
-          },
-        });
-
-        return createOutput({
-          output: { data: { url, content: "" }, error: errorMessage },
-        });
-      }
+  const { nativeMarkdown, scrapeResult } = yield* Effect.all(
+    {
+      nativeMarkdown: safeUrl.right.nativeFetchUrl
+        ? fetchSourceMarkdown(safeUrl.right.nativeFetchUrl)
+        : Effect.succeed(undefined),
+      scrapeResult: Effect.tryPromise({
+        try: () =>
+          firecrawlApp.scrape(publicUrl, {
+            formats: ["markdown"],
+            timeout: 5000,
+          }),
+        catch: (error) =>
+          new ResearchScrapeError({ message: `Failed to crawl: ${error}` }),
+      }).pipe(
+        Effect.match({
+          onFailure: (error) => ({ error: error.message }),
+          onSuccess: (response) => ({ response }),
+        })
+      ),
     },
+    { concurrency: "unbounded" }
+  );
+
+  if ("error" in scrapeResult && !nativeMarkdown) {
+    yield* Effect.sync(() =>
+      writer.write({
+        id: toolCallId,
+        type: "data-scrape-url",
+        data: {
+          url: publicUrl,
+          status: "error",
+          content: "",
+          error: scrapeResult.error,
+        },
+      })
+    );
+
+    return {
+      data: { url: publicUrl, content: "" },
+      error: scrapeResult.error,
+    } satisfies ScrapeOutput;
+  }
+
+  let markdown = nativeMarkdown;
+  let metadata = {};
+
+  if ("response" in scrapeResult) {
+    markdown ??= scrapeResult.response.markdown;
+    metadata = getDocumentMetadata({
+      metadata: scrapeResult.response.metadata,
+    });
+  }
+
+  if (!markdown) {
+    yield* Effect.sync(() =>
+      writer.write({
+        id: toolCallId,
+        type: "data-scrape-url",
+        data: {
+          url: publicUrl,
+          status: "error",
+          content: "",
+          ...metadata,
+          error: "No content found.",
+        },
+      })
+    );
+
+    return {
+      data: { url: publicUrl, content: "", ...metadata },
+      error: "No content found.",
+    } satisfies ScrapeOutput;
+  }
+
+  const processedContent = selectRelevantContent({
+    content: markdown,
+    maxLength,
+    query: selectionQuery,
   });
 
-function createOutput({ output }: { output: ScrapeOutput }): string {
-  return dedentString(`
+  yield* Effect.sync(() =>
+    writer.write({
+      id: toolCallId,
+      type: "data-scrape-url",
+      data: {
+        url: publicUrl,
+        status: "done",
+        content: processedContent,
+        ...metadata,
+      },
+    })
+  );
+
+  return {
+    data: {
+      url: publicUrl,
+      content: processedContent,
+      ...metadata,
+    },
+    error: undefined,
+  } satisfies ScrapeOutput;
+});
+
+/** Checks whether a scrape output can be cited by synthesis. */
+export function isSuccessfulScrapeOutput(output: ScrapeOutput) {
+  return !output.error && output.data.content.trim().length > 0;
+}
+
+/**
+ * Formats scrape output as markdown for the research agent.
+ */
+export function formatScrapeOutput(output: ScrapeOutput) {
+  return dedent(`
     # Scrape Result
     - URL: ${output.data.url}
+    ${output.data.title ? `- Title: ${output.data.title}` : ""}
+    ${output.data.description ? `- Description: ${output.data.description}` : ""}
     ${output.error ? `- Error: ${output.error}` : ""}
 
     ## Content

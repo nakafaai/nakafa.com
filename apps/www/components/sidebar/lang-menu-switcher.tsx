@@ -3,6 +3,7 @@
 import { useMediaQuery } from "@mantine/hooks";
 import {
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { cn } from "@repo/design-system/lib/utils";
@@ -65,29 +66,35 @@ export function LangMenuSwitcher() {
   }
 
   return (
-    <DropdownMenuContent align="end" side={isMobile ? "top" : "right"}>
-      {languages.map((language) => {
-        const Flag = flagMap[language.value];
-        return (
-          <DropdownMenuItem
-            className="cursor-pointer"
-            disabled={isPending}
-            key={language.value}
-            onFocus={() => handlePrefetch(language.value)}
-            onMouseEnter={() => handlePrefetch(language.value)}
-            onSelect={() => handleChangeLocale(language.value)}
-          >
-            <Flag className="size-4 shrink-0" />
-            <span className="truncate">{language.label}</span>
-            <IconCircleFilled
-              className={cn(
-                "ml-auto size-3 text-primary opacity-0 transition-opacity",
-                currentLocale === language.value && "opacity-100"
-              )}
-            />
-          </DropdownMenuItem>
-        );
-      })}
+    <DropdownMenuContent
+      align="end"
+      className="w-max max-w-[calc(100vw-2rem)]"
+      side={isMobile ? "top" : "right"}
+    >
+      <DropdownMenuGroup>
+        {languages.map((language) => {
+          const Flag = flagMap[language.value];
+          return (
+            <DropdownMenuItem
+              className="cursor-pointer"
+              disabled={isPending}
+              key={language.value}
+              onClick={() => handleChangeLocale(language.value)}
+              onFocus={() => handlePrefetch(language.value)}
+              onMouseEnter={() => handlePrefetch(language.value)}
+            >
+              <Flag className="size-4 shrink-0" />
+              <span className="truncate">{language.label}</span>
+              <IconCircleFilled
+                className={cn(
+                  "ml-auto size-3 text-primary opacity-0 transition-opacity",
+                  currentLocale === language.value && "opacity-100"
+                )}
+              />
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuGroup>
     </DropdownMenuContent>
   );
 }

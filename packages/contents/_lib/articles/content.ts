@@ -34,7 +34,7 @@ export function getArticleReferences(filePath: string) {
     "articles",
     /* istanbul ignore next: Vitest/Vite cannot execute nested variable dynamic imports here. */
     async (relativePath) =>
-      await import(`../../articles/${relativePath}/ref.ts`),
+      await import(`@repo/contents/articles/${relativePath}/ref.ts`),
     filePath
   );
 }

@@ -1,10 +1,11 @@
 import { keys as aiKeys } from "@repo/ai/keys";
 import { keys as analyticsKeys } from "@repo/analytics/keys";
 import { keys as backendKeys } from "@repo/backend/keys";
+import { keys as mathKeys } from "@repo/math/keys";
 import { keys as core } from "@repo/next-config/keys";
 import { createEnv } from "@t3-oss/env-nextjs";
 
 export const env = createEnv({
-  extends: [core(), aiKeys(), analyticsKeys(), backendKeys()],
+  extends: [core(), aiKeys(), analyticsKeys(), backendKeys(), mathKeys()],
   runtimeEnv: {},
 });

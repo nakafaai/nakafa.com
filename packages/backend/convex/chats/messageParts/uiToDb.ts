@@ -19,6 +19,25 @@ function requirePersistableToolState(state: string): ToolState {
   }
 }
 
+/** Returns tool result provider metadata only for tool states that carry it. */
+function getToolResultProviderMetadata(part: MyUIMessagePart) {
+  if (
+    part.type !== "tool-nakafa" &&
+    part.type !== "tool-deepResearch" &&
+    part.type !== "tool-math"
+  ) {
+    return;
+  }
+
+  switch (part.state) {
+    case "output-available":
+    case "output-error":
+      return part.resultProviderMetadata;
+    default:
+      return;
+  }
+}
+
 function mapUIMessagePartToDBPart(
   part: MyUIMessagePart,
   order: number
@@ -49,38 +68,22 @@ function mapUIMessagePartToDBPart(
         fileFilename: part.filename,
         fileUrl: part.url,
       };
-    case "source-document":
-      return {
-        ...baseFields,
-        type: part.type,
-        sourceDocumentSourceId: part.sourceId,
-        sourceDocumentMediaType: part.mediaType,
-        sourceDocumentTitle: part.title,
-        sourceDocumentFilename: part.filename,
-        providerMetadata: part.providerMetadata,
-      };
-    case "source-url":
-      return {
-        ...baseFields,
-        type: part.type,
-        sourceUrlSourceId: part.sourceId,
-        sourceUrlUrl: part.url,
-        sourceUrlTitle: part.title,
-        providerMetadata: part.providerMetadata,
-      };
     case "step-start":
       return {
         ...baseFields,
         type: part.type,
       };
-    case "tool-contentAccess":
+    case "tool-nakafa":
       return {
         ...baseFields,
         type: part.type,
         toolToolCallId: part.toolCallId,
         toolState: requirePersistableToolState(part.state),
-        toolContentAccessInput: part.input?.query,
-        toolContentAccessOutput: part.output,
+        toolCallProviderMetadata: part.callProviderMetadata,
+        toolResultProviderMetadata: getToolResultProviderMetadata(part),
+        toolNakafaInput:
+          part.state === "input-streaming" ? undefined : part.input,
+        toolNakafaOutput: part.output,
         toolErrorText: part.errorText,
       };
     case "tool-deepResearch":
@@ -89,18 +92,24 @@ function mapUIMessagePartToDBPart(
         type: part.type,
         toolToolCallId: part.toolCallId,
         toolState: requirePersistableToolState(part.state),
-        toolDeepResearchInput: part.input?.query,
+        toolCallProviderMetadata: part.callProviderMetadata,
+        toolResultProviderMetadata: getToolResultProviderMetadata(part),
+        toolDeepResearchInput:
+          part.state === "input-streaming" ? undefined : part.input,
         toolDeepResearchOutput: part.output,
         toolErrorText: part.errorText,
       };
-    case "tool-mathCalculation":
+    case "tool-math":
       return {
         ...baseFields,
         type: part.type,
         toolToolCallId: part.toolCallId,
         toolState: requirePersistableToolState(part.state),
-        toolMathCalculationInput: part.input?.query,
-        toolMathCalculationOutput: part.output,
+        toolCallProviderMetadata: part.callProviderMetadata,
+        toolResultProviderMetadata: getToolResultProviderMetadata(part),
+        toolMathInput:
+          part.state === "input-streaming" ? undefined : part.input,
+        toolMathOutput: part.output,
         toolErrorText: part.errorText,
       };
     case "data-suggestions":
@@ -110,52 +119,19 @@ function mapUIMessagePartToDBPart(
         dataSuggestionsId: part.id,
         dataSuggestionsData: part.data.data,
       };
-    case "data-get-articles":
+    case "data-nakafa":
       return {
         ...baseFields,
         type: part.type,
-        dataGetArticlesId: part.id,
-        dataGetArticlesBaseUrl: part.data.baseUrl,
-        dataGetArticlesInputLocale: part.data.input.locale,
-        dataGetArticlesInputCategory: part.data.input.category,
-        dataGetArticlesArticles: part.data.articles,
-        dataGetArticlesStatus: part.data.status,
-        dataGetArticlesError: part.data.error,
+        dataNakafaId: part.id,
+        dataNakafaData: part.data,
       };
-    case "data-get-subjects":
+    case "data-math":
       return {
         ...baseFields,
         type: part.type,
-        dataGetSubjectsId: part.id,
-        dataGetSubjectsBaseUrl: part.data.baseUrl,
-        dataGetSubjectsInputLocale: part.data.input.locale,
-        dataGetSubjectsInputCategory: part.data.input.category,
-        dataGetSubjectsInputGrade: part.data.input.grade,
-        dataGetSubjectsInputMaterial: part.data.input.material,
-        dataGetSubjectsSubjects: part.data.subjects,
-        dataGetSubjectsStatus: part.data.status,
-        dataGetSubjectsError: part.data.error,
-      };
-    case "data-get-content":
-      return {
-        ...baseFields,
-        type: part.type,
-        dataGetContentId: part.id,
-        dataGetContentUrl: part.data.url,
-        dataGetContentTitle: part.data.title,
-        dataGetContentDescription: part.data.description,
-        dataGetContentStatus: part.data.status,
-        dataGetContentError: part.data.error,
-      };
-    case "data-calculator":
-      return {
-        ...baseFields,
-        type: part.type,
-        dataCalculatorId: part.id,
-        dataCalculatorOriginal: part.data.original,
-        dataCalculatorResult: part.data.result,
-        dataCalculatorStatus: part.data.status,
-        dataCalculatorError: part.data.error,
+        dataMathId: part.id,
+        dataMathData: part.data,
       };
     case "data-scrape-url":
       return {
@@ -164,6 +140,9 @@ function mapUIMessagePartToDBPart(
         dataScrapeUrlId: part.id,
         dataScrapeUrlUrl: part.data.url,
         dataScrapeUrlContent: part.data.content,
+        dataScrapeUrlTitle: part.data.title,
+        dataScrapeUrlDescription: part.data.description,
+        dataScrapeUrlFavicon: part.data.favicon,
         dataScrapeUrlStatus: part.data.status,
         dataScrapeUrlError: part.data.error,
       };
@@ -172,7 +151,8 @@ function mapUIMessagePartToDBPart(
         ...baseFields,
         type: part.type,
         dataWebSearchId: part.id,
-        dataWebSearchQuery: part.data.query,
+        dataWebSearchProvider: part.data.provider,
+        dataWebSearchQueries: part.data.queries,
         dataWebSearchSources: part.data.sources,
         dataWebSearchStatus: part.data.status,
         dataWebSearchError: part.data.error,

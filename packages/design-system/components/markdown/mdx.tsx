@@ -1,3 +1,4 @@
+import { AgentContext } from "@repo/design-system/components/markdown/agent-context";
 import { Anchor } from "@repo/design-system/components/markdown/anchor";
 import { CodeBlockMdx } from "@repo/design-system/components/markdown/code-block";
 import { Heading } from "@repo/design-system/components/markdown/heading";
@@ -89,6 +90,7 @@ export const components = {
   MathContainer,
   InlineMath,
   BlockMath,
+  AgentContext,
   table: ({ children, className, ...props }: TableProps) => (
     <Table
       className={cn("has-[tbody]:[&_thead]:border-b", className)}

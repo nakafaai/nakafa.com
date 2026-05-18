@@ -33,6 +33,7 @@ const countableTableNameValidator = literals(
   "irtScalePublicationQueue",
   "irtScaleVersions",
   "irtScaleVersionItems",
+  "contentSearch",
   "authors",
   "contentAuthors",
   "articleReferences",

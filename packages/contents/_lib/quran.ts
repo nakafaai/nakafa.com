@@ -5,10 +5,11 @@ import {
 } from "@repo/contents/_shared/error";
 import {
   type Surah,
+  SurahMetadataSchema,
   SurahSchema,
   type Verse,
 } from "@repo/contents/_types/quran";
-import { Effect, Option, pipe } from "effect";
+import { Effect, Option, pipe, Schema } from "effect";
 import type { Locale } from "next-intl";
 
 const verses = quran.flatMap((surah) => surah.verses);
@@ -31,12 +32,12 @@ export function getSurah(id: number): Effect.Effect<Surah, SurahNotFoundError> {
     }
 
     const surah = quran.find((item) => item.number === id);
-    const result = SurahSchema.safeParse(surah);
-    if (!result.success) {
+    const result = Schema.decodeUnknownOption(SurahSchema)(surah);
+    if (Option.isNone(result)) {
       return yield* Effect.fail(new SurahNotFoundError({ surahNumber: id }));
     }
 
-    return result.data;
+    return result.value;
   });
 }
 
@@ -54,9 +55,7 @@ export function getSurah(id: number): Effect.Effect<Surah, SurahNotFoundError> {
 export function validateSurahWithoutVerses(
   surah: unknown
 ): Option.Option<Omit<Surah, "verses">> {
-  return Option.fromNullable(
-    SurahSchema.omit({ verses: true }).safeParse(surah).data
-  );
+  return Schema.decodeUnknownOption(SurahMetadataSchema)(surah);
 }
 
 /**

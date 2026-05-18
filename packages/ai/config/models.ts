@@ -1,215 +1,83 @@
 import type { GatewayModelId } from "@ai-sdk/gateway";
+import type { GoogleLanguageModelOptions } from "@ai-sdk/google";
 
 /**
- * All model IDs — single source of truth.
- * The registry is derived from this tuple so MODEL_IDS is always in sync
- * and fully typed without any type assertions.
+ * User-facing Nakafa chat models.
  */
-export const MODEL_IDS = [
-  // Alibaba
-  "qwen-3-coder",
-  "qwen-3-max",
-
-  // Anthropic
-  "claude-haiku-4.5",
-  "claude-sonnet-4.5",
-
-  // DeepSeek
-  "deepseek-v3.1",
-
-  // Google
-  "gemini-2.5-flash",
-  "gemini-2.5-pro",
-  "gemini-3-flash",
-  "gemini-3.1-flash-lite",
-  "gemini-3-pro",
-  "gemini-3.1-pro",
-
-  // Meta
-  "llama-4-maverick",
-
-  // Minimax
-  "minimax-m2",
-  "minimax-m2.1",
-  "minimax-m2.5",
-
-  // MoonshotAI
-  "kimi-k2",
-  "kimi-k2-thinking",
-  "kimi-k2.5",
-
-  // OpenAI
-  "gpt-5",
-  "gpt-5-nano",
-  "gpt-5.2",
-  "gpt-oss-120b",
-
-  // XAI
-  "grok-4",
-  "grok-4.1-fast-non-reasoning",
-  "grok-4.1-fast-reasoning",
-
-  // ZAI
-  "glm-4.6",
-  "glm-4.7",
-  "glm-5",
-
-  // Meituan
-  "longcat-flash",
-] as const;
+export const MODEL_IDS = ["nakafa-lite", "nakafa-pro"] as const;
 
 export type ModelId = (typeof MODEL_IDS)[number];
 
+const interactiveProviderOptions = {
+  thinkingConfig: {
+    includeThoughts: true,
+    thinkingLevel: "high",
+  },
+} satisfies GoogleLanguageModelOptions;
+
+const fastProviderOptions = {
+  thinkingConfig: {
+    thinkingLevel: "low",
+  },
+} satisfies GoogleLanguageModelOptions;
+
 export const modelRegistry = {
-  // Alibaba
-  "qwen-3-coder": {
-    gatewayId: "alibaba/qwen3-coder",
+  "nakafa-lite": {
     credits: 2,
+    gatewayId: "google/gemini-3.1-flash-lite",
+    providerOptions: {
+      fast: fastProviderOptions,
+      interactive: interactiveProviderOptions,
+    },
   },
-  "qwen-3-max": {
-    gatewayId: "alibaba/qwen3-max",
-    credits: 3,
-  },
-
-  // Anthropic
-  "claude-haiku-4.5": {
-    gatewayId: "anthropic/claude-haiku-4.5",
-    credits: 2,
-  },
-  "claude-sonnet-4.5": {
-    gatewayId: "anthropic/claude-sonnet-4.5",
+  "nakafa-pro": {
     credits: 5,
-  },
-
-  // DeepSeek
-  "deepseek-v3.1": {
-    gatewayId: "deepseek/deepseek-v3.1",
-    credits: 2,
-  },
-
-  // Google
-  "gemini-2.5-flash": {
-    gatewayId: "google/gemini-2.5-flash",
-    credits: 1,
-  },
-  "gemini-2.5-pro": {
-    gatewayId: "google/gemini-2.5-pro",
-    credits: 3,
-  },
-  "gemini-3-flash": {
-    gatewayId: "google/gemini-3-flash",
-    credits: 1,
-  },
-  "gemini-3.1-flash-lite": {
-    gatewayId: "google/gemini-3.1-flash-lite-preview",
-    credits: 1,
-  },
-  "gemini-3-pro": {
     gatewayId: "google/gemini-3-pro-preview",
-    credits: 3,
+    providerOptions: {
+      fast: fastProviderOptions,
+      interactive: interactiveProviderOptions,
+    },
   },
-  "gemini-3.1-pro": {
-    gatewayId: "google/gemini-3.1-pro-preview",
-    credits: 4,
-  },
+} satisfies Record<
+  ModelId,
+  {
+    credits: number;
+    gatewayId: GatewayModelId;
+    providerOptions: {
+      fast: GoogleLanguageModelOptions;
+      interactive: GoogleLanguageModelOptions;
+    };
+  }
+>;
 
-  // Meta
-  "llama-4-maverick": {
-    gatewayId: "meta/llama-4-maverick",
-    credits: 1,
-  },
+export const defaultModel = "nakafa-lite" satisfies ModelId;
 
-  // Minimax
-  "minimax-m2": {
-    gatewayId: "minimax/minimax-m2",
-    credits: 1,
-  },
-  "minimax-m2.1": {
-    gatewayId: "minimax/minimax-m2.1",
-    credits: 1,
-  },
-  "minimax-m2.5": {
-    gatewayId: "minimax/minimax-m2.5",
-    credits: 2,
-  },
+/** Checks whether an untrusted string is one of the public Nakafa model IDs. */
+export function isModelId(value: string): value is ModelId {
+  return MODEL_IDS.some((modelId) => modelId === value);
+}
 
-  // MoonshotAI
-  "kimi-k2": {
-    gatewayId: "moonshotai/kimi-k2-0905",
-    credits: 1,
-  },
-  "kimi-k2-thinking": {
-    gatewayId: "moonshotai/kimi-k2-thinking",
-    credits: 3,
-  },
-  "kimi-k2.5": {
-    gatewayId: "moonshotai/kimi-k2.5",
-    credits: 2,
-  },
-
-  // OpenAI
-  "gpt-5": {
-    gatewayId: "openai/gpt-5",
-    credits: 4,
-  },
-  "gpt-5-nano": {
-    gatewayId: "openai/gpt-5-nano",
-    credits: 1,
-  },
-  "gpt-5.2": {
-    gatewayId: "openai/gpt-5.2",
-    credits: 4,
-  },
-  "gpt-oss-120b": {
-    gatewayId: "openai/gpt-oss-120b",
-    credits: 1,
-  },
-
-  // XAI
-  "grok-4": {
-    gatewayId: "xai/grok-4",
-    credits: 5,
-  },
-  "grok-4.1-fast-non-reasoning": {
-    gatewayId: "xai/grok-4.1-fast-non-reasoning",
-    credits: 1,
-  },
-  "grok-4.1-fast-reasoning": {
-    gatewayId: "xai/grok-4.1-fast-reasoning",
-    credits: 2,
-  },
-
-  // ZAI
-  "glm-4.6": {
-    gatewayId: "zai/glm-4.6",
-    credits: 2,
-  },
-  "glm-4.7": {
-    gatewayId: "zai/glm-4.7",
-    credits: 2,
-  },
-  "glm-5": {
-    gatewayId: "zai/glm-5",
-    credits: 3,
-  },
-
-  // Meituan
-  "longcat-flash": {
-    gatewayId: "meituan/longcat-flash-chat",
-    credits: 1,
-  },
-} satisfies Record<ModelId, { gatewayId: GatewayModelId; credits: number }>;
-
-export const defaultModel: ModelId = "gemini-3.1-flash-lite";
-
+/** Returns the credit cost for one Nakafa model response. */
 export function getModelCreditCost(modelId: ModelId) {
   return modelRegistry[modelId].credits;
 }
 
+/** Returns whether the current balance can pay for one Nakafa model response. */
 export function hasEnoughCredits(currentCredits: number, modelId: ModelId) {
   return currentCredits >= getModelCreditCost(modelId);
 }
 
+/** Returns the Vercel AI Gateway model behind a Nakafa model. */
 export function getModelGatewayId(modelId: ModelId) {
   return modelRegistry[modelId].gatewayId;
+}
+
+/** Returns Gemini provider options for one Nakafa model. */
+export function getModelProviderOptions(modelId: ModelId) {
+  return modelRegistry[modelId].providerOptions.interactive;
+}
+
+/** Returns Gemini provider options for background and tool-routing calls. */
+export function getFastModelProviderOptions(modelId: ModelId) {
+  return modelRegistry[modelId].providerOptions.fast;
 }

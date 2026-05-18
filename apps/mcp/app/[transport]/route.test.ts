@@ -1,12 +1,12 @@
 import { getNakafaContentResourceUri } from "@repo/contents/_lib/agent/refs";
-import {
-  NakafaAgentExerciseResultSchema,
-  NakafaAgentMarkdownSchema,
-  NakafaAgentQuranReferenceSchema,
-  NakafaAgentSearchResultSchema,
-} from "@repo/contents/_lib/agent/schemas";
+import { NakafaAgentExerciseResultSchema } from "@repo/contents/_lib/agent/schema/exercise";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran";
+import { NakafaAgentMarkdownSchema } from "@repo/contents/_lib/agent/schema/read";
+import { NakafaAgentSearchResultSchema } from "@repo/contents/_lib/agent/schema/search";
+import { Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
-import * as z from "zod";
+import { GET, OPTIONS, POST } from "@/app/[transport]/route";
+import packageJson from "@/package.json";
 
 vi.mock("@/env", () => ({
   env: {
@@ -15,20 +15,51 @@ vi.mock("@/env", () => ({
   },
 }));
 
-const JsonRpcResponseSchema = z.object({
-  error: z
-    .object({
-      message: z.string(),
+vi.mock("convex/nextjs", () => ({
+  fetchQuery: vi.fn(() =>
+    Promise.resolve({
+      count: 1,
+      has_more: false,
+      items: [
+        {
+          content_id:
+            "en/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
+          description: "A synced exercise set.",
+          locale: "en",
+          markdown_url:
+            "https://nakafa.com/en/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1.md",
+          route:
+            "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
+          section: "exercises",
+          title: "Set 1",
+          url: "https://nakafa.com/en/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1",
+        },
+      ],
+      limit: 1,
+      next_offset: null,
+      offset: 0,
     })
-    .optional(),
-  id: z.union([z.number(), z.string(), z.null()]).optional(),
-  jsonrpc: z.literal("2.0"),
-  result: z.record(z.string(), z.unknown()).optional(),
+  ),
+}));
+
+const JsonObjectSchema = Schema.Record({
+  key: Schema.String,
+  value: Schema.Unknown,
+});
+
+const JsonRpcResponseSchema = Schema.Struct({
+  error: Schema.optional(
+    Schema.Struct({
+      message: Schema.String,
+    })
+  ),
+  id: Schema.optional(Schema.Union(Schema.Number, Schema.String, Schema.Null)),
+  jsonrpc: Schema.Literal("2.0"),
+  result: Schema.optional(JsonObjectSchema),
 });
 
 /** Posts one JSON-RPC request to the local MCP route. */
 async function postMcp(method: string, params: Record<string, unknown> = {}) {
-  const { POST } = await import("@/app/[transport]/route");
   const response = await POST(
     new Request("https://mcp.nakafa.com/mcp", {
       body: JSON.stringify({
@@ -45,7 +76,7 @@ async function postMcp(method: string, params: Record<string, unknown> = {}) {
     })
   );
 
-  return JsonRpcResponseSchema.parse(
+  return Schema.decodeUnknownSync(JsonRpcResponseSchema)(
     parseMcpResponseText(await response.text())
   );
 }
@@ -84,26 +115,26 @@ describe("Nakafa MCP route", () => {
       protocolVersion: "2025-06-18",
     });
     const listedTools = await postMcp("tools/list");
-    const result = z
-      .object({
-        tools: z.array(
-          z.object({
-            annotations: z.object({
-              destructiveHint: z.literal(false),
-              idempotentHint: z.literal(true),
-              readOnlyHint: z.literal(true),
+    const result = Schema.decodeUnknownSync(
+      Schema.Struct({
+        tools: Schema.Array(
+          Schema.Struct({
+            annotations: Schema.Struct({
+              destructiveHint: Schema.Literal(false),
+              idempotentHint: Schema.Literal(true),
+              readOnlyHint: Schema.Literal(true),
             }),
-            inputSchema: z.object({}).passthrough(),
-            name: z.string(),
-            outputSchema: z.object({}).passthrough(),
+            inputSchema: JsonObjectSchema,
+            name: Schema.String,
+            outputSchema: JsonObjectSchema,
           })
         ),
       })
-      .parse(listedTools.result);
+    )(listedTools.result);
 
     expect(initialized.result?.serverInfo).toStrictEqual({
       name: "nakafa-mcp-server",
-      version: "0.2.0",
+      version: packageJson.version,
     });
     expect(result.tools.map((tool) => tool.name)).toStrictEqual([
       "nakafa_search_content",
@@ -140,7 +171,7 @@ describe("Nakafa MCP route", () => {
       locale: "en",
       section: "exercises",
     });
-    const search = NakafaAgentSearchResultSchema.parse(
+    const search = Schema.decodeUnknownSync(NakafaAgentSearchResultSchema)(
       searchResponse.result?.structuredContent
     );
     const contentId = search.items[0].content_id;
@@ -153,21 +184,21 @@ describe("Nakafa MCP route", () => {
     const resourceResponse = await postMcp("resources/read", {
       uri: getNakafaContentResourceUri(contentId),
     });
-    const content = NakafaAgentMarkdownSchema.parse(
+    const content = Schema.decodeUnknownSync(NakafaAgentMarkdownSchema)(
       contentResponse.result?.structuredContent
     );
-    const exercise = NakafaAgentExerciseResultSchema.parse(
+    const exercise = Schema.decodeUnknownSync(NakafaAgentExerciseResultSchema)(
       exerciseResponse.result?.structuredContent
     );
-    const resource = z
-      .object({
-        contents: z.array(
-          z.object({
-            text: z.string(),
+    const resource = Schema.decodeUnknownSync(
+      Schema.Struct({
+        contents: Schema.Array(
+          Schema.Struct({
+            text: Schema.String,
           })
         ),
       })
-      .parse(resourceResponse.result);
+    )(resourceResponse.result);
 
     expect(content.content_id).toBe(contentId);
     expect(content.text).toContain("### Question");
@@ -182,21 +213,23 @@ describe("Nakafa MCP route", () => {
     const missingExercise = await callTool("nakafa_get_exercise", {
       content_ref: "en/quran/1",
     });
-    const errorSchema = z.object({
-      isError: z.literal(true),
-      structuredContent: z.object({
-        error: z.object({
-          message: z.string(),
-          suggestions: z.array(z.string()).min(1),
+    const errorSchema = Schema.Struct({
+      isError: Schema.Literal(true),
+      structuredContent: Schema.Struct({
+        error: Schema.Struct({
+          message: Schema.String,
+          suggestions: Schema.NonEmptyArray(Schema.String),
         }),
       }),
     });
 
     expect(
-      errorSchema.parse(missingContent.result).structuredContent.error.message
+      Schema.decodeUnknownSync(errorSchema)(missingContent.result)
+        .structuredContent.error.message
     ).toContain("not found");
     expect(
-      errorSchema.parse(missingExercise.result).structuredContent.error.message
+      Schema.decodeUnknownSync(errorSchema)(missingExercise.result)
+        .structuredContent.error.message
     ).toContain("exercise");
   });
 
@@ -254,13 +287,12 @@ describe("Nakafa MCP route", () => {
       locale: "en",
       surah: 1,
     });
-    const taxonomy = z
-      .object({
-        tools: z.array(z.string()),
+    const taxonomy = Schema.decodeUnknownSync(
+      Schema.Struct({
+        tools: Schema.Array(Schema.String),
       })
-      .passthrough()
-      .parse(taxonomyResponse.result?.structuredContent);
-    const quran = NakafaAgentQuranReferenceSchema.parse(
+    )(taxonomyResponse.result?.structuredContent);
+    const quran = Schema.decodeUnknownSync(NakafaAgentQuranReferenceSchema)(
       quranResponse.result?.structuredContent
     );
 
@@ -285,11 +317,11 @@ describe("Nakafa MCP route", () => {
       uri: "nakafa://content/en%2Farticles%2Fmissing",
     });
     const prompts = await postMcp("prompts/list");
-    const listedPrompts = z
-      .object({
-        prompts: z.array(z.object({ name: z.string() }).passthrough()),
+    const listedPrompts = Schema.decodeUnknownSync(
+      Schema.Struct({
+        prompts: Schema.Array(Schema.Struct({ name: Schema.String })),
       })
-      .parse(prompts.result).prompts;
+    )(prompts.result).prompts;
     const promptNames = listedPrompts.map((prompt) => prompt.name);
 
     for (const promptName of promptNames) {
@@ -299,9 +331,13 @@ describe("Nakafa MCP route", () => {
       });
 
       expect(
-        z
-          .object({ messages: z.array(z.object({ role: z.literal("user") })) })
-          .parse(prompt.result).messages
+        Schema.decodeUnknownSync(
+          Schema.Struct({
+            messages: Schema.Array(
+              Schema.Struct({ role: Schema.Literal("user") })
+            ),
+          })
+        )(prompt.result).messages
       ).toHaveLength(1);
     }
 
@@ -322,9 +358,11 @@ describe("Nakafa MCP route", () => {
     });
 
     expect(
-      z
-        .object({ resources: z.array(z.object({ uri: z.string() })) })
-        .parse(resources.result).resources
+      Schema.decodeUnknownSync(
+        Schema.Struct({
+          resources: Schema.Array(Schema.Struct({ uri: Schema.String })),
+        })
+      )(resources.result).resources
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ uri: "nakafa://usage" }),
@@ -332,16 +370,18 @@ describe("Nakafa MCP route", () => {
       ])
     );
     expect(
-      z
-        .object({
-          resourceTemplates: z.array(z.object({ uriTemplate: z.string() })),
+      Schema.decodeUnknownSync(
+        Schema.Struct({
+          resourceTemplates: Schema.Array(
+            Schema.Struct({ uriTemplate: Schema.String })
+          ),
         })
-        .parse(templates.result).resourceTemplates[0].uriTemplate
+      )(templates.result).resourceTemplates[0].uriTemplate
     ).toBe("nakafa://content/{contentId}");
     expect(JSON.stringify(usage.result)).toContain("nakafa_search_content");
     expect(JSON.stringify(taxonomy.result)).toContain("nakafa_get_taxonomy");
     expect(missingContent.error?.message).toContain("not found");
-    expect(JSON.stringify(listedPrompts)).toContain("content_ref");
+    expect(JSON.stringify(prompts.result)).toContain("content_ref");
     expect(JSON.stringify(exercisePrompt.result)).toContain(
       "use the question in the content ID"
     );
@@ -351,7 +391,6 @@ describe("Nakafa MCP route", () => {
   });
 
   it("guards browser origins while allowing desktop clients without Origin", async () => {
-    const { GET, OPTIONS, POST } = await import("@/app/[transport]/route");
     const noOrigin = await GET(new Request("https://mcp.nakafa.com/mcp"));
     const allowedOptions = await OPTIONS(
       new Request("https://mcp.nakafa.com/mcp", {
@@ -407,7 +446,7 @@ function getPromptArguments(promptName: string) {
   if (promptName === "nakafa_find_lesson") {
     return {
       locale: "en",
-      query: "green chemistry",
+      topic: "green chemistry",
     };
   }
 

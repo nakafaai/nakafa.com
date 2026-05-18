@@ -79,63 +79,67 @@ export function SchoolSidebarNavUser() {
   return (
     <SidebarMenuItem>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <SidebarMenuButton
-            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            size="lg"
-          >
-            <Avatar>
-              <AvatarImage
-                alt={user.authUser.name}
-                role="presentation"
-                src={user.authUser.image ?? ""}
-              />
-              <AvatarFallback className="text-xs">
-                {getInitialName(user.authUser.name)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-              <span className="truncate">{user.authUser.name}</span>
-              <span className="truncate text-muted-foreground text-xs">
-                {planLabel}
-              </span>
-            </div>
-            <HugeIcons className="ml-auto" icon={MoreVerticalIcon} />
-          </SidebarMenuButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-          side={isMobile ? "bottom" : "right"}
-          sideOffset={4}
-        >
-          <DropdownMenuLabel className="p-0 font-normal">
-            <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+        <DropdownMenuTrigger
+          render={
+            <SidebarMenuButton
+              className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
+              size="lg"
+            >
               <Avatar>
                 <AvatarImage
                   alt={user.authUser.name}
                   role="presentation"
                   src={user.authUser.image ?? ""}
                 />
-                <AvatarFallback>
+                <AvatarFallback className="text-xs">
                   {getInitialName(user.authUser.name)}
                 </AvatarFallback>
               </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium text-foreground">
-                  {user.authUser.name}
-                </span>
+              <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+                <span className="truncate">{user.authUser.name}</span>
                 <span className="truncate text-muted-foreground text-xs">
-                  {user.authUser.email}
+                  {planLabel}
                 </span>
               </div>
-            </div>
-          </DropdownMenuLabel>
+              <HugeIcons className="ml-auto" icon={MoreVerticalIcon} />
+            </SidebarMenuButton>
+          }
+        />
+        <DropdownMenuContent
+          align="end"
+          className="w-(--anchor-width) min-w-56 max-w-[calc(100vw-2rem)] rounded-lg"
+          side={isMobile ? "bottom" : "right"}
+          sideOffset={4}
+        >
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="p-0 font-normal">
+              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                <Avatar>
+                  <AvatarImage
+                    alt={user.authUser.name}
+                    role="presentation"
+                    src={user.authUser.image ?? ""}
+                  />
+                  <AvatarFallback>
+                    {getInitialName(user.authUser.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium text-foreground">
+                    {user.authUser.name}
+                  </span>
+                  <span className="truncate text-muted-foreground text-xs">
+                    {user.authUser.email}
+                  </span>
+                </div>
+              </div>
+            </DropdownMenuLabel>
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem
               className="cursor-pointer"
-              onSelect={handleSignOut}
+              onClick={handleSignOut}
             >
               <HugeIcons icon={Logout01Icon} />
               {t("logout")}

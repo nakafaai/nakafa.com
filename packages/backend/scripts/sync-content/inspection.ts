@@ -1,4 +1,4 @@
-import { runConvexQueryWithArgs } from "@repo/backend/scripts/sync-content/convexApi";
+import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
   ArticleReferenceIntegrityPageSchema,
   AuthorPageSchema,
@@ -16,28 +16,31 @@ import type {
   ConvexConfig,
   FilesystemSlugs,
 } from "@repo/backend/scripts/sync-content/types";
-import type * as z from "zod";
+import { Effect, Schema } from "effect";
 
 const PAGE_SIZE = 1000;
 
-async function collectPages<T>(
+interface PageResult<T> {
+  continueCursor: string;
+  isDone: boolean;
+  page: readonly T[];
+}
+
+const collectPages = Effect.fn("sync.collectPages")(function* <T>(
   config: ConvexConfig,
   functionPath: string,
   args: Record<string, unknown>,
-  schema: z.ZodType<{
-    continueCursor: string;
-    isDone: boolean;
-    page: T[];
-  }>
+  schema: Schema.Schema<PageResult<T>>
 ) {
   const rows: T[] = [];
   let continueCursor: string | null = null;
   let isDone = false;
-  let page: T[] = [];
+  let page: readonly T[] = [];
 
   while (!isDone) {
-    ({ continueCursor, isDone, page } = await runConvexQueryWithArgs(
+    ({ continueCursor, isDone, page } = yield* callConvex(
       config,
+      "query",
       functionPath,
       {
         ...args,
@@ -53,9 +56,9 @@ async function collectPages<T>(
   }
 
   return rows;
-}
+});
 
-export async function getStaleContent(
+export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
   config: ConvexConfig,
   filesystemSlugs: FilesystemSlugs
 ) {
@@ -72,7 +75,7 @@ export async function getStaleContent(
     subjectSections,
     exerciseSets,
     exerciseQuestions,
-  ] = await Promise.all([
+  ] = yield* Effect.all([
     collectPages(
       config,
       "contentSync/queries/stale:listStaleContentPage",
@@ -105,7 +108,7 @@ export async function getStaleContent(
     ),
   ]);
 
-  return StaleContentSchema.parse({
+  return Schema.decodeUnknownSync(StaleContentSchema)({
     staleArticles: articles.filter((item) => !articleSlugSet.has(item.slug)),
     staleSubjectTopics: subjectTopics.filter(
       (item) => !subjectTopicSlugSet.has(item.slug)
@@ -120,9 +123,11 @@ export async function getStaleContent(
       (item) => !exerciseQuestionSlugSet.has(item.slug)
     ),
   });
-}
+});
 
-export async function getDataIntegrity(config: ConvexConfig) {
+export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
+  config: ConvexConfig
+) {
   const [
     questions,
     choices,
@@ -131,7 +136,7 @@ export async function getDataIntegrity(config: ConvexConfig) {
     articles,
     sections,
     tryoutScaleIntegrity,
-  ] = await Promise.all([
+  ] = yield* Effect.all([
     collectPages(
       config,
       "contentSync/queries/integrity:listIntegrityExerciseQuestionsPage",
@@ -187,7 +192,7 @@ export async function getDataIntegrity(config: ConvexConfig) {
     references.map((reference) => reference.articleId)
   );
 
-  return DataIntegritySchema.parse({
+  return Schema.decodeUnknownSync(DataIntegritySchema)({
     questionsWithoutChoices: questions
       .filter((question) => !questionIdsWithChoices.has(question.id))
       .map((question) => `${question.slug} (${question.locale})`),
@@ -207,10 +212,12 @@ export async function getDataIntegrity(config: ConvexConfig) {
     totalArticles: articles.length,
     totalSections: sections.length,
   });
-}
+});
 
-export async function getUnusedAuthors(config: ConvexConfig) {
-  const [authors, contentAuthors] = await Promise.all([
+export const getUnusedAuthors = Effect.fn("sync.getUnusedAuthors")(function* (
+  config: ConvexConfig
+) {
+  const [authors, contentAuthors] = yield* Effect.all([
     collectPages(
       config,
       "contentSync/queries/authors:listAuthorsPage",
@@ -228,9 +235,9 @@ export async function getUnusedAuthors(config: ConvexConfig) {
     contentAuthors.map((authorLink) => authorLink.authorId)
   );
 
-  return UnusedAuthorsSchema.parse({
+  return Schema.decodeUnknownSync(UnusedAuthorsSchema)({
     unusedAuthors: authors.filter(
       (author) => !authorIdsWithContent.has(author.id)
     ),
   });
-}
+});

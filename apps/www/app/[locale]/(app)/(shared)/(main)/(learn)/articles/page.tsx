@@ -3,7 +3,7 @@ import {
   getCategoryIcon,
   getCategoryPath,
 } from "@repo/contents/_lib/articles/category";
-import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
+import { ARTICLE_CATEGORIES } from "@repo/contents/_types/articles/category";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
@@ -55,7 +55,6 @@ export default function Page(props: PageProps<"/[locale]/articles">) {
 }
 
 async function PageContent({ locale }: { locale: Locale }) {
-  const categories = ArticleCategorySchema.options;
   const [tCommon, tArticles] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Articles" }),
@@ -76,7 +75,7 @@ async function PageContent({ locale }: { locale: Locale }) {
       />
       <LayoutContent>
         <SubjectList>
-          {categories.map((category) => (
+          {ARTICLE_CATEGORIES.map((category) => (
             <SubjectItem
               href={getCategoryPath(category)}
               icon={getCategoryIcon(category)}

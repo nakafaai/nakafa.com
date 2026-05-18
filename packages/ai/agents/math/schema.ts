@@ -1,35 +1,51 @@
-import * as z from "zod";
+import {
+  createEffectSchema,
+  providerCompatibleObjectSchema,
+} from "@repo/ai/lib/effect-schema";
+import { MathAlgebraInputSchema } from "@repo/math/schema/tool/algebra";
+import { MathArithmeticInputSchema } from "@repo/math/schema/tool/arithmetic";
+import { MathCalculusInputSchema } from "@repo/math/schema/tool/calculus";
+import { MathDiscreteInputSchema } from "@repo/math/schema/tool/discrete";
+import { MathEquationInputSchema } from "@repo/math/schema/tool/equation";
+import { MathGeometryInputSchema } from "@repo/math/schema/tool/geometry";
+import { MathMatrixInputSchema } from "@repo/math/schema/tool/matrix";
+import { MathProbabilityInputSchema } from "@repo/math/schema/tool/probability";
+import { MathSeriesInputSchema } from "@repo/math/schema/tool/series";
+import { MathStatisticsInputSchema } from "@repo/math/schema/tool/statistics";
 
-/**
- * Input schema for calculator tool
- */
-export const calculatorInputSchema = z
-  .object({
-    expression: z
-      .string()
-      .describe(
-        "A mathematical expression with concrete numbers and operations. Use ONLY evaluable expressions with numbers - NOT algebraic variables. Compatible with Math.js."
-      ),
-  })
-  .describe(
-    "MANDATORY calculator tool - ALWAYS use this for ANY mathematical calculation including simple arithmetic. NEVER calculate manually. Only use for evaluable expressions with concrete numbers, not algebraic variables."
-  );
-export type CalculatorInput = z.input<typeof calculatorInputSchema>;
-
-/**
- * Output schema for calculator tool
- */
-export const calculatorOutputSchema = z
-  .object({
-    original: z.object({
-      expression: z.string().describe("The original expression."),
-      latex: z.string().describe("The original expression in LaTeX."),
-    }),
-    result: z.object({
-      expression: z.string().describe("The simplified expression."),
-      latex: z.string().describe("The simplified expression in LaTeX."),
-      value: z.string().describe("The evaluated value."),
-    }),
-  })
-  .describe("The output schema for calculator tool.");
-export type CalculatorOutput = z.output<typeof calculatorOutputSchema>;
+export const mathArithmeticInput = createEffectSchema(
+  MathArithmeticInputSchema
+);
+export const mathAlgebraInput = createEffectSchema(
+  MathAlgebraInputSchema,
+  providerCompatibleObjectSchema(MathAlgebraInputSchema)
+);
+export const mathEquationInput = createEffectSchema(
+  MathEquationInputSchema,
+  providerCompatibleObjectSchema(MathEquationInputSchema)
+);
+export const mathCalculusInput = createEffectSchema(MathCalculusInputSchema);
+export const mathSeriesInput = createEffectSchema(
+  MathSeriesInputSchema,
+  providerCompatibleObjectSchema(MathSeriesInputSchema)
+);
+export const mathMatrixInput = createEffectSchema(
+  MathMatrixInputSchema,
+  providerCompatibleObjectSchema(MathMatrixInputSchema)
+);
+export const mathStatisticsInput = createEffectSchema(
+  MathStatisticsInputSchema,
+  providerCompatibleObjectSchema(MathStatisticsInputSchema)
+);
+export const mathProbabilityInput = createEffectSchema(
+  MathProbabilityInputSchema,
+  providerCompatibleObjectSchema(MathProbabilityInputSchema)
+);
+export const mathGeometryInput = createEffectSchema(
+  MathGeometryInputSchema,
+  providerCompatibleObjectSchema(MathGeometryInputSchema)
+);
+export const mathDiscreteInput = createEffectSchema(
+  MathDiscreteInputSchema,
+  providerCompatibleObjectSchema(MathDiscreteInputSchema)
+);

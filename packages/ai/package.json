@@ -1,35 +1,40 @@
 {
   "name": "@repo/ai",
-  "version": "1.2.0",
+  "version": "2.0.1",
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@ai-sdk/devtools": "^0.0.17",
-    "@ai-sdk/elevenlabs": "^2.0.32",
-    "@ai-sdk/gateway": "^3.0.110",
-    "@ai-sdk/google": "^3.0.68",
-    "@ai-sdk/google-vertex": "^4.0.122",
-    "@ai-sdk/openai": "^3.0.62",
-    "@ai-sdk/react": "^3.0.177",
-    "@mendable/firecrawl-js": "^4.22.2",
+    "@ai-sdk/devtools": "^0.0.18",
+    "@ai-sdk/elevenlabs": "^2.0.33",
+    "@ai-sdk/gateway": "^3.0.115",
+    "@ai-sdk/google": "^3.0.75",
+    "@ai-sdk/react": "^3.0.186",
+    "@mendable/firecrawl-js": "^4.24.1",
+    "@repo/contents": "workspace:*",
+    "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "ai": "^6.0.175",
-    "convex": "^1.37.0",
+    "ai": "^6.0.184",
+    "convex": "^1.39.1",
     "dedent": "^1.7.2",
+    "effect": "^3.21.2",
     "gpt-tokenizer": "^3.4.0",
+    "ipaddr.js": "^2.4.0",
     "ky": "^2.0.2",
-    "mathjs": "^15.2.0",
-    "parse-domain": "^8.3.0",
-    "zod": "^4.4.3"
+    "parse-domain": "^8.3.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.6.1",
+    "@types/node": "25.8.0",
     "@types/react": "19.2.14",
-    "@types/react-dom": "^19.2.3"
+    "@types/react-dom": "^19.2.3",
+    "@vitest/coverage-istanbul": "^4.1.6",
+    "vitest": "^4.1.6"
   }
 }

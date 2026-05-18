@@ -6,22 +6,6 @@ import {
 } from "@repo/backend/convex/chats/messageParts/shared";
 import { ConvexError } from "convex/values";
 
-function requireToolInputQuery(
-  part: Doc<"parts">,
-  fieldName:
-    | "toolContentAccessInput"
-    | "toolDeepResearchInput"
-    | "toolMathCalculationInput"
-) {
-  return {
-    query: requirePartField({
-      value: part[fieldName],
-      fieldName,
-      partType: part.type,
-    }),
-  };
-}
-
 /** Rebuild one UI message part from the flattened persisted part row. */
 export function mapDBPartToUIMessagePart({
   part,
@@ -69,59 +53,12 @@ export function mapDBPartToUIMessagePart({
           partType: part.type,
         }),
       };
-    case "source-document":
-      return {
-        type: part.type,
-        sourceId: requirePartField({
-          value: part.sourceDocumentSourceId,
-          fieldName: "sourceDocumentSourceId",
-          partType: part.type,
-        }),
-        mediaType: requirePartField({
-          value: part.sourceDocumentMediaType,
-          fieldName: "sourceDocumentMediaType",
-          partType: part.type,
-        }),
-        title: requirePartField({
-          value: part.sourceDocumentTitle,
-          fieldName: "sourceDocumentTitle",
-          partType: part.type,
-        }),
-        filename: requirePartField({
-          value: part.sourceDocumentFilename,
-          fieldName: "sourceDocumentFilename",
-          partType: part.type,
-        }),
-        providerMetadata: part.providerMetadata,
-      };
-    case "source-url":
-      return {
-        type: part.type,
-        sourceId: requirePartField({
-          value: part.sourceUrlSourceId,
-          fieldName: "sourceUrlSourceId",
-          partType: part.type,
-        }),
-        url: requirePartField({
-          value: part.sourceUrlUrl,
-          fieldName: "sourceUrlUrl",
-          partType: part.type,
-        }),
-        title: requirePartField({
-          value: part.sourceUrlTitle,
-          fieldName: "sourceUrlTitle",
-          partType: part.type,
-        }),
-        providerMetadata: part.providerMetadata,
-      };
     case "step-start":
       return {
         type: part.type,
       };
-    case "tool-contentAccess": {
+    case "tool-nakafa": {
       const toolState = requireToolState(part);
-      const input = { query: part.toolContentAccessInput ?? "" };
-
       switch (toolState) {
         case "input-streaming":
           return {
@@ -132,7 +69,8 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input,
+            callProviderMetadata: part.toolCallProviderMetadata,
+            input: part.toolNakafaInput,
           };
         case "input-available":
           return {
@@ -143,7 +81,12 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireToolInputQuery(part, "toolContentAccessInput"),
+            callProviderMetadata: part.toolCallProviderMetadata,
+            input: requirePartField({
+              value: part.toolNakafaInput,
+              fieldName: "toolNakafaInput",
+              partType: part.type,
+            }),
           };
         case "output-available":
           return {
@@ -154,12 +97,18 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireToolInputQuery(part, "toolContentAccessInput"),
-            output: requirePartField({
-              value: part.toolContentAccessOutput,
-              fieldName: "toolContentAccessOutput",
+            callProviderMetadata: part.toolCallProviderMetadata,
+            input: requirePartField({
+              value: part.toolNakafaInput,
+              fieldName: "toolNakafaInput",
               partType: part.type,
             }),
+            output: requirePartField({
+              value: part.toolNakafaOutput,
+              fieldName: "toolNakafaOutput",
+              partType: part.type,
+            }),
+            resultProviderMetadata: part.toolResultProviderMetadata,
           };
         case "output-error":
           return {
@@ -170,12 +119,14 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireToolInputQuery(part, "toolContentAccessInput"),
+            callProviderMetadata: part.toolCallProviderMetadata,
+            input: part.toolNakafaInput,
             errorText: requirePartField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",
               partType: part.type,
             }),
+            resultProviderMetadata: part.toolResultProviderMetadata,
           };
         default:
           throw new ConvexError({
@@ -186,8 +137,6 @@ export function mapDBPartToUIMessagePart({
     }
     case "tool-deepResearch": {
       const toolState = requireToolState(part);
-      const input = { query: part.toolDeepResearchInput ?? "" };
-
       switch (toolState) {
         case "input-streaming":
           return {
@@ -198,7 +147,8 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input,
+            callProviderMetadata: part.toolCallProviderMetadata,
+            input: part.toolDeepResearchInput,
           };
         case "input-available":
           return {
@@ -209,7 +159,12 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireToolInputQuery(part, "toolDeepResearchInput"),
+            callProviderMetadata: part.toolCallProviderMetadata,
+            input: requirePartField({
+              value: part.toolDeepResearchInput,
+              fieldName: "toolDeepResearchInput",
+              partType: part.type,
+            }),
           };
         case "output-available":
           return {
@@ -220,12 +175,18 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireToolInputQuery(part, "toolDeepResearchInput"),
+            callProviderMetadata: part.toolCallProviderMetadata,
+            input: requirePartField({
+              value: part.toolDeepResearchInput,
+              fieldName: "toolDeepResearchInput",
+              partType: part.type,
+            }),
             output: requirePartField({
               value: part.toolDeepResearchOutput,
               fieldName: "toolDeepResearchOutput",
               partType: part.type,
             }),
+            resultProviderMetadata: part.toolResultProviderMetadata,
           };
         case "output-error":
           return {
@@ -236,12 +197,14 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireToolInputQuery(part, "toolDeepResearchInput"),
+            callProviderMetadata: part.toolCallProviderMetadata,
+            input: part.toolDeepResearchInput,
             errorText: requirePartField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",
               partType: part.type,
             }),
+            resultProviderMetadata: part.toolResultProviderMetadata,
           };
         default:
           throw new ConvexError({
@@ -250,10 +213,8 @@ export function mapDBPartToUIMessagePart({
           });
       }
     }
-    case "tool-mathCalculation": {
+    case "tool-math": {
       const toolState = requireToolState(part);
-      const input = { query: part.toolMathCalculationInput ?? "" };
-
       switch (toolState) {
         case "input-streaming":
           return {
@@ -264,7 +225,8 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input,
+            callProviderMetadata: part.toolCallProviderMetadata,
+            input: part.toolMathInput,
           };
         case "input-available":
           return {
@@ -275,7 +237,12 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireToolInputQuery(part, "toolMathCalculationInput"),
+            callProviderMetadata: part.toolCallProviderMetadata,
+            input: requirePartField({
+              value: part.toolMathInput,
+              fieldName: "toolMathInput",
+              partType: part.type,
+            }),
           };
         case "output-available":
           return {
@@ -286,12 +253,18 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireToolInputQuery(part, "toolMathCalculationInput"),
-            output: requirePartField({
-              value: part.toolMathCalculationOutput,
-              fieldName: "toolMathCalculationOutput",
+            callProviderMetadata: part.toolCallProviderMetadata,
+            input: requirePartField({
+              value: part.toolMathInput,
+              fieldName: "toolMathInput",
               partType: part.type,
             }),
+            output: requirePartField({
+              value: part.toolMathOutput,
+              fieldName: "toolMathOutput",
+              partType: part.type,
+            }),
+            resultProviderMetadata: part.toolResultProviderMetadata,
           };
         case "output-error":
           return {
@@ -302,12 +275,14 @@ export function mapDBPartToUIMessagePart({
               fieldName: "toolToolCallId",
               partType: part.type,
             }),
-            input: requireToolInputQuery(part, "toolMathCalculationInput"),
+            callProviderMetadata: part.toolCallProviderMetadata,
+            input: part.toolMathInput,
             errorText: requirePartField({
               value: part.toolErrorText,
               fieldName: "toolErrorText",
               partType: part.type,
             }),
+            resultProviderMetadata: part.toolResultProviderMetadata,
           };
         default:
           throw new ConvexError({
@@ -332,152 +307,33 @@ export function mapDBPartToUIMessagePart({
           }),
         },
       };
-    case "data-get-articles":
+    case "data-nakafa":
       return {
         type: part.type,
         id: requirePartField({
-          value: part.dataGetArticlesId,
-          fieldName: "dataGetArticlesId",
+          value: part.dataNakafaId,
+          fieldName: "dataNakafaId",
           partType: part.type,
         }),
-        data: {
-          baseUrl: requirePartField({
-            value: part.dataGetArticlesBaseUrl,
-            fieldName: "dataGetArticlesBaseUrl",
-            partType: part.type,
-          }),
-          input: {
-            locale: requirePartField({
-              value: part.dataGetArticlesInputLocale,
-              fieldName: "dataGetArticlesInputLocale",
-              partType: part.type,
-            }),
-            category: requirePartField({
-              value: part.dataGetArticlesInputCategory,
-              fieldName: "dataGetArticlesInputCategory",
-              partType: part.type,
-            }),
-          },
-          articles: requirePartField({
-            value: part.dataGetArticlesArticles,
-            fieldName: "dataGetArticlesArticles",
-            partType: part.type,
-          }),
-          status: requirePartField({
-            value: part.dataGetArticlesStatus,
-            fieldName: "dataGetArticlesStatus",
-            partType: part.type,
-          }),
-          error: part.dataGetArticlesError,
-        },
+        data: requirePartField({
+          value: part.dataNakafaData,
+          fieldName: "dataNakafaData",
+          partType: part.type,
+        }),
       };
-    case "data-get-subjects":
+    case "data-math":
       return {
         type: part.type,
         id: requirePartField({
-          value: part.dataGetSubjectsId,
-          fieldName: "dataGetSubjectsId",
+          value: part.dataMathId,
+          fieldName: "dataMathId",
           partType: part.type,
         }),
-        data: {
-          baseUrl: requirePartField({
-            value: part.dataGetSubjectsBaseUrl,
-            fieldName: "dataGetSubjectsBaseUrl",
-            partType: part.type,
-          }),
-          input: {
-            locale: requirePartField({
-              value: part.dataGetSubjectsInputLocale,
-              fieldName: "dataGetSubjectsInputLocale",
-              partType: part.type,
-            }),
-            category: requirePartField({
-              value: part.dataGetSubjectsInputCategory,
-              fieldName: "dataGetSubjectsInputCategory",
-              partType: part.type,
-            }),
-            grade: requirePartField({
-              value: part.dataGetSubjectsInputGrade,
-              fieldName: "dataGetSubjectsInputGrade",
-              partType: part.type,
-            }),
-            material: requirePartField({
-              value: part.dataGetSubjectsInputMaterial,
-              fieldName: "dataGetSubjectsInputMaterial",
-              partType: part.type,
-            }),
-          },
-          subjects: requirePartField({
-            value: part.dataGetSubjectsSubjects,
-            fieldName: "dataGetSubjectsSubjects",
-            partType: part.type,
-          }),
-          status: requirePartField({
-            value: part.dataGetSubjectsStatus,
-            fieldName: "dataGetSubjectsStatus",
-            partType: part.type,
-          }),
-          error: part.dataGetSubjectsError,
-        },
-      };
-    case "data-get-content":
-      return {
-        type: part.type,
-        id: requirePartField({
-          value: part.dataGetContentId,
-          fieldName: "dataGetContentId",
+        data: requirePartField({
+          value: part.dataMathData,
+          fieldName: "dataMathData",
           partType: part.type,
         }),
-        data: {
-          url: requirePartField({
-            value: part.dataGetContentUrl,
-            fieldName: "dataGetContentUrl",
-            partType: part.type,
-          }),
-          title: requirePartField({
-            value: part.dataGetContentTitle,
-            fieldName: "dataGetContentTitle",
-            partType: part.type,
-          }),
-          description: requirePartField({
-            value: part.dataGetContentDescription,
-            fieldName: "dataGetContentDescription",
-            partType: part.type,
-          }),
-          status: requirePartField({
-            value: part.dataGetContentStatus,
-            fieldName: "dataGetContentStatus",
-            partType: part.type,
-          }),
-          error: part.dataGetContentError,
-        },
-      };
-    case "data-calculator":
-      return {
-        type: part.type,
-        id: requirePartField({
-          value: part.dataCalculatorId,
-          fieldName: "dataCalculatorId",
-          partType: part.type,
-        }),
-        data: {
-          original: requirePartField({
-            value: part.dataCalculatorOriginal,
-            fieldName: "dataCalculatorOriginal",
-            partType: part.type,
-          }),
-          result: requirePartField({
-            value: part.dataCalculatorResult,
-            fieldName: "dataCalculatorResult",
-            partType: part.type,
-          }),
-          status: requirePartField({
-            value: part.dataCalculatorStatus,
-            fieldName: "dataCalculatorStatus",
-            partType: part.type,
-          }),
-          error: part.dataCalculatorError,
-        },
       };
     case "data-scrape-url":
       return {
@@ -498,6 +354,9 @@ export function mapDBPartToUIMessagePart({
             fieldName: "dataScrapeUrlContent",
             partType: part.type,
           }),
+          title: part.dataScrapeUrlTitle,
+          description: part.dataScrapeUrlDescription,
+          favicon: part.dataScrapeUrlFavicon,
           status: requirePartField({
             value: part.dataScrapeUrlStatus,
             fieldName: "dataScrapeUrlStatus",
@@ -515,9 +374,10 @@ export function mapDBPartToUIMessagePart({
           partType: part.type,
         }),
         data: {
-          query: requirePartField({
-            value: part.dataWebSearchQuery,
-            fieldName: "dataWebSearchQuery",
+          provider: part.dataWebSearchProvider,
+          queries: requirePartField({
+            value: part.dataWebSearchQueries,
+            fieldName: "dataWebSearchQueries",
             partType: part.type,
           }),
           sources: requirePartField({

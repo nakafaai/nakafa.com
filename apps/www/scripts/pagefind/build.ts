@@ -1,5 +1,6 @@
 import { rm } from "node:fs/promises";
-import { createServiceLogger } from "@repo/utilities/logging";
+import { logError } from "@repo/utilities/logging/effect";
+import { Effect } from "effect";
 import {
   addArticleRecords,
   addExerciseRecords,
@@ -8,7 +9,6 @@ import {
 } from "@/scripts/pagefind/records";
 
 const OUTPUT_PATH = "public/_pagefind";
-const logger = createServiceLogger("pagefind");
 
 /**
  * Builds the production Pagefind bundle from source-of-truth content instead of
@@ -66,9 +66,15 @@ export async function buildPagefindIndex() {
     throw new Error(write.errors.join("\n"));
   }
 
-  logger.info(
-    { count, outputPath: write.outputPath, words },
-    "Indexed Pagefind source records"
+  await Effect.runPromise(
+    Effect.logInfo("Indexed Pagefind source records").pipe(
+      Effect.annotateLogs({
+        service: "pagefind",
+        count,
+        outputPath: write.outputPath,
+        words,
+      })
+    )
   );
 }
 
@@ -76,6 +82,11 @@ export async function buildPagefindIndex() {
  * Logs the Pagefind failure and exits with a non-zero code.
  */
 export function handlePagefindError(error: unknown) {
-  logger.error({ error }, "Pagefind build failed");
+  Effect.runFork(
+    logError(error instanceof Error ? error : new Error(String(error)), {
+      service: "pagefind",
+      message: "Pagefind build failed.",
+    })
+  );
   process.exitCode = 1;
 }

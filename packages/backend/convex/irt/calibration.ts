@@ -20,8 +20,6 @@ interface CalibrationSeed {
   discrimination: number;
 }
 
-const THETA_SEED_MIN = IRT_ESTIMATION_THETA_MIN;
-const THETA_SEED_MAX = IRT_ESTIMATION_THETA_MAX;
 const LOGISTIC_MAX_ITERATIONS = 25;
 const LOGISTIC_CONVERGENCE_DELTA = 1e-4;
 const HESSIAN_EPSILON = 1e-6;
@@ -63,7 +61,11 @@ function estimateInitialTheta(correctCount: number, totalCount: number) {
     1 - IRT_PROBABILITY_EPSILON
   );
 
-  return clamp(logit(seededProbability), THETA_SEED_MIN, THETA_SEED_MAX);
+  return clamp(
+    logit(seededProbability),
+    IRT_ESTIMATION_THETA_MIN,
+    IRT_ESTIMATION_THETA_MAX
+  );
 }
 
 /** Solve the symmetric 2x2 linear system used by one logistic Newton step. */

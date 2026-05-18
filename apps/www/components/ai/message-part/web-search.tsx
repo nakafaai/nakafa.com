@@ -1,7 +1,7 @@
 "use client";
 
 import { Sad02Icon, Search01Icon } from "@hugeicons/core-free-icons";
-import type { DataPart } from "@repo/ai/schema/data-parts";
+import type { DataPart } from "@repo/ai/schema/data";
 import {
   Source,
   SourceContent,
@@ -34,7 +34,7 @@ export const WebSearchPart = memo(({ message }: Props) => {
             {t("web-search-loading")}
           </p>
         </div>
-        <WebSearchPartQuery query={message.query} />
+        <WebSearchPartQueries queries={message.queries} />
       </div>
     );
   }
@@ -48,7 +48,7 @@ export const WebSearchPart = memo(({ message }: Props) => {
             {t("web-search-error")}
           </span>
         </div>
-        <WebSearchPartQuery query={message.query} />
+        <WebSearchPartQueries queries={message.queries} />
       </div>
     );
   }
@@ -63,31 +63,51 @@ export const WebSearchPart = memo(({ message }: Props) => {
         <span className="text-muted-foreground text-sm">{t("web-search")}</span>
         <Badge variant="muted">{results.length}</Badge>
       </div>
-      <WebSearchPartQuery query={message.query} />
-      <WebSearchPartPreview results={results} />
+      <WebSearchPartQueries queries={message.queries} />
+      <WebSearchPartPreview
+        emptyLabel={t("web-search-empty")}
+        results={results}
+      />
     </div>
   );
 });
 WebSearchPart.displayName = "WebSearchPart";
 
-const WebSearchPartQuery = memo(({ query }: { query: string }) => (
-  <blockquote className="text-muted-foreground text-sm italic">
-    "{query}"
-  </blockquote>
-));
-WebSearchPartQuery.displayName = "WebSearchPartQuery";
+const WebSearchPartQueries = memo(({ queries }: { queries: string[] }) => {
+  if (queries.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      {queries.map((query) => (
+        <WebSearchQueryText key={query} query={query} />
+      ))}
+    </div>
+  );
+});
+WebSearchPartQueries.displayName = "WebSearchPartQueries";
+
+function WebSearchQueryText({ query }: { query: string }) {
+  return <p className="text-muted-foreground text-sm">{`"${query}"`}</p>;
+}
 
 const WebSearchPartPreview = memo(
-  ({ results }: { results: DataPart["web-search"]["sources"] }) => {
+  ({
+    emptyLabel,
+    results,
+  }: {
+    emptyLabel: string;
+    results: DataPart["web-search"]["sources"];
+  }) => {
     if (results.length === 0) {
-      return null;
+      return <p className="text-muted-foreground text-sm">{emptyLabel}</p>;
     }
 
     return (
       <div className="flex flex-wrap items-center gap-2">
-        {results.map((item, index) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: URL may appear multiple times, need index for uniqueness
-          <Source href={item.url} key={`${item.url}-${index}`}>
+        {results.map((item) => (
+          <Source href={item.url} key={item.url}>
             <SourceTrigger showFavicon />
             <SourceContent description={item.description} title={item.title} />
           </Source>

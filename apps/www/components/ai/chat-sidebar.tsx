@@ -105,37 +105,33 @@ function AiChatSidebarContent({ ...props }: ComponentProps<typeof Sidebar>) {
 }
 
 function AiChatSidebarHistory({ q }: { q?: string }) {
-  const user = useUser((s) => s.user);
+  const { isPending, user } = useUser((s) => ({
+    isPending: s.isPending,
+    user: s.user,
+  }));
 
-  if (!user) {
+  if (isPending || !user) {
     return null;
   }
 
   return (
     <SidebarGroup>
       <SidebarGroupContent>
-        <AiChatSidebarChats q={q} userId={user.appUser._id} />
+        <AiChatSidebarChats q={q} />
       </SidebarGroupContent>
     </SidebarGroup>
   );
 }
 
-function AiChatSidebarChats({
-  userId,
-  q,
-}: {
-  userId: Id<"users">;
-  q?: string;
-}) {
+function AiChatSidebarChats({ q }: { q?: string }) {
   const params = useParams<{ id: Id<"chats"> }>();
   const id = params.id;
+  const searchQuery = q?.trim();
+  const type = "study" as const;
+  const queryArgs = searchQuery ? { q: searchQuery, type } : { type };
   const { results, status } = usePaginatedQuery(
-    api.chats.queries.getChats,
-    {
-      userId,
-      q,
-      type: "study",
-    },
+    api.chats.queries.getOwnChats,
+    queryArgs,
     { initialNumItems: 50 }
   );
 

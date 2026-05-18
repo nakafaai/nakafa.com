@@ -1,4 +1,5 @@
 import posthogTest from "@posthog/convex/test";
+import { getModelCreditCost } from "@repo/ai/config/models";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import {
@@ -10,6 +11,7 @@ import { convexTest } from "convex-test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
+const liteCreditCost = getModelCreditCost("nakafa-lite");
 
 describe("chats/mutations", () => {
   beforeEach(() => {
@@ -48,7 +50,7 @@ describe("chats/mutations", () => {
           chatId,
           role: "assistant",
           identifier: "assistant-1",
-          modelId: "gpt-5-nano",
+          modelId: "nakafa-lite",
           inputTokens: 10,
           outputTokens: 20,
           totalTokens: 30,
@@ -65,10 +67,10 @@ describe("chats/mutations", () => {
       user: await ctx.db.get("users", userId),
     }));
 
-    expect(result.credits).toBe(1);
-    expect(result.newBalance).toBe(6);
+    expect(result.credits).toBe(liteCreditCost);
+    expect(result.newBalance).toBe(7 - liteCreditCost);
     expect(savedState.user).toMatchObject({
-      credits: 6,
+      credits: 7 - liteCreditCost,
       creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
     });
     expect(savedState.creditTransactions).toEqual([
@@ -80,15 +82,15 @@ describe("chats/mutations", () => {
       }),
       expect.objectContaining({
         userId,
-        amount: -1,
+        amount: -liteCreditCost,
         type: "usage",
-        balanceAfter: 6,
+        balanceAfter: 7 - liteCreditCost,
         metadata: expect.objectContaining({
           chatId,
           inputTokens: 10,
           outputTokens: 20,
           totalTokens: 30,
-          modelId: "gpt-5-nano",
+          modelId: "nakafa-lite",
         }),
       }),
     ]);
@@ -102,9 +104,9 @@ describe("chats/mutations", () => {
             host: "https://eu.i.posthog.com",
             properties: JSON.stringify({
               chat_type: "study",
-              credits: 1,
+              credits: liteCreditCost,
               input_tokens: 10,
-              model_id: "gpt-5-nano",
+              model_id: "nakafa-lite",
               output_tokens: 20,
               total_tokens: 30,
             }),
@@ -131,7 +133,7 @@ describe("chats/mutations", () => {
         message: {
           role: "user",
           identifier: "user-1",
-          modelId: "gpt-5-nano",
+          modelId: "nakafa-lite",
         },
         parts: [],
       });
@@ -150,7 +152,7 @@ describe("chats/mutations", () => {
             event: "chat message sent",
             properties: JSON.stringify({
               chat_type: "study",
-              model_id: "gpt-5-nano",
+              model_id: "nakafa-lite",
             }),
           }),
         ],

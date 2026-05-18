@@ -20,17 +20,19 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
+import { Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import * as z from "zod/mini";
 
-const formSchema = z.object({
-  code: z.string().check(z.minLength(1), z.trim()),
+const form = Schema.Struct({
+  code: Schema.Trim.pipe(Schema.minLength(1)),
 });
 
-const defaultValues: z.infer<typeof formSchema> = {
+const formSchema = Schema.standardSchemaV1(form);
+
+const defaultValues = {
   code: "",
-};
+} satisfies Schema.Schema.Type<typeof form>;
 
 export function SchoolClassesHeaderJoin() {
   const t = useTranslations("School.Classes");

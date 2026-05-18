@@ -1,21 +1,23 @@
-import * as z from "zod";
+import { Schema } from "effect";
 
-export const MaterialListSchema = z.array(
-  z.object({
-    title: z.string(),
-    description: z.string().optional(),
-    href: z.string(),
-    items: z.array(
-      z.object({
-        title: z.string(),
-        href: z.string(),
-      })
-    ),
-  })
+const MaterialListItemSchema = Schema.Struct({
+  title: Schema.String,
+  description: Schema.optional(Schema.String),
+  href: Schema.String,
+  items: Schema.Array(
+    Schema.Struct({
+      title: Schema.String,
+      href: Schema.String,
+    }).pipe(Schema.mutable)
+  ).pipe(Schema.mutable),
+}).pipe(Schema.mutable);
+
+export const MaterialListSchema = Schema.Array(MaterialListItemSchema).pipe(
+  Schema.mutable
 );
-export type MaterialList = z.infer<typeof MaterialListSchema>;
+export type MaterialList = Schema.Schema.Type<typeof MaterialListSchema>;
 
-export const MaterialHighSchoolSchema = z.enum([
+export const HIGH_SCHOOL_MATERIALS = [
   "mathematics",
   "physics",
   "chemistry",
@@ -26,10 +28,9 @@ export const MaterialHighSchoolSchema = z.enum([
   "informatics",
   "geospatial",
   "sociology",
-]);
-export type MaterialHighSchool = z.infer<typeof MaterialHighSchoolSchema>;
+] as const;
 
-export const MaterialBachelorSchema = z.enum([
+export const BACHELOR_MATERIALS = [
   "ai-ds",
   "game-engineering",
   "computer-science",
@@ -37,11 +38,22 @@ export const MaterialBachelorSchema = z.enum([
   "political-science",
   "informatics-engineering",
   "international-relations",
-]);
-export type MaterialBachelor = z.infer<typeof MaterialBachelorSchema>;
+] as const;
 
-export const MaterialSchema = z.union([
+export const MaterialHighSchoolSchema = Schema.Literal(
+  ...HIGH_SCHOOL_MATERIALS
+);
+export type MaterialHighSchool = Schema.Schema.Type<
+  typeof MaterialHighSchoolSchema
+>;
+
+export const MaterialBachelorSchema = Schema.Literal(...BACHELOR_MATERIALS);
+export type MaterialBachelor = Schema.Schema.Type<
+  typeof MaterialBachelorSchema
+>;
+
+export const MaterialSchema = Schema.Union(
   MaterialHighSchoolSchema,
-  MaterialBachelorSchema,
-]);
-export type Material = z.infer<typeof MaterialSchema>;
+  MaterialBachelorSchema
+);
+export type Material = Schema.Schema.Type<typeof MaterialSchema>;

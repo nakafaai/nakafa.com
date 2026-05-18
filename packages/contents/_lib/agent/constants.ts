@@ -19,6 +19,12 @@ export const NAKAFA_AGENT_DEFAULT_LIMIT = 20;
 /** Hard cap for paginated agent search results. */
 export const NAKAFA_AGENT_MAX_LIMIT = 50;
 
+/** Hard cap for offset pagination within Convex full-text scan limits. */
+export const NAKAFA_AGENT_MAX_OFFSET = 950;
+
+/** Hard cap for alternate query variants in one search request. */
+export const NAKAFA_AGENT_MAX_QUERIES = 4;
+
 /** Hard cap for direct Quran reference tool ranges. */
 export const NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES = 20;
 

@@ -1,3 +1,4 @@
+import { selfSelectableUserRoles, userRoles } from "@repo/utilities/roles";
 import { defineTable } from "convex/server";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
@@ -6,18 +7,11 @@ import { literals, nullable } from "convex-helpers/validators";
 /**
  * User role options (non-null) - for mutations that set a role
  */
-export const userRoleOptionsValidator = literals(
-  "teacher",
-  "student",
-  "parent",
-  "administrator"
-);
+export const userRoleOptionsValidator = literals(...userRoles);
 
 /** Roles a normal end user may self-select during onboarding/settings. */
 export const selfSelectableUserRoleValidator = literals(
-  "teacher",
-  "student",
-  "parent"
+  ...selfSelectableUserRoles
 );
 
 /**

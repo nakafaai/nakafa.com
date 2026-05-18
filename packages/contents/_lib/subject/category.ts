@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
+import { Option, Schema } from "effect";
 
 /**
  * Builds the public path for a subject category page.
@@ -41,11 +42,13 @@ export function getCategoryIcon(category: string) {
 
 /** Narrows one subject category route segment to the supported category union. */
 export function parseSubjectCategory(value: string) {
-  const parsedCategory = SubjectCategorySchema.safeParse(value);
+  const parsedCategory = Schema.decodeUnknownOption(SubjectCategorySchema)(
+    value
+  );
 
-  if (!parsedCategory.success) {
+  if (Option.isNone(parsedCategory)) {
     return null;
   }
 
-  return parsedCategory.data;
+  return parsedCategory.value;
 }

@@ -16,7 +16,7 @@ export function getNakafaMcpUsageMarkdown() {
     "## Workflow",
     "",
     "1. Call `nakafa_get_taxonomy` to inspect supported locales and content sections.",
-    "2. Call `nakafa_search_content` with a query, locale, and optional section.",
+    "2. Call `nakafa_search_content` with queries, locale, and optional section.",
     "3. Pass the returned `content_id` as `content_ref` to `nakafa_get_content` or `nakafa_get_exercise`.",
     "4. Cite the returned canonical Nakafa URL in final answers.",
   ].join("\n");

@@ -3,8 +3,7 @@ import {
   ResourceTemplate,
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
-import { getNakafaAgentMarkdown } from "@repo/contents/_lib/agent/markdown";
-import { getNakafaAgentTaxonomy } from "@repo/contents/_lib/agent/taxonomy";
+import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { getNakafaMcpUsageMarkdown } from "@repo/contents/_lib/agent/usage";
 import { Effect, Option } from "effect";
 
@@ -39,7 +38,8 @@ export function registerNakafaMcpResources(server: McpServer) {
     },
     (uri) =>
       Effect.runPromise(
-        getNakafaAgentTaxonomy().pipe(
+        Nakafa.taxonomy().pipe(
+          Effect.provide(Nakafa.Default),
           Effect.map((taxonomy) => ({
             contents: [
               {
@@ -63,7 +63,8 @@ export function registerNakafaMcpResources(server: McpServer) {
     },
     (uri) =>
       Effect.runPromise(
-        getNakafaAgentMarkdown(uri.toString()).pipe(
+        Nakafa.read(uri.toString()).pipe(
+          Effect.provide(Nakafa.Default),
           Effect.flatMap(
             Option.match({
               onNone: () =>

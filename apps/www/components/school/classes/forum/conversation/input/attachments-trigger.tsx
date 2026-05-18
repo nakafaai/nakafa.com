@@ -22,20 +22,22 @@ export const InputAttachments = memo(
 
     return (
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <InputGroupButton
-            size="icon"
-            type="button"
-            variant="ghost"
-            {...props}
-          >
-            <HugeIcons icon={Add01Icon} />
-            <span className="sr-only">{t("attachments")}</span>
-          </InputGroupButton>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <InputGroupButton
+              size="icon"
+              type="button"
+              variant="ghost"
+              {...props}
+            >
+              <HugeIcons icon={Add01Icon} />
+              <span className="sr-only">{t("attachments")}</span>
+            </InputGroupButton>
+          }
+        />
 
         <DropdownMenuContent align="start">
-          <DropdownMenuItem className="cursor-pointer" onSelect={onOpenFiles}>
+          <DropdownMenuItem className="cursor-pointer" onClick={onOpenFiles}>
             <HugeIcons icon={FileAttachmentIcon} />
             {t("attachments")}
           </DropdownMenuItem>

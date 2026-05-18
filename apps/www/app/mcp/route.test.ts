@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { GET, HEAD, OPTIONS, POST } from "@/app/mcp/route";
 
 vi.mock("@/env", () => ({
   env: {
@@ -23,7 +24,6 @@ describe("MCP route proxy", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const { POST } = await import("@/app/mcp/route");
     const body = new Uint8Array([31, 139, 8, 0]);
 
     await POST(
@@ -88,8 +88,6 @@ describe("MCP route proxy", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const { OPTIONS } = await import("@/app/mcp/route");
-
     await OPTIONS(
       new Request("https://nakafa.com/mcp", {
         headers: {
@@ -144,7 +142,6 @@ describe("MCP route proxy", () => {
       )
     );
 
-    const { GET } = await import("@/app/mcp/route");
     const response = await GET(
       new Request("https://nakafa.com/mcp", {
         headers: {
@@ -163,7 +160,6 @@ describe("MCP route proxy", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
-    const { POST } = await import("@/app/mcp/route");
     const response = await POST(
       new UnreadableBodyRequest("https://nakafa.com/mcp", {
         body: "unreadable",
@@ -185,7 +181,6 @@ describe("MCP route proxy", () => {
       vi.fn(() => Promise.reject(new Error("upstream unavailable")))
     );
 
-    const { GET } = await import("@/app/mcp/route");
     const response = await GET(
       new Request("https://nakafa.com/mcp", {
         headers: {
@@ -202,7 +197,6 @@ describe("MCP route proxy", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
-    const { GET, HEAD } = await import("@/app/mcp/route");
     const response = await GET(new Request("https://nakafa.com/mcp"));
     const headResponse = HEAD();
 

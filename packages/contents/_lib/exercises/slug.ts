@@ -5,6 +5,8 @@ import type {
   ExercisesMaterialList,
 } from "@repo/contents/_types/exercises/material";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
+import { cleanSlug } from "@repo/utilities/helper";
+import { Option } from "effect";
 
 const TRY_OUT_SEGMENT = "try-out";
 const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
@@ -88,6 +90,50 @@ export function isTryOutCollectionSlug(slug: readonly string[]) {
  */
 export function hasInvalidTryOutYearSlug(slug: readonly string[]) {
   return slug[0] === TRY_OUT_SEGMENT && !isExerciseYearSegment(slug[1]);
+}
+
+/**
+ * Checks whether one route segment is exactly a positive exercise number.
+ */
+export function isExerciseNumberSegment(value: string | undefined) {
+  if (value === undefined) {
+    return false;
+  }
+
+  const trimmedValue = value.trim();
+
+  if (trimmedValue === "") {
+    return false;
+  }
+
+  const number = Number.parseInt(trimmedValue, 10);
+
+  return number > 0 && number.toString() === trimmedValue;
+}
+
+/**
+ * Splits an exercise content route into the concrete set path and optional
+ * exercise number.
+ *
+ * @see https://effect.website/docs/data-types/option/
+ */
+export function getExerciseSetTarget(filePath: string) {
+  const segments = cleanSlug(filePath).split("/").filter(Boolean);
+  const lastSegment = segments.at(-1);
+
+  if (lastSegment === undefined || !isExerciseNumberSegment(lastSegment)) {
+    return {
+      exerciseNumber: Option.none(),
+      filePath: segments.join("/"),
+    };
+  }
+
+  const exerciseNumber = Number.parseInt(lastSegment, 10);
+
+  return {
+    exerciseNumber: Option.some(exerciseNumber),
+    filePath: segments.slice(0, -1).join("/"),
+  };
 }
 
 /**

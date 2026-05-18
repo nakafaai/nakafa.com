@@ -3,22 +3,21 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
 const convexTestTimeout = 15_000;
 const defaultExcludes = ["**/node_modules/**", "coverage/**"];
 
 const config = defineConfig({
   test: {
+    coverage: {
+      enabled: true,
+      provider: "istanbul",
+      reportsDirectory: "./coverage",
+    },
     setupFiles: ["./vitest.setup.ts"],
     projects: [
       {
         extends: true,
         test: {
-          coverage: {
-            enabled: true,
-            provider: "istanbul",
-            reportsDirectory: "./coverage/convex",
-          },
           name: "convex",
           include: ["convex/**/*.test.ts"],
           exclude: defaultExcludes,
@@ -29,11 +28,6 @@ const config = defineConfig({
       {
         extends: true,
         test: {
-          coverage: {
-            enabled: true,
-            provider: "istanbul",
-            reportsDirectory: "./coverage/backend",
-          },
           name: "backend",
           include: ["**/*.test.ts"],
           exclude: ["convex/**", ...defaultExcludes],

@@ -3,13 +3,16 @@
   "globalDependencies": ["**/.env.*local"],
   "ui": "tui",
   "envMode": "loose",
-  "globalEnv": ["ANALYZE", "NEXT_RUNTIME"],
+  "globalEnv": ["AI_SDK_DEVTOOLS", "ANALYZE", "NEXT_RUNTIME"],
   "globalPassThroughEnv": [
     "REDIS_URL",
     "BING_WEBMASTER_API_KEY",
     "AI_GATEWAY_API_KEY",
     "FIRECRAWL_API_KEY",
+    "MATH_CAS_API_KEY",
+    "NEXT_PUBLIC_CAS_URL",
     "OPENWEATHER_API_KEY",
+    "VERCEL_ENV",
     "SITE_URL",
     "AUTH_GOOGLE_ID",
     "AUTH_GOOGLE_SECRET",
@@ -49,6 +52,19 @@
     "test:coverage": {
       "dependsOn": ["^test:coverage"],
       "outputs": ["coverage/**"]
+    },
+    "format": {
+      "dependsOn": ["^format"],
+      "cache": false,
+      "outputs": []
+    },
+    "lint": {
+      "dependsOn": ["^lint"],
+      "outputs": []
+    },
+    "bump-deps": {
+      "cache": false,
+      "outputs": ["uv.lock"]
     },
     "analyze": {
       "dependsOn": ["^analyze"]

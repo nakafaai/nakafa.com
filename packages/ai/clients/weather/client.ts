@@ -1,16 +1,12 @@
 import {
-  airPollutionResponseSchema,
+  AirPollutionResponseSchema,
   type GeoData,
-  reverseGeocodeSchema,
-  weatherResponseSchema,
+  ReverseGeocodeSchema,
+  WeatherResponseSchema,
 } from "@repo/ai/clients/weather/schema";
 import { keys } from "@repo/ai/keys";
-import {
-  createChildLogger,
-  createServiceLogger,
-  createTimer,
-  logError,
-} from "@repo/utilities/logging";
+import { logError, timeOperation } from "@repo/utilities/logging/effect";
+import { Effect, Schema } from "effect";
 import ky from "ky";
 
 const apiKey = keys().OPENWEATHER_API_KEY;
@@ -19,266 +15,274 @@ const WEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5";
 export const DEFAULT_LATITUDE = "-6.2088";
 export const DEFAULT_LONGITUDE = "106.8456";
 
-const weatherLogger = createServiceLogger("weather");
+type AirPollutionResponse = Schema.Schema.Type<
+  typeof AirPollutionResponseSchema
+>;
 
-/**
- * Fetches comprehensive weather data for given coordinates
- * @param latitude - Latitude coordinate
- * @param longitude - Longitude coordinate
- * @returns Combined weather data including forecast, air pollution, and location info
- */
-export async function getWeather({
+/** OpenWeather failed before returning usable JSON. */
+export class WeatherClientRequestError extends Schema.TaggedError<WeatherClientRequestError>()(
+  "WeatherClientRequestError",
+  {
+    cause: Schema.optional(Schema.String),
+    endpoint: Schema.String,
+    message: Schema.String,
+  }
+) {}
+
+/** Fetches comprehensive weather data for given coordinates. */
+export const getWeather = Effect.fn("weather.getWeather")(function* ({
   latitude,
   longitude,
 }: {
   latitude: string;
   longitude: string;
 }) {
-  const logger = createChildLogger({ latitude, longitude });
-  const endTimer = createTimer(weatherLogger, "fetch_weather_data", {
+  const context = {
+    service: "weather",
     latitude,
     longitude,
-  });
+  };
 
-  try {
-    logger.info("Fetching weather data");
+  return yield* timeOperation(
+    "fetch_weather_data",
+    Effect.gen(function* () {
+      yield* Effect.logInfo("Fetching weather data").pipe(
+        Effect.annotateLogs(context)
+      );
 
-    // Step 1: Get geo data
-    const geoData = await fetchGeoData(latitude, longitude);
-    logger.debug(
-      {
-        city: geoData.city,
-        country: geoData.country,
-      },
-      "Geocoding completed"
-    );
+      const geoData = yield* fetchGeoData(latitude, longitude);
 
-    // Step 2: Fetch all weather data in parallel
-    const [weatherResult, airPollutionResult, airPollutionForecastResult] =
-      await Promise.all([
-        fetchWeatherForecast(geoData.latitude, geoData.longitude),
-        fetchAirPollution(geoData.latitude, geoData.longitude),
-        fetchAirPollutionForecast(geoData.latitude, geoData.longitude),
-      ]);
+      yield* Effect.logDebug("Geocoding completed").pipe(
+        Effect.annotateLogs({
+          ...context,
+          city: geoData.city,
+          country: geoData.country,
+        })
+      );
 
-    logger.info("Weather data fetched successfully");
-    endTimer();
+      const [weatherResult, airPollutionResult, airPollutionForecastResult] =
+        yield* Effect.all(
+          [
+            fetchWeatherForecast(geoData.latitude, geoData.longitude),
+            fetchAirPollution(geoData.latitude, geoData.longitude),
+            fetchAirPollutionForecast(geoData.latitude, geoData.longitude),
+          ],
+          { concurrency: "unbounded" }
+        );
 
-    // Return combined data
-    return {
-      ...weatherResult,
-      geocoding: geoData,
-      air_pollution: airPollutionResult,
-      air_pollution_forecast: airPollutionForecastResult,
-    };
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    logError(logger, err, {
-      context: "getWeather",
-      latitude,
-      longitude,
-    });
-    throw error;
-  }
-}
+      yield* Effect.logInfo("Weather data fetched successfully").pipe(
+        Effect.annotateLogs(context)
+      );
 
-/**
- * Fetches location name from coordinates using reverse geocoding
- * @param latitude - Latitude coordinate
- * @param longitude - Longitude coordinate
- * @returns Geographic data with city name and country code
- */
-async function fetchGeoData(
+      return {
+        ...weatherResult,
+        air_pollution: airPollutionResult,
+        air_pollution_forecast: airPollutionForecastResult,
+        geocoding: geoData,
+      };
+    }),
+    context
+  );
+});
+
+/** Fetches location name from coordinates using reverse geocoding. */
+const fetchGeoData = Effect.fn("weather.fetchGeoData")(function* (
   latitude: string,
   longitude: string
-): Promise<GeoData> {
-  try {
-    weatherLogger.debug({ latitude, longitude }, "Fetching geocoding data");
+) {
+  const context = { service: "weather", latitude, longitude };
 
-    const response = await ky
-      .get(`${GEO_BASE_URL}/reverse`, {
-        searchParams: {
-          lat: latitude,
-          lon: longitude,
-          limit: "1",
-          appid: apiKey,
-        },
-      })
-      .json();
+  yield* Effect.logDebug("Fetching geocoding data").pipe(
+    Effect.annotateLogs(context)
+  );
 
-    const result = reverseGeocodeSchema.safeParse(response);
+  const locations = yield* requestJson({
+    endpoint: "reverse-geocode",
+    searchParams: {
+      appid: apiKey,
+      lat: latitude,
+      limit: "1",
+      lon: longitude,
+    },
+    url: `${GEO_BASE_URL}/reverse`,
+  }).pipe(
+    Effect.flatMap(Schema.decodeUnknown(ReverseGeocodeSchema)),
+    Effect.catchTag("WeatherClientRequestError", (error) =>
+      logError(new Error(error.message), {
+        ...context,
+        operation: "fetchGeoData",
+      }).pipe(Effect.as([]))
+    ),
+    Effect.catchTag("ParseError", (error) =>
+      Effect.logWarning("Geocoding validation failed").pipe(
+        Effect.annotateLogs({ ...context, cause: error.message }),
+        Effect.as([])
+      )
+    )
+  );
 
-    if (!result.success || result.data.length === 0) {
-      weatherLogger.warn(
-        {
-          latitude,
-          longitude,
-        },
-        "Geocoding returned no results"
-      );
-      return {
-        city: "",
-        country: "",
-        latitude,
-        longitude,
-      };
-    }
+  const location = locations.at(0);
 
-    const location = result.data[0];
-    return {
-      city: location.name,
-      country: location.country,
-      latitude,
-      longitude,
-    };
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    logError(weatherLogger, err, {
-      context: "fetchGeoData",
-      latitude,
-      longitude,
-    });
-    return {
-      city: "",
-      country: "",
-      latitude,
-      longitude,
-    };
-  }
-}
-
-/**
- * Fetches 5-day/3-hour weather forecast
- * @param latitude - Latitude coordinate
- * @param longitude - Longitude coordinate
- * @returns Weather forecast data or null on error
- */
-async function fetchWeatherForecast(latitude: string, longitude: string) {
-  try {
-    weatherLogger.debug({ latitude, longitude }, "Fetching weather forecast");
-
-    const response = await ky
-      .get(`${WEATHER_BASE_URL}/forecast`, {
-        searchParams: {
-          lat: latitude,
-          lon: longitude,
-          appid: apiKey,
-        },
-      })
-      .json();
-
-    const result = weatherResponseSchema.safeParse(response);
-    if (!result.success) {
-      weatherLogger.warn(
-        {
-          latitude,
-          longitude,
-        },
-        "Weather forecast validation failed"
-      );
-    }
-    return result.success ? result.data : null;
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    logError(weatherLogger, err, {
-      context: "fetchWeatherForecast",
-      latitude,
-      longitude,
-    });
-    return null;
-  }
-}
-
-/**
- * Fetches current air pollution data
- * @param latitude - Latitude coordinate
- * @param longitude - Longitude coordinate
- * @returns Air pollution data with AQI and pollutant concentrations
- */
-async function fetchAirPollution(latitude: string, longitude: string) {
-  try {
-    weatherLogger.debug({ latitude, longitude }, "Fetching air pollution data");
-
-    const response = await ky
-      .get(`${WEATHER_BASE_URL}/air_pollution`, {
-        searchParams: {
-          lat: latitude,
-          lon: longitude,
-          appid: apiKey,
-        },
-      })
-      .json();
-
-    const result = airPollutionResponseSchema.safeParse(response);
-    if (!result.success) {
-      weatherLogger.warn(
-        {
-          latitude,
-          longitude,
-        },
-        "Air pollution validation failed"
-      );
-    }
-    return result.success
-      ? result.data
-      : { coord: { lon: longitude, lat: latitude }, list: [] };
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    logError(weatherLogger, err, {
-      context: "fetchAirPollution",
-      latitude,
-      longitude,
-    });
-    return { coord: { lon: longitude, lat: latitude }, list: [] };
-  }
-}
-
-/**
- * Fetches air pollution forecast
- * @param latitude - Latitude coordinate
- * @param longitude - Longitude coordinate
- * @returns Air pollution forecast data with predicted AQI values
- */
-async function fetchAirPollutionForecast(latitude: string, longitude: string) {
-  try {
-    weatherLogger.debug(
-      {
-        latitude,
-        longitude,
-      },
-      "Fetching air pollution forecast"
+  if (!location) {
+    yield* Effect.logWarning("Geocoding returned no results").pipe(
+      Effect.annotateLogs(context)
     );
 
-    const response = await ky
-      .get(`${WEATHER_BASE_URL}/air_pollution/forecast`, {
-        searchParams: {
-          lat: latitude,
-          lon: longitude,
-          appid: apiKey,
-        },
-      })
-      .json();
-
-    const result = airPollutionResponseSchema.safeParse(response);
-    if (!result.success) {
-      weatherLogger.warn(
-        {
-          latitude,
-          longitude,
-        },
-        "Air pollution forecast validation failed"
-      );
-    }
-    return result.success
-      ? result.data
-      : { coord: { lon: longitude, lat: latitude }, list: [] };
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    logError(weatherLogger, err, {
-      context: "fetchAirPollutionForecast",
-      latitude,
-      longitude,
-    });
-    return { coord: { lon: longitude, lat: latitude }, list: [] };
+    return emptyGeoData(latitude, longitude);
   }
+
+  return {
+    city: location.name,
+    country: location.country,
+    latitude,
+    longitude,
+  };
+});
+
+/** Fetches 5-day/3-hour weather forecast. */
+const fetchWeatherForecast = Effect.fn("weather.fetchWeatherForecast")(
+  function* (latitude: string, longitude: string) {
+    const context = { service: "weather", latitude, longitude };
+
+    yield* Effect.logDebug("Fetching weather forecast").pipe(
+      Effect.annotateLogs(context)
+    );
+
+    return yield* requestJson({
+      endpoint: "weather-forecast",
+      searchParams: {
+        appid: apiKey,
+        lat: latitude,
+        lon: longitude,
+      },
+      url: `${WEATHER_BASE_URL}/forecast`,
+    }).pipe(
+      Effect.flatMap(Schema.decodeUnknown(WeatherResponseSchema)),
+      Effect.catchTag("WeatherClientRequestError", (error) =>
+        logError(new Error(error.message), {
+          ...context,
+          operation: "fetchWeatherForecast",
+        }).pipe(Effect.as(null))
+      ),
+      Effect.catchTag("ParseError", (error) =>
+        Effect.logWarning("Weather forecast validation failed").pipe(
+          Effect.annotateLogs({ ...context, cause: error.message }),
+          Effect.as(null)
+        )
+      )
+    );
+  }
+);
+
+/** Fetches current air pollution data. */
+const fetchAirPollution = Effect.fn("weather.fetchAirPollution")(function* (
+  latitude: string,
+  longitude: string
+) {
+  const context = { service: "weather", latitude, longitude };
+
+  yield* Effect.logDebug("Fetching air pollution data").pipe(
+    Effect.annotateLogs(context)
+  );
+
+  return yield* requestJson({
+    endpoint: "air-pollution",
+    searchParams: {
+      appid: apiKey,
+      lat: latitude,
+      lon: longitude,
+    },
+    url: `${WEATHER_BASE_URL}/air_pollution`,
+  }).pipe(
+    Effect.flatMap(Schema.decodeUnknown(AirPollutionResponseSchema)),
+    Effect.catchTag("WeatherClientRequestError", (error) =>
+      logError(new Error(error.message), {
+        ...context,
+        operation: "fetchAirPollution",
+      }).pipe(Effect.as(emptyAirPollution(latitude, longitude)))
+    ),
+    Effect.catchTag("ParseError", (error) =>
+      Effect.logWarning("Air pollution validation failed").pipe(
+        Effect.annotateLogs({ ...context, cause: error.message }),
+        Effect.as(emptyAirPollution(latitude, longitude))
+      )
+    )
+  );
+});
+
+/** Fetches air pollution forecast data. */
+const fetchAirPollutionForecast = Effect.fn(
+  "weather.fetchAirPollutionForecast"
+)(function* (latitude: string, longitude: string) {
+  const context = { service: "weather", latitude, longitude };
+
+  yield* Effect.logDebug("Fetching air pollution forecast").pipe(
+    Effect.annotateLogs(context)
+  );
+
+  return yield* requestJson({
+    endpoint: "air-pollution-forecast",
+    searchParams: {
+      appid: apiKey,
+      lat: latitude,
+      lon: longitude,
+    },
+    url: `${WEATHER_BASE_URL}/air_pollution/forecast`,
+  }).pipe(
+    Effect.flatMap(Schema.decodeUnknown(AirPollutionResponseSchema)),
+    Effect.catchTag("WeatherClientRequestError", (error) =>
+      logError(new Error(error.message), {
+        ...context,
+        operation: "fetchAirPollutionForecast",
+      }).pipe(Effect.as(emptyAirPollution(latitude, longitude)))
+    ),
+    Effect.catchTag("ParseError", (error) =>
+      Effect.logWarning("Air pollution forecast validation failed").pipe(
+        Effect.annotateLogs({ ...context, cause: error.message }),
+        Effect.as(emptyAirPollution(latitude, longitude))
+      )
+    )
+  );
+});
+
+/** Requests JSON from OpenWeather through an Effect boundary. */
+const requestJson = Effect.fn("weather.requestJson")(function* ({
+  endpoint,
+  searchParams,
+  url,
+}: {
+  endpoint: string;
+  searchParams: Record<string, string>;
+  url: string;
+}) {
+  return yield* Effect.tryPromise({
+    try: () => ky.get(url, { searchParams }).json(),
+    catch: (error) =>
+      new WeatherClientRequestError({
+        cause: String(error),
+        endpoint,
+        message: `OpenWeather request failed for ${endpoint}.`,
+      }),
+  });
+});
+
+/** Builds an empty location when reverse geocoding is unavailable. */
+function emptyGeoData(latitude: string, longitude: string) {
+  return {
+    city: "",
+    country: "",
+    latitude,
+    longitude,
+  } satisfies GeoData;
+}
+
+/** Builds an empty air-pollution payload when OpenWeather cannot provide one. */
+function emptyAirPollution(latitude: string, longitude: string) {
+  return {
+    coord: {
+      lat: Number.parseFloat(latitude),
+      lon: Number.parseFloat(longitude),
+    },
+    list: [],
+  } satisfies AirPollutionResponse;
 }

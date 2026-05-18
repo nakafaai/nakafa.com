@@ -1,8 +1,8 @@
+import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import * as rootParams from "next/root-params";
 import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
-import { routing } from "./routing";
 
 /**
  * Resolves the request locale for `next-intl` from `next/root-params` so the
@@ -34,6 +34,10 @@ export default getRequestConfig(async ({ locale }) => {
 
   return {
     locale: resolvedLocale,
-    messages: (await import(`../dictionaries/${resolvedLocale}.json`)).default,
+    messages: (
+      await import(
+        `@repo/internationalization/dictionaries/${resolvedLocale}.json`
+      )
+    ).default,
   };
 });

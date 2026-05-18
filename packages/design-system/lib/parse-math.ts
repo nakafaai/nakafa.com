@@ -24,10 +24,17 @@ const BLOCK_MATH_COMPONENT_PATTERN =
 // Detects code blocks containing dollar math: ```\n$x^2$\n```
 const CODE_BLOCK_WITH_SINGLE_DOLLAR_MATH_PATTERN =
   /```(?:\s*\n)?\s*\$\s*([\s\S]*?)\s*\$\s*(?:\n\s*)?```/g;
+// Detects plain single-dollar spans outside code fences: $x^2$
+const SINGLE_DOLLAR_SPAN_PATTERN = /(^|[^$\\])\$([^$\n]+)\$(?!\$)/g;
+const LATEX_SIGNAL_PATTERN = /\\[a-zA-Z]+|\\[,;! ]/;
+const MATH_SYMBOL_PATTERN = /[=^_{}<>≤≥√∞±×÷∑∫]/u;
+const MATH_OPERATOR_PATTERN = /(?:\d|\p{L})\s*(?:[+\-*/=<>])\s*(?:\d|\p{L})/u;
+const SINGLE_VARIABLE_PATTERN = /^[A-Za-z](?:[_^][A-Za-z0-9{}]+)?$/;
 const TRIPLE_BACKTICK_LENGTH = 3;
 const NUMBERED_LIST_PATTERN = /^(\s*)(\d+)\.\s+/;
-const BULLET_LIST_PATTERN = /^(\s*)[-]\s+/;
+const BULLET_LIST_PATTERN = /^(\s*)[-*+]\s+/;
 const NON_WHITESPACE_START_PATTERN = /^\S/;
+const BLOCKQUOTE_PREFIX_PATTERN = /^(\s*(?:>\s*)+)\s*$/;
 
 /**
  * Applies a transform only to segments that are OUTSIDE of fenced code blocks (``` ... ```)
@@ -93,14 +100,14 @@ function getListContext(
     // Check for numbered list (1., 2., etc.)
     const numberedMatch = line.match(NUMBERED_LIST_PATTERN);
     if (numberedMatch) {
-      const indentation = `${numberedMatch[1]}    `; // Base indentation + 4 spaces for content
+      const indentation = " ".repeat(numberedMatch[0].length);
       return { isInList: true, indentation };
     }
 
     // Check for bullet list (-, *, +)
     const bulletMatch = line.match(BULLET_LIST_PATTERN);
     if (bulletMatch) {
-      const indentation = `${bulletMatch[1]}  `; // Base indentation + 2 spaces for content
+      const indentation = " ".repeat(bulletMatch[0].length);
       return { isInList: true, indentation };
     }
 
@@ -111,6 +118,18 @@ function getListContext(
   }
 
   return { isInList: false, indentation: "" };
+}
+
+/**
+ * Returns the Markdown quote prefix when display math is the only content on a
+ * blockquote line.
+ */
+function getBlockquotePrefix(text: string, position: number) {
+  const lineStart = text.lastIndexOf("\n", position - 1) + 1;
+  const linePrefix = text.slice(lineStart, position);
+  const match = linePrefix.match(BLOCKQUOTE_PREFIX_PATTERN);
+
+  return match?.[1];
 }
 
 /**
@@ -126,9 +145,18 @@ function createFencedMathBlock(
   fullText: string,
   matchStart: number
 ): string {
+  const blockquotePrefix = getBlockquotePrefix(fullText, matchStart);
   const context = getListContext(fullText, matchStart);
-
   const mathContent = inner.trim();
+
+  if (blockquotePrefix) {
+    const quotedMath = mathContent
+      .split("\n")
+      .map((line) => `${blockquotePrefix}${line}`)
+      .join("\n");
+
+    return `\`\`\`math\n${quotedMath}\n${blockquotePrefix}\`\`\``;
+  }
 
   if (context.isInList) {
     // In a list: use single newline and preserve indentation
@@ -136,6 +164,41 @@ function createFencedMathBlock(
   }
   // Not in a list: use double newlines for block separation
   return `\n\n\`\`\`math\n${mathContent}\n\`\`\`\n\n`;
+}
+
+/**
+ * Checks whether a single-dollar span is math instead of ordinary currency text.
+ */
+function isLikelyInlineMath(content: string) {
+  const text = content.trim();
+
+  if (!text) {
+    return false;
+  }
+
+  return (
+    LATEX_SIGNAL_PATTERN.test(text) ||
+    MATH_SYMBOL_PATTERN.test(text) ||
+    MATH_OPERATOR_PATTERN.test(text) ||
+    SINGLE_VARIABLE_PATTERN.test(text)
+  );
+}
+
+/**
+ * Converts safe plain `$...$` spans into the double-dollar inline form parsed
+ * by remark-math while single-dollar parsing stays disabled.
+ */
+function normalizeSingleDollarMath(segment: string) {
+  return segment.replace(
+    SINGLE_DOLLAR_SPAN_PATTERN,
+    (match, prefix: string, content: string) => {
+      if (!isLikelyInlineMath(content)) {
+        return match;
+      }
+
+      return `${prefix}$$${content.trim()}$$`;
+    }
+  );
 }
 
 /**
@@ -193,6 +256,8 @@ function normalizeMathDelimiters(input: string): string {
     for (const pattern of inlineMathPatterns) {
       s = s.replace(pattern, (_, content: string) => `$$${content.trim()}$$`);
     }
+
+    s = normalizeSingleDollarMath(s);
 
     // Convert all display math formats to fenced blocks
     const displayMathPatterns = [

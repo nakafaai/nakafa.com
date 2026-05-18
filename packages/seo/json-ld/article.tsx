@@ -1,4 +1,4 @@
-import { getAppUrl } from "@repo/design-system/lib/utils";
+import { getAppUrl } from "@repo/next-config/app";
 import { JsonLd } from "@repo/seo/json-ld";
 import { ORGANIZATION } from "@repo/seo/json-ld/constants";
 import type { Person } from "schema-dts";

@@ -182,23 +182,25 @@ function AssessmentActions({
   return (
     <div className={className}>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            className="z-1 opacity-50 transition-opacity ease-out group-hover:opacity-100"
-            disabled={isPending}
-            size="icon-sm"
-            variant="ghost"
-          >
-            <HugeIcons icon={MoreHorizontalIcon} />
-            <span className="sr-only">{t("more-actions")}</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuTrigger
+          render={
+            <Button
+              className="z-1 opacity-50 transition-opacity ease-out group-hover:opacity-100"
+              disabled={isPending}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <HugeIcons icon={MoreHorizontalIcon} />
+              <span className="sr-only">{t("more-actions")}</span>
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuGroup>
             <DropdownMenuItem
               className="cursor-pointer"
               disabled={isPending}
-              onSelect={editHandlers.open}
+              onClick={editHandlers.open}
             >
               <HugeIcons icon={Edit01Icon} />
               {t("edit")}
@@ -206,7 +208,7 @@ function AssessmentActions({
             <DropdownMenuItem
               className="cursor-pointer"
               disabled={isPending}
-              onSelect={handleMoveUp}
+              onClick={handleMoveUp}
             >
               <HugeIcons icon={ArrowUp02Icon} />
               {t("move-up")}
@@ -214,7 +216,7 @@ function AssessmentActions({
             <DropdownMenuItem
               className="cursor-pointer"
               disabled={isPending}
-              onSelect={handleMoveDown}
+              onClick={handleMoveDown}
             >
               <HugeIcons icon={ArrowDown02Icon} />
               {t("move-down")}
@@ -225,7 +227,7 @@ function AssessmentActions({
             <DropdownMenuItem
               className="cursor-pointer"
               disabled={isPending}
-              onSelect={confirmDeleteHandlers.open}
+              onClick={confirmDeleteHandlers.open}
               variant="destructive"
             >
               <HugeIcons icon={Delete02Icon} />

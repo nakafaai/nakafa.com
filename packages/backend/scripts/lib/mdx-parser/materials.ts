@@ -16,10 +16,7 @@ import {
   buildExerciseSetSlug,
   getRelativeExercisePathSegments,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
-import type {
-  ParsedExerciseSet,
-  ParsedSubjectTopic,
-} from "@repo/backend/scripts/lib/mdx-parser/types";
+import type { ParsedExerciseSet } from "@repo/backend/scripts/lib/mdx-parser/types";
 import {
   parseExerciseYear,
   validateExercisesCategory,
@@ -31,36 +28,52 @@ import {
 } from "@repo/backend/scripts/lib/mdx-parser/validators";
 import { ExercisesMaterialListSchema } from "@repo/contents/_types/exercises/material";
 import { MaterialListSchema } from "@repo/contents/_types/subject/material";
-import type * as z from "zod";
+import { Effect, Schema } from "effect";
 
-async function readBasePath(
+class MaterialReadError extends Schema.TaggedError<MaterialReadError>()(
+  "MaterialReadError",
+  {
+    message: Schema.String,
+  }
+) {}
+
+const getUnknownMessage = (error: unknown) =>
+  error instanceof Error ? error.message : String(error);
+
+const readBasePath = Effect.fn("mdx.readBasePath")(function* (
   materialFilePath: string,
   fallbackBasePath: string
 ) {
   const indexPath = path.join(path.dirname(materialFilePath), "index.ts");
+  const file = yield* Effect.either(
+    Effect.tryPromise({
+      try: () => fs.readFile(indexPath, "utf8"),
+      catch: (error) =>
+        new MaterialReadError({ message: getUnknownMessage(error) }),
+    })
+  );
 
-  try {
-    const indexContent = await fs.readFile(indexPath, "utf8");
-    const basePathMatch = indexContent.match(BASE_PATH_REGEX);
-
-    if (!basePathMatch) {
-      return fallbackBasePath;
-    }
-
-    return basePathMatch[1].replace(LEADING_SLASH_REGEX, "");
-  } catch {
+  if (file._tag === "Left") {
     return fallbackBasePath;
   }
-}
 
-function readTypedArray<T>(
+  const basePathMatch = file.right.match(BASE_PATH_REGEX);
+
+  if (!basePathMatch) {
+    return fallbackBasePath;
+  }
+
+  return basePathMatch[1].replace(LEADING_SLASH_REGEX, "");
+});
+
+const readTypedArray = Effect.fn("mdx.readTypedArray")(function* <A, I>(
   content: string,
   arrayRegex: RegExp,
   basePath: string,
-  parser: z.ZodType<T>,
+  parser: Schema.Schema<A, I, never>,
   filePath: string,
-  emptyValue: T
-): T {
+  emptyValue: A
+) {
   const constMatch = content.match(arrayRegex);
 
   if (!constMatch) {
@@ -71,28 +84,39 @@ function readTypedArray<T>(
     BASE_PATH_TEMPLATE_REGEX,
     `/${basePath}`
   );
-  const parsedArray = new Function(`return ${arrayWithBasePath}`)();
-  const parseResult = parser.safeParse(parsedArray);
+  const parsedArray = yield* Effect.try({
+    try: () => new Function(`return ${arrayWithBasePath}`)(),
+    catch: (error) =>
+      new MaterialReadError({
+        message: `Invalid material file ${filePath}: ${getUnknownMessage(error)}`,
+      }),
+  });
+  const parseResult = Schema.decodeUnknownEither(parser)(parsedArray);
 
-  if (!parseResult.success) {
-    console.warn(
-      `Invalid material file ${filePath}: ${parseResult.error?.message ?? "Unknown error"}`
+  if (parseResult._tag === "Left") {
+    return yield* Effect.fail(
+      new MaterialReadError({
+        message: `Invalid material file ${filePath}: ${parseResult.left.message}`,
+      })
     );
-    return emptyValue;
   }
 
-  return parseResult.data;
-}
+  return parseResult.right;
+});
 
-export async function parseExerciseMaterialFile(
-  materialFilePath: string,
-  locale: Locale
-): Promise<ParsedExerciseSet[]> {
+/** Parses one exercise material module into sync-ready exercise sets. */
+export const parseExerciseMaterialFile = Effect.fn(
+  "mdx.parseExerciseMaterialFile"
+)(function* (materialFilePath: string, locale: Locale) {
   const normalized = materialFilePath.replace(BACKSLASH_REGEX, "/");
   const pathMatch = normalized.match(EXERCISE_MATERIAL_PATH_REGEX);
 
   if (!pathMatch) {
-    throw new Error(`Invalid material file path: ${materialFilePath}`);
+    return yield* Effect.fail(
+      new MaterialReadError({
+        message: `Invalid material file path: ${materialFilePath}`,
+      })
+    );
   }
 
   const [, rawCategory, rawType, rawMaterial] = pathMatch;
@@ -100,9 +124,13 @@ export async function parseExerciseMaterialFile(
   const type = validateExercisesType(rawType, materialFilePath);
   const material = validateExercisesMaterial(rawMaterial, materialFilePath);
   const fallbackBasePath = `exercises/${category}/${type}/${material}`;
-  const basePath = await readBasePath(materialFilePath, fallbackBasePath);
-  const content = await fs.readFile(materialFilePath, "utf8");
-  const exerciseTypeGroups = readTypedArray(
+  const basePath = yield* readBasePath(materialFilePath, fallbackBasePath);
+  const content = yield* Effect.tryPromise({
+    try: () => fs.readFile(materialFilePath, "utf8"),
+    catch: (error) =>
+      new MaterialReadError({ message: getUnknownMessage(error) }),
+  });
+  const exerciseTypeGroups = yield* readTypedArray(
     content,
     EXERCISE_MATERIAL_CONST_REGEX,
     basePath,
@@ -120,16 +148,20 @@ export async function parseExerciseMaterialFile(
     );
 
     if (groupSegments.length === 0 || groupSegments.length > 2) {
-      throw new Error(
-        `Invalid exercise group href "${exerciseTypeGroup.href}" in ${materialFilePath}.`
+      return yield* Effect.fail(
+        new MaterialReadError({
+          message: `Invalid exercise group href "${exerciseTypeGroup.href}" in ${materialFilePath}.`,
+        })
       );
     }
 
     const [exerciseType, rawYear] = groupSegments;
 
     if (!exerciseType) {
-      throw new Error(
-        `Invalid exercise group href "${exerciseTypeGroup.href}" in ${materialFilePath}.`
+      return yield* Effect.fail(
+        new MaterialReadError({
+          message: `Invalid exercise group href "${exerciseTypeGroup.href}" in ${materialFilePath}.`,
+        })
       );
     }
 
@@ -151,16 +183,20 @@ export async function parseExerciseMaterialFile(
         itemSegments.length !== expectedPrefix.length + 1 ||
         !hasExpectedPrefix
       ) {
-        throw new Error(
-          `Invalid exercise set href "${setItem.href}" in ${materialFilePath}.`
+        return yield* Effect.fail(
+          new MaterialReadError({
+            message: `Invalid exercise set href "${setItem.href}" in ${materialFilePath}.`,
+          })
         );
       }
 
       const setName = itemSegments.at(-1);
 
       if (!setName) {
-        throw new Error(
-          `Invalid exercise set href "${setItem.href}" in ${materialFilePath}.`
+        return yield* Effect.fail(
+          new MaterialReadError({
+            message: `Invalid exercise set href "${setItem.href}" in ${materialFilePath}.`,
+          })
         );
       }
 
@@ -178,6 +214,7 @@ export async function parseExerciseMaterialFile(
         type,
         material,
         exerciseType,
+        exerciseTypeTitle: exerciseTypeGroup.title,
         setName,
         title: setItem.title,
         description: exerciseTypeGroup.description,
@@ -187,17 +224,21 @@ export async function parseExerciseMaterialFile(
   }
 
   return sets;
-}
+});
 
-export async function parseSubjectMaterialFile(
-  materialFilePath: string,
-  locale: Locale
-): Promise<ParsedSubjectTopic[]> {
+/** Parses one subject material module into sync-ready subject topics. */
+export const parseSubjectMaterialFile = Effect.fn(
+  "mdx.parseSubjectMaterialFile"
+)(function* (materialFilePath: string, locale: Locale) {
   const normalized = materialFilePath.replace(BACKSLASH_REGEX, "/");
   const pathMatch = normalized.match(SUBJECT_MATERIAL_PATH_REGEX);
 
   if (!pathMatch) {
-    throw new Error(`Invalid subject material file path: ${materialFilePath}`);
+    return yield* Effect.fail(
+      new MaterialReadError({
+        message: `Invalid subject material file path: ${materialFilePath}`,
+      })
+    );
   }
 
   const [, rawCategory, rawGrade, rawMaterial] = pathMatch;
@@ -205,9 +246,13 @@ export async function parseSubjectMaterialFile(
   const grade = validateGrade(rawGrade, materialFilePath);
   const material = validateMaterial(rawMaterial, materialFilePath);
   const fallbackBasePath = `subject/${category}/${grade}/${material}`;
-  const basePath = await readBasePath(materialFilePath, fallbackBasePath);
-  const content = await fs.readFile(materialFilePath, "utf8");
-  const topicGroups = readTypedArray(
+  const basePath = yield* readBasePath(materialFilePath, fallbackBasePath);
+  const content = yield* Effect.tryPromise({
+    try: () => fs.readFile(materialFilePath, "utf8"),
+    catch: (error) =>
+      new MaterialReadError({ message: getUnknownMessage(error) }),
+  });
+  const topicGroups = yield* readTypedArray(
     content,
     SUBJECT_MATERIAL_CONST_REGEX,
     basePath,
@@ -231,4 +276,4 @@ export async function parseSubjectMaterialFile(
       sectionCount: topicGroup.items.length,
     };
   });
-}
+});

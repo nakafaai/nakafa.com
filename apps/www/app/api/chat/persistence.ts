@@ -1,5 +1,5 @@
 import type { ModelId } from "@repo/ai/config/models";
-import { compressMessages } from "@repo/ai/lib/utils";
+import { compressMessages } from "@repo/ai/lib/message";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -8,11 +8,24 @@ import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messagePa
 import type { MessageWithPartsDoc } from "@repo/backend/convex/chats/schema";
 import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
+import { Effect } from "effect";
 
 interface ChatMessagesPage {
   continueCursor: string;
   isDone: boolean;
   page: MessageWithPartsDoc[];
+}
+
+interface Save {
+  chatId: Id<"chats"> | undefined;
+  message: MyUIMessage;
+  modelId: ModelId;
+  token: string;
+}
+
+interface Load {
+  chatId: Id<"chats">;
+  token: string;
 }
 
 /**
@@ -21,51 +34,69 @@ interface ChatMessagesPage {
  *
  * @returns The resolved chat ID (either the existing one or the newly created one).
  */
-export async function saveOrCreateChat({
+export const saveOrCreateChat = Effect.fn("chat.saveOrCreateChat")(function* ({
   chatId,
   message,
   modelId,
   token,
-}: {
-  chatId: Id<"chats"> | undefined;
-  message: MyUIMessage;
-  modelId: ModelId;
-  token: string;
-}): Promise<Id<"chats">> {
+}: Save) {
   const dbParts = mapUIMessagePartsToDBParts({ messageParts: message.parts });
 
   if (chatId) {
-    const existingMessage = await fetchQuery(
-      convexApi.chats.queries.getMessageMatch,
-      {
-        chatId,
-        identifier: message.id,
-      },
-      { token }
+    const existingMessage = yield* Effect.tryPromise(() =>
+      fetchQuery(
+        convexApi.chats.queries.getMessageMatch,
+        {
+          chatId,
+          identifier: message.id,
+        },
+        { token }
+      )
     );
 
     if (existingMessage) {
       let hasMore = true;
 
       while (hasMore) {
-        const result = await fetchMutation(
-          convexApi.chats.mutations.deleteMessageBatch,
-          {
-            chatId,
-            fromCreationTime: existingMessage.creationTime,
-          },
-          { token }
+        const result = yield* Effect.tryPromise(() =>
+          fetchMutation(
+            convexApi.chats.mutations.deleteMessageBatch,
+            {
+              chatId,
+              fromCreationTime: existingMessage.creationTime,
+            },
+            { token }
+          )
         );
 
         hasMore = result.hasMore;
       }
     }
 
-    await fetchMutation(
-      convexApi.chats.mutations.saveMessage,
+    yield* Effect.tryPromise(() =>
+      fetchMutation(
+        convexApi.chats.mutations.saveMessage,
+        {
+          message: {
+            chatId,
+            role: message.role,
+            identifier: message.id,
+            modelId,
+          },
+          parts: dbParts,
+        },
+        { token }
+      )
+    );
+    return chatId;
+  }
+
+  const result = yield* Effect.tryPromise(() =>
+    fetchMutation(
+      convexApi.chats.mutations.createChatWithMessage,
       {
+        type: "study",
         message: {
-          chatId,
           role: message.role,
           identifier: message.id,
           modelId,
@@ -73,25 +104,10 @@ export async function saveOrCreateChat({
         parts: dbParts,
       },
       { token }
-    );
-    return chatId;
-  }
-
-  const result = await fetchMutation(
-    convexApi.chats.mutations.createChatWithMessage,
-    {
-      type: "study",
-      message: {
-        role: message.role,
-        identifier: message.id,
-        modelId,
-      },
-      parts: dbParts,
-    },
-    { token }
+    )
   );
   return result.chatId;
-}
+});
 
 /**
  * Fetches a chat transcript page-by-page until the retained context is enough
@@ -99,27 +115,26 @@ export async function saveOrCreateChat({
  *
  * @returns An ordered array of UI messages for the given chat context.
  */
-export async function loadMessages({
+export const loadMessages = Effect.fn("chat.loadMessages")(function* ({
   chatId,
   token,
-}: {
-  chatId: Id<"chats">;
-  token: string;
-}): Promise<MyUIMessage[]> {
+}: Load) {
   let cursor: string | null = null;
   let messages: MyUIMessage[] = [];
 
   while (true) {
-    const page: ChatMessagesPage = await fetchQuery(
-      convexApi.chats.queries.loadMessagesPage,
-      {
-        chatId,
-        paginationOpts: {
-          cursor,
-          numItems: CHAT_MESSAGES_PAGE_SIZE,
+    const page: ChatMessagesPage = yield* Effect.tryPromise(() =>
+      fetchQuery(
+        convexApi.chats.queries.loadMessagesPage,
+        {
+          chatId,
+          paginationOpts: {
+            cursor,
+            numItems: CHAT_MESSAGES_PAGE_SIZE,
+          },
         },
-      },
-      { token }
+        { token }
+      )
     );
     const nextMessages = mapDBMessagesToUIMessages([...page.page].reverse());
     messages = [...nextMessages, ...messages];
@@ -132,4 +147,4 @@ export async function loadMessages({
 
     cursor = page.continueCursor;
   }
-}
+});

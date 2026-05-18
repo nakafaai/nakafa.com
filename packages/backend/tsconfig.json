@@ -19,5 +19,5 @@
     }
   },
   "include": ["./**/*"],
-  "exclude": ["./convex/_generated", "./coverage", "./vitest.config.ts"]
+  "exclude": ["./convex/_generated", "./coverage"]
 }

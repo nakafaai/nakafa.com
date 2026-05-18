@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { getNakafaAgentMarkdown } from "@repo/contents/_lib/agent/markdown";
+import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { Effect, Option } from "effect";
 import {
   succeedMcpReadModelError,
@@ -31,7 +31,8 @@ export function registerNakafaGetContentTool(server: McpServer) {
 
 /** Builds a full-content tool result for one Nakafa content reference. */
 export function getNakafaContentToolResult(contentRef: string) {
-  return getNakafaAgentMarkdown(contentRef).pipe(
+  return Nakafa.read(contentRef).pipe(
+    Effect.provide(Nakafa.Default),
     Effect.map(
       Option.match({
         onNone: () =>

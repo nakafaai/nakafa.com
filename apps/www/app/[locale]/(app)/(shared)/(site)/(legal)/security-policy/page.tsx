@@ -32,7 +32,9 @@ export default function Page(props: PageProps<"/[locale]/security-policy">) {
 
 async function PageContent({ locale }: { locale: Locale }) {
   try {
-    const { default: Content } = await import(`./${locale}.mdx`);
+    const { default: Content } = await import(
+      `@/app/[locale]/(app)/(shared)/(site)/(legal)/security-policy/${locale}.mdx`
+    );
 
     if (!Content) {
       notFound();

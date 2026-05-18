@@ -9,7 +9,7 @@ import {
   getArticleDir,
   parseArticlePath,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
-import { runConvexMutation } from "@repo/backend/scripts/sync-content/convexApi";
+import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
   log,
@@ -22,12 +22,16 @@ import {
   updateBatchProgress,
 } from "@repo/backend/scripts/sync-content/metrics";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
-import { BATCH_SIZES } from "@repo/backend/scripts/sync-content/schemas";
+import {
+  BATCH_SIZES,
+  SyncResultSchema,
+} from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
   SyncOptions,
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
+import { Effect } from "effect";
 
 interface ArticlePayload {
   articleSlug: string;
@@ -51,10 +55,11 @@ interface ArticlePayload {
   title: string;
 }
 
-export const syncArticles = async (
+/** Syncs article MDX files and their references into Convex. */
+export const syncArticles = Effect.fn("sync.articles")(function* (
   config: ConvexConfig,
   options: SyncOptions
-): Promise<SyncResult> => {
+) {
   const startTime = performance.now();
   if (!options.quiet) {
     log("\n--- ARTICLES ---\n");
@@ -63,7 +68,7 @@ export const syncArticles = async (
   const pattern = options.locale
     ? `articles/**/${options.locale}.mdx`
     : "articles/**/*.mdx";
-  const files = await globFiles(pattern);
+  const files = yield* globFiles(pattern);
 
   if (!options.quiet) {
     log(`Files found: ${files.length}`);
@@ -80,31 +85,43 @@ export const syncArticles = async (
   const errors: string[] = [];
 
   for (const file of files) {
-    try {
-      const pathInfo = parseArticlePath(file);
-      const { metadata, body } = await readMdxFile(file);
-      const articleDir = getArticleDir(file);
-      const references = await readArticleReferences(articleDir);
-      const contentHash = computeHash(
-        body + JSON.stringify(references) + JSON.stringify(metadata.authors)
-      );
+    const result = yield* Effect.either(
+      Effect.gen(function* () {
+        const pathInfo = yield* Effect.try({
+          try: () => parseArticlePath(file),
+          catch: (error) => error,
+        });
+        const { metadata, body } = yield* readMdxFile(file);
+        const articleDir = getArticleDir(file);
+        const references = yield* readArticleReferences(articleDir);
+        const contentHash = computeHash(
+          body + JSON.stringify(references) + JSON.stringify(metadata.authors)
+        );
 
-      articles.push({
-        locale: pathInfo.locale,
-        slug: pathInfo.slug,
-        category: pathInfo.category,
-        articleSlug: pathInfo.articleSlug,
-        title: metadata.title,
-        description: metadata.description,
-        date: parseDateToEpoch(metadata.date),
-        body,
-        contentHash,
-        authors: metadata.authors,
-        references,
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+        return {
+          locale: pathInfo.locale,
+          slug: pathInfo.slug,
+          category: pathInfo.category,
+          articleSlug: pathInfo.articleSlug,
+          title: metadata.title,
+          description: metadata.description,
+          date: parseDateToEpoch(metadata.date),
+          body,
+          contentHash,
+          authors: metadata.authors,
+          references,
+        };
+      })
+    );
+
+    if (result._tag === "Left") {
+      const message =
+        result.left instanceof Error
+          ? result.left.message
+          : String(result.left);
       errors.push(`${file}: ${message}`);
+    } else {
+      articles.push(result.right);
     }
   }
 
@@ -126,10 +143,12 @@ export const syncArticles = async (
       log(formatBatchProgress(progress, batchNum, totalBatches, batch.length));
     }
 
-    const result = await runConvexMutation(
+    const result = yield* callConvex(
       config,
+      "mutation",
       "contentSync/mutations/articles:bulkSyncArticles",
-      { articles: batch }
+      { articles: batch },
+      SyncResultSchema
     );
 
     totals.created += result.created;
@@ -167,4 +186,4 @@ export const syncArticles = async (
   }
 
   return { ...totals, durationMs, itemsPerSecond };
-};
+});

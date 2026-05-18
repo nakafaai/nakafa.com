@@ -1,207 +1,51 @@
 import {
-  Anthropic,
-  DeepSeek,
-  Gemini,
-  Kimi,
-  LongCat,
-  Meta,
-  Minimax,
-  OpenAI,
-  Qwen,
-  XAI,
-  ZAI,
-} from "@lobehub/icons";
-import type { ModelId } from "@repo/ai/config/models";
-import type { ComponentType } from "react";
+  LaurelWreath01Icon,
+  LaurelWreathRight03Icon,
+} from "@hugeicons/core-free-icons";
+import type { IconSvgElement } from "@hugeicons/react";
+import { MODEL_IDS, type ModelId } from "@repo/ai/config/models";
 
-interface Model {
-  icon: ComponentType;
-  label: string;
-  type: "premium" | "free";
-  value: ModelId;
-}
+const modelIcons = {
+  "nakafa-lite": LaurelWreathRight03Icon,
+  "nakafa-pro": LaurelWreath01Icon,
+} satisfies Record<ModelId, IconSvgElement>;
 
-export const aiModels: Model[] = [
-  {
-    icon: Anthropic,
-    value: "claude-sonnet-4.5",
-    label: "Claude Sonnet 4.5",
-    type: "premium",
-  },
-  {
-    icon: Anthropic,
-    value: "claude-haiku-4.5",
-    label: "Claude Haiku 4.5",
-    type: "premium",
-  },
-  {
-    icon: Gemini,
-    value: "gemini-3.1-pro",
-    label: "Gemini 3.1 Pro",
-    type: "premium",
-  },
-  {
-    icon: Gemini,
-    value: "gemini-3-pro",
-    label: "Gemini 3 Pro",
-    type: "premium",
-  },
-  {
-    icon: Gemini,
-    value: "gemini-2.5-pro",
-    label: "Gemini 2.5 Pro",
-    type: "premium",
-  },
-  {
-    icon: Gemini,
-    value: "gemini-3-flash",
-    label: "Gemini 3 Flash",
-    type: "premium",
-  },
-  {
-    icon: OpenAI,
-    value: "gpt-5.2",
-    label: "GPT 5.2",
-    type: "premium",
-  },
-  {
-    icon: OpenAI,
-    value: "gpt-5",
-    label: "GPT 5",
-    type: "premium",
-  },
-  {
-    icon: XAI,
-    value: "grok-4",
-    label: "Grok 4",
-    type: "premium",
-  },
-  {
-    icon: Qwen,
-    value: "qwen-3-max",
-    label: "Qwen 3 Max",
-    type: "premium",
-  },
-  {
-    icon: Minimax,
-    value: "minimax-m2.5",
-    label: "Minimax M2.5",
-    type: "premium",
-  },
-  {
-    icon: ZAI,
-    value: "glm-5",
-    label: "GLM 5",
-    type: "premium",
-  },
-  {
-    icon: Kimi,
-    value: "kimi-k2-thinking",
-    label: "Kimi K2 Thinking",
-    type: "premium",
-  },
-  {
-    icon: Gemini,
-    value: "gemini-3.1-flash-lite",
-    label: "Gemini 3.1 Flash Lite",
-    type: "free",
-  },
-  {
-    icon: Gemini,
-    value: "gemini-2.5-flash",
-    label: "Gemini 2.5 Flash",
-    type: "free",
-  },
-  {
-    icon: Kimi,
-    value: "kimi-k2.5",
-    label: "Kimi K2.5",
-    type: "free",
-  },
-  {
-    icon: Kimi,
-    value: "kimi-k2",
-    label: "Kimi K2",
-    type: "free",
-  },
-  {
-    icon: XAI,
-    value: "grok-4.1-fast-reasoning",
-    label: "Grok 4.1 Fast Reasoning",
-    type: "free",
-  },
-  {
-    icon: XAI,
-    value: "grok-4.1-fast-non-reasoning",
-    label: "Grok 4.1 Fast",
-    type: "free",
-  },
-  {
-    icon: OpenAI,
-    value: "gpt-oss-120b",
-    label: "GPT OSS 120B",
-    type: "free",
-  },
-  {
-    icon: OpenAI,
-    value: "gpt-5-nano",
-    label: "GPT 5 Nano",
-    type: "free",
-  },
-  {
-    icon: Minimax,
-    value: "minimax-m2.1",
-    label: "Minimax M2.1",
-    type: "free",
-  },
-  {
-    icon: Minimax,
-    value: "minimax-m2",
-    label: "Minimax M2",
-    type: "free",
-  },
-  {
-    icon: DeepSeek,
-    value: "deepseek-v3.1",
-    label: "DeepSeek V3.1",
-    type: "free",
-  },
-  {
-    icon: Meta,
-    value: "llama-4-maverick",
-    label: "Llama 4 Maverick",
-    type: "free",
-  },
-  {
-    icon: LongCat,
-    value: "longcat-flash",
-    label: "LongCat Flash",
-    type: "free",
-  },
-  {
-    icon: Qwen,
-    value: "qwen-3-coder",
-    label: "Qwen 3 Coder",
-    type: "free",
-  },
-  {
-    icon: ZAI,
-    value: "glm-4.7",
-    label: "GLM 4.7",
-    type: "free",
-  },
-  {
-    icon: ZAI,
-    value: "glm-4.6",
-    label: "GLM 4.6",
-    type: "free",
-  },
-];
+const modelLabels = {
+  "nakafa-lite": "Lite",
+  "nakafa-pro": "Pro",
+} as const satisfies Record<ModelId, string>;
 
-export function getPremiumModels() {
-  return aiModels.filter((m) => m.type === "premium");
-}
+const modelSubtitleKeys = {
+  "nakafa-lite": "model-subtitle-nakafa-lite",
+  "nakafa-pro": "model-subtitle-nakafa-pro",
+} as const satisfies Record<ModelId, string>;
 
-export function getFreeModels() {
-  return aiModels.filter((m) => m.type === "free");
+export const aiModelsById = {
+  "nakafa-lite": {
+    icon: modelIcons["nakafa-lite"],
+    label: modelLabels["nakafa-lite"],
+    subtitleKey: modelSubtitleKeys["nakafa-lite"],
+    value: "nakafa-lite",
+  },
+  "nakafa-pro": {
+    icon: modelIcons["nakafa-pro"],
+    label: modelLabels["nakafa-pro"],
+    subtitleKey: modelSubtitleKeys["nakafa-pro"],
+    value: "nakafa-pro",
+  },
+} satisfies Record<
+  ModelId,
+  {
+    icon: IconSvgElement;
+    label: (typeof modelLabels)[ModelId];
+    subtitleKey: (typeof modelSubtitleKeys)[ModelId];
+    value: ModelId;
+  }
+>;
+
+export const aiModels = MODEL_IDS.map((value) => aiModelsById[value]);
+
+/** Finds display metadata for one Nakafa model. */
+export function getAiModel(modelId: ModelId) {
+  return aiModelsById[modelId];
 }

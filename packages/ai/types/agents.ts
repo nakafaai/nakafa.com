@@ -1,12 +1,13 @@
 import type { ModelId } from "@repo/ai/config/models";
-import type { AccumulatedTokenUsage } from "@repo/ai/lib/usage";
-import type { ToolName } from "@repo/ai/schema/tools";
+import type { SourceReference } from "@repo/ai/lib/source";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-import type { UserRole } from "@repo/backend/convex/users/schema";
-import type { LanguageModelUsage, UIMessageStreamWriter } from "ai";
+import type { Locale } from "@repo/utilities/locales";
+import type { UserRole } from "@repo/utilities/roles";
+import type { UIMessageStreamWriter } from "ai";
 
 export interface AgentContext {
+  currentDate: string;
+  needsPageFetch: boolean;
   slug: string;
   url: string;
   userRole?: UserRole;
@@ -30,24 +31,17 @@ export interface TaskAgentParams extends BaseAgentParams {
   task: string;
 }
 
-/**
- * Token usage accumulator for tracking across sub-agents.
- */
-export interface UsageAccumulator {
-  addUsage: (component: ToolName, usage: LanguageModelUsage) => void;
-  getTotal: () => AccumulatedTokenUsage;
-}
+/** Parameters for the Nakafa content retrieval subagent. */
+export type NakafaAgentParams = TaskAgentParams;
 
-/**
- * Parameters for orchestrator tools.
- */
-export interface OrchestratorToolParams extends BaseAgentParams {
-  usageAccumulator: UsageAccumulator;
+/** Parameters for the external research subagent. */
+export interface ResearchAgentParams extends BaseAgentParams {
+  sourceReferences: SourceReference[];
+  task: string;
+  toolCallId: string;
 }
 
 /**
  * Agent parameter exports.
  */
-export type ContentAccessAgentParams = TaskAgentParams;
 export type MathAgentParams = TaskAgentParams;
-export type ResearchAgentParams = TaskAgentParams;
