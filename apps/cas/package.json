@@ -3,15 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "PYTHONDONTWRITEBYTECODE=1 uv run --dev basedpyright",
+    "build": "UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev basedpyright",
     "bump-deps": "uv lock --upgrade",
     "clean": "rm -rf .coverage .pytest_cache .ruff_cache .turbo .venv && find . -name __pycache__ -type d -prune -exec rm -rf {} +",
     "dev": "PYTHONDONTWRITEBYTECODE=1 uv run uvicorn api.index:app --host 0.0.0.0 --port 3003 --reload",
-    "format": "uv run --dev ruff check --fix --no-cache . && uv run --dev ruff format --no-cache .",
-    "lint": "uv run --dev ruff check --no-cache .",
+    "format": "UV_NO_DEV=0 uv run --dev ruff check --fix --no-cache . && UV_NO_DEV=0 uv run --dev ruff format --no-cache .",
+    "lint": "UV_NO_DEV=0 uv run --dev ruff check --no-cache .",
     "setup": "uv sync",
     "start": "PYTHONDONTWRITEBYTECODE=1 uv run uvicorn api.index:app --host 0.0.0.0 --port 3003",
-    "test": "PYTHONDONTWRITEBYTECODE=1 uv run --dev pytest",
-    "typecheck": "PYTHONDONTWRITEBYTECODE=1 uv run --dev basedpyright"
+    "test": "UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev pytest",
+    "typecheck": "UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev basedpyright"
   }
 }
