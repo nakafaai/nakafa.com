@@ -1,5 +1,5 @@
+import { casApiKey, casUrl } from "@repo/math/config";
 import { MathCasRequestError, MathCasResponseError } from "@repo/math/errors";
-import { casApiKey, casUrl } from "@repo/math/keys";
 import type { MathRequest } from "@repo/math/schema/request";
 import { MathResultSchema } from "@repo/math/schema/result";
 import { Effect, Redacted, Schema } from "effect";

@@ -54,6 +54,7 @@ def test_api_health_and_validation_error(monkeypatch) -> None:
     monkeypatch.setenv("MATH_CAS_API_KEY", "secret")
     client = TestClient(app, raise_server_exceptions=False)
 
+    root = client.get("/")
     health = client.get("/health")
     response = client.post(
         "/api/math",
@@ -61,6 +62,11 @@ def test_api_health_and_validation_error(monkeypatch) -> None:
         json={"kind": "math", "operation": "evaluate"},
     )
 
+    assert root.status_code == 200
+    assert root.headers["content-type"].startswith("text/plain")
+    assert "Nakafa CAS Server" in root.text
+    assert "https://cas.nakafa.com is informational only" in root.text
+    assert "POST /api/math" in root.text
     assert health.json() == {"status": "ok"}
     assert response.status_code == 422
     assert response.json()["detail"] == "Expression is required."
