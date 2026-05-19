@@ -17,8 +17,9 @@ def differentiate(request: MathRequest) -> MathResult:
     """Differentiate an expression with respect to one variable."""
     expr = parse.first_expression(request)
     variable = parse.symbol_from_expression(request.variable, request.expression)
-    output = sp.diff(expr, variable)
-    steps = _differentiate_steps(expr, variable, output)
+    order = _derivative_order(request)
+    output = sp.diff(expr, variable, order)
+    steps = _differentiate_steps(expr, variable, output, order)
 
     return result(
         request,
@@ -394,10 +395,31 @@ def limit(request: MathRequest) -> MathResult:
     )
 
 
+def _derivative_order(request: MathRequest) -> int:
+    """Read the requested derivative order."""
+    if request.order is None:
+        return 1
+
+    if request.order < 1:
+        raise ValueError("Derivative order must be positive.")
+
+    return request.order
+
+
 def _differentiate_steps(
-    expr: sp.Expr, variable: sp.Symbol, output: sp.Expr
+    expr: sp.Expr, variable: sp.Symbol, output: sp.Expr, order: int
 ) -> list[MathStep]:
     """Derive readable term-by-term steps for polynomial derivatives."""
+    if order != 1:
+        return [
+            step(
+                "differentiate",
+                primary=sp.Derivative(expr, (variable, order), evaluate=False),
+                relation=EQUALS,
+                secondary=output,
+            )
+        ]
+
     try:
         sp.Poly(expr, variable)
     except sp.PolynomialError:

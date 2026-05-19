@@ -50,6 +50,9 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
       Calculus:
       - differentiate, integrate, limit.
       - Use calculus before arithmetic simplification.
+      - Send only the target expression in expression.
+      - Do not put operation syntax such as diff(...), integrate(...), or limit(...) inside expression.
+      - For second or higher derivatives, keep expression as the original function and set order.
       - For bounded integrals, include lower and upper and describe the request as definite.
 
       Series:

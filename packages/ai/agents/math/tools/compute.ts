@@ -6,7 +6,7 @@ import { MathToolInputSchema } from "@repo/math/schema/tool-input";
 import { MathService } from "@repo/math/service";
 import type { UIMessageStreamWriter } from "ai";
 import dedent from "dedent";
-import { Effect, Schema } from "effect";
+import { Effect, ParseResult, Schema } from "effect";
 
 const invalidMathInputError = "invalid_math_input";
 const mathCheckUnavailableError = "math_check_unavailable";
@@ -28,6 +28,24 @@ function recoveryMessage(message: string) {
   `);
 }
 
+/** Formats schema validation errors for model-facing recovery decisions. */
+function formatDecodeError(error: ParseResult.ParseError) {
+  return ParseResult.TreeFormatter.formatErrorSync(error);
+}
+
+/** Gives the model a concrete retry path for invalid tool arguments. */
+function decodeRecoveryMessage(message: string) {
+  if (message.includes("Expected the constrained variable")) {
+    return dedent(`
+      Retry the same equation solve.
+      Keep the same expressions, operation, variables, bounds, and inclusivity fields from the failed input.
+      Add variable for the bounded variable from the user's domain restriction, for example x in x > 0.
+    `);
+  }
+
+  return "Ask the user for the exact missing expression or data in their language.";
+}
+
 /** Runs one deterministic math request and writes the math evidence data part. */
 export function compute({
   input,
@@ -44,11 +62,13 @@ export function compute({
     ).pipe(Effect.either);
 
     if (decoded._tag === "Left") {
+      const recovery = decodeRecoveryMessage(formatDecodeError(decoded.left));
+
       return [
         "# Checked Math Work",
         "- Status: error",
         `- Error code: ${invalidMathInputError}`,
-        "- Recovery: Ask the user for the exact missing expression or data in their language.",
+        `- Recovery: ${recovery}`,
       ].join("\n");
     }
 

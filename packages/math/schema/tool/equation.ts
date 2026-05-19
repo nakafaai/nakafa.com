@@ -11,7 +11,7 @@ const equationDomainFields = {
   lower: Schema.optional(
     boundInputSchema.annotations({
       description:
-        "Optional lower endpoint for the solve domain, for example 0 when the user says x > 0.",
+        "Optional lower endpoint for the solve domain, for example 0 when the user says x > 0. System inputs with lower or upper must also set variable to the bounded variable.",
     })
   ),
   lowerInclusive: Schema.optional(
@@ -23,7 +23,7 @@ const equationDomainFields = {
   upper: Schema.optional(
     boundInputSchema.annotations({
       description:
-        "Optional upper endpoint for the solve domain, for example 1 when the user says x < 1.",
+        "Optional upper endpoint for the solve domain, for example 1 when the user says x < 1. System inputs with lower or upper must also set variable to the bounded variable.",
     })
   ),
   upperInclusive: Schema.optional(
@@ -59,7 +59,7 @@ const MathEquationSystemInputSchema = Schema.Struct({
   variable: Schema.optional(
     variableInputSchema.annotations({
       description:
-        "Variable constrained by lower or upper when a system has solve-domain bounds.",
+        "Bounded variable for system solve-domain restrictions such as x > 0.",
     })
   ),
   variables: Schema.optional(
@@ -67,7 +67,19 @@ const MathEquationSystemInputSchema = Schema.Struct({
       description: "Variables to solve for, for example [x, y].",
     })
   ),
-}).pipe(Schema.mutable);
+})
+  .pipe(
+    Schema.filter(
+      (value) =>
+        (value.lower === undefined && value.upper === undefined) ||
+        value.variable !== undefined,
+      {
+        message: () =>
+          "Expected the constrained variable when a system solve has domain bounds.",
+      }
+    )
+  )
+  .pipe(Schema.mutable);
 
 export const MathEquationInputSchema = Schema.Union(
   MathEquationSingleInputSchema,
@@ -76,5 +88,5 @@ export const MathEquationInputSchema = Schema.Union(
   .pipe(Schema.mutable)
   .annotations({
     description:
-      "Equation solving tool input. Use expression for one equation or expressions for a system. Include solve-domain bounds when the user gives restrictions such as x > 0.",
+      "Equation solving tool input. Use expression for one equation or expressions for a system. Include solve-domain bounds when the user gives restrictions such as x > 0. For systems, lower or upper also requires variable.",
   });

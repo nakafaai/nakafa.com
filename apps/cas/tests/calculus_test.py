@@ -43,6 +43,37 @@ def test_differentiate_lowercase_e_exponential() -> None:
     assert result.secondary.expression == "exp(x)"
 
 
+def test_differentiate_second_order() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="differentiate",
+            expression="x^x",
+            order=2,
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "x**x*((log(x) + 1)**2 + 1/x)"
+    assert result.stepStatus == "complete"
+    assert result.steps[0].primary.expression == "Derivative(x**x, (x, 2))"
+
+
+def test_differentiate_rejects_nonpositive_order() -> None:
+    with pytest.raises(ValueError, match="Derivative order must be positive"):
+        run(
+            MathRequest(
+                expression="x^2",
+                kind="math",
+                operation="differentiate",
+                order=0,
+                variable="x",
+            )
+        )
+
+
 def test_differentiate_infers_single_symbol_when_variable_is_omitted() -> None:
     result = run(
         MathRequest(

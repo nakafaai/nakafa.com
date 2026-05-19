@@ -67,9 +67,7 @@ export const AiChatMessageCredits = memo(() => {
                 {t("credits-label")}
               </span>
             </div>
-            <span className="tabular-nums">
-              {t("credits-count", { count: credits })}
-            </span>
+            <span className="tabular-nums">{credits.toLocaleString()}</span>
           </div>
 
           {/* Token Usage */}

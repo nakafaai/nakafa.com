@@ -56,6 +56,14 @@ describe("math tool descriptions", () => {
     );
   });
 
+  it("keeps calculus operation syntax out of expression inputs", () => {
+    expect(mathCalculus).toContain("Send the target mathematical expression");
+    expect(mathCalculus).toContain(
+      "Do not wrap expression in operation syntax"
+    );
+    expect(mathCalculus).toContain("set order");
+  });
+
   it("requires calculus bounds for definite or improper integrals", () => {
     expect(mathCalculus).toContain(
       "Definite or improper integrals must include lower and upper"

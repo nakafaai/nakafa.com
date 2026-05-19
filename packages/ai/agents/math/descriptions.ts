@@ -53,7 +53,10 @@ export const mathEquation = dedent(`
 
 export const mathCalculus = dedent(`
   Use for differentiate, integrate, and limit.
-  Send expression copied from the user.
+  Send the target mathematical expression copied from the user.
+  Do not wrap expression in operation syntax such as diff(...), integrate(...), or limit(...).
+  Put the requested action only in operation.
+  For second or higher derivatives, keep expression as the original function and set order.
 
   Definite or improper integrals must include lower and upper.
   For example, integral from 0 to infinity uses lower 0 and upper oo.

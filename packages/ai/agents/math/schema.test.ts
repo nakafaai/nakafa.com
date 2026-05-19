@@ -338,6 +338,25 @@ describe("math AI input schemas", () => {
         operation: "differentiate",
       },
     });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          expression: "x^x",
+          operation: "differentiate",
+          order: 2,
+          variable: "x",
+        })
+      )
+    ).resolves.toEqual({
+      success: true,
+      value: {
+        expression: "x^x",
+        operation: "differentiate",
+        order: 2,
+        variable: "x",
+      },
+    });
   });
 
   it("requires event bounds for named probability event operations", async () => {

@@ -1,5 +1,8 @@
 import { repairMathToolCall } from "@repo/ai/agents/math/repair";
-import { mathAlgebraInput } from "@repo/ai/agents/math/schema";
+import {
+  mathAlgebraInput,
+  mathEquationInput,
+} from "@repo/ai/agents/math/schema";
 import type { JSONSchema7 } from "ai";
 import { InvalidToolInputError, NoSuchToolError, tool } from "ai";
 import { Effect } from "effect";
@@ -27,6 +30,10 @@ const tools = {
   algebra: tool({
     description: "Algebra",
     inputSchema: mathAlgebraInput,
+  }),
+  equation: tool({
+    description: "Equation",
+    inputSchema: mathEquationInput,
   }),
 };
 
@@ -142,6 +149,86 @@ describe("math tool repair", () => {
     });
   });
 
+  it("preserves valid solve-domain fields while repairing bounded systems", async () => {
+    const equationToolCall = {
+      input: JSON.stringify({
+        expressions: ["x^2 = 1", "y = 0"],
+        lower: "0",
+        lowerInclusive: false,
+        operation: "solve",
+        variables: ["x", "y"],
+      }),
+      toolCallId: "math-2",
+      toolName: "equation",
+      type: "tool-call" as const,
+    };
+    const equationSchema = {
+      properties: {
+        expressions: { type: "array" },
+        lower: { type: "string" },
+        lowerInclusive: { type: "boolean" },
+        operation: { const: "solve" },
+        variable: { type: "string" },
+        variables: { type: "array" },
+      },
+      required: [],
+      type: "object",
+    } satisfies JSONSchema7;
+    const equationInputError = new InvalidToolInputError({
+      cause: new Error("Bounded systems need a variable."),
+      toolInput: equationToolCall.input,
+      toolName: equationToolCall.toolName,
+    });
+
+    inputSchema.mockResolvedValueOnce(equationSchema);
+    generateText.mockResolvedValue({
+      output: {
+        expressions: ["x^2 = 1", "y = 0"],
+        lower: "0",
+        lowerInclusive: false,
+        operation: "solve",
+        variable: "x",
+        variables: ["x", "y"],
+      },
+    });
+
+    const repaired = await Effect.runPromise(
+      repairMathToolCall({
+        error: equationInputError,
+        inputSchema,
+        messages: [],
+        modelId: "nakafa-lite",
+        system: "system",
+        task: "x^2 = 1, y = 0, and x > 0",
+        toolCall: equationToolCall,
+        tools,
+      })
+    );
+
+    expect(repaired).toMatchObject({
+      ...equationToolCall,
+      input: expect.any(String),
+    });
+    expect(JSON.parse(repaired?.input ?? "{}")).toEqual({
+      expressions: ["x^2 = 1", "y = 0"],
+      lower: "0",
+      lowerInclusive: false,
+      operation: "solve",
+      variable: "x",
+      variables: ["x", "y"],
+    });
+    expect(generateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining('"lower": "0"'),
+      })
+    );
+    expect(generateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining("Do not drop bounds"),
+      })
+    );
+  });
+
   it("does not repair when the repair output is not object-shaped", async () => {
     generateText.mockResolvedValue({ output: null });
 
@@ -198,6 +285,50 @@ describe("math tool repair", () => {
         2
       ),
     });
+  });
+
+  it("keeps malformed failed arguments readable in the repair prompt", async () => {
+    generateText.mockResolvedValue({
+      output: {
+        expression: "(x^2 - 9)/(x - 3)",
+        operation: "simplify",
+      },
+    });
+
+    const malformedToolCall = {
+      ...toolCall,
+      input: '{"operation":"simplify"',
+    };
+
+    const repaired = await Effect.runPromise(
+      repairMathToolCall({
+        error: invalidInputError,
+        inputSchema,
+        messages: [],
+        modelId: "nakafa-lite",
+        system: "system",
+        task: "Sederhanakan (x^2 - 9)/(x - 3)",
+        toolCall: malformedToolCall,
+        tools,
+      })
+    );
+
+    expect(repaired).toEqual({
+      ...malformedToolCall,
+      input: JSON.stringify(
+        {
+          expression: "(x^2 - 9)/(x - 3)",
+          operation: "simplify",
+        },
+        null,
+        2
+      ),
+    });
+    expect(generateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining('{"operation":"simplify"'),
+      })
+    );
   });
 
   it("does not repair unavailable tools", async () => {

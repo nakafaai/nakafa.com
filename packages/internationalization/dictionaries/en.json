@@ -604,7 +604,6 @@
     "link-copied": "Link copied!",
     "private-chat-error": "Access denied",
     "private-chat-error-description": "This isn't your chat. Ask the owner for access.",
-    "credits-count": "{count, plural, one {# credit} other {# credits}}",
     "credits-label": "Credits",
     "token-usage": "Token Usage",
     "input-tokens": "Input",

@@ -160,6 +160,42 @@ describe("math schemas", () => {
     });
   });
 
+  it("accepts unbounded systems without a domain variable", () => {
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["x^2 - 1 = 0", "y = 0"],
+        operation: "solve",
+        variables: ["x", "y"],
+      })
+    ).toEqual({
+      expressions: ["x^2 - 1 = 0", "y = 0"],
+      operation: "solve",
+      variables: ["x", "y"],
+    });
+  });
+
+  it("rejects bounded system domains without a domain variable", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["x^2 - 1 = 0", "y = 0"],
+        lower: "0",
+        lowerInclusive: false,
+        operation: "solve",
+        variables: ["x", "y"],
+      })
+    ).toThrow();
+
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["x^2 - 1 = 0", "y = 0"],
+        operation: "solve",
+        upper: "2",
+        upperInclusive: false,
+        variables: ["x", "y"],
+      })
+    ).toThrow();
+  });
+
   it("accepts matrix eigen analysis tool input", () => {
     expect(
       Schema.decodeUnknownSync(MathToolInputSchema)({
@@ -215,6 +251,29 @@ describe("math schemas", () => {
       upper: "oo",
       variable: "x",
     });
+
+    expect(
+      decodeMathToolInput({
+        expression: "x^x",
+        operation: "differentiate",
+        order: 2,
+        variable: "x",
+      })
+    ).toEqual({
+      expression: "x^x",
+      operation: "differentiate",
+      order: 2,
+      variable: "x",
+    });
+
+    expect(() =>
+      decodeMathToolInput({
+        expression: "x^x",
+        operation: "differentiate",
+        order: 0,
+        variable: "x",
+      })
+    ).toThrow();
   });
 
   it("rejects strict algebra input without an expression", () => {

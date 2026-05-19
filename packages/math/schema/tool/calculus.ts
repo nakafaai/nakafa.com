@@ -53,6 +53,12 @@ const MathCalculusStructSchema = Schema.Struct({
   operation: Schema.Literal("differentiate", "integrate", "limit").annotations({
     description: "Differentiate, integrate, or find a limit.",
   }),
+  order: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
+      description:
+        "Derivative order for differentiate, for example 2 for the second derivative.",
+    })
+  ),
   point: Schema.optional(pointInputSchema),
   upper: Schema.optional(boundInputSchema),
   variable: Schema.optional(variableInputSchema),
