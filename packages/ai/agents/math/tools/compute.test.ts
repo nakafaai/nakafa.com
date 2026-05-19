@@ -144,7 +144,10 @@ describe("math compute tool", () => {
     expect(output).toContain("- Error code: math_check_unavailable");
     expect(output).toContain("Do not present this result as checked.");
     expect(output).toContain(
-      "Retry only if the original request gives enough information"
+      "Compare this failed input with the original task before answering"
+    );
+    expect(output).toContain(
+      "Retry the same operation if the task gives omitted variables"
     );
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({

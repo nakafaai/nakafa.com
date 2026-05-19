@@ -114,7 +114,7 @@ describe("math data formatter", () => {
     const output = formatMathData(data);
 
     expect(output).not.toContain("- Secondary: 42");
-    expect(output).not.toContain("Reason");
+    expect(output).toContain("- Reason: Exact arithmetic was checked.");
     expect(output).not.toContain("SymPy");
     expect(output).toContain(
       "- Evidence scope: complete deterministic derivation"

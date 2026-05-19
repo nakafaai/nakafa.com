@@ -61,4 +61,9 @@ describe("math tool descriptions", () => {
       "Definite or improper integrals must include lower and upper"
     );
   });
+
+  it("preserves solve-domain restrictions for equations", () => {
+    expect(mathEquation).toContain("Preserve solve-domain bounds");
+    expect(mathEquation).toContain("lower, upper, and inclusivity fields");
+  });
 });

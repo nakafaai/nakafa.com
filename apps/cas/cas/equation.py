@@ -20,6 +20,7 @@ def solve(request: MathRequest) -> MathResult:
     """Solve equations, inequalities, or systems for requested variables."""
     equations = request.expressions or [request.expression or ""]
     variables, parsed = _solve_variables(request, equations)
+    domain = _solution_domain(request)
 
     if len(parsed) == 1 and isinstance(parsed[0], sp.core.relational.Relational):
         relation = parsed[0]
@@ -27,7 +28,7 @@ def solve(request: MathRequest) -> MathResult:
 
         if isinstance(relation, sp.Equality):
             try:
-                solved = _solve_equality(relation, variable)
+                solved = _solve_equality(relation, variable, domain)
             except SolutionSetUnavailable:
                 return result(
                     request,
@@ -76,18 +77,108 @@ def _solve_variables(
     return [variable], parsed
 
 
-def _solve_equality(relation: sp.Equality, variable: sp.Symbol):
+def _solution_domain(request: MathRequest) -> sp.Set:
+    """Build the real solve domain from optional request bounds."""
+    if request.lower is None and request.upper is None:
+        return sp.S.Reals
+
+    lower = parse.expression(request.lower) if request.lower is not None else -sp.oo
+    upper = parse.expression(request.upper) if request.upper is not None else sp.oo
+
+    return sp.Interval(
+        lower,
+        upper,
+        left_open=request.lowerInclusive is False,
+        right_open=request.upperInclusive is False,
+    )
+
+
+def _solve_equality(relation: sp.Equality, variable: sp.Symbol, domain: sp.Set):
     """Solve one equation without marking partial families as verified."""
     expression = _equality_expression(relation)
 
     if expression.is_polynomial(variable):
-        return sp.solve(relation, variable)
+        solved = sp.solve(relation, variable)
+        return _filter_solved_values(solved, domain)
 
-    solved = sp.solveset(relation, variable, domain=sp.S.Reals)
+    # `solveset` returns ConditionSet when it cannot represent the complete
+    # exact set, so fallback logic must prove completeness before verification.
+    # https://docs.sympy.org/latest/modules/solvers/solveset.html
+    solved = sp.solveset(relation, variable, domain=domain)
     if isinstance(solved, sp.ConditionSet):
+        product_solved = _solve_product_equality(expression, variable, domain)
+        if product_solved is not None:
+            return product_solved
+
         raise SolutionSetUnavailable(SOLUTION_SET_UNAVAILABLE)
 
     return solved
+
+
+def _filter_solved_values(
+    solved: list[sp.Expr],
+    domain: sp.Set,
+) -> list[sp.Expr]:
+    """Keep only exactly validated finite solutions inside the solve domain."""
+    if domain == sp.S.Reals:
+        return solved
+
+    return [value for value in solved if _is_inside_domain(value, domain)]
+
+
+def _solve_product_equality(
+    expression: sp.Expr, variable: sp.Symbol, domain: sp.Set
+) -> sp.Set | None:
+    """Solve products when every factor is exact or proven nonzero."""
+    assumed_variable = _domain_symbol(variable, domain)
+    assumed_expression = expression.xreplace({variable: assumed_variable})
+    factors = sp.factor(assumed_expression).as_ordered_factors()
+
+    if len(factors) < 2:
+        return None
+
+    solutions = sp.S.EmptySet
+
+    for factor in factors:
+        if _is_definitely_nonzero(factor):
+            continue
+
+        factor_solutions = sp.solveset(factor, assumed_variable, domain=domain)
+        if isinstance(factor_solutions, sp.ConditionSet):
+            return None
+
+        solutions = solutions.union(factor_solutions)
+
+    return solutions
+
+
+def _domain_symbol(variable: sp.Symbol, domain: sp.Set) -> sp.Symbol:
+    """Create a symbol carrying assumptions known from the solve domain."""
+    if domain.is_subset(sp.Interval.open(0, sp.oo)) is True:
+        return sp.Symbol(str(variable), positive=True)
+
+    return variable
+
+
+def _is_definitely_nonzero(value: sp.Expr) -> bool:
+    """Return whether a factor cannot be zero under current assumptions."""
+    if value.is_zero is False:
+        return True
+
+    return sp.ask(sp.Q.nonzero(value)) is True
+
+
+def _is_inside_domain(value: sp.Expr, domain: sp.Set) -> bool:
+    """Return exact membership for one finite solution candidate."""
+    contained = domain.contains(value)
+
+    if contained is sp.S.true:
+        return True
+
+    if contained is sp.S.false:
+        return False
+
+    raise SolutionSetUnavailable(SOLUTION_SET_UNAVAILABLE)
 
 
 def _equality_expression(relation: sp.Equality) -> sp.Expr:

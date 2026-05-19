@@ -81,6 +81,59 @@ def test_solve_returns_inconclusive_for_unrepresented_product_solution_set() -> 
     assert result.primary.expression == "Eq(x**x*(log(x) + 1), 0)"
 
 
+def test_solve_product_equation_uses_positive_domain() -> None:
+    result = run(
+        MathRequest(
+            expression="x^x * (ln(x) + 1) = 0",
+            kind="math",
+            lower="0",
+            lowerInclusive=False,
+            operation="solve",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "{exp(-1)}"
+    assert result.input.lower == "0"
+    assert result.input.lowerInclusive is False
+    assert result.steps[0].action == "solve"
+
+
+def test_solve_filters_polynomial_solutions_by_domain() -> None:
+    result = run(
+        MathRequest(
+            expression="x^2 - 1 = 0",
+            kind="math",
+            lower="0",
+            lowerInclusive=False,
+            operation="solve",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "[1]"
+
+
+def test_solve_returns_inconclusive_for_symbolic_domain_membership() -> None:
+    result = run(
+        MathRequest(
+            expression="x - a = 0",
+            kind="math",
+            lower="0",
+            lowerInclusive=False,
+            operation="solve",
+            variable="x",
+        )
+    )
+
+    assert result.status == "inconclusive"
+    assert result.reason == "The equation solution set could not be determined exactly."
+
+
 def test_solve_uses_single_requested_variable() -> None:
     result = run(
         MathRequest(

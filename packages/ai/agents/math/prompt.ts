@@ -44,6 +44,7 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
       - solve: equations, systems, and inequalities.
       - roots: polynomial roots.
       - Send one equation as expression; send systems as expressions with variables when named.
+      - Include lower, upper, and inclusivity fields when the user gives a solve-domain restriction such as x > 0 or 0 < t < 1.
 
       Calculus:
       - differentiate, integrate, limit.
@@ -113,6 +114,7 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
       Recovery:
       - If required input is missing, ask for the exact missing expression or data.
       - Do not repeat backend errors.
+      - On error or inconclusive evidence, compare the failed input with the original task for omitted variables, assumptions, domains, bounds, parameters, matrices, vectors, or data.
       - If recovery guidance identifies a correctable input issue, retry the original operation with corrected input before answering.
 
       Teaching:

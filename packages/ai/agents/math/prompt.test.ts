@@ -80,6 +80,9 @@ describe("mathPrompt", () => {
     expect(prompt).toContain(
       "retry the original operation with corrected input before answering"
     );
+    expect(prompt).toContain(
+      "compare the failed input with the original task for omitted variables"
+    );
   });
 
   it("routes broad math domains through supported deterministic operations", () => {
@@ -87,6 +90,7 @@ describe("mathPrompt", () => {
 
     expect(prompt).toContain("solve: equations, systems, and inequalities.");
     expect(prompt).toContain("roots: polynomial roots.");
+    expect(prompt).toContain("Include lower, upper, and inclusivity fields");
     expect(prompt).toContain(
       "Use separate calls when a request asks for both expansion and closed-form sum or product."
     );

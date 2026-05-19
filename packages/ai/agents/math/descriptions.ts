@@ -47,6 +47,7 @@ export const mathEquation = dedent(`
   - Send expression for one equation.
   - Send expressions for a system.
   - Provide explicit variables when the user names them.
+  - Preserve solve-domain bounds such as x > 0 with lower, upper, and inclusivity fields.
 `);
 
 export const mathCalculus = dedent(`

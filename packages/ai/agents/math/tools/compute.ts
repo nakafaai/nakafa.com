@@ -22,7 +22,8 @@ function recoveryMessage(message: string) {
 
   return dedent(`
     Do not present this result as checked.
-    Retry only if the original request gives enough information to correct the input.
+    Compare this failed input with the original task before answering.
+    Retry the same operation if the task gives omitted variables, assumptions, domains, bounds, parameters, matrices, vectors, or data.
     Otherwise ask for the missing math data.
   `);
 }

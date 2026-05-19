@@ -122,6 +122,24 @@ describe("math schemas", () => {
     });
   });
 
+  it("accepts equation solve domains", () => {
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expression: "x^x * (ln(x) + 1) = 0",
+        lower: "0",
+        lowerInclusive: false,
+        operation: "solve",
+        variable: "x",
+      })
+    ).toEqual({
+      expression: "x^x * (ln(x) + 1) = 0",
+      lower: "0",
+      lowerInclusive: false,
+      operation: "solve",
+      variable: "x",
+    });
+  });
+
   it("accepts matrix eigen analysis tool input", () => {
     expect(
       Schema.decodeUnknownSync(MathToolInputSchema)({
