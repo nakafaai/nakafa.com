@@ -140,6 +140,26 @@ describe("math schemas", () => {
     });
   });
 
+  it("accepts bounded system domains with a domain variable", () => {
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["x^2 - 1 = 0", "y = 0"],
+        lower: "0",
+        lowerInclusive: false,
+        operation: "solve",
+        variable: "x",
+        variables: ["x", "y"],
+      })
+    ).toEqual({
+      expressions: ["x^2 - 1 = 0", "y = 0"],
+      lower: "0",
+      lowerInclusive: false,
+      operation: "solve",
+      variable: "x",
+      variables: ["x", "y"],
+    });
+  });
+
   it("accepts matrix eigen analysis tool input", () => {
     expect(
       Schema.decodeUnknownSync(MathToolInputSchema)({

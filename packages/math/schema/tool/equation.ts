@@ -56,6 +56,12 @@ const MathEquationSystemInputSchema = Schema.Struct({
   operation: Schema.Literal("solve").annotations({
     description: "Solve a system of equations or inequalities.",
   }),
+  variable: Schema.optional(
+    variableInputSchema.annotations({
+      description:
+        "Variable constrained by lower or upper when a system has solve-domain bounds.",
+    })
+  ),
   variables: Schema.optional(
     stringArraySchema.annotations({
       description: "Variables to solve for, for example [x, y].",

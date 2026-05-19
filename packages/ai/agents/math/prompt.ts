@@ -45,6 +45,7 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
       - roots: polynomial roots.
       - Send one equation as expression; send systems as expressions with variables when named.
       - Include lower, upper, and inclusivity fields when the user gives a solve-domain restriction such as x > 0 or 0 < t < 1.
+      - For systems with solve-domain restrictions, set variable to the bounded variable and variables to all solved variables.
 
       Calculus:
       - differentiate, integrate, limit.

@@ -22,7 +22,11 @@ def solve(request: MathRequest) -> MathResult:
     variables, parsed = _solve_variables(request, equations)
     domain = _solution_domain(request)
 
-    if len(parsed) == 1 and isinstance(parsed[0], sp.core.relational.Relational):
+    if (
+        len(parsed) == 1
+        and len(variables) == 1
+        and isinstance(parsed[0], sp.core.relational.Relational)
+    ):
         relation = parsed[0]
         variable = variables[0]
 
@@ -38,7 +42,13 @@ def solve(request: MathRequest) -> MathResult:
                 )
             steps = _solve_equality_steps(relation, variable, solved)
         else:
-            solved = sp.solve_univariate_inequality(relation, variable)
+            # SymPy intersects univariate inequality solutions with this domain.
+            # https://docs.sympy.org/latest/modules/solvers/inequalities.html
+            solved = sp.solve_univariate_inequality(
+                relation,
+                variable,
+                domain=domain,
+            )
             steps = [
                 step("solve", primary=relation, relation=IMPLIES, secondary=solved)
             ]
@@ -53,7 +63,15 @@ def solve(request: MathRequest) -> MathResult:
             stepStatus="partial" if steps else "unavailable",
         )
 
-    solved = sp.solve(parsed, variables, dict=True)
+    try:
+        solved = _solve_system(request, parsed, variables, domain)
+    except SolutionSetUnavailable:
+        return result(
+            request,
+            status="inconclusive",
+            primary=parsed,
+            reason=SOLUTION_SET_UNAVAILABLE,
+        )
 
     return result(
         request,
@@ -75,6 +93,39 @@ def _solve_variables(
 
     variable, parsed = parse.symbol_from_equations(request.variable, equations)
     return [variable], parsed
+
+
+def _solve_system(
+    request: MathRequest,
+    parsed: list[sp.Expr | sp.Equality | Relational],
+    variables: list[sp.Symbol],
+    domain: sp.Set,
+):
+    """Solve a system and enforce a requested single-variable domain."""
+    solved = sp.solve(parsed, variables, dict=True)
+
+    if domain == sp.S.Reals:
+        return solved
+
+    domain_variable = _system_domain_variable(request, variables)
+    return _filter_solved_mappings(solved, domain_variable, domain)
+
+
+def _system_domain_variable(
+    request: MathRequest,
+    variables: list[sp.Symbol],
+) -> sp.Symbol:
+    """Return the system variable constrained by lower or upper bounds."""
+    if not request.variable:
+        raise ValueError(
+            "Domain variable is required when solving a system with bounds."
+        )
+
+    variable = parse.symbol(request.variable)
+    if variable not in variables:
+        raise ValueError("Domain variable must be one of the solved variables.")
+
+    return variable
 
 
 def _solution_domain(request: MathRequest) -> sp.Set:
@@ -124,6 +175,25 @@ def _filter_solved_values(
         return solved
 
     return [value for value in solved if _is_inside_domain(value, domain)]
+
+
+def _filter_solved_mappings(
+    solved: list[dict[sp.Symbol, sp.Expr]],
+    variable: sp.Symbol,
+    domain: sp.Set,
+) -> list[dict[sp.Symbol, sp.Expr]]:
+    """Keep only exact system solutions whose constrained value is in domain."""
+    filtered = []
+
+    for solution in solved:
+        value = solution.get(variable)
+        if value is None:
+            raise SolutionSetUnavailable(SOLUTION_SET_UNAVAILABLE)
+
+        if _is_inside_domain(value, domain):
+            filtered.append(solution)
+
+    return filtered
 
 
 def _solve_product_equality(

@@ -91,6 +91,7 @@ describe("mathPrompt", () => {
     expect(prompt).toContain("solve: equations, systems, and inequalities.");
     expect(prompt).toContain("roots: polynomial roots.");
     expect(prompt).toContain("Include lower, upper, and inclusivity fields");
+    expect(prompt).toContain("set variable to the bounded variable");
     expect(prompt).toContain(
       "Use separate calls when a request asks for both expansion and closed-form sum or product."
     );

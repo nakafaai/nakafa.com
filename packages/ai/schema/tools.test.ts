@@ -32,8 +32,9 @@ describe("orchestrator tool schemas", () => {
         type: "object",
       });
       expect(jsonSchema.required).toEqual(
-        expect.arrayContaining(["request", "objective", "requirements"])
+        expect.arrayContaining(["request", "objective"])
       );
+      expect(jsonSchema.required).not.toContain("requirements");
       expect(jsonSchema).not.toHaveProperty("properties.task");
       expect(jsonSchema).not.toHaveProperty("properties.query");
     }
@@ -140,6 +141,30 @@ describe("orchestrator tool schemas", () => {
     expect(task).not.toContain("# Requirements");
     expect(task).not.toContain("# Source Requirements");
     expect(task).not.toContain("# Given");
+  });
+
+  it("omits requirements when the tool call has no real constraints", () => {
+    const task = formatSpecialistToolTask({
+      given: ["x^2 < 9", "x > 0"],
+      objective: "Solve the inequality with the domain restriction.",
+      request: "x^2 < 9 dan x > 0",
+    });
+
+    expect(task).toContain(dedent`
+      # Request
+
+      x^2 < 9 dan x > 0
+
+      # Task
+
+      Solve the inequality with the domain restriction.
+
+      # Given
+
+      - x^2 < 9
+      - x > 0
+    `);
+    expect(task).not.toContain("# Requirements");
   });
 
   it("renders math givens without adding response outcomes", () => {

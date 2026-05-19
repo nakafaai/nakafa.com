@@ -65,5 +65,6 @@ describe("math tool descriptions", () => {
   it("preserves solve-domain restrictions for equations", () => {
     expect(mathEquation).toContain("Preserve solve-domain bounds");
     expect(mathEquation).toContain("lower, upper, and inclusivity fields");
+    expect(mathEquation).toContain("set variable to the bounded variable");
   });
 });

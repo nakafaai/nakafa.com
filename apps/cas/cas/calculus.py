@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from typing import cast
 
 import sympy as sp
+from sympy.calculus.util import continuous_domain
 
 from cas import parse
 from cas.format import expression_text, inconclusive, result, step
@@ -60,7 +61,7 @@ def integrate(request: MathRequest) -> MathResult:
         output = sp.integrate(expr, variable)
         primary = sp.Integral(expr, variable)
 
-    if _has_unevaluated_integral(output):
+    if _has_unevaluated_integral(output) or _is_nonfinite_integral_value(output):
         return result(
             request,
             status="inconclusive",
@@ -92,6 +93,17 @@ def _definite_integral_fallback(
     if reflected is not None:
         return _integral_result(request, primary, reflected, "integrate-symmetry")
 
+    if expr.free_symbols - {variable}:
+        termwise = _termwise_definite_integral_value(expr, variable, lower, upper)
+        if termwise is not None:
+            return _integral_result(
+                request,
+                primary,
+                termwise,
+                "integrate-sum",
+                "The definite integral was checked term by term.",
+            )
+
     return _arctangent_reflection_integral(
         request,
         expr,
@@ -111,6 +123,10 @@ def _arctangent_reflection_integral(
     primary: sp.Integral,
 ) -> MathResult | None:
     """Try x = tan(theta), then use interval-reflection symmetry."""
+    reflected = _arctangent_reflection_value(expr, variable, lower, upper)
+    if reflected is None:
+        return None
+
     theta = _fresh_symbol("theta", expr.free_symbols | {variable})
     substitution = sp.tan(theta)
     differential = sp.diff(substitution, theta)
@@ -120,16 +136,6 @@ def _arctangent_reflection_integral(
     )
     transformed_lower = sp.atan(lower)
     transformed_upper = sp.atan(upper)
-    reflected = _reflection_integral_value(
-        transformed,
-        theta,
-        transformed_lower,
-        transformed_upper,
-    )
-
-    if reflected is None:
-        return None
-
     transformed_primary = sp.Integral(
         transformed,
         (theta, transformed_lower, transformed_upper),
@@ -164,6 +170,7 @@ def _integral_result(
     primary: sp.Integral,
     output: sp.Expr,
     action: str,
+    reason: str = "The definite integral was checked by symmetry.",
 ) -> MathResult:
     """Build a verified definite-integral result from an exact identity."""
     return result(
@@ -171,9 +178,84 @@ def _integral_result(
         status="verified",
         primary=primary,
         secondary=output,
-        reason="The definite integral was checked by symmetry.",
+        reason=reason,
         steps=[step(action, primary=primary, relation=EQUALS, secondary=output)],
         stepStatus="partial",
+    )
+
+
+def _termwise_definite_integral_value(
+    expr: sp.Expr,
+    variable: sp.Symbol,
+    lower: sp.Expr,
+    upper: sp.Expr,
+) -> sp.Expr | None:
+    """Evaluate a sum only when every term is checked exactly."""
+    if not isinstance(expr, sp.Add):
+        return None
+
+    terms = [cast(sp.Expr, term) for term in expr.as_ordered_terms()]
+    values = [
+        _definite_integral_term_value(term, variable, lower, upper) for term in terms
+    ]
+
+    total = sp.S.Zero
+    for value in values:
+        if value is None:
+            return None
+
+        total += value
+
+    return sp.simplify(total)
+
+
+def _definite_integral_term_value(
+    expr: sp.Expr,
+    variable: sp.Symbol,
+    lower: sp.Expr,
+    upper: sp.Expr,
+) -> sp.Expr | None:
+    """Evaluate one definite-integral term without certifying weak evidence."""
+    if variable not in expr.free_symbols:
+        return sp.simplify(expr * (upper - lower))
+
+    reflected = _reflection_integral_value(expr, variable, lower, upper)
+    if reflected is not None:
+        return reflected
+
+    arctangent_reflected = _arctangent_reflection_value(expr, variable, lower, upper)
+    if arctangent_reflected is not None:
+        return arctangent_reflected
+
+    output = sp.integrate(expr, (variable, lower, upper))
+    if _has_unevaluated_integral(output) or _is_nonfinite_integral_value(output):
+        return None
+
+    return cast(sp.Expr, output)
+
+
+def _arctangent_reflection_value(
+    expr: sp.Expr,
+    variable: sp.Symbol,
+    lower: sp.Expr,
+    upper: sp.Expr,
+) -> sp.Expr | None:
+    """Return an arctangent-substitution symmetry value when exact."""
+    theta = _fresh_symbol("theta", expr.free_symbols | {variable})
+    substitution = sp.tan(theta)
+    differential = sp.diff(substitution, theta)
+    transformed = cast(
+        sp.Expr,
+        sp.trigsimp(sp.simplify(expr.subs(variable, substitution) * differential)),
+    )
+    transformed_lower = sp.atan(lower)
+    transformed_upper = sp.atan(upper)
+
+    return _reflection_integral_value(
+        transformed,
+        theta,
+        transformed_lower,
+        transformed_upper,
     )
 
 
@@ -184,6 +266,9 @@ def _reflection_integral_value(
     upper: sp.Expr,
 ) -> sp.Expr | None:
     """Evaluate an integral when f(x) + f(a + b - x) is constant."""
+    if not _is_continuous_on_closed_interval(expr, variable, lower, upper):
+        return None
+
     reflected = expr.subs(variable, lower + upper - variable)
     pair = _constant_reflection_pair(expr + reflected, variable)
 
@@ -191,6 +276,40 @@ def _reflection_integral_value(
         return None
 
     return sp.simplify(pair * (upper - lower) / 2)
+
+
+def _is_continuous_on_closed_interval(
+    expr: sp.Expr,
+    variable: sp.Symbol,
+    lower: sp.Expr,
+    upper: sp.Expr,
+) -> bool:
+    """Return whether the real integrand is proven continuous on the interval."""
+    interval = _closed_interval(lower, upper)
+    if interval is None:
+        return False
+
+    try:
+        # `continuous_domain` proves the shortcut is not crossing a singularity.
+        # https://docs.sympy.org/latest/modules/calculus/index.html
+        domain = continuous_domain(expr, variable, interval)
+    except NotImplementedError:
+        return False
+
+    return interval.is_subset(domain) is True
+
+
+def _closed_interval(lower: sp.Expr, upper: sp.Expr) -> sp.Interval | None:
+    """Build the closed interval covered by the definite integral bounds."""
+    if sp.simplify(upper - lower).is_nonnegative is True:
+        interval = sp.Interval(lower, upper)
+        return interval if isinstance(interval, sp.Interval) else None
+
+    if sp.simplify(lower - upper).is_nonnegative is True:
+        interval = sp.Interval(upper, lower)
+        return interval if isinstance(interval, sp.Interval) else None
+
+    return None
 
 
 def _constant_reflection_pair(value: sp.Expr, variable: sp.Symbol) -> sp.Expr | None:
@@ -215,16 +334,30 @@ def _constant_reflection_pair(value: sp.Expr, variable: sp.Symbol) -> sp.Expr | 
 
 def _fresh_symbol(name: str, used: Iterable[object]) -> sp.Symbol:
     """Create a readable temporary symbol that does not shadow user variables."""
-    if sp.Symbol(name) not in used:
-        return sp.Symbol(name)
+    candidate = sp.Symbol(name)
+    if candidate not in used:
+        return candidate
 
-    return sp.Symbol(f"{name}_sub")
+    suffix = 1
+    while True:
+        candidate = sp.Symbol(f"{name}_{suffix}")
+        if candidate not in used:
+            return candidate
+
+        suffix += 1
 
 
 def _has_unevaluated_integral(value: object) -> bool:
     """Return whether integration produced an unevaluated Integral expression."""
     return isinstance(value, sp.Integral) or (
         isinstance(value, sp.Basic) and value.has(sp.Integral)
+    )
+
+
+def _is_nonfinite_integral_value(value: object) -> bool:
+    """Return whether a definite integral produced a non-finite value."""
+    return isinstance(value, sp.Basic) and (
+        value.has(sp.nan, sp.zoo) or value.is_finite is False
     )
 
 

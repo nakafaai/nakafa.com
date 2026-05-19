@@ -101,7 +101,7 @@ export function nakafaPrompt({
       All specialist tools share compact fields:
       - request: task-relevant user details only.
       - objective: the specialist job only.
-      - requirements: real retrieval or verification constraints only.
+      - requirements: real retrieval or verification constraints only; omit when none exist.
 
       request must:
       - stay in the user's language.

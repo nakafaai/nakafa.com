@@ -79,7 +79,7 @@ describe("nakafaPrompt", () => {
     expect(toolSection).toContain("request: task-relevant user details only.");
     expect(toolSection).toContain("objective: the specialist job only.");
     expect(toolSection).toContain(
-      "requirements: real retrieval or verification constraints only."
+      "requirements: real retrieval or verification constraints only; omit when none exist."
     );
     expect(toolSection).toContain("deepResearch.sourceRequirements");
     expect(toolSection).toContain("nakafa.deliverables");

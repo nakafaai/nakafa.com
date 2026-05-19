@@ -189,6 +189,23 @@ def test_solve_inequality() -> None:
     assert "2 < x" in result.secondary.expression
 
 
+def test_solve_inequality_intersects_requested_domain() -> None:
+    result = run(
+        MathRequest(
+            expression="x^2 < 4",
+            kind="math",
+            lower="0",
+            lowerInclusive=False,
+            operation="solve",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "(0 < x) & (x < 2)"
+
+
 def test_solve_system() -> None:
     result = run(
         MathRequest(
@@ -201,6 +218,67 @@ def test_solve_system() -> None:
 
     assert result.status == "verified"
     assert result.items[0].value == "{x: 2, y: 1}"
+
+
+def test_solve_system_filters_solutions_by_requested_domain() -> None:
+    result = run(
+        MathRequest(
+            expressions=["x^2 - 1 = 0", "y = 0"],
+            kind="math",
+            lower="0",
+            lowerInclusive=False,
+            operation="solve",
+            variable="x",
+            variables=["x", "y"],
+        )
+    )
+
+    assert result.status == "verified"
+    assert [item.value for item in result.items] == ["{x: 1, y: 0}"]
+
+
+def test_solve_system_requires_domain_variable_for_requested_domain() -> None:
+    with pytest.raises(ValueError, match="Domain variable is required"):
+        run(
+            MathRequest(
+                expressions=["x^2 - 1 = 0", "y = 0"],
+                kind="math",
+                lower="0",
+                lowerInclusive=False,
+                operation="solve",
+                variables=["x", "y"],
+            )
+        )
+
+
+def test_solve_system_rejects_domain_variable_outside_solved_variables() -> None:
+    with pytest.raises(ValueError, match="one of the solved variables"):
+        run(
+            MathRequest(
+                expressions=["x^2 - 1 = 0", "y = 0"],
+                kind="math",
+                lower="0",
+                operation="solve",
+                variable="z",
+                variables=["x", "y"],
+            )
+        )
+
+
+def test_solve_system_returns_inconclusive_when_domain_value_is_not_solved() -> None:
+    result = run(
+        MathRequest(
+            expressions=["y = 0"],
+            kind="math",
+            lower="0",
+            operation="solve",
+            variable="x",
+            variables=["x", "y"],
+        )
+    )
+
+    assert result.status == "inconclusive"
+    assert result.reason == "The equation solution set could not be determined exactly."
 
 
 def test_roots_quartic() -> None:

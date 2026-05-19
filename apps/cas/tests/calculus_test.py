@@ -1,5 +1,6 @@
 import pytest
 
+from cas import calculus
 from cas.engine import run
 from cas.schema import MathRequest
 
@@ -145,6 +146,211 @@ def test_integrate_uses_arctangent_reflection_for_rational_log_integral() -> Non
         "substitute",
         "integrate-symmetry",
     ]
+
+
+def test_integrate_rejects_divergent_symmetric_integral() -> None:
+    result = run(
+        MathRequest(
+            expression="1/x",
+            kind="math",
+            lower="-1",
+            operation="integrate",
+            upper="1",
+            variable="x",
+        )
+    )
+
+    assert result.status == "inconclusive"
+    assert result.secondary is None
+    assert result.steps == []
+
+
+def test_integrate_keeps_existing_substitution_symbol_as_parameter() -> None:
+    result = run(
+        MathRequest(
+            expression="theta + theta_sub + log(1 + x)/(1 + x^2)",
+            kind="math",
+            lower="0",
+            operation="integrate",
+            upper="1",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "theta + theta_sub + pi*log(2)/8"
+    assert result.steps[0].action == "integrate-sum"
+
+
+def test_integrate_keeps_numbered_substitution_symbols_as_parameters() -> None:
+    result = run(
+        MathRequest(
+            expression="theta + theta_1 + theta_2 + log(1 + x)/(1 + x^2)",
+            kind="math",
+            lower="0",
+            operation="integrate",
+            upper="1",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "theta + theta_1 + theta_2 + pi*log(2)/8"
+
+
+def test_integrate_termwise_handles_parameterized_linear_terms() -> None:
+    result = run(
+        MathRequest(
+            expression="a + x",
+            kind="math",
+            lower="0",
+            operation="integrate",
+            upper="2",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "2*a + 2"
+    assert result.steps[0].action == "integrate-symmetry"
+
+
+def test_integrate_falls_back_to_generic_for_single_parameterized_term() -> None:
+    result = run(
+        MathRequest(
+            expression="a*x^2",
+            kind="math",
+            lower="0",
+            operation="integrate",
+            upper="1",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "a/3"
+    assert result.steps[0].action == "integrate"
+
+
+def test_integrate_termwise_uses_generic_for_supported_terms() -> None:
+    result = run(
+        MathRequest(
+            expression="a + x^2",
+            kind="math",
+            lower="0",
+            operation="integrate",
+            upper="1",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "a + 1/3"
+    assert result.steps[0].action == "integrate-sum"
+
+
+def test_integrate_termwise_uses_reflection_for_supported_terms() -> None:
+    result = run(
+        MathRequest(
+            expression="a + x + x^2",
+            kind="math",
+            lower="0",
+            operation="integrate",
+            upper="1",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "a + 5/6"
+
+
+def test_integrate_termwise_rejects_unsupported_terms() -> None:
+    result = run(
+        MathRequest(
+            expression="a + x^x",
+            kind="math",
+            lower="0",
+            operation="integrate",
+            upper="1",
+            variable="x",
+        )
+    )
+
+    assert result.status == "inconclusive"
+    assert result.secondary is None
+
+
+def test_integrate_uses_generic_for_symbolic_bounds() -> None:
+    result = run(
+        MathRequest(
+            expression="sin(x)",
+            kind="math",
+            lower="a",
+            operation="integrate",
+            upper="b",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "cos(a) - cos(b)"
+
+
+def test_integrate_uses_generic_when_continuity_cannot_be_checked(monkeypatch) -> None:
+    def fail_continuity(*_args) -> None:
+        raise NotImplementedError
+
+    monkeypatch.setattr(calculus, "continuous_domain", fail_continuity)
+
+    result = run(
+        MathRequest(
+            expression="x",
+            kind="math",
+            lower="0",
+            operation="integrate",
+            upper="2",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "2"
+    assert result.steps[0].action == "integrate"
+
+
+def test_integrate_handles_reversed_reflection_bounds() -> None:
+    result = run(
+        MathRequest(
+            expression="log(1 + tan(theta))",
+            kind="math",
+            lower="pi/4",
+            operation="integrate",
+            upper="0",
+            variable="theta",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "-pi*log(2)/8"
+
+
+def test_fresh_symbol_skips_numbered_symbol_collisions() -> None:
+    theta = calculus.sp.Symbol("theta")
+    theta_one = calculus.sp.Symbol("theta_1")
+
+    assert calculus._fresh_symbol("theta", {theta, theta_one}) == calculus.sp.Symbol(
+        "theta_2"
+    )
 
 
 def test_integrate_uses_fresh_substitution_symbol_when_theta_is_taken() -> None:

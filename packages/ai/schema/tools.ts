@@ -31,10 +31,10 @@ const SpecialistToolInputFields = {
       Do not include instructions for weak, missing, or failed outcomes.
     `),
   }),
-  requirements: Schema.Array(Schema.NonEmptyString)
-    .pipe(Schema.mutable)
-    .annotations({
-      description: dedent(`
+  requirements: Schema.optional(
+    Schema.Array(Schema.NonEmptyString).pipe(Schema.mutable)
+  ).annotations({
+    description: dedent(`
         Real constraints only.
 
         Include locale, current page, source ownership, recency, variables,
@@ -42,7 +42,7 @@ const SpecialistToolInputFields = {
         Do not include general answer-formatting, persona, or style rules.
         Do not include empty, fallback, or outcome-dependent instructions.
       `),
-    }),
+  }),
 };
 
 /**
@@ -123,7 +123,7 @@ export function formatSpecialistToolTask(input: SpecialistToolInput) {
   const sections = [
     formatTextSection("Request", input.request),
     formatTextSection("Task", input.objective),
-    formatListSection("Requirements", input.requirements),
+    formatListSection("Requirements", input.requirements ?? []),
     formatListSection(
       "Source Requirements",
       "sourceRequirements" in input ? input.sourceRequirements : []
