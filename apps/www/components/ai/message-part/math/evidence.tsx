@@ -115,10 +115,7 @@ function StepRow({ number, step }: StepRowProps) {
 /** Renders the main math result in a sentence-like shape students can scan. */
 function ResultLine({ result }: ResultLineProps) {
   const t = useTranslations("Ai");
-  const label =
-    !result.secondary && result.items.length > 0
-      ? t("math-input")
-      : t("math-item-result");
+  const label = result.secondary ? t("math-item-result") : t("math-input");
 
   return (
     <div className="grid max-w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-1">

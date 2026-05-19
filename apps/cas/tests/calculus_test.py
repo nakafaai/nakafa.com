@@ -105,6 +105,101 @@ def test_integrate_with_bounds() -> None:
     assert result.steps[0].primary.expression == "Integral(x, (x, 0, 2))"
 
 
+def test_integrate_uses_reflection_for_log_tangent_integral() -> None:
+    result = run(
+        MathRequest(
+            expression="log(1 + tan(theta))",
+            kind="math",
+            lower="0",
+            operation="integrate",
+            upper="pi/4",
+            variable="theta",
+        )
+    )
+
+    assert result.status == "verified"
+    assert (
+        result.primary.expression == "Integral(log(tan(theta) + 1), (theta, 0, pi/4))"
+    )
+    assert result.secondary
+    assert result.secondary.expression == "pi*log(2)/8"
+    assert [step.action for step in result.steps] == ["integrate-symmetry"]
+
+
+def test_integrate_uses_arctangent_reflection_for_rational_log_integral() -> None:
+    result = run(
+        MathRequest(
+            expression="log(1 + x)/(1 + x^2)",
+            kind="math",
+            lower="0",
+            operation="integrate",
+            upper="1",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "pi*log(2)/8"
+    assert [step.action for step in result.steps] == [
+        "substitute",
+        "integrate-symmetry",
+    ]
+
+
+def test_integrate_uses_fresh_substitution_symbol_when_theta_is_taken() -> None:
+    result = run(
+        MathRequest(
+            expression="log(1 + theta)/(1 + theta^2)",
+            kind="math",
+            lower="0",
+            operation="integrate",
+            upper="1",
+            variable="theta",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "pi*log(2)/8"
+
+
+def test_integrate_uses_generic_integrate_when_log_reflection_is_not_constant() -> None:
+    result = run(
+        MathRequest(
+            expression="x + log(x + 2)",
+            kind="math",
+            lower="0",
+            operation="integrate",
+            upper="1",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "-2*log(2) - 1/2 + 3*log(3)"
+    assert [step.action for step in result.steps] == ["integrate"]
+
+
+def test_integrate_returns_inconclusive_for_unevaluated_result() -> None:
+    result = run(
+        MathRequest(
+            expression="x^x",
+            kind="math",
+            lower="0",
+            operation="integrate",
+            upper="1",
+            variable="x",
+        )
+    )
+
+    assert result.status == "inconclusive"
+    assert result.secondary is None
+    assert result.steps == []
+    assert result.reason == "The integral could not be determined exactly."
+
+
 def test_integrate_rejects_one_sided_bounds() -> None:
     with pytest.raises(ValueError, match="lower and upper bounds"):
         run(
