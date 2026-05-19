@@ -3,15 +3,17 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 
 export const metadata = {
   title: "Piecewise Function Modeling",
-  description: "Model real-world scenarios using piecewise functions. Learn tiered pricing, tax brackets, and multi-stage processes with step-by-step examples.",
+  description: "Learn how to build piecewise function models from interval boundaries, tiered rates, staged motion, and connection points.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/18/2025",
   subject: "Functions and Their Modeling",
 };
 
-## Understanding Piecewise Functions
+## When to Use Piecewise Functions
 
-A piecewise function is a function that is defined by several different equations on certain intervals of its domain. Each "piece" of the function applies to a specific part of the domain.
+A piecewise function is useful when one situation cannot be described well by one formula. The domain is split into intervals, and each interval uses its own rule.
+
+For example, electricity cost can be cheaper for the first usage tier and more expensive after a certain boundary. A boundary like this is a sign that the model should be written in pieces.
 
 ### Mathematical Definition
 
@@ -21,18 +23,17 @@ A piecewise function can be written in the form:
 
 where <InlineMath math="D_1, D_2, D_3, \ldots, D_n" /> are intervals that form a partition of the function's domain.
 
-**Characteristics of piecewise functions:**
+When reading or building a piecewise function, pay attention to three things:
 
-- Consists of several different equations
-- Each equation applies to a specific interval
-- Can be continuous or discontinuous
-- Intervals do not overlap
+- The formula on each row.
+- The interval condition that decides when that formula is used.
+- The function value at connection points, especially when an interval boundary uses <InlineMath math="\lt" />, <InlineMath math="\leq" />, <InlineMath math="\gt" />, or <InlineMath math="\geq" />.
 
-## Types of Piecewise Functions
+## Common Piece Shapes
 
-### Linear Piecewise Functions
+### Linear Pieces
 
-A linear piecewise function is a function where each piece is a linear function.
+A linear piecewise function uses a linear function on each interval. This form often appears when the rate of change is constant for a while, then changes after a certain point.
 
 <LineEquation
   title="Linear Piecewise Function"
@@ -74,9 +75,11 @@ The function above can be written as:
 
 <BlockMath math="f(x) = \begin{cases} 2x + 3, & \text{if } -2 \leq x < 0 \\ -x + 3, & \text{if } 0 \leq x < 2 \\ 0.5x, & \text{if } x \geq 2 \end{cases}" />
 
-### Quadratic Piecewise Functions
+The three rows are not three separate functions. They work together as one function, and the chosen formula depends on the value of <InlineMath math="x" />.
 
-Piecewise functions can also contain quadratic pieces or combinations of linear and quadratic functions.
+### Quadratic Pieces
+
+Piecewise functions can also use quadratic pieces. This is helpful when one part of the model curves instead of following a straight line.
 
 <LineEquation
   title="Combined Piecewise Function"
@@ -105,17 +108,17 @@ Piecewise functions can also contain quadratic pieces or combinations of linear 
   showZAxis={false}
 />
 
-## Continuity of Piecewise Functions
+## Connection Points and Continuity
 
-### Continuous Piecewise Functions
+### Connections Without Jumps
 
-A piecewise function is said to be continuous if there are no "jumps" at the connection points between pieces.
+A piecewise function is continuous if the graph does not jump at a connection point. The value from the left, the value from the right, and the function value at that point must match.
 
 Condition for continuity at point <InlineMath math="x = c" />:
 
 <BlockMath math="\lim_{x \to c^-} f(x) = \lim_{x \to c^+} f(x) = f(c)" />
 
-**Example of a continuous piecewise function:**
+Example of a continuous piecewise function:
 
 <BlockMath math="f(x) = \begin{cases} x + 1, & \text{if } x < 2 \\ 3, & \text{if } x = 2 \\ 5 - x, & \text{if } x > 2 \end{cases}" />
 
@@ -125,7 +128,7 @@ For continuity at <InlineMath math="x = 2" />:
 - <InlineMath math="\lim_{x \to 2^+} (5 - x) = 3" />
 - <InlineMath math="f(2) = 3" />
 
-### Discontinuous Piecewise Functions
+### Connections With Jumps
 
 Discontinuous piecewise functions have "jumps" or "holes" at certain points.
 
@@ -165,7 +168,7 @@ Discontinuous piecewise functions have "jumps" or "holes" at certain points.
 
 ### Progressive Rates
 
-Many real-world situations can be modeled with piecewise functions, such as progressive tax rates or tiered parking fees.
+Many real-world situations can be modeled with piecewise functions because their rules change after certain boundaries. Progressive taxes, tiered parking fees, and tiered electricity rates are common examples.
 
 **Example: Electricity Rates**
 
@@ -178,6 +181,8 @@ An electricity company applies tiered rates:
 The mathematical model:
 
 <BlockMath math="C(x) = \begin{cases} 1000x, & \text{if } 0 \leq x \leq 50 \\ 50000 + 1500(x-50), & \text{if } 50 < x \leq 100 \\ 125000 + 2000(x-100), & \text{if } x > 100 \end{cases}" />
+
+The number <InlineMath math="50{,}000" /> in the second row comes from the first <InlineMath math="50 \text{ kWh}" />. The number <InlineMath math="125{,}000" /> in the third row comes from the cost up to the first <InlineMath math="100 \text{ kWh}" />. This keeps the cost from restarting at <InlineMath math="0" /> when the usage enters a new interval.
 
 **Electricity cost table:**
 
@@ -199,14 +204,16 @@ Distance function with respect to time:
 
 <BlockMath math="s(t) = \begin{cases} 5t, & \text{if } 0 \leq t \leq 0.5 \\ 2.5 + 15(t-0.5), & \text{if } 0.5 < t \leq 1.5 \\ 17.5 + 60(t-1.5), & \text{if } 1.5 < t \leq 2 \end{cases}" />
 
+The constants <InlineMath math="2.5" /> and <InlineMath math="17.5" /> keep the total distance moving forward from the last position, instead of returning to <InlineMath math="0" /> when the transportation mode changes.
+
 ## Determining Piecewise Function Equations
 
 To determine piecewise function equations from graphs or situations:
 
-1. **Identify the intervals** of the domain
-2. **Determine the equation** for each interval
-3. **Check continuity** at connection points
-4. **Write in piecewise notation**
+- Split the domain at every boundary where the rule changes.
+- Determine the formula for each interval.
+- Check the connection points so the interval signs and function values do not conflict.
+- Write all pieces in piecewise notation.
 
 **Example:**
 
@@ -216,21 +223,13 @@ From a graph showing:
 - Horizontal line <InlineMath math="y = 4" /> from <InlineMath math="x = 0" /> to <InlineMath math="x = 2" />
 - Line with slope <InlineMath math="-1" /> from <InlineMath math="x = 2" /> to <InlineMath math="x = 4" />
 
-Solution steps:
+The solution can be summarized like this:
 
-1. Interval <InlineMath math="1" />: <InlineMath math="[-2, 0)" />
-
-- Passes through <InlineMath math="(-2, 0)" /> with slope <InlineMath math="2" />
-   - Equation: <InlineMath math="y = 2(x + 2) = 2x + 4" />
-
-2. Interval <InlineMath math="2" />: <InlineMath math="[0, 2)" />
-
-   - Horizontal line
-   - Equation: <InlineMath math="y = 4" />
-
-3. Interval <InlineMath math="3" />: <InlineMath math="[2, 4]" />
-- Passes through <InlineMath math="(2, 4)" /> with slope <InlineMath math="-1" />
-   - Equation: <InlineMath math="y = -1(x - 2) + 4 = -x + 6" />
+| Interval | Graph information | Equation |
+| -------- | ----------------- | -------- |
+| <InlineMath math="[-2, 0)" /> | Passes through <InlineMath math="(-2, 0)" /> with slope <InlineMath math="2" /> | <InlineMath math="y = 2(x + 2) = 2x + 4" /> |
+| <InlineMath math="[0, 2)" /> | Horizontal line | <InlineMath math="y = 4" /> |
+| <InlineMath math="[2, 4]" /> | Passes through <InlineMath math="(2, 4)" /> with slope <InlineMath math="-1" /> | <InlineMath math="y = -1(x - 2) + 4 = -x + 6" /> |
 
 Piecewise function:
 
@@ -244,9 +243,7 @@ Piecewise function:
 
 2. An online taxi company applies the following rates:
 
-   - Base fare: <InlineMath math="\text{Rp }10{,}000" /> (for the first <InlineMath math="2 \text{ km}" />)
-- Km <InlineMath math="3\text{-}10" />: <InlineMath math="\text{Rp }4{,}000/\text{km}" />
-   - Above <InlineMath math="10 \text{ km}" />: <InlineMath math="\text{Rp }3{,}000/\text{km}" />
+   The base fare is <InlineMath math="\text{Rp }10{,}000" /> for the first <InlineMath math="2 \text{ km}" />. Km <InlineMath math="3\text{-}10" /> costs <InlineMath math="\text{Rp }4{,}000/\text{km}" />. Above <InlineMath math="10 \text{ km}" />, the additional rate becomes <InlineMath math="\text{Rp }3{,}000/\text{km}" />.
 
    Create a piecewise function model for the total cost!
 
@@ -260,8 +257,7 @@ Piecewise function:
 
 5. A worker is paid with the following system:
 
-   - First <InlineMath math="8 \text{ hours}" />: <InlineMath math="\text{Rp }50{,}000/\text{hour}" />
-   - Overtime (<InlineMath math="9" />th hour onwards): <InlineMath math="\text{Rp }75{,}000/\text{hour}" />
+   The first <InlineMath math="8 \text{ hours}" /> are paid at <InlineMath math="\text{Rp }50{,}000/\text{hour}" />. Overtime from the <InlineMath math="9" />th hour onward is paid at <InlineMath math="\text{Rp }75{,}000/\text{hour}" />.
 
    If the maximum work is <InlineMath math="12 \text{ hours/day}" />, create a daily wage function!
 

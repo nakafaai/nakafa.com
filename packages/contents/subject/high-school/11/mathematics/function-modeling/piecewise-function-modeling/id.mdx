@@ -3,15 +3,17 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 
 export const metadata = {
   title: "Pemodelan Fungsi Piecewise",
-  description: "Modelkan skenario dunia nyata menggunakan fungsi piecewise. Pelajari tarif bertingkat, pajak progresif, dan proses multi-tahap dengan contoh lengkap.",
+  description: "Pelajari cara membuat model fungsi piecewise dari batas interval, tarif bertingkat, gerak bertahap, dan titik sambung.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/18/2025",
   subject: "Fungsi dan Pemodelannya",
 };
 
-## Pengertian Fungsi Piecewise
+## Kapan Memakai Fungsi Piecewise?
 
-Fungsi piecewise (fungsi sepotong-sepotong) adalah fungsi yang didefinisikan oleh beberapa persamaan berbeda pada interval-interval tertentu dari domainnya. Setiap "potongan" fungsi berlaku pada bagian domain yang spesifik.
+Fungsi piecewise (fungsi sepotong-sepotong) dipakai ketika satu situasi tidak cukup dijelaskan oleh satu rumus. Domainnya dibagi menjadi beberapa interval, lalu setiap interval memakai aturan sendiri.
+
+Misalnya, biaya listrik bisa murah untuk pemakaian awal, lalu lebih mahal setelah melewati batas tertentu. Batas seperti ini menjadi tanda bahwa modelnya perlu ditulis per potongan.
 
 ### Definisi Matematika
 
@@ -21,18 +23,17 @@ Fungsi piecewise dapat ditulis dalam bentuk:
 
 dengan <InlineMath math="D_1, D_2, D_3, \ldots, D_n" /> adalah interval-interval yang membentuk partisi dari domain fungsi.
 
-**Karakteristik fungsi piecewise:**
+Saat membaca atau membuat fungsi piecewise, perhatikan tiga hal berikut:
 
-- Terdiri dari beberapa persamaan berbeda
-- Setiap persamaan berlaku pada interval tertentu
-- Dapat kontinu atau diskontinu
-- Interval-interval tidak saling tumpang tindih
+- Rumus pada setiap baris.
+- Syarat interval yang menentukan kapan rumus itu dipakai.
+- Nilai fungsi di titik sambung, terutama ketika batas interval memakai <InlineMath math="\lt" />, <InlineMath math="\leq" />, <InlineMath math="\gt" />, atau <InlineMath math="\geq" />.
 
-## Jenis-jenis Fungsi Piecewise
+## Bentuk Potongan yang Sering Dipakai
 
-### Fungsi Piecewise Linear
+### Potongan Linear
 
-Fungsi piecewise linear adalah fungsi yang setiap potongannya merupakan fungsi linear.
+Fungsi piecewise linear memakai fungsi linear pada setiap interval. Bentuk ini sering muncul ketika perubahan berlangsung dengan laju tetap, tetapi lajunya berubah setelah melewati titik tertentu.
 
 <LineEquation
   title="Fungsi Piecewise Linear"
@@ -74,9 +75,11 @@ Fungsi di atas dapat ditulis sebagai:
 
 <BlockMath math="f(x) = \begin{cases} 2x + 3, & \text{jika } -2 \leq x < 0 \\ -x + 3, & \text{jika } 0 \leq x < 2 \\ 0.5x, & \text{jika } x \geq 2 \end{cases}" />
 
-### Fungsi Piecewise Kuadratik
+Perhatikan bahwa tiga baris pada rumus itu bukan tiga fungsi yang terpisah. Ketiganya bekerja sebagai satu fungsi, tetapi pilihan rumusnya bergantung pada nilai <InlineMath math="x" />.
 
-Fungsi piecewise dapat juga mengandung potongan-potongan kuadratik atau kombinasi linear dan kuadratik.
+### Potongan Kuadratik
+
+Fungsi piecewise juga bisa memakai potongan kuadratik. Ini berguna ketika salah satu bagian model berubah melengkung, bukan mengikuti garis lurus.
 
 <LineEquation
   title="Fungsi Piecewise Kombinasi"
@@ -105,17 +108,17 @@ Fungsi piecewise dapat juga mengandung potongan-potongan kuadratik atau kombinas
   showZAxis={false}
 />
 
-## Kontinuitas Fungsi Piecewise
+## Titik Sambung dan Kontinuitas
 
-### Fungsi Piecewise Kontinu
+### Sambungan Tanpa Lompatan
 
-Fungsi piecewise dikatakan kontinu jika tidak ada "lompatan" pada titik-titik sambungan antar potongan.
+Fungsi piecewise kontinu jika grafiknya tidak melompat di titik sambung. Nilai dari kiri, nilai dari kanan, dan nilai fungsi di titik itu harus sama.
 
 Syarat kontinuitas di titik <InlineMath math="x = c" />:
 
 <BlockMath math="\lim_{x \to c^-} f(x) = \lim_{x \to c^+} f(x) = f(c)" />
 
-**Contoh fungsi piecewise kontinu:**
+Contoh fungsi piecewise kontinu:
 
 <BlockMath math="f(x) = \begin{cases} x + 1, & \text{jika } x < 2 \\ 3, & \text{jika } x = 2 \\ 5 - x, & \text{jika } x > 2 \end{cases}" />
 
@@ -125,7 +128,7 @@ Untuk kontinu di <InlineMath math="x = 2" />:
 - <InlineMath math="\lim_{x \to 2^+} (5 - x) = 3" />
 - <InlineMath math="f(2) = 3" />
 
-### Fungsi Piecewise Diskontinu
+### Sambungan dengan Lompatan
 
 Fungsi piecewise diskontinu memiliki "lompatan" atau "lubang" pada titik-titik tertentu.
 
@@ -164,7 +167,7 @@ Fungsi piecewise diskontinu memiliki "lompatan" atau "lubang" pada titik-titik t
 
 ### Tarif Progresif
 
-Banyak situasi nyata dapat dimodelkan dengan fungsi piecewise, seperti tarif pajak progresif atau biaya parkir bertingkat.
+Banyak situasi nyata dapat dimodelkan dengan fungsi piecewise karena aturannya berubah setelah melewati batas tertentu. Tarif pajak progresif, biaya parkir bertingkat, dan tarif listrik bertingkat adalah contoh yang mudah dilihat.
 
 **Contoh: Tarif Listrik**
 
@@ -177,6 +180,8 @@ Perusahaan listrik menerapkan tarif bertingkat:
 Model matematikanya:
 
 <BlockMath math="C(x) = \begin{cases} 1000x, & \text{jika } 0 \leq x \leq 50 \\ 50000 + 1500(x-50), & \text{jika } 50 < x \leq 100 \\ 125000 + 2000(x-100), & \text{jika } x > 100 \end{cases}" />
+
+Angka <InlineMath math="50.000" /> pada baris kedua berasal dari biaya <InlineMath math="50 \text{ kWh}" /> pertama. Angka <InlineMath math="125.000" /> pada baris ketiga berasal dari biaya sampai <InlineMath math="100 \text{ kWh}" /> pertama. Dengan cara ini, biaya tidak mulai dari nol lagi setiap masuk interval baru.
 
 **Tabel biaya listrik:**
 
@@ -198,14 +203,16 @@ Fungsi jarak terhadap waktu:
 
 <BlockMath math="s(t) = \begin{cases} 5t, & \text{jika } 0 \leq t \leq 0.5 \\ 2.5 + 15(t-0.5), & \text{jika } 0.5 < t \leq 1.5 \\ 17.5 + 60(t-1.5), & \text{jika } 1.5 < t \leq 2 \end{cases}" />
 
+Konstanta <InlineMath math="2.5" /> dan <InlineMath math="17.5" /> menjaga agar jarak total terus bertambah dari posisi terakhir, bukan kembali ke <InlineMath math="0" /> saat moda transportasi berubah.
+
 ## Menentukan Persamaan Fungsi Piecewise
 
 Untuk menentukan persamaan fungsi piecewise dari grafik atau situasi:
 
-1. **Identifikasi interval-interval** domain
-2. **Tentukan persamaan** untuk setiap interval
-3. **Periksa kontinuitas** di titik sambungan
-4. **Tulis dalam notasi piecewise**
+- Pisahkan domain berdasarkan batas ketika aturan berubah.
+- Tentukan rumus untuk setiap interval.
+- Periksa titik sambung agar tanda interval dan nilai fungsi tidak saling bertabrakan.
+- Tulis semua potongan dalam notasi piecewise.
 
 **Contoh:**
 
@@ -215,21 +222,13 @@ Dari grafik yang menunjukkan:
 - Garis horizontal <InlineMath math="y = 4" /> dari <InlineMath math="x = 0" /> hingga <InlineMath math="x = 2" />
 - Garis dengan kemiringan <InlineMath math="-1" /> dari <InlineMath math="x = 2" /> hingga <InlineMath math="x = 4" />
 
-Langkah penyelesaian:
+Langkah penyelesaiannya bisa diringkas seperti ini:
 
-1. Interval <InlineMath math="1" />: <InlineMath math="[-2, 0)" />
-
-- Melalui <InlineMath math="(-2, 0)" /> dengan kemiringan <InlineMath math="2" />
-   - Persamaan: <InlineMath math="y = 2(x + 2) = 2x + 4" />
-
-2. Interval <InlineMath math="2" />: <InlineMath math="[0, 2)" />
-
-   - Garis horizontal
-   - Persamaan: <InlineMath math="y = 4" />
-
-3. Interval <InlineMath math="3" />: <InlineMath math="[2, 4]" />
-- Melalui <InlineMath math="(2, 4)" /> dengan kemiringan <InlineMath math="-1" />
-   - Persamaan: <InlineMath math="y = -1(x - 2) + 4 = -x + 6" />
+| Interval | Informasi grafik | Persamaan |
+| -------- | ---------------- | --------- |
+| <InlineMath math="[-2, 0)" /> | Melalui <InlineMath math="(-2, 0)" /> dengan kemiringan <InlineMath math="2" /> | <InlineMath math="y = 2(x + 2) = 2x + 4" /> |
+| <InlineMath math="[0, 2)" /> | Garis horizontal | <InlineMath math="y = 4" /> |
+| <InlineMath math="[2, 4]" /> | Melalui <InlineMath math="(2, 4)" /> dengan kemiringan <InlineMath math="-1" /> | <InlineMath math="y = -1(x - 2) + 4 = -x + 6" /> |
 
 Fungsi piecewise:
 
@@ -243,9 +242,7 @@ Fungsi piecewise:
 
 2. Sebuah perusahaan taksi online menerapkan tarif:
 
-   - Tarif dasar: <InlineMath math="\text{Rp }10.000" /> (untuk <InlineMath math="2 \text{ km}" /> pertama)
-- Km <InlineMath math="3\text{-}10" />: <InlineMath math="\text{Rp }4.000/\text{km}" />
-   - Di atas <InlineMath math="10 \text{ km}" />: <InlineMath math="\text{Rp }3.000/\text{km}" />
+   Tarif dasar adalah <InlineMath math="\text{Rp }10.000" /> untuk <InlineMath math="2 \text{ km}" /> pertama. Km <InlineMath math="3\text{-}10" /> dikenai <InlineMath math="\text{Rp }4.000/\text{km}" />. Di atas <InlineMath math="10 \text{ km}" />, tarif tambahannya menjadi <InlineMath math="\text{Rp }3.000/\text{km}" />.
 
    Buatlah model fungsi piecewise untuk total biaya!
 
@@ -259,8 +256,7 @@ Fungsi piecewise:
 
 5. Seorang pekerja dibayar dengan sistem:
 
-   - <InlineMath math="8 \text{ jam}" /> pertama: <InlineMath math="\text{Rp }50.000/\text{jam}" />
-   - Lembur (jam ke-<InlineMath math="9" /> dst): <InlineMath math="\text{Rp }75.000/\text{jam}" />
+   <InlineMath math="8 \text{ jam}" /> pertama dibayar <InlineMath math="\text{Rp }50.000/\text{jam}" />. Lembur mulai jam ke-<InlineMath math="9" /> dibayar <InlineMath math="\text{Rp }75.000/\text{jam}" />.
 
    Jika maksimal kerja <InlineMath math="12 \text{ jam/hari}" />, buatlah fungsi upah harian!
 
