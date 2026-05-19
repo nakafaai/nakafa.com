@@ -13,7 +13,7 @@ export const metadata = {
 
 Mengalikan dua fungsi, <InlineMath math="f" /> dan <InlineMath math="g" />, sama mudahnya seperti mengalikan dua bilangan. Kita tinggal kalikan saja hasil <InlineMath math="f(x)" /> dengan <InlineMath math="g(x)" /> untuk nilai <InlineMath math="x" /> yang sama. Hasilnya adalah fungsi baru <InlineMath math="(f \cdot g)" />.
 
-<div className="flex flex-col gap-4">
+<ContentStack>
   <LineEquation
     title="Visualisasi Perkalian Fungsi"
     description={
@@ -52,7 +52,7 @@ Mengalikan dua fungsi, <InlineMath math="f" /> dan <InlineMath math="g" />, sama
 
   <BlockMath math="(f \cdot g)(x) = f(x) \cdot g(x)" />
 
-</div>
+</ContentStack>
 
 Sama seperti penjumlahan dan pengurangan, mesin perkalian <InlineMath math="(f \cdot g)" /> ini hanya bisa mengolah bahan baku (nilai <InlineMath math="x" />) yang bisa diolah oleh _kedua_ mesin asli, <InlineMath math="f" /> dan <InlineMath math="g" />. Jadi, domainnya adalah irisan dari domain <InlineMath math="f" /> dan domain <InlineMath math="g" />.
 
