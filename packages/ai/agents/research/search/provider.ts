@@ -3,8 +3,12 @@ import { firecrawlApp } from "@repo/ai/config/firecrawl";
 import { Effect } from "effect";
 
 /** Calls Firecrawl search with one generated query. */
-export function searchFirecrawl(query: string) {
-  return Effect.tryPromise({
+export const searchFirecrawl = Effect.fn("research.searchFirecrawl")(function* (
+  query: string
+) {
+  yield* Effect.annotateCurrentSpan("query", query);
+
+  return yield* Effect.tryPromise({
     try: () =>
       firecrawlApp.search(query, {
         limit: 5,
@@ -19,4 +23,4 @@ export function searchFirecrawl(query: string) {
     catch: (error) =>
       new ResearchSearchError({ message: `Failed to search: ${error}` }),
   }).pipe(Effect.map((response) => ({ query, response })));
-}
+});

@@ -6,7 +6,7 @@ import { MathToolInputSchema } from "@repo/math/schema/tool-input";
 import { MathService } from "@repo/math/service";
 import type { UIMessageStreamWriter } from "ai";
 import dedent from "dedent";
-import { Effect, ParseResult, Schema } from "effect";
+import { Effect, Either, ParseResult, Schema } from "effect";
 
 const invalidMathInputError = "invalid_math_input";
 const mathCheckUnavailableError = "math_check_unavailable";
@@ -46,66 +46,59 @@ function decodeRecoveryMessage(message: string) {
   return "Ask the user for the exact missing expression or data in their language.";
 }
 
-/** Runs one deterministic math request and writes the math evidence data part. */
-export function compute({
-  input,
-  toolCallId,
-  writer,
-}: {
+interface ComputeParams {
   input: unknown;
   toolCallId: string;
   writer: UIMessageStreamWriter<MyUIMessage>;
-}) {
-  return Effect.gen(function* () {
-    const decoded = yield* Schema.decodeUnknown(MathToolInputSchema)(
-      input
-    ).pipe(Effect.either);
+}
 
-    if (decoded._tag === "Left") {
-      const recovery = decodeRecoveryMessage(formatDecodeError(decoded.left));
+/** Runs one deterministic math request and writes the math evidence data part. */
+export const compute = Effect.fn("math.compute")(function* ({
+  input,
+  toolCallId,
+  writer,
+}: ComputeParams) {
+  const decoded = yield* Schema.decodeUnknown(MathToolInputSchema)(input).pipe(
+    Effect.either
+  );
 
-      return [
-        "# Checked Math Work",
-        "- Status: error",
-        `- Error code: ${invalidMathInputError}`,
-        `- Recovery: ${recovery}`,
-      ].join("\n");
-    }
+  if (Either.isLeft(decoded)) {
+    const recovery = decodeRecoveryMessage(formatDecodeError(decoded.left));
 
-    const request = {
-      ...decoded.right,
-      kind: "math",
-    } satisfies MathRequest;
+    return [
+      "# Checked Math Work",
+      "- Status: error",
+      `- Error code: ${invalidMathInputError}`,
+      `- Recovery: ${recovery}`,
+    ].join("\n");
+  }
 
-    yield* Effect.sync(() =>
-      writer.write({
-        data: {
-          input: request,
-          kind: request.operation,
-          status: "loading",
-        },
-        id: toolCallId,
-        type: "data-math",
-      })
-    );
+  const request = {
+    ...decoded.right,
+    kind: "math",
+  } satisfies MathRequest;
 
-    const checked = yield* MathService.compute(request).pipe(Effect.either);
+  yield* Effect.sync(() =>
+    writer.write({
+      data: {
+        input: request,
+        kind: request.operation,
+        status: "loading",
+      },
+      id: toolCallId,
+      type: "data-math",
+    })
+  );
 
-    const data =
-      checked._tag === "Right"
-        ? ({
-            input: request,
-            kind: checked.right.operation,
-            result: checked.right,
-            status: checked.right.status,
-            summary: checked.right.status,
-          } satisfies MathData)
-        : ({
-            error: mathCheckUnavailableError,
-            input: request,
-            kind: request.operation,
-            status: "error",
-          } satisfies MathData);
+  const checked = yield* MathService.compute(request).pipe(Effect.either);
+
+  if (Either.isLeft(checked)) {
+    const data = {
+      error: mathCheckUnavailableError,
+      input: request,
+      kind: request.operation,
+      status: "error",
+    } satisfies MathData;
 
     yield* Effect.sync(() =>
       writer.write({
@@ -115,11 +108,24 @@ export function compute({
       })
     );
 
-    return formatMathData(
+    return formatMathData(data, recoveryMessage(checked.left.message));
+  }
+
+  const data = {
+    input: request,
+    kind: checked.right.operation,
+    result: checked.right,
+    status: checked.right.status,
+    summary: checked.right.status,
+  } satisfies MathData;
+
+  yield* Effect.sync(() =>
+    writer.write({
       data,
-      checked._tag === "Left"
-        ? recoveryMessage(checked.left.message)
-        : undefined
-    );
-  });
-}
+      id: toolCallId,
+      type: "data-math",
+    })
+  );
+
+  return formatMathData(data);
+});
