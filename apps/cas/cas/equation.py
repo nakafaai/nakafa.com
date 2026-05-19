@@ -9,6 +9,11 @@ from cas.schema import MathRequest, MathResult
 
 EQUALS = expression_text("equals", "=")
 IMPLIES = expression_text("becomes", "\\Rightarrow")
+SOLUTION_SET_UNAVAILABLE = "The equation solution set could not be determined exactly."
+
+
+class SolutionSetUnavailable(ValueError):
+    """Raised when SymPy cannot represent the complete exact solution set."""
 
 
 def solve(request: MathRequest) -> MathResult:
@@ -21,7 +26,15 @@ def solve(request: MathRequest) -> MathResult:
         variable = variables[0]
 
         if isinstance(relation, sp.Equality):
-            solved = _solve_equality(relation, variable)
+            try:
+                solved = _solve_equality(relation, variable)
+            except SolutionSetUnavailable:
+                return result(
+                    request,
+                    status="inconclusive",
+                    primary=relation,
+                    reason=SOLUTION_SET_UNAVAILABLE,
+                )
             steps = _solve_equality_steps(relation, variable, solved)
         else:
             solved = sp.solve_univariate_inequality(relation, variable)
@@ -72,7 +85,7 @@ def _solve_equality(relation: sp.Equality, variable: sp.Symbol):
 
     solved = sp.solveset(relation, variable, domain=sp.S.Reals)
     if isinstance(solved, sp.ConditionSet):
-        raise ValueError("Equation solution set could not be determined exactly.")
+        raise SolutionSetUnavailable(SOLUTION_SET_UNAVAILABLE)
 
     return solved
 

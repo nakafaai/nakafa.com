@@ -53,16 +53,32 @@ def test_solve_trig_equation_returns_full_real_solution_set() -> None:
     assert "Integers" in result.secondary.expression
 
 
-def test_solve_rejects_unrepresented_transcendental_solution_sets() -> None:
-    with pytest.raises(ValueError, match="could not be determined exactly"):
-        run(
-            MathRequest(
-                expression="sin(x) = x",
-                kind="math",
-                operation="solve",
-                variable="x",
-            )
+def test_solve_returns_inconclusive_for_transcendental_condition_sets() -> None:
+    result = run(
+        MathRequest(
+            expression="sin(x) = x",
+            kind="math",
+            operation="solve",
+            variable="x",
         )
+    )
+
+    assert result.status == "inconclusive"
+    assert result.reason == "The equation solution set could not be determined exactly."
+
+
+def test_solve_returns_inconclusive_for_unrepresented_product_solution_set() -> None:
+    result = run(
+        MathRequest(
+            expression="x^x * (ln(x) + 1) = 0",
+            kind="math",
+            operation="solve",
+            variable="x",
+        )
+    )
+
+    assert result.status == "inconclusive"
+    assert result.primary.expression == "Eq(x**x*(log(x) + 1), 0)"
 
 
 def test_solve_uses_single_requested_variable() -> None:

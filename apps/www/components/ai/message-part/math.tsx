@@ -32,7 +32,10 @@ export const MathPart = memo(({ message }: Props) => {
     >
       <CollapsibleTrigger className="flex w-full cursor-pointer items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground">
         <HugeIcons
-          className="size-4 shrink-0"
+          className={cn(
+            "size-4 shrink-0",
+            message.status === "error" ? "text-destructive" : undefined
+          )}
           icon={getMathIcon(message.kind)}
         />
         <span className="truncate">{t(`math-${message.kind}`)}</span>
