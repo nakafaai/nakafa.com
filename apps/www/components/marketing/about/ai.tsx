@@ -16,6 +16,7 @@ interface AudienceCardProps {
   title: string;
 }
 
+/** Renders one audience-specific call to action in the AI section. */
 function AudienceCard({
   icon,
   title,
@@ -48,6 +49,7 @@ function AudienceCard({
   );
 }
 
+/** Renders the AI-facing Nakafa content section on the marketing page. */
 export function Ai() {
   const t = useTranslations("AiSection");
 
@@ -86,14 +88,16 @@ export function Ai() {
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <span className="text-primary">$</span>
                     <span className="truncate text-foreground">
-                      curl nakafa.com/en/subject/math/vector.md
+                      curl nakafa.com/en/quran.md
                     </span>
                   </div>
                   <div className="mt-2 space-y-0.5 text-muted-foreground">
-                    <div className="text-primary"># Nakafa Framework: LLM</div>
-                    <div>## What Is a Vector?</div>
+                    <div className="text-primary">
+                      # Nakafa Learning Content
+                    </div>
+                    <div>## 1. Al-Faatiha</div>
                     <div className="text-muted-foreground">
-                      Imagine a weather map...
+                      **Translation:** The Opening
                     </div>
                   </div>
                 </div>

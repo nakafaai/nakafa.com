@@ -1,10 +1,10 @@
 {
   "Metadata": {
-    "title": "Nakafa: Free High-Quality Learning Platform (K-12 to University)",
-    "description": "Access free, high-quality learning resources on Nakafa. Covering K-12, university subjects (Math, Science, CS, AI), exam prep & more. Start learning!",
-    "short-description": "Free, quality learning for all levels.",
-    "very-short-description": "Learn free and with quality.",
-    "keywords": "free learning resources, quality education platform, online tutoring, K-12 education, university courses, STEM education, mathematics tutorials, physics lessons, chemistry help, biology study guide, computer science basics, data science learning, artificial intelligence course, exam preparation online, study materials free, educational technology, Nakafa learning, Indonesian education support, interactive learning modules, programming tutorials online, digital learning tools, academic excellence resources, e-learning platform, free educational content, lifelong learning",
+    "title": "Nakafa: Free Lessons from K-12 to University",
+    "description": "Study math, science, computer science, AI, and exam prep on Nakafa. Free lessons from K-12 to university with practice questions and explanations.",
+    "short-description": "Free lessons for K-12 through university.",
+    "very-short-description": "Free learning materials.",
+    "keywords": "free lessons, math lessons, physics lessons, chemistry lessons, biology lessons, computer science lessons, AI lessons, data science lessons, practice questions, worked solutions, exam prep, online try out, K-12 materials, university materials, open education, Nakafa",
     "classification": "Education"
   },
   "Common": {
@@ -142,8 +142,8 @@
     "vocational-school": "Vocational School",
     "university": "University",
     "grade": "Grade {grade}",
-    "grade-description": "Choose your subject and level up your understanding chapter by chapter!",
-    "subject-description": "Choose your grade and start exploring exciting learning materials today!",
+    "grade-description": "Choose the subject that matches your grade.",
+    "subject-description": "Choose a grade, then open the topic you want to study.",
     "chapter": "Chapter",
     "mathematics": "Mathematics",
     "physics": "Physics",
@@ -169,7 +169,7 @@
     "learn-with-nakafa": "Learn with Nakafa"
   },
   "Articles": {
-    "description": "Explore fresh perspectives with our deeply researched educational articles.",
+    "description": "Read educational articles with clear context, data, and references.",
     "politics": "Politics",
     "official": "Official",
     "official-description": "Made by Nakafa",
@@ -181,13 +181,13 @@
   "Holy": {
     "holy": "Holy",
     "quran": "Quran",
-    "quran-description": "Find peace and profound wisdom in every holy verse of the Quran.",
+    "quran-description": "Read the Quran with verse-by-verse translation and tafsir.",
     "verse": "Verse",
     "verse-count": "Verse {count}",
     "interpretation": "Interpretation",
     "surah-title": "Surah {number}: {name} ({translation}) - {quran}",
     "verses": "verses",
-    "read-quran-description": "Read the Quran online with complete translation and in-depth interpretation available on Nakafa"
+    "read-quran-description": "Read the Quran online with verse-by-verse translation and tafsir on Nakafa"
   },
   "Exercises": {
     "exercises": "Exercises",
@@ -203,7 +203,7 @@
     "grade-9": "Grade 9",
     "tka": "TKA",
     "snbt": "SNBT",
-    "type-description": "Test your limits and conquer exams with interactive practice sessions!",
+    "type-description": "Practice questions with explanations to check your understanding.",
     "mathematics": "Mathematics",
     "quantitative-knowledge": "Quantitative Knowledge",
     "mathematical-reasoning": "Mathematical Reasoning",
@@ -213,9 +213,9 @@
     "general-knowledge": "General Knowledge and Understanding",
     "reading-and-writing-skills": "Reading and Writing Skills",
     "simulation": "Simulation",
-    "simulation-description": "Challenge yourself in a realistic exam mode where results and explanations appear only after submission.",
+    "simulation-description": "Work in exam mode. Results and explanations appear after submission.",
     "practice": "Practice",
-    "practice-description": "Master concepts at your own pace with instant answers and detailed explanations.",
+    "practice-description": "Work at your own pace, then check the answer and explanation.",
     "start": "Start",
     "start-exercise-title": "Start exercise",
     "start-exercise-description": "Choose between simulation or practice mode to start your exercise.",
@@ -234,7 +234,7 @@
     "attempt-not-in-progress": "Please start a new session to continue practicing.",
     "attempt-not-found": "Please start the exercise first.",
     "submit-answer-error": "We couldn't save your answer. Please try again.",
-    "practice-exercises": "Practice exercises to master the material"
+    "practice-exercises": "Practice exercises to understand the material"
   },
   "Tryouts": {
     "title": "What tryout do you want today?",
@@ -320,7 +320,7 @@
     "search-help": "Type to start searching...",
     "search-error": "An error occurred while searching.",
     "search-title": "Search Learning Materials",
-    "search-description": "Search thousands of free learning materials, educational articles, practice exercises, and study resources. Find exactly what you need to master any subject."
+    "search-description": "Search free learning materials, educational articles, practice exercises, and study resources. Find the topic you are studying."
   },
   "Home": {
     "greeting": "Hi, {name}",
@@ -385,11 +385,11 @@
     "settings": "Settings",
     "settings-description": "Manage your Nakafa account settings, preferences, and profile information to personalize your learning experience.",
     "profile": "Profile",
-    "profile-description": "Explore user learning profiles featuring educational contributions, insightful comments, study progress tracking, and community engagement in collaborative learning.",
+    "profile-description": "View user learning profiles with educational contributions, comments, study progress, and community activity.",
     "chat": "Chat",
-    "chat-description": "Connect with our AI learning assistant for personalized tutoring, homework help, concept explanations, and interactive educational conversations tailored to your needs.",
+    "chat-description": "Use the AI learning assistant for homework help, concept explanations, and study conversations.",
     "subscriptions": "Subscriptions",
-    "subscriptions-description": "Unlock the most powerful learning experience with Nakafa Pro.",
+    "subscriptions-description": "Get extra learning tools with Nakafa Pro.",
     "get-pro": "Get Pro",
     "manage": "Manage",
     "plan-free": "Free",
@@ -632,7 +632,7 @@
     "pro-feature-2": "More credits for Nakafa Lite and Nakafa Pro tutoring",
     "pro-feature-3": "Download any lesson as PDF for offline reading",
     "pro-feature-4": "Audio lessons for learning on the go",
-    "pro-feature-5": "Priority support when you get stuck",
+    "pro-feature-5": "Priority support when you need guidance",
     "pro-cta": "Get Pro"
   },
   "Faq": {
@@ -653,16 +653,16 @@
     "q6": "Can schools use Nakafa?",
     "a6": "Absolutely. We offer custom solutions for classrooms and institutions. Contact founder for LMS integration, student management, and custom branding.",
     "q7": "How does Nakafa ensure content accuracy?",
-    "a7": "All content is created by qualified contributors and reviewed by the community. Our source-available approach means anyone can inspect materials and propose improvements. Practice exercises include detailed explanations so you learn from mistakes, not just scores."
+    "a7": "All content is created by qualified contributors and reviewed by the community. Our source-available approach means anyone can inspect materials and propose improvements. Practice exercises include explanations so you learn from mistakes, not just scores."
   },
   "Features": {
-    "headline": "<mark>Stuck on a lesson at 2am with no one to ask. We have been there.</mark> That is why we built this. Complete materials from elementary to university, practice problems with explanations, and AI ready to help whenever you need it. <mark>Free, no strings attached.</mark>",
+    "headline": "<mark>Learning can feel hard when you are working alone.</mark> Nakafa provides lessons from elementary school to university, practice problems with explanations, and AI help when you need another explanation. <mark>Core content is free.</mark>",
     "materials-value": "5000+",
     "materials-label": "Learning Materials",
     "materials-description": "From basic concepts to advanced topics",
     "exercises-value": "2000+",
     "exercises-label": "Practice Questions",
-    "exercises-description": "With detailed explanations",
+    "exercises-description": "With explanations",
     "subjects-value": "100+",
     "subjects-label": "Subjects",
     "subjects-description": "Elementary to university",
@@ -673,42 +673,42 @@
   "SchoolsSection": {
     "badge": "For Schools",
     "headline": "Every school has <mark>different</mark> needs. We <mark>get it</mark>.",
-    "description": "Want a full LMS? Content integration? Or custom solutions? Pick what works for your school.",
+    "description": "Need an LMS, content integration, or a custom classroom flow? Pick what works for your school.",
     "cta": "Discuss your needs"
   },
   "AiSection": {
-    "headline": "Built for humans. <mark>Optimized for AI.</mark>",
-    "description": "Access free, high-quality lessons, practice questions, articles, and AI tutoring for school, university, and exam preparation.",
-    "feature-description": "Just add <mark>.md</mark> to any page URL to get structured markdown. Build apps, train models, or integrate with your tools. No API needed.",
+    "headline": "Lessons for students. <mark>Markdown for learning tools.</mark>",
+    "description": "Open lessons, practice questions, articles, and AI help for school, university, and exam preparation.",
+    "feature-description": "Add <mark>.md</mark> to any page URL to open structured markdown. Use it for learning apps, search, or tool integrations.",
     "students-title": "For Students",
     "students-description": "Study with Nina using Nakafa Lite and Nakafa Pro. All in one place.",
     "cta-students": "Start learning",
     "developers-title": "For Developers",
-    "developers-description": "Build on our content. Access via llms.txt or integrate into your platform.",
+    "developers-description": "Use the llms.txt index to read Nakafa's content map and markdown URLs.",
     "cta-developers": "Explore llms.txt",
     "schools-title": "For Schools",
-    "schools-description": "Integrate with your LMS. Connect Nakafa content to your classroom tools without friction.",
+    "schools-description": "Connect Nakafa content to the LMS or classroom tools your school already uses.",
     "cta-schools": "Contact founder"
   },
   "About": {
-    "meta-title": "Reject Closed Education, Enjoy Free Open Education",
-    "title": "Reject closed education, enjoy <mark>free open education</mark>",
-    "description": "Our core mission is to provide high-quality, comprehensive educational content across a wide spectrum of subjects and topics.",
+    "meta-title": "Free Open Learning Materials from K-12 to University",
+    "title": "Free open learning materials from <mark>K-12 to university</mark>",
+    "description": "We make open learning materials from K-12 to university, with explanations that can be checked and improved together.",
     "contribute": "Contribute",
     "start-learning": "Start learning",
     "join-community": "Join community",
     "community-title": "Find people who get what you are learning",
     "community-description": "Every lesson is made by someone who was confused too. Join our Discord to ask questions, share resources, or help others out.",
     "curriculum-title": "Learn exactly <mark>what you need</mark>, <mark>when you need it</mark>",
-    "curriculum-description": "Pick your grade, dive into any subject, or search for what you're stuck on. No endless scrolling.",
+    "curriculum-description": "Pick your grade, choose a subject, or search for the topic you are studying. No endless scrolling.",
     "company": "Company",
     "community": "Community",
     "about-us": "About Us",
     "events": "Events",
-    "events-description": "Discover upcoming educational events, workshops, webinars, and community gatherings. Join us to learn, connect, and grow together.",
-    "trusted-badge": "Trusted by educators",
-    "trusted-headline": "Trusted by <mark>thousands of students</mark> and <mark>teachers</mark> from leading schools and universities",
-    "trusted-description": "Join the growing community of learners and educators who choose Nakafa for quality education."
+    "events-description": "See Nakafa learning events, workshops, webinars, and community meetups.",
+    "trusted-badge": "For students and teachers",
+    "trusted-headline": "Used by <mark>students</mark> and <mark>teachers</mark> across schools and universities",
+    "trusted-description": "Use open lessons, practice, and discussion spaces to support learning."
   },
   "File": {
     "exceeds-max-size": "{fileName} exceeds maximum size of {maxSizeFormatted}.",
@@ -964,17 +964,17 @@
   "SEO": {
     "subject": {
       "title": "{title}: {chapter, select, __EMPTY__ {} other {{chapter} - }}{material} ({grade}) | Nakafa",
-      "description": "Learn {title} in {chapter, select, __EMPTY__ {} other {{chapter} }}{material} for {grade}. Complete material with practice problems, exercises, and step-by-step explanations.",
+      "description": "Learn {title} in {chapter, select, __EMPTY__ {} other {{chapter} }}{material} for {grade}. This page explains the concept, examples, and practice for checking understanding.",
       "keywords": "{title}, {chapter, select, __EMPTY__ {} other {{chapter}, }}{material}, {grade}, learn, material, practice problems, exercises, education"
     },
     "exercise": {
       "title": "{number, select, 0 {} other {Question {number}/{questionCount}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) | Nakafa",
-      "description": "Take {material} {exam} exercise{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} with {questionCount, plural, =0 {practice questions} =1 {1 question} other {{questionCount} questions}} and detailed solutions.",
+      "description": "Take {material} {exam} exercise{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} with {questionCount, plural, =0 {practice questions} =1 {1 question} other {{questionCount} questions}} and explanations for checking your reasoning.",
       "keywords": "{material}, {exam}, {group, select, __EMPTY__ {} other {{group}, }}{set, select, __EMPTY__ {} other {{set}, }}exercise, practice questions, solutions, exam"
     },
     "article": {
       "title": "{title} - {category} | Nakafa",
-      "description": "Read complete analysis of {title}. Latest information with data and in-depth research from Nakafa editorial team.",
+      "description": "Read {title} in {category}. This article presents context, data, and references readers can check.",
       "keywords": "{title}, {category}, analysis, facts, latest, research, information, news"
     },
     "quran": {

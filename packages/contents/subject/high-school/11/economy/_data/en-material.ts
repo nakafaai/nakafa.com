@@ -93,7 +93,7 @@ const enMaterials: MaterialList = [
   {
     title: "Monetary and Fiscal Policy",
     description:
-      "Government's economic toolkit for steering nations through prosperity and crisis.",
+      "How monetary and fiscal policy influence prices, growth, and economic stability.",
     href: `${BASE_PATH}/monetary-fiscal-policy`,
     items: [
       {

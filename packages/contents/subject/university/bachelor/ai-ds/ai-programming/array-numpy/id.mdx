@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Membuat Array dengan NumPy",
-  description: "Pelajari cara membuat array NumPy: manual, fungsi bawaan, sequence, dan operasi dasar. Panduan lengkap dengan contoh kode teruji untuk pemrograman AI dan data science.",
+  description: "Pelajari cara membuat array NumPy secara manual, dengan fungsi bawaan, dari sequence, dan melalui operasi dasar.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "09/18/2025",
   subject: "Pemrograman AI",
@@ -8,16 +8,16 @@ export const metadata = {
 
 ## Pengenalan NumPy
 
-NumPy mengubah Python menjadi mesin komputasi numerik yang kuat. Sementara list Python bisa menampung data tipe campuran, array NumPy menyimpan data homogen dalam struktur yang sangat optimal. Pilihan desain ini memungkinkan operasi matematika secepat kilat yang mustahil dicapai dengan list Python biasa.
+NumPy membantu Python mengolah data numerik secara efisien. Sementara list Python bisa menampung data tipe campuran, array NumPy menyimpan data homogen dalam struktur yang dioptimalkan. Pilihan desain ini membuat operasi matematika pada banyak data berjalan jauh lebih cepat daripada list Python biasa.
 
-Objek inti `ndarray` merepresentasikan array n-dimensi dengan ukuran tetap dan tipe data identik di seluruh elemen. Batasan ini bukan pembatas, melainkan pembebas karena membuka operasi vektorisasi yang memproses seluruh array dalam perintah tunggal. [Dokumentasi resmi NumPy](https://numpy.org/doc/stable/) menawarkan tutorial komprehensif dan contoh untuk menguasai kemampuan powerful ini.
+Objek inti `ndarray` merepresentasikan array n-dimensi dengan ukuran tetap dan tipe data identik di seluruh elemen. Batasan ini membuat NumPy dapat melakukan vektorisasi, yaitu memproses seluruh array dengan satu perintah. [Dokumentasi resmi NumPy](https://numpy.org/doc/stable/) menyediakan tutorial dan contoh untuk mempelajari fitur ini lebih lanjut.
 
 NumPy menyediakan beberapa keunggulan penting untuk pemrograman ilmiah:
 
 1. **Efisiensi tinggi** karena diimplementasikan dalam bahasa C yang terkompilasi
 2. **Vektorisasi** memungkinkan operasi pada seluruh array tanpa loop eksplisit
 3. **Konsumsi memori lebih kecil** dibandingkan list Python
-4. **Operasi matematika yang lengkap** dan optimized
+4. **Operasi matematika yang lengkap** dan siap dipakai
 
 Vektorisasi adalah kemampuan untuk menerapkan operasi tunggal pada seluruh array sekaligus. Ini seperti memberi perintah kepada seluruh barisan tentara sekaligus, bukan satu per satu.
 

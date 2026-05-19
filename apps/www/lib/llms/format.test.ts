@@ -19,9 +19,9 @@ describe("llms formatting helpers", () => {
         url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
       })
     ).toStrictEqual([
-      "# Nakafa Framework: LLM",
+      "# Nakafa Learning Content",
       "",
-      "> For AI agents: use [llms.txt](https://nakafa.com/llms.txt). Markdown versions are available by appending `.md` to content URLs or sending `Accept: text/markdown`.",
+      "> For AI agents: use [llms.txt](https://nakafa.com/llms.txt) for the site index. Markdown versions are available by appending `.md` to content URLs or sending `Accept: text/markdown`.",
       "",
       "URL: https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
       "Source: packages/contents/articles/politics/dynastic-politics-asian-values/en.mdx",

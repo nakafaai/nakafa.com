@@ -79,7 +79,7 @@ describe("llms indexes", () => {
   it("uses the cached wrapper without changing section output", async () => {
     await expect(
       getCachedLlmsSectionIndexText({ cleanSlug: "llms/en" })
-    ).resolves.toContain("# Nakafa English Docs");
+    ).resolves.toContain("# Nakafa English Content");
 
     expect(mockCacheLife).toHaveBeenCalledWith("max");
   });
