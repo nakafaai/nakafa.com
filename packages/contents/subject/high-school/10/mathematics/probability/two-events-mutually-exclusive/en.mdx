@@ -60,22 +60,14 @@ To understand better, look at these examples:
 
 2.  **Rolling a Die (once):**
 
-    - The event of getting a "<InlineMath math="3" />" and the event of getting a "<InlineMath math="5" />". You can't get both numbers at once.
-      - <InlineMath math="P(3) = 1/6" />
-      - <InlineMath math="P(5) = 1/6" />
-      - Probability of getting a <InlineMath math="3" /> OR <InlineMath math="5" /> is <InlineMath math="P(3) + P(5) = 1/6 + 1/6 = 2/6 = 1/3" />.
-    - The event of getting an "even number" (<InlineMath math="\{2, 4, 6\}" />) and the event of getting an "odd number" (<InlineMath math="\{1, 3, 5\}" />). No number is both even and odd.
-      - <InlineMath math="P(\text{Even}) = 3/6 = 1/2" />
-      - <InlineMath math="P(\text{Odd}) = 3/6 = 1/2" />
-      - Probability of getting Even OR Odd is <InlineMath math="P(\text{Even}) + P(\text{Odd}) = 1/2 + 1/2 = 1" />.
+    Look at two pairs of events:
+
+    - Getting a <InlineMath math="3" /> and getting a <InlineMath math="5" /> cannot happen at once. Each has probability <InlineMath math="1/6" />, so the probability of getting a <InlineMath math="3" /> or <InlineMath math="5" /> is <InlineMath math="1/6 + 1/6 = 2/6 = 1/3" />.
+    - Getting an even number <InlineMath math="\{2, 4, 6\}" /> and getting an odd number <InlineMath math="\{1, 3, 5\}" /> cannot happen at once. Each event has probability <InlineMath math="3/6 = 1/2" />, so the probability of getting even or odd is <InlineMath math="1/2 + 1/2 = 1" />.
 
 3.  **Drawing a Card (once):**
 
-    - The event of getting a "King" and the event of getting a "Queen". One card cannot be both a King and a Queen.
-      - There are <InlineMath math="4" /> Kings in <InlineMath math="52 \text{ cards}" />, <InlineMath math="P(\text{King}) = 4/52" />
-      - There are <InlineMath math="4" /> Queens in <InlineMath math="52 \text{ cards}" />, <InlineMath math="P(\text{Queen}) = 4/52" />
-      - Probability of getting a King OR Queen is <InlineMath math="P(\text{King}) + P(\text{Queen}) = 4/52 + 4/52 = 8/52 = 2/13" />.
-    - The event of getting a "Red card (Hearts/Diamonds)" and the event of getting a "Club (<InlineMath math="\clubsuit" />)". Clubs are black, so a card cannot be red and a club simultaneously.
-      - There are <InlineMath math="26 \text{ red cards}" />, <InlineMath math="P(\text{Red}) = 26/52" />
-      - There are <InlineMath math="13" /> clubs, <InlineMath math="P(\clubsuit) = 13/52" />
-      - Probability of getting Red OR Club is <InlineMath math="P(\text{Red}) + P(\clubsuit) = 26/52 + 13/52 = 39/52 = 3/4" />.
+    Use the same idea for card events:
+
+    - Getting a King and getting a Queen are mutually exclusive. There are <InlineMath math="4" /> Kings and <InlineMath math="4" /> Queens in <InlineMath math="52 \text{ cards}" />, so the probability of getting a King or Queen is <InlineMath math="4/52 + 4/52 = 8/52 = 2/13" />.
+    - Getting a red card and getting a club <InlineMath math="\clubsuit" /> are mutually exclusive because clubs are black. There are <InlineMath math="26" /> red cards and <InlineMath math="13" /> clubs, so the probability of getting red or club is <InlineMath math="26/52 + 13/52 = 39/52 = 3/4" />.

@@ -1,6 +1,6 @@
 export const metadata = {
    title: "Circular Permutation",
-   description: "Learn circular permutation formulas for seating arrangements and circular problems. Learn why rotations are identical with step-by-step examples and practice.",
+   description: "Learn circular permutation formulas for seating arrangements and circular problems. Learn why rotations are identical with worked examples and practice.",
    authors: [{ name: "Nabil Akbarazzima Fatih" }],
    date: "05/26/2025",
    subject: "Combinatorics",
@@ -113,10 +113,10 @@ Example: <InlineMath math="4" /> married couples sit in a circle, each couple mu
    
    Solution steps (**complement method**):
    - Total ways without restrictions: <InlineMath math="(7-1)! = 6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720" />
-   - **Count unwanted ways** (<InlineMath math="2 \text{ students}" /> sitting adjacent):
-     - Consider <InlineMath math="2 \text{ students}" /> as one unit: <InlineMath math="(6-1)! = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120" />
-     - <InlineMath math="2 \text{ students}" /> can exchange positions: <InlineMath math="2! = 2" />
-     - Total adjacent arrangements: <InlineMath math="120 \times 2 = 240" />
+   - To count the unwanted ways, make the <InlineMath math="2 \text{ students}" /> who sit adjacent into one unit.
+   - Now there are <InlineMath math="6" /> units around the circle, so the number of circular arrangements is <InlineMath math="(6-1)! = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120" />.
+   - The <InlineMath math="2 \text{ students}" /> inside that unit can exchange positions, so there are <InlineMath math="2! = 2" /> internal arrangements.
+   - Total adjacent arrangements: <InlineMath math="120 \times 2 = 240" />
    - **Desired ways:** <InlineMath math="720 - 240 = 480" />
    
    Therefore, there are <InlineMath math="480 \text{ ways}" /> to form a circle where the two students are not adjacent.
