@@ -1,3 +1,7 @@
+import {
+  getUnknownErrorMessage,
+  NakafaAgentDataReadError,
+} from "@repo/contents/_lib/agent/errors";
 import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercise/read";
 import { formatNakafaRouteTitle } from "@repo/contents/_lib/agent/format";
 import { getNakafaAgentQuranReference } from "@repo/contents/_lib/agent/quran/read";
@@ -43,21 +47,21 @@ function renderNakafaMdxMarkdown(ref: NakafaAgentContentRef) {
       return Option.none();
     }
 
-    return Option.some(
-      Schema.decodeUnknownSync(NakafaAgentMarkdownSchema)({
-        ...ref,
-        description:
-          content.value.metadata.description ??
-          content.value.metadata.subject ??
-          "",
-        text: [
-          `# ${content.value.metadata.title}`,
-          "",
-          content.value.raw.trim(),
-        ].join("\n"),
-        title: content.value.metadata.title,
-      })
-    );
+    const markdown = yield* parseNakafaAgentMarkdown({
+      ...ref,
+      description:
+        content.value.metadata.description ??
+        content.value.metadata.subject ??
+        "",
+      text: [
+        `# ${content.value.metadata.title}`,
+        "",
+        content.value.raw.trim(),
+      ].join("\n"),
+      title: content.value.metadata.title,
+    });
+
+    return Option.some(markdown);
   });
 }
 
@@ -70,35 +74,35 @@ function renderNakafaExerciseMarkdown(ref: NakafaAgentContentRef) {
       return Option.none();
     }
 
-    return Option.some(
-      Schema.decodeUnknownSync(NakafaAgentMarkdownSchema)({
-        ...ref,
-        description: `${exercise.value.count} exercises`,
-        text: [
-          `# ${formatNakafaRouteTitle(exercise.value.route, ref.locale)}`,
+    const markdown = yield* parseNakafaAgentMarkdown({
+      ...ref,
+      description: `${exercise.value.count} exercises`,
+      text: [
+        `# ${formatNakafaRouteTitle(exercise.value.route, ref.locale)}`,
+        "",
+        ...exercise.value.exercises.flatMap((item) => [
+          `## Exercise ${item.number}`,
           "",
-          ...exercise.value.exercises.flatMap((item) => [
-            `## Exercise ${item.number}`,
-            "",
-            "### Question",
-            "",
-            item.question.raw.trim(),
-            "",
-            "### Choices",
-            "",
-            ...item.choices.map(
-              (choice) => `- [${choice.correct ? "x" : " "}] ${choice.label}`
-            ),
-            "",
-            "### Answer & Explanation",
-            "",
-            item.answer.raw.trim(),
-            "",
-          ]),
-        ].join("\n"),
-        title: formatNakafaRouteTitle(exercise.value.route, ref.locale),
-      })
-    );
+          "### Question",
+          "",
+          item.question.raw.trim(),
+          "",
+          "### Choices",
+          "",
+          ...item.choices.map(
+            (choice) => `- [${choice.correct ? "x" : " "}] ${choice.label}`
+          ),
+          "",
+          "### Answer & Explanation",
+          "",
+          item.answer.raw.trim(),
+          "",
+        ]),
+      ].join("\n"),
+      title: formatNakafaRouteTitle(exercise.value.route, ref.locale),
+    });
+
+    return Option.some(markdown);
   });
 }
 
@@ -128,32 +132,44 @@ function renderNakafaQuranMarkdown(ref: NakafaAgentContentRef) {
       return Option.none();
     }
 
-    return Option.some(
-      Schema.decodeUnknownSync(NakafaAgentMarkdownSchema)({
-        ...ref,
-        description: reference.value.translation,
-        text: [
-          `# ${reference.value.name}`,
+    const markdown = yield* parseNakafaAgentMarkdown({
+      ...ref,
+      description: reference.value.translation,
+      text: [
+        `# ${reference.value.name}`,
+        "",
+        `Translation: ${reference.value.translation}`,
+        `Revelation: ${reference.value.revelation}`,
+        "",
+        "## Verses",
+        "",
+        ...reference.value.verses.flatMap((verse) => [
+          `### Verse ${verse.number}`,
           "",
-          `Translation: ${reference.value.translation}`,
-          `Revelation: ${reference.value.revelation}`,
+          verse.arabic,
           "",
-          "## Verses",
+          `Transliteration: ${verse.transliteration}`,
           "",
-          ...reference.value.verses.flatMap((verse) => [
-            `### Verse ${verse.number}`,
-            "",
-            verse.arabic,
-            "",
-            `Transliteration: ${verse.transliteration}`,
-            "",
-            `Translation: ${verse.translation}`,
-            "",
-          ]),
-        ].join("\n"),
-        title: reference.value.name,
-      })
-    );
+          `Translation: ${verse.translation}`,
+          "",
+        ]),
+      ].join("\n"),
+      title: reference.value.name,
+    });
+
+    return Option.some(markdown);
+  });
+}
+
+/** Validates an agent markdown payload without throwing from render flows. */
+function parseNakafaAgentMarkdown(markdown: unknown) {
+  return Effect.try({
+    try: () => Schema.decodeUnknownSync(NakafaAgentMarkdownSchema)(markdown),
+    catch: (error) =>
+      new NakafaAgentDataReadError({
+        cause: getUnknownErrorMessage(error),
+        message: "Unable to build Nakafa agent markdown.",
+      }),
   });
 }
 

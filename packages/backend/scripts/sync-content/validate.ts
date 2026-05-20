@@ -1,3 +1,4 @@
+import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import {
   readArticleReferences,
   readExerciseChoices,
@@ -43,10 +44,7 @@ const validateArticles = Effect.fn("sync.validateArticles")(function* () {
   for (const file of files) {
     const validated = yield* Effect.either(
       Effect.gen(function* () {
-        yield* Effect.try({
-          try: () => parseArticlePath(file),
-          catch: (error) => error,
-        });
+        yield* parseArticlePath(file);
         yield* readMdxFile(file);
         yield* readArticleReferences(getArticleDir(file));
       })
@@ -77,10 +75,7 @@ const validateSubjects = Effect.fn("sync.validateSubjects")(function* () {
   for (const file of files) {
     const validated = yield* Effect.either(
       Effect.gen(function* () {
-        yield* Effect.try({
-          try: () => parseSubjectPath(file),
-          catch: (error) => error,
-        });
+        yield* parseSubjectPath(file);
         yield* readMdxFile(file);
       })
     );
@@ -106,10 +101,8 @@ const validateSubjects = Effect.fn("sync.validateSubjects")(function* () {
           LOCALE_SUBJECT_MATERIAL_FILE_REGEX
         );
         if (localeMatch) {
-          yield* parseSubjectMaterialFile(
-            materialFile,
-            parseLocale(localeMatch[1], materialFile)
-          );
+          const locale = yield* parseLocale(localeMatch[1], materialFile);
+          yield* parseSubjectMaterialFile(materialFile, locale);
         }
       })
     );
@@ -136,12 +129,10 @@ const validateExercises = Effect.fn("sync.validateExercises")(function* () {
   for (const file of questionFiles) {
     const validated = yield* Effect.either(
       Effect.gen(function* () {
-        yield* Effect.try({
-          try: () => parseExercisePath(file),
-          catch: (error) => error,
-        });
+        yield* parseExercisePath(file);
         yield* readMdxFile(file);
-        yield* readExerciseChoices(getExerciseDir(file));
+        const exerciseDir = yield* getExerciseDir(file);
+        yield* readExerciseChoices(exerciseDir);
       })
     );
 
@@ -164,10 +155,8 @@ const validateExercises = Effect.fn("sync.validateExercises")(function* () {
       Effect.gen(function* () {
         const localeMatch = materialFile.match(LOCALE_MATERIAL_FILE_REGEX);
         if (localeMatch) {
-          yield* parseExerciseMaterialFile(
-            materialFile,
-            parseLocale(localeMatch[1], materialFile)
-          );
+          const locale = yield* parseLocale(localeMatch[1], materialFile);
+          yield* parseExerciseMaterialFile(materialFile, locale);
         }
       })
     );
@@ -233,5 +222,7 @@ export const validate = Effect.fn("sync.validate")(function* () {
   if (allErrors.length > 20) {
     log(`... and ${allErrors.length - 20} more errors`);
   }
-  process.exit(1);
+  return yield* Effect.fail(
+    new ScriptFailureError({ message: "Content validation failed." })
+  );
 });

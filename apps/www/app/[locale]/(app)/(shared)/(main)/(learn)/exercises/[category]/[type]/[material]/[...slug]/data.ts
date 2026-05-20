@@ -80,8 +80,10 @@ export async function getExerciseRouteData(
     const setPath = getSlugPath(category, type, material, baseSlug);
 
     const [materials, exercise, exerciseCount] = await Promise.all([
-      getMaterials(materialPath, locale),
-      getRenderableExerciseByNumber(locale, setPath, exerciseNumber),
+      Effect.runPromise(getMaterials(materialPath, locale)),
+      Effect.runPromise(
+        getRenderableExerciseByNumber(locale, setPath, exerciseNumber)
+      ),
       Effect.runPromise(
         Effect.match(getExerciseCount(setPath), {
           onFailure: () => 0,
@@ -118,7 +120,7 @@ export async function getExerciseRouteData(
     };
   }
 
-  const materials = await getMaterials(materialPath, locale);
+  const materials = await Effect.runPromise(getMaterials(materialPath, locale));
   const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
     pagePath,
     materials
@@ -144,7 +146,9 @@ export async function getExerciseRouteData(
     };
   }
 
-  const exercises = await getRenderableExercisesContent(locale, pagePath);
+  const exercises = await Effect.runPromise(
+    getRenderableExercisesContent(locale, pagePath)
+  );
 
   if (exercises.length === 0) {
     return {

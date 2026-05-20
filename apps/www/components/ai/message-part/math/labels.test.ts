@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { getItemLabelKey, getItemValueKey } from "./labels";
+import {
+  getItemLabelKey,
+  getItemValueKey,
+} from "@/components/ai/message-part/math/labels";
 
 describe("math item labels", () => {
   it("maps every CAS item label to a student-facing translation key", () => {

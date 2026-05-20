@@ -1,7 +1,7 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from "@repo/contents/subject/middle-school/8/mathematics/_data";
+import { BASE_PATH } from "@repo/contents/subject/middle-school/8/mathematics/_data/path";
 
-const idMaterials: MaterialList = [
+const idMaterials = [
   {
     title: "Bilangan Berpangkat",
     description: "Kekuatan perkalian berulang dalam matematika.",
@@ -245,6 +245,6 @@ const idMaterials: MaterialList = [
       },
     ],
   },
-] as const;
+] satisfies MaterialList;
 
 export default idMaterials;

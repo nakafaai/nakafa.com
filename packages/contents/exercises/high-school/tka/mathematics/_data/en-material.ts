@@ -1,7 +1,7 @@
 import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
-import { BASE_PATH } from "@repo/contents/exercises/high-school/tka/mathematics/_data";
+import { BASE_PATH } from "@repo/contents/exercises/high-school/tka/mathematics/_data/path";
 
-const enMaterials: ExercisesMaterialList = [
+const enMaterials = [
   {
     title: "Try Out 2026",
     description:
@@ -22,6 +22,6 @@ const enMaterials: ExercisesMaterialList = [
       },
     ],
   },
-] as const;
+] satisfies ExercisesMaterialList;
 
 export default enMaterials;

@@ -1,7 +1,7 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from "@repo/contents/subject/high-school/11/physics/_data";
+import { BASE_PATH } from "@repo/contents/subject/high-school/11/physics/_data/path";
 
-const idMaterials: MaterialList = [
+const idMaterials = [
   {
     title: "Vektor",
     description:
@@ -418,6 +418,6 @@ const idMaterials: MaterialList = [
       },
     ],
   },
-] as const;
+] satisfies MaterialList;
 
 export default idMaterials;

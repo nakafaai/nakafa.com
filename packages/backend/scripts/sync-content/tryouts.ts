@@ -1,4 +1,5 @@
 import { tryoutProducts } from "@repo/backend/convex/tryouts/products";
+import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
@@ -23,15 +24,21 @@ const tryoutPartKeyReaders = {
 >;
 
 /** Returns product part keys from the same content folders used by web listings. */
-function getTryoutPartKeys(product: (typeof tryoutProducts)[number]) {
+const getTryoutPartKeys = Effect.fn("sync.getTryoutPartKeys")(function* (
+  product: (typeof tryoutProducts)[number]
+) {
   const partKeys = tryoutPartKeyReaders[product]();
 
   if (partKeys.length === 0) {
-    throw new Error(`No tryout part keys found for ${product}.`);
+    return yield* Effect.fail(
+      new ScriptFailureError({
+        message: `No tryout part keys found for ${product}.`,
+      })
+    );
   }
 
   return partKeys;
-}
+});
 
 /** Syncs tryout product metadata derived from content folders. */
 export const syncTryouts = Effect.fn("sync.tryouts")(function* (
@@ -52,7 +59,11 @@ export const syncTryouts = Effect.fn("sync.tryouts")(function* (
         config,
         "mutation",
         "contentSync/mutations/tryouts:bulkSyncTryouts",
-        { product, locale, requiredPartKeys: getTryoutPartKeys(product) },
+        {
+          product,
+          locale,
+          requiredPartKeys: yield* getTryoutPartKeys(product),
+        },
         SyncResultSchema
       );
 

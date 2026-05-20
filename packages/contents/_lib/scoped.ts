@@ -10,6 +10,7 @@ import {
   InvalidPathError,
   MetadataParseError,
   ModuleLoadError,
+  ReferenceParseError,
 } from "@repo/contents/_shared/error";
 import type { Locale } from "@repo/contents/_types/content";
 import {
@@ -42,7 +43,7 @@ interface ScopedContentTarget extends ScopedPathTarget {
 
 type ScopedReferencesImporter = (
   relativePath: string
-) => Promise<ScopedReferencesModule>;
+) => Effect.Effect<ScopedReferencesModule, ModuleLoadError>;
 
 /**
  * Validates a content-relative path against the contents root to block path
@@ -58,6 +59,7 @@ export function validatePath(
   if (!fullPath.startsWith(basePath)) {
     return Effect.fail(
       new InvalidPathError({
+        message: "Path traversal detected while resolving content.",
         path: filePath,
         reason: "Path traversal detected",
       })
@@ -82,27 +84,26 @@ export function getRawContent(
         try: () => fsPromises.readFile(fullPath, "utf8"),
         catch: (error: unknown) =>
           new FileReadError({
-            path: fullPath,
             cause: error,
+            message: "Unable to read local content file.",
+            path: fullPath,
           }),
       });
 
+      const githubUrl = `https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/${cleanPath}`;
       const fetchFromGitHub = Effect.tryPromise({
-        try: () =>
-          ky
-            .get(
-              `https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/${cleanPath}`,
-              { cache: "force-cache" }
-            )
-            .text(),
+        try: () => ky.get(githubUrl, { cache: "force-cache" }).text(),
         catch: (error: unknown) =>
           new GitHubFetchError({
-            url: `https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/${cleanPath}`,
             cause: error,
+            message: "Unable to fetch content from GitHub fallback.",
+            url: githubUrl,
           }),
       });
 
-      return Effect.catchAll(readFileEffect, () => fetchFromGitHub);
+      return readFileEffect.pipe(
+        Effect.catchTag("FileReadError", () => fetchFromGitHub)
+      );
     })
   );
 }
@@ -123,6 +124,7 @@ function getScopedPathTarget(
   if (!cleanPath.startsWith(rootPrefix)) {
     return Effect.fail(
       new InvalidPathError({
+        message: `Path does not belong to the ${root} content root.`,
         path: filePath,
         reason: `Path does not belong to the ${root} content root`,
       })
@@ -176,6 +178,7 @@ export function parseModuleMetadata(
     ) {
       return yield* Effect.fail(
         new MetadataParseError({
+          message: "Imported content module is missing metadata.",
           path: modulePath,
           reason: "Module does not contain metadata property",
         })
@@ -187,6 +190,7 @@ export function parseModuleMetadata(
         Schema.decodeUnknownSync(ContentMetadataSchema)(module.metadata),
       catch: (error: unknown) =>
         new MetadataParseError({
+          message: "Unable to parse imported content metadata.",
           path: modulePath,
           reason: String(error),
         }),
@@ -214,11 +218,14 @@ export function extractReferences(module: unknown): unknown[] {
  */
 export function parseReferences(
   rawReferences: unknown
-): Effect.Effect<Reference[], Error> {
+): Effect.Effect<Reference[], ReferenceParseError> {
   return Effect.try({
     try: () => Schema.decodeUnknownSync(ReferenceListSchema)(rawReferences),
     catch: (error: unknown) =>
-      new Error(`Failed to parse references: ${String(error)}`),
+      new ReferenceParseError({
+        message: "Failed to parse references.",
+        reason: String(error),
+      }),
   });
 }
 
@@ -252,8 +259,9 @@ export function getScopedContent(
             try: () => importContentModule(target.cleanPath, locale),
             catch: (error: unknown) =>
               new ModuleLoadError({
-                path: `@repo/contents/${target.contentPath}`,
                 cause: error,
+                message: "Unable to import localized content module.",
+                path: `@repo/contents/${target.contentPath}`,
               }),
           }),
         ],
@@ -278,6 +286,7 @@ export function getScopedContent(
     if (Option.isNone(metadata)) {
       return yield* Effect.fail(
         new MetadataParseError({
+          message: "Unable to parse raw content metadata.",
           path: target.contentPath,
           reason: "No metadata found",
         })
@@ -358,12 +367,14 @@ export function getScopedReferences(
 ): Effect.Effect<Reference[]> {
   return Effect.gen(function* () {
     const target = yield* getScopedPathTarget(root, filePath);
-
-    const referencesModule = yield* Effect.tryPromise({
-      try: () => importReferencesModule(target.relativePath),
-      catch: () => new Error("Failed to load references"),
-    });
+    const referencesModule = yield* importReferencesModule(target.relativePath);
 
     return yield* parseReferences(extractReferences(referencesModule));
-  }).pipe(Effect.catchAll(() => Effect.succeed([])));
+  }).pipe(
+    Effect.catchTags({
+      InvalidPathError: () => Effect.succeed([]),
+      ModuleLoadError: () => Effect.succeed([]),
+      ReferenceParseError: () => Effect.succeed([]),
+    })
+  );
 }

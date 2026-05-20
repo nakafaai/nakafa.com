@@ -78,15 +78,23 @@ const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
       globFiles("exercises/**/_question/*.mdx"),
     ]);
 
-    const articleSlugs = articleFiles.map(
-      (file) => parseArticlePath(file).slug
-    );
-    const subjectSectionSlugs = subjectFiles.map(
-      (file) => parseSubjectPath(file).slug
-    );
-    const exerciseQuestionSlugs = questionFiles.map(
-      (file) => parseExercisePath(file).slug
-    );
+    const articleSlugs: string[] = [];
+    for (const file of articleFiles) {
+      const pathInfo = yield* parseArticlePath(file);
+      articleSlugs.push(pathInfo.slug);
+    }
+
+    const subjectSectionSlugs: string[] = [];
+    for (const file of subjectFiles) {
+      const pathInfo = yield* parseSubjectPath(file);
+      subjectSectionSlugs.push(pathInfo.slug);
+    }
+
+    const exerciseQuestionSlugs: string[] = [];
+    for (const file of questionFiles) {
+      const pathInfo = yield* parseExercisePath(file);
+      exerciseQuestionSlugs.push(pathInfo.slug);
+    }
 
     const subjectTopicSlugs: string[] = [];
     for (const materialFile of subjectMaterialFiles) {
@@ -96,11 +104,9 @@ const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
       if (!localeMatch) {
         continue;
       }
+      const locale = yield* parseLocale(localeMatch[1], materialFile);
       const result = yield* Effect.either(
-        parseSubjectMaterialFile(
-          materialFile,
-          parseLocale(localeMatch[1], materialFile)
-        )
+        parseSubjectMaterialFile(materialFile, locale)
       );
 
       if (result._tag === "Right") {
@@ -115,11 +121,9 @@ const collectFilesystemSlugs = Effect.fn("sync.collectFilesystemSlugs")(
       if (!localeMatch) {
         continue;
       }
+      const locale = yield* parseLocale(localeMatch[1], materialFile);
       const result = yield* Effect.either(
-        parseExerciseMaterialFile(
-          materialFile,
-          parseLocale(localeMatch[1], materialFile)
-        )
+        parseExerciseMaterialFile(materialFile, locale)
       );
 
       if (result._tag === "Right") {

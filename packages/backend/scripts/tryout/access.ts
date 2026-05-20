@@ -1,8 +1,10 @@
 import { tryoutProducts } from "@repo/backend/convex/tryouts/products";
+import { formatScriptCause } from "@repo/backend/scripts/lib/errors";
 import {
   callConvex,
   getConvexConfig,
 } from "@repo/backend/scripts/sync-content/convex";
+import { logError } from "@repo/backend/scripts/sync-content/logging";
 import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
 import { Effect, Schema } from "effect";
 
@@ -217,7 +219,7 @@ const getCompetitionCampaignProductOverlapIntegrity = Effect.fn(
 
 /** Runs access-state verification for dev or prod. */
 const main = Effect.fn("tryout.verifyAccess")(function* () {
-  const flags = process.argv.slice(2);
+  const flags = yield* Effect.sync(() => process.argv.slice(2));
   const prod = flags.includes("--prod");
   const [campaigns, entitlements, grants, overlap] = yield* Effect.all([
     getTryoutAccessCampaignIntegrity(prod),
@@ -232,8 +234,7 @@ const main = Effect.fn("tryout.verifyAccess")(function* () {
     ...overlap,
   };
 
-  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
-  process.exitCode =
+  const exitCode =
     result.overdueScheduledCampaignCount > 0 ||
     result.overdueActiveCampaignCount > 0 ||
     result.overduePendingCompetitionCount > 0 ||
@@ -242,15 +243,23 @@ const main = Effect.fn("tryout.verifyAccess")(function* () {
     result.overlappingCompetitionCampaignProductCount > 0
       ? 1
       : 0;
+
+  yield* Effect.sync(() => {
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+    process.exitCode = exitCode;
+  });
 });
 
 Effect.runPromise(
   Effect.gen(function* () {
     const provider = yield* loadEnvProvider();
     yield* main().pipe(Effect.withConfigProvider(provider));
-  })
-).catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  process.stderr.write(`${message}\n`);
-  process.exitCode = 1;
-});
+  }).pipe(
+    Effect.catchAllCause((cause) =>
+      Effect.sync(() => {
+        logError(formatScriptCause(cause));
+        process.exitCode = 1;
+      })
+    )
+  )
+);

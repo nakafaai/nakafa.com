@@ -138,6 +138,7 @@ function readContentsText(filePath: string) {
     if (!fullPath) {
       return yield* Effect.fail(
         new InvalidPathError({
+          message: "Path traversal detected while resolving exercise source.",
           path: filePath,
           reason: "Path traversal detected",
         })
@@ -149,8 +150,9 @@ function readContentsText(filePath: string) {
         fsPromises.readFile(/* turbopackIgnore: true */ fullPath, "utf8"),
       catch: (cause) =>
         new FileReadError({
-          path: fullPath,
           cause,
+          message: "Unable to read exercise source file.",
+          path: fullPath,
         }),
     });
   });
@@ -166,7 +168,12 @@ function readContentsTextWithGitHubFallback(filePath: string) {
   const url = getRawGitHubUrl(filePath);
   const fetchFromGitHub = Effect.tryPromise({
     try: () => ky.get(url, { cache: "force-cache" }).text(),
-    catch: (cause) => new GitHubFetchError({ url, cause }),
+    catch: (cause) =>
+      new GitHubFetchError({
+        cause,
+        message: "Unable to fetch exercise source from GitHub fallback.",
+        url,
+      }),
   });
 
   return readContentsText(filePath).pipe(

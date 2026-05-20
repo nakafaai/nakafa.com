@@ -7,7 +7,7 @@ import { getMaterialPath } from "@repo/contents/_lib/exercises/route";
 import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
 import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
 import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
-import { Option, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { BASE_URL, NUMBER_SEGMENT } from "@/lib/llms/constants";
@@ -129,7 +129,7 @@ async function getExerciseRows({
   locale: Locale;
   path: string;
 }) {
-  return await getRenderableExercisesContent(locale, path);
+  return await Effect.runPromise(getRenderableExercisesContent(locale, path));
 }
 
 /** Builds the markdown document description for an exercise page. */
@@ -192,7 +192,9 @@ async function getExerciseSetDescription({
     parsedType.value,
     parsedMaterial.value
   );
-  const materialsList = await getMaterials(materialPath, locale);
+  const materialsList = await Effect.runPromise(
+    getMaterials(materialPath, locale)
+  );
   const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
     `/${path}`,
     materialsList

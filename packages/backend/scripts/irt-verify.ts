@@ -1,7 +1,12 @@
 import {
+  formatScriptCause,
+  ScriptFailureError,
+} from "@repo/backend/scripts/lib/errors";
+import {
   callConvex,
   getConvexConfig,
 } from "@repo/backend/scripts/sync-content/convex";
+import { logError } from "@repo/backend/scripts/sync-content/logging";
 import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
 import { Effect, Schema } from "effect";
 
@@ -194,12 +199,15 @@ const getCalibrationQueueIntegrity = Effect.fn(
 
 /** Parse CLI flags and print one IRT integrity summary. */
 const main = Effect.fn("irt.verify")(function* () {
-  const [kind, ...flags] = process.argv.slice(2);
+  const [kind, ...flags] = yield* Effect.sync(() => process.argv.slice(2));
   const prod = flags.includes("--prod");
 
   if (!(kind === "cache" || kind === "queue" || kind === "scale")) {
-    throw new Error(
-      "Usage: tsx scripts/irt-verify.ts <cache|queue|scale> [--prod]"
+    return yield* Effect.fail(
+      new ScriptFailureError({
+        message:
+          "Usage: tsx scripts/irt-verify.ts <cache|queue|scale> [--prod]",
+      })
     );
   }
 
@@ -213,16 +221,21 @@ const main = Effect.fn("irt.verify")(function* () {
     result = yield* getScaleQualityIntegrity(prod);
   }
 
-  process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  yield* Effect.sync(() => {
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  });
 });
 
 Effect.runPromise(
   Effect.gen(function* () {
     const provider = yield* loadEnvProvider();
     yield* main().pipe(Effect.withConfigProvider(provider));
-  })
-).catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-  process.stderr.write(`${message}\n`);
-  process.exitCode = 1;
-});
+  }).pipe(
+    Effect.catchAllCause((cause) =>
+      Effect.sync(() => {
+        logError(formatScriptCause(cause));
+        process.exitCode = 1;
+      })
+    )
+  )
+);

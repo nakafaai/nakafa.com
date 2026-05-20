@@ -1,7 +1,7 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from "@repo/contents/subject/high-school/12/economy/_data";
+import { BASE_PATH } from "@repo/contents/subject/high-school/12/economy/_data/path";
 
-const enMaterials: MaterialList = [
+const enMaterials = [
   {
     title: "Economic Growth and Development",
     description:
@@ -98,6 +98,6 @@ const enMaterials: MaterialList = [
       },
     ],
   },
-] as const;
+] satisfies MaterialList;
 
 export default enMaterials;

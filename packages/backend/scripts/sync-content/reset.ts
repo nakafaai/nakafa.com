@@ -235,15 +235,17 @@ const deleteAllBatched = Effect.fn("sync.reset.deleteAllBatched")(function* (
     hasMore = result.hasMore;
 
     if (result.deleted > 0) {
-      process.stdout.write(
-        `\r  Batch ${batchNum}: deleted ${totalDeleted} ${label}...`
+      yield* Effect.sync(() =>
+        process.stdout.write(
+          `\r  Batch ${batchNum}: deleted ${totalDeleted} ${label}...`
+        )
       );
       batchNum++;
     }
   }
 
   if (totalDeleted > 0) {
-    process.stdout.write("\n");
+    yield* Effect.sync(() => process.stdout.write("\n"));
   }
   return totalDeleted;
 });

@@ -1,7 +1,7 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from "@repo/contents/subject/high-school/11/history/_data";
+import { BASE_PATH } from "@repo/contents/subject/high-school/11/history/_data/path";
 
-const enMaterials: MaterialList = [
+const enMaterials = [
   {
     title: "Colonialism and Indonesian Resistance",
     description:
@@ -90,6 +90,6 @@ const enMaterials: MaterialList = [
       },
     ],
   },
-] as const;
+] satisfies MaterialList;
 
 export default enMaterials;

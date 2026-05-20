@@ -1,7 +1,7 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from "@repo/contents/subject/high-school/11/chemistry/_data";
+import { BASE_PATH } from "@repo/contents/subject/high-school/11/chemistry/_data/path";
 
-const enMaterials: MaterialList = [
+const enMaterials = [
   {
     title: "Atomic Structure and Periodic Table",
     description:
@@ -226,6 +226,6 @@ const enMaterials: MaterialList = [
       },
     ],
   },
-] as const;
+] satisfies MaterialList;
 
 export default enMaterials;

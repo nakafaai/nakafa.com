@@ -1,5 +1,4 @@
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
-import { getExerciseContent } from "@repo/contents/_lib/exercises/content";
 import { getExercisesContent } from "@repo/contents/_lib/exercises/set";
 import {
   hasInvalidTryOutYearSlug,
@@ -10,6 +9,7 @@ import {
   getExerciseNumberPaths,
   getExerciseSetPaths,
 } from "@repo/contents/_lib/params";
+import { getScopedContent } from "@repo/contents/_lib/scoped";
 import {
   FileReadError,
   GitHubFetchError,
@@ -134,7 +134,11 @@ export async function GET(
   if (isQuestionOrAnswer && exerciseNumber !== null) {
     const mdxPath = `exercises/${basePath}/${exerciseNumber}/${slug.at(-1)}`;
 
-    const program = getExerciseContent(validLocale.value, mdxPath).pipe(
+    const program = getScopedContent(
+      "exercises",
+      validLocale.value,
+      mdxPath
+    ).pipe(
       Effect.matchEffect({
         onFailure: (error: unknown) =>
           Effect.gen(function* () {

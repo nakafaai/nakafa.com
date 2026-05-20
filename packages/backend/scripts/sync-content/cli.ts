@@ -1,3 +1,4 @@
+import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import { syncArticles } from "@repo/backend/scripts/sync-content/articles";
 import { syncAuthors } from "@repo/backend/scripts/sync-content/authors";
 import { clean } from "@repo/backend/scripts/sync-content/clean";
@@ -24,8 +25,8 @@ import {
 import { Effect } from "effect";
 
 /** Parses one sync-content CLI invocation into a command and option bag. */
-const parseArgs = (): { options: SyncOptions; type: string } => {
-  const args = process.argv.slice(2);
+const parseArgs = Effect.fn("sync.parseArgs")(function* () {
+  const args = yield* Effect.sync(() => process.argv.slice(2));
   const type = args[0] || "all";
   const options: SyncOptions = {};
 
@@ -56,7 +57,7 @@ const parseArgs = (): { options: SyncOptions; type: string } => {
   }
 
   return { type, options };
-};
+});
 
 /** Prints the supported sync-content commands and flags. */
 const printUsage = (): void => {
@@ -168,12 +169,14 @@ export const runCommand = Effect.fn("sync.runCommand")(function* (
     default:
       logError(`Unknown command: ${type}`);
       printUsage();
-      process.exit(1);
+      return yield* Effect.fail(
+        new ScriptFailureError({ message: `Unknown command: ${type}` })
+      );
   }
 });
 
 /** Parses process arguments and runs the selected sync-content workflow. */
 export const parseAndRun = Effect.fn("sync.parseAndRun")(function* () {
-  const { type, options } = parseArgs();
+  const { type, options } = yield* parseArgs();
   yield* runCommand(type, options);
 });

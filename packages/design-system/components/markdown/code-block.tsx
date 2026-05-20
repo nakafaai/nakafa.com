@@ -1,9 +1,6 @@
 "use client";
 
-import type {
-  BundledLanguage,
-  CodeBlockData,
-} from "@repo/design-system/components/code-block";
+import type { CodeBlockData } from "@repo/design-system/components/code-block";
 import {
   CodeBlock,
   CodeBlockBody,
@@ -19,6 +16,7 @@ import {
   CodeBlockSelectTrigger,
   CodeBlockSelectValue,
 } from "@repo/design-system/components/code-block";
+import type { BundledLanguage } from "shiki";
 
 export function CodeBlockMdx({ data }: { data: CodeBlockData[] }) {
   return (

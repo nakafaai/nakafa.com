@@ -6,10 +6,7 @@ import type {
   NakafaAgentContentRef,
   NakafaAgentSection,
 } from "@repo/contents/_lib/agent/schema/ref";
-import {
-  NakafaAgentContentRefSchema,
-  NakafaAgentSectionSchema,
-} from "@repo/contents/_lib/agent/schema/ref";
+import { NakafaAgentSectionSchema } from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/contents/_types/content";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
@@ -64,15 +61,16 @@ export function buildNakafaContentRef(
   section: NakafaAgentSection
 ) {
   const contentId = `${locale}/${route}`;
-
-  return Schema.decodeUnknownSync(NakafaAgentContentRefSchema)({
+  const contentRef = {
     content_id: contentId,
     locale,
     markdown_url: `${NAKAFA_BASE_URL}/${contentId}.md`,
     route,
     section,
     url: `${NAKAFA_BASE_URL}/${contentId}`,
-  });
+  };
+
+  return contentRef;
 }
 
 /** Builds the MCP resource URI for a canonical Nakafa content reference. */

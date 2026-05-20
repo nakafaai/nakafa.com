@@ -29,65 +29,60 @@ export function getSlugPath(category: ArticleCategory, slug: string) {
  *
  * @example
  * ```ts
- * const articles = await getArticleSummaries("politics", "en");
+ * const articles = await Effect.runPromise(getArticleSummaries("politics", "en"));
  * // Returns: [{ title, description, date, slug, official }, ...]
  * ```
  */
-export async function getArticleSummaries(
-  category: ArticleCategory,
-  locale: Locale
-): Promise<Article[]> {
-  // Extract the actual category name if a full path is provided
-  const categoryName = category.includes("/")
-    ? category.split("/").pop()
-    : category;
+export const getArticleSummaries = Effect.fn("Contents.Articles.getSummaries")(
+  function* (category: ArticleCategory, locale: Locale) {
+    // Extract the actual category name if a full path is provided
+    const categoryName = category.includes("/")
+      ? category.split("/").pop()
+      : category;
 
-  if (!categoryName) {
-    return [];
-  }
+    if (!categoryName) {
+      return [];
+    }
 
-  const categoryPrefix = `articles/${categoryName}/`;
+    const categoryPrefix = `articles/${categoryName}/`;
 
-  return await Effect.runPromise(
-    getContentsMetadata({
+    const entries = yield* getContentsMetadata({
       locale,
       basePath: categoryPrefix,
-    }).pipe(
-      Effect.map((entries) => {
-        const articlesBySlug = new Map<string, Article>();
+    });
 
-        for (const entry of entries) {
-          if (!entry.slug.startsWith(categoryPrefix)) {
-            continue;
-          }
+    const articlesBySlug = new Map<string, Article>();
 
-          const relativePath = entry.slug.slice(categoryPrefix.length);
-          const slug = relativePath.split("/")[0];
+    for (const entry of entries) {
+      if (!entry.slug.startsWith(categoryPrefix)) {
+        continue;
+      }
 
-          if (!slug || articlesBySlug.has(slug)) {
-            continue;
-          }
+      const relativePath = entry.slug.slice(categoryPrefix.length);
+      const slug = relativePath.split("/")[0];
 
-          const publishedAt = formatContentDateISO(entry.metadata.date);
-          if (!publishedAt) {
-            continue;
-          }
+      if (!slug || articlesBySlug.has(slug)) {
+        continue;
+      }
 
-          const authors = entry.metadata.authors.map((author) => author.name);
+      const publishedAt = formatContentDateISO(entry.metadata.date);
+      if (!publishedAt) {
+        continue;
+      }
 
-          articlesBySlug.set(slug, {
-            title: entry.metadata.title,
-            description: entry.metadata.description ?? "",
-            date: publishedAt,
-            slug,
-            official: authors.some((author) => teams.has(author)),
-          });
-        }
+      const authors = entry.metadata.authors.map((author) => author.name);
 
-        return Array.from(articlesBySlug.values()).sort((a, b) =>
-          b.date.localeCompare(a.date)
-        );
-      })
-    )
-  );
-}
+      articlesBySlug.set(slug, {
+        title: entry.metadata.title,
+        description: entry.metadata.description ?? "",
+        date: publishedAt,
+        slug,
+        official: authors.some((author) => teams.has(author)),
+      });
+    }
+
+    return Array.from(articlesBySlug.values()).sort((a, b) =>
+      b.date.localeCompare(a.date)
+    );
+  }
+);

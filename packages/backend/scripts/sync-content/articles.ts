@@ -87,10 +87,7 @@ export const syncArticles = Effect.fn("sync.articles")(function* (
   for (const file of files) {
     const result = yield* Effect.either(
       Effect.gen(function* () {
-        const pathInfo = yield* Effect.try({
-          try: () => parseArticlePath(file),
-          catch: (error) => error,
-        });
+        const pathInfo = yield* parseArticlePath(file);
         const { metadata, body } = yield* readMdxFile(file);
         const articleDir = getArticleDir(file);
         const references = yield* readArticleReferences(articleDir);
@@ -105,7 +102,7 @@ export const syncArticles = Effect.fn("sync.articles")(function* (
           articleSlug: pathInfo.articleSlug,
           title: metadata.title,
           description: metadata.description,
-          date: parseDateToEpoch(metadata.date),
+          date: yield* parseDateToEpoch(metadata.date),
           body,
           contentHash,
           authors: metadata.authors,

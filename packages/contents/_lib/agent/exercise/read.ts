@@ -12,7 +12,6 @@ import {
 } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentExerciseResultSchema } from "@repo/contents/_lib/agent/schema/exercise";
 import { getRenderableExercisesContent } from "@repo/contents/_lib/exercises/renderable";
-import type { Locale } from "@repo/contents/_types/content";
 import { Effect, Option, Schema } from "effect";
 
 /** Retrieves a structured exercise set or one exercise by content ID or URL. */
@@ -25,7 +24,7 @@ export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
     }
 
     const target = getNakafaExerciseTarget(ref.value.route, exerciseNumber);
-    const exercises = yield* readRenderableNakafaExercises(
+    const exercises = yield* getRenderableExercisesContent(
       ref.value.locale,
       target.setRoute
     );
@@ -44,42 +43,38 @@ export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
       "exercises"
     );
 
-    return Option.some(
-      Schema.decodeUnknownSync(NakafaAgentExerciseResultSchema)({
-        ...setRef,
-        count: selectedExercises.length,
-        exercise_number: target.number,
-        exercises: selectedExercises.map((exercise) => ({
-          answer: {
-            raw: exercise.answer.raw,
-            title: exercise.answer.metadata.title,
-          },
-          choices: exercise.choices[ref.value.locale].map((choice) => ({
-            correct: choice.value,
-            label: choice.label,
+    const result = yield* Effect.try({
+      try: () =>
+        Schema.decodeUnknownSync(NakafaAgentExerciseResultSchema)({
+          ...setRef,
+          count: selectedExercises.length,
+          exercise_number: target.number,
+          exercises: selectedExercises.map((exercise) => ({
+            answer: {
+              raw: exercise.answer.raw,
+              title: exercise.answer.metadata.title,
+            },
+            choices: exercise.choices[ref.value.locale].map((choice) => ({
+              correct: choice.value,
+              label: choice.label,
+            })),
+            number: exercise.number,
+            question: {
+              raw: exercise.question.raw,
+              title: exercise.question.metadata.title,
+            },
           })),
-          number: exercise.number,
-          question: {
-            raw: exercise.question.raw,
-            title: exercise.question.metadata.title,
-          },
-        })),
-      })
-    );
+        }),
+      catch: (error) =>
+        new NakafaAgentDataReadError({
+          cause: getUnknownErrorMessage(error),
+          message: "Unable to build Nakafa exercise read model.",
+        }),
+    });
+
+    return Option.some(result);
   }
 );
-
-/** Reads renderable exercises through Effect so failures stay typed. */
-function readRenderableNakafaExercises(locale: Locale, route: string) {
-  return Effect.tryPromise({
-    try: () => getRenderableExercisesContent(locale, route),
-    catch: (error) =>
-      new NakafaAgentDataReadError({
-        cause: getUnknownErrorMessage(error),
-        message: "Unable to read Nakafa exercise content.",
-      }),
-  });
-}
 
 /** Resolves whether the input route points to a set or a numbered exercise. */
 function getNakafaExerciseTarget(route: string, exerciseNumber?: number) {

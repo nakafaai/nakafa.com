@@ -1,10 +1,10 @@
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getExerciseQuestionNumbers } from "@repo/contents/_lib/exercises/collection";
-import { getExerciseContent } from "@repo/contents/_lib/exercises/content";
 import {
   loadExerciseEntry,
   readExerciseChoices,
 } from "@repo/contents/_lib/exercises/source";
+import { getScopedContent } from "@repo/contents/_lib/scoped";
 import { ExerciseLoadError } from "@repo/contents/_shared/error";
 import type { Locale } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
@@ -36,20 +36,22 @@ function loadExercise(
 ) {
   return loadExerciseEntry(cleanPath, exerciseNumberSegment, {
     loadQuestion: (questionPath) =>
-      getExerciseContent(locale, questionPath, { includeMDX }).pipe(
+      getScopedContent("exercises", locale, questionPath, { includeMDX }).pipe(
         Effect.mapError(
           () =>
             new ExerciseLoadError({
+              message: "Unable to load exercise question.",
               path: questionPath,
               reason: "Failed to load question",
             })
         )
       ),
     loadAnswer: (answerPath) =>
-      getExerciseContent(locale, answerPath, { includeMDX }).pipe(
+      getScopedContent("exercises", locale, answerPath, { includeMDX }).pipe(
         Effect.mapError(
           () =>
             new ExerciseLoadError({
+              message: "Unable to load exercise answer.",
               path: answerPath,
               reason: "Failed to load answer",
             })
@@ -60,6 +62,7 @@ function loadExercise(
         Effect.mapError(
           () =>
             new ExerciseLoadError({
+              message: "Unable to load exercise choices.",
               path: choicesPath,
               reason: "Failed to load choices",
             })

@@ -44,10 +44,10 @@ const readBasePath = Effect.fn("mdx.readBasePath")(function* (
   materialFilePath: string,
   fallbackBasePath: string
 ) {
-  const indexPath = path.join(path.dirname(materialFilePath), "index.ts");
+  const pathFile = path.join(path.dirname(materialFilePath), "path.ts");
   const file = yield* Effect.either(
     Effect.tryPromise({
-      try: () => fs.readFile(indexPath, "utf8"),
+      try: () => fs.readFile(pathFile, "utf8"),
       catch: (error) =>
         new MaterialReadError({ message: getUnknownMessage(error) }),
     })
@@ -120,9 +120,15 @@ export const parseExerciseMaterialFile = Effect.fn(
   }
 
   const [, rawCategory, rawType, rawMaterial] = pathMatch;
-  const category = validateExercisesCategory(rawCategory, materialFilePath);
-  const type = validateExercisesType(rawType, materialFilePath);
-  const material = validateExercisesMaterial(rawMaterial, materialFilePath);
+  const category = yield* validateExercisesCategory(
+    rawCategory,
+    materialFilePath
+  );
+  const type = yield* validateExercisesType(rawType, materialFilePath);
+  const material = yield* validateExercisesMaterial(
+    rawMaterial,
+    materialFilePath
+  );
   const fallbackBasePath = `exercises/${category}/${type}/${material}`;
   const basePath = yield* readBasePath(materialFilePath, fallbackBasePath);
   const content = yield* Effect.tryPromise({
@@ -141,7 +147,7 @@ export const parseExerciseMaterialFile = Effect.fn(
   const sets: ParsedExerciseSet[] = [];
 
   for (const exerciseTypeGroup of exerciseTypeGroups) {
-    const groupSegments = getRelativeExercisePathSegments(
+    const groupSegments = yield* getRelativeExercisePathSegments(
       basePath,
       exerciseTypeGroup.href,
       materialFilePath
@@ -165,10 +171,10 @@ export const parseExerciseMaterialFile = Effect.fn(
       );
     }
 
-    const year = parseExerciseYear(rawYear, materialFilePath);
+    const year = yield* parseExerciseYear(rawYear, materialFilePath);
 
     for (const setItem of exerciseTypeGroup.items) {
-      const itemSegments = getRelativeExercisePathSegments(
+      const itemSegments = yield* getRelativeExercisePathSegments(
         basePath,
         setItem.href,
         materialFilePath
@@ -242,9 +248,12 @@ export const parseSubjectMaterialFile = Effect.fn(
   }
 
   const [, rawCategory, rawGrade, rawMaterial] = pathMatch;
-  const category = validateSubjectCategory(rawCategory, materialFilePath);
-  const grade = validateGrade(rawGrade, materialFilePath);
-  const material = validateMaterial(rawMaterial, materialFilePath);
+  const category = yield* validateSubjectCategory(
+    rawCategory,
+    materialFilePath
+  );
+  const grade = yield* validateGrade(rawGrade, materialFilePath);
+  const material = yield* validateMaterial(rawMaterial, materialFilePath);
   const fallbackBasePath = `subject/${category}/${grade}/${material}`;
   const basePath = yield* readBasePath(materialFilePath, fallbackBasePath);
   const content = yield* Effect.tryPromise({

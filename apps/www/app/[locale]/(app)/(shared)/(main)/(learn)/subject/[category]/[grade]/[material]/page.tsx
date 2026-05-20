@@ -21,7 +21,9 @@ import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
+import { Effect } from "effect";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -165,14 +167,18 @@ async function PageContent({
   grade: Grade;
   material: Material;
 }) {
+  "use cache";
+
+  cacheLife("max");
+
   const gradePath = getGradePath(category, grade);
   const FilePath = getMaterialPath(category, grade, material);
 
-  const [materials, t, tCommon] = await Promise.all([
-    getMaterials(FilePath, locale),
+  const [t, tCommon] = await Promise.all([
     getTranslations({ locale, namespace: "Subject" }),
     getTranslations({ locale, namespace: "Common" }),
   ]);
+  const materials = await Effect.runPromise(getMaterials(FilePath, locale));
 
   const chapters: ParsedHeading[] = materials.map((mat) => ({
     label: mat.title,
