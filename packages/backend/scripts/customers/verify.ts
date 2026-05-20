@@ -1,3 +1,4 @@
+import { formatScriptCause } from "@repo/backend/scripts/lib/errors";
 import {
   callConvex,
   getConvexConfig,
@@ -147,7 +148,8 @@ const getCustomerIntegrityReport = Effect.fn(
 
 /** Prints the current customer cohesion report for one deployment. */
 const main = Effect.fn("customers.verify")(function* () {
-  const prod = process.argv.includes("--prod");
+  const args = yield* Effect.sync(() => process.argv.slice(2));
+  const prod = args.includes("--prod");
   const report = yield* getCustomerIntegrityReport(prod);
 
   log(
@@ -173,22 +175,27 @@ const main = Effect.fn("customers.verify")(function* () {
     )
   );
 
-  process.exit(
+  const hasIntegrityIssues =
     report.usersWithoutCustomer.length > 0 ||
-      report.orphanCustomers.length > 0 ||
-      report.customersWithExternalIdMismatch.length > 0 ||
-      report.subscriptionsWithoutLocalCustomer.length > 0
-      ? 1
-      : 0
-  );
+    report.orphanCustomers.length > 0 ||
+    report.customersWithExternalIdMismatch.length > 0 ||
+    report.subscriptionsWithoutLocalCustomer.length > 0;
+
+  yield* Effect.sync(() => {
+    process.exitCode = hasIntegrityIssues ? 1 : 0;
+  });
 });
 
 Effect.runPromise(
   Effect.gen(function* () {
     const provider = yield* loadEnvProvider();
     yield* main().pipe(Effect.withConfigProvider(provider));
-  })
-).catch((error: unknown) => {
-  logError(error instanceof Error ? error.message : String(error));
-  process.exit(1);
-});
+  }).pipe(
+    Effect.catchAllCause((cause) =>
+      Effect.sync(() => {
+        logError(formatScriptCause(cause));
+        process.exitCode = 1;
+      })
+    )
+  )
+);

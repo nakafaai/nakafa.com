@@ -1,7 +1,7 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from "@repo/contents/subject/high-school/12/mathematics/_data";
+import { BASE_PATH } from "@repo/contents/subject/high-school/12/mathematics/_data/path";
 
-const enMaterials: MaterialList = [
+const enMaterials = [
   {
     title: "Function Transformation",
     description: "Movement and shape changes vital for animation and design.",
@@ -340,6 +340,6 @@ const enMaterials: MaterialList = [
       },
     ],
   },
-] as const;
+] satisfies MaterialList;
 
 export default enMaterials;

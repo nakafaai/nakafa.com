@@ -8,7 +8,6 @@ import {
   MULTIPLE_NEWLINES_REGEX,
   REFERENCES_REGEX,
 } from "@repo/backend/scripts/lib/mdx-parser/constants";
-import type { ParsedMdx } from "@repo/backend/scripts/lib/mdx-parser/types";
 import { parseContentDate } from "@repo/contents/_shared/date";
 import {
   ContentMetadataSchema,
@@ -22,48 +21,67 @@ class MdxReadError extends Schema.TaggedError<MdxReadError>()("MdxReadError", {
   message: Schema.String,
 }) {}
 
-function normalizeWhitespace(content: string) {
-  return content.replace(MULTIPLE_NEWLINES_REGEX, "\n\n").trim();
-}
+/** Normalizes MDX body spacing before hashing and syncing. */
+const normalizeWhitespace = (content: string) =>
+  content.replace(MULTIPLE_NEWLINES_REGEX, "\n\n").trim();
 
-export function computeHash(content: string): string {
-  return createHash("sha256").update(content, "utf8").digest("hex");
-}
+/** Computes the stable content hash sent to Convex sync mutations. */
+export const computeHash = (content: string) =>
+  createHash("sha256").update(content, "utf8").digest("hex");
 
-export function parseDateToEpoch(dateStr: string): number {
+/** Parses a content metadata date into an epoch millisecond timestamp. */
+export const parseDateToEpoch = Effect.fn("mdx.parseDateToEpoch")(function* (
+  dateStr: string
+) {
   const date = parseContentDate(dateStr);
 
   if (!date) {
-    throw new Error(`Invalid date format: ${dateStr}. Expected MM/DD/YYYY`);
+    return yield* Effect.fail(
+      new MdxReadError({
+        message: `Invalid date format: ${dateStr}. Expected MM/DD/YYYY`,
+      })
+    );
   }
 
   return date.getTime();
-}
+});
 
-export function parseMdxContent(content: string): ParsedMdx {
+/** Parses one MDX source string into metadata, normalized body, and body hash. */
+export const parseMdxContent = Effect.fn("mdx.parseMdxContent")(function* (
+  content: string
+) {
   const match = content.match(METADATA_REGEX);
 
   if (!match) {
-    throw new Error("No metadata export found in MDX file");
+    return yield* Effect.fail(
+      new MdxReadError({ message: "No metadata export found in MDX file" })
+    );
   }
 
-  const metadataObject = new Function(`return ${match[1]}`)();
-  const parseResult = Schema.decodeUnknownEither(ContentMetadataSchema)(
+  const metadataObject = yield* Effect.try({
+    try: () => new Function(`return ${match[1]}`)(),
+    catch: (error) =>
+      new MdxReadError({
+        message: error instanceof Error ? error.message : String(error),
+      }),
+  });
+  const metadata = yield* Schema.decodeUnknown(ContentMetadataSchema)(
     metadataObject
+  ).pipe(
+    Effect.mapError(
+      (error) =>
+        new MdxReadError({ message: `Invalid metadata: ${error.message}` })
+    )
   );
-
-  if (parseResult._tag === "Left") {
-    throw new Error(`Invalid metadata: ${parseResult.left.message}`);
-  }
 
   const body = normalizeWhitespace(content.replace(METADATA_REGEX, ""));
 
   return {
-    metadata: parseResult.right,
+    metadata,
     body,
     contentHash: computeHash(body),
   };
-}
+});
 
 /** Reads and parses one MDX file through an Effect filesystem boundary. */
 export const readMdxFile = Effect.fn("mdx.readMdxFile")(function* (
@@ -76,13 +94,7 @@ export const readMdxFile = Effect.fn("mdx.readMdxFile")(function* (
         message: error instanceof Error ? error.message : String(error),
       }),
   });
-  const parsed = yield* Effect.try({
-    try: () => parseMdxContent(content),
-    catch: (error) =>
-      new MdxReadError({
-        message: error instanceof Error ? error.message : String(error),
-      }),
-  });
+  const parsed = yield* parseMdxContent(content);
 
   return {
     ...parsed,

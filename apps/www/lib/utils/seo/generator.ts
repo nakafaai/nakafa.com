@@ -408,7 +408,7 @@ export async function generateSEOMetadata(
     return yield* generateQuranMetadata(context, locale);
   });
 
-  return Effect.runPromise(
+  return await Effect.runPromise(
     effect.pipe(
       Effect.catchTag("SEOTranslationLoadError", () =>
         Effect.sync(() => generateFallbackMetadata(context))

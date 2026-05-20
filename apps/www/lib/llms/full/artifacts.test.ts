@@ -118,14 +118,16 @@ describe("llms full document", () => {
     mockGetLocalizedLlmsEntries.mockReset();
     mockGetLlmsSourceMarkdownText.mockReset();
 
-    mockGetLocalizedLlmsEntries.mockResolvedValue(localizedEntries);
+    mockGetLocalizedLlmsEntries.mockReturnValue(
+      Effect.succeed(localizedEntries)
+    );
     mockGetLlmsSourceMarkdownText.mockImplementation(
       ({ cleanSlug, locale }) => {
         if (cleanSlug === "articles/story/missing") {
-          return Promise.resolve(null);
+          return Effect.succeed(null);
         }
 
-        return Promise.resolve(`${locale}:${cleanSlug}: full markdown`);
+        return Effect.succeed(`${locale}:${cleanSlug}: full markdown`);
       }
     );
   });
@@ -227,16 +229,18 @@ describe("llms full document", () => {
   });
 
   it("omits locale sections when no markdown documents are available", async () => {
-    mockGetLocalizedLlmsEntries.mockResolvedValue([
-      {
-        description: "Site description",
-        href: "https://nakafa.com/en",
-        route: "/",
-        section: "site",
-        segments: ["site"],
-        title: "Home",
-      },
-    ]);
+    mockGetLocalizedLlmsEntries.mockReturnValue(
+      Effect.succeed([
+        {
+          description: "Site description",
+          href: "https://nakafa.com/en",
+          route: "/",
+          section: "site",
+          segments: ["site"],
+          title: "Home",
+        },
+      ])
+    );
 
     const text = await Effect.runPromise(getLlmsFullText());
 

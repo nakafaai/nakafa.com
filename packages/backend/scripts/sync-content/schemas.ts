@@ -1,7 +1,6 @@
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { locales } from "@repo/utilities/locales";
-import { Option, Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 const SyncLocaleSchema = Schema.Literal(...locales);
 
@@ -24,16 +23,28 @@ export const BATCH_SIZES = {
 export const LOCALE_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
 export const LOCALE_SUBJECT_MATERIAL_FILE_REGEX = /\/([a-z]{2})-material\.ts$/;
 
-/** Parses one CLI locale flag into the supported Convex content locale. */
-export const parseLocale = (value: string, context: string): Locale => {
-  const result = Schema.decodeUnknownOption(SyncLocaleSchema)(value);
-  if (Option.isNone(result)) {
-    throw new Error(
-      `Invalid locale "${value}" in ${context}. Expected: ${locales.join(", ")}`
-    );
+/** Identifies an unsupported locale segment while parsing script inputs. */
+export class SyncLocaleParseError extends Schema.TaggedError<SyncLocaleParseError>()(
+  "SyncLocaleParseError",
+  {
+    message: Schema.String,
   }
-  return result.value;
-};
+) {}
+
+/** Parses one CLI locale flag into the supported Convex content locale. */
+export const parseLocale = Effect.fn("sync.parseLocale")(function* (
+  value: string,
+  context: string
+) {
+  return yield* Schema.decodeUnknown(SyncLocaleSchema)(value).pipe(
+    Effect.mapError(
+      () =>
+        new SyncLocaleParseError({
+          message: `Invalid locale "${value}" in ${context}. Expected: ${locales.join(", ")}`,
+        })
+    )
+  );
+});
 
 export const SyncStateSchema = Schema.Struct({
   lastSyncTimestamp: Schema.Number,

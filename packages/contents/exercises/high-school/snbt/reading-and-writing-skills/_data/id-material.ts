@@ -1,7 +1,7 @@
 import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
-import { BASE_PATH } from "@repo/contents/exercises/high-school/snbt/reading-and-writing-skills/_data";
+import { BASE_PATH } from "@repo/contents/exercises/high-school/snbt/reading-and-writing-skills/_data/path";
 
-const idMaterials: ExercisesMaterialList = [
+const idMaterials = [
   {
     title: "Try Out 2026",
     description:
@@ -18,6 +18,6 @@ const idMaterials: ExercisesMaterialList = [
       },
     ],
   },
-] as const;
+] satisfies ExercisesMaterialList;
 
 export default idMaterials;

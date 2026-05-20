@@ -5,7 +5,7 @@ import {
 } from "@repo/contents/_lib/agent/constants";
 import { getNakafaAgentTaxonomy } from "@repo/contents/_lib/agent/taxonomy/read";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 describe("Nakafa agent taxonomy", () => {
   it("returns taxonomy counts and endpoint guidance", async () => {
@@ -32,5 +32,35 @@ describe("Nakafa agent taxonomy", () => {
       "nakafa_get_exercise",
       "nakafa_get_quran_reference",
     ]);
+  });
+
+  it("fails with a typed read error when the taxonomy schema rejects output", async () => {
+    vi.resetModules();
+    vi.doMock("@repo/contents/_lib/agent/schema/taxonomy", async () => {
+      const { Schema } = await import("effect");
+
+      return {
+        NakafaAgentTaxonomySchema: Schema.Struct({
+          impossible: Schema.String,
+        }),
+      };
+    });
+
+    const { NakafaAgentDataReadError } = await import(
+      "@repo/contents/_lib/agent/errors"
+    );
+    const { getNakafaAgentTaxonomy } = await import(
+      "@repo/contents/_lib/agent/taxonomy/read"
+    );
+    const error = await Effect.runPromise(
+      Effect.match(getNakafaAgentTaxonomy("en"), {
+        onFailure: (failure) => failure,
+        onSuccess: () => null,
+      })
+    );
+
+    expect(error).toBeInstanceOf(NakafaAgentDataReadError);
+    vi.doUnmock("@repo/contents/_lib/agent/schema/taxonomy");
+    vi.resetModules();
   });
 });

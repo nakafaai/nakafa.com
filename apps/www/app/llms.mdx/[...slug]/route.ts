@@ -1,4 +1,5 @@
 import { routing } from "@repo/internationalization/src/routing";
+import { Effect } from "effect";
 import type { NextRequest } from "next/server";
 import { hasLocale } from "next-intl";
 import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
@@ -47,7 +48,9 @@ export async function GET(
     });
   }
 
-  const markdownText = await getLlmsMarkdownText({ cleanSlug, locale });
+  const markdownText = await Effect.runPromise(
+    getLlmsMarkdownText({ cleanSlug, locale })
+  );
   if (markdownText) {
     return new Response(markdownText, {
       headers: MARKDOWN_HEADERS,

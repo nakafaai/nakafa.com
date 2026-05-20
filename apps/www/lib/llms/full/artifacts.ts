@@ -84,9 +84,7 @@ const getLlmsFullDocuments = Effect.fn("llms.getLlmsFullDocuments")(
       routing.locales,
       (locale) =>
         Effect.gen(function* () {
-          const entries = yield* Effect.tryPromise(() =>
-            getLocalizedLlmsEntries(locale)
-          );
+          const entries = yield* getLocalizedLlmsEntries(locale);
 
           return yield* getLocaleDocuments({ entries, locale });
         }),
@@ -131,12 +129,10 @@ function getEntryDocument({
   }
 
   return Effect.gen(function* () {
-    const text = yield* Effect.tryPromise(() =>
-      getLlmsSourceMarkdownText({
-        cleanSlug: entry.route.slice(1),
-        locale,
-      })
-    );
+    const text = yield* getLlmsSourceMarkdownText({
+      cleanSlug: entry.route.slice(1),
+      locale,
+    });
 
     if (!text) {
       return null;

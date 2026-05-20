@@ -6,7 +6,7 @@ import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
 import { getRawGithubUrl } from "@/lib/utils/github";
 
-/** Builds markdown for one article or subject MDX content page. */
+/** Runs the cached MDX markdown Effect at the Next cache boundary. */
 export async function getCachedLlmsMdxText({
   cleanSlug,
   locale,
@@ -18,22 +18,23 @@ export async function getCachedLlmsMdxText({
 
   cacheLife("max");
 
-  return await getLlmsMdxText({ cleanSlug, locale });
+  return await Effect.runPromise(getLlmsMdxText({ cleanSlug, locale }));
 }
 
 /** Builds uncached markdown for one article or subject MDX content page. */
-export async function getLlmsMdxText({
+export const getLlmsMdxText = Effect.fn("www.llms.mdx.text")(function* ({
   cleanSlug,
   locale,
 }: {
   cleanSlug: string;
   locale: Locale;
 }) {
-  const content = await Effect.runPromise(
-    Effect.match(getContentMetadataWithRaw(locale, cleanSlug), {
+  const content = yield* Effect.match(
+    getContentMetadataWithRaw(locale, cleanSlug),
+    {
       onFailure: () => null,
       onSuccess: (data) => data,
-    })
+    }
   );
 
   if (!content) {
@@ -50,4 +51,4 @@ export async function getLlmsMdxText({
   ];
 
   return scanned.join("\n");
-}
+});

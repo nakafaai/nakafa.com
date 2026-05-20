@@ -1,5 +1,6 @@
 import {
   getUnknownErrorMessage,
+  NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
 import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
@@ -56,18 +57,26 @@ export const getNakafaAgentQuranReference = Effect.fn(
     return Option.none();
   }
 
-  return Option.some(
-    Schema.decodeUnknownSync(NakafaAgentQuranReferenceSchema)({
-      ...ref,
-      name: getSurahName({
-        locale: parsedOptions.locale,
-        name: surah.value.name,
+  const quranReference = yield* Effect.try({
+    try: () =>
+      Schema.decodeUnknownSync(NakafaAgentQuranReferenceSchema)({
+        ...ref,
+        name: getSurahName({
+          locale: parsedOptions.locale,
+          name: surah.value.name,
+        }),
+        revelation: surah.value.revelation[parsedOptions.locale],
+        translation: surah.value.name.translation[parsedOptions.locale],
+        verses,
       }),
-      revelation: surah.value.revelation[parsedOptions.locale],
-      translation: surah.value.name.translation[parsedOptions.locale],
-      verses,
-    })
-  );
+    catch: (error) =>
+      new NakafaAgentDataReadError({
+        cause: getUnknownErrorMessage(error),
+        message: "Unable to build Nakafa Quran reference.",
+      }),
+  });
+
+  return Option.some(quranReference);
 });
 
 /** Parses Quran reference input with actionable Effect errors. */

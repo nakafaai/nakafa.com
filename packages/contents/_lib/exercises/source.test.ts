@@ -31,6 +31,9 @@ vi.mock("ky", () => ({
 
 import { readExerciseChoices } from "@repo/contents/_lib/exercises/source";
 
+/**
+ * Runs an Effect and returns its failure value for focused error assertions.
+ */
 async function captureFailure<TSuccess, TError>(
   effect: Effect.Effect<TSuccess, TError>
 ) {
@@ -53,6 +56,45 @@ afterEach(() => {
 });
 
 describe("readExerciseChoices", () => {
+  it("parses math labels with semicolons and braces", async () => {
+    mockReadFile.mockResolvedValue(`import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
+
+const choices: ExercisesChoices = {
+  id: [
+    {
+      label: "$$1\\\\frac{1}{8}; 0{,}875; \\\\frac{3}{4}$$",
+      value: true,
+    },
+  ],
+  en: [
+    {
+      label: "$$1\\\\frac{1}{8}; 0.875; \\\\frac{3}{4}$$",
+      value: true,
+    },
+  ],
+};
+
+export default choices;`);
+
+    const result = await Effect.runPromise(
+      readExerciseChoices("exercises/high-school/snbt/example/choices.ts")
+    );
+
+    expect(result?.en[0]?.label).toBe("$$1\\frac{1}{8}; 0.875; \\frac{3}{4}$$");
+  });
+
+  it("returns null when a choices string is unterminated", async () => {
+    mockReadFile.mockResolvedValue(
+      'const choices = { id: [{ label: "broken, value: true }], en: [] };'
+    );
+
+    const result = await Effect.runPromise(
+      readExerciseChoices("exercises/high-school/snbt/example/choices.ts")
+    );
+
+    expect(result).toBeNull();
+  });
+
   it("fails with InvalidPathError for absolute choices paths", async () => {
     const result = await captureFailure(readExerciseChoices("/tmp/choices.ts"));
 

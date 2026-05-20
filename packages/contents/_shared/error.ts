@@ -1,45 +1,108 @@
-import { Data } from "effect";
+import { Schema } from "effect";
 
-export class InvalidPathError extends Data.TaggedError("InvalidPathError")<{
-  readonly path: string;
-  readonly reason: string;
-}> {}
+/** Invalid content path rejected before filesystem or module loading. */
+export class InvalidPathError extends Schema.TaggedError<InvalidPathError>()(
+  "InvalidPathError",
+  {
+    message: Schema.String,
+    path: Schema.String,
+    reason: Schema.String,
+  }
+) {}
 
-export class DirectoryReadError extends Data.TaggedError("DirectoryReadError")<{
-  readonly path: string;
-  readonly cause: unknown;
-}> {}
+/** Directory read failure while scanning the contents tree. */
+export class DirectoryReadError extends Schema.TaggedError<DirectoryReadError>()(
+  "DirectoryReadError",
+  {
+    cause: Schema.Unknown,
+    message: Schema.String,
+    path: Schema.String,
+  }
+) {}
 
-export class FileReadError extends Data.TaggedError("FileReadError")<{
-  readonly path: string;
-  readonly cause: unknown;
-}> {}
+/** File read failure while loading a concrete content source file. */
+export class FileReadError extends Schema.TaggedError<FileReadError>()(
+  "FileReadError",
+  {
+    cause: Schema.Unknown,
+    message: Schema.String,
+    path: Schema.String,
+  }
+) {}
 
-export class MetadataParseError extends Data.TaggedError("MetadataParseError")<{
-  readonly path?: string;
-  readonly reason: string;
-}> {}
+/** Metadata validation failure for MDX or dynamically imported content. */
+export class MetadataParseError extends Schema.TaggedError<MetadataParseError>()(
+  "MetadataParseError",
+  {
+    message: Schema.String,
+    path: Schema.optional(Schema.String),
+    reason: Schema.String,
+  }
+) {}
 
-export class ModuleLoadError extends Data.TaggedError("ModuleLoadError")<{
-  readonly path: string;
-  readonly cause: unknown;
-}> {}
+/** Dynamic module import failure for compiled content modules. */
+export class ModuleLoadError extends Schema.TaggedError<ModuleLoadError>()(
+  "ModuleLoadError",
+  {
+    cause: Schema.Unknown,
+    message: Schema.String,
+    path: Schema.String,
+  }
+) {}
 
-export class GitHubFetchError extends Data.TaggedError("GitHubFetchError")<{
-  readonly url: string;
-  readonly cause: unknown;
-}> {}
+/** GitHub raw-content fallback failure. */
+export class GitHubFetchError extends Schema.TaggedError<GitHubFetchError>()(
+  "GitHubFetchError",
+  {
+    cause: Schema.Unknown,
+    message: Schema.String,
+    url: Schema.String,
+  }
+) {}
 
-export class ExerciseLoadError extends Data.TaggedError("ExerciseLoadError")<{
-  readonly path: string;
-  readonly reason: string;
-}> {}
+/** Exercise route/source validation failure. */
+export class ExerciseLoadError extends Schema.TaggedError<ExerciseLoadError>()(
+  "ExerciseLoadError",
+  {
+    message: Schema.String,
+    path: Schema.String,
+    reason: Schema.String,
+  }
+) {}
 
-export class SurahNotFoundError extends Data.TaggedError("SurahNotFoundError")<{
-  readonly surahNumber: number;
-}> {}
+/** Quran surah lookup failure for an unknown surah number. */
+export class SurahNotFoundError extends Schema.TaggedError<SurahNotFoundError>()(
+  "SurahNotFoundError",
+  {
+    message: Schema.String,
+    surahNumber: Schema.Number,
+  }
+) {}
 
-export class VerseNotFoundError extends Data.TaggedError("VerseNotFoundError")<{
-  readonly surahNumber: number;
-  readonly verseNumber: number;
-}> {}
+/** Quran verse lookup failure for an unknown verse number. */
+export class VerseNotFoundError extends Schema.TaggedError<VerseNotFoundError>()(
+  "VerseNotFoundError",
+  {
+    message: Schema.String,
+    surahNumber: Schema.Number,
+    verseNumber: Schema.Number,
+  }
+) {}
+
+/** Reference payload validation failure for article citations. */
+export class ReferenceParseError extends Schema.TaggedError<ReferenceParseError>()(
+  "ReferenceParseError",
+  {
+    message: Schema.String,
+    reason: Schema.String,
+  }
+) {}
+
+/** MDX cache build failure for invalid internal cache state. */
+export class CacheBuildError extends Schema.TaggedError<CacheBuildError>()(
+  "CacheBuildError",
+  {
+    message: Schema.String,
+    reason: Schema.String,
+  }
+) {}

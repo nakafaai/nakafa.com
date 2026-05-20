@@ -2,12 +2,13 @@ import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar";
 import { HeaderContainer } from "@/components/sidebar/header-container";
 import { HeaderSearch } from "@/components/sidebar/header-search";
 
+/** Renders the app header controls shared by authenticated learning pages. */
 export function Header() {
   return (
     <HeaderContainer>
       <div className="flex w-full items-center justify-between gap-2 px-6">
         <div className="flex items-center gap-6 sm:w-full">
-          <SidebarTrigger className="size-8" variant="outline" />
+          <SidebarTrigger className="size-9" variant="outline" />
         </div>
 
         <div className="flex w-full items-center justify-end gap-2">

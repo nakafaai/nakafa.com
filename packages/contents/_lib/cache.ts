@@ -1,8 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
+import {
+  CacheBuildError,
+  DirectoryReadError,
+} from "@repo/contents/_shared/error";
 import { routing } from "@repo/internationalization/src/routing";
-import { Option } from "effect";
+import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 
 const contentsDir = resolveContentsDir(import.meta.url);
@@ -37,24 +41,47 @@ class MDXCacheRegistry {
   }
 
   build(): MDXCache {
+    return Effect.runSync(this.buildEffect());
+  }
+
+  /** Builds the MDX cache with Effect-managed state cleanup. */
+  private buildEffect(): Effect.Effect<MDXCache, CacheBuildError> {
     if (this.cache !== null) {
-      return this.cache;
+      return Effect.succeed(this.cache);
     }
 
     if (this.isBuilding) {
-      throw new Error(
-        "Cache is already being built. This indicates a circular dependency or concurrent build attempt."
+      return Effect.fail(
+        new CacheBuildError({
+          message:
+            "Cache is already being built. This indicates a circular dependency or concurrent build attempt.",
+          reason:
+            "Cache is already being built. This indicates a circular dependency or concurrent build attempt.",
+        })
       );
     }
 
-    this.isBuilding = true;
+    const registry = this;
 
-    try {
-      this.cache = this.buildCacheIteratively();
-      return this.cache;
-    } finally {
-      this.isBuilding = false;
-    }
+    return Effect.gen(function* () {
+      yield* Effect.sync(() => {
+        registry.isBuilding = true;
+      });
+
+      const cache = yield* Effect.sync(() => registry.buildCacheIteratively());
+
+      yield* Effect.sync(() => {
+        registry.cache = cache;
+      });
+
+      return cache;
+    }).pipe(
+      Effect.ensuring(
+        Effect.sync(() => {
+          registry.isBuilding = false;
+        })
+      )
+    );
   }
 
   startBuilding(): void {
@@ -150,11 +177,17 @@ class MDXCacheRegistry {
   }
 
   private readDirectory(absolutePath: string): fs.Dirent[] {
-    try {
-      return fs.readdirSync(absolutePath, { withFileTypes: true });
-    } catch {
-      return [];
-    }
+    return Effect.runSync(
+      Effect.try({
+        try: () => fs.readdirSync(absolutePath, { withFileTypes: true }),
+        catch: (cause) =>
+          new DirectoryReadError({
+            cause,
+            message: "Unable to read directory while building MDX cache.",
+            path: absolutePath,
+          }),
+      }).pipe(Effect.catchTag("DirectoryReadError", () => Effect.succeed([])))
+    );
   }
 
   private addFileToCache(

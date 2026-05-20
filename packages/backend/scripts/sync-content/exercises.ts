@@ -1,4 +1,5 @@
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import {
   computeHash,
   parseDateToEpoch,
@@ -123,12 +124,7 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
   const questionFiles = yield* globFiles("exercises/**/_question/*.mdx");
   const questionCountByLocaleSlug = new Map<string, number>();
   for (const questionFile of questionFiles) {
-    const pathResult = yield* Effect.either(
-      Effect.try({
-        try: () => parseExercisePath(questionFile),
-        catch: (error) => error,
-      })
-    );
+    const pathResult = yield* Effect.either(parseExercisePath(questionFile));
 
     if (pathResult._tag === "Left") {
       continue;
@@ -158,7 +154,7 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
           return [];
         }
 
-        const locale = parseLocale(localeMatch[1], materialFile);
+        const locale = yield* parseLocale(localeMatch[1], materialFile);
         const parsedSets = yield* parseExerciseMaterialFile(
           materialFile,
           locale
@@ -287,8 +283,8 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
   questionFile: string,
   searchLabelsBySet: ReadonlyMap<string, ExerciseSearchLabels>
 ) {
-  const pathInfo = parseExercisePath(questionFile);
-  const exerciseDir = getExerciseDir(questionFile);
+  const pathInfo = yield* parseExercisePath(questionFile);
+  const exerciseDir = yield* getExerciseDir(questionFile);
   const answerFile = questionFile.replace("_question", "_answer");
   const questionParsed = yield* readMdxFile(questionFile);
 
@@ -321,9 +317,9 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
 
   if (!searchLabels) {
     return yield* Effect.fail(
-      new Error(
-        `Missing exercise search labels for ${pathInfo.locale}:${setSlug}. Add this set to the matching _data material file.`
-      )
+      new ScriptFailureError({
+        message: `Missing exercise search labels for ${pathInfo.locale}:${setSlug}. Add this set to the matching _data material file.`,
+      })
     );
   }
 
@@ -356,7 +352,7 @@ const parseQuestionFile = Effect.fn("sync.parseQuestionFile")(function* (
     number: pathInfo.number,
     title: questionParsed.metadata.title,
     description: questionParsed.metadata.description,
-    date: parseDateToEpoch(questionParsed.metadata.date),
+    date: yield* parseDateToEpoch(questionParsed.metadata.date),
     questionBody: questionParsed.body,
     answerBody,
     searchDescription: getExerciseSearchDescription(searchSource),
@@ -388,7 +384,7 @@ const readExerciseSearchLabels = Effect.fn("sync.readExerciseSearchLabels")(
         continue;
       }
 
-      const locale = parseLocale(localeMatch[1], materialFile);
+      const locale = yield* parseLocale(localeMatch[1], materialFile);
       const sets = yield* parseExerciseMaterialFile(materialFile, locale);
 
       for (const set of sets) {

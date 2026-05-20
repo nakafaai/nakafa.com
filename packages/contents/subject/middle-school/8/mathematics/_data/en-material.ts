@@ -1,7 +1,7 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from "@repo/contents/subject/middle-school/8/mathematics/_data";
+import { BASE_PATH } from "@repo/contents/subject/middle-school/8/mathematics/_data/path";
 
-const enMaterials: MaterialList = [
+const enMaterials = [
   {
     title: "Exponents",
     description: "The power of repeated multiplication in math.",
@@ -244,6 +244,6 @@ const enMaterials: MaterialList = [
       },
     ],
   },
-] as const;
+] satisfies MaterialList;
 
 export default enMaterials;

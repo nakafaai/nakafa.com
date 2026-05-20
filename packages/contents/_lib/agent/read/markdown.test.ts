@@ -143,4 +143,38 @@ describe("Nakafa agent markdown", () => {
     vi.doUnmock("@repo/contents/_lib/agent/quran/read");
     vi.resetModules();
   });
+
+  it("fails with a typed read error when the markdown schema rejects output", async () => {
+    vi.resetModules();
+    vi.doMock("@repo/contents/_lib/agent/schema/read", async () => {
+      const actual = await vi.importActual<
+        typeof import("@repo/contents/_lib/agent/schema/read")
+      >("@repo/contents/_lib/agent/schema/read");
+      const { Schema } = await import("effect");
+
+      return {
+        ...actual,
+        NakafaAgentMarkdownSchema: Schema.Struct({
+          impossible: Schema.String,
+        }),
+      };
+    });
+
+    const { NakafaAgentDataReadError } = await import(
+      "@repo/contents/_lib/agent/errors"
+    );
+    const { getNakafaAgentMarkdown } = await import(
+      "@repo/contents/_lib/agent/read/markdown"
+    );
+    const error = await Effect.runPromise(
+      Effect.match(getNakafaAgentMarkdown(ARTICLE_CONTENT_ID), {
+        onFailure: (failure) => failure,
+        onSuccess: () => null,
+      })
+    );
+
+    expect(error).toBeInstanceOf(NakafaAgentDataReadError);
+    vi.doUnmock("@repo/contents/_lib/agent/schema/read");
+    vi.resetModules();
+  });
 });

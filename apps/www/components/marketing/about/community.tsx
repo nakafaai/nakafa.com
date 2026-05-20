@@ -11,7 +11,7 @@ export function Community() {
   return (
     <section className="scroll-mt-28" id="community">
       <div className="mx-auto w-full max-w-7xl border-x">
-        <div className="grid gap-12 px-6 py-24">
+        <div className="grid gap-12 px-6 py-48">
           <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
             <div className="grid content-start gap-6">
               <h2 className="max-w-xl text-balance font-medium text-3xl tracking-tight sm:text-4xl">

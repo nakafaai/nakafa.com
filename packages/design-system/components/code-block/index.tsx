@@ -34,8 +34,6 @@ import {
 } from "shiki";
 import { createContext, useContextSelector } from "use-context-selector";
 
-export type { BundledLanguage } from "shiki";
-
 const lineNumberClassNames = cn(
   "[&_code]:[counter-reset:line]",
   "[&_code]:[counter-increment:line_0]",

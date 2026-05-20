@@ -1,3 +1,4 @@
+import { formatScriptCause } from "@repo/backend/scripts/lib/errors";
 import { parseAndRun } from "@repo/backend/scripts/sync-content/cli";
 import { logError } from "@repo/backend/scripts/sync-content/logging";
 import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
@@ -9,9 +10,13 @@ export const runCli = (): void => {
     Effect.gen(function* () {
       const provider = yield* loadEnvProvider();
       yield* parseAndRun().pipe(Effect.withConfigProvider(provider));
-    })
-  ).catch((error: unknown) => {
-    logError(error instanceof Error ? error.message : String(error));
-    process.exit(1);
-  });
+    }).pipe(
+      Effect.catchAllCause((cause) =>
+        Effect.sync(() => {
+          logError(formatScriptCause(cause));
+          process.exitCode = 1;
+        })
+      )
+    )
+  );
 };

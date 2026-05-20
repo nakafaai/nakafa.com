@@ -60,9 +60,21 @@ describe("Nakafa agent exercises", () => {
 
   it("fails with a typed read error when renderable exercise loading fails", async () => {
     vi.resetModules();
-    vi.doMock("@repo/contents/_lib/exercises/renderable", () => ({
-      getRenderableExercisesContent: () => Promise.reject(new Error("broken")),
-    }));
+    vi.doMock("@repo/contents/_lib/exercises/renderable", async () => {
+      const { NakafaAgentDataReadError } = await import(
+        "@repo/contents/_lib/agent/errors"
+      );
+
+      return {
+        getRenderableExercisesContent: () =>
+          Effect.fail(
+            new NakafaAgentDataReadError({
+              cause: "broken",
+              message: "Unable to read Nakafa exercise content.",
+            })
+          ),
+      };
+    });
 
     const { NakafaAgentDataReadError } = await import(
       "@repo/contents/_lib/agent/errors"
@@ -79,6 +91,36 @@ describe("Nakafa agent exercises", () => {
 
     expect(error).toBeInstanceOf(NakafaAgentDataReadError);
     vi.doUnmock("@repo/contents/_lib/exercises/renderable");
+    vi.resetModules();
+  });
+
+  it("fails with a typed read error when the exercise result schema rejects output", async () => {
+    vi.resetModules();
+    vi.doMock("@repo/contents/_lib/agent/schema/exercise", async () => {
+      const { Schema } = await import("effect");
+
+      return {
+        NakafaAgentExerciseResultSchema: Schema.Struct({
+          impossible: Schema.String,
+        }),
+      };
+    });
+
+    const { NakafaAgentDataReadError } = await import(
+      "@repo/contents/_lib/agent/errors"
+    );
+    const { getNakafaAgentExercise } = await import(
+      "@repo/contents/_lib/agent/exercise/read"
+    );
+    const error = await Effect.runPromise(
+      Effect.match(getNakafaAgentExercise(EXERCISE_CONTENT_ID), {
+        onFailure: (failure) => failure,
+        onSuccess: () => null,
+      })
+    );
+
+    expect(error).toBeInstanceOf(NakafaAgentDataReadError);
+    vi.doUnmock("@repo/contents/_lib/agent/schema/exercise");
     vi.resetModules();
   });
 });

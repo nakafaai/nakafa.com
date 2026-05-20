@@ -13,7 +13,7 @@ import {
   ContentMetadataSchema,
 } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Either, Option, Schema } from "effect";
 
 const contentsDir = resolveContentsDir(import.meta.url);
 const METADATA_REGEX = /export const metadata\s*=\s*({[\s\S]*?});/;
@@ -45,18 +45,24 @@ export interface ContentMetadataWithRaw {
 export function extractMetadata(
   rawContent: string
 ): Option.Option<ContentMetadata> {
-  try {
-    const metadataMatch = rawContent.match(METADATA_REGEX);
+  const metadataMatch = rawContent.match(METADATA_REGEX);
 
-    if (!metadataMatch) {
-      return Option.none();
-    }
-
-    const metadataObject = new Function(`return ${metadataMatch[1]}`)();
-    return Schema.decodeUnknownOption(ContentMetadataSchema)(metadataObject);
-  } catch {
+  if (!metadataMatch?.[1]) {
     return Option.none();
   }
+
+  const metadataObject = Either.try({
+    try: () => new Function(`return ${metadataMatch[1]}`)(),
+    catch: () => null,
+  });
+
+  if (Either.isLeft(metadataObject)) {
+    return Option.none();
+  }
+
+  return Schema.decodeUnknownOption(ContentMetadataSchema)(
+    metadataObject.right
+  );
 }
 
 /**
@@ -79,6 +85,7 @@ export function getContentMetadata(
   if (!fullPath.startsWith(contentsDir)) {
     return Effect.fail(
       new InvalidPathError({
+        message: "Path traversal detected while reading content metadata.",
         path: filePath,
         reason: "Path traversal detected",
       })
@@ -90,8 +97,9 @@ export function getContentMetadata(
       try: () => fsPromises.readFile(fullPath, "utf8"),
       catch: (error: unknown) =>
         new FileReadError({
-          path: fullPath,
           cause: error,
+          message: "Unable to read content metadata file.",
+          path: fullPath,
         }),
     });
 
@@ -99,6 +107,7 @@ export function getContentMetadata(
     if (Option.isNone(metadata)) {
       return yield* Effect.fail(
         new MetadataParseError({
+          message: "Unable to parse content metadata.",
           path: fullPath,
           reason: "No metadata found",
         })
@@ -129,6 +138,7 @@ export function getContentMetadataWithRaw(
   if (!fullPath.startsWith(contentsDir)) {
     return Effect.fail(
       new InvalidPathError({
+        message: "Path traversal detected while reading content metadata.",
         path: filePath,
         reason: "Path traversal detected",
       })
@@ -140,8 +150,9 @@ export function getContentMetadataWithRaw(
       try: () => fsPromises.readFile(fullPath, "utf8"),
       catch: (error: unknown) =>
         new FileReadError({
-          path: fullPath,
           cause: error,
+          message: "Unable to read content metadata file.",
+          path: fullPath,
         }),
     });
 
@@ -149,6 +160,7 @@ export function getContentMetadataWithRaw(
     if (Option.isNone(metadata)) {
       return yield* Effect.fail(
         new MetadataParseError({
+          message: "Unable to parse content metadata.",
           path: fullPath,
           reason: "No metadata found",
         })
