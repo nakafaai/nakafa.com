@@ -406,6 +406,33 @@ describe("math AI input schemas", () => {
         variable: "x",
       },
     });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          expression: "x^2",
+          operation: "integrate",
+          order: 2,
+          variable: "x",
+        })
+      )
+    ).resolves.toMatchObject({
+      success: false,
+    });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          expression: "sin(x) / x",
+          operation: "limit",
+          order: 2,
+          point: "0",
+          variable: "x",
+        })
+      )
+    ).resolves.toMatchObject({
+      success: false,
+    });
   });
 
   it("requires event bounds for named probability event operations", async () => {

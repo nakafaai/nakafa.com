@@ -281,6 +281,25 @@ describe("MathToolInputSchema", () => {
         variable: "x",
       })
     ).toThrow();
+
+    expect(() =>
+      decodeMathToolInput({
+        expression: "x^2",
+        operation: "integrate",
+        order: 2,
+        variable: "x",
+      })
+    ).toThrow();
+
+    expect(() =>
+      decodeMathToolInput({
+        expression: "sin(x) / x",
+        operation: "limit",
+        order: 2,
+        point: "0",
+        variable: "x",
+      })
+    ).toThrow();
   });
 
   it("rejects strict algebra input without an expression", () => {

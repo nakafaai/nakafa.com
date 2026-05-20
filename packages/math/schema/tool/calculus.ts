@@ -16,6 +16,15 @@ function hasSafeCalculusVariable(value: MathCalculusInput) {
   return getExpressionSymbols(value.expression).size < 2;
 }
 
+/** Keeps derivative-order input aligned with the only CAS operation that uses it. */
+function hasValidCalculusOrder(value: MathCalculusInput) {
+  if (value.order === undefined) {
+    return true;
+  }
+
+  return value.operation === "differentiate";
+}
+
 const MathCalculusStructSchema = Schema.Struct({
   expression: expressionInputSchema,
   lower: Schema.optional(boundInputSchema),
@@ -39,6 +48,9 @@ export const MathCalculusInputSchema = MathCalculusStructSchema.pipe(
   Schema.filter((value) => hasSafeCalculusVariable(value), {
     message: () =>
       "Expected variable when a calculus expression has parameters or more than one symbol.",
+  }),
+  Schema.filter((value) => hasValidCalculusOrder(value), {
+    message: () => "Expected derivative order only for differentiate.",
   })
 )
   .pipe(Schema.mutable)
