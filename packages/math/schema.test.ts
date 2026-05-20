@@ -367,6 +367,24 @@ describe("math schemas", () => {
     expect(
       Schema.decodeUnknownSync(MathToolInputSchema)({
         distribution: "poisson",
+        operation: "distribution",
+        parameters: {
+          lambda: "3",
+        },
+        variable: "X",
+      })
+    ).toEqual({
+      distribution: "poisson",
+      operation: "distribution",
+      parameters: {
+        lambda: "3",
+      },
+      variable: "X",
+    });
+
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        distribution: "poisson",
         expression: "X^2",
         operation: "expected_value",
         parameters: {
@@ -517,6 +535,16 @@ describe("math schemas", () => {
   });
 
   it("rejects probability inputs without required distribution parameters", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        distribution: "normal",
+        operation: "distribution",
+        parameters: {
+          mean: "70",
+        },
+      })
+    ).toThrow();
+
     expect(() =>
       Schema.decodeUnknownSync(MathToolInputSchema)({
         distribution: "normal",

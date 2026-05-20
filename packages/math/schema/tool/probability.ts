@@ -47,7 +47,7 @@ const MathProbabilityBaseInputSchema = Schema.Struct({
   variable: Schema.optional(
     Schema.NonEmptyString.annotations({
       description:
-        "Random variable name, for example X. For transformed moments such as E[X^4] or Var(X^2), send variable as X and expression as X^4 or X^2.",
+        "Random variable name, for example X. For transformed moments such as E[X^4] or Var(X^2), send variable as X and expression as X^4 or X^2. The expression must use this same variable.",
     })
   ),
 });
@@ -100,7 +100,7 @@ const MathProbabilityMomentInputSchema = Schema.extend(
     expression: Schema.optional(
       expressionInputSchema.annotations({
         description:
-          "Optional transformed random-variable expression for expected_value or variance_probability, for example X^4 for E[X^4] or X^2 for Var(X^2).",
+          "Optional transformed random-variable expression for expected_value or variance_probability, for example X^4 for E[X^4] or X^2 for Var(X^2). It must use the same variable named by variable.",
       })
     ),
     operation: Schema.Literal(

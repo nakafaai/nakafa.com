@@ -90,12 +90,26 @@ def _distribution_variable(request: MathRequest) -> sp.Symbol:
 def _summary_target(request: MathRequest, variable: sp.Symbol) -> sp.Expr:
     """Return the expression whose expectation or variance should be checked."""
     if request.expression:
-        return parse.expression(request.expression)
+        target = parse.expression(request.expression)
+        _require_selected_random_variable(target, variable)
+        return target
 
     if request.variable:
-        return parse.expression(request.variable)
+        target = parse.expression(request.variable)
+        _require_selected_random_variable(target, variable)
+        return target
 
     return variable
+
+
+def _require_selected_random_variable(target: sp.Expr, variable: sp.Symbol) -> None:
+    """Reject moment targets that are not computed from the selected variable."""
+    if variable in target.free_symbols:
+        return
+
+    raise ValueError(
+        "Probability moment expression must use the selected random variable."
+    )
 
 
 def _single_random_symbol(expression: sp.Expr) -> sp.Symbol:

@@ -37,6 +37,7 @@ describe("math item labels", () => {
     expect(getItemValueKey("diagonalizable", "false")).toBe("math-value-no");
     expect(getItemValueKey("diagonalizable", "unknown")).toBeUndefined();
     expect(getItemValueKey("status", "divergent")).toBe("math-value-divergent");
+    expect(getItemValueKey("status", "unknown")).toBeUndefined();
     expect(getItemValueKey("eigenvalue", "false")).toBeUndefined();
   });
 });

@@ -282,6 +282,29 @@ def test_probability_moment_can_read_variable_expression() -> None:
     assert result.secondary.expression == "3"
 
 
+@pytest.mark.parametrize(
+    "operation",
+    [
+        "expected_value",
+        "variance_probability",
+    ],
+)
+def test_probability_moment_rejects_expression_without_selected_variable(
+    operation: str,
+) -> None:
+    with pytest.raises(ValueError, match="selected random variable"):
+        run(
+            MathRequest(
+                distribution="normal",
+                expression="X^2",
+                kind="math",
+                operation=operation,
+                parameters={"mean": "0", "standard_deviation": "1"},
+                variable="Y",
+            )
+        )
+
+
 def test_probability_summary_defaults_to_standard_random_variable_name() -> None:
     result = run(
         MathRequest(
