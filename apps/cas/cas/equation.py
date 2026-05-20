@@ -30,6 +30,10 @@ def solve(request: MathRequest) -> MathResult:
     ):
         relation = parsed[0]
         variable = variables[0]
+        if domain != sp.S.Reals:
+            requested_variable = _requested_domain_variable(request, variables)
+            if requested_variable is not None:
+                variable = requested_variable
 
         if isinstance(relation, sp.Equality):
             try:
@@ -115,24 +119,28 @@ def _solve_system(
     domain: sp.Set,
 ) -> list[dict[sp.Symbol, sp.Expr]] | Boolean:
     """Solve a system and enforce a requested single-variable domain."""
+    domain_variable: sp.Symbol | None = None
     if domain != sp.S.Reals:
         _require_bounded_system_variables(parsed, variables)
+        domain_variable = _bounded_system_variable(request, variables)
 
     if _is_univariate_relation_system(parsed, variables):
         # `solve()` returns Boolean/Relational output for inequalities and ignores
         # dict/set/check flags there, so relation systems use the documented
         # inequality reducer directly.
         # https://docs.sympy.org/latest/explanation/solve_output.html#boolean-or-relational
-        return _solve_relation_system(parsed, variables[0], domain)
+        relation_variable = variables[0]
+        if domain_variable is not None:
+            relation_variable = domain_variable
+        return _solve_relation_system(parsed, relation_variable, domain)
 
     solved = sp.solve(parsed, variables, dict=True)
     if not _is_mapping_solution_list(solved):
         raise SolutionSetUnavailable(SOLUTION_SET_UNAVAILABLE)
 
-    if domain == sp.S.Reals:
+    if domain_variable is None:
         return solved
 
-    domain_variable = _system_domain_variable(request, variables)
     return _filter_solved_mappings(solved, domain_variable, domain)
 
 
@@ -205,15 +213,27 @@ def _relation_symbols(
     return {symbol for symbol in relation.free_symbols if isinstance(symbol, sp.Symbol)}
 
 
-def _system_domain_variable(
+def _bounded_system_variable(
     request: MathRequest,
     variables: list[sp.Symbol],
 ) -> sp.Symbol:
-    """Return the system variable constrained by lower or upper bounds."""
-    if not request.variable:
+    """Return the explicitly bounded system variable."""
+    variable = _requested_domain_variable(request, variables)
+    if variable is None:
         raise ValueError(
             "Domain variable is required when solving a system with bounds."
         )
+
+    return variable
+
+
+def _requested_domain_variable(
+    request: MathRequest,
+    variables: list[sp.Symbol],
+) -> sp.Symbol | None:
+    """Validate the requested bounded-domain variable when one is present."""
+    if not request.variable:
+        return None
 
     variable = parse.symbol(request.variable)
     if variable not in variables:

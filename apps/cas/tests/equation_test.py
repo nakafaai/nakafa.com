@@ -224,6 +224,23 @@ def test_solve_inequality_intersects_requested_domain() -> None:
     assert result.secondary.expression == "(0 < x) & (x < 2)"
 
 
+def test_solve_inequality_intersects_domain_with_inferred_variable() -> None:
+    result = run(
+        MathRequest(
+            expressions=["y^2 < 4"],
+            kind="math",
+            lower="0",
+            lowerInclusive=False,
+            operation="solve",
+            variables=["y"],
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "(0 < y) & (y < 2)"
+
+
 def test_solve_inequality_system_intersects_requested_domain() -> None:
     result = run(
         MathRequest(
@@ -355,6 +372,34 @@ def test_solve_system_rejects_domain_variable_outside_solved_variables() -> None
                 operation="solve",
                 variable="z",
                 variables=["x", "y"],
+            )
+        )
+
+
+def test_solve_inequality_rejects_mismatched_domain_variable() -> None:
+    with pytest.raises(ValueError, match="one of the solved variables"):
+        run(
+            MathRequest(
+                expressions=["y > 0"],
+                kind="math",
+                lower="0",
+                operation="solve",
+                variable="x",
+                variables=["y"],
+            )
+        )
+
+
+def test_solve_inequality_system_rejects_mismatched_domain_variable() -> None:
+    with pytest.raises(ValueError, match="one of the solved variables"):
+        run(
+            MathRequest(
+                expressions=["y > 0", "y < 2"],
+                kind="math",
+                lower="0",
+                operation="solve",
+                variable="x",
+                variables=["y"],
             )
         )
 
