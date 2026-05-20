@@ -12,6 +12,9 @@ EQUALS = expression_text("equals", "=")
 def run(request: MathRequest) -> MathResult:
     """Run point, line, circle, and intersection geometry operations."""
     operation = request.operation
+    # SymPy Geometry is documented around exact two-dimensional entities such as
+    # Point, Line, Segment, and Circle, which matches this fixed CAS surface.
+    # https://docs.sympy.org/latest/modules/geometry/index.html
     points = [parse.point(point) for point in request.points]
     x, y = sp.symbols("x y")
 

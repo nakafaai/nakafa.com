@@ -15,6 +15,9 @@ def expand(request: MathRequest) -> MathResult:
     variable = parse.symbol_from_expression(request.variable, request.expression)
     point = parse.expression(request.point or "0")
     order = _series_order(request)
+    # SymPy's `n` parameter is the expansion cutoff, so degree `order` needs the
+    # next cutoff to keep the requested Taylor polynomial degree.
+    # https://docs.sympy.org/latest/modules/series/series.html
     sympy_order = order + 1
     offset = sp.Dummy("offset")
     shifted = expr.subs(variable, point + offset)

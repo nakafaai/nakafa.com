@@ -64,6 +64,9 @@ def integrate(request: MathRequest) -> MathResult:
         output = sp.integrate(expr, variable)
         primary = sp.Integral(expr, variable)
 
+    # `integrate()` may return an unevaluated `Integral` when SymPy cannot
+    # compute the requested integral exactly; that is not verified evidence.
+    # https://docs.sympy.org/latest/modules/integrals/integrals.html
     if _has_unevaluated_integral(output):
         return result(
             request,
@@ -461,6 +464,9 @@ def limit(request: MathRequest) -> MathResult:
     point = parse.expression(request.point)
 
     try:
+        # SymPy exposes directional limits via `dir`; compare both sides before
+        # certifying the ordinary two-sided limit.
+        # https://docs.sympy.org/latest/modules/series/series.html#sympy.series.limits.limit
         left = sp.limit(expr, variable, point, dir="-")
         right = sp.limit(expr, variable, point, dir="+")
         limits_differ = left != right and sp.simplify(left - right) != 0

@@ -119,6 +119,10 @@ def _solve_system(
         _require_bounded_system_variables(parsed, variables)
 
     if _is_univariate_relation_system(parsed, variables):
+        # `solve()` returns Boolean/Relational output for inequalities and ignores
+        # dict/set/check flags there, so relation systems use the documented
+        # inequality reducer directly.
+        # https://docs.sympy.org/latest/explanation/solve_output.html#boolean-or-relational
         return _solve_relation_system(parsed, variables[0], domain)
 
     solved = sp.solve(parsed, variables, dict=True)
@@ -165,6 +169,9 @@ def _solve_relation_system(
     if domain != sp.S.Reals:
         constraints.extend(_flatten_conjunction(domain.contains(variable)))
 
+    # SymPy documents `reduce_inequalities` as the supported algebraic reducer
+    # for one-symbol inequality systems.
+    # https://docs.sympy.org/latest/guides/solving/reduce-inequalities-algebraically.html
     return sp.reduce_inequalities(constraints, variable)
 
 

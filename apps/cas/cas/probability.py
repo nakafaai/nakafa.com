@@ -25,6 +25,9 @@ def run(request: MathRequest) -> MathResult:
         return _tail_probability(request, distribution, variable)
     if request.operation == "expected_value":
         target = _summary_target(request, variable)
+        # SymPy Stats models random variables and queries through E, variance,
+        # and P, so transformed moments substitute the selected distribution.
+        # https://docs.sympy.org/latest/modules/stats.html
         output = E(_replace_random_variable(target, variable, distribution))
         primary = expression_text(
             f"E({target})",
@@ -33,6 +36,9 @@ def run(request: MathRequest) -> MathResult:
         reason = "The expected value was checked exactly from the distribution."
     elif request.operation == "variance_probability":
         target = _summary_target(request, variable)
+        # Keep variance on the transformed random expression, matching the
+        # SymPy Stats `variance(expression)` API.
+        # https://docs.sympy.org/latest/modules/stats.html
         output = variance(_replace_random_variable(target, variable, distribution))
         primary = expression_text(
             f"Var({target})",

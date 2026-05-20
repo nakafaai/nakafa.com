@@ -21,6 +21,8 @@ class PointInput(BaseModel):
 class MathRequest(BaseModel):
     """Single fixed-operation math request accepted by the CAS API."""
 
+    # Extra fields are forbidden so the AI/tool contract cannot silently drift.
+    # https://docs.pydantic.dev/latest/concepts/models/#extra-data
     model_config = ConfigDict(extra="forbid")
 
     kind: MathSource
@@ -101,4 +103,6 @@ class MathResult(BaseModel):
     @field_serializer("input")
     def compact_input(self, request: MathRequest) -> dict[str, object]:
         """Serialize only the request fields the caller intentionally sent."""
+        # Keep result payloads compact by excluding defaults and None values.
+        # https://docs.pydantic.dev/latest/concepts/serialization/
         return request.model_dump(exclude_defaults=True, exclude_none=True)
