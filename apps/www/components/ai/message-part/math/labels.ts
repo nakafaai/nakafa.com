@@ -33,6 +33,10 @@ export function getItemLabelKey(label: string) {
       return "math-item-root";
     case "solution":
       return "math-item-solution";
+    case "singularity":
+      return "math-item-singularity";
+    case "status":
+      return "math-item-status";
     default:
       return "math-item-result";
   }
@@ -40,16 +44,23 @@ export function getItemLabelKey(label: string) {
 
 /** Maps semantic math item values to localized display text. */
 export function getItemValueKey(label: string, value: string) {
-  if (label !== "diagonalizable") {
-    return;
+  if (label === "diagonalizable") {
+    switch (value) {
+      case "false":
+        return "math-value-no";
+      case "true":
+        return "math-value-yes";
+      default:
+        return;
+    }
   }
 
-  switch (value) {
-    case "false":
-      return "math-value-no";
-    case "true":
-      return "math-value-yes";
-    default:
-      return;
+  if (label === "status") {
+    switch (value) {
+      case "divergent":
+        return "math-value-divergent";
+      default:
+        return;
+    }
   }
 }

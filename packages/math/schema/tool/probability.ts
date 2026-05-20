@@ -1,8 +1,8 @@
 import {
   boundInputSchema,
+  expressionInputSchema,
   pointInputSchema,
   valueInputSchema,
-  variableInputSchema,
 } from "@repo/math/schema/shared";
 import { Schema } from "effect";
 
@@ -44,7 +44,12 @@ const probabilityInclusiveSchema = Schema.Boolean.annotations({
 const MathProbabilityBaseInputSchema = Schema.Struct({
   distribution: probabilityDistributionSchema,
   parameters: probabilityParametersSchema,
-  variable: Schema.optional(variableInputSchema),
+  variable: Schema.optional(
+    Schema.NonEmptyString.annotations({
+      description:
+        "Random variable name, for example X. For transformed moments such as E[X^4] or Var(X^2), send variable as X and expression as X^4 or X^2.",
+    })
+  ),
 });
 
 type ProbabilityBaseInput = Schema.Schema.Type<
@@ -71,16 +76,39 @@ function hasRequiredProbabilityParameters(value: ProbabilityBaseInput) {
   );
 }
 
-const MathProbabilitySummaryInputSchema = Schema.extend(
+const MathProbabilityDistributionInputSchema = Schema.extend(
   MathProbabilityBaseInputSchema,
   Schema.Struct({
+    operation: Schema.Literal("distribution").annotations({
+      description:
+        "Use distribution to inspect a supported named distribution.",
+    }),
+  })
+)
+  .pipe(
+    Schema.filter((value) => hasRequiredProbabilityParameters(value), {
+      message: () =>
+        "Expected required distribution parameters for the selected probability distribution.",
+    })
+  )
+  .pipe(Schema.mutable)
+  .annotations({ description: "Named distribution summary input." });
+
+const MathProbabilityMomentInputSchema = Schema.extend(
+  MathProbabilityBaseInputSchema,
+  Schema.Struct({
+    expression: Schema.optional(
+      expressionInputSchema.annotations({
+        description:
+          "Optional transformed random-variable expression for expected_value or variance_probability, for example X^4 for E[X^4] or X^2 for Var(X^2).",
+      })
+    ),
     operation: Schema.Literal(
-      "distribution",
       "expected_value",
       "variance_probability"
     ).annotations({
       description:
-        "Use distribution to inspect a supported named distribution, expected_value for expectation, or variance_probability for variance.",
+        "Use expected_value for expectation or variance_probability for variance.",
     }),
   })
 )
@@ -92,8 +120,7 @@ const MathProbabilitySummaryInputSchema = Schema.extend(
   )
   .pipe(Schema.mutable)
   .annotations({
-    description:
-      "Named distribution summary, expected value, or variance input.",
+    description: "Named distribution expected value or variance input.",
   });
 
 const MathProbabilityPointInputSchema = Schema.extend(
@@ -185,7 +212,8 @@ const MathProbabilityIntervalInputSchema = Schema.extend(
   .annotations({ description: "Interval probability input." });
 
 export const MathProbabilityInputSchema = Schema.Union(
-  MathProbabilitySummaryInputSchema,
+  MathProbabilityDistributionInputSchema,
+  MathProbabilityMomentInputSchema,
   MathProbabilityPointInputSchema,
   MathProbabilityCumulativeInputSchema,
   MathProbabilityTailInputSchema,

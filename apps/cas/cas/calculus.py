@@ -7,8 +7,8 @@ import sympy as sp
 from sympy.calculus.util import continuous_domain
 
 from cas import parse
-from cas.format import expression_text, inconclusive, result, step
-from cas.schema import MathRequest, MathResult, MathStep
+from cas.format import expression_text, inconclusive, item, result, step
+from cas.schema import MathItem, MathRequest, MathResult, MathStep
 
 EQUALS = expression_text("equals", "=")
 
@@ -38,6 +38,8 @@ def integrate(request: MathRequest) -> MathResult:
     variable = parse.symbol_from_expression(request.variable, request.expression)
     has_lower = request.lower is not None
     has_upper = request.upper is not None
+    lower: sp.Expr | None = None
+    upper: sp.Expr | None = None
 
     if has_lower != has_upper:
         raise ValueError("Definite integrals require both lower and upper bounds.")
@@ -62,12 +64,30 @@ def integrate(request: MathRequest) -> MathResult:
         output = sp.integrate(expr, variable)
         primary = sp.Integral(expr, variable)
 
-    if _has_unevaluated_integral(output) or _is_nonfinite_integral_value(output):
+    if _has_unevaluated_integral(output):
         return result(
             request,
             status="inconclusive",
             primary=primary,
             reason="The integral could not be determined exactly.",
+        )
+
+    if _is_nonfinite_integral_value(output):
+        if _depends_on_unchecked_parameters(output):
+            return result(
+                request,
+                status="inconclusive",
+                primary=primary,
+                reason="The integral depends on parameter assumptions.",
+            )
+
+        return _nonfinite_integral_result(
+            request,
+            expr,
+            variable,
+            lower if has_lower else None,
+            upper if has_upper else None,
+            primary,
         )
 
     return result(
@@ -185,6 +205,62 @@ def _integral_result(
     )
 
 
+def _nonfinite_integral_result(
+    request: MathRequest,
+    expr: sp.Expr,
+    variable: sp.Symbol,
+    lower: sp.Expr | None,
+    upper: sp.Expr | None,
+    primary: sp.Integral,
+) -> MathResult:
+    """Build checked evidence for integrals that do not converge finitely."""
+    return result(
+        request,
+        status="verified",
+        primary=primary,
+        reason="The integral was checked and does not converge to a finite value.",
+        items=[
+            item("status", expression_text("divergent")),
+            *_singularity_items(expr, variable, lower, upper),
+        ],
+    )
+
+
+def _singularity_items(
+    expr: sp.Expr,
+    variable: sp.Symbol,
+    lower: sp.Expr | None,
+    upper: sp.Expr | None,
+) -> list[MathItem]:
+    """Return singularities inside a finite interval when SymPy can prove them."""
+    if lower is None or upper is None:
+        return []
+
+    interval = _closed_interval(lower, upper)
+    if interval is None:
+        return []
+
+    try:
+        singularities = sp.calculus.singularities(expr, variable)
+    except NotImplementedError:
+        return []
+
+    if not isinstance(singularities, sp.FiniteSet):
+        return []
+
+    return [
+        item(
+            "singularity",
+            expression_text(
+                f"{variable} = {singularity}",
+                f"{sp.latex(variable)} = {sp.latex(singularity)}",
+            ),
+        )
+        for singularity in singularities
+        if interval.contains(singularity) is sp.S.true
+    ]
+
+
 def _termwise_definite_integral_value(
     expr: sp.Expr,
     variable: sp.Symbol,
@@ -218,6 +294,9 @@ def _definite_integral_term_value(
 ) -> sp.Expr | None:
     """Evaluate one definite-integral term without certifying weak evidence."""
     if variable not in expr.free_symbols:
+        if not _is_finite_interval(lower, upper):
+            return None
+
         return sp.simplify(expr * (upper - lower))
 
     reflected = _reflection_integral_value(expr, variable, lower, upper)
@@ -302,6 +381,9 @@ def _is_continuous_on_closed_interval(
 
 def _closed_interval(lower: sp.Expr, upper: sp.Expr) -> sp.Interval | None:
     """Build the closed interval covered by the definite integral bounds."""
+    if not _is_finite_interval(lower, upper):
+        return None
+
     if sp.simplify(upper - lower).is_nonnegative is True:
         interval = sp.Interval(lower, upper)
         return interval if isinstance(interval, sp.Interval) else None
@@ -311,6 +393,11 @@ def _closed_interval(lower: sp.Expr, upper: sp.Expr) -> sp.Interval | None:
         return interval if isinstance(interval, sp.Interval) else None
 
     return None
+
+
+def _is_finite_interval(lower: sp.Expr, upper: sp.Expr) -> bool:
+    """Return whether both integration endpoints are proven finite."""
+    return lower.is_finite is True and upper.is_finite is True
 
 
 def _constant_reflection_pair(value: sp.Expr, variable: sp.Symbol) -> sp.Expr | None:
@@ -358,8 +445,13 @@ def _has_unevaluated_integral(value: object) -> bool:
 def _is_nonfinite_integral_value(value: object) -> bool:
     """Return whether a definite integral produced a non-finite value."""
     return isinstance(value, sp.Basic) and (
-        value.has(sp.nan, sp.zoo) or value.is_finite is False
+        value.has(sp.nan, sp.zoo, sp.oo, -sp.oo) or value.is_finite is False
     )
+
+
+def _depends_on_unchecked_parameters(value: object) -> bool:
+    """Return whether a non-finite integral result still depends on parameters."""
+    return isinstance(value, sp.Basic) and bool(value.free_symbols)
 
 
 def limit(request: MathRequest) -> MathResult:

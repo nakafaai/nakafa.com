@@ -251,6 +251,19 @@ def test_solve_system_requires_domain_variable_for_requested_domain() -> None:
         )
 
 
+def test_solve_system_requires_full_variables_for_requested_domain() -> None:
+    with pytest.raises(ValueError, match="all solved variables"):
+        run(
+            MathRequest(
+                expressions=["x + y = 3", "y = 1"],
+                kind="math",
+                lower="0",
+                operation="solve",
+                variable="x",
+            )
+        )
+
+
 def test_solve_system_rejects_domain_variable_outside_solved_variables() -> None:
     with pytest.raises(ValueError, match="one of the solved variables"):
         run(
@@ -320,6 +333,19 @@ def test_roots_infers_single_symbol_when_variable_is_omitted() -> None:
 
     assert result.status == "verified"
     assert {root.value for root in result.items} == {"-2: 1", "2: 1"}
+
+
+def test_roots_rejects_solve_domain_bounds() -> None:
+    with pytest.raises(ValueError, match="solve-domain bounds"):
+        run(
+            MathRequest(
+                expression="x^2 - 1 = 0",
+                kind="math",
+                lower="0",
+                operation="roots",
+                variable="x",
+            )
+        )
 
 
 def test_roots_rejects_inequality() -> None:

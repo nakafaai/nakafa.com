@@ -277,7 +277,8 @@ describe("math compute tool", () => {
     expect(output).toContain("- Error code: invalid_math_input");
     expect(output).toContain("Retry the same equation solve");
     expect(output).toContain("Keep the same expressions");
-    expect(output).toContain("Add variable for the bounded variable");
+    expect(output).toContain("Set variable to the bounded variable");
+    expect(output).toContain("Set variables to every solved variable");
     expect(fetch).not.toHaveBeenCalled();
     expect(parts).toEqual([]);
   });

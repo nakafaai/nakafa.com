@@ -10,7 +10,7 @@ import dedent from "dedent";
  *   https://docs.sympy.org/latest/index.html
  */
 export const mathArithmetic = dedent(`
-  Use for exact arithmetic and concrete numeric evaluation.
+  Use for exact arithmetic, concrete numeric evaluation, and already-substituted function values.
 
   Required input:
   - Send operation evaluate.
@@ -47,8 +47,9 @@ export const mathEquation = dedent(`
   - Send expression for one equation.
   - Send expressions for a system.
   - Provide explicit variables when the user names them.
-  - Preserve solve-domain bounds such as x > 0 with lower, upper, and inclusivity fields.
-  - For system solve-domain bounds, set variable to the bounded variable.
+  - Preserve solve-domain bounds such as x > 0 with lower, upper, and inclusivity fields for solve.
+  - Use solve instead of roots when bounds restrict which roots are valid.
+  - For system solve-domain bounds, set variable to the bounded variable and variables to all solved variables.
 `);
 
 export const mathCalculus = dedent(`
@@ -57,6 +58,12 @@ export const mathCalculus = dedent(`
   Do not wrap expression in operation syntax such as diff(...), integrate(...), or limit(...).
   Put the requested action only in operation.
   For second or higher derivatives, keep expression as the original function and set order.
+  For optimization or extrema, differentiate first, solve the critical equation with the stated domain, then call arithmetic evaluate on the original expression after substituting each valid candidate value that will appear in the answer.
+  Treat minimum point and maximum point requests as asking for both the input location and function value unless the user asks only for the input location.
+  Do not finish an extrema value until the substituted original expression is checked.
+
+  Do not use for named probability distribution moments.
+  Expectations, variances, and random-variable moments must be checked by probability first.
 
   Definite or improper integrals must include lower and upper.
   For example, integral from 0 to infinity uses lower 0 and upper oo.
@@ -109,6 +116,8 @@ export const mathStatistics = dedent(`
 export const mathProbability = dedent(`
   Use for supported named probability distributions such as normal, binomial, or poisson.
   Prefer probability over arithmetic or calculus when a distribution and its parameters are given.
+  For named-distribution moments, call probability before any calculus derivation detail.
+  This is the evidence source for expectations, variances, and moments of random variables.
 
   Supported operations:
   - distribution
@@ -125,6 +134,13 @@ export const mathProbability = dedent(`
   - normal needs mean and standard_deviation.
   - poisson needs lambda.
   - uniform needs lower and upper.
+
+  Moment operations:
+  - For E[X^4], send operation expected_value, variable X, and expression X^4.
+  - For Var(X^2), send operation variance_probability, variable X, and expression X^2.
+  - Keep variable as the random variable name, not the transformed expression.
+  - For derivation requests, check the requested moment here first, then explain the definition, identity, recurrence, or theorem that connects the checked value to the result.
+  - Do not reduce a requested derivation to only "known", "given", or the final number.
 
   Event operations also need their event value:
   - point_probability needs point.

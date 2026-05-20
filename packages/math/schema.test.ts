@@ -160,6 +160,17 @@ describe("math schemas", () => {
     });
   });
 
+  it("rejects root requests with solve-domain bounds", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expression: "x^2 - 1 = 0",
+        lower: "0",
+        operation: "roots",
+        variable: "x",
+      })
+    ).toThrow();
+  });
+
   it("accepts unbounded systems without a domain variable", () => {
     expect(
       Schema.decodeUnknownSync(MathToolInputSchema)({
@@ -191,6 +202,27 @@ describe("math schemas", () => {
         operation: "solve",
         upper: "2",
         upperInclusive: false,
+        variables: ["x", "y"],
+      })
+    ).toThrow();
+  });
+
+  it("rejects bounded system domains without full solved variables", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["x + y = 3", "y = 1"],
+        lower: "0",
+        operation: "solve",
+        variable: "x",
+      })
+    ).toThrow();
+
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["x^2 - 1 = 0", "y = 0"],
+        lower: "0",
+        operation: "solve",
+        variable: "z",
         variables: ["x", "y"],
       })
     ).toThrow();
@@ -335,17 +367,21 @@ describe("math schemas", () => {
     expect(
       Schema.decodeUnknownSync(MathToolInputSchema)({
         distribution: "poisson",
+        expression: "X^2",
         operation: "expected_value",
         parameters: {
           lambda: "3",
         },
+        variable: "X",
       })
     ).toEqual({
       distribution: "poisson",
+      expression: "X^2",
       operation: "expected_value",
       parameters: {
         lambda: "3",
       },
+      variable: "X",
     });
   });
 

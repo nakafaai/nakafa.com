@@ -191,9 +191,13 @@ def test_integrate_rejects_divergent_symmetric_integral() -> None:
         )
     )
 
-    assert result.status == "inconclusive"
+    assert result.status == "verified"
     assert result.secondary is None
     assert result.steps == []
+    assert [(item.label, item.value) for item in result.items] == [
+        ("status", "divergent"),
+        ("singularity", "x = 0"),
+    ]
 
 
 def test_integrate_keeps_existing_substitution_symbol_as_parameter() -> None:
@@ -316,6 +320,112 @@ def test_integrate_termwise_rejects_unsupported_terms() -> None:
 
     assert result.status == "inconclusive"
     assert result.secondary is None
+
+
+def test_integrate_rejects_parameter_constant_over_infinite_span() -> None:
+    result = run(
+        MathRequest(
+            expression="a + exp(-x)",
+            kind="math",
+            lower="0",
+            operation="integrate",
+            upper="oo",
+            variable="x",
+        )
+    )
+
+    assert result.status == "inconclusive"
+    assert result.secondary is None
+    assert result.steps == []
+
+
+def test_integrate_marks_direct_infinite_growth_as_divergent() -> None:
+    result = run(
+        MathRequest(
+            expression="exp(x)",
+            kind="math",
+            lower="0",
+            operation="integrate",
+            upper="oo",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert [(item.label, item.value) for item in result.items] == [
+        ("status", "divergent")
+    ]
+
+
+def test_integrate_marks_unbounded_reflection_identity_as_divergent() -> None:
+    result = run(
+        MathRequest(
+            expression="x",
+            kind="math",
+            lower="-oo",
+            operation="integrate",
+            upper="oo",
+            variable="x",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary is None
+    assert result.steps == []
+    assert [(item.label, item.value) for item in result.items] == [
+        ("status", "divergent")
+    ]
+
+
+def test_integral_singularity_items_ignore_missing_bounds() -> None:
+    x = calculus.sp.Symbol("x")
+
+    assert calculus._singularity_items(1 / x, x, None, None) == []
+
+
+def test_integral_singularity_items_ignore_unknown_singularities(monkeypatch) -> None:
+    x = calculus.sp.Symbol("x")
+
+    def singularities(_expr: object, _symbol: object) -> object:
+        raise NotImplementedError
+
+    monkeypatch.setattr(calculus.sp.calculus, "singularities", singularities)
+
+    assert (
+        calculus._singularity_items(
+            1 / x,
+            x,
+            calculus.sp.S.NegativeOne,
+            calculus.sp.S.One,
+        )
+        == []
+    )
+
+
+def test_integral_singularity_items_ignore_nonfinite_sets(monkeypatch) -> None:
+    x = calculus.sp.Symbol("x")
+
+    def singularities(_expr: object, _symbol: object) -> object:
+        return calculus.sp.Interval(0, 1)
+
+    monkeypatch.setattr(calculus.sp.calculus, "singularities", singularities)
+
+    assert (
+        calculus._singularity_items(
+            1 / x,
+            x,
+            calculus.sp.S.NegativeOne,
+            calculus.sp.S.One,
+        )
+        == []
+    )
+
+
+def test_closed_interval_rejects_unknown_bound_order() -> None:
+    a = calculus.sp.Symbol("a", finite=True)
+    b = calculus.sp.Symbol("b", finite=True)
+
+    assert calculus._closed_interval(a, b) is None
 
 
 def test_integrate_uses_generic_for_symbolic_bounds() -> None:

@@ -34,10 +34,26 @@ const equationDomainFields = {
   ),
 };
 
-const MathEquationSingleInputSchema = Schema.Struct({
+const unsupportedRootDomainFields = {
+  lower: Schema.optional(Schema.Never),
+  lowerInclusive: Schema.optional(Schema.Never),
+  upper: Schema.optional(Schema.Never),
+  upperInclusive: Schema.optional(Schema.Never),
+};
+
+const MathEquationRootInputSchema = Schema.Struct({
+  expression: expressionInputSchema,
+  ...unsupportedRootDomainFields,
+  operation: Schema.Literal("roots").annotations({
+    description: "Find exact polynomial roots without solve-domain bounds.",
+  }),
+  variable: Schema.optional(variableInputSchema),
+}).pipe(Schema.mutable);
+
+const MathEquationSingleSolveInputSchema = Schema.Struct({
   expression: expressionInputSchema,
   ...equationDomainFields,
-  operation: Schema.Literal("roots", "solve").annotations({
+  operation: Schema.Literal("solve").annotations({
     description: "Solve one equation, inequality, or polynomial expression.",
   }),
   variable: Schema.optional(variableInputSchema),
@@ -70,23 +86,34 @@ const MathEquationSystemInputSchema = Schema.Struct({
 })
   .pipe(
     Schema.filter(
-      (value) =>
-        (value.lower === undefined && value.upper === undefined) ||
-        value.variable !== undefined,
+      (value) => {
+        const hasBounds =
+          value.lower !== undefined || value.upper !== undefined;
+        if (!hasBounds) {
+          return true;
+        }
+
+        if (!(value.variable && value.variables)) {
+          return false;
+        }
+
+        return value.variables.includes(value.variable);
+      },
       {
         message: () =>
-          "Expected the constrained variable when a system solve has domain bounds.",
+          "Expected bounded system solves to include all solved variables and the bounded variable.",
       }
     )
   )
   .pipe(Schema.mutable);
 
 export const MathEquationInputSchema = Schema.Union(
-  MathEquationSingleInputSchema,
+  MathEquationRootInputSchema,
+  MathEquationSingleSolveInputSchema,
   MathEquationSystemInputSchema
 )
   .pipe(Schema.mutable)
   .annotations({
     description:
-      "Equation solving tool input. Use expression for one equation or expressions for a system. Include solve-domain bounds when the user gives restrictions such as x > 0. For systems, lower or upper also requires variable.",
+      "Equation solving tool input. Use roots for unrestricted polynomial roots, solve for equations or inequalities, and expressions for systems. Include solve-domain bounds only for solve operations. For bounded systems, include variable and every solved variable.",
   });

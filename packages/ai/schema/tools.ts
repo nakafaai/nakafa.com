@@ -17,8 +17,9 @@ const SpecialistToolInputFields = {
       - formulas, values, variables, matrices, and data.
       - language, level, context, and requested deliverables.
 
-      Keep this field in the user's language after cleanup.
-      Do not translate it into English.
+      Keep connective wording in the user's language after cleanup.
+      Preserve technical names and terms exactly.
+      Do not translate this field into English.
       Omit unrelated, repeated, emotional, or orchestration noise.
     `),
   }),
@@ -97,10 +98,12 @@ export const MathToolInputSchema = Schema.Struct({
     .pipe(Schema.mutable)
     .annotations({
       description: dedent(`
-        Math givens only.
+      Math givens only.
 
-        Include expressions, equations, variables, assumptions, matrices,
-        data, selected exercise content, or answer keys that must be checked.
+      Include expressions, equations, variables, assumptions, matrices,
+      data, selected exercise content, or answer keys that must be checked.
+      Do not add derived formulas or solution methods unless they come from
+      the user or retrieved evidence being verified.
       `),
     }),
 })
@@ -122,7 +125,7 @@ type SpecialistToolInput = MathToolInput | NakafaToolInput | ResearchToolInput;
 export function formatSpecialistToolTask(input: SpecialistToolInput) {
   const sections = [
     formatTextSection("Request", input.request),
-    formatTextSection("Task", input.objective),
+    formatTextSection("Objective", input.objective),
     formatListSection("Requirements", input.requirements ?? []),
     formatListSection(
       "Source Requirements",

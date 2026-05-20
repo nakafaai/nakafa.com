@@ -35,11 +35,12 @@ function formatDecodeError(error: ParseResult.ParseError) {
 
 /** Gives the model a concrete retry path for invalid tool arguments. */
 function decodeRecoveryMessage(message: string) {
-  if (message.includes("Expected the constrained variable")) {
+  if (message.includes("Expected bounded system solves")) {
     return dedent(`
       Retry the same equation solve.
-      Keep the same expressions, operation, variables, bounds, and inclusivity fields from the failed input.
-      Add variable for the bounded variable from the user's domain restriction, for example x in x > 0.
+      Keep the same expressions, operation, bounds, and inclusivity fields from the failed input.
+      Set variable to the bounded variable from the user's domain restriction, for example x in x > 0.
+      Set variables to every solved variable in the system.
     `);
   }
 

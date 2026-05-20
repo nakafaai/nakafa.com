@@ -102,6 +102,9 @@ def _solve_system(
     domain: sp.Set,
 ):
     """Solve a system and enforce a requested single-variable domain."""
+    if domain != sp.S.Reals and not request.variables:
+        raise ValueError("Bounded system solves require all solved variables.")
+
     solved = sp.solve(parsed, variables, dict=True)
 
     if domain == sp.S.Reals:
@@ -286,6 +289,9 @@ def _solve_equality_steps(
 
 def roots(request: MathRequest) -> MathResult:
     """Find polynomial roots and multiplicities."""
+    if request.lower is not None or request.upper is not None:
+        raise ValueError("Roots do not support solve-domain bounds.")
+
     variable, parsed_values = parse.symbol_from_equations(
         request.variable, [request.expression or ""]
     )

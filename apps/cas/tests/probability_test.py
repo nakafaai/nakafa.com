@@ -213,6 +213,118 @@ def test_normal_distribution_accepts_standard_deviation() -> None:
     assert result.secondary.expression == "4"
 
 
+def test_normal_distribution_computes_transformed_moments() -> None:
+    expected_value = run(
+        MathRequest(
+            distribution="normal",
+            expression="X^4",
+            kind="math",
+            operation="expected_value",
+            parameters={"mean": "0", "standard_deviation": "1"},
+            variable="X",
+        )
+    )
+    variance_value = run(
+        MathRequest(
+            distribution="normal",
+            expression="X^2",
+            kind="math",
+            operation="variance_probability",
+            parameters={"mean": "0", "standard_deviation": "1"},
+            variable="X",
+        )
+    )
+
+    assert expected_value.status == "verified"
+    assert expected_value.secondary
+    assert expected_value.primary.expression == "E(X**4)"
+    assert expected_value.secondary.expression == "3"
+    assert expected_value.steps[0].primary.latex == "E\\left[X^{4}\\right]"
+
+    assert variance_value.status == "verified"
+    assert variance_value.secondary
+    assert variance_value.primary.expression == "Var(X**2)"
+    assert variance_value.secondary.expression == "2"
+    assert variance_value.steps[0].primary.latex == (
+        "\\operatorname{Var}\\left(X^{2}\\right)"
+    )
+
+
+def test_probability_moment_can_infer_the_random_variable_from_expression() -> None:
+    result = run(
+        MathRequest(
+            distribution="normal",
+            expression="X^4",
+            kind="math",
+            operation="expected_value",
+            parameters={"mean": "0", "standard_deviation": "1"},
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "3"
+
+
+def test_probability_moment_can_read_variable_expression() -> None:
+    result = run(
+        MathRequest(
+            distribution="normal",
+            kind="math",
+            operation="expected_value",
+            parameters={"mean": "0", "standard_deviation": "1"},
+            variable="X^4",
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "3"
+
+
+def test_probability_summary_defaults_to_standard_random_variable_name() -> None:
+    result = run(
+        MathRequest(
+            distribution="poisson",
+            kind="math",
+            operation="expected_value",
+            parameters={"lambda": "3"},
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.primary.expression == "E(X)"
+    assert result.secondary
+    assert result.secondary.expression == "3"
+
+
+def test_probability_event_rejects_expression_as_variable() -> None:
+    with pytest.raises(ValueError, match="Probability variable must be one symbol"):
+        run(
+            MathRequest(
+                distribution="normal",
+                kind="math",
+                operation="cumulative_probability",
+                parameters={"mean": "0", "standard_deviation": "1"},
+                upper="1",
+                variable="X^2",
+            )
+        )
+
+
+def test_probability_moment_requires_one_inferable_random_variable() -> None:
+    with pytest.raises(ValueError, match="one random variable"):
+        run(
+            MathRequest(
+                distribution="normal",
+                expression="X + Y",
+                kind="math",
+                operation="expected_value",
+                parameters={"mean": "0", "standard_deviation": "1"},
+            )
+        )
+
+
 def test_unsupported_probability_distribution_raises() -> None:
     with pytest.raises(ValueError, match="Unsupported distribution"):
         run(
