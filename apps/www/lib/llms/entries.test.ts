@@ -75,7 +75,7 @@ describe("llms entries", () => {
   });
 
   it("builds localized entries with markdown links and metadata subject fallback", async () => {
-    const entries = await getLocalizedLlmsEntries("en");
+    const entries = await Effect.runPromise(getLocalizedLlmsEntries("en"));
 
     expect(entries).toContainEqual(
       expect.objectContaining({

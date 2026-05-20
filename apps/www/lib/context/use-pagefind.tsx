@@ -1,10 +1,13 @@
 "use client";
 
 import { captureException } from "@repo/analytics/posthog";
+import { Effect } from "effect";
 import { addBasePath } from "next/dist/client/add-base-path";
 import {
+  type Dispatch,
   type ReactElement,
   type ReactNode,
+  type SetStateAction,
   useEffect,
   useMemo,
   useState,
@@ -16,6 +19,11 @@ const PAGEFIND_SCRIPT_PATH = "/_pagefind/pagefind.js";
 interface PagefindContextType {
   error: ReactElement | string;
   ready: boolean;
+}
+
+interface PagefindStateSetters {
+  setError: Dispatch<SetStateAction<ReactElement | string>>;
+  setReady: Dispatch<SetStateAction<boolean>>;
 }
 
 const PagefindContext = createContext<PagefindContextType | undefined>(
@@ -38,33 +46,7 @@ export function PagefindProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<ReactElement | string>("");
 
   useEffect(() => {
-    async function init() {
-      setError("");
-
-      if (window.pagefind) {
-        setReady(true);
-        return;
-      }
-
-      try {
-        await importPagefind();
-        setReady(true);
-      } catch (error) {
-        if (await hasMissingDevelopmentPagefindBundle()) {
-          setError(DEV_SEARCH_NOTICE);
-          setReady(false);
-          return;
-        }
-
-        captureException(error, {
-          source: "pagefind-import",
-        });
-        setError(getErrorMessage(error));
-        setReady(false);
-      }
-    }
-
-    init();
+    Effect.runFork(initializePagefind({ setError, setReady }));
   }, []);
 
   const values = useMemo(() => ({ ready, error }), [ready, error]);
@@ -114,6 +96,46 @@ const DEV_SEARCH_NOTICE = (
 );
 
 /**
+ * Initialize Pagefind and publish its readiness state for search consumers.
+ */
+const initializePagefind = Effect.fn("www.pagefind.initialize")(function* ({
+  setError,
+  setReady,
+}: PagefindStateSetters) {
+  yield* Effect.sync(() => setError(""));
+
+  if (window.pagefind) {
+    yield* Effect.sync(() => setReady(true));
+    return;
+  }
+
+  yield* importPagefind().pipe(
+    Effect.tap(() => Effect.sync(() => setReady(true))),
+    Effect.catchAll((error) =>
+      Effect.gen(function* () {
+        const hasMissingBundle = yield* hasMissingDevelopmentPagefindBundle();
+
+        if (hasMissingBundle) {
+          yield* Effect.sync(() => {
+            setError(DEV_SEARCH_NOTICE);
+            setReady(false);
+          });
+          return;
+        }
+
+        yield* Effect.sync(() => {
+          captureException(error, {
+            source: "pagefind-import",
+          });
+          setError(getErrorMessage(error));
+          setReady(false);
+        });
+      })
+    )
+  );
+});
+
+/**
  * Detect the expected development case where the generated Pagefind bundle does
  * not exist yet because `next dev` does not run the app's `postbuild` step.
  *
@@ -125,20 +147,21 @@ const DEV_SEARCH_NOTICE = (
  * Related docs:
  * https://pagefind.app/docs/indexing/
  */
-async function hasMissingDevelopmentPagefindBundle() {
+function hasMissingDevelopmentPagefindBundle() {
   if (process.env.NODE_ENV === "production") {
-    return false;
+    return Effect.succeed(false);
   }
 
-  try {
-    const response = await fetch(addBasePath(PAGEFIND_SCRIPT_PATH), {
-      cache: "no-store",
-    });
-
-    return response.status === 404;
-  } catch {
-    return false;
-  }
+  return Effect.tryPromise({
+    try: () =>
+      fetch(addBasePath(PAGEFIND_SCRIPT_PATH), {
+        cache: "no-store",
+      }),
+    catch: (error) => error,
+  }).pipe(
+    Effect.map((response) => response.status === 404),
+    Effect.catchAll(() => Effect.succeed(false))
+  );
 }
 
 /**
@@ -151,22 +174,39 @@ async function hasMissingDevelopmentPagefindBundle() {
  * Related docs:
  * https://pagefind.app/docs/indexing/
  */
-async function importPagefind() {
-  window.pagefind = await import(
-    /* webpackIgnore: true */ addBasePath(PAGEFIND_SCRIPT_PATH)
-  );
-
-  if (!window.pagefind) {
-    throw new Error("Pagefind not initialized correctly.");
-  }
-
-  window.pagefind.options({
-    baseUrl: "/",
+const importPagefind = Effect.fn("www.pagefind.import")(function* () {
+  const pagefind = yield* Effect.tryPromise({
+    try: () =>
+      import(/* webpackIgnore: true */ addBasePath(PAGEFIND_SCRIPT_PATH)),
+    catch: (error) => error,
   });
 
-  if (!window.pagefind.init) {
-    throw new Error("Pagefind init not found.");
+  yield* Effect.sync(() => {
+    window.pagefind = pagefind;
+  });
+
+  const pagefindRuntime = window.pagefind;
+
+  if (!pagefindRuntime) {
+    return yield* Effect.fail(new Error("Pagefind not initialized correctly."));
   }
 
-  await window.pagefind.init();
-}
+  yield* Effect.try({
+    try: () =>
+      pagefindRuntime.options({
+        baseUrl: "/",
+      }),
+    catch: (error) => error,
+  });
+
+  if (!pagefindRuntime.init) {
+    return yield* Effect.fail(new Error("Pagefind init not found."));
+  }
+
+  const initializeRuntime = pagefindRuntime.init;
+
+  yield* Effect.tryPromise({
+    try: () => initializeRuntime(),
+    catch: (error) => error,
+  });
+});

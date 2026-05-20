@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { Effect } from "effect";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
 import { logger } from "@/scripts/utils";
 
@@ -92,7 +93,7 @@ async function getUnsubmittedUrls(service: "indexNow" | "bing"): Promise<{
   // Load existing submission history
   const history = loadSubmissionHistory();
 
-  const allEntries = await getSitemapEntries();
+  const allEntries = await Effect.runPromise(getSitemapEntries());
 
   // Extract unique URLs
   const allUrls = new Set<string>();

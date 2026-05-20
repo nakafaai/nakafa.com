@@ -1,5 +1,6 @@
 import type { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getLocalizedLlmsEntries } from "@/lib/llms/entries";
 import {
@@ -60,7 +61,7 @@ describe("llms indexes", () => {
     ]);
 
     for (const slug of slugs) {
-      const text = await getLlmsSectionIndexText(slug);
+      const text = await Effect.runPromise(getLlmsSectionIndexText(slug));
 
       expect(text).not.toBeNull();
       expect(text?.length).toBeLessThan(AF_DOCS_LLMS_SIZE_LIMIT);
@@ -69,14 +70,18 @@ describe("llms indexes", () => {
   }, 30_000);
 
   it("does not generate indexes for unknown llms paths", async () => {
-    await expect(getLlmsSectionIndexText("docs")).resolves.toBeNull();
-    await expect(getLlmsSectionIndexText("llms/fr")).resolves.toBeNull();
     await expect(
-      getLlmsSectionIndexText("llms/en/unknown")
+      Effect.runPromise(getLlmsSectionIndexText("docs"))
+    ).resolves.toBeNull();
+    await expect(
+      Effect.runPromise(getLlmsSectionIndexText("llms/fr"))
+    ).resolves.toBeNull();
+    await expect(
+      Effect.runPromise(getLlmsSectionIndexText("llms/en/unknown"))
     ).resolves.toBeNull();
   });
 
-  it("uses the cached wrapper without changing section output", async () => {
+  it("uses the Next cache boundary without changing section output", async () => {
     await expect(
       getCachedLlmsSectionIndexText({ cleanSlug: "llms/en" })
     ).resolves.toContain("# Nakafa English Content");
@@ -86,12 +91,14 @@ describe("llms indexes", () => {
 
   it("returns null for missing scoped entries", async () => {
     await expect(
-      getLlmsSectionIndexText("llms/en/articles/missing")
+      Effect.runPromise(getLlmsSectionIndexText("llms/en/articles/missing"))
     ).resolves.toBeNull();
   });
 
   it("splits large nested indexes into child route groups", async () => {
-    const text = await getLlmsSectionIndexText("llms/en/subject/high-school");
+    const text = await Effect.runPromise(
+      getLlmsSectionIndexText("llms/en/subject/high-school")
+    );
 
     expect(text).toContain("# Nakafa English Subject: High School Index");
     expect(text).toContain("Sitemap group");
@@ -107,7 +114,7 @@ describe("llms sitemap alignment", () => {
     const sitemapRoutes = new Set(getSitemapRoutes());
 
     for (const locale of routing.locales) {
-      const entries = await getLocalizedLlmsEntries(locale);
+      const entries = await Effect.runPromise(getLocalizedLlmsEntries(locale));
       const entryRoutes = new Set(entries.map((entry) => entry.route));
 
       expect(entryRoutes).toEqual(sitemapRoutes);
@@ -130,7 +137,7 @@ describe("llms sitemap alignment", () => {
   }, 30_000);
 
   it("uses markdown URLs for sitemap pages with markdown variants", async () => {
-    const entries = await getLocalizedLlmsEntries("en");
+    const entries = await Effect.runPromise(getLocalizedLlmsEntries("en"));
 
     for (const section of ["articles", "exercises", "quran", "subject"]) {
       const sectionEntries = entries.filter((entry) =>

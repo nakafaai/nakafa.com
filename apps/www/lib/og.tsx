@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import anyAscii from "any-ascii";
+import { Effect } from "effect";
 import { cacheLife } from "next/cache";
 import type { ReactNode } from "react";
 import { ImageResponse } from "takumi-js/response";
@@ -20,11 +21,16 @@ async function getLogoDataUrl() {
 
   cacheLife("max");
 
-  const logo = await readFile(
-    join(process.cwd(), "public", "logo.svg"),
-    "utf8"
+  return await Effect.runPromise(
+    Effect.tryPromise({
+      try: () => readFile(join(process.cwd(), "public", "logo.svg"), "utf8"),
+      catch: (error) => error,
+    }).pipe(
+      Effect.map(
+        (logo) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(logo)}`
+      )
+    )
   );
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(logo)}`;
 }
 
 /** Renders the shared Open Graph image layout from already-resolved content. */
@@ -158,34 +164,41 @@ function OgImage(props: GenerateProps) {
 }
 
 /** Generates one OG image response with cached persistent assets. */
-export async function generateOGImage(
+export function generateOGImage(
   options: GenerateProps & { width?: number; height?: number }
 ) {
-  const { title, description, width = 1200, height = 630 } = options;
-  const logoDataUrl = await getLogoDataUrl();
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const { title, description, width = 1200, height = 630 } = options;
+      const logoDataUrl = yield* Effect.tryPromise({
+        try: getLogoDataUrl,
+        catch: (error) => error,
+      });
 
-  return new ImageResponse(
-    <OgImage
-      description={description}
-      icon={
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            backgroundImage: `url(${logoDataUrl})`,
-            backgroundSize: "contain",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-            borderRadius: "50%",
-          }}
-        />
-      }
-      title={title}
-    />,
-    {
-      width,
-      height,
-      fetchedResources: [],
-    }
+      return new ImageResponse(
+        <OgImage
+          description={description}
+          icon={
+            <div
+              style={{
+                width: 48,
+                height: 48,
+                backgroundImage: `url(${logoDataUrl})`,
+                backgroundSize: "contain",
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "center",
+                borderRadius: "50%",
+              }}
+            />
+          }
+          title={title}
+        />,
+        {
+          width,
+          height,
+          fetchedResources: [],
+        }
+      );
+    })
   );
 }

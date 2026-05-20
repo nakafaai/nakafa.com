@@ -1,5 +1,6 @@
 import { NAKAFA_MCP_RECOMMENDED_ENDPOINT } from "@repo/contents/_lib/agent/constants";
 import { routing } from "@repo/internationalization/src/routing";
+import { Effect } from "effect";
 import { cacheLife } from "next/cache";
 import { hasLocale, type Locale } from "next-intl";
 import {
@@ -50,44 +51,46 @@ export async function getCachedLlmsSectionIndexText({
 
   cacheLife("max");
 
-  return await getLlmsSectionIndexText(cleanSlug);
+  return await Effect.runPromise(getLlmsSectionIndexText(cleanSlug));
 }
 
 /** Builds a locale or section llms index from a cleaned llms route. */
-export async function getLlmsSectionIndexText(cleanSlug: string) {
-  const parsed = parseLlmsIndexSlug(cleanSlug);
+export const getLlmsSectionIndexText = Effect.fn("www.llms.index.text")(
+  function* (cleanSlug: string) {
+    const parsed = parseLlmsIndexSlug(cleanSlug);
 
-  if (!parsed) {
-    return null;
+    if (!parsed) {
+      return null;
+    }
+
+    const { locale, prefixParts } = parsed;
+
+    if (prefixParts.length === 0) {
+      return buildLocaleLlmsIndexText(locale);
+    }
+
+    const section = prefixParts[0];
+    if (!isLlmsSection(section)) {
+      return null;
+    }
+
+    const entries = yield* getLocalizedLlmsEntries(locale);
+    const scopedEntries = entries.filter((entry) =>
+      entryBelongsToPrefix(entry, prefixParts)
+    );
+
+    if (scopedEntries.length === 0) {
+      return null;
+    }
+
+    return buildScopedLlmsIndexText({
+      entries: scopedEntries,
+      locale,
+      prefixParts,
+      section,
+    });
   }
-
-  const { locale, prefixParts } = parsed;
-
-  if (prefixParts.length === 0) {
-    return buildLocaleLlmsIndexText(locale);
-  }
-
-  const section = prefixParts[0];
-  if (!isLlmsSection(section)) {
-    return null;
-  }
-
-  const entries = await getLocalizedLlmsEntries(locale);
-  const scopedEntries = entries.filter((entry) =>
-    entryBelongsToPrefix(entry, prefixParts)
-  );
-
-  if (scopedEntries.length === 0) {
-    return null;
-  }
-
-  return buildScopedLlmsIndexText({
-    entries: scopedEntries,
-    locale,
-    prefixParts,
-    section,
-  });
-}
+);
 
 /** Parses `/llms/:locale/...` index routes into locale and prefix parts. */
 function parseLlmsIndexSlug(cleanSlug: string) {

@@ -1,30 +1,68 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { Effect, Schema } from "effect";
 import { usePagefind } from "@/lib/context/use-pagefind";
 import { normalizePagefindResult } from "@/lib/utils/pagefind";
 import type { PagefindResult, PagefindSearchOptions } from "@/types/pagefind";
 
 const SEARCH_OPTIONS: PagefindSearchOptions = {};
 
-async function fetchSearchResults(query: string): Promise<PagefindResult[]> {
-  if (!window.pagefind?.debouncedSearch) {
-    // Should not happen if isPagefindReady is true, but good practice
-    throw new Error("Pagefind not initialized correctly.");
+class PagefindNotReadyError extends Schema.TaggedError<PagefindNotReadyError>()(
+  "PagefindNotReadyError",
+  {
+    message: Schema.String,
+  }
+) {}
+
+class PagefindSearchError extends Schema.TaggedError<PagefindSearchError>()(
+  "PagefindSearchError",
+  {
+    cause: Schema.Unknown,
+    message: Schema.String,
+  }
+) {}
+
+/** Query Pagefind and normalize the result payload for the search UI. */
+const searchPagefind = Effect.fn("www.search.pagefind")(function* (
+  query: string
+) {
+  const pagefind = window.pagefind;
+
+  if (!pagefind?.debouncedSearch) {
+    return yield* Effect.fail(
+      new PagefindNotReadyError({
+        message: "Pagefind not initialized correctly.",
+      })
+    );
   }
 
-  const response = await window.pagefind.debouncedSearch<PagefindResult>(
-    query,
-    SEARCH_OPTIONS
-  );
+  const response = yield* Effect.tryPromise({
+    try: () => pagefind.debouncedSearch<PagefindResult>(query, SEARCH_OPTIONS),
+    catch: (cause) =>
+      new PagefindSearchError({
+        cause,
+        message: "Unable to search Pagefind.",
+      }),
+  });
 
   if (!response) {
     return [];
   }
 
-  const data = await Promise.all(response.results.map((o) => o.data()));
+  const data = yield* Effect.forEach(response.results, (result) =>
+    Effect.tryPromise({
+      try: () => result.data(),
+      catch: (cause) =>
+        new PagefindSearchError({
+          cause,
+          message: "Unable to load Pagefind search result.",
+        }),
+    })
+  );
 
   return data.map(normalizePagefindResult);
-}
+});
 
+/** Return a cached React Query handle for Pagefind search results. */
 export function useSearchQuery({
   query,
   enabled,
@@ -36,7 +74,7 @@ export function useSearchQuery({
 
   return useQuery({
     queryKey: ["search", query],
-    queryFn: () => fetchSearchResults(query),
+    queryFn: () => Effect.runPromise(searchPagefind(query)),
     enabled: pagefindReady && enabled,
     placeholderData: keepPreviousData,
   });

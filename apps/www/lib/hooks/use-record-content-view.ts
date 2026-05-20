@@ -13,6 +13,7 @@ import type {
 } from "@repo/backend/convex/lib/validators/contents";
 import { generateNanoId } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
+import { Effect } from "effect";
 import { useEffect, useMemo } from "react";
 import { useContentViews } from "@/lib/context/use-content-views";
 
@@ -52,22 +53,30 @@ export function useRecordContentView({
   });
 
   const { start, clear } = useTimeout(
-    async () => {
-      try {
-        await recordView({
-          contentRef: { type: contentView.type, slug: contentView.slug },
-          locale,
-          deviceId,
-        });
-        markAsViewed(viewKey);
-      } catch (error) {
-        captureException(error, {
-          locale,
-          slug: contentView.slug,
-          source: "record-content-view",
-          type: contentView.type,
-        });
-      }
+    () => {
+      Effect.runFork(
+        Effect.tryPromise({
+          try: () =>
+            recordView({
+              contentRef: { type: contentView.type, slug: contentView.slug },
+              locale,
+              deviceId,
+            }),
+          catch: (error) => error,
+        }).pipe(
+          Effect.tap(() => Effect.sync(() => markAsViewed(viewKey))),
+          Effect.catchAll((error) =>
+            Effect.sync(() =>
+              captureException(error, {
+                locale,
+                slug: contentView.slug,
+                source: "record-content-view",
+                type: contentView.type,
+              })
+            )
+          )
+        )
+      );
     },
     delay,
     { autoInvoke: false }

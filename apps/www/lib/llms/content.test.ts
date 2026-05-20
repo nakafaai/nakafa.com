@@ -1,3 +1,4 @@
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getLlmsMarkdownText,
@@ -44,9 +45,9 @@ describe("llms markdown content resolver", () => {
     mockGetCachedLlmsExerciseText.mockResolvedValue(null);
     mockGetCachedLlmsSectionIndexText.mockResolvedValue(null);
     mockGetCachedLlmsMdxText.mockResolvedValue(null);
-    mockGetLlmsExerciseText.mockResolvedValue(null);
-    mockGetLlmsSectionIndexText.mockResolvedValue(null);
-    mockGetLlmsMdxText.mockResolvedValue(null);
+    mockGetLlmsExerciseText.mockReturnValue(Effect.succeed(null));
+    mockGetLlmsSectionIndexText.mockReturnValue(Effect.succeed(null));
+    mockGetLlmsMdxText.mockReturnValue(Effect.succeed(null));
     mockGetQuranLlmsText.mockReturnValue(null);
   });
 
@@ -54,7 +55,9 @@ describe("llms markdown content resolver", () => {
     mockGetQuranLlmsText.mockReturnValue("Quran markdown");
 
     await expect(
-      getLlmsMarkdownText({ cleanSlug: "quran/1", locale: "en" })
+      Effect.runPromise(
+        getLlmsMarkdownText({ cleanSlug: "quran/1", locale: "en" })
+      )
     ).resolves.toBe("Quran markdown");
 
     expect(mockGetCachedLlmsExerciseText).not.toHaveBeenCalled();
@@ -66,11 +69,13 @@ describe("llms markdown content resolver", () => {
     mockGetCachedLlmsExerciseText.mockResolvedValue("Exercise markdown");
 
     await expect(
-      getLlmsMarkdownText({
-        cleanSlug:
-          "exercises/high-school/snbt/general-knowledge/try-out/2026/set-1/9",
-        locale: "en",
-      })
+      Effect.runPromise(
+        getLlmsMarkdownText({
+          cleanSlug:
+            "exercises/high-school/snbt/general-knowledge/try-out/2026/set-1/9",
+          locale: "en",
+        })
+      )
     ).resolves.toBe("Exercise markdown");
 
     expect(mockGetCachedLlmsMdxText).not.toHaveBeenCalled();
@@ -81,11 +86,13 @@ describe("llms markdown content resolver", () => {
     mockGetCachedLlmsMdxText.mockResolvedValue("MDX markdown");
 
     await expect(
-      getLlmsMarkdownText({
-        cleanSlug:
-          "subject/high-school/10/chemistry/green-chemistry/definition",
-        locale: "id",
-      })
+      Effect.runPromise(
+        getLlmsMarkdownText({
+          cleanSlug:
+            "subject/high-school/10/chemistry/green-chemistry/definition",
+          locale: "id",
+        })
+      )
     ).resolves.toBe("MDX markdown");
 
     expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
@@ -95,10 +102,12 @@ describe("llms markdown content resolver", () => {
     mockGetCachedLlmsSectionIndexText.mockResolvedValue("Index markdown");
 
     await expect(
-      getLlmsMarkdownText({
-        cleanSlug: "subject/high-school/10/chemistry",
-        locale: "en",
-      })
+      Effect.runPromise(
+        getLlmsMarkdownText({
+          cleanSlug: "subject/high-school/10/chemistry",
+          locale: "en",
+        })
+      )
     ).resolves.toBe("Index markdown");
 
     expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
@@ -108,18 +117,57 @@ describe("llms markdown content resolver", () => {
 
   it("returns null when no markdown source exists", async () => {
     await expect(
-      getLlmsMarkdownText({ cleanSlug: "articles/missing", locale: "en" })
+      Effect.runPromise(
+        getLlmsMarkdownText({ cleanSlug: "articles/missing", locale: "en" })
+      )
     ).resolves.toBeNull();
   });
 
-  it("uses uncached source builders for build-time artifacts", async () => {
-    mockGetLlmsSectionIndexText.mockResolvedValue("Source index markdown");
+  it("surfaces cached exercise markdown failures", async () => {
+    const error = new Error("exercise failed");
+    mockGetCachedLlmsExerciseText.mockRejectedValue(error);
 
     await expect(
-      getLlmsSourceMarkdownText({
-        cleanSlug: "subject/high-school/10/chemistry",
-        locale: "en",
-      })
+      Effect.runPromise(
+        getLlmsMarkdownText({ cleanSlug: "exercises/missing", locale: "en" })
+      )
+    ).rejects.toThrow(error.message);
+  });
+
+  it("surfaces cached MDX markdown failures", async () => {
+    const error = new Error("mdx failed");
+    mockGetCachedLlmsMdxText.mockRejectedValue(error);
+
+    await expect(
+      Effect.runPromise(
+        getLlmsMarkdownText({ cleanSlug: "articles/missing", locale: "en" })
+      )
+    ).rejects.toThrow(error.message);
+  });
+
+  it("surfaces cached section index failures", async () => {
+    const error = new Error("index failed");
+    mockGetCachedLlmsSectionIndexText.mockRejectedValue(error);
+
+    await expect(
+      Effect.runPromise(
+        getLlmsMarkdownText({ cleanSlug: "subject/missing", locale: "en" })
+      )
+    ).rejects.toThrow(error.message);
+  });
+
+  it("uses uncached source builders for build-time artifacts", async () => {
+    mockGetLlmsSectionIndexText.mockReturnValue(
+      Effect.succeed("Source index markdown")
+    );
+
+    await expect(
+      Effect.runPromise(
+        getLlmsSourceMarkdownText({
+          cleanSlug: "subject/high-school/10/chemistry",
+          locale: "en",
+        })
+      )
     ).resolves.toBe("Source index markdown");
 
     expect(mockGetLlmsSectionIndexText).toHaveBeenCalledWith(
@@ -132,7 +180,9 @@ describe("llms markdown content resolver", () => {
     mockGetQuranLlmsText.mockReturnValue("Source Quran markdown");
 
     await expect(
-      getLlmsSourceMarkdownText({ cleanSlug: "quran/1", locale: "id" })
+      Effect.runPromise(
+        getLlmsSourceMarkdownText({ cleanSlug: "quran/1", locale: "id" })
+      )
     ).resolves.toBe("Source Quran markdown");
 
     expect(mockGetLlmsExerciseText).not.toHaveBeenCalled();
@@ -141,14 +191,18 @@ describe("llms markdown content resolver", () => {
   });
 
   it("returns source exercise markdown before source MDX or indexes", async () => {
-    mockGetLlmsExerciseText.mockResolvedValue("Source exercise markdown");
+    mockGetLlmsExerciseText.mockReturnValue(
+      Effect.succeed("Source exercise markdown")
+    );
 
     await expect(
-      getLlmsSourceMarkdownText({
-        cleanSlug:
-          "exercises/high-school/snbt/general-knowledge/try-out/2026/set-1",
-        locale: "en",
-      })
+      Effect.runPromise(
+        getLlmsSourceMarkdownText({
+          cleanSlug:
+            "exercises/high-school/snbt/general-knowledge/try-out/2026/set-1",
+          locale: "en",
+        })
+      )
     ).resolves.toBe("Source exercise markdown");
 
     expect(mockGetLlmsMdxText).not.toHaveBeenCalled();
@@ -156,14 +210,16 @@ describe("llms markdown content resolver", () => {
   });
 
   it("returns source MDX markdown before source index fallbacks", async () => {
-    mockGetLlmsMdxText.mockResolvedValue("Source MDX markdown");
+    mockGetLlmsMdxText.mockReturnValue(Effect.succeed("Source MDX markdown"));
 
     await expect(
-      getLlmsSourceMarkdownText({
-        cleanSlug:
-          "subject/high-school/10/chemistry/green-chemistry/definition",
-        locale: "id",
-      })
+      Effect.runPromise(
+        getLlmsSourceMarkdownText({
+          cleanSlug:
+            "subject/high-school/10/chemistry/green-chemistry/definition",
+          locale: "id",
+        })
+      )
     ).resolves.toBe("Source MDX markdown");
 
     expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
