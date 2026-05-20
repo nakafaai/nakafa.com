@@ -40,7 +40,16 @@ function decodeRecoveryMessage(message: string) {
       Retry the same equation solve.
       Keep the same expressions, operation, bounds, and inclusivity fields from the failed input.
       Set variable to the bounded variable from the user's domain restriction, for example x in x > 0.
-      Set variables to every solved variable in the system.
+      Set variables to the unknowns that should be solved.
+    `);
+  }
+
+  if (message.includes("Expected every bounded-system expression")) {
+    return dedent(`
+      Retry the same bounded system solve.
+      Keep symbolic parameters out of variables.
+      Set variables to the unknowns that should be solved.
+      Every expression must involve at least one selected unknown.
     `);
   }
 

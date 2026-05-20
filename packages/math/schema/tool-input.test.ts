@@ -1,25 +1,8 @@
-import { MathDataSchema } from "@repo/math/schema/data";
-import { MathRequestSchema } from "@repo/math/schema/request";
-import { MathResultSchema } from "@repo/math/schema/result";
 import { MathToolInputSchema } from "@repo/math/schema/tool-input";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
-describe("math schemas", () => {
-  it("decodes a CAS request", () => {
-    expect(
-      Schema.decodeUnknownSync(MathRequestSchema)({
-        expression: "2 + 2",
-        kind: "math",
-        operation: "evaluate",
-      })
-    ).toEqual({
-      expression: "2 + 2",
-      kind: "math",
-      operation: "evaluate",
-    });
-  });
-
+describe("MathToolInputSchema", () => {
   it("accepts zero-order series requests but rejects invalid series orders", () => {
     const decodeMathToolInput = Schema.decodeUnknownSync(MathToolInputSchema);
 
@@ -50,62 +33,6 @@ describe("math schemas", () => {
         order: 1.5,
       })
     ).toThrow();
-  });
-
-  it("decodes CAS results and data parts", () => {
-    const result = Schema.decodeUnknownSync(MathResultSchema)({
-      conditions: [],
-      input: {
-        expression: "2 + 2",
-        kind: "math",
-        operation: "evaluate",
-      },
-      items: [],
-      kind: "evaluate",
-      operation: "evaluate",
-      primary: {
-        expression: "2 + 2",
-        latex: "2 + 2",
-      },
-      reason: "Exact arithmetic was checked.",
-      secondary: {
-        expression: "4",
-        latex: "4",
-      },
-      stepStatus: "complete",
-      steps: [
-        {
-          action: "evaluate",
-          items: [],
-          primary: {
-            expression: "2 + 2",
-            latex: "2 + 2",
-          },
-          relation: {
-            expression: "equals",
-            latex: "=",
-          },
-          secondary: {
-            expression: "4",
-            latex: "4",
-          },
-        },
-      ],
-      status: "verified",
-    });
-
-    expect(
-      Schema.decodeUnknownSync(MathDataSchema)({
-        input: result.input,
-        kind: result.operation,
-        result,
-        status: result.status,
-        summary: result.reason,
-      })
-    ).toMatchObject({
-      kind: "evaluate",
-      status: "verified",
-    });
   });
 
   it("accepts strict compare tool input", () => {
@@ -236,6 +163,44 @@ describe("math schemas", () => {
         variables: ["x", "y"],
       })
     ).toThrow();
+  });
+
+  it("accepts bounded systems with symbolic parameters", () => {
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["a*x = 1"],
+        lower: "0",
+        lowerInclusive: false,
+        operation: "solve",
+        variable: "x",
+        variables: ["x"],
+      })
+    ).toEqual({
+      expressions: ["a*x = 1"],
+      lower: "0",
+      lowerInclusive: false,
+      operation: "solve",
+      variable: "x",
+      variables: ["x"],
+    });
+  });
+
+  it("accepts bounded systems with supported parser functions", () => {
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["Rational(1, 2)*x = 1"],
+        lower: "0",
+        operation: "solve",
+        variable: "x",
+        variables: ["x"],
+      })
+    ).toEqual({
+      expressions: ["Rational(1, 2)*x = 1"],
+      lower: "0",
+      operation: "solve",
+      variable: "x",
+      variables: ["x"],
+    });
   });
 
   it("accepts matrix eigen analysis tool input", () => {

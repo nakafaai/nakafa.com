@@ -252,7 +252,7 @@ def test_solve_system_requires_domain_variable_for_requested_domain() -> None:
 
 
 def test_solve_system_requires_full_variables_for_requested_domain() -> None:
-    with pytest.raises(ValueError, match="all solved variables"):
+    with pytest.raises(ValueError, match="include a solved variable"):
         run(
             MathRequest(
                 expressions=["x + y = 3", "y = 1"],
@@ -263,7 +263,7 @@ def test_solve_system_requires_full_variables_for_requested_domain() -> None:
             )
         )
 
-    with pytest.raises(ValueError, match="all solved variables"):
+    with pytest.raises(ValueError, match="include a solved variable"):
         run(
             MathRequest(
                 expressions=["x = 2", "y = 1"],
@@ -274,6 +274,39 @@ def test_solve_system_requires_full_variables_for_requested_domain() -> None:
                 variables=["x"],
             )
         )
+
+
+def test_solve_system_allows_symbolic_parameters_for_requested_domain() -> None:
+    result = run(
+        MathRequest(
+            expressions=["a*x = 1", "2*x = 2/a"],
+            kind="math",
+            lower="0",
+            lowerInclusive=False,
+            operation="solve",
+            variable="x",
+            variables=["x"],
+        )
+    )
+
+    assert result.status == "inconclusive"
+    assert result.reason == "The equation solution set could not be determined exactly."
+
+
+def test_solve_system_allows_supported_functions_for_requested_domain() -> None:
+    result = run(
+        MathRequest(
+            expressions=["Rational(1, 2)*x = 1", "2*x = 4"],
+            kind="math",
+            lower="0",
+            operation="solve",
+            variable="x",
+            variables=["x"],
+        )
+    )
+
+    assert result.status == "verified"
+    assert [item.value for item in result.items] == ["{x: 2}"]
 
 
 def test_solve_system_rejects_domain_variable_outside_solved_variables() -> None:

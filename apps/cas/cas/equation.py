@@ -118,24 +118,18 @@ def _require_bounded_system_variables(
     parsed: list[sp.Expr | sp.Equality | Relational],
     variables: list[sp.Symbol],
 ) -> None:
-    """Require bounded systems to include every symbol used by the system."""
-    missing = _system_symbols(parsed) - set(variables)
-    if not missing:
-        return
+    """Require each bounded-system relation to involve a solved variable."""
+    solved_variables = set(variables)
+    for relation in parsed:
+        if _relation_symbols(relation).isdisjoint(solved_variables):
+            raise ValueError("Bounded system equations must include a solved variable.")
 
-    raise ValueError("Bounded system solves require all solved variables.")
 
-
-def _system_symbols(
-    parsed: list[sp.Expr | sp.Equality | Relational],
+def _relation_symbols(
+    relation: sp.Expr | sp.Equality | Relational,
 ) -> set[sp.Symbol]:
-    """Return every symbolic variable present in a parsed system."""
-    return {
-        symbol
-        for relation in parsed
-        for symbol in relation.free_symbols
-        if isinstance(symbol, sp.Symbol)
-    }
+    """Return symbolic variables present in one parsed relation."""
+    return {symbol for symbol in relation.free_symbols if isinstance(symbol, sp.Symbol)}
 
 
 def _system_domain_variable(

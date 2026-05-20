@@ -4,6 +4,7 @@ const expressionReservedNames = new Set([
   "Abs",
   "E",
   "I",
+  "Rational",
   "acos",
   "asin",
   "atan",

@@ -82,7 +82,7 @@ const MathEquationSystemStructSchema = Schema.Struct({
   variables: Schema.optional(
     stringArraySchema.annotations({
       description:
-        "Variables to solve for, for example [x, y]. Bounded systems must include every variable used by the system.",
+        "Variables to solve for, for example [x, y]. Include unknowns that need solved; keep symbolic parameters out.",
     })
   ),
 });
@@ -96,8 +96,8 @@ function hasSolveDomain(value: MathEquationSystemInput) {
   return value.lower !== undefined || value.upper !== undefined;
 }
 
-/** Requires bounded systems to solve every symbol mentioned by the system. */
-function hasCompleteBoundedSystemVariables(value: MathEquationSystemInput) {
+/** Requires bounded systems to declare the constrained variable. */
+function hasBoundedDomainVariable(value: MathEquationSystemInput) {
   if (!hasSolveDomain(value)) {
     return true;
   }
@@ -111,19 +111,38 @@ function hasCompleteBoundedSystemVariables(value: MathEquationSystemInput) {
     return false;
   }
 
+  return true;
+}
+
+/** Requires every bounded-system equation to involve a selected unknown. */
+function hasSolvedVariableInEveryBoundedExpression(
+  value: MathEquationSystemInput
+) {
+  if (!(hasSolveDomain(value) && value.variables)) {
+    return true;
+  }
+
+  const variables = new Set(value.variables);
   return value.expressions.every((expression) =>
-    [...getExpressionSymbols(expression)].every((symbol) =>
+    [...getExpressionSymbols(expression)].some((symbol) =>
       variables.has(symbol)
     )
   );
 }
 
 const MathEquationSystemInputSchema = MathEquationSystemStructSchema.pipe(
-  Schema.filter((value) => hasCompleteBoundedSystemVariables(value), {
+  Schema.filter((value) => hasBoundedDomainVariable(value), {
     message: () =>
-      "Expected bounded system solves to include all solved variables and the bounded variable.",
+      "Expected bounded system solves to include the bounded variable in variables.",
   })
-).pipe(Schema.mutable);
+)
+  .pipe(
+    Schema.filter((value) => hasSolvedVariableInEveryBoundedExpression(value), {
+      message: () =>
+        "Expected every bounded-system expression to include a solved variable.",
+    })
+  )
+  .pipe(Schema.mutable);
 
 export const MathEquationInputSchema = Schema.Union(
   MathEquationRootInputSchema,
@@ -133,5 +152,5 @@ export const MathEquationInputSchema = Schema.Union(
   .pipe(Schema.mutable)
   .annotations({
     description:
-      "Equation solving tool input. Use roots for unrestricted polynomial roots, solve for equations or inequalities, and expressions for systems. Include solve-domain bounds only for solve operations. For bounded systems, include variable and every solved variable.",
+      "Equation solving tool input. Use roots for unrestricted polynomial roots, solve for equations or inequalities, and expressions for systems. Include solve-domain bounds only for solve operations. For bounded systems, include the bounded variable in variables and list unknowns that should be solved.",
   });
