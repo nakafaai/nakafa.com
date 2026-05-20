@@ -3,7 +3,7 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 
 export const metadata = {
   title: "Multiplication and Division of Functions",
-  description: "Master function multiplication and division: domain rules, zero restrictions, and practical examples. Solve (f·g)(x) and (f/g)(x) with confidence.",
+  description: "Learn function multiplication and division, including domain rules, zero restrictions, and examples for (f·g)(x) and (f/g)(x).",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/27/2025",
   subject: "Function Composition and Inverse Function",
@@ -13,7 +13,7 @@ export const metadata = {
 
 Multiplying two functions, <InlineMath math="f" /> and <InlineMath math="g" />, is as easy as multiplying two numbers. We just multiply the result of <InlineMath math="f(x)" /> by <InlineMath math="g(x)" /> for the same value of <InlineMath math="x" />. The result is a new function <InlineMath math="(f \cdot g)" />.
 
-<div className="flex flex-col gap-4">
+<ContentStack>
   <LineEquation
     title="Function Multiplication Visualization"
     description={
@@ -52,7 +52,7 @@ Multiplying two functions, <InlineMath math="f" /> and <InlineMath math="g" />, 
 
   <BlockMath math="(f \cdot g)(x) = f(x) \cdot g(x)" />
 
-</div>
+</ContentStack>
 
 Just like addition and subtraction, this multiplication machine <InlineMath math="(f \cdot g)" /> can only process raw materials (values of <InlineMath math="x" />) that can be processed by _both_ original machines, <InlineMath math="f" /> and <InlineMath math="g" />. So, its domain is the intersection of the domain of <InlineMath math="f" /> and the domain of <InlineMath math="g" />.
 

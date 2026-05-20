@@ -3,7 +3,7 @@ import { getColor } from "@repo/design-system/lib/color";
 
 export const metadata = {
   title: "Penjumlahan Vektor",
-  description: "Kuasai penjumlahan vektor dengan metode segitiga, jajar genjang & poligon. Pelajari perhitungan resultan, komponen, dan aplikasi dunia nyata.",
+  description: "Pelajari penjumlahan vektor dengan metode segitiga, jajar genjang & poligon. Pelajari perhitungan resultan, komponen, dan aplikasi dunia nyata.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/12/2025",
   subject: "Vektor dan Operasinya",
@@ -23,7 +23,7 @@ Penjumlahan vektor dapat dilakukan dengan cara grafis menggunakan metode segitig
 2. Gambar vektor kedua <InlineMath math="\vec{b}" /> dengan pangkal vektor bertemu dengan ujung vektor pertama
 3. Resultan vektor adalah vektor yang menghubungkan pangkal vektor pertama dengan ujung vektor kedua
 
-<div className="mt-4">
+<ContentBlock>
   <Vector3d
     title="Penjumlahan Vektor dengan Metode Segitiga"
     description={<>Metode segitiga untuk menjumlahkan vektor <InlineMath math="\vec{a}" /> dan vektor <InlineMath math="\vec{b}" />.</>}
@@ -51,7 +51,7 @@ Penjumlahan vektor dapat dilakukan dengan cara grafis menggunakan metode segitig
       },
     ]}
   />
-</div>
+</ContentBlock>
 
 Secara matematis, jika <InlineMath math="\overrightarrow{AB}" /> dan <InlineMath math="\overrightarrow{BC}" /> adalah dua vektor, maka:
 
@@ -69,7 +69,7 @@ Metode lain untuk menjumlahkan vektor adalah metode jajar genjang. Caranya:
 2. Buat jajar genjang dengan kedua vektor sebagai sisi
 3. Resultan vektor adalah diagonal jajar genjang yang melalui titik pangkal kedua vektor
 
-<div className="mt-4">
+<ContentBlock>
   <Vector3d
     title="Penjumlahan Vektor dengan Metode Jajar Genjang"
     description={<>Metode jajar genjang untuk menjumlahkan vektor <InlineMath math="\vec{a}" /> dan vektor <InlineMath math="\vec{b}" />.</>}
@@ -112,7 +112,7 @@ Metode lain untuk menjumlahkan vektor adalah metode jajar genjang. Caranya:
     ]}
     cameraPosition={[12, 8, 12]}
   />
-</div>
+</ContentBlock>
 
 Metode ini juga memenuhi **sifat komutatif**, sehingga urutan penjumlahan vektor tidak mempengaruhi hasilnya.
 
@@ -170,7 +170,7 @@ Untuk menjumlahkan tiga vektor dengan metode jajar genjang, kita dapat:
 1. Jumlahkan dua vektor terlebih dahulu untuk mendapatkan resultan <InlineMath math="R_1" />
 2. Jumlahkan <InlineMath math="R_1" /> dengan vektor ketiga untuk mendapatkan resultan akhir <InlineMath math="R_2" />
 
-<div className="mt-4">
+<ContentBlock>
   <Vector3d
     title="Sifat Asosiatif Penjumlahan Vektor"
     description={
@@ -231,7 +231,7 @@ Untuk menjumlahkan tiga vektor dengan metode jajar genjang, kita dapat:
     ]}
     cameraPosition={[10, 7, 10]}
   />
-</div>
+</ContentBlock>
 
 ## Penjumlahan Vektor secara Komponen
 
@@ -309,7 +309,7 @@ Salah satu contoh aplikasi penjumlahan vektor adalah pada gerakan perahu menyebe
 1. Jika kelajuan arus sungai nol (tidak ada arus), maka gerak perahu tidak berubah arah, hanya mengikuti arah yang dituju
 2. Jika kelajuan arus sungai tidak nol, maka gerak perahu berubah, baik arah maupun kelajuannya
 
-<div className="mt-4">
+<ContentBlock>
   <Vector3d
     title="Aplikasi Penjumlahan Vektor: Perahu Menyeberangi Sungai"
     description="Resultan dari vektor kecepatan perahu dan vektor arus sungai."
@@ -338,7 +338,7 @@ Salah satu contoh aplikasi penjumlahan vektor adalah pada gerakan perahu menyebe
     ]}
     cameraPosition={[8, 6, 8]}
   />
-</div>
+</ContentBlock>
 
 Gerak perahu merupakan hasil penjumlahan vektor antara kecepatan perahu sendiri dengan kecepatan arus sungai. Ini seperti contoh pada peta rute kendaraan, di mana kita perlu mempertimbangkan setiap vektor perpindahan dari satu lokasi ke lokasi lain untuk menentukan rute terpendek.
 

@@ -39,6 +39,36 @@ import type {
   TableProps,
   TableRowProps,
 } from "@repo/design-system/types/markdown";
+import type { ComponentPropsWithoutRef } from "react";
+
+type ContentLayoutProps = ComponentPropsWithoutRef<"div">;
+
+/** Renders a standard spaced block for visual MDX components. */
+function ContentBlock({ children, className, ...props }: ContentLayoutProps) {
+  return (
+    <div className={cn("mt-4", className)} {...props}>
+      {children}
+    </div>
+  );
+}
+
+/** Renders a vertical stack for related visual MDX components. */
+function ContentStack({ children, className, ...props }: ContentLayoutProps) {
+  return (
+    <div className={cn("flex flex-col gap-4", className)} {...props}>
+      {children}
+    </div>
+  );
+}
+
+/** Renders a single-column grid for related article visualizations. */
+function ContentGrid({ children, className, ...props }: ContentLayoutProps) {
+  return (
+    <div className={cn("grid grid-cols-1 gap-4", className)} {...props}>
+      {children}
+    </div>
+  );
+}
 
 export const components = {
   h1: (props: HeadingProps) => (
@@ -91,6 +121,9 @@ export const components = {
   InlineMath,
   BlockMath,
   AgentContext,
+  ContentBlock,
+  ContentStack,
+  ContentGrid,
   table: ({ children, className, ...props }: TableProps) => (
     <Table
       className={cn("has-[tbody]:[&_thead]:border-b", className)}

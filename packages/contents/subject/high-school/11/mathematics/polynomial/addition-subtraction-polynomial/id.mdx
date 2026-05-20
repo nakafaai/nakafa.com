@@ -3,7 +3,7 @@ import { getColor } from "@repo/design-system/lib/color";
 
 export const metadata = {
   title: "Penjumlahan dan Pengurangan Polinomial",
-  description: "Pelajari penjumlahan dan pengurangan polinomial dengan contoh langkah demi langkah. Pahami suku sejenis, metode horizontal & vertikal, plus visualisasi grafik.",
+  description: "Pelajari penjumlahan dan pengurangan polinomial dengan contoh bertahap. Pahami suku sejenis, metode horizontal dan vertikal, serta visualisasi grafik.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/04/2025",
   subject: "Polinomial",
@@ -126,7 +126,7 @@ Selain melakukan operasi secara aljabar, kita juga bisa memahami penjumlahan dan
 
 Misalkan kita memiliki tiga grafik fungsi polinomial:
 
-<div className="flex flex-col gap-4">
+<ContentStack>
   <LineEquation
     title={
       <>
@@ -187,7 +187,7 @@ Misalkan kita memiliki tiga grafik fungsi polinomial:
       },
     ]}
   />
-</div>
+</ContentStack>
 
 ### Sketsa Grafik Hasil Penjumlahan dan Pengurangan
 
@@ -209,7 +209,7 @@ Karena definisi dari penjumlahan atau pengurangan fungsi adalah menjumlahkan ata
 
 Berikut adalah contoh sketsa grafik hasil penjumlahan <InlineMath math="f(x) + g(x)" /> dan pengurangan <InlineMath math="f(x) - g(x)" /> yang didapat dengan metode penjumlahan/pengurangan nilai <InlineMath math="y" /> secara vertikal untuk setiap <InlineMath math="x" />.
 
-<div className="flex flex-col gap-4">
+<ContentStack>
   <LineEquation
     title={
       <>
@@ -264,6 +264,6 @@ Berikut adalah contoh sketsa grafik hasil penjumlahan <InlineMath math="f(x) + g
       },
     ]}
   />
-</div>
+</ContentStack>
 
 Dengan cara yang sama, kamu bisa mensketsa grafik <InlineMath math="f(x) + h(x), \space g(x) + h(x), \space f(x) - h(x), \space \text{dan} \space g(x) - h(x)" />. Intinya adalah menjumlahkan atau mengurangkan ketinggian (nilai <InlineMath math="y" />) dari grafik-grafik asli pada setiap nilai <InlineMath math="x" /> yang bersesuaian.

@@ -16,9 +16,9 @@ export function buildHeader({
   source?: string;
 }) {
   const header = [
-    "# Nakafa Framework: LLM",
+    "# Nakafa Learning Content",
     "",
-    `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt). Markdown versions are available by appending \`.md\` to content URLs or sending \`Accept: text/markdown\`.`,
+    `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt) for the site index. Markdown versions are available by appending \`.md\` to content URLs or sending \`Accept: text/markdown\`.`,
     "",
     `URL: ${url}`,
   ];

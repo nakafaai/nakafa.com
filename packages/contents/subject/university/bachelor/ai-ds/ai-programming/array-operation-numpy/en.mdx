@@ -1,6 +1,6 @@
 export const metadata = {
     title: "Array Operations with NumPy",
-    description: "Master NumPy array operations: broadcasting, vectorization, arithmetic, statistics, and shape manipulation with practical examples for data science.",
+    description: "Learn NumPy array operations: broadcasting, vectorization, arithmetic, statistics, and shape manipulation with practical examples for data science.",
     authors: [{ name: "Nabil Akbarazzima Fatih" }],
     date: "09/20/2025",
     subject: "AI Programming",
@@ -8,9 +8,9 @@ export const metadata = {
 
 ## Broadcasting in NumPy
 
-Broadcasting is NumPy's smart way of handling operations between arrays of different sizes. Think of it like a universal translator that automatically figures out how to make mismatched arrays work together in calculations. You can explore more advanced broadcasting techniques in the [NumPy broadcasting guide](https://numpy.org/doc/stable/user/basics.broadcasting.html) when you're ready for complex scenarios.
+Broadcasting is NumPy's way of handling operations between arrays of different sizes. It automatically figures out how to make arrays with compatible shapes work together in calculations. You can explore more advanced broadcasting techniques in the [NumPy broadcasting guide](https://numpy.org/doc/stable/user/basics.broadcasting.html) when you're ready for complex scenarios.
 
-Vectorization allows operations on entire arrays without writing loops, making calculations incredibly fast by processing elements simultaneously at the hardware level.
+Vectorization allows operations on entire arrays without writing loops, making calculations faster by processing elements simultaneously at the hardware level.
 
 <CodeBlock
   data={[
@@ -485,4 +485,4 @@ print(f"New standard deviation: {np.std(Z, axis=0)}")  # Should be close to 1
 
 This standardization process ensures that each feature contributes equally in machine learning algorithms, regardless of their original data scale. For example, if you have height data in centimeters and weight data in kilograms, standardization will make both have the same influence in the model.
 
-For complete documentation and more information about NumPy array operations, you can visit the [official NumPy documentation](https://numpy.org/doc/stable/user/basics.html) which provides comprehensive guides and practical examples.
+For more details about NumPy array operations, you can visit the [official NumPy documentation](https://numpy.org/doc/stable/user/basics.html), which provides guides and practical examples.

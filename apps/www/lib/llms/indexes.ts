@@ -25,7 +25,7 @@ export function buildRootLlmsIndexText() {
   return [
     "# Nakafa",
     "",
-    "> Nakafa is a multilingual educational platform. Use this root index to choose a locale and section, then open the linked section llms.txt files for page-level markdown URLs.",
+    "> Nakafa publishes multilingual learning materials. Use this root index to choose a locale and section, then open the linked section llms.txt files for page-level markdown URLs.",
     "",
     "## Indexes",
     "",
@@ -113,7 +113,7 @@ function buildLocaleLlmsIndexText(locale: Locale) {
   const localeLabel = getLocaleLabel(locale);
 
   return [
-    `# Nakafa ${localeLabel} Docs`,
+    `# Nakafa ${localeLabel} Content`,
     "",
     `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt). ${localeLabel} Nakafa content index generated from the sitemap. Follow a section llms.txt link, then use \`.md\` page links when available for clean markdown content.`,
     "",
@@ -260,7 +260,7 @@ function formatLlmsEntryLine(entry: LlmsEntry) {
 /** Formats one root index link to a locale index. */
 function formatLocaleIndexLine(locale: Locale) {
   const localeLabel = getLocaleLabel(locale);
-  return `- [${localeLabel} docs index](${BASE_URL}/llms/${locale}/llms.txt): ${localeLabel} pages grouped by content area.`;
+  return `- [${localeLabel} content index](${BASE_URL}/llms/${locale}/llms.txt): ${localeLabel} pages grouped by content area.`;
 }
 
 /** Formats one locale index link to a section index. */

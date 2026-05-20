@@ -2,7 +2,7 @@ import { FunctionChart } from "@repo/design-system/components/contents/mathemati
 
 export const metadata = {
   title: "Peluruhan Eksponen",
-  description: "Pahami peluruhan eksponen melalui eliminasi obat, radioaktif & pantulan bola. Kuasai fungsi menurun dengan aplikasi kehidupan nyata.",
+  description: "Pahami peluruhan eksponen melalui eliminasi obat, radioaktif & pantulan bola. Pelajari fungsi menurun dengan aplikasi kehidupan nyata.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/04/2025",
   subject: "Eksponen dan Logaritma",
@@ -34,14 +34,14 @@ Grafik dibawah ini menunjukkan grafik peluruhan eksponen dengan basis <InlineMat
 
 <BlockMath math="f(x) = 50 \times \left(\frac{1}{2}\right)^x" />
 
-<div className="mt-4">
+<ContentBlock>
   <FunctionChart
     a={0.5}
     p={50}
     title="Grafik Peluruhan Eksponen"
     description="Grafik turun dengan laju yang semakin lambat."
   />
-</div>
+</ContentBlock>
 
 ## Aplikasi Peluruhan Eksponen
 
@@ -125,14 +125,14 @@ Berikut adalah beberapa latihan soal untuk memperdalam pemahaman tentang peluruh
 
    <BlockMath math="h(n) = 300 \times \left(\frac{3}{5}\right)^n" />
 
-   <div className="mt-4">
+   <ContentBlock>
      <FunctionChart
        a={3 / 5}
        p={300}
        title="Grafik Peluruhan Eksponen"
        description="Grafik turun dengan laju yang semakin lambat."
      />
-   </div>
+   </ContentBlock>
 
    b. Bola akan berhenti melambung ketika tingginya mendekati nol. Berdasarkan perhitungan, pada pantulan ke-<InlineMath math="12" />, tinggi bola sudah mencapai <InlineMath math="0{,}653035 \text{ cm}" />, yang cukup kecil untuk menganggap bola berhenti melambung. Namun, jika mempertimbangkan massa bola, kemungkinan bola sudah berhenti melambung pada pantulan ke-<InlineMath math="10" />, saat tingginya sekitar <InlineMath math="1{,}8 \text{ cm}" />.
 

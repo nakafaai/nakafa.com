@@ -3,7 +3,7 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 
 export const metadata = {
   title: "Logarithmic Function Graph",
-  description: "Learn to draw logarithmic function graphs step-by-step. Explore transformations, asymptotes, and key characteristics with interactive visualizations.",
+  description: "Learn to draw logarithmic function graphs one step at a time. Explore transformations, asymptotes, and key characteristics with interactive visualizations.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/18/2025",
   subject: "Functions and Their Modeling",
@@ -225,7 +225,7 @@ Logarithmic graphs can be transformed in various ways:
 
 We can shift the logarithmic function graph by adding or subtracting a constant <InlineMath math="k" /> to the function.
 
-<div className="flex flex-col gap-4">
+<ContentStack>
 
   <BlockMath math="y = \log_b x + k" />
 
@@ -269,13 +269,13 @@ We can shift the logarithmic function graph by adding or subtracting a constant 
     cameraPosition={[0, 0, 15]}
     showZAxis={false}
   />
-</div>
+</ContentStack>
 
 ### Horizontal Translation
 
 We can shift the logarithmic function graph by adding or subtracting a constant <InlineMath math="h" /> to the function.
 
-<div className="flex flex-col gap-4">
+<ContentStack>
 
   <BlockMath math="y = \log_b (x - h)" />
 
@@ -310,7 +310,7 @@ We can shift the logarithmic function graph by adding or subtracting a constant 
     cameraPosition={[0, 0, 15]}
     showZAxis={false}
   />
-</div>
+</ContentStack>
 
 ## Exercises
 
@@ -358,7 +358,7 @@ We can shift the logarithmic function graph by adding or subtracting a constant 
    - Graph <InlineMath math="y = \log_3 x" /> shifted <InlineMath math="2 \text{ units}" /> up
    - There is no <InlineMath math="y" />-intercept because the domain is <InlineMath math="x > 0" />
 
-   <div className="mt-4">
+   <ContentBlock>
      <LineEquation
        title={
          <>
@@ -426,4 +426,4 @@ We can shift the logarithmic function graph by adding or subtracting a constant 
        cameraPosition={[0, 0, 15]}
        showZAxis={false}
      />
-   </div>
+   </ContentBlock>

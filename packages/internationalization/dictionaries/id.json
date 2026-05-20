@@ -1,10 +1,10 @@
 {
   "Metadata": {
-    "title": "Nakafa: Platform Belajar Gratis Berkualitas (SD - Universitas)",
-    "description": "Akses sumber belajar gratis berkualitas di Nakafa. Mencakup SD-Universitas (Matematika, Sains, Komputer, AI), persiapan ujian & lainnya. Mulai belajar!",
-    "short-description": "Belajar gratis berkualitas untuk semua jenjang.",
-    "very-short-description": "Belajar gratis dan berkualitas.",
-    "keywords": "sumber belajar gratis, platform pendidikan berkualitas, bimbel online gratis, pendidikan SD-SMA, kursus universitas, pendidikan STEM, tutorial matematika, pelajaran fisika, bantuan kimia, panduan belajar biologi, dasar ilmu komputer, belajar sains data, kursus kecerdasan buatan, persiapan ujian online, materi belajar gratis, teknologi pendidikan, belajar Nakafa, dukungan pendidikan Indonesia, modul belajar interaktif, tutorial pemrograman online, alat belajar digital, sumber keunggulan akademik, platform e-learning, konten pendidikan gratis, belajar sepanjang hayat, try out ujian, latihan soal",
+    "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",
+    "description": "Belajar Matematika, Sains, Komputer, AI, dan persiapan ujian di Nakafa. Materi gratis dari SD sampai universitas dengan latihan dan pembahasan.",
+    "short-description": "Materi belajar gratis untuk SD sampai universitas.",
+    "very-short-description": "Materi belajar gratis.",
+    "keywords": "materi belajar gratis, belajar matematika, belajar fisika, belajar kimia, belajar biologi, belajar komputer, belajar AI, belajar data science, latihan soal, pembahasan soal, persiapan ujian, try out online, materi SD, materi SMP, materi SMA, materi universitas, pendidikan terbuka, Nakafa",
     "classification": "Pendidikan"
   },
   "Common": {
@@ -142,8 +142,8 @@
     "vocational-school": "SMK",
     "university": "Universitas",
     "grade": "Kelas {grade}",
-    "grade-description": "Pilih materi dan tingkatkan pemahamanmu di setiap bab!",
-    "subject-description": "Pilih kelas kamu dan mulai petualangan belajar yang seru hari ini!",
+    "grade-description": "Pilih materi yang sesuai dengan kelasmu.",
+    "subject-description": "Pilih kelas, lalu buka materi yang ingin kamu pelajari.",
     "chapter": "Bab",
     "mathematics": "Matematika",
     "physics": "Fisika",
@@ -169,7 +169,7 @@
     "learn-with-nakafa": "Belajar dengan Nakafa"
   },
   "Articles": {
-    "description": "Eksplorasi wawasan baru dari artikel edukatif dan riset mendalam kami.",
+    "description": "Baca artikel edukatif dengan konteks, data, dan rujukan yang jelas.",
     "politics": "Politik",
     "official": "Resmi",
     "official-description": "Dibuat oleh Nakafa",
@@ -181,13 +181,13 @@
   "Holy": {
     "holy": "Suci",
     "quran": "Al Quran",
-    "quran-description": "Temukan ketenangan dan hikmah dalam setiap ayat suci Al-Quran.",
+    "quran-description": "Baca Al-Quran dengan terjemahan dan tafsir per ayat.",
     "verse": "Ayat",
     "verse-count": "Ayat {count}",
     "interpretation": "Tafsir",
     "surah-title": "Surat {number}: {name} ({translation}) - {quran}",
     "verses": "ayat",
-    "read-quran-description": "Baca Al Quran dengan terjemahan lengkap dan tafsir mendalam secara online di Nakafa secara gratis"
+    "read-quran-description": "Baca Al-Quran online dengan terjemahan dan tafsir per ayat di Nakafa"
   },
   "Exercises": {
     "exercises": "Latihan",
@@ -203,7 +203,7 @@
     "grade-9": "Kelas 9",
     "tka": "TKA",
     "snbt": "SNBT",
-    "type-description": "Uji seberapa jauh kemampuanmu dengan ribuan soal latihan interaktif!",
+    "type-description": "Latihan soal dengan pembahasan untuk mengecek pemahamanmu.",
     "mathematics": "Matematika",
     "quantitative-knowledge": "Pengetahuan Kuantitatif",
     "mathematical-reasoning": "Penalaran Matematika",
@@ -213,9 +213,9 @@
     "general-knowledge": "Pengetahuan dan Pemahaman Umum",
     "reading-and-writing-skills": "Kemampuan Membaca dan Menulis",
     "simulation": "Simulasi",
-    "simulation-description": "Uji kemampuanmu dalam mode ujian realistis di mana hasil dan pembahasan baru muncul setelah selesai.",
+    "simulation-description": "Kerjakan dalam mode ujian. Hasil dan pembahasan muncul setelah selesai.",
     "practice": "Latihan",
-    "practice-description": "Kuasai konsep sesuai kecepatanmu dengan jawaban instan dan pembahasan mendetail.",
+    "practice-description": "Kerjakan soal sesuai ritmemu, lalu cek jawaban dan pembahasannya.",
     "start": "Mulai",
     "start-exercise-title": "Mulai latihan",
     "start-exercise-description": "Pilih antara mode simulasi atau latihan untuk memulai latihanmu.",
@@ -234,7 +234,7 @@
     "attempt-not-in-progress": "Mulai sesi baru dulu ya untuk lanjut latihan.",
     "attempt-not-found": "Mulai latihan terlebih dahulu ya.",
     "submit-answer-error": "Ada masalah saat menyimpan jawaban. Coba lagi ya.",
-    "practice-exercises": "Latihan soal untuk menguasai materi"
+    "practice-exercises": "Latihan soal untuk memahami materi"
   },
   "Tryouts": {
     "title": "Mau coba try out apa hari ini?",
@@ -320,7 +320,7 @@
     "search-help": "Ketik untuk mencari...",
     "search-error": "Ada masalah saat mencari. Coba lagi ya.",
     "search-title": "Cari Materi Belajar",
-    "search-description": "Cari ribuan materi pembelajaran gratis, artikel edukasi, latihan soal, dan sumber belajar. Temukan persis apa yang kamu butuhkan untuk menguasai pelajaran."
+    "search-description": "Cari materi belajar gratis, artikel edukasi, latihan soal, dan sumber belajar. Temukan topik yang sedang kamu pelajari."
   },
   "Home": {
     "greeting": "Hi, {name}",
@@ -632,7 +632,7 @@
     "pro-feature-2": "Lebih banyak kredit untuk tutor Nakafa Lite dan Nakafa Pro",
     "pro-feature-3": "Download materi apa pun sebagai PDF untuk dibaca offline",
     "pro-feature-4": "Materi audio untuk belajar di mana saja",
-    "pro-feature-5": "Support prioritas saat kamu stuck",
+    "pro-feature-5": "Bantuan prioritas saat kamu butuh arahan",
     "pro-cta": "Dapatkan Pro"
   },
   "Faq": {
@@ -653,16 +653,16 @@
     "q6": "Bisakah sekolah menggunakan Nakafa?",
     "a6": "Tentu saja. Kami menawarkan solusi kustom untuk kelas dan institusi pendidikan. Hubungi founder untuk integrasi LMS, manajemen siswa, dan branding kustom.",
     "q7": "Bagaimana Nakafa memastikan akurasi konten?",
-    "a7": "Semua konten dibuat oleh kontributor yang berkualifikasi dan ditinjau oleh komunitas. Pendekatan source-available kami membuat siapa pun bisa meninjau materi dan mengusulkan perbaikan. Latihan soal mencakup penjelasan detail sehingga kamu belajar dari kesalahan, bukan hanya skor."
+    "a7": "Semua konten dibuat oleh kontributor yang berkualifikasi dan ditinjau oleh komunitas. Pendekatan source-available kami membuat siapa pun bisa meninjau materi dan mengusulkan perbaikan. Latihan soal punya pembahasan supaya kamu belajar dari kesalahan, bukan hanya skor."
   },
   "Features": {
-    "headline": "<mark>Stuck di materi tengah malam, bingung mau nanya siapa. Kita pernah ngalamin juga.</mark> Makanya kita bikin platform ini. Ada materi lengkap dari SD sampai kuliah, latihan soal dengan pembahasan, dan AI yang siap bantu. <mark>Gratis, gak ada syarat.</mark>",
+    "headline": "<mark>Belajar bisa terasa berat saat kamu sendirian.</mark> Nakafa menyediakan materi dari SD sampai kuliah, latihan soal dengan pembahasan, dan AI untuk membantu saat kamu butuh penjelasan tambahan. <mark>Konten inti gratis.</mark>",
     "materials-value": "5000+",
     "materials-label": "Materi Belajar",
     "materials-description": "Dari konsep dasar hingga lanjut",
     "exercises-value": "2000+",
     "exercises-label": "Soal Latihan",
-    "exercises-description": "Dengan pembahasan detail",
+    "exercises-description": "Dengan pembahasan",
     "subjects-value": "100+",
     "subjects-label": "Mata Pelajaran",
     "subjects-description": "SD sampai kuliah",
@@ -673,27 +673,27 @@
   "SchoolsSection": {
     "badge": "Untuk Sekolah",
     "headline": "Setiap sekolah punya kebutuhan <mark>berbeda</mark>. Kami <mark>mengerti</mark>.",
-    "description": "Mau LMS lengkap? Integrasi konten? Atau solusi custom? Pilih yang cocok untuk sekolahmu.",
+    "description": "Butuh LMS, integrasi konten, atau alur kelas khusus? Pilih yang cocok untuk sekolahmu.",
     "cta": "Diskusikan kebutuhanmu"
   },
   "AiSection": {
-    "headline": "Dibuat untuk manusia. <mark>Dioptimalkan untuk AI.</mark>",
-    "description": "Akses materi gratis berkualitas, latihan soal, artikel, dan tutor AI untuk sekolah, kuliah, dan persiapan ujian.",
-    "feature-description": "Cukup tambahkan <mark>.md</mark> di URL halaman mana pun untuk mendapatkan markdown terstruktur. Bangun aplikasi, latih model, atau integrasikan dengan alatmu. Tanpa perlu API.",
+    "headline": "Materi untuk siswa. <mark>Markdown untuk alat belajar.</mark>",
+    "description": "Buka materi, latihan soal, artikel, dan bantuan AI untuk sekolah, kuliah, dan persiapan ujian.",
+    "feature-description": "Tambahkan <mark>.md</mark> di URL halaman mana pun untuk membuka markdown terstruktur. Gunakan untuk aplikasi belajar, pencarian, atau integrasi alat.",
     "students-title": "Untuk Siswa",
     "students-description": "Belajar bareng Nina dengan Nakafa Lite dan Nakafa Pro. Semua dalam satu tempat.",
     "cta-students": "Mulai belajar",
     "developers-title": "Untuk Developer",
-    "developers-description": "Bangun di atas konten kami. Akses via llms.txt atau integrasikan ke platformmu.",
+    "developers-description": "Gunakan indeks llms.txt untuk membaca peta materi dan URL markdown Nakafa.",
     "cta-developers": "Jelajahi llms.txt",
     "schools-title": "Untuk Sekolah",
-    "schools-description": "Integrasikan ke LMS. Hubungkan konten Nakafa ke alat kelasmu tanpa hambatan.",
+    "schools-description": "Hubungkan konten Nakafa ke LMS atau alat kelas yang sudah dipakai sekolahmu.",
     "cta-schools": "Hubungi founder"
   },
   "About": {
-    "meta-title": "Tolak Pendidikan Tertutup, Nikmati Pendidikan Terbuka Gratis",
-    "title": "Tolak pendidikan tertutup, nikmati <mark>pendidikan terbuka gratis</mark>",
-    "description": "Misi inti kami adalah menyediakan konten edukasi berkualitas tinggi dan komprehensif di berbagai spektrum subjek dan topik.",
+    "meta-title": "Materi Belajar Terbuka Gratis dari SD sampai Universitas",
+    "title": "Materi belajar terbuka gratis dari <mark>SD sampai universitas</mark>",
+    "description": "Kami membuat materi belajar terbuka dari SD sampai kuliah, dengan penjelasan yang bisa diperiksa dan diperbaiki bersama.",
     "contribute": "Kontribusi",
     "start-learning": "Mulai belajar",
     "join-community": "Bergabung komunitas",
@@ -705,10 +705,10 @@
     "community": "Komunitas",
     "about-us": "Tentang Kami",
     "events": "Acara",
-    "events-description": "Temukan acara edukasi mendatang, workshop, webinar, dan pertemuan komunitas. Bergabunglah dengan kami untuk belajar, terhubung, dan berkembang bersama.",
-    "trusted-badge": "Dipercaya oleh pendidik",
-    "trusted-headline": "Dipercaya oleh <mark>ribuan siswa</mark> dan <mark>guru</mark> dari sekolah dan universitas terkemuka",
-    "trusted-description": "Bergabunglah dengan komunitas yang terus berkembang dari pembelajar dan pendidik yang memilih Nakafa untuk pendidikan berkualitas."
+    "events-description": "Lihat acara belajar, workshop, webinar, dan pertemuan komunitas Nakafa.",
+    "trusted-badge": "Untuk siswa dan guru",
+    "trusted-headline": "Dipakai oleh <mark>siswa</mark> dan <mark>guru</mark> di sekolah dan universitas",
+    "trusted-description": "Gunakan materi terbuka, latihan, dan ruang diskusi untuk membantu proses belajar."
   },
   "File": {
     "exceeds-max-size": "{fileName} kegedean nih, maksimal {maxSizeFormatted} ya.",
@@ -964,17 +964,17 @@
   "SEO": {
     "subject": {
       "title": "{title}: {chapter, select, __EMPTY__ {} other {{chapter} - }}{material} ({grade}) | Nakafa",
-      "description": "Pelajari {title} dalam {chapter, select, __EMPTY__ {} other {{chapter} }}{material} untuk {grade}. Materi lengkap dengan contoh soal, latihan, dan pembahasan langkah demi langkah.",
+      "description": "Pelajari {title} dalam {chapter, select, __EMPTY__ {} other {{chapter} }}{material} untuk {grade}. Halaman ini berisi konsep, contoh, dan latihan untuk mengecek pemahaman.",
       "keywords": "{title}, {chapter, select, __EMPTY__ {} other {{chapter}, }}{material}, {grade}, belajar, materi, contoh soal, latihan, edukasi"
     },
     "exercise": {
       "title": "{number, select, 0 {} other {Soal {number}/{questionCount}: }}{set, select, __EMPTY__ {} other {{set}{number, select, 0 {: } other { - }}}}{group, select, __EMPTY__ {} other {{group} - }}{material} ({exam}) | Nakafa",
-      "description": "Latihan {material} {exam}{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} dengan {questionCount, plural, =0 {soal-soal} =1 {1 soal} other {{questionCount} soal}} lengkap beserta pembahasan dan penjelasan detail.",
+      "description": "Latihan {material} {exam}{group, select, __EMPTY__ {} other { {group}}}{set, select, __EMPTY__ {} other { {set}}} berisi {questionCount, plural, =0 {soal-soal} =1 {1 soal} other {{questionCount} soal}} dengan pembahasan untuk memeriksa cara berpikir.",
       "keywords": "{material}, {exam}, {group, select, __EMPTY__ {} other {{group}, }}{set, select, __EMPTY__ {} other {{set}, }}latihan, soal, pembahasan, ujian"
     },
     "article": {
       "title": "{title} - {category} | Nakafa",
-      "description": "Baca analisis lengkap {title}. Informasi terkini dengan data dan riset mendalam dari tim redaksi Nakafa.",
+      "description": "Baca {title} dalam topik {category}. Artikel ini menyajikan konteks, data, dan rujukan yang bisa diperiksa pembaca.",
       "keywords": "{title}, {category}, analisis, fakta, terkini, riset, informasi, berita"
     },
     "quran": {

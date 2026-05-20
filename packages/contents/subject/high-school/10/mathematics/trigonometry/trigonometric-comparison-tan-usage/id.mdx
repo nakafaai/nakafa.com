@@ -2,7 +2,7 @@ import { Triangle } from "@repo/design-system/components/contents/mathematics/tr
 
 export const metadata = {
   title: "Kegunaan Perbandingan Trigonometri Tangen",
-  description: "Terapkan tangen untuk mengukur tinggi gedung menggunakan bayangan. Kuasai segitiga sebangun dan sudut elevasi untuk perhitungan jarak dan tinggi nyata.",
+  description: "Terapkan tangen untuk mengukur tinggi gedung menggunakan bayangan. Pelajari segitiga sebangun dan sudut elevasi untuk perhitungan jarak dan tinggi nyata.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/14/2025",
   subject: "Trigonometri",
@@ -54,7 +54,7 @@ Bayangkan kita ingin mengukur tinggi sebuah pohon, gedung, atau objek tinggi lai
   <BlockMath math="\text{tinggi objek} = \text{panjang bayangan} \times \tan \theta" />
 </MathContainer>
 
-<div className="mt-4">
+<ContentBlock>
   <Triangle
     title="Aplikasi Tangen dalam Pengukuran"
     description="Contoh segitiga yang terbentuk saat mengukur tinggi dengan bayangan."
@@ -65,7 +65,7 @@ Bayangkan kita ingin mengukur tinggi sebuah pohon, gedung, atau objek tinggi lai
       hypotenuse: "",
     }}
   />
-</div>
+</ContentBlock>
 
 ## Metode Menghitung dengan Tangen
 
@@ -101,7 +101,7 @@ Misalnya, jika kita memiliki sudut elevasi matahari <InlineMath math="30^\circ" 
   <BlockMath math="x \text{ cm} = \frac{148 \text{ cm}}{0{,}57} = 259{,}65 \text{ cm}" />
 </MathContainer>
 
-<div className="mt-4">
+<ContentBlock>
   <Triangle
     title={<>Sudut <InlineMath math="30^\circ" /> dengan Tangen <InlineMath math="0{,}57" /></>}
     description={
@@ -117,4 +117,4 @@ Misalnya, jika kita memiliki sudut elevasi matahari <InlineMath math="30^\circ" 
       hypotenuse: "",
     }}
   />
-</div>
+</ContentBlock>

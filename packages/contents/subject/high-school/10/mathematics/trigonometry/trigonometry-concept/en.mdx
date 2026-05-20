@@ -3,7 +3,7 @@ import { Triangle } from "@repo/design-system/components/contents/mathematics/tr
 
 export const metadata = {
   title: "Trigonometry Concept",
-  description: "Discover trigonometry fundamentals from Pythagorean theorem to six basic ratios. Learn similar triangles, shadow measurements, and real-world applications.",
+  description: "Learn trigonometry fundamentals from the Pythagorean theorem to six basic ratios, similar triangles, and shadow measurements.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/13/2025",
   subject: "Trigonometry",
@@ -15,7 +15,7 @@ Trigonometry comes from Greek, "trigon" meaning triangle and "metron" meaning me
 
 ### Recalling the Pythagorean Theorem
 
-Before we dive into trigonometry concepts, we need to recall the Pythagorean theorem that applies to right triangles:
+Before studying trigonometry, we need to recall the Pythagorean theorem that applies to right triangles:
 
 <BlockMath math="a^2 + b^2 = c^2" />
 
@@ -71,7 +71,7 @@ Imagine a right triangle with an angle <InlineMath math="\theta" /> (theta). We 
 - **Opposite side**: the side opposite to angle <InlineMath math="\theta" />.
 - **Adjacent side**: the side adjacent to angle <InlineMath math="\theta" /> other than the hypotenuse.
 
-<div className="mt-4">
+<ContentBlock>
   <Triangle
     title="Right Triangle"
     description={
@@ -81,7 +81,7 @@ Imagine a right triangle with an angle <InlineMath math="\theta" /> (theta). We 
     }
     angle={45}
   />
-</div>
+</ContentBlock>
 
 From these three sides, we get six basic trigonometric ratios:
 
@@ -113,7 +113,7 @@ From these three sides, we get six basic trigonometric ratios:
 
 The interesting thing about trigonometric ratios is that their values are always the same for the same angle, regardless of the size of the right triangle. This is because triangles with the same angles are similar!
 
-Let's understand this concept more deeply:
+Let's understand this concept more clearly:
 
 Imagine we have two right triangles with the same angle (for example <InlineMath math="\theta = 30^\circ" />) but different sizes. Because both triangles have the same angle, they are similar. In similar triangles, the ratios of their sides are always proportional.
 

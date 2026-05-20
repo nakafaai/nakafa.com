@@ -3,7 +3,7 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 
 export const metadata = {
   title: "Translasi",
-  description: "Kuasai transformasi translasi geometri: pelajari cara mentranslasi titik dan garis menggunakan vektor dengan contoh langkah demi langkah dan visualisasi.",
+  description: "Pelajari transformasi translasi geometri: pelajari cara mentranslasi titik dan garis menggunakan vektor dengan contoh bertahap dan visualisasi.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/10/2025",
   subject: "Transformasi Geometri",
@@ -102,7 +102,7 @@ Substitusikan nilai <InlineMath math="x" /> dan <InlineMath math="y" /> ini ke d
 
 Mengganti <InlineMath math="x'" /> dan <InlineMath math="y'" /> kembali ke <InlineMath math="x" /> dan <InlineMath math="y" />, persamaan garis bayangan <InlineMath math="l'" /> adalah:
 
-<div className="flex flex-col gap-4">
+<ContentStack>
 
   <BlockMath math="2x + 3y - 2 = 0" />
 
@@ -142,7 +142,7 @@ Mengganti <InlineMath math="x'" /> dan <InlineMath math="y'" /> kembali ke <Inli
     showZAxis={false}
     cameraPosition={[0, 0, 10]}
   />
-</div>
+</ContentStack>
 
 ## Latihan
 

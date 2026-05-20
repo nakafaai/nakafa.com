@@ -3,7 +3,7 @@ import { getColor } from "@repo/design-system/lib/color";
 
 export const metadata = {
   title: "Polynomial Graph",
-  description: "Master polynomial graphing with point plotting, end behavior analysis, and visual patterns. Learn to sketch linear, quadratic, and cubic graphs step-by-step.",
+  description: "Learn polynomial graphing with point plotting, end behavior analysis, and visual patterns. Learn to sketch linear, quadratic, and cubic graphs one step at a time.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/04/2025",
   subject: "Polynomial",
@@ -286,7 +286,7 @@ Match the following functions with their likely end behavior:
     - Leading coefficient <InlineMath math="a_n=1" /> (Positive)
     - End behavior: Rises left (<InlineMath math="\nwarrow" />), Rises right (<InlineMath math="\nearrow" />)
 
-    <div className="mt-4">
+    <ContentBlock>
       <LineEquation
         title={
           <>
@@ -313,7 +313,7 @@ Match the following functions with their likely end behavior:
           },
         ]}
       />
-    </div>
+    </ContentBlock>
 
 2.  <InlineMath math="g(x) = -x^3 + 2x^2 - x + 1" />
 
@@ -322,7 +322,7 @@ Match the following functions with their likely end behavior:
     - Leading coefficient <InlineMath math="a_n=-1" /> (Negative)
     - End behavior: Rises left (<InlineMath math="\nwarrow" />), Falls right (<InlineMath math="\searrow" />)
 
-    <div className="mt-4">
+    <ContentBlock>
       <LineEquation
         title={
           <>
@@ -349,7 +349,7 @@ Match the following functions with their likely end behavior:
           },
         ]}
       />
-    </div>
+    </ContentBlock>
 
 3.  <InlineMath math="h(x) = -x^6 - \frac{11}{4}x^5 + x^4 + 5x^3 + 2" />
 
@@ -358,7 +358,7 @@ Match the following functions with their likely end behavior:
     - Leading coefficient <InlineMath math="a_n=-1" /> (Negative)
     - End behavior: Falls left (<InlineMath math="\swarrow" />), Falls right (<InlineMath math="\searrow" />)
 
-    <div className="mt-4">
+    <ContentBlock>
       <LineEquation
         title={
           <>
@@ -386,7 +386,7 @@ Match the following functions with their likely end behavior:
           },
         ]}
       />
-    </div>
+    </ContentBlock>
 
 4.  <InlineMath math="k(x) = 25x^5 - 20x^4 - 26x^3 + 12x^2 + 9x - 1" />
 
@@ -395,7 +395,7 @@ Match the following functions with their likely end behavior:
     - Leading coefficient <InlineMath math="a_n=25" /> (Positive)
     - End behavior: Falls left (<InlineMath math="\swarrow" />), Rises right (<InlineMath math="\nearrow" />)
 
-    <div className="mt-4">
+    <ContentBlock>
       <LineEquation
         title={
           <>
@@ -429,6 +429,6 @@ Match the following functions with their likely end behavior:
           },
         ]}
       />
-    </div>
+    </ContentBlock>
 
 By analyzing the leading term, we can predict the general shape of the graph at its ends.
