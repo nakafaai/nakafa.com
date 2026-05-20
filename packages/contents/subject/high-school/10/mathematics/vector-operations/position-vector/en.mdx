@@ -3,7 +3,7 @@ import { getColor } from "@repo/design-system/lib/color";
 
 export const metadata = {
   title: "Position Vector",
-  description: "Master position vectors from origin to points. Learn coordinate representation, displacement relationships, GPS applications, and 3D space visualization.",
+  description: "Learn position vectors from origin to points. Learn coordinate representation, displacement relationships, GPS applications, and 3D space visualization.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/12/2025",
   subject: "Vector and Operations",
@@ -119,7 +119,7 @@ Displacement vectors can be obtained from the difference between two position ve
 
 <BlockMath math="\overrightarrow{AB} = \overrightarrow{OB} - \overrightarrow{OA}" />
 
-<div className="mt-4">
+<ContentBlock>
   <Vector3d
     title="Relationship Between Position Vectors and Displacement Vector"
     description={
@@ -154,7 +154,7 @@ Displacement vectors can be obtained from the difference between two position ve
     ]}
     cameraPosition={[10, 6, 10]}
   />
-</div>
+</ContentBlock>
 
 From the previous example, the displacement vector from <InlineMath math="A" /> to <InlineMath math="B" /> is:
 

@@ -41,6 +41,7 @@ import {
   getRenderableExerciseByNumber,
   getRenderableExercisesContent,
 } from "@repo/contents/_lib/exercises/renderable";
+import { Effect } from "effect";
 
 const exerciseBasePath =
   "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
@@ -103,7 +104,9 @@ describe("getRenderableExercisesContent", () => {
       return Promise.resolve(createChoicesSource("Two"));
     });
 
-    const result = await getRenderableExercisesContent("id", exerciseBasePath);
+    const result = await Effect.runPromise(
+      getRenderableExercisesContent("id", exerciseBasePath)
+    );
 
     expect(result).toHaveLength(2);
     expect(result.map((exercise) => exercise.number)).toStrictEqual([1, 2]);
@@ -135,7 +138,9 @@ describe("getRenderableExercisesContent", () => {
       text: () => Promise.resolve(createChoicesSource("Remote")),
     });
 
-    const result = await getRenderableExercisesContent("en", exerciseBasePath);
+    const result = await Effect.runPromise(
+      getRenderableExercisesContent("en", exerciseBasePath)
+    );
 
     expect(result).toHaveLength(1);
     expect(result[0]?.choices.en[0]?.label).toBe("Remote EN");
@@ -166,7 +171,9 @@ describe("getRenderableExercisesContent", () => {
       text: () => Promise.reject(new Error("remote choices unavailable")),
     });
 
-    const result = await getRenderableExercisesContent("en", exerciseBasePath);
+    const result = await Effect.runPromise(
+      getRenderableExercisesContent("en", exerciseBasePath)
+    );
 
     expect(result).toStrictEqual([]);
     expect(mockKyGet).toHaveBeenCalledTimes(1);
@@ -203,7 +210,9 @@ describe("getRenderableExercisesContent", () => {
       return Promise.resolve("## Missing metadata");
     });
 
-    const result = await getRenderableExercisesContent("id", exerciseBasePath);
+    const result = await Effect.runPromise(
+      getRenderableExercisesContent("id", exerciseBasePath)
+    );
 
     expect(result).toHaveLength(1);
     expect(result[0]?.number).toBe(1);
@@ -232,10 +241,8 @@ describe("getRenderableExerciseByNumber", () => {
       return Promise.resolve(createChoicesSource("Three"));
     });
 
-    const result = await getRenderableExerciseByNumber(
-      "id",
-      exerciseBasePath,
-      3
+    const result = await Effect.runPromise(
+      getRenderableExerciseByNumber("id", exerciseBasePath, 3)
     );
 
     expect(result?.number).toBe(3);
@@ -248,10 +255,8 @@ describe("getRenderableExerciseByNumber", () => {
       `${exerciseBasePath}/1/_answer`,
     ]);
 
-    const result = await getRenderableExerciseByNumber(
-      "en",
-      exerciseBasePath,
-      9
+    const result = await Effect.runPromise(
+      getRenderableExerciseByNumber("en", exerciseBasePath, 9)
     );
 
     expect(result).toBeNull();
@@ -278,10 +283,8 @@ describe("getRenderableExerciseByNumber", () => {
       return Promise.resolve("const choices = { broken:");
     });
 
-    const result = await getRenderableExerciseByNumber(
-      "en",
-      exerciseBasePath,
-      1
+    const result = await Effect.runPromise(
+      getRenderableExerciseByNumber("en", exerciseBasePath, 1)
     );
 
     expect(result).toBeNull();
@@ -308,10 +311,8 @@ describe("getRenderableExerciseByNumber", () => {
       return Promise.resolve("const choices = { broken: foo };");
     });
 
-    const result = await getRenderableExerciseByNumber(
-      "en",
-      exerciseBasePath,
-      1
+    const result = await Effect.runPromise(
+      getRenderableExerciseByNumber("en", exerciseBasePath, 1)
     );
 
     expect(result).toBeNull();
@@ -338,10 +339,8 @@ describe("getRenderableExerciseByNumber", () => {
       return Promise.resolve("const choices = { id: 'wrong', en: [] };");
     });
 
-    const result = await getRenderableExerciseByNumber(
-      "en",
-      exerciseBasePath,
-      1
+    const result = await Effect.runPromise(
+      getRenderableExerciseByNumber("en", exerciseBasePath, 1)
     );
 
     expect(result).toBeNull();
@@ -354,7 +353,9 @@ describe("getRenderableExerciseByNumber", () => {
       `${unsafePath}/1/_answer`,
     ]);
 
-    const result = await getRenderableExerciseByNumber("en", unsafePath, 1);
+    const result = await Effect.runPromise(
+      getRenderableExerciseByNumber("en", unsafePath, 1)
+    );
 
     expect(result).toBeNull();
     expect(mockReadFile).not.toHaveBeenCalled();
@@ -379,10 +380,8 @@ describe("getRenderableExerciseByNumber", () => {
       return Promise.resolve(createChoicesSource("One"));
     });
 
-    const result = await getRenderableExerciseByNumber(
-      "id",
-      exerciseBasePath,
-      1
+    const result = await Effect.runPromise(
+      getRenderableExerciseByNumber("id", exerciseBasePath, 1)
     );
 
     expect(result).toBeNull();
@@ -393,7 +392,9 @@ describe("getRenderableExercisesContent edge cases", () => {
   it("returns an empty array when no renderable exercise numbers exist", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([]);
 
-    const result = await getRenderableExercisesContent("en", exerciseBasePath);
+    const result = await Effect.runPromise(
+      getRenderableExercisesContent("en", exerciseBasePath)
+    );
 
     expect(result).toStrictEqual([]);
   });

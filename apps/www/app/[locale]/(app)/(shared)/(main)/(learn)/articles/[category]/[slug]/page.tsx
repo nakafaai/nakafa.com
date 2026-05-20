@@ -1,6 +1,6 @@
 import { captureServerException } from "@repo/analytics/posthog/server";
 import { parseArticleCategory } from "@repo/contents/_lib/articles/category";
-import { getArticleReferences } from "@repo/contents/_lib/articles/content";
+import { getArticleReferences } from "@repo/contents/_lib/articles/references";
 import { getSlugPath } from "@repo/contents/_lib/articles/slug";
 import { importContentModule } from "@repo/contents/_lib/module";
 import { getHeadings } from "@repo/contents/_lib/toc";

@@ -8,6 +8,7 @@ import {
 import { getExercisesContent } from "@repo/contents/_lib/exercises/set";
 import { getAllSurah, getSurah, getSurahName } from "@repo/contents/_lib/quran";
 import { CONTENT_ROOT_VALUES } from "@repo/contents/_types/content";
+import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import type { CustomRecord, HTMLFile, PagefindIndex } from "pagefind";
@@ -122,10 +123,7 @@ export async function addSubjectRecords(index: PagefindIndex) {
  * search relevance and tend to add noise without adding much retrieval value.
  */
 export async function addExerciseRecords(index: PagefindIndex) {
-  const materialListCache = new Map<
-    string,
-    ReturnType<typeof getExerciseMaterials>
-  >();
+  const materialListCache = new Map<string, Promise<ExercisesMaterialList>>();
 
   const records = (
     await Promise.all(
@@ -150,7 +148,9 @@ export async function addExerciseRecords(index: PagefindIndex) {
             let materialList = materialListCache.get(materialCacheKey);
 
             if (!materialList) {
-              materialList = getExerciseMaterials(materialPath, locale);
+              materialList = Effect.runPromise(
+                getExerciseMaterials(materialPath, locale)
+              );
               materialListCache.set(materialCacheKey, materialList);
             }
 

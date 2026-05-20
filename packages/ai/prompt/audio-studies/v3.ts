@@ -1,6 +1,5 @@
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { Locale } from "@repo/utilities/locales";
-import dedent from "dedent";
 
 interface PodcastScriptProps {
   /**
@@ -25,18 +24,18 @@ interface PodcastScriptProps {
  * Language guidelines for different locales.
  */
 const LANGUAGE_GUIDELINES: Record<Locale, string> = {
-  en: dedent(`
-    Use conversational, direct English.
-    No formal introductions.
-    Get straight to the point.
-    Use everyday analogies.
-  `),
-  id: dedent(`
-    Use casual, direct Indonesian.
-    Do not use long introductions.
-    Get straight to the point.
-    Use everyday analogies.
-  `),
+  en: [
+    "Use conversational, direct English.",
+    "No formal introductions.",
+    "Get straight to the point.",
+    "Use everyday analogies.",
+  ].join("\n"),
+  id: [
+    "Use casual, direct Indonesian.",
+    "Do not use long introductions.",
+    "Get straight to the point.",
+    "Use everyday analogies.",
+  ].join("\n"),
 };
 
 /**

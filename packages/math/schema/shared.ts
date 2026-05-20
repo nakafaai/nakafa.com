@@ -1,5 +1,38 @@
 import { Schema } from "effect";
 
+const expressionReservedNames = new Set([
+  "Abs",
+  "E",
+  "I",
+  "Rational",
+  "acos",
+  "asin",
+  "atan",
+  "cos",
+  "e",
+  "exp",
+  "factorial",
+  "factorial2",
+  "ln",
+  "log",
+  "oo",
+  "pi",
+  "sin",
+  "sqrt",
+  "tan",
+]);
+
+const symbolPattern = /[A-Za-z_][A-Za-z0-9_]*/gu;
+
+/** Returns variable-looking identifiers while ignoring supported functions. */
+export function getExpressionSymbols(expression: string) {
+  return new Set(
+    [...expression.matchAll(symbolPattern)]
+      .map(([symbol]) => symbol)
+      .filter((symbol) => !expressionReservedNames.has(symbol))
+  );
+}
+
 export const expressionInputSchema = Schema.NonEmptyString.annotations({
   description:
     "A math expression in plain text syntax, for example (x^2 - 9)/(x - 3).",

@@ -10,17 +10,20 @@ import { formatRouteTitle } from "@/lib/llms/format";
 import { getQuranRouteMetadata } from "@/lib/llms/quran";
 import { getSitemapRoutes } from "@/lib/sitemap/routes";
 
-export type LlmsEntry = Awaited<ReturnType<typeof buildLocalizedLlmsEntry>>;
-
 /** Builds sitemap-aligned llms entries for one locale. */
-export async function getLocalizedLlmsEntries(locale: Locale) {
+export const getLocalizedLlmsEntries = Effect.fn("www.llms.entries")(function* (
+  locale: Locale
+) {
   const routes = getSitemapRoutes().sort((a, b) => a.localeCompare(b));
-  const entries = await Promise.all(
-    routes.map((route) => buildLocalizedLlmsEntry(locale, route))
-  );
 
-  return entries;
-}
+  return yield* Effect.forEach(
+    routes,
+    (route) => buildLocalizedLlmsEntry({ locale, route }),
+    {
+      concurrency: "unbounded",
+    }
+  );
+});
 
 /** Classifies a sitemap route into the llms section that owns it. */
 export function getRouteSection(route: string): LlmsSection {
@@ -46,11 +49,17 @@ export function getLlmsSections() {
 }
 
 /** Builds one locale-specific llms entry from a sitemap route. */
-async function buildLocalizedLlmsEntry(locale: Locale, route: string) {
+const buildLocalizedLlmsEntry = Effect.fn("www.llms.entry")(function* ({
+  locale,
+  route,
+}: {
+  locale: Locale;
+  route: string;
+}) {
   const hrefBase = `${BASE_URL}/${locale}${route === "/" ? "" : route}`;
   const section = getRouteSection(route);
   const routePath = route.slice(1);
-  const metadata = await getRouteMetadata({
+  const metadata = yield* getRouteMetadata({
     locale,
     route,
     section,
@@ -69,10 +78,14 @@ async function buildLocalizedLlmsEntry(locale: Locale, route: string) {
     segments: routeSegments,
     title: metadata.title,
   };
-}
+});
+
+export type LlmsEntry = Effect.Effect.Success<
+  ReturnType<typeof buildLocalizedLlmsEntry>
+>;
 
 /** Resolves title, description, and markdown availability for one route. */
-async function getRouteMetadata({
+const getRouteMetadata = Effect.fn("www.llms.routeMetadata")(function* ({
   locale,
   route,
   section,
@@ -90,7 +103,7 @@ async function getRouteMetadata({
   }
 
   if (section === "articles" || section === "subject") {
-    const metadata = await getMdxRouteMetadata({ locale, route });
+    const metadata = yield* getMdxRouteMetadata({ locale, route });
 
     if (metadata) {
       return metadata;
@@ -104,7 +117,7 @@ async function getRouteMetadata({
     hasMarkdown: false,
     title: formatRouteTitle(route),
   };
-}
+});
 
 /** Builds fallback metadata for routes served as sitemap-derived indexes. */
 function getIndexRouteMetadata(route: string) {
@@ -116,18 +129,19 @@ function getIndexRouteMetadata(route: string) {
 }
 
 /** Reads existing MDX metadata for article and subject routes. */
-async function getMdxRouteMetadata({
+const getMdxRouteMetadata = Effect.fn("www.llms.mdxRouteMetadata")(function* ({
   locale,
   route,
 }: {
   locale: Locale;
   route: string;
 }) {
-  const metadata = await Effect.runPromise(
-    Effect.match(getContentMetadata(route.slice(1), locale), {
+  const metadata = yield* Effect.match(
+    getContentMetadata(route.slice(1), locale),
+    {
       onFailure: () => null,
       onSuccess: (data) => data,
-    })
+    }
   );
 
   if (!metadata) {
@@ -139,4 +153,4 @@ async function getMdxRouteMetadata({
     hasMarkdown: true,
     title: metadata.title,
   };
-}
+});

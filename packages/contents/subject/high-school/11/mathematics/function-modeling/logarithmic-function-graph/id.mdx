@@ -3,7 +3,7 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 
 export const metadata = {
   title: "Grafik Fungsi Logaritma",
-  description: "Pelajari cara menggambar grafik fungsi logaritma langkah demi langkah. Jelajahi transformasi, asimtot, dan karakteristik dengan visualisasi interaktif.",
+  description: "Pelajari cara menggambar grafik fungsi logaritma secara bertahap. Lihat transformasi, asimtot, dan karakteristik utamanya lewat visualisasi interaktif.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/18/2025",
   subject: "Fungsi dan Pemodelannya",
@@ -223,7 +223,7 @@ Grafik logaritma dapat ditransformasi dengan berbagai cara:
 
 Kita dapat menggeser grafik fungsi logaritma dengan menambahkan atau mengurangi konstanta <InlineMath math="k" /> pada fungsi.
 
-<div className="flex flex-col gap-4">
+<ContentStack>
 
   <BlockMath math="y = \log_b x + k" />
 
@@ -267,13 +267,13 @@ Kita dapat menggeser grafik fungsi logaritma dengan menambahkan atau mengurangi 
     cameraPosition={[0, 0, 15]}
     showZAxis={false}
   />
-</div>
+</ContentStack>
 
 ### Translasi Horizontal
 
 Kita dapat menggeser grafik fungsi logaritma dengan menambahkan atau mengurangi konstanta <InlineMath math="h" /> pada fungsi.
 
-<div className="flex flex-col gap-4">
+<ContentStack>
 
   <BlockMath math="y = \log_b (x - h)" />
 
@@ -308,7 +308,7 @@ Kita dapat menggeser grafik fungsi logaritma dengan menambahkan atau mengurangi 
     cameraPosition={[0, 0, 15]}
     showZAxis={false}
   />
-</div>
+</ContentStack>
 
 ## Latihan
 
@@ -356,7 +356,7 @@ Kita dapat menggeser grafik fungsi logaritma dengan menambahkan atau mengurangi 
    - Grafik <InlineMath math="y = \log_3 x" /> digeser <InlineMath math="2 \text{ satuan}" /> ke atas
    - Tidak ada titik potong dengan sumbu <InlineMath math="y" /> karena domain adalah <InlineMath math="x > 0" />
 
-   <div className="mt-4">
+   <ContentBlock>
      <LineEquation
        title={
          <>
@@ -420,4 +420,4 @@ Kita dapat menggeser grafik fungsi logaritma dengan menambahkan atau mengurangi 
        cameraPosition={[0, 0, 15]}
        showZAxis={false}
      />
-   </div>
+   </ContentBlock>

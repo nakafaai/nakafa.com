@@ -1,12 +1,12 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from "@repo/contents/subject/high-school/12/geography/_data";
+import { BASE_PATH } from "@repo/contents/subject/high-school/12/geography/_data/path";
 
-const enMaterials: MaterialList = [
+const enMaterials = [
   {
     title:
       "Regional Development, Spatial Planning, and Their Impact on Happiness",
     description:
-      "The art of building spaces that transform regions into happy places to live.",
+      "How planning and regional development affect where people live and their well-being.",
     href: `${BASE_PATH}/development-happiness`,
     items: [
       {
@@ -44,7 +44,7 @@ const enMaterials: MaterialList = [
     title:
       "Regional Development, Industrial Revolution, and Their Impact on Earth's Surface and Welfare",
     description:
-      "Digital transformation changing Earth's face and shaping the future of prosperity.",
+      "How development and industrial change affect land use, welfare, and the environment.",
     href: `${BASE_PATH}/region-industry-wellbeing`,
     items: [
       {
@@ -86,7 +86,7 @@ const enMaterials: MaterialList = [
     title:
       "Dynamics of International Cooperation and Its Impact on Indonesia's Regional Security",
     description:
-      "Global diplomatic networks strengthening Indonesia's defense fortress.",
+      "How international cooperation affects Indonesia's regional security.",
     href: `${BASE_PATH}/international-cooperation-security`,
     items: [
       {
@@ -108,6 +108,6 @@ const enMaterials: MaterialList = [
       },
     ],
   },
-] as const;
+] satisfies MaterialList;
 
 export default enMaterials;

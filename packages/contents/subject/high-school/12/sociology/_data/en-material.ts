@@ -1,11 +1,11 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from "@repo/contents/subject/high-school/12/sociology/_data";
+import { BASE_PATH } from "@repo/contents/subject/high-school/12/sociology/_data/path";
 
-const enMaterials: MaterialList = [
+const enMaterials = [
   {
     title: "Social Change",
     description:
-      "Unstoppable force transforming human lifestyles from generation to generation.",
+      "How societies change over time and how those changes affect daily life.",
     href: `${BASE_PATH}/social-change`,
     items: [
       {
@@ -29,7 +29,7 @@ const enMaterials: MaterialList = [
   {
     title: "Globalization and Digital Society",
     description:
-      "Connectivity revolution uniting the world in one giant digital network.",
+      "How global connections and digital technology shape social life.",
     href: `${BASE_PATH}/globalization-digital`,
     items: [
       {
@@ -70,8 +70,7 @@ const enMaterials: MaterialList = [
   },
   {
     title: "Community Empowerment Based on Local Wisdom",
-    description:
-      "Harnessing traditional strength to build a sustainable future.",
+    description: "How local wisdom can guide community empowerment.",
     href: `${BASE_PATH}/local-empowerment`,
     items: [
       {
@@ -88,6 +87,6 @@ const enMaterials: MaterialList = [
       },
     ],
   },
-] as const;
+] satisfies MaterialList;
 
 export default enMaterials;

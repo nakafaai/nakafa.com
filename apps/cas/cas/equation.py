@@ -2,6 +2,7 @@
 
 import sympy as sp
 from sympy.core.relational import Relational
+from sympy.logic.boolalg import And, Boolean
 
 from cas import parse
 from cas.format import expression_text, item, result, step
@@ -9,22 +10,50 @@ from cas.schema import MathRequest, MathResult
 
 EQUALS = expression_text("equals", "=")
 IMPLIES = expression_text("becomes", "\\Rightarrow")
+SOLUTION_SET_UNAVAILABLE = "The equation solution set could not be determined exactly."
+
+
+class SolutionSetUnavailable(ValueError):
+    """Raised when SymPy cannot represent the complete exact solution set."""
 
 
 def solve(request: MathRequest) -> MathResult:
     """Solve equations, inequalities, or systems for requested variables."""
     equations = request.expressions or [request.expression or ""]
     variables, parsed = _solve_variables(request, equations)
+    domain = _solution_domain(request)
 
-    if len(parsed) == 1 and isinstance(parsed[0], sp.core.relational.Relational):
+    if (
+        len(parsed) == 1
+        and len(variables) == 1
+        and isinstance(parsed[0], sp.core.relational.Relational)
+    ):
         relation = parsed[0]
         variable = variables[0]
+        if domain != sp.S.Reals:
+            requested_variable = _requested_domain_variable(request, variables)
+            if requested_variable is not None:
+                variable = requested_variable
 
         if isinstance(relation, sp.Equality):
-            solved = _solve_equality(relation, variable)
+            try:
+                solved = _solve_equality(relation, variable, domain)
+            except SolutionSetUnavailable:
+                return result(
+                    request,
+                    status="inconclusive",
+                    primary=relation,
+                    reason=SOLUTION_SET_UNAVAILABLE,
+                )
             steps = _solve_equality_steps(relation, variable, solved)
         else:
-            solved = sp.solve_univariate_inequality(relation, variable)
+            # SymPy intersects univariate inequality solutions with this domain.
+            # https://docs.sympy.org/latest/modules/solvers/inequalities.html
+            solved = sp.solve_univariate_inequality(
+                relation,
+                variable,
+                domain=domain,
+            )
             steps = [
                 step("solve", primary=relation, relation=IMPLIES, secondary=solved)
             ]
@@ -39,7 +68,27 @@ def solve(request: MathRequest) -> MathResult:
             stepStatus="partial" if steps else "unavailable",
         )
 
-    solved = sp.solve(parsed, variables, dict=True)
+    try:
+        solved = _solve_system(request, parsed, variables, domain)
+    except SolutionSetUnavailable:
+        return result(
+            request,
+            status="inconclusive",
+            primary=parsed,
+            reason=SOLUTION_SET_UNAVAILABLE,
+        )
+
+    if isinstance(solved, Boolean):
+        steps = [step("solve", primary=parsed, relation=IMPLIES, secondary=solved)]
+        return result(
+            request,
+            status="verified",
+            primary=parsed,
+            secondary=solved,
+            reason="The system was solved exactly.",
+            steps=steps,
+            stepStatus="partial",
+        )
 
     return result(
         request,
@@ -63,18 +112,257 @@ def _solve_variables(
     return [variable], parsed
 
 
-def _solve_equality(relation: sp.Equality, variable: sp.Symbol):
+def _solve_system(
+    request: MathRequest,
+    parsed: list[sp.Expr | sp.Equality | Relational],
+    variables: list[sp.Symbol],
+    domain: sp.Set,
+) -> list[dict[sp.Symbol, sp.Expr]] | Boolean:
+    """Solve a system and enforce a requested single-variable domain."""
+    domain_variable: sp.Symbol | None = None
+    if domain != sp.S.Reals:
+        _require_bounded_system_variables(parsed, variables)
+        domain_variable = _bounded_system_variable(request, variables)
+
+    if _is_univariate_relation_system(parsed, variables):
+        # `solve()` returns Boolean/Relational output for inequalities and ignores
+        # dict/set/check flags there, so relation systems use the documented
+        # inequality reducer directly.
+        # https://docs.sympy.org/latest/explanation/solve_output.html#boolean-or-relational
+        relation_variable = variables[0]
+        if domain_variable is not None:
+            relation_variable = domain_variable
+        return _solve_relation_system(parsed, relation_variable, domain)
+
+    solved = sp.solve(parsed, variables, dict=True)
+    if not _is_mapping_solution_list(solved):
+        raise SolutionSetUnavailable(SOLUTION_SET_UNAVAILABLE)
+
+    if domain_variable is None:
+        return solved
+
+    return _filter_solved_mappings(solved, domain_variable, domain)
+
+
+def _is_mapping_solution_list(
+    solved: object,
+) -> bool:
+    """Return whether SymPy produced dictionary solution mappings."""
+    if not isinstance(solved, list):
+        return False
+
+    return all(isinstance(solution, dict) for solution in solved)
+
+
+def _is_univariate_relation_system(
+    parsed: list[sp.Expr | sp.Equality | Relational],
+    variables: list[sp.Symbol],
+) -> bool:
+    """Return whether a relation system can be reduced as one-variable logic."""
+    return (
+        len(variables) == 1
+        and all(isinstance(relation, Relational) for relation in parsed)
+        and any(not isinstance(relation, sp.Equality) for relation in parsed)
+    )
+
+
+def _solve_relation_system(
+    relations: list[sp.Expr | sp.Equality | Relational],
+    variable: sp.Symbol,
+    domain: sp.Set,
+) -> Boolean:
+    """Solve a one-variable relational system with optional domain bounds."""
+    constraints: list[object] = list(relations)
+
+    if domain != sp.S.Reals:
+        constraints.extend(_flatten_conjunction(domain.contains(variable)))
+
+    # SymPy documents `reduce_inequalities` as the supported algebraic reducer
+    # for one-symbol inequality systems.
+    # https://docs.sympy.org/latest/guides/solving/reduce-inequalities-algebraically.html
+    return sp.reduce_inequalities(constraints, variable)
+
+
+def _flatten_conjunction(value: object) -> list[object]:
+    """Flatten conjunctions so SymPy can reduce domain relations correctly."""
+    if not isinstance(value, And):
+        return [value]
+
+    constraints = []
+    for argument in value.args:
+        constraints.extend(_flatten_conjunction(argument))
+
+    return constraints
+
+
+def _require_bounded_system_variables(
+    parsed: list[sp.Expr | sp.Equality | Relational],
+    variables: list[sp.Symbol],
+) -> None:
+    """Require each bounded-system relation to involve a solved variable."""
+    solved_variables = set(variables)
+    for relation in parsed:
+        if _relation_symbols(relation).isdisjoint(solved_variables):
+            raise ValueError("Bounded system equations must include a solved variable.")
+
+
+def _relation_symbols(
+    relation: sp.Expr | sp.Equality | Relational,
+) -> set[sp.Symbol]:
+    """Return symbolic variables present in one parsed relation."""
+    return {symbol for symbol in relation.free_symbols if isinstance(symbol, sp.Symbol)}
+
+
+def _bounded_system_variable(
+    request: MathRequest,
+    variables: list[sp.Symbol],
+) -> sp.Symbol:
+    """Return the explicitly bounded system variable."""
+    variable = _requested_domain_variable(request, variables)
+    if variable is None:
+        raise ValueError(
+            "Domain variable is required when solving a system with bounds."
+        )
+
+    return variable
+
+
+def _requested_domain_variable(
+    request: MathRequest,
+    variables: list[sp.Symbol],
+) -> sp.Symbol | None:
+    """Validate the requested bounded-domain variable when one is present."""
+    if not request.variable:
+        return None
+
+    variable = parse.symbol(request.variable)
+    if variable not in variables:
+        raise ValueError("Domain variable must be one of the solved variables.")
+
+    return variable
+
+
+def _solution_domain(request: MathRequest) -> sp.Set:
+    """Build the real solve domain from optional request bounds."""
+    if request.lower is None and request.upper is None:
+        return sp.S.Reals
+
+    lower = parse.expression(request.lower) if request.lower is not None else -sp.oo
+    upper = parse.expression(request.upper) if request.upper is not None else sp.oo
+
+    return sp.Interval(
+        lower,
+        upper,
+        left_open=request.lowerInclusive is False,
+        right_open=request.upperInclusive is False,
+    )
+
+
+def _solve_equality(relation: sp.Equality, variable: sp.Symbol, domain: sp.Set):
     """Solve one equation without marking partial families as verified."""
     expression = _equality_expression(relation)
 
     if expression.is_polynomial(variable):
-        return sp.solve(relation, variable)
+        solved = sp.solve(relation, variable)
+        return _filter_solved_values(solved, domain)
 
-    solved = sp.solveset(relation, variable, domain=sp.S.Reals)
+    # `solveset` returns ConditionSet when it cannot represent the complete
+    # exact set, so fallback logic must prove completeness before verification.
+    # https://docs.sympy.org/latest/modules/solvers/solveset.html
+    solved = sp.solveset(relation, variable, domain=domain)
     if isinstance(solved, sp.ConditionSet):
-        raise ValueError("Equation solution set could not be determined exactly.")
+        product_solved = _solve_product_equality(expression, variable, domain)
+        if product_solved is not None:
+            return product_solved
+
+        raise SolutionSetUnavailable(SOLUTION_SET_UNAVAILABLE)
 
     return solved
+
+
+def _filter_solved_values(
+    solved: list[sp.Expr],
+    domain: sp.Set,
+) -> list[sp.Expr]:
+    """Keep only exactly validated finite solutions inside the solve domain."""
+    if domain == sp.S.Reals:
+        return solved
+
+    return [value for value in solved if _is_inside_domain(value, domain)]
+
+
+def _filter_solved_mappings(
+    solved: list[dict[sp.Symbol, sp.Expr]],
+    variable: sp.Symbol,
+    domain: sp.Set,
+) -> list[dict[sp.Symbol, sp.Expr]]:
+    """Keep only exact system solutions whose constrained value is in domain."""
+    filtered = []
+
+    for solution in solved:
+        value = solution.get(variable)
+        if value is None:
+            raise SolutionSetUnavailable(SOLUTION_SET_UNAVAILABLE)
+
+        if _is_inside_domain(value, domain):
+            filtered.append(solution)
+
+    return filtered
+
+
+def _solve_product_equality(
+    expression: sp.Expr, variable: sp.Symbol, domain: sp.Set
+) -> sp.Set | None:
+    """Solve products when every factor is exact or proven nonzero."""
+    assumed_variable = _domain_symbol(variable, domain)
+    assumed_expression = expression.xreplace({variable: assumed_variable})
+    factors = sp.factor(assumed_expression).as_ordered_factors()
+
+    if len(factors) < 2:
+        return None
+
+    solutions = sp.S.EmptySet
+
+    for factor in factors:
+        if _is_definitely_nonzero(factor):
+            continue
+
+        factor_solutions = sp.solveset(factor, assumed_variable, domain=domain)
+        if isinstance(factor_solutions, sp.ConditionSet):
+            return None
+
+        solutions = solutions.union(factor_solutions)
+
+    return solutions
+
+
+def _domain_symbol(variable: sp.Symbol, domain: sp.Set) -> sp.Symbol:
+    """Create a symbol carrying assumptions known from the solve domain."""
+    if domain.is_subset(sp.Interval.open(0, sp.oo)) is True:
+        return sp.Symbol(str(variable), positive=True)
+
+    return variable
+
+
+def _is_definitely_nonzero(value: sp.Expr) -> bool:
+    """Return whether a factor cannot be zero under current assumptions."""
+    if value.is_zero is False:
+        return True
+
+    return sp.ask(sp.Q.nonzero(value)) is True
+
+
+def _is_inside_domain(value: sp.Expr, domain: sp.Set) -> bool:
+    """Return exact membership for one finite solution candidate."""
+    contained = domain.contains(value)
+
+    if contained is sp.S.true:
+        return True
+
+    if contained is sp.S.false:
+        return False
+
+    raise SolutionSetUnavailable(SOLUTION_SET_UNAVAILABLE)
 
 
 def _equality_expression(relation: sp.Equality) -> sp.Expr:
@@ -112,6 +400,9 @@ def _solve_equality_steps(
 
 def roots(request: MathRequest) -> MathResult:
     """Find polynomial roots and multiplicities."""
+    if request.lower is not None or request.upper is not None:
+        raise ValueError("Roots do not support solve-domain bounds.")
+
     variable, parsed_values = parse.symbol_from_equations(
         request.variable, [request.expression or ""]
     )

@@ -48,6 +48,9 @@ def health() -> dict[str, str]:
 @app.exception_handler(ValueError)
 def value_error_handler(_request: Request, error: ValueError) -> JSONResponse:
     """Convert deterministic CAS validation failures into HTTP 422 responses."""
+    # FastAPI exception handlers let CAS validation errors stay typed at the API
+    # boundary instead of leaking stack traces.
+    # https://fastapi.tiangolo.com/tutorial/handling-errors/#install-custom-exception-handlers
     return JSONResponse(status_code=422, content={"detail": str(error)})
 
 

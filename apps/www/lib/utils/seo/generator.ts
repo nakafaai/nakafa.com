@@ -4,7 +4,7 @@ import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import type { Material } from "@repo/contents/_types/subject/material";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -16,13 +16,37 @@ import type {
   SEOMetadata,
 } from "@/lib/utils/seo/types";
 
+/** Expected failure when a localized SEO dictionary cannot be loaded. */
+class SEOTranslationLoadError extends Schema.TaggedError<SEOTranslationLoadError>()(
+  "SEOTranslationLoadError",
+  {
+    locale: Schema.String,
+    message: Schema.String,
+    namespace: Schema.String,
+  }
+) {}
+
+/** Converts unknown thrown values into readable fallback error messages. */
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Unknown translation loading error";
+}
+
 /**
  * Fetches translations for the Metadata namespace.
  */
 const fetchMetadataTranslations = (locale: Locale) =>
   Effect.tryPromise({
     try: () => getTranslations({ locale, namespace: "Metadata" }),
-    catch: () => new Error("Failed to load Metadata translations"),
+    catch: (error: unknown) =>
+      new SEOTranslationLoadError({
+        locale,
+        namespace: "Metadata",
+        message: `Failed to load Metadata translations: ${getErrorMessage(error)}`,
+      }),
   });
 
 /**
@@ -31,7 +55,12 @@ const fetchMetadataTranslations = (locale: Locale) =>
 const fetchSubjectTranslations = (locale: Locale) =>
   Effect.tryPromise({
     try: () => getTranslations({ locale, namespace: "Subject" }),
-    catch: () => new Error("Failed to load Subject translations"),
+    catch: (error: unknown) =>
+      new SEOTranslationLoadError({
+        locale,
+        namespace: "Subject",
+        message: `Failed to load Subject translations: ${getErrorMessage(error)}`,
+      }),
   });
 
 /**
@@ -40,7 +69,12 @@ const fetchSubjectTranslations = (locale: Locale) =>
 const fetchExercisesTranslations = (locale: Locale) =>
   Effect.tryPromise({
     try: () => getTranslations({ locale, namespace: "Exercises" }),
-    catch: () => new Error("Failed to load Exercises translations"),
+    catch: (error: unknown) =>
+      new SEOTranslationLoadError({
+        locale,
+        namespace: "Exercises",
+        message: `Failed to load Exercises translations: ${getErrorMessage(error)}`,
+      }),
   });
 
 /**
@@ -49,7 +83,12 @@ const fetchExercisesTranslations = (locale: Locale) =>
 const fetchArticlesTranslations = (locale: Locale) =>
   Effect.tryPromise({
     try: () => getTranslations({ locale, namespace: "Articles" }),
-    catch: () => new Error("Failed to load Articles translations"),
+    catch: (error: unknown) =>
+      new SEOTranslationLoadError({
+        locale,
+        namespace: "Articles",
+        message: `Failed to load Articles translations: ${getErrorMessage(error)}`,
+      }),
   });
 
 /**
@@ -58,7 +97,12 @@ const fetchArticlesTranslations = (locale: Locale) =>
 const fetchSEOTranslations = (locale: Locale) =>
   Effect.tryPromise({
     try: () => getTranslations({ locale, namespace: "SEO" }),
-    catch: () => new Error("Failed to load SEO translations"),
+    catch: (error: unknown) =>
+      new SEOTranslationLoadError({
+        locale,
+        namespace: "SEO",
+        message: `Failed to load SEO translations: ${getErrorMessage(error)}`,
+      }),
   });
 
 /**
@@ -364,9 +408,9 @@ export async function generateSEOMetadata(
     return yield* generateQuranMetadata(context, locale);
   });
 
-  return Effect.runPromise(
+  return await Effect.runPromise(
     effect.pipe(
-      Effect.catchAll(() =>
+      Effect.catchTag("SEOTranslationLoadError", () =>
         Effect.sync(() => generateFallbackMetadata(context))
       )
     )

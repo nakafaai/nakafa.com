@@ -1,3 +1,4 @@
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCachedLlmsExerciseText } from "@/lib/llms/exercises";
 
@@ -69,7 +70,7 @@ beforeEach(() => {
   mockGetMaterialPath.mockReturnValue(
     "/exercises/high-school/snbt/quantitative-knowledge"
   );
-  mockGetMaterials.mockResolvedValue([]);
+  mockGetMaterials.mockReturnValue(Effect.succeed([]));
   mockGetCurrentMaterial.mockReturnValue({
     currentMaterial: {
       description: "Practice with quantitative reasoning.",
@@ -81,10 +82,9 @@ beforeEach(() => {
       title: "Set 1",
     },
   });
-  mockGetRenderableExercisesContent.mockResolvedValue([
-    exerciseWithLocalizedChoices,
-    exerciseWithoutChoices,
-  ]);
+  mockGetRenderableExercisesContent.mockReturnValue(
+    Effect.succeed([exerciseWithLocalizedChoices, exerciseWithoutChoices])
+  );
 });
 
 describe("llms exercise markdown", () => {
@@ -100,7 +100,7 @@ describe("llms exercise markdown", () => {
   });
 
   it("returns null when an exercise set has no renderable rows", async () => {
-    mockGetRenderableExercisesContent.mockResolvedValue([]);
+    mockGetRenderableExercisesContent.mockReturnValue(Effect.succeed([]));
 
     await expect(
       getCachedLlmsExerciseText({
@@ -126,20 +126,22 @@ describe("llms exercise markdown", () => {
   });
 
   it("renders one exercise with English choices and title fallback", async () => {
-    mockGetRenderableExercisesContent.mockResolvedValue([
-      exerciseWithoutChoices,
-      {
-        ...exerciseWithLocalizedChoices,
-        choices: {
-          en: [{ label: "A. Fallback", value: true }],
+    mockGetRenderableExercisesContent.mockReturnValue(
+      Effect.succeed([
+        exerciseWithoutChoices,
+        {
+          ...exerciseWithLocalizedChoices,
+          choices: {
+            en: [{ label: "A. Fallback", value: true }],
+          },
+          number: 3,
+          question: {
+            metadata: {},
+            raw: "Third question raw",
+          },
         },
-        number: 3,
-        question: {
-          metadata: {},
-          raw: "Third question raw",
-        },
-      },
-    ]);
+      ])
+    );
     mockGetCurrentMaterial.mockReturnValue({
       currentMaterial: {
         items: [],

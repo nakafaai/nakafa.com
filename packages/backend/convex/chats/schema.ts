@@ -401,7 +401,7 @@ export const providerMetadataValidator = v.optional(
 const specialistToolInputFields = {
   objective: v.string(),
   request: v.string(),
-  requirements: v.array(v.string()),
+  requirements: v.optional(v.array(v.string())),
 };
 
 export const nakafaToolInputValidator = v.object({

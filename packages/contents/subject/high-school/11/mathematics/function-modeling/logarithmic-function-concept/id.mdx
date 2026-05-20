@@ -3,7 +3,7 @@ import { LineEquation } from "@repo/design-system/components/contents/mathematic
 
 export const metadata = {
   title: "Konsep Fungsi Logaritma",
-  description: "Pelajari fungsi logaritma lengkap dengan grafik, sifat-sifat, dan aplikasi nyata. Pahami kebalikan dari eksponensial melalui contoh dan latihan soal.",
+  description: "Pelajari fungsi logaritma lewat grafik, sifat-sifat, dan aplikasi nyata. Pahami hubungannya sebagai kebalikan dari fungsi eksponensial.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/18/2025",
   subject: "Fungsi dan Pemodelannya",
@@ -120,7 +120,7 @@ Fungsi logaritma dengan basis <InlineMath math="b" /> (dimana <InlineMath math="
 
 Pada awal pandemi, penyebaran COVID-19 di Indonesia dapat dimodelkan dengan fungsi eksponensial. Jika pada <InlineMath math="2" /> Maret <InlineMath math="2020" /> ada <InlineMath math="2 \text{ kasus}" /> dan dalam <InlineMath math="60 \text{ hari}" /> mencapai <InlineMath math="10.118 \text{ kasus}" />, maka:
 
-<div className="flex flex-col gap-4">
+<ContentStack>
 
   <BlockMath math="P(t) = 2e^{\frac{1}{60}\ln(5059)t}" />
 
@@ -142,7 +142,7 @@ Pada awal pandemi, penyebaran COVID-19 di Indonesia dapat dimodelkan dengan fung
     cameraPosition={[15, 10, 15]}
     showZAxis={false}
   />
-</div>
+</ContentStack>
 
 **Menggunakan logaritma**, kita dapat menghitung kapan akan ada <InlineMath math="50.000 \text{ kasus}" />:
 
@@ -167,7 +167,9 @@ Pada awal pandemi, penyebaran COVID-19 di Indonesia dapat dimodelkan dengan fung
 
 ### Kunci Jawaban
 
-1. - <InlineMath math="\log_3 27 = 3" />
+1. Nilainya:
+
+   - <InlineMath math="\log_3 27 = 3" />
    - <InlineMath math="\log_5 \frac{1}{125} = -3" />
    - <InlineMath math="\ln e^3 = 3" />
 

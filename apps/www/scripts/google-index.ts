@@ -30,6 +30,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { Effect } from "effect";
 import { JWT } from "google-auth-library";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
 import { logger } from "@/scripts/utils";
@@ -138,7 +139,7 @@ async function getUnsubmittedUrls(): Promise<{
   // Load existing submission history
   const history = loadGoogleIndexHistory();
 
-  const allEntries = await getSitemapEntries();
+  const allEntries = await Effect.runPromise(getSitemapEntries());
 
   // Extract unique URLs
   const allUrls = new Set<string>();

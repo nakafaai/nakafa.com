@@ -17,7 +17,7 @@ describe("Nakafa model registry", () => {
     expect(defaultModel).toBe("nakafa-lite");
     expect(isModelId("nakafa-lite")).toBe(true);
     expect(isModelId("nakafa-pro")).toBe(true);
-    expect(isModelId("google/gemini-3-pro-preview")).toBe(false);
+    expect(isModelId("google/gemini-3.5-flash")).toBe(false);
   });
 
   it("keeps credit costs and gateway mapping explicit", () => {
@@ -30,7 +30,7 @@ describe("Nakafa model registry", () => {
     expect(getModelGatewayId("nakafa-lite")).toBe(
       "google/gemini-3.1-flash-lite"
     );
-    expect(getModelGatewayId("nakafa-pro")).toBe("google/gemini-3-pro-preview");
+    expect(getModelGatewayId("nakafa-pro")).toBe("google/gemini-3.5-flash");
   });
 
   it("uses interactive and fast Gemini thinking profiles", () => {

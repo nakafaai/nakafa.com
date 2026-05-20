@@ -79,12 +79,24 @@ describe("nakafaPrompt", () => {
     expect(toolSection).toContain("request: task-relevant user details only.");
     expect(toolSection).toContain("objective: the specialist job only.");
     expect(toolSection).toContain(
-      "requirements: real retrieval or verification constraints only."
+      "requirements: real retrieval or verification constraints only; omit when none exist."
     );
     expect(toolSection).toContain("deepResearch.sourceRequirements");
     expect(toolSection).toContain("nakafa.deliverables");
     expect(toolSection).toContain("math.given");
-    expect(toolSection).toContain("stay in the user's language");
+    expect(toolSection).toContain(
+      "do not preload solution methods or derived formulas"
+    );
+    expect(toolSection).toContain(
+      "ask math for the valid location and function value"
+    );
+    expect(toolSection).toContain(
+      'Preserve derivation, proof, and "why" deliverables'
+    );
+    expect(toolSection).toContain(
+      "keep connective wording in the user's language"
+    );
+    expect(toolSection).toContain("preserve technical names and terms exactly");
     expect(toolSection).toContain("avoid copying the full user message");
     expect(toolSection).not.toContain("exact user wording");
     expect(toolSection).not.toContain("deepResearch uses separate fields:");

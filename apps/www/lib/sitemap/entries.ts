@@ -4,7 +4,6 @@ import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect } from "effect";
-import type { MetadataRoute } from "next";
 import type { Locale } from "next-intl";
 import { baseRoutes, getSitemapRoutes } from "@/lib/sitemap/routes";
 
@@ -30,32 +29,26 @@ const MONTHS_IN_CONTENT_FALLBACK = 3;
  * Expands one route into localized sitemap entries with alternate language
  * URLs, last-modified metadata, change frequency, and priority.
  */
-export async function getEntries(
+export const getEntries = Effect.fn("www.sitemap.entries")(function* (
   href: Href,
   options: SitemapEntryOptions = {}
-): Promise<MetadataRoute.Sitemap> {
+) {
   const routeString = typeof href === "string" ? href : href.pathname;
   const { changeFrequency, priority } = getContentSeoSettings(routeString);
   let lastModified = new Date();
 
   if (isContentRoute(routeString)) {
-    try {
-      const contentPath = routeString.startsWith("/")
-        ? routeString.slice(1)
-        : routeString;
-      lastModified = await getContentLastModified(contentPath, options);
-    } catch (error) {
-      await reportError(error, options, {
-        route: routeString,
-        source: "sitemap-route-entry",
-      });
-
-      const threeMonthsAgo = new Date();
-      threeMonthsAgo.setMonth(
-        threeMonthsAgo.getMonth() - MONTHS_IN_CONTENT_FALLBACK
-      );
-      lastModified = threeMonthsAgo;
-    }
+    const contentPath = routeString.startsWith("/")
+      ? routeString.slice(1)
+      : routeString;
+    lastModified = yield* getContentLastModified(contentPath, options).pipe(
+      Effect.catchAll((error) =>
+        reportError(error, options, {
+          route: routeString,
+          source: "sitemap-route-entry",
+        }).pipe(Effect.as(getFallbackDate(MONTHS_IN_CONTENT_FALLBACK)))
+      )
+    );
   } else if (routeString === "/") {
     lastModified = new Date("2025-01-01");
   } else if (routeString.startsWith("/quran")) {
@@ -78,7 +71,7 @@ export async function getEntries(
     lastModified,
     priority,
   }));
-}
+});
 
 /** Converts an app href and locale into an absolute canonical URL. */
 export function getUrl(href: Href, locale: Locale, domain?: string): string {
@@ -89,31 +82,47 @@ export function getUrl(href: Href, locale: Locale, domain?: string): string {
 }
 
 /** Generates sitemap entries ready for Next metadata output or URL submission. */
-export async function getSitemapEntries(
-  options: SitemapEntryOptions = {}
-): Promise<MetadataRoute.Sitemap> {
-  const routePromises = getSitemapRoutes().map((route) =>
-    getEntries(route, options)
-  );
-  const routeArrays = await Promise.all(routePromises);
-  return routeArrays.flat();
-}
+export const getSitemapEntries = Effect.fn("www.sitemap.entries.all")(
+  function* (options: SitemapEntryOptions = {}) {
+    const routeArrays = yield* Effect.forEach(
+      getSitemapRoutes(),
+      (route) => getEntries(route, options),
+      {
+        concurrency: "unbounded",
+      }
+    );
+
+    return routeArrays.flat();
+  }
+);
 
 /**
  * Resolves the last-modified date for content from localized MDX metadata.
  * Falls back to a stable date when metadata is missing or invalid.
  */
-async function getContentLastModified(
-  contentPath: string,
-  options: SitemapEntryOptions,
-  locale: Locale = "en"
-): Promise<Date> {
-  try {
-    const metadata = await Effect.runPromise(
-      Effect.match(getContentMetadata(contentPath, locale), {
-        onFailure: () => null,
-        onSuccess: (data) => data,
-      })
+const getContentLastModified = Effect.fn("www.sitemap.contentLastModified")(
+  function* (
+    contentPath: string,
+    options: SitemapEntryOptions,
+    locale: Locale = "en"
+  ) {
+    const metadata = yield* Effect.try({
+      try: () => getContentMetadata(contentPath, locale),
+      catch: (error) => error,
+    }).pipe(
+      Effect.flatMap((metadataEffect) =>
+        Effect.match(metadataEffect, {
+          onFailure: () => null,
+          onSuccess: (data) => data,
+        })
+      ),
+      Effect.catchAll((error) =>
+        reportError(error, options, {
+          content_path: contentPath,
+          locale,
+          source: "sitemap-content-last-modified",
+        }).pipe(Effect.as(null))
+      )
     );
 
     if (metadata?.date) {
@@ -123,17 +132,16 @@ async function getContentLastModified(
         return metadataDate;
       }
     }
-  } catch (error) {
-    await reportError(error, options, {
-      content_path: contentPath,
-      locale,
-      source: "sitemap-content-last-modified",
-    });
-  }
 
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - MONTHS_IN_FALLBACK_PERIOD);
-  return sixMonthsAgo;
+    return getFallbackDate(MONTHS_IN_FALLBACK_PERIOD);
+  }
+);
+
+/** Builds a stable relative fallback date for sitemap recovery paths. */
+function getFallbackDate(monthsAgo: number) {
+  const date = new Date();
+  date.setMonth(date.getMonth() - monthsAgo);
+  return date;
 }
 
 /** Chooses sitemap change frequency and priority from the route family. */
@@ -187,14 +195,19 @@ function isContentRoute(route: string) {
 }
 
 /** Sends a non-fatal sitemap generation error to the optional reporter. */
-async function reportError(
+function reportError(
   error: unknown,
   options: SitemapEntryOptions,
   context: SitemapErrorContext
 ) {
-  if (!options.reportError) {
-    return;
+  const reporter = options.reportError;
+
+  if (!reporter) {
+    return Effect.void;
   }
 
-  await options.reportError(error, context);
+  return Effect.tryPromise({
+    try: () => reporter(error, context),
+    catch: (cause) => cause,
+  });
 }

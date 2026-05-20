@@ -2,7 +2,7 @@ import { Triangle } from "@repo/design-system/components/contents/mathematics/tr
 
 export const metadata = {
   title: "Trigonometric Comparison: Tangent",
-  description: "Calculate tangent ratios using opposite and adjacent sides. Solve height problems, slopes, and angles with step-by-step examples and practice exercises.",
+  description: "Calculate tangent ratios using opposite and adjacent sides. Solve height problems, slopes, and angles with worked examples and practice exercises.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/14/2025",
   subject: "Trigonometry",
@@ -18,7 +18,7 @@ Tangent is the ratio between the length of the opposite side (the side opposite 
 
 <BlockMath math="\tan \theta = \frac{\text{opposite side}}{\text{adjacent side}}" />
 
-<div className="mt-4">
+<ContentBlock>
   <Triangle
     title="Visualization of Tangent in a Triangle"
     description={<>The <InlineMath math="\tan" /> ratio compares the opposite side to the adjacent side.</>}
@@ -29,7 +29,7 @@ Tangent is the ratio between the length of the opposite side (the side opposite 
       hypotenuse: "hypotenuse",
     }}
   />
-</div>
+</ContentBlock>
 
 In a right-angled triangle, we can observe that:
 

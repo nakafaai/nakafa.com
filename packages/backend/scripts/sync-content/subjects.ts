@@ -95,7 +95,7 @@ export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (
           return [];
         }
 
-        const locale = parseLocale(localeMatch[1], materialFile);
+        const locale = yield* parseLocale(localeMatch[1], materialFile);
         const parsedTopics = yield* parseSubjectMaterialFile(
           materialFile,
           locale
@@ -222,10 +222,7 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
   for (const file of files) {
     const result = yield* Effect.either(
       Effect.gen(function* () {
-        const pathInfo = yield* Effect.try({
-          try: () => parseSubjectPath(file),
-          catch: (error) => error,
-        });
+        const pathInfo = yield* parseSubjectPath(file);
         const { metadata, body } = yield* readMdxFile(file);
         const topicSlug = `subject/${pathInfo.category}/${pathInfo.grade}/${pathInfo.material}/${pathInfo.topic}`;
 
@@ -240,7 +237,7 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
           section: pathInfo.section,
           title: metadata.title,
           description: metadata.description,
-          date: parseDateToEpoch(metadata.date),
+          date: yield* parseDateToEpoch(metadata.date),
           subject: metadata.subject,
           body,
           contentHash: computeHash(body + JSON.stringify(metadata.authors)),

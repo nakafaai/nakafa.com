@@ -31,6 +31,8 @@ def run(request: MathRequest) -> MathResult:
         steps = []
     elif operation == "eigenvalues":
         _require_square(matrix, "Eigenvalues")
+        # SymPy documents `multiple=True` as the list output form for eigenvals.
+        # https://docs.sympy.org/latest/modules/matrices/matrices.html#sympy.matrices.matrixbase.MatrixBase.eigenvals
         eigenvalues = matrix.eigenvals(multiple=True)
         return result(
             request,
@@ -59,6 +61,9 @@ def run(request: MathRequest) -> MathResult:
     elif operation == "linear_system":
         vector = parse.vector(request.vector)
         _require_linear_system_dimensions(matrix, vector)
+        # `linsolve((matrix, vector))` is SymPy's exact linear-system API for
+        # augmented matrix data.
+        # https://docs.sympy.org/latest/modules/solvers/solveset.html#sympy.solvers.solveset.linsolve
         output = sp.linsolve((matrix, vector))
         steps = []
     else:

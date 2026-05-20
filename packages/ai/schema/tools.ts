@@ -1,7 +1,6 @@
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import { type InferUITools, tool } from "ai";
-import dedent from "dedent";
 import { Schema } from "effect";
 
 export const ToolNameSchema = Schema.Literal("nakafa", "deepResearch", "math");
@@ -9,40 +8,47 @@ export type ToolName = Schema.Schema.Type<typeof ToolNameSchema>;
 
 const SpecialistToolInputFields = {
   request: Schema.NonEmptyString.annotations({
-    description: dedent(`
-      Task-relevant user request details only.
+    description: createPrompt({
+      taskContext: `
+        Task-relevant user request details only.
 
-      Preserve user-provided:
-      - names, dates, URLs, domains, versions, and source owners.
-      - formulas, values, variables, matrices, and data.
-      - language, level, context, and requested deliverables.
+        Preserve user-provided:
+        - names, dates, URLs, domains, versions, and source owners.
+        - formulas, values, variables, matrices, and data.
+        - language, level, context, and requested deliverables.
 
-      Keep this field in the user's language after cleanup.
-      Do not translate it into English.
-      Omit unrelated, repeated, emotional, or orchestration noise.
-    `),
+        Keep connective wording in the user's language after cleanup.
+        Preserve technical names and terms exactly.
+        Do not translate this field into English.
+        Omit unrelated, repeated, emotional, or orchestration noise.
+      `,
+    }),
   }),
   objective: Schema.NonEmptyString.annotations({
-    description: dedent(`
-      Specialist job only.
+    description: createPrompt({
+      taskContext: `
+        Specialist job only.
 
-      State what evidence, retrieval, or verification is needed.
-      Do not include final-answer wording.
-      Do not include instructions for weak, missing, or failed outcomes.
-    `),
+        State what evidence, retrieval, or verification is needed.
+        Do not include final-answer wording.
+        Do not include instructions for weak, missing, or failed outcomes.
+      `,
+    }),
   }),
-  requirements: Schema.Array(Schema.NonEmptyString)
-    .pipe(Schema.mutable)
-    .annotations({
-      description: dedent(`
+  requirements: Schema.optional(
+    Schema.Array(Schema.NonEmptyString).pipe(Schema.mutable)
+  ).annotations({
+    description: createPrompt({
+      taskContext: `
         Real constraints only.
 
         Include locale, current page, source ownership, recency, variables,
         assumptions, or requested evidence only when they matter.
         Do not include general answer-formatting, persona, or style rules.
         Do not include empty, fallback, or outcome-dependent instructions.
-      `),
+      `,
     }),
+  }),
 };
 
 /**
@@ -53,21 +59,29 @@ export const NakafaToolInputSchema = Schema.Struct({
   deliverables: Schema.Array(Schema.NonEmptyString)
     .pipe(Schema.mutable)
     .annotations({
-      description: dedent(`
-      Requested Nakafa deliverables only.
+      description: createPrompt({
+        taskContext: `
+          Requested Nakafa deliverables only.
 
-      Examples:
-      - lesson explanations.
-      - summaries.
-      - examples.
-      - exercises or practice questions.
-      - answers.
-      - Quran references.
-    `),
+          Typical deliverable types:
+          - lesson explanations.
+          - summaries.
+          - examples.
+          - exercises or practice questions.
+          - answers.
+          - Quran references.
+        `,
+      }),
     }),
 })
   .pipe(Schema.mutable)
-  .annotations({ description: "Nakafa content retrieval request." });
+  .annotations({
+    description: createPrompt({
+      taskContext: `
+        Nakafa content retrieval request.
+      `,
+    }),
+  });
 
 /**
  * Input schema for the deep research orchestrator tool.
@@ -77,16 +91,24 @@ export const ResearchToolInputSchema = Schema.Struct({
   sourceRequirements: Schema.Array(Schema.NonEmptyString)
     .pipe(Schema.mutable)
     .annotations({
-      description: dedent(`
+      description: createPrompt({
+        taskContext: `
         Source requirements only.
 
         Include source ownership, recency, domain, URL, or credibility
         requirements. Do not include final-answer wording.
-      `),
+      `,
+      }),
     }),
 })
   .pipe(Schema.mutable)
-  .annotations({ description: "External research request." });
+  .annotations({
+    description: createPrompt({
+      taskContext: `
+        External research request.
+      `,
+    }),
+  });
 
 /**
  * Input schema for the deterministic math orchestrator tool.
@@ -96,16 +118,26 @@ export const MathToolInputSchema = Schema.Struct({
   given: Schema.Array(Schema.NonEmptyString)
     .pipe(Schema.mutable)
     .annotations({
-      description: dedent(`
-        Math givens only.
+      description: createPrompt({
+        taskContext: `
+          Math givens only.
 
-        Include expressions, equations, variables, assumptions, matrices,
-        data, selected exercise content, or answer keys that must be checked.
-      `),
+          Include expressions, equations, variables, assumptions, matrices,
+          data, selected exercise content, or answer keys that must be checked.
+          Do not add derived formulas or solution methods unless they come from
+          the user or retrieved evidence being verified.
+        `,
+      }),
     }),
 })
   .pipe(Schema.mutable)
-  .annotations({ description: "Deterministic math verification request." });
+  .annotations({
+    description: createPrompt({
+      taskContext: `
+        Deterministic math verification request.
+      `,
+    }),
+  });
 
 export type NakafaToolInput = Schema.Schema.Type<typeof NakafaToolInputSchema>;
 export type ResearchToolInput = Schema.Schema.Type<
@@ -122,8 +154,8 @@ type SpecialistToolInput = MathToolInput | NakafaToolInput | ResearchToolInput;
 export function formatSpecialistToolTask(input: SpecialistToolInput) {
   const sections = [
     formatTextSection("Request", input.request),
-    formatTextSection("Task", input.objective),
-    formatListSection("Requirements", input.requirements),
+    formatTextSection("Objective", input.objective),
+    formatListSection("Requirements", input.requirements ?? []),
     formatListSection(
       "Source Requirements",
       "sourceRequirements" in input ? input.sourceRequirements : []
@@ -142,11 +174,13 @@ export function formatSpecialistToolTask(input: SpecialistToolInput) {
 
 /** Formats a single prose section for the internal specialist task. */
 function formatTextSection(heading: string, text: string) {
-  return dedent(`
-    # ${heading}
+  return createPrompt({
+    taskContext: `
+      # ${heading}
 
-    ${text}
-  `);
+      ${text}
+    `,
+  });
 }
 
 /** Formats a list section, omitting it when no items are present. */
@@ -155,11 +189,13 @@ function formatListSection(heading: string, items: readonly string[]) {
     return "";
   }
 
-  return dedent(`
-    # ${heading}
+  return createPrompt({
+    taskContext: `
+      # ${heading}
 
-    ${items.map((item) => `- ${item}`).join("\n")}
-  `);
+      ${items.map((item) => `- ${item}`).join("\n")}
+    `,
+  });
 }
 
 export const nakafaToolInputSchema = createEffectSchema(NakafaToolInputSchema);

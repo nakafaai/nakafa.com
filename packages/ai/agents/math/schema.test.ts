@@ -149,6 +149,117 @@ describe("math AI input schemas", () => {
     });
   });
 
+  it("allows equation solve domains for restricted variables", async () => {
+    const schema = asSchema(mathEquationInput);
+    const validate = schema.validate;
+
+    if (!validate) {
+      throw new Error("Math equation schema must validate model tool input.");
+    }
+
+    await expect(
+      Promise.resolve(
+        validate({
+          expression: "x^x * (ln(x) + 1) = 0",
+          lower: "0",
+          lowerInclusive: false,
+          operation: "solve",
+          variable: "x",
+        })
+      )
+    ).resolves.toEqual({
+      success: true,
+      value: {
+        expression: "x^x * (ln(x) + 1) = 0",
+        lower: "0",
+        lowerInclusive: false,
+        operation: "solve",
+        variable: "x",
+      },
+    });
+  });
+
+  it("allows system solve domains with an explicit bounded variable", async () => {
+    const schema = asSchema(mathEquationInput);
+    const validate = schema.validate;
+
+    if (!validate) {
+      throw new Error("Math equation schema must validate model tool input.");
+    }
+
+    await expect(
+      Promise.resolve(
+        validate({
+          expressions: ["x^2 - 1 = 0", "y = 0"],
+          lower: "0",
+          lowerInclusive: false,
+          operation: "solve",
+          variable: "x",
+          variables: ["x", "y"],
+        })
+      )
+    ).resolves.toEqual({
+      success: true,
+      value: {
+        expressions: ["x^2 - 1 = 0", "y = 0"],
+        lower: "0",
+        lowerInclusive: false,
+        operation: "solve",
+        variable: "x",
+        variables: ["x", "y"],
+      },
+    });
+  });
+
+  it("rejects unsupported equation domain shapes", async () => {
+    const schema = asSchema(mathEquationInput);
+    const validate = schema.validate;
+
+    if (!validate) {
+      throw new Error("Math equation schema must validate model tool input.");
+    }
+
+    await expect(
+      Promise.resolve(
+        validate({
+          expression: "x^2 - 1 = 0",
+          lower: "0",
+          operation: "roots",
+          variable: "x",
+        })
+      )
+    ).resolves.toMatchObject({
+      success: false,
+    });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          expressions: ["x + y = 3", "y = 1"],
+          lower: "0",
+          operation: "solve",
+          variable: "x",
+        })
+      )
+    ).resolves.toMatchObject({
+      success: false,
+    });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          expressions: ["x^2 - 1 = 0", "y = 0"],
+          lower: "0",
+          operation: "solve",
+          variable: "z",
+          variables: ["x", "y"],
+        })
+      )
+    ).resolves.toMatchObject({
+      success: false,
+    });
+  });
+
   it("requires values for discrete operations that use integer lists", async () => {
     const schema = asSchema(mathDiscreteInput);
     const validate = schema.validate;
@@ -275,6 +386,52 @@ describe("math AI input schemas", () => {
         expression: "x^2",
         operation: "differentiate",
       },
+    });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          expression: "x^x",
+          operation: "differentiate",
+          order: 2,
+          variable: "x",
+        })
+      )
+    ).resolves.toEqual({
+      success: true,
+      value: {
+        expression: "x^x",
+        operation: "differentiate",
+        order: 2,
+        variable: "x",
+      },
+    });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          expression: "x^2",
+          operation: "integrate",
+          order: 2,
+          variable: "x",
+        })
+      )
+    ).resolves.toMatchObject({
+      success: false,
+    });
+
+    await expect(
+      Promise.resolve(
+        validate({
+          expression: "sin(x) / x",
+          operation: "limit",
+          order: 2,
+          point: "0",
+          variable: "x",
+        })
+      )
+    ).resolves.toMatchObject({
+      success: false,
     });
   });
 
@@ -524,6 +681,7 @@ describe("math AI input schemas", () => {
           },
           type: "object",
         },
+        expression: expect.objectContaining({ type: "string" }),
         point: expect.objectContaining({ type: "string" }),
         lower: expect.objectContaining({ type: "string" }),
         upper: expect.objectContaining({ type: "string" }),

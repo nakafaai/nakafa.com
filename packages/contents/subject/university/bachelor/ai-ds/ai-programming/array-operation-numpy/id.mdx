@@ -1,6 +1,6 @@
 export const metadata = {
     title: "Operasi pada Array dengan NumPy",
-    description: "Pelajari operasi matematika pada array dengan NumPy: broadcasting, vektorisasi, aritmetika, statistik, dan manipulasi bentuk. Panduan lengkap dengan contoh kode teruji untuk pemrograman AI dan data science.",
+    description: "Pelajari operasi array NumPy: broadcasting, vektorisasi, aritmetika, statistik, dan manipulasi bentuk dengan contoh kode.",
     authors: [{ name: "Nabil Akbarazzima Fatih" }],
     date: "09/20/2025",
     subject: "Pemrograman AI",
@@ -8,9 +8,9 @@ export const metadata = {
 
 ## Broadcasting dalam NumPy
 
-Broadcasting adalah cara cerdas NumPy menangani operasi antara array dengan ukuran berbeda. Bayangkan seperti penerjemah universal yang otomatis mencari cara agar array yang tidak cocok bisa bekerja sama dalam perhitungan. Kamu bisa menjelajahi teknik broadcasting lanjutan di [panduan broadcasting NumPy](https://numpy.org/doc/stable/user/basics.broadcasting.html) ketika siap untuk skenario yang lebih kompleks.
+Broadcasting adalah cara NumPy menangani operasi antara array dengan ukuran berbeda. NumPy otomatis mencari cara agar array dengan bentuk yang kompatibel bisa bekerja sama dalam perhitungan. Kamu bisa menjelajahi teknik broadcasting lanjutan di [panduan broadcasting NumPy](https://numpy.org/doc/stable/user/basics.broadcasting.html) ketika siap untuk skenario yang lebih kompleks.
 
-Vektorisasi memungkinkan operasi pada seluruh array tanpa menulis loop, membuat perhitungan sangat cepat dengan memproses elemen secara bersamaan di level hardware.
+Vektorisasi memungkinkan operasi pada seluruh array tanpa menulis loop, sehingga perhitungan menjadi lebih cepat karena elemen diproses secara bersamaan di level hardware.
 
 <CodeBlock
   data={[
@@ -485,4 +485,4 @@ print(f"Standar deviasi baru: {np.std(Z, axis=0)}")  # Harus mendekati 1
 
 Proses standardisasi ini memastikan bahwa setiap fitur berkontribusi secara setara dalam algoritma machine learning, terlepas dari skala asli datanya. Misalnya, jika kamu memiliki data tinggi badan dalam sentimeter dan berat badan dalam kilogram, standardisasi akan membuat keduanya memiliki pengaruh yang sama dalam model.
 
-Untuk dokumentasi lengkap dan informasi lebih lanjut tentang operasi array NumPy, kamu dapat mengunjungi [dokumentasi resmi NumPy](https://numpy.org/doc/stable/user/basics.html) yang menyediakan panduan komprehensif dan contoh-contoh praktis.
+Untuk rincian operasi array NumPy yang lebih lengkap, kamu dapat membuka [dokumentasi resmi NumPy](https://numpy.org/doc/stable/user/basics.html) yang menyediakan panduan dan contoh praktis.

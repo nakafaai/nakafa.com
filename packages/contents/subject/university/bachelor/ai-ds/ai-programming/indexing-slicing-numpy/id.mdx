@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Indexing dan Slicing dengan NumPy",
-  description: "Pelajari teknik indexing dan slicing NumPy: array 1D, 2D, boolean mask, advanced indexing. Panduan lengkap dengan contoh kode teruji untuk pemrograman AI.",
+  description: "Pelajari teknik indexing dan slicing NumPy untuk array 1D, 2D, boolean mask, dan advanced indexing dengan contoh kode.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "09/20/2025",
   subject: "Pemrograman AI",
@@ -10,7 +10,7 @@ export const metadata = {
 
 Indexing dan slicing adalah alat untuk mengekstrak data spesifik dari array NumPy. Bayangkan indexing sebagai penunjuk ke lokasi tepat, sedangkan slicing mengambil seluruh bagian sekaligus. Berbeda dengan list Python yang membuat copy, slicing NumPy membuat view yang berbagi memori dengan array asli.
 
-Perilaku berbagi memori ini membuat NumPy sangat efisien tetapi memerlukan perhatian khusus untuk menghindari modifikasi yang tidak diinginkan. [Dokumentasi indexing NumPy](https://numpy.org/doc/stable/user/basics.indexing.html) menyediakan contoh ekstensif pola indexing lanjutan ketika kamu butuh seleksi data yang lebih canggih.
+Perilaku berbagi memori ini membuat NumPy efisien tetapi memerlukan perhatian khusus untuk menghindari modifikasi yang tidak diinginkan. [Dokumentasi indexing NumPy](https://numpy.org/doc/stable/user/basics.indexing.html) menyediakan contoh ekstensif pola indexing lanjutan ketika kamu butuh seleksi data yang lebih rinci.
 
 ## Operasi Array Satu Dimensi
 
@@ -199,7 +199,7 @@ print(a[i])
   ]}
 />
 
-Boolean mask adalah teknik powerful untuk filtering data berdasarkan kondisi tertentu. Indexing dengan array boolean mengambil elemen di mana nilai True ditemukan.
+Boolean mask adalah teknik yang berguna untuk filtering data berdasarkan kondisi tertentu. Indexing dengan array boolean mengambil elemen di mana nilai True ditemukan.
 
 <CodeBlock
   data={[

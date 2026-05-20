@@ -130,4 +130,45 @@ describe("Nakafa agent Quran references", () => {
     vi.doUnmock("@repo/contents/_lib/quran");
     vi.resetModules();
   });
+
+  it("fails with a typed read error when the Quran reference schema rejects output", async () => {
+    vi.resetModules();
+    vi.doMock("@repo/contents/_lib/agent/schema/quran", async () => {
+      const actual = await vi.importActual<
+        typeof import("@repo/contents/_lib/agent/schema/quran")
+      >("@repo/contents/_lib/agent/schema/quran");
+      const { Schema } = await import("effect");
+
+      return {
+        ...actual,
+        NakafaAgentQuranReferenceSchema: Schema.Struct({
+          impossible: Schema.String,
+        }),
+      };
+    });
+
+    const { NakafaAgentDataReadError } = await import(
+      "@repo/contents/_lib/agent/errors"
+    );
+    const { getNakafaAgentQuranReference } = await import(
+      "@repo/contents/_lib/agent/quran/read"
+    );
+    const error = await Effect.runPromise(
+      Effect.match(
+        getNakafaAgentQuranReference({
+          from_verse: 1,
+          locale: "en",
+          surah: 1,
+        }),
+        {
+          onFailure: (failure) => failure,
+          onSuccess: () => null,
+        }
+      )
+    );
+
+    expect(error).toBeInstanceOf(NakafaAgentDataReadError);
+    vi.doUnmock("@repo/contents/_lib/agent/schema/quran");
+    vi.resetModules();
+  });
 });

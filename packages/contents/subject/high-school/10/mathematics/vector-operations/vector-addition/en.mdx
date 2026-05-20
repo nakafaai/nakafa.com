@@ -3,7 +3,7 @@ import { getColor } from "@repo/design-system/lib/color";
 
 export const metadata = {
   title: "Vector Addition",
-  description: "Master vector addition using triangle, parallelogram & polygon methods. Learn resultant calculations, component addition, and real-world applications.",
+  description: "Learn vector addition using triangle, parallelogram & polygon methods. Learn resultant calculations, component addition, and real-world applications.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/12/2025",
   subject: "Vector and Operations",
@@ -23,7 +23,7 @@ Vector addition can be performed graphically using the triangle method. The prin
 2. Draw the second vector <InlineMath math="\vec{b}" /> with its tail meeting the tip of the first vector
 3. The resultant vector is the vector connecting the tail of the first vector to the tip of the second vector
 
-<div className="mt-4">
+<ContentBlock>
   <Vector3d
     title="Vector Addition Using the Triangle Method"
     description={<>Triangle method for adding vector <InlineMath math="\vec{a}" /> and vector <InlineMath math="\vec{b}" />.</>}
@@ -51,7 +51,7 @@ Vector addition can be performed graphically using the triangle method. The prin
       },
     ]}
   />
-</div>
+</ContentBlock>
 
 Mathematically, if <InlineMath math="\overrightarrow{AB}" /> and <InlineMath math="\overrightarrow{BC}" /> are two vectors, then:
 
@@ -69,7 +69,7 @@ Another method for adding vectors is the parallelogram method. The steps are:
 2. Create a parallelogram using the two vectors as sides
 3. The resultant vector is the diagonal of the parallelogram passing through the common origin of both vectors
 
-<div className="mt-4">
+<ContentBlock>
   <Vector3d
     title="Vector Addition Using the Parallelogram Method"
     description={<>Parallelogram method for adding vector <InlineMath math="\vec{a}" /> and vector <InlineMath math="\vec{b}" />.</>}
@@ -112,7 +112,7 @@ Another method for adding vectors is the parallelogram method. The steps are:
     ]}
     cameraPosition={[12, 8, 12]}
   />
-</div>
+</ContentBlock>
 
 This method also satisfies the **commutative property**, so the order of addition does not affect the result.
 
@@ -170,7 +170,7 @@ To add three vectors using the parallelogram method, we can:
 1. Add two vectors first to get the resultant <InlineMath math="R_1" />
 2. Add <InlineMath math="R_1" /> to the third vector to get the final resultant <InlineMath math="R_2" />
 
-<div className="mt-4">
+<ContentBlock>
   <Vector3d
     title="Associative Property of Vector Addition"
     description={
@@ -231,7 +231,7 @@ To add three vectors using the parallelogram method, we can:
     ]}
     cameraPosition={[10, 7, 10]}
   />
-</div>
+</ContentBlock>
 
 ## Vector Addition by Components
 
@@ -309,7 +309,7 @@ One example of vector addition application is in the movement of a boat crossing
 1. If the river current velocity is zero (no current), the boat's movement direction remains unchanged, only following the intended direction
 2. If the river current velocity is not zero, the boat's movement changes in both direction and speed
 
-<div className="mt-4">
+<ContentBlock>
   <Vector3d
     title="Application of Vector Addition: Boat Crossing a River"
     description="Resultant of boat velocity vector and river current vector."
@@ -338,7 +338,7 @@ One example of vector addition application is in the movement of a boat crossing
     ]}
     cameraPosition={[8, 6, 8]}
   />
-</div>
+</ContentBlock>
 
 The boat's motion is the result of adding the boat's own velocity vector to the river current velocity vector. This is similar to planning vehicle routes, where we need to consider each displacement vector from one location to another to determine the shortest route.
 

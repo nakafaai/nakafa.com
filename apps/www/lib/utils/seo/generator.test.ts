@@ -43,7 +43,7 @@ const translations = {
     "article.title": (values) =>
       `${getValue(values, "title")} - ${getValue(values, "category")} | Nakafa`,
     "exercise.description": (values) =>
-      `Take ${getValue(values, "material")} ${getValue(values, "exam")} exercise with ${getValue(values, "questionCount")} questions and detailed solutions.`,
+      `Take ${getValue(values, "material")} ${getValue(values, "exam")} exercise with ${getValue(values, "questionCount")} questions and explanations for checking your reasoning.`,
     "exercise.keywords": (values) =>
       `${getValue(values, "material")}, ${getValue(values, "exam")}, exercise`,
     "exercise.title": (values) =>
@@ -58,10 +58,16 @@ const translations = {
       `Generated subject description for ${getValue(values, "title")} in ${getValue(values, "material")} for ${getValue(values, "grade")}.`,
     "subject.keywords": (values) =>
       `${getValue(values, "title")}, ${getValue(values, "material")}, ${getValue(values, "grade")}`,
-    "subject.title": (values) =>
-      `${getValue(values, "title")}: ${getValue(values, "material")} (${getValue(values, "grade")}) | Nakafa`,
+    /** Formats subject titles with the same chapter-aware shape as the locale dictionary. */
+    "subject.title": (values) => {
+      const chapter = getValue(values, "chapter");
+      const chapterPrefix = chapter === "__EMPTY__" ? "" : `${chapter} - `;
+
+      return `${getValue(values, "title")}: ${chapterPrefix}${getValue(values, "material")} (${getValue(values, "grade")}) | Nakafa`;
+    },
   },
   Subject: {
+    "ai-ds": "Artificial Intelligence & Data Science",
     bachelor: "Bachelor",
     grade: (values) => `Grade ${getValue(values, "grade")}`,
     mathematics: "Mathematics",
@@ -205,6 +211,26 @@ describe("generateSEOMetadata", () => {
     expect(result.title).toBe("Nakafa: Mathematics (Grade 11) | Nakafa");
   });
 
+  it("keeps long subject titles intact in the localized title template", async () => {
+    const result = await generateSEOMetadata(
+      {
+        type: "subject",
+        category: "university",
+        grade: "bachelor",
+        material: "ai-ds",
+        chapter: "Linear Methods of AI",
+        data: {
+          title: "Best Approximation in Function and Polynomial Spaces",
+        },
+      },
+      "en"
+    );
+
+    expect(result.title).toBe(
+      "Best Approximation in Function and Polynomial Spaces: Linear Methods of AI - Artificial Intelligence & Data Science (Bachelor) | Nakafa"
+    );
+  });
+
   it("uses article MDX description before generated fallback copy", async () => {
     const result = await generateSEOMetadata(
       {
@@ -220,6 +246,24 @@ describe("generateSEOMetadata", () => {
 
     expect(result.description).toBe("Hand-written article summary.");
     expect(result.title).toBe("Regional Elections - Politics | Nakafa");
+  });
+
+  it("keeps long article titles intact in the localized title template", async () => {
+    const result = await generateSEOMetadata(
+      {
+        type: "article",
+        category: "politics",
+        data: {
+          title:
+            "Nepotism: The Machinations of Power in the Political Chessboard of Governance",
+        },
+      },
+      "en"
+    );
+
+    expect(result.title).toBe(
+      "Nepotism: The Machinations of Power in the Political Chessboard of Governance - Politics | Nakafa"
+    );
   });
 
   it("uses generated article description when MDX description is missing", async () => {
@@ -259,7 +303,7 @@ describe("generateSEOMetadata", () => {
       "Question 9/20: Quantitative Knowledge (SNBT) | Nakafa"
     );
     expect(result.description).toBe(
-      "Take Quantitative Knowledge SNBT exercise with 20 questions and detailed solutions."
+      "Take Quantitative Knowledge SNBT exercise with 20 questions and explanations for checking your reasoning."
     );
   });
 
@@ -283,7 +327,7 @@ describe("generateSEOMetadata", () => {
       "Question 0/0: Quantitative Knowledge (SNBT) | Nakafa"
     );
     expect(result.description).toBe(
-      "Take Quantitative Knowledge SNBT exercise with 0 questions and detailed solutions."
+      "Take Quantitative Knowledge SNBT exercise with 0 questions and explanations for checking your reasoning."
     );
   });
 
@@ -385,9 +429,7 @@ describe("generateSEOMetadata", () => {
   });
 
   it("falls back to legacy metadata builders when translations fail", async () => {
-    mockGetTranslations.mockRejectedValueOnce(
-      new Error("missing translations")
-    );
+    mockGetTranslations.mockRejectedValueOnce("missing translations");
 
     const result = await generateSEOMetadata(
       {

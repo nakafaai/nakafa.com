@@ -1,7 +1,7 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from "@repo/contents/subject/high-school/12/physics/_data";
+import { BASE_PATH } from "@repo/contents/subject/high-school/12/physics/_data/path";
 
-const enMaterials: MaterialList = [
+const enMaterials = [
   {
     title: "Static Electricity",
     description:
@@ -177,7 +177,7 @@ const enMaterials: MaterialList = [
   {
     title: "Electromagnetic Waves",
     description:
-      "Invisible spectrum that enables WiFi, radio, and X-rays to transform civilization.",
+      "How electromagnetic waves work in communication, light, and radiation.",
     href: `${BASE_PATH}/electromagnetic-wave`,
     items: [
       {
@@ -221,7 +221,7 @@ const enMaterials: MaterialList = [
   {
     title: "Introduction to Electronic Systems",
     description:
-      "Gateway to digital technology that transforms the world from LEDs to modern computers.",
+      "How electronic components support systems from simple circuits to computers.",
     href: `${BASE_PATH}/electronic-systems`,
     items: [
       {
@@ -370,6 +370,6 @@ const enMaterials: MaterialList = [
       },
     ],
   },
-] as const;
+] satisfies MaterialList;
 
 export default enMaterials;

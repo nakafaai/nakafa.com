@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { getItemLabelKey, getItemValueKey } from "./labels";
+import {
+  getItemLabelKey,
+  getItemValueKey,
+} from "@/components/ai/message-part/math/labels";
 
 describe("math item labels", () => {
   it("maps every CAS item label to a student-facing translation key", () => {
@@ -24,6 +27,8 @@ describe("math item labels", () => {
     expect(getItemLabelKey("q3")).toBe("math-item-q3");
     expect(getItemLabelKey("root")).toBe("math-item-root");
     expect(getItemLabelKey("solution")).toBe("math-item-solution");
+    expect(getItemLabelKey("singularity")).toBe("math-item-singularity");
+    expect(getItemLabelKey("status")).toBe("math-item-status");
   });
 
   it("keeps unknown item labels on the generic result fallback", () => {
@@ -34,6 +39,8 @@ describe("math item labels", () => {
     expect(getItemValueKey("diagonalizable", "true")).toBe("math-value-yes");
     expect(getItemValueKey("diagonalizable", "false")).toBe("math-value-no");
     expect(getItemValueKey("diagonalizable", "unknown")).toBeUndefined();
+    expect(getItemValueKey("status", "divergent")).toBe("math-value-divergent");
+    expect(getItemValueKey("status", "unknown")).toBeUndefined();
     expect(getItemValueKey("eigenvalue", "false")).toBeUndefined();
   });
 });

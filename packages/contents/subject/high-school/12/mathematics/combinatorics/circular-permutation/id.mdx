@@ -1,6 +1,6 @@
 export const metadata = {
    title: "Permutasi Siklis",
-   description: "Kuasai rumus permutasi siklis untuk susunan melingkar dan masalah tempat duduk. Pelajari mengapa rotasi identik dengan contoh detail dan latihan soal lengkap.",
+  description: "Pelajari rumus permutasi siklis untuk susunan melingkar dan masalah tempat duduk. Pahami mengapa susunan yang hanya berputar dianggap sama.",
    authors: [{ name: "Nabil Akbarazzima Fatih" }],
    date: "05/26/2025",
    subject: "Kombinatorik",
@@ -113,10 +113,10 @@ Contoh: <InlineMath math="4" /> pasang suami istri duduk melingkar, setiap pasan
    
    Langkah penyelesaian (**metode komplemen**):
    - Total cara tanpa syarat: <InlineMath math="(7-1)! = 6! = 6 \times 5 \times 4 \times 3 \times 2 \times 1 = 720" />
-   - **Hitung cara yang TIDAK diinginkan** (<InlineMath math="2 \text{ siswa}" /> bersebelahan):
-     - Anggap <InlineMath math="2 \text{ siswa}" /> sebagai satu unit: <InlineMath math="(6-1)! = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120" />
-     - <InlineMath math="2 \text{ siswa}" /> dapat bertukar posisi: <InlineMath math="2! = 2" />
-     - Total cara bersebelahan: <InlineMath math="120 \times 2 = 240" />
+   - Untuk menghitung cara yang tidak diinginkan, anggap <InlineMath math="2 \text{ siswa}" /> yang bersebelahan sebagai satu unit.
+   - Sekarang ada <InlineMath math="6" /> unit yang disusun melingkar, sehingga banyak susunannya adalah <InlineMath math="(6-1)! = 5! = 5 \times 4 \times 3 \times 2 \times 1 = 120" />.
+   - Dua siswa di dalam unit itu dapat bertukar posisi, sehingga ada <InlineMath math="2! = 2" /> susunan internal.
+   - Total cara bersebelahan: <InlineMath math="120 \times 2 = 240" />
    - **Cara yang diinginkan:** <InlineMath math="720 - 240 = 480" />
    
    Jadi, ada <InlineMath math="480 \text{ cara}" /> membentuk lingkaran dimana kedua siswa tidak bersebelahan.

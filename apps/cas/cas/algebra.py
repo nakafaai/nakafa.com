@@ -62,6 +62,9 @@ def domain(request: MathRequest) -> MathResult:
     variable = parse.symbol_from_expression(request.variable, request.expression)
 
     try:
+        # `continuous_domain` returns the real intervals where the expression is
+        # continuous, or raises when SymPy has no implemented method.
+        # https://docs.sympy.org/latest/modules/calculus/index.html
         domain_set = continuous_domain(expr, variable, sp.S.Reals)
     except NotImplementedError as error:
         raise ValueError("Domain could not be determined.") from error

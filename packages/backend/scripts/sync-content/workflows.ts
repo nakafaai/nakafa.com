@@ -1,3 +1,7 @@
+import {
+  getUnknownMessage,
+  ScriptFailureError,
+} from "@repo/backend/scripts/lib/errors";
 import { syncArticles } from "@repo/backend/scripts/sync-content/articles";
 import {
   collectAuthorNamesFromFiles,
@@ -464,33 +468,37 @@ export const syncFull = Effect.fn("sync.full")(function* (
   );
 
   const currentCommit = yield* getCurrentGitCommit();
+  const result = yield* Effect.either(
+    Effect.gen(function* () {
+      yield* syncAll(config, options);
+      log("\n");
 
-  try {
-    yield* syncAll(config, options);
-    log("\n");
+      const cleanResult = yield* clean(config, {
+        ...options,
+        force: true,
+        authors: true,
+      });
+      if (cleanResult.hasStale && cleanResult.deleted) {
+        log("\nStale content was found and deleted.");
+      }
 
-    const cleanResult = yield* clean(config, {
-      ...options,
-      force: true,
-      authors: true,
-    });
-    if (cleanResult.hasStale && cleanResult.deleted) {
-      log("\nStale content was found and deleted.");
-    }
+      log("\n");
+      yield* verify(config, options);
+      yield* saveSyncState(
+        { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
+        options.prod ?? false
+      );
+    })
+  );
 
-    log("\n");
-    yield* verify(config, options);
-    yield* saveSyncState(
-      { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
-      options.prod ?? false
+  if (result._tag === "Left") {
+    logError(`Full sync failed: ${getUnknownMessage(result.left)}`);
+    return yield* Effect.fail(
+      new ScriptFailureError({ message: "Full sync failed." })
     );
-
-    log("\n=== FULL SYNC COMPLETE ===");
-    logSuccess("All operations completed successfully!");
-    logSuccess("Sync state saved for incremental syncs");
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    logError(`Full sync failed: ${message}`);
-    process.exit(1);
   }
+
+  log("\n=== FULL SYNC COMPLETE ===");
+  logSuccess("All operations completed successfully!");
+  logSuccess("Sync state saved for incremental syncs");
 });

@@ -1,11 +1,11 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from "@repo/contents/subject/high-school/12/economy/_data";
+import { BASE_PATH } from "@repo/contents/subject/high-school/12/economy/_data/path";
 
-const enMaterials: MaterialList = [
+const enMaterials = [
   {
     title: "Economic Growth and Development",
     description:
-      "The engine transforming societies from poverty to prosperity in the digital age.",
+      "How economic growth, development, and the digital economy affect people's welfare.",
     href: `${BASE_PATH}/growth-development`,
     items: [
       {
@@ -25,7 +25,7 @@ const enMaterials: MaterialList = [
   {
     title: "International Economy",
     description:
-      "Global economic web connecting nations through trade, cooperation, and competition.",
+      "How trade, cooperation, and competition connect national economies.",
     href: `${BASE_PATH}/international-economy`,
     items: [
       {
@@ -65,7 +65,7 @@ const enMaterials: MaterialList = [
   {
     title: "State and Regional Budget",
     description:
-      "Financial blueprint determining public services, infrastructure, and national priorities.",
+      "How public budgets shape services, infrastructure, and priorities.",
     href: `${BASE_PATH}/apbn-apbd`,
     items: [
       {
@@ -85,7 +85,7 @@ const enMaterials: MaterialList = [
   {
     title: "Accounting",
     description:
-      "Business language revealing financial health and guiding smart decisions.",
+      "How accounting records financial activity and supports business decisions.",
     href: `${BASE_PATH}/accounting`,
     items: [
       {
@@ -98,6 +98,6 @@ const enMaterials: MaterialList = [
       },
     ],
   },
-] as const;
+] satisfies MaterialList;
 
 export default enMaterials;

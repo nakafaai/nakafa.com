@@ -320,7 +320,7 @@ describe("scoped content helpers", () => {
 
   it("parses scoped references successfully", async () => {
     const importReferencesModule = vi.fn(() =>
-      Promise.resolve({
+      Effect.succeed({
         references: [
           {
             title: "Scoped Reference",
@@ -356,7 +356,7 @@ describe("scoped content helpers", () => {
       getScopedReferences(
         "articles",
         () =>
-          Promise.resolve({
+          Effect.succeed({
             references: [{ title: "Broken" }],
           }),
         "articles/politics/test-article"
@@ -366,11 +366,25 @@ describe("scoped content helpers", () => {
     expect(result).toStrictEqual([]);
   });
 
+  it("returns an empty array when scoped references use the wrong root", async () => {
+    const importReferencesModule = vi.fn(() => Effect.succeed({}));
+    const result = await Effect.runPromise(
+      getScopedReferences(
+        "articles",
+        importReferencesModule,
+        "subject/high-school/10/mathematics"
+      )
+    );
+
+    expect(result).toStrictEqual([]);
+    expect(importReferencesModule).not.toHaveBeenCalled();
+  });
+
   it("returns an empty array when scoped references have no array export", async () => {
     const result = await Effect.runPromise(
       getScopedReferences(
         "articles",
-        () => Promise.resolve({ references: undefined }),
+        () => Effect.succeed({ references: undefined }),
         "articles/politics/test-article"
       )
     );
@@ -382,7 +396,7 @@ describe("scoped content helpers", () => {
     const result = await Effect.runPromise(
       getScopedReferences(
         "articles",
-        () => Promise.resolve({}),
+        () => Effect.succeed({}),
         "articles/politics/test-article"
       )
     );
@@ -394,7 +408,14 @@ describe("scoped content helpers", () => {
     const result = await Effect.runPromise(
       getScopedReferences(
         "articles",
-        () => Promise.reject(new Error("missing references")),
+        () =>
+          Effect.fail(
+            new ModuleLoadError({
+              cause: new Error("missing references"),
+              message: "Unable to import test references.",
+              path: "@repo/contents/articles/politics/test-article/ref.ts",
+            })
+          ),
         "articles/politics/test-article"
       )
     );

@@ -225,7 +225,13 @@ describe("generateContentParams", () => {
 
   it("should handle error gracefully", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(
-      Effect.fail(new DirectoryReadError({ path: "test", cause: "error" }))
+      Effect.fail(
+        new DirectoryReadError({
+          cause: "error",
+          message: "Unable to read test directory.",
+          path: "test",
+        })
+      )
     );
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
@@ -399,7 +405,13 @@ describe("generateLocaleParams", () => {
 
   it("should handle error gracefully", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(
-      Effect.fail(new DirectoryReadError({ path: ".", cause: "error" }))
+      Effect.fail(
+        new DirectoryReadError({
+          cause: "error",
+          message: "Unable to read test directory.",
+          path: ".",
+        })
+      )
     );
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 

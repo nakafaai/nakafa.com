@@ -32,7 +32,6 @@ const mathInput = {
   given: ["2x + 3x"],
   objective: "Simplify the expression.",
   request: "simplify 2x + 3x",
-  requirements: ["Verify the simplified result."],
 };
 
 describe("mapUIMessagePartsToDBParts", () => {

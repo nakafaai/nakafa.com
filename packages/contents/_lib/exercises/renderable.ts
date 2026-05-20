@@ -52,10 +52,9 @@ function loadRenderableExercise(
  * @param filePath - Exercise-set path relative to `packages/contents`
  * @returns Plain exercise rows ordered by exercise number
  */
-export async function getRenderableExercisesContent(
-  locale: Locale,
-  filePath: string
-) {
+export const getRenderableExercisesContent = Effect.fn(
+  "Contents.Exercises.getRenderableExercisesContent"
+)(function* (locale: Locale, filePath: string) {
   const cleanPath = cleanSlug(filePath);
   const exerciseNumbers = getExerciseQuestionNumbers(
     getMDXSlugsForLocale(locale),
@@ -66,19 +65,15 @@ export async function getRenderableExercisesContent(
     return [];
   }
 
-  return await Effect.runPromise(
-    Effect.all(
-      exerciseNumbers.map((exerciseNumber) =>
-        loadRenderableExercise(exerciseNumber, cleanPath, locale)
-      ),
-      { concurrency: "unbounded" }
-    ).pipe(
-      Effect.map((exercises) =>
-        exercises.filter((exercise) => exercise !== null)
-      )
-    )
+  return yield* Effect.all(
+    exerciseNumbers.map((exerciseNumber) =>
+      loadRenderableExercise(exerciseNumber, cleanPath, locale)
+    ),
+    { concurrency: "unbounded" }
+  ).pipe(
+    Effect.map((exercises) => exercises.filter((exercise) => exercise !== null))
   );
-}
+});
 
 /**
  * Loads one plain renderable exercise row by its number within an exercise set.
@@ -88,11 +83,9 @@ export async function getRenderableExercisesContent(
  * @param exerciseNumber - Exercise number to look up
  * @returns Matching plain exercise row, or `null` when it is unavailable
  */
-export function getRenderableExerciseByNumber(
-  locale: Locale,
-  filePath: string,
-  exerciseNumber: number
-) {
+export const getRenderableExerciseByNumber = Effect.fn(
+  "Contents.Exercises.getRenderableExerciseByNumber"
+)(function* (locale: Locale, filePath: string, exerciseNumber: number) {
   const cleanPath = cleanSlug(filePath);
   const numberSegment = getExerciseQuestionNumbers(
     getMDXSlugsForLocale(locale),
@@ -103,7 +96,5 @@ export function getRenderableExerciseByNumber(
     return null;
   }
 
-  return Effect.runPromise(
-    loadRenderableExercise(numberSegment, cleanPath, locale)
-  );
-}
+  return yield* loadRenderableExercise(numberSegment, cleanPath, locale);
+});

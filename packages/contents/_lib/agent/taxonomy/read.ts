@@ -5,6 +5,10 @@ import {
   NAKAFA_MCP_INFORMATIONAL_ROOT,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
+import {
+  getUnknownErrorMessage,
+  NakafaAgentDataReadError,
+} from "@repo/contents/_lib/agent/errors";
 import { NakafaAgentTaxonomySchema } from "@repo/contents/_lib/agent/schema/taxonomy";
 import {
   getExerciseCategoryOptions,
@@ -41,40 +45,48 @@ export const getNakafaAgentTaxonomy = Effect.fn("NakafaAgent.getTaxonomy")(
       { concurrency: "unbounded" }
     );
 
-    return Schema.decodeUnknownSync(NakafaAgentTaxonomySchema)({
-      articles: {
-        categories: ARTICLE_CATEGORIES,
-      },
-      content_counts: contentCounts,
-      default_locale: routing.defaultLocale,
-      endpoints: {
-        direct: NAKAFA_MCP_DIRECT_ENDPOINT,
-        recommended: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
-        root_note: `${NAKAFA_MCP_INFORMATIONAL_ROOT} is informational only.`,
-      },
-      exercises: {
-        categories: getExerciseCategoryOptions(locale),
-        materials: getExerciseMaterialOptions(locale),
-        types: getExerciseTypeOptions(locale),
-      },
-      locale,
-      locales: routing.locales,
-      quran: {
-        surah_count: getAllSurah().length,
-      },
-      sections: NAKAFA_AGENT_SECTIONS,
-      subject: {
-        categories: SUBJECT_CATEGORIES,
-        grades: [...NUMERIC_GRADES, ...NON_NUMERIC_GRADES],
-        materials: [...HIGH_SCHOOL_MATERIALS, ...BACHELOR_MATERIALS],
-      },
-      tools: [
-        "nakafa_search_content",
-        "nakafa_get_content",
-        "nakafa_get_taxonomy",
-        "nakafa_get_exercise",
-        "nakafa_get_quran_reference",
-      ],
+    return yield* Effect.try({
+      try: () =>
+        Schema.decodeUnknownSync(NakafaAgentTaxonomySchema)({
+          articles: {
+            categories: ARTICLE_CATEGORIES,
+          },
+          content_counts: contentCounts,
+          default_locale: routing.defaultLocale,
+          endpoints: {
+            direct: NAKAFA_MCP_DIRECT_ENDPOINT,
+            recommended: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+            root_note: `${NAKAFA_MCP_INFORMATIONAL_ROOT} is informational only.`,
+          },
+          exercises: {
+            categories: getExerciseCategoryOptions(locale),
+            materials: getExerciseMaterialOptions(locale),
+            types: getExerciseTypeOptions(locale),
+          },
+          locale,
+          locales: routing.locales,
+          quran: {
+            surah_count: getAllSurah().length,
+          },
+          sections: NAKAFA_AGENT_SECTIONS,
+          subject: {
+            categories: SUBJECT_CATEGORIES,
+            grades: [...NUMERIC_GRADES, ...NON_NUMERIC_GRADES],
+            materials: [...HIGH_SCHOOL_MATERIALS, ...BACHELOR_MATERIALS],
+          },
+          tools: [
+            "nakafa_search_content",
+            "nakafa_get_content",
+            "nakafa_get_taxonomy",
+            "nakafa_get_exercise",
+            "nakafa_get_quran_reference",
+          ],
+        }),
+      catch: (error) =>
+        new NakafaAgentDataReadError({
+          cause: getUnknownErrorMessage(error),
+          message: "Unable to build Nakafa agent taxonomy.",
+        }),
     });
   }
 );

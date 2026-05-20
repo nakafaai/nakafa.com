@@ -2,7 +2,7 @@ import { Triangle } from "@repo/design-system/components/contents/mathematics/tr
 
 export const metadata = {
   title: "Perbandingan Trigonometri: Sinus dan Cosinus",
-  description: "Kuasai rasio sinus dan cosinus dengan contoh piramida nyata. Bandingkan fungsi trigonometri, selesaikan masalah praktis, dan pahami aplikasinya.",
+  description: "Pelajari rasio sinus dan cosinus dengan contoh piramida nyata. Bandingkan fungsi trigonometri, selesaikan masalah praktis, dan pahami aplikasinya.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/14/2025",
   subject: "Trigonometri",
@@ -14,7 +14,7 @@ Sinus suatu sudut <InlineMath math="\theta" /> dalam segitiga siku-siku adalah p
 
 <BlockMath math="\sin \theta = \frac{\text{sisi depan}}{\text{sisi miring}}" />
 
-<div className="mt-4">
+<ContentBlock>
   <Triangle
     title={
       <>
@@ -29,7 +29,7 @@ Sinus suatu sudut <InlineMath math="\theta" /> dalam segitiga siku-siku adalah p
       hypotenuse: "Sisi Miring",
     }}
   />
-</div>
+</ContentBlock>
 
 ### Apa itu Perbandingan Cosinus?
 
@@ -37,7 +37,7 @@ Cosinus suatu sudut <InlineMath math="\theta" /> dalam segitiga siku-siku adalah
 
 <BlockMath math="\cos \theta = \frac{\text{sisi samping}}{\text{sisi miring}}" />
 
-<div className="mt-4">
+<ContentBlock>
   <Triangle
     title={
       <>
@@ -52,7 +52,7 @@ Cosinus suatu sudut <InlineMath math="\theta" /> dalam segitiga siku-siku adalah
       hypotenuse: "Sisi Miring",
     }}
   />
-</div>
+</ContentBlock>
 
 ## Nilai Sinus dan Cosinus untuk Sudut Umum
 

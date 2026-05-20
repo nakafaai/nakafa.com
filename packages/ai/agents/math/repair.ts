@@ -5,6 +5,7 @@ import {
 } from "@repo/ai/config/models";
 import { backgroundGenerationTimeout } from "@repo/ai/config/timeouts";
 import { model } from "@repo/ai/config/vercel";
+import { createPrompt } from "@repo/ai/prompt/utils";
 import {
   generateText,
   NoSuchToolError,
@@ -12,8 +13,7 @@ import {
   type ToolCallRepairFunction,
   type ToolSet,
 } from "ai";
-import dedent from "dedent";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 type MathRepairOptions = Parameters<ToolCallRepairFunction<ToolSet>>[0];
 
@@ -64,24 +64,39 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
   }
 
   const schema = yield* Effect.tryPromise(() => inputSchema(toolCall)).pipe(
-    Effect.either
+    Effect.option
   );
 
-  if (schema._tag === "Left") {
+  if (Option.isNone(schema)) {
     return null;
   }
+
+  const failedArguments = yield* Schema.decodeUnknown(
+    Schema.parseJson(Schema.Unknown)
+  )(toolCall.input).pipe(Effect.option);
+  const failedArgumentsText = Option.match(failedArguments, {
+    onNone: () => toolCall.input,
+    onSome: (input) => JSON.stringify(input, null, 2),
+  });
 
   const repaired = yield* Effect.tryPromise(() =>
     generateText({
       model: model.languageModel(modelId),
       output: Output.object({ schema: tool.inputSchema }),
-      prompt: dedent(`
+      prompt: createPrompt({
+        taskContext: `
         # Repair Task
 
         Repair the math tool arguments without changing the selected tool.
+      `,
 
-        Rules:
+        toolUsageGuidelines: `
+        # Repair Rules
+
         - Keep the operation field exactly the same as the failed arguments.
+        - Start from the failed arguments and keep every relevant existing field that the accepted schema allows.
+        - Add or correct only the fields needed to satisfy validation.
+        - Do not drop bounds, inclusivity flags, variables, matrices, points, datasets, or expression data from the failed arguments.
         - Copy the exact expression, equation, points, matrix, or dataset from the original user request.
         - Do not invent a new math problem.
         - For equivalence or validity checks, use compare with left and right expressions.
@@ -89,9 +104,12 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
         - For derivative, integral, or limit, include expression.
         - Use variable x unless the request names another variable.
         - For a definite or improper integral, include lower and upper exactly from the original request.
+        - For equation systems with lower or upper solve-domain bounds, include variable for the bounded variable and variables for all solved variables.
         - For named probability distributions, include distribution and parameters.
         - Include the requested probability point or event bounds.
+      `,
 
+        backgroundData: `
         # Selected Tool
 
         ${toolCall.toolName}
@@ -102,16 +120,17 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
 
         # Failed Arguments
 
-        ${JSON.stringify(toolCall.input, null, 2)}
+        ${failedArgumentsText}
 
         # Accepted Schema
 
-        ${JSON.stringify(schema.right, null, 2)}
+        ${JSON.stringify(schema.value, null, 2)}
 
         # Validation Error
 
         ${error.message}
-      `),
+      `,
+      }),
       providerOptions: {
         gateway: gatewayProviderOptions,
         google: getFastModelProviderOptions(modelId),
@@ -119,27 +138,27 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
       system,
       timeout: backgroundGenerationTimeout,
     })
-  ).pipe(Effect.either);
+  ).pipe(Effect.option);
 
-  if (repaired._tag === "Left") {
+  if (Option.isNone(repaired)) {
     return null;
   }
 
-  const repairedInput = yield* Effect.either(
-    Schema.decodeUnknown(repairArgumentsSchema)(repaired.right.output)
-  );
+  const repairedInput = yield* Schema.decodeUnknown(repairArgumentsSchema)(
+    repaired.value.output
+  ).pipe(Effect.option);
 
-  if (repairedInput._tag === "Left") {
+  if (Option.isNone(repairedInput)) {
     return null;
   }
 
-  const originalOperation = yield* Effect.either(
-    decodeOperation(toolCall.input)
+  const originalOperation = yield* decodeOperation(toolCall.input).pipe(
+    Effect.option
   );
-  const input =
-    originalOperation._tag === "Right"
-      ? { ...repairedInput.right, operation: originalOperation.right.operation }
-      : repairedInput.right;
+  const input = Option.match(originalOperation, {
+    onNone: () => repairedInput.value,
+    onSome: ({ operation }) => ({ ...repairedInput.value, operation }),
+  });
 
   return {
     ...toolCall,

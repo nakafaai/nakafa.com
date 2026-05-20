@@ -1,3 +1,7 @@
+import {
+  getUnknownMessage,
+  ScriptFailureError,
+} from "@repo/backend/scripts/lib/errors";
 import { getContentCounts } from "@repo/backend/scripts/sync-content/counts";
 import { getDataIntegrity } from "@repo/backend/scripts/sync-content/inspection";
 import {
@@ -101,148 +105,160 @@ export const verify = Effect.fn("sync.verify")(function* (
 
   log("\n=== DATABASE ===\n");
 
-  try {
-    const counts = yield* getContentCounts(config);
-
-    log("Content tables:");
-    log(`  articleContents:     ${counts.articles}`);
-    log(`  subjectTopics:       ${counts.subjectTopics}`);
-    log(`  subjectSections:     ${counts.subjectSections}`);
-    log(`  exerciseSets:        ${counts.exerciseSets}`);
-    log(`  exerciseQuestions:   ${counts.exerciseQuestions}`);
-    log(`  contentSearch: ${counts.contentSearch}`);
-    log(`  tryouts:             ${counts.tryouts}`);
-
-    log("\nRelated tables:");
-    log(`  authors:             ${counts.authors}`);
-    log(
-      `  contentAuthors:      ${counts.contentAuthors} (content-author links)`
+  const countsResult = yield* Effect.either(getContentCounts(config));
+  if (countsResult._tag === "Left") {
+    return yield* Effect.fail(
+      new ScriptFailureError({
+        message: `Failed to query database: ${getUnknownMessage(countsResult.left)}`,
+      })
     );
-    log(`  articleReferences:   ${counts.articleReferences}`);
-    log(`  exerciseChoices:     ${counts.exerciseChoices}`);
-
-    log("\n=== VERIFICATION ===\n");
-
-    let allMatch = true;
-    let hasWarnings = false;
-
-    if (counts.articles === articleFiles.length) {
-      logSuccess(
-        `Articles: ${counts.articles} in DB = ${articleFiles.length} files`
-      );
-    } else {
-      logError(
-        `Articles: ${counts.articles} in DB != ${articleFiles.length} files`
-      );
-      allMatch = false;
-    }
-
-    if (counts.subjectSections === subjectFiles.length) {
-      logSuccess(
-        `Subject Sections: ${counts.subjectSections} in DB = ${subjectFiles.length} files`
-      );
-    } else {
-      logError(
-        `Subject Sections: ${counts.subjectSections} in DB != ${subjectFiles.length} files`
-      );
-      allMatch = false;
-    }
-
-    if (counts.exerciseQuestions === questionFiles.length) {
-      logSuccess(
-        `Questions: ${counts.exerciseQuestions} in DB = ${questionFiles.length} question files`
-      );
-    } else {
-      logError(
-        `Questions: ${counts.exerciseQuestions} in DB != ${questionFiles.length} question files`
-      );
-      allMatch = false;
-    }
-
-    log(
-      `\nReferences: ${counts.articleReferences} in DB (from ${refFiles.length} ref.ts files x 2 locales)`
-    );
-
-    const avgChoicesPerQuestion =
-      counts.exerciseQuestions > 0
-        ? counts.exerciseChoices / counts.exerciseQuestions
-        : 0;
-    log(
-      `Choices: ${counts.exerciseChoices} in DB (~${avgChoicesPerQuestion.toFixed(1)} per question)`
-    );
-    log(`Content-Author links: ${counts.contentAuthors} in DB`);
-
-    if (answerFiles.length !== questionFiles.length) {
-      log(
-        `\nWARNING: Answer files (${answerFiles.length}) != Question files (${questionFiles.length})`
-      );
-      hasWarnings = true;
-    }
-
-    log("\n=== DATA INTEGRITY ===\n");
-    const integrity = yield* getDataIntegrity(config);
-
-    allMatch =
-      !logIntegrityList(
-        "questions without choices",
-        integrity.questionsWithoutChoices,
-        `All ${integrity.totalQuestions} questions have choices`
-      ) && allMatch;
-    allMatch =
-      !logIntegrityList(
-        "questions without authors",
-        integrity.questionsWithoutAuthors,
-        `All ${integrity.totalQuestions} questions have authors`
-      ) && allMatch;
-    allMatch =
-      !logIntegrityList(
-        "sections without topics",
-        integrity.sectionsWithoutTopics,
-        `All ${integrity.totalSections} sections have topics`
-      ) && allMatch;
-    allMatch =
-      !logIntegrityList(
-        "active tryouts without published scales",
-        integrity.activeTryoutsWithoutScale,
-        `All ${counts.tryouts} active tryouts have published scales`
-      ) && allMatch;
-
-    const articlesWithRefs =
-      integrity.totalArticles - integrity.articlesWithoutReferences.length;
-    log(
-      `Articles with references: ${articlesWithRefs}/${integrity.totalArticles}`
-    );
-
-    log("\n=== SUMMARY ===\n");
-    if (allMatch) {
-      logSuccess("All primary content synced correctly!");
-      log(`  - ${counts.articles} articles`);
-      log(`  - ${counts.subjectTopics} subject topics`);
-      log(`  - ${counts.subjectSections} subject sections`);
-      log(`  - ${counts.exerciseSets} exercise sets`);
-      log(`  - ${counts.exerciseQuestions} exercise questions`);
-      log(`  - ${counts.contentSearch} content search rows`);
-      log(`  - ${counts.tryouts} tryouts`);
-      log(`  - ${counts.articleReferences} references`);
-      log(`  - ${counts.exerciseChoices} choices`);
-      log(`  - ${counts.authors} authors`);
-
-      if (hasWarnings) {
-        log("\nSome warnings found (see above)");
-      }
-      return;
-    }
-
-    logError("Content mismatch detected!");
-    if (options.prod) {
-      log("\nRun 'pnpm --filter @repo/backend sync:prod' to fix");
-    } else {
-      log("\nRun 'pnpm --filter @repo/backend sync' to fix");
-    }
-    process.exit(1);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    logError(`Failed to query database: ${message}`);
-    process.exit(1);
   }
+
+  const counts = countsResult.right;
+
+  log("Content tables:");
+  log(`  articleContents:     ${counts.articles}`);
+  log(`  subjectTopics:       ${counts.subjectTopics}`);
+  log(`  subjectSections:     ${counts.subjectSections}`);
+  log(`  exerciseSets:        ${counts.exerciseSets}`);
+  log(`  exerciseQuestions:   ${counts.exerciseQuestions}`);
+  log(`  contentSearch: ${counts.contentSearch}`);
+  log(`  tryouts:             ${counts.tryouts}`);
+
+  log("\nRelated tables:");
+  log(`  authors:             ${counts.authors}`);
+  log(`  contentAuthors:      ${counts.contentAuthors} (content-author links)`);
+  log(`  articleReferences:   ${counts.articleReferences}`);
+  log(`  exerciseChoices:     ${counts.exerciseChoices}`);
+
+  log("\n=== VERIFICATION ===\n");
+
+  let allMatch = true;
+  let hasWarnings = false;
+
+  if (counts.articles === articleFiles.length) {
+    logSuccess(
+      `Articles: ${counts.articles} in DB = ${articleFiles.length} files`
+    );
+  } else {
+    logError(
+      `Articles: ${counts.articles} in DB != ${articleFiles.length} files`
+    );
+    allMatch = false;
+  }
+
+  if (counts.subjectSections === subjectFiles.length) {
+    logSuccess(
+      `Subject Sections: ${counts.subjectSections} in DB = ${subjectFiles.length} files`
+    );
+  } else {
+    logError(
+      `Subject Sections: ${counts.subjectSections} in DB != ${subjectFiles.length} files`
+    );
+    allMatch = false;
+  }
+
+  if (counts.exerciseQuestions === questionFiles.length) {
+    logSuccess(
+      `Questions: ${counts.exerciseQuestions} in DB = ${questionFiles.length} question files`
+    );
+  } else {
+    logError(
+      `Questions: ${counts.exerciseQuestions} in DB != ${questionFiles.length} question files`
+    );
+    allMatch = false;
+  }
+
+  log(
+    `\nReferences: ${counts.articleReferences} in DB (from ${refFiles.length} ref.ts files x 2 locales)`
+  );
+
+  const avgChoicesPerQuestion =
+    counts.exerciseQuestions > 0
+      ? counts.exerciseChoices / counts.exerciseQuestions
+      : 0;
+  log(
+    `Choices: ${counts.exerciseChoices} in DB (~${avgChoicesPerQuestion.toFixed(1)} per question)`
+  );
+  log(`Content-Author links: ${counts.contentAuthors} in DB`);
+
+  if (answerFiles.length !== questionFiles.length) {
+    log(
+      `\nWARNING: Answer files (${answerFiles.length}) != Question files (${questionFiles.length})`
+    );
+    hasWarnings = true;
+  }
+
+  log("\n=== DATA INTEGRITY ===\n");
+  const integrityResult = yield* Effect.either(getDataIntegrity(config));
+  if (integrityResult._tag === "Left") {
+    return yield* Effect.fail(
+      new ScriptFailureError({
+        message: `Failed to query database: ${getUnknownMessage(integrityResult.left)}`,
+      })
+    );
+  }
+
+  const integrity = integrityResult.right;
+
+  allMatch =
+    !logIntegrityList(
+      "questions without choices",
+      integrity.questionsWithoutChoices,
+      `All ${integrity.totalQuestions} questions have choices`
+    ) && allMatch;
+  allMatch =
+    !logIntegrityList(
+      "questions without authors",
+      integrity.questionsWithoutAuthors,
+      `All ${integrity.totalQuestions} questions have authors`
+    ) && allMatch;
+  allMatch =
+    !logIntegrityList(
+      "sections without topics",
+      integrity.sectionsWithoutTopics,
+      `All ${integrity.totalSections} sections have topics`
+    ) && allMatch;
+  allMatch =
+    !logIntegrityList(
+      "active tryouts without published scales",
+      integrity.activeTryoutsWithoutScale,
+      `All ${counts.tryouts} active tryouts have published scales`
+    ) && allMatch;
+
+  const articlesWithRefs =
+    integrity.totalArticles - integrity.articlesWithoutReferences.length;
+  log(
+    `Articles with references: ${articlesWithRefs}/${integrity.totalArticles}`
+  );
+
+  log("\n=== SUMMARY ===\n");
+  if (allMatch) {
+    logSuccess("All primary content synced correctly!");
+    log(`  - ${counts.articles} articles`);
+    log(`  - ${counts.subjectTopics} subject topics`);
+    log(`  - ${counts.subjectSections} subject sections`);
+    log(`  - ${counts.exerciseSets} exercise sets`);
+    log(`  - ${counts.exerciseQuestions} exercise questions`);
+    log(`  - ${counts.contentSearch} content search rows`);
+    log(`  - ${counts.tryouts} tryouts`);
+    log(`  - ${counts.articleReferences} references`);
+    log(`  - ${counts.exerciseChoices} choices`);
+    log(`  - ${counts.authors} authors`);
+
+    if (hasWarnings) {
+      log("\nSome warnings found (see above)");
+    }
+    return;
+  }
+
+  logError("Content mismatch detected!");
+  if (options.prod) {
+    log("\nRun 'pnpm --filter @repo/backend sync:prod' to fix");
+  } else {
+    log("\nRun 'pnpm --filter @repo/backend sync' to fix");
+  }
+  return yield* Effect.fail(
+    new ScriptFailureError({ message: "Content verification failed." })
+  );
 });

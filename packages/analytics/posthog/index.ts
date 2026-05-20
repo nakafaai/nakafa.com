@@ -1,7 +1,7 @@
 import type { Properties } from "posthog-js";
 import posthog from "posthog-js";
 
-export { default as analytics } from "posthog-js";
+export const analytics = posthog;
 
 /**
  * Capture a PostHog `$exception` event with optional extra context.

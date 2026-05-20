@@ -1,5 +1,5 @@
 import { generateContentParams } from "@repo/contents/_lib/params";
-import { getSubjectContents } from "@repo/contents/_lib/subject/content";
+import { getScopedContents } from "@repo/contents/_lib/scoped";
 import {
   FileReadError,
   GitHubFetchError,
@@ -44,7 +44,7 @@ export async function GET(
   const cleanPath = `subject/${basePath}` as const;
 
   return Effect.runPromise(
-    getSubjectContents({
+    getScopedContents("subject", {
       locale: validLocale.value,
       basePath: cleanPath,
       includeMDX: false,

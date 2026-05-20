@@ -47,8 +47,9 @@ function loadRenderableContentModule(
       try: () => importContentModule(cleanPath, locale),
       catch: (error: unknown) =>
         new ModuleLoadError({
-          path: modulePath,
           cause: error,
+          message: "Unable to import localized content module.",
+          path: modulePath,
         }),
     });
 
@@ -56,6 +57,7 @@ function loadRenderableContentModule(
       Effect.mapError(
         (error) =>
           new MetadataParseError({
+            message: "Unable to parse imported content metadata.",
             path: modulePath,
             reason: error.reason,
           })
@@ -135,6 +137,7 @@ export function getContent(
     if (Option.isNone(metadata)) {
       return yield* Effect.fail(
         new MetadataParseError({
+          message: "Unable to parse raw content metadata.",
           path: contentPath,
           reason: "No metadata found",
         })

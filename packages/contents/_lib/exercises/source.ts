@@ -10,12 +10,12 @@ import {
 import type { Locale } from "@repo/contents/_types/content";
 import { ExercisesChoicesSchema } from "@repo/contents/_types/exercises/choices";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Either, Option, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import ky from "ky";
 
 const contentsDir = resolveContentsDir(import.meta.url);
-const CHOICES_REGEX =
-  /const\s+choices\s*(?::\s*ExercisesChoices\s*)?=\s*({[\s\S]*?});/;
+const CHOICES_DECLARATION_REGEX =
+  /const\s+choices\s*(?::\s*ExercisesChoices\s*)?=/;
 const EXERCISES_ROOT = "exercises";
 
 /**
@@ -126,6 +126,94 @@ function getRawGitHubUrl(filePath: string) {
 }
 
 /**
+ * Finds the start index of the `choices` object literal inside a choices file.
+ *
+ * @param source - Raw `choices.ts` source text
+ * @returns Object-literal start index, or `null` when no choices declaration exists
+ */
+function getChoicesObjectStart(source: string) {
+  const declaration = source.match(CHOICES_DECLARATION_REGEX);
+
+  if (!declaration || declaration.index === undefined) {
+    return null;
+  }
+
+  const declarationEnd = declaration.index + declaration[0].length;
+  const objectStart = source.indexOf("{", declarationEnd);
+
+  return objectStart === -1 ? null : objectStart;
+}
+
+/**
+ * Skips a quoted JavaScript string while preserving escaped delimiters.
+ *
+ * @param source - Raw JavaScript source text
+ * @param startIndex - Index of the opening quote
+ * @returns Index of the closing quote, or the last source index when unterminated
+ */
+function skipQuotedString(source: string, startIndex: number) {
+  const quote = source[startIndex];
+
+  for (let index = startIndex + 1; index < source.length; index += 1) {
+    const char = source[index];
+
+    if (char === "\\") {
+      index += 1;
+      continue;
+    }
+
+    if (char === quote) {
+      return index;
+    }
+  }
+
+  return source.length - 1;
+}
+
+/**
+ * Extracts the complete `choices` object literal without being confused by
+ * math labels that contain braces or semicolons inside strings.
+ *
+ * @param source - Raw `choices.ts` source text
+ * @returns Complete object-literal source, or `null` when it is incomplete
+ */
+function extractChoicesObjectLiteral(source: string) {
+  const objectStart = getChoicesObjectStart(source);
+
+  if (objectStart === null) {
+    return null;
+  }
+
+  let depth = 0;
+
+  for (let index = objectStart; index < source.length; index += 1) {
+    const char = source[index];
+
+    if (char === '"' || char === "'" || char === "`") {
+      index = skipQuotedString(source, index);
+      continue;
+    }
+
+    if (char === "{") {
+      depth += 1;
+      continue;
+    }
+
+    if (char !== "}") {
+      continue;
+    }
+
+    depth -= 1;
+
+    if (depth === 0) {
+      return source.slice(objectStart, index + 1);
+    }
+  }
+
+  return null;
+}
+
+/**
  * Reads one text file from the contents workspace.
  *
  * @param filePath - Relative file path inside `packages/contents`
@@ -138,6 +226,7 @@ function readContentsText(filePath: string) {
     if (!fullPath) {
       return yield* Effect.fail(
         new InvalidPathError({
+          message: "Path traversal detected while resolving exercise source.",
           path: filePath,
           reason: "Path traversal detected",
         })
@@ -149,8 +238,9 @@ function readContentsText(filePath: string) {
         fsPromises.readFile(/* turbopackIgnore: true */ fullPath, "utf8"),
       catch: (cause) =>
         new FileReadError({
-          path: fullPath,
           cause,
+          message: "Unable to read exercise source file.",
+          path: fullPath,
         }),
     });
   });
@@ -166,7 +256,12 @@ function readContentsTextWithGitHubFallback(filePath: string) {
   const url = getRawGitHubUrl(filePath);
   const fetchFromGitHub = Effect.tryPromise({
     try: () => ky.get(url, { cache: "force-cache" }).text(),
-    catch: (cause) => new GitHubFetchError({ url, cause }),
+    catch: (cause) =>
+      new GitHubFetchError({
+        cause,
+        message: "Unable to fetch exercise source from GitHub fallback.",
+        url,
+      }),
   });
 
   return readContentsText(filePath).pipe(
@@ -187,23 +282,25 @@ function readContentsTextWithGitHubFallback(filePath: string) {
 export function readExerciseChoices(choicesPath: string) {
   return Effect.gen(function* () {
     const raw = yield* readContentsTextWithGitHubFallback(choicesPath);
-    const match = raw.match(CHOICES_REGEX);
+    const choicesLiteral = extractChoicesObjectLiteral(raw);
 
-    if (!match?.[1]) {
+    if (choicesLiteral === null) {
       return null;
     }
 
-    const choicesObject = Either.try({
-      try: () => new Function(`return ${match[1]}`)(),
-      catch: () => null,
-    });
+    const choicesObject = yield* Effect.option(
+      Effect.try({
+        try: () => new Function(`return ${choicesLiteral}`)(),
+        catch: () => null,
+      })
+    );
 
-    if (Either.isLeft(choicesObject)) {
+    if (Option.isNone(choicesObject)) {
       return null;
     }
 
     const parsed = Schema.decodeUnknownOption(ExercisesChoicesSchema)(
-      choicesObject.right
+      choicesObject.value
     );
     return Option.isSome(parsed) ? parsed.value : null;
   });

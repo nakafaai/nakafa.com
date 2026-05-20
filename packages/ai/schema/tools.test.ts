@@ -32,8 +32,9 @@ describe("orchestrator tool schemas", () => {
         type: "object",
       });
       expect(jsonSchema.required).toEqual(
-        expect.arrayContaining(["request", "objective", "requirements"])
+        expect.arrayContaining(["request", "objective"])
       );
+      expect(jsonSchema.required).not.toContain("requirements");
       expect(jsonSchema).not.toHaveProperty("properties.task");
       expect(jsonSchema).not.toHaveProperty("properties.query");
     }
@@ -74,12 +75,16 @@ describe("orchestrator tool schemas", () => {
       type: "object",
     });
     expect(json).toContain("Task-relevant user request details only");
-    expect(json).toContain("Keep this field in the user's language");
-    expect(json).toContain("Do not translate it into English");
+    expect(json).toContain("Keep connective wording in the user's language");
+    expect(json).toContain("Preserve technical names and terms exactly");
+    expect(json).toContain("Do not translate this field into English");
     expect(json).toContain("Omit unrelated, repeated, emotional");
     expect(json).toContain("Specialist job only");
     expect(json).toContain("Source requirements only");
     expect(json).toContain("versions");
+    expect(JSON.stringify(mathJsonSchema)).toContain(
+      "Do not add derived formulas or solution methods"
+    );
     expect(json).not.toContain("exact user wording");
     expect(json).not.toContain("userRequest");
     expect(json).toContain("Do not include final-answer wording");
@@ -101,7 +106,7 @@ describe("orchestrator tool schemas", () => {
 
       event at SMA Tirta Lazuardi on 28 Mei 2026
 
-      # Task
+      # Objective
 
       Verify the event from direct sources.
 
@@ -128,7 +133,7 @@ describe("orchestrator tool schemas", () => {
 
       SNBT pola bilangan practice
 
-      # Task
+      # Objective
 
       Find a suitable Nakafa exercise set.
 
@@ -140,6 +145,30 @@ describe("orchestrator tool schemas", () => {
     expect(task).not.toContain("# Requirements");
     expect(task).not.toContain("# Source Requirements");
     expect(task).not.toContain("# Given");
+  });
+
+  it("omits requirements when the tool call has no real constraints", () => {
+    const task = formatSpecialistToolTask({
+      given: ["x^2 < 9", "x > 0"],
+      objective: "Solve the inequality with the domain restriction.",
+      request: "x^2 < 9 dan x > 0",
+    });
+
+    expect(task).toContain(dedent`
+      # Request
+
+      x^2 < 9 dan x > 0
+
+      # Objective
+
+      Solve the inequality with the domain restriction.
+
+      # Given
+
+      - x^2 < 9
+      - x > 0
+    `);
+    expect(task).not.toContain("# Requirements");
   });
 
   it("renders math givens without adding response outcomes", () => {
@@ -155,7 +184,7 @@ describe("orchestrator tool schemas", () => {
 
       is this matrix diagonalizable?
 
-      # Task
+      # Objective
 
       Analyze whether the matrix is diagonalizable.
 

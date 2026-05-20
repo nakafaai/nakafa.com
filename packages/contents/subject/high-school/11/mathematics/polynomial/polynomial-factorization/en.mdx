@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Complete Polynomial Factorization",
-  description: "Master complete polynomial factorization into linear factors using complex numbers. Learn to find all roots and apply the Fundamental Theorem of Algebra.",
+  description: "Learn complete polynomial factorization into linear factors using complex numbers. Learn to find all roots and apply the Fundamental Theorem of Algebra.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/04/2025",
   subject: "Polynomial",
@@ -60,8 +60,10 @@ Find all complex zeros of <InlineMath math="P(x) = x^3 - x^2 + x - 1" /> and fac
 
     - This gives two possibilities:
 
-      - <InlineMath math="x - 1 = 0 \implies x = 1" />
-      - <InlineMath math="x^2 + 1 = 0 \implies x^2 = -1 \implies x = \pm\sqrt{-1} \implies x = \pm i" />
+      <MathContainer>
+        <BlockMath math="x - 1 = 0 \implies x = 1" />
+        <BlockMath math="x^2 + 1 = 0 \implies x^2 = -1 \implies x = \pm\sqrt{-1} \implies x = \pm i" />
+      </MathContainer>
 
     So, the complex roots are <InlineMath math="1, i, -i" />.
 

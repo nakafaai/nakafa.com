@@ -302,15 +302,7 @@ async function getSubjectMetadataData({
         }
       )
     ),
-    getMaterials(materialPath, locale).catch(async (error) => {
-      await captureServerException(error, undefined, {
-        locale,
-        material_path: materialPath,
-        source: "subject-metadata-materials",
-      });
-
-      return [];
-    }),
+    Effect.runPromise(getMaterials(materialPath, locale)),
   ]);
 
   const metadata = content?.metadata ?? null;
@@ -369,15 +361,7 @@ async function CachedSubjectShell({
         }
       )
     ),
-    getMaterials(materialPath, locale).catch(async (error) => {
-      await captureServerException(error, undefined, {
-        locale,
-        material_path: materialPath,
-        source: "subject-shell-materials",
-      });
-
-      return null;
-    }),
+    Effect.runPromise(getMaterials(materialPath, locale)),
   ]);
 
   if (!content.content) {

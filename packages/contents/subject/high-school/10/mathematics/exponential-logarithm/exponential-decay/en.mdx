@@ -2,7 +2,7 @@ import { FunctionChart } from "@repo/design-system/components/contents/mathemati
 
 export const metadata = {
   title: "Exponential Decay",
-  description: "Discover exponential decay through drug elimination, radioactive decay & bouncing balls. Master decreasing functions with real-world applications.",
+  description: "Learn exponential decay through drug elimination, radioactive decay, and bouncing ball examples.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/04/2025",
   subject: "Exponential and Logarithm",
@@ -34,14 +34,14 @@ The graph below shows an exponential decay function with base <InlineMath math="
 
 <BlockMath math="f(x) = 50 \times \left(\frac{1}{2}\right)^x" />
 
-<div className="mt-4">
+<ContentBlock>
   <FunctionChart
     a={0.5}
     p={50}
     title="Exponential Decay Graph"
     description="Graph decreases at a progressively slower rate."
   />
-</div>
+</ContentBlock>
 
 ## Applications of Exponential Decay
 
@@ -125,14 +125,14 @@ Here are some practice problems to deepen your understanding of exponential deca
 
    <BlockMath math="h(n) = 300 \times \left(\frac{3}{5}\right)^n" />
 
-   <div className="mt-4">
+   <ContentBlock>
      <FunctionChart
        a={3 / 5}
        p={300}
        title="Exponential Decay Graph"
        description="Graph decreases at a progressively slower rate."
      />
-   </div>
+   </ContentBlock>
 
    b. The ball will stop bouncing when its height approaches zero. Based on calculations, at the <InlineMath math="12" />th bounce, the ball's height reaches <InlineMath math="0.653035 \text{ cm}" />, which is small enough to consider the ball has stopped bouncing. However, considering the ball's mass, it might have stopped bouncing by the <InlineMath math="10" />th bounce, when its height is about <InlineMath math="1.8 \text{ cm}" />.
 

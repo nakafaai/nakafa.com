@@ -61,11 +61,10 @@ beforeEach(() => {
 
 describe("sitemap entries", () => {
   it("builds localized URLs with parsed content last-modified dates", async () => {
-    const entries = await getEntries(
-      "/articles/politics/dynastic-politics-asian-values",
-      {
+    const entries = await Effect.runPromise(
+      getEntries("/articles/politics/dynastic-politics-asian-values", {
         domain: "docs.example.com",
-      }
+      })
     );
 
     expect(entries).toHaveLength(2);
@@ -78,8 +77,8 @@ describe("sitemap entries", () => {
   });
 
   it("accepts content routes without a leading slash", async () => {
-    const entries = await getEntries(
-      "articles/politics/dynastic-politics-asian-values"
+    const entries = await Effect.runPromise(
+      getEntries("articles/politics/dynastic-politics-asian-values")
     );
 
     expect(entries[0]).toMatchObject({
@@ -90,11 +89,13 @@ describe("sitemap entries", () => {
   });
 
   it("supports object hrefs and custom domains", async () => {
-    const entries = await getEntries(
-      { pathname: "/search" },
-      {
-        domain: "docs.example.com",
-      }
+    const entries = await Effect.runPromise(
+      getEntries(
+        { pathname: "/search" },
+        {
+          domain: "docs.example.com",
+        }
+      )
     );
 
     expect(getUrl({ pathname: "/search" }, "id", "docs.example.com")).toBe(
@@ -108,7 +109,7 @@ describe("sitemap entries", () => {
   });
 
   it("assigns SEO settings for known route families", async () => {
-    await expect(getEntries("/")).resolves.toContainEqual(
+    await expect(Effect.runPromise(getEntries("/"))).resolves.toContainEqual(
       expect.objectContaining({
         changeFrequency: "monthly",
         lastModified: new Date("2025-01-01"),
@@ -116,27 +117,33 @@ describe("sitemap entries", () => {
         url: "https://nakafa.com/en",
       })
     );
-    await expect(getEntries("/quran/1")).resolves.toContainEqual(
+    await expect(
+      Effect.runPromise(getEntries("/quran/1"))
+    ).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "yearly", priority: 0.6 })
     );
-    await expect(getEntries("/contributor")).resolves.toContainEqual(
+    await expect(
+      Effect.runPromise(getEntries("/contributor"))
+    ).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "weekly", priority: 0.8 })
     );
     await expect(
-      getEntries("/subject/university/bachelor")
+      Effect.runPromise(getEntries("/subject/university/bachelor"))
     ).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "monthly", priority: 0.9 })
     );
-    await expect(getEntries("/subject/high-school/10")).resolves.toContainEqual(
+    await expect(
+      Effect.runPromise(getEntries("/subject/high-school/10"))
+    ).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "monthly", priority: 0.8 })
     );
     await expect(
-      getEntries("/subject/middle-school/9")
+      Effect.runPromise(getEntries("/subject/middle-school/9"))
     ).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "monthly", priority: 0.7 })
     );
     await expect(
-      getEntries("/subject/elementary-school/6")
+      Effect.runPromise(getEntries("/subject/elementary-school/6"))
     ).resolves.toContainEqual(
       expect.objectContaining({ changeFrequency: "monthly", priority: 0.6 })
     );
@@ -149,8 +156,8 @@ describe("sitemap entries", () => {
       })
     );
 
-    const invalidDateEntries = await getEntries(
-      "/articles/politics/dynastic-politics-asian-values"
+    const invalidDateEntries = await Effect.runPromise(
+      getEntries("/articles/politics/dynastic-politics-asian-values")
     );
 
     expect(invalidDateEntries[0]?.lastModified).toBeInstanceOf(Date);
@@ -160,7 +167,9 @@ describe("sitemap entries", () => {
     );
 
     await expect(
-      getEntries("/articles/politics/dynastic-politics-asian-values")
+      Effect.runPromise(
+        getEntries("/articles/politics/dynastic-politics-asian-values")
+      )
     ).resolves.toHaveLength(2);
 
     mockGetContentMetadata.mockImplementationOnce(() => {
@@ -168,7 +177,9 @@ describe("sitemap entries", () => {
     });
 
     await expect(
-      getEntries("/articles/politics/dynastic-politics-asian-values")
+      Effect.runPromise(
+        getEntries("/articles/politics/dynastic-politics-asian-values")
+      )
     ).resolves.toHaveLength(2);
   });
 
@@ -188,9 +199,10 @@ describe("sitemap entries", () => {
       throw new Error("metadata crashed");
     });
 
-    const entries = await getEntries(
-      "/articles/politics/dynastic-politics-asian-values",
-      { reportError }
+    const entries = await Effect.runPromise(
+      getEntries("/articles/politics/dynastic-politics-asian-values", {
+        reportError,
+      })
     );
 
     expect(entries).toHaveLength(2);
@@ -210,7 +222,7 @@ describe("sitemap entries", () => {
   });
 
   it("generates sitemap entries from route and locale inputs", async () => {
-    const entries = await getSitemapEntries();
+    const entries = await Effect.runPromise(getSitemapEntries());
     const urls = entries.map((entry) => entry.url);
 
     expect(new Set(urls).size).toBe(urls.length);

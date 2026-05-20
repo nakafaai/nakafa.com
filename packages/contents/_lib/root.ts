@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { Effect } from "effect";
 
 const CONTENTS_LIB_SEGMENT = `${path.sep}_lib${path.sep}`;
 const CONTENTS_SENTINELS = ["articles", "exercises", "subject"];
@@ -12,8 +13,10 @@ const CONTENTS_SENTINELS = ["articles", "exercises", "subject"];
  * @returns True when the directory contains the expected contents structure
  */
 function isContentsDirectory(directory: string) {
-  return CONTENTS_SENTINELS.every((entry) =>
-    fs.existsSync(path.join(directory, entry))
+  return Effect.runSync(
+    Effect.forEach(CONTENTS_SENTINELS, (entry) =>
+      Effect.sync(() => fs.existsSync(path.join(directory, entry)))
+    ).pipe(Effect.map((exists) => exists.every(Boolean)))
   );
 }
 

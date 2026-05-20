@@ -35,7 +35,6 @@ const mathInput = {
   given: ["x + 1", "x + 2"],
   objective: "Compare the expressions.",
   request: "compare x + 1 and x + 2",
-  requirements: ["Check whether the expressions are equivalent."],
 };
 
 describe("mapDBPartToUIMessagePart", () => {

@@ -2,6 +2,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 import { getRenderableExercisesContent } from "@repo/contents/_lib/exercises/renderable";
 import { fetchQuery } from "convex/nextjs";
+import { Effect } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 
@@ -48,5 +49,7 @@ export async function getTryoutExercises(locale: Locale, setSlug: string) {
 
   cacheLife("max");
 
-  return await getRenderableExercisesContent(locale, setSlug);
+  return await Effect.runPromise(
+    getRenderableExercisesContent(locale, setSlug)
+  );
 }

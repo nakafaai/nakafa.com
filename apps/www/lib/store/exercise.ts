@@ -6,11 +6,11 @@ import { immer } from "zustand/middleware/immer";
 const StateSchema = Schema.Struct({
   slug: Schema.String,
   visibleExplanations: Schema.Record({
-    key: Schema.NumberFromString,
+    key: Schema.String,
     value: Schema.Boolean,
   }),
   timeSpent: Schema.Record({
-    key: Schema.NumberFromString,
+    key: Schema.String,
     value: Schema.Number,
   }),
   showStats: Schema.Boolean,

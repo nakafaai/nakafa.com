@@ -1,7 +1,11 @@
+import {
+  MetadataParseError,
+  ModuleLoadError,
+} from "@repo/contents/_shared/error";
 import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
 import { ExercisesMaterialListSchema } from "@repo/contents/_types/exercises/material";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 
 /**
@@ -11,27 +15,42 @@ import type { Locale } from "next-intl";
  * @param locale - Locale used to select the `_data/*-material.ts` file
  * @returns Parsed material list, or an empty list when unavailable
  */
-export async function getMaterials(
-  path: string,
-  locale: Locale
-): Promise<ExercisesMaterialList> {
-  try {
-    // Strip leading slash if present for consistency
-    const cleanPath = path.startsWith("/") ? path.slice(1) : path;
+export const getMaterials = Effect.fn("Contents.Exercises.getMaterials")(
+  function* (path: string, locale: Locale) {
+    const cleanPath = cleanSlug(path.startsWith("/") ? path.slice(1) : path);
+    const modulePath = `@repo/contents/${cleanPath}/_data/${locale}-material.ts`;
 
-    const content = await import(
-      `@repo/contents/${cleanPath}/_data/${locale}-material.ts`
+    return yield* Effect.gen(function* () {
+      const content = yield* Effect.tryPromise({
+        try: () => import(modulePath),
+        catch: (cause) =>
+          new ModuleLoadError({
+            cause,
+            message: "Unable to import exercises material list.",
+            path: modulePath,
+          }),
+      });
+
+      return yield* Effect.try({
+        try: () =>
+          Schema.decodeUnknownSync(ExercisesMaterialListSchema)(
+            content.default
+          ),
+        catch: (cause) =>
+          new MetadataParseError({
+            message: "Unable to parse exercises material list.",
+            path: modulePath,
+            reason: String(cause),
+          }),
+      });
+    }).pipe(
+      Effect.catchTags({
+        MetadataParseError: () => Effect.succeed([]),
+        ModuleLoadError: () => Effect.succeed([]),
+      })
     );
-
-    const parsedContent = Schema.decodeUnknownSync(ExercisesMaterialListSchema)(
-      content.default
-    );
-
-    return parsedContent;
-  } catch {
-    return [];
   }
-}
+);
 
 /**
  * Finds the active material group and optional item for a route path.

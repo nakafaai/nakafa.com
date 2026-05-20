@@ -43,13 +43,21 @@ export function getFolderChildNamesCacheVersion() {
 function validatePath(folder: string): Effect.Effect<void, InvalidPathError> {
   if (folder.includes("..")) {
     return Effect.fail(
-      new InvalidPathError({ reason: "Path contains '..'", path: folder })
+      new InvalidPathError({
+        message: "Path contains parent directory traversal.",
+        path: folder,
+        reason: "Path contains '..'",
+      })
     );
   }
 
   if (path.isAbsolute(folder)) {
     return Effect.fail(
-      new InvalidPathError({ reason: "Path is absolute", path: folder })
+      new InvalidPathError({
+        message: "Absolute paths are not allowed in content lookups.",
+        path: folder,
+        reason: "Path is absolute",
+      })
     );
   }
 
@@ -73,7 +81,12 @@ function readDirectorySync(
 ): Effect.Effect<fs.Dirent[], DirectoryReadError> {
   return Effect.try({
     try: () => fs.readdirSync(dirPath, { withFileTypes: true }),
-    catch: (cause) => new DirectoryReadError({ path: dirPath, cause }),
+    catch: (cause) =>
+      new DirectoryReadError({
+        cause,
+        message: "Unable to read content directory.",
+        path: dirPath,
+      }),
   });
 }
 
@@ -164,10 +177,6 @@ export function getFolderChildNamesSync(
   folder: string,
   exclude?: string[]
 ): string[] {
-  if (folder.includes("..") || path.isAbsolute(folder)) {
-    return [];
-  }
-
   const cacheKey =
     exclude && exclude.length > 0 ? `${folder}\0${exclude.join("\0")}` : folder;
   const cachedNames = folderChildNamesCache.get(cacheKey);
@@ -178,19 +187,24 @@ export function getFolderChildNamesSync(
 
   const contentDir = path.join(contentsDir, folder);
 
-  try {
-    const names = filterDirectoryNames(
-      fs.readdirSync(contentDir, { withFileTypes: true }),
-      DEFAULT_EXCLUDE,
-      exclude
-    );
+  const names = Effect.runSync(
+    Effect.gen(function* () {
+      yield* validatePath(folder);
 
-    folderChildNamesCache.set(cacheKey, names);
+      const files = yield* readDirectorySync(contentDir);
 
-    return names;
-  } catch {
-    return [];
-  }
+      return filterDirectoryNames(files, DEFAULT_EXCLUDE, exclude);
+    }).pipe(
+      Effect.catchTags({
+        DirectoryReadError: () => Effect.succeed([]),
+        InvalidPathError: () => Effect.succeed([]),
+      })
+    )
+  );
+
+  folderChildNamesCache.set(cacheKey, names);
+
+  return names;
 }
 
 /**

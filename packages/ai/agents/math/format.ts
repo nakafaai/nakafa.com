@@ -32,6 +32,7 @@ export function formatMathData(data: MathData, diagnostic?: string) {
       - Operation: ${data.result.operation}
       - Step status: ${data.result.stepStatus}
       - Evidence scope: ${formatEvidenceScope(data.result)}
+      - Reason: ${data.result.reason}
       - Primary: ${data.result.primary.expression}
     ${formatSecondary(data.result)}
     ${formatSteps(data.result.steps)}

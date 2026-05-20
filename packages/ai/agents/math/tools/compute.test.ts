@@ -144,7 +144,10 @@ describe("math compute tool", () => {
     expect(output).toContain("- Error code: math_check_unavailable");
     expect(output).toContain("Do not present this result as checked.");
     expect(output).toContain(
-      "Retry only if the original request gives enough information"
+      "Compare this failed input with the original task before answering"
+    );
+    expect(output).toContain(
+      "Retry the same operation if the task gives omitted variables"
     );
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
@@ -251,13 +254,74 @@ describe("math compute tool", () => {
     expect(parts).toEqual([]);
   });
 
+  it("tells the model how to retry bounded systems with the same bounds", async () => {
+    const fetch = vi.spyOn(globalThis, "fetch");
+    const { parts, writer } = createWriter();
+    const output = await Effect.runPromise(
+      compute({
+        input: {
+          expressions: ["x^2 = 1", "y = 0"],
+          lower: "0",
+          lowerInclusive: false,
+          operation: "solve",
+          variables: ["x", "y"],
+        },
+        toolCallId: "math-5",
+        writer,
+      }).pipe(
+        Effect.provide(MathService.Default),
+        Effect.withConfigProvider(provider)
+      )
+    );
+
+    expect(output).toContain("- Error code: invalid_math_input");
+    expect(output).toContain("Retry the same equation solve");
+    expect(output).toContain("Keep the same expressions");
+    expect(output).toContain("Set variable to the bounded variable");
+    expect(output).toContain(
+      "Set variables to the unknowns that should be solved"
+    );
+    expect(fetch).not.toHaveBeenCalled();
+    expect(parts).toEqual([]);
+  });
+
+  it("tells the model how to retry incomplete bounded system expressions", async () => {
+    const fetch = vi.spyOn(globalThis, "fetch");
+    const { parts, writer } = createWriter();
+    const output = await Effect.runPromise(
+      compute({
+        input: {
+          expressions: ["x = 2", "y = 1"],
+          lower: "0",
+          operation: "solve",
+          variable: "x",
+          variables: ["x"],
+        },
+        toolCallId: "math-6",
+        writer,
+      }).pipe(
+        Effect.provide(MathService.Default),
+        Effect.withConfigProvider(provider)
+      )
+    );
+
+    expect(output).toContain("- Error code: invalid_math_input");
+    expect(output).toContain("Retry the same bounded system solve");
+    expect(output).toContain("Keep symbolic parameters out of variables");
+    expect(output).toContain(
+      "Every expression must involve at least one selected unknown"
+    );
+    expect(fetch).not.toHaveBeenCalled();
+    expect(parts).toEqual([]);
+  });
+
   it("keeps invalid input errors locale-free", async () => {
     const fetch = vi.spyOn(globalThis, "fetch");
     const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
       compute({
         input: { operation: "domain" },
-        toolCallId: "math-5",
+        toolCallId: "math-6",
         writer,
       }).pipe(
         Effect.provide(MathService.Default),
@@ -276,7 +340,7 @@ describe("math compute tool", () => {
     const output = await Effect.runPromise(
       compute({
         input,
-        toolCallId: "math-6",
+        toolCallId: "math-7",
         writer,
       }).pipe(
         Effect.provide(MathService.Default),
@@ -293,7 +357,7 @@ describe("math compute tool", () => {
           kind: "evaluate",
           status: "error",
         }),
-        id: "math-6",
+        id: "math-7",
         type: "data-math",
       })
     );

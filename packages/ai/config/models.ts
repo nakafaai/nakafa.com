@@ -32,7 +32,7 @@ export const modelRegistry = {
   },
   "nakafa-pro": {
     credits: 5,
-    gatewayId: "google/gemini-3-pro-preview",
+    gatewayId: "google/gemini-3.5-flash",
     providerOptions: {
       fast: fastProviderOptions,
       interactive: interactiveProviderOptions,

@@ -28,13 +28,23 @@ function isPositiveInteger(value: number) {
 export function getSurah(id: number): Effect.Effect<Surah, SurahNotFoundError> {
   return Effect.gen(function* () {
     if (!isPositiveInteger(id)) {
-      return yield* Effect.fail(new SurahNotFoundError({ surahNumber: id }));
+      return yield* Effect.fail(
+        new SurahNotFoundError({
+          message: "Surah number must be a positive integer.",
+          surahNumber: id,
+        })
+      );
     }
 
     const surah = quran.find((item) => item.number === id);
     const result = Schema.decodeUnknownOption(SurahSchema)(surah);
     if (Option.isNone(result)) {
-      return yield* Effect.fail(new SurahNotFoundError({ surahNumber: id }));
+      return yield* Effect.fail(
+        new SurahNotFoundError({
+          message: "Surah was not found.",
+          surahNumber: id,
+        })
+      );
     }
 
     return result.value;
@@ -102,6 +112,7 @@ export function getVerseBySurah({
     if (!isPositiveInteger(verseNum)) {
       return yield* Effect.fail(
         new VerseNotFoundError({
+          message: "Verse number must be a positive integer.",
           surahNumber: surahNum,
           verseNumber: verseNum,
         })
@@ -114,6 +125,7 @@ export function getVerseBySurah({
     if (!verse) {
       return yield* Effect.fail(
         new VerseNotFoundError({
+          message: "Verse was not found in the selected surah.",
           surahNumber: surahNum,
           verseNumber: verseNum,
         })

@@ -58,10 +58,8 @@ export type SEOContext =
 
 /**
  * Generated SEO metadata result
- * Evidence: Keywords help Google understand page content
- * Source: https://developers.google.com/search/docs/appearance/snippet
- * Note: While Google doesn't use meta keywords for ranking, they help
- * with internal search and content organization
+ * Note: Google does not use meta keywords for ranking, but this list is still
+ * useful for internal search and content organization.
  */
 export interface SEOMetadata {
   /** Meta description - 150-160 chars optimal */

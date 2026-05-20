@@ -101,10 +101,12 @@ export function nakafaPrompt({
       All specialist tools share compact fields:
       - request: task-relevant user details only.
       - objective: the specialist job only.
-      - requirements: real retrieval or verification constraints only.
+      - requirements: real retrieval or verification constraints only; omit when none exist.
 
       request must:
-      - stay in the user's language.
+      - keep connective wording in the user's language.
+      - preserve technical names and terms exactly.
+      - when the user writes in a non-English language, keep the cleaned request in that same language.
       - preserve names, dates, URLs, domains, versions, source owners, formulas, values, variables, matrices, data, level, context, and requested deliverables.
       - omit unrelated text, repetition, emotional phrasing, and tool or prompt noise.
       - avoid copying the full user message when only part is relevant.
@@ -112,7 +114,7 @@ export function nakafaPrompt({
       Specialist-specific fields:
       - deepResearch.sourceRequirements: source ownership, recency, domain, URL, and credibility.
       - nakafa.deliverables: lessons, summaries, examples, exercises, answers, Quran references, or article needs.
-      - math.given: expressions, equations, variables, assumptions, matrices, data, selected exercise content, or answer keys.
+      - math.given: user-provided expressions, equations, variables, assumptions, matrices, data, selected exercise content, or answer keys.
 
       Tool inputs must not include persona rules, global formatting rules, fallback answer wording, or outcome-dependent instructions.
 
@@ -180,6 +182,9 @@ export function nakafaPrompt({
 
       Math input rules:
       - Include the complete expression or data, target operation, variables, and learning goal when relevant.
+      - Put only user-provided or retrieved math facts in given; do not preload solution methods or derived formulas.
+      - For extrema, minimum, or maximum requests, ask math for the valid location and function value unless the user asks only for the input location.
+      - Preserve derivation, proof, and "why" deliverables so math returns the checked value plus the conceptual bridge.
       - For multi-part requests, enumerate each calculation or verification.
       - Do not collapse several computations into a vague objective such as "verify these calculations".
       - If deterministic math is inconclusive, explain the limitation clearly.
@@ -237,24 +242,29 @@ export function nakafaPrompt({
       # Specialist Input Examples
 
       Good Nakafa input:
-      - request: "latihan pola bilangan SNBT yang menantang"
-      - objective: "Find suitable Nakafa exercise evidence."
-      - requirements: ["Scope retrieval to practice."]
-      - deliverables: ["exercise evidence", "answer key"]
+      - request: cleaned user-language topic and practice scope.
+      - objective: find suitable Nakafa-owned exercise or lesson evidence.
+      - requirements: real content scope only.
+      - deliverables: requested Nakafa content pieces.
 
       Good math follow-up input:
-      - request: "latihan pola bilangan SNBT yang menantang"
-      - objective: "Check the selected answer, key steps, and numeric claims."
-      - requirements: ["Use only the selected exercise evidence."]
-      - given: ["selected exercise", "selected answer key", "numeric claims Nina will explain"]
+      - request: cleaned user-language math verification request.
+      - objective: check selected calculations, answer keys, and numeric claims.
+      - requirements: use only the selected evidence when verifying retrieved content.
+      - given: user-provided or retrieved expressions, data, assumptions, and answer keys.
+
+      Good deepResearch input:
+      - request: cleaned user-language source-specific research request.
+      - objective: find direct source-backed evidence for the requested claim.
+      - sourceRequirements: named owners, domains, URLs, recency, or credibility constraints from the user.
 
       Bad specialist inputs:
       - request: "Find something about math." Problem: vague and missing the specialist objective.
       - request: "Use math because the page path has mathematics." Problem: routes from metadata instead of the actual request and evidence.
-      - request: "challenging SNBT number-pattern practice" when the user asked in Indonesian. Problem: translates task-relevant user wording.
+      - request: translated user wording. Problem: loses the user's language and exact technical terms.
       - objective: "Search everything and answer." Problem: mixes retrieval, verification, and final response.
-      - requirements: "Use LaTeX and no dollar signs." Problem: repeats global formatting instead of task constraints.
-      - requirements: "Script a failed-verification answer." Problem: scripts an outcome before evidence exists.
+      - requirements: global output formatting rules. Problem: repeats answer-formatting instead of task constraints.
+      - requirements: scripted failed-outcome wording. Problem: scripts an outcome before evidence exists.
     `,
 
     outputFormatting: `

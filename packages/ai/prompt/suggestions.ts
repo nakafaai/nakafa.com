@@ -36,7 +36,7 @@ export function nakafaSuggestions({ locale }: Params) {
 
   return createPrompt({
     taskContext: `
-      # Core Identity and Role Definition
+      # Identity
 
       You are creating follow-up suggestions for students using Nakafa's educational platform.
       Students are interacting with Nina, their friendly expert tutor.
@@ -59,19 +59,19 @@ export function nakafaSuggestions({ locale }: Params) {
     detailedTaskInstructions: `
       # Suggestion Types
 
-      Natural questions asking for clarification, examples, or deeper understanding.
-      Requests like "Show me", "Explain", "Help me", "Give me examples".
-      Combine both questions and statements for variety.
+      Include a useful mix:
+      - clarification questions.
+      - deeper-understanding questions.
+      - example requests.
+      - practice requests.
+      - real-world application requests.
 
       # Content Focus
 
-      Focus only on the actual subject matter being discussed.
+      Base every suggestion on the topic Nina just discussed.
+      Stay focused on learning, understanding, and skill building for that topic.
+      Continue naturally from the current conversation instead of starting a new subject.
       Never focus on Nina or internal system processes.
-      Base suggestions on the specific topic that was just discussed in the conversation.
-      Suggestions should naturally continue from what Nina just explained or taught about the topic.
-      Focus on learning, understanding, and skill building related to the current topic.
-      Include real-world applications and hands-on practice requests for the current subject.
-      Build on what was just discussed to go deeper or broader in the same context.
 
       # Quality Rules
 

@@ -62,7 +62,9 @@ describe("getArticleSummaries", () => {
       ])
     );
 
-    const articles = await getArticleSummaries("politics", "en");
+    const articles = await Effect.runPromise(
+      getArticleSummaries("politics", "en")
+    );
 
     expect(mockGetContentsMetadata).toHaveBeenCalledWith({
       locale: "en",
@@ -114,7 +116,9 @@ describe("getArticleSummaries", () => {
       ])
     );
 
-    const articles = await getArticleSummaries("politics", "en");
+    const articles = await Effect.runPromise(
+      getArticleSummaries("politics", "en")
+    );
 
     expect(articles).toHaveLength(1);
     expect(articles[0]?.slug).toBe("nested-article");
@@ -124,9 +128,8 @@ describe("getArticleSummaries", () => {
   it("accepts a full category path and still resolves the category name", async () => {
     mockGetContentsMetadata.mockReturnValue(Effect.succeed([]));
 
-    const articles = await getArticleSummaries(
-      "articles/politics" as never,
-      "en"
+    const articles = await Effect.runPromise(
+      getArticleSummaries("articles/politics" as never, "en")
     );
 
     expect(mockGetContentsMetadata).toHaveBeenCalledWith({
@@ -137,7 +140,9 @@ describe("getArticleSummaries", () => {
   });
 
   it("returns an empty list for malformed full category paths", async () => {
-    const articles = await getArticleSummaries("articles/" as never, "en");
+    const articles = await Effect.runPromise(
+      getArticleSummaries("articles/" as never, "en")
+    );
 
     expect(mockGetContentsMetadata).not.toHaveBeenCalled();
     expect(articles).toStrictEqual([]);
@@ -171,7 +176,9 @@ describe("getArticleSummaries", () => {
       ])
     );
 
-    const articles = await getArticleSummaries("politics", "en");
+    const articles = await Effect.runPromise(
+      getArticleSummaries("politics", "en")
+    );
 
     expect(articles).toHaveLength(1);
     expect(articles[0]?.slug).toBe("valid-article");
@@ -205,7 +212,9 @@ describe("getArticleSummaries", () => {
       ])
     );
 
-    const articles = await getArticleSummaries("politics", "en");
+    const articles = await Effect.runPromise(
+      getArticleSummaries("politics", "en")
+    );
 
     expect(articles).toHaveLength(1);
     expect(articles[0]?.slug).toBe("valid-article");
@@ -228,7 +237,9 @@ describe("getArticleSummaries", () => {
       ])
     );
 
-    const articles = await getArticleSummaries("politics", "en");
+    const articles = await Effect.runPromise(
+      getArticleSummaries("politics", "en")
+    );
 
     expect(articles).toHaveLength(1);
     expect(articles[0]).toMatchObject({

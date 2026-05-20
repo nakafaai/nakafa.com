@@ -1,4 +1,9 @@
 import {
+  formatScriptCause,
+  getUnknownMessage,
+  ScriptFailureError,
+} from "@repo/backend/scripts/lib/errors";
+import {
   callConvex,
   getConvexConfig,
 } from "@repo/backend/scripts/sync-content/convex";
@@ -66,44 +71,56 @@ const repairCustomerResultSchema = Schema.Union(
 );
 
 /** Parses one optional numeric CLI flag. */
-function getOptionalNumericFlag(flag: string) {
-  const index = process.argv.indexOf(flag);
+const getOptionalNumericFlag = Effect.fn("customers.getOptionalNumericFlag")(
+  function* (args: readonly string[], flag: string) {
+    const index = args.indexOf(flag);
 
-  if (index === -1) {
-    return null;
+    if (index === -1) {
+      return null;
+    }
+
+    const rawValue = args[index + 1];
+
+    if (!rawValue) {
+      return yield* Effect.fail(
+        new ScriptFailureError({ message: `Missing value for ${flag}` })
+      );
+    }
+
+    const value = Number(rawValue);
+
+    if (!Number.isInteger(value) || value <= 0) {
+      return yield* Effect.fail(
+        new ScriptFailureError({
+          message: `${flag} must be a positive integer.`,
+        })
+      );
+    }
+
+    return value;
   }
-
-  const rawValue = process.argv[index + 1];
-
-  if (!rawValue) {
-    throw new Error(`Missing value for ${flag}`);
-  }
-
-  const value = Number(rawValue);
-
-  if (!Number.isInteger(value) || value <= 0) {
-    throw new Error(`${flag} must be a positive integer.`);
-  }
-
-  return value;
-}
+);
 
 /** Parses one optional string CLI flag. */
-function getOptionalStringFlag(flag: string) {
-  const index = process.argv.indexOf(flag);
+const getOptionalStringFlag = Effect.fn("customers.getOptionalStringFlag")(
+  function* (args: readonly string[], flag: string) {
+    const index = args.indexOf(flag);
 
-  if (index === -1) {
-    return null;
+    if (index === -1) {
+      return null;
+    }
+
+    const value = args[index + 1];
+
+    if (!value) {
+      return yield* Effect.fail(
+        new ScriptFailureError({ message: `Missing value for ${flag}` })
+      );
+    }
+
+    return value;
   }
-
-  const value = process.argv[index + 1];
-
-  if (!value) {
-    throw new Error(`Missing value for ${flag}`);
-  }
-
-  return value;
-}
+);
 
 /** Reads every page from one bounded internal customer-integrity query. */
 const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
@@ -227,11 +244,13 @@ const cleanupStalePolarCustomer = Effect.fn(
 
 /** Repairs missing customer rows and optionally cleans safe stale Polar customers. */
 const main = Effect.fn("customers.repair")(function* () {
-  const prod = process.argv.includes("--prod");
-  const force = process.argv.includes("--force");
-  const cleanupOrphans = process.argv.includes("--cleanup-orphans");
-  const limit = getOptionalNumericFlag("--limit") ?? DEFAULT_REPAIR_LIMIT;
-  const userId = getOptionalStringFlag("--user");
+  const args = yield* Effect.sync(() => process.argv.slice(2));
+  const prod = args.includes("--prod");
+  const force = args.includes("--force");
+  const cleanupOrphans = args.includes("--cleanup-orphans");
+  const limit =
+    (yield* getOptionalNumericFlag(args, "--limit")) ?? DEFAULT_REPAIR_LIMIT;
+  const userId = yield* getOptionalStringFlag(args, "--user");
   const report = yield* getCustomerIntegrityReport(prod);
   const usersToRepair = userId
     ? report.usersWithoutCustomer.filter((user) => user.userId === userId)
@@ -296,9 +315,9 @@ const main = Effect.fn("customers.repair")(function* () {
 
           if (retried.status === "conflict") {
             return yield* Effect.fail(
-              new Error(
-                `Customer conflict remained after cleanup for ${user.userId}`
-              )
+              new ScriptFailureError({
+                message: `Customer conflict remained after cleanup for ${user.userId}`,
+              })
             );
           }
         }
@@ -309,7 +328,7 @@ const main = Effect.fn("customers.repair")(function* () {
 
     if (repairResult._tag === "Left") {
       failed.push({
-        error: String(repairResult.left),
+        error: getUnknownMessage(repairResult.left),
         userId: user.userId,
       });
     } else {
@@ -337,15 +356,21 @@ const main = Effect.fn("customers.repair")(function* () {
     )
   );
 
-  process.exit(failed.length > 0 ? 1 : 0);
+  yield* Effect.sync(() => {
+    process.exitCode = failed.length > 0 ? 1 : 0;
+  });
 });
 
 Effect.runPromise(
   Effect.gen(function* () {
     const provider = yield* loadEnvProvider();
     yield* main().pipe(Effect.withConfigProvider(provider));
-  })
-).catch((error: unknown) => {
-  logError(error instanceof Error ? error.message : String(error));
-  process.exit(1);
-});
+  }).pipe(
+    Effect.catchAllCause((cause) =>
+      Effect.sync(() => {
+        logError(formatScriptCause(cause));
+        process.exitCode = 1;
+      })
+    )
+  )
+);

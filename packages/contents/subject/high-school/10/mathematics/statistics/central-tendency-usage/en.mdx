@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Applications of Measures of Central Tendency",
-  description: "Learn when to use mean, median, or mode in statistics. Discover how outliers affect each measure and get practical guidance for real-world data analysis.",
+  description: "Learn when to use mean, median, or mode in statistics and how outliers affect each measure in real data.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "04/22/2025",
   subject: "Statistics",
@@ -23,14 +23,14 @@ Choosing the wrong measure can give a misleading picture of the data. So, let's 
 ### Median (Middle Value)
 
 - **How to Calculate:** Sort the data, then find the value exactly in the middle position.
-- **Property:** Only considers the middle position of the data. Therefore, the Median is **not sensitive (robust) to extreme values (outliers)**.
-- **Robustness Example:** For data <InlineMath math="7, 8, 9, 8, 10" /> (sorted: <InlineMath math="7, 8, 8, 9, 10" />), the median is <InlineMath math="8" />. If a score of <InlineMath math="1" /> is added (sorted: <InlineMath math="1, 7, 8, 8, 9, 10" />), the median is <InlineMath math="(8+8)/2=8" />. The median hardly changes despite the outlier.
+- **Property:** Only considers the middle position of the data. Therefore, the Median is **not sensitive to extreme values (outliers)**.
+- **Outlier Example:** For data <InlineMath math="7, 8, 9, 8, 10" /> (sorted: <InlineMath math="7, 8, 8, 9, 10" />), the median is <InlineMath math="8" />. If a score of <InlineMath math="1" /> is added (sorted: <InlineMath math="1, 7, 8, 8, 9, 10" />), the median is <InlineMath math="(8+8)/2=8" />. The median hardly changes despite the outlier.
 
 ### Mode (Most Frequent Value)
 
 - **How to Calculate:** Find the data value with the highest frequency.
-- **Property:** Focuses on the most popular value. Like the Median, the Mode is **not sensitive (robust) to extreme values (outliers)**. Also, the Mode is the only measure of central tendency that can be used for **qualitative data** (non-numerical).
-- **Robustness & Qualitative Example:** For data <InlineMath math="7, 8, 9, 8, 10" />, the mode is <InlineMath math="8" />. If a score of <InlineMath math="1" /> is added, the mode remains <InlineMath math="8" />. If the data is favorite colors (red, blue, red, green), the mode is red.
+- **Property:** Focuses on the most popular value. Like the Median, the Mode is **not sensitive to extreme values (outliers)**. Also, the Mode is the only measure of central tendency that can be used for **qualitative data** (non-numerical).
+- **Outlier & Qualitative Example:** For data <InlineMath math="7, 8, 9, 8, 10" />, the mode is <InlineMath math="8" />. If a score of <InlineMath math="1" /> is added, the mode remains <InlineMath math="8" />. If the data is favorite colors (red, blue, red, green), the mode is red.
 
 ## Usage Guide
 
@@ -39,7 +39,7 @@ Here's a concise guide on when to use each measure:
 | Measure    | Best Data Type             | Outlier Influence | When to Use?                                                                                                |
 | :--------- | :------------------------- | :---------------- | :---------------------------------------------------------------------------------------------------------- |
 | **Mean**   | Quantitative (Numbers)     | Highly Influenced | When data has **no significant outliers** & you want a representation involving all data values.            |
-| **Median** | Quantitative (Numbers)     | Not Influenced    | When data **has outliers** or the distribution is skewed (not symmetrical). Provides a robust middle value. |
+| **Median** | Quantitative (Numbers)     | Not Influenced    | When data **has outliers** or the distribution is skewed (not symmetrical). Provides a stable middle value. |
 | **Mode**   | Qualitative & Quantitative | Not Influenced    | When you want to know the **most popular value/category** or the most frequent occurrence.                  |
 
 **Example Scenarios:**

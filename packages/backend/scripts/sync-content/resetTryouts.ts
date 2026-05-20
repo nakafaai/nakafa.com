@@ -173,14 +173,16 @@ const deleteAllBatched = Effect.fn("sync.resetTryouts.deleteAllBatched")(
         continue;
       }
 
-      process.stdout.write(
-        `\r  Batch ${batchNumber}: deleted ${totalDeleted} ${label}...`
+      yield* Effect.sync(() =>
+        process.stdout.write(
+          `\r  Batch ${batchNumber}: deleted ${totalDeleted} ${label}...`
+        )
       );
       batchNumber += 1;
     }
 
     if (totalDeleted > 0) {
-      process.stdout.write("\n");
+      yield* Effect.sync(() => process.stdout.write("\n"));
     }
 
     return totalDeleted;

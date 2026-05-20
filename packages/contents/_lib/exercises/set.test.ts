@@ -4,13 +4,13 @@ import { createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
-  mockGetExerciseContent,
+  mockGetScopedContent,
   mockGetMDXSlugsForLocale,
   mockKyGet,
   mockReadFile,
   mockResolveContentsDir,
 } = vi.hoisted(() => ({
-  mockGetExerciseContent: vi.fn(),
+  mockGetScopedContent: vi.fn(),
   mockGetMDXSlugsForLocale: vi.fn(),
   mockKyGet: vi.fn(),
   mockReadFile: vi.fn(),
@@ -32,8 +32,8 @@ vi.mock("@repo/contents/_lib/cache", () => ({
   getMDXSlugsForLocale: mockGetMDXSlugsForLocale,
 }));
 
-vi.mock("@repo/contents/_lib/exercises/content", () => ({
-  getExerciseContent: mockGetExerciseContent,
+vi.mock("@repo/contents/_lib/scoped", () => ({
+  getScopedContent: mockGetScopedContent,
 }));
 
 vi.mock("@repo/contents/_lib/root", () => ({
@@ -98,7 +98,7 @@ async function captureFailure<TSuccess, TError>(
 beforeEach(() => {
   mockResolveContentsDir.mockReturnValue("/virtual/contents");
   mockGetMDXSlugsForLocale.mockReturnValue([]);
-  mockGetExerciseContent.mockReset();
+  mockGetScopedContent.mockReset();
   mockReadFile.mockReset();
   mockKyGet.mockReset();
 });
@@ -123,8 +123,9 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_answer`,
       `${exerciseBasePath}/2/_question`,
     ]);
-    mockGetExerciseContent.mockImplementation(
+    mockGetScopedContent.mockImplementation(
       (
+        _root: string,
         _locale: string,
         filePath: string,
         options?: { includeMDX?: boolean }
@@ -168,7 +169,7 @@ describe("getExercisesContent", () => {
     expect(result.map((exercise) => exercise.number)).toStrictEqual([1, 2]);
     expect(result[0]?.question.default).toBeUndefined();
     expect(result[0]?.choices.id[0]?.label).toBe("One ID");
-    expect(mockGetExerciseContent).toHaveBeenCalledTimes(4);
+    expect(mockGetScopedContent).toHaveBeenCalledTimes(4);
   });
 
   it("loads exercises via MDX imports and falls back to GitHub choices when needed", async () => {
@@ -176,8 +177,8 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetExerciseContent.mockImplementation(
-      (_locale: string, filePath: string) => {
+    mockGetScopedContent.mockImplementation(
+      (_root: string, _locale: string, filePath: string) => {
         if (filePath.endsWith("1/_question")) {
           return Effect.succeed(createMdxContent("Question 1"));
         }
@@ -205,8 +206,9 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/03/_question`,
       `${exerciseBasePath}/03/_answer`,
     ]);
-    mockGetExerciseContent.mockImplementation(
+    mockGetScopedContent.mockImplementation(
       (
+        _root: string,
         _locale: string,
         filePath: string,
         options?: { includeMDX?: boolean }
@@ -240,14 +242,16 @@ describe("getExercisesContent", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]?.number).toBe(3);
-    expect(mockGetExerciseContent).toHaveBeenNthCalledWith(
+    expect(mockGetScopedContent).toHaveBeenNthCalledWith(
       1,
+      "exercises",
       "id",
       `${exerciseBasePath}/03/_question`,
       { includeMDX: false }
     );
-    expect(mockGetExerciseContent).toHaveBeenNthCalledWith(
+    expect(mockGetScopedContent).toHaveBeenNthCalledWith(
       2,
+      "exercises",
       "id",
       `${exerciseBasePath}/03/_answer`,
       { includeMDX: false }
@@ -263,7 +267,7 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetExerciseContent.mockReturnValue(
+    mockGetScopedContent.mockReturnValue(
       Effect.succeed(createRawContent("Exercise"))
     );
     mockReadFile.mockResolvedValue("export const metadata = {};");
@@ -284,7 +288,7 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetExerciseContent.mockReturnValue(
+    mockGetScopedContent.mockReturnValue(
       Effect.succeed(createRawContent("Exercise"))
     );
     mockReadFile.mockResolvedValue(
@@ -307,7 +311,7 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetExerciseContent.mockReturnValue(
+    mockGetScopedContent.mockReturnValue(
       Effect.succeed(createRawContent("Exercise"))
     );
     mockReadFile.mockResolvedValue(
@@ -330,8 +334,9 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetExerciseContent.mockImplementation(
+    mockGetScopedContent.mockImplementation(
       (
+        _root: string,
         _locale: string,
         filePath: string,
         options?: { includeMDX?: boolean }
@@ -366,8 +371,9 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetExerciseContent.mockImplementation(
+    mockGetScopedContent.mockImplementation(
       (
+        _root: string,
         _locale: string,
         filePath: string,
         options?: { includeMDX?: boolean }
@@ -402,8 +408,8 @@ describe("getExercisesContent", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetExerciseContent.mockImplementation(
-      (_locale: string, filePath: string) => {
+    mockGetScopedContent.mockImplementation(
+      (_root: string, _locale: string, filePath: string) => {
         if (filePath.endsWith("1/_question")) {
           return Effect.succeed(createMdxContent("Question 1"));
         }
@@ -433,8 +439,9 @@ describe("getExerciseByNumber", () => {
       `${exerciseBasePath}/2/_question`,
       `${exerciseBasePath}/2/_answer`,
     ]);
-    mockGetExerciseContent.mockImplementation(
+    mockGetScopedContent.mockImplementation(
       (
+        _root: string,
         _locale: string,
         filePath: string,
         options?: { includeMDX?: boolean }
@@ -479,7 +486,7 @@ describe("getExerciseByNumber", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetExerciseContent.mockReturnValue(
+    mockGetScopedContent.mockReturnValue(
       Effect.succeed(createRawContent("Exercise"))
     );
     mockReadFile.mockResolvedValue(createChoicesSource("Only"));
@@ -496,8 +503,9 @@ describe("getExerciseByNumber", () => {
       `${exerciseBasePath}/03/_question`,
       `${exerciseBasePath}/03/_answer`,
     ]);
-    mockGetExerciseContent.mockImplementation(
+    mockGetScopedContent.mockImplementation(
       (
+        _root: string,
         _locale: string,
         filePath: string,
         options?: { includeMDX?: boolean }
@@ -527,14 +535,16 @@ describe("getExerciseByNumber", () => {
 
     expect(Option.isSome(result)).toBe(true);
     expect(Option.getOrUndefined(result)?.number).toBe(3);
-    expect(mockGetExerciseContent).toHaveBeenNthCalledWith(
+    expect(mockGetScopedContent).toHaveBeenNthCalledWith(
       1,
+      "exercises",
       "id",
       `${exerciseBasePath}/03/_question`,
       { includeMDX: false }
     );
-    expect(mockGetExerciseContent).toHaveBeenNthCalledWith(
+    expect(mockGetScopedContent).toHaveBeenNthCalledWith(
       2,
+      "exercises",
       "id",
       `${exerciseBasePath}/03/_answer`,
       { includeMDX: false }
@@ -546,8 +556,8 @@ describe("getExerciseByNumber", () => {
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
     ]);
-    mockGetExerciseContent.mockImplementation(
-      (_locale: string, filePath: string) => {
+    mockGetScopedContent.mockImplementation(
+      (_root: string, _locale: string, filePath: string) => {
         if (filePath.endsWith("1/_question")) {
           return Effect.succeed(createMdxContent("Question 1"));
         }

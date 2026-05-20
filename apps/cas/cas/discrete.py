@@ -23,6 +23,8 @@ def run(request: MathRequest) -> MathResult:
         steps = _operation_steps("lcm", values, output)
     elif operation == "prime_factorization":
         value = _integer(request.n)
+        # `factorint` returns the prime-power dictionary shape used below.
+        # https://docs.sympy.org/latest/modules/ntheory.html#sympy.ntheory.factor_.factorint
         factors = sp.factorint(value)
         factorization = _factorization_expression(factors)
 
@@ -48,6 +50,8 @@ def run(request: MathRequest) -> MathResult:
         )
     elif operation == "is_prime":
         value = _integer(request.n)
+        # SymPy's primality API gives a deterministic boolean for exact integers.
+        # https://docs.sympy.org/latest/modules/ntheory.html#sympy.ntheory.primetest.isprime
         output = sp.isprime(value)
         steps = [
             step(

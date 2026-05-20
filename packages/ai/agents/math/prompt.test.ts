@@ -46,6 +46,35 @@ describe("mathPrompt", () => {
     }
 
     expect(toolSection).toContain("interval_probability");
+    expect(toolSection).toContain("already-substituted function values");
+    expect(toolSection).toContain(
+      "Named-distribution moments are probability targets"
+    );
+    expect(toolSection).toContain(
+      "Check each requested named-distribution moment with probability"
+    );
+    expect(toolSection).toContain(
+      "Derivations must name the definition, moment identity, recurrence, or variance identity"
+    );
+    expect(toolSection).toContain(
+      "keep variable as the underlying random variable name"
+    );
+    expect(toolSection).toContain(
+      "put the requested transformed target in expression"
+    );
+    expect(toolSection).toContain(
+      "The transformed expression must contain only that same random variable."
+    );
+    expect(toolSection).not.toContain("E[X^4]");
+    expect(toolSection).not.toContain("Var(X^2)");
+    expect(toolSection).toContain(
+      "Do not use calculus to replace probability checks"
+    );
+    expect(toolSection).toContain("For optimization or extrema, differentiate");
+    expect(toolSection).toContain(
+      "use arithmetic evaluate on the original expression after substituting"
+    );
+    expect(toolSection).toContain("minimum point and maximum point requests");
     expect(toolSection).not.toContain("Never label math as verified");
     expect(verificationSection).toContain("Never label math as verified");
     expect(verificationSection).not.toContain(
@@ -71,6 +100,9 @@ describe("mathPrompt", () => {
     expect(prompt).toContain("Call tools for each distinct calculation");
     expect(prompt).toContain("If evidence is missing and can be checked");
     expect(prompt).toContain(
+      "the evidence is incomplete until the substituted original expression is checked"
+    );
+    expect(prompt).toContain(
       "For error status, do not present the requested result as checked or proven."
     );
     expect(prompt).toContain("For partial step status");
@@ -80,6 +112,16 @@ describe("mathPrompt", () => {
     expect(prompt).toContain(
       "retry the original operation with corrected input before answering"
     );
+    expect(prompt).toContain(
+      "compare the failed input with the original task for omitted variables"
+    );
+    expect(prompt).toContain(
+      "include the conceptual bridge between evidence and conclusion"
+    );
+    expect(prompt).toContain('Avoid contextless labels such as "given"');
+    expect(prompt).toContain(
+      "Do not say the user provided a formula, method, or calculation"
+    );
   });
 
   it("routes broad math domains through supported deterministic operations", () => {
@@ -87,6 +129,11 @@ describe("mathPrompt", () => {
 
     expect(prompt).toContain("solve: equations, systems, and inequalities.");
     expect(prompt).toContain("roots: polynomial roots.");
+    expect(prompt).toContain("Include lower, upper, and inclusivity fields");
+    expect(prompt).toContain("Use solve instead of roots");
+    expect(prompt).toContain(
+      "set variable to the bounded variable and variables to all solved variables"
+    );
     expect(prompt).toContain(
       "Use separate calls when a request asks for both expansion and closed-form sum or product."
     );

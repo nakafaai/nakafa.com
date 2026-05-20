@@ -1,7 +1,7 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from "@repo/contents/subject/high-school/11/economy/_data";
+import { BASE_PATH } from "@repo/contents/subject/high-school/11/economy/_data/path";
 
-const enMaterials: MaterialList = [
+const enMaterials = [
   {
     title: "Business Entities in Economy",
     description:
@@ -93,7 +93,7 @@ const enMaterials: MaterialList = [
   {
     title: "Monetary and Fiscal Policy",
     description:
-      "Government's economic toolkit for steering nations through prosperity and crisis.",
+      "How monetary and fiscal policy influence prices, growth, and economic stability.",
     href: `${BASE_PATH}/monetary-fiscal-policy`,
     items: [
       {
@@ -114,6 +114,6 @@ const enMaterials: MaterialList = [
       },
     ],
   },
-] as const;
+] satisfies MaterialList;
 
 export default enMaterials;

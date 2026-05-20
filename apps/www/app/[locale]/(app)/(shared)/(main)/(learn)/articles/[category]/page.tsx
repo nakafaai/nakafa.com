@@ -7,6 +7,7 @@ import { getArticleSummaries } from "@repo/contents/_lib/articles/slug";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
@@ -45,7 +46,7 @@ async function getCategoryArticles(category: ArticleCategory, locale: Locale) {
 
   cacheLife("max");
 
-  return getArticleSummaries(category, locale);
+  return Effect.runPromise(getArticleSummaries(category, locale));
 }
 
 export async function generateMetadata({

@@ -1,7 +1,7 @@
 import type { MaterialList } from "@repo/contents/_types/subject/material";
-import { BASE_PATH } from "@repo/contents/subject/university/bachelor/ai-ds/_data";
+import { BASE_PATH } from "@repo/contents/subject/university/bachelor/ai-ds/_data/path";
 
-const enMaterials: MaterialList = [
+const enMaterials = [
   {
     title: "Linear Methods of AI",
     description:
@@ -991,6 +991,6 @@ const enMaterials: MaterialList = [
       },
     ],
   },
-] as const;
+] satisfies MaterialList;
 
 export default enMaterials;

@@ -1,6 +1,6 @@
 export const metadata = {
     title: "Indexing dan Slicing",
-    description: "Pelajari teknik indexing dan slicing Python untuk mengakses elemen string dan list. Kuasai penggunaan indeks positif, negatif, dan stride.",
+    description: "Pelajari teknik indexing dan slicing Python untuk mengakses elemen string dan list. Pelajari penggunaan indeks positif, negatif, dan stride.",
     authors: [{ name: "Nabil Akbarazzima Fatih" }],
     date: "09/17/2025",
     subject: "Pemrograman AI",
@@ -273,6 +273,6 @@ print(f"'kasur rusak' palindrome? {is_palindrome('kasur rusak')}")`
 
 Dari kelima contoh aplikasi ini, terlihat bahwa operasi indexing dan slicing dapat menggantikan logika pemrograman yang kompleks. Misalnya, membalik string dengan `[::-1]` jauh lebih ringkas dibandingkan menggunakan loop manual, dan mengambil ekstensi file dengan `[-3:]` lebih intuitif daripada mencari posisi titik terakhir.
 
-Keunggulan utama teknik ini terletak pada kemampuannya menangani data berurutan tanpa risiko IndexError pada slicing. Ketika kamu melakukan `s[10:]` pada string pendek, Python tidak akan crash melainkan mengembalikan string kosong. Fleksibilitas ini membuat kode lebih robust, terutama ketika bekerja dengan data yang panjangnya tidak dapat diprediksi.
+Keunggulan utama teknik ini terletak pada kemampuannya menangani data berurutan tanpa risiko IndexError pada slicing. Ketika kamu melakukan `s[10:]` pada string pendek, Python tidak akan crash melainkan mengembalikan string kosong. Fleksibilitas ini membuat kode lebih aman, terutama ketika bekerja dengan data yang panjangnya tidak dapat diprediksi.
 
 Penguasaan indeks negatif memberikan perspektif baru dalam mengakses data. Alih-alih menghitung dari depan, kamu bisa langsung mengambil elemen dari belakang dengan `s[-1]` untuk elemen terakhir atau `s[-3:]` untuk tiga elemen terakhir. Pendekatan ini sangat berguna dalam pemrosesan file, parsing teks, dan manipulasi dataset di mana posisi relatif dari akhir lebih penting daripada posisi absolut dari awal.

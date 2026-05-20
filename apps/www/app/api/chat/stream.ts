@@ -40,6 +40,11 @@ import { Effect } from "effect";
 import type { getTranslations } from "next-intl/server";
 import { search as nakafaSearch } from "@/app/api/chat/nakafa";
 import { repairChatToolCall } from "@/app/api/chat/repair";
+import {
+  recordSpecialistUsage,
+  recoverSpecialistFailure,
+  specialistSuccess,
+} from "@/app/api/chat/specialist";
 import { prepareChatStep } from "@/app/api/chat/step";
 import { writeSuggestions } from "@/app/api/chat/suggestions";
 import { trackUsage } from "@/app/api/chat/usage";
@@ -250,10 +255,25 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                         task: formatSpecialistToolTask(input),
                         writer,
                       }).pipe(
-                        Effect.provideService(NakafaSearch, nakafaSearch)
+                        Effect.provideService(NakafaSearch, nakafaSearch),
+                        Effect.map(specialistSuccess),
+                        Effect.catchAll((error) =>
+                          recoverSpecialistFailure({
+                            component: TOOL_NAMES.nakafa,
+                            error,
+                            errorLocation: "runNakafaAgent",
+                            logContext: runtime.logContext,
+                            reportError: runtime.reportError,
+                          })
+                        )
                       );
 
-                      yield* usage.addUsage(TOOL_NAMES.nakafa, result.usage);
+                      yield* recordSpecialistUsage({
+                        addUsage: usage.addUsage,
+                        component: TOOL_NAMES.nakafa,
+                        logContext: runtime.logContext,
+                        result,
+                      });
 
                       return result.text;
                     })
@@ -276,12 +296,25 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                           getSourceReferencesFromMessages(messages),
                         toolCallId,
                         writer,
-                      });
-
-                      yield* usage.addUsage(
-                        TOOL_NAMES.deepResearch,
-                        result.usage
+                      }).pipe(
+                        Effect.map(specialistSuccess),
+                        Effect.catchAll((error) =>
+                          recoverSpecialistFailure({
+                            component: TOOL_NAMES.deepResearch,
+                            error,
+                            errorLocation: "runResearchAgent",
+                            logContext: runtime.logContext,
+                            reportError: runtime.reportError,
+                          })
+                        )
                       );
+
+                      yield* recordSpecialistUsage({
+                        addUsage: usage.addUsage,
+                        component: TOOL_NAMES.deepResearch,
+                        logContext: runtime.logContext,
+                        result,
+                      });
 
                       return result.text;
                     })
@@ -300,9 +333,25 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                         modelId: runtime.modelId,
                         task: formatSpecialistToolTask(input),
                         writer,
-                      });
+                      }).pipe(
+                        Effect.map(specialistSuccess),
+                        Effect.catchAll((error) =>
+                          recoverSpecialistFailure({
+                            component: TOOL_NAMES.math,
+                            error,
+                            errorLocation: "runMathAgent",
+                            logContext: runtime.logContext,
+                            reportError: runtime.reportError,
+                          })
+                        )
+                      );
 
-                      yield* usage.addUsage(TOOL_NAMES.math, result.usage);
+                      yield* recordSpecialistUsage({
+                        addUsage: usage.addUsage,
+                        component: TOOL_NAMES.math,
+                        logContext: runtime.logContext,
+                        result,
+                      });
 
                       return result.text;
                     })

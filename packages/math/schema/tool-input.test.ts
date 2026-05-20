@@ -1,25 +1,8 @@
-import { MathDataSchema } from "@repo/math/schema/data";
-import { MathRequestSchema } from "@repo/math/schema/request";
-import { MathResultSchema } from "@repo/math/schema/result";
 import { MathToolInputSchema } from "@repo/math/schema/tool-input";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
-describe("math schemas", () => {
-  it("decodes a CAS request", () => {
-    expect(
-      Schema.decodeUnknownSync(MathRequestSchema)({
-        expression: "2 + 2",
-        kind: "math",
-        operation: "evaluate",
-      })
-    ).toEqual({
-      expression: "2 + 2",
-      kind: "math",
-      operation: "evaluate",
-    });
-  });
-
+describe("MathToolInputSchema", () => {
   it("accepts zero-order series requests but rejects invalid series orders", () => {
     const decodeMathToolInput = Schema.decodeUnknownSync(MathToolInputSchema);
 
@@ -52,62 +35,6 @@ describe("math schemas", () => {
     ).toThrow();
   });
 
-  it("decodes CAS results and data parts", () => {
-    const result = Schema.decodeUnknownSync(MathResultSchema)({
-      conditions: [],
-      input: {
-        expression: "2 + 2",
-        kind: "math",
-        operation: "evaluate",
-      },
-      items: [],
-      kind: "evaluate",
-      operation: "evaluate",
-      primary: {
-        expression: "2 + 2",
-        latex: "2 + 2",
-      },
-      reason: "Exact arithmetic was checked.",
-      secondary: {
-        expression: "4",
-        latex: "4",
-      },
-      stepStatus: "complete",
-      steps: [
-        {
-          action: "evaluate",
-          items: [],
-          primary: {
-            expression: "2 + 2",
-            latex: "2 + 2",
-          },
-          relation: {
-            expression: "equals",
-            latex: "=",
-          },
-          secondary: {
-            expression: "4",
-            latex: "4",
-          },
-        },
-      ],
-      status: "verified",
-    });
-
-    expect(
-      Schema.decodeUnknownSync(MathDataSchema)({
-        input: result.input,
-        kind: result.operation,
-        result,
-        status: result.status,
-        summary: result.reason,
-      })
-    ).toMatchObject({
-      kind: "evaluate",
-      status: "verified",
-    });
-  });
-
   it("accepts strict compare tool input", () => {
     expect(
       Schema.decodeUnknownSync(MathToolInputSchema)({
@@ -119,6 +46,160 @@ describe("math schemas", () => {
       left: "(x^2 - 9)/(x - 3)",
       operation: "compare",
       right: "x + 3",
+    });
+  });
+
+  it("accepts equation solve domains", () => {
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expression: "x^x * (ln(x) + 1) = 0",
+        lower: "0",
+        lowerInclusive: false,
+        operation: "solve",
+        variable: "x",
+      })
+    ).toEqual({
+      expression: "x^x * (ln(x) + 1) = 0",
+      lower: "0",
+      lowerInclusive: false,
+      operation: "solve",
+      variable: "x",
+    });
+  });
+
+  it("accepts bounded system domains with a domain variable", () => {
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["x^2 - 1 = 0", "y = 0"],
+        lower: "0",
+        lowerInclusive: false,
+        operation: "solve",
+        variable: "x",
+        variables: ["x", "y"],
+      })
+    ).toEqual({
+      expressions: ["x^2 - 1 = 0", "y = 0"],
+      lower: "0",
+      lowerInclusive: false,
+      operation: "solve",
+      variable: "x",
+      variables: ["x", "y"],
+    });
+  });
+
+  it("rejects root requests with solve-domain bounds", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expression: "x^2 - 1 = 0",
+        lower: "0",
+        operation: "roots",
+        variable: "x",
+      })
+    ).toThrow();
+  });
+
+  it("accepts unbounded systems without a domain variable", () => {
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["x^2 - 1 = 0", "y = 0"],
+        operation: "solve",
+        variables: ["x", "y"],
+      })
+    ).toEqual({
+      expressions: ["x^2 - 1 = 0", "y = 0"],
+      operation: "solve",
+      variables: ["x", "y"],
+    });
+  });
+
+  it("rejects bounded system domains without a domain variable", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["x^2 - 1 = 0", "y = 0"],
+        lower: "0",
+        lowerInclusive: false,
+        operation: "solve",
+        variables: ["x", "y"],
+      })
+    ).toThrow();
+
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["x^2 - 1 = 0", "y = 0"],
+        operation: "solve",
+        upper: "2",
+        upperInclusive: false,
+        variables: ["x", "y"],
+      })
+    ).toThrow();
+  });
+
+  it("rejects bounded system domains without full solved variables", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["x + y = 3", "y = 1"],
+        lower: "0",
+        operation: "solve",
+        variable: "x",
+      })
+    ).toThrow();
+
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["x = 2", "y = 1"],
+        lower: "0",
+        operation: "solve",
+        variable: "x",
+        variables: ["x"],
+      })
+    ).toThrow();
+
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["x^2 - 1 = 0", "y = 0"],
+        lower: "0",
+        operation: "solve",
+        variable: "z",
+        variables: ["x", "y"],
+      })
+    ).toThrow();
+  });
+
+  it("accepts bounded systems with symbolic parameters", () => {
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["a*x = 1"],
+        lower: "0",
+        lowerInclusive: false,
+        operation: "solve",
+        variable: "x",
+        variables: ["x"],
+      })
+    ).toEqual({
+      expressions: ["a*x = 1"],
+      lower: "0",
+      lowerInclusive: false,
+      operation: "solve",
+      variable: "x",
+      variables: ["x"],
+    });
+  });
+
+  it("accepts bounded systems with supported parser functions", () => {
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["Rational(1, 2)*x = 1"],
+        lower: "0",
+        operation: "solve",
+        variable: "x",
+        variables: ["x"],
+      })
+    ).toEqual({
+      expressions: ["Rational(1, 2)*x = 1"],
+      lower: "0",
+      operation: "solve",
+      variable: "x",
+      variables: ["x"],
     });
   });
 
@@ -177,6 +258,48 @@ describe("math schemas", () => {
       upper: "oo",
       variable: "x",
     });
+
+    expect(
+      decodeMathToolInput({
+        expression: "x^x",
+        operation: "differentiate",
+        order: 2,
+        variable: "x",
+      })
+    ).toEqual({
+      expression: "x^x",
+      operation: "differentiate",
+      order: 2,
+      variable: "x",
+    });
+
+    expect(() =>
+      decodeMathToolInput({
+        expression: "x^x",
+        operation: "differentiate",
+        order: 0,
+        variable: "x",
+      })
+    ).toThrow();
+
+    expect(() =>
+      decodeMathToolInput({
+        expression: "x^2",
+        operation: "integrate",
+        order: 2,
+        variable: "x",
+      })
+    ).toThrow();
+
+    expect(() =>
+      decodeMathToolInput({
+        expression: "sin(x) / x",
+        operation: "limit",
+        order: 2,
+        point: "0",
+        variable: "x",
+      })
+    ).toThrow();
   });
 
   it("rejects strict algebra input without an expression", () => {
@@ -238,10 +361,49 @@ describe("math schemas", () => {
     expect(
       Schema.decodeUnknownSync(MathToolInputSchema)({
         distribution: "poisson",
+        operation: "distribution",
+        parameters: {
+          lambda: "3",
+        },
+        variable: "X",
+      })
+    ).toEqual({
+      distribution: "poisson",
+      operation: "distribution",
+      parameters: {
+        lambda: "3",
+      },
+      variable: "X",
+    });
+
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        distribution: "poisson",
+        expression: "X^2",
         operation: "expected_value",
         parameters: {
           lambda: "3",
         },
+        variable: "X",
+      })
+    ).toEqual({
+      distribution: "poisson",
+      expression: "X^2",
+      operation: "expected_value",
+      parameters: {
+        lambda: "3",
+      },
+      variable: "X",
+    });
+
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        distribution: "poisson",
+        operation: "expected_value",
+        parameters: {
+          lambda: "3",
+        },
+        variable: "X",
       })
     ).toEqual({
       distribution: "poisson",
@@ -249,7 +411,69 @@ describe("math schemas", () => {
       parameters: {
         lambda: "3",
       },
+      variable: "X",
     });
+
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        distribution: "poisson",
+        expression: "X^2",
+        operation: "expected_value",
+        parameters: {
+          lambda: "3",
+        },
+      })
+    ).toEqual({
+      distribution: "poisson",
+      expression: "X^2",
+      operation: "expected_value",
+      parameters: {
+        lambda: "3",
+      },
+    });
+  });
+
+  it("rejects moment expressions with extra random variables", () => {
+    const decodeMathToolInput = Schema.decodeUnknownSync(MathToolInputSchema);
+
+    expect(() =>
+      decodeMathToolInput({
+        distribution: "normal",
+        expression: "X + Y",
+        operation: "expected_value",
+        parameters: {
+          mean: "0",
+          standard_deviation: "1",
+        },
+        variable: "X",
+      })
+    ).toThrow();
+
+    expect(() =>
+      decodeMathToolInput({
+        distribution: "normal",
+        expression: "X + Y",
+        operation: "variance_probability",
+        parameters: {
+          mean: "0",
+          standard_deviation: "1",
+        },
+        variable: "X",
+      })
+    ).toThrow();
+
+    expect(() =>
+      decodeMathToolInput({
+        distribution: "normal",
+        expression: "X^2",
+        operation: "expected_value",
+        parameters: {
+          mean: "0",
+          standard_deviation: "1",
+        },
+        variable: "Y",
+      })
+    ).toThrow();
   });
 
   it("requires canonical normal standard_deviation input", () => {
@@ -384,6 +608,16 @@ describe("math schemas", () => {
   });
 
   it("rejects probability inputs without required distribution parameters", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        distribution: "normal",
+        operation: "distribution",
+        parameters: {
+          mean: "70",
+        },
+      })
+    ).toThrow();
+
     expect(() =>
       Schema.decodeUnknownSync(MathToolInputSchema)({
         distribution: "normal",
