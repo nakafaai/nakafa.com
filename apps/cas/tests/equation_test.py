@@ -263,6 +263,18 @@ def test_solve_system_requires_full_variables_for_requested_domain() -> None:
             )
         )
 
+    with pytest.raises(ValueError, match="all solved variables"):
+        run(
+            MathRequest(
+                expressions=["x = 2", "y = 1"],
+                kind="math",
+                lower="0",
+                operation="solve",
+                variable="x",
+                variables=["x"],
+            )
+        )
+
 
 def test_solve_system_rejects_domain_variable_outside_solved_variables() -> None:
     with pytest.raises(ValueError, match="one of the solved variables"):

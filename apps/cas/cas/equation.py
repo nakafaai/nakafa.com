@@ -102,8 +102,8 @@ def _solve_system(
     domain: sp.Set,
 ):
     """Solve a system and enforce a requested single-variable domain."""
-    if domain != sp.S.Reals and not request.variables:
-        raise ValueError("Bounded system solves require all solved variables.")
+    if domain != sp.S.Reals:
+        _require_bounded_system_variables(parsed, variables)
 
     solved = sp.solve(parsed, variables, dict=True)
 
@@ -112,6 +112,30 @@ def _solve_system(
 
     domain_variable = _system_domain_variable(request, variables)
     return _filter_solved_mappings(solved, domain_variable, domain)
+
+
+def _require_bounded_system_variables(
+    parsed: list[sp.Expr | sp.Equality | Relational],
+    variables: list[sp.Symbol],
+) -> None:
+    """Require bounded systems to include every symbol used by the system."""
+    missing = _system_symbols(parsed) - set(variables)
+    if not missing:
+        return
+
+    raise ValueError("Bounded system solves require all solved variables.")
+
+
+def _system_symbols(
+    parsed: list[sp.Expr | sp.Equality | Relational],
+) -> set[sp.Symbol]:
+    """Return every symbolic variable present in a parsed system."""
+    return {
+        symbol
+        for relation in parsed
+        for symbol in relation.free_symbols
+        if isinstance(symbol, sp.Symbol)
+    }
 
 
 def _system_domain_variable(

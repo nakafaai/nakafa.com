@@ -1,6 +1,7 @@
 import {
   boundInputSchema,
   expressionInputSchema,
+  getExpressionSymbols,
   nonEmptyStringArraySchema,
   stringArraySchema,
   variableInputSchema,
@@ -64,7 +65,7 @@ const MathEquationSingleSolveInputSchema = Schema.Struct({
   ),
 }).pipe(Schema.mutable);
 
-const MathEquationSystemInputSchema = Schema.Struct({
+const MathEquationSystemStructSchema = Schema.Struct({
   expressions: nonEmptyStringArraySchema.annotations({
     description: "Equations or inequalities for systems.",
   }),
@@ -80,32 +81,49 @@ const MathEquationSystemInputSchema = Schema.Struct({
   ),
   variables: Schema.optional(
     stringArraySchema.annotations({
-      description: "Variables to solve for, for example [x, y].",
+      description:
+        "Variables to solve for, for example [x, y]. Bounded systems must include every variable used by the system.",
     })
   ),
-})
-  .pipe(
-    Schema.filter(
-      (value) => {
-        const hasBounds =
-          value.lower !== undefined || value.upper !== undefined;
-        if (!hasBounds) {
-          return true;
-        }
+});
 
-        if (!(value.variable && value.variables)) {
-          return false;
-        }
+type MathEquationSystemInput = Schema.Schema.Type<
+  typeof MathEquationSystemStructSchema
+>;
 
-        return value.variables.includes(value.variable);
-      },
-      {
-        message: () =>
-          "Expected bounded system solves to include all solved variables and the bounded variable.",
-      }
+/** Returns whether a solve request includes a non-real solve domain. */
+function hasSolveDomain(value: MathEquationSystemInput) {
+  return value.lower !== undefined || value.upper !== undefined;
+}
+
+/** Requires bounded systems to solve every symbol mentioned by the system. */
+function hasCompleteBoundedSystemVariables(value: MathEquationSystemInput) {
+  if (!hasSolveDomain(value)) {
+    return true;
+  }
+
+  if (!(value.variable && value.variables)) {
+    return false;
+  }
+
+  const variables = new Set(value.variables);
+  if (!variables.has(value.variable)) {
+    return false;
+  }
+
+  return value.expressions.every((expression) =>
+    [...getExpressionSymbols(expression)].every((symbol) =>
+      variables.has(symbol)
     )
-  )
-  .pipe(Schema.mutable);
+  );
+}
+
+const MathEquationSystemInputSchema = MathEquationSystemStructSchema.pipe(
+  Schema.filter((value) => hasCompleteBoundedSystemVariables(value), {
+    message: () =>
+      "Expected bounded system solves to include all solved variables and the bounded variable.",
+  })
+).pipe(Schema.mutable);
 
 export const MathEquationInputSchema = Schema.Union(
   MathEquationRootInputSchema,

@@ -219,6 +219,16 @@ describe("math schemas", () => {
 
     expect(() =>
       Schema.decodeUnknownSync(MathToolInputSchema)({
+        expressions: ["x = 2", "y = 1"],
+        lower: "0",
+        operation: "solve",
+        variable: "x",
+        variables: ["x"],
+      })
+    ).toThrow();
+
+    expect(() =>
+      Schema.decodeUnknownSync(MathToolInputSchema)({
         expressions: ["x^2 - 1 = 0", "y = 0"],
         lower: "0",
         operation: "solve",

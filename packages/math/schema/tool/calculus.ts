@@ -1,42 +1,11 @@
 import {
   boundInputSchema,
   expressionInputSchema,
+  getExpressionSymbols,
   pointInputSchema,
   variableInputSchema,
 } from "@repo/math/schema/shared";
 import { Schema } from "effect";
-
-const expressionReservedNames = new Set([
-  "Abs",
-  "E",
-  "I",
-  "acos",
-  "asin",
-  "atan",
-  "cos",
-  "e",
-  "exp",
-  "factorial",
-  "factorial2",
-  "ln",
-  "log",
-  "oo",
-  "pi",
-  "sin",
-  "sqrt",
-  "tan",
-]);
-
-const symbolPattern = /[A-Za-z_][A-Za-z0-9_]*/gu;
-
-/** Counts free-symbol-looking identifiers while ignoring supported functions. */
-function getExpressionSymbols(expression: string) {
-  return new Set(
-    [...expression.matchAll(symbolPattern)]
-      .map(([symbol]) => symbol)
-      .filter((symbol) => !expressionReservedNames.has(symbol))
-  );
-}
 
 /** Requires an explicit calculus variable when parameters make inference unsafe. */
 function hasSafeCalculusVariable(value: MathCalculusInput) {
