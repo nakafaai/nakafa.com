@@ -189,6 +189,24 @@ def test_solve_inequality() -> None:
     assert "2 < x" in result.secondary.expression
 
 
+def test_solve_inequality_system() -> None:
+    result = run(
+        MathRequest(
+            expressions=["x > 0", "x < 2"],
+            kind="math",
+            operation="solve",
+            variable="x",
+            variables=["x"],
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "(0 < x) & (x < 2)"
+    assert result.stepStatus == "partial"
+    assert result.steps[0].action == "solve"
+
+
 def test_solve_inequality_intersects_requested_domain() -> None:
     result = run(
         MathRequest(
@@ -204,6 +222,24 @@ def test_solve_inequality_intersects_requested_domain() -> None:
     assert result.status == "verified"
     assert result.secondary
     assert result.secondary.expression == "(0 < x) & (x < 2)"
+
+
+def test_solve_inequality_system_intersects_requested_domain() -> None:
+    result = run(
+        MathRequest(
+            expressions=["x > 0", "x < 2"],
+            kind="math",
+            lower="1",
+            lowerInclusive=False,
+            operation="solve",
+            variable="x",
+            variables=["x"],
+        )
+    )
+
+    assert result.status == "verified"
+    assert result.secondary
+    assert result.secondary.expression == "(1 < x) & (x < 2)"
 
 
 def test_solve_system() -> None:
@@ -331,6 +367,27 @@ def test_solve_system_returns_inconclusive_when_domain_value_is_not_solved() -> 
             lower="0",
             operation="solve",
             variable="x",
+            variables=["x", "y"],
+        )
+    )
+
+    assert result.status == "inconclusive"
+    assert result.reason == "The equation solution set could not be determined exactly."
+
+
+def test_solve_system_returns_inconclusive_for_non_mapping_solve_outputs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def solve_non_mapping(*_args: object, **_kwargs: object) -> object:
+        return object()
+
+    monkeypatch.setattr("cas.equation.sp.solve", solve_non_mapping)
+
+    result = run(
+        MathRequest(
+            expressions=["x + y = 3", "x - y = 1"],
+            kind="math",
+            operation="solve",
             variables=["x", "y"],
         )
     )

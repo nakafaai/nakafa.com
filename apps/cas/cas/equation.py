@@ -2,6 +2,7 @@
 
 import sympy as sp
 from sympy.core.relational import Relational
+from sympy.logic.boolalg import And, Boolean
 
 from cas import parse
 from cas.format import expression_text, item, result, step
@@ -73,6 +74,18 @@ def solve(request: MathRequest) -> MathResult:
             reason=SOLUTION_SET_UNAVAILABLE,
         )
 
+    if isinstance(solved, Boolean):
+        steps = [step("solve", primary=parsed, relation=IMPLIES, secondary=solved)]
+        return result(
+            request,
+            status="verified",
+            primary=parsed,
+            secondary=solved,
+            reason="The system was solved exactly.",
+            steps=steps,
+            stepStatus="partial",
+        )
+
     return result(
         request,
         status="verified",
@@ -100,18 +113,71 @@ def _solve_system(
     parsed: list[sp.Expr | sp.Equality | Relational],
     variables: list[sp.Symbol],
     domain: sp.Set,
-):
+) -> list[dict[sp.Symbol, sp.Expr]] | Boolean:
     """Solve a system and enforce a requested single-variable domain."""
     if domain != sp.S.Reals:
         _require_bounded_system_variables(parsed, variables)
 
+    if _is_univariate_relation_system(parsed, variables):
+        return _solve_relation_system(parsed, variables[0], domain)
+
     solved = sp.solve(parsed, variables, dict=True)
+    if not _is_mapping_solution_list(solved):
+        raise SolutionSetUnavailable(SOLUTION_SET_UNAVAILABLE)
 
     if domain == sp.S.Reals:
         return solved
 
     domain_variable = _system_domain_variable(request, variables)
     return _filter_solved_mappings(solved, domain_variable, domain)
+
+
+def _is_mapping_solution_list(
+    solved: object,
+) -> bool:
+    """Return whether SymPy produced dictionary solution mappings."""
+    if not isinstance(solved, list):
+        return False
+
+    return all(isinstance(solution, dict) for solution in solved)
+
+
+def _is_univariate_relation_system(
+    parsed: list[sp.Expr | sp.Equality | Relational],
+    variables: list[sp.Symbol],
+) -> bool:
+    """Return whether a relation system can be reduced as one-variable logic."""
+    return (
+        len(variables) == 1
+        and all(isinstance(relation, Relational) for relation in parsed)
+        and any(not isinstance(relation, sp.Equality) for relation in parsed)
+    )
+
+
+def _solve_relation_system(
+    relations: list[sp.Expr | sp.Equality | Relational],
+    variable: sp.Symbol,
+    domain: sp.Set,
+) -> Boolean:
+    """Solve a one-variable relational system with optional domain bounds."""
+    constraints: list[object] = list(relations)
+
+    if domain != sp.S.Reals:
+        constraints.extend(_flatten_conjunction(domain.contains(variable)))
+
+    return sp.reduce_inequalities(constraints, variable)
+
+
+def _flatten_conjunction(value: object) -> list[object]:
+    """Flatten conjunctions so SymPy can reduce domain relations correctly."""
+    if not isinstance(value, And):
+        return [value]
+
+    constraints = []
+    for argument in value.args:
+        constraints.extend(_flatten_conjunction(argument))
+
+    return constraints
 
 
 def _require_bounded_system_variables(
