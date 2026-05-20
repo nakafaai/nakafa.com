@@ -5,6 +5,7 @@ import {
 } from "@repo/ai/config/models";
 import { backgroundGenerationTimeout } from "@repo/ai/config/timeouts";
 import { model } from "@repo/ai/config/vercel";
+import { createPrompt } from "@repo/ai/prompt/utils";
 import {
   generateText,
   NoSuchToolError,
@@ -12,7 +13,6 @@ import {
   type ToolCallRepairFunction,
   type ToolSet,
 } from "ai";
-import dedent from "dedent";
 import { Effect, Option, Schema } from "effect";
 
 type MathRepairOptions = Parameters<ToolCallRepairFunction<ToolSet>>[0];
@@ -83,12 +83,16 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
     generateText({
       model: model.languageModel(modelId),
       output: Output.object({ schema: tool.inputSchema }),
-      prompt: dedent(`
+      prompt: createPrompt({
+        taskContext: `
         # Repair Task
 
         Repair the math tool arguments without changing the selected tool.
+      `,
 
-        Rules:
+        toolUsageGuidelines: `
+        # Repair Rules
+
         - Keep the operation field exactly the same as the failed arguments.
         - Start from the failed arguments and keep every relevant existing field that the accepted schema allows.
         - Add or correct only the fields needed to satisfy validation.
@@ -103,7 +107,9 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
         - For equation systems with lower or upper solve-domain bounds, include variable for the bounded variable and variables for all solved variables.
         - For named probability distributions, include distribution and parameters.
         - Include the requested probability point or event bounds.
+      `,
 
+        backgroundData: `
         # Selected Tool
 
         ${toolCall.toolName}
@@ -123,7 +129,8 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
         # Validation Error
 
         ${error.message}
-      `),
+      `,
+      }),
       providerOptions: {
         gateway: gatewayProviderOptions,
         google: getFastModelProviderOptions(modelId),

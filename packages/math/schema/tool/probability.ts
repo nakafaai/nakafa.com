@@ -1,6 +1,7 @@
 import {
   boundInputSchema,
   expressionInputSchema,
+  getExpressionSymbols,
   pointInputSchema,
   valueInputSchema,
 } from "@repo/math/schema/shared";
@@ -47,7 +48,7 @@ const MathProbabilityBaseInputSchema = Schema.Struct({
   variable: Schema.optional(
     Schema.NonEmptyString.annotations({
       description:
-        "Random variable name, for example X. For transformed moments such as E[X^4] or Var(X^2), send variable as X and expression as X^4 or X^2. The expression must use this same variable.",
+        "Random variable name. For transformed moments, keep this as the underlying random variable and put the transformed target in expression. The expression must use this same variable.",
     })
   ),
 });
@@ -57,6 +58,10 @@ type ProbabilityBaseInput = Schema.Schema.Type<
 >;
 
 type ProbabilityParameter = keyof ProbabilityBaseInput["parameters"];
+type ProbabilityMomentInput = ProbabilityBaseInput & {
+  expression?: string;
+  operation: "expected_value" | "variance_probability";
+};
 
 const probabilityDistributionParameters = {
   bernoulli: ["p"],
@@ -74,6 +79,25 @@ function hasRequiredProbabilityParameters(value: ProbabilityBaseInput) {
   return probabilityDistributionParameters[value.distribution].every(
     (parameter) => Boolean(value.parameters[parameter])
   );
+}
+
+/** Checks that a transformed moment targets one configured random variable. */
+function hasConsistentMomentExpression(value: ProbabilityMomentInput) {
+  if (!value.expression) {
+    return true;
+  }
+
+  const symbols = getExpressionSymbols(value.expression);
+
+  if (symbols.size !== 1) {
+    return false;
+  }
+
+  if (!value.variable) {
+    return true;
+  }
+
+  return symbols.has(value.variable);
 }
 
 const MathProbabilityDistributionInputSchema = Schema.extend(
@@ -100,7 +124,7 @@ const MathProbabilityMomentInputSchema = Schema.extend(
     expression: Schema.optional(
       expressionInputSchema.annotations({
         description:
-          "Optional transformed random-variable expression for expected_value or variance_probability, for example X^4 for E[X^4] or X^2 for Var(X^2). It must use the same variable named by variable.",
+          "Optional transformed random-variable expression for expected_value or variance_probability. Use when the requested moment is about a transformation of the random variable. It must contain exactly one random variable and match variable when variable is provided.",
       })
     ),
     operation: Schema.Literal(
@@ -116,6 +140,12 @@ const MathProbabilityMomentInputSchema = Schema.extend(
     Schema.filter((value) => hasRequiredProbabilityParameters(value), {
       message: () =>
         "Expected required distribution parameters for the selected probability distribution.",
+    })
+  )
+  .pipe(
+    Schema.filter((value) => hasConsistentMomentExpression(value), {
+      message: () =>
+        "Expected the moment expression to contain exactly one random variable, matching variable when provided.",
     })
   )
   .pipe(Schema.mutable)

@@ -43,6 +43,7 @@ import { getFastModelProviderOptions } from "@repo/ai/config/models";
 import { subAgentGenerationTimeout } from "@repo/ai/config/timeouts";
 import { model } from "@repo/ai/config/vercel";
 import { getSourceReferences } from "@repo/ai/lib/source";
+import { createPrompt } from "@repo/ai/prompt/utils";
 import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { ResearchAgentParams } from "@repo/ai/types/agents";
 import {
@@ -245,8 +246,11 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
             task,
           }),
           output: Output.object({
-            description:
-              "Source-backed research findings with citations separated from prose.",
+            description: createPrompt({
+              taskContext: `
+                Source-backed research findings with citations separated from prose.
+              `,
+            }),
             name: "research_findings",
             schema: researchOutputSchema,
           }),

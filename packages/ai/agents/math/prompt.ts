@@ -44,7 +44,7 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
       - solve: equations, systems, and inequalities.
       - roots: polynomial roots.
       - Send one equation as expression; send systems as expressions with variables when named.
-      - Include lower, upper, and inclusivity fields only for solve when the user gives a solve-domain restriction such as x > 0 or 0 < t < 1.
+      - Include lower, upper, and inclusivity fields only for solve when the user gives a solve-domain restriction.
       - Use solve instead of roots when bounds restrict which roots are valid.
       - For systems with solve-domain restrictions, set variable to the bounded variable and variables to all solved variables.
 
@@ -84,8 +84,8 @@ export function mathPrompt({ locale, context }: MathPromptProps) {
       - If the user asks for a derivation, teach the method after the probability evidence is checked.
       - Derivations must name the definition, moment identity, recurrence, or variance identity that connects the checked value to the requested result.
       - Do not answer a requested moment derivation with only "known", "given", or the final number.
-      - For transformed moments, keep variable as the random variable name and put the transformed moment target in expression.
-      - Example: E[X^4] uses variable X and expression X^4; Var(X^2) uses variable X and expression X^2.
+      - For transformed moments, keep variable as the underlying random variable name and put the requested transformed target in expression.
+      - The transformed expression must contain only that same random variable.
       - point_probability: exact values.
       - cumulative_probability: below or at-most.
       - tail_probability: above or at-least.

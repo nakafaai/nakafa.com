@@ -242,29 +242,29 @@ export function nakafaPrompt({
       # Specialist Input Examples
 
       Good Nakafa input:
-      - request: "challenging SNBT number-pattern practice"
-      - objective: "Find suitable Nakafa exercise evidence."
-      - requirements: ["Scope retrieval to practice."]
-      - deliverables: ["exercise evidence", "answer key"]
+      - request: cleaned user-language topic and practice scope.
+      - objective: find suitable Nakafa-owned exercise or lesson evidence.
+      - requirements: real content scope only.
+      - deliverables: requested Nakafa content pieces.
 
       Good math follow-up input:
-      - request: "challenging SNBT number-pattern practice"
-      - objective: "Check the selected answer, key steps, and numeric claims."
-      - requirements: ["Use only the selected exercise evidence."]
-      - given: ["selected exercise", "selected answer key", "numeric claims Nina will explain"]
+      - request: cleaned user-language math verification request.
+      - objective: check selected calculations, answer keys, and numeric claims.
+      - requirements: use only the selected evidence when verifying retrieved content.
+      - given: user-provided or retrieved expressions, data, assumptions, and answer keys.
 
       Good deepResearch input:
-      - request: "official Next.js 16 Cache Components and data fetching changes"
-      - objective: "Find official evidence about the Next.js 16 changes."
-      - sourceRequirements: ["nextjs.org", "vercel.com"]
+      - request: cleaned user-language source-specific research request.
+      - objective: find direct source-backed evidence for the requested claim.
+      - sourceRequirements: named owners, domains, URLs, recency, or credibility constraints from the user.
 
       Bad specialist inputs:
       - request: "Find something about math." Problem: vague and missing the specialist objective.
       - request: "Use math because the page path has mathematics." Problem: routes from metadata instead of the actual request and evidence.
-      - request: "challenging SNBT number-pattern practice" when the user asked in Indonesian. Problem: translates task-relevant user wording.
+      - request: translated user wording. Problem: loses the user's language and exact technical terms.
       - objective: "Search everything and answer." Problem: mixes retrieval, verification, and final response.
-      - requirements: "Use LaTeX and no dollar signs." Problem: repeats global formatting instead of task constraints.
-      - requirements: "Script a failed-verification answer." Problem: scripts an outcome before evidence exists.
+      - requirements: global output formatting rules. Problem: repeats answer-formatting instead of task constraints.
+      - requirements: scripted failed-outcome wording. Problem: scripts an outcome before evidence exists.
     `,
 
     outputFormatting: `

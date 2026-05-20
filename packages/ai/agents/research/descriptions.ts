@@ -59,19 +59,6 @@ export const nakafaWebSearch = createPrompt({
       - Do not broaden a specific documentation request into a generic industry trend search.
       - Avoid YouTube, social posts, and listicles unless requested or no primary source exists.
     `,
-
-  examples: `
-      ## Examples
-
-      <example>
-        User: what is the latest news about the stock market?
-        *Calls webSearch tool*
-      </example>
-
-      ## Citation data
-
-      Use returned source titles and URLs as citation data for structured findings.
-    `,
 });
 
 export const nakafaScrape = createPrompt({
@@ -106,15 +93,5 @@ export const nakafaScrape = createPrompt({
       - Keep findings tied to the correct source when inspecting multiple selected URLs
       - Prefer primary documentation, standards, papers, and vendor pages over social/video/listicle pages
       - If the content is not related to the user's question, state that limitation
-    `,
-
-  examples: `
-      ## Examples
-
-      <example>
-        User: Compare the current official docs for this framework.
-        Assistant: The web search result needs direct source reading.
-        *Calls scrape tool*
-      </example>
     `,
 });

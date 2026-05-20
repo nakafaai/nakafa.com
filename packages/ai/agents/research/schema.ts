@@ -1,6 +1,6 @@
 import { isPublicHttpUrlSyntax } from "@repo/ai/agents/research/url";
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
-import dedent from "dedent";
+import { createPrompt } from "@repo/ai/prompt/utils";
 import { Schema } from "effect";
 
 export const webSearchMaxQueries = 4;
@@ -10,14 +10,24 @@ const urlInputSchema = Schema.NonEmptyString.pipe(
     message: () => "Expected a public http(s) URL.",
   })
 ).annotations({
-  description: "The URL to scrape, including http:// or https://.",
+  description: createPrompt({
+    taskContext: `
+      The public http(s) URL to scrape.
+    `,
+  }),
 });
 
 export const ScrapeInputSchema = Schema.Struct({
   urlToCrawl: urlInputSchema,
 })
   .pipe(Schema.mutable)
-  .annotations({ description: "Get the content of a URL." });
+  .annotations({
+    description: createPrompt({
+      taskContext: `
+        Get content from one selected public URL.
+      `,
+    }),
+  });
 
 export const ScrapeOutputSchema = Schema.Struct({
   data: Schema.Struct({
@@ -38,7 +48,8 @@ export const WebSearchInputSchema = Schema.Struct({
       Schema.mutable
     )
     .annotations({
-      description: dedent(`
+      description: createPrompt({
+        taskContext: `
         One or more search-engine queries.
 
         Preserve task-relevant user-provided strings for:
@@ -51,10 +62,12 @@ export const WebSearchInputSchema = Schema.Struct({
         - tone.
         - output language.
         - citation style.
-      `),
+      `,
+      }),
     }),
   sourcePreference: Schema.Literal("primary", "any").annotations({
-    description: dedent(`
+    description: createPrompt({
+      taskContext: `
       Choose primary when the task requires direct evidence from:
       - a source owner.
       - a first-party publisher.
@@ -63,13 +76,17 @@ export const WebSearchInputSchema = Schema.Struct({
       - paper authors.
 
       Choose any when broader credible sources are acceptable.
-    `),
+    `,
+    }),
   }),
 })
   .pipe(Schema.mutable)
   .annotations({
-    description:
-      "Search the web for up-to-date information using optimized query strings.",
+    description: createPrompt({
+      taskContext: `
+        Search the web for up-to-date information using optimized query strings.
+      `,
+    }),
   });
 
 export const WebSearchSourceSchema = Schema.Struct({
@@ -86,34 +103,51 @@ export const WebSearchOutputSchema = Schema.Struct({
 })
   .pipe(Schema.mutable)
   .annotations({
-    description:
-      "The output schema for web search results. Use the citation field for inline citations.",
+    description: createPrompt({
+      taskContext: `
+        Web search results with source content and citation labels.
+      `,
+    }),
   });
 
 export const ResearchCitationSchema = Schema.Struct({
   title: Schema.NonEmptyString.annotations({
-    description: "Concise citation label shown to the user.",
+    description: createPrompt({
+      taskContext: `
+        Concise citation label shown to the user.
+      `,
+    }),
   }),
   url: urlInputSchema.annotations({
-    description: "Canonical source URL for the cited evidence.",
+    description: createPrompt({
+      taskContext: `
+        Canonical source URL for the cited evidence.
+      `,
+    }),
   }),
 }).pipe(Schema.mutable);
 
 export const ResearchFindingSchema = Schema.Struct({
   text: Schema.NonEmptyString.annotations({
-    description: dedent(`
+    description: createPrompt({
+      taskContext: `
       One concise source-backed finding.
 
       Do not include:
       - markdown links.
       - numeric citation markers.
       - bibliography text.
-    `),
+    `,
+    }),
   }),
   citations: Schema.Array(ResearchCitationSchema)
     .pipe(Schema.minItems(1), Schema.mutable)
     .annotations({
-      description: "Sources that directly support this finding.",
+      description: createPrompt({
+        taskContext: `
+          Sources that directly support this finding.
+        `,
+      }),
     }),
 }).pipe(Schema.mutable);
 
@@ -121,17 +155,20 @@ export const ResearchOutputSchema = Schema.Struct({
   findings: Schema.Array(ResearchFindingSchema)
     .pipe(Schema.mutable)
     .annotations({
-      description: dedent(`
+      description: createPrompt({
+        taskContext: `
         Source-backed findings.
 
         Keep each finding scoped to the cited sources.
         Use an empty array when direct citation evidence is unavailable.
-      `),
+      `,
+      }),
     }),
   limitations: Schema.Array(Schema.NonEmptyString)
     .pipe(Schema.mutable)
     .annotations({
-      description: dedent(`
+      description: createPrompt({
+        taskContext: `
         Process limitations in the user's locale.
         Use an empty array when there are none.
 
@@ -139,10 +176,12 @@ export const ResearchOutputSchema = Schema.Struct({
         Do not use found or not-found wording.
         Do not make absence claims.
         Do not mention a database, corpus, or search index.
-      `),
+      `,
+      }),
     }),
   noEvidenceAnswer: Schema.NonEmptyString.annotations({
-    description: dedent(`
+    description: createPrompt({
+      taskContext: `
       A brief user-facing process limitation in the user's locale.
       Use it when no source-backed finding can be returned.
 
@@ -164,7 +203,8 @@ export const ResearchOutputSchema = Schema.Struct({
       - absence claims.
       - source names, URLs, or dates.
       - rules or recommendations.
-    `),
+    `,
+    }),
   }),
 }).pipe(Schema.mutable);
 

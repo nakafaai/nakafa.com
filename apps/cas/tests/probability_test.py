@@ -305,6 +305,29 @@ def test_probability_moment_rejects_expression_without_selected_variable(
         )
 
 
+@pytest.mark.parametrize(
+    "operation",
+    [
+        "expected_value",
+        "variance_probability",
+    ],
+)
+def test_probability_moment_rejects_expression_with_extra_random_variables(
+    operation: str,
+) -> None:
+    with pytest.raises(ValueError, match="only the selected random variable"):
+        run(
+            MathRequest(
+                distribution="normal",
+                expression="X + Y",
+                kind="math",
+                operation=operation,
+                parameters={"mean": "0", "standard_deviation": "1"},
+                variable="X",
+            )
+        )
+
+
 def test_probability_summary_defaults_to_standard_random_variable_name() -> None:
     result = run(
         MathRequest(

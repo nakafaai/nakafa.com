@@ -61,11 +61,20 @@ describe("math tool descriptions", () => {
   });
 
   it("keeps transformed probability moments in expression, not variable", () => {
-    expect(mathProbability).toContain("For E[X^4]");
-    expect(mathProbability).toContain("variable X");
-    expect(mathProbability).toContain("expression X^4");
     expect(mathProbability).toContain(
-      "Keep variable as the random variable name"
+      "Use expected_value for any requested expectation"
+    );
+    expect(mathProbability).toContain(
+      "Use variance_probability for any requested variance"
+    );
+    expect(mathProbability).toContain(
+      "Keep variable as the underlying random variable name"
+    );
+    expect(mathProbability).toContain(
+      "Put the requested transform in expression"
+    );
+    expect(mathProbability).toContain(
+      "must contain exactly one random variable"
     );
     expect(mathProbability).toContain("check the requested moment here first");
     expect(mathProbability).toContain(
@@ -77,6 +86,8 @@ describe("math tool descriptions", () => {
     expect(mathCalculus).toContain(
       "Do not use for named probability distribution moments"
     );
+    expect(mathProbability).not.toContain("E[X^4]");
+    expect(mathProbability).not.toContain("Var(X^2)");
   });
 
   it("requires calculus variables for parameterized expressions", () => {

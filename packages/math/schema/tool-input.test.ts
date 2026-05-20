@@ -376,6 +376,85 @@ describe("MathToolInputSchema", () => {
       },
       variable: "X",
     });
+
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        distribution: "poisson",
+        operation: "expected_value",
+        parameters: {
+          lambda: "3",
+        },
+        variable: "X",
+      })
+    ).toEqual({
+      distribution: "poisson",
+      operation: "expected_value",
+      parameters: {
+        lambda: "3",
+      },
+      variable: "X",
+    });
+
+    expect(
+      Schema.decodeUnknownSync(MathToolInputSchema)({
+        distribution: "poisson",
+        expression: "X^2",
+        operation: "expected_value",
+        parameters: {
+          lambda: "3",
+        },
+      })
+    ).toEqual({
+      distribution: "poisson",
+      expression: "X^2",
+      operation: "expected_value",
+      parameters: {
+        lambda: "3",
+      },
+    });
+  });
+
+  it("rejects moment expressions with extra random variables", () => {
+    const decodeMathToolInput = Schema.decodeUnknownSync(MathToolInputSchema);
+
+    expect(() =>
+      decodeMathToolInput({
+        distribution: "normal",
+        expression: "X + Y",
+        operation: "expected_value",
+        parameters: {
+          mean: "0",
+          standard_deviation: "1",
+        },
+        variable: "X",
+      })
+    ).toThrow();
+
+    expect(() =>
+      decodeMathToolInput({
+        distribution: "normal",
+        expression: "X + Y",
+        operation: "variance_probability",
+        parameters: {
+          mean: "0",
+          standard_deviation: "1",
+        },
+        variable: "X",
+      })
+    ).toThrow();
+
+    expect(() =>
+      decodeMathToolInput({
+        distribution: "normal",
+        expression: "X^2",
+        operation: "expected_value",
+        parameters: {
+          mean: "0",
+          standard_deviation: "1",
+        },
+        variable: "Y",
+      })
+    ).toThrow();
   });
 
   it("requires canonical normal standard_deviation input", () => {

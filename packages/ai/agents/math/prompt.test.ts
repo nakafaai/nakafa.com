@@ -56,7 +56,17 @@ describe("mathPrompt", () => {
     expect(toolSection).toContain(
       "Derivations must name the definition, moment identity, recurrence, or variance identity"
     );
-    expect(toolSection).toContain("E[X^4] uses variable X and expression X^4");
+    expect(toolSection).toContain(
+      "keep variable as the underlying random variable name"
+    );
+    expect(toolSection).toContain(
+      "put the requested transformed target in expression"
+    );
+    expect(toolSection).toContain(
+      "The transformed expression must contain only that same random variable."
+    );
+    expect(toolSection).not.toContain("E[X^4]");
+    expect(toolSection).not.toContain("Var(X^2)");
     expect(toolSection).toContain(
       "Do not use calculus to replace probability checks"
     );

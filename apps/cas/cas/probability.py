@@ -104,11 +104,11 @@ def _summary_target(request: MathRequest, variable: sp.Symbol) -> sp.Expr:
 
 def _require_selected_random_variable(target: sp.Expr, variable: sp.Symbol) -> None:
     """Reject moment targets that are not computed from the selected variable."""
-    if variable in target.free_symbols:
+    if target.free_symbols == {variable}:
         return
 
     raise ValueError(
-        "Probability moment expression must use the selected random variable."
+        "Probability moment expression must use only the selected random variable."
     )
 
 
