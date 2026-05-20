@@ -39,7 +39,7 @@ export function Logos() {
   const duplicatedSchools = [...schools, ...schools];
 
   return (
-    <section className="grid scroll-mt-28 gap-12 py-24" id="logos">
+    <section className="grid scroll-mt-28 gap-12 py-36" id="logos">
       <div className="mx-auto grid w-full max-w-7xl gap-6 px-6">
         <div className="grid gap-6">
           <div className="flex items-center gap-2">
