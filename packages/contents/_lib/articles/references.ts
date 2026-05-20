@@ -8,7 +8,6 @@ import { Effect } from "effect";
 export function getArticleReferences(filePath: string) {
   return getScopedReferences(
     "articles",
-    /* istanbul ignore next: Vitest/Vite cannot execute nested variable dynamic imports here. */
     (relativePath) => {
       const modulePath = `@repo/contents/articles/${relativePath}/ref.ts`;
 
