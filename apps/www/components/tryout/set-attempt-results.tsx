@@ -9,8 +9,10 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Command,
+  CommandCollection,
   CommandEmpty,
   CommandGroup,
+  CommandGroupLabel,
   CommandInput,
   CommandItem,
   CommandList,
@@ -55,14 +57,14 @@ interface Props {
 function TryoutAttemptHistoryItem({
   attempt,
   isSelected,
-  onSelect,
+  onChoose,
 }: {
   attempt: AttemptOption;
   isSelected: boolean;
-  onSelect: () => void;
+  onChoose: () => void;
 }) {
   return (
-    <CommandItem className="cursor-pointer" onSelect={onSelect}>
+    <CommandItem className="cursor-pointer" onClick={onChoose} value={attempt}>
       <div className="flex min-w-0 flex-1 flex-col">
         <span>{attempt.label}</span>
         <span className="truncate text-muted-foreground text-xs">
@@ -171,7 +173,12 @@ function TryoutAttemptHistoryControls({
             />
           </PopoverTrigger>
           <PopoverContent align="start" className="w-80 p-0">
-            <Command>
+            <Command
+              items={attemptOptions}
+              itemToStringValue={(attempt) =>
+                `${attempt.label} ${attempt.subtitle}`
+              }
+            >
               <CommandInput
                 placeholder={tTryouts("attempt-menu-search-placeholder")}
               />
@@ -196,25 +203,30 @@ function TryoutAttemptHistoryControls({
                 }}
               >
                 <CommandEmpty>{tTryouts("attempt-menu-empty")}</CommandEmpty>
-                <CommandGroup heading={tTryouts("attempt-menu-label")}>
-                  {attemptOptions.map((attemptOption) => (
-                    <TryoutAttemptHistoryItem
-                      attempt={attemptOption}
-                      isSelected={attemptOption.attemptId === activeAttemptId}
-                      key={attemptOption.attemptId}
-                      onSelect={() => {
-                        setSelectedAttemptId(
-                          attemptOption.isLatest
-                            ? null
-                            : attemptOption.attemptId,
-                          {
-                            shallow: false,
-                            startTransition,
-                          }
-                        );
-                      }}
-                    />
-                  ))}
+                <CommandGroup items={attemptOptions}>
+                  <CommandGroupLabel>
+                    {tTryouts("attempt-menu-label")}
+                  </CommandGroupLabel>
+                  <CommandCollection>
+                    {(attemptOption) => (
+                      <TryoutAttemptHistoryItem
+                        attempt={attemptOption}
+                        isSelected={attemptOption.attemptId === activeAttemptId}
+                        key={attemptOption.attemptId}
+                        onChoose={() => {
+                          setSelectedAttemptId(
+                            attemptOption.isLatest
+                              ? null
+                              : attemptOption.attemptId,
+                            {
+                              shallow: false,
+                              startTransition,
+                            }
+                          );
+                        }}
+                      />
+                    )}
+                  </CommandCollection>
                 </CommandGroup>
               </CommandList>
             </Command>

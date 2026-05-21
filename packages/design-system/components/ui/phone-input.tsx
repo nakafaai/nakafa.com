@@ -69,6 +69,17 @@ interface CountrySelectProps {
   value: RpnInput.Country;
 }
 
+interface CountryOption {
+  label: string;
+  value: RpnInput.Country;
+}
+
+function hasCountryValue(
+  option: CountrySelectProps["options"][number]
+): option is CountryOption {
+  return option.value !== undefined;
+}
+
 const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
   const t = useTranslations("Common");
 
@@ -76,7 +87,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
   const [open, setOpen] = useState(false);
 
   const filteredCountries = useMemo(() => {
-    const validOptions = options.filter((c) => c.value !== undefined);
+    const validOptions = options.filter(hasCountryValue);
 
     let filtered = validOptions;
 
@@ -84,8 +95,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
       const q = searchQuery.toLowerCase();
       filtered = validOptions.filter(
         (c) =>
-          c.label.toLowerCase().includes(q) ||
-          c.value?.toLowerCase().includes(q)
+          c.label.toLowerCase().includes(q) || c.value.toLowerCase().includes(q)
       );
     }
 
@@ -122,16 +132,20 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
         align="start"
         className="w-full border-[color-mix(in_oklch,var(--input)_5%,var(--border))] p-0"
       >
-        <Command shouldFilter={false}>
-          <CommandInput
-            onValueChange={setSearchQuery}
-            placeholder={t("search-country-placeholder")}
-            value={searchQuery}
-          />
+        <Command
+          filter={null}
+          items={filteredCountries}
+          itemToStringValue={(country) => `${country.label} (${country.value})`}
+          mode="none"
+          onValueChange={setSearchQuery}
+          value={searchQuery}
+        >
+          <CommandInput placeholder={t("search-country-placeholder")} />
           <CommandList>
             <CommandEmpty>{t("no-country-found")}</CommandEmpty>
             <CommandGroup
               className={cn("p-0", filteredCountries.length === 0 && "hidden")}
+              items={filteredCountries}
             >
               <VList
                 className="p-1"
@@ -142,13 +156,10 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
                   <CommandItem
                     className="flex cursor-pointer items-center justify-between gap-2"
                     key={c.value}
-                    onSelect={() => {
-                      if (!c.value) {
-                        return;
-                      }
+                    onClick={() => {
                       onChange(c.value);
                     }}
-                    value={`${c.label} (${c.value})`}
+                    value={c}
                   >
                     <span className="truncate">{c.label}</span>
 

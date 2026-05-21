@@ -14,8 +14,10 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   Command,
+  CommandCollection,
   CommandEmpty,
   CommandGroup,
+  CommandGroupLabel,
   CommandInput,
   CommandItem,
   CommandList,
@@ -72,6 +74,10 @@ export function CreateSchoolClassDialog({
   const schoolId = useSchool((state) => state.school._id);
   const createClass = useMutation(api.classes.mutations.createClass);
   const [subjectPopoverOpen, subjectPopoverHandlers] = useDisclosure(false);
+  const subjectOptions = subjectList.map((subject) => ({
+    label: t(subject),
+    value: subject,
+  }));
 
   const form = useForm({
     defaultValues: classCreateDefaultValues,
@@ -201,7 +207,7 @@ export function CreateSchoolClassDialog({
                         />
                       </PopoverTrigger>
                       <PopoverContent align="end" className="p-0">
-                        <Command>
+                        <Command items={subjectOptions}>
                           <CommandInput
                             placeholder={t("search-subjects-placeholder")}
                           />
@@ -209,27 +215,33 @@ export function CreateSchoolClassDialog({
                             <CommandEmpty>
                               {t("no-subjects-found")}
                             </CommandEmpty>
-                            <CommandGroup>
-                              {subjectList.map((subject) => (
-                                <CommandItem
-                                  className="cursor-pointer"
-                                  key={subject}
-                                  onSelect={() => {
-                                    field.handleChange(t(subject));
-                                    subjectPopoverHandlers.close();
-                                  }}
-                                >
-                                  <span>{t(subject)}</span>
-                                  <HugeIcons
-                                    className={cn(
-                                      "ml-auto size-4 opacity-0 transition-opacity ease-out",
-                                      field.state.value === t(subject) &&
-                                        "opacity-100"
-                                    )}
-                                    icon={Tick01Icon}
-                                  />
-                                </CommandItem>
-                              ))}
+                            <CommandGroup items={subjectOptions}>
+                              <CommandGroupLabel>
+                                {t("subject-label")}
+                              </CommandGroupLabel>
+                              <CommandCollection>
+                                {(subject) => (
+                                  <CommandItem
+                                    className="cursor-pointer"
+                                    key={subject.value}
+                                    onClick={() => {
+                                      field.handleChange(subject.label);
+                                      subjectPopoverHandlers.close();
+                                    }}
+                                    value={subject}
+                                  >
+                                    <span>{subject.label}</span>
+                                    <HugeIcons
+                                      className={cn(
+                                        "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                                        field.state.value === subject.label &&
+                                          "opacity-100"
+                                      )}
+                                      icon={Tick01Icon}
+                                    />
+                                  </CommandItem>
+                                )}
+                              </CommandCollection>
                             </CommandGroup>
                           </CommandList>
                         </Command>
