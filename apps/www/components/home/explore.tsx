@@ -1,4 +1,6 @@
 import {
+  AiChat02Icon,
+  AiMagicIcon,
   Atom02Icon,
   Books02Icon,
   Target01Icon,
@@ -53,30 +55,69 @@ export function TryoutIcon() {
   );
 }
 
+function NinaIcon() {
+  return (
+    <div className="relative flex h-18 w-20 items-center justify-center">
+      <div className="relative h-14 w-16 transition-all ease-out group-hover:-translate-y-1">
+        <div className="relative flex h-14 w-16 flex-col justify-between rounded-md border bg-card p-2.5 shadow-xs">
+          <div className="ml-auto h-1 w-7 rounded-full bg-chart-2/40" />
+          <div className="ml-auto h-1 w-10 rounded-full bg-chart-1/30" />
+          <div className="ml-auto h-1 w-6 rounded-full bg-chart-3/60" />
+
+          <div className="mt-1 flex w-fit items-center gap-1 rounded-full bg-chart-1/15 px-1.5 py-1">
+            <div className="size-1 rounded-full bg-chart-1" />
+            <div className="size-1 rounded-full bg-chart-2" />
+            <div className="size-1 rounded-full bg-chart-1" />
+          </div>
+        </div>
+
+        <div className="absolute -top-2 -left-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-card bg-chart-1 text-background shadow-xs transition-all ease-out group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:scale-110">
+          <HugeIcons className="size-4.5" icon={AiChat02Icon} />
+        </div>
+
+        <div className="absolute -right-2 -bottom-2 flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-chart-2 text-background shadow-xs transition-all ease-out group-hover:translate-x-1 group-hover:translate-y-1 group-hover:scale-110">
+          <HugeIcons className="size-3.5" icon={AiMagicIcon} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function HomeExplore() {
-  const t = useTranslations("Common");
+  const tAi = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
 
   return (
     <section className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
         <NavigationLink
           className="group flex flex-col items-center gap-2"
+          href="/chat"
+        >
+          <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-chart-3/15 transition-all ease-out group-hover:bg-chart-3/20">
+            <NinaIcon />
+          </div>
+          <h2>{tAi("ask-nina")}</h2>
+        </NavigationLink>
+
+        <NavigationLink
+          className="group flex flex-col items-center gap-2"
           href="/subject"
         >
-          <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-muted/50 transition-all ease-out group-hover:bg-muted">
+          <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-chart-1/10 transition-all ease-out group-hover:bg-chart-1/15">
             <SubjectIcon />
           </div>
-          <h2>{t("explore-grades")}</h2>
+          <h2>{tCommon("explore-grades")}</h2>
         </NavigationLink>
 
         <NavigationLink
           className="group flex flex-col items-center gap-2"
           href="/try-out"
         >
-          <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-muted/50 transition-all ease-out group-hover:bg-muted">
+          <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl bg-chart-2/10 transition-all ease-out group-hover:bg-chart-2/15">
             <TryoutIcon />
           </div>
-          <h2>{t("try-out")}</h2>
+          <h2>{tCommon("try-out")}</h2>
         </NavigationLink>
       </div>
     </section>
