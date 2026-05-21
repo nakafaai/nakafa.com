@@ -204,7 +204,7 @@ function StepperIndicator({
   return (
     <span
       className={cn(
-        "relative flex size-6 shrink-0 items-center justify-center rounded-full bg-muted font-medium text-muted-foreground text-xs data-[state=active]:bg-primary data-[state=completed]:bg-primary data-[state=active]:text-primary-foreground data-[state=completed]:text-primary-foreground",
+        "relative flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs data-[state=active]:bg-primary data-[state=completed]:bg-primary data-[state=active]:text-primary-foreground data-[state=completed]:text-primary-foreground",
         className
       )}
       data-slot="stepper-indicator"

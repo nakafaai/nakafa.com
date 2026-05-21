@@ -4,7 +4,7 @@ import { Toggle as TogglePrimitive } from "@base-ui/react/toggle";
 import { ToggleGroup as ToggleGroupPrimitive } from "@base-ui/react/toggle-group";
 import { toggleVariants } from "@repo/design-system/components/ui/toggle";
 import { cn } from "@repo/design-system/lib/utils";
-import type { VariantProps } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 import { createContext, useContext } from "react";
 
@@ -18,6 +18,34 @@ const ToggleGroupContext = createContext<ToggleGroupContextValue>({
   layout: "default",
   size: "default",
   variant: "default",
+});
+
+const toggleGroupRootVariants = cva(
+  "group/toggle-group flex w-fit items-center rounded-md data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch data-[variant=outline]:shadow-xs",
+  {
+    variants: {
+      layout: {
+        default: "",
+        grid: "gap-px overflow-hidden rounded-md data-[variant=outline]:border data-[variant=outline]:bg-border",
+      },
+    },
+    defaultVariants: {
+      layout: "default",
+    },
+  }
+);
+
+const toggleGroupItemLayoutVariants = cva("", {
+  variants: {
+    layout: {
+      default:
+        "group-data-[orientation=vertical]/toggle-group:w-full group-data-[orientation=vertical]/toggle-group:flex-none group-data-[orientation=vertical]/toggle-group:border-t-0 group-data-[orientation=horizontal]/toggle-group:border-l-0 group-data-[orientation=horizontal]/toggle-group:last:rounded-r-md group-data-[orientation=vertical]/toggle-group:last:rounded-b-md group-data-[orientation=vertical]/toggle-group:first:rounded-t-md group-data-[orientation=horizontal]/toggle-group:first:rounded-l-md group-data-[orientation=vertical]/toggle-group:first:border-t group-data-[orientation=horizontal]/toggle-group:first:border-l",
+      grid: "rounded-none border-0 bg-background hover:bg-accent data-[state=on]:bg-accent data-pressed:bg-accent",
+    },
+  },
+  defaultVariants: {
+    layout: "default",
+  },
 });
 
 type ToggleGroupBaseProps = Omit<
@@ -85,12 +113,7 @@ function SingleToggleGroup({
 
   return (
     <ToggleGroupPrimitive
-      className={cn(
-        "group/toggle-group flex w-fit items-center rounded-md data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch data-[variant=outline]:shadow-xs",
-        layout === "grid" &&
-          "gap-px overflow-hidden rounded-md data-[variant=outline]:border data-[variant=outline]:bg-border",
-        className
-      )}
+      className={cn(toggleGroupRootVariants({ layout }), className)}
       data-layout={layout}
       data-orientation={orientation}
       data-size={size}
@@ -125,12 +148,7 @@ function MultipleToggleGroup({
 }: ToggleGroupMultipleProps) {
   return (
     <ToggleGroupPrimitive
-      className={cn(
-        "group/toggle-group flex w-fit items-center rounded-md data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-stretch data-[variant=outline]:shadow-xs",
-        layout === "grid" &&
-          "gap-px overflow-hidden rounded-md data-[variant=outline]:border data-[variant=outline]:bg-border",
-        className
-      )}
+      className={cn(toggleGroupRootVariants({ layout }), className)}
       data-layout={layout}
       data-orientation={orientation}
       data-size={size}
@@ -182,10 +200,6 @@ function ToggleGroupItem({
   const context = useContext(ToggleGroupContext);
   const itemSize = context.size || size;
   const itemVariant = context.variant || variant;
-  const itemLayoutClasses =
-    context.layout === "grid"
-      ? "rounded-none border-0 bg-background hover:bg-accent data-[state=on]:bg-accent data-pressed:bg-accent"
-      : "group-data-[orientation=vertical]/toggle-group:w-full group-data-[orientation=vertical]/toggle-group:flex-none group-data-[orientation=vertical]/toggle-group:border-t-0 group-data-[orientation=horizontal]/toggle-group:border-l-0 group-data-[orientation=horizontal]/toggle-group:last:rounded-r-md group-data-[orientation=vertical]/toggle-group:last:rounded-b-md group-data-[orientation=vertical]/toggle-group:first:rounded-t-md group-data-[orientation=horizontal]/toggle-group:first:rounded-l-md group-data-[orientation=vertical]/toggle-group:first:border-t group-data-[orientation=horizontal]/toggle-group:first:border-l";
 
   return (
     <TogglePrimitive
@@ -195,7 +209,7 @@ function ToggleGroupItem({
           size: itemSize,
         }),
         "relative min-w-0 flex-1 shrink-0 rounded-none shadow-none hover:z-10 focus:z-10 focus-visible:z-10 data-[state=on]:z-10 data-pressed:z-10",
-        itemLayoutClasses,
+        toggleGroupItemLayoutVariants({ layout: context.layout }),
         className
       )}
       data-size={itemSize}

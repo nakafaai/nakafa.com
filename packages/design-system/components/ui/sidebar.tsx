@@ -562,6 +562,20 @@ export const sidebarMenuButtonVariants = cva(
   }
 );
 
+const sidebarMenuSkeletonTextWidths = ["50", "60", "70", "80", "90"] as const;
+
+const sidebarMenuSkeletonTextVariants = cva("h-4 flex-1", {
+  variants: {
+    width: {
+      "50": "max-w-[50%]",
+      "60": "max-w-[60%]",
+      "70": "max-w-[70%]",
+      "80": "max-w-[80%]",
+      "90": "max-w-[90%]",
+    },
+  },
+});
+
 function SidebarMenuButton({
   asChild = false,
   isActive = false,
@@ -675,18 +689,8 @@ function SidebarMenuSkeleton({
   showIcon?: boolean;
   index?: number;
 }) {
-  const widthClasses = useMemo(() => {
-    const widthOptions = [
-      "max-w-[50%]",
-      "max-w-[60%]",
-      "max-w-[70%]",
-      "max-w-[80%]",
-      "max-w-[90%]",
-    ];
-    const widthIndex = index % widthOptions.length;
-
-    return widthOptions[widthIndex];
-  }, [index]);
+  const widthIndex = index % sidebarMenuSkeletonTextWidths.length;
+  const width = sidebarMenuSkeletonTextWidths[widthIndex];
 
   return (
     <div
@@ -702,7 +706,7 @@ function SidebarMenuSkeleton({
         />
       )}
       <Skeleton
-        className={cn("h-4 flex-1", widthClasses)}
+        className={sidebarMenuSkeletonTextVariants({ width })}
         data-sidebar="menu-skeleton-text"
       />
     </div>

@@ -1,4 +1,5 @@
 import { Section, Text } from "@react-email/components";
+import { cva } from "class-variance-authority";
 import type { CSSProperties, ReactNode } from "react";
 
 interface CardProps {
@@ -37,24 +38,23 @@ interface CardFooterProps {
   style?: CSSProperties;
 }
 
-const CARD_BASE_STYLES =
-  "w-full rounded-xl border border-border bg-card text-card-foreground";
+const cardVariants = cva(
+  "w-full rounded-xl border border-border bg-card text-card-foreground"
+);
 
-const CARD_HEADER_BASE_STYLES = "w-full border-b border-border px-6 py-6";
+const cardHeaderVariants = cva("w-full border-border border-b px-6 py-6");
 
-const CARD_TITLE_BASE_STYLES = "font-medium leading-tight m-0";
+const cardTitleVariants = cva("m-0 font-medium leading-tight");
 
-const CARD_DESCRIPTION_BASE_STYLES = "text-muted-foreground text-sm m-0";
+const cardDescriptionVariants = cva("m-0 text-muted-foreground text-sm");
 
-const CARD_CONTENT_BASE_STYLES = "w-full px-6 py-6";
+const cardContentVariants = cva("w-full px-6 py-6");
 
-const CARD_FOOTER_BASE_STYLES = "w-full border-t border-border px-6 py-6";
+const cardFooterVariants = cva("w-full border-border border-t px-6 py-6");
 
 export function Card({ children, className = "", style }: CardProps) {
-  const combinedClassName = `${CARD_BASE_STYLES} ${className}`.trim();
-
   return (
-    <Section className={combinedClassName} style={style}>
+    <Section className={cardVariants({ className })} style={style}>
       {children}
     </Section>
   );
@@ -65,20 +65,16 @@ export function CardHeader({
   className = "",
   style,
 }: CardHeaderProps) {
-  const combinedClassName = `${CARD_HEADER_BASE_STYLES} ${className}`.trim();
-
   return (
-    <Section className={combinedClassName} style={style}>
+    <Section className={cardHeaderVariants({ className })} style={style}>
       {children}
     </Section>
   );
 }
 
 export function CardTitle({ children, className = "", style }: CardTitleProps) {
-  const combinedClassName = `${CARD_TITLE_BASE_STYLES} ${className}`.trim();
-
   return (
-    <Text className={combinedClassName} style={style}>
+    <Text className={cardTitleVariants({ className })} style={style}>
       {children}
     </Text>
   );
@@ -89,11 +85,8 @@ export function CardDescription({
   className = "",
   style,
 }: CardDescriptionProps) {
-  const combinedClassName =
-    `${CARD_DESCRIPTION_BASE_STYLES} ${className}`.trim();
-
   return (
-    <Text className={combinedClassName} style={style}>
+    <Text className={cardDescriptionVariants({ className })} style={style}>
       {children}
     </Text>
   );
@@ -104,10 +97,8 @@ export function CardContent({
   className = "",
   style,
 }: CardContentProps) {
-  const combinedClassName = `${CARD_CONTENT_BASE_STYLES} ${className}`.trim();
-
   return (
-    <Section className={combinedClassName} style={style}>
+    <Section className={cardContentVariants({ className })} style={style}>
       {children}
     </Section>
   );
@@ -118,10 +109,8 @@ export function CardFooter({
   className = "",
   style,
 }: CardFooterProps) {
-  const combinedClassName = `${CARD_FOOTER_BASE_STYLES} ${className}`.trim();
-
   return (
-    <Section className={combinedClassName} style={style}>
+    <Section className={cardFooterVariants({ className })} style={style}>
       {children}
     </Section>
   );

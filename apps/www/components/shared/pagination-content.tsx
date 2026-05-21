@@ -48,7 +48,7 @@ function PaginationButton({
           </div>
           <p
             className={cn(
-              "w-full font-medium text-foreground transition-colors group-hover:text-accent-foreground",
+              "w-full text-foreground transition-colors group-hover:text-accent-foreground",
               iconPosition === "right" ? "text-right" : ""
             )}
           >

@@ -24,6 +24,7 @@ import {
   transformerNotationHighlight,
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
+import { cva } from "class-variance-authority";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
 import { useEffect, useState } from "react";
@@ -34,72 +35,32 @@ import {
 } from "shiki";
 import { createContext, useContextSelector } from "use-context-selector";
 
-const lineNumberClassNames = cn(
-  "[&_code]:[counter-reset:line]",
-  "[&_code]:[counter-increment:line_0]",
-  "[&_.line]:before:content-[counter(line)]",
-  "[&_.line]:before:inline-block",
-  "[&_.line]:before:[counter-increment:line]",
-  "[&_.line]:before:w-4",
-  "[&_.line]:before:mr-4",
-  "[&_.line]:before:text-xs",
-  "[&_.line]:before:text-right",
-  "[&_.line]:before:text-muted-foreground/50",
-  "[&_.line]:before:font-mono",
-  "[&_.line]:before:select-none"
+const codeBlockLineNumberVariants = cva(
+  "[&_.line]:before:mr-4 [&_.line]:before:inline-block [&_.line]:before:w-4 [&_.line]:before:select-none [&_.line]:before:text-right [&_.line]:before:font-mono [&_.line]:before:text-muted-foreground/50 [&_.line]:before:text-xs [&_.line]:before:content-[counter(line)] [&_.line]:before:[counter-increment:line] [&_code]:[counter-increment:line_0] [&_code]:[counter-reset:line]"
 );
 
-const darkModeClassNames = cn(
-  "dark:[&_.shiki]:text-(--shiki-dark)!",
-  "dark:[&_.shiki]:[font-style:var(--shiki-dark-font-style)]!",
-  "dark:[&_.shiki]:font-(--shiki-dark-font-weight)!",
-  "dark:[&_.shiki]:[text-decoration:var(--shiki-dark-text-decoration)]!",
-  "dark:[&_.shiki_span]:text-(--shiki-dark)!",
-  "dark:[&_.shiki_span]:[font-style:var(--shiki-dark-font-style)]!",
-  "dark:[&_.shiki_span]:font-(--shiki-dark-font-weight)!",
-  "dark:[&_.shiki_span]:[text-decoration:var(--shiki-dark-text-decoration)]!"
+const codeBlockDarkModeVariants = cva(
+  "dark:[&_.shiki]:font-(--shiki-dark-font-weight)! dark:[&_.shiki]:text-(--shiki-dark)! dark:[&_.shiki]:[font-style:var(--shiki-dark-font-style)]! dark:[&_.shiki]:[text-decoration:var(--shiki-dark-text-decoration)]! dark:[&_.shiki_span]:font-(--shiki-dark-font-weight)! dark:[&_.shiki_span]:text-(--shiki-dark)! dark:[&_.shiki_span]:[font-style:var(--shiki-dark-font-style)]! dark:[&_.shiki_span]:[text-decoration:var(--shiki-dark-text-decoration)]!"
 );
 
-const lineHighlightClassNames = cn(
-  "[&_.line.highlighted]:bg-primary/10",
-  "[&_.line.highlighted]:after:bg-primary",
-  "[&_.line.highlighted]:after:absolute",
-  "[&_.line.highlighted]:after:left-0",
-  "[&_.line.highlighted]:after:top-0",
-  "[&_.line.highlighted]:after:bottom-0",
-  "[&_.line.highlighted]:after:w-0.5"
+const codeBlockLineHighlightVariants = cva(
+  "[&_.line.highlighted]:bg-primary/10 [&_.line.highlighted]:after:absolute [&_.line.highlighted]:after:top-0 [&_.line.highlighted]:after:bottom-0 [&_.line.highlighted]:after:left-0 [&_.line.highlighted]:after:w-0.5 [&_.line.highlighted]:after:bg-primary"
 );
 
-const lineDiffClassNames = cn(
-  "[&_.line.diff]:after:absolute",
-  "[&_.line.diff]:after:left-0",
-  "[&_.line.diff]:after:top-0",
-  "[&_.line.diff]:after:bottom-0",
-  "[&_.line.diff]:after:w-0.5",
-  "[&_.line.diff.add]:bg-primary/10",
-  "[&_.line.diff.add]:after:bg-primary",
-  "[&_.line.diff.remove]:bg-destructive/10",
-  "[&_.line.diff.remove]:after:bg-destructive"
+const codeBlockLineDiffVariants = cva(
+  "[&_.line.diff.add]:bg-primary/10 [&_.line.diff.add]:after:bg-primary [&_.line.diff.remove]:bg-destructive/10 [&_.line.diff.remove]:after:bg-destructive [&_.line.diff]:after:absolute [&_.line.diff]:after:top-0 [&_.line.diff]:after:bottom-0 [&_.line.diff]:after:left-0 [&_.line.diff]:after:w-0.5"
 );
 
-const lineFocusedClassNames = cn(
-  "[&_code:has(.focused)_.line]:blur-[2px]",
-  "[&_code:has(.focused)_.line.focused]:blur-none"
+const codeBlockLineFocusedVariants = cva(
+  "[&_code:has(.focused)_.line.focused]:blur-none [&_code:has(.focused)_.line]:blur-[2px]"
 );
 
-const wordHighlightClassNames = cn("[&_.highlighted-word]:bg-primary/10");
+const codeBlockWordHighlightVariants = cva(
+  "[&_.highlighted-word]:bg-primary/10"
+);
 
-const codeBlockClassName = cn(
-  "mt-0 bg-muted/40 text-sm",
-  "[&_pre]:py-4",
-  "[&_pre]:overflow-x-auto",
-  "[&_.shiki]:bg-(--shiki-bg)!",
-  "[&_code]:w-full",
-  "[&_code]:grid",
-  "[&_code]:bg-transparent",
-  "[&_.line]:px-4",
-  "[&_.line]:w-full",
-  "[&_.line]:relative"
+const codeBlockVariants = cva(
+  "mt-0 bg-muted/40 text-sm [&_.line]:relative [&_.line]:w-full [&_.line]:px-4 [&_.shiki]:bg-(--shiki-bg)! [&_code]:grid [&_code]:w-full [&_code]:bg-transparent [&_pre]:overflow-x-auto [&_pre]:py-4"
 );
 
 function highlight(
@@ -447,13 +408,13 @@ export const CodeBlockItem = ({
   return (
     <div
       className={cn(
-        codeBlockClassName,
-        lineHighlightClassNames,
-        lineDiffClassNames,
-        lineFocusedClassNames,
-        wordHighlightClassNames,
-        darkModeClassNames,
-        !!lineNumbers && lineNumberClassNames,
+        codeBlockVariants(),
+        codeBlockLineHighlightVariants(),
+        codeBlockLineDiffVariants(),
+        codeBlockLineFocusedVariants(),
+        codeBlockWordHighlightVariants(),
+        codeBlockDarkModeVariants(),
+        !!lineNumbers && codeBlockLineNumberVariants(),
         className
       )}
       {...props}
