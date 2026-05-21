@@ -7,9 +7,18 @@ function HoverCard({ ...props }: HoverCardPrimitive.Root.Props) {
   return <HoverCardPrimitive.Root data-slot="hover-card" {...props} />;
 }
 
-function HoverCardTrigger({ ...props }: HoverCardPrimitive.Trigger.Props) {
+function HoverCardTrigger({
+  closeDelay = 0,
+  delay = 0,
+  ...props
+}: HoverCardPrimitive.Trigger.Props) {
   return (
-    <HoverCardPrimitive.Trigger data-slot="hover-card-trigger" {...props} />
+    <HoverCardPrimitive.Trigger
+      closeDelay={closeDelay}
+      data-slot="hover-card-trigger"
+      delay={delay}
+      {...props}
+    />
   );
 }
 
