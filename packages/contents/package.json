@@ -19,7 +19,7 @@
     "date-fns": "4.1.0",
     "effect": "^3.21.2",
     "ky": "^2.0.2",
-    "motion": "^12.38.0",
+    "motion": "^12.39.0",
     "next-intl": "^4.12.0",
     "react": "19.2.6",
     "react-aria-components": "^1.17.0",
@@ -27,9 +27,9 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.8.0",
-    "@types/react": "^19.2.14",
-    "@vitest/coverage-istanbul": "^4.1.6",
-    "vitest": "^4.1.6"
+    "@types/node": "25.9.1",
+    "@types/react": "^19.2.15",
+    "@vitest/coverage-istanbul": "^4.1.7",
+    "vitest": "^4.1.7"
   }
 }

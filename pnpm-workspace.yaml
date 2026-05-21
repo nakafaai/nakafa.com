@@ -11,3 +11,35 @@ allowBuilds:
   msw: true
   protobufjs: true
   sharp: true
+
+minimumReleaseAgeExclude:
+  - '@ai-sdk/gateway@3.0.118'
+  - '@ai-sdk/google@3.0.78'
+  - '@ai-sdk/react@3.0.190'
+  - '@effect/language-service@0.86.2'
+  - '@posthog/convex@1.0.2'
+  - '@posthog/core@1.29.6'
+  - '@posthog/types@1.374.3'
+  - '@rolldown/binding-android-arm64@1.0.2'
+  - '@rolldown/binding-darwin-arm64@1.0.2'
+  - '@rolldown/binding-darwin-x64@1.0.2'
+  - '@rolldown/binding-freebsd-x64@1.0.2'
+  - '@rolldown/binding-linux-arm-gnueabihf@1.0.2'
+  - '@rolldown/binding-linux-arm64-gnu@1.0.2'
+  - '@rolldown/binding-linux-arm64-musl@1.0.2'
+  - '@rolldown/binding-linux-ppc64-gnu@1.0.2'
+  - '@rolldown/binding-linux-s390x-gnu@1.0.2'
+  - '@rolldown/binding-linux-x64-gnu@1.0.2'
+  - '@rolldown/binding-linux-x64-musl@1.0.2'
+  - '@rolldown/binding-openharmony-arm64@1.0.2'
+  - '@rolldown/binding-wasm32-wasi@1.0.2'
+  - '@rolldown/binding-win32-arm64-msvc@1.0.2'
+  - '@rolldown/binding-win32-x64-msvc@1.0.2'
+  - '@tanstack/react-virtual@3.13.25'
+  - '@tanstack/virtual-core@3.15.0'
+  - ai@6.0.188
+  - geist@1.7.1
+  - posthog-js@1.374.3
+  - posthog-node@5.34.8
+  - rolldown@1.0.2
+  - vite@8.0.14

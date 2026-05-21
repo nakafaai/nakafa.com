@@ -10,9 +10,9 @@
   "devDependencies": {
     "@next/mdx": "^16.2.6",
     "@repo/typescript-config": "workspace:*",
-    "@vitest/coverage-istanbul": "^4.1.6",
+    "@vitest/coverage-istanbul": "^4.1.7",
     "next": "16.2.6",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.7"
   },
   "dependencies": {
     "@next/bundle-analyzer": "16.2.6",

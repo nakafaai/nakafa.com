@@ -11,17 +11,17 @@
     "@t3-oss/env-nextjs": "^0.13.11",
     "@vercel/analytics": "^2.0.1",
     "effect": "^3.21.2",
-    "posthog-js": "^1.374.0",
-    "posthog-node": "^5.34.3",
+    "posthog-js": "^1.374.3",
+    "posthog-node": "^5.34.8",
     "react": "^19.2.6",
     "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "25.8.0",
-    "@types/react": "19.2.14",
+    "@types/node": "25.9.1",
+    "@types/react": "19.2.15",
     "@types/react-dom": "19.2.3",
-    "@vitest/coverage-istanbul": "^4.1.6",
-    "vitest": "^4.1.6"
+    "@vitest/coverage-istanbul": "^4.1.7",
+    "vitest": "^4.1.7"
   }
 }
