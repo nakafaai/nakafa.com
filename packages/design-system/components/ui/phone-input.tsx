@@ -3,17 +3,18 @@
 import {
   ArrowDown01Icon,
   Call02Icon,
+  Search02Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@repo/design-system/components/ui/command";
+  Autocomplete,
+  AutocompleteEmpty,
+  AutocompleteGroup,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteList,
+} from "@repo/design-system/components/ui/autocomplete";
+import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
@@ -132,18 +133,27 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
         align="start"
         className="w-full border-[color-mix(in_oklch,var(--input)_5%,var(--border))] p-0"
       >
-        <Command
+        <Autocomplete
+          autoHighlight="always"
           filter={null}
+          inline
           items={filteredCountries}
           itemToStringValue={(country) => `${country.label} (${country.value})`}
+          keepHighlight
           mode="none"
           onValueChange={setSearchQuery}
+          open
           value={searchQuery}
         >
-          <CommandInput placeholder={t("search-country-placeholder")} />
-          <CommandList>
-            <CommandEmpty>{t("no-country-found")}</CommandEmpty>
-            <CommandGroup
+          <AutocompleteInput
+            className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
+            placeholder={t("search-country-placeholder")}
+            showClear
+            startAddon={<HugeIcons className="size-4" icon={Search02Icon} />}
+          />
+          <AutocompleteEmpty>{t("no-country-found")}</AutocompleteEmpty>
+          <AutocompleteList className="p-0" scrollArea={false}>
+            <AutocompleteGroup
               className={cn("p-0", filteredCountries.length === 0 && "hidden")}
               items={filteredCountries}
             >
@@ -153,11 +163,13 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
                 style={{ height: "200px" }}
               >
                 {(c) => (
-                  <CommandItem
-                    className="flex cursor-pointer items-center justify-between gap-2"
+                  <AutocompleteItem
+                    className="flex min-h-8 cursor-pointer items-center justify-between gap-2 py-1.5 text-sm sm:min-h-8"
                     key={c.value}
                     onClick={() => {
                       onChange(c.value);
+                      setOpen(false);
+                      setSearchQuery("");
                     }}
                     value={c}
                   >
@@ -171,12 +183,12 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
                       )}
                       icon={Tick01Icon}
                     />
-                  </CommandItem>
+                  </AutocompleteItem>
                 )}
               </VList>
-            </CommandGroup>
-          </CommandList>
-        </Command>
+            </AutocompleteGroup>
+          </AutocompleteList>
+        </Autocomplete>
       </PopoverContent>
     </Popover>
   );

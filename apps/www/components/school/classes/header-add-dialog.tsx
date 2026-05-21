@@ -4,24 +4,24 @@ import {
   Add01Icon,
   ArrowDown01Icon,
   Calendar03Icon,
+  Search02Icon,
   Tick01Icon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
+import {
+  Autocomplete,
+  AutocompleteCollection,
+  AutocompleteEmpty,
+  AutocompleteGroup,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteList,
+} from "@repo/design-system/components/ui/autocomplete";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import {
-  Command,
-  CommandCollection,
-  CommandEmpty,
-  CommandGroup,
-  CommandGroupLabel,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@repo/design-system/components/ui/command";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -78,6 +78,12 @@ export function CreateSchoolClassDialog({
     label: t(subject),
     value: subject,
   }));
+  const subjectGroups = [
+    {
+      items: subjectOptions,
+      value: t("subject-label"),
+    },
+  ];
 
   const form = useForm({
     defaultValues: classCreateDefaultValues,
@@ -207,44 +213,63 @@ export function CreateSchoolClassDialog({
                         />
                       </PopoverTrigger>
                       <PopoverContent align="end" className="p-0">
-                        <Command items={subjectOptions}>
-                          <CommandInput
+                        <Autocomplete
+                          autoHighlight="always"
+                          inline
+                          items={subjectGroups}
+                          keepHighlight
+                          open
+                        >
+                          <AutocompleteInput
+                            className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
                             placeholder={t("search-subjects-placeholder")}
+                            showClear
+                            startAddon={
+                              <HugeIcons
+                                className="size-4"
+                                icon={Search02Icon}
+                              />
+                            }
                           />
-                          <CommandList>
-                            <CommandEmpty>
-                              {t("no-subjects-found")}
-                            </CommandEmpty>
-                            <CommandGroup items={subjectOptions}>
-                              <CommandGroupLabel>
-                                {t("subject-label")}
-                              </CommandGroupLabel>
-                              <CommandCollection>
-                                {(subject) => (
-                                  <CommandItem
-                                    className="cursor-pointer"
-                                    key={subject.value}
-                                    onClick={() => {
-                                      field.handleChange(subject.label);
-                                      subjectPopoverHandlers.close();
-                                    }}
-                                    value={subject}
-                                  >
-                                    <span>{subject.label}</span>
-                                    <HugeIcons
-                                      className={cn(
-                                        "ml-auto size-4 opacity-0 transition-opacity ease-out",
-                                        field.state.value === subject.label &&
-                                          "opacity-100"
-                                      )}
-                                      icon={Tick01Icon}
-                                    />
-                                  </CommandItem>
-                                )}
-                              </CommandCollection>
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
+                          <AutocompleteEmpty>
+                            {t("no-subjects-found")}
+                          </AutocompleteEmpty>
+                          <AutocompleteList
+                            className="max-h-75"
+                            scrollArea={false}
+                          >
+                            {(group) => (
+                              <AutocompleteGroup
+                                items={group.items}
+                                key={group.value}
+                              >
+                                <AutocompleteCollection>
+                                  {(subject) => (
+                                    <AutocompleteItem
+                                      className="min-h-8 cursor-pointer py-1.5 text-sm sm:min-h-8"
+                                      key={subject.value}
+                                      onClick={() => {
+                                        field.handleChange(subject.label);
+                                        subjectPopoverHandlers.close();
+                                      }}
+                                      value={subject}
+                                    >
+                                      <span>{subject.label}</span>
+                                      <HugeIcons
+                                        className={cn(
+                                          "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                                          field.state.value === subject.label &&
+                                            "opacity-100"
+                                        )}
+                                        icon={Tick01Icon}
+                                      />
+                                    </AutocompleteItem>
+                                  )}
+                                </AutocompleteCollection>
+                              </AutocompleteGroup>
+                            )}
+                          </AutocompleteList>
+                        </Autocomplete>
                       </PopoverContent>
                     </Popover>
                   </ButtonGroup>

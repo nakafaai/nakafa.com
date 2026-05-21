@@ -2,21 +2,22 @@
 
 import {
   ArrowDown01Icon,
+  Search02Icon,
   Tick01Icon,
   TransactionHistoryIcon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Command,
-  CommandCollection,
-  CommandEmpty,
-  CommandGroup,
-  CommandGroupLabel,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@repo/design-system/components/ui/command";
+  Autocomplete,
+  AutocompleteCollection,
+  AutocompleteEmpty,
+  AutocompleteGroup,
+  AutocompleteGroupLabel,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteList,
+} from "@repo/design-system/components/ui/autocomplete";
+import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Popover,
@@ -64,7 +65,11 @@ function TryoutAttemptHistoryItem({
   onChoose: () => void;
 }) {
   return (
-    <CommandItem className="cursor-pointer" onClick={onChoose} value={attempt}>
+    <AutocompleteItem
+      className="min-h-8 cursor-pointer py-1.5 text-sm sm:min-h-8"
+      onClick={onChoose}
+      value={attempt}
+    >
       <div className="flex min-w-0 flex-1 flex-col">
         <span>{attempt.label}</span>
         <span className="truncate text-muted-foreground text-xs">
@@ -78,7 +83,7 @@ function TryoutAttemptHistoryItem({
         )}
         icon={Tick01Icon}
       />
-    </CommandItem>
+    </AutocompleteItem>
   );
 }
 
@@ -144,6 +149,12 @@ function TryoutAttemptHistoryControls({
       locale: getLocale(locale),
     }),
   }));
+  const attemptGroups = [
+    {
+      items: attemptOptions,
+      value: tTryouts("attempt-menu-label"),
+    },
+  ];
 
   return (
     <div className="flex w-full flex-wrap items-center gap-3">
@@ -173,16 +184,28 @@ function TryoutAttemptHistoryControls({
             />
           </PopoverTrigger>
           <PopoverContent align="start" className="w-80 p-0">
-            <Command
-              items={attemptOptions}
+            <Autocomplete
+              autoHighlight="always"
+              inline
+              items={attemptGroups}
               itemToStringValue={(attempt) =>
                 `${attempt.label} ${attempt.subtitle}`
               }
+              keepHighlight
+              open
             >
-              <CommandInput
+              <AutocompleteInput
+                className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
                 placeholder={tTryouts("attempt-menu-search-placeholder")}
+                showClear
+                startAddon={
+                  <HugeIcons className="size-4" icon={Search02Icon} />
+                }
               />
-              <CommandList
+              <AutocompleteEmpty>
+                {tTryouts("attempt-menu-empty")}
+              </AutocompleteEmpty>
+              <AutocompleteList
                 className="max-h-64"
                 onScroll={(event) => {
                   if (status !== "CanLoadMore") {
@@ -201,35 +224,39 @@ function TryoutAttemptHistoryControls({
 
                   loadMore(25);
                 }}
+                scrollArea={false}
               >
-                <CommandEmpty>{tTryouts("attempt-menu-empty")}</CommandEmpty>
-                <CommandGroup items={attemptOptions}>
-                  <CommandGroupLabel>
-                    {tTryouts("attempt-menu-label")}
-                  </CommandGroupLabel>
-                  <CommandCollection>
-                    {(attemptOption) => (
-                      <TryoutAttemptHistoryItem
-                        attempt={attemptOption}
-                        isSelected={attemptOption.attemptId === activeAttemptId}
-                        key={attemptOption.attemptId}
-                        onChoose={() => {
-                          setSelectedAttemptId(
-                            attemptOption.isLatest
-                              ? null
-                              : attemptOption.attemptId,
-                            {
-                              shallow: false,
-                              startTransition,
-                            }
-                          );
-                        }}
-                      />
-                    )}
-                  </CommandCollection>
-                </CommandGroup>
-              </CommandList>
-            </Command>
+                {(group) => (
+                  <AutocompleteGroup items={group.items} key={group.value}>
+                    <AutocompleteGroupLabel>
+                      {group.value}
+                    </AutocompleteGroupLabel>
+                    <AutocompleteCollection>
+                      {(attemptOption) => (
+                        <TryoutAttemptHistoryItem
+                          attempt={attemptOption}
+                          isSelected={
+                            attemptOption.attemptId === activeAttemptId
+                          }
+                          key={attemptOption.attemptId}
+                          onChoose={() => {
+                            setSelectedAttemptId(
+                              attemptOption.isLatest
+                                ? null
+                                : attemptOption.attemptId,
+                              {
+                                shallow: false,
+                                startTransition,
+                              }
+                            );
+                          }}
+                        />
+                      )}
+                    </AutocompleteCollection>
+                  </AutocompleteGroup>
+                )}
+              </AutocompleteList>
+            </Autocomplete>
           </PopoverContent>
         </Popover>
       ) : null}

@@ -11,8 +11,6 @@ import { SchoolSidebarNavLearning } from "@/components/school/sidebar/nav-learni
 import { SchoolSidebarNavUser } from "@/components/school/sidebar/nav-user";
 import { SchoolSidebarNavYours } from "@/components/school/sidebar/nav-yours";
 import { SchoolSwitcher } from "@/components/school/sidebar/school-switcher";
-import { LangMenu } from "@/components/sidebar/lang-menu";
-import { ThemeMenu } from "@/components/sidebar/theme-menu";
 import { getSchoolSwitcherPage } from "@/lib/school/server";
 
 /** Render the School sidebar and preload the switcher shell page on the server. */
@@ -32,8 +30,6 @@ export async function SchoolSidebar({
       </SidebarContent>
       <SidebarFooter className="border-t">
         <SidebarMenu>
-          <LangMenu />
-          <ThemeMenu />
           <SchoolSidebarNavUser />
         </SidebarMenu>
       </SidebarFooter>
