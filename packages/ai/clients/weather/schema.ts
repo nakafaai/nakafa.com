@@ -71,7 +71,7 @@ export const WeatherListItemSchema = Schema.Struct({
   sys: Schema.Struct({
     pod: Schema.String,
   }).pipe(Schema.mutable),
-  visibility: Schema.Number,
+  visibility: Schema.optional(Schema.Number),
   weather: Schema.Array(WeatherConditionSchema).pipe(Schema.mutable),
   wind: WindSchema,
 }).pipe(Schema.mutable);
