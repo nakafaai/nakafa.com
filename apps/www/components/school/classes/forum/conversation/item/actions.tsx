@@ -64,11 +64,13 @@ export const PostItemActions = memo(({ post }: { post: ForumPost }) => {
         <Tooltip>
           <TooltipTrigger
             render={
-              <PopoverTrigger asChild>
-                <Button disabled={isPending} size="icon" variant="outline">
-                  <HugeIcons icon={WinkIcon} />
-                  <span className="sr-only">{t("reaction")}</span>
-                </Button>
+              <PopoverTrigger
+                render={
+                  <Button disabled={isPending} size="icon" variant="outline" />
+                }
+              >
+                <HugeIcons icon={WinkIcon} />
+                <span className="sr-only">{t("reaction")}</span>
               </PopoverTrigger>
             }
           />

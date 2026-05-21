@@ -1,7 +1,31 @@
 import { Section, Text } from "@react-email/components";
+import { cva, type VariantProps } from "class-variance-authority";
 import type { ReactNode } from "react";
 
-export type AlertVariant = "default" | "destructive";
+const alertVariants = cva(
+  "relative flex w-full flex-col gap-1 rounded-lg border px-4 py-3 text-sm",
+  {
+    variants: {
+      variant: {
+        default: "bg-card text-card-foreground",
+        destructive: "border-destructive bg-destructive/10 text-destructive",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
+
+const alertTitleVariants = cva("min-h-4 font-medium tracking-tight");
+
+const alertDescriptionVariants = cva(
+  "text-muted-foreground text-sm leading-relaxed"
+);
+
+export type AlertVariant = NonNullable<
+  VariantProps<typeof alertVariants>["variant"]
+>;
 
 interface AlertProps {
   children: ReactNode;
@@ -19,46 +43,27 @@ interface AlertDescriptionProps {
   className?: string;
 }
 
-const ALERT_BASE_STYLES =
-  "relative flex flex-col gap-1 w-full rounded-lg border px-4 py-3 text-sm";
-
-const VARIANT_STYLES: Record<AlertVariant, string> = {
-  default: "bg-card text-card-foreground",
-  destructive: "bg-destructive/10 text-destructive border-destructive",
-};
-
-const ALERT_TITLE_BASE_STYLES = "font-medium tracking-tight min-h-4";
-
-const ALERT_DESCRIPTION_BASE_STYLES =
-  "text-muted-foreground text-sm leading-relaxed";
-
 export function Alert({
   children,
   variant = "default",
   className = "",
 }: AlertProps) {
-  const combinedClassName =
-    `${ALERT_BASE_STYLES} ${VARIANT_STYLES[variant]} ${className}`.trim();
-
   return (
-    <Section className={combinedClassName} role="alert">
+    <Section className={alertVariants({ className, variant })} role="alert">
       {children}
     </Section>
   );
 }
 
 export function AlertTitle({ children, className = "" }: AlertTitleProps) {
-  const combinedClassName = `${ALERT_TITLE_BASE_STYLES} ${className}`.trim();
-
-  return <div className={combinedClassName}>{children}</div>;
+  return <div className={alertTitleVariants({ className })}>{children}</div>;
 }
 
 export function AlertDescription({
   children,
   className = "",
 }: AlertDescriptionProps) {
-  const combinedClassName =
-    `${ALERT_DESCRIPTION_BASE_STYLES} ${className}`.trim();
-
-  return <Text className={combinedClassName}>{children}</Text>;
+  return (
+    <Text className={alertDescriptionVariants({ className })}>{children}</Text>
+  );
 }

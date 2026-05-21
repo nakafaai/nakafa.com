@@ -30,20 +30,24 @@ export const PostReactions = memo(({ post }: { post: ForumPost }) => {
 
         return (
           <HoverCard key={emoji}>
-            <HoverCardTrigger asChild>
-              <Button
-                disabled={isPending}
-                onClick={() => {
-                  startTransition(async () => {
-                    await toggleReaction({ postId: post._id, emoji });
-                  });
-                }}
-                size="sm"
-                variant={isMyReaction === true ? "default-outline" : "outline"}
-              >
-                {emoji}
-                <span className="tracking-tight">{count}</span>
-              </Button>
+            <HoverCardTrigger
+              render={
+                <Button
+                  disabled={isPending}
+                  onClick={() => {
+                    startTransition(async () => {
+                      await toggleReaction({ postId: post._id, emoji });
+                    });
+                  }}
+                  size="sm"
+                  variant={
+                    isMyReaction === true ? "default-outline" : "outline"
+                  }
+                />
+              }
+            >
+              {emoji}
+              <span className="tracking-tight">{count}</span>
             </HoverCardTrigger>
             <HoverCardContent
               align="center"

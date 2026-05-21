@@ -221,7 +221,7 @@ export function StartExerciseButton({
                             mode === "simulation" ? Timer02Icon : BookOpen02Icon
                           }
                         />
-                        <span className="font-medium text-sm">{t(mode)}</span>
+                        <span className="text-sm">{t(mode)}</span>
                       </div>
                       <p className="text-start text-muted-foreground text-sm group-hover:text-accent-foreground/80">
                         {t(`${mode}-description`)}

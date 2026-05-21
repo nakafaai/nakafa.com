@@ -113,7 +113,7 @@ function ResultGroup({ result }: { result: PagefindResult }) {
             </div>
             <p
               className={cn(
-                "line-clamp-3 text-muted-foreground text-sm group-hover:text-accent-foreground group-data-[selected=true]:text-accent-foreground",
+                "line-clamp-3 text-muted-foreground text-sm group-hover:text-accent-foreground",
                 !hasPagefindExcerpt(subResult.excerpt) && "hidden"
               )}
               // biome-ignore lint/security/noDangerouslySetInnerHtml: Pagefind returns highlighted HTML excerpts

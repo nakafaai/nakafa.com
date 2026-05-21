@@ -33,22 +33,24 @@ export const EmojiButton = memo(
     onOpenChange: (open: boolean) => void;
   }) => (
     <Popover onOpenChange={onOpenChange} open={isOpen}>
-      <PopoverTrigger asChild>
-        <InputGroupButton
-          aria-label={label}
-          disabled={isSubmitting}
-          size="icon"
-          type="button"
-          variant="ghost"
-        >
-          <Activity mode={isMobile ? "hidden" : "visible"}>
-            <Spinner icon={WinkIcon} isLoading={isSubmitting} />
-          </Activity>
-          <Activity mode={isMobile ? "visible" : "hidden"}>
-            <HugeIcons icon={WinkIcon} />
-          </Activity>
-          <span className="sr-only">{label}</span>
-        </InputGroupButton>
+      <PopoverTrigger
+        render={
+          <InputGroupButton
+            aria-label={label}
+            disabled={isSubmitting}
+            size="icon"
+            type="button"
+            variant="ghost"
+          />
+        }
+      >
+        <Activity mode={isMobile ? "hidden" : "visible"}>
+          <Spinner icon={WinkIcon} isLoading={isSubmitting} />
+        </Activity>
+        <Activity mode={isMobile ? "visible" : "hidden"}>
+          <HugeIcons icon={WinkIcon} />
+        </Activity>
+        <span className="sr-only">{label}</span>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-fit p-0">
         <EmojiPicker

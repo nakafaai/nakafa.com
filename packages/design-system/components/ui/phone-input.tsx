@@ -3,17 +3,18 @@
 import {
   ArrowDown01Icon,
   Call02Icon,
+  Search02Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@repo/design-system/components/ui/command";
+  Autocomplete,
+  AutocompleteEmpty,
+  AutocompleteGroup,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteList,
+} from "@repo/design-system/components/ui/autocomplete";
+import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import {
@@ -69,6 +70,17 @@ interface CountrySelectProps {
   value: RpnInput.Country;
 }
 
+interface CountryOption {
+  label: string;
+  value: RpnInput.Country;
+}
+
+function hasCountryValue(
+  option: CountrySelectProps["options"][number]
+): option is CountryOption {
+  return option.value !== undefined;
+}
+
 const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
   const t = useTranslations("Common");
 
@@ -76,7 +88,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
   const [open, setOpen] = useState(false);
 
   const filteredCountries = useMemo(() => {
-    const validOptions = options.filter((c) => c.value !== undefined);
+    const validOptions = options.filter(hasCountryValue);
 
     let filtered = validOptions;
 
@@ -84,8 +96,7 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
       const q = searchQuery.toLowerCase();
       filtered = validOptions.filter(
         (c) =>
-          c.label.toLowerCase().includes(q) ||
-          c.value?.toLowerCase().includes(q)
+          c.label.toLowerCase().includes(q) || c.value.toLowerCase().includes(q)
       );
     }
 
@@ -101,39 +112,50 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
 
   return (
     <Popover modal onOpenChange={setOpen} open={open}>
-      <PopoverTrigger asChild>
-        <Button
-          className="inline-flex items-center rounded-r-none border px-3 hover:bg-accent hover:text-accent-foreground"
-          variant="ghost"
-        >
-          <FlagComponent
-            aria-hidden="true"
-            country={value}
-            countryName={value}
+      <PopoverTrigger
+        render={
+          <Button
+            className="inline-flex items-center rounded-r-none border px-3 hover:bg-accent hover:text-accent-foreground"
+            variant="ghost"
           />
-          <span className="text-muted-foreground">
-            <HugeIcons
-              aria-hidden="true"
-              className="ml-auto h-4 w-4 shrink-0 opacity-50"
-              icon={ArrowDown01Icon}
-            />
-          </span>
-        </Button>
+        }
+      >
+        <FlagComponent aria-hidden="true" country={value} countryName={value} />
+        <span className="text-muted-foreground">
+          <HugeIcons
+            aria-hidden="true"
+            className="ml-auto h-4 w-4 shrink-0 opacity-50"
+            icon={ArrowDown01Icon}
+          />
+        </span>
       </PopoverTrigger>
       <PopoverContent
         align="start"
         className="w-full border-[color-mix(in_oklch,var(--input)_5%,var(--border))] p-0"
       >
-        <Command shouldFilter={false}>
-          <CommandInput
-            onValueChange={setSearchQuery}
+        <Autocomplete
+          autoHighlight="always"
+          filter={null}
+          inline
+          items={filteredCountries}
+          itemToStringValue={(country) => `${country.label} (${country.value})`}
+          keepHighlight
+          mode="none"
+          onValueChange={setSearchQuery}
+          open
+          value={searchQuery}
+        >
+          <AutocompleteInput
+            className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
             placeholder={t("search-country-placeholder")}
-            value={searchQuery}
+            showClear
+            startAddon={<HugeIcons className="size-4" icon={Search02Icon} />}
           />
-          <CommandList>
-            <CommandEmpty>{t("no-country-found")}</CommandEmpty>
-            <CommandGroup
+          <AutocompleteEmpty>{t("no-country-found")}</AutocompleteEmpty>
+          <AutocompleteList className="p-0" scrollArea={false}>
+            <AutocompleteGroup
               className={cn("p-0", filteredCountries.length === 0 && "hidden")}
+              items={filteredCountries}
             >
               <VList
                 className="p-1"
@@ -141,16 +163,15 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
                 style={{ height: "200px" }}
               >
                 {(c) => (
-                  <CommandItem
-                    className="flex cursor-pointer items-center justify-between gap-2"
+                  <AutocompleteItem
+                    className="flex min-h-8 cursor-pointer items-center justify-between gap-2 py-1.5 text-sm sm:min-h-8"
                     key={c.value}
-                    onSelect={() => {
-                      if (!c.value) {
-                        return;
-                      }
+                    onClick={() => {
                       onChange(c.value);
+                      setOpen(false);
+                      setSearchQuery("");
                     }}
-                    value={`${c.label} (${c.value})`}
+                    value={c}
                   >
                     <span className="truncate">{c.label}</span>
 
@@ -162,12 +183,12 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
                       )}
                       icon={Tick01Icon}
                     />
-                  </CommandItem>
+                  </AutocompleteItem>
                 )}
               </VList>
-            </CommandGroup>
-          </CommandList>
-        </Command>
+            </AutocompleteGroup>
+          </AutocompleteList>
+        </Autocomplete>
       </PopoverContent>
     </Popover>
   );

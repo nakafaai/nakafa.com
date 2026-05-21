@@ -9,10 +9,10 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Character } from "@repo/design-system/components/ui/character";
 import {
   Drawer,
-  DrawerContent,
   DrawerDescription,
   DrawerFooter,
   DrawerHeader,
+  DrawerPopup,
   DrawerTitle,
   DrawerTrigger,
 } from "@repo/design-system/components/ui/drawer";
@@ -67,7 +67,7 @@ export function Avatar({ contributor, size }: AvatarProps) {
         </TooltipContent>
       </Tooltip>
 
-      <DrawerContent className="mx-auto sm:max-w-xs">
+      <DrawerPopup className="mx-auto sm:max-w-xs" showBar>
         <DrawerHeader className="items-center">
           <Character
             className="size-16 shadow-sm"
@@ -78,7 +78,7 @@ export function Avatar({ contributor, size }: AvatarProps) {
             <Badge>{t(contributor.type)}</Badge>
           </DrawerDescription>
         </DrawerHeader>
-        <DrawerFooter>
+        <DrawerFooter className="sm:justify-center">
           {!!contributor.social && (
             <div className="flex flex-wrap items-center justify-center gap-2">
               {!!contributor.social.twitter && (
@@ -138,7 +138,7 @@ export function Avatar({ contributor, size }: AvatarProps) {
             </div>
           )}
         </DrawerFooter>
-      </DrawerContent>
+      </DrawerPopup>
     </Drawer>
   );
 }

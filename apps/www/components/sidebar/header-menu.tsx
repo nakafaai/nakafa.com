@@ -17,25 +17,28 @@ export function HeaderMenu() {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <SidebarMenuButton asChild size="lg">
-          <NavigationLink href={currentUser ? "/home" : "/"} title="Nakafa">
-            <div className="relative aspect-square size-8">
-              <Image
-                alt="Nakafa"
-                className="rounded-sm border object-contain"
-                fill
-                preload
-                src="/logo.svg"
-                title="Nakafa"
-              />
-            </div>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <p className="truncate font-medium">Nakafa</p>
-              <span className="truncate text-xs">
-                {t("very-short-description")}
-              </span>
-            </div>
-          </NavigationLink>
+        <SidebarMenuButton
+          render={
+            <NavigationLink href={currentUser ? "/home" : "/"} title="Nakafa" />
+          }
+          size="lg"
+        >
+          <div className="relative aspect-square size-8">
+            <Image
+              alt="Nakafa"
+              className="rounded-sm border object-contain"
+              fill
+              preload
+              src="/logo.svg"
+              title="Nakafa"
+            />
+          </div>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <p className="truncate font-medium">Nakafa</p>
+            <span className="truncate text-xs">
+              {t("very-short-description")}
+            </span>
+          </div>
         </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>

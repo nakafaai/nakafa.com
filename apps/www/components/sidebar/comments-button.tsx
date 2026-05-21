@@ -14,11 +14,12 @@ export function CommentsButton() {
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild tooltip={t("comments")}>
-        <NavigationLink href="#comments" title={t("comments")}>
-          <HugeIcons className="shrink-0" icon={MessageMultiple01Icon} />
-          <span className="truncate">{t("comments")}</span>
-        </NavigationLink>
+      <SidebarMenuButton
+        render={<NavigationLink href="#comments" title={t("comments")} />}
+        tooltip={t("comments")}
+      >
+        <HugeIcons className="shrink-0" icon={MessageMultiple01Icon} />
+        <span className="truncate">{t("comments")}</span>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );

@@ -5,6 +5,7 @@ import {
   Logout01Icon,
   MoreVerticalIcon,
 } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import {
   Avatar,
   AvatarFallback,
@@ -30,6 +31,8 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
+import { useLayoutEffect } from "react";
+import { SidebarPreferenceSubmenus } from "@/components/sidebar/preference-submenus";
 import { authClient } from "@/lib/auth/client";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
@@ -44,9 +47,13 @@ export function SchoolSidebarNavUser() {
 
   const router = useRouter();
   const user = useUser((state) => state.user);
+  const [open, { close, set }] = useDisclosure(false);
 
   const { isMobile } = useSidebar();
   const authHref = `/auth?redirect=${pathname}`;
+  const submenuSide = isMobile ? "top" : "right";
+
+  useLayoutEffect(() => close, [close]);
 
   /** Signs the user out and leaves the shared authenticated app subtree on success. */
   async function handleSignOut() {
@@ -78,7 +85,7 @@ export function SchoolSidebarNavUser() {
 
   return (
     <SidebarMenuItem>
-      <DropdownMenu>
+      <DropdownMenu onOpenChange={set} open={open}>
         <DropdownMenuTrigger
           render={
             <SidebarMenuButton
@@ -135,6 +142,8 @@ export function SchoolSidebarNavUser() {
               </div>
             </DropdownMenuLabel>
           </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <SidebarPreferenceSubmenus side={submenuSide} />
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem

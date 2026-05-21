@@ -145,11 +145,14 @@ function AiChatSidebarChats({ q }: { q?: string }) {
         const isPrivate = chat.visibility === "private";
         return (
           <SidebarMenuItem key={chat._id}>
-            <SidebarMenuButton asChild isActive={id === chat._id}>
-              <NavigationLink href={`/chat/${chat._id}`} title={chat.title}>
-                <HugeIcons icon={isPrivate ? SquareLock01Icon : Globe02Icon} />
-                <span className="truncate">{chat.title}</span>
-              </NavigationLink>
+            <SidebarMenuButton
+              isActive={id === chat._id}
+              render={
+                <NavigationLink href={`/chat/${chat._id}`} title={chat.title} />
+              }
+            >
+              <HugeIcons icon={isPrivate ? SquareLock01Icon : Globe02Icon} />
+              <span className="truncate">{chat.title}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         );

@@ -59,9 +59,7 @@ export function Source({ href, children }: SourceProps) {
 
   return (
     <SourceContext.Provider value={{ href, domain }}>
-      <HoverCard closeDelay={0} openDelay={150}>
-        {children}
-      </HoverCard>
+      <HoverCard>{children}</HoverCard>
     </SourceContext.Provider>
   );
 }
@@ -90,29 +88,29 @@ export function SourceTrigger({
       : null;
 
   return (
-    <HoverCardTrigger asChild>
-      <a
-        className={cn(
-          "inline-flex h-5 max-w-32 items-center gap-1 overflow-hidden rounded-full border border-transparent bg-muted py-0 text-muted-foreground text-xs leading-none no-underline transition-colors ease-out hover:border-primary hover:bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] hover:text-primary",
-          visibleFaviconUrl ? "pr-2 pl-1" : "px-1",
-          className
-        )}
-        href={href}
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        {visibleFaviconUrl ? (
-          <SourceFavicon
-            alt="favicon"
-            className="size-3.5 rounded-full"
-            height={14}
-            onUnavailable={() => setFailedFaviconUrl(visibleFaviconUrl)}
-            src={visibleFaviconUrl}
-            width={14}
-          />
-        ) : null}
-        <span className="truncate text-center font-normal">{labelToShow}</span>
-      </a>
+    <HoverCardTrigger
+      className={cn(
+        "inline-flex h-5 max-w-32 items-center gap-1 overflow-hidden rounded-full border border-transparent bg-muted py-0 text-muted-foreground text-xs leading-none no-underline transition-colors ease-out hover:border-primary hover:bg-[color-mix(in_oklch,var(--primary)_5%,var(--background))] hover:text-primary",
+        visibleFaviconUrl ? "pr-2 pl-1" : "px-1",
+        className
+      )}
+      closeDelay={0}
+      delay={150}
+      href={href}
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      {visibleFaviconUrl ? (
+        <SourceFavicon
+          alt="favicon"
+          className="size-3.5 rounded-full"
+          height={14}
+          onUnavailable={() => setFailedFaviconUrl(visibleFaviconUrl)}
+          src={visibleFaviconUrl}
+          width={14}
+        />
+      ) : null}
+      <span className="truncate text-center font-normal">{labelToShow}</span>
     </HoverCardTrigger>
   );
 }

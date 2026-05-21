@@ -357,24 +357,26 @@ function MaterialGroupDialogShell({
                           {t("material-scheduled-at-label")}
                         </FieldLabel>
                         <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              aria-invalid={isInvalid}
-                              className="w-full font-normal"
-                              id={`${formId}-scheduled-at`}
-                              name={field.name}
-                              type="button"
-                              variant="outline"
-                            >
-                              <HugeIcons icon={Calendar03Icon} />
-                              {field.state.value
-                                ? formatScheduledAt(field.state.value, locale)
-                                : t("material-scheduled-at-placeholder")}
-                              <HugeIcons
-                                className="ml-auto"
-                                icon={ArrowDown01Icon}
+                          <PopoverTrigger
+                            render={
+                              <Button
+                                aria-invalid={isInvalid}
+                                className="w-full font-normal"
+                                id={`${formId}-scheduled-at`}
+                                name={field.name}
+                                type="button"
+                                variant="outline"
                               />
-                            </Button>
+                            }
+                          >
+                            <HugeIcons icon={Calendar03Icon} />
+                            {field.state.value
+                              ? formatScheduledAt(field.state.value, locale)
+                              : t("material-scheduled-at-placeholder")}
+                            <HugeIcons
+                              className="ml-auto"
+                              icon={ArrowDown01Icon}
+                            />
                           </PopoverTrigger>
                           <PopoverContent
                             align="start"

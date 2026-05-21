@@ -12,11 +12,12 @@ export function AboutMenu() {
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild tooltip={t("about")}>
-        <NavigationLink href="/" title={t("about")}>
-          <HugeIcons icon={FavouriteIcon} />
-          <span className="truncate">{t("about")}</span>
-        </NavigationLink>
+      <SidebarMenuButton
+        render={<NavigationLink href="/" title={t("about")} />}
+        tooltip={t("about")}
+      >
+        <HugeIcons icon={FavouriteIcon} />
+        <span className="truncate">{t("about")}</span>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );

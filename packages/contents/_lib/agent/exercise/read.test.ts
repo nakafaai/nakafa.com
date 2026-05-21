@@ -105,6 +105,34 @@ describe("Nakafa agent exercises", () => {
         }),
       };
     });
+    vi.doMock("@repo/contents/_lib/exercises/renderable", () => ({
+      getRenderableExercisesContent: () =>
+        Effect.succeed([
+          {
+            answer: {
+              metadata: {
+                title: "Answer",
+              },
+              raw: "Answer body",
+            },
+            choices: {
+              en: [
+                {
+                  label: "A",
+                  value: true,
+                },
+              ],
+            },
+            number: 1,
+            question: {
+              metadata: {
+                title: "Question",
+              },
+              raw: "Question body",
+            },
+          },
+        ]),
+    }));
 
     const { NakafaAgentDataReadError } = await import(
       "@repo/contents/_lib/agent/errors"
@@ -121,6 +149,7 @@ describe("Nakafa agent exercises", () => {
 
     expect(error).toBeInstanceOf(NakafaAgentDataReadError);
     vi.doUnmock("@repo/contents/_lib/agent/schema/exercise");
+    vi.doUnmock("@repo/contents/_lib/exercises/renderable");
     vi.resetModules();
   });
 });

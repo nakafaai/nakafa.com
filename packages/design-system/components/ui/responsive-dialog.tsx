@@ -9,10 +9,11 @@ import {
 } from "@repo/design-system/components/ui/dialog";
 import {
   Drawer,
-  DrawerContent,
   DrawerDescription,
   DrawerFooter,
   DrawerHeader,
+  DrawerPanel,
+  DrawerPopup,
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
@@ -38,7 +39,7 @@ interface Props {
       title?: ComponentProps<typeof DrawerTitle>["className"];
       description?: ComponentProps<typeof DrawerDescription>["className"];
       footer?: ComponentProps<typeof DrawerFooter>["className"];
-      content?: ComponentProps<typeof DrawerContent>["className"];
+      content?: ComponentProps<typeof DrawerPopup>["className"];
     };
   };
   title: ReactNode;
@@ -84,7 +85,7 @@ export function ResponsiveDialog({
 
   return (
     <Drawer onOpenChange={setOpen} open={open}>
-      <DrawerContent className={styleClassName?.drawer?.content}>
+      <DrawerPopup className={styleClassName?.drawer?.content} showBar>
         <DrawerHeader
           className={cn(
             "border-b",
@@ -101,17 +102,17 @@ export function ResponsiveDialog({
             </DrawerDescription>
           )}
         </DrawerHeader>
-        <div
+        <DrawerPanel
           className={cn("flex-1 overflow-y-auto p-4", !children && "hidden")}
         >
           {children}
-        </div>
+        </DrawerPanel>
         {!!footer && (
           <DrawerFooter className={styleClassName?.drawer?.footer}>
             {footer}
           </DrawerFooter>
         )}
-      </DrawerContent>
+      </DrawerPopup>
     </Drawer>
   );
 }

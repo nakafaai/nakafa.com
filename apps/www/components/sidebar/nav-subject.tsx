@@ -79,12 +79,12 @@ function SubjectMenuItem({ item }: { item: (typeof subjectMenu)[number] }) {
               return (
                 <SidebarMenuSubItem key={title}>
                   <SidebarMenuSubButton
-                    asChild
                     isActive={pathname.includes(subItem.href)}
+                    render={
+                      <NavigationLink href={subItem.href} title={title} />
+                    }
                   >
-                    <NavigationLink href={subItem.href} title={title}>
-                      <span>{title}</span>
-                    </NavigationLink>
+                    <span>{title}</span>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               );

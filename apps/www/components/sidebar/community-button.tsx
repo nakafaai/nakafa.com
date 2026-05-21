@@ -10,22 +10,26 @@ export function CommunityButton() {
   const t = useTranslations("Common");
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild tooltip={t("community")}>
-        <a
-          href="https://discord.gg/CPCSfKhvfQ"
-          rel="noopener noreferrer"
-          target="_blank"
-          title={t("community")}
-        >
-          <HugeIcons className="size-4 shrink-0" icon={DiscordIcon} />
-          <span className="truncate">{t("community")}</span>
+      <SidebarMenuButton
+        render={
+          <a
+            aria-label={t("community")}
+            href="https://discord.gg/CPCSfKhvfQ"
+            rel="noopener noreferrer"
+            target="_blank"
+            title={t("community")}
+          >
+            <HugeIcons className="size-4 shrink-0" icon={DiscordIcon} />
+            <span className="truncate">{t("community")}</span>
 
-          <HugeIcons
-            className="ml-auto size-4 shrink-0"
-            icon={LinkSquare02Icon}
-          />
-        </a>
-      </SidebarMenuButton>
+            <HugeIcons
+              className="ml-auto size-4 shrink-0"
+              icon={LinkSquare02Icon}
+            />
+          </a>
+        }
+        tooltip={t("community")}
+      />
     </SidebarMenuItem>
   );
 }

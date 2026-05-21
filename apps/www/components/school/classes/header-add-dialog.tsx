@@ -4,22 +4,24 @@ import {
   Add01Icon,
   ArrowDown01Icon,
   Calendar03Icon,
+  Search02Icon,
   Tick01Icon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
+import {
+  Autocomplete,
+  AutocompleteCollection,
+  AutocompleteEmpty,
+  AutocompleteGroup,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteList,
+} from "@repo/design-system/components/ui/autocomplete";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@repo/design-system/components/ui/command";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,6 +74,16 @@ export function CreateSchoolClassDialog({
   const schoolId = useSchool((state) => state.school._id);
   const createClass = useMutation(api.classes.mutations.createClass);
   const [subjectPopoverOpen, subjectPopoverHandlers] = useDisclosure(false);
+  const subjectOptions = subjectList.map((subject) => ({
+    label: t(subject),
+    value: subject,
+  }));
+  const subjectGroups = [
+    {
+      items: subjectOptions,
+      value: t("subject-label"),
+    },
+  ];
 
   const form = useForm({
     defaultValues: classCreateDefaultValues,
@@ -182,55 +194,82 @@ export function CreateSchoolClassDialog({
                       onOpenChange={subjectPopoverHandlers.set}
                       open={subjectPopoverOpen}
                     >
-                      <PopoverTrigger asChild>
-                        <Button
-                          aria-label="Select subject"
-                          size="icon"
-                          type="button"
-                          variant="outline"
-                        >
-                          <HugeIcons
-                            className={cn(
-                              "transition-transform ease-out",
-                              subjectPopoverOpen && "rotate-180"
-                            )}
-                            icon={ArrowDown01Icon}
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            aria-label="Select subject"
+                            size="icon"
+                            type="button"
+                            variant="outline"
                           />
-                        </Button>
+                        }
+                      >
+                        <HugeIcons
+                          className={cn(
+                            "transition-transform ease-out",
+                            subjectPopoverOpen && "rotate-180"
+                          )}
+                          icon={ArrowDown01Icon}
+                        />
                       </PopoverTrigger>
                       <PopoverContent align="end" className="p-0">
-                        <Command>
-                          <CommandInput
+                        <Autocomplete
+                          autoHighlight="always"
+                          inline
+                          items={subjectGroups}
+                          keepHighlight
+                          open
+                        >
+                          <AutocompleteInput
+                            className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
                             placeholder={t("search-subjects-placeholder")}
+                            showClear
+                            startAddon={
+                              <HugeIcons
+                                className="size-4"
+                                icon={Search02Icon}
+                              />
+                            }
                           />
-                          <CommandList>
-                            <CommandEmpty>
-                              {t("no-subjects-found")}
-                            </CommandEmpty>
-                            <CommandGroup>
-                              {subjectList.map((subject) => (
-                                <CommandItem
-                                  className="cursor-pointer"
-                                  key={subject}
-                                  onSelect={() => {
-                                    field.handleChange(t(subject));
-                                    subjectPopoverHandlers.close();
-                                  }}
-                                >
-                                  <span>{t(subject)}</span>
-                                  <HugeIcons
-                                    className={cn(
-                                      "ml-auto size-4 opacity-0 transition-opacity ease-out",
-                                      field.state.value === t(subject) &&
-                                        "opacity-100"
-                                    )}
-                                    icon={Tick01Icon}
-                                  />
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
+                          <AutocompleteEmpty>
+                            {t("no-subjects-found")}
+                          </AutocompleteEmpty>
+                          <AutocompleteList
+                            className="max-h-75"
+                            scrollArea={false}
+                          >
+                            {(group) => (
+                              <AutocompleteGroup
+                                items={group.items}
+                                key={group.value}
+                              >
+                                <AutocompleteCollection>
+                                  {(subject) => (
+                                    <AutocompleteItem
+                                      className="min-h-8 cursor-pointer py-1.5 text-sm sm:min-h-8"
+                                      key={subject.value}
+                                      onClick={() => {
+                                        field.handleChange(subject.label);
+                                        subjectPopoverHandlers.close();
+                                      }}
+                                      value={subject}
+                                    >
+                                      <span>{subject.label}</span>
+                                      <HugeIcons
+                                        className={cn(
+                                          "ml-auto size-4 opacity-0 transition-opacity ease-out",
+                                          field.state.value === subject.label &&
+                                            "opacity-100"
+                                        )}
+                                        icon={Tick01Icon}
+                                      />
+                                    </AutocompleteItem>
+                                  )}
+                                </AutocompleteCollection>
+                              </AutocompleteGroup>
+                            )}
+                          </AutocompleteList>
+                        </Autocomplete>
                       </PopoverContent>
                     </Popover>
                   </ButtonGroup>

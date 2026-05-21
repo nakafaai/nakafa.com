@@ -14,6 +14,7 @@ import PhoneInput from "@repo/design-system/components/ui/phone-input";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -34,6 +35,10 @@ import {
 /** Render the onboarding form for creating a new school. */
 export function SchoolOnboardingCreateForm() {
   const t = useTranslations("School.Onboarding");
+  const schoolTypeItems = schoolTypeOptions.map((option) => ({
+    label: t(option.value),
+    value: option.value,
+  }));
 
   const router = useRouter();
 
@@ -227,6 +232,7 @@ export function SchoolOnboardingCreateForm() {
                   {t("school-type")}
                 </FieldLabel>
                 <Select
+                  items={schoolTypeItems}
                   name={field.name}
                   onValueChange={(value) => {
                     const parsed =
@@ -245,11 +251,13 @@ export function SchoolOnboardingCreateForm() {
                     <SelectValue placeholder={t("school-type-placeholder")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {schoolTypeOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {t(option.value)}
-                      </SelectItem>
-                    ))}
+                    <SelectGroup>
+                      {schoolTypeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {t(option.value)}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </Field>

@@ -2,19 +2,22 @@
 
 import {
   ArrowDown01Icon,
+  Search02Icon,
   Tick01Icon,
   TransactionHistoryIcon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@repo/design-system/components/ui/command";
+  Autocomplete,
+  AutocompleteCollection,
+  AutocompleteEmpty,
+  AutocompleteGroup,
+  AutocompleteGroupLabel,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteList,
+} from "@repo/design-system/components/ui/autocomplete";
+import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Popover,
@@ -55,14 +58,18 @@ interface Props {
 function TryoutAttemptHistoryItem({
   attempt,
   isSelected,
-  onSelect,
+  onChoose,
 }: {
   attempt: AttemptOption;
   isSelected: boolean;
-  onSelect: () => void;
+  onChoose: () => void;
 }) {
   return (
-    <CommandItem className="cursor-pointer" onSelect={onSelect}>
+    <AutocompleteItem
+      className="min-h-8 cursor-pointer py-1.5 text-sm sm:min-h-8"
+      onClick={onChoose}
+      value={attempt}
+    >
       <div className="flex min-w-0 flex-1 flex-col">
         <span>{attempt.label}</span>
         <span className="truncate text-muted-foreground text-xs">
@@ -76,7 +83,7 @@ function TryoutAttemptHistoryItem({
         )}
         icon={Tick01Icon}
       />
-    </CommandItem>
+    </AutocompleteItem>
   );
 }
 
@@ -142,38 +149,63 @@ function TryoutAttemptHistoryControls({
       locale: getLocale(locale),
     }),
   }));
+  const attemptGroups = [
+    {
+      items: attemptOptions,
+      value: tTryouts("attempt-menu-label"),
+    },
+  ];
 
   return (
     <div className="flex w-full flex-wrap items-center gap-3">
       {visibleAttemptHistory.length > 1 ? (
         <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              className="group [&[data-state=open]_.tryout-history-chevron]:rotate-180"
-              disabled={isSelectingAttempt}
-              type="button"
-              variant="outline"
-            >
-              <Spinner
-                className="size-4"
-                icon={TransactionHistoryIcon}
-                isLoading={isSelectingAttempt}
+          <PopoverTrigger
+            render={
+              <Button
+                className="group data-open:[&_.tryout-history-chevron]:rotate-180"
+                disabled={isSelectingAttempt}
+                type="button"
+                variant="outline"
               />
-              {tTryouts("attempt-select-label", {
-                number: activeAttemptNumber,
-              })}
-              <HugeIcons
-                className="tryout-history-chevron ml-auto size-4 transition-transform ease-out"
-                icon={ArrowDown01Icon}
-              />
-            </Button>
+            }
+          >
+            <Spinner
+              className="size-4"
+              icon={TransactionHistoryIcon}
+              isLoading={isSelectingAttempt}
+            />
+            {tTryouts("attempt-select-label", {
+              number: activeAttemptNumber,
+            })}
+            <HugeIcons
+              className="tryout-history-chevron ml-auto size-4 transition-transform ease-out"
+              icon={ArrowDown01Icon}
+            />
           </PopoverTrigger>
           <PopoverContent align="start" className="w-80 p-0">
-            <Command>
-              <CommandInput
+            <Autocomplete
+              autoHighlight="always"
+              inline
+              items={attemptGroups}
+              itemToStringValue={(attempt) =>
+                `${attempt.label} ${attempt.subtitle}`
+              }
+              keepHighlight
+              open
+            >
+              <AutocompleteInput
+                className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
                 placeholder={tTryouts("attempt-menu-search-placeholder")}
+                showClear
+                startAddon={
+                  <HugeIcons className="size-4" icon={Search02Icon} />
+                }
               />
-              <CommandList
+              <AutocompleteEmpty>
+                {tTryouts("attempt-menu-empty")}
+              </AutocompleteEmpty>
+              <AutocompleteList
                 className="max-h-64"
                 onScroll={(event) => {
                   if (status !== "CanLoadMore") {
@@ -192,30 +224,39 @@ function TryoutAttemptHistoryControls({
 
                   loadMore(25);
                 }}
+                scrollArea={false}
               >
-                <CommandEmpty>{tTryouts("attempt-menu-empty")}</CommandEmpty>
-                <CommandGroup heading={tTryouts("attempt-menu-label")}>
-                  {attemptOptions.map((attemptOption) => (
-                    <TryoutAttemptHistoryItem
-                      attempt={attemptOption}
-                      isSelected={attemptOption.attemptId === activeAttemptId}
-                      key={attemptOption.attemptId}
-                      onSelect={() => {
-                        setSelectedAttemptId(
-                          attemptOption.isLatest
-                            ? null
-                            : attemptOption.attemptId,
-                          {
-                            shallow: false,
-                            startTransition,
+                {(group) => (
+                  <AutocompleteGroup items={group.items} key={group.value}>
+                    <AutocompleteGroupLabel>
+                      {group.value}
+                    </AutocompleteGroupLabel>
+                    <AutocompleteCollection>
+                      {(attemptOption) => (
+                        <TryoutAttemptHistoryItem
+                          attempt={attemptOption}
+                          isSelected={
+                            attemptOption.attemptId === activeAttemptId
                           }
-                        );
-                      }}
-                    />
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
+                          key={attemptOption.attemptId}
+                          onChoose={() => {
+                            setSelectedAttemptId(
+                              attemptOption.isLatest
+                                ? null
+                                : attemptOption.attemptId,
+                              {
+                                shallow: false,
+                                startTransition,
+                              }
+                            );
+                          }}
+                        />
+                      )}
+                    </AutocompleteCollection>
+                  </AutocompleteGroup>
+                )}
+              </AutocompleteList>
+            </Autocomplete>
           </PopoverContent>
         </Popover>
       ) : null}

@@ -29,7 +29,7 @@ export default function Page() {
   return (
     <>
       <PageHeader />
-      <LayoutContent>
+      <LayoutContent className="pb-20">
         <div className="flex flex-wrap gap-2">
           {contributors.map((contributor) => (
             <Avatar contributor={contributor} key={contributor.username} />

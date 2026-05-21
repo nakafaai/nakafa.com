@@ -23,14 +23,12 @@ function MenuItem() {
       {holyMenu.map((item) => (
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton
-            asChild
             isActive={pathname.includes(item.href)}
+            render={<NavigationLink href={item.href} title={t(item.title)} />}
             tooltip={t(item.title)}
           >
-            <NavigationLink href={item.href} title={t(item.title)}>
-              {!!item.icon && <HugeIcons icon={item.icon} />}
-              <span className="truncate">{t(item.title)}</span>
-            </NavigationLink>
+            {!!item.icon && <HugeIcons icon={item.icon} />}
+            <span className="truncate">{t(item.title)}</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       ))}
