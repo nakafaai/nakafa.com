@@ -34,7 +34,7 @@ export default function Page() {
           <div className="flex flex-col gap-2">
             <BackButton
               className="w-fit p-0 text-muted-foreground"
-              defaultHref="/"
+              defaultHref="/home"
               variant="link"
             />
 

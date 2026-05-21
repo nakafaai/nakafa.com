@@ -14,22 +14,26 @@ export function GithubButton({ githubUrl }: Props) {
   const t = useTranslations("Common");
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild tooltip={t("source-code")}>
-        <a
-          href={githubUrl}
-          rel="noopener noreferrer"
-          target="_blank"
-          title={t("source-code")}
-        >
-          <HugeIcons className="size-4 shrink-0" icon={GithubIcon} />
-          <span className="truncate">{t("source-code")}</span>
+      <SidebarMenuButton
+        render={
+          <a
+            aria-label={t("source-code")}
+            href={githubUrl}
+            rel="noopener noreferrer"
+            target="_blank"
+            title={t("source-code")}
+          >
+            <HugeIcons className="size-4 shrink-0" icon={GithubIcon} />
+            <span className="truncate">{t("source-code")}</span>
 
-          <HugeIcons
-            className="ml-auto size-4 shrink-0"
-            icon={LinkSquare02Icon}
-          />
-        </a>
-      </SidebarMenuButton>
+            <HugeIcons
+              className="ml-auto size-4 shrink-0"
+              icon={LinkSquare02Icon}
+            />
+          </a>
+        }
+        tooltip={t("source-code")}
+      />
     </SidebarMenuItem>
   );
 }

@@ -62,7 +62,7 @@ export function Faq() {
             </div>
 
             <div className="lg:col-span-2">
-              <Accordion className="w-full" type="single">
+              <Accordion className="w-full">
                 {faqs.map((faq) => (
                   <AccordionItem key={faq.question} value={faq.question}>
                     <AccordionTrigger className="text-base transition-colors ease-out hover:text-primary hover:no-underline">

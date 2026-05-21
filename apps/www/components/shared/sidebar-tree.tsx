@@ -52,27 +52,26 @@ function SidebarTreeItem({
       <Tooltip>
         <TooltipTrigger
           render={
-            <SidebarMenuButton asChild isActive={isActive}>
-              {hasIndex ? (
-                <button
-                  onClick={() => {
-                    if (heading.index !== undefined) {
-                      scrollToIndex(heading.index);
-                    }
-                  }}
-                  type="button"
-                >
-                  <span className="truncate" title={heading.label}>
-                    {heading.label}
-                  </span>
-                </button>
-              ) : (
-                <NavigationLink href={heading.href} title={heading.label}>
-                  <span className="truncate" title={heading.label}>
-                    {heading.label}
-                  </span>
-                </NavigationLink>
-              )}
+            <SidebarMenuButton
+              isActive={isActive}
+              render={
+                hasIndex ? (
+                  <button
+                    onClick={() => {
+                      if (heading.index !== undefined) {
+                        scrollToIndex(heading.index);
+                      }
+                    }}
+                    type="button"
+                  />
+                ) : (
+                  <NavigationLink href={heading.href} title={heading.label} />
+                )
+              }
+            >
+              <span className="truncate" title={heading.label}>
+                {heading.label}
+              </span>
             </SidebarMenuButton>
           }
         />

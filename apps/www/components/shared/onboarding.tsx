@@ -43,6 +43,15 @@ export function Onboarding() {
 
 function OnboardingContent({ user }: { user: CurrentUser }) {
   const t = useTranslations("Onboarding");
+  const roleItems = roles.map((role) => ({
+    label: (
+      <>
+        <HugeIcons icon={role.icon} />
+        {t(role.value)}
+      </>
+    ),
+    value: role.value,
+  }));
 
   const [selectedRole, setSelectedRole] = useState<Role | undefined>(undefined);
 
@@ -50,7 +59,11 @@ function OnboardingContent({ user }: { user: CurrentUser }) {
 
   const [isPending, startTransition] = useTransition();
 
-  const handleRoleChange = (value: Role) => {
+  const handleRoleChange = (value: Role | null) => {
+    if (!value) {
+      return;
+    }
+
     setSelectedRole(value);
   };
 
@@ -89,7 +102,11 @@ function OnboardingContent({ user }: { user: CurrentUser }) {
             <DialogDescription>{t("description")}</DialogDescription>
           </DialogHeader>
 
-          <Select disabled={isPending} onValueChange={handleRoleChange}>
+          <Select
+            disabled={isPending}
+            items={roleItems}
+            onValueChange={handleRoleChange}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder={t("select-role")} />
             </SelectTrigger>

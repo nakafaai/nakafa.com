@@ -47,15 +47,16 @@ function SidebarRightHeader({
     <SidebarHeader>
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton asChild size="lg">
-            <NavigationLink href={header.href} title={header.title}>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{header.title}</span>
-                {!!header.description && (
-                  <span className="truncate text-xs">{header.description}</span>
-                )}
-              </div>
-            </NavigationLink>
+          <SidebarMenuButton
+            render={<NavigationLink href={header.href} title={header.title} />}
+            size="lg"
+          >
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium">{header.title}</span>
+              {!!header.description && (
+                <span className="truncate text-xs">{header.description}</span>
+              )}
+            </div>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

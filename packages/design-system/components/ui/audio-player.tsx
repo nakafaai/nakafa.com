@@ -1,12 +1,12 @@
 "use client";
 
+import { Slider as SliderPrimitive } from "@base-ui/react/slider";
 import {
   PauseIcon,
   PlayIcon,
   Settings01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import * as SliderPrimitive from "@radix-ui/react-slider";
 import { captureException } from "@repo/analytics/posthog";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -18,7 +18,6 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import {
-  type ComponentProps,
   createContext,
   type HTMLProps,
   type ReactNode,
@@ -340,10 +339,7 @@ export function AudioPlayerProvider<TData = unknown>({
 
 export const AudioPlayerProgress = ({
   ...otherProps
-}: Omit<
-  ComponentProps<typeof SliderPrimitive.Root>,
-  "min" | "max" | "value"
->) => {
+}: Omit<SliderPrimitive.Root.Props<number>, "min" | "max" | "value">) => {
   const player = useAudioPlayer();
   const time = useAudioPlayerTime();
   const wasPlayingRef = useRef(false);
@@ -384,22 +380,25 @@ export const AudioPlayerProgress = ({
         }
         otherProps.onPointerUp?.(e);
       }}
-      onValueChange={(vals) => {
-        player.seek(vals[0]);
-        otherProps.onValueChange?.(vals);
+      onValueChange={(value, eventDetails) => {
+        player.seek(value);
+        otherProps.onValueChange?.(value, eventDetails);
       }}
       step={otherProps.step || 0.25}
-      value={[time]}
+      thumbAlignment="edge"
+      value={time}
     >
-      <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-muted">
-        <SliderPrimitive.Range className="absolute h-full bg-primary" />
-      </SliderPrimitive.Track>
-      <SliderPrimitive.Thumb
-        className="relative flex h-0 w-0 items-center justify-center opacity-0 focus-visible:opacity-100 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 group-hover/player:opacity-100"
-        data-slot="slider-thumb"
-      >
-        <div className="absolute size-3 rounded-full bg-foreground" />
-      </SliderPrimitive.Thumb>
+      <SliderPrimitive.Control className="relative flex h-full w-full items-center">
+        <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-muted">
+          <SliderPrimitive.Indicator className="h-full bg-primary" />
+        </SliderPrimitive.Track>
+        <SliderPrimitive.Thumb
+          className="relative flex h-0 w-0 items-center justify-center opacity-0 focus-visible:opacity-100 focus-visible:outline-none group-hover/player:opacity-100 data-disabled:pointer-events-none data-disabled:opacity-50"
+          data-slot="slider-thumb"
+        >
+          <div className="absolute size-3 rounded-full bg-foreground" />
+        </SliderPrimitive.Thumb>
+      </SliderPrimitive.Control>
     </SliderPrimitive.Root>
   );
 };

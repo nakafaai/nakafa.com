@@ -2,7 +2,6 @@
 
 import { Copy01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { type IconType, SiGnometerminal } from "@icons-pack/react-simple-icons";
-import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import { captureException } from "@repo/analytics/posthog";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -15,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { useControllableState } from "@repo/design-system/hooks/use-controllable-state";
 import { filenameIconMap } from "@repo/design-system/lib/programming";
 import { cn } from "@repo/design-system/lib/utils";
 import {
@@ -232,12 +232,28 @@ export const CodeBlockFilename = ({
 export type CodeBlockSelectProps = ComponentProps<typeof Select>;
 
 export const CodeBlockSelect = (props: CodeBlockSelectProps) => {
-  const { value, onValueChange } = useCodeBlock((state) => ({
+  const { data, value, onValueChange } = useCodeBlock((state) => ({
+    data: state.data,
     value: state.value,
     onValueChange: state.onValueChange,
   }));
+  const items = data.map((item) => ({
+    label: item.language,
+    value: item.language,
+  }));
 
-  return <Select onValueChange={onValueChange} value={value} {...props} />;
+  return (
+    <Select
+      items={items}
+      onValueChange={(nextValue) => {
+        if (typeof nextValue === "string") {
+          onValueChange?.(nextValue);
+        }
+      }}
+      value={value}
+      {...props}
+    />
+  );
 };
 
 export type CodeBlockSelectTriggerProps = ComponentProps<typeof SelectTrigger>;

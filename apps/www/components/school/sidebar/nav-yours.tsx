@@ -27,25 +27,31 @@ export function SchoolSidebarNavYours() {
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname.includes("/home")}>
-              <NavigationLink href={`/school/${slug}/home`} title={t("home")}>
-                <HugeIcons icon={Home07Icon} />
-                {t("home")}
-              </NavigationLink>
+            <SidebarMenuButton
+              isActive={pathname.includes("/home")}
+              render={
+                <NavigationLink
+                  href={`/school/${slug}/home`}
+                  title={t("home")}
+                />
+              }
+            >
+              <HugeIcons icon={Home07Icon} />
+              {t("home")}
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
-              asChild
               isActive={pathname.includes("/notifications")}
+              render={
+                <NavigationLink
+                  href={`/school/${slug}/notifications`}
+                  title={t("notifications")}
+                />
+              }
             >
-              <NavigationLink
-                href={`/school/${slug}/notifications`}
-                title={t("notifications")}
-              >
-                <HugeIcons icon={Notification01Icon} />
-                {t("notifications")}
-              </NavigationLink>
+              <HugeIcons icon={Notification01Icon} />
+              {t("notifications")}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

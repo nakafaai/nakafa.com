@@ -115,16 +115,20 @@ const ForumReactions = memo(() => {
 
         return (
           <HoverCard key={emoji}>
-            <HoverCardTrigger asChild>
-              <Button
-                disabled={isPending}
-                onClick={() => handleToggleReaction(emoji)}
-                size="sm"
-                variant={isMyReaction === true ? "default-outline" : "outline"}
-              >
-                {emoji}
-                <span className="tracking-tight">{count}</span>
-              </Button>
+            <HoverCardTrigger
+              render={
+                <Button
+                  disabled={isPending}
+                  onClick={() => handleToggleReaction(emoji)}
+                  size="sm"
+                  variant={
+                    isMyReaction === true ? "default-outline" : "outline"
+                  }
+                />
+              }
+            >
+              {emoji}
+              <span className="tracking-tight">{count}</span>
             </HoverCardTrigger>
             <HoverCardContent
               align="center"
@@ -186,11 +190,13 @@ const ForumActions = memo(() => {
       <Tooltip>
         <TooltipTrigger
           render={
-            <PopoverTrigger asChild>
-              <Button disabled={isPending} size="icon-sm" variant="outline">
-                <HugeIcons icon={WinkIcon} />
-                <span className="sr-only">{t("reaction")}</span>
-              </Button>
+            <PopoverTrigger
+              render={
+                <Button disabled={isPending} size="icon-sm" variant="outline" />
+              }
+            >
+              <HugeIcons icon={WinkIcon} />
+              <span className="sr-only">{t("reaction")}</span>
             </PopoverTrigger>
           }
         />

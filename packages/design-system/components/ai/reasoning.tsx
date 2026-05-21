@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowDown01Icon, BrainIcon } from "@hugeicons/core-free-icons";
-import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Collapsible,
@@ -10,6 +9,7 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { useControllableState } from "@repo/design-system/hooks/use-controllable-state";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";

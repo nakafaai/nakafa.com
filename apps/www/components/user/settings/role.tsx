@@ -7,6 +7,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -28,6 +29,15 @@ const formSchema = Schema.standardSchemaV1(
 
 export function UserSettingsRole({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
+  const roleItems = roles.map((role) => ({
+    label: (
+      <>
+        <HugeIcons icon={role.icon} />
+        {t(role.value)}
+      </>
+    ),
+    value: role.value,
+  }));
 
   const updateUserRole = useMutation(api.users.mutations.updateUserRole);
   const initialRole = roles.find(
@@ -93,6 +103,7 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
                 {t("role")}
               </FieldLabel>
               <Select
+                items={roleItems}
                 name={field.name}
                 onValueChange={(value) => {
                   const parsed = Schema.decodeUnknownOption(roleSchema)(value);
@@ -109,12 +120,14 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
                   <SelectValue placeholder={t("role-placeholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {roles.map((role) => (
-                    <SelectItem key={role.value} value={role.value}>
-                      <HugeIcons icon={role.icon} />
-                      {t(role.value)}
-                    </SelectItem>
-                  ))}
+                  <SelectGroup>
+                    {roles.map((role) => (
+                      <SelectItem key={role.value} value={role.value}>
+                        <HugeIcons icon={role.icon} />
+                        {t(role.value)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </Field>

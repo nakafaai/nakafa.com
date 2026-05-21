@@ -30,27 +30,32 @@ export function SchoolSidebarNavLearning() {
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <NavigationLink
-                href="/home"
-                rel="noopener noreferrer"
-                target="_blank"
-                title={t("nakafa-materials")}
-              >
-                <HugeIcons icon={ArrowUpRight01Icon} />
-                {t("nakafa-materials")}
-              </NavigationLink>
+            <SidebarMenuButton
+              render={
+                <NavigationLink
+                  href="/home"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                  title={t("nakafa-materials")}
+                />
+              }
+            >
+              <HugeIcons icon={ArrowUpRight01Icon} />
+              {t("nakafa-materials")}
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname.includes("/classes")}>
-              <NavigationLink
-                href={`/school/${slug}/classes`}
-                title={t("classes")}
-              >
-                <HugeIcons icon={GeometricShapes01Icon} />
-                {t("classes")}
-              </NavigationLink>
+            <SidebarMenuButton
+              isActive={pathname.includes("/classes")}
+              render={
+                <NavigationLink
+                  href={`/school/${slug}/classes`}
+                  title={t("classes")}
+                />
+              }
+            >
+              <HugeIcons icon={GeometricShapes01Icon} />
+              {t("classes")}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

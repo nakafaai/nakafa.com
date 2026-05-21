@@ -182,21 +182,23 @@ export function CreateSchoolClassDialog({
                       onOpenChange={subjectPopoverHandlers.set}
                       open={subjectPopoverOpen}
                     >
-                      <PopoverTrigger asChild>
-                        <Button
-                          aria-label="Select subject"
-                          size="icon"
-                          type="button"
-                          variant="outline"
-                        >
-                          <HugeIcons
-                            className={cn(
-                              "transition-transform ease-out",
-                              subjectPopoverOpen && "rotate-180"
-                            )}
-                            icon={ArrowDown01Icon}
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            aria-label="Select subject"
+                            size="icon"
+                            type="button"
+                            variant="outline"
                           />
-                        </Button>
+                        }
+                      >
+                        <HugeIcons
+                          className={cn(
+                            "transition-transform ease-out",
+                            subjectPopoverOpen && "rotate-180"
+                          )}
+                          icon={ArrowDown01Icon}
+                        />
                       </PopoverTrigger>
                       <PopoverContent align="end" className="p-0">
                         <Command>

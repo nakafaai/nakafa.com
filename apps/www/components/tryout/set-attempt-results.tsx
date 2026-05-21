@@ -147,26 +147,28 @@ function TryoutAttemptHistoryControls({
     <div className="flex w-full flex-wrap items-center gap-3">
       {visibleAttemptHistory.length > 1 ? (
         <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              className="group [&[data-state=open]_.tryout-history-chevron]:rotate-180"
-              disabled={isSelectingAttempt}
-              type="button"
-              variant="outline"
-            >
-              <Spinner
-                className="size-4"
-                icon={TransactionHistoryIcon}
-                isLoading={isSelectingAttempt}
+          <PopoverTrigger
+            render={
+              <Button
+                className="group data-open:[&_.tryout-history-chevron]:rotate-180"
+                disabled={isSelectingAttempt}
+                type="button"
+                variant="outline"
               />
-              {tTryouts("attempt-select-label", {
-                number: activeAttemptNumber,
-              })}
-              <HugeIcons
-                className="tryout-history-chevron ml-auto size-4 transition-transform ease-out"
-                icon={ArrowDown01Icon}
-              />
-            </Button>
+            }
+          >
+            <Spinner
+              className="size-4"
+              icon={TransactionHistoryIcon}
+              isLoading={isSelectingAttempt}
+            />
+            {tTryouts("attempt-select-label", {
+              number: activeAttemptNumber,
+            })}
+            <HugeIcons
+              className="tryout-history-chevron ml-auto size-4 transition-transform ease-out"
+              icon={ArrowDown01Icon}
+            />
           </PopoverTrigger>
           <PopoverContent align="start" className="w-80 p-0">
             <Command>

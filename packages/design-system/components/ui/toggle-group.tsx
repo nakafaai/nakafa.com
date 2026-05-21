@@ -40,7 +40,7 @@ const toggleGroupItemLayoutVariants = cva("", {
     layout: {
       default:
         "group-data-[orientation=vertical]/toggle-group:w-full group-data-[orientation=vertical]/toggle-group:flex-none group-data-[orientation=vertical]/toggle-group:border-t-0 group-data-[orientation=horizontal]/toggle-group:border-l-0 group-data-[orientation=horizontal]/toggle-group:last:rounded-r-md group-data-[orientation=vertical]/toggle-group:last:rounded-b-md group-data-[orientation=vertical]/toggle-group:first:rounded-t-md group-data-[orientation=horizontal]/toggle-group:first:rounded-l-md group-data-[orientation=vertical]/toggle-group:first:border-t group-data-[orientation=horizontal]/toggle-group:first:border-l",
-      grid: "rounded-none border-0 bg-background hover:bg-accent data-[state=on]:bg-accent data-pressed:bg-accent",
+      grid: "rounded-none border-0 bg-background hover:bg-accent data-pressed:bg-accent",
     },
   },
   defaultVariants: {
@@ -208,7 +208,7 @@ function ToggleGroupItem({
           variant: itemVariant,
           size: itemSize,
         }),
-        "relative min-w-0 flex-1 shrink-0 rounded-none shadow-none hover:z-10 focus:z-10 focus-visible:z-10 data-[state=on]:z-10 data-pressed:z-10",
+        "relative min-w-0 flex-1 shrink-0 rounded-none shadow-none hover:z-10 focus:z-10 focus-visible:z-10 data-pressed:z-10",
         toggleGroupItemLayoutVariants({ layout: context.layout }),
         className
       )}

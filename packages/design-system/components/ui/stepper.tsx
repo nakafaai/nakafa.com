@@ -1,10 +1,10 @@
 "use client";
 
+import { useRender } from "@base-ui/react/use-render";
 import { Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
-import { Slot as SlotPrimitive } from "radix-ui";
 import { createContext, useCallback, useContext, useState } from "react";
 
 // Types
@@ -138,7 +138,7 @@ function StepperItem({
           className
         )}
         data-slot="stepper-item"
-        data-state={state}
+        data-step-state={state}
         {...(isLoading ? { "data-loading": true } : {})}
         {...props}
       >
@@ -149,89 +149,81 @@ function StepperItem({
 }
 
 // StepperTrigger
-interface StepperTriggerProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  asChild?: boolean;
-}
-
 function StepperTrigger({
-  asChild = false,
   className,
   children,
+  onClick,
+  render,
+  type,
   ...props
-}: StepperTriggerProps) {
+}: useRender.ComponentProps<"button">) {
   const { setActiveStep } = useStepper();
   const { step, isDisabled } = useStepItem();
 
-  if (asChild) {
-    const Comp = asChild ? SlotPrimitive.Slot : "span";
-    return (
-      <Comp className={className} data-slot="stepper-trigger">
-        {children}
-      </Comp>
-    );
-  }
-
-  return (
-    <button
-      className={cn(
+  return useRender({
+    defaultTagName: "button",
+    render,
+    props: {
+      children,
+      className: cn(
         "inline-flex items-center gap-3 rounded-full outline-none focus-visible:z-10 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50",
         className
-      )}
-      data-slot="stepper-trigger"
-      disabled={isDisabled}
-      onClick={() => setActiveStep(step)}
-      {...props}
-    >
-      {children}
-    </button>
-  );
+      ),
+      "data-slot": "stepper-trigger",
+      disabled: isDisabled,
+      onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(event);
+
+        if (!event.defaultPrevented) {
+          setActiveStep(step);
+        }
+      },
+      type: type ?? "button",
+      ...props,
+    },
+  });
 }
 
 // StepperIndicator
-interface StepperIndicatorProps extends React.HTMLAttributes<HTMLDivElement> {
-  asChild?: boolean;
-}
-
 function StepperIndicator({
-  asChild = false,
   className,
   children,
+  render,
   ...props
-}: StepperIndicatorProps) {
+}: useRender.ComponentProps<"span">) {
   const { state, step, isLoading } = useStepItem();
-
-  return (
-    <span
-      className={cn(
-        "relative flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs data-[state=active]:bg-primary data-[state=completed]:bg-primary data-[state=active]:text-primary-foreground data-[state=completed]:text-primary-foreground",
-        className
+  const defaultChildren = (
+    <>
+      <span className="transition-all group-data-[step-state=completed]/step:scale-0 group-data-loading/step:scale-0 group-data-[step-state=completed]/step:opacity-0 group-data-loading/step:opacity-0 group-data-loading/step:transition-none">
+        {step}
+      </span>
+      <HugeIcons
+        aria-hidden="true"
+        className="absolute size-4 scale-0 opacity-0 transition-all group-data-[step-state=completed]/step:scale-100 group-data-[step-state=completed]/step:opacity-100"
+        icon={Tick01Icon}
+      />
+      {!!isLoading && (
+        <span className="absolute transition-all">
+          <Spinner aria-hidden="true" className="size-3.5" />
+        </span>
       )}
-      data-slot="stepper-indicator"
-      data-state={state}
-      {...props}
-    >
-      {asChild ? (
-        children
-      ) : (
-        <>
-          <span className="transition-all group-data-[state=completed]/step:scale-0 group-data-loading/step:scale-0 group-data-[state=completed]/step:opacity-0 group-data-loading/step:opacity-0 group-data-loading/step:transition-none">
-            {step}
-          </span>
-          <HugeIcons
-            aria-hidden="true"
-            className="absolute size-4 scale-0 opacity-0 transition-all group-data-[state=completed]/step:scale-100 group-data-[state=completed]/step:opacity-100"
-            icon={Tick01Icon}
-          />
-          {!!isLoading && (
-            <span className="absolute transition-all">
-              <Spinner aria-hidden="true" className="size-3.5" />
-            </span>
-          )}
-        </>
-      )}
-    </span>
+    </>
   );
+
+  return useRender({
+    defaultTagName: "span",
+    render,
+    props: {
+      children: children ?? defaultChildren,
+      className: cn(
+        "relative flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs data-[step-state=active]:bg-primary data-[step-state=completed]:bg-primary data-[step-state=active]:text-primary-foreground data-[step-state=completed]:text-primary-foreground",
+        className
+      ),
+      "data-slot": "stepper-indicator",
+      "data-step-state": state,
+      ...props,
+    },
+  });
 }
 
 // StepperTitle
@@ -270,7 +262,7 @@ function StepperSeparator({
   return (
     <div
       className={cn(
-        "m-0.5 bg-muted group-data-[orientation=horizontal]/stepper:h-0.5 group-data-[orientation=vertical]/stepper:h-12 group-data-[orientation=horizontal]/stepper:w-full group-data-[orientation=vertical]/stepper:w-0.5 group-data-[orientation=horizontal]/stepper:flex-1 group-data-[state=completed]/step:bg-primary",
+        "m-0.5 bg-muted group-data-[orientation=horizontal]/stepper:h-0.5 group-data-[orientation=vertical]/stepper:h-12 group-data-[orientation=horizontal]/stepper:w-full group-data-[orientation=vertical]/stepper:w-0.5 group-data-[orientation=horizontal]/stepper:flex-1 group-data-[step-state=completed]/step:bg-primary",
         className
       )}
       data-slot="stepper-separator"

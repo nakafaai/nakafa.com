@@ -101,24 +101,22 @@ const CountrySelect = ({ value, onChange, options }: CountrySelectProps) => {
 
   return (
     <Popover modal onOpenChange={setOpen} open={open}>
-      <PopoverTrigger asChild>
-        <Button
-          className="inline-flex items-center rounded-r-none border px-3 hover:bg-accent hover:text-accent-foreground"
-          variant="ghost"
-        >
-          <FlagComponent
-            aria-hidden="true"
-            country={value}
-            countryName={value}
+      <PopoverTrigger
+        render={
+          <Button
+            className="inline-flex items-center rounded-r-none border px-3 hover:bg-accent hover:text-accent-foreground"
+            variant="ghost"
           />
-          <span className="text-muted-foreground">
-            <HugeIcons
-              aria-hidden="true"
-              className="ml-auto h-4 w-4 shrink-0 opacity-50"
-              icon={ArrowDown01Icon}
-            />
-          </span>
-        </Button>
+        }
+      >
+        <FlagComponent aria-hidden="true" country={value} countryName={value} />
+        <span className="text-muted-foreground">
+          <HugeIcons
+            aria-hidden="true"
+            className="ml-auto h-4 w-4 shrink-0 opacity-50"
+            icon={ArrowDown01Icon}
+          />
+        </span>
       </PopoverTrigger>
       <PopoverContent
         align="start"
