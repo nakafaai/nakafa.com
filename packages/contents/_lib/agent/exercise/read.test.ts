@@ -1,4 +1,8 @@
-import { getNakafaAgentExercise } from "@repo/contents/_lib/agent/exercise/read";
+import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import {
+  decodeNakafaAgentExerciseResult,
+  getNakafaAgentExercise,
+} from "@repo/contents/_lib/agent/exercise/read";
 import { Effect, Option } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
@@ -60,25 +64,16 @@ describe("Nakafa agent exercises", () => {
 
   it("fails with a typed read error when renderable exercise loading fails", async () => {
     vi.resetModules();
-    vi.doMock("@repo/contents/_lib/exercises/renderable", async () => {
-      const { NakafaAgentDataReadError } = await import(
-        "@repo/contents/_lib/agent/errors"
-      );
+    vi.doMock("@repo/contents/_lib/exercises/renderable", () => ({
+      getRenderableExercisesContent: () =>
+        Effect.fail(
+          new NakafaAgentDataReadError({
+            cause: "broken",
+            message: "Unable to read Nakafa exercise content.",
+          })
+        ),
+    }));
 
-      return {
-        getRenderableExercisesContent: () =>
-          Effect.fail(
-            new NakafaAgentDataReadError({
-              cause: "broken",
-              message: "Unable to read Nakafa exercise content.",
-            })
-          ),
-      };
-    });
-
-    const { NakafaAgentDataReadError } = await import(
-      "@repo/contents/_lib/agent/errors"
-    );
     const { getNakafaAgentExercise } = await import(
       "@repo/contents/_lib/agent/exercise/read"
     );
@@ -95,51 +90,47 @@ describe("Nakafa agent exercises", () => {
   });
 
   it("fails with a typed read error when the exercise result schema rejects output", async () => {
-    vi.resetModules();
-    vi.doMock("@repo/contents/_lib/exercises/renderable", () => ({
-      getRenderableExercisesContent: () =>
-        Effect.succeed([
-          {
-            answer: {
-              metadata: {
+    const error = await Effect.runPromise(
+      Effect.match(
+        decodeNakafaAgentExerciseResult({
+          content_ref: EXERCISE_CONTENT_ID,
+          count: 1,
+          exercise_number: null,
+          exercises: [
+            {
+              answer: {
+                raw: "Answer body",
                 title: "Answer",
               },
-              raw: "Answer body",
-            },
-            choices: {
-              en: [
+              choices: [
                 {
+                  correct: true,
                   label: "A",
-                  value: true,
                 },
               ],
-            },
-            number: 0,
-            question: {
-              metadata: {
+              number: 0,
+              question: {
+                raw: "Question body",
                 title: "Question",
               },
-              raw: "Question body",
             },
-          },
-        ]),
-    }));
-
-    const { NakafaAgentDataReadError } = await import(
-      "@repo/contents/_lib/agent/errors"
-    );
-    const { getNakafaAgentExercise } = await import(
-      "@repo/contents/_lib/agent/exercise/read"
-    );
-    const error = await Effect.runPromise(
-      Effect.match(getNakafaAgentExercise(EXERCISE_CONTENT_ID), {
-        onFailure: (failure) => failure,
-        onSuccess: () => null,
-      })
+          ],
+          locale: "en",
+          markdown_url:
+            "/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2.md",
+          path: "high-school/snbt/general-knowledge/try-out/2026/set-2",
+          section: "exercises",
+          source_url:
+            "/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2",
+          title: "Exercise Set",
+        }),
+        {
+          onFailure: (failure) => failure,
+          onSuccess: () => null,
+        }
+      )
     );
 
     expect(error).toBeInstanceOf(NakafaAgentDataReadError);
-    vi.doUnmock("@repo/contents/_lib/exercises/renderable");
-    vi.resetModules();
   });
 });

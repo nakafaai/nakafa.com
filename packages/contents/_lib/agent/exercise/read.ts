@@ -43,38 +43,44 @@ export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
       "exercises"
     );
 
-    const result = yield* Effect.try({
-      try: () =>
-        Schema.decodeUnknownSync(NakafaAgentExerciseResultSchema)({
-          ...setRef,
-          count: selectedExercises.length,
-          exercise_number: target.number,
-          exercises: selectedExercises.map((exercise) => ({
-            answer: {
-              raw: exercise.answer.raw,
-              title: exercise.answer.metadata.title,
-            },
-            choices: exercise.choices[ref.value.locale].map((choice) => ({
-              correct: choice.value,
-              label: choice.label,
-            })),
-            number: exercise.number,
-            question: {
-              raw: exercise.question.raw,
-              title: exercise.question.metadata.title,
-            },
-          })),
-        }),
-      catch: (error) =>
-        new NakafaAgentDataReadError({
-          cause: getUnknownErrorMessage(error),
-          message: "Unable to build Nakafa exercise read model.",
-        }),
+    const result = yield* decodeNakafaAgentExerciseResult({
+      ...setRef,
+      count: selectedExercises.length,
+      exercise_number: target.number,
+      exercises: selectedExercises.map((exercise) => ({
+        answer: {
+          raw: exercise.answer.raw,
+          title: exercise.answer.metadata.title,
+        },
+        choices: exercise.choices[ref.value.locale].map((choice) => ({
+          correct: choice.value,
+          label: choice.label,
+        })),
+        number: exercise.number,
+        question: {
+          raw: exercise.question.raw,
+          title: exercise.question.metadata.title,
+        },
+      })),
     });
 
     return Option.some(result);
   }
 );
+
+/** Validates and decodes the exercise read model with a typed data-read error. */
+export const decodeNakafaAgentExerciseResult = Effect.fn(
+  "NakafaAgent.decodeExerciseResult"
+)(function* (input: unknown) {
+  return yield* Effect.try({
+    try: () => Schema.decodeUnknownSync(NakafaAgentExerciseResultSchema)(input),
+    catch: (error) =>
+      new NakafaAgentDataReadError({
+        cause: getUnknownErrorMessage(error),
+        message: "Unable to build Nakafa exercise read model.",
+      }),
+  });
+});
 
 /** Resolves whether the input route points to a set or a numbered exercise. */
 function getNakafaExerciseTarget(route: string, exerciseNumber?: number) {
