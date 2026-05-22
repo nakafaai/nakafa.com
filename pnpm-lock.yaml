@@ -391,9 +391,6 @@ importers:
       use-context-selector:
         specifier: ^2.0.0
         version: 2.0.0(react@19.2.6)(scheduler@0.27.0)
-      use-sound:
-        specifier: ^5.0.0
-        version: 5.0.0(react@19.2.6)
       virtua:
         specifier: ^0.49.1
         version: 0.49.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -6068,9 +6065,6 @@ packages:
     resolution: {integrity: sha512-uV63apnb0kyPtAUwoWgaGh9HyIFcv8lgmzPZSiTBQAFOFGIzka5EZ1dZocmGnn0XdX0+XTqJ6Tqv7selMuGLRQ==}
     engines: {node: '>=16.9.0'}
 
-  howler@2.2.4:
-    resolution: {integrity: sha512-iARIBPgcQrwtEr+tALF+rapJ8qSc+Set2GJQl7xT1MQzWaVkFebdJhR3alVlSiUf5U7nAANKuj3aWpwerocD5w==}
-
   html-encoding-sniffer@6.0.0:
     resolution: {integrity: sha512-CV9TW3Y3f8/wT0BRFc1/KAVQ3TUHiXmaAb6VW9vtiMFf7SLoMd1PdAc4W3KFOFETBJUb90KatHqlsZMWV+R9Gg==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
@@ -8349,11 +8343,6 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
-
-  use-sound@5.0.0:
-    resolution: {integrity: sha512-MNHT3FFC5HxNCrgZtrnpIMJI2cw/0D2xismcrtyht8BTuF5FhFhb57xO/jlQr2xJaFrc/0btzRQvGyHQwB7PVA==}
-    peerDependencies:
-      react: '>=16.8'
 
   use-stick-to-bottom@1.1.4:
     resolution: {integrity: sha512-2w/lydkrwhWMv1vCaEhYbzMDhgbwIodHpAHPV0/xKJErRkbjDEUe1EWmvr6Fwb+qhiERjc1EWgAEZaSaF69CpA==}
@@ -13323,8 +13312,6 @@ snapshots:
 
   hono@4.12.21: {}
 
-  howler@2.2.4: {}
-
   html-encoding-sniffer@6.0.0(@noble/hashes@2.2.0):
     dependencies:
       '@exodus/bytes': 1.15.0(@noble/hashes@2.2.0)
@@ -16095,11 +16082,6 @@ snapshots:
       use-isomorphic-layout-effect: 1.2.1(@types/react@19.2.15)(react@19.2.6)
     optionalDependencies:
       '@types/react': 19.2.15
-
-  use-sound@5.0.0(react@19.2.6):
-    dependencies:
-      howler: 2.2.4
-      react: 19.2.6
 
   use-stick-to-bottom@1.1.4(react@19.2.6):
     dependencies:

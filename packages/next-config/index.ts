@@ -14,6 +14,12 @@ const BASE_CONTENT_SECURITY_POLICY = {
     "https://www.youtube-nocookie.com",
     "https://www.youtube.com",
   ],
+  mediaSrc: [
+    "'self'",
+    "https://*.convex.cloud",
+    "https://cdn.alquran.cloud",
+    "https://cdn.islamic.network",
+  ],
   scriptSrc: [
     "'self'",
     "'unsafe-eval'",
@@ -48,7 +54,7 @@ export function createSecurityHeaders() {
         "font-src 'self'",
         `connect-src ${BASE_CONTENT_SECURITY_POLICY.connectSrc.join(" ")}`,
         "frame-src 'self' https://accounts.google.com https://www.youtube-nocookie.com https://www.youtube.com",
-        "media-src 'self' https://*.convex.cloud https://cdn.islamic.network",
+        `media-src ${BASE_CONTENT_SECURITY_POLICY.mediaSrc.join(" ")}`,
         "frame-ancestors 'none'",
         "base-uri 'self'",
         "form-action 'self' https://accounts.google.com",
