@@ -4,7 +4,13 @@ import type { ReactNode } from "react";
 
 export type BiologyScenePoint = readonly [number, number, number];
 
+export interface BiologyLabCallout {
+  id: string;
+  label: string;
+}
+
 export interface BiologyLabItem {
+  callouts?: readonly BiologyLabCallout[];
   caption: ReactNode;
   focus: ReactNode;
   tab: string;

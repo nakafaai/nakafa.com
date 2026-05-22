@@ -7,6 +7,10 @@ import {
   type BiologyScenePoint,
   createBiologySpherePoints,
 } from "@repo/design-system/components/contents/biology/data";
+import {
+  DnaDoubleHelix,
+  RnaSingleStrand,
+} from "@repo/design-system/components/contents/biology/parts";
 import { Quaternion, Vector3 } from "three";
 
 const VECTOR_UP = new Vector3(0, 1, 0);
@@ -116,10 +120,15 @@ export function MiniEnvelopedVirion({
         <icosahedronGeometry args={[0.13, 1]} />
         <meshStandardMaterial color={colors.pathogen} roughness={0.72} />
       </mesh>
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.075, 0.01, 6, 32]} />
-        <meshStandardMaterial color={colors.genome} />
-      </mesh>
+      <group rotation={[0.2, 0.1, -0.4]} scale={0.38}>
+        <RnaSingleStrand
+          backboneColor={colors.genome}
+          baseColor={colors.microbe}
+          lineWidth={2}
+          radius={0.04}
+          turns={1.4}
+        />
+      </group>
       {MINI_VIRION_SPIKES.map((anchor) => (
         <VirusSurfaceSpike
           anchor={anchor}
@@ -147,10 +156,15 @@ export function BacteriophageModel({
         <icosahedronGeometry args={[0.2, 1]} />
         <meshStandardMaterial color={colors.pathogen} roughness={0.66} />
       </mesh>
-      <mesh position={[0, 0.26, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.085, 0.012, 6, 28]} />
-        <meshStandardMaterial color={colors.genome} />
-      </mesh>
+      <group position={[0, 0.26, 0]} rotation={[0.18, 0, -0.42]} scale={0.38}>
+        <DnaDoubleHelix
+          backboneColor={colors.genome}
+          pairColor={colors.arrow}
+          pairLineWidth={0.8}
+          radius={0.045}
+          turns={1.15}
+        />
+      </group>
       <mesh position={[0, 0.02, 0]}>
         <cylinderGeometry args={[0.065, 0.065, 0.16, 12]} />
         <meshStandardMaterial color={colors.arrow} roughness={0.74} />
