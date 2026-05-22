@@ -1,62 +1,64 @@
-import { VirusRoleLab } from "@repo/design-system/components/contents/biology/lab";
+import { VirusRoleLab } from "@repo/design-system/components/contents/biology/virus-role";
 
 export const metadata = {
   title: "Peranan Virus",
   description:
-    "Pelajari peran virus sebagai penyebab penyakit, pengatur populasi mikroba, dan alat penting dalam bioteknologi.",
+    "Membedakan peran virus sebagai penyebab penyakit, pengendali mikroba, dan alat bioteknologi.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Virus dan Peranannya",
 };
 
-## Virus Tidak Selalu Dibaca dari Satu Sisi
+## Peran virus bergantung pada konteks
 
-Virus dapat menyebabkan penyakit, tetapi virus juga berperan dalam ekosistem dan riset. Bakteriofag, yaitu virus yang menginfeksi bakteri, dapat memengaruhi jumlah bakteri di lingkungan.
-
-NCBI Bookshelf menjelaskan bakteriofag sebagai virus yang menginfeksi bakteri dan banyak dipakai untuk mempelajari biologi molekuler di [Bacteriophages](https://www.ncbi.nlm.nih.gov/books/NBK493185/).
+Virus memang dapat menyebabkan penyakit, tetapi biologi virus tidak berhenti di situ. Buku IPA SMA/MA Kelas X Bab II memberi contoh virus sebagai penyebab penyakit sekaligus alat bioteknologi, misalnya vektor terapi gen, pembuatan vaksin, dan virus onkolitik. OpenStax juga menekankan bahwa virus menginfeksi hampir semua bentuk kehidupan, dari bakteri sampai eukariota, pada bagian [Viral Evolution, Morphology, and Classification](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
 
 <VirusRoleLab
-  title={<>Tiga Cara Membaca Peran Virus</>}
-  description={<>Pilih peran untuk melihat mengapa virus perlu dibaca dalam konteksnya.</>}
+  title={<>Tiga konteks peran virus</>}
+  description={<>Ganti mode untuk melihat mengapa virus tidak cukup dipahami sebagai satu label: penyakit.</>}
   labels={{
-    chooseMode: "Pilih peran",
+    chooseMode: "Pilih konteks",
     detailLabel: "Catatan akurasi",
     sourceNoteLabel: "Rujukan model",
-    structureLabel: "Struktur yang dibaca",
+    structureLabel: "Hubungan yang dibaca",
     viewLabel: "Model 3D peran virus",
-    sourceNote: <>Model merangkum konsep patogen, bakteriofag, dan vektor bioteknologi dari OpenStax dan NCBI.</>,
+    sourceNote: <>Contoh peran mengikuti Buku IPA SMA/MA Kelas X Bab II dan rujukan OpenStax tentang keragaman inang virus.</>,
     items: [
       {
         tab: "Penyakit",
-        label: "Patogen",
-        structure: "Virus dapat merusak jaringan saat bereplikasi di sel inang.",
-        caption: <>Dampak penyakit muncul dari interaksi virus, sel inang, dan respons imun.</>,
-        detail: <>Model tidak menyatakan semua virus menyebabkan penyakit berat.</>,
+        label: "Penyakit",
+        structure: "Virus merusak atau mengganggu fungsi sel inang.",
+        caption: <>Pada konteks penyakit, dampak terlihat ketika infeksi mengubah kerja jaringan atau memicu respons imun berlebihan.</>,
+        detail: <>Model menampilkan sel inang dengan banyak partikel virus untuk menekankan beban infeksi.</>,
       },
       {
         tab: "Ekologi",
-        label: "Pengatur mikroba",
-        structure: "Bakteriofag dapat menginfeksi bakteri dan memengaruhi komunitas mikroba.",
-        caption: <>Di lingkungan, virus ikut membentuk dinamika populasi mikroorganisme.</>,
-        detail: <>Hubungan ini kompleks dan bergantung pada jenis virus serta inangnya.</>,
+        label: "Ekologi",
+        structure: "Virus dapat menginfeksi mikroba dan memengaruhi populasi.",
+        caption: <>Bakteriofag, yaitu virus yang menginfeksi bakteri, dapat memengaruhi jumlah bakteri dalam lingkungan.</>,
+        detail: <>Model memakai sel bakteri karena peran ekologis virus sering dibahas melalui fag dan komunitas mikroba.</>,
       },
       {
-        tab: "Riset",
-        label: "Vektor",
-        structure: "Virus dapat dimodifikasi untuk membawa materi genetik dalam riset.",
-        caption: <>Dalam bioteknologi, kemampuan virus masuk ke sel dapat dimanfaatkan dengan kontrol ketat.</>,
-        detail: <>Pemanfaatan ini membutuhkan desain keselamatan dan etika yang kuat.</>,
+        tab: "Biotek",
+        label: "Bioteknologi",
+        structure: "Virus dimodifikasi untuk membawa materi genetik tertentu.",
+        caption: <>Dalam bioteknologi, bagian virus dapat dipakai sebagai vektor, yaitu pembawa gen ke sel target.</>,
+        detail: <>Model menyederhanakan viral vector sebagai partikel pembawa gen, bukan prosedur klinis lengkap.</>,
       },
     ],
   }}
 />
 
-## Membaca Manfaat tanpa Mengabaikan Risiko
+## Satu objek biologi dapat punya dampak berbeda
 
-Satu virus dapat merugikan di satu konteks, tetapi berguna di konteks riset. Cara berpikir yang tepat bukan menganggap semua virus baik atau buruk, melainkan bertanya: virus apa, inangnya siapa, dan dalam kondisi apa?
+Cara berpikir yang rapi adalah memisahkan mekanisme dan dampak. Mekanisme dasar virus adalah masuk ke sel dan memakai sistem sel. Dampaknya bisa penyakit, perubahan populasi mikroba, atau pemanfaatan dalam riset dan terapi. Dari sini kita tidak jatuh ke dua ekstrem: menganggap semua virus selalu buruk, atau mengabaikan risiko infeksi.
 
-## Cek Pemahaman
+Dalam pembelajaran SMA, peran virus sebaiknya dibaca sebagai peta konteks. Pertanyaan utamanya: virus ini menginfeksi siapa, lewat jalur apa, dan apa akibatnya pada tingkat sel, organisme, atau ekosistem?
 
-Mengapa bakteriofag tidak langsung dianggap berbahaya bagi manusia?
+## Cek pemahaman
 
-Karena bakteriofag menginfeksi bakteri. Dampaknya pada manusia bergantung pada bakteri target dan konteks penggunaannya.
+Mengapa virus dapat menjadi penyebab penyakit tetapi juga alat bioteknologi?
+
+Jawaban: karena mekanisme masuk ke sel dapat menimbulkan kerusakan pada infeksi alami, tetapi dapat dimanfaatkan secara terkendali untuk membawa materi genetik.
+
+Alasan: konteks penggunaan dan pengendalian risikonya berbeda, meskipun objek biologinya sama-sama virus.

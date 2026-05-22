@@ -1,62 +1,62 @@
-import { BiodiversityLevelsLab } from "@repo/design-system/components/contents/biology/lab";
+import { BiodiversityLevelsLab } from "@repo/design-system/components/contents/biology/biodiversity-levels";
 
 export const metadata = {
   title: "Keanekaragaman Hayati",
   description:
-    "Pelajari tiga tingkat keanekaragaman hayati: gen, spesies, dan ekosistem melalui model 3D yang saling terhubung.",
+    "Membaca keanekaragaman hayati pada tingkat gen, spesies, dan ekosistem dengan contoh yang terhubung.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Keanekaragaman Makhluk Hidup",
 };
 
-## Keanekaragaman Tidak Hanya Berarti Banyak Spesies
+## Keanekaragaman dibaca pada tiga tingkat
 
-Keanekaragaman hayati adalah variasi kehidupan. Variasi ini dapat dibaca pada tingkat gen, spesies, dan ekosistem. Jadi, dua padi yang berbeda varietasnya, banyak jenis burung, dan hutan bakau yang berbeda dari hutan hujan semuanya termasuk cara membaca keanekaragaman.
-
-OpenStax Biology 2e menjelaskan nilai biodiversitas pada tingkat genetik, spesies, dan ekosistem di [The Importance of Biodiversity to Human Life](https://openstax.org/books/biology-2e/pages/47-3-the-importance-of-biodiversity-to-human-life).
+Keanekaragaman hayati adalah variasi kehidupan. Buku IPA SMA/MA Kelas X Bab VI membaginya menjadi keanekaragaman gen, spesies, dan ekosistem. OpenStax juga memakai tingkat genetik, spesies, dan ekosistem untuk menjelaskan nilai biodiversitas pada [The Importance of Biodiversity to Human Life](https://openstax.org/books/biology-2e/pages/47-3-the-importance-of-biodiversity-to-human-life).
 
 <BiodiversityLevelsLab
-  title={<>Tingkat Keanekaragaman</>}
-  description={<>Pilih tingkatnya, lalu perhatikan skala yang sedang dibandingkan.</>}
+  title={<>Tiga skala biodiversitas</>}
+  description={<>Pindah tingkat untuk melihat apakah variasi terjadi di dalam satu jenis, antarjenis, atau antarhabitat.</>}
   labels={{
     chooseMode: "Pilih tingkat",
     detailLabel: "Catatan akurasi",
     sourceNoteLabel: "Rujukan model",
-    structureLabel: "Struktur yang dibaca",
+    structureLabel: "Skala yang dibaca",
     viewLabel: "Model 3D tingkat biodiversitas",
-    sourceNote: <>Model mengikuti pembagian genetik, spesies, dan ekosistem yang umum dipakai dalam biologi konservasi.</>,
+    sourceNote: <>Model mengikuti pembagian gen, spesies, dan ekosistem dalam Buku IPA SMA/MA Kelas X Bab VI dan OpenStax Biology 2e.</>,
     items: [
       {
         tab: "Gen",
         label: "Gen",
-        structure: "Variasi sifat di dalam satu jenis makhluk hidup.",
-        caption: <>Variasi gen membantu populasi beradaptasi saat lingkungan berubah.</>,
-        detail: <>Model memakai titik berbeda untuk mewakili variasi dalam satu populasi.</>,
+        structure: "Variasi sifat di dalam satu spesies.",
+        caption: <>Varietas padi atau mangga yang berbeda menunjukkan variasi genetik, meskipun masih satu spesies.</>,
+        detail: <>Titik gen pada model bukan data sekuens, melainkan penanda variasi sifat dalam populasi.</>,
       },
       {
         tab: "Spesies",
         label: "Spesies",
-        structure: "Banyaknya jenis makhluk hidup yang berbeda dalam suatu tempat.",
-        caption: <>Semakin banyak jenis yang seimbang, semakin kaya komunitasnya.</>,
-        detail: <>Jumlah titik bukan data lapangan, tetapi representasi hubungan antarjenis.</>,
+        structure: "Banyaknya jenis makhluk hidup dalam komunitas.",
+        caption: <>Burung, tumbuhan, jamur, dan mikroba yang hidup bersama menunjukkan tingkat spesies.</>,
+        detail: <>Bentuk berbeda dipakai agar murid membaca perbedaan jenis, bukan jumlah individu saja.</>,
       },
       {
         tab: "Ekosistem",
         label: "Ekosistem",
-        structure: "Variasi habitat dan interaksi antara makhluk hidup dengan lingkungannya.",
-        caption: <>Ekosistem berbeda menyediakan relung dan tekanan lingkungan berbeda.</>,
-        detail: <>Model menekankan skala, bukan batas peta ekosistem tertentu.</>,
+        structure: "Variasi habitat dan interaksi makhluk hidup dengan lingkungannya.",
+        caption: <>Hutan hujan, mangrove, dan savana berbeda karena faktor fisik dan komunitasnya berbeda.</>,
+        detail: <>Sungai, tanah, dan pohon pada model menekankan habitat, bukan peta lokasi tertentu.</>,
       },
     ],
   }}
 />
 
-## Mengapa Tiga Tingkat Ini Dipisahkan
+## Satu tempat bisa kaya di satu tingkat dan miskin di tingkat lain
 
-Satu kebun bisa punya banyak tanaman, tetapi jika semuanya berasal dari satu varietas yang sama, tingkat genetiknya sempit. Sebaliknya, satu hutan dapat terlihat mirip dari jauh, tetapi menyimpan banyak mikrohabitat.
+Sebuah kebun dapat punya banyak pohon mangga, tetapi jika semua berasal dari varietas yang sama, variasi genetiknya sempit. Sebaliknya, satu kawasan hutan dapat menyimpan banyak jenis organisme sekaligus banyak mikrohabitat. Karena itu pertanyaan "biodiversitasnya tinggi atau rendah" harus selalu diikuti pertanyaan: tingkat yang mana?
 
-## Cek Pemahaman
+## Cek pemahaman
 
-Jika satu daerah punya banyak varietas mangga, tetapi semuanya masih satu spesies, tingkat keanekaragaman apa yang paling langsung terlihat?
+Jika satu daerah punya banyak varietas pisang, tetapi semuanya masih termasuk pisang, tingkat keanekaragaman apa yang paling langsung terlihat?
 
-Tingkat genetik, karena variasinya berada di dalam satu spesies.
+Jawaban: keanekaragaman gen.
+
+Alasan: variasi terjadi di dalam satu kelompok jenis, bukan antarspesies atau antarekosistem.

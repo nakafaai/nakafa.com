@@ -1,62 +1,62 @@
-import { FungiGrowthLab } from "@repo/design-system/components/contents/biology/lab";
+import { FungiGrowthLab } from "@repo/design-system/components/contents/biology/fungi";
 
 export const metadata = {
   title: "Fungi",
   description:
-    "Pelajari struktur fungi, hifa, miselium, spora, dan perannya sebagai pengurai dalam ekosistem.",
+    "Mengenal fungi sebagai organisme heterotrof yang menyerap nutrien melalui hifa, miselium, dan spora.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Keanekaragaman Makhluk Hidup",
 };
 
-## Fungi Bukan Tumbuhan
+## Fungi menyerap nutrien dari lingkungan
 
-Fungi tidak berfotosintesis seperti tumbuhan. Banyak fungi memperoleh nutrisi dengan menyerap zat organik dari lingkungan. Tubuh fungi multiseluler tersusun dari hifa, yaitu benang-benang halus yang membentuk jaringan miselium.
-
-OpenStax Biology 2e menjelaskan struktur hifa dan peran fungi dalam ekosistem di [Characteristics of Fungi](https://openstax.org/books/biology-2e/pages/24-1-characteristics-of-fungi).
+Fungi bukan tumbuhan. Fungi adalah eukariot heterotrof, artinya memperoleh bahan organik dari organisme lain atau sisa organisme. Buku IPA SMA/MA Kelas X Bab VI menjelaskan hifa, miselium, dinding sel kitin, dan spora. OpenStax menjelaskan fungi sebagai heterotrof yang menyerap nutrien dan berperan sebagai pengurai pada [Characteristics of Fungi](https://openstax.org/books/biology-2e/pages/24-1-characteristics-of-fungi).
 
 <FungiGrowthLab
-  title={<>Model Pertumbuhan Fungi</>}
-  description={<>Pilih struktur fungi untuk melihat hubungan hifa, miselium, dan spora.</>}
+  title={<>Cara tubuh fungi bekerja</>}
+  description={<>Pilih mode untuk melihat jaringan hifa, pelepasan spora, atau hubungan fungi dengan akar dan bahan mati.</>}
   labels={{
-    chooseMode: "Pilih struktur",
+    chooseMode: "Pilih mode",
     detailLabel: "Catatan akurasi",
     sourceNoteLabel: "Rujukan model",
     structureLabel: "Struktur yang dibaca",
     viewLabel: "Model 3D fungi",
-    sourceNote: <>Model disederhanakan dari penjelasan OpenStax tentang hifa, miselium, dan spora fungi.</>,
+    sourceNote: <>Model mengikuti Buku IPA SMA/MA Kelas X Bab VI dan OpenStax tentang hifa, miselium, spora, kitin, dan peran pengurai.</>,
     items: [
       {
         tab: "Hifa",
         label: "Hifa",
-        structure: "Benang halus yang menyerap nutrisi dari lingkungan.",
-        caption: <>Hifa memperluas area kontak fungi dengan sumber makanan.</>,
-        detail: <>Model menggambarkan arah pertumbuhan, bukan semua detail dinding sel.</>,
-      },
-      {
-        tab: "Miselium",
-        label: "Miselium",
-        structure: "Jaringan hifa yang membentuk tubuh utama banyak fungi.",
-        caption: <>Bagian fungi yang terlihat hanya sebagian dari jaringan yang lebih luas.</>,
-        detail: <>Kepadatan jaringan di model disederhanakan agar mudah dibaca.</>,
+        structure: "Benang sel fungi yang menyerap nutrien.",
+        caption: <>Jaringan hifa membentuk miselium. Permukaan yang luas membantu fungi menyerap hasil penguraian.</>,
+        detail: <>Cabang pada model menggambarkan pertumbuhan menjelajah substrat, bukan satu spesies jamur tertentu.</>,
       },
       {
         tab: "Spora",
         label: "Spora",
-        structure: "Sel reproduksi yang dapat menyebar dan tumbuh di tempat baru.",
-        caption: <>Spora membantu fungi menyebar ketika kondisi mendukung.</>,
-        detail: <>Ukuran spora dibuat besar agar terlihat di model.</>,
+        structure: "Sel reproduksi yang dapat menyebar dan tumbuh.",
+        caption: <>Spora membantu fungi menyebar ke tempat baru saat kondisi mendukung.</>,
+        detail: <>Titik spora dibuat banyak karena satu tubuh buah dapat menghasilkan banyak spora.</>,
+      },
+      {
+        tab: "Peran",
+        label: "Peran",
+        structure: "Fungi dapat mengurai bahan mati atau bermutualisme dengan tumbuhan.",
+        caption: <>Mikoriza adalah hubungan fungi dan akar tumbuhan yang membantu pertukaran air dan nutrien.</>,
+        detail: <>Model menghubungkan kayu mati, jaringan hifa, dan akar untuk menekankan aliran materi.</>,
       },
     ],
   }}
 />
 
-## Pengurai yang Mengembalikan Materi
+## Cara makan fungi berbeda dari hewan
 
-Fungi membantu menguraikan sisa makhluk hidup. Peran ini mengembalikan unsur hara ke tanah sehingga materi dapat digunakan lagi oleh organisme lain.
+Hewan biasanya mencerna makanan di dalam tubuh. Fungi mengeluarkan enzim ke lingkungan, memecah molekul besar, lalu menyerap molekul yang lebih kecil. Inilah alasan fungi penting sebagai pengurai dalam ekosistem. Tanpa pengurai, unsur hara akan lebih lama terkunci dalam sisa makhluk hidup.
 
-## Cek Pemahaman
+## Cek pemahaman
 
-Mengapa fungi tidak dikelompokkan sebagai tumbuhan hanya karena hidup diam di satu tempat?
+Mengapa miselium membantu fungi mendapatkan nutrien?
 
-Karena fungi tidak berfotosintesis dan memperoleh nutrisi dengan cara menyerap zat organik.
+Jawaban: miselium memperluas permukaan kontak dengan substrat.
+
+Alasan: semakin luas jaringan hifa, semakin banyak area yang dapat mengeluarkan enzim dan menyerap hasil penguraian.

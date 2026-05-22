@@ -1,62 +1,62 @@
-import { EcosystemOrganismsLab } from "@repo/design-system/components/contents/biology/lab";
+import { EcosystemOrganismsLab } from "@repo/design-system/components/contents/biology/ecosystem";
 
 export const metadata = {
   title: "Makhluk Hidup dalam Ekosistem",
   description:
-    "Pelajari peran produsen, konsumen, dan pengurai dalam ekosistem serta bagaimana energi dan materi bergerak.",
+    "Membaca peran produsen, konsumen, pengurai, aliran energi, dan interaksi dalam ekosistem.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Keanekaragaman Makhluk Hidup",
 };
 
-## Ekosistem Dibangun oleh Hubungan
+## Ekosistem bekerja lewat aliran energi
 
-Ekosistem adalah hubungan antara makhluk hidup dan lingkungan fisiknya. Di dalamnya ada produsen, konsumen, pengurai, aliran energi, dan daur materi.
-
-OpenStax Biology 2e menjelaskan aliran energi dan struktur ekosistem di [Energy Flow through Ecosystems](https://openstax.org/books/biology-2e/pages/46-2-energy-flow-through-ecosystems).
+Ekosistem adalah hubungan antara makhluk hidup dan lingkungan fisiknya. Buku IPA SMA/MA Kelas X Bab VI mengantar pembahasan organisme dalam ekosistem melalui aliran energi dan daur materi. OpenStax menjelaskan bahwa energi mengalir melalui tingkat trofik dan materi didaur ulang dalam [Ecology of Ecosystems](https://openstax.org/books/biology-2e/pages/46-1-ecology-of-ecosystems).
 
 <EcosystemOrganismsLab
-  title={<>Jaringan Peran Ekosistem</>}
-  description={<>Pilih peran organisme untuk melihat hubungan energi dan materi.</>}
+  title={<>Peran organisme dalam ekosistem</>}
+  description={<>Pilih hubungan untuk melihat rantai makanan, piramida energi, atau interaksi relung.</>}
   labels={{
-    chooseMode: "Pilih peran",
+    chooseMode: "Pilih hubungan",
     detailLabel: "Catatan akurasi",
     sourceNoteLabel: "Rujukan model",
-    structureLabel: "Struktur yang dibaca",
-    viewLabel: "Model 3D organisme dalam ekosistem",
-    sourceNote: <>Model mengikuti konsep produsen, konsumen, dan pengurai dalam aliran energi ekosistem.</>,
+    structureLabel: "Relasi yang dibaca",
+    viewLabel: "Model 3D organisme ekosistem",
+    sourceNote: <>Model mengikuti Buku IPA SMA/MA Kelas X Bab VI dan OpenStax tentang aliran energi, tingkat trofik, dan daur materi.</>,
     items: [
       {
-        tab: "Produsen",
-        label: "Produsen",
-        structure: "Organisme yang membuat bahan organik, biasanya lewat fotosintesis.",
-        caption: <>Produsen menjadi pintu masuk energi bagi banyak jaring makanan.</>,
-        detail: <>Model menampilkan hubungan umum, bukan satu ekosistem spesifik.</>,
+        tab: "Rantai",
+        label: "Rantai makanan",
+        structure: "Produsen, konsumen, dan pengurai saling terhubung.",
+        caption: <>Energi masuk lewat produsen, berpindah ke konsumen, lalu materi dikembalikan oleh pengurai.</>,
+        detail: <>Panah menunjukkan arah perpindahan energi, bukan semua hubungan makan di ekosistem nyata.</>,
       },
       {
-        tab: "Konsumen",
-        label: "Konsumen",
-        structure: "Organisme yang memperoleh energi dengan memakan organisme lain.",
-        caption: <>Konsumen menghubungkan tingkat trofik dalam jaring makanan.</>,
-        detail: <>Panah menunjukkan arah perpindahan energi yang disederhanakan.</>,
+        tab: "Energi",
+        label: "Piramida energi",
+        structure: "Energi yang tersedia menurun pada tingkat trofik lebih tinggi.",
+        caption: <>Piramida energi membantu menjelaskan mengapa predator puncak biasanya lebih sedikit daripada produsen.</>,
+        detail: <>Lebar tingkat dibuat berbeda untuk menekankan penurunan energi yang tersedia.</>,
       },
       {
-        tab: "Pengurai",
-        label: "Pengurai",
-        structure: "Organisme yang menguraikan sisa makhluk hidup dan mengembalikan materi.",
-        caption: <>Tanpa pengurai, unsur hara lebih lambat kembali ke lingkungan.</>,
-        detail: <>Peran bakteri dan fungi disatukan sebagai pengurai untuk fokus konsep.</>,
+        tab: "Relung",
+        label: "Relung",
+        structure: "Organisme punya peran dan hubungan khas di habitatnya.",
+        caption: <>Relung mencakup apa yang dimakan, siapa yang memakan, tempat hidup, dan interaksi seperti mutualisme.</>,
+        detail: <>Model menaruh mutualisme, predasi, dan penguraian dalam satu ruang agar hubungan tidak dibaca terpisah.</>,
       },
     ],
   }}
 />
 
-## Energi Mengalir, Materi Berputar
+## Hubungan lebih penting daripada daftar nama
 
-Energi biasanya mengalir dari produsen ke konsumen lalu hilang sebagai panas. Materi seperti karbon, nitrogen, dan mineral dapat berputar kembali melalui penguraian.
+Menghafal nama produsen dan konsumen belum cukup. Ekosistem dipahami saat kita melihat hubungan: dari mana energi masuk, ke mana materi kembali, dan apa yang terjadi jika satu populasi berubah. Itulah sebabnya jaring-jaring makanan lebih realistis daripada satu rantai makanan lurus, meskipun rantai makanan berguna sebagai langkah awal.
 
-## Cek Pemahaman
+## Cek pemahaman
 
-Mengapa pengurai penting walaupun tidak selalu terlihat dalam rantai makanan sederhana?
+Mengapa pengurai tetap penting meskipun tidak selalu berada di puncak rantai makanan?
 
-Karena pengurai mengembalikan materi dari sisa organisme ke lingkungan sehingga dapat digunakan lagi.
+Jawaban: pengurai mengembalikan materi dari sisa organisme ke lingkungan.
+
+Alasan: energi mengalir, tetapi materi perlu didaur ulang agar unsur hara dapat dipakai kembali oleh produsen.

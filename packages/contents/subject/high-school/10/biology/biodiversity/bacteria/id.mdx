@@ -1,62 +1,62 @@
-import { BacteriaStructureLab } from "@repo/design-system/components/contents/biology/lab";
+import { BacteriaStructureLab } from "@repo/design-system/components/contents/biology/bacteria";
 
 export const metadata = {
   title: "Bakteri",
   description:
-    "Pelajari struktur dasar bakteri, bentuk umum, dan mengapa bakteri dapat merugikan sekaligus bermanfaat.",
+    "Mengenal bakteri sebagai sel prokariotik melalui bentuk, struktur, dinding sel, dan perannya.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Keanekaragaman Makhluk Hidup",
 };
 
-## Sel Kecil dengan Dampak Besar
+## Bakteri adalah sel prokariotik
 
-Bakteri adalah organisme prokariotik, artinya tidak memiliki inti sel bermembran. Materi genetiknya berada di daerah nukleoid, sementara ribosom dan sitoplasma berada di dalam membran sel.
-
-OpenStax Biology 2e menjelaskan struktur prokariota dan variasi bentuknya di [Prokaryotic Cells](https://openstax.org/books/biology-2e/pages/4-2-prokaryotic-cells).
+Bakteri adalah organisme uniseluler prokariotik. Prokariotik berarti selnya tidak memiliki inti bermembran. Buku IPA SMA/MA Kelas X Bab VI menekankan bentuk bakteri seperti kokus, basilus, dan spiral, serta struktur seperti dinding sel, membran, sitoplasma, ribosom, dan nukleoid. OpenStax menjelaskan bentuk umum prokariota dan struktur dasarnya pada [Structure of Prokaryotes: Bacteria and Archaea](https://openstax.org/books/biology-2e/pages/22-2-structure-of-prokaryotes-bacteria-and-archaea).
 
 <BacteriaStructureLab
-  title={<>Model Sel Bakteri</>}
-  description={<>Pilih bagian sel untuk membaca fungsi dasar struktur bakteri.</>}
+  title={<>Bentuk dan bagian bakteri</>}
+  description={<>Pilih fokus untuk membaca bentuk sel, isi sel, atau perbedaan lapisan dinding bakteri.</>}
   labels={{
-    chooseMode: "Pilih bagian",
+    chooseMode: "Pilih fokus",
     detailLabel: "Catatan akurasi",
     sourceNoteLabel: "Rujukan model",
-    structureLabel: "Struktur yang dibaca",
+    structureLabel: "Bagian yang dibaca",
     viewLabel: "Model 3D bakteri",
-    sourceNote: <>Model mengikuti struktur umum prokariota dari OpenStax: membran, dinding sel, nukleoid, dan ribosom.</>,
+    sourceNote: <>Model mengikuti Buku IPA SMA/MA Kelas X Bab VI dan OpenStax tentang bentuk kokus, basilus, spiril, nukleoid, ribosom, dan dinding sel.</>,
     items: [
       {
         tab: "Bentuk",
-        label: "Bentuk sel",
-        structure: "Bakteri dapat berbentuk bulat, batang, atau spiral.",
-        caption: <>Model memakai bentuk batang agar ruang struktur internal mudah dibaca.</>,
-        detail: <>Bentuk ini tidak mewakili semua bakteri.</>,
+        label: "Bentuk",
+        structure: "Kokus, basilus, dan spiral adalah bentuk umum bakteri.",
+        caption: <>Bentuk membantu identifikasi awal, tetapi tidak cukup untuk menentukan seluruh hubungan taksonomi.</>,
+        detail: <>Model menaruh tiga bentuk berdampingan agar perbandingan visual langsung terlihat.</>,
       },
       {
-        tab: "Nukleoid",
-        label: "Nukleoid",
-        structure: "Daerah tempat DNA bakteri berada tanpa membran inti.",
-        caption: <>Prokariota tidak punya nukleus seperti sel hewan dan tumbuhan.</>,
-        detail: <>Model menampilkan nukleoid sebagai massa terpusat yang disederhanakan.</>,
+        tab: "Struktur",
+        label: "Struktur",
+        structure: "Bakteri punya membran, sitoplasma, ribosom, dan nukleoid tanpa inti bermembran.",
+        caption: <>Nukleoid adalah wilayah DNA bakteri. Ia berbeda dari inti sel eukariotik karena tidak dibungkus membran inti.</>,
+        detail: <>Titik kecil mewakili ribosom dan untai tengah mewakili DNA di nukleoid.</>,
       },
       {
-        tab: "Ribosom",
-        label: "Ribosom",
-        structure: "Tempat pembentukan protein di dalam sel.",
-        caption: <>Bakteri tetap bisa membuat protein karena memiliki ribosom sendiri.</>,
-        detail: <>Titik kecil mewakili ribosom, bukan jumlah sebenarnya.</>,
+        tab: "Dinding",
+        label: "Dinding sel",
+        structure: "Dinding sel bakteri mengandung peptidoglikan.",
+        caption: <>Perbedaan susunan dinding membantu menjelaskan pewarnaan Gram positif dan Gram negatif.</>,
+        detail: <>Lapisan dibuat bertumpuk untuk menekankan perbedaan arsitektur, bukan ketebalan skala nyata.</>,
       },
     ],
   }}
 />
 
-## Bakteri Tidak Selalu Musuh
+## Bakteri tidak selalu merugikan
 
-Sebagian bakteri menyebabkan penyakit, tetapi banyak bakteri membantu penguraian, pembuatan makanan fermentasi, dan menjaga keseimbangan mikrobioma.
+Sebagian bakteri menyebabkan penyakit, tetapi banyak bakteri berguna. Buku IPA SMA/MA Kelas X mencontohkan peran bakteri dalam pangan, bioteknologi, vitamin, dan bioremediasi. Jadi pertanyaan biologinya bukan "bakteri baik atau jahat", melainkan: spesies apa, hidup di mana, dan berinteraksi dengan siapa?
 
-## Cek Pemahaman
+## Cek pemahaman
 
-Apa perbedaan utama bakteri dengan sel hewan jika dilihat dari inti sel?
+Apa perbedaan utama nukleoid bakteri dan inti sel hewan?
 
-Bakteri tidak memiliki inti sel bermembran, sedangkan sel hewan memiliki nukleus.
+Jawaban: nukleoid tidak dibungkus membran inti, sedangkan inti sel hewan dibungkus membran inti.
+
+Alasan: bakteri adalah prokariotik, sedangkan sel hewan adalah eukariotik.

@@ -1,69 +1,64 @@
-import { VirusStructureLab } from "@repo/design-system/components/contents/biology/lab";
+import { VirusStructureLab } from "@repo/design-system/components/contents/biology/virus-structure";
 
 export const metadata = {
   title: "What Is a Virus?",
   description:
-    "Learn virus structure, why viruses are not cells, and how to read the capsid, genetic material, and envelope.",
+    "Understand viruses as acellular particles with genetic material, a capsid, and sometimes an envelope.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Viruses and Their Role",
 };
 
-## A Tiny Particle That Changes the Question
+## A virus is an acellular particle
 
-A virus is very small and can reproduce only after entering a living cell. Because it has no cell structure, cytoplasm, ribosomes, or independent metabolism, a virus is usually studied as a biological particle, not a cellular organism.
-
-OpenStax Biology 2e explains that viruses are acellular and depend on host cells for replication in [Viruses](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
+A virus is often mistaken for a tiny cell. That is not quite right. A virus is acellular, meaning it is not organized as a complete cell. The Indonesian grade 10 science textbook describes a virion, one complete virus particle, as nucleic acid packaged in a capsid. OpenStax also describes viruses as noncellular entities that lack organelles, ribosomes, and a plasma membrane in [Viral Morphology](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
 
 <VirusStructureLab
-  title={<>Virus Structure Model</>}
-  description={
-    <>
-      Rotate the model, then choose the part you want to inspect. The model is
-      procedural so the core structures stay clear.
-    </>
-  }
+  title={<>Structure of one virion</>}
+  description={<>Choose a part, then notice which part carries information, protects it, and helps the virus attach to a host.</>}
   labels={{
-    chooseMode: "Choose a virus part",
+    chooseMode: "Choose a part",
     detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model reference",
-    structureLabel: "Structure being read",
-    viewLabel: "3D model of virus structure",
-    sourceNote: <>The structure notes follow OpenStax descriptions of capsids, genetic material, and viral envelopes.</>,
+    sourceNoteLabel: "Model source",
+    structureLabel: "Structure to read",
+    viewLabel: "3D virus structure model",
+    sourceNote: <>The model follows the Indonesian grade 10 science textbook and OpenStax Biology 2e on viral genomes, capsids, capsomeres, and envelopes.</>,
     items: [
       {
         tab: "Capsid",
         label: "Capsid",
-        structure: "A protein coat that protects the viral genetic material.",
-        caption: <>The capsid is drawn as a faceted shell because many viruses use repeating symmetry.</>,
-        detail: <>This simplifies capsid symmetry. It is not a literal size model.</>,
+        structure: "A protein coat that packages the viral genetic material.",
+        caption: <>The capsid is built from protein subunits called capsomeres. It protects the genome outside the host cell.</>,
+        detail: <>The polyhedral form helps students read the capsid as a protein package, not as a cell membrane.</>,
       },
       {
         tab: "Genome",
-        label: "Genetic material",
-        structure: "DNA or RNA carrying instructions for making new viruses.",
-        caption: <>The spiral line represents genetic material inside the capsid.</>,
-        detail: <>A virus may carry DNA or RNA, depending on the virus type.</>,
+        label: "Genome",
+        structure: "DNA or RNA carrying instructions for producing new viruses.",
+        caption: <>Viruses do not all use DNA. Many carry RNA, and genome type affects how replication works.</>,
+        detail: <>The strand represents genetic material, not an actual base sequence.</>,
       },
       {
         tab: "Envelope",
         label: "Envelope",
-        structure: "An outer layer on some viruses that helps them attach to host cells.",
-        caption: <>Not all viruses have envelopes, so read this as one structural variation.</>,
-        detail: <>Viral envelopes usually come from host-cell membranes during exit.</>,
+        structure: "A host-derived lipid layer found in some viruses.",
+        caption: <>Not every virus has an envelope. In enveloped viruses, surface proteins help the virus recognize host cells.</>,
+        detail: <>The envelope is transparent because it surrounds the capsid rather than replacing it.</>,
       },
     ],
   }}
 />
 
-## Why a Virus Is Not a Cell
+## Virus parts are not cell parts
 
-Living cells can run chemical reactions, make proteins, and regulate their internal environment. A virus cannot do that by itself. It carries instructions, but it needs a host cell's machinery to copy and express those instructions.
+Cells have cytoplasm, ribosomes, a cell membrane, and metabolic machinery. Viruses do not carry that full system. That is why viruses cannot reproduce by themselves outside a cell. They need a host cell, the cell used to copy genetic material and build new viral parts.
 
-This distinction matters. If we treat a virus as a tiny cell, we misunderstand how medicines, vaccines, and immune defenses work against it.
+The size also matters. The Indonesian textbook gives a range around 20 to 400 nm, and OpenStax places many virions in the tens to hundreds of nanometers. That scale explains why ordinary light microscopes are not enough to observe most viruses.
 
-## Self-Check
+## Self-check
 
-If a particle has a capsid and RNA but no ribosomes of its own, can it make proteins by itself?
+If a virus does not have ribosomes, which part of the host cell becomes essential for making viral proteins?
 
-No. Without ribosomes, it must use a host cell's ribosomes to make viral proteins.
+Answer: the host cell's ribosomes.
+
+Explanation: the viral genome carries instructions, but protein production still depends on the host cell's translation machinery.

@@ -1,62 +1,64 @@
-import { VirusPreventionLab } from "@repo/design-system/components/contents/biology/lab";
+import { VirusPreventionLab } from "@repo/design-system/components/contents/biology/virus-prevention";
 
 export const metadata = {
   title: "Cara Mencegah Penyebaran Virus",
   description:
-    "Pelajari cara memutus penyebaran virus melalui kebersihan tangan, ventilasi, vaksinasi, dan pengurangan kontak berisiko.",
+    "Menghubungkan pencegahan virus dengan jalur penularan, jarak, penghalang, kebersihan, dan vaksin.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Virus dan Peranannya",
 };
 
-## Pencegahan Berarti Memutus Jalur
+## Pencegahan mengikuti jalur penularan
 
-Virus menyebar lewat jalur tertentu, misalnya percikan pernapasan, kontak tangan, makanan atau air tercemar, darah, atau vektor seperti nyamuk. Pencegahan bekerja ketika jalur itu diputus.
-
-CDC merangkum kebersihan tangan sebagai salah satu cara penting untuk mencegah penyebaran infeksi di [When and How to Wash Your Hands](https://www.cdc.gov/handwashing/when-how-handwashing.html). WHO juga menjelaskan peran vaksinasi dalam melatih sistem imun di [Vaccines and immunization](https://www.who.int/health-topics/vaccines-and-immunization).
+Tidak ada satu cara pencegahan yang cocok untuk semua virus. Buku IPA SMA/MA Kelas X Bab II membedakan contoh penularan melalui nyamuk, kontak kulit, cairan tubuh, permukaan, dan droplet. CDC menjelaskan pencegahan penyakit pernapasan dengan langkah seperti menjaga udara bersih, kebersihan tangan, masker saat berisiko, dan tinggal di rumah saat sakit pada [Preventing Respiratory Illnesses](https://www.cdc.gov/respiratory-viruses/prevention/index.html).
 
 <VirusPreventionLab
-  title={<>Model Jalur Penularan</>}
-  description={<>Pilih penghalang untuk melihat bagaimana risiko dapat dikurangi sebelum virus mencapai inang baru.</>}
+  title={<>Simulasi jalur pencegahan</>}
+  description={<>Pilih strategi, lalu lihat bagian mana dari perpindahan virus yang diputus.</>}
   labels={{
-    chooseMode: "Pilih pencegahan",
+    chooseMode: "Pilih strategi",
     detailLabel: "Catatan akurasi",
     sourceNoteLabel: "Rujukan model",
-    structureLabel: "Struktur yang dibaca",
+    structureLabel: "Jalur yang diputus",
     viewLabel: "Model 3D pencegahan virus",
-    sourceNote: <>Model diringkas dari prinsip pemutusan penularan CDC dan WHO tentang kebersihan, ventilasi, dan vaksinasi.</>,
+    sourceNote: <>Model mengikuti contoh Buku IPA SMA/MA Kelas X Bab II dan prinsip pencegahan CDC untuk infeksi pernapasan.</>,
     items: [
       {
-        tab: "Tangan",
+        tab: "Jarak",
+        label: "Jarak",
+        structure: "Mengurangi peluang droplet mencapai orang lain.",
+        caption: <>Jarak tidak membunuh virus, tetapi menurunkan peluang partikel infeksius berpindah dari satu orang ke orang lain.</>,
+        detail: <>Partikel dibuat menyebar di antara dua orang untuk menunjukkan risiko kontak dekat.</>,
+      },
+      {
+        tab: "Penghalang",
+        label: "Penghalang",
+        structure: "Masker atau pelindung mengurangi partikel yang keluar dan masuk.",
+        caption: <>Penghalang bekerja paling masuk akal untuk jalur droplet atau aerosol, bukan untuk semua jalur penularan.</>,
+        detail: <>Model memperkecil partikel saat penghalang aktif agar efeknya terlihat tanpa mengklaim perlindungan sempurna.</>,
+      },
+      {
+        tab: "Kebersihan",
         label: "Kebersihan",
-        structure: "Membersihkan tangan mengurangi perpindahan partikel infeksius dari permukaan ke tubuh.",
-        caption: <>Tangan sering menjadi jembatan antara permukaan, wajah, dan makanan.</>,
-        detail: <>Model ini menunjukkan jalur kontak umum, bukan semua virus sekaligus.</>,
-      },
-      {
-        tab: "Udara",
-        label: "Ventilasi",
-        structure: "Udara yang berganti membantu mengencerkan partikel yang melayang.",
-        caption: <>Ruang tertutup dengan udara buruk dapat membuat paparan bertahan lebih lama.</>,
-        detail: <>Efek ventilasi bergantung pada ukuran ruang, aliran udara, dan sumber partikel.</>,
-      },
-      {
-        tab: "Imun",
-        label: "Vaksinasi",
-        structure: "Vaksin membantu tubuh mengenali ancaman sebelum infeksi berat terjadi.",
-        caption: <>Vaksin bukan dinding fisik, tetapi mempercepat respons pertahanan tubuh.</>,
-        detail: <>Jenis vaksin dan perlindungannya berbeda menurut penyakit.</>,
+        structure: "Cuci tangan, disinfeksi, dan vaksin mengurangi risiko pada titik berbeda.",
+        caption: <>Sabun dapat membantu merusak selubung lipid pada virus berselubung. Vaksin melatih memori imun sebelum paparan berat.</>,
+        detail: <>Model menampilkan sabun sebagai intervensi permukaan, bukan pengganti vaksin atau tata udara.</>,
       },
     ],
   }}
 />
 
-## Pilih Pencegahan Sesuai Jalur
+## Strategi harus cocok dengan risikonya
 
-Tidak semua pencegahan bekerja untuk semua virus dengan cara yang sama. Untuk virus yang menyebar lewat udara, ventilasi dan masker lebih relevan. Untuk virus lewat vektor, pengendalian nyamuk atau hewan pembawa menjadi penting.
+Virus dengue perlu pencegahan berbasis vektor, misalnya mengurangi tempat berkembang biak nyamuk. HIV terkait cairan tubuh, sehingga pencegahannya berbeda dari flu. Virus pernapasan lebih sering dibahas lewat ventilasi, masker, etika batuk, dan isolasi saat sakit.
 
-## Cek Pemahaman
+Prinsipnya sederhana: cari pintu keluar virus, jalur perpindahan, dan pintu masuk ke inang berikutnya. Pencegahan yang kuat biasanya memutus lebih dari satu titik pada rantai itu.
 
-Mengapa mencuci tangan tidak bisa menggantikan vaksinasi?
+## Cek pemahaman
 
-Karena mencuci tangan mengurangi perpindahan virus dari luar tubuh, sedangkan vaksinasi melatih respons imun di dalam tubuh.
+Mengapa cuci tangan tidak cukup untuk semua penyakit virus?
+
+Jawaban: karena virus memiliki jalur penularan yang berbeda.
+
+Alasan: cuci tangan membantu pada jalur kontak atau permukaan, tetapi virus yang dibawa nyamuk, cairan tubuh, atau udara membutuhkan strategi tambahan yang sesuai.

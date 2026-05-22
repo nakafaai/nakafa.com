@@ -1,64 +1,62 @@
-import { ClimateCauseLab } from "@repo/design-system/components/contents/biology/lab";
+import { ClimateCauseLab } from "@repo/design-system/components/contents/biology/climate-causes";
 
 export const metadata = {
   title: "Causes of Climate Change",
   description:
-    "Understand the greenhouse effect, greenhouse gases, and Earth's energy flow through a 3D radiation model.",
+    "Explain the greenhouse effect, greenhouse gases, fossil fuels, land-use change, and organic waste.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Climate Change",
 };
 
-## The Problem Is in the Energy Budget
+## Greenhouse gases change Earth's energy balance
 
-The greenhouse effect is the process where certain atmospheric gases absorb and re-emit infrared radiation. This natural process keeps Earth habitable, but extra greenhouse gases from human activity strengthen warming.
-
-NOAA explains rising atmospheric carbon dioxide and its link to human activity in [Climate Change: Atmospheric Carbon Dioxide](https://www.climate.gov/news-features/understanding-climate/climate-change-atmospheric-carbon-dioxide).
+The natural greenhouse effect helps keep Earth habitable. The problem appears when greenhouse gas concentration rises and more heat is retained. The Indonesian grade 10 science textbook emphasizes carbon dioxide, methane, fossil fuels, land-use change, refrigerants, vehicles, plastics, and organic waste. NASA explains the human role in increasing greenhouse gases in [Climate Change Causes](https://science.nasa.gov/climate-change/causes/).
 
 <ClimateCauseLab
-  title={<>Radiation Flow Model</>}
-  description={<>Choose a cause to see how energy enters, is trapped, or is reduced.</>}
+  title={<>Mechanism and sources</>}
+  description={<>Choose a mode to separate atmospheric physics from human emission sources.</>}
   labels={{
     chooseMode: "Choose a cause",
     detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model reference",
-    structureLabel: "Cause being read",
-    viewLabel: "3D model of climate change causes",
-    sourceNote: <>The model summarizes the greenhouse effect and energy-budget changes discussed by NOAA, NASA, and IPCC.</>,
+    sourceNoteLabel: "Model source",
+    structureLabel: "Cause to read",
+    viewLabel: "3D climate causes model",
+    sourceNote: <>The model follows the Indonesian grade 10 science textbook and NASA on the greenhouse effect, fossil fuels, land-use change, and waste.</>,
     items: [
       {
-        tab: "CO2",
-        label: "Carbon dioxide",
-        structure: "CO2 increases mainly from fossil fuel burning and land-use change.",
-        caption: <>The atmosphere layer appears more active to show more infrared radiation being retained.</>,
-        detail: <>CO2 remains in the atmosphere for a long time, so accumulation matters.</>,
+        tab: "Effect",
+        label: "Greenhouse effect",
+        structure: "Some gases retain part of Earth's outgoing infrared radiation.",
+        caption: <>The greenhouse effect is not automatically bad. The problem is strengthening it with extra greenhouse gases.</>,
+        detail: <>The transparent atmosphere and separate gas particles make heat retention easier to read.</>,
       },
       {
-        tab: "Methane",
-        label: "Methane",
-        structure: "Methane comes from sources such as fossil energy, livestock, waste, and wetlands.",
-        caption: <>Small particles represent a gas that is less abundant but strong at absorbing heat.</>,
-        detail: <>Methane is shorter-lived than CO2, but it has high warming power.</>,
+        tab: "Fossil",
+        label: "Fossil fuels",
+        structure: "Burning coal, oil, and gas adds CO2 to the atmosphere.",
+        caption: <>Fossil energy moves carbon long stored underground into the atmosphere.</>,
+        detail: <>The car and smokestack are source symbols, not a complete emission inventory.</>,
       },
       {
         tab: "Land",
-        label: "Land-use change",
-        structure: "Deforestation reduces carbon sinks and changes Earth's surface.",
-        caption: <>Earth's surface is read as a system that absorbs, reflects, and stores energy.</>,
-        detail: <>Land-use change can add emissions and reduce carbon sink capacity at the same time.</>,
+        label: "Land and waste",
+        structure: "Deforestation reduces carbon uptake, while organic waste can produce methane.",
+        caption: <>Land change and waste management affect the amount of greenhouse gases in the atmosphere.</>,
+        detail: <>Fallen wood and gas bubbles mark two pathways: lost uptake and released emissions.</>,
       },
     ],
   }}
 />
 
-## Natural and Human Causes Must Be Separated
+## There is not only one cause
 
-Volcanoes, solar variation, and natural processes do affect climate. But rapid warming since the industrial era is mainly explained by increased greenhouse gases from human activity.
+Modern climate change comes from combined activities that increase greenhouse gases and reduce carbon sinks. Because causes are spread across energy, transport, land, food, and waste, the discussion must be systemic. One habit change helps, but large change needs policy, technology, and changes in production.
 
-IPCC AR6 WG1 concludes that human influence has warmed the atmosphere, ocean, and land in the [Summary for Policymakers](https://www.ipcc.ch/report/ar6/wg1/).
+## Self-check
 
-## Self-Check
+Why is the greenhouse effect not the same as climate change?
 
-Why is the natural greenhouse effect not the same as climate change today?
+Answer: the greenhouse effect is a natural heat-retention mechanism, while climate change occurs when that mechanism strengthens and shifts long-term climate patterns.
 
-The natural greenhouse effect keeps Earth warm. Today's problem is the strengthened effect caused by extra greenhouse gases from human activity.
+Explanation: without the greenhouse effect Earth would be too cold, but added greenhouse gases retain more heat.

@@ -1,62 +1,78 @@
-import { VirusReplicationLab } from "@repo/design-system/components/contents/biology/lab";
+import { VirusReplicationLab } from "@repo/design-system/components/contents/biology/virus-replication";
 
 export const metadata = {
   title: "Bagaimana Virus Bereproduksi?",
   description:
-    "Pelajari tahapan reproduksi virus dari penempelan ke sel inang sampai pembentukan partikel virus baru.",
+    "Menelusuri tahap pelekatan, masuk, sintesis, perakitan, dan pelepasan virus di dalam sel inang.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Virus dan Peranannya",
 };
 
-## Virus Tidak Membelah Diri
+## Virus bereplikasi di dalam sel inang
 
-Virus tidak membelah seperti bakteri. Virus memperbanyak diri dengan memasukkan materi genetiknya ke sel inang, lalu memanfaatkan mesin sel untuk membuat bagian virus baru.
-
-OpenStax Biology 2e membahas siklus litik dan lisogenik sebagai dua pola besar reproduksi virus di [Virus Infections and Hosts](https://openstax.org/books/biology-2e/pages/21-2-virus-infections-and-hosts).
+Virus tidak membelah seperti bakteri. Replikasi virus adalah proses membuat partikel virus baru dengan memakai mesin sel inang. Buku IPA SMA/MA Kelas X Bab II merangkum tahapnya sebagai pelekatan, penetrasi, sintesis, perakitan, dan lisis atau pelepasan. OpenStax juga menjelaskan bahwa banyak virus harus melekat pada reseptor sel sebelum masuk dan menyelesaikan replikasi di dalam sel pada bagian [Viral Morphology](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
 
 <VirusReplicationLab
-  title={<>Tahap Reproduksi Virus</>}
-  description={<>Ikuti urutan sederhana dari penempelan, penyalinan, sampai pelepasan virus baru.</>}
+  title={<>Urutan replikasi virus</>}
+  description={<>Pindah tahap dari kiri ke kanan. Perhatikan bagaimana satu partikel dapat menjadi banyak partikel setelah memakai sel inang.</>}
   labels={{
     chooseMode: "Pilih tahap",
     detailLabel: "Catatan akurasi",
     sourceNoteLabel: "Rujukan model",
-    structureLabel: "Struktur yang dibaca",
-    viewLabel: "Model 3D reproduksi virus",
-    sourceNote: <>Urutan tahap diringkas dari konsep infeksi virus pada OpenStax Biology 2e.</>,
+    structureLabel: "Tahap yang dibaca",
+    viewLabel: "Model 3D replikasi virus",
+    sourceNote: <>Tahapan disusun dari Buku IPA SMA/MA Kelas X Bab II: pelekatan, penetrasi, sintesis, perakitan, dan pelepasan.</>,
     items: [
       {
+        tab: "Melekat",
+        label: "Melekat",
+        structure: "Protein virus mengenali reseptor pada permukaan sel inang.",
+        caption: <>Pelekatan menentukan sel mana yang dapat diinfeksi. Tanpa kecocokan reseptor, infeksi biasanya tidak berlanjut.</>,
+        detail: <>Model menaruh virus di tepi sel untuk menekankan kontak awal dengan permukaan inang.</>,
+      },
+      {
         tab: "Masuk",
-        label: "Penempelan",
-        structure: "Virus mengenali reseptor pada permukaan sel inang.",
-        caption: <>Virus tidak masuk ke sembarang sel. Kecocokan reseptor menentukan sel target.</>,
-        detail: <>Model menampilkan kontak awal, bukan semua variasi mekanisme masuk.</>,
+        label: "Masuk",
+        structure: "Materi genetik virus masuk ke sel inang.",
+        caption: <>Pada tahap ini genom virus mulai berada di wilayah yang dapat memakai mesin sel.</>,
+        detail: <>Model memisahkan posisi kapsid dan genom agar murid melihat perpindahan informasi genetik.</>,
       },
       {
-        tab: "Salin",
-        label: "Replikasi",
-        structure: "Materi genetik virus disalin dan protein virus dibuat oleh sel inang.",
-        caption: <>Di tahap ini, sel inang berubah menjadi tempat produksi komponen virus.</>,
-        detail: <>Detail molekuler berbeda pada virus DNA dan virus RNA.</>,
+        tab: "Sintesis",
+        label: "Sintesis",
+        structure: "Sel inang membuat salinan genom dan protein virus.",
+        caption: <>Istilah sintesis berarti pembentukan komponen baru. Di sini sel inang dipaksa membuat bahan virus.</>,
+        detail: <>Partikel kecil bertambah untuk menggambarkan komponen yang sedang diproduksi.</>,
       },
       {
-        tab: "Keluar",
-        label: "Pelepasan",
-        structure: "Komponen dirakit menjadi virus baru, lalu keluar dari sel.",
-        caption: <>Virus baru dapat keluar dengan merusak sel atau bertunas dari membran sel.</>,
-        detail: <>Model menyederhanakan dua pola keluar menjadi satu alur visual.</>,
+        tab: "Merakit",
+        label: "Merakit",
+        structure: "Genom dan protein disusun menjadi virion baru.",
+        caption: <>Perakitan mengubah komponen terpisah menjadi partikel yang siap dilepas.</>,
+        detail: <>Model menunjukkan jumlah partikel lebih banyak karena komponen mulai tersusun.</>,
+      },
+      {
+        tab: "Melepas",
+        label: "Melepas",
+        structure: "Virion baru keluar dari sel, kadang merusak sel inang.",
+        caption: <>Pada siklus litik, pelepasan dapat memecahkan sel. Pada beberapa virus, keluarnya partikel terjadi lewat budding.</>,
+        detail: <>Model tidak memaksa semua virus mengalami lisis, tetapi menunjukkan hasil akhirnya: virion baru keluar.</>,
       },
     ],
   }}
 />
 
-## Siklus Litik dan Lisogenik
+## Siklus litik dan lisogenik dibedakan dari nasib genom
 
-Pada siklus litik, virus segera membuat banyak salinan dan biasanya merusak sel inang. Pada siklus lisogenik, materi genetik virus dapat tersisip di genom inang dan ikut tersalin sebelum aktif kembali.
+Pada siklus litik, produksi virion baru berjalan cepat sampai sel rusak atau pecah. Pada siklus lisogenik, materi genetik virus dapat bergabung atau bertahan bersama materi genetik inang sebelum aktif kembali. Perbedaan pentingnya bukan sekadar cepat atau lambat, tetapi apakah genom virus langsung membuat partikel baru atau menunggu dalam sel.
 
-## Cek Pemahaman
+Cara membaca proses ini: jangan bayangkan virus "beranak". Bayangkan sel inang berubah menjadi tempat produksi sementara.
 
-Mengapa virus harus masuk ke sel inang sebelum jumlahnya bertambah?
+## Cek pemahaman
 
-Karena virus tidak punya mesin lengkap untuk membuat protein dan menyalin dirinya sendiri. Mesin itu tersedia di dalam sel inang.
+Mengapa tahap pelekatan dapat menentukan jenis sel yang dapat diinfeksi virus?
+
+Jawaban: karena pelekatan bergantung pada kecocokan protein virus dengan reseptor di permukaan sel.
+
+Alasan: jika reseptor yang sesuai tidak ada, virus sulit masuk dan tahap replikasi berikutnya tidak terjadi.

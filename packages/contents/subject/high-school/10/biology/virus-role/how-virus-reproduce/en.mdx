@@ -1,62 +1,78 @@
-import { VirusReplicationLab } from "@repo/design-system/components/contents/biology/lab";
+import { VirusReplicationLab } from "@repo/design-system/components/contents/biology/virus-replication";
 
 export const metadata = {
   title: "How Do Viruses Reproduce?",
   description:
-    "Learn the stages of viral reproduction from attachment to a host cell through assembly and release.",
+    "Follow attachment, entry, synthesis, assembly, and release inside a host cell.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Viruses and Their Role",
 };
 
-## A Virus Does Not Divide Like a Cell
+## Viruses replicate inside host cells
 
-A virus does not split the way bacteria do. It reproduces by delivering genetic material into a host cell, then using the cell's machinery to build new viral parts.
-
-OpenStax Biology 2e discusses lytic and lysogenic cycles as major patterns of viral reproduction in [Virus Infections and Hosts](https://openstax.org/books/biology-2e/pages/21-2-virus-infections-and-hosts).
+Viruses do not divide like bacteria. Viral replication means producing new virus particles by using the machinery of a host cell. The Indonesian grade 10 science textbook summarizes the stages as attachment, penetration, synthesis, assembly, and lysis or release. OpenStax also explains that many viruses attach to host receptors before entering and completing replication inside the cell in [Viral Morphology](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
 
 <VirusReplicationLab
-  title={<>Viral Reproduction Stages</>}
-  description={<>Follow the simplified sequence from attachment, copying, and release.</>}
+  title={<>Viral replication sequence</>}
+  description={<>Move from left to right. Watch how one particle can lead to many after the host cell is used.</>}
   labels={{
     chooseMode: "Choose a stage",
     detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model reference",
-    structureLabel: "Structure being read",
-    viewLabel: "3D model of viral reproduction",
-    sourceNote: <>The stage order is summarized from OpenStax Biology 2e's explanation of viral infection.</>,
+    sourceNoteLabel: "Model source",
+    structureLabel: "Stage to read",
+    viewLabel: "3D viral replication model",
+    sourceNote: <>The stages follow the Indonesian grade 10 science textbook: attachment, penetration, synthesis, assembly, and release.</>,
     items: [
       {
-        tab: "Entry",
-        label: "Attachment",
-        structure: "The virus recognizes receptors on the host-cell surface.",
-        caption: <>A virus does not enter every cell. Receptor fit helps determine its target cell.</>,
-        detail: <>The model shows the initial contact, not every entry mechanism.</>,
+        tab: "Attach",
+        label: "Attach",
+        structure: "Viral proteins recognize receptors on the host cell surface.",
+        caption: <>Attachment decides which cells can be infected. Without receptor fit, infection usually cannot continue.</>,
+        detail: <>The virus sits at the cell edge to emphasize first contact with the host surface.</>,
       },
       {
-        tab: "Copy",
-        label: "Replication",
-        structure: "Viral genetic material is copied and viral proteins are made by the host cell.",
-        caption: <>At this stage, the host cell becomes a production site for viral components.</>,
-        detail: <>Molecular details differ between DNA viruses and RNA viruses.</>,
+        tab: "Enter",
+        label: "Enter",
+        structure: "Viral genetic material enters the host cell.",
+        caption: <>At this point the viral genome reaches a space where it can use host machinery.</>,
+        detail: <>The model separates capsid and genome so the movement of genetic information is visible.</>,
+      },
+      {
+        tab: "Synthesize",
+        label: "Synthesize",
+        structure: "The host cell makes viral genome copies and proteins.",
+        caption: <>Synthesis means building new components. Here, the host cell is redirected to make viral parts.</>,
+        detail: <>Small particles increase to represent components being produced.</>,
+      },
+      {
+        tab: "Assemble",
+        label: "Assemble",
+        structure: "Genome and proteins are put together into new virions.",
+        caption: <>Assembly turns separate parts into particles ready for release.</>,
+        detail: <>More particles are shown because viral components are now being packaged.</>,
       },
       {
         tab: "Release",
         label: "Release",
-        structure: "Parts assemble into new viruses, then leave the cell.",
-        caption: <>New viruses may leave by breaking the cell or budding from its membrane.</>,
-        detail: <>The model simplifies different exit patterns into one visual flow.</>,
+        structure: "New virions leave the cell and may damage the host cell.",
+        caption: <>In a lytic cycle, release can rupture the cell. Some viruses exit by budding instead.</>,
+        detail: <>The model does not claim all viruses lyse cells. It shows the shared result: new virions leave.</>,
       },
     ],
   }}
 />
 
-## Lytic and Lysogenic Cycles
+## Lytic and lysogenic cycles differ by genome behavior
 
-In the lytic cycle, viruses quickly make many copies and usually damage the host cell. In the lysogenic cycle, viral genetic material can become part of the host genome and be copied before becoming active again.
+In the lytic cycle, production of new virions proceeds quickly until the cell is damaged or ruptured. In the lysogenic cycle, viral genetic material can remain with the host's genetic material before becoming active again. The key difference is not just speed. It is whether the viral genome immediately produces particles or waits inside the cell.
 
-## Self-Check
+Read the process this way: viruses do not give birth. A host cell is temporarily turned into a production site.
 
-Why must a virus enter a host cell before its number can increase?
+## Self-check
 
-Because a virus lacks the full machinery needed to make proteins and copy itself. That machinery is inside the host cell.
+Why can attachment determine which cell type a virus infects?
+
+Answer: attachment depends on a match between viral proteins and receptors on the cell surface.
+
+Explanation: without a matching receptor, entry is difficult and the later replication stages do not happen.

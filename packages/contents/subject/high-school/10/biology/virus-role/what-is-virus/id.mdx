@@ -1,69 +1,64 @@
-import { VirusStructureLab } from "@repo/design-system/components/contents/biology/lab";
+import { VirusStructureLab } from "@repo/design-system/components/contents/biology/virus-structure";
 
 export const metadata = {
   title: "Apa itu Virus?",
   description:
-    "Pelajari struktur virus, mengapa virus tidak dianggap sel, dan cara membaca bagian kapsid, materi genetik, serta selubungnya.",
+    "Memahami virus sebagai partikel aseluler yang membawa materi genetik, kapsid, dan kadang selubung.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Virus dan Peranannya",
 };
 
-## Benda Kecil yang Membuat Kita Berdebat
+## Virus adalah partikel aseluler
 
-Virus sangat kecil dan hanya bisa memperbanyak diri jika masuk ke sel hidup. Karena tidak memiliki sel, sitoplasma, ribosom, dan metabolisme mandiri, virus biasanya dipelajari sebagai partikel biologis, bukan organisme seluler.
-
-OpenStax Biology 2e menjelaskan bahwa virus bersifat aseluler dan membutuhkan sel inang untuk bereplikasi di [Viruses](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
+Virus sering disangka sebagai sel kecil. Itu kurang tepat. Virus adalah partikel aseluler, artinya tidak tersusun sebagai sel utuh. Buku IPA SMA/MA Kelas X Bab II menjelaskan bahwa virion, yaitu satu partikel virus lengkap, tersusun dari asam nukleat dan kapsid. OpenStax juga menempatkan virus sebagai entitas non-seluler yang tidak memiliki organel, ribosom, dan membran plasma seperti sel pada bagian [Viral Morphology](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
 
 <VirusStructureLab
-  title={<>Model Struktur Virus</>}
-  description={
-    <>
-      Putar modelnya, lalu pilih bagian yang ingin dibaca. Model ini memakai
-      bentuk prosedural agar struktur utama tetap jelas.
-    </>
-  }
+  title={<>Struktur satu virion</>}
+  description={<>Pilih bagian virus, lalu amati mana yang membawa informasi genetik, melindungi, dan membantu melekat pada inang.</>}
   labels={{
     chooseMode: "Pilih bagian virus",
     detailLabel: "Catatan akurasi",
     sourceNoteLabel: "Rujukan model",
     structureLabel: "Struktur yang dibaca",
     viewLabel: "Model 3D struktur virus",
-    sourceNote: <>Akurasi struktur mengacu pada ringkasan OpenStax tentang kapsid, materi genetik, dan selubung virus.</>,
+    sourceNote: <>Model mengikuti ringkasan Buku IPA SMA/MA Kelas X Bab II dan OpenStax Biology 2e tentang genom, kapsid, kapsomer, dan selubung virus.</>,
     items: [
       {
         tab: "Kapsid",
         label: "Kapsid",
-        structure: "Lapisan protein yang melindungi materi genetik virus.",
-        caption: <>Kapsid digambar sebagai cangkang bersegi karena banyak virus memiliki simetri berulang.</>,
-        detail: <>Bentuk ini menyederhanakan simetri kapsid, bukan ukuran sebenarnya.</>,
+        structure: "Selubung protein yang membungkus materi genetik virus.",
+        caption: <>Kapsid dibangun dari subunit protein bernama kapsomer. Fungsinya melindungi genom saat virus berada di luar sel inang.</>,
+        detail: <>Bentuk pada model dibuat polihedral agar murid membaca ide kapsid sebagai paket protein, bukan sebagai membran sel.</>,
       },
       {
         tab: "Genom",
-        label: "Materi genetik",
+        label: "Genom",
         structure: "DNA atau RNA yang membawa instruksi pembentukan virus baru.",
-        caption: <>Garis spiral menunjukkan materi genetik yang berada di dalam kapsid.</>,
-        detail: <>Virus dapat membawa DNA atau RNA, tergantung jenis virusnya.</>,
+        caption: <>Virus tidak selalu memakai DNA. Banyak virus membawa RNA, dan jenis genom ini memengaruhi cara replikasinya.</>,
+        detail: <>Untai di tengah adalah simbol materi genetik, bukan urutan basa sebenarnya.</>,
       },
       {
         tab: "Selubung",
         label: "Selubung",
-        structure: "Lapisan luar pada sebagian virus yang membantu menempel ke sel inang.",
-        caption: <>Tidak semua virus punya selubung. Karena itu, selubung harus dibaca sebagai variasi struktur.</>,
-        detail: <>Selubung virus umumnya berasal dari membran sel inang saat virus keluar.</>,
+        structure: "Lapisan lipid dari sel inang pada sebagian virus.",
+        caption: <>Tidak semua virus punya selubung. Pada virus berselubung, protein permukaan membantu virus mengenali sel inang.</>,
+        detail: <>Selubung dibuat transparan karena lapisan ini membungkus kapsid, bukan menggantikan kapsid.</>,
       },
     ],
   }}
 />
 
-## Mengapa Virus Bukan Sel
+## Bagian virus berbeda dari bagian sel
 
-Sel hidup dapat menjalankan reaksi kimia, membuat protein, dan mengatur lingkungannya sendiri. Virus tidak melakukan itu sendirian. Virus membawa instruksi, tetapi membutuhkan mesin sel inang untuk menyalin instruksi tersebut.
+Sel memiliki sitoplasma, ribosom, membran sel, dan perangkat metabolisme. Virus tidak membawa paket lengkap itu. Karena itu virus tidak dapat memperbanyak diri sendiri di luar sel. Ia harus masuk ke sel inang, yaitu sel yang dipakai virus sebagai tempat menggandakan materi genetik dan membuat komponen virus baru.
 
-Perbedaan ini penting. Kalau kita menyebut virus sebagai sel kecil, kita akan salah membaca cara obat, vaksin, dan sistem imun menghadapinya.
+Ukuran virus juga sangat kecil. Buku IPA SMA/MA Kelas X memberi rentang sekitar 20 sampai 400 nm, sedangkan OpenStax menyebut banyak virion berada pada puluhan sampai ratusan nanometer. Angka itu membantu kita memahami kenapa virus tidak diamati dengan mikroskop cahaya biasa.
 
-## Cek Pemahaman
+## Cek pemahaman
 
-Jika sebuah partikel memiliki kapsid dan RNA, tetapi tidak memiliki ribosom sendiri, apakah partikel itu bisa membuat protein sendiri?
+Jika virus tidak punya ribosom, bagian mana dari sel inang yang paling penting untuk membuat protein virus?
 
-Tidak. Tanpa ribosom, partikel itu harus memakai ribosom sel inang untuk membuat protein virus.
+Jawaban: ribosom sel inang.
+
+Alasan: genom virus membawa instruksi, tetapi proses membuat protein tetap membutuhkan mesin translasi milik sel inang.

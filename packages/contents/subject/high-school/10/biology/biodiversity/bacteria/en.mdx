@@ -1,62 +1,62 @@
-import { BacteriaStructureLab } from "@repo/design-system/components/contents/biology/lab";
+import { BacteriaStructureLab } from "@repo/design-system/components/contents/biology/bacteria";
 
 export const metadata = {
   title: "Bacteria",
   description:
-    "Learn basic bacterial structure, common shapes, and why bacteria can be harmful and useful.",
+    "Meet bacteria as prokaryotic cells through shape, structure, cell wall organization, and roles.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Biodiversity of Living Organisms",
 };
 
-## Small Cells with Large Effects
+## Bacteria are prokaryotic cells
 
-Bacteria are prokaryotic organisms, meaning they do not have a membrane-bound nucleus. Their genetic material is in a nucleoid region, while ribosomes and cytoplasm sit inside the cell membrane.
-
-OpenStax Biology 2e explains prokaryotic structure and shape variation in [Prokaryotic Cells](https://openstax.org/books/biology-2e/pages/4-2-prokaryotic-cells).
+Bacteria are unicellular prokaryotes. Prokaryotic means their cells do not have a membrane-bound nucleus. The Indonesian grade 10 science textbook emphasizes bacterial shapes such as coccus, bacillus, and spiral forms, plus structures such as cell wall, membrane, cytoplasm, ribosomes, and nucleoid. OpenStax explains common prokaryotic shapes and structures in [Structure of Prokaryotes: Bacteria and Archaea](https://openstax.org/books/biology-2e/pages/22-2-structure-of-prokaryotes-bacteria-and-archaea).
 
 <BacteriaStructureLab
-  title={<>Bacterial Cell Model</>}
-  description={<>Choose a cell part to read the basic function of bacterial structures.</>}
+  title={<>Bacterial shape and parts</>}
+  description={<>Choose a focus to read cell shape, internal structure, or bacterial wall layers.</>}
   labels={{
-    chooseMode: "Choose a part",
+    chooseMode: "Choose a focus",
     detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model reference",
-    structureLabel: "Structure being read",
-    viewLabel: "3D model of bacteria",
-    sourceNote: <>The model follows common prokaryotic structures from OpenStax: membrane, cell wall, nucleoid, and ribosomes.</>,
+    sourceNoteLabel: "Model source",
+    structureLabel: "Part to read",
+    viewLabel: "3D bacteria model",
+    sourceNote: <>The model follows the Indonesian grade 10 science textbook and OpenStax on cocci, bacilli, spirilla, nucleoid, ribosomes, and cell walls.</>,
     items: [
       {
-        tab: "Shape",
-        label: "Cell shape",
-        structure: "Bacteria may be spherical, rod-shaped, or spiral.",
-        caption: <>The model uses a rod shape so internal structures remain readable.</>,
-        detail: <>This shape does not represent all bacteria.</>,
+        tab: "Shapes",
+        label: "Shapes",
+        structure: "Coccus, bacillus, and spiral are common bacterial shapes.",
+        caption: <>Shape helps early identification, but it is not enough to determine full taxonomy.</>,
+        detail: <>The three forms are placed side by side for direct visual comparison.</>,
       },
       {
-        tab: "Nucleoid",
-        label: "Nucleoid",
-        structure: "The region where bacterial DNA is found without a nuclear membrane.",
-        caption: <>Prokaryotes do not have a nucleus like animal and plant cells.</>,
-        detail: <>The model shows the nucleoid as a simplified central mass.</>,
+        tab: "Structure",
+        label: "Structure",
+        structure: "Bacteria have a membrane, cytoplasm, ribosomes, and a nucleoid without a nuclear membrane.",
+        caption: <>The nucleoid is the DNA region in bacteria. It differs from a eukaryotic nucleus because it is not membrane-bound.</>,
+        detail: <>Small dots represent ribosomes, and the central strand represents DNA in the nucleoid.</>,
       },
       {
-        tab: "Ribosomes",
-        label: "Ribosomes",
-        structure: "Sites of protein production inside the cell.",
-        caption: <>Bacteria can make proteins because they have their own ribosomes.</>,
-        detail: <>Small points represent ribosomes, not their true number.</>,
+        tab: "Wall",
+        label: "Cell wall",
+        structure: "Bacterial cell walls contain peptidoglycan.",
+        caption: <>Wall organization helps explain Gram-positive and Gram-negative staining patterns.</>,
+        detail: <>The layers are stacked to show architecture, not real scale thickness.</>,
       },
     ],
   }}
 />
 
-## Bacteria Are Not Always Enemies
+## Bacteria are not always harmful
 
-Some bacteria cause disease, but many bacteria support decomposition, fermented food production, and microbiome balance.
+Some bacteria cause disease, but many are useful. The Indonesian grade 10 science textbook gives examples in food, biotechnology, vitamins, and bioremediation. So the biological question is not "good or bad bacteria" but: which species, where does it live, and what does it interact with?
 
-## Self-Check
+## Self-check
 
-What is the main difference between bacteria and animal cells when you look at the nucleus?
+What is the key difference between a bacterial nucleoid and an animal cell nucleus?
 
-Bacteria do not have a membrane-bound nucleus, while animal cells do.
+Answer: the nucleoid is not enclosed by a nuclear membrane, while an animal cell nucleus is.
+
+Explanation: bacteria are prokaryotic; animal cells are eukaryotic.

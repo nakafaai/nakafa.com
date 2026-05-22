@@ -1,62 +1,64 @@
-import { VirusPreventionLab } from "@repo/design-system/components/contents/biology/lab";
+import { VirusPreventionLab } from "@repo/design-system/components/contents/biology/virus-prevention";
 
 export const metadata = {
   title: "Ways to Prevent Virus Spread",
   description:
-    "Learn how hand hygiene, ventilation, vaccination, and reduced risky contact interrupt virus transmission.",
+    "Connect virus prevention to transmission routes, distance, barriers, hygiene, and vaccination.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Viruses and Their Role",
 };
 
-## Prevention Means Breaking a Route
+## Prevention follows the transmission route
 
-Viruses spread through specific routes, such as respiratory droplets, hand contact, contaminated food or water, blood, or vectors like mosquitoes. Prevention works when that route is interrupted.
-
-CDC summarizes hand hygiene as an important way to prevent infection spread in [When and How to Wash Your Hands](https://www.cdc.gov/handwashing/when-how-handwashing.html). WHO explains vaccination as a way to train the immune system in [Vaccines and immunization](https://www.who.int/health-topics/vaccines-and-immunization).
+There is no single prevention step that fits every virus. The Indonesian grade 10 science textbook compares transmission through mosquitoes, skin contact, body fluids, surfaces, and droplets. CDC explains respiratory illness prevention through steps such as cleaner air, hand hygiene, masking when risk is high, and staying home when sick in [Preventing Respiratory Illnesses](https://www.cdc.gov/respiratory-viruses/prevention/index.html).
 
 <VirusPreventionLab
-  title={<>Transmission Route Model</>}
-  description={<>Choose a barrier to see how risk can be reduced before a virus reaches a new host.</>}
+  title={<>Prevention route simulation</>}
+  description={<>Choose a strategy, then see which part of viral movement is interrupted.</>}
   labels={{
-    chooseMode: "Choose prevention",
+    chooseMode: "Choose a strategy",
     detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model reference",
-    structureLabel: "Structure being read",
-    viewLabel: "3D model of virus prevention",
-    sourceNote: <>The model summarizes CDC and WHO principles for interrupting transmission through hygiene, ventilation, and vaccination.</>,
+    sourceNoteLabel: "Model source",
+    structureLabel: "Route interrupted",
+    viewLabel: "3D virus prevention model",
+    sourceNote: <>The model follows examples from the Indonesian grade 10 science textbook and CDC respiratory infection prevention principles.</>,
     items: [
       {
-        tab: "Hands",
+        tab: "Distance",
+        label: "Distance",
+        structure: "Reduces the chance that droplets reach another person.",
+        caption: <>Distance does not kill viruses, but it lowers the chance that infectious particles move between people.</>,
+        detail: <>Particles are spread between two people to show the risk of close contact.</>,
+      },
+      {
+        tab: "Barrier",
+        label: "Barrier",
+        structure: "Masks or shields reduce particles leaving or entering.",
+        caption: <>Barriers make the most sense for droplet or aerosol routes, not for every transmission route.</>,
+        detail: <>Particles shrink when the barrier is active so the effect is visible without claiming perfect protection.</>,
+      },
+      {
+        tab: "Hygiene",
         label: "Hygiene",
-        structure: "Cleaning hands reduces movement of infectious particles from surfaces to the body.",
-        caption: <>Hands often act as a bridge between surfaces, the face, and food.</>,
-        detail: <>The model shows a common contact route, not every virus at once.</>,
-      },
-      {
-        tab: "Air",
-        label: "Ventilation",
-        structure: "Air exchange helps dilute particles suspended in air.",
-        caption: <>Closed spaces with poor air exchange can keep exposure around longer.</>,
-        detail: <>Ventilation effects depend on room size, airflow, and particle source.</>,
-      },
-      {
-        tab: "Immune",
-        label: "Vaccination",
-        structure: "Vaccines help the body recognize a threat before severe infection develops.",
-        caption: <>A vaccine is not a physical wall, but it speeds up body defense.</>,
-        detail: <>Vaccine type and protection differ by disease.</>,
+        structure: "Handwashing, disinfection, and vaccines reduce risk at different points.",
+        caption: <>Soap can help disrupt lipid envelopes in enveloped viruses. Vaccines train immune memory before serious exposure.</>,
+        detail: <>Soap is shown as a surface intervention, not as a replacement for vaccination or clean air.</>,
       },
     ],
   }}
 />
 
-## Match Prevention to the Route
+## Strategies must match the risk
 
-Not every prevention step works for every virus in the same way. For airborne spread, ventilation and masks are more relevant. For vector-borne viruses, controlling mosquitoes or other carriers becomes important.
+Dengue prevention centers on the mosquito vector, such as reducing breeding sites. HIV is linked to body fluids, so its prevention differs from flu prevention. Respiratory viruses are often discussed through ventilation, masks, cough etiquette, and isolation while sick.
 
-## Self-Check
+The rule is simple: find the virus exit point, the movement route, and the entry point into the next host. Strong prevention usually interrupts more than one point in that chain.
 
-Why can handwashing not replace vaccination?
+## Self-check
 
-Because handwashing reduces virus transfer outside the body, while vaccination trains immune response inside the body.
+Why is handwashing not enough for every viral disease?
+
+Answer: viruses spread through different transmission routes.
+
+Explanation: handwashing helps with contact or surface routes, but viruses carried by mosquitoes, body fluids, or air need additional route-specific strategies.

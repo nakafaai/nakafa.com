@@ -1,62 +1,64 @@
-import { VirusRoleLab } from "@repo/design-system/components/contents/biology/lab";
+import { VirusRoleLab } from "@repo/design-system/components/contents/biology/virus-role";
 
 export const metadata = {
   title: "Role of Viruses",
   description:
-    "Learn how viruses can act as disease agents, microbial population regulators, and useful tools in biotechnology.",
+    "Separate viral roles as disease agents, microbial population controls, and biotechnology tools.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Viruses and Their Role",
 };
 
-## A Virus Has to Be Read in Context
+## A virus role depends on context
 
-Viruses can cause disease, but they also matter in ecosystems and research. Bacteriophages, viruses that infect bacteria, can influence bacterial populations in the environment.
-
-NCBI Bookshelf describes bacteriophages as viruses that infect bacteria and have been widely used to study molecular biology in [Bacteriophages](https://www.ncbi.nlm.nih.gov/books/NBK493185/).
+Viruses can cause disease, but that is not the whole biology of viruses. The Indonesian grade 10 science textbook includes viruses as disease agents and as biotechnology tools, including gene therapy vectors, vaccine development, and oncolytic viruses. OpenStax also emphasizes that viruses infect nearly all forms of life, from bacteria to eukaryotes, in [Viral Evolution, Morphology, and Classification](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
 
 <VirusRoleLab
-  title={<>Three Ways to Read Viral Roles</>}
-  description={<>Choose a role to see why viruses need context.</>}
+  title={<>Three contexts for viral roles</>}
+  description={<>Switch modes to see why viruses should not be reduced to one label: disease.</>}
   labels={{
-    chooseMode: "Choose a role",
+    chooseMode: "Choose a context",
     detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model reference",
-    structureLabel: "Structure being read",
-    viewLabel: "3D model of viral roles",
-    sourceNote: <>The model summarizes pathogen, bacteriophage, and biotechnology-vector concepts from OpenStax and NCBI.</>,
+    sourceNoteLabel: "Model source",
+    structureLabel: "Relationship to read",
+    viewLabel: "3D viral role model",
+    sourceNote: <>The examples follow the Indonesian grade 10 science textbook and OpenStax's discussion of diverse viral hosts.</>,
     items: [
       {
         tab: "Disease",
-        label: "Pathogen",
-        structure: "A virus may damage tissue while replicating in host cells.",
-        caption: <>Disease effects come from the interaction between the virus, host cells, and immune response.</>,
-        detail: <>The model does not claim every virus causes severe disease.</>,
+        label: "Disease",
+        structure: "A virus damages or disrupts host cell function.",
+        caption: <>In disease, impact appears when infection changes tissue function or triggers harmful immune responses.</>,
+        detail: <>The model shows a host cell with many viral particles to emphasize infection load.</>,
       },
       {
         tab: "Ecology",
-        label: "Microbe regulator",
-        structure: "Bacteriophages can infect bacteria and shape microbial communities.",
-        caption: <>In the environment, viruses help shape microorganism population dynamics.</>,
-        detail: <>This relationship depends on the virus type and its host.</>,
+        label: "Ecology",
+        structure: "Viruses can infect microbes and influence populations.",
+        caption: <>Bacteriophages, viruses that infect bacteria, can affect bacterial abundance in an environment.</>,
+        detail: <>The model uses bacterial cells because ecological viral roles are often discussed through phages and microbial communities.</>,
       },
       {
-        tab: "Research",
-        label: "Vector",
-        structure: "Modified viruses can carry genetic material in research.",
-        caption: <>In biotechnology, viral cell-entry ability can be used under strict control.</>,
-        detail: <>This use requires strong safety design and ethical review.</>,
+        tab: "Biotech",
+        label: "Biotechnology",
+        structure: "Modified viruses can carry selected genetic material.",
+        caption: <>In biotechnology, viral parts can be used as vectors, meaning carriers that deliver genes to target cells.</>,
+        detail: <>The model simplifies a viral vector as a gene carrier, not a full clinical procedure.</>,
       },
     ],
   }}
 />
 
-## Benefits Without Ignoring Risk
+## One biological object can have different effects
 
-A virus can be harmful in one context and useful in research. The better question is not whether all viruses are good or bad, but which virus it is, what host it infects, and under what conditions.
+A clean way to think is to separate mechanism from effect. The basic mechanism is cell entry and use of cellular systems. The effect can be disease, a shift in microbial populations, or a tool for research and therapy. This avoids two mistakes: treating every virus as only harmful, or ignoring infection risk.
 
-## Self-Check
+At this level, read viral roles as context maps. Ask: which host is infected, what route is used, and what happens at the cell, organism, or ecosystem level?
 
-Why is a bacteriophage not automatically considered dangerous to humans?
+## Self-check
 
-Because a bacteriophage infects bacteria. Its effect on humans depends on the target bacteria and how it is used.
+Why can viruses cause disease and also serve as biotechnology tools?
+
+Answer: the same cell-entry mechanism can damage cells in natural infection but can be controlled and redesigned to deliver genetic material.
+
+Explanation: the context and risk control are different, even though both involve viral biology.

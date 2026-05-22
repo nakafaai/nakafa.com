@@ -1,64 +1,62 @@
-import { ClimateSymptomsLab } from "@repo/design-system/components/contents/biology/lab";
+import { ClimateSymptomsLab } from "@repo/design-system/components/contents/biology/climate-symptoms";
 
 export const metadata = {
   title: "Symptoms of Climate Change",
   description:
-    "Read climate change signals across the atmosphere, ocean, land, and living systems with a 3D indicator model.",
+    "Read climate change symptoms through global temperature, ocean heat, ice loss, and sea level rise.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Climate Change",
 };
 
-## Signals That Do Not Stand Alone
+## Climate symptoms appear across many indicators
 
-Climate change is a long-term change in temperature, rainfall, and atmospheric patterns. Its symptoms are not simply “today feels hot”, but repeated trends across many systems.
-
-NASA summarizes major indicators such as global temperature rise, ocean warming, shrinking ice, and sea level rise in [Global Climate Change: Vital Signs](https://climate.nasa.gov/vital-signs/).
+Climate is the long-term pattern of weather in an area. Climate change means long-term change in temperature and weather patterns. The Indonesian grade 10 science textbook highlights global average temperature rise, ocean warming, shrinking ice, and sea level rise. NASA summarizes similar evidence in [Climate Change Evidence](https://science.nasa.gov/climate-change/evidence/).
 
 <ClimateSymptomsLab
-  title={<>Climate Indicator Model</>}
-  description={<>Choose an indicator, then read which part of Earth is showing the signal.</>}
+  title={<>Climate change indicators</>}
+  description={<>Choose an indicator to see why climate change is not read from one hot day alone.</>}
   labels={{
     chooseMode: "Choose an indicator",
     detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model reference",
-    structureLabel: "Indicator being read",
-    viewLabel: "3D model of climate change symptoms",
-    sourceNote: <>The model summarizes physical indicators commonly used by NASA and IPCC: atmosphere, ocean, ice, and land.</>,
+    sourceNoteLabel: "Model source",
+    structureLabel: "Indicator to read",
+    viewLabel: "3D climate symptoms model",
+    sourceNote: <>The model follows the Indonesian grade 10 science textbook and NASA on global temperature, ocean heat, ice, and sea level.</>,
     items: [
       {
-        tab: "Temperature",
+        tab: "Temp",
         label: "Global temperature",
-        structure: "Earth's average surface temperature is rising over a long-term trend.",
-        caption: <>The atmosphere appears as a thin shell so warming reads as a system-level change.</>,
-        detail: <>One hot day is not enough; scientists read multi-decade trends.</>,
+        structure: "Global average temperature rises as a long-term trend.",
+        caption: <>Daily weather can go up and down, but climate is read through multi-year trends.</>,
+        detail: <>The heat ring represents temperature anomaly, not one city's weather.</>,
       },
       {
         tab: "Ocean",
-        label: "Warming ocean",
-        structure: "The ocean stores a large share of extra heat in the climate system.",
-        caption: <>Warm points around the globe show energy entering and staying in the ocean.</>,
-        detail: <>Ocean warming influences extreme weather and marine ecosystems.</>,
+        label: "Ocean heat",
+        structure: "The ocean stores much of the added heat in the climate system.",
+        caption: <>Ocean warming can affect ecosystems, extreme weather, and thermal expansion of seawater.</>,
+        detail: <>Heat particles sit below the surface to show storage inside the ocean.</>,
       },
       {
         tab: "Ice",
-        label: "Shrinking ice",
-        structure: "Glaciers and sea ice shrink as average temperature rises.",
-        caption: <>The model is not to scale; it highlights the relationship between heat and ice loss.</>,
-        detail: <>Ice loss also changes how much sunlight Earth's surface reflects.</>,
+        label: "Ice and sea level",
+        structure: "Ice shrinks and sea level rises in many coastal regions.",
+        caption: <>Sea level rise is linked to ocean expansion and added water from melting land ice.</>,
+        detail: <>The rising water line makes level change readable in a coastal cross-section.</>,
       },
     ],
   }}
 />
 
-## Weather Is Not Climate
+## Weather and climate are different
 
-Weather changes hour by hour. Climate is the statistical pattern of weather over long periods. That is why climate evidence comes from data collections, not one event.
+Today can be cooler than yesterday while the climate trend still warms. Weather describes current or short-term conditions. Climate describes long-term patterns. That is why climate data needs time series, not one daily experience.
 
-IPCC AR6 states that warming is visible across independent indicators in the atmosphere, ocean, cryosphere, and biosphere in the [Summary for Policymakers](https://www.ipcc.ch/report/ar6/wg1/).
+## Self-check
 
-## Self-Check
+Why is one heavy rain day not enough to conclude climate change?
 
-Why does one very cold day not disprove climate change?
+Answer: climate change is read from long-term patterns, not one weather event.
 
-Because climate change is read from long-term trends. A cold day is weather; climate is the pattern over many years.
+Explanation: a single event must be compared with trends, frequency, intensity, and historical data.

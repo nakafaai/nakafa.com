@@ -1,62 +1,62 @@
-import { EcosystemOrganismsLab } from "@repo/design-system/components/contents/biology/lab";
+import { EcosystemOrganismsLab } from "@repo/design-system/components/contents/biology/ecosystem";
 
 export const metadata = {
   title: "Living Organisms in Ecosystems",
   description:
-    "Learn the roles of producers, consumers, and decomposers in ecosystems and how energy and matter move.",
+    "Read producers, consumers, decomposers, energy flow, and interactions in ecosystems.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Biodiversity of Living Organisms",
 };
 
-## Ecosystems Are Built from Relationships
+## Ecosystems work through energy flow
 
-An ecosystem is the relationship between living organisms and their physical environment. It includes producers, consumers, decomposers, energy flow, and matter cycling.
-
-OpenStax Biology 2e explains energy flow and ecosystem structure in [Energy Flow through Ecosystems](https://openstax.org/books/biology-2e/pages/46-2-energy-flow-through-ecosystems).
+An ecosystem is the relationship between living organisms and their physical environment. The Indonesian grade 10 science textbook introduces organisms in ecosystems through energy flow and matter cycling. OpenStax explains that energy flows through trophic levels while matter is recycled in [Ecology of Ecosystems](https://openstax.org/books/biology-2e/pages/46-1-ecology-of-ecosystems).
 
 <EcosystemOrganismsLab
-  title={<>Ecosystem Role Network</>}
-  description={<>Choose an organism role to see the relationship between energy and matter.</>}
+  title={<>Organism roles in an ecosystem</>}
+  description={<>Choose a relationship to see a food chain, an energy pyramid, or niche interactions.</>}
   labels={{
-    chooseMode: "Choose a role",
+    chooseMode: "Choose a relationship",
     detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model reference",
-    structureLabel: "Structure being read",
-    viewLabel: "3D model of organisms in ecosystems",
-    sourceNote: <>The model follows producer, consumer, and decomposer roles in ecosystem energy flow.</>,
+    sourceNoteLabel: "Model source",
+    structureLabel: "Relationship to read",
+    viewLabel: "3D ecosystem organism model",
+    sourceNote: <>The model follows the Indonesian grade 10 science textbook and OpenStax on energy flow, trophic levels, and matter cycling.</>,
     items: [
       {
-        tab: "Producers",
-        label: "Producers",
-        structure: "Organisms that make organic material, usually through photosynthesis.",
-        caption: <>Producers are the entry point for energy in many food webs.</>,
-        detail: <>The model shows a general relationship, not one specific ecosystem.</>,
+        tab: "Chain",
+        label: "Food chain",
+        structure: "Producers, consumers, and decomposers are connected.",
+        caption: <>Energy enters through producers, moves to consumers, and matter is returned by decomposers.</>,
+        detail: <>Arrows show energy direction, not every feeding relationship in a real ecosystem.</>,
       },
       {
-        tab: "Consumers",
-        label: "Consumers",
-        structure: "Organisms that get energy by eating other organisms.",
-        caption: <>Consumers connect trophic levels in food webs.</>,
-        detail: <>Arrows simplify the direction of energy transfer.</>,
+        tab: "Energy",
+        label: "Energy pyramid",
+        structure: "Available energy decreases at higher trophic levels.",
+        caption: <>An energy pyramid helps explain why top predators are usually fewer than producers.</>,
+        detail: <>Different tier widths emphasize decreasing available energy.</>,
       },
       {
-        tab: "Decomposers",
-        label: "Decomposers",
-        structure: "Organisms that break down remains and return matter.",
-        caption: <>Without decomposers, nutrients return to the environment more slowly.</>,
-        detail: <>Bacteria and fungi are grouped as decomposers to keep the concept focused.</>,
+        tab: "Niche",
+        label: "Niche",
+        structure: "Organisms have specific roles and relationships in a habitat.",
+        caption: <>A niche includes what an organism eats, what eats it, where it lives, and interactions such as mutualism.</>,
+        detail: <>The model places mutualism, predation, and decomposition in one space so relationships are not read separately.</>,
       },
     ],
   }}
 />
 
-## Energy Flows, Matter Cycles
+## Relationships matter more than name lists
 
-Energy usually flows from producers to consumers and is lost as heat. Matter such as carbon, nitrogen, and minerals can cycle back through decomposition.
+Memorizing producers and consumers is not enough. Ecosystems make sense when we see relationships: where energy enters, where matter returns, and what changes when one population shifts. That is why a food web is more realistic than a single straight food chain, even though a chain is a useful first step.
 
-## Self-Check
+## Self-check
 
-Why are decomposers important even when they are not shown in a simple food chain?
+Why are decomposers important even though they are not always at the top of a food chain?
 
-Because decomposers return matter from organism remains to the environment so it can be used again.
+Answer: decomposers return matter from remains to the environment.
+
+Explanation: energy flows through ecosystems, but matter must be recycled so nutrients can be used again by producers.

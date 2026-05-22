@@ -1,64 +1,62 @@
-import { ClimateSymptomsLab } from "@repo/design-system/components/contents/biology/lab";
+import { ClimateSymptomsLab } from "@repo/design-system/components/contents/biology/climate-symptoms";
 
 export const metadata = {
   title: "Gejala Perubahan Iklim",
   description:
-    "Kenali tanda perubahan iklim dari atmosfer, laut, daratan, dan organisme hidup melalui model 3D indikator iklim.",
+    "Membaca gejala perubahan iklim melalui suhu global, panas laut, penyusutan es, dan kenaikan muka laut.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Perubahan Iklim",
 };
 
-## Tanda yang Tidak Muncul Sendirian
+## Gejala iklim terlihat pada banyak indikator
 
-Perubahan iklim adalah perubahan jangka panjang pada pola suhu, curah hujan, dan kondisi atmosfer. Gejalanya tidak hanya “cuaca panas hari ini”, tetapi tren yang terlihat berulang pada banyak sistem.
-
-NASA merangkum indikator utama perubahan iklim seperti kenaikan suhu global, pemanasan laut, penyusutan es, dan kenaikan muka laut di [Global Climate Change: Vital Signs](https://climate.nasa.gov/vital-signs/).
+Iklim adalah pola cuaca jangka panjang di suatu wilayah. Perubahan iklim berarti perubahan jangka panjang pada suhu dan pola cuaca. Buku IPA SMA/MA Kelas X Bab VIII menekankan beberapa gejala: kenaikan suhu rata-rata global, pemanasan laut, penyusutan es, dan kenaikan muka laut. NASA merangkum bukti yang sama pada [Climate Change Evidence](https://science.nasa.gov/climate-change/evidence/).
 
 <ClimateSymptomsLab
-  title={<>Model Indikator Iklim</>}
-  description={<>Pilih indikator, lalu baca bagian Bumi yang sedang memberi sinyal perubahan.</>}
+  title={<>Indikator perubahan iklim</>}
+  description={<>Pilih indikator untuk melihat mengapa perubahan iklim tidak dibaca dari satu hari panas saja.</>}
   labels={{
     chooseMode: "Pilih indikator",
     detailLabel: "Catatan akurasi",
     sourceNoteLabel: "Rujukan model",
     structureLabel: "Indikator yang dibaca",
-    viewLabel: "Model 3D gejala perubahan iklim",
-    sourceNote: <>Model merangkum indikator fisik yang umum dipakai NASA dan IPCC: atmosfer, laut, es, dan daratan.</>,
+    viewLabel: "Model 3D gejala iklim",
+    sourceNote: <>Model mengikuti Buku IPA SMA/MA Kelas X Bab VIII dan NASA tentang suhu global, panas laut, es, dan muka laut.</>,
     items: [
       {
         tab: "Suhu",
         label: "Suhu global",
-        structure: "Rata-rata suhu permukaan Bumi meningkat dalam tren jangka panjang.",
-        caption: <>Lapisan atmosfer ditampilkan sebagai cincin tipis agar tren pemanasan terbaca sebagai perubahan sistem.</>,
-        detail: <>Satu hari panas belum cukup; yang dibaca ilmuwan adalah tren puluhan tahun.</>,
+        structure: "Suhu rata-rata global naik dalam tren jangka panjang.",
+        caption: <>Cuaca harian dapat naik turun, tetapi iklim dibaca dari tren data bertahun-tahun.</>,
+        detail: <>Cincin panas melambangkan anomali suhu, bukan suhu satu kota.</>,
       },
       {
         tab: "Laut",
-        label: "Laut menghangat",
+        label: "Panas laut",
         structure: "Laut menyerap banyak panas tambahan dari sistem iklim.",
-        caption: <>Titik panas di sekitar globe menunjukkan energi yang masuk dan tersimpan di laut.</>,
-        detail: <>Pemanasan laut ikut memengaruhi cuaca ekstrem dan ekosistem laut.</>,
+        caption: <>Pemanasan laut dapat memengaruhi ekosistem, cuaca ekstrem, dan pemuaian air laut.</>,
+        detail: <>Partikel panas ditempatkan di bawah permukaan untuk menunjukkan penyimpanan panas dalam laut.</>,
       },
       {
         tab: "Es",
-        label: "Es berkurang",
-        structure: "Gletser dan es laut menyusut ketika suhu rata-rata naik.",
-        caption: <>Model tidak memakai skala asli, tetapi menonjolkan hubungan antara panas dan hilangnya es.</>,
-        detail: <>Penyusutan es juga mengubah kemampuan permukaan Bumi memantulkan cahaya Matahari.</>,
+        label: "Es dan muka laut",
+        structure: "Es menyusut dan muka laut naik pada banyak wilayah pantai.",
+        caption: <>Kenaikan muka laut terkait pemuaian air laut dan tambahan air dari es daratan yang mencair.</>,
+        detail: <>Garis air dibuat miring naik agar perubahan level terlihat pada penampang pantai.</>,
       },
     ],
   }}
 />
 
-## Bedakan Cuaca dan Iklim
+## Cuaca dan iklim tidak sama
 
-Cuaca berubah dari jam ke jam. Iklim adalah pola statistik cuaca dalam rentang panjang. Karena itu, bukti perubahan iklim selalu dibaca dari kumpulan data, bukan dari satu kejadian.
+Hari ini bisa lebih dingin dari kemarin, tetapi tren iklim tetap menghangat. Cuaca menjawab kondisi saat ini atau beberapa hari. Iklim menjawab pola panjang. Karena itu data iklim perlu deret waktu, bukan satu pengalaman harian.
 
-IPCC AR6 menyatakan bahwa pemanasan sistem iklim tampak dari banyak indikator independen di atmosfer, laut, kriosfer, dan biosfer pada [Summary for Policymakers](https://www.ipcc.ch/report/ar6/wg1/).
+## Cek pemahaman
 
-## Cek Pemahaman
+Mengapa satu hari hujan deras tidak cukup untuk menyimpulkan perubahan iklim?
 
-Mengapa satu hari yang sangat dingin tidak membantah perubahan iklim?
+Jawaban: karena perubahan iklim dibaca dari pola jangka panjang, bukan satu kejadian cuaca.
 
-Karena perubahan iklim dibaca dari tren jangka panjang. Satu hari dingin adalah cuaca, sedangkan iklim dilihat dari pola bertahun-tahun.
+Alasan: kejadian tunggal perlu dibandingkan dengan tren, frekuensi, intensitas, dan data historis.

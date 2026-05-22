@@ -1,64 +1,62 @@
-import { ClimateCauseLab } from "@repo/design-system/components/contents/biology/lab";
+import { ClimateCauseLab } from "@repo/design-system/components/contents/biology/climate-causes";
 
 export const metadata = {
   title: "Penyebab Perubahan Iklim",
   description:
-    "Pahami efek rumah kaca, gas rumah kaca, dan aliran energi Bumi melalui model 3D radiasi.",
+    "Menjelaskan efek rumah kaca, gas rumah kaca, pembakaran bahan bakar fosil, perubahan lahan, dan limbah organik.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Perubahan Iklim",
 };
 
-## Masalahnya Ada pada Neraca Energi
+## Gas rumah kaca mengubah neraca energi
 
-Efek rumah kaca adalah proses ketika gas tertentu di atmosfer menyerap dan memancarkan kembali radiasi inframerah. Proses alami ini membuat Bumi layak huni, tetapi penambahan gas rumah kaca dari aktivitas manusia memperkuat pemanasan.
-
-NOAA menjelaskan kenaikan konsentrasi karbon dioksida atmosfer dan hubungannya dengan aktivitas manusia di [Climate Change: Atmospheric Carbon Dioxide](https://www.climate.gov/news-features/understanding-climate/climate-change-atmospheric-carbon-dioxide).
+Efek rumah kaca alami membuat Bumi layak huni. Masalah muncul ketika konsentrasi gas rumah kaca meningkat sehingga lebih banyak panas tertahan. Buku IPA SMA/MA Kelas X Bab VIII menekankan karbon dioksida, metana, bahan bakar fosil, perubahan lahan, freon, kendaraan, plastik, dan limbah organik. NASA menjelaskan peran aktivitas manusia dalam peningkatan gas rumah kaca pada [Climate Change Causes](https://science.nasa.gov/climate-change/causes/).
 
 <ClimateCauseLab
-  title={<>Model Aliran Radiasi</>}
-  description={<>Pilih penyebab untuk melihat bagaimana energi masuk, tertahan, atau dikurangi.</>}
+  title={<>Mekanisme dan sumber penyebab</>}
+  description={<>Pilih mode untuk memisahkan mekanisme fisika atmosfer dari sumber emisi manusia.</>}
   labels={{
     chooseMode: "Pilih penyebab",
     detailLabel: "Catatan akurasi",
     sourceNoteLabel: "Rujukan model",
     structureLabel: "Penyebab yang dibaca",
-    viewLabel: "Model 3D penyebab perubahan iklim",
-    sourceNote: <>Model merangkum efek rumah kaca dan perubahan neraca energi yang dibahas NOAA, NASA, dan IPCC.</>,
+    viewLabel: "Model 3D penyebab iklim",
+    sourceNote: <>Model mengikuti Buku IPA SMA/MA Kelas X Bab VIII dan NASA tentang efek rumah kaca, bahan bakar fosil, perubahan lahan, dan limbah.</>,
     items: [
       {
-        tab: "CO2",
-        label: "Karbon dioksida",
-        structure: "CO2 bertambah terutama dari pembakaran bahan bakar fosil dan perubahan penggunaan lahan.",
-        caption: <>Lapisan atmosfer ditampilkan lebih aktif untuk menunjukkan lebih banyak radiasi inframerah tertahan.</>,
-        detail: <>CO2 bertahan lama di atmosfer, sehingga akumulasinya penting.</>,
+        tab: "Efek",
+        label: "Efek rumah kaca",
+        structure: "Gas tertentu menahan sebagian radiasi inframerah dari Bumi.",
+        caption: <>Efek rumah kaca bukan selalu buruk. Yang bermasalah adalah penguatannya akibat tambahan gas rumah kaca.</>,
+        detail: <>Atmosfer transparan dan partikel gas dibuat terpisah agar mekanisme penahanan panas terbaca.</>,
       },
       {
-        tab: "Metana",
-        label: "Metana",
-        structure: "Metana berasal dari sumber seperti energi fosil, peternakan, limbah, dan lahan basah.",
-        caption: <>Partikel kecil menggambarkan gas yang jumlahnya lebih sedikit tetapi kuat menyerap panas.</>,
-        detail: <>Metana berumur lebih pendek daripada CO2, tetapi daya pemanasannya tinggi.</>,
+        tab: "Fosil",
+        label: "Bahan bakar fosil",
+        structure: "Pembakaran batu bara, minyak, dan gas menambah CO2 ke atmosfer.",
+        caption: <>Energi fosil memindahkan karbon yang lama tersimpan di bawah tanah ke atmosfer.</>,
+        detail: <>Mobil dan cerobong adalah simbol sumber emisi, bukan inventaris emisi lengkap.</>,
       },
       {
         tab: "Lahan",
-        label: "Perubahan lahan",
-        structure: "Deforestasi mengurangi penyerap karbon dan mengubah permukaan Bumi.",
-        caption: <>Permukaan Bumi pada model dibaca sebagai sistem yang menyerap, memantulkan, dan menyimpan energi.</>,
-        detail: <>Perubahan lahan dapat menambah emisi sekaligus mengurangi kapasitas penyerap karbon.</>,
+        label: "Lahan dan limbah",
+        structure: "Deforestasi mengurangi penyerap karbon, sedangkan limbah organik dapat menghasilkan metana.",
+        caption: <>Perubahan lahan dan pengelolaan sampah memengaruhi jumlah gas rumah kaca di atmosfer.</>,
+        detail: <>Kayu tumbang dan gelembung gas menandai dua jalur: hilangnya serapan dan keluarnya emisi.</>,
       },
     ],
   }}
 />
 
-## Penyebab Alami dan Manusia Harus Dipisahkan
+## Penyebab bukan hanya satu benda
 
-Gunung api, variasi Matahari, dan proses alam memang memengaruhi iklim. Namun pemanasan cepat sejak era industri terutama dijelaskan oleh peningkatan gas rumah kaca dari aktivitas manusia.
+Perubahan iklim modern terjadi karena gabungan aktivitas yang meningkatkan gas rumah kaca dan mengurangi penyerap karbon. Karena penyebabnya tersebar di energi, transportasi, lahan, pangan, dan limbah, pembahasannya harus sistemik. Mengganti satu kebiasaan membantu, tetapi perubahan besar membutuhkan kebijakan, teknologi, dan perubahan cara produksi.
 
-IPCC AR6 WG1 menyimpulkan pengaruh manusia telah memanaskan atmosfer, laut, dan daratan di [Summary for Policymakers](https://www.ipcc.ch/report/ar6/wg1/).
+## Cek pemahaman
 
-## Cek Pemahaman
+Mengapa efek rumah kaca tidak sama dengan perubahan iklim?
 
-Mengapa efek rumah kaca alami tidak sama dengan perubahan iklim saat ini?
+Jawaban: efek rumah kaca adalah mekanisme alami penahanan panas, sedangkan perubahan iklim terjadi ketika mekanisme itu menguat dan mengubah pola iklim jangka panjang.
 
-Efek rumah kaca alami membantu Bumi hangat. Masalah saat ini adalah penguatan efek itu akibat tambahan gas rumah kaca dari aktivitas manusia.
+Alasan: tanpa efek rumah kaca Bumi terlalu dingin, tetapi tambahan gas rumah kaca membuat lebih banyak panas tertahan.

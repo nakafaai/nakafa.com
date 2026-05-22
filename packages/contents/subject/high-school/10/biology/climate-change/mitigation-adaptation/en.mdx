@@ -1,64 +1,62 @@
-import { ClimateActionLab } from "@repo/design-system/components/contents/biology/lab";
+import { ClimateActionLab } from "@repo/design-system/components/contents/biology/climate-action";
 
 export const metadata = {
   title: "Mitigation and Adaptation Efforts for Climate Change",
   description:
-    "Compare mitigation and adaptation through a 3D climate action model that lowers emissions and reduces risk.",
+    "Distinguish mitigation, adaptation, and restoration as complementary responses to climate change.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Climate Change",
 };
 
-## Two Paths That Must Work Together
+## Mitigation and adaptation have different goals
 
-Mitigation means reducing the causes of climate change, especially greenhouse gas emissions. Adaptation means reducing impacts that are already happening or expected.
-
-IPCC AR6 WGIII discusses mitigation options across energy, transport, industry, and land in [Mitigation of Climate Change](https://www.ipcc.ch/report/ar6/wg3/).
+Mitigation means reducing or stabilizing greenhouse gases. Adaptation means adjusting so climate impacts cause less harm. The Indonesian grade 10 science textbook gives examples such as forest restoration, plastic reduction, and drought-tolerant crops. IPCC discusses mitigation and adaptation as key responses in the [AR6 Synthesis Report](https://www.ipcc.ch/report/ar6/syr/).
 
 <ClimateActionLab
-  title={<>Climate Action Model</>}
-  description={<>Compare actions that lower emissions with actions that lower risk.</>}
+  title={<>Three climate response types</>}
+  description={<>Choose a response to see whether it reduces causes, reduces harm, or restores ecosystems.</>}
   labels={{
-    chooseMode: "Choose an action",
+    chooseMode: "Choose a response",
     detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model reference",
-    structureLabel: "Action being read",
-    viewLabel: "3D model of mitigation and adaptation",
-    sourceNote: <>The model separates mitigation, adaptation, and restoration so students do not mix up the purpose of each action.</>,
+    sourceNoteLabel: "Model source",
+    structureLabel: "Response to read",
+    viewLabel: "3D climate action model",
+    sourceNote: <>The model follows the Indonesian grade 10 science textbook and IPCC AR6 on mitigation, adaptation, and ecosystem restoration.</>,
     items: [
       {
         tab: "Mitigation",
-        label: "Reduce emissions",
-        structure: "Clean energy, efficiency, and forest protection reduce warming sources.",
-        caption: <>Outgoing pressure is reduced to show less emission stress on the atmosphere.</>,
-        detail: <>Mitigation works on the cause, not only the impact.</>,
+        label: "Mitigation",
+        structure: "Reduces emission sources or increases carbon uptake.",
+        caption: <>Examples include energy efficiency, renewable energy, low-emission transport, and forest protection.</>,
+        detail: <>The carbon arrow toward trees emphasizes emission reduction and uptake.</>,
       },
       {
         tab: "Adaptation",
-        label: "Reduce risk",
-        structure: "Drainage, early warning, drought-tolerant crops, and health protection help communities cope.",
-        caption: <>Protection nodes sit between hazards and communities.</>,
-        detail: <>Adaptation does not remove warming causes, but it reduces losses.</>,
+        label: "Adaptation",
+        structure: "Adjusts systems so they can better withstand climate impacts.",
+        caption: <>Examples include drought-tolerant varieties, water management, early warning, and heat-aware urban design.</>,
+        detail: <>Water and crop protection emphasize risk reduction, not removal of the cause.</>,
       },
       {
         tab: "Restoration",
-        label: "Restore ecosystems",
-        structure: "Mangroves, forests, and wetlands can store carbon while protecting habitats.",
-        caption: <>Green areas show actions that can support both mitigation and adaptation.</>,
-        detail: <>Restoration benefits depend on ecosystem type and management quality.</>,
+        label: "Restoration",
+        structure: "Recovers habitats so ecological functions can work again.",
+        caption: <>Forest or mangrove restoration can support carbon uptake and ecosystem protection.</>,
+        detail: <>Seedlings and a small animal show a habitat beginning to recover, not an instant mature forest.</>,
       },
     ],
   }}
 />
 
-## Do Not Mix Them Up
+## Both responses need to move together
 
-Planting trees can be mitigation if it increases carbon storage. A flood barrier is adaptation because it reduces flood impact. Both matter, but they answer different parts of the problem.
+Adaptation without mitigation means society keeps chasing stronger impacts. Mitigation without adaptation ignores impacts that are already happening. A coherent climate response asks two questions: how do we reduce the cause, and how do we protect people and ecosystems while change continues?
 
-UNEP explains the growing need for adaptation as climate risk increases in the [Adaptation Gap Report](https://www.unep.org/resources/adaptation-gap-report).
+## Self-check
 
-## Self-Check
+Is building a seawall mitigation or adaptation?
 
-Is building a flood early-warning system mitigation or adaptation?
+Answer: adaptation.
 
-Adaptation, because it reduces risk and losses from climate impacts, not greenhouse gas emissions directly.
+Explanation: a seawall does not directly reduce greenhouse gases, but it can reduce risk from coastal flooding or sea level rise.

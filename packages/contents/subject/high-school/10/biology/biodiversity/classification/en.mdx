@@ -1,62 +1,62 @@
-import { ClassificationLab } from "@repo/design-system/components/contents/biology/lab";
+import { ClassificationLab } from "@repo/design-system/components/contents/biology/classification";
 
 export const metadata = {
   title: "Classification of Living Organisms",
   description:
-    "Learn why living things are classified and how shared traits help organize biological groups.",
+    "Understand artificial, natural, and phylogenetic classification as ways to find patterns in living things.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Biodiversity of Living Organisms",
 };
 
-## Classification Makes Diversity Readable
+## Classification helps us find patterns
 
-Classification groups living organisms by similarities and differences. Without classification, organisms become a long list of names that is hard to study.
-
-OpenStax Biology 2e introduces taxonomy as the science of grouping and naming organisms in [Organizing Life on Earth](https://openstax.org/books/biology-2e/pages/20-1-organizing-life-on-earth).
+Classification means grouping living things based on chosen traits. The Indonesian grade 10 science textbook distinguishes artificial, natural, and phylogenetic classification. OpenStax explains that modern systematics organizes life's diversity through evolutionary relationships in [Organizing Life on Earth](https://openstax.org/books/biology-2e/pages/20-1-organizing-life-on-earth).
 
 <ClassificationLab
-  title={<>Classification Network</>}
-  description={<>Choose a reading mode, then see how shared traits connect organisms.</>}
+  title={<>Ways to group organisms</>}
+  description={<>Compare grouping by visible traits, multiple natural traits, and evolutionary relatedness.</>}
   labels={{
-    chooseMode: "Choose a reading mode",
+    chooseMode: "Choose a classification",
     detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model reference",
-    structureLabel: "Structure being read",
-    viewLabel: "3D model of classification",
-    sourceNote: <>The model follows taxonomy principles: organisms are grouped by shared traits and relatedness.</>,
+    sourceNoteLabel: "Model source",
+    structureLabel: "Grouping basis",
+    viewLabel: "3D classification model",
+    sourceNote: <>The model follows artificial, natural, and phylogenetic classification in the Indonesian grade 10 science textbook.</>,
     items: [
       {
-        tab: "Traits",
-        label: "Shared traits",
-        structure: "Traits found in several organisms, such as a backbone or cell wall.",
-        caption: <>Shared traits help us build meaningful groups.</>,
-        detail: <>Nodes represent trait groups, not a complete phylogenetic tree.</>,
+        tab: "Artificial",
+        label: "Artificial",
+        structure: "Groups by traits that are easy to observe or useful for a purpose.",
+        caption: <>Artificial classification is quick, but it can place unrelated organisms together.</>,
+        detail: <>The boxes show practical groups, not evolutionary relationships.</>,
       },
       {
-        tab: "Taxa",
-        label: "Taxon",
-        structure: "A grouping level such as genus, family, order, class, or kingdom.",
-        caption: <>Lower taxonomic levels usually contain organisms with more similar traits.</>,
-        detail: <>The taxonomic sequence is simplified to focus on hierarchy.</>,
+        tab: "Natural",
+        label: "Natural",
+        structure: "Groups by many similarities in structure and function.",
+        caption: <>Natural classification is more stable because it does not rely on one surface trait.</>,
+        detail: <>The five columns recall kingdom-level patterns discussed in grade 10 biology.</>,
       },
       {
-        tab: "Names",
-        label: "Scientific name",
-        structure: "A two-part name that lets scientists refer to a species consistently.",
-        caption: <>Scientific names reduce confusion from different local names.</>,
-        detail: <>Detailed naming rules are studied further in taxonomy.</>,
+        tab: "Phylogeny",
+        label: "Phylogeny",
+        structure: "Groups by evolutionary relatedness.",
+        caption: <>Phylogenetic classification asks which organisms share a closer common ancestor.</>,
+        detail: <>The branches simplify relatedness; they are not a full phylogenetic tree.</>,
       },
     ],
   }}
 />
 
-## The Chosen Trait Must Matter
+## A group name needs a reason
 
-Body color alone is often not enough for classification. Body structure, reproduction, genetic material, and evolutionary relationships provide stronger evidence.
+Good classification is not only naming. It helps us predict traits. If two organisms are grouped because they are closely related, we can expect patterns in structure, physiology, or genes. That is why phylogenetic classification explains biological relationships better than grouping only by color, size, or habitat.
 
-## Self-Check
+## Self-check
 
-Why are two animals that both live in water not automatically close relatives?
+Why are bats not grouped with birds just because both can fly?
 
-Because habitat is not the only basis for classification. Body traits, reproduction, and evolutionary relationships also need to be checked.
+Answer: flight is one visible trait, not the strongest evidence of relatedness.
+
+Explanation: good classification considers many traits and evolutionary relationships, not one practical trait.

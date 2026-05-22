@@ -1,64 +1,62 @@
-import { ClimateActionLab } from "@repo/design-system/components/contents/biology/lab";
+import { ClimateActionLab } from "@repo/design-system/components/contents/biology/climate-action";
 
 export const metadata = {
   title: "Upaya Mitigasi dan Adaptasi terhadap Perubahan Iklim",
   description:
-    "Bandingkan mitigasi dan adaptasi melalui model 3D tindakan iklim yang menurunkan emisi dan mengurangi risiko.",
+    "Membedakan mitigasi, adaptasi, dan restorasi sebagai respons yang saling melengkapi terhadap perubahan iklim.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Perubahan Iklim",
 };
 
-## Dua Jalur yang Harus Jalan Bersama
+## Mitigasi dan adaptasi punya tujuan berbeda
 
-Mitigasi adalah upaya mengurangi penyebab perubahan iklim, terutama emisi gas rumah kaca. Adaptasi adalah upaya menurunkan dampak yang sudah atau akan terjadi.
-
-IPCC AR6 WGIII membahas pilihan mitigasi lintas energi, transportasi, industri, dan lahan di [Mitigation of Climate Change](https://www.ipcc.ch/report/ar6/wg3/).
+Mitigasi adalah upaya mengurangi atau menstabilkan gas rumah kaca. Adaptasi adalah penyesuaian agar dampak perubahan iklim tidak merusak sebesar mungkin. Buku IPA SMA/MA Kelas X Bab VIII memberi contoh restorasi hutan, pengurangan plastik, dan tanaman tahan kering. IPCC membahas mitigasi dan adaptasi sebagai dua respons penting dalam [AR6 Synthesis Report](https://www.ipcc.ch/report/ar6/syr/).
 
 <ClimateActionLab
-  title={<>Model Tindakan Iklim</>}
-  description={<>Bandingkan tindakan yang menurunkan emisi dengan tindakan yang menurunkan risiko.</>}
+  title={<>Tiga jenis respons iklim</>}
+  description={<>Pilih respons untuk melihat apakah tindakan mengurangi penyebab, mengurangi dampak, atau memulihkan ekosistem.</>}
   labels={{
-    chooseMode: "Pilih tindakan",
+    chooseMode: "Pilih respons",
     detailLabel: "Catatan akurasi",
     sourceNoteLabel: "Rujukan model",
-    structureLabel: "Tindakan yang dibaca",
-    viewLabel: "Model 3D mitigasi dan adaptasi",
-    sourceNote: <>Model memisahkan mitigasi, adaptasi, dan restorasi agar siswa tidak mencampur tujuan tindakan.</>,
+    structureLabel: "Respons yang dibaca",
+    viewLabel: "Model 3D aksi iklim",
+    sourceNote: <>Model mengikuti Buku IPA SMA/MA Kelas X Bab VIII dan IPCC AR6 tentang mitigasi, adaptasi, dan pemulihan ekosistem.</>,
     items: [
       {
         tab: "Mitigasi",
-        label: "Kurangi emisi",
-        structure: "Energi bersih, efisiensi, dan perlindungan hutan menurunkan sumber pemanasan.",
-        caption: <>Panah keluar diperkecil untuk menunjukkan berkurangnya tekanan emisi ke atmosfer.</>,
-        detail: <>Mitigasi bekerja pada penyebab, bukan hanya dampaknya.</>,
+        label: "Mitigasi",
+        structure: "Mengurangi sumber emisi atau meningkatkan serapan karbon.",
+        caption: <>Contohnya efisiensi energi, energi terbarukan, transportasi rendah emisi, dan perlindungan hutan.</>,
+        detail: <>Panah karbon menuju pohon menekankan pengurangan emisi dan peningkatan serapan.</>,
       },
       {
         tab: "Adaptasi",
-        label: "Kurangi risiko",
-        structure: "Drainase, peringatan dini, varietas tahan kering, dan perlindungan kesehatan membantu masyarakat bertahan.",
-        caption: <>Node perlindungan ditempatkan di antara bahaya dan komunitas.</>,
-        detail: <>Adaptasi tidak menghapus penyebab pemanasan, tetapi menurunkan kerugian.</>,
+        label: "Adaptasi",
+        structure: "Menyesuaikan sistem agar lebih tahan terhadap dampak iklim.",
+        caption: <>Contohnya varietas tahan kering, tata air, peringatan dini, dan desain kota yang mengurangi panas.</>,
+        detail: <>Air dan pelindung tanaman menekankan pengurangan risiko, bukan penghilangan penyebab.</>,
       },
       {
         tab: "Restorasi",
-        label: "Pulihkan ekosistem",
-        structure: "Mangrove, hutan, dan lahan basah dapat menyimpan karbon sekaligus melindungi habitat.",
-        caption: <>Area hijau menunjukkan tindakan yang bisa punya manfaat mitigasi dan adaptasi sekaligus.</>,
-        detail: <>Manfaat restorasi bergantung pada jenis ekosistem dan cara pengelolaannya.</>,
+        label: "Restorasi",
+        structure: "Memulihkan habitat agar fungsi ekologis kembali bekerja.",
+        caption: <>Restorasi hutan atau mangrove dapat membantu serapan karbon dan perlindungan ekosistem.</>,
+        detail: <>Bibit dan satwa kecil menunjukkan habitat yang mulai pulih, bukan hutan matang instan.</>,
       },
     ],
   }}
 />
 
-## Jangan Tertukar
+## Keduanya perlu berjalan bersama
 
-Menanam pohon bisa menjadi mitigasi jika meningkatkan penyimpanan karbon. Tanggul banjir adalah adaptasi karena mengurangi dampak banjir. Keduanya penting, tetapi menjawab bagian masalah yang berbeda.
+Adaptasi tanpa mitigasi membuat kita terus mengejar dampak yang semakin berat. Mitigasi tanpa adaptasi mengabaikan dampak yang sudah terjadi. Karena itu respons iklim yang rapi selalu bertanya dua hal: bagaimana mengurangi penyebab, dan bagaimana melindungi manusia serta ekosistem selama perubahan masih berlangsung?
 
-UNEP menjelaskan kebutuhan adaptasi yang meningkat seiring risiko iklim di [Adaptation Gap Report](https://www.unep.org/resources/adaptation-gap-report).
+## Cek pemahaman
 
-## Cek Pemahaman
+Apakah membangun tanggul termasuk mitigasi atau adaptasi?
 
-Apakah membangun sistem peringatan dini banjir termasuk mitigasi atau adaptasi?
+Jawaban: adaptasi.
 
-Adaptasi, karena tindakan itu mengurangi risiko dan kerugian dari dampak iklim, bukan langsung menurunkan emisi gas rumah kaca.
+Alasan: tanggul tidak langsung menurunkan gas rumah kaca, tetapi mengurangi risiko dampak seperti banjir rob atau kenaikan muka laut.

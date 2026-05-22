@@ -1,64 +1,62 @@
-import { ClimateImpactLab } from "@repo/design-system/components/contents/biology/lab";
+import { ClimateImpactLab } from "@repo/design-system/components/contents/biology/climate-impact";
 
 export const metadata = {
   title: "Impact of Climate Change",
   description:
-    "Learn climate change impacts on ecosystems, health, food, and habitat through a 3D ecosystem stress model.",
+    "Connect climate change to coral reefs, food, water, health, and disease vectors.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Climate Change",
 };
 
-## The Impact Enters the Web of Life
+## Climate impacts spread through ecosystems
 
-Climate impacts appear when temperature, water, seasons, and extreme events change enough that organisms must adapt, move, or face population decline.
-
-IPCC AR6 WGII explains impacts on ecosystems, human health, food production, and infrastructure in [Impacts, Adaptation and Vulnerability](https://www.ipcc.ch/report/ar6/wg2/).
+Climate change is not only hotter air. The Indonesian grade 10 science textbook discusses drought, fires, floods, agriculture, coral bleaching, sea turtle sex ratios, and disease risk. WHO connects climate change to health through extreme heat, air quality, water, food, and infectious disease in [Climate change and health](https://www.who.int/news-room/fact-sheets/detail/climate-change-and-health).
 
 <ClimateImpactLab
-  title={<>Ecosystem Stress Model</>}
-  description={<>Choose an impact type to see which part of the ecosystem is pushed to change.</>}
+  title={<>Climate impact chains</>}
+  description={<>Choose an impact example to see how physical pressure becomes a biological problem.</>}
   labels={{
     chooseMode: "Choose an impact",
     detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model reference",
-    structureLabel: "Impact being read",
-    viewLabel: "3D model of climate change impact",
-    sourceNote: <>The model simplifies IPCC-described impacts on habitat, organisms, food, and health into cause-effect relationships.</>,
+    sourceNoteLabel: "Model source",
+    structureLabel: "Impact to read",
+    viewLabel: "3D climate impact model",
+    sourceNote: <>The model follows the Indonesian grade 10 science textbook, NASA Effects, and WHO on ecosystem and health impacts.</>,
     items: [
       {
-        tab: "Habitat",
-        label: "Shifting habitat",
-        structure: "Living zones may move toward cooler or wetter areas.",
-        caption: <>Organism points shift toward a new area to show habitat movement.</>,
-        detail: <>Not every species can move quickly, especially when habitat is fragmented.</>,
+        tab: "Coral",
+        label: "Coral",
+        structure: "Ocean heat can trigger coral bleaching.",
+        caption: <>Coral bleaching is a stress sign. If pressure continues, reef ecosystems can weaken.</>,
+        detail: <>Contrasting colors help students see a shift from healthier coral to stressed coral.</>,
       },
       {
         tab: "Food",
-        label: "Food production",
-        structure: "Heat, drought, flood, and pests can reduce crop yields.",
-        caption: <>Energy and water flows appear unbalanced so the climate-food link is easier to read.</>,
-        detail: <>Food impacts vary by region, crop, and adaptation capacity.</>,
+        label: "Food and water",
+        structure: "Heat and drought can stress crops and water availability.",
+        caption: <>Agricultural impacts can happen through water, temperature, pests, and extreme events.</>,
+        detail: <>Leaning crops and a small water pool show stress, not total crop failure.</>,
       },
       {
         tab: "Health",
-        label: "Health risk",
-        structure: "Heat waves and changing vector habitats can increase health risks.",
-        caption: <>Risk nodes show how climate impacts can move from environment to people.</>,
-        detail: <>Prevention still depends on health systems, sanitation, and community protection.</>,
+        label: "Health",
+        structure: "Temperature and rainfall changes can shift certain disease risks.",
+        caption: <>Disease vectors such as mosquitoes respond to environmental conditions, so risk can change across regions.</>,
+        detail: <>The model presents vector risk as ecological risk, not a location prediction.</>,
       },
     ],
   }}
 />
 
-## Risk Is Uneven
+## Impacts often move through cause-and-effect chains
 
-Two places can warm by the same amount but face different risks. Areas with fewer adaptation resources are usually more vulnerable to floods, crop failure, or disease.
+Ocean heat can stress corals, weakened coral changes fish habitat, and coastal communities can be affected. Drought can stress crops, reduce yield, and disturb food availability. Because impacts cascade, solutions also need cross-sector work.
 
-WHO discusses climate and health links, including extreme heat, air quality, and infectious disease, in [Climate change and health](https://www.who.int/news-room/fact-sheets/detail/climate-change-and-health).
+## Self-check
 
-## Self-Check
+Why can ocean warming affect people who live far from coral reefs?
 
-Why are climate impacts not the same in every region?
+Answer: coral reefs connect to biodiversity, fisheries, coastal protection, and coastal economies.
 
-Because risk depends on hazard exposure, vulnerability, and each region's capacity to adapt.
+Explanation: a change in one ecosystem can spread through food webs and human activities.

@@ -1,62 +1,62 @@
-import { ClassificationLab } from "@repo/design-system/components/contents/biology/lab";
+import { ClassificationLab } from "@repo/design-system/components/contents/biology/classification";
 
 export const metadata = {
   title: "Klasifikasi Makhluk Hidup",
   description:
-    "Pelajari mengapa makhluk hidup diklasifikasikan dan bagaimana ciri bersama membantu menyusun kelompok biologis.",
+    "Memahami klasifikasi buatan, alami, dan filogenetik sebagai cara mencari pola pada makhluk hidup.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Keanekaragaman Makhluk Hidup",
 };
 
-## Klasifikasi Membuat Keanekaragaman Bisa Dibaca
+## Klasifikasi membantu mencari pola
 
-Klasifikasi adalah pengelompokan makhluk hidup berdasarkan persamaan dan perbedaan cirinya. Tanpa klasifikasi, daftar organisme hanya menjadi kumpulan nama yang sulit dipelajari.
-
-OpenStax Biology 2e memperkenalkan taksonomi sebagai ilmu pengelompokan dan penamaan organisme di [Organizing Life on Earth](https://openstax.org/books/biology-2e/pages/20-1-organizing-life-on-earth).
+Klasifikasi adalah pengelompokan makhluk hidup berdasarkan ciri tertentu. Buku IPA SMA/MA Kelas X Bab VI membedakan klasifikasi buatan, alami, dan filogenetik. OpenStax menjelaskan bahwa sistematika modern berusaha menyusun keanekaragaman hidup berdasarkan hubungan evolusi pada [Organizing Life on Earth](https://openstax.org/books/biology-2e/pages/20-1-organizing-life-on-earth).
 
 <ClassificationLab
-  title={<>Jaringan Klasifikasi</>}
-  description={<>Pilih cara membaca kelompok, lalu lihat bagaimana ciri bersama menghubungkan organisme.</>}
+  title={<>Cara mengelompokkan organisme</>}
+  description={<>Bandingkan pengelompokan berdasarkan ciri tampak, banyak ciri alami, dan kekerabatan evolusi.</>}
   labels={{
-    chooseMode: "Pilih cara baca",
+    chooseMode: "Pilih cara klasifikasi",
     detailLabel: "Catatan akurasi",
     sourceNoteLabel: "Rujukan model",
-    structureLabel: "Struktur yang dibaca",
+    structureLabel: "Dasar pengelompokan",
     viewLabel: "Model 3D klasifikasi",
-    sourceNote: <>Model mengikuti prinsip taksonomi: organisme dikelompokkan menurut ciri bersama dan hubungan kekerabatan.</>,
+    sourceNote: <>Model mengikuti klasifikasi buatan, alami, dan filogenetik dalam Buku IPA SMA/MA Kelas X Bab VI.</>,
     items: [
       {
-        tab: "Ciri",
-        label: "Ciri bersama",
-        structure: "Ciri yang dimiliki beberapa organisme, misalnya tulang belakang atau dinding sel.",
-        caption: <>Ciri bersama membantu kita membuat kelompok yang bermakna.</>,
-        detail: <>Model memakai node sebagai kelompok ciri, bukan pohon filogenetik lengkap.</>,
+        tab: "Buatan",
+        label: "Buatan",
+        structure: "Mengelompokkan berdasarkan ciri yang mudah diamati atau kebutuhan praktis.",
+        caption: <>Klasifikasi buatan cepat dipakai, tetapi bisa menaruh organisme tidak berkerabat dalam kelompok yang sama.</>,
+        detail: <>Kotak pada model menunjukkan kelompok praktis, bukan hubungan kekerabatan.</>,
       },
       {
-        tab: "Takson",
-        label: "Takson",
-        structure: "Tingkat pengelompokan seperti genus, famili, ordo, kelas, dan kingdom.",
-        caption: <>Semakin rendah tingkat takson, biasanya ciri anggotanya semakin mirip.</>,
-        detail: <>Urutan takson disederhanakan agar fokus pada ide hierarki.</>,
+        tab: "Alami",
+        label: "Alami",
+        structure: "Mengelompokkan berdasarkan banyak persamaan struktur dan fungsi.",
+        caption: <>Klasifikasi alami lebih stabil karena tidak hanya memakai satu ciri permukaan.</>,
+        detail: <>Lima kolom mengingatkan pada pembahasan kingdom sebagai pola besar di tingkat SMA.</>,
       },
       {
-        tab: "Nama",
-        label: "Nama ilmiah",
-        structure: "Nama dua kata yang membantu ilmuwan merujuk spesies secara stabil.",
-        caption: <>Nama ilmiah mengurangi kebingungan akibat nama lokal yang berbeda.</>,
-        detail: <>Aturan penulisan rinci dipelajari lebih lanjut dalam taksonomi.</>,
+        tab: "Filogenetik",
+        label: "Filogenetik",
+        structure: "Mengelompokkan berdasarkan kekerabatan evolusi.",
+        caption: <>Filogenetik bertanya organisme mana yang berbagi nenek moyang lebih dekat.</>,
+        detail: <>Cabang pada model menyederhanakan pohon kekerabatan, bukan pohon filogenetik lengkap.</>,
       },
     ],
   }}
 />
 
-## Ciri yang Dipilih Harus Relevan
+## Nama kelompok harus punya alasan
 
-Warna tubuh saja sering tidak cukup untuk mengelompokkan organisme. Ciri struktur, cara berkembang biak, materi genetik, dan hubungan evolusi memberi dasar yang lebih kuat.
+Klasifikasi yang baik bukan sekadar memberi nama. Ia membantu kita memprediksi ciri. Jika dua organisme dikelompokkan karena kekerabatannya dekat, kita dapat memperkirakan ada pola struktur, fisiologi, atau genetik yang mirip. Karena itu, klasifikasi filogenetik lebih kuat untuk menjelaskan hubungan biologis daripada klasifikasi yang hanya berdasarkan warna, ukuran, atau tempat hidup.
 
-## Cek Pemahaman
+## Cek pemahaman
 
-Mengapa dua hewan yang sama-sama hidup di air belum tentu berkerabat dekat?
+Mengapa kelelawar tidak dikelompokkan bersama burung hanya karena sama-sama bisa terbang?
 
-Karena habitat bukan satu-satunya dasar klasifikasi. Ciri tubuh, reproduksi, dan hubungan evolusi harus ikut diperiksa.
+Jawaban: kemampuan terbang adalah satu ciri permukaan, bukan bukti kekerabatan paling kuat.
+
+Alasan: klasifikasi yang baik mempertimbangkan banyak ciri dan hubungan evolusi, bukan satu ciri praktis saja.
