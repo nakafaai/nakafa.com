@@ -96,15 +96,6 @@ describe("Nakafa agent exercises", () => {
 
   it("fails with a typed read error when the exercise result schema rejects output", async () => {
     vi.resetModules();
-    vi.doMock("@repo/contents/_lib/agent/schema/exercise", async () => {
-      const { Schema } = await import("effect");
-
-      return {
-        NakafaAgentExerciseResultSchema: Schema.Struct({
-          impossible: Schema.String,
-        }),
-      };
-    });
     vi.doMock("@repo/contents/_lib/exercises/renderable", () => ({
       getRenderableExercisesContent: () =>
         Effect.succeed([
@@ -123,7 +114,7 @@ describe("Nakafa agent exercises", () => {
                 },
               ],
             },
-            number: 1,
+            number: 0,
             question: {
               metadata: {
                 title: "Question",
@@ -148,7 +139,6 @@ describe("Nakafa agent exercises", () => {
     );
 
     expect(error).toBeInstanceOf(NakafaAgentDataReadError);
-    vi.doUnmock("@repo/contents/_lib/agent/schema/exercise");
     vi.doUnmock("@repo/contents/_lib/exercises/renderable");
     vi.resetModules();
   });
