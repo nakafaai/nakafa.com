@@ -1,0 +1,64 @@
+import { ClimateActionLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Mitigation and Adaptation Efforts for Climate Change",
+  description:
+    "Compare mitigation and adaptation through a 3D climate action model that lowers emissions and reduces risk.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Climate Change",
+};
+
+## Two Paths That Must Work Together
+
+Mitigation means reducing the causes of climate change, especially greenhouse gas emissions. Adaptation means reducing impacts that are already happening or expected.
+
+IPCC AR6 WGIII discusses mitigation options across energy, transport, industry, and land in [Mitigation of Climate Change](https://www.ipcc.ch/report/ar6/wg3/).
+
+<ClimateActionLab
+  title={<>Climate Action Model</>}
+  description={<>Compare actions that lower emissions with actions that lower risk.</>}
+  labels={{
+    chooseMode: "Choose an action",
+    detailLabel: "Accuracy note",
+    sourceNoteLabel: "Model reference",
+    structureLabel: "Action being read",
+    viewLabel: "3D model of mitigation and adaptation",
+    sourceNote: <>The model separates mitigation, adaptation, and restoration so students do not mix up the purpose of each action.</>,
+    items: [
+      {
+        tab: "Mitigation",
+        label: "Reduce emissions",
+        structure: "Clean energy, efficiency, and forest protection reduce warming sources.",
+        caption: <>Outgoing pressure is reduced to show less emission stress on the atmosphere.</>,
+        detail: <>Mitigation works on the cause, not only the impact.</>,
+      },
+      {
+        tab: "Adaptation",
+        label: "Reduce risk",
+        structure: "Drainage, early warning, drought-tolerant crops, and health protection help communities cope.",
+        caption: <>Protection nodes sit between hazards and communities.</>,
+        detail: <>Adaptation does not remove warming causes, but it reduces losses.</>,
+      },
+      {
+        tab: "Restoration",
+        label: "Restore ecosystems",
+        structure: "Mangroves, forests, and wetlands can store carbon while protecting habitats.",
+        caption: <>Green areas show actions that can support both mitigation and adaptation.</>,
+        detail: <>Restoration benefits depend on ecosystem type and management quality.</>,
+      },
+    ],
+  }}
+/>
+
+## Do Not Mix Them Up
+
+Planting trees can be mitigation if it increases carbon storage. A flood barrier is adaptation because it reduces flood impact. Both matter, but they answer different parts of the problem.
+
+UNEP explains the growing need for adaptation as climate risk increases in the [Adaptation Gap Report](https://www.unep.org/resources/adaptation-gap-report).
+
+## Self-Check
+
+Is building a flood early-warning system mitigation or adaptation?
+
+Adaptation, because it reduces risk and losses from climate impacts, not greenhouse gas emissions directly.

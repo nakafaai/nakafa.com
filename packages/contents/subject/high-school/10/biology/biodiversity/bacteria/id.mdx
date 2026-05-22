@@ -1,0 +1,62 @@
+import { BacteriaStructureLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Bakteri",
+  description:
+    "Pelajari struktur dasar bakteri, bentuk umum, dan mengapa bakteri dapat merugikan sekaligus bermanfaat.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Keanekaragaman Makhluk Hidup",
+};
+
+## Sel Kecil dengan Dampak Besar
+
+Bakteri adalah organisme prokariotik, artinya tidak memiliki inti sel bermembran. Materi genetiknya berada di daerah nukleoid, sementara ribosom dan sitoplasma berada di dalam membran sel.
+
+OpenStax Biology 2e menjelaskan struktur prokariota dan variasi bentuknya di [Prokaryotic Cells](https://openstax.org/books/biology-2e/pages/4-2-prokaryotic-cells).
+
+<BacteriaStructureLab
+  title={<>Model Sel Bakteri</>}
+  description={<>Pilih bagian sel untuk membaca fungsi dasar struktur bakteri.</>}
+  labels={{
+    chooseMode: "Pilih bagian",
+    detailLabel: "Catatan akurasi",
+    sourceNoteLabel: "Rujukan model",
+    structureLabel: "Struktur yang dibaca",
+    viewLabel: "Model 3D bakteri",
+    sourceNote: <>Model mengikuti struktur umum prokariota dari OpenStax: membran, dinding sel, nukleoid, dan ribosom.</>,
+    items: [
+      {
+        tab: "Bentuk",
+        label: "Bentuk sel",
+        structure: "Bakteri dapat berbentuk bulat, batang, atau spiral.",
+        caption: <>Model memakai bentuk batang agar ruang struktur internal mudah dibaca.</>,
+        detail: <>Bentuk ini tidak mewakili semua bakteri.</>,
+      },
+      {
+        tab: "Nukleoid",
+        label: "Nukleoid",
+        structure: "Daerah tempat DNA bakteri berada tanpa membran inti.",
+        caption: <>Prokariota tidak punya nukleus seperti sel hewan dan tumbuhan.</>,
+        detail: <>Model menampilkan nukleoid sebagai massa terpusat yang disederhanakan.</>,
+      },
+      {
+        tab: "Ribosom",
+        label: "Ribosom",
+        structure: "Tempat pembentukan protein di dalam sel.",
+        caption: <>Bakteri tetap bisa membuat protein karena memiliki ribosom sendiri.</>,
+        detail: <>Titik kecil mewakili ribosom, bukan jumlah sebenarnya.</>,
+      },
+    ],
+  }}
+/>
+
+## Bakteri Tidak Selalu Musuh
+
+Sebagian bakteri menyebabkan penyakit, tetapi banyak bakteri membantu penguraian, pembuatan makanan fermentasi, dan menjaga keseimbangan mikrobioma.
+
+## Cek Pemahaman
+
+Apa perbedaan utama bakteri dengan sel hewan jika dilihat dari inti sel?
+
+Bakteri tidak memiliki inti sel bermembran, sedangkan sel hewan memiliki nukleus.

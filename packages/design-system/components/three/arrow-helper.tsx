@@ -72,7 +72,7 @@ interface Props {
   /** Color of the vector */
   color?: string | Color;
   /** Starting point of the vector [x, y, z] */
-  from?: [number, number, number];
+  from?: readonly [number, number, number];
   /** Label for the vector */
   label?: string;
   /** Position of the label */
@@ -84,7 +84,7 @@ interface Props {
   /** Show arrowhead */
   showArrow?: boolean;
   /** End point of the vector [x, y, z] */
-  to: [number, number, number];
+  to: readonly [number, number, number];
   /** Use mono font for the label */
   useMonoFont?: boolean;
   /** Additional props */

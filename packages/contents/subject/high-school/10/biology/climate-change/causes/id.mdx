@@ -1,0 +1,64 @@
+import { ClimateCauseLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Penyebab Perubahan Iklim",
+  description:
+    "Pahami efek rumah kaca, gas rumah kaca, dan aliran energi Bumi melalui model 3D radiasi.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Perubahan Iklim",
+};
+
+## Masalahnya Ada pada Neraca Energi
+
+Efek rumah kaca adalah proses ketika gas tertentu di atmosfer menyerap dan memancarkan kembali radiasi inframerah. Proses alami ini membuat Bumi layak huni, tetapi penambahan gas rumah kaca dari aktivitas manusia memperkuat pemanasan.
+
+NOAA menjelaskan kenaikan konsentrasi karbon dioksida atmosfer dan hubungannya dengan aktivitas manusia di [Climate Change: Atmospheric Carbon Dioxide](https://www.climate.gov/news-features/understanding-climate/climate-change-atmospheric-carbon-dioxide).
+
+<ClimateCauseLab
+  title={<>Model Aliran Radiasi</>}
+  description={<>Pilih penyebab untuk melihat bagaimana energi masuk, tertahan, atau dikurangi.</>}
+  labels={{
+    chooseMode: "Pilih penyebab",
+    detailLabel: "Catatan akurasi",
+    sourceNoteLabel: "Rujukan model",
+    structureLabel: "Penyebab yang dibaca",
+    viewLabel: "Model 3D penyebab perubahan iklim",
+    sourceNote: <>Model merangkum efek rumah kaca dan perubahan neraca energi yang dibahas NOAA, NASA, dan IPCC.</>,
+    items: [
+      {
+        tab: "CO2",
+        label: "Karbon dioksida",
+        structure: "CO2 bertambah terutama dari pembakaran bahan bakar fosil dan perubahan penggunaan lahan.",
+        caption: <>Lapisan atmosfer ditampilkan lebih aktif untuk menunjukkan lebih banyak radiasi inframerah tertahan.</>,
+        detail: <>CO2 bertahan lama di atmosfer, sehingga akumulasinya penting.</>,
+      },
+      {
+        tab: "Metana",
+        label: "Metana",
+        structure: "Metana berasal dari sumber seperti energi fosil, peternakan, limbah, dan lahan basah.",
+        caption: <>Partikel kecil menggambarkan gas yang jumlahnya lebih sedikit tetapi kuat menyerap panas.</>,
+        detail: <>Metana berumur lebih pendek daripada CO2, tetapi daya pemanasannya tinggi.</>,
+      },
+      {
+        tab: "Lahan",
+        label: "Perubahan lahan",
+        structure: "Deforestasi mengurangi penyerap karbon dan mengubah permukaan Bumi.",
+        caption: <>Permukaan Bumi pada model dibaca sebagai sistem yang menyerap, memantulkan, dan menyimpan energi.</>,
+        detail: <>Perubahan lahan dapat menambah emisi sekaligus mengurangi kapasitas penyerap karbon.</>,
+      },
+    ],
+  }}
+/>
+
+## Penyebab Alami dan Manusia Harus Dipisahkan
+
+Gunung api, variasi Matahari, dan proses alam memang memengaruhi iklim. Namun pemanasan cepat sejak era industri terutama dijelaskan oleh peningkatan gas rumah kaca dari aktivitas manusia.
+
+IPCC AR6 WG1 menyimpulkan pengaruh manusia telah memanaskan atmosfer, laut, dan daratan di [Summary for Policymakers](https://www.ipcc.ch/report/ar6/wg1/).
+
+## Cek Pemahaman
+
+Mengapa efek rumah kaca alami tidak sama dengan perubahan iklim saat ini?
+
+Efek rumah kaca alami membantu Bumi hangat. Masalah saat ini adalah penguatan efek itu akibat tambahan gas rumah kaca dari aktivitas manusia.

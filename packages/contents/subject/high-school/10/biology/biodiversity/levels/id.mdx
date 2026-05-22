@@ -1,0 +1,62 @@
+import { BiodiversityLevelsLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Keanekaragaman Hayati",
+  description:
+    "Pelajari tiga tingkat keanekaragaman hayati: gen, spesies, dan ekosistem melalui model 3D yang saling terhubung.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Keanekaragaman Makhluk Hidup",
+};
+
+## Keanekaragaman Tidak Hanya Berarti Banyak Spesies
+
+Keanekaragaman hayati adalah variasi kehidupan. Variasi ini dapat dibaca pada tingkat gen, spesies, dan ekosistem. Jadi, dua padi yang berbeda varietasnya, banyak jenis burung, dan hutan bakau yang berbeda dari hutan hujan semuanya termasuk cara membaca keanekaragaman.
+
+OpenStax Biology 2e menjelaskan nilai biodiversitas pada tingkat genetik, spesies, dan ekosistem di [The Importance of Biodiversity to Human Life](https://openstax.org/books/biology-2e/pages/47-3-the-importance-of-biodiversity-to-human-life).
+
+<BiodiversityLevelsLab
+  title={<>Tingkat Keanekaragaman</>}
+  description={<>Pilih tingkatnya, lalu perhatikan skala yang sedang dibandingkan.</>}
+  labels={{
+    chooseMode: "Pilih tingkat",
+    detailLabel: "Catatan akurasi",
+    sourceNoteLabel: "Rujukan model",
+    structureLabel: "Struktur yang dibaca",
+    viewLabel: "Model 3D tingkat biodiversitas",
+    sourceNote: <>Model mengikuti pembagian genetik, spesies, dan ekosistem yang umum dipakai dalam biologi konservasi.</>,
+    items: [
+      {
+        tab: "Gen",
+        label: "Gen",
+        structure: "Variasi sifat di dalam satu jenis makhluk hidup.",
+        caption: <>Variasi gen membantu populasi beradaptasi saat lingkungan berubah.</>,
+        detail: <>Model memakai titik berbeda untuk mewakili variasi dalam satu populasi.</>,
+      },
+      {
+        tab: "Spesies",
+        label: "Spesies",
+        structure: "Banyaknya jenis makhluk hidup yang berbeda dalam suatu tempat.",
+        caption: <>Semakin banyak jenis yang seimbang, semakin kaya komunitasnya.</>,
+        detail: <>Jumlah titik bukan data lapangan, tetapi representasi hubungan antarjenis.</>,
+      },
+      {
+        tab: "Ekosistem",
+        label: "Ekosistem",
+        structure: "Variasi habitat dan interaksi antara makhluk hidup dengan lingkungannya.",
+        caption: <>Ekosistem berbeda menyediakan relung dan tekanan lingkungan berbeda.</>,
+        detail: <>Model menekankan skala, bukan batas peta ekosistem tertentu.</>,
+      },
+    ],
+  }}
+/>
+
+## Mengapa Tiga Tingkat Ini Dipisahkan
+
+Satu kebun bisa punya banyak tanaman, tetapi jika semuanya berasal dari satu varietas yang sama, tingkat genetiknya sempit. Sebaliknya, satu hutan dapat terlihat mirip dari jauh, tetapi menyimpan banyak mikrohabitat.
+
+## Cek Pemahaman
+
+Jika satu daerah punya banyak varietas mangga, tetapi semuanya masih satu spesies, tingkat keanekaragaman apa yang paling langsung terlihat?
+
+Tingkat genetik, karena variasinya berada di dalam satu spesies.

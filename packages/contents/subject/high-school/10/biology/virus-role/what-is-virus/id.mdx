@@ -1,0 +1,69 @@
+import { VirusStructureLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Apa itu Virus?",
+  description:
+    "Pelajari struktur virus, mengapa virus tidak dianggap sel, dan cara membaca bagian kapsid, materi genetik, serta selubungnya.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Virus dan Peranannya",
+};
+
+## Benda Kecil yang Membuat Kita Berdebat
+
+Virus sangat kecil dan hanya bisa memperbanyak diri jika masuk ke sel hidup. Karena tidak memiliki sel, sitoplasma, ribosom, dan metabolisme mandiri, virus biasanya dipelajari sebagai partikel biologis, bukan organisme seluler.
+
+OpenStax Biology 2e menjelaskan bahwa virus bersifat aseluler dan membutuhkan sel inang untuk bereplikasi di [Viruses](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
+
+<VirusStructureLab
+  title={<>Model Struktur Virus</>}
+  description={
+    <>
+      Putar modelnya, lalu pilih bagian yang ingin dibaca. Model ini memakai
+      bentuk prosedural agar struktur utama tetap jelas.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih bagian virus",
+    detailLabel: "Catatan akurasi",
+    sourceNoteLabel: "Rujukan model",
+    structureLabel: "Struktur yang dibaca",
+    viewLabel: "Model 3D struktur virus",
+    sourceNote: <>Akurasi struktur mengacu pada ringkasan OpenStax tentang kapsid, materi genetik, dan selubung virus.</>,
+    items: [
+      {
+        tab: "Kapsid",
+        label: "Kapsid",
+        structure: "Lapisan protein yang melindungi materi genetik virus.",
+        caption: <>Kapsid digambar sebagai cangkang bersegi karena banyak virus memiliki simetri berulang.</>,
+        detail: <>Bentuk ini menyederhanakan simetri kapsid, bukan ukuran sebenarnya.</>,
+      },
+      {
+        tab: "Genom",
+        label: "Materi genetik",
+        structure: "DNA atau RNA yang membawa instruksi pembentukan virus baru.",
+        caption: <>Garis spiral menunjukkan materi genetik yang berada di dalam kapsid.</>,
+        detail: <>Virus dapat membawa DNA atau RNA, tergantung jenis virusnya.</>,
+      },
+      {
+        tab: "Selubung",
+        label: "Selubung",
+        structure: "Lapisan luar pada sebagian virus yang membantu menempel ke sel inang.",
+        caption: <>Tidak semua virus punya selubung. Karena itu, selubung harus dibaca sebagai variasi struktur.</>,
+        detail: <>Selubung virus umumnya berasal dari membran sel inang saat virus keluar.</>,
+      },
+    ],
+  }}
+/>
+
+## Mengapa Virus Bukan Sel
+
+Sel hidup dapat menjalankan reaksi kimia, membuat protein, dan mengatur lingkungannya sendiri. Virus tidak melakukan itu sendirian. Virus membawa instruksi, tetapi membutuhkan mesin sel inang untuk menyalin instruksi tersebut.
+
+Perbedaan ini penting. Kalau kita menyebut virus sebagai sel kecil, kita akan salah membaca cara obat, vaksin, dan sistem imun menghadapinya.
+
+## Cek Pemahaman
+
+Jika sebuah partikel memiliki kapsid dan RNA, tetapi tidak memiliki ribosom sendiri, apakah partikel itu bisa membuat protein sendiri?
+
+Tidak. Tanpa ribosom, partikel itu harus memakai ribosom sel inang untuk membuat protein virus.

@@ -1,0 +1,64 @@
+import { ClimateCooperationLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Global Cooperation to Address Climate Change",
+  description:
+    "Learn why climate change needs global cooperation through a 3D network model of action and emissions.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Climate Change",
+};
+
+## The Atmosphere Has No National Border
+
+Greenhouse gases mix in the global atmosphere. That means emissions in one region can affect risk elsewhere. Global cooperation is needed for shared targets, funding, technology, and protection for vulnerable groups.
+
+UNFCCC explains the Paris Agreement goal to limit global temperature rise and strengthen the climate response in [The Paris Agreement](https://unfccc.int/process-and-meetings/the-paris-agreement).
+
+<ClimateCooperationLab
+  title={<>Global Action Network Model</>}
+  description={<>Choose a cooperation layer to see the link between emissions, funding, technology, and adaptation.</>}
+  labels={{
+    chooseMode: "Choose a cooperation layer",
+    detailLabel: "Accuracy note",
+    sourceNoteLabel: "Model reference",
+    structureLabel: "Cooperation being read",
+    viewLabel: "3D model of global climate cooperation",
+    sourceNote: <>The model simplifies climate cooperation as a network of countries, emissions, support, and shared targets.</>,
+    items: [
+      {
+        tab: "Targets",
+        label: "Shared targets",
+        structure: "Countries prepare national contributions to lower emissions and strengthen adaptation.",
+        caption: <>The central target node shows that national actions connect to a global goal.</>,
+        detail: <>Targets need updates because science, technology, and national capacity change.</>,
+      },
+      {
+        tab: "Support",
+        label: "Funding and technology",
+        structure: "Countries and institutions can support vulnerable regions through funds, technology, and capacity.",
+        caption: <>Support lines show that cooperation is not only emissions reduction, but also help.</>,
+        detail: <>Support matters because adaptation capacity is uneven.</>,
+      },
+      {
+        tab: "Data",
+        label: "Data reporting",
+        structure: "Measurement and reporting help the world see whether action is actually happening.",
+        caption: <>Data nodes make action easier to check and compare.</>,
+        detail: <>Without data, cooperation is harder to trust and improve.</>,
+      },
+    ],
+  }}
+/>
+
+## From Global to Local
+
+Global cooperation does not stop at conferences. Energy, transport, food, forest, school, and city decisions all shape whether targets become real action.
+
+BMKG provides Indonesian climate information that supports monitoring and preparedness through [BMKG Climate Information](https://www.bmkg.go.id/iklim/).
+
+## Self-Check
+
+Why can climate change not be solved by one country alone?
+
+Because greenhouse gases mix in the global atmosphere, impacts cross borders, and each country has different capacity for mitigation and adaptation.

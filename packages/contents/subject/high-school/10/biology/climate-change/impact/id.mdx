@@ -1,0 +1,64 @@
+import { ClimateImpactLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Dampak Perubahan Iklim",
+  description:
+    "Pelajari dampak perubahan iklim pada ekosistem, kesehatan, pangan, dan habitat melalui model 3D stres ekosistem.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Perubahan Iklim",
+};
+
+## Dampaknya Masuk ke Jaring Kehidupan
+
+Dampak perubahan iklim muncul ketika suhu, air, musim, dan kejadian ekstrem berubah cukup besar sehingga organisme harus beradaptasi, berpindah, atau mengalami penurunan populasi.
+
+IPCC AR6 WGII menjelaskan bahwa perubahan iklim memengaruhi ekosistem, kesehatan manusia, produksi pangan, dan infrastruktur di [Impacts, Adaptation and Vulnerability](https://www.ipcc.ch/report/ar6/wg2/).
+
+<ClimateImpactLab
+  title={<>Model Stres Ekosistem</>}
+  description={<>Pilih jenis dampak untuk melihat bagian ekosistem yang paling terdorong berubah.</>}
+  labels={{
+    chooseMode: "Pilih dampak",
+    detailLabel: "Catatan akurasi",
+    sourceNoteLabel: "Rujukan model",
+    structureLabel: "Dampak yang dibaca",
+    viewLabel: "Model 3D dampak perubahan iklim",
+    sourceNote: <>Model menyederhanakan dampak IPCC pada habitat, organisme, pangan, dan kesehatan sebagai hubungan sebab-akibat.</>,
+    items: [
+      {
+        tab: "Habitat",
+        label: "Habitat bergeser",
+        structure: "Zona hidup organisme dapat bergerak ke tempat yang lebih sejuk atau lebih basah.",
+        caption: <>Titik organisme ditarik ke area baru untuk menunjukkan pergeseran habitat.</>,
+        detail: <>Tidak semua spesies bisa berpindah cepat, terutama jika habitatnya terfragmentasi.</>,
+      },
+      {
+        tab: "Pangan",
+        label: "Produksi pangan",
+        structure: "Panas, kekeringan, banjir, dan hama dapat menekan hasil panen.",
+        caption: <>Aliran energi dan air ditampilkan tidak seimbang agar hubungan iklim dan pangan terlihat.</>,
+        detail: <>Dampak pangan berbeda menurut wilayah, tanaman, dan kemampuan adaptasi.</>,
+      },
+      {
+        tab: "Kesehatan",
+        label: "Risiko kesehatan",
+        structure: "Gelombang panas dan perubahan habitat vektor penyakit dapat meningkatkan risiko kesehatan.",
+        caption: <>Node risiko menunjukkan bahwa dampak iklim dapat bergerak dari lingkungan ke manusia.</>,
+        detail: <>Pencegahan tetap bergantung pada sistem kesehatan, sanitasi, dan perlindungan komunitas.</>,
+      },
+    ],
+  }}
+/>
+
+## Risiko Tidak Merata
+
+Dua tempat bisa mengalami pemanasan yang sama, tetapi risikonya berbeda. Wilayah dengan sumber daya adaptasi rendah biasanya lebih rentan terhadap banjir, gagal panen, atau penyakit.
+
+WHO membahas hubungan iklim dan kesehatan, termasuk panas ekstrem, kualitas udara, dan penyakit menular, di [Climate change and health](https://www.who.int/news-room/fact-sheets/detail/climate-change-and-health).
+
+## Cek Pemahaman
+
+Mengapa dampak perubahan iklim tidak sama di semua wilayah?
+
+Karena risiko dipengaruhi oleh paparan bahaya, kerentanan, dan kemampuan adaptasi setiap wilayah.

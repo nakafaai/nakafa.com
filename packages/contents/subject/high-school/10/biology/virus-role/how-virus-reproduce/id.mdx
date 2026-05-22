@@ -1,0 +1,62 @@
+import { VirusReplicationLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Bagaimana Virus Bereproduksi?",
+  description:
+    "Pelajari tahapan reproduksi virus dari penempelan ke sel inang sampai pembentukan partikel virus baru.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Virus dan Peranannya",
+};
+
+## Virus Tidak Membelah Diri
+
+Virus tidak membelah seperti bakteri. Virus memperbanyak diri dengan memasukkan materi genetiknya ke sel inang, lalu memanfaatkan mesin sel untuk membuat bagian virus baru.
+
+OpenStax Biology 2e membahas siklus litik dan lisogenik sebagai dua pola besar reproduksi virus di [Virus Infections and Hosts](https://openstax.org/books/biology-2e/pages/21-2-virus-infections-and-hosts).
+
+<VirusReplicationLab
+  title={<>Tahap Reproduksi Virus</>}
+  description={<>Ikuti urutan sederhana dari penempelan, penyalinan, sampai pelepasan virus baru.</>}
+  labels={{
+    chooseMode: "Pilih tahap",
+    detailLabel: "Catatan akurasi",
+    sourceNoteLabel: "Rujukan model",
+    structureLabel: "Struktur yang dibaca",
+    viewLabel: "Model 3D reproduksi virus",
+    sourceNote: <>Urutan tahap diringkas dari konsep infeksi virus pada OpenStax Biology 2e.</>,
+    items: [
+      {
+        tab: "Masuk",
+        label: "Penempelan",
+        structure: "Virus mengenali reseptor pada permukaan sel inang.",
+        caption: <>Virus tidak masuk ke sembarang sel. Kecocokan reseptor menentukan sel target.</>,
+        detail: <>Model menampilkan kontak awal, bukan semua variasi mekanisme masuk.</>,
+      },
+      {
+        tab: "Salin",
+        label: "Replikasi",
+        structure: "Materi genetik virus disalin dan protein virus dibuat oleh sel inang.",
+        caption: <>Di tahap ini, sel inang berubah menjadi tempat produksi komponen virus.</>,
+        detail: <>Detail molekuler berbeda pada virus DNA dan virus RNA.</>,
+      },
+      {
+        tab: "Keluar",
+        label: "Pelepasan",
+        structure: "Komponen dirakit menjadi virus baru, lalu keluar dari sel.",
+        caption: <>Virus baru dapat keluar dengan merusak sel atau bertunas dari membran sel.</>,
+        detail: <>Model menyederhanakan dua pola keluar menjadi satu alur visual.</>,
+      },
+    ],
+  }}
+/>
+
+## Siklus Litik dan Lisogenik
+
+Pada siklus litik, virus segera membuat banyak salinan dan biasanya merusak sel inang. Pada siklus lisogenik, materi genetik virus dapat tersisip di genom inang dan ikut tersalin sebelum aktif kembali.
+
+## Cek Pemahaman
+
+Mengapa virus harus masuk ke sel inang sebelum jumlahnya bertambah?
+
+Karena virus tidak punya mesin lengkap untuk membuat protein dan menyalin dirinya sendiri. Mesin itu tersedia di dalam sel inang.

@@ -1,0 +1,69 @@
+import { VirusStructureLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "What Is a Virus?",
+  description:
+    "Learn virus structure, why viruses are not cells, and how to read the capsid, genetic material, and envelope.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Viruses and Their Role",
+};
+
+## A Tiny Particle That Changes the Question
+
+A virus is very small and can reproduce only after entering a living cell. Because it has no cell structure, cytoplasm, ribosomes, or independent metabolism, a virus is usually studied as a biological particle, not a cellular organism.
+
+OpenStax Biology 2e explains that viruses are acellular and depend on host cells for replication in [Viruses](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
+
+<VirusStructureLab
+  title={<>Virus Structure Model</>}
+  description={
+    <>
+      Rotate the model, then choose the part you want to inspect. The model is
+      procedural so the core structures stay clear.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose a virus part",
+    detailLabel: "Accuracy note",
+    sourceNoteLabel: "Model reference",
+    structureLabel: "Structure being read",
+    viewLabel: "3D model of virus structure",
+    sourceNote: <>The structure notes follow OpenStax descriptions of capsids, genetic material, and viral envelopes.</>,
+    items: [
+      {
+        tab: "Capsid",
+        label: "Capsid",
+        structure: "A protein coat that protects the viral genetic material.",
+        caption: <>The capsid is drawn as a faceted shell because many viruses use repeating symmetry.</>,
+        detail: <>This simplifies capsid symmetry. It is not a literal size model.</>,
+      },
+      {
+        tab: "Genome",
+        label: "Genetic material",
+        structure: "DNA or RNA carrying instructions for making new viruses.",
+        caption: <>The spiral line represents genetic material inside the capsid.</>,
+        detail: <>A virus may carry DNA or RNA, depending on the virus type.</>,
+      },
+      {
+        tab: "Envelope",
+        label: "Envelope",
+        structure: "An outer layer on some viruses that helps them attach to host cells.",
+        caption: <>Not all viruses have envelopes, so read this as one structural variation.</>,
+        detail: <>Viral envelopes usually come from host-cell membranes during exit.</>,
+      },
+    ],
+  }}
+/>
+
+## Why a Virus Is Not a Cell
+
+Living cells can run chemical reactions, make proteins, and regulate their internal environment. A virus cannot do that by itself. It carries instructions, but it needs a host cell's machinery to copy and express those instructions.
+
+This distinction matters. If we treat a virus as a tiny cell, we misunderstand how medicines, vaccines, and immune defenses work against it.
+
+## Self-Check
+
+If a particle has a capsid and RNA but no ribosomes of its own, can it make proteins by itself?
+
+No. Without ribosomes, it must use a host cell's ribosomes to make viral proteins.

@@ -1,0 +1,62 @@
+import { VirusPreventionLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Ways to Prevent Virus Spread",
+  description:
+    "Learn how hand hygiene, ventilation, vaccination, and reduced risky contact interrupt virus transmission.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Viruses and Their Role",
+};
+
+## Prevention Means Breaking a Route
+
+Viruses spread through specific routes, such as respiratory droplets, hand contact, contaminated food or water, blood, or vectors like mosquitoes. Prevention works when that route is interrupted.
+
+CDC summarizes hand hygiene as an important way to prevent infection spread in [When and How to Wash Your Hands](https://www.cdc.gov/handwashing/when-how-handwashing.html). WHO explains vaccination as a way to train the immune system in [Vaccines and immunization](https://www.who.int/health-topics/vaccines-and-immunization).
+
+<VirusPreventionLab
+  title={<>Transmission Route Model</>}
+  description={<>Choose a barrier to see how risk can be reduced before a virus reaches a new host.</>}
+  labels={{
+    chooseMode: "Choose prevention",
+    detailLabel: "Accuracy note",
+    sourceNoteLabel: "Model reference",
+    structureLabel: "Structure being read",
+    viewLabel: "3D model of virus prevention",
+    sourceNote: <>The model summarizes CDC and WHO principles for interrupting transmission through hygiene, ventilation, and vaccination.</>,
+    items: [
+      {
+        tab: "Hands",
+        label: "Hygiene",
+        structure: "Cleaning hands reduces movement of infectious particles from surfaces to the body.",
+        caption: <>Hands often act as a bridge between surfaces, the face, and food.</>,
+        detail: <>The model shows a common contact route, not every virus at once.</>,
+      },
+      {
+        tab: "Air",
+        label: "Ventilation",
+        structure: "Air exchange helps dilute particles suspended in air.",
+        caption: <>Closed spaces with poor air exchange can keep exposure around longer.</>,
+        detail: <>Ventilation effects depend on room size, airflow, and particle source.</>,
+      },
+      {
+        tab: "Immune",
+        label: "Vaccination",
+        structure: "Vaccines help the body recognize a threat before severe infection develops.",
+        caption: <>A vaccine is not a physical wall, but it speeds up body defense.</>,
+        detail: <>Vaccine type and protection differ by disease.</>,
+      },
+    ],
+  }}
+/>
+
+## Match Prevention to the Route
+
+Not every prevention step works for every virus in the same way. For airborne spread, ventilation and masks are more relevant. For vector-borne viruses, controlling mosquitoes or other carriers becomes important.
+
+## Self-Check
+
+Why can handwashing not replace vaccination?
+
+Because handwashing reduces virus transfer outside the body, while vaccination trains immune response inside the body.

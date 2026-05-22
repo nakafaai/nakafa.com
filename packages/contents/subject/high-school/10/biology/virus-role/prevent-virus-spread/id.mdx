@@ -1,0 +1,62 @@
+import { VirusPreventionLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Cara Mencegah Penyebaran Virus",
+  description:
+    "Pelajari cara memutus penyebaran virus melalui kebersihan tangan, ventilasi, vaksinasi, dan pengurangan kontak berisiko.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Virus dan Peranannya",
+};
+
+## Pencegahan Berarti Memutus Jalur
+
+Virus menyebar lewat jalur tertentu, misalnya percikan pernapasan, kontak tangan, makanan atau air tercemar, darah, atau vektor seperti nyamuk. Pencegahan bekerja ketika jalur itu diputus.
+
+CDC merangkum kebersihan tangan sebagai salah satu cara penting untuk mencegah penyebaran infeksi di [When and How to Wash Your Hands](https://www.cdc.gov/handwashing/when-how-handwashing.html). WHO juga menjelaskan peran vaksinasi dalam melatih sistem imun di [Vaccines and immunization](https://www.who.int/health-topics/vaccines-and-immunization).
+
+<VirusPreventionLab
+  title={<>Model Jalur Penularan</>}
+  description={<>Pilih penghalang untuk melihat bagaimana risiko dapat dikurangi sebelum virus mencapai inang baru.</>}
+  labels={{
+    chooseMode: "Pilih pencegahan",
+    detailLabel: "Catatan akurasi",
+    sourceNoteLabel: "Rujukan model",
+    structureLabel: "Struktur yang dibaca",
+    viewLabel: "Model 3D pencegahan virus",
+    sourceNote: <>Model diringkas dari prinsip pemutusan penularan CDC dan WHO tentang kebersihan, ventilasi, dan vaksinasi.</>,
+    items: [
+      {
+        tab: "Tangan",
+        label: "Kebersihan",
+        structure: "Membersihkan tangan mengurangi perpindahan partikel infeksius dari permukaan ke tubuh.",
+        caption: <>Tangan sering menjadi jembatan antara permukaan, wajah, dan makanan.</>,
+        detail: <>Model ini menunjukkan jalur kontak umum, bukan semua virus sekaligus.</>,
+      },
+      {
+        tab: "Udara",
+        label: "Ventilasi",
+        structure: "Udara yang berganti membantu mengencerkan partikel yang melayang.",
+        caption: <>Ruang tertutup dengan udara buruk dapat membuat paparan bertahan lebih lama.</>,
+        detail: <>Efek ventilasi bergantung pada ukuran ruang, aliran udara, dan sumber partikel.</>,
+      },
+      {
+        tab: "Imun",
+        label: "Vaksinasi",
+        structure: "Vaksin membantu tubuh mengenali ancaman sebelum infeksi berat terjadi.",
+        caption: <>Vaksin bukan dinding fisik, tetapi mempercepat respons pertahanan tubuh.</>,
+        detail: <>Jenis vaksin dan perlindungannya berbeda menurut penyakit.</>,
+      },
+    ],
+  }}
+/>
+
+## Pilih Pencegahan Sesuai Jalur
+
+Tidak semua pencegahan bekerja untuk semua virus dengan cara yang sama. Untuk virus yang menyebar lewat udara, ventilasi dan masker lebih relevan. Untuk virus lewat vektor, pengendalian nyamuk atau hewan pembawa menjadi penting.
+
+## Cek Pemahaman
+
+Mengapa mencuci tangan tidak bisa menggantikan vaksinasi?
+
+Karena mencuci tangan mengurangi perpindahan virus dari luar tubuh, sedangkan vaksinasi melatih respons imun di dalam tubuh.

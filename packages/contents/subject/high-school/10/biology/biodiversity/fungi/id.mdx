@@ -1,0 +1,62 @@
+import { FungiGrowthLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Fungi",
+  description:
+    "Pelajari struktur fungi, hifa, miselium, spora, dan perannya sebagai pengurai dalam ekosistem.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Keanekaragaman Makhluk Hidup",
+};
+
+## Fungi Bukan Tumbuhan
+
+Fungi tidak berfotosintesis seperti tumbuhan. Banyak fungi memperoleh nutrisi dengan menyerap zat organik dari lingkungan. Tubuh fungi multiseluler tersusun dari hifa, yaitu benang-benang halus yang membentuk jaringan miselium.
+
+OpenStax Biology 2e menjelaskan struktur hifa dan peran fungi dalam ekosistem di [Characteristics of Fungi](https://openstax.org/books/biology-2e/pages/24-1-characteristics-of-fungi).
+
+<FungiGrowthLab
+  title={<>Model Pertumbuhan Fungi</>}
+  description={<>Pilih struktur fungi untuk melihat hubungan hifa, miselium, dan spora.</>}
+  labels={{
+    chooseMode: "Pilih struktur",
+    detailLabel: "Catatan akurasi",
+    sourceNoteLabel: "Rujukan model",
+    structureLabel: "Struktur yang dibaca",
+    viewLabel: "Model 3D fungi",
+    sourceNote: <>Model disederhanakan dari penjelasan OpenStax tentang hifa, miselium, dan spora fungi.</>,
+    items: [
+      {
+        tab: "Hifa",
+        label: "Hifa",
+        structure: "Benang halus yang menyerap nutrisi dari lingkungan.",
+        caption: <>Hifa memperluas area kontak fungi dengan sumber makanan.</>,
+        detail: <>Model menggambarkan arah pertumbuhan, bukan semua detail dinding sel.</>,
+      },
+      {
+        tab: "Miselium",
+        label: "Miselium",
+        structure: "Jaringan hifa yang membentuk tubuh utama banyak fungi.",
+        caption: <>Bagian fungi yang terlihat hanya sebagian dari jaringan yang lebih luas.</>,
+        detail: <>Kepadatan jaringan di model disederhanakan agar mudah dibaca.</>,
+      },
+      {
+        tab: "Spora",
+        label: "Spora",
+        structure: "Sel reproduksi yang dapat menyebar dan tumbuh di tempat baru.",
+        caption: <>Spora membantu fungi menyebar ketika kondisi mendukung.</>,
+        detail: <>Ukuran spora dibuat besar agar terlihat di model.</>,
+      },
+    ],
+  }}
+/>
+
+## Pengurai yang Mengembalikan Materi
+
+Fungi membantu menguraikan sisa makhluk hidup. Peran ini mengembalikan unsur hara ke tanah sehingga materi dapat digunakan lagi oleh organisme lain.
+
+## Cek Pemahaman
+
+Mengapa fungi tidak dikelompokkan sebagai tumbuhan hanya karena hidup diam di satu tempat?
+
+Karena fungi tidak berfotosintesis dan memperoleh nutrisi dengan cara menyerap zat organik.

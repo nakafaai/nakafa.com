@@ -1,0 +1,62 @@
+import { FungiGrowthLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Fungi",
+  description:
+    "Learn fungal structure, hyphae, mycelium, spores, and their role as decomposers in ecosystems.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Biodiversity of Living Organisms",
+};
+
+## Fungi Are Not Plants
+
+Fungi do not photosynthesize like plants. Many fungi get nutrients by absorbing organic matter from their surroundings. The body of many multicellular fungi is made of hyphae, thin threads that form a mycelium network.
+
+OpenStax Biology 2e explains hyphae and fungal ecosystem roles in [Characteristics of Fungi](https://openstax.org/books/biology-2e/pages/24-1-characteristics-of-fungi).
+
+<FungiGrowthLab
+  title={<>Fungal Growth Model</>}
+  description={<>Choose a fungal structure to see how hyphae, mycelium, and spores connect.</>}
+  labels={{
+    chooseMode: "Choose a structure",
+    detailLabel: "Accuracy note",
+    sourceNoteLabel: "Model reference",
+    structureLabel: "Structure being read",
+    viewLabel: "3D model of fungi",
+    sourceNote: <>The model simplifies OpenStax descriptions of fungal hyphae, mycelium, and spores.</>,
+    items: [
+      {
+        tab: "Hyphae",
+        label: "Hyphae",
+        structure: "Thin threads that absorb nutrients from the environment.",
+        caption: <>Hyphae expand contact area between fungi and food sources.</>,
+        detail: <>The model shows growth direction, not every cell-wall detail.</>,
+      },
+      {
+        tab: "Mycelium",
+        label: "Mycelium",
+        structure: "A network of hyphae forming the main body of many fungi.",
+        caption: <>The visible part of a fungus may be only a small part of a wider network.</>,
+        detail: <>Network density is simplified for readability.</>,
+      },
+      {
+        tab: "Spores",
+        label: "Spores",
+        structure: "Reproductive cells that can spread and grow in new places.",
+        caption: <>Spores help fungi spread when conditions support growth.</>,
+        detail: <>Spores are enlarged in the model so students can see them.</>,
+      },
+    ],
+  }}
+/>
+
+## Decomposers That Return Matter
+
+Fungi help decompose remains of living things. This role returns nutrients to soil so matter can be used again by other organisms.
+
+## Self-Check
+
+Why are fungi not classified as plants just because they stay in one place?
+
+Because fungi do not photosynthesize and get nutrients by absorbing organic matter.

@@ -1,0 +1,62 @@
+import { BiodiversityLevelsLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Biological Diversity",
+  description:
+    "Learn the three levels of biodiversity: genetic, species, and ecosystem diversity through a connected 3D model.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Biodiversity of Living Organisms",
+};
+
+## Biodiversity Is More Than Many Species
+
+Biodiversity means variation in life. That variation can be read at genetic, species, and ecosystem levels. Different rice varieties, many bird species, and mangrove forests that differ from rainforests are all biodiversity patterns.
+
+OpenStax Biology 2e explains the value of biodiversity at genetic, species, and ecosystem levels in [The Importance of Biodiversity to Human Life](https://openstax.org/books/biology-2e/pages/47-3-the-importance-of-biodiversity-to-human-life).
+
+<BiodiversityLevelsLab
+  title={<>Levels of Biodiversity</>}
+  description={<>Choose a level, then notice the scale being compared.</>}
+  labels={{
+    chooseMode: "Choose a level",
+    detailLabel: "Accuracy note",
+    sourceNoteLabel: "Model reference",
+    structureLabel: "Structure being read",
+    viewLabel: "3D model of biodiversity levels",
+    sourceNote: <>The model follows the common genetic, species, and ecosystem distinction used in conservation biology.</>,
+    items: [
+      {
+        tab: "Genes",
+        label: "Genes",
+        structure: "Variation of traits within one kind of organism.",
+        caption: <>Genetic variation helps a population adapt when environments change.</>,
+        detail: <>Different points represent variation inside one population.</>,
+      },
+      {
+        tab: "Species",
+        label: "Species",
+        structure: "The variety of different living species in a place.",
+        caption: <>A balanced community with more species is richer.</>,
+        detail: <>The number of points is a relationship model, not field data.</>,
+      },
+      {
+        tab: "Ecosystems",
+        label: "Ecosystems",
+        structure: "Variation of habitats and interactions between organisms and their environment.",
+        caption: <>Different ecosystems provide different niches and environmental pressures.</>,
+        detail: <>The model emphasizes scale, not a specific ecosystem boundary.</>,
+      },
+    ],
+  }}
+/>
+
+## Why the Levels Are Separated
+
+A garden may have many plants, but if they are all from one variety, genetic diversity is narrow. A forest can look similar from far away while still holding many microhabitats.
+
+## Self-Check
+
+If an area has many mango varieties but all are still one species, what diversity level is most directly visible?
+
+Genetic diversity, because the variation is within one species.

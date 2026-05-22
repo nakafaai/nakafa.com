@@ -1,0 +1,62 @@
+import { VirusReplicationLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "How Do Viruses Reproduce?",
+  description:
+    "Learn the stages of viral reproduction from attachment to a host cell through assembly and release.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Viruses and Their Role",
+};
+
+## A Virus Does Not Divide Like a Cell
+
+A virus does not split the way bacteria do. It reproduces by delivering genetic material into a host cell, then using the cell's machinery to build new viral parts.
+
+OpenStax Biology 2e discusses lytic and lysogenic cycles as major patterns of viral reproduction in [Virus Infections and Hosts](https://openstax.org/books/biology-2e/pages/21-2-virus-infections-and-hosts).
+
+<VirusReplicationLab
+  title={<>Viral Reproduction Stages</>}
+  description={<>Follow the simplified sequence from attachment, copying, and release.</>}
+  labels={{
+    chooseMode: "Choose a stage",
+    detailLabel: "Accuracy note",
+    sourceNoteLabel: "Model reference",
+    structureLabel: "Structure being read",
+    viewLabel: "3D model of viral reproduction",
+    sourceNote: <>The stage order is summarized from OpenStax Biology 2e's explanation of viral infection.</>,
+    items: [
+      {
+        tab: "Entry",
+        label: "Attachment",
+        structure: "The virus recognizes receptors on the host-cell surface.",
+        caption: <>A virus does not enter every cell. Receptor fit helps determine its target cell.</>,
+        detail: <>The model shows the initial contact, not every entry mechanism.</>,
+      },
+      {
+        tab: "Copy",
+        label: "Replication",
+        structure: "Viral genetic material is copied and viral proteins are made by the host cell.",
+        caption: <>At this stage, the host cell becomes a production site for viral components.</>,
+        detail: <>Molecular details differ between DNA viruses and RNA viruses.</>,
+      },
+      {
+        tab: "Release",
+        label: "Release",
+        structure: "Parts assemble into new viruses, then leave the cell.",
+        caption: <>New viruses may leave by breaking the cell or budding from its membrane.</>,
+        detail: <>The model simplifies different exit patterns into one visual flow.</>,
+      },
+    ],
+  }}
+/>
+
+## Lytic and Lysogenic Cycles
+
+In the lytic cycle, viruses quickly make many copies and usually damage the host cell. In the lysogenic cycle, viral genetic material can become part of the host genome and be copied before becoming active again.
+
+## Self-Check
+
+Why must a virus enter a host cell before its number can increase?
+
+Because a virus lacks the full machinery needed to make proteins and copy itself. That machinery is inside the host cell.

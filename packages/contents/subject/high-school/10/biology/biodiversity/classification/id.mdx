@@ -1,0 +1,62 @@
+import { ClassificationLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Klasifikasi Makhluk Hidup",
+  description:
+    "Pelajari mengapa makhluk hidup diklasifikasikan dan bagaimana ciri bersama membantu menyusun kelompok biologis.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Keanekaragaman Makhluk Hidup",
+};
+
+## Klasifikasi Membuat Keanekaragaman Bisa Dibaca
+
+Klasifikasi adalah pengelompokan makhluk hidup berdasarkan persamaan dan perbedaan cirinya. Tanpa klasifikasi, daftar organisme hanya menjadi kumpulan nama yang sulit dipelajari.
+
+OpenStax Biology 2e memperkenalkan taksonomi sebagai ilmu pengelompokan dan penamaan organisme di [Organizing Life on Earth](https://openstax.org/books/biology-2e/pages/20-1-organizing-life-on-earth).
+
+<ClassificationLab
+  title={<>Jaringan Klasifikasi</>}
+  description={<>Pilih cara membaca kelompok, lalu lihat bagaimana ciri bersama menghubungkan organisme.</>}
+  labels={{
+    chooseMode: "Pilih cara baca",
+    detailLabel: "Catatan akurasi",
+    sourceNoteLabel: "Rujukan model",
+    structureLabel: "Struktur yang dibaca",
+    viewLabel: "Model 3D klasifikasi",
+    sourceNote: <>Model mengikuti prinsip taksonomi: organisme dikelompokkan menurut ciri bersama dan hubungan kekerabatan.</>,
+    items: [
+      {
+        tab: "Ciri",
+        label: "Ciri bersama",
+        structure: "Ciri yang dimiliki beberapa organisme, misalnya tulang belakang atau dinding sel.",
+        caption: <>Ciri bersama membantu kita membuat kelompok yang bermakna.</>,
+        detail: <>Model memakai node sebagai kelompok ciri, bukan pohon filogenetik lengkap.</>,
+      },
+      {
+        tab: "Takson",
+        label: "Takson",
+        structure: "Tingkat pengelompokan seperti genus, famili, ordo, kelas, dan kingdom.",
+        caption: <>Semakin rendah tingkat takson, biasanya ciri anggotanya semakin mirip.</>,
+        detail: <>Urutan takson disederhanakan agar fokus pada ide hierarki.</>,
+      },
+      {
+        tab: "Nama",
+        label: "Nama ilmiah",
+        structure: "Nama dua kata yang membantu ilmuwan merujuk spesies secara stabil.",
+        caption: <>Nama ilmiah mengurangi kebingungan akibat nama lokal yang berbeda.</>,
+        detail: <>Aturan penulisan rinci dipelajari lebih lanjut dalam taksonomi.</>,
+      },
+    ],
+  }}
+/>
+
+## Ciri yang Dipilih Harus Relevan
+
+Warna tubuh saja sering tidak cukup untuk mengelompokkan organisme. Ciri struktur, cara berkembang biak, materi genetik, dan hubungan evolusi memberi dasar yang lebih kuat.
+
+## Cek Pemahaman
+
+Mengapa dua hewan yang sama-sama hidup di air belum tentu berkerabat dekat?
+
+Karena habitat bukan satu-satunya dasar klasifikasi. Ciri tubuh, reproduksi, dan hubungan evolusi harus ikut diperiksa.

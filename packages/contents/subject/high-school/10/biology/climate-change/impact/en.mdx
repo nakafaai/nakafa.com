@@ -1,0 +1,64 @@
+import { ClimateImpactLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Impact of Climate Change",
+  description:
+    "Learn climate change impacts on ecosystems, health, food, and habitat through a 3D ecosystem stress model.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Climate Change",
+};
+
+## The Impact Enters the Web of Life
+
+Climate impacts appear when temperature, water, seasons, and extreme events change enough that organisms must adapt, move, or face population decline.
+
+IPCC AR6 WGII explains impacts on ecosystems, human health, food production, and infrastructure in [Impacts, Adaptation and Vulnerability](https://www.ipcc.ch/report/ar6/wg2/).
+
+<ClimateImpactLab
+  title={<>Ecosystem Stress Model</>}
+  description={<>Choose an impact type to see which part of the ecosystem is pushed to change.</>}
+  labels={{
+    chooseMode: "Choose an impact",
+    detailLabel: "Accuracy note",
+    sourceNoteLabel: "Model reference",
+    structureLabel: "Impact being read",
+    viewLabel: "3D model of climate change impact",
+    sourceNote: <>The model simplifies IPCC-described impacts on habitat, organisms, food, and health into cause-effect relationships.</>,
+    items: [
+      {
+        tab: "Habitat",
+        label: "Shifting habitat",
+        structure: "Living zones may move toward cooler or wetter areas.",
+        caption: <>Organism points shift toward a new area to show habitat movement.</>,
+        detail: <>Not every species can move quickly, especially when habitat is fragmented.</>,
+      },
+      {
+        tab: "Food",
+        label: "Food production",
+        structure: "Heat, drought, flood, and pests can reduce crop yields.",
+        caption: <>Energy and water flows appear unbalanced so the climate-food link is easier to read.</>,
+        detail: <>Food impacts vary by region, crop, and adaptation capacity.</>,
+      },
+      {
+        tab: "Health",
+        label: "Health risk",
+        structure: "Heat waves and changing vector habitats can increase health risks.",
+        caption: <>Risk nodes show how climate impacts can move from environment to people.</>,
+        detail: <>Prevention still depends on health systems, sanitation, and community protection.</>,
+      },
+    ],
+  }}
+/>
+
+## Risk Is Uneven
+
+Two places can warm by the same amount but face different risks. Areas with fewer adaptation resources are usually more vulnerable to floods, crop failure, or disease.
+
+WHO discusses climate and health links, including extreme heat, air quality, and infectious disease, in [Climate change and health](https://www.who.int/news-room/fact-sheets/detail/climate-change-and-health).
+
+## Self-Check
+
+Why are climate impacts not the same in every region?
+
+Because risk depends on hazard exposure, vulnerability, and each region's capacity to adapt.

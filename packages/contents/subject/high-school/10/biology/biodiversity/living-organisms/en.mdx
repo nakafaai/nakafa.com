@@ -1,0 +1,62 @@
+import { EcosystemOrganismsLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Living Organisms in Ecosystems",
+  description:
+    "Learn the roles of producers, consumers, and decomposers in ecosystems and how energy and matter move.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Biodiversity of Living Organisms",
+};
+
+## Ecosystems Are Built from Relationships
+
+An ecosystem is the relationship between living organisms and their physical environment. It includes producers, consumers, decomposers, energy flow, and matter cycling.
+
+OpenStax Biology 2e explains energy flow and ecosystem structure in [Energy Flow through Ecosystems](https://openstax.org/books/biology-2e/pages/46-2-energy-flow-through-ecosystems).
+
+<EcosystemOrganismsLab
+  title={<>Ecosystem Role Network</>}
+  description={<>Choose an organism role to see the relationship between energy and matter.</>}
+  labels={{
+    chooseMode: "Choose a role",
+    detailLabel: "Accuracy note",
+    sourceNoteLabel: "Model reference",
+    structureLabel: "Structure being read",
+    viewLabel: "3D model of organisms in ecosystems",
+    sourceNote: <>The model follows producer, consumer, and decomposer roles in ecosystem energy flow.</>,
+    items: [
+      {
+        tab: "Producers",
+        label: "Producers",
+        structure: "Organisms that make organic material, usually through photosynthesis.",
+        caption: <>Producers are the entry point for energy in many food webs.</>,
+        detail: <>The model shows a general relationship, not one specific ecosystem.</>,
+      },
+      {
+        tab: "Consumers",
+        label: "Consumers",
+        structure: "Organisms that get energy by eating other organisms.",
+        caption: <>Consumers connect trophic levels in food webs.</>,
+        detail: <>Arrows simplify the direction of energy transfer.</>,
+      },
+      {
+        tab: "Decomposers",
+        label: "Decomposers",
+        structure: "Organisms that break down remains and return matter.",
+        caption: <>Without decomposers, nutrients return to the environment more slowly.</>,
+        detail: <>Bacteria and fungi are grouped as decomposers to keep the concept focused.</>,
+      },
+    ],
+  }}
+/>
+
+## Energy Flows, Matter Cycles
+
+Energy usually flows from producers to consumers and is lost as heat. Matter such as carbon, nitrogen, and minerals can cycle back through decomposition.
+
+## Self-Check
+
+Why are decomposers important even when they are not shown in a simple food chain?
+
+Because decomposers return matter from organism remains to the environment so it can be used again.

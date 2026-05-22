@@ -1,0 +1,62 @@
+import { VirusRoleLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Role of Viruses",
+  description:
+    "Learn how viruses can act as disease agents, microbial population regulators, and useful tools in biotechnology.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Viruses and Their Role",
+};
+
+## A Virus Has to Be Read in Context
+
+Viruses can cause disease, but they also matter in ecosystems and research. Bacteriophages, viruses that infect bacteria, can influence bacterial populations in the environment.
+
+NCBI Bookshelf describes bacteriophages as viruses that infect bacteria and have been widely used to study molecular biology in [Bacteriophages](https://www.ncbi.nlm.nih.gov/books/NBK493185/).
+
+<VirusRoleLab
+  title={<>Three Ways to Read Viral Roles</>}
+  description={<>Choose a role to see why viruses need context.</>}
+  labels={{
+    chooseMode: "Choose a role",
+    detailLabel: "Accuracy note",
+    sourceNoteLabel: "Model reference",
+    structureLabel: "Structure being read",
+    viewLabel: "3D model of viral roles",
+    sourceNote: <>The model summarizes pathogen, bacteriophage, and biotechnology-vector concepts from OpenStax and NCBI.</>,
+    items: [
+      {
+        tab: "Disease",
+        label: "Pathogen",
+        structure: "A virus may damage tissue while replicating in host cells.",
+        caption: <>Disease effects come from the interaction between the virus, host cells, and immune response.</>,
+        detail: <>The model does not claim every virus causes severe disease.</>,
+      },
+      {
+        tab: "Ecology",
+        label: "Microbe regulator",
+        structure: "Bacteriophages can infect bacteria and shape microbial communities.",
+        caption: <>In the environment, viruses help shape microorganism population dynamics.</>,
+        detail: <>This relationship depends on the virus type and its host.</>,
+      },
+      {
+        tab: "Research",
+        label: "Vector",
+        structure: "Modified viruses can carry genetic material in research.",
+        caption: <>In biotechnology, viral cell-entry ability can be used under strict control.</>,
+        detail: <>This use requires strong safety design and ethical review.</>,
+      },
+    ],
+  }}
+/>
+
+## Benefits Without Ignoring Risk
+
+A virus can be harmful in one context and useful in research. The better question is not whether all viruses are good or bad, but which virus it is, what host it infects, and under what conditions.
+
+## Self-Check
+
+Why is a bacteriophage not automatically considered dangerous to humans?
+
+Because a bacteriophage infects bacteria. Its effect on humans depends on the target bacteria and how it is used.

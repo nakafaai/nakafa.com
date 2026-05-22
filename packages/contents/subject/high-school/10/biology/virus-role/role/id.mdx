@@ -1,0 +1,62 @@
+import { VirusRoleLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Peranan Virus",
+  description:
+    "Pelajari peran virus sebagai penyebab penyakit, pengatur populasi mikroba, dan alat penting dalam bioteknologi.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Virus dan Peranannya",
+};
+
+## Virus Tidak Selalu Dibaca dari Satu Sisi
+
+Virus dapat menyebabkan penyakit, tetapi virus juga berperan dalam ekosistem dan riset. Bakteriofag, yaitu virus yang menginfeksi bakteri, dapat memengaruhi jumlah bakteri di lingkungan.
+
+NCBI Bookshelf menjelaskan bakteriofag sebagai virus yang menginfeksi bakteri dan banyak dipakai untuk mempelajari biologi molekuler di [Bacteriophages](https://www.ncbi.nlm.nih.gov/books/NBK493185/).
+
+<VirusRoleLab
+  title={<>Tiga Cara Membaca Peran Virus</>}
+  description={<>Pilih peran untuk melihat mengapa virus perlu dibaca dalam konteksnya.</>}
+  labels={{
+    chooseMode: "Pilih peran",
+    detailLabel: "Catatan akurasi",
+    sourceNoteLabel: "Rujukan model",
+    structureLabel: "Struktur yang dibaca",
+    viewLabel: "Model 3D peran virus",
+    sourceNote: <>Model merangkum konsep patogen, bakteriofag, dan vektor bioteknologi dari OpenStax dan NCBI.</>,
+    items: [
+      {
+        tab: "Penyakit",
+        label: "Patogen",
+        structure: "Virus dapat merusak jaringan saat bereplikasi di sel inang.",
+        caption: <>Dampak penyakit muncul dari interaksi virus, sel inang, dan respons imun.</>,
+        detail: <>Model tidak menyatakan semua virus menyebabkan penyakit berat.</>,
+      },
+      {
+        tab: "Ekologi",
+        label: "Pengatur mikroba",
+        structure: "Bakteriofag dapat menginfeksi bakteri dan memengaruhi komunitas mikroba.",
+        caption: <>Di lingkungan, virus ikut membentuk dinamika populasi mikroorganisme.</>,
+        detail: <>Hubungan ini kompleks dan bergantung pada jenis virus serta inangnya.</>,
+      },
+      {
+        tab: "Riset",
+        label: "Vektor",
+        structure: "Virus dapat dimodifikasi untuk membawa materi genetik dalam riset.",
+        caption: <>Dalam bioteknologi, kemampuan virus masuk ke sel dapat dimanfaatkan dengan kontrol ketat.</>,
+        detail: <>Pemanfaatan ini membutuhkan desain keselamatan dan etika yang kuat.</>,
+      },
+    ],
+  }}
+/>
+
+## Membaca Manfaat tanpa Mengabaikan Risiko
+
+Satu virus dapat merugikan di satu konteks, tetapi berguna di konteks riset. Cara berpikir yang tepat bukan menganggap semua virus baik atau buruk, melainkan bertanya: virus apa, inangnya siapa, dan dalam kondisi apa?
+
+## Cek Pemahaman
+
+Mengapa bakteriofag tidak langsung dianggap berbahaya bagi manusia?
+
+Karena bakteriofag menginfeksi bakteri. Dampaknya pada manusia bergantung pada bakteri target dan konteks penggunaannya.

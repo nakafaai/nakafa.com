@@ -1,0 +1,64 @@
+import { ClimateCauseLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Causes of Climate Change",
+  description:
+    "Understand the greenhouse effect, greenhouse gases, and Earth's energy flow through a 3D radiation model.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Climate Change",
+};
+
+## The Problem Is in the Energy Budget
+
+The greenhouse effect is the process where certain atmospheric gases absorb and re-emit infrared radiation. This natural process keeps Earth habitable, but extra greenhouse gases from human activity strengthen warming.
+
+NOAA explains rising atmospheric carbon dioxide and its link to human activity in [Climate Change: Atmospheric Carbon Dioxide](https://www.climate.gov/news-features/understanding-climate/climate-change-atmospheric-carbon-dioxide).
+
+<ClimateCauseLab
+  title={<>Radiation Flow Model</>}
+  description={<>Choose a cause to see how energy enters, is trapped, or is reduced.</>}
+  labels={{
+    chooseMode: "Choose a cause",
+    detailLabel: "Accuracy note",
+    sourceNoteLabel: "Model reference",
+    structureLabel: "Cause being read",
+    viewLabel: "3D model of climate change causes",
+    sourceNote: <>The model summarizes the greenhouse effect and energy-budget changes discussed by NOAA, NASA, and IPCC.</>,
+    items: [
+      {
+        tab: "CO2",
+        label: "Carbon dioxide",
+        structure: "CO2 increases mainly from fossil fuel burning and land-use change.",
+        caption: <>The atmosphere layer appears more active to show more infrared radiation being retained.</>,
+        detail: <>CO2 remains in the atmosphere for a long time, so accumulation matters.</>,
+      },
+      {
+        tab: "Methane",
+        label: "Methane",
+        structure: "Methane comes from sources such as fossil energy, livestock, waste, and wetlands.",
+        caption: <>Small particles represent a gas that is less abundant but strong at absorbing heat.</>,
+        detail: <>Methane is shorter-lived than CO2, but it has high warming power.</>,
+      },
+      {
+        tab: "Land",
+        label: "Land-use change",
+        structure: "Deforestation reduces carbon sinks and changes Earth's surface.",
+        caption: <>Earth's surface is read as a system that absorbs, reflects, and stores energy.</>,
+        detail: <>Land-use change can add emissions and reduce carbon sink capacity at the same time.</>,
+      },
+    ],
+  }}
+/>
+
+## Natural and Human Causes Must Be Separated
+
+Volcanoes, solar variation, and natural processes do affect climate. But rapid warming since the industrial era is mainly explained by increased greenhouse gases from human activity.
+
+IPCC AR6 WG1 concludes that human influence has warmed the atmosphere, ocean, and land in the [Summary for Policymakers](https://www.ipcc.ch/report/ar6/wg1/).
+
+## Self-Check
+
+Why is the natural greenhouse effect not the same as climate change today?
+
+The natural greenhouse effect keeps Earth warm. Today's problem is the strengthened effect caused by extra greenhouse gases from human activity.

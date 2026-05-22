@@ -1,0 +1,62 @@
+import { BacteriaStructureLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Bacteria",
+  description:
+    "Learn basic bacterial structure, common shapes, and why bacteria can be harmful and useful.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Biodiversity of Living Organisms",
+};
+
+## Small Cells with Large Effects
+
+Bacteria are prokaryotic organisms, meaning they do not have a membrane-bound nucleus. Their genetic material is in a nucleoid region, while ribosomes and cytoplasm sit inside the cell membrane.
+
+OpenStax Biology 2e explains prokaryotic structure and shape variation in [Prokaryotic Cells](https://openstax.org/books/biology-2e/pages/4-2-prokaryotic-cells).
+
+<BacteriaStructureLab
+  title={<>Bacterial Cell Model</>}
+  description={<>Choose a cell part to read the basic function of bacterial structures.</>}
+  labels={{
+    chooseMode: "Choose a part",
+    detailLabel: "Accuracy note",
+    sourceNoteLabel: "Model reference",
+    structureLabel: "Structure being read",
+    viewLabel: "3D model of bacteria",
+    sourceNote: <>The model follows common prokaryotic structures from OpenStax: membrane, cell wall, nucleoid, and ribosomes.</>,
+    items: [
+      {
+        tab: "Shape",
+        label: "Cell shape",
+        structure: "Bacteria may be spherical, rod-shaped, or spiral.",
+        caption: <>The model uses a rod shape so internal structures remain readable.</>,
+        detail: <>This shape does not represent all bacteria.</>,
+      },
+      {
+        tab: "Nucleoid",
+        label: "Nucleoid",
+        structure: "The region where bacterial DNA is found without a nuclear membrane.",
+        caption: <>Prokaryotes do not have a nucleus like animal and plant cells.</>,
+        detail: <>The model shows the nucleoid as a simplified central mass.</>,
+      },
+      {
+        tab: "Ribosomes",
+        label: "Ribosomes",
+        structure: "Sites of protein production inside the cell.",
+        caption: <>Bacteria can make proteins because they have their own ribosomes.</>,
+        detail: <>Small points represent ribosomes, not their true number.</>,
+      },
+    ],
+  }}
+/>
+
+## Bacteria Are Not Always Enemies
+
+Some bacteria cause disease, but many bacteria support decomposition, fermented food production, and microbiome balance.
+
+## Self-Check
+
+What is the main difference between bacteria and animal cells when you look at the nucleus?
+
+Bacteria do not have a membrane-bound nucleus, while animal cells do.

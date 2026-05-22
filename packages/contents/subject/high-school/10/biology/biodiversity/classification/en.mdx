@@ -1,0 +1,62 @@
+import { ClassificationLab } from "@repo/design-system/components/contents/biology/lab";
+
+export const metadata = {
+  title: "Classification of Living Organisms",
+  description:
+    "Learn why living things are classified and how shared traits help organize biological groups.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Biodiversity of Living Organisms",
+};
+
+## Classification Makes Diversity Readable
+
+Classification groups living organisms by similarities and differences. Without classification, organisms become a long list of names that is hard to study.
+
+OpenStax Biology 2e introduces taxonomy as the science of grouping and naming organisms in [Organizing Life on Earth](https://openstax.org/books/biology-2e/pages/20-1-organizing-life-on-earth).
+
+<ClassificationLab
+  title={<>Classification Network</>}
+  description={<>Choose a reading mode, then see how shared traits connect organisms.</>}
+  labels={{
+    chooseMode: "Choose a reading mode",
+    detailLabel: "Accuracy note",
+    sourceNoteLabel: "Model reference",
+    structureLabel: "Structure being read",
+    viewLabel: "3D model of classification",
+    sourceNote: <>The model follows taxonomy principles: organisms are grouped by shared traits and relatedness.</>,
+    items: [
+      {
+        tab: "Traits",
+        label: "Shared traits",
+        structure: "Traits found in several organisms, such as a backbone or cell wall.",
+        caption: <>Shared traits help us build meaningful groups.</>,
+        detail: <>Nodes represent trait groups, not a complete phylogenetic tree.</>,
+      },
+      {
+        tab: "Taxa",
+        label: "Taxon",
+        structure: "A grouping level such as genus, family, order, class, or kingdom.",
+        caption: <>Lower taxonomic levels usually contain organisms with more similar traits.</>,
+        detail: <>The taxonomic sequence is simplified to focus on hierarchy.</>,
+      },
+      {
+        tab: "Names",
+        label: "Scientific name",
+        structure: "A two-part name that lets scientists refer to a species consistently.",
+        caption: <>Scientific names reduce confusion from different local names.</>,
+        detail: <>Detailed naming rules are studied further in taxonomy.</>,
+      },
+    ],
+  }}
+/>
+
+## The Chosen Trait Must Matter
+
+Body color alone is often not enough for classification. Body structure, reproduction, genetic material, and evolutionary relationships provide stronger evidence.
+
+## Self-Check
+
+Why are two animals that both live in water not automatically close relatives?
+
+Because habitat is not the only basis for classification. Body traits, reproduction, and evolutionary relationships also need to be checked.
