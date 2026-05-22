@@ -40,6 +40,7 @@ function QuranAudioButton({
   return (
     <button
       aria-label={labels.playAudio}
+      aria-pressed="false"
       className={audioButtonClassName}
       data-quran-audio-index={index}
       data-state="idle"
@@ -101,10 +102,9 @@ export function QuranVerse({
   return (
     <div
       className={cn(
-        "mb-6 space-y-6 border-b pb-6 [contain-intrinsic-size:0_32rem] [content-visibility:auto]",
+        "mb-6 space-y-6 border-b pb-6 content-auto-quran-verse",
         isLast && "mb-0 border-b-0 pb-0"
       )}
-      key={verse.number.inQuran}
     >
       <div className="flex items-center gap-4">
         <a

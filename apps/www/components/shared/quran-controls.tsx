@@ -79,6 +79,7 @@ function setAudioButtonState({
 }) {
   button.dataset.state = state;
   button.setAttribute("aria-label", label);
+  button.setAttribute("aria-pressed", state === "playing" ? "true" : "false");
 
   const visibleLabel = button.querySelector(AUDIO_LABEL_SELECTOR);
 
@@ -116,12 +117,29 @@ export function QuranPageControls({
   interpretations = [],
   labels,
 }: Props) {
+  const activeAudioObserverRef = useRef<MutationObserver | null>(null);
   const activeAudioButtonRef = useRef<HTMLButtonElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isInterpretationOpen, setInterpretationOpen] = useState(false);
   const [selectedInterpretation, setSelectedInterpretation] = useState("");
 
+  /**
+   * Stops watching the active verse button after playback ends or changes.
+   */
+  const disconnectActiveAudioObserver = useCallback(() => {
+    const observer = activeAudioObserverRef.current;
+
+    if (!observer) {
+      return;
+    }
+
+    observer.disconnect();
+    activeAudioObserverRef.current = null;
+  }, []);
+
   const stopAudio = useCallback(() => {
+    disconnectActiveAudioObserver();
+
     const audio = audioRef.current;
 
     if (audio) {
@@ -145,7 +163,7 @@ export function QuranPageControls({
       state: "idle",
     });
     activeAudioButtonRef.current = null;
-  }, [labels.playAudio]);
+  }, [disconnectActiveAudioObserver, labels.playAudio]);
 
   const playAudio = useCallback(
     (button: HTMLButtonElement) => {
@@ -172,6 +190,20 @@ export function QuranPageControls({
         label: labels.stopAudio,
         state: "playing",
       });
+
+      const activeAudioObserver = new MutationObserver(() => {
+        if (button.isConnected) {
+          return;
+        }
+
+        stopAudio();
+      });
+
+      activeAudioObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+      activeAudioObserverRef.current = activeAudioObserver;
 
       let sourceIndex = 0;
 
@@ -280,7 +312,16 @@ export function QuranPageControls({
     };
   }, [openInterpretation, playAudio]);
 
-  useEffect(() => stopAudio, [stopAudio]);
+  useEffect(() => {
+    /**
+     * Stops Quran audio when the page controller leaves the tree.
+     */
+    function cleanupAudio() {
+      stopAudio();
+    }
+
+    return cleanupAudio;
+  }, [stopAudio]);
 
   return (
     <Drawer onOpenChange={setInterpretationOpen} open={isInterpretationOpen}>
