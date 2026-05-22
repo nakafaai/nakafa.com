@@ -11,6 +11,10 @@ import {
   RotatingGroup,
   SlidingGroup,
 } from "@repo/design-system/components/contents/biology/parts";
+import {
+  BacteriophageModel,
+  MiniEnvelopedVirion,
+} from "@repo/design-system/components/contents/biology/virus-parts";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 
 /**
@@ -47,10 +51,9 @@ function PathogenRole({ colors }: Pick<BiologySceneProps, "colors">) {
       </mesh>
       {[-0.8, -0.38, 0.05, 0.52, 0.9].map((x, index) => (
         <FloatingGroup key={x} phase={index * 0.55} travel={0.08}>
-          <mesh position={[x, 0.35 - Math.abs(x) * 0.24, 0.42]}>
-            <icosahedronGeometry args={[0.18, 1]} />
-            <meshStandardMaterial color={colors.pathogen} />
-          </mesh>
+          <group position={[x, 0.35 - Math.abs(x) * 0.24, 0.42]}>
+            <MiniEnvelopedVirion colors={colors} scale={0.75} />
+          </group>
         </FloatingGroup>
       ))}
     </group>
@@ -80,10 +83,9 @@ function EcologyRole({ colors }: Pick<BiologySceneProps, "colors">) {
         to={[-0.92, 0.18, 0.12]}
       />
       <SlidingGroup speed={0.8} travel={0.2}>
-        <mesh position={[-0.72, 0.66, 0.12]}>
-          <icosahedronGeometry args={[0.2, 1]} />
-          <meshStandardMaterial color={colors.pathogen} />
-        </mesh>
+        <group position={[-0.72, 0.66, 0.12]} rotation={[0, 0, -0.5]}>
+          <BacteriophageModel colors={colors} scale={0.78} />
+        </group>
       </SlidingGroup>
     </group>
   );
@@ -102,10 +104,7 @@ function BiotechRole({ colors }: Pick<BiologySceneProps, "colors">) {
       <SlidingGroup speed={0.9} travel={0.18}>
         <group position={[-0.95, 0.1, 0]}>
           <RotatingGroup speed={0.3}>
-            <mesh>
-              <icosahedronGeometry args={[0.32, 1]} />
-              <meshStandardMaterial color={colors.membrane} />
-            </mesh>
+            <MiniEnvelopedVirion colors={colors} scale={1.1} />
           </RotatingGroup>
           <PulsingGroup speed={1.7} strength={0.06}>
             <mesh rotation={[Math.PI / 2, 0, 0]}>

@@ -4,6 +4,7 @@ import {
   BIOLOGY_RING_POINT_COUNT,
   type BiologyLabProps,
   type BiologySceneProps,
+  type BiologySceneView,
   createBiologySpherePoints,
 } from "@repo/design-system/components/contents/biology/data";
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
@@ -12,17 +13,36 @@ import {
   PulsingGroup,
   RotatingGroup,
 } from "@repo/design-system/components/contents/biology/parts";
+import {
+  createVirusSurfaceAnchors,
+  VirusSurfaceSpike,
+} from "@repo/design-system/components/contents/biology/virus-parts";
 
 const CAPSID_POINTS = createBiologySpherePoints(
   BIOLOGY_RING_POINT_COUNT * 2,
-  1.12
+  0.92
 );
+const ENVELOPE_SPIKES = createVirusSurfaceAnchors(
+  BIOLOGY_RING_POINT_COUNT * 2,
+  1.08
+);
+const VIRION_VIEW = {
+  cameraPosition: [2.05, 1.5, 2.85],
+  cameraTarget: [0, 0.04, 0],
+  narrowCameraPosition: [2.25, 1.72, 3.15],
+} satisfies BiologySceneView;
 
 /**
  * Renders the virus structure lab with capsid, genome, and envelope focus modes.
  */
 export function VirusStructureLab(props: BiologyLabProps) {
-  return <BiologyLabFrame scene={VirusStructureScene} {...props} />;
+  return (
+    <BiologyLabFrame
+      scene={VirusStructureScene}
+      view={VIRION_VIEW}
+      {...props}
+    />
+  );
 }
 
 /**
@@ -36,11 +56,22 @@ function VirusStructureScene({ colors, selectedIndex }: BiologySceneProps) {
   return (
     <group>
       <RotatingGroup speed={0.08}>
+        <mesh scale={[1.04, 0.96, 1.08]}>
+          <sphereGeometry args={[1.1, 56, 36]} />
+          <meshStandardMaterial
+            color={colors.host}
+            opacity={isEnvelopeFocus ? 0.28 : 0.11}
+            roughness={0.82}
+            transparent
+          />
+        </mesh>
+
         <mesh>
-          <icosahedronGeometry args={[1, 2]} />
+          <icosahedronGeometry args={[0.86, 2]} />
           <meshStandardMaterial
             color={colors.membrane}
-            opacity={isCapsidFocus ? 0.58 : 0.22}
+            opacity={isCapsidFocus ? 0.72 : 0.24}
+            roughness={0.72}
             transparent
             wireframe={!isCapsidFocus}
           />
@@ -48,8 +79,8 @@ function VirusStructureScene({ colors, selectedIndex }: BiologySceneProps) {
 
         {CAPSID_POINTS.map((point) => (
           <mesh key={point.id} position={point.position}>
-            <sphereGeometry args={[isCapsidFocus ? 0.13 : 0.08, 16, 16]} />
-            <meshStandardMaterial color={colors.pathogen} />
+            <icosahedronGeometry args={[isCapsidFocus ? 0.09 : 0.052, 1]} />
+            <meshStandardMaterial color={colors.pathogen} roughness={0.7} />
           </mesh>
         ))}
 
@@ -58,36 +89,17 @@ function VirusStructureScene({ colors, selectedIndex }: BiologySceneProps) {
             <torusKnotGeometry
               args={[0.45, isGenomeFocus ? 0.055 : 0.03, 96, 8]}
             />
-            <meshStandardMaterial color={colors.genome} />
+            <meshStandardMaterial color={colors.genome} roughness={0.52} />
           </mesh>
         </PulsingGroup>
 
-        <mesh visible={isEnvelopeFocus}>
-          <sphereGeometry args={[1.34, 48, 32]} />
-          <meshStandardMaterial
-            color={colors.host}
-            opacity={0.18}
-            transparent
-          />
-        </mesh>
-
-        {CAPSID_POINTS.map((point, index) => (
-          <FloatingGroup
-            key={`spike-${point.id}`}
-            phase={index * 0.35}
-            travel={0.035}
-          >
-            <mesh
-              position={[
-                point.position[0] * 1.18,
-                point.position[1] * 1.18,
-                point.position[2] * 1.18,
-              ]}
-              visible={isEnvelopeFocus}
-            >
-              <sphereGeometry args={[0.075, 12, 10]} />
-              <meshStandardMaterial color={colors.microbe} />
-            </mesh>
+        {ENVELOPE_SPIKES.map((anchor, index) => (
+          <FloatingGroup key={anchor.id} phase={index * 0.35} travel={0.035}>
+            <VirusSurfaceSpike
+              anchor={anchor}
+              color={colors.microbe}
+              highlighted={isEnvelopeFocus}
+            />
           </FloatingGroup>
         ))}
       </RotatingGroup>

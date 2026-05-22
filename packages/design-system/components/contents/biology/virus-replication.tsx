@@ -3,6 +3,7 @@
 import type {
   BiologyLabProps,
   BiologySceneProps,
+  BiologySceneView,
 } from "@repo/design-system/components/contents/biology/data";
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
 import {
@@ -11,15 +12,18 @@ import {
   RotatingGroup,
   SlidingGroup,
 } from "@repo/design-system/components/contents/biology/parts";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import {
+  BacteriophageModel,
+  MiniEnvelopedVirion,
+} from "@repo/design-system/components/contents/biology/virus-parts";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 
 const VIRUS_STAGES = [
-  { id: "attach", label: "1", position: [-1.45, 0.24, 0.3] },
-  { id: "enter", label: "2", position: [-0.72, 0.08, 0.34] },
-  { id: "copy", label: "3", position: [0, -0.08, 0.38] },
-  { id: "assemble", label: "4", position: [0.72, 0.08, 0.34] },
-  { id: "release", label: "5", position: [1.45, 0.24, 0.3] },
+  { id: "attach", position: [-1.28, 0.32, 0.36] },
+  { id: "enter", position: [-0.58, 0.08, 0.38] },
+  { id: "copy", position: [0, -0.04, 0.4] },
+  { id: "assemble", position: [0.58, 0.08, 0.38] },
+  { id: "release", position: [1.28, 0.32, 0.36] },
 ] as const;
 
 const HOST_DNA_PATH = [
@@ -28,12 +32,23 @@ const HOST_DNA_PATH = [
   [0.12, -0.08, 0.38],
   [0.54, 0.14, 0.38],
 ] as const;
+const REPLICATION_VIEW = {
+  cameraPosition: [0, 1.62, 3.05],
+  cameraTarget: [0, -0.06, 0.18],
+  narrowCameraPosition: [0, 1.85, 3.55],
+} satisfies BiologySceneView;
 
 /**
  * Renders the viral replication lab with lytic and lysogenic cycle views.
  */
 export function VirusReplicationLab(props: BiologyLabProps) {
-  return <BiologyLabFrame scene={VirusReplicationScene} {...props} />;
+  return (
+    <BiologyLabFrame
+      scene={VirusReplicationScene}
+      view={REPLICATION_VIEW}
+      {...props}
+    />
+  );
 }
 
 /**
@@ -53,36 +68,27 @@ function VirusReplicationScene({ colors, selectedIndex }: BiologySceneProps) {
 function LyticCycle({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
-      <mesh scale={[1.55, 0.95, 0.72]}>
-        <sphereGeometry args={[1, 48, 32]} />
+      <mesh rotation={[0, 0, Math.PI / 2]} scale={[0.88, 1.5, 0.68]}>
+        <capsuleGeometry args={[0.62, 1.22, 14, 34]} />
         <meshStandardMaterial color={colors.host} opacity={0.2} transparent />
       </mesh>
 
       {VIRUS_STAGES.map((stage, index) => (
         <group key={stage.id} position={stage.position}>
           <RotatingGroup speed={0.3 + index * 0.05}>
-            <mesh scale={index < 2 ? 1 : 0.76}>
-              <icosahedronGeometry args={[0.16, 1]} />
-              <meshStandardMaterial
-                color={index < 3 ? colors.pathogen : colors.membrane}
-              />
-            </mesh>
+            {index < 2 ? (
+              <BacteriophageModel colors={colors} scale={0.52} />
+            ) : (
+              <MiniEnvelopedVirion colors={colors} scale={0.58} />
+            )}
           </RotatingGroup>
-          <SceneLabel
-            color={colors.text}
-            fontSize="compact"
-            position={[0, -0.34, 0]}
-          >
-            {stage.label}
-          </SceneLabel>
         </group>
       ))}
 
       <SlidingGroup speed={1.2} travel={1.35}>
-        <mesh position={[0, 0.62, 0.48]}>
-          <icosahedronGeometry args={[0.13, 1]} />
-          <meshStandardMaterial color={colors.pathogen} />
-        </mesh>
+        <group position={[0, 0.72, 0.5]} rotation={[0, 0, -0.7]}>
+          <BacteriophageModel colors={colors} scale={0.42} />
+        </group>
       </SlidingGroup>
 
       <PulsingGroup speed={1.7} strength={0.08}>
@@ -93,6 +99,16 @@ function LyticCycle({ colors }: Pick<BiologySceneProps, "colors">) {
           </mesh>
         ))}
       </PulsingGroup>
+
+      <BiologyLine
+        color={colors.warning}
+        lineWidth={3}
+        points={[
+          [1.02, 0.06, 0.5],
+          [1.18, -0.1, 0.52],
+          [1.36, 0.02, 0.5],
+        ]}
+      />
 
       <ArrowHelper
         arrowSize={0.14}
