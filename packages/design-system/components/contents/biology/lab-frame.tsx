@@ -103,7 +103,7 @@ export function BiologyLabFrame({
             frameloop="always"
           >
             <Suspense>
-              <ResponsiveBiologyCamera view={view} />
+              <ResponsiveBiologyCamera key={selectedIndex} view={view} />
               <ambientLight intensity={0.58} />
               <hemisphereLight
                 color={colors.skyLight}
