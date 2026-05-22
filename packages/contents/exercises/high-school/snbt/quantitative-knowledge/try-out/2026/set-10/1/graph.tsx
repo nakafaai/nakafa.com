@@ -34,19 +34,19 @@ export function Graph({ title, description, mode = "question" }: GraphProps) {
     { x: T2_CENTER_X + TOP.x, y: TOP.y, z: 0 },
   ];
 
-  const offTop = [0, 0.5, 0] as [number, number, number];
-  const offLeft = [-1.25 * SCALE - 0.6, -2.5 * SCALE, 0] as [
+  const offTop = [0, 0.5, 0] satisfies [number, number, number];
+  const offLeft = [-1.25 * SCALE - 0.6, -2.5 * SCALE, 0] satisfies [
     number,
     number,
     number,
   ];
-  const offRight = [1.25 * SCALE + 0.6, -2.5 * SCALE, 0] as [
+  const offRight = [1.25 * SCALE + 0.6, -2.5 * SCALE, 0] satisfies [
     number,
     number,
     number,
   ];
-  const offBottom = [0, -5 * SCALE - 0.6, 0] as [number, number, number];
-  const offCenter = [0, -3.5 * SCALE, 0] as [number, number, number];
+  const offBottom = [0, -5 * SCALE - 0.6, 0] satisfies [number, number, number];
+  const offCenter = [0, -3.5 * SCALE, 0] satisfies [number, number, number];
 
   let t1Text = { top: "A", left: "D", right: "F", bottom: "A", center: "T" };
   let t2Text = { top: "B", left: "A", right: "D", bottom: "C", center: "?" };

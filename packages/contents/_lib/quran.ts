@@ -10,7 +10,6 @@ import {
   type Verse,
 } from "@repo/contents/_types/quran";
 import { Effect, Option, pipe, Schema } from "effect";
-import type { Locale } from "next-intl";
 
 const verses = quran.flatMap((surah) => surah.verses);
 
@@ -150,7 +149,7 @@ export function getSurahName({
   locale,
   name,
 }: {
-  locale: Locale;
+  locale: string;
   name: Surah["name"];
 }): string {
   return pipe(

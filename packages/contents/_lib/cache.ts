@@ -100,19 +100,29 @@ class MDXCacheRegistry {
     return this.cache;
   }
 
-  getSlugsForLocale(locale: Locale): FilePath[] {
-    if (this.cache === null) {
-      this.build();
+  getSlugsForLocale(locale: string): FilePath[] {
+    if (!this.isValidLocale(locale)) {
+      return [];
     }
-    return Array.from(this.cache?.get(locale) ?? []);
+
+    const cache = this.cache ?? this.build();
+    return Array.from(cache.get(locale) ?? []);
   }
 
-  hasLocale(locale: Locale): boolean {
+  hasLocale(locale: string): boolean {
+    if (!this.isValidLocale(locale)) {
+      return false;
+    }
+
     const cache = this.cache ?? this.build();
     return cache.has(locale);
   }
 
-  hasPath(locale: Locale, path: FilePath): boolean {
+  hasPath(locale: string, path: FilePath): boolean {
+    if (!this.isValidLocale(locale)) {
+      return false;
+    }
+
     const cache = this.cache ?? this.build();
     const localeCache = cache.get(locale);
     return localeCache === undefined ? false : localeCache.has(path);
@@ -269,7 +279,7 @@ export function resetMDXFileCache(): void {
  * Retrieves all MDX file paths (slugs) for a specific locale.
  * Automatically builds the cache if it hasn't been initialized.
  *
- * @param locale - Target locale (e.g., "en", "id")
+ * @param locale - Target locale or unchecked request locale
  * @returns Array of relative file paths for the given locale
  *
  * @example
@@ -278,7 +288,7 @@ export function resetMDXFileCache(): void {
  * // ["articles/hello-world", "exercises/math/set-1"]
  * ```
  */
-export function getMDXSlugsForLocale(locale: Locale): FilePath[] {
+export function getMDXSlugsForLocale(locale: string): FilePath[] {
   return registry.getSlugsForLocale(locale);
 }
 
@@ -288,7 +298,7 @@ export function getMDXSlugsForLocale(locale: Locale): FilePath[] {
  * @param locale - Locale to check
  * @returns True if the locale is valid and cached
  */
-export function hasLocaleInCache(locale: Locale): boolean {
+export function hasLocaleInCache(locale: string): boolean {
   return registry.hasLocale(locale);
 }
 
@@ -296,7 +306,7 @@ export function hasLocaleInCache(locale: Locale): boolean {
  * Checks if a specific file path exists for a given locale.
  * Efficiently verifies existence without loading the file content.
  *
- * @param locale - Target locale
+ * @param locale - Target locale or unchecked request locale
  * @param path - Relative path to check (e.g. "articles/my-post")
  * @returns True if the path exists in the cache for the locale
  *
@@ -307,7 +317,7 @@ export function hasLocaleInCache(locale: Locale): boolean {
  * }
  * ```
  */
-export function hasPathInCache(locale: Locale, path: FilePath): boolean {
+export function hasPathInCache(locale: string, path: FilePath): boolean {
   return registry.hasPath(locale, path);
 }
 

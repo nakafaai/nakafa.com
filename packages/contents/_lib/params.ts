@@ -6,13 +6,12 @@ import {
 } from "@repo/contents/_lib/fs";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
-import type { Locale } from "next-intl";
 
 const EXERCISE_SET_REGEX = /^(exercises\/.*?)\/\d+\/_(?:question|answer)$/;
 const EXERCISE_NUMBER_REGEX = /^(exercises\/.*?\/\d+)\/_(?:question|answer)$/;
 
 interface StaticParamsWithLocale {
-  locale: Locale;
+  locale: string;
   slug: string[];
 }
 
@@ -22,14 +21,14 @@ interface ContentPathCandidate {
 }
 
 interface BaseConfig {
-  locales?: readonly Locale[];
+  locales?: readonly string[];
 }
 
 interface ContentPathsConfig extends BaseConfig {
   basePath: string;
 }
 
-interface LocaleParamsConfig extends BaseConfig {}
+type LocaleParamsConfig = BaseConfig;
 
 interface FolderPathCacheEntry {
   paths: Set<string>;
@@ -43,6 +42,12 @@ interface ContentPathCandidatesCacheEntry {
 
 const folderPathCache = new Map<string, FolderPathCacheEntry>();
 let contentPathCandidatesCache: ContentPathCandidatesCacheEntry | undefined;
+
+/** Clears generated static-param caches after content path discovery changes. */
+export function resetStaticParamCaches(): void {
+  folderPathCache.clear();
+  contentPathCandidatesCache = undefined;
+}
 
 /**
  * Extracts unique exercise set paths from MDX cache entries.
@@ -80,9 +85,10 @@ export function getExerciseNumberPaths(slugs: readonly string[]): string[] {
 
 /**
  * Gets all MDX content paths for a specific base path and locale.
- * Returns paths relative to the base path.
+ *
+ * @returns Paths relative to the base path
  */
-function getMDXPathsForBasePath(locale: Locale, basePath: string): Set<string> {
+function getMDXPathsForBasePath(locale: string, basePath: string): Set<string> {
   const allSlugs = getMDXSlugsForLocale(locale);
   const prefix = `${basePath}/`;
 
@@ -251,17 +257,13 @@ export function generateLocaleParams(
   const contentPathCandidates = getContentPathCandidates();
   const result: StaticParamsWithLocale[] = [];
 
-  const addPath = (locale: Locale, slugParts: string[]) => {
-    result.push({ locale, slug: slugParts });
-  };
-
   for (const locale of locales) {
     const slugs = getMDXSlugsForLocale(locale);
     const localeCache = new Set(slugs);
 
     for (const candidate of contentPathCandidates) {
       if (localeCache.has(candidate.fullPath)) {
-        addPath(locale, candidate.slugParts);
+        result.push({ locale, slug: candidate.slugParts });
       }
     }
   }

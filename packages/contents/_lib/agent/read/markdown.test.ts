@@ -1,6 +1,11 @@
-import { getNakafaAgentMarkdown } from "@repo/contents/_lib/agent/read/markdown";
+import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import {
+  decodeNakafaAgentMarkdown,
+  getNakafaAgentMarkdown,
+} from "@repo/contents/_lib/agent/read/markdown";
+import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { Effect, Option } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 const ARTICLE_CONTENT_ID =
   "en/articles/politics/dynastic-politics-asian-values";
@@ -64,26 +69,21 @@ describe("Nakafa agent markdown", () => {
   });
 
   it("uses subject metadata when description metadata is absent", async () => {
-    vi.resetModules();
-    vi.doMock("@repo/contents/_lib/metadata", () => ({
-      getContentMetadataWithRaw: () =>
-        Effect.succeed({
-          metadata: {
-            authors: [{ name: "Nakafa" }],
-            date: "01/01/2026",
-            subject: "Fallback Subject",
-            title: "Subject Fallback",
-          },
-          raw: "## Subject body",
-        }),
-    }));
-
-    const { getNakafaAgentMarkdown } = await import(
-      "@repo/contents/_lib/agent/read/markdown"
-    );
     const content = await Effect.runPromise(
       getNakafaAgentMarkdown(
-        "en/subject/university/bachelor/ai-ds/ai-programming/variable"
+        "en/subject/university/bachelor/ai-ds/ai-programming/variable",
+        {
+          loadContent: () =>
+            Effect.succeed({
+              metadata: {
+                authors: [{ name: "Nakafa" }],
+                date: "01/01/2026",
+                subject: "Fallback Subject",
+                title: "Subject Fallback",
+              },
+              raw: "## Subject body",
+            }),
+        }
       )
     );
 
@@ -92,29 +92,21 @@ describe("Nakafa agent markdown", () => {
     }
 
     expect(content.value.description).toBe("Fallback Subject");
-    vi.doUnmock("@repo/contents/_lib/metadata");
-    vi.resetModules();
   });
 
   it("uses an empty markdown description when metadata has no description or subject", async () => {
-    vi.resetModules();
-    vi.doMock("@repo/contents/_lib/metadata", () => ({
-      getContentMetadataWithRaw: () =>
-        Effect.succeed({
-          metadata: {
-            authors: [{ name: "Nakafa" }],
-            date: "01/01/2026",
-            title: "No Description",
-          },
-          raw: "## Body",
-        }),
-    }));
-
-    const { getNakafaAgentMarkdown } = await import(
-      "@repo/contents/_lib/agent/read/markdown"
-    );
     const content = await Effect.runPromise(
-      getNakafaAgentMarkdown("en/articles/no-description")
+      getNakafaAgentMarkdown("en/articles/no-description", {
+        loadContent: () =>
+          Effect.succeed({
+            metadata: {
+              authors: [{ name: "Nakafa" }],
+              date: "01/01/2026",
+              title: "No Description",
+            },
+            raw: "## Body",
+          }),
+      })
     );
 
     if (Option.isNone(content)) {
@@ -122,59 +114,38 @@ describe("Nakafa agent markdown", () => {
     }
 
     expect(content.value.description).toBe("");
-    vi.doUnmock("@repo/contents/_lib/metadata");
-    vi.resetModules();
   });
 
   it("returns none when a Quran reference cannot be built for an existing Surah", async () => {
-    vi.resetModules();
-    vi.doMock("@repo/contents/_lib/agent/quran/read", () => ({
-      getNakafaAgentQuranReference: () => Effect.succeed(Option.none()),
-    }));
-
-    const { getNakafaAgentMarkdown } = await import(
-      "@repo/contents/_lib/agent/read/markdown"
-    );
     const content = await Effect.runPromise(
-      getNakafaAgentMarkdown("en/quran/1")
-    );
-
-    expect(Option.isNone(content)).toBe(true);
-    vi.doUnmock("@repo/contents/_lib/agent/quran/read");
-    vi.resetModules();
-  });
-
-  it("fails with a typed read error when the markdown schema rejects output", async () => {
-    vi.resetModules();
-    vi.doMock("@repo/contents/_lib/agent/schema/read", async () => {
-      const actual = await vi.importActual<
-        typeof import("@repo/contents/_lib/agent/schema/read")
-      >("@repo/contents/_lib/agent/schema/read");
-      const { Schema } = await import("effect");
-
-      return {
-        ...actual,
-        NakafaAgentMarkdownSchema: Schema.Struct({
-          impossible: Schema.String,
-        }),
-      };
-    });
-
-    const { NakafaAgentDataReadError } = await import(
-      "@repo/contents/_lib/agent/errors"
-    );
-    const { getNakafaAgentMarkdown } = await import(
-      "@repo/contents/_lib/agent/read/markdown"
-    );
-    const error = await Effect.runPromise(
-      Effect.match(getNakafaAgentMarkdown(ARTICLE_CONTENT_ID), {
-        onFailure: (failure) => failure,
-        onSuccess: () => null,
+      getNakafaAgentMarkdown("en/quran/1", {
+        readQuran: () => Effect.succeed(Option.none()),
       })
     );
 
+    expect(Option.isNone(content)).toBe(true);
+  });
+
+  it("fails with a typed read error when the markdown schema rejects output", async () => {
+    const error = await Effect.runPromise(
+      Effect.match(
+        decodeNakafaAgentMarkdown({
+          ...buildNakafaContentRef(
+            "en",
+            "articles/politics/dynastic-politics-asian-values",
+            "articles"
+          ),
+          description: 1,
+          text: "## Body",
+          title: "Invalid Markdown",
+        }),
+        {
+          onFailure: (failure) => failure,
+          onSuccess: () => null,
+        }
+      )
+    );
+
     expect(error).toBeInstanceOf(NakafaAgentDataReadError);
-    vi.doUnmock("@repo/contents/_lib/agent/schema/read");
-    vi.resetModules();
   });
 });

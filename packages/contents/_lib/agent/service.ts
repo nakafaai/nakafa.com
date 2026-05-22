@@ -10,8 +10,10 @@ const QURAN_ROUTE_SECTION = "quran";
 const QURAN_SURAH_PATTERN = /^\d+$/;
 
 /** Verifies whether a Nakafa content reference resolves to readable content. */
-const verifyNakafaContent = Effect.fn("Nakafa.verify")(function* (
-  contentRef: string
+export const verifyNakafaContent = Effect.fn("Nakafa.verify")(function* (
+  contentRef: string,
+  readContent: typeof getNakafaAgentMarkdown = getNakafaAgentMarkdown,
+  loadSurah: typeof getSurah = getSurah
 ) {
   const ref = parseNakafaContentRef(contentRef);
 
@@ -20,10 +22,10 @@ const verifyNakafaContent = Effect.fn("Nakafa.verify")(function* (
   }
 
   if (ref.value.section === "quran") {
-    return yield* verifyNakafaQuranRoute(ref.value.route);
+    return yield* verifyNakafaQuranRoute(ref.value.route, loadSurah);
   }
 
-  const content = yield* Effect.either(getNakafaAgentMarkdown(contentRef));
+  const content = yield* Effect.either(readContent(contentRef));
 
   return Either.match(content, {
     onLeft: () => false,
@@ -32,7 +34,7 @@ const verifyNakafaContent = Effect.fn("Nakafa.verify")(function* (
 });
 
 /** Verifies canonical Quran content routes without loading non-Quran content. */
-function verifyNakafaQuranRoute(route: string) {
+function verifyNakafaQuranRoute(route: string, loadSurah: typeof getSurah) {
   const routeSegments = route.split("/");
   const surahSegment = routeSegments.at(1);
 
@@ -51,7 +53,7 @@ function verifyNakafaQuranRoute(route: string) {
     return Effect.succeed(false);
   }
 
-  return getSurah(surahNumber).pipe(Effect.either, Effect.map(Either.isRight));
+  return loadSurah(surahNumber).pipe(Effect.either, Effect.map(Either.isRight));
 }
 
 /** Shared Nakafa read-model service used by MCP and Nina. */

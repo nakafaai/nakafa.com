@@ -10,7 +10,6 @@ import {
   SurahNotFoundError,
   VerseNotFoundError,
 } from "@repo/contents/_shared/error";
-import type { Locale } from "@repo/contents/_types/content";
 import { Effect, Option } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -566,7 +565,7 @@ describe("getSurahName", () => {
     it("should return long Arabic name as fallback", async () => {
       const surahValue = await Effect.runPromise(getSurah(1));
       const name = getSurahName({
-        locale: "invalid" as Locale,
+        locale: "invalid",
         name: surahValue.name,
       });
       expect(name).toContain("ٱلْفَاتِحَة");
@@ -575,7 +574,7 @@ describe("getSurahName", () => {
     it("should return long Arabic name for unknown locale", async () => {
       const surahValue = await Effect.runPromise(getSurah(1));
       const name = getSurahName({
-        locale: "unknown-locale" as Locale,
+        locale: "unknown-locale",
         name: surahValue.name,
       });
       expect(name).toBe(surahValue.name.long);
@@ -595,7 +594,7 @@ describe("getSurahName", () => {
         },
       };
       const name = getSurahName({
-        locale: "custom-locale" as Locale,
+        locale: "custom-locale",
         name: customName,
       });
       expect(name).toBe(customName.long);
@@ -616,7 +615,7 @@ describe("getSurahName", () => {
         },
       };
       const name = getSurahName({
-        locale: "custom" as Locale,
+        locale: "custom",
         name: customName,
       });
       expect(name).toBe("Custom Translation");

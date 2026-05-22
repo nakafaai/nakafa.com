@@ -379,21 +379,22 @@ export default function TableChairsAnimation({
 
         <div className="w-full border-t px-6 pt-4">
           <div className="flex flex-wrap justify-center gap-2">
-            {Array.from({ length: maxTables }).map((_, i) => (
-              <Button
-                aria-label={`Set table count to ${i + 1}`}
-                // biome-ignore lint/suspicious/noArrayIndexKey: Button count is based on array index position
-                key={`table-count-${i + 1}`}
-                onClick={() => {
-                  setTableCount(i + 1);
-                  setIsPlaying(false);
-                }}
-                size="sm"
-                variant={tableCount === i + 1 ? "default" : "outline"}
-              >
-                {i + 1} {labels.table}
-              </Button>
-            ))}
+            {Array.from({ length: maxTables }, (_, index) => index + 1).map(
+              (count) => (
+                <Button
+                  aria-label={`Set table count to ${count}`}
+                  key={`table-count-${count}`}
+                  onClick={() => {
+                    setTableCount(count);
+                    setIsPlaying(false);
+                  }}
+                  size="sm"
+                  variant={tableCount === count ? "default" : "outline"}
+                >
+                  {count} {labels.table}
+                </Button>
+              )
+            )}
           </div>
         </div>
       </CardFooter>

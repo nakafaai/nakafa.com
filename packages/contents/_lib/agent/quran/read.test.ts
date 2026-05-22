@@ -1,7 +1,15 @@
-import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
-import { getNakafaAgentQuranReference } from "@repo/contents/_lib/agent/quran/read";
+import {
+  NakafaAgentDataReadError,
+  NakafaAgentInputError,
+} from "@repo/contents/_lib/agent/errors";
+import {
+  decodeNakafaAgentQuranReference,
+  getNakafaAgentQuranReference,
+} from "@repo/contents/_lib/agent/quran/read";
+import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { SurahNotFoundError } from "@repo/contents/_shared/error";
 import { Effect, Option } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 describe("Nakafa agent Quran references", () => {
   it("retrieves bounded Quran references and handles invalid bounds", async () => {
@@ -64,101 +72,81 @@ describe("Nakafa agent Quran references", () => {
   });
 
   it("returns none when a valid Surah number is unavailable in the data source", async () => {
-    vi.resetModules();
-    vi.doMock("@repo/contents/_lib/quran", () => ({
-      getSurah: () => Effect.fail(new Error("missing surah")),
-      getSurahName: () => "Missing Surah",
-    }));
-
-    const { getNakafaAgentQuranReference } = await import(
-      "@repo/contents/_lib/agent/quran/read"
-    );
     const reference = await Effect.runPromise(
-      getNakafaAgentQuranReference({
-        from_verse: 1,
-        locale: "en",
-        surah: 1,
-      })
-    );
-
-    expect(Option.isNone(reference)).toBe(true);
-    vi.doUnmock("@repo/contents/_lib/quran");
-    vi.resetModules();
-  });
-
-  it("returns none when Surah data has no verses in the requested range", async () => {
-    vi.resetModules();
-    vi.doMock("@repo/contents/_lib/quran", () => ({
-      getSurah: () =>
-        Effect.succeed({
-          name: {
-            long: "Empty",
-            short: "Empty",
-            translation: {
-              en: "Empty",
-              id: "Kosong",
-            },
-            transliteration: {
-              en: "Empty",
-              id: "Kosong",
-            },
-          },
-          number: 1,
-          numberOfVerses: 1,
-          revelation: {
-            en: "Meccan",
-            id: "Makkiyah",
-          },
-          sequence: 1,
-          verses: [],
-        }),
-      getSurahName: () => "Empty",
-    }));
-
-    const { getNakafaAgentQuranReference } = await import(
-      "@repo/contents/_lib/agent/quran/read"
-    );
-    const reference = await Effect.runPromise(
-      getNakafaAgentQuranReference({
-        from_verse: 1,
-        locale: "en",
-        surah: 1,
-      })
-    );
-
-    expect(Option.isNone(reference)).toBe(true);
-    vi.doUnmock("@repo/contents/_lib/quran");
-    vi.resetModules();
-  });
-
-  it("fails with a typed read error when the Quran reference schema rejects output", async () => {
-    vi.resetModules();
-    vi.doMock("@repo/contents/_lib/agent/schema/quran", async () => {
-      const actual = await vi.importActual<
-        typeof import("@repo/contents/_lib/agent/schema/quran")
-      >("@repo/contents/_lib/agent/schema/quran");
-      const { Schema } = await import("effect");
-
-      return {
-        ...actual,
-        NakafaAgentQuranReferenceSchema: Schema.Struct({
-          impossible: Schema.String,
-        }),
-      };
-    });
-
-    const { NakafaAgentDataReadError } = await import(
-      "@repo/contents/_lib/agent/errors"
-    );
-    const { getNakafaAgentQuranReference } = await import(
-      "@repo/contents/_lib/agent/quran/read"
-    );
-    const error = await Effect.runPromise(
-      Effect.match(
-        getNakafaAgentQuranReference({
+      getNakafaAgentQuranReference(
+        {
           from_verse: 1,
           locale: "en",
           surah: 1,
+        },
+        () =>
+          Effect.fail(
+            new SurahNotFoundError({
+              message: "Surah was not found.",
+              surahNumber: 1,
+            })
+          )
+      )
+    );
+
+    expect(Option.isNone(reference)).toBe(true);
+  });
+
+  it("returns none when Surah data has no verses in the requested range", async () => {
+    const reference = await Effect.runPromise(
+      getNakafaAgentQuranReference(
+        {
+          from_verse: 1,
+          locale: "en",
+          surah: 1,
+        },
+        () =>
+          Effect.succeed({
+            name: {
+              long: "Empty",
+              short: "Empty",
+              translation: {
+                en: "Empty",
+                id: "Kosong",
+              },
+              transliteration: {
+                en: "Empty",
+                id: "Kosong",
+              },
+            },
+            number: 1,
+            numberOfVerses: 1,
+            revelation: {
+              arab: "Meccan",
+              en: "Meccan",
+              id: "Makkiyah",
+            },
+            sequence: 1,
+            verses: [],
+          })
+      )
+    );
+
+    expect(Option.isNone(reference)).toBe(true);
+  });
+
+  it("fails with a typed read error when the Quran reference schema rejects output", async () => {
+    const error = await Effect.runPromise(
+      Effect.match(
+        decodeNakafaAgentQuranReference({
+          ...buildNakafaContentRef("en", "quran/1", "quran"),
+          name: "Al-Fatihah",
+          revelation: "Meccan",
+          translation: "The Opener",
+          verses: [
+            {
+              arabic: "Invalid verse.",
+              number: 0,
+              translation:
+                "In the Name of Allah, the Most Compassionate, Most Merciful.",
+              transliteration: "Bismillahirrahmanirrahim",
+            },
+          ],
         }),
         {
           onFailure: (failure) => failure,
@@ -168,7 +156,5 @@ describe("Nakafa agent Quran references", () => {
     );
 
     expect(error).toBeInstanceOf(NakafaAgentDataReadError);
-    vi.doUnmock("@repo/contents/_lib/agent/schema/quran");
-    vi.resetModules();
   });
 });

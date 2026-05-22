@@ -1,6 +1,7 @@
-import { Nakafa } from "@repo/contents/_lib/agent/service";
+import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import { Nakafa, verifyNakafaContent } from "@repo/contents/_lib/agent/service";
 import { Effect, Option } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 const ARTICLE_CONTENT_ID =
   "en/articles/politics/dynastic-politics-asian-values";
@@ -77,18 +78,17 @@ describe("Nakafa service", () => {
   });
 
   it("returns false when exercise verification cannot read the set", async () => {
-    vi.resetModules();
-    vi.doMock("@repo/contents/_lib/agent/exercise/read", () => ({
-      getNakafaAgentExercise: () => Effect.fail(new Error("broken")),
-    }));
-
-    const { Nakafa } = await import("@repo/contents/_lib/agent/service");
     const verified = await Effect.runPromise(
-      Nakafa.verify(EXERCISE_CONTENT_ID).pipe(Effect.provide(Nakafa.Default))
+      verifyNakafaContent(EXERCISE_CONTENT_ID, () =>
+        Effect.fail(
+          new NakafaAgentDataReadError({
+            cause: "broken",
+            message: "Unable to build Nakafa agent markdown.",
+          })
+        )
+      )
     );
 
     expect(verified).toBe(false);
-    vi.doUnmock("@repo/contents/_lib/agent/exercise/read");
-    vi.resetModules();
   });
 });

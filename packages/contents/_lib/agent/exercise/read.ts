@@ -14,9 +14,21 @@ import { NakafaAgentExerciseResultSchema } from "@repo/contents/_lib/agent/schem
 import { getRenderableExercisesContent } from "@repo/contents/_lib/exercises/renderable";
 import { Effect, Option, Schema } from "effect";
 
+type NakafaRenderableExercises = Effect.Effect.Success<
+  ReturnType<typeof getRenderableExercisesContent>
+>;
+
+type NakafaRenderableExercisesLoader = (
+  ...input: Parameters<typeof getRenderableExercisesContent>
+) => Effect.Effect<NakafaRenderableExercises, NakafaAgentDataReadError>;
+
 /** Retrieves a structured exercise set or one exercise by content ID or URL. */
 export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
-  function* (input: string, exerciseNumber?: number) {
+  function* (
+    input: string,
+    exerciseNumber?: number,
+    loadExercises: NakafaRenderableExercisesLoader = getRenderableExercisesContent
+  ) {
     const ref = parseNakafaContentRef(input);
 
     if (Option.isNone(ref) || ref.value.section !== "exercises") {
@@ -24,10 +36,7 @@ export const getNakafaAgentExercise = Effect.fn("NakafaAgent.getExercise")(
     }
 
     const target = getNakafaExerciseTarget(ref.value.route, exerciseNumber);
-    const exercises = yield* getRenderableExercisesContent(
-      ref.value.locale,
-      target.setRoute
-    );
+    const exercises = yield* loadExercises(ref.value.locale, target.setRoute);
     const selectedExercises =
       typeof target.number === "number"
         ? exercises.filter((exercise) => exercise.number === target.number)

@@ -3,11 +3,14 @@ import {
   decodeNakafaAgentExerciseResult,
   getNakafaAgentExercise,
 } from "@repo/contents/_lib/agent/exercise/read";
+import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
 import { Effect, Option } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 const EXERCISE_CONTENT_ID =
   "en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2";
+const EXERCISE_ROUTE =
+  "exercises/high-school/snbt/general-knowledge/try-out/2026/set-2";
 
 describe("Nakafa agent exercises", () => {
   it("retrieves whole exercise sets, numbered exercises, and missing exercise paths", async () => {
@@ -63,37 +66,31 @@ describe("Nakafa agent exercises", () => {
   });
 
   it("fails with a typed read error when renderable exercise loading fails", async () => {
-    vi.resetModules();
-    vi.doMock("@repo/contents/_lib/exercises/renderable", () => ({
-      getRenderableExercisesContent: () =>
-        Effect.fail(
-          new NakafaAgentDataReadError({
-            cause: "broken",
-            message: "Unable to read Nakafa exercise content.",
-          })
-        ),
-    }));
-
-    const { getNakafaAgentExercise } = await import(
-      "@repo/contents/_lib/agent/exercise/read"
-    );
     const error = await Effect.runPromise(
-      Effect.match(getNakafaAgentExercise(EXERCISE_CONTENT_ID), {
-        onFailure: (failure) => failure,
-        onSuccess: () => null,
-      })
+      Effect.match(
+        getNakafaAgentExercise(EXERCISE_CONTENT_ID, undefined, () =>
+          Effect.fail(
+            new NakafaAgentDataReadError({
+              cause: "broken",
+              message: "Unable to read Nakafa exercise content.",
+            })
+          )
+        ),
+        {
+          onFailure: (failure) => failure,
+          onSuccess: () => null,
+        }
+      )
     );
 
     expect(error).toBeInstanceOf(NakafaAgentDataReadError);
-    vi.doUnmock("@repo/contents/_lib/exercises/renderable");
-    vi.resetModules();
   });
 
   it("fails with a typed read error when the exercise result schema rejects output", async () => {
     const error = await Effect.runPromise(
       Effect.match(
         decodeNakafaAgentExerciseResult({
-          content_ref: EXERCISE_CONTENT_ID,
+          ...buildNakafaContentRef("en", EXERCISE_ROUTE, "exercises"),
           count: 1,
           exercise_number: null,
           exercises: [
@@ -115,14 +112,6 @@ describe("Nakafa agent exercises", () => {
               },
             },
           ],
-          locale: "en",
-          markdown_url:
-            "/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2.md",
-          path: "high-school/snbt/general-knowledge/try-out/2026/set-2",
-          section: "exercises",
-          source_url:
-            "/en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2",
-          title: "Exercise Set",
         }),
         {
           onFailure: (failure) => failure,

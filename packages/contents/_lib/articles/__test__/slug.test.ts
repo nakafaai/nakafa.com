@@ -129,7 +129,7 @@ describe("getArticleSummaries", () => {
     mockGetContentsMetadata.mockReturnValue(Effect.succeed([]));
 
     const articles = await Effect.runPromise(
-      getArticleSummaries("articles/politics" as never, "en")
+      getArticleSummaries("articles/politics", "en")
     );
 
     expect(mockGetContentsMetadata).toHaveBeenCalledWith({
@@ -141,7 +141,7 @@ describe("getArticleSummaries", () => {
 
   it("returns an empty list for malformed full category paths", async () => {
     const articles = await Effect.runPromise(
-      getArticleSummaries("articles/" as never, "en")
+      getArticleSummaries("articles/", "en")
     );
 
     expect(mockGetContentsMetadata).not.toHaveBeenCalled();

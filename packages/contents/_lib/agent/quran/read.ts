@@ -14,9 +14,13 @@ import { Effect, Option, Schema } from "effect";
 /** Retrieves bounded Quran verses with translation and optional tafsir. */
 export const getNakafaAgentQuranReference = Effect.fn(
   "NakafaAgent.getQuranReference"
-)(function* (options: unknown) {
+)(function* (
+  options: unknown,
+  loadSurah: typeof getSurah = getSurah,
+  formatSurahName = getSurahName
+) {
   const parsedOptions = yield* parseNakafaQuranOptions(options);
-  const surah = yield* Effect.option(getSurah(parsedOptions.surah));
+  const surah = yield* Effect.option(loadSurah(parsedOptions.surah));
 
   if (Option.isNone(surah)) {
     return Option.none();
@@ -57,27 +61,32 @@ export const getNakafaAgentQuranReference = Effect.fn(
     return Option.none();
   }
 
-  const quranReference = yield* Effect.try({
+  const quranReference = yield* decodeNakafaAgentQuranReference({
+    ...ref,
+    name: formatSurahName({
+      locale: parsedOptions.locale,
+      name: surah.value.name,
+    }),
+    revelation: surah.value.revelation[parsedOptions.locale],
+    translation: surah.value.name.translation[parsedOptions.locale],
+    verses,
+  });
+
+  return Option.some(quranReference);
+});
+
+/** Decodes Quran reference output into the public agent schema shape. */
+export function decodeNakafaAgentQuranReference(reference: unknown) {
+  return Effect.try({
     try: () =>
-      Schema.decodeUnknownSync(NakafaAgentQuranReferenceSchema)({
-        ...ref,
-        name: getSurahName({
-          locale: parsedOptions.locale,
-          name: surah.value.name,
-        }),
-        revelation: surah.value.revelation[parsedOptions.locale],
-        translation: surah.value.name.translation[parsedOptions.locale],
-        verses,
-      }),
+      Schema.decodeUnknownSync(NakafaAgentQuranReferenceSchema)(reference),
     catch: (error) =>
       new NakafaAgentDataReadError({
         cause: getUnknownErrorMessage(error),
         message: "Unable to build Nakafa Quran reference.",
       }),
   });
-
-  return Option.some(quranReference);
-});
+}
 
 /** Parses Quran reference input with actionable Effect errors. */
 function parseNakafaQuranOptions(options: unknown) {

@@ -34,7 +34,7 @@ export function getSlugPath(category: ArticleCategory, slug: string) {
  * ```
  */
 export const getArticleSummaries = Effect.fn("Contents.Articles.getSummaries")(
-  function* (category: ArticleCategory, locale: Locale) {
+  function* (category: string, locale: Locale) {
     // Extract the actual category name if a full path is provided
     const categoryName = category.includes("/")
       ? category.split("/").pop()

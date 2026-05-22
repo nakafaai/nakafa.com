@@ -89,6 +89,21 @@ export function RelationVisualizer({
   domainLabel = "X",
   codomainLabel = "Y",
 }: RelationVisualizerProps) {
+  const renderableMappings = useMemo(() => {
+    const seenMappings = new Map<string, number>();
+
+    return mappings.map((mapping) => {
+      const baseKey = `${mapping.from}-${mapping.to}`;
+      const occurrence = seenMappings.get(baseKey) ?? 0;
+      seenMappings.set(baseKey, occurrence + 1);
+
+      return {
+        ...mapping,
+        key: `mapping-${baseKey}-${occurrence}`,
+      };
+    });
+  }, [mappings]);
+
   // Calculate Text Y coordinates dynamically for domain and codomain
   const elementCoords = useMemo(() => {
     const coords: Record<string, { x: number; y: number }> = {};
@@ -199,7 +214,7 @@ export function RelationVisualizer({
         ))}
 
         {/* Mappings (Arrows/Lines) */}
-        {mappings.map((mapping, index) => {
+        {renderableMappings.map((mapping) => {
           const startCoords = elementCoords[mapping.from];
           const endCoords = elementCoords[mapping.to];
 
@@ -215,8 +230,7 @@ export function RelationVisualizer({
           return (
             <line
               className="stroke-foreground/50"
-              // biome-ignore lint/suspicious/noArrayIndexKey: Mappings may have same from/to, need index for uniqueness
-              key={`mapping-${mapping.from}-${mapping.to}-${index}`}
+              key={mapping.key}
               markerEnd="url(#arrowhead-visualizer)"
               strokeWidth="1.5" // Adjusted end point for marker
               x1={lineStartX}

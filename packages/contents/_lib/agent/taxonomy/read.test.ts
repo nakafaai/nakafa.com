@@ -3,9 +3,13 @@ import {
   NAKAFA_MCP_INFORMATIONAL_ROOT,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
-import { getNakafaAgentTaxonomy } from "@repo/contents/_lib/agent/taxonomy/read";
+import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import {
+  decodeNakafaAgentTaxonomy,
+  getNakafaAgentTaxonomy,
+} from "@repo/contents/_lib/agent/taxonomy/read";
 import { Effect } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 describe("Nakafa agent taxonomy", () => {
   it("returns taxonomy counts and endpoint guidance", async () => {
@@ -35,32 +39,13 @@ describe("Nakafa agent taxonomy", () => {
   });
 
   it("fails with a typed read error when the taxonomy schema rejects output", async () => {
-    vi.resetModules();
-    vi.doMock("@repo/contents/_lib/agent/schema/taxonomy", async () => {
-      const { Schema } = await import("effect");
-
-      return {
-        NakafaAgentTaxonomySchema: Schema.Struct({
-          impossible: Schema.String,
-        }),
-      };
-    });
-
-    const { NakafaAgentDataReadError } = await import(
-      "@repo/contents/_lib/agent/errors"
-    );
-    const { getNakafaAgentTaxonomy } = await import(
-      "@repo/contents/_lib/agent/taxonomy/read"
-    );
     const error = await Effect.runPromise(
-      Effect.match(getNakafaAgentTaxonomy("en"), {
+      Effect.match(decodeNakafaAgentTaxonomy({ locale: "en" }), {
         onFailure: (failure) => failure,
         onSuccess: () => null,
       })
     );
 
     expect(error).toBeInstanceOf(NakafaAgentDataReadError);
-    vi.doUnmock("@repo/contents/_lib/agent/schema/taxonomy");
-    vi.resetModules();
   });
 });

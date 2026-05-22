@@ -279,9 +279,7 @@ describe("validatePath", () => {
         })
       );
       expect(result).toBeInstanceOf(InvalidPathError);
-      expect((result as InvalidPathError).reason).toBe(
-        "Path traversal detected"
-      );
+      expect(result).toMatchObject({ reason: "Path traversal detected" });
     });
 
     it("should reject paths with .. in the middle that escape base directory", async () => {
@@ -1178,7 +1176,9 @@ describe("parseReferences", () => {
         })
       );
       expect(result).toBeInstanceOf(Error);
-      expect((result as Error).message).toContain("Failed to parse references");
+      expect(result).toMatchObject({
+        message: expect.stringContaining("Failed to parse references"),
+      });
     });
 
     it("should handle references with null values by returning error", async () => {
@@ -1197,7 +1197,9 @@ describe("parseReferences", () => {
         })
       );
       expect(result).toBeInstanceOf(Error);
-      expect((result as Error).message).toContain("Failed to parse references");
+      expect(result).toMatchObject({
+        message: expect.stringContaining("Failed to parse references"),
+      });
     });
 
     it("should handle references with wrong year type by returning error", async () => {
@@ -1216,7 +1218,9 @@ describe("parseReferences", () => {
         })
       );
       expect(result).toBeInstanceOf(Error);
-      expect((result as Error).message).toContain("Failed to parse references");
+      expect(result).toMatchObject({
+        message: expect.stringContaining("Failed to parse references"),
+      });
     });
 
     it("should handle references array as non-array by returning error", async () => {
@@ -1229,7 +1233,9 @@ describe("parseReferences", () => {
         })
       );
       expect(result).toBeInstanceOf(Error);
-      expect((result as Error).message).toContain("Failed to parse references");
+      expect(result).toMatchObject({
+        message: expect.stringContaining("Failed to parse references"),
+      });
     });
 
     it("should handle references with undefined required field by returning error", async () => {
@@ -1248,7 +1254,9 @@ describe("parseReferences", () => {
         })
       );
       expect(result).toBeInstanceOf(Error);
-      expect((result as Error).message).toContain("Failed to parse references");
+      expect(result).toMatchObject({
+        message: expect.stringContaining("Failed to parse references"),
+      });
     });
 
     it("should handle empty references array", async () => {
@@ -1551,9 +1559,9 @@ describe("parseModuleMetadata", () => {
     );
 
     expect(result).toBeInstanceOf(MetadataParseError);
-    expect((result as MetadataParseError).reason).toContain(
-      "Invalid content date"
-    );
+    expect(result).toMatchObject({
+      reason: expect.stringContaining("Invalid content date"),
+    });
   });
 
   it("should report reference parse failures", async () => {
@@ -1565,6 +1573,8 @@ describe("parseModuleMetadata", () => {
     );
 
     expect(result).toBeInstanceOf(Error);
-    expect((result as Error).message).toContain("Failed to parse references");
+    expect(result).toMatchObject({
+      message: expect.stringContaining("Failed to parse references"),
+    });
   });
 });

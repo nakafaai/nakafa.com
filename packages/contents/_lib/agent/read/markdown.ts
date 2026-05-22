@@ -15,9 +15,16 @@ import { Effect, Option, Schema } from "effect";
 const QURAN_ROUTE_SECTION = "quran";
 const QURAN_SURAH_PATTERN = /^\d+$/;
 
+interface NakafaMarkdownReaders {
+  readonly loadContent?: typeof getContentMetadataWithRaw;
+  readonly loadSurah?: typeof getSurah;
+  readonly readExercise?: typeof getNakafaAgentExercise;
+  readonly readQuran?: typeof getNakafaAgentQuranReference;
+}
+
 /** Retrieves full agent-readable markdown by content ID, resource URI, or URL. */
 export const getNakafaAgentMarkdown = Effect.fn("NakafaAgent.getMarkdown")(
-  function* (input: string) {
+  function* (input: string, readers: NakafaMarkdownReaders = {}) {
     const ref = parseNakafaContentRef(input);
 
     if (Option.isNone(ref)) {
@@ -25,29 +32,31 @@ export const getNakafaAgentMarkdown = Effect.fn("NakafaAgent.getMarkdown")(
     }
 
     if (ref.value.section === "quran") {
-      return yield* renderNakafaQuranMarkdown(ref.value);
+      return yield* renderNakafaQuranMarkdown(ref.value, readers);
     }
 
     if (ref.value.section === "exercises") {
-      return yield* renderNakafaExerciseMarkdown(ref.value);
+      return yield* renderNakafaExerciseMarkdown(ref.value, readers);
     }
 
-    return yield* renderNakafaMdxMarkdown(ref.value);
+    return yield* renderNakafaMdxMarkdown(ref.value, readers);
   }
 );
 
 /** Renders article and subject MDX source as agent markdown. */
-function renderNakafaMdxMarkdown(ref: NakafaAgentContentRef) {
+function renderNakafaMdxMarkdown(
+  ref: NakafaAgentContentRef,
+  readers: NakafaMarkdownReaders
+) {
   return Effect.gen(function* () {
-    const content = yield* Effect.option(
-      getContentMetadataWithRaw(ref.locale, ref.route)
-    );
+    const loadContent = readers.loadContent ?? getContentMetadataWithRaw;
+    const content = yield* Effect.option(loadContent(ref.locale, ref.route));
 
     if (Option.isNone(content)) {
       return Option.none();
     }
 
-    const markdown = yield* parseNakafaAgentMarkdown({
+    const markdown = yield* decodeNakafaAgentMarkdown({
       ...ref,
       description:
         content.value.metadata.description ??
@@ -66,15 +75,19 @@ function renderNakafaMdxMarkdown(ref: NakafaAgentContentRef) {
 }
 
 /** Renders an exercise set as agent markdown with answers included. */
-function renderNakafaExerciseMarkdown(ref: NakafaAgentContentRef) {
+function renderNakafaExerciseMarkdown(
+  ref: NakafaAgentContentRef,
+  readers: NakafaMarkdownReaders
+) {
   return Effect.gen(function* () {
-    const exercise = yield* getNakafaAgentExercise(ref.content_id);
+    const readExercise = readers.readExercise ?? getNakafaAgentExercise;
+    const exercise = yield* readExercise(ref.content_id);
 
     if (Option.isNone(exercise)) {
       return Option.none();
     }
 
-    const markdown = yield* parseNakafaAgentMarkdown({
+    const markdown = yield* decodeNakafaAgentMarkdown({
       ...ref,
       description: `${exercise.value.count} exercises`,
       text: [
@@ -107,21 +120,26 @@ function renderNakafaExerciseMarkdown(ref: NakafaAgentContentRef) {
 }
 
 /** Renders a full Quran surah as agent markdown for content retrieval. */
-function renderNakafaQuranMarkdown(ref: NakafaAgentContentRef) {
+function renderNakafaQuranMarkdown(
+  ref: NakafaAgentContentRef,
+  readers: NakafaMarkdownReaders
+) {
   return Effect.gen(function* () {
+    const loadSurah = readers.loadSurah ?? getSurah;
+    const readQuran = readers.readQuran ?? getNakafaAgentQuranReference;
     const surahNumber = parseQuranSurahRoute(ref.route);
 
     if (Option.isNone(surahNumber)) {
       return Option.none();
     }
 
-    const surah = yield* Effect.option(getSurah(surahNumber.value));
+    const surah = yield* Effect.option(loadSurah(surahNumber.value));
 
     if (Option.isNone(surah)) {
       return Option.none();
     }
 
-    const reference = yield* getNakafaAgentQuranReference({
+    const reference = yield* readQuran({
       from_verse: 1,
       locale: ref.locale,
       surah: surah.value.number,
@@ -132,7 +150,7 @@ function renderNakafaQuranMarkdown(ref: NakafaAgentContentRef) {
       return Option.none();
     }
 
-    const markdown = yield* parseNakafaAgentMarkdown({
+    const markdown = yield* decodeNakafaAgentMarkdown({
       ...ref,
       description: reference.value.translation,
       text: [
@@ -162,7 +180,7 @@ function renderNakafaQuranMarkdown(ref: NakafaAgentContentRef) {
 }
 
 /** Validates an agent markdown payload without throwing from render flows. */
-function parseNakafaAgentMarkdown(markdown: unknown) {
+export function decodeNakafaAgentMarkdown(markdown: unknown) {
   return Effect.try({
     try: () => Schema.decodeUnknownSync(NakafaAgentMarkdownSchema)(markdown),
     catch: (error) =>

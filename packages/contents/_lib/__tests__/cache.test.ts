@@ -8,7 +8,6 @@ import {
   registry,
   resetMDXFileCache,
 } from "@repo/contents/_lib/cache";
-import type { Locale } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("cache - basic functionality", () => {
@@ -97,7 +96,7 @@ describe("cache - locale and path checks", () => {
   it("should return false for invalid locale", () => {
     resetMDXFileCache();
     registry.build();
-    const hasLocale = hasLocaleInCache("invalid-locale" as Locale);
+    const hasLocale = hasLocaleInCache("invalid-locale");
     expect(hasLocale).toBe(false);
   });
 
@@ -113,7 +112,7 @@ describe("cache - locale and path checks", () => {
 
   it("should return false when checking path for non-existent locale", () => {
     registry.build();
-    expect(hasPathInCache("fr" as Locale, "some-path")).toBe(false);
+    expect(hasPathInCache("fr", "some-path")).toBe(false);
   });
 
   it("should return slugs for locale", () => {
@@ -409,9 +408,19 @@ describe("cache - mocked filesystem tests", () => {
   it("should handle slugs for non-existent locale", () => {
     resetMDXFileCache();
     registry.build();
-    const slugs = getMDXSlugsForLocale("fr" as Locale);
+    const slugs = getMDXSlugsForLocale("fr");
     expect(Array.isArray(slugs)).toBe(true);
     expect(slugs.length).toBe(0);
+  });
+
+  it("should return empty slugs when a raw cache misses a valid locale", () => {
+    resetMDXFileCache();
+    const cache = registry.build();
+    cache.delete("en");
+
+    const slugs = getMDXSlugsForLocale("en");
+
+    expect(slugs).toEqual([]);
   });
 
   it("should handle path check for non-existent locale in cache", () => {

@@ -4,8 +4,14 @@ import {
   getFolderChildNamesCacheVersion,
   getNestedSlugs,
 } from "@repo/contents/_lib/fs";
+import {
+  generateContentParams,
+  generateLocaleParams,
+  getExerciseNumberPaths,
+  getExerciseSetPaths,
+  resetStaticParamCaches,
+} from "@repo/contents/_lib/params";
 import { DirectoryReadError } from "@repo/contents/_shared/error";
-import type { Locale } from "@repo/contents/_types/content";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -17,17 +23,15 @@ vi.mock("@repo/internationalization/src/routing", () => ({
   },
 }));
 
-let params = await import("@repo/contents/_lib/params");
 let folderCacheVersion = 0;
 
-beforeEach(async () => {
+beforeEach(() => {
   folderCacheVersion = 0;
-  vi.resetModules();
+  resetStaticParamCaches();
   vi.clearAllMocks();
   vi.mocked(getFolderChildNamesCacheVersion).mockImplementation(
     () => folderCacheVersion
   );
-  params = await import("@repo/contents/_lib/params");
 });
 
 describe("getExerciseSetPaths", () => {
@@ -37,13 +41,13 @@ describe("getExerciseSetPaths", () => {
       "exercises/math/set-1/2/_question",
       "exercises/math/set-2/1/_question",
     ];
-    const result = params.getExerciseSetPaths(slugs);
+    const result = getExerciseSetPaths(slugs);
     expect(result).toContain("exercises/math/set-1");
     expect(result).toContain("exercises/math/set-2");
   });
 
   it("should return empty array for empty input", () => {
-    expect(params.getExerciseSetPaths([])).toEqual([]);
+    expect(getExerciseSetPaths([])).toEqual([]);
   });
 
   it("should deduplicate paths", () => {
@@ -52,13 +56,13 @@ describe("getExerciseSetPaths", () => {
       "exercises/math/set-1/1/_answer",
       "exercises/math/set-1/2/_question",
     ];
-    const result = params.getExerciseSetPaths(slugs);
+    const result = getExerciseSetPaths(slugs);
     expect(result).toEqual(["exercises/math/set-1"]);
   });
 
   it("should not match non-exercise paths", () => {
     const slugs = ["articles/my-article", "subject/math/algebra"];
-    const result = params.getExerciseSetPaths(slugs);
+    const result = getExerciseSetPaths(slugs);
     expect(result).toEqual([]);
   });
 });
@@ -69,13 +73,13 @@ describe("getExerciseNumberPaths", () => {
       "exercises/math/set-1/1/_question",
       "exercises/math/set-1/2/_question",
     ];
-    const result = params.getExerciseNumberPaths(slugs);
+    const result = getExerciseNumberPaths(slugs);
     expect(result).toContain("exercises/math/set-1/1");
     expect(result).toContain("exercises/math/set-1/2");
   });
 
   it("should return empty array for empty input", () => {
-    expect(params.getExerciseNumberPaths([])).toEqual([]);
+    expect(getExerciseNumberPaths([])).toEqual([]);
   });
 
   it("should deduplicate paths", () => {
@@ -83,7 +87,7 @@ describe("getExerciseNumberPaths", () => {
       "exercises/math/set-1/1/_question",
       "exercises/math/set-1/1/_answer",
     ];
-    const result = params.getExerciseNumberPaths(slugs);
+    const result = getExerciseNumberPaths(slugs);
     expect(result).toEqual(["exercises/math/set-1/1"]);
   });
 
@@ -92,14 +96,14 @@ describe("getExerciseNumberPaths", () => {
       "exercises/math/set-1/10/_question",
       "exercises/math/set-1/99/_question",
     ];
-    const result = params.getExerciseNumberPaths(slugs);
+    const result = getExerciseNumberPaths(slugs);
     expect(result).toContain("exercises/math/set-1/10");
     expect(result).toContain("exercises/math/set-1/99");
   });
 
   it("should not match non-exercise paths", () => {
     const slugs = ["articles/my-article", "subject/math/algebra"];
-    const result = params.getExerciseNumberPaths(slugs);
+    const result = getExerciseNumberPaths(slugs);
     expect(result).toEqual([]);
   });
 });
@@ -110,7 +114,7 @@ describe("generateContentParams", () => {
     vi.mocked(getNestedSlugs).mockReturnValue([]);
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
-    const result = params.generateContentParams({ basePath: "articles" });
+    const result = generateContentParams({ basePath: "articles" });
 
     expect(result[0]).toHaveProperty("locale");
     expect(result[0]).toHaveProperty("slug");
@@ -124,7 +128,7 @@ describe("generateContentParams", () => {
       "exercises/math/set-1/1/_question",
     ]);
 
-    const result = params.generateContentParams({ basePath: "exercises" });
+    const result = generateContentParams({ basePath: "exercises" });
     const slugPaths = result.map((r) => r.slug.join("/"));
 
     expect(slugPaths).toContain("math/set-1");
@@ -135,9 +139,9 @@ describe("generateContentParams", () => {
     vi.mocked(getNestedSlugs).mockReturnValue([]);
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
-    const result = params.generateContentParams({
+    const result = generateContentParams({
       basePath: "articles",
-      locales: ["de", "fr"] as unknown as Locale[],
+      locales: ["de", "fr"],
     });
 
     const locales = result.map((r) => r.locale);
@@ -155,7 +159,7 @@ describe("generateContentParams", () => {
       "articles/another-mdx-path",
     ]);
 
-    const result = params.generateContentParams({
+    const result = generateContentParams({
       basePath: "articles",
       locales: ["en"],
     });
@@ -174,7 +178,7 @@ describe("generateContentParams", () => {
       "exercises/math/algebra/set-2/1/_question",
     ]);
 
-    const result = params.generateContentParams({
+    const result = generateContentParams({
       basePath: "exercises",
       locales: ["en"],
     });
@@ -192,7 +196,7 @@ describe("generateContentParams", () => {
       "exercises/math/algebra/set-1/1/_question",
     ]);
 
-    const result = params.generateContentParams({
+    const result = generateContentParams({
       basePath: "exercises",
       locales: ["en"],
     });
@@ -212,7 +216,7 @@ describe("generateContentParams", () => {
     ]);
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
-    const result = params.generateContentParams({
+    const result = generateContentParams({
       basePath: "articles",
       locales: ["en"],
     });
@@ -235,7 +239,7 @@ describe("generateContentParams", () => {
     );
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
-    const result = params.generateContentParams({ basePath: "articles" });
+    const result = generateContentParams({ basePath: "articles" });
     expect(result).toHaveLength(0);
   });
 
@@ -244,7 +248,7 @@ describe("generateContentParams", () => {
     vi.mocked(getNestedSlugs).mockReturnValue([]);
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
-    const result = params.generateContentParams({
+    const result = generateContentParams({
       basePath: "articles",
       locales: [],
     });
@@ -257,8 +261,8 @@ describe("generateContentParams", () => {
     vi.mocked(getNestedSlugs).mockReturnValue([]);
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
-    params.generateContentParams({ basePath: "articles", locales: ["en"] });
-    params.generateContentParams({ basePath: "articles", locales: ["id"] });
+    generateContentParams({ basePath: "articles", locales: ["en"] });
+    generateContentParams({ basePath: "articles", locales: ["id"] });
 
     expect(getFolderChildNames).toHaveBeenCalledTimes(1);
     expect(getNestedSlugs).toHaveBeenCalledTimes(1);
@@ -269,7 +273,7 @@ describe("generateContentParams", () => {
     vi.mocked(getNestedSlugs).mockReturnValue([]);
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
-    const firstResult = params.generateContentParams({
+    const firstResult = generateContentParams({
       basePath: "articles",
       locales: ["en"],
     });
@@ -277,7 +281,7 @@ describe("generateContentParams", () => {
     folderCacheVersion += 1;
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["new"]));
 
-    const secondResult = params.generateContentParams({
+    const secondResult = generateContentParams({
       basePath: "articles",
       locales: ["en"],
     });
@@ -295,7 +299,7 @@ describe("generateLocaleParams", () => {
     vi.mocked(getNestedSlugs).mockReturnValue([]);
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
-    const result = params.generateLocaleParams();
+    const result = generateLocaleParams();
 
     expect(Array.isArray(result)).toBe(true);
     expect(result.length).toBeGreaterThan(0);
@@ -306,7 +310,7 @@ describe("generateLocaleParams", () => {
     vi.mocked(getNestedSlugs).mockReturnValue([]);
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
-    const result = params.generateLocaleParams({});
+    const result = generateLocaleParams({});
 
     expect(result[0]).toHaveProperty("locale");
     expect(result[0]).toHaveProperty("slug");
@@ -318,7 +322,7 @@ describe("generateLocaleParams", () => {
     vi.mocked(getNestedSlugs).mockReturnValue([]);
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
-    const result = params.generateLocaleParams({});
+    const result = generateLocaleParams({});
 
     const enResults = result.filter((r) => r.locale === "en");
     const idResults = result.filter((r) => r.locale === "id");
@@ -332,8 +336,8 @@ describe("generateLocaleParams", () => {
     vi.mocked(getNestedSlugs).mockReturnValue([]);
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
-    const result = params.generateLocaleParams({
-      locales: ["de", "fr"] as unknown as Locale[],
+    const result = generateLocaleParams({
+      locales: ["de", "fr"],
     });
 
     const locales = result.map((r) => r.locale);
@@ -349,7 +353,7 @@ describe("generateLocaleParams", () => {
     vi.mocked(getNestedSlugs).mockReturnValue([]);
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
-    const result = params.generateLocaleParams({ locales: ["en"] });
+    const result = generateLocaleParams({ locales: ["en"] });
     const slugPaths = result.map((r) => r.slug.join("/"));
 
     expect(slugPaths).toContain("subject");
@@ -363,7 +367,7 @@ describe("generateLocaleParams", () => {
     vi.mocked(getNestedSlugs).mockReturnValue([]);
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
-    const result = params.generateLocaleParams({ locales: ["en"] });
+    const result = generateLocaleParams({ locales: ["en"] });
     const slugPaths = result.map((r) => r.slug.join("/"));
 
     expect(slugPaths).not.toContain("subject");
@@ -379,7 +383,7 @@ describe("generateLocaleParams", () => {
       "subject/math/calculus",
     ]);
 
-    const result = params.generateLocaleParams({ locales: ["en"] });
+    const result = generateLocaleParams({ locales: ["en"] });
     const slugPaths = result.map((r) => r.slug.join("/"));
 
     expect(slugPaths).toContain("subject");
@@ -395,7 +399,7 @@ describe("generateLocaleParams", () => {
       "subject/math",
     ]);
 
-    const result = params.generateLocaleParams({ locales: ["en"] });
+    const result = generateLocaleParams({ locales: ["en"] });
     const slugPaths = result.map((r) => r.slug.join("/"));
 
     expect(slugPaths).toContain("subject");
@@ -415,7 +419,7 @@ describe("generateLocaleParams", () => {
     );
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
-    const result = params.generateLocaleParams({});
+    const result = generateLocaleParams({});
     expect(result).toHaveLength(0);
   });
 
@@ -424,7 +428,7 @@ describe("generateLocaleParams", () => {
     vi.mocked(getNestedSlugs).mockReturnValue([]);
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
-    const result = params.generateLocaleParams({ locales: [] });
+    const result = generateLocaleParams({ locales: [] });
     expect(result).toHaveLength(0);
   });
 
@@ -435,13 +439,13 @@ describe("generateLocaleParams", () => {
     vi.mocked(getNestedSlugs)
       .mockReturnValueOnce([["math"]])
       .mockReturnValueOnce([["politics"]]);
-    vi.mocked(getMDXSlugsForLocale).mockImplementation((locale: Locale) =>
+    vi.mocked(getMDXSlugsForLocale).mockImplementation((locale) =>
       locale === "en"
         ? ["subject", "subject/math", "articles/politics"]
         : ["subject", "articles/politics"]
     );
 
-    const result = params.generateLocaleParams({ locales: ["en", "id"] });
+    const result = generateLocaleParams({ locales: ["en", "id"] });
 
     expect(getNestedSlugs).toHaveBeenCalledTimes(2);
     expect(result).toContainEqual({ locale: "en", slug: ["subject", "math"] });
@@ -459,8 +463,8 @@ describe("generateLocaleParams", () => {
       "subject/math",
     ]);
 
-    params.generateLocaleParams({ locales: ["en"] });
-    params.generateLocaleParams({ locales: ["en"] });
+    generateLocaleParams({ locales: ["en"] });
+    generateLocaleParams({ locales: ["en"] });
 
     expect(getFolderChildNames).toHaveBeenCalledTimes(1);
     expect(getNestedSlugs).toHaveBeenCalledTimes(1);
@@ -471,7 +475,7 @@ describe("generateLocaleParams", () => {
     vi.mocked(getNestedSlugs).mockReturnValue([]);
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
-    const firstResult = params.generateLocaleParams({ locales: ["en"] });
+    const firstResult = generateLocaleParams({ locales: ["en"] });
 
     folderCacheVersion += 1;
     vi.mocked(getFolderChildNames).mockReturnValue(
@@ -479,7 +483,7 @@ describe("generateLocaleParams", () => {
     );
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["articles"]);
 
-    const secondResult = params.generateLocaleParams({ locales: ["en"] });
+    const secondResult = generateLocaleParams({ locales: ["en"] });
 
     expect(firstResult).toContainEqual({ locale: "en", slug: ["subject"] });
     expect(secondResult).toContainEqual({ locale: "en", slug: ["articles"] });
