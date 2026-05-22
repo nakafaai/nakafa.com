@@ -9,7 +9,9 @@ import { BiologyLabFrame } from "@repo/design-system/components/contents/biology
 import {
   BiologyGround,
   BiologyLine,
-  BiologySceneTitle,
+  FloatingGroup,
+  PulsingGroup,
+  SlidingGroup,
 } from "@repo/design-system/components/contents/biology/parts";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 
@@ -47,46 +49,50 @@ export function FungiGrowthLab(props: BiologyLabProps) {
 /**
  * Changes the visible fungal process behind each tab.
  */
-function FungiGrowthScene({ colors, item, selectedIndex }: BiologySceneProps) {
+function FungiGrowthScene({ colors, selectedIndex }: BiologySceneProps) {
   if (selectedIndex === 1) {
-    return <SporeRelease colors={colors} label={item.label} />;
+    return <SporeRelease colors={colors} />;
   }
 
   if (selectedIndex === 2) {
-    return <FungalRole colors={colors} label={item.label} />;
+    return <FungalRole colors={colors} />;
   }
 
-  return <HyphaNetwork colors={colors} label={item.label} />;
+  return <HyphaNetwork colors={colors} />;
 }
 
 /**
  * Shows hyphae branching into a mycelium network.
  */
-function HyphaNetwork({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function HyphaNetwork({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       <BiologyGround color={colors.soil} />
-      <BiologyLine
-        color={colors.decomposer}
-        lineWidth={4}
-        points={HYPHA_LEFT}
-      />
-      <BiologyLine
-        color={colors.decomposer}
-        lineWidth={4}
-        points={HYPHA_RIGHT}
-      />
-      <BiologyLine color={colors.decomposer} lineWidth={4} points={HYPHA_TOP} />
-      {HYPHA_BRANCHES.map((branch) => (
-        <mesh key={branch.id} position={branch.tip}>
-          <sphereGeometry args={[0.08, 12, 10]} />
-          <meshStandardMaterial color={colors.spore} />
-        </mesh>
+      <PulsingGroup speed={0.9} strength={0.025}>
+        <BiologyLine
+          color={colors.decomposer}
+          lineWidth={4}
+          points={HYPHA_LEFT}
+        />
+        <BiologyLine
+          color={colors.decomposer}
+          lineWidth={4}
+          points={HYPHA_RIGHT}
+        />
+        <BiologyLine
+          color={colors.decomposer}
+          lineWidth={4}
+          points={HYPHA_TOP}
+        />
+      </PulsingGroup>
+      {HYPHA_BRANCHES.map((branch, index) => (
+        <PulsingGroup key={branch.id} phase={index * 0.8} strength={0.12}>
+          <mesh position={branch.tip}>
+            <sphereGeometry args={[0.08, 12, 10]} />
+            <meshStandardMaterial color={colors.spore} />
+          </mesh>
+        </PulsingGroup>
       ))}
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
     </group>
   );
 }
@@ -94,10 +100,7 @@ function HyphaNetwork({
 /**
  * Shows spores leaving a fruiting body.
  */
-function SporeRelease({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function SporeRelease({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       <mesh position={[0, -0.52, 0]} scale={[0.18, 0.72, 0.18]}>
@@ -108,18 +111,24 @@ function SporeRelease({
         <sphereGeometry args={[1, 32, 18]} />
         <meshStandardMaterial color={colors.spore} opacity={0.82} transparent />
       </mesh>
-      {SPORE_POINTS.map((point) => (
-        <mesh
+      {SPORE_POINTS.map((point, index) => (
+        <FloatingGroup
           key={point.id}
-          position={[
-            point.position[0] * 0.24,
-            point.position[1] * 0.22 + 0.68,
-            0.22,
-          ]}
+          phase={index * 0.45}
+          speed={1.3}
+          travel={0.16}
         >
-          <sphereGeometry args={[0.055, 12, 10]} />
-          <meshStandardMaterial color={colors.spore} />
-        </mesh>
+          <mesh
+            position={[
+              point.position[0] * 0.24,
+              point.position[1] * 0.22 + 0.68,
+              0.22,
+            ]}
+          >
+            <sphereGeometry args={[0.055, 12, 10]} />
+            <meshStandardMaterial color={colors.spore} />
+          </mesh>
+        </FloatingGroup>
       ))}
       <ArrowHelper
         arrowSize={0.11}
@@ -127,7 +136,6 @@ function SporeRelease({
         from={[0, 0.34, 0.18]}
         to={[0.72, 0.86, 0.18]}
       />
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
     </group>
   );
 }
@@ -135,10 +143,7 @@ function SporeRelease({
 /**
  * Shows fungi connecting dead matter and roots.
  */
-function FungalRole({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function FungalRole({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       <BiologyGround color={colors.soil} />
@@ -156,12 +161,13 @@ function FungalRole({
           <meshStandardMaterial color={colors.decomposer} />
         </mesh>
       </group>
-      <BiologyLine
-        color={colors.decomposer}
-        lineWidth={4}
-        points={HYPHA_RIGHT}
-      />
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
+      <SlidingGroup speed={0.8} travel={0.05}>
+        <BiologyLine
+          color={colors.decomposer}
+          lineWidth={4}
+          points={HYPHA_RIGHT}
+        />
+      </SlidingGroup>
     </group>
   );
 }

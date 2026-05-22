@@ -9,7 +9,9 @@ import { BiologyLabFrame } from "@repo/design-system/components/contents/biology
 import {
   BiologyGround,
   BiologyLine,
-  BiologySceneTitle,
+  FloatingGroup,
+  PulsingGroup,
+  RotatingGroup,
 } from "@repo/design-system/components/contents/biology/parts";
 import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
 
@@ -45,20 +47,16 @@ export function ClassificationLab(props: BiologyLabProps) {
 /**
  * Separates surface grouping from relationship-based grouping.
  */
-function ClassificationScene({
-  colors,
-  item,
-  selectedIndex,
-}: BiologySceneProps) {
+function ClassificationScene({ colors, selectedIndex }: BiologySceneProps) {
   if (selectedIndex === 1) {
-    return <NaturalClassification colors={colors} label={item.label} />;
+    return <NaturalClassification colors={colors} />;
   }
 
   if (selectedIndex === 2) {
-    return <PhylogeneticClassification colors={colors} label={item.label} />;
+    return <PhylogeneticClassification colors={colors} />;
   }
 
-  return <ArtificialClassification colors={colors} label={item.label} />;
+  return <ArtificialClassification colors={colors} />;
 }
 
 /**
@@ -66,8 +64,7 @@ function ClassificationScene({
  */
 function ArtificialClassification({
   colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+}: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       <BiologyGround color={colors.soil} scale={[3.2, 0.08, 1.5]} />
@@ -81,10 +78,11 @@ function ArtificialClassification({
               transparent
             />
           </mesh>
-          <ArtificialSpecimen colors={colors} index={index} />
+          <FloatingGroup phase={index * 0.8} travel={0.045}>
+            <ArtificialSpecimen colors={colors} index={index} />
+          </FloatingGroup>
         </group>
       ))}
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
     </group>
   );
 }
@@ -92,10 +90,7 @@ function ArtificialClassification({
 /**
  * Shows kingdom-level grouping as parallel biological patterns.
  */
-function NaturalClassification({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function NaturalClassification({ colors }: Pick<BiologySceneProps, "colors">) {
   const kingdomColors = [
     colors.microbe,
     colors.ocean,
@@ -107,28 +102,29 @@ function NaturalClassification({
   return (
     <group>
       {KINGDOM_POINTS.map((point, index) => (
-        <group key={point.id} position={[point.position[0] * 0.52, -0.1, 0]}>
-          <mesh
-            position={[0, 0.28, 0]}
-            scale={[0.18, 0.56 + index * 0.05, 0.18]}
-          >
-            <boxGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial
-              color={kingdomColors[index]}
-              opacity={0.78}
-              transparent
-            />
-          </mesh>
-          <SceneLabel
-            color={colors.text}
-            fontSize="compact"
-            position={[0, -0.42, 0]}
-          >
-            {String(index + 1)}
-          </SceneLabel>
-        </group>
+        <PulsingGroup key={point.id} phase={index * 0.35} strength={0.035}>
+          <group position={[point.position[0] * 0.52, -0.1, 0]}>
+            <mesh
+              position={[0, 0.28, 0]}
+              scale={[0.18, 0.56 + index * 0.05, 0.18]}
+            >
+              <boxGeometry args={[1, 1, 1]} />
+              <meshStandardMaterial
+                color={kingdomColors[index]}
+                opacity={0.78}
+                transparent
+              />
+            </mesh>
+            <SceneLabel
+              color={colors.text}
+              fontSize="compact"
+              position={[0, -0.42, 0]}
+            >
+              {String(index + 1)}
+            </SceneLabel>
+          </group>
+        </PulsingGroup>
       ))}
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
     </group>
   );
 }
@@ -138,35 +134,41 @@ function NaturalClassification({
  */
 function PhylogeneticClassification({
   colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+}: Pick<BiologySceneProps, "colors">) {
   const nodeColors = [colors.plant, colors.decomposer, colors.animal];
 
   return (
     <group>
-      <BiologyLine
-        color={colors.arrow}
-        lineWidth={4}
-        points={PHYLOGENY_TRUNK}
-      />
-      <BiologyLine color={colors.plant} lineWidth={3} points={PHYLOGENY_LEFT} />
-      <BiologyLine
-        color={colors.decomposer}
-        lineWidth={3}
-        points={PHYLOGENY_MIDDLE}
-      />
-      <BiologyLine
-        color={colors.animal}
-        lineWidth={3}
-        points={PHYLOGENY_RIGHT}
-      />
-      {[-1.15, 0.05, 1.22].map((x, index) => (
-        <mesh key={x} position={[x, index === 1 ? 0.95 : 0.86, 0.12]}>
-          <sphereGeometry args={[0.16, 18, 14]} />
-          <meshStandardMaterial color={nodeColors[index]} />
-        </mesh>
-      ))}
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
+      <PulsingGroup speed={0.75} strength={0.02}>
+        <BiologyLine
+          color={colors.arrow}
+          lineWidth={4}
+          points={PHYLOGENY_TRUNK}
+        />
+        <BiologyLine
+          color={colors.plant}
+          lineWidth={3}
+          points={PHYLOGENY_LEFT}
+        />
+        <BiologyLine
+          color={colors.decomposer}
+          lineWidth={3}
+          points={PHYLOGENY_MIDDLE}
+        />
+        <BiologyLine
+          color={colors.animal}
+          lineWidth={3}
+          points={PHYLOGENY_RIGHT}
+        />
+      </PulsingGroup>
+      <RotatingGroup speed={0.1}>
+        {[-1.15, 0.05, 1.22].map((x, index) => (
+          <mesh key={x} position={[x, index === 1 ? 0.95 : 0.86, 0.12]}>
+            <sphereGeometry args={[0.16, 18, 14]} />
+            <meshStandardMaterial color={nodeColors[index]} />
+          </mesh>
+        ))}
+      </RotatingGroup>
     </group>
   );
 }

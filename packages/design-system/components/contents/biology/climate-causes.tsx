@@ -9,7 +9,9 @@ import {
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
 import {
   BiologyGround,
-  BiologySceneTitle,
+  FloatingGroup,
+  PulsingGroup,
+  RotatingGroup,
 } from "@repo/design-system/components/contents/biology/parts";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 
@@ -26,25 +28,22 @@ export function ClimateCauseLab(props: BiologyLabProps) {
 /**
  * Separates physical mechanism from human activity sources.
  */
-function ClimateCauseScene({ colors, item, selectedIndex }: BiologySceneProps) {
+function ClimateCauseScene({ colors, selectedIndex }: BiologySceneProps) {
   if (selectedIndex === 1) {
-    return <FossilFuelSource colors={colors} label={item.label} />;
+    return <FossilFuelSource colors={colors} />;
   }
 
   if (selectedIndex === 2) {
-    return <LandAndWasteSource colors={colors} label={item.label} />;
+    return <LandAndWasteSource colors={colors} />;
   }
 
-  return <GreenhouseEffect colors={colors} label={item.label} />;
+  return <GreenhouseEffect colors={colors} />;
 }
 
 /**
  * Shows sunlight entering and infrared energy being retained by gases.
  */
-function GreenhouseEffect({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function GreenhouseEffect({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       <mesh>
@@ -59,15 +58,17 @@ function GreenhouseEffect({
           transparent
         />
       </mesh>
-      {GAS_RING.map((point) => (
-        <mesh
-          key={point.id}
-          position={[point.position[0], point.position[2] * 0.62, 0.18]}
-        >
-          <sphereGeometry args={[0.045, 10, 8]} />
-          <meshStandardMaterial color={colors.carbon} />
-        </mesh>
-      ))}
+      <RotatingGroup speed={0.2}>
+        {GAS_RING.map((point) => (
+          <mesh
+            key={point.id}
+            position={[point.position[0], point.position[2] * 0.62, 0.18]}
+          >
+            <sphereGeometry args={[0.045, 10, 8]} />
+            <meshStandardMaterial color={colors.carbon} />
+          </mesh>
+        ))}
+      </RotatingGroup>
       <ArrowHelper
         color={colors.heat}
         from={[-1.35, 0.78, 0.2]}
@@ -78,7 +79,6 @@ function GreenhouseEffect({
         from={[0.38, 0.08, 0.2]}
         to={[0.92, 0.72, 0.2]}
       />
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
     </group>
   );
 }
@@ -86,10 +86,7 @@ function GreenhouseEffect({
 /**
  * Shows combustion sources adding carbon dioxide to the air.
  */
-function FossilFuelSource({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function FossilFuelSource({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       <mesh position={[-0.78, -0.42, 0.14]} scale={[0.8, 0.24, 0.28]}>
@@ -108,20 +105,20 @@ function FossilFuelSource({
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color={colors.muted} />
       </mesh>
-      {EXHAUST_POINTS.map((point) => (
-        <mesh
-          key={point.id}
-          position={[
-            point.position[0] * 0.22 + 0.55,
-            point.position[1] * 0.18 + 0.62,
-            0.28,
-          ]}
-        >
-          <sphereGeometry args={[0.06, 10, 8]} />
-          <meshStandardMaterial color={colors.carbon} />
-        </mesh>
+      {EXHAUST_POINTS.map((point, index) => (
+        <FloatingGroup key={point.id} phase={index * 0.4} travel={0.16}>
+          <mesh
+            position={[
+              point.position[0] * 0.22 + 0.55,
+              point.position[1] * 0.18 + 0.62,
+              0.28,
+            ]}
+          >
+            <sphereGeometry args={[0.06, 10, 8]} />
+            <meshStandardMaterial color={colors.carbon} />
+          </mesh>
+        </FloatingGroup>
       ))}
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
     </group>
   );
 }
@@ -129,10 +126,7 @@ function FossilFuelSource({
 /**
  * Shows deforestation and organic waste emissions as land-use causes.
  */
-function LandAndWasteSource({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function LandAndWasteSource({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       <BiologyGround color={colors.soil} />
@@ -144,18 +138,19 @@ function LandAndWasteSource({
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color={colors.muted} />
       </mesh>
-      {[0.22, 0.52, 0.82].map((x) => (
-        <mesh key={x} position={[x, 0.05 + x * 0.26, 0.32]}>
-          <sphereGeometry args={[0.075, 12, 10]} />
-          <meshStandardMaterial color={colors.carbon} />
-        </mesh>
+      {[0.22, 0.52, 0.82].map((x, index) => (
+        <PulsingGroup key={x} phase={index * 0.6} strength={0.08}>
+          <mesh position={[x, 0.05 + x * 0.26, 0.32]}>
+            <sphereGeometry args={[0.075, 12, 10]} />
+            <meshStandardMaterial color={colors.carbon} />
+          </mesh>
+        </PulsingGroup>
       ))}
       <ArrowHelper
         color={colors.warning}
         from={[0.62, -0.04, 0.2]}
         to={[0.92, 0.58, 0.2]}
       />
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
     </group>
   );
 }

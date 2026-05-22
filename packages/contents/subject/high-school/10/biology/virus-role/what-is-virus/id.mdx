@@ -3,62 +3,74 @@ import { VirusStructureLab } from "@repo/design-system/components/contents/biolo
 export const metadata = {
   title: "Apa itu Virus?",
   description:
-    "Memahami virus sebagai partikel aseluler yang membawa materi genetik, kapsid, dan kadang selubung.",
+    "Memahami virus sebagai partikel aseluler yang memiliki genom, kapsid, kadang selubung, dan hanya memperbanyak diri dengan bantuan sel inang.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Virus dan Peranannya",
 };
 
-## Virus adalah partikel aseluler
+## Benda Sangat Kecil yang Tidak Berupa Sel
 
-Virus sering disangka sebagai sel kecil. Itu kurang tepat. Virus adalah partikel aseluler, artinya tidak tersusun sebagai sel utuh. Buku IPA SMA/MA Kelas X Bab II menjelaskan bahwa virion, yaitu satu partikel virus lengkap, tersusun dari asam nukleat dan kapsid. OpenStax juga menempatkan virus sebagai entitas non-seluler yang tidak memiliki organel, ribosom, dan membran plasma seperti sel pada bagian [Viral Morphology](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
+Saat ada orang sakit flu, kita sering berkata "tertular virus". Kalimat itu benar, tetapi bisa membuat virus terasa seperti bakteri yang jauh lebih kecil. Padahal virus bukan sel kecil. Virus adalah partikel **aseluler**, artinya tidak tersusun sebagai sel lengkap.
+
+Satu partikel virus utuh disebut **virion**. Virion membawa **genom**, yaitu materi genetik berupa DNA atau RNA. Genom itu dibungkus oleh **kapsid**, selubung protein yang tersusun dari subunit kecil bernama **kapsomer**. Sebagian virus juga memiliki **selubung lipid** di luar kapsid, yaitu lapisan mirip membran yang berasal dari sel inang.
+
+Struktur seperti genom, kapsid, dan selubung ini juga dipakai dalam klasifikasi virus; penjelasan ringkasnya dapat dibuka di [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
 
 <VirusStructureLab
-  title={<>Struktur satu virion</>}
-  description={<>Pilih bagian virus, lalu amati mana yang membawa informasi genetik, melindungi, dan membantu melekat pada inang.</>}
+  title={<>Virion sebagai paket instruksi</>}
+  description={
+    <>
+      Amati kapsid, genom, dan selubung. Gerakan halus pada model membantu
+      membedakan bagian yang melindungi, membawa instruksi, dan mengenali sel.
+    </>
+  }
   labels={{
-    chooseMode: "Pilih bagian virus",
-    detailLabel: "Catatan akurasi",
-    sourceNoteLabel: "Rujukan model",
-    structureLabel: "Struktur yang dibaca",
-    viewLabel: "Model 3D struktur virus",
-    sourceNote: <>Model mengikuti ringkasan Buku IPA SMA/MA Kelas X Bab II dan OpenStax Biology 2e tentang genom, kapsid, kapsomer, dan selubung virus.</>,
+    chooseMode: "Pilih bagian virion",
+    focusLabel: "Yang harus dibaca",
+    takeawayLabel: "Makna biologis",
+    viewLabel: "Model 3D struktur virion",
     items: [
       {
         tab: "Kapsid",
-        label: "Kapsid",
-        structure: "Selubung protein yang membungkus materi genetik virus.",
-        caption: <>Kapsid dibangun dari subunit protein bernama kapsomer. Fungsinya melindungi genom saat virus berada di luar sel inang.</>,
-        detail: <>Bentuk pada model dibuat polihedral agar murid membaca ide kapsid sebagai paket protein, bukan sebagai membran sel.</>,
+        caption: <>Kapsid adalah kemasan protein yang menjaga genom tetap utuh saat virus berada di luar sel inang.</>,
+        focus: <>Bidang-bidang pada model menunjukkan kapsid disusun dari banyak kapsomer, bukan satu cangkang polos.</>,
+        takeaway: <>Tanpa kapsid, genom virus mudah rusak sebelum mencapai sel yang cocok.</>,
       },
       {
         tab: "Genom",
-        label: "Genom",
-        structure: "DNA atau RNA yang membawa instruksi pembentukan virus baru.",
-        caption: <>Virus tidak selalu memakai DNA. Banyak virus membawa RNA, dan jenis genom ini memengaruhi cara replikasinya.</>,
-        detail: <>Untai di tengah adalah simbol materi genetik, bukan urutan basa sebenarnya.</>,
+        caption: <>Untai di tengah mewakili DNA atau RNA virus, yaitu instruksi untuk membuat partikel virus baru.</>,
+        focus: <>Genom terlihat aktif, tetapi instruksi ini belum bisa berjalan tanpa mesin sel inang.</>,
+        takeaway: <>Virus membawa resepnya, sedangkan bahan dan alat kerjanya dipinjam dari sel inang.</>,
       },
       {
         tab: "Selubung",
-        label: "Selubung",
-        structure: "Lapisan lipid dari sel inang pada sebagian virus.",
-        caption: <>Tidak semua virus punya selubung. Pada virus berselubung, protein permukaan membantu virus mengenali sel inang.</>,
-        detail: <>Selubung dibuat transparan karena lapisan ini membungkus kapsid, bukan menggantikan kapsid.</>,
+        caption: <>Sebagian virus memiliki selubung lipid dengan protein permukaan yang membantu pengenalan sel target.</>,
+        focus: <>Selubung dibuat transparan karena lapisan ini membungkus kapsid, bukan menggantikan kapsid.</>,
+        takeaway: <>Selubung dan protein permukaan ikut menentukan apakah virus dapat menempel pada sel tertentu.</>,
       },
     ],
   }}
 />
 
-## Bagian virus berbeda dari bagian sel
+## Mengapa Virus Tidak Disebut Sel
 
-Sel memiliki sitoplasma, ribosom, membran sel, dan perangkat metabolisme. Virus tidak membawa paket lengkap itu. Karena itu virus tidak dapat memperbanyak diri sendiri di luar sel. Ia harus masuk ke sel inang, yaitu sel yang dipakai virus sebagai tempat menggandakan materi genetik dan membuat komponen virus baru.
+Sel hidup biasanya memiliki membran sel, sitoplasma, ribosom, dan sistem metabolisme. **Metabolisme** adalah rangkaian reaksi kimia yang membuat sel dapat memperoleh energi dan membangun bagian tubuhnya. Virus tidak memiliki perangkat lengkap itu.
 
-Ukuran virus juga sangat kecil. Buku IPA SMA/MA Kelas X memberi rentang sekitar 20 sampai 400 nm, sedangkan OpenStax menyebut banyak virion berada pada puluhan sampai ratusan nanometer. Angka itu membantu kita memahami kenapa virus tidak diamati dengan mikroskop cahaya biasa.
+Karena tidak punya ribosom, virus tidak bisa membuat protein sendiri. Karena tidak punya sistem metabolisme, virus tidak bisa menghasilkan energi sendiri. Itulah sebabnya virus hanya memperbanyak diri ketika sudah masuk ke **sel inang**, yaitu sel yang dipakai virus sebagai tempat membuat komponen baru.
 
-## Cek pemahaman
+Di luar sel inang, virion seperti paket instruksi yang masih tersegel. Ia bisa bertahan sementara, menempel pada sel yang cocok, lalu memasukkan genomnya. Setelah itu barulah instruksi virus dibaca oleh mesin sel inang.
 
-Jika virus tidak punya ribosom, bagian mana dari sel inang yang paling penting untuk membuat protein virus?
+## Bentuk Virus Berasal dari Cara Komponennya Disusun
 
-Jawaban: ribosom sel inang.
+Ukuran virus sangat kecil, umumnya puluhan sampai ratusan nanometer. **Nanometer** adalah satuan yang jauh lebih kecil daripada mikrometer, sehingga banyak virus tidak dapat dilihat dengan mikroskop cahaya biasa.
 
-Alasan: genom virus membawa instruksi, tetapi proses membuat protein tetap membutuhkan mesin translasi milik sel inang.
+Bentuk virus berbeda-beda karena susunan kapsomer dan lapisan luarnya berbeda. Ada bentuk heliks seperti gulungan, polihedral seperti bangun berbidang, bulat berselubung, dan bentuk kompleks seperti bakteriofag yang menyerang bakteri. Bentuk bukan hiasan. Bentuk membantu menjelaskan bagaimana virus melindungi genom, menempel, dan masuk ke sel.
+
+Kecocokan dengan sel juga penting. Protein permukaan virus harus cocok dengan **reseptor** pada sel inang. Reseptor dapat dibayangkan seperti gagang pintu biologis. Jika bentuknya tidak cocok, virus sulit masuk walaupun berada dekat dengan sel.
+
+## Cara Membaca Virus setelah Melihat Strukturnya
+
+Setelah struktur virion jelas, kita bisa membaca virus dengan urutan yang lebih rapi. Pertama, lihat genomnya sebagai instruksi. Kedua, lihat kapsid sebagai pelindung instruksi. Ketiga, lihat protein permukaan sebagai bagian yang menentukan kecocokan dengan sel inang.
+
+Urutan ini penting saat membahas reproduksi virus. Virus tidak memperbanyak diri hanya karena punya genom. Genom itu harus masuk ke sel yang cocok, lalu mesin sel inang dipakai untuk menyalin instruksi dan merakit virion baru.

@@ -5,43 +5,52 @@ import type {
   BiologySceneProps,
 } from "@repo/design-system/components/contents/biology/data";
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
-import { BiologySceneTitle } from "@repo/design-system/components/contents/biology/parts";
+import {
+  BiologyLine,
+  PulsingGroup,
+  RotatingGroup,
+  SlidingGroup,
+} from "@repo/design-system/components/contents/biology/parts";
 import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 
 const VIRUS_STAGES = [
-  { id: "attach", virusX: -1.35, genomeX: -1.35, particles: 1 },
-  { id: "enter", virusX: -0.55, genomeX: -0.18, particles: 1 },
-  { id: "copy", virusX: 0, genomeX: 0, particles: 4 },
-  { id: "assemble", virusX: 0.55, genomeX: 0.55, particles: 7 },
-  { id: "release", virusX: 1.35, genomeX: 1.35, particles: 9 },
+  { id: "attach", label: "1", position: [-1.45, 0.24, 0.3] },
+  { id: "enter", label: "2", position: [-0.72, 0.08, 0.34] },
+  { id: "copy", label: "3", position: [0, -0.08, 0.38] },
+  { id: "assemble", label: "4", position: [0.72, 0.08, 0.34] },
+  { id: "release", label: "5", position: [1.45, 0.24, 0.3] },
+] as const;
+
+const HOST_DNA_PATH = [
+  [-0.76, -0.08, 0.38],
+  [-0.34, 0.18, 0.38],
+  [0.12, -0.08, 0.38],
+  [0.54, 0.14, 0.38],
 ] as const;
 
 /**
- * Renders the viral replication lab with a real stage-by-stage 3D transition.
+ * Renders the viral replication lab with lytic and lysogenic cycle views.
  */
 export function VirusReplicationLab(props: BiologyLabProps) {
   return <BiologyLabFrame scene={VirusReplicationScene} {...props} />;
 }
 
 /**
- * Shows attachment, entry, copying, assembly, and release inside one host cell.
+ * Switches between immediate virion production and genome dormancy.
  */
-function VirusReplicationScene({
-  colors,
-  item,
-  selectedIndex,
-}: BiologySceneProps) {
-  const stage = VIRUS_STAGES[selectedIndex] ?? VIRUS_STAGES[0];
-  const particles = Array.from({ length: stage.particles }, (_, index) => {
-    const angle = (index / stage.particles) * Math.PI * 2;
+function VirusReplicationScene({ colors, selectedIndex }: BiologySceneProps) {
+  if (selectedIndex === 1) {
+    return <LysogenicCycle colors={colors} />;
+  }
 
-    return {
-      id: `particle-${index}`,
-      position: [Math.cos(angle) * 0.62, Math.sin(angle) * 0.34, 0.18] as const,
-    };
-  });
+  return <LyticCycle colors={colors} />;
+}
 
+/**
+ * Shows the full lytic cycle at once so students do not need five separate tabs.
+ */
+function LyticCycle({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       <mesh scale={[1.55, 0.95, 0.72]}>
@@ -49,25 +58,41 @@ function VirusReplicationScene({
         <meshStandardMaterial color={colors.host} opacity={0.2} transparent />
       </mesh>
 
-      <mesh position={[stage.virusX, 0.16, 0.35]}>
-        <icosahedronGeometry args={[0.22, 1]} />
-        <meshStandardMaterial color={colors.pathogen} />
-      </mesh>
-
-      <mesh
-        position={[stage.genomeX, -0.08, 0.42]}
-        rotation={[Math.PI / 2, 0, 0]}
-      >
-        <torusKnotGeometry args={[0.2, 0.025, 64, 6]} />
-        <meshStandardMaterial color={colors.genome} />
-      </mesh>
-
-      {particles.map((particle) => (
-        <mesh key={particle.id} position={particle.position}>
-          <icosahedronGeometry args={[0.13, 1]} />
-          <meshStandardMaterial color={colors.membrane} />
-        </mesh>
+      {VIRUS_STAGES.map((stage, index) => (
+        <group key={stage.id} position={stage.position}>
+          <RotatingGroup speed={0.3 + index * 0.05}>
+            <mesh scale={index < 2 ? 1 : 0.76}>
+              <icosahedronGeometry args={[0.16, 1]} />
+              <meshStandardMaterial
+                color={index < 3 ? colors.pathogen : colors.membrane}
+              />
+            </mesh>
+          </RotatingGroup>
+          <SceneLabel
+            color={colors.text}
+            fontSize="compact"
+            position={[0, -0.34, 0]}
+          >
+            {stage.label}
+          </SceneLabel>
+        </group>
       ))}
+
+      <SlidingGroup speed={1.2} travel={1.35}>
+        <mesh position={[0, 0.62, 0.48]}>
+          <icosahedronGeometry args={[0.13, 1]} />
+          <meshStandardMaterial color={colors.pathogen} />
+        </mesh>
+      </SlidingGroup>
+
+      <PulsingGroup speed={1.7} strength={0.08}>
+        {[-0.16, 0, 0.16].map((x) => (
+          <mesh key={x} position={[x, 0.34, 0.42]}>
+            <sphereGeometry args={[0.07, 12, 10]} />
+            <meshStandardMaterial color={colors.genome} />
+          </mesh>
+        ))}
+      </PulsingGroup>
 
       <ArrowHelper
         arrowSize={0.14}
@@ -76,16 +101,58 @@ function VirusReplicationScene({
         lineWidth={3}
         to={[1.55, -0.8, 0]}
       />
+    </group>
+  );
+}
 
-      <SceneLabel
-        color={colors.text}
-        fontSize="compact"
-        position={[stage.virusX, 0.75, 0.1]}
-      >
-        {String(selectedIndex + 1)}
-      </SceneLabel>
+/**
+ * Shows a viral genome carried quietly with the host genome before activation.
+ */
+function LysogenicCycle({ colors }: Pick<BiologySceneProps, "colors">) {
+  return (
+    <group>
+      <mesh rotation={[0, 0, Math.PI / 2]} scale={[0.8, 1.3, 0.8]}>
+        <capsuleGeometry args={[0.48, 1.36, 12, 30]} />
+        <meshStandardMaterial color={colors.host} opacity={0.24} transparent />
+      </mesh>
 
-      <BiologySceneTitle color={colors.text}>{item.label}</BiologySceneTitle>
+      <PulsingGroup speed={1.3} strength={0.04}>
+        <BiologyLine
+          color={colors.genome}
+          lineWidth={4}
+          points={HOST_DNA_PATH}
+        />
+      </PulsingGroup>
+
+      <RotatingGroup speed={0.22}>
+        <mesh position={[0.12, 0, 0.44]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.22, 0.022, 8, 48]} />
+          <meshStandardMaterial color={colors.pathogen} />
+        </mesh>
+      </RotatingGroup>
+
+      {[-0.8, 0.82].map((x) => (
+        <mesh
+          key={x}
+          position={[x, -0.58, 0.24]}
+          rotation={[0, 0, Math.PI / 2]}
+          scale={[0.32, 0.52, 0.32]}
+        >
+          <capsuleGeometry args={[0.3, 0.62, 8, 18]} />
+          <meshStandardMaterial
+            color={colors.microbe}
+            opacity={0.7}
+            transparent
+          />
+        </mesh>
+      ))}
+
+      <ArrowHelper
+        arrowSize={0.12}
+        color={colors.arrow}
+        from={[-0.36, -0.58, 0.22]}
+        to={[0.36, -0.58, 0.22]}
+      />
     </group>
   );
 }

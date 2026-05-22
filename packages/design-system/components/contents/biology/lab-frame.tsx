@@ -51,6 +51,7 @@ export function BiologyLabFrame({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const colors = getBiologySceneColors(resolvedTheme);
   const selectedItem = labels.items[selectedIndex];
+  const hasMultipleItems = labels.items.length > 1;
 
   /**
    * Keeps one tab active when ToggleGroup emits an empty value.
@@ -75,36 +76,50 @@ export function BiologyLabFrame({
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
-        <ToggleGroup
-          aria-label={labels.chooseMode}
-          className="grid w-full grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(8rem,1fr))]"
-          layout="grid"
-          onValueChange={handleItemChange}
-          type="single"
-          value={String(selectedIndex)}
-          variant="outline"
-        >
-          {labels.items.map((item, index) => (
-            <ToggleGroupItem key={item.tab} value={String(index)}>
-              {item.tab}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        {hasMultipleItems && (
+          <ToggleGroup
+            aria-label={labels.chooseMode}
+            className="grid w-full grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(8rem,1fr))]"
+            layout="grid"
+            onValueChange={handleItemChange}
+            type="single"
+            value={String(selectedIndex)}
+            variant="outline"
+          >
+            {labels.items.map((item, index) => (
+              <ToggleGroupItem key={item.tab} value={String(index)}>
+                {item.tab}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        )}
 
         <section
           aria-label={labels.viewLabel}
           className={threeSceneFrameVariants()}
         >
-          <ThreeCanvas camera={{ fov: 45, position: view.cameraPosition }}>
+          <ThreeCanvas
+            camera={{ fov: 45, position: view.cameraPosition }}
+            frameloop="always"
+          >
             <Suspense>
               <ResponsiveBiologyCamera view={view} />
-              <ambientLight intensity={0.78} />
+              <ambientLight intensity={0.58} />
               <hemisphereLight
                 color={colors.skyLight}
                 groundColor={colors.soil}
-                intensity={0.62}
+                intensity={0.68}
               />
-              <directionalLight intensity={1.25} position={[5, 6, 5]} />
+              <directionalLight
+                castShadow
+                intensity={1.45}
+                position={[4.5, 6, 4.5]}
+              />
+              <pointLight
+                color={colors.skyLight}
+                intensity={0.34}
+                position={[-3, 2, 3]}
+              />
               <Scene
                 colors={colors}
                 item={selectedItem}
@@ -119,15 +134,10 @@ export function BiologyLabFrame({
 
       <CardFooter className="border-t">
         <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+          <BiologyFact label={labels.focusLabel} value={selectedItem.focus} />
           <BiologyFact
-            label={labels.structureLabel}
-            value={selectedItem.structure}
-          />
-          <BiologyFact label={labels.detailLabel} value={selectedItem.detail} />
-          <BiologyFact
-            className="sm:col-span-2"
-            label={labels.sourceNoteLabel}
-            value={labels.sourceNote}
+            label={labels.takeawayLabel}
+            value={selectedItem.takeaway}
           />
         </dl>
       </CardFooter>
@@ -149,8 +159,8 @@ function ResponsiveBiologyCamera({ view }: { view: BiologySceneView }) {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={view.cameraTarget}
-      maxDistance={9.4}
-      minDistance={2.4}
+      maxDistance={7.4}
+      minDistance={1.8}
     />
   );
 }

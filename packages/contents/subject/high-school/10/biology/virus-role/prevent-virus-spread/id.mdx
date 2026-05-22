@@ -1,64 +1,82 @@
 import { VirusPreventionLab } from "@repo/design-system/components/contents/biology/virus-prevention";
 
 export const metadata = {
-  title: "Cara Mencegah Penyebaran Virus",
+  title: "Mencegah Penyebaran Virus",
   description:
-    "Menghubungkan pencegahan virus dengan jalur penularan, jarak, penghalang, kebersihan, dan vaksin.",
+    "Memilih pencegahan virus berdasarkan rute penularan, seperti droplet, kontak, cairan tubuh, vektor nyamuk, kebersihan, vaksin, dan obat antivirus.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Virus dan Peranannya",
 };
 
-## Pencegahan mengikuti jalur penularan
+## Pencegahan Dimulai dari Rute, Bukan dari Daftar Tips
 
-Tidak ada satu cara pencegahan yang cocok untuk semua virus. Buku IPA SMA/MA Kelas X Bab II membedakan contoh penularan melalui nyamuk, kontak kulit, cairan tubuh, permukaan, dan droplet. CDC menjelaskan pencegahan penyakit pernapasan dengan langkah seperti menjaga udara bersih, kebersihan tangan, masker saat berisiko, dan tinggal di rumah saat sakit pada [Preventing Respiratory Illnesses](https://www.cdc.gov/respiratory-viruses/prevention/index.html).
+Langkah pencegahan virus harus dimulai dari pertanyaan sederhana: virus berpindah lewat apa? Rutenya bisa droplet pernapasan, kontak tangan dan permukaan, darah atau cairan tubuh, makanan dan air, atau vektor seperti nyamuk. **Vektor** adalah organisme pembawa yang memindahkan patogen dari satu inang ke inang lain.
+
+Jika rute salah dibaca, tindakannya mudah salah sasaran. Menguras genangan air membantu menekan nyamuk pembawa virus tertentu, tetapi tidak langsung memotong penularan droplet di ruang tertutup. Sebaliknya, masker tidak menggantikan pengendalian jentik nyamuk.
+
+CDC merangkum jalur penyebaran kuman di lingkungan sekolah, termasuk kontak, percikan batuk atau bersin, udara, makanan atau cairan, dan vektor seperti nyamuk; ringkasannya bisa dibuka di [CDC](https://www.cdc.gov/children-and-school-preparedness/infection-prevention/appendix-a.html).
 
 <VirusPreventionLab
-  title={<>Simulasi jalur pencegahan</>}
-  description={<>Pilih strategi, lalu lihat bagian mana dari perpindahan virus yang diputus.</>}
+  title={<>Memotong jalur perpindahan virus</>}
+  description={
+    <>
+      Droplet pada model bergerak agar terlihat bahwa pencegahan bekerja ketika
+      jalurnya dipotong di tempat yang tepat.
+    </>
+  }
   labels={{
     chooseMode: "Pilih strategi",
-    detailLabel: "Catatan akurasi",
-    sourceNoteLabel: "Rujukan model",
-    structureLabel: "Jalur yang diputus",
-    viewLabel: "Model 3D pencegahan virus",
-    sourceNote: <>Model mengikuti contoh Buku IPA SMA/MA Kelas X Bab II dan prinsip pencegahan CDC untuk infeksi pernapasan.</>,
+    focusLabel: "Rute yang diputus",
+    takeawayLabel: "Prinsip pencegahan",
+    viewLabel: "Model 3D pencegahan penyebaran virus",
     items: [
       {
         tab: "Jarak",
-        label: "Jarak",
-        structure: "Mengurangi peluang droplet mencapai orang lain.",
-        caption: <>Jarak tidak membunuh virus, tetapi menurunkan peluang partikel infeksius berpindah dari satu orang ke orang lain.</>,
-        detail: <>Partikel dibuat menyebar di antara dua orang untuk menunjukkan risiko kontak dekat.</>,
+        caption: <>Droplet bergerak dari satu orang ke orang lain. Semakin jauh dan semakin baik aliran udara, peluang bertemu inang menurun.</>,
+        focus: <>Perhatikan arah perpindahan partikel, bukan hanya posisi dua orang.</>,
+        takeaway: <>Jarak membantu menurunkan paparan, terutama jika digabung dengan ventilasi pada risiko pernapasan.</>,
       },
       {
-        tab: "Penghalang",
-        label: "Penghalang",
-        structure: "Masker atau pelindung mengurangi partikel yang keluar dan masuk.",
-        caption: <>Penghalang bekerja paling masuk akal untuk jalur droplet atau aerosol, bukan untuk semua jalur penularan.</>,
-        detail: <>Model memperkecil partikel saat penghalang aktif agar efeknya terlihat tanpa mengklaim perlindungan sempurna.</>,
+        tab: "Masker",
+        caption: <>Penghalang menunjukkan droplet tertahan sebelum mudah keluar atau masuk melalui hidung dan mulut.</>,
+        focus: <>Masker efektif jika menutup hidung sampai dagu dan dipakai pada situasi yang sesuai.</>,
+        takeaway: <>Penghalang fisik harus berada di jalur penularan agar bukan sekadar simbol pencegahan.</>,
       },
       {
-        tab: "Kebersihan",
-        label: "Kebersihan",
-        structure: "Cuci tangan, disinfeksi, dan vaksin mengurangi risiko pada titik berbeda.",
-        caption: <>Sabun dapat membantu merusak selubung lipid pada virus berselubung. Vaksin melatih memori imun sebelum paparan berat.</>,
-        detail: <>Model menampilkan sabun sebagai intervensi permukaan, bukan pengganti vaksin atau tata udara.</>,
+        tab: "Sabun",
+        caption: <>Butiran memudar saat kebersihan tangan atau permukaan menurunkan jumlah partikel infektif.</>,
+        focus: <>Sabun membantu karena molekulnya dapat mengganggu lapisan lipid pada virus berselubung.</>,
+        takeaway: <>Kebersihan tangan penting karena tangan sering berpindah dari permukaan ke wajah.</>,
       },
     ],
   }}
 />
 
-## Strategi harus cocok dengan risikonya
+## Setiap Rute Punya Titik Lemah
 
-Virus dengue perlu pencegahan berbasis vektor, misalnya mengurangi tempat berkembang biak nyamuk. HIV terkait cairan tubuh, sehingga pencegahannya berbeda dari flu. Virus pernapasan lebih sering dibahas lewat ventilasi, masker, etika batuk, dan isolasi saat sakit.
+Pada penularan pernapasan, titik lemah virus berada pada udara dekat wajah, droplet, ventilasi, dan durasi berada dalam ruangan. Pada penularan kontak, titik lemahnya adalah tangan, permukaan, luka, dan kebiasaan menyentuh wajah. Pada penularan lewat nyamuk, titik lemahnya ada pada tempat berkembang biak nyamuk dan peluang nyamuk menggigit manusia.
 
-Prinsipnya sederhana: cari pintu keluar virus, jalur perpindahan, dan pintu masuk ke inang berikutnya. Pencegahan yang kuat biasanya memutus lebih dari satu titik pada rantai itu.
+Itulah alasan pencegahan biasanya berupa kombinasi. Untuk virus pernapasan, jarak, ventilasi, masker saat risiko tinggi, dan kebersihan tangan saling melengkapi. Untuk virus yang dibawa nyamuk, pengendalian tempat air tergenang, perlindungan dari gigitan, dan pemantauan lingkungan menjadi lebih relevan.
 
-## Cek pemahaman
+## Vaksin dan Obat Bekerja di Lapisan yang Berbeda
 
-Mengapa cuci tangan tidak cukup untuk semua penyakit virus?
+**Vaksin** tidak menahan droplet di udara. Vaksin melatih sistem imun agar tubuh lebih siap mengenali patogen. Jadi vaksin bekerja di dalam tubuh, sedangkan masker, ventilasi, dan kebersihan bekerja pada jalur perpindahan.
 
-Jawaban: karena virus memiliki jalur penularan yang berbeda.
+**Antivirus** adalah obat yang menghambat tahap tertentu dalam replikasi virus. Contohnya, ada obat yang dirancang untuk menghambat perbanyakan virus tertentu. Obat seperti ini bukan pengganti kebiasaan pencegahan, karena obat bekerja setelah risiko infeksi ditangani secara medis.
 
-Alasan: cuci tangan membantu pada jalur kontak atau permukaan, tetapi virus yang dibawa nyamuk, cairan tubuh, atau udara membutuhkan strategi tambahan yang sesuai.
+Cara berpikirnya berlapis: kurangi peluang virus berpindah, kurangi peluang virus masuk, latih pertahanan tubuh, dan tangani infeksi dengan cara yang sesuai jika sudah terjadi.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Baca rute penularan"] --> B["Droplet pernapasan"]
+    A --> C["Kontak tangan dan permukaan"]
+    A --> D["Vektor seperti nyamuk"]
+    B --> E["Ventilasi, jarak, masker sesuai risiko"]
+    C --> F["Kebersihan tangan dan permukaan"]
+    D --> G["Kurangi tempat berkembang biak dan cegah gigitan"]`}
+/>
+
+## Pencegahan yang Rapi Selalu Bertanya Jalur
+
+Sebelum memilih tindakan, kembalikan dulu pembahasan ke jalur penularannya. Jika jalurnya droplet, perbaiki udara dan penghalang dekat wajah. Jika jalurnya nyamuk, perhatikan tempat berkembang biak dan gigitan. Jika jalurnya kontak, perhatikan tangan, permukaan, dan luka. Dengan cara ini, pencegahan tidak menjadi daftar acak, tetapi keputusan biologis yang sesuai rute.

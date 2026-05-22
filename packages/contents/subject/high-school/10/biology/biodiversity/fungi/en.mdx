@@ -3,60 +3,84 @@ import { FungiGrowthLab } from "@repo/design-system/components/contents/biology/
 export const metadata = {
   title: "Fungi",
   description:
-    "Understand fungi as heterotrophs that absorb nutrients through hyphae, mycelium, and spores.",
+    "Recognize fungi as eukaryotic heterotrophs made of hyphae, forming mycelium, producing spores, and acting as decomposers.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
-  subject: "Biodiversity of Living Organisms",
+  subject: "Biodiversity",
 };
 
-## Fungi absorb nutrients from the environment
+## The White Threads in Tempeh Are Not Roots
 
-Fungi are not plants. They are eukaryotic heterotrophs, meaning they obtain organic material from other organisms or remains. The Indonesian grade 10 science textbook explains hyphae, mycelium, chitin cell walls, and spores. OpenStax describes fungi as heterotrophs that absorb nutrients and act as decomposers in [Characteristics of Fungi](https://openstax.org/books/biology-2e/pages/24-1-characteristics-of-fungi).
+In tempeh, a white layer binds the soybean pieces together. That layer is not a plant root. It is fungal growth. This simple example reveals an important fungal trait: the body can be made of fine threads spreading through food material.
+
+**Fungi** are eukaryotic heterotrophs. **Eukaryotic** means their cells have a membrane-bound nucleus. **Heterotrophic** means they do not make their own food like chlorophyll-bearing plants. Fungi obtain nutrients by absorbing organic matter from living organisms or remains.
+
+Fungal traits such as hyphae, mycelium, heterotrophic nutrition, and spores are summarized in [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/24-1-characteristics-of-fungi).
 
 <FungiGrowthLab
-  title={<>How fungal bodies work</>}
-  description={<>Choose a mode to see hyphal networks, spore release, or fungal relationships with roots and dead matter.</>}
+  title={<>Fungi as absorbing networks</>}
+  description={
+    <>
+      Observe branching hyphae, moving spores, and fungal contact with organic
+      matter. Small movements show growth and dispersal processes.
+    </>
+  }
   labels={{
-    chooseMode: "Choose a mode",
-    detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model source",
-    structureLabel: "Structure to read",
-    viewLabel: "3D fungi model",
-    sourceNote: <>The model follows the Indonesian grade 10 science textbook and OpenStax on hyphae, mycelium, spores, chitin, and decomposer roles.</>,
+    chooseMode: "Choose a fungal process",
+    focusLabel: "What to observe",
+    takeawayLabel: "Concept meaning",
+    viewLabel: "3D fungal growth model",
     items: [
       {
         tab: "Hyphae",
-        label: "Hyphae",
-        structure: "Threadlike fungal cells that absorb nutrients.",
-        caption: <>Hyphae form a mycelium. A large surface area helps fungi absorb products of decomposition.</>,
-        detail: <>The branching model represents growth through a substrate, not one specific fungal species.</>,
+        caption: <>The branching lines show hyphae forming mycelium.</>,
+        focus: <>Notice that a fungal body can be a thread network, not stems and leaves.</>,
+        takeaway: <>Mycelium expands surface area so fungi can absorb nutrients more effectively.</>,
       },
       {
         tab: "Spores",
-        label: "Spores",
-        structure: "Reproductive cells that can spread and grow.",
-        caption: <>Spores help fungi reach new places when conditions allow growth.</>,
-        detail: <>Many dots are shown because one fruiting body can produce many spores.</>,
+        caption: <>The moving particles represent spores that can travel to new places.</>,
+        focus: <>Spores are not seeds; they are small reproductive cells.</>,
+        takeaway: <>Spore dispersal helps fungi appear where conditions support growth.</>,
       },
       {
-        tab: "Roles",
-        label: "Roles",
-        structure: "Fungi can decompose dead matter or form mutualisms with plants.",
-        caption: <>Mycorrhizae are relationships between fungi and plant roots that support water and nutrient exchange.</>,
-        detail: <>The model connects dead wood, hyphae, and roots to emphasize matter flow.</>,
+        tab: "Role",
+        caption: <>The hyphal path connects organism remains with soil and plant roots.</>,
+        focus: <>Fungi feed by contacting food sources through hyphae.</>,
+        takeaway: <>As decomposers, fungi return matter from remains back to ecosystems.</>,
       },
     ],
   }}
 />
 
-## Fungal feeding differs from animal feeding
+## Fungi Feed Differently from Animals
 
-Animals usually digest food inside the body. Fungi release enzymes into the environment, break down large molecules, then absorb smaller molecules. This is why fungi are important decomposers. Without decomposers, nutrients would stay locked in remains for longer.
+Animals usually take food into the body and digest it inside. Fungi use a different pattern. They release enzymes into the environment, break complex organic material into smaller molecules, and then absorb the products.
 
-## Self-check
+A simple analogy is softening food outside the body before drinking the extract. Because of this feeding style, hyphae are important. **Hyphae** are fine threads that make up much of the fungal body. A mass of hyphae is called **mycelium**. The wider the mycelium, the more surface can touch food.
 
-Why does mycelium help fungi obtain nutrients?
+Fungal cell walls contain **chitin**, not cellulose like plant cell walls. Chitin is also found in insect exoskeletons, so fungi should not be read as tiny plants.
 
-Answer: mycelium expands the surface area in contact with the substrate.
+## Spores Help Fungi Spread
 
-Explanation: more hyphal network means more area to release enzymes and absorb products of decomposition.
+Fungi can reproduce with spores through sexual or asexual processes depending on the type. Spores are light and may be carried by air, water, or surfaces. If they land in a moist place with organic material, they can grow into new hyphae.
+
+That is why damp food is easily colonized by fungi. Moisture, available nutrients, and suitable temperature give spores a chance to grow.
+
+## A Fungal Role Depends on Context
+
+Fungi can be helpful, harmful, or neutral depending on context. Yeast helps fermentation. Edible mushrooms become food. Soil fungi help decompose leaves and wood. But some fungi spoil food, attack crops, or cause disease.
+
+So the useful question is not simply "are fungi good or bad", but "where does this fungus live, what does it absorb nutrients from, and what effect does it have on nearby organisms".
+
+<Mermaid
+  chart={`flowchart LR
+    A["A spore lands"] --> B["Hyphae grow"]
+    B --> C["Mycelium expands"]
+    C --> D["Enzymes break organic material"]
+    D --> E["Nutrients are absorbed"]`}
+/>
+
+## Fungi Show Another Way to Be Heterotrophic
+
+Animals chase or take food and digest it inside the body. Fungi spread hyphae, break food down outside the body, and absorb the products. That is why the white layer in tempeh is easier to understand as an absorbing network. It is not a root, not a leaf, and not ordinary slime, but mycelium using organic material.

@@ -1,62 +1,84 @@
 import { BiodiversityLevelsLab } from "@repo/design-system/components/contents/biology/biodiversity-levels";
 
 export const metadata = {
-  title: "Biological Diversity",
+  title: "Levels of Biodiversity",
   description:
-    "Read biodiversity at genetic, species, and ecosystem levels through connected examples.",
+    "Distinguish genetic, species, and ecosystem biodiversity through bananas, organism communities, and habitat differences.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
-  subject: "Biodiversity of Living Organisms",
+  subject: "Biodiversity",
 };
 
-## Diversity is read at three levels
+## One Market Can Show Three Scales
 
-Biodiversity means variation in life. The Indonesian grade 10 science textbook divides it into genetic, species, and ecosystem diversity. OpenStax also uses genetic, species, and ecosystem levels to explain biodiversity's value in [The Importance of Biodiversity to Human Life](https://openstax.org/books/biology-2e/pages/47-3-the-importance-of-biodiversity-to-human-life).
+Picture yourself standing in a fruit market. On one table, several bananas differ in taste, size, and shape. On another table, you see mangoes, oranges, chilies, fungi, fish, and chicken. Even in that small place, biodiversity can be read at several scales.
+
+**Biodiversity** is the variation of living things. This variation can appear at the genetic level, species level, and ecosystem level. A **gene** is a part of genetic material that influences a trait. A **species** is a group of organisms with shared basic traits that generally produce the same kind of offspring. An **ecosystem** is the relationship between organisms and their physical environment.
+
+This layered reading matches the way biology discusses biodiversity from genes to ecosystems; the broader overview is available in [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/47-1-the-biodiversity-crisis).
 
 <BiodiversityLevelsLab
-  title={<>Three biodiversity scales</>}
-  description={<>Switch levels to see whether variation is inside one species, among species, or among habitats.</>}
+  title={<>Three ways to read biodiversity</>}
+  description={
+    <>
+      The model moves from genetic variation to groups of species and habitat
+      differences. Each scale answers a different question.
+    </>
+  }
   labels={{
-    chooseMode: "Choose a level",
-    detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model source",
-    structureLabel: "Scale to read",
+    chooseMode: "Choose a biodiversity level",
+    focusLabel: "Main question",
+    takeawayLabel: "Key distinction",
     viewLabel: "3D biodiversity levels model",
-    sourceNote: <>The model follows the genetic, species, and ecosystem levels in the Indonesian grade 10 science textbook and OpenStax Biology 2e.</>,
     items: [
       {
-        tab: "Genes",
-        label: "Genes",
-        structure: "Trait variation inside one species.",
-        caption: <>Different rice or mango varieties show genetic diversity even when they remain one species.</>,
-        detail: <>The gene points are not sequence data. They mark trait variation inside a population.</>,
+        tab: "Gene",
+        caption: <>The beads and gene strand show trait differences inside one group of similar organisms.</>,
+        focus: <>Are the changing traits still within one species?</>,
+        takeaway: <>Genetic diversity explains variation such as size, color, taste, or resistance within one kind.</>,
       },
       {
         tab: "Species",
-        label: "Species",
-        structure: "Different kinds of living things in a community.",
-        caption: <>Birds, plants, fungi, and microbes living together show species-level diversity.</>,
-        detail: <>Different shapes help students read different kinds, not just number of individuals.</>,
+        caption: <>Different organism markers show a community containing several species.</>,
+        focus: <>What kinds of organisms are present in the same place?</>,
+        takeaway: <>Species diversity is read from the number of kinds and the trait differences between them.</>,
       },
       {
-        tab: "Ecosystems",
-        label: "Ecosystems",
-        structure: "Variation in habitats and organism-environment interactions.",
-        caption: <>Rainforests, mangroves, and savannas differ because their physical factors and communities differ.</>,
-        detail: <>The stream, soil, and trees emphasize habitat, not a specific map location.</>,
+        tab: "Ecosystem",
+        caption: <>Soil, water flow, plants, and animals show that the environment helps shape biodiversity.</>,
+        focus: <>Which living conditions make this community different?</>,
+        takeaway: <>Ecosystem diversity appears when habitats, environmental factors, and organism relationships differ.</>,
       },
     ],
   }}
 />
 
-## One place can be rich at one level and poor at another
+## Genes Explain Variation Within One Kind
 
-A garden may have many mango trees, but if they all come from the same variety, genetic variation is narrow. A forest can hold many organism types and many microhabitats at once. So the question "is biodiversity high or low" should always be followed by: at which level?
+Genetic diversity appears when organisms are still one species, but their traits are not exactly the same. For example, banana varieties can differ in fruit size, taste, shape, or resistance to environmental conditions. They remain close as one group, but genetic differences create trait variation.
 
-## Self-check
+Think of several recipes for one kind of food. The basic dish is the same, but different amounts of ingredients can change taste and texture. In organisms, those differences are read as genetic variation.
 
-If one area has many banana varieties, but they are still bananas, which diversity level is most directly visible?
+Genetic variation matters because it supplies raw material for adaptation. If the environment changes, a population with more variation has a better chance of including individuals that can cope.
 
-Answer: genetic diversity.
+## Species and Ecosystems Need a Wider View
 
-Explanation: the variation is inside one kind of organism, not among species or ecosystems.
+Species diversity no longer asks "why is this banana different from another banana". The question becomes "what kinds of organisms live here". In a garden, we may find trees, insects, birds, fungi, bacteria, and small animals. Each kind has its own traits and role.
+
+Ecosystem diversity is wider again. Tropical rainforests, mangroves, savannas, rice fields, and coral reefs have different conditions. Light, water, salinity, soil, temperature, and organism interactions shape which living things can survive there.
+
+Indonesia is a strong example because it is large, tropical, and rich in habitat types. Western fauna tends to differ from eastern fauna, while the central region contains many transitional forms. This biodiversity is not just a list of organism names. It is the result of environment, history, and long biological interactions.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Biodiversity"] --> B["Genes: variation within one species"]
+    A --> C["Species: many kinds of organisms"]
+    A --> D["Ecosystems: different habitats and relations"]
+    B --> E["Close example: banana varieties"]
+    C --> F["Close example: a garden with many organisms"]
+    D --> G["Close example: mangrove, savanna, rainforest"]`}
+/>
+
+## Reading the Scale Makes Observation Sharper
+
+When observing nature, do not immediately write everything as "many kinds". Ask for the scale first. If the comparison is still within one kind but traits differ, you are reading genes. If the comparison is between many organism kinds, you are reading species. If the comparison is about living places and environmental relationships, you are reading ecosystems.

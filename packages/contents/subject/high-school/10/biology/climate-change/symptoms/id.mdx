@@ -3,60 +3,90 @@ import { ClimateSymptomsLab } from "@repo/design-system/components/contents/biol
 export const metadata = {
   title: "Gejala Perubahan Iklim",
   description:
-    "Membaca gejala perubahan iklim melalui suhu global, panas laut, penyusutan es, dan kenaikan muka laut.",
+    "Membedakan cuaca harian dan iklim, lalu membaca gejala perubahan iklim dari suhu rata-rata, pemanasan laut, pencairan es, kenaikan muka laut, dan pola ekstrem.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Perubahan Iklim",
 };
 
-## Gejala iklim terlihat pada banyak indikator
+## Satu Hari Panas Belum Cukup
 
-Iklim adalah pola cuaca jangka panjang di suatu wilayah. Perubahan iklim berarti perubahan jangka panjang pada suhu dan pola cuaca. Buku IPA SMA/MA Kelas X Bab VIII menekankan beberapa gejala: kenaikan suhu rata-rata global, pemanasan laut, penyusutan es, dan kenaikan muka laut. NASA merangkum bukti yang sama pada [Climate Change Evidence](https://science.nasa.gov/climate-change/evidence/).
+Cuaca adalah kondisi atmosfer dalam waktu pendek, misalnya hari ini hujan, panas, atau berawan. **Iklim** adalah pola cuaca jangka panjang pada suatu wilayah. Karena itu perubahan iklim tidak dibuktikan hanya dari satu hari panas, tetapi dari pola yang konsisten dalam waktu lama.
+
+Gejala perubahan iklim dibaca seperti dokter membaca tanda tubuh. Satu tanda bisa keliru jika berdiri sendiri, tetapi beberapa tanda yang searah memberi gambaran lebih kuat. Suhu rata-rata naik, laut menyimpan lebih banyak panas, es menyusut, muka laut naik, dan pola hujan ekstrem menjadi sinyal yang saling menguatkan.
+
+NASA merangkum bukti perubahan iklim dari pemanasan global, pemanasan samudra, penyusutan es, dan kenaikan muka laut; ringkasannya dapat dibuka di [NASA Climate](https://science.nasa.gov/climate-change/evidence/).
 
 <ClimateSymptomsLab
-  title={<>Indikator perubahan iklim</>}
-  description={<>Pilih indikator untuk melihat mengapa perubahan iklim tidak dibaca dari satu hari panas saja.</>}
+  title={<>Membaca indikator iklim</>}
+  description={
+    <>
+      Model menampilkan pemanasan atmosfer, panas laut, dan hubungan es dengan
+      muka laut. Partikel bergerak agar gejala terbaca sebagai proses.
+    </>
+  }
   labels={{
     chooseMode: "Pilih indikator",
-    detailLabel: "Catatan akurasi",
-    sourceNoteLabel: "Rujukan model",
-    structureLabel: "Indikator yang dibaca",
-    viewLabel: "Model 3D gejala iklim",
-    sourceNote: <>Model mengikuti Buku IPA SMA/MA Kelas X Bab VIII dan NASA tentang suhu global, panas laut, es, dan muka laut.</>,
+    focusLabel: "Yang diamati",
+    takeawayLabel: "Makna iklim",
+    viewLabel: "Model 3D gejala perubahan iklim",
     items: [
       {
         tab: "Suhu",
-        label: "Suhu global",
-        structure: "Suhu rata-rata global naik dalam tren jangka panjang.",
-        caption: <>Cuaca harian dapat naik turun, tetapi iklim dibaca dari tren data bertahun-tahun.</>,
-        detail: <>Cincin panas melambangkan anomali suhu, bukan suhu satu kota.</>,
+        caption: <>Cincin panas bergerak di sekitar Bumi untuk menunjukkan akumulasi panas, bukan satu hari yang terasa gerah.</>,
+        focus: <>Bandingkan tren jangka panjang, bukan cuaca sesaat.</>,
+        takeaway: <>Pemanasan global dibaca dari kenaikan suhu rata-rata yang berlangsung lama.</>,
       },
       {
         tab: "Laut",
-        label: "Panas laut",
-        structure: "Laut menyerap banyak panas tambahan dari sistem iklim.",
-        caption: <>Pemanasan laut dapat memengaruhi ekosistem, cuaca ekstrem, dan pemuaian air laut.</>,
-        detail: <>Partikel panas ditempatkan di bawah permukaan untuk menunjukkan penyimpanan panas dalam laut.</>,
+        caption: <>Partikel panas di laut menunjukkan bahwa samudra dapat menyerap dan menyimpan energi panas.</>,
+        focus: <>Perhatikan panas di bawah permukaan, bukan hanya suhu udara di daratan.</>,
+        takeaway: <>Laut yang lebih hangat dapat memengaruhi karang, arus, badai, dan kehidupan laut.</>,
       },
       {
         tab: "Es",
-        label: "Es dan muka laut",
-        structure: "Es menyusut dan muka laut naik pada banyak wilayah pantai.",
-        caption: <>Kenaikan muka laut terkait pemuaian air laut dan tambahan air dari es daratan yang mencair.</>,
-        detail: <>Garis air dibuat miring naik agar perubahan level terlihat pada penampang pantai.</>,
+        caption: <>Es dan garis laut memperlihatkan hubungan antara pencairan es, pemuaian air laut, dan pesisir.</>,
+        focus: <>Kenaikan muka laut adalah sinyal lambat yang dampaknya terasa di wilayah pantai.</>,
+        takeaway: <>Perubahan kecil dalam tinggi laut dapat memperbesar risiko rob, abrasi, dan banjir pesisir.</>,
       },
     ],
   }}
 />
 
-## Cuaca dan iklim tidak sama
+## Suhu Rata-rata Berbeda dari Rasa Gerah
 
-Hari ini bisa lebih dingin dari kemarin, tetapi tren iklim tetap menghangat. Cuaca menjawab kondisi saat ini atau beberapa hari. Iklim menjawab pola panjang. Karena itu data iklim perlu deret waktu, bukan satu pengalaman harian.
+Rasa gerah di siang hari dipengaruhi cuaca lokal. Suhu rata-rata global dihitung dari banyak pengukuran dalam jangka panjang. Jika rata-rata itu meningkat, artinya sistem Bumi menyimpan lebih banyak panas.
 
-## Cek pemahaman
+Analogi sederhananya seperti nilai rapor. Satu nilai ulangan bisa naik turun, tetapi nilai rata-rata beberapa bulan menunjukkan arah belajar yang lebih jelas. Dalam iklim, data jangka panjang memberi sinyal yang lebih kuat daripada pengalaman satu hari.
 
-Mengapa satu hari hujan deras tidak cukup untuk menyimpulkan perubahan iklim?
+## Laut, Es, dan Pesisir Saling Terhubung
 
-Jawaban: karena perubahan iklim dibaca dari pola jangka panjang, bukan satu kejadian cuaca.
+Laut menyerap banyak panas. Saat air laut menghangat, organisme laut dapat mengalami tekanan. Terumbu karang misalnya, dapat mengalami pemutihan ketika hubungan karang dengan alga simbiotik terganggu oleh panas.
 
-Alasan: kejadian tunggal perlu dibandingkan dengan tren, frekuensi, intensitas, dan data historis.
+Es yang menyusut juga mengubah keseimbangan. Permukaan es yang terang memantulkan banyak cahaya. Ketika es berkurang, permukaan yang lebih gelap menyerap lebih banyak panas. Di wilayah pegunungan bersalju atau es tropis, penyusutan es menjadi tanda bahwa suhu lingkungan berubah.
+
+Kenaikan muka laut terjadi karena air laut memuai saat hangat dan karena tambahan air dari es daratan yang mencair. Dampaknya tidak langsung sama di semua tempat, tetapi wilayah pesisir lebih rentan terhadap rob, abrasi, dan banjir.
+
+## Pola Ekstrem Membuat Gejala Terasa Dekat
+
+Perubahan iklim juga terlihat pada pola kejadian ekstrem. Kekeringan dapat bertambah berat di sebagian wilayah. Hujan lebat dapat menjadi lebih merusak di wilayah lain. Fenomena seperti El Nino dan La Nina memengaruhi musim basah atau kering, dan pemanasan global dapat memperkuat risiko di atas pola alami itu.
+
+Karena itu, membaca gejala iklim harus memakai banyak indikator. Suhu, laut, es, hujan, kekeringan, dan kejadian pesisir dibaca bersama agar kita tidak tertipu oleh satu contoh yang terlalu sempit.
+
+<Mermaid
+  chart={`flowchart LR
+    A["Data jangka panjang"] --> B["Suhu rata-rata"]
+    A --> C["Panas laut"]
+    A --> D["Es dan muka laut"]
+    A --> E["Pola ekstrem"]
+    B --> F["Gejala iklim lebih kuat"]
+    C --> F
+    D --> F
+    E --> F`}
+/>
+
+## Membaca Gejala tanpa Tertipu Cuaca Harian
+
+Kalimat seperti "hari ini hujan, berarti pemanasan global tidak ada" keliru karena mencampur cuaca harian dengan iklim jangka panjang. Hujan hari ini tetap dapat terjadi di Bumi yang rata-ratanya menghangat.
+
+Pembacaan yang teliti tidak berhenti pada satu peristiwa. Kita perlu melihat pola yang lebih panjang, lalu mencocokkan banyak tanda. Jika suhu rata-rata, panas laut, es, muka laut, dan kejadian ekstrem bergerak ke arah yang sama, barulah gejala perubahan iklim terbaca lebih kuat.

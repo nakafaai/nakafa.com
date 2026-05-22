@@ -3,60 +3,90 @@ import { ClimateSymptomsLab } from "@repo/design-system/components/contents/biol
 export const metadata = {
   title: "Symptoms of Climate Change",
   description:
-    "Read climate change symptoms through global temperature, ocean heat, ice loss, and sea level rise.",
+    "Distinguish daily weather from climate, then read climate change symptoms through average temperature, ocean warming, ice loss, sea-level rise, and extreme patterns.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Climate Change",
 };
 
-## Climate symptoms appear across many indicators
+## One Hot Day Is Not Enough
 
-Climate is the long-term pattern of weather in an area. Climate change means long-term change in temperature and weather patterns. The Indonesian grade 10 science textbook highlights global average temperature rise, ocean warming, shrinking ice, and sea level rise. NASA summarizes similar evidence in [Climate Change Evidence](https://science.nasa.gov/climate-change/evidence/).
+Weather is the short-term condition of the atmosphere, such as rain, heat, or clouds today. **Climate** is the long-term pattern of weather in a region. Climate change is therefore not proven by one hot day, but by consistent patterns over a long time.
+
+Climate symptoms are read like signs in a medical checkup. One sign can mislead when it stands alone, but several signs pointing in the same direction give a stronger picture. Rising average temperature, warmer oceans, shrinking ice, higher sea level, and more extreme rainfall patterns reinforce one another.
+
+NASA summarizes climate evidence from global warming, ocean warming, ice loss, and sea-level rise; the overview is available at [NASA Climate](https://science.nasa.gov/climate-change/evidence/).
 
 <ClimateSymptomsLab
-  title={<>Climate change indicators</>}
-  description={<>Choose an indicator to see why climate change is not read from one hot day alone.</>}
+  title={<>Reading climate indicators</>}
+  description={
+    <>
+      The model shows atmospheric warming, ocean heat, and the link between ice
+      and sea level. Moving particles make the symptoms read as processes.
+    </>
+  }
   labels={{
     chooseMode: "Choose an indicator",
-    detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model source",
-    structureLabel: "Indicator to read",
-    viewLabel: "3D climate symptoms model",
-    sourceNote: <>The model follows the Indonesian grade 10 science textbook and NASA on global temperature, ocean heat, ice, and sea level.</>,
+    focusLabel: "What to observe",
+    takeawayLabel: "Climate meaning",
+    viewLabel: "3D climate change symptoms model",
     items: [
       {
         tab: "Temp",
-        label: "Global temperature",
-        structure: "Global average temperature rises as a long-term trend.",
-        caption: <>Daily weather can go up and down, but climate is read through multi-year trends.</>,
-        detail: <>The heat ring represents temperature anomaly, not one city's weather.</>,
+        caption: <>The moving heat ring around Earth shows accumulated heat, not just one uncomfortable day.</>,
+        focus: <>Compare long-term trends, not momentary weather.</>,
+        takeaway: <>Global warming is read from a long-term increase in average temperature.</>,
       },
       {
         tab: "Ocean",
-        label: "Ocean heat",
-        structure: "The ocean stores much of the added heat in the climate system.",
-        caption: <>Ocean warming can affect ecosystems, extreme weather, and thermal expansion of seawater.</>,
-        detail: <>Heat particles sit below the surface to show storage inside the ocean.</>,
+        caption: <>Heat particles in the ocean show that seawater can absorb and store thermal energy.</>,
+        focus: <>Notice heat below the surface, not only air temperature over land.</>,
+        takeaway: <>A warmer ocean can affect corals, currents, storms, and marine life.</>,
       },
       {
         tab: "Ice",
-        label: "Ice and sea level",
-        structure: "Ice shrinks and sea level rises in many coastal regions.",
-        caption: <>Sea level rise is linked to ocean expansion and added water from melting land ice.</>,
-        detail: <>The rising water line makes level change readable in a coastal cross-section.</>,
+        caption: <>The ice and sea line show the link between melting ice, ocean expansion, and coastlines.</>,
+        focus: <>Sea-level rise is a slow signal with visible effects in coastal regions.</>,
+        takeaway: <>Small changes in sea level can increase tidal flooding, erosion, and coastal flood risk.</>,
       },
     ],
   }}
 />
 
-## Weather and climate are different
+## Average Temperature Differs from Feeling Hot
 
-Today can be cooler than yesterday while the climate trend still warms. Weather describes current or short-term conditions. Climate describes long-term patterns. That is why climate data needs time series, not one daily experience.
+Feeling hot in the afternoon depends on local weather. Global average temperature is calculated from many measurements over a long time. If that average rises, the Earth system is storing more heat.
 
-## Self-check
+A simple analogy is a report-card average. One quiz score can go up or down, but the average over several months shows the learning direction more clearly. In climate, long-term data gives a stronger signal than one day's experience.
 
-Why is one heavy rain day not enough to conclude climate change?
+## Ocean, Ice, and Coasts Are Connected
 
-Answer: climate change is read from long-term patterns, not one weather event.
+The ocean absorbs a large amount of heat. When seawater warms, marine organisms can be stressed. Coral reefs, for example, can bleach when heat disrupts the relationship between coral and its symbiotic algae.
 
-Explanation: a single event must be compared with trends, frequency, intensity, and historical data.
+Shrinking ice also changes balance. Bright ice reflects a lot of light. When ice decreases, darker surfaces absorb more heat. In snowy mountains or tropical ice regions, ice loss is a sign that environmental temperature is changing.
+
+Sea level rises because seawater expands when warm and because melting land ice adds water to the ocean. The effect is not identical everywhere, but coastal regions are more vulnerable to tidal flooding, erosion, and floods.
+
+## Extreme Patterns Make the Signal Feel Close
+
+Climate change also appears in extreme event patterns. Drought can become more severe in some regions. Heavy rain can become more damaging in others. Events such as El Nino and La Nina influence wet or dry seasons, and global warming can strengthen risk on top of those natural patterns.
+
+That is why climate symptoms should be read using many indicators. Temperature, ocean, ice, rainfall, drought, and coastal events must be read together so one narrow example does not mislead us.
+
+<Mermaid
+  chart={`flowchart LR
+    A["Long-term data"] --> B["Average temperature"]
+    A --> C["Ocean heat"]
+    A --> D["Ice and sea level"]
+    A --> E["Extreme patterns"]
+    B --> F["Stronger climate signal"]
+    C --> F
+    D --> F
+    E --> F`}
+/>
+
+## Reading Symptoms without Being Misled by Daily Weather
+
+The sentence "it rained today, so global warming is not happening" is wrong because it mixes daily weather with long-term climate. Rain can still happen on an Earth whose average temperature is rising.
+
+Careful reading does not stop at one event. We need longer patterns, then many signs are compared together. When average temperature, ocean heat, ice, sea level, and extreme events point in the same direction, the climate change signal becomes stronger.

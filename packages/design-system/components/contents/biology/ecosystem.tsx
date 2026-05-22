@@ -8,7 +8,9 @@ import {
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
 import {
   BiologyGround,
-  BiologySceneTitle,
+  FloatingGroup,
+  PulsingGroup,
+  RotatingGroup,
 } from "@repo/design-system/components/contents/biology/parts";
 import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
@@ -25,35 +27,34 @@ export function EcosystemOrganismsLab(props: BiologyLabProps) {
 /**
  * Keeps ecosystem learning tied to relationships, not isolated organism icons.
  */
-function EcosystemOrganismsScene({
-  colors,
-  item,
-  selectedIndex,
-}: BiologySceneProps) {
+function EcosystemOrganismsScene({ colors, selectedIndex }: BiologySceneProps) {
   if (selectedIndex === 1) {
-    return <EnergyPyramid colors={colors} label={item.label} />;
+    return <EnergyPyramid colors={colors} />;
   }
 
   if (selectedIndex === 2) {
-    return <NicheInteractions colors={colors} label={item.label} />;
+    return <NicheInteractions colors={colors} />;
   }
 
-  return <FoodWeb colors={colors} label={item.label} />;
+  return <FoodWeb colors={colors} />;
 }
 
 /**
  * Shows a producer-to-consumer food chain with decomposers returning matter.
  */
-function FoodWeb({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function FoodWeb({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       <BiologyGround color={colors.soil} />
-      <Organism color={colors.plant} shape="plant" x={-1.18} />
-      <Organism color={colors.animal} shape="grazer" x={0} />
-      <Organism color={colors.warning} shape="predator" x={1.18} />
+      <FloatingGroup travel={0.035}>
+        <Organism color={colors.plant} shape="plant" x={-1.18} />
+      </FloatingGroup>
+      <FloatingGroup phase={0.8} travel={0.035}>
+        <Organism color={colors.animal} shape="grazer" x={0} />
+      </FloatingGroup>
+      <FloatingGroup phase={1.6} travel={0.035}>
+        <Organism color={colors.warning} shape="predator" x={1.18} />
+      </FloatingGroup>
       <ArrowHelper
         color={colors.arrow}
         from={[-0.86, -0.2, 0.2]}
@@ -64,16 +65,21 @@ function FoodWeb({
         from={[0.34, -0.2, 0.2]}
         to={[0.92, -0.2, 0.2]}
       />
-      {DECOMPOSER_RING.map((point) => (
-        <mesh
-          key={point.id}
-          position={[point.position[0] * 0.5, -0.76, point.position[2] * 0.18]}
-        >
-          <sphereGeometry args={[0.04, 10, 8]} />
-          <meshStandardMaterial color={colors.decomposer} />
-        </mesh>
-      ))}
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
+      <RotatingGroup speed={0.45}>
+        {DECOMPOSER_RING.map((point) => (
+          <mesh
+            key={point.id}
+            position={[
+              point.position[0] * 0.5,
+              -0.76,
+              point.position[2] * 0.18,
+            ]}
+          >
+            <sphereGeometry args={[0.04, 10, 8]} />
+            <meshStandardMaterial color={colors.decomposer} />
+          </mesh>
+        ))}
+      </RotatingGroup>
     </group>
   );
 }
@@ -81,19 +87,18 @@ function FoodWeb({
 /**
  * Shows decreasing energy across trophic levels.
  */
-function EnergyPyramid({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function EnergyPyramid({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
-      <PyramidTier
-        color={colors.plant}
-        label="1"
-        textColor={colors.text}
-        width={2.45}
-        y={-0.62}
-      />
+      <PulsingGroup speed={0.75} strength={0.025}>
+        <PyramidTier
+          color={colors.plant}
+          label="1"
+          textColor={colors.text}
+          width={2.45}
+          y={-0.62}
+        />
+      </PulsingGroup>
       <PyramidTier
         color={colors.animal}
         label="2"
@@ -113,7 +118,6 @@ function EnergyPyramid({
         from={[1.45, -0.5, 0.2]}
         to={[1.45, 0.52, 0.2]}
       />
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
     </group>
   );
 }
@@ -121,18 +125,19 @@ function EnergyPyramid({
 /**
  * Shows mutualism, predation, and decomposition in one habitat.
  */
-function NicheInteractions({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function NicheInteractions({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       <BiologyGround color={colors.soil} />
-      <Organism color={colors.plant} shape="plant" x={-0.95} />
-      <mesh position={[-0.45, 0.08, 0.28]}>
-        <sphereGeometry args={[0.11, 14, 10]} />
-        <meshStandardMaterial color={colors.animal} />
-      </mesh>
+      <FloatingGroup travel={0.035}>
+        <Organism color={colors.plant} shape="plant" x={-0.95} />
+      </FloatingGroup>
+      <FloatingGroup phase={0.6} travel={0.08}>
+        <mesh position={[-0.45, 0.08, 0.28]}>
+          <sphereGeometry args={[0.11, 14, 10]} />
+          <meshStandardMaterial color={colors.animal} />
+        </mesh>
+      </FloatingGroup>
       <ArrowHelper
         color={colors.arrow}
         from={[-0.55, 0.1, 0.22]}
@@ -148,7 +153,6 @@ function NicheInteractions({
         from={[0.86, -0.45, 0.2]}
         to={[0.28, -0.38, 0.2]}
       />
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
     </group>
   );
 }

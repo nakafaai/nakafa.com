@@ -1,62 +1,84 @@
 import { BiodiversityLevelsLab } from "@repo/design-system/components/contents/biology/biodiversity-levels";
 
 export const metadata = {
-  title: "Keanekaragaman Hayati",
+  title: "Tingkat Keanekaragaman Hayati",
   description:
-    "Membaca keanekaragaman hayati pada tingkat gen, spesies, dan ekosistem dengan contoh yang terhubung.",
+    "Membedakan keanekaragaman gen, spesies, dan ekosistem melalui contoh pisang, komunitas organisme, dan perbedaan habitat.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
-  subject: "Keanekaragaman Makhluk Hidup",
+  subject: "Keanekaragaman Hayati",
 };
 
-## Keanekaragaman dibaca pada tiga tingkat
+## Satu Pasar Dapat Menunjukkan Tiga Skala
 
-Keanekaragaman hayati adalah variasi kehidupan. Buku IPA SMA/MA Kelas X Bab VI membaginya menjadi keanekaragaman gen, spesies, dan ekosistem. OpenStax juga memakai tingkat genetik, spesies, dan ekosistem untuk menjelaskan nilai biodiversitas pada [The Importance of Biodiversity to Human Life](https://openstax.org/books/biology-2e/pages/47-3-the-importance-of-biodiversity-to-human-life).
+Bayangkan kamu berdiri di pasar buah. Di satu meja ada beberapa pisang dengan rasa, ukuran, dan bentuk yang berbeda. Di meja lain ada mangga, jeruk, cabai, jamur, ikan, dan ayam. Dari satu tempat kecil itu saja, keanekaragaman hayati sudah bisa dibaca dalam beberapa skala.
+
+**Keanekaragaman hayati** adalah variasi makhluk hidup. Variasi ini dapat muncul pada tingkat gen, tingkat spesies, dan tingkat ekosistem. **Gen** adalah bagian materi genetik yang memengaruhi sifat. **Spesies** adalah kelompok organisme yang memiliki ciri dasar sama dan umumnya dapat menghasilkan keturunan sejenis. **Ekosistem** adalah hubungan antara organisme dengan lingkungan fisiknya.
+
+Pembacaan berlapis seperti ini sejalan dengan cara biologi membahas biodiversitas sebagai variasi dari gen sampai ekosistem; gambaran besarnya dapat dibaca di [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/47-1-the-biodiversity-crisis).
 
 <BiodiversityLevelsLab
-  title={<>Tiga skala biodiversitas</>}
-  description={<>Pindah tingkat untuk melihat apakah variasi terjadi di dalam satu jenis, antarjenis, atau antarhabitat.</>}
+  title={<>Tiga cara membaca keanekaragaman</>}
+  description={
+    <>
+      Model bergerak dari variasi gen, kumpulan spesies, sampai perbedaan
+      habitat. Setiap skala menjawab pertanyaan yang berbeda.
+    </>
+  }
   labels={{
-    chooseMode: "Pilih tingkat",
-    detailLabel: "Catatan akurasi",
-    sourceNoteLabel: "Rujukan model",
-    structureLabel: "Skala yang dibaca",
-    viewLabel: "Model 3D tingkat biodiversitas",
-    sourceNote: <>Model mengikuti pembagian gen, spesies, dan ekosistem dalam Buku IPA SMA/MA Kelas X Bab VI dan OpenStax Biology 2e.</>,
+    chooseMode: "Pilih tingkat keanekaragaman",
+    focusLabel: "Pertanyaan utama",
+    takeawayLabel: "Kunci pembeda",
+    viewLabel: "Model 3D tingkat keanekaragaman hayati",
     items: [
       {
         tab: "Gen",
-        label: "Gen",
-        structure: "Variasi sifat di dalam satu spesies.",
-        caption: <>Varietas padi atau mangga yang berbeda menunjukkan variasi genetik, meskipun masih satu spesies.</>,
-        detail: <>Titik gen pada model bukan data sekuens, melainkan penanda variasi sifat dalam populasi.</>,
+        caption: <>Butiran dan untai gen menunjukkan perbedaan sifat di dalam satu kelompok organisme sejenis.</>,
+        focus: <>Apakah yang berubah masih berada dalam satu spesies?</>,
+        takeaway: <>Keanekaragaman gen menjelaskan variasi seperti ukuran, warna, rasa, atau ketahanan dalam satu jenis.</>,
       },
       {
         tab: "Spesies",
-        label: "Spesies",
-        structure: "Banyaknya jenis makhluk hidup dalam komunitas.",
-        caption: <>Burung, tumbuhan, jamur, dan mikroba yang hidup bersama menunjukkan tingkat spesies.</>,
-        detail: <>Bentuk berbeda dipakai agar murid membaca perbedaan jenis, bukan jumlah individu saja.</>,
+        caption: <>Penanda organisme yang berbeda menunjukkan komunitas berisi beberapa spesies.</>,
+        focus: <>Jenis organisme apa saja yang hadir di tempat yang sama?</>,
+        takeaway: <>Keanekaragaman spesies dibaca dari banyaknya jenis dan perbedaan ciri antarjenis.</>,
       },
       {
         tab: "Ekosistem",
-        label: "Ekosistem",
-        structure: "Variasi habitat dan interaksi makhluk hidup dengan lingkungannya.",
-        caption: <>Hutan hujan, mangrove, dan savana berbeda karena faktor fisik dan komunitasnya berbeda.</>,
-        detail: <>Sungai, tanah, dan pohon pada model menekankan habitat, bukan peta lokasi tertentu.</>,
+        caption: <>Tanah, aliran air, tumbuhan, dan hewan menunjukkan bahwa lingkungan ikut membentuk keanekaragaman.</>,
+        focus: <>Kondisi tempat hidup apa yang membuat komunitasnya berbeda?</>,
+        takeaway: <>Keanekaragaman ekosistem muncul saat habitat, faktor lingkungan, dan hubungan organisme tidak sama.</>,
       },
     ],
   }}
 />
 
-## Satu tempat bisa kaya di satu tingkat dan miskin di tingkat lain
+## Gen Menjelaskan Variasi dalam Satu Jenis
 
-Sebuah kebun dapat punya banyak pohon mangga, tetapi jika semua berasal dari varietas yang sama, variasi genetiknya sempit. Sebaliknya, satu kawasan hutan dapat menyimpan banyak jenis organisme sekaligus banyak mikrohabitat. Karena itu pertanyaan "biodiversitasnya tinggi atau rendah" harus selalu diikuti pertanyaan: tingkat yang mana?
+Keanekaragaman gen terlihat ketika organisme masih satu spesies, tetapi sifatnya tidak persis sama. Contohnya, beberapa varietas pisang dapat berbeda pada ukuran buah, rasa, bentuk, atau ketahanan terhadap kondisi lingkungan. Mereka tetap dekat sebagai satu kelompok, tetapi gen yang berbeda membuat sifatnya bervariasi.
 
-## Cek pemahaman
+Analogi sederhananya seperti beberapa resep dari satu jenis makanan. Dasarnya sama, tetapi takaran bahan bisa membuat rasa dan teksturnya berbeda. Pada organisme, "takaran" itu dibaca sebagai variasi genetik.
 
-Jika satu daerah punya banyak varietas pisang, tetapi semuanya masih termasuk pisang, tingkat keanekaragaman apa yang paling langsung terlihat?
+Variasi gen penting karena memberi bahan mentah bagi adaptasi. Jika lingkungan berubah, populasi yang memiliki variasi lebih besar punya peluang lebih baik untuk menyisakan individu yang cocok.
 
-Jawaban: keanekaragaman gen.
+## Spesies dan Ekosistem Membutuhkan Sudut Pandang Lebih Luas
 
-Alasan: variasi terjadi di dalam satu kelompok jenis, bukan antarspesies atau antarekosistem.
+Keanekaragaman spesies tidak lagi bertanya "mengapa pisang ini berbeda dengan pisang lain". Pertanyaannya berubah menjadi "jenis organisme apa saja yang hidup di sini". Di kebun, kita dapat menemukan pohon, serangga, burung, jamur, bakteri, dan hewan kecil. Setiap jenis memiliki ciri dan peran sendiri.
+
+Keanekaragaman ekosistem lebih luas lagi. Hutan hujan tropis, mangrove, savana, sawah, dan terumbu karang memiliki kondisi berbeda. Cahaya, air, salinitas, tanah, suhu, dan interaksi organisme membuat jenis yang hidup di sana tidak sama.
+
+Indonesia menjadi contoh kuat karena wilayahnya luas, tropis, dan memiliki banyak tipe habitat. Fauna wilayah barat cenderung berbeda dari wilayah timur, sementara wilayah tengah memiliki banyak bentuk peralihan. Keanekaragaman ini bukan sekadar daftar nama organisme, tetapi hasil dari lingkungan, sejarah, dan interaksi yang panjang.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Keanekaragaman hayati"] --> B["Gen: variasi dalam satu spesies"]
+    A --> C["Spesies: banyak jenis organisme"]
+    A --> D["Ekosistem: habitat dan relasi berbeda"]
+    B --> E["Contoh dekat: varietas pisang"]
+    C --> F["Contoh dekat: kebun berisi banyak organisme"]
+    D --> G["Contoh dekat: mangrove, savana, hutan hujan"]`}
+/>
+
+## Membaca Skala Membuat Observasi Lebih Tajam
+
+Saat melihat alam, jangan langsung menulis semua hal sebagai "banyak jenis". Tanyakan dulu skalanya. Jika yang dibandingkan masih satu jenis tetapi sifatnya berbeda, kamu sedang membaca gen. Jika yang dibandingkan adalah banyak jenis organisme, kamu membaca spesies. Jika yang dibandingkan adalah tempat hidup dan hubungan lingkungannya, kamu membaca ekosistem.

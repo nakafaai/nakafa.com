@@ -6,19 +6,16 @@ export type BiologyScenePoint = readonly [number, number, number];
 
 export interface BiologyLabItem {
   caption: ReactNode;
-  detail: ReactNode;
-  label: string;
-  structure: string;
+  focus: ReactNode;
   tab: string;
+  takeaway: ReactNode;
 }
 
 export interface BiologyLabLabels {
   chooseMode: string;
-  detailLabel: string;
+  focusLabel: string;
   items: readonly [BiologyLabItem, ...BiologyLabItem[]];
-  sourceNote: ReactNode;
-  sourceNoteLabel: string;
-  structureLabel: string;
+  takeawayLabel: string;
   viewLabel: string;
 }
 
@@ -51,9 +48,9 @@ export interface BiologySceneColors {
 }
 
 export const BIOLOGY_DEFAULT_VIEW = {
-  cameraPosition: [4.4, 3.2, 6.2],
-  narrowCameraPosition: [5.1, 3.9, 7.3],
-  cameraTarget: [0, 0.2, 0],
+  cameraPosition: [2.85, 2.1, 4.15],
+  narrowCameraPosition: [3.15, 2.4, 4.65],
+  cameraTarget: [0, 0.1, 0],
 } satisfies Record<string, BiologyScenePoint>;
 
 export interface BiologySceneView {
@@ -127,6 +124,39 @@ export function createBiologyRingPoints(count: number, radius: number) {
         Math.cos(angle) * radius,
         0,
         Math.sin(angle) * radius,
+      ] satisfies BiologyScenePoint,
+    };
+  });
+}
+
+/**
+ * Creates evenly distributed points on a sphere for viral particles and cells.
+ */
+export function createBiologySpherePoints(count: number, radius: number) {
+  if (count <= 0) {
+    return [];
+  }
+
+  if (count === 1) {
+    return [
+      {
+        id: "sphere-0",
+        position: [0, radius, 0] satisfies BiologyScenePoint,
+      },
+    ];
+  }
+
+  return Array.from({ length: count }, (_, index) => {
+    const y = 1 - (index / (count - 1)) * 2;
+    const ringRadius = Math.sqrt(1 - y * y);
+    const angle = index * Math.PI * (3 - Math.sqrt(5));
+
+    return {
+      id: `sphere-${index}`,
+      position: [
+        Math.cos(angle) * ringRadius * radius,
+        y * radius,
+        Math.sin(angle) * ringRadius * radius,
       ] satisfies BiologyScenePoint,
     };
   });

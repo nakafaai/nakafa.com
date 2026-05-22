@@ -5,7 +5,12 @@ import type {
   BiologySceneProps,
 } from "@repo/design-system/components/contents/biology/data";
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
-import { BiologySceneTitle } from "@repo/design-system/components/contents/biology/parts";
+import {
+  FloatingGroup,
+  PulsingGroup,
+  RotatingGroup,
+  SlidingGroup,
+} from "@repo/design-system/components/contents/biology/parts";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 
 /**
@@ -18,38 +23,36 @@ export function VirusRoleLab(props: BiologyLabProps) {
 /**
  * Changes the whole scene so students do not read all virus roles as disease.
  */
-function VirusRoleScene({ colors, item, selectedIndex }: BiologySceneProps) {
+function VirusRoleScene({ colors, selectedIndex }: BiologySceneProps) {
   if (selectedIndex === 1) {
-    return <EcologyRole colors={colors} label={item.label} />;
+    return <EcologyRole colors={colors} />;
   }
 
   if (selectedIndex === 2) {
-    return <BiotechRole colors={colors} label={item.label} />;
+    return <BiotechRole colors={colors} />;
   }
 
-  return <PathogenRole colors={colors} label={item.label} />;
+  return <PathogenRole colors={colors} />;
 }
 
 /**
  * Shows virus damage as a host cell with many pathogen particles.
  */
-function PathogenRole({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function PathogenRole({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       <mesh scale={[1.2, 0.78, 0.78]}>
         <sphereGeometry args={[1, 40, 24]} />
         <meshStandardMaterial color={colors.host} opacity={0.2} transparent />
       </mesh>
-      {[-0.8, -0.38, 0.05, 0.52, 0.9].map((x) => (
-        <mesh key={x} position={[x, 0.35 - Math.abs(x) * 0.24, 0.42]}>
-          <icosahedronGeometry args={[0.18, 1]} />
-          <meshStandardMaterial color={colors.pathogen} />
-        </mesh>
+      {[-0.8, -0.38, 0.05, 0.52, 0.9].map((x, index) => (
+        <FloatingGroup key={x} phase={index * 0.55} travel={0.08}>
+          <mesh position={[x, 0.35 - Math.abs(x) * 0.24, 0.42]}>
+            <icosahedronGeometry args={[0.18, 1]} />
+            <meshStandardMaterial color={colors.pathogen} />
+          </mesh>
+        </FloatingGroup>
       ))}
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
     </group>
   );
 }
@@ -57,10 +60,7 @@ function PathogenRole({
 /**
  * Shows bacteriophages linking viruses to microbial population control.
  */
-function EcologyRole({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function EcologyRole({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       {[-1.1, 0, 1.1].map((x) => (
@@ -79,11 +79,12 @@ function EcologyRole({
         from={[-0.72, 0.58, 0.12]}
         to={[-0.92, 0.18, 0.12]}
       />
-      <mesh position={[-0.72, 0.66, 0.12]}>
-        <icosahedronGeometry args={[0.2, 1]} />
-        <meshStandardMaterial color={colors.pathogen} />
-      </mesh>
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
+      <SlidingGroup speed={0.8} travel={0.2}>
+        <mesh position={[-0.72, 0.66, 0.12]}>
+          <icosahedronGeometry args={[0.2, 1]} />
+          <meshStandardMaterial color={colors.pathogen} />
+        </mesh>
+      </SlidingGroup>
     </group>
   );
 }
@@ -91,24 +92,29 @@ function EcologyRole({
 /**
  * Shows a viral vector carrying a gene into a target cell.
  */
-function BiotechRole({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function BiotechRole({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       <mesh position={[0.9, 0, 0]} scale={[0.82, 0.62, 0.62]}>
         <sphereGeometry args={[1, 40, 24]} />
         <meshStandardMaterial color={colors.host} opacity={0.24} transparent />
       </mesh>
-      <mesh position={[-0.95, 0.1, 0]}>
-        <icosahedronGeometry args={[0.32, 1]} />
-        <meshStandardMaterial color={colors.membrane} />
-      </mesh>
-      <mesh position={[-0.95, 0.1, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.18, 0.018, 8, 48]} />
-        <meshStandardMaterial color={colors.genome} />
-      </mesh>
+      <SlidingGroup speed={0.9} travel={0.18}>
+        <group position={[-0.95, 0.1, 0]}>
+          <RotatingGroup speed={0.3}>
+            <mesh>
+              <icosahedronGeometry args={[0.32, 1]} />
+              <meshStandardMaterial color={colors.membrane} />
+            </mesh>
+          </RotatingGroup>
+          <PulsingGroup speed={1.7} strength={0.06}>
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[0.18, 0.018, 8, 48]} />
+              <meshStandardMaterial color={colors.genome} />
+            </mesh>
+          </PulsingGroup>
+        </group>
+      </SlidingGroup>
       <ArrowHelper
         arrowSize={0.16}
         color={colors.arrow}
@@ -116,7 +122,6 @@ function BiotechRole({
         lineWidth={3}
         to={[0.36, 0.04, 0]}
       />
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
     </group>
   );
 }

@@ -3,7 +3,6 @@
 import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type { BiologyScenePoint } from "@repo/design-system/components/contents/biology/data";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
 import type { ReactNode } from "react";
 import { useRef } from "react";
 import type { Group } from "three";
@@ -11,7 +10,13 @@ import type { Group } from "three";
 /**
  * Rotates an educational model slowly without hiding the first-read structure.
  */
-export function RotatingGroup({ children }: { children: ReactNode }) {
+export function RotatingGroup({
+  children,
+  speed = 0.18,
+}: {
+  children: ReactNode;
+  speed?: number;
+}) {
   const ref = useRef<Group>(null);
 
   useFrame((_, delta) => {
@@ -19,29 +24,98 @@ export function RotatingGroup({ children }: { children: ReactNode }) {
       return;
     }
 
-    ref.current.rotation.y += delta * 0.18;
+    ref.current.rotation.y += delta * speed;
   });
 
   return <group ref={ref}>{children}</group>;
 }
 
 /**
- * Renders a compact model label above the active biology scene.
+ * Makes a structure gently expand and contract so active biological material
+ * reads as alive without needing state updates.
  */
-export function BiologySceneTitle({
+export function PulsingGroup({
   children,
-  color,
-  y = 1.65,
+  phase = 0,
+  speed = 1.4,
+  strength = 0.06,
 }: {
-  children: string;
-  color: string;
-  y?: number;
+  children: ReactNode;
+  phase?: number;
+  speed?: number;
+  strength?: number;
 }) {
-  return (
-    <SceneLabel color={color} fontSize="annotation" position={[0, y, 0]}>
-      {children}
-    </SceneLabel>
-  );
+  const ref = useRef<Group>(null);
+
+  useFrame(({ clock }) => {
+    if (!ref.current) {
+      return;
+    }
+
+    const scale = 1 + Math.sin(clock.elapsedTime * speed + phase) * strength;
+
+    ref.current.scale.setScalar(scale);
+  });
+
+  return <group ref={ref}>{children}</group>;
+}
+
+/**
+ * Moves a nested structure up and down to make spores, droplets, and heat
+ * indicators readable as processes instead of frozen icons.
+ */
+export function FloatingGroup({
+  children,
+  phase = 0,
+  speed = 1,
+  travel = 0.08,
+}: {
+  children: ReactNode;
+  phase?: number;
+  speed?: number;
+  travel?: number;
+}) {
+  const ref = useRef<Group>(null);
+
+  useFrame(({ clock }) => {
+    if (!ref.current) {
+      return;
+    }
+
+    ref.current.position.y =
+      Math.sin(clock.elapsedTime * speed + phase) * travel;
+  });
+
+  return <group ref={ref}>{children}</group>;
+}
+
+/**
+ * Slides a nested structure horizontally on a loop for visible transfer,
+ * spread, and circulation diagrams.
+ */
+export function SlidingGroup({
+  children,
+  phase = 0,
+  speed = 1,
+  travel = 0.16,
+}: {
+  children: ReactNode;
+  phase?: number;
+  speed?: number;
+  travel?: number;
+}) {
+  const ref = useRef<Group>(null);
+
+  useFrame(({ clock }) => {
+    if (!ref.current) {
+      return;
+    }
+
+    ref.current.position.x =
+      Math.sin(clock.elapsedTime * speed + phase) * travel;
+  });
+
+  return <group ref={ref}>{children}</group>;
 }
 
 /**
@@ -55,7 +129,7 @@ export function BiologyGround({
   scale?: BiologyScenePoint;
 }) {
   return (
-    <mesh position={[0, -0.9, 0]} scale={scale}>
+    <mesh position={[0, -0.9, 0]} receiveShadow scale={scale}>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color={color} opacity={0.26} transparent />
     </mesh>

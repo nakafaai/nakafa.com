@@ -1,62 +1,87 @@
 import { ClimateCooperationLab } from "@repo/design-system/components/contents/biology/climate-cooperation";
 
 export const metadata = {
-  title: "Global Cooperation to Address Climate Change",
+  title: "Global Cooperation on Climate Change",
   description:
-    "Understand why climate change needs shared targets, shared data, and action across countries.",
+    "Understand why climate change needs global cooperation through temperature targets, data monitoring, international agreements, and shared action.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Climate Change",
 };
 
-## Climate problems need cross-country cooperation
+## Greenhouse Gases Do Not Respect Borders
 
-Greenhouse gases mix in the atmosphere. Impacts also cross borders through oceans, air, food, migration, and economics. The Indonesian grade 10 science textbook discusses UNFCCC, IPCC, and the Paris Agreement, which Indonesia signed on April 22, 2016. IPCC summarizes the scientific basis and global response options in the [AR6 Synthesis Report](https://www.ipcc.ch/report/ar6/syr/).
+Smoke from one city does not stop exactly at a map line. Greenhouse gases mix in the atmosphere and affect the Earth system together. That is why climate change cannot be solved by one school, one city, or one country alone.
+
+Global cooperation is needed because causes and impacts are connected. Countries with large emissions need to reduce greenhouse gas sources. Countries vulnerable to impacts need adaptation support. Everyone needs data that can be compared.
+
+The Paris Agreement is one example of global cooperation to hold down global average temperature rise and strengthen climate response; its explanation is available at [UNFCCC](https://unfccc.int/process-and-meetings/the-paris-agreement).
 
 <ClimateCooperationLab
-  title={<>Global climate cooperation</>}
-  description={<>Choose a mode to see targets, data monitoring, and action networks that depend on each other.</>}
+  title={<>Targets, data, and shared action</>}
+  description={
+    <>
+      The model shows a temperature target, monitoring network, and action nodes.
+      Node movement shows that climate work depends on coordination.
+    </>
+  }
   labels={{
-    chooseMode: "Choose a mode",
-    detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model source",
-    structureLabel: "Cooperation to read",
-    viewLabel: "3D climate cooperation model",
-    sourceNote: <>The model follows the Indonesian grade 10 science textbook on UNFCCC, IPCC, the Paris Agreement, and cross-country action.</>,
+    chooseMode: "Choose a cooperation part",
+    focusLabel: "What to check",
+    takeawayLabel: "Global role",
+    viewLabel: "3D global climate cooperation model",
     items: [
       {
         tab: "Target",
-        label: "Temperature target",
-        structure: "The Paris Agreement pursues limits on global warming.",
-        caption: <>A global target gives shared direction, but it must become national policies and real actions.</>,
-        detail: <>The 1.5 marker represents a climate target, not a local temperature forecast.</>,
+        caption: <>The heat ring around Earth shows that temperature targets serve as shared benchmarks.</>,
+        focus: <>Targets help countries judge whether their actions are strong enough.</>,
+        takeaway: <>Global targets make a broad problem measurable in a shared language.</>,
       },
       {
         tab: "Data",
-        label: "Shared data",
-        structure: "Climate monitoring needs measurements from many regions.",
-        caption: <>Satellite, weather station, ocean, and land data help the world read the same change.</>,
-        detail: <>Stations around Earth emphasize distributed monitoring.</>,
+        caption: <>Stations moving around Earth represent climate observations that need to be collected and compared.</>,
+        focus: <>Without data, emissions promises are hard to check.</>,
+        takeaway: <>Data turns cooperation from statements into progress that can be monitored.</>,
       },
       {
         tab: "Action",
-        label: "Shared action",
-        structure: "Countries, cities, scientists, industries, and citizens are connected in climate response.",
-        caption: <>Cooperation matters because emissions, technology, finance, and impacts are not evenly distributed.</>,
-        detail: <>The node network represents coordination, not one specific organization chart.</>,
+        caption: <>Action nodes represent governments, communities, research, industry, and schools as connected actors.</>,
+        focus: <>Cooperation happens at many levels, not only in international meeting rooms.</>,
+        takeaway: <>Global action becomes real when big decisions translate into changes in energy, land, food, and habits.</>,
       },
     ],
   }}
 />
 
-## Cooperation must be measurable
+## Temperature Targets Make the Goal Measurable
 
-Climate commitments are not enough if they stay as promises. They need targets, data, reporting, finance, technology, and evaluation. Because countries differ in responsibility and capacity, global cooperation also involves fairness: who reduces most, who needs adaptation support, and who faces the greatest risk?
+International climate agreements use temperature targets to keep warming from crossing dangerous limits. Targets such as keeping warming well below two degrees and pursuing limits around one and a half degrees make the work direction clearer.
 
-## Self-check
+The target number is not just a symbol. The higher warming rises, the greater the risk to water, food, health, ecosystems, coasts, and biodiversity. Targets help countries judge how quickly emissions need to fall.
 
-Why can climate change not be solved by one country alone?
+## Institutions Do Different Jobs
 
-Answer: greenhouse gases mix in the atmosphere and impacts cross national borders.
+Global cooperation involves many institutions and processes. Some agreements set the direction of national commitments. Some forums bring countries together to negotiate. Some scientific bodies assess research and prepare reports so decisions are not based only on opinion.
 
-Explanation: one country's action matters, but the global climate is shaped by total emissions and cooperation among many parties.
+A simple way to read it is to separate three jobs. The first job is agreeing on goals. The second is measuring and reporting progress. The third is preparing real actions in energy, land, transport, food, and adaptation.
+
+## Big Action Still Reaches Daily Life
+
+Global cooperation can sound distant, but its results affect many nearby decisions. Energy policy shapes electricity sources. Forest protection affects habitat and carbon uptake. City planning affects transport and flood risk. Education helps communities understand better choices.
+
+So students do not need to see global cooperation as only an adult issue. Understanding data, distinguishing mitigation and adaptation, reducing waste, and caring for local environments are small parts of a larger action network.
+
+<Mermaid
+  chart={`flowchart LR
+    A["Shared target"] --> B["National plan"]
+    B --> C["Energy and land data"]
+    C --> D["Progress report"]
+    D --> E["Action improves"]
+    E --> B`}
+/>
+
+## Climate Promises Matter When Progress Can Be Seen
+
+A promise to reduce emissions can be evaluated only when there is data on energy use, land-use change, and action progress. Without data, the promise may sound good but remains hard to compare with reality.
+
+Careful global cooperation always needs three things: a clear target, measurements that can be checked, and improved action when results are not enough. That keeps climate change from becoming a slogan and turns it into a shared problem that can be monitored and worked on.

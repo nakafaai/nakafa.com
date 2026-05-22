@@ -10,7 +10,10 @@ import { BiologyLabFrame } from "@repo/design-system/components/contents/biology
 import {
   BiologyGround,
   BiologyLine,
-  BiologySceneTitle,
+  FloatingGroup,
+  PulsingGroup,
+  RotatingGroup,
+  SlidingGroup,
 } from "@repo/design-system/components/contents/biology/parts";
 
 const GENE_VARIANTS = createBiologyGridPoints(2, 5);
@@ -32,47 +35,42 @@ export function BiodiversityLevelsLab(props: BiologyLabProps) {
 /**
  * Switches scale instead of reusing one generic biodiversity diagram.
  */
-function BiodiversityLevelsScene({
-  colors,
-  item,
-  selectedIndex,
-}: BiologySceneProps) {
+function BiodiversityLevelsScene({ colors, selectedIndex }: BiologySceneProps) {
   if (selectedIndex === 1) {
-    return <SpeciesLevel colors={colors} label={item.label} />;
+    return <SpeciesLevel colors={colors} />;
   }
 
   if (selectedIndex === 2) {
-    return <EcosystemLevel colors={colors} label={item.label} />;
+    return <EcosystemLevel colors={colors} />;
   }
 
-  return <GeneLevel colors={colors} label={item.label} />;
+  return <GeneLevel colors={colors} />;
 }
 
 /**
  * Shows variation inside one population through different gene beads.
  */
-function GeneLevel({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function GeneLevel({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       {GENE_VARIANTS.map((point, index) => (
-        <mesh
-          key={point.id}
-          position={[point.position[0] * 0.32, point.position[1] * 0.34, 0]}
-        >
-          <sphereGeometry args={[index % 2 === 0 ? 0.14 : 0.1, 20, 16]} />
-          <meshStandardMaterial
-            color={index % 3 === 0 ? colors.genome : colors.plant}
-          />
-        </mesh>
+        <FloatingGroup key={point.id} phase={index * 0.4} travel={0.045}>
+          <mesh
+            position={[point.position[0] * 0.32, point.position[1] * 0.34, 0]}
+          >
+            <sphereGeometry args={[index % 2 === 0 ? 0.14 : 0.1, 20, 16]} />
+            <meshStandardMaterial
+              color={index % 3 === 0 ? colors.genome : colors.plant}
+            />
+          </mesh>
+        </FloatingGroup>
       ))}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusKnotGeometry args={[0.68, 0.026, 96, 6]} />
-        <meshStandardMaterial color={colors.genome} />
-      </mesh>
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
+      <PulsingGroup speed={1.45} strength={0.05}>
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusKnotGeometry args={[0.68, 0.026, 96, 6]} />
+          <meshStandardMaterial color={colors.genome} />
+        </mesh>
+      </PulsingGroup>
     </group>
   );
 }
@@ -80,22 +78,20 @@ function GeneLevel({
 /**
  * Shows several species sharing one community space.
  */
-function SpeciesLevel({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function SpeciesLevel({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
-      {SPECIES_RING.map((point, index) => (
-        <SpeciesMarker
-          colors={colors}
-          index={index}
-          key={point.id}
-          position={[point.position[0], point.position[2] * 0.42, 0.18]}
-        />
-      ))}
+      <RotatingGroup speed={0.12}>
+        {SPECIES_RING.map((point, index) => (
+          <SpeciesMarker
+            colors={colors}
+            index={index}
+            key={point.id}
+            position={[point.position[0], point.position[2] * 0.42, 0.18]}
+          />
+        ))}
+      </RotatingGroup>
       <BiologyGround color={colors.soil} scale={[2.8, 0.08, 1.6]} />
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
     </group>
   );
 }
@@ -142,14 +138,13 @@ function SpeciesMarker({
 /**
  * Shows habitat variety with land, stream, and plant structures.
  */
-function EcosystemLevel({
-  colors,
-  label,
-}: Pick<BiologySceneProps, "colors"> & { label: string }) {
+function EcosystemLevel({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
       <BiologyGround color={colors.soil} />
-      <BiologyLine color={colors.ocean} lineWidth={5} points={STREAM_PATH} />
+      <SlidingGroup speed={0.75} travel={0.06}>
+        <BiologyLine color={colors.ocean} lineWidth={5} points={STREAM_PATH} />
+      </SlidingGroup>
       {[-1.1, -0.45, 0.45, 1.1].map((x) => (
         <group key={x} position={[x, -0.45 + Math.abs(x) * 0.12, 0.22]}>
           <mesh position={[0, 0.24, 0]}>
@@ -166,7 +161,6 @@ function EcosystemLevel({
         <sphereGeometry args={[0.22, 20, 16]} />
         <meshStandardMaterial color={colors.animal} />
       </mesh>
-      <BiologySceneTitle color={colors.text}>{label}</BiologySceneTitle>
     </group>
   );
 }

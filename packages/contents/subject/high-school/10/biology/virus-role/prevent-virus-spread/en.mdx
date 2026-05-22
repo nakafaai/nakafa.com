@@ -1,64 +1,82 @@
 import { VirusPreventionLab } from "@repo/design-system/components/contents/biology/virus-prevention";
 
 export const metadata = {
-  title: "Ways to Prevent Virus Spread",
+  title: "Preventing Virus Spread",
   description:
-    "Connect virus prevention to transmission routes, distance, barriers, hygiene, and vaccination.",
+    "Choose virus prevention based on transmission routes such as droplets, contact, body fluids, mosquito vectors, hygiene, vaccination, and antivirals.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
-  subject: "Viruses and Their Role",
+  subject: "Viruses and Their Roles",
 };
 
-## Prevention follows the transmission route
+## Prevention Starts with the Route, Not a Tip List
 
-There is no single prevention step that fits every virus. The Indonesian grade 10 science textbook compares transmission through mosquitoes, skin contact, body fluids, surfaces, and droplets. CDC explains respiratory illness prevention through steps such as cleaner air, hand hygiene, masking when risk is high, and staying home when sick in [Preventing Respiratory Illnesses](https://www.cdc.gov/respiratory-viruses/prevention/index.html).
+Virus prevention should begin with a simple question: how does the virus move? The route may involve respiratory droplets, hands and surfaces, blood or body fluids, food and water, or a vector such as a mosquito. A **vector** is an organism that carries a pathogen from one host to another.
+
+If the route is misread, the action can miss the target. Draining standing water helps reduce mosquitoes that carry certain viruses, but it does not directly stop droplet spread in a closed room. Masks, in the same way, do not replace mosquito breeding-site control.
+
+CDC summarizes common germ-spread routes in schools, including contact, cough and sneeze droplets, air, food or body fluids, and vectors such as mosquitoes; the summary is available at [CDC](https://www.cdc.gov/children-and-school-preparedness/infection-prevention/appendix-a.html).
 
 <VirusPreventionLab
-  title={<>Prevention route simulation</>}
-  description={<>Choose a strategy, then see which part of viral movement is interrupted.</>}
+  title={<>Cutting the route of viral movement</>}
+  description={
+    <>
+      The droplets move so prevention is seen as cutting a route at the correct
+      place, not memorizing disconnected advice.
+    </>
+  }
   labels={{
     chooseMode: "Choose a strategy",
-    detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model source",
-    structureLabel: "Route interrupted",
-    viewLabel: "3D virus prevention model",
-    sourceNote: <>The model follows examples from the Indonesian grade 10 science textbook and CDC respiratory infection prevention principles.</>,
+    focusLabel: "Route being cut",
+    takeawayLabel: "Prevention principle",
+    viewLabel: "3D virus spread prevention model",
     items: [
       {
         tab: "Distance",
-        label: "Distance",
-        structure: "Reduces the chance that droplets reach another person.",
-        caption: <>Distance does not kill viruses, but it lowers the chance that infectious particles move between people.</>,
-        detail: <>Particles are spread between two people to show the risk of close contact.</>,
+        caption: <>Droplets move from one person to another. More distance and better airflow lower the chance of reaching a host.</>,
+        focus: <>Notice the direction of particle movement, not only the position of two people.</>,
+        takeaway: <>Distance reduces exposure, especially when combined with ventilation during respiratory risk.</>,
       },
       {
-        tab: "Barrier",
-        label: "Barrier",
-        structure: "Masks or shields reduce particles leaving or entering.",
-        caption: <>Barriers make the most sense for droplet or aerosol routes, not for every transmission route.</>,
-        detail: <>Particles shrink when the barrier is active so the effect is visible without claiming perfect protection.</>,
+        tab: "Mask",
+        caption: <>The barrier shows droplets being blocked before they easily leave or enter through the nose and mouth.</>,
+        focus: <>A mask works best when it covers the nose to the chin and is used in the right situation.</>,
+        takeaway: <>A physical barrier must sit on the transmission route, or it becomes only a symbol of prevention.</>,
       },
       {
-        tab: "Hygiene",
-        label: "Hygiene",
-        structure: "Handwashing, disinfection, and vaccines reduce risk at different points.",
-        caption: <>Soap can help disrupt lipid envelopes in enveloped viruses. Vaccines train immune memory before serious exposure.</>,
-        detail: <>Soap is shown as a surface intervention, not as a replacement for vaccination or clean air.</>,
+        tab: "Soap",
+        caption: <>The fading particles show how hand or surface hygiene can reduce infectious material.</>,
+        focus: <>Soap helps because its molecules can disrupt the lipid layer of enveloped viruses.</>,
+        takeaway: <>Hand hygiene matters because hands often move from surfaces to the face.</>,
       },
     ],
   }}
 />
 
-## Strategies must match the risk
+## Every Route Has a Weak Point
 
-Dengue prevention centers on the mosquito vector, such as reducing breeding sites. HIV is linked to body fluids, so its prevention differs from flu prevention. Respiratory viruses are often discussed through ventilation, masks, cough etiquette, and isolation while sick.
+For respiratory spread, the weak points are air near the face, droplets, ventilation, and time spent indoors. For contact spread, the weak points are hands, surfaces, wounds, and the habit of touching the face. For mosquito-borne spread, the weak points are mosquito breeding places and the chance of mosquitoes biting humans.
 
-The rule is simple: find the virus exit point, the movement route, and the entry point into the next host. Strong prevention usually interrupts more than one point in that chain.
+That is why prevention is usually a combination. For respiratory viruses, distance, ventilation, masks during higher risk, and hand hygiene support one another. For mosquito-borne viruses, removing standing water, preventing bites, and monitoring the environment become more relevant.
 
-## Self-check
+## Vaccines and Medicines Work on Different Layers
 
-Why is handwashing not enough for every viral disease?
+A **vaccine** does not block droplets in the air. It trains the immune system so the body is better prepared to recognize a pathogen. Vaccines work inside the body, while masks, ventilation, and hygiene work on the movement route.
 
-Answer: viruses spread through different transmission routes.
+An **antiviral** is a medicine that inhibits a specific stage of viral replication. Some medicines are designed to limit the multiplication of certain viruses. This does not replace prevention habits, because medicines act after infection risk is handled medically.
 
-Explanation: handwashing helps with contact or surface routes, but viruses carried by mosquitoes, body fluids, or air need additional route-specific strategies.
+Think in layers: reduce the chance of movement, reduce the chance of entry, train body defense, and treat infection appropriately if it happens.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Read the transmission route"] --> B["Respiratory droplets"]
+    A --> C["Hands and surfaces"]
+    A --> D["Vectors such as mosquitoes"]
+    B --> E["Ventilation, distance, masks when risk fits"]
+    C --> F["Hand and surface hygiene"]
+    D --> G["Reduce breeding sites and prevent bites"]`}
+/>
+
+## Careful Prevention Always Asks for the Route
+
+Before choosing an action, bring the discussion back to the transmission route. If the route is droplets, improve air and barriers near the face. If the route is mosquitoes, watch breeding places and bites. If the route is contact, watch hands, surfaces, and wounds. In this way, prevention is not a random advice list, but a biological decision that matches the route.

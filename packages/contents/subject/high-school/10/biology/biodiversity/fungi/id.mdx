@@ -3,60 +3,84 @@ import { FungiGrowthLab } from "@repo/design-system/components/contents/biology/
 export const metadata = {
   title: "Fungi",
   description:
-    "Mengenal fungi sebagai organisme heterotrof yang menyerap nutrien melalui hifa, miselium, dan spora.",
+    "Mengenali fungi sebagai eukariot heterotrof yang tersusun dari hifa, membentuk miselium, menghasilkan spora, dan berperan sebagai pengurai.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
-  subject: "Keanekaragaman Makhluk Hidup",
+  subject: "Keanekaragaman Hayati",
 };
 
-## Fungi menyerap nutrien dari lingkungan
+## Benang Putih pada Tempe Bukan Akar
 
-Fungi bukan tumbuhan. Fungi adalah eukariot heterotrof, artinya memperoleh bahan organik dari organisme lain atau sisa organisme. Buku IPA SMA/MA Kelas X Bab VI menjelaskan hifa, miselium, dinding sel kitin, dan spora. OpenStax menjelaskan fungi sebagai heterotrof yang menyerap nutrien dan berperan sebagai pengurai pada [Characteristics of Fungi](https://openstax.org/books/biology-2e/pages/24-1-characteristics-of-fungi).
+Pada tempe, ada lapisan putih yang merekatkan biji kedelai. Lapisan itu bukan akar tumbuhan. Itu adalah pertumbuhan fungi. Contoh sederhana ini membantu kita melihat ciri penting fungi: tubuhnya dapat tersusun dari benang halus yang menyebar di bahan makanan.
+
+**Fungi** adalah organisme eukariotik heterotrof. **Eukariotik** berarti selnya memiliki inti bermembran. **Heterotrof** berarti tidak membuat makanan sendiri seperti tumbuhan berklorofil. Fungi memperoleh nutrien dengan menyerap bahan organik dari organisme hidup atau sisa organisme.
+
+Ciri fungi sebagai eukariot heterotrof yang memiliki hifa, miselium, dan spora juga dijelaskan dalam ringkasan karakteristik fungi di [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/24-1-characteristics-of-fungi).
 
 <FungiGrowthLab
-  title={<>Cara tubuh fungi bekerja</>}
-  description={<>Pilih mode untuk melihat jaringan hifa, pelepasan spora, atau hubungan fungi dengan akar dan bahan mati.</>}
+  title={<>Fungi sebagai jaringan penyerap</>}
+  description={
+    <>
+      Amati hifa yang bercabang, spora yang bergerak, dan hubungan fungi dengan
+      bahan organik. Gerakan kecil menunjukkan proses pertumbuhan dan penyebaran.
+    </>
+  }
   labels={{
-    chooseMode: "Pilih mode",
-    detailLabel: "Catatan akurasi",
-    sourceNoteLabel: "Rujukan model",
-    structureLabel: "Struktur yang dibaca",
-    viewLabel: "Model 3D fungi",
-    sourceNote: <>Model mengikuti Buku IPA SMA/MA Kelas X Bab VI dan OpenStax tentang hifa, miselium, spora, kitin, dan peran pengurai.</>,
+    chooseMode: "Pilih proses fungi",
+    focusLabel: "Yang diamati",
+    takeawayLabel: "Makna konsep",
+    viewLabel: "Model 3D pertumbuhan fungi",
     items: [
       {
         tab: "Hifa",
-        label: "Hifa",
-        structure: "Benang sel fungi yang menyerap nutrien.",
-        caption: <>Jaringan hifa membentuk miselium. Permukaan yang luas membantu fungi menyerap hasil penguraian.</>,
-        detail: <>Cabang pada model menggambarkan pertumbuhan menjelajah substrat, bukan satu spesies jamur tertentu.</>,
+        caption: <>Garis bercabang menunjukkan hifa yang membentuk miselium.</>,
+        focus: <>Perhatikan bahwa tubuh fungi dapat berupa jaringan benang, bukan batang dan daun.</>,
+        takeaway: <>Miselium memperluas permukaan sehingga fungi lebih efektif menyerap nutrien.</>,
       },
       {
         tab: "Spora",
-        label: "Spora",
-        structure: "Sel reproduksi yang dapat menyebar dan tumbuh.",
-        caption: <>Spora membantu fungi menyebar ke tempat baru saat kondisi mendukung.</>,
-        detail: <>Titik spora dibuat banyak karena satu tubuh buah dapat menghasilkan banyak spora.</>,
+        caption: <>Butiran bergerak ke atas sebagai gambaran spora yang dapat berpindah ke tempat baru.</>,
+        focus: <>Spora bukan biji; spora adalah sel reproduksi yang ringan dan kecil.</>,
+        takeaway: <>Penyebaran spora membantu fungi muncul di tempat yang kondisinya sesuai.</>,
       },
       {
         tab: "Peran",
-        label: "Peran",
-        structure: "Fungi dapat mengurai bahan mati atau bermutualisme dengan tumbuhan.",
-        caption: <>Mikoriza adalah hubungan fungi dan akar tumbuhan yang membantu pertukaran air dan nutrien.</>,
-        detail: <>Model menghubungkan kayu mati, jaringan hifa, dan akar untuk menekankan aliran materi.</>,
+        caption: <>Jalur hifa menghubungkan sisa organisme dengan tanah dan akar tanaman.</>,
+        focus: <>Fungi bekerja dengan menyentuh sumber makanan melalui hifa.</>,
+        takeaway: <>Sebagai pengurai, fungi mengembalikan materi dari sisa organisme ke ekosistem.</>,
       },
     ],
   }}
 />
 
-## Cara makan fungi berbeda dari hewan
+## Cara Makan Fungi Berbeda dari Hewan
 
-Hewan biasanya mencerna makanan di dalam tubuh. Fungi mengeluarkan enzim ke lingkungan, memecah molekul besar, lalu menyerap molekul yang lebih kecil. Inilah alasan fungi penting sebagai pengurai dalam ekosistem. Tanpa pengurai, unsur hara akan lebih lama terkunci dalam sisa makhluk hidup.
+Hewan biasanya memasukkan makanan ke tubuh, lalu mencernanya di dalam. Fungi melakukan pola yang berbeda. Fungi mengeluarkan enzim ke lingkungan, memecah bahan organik kompleks menjadi molekul lebih kecil, lalu menyerapnya.
 
-## Cek pemahaman
+Analogi sederhananya seperti melunakkan makanan di luar tubuh sebelum diminum sebagai sari. Karena cara makan ini, hifa sangat penting. Hifa adalah benang halus penyusun tubuh fungi. Kumpulan hifa disebut **miselium**. Semakin luas miselium, semakin besar permukaan yang dapat menyentuh makanan.
 
-Mengapa miselium membantu fungi mendapatkan nutrien?
+Dinding sel fungi mengandung **kitin**, bukan selulosa seperti dinding sel tumbuhan. Kitin juga ditemukan pada rangka luar serangga, sehingga fungi tidak tepat disebut tumbuhan kecil.
 
-Jawaban: miselium memperluas permukaan kontak dengan substrat.
+## Spora Membantu Fungi Menyebar
 
-Alasan: semakin luas jaringan hifa, semakin banyak area yang dapat mengeluarkan enzim dan menyerap hasil penguraian.
+Fungi dapat berkembang biak dengan spora, baik melalui cara seksual maupun aseksual tergantung jenisnya. Spora ringan dapat terbawa udara, air, atau menempel pada permukaan. Jika jatuh di tempat lembap dan tersedia bahan organik, spora dapat tumbuh menjadi hifa baru.
+
+Itulah sebabnya makanan lembap mudah ditumbuhi jamur. Kondisi lembap, nutrien tersedia, dan suhu yang sesuai membuat spora punya peluang untuk tumbuh.
+
+## Peran Fungi Selalu Perlu Konteks
+
+Fungi dapat menguntungkan, merugikan, atau netral tergantung konteks. Ragi membantu fermentasi. Jamur konsumsi menjadi bahan makanan. Fungi tanah membantu penguraian daun dan kayu. Namun fungi tertentu juga dapat merusak makanan, menyerang tanaman, atau menyebabkan penyakit.
+
+Jadi, pertanyaan yang tepat bukan hanya "fungi itu berguna atau merugikan", melainkan "fungi ini hidup di mana, memperoleh nutrien dari apa, dan dampaknya bagi organisme sekitar apa".
+
+<Mermaid
+  chart={`flowchart LR
+    A["Spora mendarat"] --> B["Hifa tumbuh"]
+    B --> C["Miselium meluas"]
+    C --> D["Enzim memecah bahan organik"]
+    D --> E["Nutrien diserap"]`}
+/>
+
+## Fungi Mengajarkan Cara Lain Menjadi Heterotrof
+
+Hewan mengejar atau mengambil makanan, lalu mencernanya di dalam tubuh. Fungi justru membentangkan hifa, memecah makanan di luar tubuh, lalu menyerap hasilnya. Karena itu lapisan putih pada tempe lebih mudah dipahami sebagai jaringan penyerap. Ia bukan akar, bukan daun, dan bukan lendir biasa, melainkan miselium yang sedang memanfaatkan bahan organik.

@@ -3,60 +3,84 @@ import { ClimateImpactLab } from "@repo/design-system/components/contents/biolog
 export const metadata = {
   title: "Dampak Perubahan Iklim",
   description:
-    "Menghubungkan perubahan iklim dengan terumbu karang, pangan, air, kesehatan, dan vektor penyakit.",
+    "Menelusuri dampak perubahan iklim pada terumbu karang, pangan dan air, kesehatan, habitat, migrasi spesies, serta kehidupan manusia.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Perubahan Iklim",
 };
 
-## Dampak iklim menjalar ke ekosistem
+## Dampak Iklim Menjalar Seperti Rantai
 
-Dampak perubahan iklim tidak hanya berupa suhu yang lebih panas. Buku IPA SMA/MA Kelas X Bab VIII membahas kekeringan, kebakaran, banjir, gangguan pertanian, pemutihan karang, perubahan rasio kelamin penyu, dan risiko penyakit. WHO menghubungkan perubahan iklim dengan kesehatan melalui panas ekstrem, kualitas udara, air, pangan, dan penyakit menular pada [Climate change and health](https://www.who.int/news-room/fact-sheets/detail/climate-change-and-health).
+Perubahan iklim jarang berhenti pada satu peristiwa. Udara lebih panas dapat membuat tanah lebih cepat kering. Tanah kering dapat menekan tanaman. Hasil panen turun dapat memengaruhi pangan. Jika air bersih berkurang, kesehatan manusia ikut terpengaruh.
+
+Jadi dampak iklim perlu dibaca sebagai rantai sebab-akibat. Satu perubahan fisik dapat merambat ke organisme, ekosistem, ekonomi, dan kesehatan.
+
+IPCC AR6 Synthesis Report menjelaskan bahwa perubahan iklim telah memengaruhi ekosistem, manusia, pangan, air, dan kesehatan di banyak wilayah; ringkasannya dapat dibuka di [IPCC](https://www.ipcc.ch/report/ar6/syr/).
 
 <ClimateImpactLab
-  title={<>Rantai dampak iklim</>}
-  description={<>Pilih contoh dampak untuk melihat bagaimana tekanan fisik dapat berubah menjadi masalah biologis.</>}
+  title={<>Tiga jalur dampak iklim</>}
+  description={
+    <>
+      Model memperlihatkan karang yang tertekan panas, tanaman yang kekurangan
+      air, dan risiko kesehatan yang bergerak lewat vektor.
+    </>
+  }
   labels={{
-    chooseMode: "Pilih dampak",
-    detailLabel: "Catatan akurasi",
-    sourceNoteLabel: "Rujukan model",
-    structureLabel: "Dampak yang dibaca",
-    viewLabel: "Model 3D dampak iklim",
-    sourceNote: <>Model mengikuti Buku IPA SMA/MA Kelas X Bab VIII, NASA Effects, dan WHO tentang dampak ekosistem dan kesehatan.</>,
+    chooseMode: "Pilih jalur dampak",
+    focusLabel: "Yang ditelusuri",
+    takeawayLabel: "Makna dampak",
+    viewLabel: "Model 3D dampak perubahan iklim",
     items: [
       {
         tab: "Karang",
-        label: "Karang",
-        structure: "Panas laut dapat memicu pemutihan karang.",
-        caption: <>Pemutihan karang adalah tanda stres. Jika tekanan berlanjut, ekosistem terumbu dapat melemah.</>,
-        detail: <>Warna karang dibuat kontras agar murid melihat perubahan dari hidup sehat ke stres.</>,
+        caption: <>Karang yang pucat menunjukkan tekanan panas pada ekosistem laut.</>,
+        focus: <>Perhatikan perubahan warna sebagai tanda stres biologis, bukan hiasan.</>,
+        takeaway: <>Pemanasan laut dapat mengganggu hubungan karang dengan alga simbiotik dan melemahkan ekosistem terumbu.</>,
       },
       {
         tab: "Pangan",
-        label: "Pangan dan air",
-        structure: "Panas dan kekeringan dapat menekan tanaman dan ketersediaan air.",
-        caption: <>Dampak pada pertanian terjadi lewat air, suhu, hama, dan kejadian ekstrem.</>,
-        detail: <>Tanaman miring dan kolam kecil menekankan stres, bukan kegagalan panen total.</>,
+        caption: <>Tanaman miring dan air yang sedikit menunjukkan tekanan pada pangan dan air.</>,
+        focus: <>Ikuti rantai dari panas ke air, lalu ke pertumbuhan tanaman.</>,
+        takeaway: <>Kekeringan dan pola hujan berubah dapat menurunkan hasil pertanian dan ketersediaan air.</>,
       },
       {
         tab: "Sehat",
-        label: "Kesehatan",
-        structure: "Perubahan suhu dan hujan dapat mengubah risiko penyakit tertentu.",
-        caption: <>Vektor penyakit seperti nyamuk dipengaruhi kondisi lingkungan, sehingga risiko dapat berubah antarwilayah.</>,
-        detail: <>Model menunjukkan vektor sebagai risiko ekologis, bukan prediksi lokasi penyakit.</>,
+        caption: <>Serangga bergerak menuju manusia untuk menggambarkan risiko penyakit yang dipengaruhi lingkungan.</>,
+        focus: <>Kondisi hangat dan basah dapat mengubah area hidup vektor tertentu.</>,
+        takeaway: <>Dampak kesehatan tidak hanya berasal dari panas langsung, tetapi juga dari perubahan habitat pembawa penyakit.</>,
       },
     ],
   }}
 />
 
-## Dampak sering terjadi lewat rantai sebab-akibat
+## Ekosistem Laut Merespons Lebih Cepat dari yang Terlihat
 
-Panas laut dapat menekan karang, karang yang melemah mengubah habitat ikan, lalu masyarakat pesisir dapat ikut terdampak. Kekeringan dapat menekan tanaman, menurunkan hasil panen, dan mengganggu ketersediaan pangan. Karena dampaknya berantai, solusi juga perlu lintas bidang.
+Terumbu karang tampak seperti batu, tetapi sebenarnya dibangun oleh hewan karang yang hidup bersama alga simbiotik. **Simbiosis** adalah hubungan dekat antara dua organisme. Saat laut terlalu hangat, hubungan itu dapat terganggu dan karang tampak memutih.
 
-## Cek pemahaman
+Pemutihan karang tidak selalu berarti karang langsung mati, tetapi itu tanda stres berat. Jika tekanan berlangsung lama, karang melemah, ikan kehilangan habitat, dan masyarakat pesisir yang bergantung pada terumbu ikut terdampak.
 
-Mengapa pemanasan laut dapat berdampak pada manusia yang tinggal jauh dari terumbu karang?
+## Pangan dan Air Terhubung dengan Musim
 
-Jawaban: karena terumbu karang terhubung dengan keanekaragaman hayati, perikanan, perlindungan pantai, dan ekonomi pesisir.
+Pertanian bergantung pada air, suhu, tanah, dan waktu tanam. Jika musim hujan bergeser, kekeringan memanjang, atau hujan turun terlalu ekstrem, tanaman dapat terganggu. Banjir dapat merusak lahan, sementara kekeringan dapat membuat tanaman tidak cukup air.
 
-Alasan: perubahan pada satu ekosistem dapat menjalar ke jaringan pangan dan aktivitas manusia.
+Dampak pada pangan tidak hanya terjadi di sawah. Peternakan, perikanan, dan distribusi makanan juga dapat terganggu oleh cuaca ekstrem. Karena itu perubahan iklim menjadi masalah biologi sekaligus masalah kehidupan sehari-hari.
+
+## Kesehatan Terpengaruh Lewat Banyak Pintu
+
+Panas ekstrem dapat menyebabkan kelelahan panas. Banjir dapat meningkatkan risiko penyakit yang berkaitan dengan air tercemar. Kekeringan dapat mengurangi air bersih. Perubahan suhu dan hujan juga dapat memengaruhi wilayah hidup vektor seperti nyamuk.
+
+Pada hewan liar, perubahan iklim dapat memicu perpindahan habitat. Jika suatu spesies bergerak mencari suhu yang lebih cocok, hubungan makan-dimakan dan persaingan di tempat baru bisa berubah. Inilah sebabnya perubahan iklim dapat menekan keanekaragaman hayati.
+
+<Mermaid
+  chart={`flowchart LR
+    A["Panas atau hujan berubah"] --> B["Air dan habitat berubah"]
+    B --> C["Organisme tertekan"]
+    C --> D["Pangan, kesehatan, dan ekosistem ikut berubah"]
+    D --> E["Dampak terasa pada manusia"]`}
+/>
+
+## Dampak Terbesar Sering Muncul setelah Rantai Berjalan
+
+Contoh karang membantu kita membaca dampak iklim dengan lebih pelan. Panas laut tidak hanya membuat air terasa lebih hangat. Panas dapat mengganggu simbiosis karang, lalu karang memutih, lalu tempat berlindung ikan melemah, lalu nelayan dan masyarakat pesisir ikut menerima akibatnya.
+
+Pola yang sama bisa terjadi pada pangan, air, dan kesehatan. Karena itu dampak perubahan iklim tidak cukup dibaca dari peristiwa awal. Yang penting adalah menelusuri jalan dampaknya sampai organisme dan manusia yang bergantung pada sistem itu.

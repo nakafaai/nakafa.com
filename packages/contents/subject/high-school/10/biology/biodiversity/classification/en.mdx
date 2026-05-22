@@ -1,62 +1,84 @@
 import { ClassificationLab } from "@repo/design-system/components/contents/biology/classification";
 
 export const metadata = {
-  title: "Classification of Living Organisms",
+  title: "Classification of Living Things",
   description:
-    "Understand artificial, natural, and phylogenetic classification as ways to find patterns in living things.",
+    "Understand artificial, natural, and phylogenetic classification as ways to organize living things from different grouping reasons.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
-  subject: "Biodiversity of Living Organisms",
+  subject: "Biodiversity",
 };
 
-## Classification helps us find patterns
+## Start with the Reason for Grouping
 
-Classification means grouping living things based on chosen traits. The Indonesian grade 10 science textbook distinguishes artificial, natural, and phylogenetic classification. OpenStax explains that modern systematics organizes life's diversity through evolutionary relationships in [Organizing Life on Earth](https://openstax.org/books/biology-2e/pages/20-1-organizing-life-on-earth).
+Classification is the grouping of living things based on certain traits or relationships. Its purpose is not to create a long list of names, but to help us recognize patterns within biodiversity.
+
+One organism can enter different groups when the grouping reason changes. Chili can be grouped as a food plant because humans use it. Chili can also be discussed as a flowering plant because it has certain biological traits. If its relatedness is traced further, chili is placed according to evolutionary origin.
+
+Modern biology uses classification to organize biodiversity and read relationships among organisms; an introduction to this system is available in [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/20-1-organizing-life-on-earth).
 
 <ClassificationLab
-  title={<>Ways to group organisms</>}
-  description={<>Compare grouping by visible traits, multiple natural traits, and evolutionary relatedness.</>}
+  title={<>The reason behind a group name</>}
+  description={
+    <>
+      Three views separate grouping by use, organism traits, and relatedness
+      branches. The moving objects make the chosen basis visible.
+    </>
+  }
   labels={{
-    chooseMode: "Choose a classification",
-    detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model source",
-    structureLabel: "Grouping basis",
-    viewLabel: "3D classification model",
-    sourceNote: <>The model follows artificial, natural, and phylogenetic classification in the Indonesian grade 10 science textbook.</>,
+    chooseMode: "Choose a classification basis",
+    focusLabel: "Decision basis",
+    takeawayLabel: "What to remember",
+    viewLabel: "3D living thing classification model",
     items: [
       {
         tab: "Artificial",
-        label: "Artificial",
-        structure: "Groups by traits that are easy to observe or useful for a purpose.",
-        caption: <>Artificial classification is quick, but it can place unrelated organisms together.</>,
-        detail: <>The boxes show practical groups, not evolutionary relationships.</>,
+        caption: <>The grouping boxes show organisms arranged by practical traits, such as use or easy observation.</>,
+        focus: <>Ask why humans made that group.</>,
+        takeaway: <>Artificial classification is useful, but it does not necessarily show biological relatedness.</>,
       },
       {
         tab: "Natural",
-        label: "Natural",
-        structure: "Groups by many similarities in structure and function.",
-        caption: <>Natural classification is more stable because it does not rely on one surface trait.</>,
-        detail: <>The five columns recall kingdom-level patterns discussed in grade 10 biology.</>,
+        caption: <>Different markers represent large groups such as bacteria, protists, fungi, plants, and animals.</>,
+        focus: <>Compare body structure, food source, cell organization, and life pattern.</>,
+        takeaway: <>Natural classification uses more traits, so it is stronger than one practical trait alone.</>,
       },
       {
         tab: "Phylogeny",
-        label: "Phylogeny",
-        structure: "Groups by evolutionary relatedness.",
-        caption: <>Phylogenetic classification asks which organisms share a closer common ancestor.</>,
-        detail: <>The branches simplify relatedness; they are not a full phylogenetic tree.</>,
+        caption: <>The branches move slowly to show that phylogenetic classification reads closeness of origin.</>,
+        focus: <>Which groups share a closer common ancestor?</>,
+        takeaway: <>Phylogenetic classification can change older groups when evidence about relationships becomes more complete.</>,
       },
     ],
   }}
 />
 
-## A group name needs a reason
+## Three Methods That Are Easy to Confuse
 
-Good classification is not only naming. It helps us predict traits. If two organisms are grouped because they are closely related, we can expect patterns in structure, physiology, or genes. That is why phylogenetic classification explains biological relationships better than grouping only by color, size, or habitat.
+Artificial classification uses traits chosen for a particular need. Examples include medicinal plants, ornamental plants, or animals that can fly. These groups are practical, but they may mix organisms that are not close relatives. Birds, bats, and insects can all fly, but that does not make them one close evolutionary group.
 
-## Self-check
+Natural classification uses many organism traits. The comparison may include body form, food source, cell organization, or reproduction pattern. The five-kingdom system is one way to read organisms from broad traits: Monera, Protista, Fungi, Plantae, and Animalia.
 
-Why are bats not grouped with birds just because both can fly?
+Phylogenetic classification reads evolutionary relationships. Evidence may include body structure, development, and DNA similarity. With new evidence, an organism's position can change. That is why scientific classification is not only memorizing boxes, but following reasons and evidence.
 
-Answer: flight is one visible trait, not the strongest evidence of relatedness.
+<Mermaid
+  chart={`flowchart TD
+    A["Why are organisms grouped?"] --> B["For human use"]
+    A --> C["Because biological traits match"]
+    A --> D["Because relatedness is close"]
+    B --> E["Artificial classification"]
+    C --> F["Natural classification"]
+    D --> G["Phylogenetic classification"]`}
+/>
 
-Explanation: good classification considers many traits and evolutionary relationships, not one practical trait.
+## A Taxon Is Like an Address Level
+
+In classification, a **taxon** is a group level. From broad to specific, the order can be read as kingdom, phylum or division, class, order, family, genus, and species.
+
+A simple analogy is an address. A country is broader than a province, a province is broader than a city, and a city is broader than a house. In biology, a kingdom is broader than a species. The smaller the taxon level, the more similar the organisms usually are.
+
+But the address alone is not enough. Two organisms may share a group name for different reasons. So when you see a group name, ask: was this group made for use, body traits, or relatedness?
+
+## A Group Name Must Always Have a Defensible Reason
+
+If a group uses only one practical trait, the result can be useful but narrow. The group "animals that can fly" helps everyday conversation, but it mixes birds, bats, and insects with different origins. In biology class, a group name becomes stronger when the grouping reason is clear and the evidence fits the goal.

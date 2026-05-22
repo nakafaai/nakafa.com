@@ -4,15 +4,19 @@ import {
   BIOLOGY_RING_POINT_COUNT,
   type BiologyLabProps,
   type BiologySceneProps,
-  createBiologyRingPoints,
+  createBiologySpherePoints,
 } from "@repo/design-system/components/contents/biology/data";
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
 import {
-  BiologySceneTitle,
+  FloatingGroup,
+  PulsingGroup,
   RotatingGroup,
 } from "@repo/design-system/components/contents/biology/parts";
 
-const CAPSID_POINTS = createBiologyRingPoints(BIOLOGY_RING_POINT_COUNT, 1.18);
+const CAPSID_POINTS = createBiologySpherePoints(
+  BIOLOGY_RING_POINT_COUNT * 2,
+  1.12
+);
 
 /**
  * Renders the virus structure lab with capsid, genome, and envelope focus modes.
@@ -24,18 +28,14 @@ export function VirusStructureLab(props: BiologyLabProps) {
 /**
  * Shows that a virion is genetic material packaged in protein, sometimes with an envelope.
  */
-function VirusStructureScene({
-  colors,
-  item,
-  selectedIndex,
-}: BiologySceneProps) {
+function VirusStructureScene({ colors, selectedIndex }: BiologySceneProps) {
   const isCapsidFocus = selectedIndex === 0;
   const isGenomeFocus = selectedIndex === 1;
   const isEnvelopeFocus = selectedIndex === 2;
 
   return (
     <group>
-      <RotatingGroup>
+      <RotatingGroup speed={0.08}>
         <mesh>
           <icosahedronGeometry args={[1, 2]} />
           <meshStandardMaterial
@@ -53,12 +53,14 @@ function VirusStructureScene({
           </mesh>
         ))}
 
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusKnotGeometry
-            args={[0.45, isGenomeFocus ? 0.055 : 0.03, 96, 8]}
-          />
-          <meshStandardMaterial color={colors.genome} />
-        </mesh>
+        <PulsingGroup speed={1.8} strength={isGenomeFocus ? 0.08 : 0.03}>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <torusKnotGeometry
+              args={[0.45, isGenomeFocus ? 0.055 : 0.03, 96, 8]}
+            />
+            <meshStandardMaterial color={colors.genome} />
+          </mesh>
+        </PulsingGroup>
 
         <mesh visible={isEnvelopeFocus}>
           <sphereGeometry args={[1.34, 48, 32]} />
@@ -69,23 +71,26 @@ function VirusStructureScene({
           />
         </mesh>
 
-        {CAPSID_POINTS.map((point) => (
-          <mesh
+        {CAPSID_POINTS.map((point, index) => (
+          <FloatingGroup
             key={`spike-${point.id}`}
-            position={[
-              point.position[0] * 1.18,
-              0.18,
-              point.position[2] * 1.18,
-            ]}
-            visible={isEnvelopeFocus}
+            phase={index * 0.35}
+            travel={0.035}
           >
-            <coneGeometry args={[0.08, 0.28, 12]} />
-            <meshStandardMaterial color={colors.microbe} />
-          </mesh>
+            <mesh
+              position={[
+                point.position[0] * 1.18,
+                point.position[1] * 1.18,
+                point.position[2] * 1.18,
+              ]}
+              visible={isEnvelopeFocus}
+            >
+              <sphereGeometry args={[0.075, 12, 10]} />
+              <meshStandardMaterial color={colors.microbe} />
+            </mesh>
+          </FloatingGroup>
         ))}
       </RotatingGroup>
-
-      <BiologySceneTitle color={colors.text}>{item.label}</BiologySceneTitle>
     </group>
   );
 }

@@ -3,60 +3,84 @@ import { ClimateCauseLab } from "@repo/design-system/components/contents/biology
 export const metadata = {
   title: "Causes of Climate Change",
   description:
-    "Explain the greenhouse effect, greenhouse gases, fossil fuels, land-use change, and organic waste.",
+    "Understand the greenhouse effect, greenhouse gases, fossil fuel combustion, land-use change, organic waste, plastic, and human activities that increase warming.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Climate Change",
 };
 
-## Greenhouse gases change Earth's energy balance
+## The Greenhouse Effect Is Useful, but It Can Be Strengthened Too Much
 
-The natural greenhouse effect helps keep Earth habitable. The problem appears when greenhouse gas concentration rises and more heat is retained. The Indonesian grade 10 science textbook emphasizes carbon dioxide, methane, fossil fuels, land-use change, refrigerants, vehicles, plastics, and organic waste. NASA explains the human role in increasing greenhouse gases in [Climate Change Causes](https://science.nasa.gov/climate-change/causes/).
+The **greenhouse effect** is the process in which certain gases in the atmosphere hold back some of the heat emitted by Earth. Without this process, Earth would be much colder. The problem begins when greenhouse gas concentrations rise and more heat is retained.
+
+**Greenhouse gases** include carbon dioxide, methane, nitrous oxide, and some synthetic gases. These gases do not work like a visible thick blanket, but the effect can be imagined like greenhouse glass: sunlight enters, then some heat has more difficulty escaping back to space.
+
+The IPCC AR6 Synthesis Report states that warming is mainly driven by greenhouse gas emissions from human activities; the summary is available at [IPCC](https://www.ipcc.ch/report/ar6/syr/).
 
 <ClimateCauseLab
-  title={<>Mechanism and sources</>}
-  description={<>Choose a mode to separate atmospheric physics from human emission sources.</>}
+  title={<>From mechanism to gas sources</>}
+  description={
+    <>
+      The model separates heat retention, combustion sources, and land or waste
+      changes. Moving particles show flows of gas and heat.
+    </>
+  }
   labels={{
     chooseMode: "Choose a cause",
-    detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model source",
-    structureLabel: "Cause to read",
-    viewLabel: "3D climate causes model",
-    sourceNote: <>The model follows the Indonesian grade 10 science textbook and NASA on the greenhouse effect, fossil fuels, land-use change, and waste.</>,
+    focusLabel: "Process being read",
+    takeawayLabel: "Cause key",
+    viewLabel: "3D climate change causes model",
     items: [
       {
         tab: "Effect",
-        label: "Greenhouse effect",
-        structure: "Some gases retain part of Earth's outgoing infrared radiation.",
-        caption: <>The greenhouse effect is not automatically bad. The problem is strengthening it with extra greenhouse gases.</>,
-        detail: <>The transparent atmosphere and separate gas particles make heat retention easier to read.</>,
+        caption: <>The gas ring and heat arrows show that the issue is not sunlight entering, but more heat being retained.</>,
+        focus: <>Separate the natural greenhouse effect from human-driven greenhouse gas increase.</>,
+        takeaway: <>The natural greenhouse effect is important, but excess greenhouse gas strengthens warming.</>,
       },
       {
         tab: "Fossil",
-        label: "Fossil fuels",
-        structure: "Burning coal, oil, and gas adds CO2 to the atmosphere.",
-        caption: <>Fossil energy moves carbon long stored underground into the atmosphere.</>,
-        detail: <>The car and smokestack are source symbols, not a complete emission inventory.</>,
+        caption: <>Carbon particles move from a combustion source into the air.</>,
+        focus: <>Burning fossil fuels moves stored carbon into the atmosphere as carbon dioxide.</>,
+        takeaway: <>Transport, industry, and fossil-fueled power generation are major sources of added carbon dioxide.</>,
       },
       {
         tab: "Land",
-        label: "Land and waste",
-        structure: "Deforestation reduces carbon uptake, while organic waste can produce methane.",
-        caption: <>Land change and waste management affect the amount of greenhouse gases in the atmosphere.</>,
-        detail: <>Fallen wood and gas bubbles mark two pathways: lost uptake and released emissions.</>,
+        caption: <>Disturbed land and waste show that climate causes do not come only from vehicles.</>,
+        focus: <>Forest change, organic waste, and product production also alter carbon flow.</>,
+        takeaway: <>Loss of carbon sinks and emissions from waste increase greenhouse gas imbalance.</>,
       },
     ],
   }}
 />
 
-## There is not only one cause
+## Combustion Moves Carbon into the Atmosphere
 
-Modern climate change comes from combined activities that increase greenhouse gases and reduce carbon sinks. Because causes are spread across energy, transport, land, food, and waste, the discussion must be systemic. One habit change helps, but large change needs policy, technology, and changes in production.
+Fossil fuels form from carbon stored for a very long time below Earth's surface. When coal, oil, or gas is burned, that carbon reacts with oxygen and produces carbon dioxide.
 
-## Self-check
+Carbon dioxide is not the only greenhouse gas, but its amount is large because many human activities use energy from fossil fuels. Vehicles, factories, power plants, and industrial processes can add carbon dioxide to the atmosphere.
 
-Why is the greenhouse effect not the same as climate change?
+Vehicle catalysts can reduce some harmful pollutants, but they do not remove the basic fact that fuel combustion still produces carbon dioxide.
 
-Answer: the greenhouse effect is a natural heat-retention mechanism, while climate change occurs when that mechanism strengthens and shifts long-term climate patterns.
+## Land, Waste, and Plastic Also Change Carbon Flow
 
-Explanation: without the greenhouse effect Earth would be too cold, but added greenhouse gases retain more heat.
+Forests absorb carbon through photosynthesis and store it in biomass. When forests are cut or burned, carbon uptake decreases and stored carbon can return to the air. A low-diversity monoculture does not always replace the complex ecosystem functions of a forest.
+
+Organic waste can produce carbon dioxide or methane while decomposing. **Methane** is a strong greenhouse gas. Waste that accumulates without proper management makes decomposition gases harder to control.
+
+Plastic is also connected with climate through production, energy use, and disposal. Tiny plastic fragments, or microplastics, are often discussed as pollution, but the production and waste chain remains connected with energy use.
+
+<Mermaid
+  chart={`flowchart LR
+    A["Fossil fuels"] --> B["Carbon dioxide"]
+    C["Organic waste"] --> D["Methane"]
+    E["Forest change"] --> F["Carbon uptake falls"]
+    B --> G["More heat is retained"]
+    D --> G
+    F --> G`}
+/>
+
+## Causes Are Read through Carbon Flow
+
+Gasoline burning in vehicles mainly adds carbon dioxide because carbon-based fuel reacts with oxygen during combustion. This gives a useful way to read climate causes: follow the human activity, the gas or carbon balance it changes, and the extra heat retained afterward.
+
+If the activity burns fossil fuels, carbon dioxide is the main trail. If organic waste decomposes without control, methane matters. If forests are damaged, the problem is not only gas released to the air, but also the loss of carbon uptake.

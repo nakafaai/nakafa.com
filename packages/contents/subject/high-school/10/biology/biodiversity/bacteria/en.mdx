@@ -3,60 +3,86 @@ import { BacteriaStructureLab } from "@repo/design-system/components/contents/bi
 export const metadata = {
   title: "Bacteria",
   description:
-    "Meet bacteria as prokaryotic cells through shape, structure, cell wall organization, and roles.",
+    "Recognize bacteria as prokaryotic cells with coccus, bacillus, spiral forms, nucleoids, ribosomes, cell walls, and roles in life.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
-  subject: "Biodiversity of Living Organisms",
+  subject: "Biodiversity",
 };
 
-## Bacteria are prokaryotic cells
+## When Food Changes Because of Microorganisms
 
-Bacteria are unicellular prokaryotes. Prokaryotic means their cells do not have a membrane-bound nucleus. The Indonesian grade 10 science textbook emphasizes bacterial shapes such as coccus, bacillus, and spiral forms, plus structures such as cell wall, membrane, cytoplasm, ribosomes, and nucleoid. OpenStax explains common prokaryotic shapes and structures in [Structure of Prokaryotes: Bacteria and Archaea](https://openstax.org/books/biology-2e/pages/22-2-structure-of-prokaryotes-bacteria-and-archaea).
+Milk can become yogurt, soybeans can be helped through fermentation, and food kept too long can spoil. These changes remind us that microorganisms are not always visible, but their activity is real.
+
+**Bacteria** are unicellular prokaryotic organisms. **Unicellular** means the body consists of one cell. **Prokaryotic** means the genetic material is not enclosed by a nuclear membrane. Bacteria are living cells, but their internal organization differs from animal, plant, or fungal cells.
+
+Prokaryotic structures such as the plasma membrane, cell wall, nucleoid, and ribosomes are discussed as core bacterial features in [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/22-2-structure-of-prokaryotes-bacteria-and-archaea).
 
 <BacteriaStructureLab
-  title={<>Bacterial shape and parts</>}
-  description={<>Choose a focus to read cell shape, internal structure, or bacterial wall layers.</>}
+  title={<>Reading bacteria from shape to cell wall</>}
+  description={
+    <>
+      The model separates outer shape, prokaryotic contents, and cell-wall layers.
+      Moving parts keep the structure from reading as a static diagram.
+    </>
+  }
   labels={{
-    chooseMode: "Choose a focus",
-    detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model source",
-    structureLabel: "Part to read",
-    viewLabel: "3D bacteria model",
-    sourceNote: <>The model follows the Indonesian grade 10 science textbook and OpenStax on cocci, bacilli, spirilla, nucleoid, ribosomes, and cell walls.</>,
+    chooseMode: "Choose a bacterial view",
+    focusLabel: "Part to observe",
+    takeawayLabel: "Short conclusion",
+    viewLabel: "3D bacterial structure model",
     items: [
       {
-        tab: "Shapes",
-        label: "Shapes",
-        structure: "Coccus, bacillus, and spiral are common bacterial shapes.",
-        caption: <>Shape helps early identification, but it is not enough to determine full taxonomy.</>,
-        detail: <>The three forms are placed side by side for direct visual comparison.</>,
+        tab: "Shape",
+        caption: <>Spherical, rod-shaped, and spiral forms help early recognition of bacteria.</>,
+        focus: <>Shape shows morphology, not the entire bacterial identity.</>,
+        takeaway: <>Strong identification still needs other traits, not only outer form.</>,
       },
       {
-        tab: "Structure",
-        label: "Structure",
-        structure: "Bacteria have a membrane, cytoplasm, ribosomes, and a nucleoid without a nuclear membrane.",
-        caption: <>The nucleoid is the DNA region in bacteria. It differs from a eukaryotic nucleus because it is not membrane-bound.</>,
-        detail: <>Small dots represent ribosomes, and the central strand represents DNA in the nucleoid.</>,
+        tab: "Inside",
+        caption: <>The nucleoid contains bacterial DNA, while ribosomes are spread through the cytoplasm to make proteins.</>,
+        focus: <>There is no membrane-bound nucleus, but DNA and ribosomes are still present.</>,
+        takeaway: <>Bacteria live as cells because they have a membrane, cytoplasm, DNA, ribosomes, and metabolism.</>,
       },
       {
         tab: "Wall",
-        label: "Cell wall",
-        structure: "Bacterial cell walls contain peptidoglycan.",
-        caption: <>Wall organization helps explain Gram-positive and Gram-negative staining patterns.</>,
-        detail: <>The layers are stacked to show architecture, not real scale thickness.</>,
+        caption: <>The stacked layers represent wall differences read in Gram staining.</>,
+        focus: <>Compare peptidoglycan thickness and the presence of an outer membrane.</>,
+        takeaway: <>The cell wall helps determine how bacteria are recognized, protected, and treated.</>,
       },
     ],
   }}
 />
 
-## Bacteria are not always harmful
+## Shape Is an Early Clue
 
-Some bacteria cause disease, but many are useful. The Indonesian grade 10 science textbook gives examples in food, biotechnology, vitamins, and bioremediation. So the biological question is not "good or bad bacteria" but: which species, where does it live, and what does it interact with?
+Bacteria are extremely small, generally on the micrometer scale. Common forms include **coccus**, or spherical bacteria; **bacillus**, or rod-shaped bacteria; and spiral forms. Cocci can appear in pairs, chains, or clusters. Bacilli can also be single or arranged in groups.
 
-## Self-check
+Shape helps during early observation, but it should not be the endpoint. Two rod-shaped bacteria may have different lifestyles, cell walls, or effects. Biology reads shape together with structure, metabolism, and habitat.
 
-What is the key difference between a bacterial nucleoid and an animal cell nucleus?
+## A Prokaryotic Cell Still Has Working Parts
 
-Answer: the nucleoid is not enclosed by a nuclear membrane, while an animal cell nucleus is.
+The inside of a bacterium is simpler than a eukaryotic cell, but it is not empty. Bacterial DNA is located in the **nucleoid** region. **Ribosomes** make proteins. The cell membrane controls movement of substances. The cytoplasm is where many reactions happen.
 
-Explanation: bacteria are prokaryotic; animal cells are eukaryotic.
+Many bacteria have cell walls containing **peptidoglycan**, a molecular network that gives shape and protection. Gram-positive bacteria tend to have a thick peptidoglycan layer. Gram-negative bacteria have a thinner peptidoglycan layer and an outer membrane. This outer membrane can affect resistance to certain substances.
+
+## Bacteria Are Not Only Disease Agents
+
+Some bacteria cause disease, but many bacteria have useful roles. Some help make yogurt, cheese, or nata de coco. Others help decompose remains, produce vitamins, support genetic engineering, or contribute to bioremediation. **Bioremediation** means using organisms to help break down pollutants.
+
+So bacteria should be read with balance. The question is not simply "good or bad bacteria", but "where does this bacterium live, what process does it use, and what effect does it have on other organisms".
+
+<Mermaid
+  chart={`flowchart LR
+    A["Outer shape"] --> B["Morphology clue"]
+    C["Cell contents"] --> D["Nucleoid, ribosomes, cytoplasm"]
+    E["Cell wall"] --> F["Protection and Gram staining"]
+    B --> G["Bacterial identity is read more fully"]
+    D --> G
+    F --> G`}
+/>
+
+## Bacteria Are Read as Simple Cells, Not Empty Cells
+
+Prokaryotic does not mean unorganized. Bacteria do not have a membrane-bound nucleus, but they still have a membrane, cytoplasm, DNA, ribosomes, cell walls in many types, and metabolic processes.
+
+Their structural simplicity helps bacteria live in many environments and respond quickly to change. That is why bacteria are better read as efficient small cells, not empty cells.

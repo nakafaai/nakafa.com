@@ -1,78 +1,76 @@
 import { VirusReplicationLab } from "@repo/design-system/components/contents/biology/virus-replication";
 
 export const metadata = {
-  title: "How Do Viruses Reproduce?",
+  title: "How Viruses Reproduce",
   description:
-    "Follow attachment, entry, synthesis, assembly, and release inside a host cell.",
+    "Understand viral replication through lytic and lysogenic cycles, from attachment to the release of new virus particles.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
-  subject: "Viruses and Their Role",
+  subject: "Viruses and Their Roles",
 };
 
-## Viruses replicate inside host cells
+## Viruses Do Not Divide Like Cells
 
-Viruses do not divide like bacteria. Viral replication means producing new virus particles by using the machinery of a host cell. The Indonesian grade 10 science textbook summarizes the stages as attachment, penetration, synthesis, assembly, and lysis or release. OpenStax also explains that many viruses attach to host receptors before entering and completing replication inside the cell in [Viral Morphology](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
+Bacteria can divide from one cell into two cells. Viruses do not reproduce that way. A virus reproduces by delivering its genome into a host cell and redirecting that cell's machinery to make new viral components.
+
+Picture the host cell as a workshop that already has workers, tools, and materials. The virus arrives with instructions. Once those instructions enter, the workshop can be redirected to make capsids, copy the viral genome, assemble new virions, and release them.
+
+Attachment to a matching host-cell receptor is an important starting point before infection proceeds; the host and infection concept is summarized in [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/21-2-virus-infections-and-hosts).
 
 <VirusReplicationLab
-  title={<>Viral replication sequence</>}
-  description={<>Move from left to right. Watch how one particle can lead to many after the host cell is used.</>}
+  title={<>Two fates for a viral genome</>}
+  description={
+    <>
+      Compare the lytic cycle, which quickly makes new virions, with the
+      lysogenic cycle, which stores the viral genome first.
+    </>
+  }
   labels={{
-    chooseMode: "Choose a stage",
-    detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model source",
-    structureLabel: "Stage to read",
+    chooseMode: "Choose a replication cycle",
+    focusLabel: "Key event",
+    takeawayLabel: "How to read it",
     viewLabel: "3D viral replication model",
-    sourceNote: <>The stages follow the Indonesian grade 10 science textbook: attachment, penetration, synthesis, assembly, and release.</>,
     items: [
       {
-        tab: "Attach",
-        label: "Attach",
-        structure: "Viral proteins recognize receptors on the host cell surface.",
-        caption: <>Attachment decides which cells can be infected. Without receptor fit, infection usually cannot continue.</>,
-        detail: <>The virus sits at the cell edge to emphasize first contact with the host surface.</>,
+        tab: "Lytic",
+        caption: <>The moving particle follows the lytic order: attachment, entry, synthesis, assembly, and release.</>,
+        focus: <>Notice that new viruses do not appear by one virus splitting into two.</>,
+        takeaway: <>In the lytic cycle, the host cell is used to make many viral parts before new virions are released.</>,
       },
       {
-        tab: "Enter",
-        label: "Enter",
-        structure: "Viral genetic material enters the host cell.",
-        caption: <>At this point the viral genome reaches a space where it can use host machinery.</>,
-        detail: <>The model separates capsid and genome so the movement of genetic information is visible.</>,
-      },
-      {
-        tab: "Synthesize",
-        label: "Synthesize",
-        structure: "The host cell makes viral genome copies and proteins.",
-        caption: <>Synthesis means building new components. Here, the host cell is redirected to make viral parts.</>,
-        detail: <>Small particles increase to represent components being produced.</>,
-      },
-      {
-        tab: "Assemble",
-        label: "Assemble",
-        structure: "Genome and proteins are put together into new virions.",
-        caption: <>Assembly turns separate parts into particles ready for release.</>,
-        detail: <>More particles are shown because viral components are now being packaged.</>,
-      },
-      {
-        tab: "Release",
-        label: "Release",
-        structure: "New virions leave the cell and may damage the host cell.",
-        caption: <>In a lytic cycle, release can rupture the cell. Some viruses exit by budding instead.</>,
-        detail: <>The model does not claim all viruses lyse cells. It shows the shared result: new virions leave.</>,
+        tab: "Lysogenic",
+        caption: <>The small ring represents viral genetic material carried with the host cell DNA before later activation.</>,
+        focus: <>This stage does not immediately produce many new virions.</>,
+        takeaway: <>In lysogeny, viral information can persist inside the host cell and later shift toward the lytic cycle.</>,
       },
     ],
   }}
 />
 
-## Lytic and lysogenic cycles differ by genome behavior
+## Read the Lytic Cycle from the Entry Point
 
-In the lytic cycle, production of new virions proceeds quickly until the cell is damaged or ruptured. In the lysogenic cycle, viral genetic material can remain with the host's genetic material before becoming active again. The key difference is not just speed. It is whether the viral genome immediately produces particles or waits inside the cell.
+The lytic cycle begins with **adsorption**, attachment of the virus to the host cell. Attachment depends on a match between viral proteins and cell receptors. If the biological key does not fit the handle, replication is unlikely to begin.
 
-Read the process this way: viruses do not give birth. A host cell is temporarily turned into a production site.
+After attachment comes **penetration**, when the virus delivers its genome or essential part into the cell. The next stage is **synthesis**, when the host cell is directed to copy viral genomes and make capsid proteins. When the materials are ready, **assembly** builds new virions. In many lytic examples, the cell then undergoes **lysis**, the breaking of the cell so new virions can exit.
 
-## Self-check
+The order matters because each stage answers a different question. Attachment asks "which cell fits". Synthesis asks "where are viral parts made". Assembly asks "how does the new package form". Release asks "how do viruses reach other cells".
 
-Why can attachment determine which cell type a virus infects?
+<Mermaid
+  chart={`flowchart LR
+    A["Adsorption: virus attaches"] --> B["Penetration: genome enters"]
+    B --> C["Synthesis: genome and proteins are made"]
+    C --> D["Assembly: new virions form"]
+    D --> E["Lysis: virions exit"]`}
+/>
 
-Answer: attachment depends on a match between viral proteins and receptors on the cell surface.
+## Lysogeny Does Not Mean the Virus Vanished
 
-Explanation: without a matching receptor, entry is difficult and the later replication stages do not happen.
+In the lysogenic cycle, the viral genome does not immediately command the cell to make many virions. The genome can integrate or be carried with the host genetic material. When the host cell divides, viral information can be copied too.
+
+That is why lysogeny may look quiet, but it does not mean the virus is gone. If certain conditions trigger a change, the viral genome can become active and shift into the lytic pattern. Think of it as a note stored inside the cell's work notebook. The note is not always read immediately, but it remains there.
+
+## Replication Is Always Read as an Order
+
+The confusing part is often separating synthesis from assembly. Synthesis means the host cell is making materials: genomes are copied and capsid proteins are produced. Assembly means those materials are being put together into new virions.
+
+So do not picture a virus growing larger and splitting. In viral replication, parts are made first and then arranged. This explains why viruses can increase quickly once they successfully take over host-cell machinery.

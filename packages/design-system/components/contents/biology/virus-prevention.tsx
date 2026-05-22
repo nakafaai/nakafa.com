@@ -6,7 +6,10 @@ import {
   createBiologyGridPoints,
 } from "@repo/design-system/components/contents/biology/data";
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
-import { BiologySceneTitle } from "@repo/design-system/components/contents/biology/parts";
+import {
+  PulsingGroup,
+  SlidingGroup,
+} from "@repo/design-system/components/contents/biology/parts";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 
 const DROPLETS = createBiologyGridPoints(3, 5);
@@ -21,11 +24,7 @@ export function VirusPreventionLab(props: BiologyLabProps) {
 /**
  * Compares distance, barrier, and hygiene-immunity interventions as separate visuals.
  */
-function VirusPreventionScene({
-  colors,
-  item,
-  selectedIndex,
-}: BiologySceneProps) {
+function VirusPreventionScene({ colors, selectedIndex }: BiologySceneProps) {
   const hasMask = selectedIndex === 1;
   const hasSoap = selectedIndex === 2;
   const dropletScale = selectedIndex === 0 ? 1.05 : 0.52;
@@ -49,23 +48,35 @@ function VirusPreventionScene({
       )}
 
       {hasSoap && (
-        <mesh position={[0, -0.58, 0]} scale={[1.25, 0.12, 0.12]}>
-          <capsuleGeometry args={[0.14, 1.5, 6, 16]} />
-          <meshStandardMaterial color={colors.ocean} />
-        </mesh>
+        <PulsingGroup speed={1.6} strength={0.05}>
+          <mesh position={[0, -0.58, 0]} scale={[1.25, 0.12, 0.12]}>
+            <capsuleGeometry args={[0.14, 1.5, 6, 16]} />
+            <meshStandardMaterial color={colors.ocean} />
+          </mesh>
+        </PulsingGroup>
       )}
 
-      {DROPLETS.map((point) => (
-        <mesh
+      {DROPLETS.map((point, index) => (
+        <SlidingGroup
           key={point.id}
-          position={[point.position[0] * 0.22, point.position[1] * 0.22, 0.25]}
-          scale={dropletScale}
+          phase={index * 0.42}
+          speed={hasSoap ? 0.45 : 1.2}
+          travel={hasMask || hasSoap ? 0.06 : 0.22}
         >
-          <sphereGeometry args={[0.055, 12, 12]} />
-          <meshStandardMaterial
-            color={hasSoap ? colors.muted : colors.pathogen}
-          />
-        </mesh>
+          <mesh
+            position={[
+              point.position[0] * 0.22,
+              point.position[1] * 0.22,
+              0.25,
+            ]}
+            scale={dropletScale}
+          >
+            <sphereGeometry args={[0.055, 12, 12]} />
+            <meshStandardMaterial
+              color={hasSoap ? colors.muted : colors.pathogen}
+            />
+          </mesh>
+        </SlidingGroup>
       ))}
 
       <ArrowHelper
@@ -75,8 +86,6 @@ function VirusPreventionScene({
         lineWidth={3}
         to={[0.95, 0.18, 0.18]}
       />
-
-      <BiologySceneTitle color={colors.text}>{item.label}</BiologySceneTitle>
     </group>
   );
 }

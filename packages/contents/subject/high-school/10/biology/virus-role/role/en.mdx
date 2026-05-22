@@ -1,64 +1,74 @@
 import { VirusRoleLab } from "@repo/design-system/components/contents/biology/virus-role";
 
 export const metadata = {
-  title: "Role of Viruses",
+  title: "Roles of Viruses",
   description:
-    "Separate viral roles as disease agents, microbial population controls, and biotechnology tools.",
+    "Distinguish viruses as disease agents, microbial population controls, and biotechnology tools by reading the virus-host relationship.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
-  subject: "Viruses and Their Role",
+  subject: "Viruses and Their Roles",
 };
 
-## A virus role depends on context
+## A Viral Role Depends on the Host Relationship
 
-Viruses can cause disease, but that is not the whole biology of viruses. The Indonesian grade 10 science textbook includes viruses as disease agents and as biotechnology tools, including gene therapy vectors, vaccine development, and oncolytic viruses. OpenStax also emphasizes that viruses infect nearly all forms of life, from bacteria to eukaryotes, in [Viral Evolution, Morphology, and Classification](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
+Viruses are often introduced as causes of disease, but disease is not the only context. A viral role depends on the relationship between the virus and its **host**, the organism or cell the virus uses to reproduce.
+
+If viral replication damages cells, the body may develop disease. If a virus infects bacteria in the environment, microbial populations can shift. If a viral property is controlled in a laboratory, a virus can be used as a **vector**, a carrier of genetic material into target cells.
+
+The idea that viruses can cause disease, infect many host types, and be used in modern biology is discussed further in [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/21-2-virus-infections-and-hosts).
 
 <VirusRoleLab
-  title={<>Three contexts for viral roles</>}
-  description={<>Switch modes to see why viruses should not be reduced to one label: disease.</>}
+  title={<>One viral property, three outcomes</>}
+  description={
+    <>
+      Compare tissue infection, interaction with bacteria, and genetic delivery.
+      The moving model makes the direction of the virus-cell relationship visible.
+    </>
+  }
   labels={{
-    chooseMode: "Choose a context",
-    detailLabel: "Accuracy note",
-    sourceNoteLabel: "Model source",
-    structureLabel: "Relationship to read",
+    chooseMode: "Choose a viral role",
+    focusLabel: "Relationship to observe",
+    takeawayLabel: "Concept conclusion",
     viewLabel: "3D viral role model",
-    sourceNote: <>The examples follow the Indonesian grade 10 science textbook and OpenStax's discussion of diverse viral hosts.</>,
     items: [
       {
         tab: "Disease",
-        label: "Disease",
-        structure: "A virus damages or disrupts host cell function.",
-        caption: <>In disease, impact appears when infection changes tissue function or triggers harmful immune responses.</>,
-        detail: <>The model shows a host cell with many viral particles to emphasize infection load.</>,
+        caption: <>Virus particles move around a cell to show infection disrupting cell function.</>,
+        focus: <>Damage appears because replication happens inside host cells, not because the virus only touches the outside.</>,
+        takeaway: <>Disease is the result of a harmful virus-host relationship that damages tissue or triggers body responses.</>,
       },
       {
         tab: "Ecology",
-        label: "Ecology",
-        structure: "Viruses can infect microbes and influence populations.",
-        caption: <>Bacteriophages, viruses that infect bacteria, can affect bacterial abundance in an environment.</>,
-        detail: <>The model uses bacterial cells because ecological viral roles are often discussed through phages and microbial communities.</>,
+        caption: <>A bacteriophage moves toward bacteria because some viruses infect microorganisms.</>,
+        focus: <>Viruses can shape microbial populations in ecosystems.</>,
+        takeaway: <>In nature, viruses interact not only with humans, but also with bacteria, animals, plants, and other microbes.</>,
       },
       {
         tab: "Biotech",
-        label: "Biotechnology",
-        structure: "Modified viruses can carry selected genetic material.",
-        caption: <>In biotechnology, viral parts can be used as vectors, meaning carriers that deliver genes to target cells.</>,
-        detail: <>The model simplifies a viral vector as a gene carrier, not a full clinical procedure.</>,
+        caption: <>A viral vector moves toward a target cell to emphasize controlled delivery.</>,
+        focus: <>A property that is dangerous in wild infection can become useful when risk and target are controlled.</>,
+        takeaway: <>Biotechnology uses the viral ability to carry genetic information, not uncontrolled viral spread.</>,
       },
     ],
   }}
 />
 
-## One biological object can have different effects
+## Viral Diseases Do Not Share One Route
 
-A clean way to think is to separate mechanism from effect. The basic mechanism is cell entry and use of cellular systems. The effect can be disease, a shift in microbial populations, or a tool for research and therapy. This avoids two mistakes: treating every virus as only harmful, or ignoring infection risk.
+Viral diseases can affect humans, animals, and plants. In humans, viruses can be involved in flu, polio, hepatitis, or dengue fever. In animals, viruses can cause rabies or certain poultry diseases. In plants, viruses may cause mosaic leaves, stunted growth, or reduced harvest.
 
-At this level, read viral roles as context maps. Ask: which host is infected, what route is used, and what happens at the cell, organism, or ecosystem level?
+The important reading is not just the disease name, but the entry route and the tissue affected. Dengue virus is connected with mosquito bites. Respiratory viruses are connected with droplets and air near the face. Plant viruses can move through insect vectors, plant wounds, or infected planting material.
 
-## Self-check
+## Viruses Can Be Useful When Controlled
 
-Why can viruses cause disease and also serve as biotechnology tools?
+Viruses have a strong ability to recognize cells and carry genetic material. During wild infection, that ability can be harmful. Under controlled conditions, the same property can be useful.
 
-Answer: the same cell-entry mechanism can damage cells in natural infection but can be controlled and redesigned to deliver genetic material.
+Some viruses are used in genetic research, gene therapy, vaccine development, or targeted pest control. For example, baculoviruses can be used against certain insect pests in a way that differs from ordinary chemical pesticides.
 
-Explanation: the context and risk control are different, even though both involve viral biology.
+The key word is control. A useful virus must be designed, tested, and limited to its target. Without control, the ability to reproduce and move between cells becomes a risk.
+
+## One Word Is Not Enough to Judge a Virus
+
+Name the relationship between the virus and its host first. A virus that damages tissue is discussed as a disease agent. A virus that affects microbes is discussed in ecology. A virus that carries genes under control is discussed in biotechnology.
+
+This habit prevents us from reducing viruses to "always bad" or "always useful". In biology, a role comes from context, target, and control.

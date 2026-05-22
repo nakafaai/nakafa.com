@@ -3,60 +3,86 @@ import { BacteriaStructureLab } from "@repo/design-system/components/contents/bi
 export const metadata = {
   title: "Bakteri",
   description:
-    "Mengenal bakteri sebagai sel prokariotik melalui bentuk, struktur, dinding sel, dan perannya.",
+    "Mengenali bakteri sebagai sel prokariotik dengan bentuk kokus, basilus, spiral, struktur nukleoid, ribosom, dinding sel, dan peran dalam kehidupan.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
-  subject: "Keanekaragaman Makhluk Hidup",
+  subject: "Keanekaragaman Hayati",
 };
 
-## Bakteri adalah sel prokariotik
+## Ketika Makanan Berubah Karena Mikroorganisme
 
-Bakteri adalah organisme uniseluler prokariotik. Prokariotik berarti selnya tidak memiliki inti bermembran. Buku IPA SMA/MA Kelas X Bab VI menekankan bentuk bakteri seperti kokus, basilus, dan spiral, serta struktur seperti dinding sel, membran, sitoplasma, ribosom, dan nukleoid. OpenStax menjelaskan bentuk umum prokariota dan struktur dasarnya pada [Structure of Prokaryotes: Bacteria and Archaea](https://openstax.org/books/biology-2e/pages/22-2-structure-of-prokaryotes-bacteria-and-archaea).
+Susu dapat berubah menjadi yoghurt, kedelai dapat dibantu menjadi produk fermentasi, dan makanan yang disimpan terlalu lama dapat basi. Perubahan itu mengingatkan kita bahwa mikroorganisme tidak selalu terlihat, tetapi aktivitasnya nyata.
+
+**Bakteri** adalah organisme uniseluler prokariotik. **Uniseluler** berarti tubuhnya terdiri dari satu sel. **Prokariotik** berarti materi genetiknya tidak dibungkus membran inti. Jadi bakteri tetap sel hidup, tetapi susunan bagian dalamnya berbeda dari sel hewan, tumbuhan, atau fungi.
+
+Struktur prokariotik seperti membran plasma, dinding sel, nukleoid, dan ribosom dibahas sebagai ciri dasar bakteri di [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/22-2-structure-of-prokaryotes-bacteria-and-archaea).
 
 <BacteriaStructureLab
-  title={<>Bentuk dan bagian bakteri</>}
-  description={<>Pilih fokus untuk membaca bentuk sel, isi sel, atau perbedaan lapisan dinding bakteri.</>}
+  title={<>Membaca bakteri dari bentuk sampai dinding sel</>}
+  description={
+    <>
+      Model membedakan bentuk luar, isi sel prokariotik, dan lapisan dinding sel.
+      Bagian bergerak agar struktur tidak terbaca sebagai gambar diam.
+    </>
+  }
   labels={{
-    chooseMode: "Pilih fokus",
-    detailLabel: "Catatan akurasi",
-    sourceNoteLabel: "Rujukan model",
-    structureLabel: "Bagian yang dibaca",
-    viewLabel: "Model 3D bakteri",
-    sourceNote: <>Model mengikuti Buku IPA SMA/MA Kelas X Bab VI dan OpenStax tentang bentuk kokus, basilus, spiril, nukleoid, ribosom, dan dinding sel.</>,
+    chooseMode: "Pilih tampilan bakteri",
+    focusLabel: "Bagian yang diamati",
+    takeawayLabel: "Kesimpulan singkat",
+    viewLabel: "Model 3D struktur bakteri",
     items: [
       {
         tab: "Bentuk",
-        label: "Bentuk",
-        structure: "Kokus, basilus, dan spiral adalah bentuk umum bakteri.",
-        caption: <>Bentuk membantu identifikasi awal, tetapi tidak cukup untuk menentukan seluruh hubungan taksonomi.</>,
-        detail: <>Model menaruh tiga bentuk berdampingan agar perbandingan visual langsung terlihat.</>,
+        caption: <>Bentuk bulat, batang, dan spiral membantu pengenalan awal bakteri.</>,
+        focus: <>Bentuk menunjukkan morfologi, bukan seluruh identitas bakteri.</>,
+        takeaway: <>Identifikasi yang kuat tetap membutuhkan ciri lain, bukan hanya bentuk luar.</>,
       },
       {
-        tab: "Struktur",
-        label: "Struktur",
-        structure: "Bakteri punya membran, sitoplasma, ribosom, dan nukleoid tanpa inti bermembran.",
-        caption: <>Nukleoid adalah wilayah DNA bakteri. Ia berbeda dari inti sel eukariotik karena tidak dibungkus membran inti.</>,
-        detail: <>Titik kecil mewakili ribosom dan untai tengah mewakili DNA di nukleoid.</>,
+        tab: "Isi sel",
+        caption: <>Nukleoid berisi DNA bakteri, sementara ribosom tersebar di sitoplasma untuk membuat protein.</>,
+        focus: <>Tidak ada inti bermembran, tetapi DNA dan ribosom tetap ada.</>,
+        takeaway: <>Bakteri hidup sebagai sel karena masih memiliki membran, sitoplasma, DNA, ribosom, dan metabolisme.</>,
       },
       {
         tab: "Dinding",
-        label: "Dinding sel",
-        structure: "Dinding sel bakteri mengandung peptidoglikan.",
-        caption: <>Perbedaan susunan dinding membantu menjelaskan pewarnaan Gram positif dan Gram negatif.</>,
-        detail: <>Lapisan dibuat bertumpuk untuk menekankan perbedaan arsitektur, bukan ketebalan skala nyata.</>,
+        caption: <>Tumpukan lapisan menggambarkan perbedaan dinding sel yang dibaca pada pewarnaan Gram.</>,
+        focus: <>Bandingkan ketebalan peptidoglikan dan keberadaan membran luar.</>,
+        takeaway: <>Dinding sel ikut memengaruhi cara bakteri dikenali, bertahan, dan ditangani.</>,
       },
     ],
   }}
 />
 
-## Bakteri tidak selalu merugikan
+## Bentuk adalah Petunjuk Awal
 
-Sebagian bakteri menyebabkan penyakit, tetapi banyak bakteri berguna. Buku IPA SMA/MA Kelas X mencontohkan peran bakteri dalam pangan, bioteknologi, vitamin, dan bioremediasi. Jadi pertanyaan biologinya bukan "bakteri baik atau jahat", melainkan: spesies apa, hidup di mana, dan berinteraksi dengan siapa?
+Bakteri berukuran sangat kecil, umumnya pada skala mikrometer. Bentuk yang sering dikenali adalah **kokus** atau bulat, **basilus** atau batang, dan **spiril** atau spiral. Kokus dapat berpasangan, berantai, atau berkelompok seperti gerombolan. Basilus juga dapat berdiri sendiri atau membentuk rangkaian.
 
-## Cek pemahaman
+Bentuk membantu saat pengamatan awal, tetapi tidak boleh berhenti di sana. Dua bakteri yang sama-sama berbentuk batang dapat memiliki cara hidup, dinding sel, atau dampak yang berbeda. Karena itu biologi membaca bentuk bersama struktur, metabolisme, dan lingkungan hidupnya.
 
-Apa perbedaan utama nukleoid bakteri dan inti sel hewan?
+## Sel Prokariotik Tetap Punya Perangkat Kerja
 
-Jawaban: nukleoid tidak dibungkus membran inti, sedangkan inti sel hewan dibungkus membran inti.
+Bagian dalam bakteri lebih sederhana daripada sel eukariotik, tetapi bukan kosong. DNA bakteri berada pada daerah **nukleoid**. **Ribosom** membuat protein. Membran sel mengatur keluar masuk zat. Sitoplasma menjadi tempat berbagai reaksi terjadi.
 
-Alasan: bakteri adalah prokariotik, sedangkan sel hewan adalah eukariotik.
+Banyak bakteri memiliki dinding sel yang mengandung **peptidoglikan**, jaringan molekul yang memberi bentuk dan perlindungan. Pada bakteri Gram positif, lapisan peptidoglikan cenderung tebal. Pada bakteri Gram negatif, lapisan peptidoglikan lebih tipis dan ada membran luar. Membran luar ini dapat memengaruhi ketahanan terhadap zat tertentu.
+
+## Bakteri Bukan Hanya Penyebab Penyakit
+
+Sebagian bakteri memang menyebabkan penyakit, tetapi banyak bakteri berperan baik. Ada bakteri yang membantu pembuatan yoghurt, keju, atau nata de coco. Ada yang membantu penguraian sisa organisme, produksi vitamin, rekayasa genetika, dan bioremediasi. **Bioremediasi** berarti memakai organisme untuk membantu menguraikan pencemar.
+
+Jadi, cara membaca bakteri harus seimbang. Pertanyaannya bukan "bakteri baik atau jahat", melainkan "bakteri ini hidup di mana, memakai proses apa, dan dampaknya apa bagi organisme lain".
+
+<Mermaid
+  chart={`flowchart LR
+    A["Bentuk luar"] --> B["Petunjuk morfologi"]
+    C["Isi sel"] --> D["Nukleoid, ribosom, sitoplasma"]
+    E["Dinding sel"] --> F["Perlindungan dan pewarnaan Gram"]
+    B --> G["Identitas bakteri dibaca lebih lengkap"]
+    D --> G
+    F --> G`}
+/>
+
+## Bakteri Dibaca sebagai Sel yang Sederhana, Bukan Sel yang Kosong
+
+Prokariotik bukan berarti tidak teratur. Bakteri tidak punya inti bermembran, tetapi tetap memiliki membran, sitoplasma, DNA, ribosom, dinding sel pada banyak jenis, dan proses metabolisme.
+
+Kesederhanaan strukturnya justru membuat bakteri mudah hidup di banyak lingkungan dan cepat merespons perubahan. Karena itu bakteri lebih tepat dibaca sebagai sel kecil yang efisien, bukan sebagai sel yang kosong.

@@ -3,60 +3,82 @@ import { ClassificationLab } from "@repo/design-system/components/contents/biolo
 export const metadata = {
   title: "Klasifikasi Makhluk Hidup",
   description:
-    "Memahami klasifikasi buatan, alami, dan filogenetik sebagai cara mencari pola pada makhluk hidup.",
+    "Memahami klasifikasi buatan, alami, dan filogenetik sebagai cara menata makhluk hidup berdasarkan alasan pengelompokan yang berbeda.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
-  subject: "Keanekaragaman Makhluk Hidup",
+  subject: "Keanekaragaman Hayati",
 };
 
-## Klasifikasi membantu mencari pola
+## Mulai dari Alasan Mengelompokkan
 
-Klasifikasi adalah pengelompokan makhluk hidup berdasarkan ciri tertentu. Buku IPA SMA/MA Kelas X Bab VI membedakan klasifikasi buatan, alami, dan filogenetik. OpenStax menjelaskan bahwa sistematika modern berusaha menyusun keanekaragaman hidup berdasarkan hubungan evolusi pada [Organizing Life on Earth](https://openstax.org/books/biology-2e/pages/20-1-organizing-life-on-earth).
+Klasifikasi adalah pengelompokan makhluk hidup berdasarkan ciri atau hubungan tertentu. Tujuannya bukan membuat daftar nama yang panjang, tetapi membantu kita mengenali pola di tengah keanekaragaman.
+
+Satu organisme dapat masuk kelompok berbeda jika alasan pengelompokannya berubah. Cabai bisa dikelompokkan sebagai tanaman pangan karena dimanfaatkan manusia. Cabai juga bisa dibahas sebagai tumbuhan berbunga karena memiliki ciri biologis tertentu. Jika hubungan kekerabatannya ditelusuri lebih jauh, cabai ditempatkan berdasarkan asal-usul evolusinya.
+
+Dalam biologi modern, klasifikasi dipakai untuk menata keanekaragaman hidup dan membaca hubungan antarorganisme; pengantar sistematikanya dapat dibuka di [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/20-1-organizing-life-on-earth).
 
 <ClassificationLab
-  title={<>Cara mengelompokkan organisme</>}
-  description={<>Bandingkan pengelompokan berdasarkan ciri tampak, banyak ciri alami, dan kekerabatan evolusi.</>}
+  title={<>Alasan di balik nama kelompok</>}
+  description={
+    <>
+      Tiga tampilan membedakan kelompok berdasarkan manfaat, ciri organisme, dan
+      cabang kekerabatan. Objek bergerak agar pilihan dasarnya terlihat.
+    </>
+  }
   labels={{
-    chooseMode: "Pilih cara klasifikasi",
-    detailLabel: "Catatan akurasi",
-    sourceNoteLabel: "Rujukan model",
-    structureLabel: "Dasar pengelompokan",
-    viewLabel: "Model 3D klasifikasi",
-    sourceNote: <>Model mengikuti klasifikasi buatan, alami, dan filogenetik dalam Buku IPA SMA/MA Kelas X Bab VI.</>,
+    chooseMode: "Pilih dasar klasifikasi",
+    focusLabel: "Dasar keputusan",
+    takeawayLabel: "Yang harus diingat",
+    viewLabel: "Model 3D klasifikasi makhluk hidup",
     items: [
       {
         tab: "Buatan",
-        label: "Buatan",
-        structure: "Mengelompokkan berdasarkan ciri yang mudah diamati atau kebutuhan praktis.",
-        caption: <>Klasifikasi buatan cepat dipakai, tetapi bisa menaruh organisme tidak berkerabat dalam kelompok yang sama.</>,
-        detail: <>Kotak pada model menunjukkan kelompok praktis, bukan hubungan kekerabatan.</>,
+        caption: <>Kotak pengelompokan menunjukkan organisme disusun berdasarkan ciri praktis, misalnya manfaat atau kemudahan pengamatan.</>,
+        focus: <>Tanyakan tujuan manusia membuat kelompok itu.</>,
+        takeaway: <>Klasifikasi buatan berguna, tetapi belum tentu menunjukkan kekerabatan biologis.</>,
       },
       {
         tab: "Alami",
-        label: "Alami",
-        structure: "Mengelompokkan berdasarkan banyak persamaan struktur dan fungsi.",
-        caption: <>Klasifikasi alami lebih stabil karena tidak hanya memakai satu ciri permukaan.</>,
-        detail: <>Lima kolom mengingatkan pada pembahasan kingdom sebagai pola besar di tingkat SMA.</>,
+        caption: <>Penanda yang berbeda mewakili kelompok besar seperti bakteri, protista, fungi, tumbuhan, dan hewan.</>,
+        focus: <>Bandingkan struktur tubuh, cara memperoleh makanan, dan pola hidupnya.</>,
+        takeaway: <>Klasifikasi alami memakai lebih banyak ciri sehingga lebih kuat daripada satu ciri praktis saja.</>,
       },
       {
-        tab: "Filogenetik",
-        label: "Filogenetik",
-        structure: "Mengelompokkan berdasarkan kekerabatan evolusi.",
-        caption: <>Filogenetik bertanya organisme mana yang berbagi nenek moyang lebih dekat.</>,
-        detail: <>Cabang pada model menyederhanakan pohon kekerabatan, bukan pohon filogenetik lengkap.</>,
+        tab: "Filogeni",
+        caption: <>Cabang bergerak pelan untuk menekankan bahwa klasifikasi filogenetik membaca kedekatan asal-usul.</>,
+        focus: <>Kelompok mana yang punya nenek moyang lebih dekat?</>,
+        takeaway: <>Klasifikasi filogenetik dapat mengubah kelompok lama ketika bukti hubungan makin lengkap.</>,
       },
     ],
   }}
 />
 
-## Nama kelompok harus punya alasan
+## Tiga Cara yang Sering Tertukar
 
-Klasifikasi yang baik bukan sekadar memberi nama. Ia membantu kita memprediksi ciri. Jika dua organisme dikelompokkan karena kekerabatannya dekat, kita dapat memperkirakan ada pola struktur, fisiologi, atau genetik yang mirip. Karena itu, klasifikasi filogenetik lebih kuat untuk menjelaskan hubungan biologis daripada klasifikasi yang hanya berdasarkan warna, ukuran, atau tempat hidup.
+Klasifikasi buatan memakai ciri yang dipilih untuk kebutuhan tertentu. Contohnya, kelompok tanaman obat, tanaman hias, atau hewan yang dapat terbang. Kelompok seperti ini mudah dipakai, tetapi bisa mencampur organisme yang sebenarnya tidak dekat kekerabatannya. Burung, kelelawar, dan serangga sama-sama dapat terbang, tetapi bukan berarti mereka satu kelompok kekerabatan dekat.
 
-## Cek pemahaman
+Klasifikasi alami memakai banyak ciri organisme. Ciri yang dibandingkan dapat berupa bentuk tubuh, cara memperoleh makanan, susunan sel, atau pola reproduksi. Sistem lima kingdom adalah contoh cara membaca organisme dari ciri besar: Monera, Protista, Fungi, Plantae, dan Animalia.
 
-Mengapa kelelawar tidak dikelompokkan bersama burung hanya karena sama-sama bisa terbang?
+Klasifikasi filogenetik membaca hubungan evolusi. Bukti yang dipakai dapat mencakup struktur tubuh, perkembangan, sampai kemiripan DNA. Dengan bukti baru, posisi organisme dapat berubah. Itulah sebabnya klasifikasi ilmiah tidak hanya menghafal kotak, tetapi juga mengikuti alasan dan bukti.
 
-Jawaban: kemampuan terbang adalah satu ciri permukaan, bukan bukti kekerabatan paling kuat.
+<Mermaid
+  chart={`flowchart TD
+    A["Mengapa organisme dikelompokkan?"] --> B["Untuk kebutuhan manusia"]
+    A --> C["Karena ciri biologis mirip"]
+    A --> D["Karena kekerabatan dekat"]
+    B --> E["Klasifikasi buatan"]
+    C --> F["Klasifikasi alami"]
+    D --> G["Klasifikasi filogenetik"]`}
+/>
 
-Alasan: klasifikasi yang baik mempertimbangkan banyak ciri dan hubungan evolusi, bukan satu ciri praktis saja.
+## Takson adalah Tingkat Alamat
+
+Dalam klasifikasi, **takson** adalah tingkat kelompok. Urutannya dapat dibaca dari besar ke kecil: kingdom, filum atau divisi, kelas, ordo, famili, genus, dan spesies.
+
+Analogi sederhananya seperti alamat. Negara lebih luas daripada provinsi, provinsi lebih luas daripada kota, dan kota lebih luas daripada rumah. Dalam biologi, kingdom lebih luas daripada spesies. Semakin kecil tingkat takson, ciri organisme biasanya makin mirip.
+
+Namun alamat saja belum cukup. Dua organisme dapat berada di nama kelompok yang sama karena alasan berbeda. Karena itu, saat melihat nama kelompok, tanyakan: kelompok ini dibuat karena manfaat, karena ciri tubuh, atau karena kekerabatan?
+
+## Nama Kelompok Harus Selalu Bisa Dipertanggungjawabkan
+
+Jika suatu kelompok hanya memakai satu ciri praktis, hasilnya bisa berguna tetapi sempit. Kelompok "hewan yang dapat terbang" membantu percakapan sehari-hari, tetapi mencampur burung, kelelawar, dan serangga yang asal-usulnya berbeda. Dalam kelas biologi, nama kelompok menjadi kuat ketika alasan pengelompokannya jelas dan bukti yang dipakai sesuai tujuan.

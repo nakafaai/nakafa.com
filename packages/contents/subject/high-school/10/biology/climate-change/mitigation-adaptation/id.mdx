@@ -1,62 +1,90 @@
 import { ClimateActionLab } from "@repo/design-system/components/contents/biology/climate-action";
 
 export const metadata = {
-  title: "Upaya Mitigasi dan Adaptasi terhadap Perubahan Iklim",
+  title: "Mitigasi dan Adaptasi Perubahan Iklim",
   description:
-    "Membedakan mitigasi, adaptasi, dan restorasi sebagai respons yang saling melengkapi terhadap perubahan iklim.",
+    "Membedakan mitigasi yang menekan penyebab perubahan iklim dan adaptasi yang mengurangi dampaknya melalui contoh restorasi, pengurangan emisi, perlindungan air, dan pertanian.",
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
   date: "05/22/2026",
   subject: "Perubahan Iklim",
 };
 
-## Mitigasi dan adaptasi punya tujuan berbeda
+## Dua Pertanyaan untuk Satu Masalah
 
-Mitigasi adalah upaya mengurangi atau menstabilkan gas rumah kaca. Adaptasi adalah penyesuaian agar dampak perubahan iklim tidak merusak sebesar mungkin. Buku IPA SMA/MA Kelas X Bab VIII memberi contoh restorasi hutan, pengurangan plastik, dan tanaman tahan kering. IPCC membahas mitigasi dan adaptasi sebagai dua respons penting dalam [AR6 Synthesis Report](https://www.ipcc.ch/report/ar6/syr/).
+Saat menghadapi perubahan iklim, ada dua pertanyaan berbeda. Pertama, bagaimana kita mengurangi penyebabnya? Kedua, bagaimana kita mengurangi kerugiannya ketika dampak sudah terjadi?
+
+Jawaban pertama disebut **mitigasi**. Mitigasi adalah usaha mengurangi atau menstabilkan gas rumah kaca. Jawaban kedua disebut **adaptasi**. Adaptasi adalah usaha menyesuaikan diri agar dampak perubahan iklim tidak terlalu merusak.
+
+IPCC memakai dua kerangka ini saat membahas respons iklim: mitigasi menekan penyebab pemanasan, sedangkan adaptasi mengurangi risiko dampak; ringkasannya dapat dibuka di [IPCC](https://www.ipcc.ch/report/ar6/syr/).
 
 <ClimateActionLab
-  title={<>Tiga jenis respons iklim</>}
-  description={<>Pilih respons untuk melihat apakah tindakan mengurangi penyebab, mengurangi dampak, atau memulihkan ekosistem.</>}
+  title={<>Membedakan tujuan tindakan iklim</>}
+  description={
+    <>
+      Model memperlihatkan pengurangan emisi, perlindungan dari dampak, dan
+      pemulihan habitat. Partikel dan organisme bergerak sesuai tujuan tindakan.
+    </>
+  }
   labels={{
-    chooseMode: "Pilih respons",
-    detailLabel: "Catatan akurasi",
-    sourceNoteLabel: "Rujukan model",
-    structureLabel: "Respons yang dibaca",
-    viewLabel: "Model 3D aksi iklim",
-    sourceNote: <>Model mengikuti Buku IPA SMA/MA Kelas X Bab VIII dan IPCC AR6 tentang mitigasi, adaptasi, dan pemulihan ekosistem.</>,
+    chooseMode: "Pilih tindakan",
+    focusLabel: "Tujuan tindakan",
+    takeawayLabel: "Cara membedakan",
+    viewLabel: "Model 3D mitigasi dan adaptasi",
     items: [
       {
         tab: "Mitigasi",
-        label: "Mitigasi",
-        structure: "Mengurangi sumber emisi atau meningkatkan serapan karbon.",
-        caption: <>Contohnya efisiensi energi, energi terbarukan, transportasi rendah emisi, dan perlindungan hutan.</>,
-        detail: <>Panah karbon menuju pohon menekankan pengurangan emisi dan peningkatan serapan.</>,
+        caption: <>Partikel karbon bergerak menuju pepohonan untuk menggambarkan pengurangan emisi dan penyerapan karbon.</>,
+        focus: <>Apakah tindakan ini menurunkan gas rumah kaca atau meningkatkan penyerapannya?</>,
+        takeaway: <>Jika targetnya penyebab perubahan iklim, tindakan itu termasuk mitigasi.</>,
       },
       {
         tab: "Adaptasi",
-        label: "Adaptasi",
-        structure: "Menyesuaikan sistem agar lebih tahan terhadap dampak iklim.",
-        caption: <>Contohnya varietas tahan kering, tata air, peringatan dini, dan desain kota yang mengurangi panas.</>,
-        detail: <>Air dan pelindung tanaman menekankan pengurangan risiko, bukan penghilangan penyebab.</>,
+        caption: <>Air, pelindung, dan tanaman menunjukkan penyesuaian agar dampak tidak terlalu merusak.</>,
+        focus: <>Apakah tindakan ini membuat masyarakat atau ekosistem lebih siap menghadapi dampak?</>,
+        takeaway: <>Jika targetnya kerentanan terhadap dampak, tindakan itu termasuk adaptasi.</>,
       },
       {
         tab: "Restorasi",
-        label: "Restorasi",
-        structure: "Memulihkan habitat agar fungsi ekologis kembali bekerja.",
-        caption: <>Restorasi hutan atau mangrove dapat membantu serapan karbon dan perlindungan ekosistem.</>,
-        detail: <>Bibit dan satwa kecil menunjukkan habitat yang mulai pulih, bukan hutan matang instan.</>,
+        caption: <>Tumbuhan dan hewan kecil menunjukkan habitat yang dibangun kembali.</>,
+        focus: <>Restorasi dapat membantu serapan karbon sekaligus memperkuat habitat.</>,
+        takeaway: <>Beberapa tindakan memiliki manfaat mitigasi dan adaptasi sekaligus.</>,
       },
     ],
   }}
 />
 
-## Keduanya perlu berjalan bersama
+## Mitigasi Menekan Penyebab
 
-Adaptasi tanpa mitigasi membuat kita terus mengejar dampak yang semakin berat. Mitigasi tanpa adaptasi mengabaikan dampak yang sudah terjadi. Karena itu respons iklim yang rapi selalu bertanya dua hal: bagaimana mengurangi penyebab, dan bagaimana melindungi manusia serta ekosistem selama perubahan masih berlangsung?
+Mitigasi bekerja pada sumber masalah. Menghemat energi, beralih ke energi yang lebih rendah emisi, mengurangi pembakaran bahan bakar fosil, mengelola sampah organik, dan menjaga hutan adalah contoh arah mitigasi.
 
-## Cek pemahaman
+Restorasi hutan dan penanaman beragam jenis tumbuhan dapat membantu menyerap karbon. Namun bukan berarti semua penanaman sama. Ekosistem yang beragam biasanya memiliki fungsi lebih banyak daripada lahan satu jenis tanaman saja. Keanekaragaman membantu tanah, air, hewan, mikroba, dan penyimpanan karbon bekerja bersama.
 
-Apakah membangun tanggul termasuk mitigasi atau adaptasi?
+Mengurangi plastik sekali pakai juga dapat menjadi bagian dari mitigasi jika menurunkan produksi, energi, dan limbah. Tetapi cara terbaik harus tetap dilihat dari seluruh siklusnya, bukan hanya memindahkan masalah dari satu tempat ke tempat lain.
 
-Jawaban: adaptasi.
+## Adaptasi Menekan Kerugian
 
-Alasan: tanggul tidak langsung menurunkan gas rumah kaca, tetapi mengurangi risiko dampak seperti banjir rob atau kenaikan muka laut.
+Adaptasi menerima bahwa sebagian dampak sudah terjadi atau mungkin terjadi. Contohnya, petani dapat memilih varietas tanaman yang lebih tahan kering, memperbaiki jadwal tanam, atau mengelola air lebih hemat. Wilayah pesisir dapat memperkuat perlindungan pantai dan memperbaiki tata ruang.
+
+Adaptasi bukan tanda menyerah. Adaptasi adalah cara menjaga keselamatan sambil mitigasi tetap dilakukan. Tanpa mitigasi, dampak akan terus membesar. Tanpa adaptasi, masyarakat dan ekosistem lebih mudah terdorong ke kerugian saat dampak datang.
+
+## Tindakan Ganda Perlu Dibaca dari Tujuannya
+
+Satu kegiatan bisa memiliki dua manfaat. Menanam kembali mangrove, misalnya, dapat menyimpan karbon sekaligus melindungi pesisir dari abrasi dan gelombang. Jika kita menekankan penyimpanan karbon, itu sisi mitigasi. Jika kita menekankan perlindungan pesisir, itu sisi adaptasi.
+
+Cara membedakannya adalah melihat tujuan utama dalam kalimat. Kata kerja seperti mengurangi emisi, menyerap karbon, atau mengganti energi fosil mengarah ke mitigasi. Kata kerja seperti melindungi, menyesuaikan, memperkuat ketahanan, atau mengurangi kerugian mengarah ke adaptasi.
+
+<Mermaid
+  chart={`flowchart TD
+    A["Tindakan iklim"] --> B["Menekan gas rumah kaca"]
+    A --> C["Mengurangi kerugian dampak"]
+    A --> D["Memulihkan fungsi ekosistem"]
+    B --> E["Mitigasi"]
+    C --> F["Adaptasi"]
+    D --> G["Bisa membantu keduanya"]`}
+/>
+
+## Satu Tindakan Bisa Punya Dua Nilai
+
+Kalimat "desa pesisir menanam mangrove agar abrasi berkurang dan rumah warga lebih terlindungi" terutama sedang menekankan adaptasi. Tujuannya adalah mengurangi kerugian akibat dampak di pesisir. Mangrove tetap dapat menyimpan karbon, tetapi fokus kalimat itu adalah perlindungan.
+
+Inilah bagian yang perlu dibaca hati-hati. Tindakan iklim tidak selalu masuk satu kotak saja. Yang menentukan cara kita menjelaskannya adalah tujuan yang sedang dibicarakan: menekan penyebab, mengurangi dampak, atau memulihkan fungsi ekosistem.
