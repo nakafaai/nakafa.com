@@ -51,6 +51,44 @@ def test_discrete_steps_preserve_operation_context(
     assert result.steps[0].primary.latex == expected_latex
 
 
+@pytest.mark.parametrize(
+    "math_request",
+    [
+        MathRequest(kind="math", k="2", n="5", operation="combination"),
+        MathRequest(kind="math", operation="gcd", values=["18", "24"]),
+        MathRequest(kind="math", n="21", operation="is_prime"),
+        MathRequest(kind="math", operation="lcm", values=["6", "8"]),
+        MathRequest(kind="math", modulus="5", n="17", operation="modular"),
+        MathRequest(kind="math", k="2", n="5", operation="permutation"),
+        MathRequest(kind="math", n="84", operation="prime_factorization"),
+    ],
+)
+def test_discrete_steps_include_reasons(math_request: MathRequest) -> None:
+    result = run(math_request)
+
+    assert result.steps
+    assert all(step.reason for step in result.steps)
+
+
+def test_combination_and_permutation_show_formula_substitution() -> None:
+    combination = run(MathRequest(kind="math", k="2", n="5", operation="combination"))
+    permutation = run(MathRequest(kind="math", k="2", n="5", operation="permutation"))
+
+    assert [step.action for step in combination.steps] == ["combination", "evaluate"]
+    assert combination.steps[0].secondary
+    assert combination.steps[0].secondary.expression == "5!/(2!*3!)"
+    assert [step.action for step in permutation.steps] == ["permutation", "evaluate"]
+    assert permutation.steps[0].secondary
+    assert permutation.steps[0].secondary.expression == "5!/3!"
+
+
+def test_modular_step_keeps_division_algorithm_context() -> None:
+    result = run(MathRequest(kind="math", modulus="30", n="84", operation="modular"))
+
+    assert result.steps[0].items[0].label == "division"
+    assert result.steps[0].items[0].value == "84 = 2*30 + 24"
+
+
 def test_prime_factorization() -> None:
     result = run(MathRequest(kind="math", n="84", operation="prime_factorization"))
 
@@ -67,6 +105,18 @@ def test_prime_factorization_of_one() -> None:
     assert result.secondary
     assert result.secondary.expression == "1"
     assert result.secondary.latex == "1"
+
+
+def test_prime_factorization_keeps_negative_sign_first() -> None:
+    result = run(MathRequest(kind="math", n="-12", operation="prime_factorization"))
+
+    assert result.secondary
+    assert result.secondary.expression == "-1*2^2*3"
+
+
+def test_prime_factorization_rejects_zero() -> None:
+    with pytest.raises(ValueError, match="nonzero integer"):
+        run(MathRequest(kind="math", n="0", operation="prime_factorization"))
 
 
 def test_gcd_with_more_than_two_values_uses_function_notation() -> None:
@@ -94,6 +144,11 @@ def test_discrete_operands_reject_non_integers(math_request: MathRequest) -> Non
 def test_modular_rejects_zero_modulus() -> None:
     with pytest.raises(ValueError, match="Modulus must be nonzero"):
         run(MathRequest(kind="math", modulus="0", n="84", operation="modular"))
+
+
+def test_discrete_value_operations_require_values() -> None:
+    with pytest.raises(ValueError, match="at least one integer"):
+        run(MathRequest(kind="math", operation="gcd"))
 
 
 @pytest.mark.parametrize(

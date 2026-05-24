@@ -37,6 +37,7 @@ describe("MathResultSchema", () => {
               expression: "equals",
               latex: "=",
             },
+            reason: "Evaluate the exact arithmetic expression.",
             secondary: {
               expression: "4",
               latex: "4",
@@ -48,6 +49,11 @@ describe("MathResultSchema", () => {
     ).toMatchObject({
       kind: "evaluate",
       status: "verified",
+      steps: [
+        expect.objectContaining({
+          reason: "Evaluate the exact arithmetic expression.",
+        }),
+      ],
     });
   });
 });
