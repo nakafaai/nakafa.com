@@ -1,5 +1,3 @@
-import { VirusPreventionLab } from "@repo/design-system/components/contents/biology/virus-prevention";
-
 export const metadata = {
   title: "Cara Mencegah Penyebaran Virus",
   description:
@@ -11,53 +9,45 @@ export const metadata = {
 
 ## Pencegahan Dimulai dari Jalur Penularan
 
+Pencegahan terasa masuk akal saat jalur yang dipakai virus sudah jelas. Satu tindakan bisa sangat efektif pada satu jalur, tetapi lemah pada jalur lain.
+
+### Rute Virus Harus Dibaca Sebelum Tindakan Dipilih
+
 Langkah pencegahan virus harus dimulai dari pertanyaan sederhana. Virus ini berpindah lewat apa? Rutenya bisa droplet pernapasan, kontak tangan dan permukaan, darah atau cairan tubuh, makanan dan air, atau vektor seperti nyamuk. **Vektor** adalah organisme pembawa yang memindahkan patogen dari satu inang ke inang lain.
 
 Jika rute salah dibaca, tindakannya mudah salah sasaran. Menguras genangan air membantu menekan nyamuk pembawa virus tertentu, tetapi tidak langsung memotong penularan droplet di ruang tertutup. Sebaliknya, masker tidak menggantikan pengendalian jentik nyamuk.
 
-[CDC](https://www.cdc.gov/children-and-school-preparedness/infection-prevention/appendix-a.html) merangkum jalur penyebaran kuman di lingkungan sekolah, termasuk kontak, percikan batuk atau bersin, udara, makanan atau cairan, dan vektor seperti nyamuk.
+[CDC](https://www.cdc.gov/infection-control/hcp/isolation-precautions/scientific-review.html) membedakan penularan lewat kontak, droplet, udara, darah atau cairan tubuh, dan rute lain. Pembagian ini membantu kita memilih pencegahan berdasarkan jalan berpindahnya patogen, bukan berdasarkan rasa takut yang umum.
 
-<VirusPreventionLab
-  title={<>Memotong jalur perpindahan virus</>}
-  description={
-    <>
-      Droplet pada model bergerak agar terlihat bahwa pencegahan bekerja ketika
-      jalurnya dipotong di tempat yang tepat.
-    </>
-  }
-  labels={{
-    chooseMode: "Pilih strategi",
-    focusLabel: "Rute yang diputus",
-    takeawayLabel: "Prinsip pencegahan",
-    viewLabel: "Model 3D pencegahan penyebaran virus",
-    items: [
-      {
-        tab: "Jarak",
-        caption: <>Droplet membawa partikel infektif dari mulut dan hidung. Jarak dan aliran udara membuat paparan lebih sulit mencapai orang lain.</>,
-        focus: <>Perhatikan arah perpindahan partikel, bukan hanya posisi dua orang.</>,
-        takeaway: <>Jarak membantu menurunkan paparan, terutama jika digabung dengan ventilasi pada risiko pernapasan.</>,
-      },
-      {
-        tab: "Masker",
-        caption: <>Penghalang menunjukkan droplet tertahan sebelum mudah keluar atau masuk melalui hidung dan mulut.</>,
-        focus: <>Masker efektif jika menutup hidung sampai dagu dan dipakai pada situasi yang sesuai.</>,
-        takeaway: <>Penghalang fisik harus berada di jalur penularan agar bukan sekadar simbol pencegahan.</>,
-      },
-      {
-        tab: "Sabun",
-        caption: <>Misel sabun mengepung lemak dan membantu melepas partikel dari kulit atau permukaan.</>,
-        focus: <>Sabun membantu karena molekulnya dapat mengganggu lapisan lipid pada virus berselubung.</>,
-        takeaway: <>Kebersihan tangan penting karena tangan sering berpindah dari permukaan ke wajah.</>,
-      },
-    ],
-  }}
-/>
+### Pencegahan yang Tepat Selalu Memotong Jalur
+
+Pencegahan yang kuat bekerja seperti menutup jalan yang memang dipakai virus. Pada rute pernapasan, jalurnya dekat dengan hidung, mulut, droplet, aerosol, dan aliran udara. Pada rute kontak, jalurnya lewat tangan, permukaan, luka, atau selaput lendir. Pada rute nyamuk, jalurnya lewat gigitan dan tempat nyamuk berkembang biak.
+
+> Tindakan pencegahan baru kuat kalau rute penularannya bisa ditunjuk dengan jelas.
+
+| Rute penularan | Titik yang diputus | Contoh tindakan | Kesalahan umum |
+| --- | --- | --- | --- |
+| Droplet atau udara dekat wajah | Jalur hidung, mulut, udara ruangan, dan durasi paparan | Ventilasi, jarak, masker sesuai risiko, tinggal di rumah saat sakit | Mengira satu tindakan selalu cukup untuk semua situasi |
+| Kontak tangan dan permukaan | Perpindahan dari permukaan ke tangan lalu ke mata, hidung, atau mulut | Cuci tangan dengan sabun, bersihkan permukaan yang sering disentuh | Membersihkan benda tetapi tetap sering menyentuh wajah |
+| Vektor nyamuk | Gigitan dan tempat nyamuk berkembang biak | Kurangi genangan, pakai perlindungan dari gigitan, jaga lingkungan rumah | Memakai strategi virus pernapasan untuk masalah nyamuk |
 
 ## Setiap Rute Punya Titik Lemah
+
+Rute penularan selalu punya titik yang bisa diputus. Kita membaca titik itu dengan tenang, supaya tindakan pencegahan tidak terasa seperti daftar acak. Setelah rutenya jelas, alasan di balik masker, sabun, vaksin, atau pengendalian vektor menjadi lebih masuk akal.
+
+### Droplet dan Kontak Tidak Diputus dengan Cara yang Sama
 
 Pada penularan pernapasan, titik lemah virus berada pada udara dekat wajah, droplet, ventilasi, dan durasi berada dalam ruangan. Pada penularan kontak, titik lemahnya adalah tangan, permukaan, luka, dan kebiasaan menyentuh wajah. Pada penularan lewat nyamuk, titik lemahnya ada pada tempat berkembang biak nyamuk dan peluang nyamuk menggigit manusia.
 
 Karena itu, pencegahan biasanya berupa kombinasi. Untuk virus pernapasan, jarak, ventilasi, masker saat risiko tinggi, dan kebersihan tangan saling melengkapi. Untuk virus yang dibawa nyamuk, pengendalian tempat air tergenang, perlindungan dari gigitan, dan pemantauan lingkungan menjadi lebih relevan.
+
+[CDC Dengue](https://www.cdc.gov/dengue/prevention/index.html) memberi contoh konkret untuk rute vektor. Virus dengue terutama berpindah lewat gigitan nyamuk Aedes, sehingga pencegahannya menekankan perlindungan dari gigitan dan pengendalian nyamuk di sekitar rumah. Ini berbeda dari pencegahan virus pernapasan yang lebih banyak membaca udara dekat wajah.
+
+### Sabun Punya Alasan Biologis
+
+Kebersihan tangan tidak hanya soal terlihat bersih. Sabun bekerja seperti jembatan kecil. Satu bagian molekulnya mudah bercampur dengan air, sedangkan bagian lain mudah menempel pada minyak. Karena itu, sabun membantu mengangkat kotoran, minyak, dan mikroba dari kulit saat tangan digosok lalu dibilas.
+
+Pada virus berselubung, lapisan luar virus mengandung lipid atau lemak. Molekul sabun dapat mengganggu lapisan ini, sementara aliran air membantu membawa partikel yang terlepas. [CDC Clean Hands](https://www.cdc.gov/clean-hands/data-research/facts-stats/) juga menekankan bahwa sabun dan gesekan membantu mengangkat kotoran, minyak, dan mikroba dari kulit. Karena tangan sering berpindah dari permukaan ke wajah, memutus jalur tangan menjadi bagian penting dari pencegahan banyak infeksi.
 
 ## Vaksin dan Obat Bekerja di Lapisan yang Berbeda
 
@@ -68,13 +58,15 @@ Karena itu, pencegahan biasanya berupa kombinasi. Untuk virus pernapasan, jarak,
 Cara berpikirnya berlapis. Kurangi peluang virus berpindah. Kurangi peluang virus masuk. Latih pertahanan tubuh. Jika infeksi sudah terjadi, penanganannya perlu mengikuti arahan medis.
 
 <Mermaid
+  title="Vaksin dan Obat Bekerja di Lapisan yang Berbeda"
+  description="Bandingkan titik kerja vaksin, obat, dan kebiasaan pencegahan pada rantai penularan virus."
   chart={`flowchart TD
-    A["Baca rute penularan"] --> B["Droplet pernapasan"]
-    A --> C["Kontak tangan dan permukaan"]
+    A["Baca rute"] --> B["Droplet pernapasan"]
+    A --> C["Kontak permukaan"]
     A --> D["Vektor seperti nyamuk"]
-    B --> E["Ventilasi, jarak, masker sesuai risiko"]
-    C --> F["Kebersihan tangan dan permukaan"]
-    D --> G["Kurangi tempat berkembang biak dan cegah gigitan"]`}
+    B --> E["Udara dan masker"]
+    C --> F["Cuci tangan"]
+    D --> G["Cegah gigitan"]`}
 />
 
 ## Jalur Penularan Menentukan Tindakan

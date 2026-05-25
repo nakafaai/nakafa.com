@@ -40,16 +40,18 @@ print('|{0:1}|'.format('xxx'))      # Output: |xxx|`
 
 ## Pengaturan Posisi dan Karakter Pengisi
 
-### Opsi Alignment
+### Opsi Perataan
 
 <Mermaid
+  title="Opsi Perataan"
+  description="Bandingkan rata kiri, kanan, dan tengah saat teks yang sama ditempatkan dalam lebar tetap."
   chart={`
     flowchart TD
-        A["Input String: 'xxx'"] --> B["Pilihan Alignment"]
+        A["String input: 'xxx'"] --> B["Pilihan perataan"]
         
-        B --> C["< (Left)"]
-        B --> D["> (Right)"] 
-        B --> E["^ (Center)"]
+        B --> C["< (rata kiri)"]
+        B --> D["> (rata kanan)"]
+        B --> E["^ (tengah)"]
         
         C --> F["'xxx            '"]
         D --> G["'            xxx'"]
@@ -95,6 +97,8 @@ print('x = {0:12e}'.format(x))      # Output: x = 1.239800e+02`
 Python menyediakan tiga cara mereferensikan argumen dalam replacement fields, masing-masing dengan aturan berbeda.
 
 <Mermaid
+  title="Metode Referensi Argumen"
+  description="Lihat bagaimana referensi posisi, nama, dan indeks memilih nilai untuk setiap placeholder format."
   chart={`
     flowchart TD
         A["Pemformatan String"] --> B["Metode Referensi Argumen"]
@@ -163,6 +167,8 @@ Precision mengontrol jumlah digit desimal atau digit signifikan dalam tampilan a
 ### Opsi Tanda
 
 <Mermaid
+  title="Opsi Tanda"
+  description="Bandingkan tanda plus, minus, dan spasi agar keluaran angka positif dan negatif terbaca konsisten."
   chart={`
     flowchart TD
         A["Input Angka"] --> B{"Pilihan Sign"}
@@ -249,12 +255,14 @@ print(f'Area: {math.pi * radius**2:.2f} cm²') # Output: Area: 102.07 cm²`
   ]}
 />
 
-### Pola Lengkap Format Specification
+### Pola Lengkap Spesifikasi Format
 
 <Mermaid
+  title="Pola Lengkap Spesifikasi Format"
+  description="Baca urutan fill, align, width, precision, dan type agar mini-language format tidak terlihat acak."
   chart={`
     flowchart TD
-        A["Format Specification"] --> B["Urutan Komponen"]
+        A["Spesifikasi format"] --> B["Urutan komponen"]
         
         B --> C[": (mulai)"]
         C --> D["fill (karakter pengisi)"]
@@ -265,7 +273,7 @@ print(f'Area: {math.pi * radius**2:.2f} cm²') # Output: Area: 102.07 cm²`
         H --> I["type (tipe: d b o x f e g)"]
         
         J["Contoh Lengkap"] --> K["{nilai:*^+10.2f}"]
-        K --> L["fill, align, sign, width, precision, type"]
+        K --> L["komponen format"]
   `}
 />
 

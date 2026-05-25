@@ -140,7 +140,15 @@ export function MeasurementToolsLab({
                 groundColor={sceneColors.groundLight}
                 intensity={0.65}
               />
-              <directionalLight intensity={1.35} position={[5, 8, 6]} />
+              <directionalLight
+                castShadow
+                intensity={1.35}
+                position={[5, 8, 6]}
+                shadow-bias={-0.0006}
+                shadow-mapSize-height={1024}
+                shadow-mapSize-width={1024}
+                shadow-normalBias={0.02}
+              />
               <MeasurementScene
                 colors={sceneColors}
                 measurement={selectedMeasurement}

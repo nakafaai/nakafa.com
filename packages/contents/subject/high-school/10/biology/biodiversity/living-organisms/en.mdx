@@ -1,5 +1,3 @@
-import { EcosystemOrganismsLab } from "@repo/design-system/components/contents/biology/ecosystem";
-
 export const metadata = {
   title: "Living Organisms in Ecosystems",
   description:
@@ -11,58 +9,47 @@ export const metadata = {
 
 ## An Ecosystem Is More Than Organisms in One Place
 
-In a school garden, grass, insects, birds, fungi, bacteria, soil, water, and light do not stand alone. They form an **ecosystem**, a relationship between living things and their physical environment.
+An ecosystem works as a network, not as a pile of organisms in one place. Every organism brings its own needs, and those needs meet light, water, soil, air, and other organisms.
+
+### Organisms and Environment Shape Each Other
+
+In a small garden, grass, insects, birds, fungi, bacteria, soil, water, and light do not stand alone. They form an **ecosystem**, a relationship between living things and their physical environment.
 
 In ecosystems, organisms can be read by role. **Producers** make organic material, such as plants that photosynthesize. **Consumers** get food from other organisms. **Decomposers** break down remains into materials that can return to the environment.
 
+### Organism Roles Make Relationships Visible
+
 Energy flow and matter cycling are two central ideas in ecosystem ecology. The basic explanation is available in [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/46-1-ecology-of-ecosystems).
 
-<EcosystemOrganismsLab
-  title={<>Organism relationships in an ecosystem</>}
-  description={
-    <>
-      The model shows a food chain, energy pyramid, and niche interactions.
-      Organism and decomposer movement makes the relationship direction easier
-      to see.
-    </>
-  }
-  labels={{
-    chooseMode: "Choose an ecosystem relation",
-    focusLabel: "What to read",
-    takeawayLabel: "Ecological meaning",
-    viewLabel: "3D ecosystem organisms model",
-    items: [
-      {
-        tab: "Web",
-        caption: <>The arrows show food moving from plants to consumers, while decomposers return matter.</>,
-        focus: <>Follow energy from the organism being eaten to the organism that eats it.</>,
-        takeaway: <>Energy flows in one direction, while matter can cycle back through decomposers.</>,
-      },
-      {
-        tab: "Energy",
-        caption: <>The pyramid shows less available energy at higher trophic levels.</>,
-        focus: <>Look at tier size, not only the numbers.</>,
-        takeaway: <>Not all energy moves to the next level because organisms use energy and lose some as heat.</>,
-      },
-      {
-        tab: "Niche",
-        caption: <>Small interactions show feeding, living together, and decomposition in one habitat.</>,
-        focus: <>Ask what role an organism has toward other organisms in that place.</>,
-        takeaway: <>A niche explains an organism's position and work in an ecosystem, not only its address.</>,
-      },
-    ],
-  }}
-/>
+Reading roles changes a garden from a list of organisms into a working system. We begin to see who makes food, who eats, and who returns leftover matter.
+
+> Quick check: read an ecosystem by following two pathways at once, the flow of energy and the recycling of matter.
+
+| Idea | What to follow | Common mistake |
+| --- | --- | --- |
+| Energy | Food transfer from producers to consumers | Thinking the arrow shows movement or attack direction |
+| Matter | Remains and waste returning through decomposers | Forgetting that nutrients can be reused |
+| Niche | The organism's job, place, and relationship | Treating habitat and role as the same thing |
 
 ## Energy Flows from Food Sources
+
+Energy gives feeding relationships a direction. Without that direction, arrows in a food chain can be mistaken for the direction an organism moves. Start from the organism that makes or provides food, then follow who receives that food next.
+
+### Arrows Show Food Transfer
 
 The main energy source for many ecosystems is sunlight captured by producers. Plants change light energy into organic material through photosynthesis. Consumers obtain energy when they eat plants or other organisms.
 
 The arrow in a food chain shows the direction of energy and food-matter transfer. If grass is eaten by a grasshopper, and the grasshopper is eaten by a bird, the arrow points from grass to grasshopper to bird. The arrow does not mean "who attacks whom". It means "energy moves from whom to whom".
 
+### Energy Shrinks at Each Level
+
 At each transfer, some energy is used by organisms to move, grow, respire, and maintain the body. Some is lost as heat. That is why higher trophic levels usually cannot support as many organisms as lower levels.
 
 ## Matter Cycles Through Decomposers
+
+Matter behaves differently from energy. The elements that build bodies move from organisms back into the environment, then become available again through decomposers such as bacteria and fungi.
+
+### Decomposers Return Elements to the Environment
 
 Energy flows, but matter cycles. When leaves fall, animals die, or food remains are left behind, decomposers such as bacteria and fungi break them down. The products return as nutrients in soil or water.
 
@@ -74,7 +61,11 @@ A **niche** is an organism's role in an ecosystem, including where it lives, wha
 
 For example, pollinating insects, small predators, plants, and soil fungi can all be in the same garden. Their ecological jobs are different. Reading niches helps us understand why losing one kind of organism can disturb other relationships.
 
+[FAO](https://www.fao.org/pollination/) gives a real example through pollination. Many plants depend on interactions with pollinators, so losing pollinators does not only reduce one animal group. It can also change plant reproduction and food stability.
+
 <Mermaid
+  title="A Niche Shows an Organism's Role"
+  description="Connect energy source, habitat, and interactions so a niche reads as an organism's role in an ecosystem."
   chart={`flowchart LR
     A["Producer"] --> B["First consumer"]
     B --> C["Next consumer"]
@@ -82,7 +73,7 @@ For example, pollinating insects, small predators, plants, and soil fungi can al
     B --> D
     C --> D
     D --> E["Decomposer"]
-    E --> F["Nutrients return to the environment"]`}
+    E --> F["Nutrients return"]`}
 />
 
 ## Energy Arrows and Matter Pathways Belong Together

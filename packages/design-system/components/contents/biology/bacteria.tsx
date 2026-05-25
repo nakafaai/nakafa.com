@@ -1,40 +1,36 @@
 "use client";
 
 import {
-  type BiologyLabProps,
-  type BiologySceneProps,
-  createBiologyGridPoints,
+  BacillusBacteriumModel,
+  CoccusClusterModel,
+  SpirillumBacteriumModel,
+} from "@repo/design-system/components/contents/biology/bacteria-parts";
+import type {
+  BiologyLabProps,
+  BiologySceneProps,
+  BiologySceneView,
 } from "@repo/design-system/components/contents/biology/data";
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
-import {
-  BiologyLine,
-  FloatingGroup,
-  PulsingGroup,
-  SlidingGroup,
-} from "@repo/design-system/components/contents/biology/parts";
+import { PulsingGroup } from "@repo/design-system/components/contents/biology/parts";
 import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
 
-const RIBOSOME_POINTS = createBiologyGridPoints(3, 4);
-const COCCUS_POINTS = [
-  [-0.92, 0.54, 0],
-  [-0.68, 0.7, 0.05],
-  [-0.46, 0.52, 0],
-  [-0.7, 0.34, 0.05],
-] as const;
-const SPIRAL_PATH = [
-  [-0.92, -0.5, 0],
-  [-0.55, -0.22, 0],
-  [-0.2, -0.52, 0],
-  [0.16, -0.22, 0],
-  [0.52, -0.52, 0],
-  [0.9, -0.24, 0],
-] as const;
+const BACTERIA_VIEW = {
+  cameraPosition: [2.28, 1.58, 3.3],
+  cameraTarget: [0, -0.05, 0],
+  narrowCameraPosition: [2.64, 1.82, 3.9],
+} satisfies BiologySceneView;
 
 /**
  * Renders bacterial shape, structure, and cell-wall comparison views.
  */
 export function BacteriaStructureLab(props: BiologyLabProps) {
-  return <BiologyLabFrame scene={BacteriaStructureScene} {...props} />;
+  return (
+    <BiologyLabFrame
+      scene={BacteriaStructureScene}
+      view={BACTERIA_VIEW}
+      {...props}
+    />
+  );
 }
 
 /**
@@ -57,28 +53,42 @@ function BacteriaStructureScene({ colors, selectedIndex }: BiologySceneProps) {
  */
 function BacterialShapes({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
-    <group scale={1.08}>
-      {COCCUS_POINTS.map((position, index) => (
-        <FloatingGroup
-          key={position.join("-")}
-          phase={index * 0.7}
-          travel={0.04}
+    <group scale={1.22}>
+      <group position={[-0.92, 0.34, 0]}>
+        <CoccusClusterModel colors={colors} scale={0.96} />
+        <SceneLabel
+          color={colors.text}
+          fontSize="compact"
+          position={[0, -0.42, 0]}
         >
-          <mesh position={position}>
-            <sphereGeometry args={[0.17, 18, 14]} />
-            <meshStandardMaterial color={colors.microbe} />
-          </mesh>
-        </FloatingGroup>
-      ))}
-      {[0.42, 0.82].map((x, index) => (
-        <SlidingGroup key={x} phase={index * 0.9} travel={0.045}>
-          <mesh position={[x, 0.48, 0]} rotation={[0, 0, Math.PI / 2.4]}>
-            <capsuleGeometry args={[0.14, 0.52, 8, 18]} />
-            <meshStandardMaterial color={colors.host} />
-          </mesh>
-        </SlidingGroup>
-      ))}
-      <BiologyLine color={colors.pathogen} lineWidth={5} points={SPIRAL_PATH} />
+          kokus
+        </SceneLabel>
+      </group>
+      <group position={[0.18, 0.32, 0]} rotation={[0.1, 0, -0.18]}>
+        <BacillusBacteriumModel
+          colors={colors}
+          scale={0.78}
+          showInterior={false}
+          showPili={false}
+        />
+        <SceneLabel
+          color={colors.text}
+          fontSize="compact"
+          position={[0, -0.74, 0]}
+        >
+          basil
+        </SceneLabel>
+      </group>
+      <group position={[0.92, -0.42, 0]} rotation={[0, 0, -0.18]}>
+        <SpirillumBacteriumModel colors={colors} scale={1.02} />
+        <SceneLabel
+          color={colors.text}
+          fontSize="compact"
+          position={[0, -0.34, 0]}
+        >
+          spiral
+        </SceneLabel>
+      </group>
     </group>
   );
 }
@@ -89,36 +99,15 @@ function BacterialShapes({ colors }: Pick<BiologySceneProps, "colors">) {
 function BacterialStructure({ colors }: Pick<BiologySceneProps, "colors">) {
   return (
     <group>
-      <mesh rotation={[0, 0, Math.PI / 2]}>
-        <capsuleGeometry args={[0.62, 1.55, 14, 32]} />
-        <meshStandardMaterial
-          color={colors.microbe}
-          opacity={0.2}
-          transparent
-        />
-      </mesh>
-      <PulsingGroup speed={1.45} strength={0.06}>
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusKnotGeometry args={[0.42, 0.026, 86, 6]} />
-          <meshStandardMaterial color={colors.genome} />
-        </mesh>
-      </PulsingGroup>
-      {RIBOSOME_POINTS.map((point, index) => (
-        <FloatingGroup key={point.id} phase={index * 0.28} travel={0.035}>
-          <mesh
-            position={[point.position[0] * 0.28, point.position[1] * 0.2, 0.36]}
-          >
-            <sphereGeometry args={[0.045, 10, 8]} />
-            <meshStandardMaterial color={colors.spore} />
-          </mesh>
-        </FloatingGroup>
-      ))}
+      <group rotation={[0, 0, -0.08]}>
+        <BacillusBacteriumModel colors={colors} scale={1.18} />
+      </group>
       <SceneLabel
         color={colors.text}
         fontSize="compact"
-        position={[0, -0.75, 0]}
+        position={[0, -0.68, 0.38]}
       >
-        DNA
+        nukleoid DNA
       </SceneLabel>
     </group>
   );
@@ -166,13 +155,28 @@ function WallStack({
 }) {
   return (
     <group position={[x, 0, 0]}>
-      {colors.map((color, index) => (
-        <mesh key={`${label}-${color}`} position={[0, index * 0.24 - 0.24, 0]}>
-          <boxGeometry args={[0.78, 0.13, 0.26]} />
-          <meshStandardMaterial color={color} />
-        </mesh>
-      ))}
-      <SceneLabel color={textColor} fontSize="compact" position={[0, -0.68, 0]}>
+      {colors.map((color, index) => {
+        const radius = 0.25 - index * 0.035;
+        const length = 0.8 - index * 0.08;
+        const opacity = index === colors.length - 1 ? 0.78 : 0.34;
+
+        return (
+          <mesh
+            key={`${label}-${color}`}
+            position={[0, 0.02, index * 0.055]}
+            rotation={[0, 0, Math.PI / 2]}
+          >
+            <capsuleGeometry args={[radius, length, 10, 24]} />
+            <meshStandardMaterial
+              color={color}
+              opacity={opacity}
+              roughness={0.82}
+              transparent
+            />
+          </mesh>
+        );
+      })}
+      <SceneLabel color={textColor} fontSize="compact" position={[0, -0.48, 0]}>
         {label}
       </SceneLabel>
     </group>

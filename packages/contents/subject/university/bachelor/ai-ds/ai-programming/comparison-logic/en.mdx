@@ -11,11 +11,13 @@ export const metadata = {
 In programming, computers execute operations based on a specific precedence order. Imagine it like mathematical rules where multiplication is performed before addition. Python has similar rules for all its operators.
 
 <Mermaid
+  title="Operator Precedence Order"
+  description="Read evaluation order from parentheses to logic operators so expression results are not guessed."
   chart={`
-    flowchart TD
+    flowchart LR
         A["** exponent"] --> B["*, /, //, % arithmetic"]
         B --> C["+, - add subtract"]
-        C --> D["==, !=, <, <=, >, >= comparison"]
+        C --> D["comparison operators"]
         D --> E["not"]
         E --> F["and"]
         F --> G["or"]
@@ -57,6 +59,8 @@ True`
 Boolean operators allow you to combine multiple conditions or modify boolean values. Python provides three main boolean operators:
 
 <Mermaid
+  title="Boolean Operators"
+  description="See how and, or, and not combine true-false values in program decisions."
   chart={`
     flowchart LR
         A[Input A] --> AND{and}
@@ -116,6 +120,8 @@ Python has special rules for determining which values are considered `False` or 
 ### Falsy and Truthy Values
 
 <Mermaid
+  title="Falsy and Truthy Values"
+  description="Group the values Python treats as False or True before they are used in conditions."
   chart={`
     flowchart TD
         A[Python Values] --> B{Boolean Evaluation}
@@ -204,6 +210,8 @@ Comparing floating point numbers requires special attention due to precision lim
 ### Float Precision Issues
 
 <Mermaid
+  title="Float Precision Issues"
+  description="Trace decimal values into floating-point representation so comparison tolerance makes sense."
   chart={`
     flowchart TD
         A[Decimal Numbers] --> B[Binary Conversion]

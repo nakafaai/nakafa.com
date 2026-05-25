@@ -29,6 +29,8 @@ For actual content:
 - Do not go deeper than `###`.
 - Use `###` only when one `##` contains distinct sibling ideas.
 - Do not force `###` into every lesson.
+- Do not let a `##` jump directly into a `###`. Add a substantive bridge paragraph that explains the section's teaching purpose, connects the nested ideas, and gives enough context for the section to stand on its own. Do not write a one-sentence filler bridge just to satisfy structure.
+- Do not create thin sections. Each heading must carry a specific teaching job with enough explanation, example, source context, or visual interpretation to stand on its own.
 - Do not put math, symbols, or parenthesized numbers in headings.
 - Use headings that are specific to the lesson, not reusable labels that could appear unchanged in every nearby lesson.
 - Keep headings concise and non-redundant. Prefer the actual concept or case name over generic wrappers like "Condition:", "Case", "Step", or "Example" when the surrounding section already establishes that role.
@@ -51,6 +53,7 @@ For actual content:
 - If another lesson is truly needed, link to it with a specific label and route.
 - Do not reuse the same section skeleton across adjacent lessons.
 - Give each lesson its own learning path, such as a concrete phenomenon, misconception, small investigation, worked example, or interactive model.
+- Audit nearby lessons for repeated patterns before finishing. If several pages read like the same template with different nouns, rewrite the section flow.
 
 ## Practice and Worked Examples
 

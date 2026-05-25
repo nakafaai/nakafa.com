@@ -52,11 +52,13 @@ v &= \frac{s}{t} \\
 Dimension is a compact way to see which base quantities build a quantity. It does not replace units, but it helps us check whether a formula makes sense.
 
 <Mermaid
+  title="How to check a quantity"
+  description="Start from the measured quantity, then connect its base quantities to the SI unit and dimension."
   chart={`flowchart TD
-    A["Choose the measured quantity"] --> B["Identify the base quantities behind it"]
+    A["Choose quantity"] --> B["Find base quantities"]
     B --> C["Write the SI unit"]
     B --> D["Write the dimension"]
-    C --> E["Check the measurement result"]
+    C --> E["Check result"]
     D --> E`}/>
 
 For example, the area of a desk and the area of a sheet of paper can have different values, but they are the same kind of quantity. Both are area, both use the SI unit <InlineMath math="\text{m}^2" />, and both have dimension <InlineMath math="\mathrm{L}^2" />.

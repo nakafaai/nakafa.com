@@ -2,8 +2,11 @@
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { CancelIcon } from "@hugeicons/core-free-icons";
+import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "@repo/design-system/lib/utils";
+import type { ComponentProps } from "react";
 
 function Dialog(props: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
@@ -14,30 +17,30 @@ function DialogTrigger(props: DialogPrimitive.Trigger.Props) {
 }
 
 function DialogPortal(props: DialogPrimitive.Portal.Props) {
-  return <DialogPrimitive.Portal {...props} />;
+  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
 }
 
 function DialogClose(props: DialogPrimitive.Close.Props) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
 }
 
-function DialogBackdrop({
+function DialogOverlay({
   className,
   ...props
 }: DialogPrimitive.Backdrop.Props) {
   return (
     <DialogPrimitive.Backdrop
       className={cn(
-        "fixed inset-0 z-50 bg-black/32 backdrop-blur-sm transition-all duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0",
+        "data-closed:fade-out-0 data-open:fade-in-0 fixed inset-0 isolate z-50 bg-black/10 duration-100 data-closed:animate-out data-open:animate-in supports-backdrop-filter:backdrop-blur-xs",
         className
       )}
-      data-slot="dialog-backdrop"
+      data-slot="dialog-overlay"
       {...props}
     />
   );
 }
 
-function DialogPopup({
+function DialogContent({
   className,
   children,
   showCloseButton = true,
@@ -47,60 +50,101 @@ function DialogPopup({
 }) {
   return (
     <DialogPortal>
-      <DialogBackdrop />
-      <div className="fixed inset-0 z-50">
-        <div className="grid h-dvh grid-rows-[1fr_auto] justify-items-center pt-6 sm:grid-rows-[1fr_auto_2fr] sm:p-4">
-          <DialogPrimitive.Popup
-            className={cn(
-              "row-start-2 grid w-full min-w-0 origin-top gap-4 overflow-hidden border bg-popover bg-clip-padding p-6 text-popover-foreground shadow-lg transition-[scale,opacity,translate] duration-200 ease-out will-change-transform data-ending-style:opacity-0 data-starting-style:opacity-0 max-sm:overflow-y-auto max-sm:border-none max-sm:opacity-[calc(1-min(var(--nested-dialogs),1))] max-sm:data-ending-style:translate-y-4 max-sm:data-starting-style:translate-y-4 sm:max-w-lg sm:translate-y-[calc(-1.25rem*var(--nested-dialogs))] sm:scale-[calc(1-0.1*var(--nested-dialogs))] sm:rounded-2xl sm:data-ending-style:scale-98 sm:data-starting-style:scale-98 dark:bg-clip-border",
-              "relative before:pointer-events-none before:absolute before:inset-0 before:shadow-[0_1px_--theme(--color-black/4%)] max-sm:before:hidden sm:before:rounded-[calc(var(--radius-2xl)-1px)]",
-              "sm:data-nested:data-ending-style:translate-y-8 sm:data-nested:data-starting-style:translate-y-8 dark:before:shadow-[0_-1px_--theme(--color-white/8%)]",
-              className
-            )}
-            data-slot="dialog-popup"
-            {...props}
+      <DialogOverlay />
+      <DialogPrimitive.Popup
+        className={cn(
+          "data-closed:fade-out-0 data-closed:zoom-out-95 data-open:fade-in-0 data-open:zoom-in-95 fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 rounded-xl bg-popover p-6 text-popover-foreground text-sm outline-none ring-1 ring-foreground/10 duration-100 data-closed:animate-out data-open:animate-in sm:max-w-md",
+          className
+        )}
+        data-slot="dialog-content"
+        {...props}
+      >
+        {children}
+        {showCloseButton && (
+          <DialogPrimitive.Close
+            data-slot="dialog-close"
+            render={
+              <Button
+                className="absolute top-4 right-4"
+                size="icon-sm"
+                variant="ghost"
+              />
+            }
           >
-            {children}
-            {!!showCloseButton && (
-              <DialogPrimitive.Close className="absolute inset-e-2 top-2 inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md border border-transparent opacity-72 outline-none transition-[color,background-color,box-shadow,opacity] pointer-coarse:after:absolute pointer-coarse:after:size-full pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0">
-                <HugeIcons icon={CancelIcon} />
-                <span className="sr-only">Close</span>
-              </DialogPrimitive.Close>
-            )}
-          </DialogPrimitive.Popup>
-        </div>
-      </div>
+            <HugeIcons data-icon="icon" icon={CancelIcon} />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        )}
+      </DialogPrimitive.Popup>
     </DialogPortal>
   );
 }
 
-function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+function DialogHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-1 text-center sm:text-left", className)}
+      className={cn("flex flex-col gap-2", className)}
       data-slot="dialog-header"
       {...props}
     />
   );
 }
 
-function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
+function DialogFooter({
+  className,
+  showCloseButton = false,
+  children,
+  ...props
+}: ComponentProps<"div"> & {
+  showCloseButton?: boolean;
+}) {
   return (
     <div
       className={cn(
-        "flex flex-col-reverse gap-2 sm:-mx-6 sm:mt-2 sm:-mb-6 sm:flex-row sm:justify-end sm:border-t sm:bg-muted/20 sm:px-6 sm:py-4",
+        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
         className
       )}
       data-slot="dialog-footer"
       {...props}
-    />
+    >
+      {children}
+      {showCloseButton && (
+        <DialogPrimitive.Close render={<Button variant="outline" />}>
+          Close
+        </DialogPrimitive.Close>
+      )}
+    </div>
+  );
+}
+
+function DialogPanel({
+  className,
+  scrollFade = true,
+  scrollbarGutter = true,
+  ...props
+}: ComponentProps<"div"> & {
+  scrollFade?: boolean;
+  scrollbarGutter?: boolean;
+}) {
+  return (
+    <ScrollArea
+      className="touch-auto"
+      scrollbarGutter={scrollbarGutter}
+      scrollFade={scrollFade}
+    >
+      <div
+        className={cn("min-w-0", className)}
+        data-slot="dialog-panel"
+        {...props}
+      />
+    </ScrollArea>
   );
 }
 
 function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
-      className={cn("font-semibold text-lg", className)}
+      className={cn("font-medium leading-none", className)}
       data-slot="dialog-title"
       {...props}
     />
@@ -113,7 +157,10 @@ function DialogDescription({
 }: DialogPrimitive.Description.Props) {
   return (
     <DialogPrimitive.Description
-      className={cn("text-muted-foreground text-sm", className)}
+      className={cn(
+        "text-muted-foreground text-sm *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
+        className
+      )}
       data-slot="dialog-description"
       {...props}
     />
@@ -122,14 +169,13 @@ function DialogDescription({
 
 export {
   Dialog,
-  DialogBackdrop,
-  DialogBackdrop as DialogOverlay,
   DialogClose,
+  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogPopup,
-  DialogPopup as DialogContent,
+  DialogOverlay,
+  DialogPanel,
   DialogPortal,
   DialogTitle,
   DialogTrigger,

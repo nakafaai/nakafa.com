@@ -1,5 +1,3 @@
-import { ClimateSymptomsLab } from "@repo/design-system/components/contents/biology/climate-symptoms";
-
 export const metadata = {
   title: "Symptoms of Climate Change",
   description:
@@ -11,47 +9,30 @@ export const metadata = {
 
 ## One Hot Day Is Not Enough
 
+Climate change is not shown by one weather event. The stronger signal is a pattern that lasts and appears across several indicators at the same time.
+
+### Weather Changes Fast, Climate Is Read from Patterns
+
 Weather is the short-term condition of the atmosphere, such as rain, heat, or clouds today. **Climate** is the long-term pattern of weather in a region. Climate change is therefore not proven by one hot day, but by consistent patterns over a long time.
 
 Climate symptoms are read like signs in a medical checkup. One sign can mislead when it stands alone, but several signs pointing in the same direction give a stronger picture. Rising average temperature, warmer oceans, shrinking ice, higher sea level, and more extreme rainfall patterns reinforce one another.
 
 [NASA Climate](https://science.nasa.gov/climate-change/evidence/) summarizes climate evidence from global warming, ocean warming, ice loss, and sea-level rise.
 
-<ClimateSymptomsLab
-  title={<>Reading climate indicators</>}
-  description={
-    <>
-      The model shows atmospheric warming, ocean heat, and the link between ice
-      and sea level. Moving particles make the symptoms read as processes.
-    </>
-  }
-  labels={{
-    chooseMode: "Choose an indicator",
-    focusLabel: "What to observe",
-    takeawayLabel: "Climate meaning",
-    viewLabel: "3D climate change symptoms model",
-    items: [
-      {
-        tab: "Temp",
-        caption: <>The moving heat ring around Earth shows accumulated heat, not just one uncomfortable day.</>,
-        focus: <>Compare long-term trends, not momentary weather.</>,
-        takeaway: <>Global warming is read from a long-term increase in average temperature.</>,
-      },
-      {
-        tab: "Ocean",
-        caption: <>Heat particles in the ocean show that seawater can absorb and store thermal energy.</>,
-        focus: <>Notice heat below the surface, not only air temperature over land.</>,
-        takeaway: <>A warmer ocean can affect corals, currents, storms, and marine life.</>,
-      },
-      {
-        tab: "Ice",
-        caption: <>The ice and sea line show the link between melting ice, ocean expansion, and coastlines.</>,
-        focus: <>Sea-level rise is a slow signal with visible effects in coastal regions.</>,
-        takeaway: <>Small changes in sea level can increase tidal flooding, erosion, and coastal flood risk.</>,
-      },
-    ],
-  }}
-/>
+### Many Indicators Make the Claim Stronger
+
+[NOAA Climate.gov](https://www.climate.gov/news-features/understanding-climate/climate-change-ocean-heat-content) explains ocean heat as an important indicator because the ocean stores a large amount of heat energy. This helps us understand why climate symptoms are not read only from air over land.
+
+This is why climate symptoms should be read from many measurement tools. Satellites, ocean measurements, temperature records, and ice observations support one another. The point is not to memorize every number, but to understand that climate claims are strong because many indicators point in the same direction.
+
+| Indicator | What students should read | Why one day is not enough |
+| --- | --- | --- |
+| Average temperature | Long-term heat trend | Daily heat can rise or fall with local weather |
+| Ocean heat | Heat stored in seawater | Ocean change is slower but affects marine life for longer |
+| Ice and sea level | Water and reflection changes | Local snow or tide does not show the whole system |
+| Extreme patterns | Changes in risk and frequency | One storm is not the same as a long-term pattern |
+
+> One weather event can mislead. A stronger climate reading compares several indicators over a long period.
 
 ## Average Temperature Differs from Feeling Hot
 
@@ -61,9 +42,19 @@ A simple analogy is a report-card average. One assignment score can go up or dow
 
 ## Ocean, Ice, and Coasts Are Connected
 
+Warming does not stop in the air. Oceans, ice, and coasts also hold signs of change because heat, water, and reflected light connect them.
+
+### The Ocean Stores a Large Amount of Heat
+
 The ocean absorbs a large amount of heat. When seawater warms, marine organisms can be stressed. Coral reefs, for example, can bleach when heat disrupts the relationship between coral and its symbiotic algae.
 
+Because the ocean stores so much heat, changes there can move slowly but last a long time. The effects can reach currents, storms, corals, and marine organisms that are sensitive to temperature.
+
+### Ice Changes How Much Light Is Reflected
+
 Shrinking ice also changes balance. Bright ice reflects a lot of light. When ice decreases, darker surfaces absorb more heat. In snowy mountains or tropical ice regions, ice loss is a sign that environmental temperature is changing.
+
+### Coasts Feel Slow Changes
 
 Sea level rises because seawater expands when warm and because melting land ice adds water to the ocean. The effect is not identical everywhere, but coastal regions are more vulnerable to tidal flooding, erosion, and floods.
 
@@ -74,6 +65,8 @@ Climate change also appears in extreme event patterns. Drought can become more s
 That is why climate symptoms should be read using many indicators. Temperature, ocean, ice, rainfall, drought, and coastal events must be read together so one narrow example does not mislead us.
 
 <Mermaid
+  title="Extreme Patterns Make the Signal Feel Close"
+  description="Combine temperature, ocean, ice, and extreme-pattern data so climate signals are not judged from one weather day."
   chart={`flowchart LR
     A["Long-term data"] --> B["Average temperature"]
     A --> C["Ocean heat"]

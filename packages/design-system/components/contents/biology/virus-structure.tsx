@@ -1,5 +1,6 @@
 "use client";
 
+import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
 import {
   BIOLOGY_RING_POINT_COUNT,
   type BiologyLabProps,
@@ -14,7 +15,11 @@ import {
   RotatingGroup,
 } from "@repo/design-system/components/contents/biology/parts";
 import {
+  BacteriophageModel,
   createVirusSurfaceAnchors,
+  EnvelopedVirusModel,
+  HelicalVirusModel,
+  PolyhedralVirusModel,
   VirusSurfaceSpike,
 } from "@repo/design-system/components/contents/biology/virus-parts";
 
@@ -31,6 +36,21 @@ const VIRION_VIEW = {
   cameraTarget: [0, 0.04, 0],
   narrowCameraPosition: [2.25, 1.72, 3.15],
 } satisfies BiologySceneView;
+const MORPHOLOGY_VIEW = {
+  cameraPosition: [0, 1.08, 5.25],
+  cameraTarget: [0, -0.02, 0],
+  maxAzimuthAngle: Math.PI / 4.8,
+  maxPolarAngle: Math.PI / 1.8,
+  minAzimuthAngle: -Math.PI / 4.8,
+  minPolarAngle: Math.PI / 4.2,
+  narrowCameraPosition: [0, 1.32, 6.25],
+} satisfies BiologySceneView;
+const MORPHOLOGY_LABEL_TARGETS = [
+  { id: "helical", labelPosition: [-2.2, -0.86, -0.52] },
+  { id: "polyhedral", labelPosition: [-0.72, -0.86, -0.16] },
+  { id: "enveloped", labelPosition: [0.86, -0.86, 0.18] },
+  { id: "complex", labelPosition: [2.24, -0.86, 0.52] },
+] as const;
 
 /**
  * Renders the virus structure lab with capsid, genome, and envelope focus modes.
@@ -40,6 +60,19 @@ export function VirusStructureLab(props: BiologyLabProps) {
     <BiologyLabFrame
       scene={VirusStructureScene}
       view={VIRION_VIEW}
+      {...props}
+    />
+  );
+}
+
+/**
+ * Renders major virus morphology types as distinct reusable 3D assets.
+ */
+export function VirusMorphologyLab(props: BiologyLabProps) {
+  return (
+    <BiologyLabFrame
+      scene={VirusMorphologyScene}
+      view={MORPHOLOGY_VIEW}
       {...props}
     />
   );
@@ -103,6 +136,33 @@ function VirusStructureScene({ colors, selectedIndex }: BiologySceneProps) {
           </FloatingGroup>
         ))}
       </RotatingGroup>
+    </group>
+  );
+}
+
+/**
+ * Places the four common viral morphologies side by side without extra tabs.
+ */
+function VirusMorphologyScene({ colors, item }: BiologySceneProps) {
+  return (
+    <group>
+      <group position={[-2.2, 0.08, -0.52]} rotation={[0.08, -0.24, 0.08]}>
+        <HelicalVirusModel colors={colors} scale={1.04} />
+      </group>
+      <group position={[-0.72, 0.06, -0.16]} rotation={[0.18, 0.3, -0.08]}>
+        <PolyhedralVirusModel colors={colors} scale={1.02} />
+      </group>
+      <group position={[0.86, 0.07, 0.18]} rotation={[0.12, -0.25, 0]}>
+        <EnvelopedVirusModel colors={colors} scale={0.92} />
+      </group>
+      <group position={[2.24, 0.02, 0.52]} rotation={[0.12, 0.22, -0.06]}>
+        <BacteriophageModel colors={colors} scale={0.98} />
+      </group>
+      <BiologyCallouts
+        callouts={item.callouts}
+        color={colors.text}
+        targets={MORPHOLOGY_LABEL_TARGETS}
+      />
     </group>
   );
 }

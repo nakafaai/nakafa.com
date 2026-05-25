@@ -52,11 +52,13 @@ v &= \frac{s}{t} \\
 Dimensi adalah cara singkat untuk melihat susunan besaran pokok di dalam suatu besaran. Dimensi tidak menggantikan satuan, tetapi membantu kita mengecek apakah rumus masuk akal.
 
 <Mermaid
+  title="Cara mengecek besaran"
+  description="Mulai dari besaran yang diukur, lalu hubungkan besaran pokoknya ke satuan SI dan dimensi."
   chart={`flowchart TD
-    A["Pilih besaran yang diukur"] --> B["Tentukan besaran pokok pembentuknya"]
+    A["Pilih besaran"] --> B["Cari besaran pokok"]
     B --> C["Tulis satuan SI"]
     B --> D["Tulis dimensi"]
-    C --> E["Cek hasil ukur"]
+    C --> E["Cek hasil"]
     D --> E`}/>
 
 Contohnya, luas meja dan luas kertas bisa punya nilai berbeda, tetapi jenis besarannya sama. Keduanya sama-sama luas, satuan SI-nya <InlineMath math="\text{m}^2" />, dan dimensinya <InlineMath math="\mathrm{L}^2" />.

@@ -91,8 +91,10 @@ Kalau satuan gaya sudah jelas, satuan usaha dan daya bisa dibaca bertahap.
 Ketika ukuran terlalu besar atau terlalu kecil, kita tidak perlu menulis deretan nol panjang. SI memakai awalan metrik untuk menyatakan kelipatan pangkat <InlineMath math="10" />.
 
 <Mermaid
-  chart={`flowchart TD
-    A["Baca nilai dan satuan"] --> B["Pisahkan awalan dari satuan dasar"]
+  title="Awalan Metrik Menghemat Nol"
+  description="Lihat bagaimana awalan metrik mengganti deretan nol menjadi nama satuan yang lebih ringkas."
+  chart={`flowchart LR
+    A["Baca nilai"] --> B["Pisahkan awalan"]
     B --> C["Ubah ke faktor 10"]
     C --> D["Kalikan nilai"]
     D --> E["Tulis satuan akhir"]`}/>

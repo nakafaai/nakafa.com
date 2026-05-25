@@ -189,15 +189,17 @@ print(f"print_message function result: {result}")  # Output: print_message funct
 Variables in Python have scope that determines where variables can be accessed. Understanding variable scope is important to avoid errors in programs.
 
 <Mermaid
+  title="Variable Scope in Functions"
+  description="Follow name lookup from local scope outward so function scope rules are easier to trace."
   chart={`
     flowchart TD
         A[Built-in Scope] --> B[Global Scope]
         B --> C[Enclosing Scope]
         C --> D[Local Scope]
-        A1[Python built-in functions print, len, range] --> A
-        B1[Variables outside functions can be accessed anywhere] --> B
-        C1[Variables in outer functions for nested functions] --> C
-        D1[Variables inside functions can only be accessed locally] --> D
+        A1[Built-in functions] --> A
+        B1[Global variables] --> B
+        C1[Enclosing variables] --> C
+        D1[Local variables] --> D
   `}
 />
 

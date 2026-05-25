@@ -43,6 +43,8 @@ print('|{0:1}|'.format('xxx'))      # Output: |xxx|`
 ### Alignment Options
 
 <Mermaid
+  title="Alignment Options"
+  description="Compare left, right, and center alignment as the same string is placed inside a fixed width."
   chart={`
     flowchart TD
         A["Input String: 'xxx'"] --> B["Alignment Choice"]
@@ -95,6 +97,8 @@ print('x = {0:12e}'.format(x))      # Output: x = 1.239800e+02`
 Python provides three ways to reference arguments in replacement fields, each with different rules.
 
 <Mermaid
+  title="Argument Reference Methods"
+  description="See how positional, named, and indexed references choose values for each format placeholder."
   chart={`
     flowchart TD
         A["String Formatting"] --> B["Argument Reference Methods"]
@@ -163,6 +167,8 @@ Precision controls the number of decimal places or significant digits in number 
 ### Sign Options
 
 <Mermaid
+  title="Sign Options"
+  description="Compare plus, minus, and space signs so positive and negative number output reads consistently."
   chart={`
     flowchart TD
         A["Number Input"] --> B{"Sign Choice"}
@@ -252,6 +258,8 @@ print(f'Area: {math.pi * radius**2:.2f} cm²') # Output: Area: 102.07 cm²`
 ### Complete Format Specification Pattern
 
 <Mermaid
+  title="Complete Format Specification Pattern"
+  description="Read the format slots from fill, alignment, width, precision, and type so the mini-language does not feel random."
   chart={`
     flowchart TD
         A["Format Specification"] --> B["Component Order"]
@@ -265,7 +273,7 @@ print(f'Area: {math.pi * radius**2:.2f} cm²') # Output: Area: 102.07 cm²`
         H --> I["type (type: d b o x f e g)"]
         
         J["Complete Example"] --> K["{value:*^+10.2f}"]
-        K --> L["fill, align, sign, width, precision, type"]
+        K --> L["format parts"]
   `}
 />
 

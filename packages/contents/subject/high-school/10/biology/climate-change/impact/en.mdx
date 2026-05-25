@@ -1,5 +1,3 @@
-import { ClimateImpactLab } from "@repo/design-system/components/contents/biology/climate-impact";
-
 export const metadata = {
   title: "Impact of Climate Change",
   description:
@@ -11,53 +9,44 @@ export const metadata = {
 
 ## Climate Impacts Spread Like Chains
 
+Climate impacts rarely stop in one place. A physical change can disturb organisms, and that disturbance can spread to food, water, health, and livelihoods.
+
+### One Physical Change Can Become Many Impacts
+
 Climate change rarely stops at one event. Hotter air can dry soil faster. Dry soil can stress crops. Lower harvests can affect food. If clean water decreases, human health is affected too.
 
 So climate impacts need to be read as cause-and-effect chains. One physical change can spread to organisms, ecosystems, economies, and health.
 
+### Impact Data Reads Connected Systems
+
 The [IPCC AR6 Synthesis Report](https://www.ipcc.ch/report/ar6/syr/) explains that climate change has affected ecosystems, people, food, water, and health in many regions.
 
-<ClimateImpactLab
-  title={<>Three climate impact pathways</>}
-  description={
-    <>
-      The model shows heat-stressed coral, water-stressed crops, and health risk
-      moving through vectors.
-    </>
-  }
-  labels={{
-    chooseMode: "Choose an impact pathway",
-    focusLabel: "What to trace",
-    takeawayLabel: "Impact meaning",
-    viewLabel: "3D climate change impacts model",
-    items: [
-      {
-        tab: "Coral",
-        caption: <>Pale coral represents heat stress in a marine ecosystem.</>,
-        focus: <>Read the color change as biological stress, not decoration.</>,
-        takeaway: <>Ocean warming can disrupt the relationship between coral and symbiotic algae, weakening reef ecosystems.</>,
-      },
-      {
-        tab: "Food",
-        caption: <>Tilted crops and little water represent pressure on food and water.</>,
-        focus: <>Trace the chain from heat to water, then to plant growth.</>,
-        takeaway: <>Drought and shifting rainfall patterns can reduce agricultural yield and water availability.</>,
-      },
-      {
-        tab: "Health",
-        caption: <>Moving insects toward a person represent disease risk influenced by the environment.</>,
-        focus: <>Warm and wet conditions can shift the living area of certain vectors.</>,
-        takeaway: <>Health impacts come not only from direct heat, but also from habitat changes for disease carriers.</>,
-      },
-    ],
-  }}
-/>
+This shows that climate impacts are not a set of separate events. One disturbance in water, temperature, or habitat can reappear as pressure on food, health, or biodiversity.
+
+| Starting change | Biological pathway | Impact that can follow |
+| --- | --- | --- |
+| Warmer seawater | Coral-algae symbiosis is stressed | Reef habitat weakens |
+| Longer drought | Soil water falls and crops are stressed | Food supply becomes less stable |
+| Heavier rain | Water can be contaminated or floods spread | Health and safety risks increase |
+| Habitat temperature shifts | Species move or lose suitable range | New competition and food-web changes appear |
+
+> Read impact as a pathway: physical change first, organism response next, then the effect on people and ecosystems.
 
 ## Marine Ecosystems Respond Before It Looks Obvious
+
+The ocean stores a large amount of heat, so a small temperature shift can matter to sensitive organisms. Coral is a strong example because its survival depends on a fragile partnership.
+
+### Corals Live with Symbiotic Algae
 
 Coral reefs may look like rocks, but they are built by coral animals living with symbiotic algae. **Symbiosis** is a close relationship between two organisms. When seawater becomes too warm, this relationship can be disturbed and coral can appear white.
 
 Coral bleaching does not always mean immediate death, but it is a sign of severe stress. If pressure continues, corals weaken, fish lose habitat, and coastal communities that depend on reefs are affected.
+
+### Pale Color Is a Stress Signal
+
+[NOAA Ocean Service](https://oceanservice.noaa.gov/facts/coral_bleach.html) explains coral bleaching as a stress response in which coral expels the algae living in its tissue. This makes coral a useful example, because one temperature change can disturb a living relationship that supports a whole reef.
+
+So the pale color is not cosmetic. It is evidence that the coral-algae relationship is being disturbed, and the effect can spread to reef fish and habitat.
 
 ## Food and Water Follow the Seasons
 
@@ -67,15 +56,25 @@ Food impacts do not happen only in rice fields. Livestock, fisheries, and food d
 
 ## Health Is Affected Through Many Doors
 
+Health is affected by climate through several separate pathways. Heat, water, air, food, and disease-carrying organisms each need to be read on their own.
+
+### Heat, Water, and Vectors Open Different Risks
+
 Extreme heat can cause heat exhaustion. Flooding can increase disease risk linked with contaminated water. Drought can reduce clean water. Changes in temperature and rain can also affect the living area of vectors such as mosquitoes.
+
+[WHO](https://www.who.int/news-room/fact-sheets/detail/climate-change-and-health) describes health as a direct and indirect climate impact, including heatwaves, food and water disruption, and vector-borne disease. So health should not be read through one doorway only.
+
+### Habitat Movement Changes Organism Relationships
 
 In wildlife, climate change can push species to move habitats. If a species moves to find a suitable temperature, feeding relationships and competition in the new place can change. This is one way climate change can pressure biodiversity.
 
 <Mermaid
+  title="Habitat Movement Changes Organism Relationships"
+  description="Read from climate pressure to habitat movement, then to the changing relationships between organisms."
   chart={`flowchart LR
     A["Heat or rain changes"] --> B["Water and habitat change"]
     B --> C["Organisms are stressed"]
-    C --> D["Food, health, and ecosystems shift"]
+    C --> D["Systems shift"]
     D --> E["People feel the impact"]`}
 />
 

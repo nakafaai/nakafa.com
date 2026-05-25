@@ -107,7 +107,15 @@ export function ChemicalReactionTypesLab({
                 groundColor={sceneColors.groundLight}
                 intensity={0.7}
               />
-              <directionalLight intensity={1.3} position={[4, 5, 5]} />
+              <directionalLight
+                castShadow
+                intensity={1.3}
+                position={[4, 5, 5]}
+                shadow-bias={-0.0006}
+                shadow-mapSize-height={1024}
+                shadow-mapSize-width={1024}
+                shadow-normalBias={0.02}
+              />
               <pointLight
                 color={sceneColors.flame}
                 intensity={0.8}

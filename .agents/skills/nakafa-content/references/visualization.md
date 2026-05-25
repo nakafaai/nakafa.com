@@ -14,11 +14,20 @@ Use this reference when a lesson needs Mermaid, imported content components, cus
 - Use the simplest visual that fully explains the concept.
 - Use plain MDX, compact tables, Mermaid, or existing content components when the idea remains readable.
 - Prefer R3F or Three.js when a custom illustration needs many layered shapes, labels, hover states, animation paths, or responsive fixes.
+- R3F and Three.js are optional and must earn their place. If the model would look generic, symbolic, unfinished, or less clear than prose, a table, or Mermaid, remove the 3D lab from the lesson instead of forcing a low-quality visual.
 - Prefer "show, then explain": let the visual carry the concept first, then add short prose or footer facts.
 - Avoid dense left-right explanation panels, card-inside-card, and background blocks that only separate information.
 - Avoid large explanatory titles inside the scene. If labels are needed, keep them small, camera-facing, and secondary to the model.
 - Keep text-heavy footer facts at one or two columns; do not force four columns when content needs reading width.
 - For interactive visuals, the first render must explain the core idea before the user drags, zooms, or rotates.
+
+## 3D Quality Gate
+
+- Final visible objects must read as the intended real-world, conceptual, measured, or interactive entity from the default view and reasonable drag angles. Do not ship a model that reads as a plain cone, box, loose ball, disconnected line, or placeholder primitive unless the lesson explicitly teaches that primitive.
+- Primitive geometry may be used as construction pieces only when the assembled result is recognizable, cohesive, complete, and appropriate for the lesson from every inspected angle.
+- Connected parts must stay connected. Handles, joints, labels, membranes, axes, particles, apparatus parts, and structural features cannot float, intersect randomly, or disappear after rotation.
+- Tune the default camera so students do not need to drag or zoom before the model makes sense. Keep drag and zoom available for inspection.
+- If a scene fails the quality gate and cannot be fixed cleanly in scope, remove the MDX import and component usage or replace it with clearer prose, a compact table, Mermaid, or a simpler component. Quality is higher priority than keeping every page visual-enabled.
 
 ## R3F Patterns
 

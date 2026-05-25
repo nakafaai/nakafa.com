@@ -37,12 +37,14 @@ export interface BiologySceneColors {
   carbon: string;
   decomposer: string;
   genome: string;
+  grain: string;
   heat: string;
   host: string;
   ice: string;
   membrane: string;
   microbe: string;
   muted: string;
+  nucleus: string;
   ocean: string;
   pathogen: string;
   plant: string;
@@ -51,6 +53,7 @@ export interface BiologySceneColors {
   spore: string;
   text: string;
   warning: string;
+  wood: string;
 }
 
 export const BIOLOGY_DEFAULT_VIEW = {
@@ -62,6 +65,10 @@ export const BIOLOGY_DEFAULT_VIEW = {
 export interface BiologySceneView {
   cameraPosition: BiologyScenePoint;
   cameraTarget: BiologyScenePoint;
+  maxAzimuthAngle?: number;
+  maxPolarAngle?: number;
+  minAzimuthAngle?: number;
+  minPolarAngle?: number;
   narrowCameraPosition: BiologyScenePoint;
 }
 
@@ -95,14 +102,17 @@ export function getBiologySceneColors(theme?: string): BiologySceneColors {
     membrane: getColor("VIOLET"),
     microbe: getColor("EMERALD"),
     muted: isDarkTheme ? getColor("ZINC") : getColor("SLATE"),
+    nucleus: getColor("AMBER"),
     ocean: getColor("SKY"),
     pathogen: getColor("ROSE"),
     plant: getColor("GREEN"),
     skyLight: ORIGIN_COLOR.LIGHT,
     soil: isDarkTheme ? getColor("STONE") : getColor("ZINC"),
     spore: getColor("FUCHSIA"),
+    grain: getColor("AMBER"),
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
     warning: getColor("RED"),
+    wood: getColor("STONE"),
   };
 }
 

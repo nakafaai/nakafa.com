@@ -91,8 +91,10 @@ Once force is clear, work and power can be read step by step.
 When a size is very large or very small, we do not need to write long rows of zeros. SI uses metric prefixes to express powers of <InlineMath math="10" />.
 
 <Mermaid
-  chart={`flowchart TD
-    A["Read the value and unit"] --> B["Separate the prefix from the base unit"]
+  title="Metric Prefixes Save Zeros"
+  description="See how metric prefixes replace long strings of zeros with shorter unit names."
+  chart={`flowchart LR
+    A["Read value"] --> B["Split prefix"]
     B --> C["Use a power of 10"]
     C --> D["Multiply the value"]
     D --> E["Write the final unit"]`}/>

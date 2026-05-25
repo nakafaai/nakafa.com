@@ -4,12 +4,14 @@ import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type { BiologyScenePoint } from "@repo/design-system/components/contents/biology/data";
 import type { ReactNode } from "react";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import type { Group } from "three";
+import * as THREE from "three";
 
 const NUCLEIC_ACID_STEP_COUNT = 36;
 const NUCLEIC_ACID_BASE_PAIR_COUNT = 12;
 const NUCLEIC_ACID_BASE_TICK_COUNT = 9;
+const NUCLEIC_ACID_MARKER_COUNT = 8;
 const NUCLEIC_ACID_FULL_SEGMENT = [0, 1] as const;
 const TAU = Math.PI * 2;
 
@@ -52,13 +54,16 @@ export function PulsingGroup({
   strength?: number;
 }) {
   const ref = useRef<Group>(null);
+  const timeRef = useRef(phase);
 
-  useFrame(({ clock }) => {
+  useFrame((_, delta) => {
     if (!ref.current) {
       return;
     }
 
-    const scale = 1 + Math.sin(clock.elapsedTime * speed + phase) * strength;
+    timeRef.current += delta * speed;
+
+    const scale = 1 + Math.sin(timeRef.current) * strength;
 
     ref.current.scale.setScalar(scale);
   });
@@ -82,14 +87,15 @@ export function FloatingGroup({
   travel?: number;
 }) {
   const ref = useRef<Group>(null);
+  const timeRef = useRef(phase);
 
-  useFrame(({ clock }) => {
+  useFrame((_, delta) => {
     if (!ref.current) {
       return;
     }
 
-    ref.current.position.y =
-      Math.sin(clock.elapsedTime * speed + phase) * travel;
+    timeRef.current += delta * speed;
+    ref.current.position.y = Math.sin(timeRef.current) * travel;
   });
 
   return <group ref={ref}>{children}</group>;
@@ -111,14 +117,15 @@ export function SlidingGroup({
   travel?: number;
 }) {
   const ref = useRef<Group>(null);
+  const timeRef = useRef(phase);
 
-  useFrame(({ clock }) => {
+  useFrame((_, delta) => {
     if (!ref.current) {
       return;
     }
 
-    ref.current.position.x =
-      Math.sin(clock.elapsedTime * speed + phase) * travel;
+    timeRef.current += delta * speed;
+    ref.current.position.x = Math.sin(timeRef.current) * travel;
   });
 
   return <group ref={ref}>{children}</group>;
@@ -166,6 +173,21 @@ export function DnaDoubleHelix({
     segment,
     turns,
   });
+  const firstMarkers = createNucleicAcidMarkerPoints({
+    length,
+    phase: 0,
+    radius,
+    segment,
+    turns,
+  });
+  const secondMarkers = createNucleicAcidMarkerPoints({
+    length,
+    phase: Math.PI,
+    radius,
+    segment,
+    turns,
+  });
+  const markerRadius = Math.max(0.012, lineWidth * 0.005);
 
   return (
     <group>
@@ -187,6 +209,16 @@ export function DnaDoubleHelix({
           points={basePair.points}
         />
       ))}
+      <BackboneMarkers
+        color={backboneColor}
+        points={firstMarkers}
+        radius={markerRadius}
+      />
+      <BackboneMarkers
+        color={backboneColor}
+        points={secondMarkers}
+        radius={markerRadius}
+      />
     </group>
   );
 }
@@ -217,6 +249,14 @@ export function RnaSingleStrand({
     turns,
   });
   const baseTicks = createRnaBaseTicks({ length, radius, turns });
+  const markers = createNucleicAcidMarkerPoints({
+    length,
+    phase: 0,
+    radius,
+    segment: NUCLEIC_ACID_FULL_SEGMENT,
+    turns,
+  });
+  const markerRadius = Math.max(0.012, lineWidth * 0.005);
 
   return (
     <group>
@@ -233,6 +273,11 @@ export function RnaSingleStrand({
           points={baseTick.points}
         />
       ))}
+      <BackboneMarkers
+        color={backboneColor}
+        points={markers}
+        radius={markerRadius}
+      />
     </group>
   );
 }
@@ -248,9 +293,18 @@ export function BiologyGround({
   scale?: BiologyScenePoint;
 }) {
   return (
-    <mesh position={[0, -0.9, 0]} receiveShadow scale={scale}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={color} opacity={0.26} transparent />
+    <mesh
+      position={[0, -0.9, 0]}
+      receiveShadow
+      scale={[scale[0] / 2, scale[1], scale[2] / 2]}
+    >
+      <cylinderGeometry args={[1, 1, 1, 56]} />
+      <meshStandardMaterial
+        color={color}
+        depthWrite={false}
+        opacity={0.26}
+        transparent
+      />
     </mesh>
   );
 }
@@ -268,6 +322,68 @@ export function BiologyLine({
   points: readonly BiologyScenePoint[];
 }) {
   return <Line color={color} lineWidth={lineWidth} points={points} />;
+}
+
+/**
+ * Builds connected organic curves as real geometry when a line would look like
+ * an unfinished sketch.
+ */
+export function BiologyTube({
+  color,
+  opacity = 1,
+  points,
+  radius,
+  segments = 32,
+}: {
+  color: string;
+  opacity?: number;
+  points: readonly BiologyScenePoint[];
+  radius: number;
+  segments?: number;
+}) {
+  const curve = useMemo(
+    () =>
+      new THREE.CatmullRomCurve3(
+        points.map((point) => new THREE.Vector3(...point))
+      ),
+    [points]
+  );
+
+  return (
+    <mesh>
+      <tubeGeometry args={[curve, segments, radius, 8, false]} />
+      <meshStandardMaterial
+        color={color}
+        depthWrite={opacity >= 1}
+        opacity={opacity}
+        roughness={0.78}
+        transparent={opacity < 1}
+      />
+    </mesh>
+  );
+}
+
+/**
+ * Adds small 3D markers so nucleic acids read as molecular assets, not strokes.
+ */
+function BackboneMarkers({
+  color,
+  points,
+  radius,
+}: {
+  color: string;
+  points: readonly {
+    id: string;
+    position: BiologyScenePoint;
+  }[];
+  radius: number;
+}) {
+  return points.map((point) => (
+    <mesh key={point.id} position={point.position}>
+      <sphereGeometry args={[radius, 8, 6]} />
+      <meshStandardMaterial color={color} roughness={0.64} />
+    </mesh>
+  ));
 }
 
 /**
@@ -329,6 +445,43 @@ function createNucleicAcidBackbonePoints({
       turns,
     })
   );
+}
+
+/**
+ * Creates sparse backbone marker points for a clearer molecular silhouette.
+ */
+function createNucleicAcidMarkerPoints({
+  length,
+  phase,
+  radius,
+  segment,
+  turns,
+}: {
+  length: number;
+  phase: number;
+  radius: number;
+  segment: readonly [number, number];
+  turns: number;
+}) {
+  const [start, end] = segment;
+  const visibleSpan = end - start;
+  const markerCount = Math.max(
+    2,
+    Math.round(NUCLEIC_ACID_MARKER_COUNT * visibleSpan)
+  );
+
+  return Array.from({ length: markerCount }, (_, index) => ({
+    id: `marker-${phase}-${index}`,
+    position: createNucleicAcidPoint({
+      index,
+      length,
+      phase,
+      radius,
+      segment,
+      stepCount: markerCount,
+      turns,
+    }),
+  }));
 }
 
 /**

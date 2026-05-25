@@ -114,6 +114,10 @@ export function BiologyLabFrame({
                 castShadow
                 intensity={1.45}
                 position={[4.5, 6, 4.5]}
+                shadow-bias={-0.0006}
+                shadow-mapSize-height={1024}
+                shadow-mapSize-width={1024}
+                shadow-normalBias={0.02}
               />
               <pointLight
                 color={colors.skyLight}
@@ -159,8 +163,12 @@ function ResponsiveBiologyCamera({ view }: { view: BiologySceneView }) {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={view.cameraTarget}
+      maxAzimuthAngle={view.maxAzimuthAngle}
       maxDistance={7.4}
+      maxPolarAngle={view.maxPolarAngle}
+      minAzimuthAngle={view.minAzimuthAngle}
       minDistance={1.8}
+      minPolarAngle={view.minPolarAngle}
     />
   );
 }

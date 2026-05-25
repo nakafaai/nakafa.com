@@ -1,5 +1,3 @@
-import { ClimateCauseLab } from "@repo/design-system/components/contents/biology/climate-causes";
-
 export const metadata = {
   title: "Causes of Climate Change",
   description:
@@ -11,65 +9,66 @@ export const metadata = {
 
 ## The Greenhouse Effect Is Useful, but It Can Be Strengthened Too Much
 
+Earth needs some heat to stay trapped so it does not become too cold. The problem begins when added gases make that heat-trapping blanket stronger than its natural state.
+
+### The Natural Effect Keeps Earth Warm
+
 The **greenhouse effect** is the process in which certain gases in the atmosphere hold back some of the heat emitted by Earth. Without this process, Earth would be much colder. The problem begins when greenhouse gas concentrations rise and more heat is retained.
 
 **Greenhouse gases** include carbon dioxide, methane, nitrous oxide, and some synthetic gases. These gases do not work like a visible thick blanket, but the effect can be imagined like greenhouse glass. Sunlight enters, then some heat has more difficulty escaping back to space.
 
 The [IPCC AR6 Synthesis Report](https://www.ipcc.ch/report/ar6/syr/) states that warming is mainly driven by greenhouse gas emissions from human activities.
 
-<ClimateCauseLab
-  title={<>From mechanism to gas sources</>}
-  description={
-    <>
-      The model separates heat retention, combustion sources, and land or waste
-      changes. Moving particles show flows of gas and heat.
-    </>
-  }
-  labels={{
-    chooseMode: "Choose a cause",
-    focusLabel: "Process being read",
-    takeawayLabel: "Cause key",
-    viewLabel: "3D climate change causes model",
-    items: [
-      {
-        tab: "Effect",
-        caption: <>The gas ring and heat arrows show that the issue is not sunlight entering, but more heat being retained.</>,
-        focus: <>Separate the natural greenhouse effect from human-driven greenhouse gas increase.</>,
-        takeaway: <>The natural greenhouse effect is important, but excess greenhouse gas strengthens warming.</>,
-      },
-      {
-        tab: "Fossil",
-        caption: <>Carbon particles move from a combustion source into the air.</>,
-        focus: <>Burning fossil fuels moves stored carbon into the atmosphere as carbon dioxide.</>,
-        takeaway: <>Transport, industry, and fossil-fueled power generation are major sources of added carbon dioxide.</>,
-      },
-      {
-        tab: "Land",
-        caption: <>Disturbed land and waste show that climate causes do not come only from vehicles.</>,
-        focus: <>Forest change, organic waste, and product production also alter carbon flow.</>,
-        takeaway: <>Loss of carbon sinks and emissions from waste increase greenhouse gas imbalance.</>,
-      },
-    ],
-  }}
-/>
+### Different Gases Have Different Sources
+
+[EPA](https://www.epa.gov/ghgemissions/overview-greenhouse-gases) gives a practical way to read greenhouse gases. Carbon dioxide is mainly connected with burning fossil fuels and biological materials, methane with energy production, agriculture, and organic waste decay, and nitrous oxide with agriculture, industry, combustion, and wastewater treatment.
+
+| Human activity | Gas or carbon balance affected | Why it matters |
+| --- | --- | --- |
+| Burning fossil fuels | Carbon dioxide increases | Old stored carbon moves into the air quickly |
+| Organic waste without good management | Methane can increase | Low-oxygen decay can release a strong greenhouse gas |
+| Forest loss | Carbon uptake decreases | Less living biomass remains to store carbon |
+| Plastic production and disposal | Energy use and waste increase | The material chain is tied to fossil feedstocks and disposal |
+
+> To read a climate cause, follow the carbon trail: source, gas or sink change, then extra heat retained.
 
 ## Combustion Moves Carbon into the Atmosphere
 
-Fossil fuels form from carbon stored for a very long time below Earth's surface. When coal, oil, or gas is burned, that carbon reacts with oxygen and produces carbon dioxide.
+Many human activities move carbon that was stored for a long time into the air quickly. That movement changes the balance because the atmosphere receives gas that had been locked away.
+
+### Old Carbon Moves into the Air
+
+Fossil fuels form from carbon stored for millions of years below Earth's surface. When coal, oil, or gas is burned, that carbon reacts with oxygen and produces carbon dioxide.
 
 Carbon dioxide is not the only greenhouse gas, but its amount is large because many human activities use energy from fossil fuels. Vehicles, factories, power plants, and industrial processes can add carbon dioxide to the atmosphere.
 
+### Reducing Pollutants Is Not Always Reducing Carbon Dioxide
+
 Vehicle catalysts can reduce some harmful pollutants, but they do not remove the basic fact that fuel combustion still produces carbon dioxide.
+
+This difference is easy to mix up. Air can contain less of certain pollutants, while carbon dioxide from combustion still needs to fall through energy choices and less fuel use.
 
 ## Land, Waste, and Plastic Also Change Carbon Flow
 
+Climate change causes do not come only from smokestacks or exhaust pipes. Land use, waste treatment, and plastic production also change carbon flow. These causes matter because they either add greenhouse gases or weaken systems that normally store carbon.
+
+### Forests Store Carbon and Protect Habitat
+
 Forests absorb carbon through photosynthesis and store it in biomass. When forests are cut or burned, carbon uptake decreases and stored carbon can return to the air. A low-diversity monoculture does not always replace the complex ecosystem functions of a forest.
 
+### Organic Waste Can Produce Methane
+
 Organic waste can produce carbon dioxide or methane while decomposing. **Methane** is a strong greenhouse gas. Waste that accumulates without proper management makes decomposition gases harder to control.
+
+The decomposition condition affects which gas becomes important. When organic material breaks down with little oxygen, methane deserves close attention.
+
+### Plastic Is Connected to Energy and Waste
 
 Plastic is also connected with climate through production, energy use, and disposal. Tiny plastic fragments, or microplastics, are often discussed as pollution, but the production and waste chain remains connected with energy use.
 
 <Mermaid
+  title="Plastic Is Connected to Energy and Waste"
+  description="Connect plastic production, fossil energy, waste, and emissions so the problem does not look separate."
   chart={`flowchart LR
     A["Fossil fuels"] --> B["Carbon dioxide"]
     C["Organic waste"] --> D["Methane"]

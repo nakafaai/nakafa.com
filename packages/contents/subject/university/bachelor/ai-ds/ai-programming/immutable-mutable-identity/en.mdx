@@ -61,6 +61,8 @@ print(list2)  # ['x', 1, 2]`
 Every object in Python has three important characteristics that distinguish it from other objects.
 
 <Mermaid
+  title="Object Identity, Type, and Value"
+  description="Separate identity, type, and value so an object is not confused with the variable name pointing to it."
   chart={`
     flowchart LR
         A[Python Object] --> B[Identity]
@@ -216,6 +218,8 @@ print(list2)         # [0, 'x', 2] (unchanged)`
 />
 
 <Mermaid
+  title="Assignment vs Modification Behavior"
+  description="Compare assignment that changes a reference with modification that changes the same object."
   chart={`
     flowchart TD
         subgraph Before ["Before Modification"]
