@@ -5,7 +5,7 @@ export const config: VercelConfig = {
   buildCommand: "turbo run build && uv sync --no-dev --frozen",
   git: {
     deploymentEnabled: {
-      "*": false,
+      "**": false,
       "changeset-release/main": false,
       main: true,
     },

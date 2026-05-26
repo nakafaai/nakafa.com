@@ -11,7 +11,7 @@ Use this template for subject lessons under `packages/contents/subject/`.
 └── optional-local-visualization.tsx
 ```
 
-Local visualization files do not need a fixed name. Match the nearby content pattern, such as `virus-chart.tsx`.
+Local visualization files do not need a fixed name. Match the nearby content pattern and use a name that describes the lesson-specific visual.
 
 ## Structure Guardrails
 
@@ -28,7 +28,7 @@ Before writing, choose a lesson-specific flow:
 ## Common Locations
 
 - High school: `packages/contents/subject/high-school/{grade}/{subject}/{topic}/{lesson}/`
-- Middle school: `packages/contents/subject/middle-school/{grade}/mathematics/{topic}/{lesson}/`
+- Middle school: `packages/contents/subject/middle-school/{grade}/{subject}/{topic}/{lesson}/`
 - University: `packages/contents/subject/university/bachelor/{major}/{course}/{lesson}/`
 
 ## `id.mdx`
@@ -45,7 +45,7 @@ export const metadata = {
 
 Mulai dari konsep utama, konteksnya, dan istilah yang wajib dipahami di halaman ini.
 
-Gunakan <InlineMath math="x" /> untuk nilai atau simbol matematika di dalam kalimat.
+Gunakan <InlineMath math="x" /> untuk nilai atau simbol kuantitatif di dalam kalimat.
 
 <BlockMath math="f(x) = ax^2 + bx + c" />
 
@@ -93,44 +93,14 @@ Therefore, the value depends on the coefficients <InlineMath math="a" />, <Inlin
 
 ## Optional Visualization
 
-```tsx
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
-import { getColor } from "@repo/design-system/lib/color";
-
-export function QuadraticGraph() {
-  return (
-    <LineEquation
-      title={<>Graph of <InlineMath math="f(x) = x^2" /></>}
-      description={
-        <>
-          The graph shows a smooth parabola through <InlineMath math="(0, 0)" />.
-        </>
-      }
-      showZAxis={false}
-      cameraPosition={[0, 0, 15]}
-      data={[
-        {
-          points: Array.from({ length: 100 }, (_, i) => {
-            const x = -5 + (i / 99) * 10;
-            return { x, y: x * x, z: 0 };
-          }),
-          color: getColor("INDIGO"),
-          smooth: true,
-          showPoints: false,
-          labels: [{ text: "y = x^2", at: 75, offset: [0.3, 0.5, 0] }],
-        },
-      ]}
-    />
-  );
-}
-```
+Create a local visualization only when it directly improves understanding. Read `references/visualization.md`, inspect nearby components, then choose the simplest component or local TSX scene that fits the lesson.
 
 Then import it from the MDX file:
 
 ```mdx
-import { QuadraticGraph } from "./quadratic-graph";
+import { LessonVisual } from "./lesson-visual";
 
-<QuadraticGraph />
+<LessonVisual />
 ```
 
 ## Checks

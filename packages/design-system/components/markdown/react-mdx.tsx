@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
+import { readMermaidMetadata } from "@repo/design-system/lib/mermaid";
 import { cn, filterWhitespaceNodes } from "@repo/design-system/lib/utils";
 import { isValidElement, memo } from "react";
 import type { Options } from "react-markdown";
@@ -36,6 +37,7 @@ interface MarkdownPosition {
   start?: MarkdownPoint;
 }
 interface MarkdownNode {
+  data?: { meta?: string | null };
   position?: MarkdownPosition;
   properties?: { className?: string };
 }
@@ -297,7 +299,7 @@ export const reactMdxComponents: Options["components"] = {
         return (
           <code
             className={cn(
-              "inline break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight",
+              "inline whitespace-pre-wrap break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight",
               className
             )}
             data-nakafa="code-block"
@@ -336,8 +338,15 @@ export const reactMdxComponents: Options["components"] = {
       }
 
       if (language === "mermaid") {
+        const metadata = readMermaidMetadata(node?.data?.meta);
+
         return (
-          <MermaidMdx chart={code} className={`shadow-none ${className}`} />
+          <MermaidMdx
+            chart={code}
+            className={cn("shadow-none", className)}
+            description={metadata.description}
+            title={metadata.title}
+          />
         );
       }
 

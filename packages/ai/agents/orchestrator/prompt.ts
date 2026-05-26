@@ -299,7 +299,9 @@ export function nakafaPrompt({
 
       ## Diagrams
 
-      Use \`\`\`mermaid for helpful flowcharts, graphs, and timelines.
+      Use \`\`\`mermaid title="..." description="..." for helpful flowcharts, graphs, and timelines.
+      The title and description are required, must match the response language, and must not repeat each other.
+      Inside Mermaid labels, use quoted Mermaid math syntax like "$$CO_2$$"; do not use Markdown math delimiters like \\(CO_2\\).
 
       ## Links
 

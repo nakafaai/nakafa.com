@@ -4,7 +4,8 @@ import { BASE_PATH } from "@repo/contents/subject/middle-school/8/mathematics/_d
 const idMaterials = [
   {
     title: "Bilangan Berpangkat",
-    description: "Kekuatan perkalian berulang dalam matematika.",
+    description:
+      "Membaca pangkat, bentuk akar, notasi baku, dan aturan eksponen dari perkalian berulang.",
     href: `${BASE_PATH}/exponents`,
     items: [
       {
@@ -59,7 +60,8 @@ const idMaterials = [
   },
   {
     title: "Teorema Pythagoras",
-    description: "Rumus legendaris segitiga siku-siku.",
+    description:
+      "Menghubungkan sisi segitiga siku-siku, kebalikan Pythagoras, jarak, dan penerapannya.",
     href: `${BASE_PATH}/pythagorean-theorem`,
     items: [
       {
@@ -94,7 +96,8 @@ const idMaterials = [
   },
   {
     title: "Persamaan dan Pertidaksamaan Linier Satu Variabel",
-    description: "Menemukan nilai tersembunyi dalam persamaan.",
+    description:
+      "Menyusun kalimat terbuka, persamaan, dan pertidaksamaan satu variabel sampai selesai.",
     href: `${BASE_PATH}/linear-equations-inequalities`,
     items: [
       {
@@ -126,7 +129,8 @@ const idMaterials = [
   },
   {
     title: "Relasi dan Fungsi",
-    description: "Hubungan spesial antara dua himpunan.",
+    description:
+      "Membedakan himpunan, relasi, fungsi, korespondensi satu-satu, dan cara penyajiannya.",
     href: `${BASE_PATH}/relations-functions`,
     items: [
       {
@@ -177,7 +181,8 @@ const idMaterials = [
   },
   {
     title: "Persamaan Garis Lurus",
-    description: "Menggambar jejak linear dalam koordinat.",
+    description:
+      "Membaca grafik garis, kemiringan, titik, dan persamaan garis pada bidang koordinat.",
     href: `${BASE_PATH}/straight-line-equations`,
     items: [
       {
@@ -200,7 +205,8 @@ const idMaterials = [
   },
   {
     title: "Statistika",
-    description: "Menganalisis data untuk mengambil kesimpulan.",
+    description:
+      "Membaca pemusatan, jangkauan, kuartil, dan sebaran data sebelum menarik kesimpulan.",
     href: `${BASE_PATH}/statistics`,
     items: [
       {

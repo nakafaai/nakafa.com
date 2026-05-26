@@ -9,7 +9,6 @@ export const VOLUME_MODE_ID = "volume";
 export const BLOCK_WIDTH = 3;
 export const BLOCK_HEIGHT = 1.4;
 export const BLOCK_DEPTH = 1.4;
-export const HIGHLIGHT_THICKNESS = 0.04;
 export const CAMERA_POSITION = [3.6, 2.8, 4.4] satisfies readonly [
   number,
   number,
@@ -73,7 +72,8 @@ export function getDimensionSceneColors(resolvedTheme: string | undefined) {
   const isDarkTheme = resolvedTheme === "dark";
 
   return {
-    block: getColor("SLATE"),
+    block: isDarkTheme ? getColor("STONE") : getColor("AMBER"),
+    blockDetail: isDarkTheme ? getColor("ZINC") : getColor("STONE"),
     edge: getColor("ORANGE"),
     face: getColor("TEAL"),
     groundLight: isDarkTheme ? getColor("SLATE") : getColor("STONE"),

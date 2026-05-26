@@ -46,10 +46,16 @@ Prefer one expressive `BlockMath` when the formulas are one connected derivation
 ### Mermaid
 
 ```mdx
-<Mermaid chart="graph TD; A[Start] --> B[Finish];" />
+<Mermaid
+  title="Specific concept or process name"
+  description="Explain what students should follow in this diagram and why it matters here."
+  chart="graph TD; A[Start] --> B[Finish];"
+/>
 ```
 
 Use Mermaid for flowcharts, dependency diagrams, timelines, decision paths, and process maps. Do not use Mermaid as decoration when prose, a table, or math is clearer.
+
+Every Mermaid diagram requires a pedagogical `title` and `description` in the MDX. Match the lesson locale, name the concept being shown, and explain how students should read the arrows or groups. Do not use a Mermaid code fence for lessons because the component copy must be explicit.
 
 ### Youtube
 
@@ -81,258 +87,13 @@ Each subject lesson should work for students who arrive directly from search.
 
 ## Imported Content Components
 
-Import these only when the lesson needs the visualization.
+Import content components only when they directly improve the lesson. Keep this reference subject-neutral: discover the actual component API from the repo before using it.
 
-### LineEquation
-
-```tsx
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
-import { getColor } from "@repo/design-system/lib/color";
-
-<LineEquation
-  title={<>Graph of <InlineMath math="f(x) = x^2" /></>}
-  description={
-    <>
-      The curve passes through <InlineMath math="(0, 0)" />.
-    </>
-  }
-  showZAxis={false}
-  cameraPosition={[0, 0, 15]}
-  data={[
-    {
-      points: Array.from({ length: 100 }, (_, i) => {
-        const x = -5 + (i / 99) * 10;
-        return { x, y: x * x, z: 0 };
-      }),
-      color: getColor("INDIGO"),
-      smooth: true,
-      showPoints: false,
-      labels: [{ text: "y = x^2", at: 75, offset: [0.3, 0.5, 0] }],
-    },
-  ]}
-/>
-```
-
-### NumberLine
-
-```tsx
-import { NumberLine } from "@repo/design-system/components/contents/mathematics/number-line";
-
-<NumberLine
-  title={<>Solution Set for <InlineMath math="x \ge 3" /></>}
-  description={
-    <>
-      The shaded ray starts at <InlineMath math="3" /> and extends to the right.
-    </>
-  }
-  segments={[
-    {
-      start: 3,
-      end: Number.POSITIVE_INFINITY,
-      startInclusive: true,
-      label: <InlineMath math="x \ge 3" />,
-    },
-  ]}
-/>
-```
-
-### Triangle
-
-```tsx
-import { Triangle } from "@repo/design-system/components/contents/mathematics/triangle";
-
-<Triangle
-  title={<>Right Triangle with <InlineMath math="30^\circ" /></>}
-  description={
-    <>
-      The angle measure is <InlineMath math="30^\circ" />.
-    </>
-  }
-  angle={30}
-  labels={{
-    opposite: "opposite",
-    adjacent: "adjacent",
-    hypotenuse: "hypotenuse",
-  }}
-/>
-```
-
-### UnitCircle
-
-```tsx
-import { UnitCircle } from "@repo/design-system/components/contents/mathematics/unit-circle";
-
-<UnitCircle
-  title={<>Unit Circle at <InlineMath math="45^\circ" /></>}
-  description={
-    <>
-      The terminal point has equal <InlineMath math="x" /> and <InlineMath math="y" /> coordinates.
-    </>
-  }
-  angle={45}
-  trigValues={{ sin: "\\frac{\\sqrt{2}}{2}", cos: "\\frac{\\sqrt{2}}{2}" }}
-/>
-```
-
-### Vector3d
-
-```tsx
-import { Vector3d } from "@repo/design-system/components/contents/mathematics/vector-3d";
-import { getColor } from "@repo/design-system/lib/color";
-
-<Vector3d
-  title={<>Vectors <InlineMath math="\vec{u}" /> and <InlineMath math="\vec{v}" /></>}
-  description={
-    <>
-      Both vectors start at <InlineMath math="(0, 0, 0)" />.
-    </>
-  }
-  vectors={[
-    { to: [3, 2, 0], color: getColor("TEAL"), label: "u" },
-    { to: [2, 4, 0], color: getColor("INDIGO"), label: "v" },
-  ]}
-/>
-```
-
-### VectorChart
-
-```tsx
-import { VectorChart } from "@repo/design-system/components/contents/mathematics/vector-chart";
-import { getColor } from "@repo/design-system/lib/color";
-
-<VectorChart
-  title={<>Components of <InlineMath math="\vec{u}" /></>}
-  description={
-    <>
-      The endpoint is <InlineMath math="(3, 4)" />.
-    </>
-  }
-  vectors={[
-    {
-      id: "u",
-      name: "u",
-      color: getColor("TEAL"),
-      points: [
-        { x: 0, y: 0 },
-        { x: 3, y: 4 },
-      ],
-    },
-  ]}
-/>
-```
-
-### FunctionChart
-
-```tsx
-import { FunctionChart } from "@repo/design-system/components/contents/mathematics/function-chart";
-
-<FunctionChart
-  title={<>Exponential Function <InlineMath math="f(x) = 2^x" /></>}
-  description={
-    <>
-      The initial value is <InlineMath math="1" /> and the base is <InlineMath math="2" />.
-    </>
-  }
-  p={1}
-  a={2}
-  n={8}
-/>
-```
-
-### ScatterDiagram
-
-```tsx
-import { ScatterDiagram } from "@repo/design-system/components/contents/mathematics/scatter-diagram";
-import { getColor } from "@repo/design-system/lib/color";
-
-<ScatterDiagram
-  title={<>Scatter Plot for <InlineMath math="(x, y)" /> Data</>}
-  description={
-    <>
-      The regression line summarizes the relationship between <InlineMath math="x" /> and <InlineMath math="y" />.
-    </>
-  }
-  calculateRegressionLine={true}
-  datasets={[
-    {
-      name: "Sample",
-      color: getColor("INDIGO"),
-      points: [
-        { x: 1, y: 2 },
-        { x: 2, y: 3 },
-        { x: 3, y: 5 },
-      ],
-    },
-  ]}
-/>
-```
-
-### BarChart and HistogramChart
-
-```tsx
-import { BarChart } from "@repo/design-system/components/contents/mathematics/bar-chart";
-
-const chartConfig = {
-  value: {
-    label: "Frequency",
-    color: "var(--chart-1)",
-  },
-};
-
-<BarChart
-  title="Frequency Distribution"
-  description="Frequency by category."
-  yAxisLabel="Frequency"
-  chartConfig={chartConfig}
-  data={[
-    { name: "A", value: 10 },
-    { name: "B", value: 20 },
-    { name: "C", value: 15 },
-  ]}
-/>
-```
-
-### Inequality
-
-```tsx
-import { Inequality } from "@repo/design-system/components/contents/mathematics/inequality";
-import { getColor } from "@repo/design-system/lib/color";
-
-<Inequality
-  title={<>Linear Inequality <InlineMath math="x + y \le 5" /></>}
-  description={
-    <>
-      The shaded region represents <InlineMath math="x + y \le 5" />.
-    </>
-  }
-  data={[
-    {
-      is2D: true,
-      boundaryLine2D: [1, 1, -5],
-      color: getColor("TEAL"),
-      boundaryColor: getColor("INDIGO"),
-      label: { text: "x + y <= 5", position: [1, 1, 0] },
-    },
-  ]}
-/>
-```
-
-### BacterialGrowth
-
-```tsx
-import { BacterialGrowth } from "@repo/design-system/components/contents/mathematics/animation-bacterial";
-
-<BacterialGrowth
-  initialCount={1}
-  ratio={2}
-  maxGenerations={6}
-  labels={{
-    title: "Bacterial Growth",
-    bacterial: "Bacteria",
-    initialBacteria: "Initial bacteria",
-  }}
-/>
-```
+- Find candidates with `rg --files packages/design-system/components/contents`.
+- Read the component source before importing it. Verify required props, supported `ReactNode` fields, label types, responsive behavior, and theme expectations.
+- Prefer an existing content component when it fits the concept exactly. Create a local TSX component only when the lesson needs a custom interaction or visual state.
+- Keep imported component examples inside the lesson-specific task or local implementation notes, not in this generic skill map.
+- Use `getColor()` from `@repo/design-system/lib/color` for deterministic visualization colors when a component expects explicit colors.
 
 ## Math Consistency
 

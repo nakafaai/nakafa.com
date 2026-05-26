@@ -11,8 +11,8 @@
     "@t3-oss/env-nextjs": "^0.13.11",
     "@vercel/analytics": "^2.0.1",
     "effect": "^3.21.2",
-    "posthog-js": "^1.374.3",
-    "posthog-node": "^5.34.8",
+    "posthog-js": "^1.376.1",
+    "posthog-node": "^5.35.3",
     "react": "^19.2.6",
     "server-only": "^0.0.1"
   },

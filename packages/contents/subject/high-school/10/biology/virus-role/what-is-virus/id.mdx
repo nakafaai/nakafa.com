@@ -1,0 +1,131 @@
+import {
+  VirusMorphologyLab,
+  VirusStructureLab,
+} from "@repo/design-system/components/contents/biology/virus-structure";
+
+export const metadata = {
+  title: "Apa itu Virus?",
+  description:
+    "Memahami virus sebagai partikel aseluler yang memiliki genom, kapsid, kadang selubung, dan hanya memperbanyak diri dengan bantuan sel inang.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Virus dan Peranannya",
+};
+
+## Benda Sangat Kecil yang Tidak Berupa Sel
+
+Ukuran virus membuatnya mudah dibayangkan sebagai benda kecil, tetapi cara kerjanya lebih penting daripada ukurannya. Pegang dulu batas dasarnya: virus berupa partikel, bukan sel hidup lengkap.
+
+### Virion Adalah Paket, Bukan Sel
+
+Saat ada orang sakit flu, kita sering berkata "tertular virus". Kalimat itu benar, tetapi bisa membuat virus terasa seperti bakteri yang jauh lebih kecil. Padahal virus bukan sel kecil. Virus adalah partikel **aseluler**, artinya tidak tersusun sebagai sel lengkap.
+
+Satu partikel virus utuh disebut **virion**. Virion membawa **genom**, yaitu materi genetik berupa DNA atau RNA. Genom itu dibungkus oleh **kapsid**, selubung protein yang tersusun dari subunit kecil bernama **kapsomer**. Sebagian virus juga memiliki **selubung lipid** di luar kapsid, yaitu lapisan mirip membran yang berasal dari sel inang.
+
+Struktur seperti genom, kapsid, dan selubung ini juga dipakai dalam klasifikasi virus menurut [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
+
+### Bagian Kecilnya Menjelaskan Cara Kerja
+
+Dalam riset nyata, virus tidak dibaca dari gejala penyakit saja. Ulasan virologi di [NCBI PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC7148634/) menekankan komposisi, tampilan, dan klasifikasi sebagai pintu masuk untuk memahami sifat virus. Jadi model 3D pada bagian ini sebaiknya dibaca sebagai peta bagian utama, bukan foto satu jenis virus tertentu.
+
+| Bagian virion | Fungsi sederhana | Cara membacanya |
+| --- | --- | --- |
+| Genom | Membawa instruksi genetik | Dapat berupa DNA atau RNA, tergantung jenis virus |
+| Kapsid | Melindungi genom | Tersusun dari protein, bukan membran sel lengkap |
+| Selubung lipid | Membantu sebagian virus berinteraksi dengan sel | Ada pada sebagian virus, bukan semua virus |
+| Protein permukaan | Membantu pengenalan sel target | Bekerja seperti kecocokan kunci dan lubang kunci biologis |
+
+> Virus membawa instruksi dan kemasan, tetapi tidak membawa seluruh mesin kerja sel.
+
+<VirusStructureLab
+  title={<>Virion sebagai paket instruksi</>}
+  description={
+    <>
+      Amati kapsid, genom, dan selubung. Gerakan halus pada model membantu
+      membedakan bagian yang melindungi, membawa instruksi, dan mengenali sel.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih bagian virion",
+    focusLabel: "Yang harus dibaca",
+    takeawayLabel: "Makna biologis",
+    viewLabel: "Model 3D struktur virion",
+    items: [
+      {
+        tab: "Kapsid",
+        caption: <>Kapsid adalah kemasan protein yang menjaga genom tetap utuh saat virus berada di luar sel inang.</>,
+        focus: <>Bidang-bidang pada model menunjukkan kapsid disusun dari banyak kapsomer, bukan satu cangkang polos.</>,
+        takeaway: <>Tanpa kapsid, genom virus mudah rusak sebelum mencapai sel yang cocok.</>,
+      },
+      {
+        tab: "Genom",
+        caption: <>Untai di tengah mewakili DNA atau RNA virus, yaitu instruksi untuk membuat partikel virus baru.</>,
+        focus: <>Genom terlihat aktif, tetapi instruksi ini belum bisa berjalan tanpa mesin sel inang.</>,
+        takeaway: <>Virus membawa resepnya, sedangkan bahan dan alat kerjanya dipinjam dari sel inang.</>,
+      },
+      {
+        tab: "Selubung",
+        caption: <>Sebagian virus memiliki selubung lipid dengan protein permukaan yang membantu pengenalan sel target.</>,
+        focus: <>Selubung dibuat transparan karena lapisan ini membungkus kapsid, bukan menggantikan kapsid.</>,
+        takeaway: <>Selubung dan protein permukaan ikut menentukan apakah virus dapat menempel pada sel tertentu.</>,
+      },
+    ],
+  }}
+/>
+
+## Mengapa Virus Tidak Disebut Sel
+
+Sel hidup biasanya memiliki membran sel, sitoplasma, ribosom, dan sistem metabolisme. **Metabolisme** adalah rangkaian reaksi kimia yang membuat sel dapat memperoleh energi dan membangun bagian tubuhnya. Virus tidak memiliki perangkat lengkap itu.
+
+Karena tidak punya ribosom, virus tidak bisa membuat protein sendiri. Karena tidak punya sistem metabolisme, virus tidak bisa menghasilkan energi sendiri. Itulah sebabnya virus hanya memperbanyak diri ketika sudah masuk ke **sel inang**, yaitu sel yang dipakai virus sebagai tempat membuat komponen baru.
+
+Di luar sel inang, virion seperti paket instruksi yang masih tersegel. Ia bisa bertahan sementara, menempel pada sel yang cocok, lalu memasukkan genomnya. Setelah itu barulah instruksi virus dibaca oleh mesin sel inang.
+
+### Batas Hidupnya Terlihat dari Ketergantungan Ini
+
+Bagian ini penting karena virus sering berada di batas pembahasan antara benda kimia dan makhluk hidup. Di luar sel, virion tidak makan, tidak bernapas, dan tidak memperbaiki diri seperti sel. Di dalam sel yang cocok, genomnya dapat mengambil alih proses pembuatan protein dan salinan genom. Jadi perdebatan tentang virus selalu kembali ke satu hal. Virus membawa instruksi, tetapi tidak membawa seluruh mesin untuk menjalankan instruksi itu sendiri.
+
+## Bentuk Virus Berasal dari Cara Komponennya Disusun
+
+Ukuran virus sangat kecil, umumnya puluhan sampai ratusan nanometer. **Nanometer** adalah satuan yang jauh lebih kecil daripada mikrometer, sehingga banyak virus tidak dapat dilihat dengan mikroskop cahaya biasa.
+
+Bentuk virus berbeda-beda karena susunan kapsomer dan lapisan luarnya berbeda. Ada bentuk heliks seperti gulungan, polihedral seperti bangun berbidang, bulat berselubung, dan bentuk kompleks seperti bakteriofag yang menyerang bakteri. Bentuk bukan hiasan. Bentuk membantu menjelaskan bagaimana virus melindungi genom, menempel, dan masuk ke sel.
+
+<VirusMorphologyLab
+  title={<>Bentuk virion yang berbeda</>}
+  description={
+    <>
+      Bandingkan cara kapsid dan lapisan luar menata genom. Model ini memakai
+      contoh bentuk yang umum dibahas dalam virologi, bukan satu spesies virus
+      tertentu.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih bentuk virus",
+    focusLabel: "Yang harus dibaca",
+    takeawayLabel: "Makna biologis",
+    viewLabel: "Model 3D ragam bentuk virus",
+    items: [
+      {
+        tab: "Bentuk",
+        caption: <>Heliks tampak seperti batang berulir, polihedral berbidang, berselubung memiliki lapisan luar berpaku, dan kompleks memiliki kepala serta ekor.</>,
+        focus: <>Perhatikan apakah genom dibungkus oleh kapsid berulang, kapsid berbidang, selubung lipid, atau alat penempel khusus.</>,
+        takeaway: <>Bentuk membantu menjelaskan cara virus menjaga genom dan mendekati sel target.</>,
+        callouts: [
+          { id: "helical", label: "heliks" },
+          { id: "polyhedral", label: "polihedral" },
+          { id: "enveloped", label: "berselubung" },
+          { id: "complex", label: "kompleks" },
+        ],
+      },
+    ],
+  }}
+/>
+
+Kecocokan dengan sel juga penting. Protein permukaan virus harus cocok dengan **reseptor** pada sel inang. Reseptor dapat dibayangkan seperti gagang pintu biologis. Jika bentuknya tidak cocok, virus sulit masuk walaupun berada dekat dengan sel.
+
+## Cara Membaca Virus setelah Melihat Strukturnya
+
+Setelah struktur virion jelas, kita bisa membaca virus dengan urutan yang lebih rapi. Pertama, lihat genomnya sebagai instruksi. Kedua, lihat kapsid sebagai pelindung instruksi. Ketiga, lihat protein permukaan sebagai bagian yang menentukan kecocokan dengan sel inang.
+
+Urutan ini penting saat membahas reproduksi virus. Virus tidak memperbanyak diri hanya karena punya genom. Genom itu harus masuk ke sel yang cocok, lalu mesin sel inang dipakai untuk menyalin instruksi dan merakit virion baru.

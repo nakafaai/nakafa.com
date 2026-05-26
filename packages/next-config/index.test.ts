@@ -29,6 +29,8 @@ describe("createSecurityHeaders", () => {
 
     expect(csp?.value).toContain("script-src 'self'");
     expect(csp?.value).toContain("connect-src 'self'");
+    expect(csp?.value).toContain("media-src 'self'");
+    expect(csp?.value).toContain("https://cdn.alquran.cloud");
     expect(csp?.value).not.toContain("posthog.com");
   });
 

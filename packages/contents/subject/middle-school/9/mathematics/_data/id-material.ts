@@ -5,7 +5,7 @@ const idMaterials = [
   {
     title: "Sistem Persamaan Linear Dua Variabel",
     description:
-      "Menyelesaikan masalah dengan dua variabel yang saling terkait.",
+      "Memodelkan dua variabel, lalu menyelesaikannya dengan grafik, substitusi, eliminasi, dan metode campuran.",
     href: `${BASE_PATH}/linear-equations-two-variables`,
     items: [
       {
@@ -44,7 +44,8 @@ const idMaterials = [
   },
   {
     title: "Bangun Ruang",
-    description: "Menjelajahi volume dan luas permukaan objek 3D.",
+    description:
+      "Membaca jaring-jaring, luas permukaan, volume, lingkaran, dan bangun sisi lengkung.",
     href: `${BASE_PATH}/solid-geometry`,
     items: [
       {
@@ -175,7 +176,8 @@ const idMaterials = [
   },
   {
     title: "Transformasi Geometri",
-    description: "Memindahkan dan mengubah bentuk geometri.",
+    description:
+      "Memindahkan, mencerminkan, memutar, dan memperbesar bangun sambil melacak koordinatnya.",
     href: `${BASE_PATH}/geometric-transformation`,
     items: [
       {
@@ -294,7 +296,8 @@ const idMaterials = [
   },
   {
     title: "Peluang dan Pemilihan Sampel",
-    description: "Memprediksi kemungkinan dan memahami pengambilan sampel.",
+    description:
+      "Membaca ruang sampel, peluang kejadian, frekuensi harapan, dan pengambilan sampel.",
     href: `${BASE_PATH}/probability-sampling`,
     items: [
       {

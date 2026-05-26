@@ -185,6 +185,8 @@
     "verse": "Ayat",
     "verse-count": "Ayat {count}",
     "interpretation": "Tafsir",
+    "play-audio": "Putar audio",
+    "stop-audio": "Hentikan audio",
     "surah-title": "Surat {number}: {name} ({translation}) - {quran}",
     "verses": "ayat",
     "read-quran-description": "Baca Al-Quran online dengan terjemahan dan tafsir per ayat di Nakafa"

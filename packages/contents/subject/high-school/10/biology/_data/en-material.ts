@@ -5,7 +5,7 @@ const enMaterials = [
   {
     title: "Viruses and Their Role",
     description:
-      "Microscopic organisms changing the world from diseases to future gene therapy.",
+      "Virus structure, replication, roles, and prevention across cells, bodies, and environments.",
     href: `${BASE_PATH}/virus-role`,
     items: [
       {
@@ -29,7 +29,7 @@ const enMaterials = [
   {
     title: "Biodiversity of Living Organisms",
     description:
-      "The wonder of life on Earth from microscopic bacteria to tropical rainforests.",
+      "Biodiversity levels, classification, bacteria, fungi, and organism relationships in ecosystems.",
     href: `${BASE_PATH}/biodiversity`,
     items: [
       {
@@ -57,7 +57,7 @@ const enMaterials = [
   {
     title: "Climate Change",
     description:
-      "The greatest global challenge affecting the future of our planet and life.",
+      "Climate symptoms, impacts, causes, mitigation, adaptation, and data-backed cooperation.",
     href: `${BASE_PATH}/climate-change`,
     items: [
       {
