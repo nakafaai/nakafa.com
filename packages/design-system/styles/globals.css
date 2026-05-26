@@ -261,6 +261,11 @@
   content-visibility: auto;
 }
 
+@utility content-auto-quran-verse {
+  contain-intrinsic-size: auto none auto 32rem;
+  content-visibility: auto;
+}
+
 @utility content-auto-code {
   contain-intrinsic-size: auto none auto 48rem;
   content-visibility: auto;

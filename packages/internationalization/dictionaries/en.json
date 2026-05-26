@@ -185,6 +185,8 @@
     "verse": "Verse",
     "verse-count": "Verse {count}",
     "interpretation": "Interpretation",
+    "play-audio": "Play audio",
+    "stop-audio": "Stop audio",
     "surah-title": "Surah {number}: {name} ({translation}) - {quran}",
     "verses": "verses",
     "read-quran-description": "Read the Quran online with verse-by-verse translation and tafsir on Nakafa"
