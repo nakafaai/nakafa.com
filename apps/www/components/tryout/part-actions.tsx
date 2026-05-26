@@ -157,7 +157,7 @@ export function TryoutPartDialog({
           : tTryouts("complete-part-description")
       }
       footer={
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <>
           <Button
             onClick={() => setCompleteDialogOpenAction(false)}
             type="button"
@@ -179,7 +179,7 @@ export function TryoutPartDialog({
               ? tTryouts("part-processing-expiry-cta")
               : tTryouts("complete-part-cta")}
           </Button>
-        </div>
+        </>
       }
       open={isCompleteDialogOpen}
       setOpen={setCompleteDialogOpenAction}

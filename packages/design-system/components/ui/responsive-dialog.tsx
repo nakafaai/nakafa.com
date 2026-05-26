@@ -5,6 +5,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogPanel,
   DialogTitle,
 } from "@repo/design-system/components/ui/dialog";
 import {
@@ -18,7 +19,7 @@ import {
 } from "@repo/design-system/components/ui/drawer";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { cn } from "@repo/design-system/lib/utils";
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface Props {
   children?: ReactNode;
@@ -26,22 +27,6 @@ interface Props {
   footer?: ReactNode;
   open: boolean;
   setOpen: (open: boolean) => void;
-  styleClassName?: {
-    dialog?: {
-      header?: ComponentProps<typeof DialogHeader>["className"];
-      title?: ComponentProps<typeof DialogTitle>["className"];
-      description?: ComponentProps<typeof DialogDescription>["className"];
-      footer?: ComponentProps<typeof DialogFooter>["className"];
-      content?: ComponentProps<typeof DialogContent>["className"];
-    };
-    drawer?: {
-      header?: ComponentProps<typeof DrawerHeader>["className"];
-      title?: ComponentProps<typeof DrawerTitle>["className"];
-      description?: ComponentProps<typeof DrawerDescription>["className"];
-      footer?: ComponentProps<typeof DrawerFooter>["className"];
-      content?: ComponentProps<typeof DrawerPopup>["className"];
-    };
-  };
   title: ReactNode;
 }
 
@@ -52,32 +37,21 @@ export function ResponsiveDialog({
   description,
   children,
   footer,
-  styleClassName,
 }: Props) {
   const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
 
   if (isDesktop) {
     return (
       <Dialog onOpenChange={setOpen} open={open}>
-        <DialogContent className={styleClassName?.dialog?.content}>
-          <DialogHeader className={styleClassName?.dialog?.header}>
-            <DialogTitle className={styleClassName?.dialog?.title}>
-              {title}
-            </DialogTitle>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
             {!!description && (
-              <DialogDescription
-                className={styleClassName?.dialog?.description}
-              >
-                {description}
-              </DialogDescription>
+              <DialogDescription>{description}</DialogDescription>
             )}
           </DialogHeader>
-          {children}
-          {!!footer && (
-            <DialogFooter className={styleClassName?.dialog?.footer}>
-              {footer}
-            </DialogFooter>
-          )}
+          {!!children && <DialogPanel>{children}</DialogPanel>}
+          {!!footer && <DialogFooter>{footer}</DialogFooter>}
         </DialogContent>
       </Dialog>
     );
@@ -85,21 +59,11 @@ export function ResponsiveDialog({
 
   return (
     <Drawer onOpenChange={setOpen} open={open}>
-      <DrawerPopup className={styleClassName?.drawer?.content} showBar>
-        <DrawerHeader
-          className={cn(
-            "border-b",
-            !children && "border-b-0",
-            styleClassName?.drawer?.header
-          )}
-        >
-          <DrawerTitle className={styleClassName?.drawer?.title}>
-            {title}
-          </DrawerTitle>
+      <DrawerPopup showBar>
+        <DrawerHeader className={cn("border-b", !children && "border-b-0")}>
+          <DrawerTitle>{title}</DrawerTitle>
           {!!description && (
-            <DrawerDescription className={styleClassName?.drawer?.description}>
-              {description}
-            </DrawerDescription>
+            <DrawerDescription>{description}</DrawerDescription>
           )}
         </DrawerHeader>
         <DrawerPanel
@@ -107,11 +71,7 @@ export function ResponsiveDialog({
         >
           {children}
         </DrawerPanel>
-        {!!footer && (
-          <DrawerFooter className={styleClassName?.drawer?.footer}>
-            {footer}
-          </DrawerFooter>
-        )}
+        {!!footer && <DrawerFooter>{footer}</DrawerFooter>}
       </DrawerPopup>
     </Drawer>
   );

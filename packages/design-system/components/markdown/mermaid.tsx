@@ -79,18 +79,20 @@ export function MermaidMdx({
         />
       </div>
 
-      <DialogContent className="grid max-h-[min(90dvh,900px)] w-[calc(100%-2rem)] grid-rows-[auto_minmax(0,1fr)] overflow-hidden sm:max-w-7xl">
+      <DialogContent size="wide">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <DialogPanel className="rounded-lg border bg-muted/40 p-4">
-          <Mermaid
-            chart={renderableChart}
-            className="m-0 min-h-[50dvh] overflow-hidden text-base [&_svg]:h-auto [&_svg]:max-w-full"
-            config={config}
-            label={title}
-          />
+        <DialogPanel>
+          <div className="grid min-h-[50dvh] place-items-center overflow-auto rounded-lg border bg-muted/40 p-4">
+            <Mermaid
+              chart={renderableChart}
+              className="m-0 w-full max-w-full text-base [&_svg]:h-auto [&_svg]:w-full [&_svg]:max-w-full"
+              config={config}
+              label={title}
+            />
+          </div>
         </DialogPanel>
       </DialogContent>
     </Dialog>
