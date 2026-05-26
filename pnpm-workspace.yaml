@@ -18,8 +18,8 @@ minimumReleaseAgeExclude:
   - '@ai-sdk/react@3.0.190'
   - '@effect/language-service@0.86.2'
   - '@posthog/convex'
-  - '@posthog/core@1.29.6'
-  - '@posthog/types@1.374.3'
+  - '@posthog/core'
+  - '@posthog/types'
   - '@rolldown/binding-android-arm64@1.0.2'
   - '@rolldown/binding-darwin-arm64@1.0.2'
   - '@rolldown/binding-darwin-x64@1.0.2'
@@ -39,7 +39,7 @@ minimumReleaseAgeExclude:
   - '@tanstack/virtual-core'
   - ai@6.0.188
   - geist@1.7.1
-  - posthog-js@1.374.3
+  - posthog-js
   - posthog-node
   - rolldown@1.0.2
   - vite@8.0.14
