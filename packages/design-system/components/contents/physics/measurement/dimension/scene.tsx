@@ -61,9 +61,7 @@ function ReferenceBlock({ colors }: { colors: SceneColors }) {
     <group>
       <RoundedBox
         args={[BLOCK_WIDTH, BLOCK_HEIGHT, BLOCK_DEPTH]}
-        castShadow
         radius={0.08}
-        receiveShadow
         renderOrder={REFERENCE_BLOCK_RENDER_ORDER}
         smoothness={5}
       >
@@ -189,9 +187,7 @@ function VolumeLayer({ colors }: { colors: SceneColors }) {
     <group>
       <RoundedBox
         args={[BLOCK_WIDTH, BLOCK_HEIGHT, BLOCK_DEPTH]}
-        castShadow
         radius={0.08}
-        receiveShadow
         renderOrder={REFERENCE_BLOCK_RENDER_ORDER}
         smoothness={5}
       >

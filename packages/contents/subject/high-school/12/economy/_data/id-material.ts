@@ -85,7 +85,7 @@ const idMaterials = [
   {
     title: "Akuntansi",
     description:
-      "Bahasa bisnis yang mengungkap kesehatan keuangan dan memandu keputusan cerdas.",
+      "Cara mencatat transaksi, membaca posisi keuangan, dan menyiapkan laporan untuk keputusan usaha.",
     href: `${BASE_PATH}/accounting`,
     items: [
       {

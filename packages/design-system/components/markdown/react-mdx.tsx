@@ -327,7 +327,7 @@ export const reactMdxComponents: Options["components"] = {
         return (
           <code
             className={cn(
-              "inline break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight",
+              "inline whitespace-pre-wrap break-all rounded-sm border bg-muted px-1 py-0.5 font-mono text-muted-foreground text-sm tracking-tight",
               className
             )}
             data-nakafa="code-block"

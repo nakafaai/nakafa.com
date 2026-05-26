@@ -1,20 +1,20 @@
 export const metadata = {
     title: "Pemformatan String",
-    description: "Pelajari teknik pemformatan string Python dengan format(), f-strings, alignment, precision control, error handling, dan contoh praktis.",
+    description: "Cara memakai format(), f-string, lebar kolom, perataan, presisi angka, tanda, dan penanganan error saat membentuk teks Python.",
     authors: [{ name: "Nabil Akbarazzima Fatih" }],
     date: "09/17/2025",
     subject: "Pemrograman AI",
 };
 
-## Konsep Dasar dan Width Control
+## Konsep Dasar dan Kontrol Lebar
 
 Pemformatan string mengatur tampilan data dalam program Python. Bayangkan menyusun data dalam tabel yang rapi, setiap kolom memiliki lebar konsisten. Python menyediakan metode `format()` dan f-strings untuk mengontrol tampilan output.
 
 Sintaks dasar replacement field adalah `{name : width}`, dimana `name` menentukan argumen dan `width` mengatur lebar minimum output. Ketika width lebih kecil dari panjang string asli, Python tetap menampilkan string lengkap.
 
-### Format Types untuk Sistem Bilangan
+### Tipe Format untuk Sistem Bilangan
 
-| Format Type | Simbol | Contoh Input | Output | Kegunaan |
+| Tipe format | Simbol | Contoh input | Output | Kegunaan |
 |-------------|---------|--------------|--------|----------|
 | Desimal | `d` | `45` | `45` | Default untuk integer |
 | Biner | `b` | `45` | `101101` | Representasi bit |
@@ -47,7 +47,7 @@ print('|{0:1}|'.format('xxx'))      # Output: |xxx|`
   description="Bandingkan rata kiri, kanan, dan tengah saat teks yang sama ditempatkan dalam lebar tetap."
   chart={`
     flowchart TD
-        A["String input: 'xxx'"] --> B["Pilihan perataan"]
+        A["String masukan: 'xxx'"] --> B["Pilihan perataan"]
         
         B --> C["< (rata kiri)"]
         B --> D["> (rata kanan)"]
@@ -59,15 +59,15 @@ print('|{0:1}|'.format('xxx'))      # Output: |xxx|`
   `}
 />
 
-| Simbol | Nama | Behavior | Default untuk |
+| Simbol | Nama | Perilaku | Default untuk |
 |--------|------|----------|---------------|
-| `<` | Left | Teks di kiri, padding di kanan | String, objek |
-| `>` | Right | Teks di kanan, padding di kiri | Angka |
-| `^` | Center | Teks di tengah, padding merata | - |
+| `<` | Rata kiri | Teks di kiri, padding di kanan | String, objek |
+| `>` | Rata kanan | Teks di kanan, padding di kiri | Angka |
+| `^` | Tengah | Teks di tengah, padding merata | - |
 
 ### Karakter Pengisi dan Format Lanjutan
 
-Fill character menentukan karakter pengisi ruang kosong. Default menggunakan spasi, tapi bisa diganti dengan karakter apapun kecuali `{` dan `}`.
+Karakter pengisi menentukan karakter untuk mengisi ruang kosong. Default-nya adalah spasi, tetapi bisa diganti dengan karakter apa pun kecuali `{` dan `}`.
 
 <CodeBlock
   data={[
@@ -156,9 +156,9 @@ except IndexError as e:
 
 ### Presisi untuk Angka Desimal
 
-Precision mengontrol jumlah digit desimal atau digit signifikan dalam tampilan angka.
+Presisi mengontrol jumlah digit desimal atau digit signifikan dalam tampilan angka.
 
-| Format Type | Precision Behavior | Contoh |
+| Tipe format | Perilaku presisi | Contoh |
 |-------------|-------------------|--------|
 | `f/F` | Tempat desimal | `{:.2f}` → `123.99` |
 | `e/E` | Tempat desimal dalam eksponensial | `{:.2e}` → `1.24e+02` |
@@ -171,7 +171,7 @@ Precision mengontrol jumlah digit desimal atau digit signifikan dalam tampilan a
   description="Bandingkan tanda plus, minus, dan spasi agar keluaran angka positif dan negatif terbaca konsisten."
   chart={`
     flowchart TD
-        A["Input Angka"] --> B{"Pilihan Sign"}
+        A["Angka masukan"] --> B{"Pilihan tanda"}
         
         B --> C["+ (selalu tampilkan)"]
         B --> D["- (default)"]
@@ -179,15 +179,17 @@ Precision mengontrol jumlah digit desimal atau digit signifikan dalam tampilan a
         
         C --> F["+100, -200"]
         D --> G["100, -200"]
-        E --> H[" 100, -200"]
+        E --> H["' 100', '-200'"]
   `}
 />
 
-| Simbol | Behavior | Contoh |
+Pada baris spasi, simbolnya memang satu karakter kosong di dalam format specifier, seperti pada `{: d}`. Karena karakter itu tidak terlihat, tabel menamainya sebagai spasi literal.
+
+| Simbol | Perilaku | Contoh |
 |--------|----------|--------|
 | `+` | Selalu tampilkan tanda | `+100`, `-200` |
 | `-` | Hanya tanda negatif (default) | `100`, `-200` |
-| ` ` (spasi) | Spasi untuk positif | ` 100`, `-200` |
+| spasi literal | Menyisakan satu spasi sebelum angka positif | `' 100'`, `'-200'` |
 
 <CodeBlock
   data={[

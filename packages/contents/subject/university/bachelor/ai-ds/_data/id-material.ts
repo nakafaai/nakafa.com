@@ -5,7 +5,7 @@ const idMaterials = [
   {
     title: "Metode Linear AI",
     description:
-      "Tulang punggung matematika yang mengubah pola data menjadi prediksi cerdas.",
+      "Matriks, vektor, dekomposisi, dan proyeksi untuk membaca struktur data serta membangun model linear.",
     href: `${BASE_PATH}/linear-methods`,
     items: [
       {
@@ -173,7 +173,7 @@ const idMaterials = [
   {
     title: "Pemrograman AI",
     description:
-      "Mengkode kecerdasan yang mengajarkan mesin berpikir dan memecahkan masalah kompleks.",
+      "Dasar Python, NumPy, kontrol alur, struktur data, dan pola kode untuk analisis data serta alur kerja AI.",
     href: `${BASE_PATH}/ai-programming`,
     items: [
       {
@@ -670,7 +670,7 @@ const idMaterials = [
   {
     title: "Advanced Machine Learning",
     description:
-      "Teknik mutakhir yang mendorong batas kemampuan kecerdasan buatan.",
+      "Konsistensi, batas probabilitas, PAC learning, dan margin untuk membaca jaminan model pembelajaran.",
     href: `${BASE_PATH}/advanced-machine-learning`,
     items: [
       {

@@ -1,6 +1,6 @@
 export const metadata = {
     title: "String Formatting",
-    description: "Learn Python string formatting with format(), f-strings, width control, alignment options, sign specification, and examples.",
+    description: "Use format(), f-strings, column width, alignment, numeric precision, signs, and error handling to shape Python text output.",
     authors: [{ name: "Nabil Akbarazzima Fatih" }],
     date: "09/17/2025",
     subject: "AI Programming",
@@ -179,15 +179,17 @@ Precision controls the number of decimal places or significant digits in number 
         
         C --> F["+100, -200"]
         D --> G["100, -200"]
-        E --> H[" 100, -200"]
+        E --> H["' 100', '-200'"]
   `}
 />
+
+In the space row, the symbol is one blank character inside the format specifier, as in `{: d}`. Because that character is invisible, the table names it as a literal space.
 
 | Symbol | Behavior | Example |
 |--------|----------|---------|
 | `+` | Always show sign | `+100`, `-200` |
 | `-` | Only negative sign (default) | `100`, `-200` |
-| ` ` (space) | Space for positive | ` 100`, `-200` |
+| literal space | Leaves one space before a positive number | `' 100'`, `'-200'` |
 
 <CodeBlock
   data={[
