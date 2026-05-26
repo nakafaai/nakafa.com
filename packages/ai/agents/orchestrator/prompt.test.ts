@@ -166,6 +166,15 @@ describe("nakafaPrompt", () => {
     const prompt = nakafaPrompt(base);
 
     expect(prompt).toContain("Always use the user's language.");
+    expect(prompt).toContain(
+      'Use ```mermaid title="..." description="..." for helpful flowcharts, graphs, and timelines.'
+    );
+    expect(prompt).toContain(
+      "The title and description are required, must match the response language, and must not repeat each other."
+    );
+    expect(prompt).toContain(
+      'Inside Mermaid labels, use quoted Mermaid math syntax like "$$CO_2$$"; do not use Markdown math delimiters like \\(CO_2\\).'
+    );
     expect(prompt).toContain("Multiple-choice options MUST be formatted");
     expect(prompt).toContain("- A. Option text");
     expect(prompt).toContain("- E. Option text");

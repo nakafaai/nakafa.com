@@ -20,13 +20,13 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
+import { readMermaidMetadata } from "@repo/design-system/lib/mermaid";
 import { cn, filterWhitespaceNodes } from "@repo/design-system/lib/utils";
 import { isValidElement, memo } from "react";
 import type { Options } from "react-markdown";
 import type { BundledLanguage } from "shiki";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
-const MERMAID_META_REGEX = /\b(title|description)=("[^"]*"|'[^']*'|[^\s]+)/g;
 
 interface MarkdownPoint {
   column?: number;
@@ -40,34 +40,6 @@ interface MarkdownNode {
   data?: { meta?: string | null };
   position?: MarkdownPosition;
   properties?: { className?: string };
-}
-
-/** Reads required diagram copy from a markdown code fence info string. */
-function readMermaidMetadata(meta?: string | null) {
-  if (!meta) {
-    return;
-  }
-
-  const values = new Map<string, string>();
-  for (const match of meta.matchAll(MERMAID_META_REGEX)) {
-    const key = match.at(1);
-    const rawValue = match.at(2);
-
-    if (!(key && rawValue)) {
-      continue;
-    }
-
-    values.set(key, rawValue.replace(/^["']|["']$/g, "").trim());
-  }
-
-  const title = values.get("title");
-  const description = values.get("description");
-
-  if (!(title && description)) {
-    return;
-  }
-
-  return { description, title };
 }
 
 function sameNodePosition(prev?: MarkdownNode, next?: MarkdownNode): boolean {
@@ -368,16 +340,14 @@ export const reactMdxComponents: Options["components"] = {
       if (language === "mermaid") {
         const metadata = readMermaidMetadata(node?.data?.meta);
 
-        if (metadata) {
-          return (
-            <MermaidMdx
-              chart={code}
-              className={cn("shadow-none", className)}
-              description={metadata.description}
-              title={metadata.title}
-            />
-          );
-        }
+        return (
+          <MermaidMdx
+            chart={code}
+            className={cn("shadow-none", className)}
+            description={metadata.description}
+            title={metadata.title}
+          />
+        );
       }
 
       return (

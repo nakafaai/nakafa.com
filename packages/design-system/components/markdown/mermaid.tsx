@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@repo/design-system/components/ui/dialog";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { normalizeMermaidChart } from "@repo/design-system/lib/mermaid";
 import { languageIconMap } from "@repo/design-system/lib/programming";
 import { cn } from "@repo/design-system/lib/utils";
 import type { MermaidConfig } from "mermaid";
@@ -37,6 +38,7 @@ export function MermaidMdx({
   title,
 }: Props) {
   const Icon = languageIconMap.mermaid;
+  const renderableChart = normalizeMermaidChart(chart);
 
   return (
     <Dialog>
@@ -64,13 +66,13 @@ export function MermaidMdx({
                 </Button>
               }
             />
-            <CodeBlockDownloadButton code={chart} />
-            <CodeBlockCopyButton code={chart} />
+            <CodeBlockDownloadButton code={renderableChart} />
+            <CodeBlockCopyButton code={renderableChart} />
           </div>
         </div>
 
         <Mermaid
-          chart={chart}
+          chart={renderableChart}
           className="m-0 overflow-hidden bg-muted/40 p-4 text-base [&_svg]:h-auto [&_svg]:max-w-full"
           config={config}
           label={title}
@@ -84,7 +86,7 @@ export function MermaidMdx({
         </DialogHeader>
         <DialogPanel className="rounded-lg border bg-muted/40 p-4">
           <Mermaid
-            chart={chart}
+            chart={renderableChart}
             className="m-0 min-h-[50dvh] overflow-hidden text-base [&_svg]:h-auto [&_svg]:max-w-full"
             config={config}
             label={title}

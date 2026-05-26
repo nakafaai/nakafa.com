@@ -1,6 +1,6 @@
 {
   "name": "nakafa",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "license": "SEE LICENSE IN LICENSE",
   "bin": {
@@ -52,11 +52,11 @@
     "tsup": "^8.5.1",
     "turbo": "^2.9.14",
     "typescript": "^6.0.3",
-    "ultracite": "^7.7.0"
+    "ultracite": "^7.8.0"
   },
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@11.1.3",
+  "packageManager": "pnpm@11.3.0",
   "type": "module"
 }
