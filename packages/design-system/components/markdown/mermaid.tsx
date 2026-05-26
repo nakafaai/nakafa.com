@@ -50,9 +50,7 @@ export function MermaidMdx({
         <div className="flex items-center justify-between gap-2 bg-muted/80 p-1 text-muted-foreground text-sm">
           <div className="flex min-w-0 items-center gap-2 px-4 py-1.5">
             <Icon className="size-4" />
-            <span className="ml-1 truncate font-medium text-foreground">
-              {title}
-            </span>
+            <span className="ml-1 truncate text-foreground">{title}</span>
           </div>
           <div className="flex items-center">
             <DialogTrigger
