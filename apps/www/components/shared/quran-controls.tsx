@@ -1,5 +1,6 @@
 "use client";
 
+import { useDisclosure, useWindowEvent } from "@mantine/hooks";
 import {
   Drawer,
   DrawerHeader,
@@ -7,7 +8,7 @@ import {
   DrawerPopup,
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
 export interface QuranControlLabels {
   interpretation: string;
@@ -120,7 +121,14 @@ export function QuranPageControls({
   const activeAudioObserverRef = useRef<MutationObserver | null>(null);
   const activeAudioButtonRef = useRef<HTMLButtonElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isInterpretationOpen, setInterpretationOpen] = useState(false);
+  const [
+    isInterpretationOpen,
+    {
+      close: closeInterpretation,
+      open: openInterpretationDrawer,
+      set: setInterpretationOpen,
+    },
+  ] = useDisclosure(false);
   const [selectedInterpretation, setSelectedInterpretation] = useState("");
 
   /**
@@ -276,52 +284,39 @@ export function QuranPageControls({
       }
 
       setSelectedInterpretation(interpretation);
-      setInterpretationOpen(true);
+      openInterpretationDrawer();
     },
-    [interpretations]
+    [interpretations, openInterpretationDrawer]
   );
 
-  useEffect(() => {
-    /**
-     * Routes verse button clicks to the single Quran page controller.
-     */
-    function handleDocumentClick(event: MouseEvent) {
-      const audioButton = getDelegatedButton(event, AUDIO_BUTTON_SELECTOR);
+  useWindowEvent("click", (event) => {
+    const audioButton = getDelegatedButton(event, AUDIO_BUTTON_SELECTOR);
 
-      if (audioButton) {
-        playAudio(audioButton);
-        return;
-      }
-
-      const interpretationButton = getDelegatedButton(
-        event,
-        INTERPRETATION_BUTTON_SELECTOR
-      );
-
-      if (!interpretationButton) {
-        return;
-      }
-
-      openInterpretation(interpretationButton);
+    if (audioButton) {
+      playAudio(audioButton);
+      return;
     }
 
-    document.addEventListener("click", handleDocumentClick);
+    const interpretationButton = getDelegatedButton(
+      event,
+      INTERPRETATION_BUTTON_SELECTOR
+    );
 
-    return () => {
-      document.removeEventListener("click", handleDocumentClick);
-    };
-  }, [openInterpretation, playAudio]);
+    if (!interpretationButton) {
+      return;
+    }
 
-  useEffect(() => {
-    /**
-     * Stops Quran audio when the page controller leaves the tree.
-     */
-    function cleanupAudio() {
+    openInterpretation(interpretationButton);
+  });
+
+  useLayoutEffect(
+    () => () => {
       stopAudio();
-    }
-
-    return cleanupAudio;
-  }, [stopAudio]);
+      closeInterpretation();
+      setSelectedInterpretation("");
+    },
+    [closeInterpretation, stopAudio]
+  );
 
   return (
     <Drawer onOpenChange={setInterpretationOpen} open={isInterpretationOpen}>

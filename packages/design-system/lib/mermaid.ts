@@ -2,9 +2,9 @@ const MERMAID_DEFAULT_DESCRIPTION = "Key ideas shown visually.";
 const MERMAID_DEFAULT_TITLE = "Diagram";
 const MERMAID_META_REGEX = /\b(title|description)=("[^"]*"|'[^']*'|[^\s]+)/g;
 const MERMAID_SQUARE_LABEL_REGEX =
-  /(^|[^\w])([A-Za-z_][\w-]*)(\[)([^\]\n]+)(\])/g;
+  /(^|[^\w])([A-Za-z_][\w-]*)(\[)(?!\[|\(|\/|\\)([^\]\n]+)(\])/g;
 const MERMAID_ROUND_LABEL_REGEX =
-  /(^|[^\w])([A-Za-z_][\w-]*)(\()([^()\n]+)(\))/g;
+  /(^|[^\w])([A-Za-z_][\w-]*)(\()(?!\[|\()([^()\n]+)(\))/g;
 const MERMAID_EDGE_MATH_LABEL_REGEX = /(\|)([^|\n]*\$\$[^|\n]*)(\|)/g;
 const MERMAID_BACKTICK_DOLLAR_MATH_REGEX = /`\s*\$([^$\n]+)\$\s*`/g;
 const MERMAID_BACKTICK_DOUBLE_DOLLAR_MATH_REGEX =

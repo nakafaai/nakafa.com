@@ -55,6 +55,22 @@ A(Cahaya + \\(CO_2\\)) --> B(Glukosa)`;
 A("Cahaya + $$CO_2$$") --> B("Glukosa")`);
   });
 
+  it("preserves Mermaid node shapes while normalizing labels", () => {
+    const chart = `graph LR
+A(["Adsorption"]) --> B[(Database)]
+B --> C[[Subroutine]]
+C --> D((Circle))
+D --> E[Plain label]
+E --> F(Rounded label)`;
+
+    expect(normalizeMermaidChart(chart)).toBe(`graph LR
+A(["Adsorption"]) --> B[(Database)]
+B --> C[[Subroutine]]
+C --> D((Circle))
+D --> E["Plain label"]
+E --> F("Rounded label")`);
+  });
+
   it("preserves already quoted flowchart labels", () => {
     expect(normalizeMermaidChart('graph TD\nA["Already safe"]')).toBe(
       'graph TD\nA["Already safe"]'
