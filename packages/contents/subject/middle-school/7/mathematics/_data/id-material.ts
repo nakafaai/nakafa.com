@@ -4,7 +4,8 @@ import { BASE_PATH } from "@repo/contents/subject/middle-school/7/mathematics/_d
 const idMaterials = [
   {
     title: "Bilangan Bulat",
-    description: "Dasar perhitungan untuk segala hal di dunia.",
+    description:
+      "Membaca bilangan positif, negatif, faktor, FPB, dan KPK untuk perhitungan sehari-hari.",
     href: `${BASE_PATH}/integers`,
     items: [
       {
@@ -39,7 +40,8 @@ const idMaterials = [
   },
   {
     title: "Bilangan Rasional",
-    description: "Presisi angka dalam pecahan dan desimal.",
+    description:
+      "Mengubah, membandingkan, dan menghitung pecahan serta desimal dalam satu alur.",
     href: `${BASE_PATH}/rational-numbers`,
     items: [
       {
@@ -88,7 +90,8 @@ const idMaterials = [
   },
   {
     title: "Rasio",
-    description: "Memahami proporsi dan perbandingan nilai.",
+    description:
+      "Membaca perbandingan, rasio ekuivalen, skala, dan laju satuan secara bertahap.",
     href: `${BASE_PATH}/ratio`,
     items: [
       {
@@ -111,7 +114,8 @@ const idMaterials = [
   },
   {
     title: "Bentuk Aljabar",
-    description: "Bahasa simbol untuk pemecahan masalah kompleks.",
+    description:
+      "Mengubah situasi menjadi variabel, suku, operasi, dan model aljabar sederhana.",
     href: `${BASE_PATH}/algebraic-forms`,
     items: [
       {
@@ -134,7 +138,8 @@ const idMaterials = [
   },
   {
     title: "Kesebangunan",
-    description: "Geometri skala dalam peta dan desain.",
+    description:
+      "Membaca sudut, perbandingan sisi, dan faktor skala pada bangun, peta, dan desain.",
     href: `${BASE_PATH}/similarity`,
     items: [
       {
@@ -165,7 +170,8 @@ const idMaterials = [
   },
   {
     title: "Data dan Diagram",
-    description: "Mengubah angka menjadi cerita visual.",
+    description:
+      "Mengumpulkan, memilih, membaca, dan menafsirkan diagram agar data tidak sekadar angka.",
     href: `${BASE_PATH}/data-diagrams`,
     items: [
       {

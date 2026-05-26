@@ -59,7 +59,15 @@ export function ModernPeriodicTableCanvas({
             groundColor={colors.groundLight}
             intensity={0.62}
           />
-          <directionalLight intensity={1.25} position={[4, 7, 5]} />
+          <directionalLight
+            castShadow
+            intensity={1.25}
+            position={[4, 7, 5]}
+            shadow-bias={-0.0006}
+            shadow-mapSize-height={1024}
+            shadow-mapSize-width={1024}
+            shadow-normalBias={0.02}
+          />
           <ModernPeriodicTableScene
             colors={colors}
             focusId={focusId}

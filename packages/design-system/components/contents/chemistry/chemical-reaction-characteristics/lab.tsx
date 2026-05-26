@@ -103,7 +103,15 @@ export function ChemicalReactionCharacteristicsLab({
                 groundColor={sceneColors.groundLight}
                 intensity={0.66}
               />
-              <directionalLight intensity={1.25} position={[4, 5, 5]} />
+              <directionalLight
+                castShadow
+                intensity={1.25}
+                position={[4, 5, 5]}
+                shadow-bias={-0.0006}
+                shadow-mapSize-height={1024}
+                shadow-mapSize-width={1024}
+                shadow-normalBias={0.02}
+              />
               <ReactionCharacteristicsScene
                 colors={sceneColors}
                 cueId={selectedCueId}

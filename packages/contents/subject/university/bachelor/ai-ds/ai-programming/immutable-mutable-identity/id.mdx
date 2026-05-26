@@ -1,6 +1,6 @@
 export const metadata = {
     title: "Immutable, Mutable, dan Identity",
-    description: "Pelajari konsep mutabilitas, identitas, dan manajemen memori objek Python. Pelajari cara kerja list, referensi, dan identitas objek dengan contoh praktis.",
+    description: "Mutabilitas, identitas, referensi list, dan manajemen memori objek Python lewat contoh praktis.",
     authors: [{ name: "Nabil Akbarazzima Fatih" }],
     date: "09/18/2025",
     subject: "Pemrograman AI",
@@ -61,6 +61,8 @@ print(list2)  # ['x', 1, 2]`
 Setiap objek dalam Python memiliki tiga karakteristik penting yang membedakannya dari objek lain.
 
 <Mermaid
+  title="Identitas Menunjukkan Objek yang Dipakai"
+  description="Pisahkan identity, type, dan value agar satu objek tidak tertukar dengan nama variabelnya."
   chart={`
     flowchart LR
         A[Objek Python] --> B[Identitas]
@@ -216,6 +218,8 @@ print(list2)         # [0, 'x', 2] (tidak berubah)`
 />
 
 <Mermaid
+  title="Assignment Mengganti Ikatan, Modifikasi Mengubah Isi"
+  description="Bandingkan assignment yang mengganti rujukan dengan modifikasi yang mengubah objek yang sama."
   chart={`
     flowchart TD
         subgraph Sebelum ["Sebelum Modifikasi"]

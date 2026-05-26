@@ -1,0 +1,112 @@
+import { VirusRoleLab } from "@repo/design-system/components/contents/biology/virus-role";
+
+export const metadata = {
+  title: "Peranan Virus",
+  description:
+    "Membedakan virus sebagai penyebab penyakit, pengatur populasi mikroba, dan alat bioteknologi berdasarkan hubungan virus dengan inangnya.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Virus dan Peranannya",
+};
+
+## Peran Virus Dibaca dari Hubungannya dengan Inang
+
+Virus tidak bisa dinilai hanya dari bentuknya. Dampaknya ditentukan oleh inang, tempat virus berada, cara virus memperbanyak diri, dan apakah prosesnya dapat dikendalikan. Dari hubungan itu, kita bisa membedakan virus yang merugikan, bermanfaat, atau sedang dimanfaatkan manusia.
+
+### Hubungan dengan Inang Menentukan Akibat
+
+Virus sering dibahas sebagai penyebab penyakit, tetapi itu bukan satu-satunya konteks. Peran virus bergantung pada hubungan virus dengan **inang**, yaitu organisme atau sel yang dipakai virus untuk memperbanyak diri.
+
+Jika replikasi virus merusak sel, tubuh bisa mengalami penyakit. Jika virus menyerang bakteri di lingkungan, jumlah mikroba dapat berubah. Jika sifat virus dikendalikan di laboratorium, virus dapat dipakai sebagai **vektor**, yaitu pembawa materi genetik ke sel target.
+
+Gagasan bahwa virus dapat menyebabkan penyakit, menginfeksi banyak jenis inang, dan dimanfaatkan dalam biologi modern dapat dibaca lebih lanjut di [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/21-2-virus-infections-and-hosts).
+
+### Kemampuan yang Sama Bisa Berbeda Nilai
+
+Kemampuan virus menempel pada sel dan membawa materi genetik tidak otomatis buruk atau baik. Nilainya berubah ketika target, risiko, dan kendalinya berubah. Infeksi liar dapat merusak jaringan, sedangkan virus yang sudah dimodifikasi dapat dipakai untuk membawa gen tertentu ke sel target.
+
+| Konteks | Yang dilihat | Cara menilai perannya |
+| --- | --- | --- |
+| Penyakit | Sel inang rusak atau respons tubuh terganggu | Dampak dibaca dari jaringan yang terkena dan rute infeksi |
+| Ekologi | Populasi mikroba berubah | Virus ikut mengatur hubungan organisme mikroskopis |
+| Bioteknologi | Pengantaran materi genetik dikendalikan | Manfaat muncul jika target dan risikonya dibatasi |
+
+<VirusRoleLab
+  title={<>Satu sifat virus, tiga akibat berbeda</>}
+  description={
+    <>
+      Bandingkan infeksi jaringan, interaksi dengan bakteri, dan pengantaran
+      genetik dari susunan virus dan sel targetnya.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih konteks peran",
+    focusLabel: "Relasi yang diamati",
+    takeawayLabel: "Arah perannya",
+    viewLabel: "Model 3D peran virus",
+    items: [
+      {
+        tab: "Penyakit",
+        caption: <>Partikel virus ditampilkan mengelilingi sel untuk menunjukkan infeksi yang mengganggu fungsi sel.</>,
+        callouts: [
+          { id: "host-cell", label: "sel inang" },
+          { id: "virus-particle", label: "partikel virus" },
+        ],
+        focus: <>Kerusakan muncul karena replikasi terjadi di dalam sel inang, bukan karena virus hanya menempel di luar.</>,
+        takeaway: <>Penyakit adalah akibat dari hubungan virus-inang yang merusak jaringan atau memicu respons tubuh berlebihan.</>,
+      },
+      {
+        tab: "Ekologi",
+        caption: <>Bakteriofag digambarkan dekat bakteri karena virus tertentu dapat menginfeksi mikroorganisme.</>,
+        callouts: [
+          { id: "bacteriophage", label: "bakteriofag" },
+          { id: "target-bacteria", label: "bakteri target" },
+        ],
+        focus: <>Virus juga ikut membentuk populasi mikroba dalam ekosistem.</>,
+        takeaway: <>Di alam, virus tidak hanya berhubungan dengan manusia, tetapi juga dengan bakteri, hewan, tumbuhan, dan mikroba lain.</>,
+      },
+      {
+        tab: "Biotek",
+        caption: <>Vektor virus ditampilkan membawa materi genetik di dekat sel target untuk menekankan pengantaran yang dikendalikan.</>,
+        callouts: [
+          { id: "gene-cargo", label: "gen dibawa" },
+          { id: "target-cell", label: "sel target" },
+        ],
+        focus: <>Sifat yang berbahaya pada infeksi liar dapat diarahkan menjadi alat jika risiko dan targetnya dikontrol.</>,
+        takeaway: <>Bioteknologi memakai kemampuan virus membawa informasi genetik, bukan membiarkan virus menyebar bebas.</>,
+      },
+    ],
+  }}
+/>
+
+## Penyakit Virus Tidak Selalu Punya Jalur yang Sama
+
+Nama penyakit sering lebih mudah diingat daripada jalur penularannya. Padahal jalur itulah yang menjelaskan mengapa pencegahan influenza tidak sama dengan demam berdarah atau rabies.
+
+### Nama Penyakit Belum Menjelaskan Jalurnya
+
+Contoh penyakit virus dapat muncul pada manusia, hewan, dan tumbuhan. Pada manusia, virus dapat berkaitan dengan flu, polio, hepatitis, atau demam berdarah. Pada hewan, virus dapat menyebabkan rabies atau penyakit unggas tertentu. Pada tumbuhan, virus dapat membuat daun mosaik, tanaman kerdil, atau hasil panen turun.
+
+Yang perlu dibaca bukan hanya nama penyakitnya, melainkan jalur masuk dan jaringan yang terkena. Virus demam berdarah berkaitan dengan gigitan nyamuk. Virus pernapasan lebih terkait dengan droplet dan udara dekat wajah. Virus tumbuhan dapat berpindah melalui serangga pembawa, luka tanaman, atau bahan tanam yang terinfeksi.
+
+### Jalur Masuk Membuat Pencegahan Tidak Bisa Disamaratakan
+
+Jika virus masuk lewat udara dekat wajah, pembahasannya berbeda dari virus yang dibawa nyamuk atau masuk lewat cairan tubuh tertentu. Itulah alasan satu daftar pencegahan tidak cukup untuk semua virus. Kita perlu tahu rute perpindahan, sel target, dan kondisi yang membuat virus mudah berpindah.
+
+## Virus Bisa Bermanfaat Jika Dikendalikan
+
+Virus memiliki kemampuan kuat untuk mengenali sel dan membawa materi genetik. Pada infeksi liar, kemampuan itu bisa merugikan. Dalam kondisi terkontrol, sifat yang sama dapat dimanfaatkan.
+
+Beberapa virus digunakan untuk membantu riset genetik, terapi gen, pengembangan vaksin, atau pengendalian hama tertentu. Contohnya, baculovirus dapat dimanfaatkan untuk menyerang serangga hama tertentu tanpa cara kerja yang sama seperti pestisida kimia biasa.
+
+Pada terapi gen, virus dipakai bukan karena dibiarkan liar, tetapi karena dapat diubah menjadi pengantar. [NIH/NHLBI](https://www.nhlbi.nih.gov/health/genetic-therapies/types) menjelaskan bahwa vektor sering dibuat dari virus yang telah dimodifikasi agar gen penyebab penyakitnya dihilangkan dan ruangnya dipakai membawa gen terapi.
+
+Kuncinya adalah kendali. Virus yang dimanfaatkan harus dirancang, diuji, dan dibatasi targetnya. Tanpa kendali, sifat memperbanyak diri dan berpindah sel justru menjadi sumber risiko.
+
+> Kata "virus" belum cukup untuk menilai baik atau buruk. Cek inangnya, tingkat kendalinya, dan akibat yang sedang dibahas.
+
+## Satu Kata Tidak Cukup untuk Menilai Virus
+
+Sebutkan dulu hubungan virus dengan inangnya. Virus yang merusak jaringan dibahas sebagai penyebab penyakit. Virus yang memengaruhi mikroba dibahas dalam konteks ekologi. Virus yang membawa gen secara terkendali dibahas dalam konteks bioteknologi.
+
+Kebiasaan ini mencegah kita menyederhanakan virus menjadi "selalu buruk" atau "selalu berguna". Dalam biologi, peran muncul dari konteks, target, dan kendali.

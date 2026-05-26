@@ -39,9 +39,10 @@ interface MermaidProps {
   chart: string;
   className?: string;
   config?: MermaidConfig;
+  label: string;
 }
 
-export const Mermaid = ({ chart, className, config }: MermaidProps) => {
+export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [svgContent, setSvgContent] = useState<string>("");
@@ -59,7 +60,8 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
         // Initialize mermaid with optional custom config
         const mermaid = await initializeMermaid({
           ...config,
-          theme: resolvedTheme === "dark" ? "dark" : "default",
+          theme:
+            config?.theme ?? (resolvedTheme === "dark" ? "dark" : "default"),
         });
 
         // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
@@ -139,7 +141,7 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
 
   return (
     <div
-      aria-label="Mermaid chart"
+      aria-label={label}
       className={cn("my-4 flex justify-center", className)}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required for Mermaid"
       dangerouslySetInnerHTML={{ __html: displaySvg }}

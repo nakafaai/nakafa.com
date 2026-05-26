@@ -5,7 +5,7 @@ const idMaterials = [
   {
     title: "Virus dan Peranannya",
     description:
-      "Organisme mikroskopis yang mengubah dunia dari penyakit hingga terapi gen masa depan.",
+      "Struktur, replikasi, peran, dan pencegahan virus dalam konteks sel, tubuh, dan lingkungan.",
     href: `${BASE_PATH}/virus-role`,
     items: [
       {
@@ -29,7 +29,7 @@ const idMaterials = [
   {
     title: "Keanekaragaman Makhluk Hidup",
     description:
-      "Keajaiban kehidupan di Bumi dari bakteri mikroskopis hingga hutan hujan tropis.",
+      "Tingkat biodiversitas, klasifikasi, bakteri, fungi, dan hubungan organisme dalam ekosistem.",
     href: `${BASE_PATH}/biodiversity`,
     items: [
       {
@@ -57,7 +57,7 @@ const idMaterials = [
   {
     title: "Perubahan Iklim",
     description:
-      "Tantangan global terbesar yang mempengaruhi masa depan planet dan kehidupan kita.",
+      "Gejala, dampak, penyebab, mitigasi, adaptasi, dan kerja sama iklim berbasis data.",
     href: `${BASE_PATH}/climate-change`,
     items: [
       {

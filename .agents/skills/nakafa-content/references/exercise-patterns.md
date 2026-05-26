@@ -7,15 +7,15 @@ Verified against `packages/contents/exercises/` and `packages/contents/_types/ex
 ```text
 packages/contents/exercises/
 ├── high-school/
-│   ├── tka/mathematics/try-out/{year}/{set}/{number}/
+│   ├── tka/{subject}/try-out/{year}/{set}/{number}/
 │   └── snbt/{subject}/try-out/{year}/{set}/{number}/
 └── middle-school/
 ```
 
 Examples:
 
-- `packages/contents/exercises/high-school/tka/mathematics/try-out/2026/set-1/1/`
-- `packages/contents/exercises/high-school/snbt/general-reasoning/try-out/2026/set-2/1/`
+- `packages/contents/exercises/high-school/tka/{subject}/try-out/2026/set-1/1/`
+- `packages/contents/exercises/high-school/snbt/{subject}/try-out/2026/set-2/1/`
 
 ## Per-Question Structure
 

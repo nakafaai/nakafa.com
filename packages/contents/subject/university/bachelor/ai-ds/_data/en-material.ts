@@ -5,7 +5,7 @@ const enMaterials = [
   {
     title: "Linear Methods of AI",
     description:
-      "Mathematical backbone transforming data patterns into intelligent predictions.",
+      "Matrices, vectors, decompositions, and projections for reading data structure and building linear models.",
     href: `${BASE_PATH}/linear-methods`,
     items: [
       {
@@ -173,7 +173,7 @@ const enMaterials = [
   {
     title: "AI Programming",
     description:
-      "Coding intelligence that teaches machines to think and solve complex problems.",
+      "Python, NumPy, control flow, data structures, and coding patterns for data analysis and AI workflows.",
     href: `${BASE_PATH}/ai-programming`,
     items: [
       {
@@ -670,7 +670,7 @@ const enMaterials = [
   {
     title: "Advanced Machine Learning",
     description:
-      "Cutting-edge techniques pushing the boundaries of artificial intelligence capabilities.",
+      "Consistency, probability bounds, PAC learning, and margins for reading learning guarantees.",
     href: `${BASE_PATH}/advanced-machine-learning`,
     items: [
       {

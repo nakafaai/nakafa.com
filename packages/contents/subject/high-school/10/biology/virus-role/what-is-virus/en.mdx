@@ -1,0 +1,131 @@
+import {
+  VirusMorphologyLab,
+  VirusStructureLab,
+} from "@repo/design-system/components/contents/biology/virus-structure";
+
+export const metadata = {
+  title: "What is a Virus?",
+  description:
+    "Understand viruses as acellular particles with a genome, capsid, sometimes an envelope, and dependence on host cells for reproduction.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Viruses and Their Role",
+};
+
+## A Tiny Particle, Not a Tiny Cell
+
+A virus is easier to misunderstand when it is treated as a tiny organism with all cell parts. Start with the boundary: a virion is a biological package, not a complete cell.
+
+### A Virion Is a Package, Not a Cell
+
+When someone has the flu, we often say they "caught a virus." That sentence is useful, but it can make viruses sound like much smaller bacteria. A virus is not a tiny cell. It is **acellular**, meaning it is not organized as a complete cell.
+
+One complete virus particle is called a **virion**. A virion carries a **genome**, genetic material made of DNA or RNA. The genome is enclosed by a **capsid**, a protein coat built from smaller subunits called **capsomeres**. Some viruses also have a **lipid envelope** outside the capsid, a membrane-like layer taken from the host cell.
+
+Features such as genome type, capsid shape, and the presence of an envelope are also used to classify viruses. A concise reference is available in [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/21-1-viral-evolution-morphology-and-classification).
+
+### The Small Parts Explain the Behavior
+
+In real research, viruses are not read only from disease symptoms. A virology review in [NCBI PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC7148634/) uses composition, appearance, and classification as starting points for understanding viral traits. So the 3D model below should be read as a map of major parts, not as a photograph of one exact virus.
+
+| Virion part | Simple function | How to read it |
+| --- | --- | --- |
+| Genome | Carries genetic instructions | It can be DNA or RNA, depending on the virus type |
+| Capsid | Protects the genome | It is made of protein, not a complete cell membrane |
+| Lipid envelope | Helps some viruses interact with cells | Some viruses have it, but not all viruses do |
+| Surface protein | Helps recognize a target cell | It works like a biological key-and-lock fit |
+
+> A virus carries instructions and packaging, but it does not carry the full working machinery of a cell.
+
+<VirusStructureLab
+  title={<>A virion as an instruction package</>}
+  description={
+    <>
+      Observe the capsid, genome, and envelope. The model movement helps separate
+      the protective part, the instruction-carrying part, and the cell-recognition
+      part.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose a virion part",
+    focusLabel: "What to read",
+    takeawayLabel: "Biological meaning",
+    viewLabel: "3D virion structure model",
+    items: [
+      {
+        tab: "Capsid",
+        caption: <>The capsid is a protein package that protects the viral genome outside a host cell.</>,
+        focus: <>The faceted model shows a capsid made from many capsomeres, not one smooth shell.</>,
+        takeaway: <>Without a capsid, the viral genome would be exposed before reaching a suitable cell.</>,
+      },
+      {
+        tab: "Genome",
+        caption: <>The central strand represents viral DNA or RNA, the instructions for producing new virus particles.</>,
+        focus: <>The genome looks active, but the instructions cannot run without host-cell machinery.</>,
+        takeaway: <>The virus carries the recipe, while the host cell supplies the tools and materials.</>,
+      },
+      {
+        tab: "Envelope",
+        caption: <>Some viruses have a lipid envelope with surface proteins that help them recognize target cells.</>,
+        focus: <>The envelope is transparent because it surrounds the capsid rather than replacing it.</>,
+        takeaway: <>The envelope and surface proteins help decide whether a virus can attach to a specific cell.</>,
+      },
+    ],
+  }}
+/>
+
+## Why a Virus Is Not Called a Cell
+
+Living cells usually have a cell membrane, cytoplasm, ribosomes, and a metabolic system. **Metabolism** is the set of chemical reactions that lets a cell obtain energy and build its own parts. Viruses do not have that complete equipment.
+
+Because viruses lack ribosomes, they cannot make proteins by themselves. Because they lack their own metabolism, they cannot generate their own energy. That is why viruses reproduce only after entering a **host cell**, the cell used as the place to build new viral components.
+
+Outside a host cell, a virion is like a sealed instruction package. It may persist for a while, attach to a suitable cell, and deliver its genome. Only then can the host cell machinery read the viral instructions.
+
+### Its Life Boundary Shows Its Dependence
+
+This point matters because viruses sit near the boundary between chemistry and life. Outside a cell, a virion does not eat, respire, or repair itself like a cell. Inside a suitable cell, its genome can redirect protein production and genome copying. So the discussion always returns to one idea. A virus carries instructions, but it does not carry the complete machinery to run them alone.
+
+## Shape Comes from Assembly
+
+Viruses are extremely small, often only tens to hundreds of nanometers across. A **nanometer** is much smaller than a micrometer, so many viruses cannot be seen clearly with an ordinary light microscope.
+
+Viral shapes differ because capsomeres and outer layers are arranged in different ways. Some viruses are helical, some are polyhedral, some are enveloped and rounded, and some have complex forms such as bacteriophages that infect bacteria. Shape is not decoration. It helps explain how the virus protects its genome, attaches, and enters a cell.
+
+<VirusMorphologyLab
+  title={<>Different virion shapes</>}
+  description={
+    <>
+      Compare how capsids and outer layers arrange the genome. This model uses
+      common virology shape patterns, not one exact virus species.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose a virus shape",
+    focusLabel: "What to read",
+    takeawayLabel: "Biological meaning",
+    viewLabel: "3D model of virus shape diversity",
+    items: [
+      {
+        tab: "Shape",
+        caption: <>Helical viruses look like threaded rods, polyhedral viruses are faceted, enveloped viruses carry a spiked outer layer, and complex viruses can have heads and tails.</>,
+        focus: <>Notice whether the genome is held by repeated capsid units, a faceted capsid, a lipid envelope, or a special attachment structure.</>,
+        takeaway: <>Shape helps explain how a virus protects its genome and approaches a target cell.</>,
+        callouts: [
+          { id: "helical", label: "helical" },
+          { id: "polyhedral", label: "polyhedral" },
+          { id: "enveloped", label: "enveloped" },
+          { id: "complex", label: "complex" },
+        ],
+      },
+    ],
+  }}
+/>
+
+Cell fit matters too. A viral surface protein must match a **receptor** on the host cell. A receptor is like a biological door handle. If the fit is wrong, the virus has difficulty entering even when it is near the cell.
+
+## How to Read a Virus after Seeing Its Structure
+
+Once the virion structure is clear, we can read a virus in a more organized way. First, read the genome as instructions. Second, read the capsid as the instruction protector. Third, read surface proteins as the parts that decide whether the virus fits a host cell.
+
+This order matters when discussing viral reproduction. A virus does not reproduce simply because it has a genome. That genome must enter a suitable cell, and then the host cell machinery is used to copy instructions and assemble new virions.

@@ -91,7 +91,8 @@ const enMaterials = [
   },
   {
     title: "Combinatorics",
-    description: "Combining elements in unique ways to solve complex problems.",
+    description:
+      "Slot rules, permutations, and combinations for counting arrangements without listing them one by one.",
     href: `${BASE_PATH}/combinatorics`,
     items: [
       {

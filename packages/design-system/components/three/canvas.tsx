@@ -122,6 +122,7 @@ function ThreeCanvasComponent({
     >
       <Canvas
         className={cn("size-full [&_canvas]:size-full", className)}
+        dpr={[1, 2]}
         fallback={
           <div className="flex h-full w-full items-center justify-center">
             <HugeIcons
