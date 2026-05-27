@@ -121,7 +121,7 @@ export const createAuthOptions = (ctx: GenericCtx<ConvexDataModel>) => ({
   baseURL: authEnvironment.siteUrl,
   database: authComponent.adapter(ctx),
   emailAndPassword: {
-    enabled: true,
+    enabled: false,
   },
   plugins: [
     anonymous(),

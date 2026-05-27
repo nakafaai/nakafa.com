@@ -9,6 +9,9 @@ type PersistedProviderMetadata = Schema.Schema.Type<
 type PersistedGroundingProvider = NonNullable<
   PersistedProviderMetadata["google"]
 >;
+type PersistedGatewayProvider = NonNullable<
+  PersistedProviderMetadata["gateway"]
+>;
 type PersistedGroundingMetadata = NonNullable<
   NonNullable<PersistedGroundingProvider["groundingMetadata"]>
 >;
@@ -67,25 +70,46 @@ function copyGroundingProvider(
     return;
   }
 
+  const signature =
+    provider.thoughtSignature === undefined
+      ? {}
+      : { thoughtSignature: provider.thoughtSignature };
+
   if (provider.groundingMetadata === undefined) {
-    return {};
+    return signature;
   }
 
   if (provider.groundingMetadata === null) {
-    return { groundingMetadata: null };
+    return { ...signature, groundingMetadata: null };
   }
 
   return {
+    ...signature,
     groundingMetadata: copyGroundingMetadata(provider.groundingMetadata),
   };
 }
 
+/** Copies AI Gateway response metadata into the persisted shape. */
+function copyGatewayProvider(provider: PersistedGatewayProvider | undefined) {
+  if (provider === undefined) {
+    return;
+  }
+
+  if (provider.generationId === undefined) {
+    return {};
+  }
+
+  return { generationId: provider.generationId };
+}
+
 /** Copies provider metadata into a mutable persisted object. */
 function copyProviderMetadata(metadata: PersistedProviderMetadata) {
+  const gateway = copyGatewayProvider(metadata.gateway);
   const google = copyGroundingProvider(metadata.google);
   const vertex = copyGroundingProvider(metadata.vertex);
 
   return {
+    ...(gateway === undefined ? {} : { gateway }),
     ...(google === undefined ? {} : { google }),
     ...(vertex === undefined ? {} : { vertex }),
   };

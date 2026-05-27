@@ -22,9 +22,15 @@ const GroundingMetadataSchema = Schema.Struct({
 
 const GroundingProviderSchema = Schema.Struct({
   groundingMetadata: Schema.optional(Schema.NullOr(GroundingMetadataSchema)),
+  thoughtSignature: Schema.optional(Schema.NullOr(Schema.String)),
+}).pipe(Schema.mutable);
+
+const GatewayProviderSchema = Schema.Struct({
+  generationId: Schema.optional(Schema.NullOr(Schema.String)),
 }).pipe(Schema.mutable);
 
 const ProviderMetadataSchema = Schema.Struct({
+  gateway: Schema.optional(GatewayProviderSchema),
   google: Schema.optional(GroundingProviderSchema),
   vertex: Schema.optional(GroundingProviderSchema),
 }).pipe(Schema.mutable);
