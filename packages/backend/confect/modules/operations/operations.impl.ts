@@ -1,4 +1,4 @@
+import { triggersLayer } from "@repo/backend/confect/modules/operations/triggers/triggers.impl";
 import { Layer } from "effect";
-import { triggersLayer } from "./triggers/triggers.impl";
 
 export const operationsLayer = Layer.mergeAll(triggersLayer);

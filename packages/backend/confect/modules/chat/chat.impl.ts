@@ -1,4 +1,4 @@
+import { chatsLayer } from "@repo/backend/confect/modules/chat/chats/chats.impl";
 import { Layer } from "effect";
-import { chatsLayer } from "./chats/chats.impl";
 
 export const chatLayer = Layer.mergeAll(chatsLayer);

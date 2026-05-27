@@ -1,5 +1,6 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/confect/modules/content/constants";
 import type {
   ArticleCategory,
   Locale,
@@ -9,10 +10,7 @@ import {
   deleteContentSearch,
   syncContentSearch,
 } from "@repo/backend/confect/modules/content/contentSearch/writes.service";
-import {
-  assertContentSyncBatchSize,
-  CONTENT_SYNC_BATCH_LIMITS,
-} from "@repo/backend/confect/modules/content/contentSync.shared";
+import { assertContentSyncBatchSize } from "@repo/backend/confect/modules/content/contentSync.shared";
 import {
   buildAuthorCache,
   deleteArticleReferencesForArticle,

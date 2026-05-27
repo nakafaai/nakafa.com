@@ -1,15 +1,15 @@
 import { Impl } from "@confect/server";
+import api from "@repo/backend/confect/_generated/api";
+import { chatLayer } from "@repo/backend/confect/modules/chat/chat.impl";
+import { commerceLayer } from "@repo/backend/confect/modules/commerce/commerce.impl";
+import { contentLayer } from "@repo/backend/confect/modules/content/content.impl";
+import { identityLayer } from "@repo/backend/confect/modules/identity/identity.impl";
+import { learningLayer } from "@repo/backend/confect/modules/learning/learning.impl";
+import { notificationsLayer } from "@repo/backend/confect/modules/notifications/notifications.impl";
+import { operationsLayer } from "@repo/backend/confect/modules/operations/operations.impl";
+import { schoolLayer } from "@repo/backend/confect/modules/school/school.impl";
+import { tryoutLayer } from "@repo/backend/confect/modules/tryout/tryout.impl";
 import { Layer } from "effect";
-import api from "./_generated/api";
-import { chatLayer } from "./modules/chat/chat.impl";
-import { commerceLayer } from "./modules/commerce/commerce.impl";
-import { contentLayer } from "./modules/content/content.impl";
-import { identityLayer } from "./modules/identity/identity.impl";
-import { learningLayer } from "./modules/learning/learning.impl";
-import { notificationsLayer } from "./modules/notifications/notifications.impl";
-import { operationsLayer } from "./modules/operations/operations.impl";
-import { schoolLayer } from "./modules/school/school.impl";
-import { tryoutLayer } from "./modules/tryout/tryout.impl";
 
 export default Impl.make(api).pipe(
   Layer.provide(identityLayer),

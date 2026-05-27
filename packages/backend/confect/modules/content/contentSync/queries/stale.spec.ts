@@ -1,4 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
 import { Schema } from "effect";
 
 const contentSyncQueriesStaleGroup = GroupSpec.make("stale").addFunction(
@@ -33,7 +34,7 @@ const contentSyncQueriesStaleGroup = GroupSpec.make("stale").addFunction(
             GenericId.GenericId("exerciseSets"),
             GenericId.GenericId("exerciseQuestions")
           ),
-          locale: Schema.Literal("en", "id"),
+          locale: localeSchema,
           slug: Schema.String,
         })
       ),

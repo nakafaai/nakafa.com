@@ -1,6 +1,6 @@
 import { GroupSpec } from "@confect/core";
-import { tryoutsMutationsAttemptsGroup } from "./attempts.spec";
-import { tryoutsMutationsInternalGroup } from "./internalFunctions/internalFunctions.spec";
+import { tryoutsMutationsAttemptsGroup } from "@repo/backend/confect/modules/tryout/tryouts/mutations/attempts.spec";
+import { tryoutsMutationsInternalGroup } from "@repo/backend/confect/modules/tryout/tryouts/mutations/internalFunctions/internalFunctions.spec";
 
 const tryoutsMutationsGroup = GroupSpec.make("mutations")
   .addGroup(tryoutsMutationsAttemptsGroup)

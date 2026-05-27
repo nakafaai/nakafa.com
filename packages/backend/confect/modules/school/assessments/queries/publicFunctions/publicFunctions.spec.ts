@@ -1,8 +1,8 @@
 import { GroupSpec } from "@confect/core";
-import { assessmentsQueriesPublicAssignmentGroup } from "./assignment.spec";
-import { assessmentsQueriesPublicAuthoringGroup } from "./authoring.spec";
-import { assessmentsQueriesPublicBankGroup } from "./bank.spec";
-import { assessmentsQueriesPublicListGroup } from "./list.spec";
+import { assessmentsQueriesPublicAssignmentGroup } from "@repo/backend/confect/modules/school/assessments/queries/publicFunctions/assignment.spec";
+import { assessmentsQueriesPublicAuthoringGroup } from "@repo/backend/confect/modules/school/assessments/queries/publicFunctions/authoring.spec";
+import { assessmentsQueriesPublicBankGroup } from "@repo/backend/confect/modules/school/assessments/queries/publicFunctions/bank.spec";
+import { assessmentsQueriesPublicListGroup } from "@repo/backend/confect/modules/school/assessments/queries/publicFunctions/list.spec";
 
 const assessmentsQueriesPublicGroup = GroupSpec.make("publicFunctions")
   .addGroup(assessmentsQueriesPublicAuthoringGroup)

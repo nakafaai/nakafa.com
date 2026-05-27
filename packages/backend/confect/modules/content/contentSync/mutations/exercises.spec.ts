@@ -1,4 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
 import { Schema } from "effect";
 
 const contentSyncMutationsExercisesGroup = GroupSpec.make("exercises")
@@ -23,7 +24,7 @@ const contentSyncMutationsExercisesGroup = GroupSpec.make("exercises")
             date: Schema.Number,
             description: Schema.optional(Schema.String),
             exerciseType: Schema.String,
-            locale: Schema.Literal("en", "id"),
+            locale: localeSchema,
             material: Schema.Literal(
               "mathematics",
               "quantitative-knowledge",
@@ -68,7 +69,7 @@ const contentSyncMutationsExercisesGroup = GroupSpec.make("exercises")
             contentHash: Schema.String,
             description: Schema.optional(Schema.String),
             exerciseType: Schema.String,
-            locale: Schema.Literal("en", "id"),
+            locale: localeSchema,
             material: Schema.Literal(
               "mathematics",
               "quantitative-knowledge",

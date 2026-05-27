@@ -1,4 +1,6 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
 import { Schema } from "effect";
 
 const tryoutsMutationsAttemptsGroup = GroupSpec.make("attempts")
@@ -33,8 +35,8 @@ const tryoutsMutationsAttemptsGroup = GroupSpec.make("attempts")
     FunctionSpec.publicMutation({
       name: "startTryout",
       args: Schema.Struct({
-        locale: Schema.Literal("en", "id"),
-        product: Schema.Literal("snbt"),
+        locale: localeSchema,
+        product: tryoutProductSchema,
         tryoutSlug: Schema.String,
       }),
       returns: Schema.Union(

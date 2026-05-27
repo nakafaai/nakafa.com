@@ -4,8 +4,10 @@ import type { PagefindResult } from "@/types/pagefind";
 const HTML_ANCHOR_REGEX = /\.html#/;
 const HTML_EXT_REGEX = /\.html$/;
 const EMPTY_HTML_TAG_REGEX = /<([a-z]+)(?:\s[^>]*)?>\s*<\/\1>/gi;
+const HTML_ENTITY_REGEX = /&(#x[0-9a-f]+|#\d+|[a-z]+);/gi;
 const HTML_TAG_REGEX = /<[^>]+>/g;
 const HTML_TOKEN_REGEX = /(<[^>]+>)/g;
+const MARK_TOKEN_REGEX = /(<\/?mark>)/gi;
 
 /** Strip the static `.html` suffix that Pagefind stores for app pages. */
 function normalizePagefindPath(path: string) {
@@ -110,6 +112,84 @@ export function getPagefindSectionResults(result: PagefindResult) {
 /** Returns whether one HTML excerpt still contains visible text. */
 export function hasPagefindExcerpt(excerpt: string) {
   return excerpt.replace(HTML_TAG_REGEX, "").trim().length > 0;
+}
+
+/** Converts one Pagefind HTML excerpt into safe text and mark segments. */
+export function getPagefindExcerptSegments(excerpt: string) {
+  let isMarked = false;
+  let offset = 0;
+
+  return excerpt.split(MARK_TOKEN_REGEX).flatMap((token) => {
+    const key = `${offset}:${isMarked ? "mark" : "text"}`;
+    offset += token.length;
+    const normalizedToken = token.toLowerCase();
+
+    if (normalizedToken === "<mark>") {
+      isMarked = true;
+      return [];
+    }
+
+    if (normalizedToken === "</mark>") {
+      isMarked = false;
+      return [];
+    }
+
+    const text = decodeHtmlEntities(token.replace(HTML_TAG_REGEX, ""));
+
+    if (!text) {
+      return [];
+    }
+
+    return [{ key, kind: isMarked ? "mark" : "text", text } as const];
+  });
+}
+
+/** Decodes the HTML entities Pagefind can emit in highlighted excerpts. */
+function decodeHtmlEntities(value: string) {
+  return value.replace(HTML_ENTITY_REGEX, (_, entity: string) => {
+    const normalizedEntity = entity.toLowerCase();
+
+    if (normalizedEntity.startsWith("#x")) {
+      const codePoint = Number.parseInt(normalizedEntity.slice(2), 16);
+      return decodeCodePoint(codePoint);
+    }
+
+    if (normalizedEntity.startsWith("#")) {
+      const codePoint = Number.parseInt(normalizedEntity.slice(1), 10);
+      return decodeCodePoint(codePoint);
+    }
+
+    if (normalizedEntity === "amp") {
+      return "&";
+    }
+
+    if (normalizedEntity === "apos") {
+      return "'";
+    }
+
+    if (normalizedEntity === "gt") {
+      return ">";
+    }
+
+    if (normalizedEntity === "lt") {
+      return "<";
+    }
+
+    if (normalizedEntity === "quot") {
+      return '"';
+    }
+
+    return "";
+  });
+}
+
+/** Converts one validated Unicode code point to a string. */
+function decodeCodePoint(codePoint: number) {
+  if (codePoint < 0 || codePoint > 0x10_ff_ff) {
+    return "";
+  }
+
+  return String.fromCodePoint(codePoint);
 }
 
 /** Normalize one Pagefind result payload for locale-aware app navigation. */

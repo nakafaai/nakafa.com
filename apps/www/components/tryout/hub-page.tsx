@@ -1,6 +1,6 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/confect/_generated/functionReferences";
-import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
+import { primaryTryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
@@ -17,7 +17,7 @@ import { getToken } from "@/lib/auth/server";
 
 /** Renders the server-backed tryout hub with an SSR first catalog page. */
 export async function TryoutHubPage({ locale }: { locale: Locale }) {
-  const product: TryoutProduct = "snbt";
+  const product = primaryTryoutProduct;
   const [tHome, tTryouts, token] = await Promise.all([
     getTranslations({ locale, namespace: "Home" }),
     getTranslations({ locale, namespace: "Tryouts" }),
@@ -25,17 +25,24 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
   ]);
 
   const initialNowMs = Date.now();
+  const catalogSnapshotArgs = {
+    locale,
+    pageSize: TRYOUT_CATALOG_PAGE_SIZE,
+    product,
+  };
+  const catalogSnapshot = token
+    ? fetchQuery(
+        api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
+        catalogSnapshotArgs,
+        { token }
+      )
+    : fetchQuery(
+        api.tryouts.queries.tryouts.getPublicActiveTryoutCatalogSnapshot,
+        catalogSnapshotArgs
+      );
 
-  const [catalogSnapshot, currentUser] = await Promise.all([
-    fetchQuery(
-      api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
-      {
-        locale,
-        pageSize: TRYOUT_CATALOG_PAGE_SIZE,
-        product,
-      },
-      token ? { token } : undefined
-    ),
+  const [catalogSnapshotResult, currentUser] = await Promise.all([
+    catalogSnapshot,
     token
       ? fetchQuery(api.auth.getCurrentUser, {}, { token })
       : Promise.resolve(null),
@@ -64,14 +71,14 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
             />
           }
           activeCountLabel={tTryouts("package-count", {
-            count: catalogSnapshot.activeCount,
+            count: catalogSnapshotResult.activeCount,
           })}
           art={<SnbtTryoutIcon />}
           description={tTryouts("products.snbt.description")}
           title={tTryouts("products.snbt.title")}
         >
           <TryoutCatalogList
-            initialEntries={catalogSnapshot.initialPage}
+            initialEntries={catalogSnapshotResult.initialPage}
             initialNowMs={initialNowMs}
             locale={locale}
             product={product}

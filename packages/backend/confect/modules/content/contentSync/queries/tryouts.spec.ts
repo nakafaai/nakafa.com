@@ -1,4 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
 import { Schema } from "effect";
 
 const contentSyncQueriesTryoutsGroup = GroupSpec.make("tryouts").addFunction(
@@ -20,8 +22,8 @@ const contentSyncQueriesTryoutsGroup = GroupSpec.make("tryouts").addFunction(
       page: Schema.Array(
         Schema.Struct({
           cycleKey: Schema.String,
-          locale: Schema.Literal("en", "id"),
-          product: Schema.Literal("snbt"),
+          locale: localeSchema,
+          product: tryoutProductSchema,
           slug: Schema.String,
         })
       ),

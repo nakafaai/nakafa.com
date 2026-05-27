@@ -1,9 +1,9 @@
 import { GroupSpec } from "@confect/core";
-import { tryoutsQueriesMeAttemptGroup } from "./attempt.spec";
-import { tryoutsQueriesMeHistoryGroup } from "./history.spec";
-import { tryoutsQueriesMePartGroup } from "./part.spec";
-import { tryoutsQueriesMeSessionGroup } from "./session.spec";
-import { tryoutsQueriesMeSetViewGroup } from "./setView.spec";
+import { tryoutsQueriesMeAttemptGroup } from "@repo/backend/confect/modules/tryout/tryouts/queries/me/attempt.spec";
+import { tryoutsQueriesMeHistoryGroup } from "@repo/backend/confect/modules/tryout/tryouts/queries/me/history.spec";
+import { tryoutsQueriesMePartGroup } from "@repo/backend/confect/modules/tryout/tryouts/queries/me/part.spec";
+import { tryoutsQueriesMeSessionGroup } from "@repo/backend/confect/modules/tryout/tryouts/queries/me/session.spec";
+import { tryoutsQueriesMeSetViewGroup } from "@repo/backend/confect/modules/tryout/tryouts/queries/me/setView.spec";
 
 const tryoutsQueriesMeGroup = GroupSpec.make("me")
   .addGroup(tryoutsQueriesMeAttemptGroup)

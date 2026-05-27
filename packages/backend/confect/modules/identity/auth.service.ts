@@ -1,6 +1,7 @@
 import { type GenericId, Ref } from "@confect/core";
 import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
+import type { Doc } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import { ActionCtx, QueryCtx } from "@repo/backend/confect/_generated/services";
 import { jwksSchema } from "@repo/backend/confect/modules/identity/auth/auth.schemas";
@@ -22,6 +23,9 @@ import {
 } from "better-auth/plugins";
 import { Effect, Schema } from "effect";
 
+const AUTH_JWT_EXPIRATION_SECONDS = 5 * 60;
+const authIdentitySchema = Schema.Struct({ subject: Schema.String });
+
 export class UnauthorizedUser extends Schema.TaggedError<UnauthorizedUser>()(
   "UnauthorizedUser",
   { message: Schema.String }
@@ -40,6 +44,36 @@ function mapGoogleProfileToUser(profile: { email: string }) {
   };
 }
 
+/** Maps the synced app user fields back to the auth profile shape used by UI. */
+function mapAppUserToAuthUser(appUser: Doc<"users">) {
+  const authUser = {
+    _id: appUser.authId,
+    email: appUser.email,
+    name: appUser.name,
+  };
+
+  if (appUser.image === undefined) {
+    return authUser;
+  }
+
+  return { ...authUser, image: appUser.image };
+}
+
+/** Reads the Convex JWT identity issued by Better Auth. */
+const readAuthIdentity = Effect.fn("identity.readAuthIdentity")(function* (
+  ctx: ConvexActionCtx | ConvexMutationCtx | ConvexQueryCtx
+) {
+  const identity = yield* Effect.promise(() => ctx.auth.getUserIdentity());
+
+  if (!identity) {
+    return null;
+  }
+
+  return yield* Schema.decodeUnknown(authIdentitySchema)(identity).pipe(
+    Effect.orElseSucceed(() => null)
+  );
+});
+
 /** Returns the app user mapped to a Better Auth user id. */
 export const getAppUserByAuthId = Effect.fn("identity.getAppUserByAuthId")(
   function* (ctx: ConvexQueryCtx | ConvexMutationCtx, authId: string) {
@@ -52,24 +86,32 @@ export const getAppUserByAuthId = Effect.fn("identity.getAppUserByAuthId")(
   }
 );
 
+/** Resolves the current valid Better Auth session to the synced app user. */
+const getSessionAppUser = Effect.fn("identity.getSessionAppUser")(function* (
+  ctx: ConvexMutationCtx | ConvexQueryCtx
+) {
+  const identity = yield* readAuthIdentity(ctx);
+
+  if (!identity) {
+    return null;
+  }
+
+  const appUser = yield* getAppUserByAuthId(ctx, identity.subject);
+
+  if (!appUser) {
+    return null;
+  }
+
+  return {
+    appUser,
+    authUser: mapAppUserToAuthUser(appUser),
+  };
+});
+
 /** Returns the current Better Auth user and app user when both exist. */
 export const getOptionalAppUser = Effect.fn("identity.getOptionalAppUser")(
   function* (ctx: ConvexQueryCtx | ConvexMutationCtx) {
-    const authUser = yield* Effect.promise(() =>
-      authComponent.safeGetAuthUser(ctx)
-    );
-
-    if (!authUser) {
-      return null;
-    }
-
-    const appUser = yield* getAppUserByAuthId(ctx, authUser._id);
-
-    if (!appUser) {
-      return null;
-    }
-
-    return { appUser, authUser };
+    return yield* getSessionAppUser(ctx);
   }
 );
 
@@ -77,27 +119,33 @@ export const getOptionalAppUser = Effect.fn("identity.getOptionalAppUser")(
 export const requireAppUser = Effect.fn("identity.requireAppUser")(function* (
   ctx: ConvexQueryCtx | ConvexMutationCtx
 ) {
-  const authUser = yield* Effect.promise(() => authComponent.getAuthUser(ctx));
-  const appUser = yield* getAppUserByAuthId(ctx, authUser._id);
+  const user = yield* getSessionAppUser(ctx);
 
-  if (!appUser) {
+  if (!user) {
     return yield* Effect.fail(
       new UnauthorizedUser({ message: "User not found." })
     );
   }
 
-  return { appUser, authUser };
+  return user;
 });
 
 /** Requires the current action request to resolve to a mapped app user. */
 export const requireAppUserForAction = Effect.fn(
   "identity.requireAppUserForAction"
 )(function* (ctx: ConvexActionCtx) {
-  const authUser = yield* Effect.promise(() => authComponent.getAuthUser(ctx));
+  const identity = yield* readAuthIdentity(ctx);
+
+  if (!identity) {
+    return yield* Effect.fail(
+      new UnauthorizedUser({ message: "User not found." })
+    );
+  }
+
   const appUser = yield* Effect.promise(() =>
     ctx.runQuery(
       Ref.getFunctionReference(refs.internal.users.queries.getUserByAuthId),
-      { authId: authUser._id }
+      { authId: identity.subject }
     )
   );
 
@@ -107,7 +155,10 @@ export const requireAppUserForAction = Effect.fn(
     );
   }
 
-  return { appUser, authUser };
+  return {
+    appUser,
+    authUser: mapAppUserToAuthUser(appUser),
+  };
 });
 
 /** Builds Better Auth options for Convex HTTP and action boundaries. */
@@ -132,6 +183,7 @@ export const createAuthOptions = (ctx: GenericCtx<ConvexDataModel>) => ({
       authConfig,
       jwks: authEnvironment.jwks,
       jwksRotateOnTokenGenerationError: true,
+      jwt: { expirationSeconds: AUTH_JWT_EXPIRATION_SECONDS },
     }),
   ],
   socialProviders: {

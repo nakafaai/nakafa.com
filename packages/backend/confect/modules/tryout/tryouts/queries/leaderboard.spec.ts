@@ -1,4 +1,6 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
 import { Schema } from "effect";
 
 const tryoutsQueriesLeaderboardGroup = GroupSpec.make("leaderboard")
@@ -28,8 +30,8 @@ const tryoutsQueriesLeaderboardGroup = GroupSpec.make("leaderboard")
       args: Schema.Struct({
         cycleKey: Schema.String,
         limit: Schema.optional(Schema.Number),
-        locale: Schema.Literal("en", "id"),
-        product: Schema.Literal("snbt"),
+        locale: localeSchema,
+        product: tryoutProductSchema,
       }),
       returns: Schema.Array(
         Schema.Struct({

@@ -1,4 +1,5 @@
 import { QueryCtx } from "@repo/backend/confect/_generated/services";
+import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { getManyFrom } from "convex-helpers/server/relationships";
 import { Effect } from "effect";
@@ -45,7 +46,7 @@ export const getLatestAttemptBySlug = Effect.fn(
 /** Loads the answer sheet for a synced exercise set. */
 export const getQuestionAnswerSheetBySlug = Effect.fn(
   "exercises.getQuestionAnswerSheetBySlug"
-)(function* (args: { readonly locale: "en" | "id"; readonly slug: string }) {
+)(function* (args: { readonly locale: Locale; readonly slug: string }) {
   const ctx = yield* QueryCtx;
   yield* requireAppUser(ctx);
 

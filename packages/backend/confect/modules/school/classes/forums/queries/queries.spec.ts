@@ -1,6 +1,6 @@
 import { GroupSpec } from "@confect/core";
-import { classesForumsQueriesForumsGroup } from "./forums.spec";
-import { classesForumsQueriesPagesGroup } from "./pages.spec";
+import { classesForumsQueriesForumsGroup } from "@repo/backend/confect/modules/school/classes/forums/queries/forums.spec";
+import { classesForumsQueriesPagesGroup } from "@repo/backend/confect/modules/school/classes/forums/queries/pages.spec";
 
 const classesForumsQueriesGroup = GroupSpec.make("queries")
   .addGroup(classesForumsQueriesForumsGroup)

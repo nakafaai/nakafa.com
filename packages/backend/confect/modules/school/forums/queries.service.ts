@@ -10,10 +10,10 @@ import {
   loadForum,
   loadForumWithAccess,
 } from "@repo/backend/confect/modules/school/forums/access.service";
+import { MAX_FORUM_TRANSCRIPT_POSTS } from "@repo/backend/confect/modules/school/forums/constants";
 import {
   createForumFeedPosts,
   getForumUnreadCounts,
-  MAX_FORUM_TRANSCRIPT_POSTS,
 } from "@repo/backend/confect/modules/school/forums/posts.service";
 import {
   getForumReactionPreviews,

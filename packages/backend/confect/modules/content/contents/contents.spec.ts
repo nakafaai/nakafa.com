@@ -1,4 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
 import { Schema } from "effect";
 
 const contentsMutationsAnalyticsGroup = GroupSpec.make("analytics")
@@ -47,7 +48,7 @@ const contentsMutationsViewsGroup = GroupSpec.make("views").addFunction(
         Schema.Struct({ slug: Schema.String, type: Schema.Literal("exercise") })
       ),
       deviceId: Schema.String,
-      locale: Schema.Literal("en", "id"),
+      locale: localeSchema,
     }),
     returns: Schema.Struct({
       alreadyViewed: Schema.Boolean,
@@ -78,7 +79,7 @@ const contentsMutationsAudioGroup = GroupSpec.make("audio").addFunction(
           sourceContent: Schema.optional(
             Schema.Struct({
               contentHash: Schema.String,
-              locale: Schema.Literal("en", "id"),
+              locale: localeSchema,
               ref: Schema.Union(
                 Schema.Struct({
                   id: GenericId.GenericId("articleContents"),
@@ -110,7 +111,7 @@ const contentsMutationsSearchGroup = GroupSpec.make("search").addFunction(
         Schema.Struct({
           contentHash: Schema.String,
           description: Schema.String,
-          locale: Schema.Literal("en", "id"),
+          locale: localeSchema,
           route: Schema.String,
           text: Schema.String,
           title: Schema.String,
@@ -154,7 +155,7 @@ const contentsQueriesAudioGroup = GroupSpec.make("audio").addFunction(
         sourceContent: Schema.optional(
           Schema.Struct({
             contentHash: Schema.String,
-            locale: Schema.Literal("en", "id"),
+            locale: localeSchema,
             ref: Schema.Union(
               Schema.Struct({
                 id: GenericId.GenericId("articleContents"),
@@ -181,7 +182,7 @@ const contentsQueriesRecentGroup = GroupSpec.make("recent").addFunction(
     name: "getRecentlyViewed",
     args: Schema.Struct({
       limit: Schema.optional(Schema.Number),
-      locale: Schema.Literal("en", "id"),
+      locale: localeSchema,
     }),
     returns: Schema.Array(
       Schema.Struct({
@@ -238,7 +239,7 @@ const contentsQueriesSearchGroup = GroupSpec.make("search").addFunction(
     name: "search",
     args: Schema.Struct({
       limit: Schema.Number,
-      locale: Schema.Literal("en", "id"),
+      locale: localeSchema,
       offset: Schema.Number,
       queries: Schema.optional(Schema.Array(Schema.String)),
       section: Schema.optional(
@@ -252,7 +253,7 @@ const contentsQueriesSearchGroup = GroupSpec.make("search").addFunction(
         Schema.Struct({
           content_id: Schema.String,
           description: Schema.String,
-          locale: Schema.Literal("en", "id"),
+          locale: localeSchema,
           markdown_url: Schema.String,
           route: Schema.String,
           section: Schema.Literal("articles", "subject", "exercises", "quran"),

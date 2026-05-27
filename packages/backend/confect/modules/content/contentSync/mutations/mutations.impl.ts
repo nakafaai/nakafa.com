@@ -1,12 +1,12 @@
 import { GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
+import { contentSyncMutationsArticlesImpl } from "@repo/backend/confect/modules/content/contentSync/mutations/articles.impl";
+import { contentSyncMutationsAuthorsImpl } from "@repo/backend/confect/modules/content/contentSync/mutations/authors.impl";
+import { contentSyncMutationsExercisesImpl } from "@repo/backend/confect/modules/content/contentSync/mutations/exercises.impl";
+import { contentSyncMutationsMaintenanceImpl } from "@repo/backend/confect/modules/content/contentSync/mutations/maintenance.impl";
+import { contentSyncMutationsSubjectsImpl } from "@repo/backend/confect/modules/content/contentSync/mutations/subjects.impl";
+import { contentSyncMutationsTryoutsImpl } from "@repo/backend/confect/modules/content/contentSync/mutations/tryouts.impl";
 import { Layer } from "effect";
-import { contentSyncMutationsArticlesImpl } from "./articles.impl";
-import { contentSyncMutationsAuthorsImpl } from "./authors.impl";
-import { contentSyncMutationsExercisesImpl } from "./exercises.impl";
-import { contentSyncMutationsMaintenanceImpl } from "./maintenance.impl";
-import { contentSyncMutationsSubjectsImpl } from "./subjects.impl";
-import { contentSyncMutationsTryoutsImpl } from "./tryouts.impl";
 
 const contentSyncMutationsImpl = GroupImpl.make(api, "contentSync.mutations")
   .pipe(Layer.provide(contentSyncMutationsArticlesImpl))

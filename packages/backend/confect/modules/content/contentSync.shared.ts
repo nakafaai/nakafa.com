@@ -1,7 +1,5 @@
 import { Effect, Schema } from "effect";
 
-export { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/confect/modules/content/constants";
-
 export class ContentSyncError extends Schema.TaggedError<ContentSyncError>()(
   "ContentSyncError",
   { message: Schema.String }

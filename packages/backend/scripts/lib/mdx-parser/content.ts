@@ -8,6 +8,7 @@ import {
   MULTIPLE_NEWLINES_REGEX,
   REFERENCES_REGEX,
 } from "@repo/backend/scripts/lib/mdx-parser/constants";
+import { parseTypeScriptLiteral } from "@repo/backend/scripts/lib/mdx-parser/literal";
 import { parseContentDate } from "@repo/contents/_shared/date";
 import {
   ContentMetadataSchema,
@@ -58,13 +59,9 @@ export const parseMdxContent = Effect.fn("mdx.parseMdxContent")(function* (
     );
   }
 
-  const metadataObject = yield* Effect.try({
-    try: () => new Function(`return ${match[1]}`)(),
-    catch: (error) =>
-      new MdxReadError({
-        message: error instanceof Error ? error.message : String(error),
-      }),
-  });
+  const metadataObject = yield* parseTypeScriptLiteral(match[1]).pipe(
+    Effect.mapError((error) => new MdxReadError({ message: error.message }))
+  );
   const metadata = yield* Schema.decodeUnknown(ContentMetadataSchema)(
     metadataObject
   ).pipe(
@@ -129,13 +126,9 @@ export const readExerciseChoices = Effect.fn("mdx.readExerciseChoices")(
     }
 
     const choicesObject = yield* Effect.either(
-      Effect.try({
-        try: () => new Function(`return ${objectMatch[1]}`)(),
-        catch: (error) =>
-          new MdxReadError({
-            message: error instanceof Error ? error.message : String(error),
-          }),
-      })
+      parseTypeScriptLiteral(objectMatch[1]).pipe(
+        Effect.mapError((error) => new MdxReadError({ message: error.message }))
+      )
     );
 
     if (choicesObject._tag === "Left") {
@@ -179,13 +172,9 @@ export const readArticleReferences = Effect.fn("mdx.readArticleReferences")(
     }
 
     const referencesArray = yield* Effect.either(
-      Effect.try({
-        try: () => new Function(`return ${match[1]}`)(),
-        catch: (error) =>
-          new MdxReadError({
-            message: error instanceof Error ? error.message : String(error),
-          }),
-      })
+      parseTypeScriptLiteral(match[1]).pipe(
+        Effect.mapError((error) => new MdxReadError({ message: error.message }))
+      )
     );
 
     if (

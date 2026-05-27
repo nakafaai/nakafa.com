@@ -1,4 +1,6 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
 import { Schema } from "effect";
 
 const tryoutsQueriesMeAttemptGroup = GroupSpec.make("attempt").addFunction(
@@ -6,8 +8,8 @@ const tryoutsQueriesMeAttemptGroup = GroupSpec.make("attempt").addFunction(
     name: "getUserTryoutAttempt",
     args: Schema.Struct({
       attemptId: Schema.optional(Schema.String),
-      locale: Schema.Literal("en", "id"),
-      product: Schema.Literal("snbt"),
+      locale: localeSchema,
+      product: tryoutProductSchema,
       tryoutSlug: Schema.String,
     }),
     returns: Schema.Union(

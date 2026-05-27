@@ -1,12 +1,42 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
 import { Schema } from "effect";
+
+const activeTryoutCatalogEntrySchema = Schema.Struct({
+  cycleKey: Schema.String,
+  label: Schema.String,
+  latestAttempt: Schema.Union(
+    Schema.Struct({
+      expiresAtMs: Schema.Number,
+      status: Schema.Literal("in-progress", "completed", "expired"),
+      updatedAt: Schema.Number,
+    }),
+    Schema.Null
+  ),
+  partCount: Schema.Number,
+  slug: Schema.String,
+  totalQuestionCount: Schema.Number,
+  tryoutId: GenericId.GenericId("tryouts"),
+});
+
+const activeTryoutCatalogArgsSchema = Schema.Struct({
+  locale: localeSchema,
+  pageSize: Schema.optional(Schema.Number),
+  product: tryoutProductSchema,
+});
+
+const activeTryoutCatalogSnapshotSchema = Schema.Struct({
+  activeCount: Schema.Number,
+  initialPage: Schema.Array(activeTryoutCatalogEntrySchema),
+});
 
 const tryoutsQueriesTryoutsGroup = GroupSpec.make("tryouts")
   .addFunction(
     FunctionSpec.publicQuery({
       name: "getActiveTryoutCatalogPage",
       args: Schema.Struct({
-        locale: Schema.Literal("en", "id"),
+        locale: localeSchema,
         paginationOpts: Schema.Struct({
           cursor: Schema.Union(Schema.String, Schema.Null),
           endCursor: Schema.optional(Schema.Union(Schema.String, Schema.Null)),
@@ -15,29 +45,12 @@ const tryoutsQueriesTryoutsGroup = GroupSpec.make("tryouts")
           maximumRowsRead: Schema.optional(Schema.Number),
           numItems: Schema.Number,
         }),
-        product: Schema.Literal("snbt"),
+        product: tryoutProductSchema,
       }),
       returns: Schema.Struct({
         continueCursor: Schema.String,
         isDone: Schema.Boolean,
-        page: Schema.Array(
-          Schema.Struct({
-            cycleKey: Schema.String,
-            label: Schema.String,
-            latestAttempt: Schema.Union(
-              Schema.Struct({
-                expiresAtMs: Schema.Number,
-                status: Schema.Literal("in-progress", "completed", "expired"),
-                updatedAt: Schema.Number,
-              }),
-              Schema.Null
-            ),
-            partCount: Schema.Number,
-            slug: Schema.String,
-            totalQuestionCount: Schema.Number,
-            tryoutId: GenericId.GenericId("tryouts"),
-          })
-        ),
+        page: Schema.Array(activeTryoutCatalogEntrySchema),
         pageStatus: Schema.optional(
           Schema.Union(
             Schema.Literal("SplitRecommended"),
@@ -52,40 +65,23 @@ const tryoutsQueriesTryoutsGroup = GroupSpec.make("tryouts")
   .addFunction(
     FunctionSpec.publicQuery({
       name: "getActiveTryoutCatalogSnapshot",
-      args: Schema.Struct({
-        locale: Schema.Literal("en", "id"),
-        pageSize: Schema.optional(Schema.Number),
-        product: Schema.Literal("snbt"),
-      }),
-      returns: Schema.Struct({
-        activeCount: Schema.Number,
-        initialPage: Schema.Array(
-          Schema.Struct({
-            cycleKey: Schema.String,
-            label: Schema.String,
-            latestAttempt: Schema.Union(
-              Schema.Struct({
-                expiresAtMs: Schema.Number,
-                status: Schema.Literal("in-progress", "completed", "expired"),
-                updatedAt: Schema.Number,
-              }),
-              Schema.Null
-            ),
-            partCount: Schema.Number,
-            slug: Schema.String,
-            totalQuestionCount: Schema.Number,
-            tryoutId: GenericId.GenericId("tryouts"),
-          })
-        ),
-      }),
+      args: activeTryoutCatalogArgsSchema,
+      returns: activeTryoutCatalogSnapshotSchema,
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "getPublicActiveTryoutCatalogSnapshot",
+      args: activeTryoutCatalogArgsSchema,
+      returns: activeTryoutCatalogSnapshotSchema,
     })
   )
   .addFunction(
     FunctionSpec.publicQuery({
       name: "getTryoutDetails",
       args: Schema.Struct({
-        locale: Schema.Literal("en", "id"),
-        product: Schema.Literal("snbt"),
+        locale: localeSchema,
+        product: tryoutProductSchema,
         slug: Schema.String,
       }),
       returns: Schema.Union(
@@ -108,9 +104,9 @@ const tryoutsQueriesTryoutsGroup = GroupSpec.make("tryouts")
             detectedAt: Schema.Number,
             isActive: Schema.Boolean,
             label: Schema.String,
-            locale: Schema.Literal("en", "id"),
+            locale: localeSchema,
             partCount: Schema.Number,
-            product: Schema.Literal("snbt"),
+            product: tryoutProductSchema,
             slug: Schema.String,
             syncedAt: Schema.Number,
             totalQuestionCount: Schema.Number,

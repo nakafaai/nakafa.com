@@ -3,7 +3,11 @@ import {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/confect/_generated/services";
-import { tryoutProductPolicies } from "@repo/backend/confect/modules/tryout/products";
+import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
+import {
+  type TryoutProduct,
+  tryoutProductPolicies,
+} from "@repo/backend/confect/modules/tryout/products";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import {
   globalLeaderboard,
@@ -219,8 +223,8 @@ export const getGlobalLeaderboard = Effect.fn(
 )(function* (args: {
   readonly cycleKey: string;
   readonly limit?: number;
-  readonly locale: "en" | "id";
-  readonly product: "snbt";
+  readonly locale: Locale;
+  readonly product: TryoutProduct;
 }) {
   const ctx = yield* QueryCtx;
   const limit = getLeaderboardLimit(args.limit);

@@ -1,6 +1,5 @@
 import { GenericId } from "@confect/core";
 import { Table } from "@confect/server";
-import { Schema } from "effect";
 import {
   assessmentGradingModeSchema,
   assessmentModeSchema,
@@ -14,7 +13,8 @@ import {
   assessmentStatusSchema,
   assessmentTimingPolicySchema,
   richContentSchema,
-} from "./shared";
+} from "@repo/backend/confect/modules/school/assessmentsTables/shared";
+import { Schema } from "effect";
 
 /** Assessment-level authored document. */
 export const schoolAssessmentSchema = Schema.Struct({

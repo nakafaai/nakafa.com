@@ -1,6 +1,8 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import { QueryCtx } from "@repo/backend/confect/_generated/services";
+import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import { getOptionalAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import { loadValidatedTryoutPartSets } from "@repo/backend/confect/modules/tryout/tryoutParts.service";
 import { getAll } from "convex-helpers/server/relationships";
@@ -81,9 +83,9 @@ const loadActiveTryoutCatalogEntries = Effect.fn(
 export const getActiveTryoutCatalogPage = Effect.fn(
   "tryouts.catalog.getActiveTryoutCatalogPage"
 )(function* (args: {
-  readonly locale: "en" | "id";
+  readonly locale: Locale;
   readonly paginationOpts: PaginationOpts;
-  readonly product: "snbt";
+  readonly product: TryoutProduct;
 }) {
   const ctx = yield* QueryCtx;
   const paginationOpts = {
@@ -115,14 +117,17 @@ export const getActiveTryoutCatalogPage = Effect.fn(
   return { ...catalogPage, page };
 });
 
-/** Returns the active tryout catalog count and initial rows. */
-export const getActiveTryoutCatalogSnapshot = Effect.fn(
-  "tryouts.catalog.getActiveTryoutCatalogSnapshot"
-)(function* (args: {
-  readonly locale: "en" | "id";
-  readonly pageSize?: number;
-  readonly product: "snbt";
-}) {
+/** Loads active catalog rows and count with optional user attempt state. */
+const loadActiveTryoutCatalogSnapshot = Effect.fn(
+  "tryouts.catalog.loadActiveTryoutCatalogSnapshot"
+)(function* (
+  args: {
+    readonly locale: Locale;
+    readonly pageSize?: number;
+    readonly product: TryoutProduct;
+  },
+  userId: Id<"users"> | null
+) {
   const ctx = yield* QueryCtx;
   const pageSize = Math.max(
     0,
@@ -152,10 +157,9 @@ export const getActiveTryoutCatalogSnapshot = Effect.fn(
       )
       .unique()
   );
-  const user = yield* getOptionalAppUser(ctx);
   const initialPage = yield* loadActiveTryoutCatalogEntries(
     catalogEntries,
-    user?.appUser._id ?? null
+    userId
   );
 
   return {
@@ -164,11 +168,38 @@ export const getActiveTryoutCatalogSnapshot = Effect.fn(
   };
 });
 
+/** Returns the active tryout catalog count and initial rows. */
+export const getActiveTryoutCatalogSnapshot = Effect.fn(
+  "tryouts.catalog.getActiveTryoutCatalogSnapshot"
+)(function* (args: {
+  readonly locale: Locale;
+  readonly pageSize?: number;
+  readonly product: TryoutProduct;
+}) {
+  const ctx = yield* QueryCtx;
+  const user = yield* getOptionalAppUser(ctx);
+  return yield* loadActiveTryoutCatalogSnapshot(
+    args,
+    user?.appUser._id ?? null
+  );
+});
+
+/** Returns the non-personalized active tryout catalog snapshot. */
+export const getPublicActiveTryoutCatalogSnapshot = Effect.fn(
+  "tryouts.catalog.getPublicActiveTryoutCatalogSnapshot"
+)(function* (args: {
+  readonly locale: Locale;
+  readonly pageSize?: number;
+  readonly product: TryoutProduct;
+}) {
+  return yield* loadActiveTryoutCatalogSnapshot(args, null);
+});
+
 /** Returns details and part metadata for one tryout. */
 export const getTryoutDetails = Effect.fn("tryouts.catalog.getTryoutDetails")(
   function* (args: {
-    readonly locale: "en" | "id";
-    readonly product: "snbt";
+    readonly locale: Locale;
+    readonly product: TryoutProduct;
     readonly slug: string;
   }) {
     const ctx = yield* QueryCtx;

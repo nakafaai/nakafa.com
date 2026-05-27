@@ -1,4 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
 import { Schema } from "effect";
 
 const contentSyncQueriesIntegrityGroup = GroupSpec.make("integrity")
@@ -21,7 +22,7 @@ const contentSyncQueriesIntegrityGroup = GroupSpec.make("integrity")
         page: Schema.Array(
           Schema.Struct({
             id: GenericId.GenericId("exerciseQuestions"),
-            locale: Schema.Literal("en", "id"),
+            locale: localeSchema,
             slug: Schema.String,
           })
         ),
@@ -155,7 +156,7 @@ const contentSyncQueriesIntegrityGroup = GroupSpec.make("integrity")
         page: Schema.Array(
           Schema.Struct({
             id: GenericId.GenericId("articleContents"),
-            locale: Schema.Literal("en", "id"),
+            locale: localeSchema,
             slug: Schema.String,
           })
         ),
@@ -188,7 +189,7 @@ const contentSyncQueriesIntegrityGroup = GroupSpec.make("integrity")
         isDone: Schema.Boolean,
         page: Schema.Array(
           Schema.Struct({
-            locale: Schema.Literal("en", "id"),
+            locale: localeSchema,
             slug: Schema.String,
             topicId: Schema.optional(GenericId.GenericId("subjectTopics")),
           })

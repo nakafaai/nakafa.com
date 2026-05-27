@@ -1,4 +1,4 @@
+import { exercisesLayer } from "@repo/backend/confect/modules/learning/exercises/exercises.impl";
 import { Layer } from "effect";
-import { exercisesLayer } from "./exercises/exercises.impl";
 
 export const learningLayer = Layer.mergeAll(exercisesLayer);

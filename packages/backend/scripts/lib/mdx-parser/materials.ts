@@ -12,6 +12,7 @@ import {
   SUBJECT_MATERIAL_CONST_REGEX,
   SUBJECT_MATERIAL_PATH_REGEX,
 } from "@repo/backend/scripts/lib/mdx-parser/constants";
+import { parseTypeScriptLiteral } from "@repo/backend/scripts/lib/mdx-parser/literal";
 import {
   buildExerciseSetSlug,
   getRelativeExercisePathSegments,
@@ -84,13 +85,14 @@ const readTypedArray = Effect.fn("mdx.readTypedArray")(function* <A, I>(
     BASE_PATH_TEMPLATE_REGEX,
     `/${basePath}`
   );
-  const parsedArray = yield* Effect.try({
-    try: () => new Function(`return ${arrayWithBasePath}`)(),
-    catch: (error) =>
-      new MaterialReadError({
-        message: `Invalid material file ${filePath}: ${getUnknownMessage(error)}`,
-      }),
-  });
+  const parsedArray = yield* parseTypeScriptLiteral(arrayWithBasePath).pipe(
+    Effect.mapError(
+      (error) =>
+        new MaterialReadError({
+          message: `Invalid material file ${filePath}: ${error.message}`,
+        })
+    )
+  );
   const parseResult = Schema.decodeUnknownEither(parser)(parsedArray);
 
   if (parseResult._tag === "Left") {

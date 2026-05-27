@@ -98,6 +98,14 @@ const tryouts_queries_tryouts_getActiveTryoutCatalogSnapshotImpl =
     (args) => tryout_catalog.getActiveTryoutCatalogSnapshot(args)
   );
 
+const tryouts_queries_tryouts_getPublicActiveTryoutCatalogSnapshotImpl =
+  FunctionImpl.make(
+    api,
+    "tryouts.queries.tryouts",
+    "getPublicActiveTryoutCatalogSnapshot",
+    (args) => tryout_catalog.getPublicActiveTryoutCatalogSnapshot(args)
+  );
+
 const tryouts_queries_tryouts_getTryoutDetailsImpl = FunctionImpl.make(
   api,
   "tryouts.queries.tryouts",
@@ -321,6 +329,11 @@ const tryoutsQueriesTryoutsImpl = GroupImpl.make(api, "tryouts.queries.tryouts")
   .pipe(Layer.provide(tryouts_queries_tryouts_getActiveTryoutCatalogPageImpl))
   .pipe(
     Layer.provide(tryouts_queries_tryouts_getActiveTryoutCatalogSnapshotImpl)
+  )
+  .pipe(
+    Layer.provide(
+      tryouts_queries_tryouts_getPublicActiveTryoutCatalogSnapshotImpl
+    )
   )
   .pipe(Layer.provide(tryouts_queries_tryouts_getTryoutDetailsImpl));
 

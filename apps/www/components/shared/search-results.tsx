@@ -12,6 +12,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { Fragment, type ReactElement } from "react";
 import {
+  getPagefindExcerptSegments,
   getPagefindSectionResults,
   hasPagefindExcerpt,
 } from "@/lib/utils/pagefind";
@@ -116,9 +117,17 @@ function ResultGroup({ result }: { result: PagefindResult }) {
                 "line-clamp-3 text-muted-foreground text-sm group-hover:text-accent-foreground",
                 !hasPagefindExcerpt(subResult.excerpt) && "hidden"
               )}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: Pagefind returns highlighted HTML excerpts
-              dangerouslySetInnerHTML={{ __html: subResult.excerpt }}
-            />
+            >
+              {getPagefindExcerptSegments(subResult.excerpt).map((segment) => (
+                <Fragment key={segment.key}>
+                  {segment.kind === "mark" ? (
+                    <mark>{segment.text}</mark>
+                  ) : (
+                    segment.text
+                  )}
+                </Fragment>
+              ))}
+            </p>
           </NavigationLink>
         ))}
       </div>

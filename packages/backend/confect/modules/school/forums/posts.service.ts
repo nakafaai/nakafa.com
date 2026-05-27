@@ -295,5 +295,3 @@ export const createForumFeedPosts = Effect.fn(
       post.createdBy !== args.currentUserId && post.sequence > lastReadSequence,
   }));
 });
-
-export { MAX_FORUM_TRANSCRIPT_POSTS } from "@repo/backend/confect/modules/school/forums/constants";

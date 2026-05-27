@@ -2,7 +2,6 @@ import { Certificate02Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/confect/_generated/functionReferences";
 import {
   isTryoutProduct,
-  type TryoutProduct,
   tryoutProducts,
 } from "@repo/backend/confect/modules/tryout/products";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -34,7 +33,7 @@ export default async function Page(
   if (!isTryoutProduct(productParam)) {
     notFound();
   }
-  const product: TryoutProduct = productParam;
+  const product = productParam;
 
   const [tCommon, tTryouts, token] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
@@ -44,15 +43,21 @@ export default async function Page(
 
   const initialNowMs = Date.now();
 
-  const catalogSnapshot = await fetchQuery(
-    api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
-    {
-      locale,
-      pageSize: TRYOUT_CATALOG_PAGE_SIZE,
-      product,
-    },
-    token ? { token } : undefined
-  );
+  const catalogSnapshotArgs = {
+    locale,
+    pageSize: TRYOUT_CATALOG_PAGE_SIZE,
+    product,
+  };
+  const catalogSnapshot = token
+    ? await fetchQuery(
+        api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
+        catalogSnapshotArgs,
+        { token }
+      )
+    : await fetchQuery(
+        api.tryouts.queries.tryouts.getPublicActiveTryoutCatalogSnapshot,
+        catalogSnapshotArgs
+      );
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">

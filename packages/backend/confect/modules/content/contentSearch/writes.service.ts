@@ -4,12 +4,12 @@ import type {
   Locale,
   NakafaSection,
 } from "@repo/backend/confect/modules/content/content.schemas";
-import { Clock, Effect } from "effect";
 import {
   buildContentSearchDocument,
   isSameContentSearch,
-} from "./documents.service";
-import { ContentSyncBatchSizeError } from "./errors.service";
+} from "@repo/backend/confect/modules/content/contentSearch/documents.service";
+import { ContentSyncBatchSizeError } from "@repo/backend/confect/modules/content/contentSearch/errors.service";
+import { Clock, Effect } from "effect";
 
 /** Upserts one content search row and returns the write outcome. */
 export const syncContentSearch = Effect.fn("contentSearch.syncContentSearch")(

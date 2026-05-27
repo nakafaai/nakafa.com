@@ -11,12 +11,19 @@ import { SchoolSidebarNavLearning } from "@/components/school/sidebar/nav-learni
 import { SchoolSidebarNavUser } from "@/components/school/sidebar/nav-user";
 import { SchoolSidebarNavYours } from "@/components/school/sidebar/nav-yours";
 import { SchoolSwitcher } from "@/components/school/sidebar/school-switcher";
+import { getToken } from "@/lib/auth/server";
 import { getSchoolSwitcherPage } from "@/lib/school/server";
 
 /** Render the School sidebar and preload the switcher shell page on the server. */
 export async function SchoolSidebar({
   ...props
 }: ComponentProps<typeof Sidebar>) {
+  const token = await getToken();
+
+  if (!token) {
+    return null;
+  }
+
   const initialSchoolPage = await getSchoolSwitcherPage();
 
   return (

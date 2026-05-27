@@ -1,4 +1,5 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
+import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
@@ -21,7 +22,7 @@ export const loadStartableTryout = Effect.fn(
 )(function* (
   ctx: ConvexMutationCtx,
   args: {
-    readonly locale: "en" | "id";
+    readonly locale: Locale;
     readonly product: TryoutProduct;
     readonly tryoutSlug: string;
   }

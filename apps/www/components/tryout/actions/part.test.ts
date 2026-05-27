@@ -1,3 +1,5 @@
+import { primaryTryoutProduct } from "@repo/backend/confect/modules/tryout/products";
+import { locales } from "@repo/utilities/locales";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   completeTryoutPart,
@@ -6,6 +8,10 @@ import {
 
 type TryoutAttemptId = Parameters<typeof startTryoutPart>[0]["tryoutAttemptId"];
 
+const testLocale = locales[1];
+const tryoutPartKey = "mathematical-reasoning";
+const tryoutPartKeys = [tryoutPartKey] as const;
+const tryoutSlug = "2026-set-1";
 const tryoutAttemptId = "tryoutAttemptId" as TryoutAttemptId;
 
 const mocks = vi.hoisted(() => ({
@@ -53,24 +59,24 @@ describe("components/tryout/actions/part", () => {
     mocks.fetchAuthMutation.mockResolvedValue({ kind: "started" });
 
     const result = await startTryoutPart({
-      locale: "id",
-      partKey: "mathematical-reasoning",
-      partKeys: ["mathematical-reasoning"],
-      product: "snbt",
+      locale: testLocale,
+      partKey: tryoutPartKey,
+      partKeys: tryoutPartKeys,
+      product: primaryTryoutProduct,
       tryoutAttemptId,
-      tryoutSlug: "2026-set-1",
+      tryoutSlug,
     });
 
     expect(result).toEqual({ kind: "started" });
     expect(mocks.revalidateTryoutOverview).toHaveBeenCalledWith({
-      locale: "id",
-      product: "snbt",
+      locale: testLocale,
+      product: primaryTryoutProduct,
     });
     expect(mocks.revalidateTryoutSet).toHaveBeenCalledWith({
-      locale: "id",
-      partKeys: ["mathematical-reasoning"],
-      product: "snbt",
-      tryoutSlug: "2026-set-1",
+      locale: testLocale,
+      partKeys: tryoutPartKeys,
+      product: primaryTryoutProduct,
+      tryoutSlug,
     });
   });
 
@@ -78,12 +84,12 @@ describe("components/tryout/actions/part", () => {
     mocks.fetchAuthMutation.mockResolvedValue({ kind: "part-expired" });
 
     const result = await startTryoutPart({
-      locale: "id",
-      partKey: "mathematical-reasoning",
-      partKeys: ["mathematical-reasoning"],
-      product: "snbt",
+      locale: testLocale,
+      partKey: tryoutPartKey,
+      partKeys: tryoutPartKeys,
+      product: primaryTryoutProduct,
       tryoutAttemptId,
-      tryoutSlug: "2026-set-1",
+      tryoutSlug,
     });
 
     expect(result).toEqual({ kind: "part-expired" });
@@ -96,12 +102,12 @@ describe("components/tryout/actions/part", () => {
     mocks.fetchAuthMutation.mockRejectedValue(error);
 
     const result = await startTryoutPart({
-      locale: "id",
-      partKey: "mathematical-reasoning",
-      partKeys: ["mathematical-reasoning"],
-      product: "snbt",
+      locale: testLocale,
+      partKey: tryoutPartKey,
+      partKeys: tryoutPartKeys,
+      product: primaryTryoutProduct,
       tryoutAttemptId,
-      tryoutSlug: "2026-set-1",
+      tryoutSlug,
     });
 
     expect(result).toEqual({ kind: "unknown" });
@@ -109,12 +115,12 @@ describe("components/tryout/actions/part", () => {
       error,
       "user_123",
       {
-        locale: "id",
-        part_key: "mathematical-reasoning",
-        product: "snbt",
+        locale: testLocale,
+        part_key: tryoutPartKey,
+        product: primaryTryoutProduct,
         source: "start-tryout-part",
         tryout_attempt_id: "tryoutAttemptId",
-        tryout_slug: "2026-set-1",
+        tryout_slug: tryoutSlug,
       }
     );
   });
@@ -123,24 +129,24 @@ describe("components/tryout/actions/part", () => {
     mocks.fetchAuthMutation.mockResolvedValue({ kind: "tryout-expired" });
 
     const result = await completeTryoutPart({
-      locale: "id",
-      partKey: "mathematical-reasoning",
-      partKeys: ["mathematical-reasoning"],
-      product: "snbt",
+      locale: testLocale,
+      partKey: tryoutPartKey,
+      partKeys: tryoutPartKeys,
+      product: primaryTryoutProduct,
       tryoutAttemptId,
-      tryoutSlug: "2026-set-1",
+      tryoutSlug,
     });
 
     expect(result).toEqual({ kind: "tryout-expired" });
     expect(mocks.revalidateTryoutOverview).toHaveBeenCalledWith({
-      locale: "id",
-      product: "snbt",
+      locale: testLocale,
+      product: primaryTryoutProduct,
     });
     expect(mocks.revalidateTryoutSet).toHaveBeenCalledWith({
-      locale: "id",
-      partKeys: ["mathematical-reasoning"],
-      product: "snbt",
-      tryoutSlug: "2026-set-1",
+      locale: testLocale,
+      partKeys: tryoutPartKeys,
+      product: primaryTryoutProduct,
+      tryoutSlug,
     });
   });
 
@@ -149,12 +155,12 @@ describe("components/tryout/actions/part", () => {
     mocks.fetchAuthMutation.mockRejectedValue(error);
 
     const result = await completeTryoutPart({
-      locale: "id",
-      partKey: "mathematical-reasoning",
-      partKeys: ["mathematical-reasoning"],
-      product: "snbt",
+      locale: testLocale,
+      partKey: tryoutPartKey,
+      partKeys: tryoutPartKeys,
+      product: primaryTryoutProduct,
       tryoutAttemptId,
-      tryoutSlug: "2026-set-1",
+      tryoutSlug,
     });
 
     expect(result).toEqual({ kind: "unknown" });
@@ -162,12 +168,12 @@ describe("components/tryout/actions/part", () => {
       error,
       "user_123",
       {
-        locale: "id",
-        part_key: "mathematical-reasoning",
-        product: "snbt",
+        locale: testLocale,
+        part_key: tryoutPartKey,
+        product: primaryTryoutProduct,
         source: "complete-tryout-part",
         tryout_attempt_id: tryoutAttemptId,
-        tryout_slug: "2026-set-1",
+        tryout_slug: tryoutSlug,
       }
     );
   });

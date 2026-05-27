@@ -1,4 +1,5 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
+import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import type { ConvexQueryCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { Effect } from "effect";
@@ -28,7 +29,7 @@ export const loadResolvedUserTryoutContext = Effect.fn(
   ctx: ConvexQueryCtx,
   args: {
     readonly attemptId?: string;
-    readonly locale: "en" | "id";
+    readonly locale: Locale;
     readonly product: TryoutProduct;
     readonly tryoutSlug: string;
     readonly userId: Id<"users">;

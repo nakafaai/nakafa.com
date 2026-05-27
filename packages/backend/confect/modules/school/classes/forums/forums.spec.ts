@@ -1,7 +1,7 @@
 import { GroupSpec } from "@confect/core";
-import { classesForumsInternalMutationsGroup } from "./internalMutations.spec";
-import { classesForumsMutationsGroup } from "./mutations/mutations.spec";
-import { classesForumsQueriesGroup } from "./queries/queries.spec";
+import { classesForumsInternalMutationsGroup } from "@repo/backend/confect/modules/school/classes/forums/internalMutations.spec";
+import { classesForumsMutationsGroup } from "@repo/backend/confect/modules/school/classes/forums/mutations/mutations.spec";
+import { classesForumsQueriesGroup } from "@repo/backend/confect/modules/school/classes/forums/queries/queries.spec";
 
 const classesForumsGroup = GroupSpec.make("forums")
   .addGroup(classesForumsMutationsGroup)

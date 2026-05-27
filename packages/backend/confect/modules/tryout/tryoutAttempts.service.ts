@@ -2,10 +2,14 @@ import { Ref } from "@confect/core";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { createExerciseAttempt } from "@repo/backend/confect/modules/learning/exercises/attempts.service";
 import { getLatestScaleVersionForTryout } from "@repo/backend/confect/modules/tryout/irtScaleRead.service";
-import { tryoutProductPolicies } from "@repo/backend/confect/modules/tryout/products";
+import {
+  type TryoutProduct,
+  tryoutProductPolicies,
+} from "@repo/backend/confect/modules/tryout/products";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import { resolveActiveTryoutEventEntitlements } from "@repo/backend/confect/modules/tryout/tryoutAccessEntitlements.service";
 import {
@@ -31,8 +35,8 @@ import { Clock, Effect, Either } from "effect";
 /** Starts or resumes the current user's tryout attempt. */
 export const startTryout = Effect.fn("tryouts.attempts.startTryout")(
   function* (args: {
-    readonly locale: "en" | "id";
-    readonly product: "snbt";
+    readonly locale: Locale;
+    readonly product: TryoutProduct;
     readonly tryoutSlug: string;
   }) {
     const ctx = yield* MutationCtx;

@@ -1,5 +1,6 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/confect/modules/content/constants";
 import type {
   Grade,
   Locale,
@@ -9,7 +10,6 @@ import type {
 import { syncContentSearch } from "@repo/backend/confect/modules/content/contentSearch/writes.service";
 import {
   assertContentSyncBatchSize,
-  CONTENT_SYNC_BATCH_LIMITS,
   ContentSyncError,
 } from "@repo/backend/confect/modules/content/contentSync.shared";
 import {

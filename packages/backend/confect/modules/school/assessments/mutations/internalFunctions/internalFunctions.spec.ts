@@ -1,5 +1,5 @@
 import { GroupSpec } from "@confect/core";
-import { assessmentsMutationsInternalPublishingGroup } from "./publishing.spec";
+import { assessmentsMutationsInternalPublishingGroup } from "@repo/backend/confect/modules/school/assessments/mutations/internalFunctions/publishing.spec";
 
 const assessmentsMutationsInternalGroup = GroupSpec.make(
   "internalFunctions"

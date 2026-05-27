@@ -1,4 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
 import { Schema } from "effect";
 
 const tryoutAccessMutationsSetupGroup = GroupSpec.make("setup").addFunction(
@@ -13,7 +14,7 @@ const tryoutAccessMutationsSetupGroup = GroupSpec.make("setup").addFunction(
         name: Schema.String,
         slug: Schema.String,
         startsAt: Schema.Number,
-        targetProducts: Schema.Array(Schema.Literal("snbt")),
+        targetProducts: Schema.Array(tryoutProductSchema),
       }),
       link: Schema.Struct({
         code: Schema.String,
@@ -200,7 +201,7 @@ const tryoutAccessQueriesInternalMaintenanceGroup = GroupSpec.make(
           maximumRowsRead: Schema.optional(Schema.Number),
           numItems: Schema.Number,
         }),
-        product: Schema.Literal("snbt"),
+        product: tryoutProductSchema,
       }),
       returns: Schema.Struct({
         continueCursor: Schema.String,

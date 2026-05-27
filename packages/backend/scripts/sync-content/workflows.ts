@@ -44,6 +44,7 @@ import {
   syncSubjectSections,
   syncSubjectTopics,
 } from "@repo/backend/scripts/sync-content/subjects";
+import { logSyncSummary } from "@repo/backend/scripts/sync-content/summary";
 import { syncTryouts } from "@repo/backend/scripts/sync-content/tryouts";
 import type {
   ConvexConfig,
@@ -52,96 +53,6 @@ import type {
 } from "@repo/backend/scripts/sync-content/types";
 import { verify } from "@repo/backend/scripts/sync-content/verify";
 import { Clock, Effect } from "effect";
-
-const logSyncSummary = (
-  authorResult: { created: number },
-  articleResult: SyncResult,
-  subjectTopicResult: SyncResult,
-  subjectSectionResult: SyncResult,
-  exerciseSetResult: SyncResult,
-  exerciseQuestionResult: SyncResult,
-  quranSearchResult: SyncResult,
-  tryoutResult: SyncResult
-): void => {
-  const totalCreated =
-    articleResult.created +
-    subjectTopicResult.created +
-    subjectSectionResult.created +
-    exerciseSetResult.created +
-    exerciseQuestionResult.created +
-    quranSearchResult.created +
-    tryoutResult.created;
-  const totalUpdated =
-    articleResult.updated +
-    subjectTopicResult.updated +
-    subjectSectionResult.updated +
-    exerciseSetResult.updated +
-    exerciseQuestionResult.updated +
-    quranSearchResult.updated +
-    tryoutResult.updated;
-  const total =
-    totalCreated +
-    totalUpdated +
-    articleResult.unchanged +
-    subjectTopicResult.unchanged +
-    subjectSectionResult.unchanged +
-    exerciseSetResult.unchanged +
-    exerciseQuestionResult.unchanged +
-    quranSearchResult.unchanged +
-    tryoutResult.unchanged;
-  const totalAuthorLinksCreated =
-    (articleResult.authorLinksCreated || 0) +
-    (subjectSectionResult.authorLinksCreated || 0) +
-    (exerciseQuestionResult.authorLinksCreated || 0);
-
-  log("\n=== SYNC SUMMARY ===\n");
-  log("Primary Content:");
-  log(
-    `  Articles:           ${articleResult.created + articleResult.updated + articleResult.unchanged} (${articleResult.created} new, ${articleResult.updated} updated)`
-  );
-  log(
-    `  Subject Topics:     ${subjectTopicResult.created + subjectTopicResult.updated + subjectTopicResult.unchanged} (${subjectTopicResult.created} new, ${subjectTopicResult.updated} updated)`
-  );
-  log(
-    `  Subject Sections:   ${subjectSectionResult.created + subjectSectionResult.updated + subjectSectionResult.unchanged} (${subjectSectionResult.created} new, ${subjectSectionResult.updated} updated)`
-  );
-  log(
-    `  Exercise Sets:      ${exerciseSetResult.created + exerciseSetResult.updated + exerciseSetResult.unchanged} (${exerciseSetResult.created} new, ${exerciseSetResult.updated} updated)`
-  );
-  log(
-    `  Exercise Questions: ${exerciseQuestionResult.created + exerciseQuestionResult.updated + exerciseQuestionResult.unchanged} (${exerciseQuestionResult.created} new, ${exerciseQuestionResult.updated} updated)`
-  );
-  log(
-    `  Quran Search:       ${quranSearchResult.created + quranSearchResult.updated + quranSearchResult.unchanged} (${quranSearchResult.created} new, ${quranSearchResult.updated} updated)`
-  );
-  log(
-    `  Tryouts:            ${tryoutResult.created + tryoutResult.updated + tryoutResult.unchanged} (${tryoutResult.created} new, ${tryoutResult.updated} updated)`
-  );
-
-  log("\nRelated Items:");
-  if (authorResult.created > 0) {
-    log(`  Authors:              ${authorResult.created} new`);
-  }
-  if ((articleResult.referencesCreated || 0) > 0) {
-    log(`  Article References:   ${articleResult.referencesCreated || 0}`);
-  }
-  if ((exerciseQuestionResult.choicesCreated || 0) > 0) {
-    log(
-      `  Exercise Choices:     ${exerciseQuestionResult.choicesCreated || 0}`
-    );
-  }
-  if (totalAuthorLinksCreated > 0) {
-    log(`  Content-Author Links: ${totalAuthorLinksCreated}`);
-  }
-
-  log("\nOverall:");
-  log(`  Total: ${total} items synced`);
-  if (totalCreated > 0 || totalUpdated > 0) {
-    log(`  Changes: ${totalCreated} created, ${totalUpdated} updated`);
-  } else {
-    log("  All content up to date");
-  }
-};
 
 /** Runs the complete content sync in dependency-safe phases. */
 export const syncAll = Effect.fn("sync.all")(function* (
@@ -279,16 +190,16 @@ export const syncAll = Effect.fn("sync.all")(function* (
   }
 
   finalizeMetrics(metrics);
-  logSyncSummary(
+  logSyncSummary({
     authorResult,
     articleResult,
-    subjectTopicResult,
-    subjectSectionResult,
-    exerciseSetResult,
     exerciseQuestionResult,
+    exerciseSetResult,
     quranSearchResult,
-    tryoutResult
-  );
+    subjectSectionResult,
+    subjectTopicResult,
+    tryoutResult,
+  });
   logSyncMetrics(metrics);
 });
 

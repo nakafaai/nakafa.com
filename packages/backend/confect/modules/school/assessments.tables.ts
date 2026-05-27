@@ -1,8 +1,3 @@
-export * from "./assessmentsTables/authoring";
-export * from "./assessmentsTables/delivery";
-export * from "./assessmentsTables/imports";
-export * from "./assessmentsTables/shared";
-
 import {
   SchoolAssessmentChoices,
   SchoolAssessmentQuestionBankEntries,
@@ -16,7 +11,7 @@ import {
   SchoolAssessmentVersionRubricCriteria,
   SchoolAssessmentVersionSections,
   SchoolAssessmentVersions,
-} from "./assessmentsTables/authoring";
+} from "@repo/backend/confect/modules/school/assessmentsTables/authoring";
 import {
   SchoolAssessmentAssignments,
   SchoolAssessmentAssignmentTargets,
@@ -32,11 +27,11 @@ import {
   SchoolAssessmentResponses,
   SchoolAssessmentSectionAttempts,
   SchoolAssessmentStudentStats,
-} from "./assessmentsTables/delivery";
+} from "@repo/backend/confect/modules/school/assessmentsTables/delivery";
 import {
   SchoolAssessmentImportDrafts,
   SchoolAssessmentImportJobs,
-} from "./assessmentsTables/imports";
+} from "@repo/backend/confect/modules/school/assessmentsTables/imports";
 
 /** All assessment tables registered with the Confect schema. */
 export const tables = [

@@ -1,16 +1,19 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/confect/modules/content/constants";
+import type {
+  ContentType,
+  Locale,
+} from "@repo/backend/confect/modules/content/content.schemas";
 import { buildContentSearchRef } from "@repo/backend/confect/modules/content/contentSearch/documents.service";
 import { deleteContentSearch } from "@repo/backend/confect/modules/content/contentSearch/writes.service";
 import {
   assertContentSyncBatchSize,
-  CONTENT_SYNC_BATCH_LIMITS,
   ContentSyncError,
 } from "@repo/backend/confect/modules/content/contentSync.shared";
 import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import { Clock, Effect } from "effect";
 
-type ContentType = "article" | "subject" | "exercise";
 type ContentId =
   | Id<"articleContents">
   | Id<"subjectSections">
@@ -239,7 +242,7 @@ export const replaceExerciseChoices = Effect.fn(
       readonly optionKey: string;
       readonly order: number;
     }[];
-    readonly locale: "en" | "id";
+    readonly locale: Locale;
     readonly questionId: Id<"exerciseQuestions">;
   }
 ) {

@@ -1,12 +1,14 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
 import { Schema } from "effect";
 
 const contentSyncMutationsTryoutsGroup = GroupSpec.make("tryouts").addFunction(
   FunctionSpec.internalMutation({
     name: "bulkSyncTryouts",
     args: Schema.Struct({
-      locale: Schema.Literal("en", "id"),
-      product: Schema.Literal("snbt"),
+      locale: localeSchema,
+      product: tryoutProductSchema,
       requiredPartKeys: Schema.Array(
         Schema.Literal(
           "mathematics",

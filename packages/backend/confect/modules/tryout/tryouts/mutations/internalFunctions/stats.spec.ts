@@ -1,4 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
 import { Schema } from "effect";
 
 const tryoutsMutationsInternalStatsGroup = GroupSpec.make("stats").addFunction(
@@ -7,7 +8,7 @@ const tryoutsMutationsInternalStatsGroup = GroupSpec.make("stats").addFunction(
     args: Schema.Struct({
       cursor: Schema.optional(Schema.String),
       leaderboardNamespace: Schema.String,
-      product: Schema.Literal("snbt"),
+      product: tryoutProductSchema,
       progress: Schema.optional(
         Schema.Struct({
           bestTheta: Schema.optional(Schema.Number),

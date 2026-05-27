@@ -1,4 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
 import { Schema } from "effect";
 
 const subjectSectionsQueriesGroup = GroupSpec.make("queries").addFunction(
@@ -6,7 +7,7 @@ const subjectSectionsQueriesGroup = GroupSpec.make("queries").addFunction(
     name: "getTrendingSubjects",
     args: Schema.Struct({
       limit: Schema.optional(Schema.Number),
-      locale: Schema.Literal("en", "id"),
+      locale: localeSchema,
       minViews: Schema.optional(Schema.Number),
       since: Schema.Number,
       until: Schema.Number,

@@ -1,11 +1,11 @@
 import { GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
+import { contentSyncQueriesAuthorsImpl } from "@repo/backend/confect/modules/content/contentSync/queries/authors.impl";
+import { contentSyncQueriesCountsImpl } from "@repo/backend/confect/modules/content/contentSync/queries/counts.impl";
+import { contentSyncQueriesIntegrityImpl } from "@repo/backend/confect/modules/content/contentSync/queries/integrity.impl";
+import { contentSyncQueriesStaleImpl } from "@repo/backend/confect/modules/content/contentSync/queries/stale.impl";
+import { contentSyncQueriesTryoutsImpl } from "@repo/backend/confect/modules/content/contentSync/queries/tryouts.impl";
 import { Layer } from "effect";
-import { contentSyncQueriesAuthorsImpl } from "./authors.impl";
-import { contentSyncQueriesCountsImpl } from "./counts.impl";
-import { contentSyncQueriesIntegrityImpl } from "./integrity.impl";
-import { contentSyncQueriesStaleImpl } from "./stale.impl";
-import { contentSyncQueriesTryoutsImpl } from "./tryouts.impl";
 
 const contentSyncQueriesImpl = GroupImpl.make(api, "contentSync.queries")
   .pipe(Layer.provide(contentSyncQueriesAuthorsImpl))

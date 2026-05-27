@@ -1,4 +1,6 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
 import { Schema } from "effect";
 
 const tryoutsQueriesMeHistoryGroup = GroupSpec.make("history").addFunction(
@@ -6,7 +8,7 @@ const tryoutsQueriesMeHistoryGroup = GroupSpec.make("history").addFunction(
     name: "getUserTryoutAttemptHistory",
     args: Schema.Struct({
       attemptId: Schema.optional(Schema.String),
-      locale: Schema.Literal("en", "id"),
+      locale: localeSchema,
       paginationOpts: Schema.Struct({
         cursor: Schema.Union(Schema.String, Schema.Null),
         endCursor: Schema.optional(Schema.Union(Schema.String, Schema.Null)),
@@ -15,7 +17,7 @@ const tryoutsQueriesMeHistoryGroup = GroupSpec.make("history").addFunction(
         maximumRowsRead: Schema.optional(Schema.Number),
         numItems: Schema.Number,
       }),
-      product: Schema.Literal("snbt"),
+      product: tryoutProductSchema,
       tryoutSlug: Schema.String,
     }),
     returns: Schema.Struct({

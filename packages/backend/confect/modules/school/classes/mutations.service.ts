@@ -7,6 +7,7 @@ import {
   requirePermission,
 } from "@repo/backend/confect/modules/school/classAccess.service";
 import { ClassActionError } from "@repo/backend/confect/modules/school/classErrors";
+import { SCHOOL_CLASS_INVITE_CODE_ROLES } from "@repo/backend/confect/modules/school/classes/inviteCodes.service";
 import type {
   SchoolClassImage,
   SchoolClassVisibility,
@@ -15,7 +16,6 @@ import { getRandomClassImage } from "@repo/backend/confect/modules/school/images
 import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
 import { Clock, Effect } from "effect";
 import { nanoid } from "nanoid";
-import { SCHOOL_CLASS_INVITE_CODE_ROLES } from "./inviteCodes.service";
 
 /** Fails when an invite code cannot currently be used. */
 function validateInviteCodeState(

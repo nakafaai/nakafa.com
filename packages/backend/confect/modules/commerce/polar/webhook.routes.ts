@@ -3,6 +3,7 @@ import {
   WebhookVerificationError,
 } from "@polar-sh/sdk/webhooks";
 import { internal } from "@repo/backend/confect/_generated/functionReferences";
+import { readPolarWebhookSecret } from "@repo/backend/confect/modules/commerce/polar/webhook.env";
 import { convertToDatabaseSubscription } from "@repo/backend/confect/modules/commerce/subscriptions.mapper";
 import {
   HTTP_ACCEPTED,
@@ -13,7 +14,6 @@ import {
 import type { ConvexActionCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
 import { Effect, Schema } from "effect";
-import { readPolarWebhookSecret } from "./webhook.env";
 
 export class PolarWebhookProcessingError extends Schema.TaggedError<PolarWebhookProcessingError>()(
   "PolarWebhookProcessingError",

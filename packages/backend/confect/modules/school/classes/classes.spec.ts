@@ -1,8 +1,8 @@
 import { GroupSpec } from "@confect/core";
-import { classesForumsGroup } from "./forums/forums.spec";
-import { classesMaterialsGroup } from "./materials/materials.spec";
-import { classesMutationsGroup } from "./mutations.spec";
-import { classesQueriesGroup } from "./queries.spec";
+import { classesForumsGroup } from "@repo/backend/confect/modules/school/classes/forums/forums.spec";
+import { classesMaterialsGroup } from "@repo/backend/confect/modules/school/classes/materials/materials.spec";
+import { classesMutationsGroup } from "@repo/backend/confect/modules/school/classes/mutations.spec";
+import { classesQueriesGroup } from "@repo/backend/confect/modules/school/classes/queries.spec";
 
 const classesGroup = GroupSpec.make("classes")
   .addGroup(classesMaterialsGroup)

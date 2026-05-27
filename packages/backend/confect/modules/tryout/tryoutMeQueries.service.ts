@@ -1,5 +1,7 @@
 import { QueryCtx } from "@repo/backend/confect/_generated/services";
+import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import { getTryoutAccessCampaignByOptionalId } from "@repo/backend/confect/modules/tryout/tryoutAccessCampaignRead.service";
 import { buildFinalizedTryoutSnapshot } from "@repo/backend/confect/modules/tryout/tryoutFinalizeSnapshot.service";
@@ -28,8 +30,8 @@ interface PaginationOpts {
 
 interface UserTryoutRouteArgs {
   readonly attemptId?: string;
-  readonly locale: "en" | "id";
-  readonly product: "snbt";
+  readonly locale: Locale;
+  readonly product: TryoutProduct;
   readonly tryoutSlug: string;
 }
 

@@ -38,6 +38,7 @@ import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
 import { useSearch } from "@/lib/context/use-search";
 import { useSearchQuery } from "@/lib/react-query/use-search";
 import {
+  getPagefindExcerptSegments,
   getPagefindSectionResults,
   hasPagefindExcerpt,
 } from "@/lib/utils/pagefind";
@@ -269,9 +270,17 @@ function SearchListItem({
             "line-clamp-3 text-muted-foreground text-xs group-data-highlighted:text-accent-foreground",
             !hasPagefindExcerpt(item.excerpt) && "hidden"
           )}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: Pagefind returns highlighted HTML excerpts
-          dangerouslySetInnerHTML={{ __html: item.excerpt }}
-        />
+        >
+          {getPagefindExcerptSegments(item.excerpt).map((segment) => (
+            <Fragment key={segment.key}>
+              {segment.kind === "mark" ? (
+                <mark>{segment.text}</mark>
+              ) : (
+                segment.text
+              )}
+            </Fragment>
+          ))}
+        </p>
       </CommandItem>
     );
   }

@@ -1,5 +1,12 @@
+import { primaryTryoutProduct } from "@repo/backend/confect/modules/tryout/products";
+import { locales } from "@repo/utilities/locales";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { startTryout } from "@/components/tryout/actions/tryout";
+
+const testLocale = locales[1];
+const tryoutSlug = "2026-set-1";
+const tryoutReturnPath = `/${testLocale}/try-out/${primaryTryoutProduct}/${tryoutSlug}`;
+const tryoutPartKeys = ["quantitative-knowledge"] as const;
 
 const mocks = vi.hoisted(() => ({
   after: vi.fn(async (callback) => await callback()),
@@ -65,23 +72,23 @@ describe("components/tryout/actions/tryout", () => {
     mocks.fetchAuthMutation.mockResolvedValue({ kind: "started" });
 
     const result = await startTryout({
-      locale: "id",
-      partKeys: ["quantitative-knowledge"],
-      product: "snbt",
-      returnPath: "/id/try-out/snbt/2026-set-1",
-      tryoutSlug: "2026-set-1",
+      locale: testLocale,
+      partKeys: tryoutPartKeys,
+      product: primaryTryoutProduct,
+      returnPath: tryoutReturnPath,
+      tryoutSlug,
     });
 
     expect(result).toEqual({ kind: "started" });
     expect(mocks.revalidateTryoutOverview).toHaveBeenCalledWith({
-      locale: "id",
-      product: "snbt",
+      locale: testLocale,
+      product: primaryTryoutProduct,
     });
     expect(mocks.revalidateTryoutSet).toHaveBeenCalledWith({
-      locale: "id",
-      partKeys: ["quantitative-knowledge"],
-      product: "snbt",
-      tryoutSlug: "2026-set-1",
+      locale: testLocale,
+      partKeys: tryoutPartKeys,
+      product: primaryTryoutProduct,
+      tryoutSlug,
     });
   });
 
@@ -92,11 +99,11 @@ describe("components/tryout/actions/tryout", () => {
     });
 
     const result = await startTryout({
-      locale: "id",
-      partKeys: ["quantitative-knowledge"],
-      product: "snbt",
-      returnPath: "/id/try-out/snbt/2026-set-1",
-      tryoutSlug: "2026-set-1",
+      locale: testLocale,
+      partKeys: tryoutPartKeys,
+      product: primaryTryoutProduct,
+      returnPath: tryoutReturnPath,
+      tryoutSlug,
     });
 
     expect(result).toEqual({
@@ -105,7 +112,7 @@ describe("components/tryout/actions/tryout", () => {
     });
     expect(mocks.fetchAuthAction).toHaveBeenCalledWith(expect.anything(), {
       productIds: ["pro-product-id"],
-      successUrl: "https://nakafa.com/id/try-out/snbt/2026-set-1",
+      successUrl: `https://nakafa.com${tryoutReturnPath}`,
     });
   });
 
@@ -113,11 +120,11 @@ describe("components/tryout/actions/tryout", () => {
     mocks.fetchAuthMutation.mockResolvedValue({ kind: "requires-access" });
 
     const result = await startTryout({
-      locale: "id",
-      partKeys: ["quantitative-knowledge"],
-      product: "snbt",
+      locale: testLocale,
+      partKeys: tryoutPartKeys,
+      product: primaryTryoutProduct,
       returnPath: "https://evil.example/redirect",
-      tryoutSlug: "2026-set-1",
+      tryoutSlug,
     });
 
     expect(result).toEqual({ kind: "unknown" });
@@ -130,11 +137,11 @@ describe("components/tryout/actions/tryout", () => {
     mocks.fetchAuthAction.mockRejectedValue(error);
 
     const result = await startTryout({
-      locale: "id",
-      partKeys: ["quantitative-knowledge"],
-      product: "snbt",
-      returnPath: "/id/try-out/snbt/2026-set-1",
-      tryoutSlug: "2026-set-1",
+      locale: testLocale,
+      partKeys: tryoutPartKeys,
+      product: primaryTryoutProduct,
+      returnPath: tryoutReturnPath,
+      tryoutSlug,
     });
 
     expect(result).toEqual({ kind: "unknown" });
@@ -143,7 +150,7 @@ describe("components/tryout/actions/tryout", () => {
       "user_123",
       {
         source: "tryout-checkout-url",
-        success_url: "https://nakafa.com/id/try-out/snbt/2026-set-1",
+        success_url: `https://nakafa.com${tryoutReturnPath}`,
       }
     );
   });
@@ -152,11 +159,11 @@ describe("components/tryout/actions/tryout", () => {
     mocks.fetchAuthMutation.mockResolvedValue({ kind: "not-ready" });
 
     const result = await startTryout({
-      locale: "id",
-      partKeys: ["quantitative-knowledge"],
-      product: "snbt",
-      returnPath: "/id/try-out/snbt/2026-set-1",
-      tryoutSlug: "2026-set-1",
+      locale: testLocale,
+      partKeys: tryoutPartKeys,
+      product: primaryTryoutProduct,
+      returnPath: tryoutReturnPath,
+      tryoutSlug,
     });
 
     expect(result).toEqual({ kind: "not-ready" });
@@ -169,11 +176,11 @@ describe("components/tryout/actions/tryout", () => {
     mocks.fetchAuthMutation.mockRejectedValue(error);
 
     const result = await startTryout({
-      locale: "id",
-      partKeys: ["quantitative-knowledge"],
-      product: "snbt",
-      returnPath: "/id/try-out/snbt/2026-set-1",
-      tryoutSlug: "2026-set-1",
+      locale: testLocale,
+      partKeys: tryoutPartKeys,
+      product: primaryTryoutProduct,
+      returnPath: tryoutReturnPath,
+      tryoutSlug,
     });
 
     expect(result).toEqual({ kind: "unknown" });
@@ -181,10 +188,10 @@ describe("components/tryout/actions/tryout", () => {
       error,
       "user_123",
       {
-        locale: "id",
-        product: "snbt",
+        locale: testLocale,
+        product: primaryTryoutProduct,
         source: "start-tryout",
-        tryout_slug: "2026-set-1",
+        tryout_slug: tryoutSlug,
       }
     );
   });

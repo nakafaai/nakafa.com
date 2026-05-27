@@ -3,6 +3,7 @@ import type {
   GenerateAudioForQueueItemWorkflow,
   HandleAudioWorkflowComplete,
 } from "@repo/backend/confect/modules/content/audioStudies.workflow-types";
+import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
 import { Schema } from "effect";
 
 const audioStudiesWorkflowsGroup = GroupSpec.make("workflows")
@@ -53,7 +54,7 @@ const audioStudiesMutationsContentAudiosGroup = GroupSpec.make("contentAudios")
             type: Schema.Literal("subject"),
           })
         ),
-        locale: Schema.Literal("en", "id"),
+        locale: localeSchema,
       }),
       returns: GenericId.GenericId("contentAudios"),
     })
@@ -139,7 +140,7 @@ const audioStudiesMutationsQueueGroup = GroupSpec.make("queue")
               type: Schema.Literal("subject"),
             })
           ),
-          locale: Schema.Literal("en", "id"),
+          locale: localeSchema,
         })
       ),
     })
@@ -305,7 +306,7 @@ const audioStudiesQueriesPublicGroup = GroupSpec.make(
     name: "getAudioBySlug",
     args: Schema.Struct({
       contentType: Schema.Literal("article", "subject"),
-      locale: Schema.Literal("en", "id"),
+      locale: localeSchema,
       slug: Schema.String,
     }),
     returns: Schema.Union(

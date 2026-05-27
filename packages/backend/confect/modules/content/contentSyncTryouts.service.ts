@@ -1,11 +1,9 @@
 import { Ref } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/confect/modules/content/constants";
 import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
-import {
-  assertContentSyncBatchSize,
-  CONTENT_SYNC_BATCH_LIMITS,
-} from "@repo/backend/confect/modules/content/contentSync.shared";
+import { assertContentSyncBatchSize } from "@repo/backend/confect/modules/content/contentSync.shared";
 import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import { enqueueScaleQualityRefresh } from "@repo/backend/confect/modules/tryout/irtQueueHelpers.service";
 import { getOrPublishScaleVersionForTryout } from "@repo/backend/confect/modules/tryout/irtScalePublish.service";

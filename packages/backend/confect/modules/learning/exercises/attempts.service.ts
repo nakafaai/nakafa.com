@@ -7,12 +7,12 @@ import {
   buildFinalizedExerciseAttemptPatch,
   computeAttemptDurationSeconds,
 } from "@repo/backend/confect/modules/learning/exerciseAttemptUtils.service";
+import { failExercise } from "@repo/backend/confect/modules/learning/exercises/errors.service";
 import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import { irtCalibrationSyncWorkpool } from "@repo/backend/confect/modules/tryout/irtWorkpool";
 import { finalizeTryoutAttempt } from "@repo/backend/confect/modules/tryout/tryoutFinalizeAttempt.service";
 import { finalizeTryoutPartAttempt } from "@repo/backend/confect/modules/tryout/tryoutFinalizePart.service";
 import { Clock, Effect } from "effect";
-import { failExercise } from "./errors.service";
 
 /** Schedules IRT calibration sync for a completed simulation set attempt. */
 function scheduleCalibrationSyncIfReady(

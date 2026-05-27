@@ -1,7 +1,7 @@
+import { irtLayer } from "@repo/backend/confect/modules/tryout/irt/irt.impl";
+import { tryoutAccessLayer } from "@repo/backend/confect/modules/tryout/tryoutAccess/tryoutAccess.impl";
+import { tryoutsLayer } from "@repo/backend/confect/modules/tryout/tryouts/tryouts.impl";
 import { Layer } from "effect";
-import { irtLayer } from "./irt/irt.impl";
-import { tryoutAccessLayer } from "./tryoutAccess/tryoutAccess.impl";
-import { tryoutsLayer } from "./tryouts/tryouts.impl";
 
 export const tryoutLayer = Layer.mergeAll(
   irtLayer,

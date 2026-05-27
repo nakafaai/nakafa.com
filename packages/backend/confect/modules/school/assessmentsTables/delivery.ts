@@ -1,6 +1,5 @@
 import { GenericId } from "@confect/core";
 import { Table } from "@confect/server";
-import { Schema } from "effect";
 import {
   assessmentAssignmentStatusSchema,
   assessmentAttemptEventTypeSchema,
@@ -17,7 +16,8 @@ import {
   assessmentSessionStatusSchema,
   assessmentTimingPolicySchema,
   richContentSchema,
-} from "./shared";
+} from "@repo/backend/confect/modules/school/assessmentsTables/shared";
+import { Schema } from "effect";
 
 /** Publish instance visible to students through class targets. */
 export const schoolAssessmentAssignmentSchema = Schema.Struct({

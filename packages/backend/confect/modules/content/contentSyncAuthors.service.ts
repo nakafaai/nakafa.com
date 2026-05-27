@@ -3,9 +3,9 @@ import {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/confect/_generated/services";
+import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/confect/modules/content/constants";
 import {
   assertContentSyncBatchSize,
-  CONTENT_SYNC_BATCH_LIMITS,
   slugify,
 } from "@repo/backend/confect/modules/content/contentSync.shared";
 import type { PaginationOptions } from "convex/server";

@@ -1,5 +1,4 @@
 import refs from "@repo/backend/confect/_generated/refs";
-import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import {
   computeHash,
@@ -14,6 +13,12 @@ import {
   parseExercisePath,
 } from "@repo/backend/scripts/lib/mdx-parser/paths";
 import { callConvex } from "@repo/backend/scripts/sync-content/convex";
+import type {
+  ExerciseQuestionPayload,
+  ExerciseSearchLabels,
+  ExerciseSetPayload,
+} from "@repo/backend/scripts/sync-content/exercisePayloads";
+import { reportQuestionSyncResults } from "@repo/backend/scripts/sync-content/exerciseReports";
 import {
   formatDuration,
   log,
@@ -46,58 +51,6 @@ import {
   getExerciseSetSearchTitle,
 } from "@repo/contents/_lib/exercises/search";
 import { Effect } from "effect";
-
-interface ExerciseSetPayload {
-  category: string;
-  contentHash: string;
-  description?: string;
-  exerciseType: string;
-  locale: Locale;
-  material: string;
-  questionCount: number;
-  searchDescription: string;
-  searchText: string;
-  searchTitle: string;
-  setName: string;
-  slug: string;
-  title: string;
-  type: string;
-}
-
-interface QuestionChoice {
-  isCorrect: boolean;
-  label: string;
-  optionKey: string;
-  order: number;
-}
-
-interface ExerciseQuestionPayload {
-  answerBody: string;
-  authors: Array<{ name: string }>;
-  category: string;
-  choices: QuestionChoice[];
-  contentHash: string;
-  date: number;
-  description?: string;
-  exerciseType: string;
-  locale: Locale;
-  material: string;
-  number: number;
-  questionBody: string;
-  searchDescription: string;
-  searchText: string;
-  searchTitle: string;
-  setName: string;
-  setSlug: string;
-  slug: string;
-  title: string;
-  type: string;
-}
-
-interface ExerciseSearchLabels {
-  exerciseTypeTitle: string;
-  setTitle: string;
-}
 
 /** Syncs exercise set metadata from material files into Convex. */
 export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
@@ -469,55 +422,6 @@ const processQuestionBatches = Effect.fn("sync.processQuestionBatches")(
     return totals;
   }
 );
-
-const reportQuestionSyncResults = (
-  totals: SyncResult,
-  questionFilesLength: number,
-  questionsLength: number,
-  durationMs: number,
-  options: SyncOptions
-): void => {
-  const processed = totals.created + totals.updated + totals.unchanged;
-  const itemsPerSecond = durationMs > 0 ? (processed / durationMs) * 1000 : 0;
-
-  if (options.quiet) {
-    return;
-  }
-
-  log(
-    `\nResult: ${totals.created} created, ${totals.updated} updated, ${totals.unchanged} unchanged`
-  );
-
-  if (totals.skipped && totals.skipped > 0) {
-    logError(`${totals.skipped} questions SKIPPED (missing exercise sets)`);
-    const uniqueSets = [...new Set(totals.skippedSetSlugs || [])];
-    logError(
-      `Missing sets: ${uniqueSets.map((slug) => slug.replace("exercises/", "")).join(", ")}`
-    );
-    logError("Add these sets to your material files in _data/*-material.ts");
-  }
-
-  if (totals.choicesCreated || totals.authorLinksCreated) {
-    log(
-      `Related: ${totals.choicesCreated || 0} choices, ${totals.authorLinksCreated || 0} author links`
-    );
-  }
-
-  log(
-    `Time: ${formatDuration(durationMs)} (${itemsPerSecond.toFixed(1)} items/sec)`
-  );
-
-  const totalProcessed = processed + (totals.skipped || 0);
-  if (totalProcessed === questionsLength && !totals.skipped) {
-    logSuccess(`${processed}/${questionFilesLength} exercise questions synced`);
-  } else if (totals.skipped) {
-    logError(
-      `Processed: ${processed} synced, ${totals.skipped} skipped vs ${questionsLength} parsed`
-    );
-  } else {
-    logError(`Mismatch: ${processed} processed vs ${questionsLength} parsed`);
-  }
-};
 
 /** Syncs exercise question and answer MDX files into Convex. */
 export const syncExerciseQuestions = Effect.fn("sync.exerciseQuestions")(

@@ -1,11 +1,11 @@
 import { GenericId } from "@confect/core";
 import { Table } from "@confect/server";
-import { Schema } from "effect";
 import {
   assessmentImportJobStatusSchema,
   assessmentQuestionTypeSchema,
   richContentSchema,
-} from "./shared";
+} from "@repo/backend/confect/modules/school/assessmentsTables/shared";
+import { Schema } from "effect";
 
 /** AI import workflow job row. */
 export const schoolAssessmentImportJobSchema = Schema.Struct({

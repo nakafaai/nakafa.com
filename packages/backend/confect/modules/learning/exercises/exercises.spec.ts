@@ -1,4 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
 import { Schema } from "effect";
 
 const exercisesMutationsGroup = GroupSpec.make("mutations")
@@ -117,7 +118,7 @@ const exercisesQueriesGroup = GroupSpec.make("queries")
     FunctionSpec.publicQuery({
       name: "getQuestionAnswerSheetBySlug",
       args: Schema.Struct({
-        locale: Schema.Literal("en", "id"),
+        locale: localeSchema,
         slug: Schema.String,
       }),
       returns: Schema.Array(

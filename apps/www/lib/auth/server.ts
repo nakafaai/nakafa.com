@@ -1,4 +1,7 @@
 import { convexBetterAuthNextJs } from "@convex-dev/better-auth/nextjs";
+import { JWT_COOKIE_NAME } from "@convex-dev/better-auth/plugins";
+import { getSessionCookie } from "better-auth/cookies";
+import { headers } from "next/headers";
 import { cache } from "react";
 import { env } from "@/env";
 import { isAuthError } from "@/lib/auth/utils";
@@ -21,6 +24,14 @@ export const {
   fetchAuthAction,
 } = authServer;
 
+/** Detects whether the request can refresh or reuse a Better Auth Convex JWT. */
+function hasAuthSession(requestHeaders: Headers) {
+  return Boolean(
+    getSessionCookie(requestHeaders, { cookieName: JWT_COOKIE_NAME }) ??
+      getSessionCookie(requestHeaders)
+  );
+}
+
 /**
  * Returns the current request's Better Auth token.
  *
@@ -30,4 +41,12 @@ export const {
  * @see https://react.dev/reference/react/cache
  * @see https://labs.convex.dev/better-auth/framework-guides/next#ssr-with-server-components
  */
-export const getToken = cache(authServer.getToken);
+export const getToken = cache(async function getToken() {
+  const requestHeaders = new Headers(await headers());
+
+  if (!hasAuthSession(requestHeaders)) {
+    return;
+  }
+
+  return authServer.getToken();
+});

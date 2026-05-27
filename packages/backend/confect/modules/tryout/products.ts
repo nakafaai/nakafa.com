@@ -1,4 +1,5 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import { Effect, Schema } from "effect";
 
 const HOURS_PER_DAY = 24;
@@ -21,6 +22,7 @@ const SNBT_ATTEMPT_WINDOW_MS =
   MILLISECONDS_PER_SECOND;
 
 export const tryoutProducts = ["snbt"] as const;
+export const primaryTryoutProduct = tryoutProducts[0];
 
 /** Tryout products currently supported by persisted tryout tables. */
 export const tryoutProductSchema = Schema.Literal(...tryoutProducts);
@@ -31,7 +33,6 @@ export class TryoutPolicyError extends Schema.TaggedError<TryoutPolicyError>()(
 ) {}
 
 export type TryoutProduct = Schema.Schema.Type<typeof tryoutProductSchema>;
-type TryoutLocale = "en" | "id";
 
 interface DetectableTryoutSet {
   readonly _id: Id<"exerciseSets">;
@@ -53,7 +54,7 @@ interface DetectedTryout {
   readonly cycleKey: string;
   readonly isActive: boolean;
   readonly label: string;
-  readonly locale: TryoutLocale;
+  readonly locale: Locale;
   readonly partCount: number;
   readonly parts: readonly DetectedTryoutPart[];
   readonly product: TryoutProduct;
@@ -68,7 +69,7 @@ interface TryoutPolicy {
     right: DetectedTryout
   ) => number;
   readonly detectTryouts: (input: {
-    readonly locale: TryoutLocale;
+    readonly locale: Locale;
     readonly requiredPartKeys: readonly string[];
     readonly sets: readonly DetectableTryoutSet[];
   }) => readonly DetectedTryout[];
@@ -192,7 +193,7 @@ const snbtTryoutProductPolicy = {
       );
 
       detectedTryouts.push({
-        product: "snbt",
+        product: primaryTryoutProduct,
         locale,
         cycleKey: firstSet.cycleKey,
         label: firstSet.title,

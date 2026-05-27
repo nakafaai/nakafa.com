@@ -11,10 +11,10 @@ import {
   requireClassAccess,
 } from "@repo/backend/confect/modules/school/classAccess.service";
 import { ClassActionError } from "@repo/backend/confect/modules/school/classErrors";
+import { SCHOOL_CLASS_INVITE_CODE_ROLES } from "@repo/backend/confect/modules/school/classes/inviteCodes.service";
 import type { SchoolClassVisibility } from "@repo/backend/confect/modules/school/classes.tables";
 import type { PaginationOptions } from "convex/server";
 import { Effect } from "effect";
-import { SCHOOL_CLASS_INVITE_CODE_ROLES } from "./inviteCodes.service";
 
 const MAX_CLASS_MEMBER_SEARCH_RESULTS = 500;
 

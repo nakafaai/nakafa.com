@@ -1,7 +1,7 @@
 import { GroupSpec } from "@confect/core";
-import { tryoutsQueriesLeaderboardGroup } from "./leaderboard.spec";
-import { tryoutsQueriesMeGroup } from "./me/me.spec";
-import { tryoutsQueriesTryoutsGroup } from "./tryouts.spec";
+import { tryoutsQueriesLeaderboardGroup } from "@repo/backend/confect/modules/tryout/tryouts/queries/leaderboard.spec";
+import { tryoutsQueriesMeGroup } from "@repo/backend/confect/modules/tryout/tryouts/queries/me/me.spec";
+import { tryoutsQueriesTryoutsGroup } from "@repo/backend/confect/modules/tryout/tryouts/queries/tryouts.spec";
 
 const tryoutsQueriesGroup = GroupSpec.make("queries")
   .addGroup(tryoutsQueriesLeaderboardGroup)

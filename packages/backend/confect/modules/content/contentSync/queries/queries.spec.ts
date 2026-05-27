@@ -1,9 +1,9 @@
 import { GroupSpec } from "@confect/core";
-import { contentSyncQueriesAuthorsGroup } from "./authors.spec";
-import { contentSyncQueriesCountsGroup } from "./counts.spec";
-import { contentSyncQueriesIntegrityGroup } from "./integrity.spec";
-import { contentSyncQueriesStaleGroup } from "./stale.spec";
-import { contentSyncQueriesTryoutsGroup } from "./tryouts.spec";
+import { contentSyncQueriesAuthorsGroup } from "@repo/backend/confect/modules/content/contentSync/queries/authors.spec";
+import { contentSyncQueriesCountsGroup } from "@repo/backend/confect/modules/content/contentSync/queries/counts.spec";
+import { contentSyncQueriesIntegrityGroup } from "@repo/backend/confect/modules/content/contentSync/queries/integrity.spec";
+import { contentSyncQueriesStaleGroup } from "@repo/backend/confect/modules/content/contentSync/queries/stale.spec";
+import { contentSyncQueriesTryoutsGroup } from "@repo/backend/confect/modules/content/contentSync/queries/tryouts.spec";
 
 const contentSyncQueriesGroup = GroupSpec.make("queries")
   .addGroup(contentSyncQueriesAuthorsGroup)

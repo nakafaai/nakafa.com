@@ -1,6 +1,7 @@
 import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { describe, expect, it } from "vitest";
 import {
+  getPagefindExcerptSegments,
   getPagefindSectionResults,
   getPagefindSubResultHref,
   hasPagefindExcerpt,
@@ -268,5 +269,38 @@ describe("hasPagefindExcerpt", () => {
     expect(hasPagefindExcerpt("<mark>Logaritma</mark> adalah operasi")).toBe(
       true
     );
+  });
+});
+
+describe("getPagefindExcerptSegments", () => {
+  it("keeps Pagefind mark highlights without rendering raw HTML", () => {
+    expect(
+      getPagefindExcerptSegments(
+        "Materi <mark>logaritma</mark> &amp; eksponen"
+      ).map(({ kind, text }) => ({ kind, text }))
+    ).toStrictEqual([
+      { kind: "text", text: "Materi " },
+      { kind: "mark", text: "logaritma" },
+      { kind: "text", text: " & eksponen" },
+    ]);
+  });
+
+  it("drops unsupported tags from excerpts", () => {
+    expect(
+      getPagefindExcerptSegments("<script>alert(1)</script><mark>A</mark>").map(
+        ({ kind, text }) => ({ kind, text })
+      )
+    ).toStrictEqual([
+      { kind: "text", text: "alert(1)" },
+      { kind: "mark", text: "A" },
+    ]);
+  });
+
+  it("decodes supported named and numeric entities", () => {
+    expect(
+      getPagefindExcerptSegments(
+        "&apos;&gt;&lt;&quot;&#65;&#x42;&#99999999;&unknown;"
+      ).map(({ kind, text }) => ({ kind, text }))
+    ).toStrictEqual([{ kind: "text", text: "'><\"AB" }]);
   });
 });

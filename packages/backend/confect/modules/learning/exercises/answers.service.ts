@@ -2,11 +2,11 @@ import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { applyAttemptAggregatesDelta } from "@repo/backend/confect/modules/learning/exerciseAttemptUtils.service";
+import { failExercise } from "@repo/backend/confect/modules/learning/exercises/errors.service";
 import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import { syncTryoutExerciseAttemptExpiry } from "@repo/backend/confect/modules/tryout/tryoutExpiry.service";
 import { getManyFrom } from "convex-helpers/server/relationships";
 import { Clock, Effect } from "effect";
-import { failExercise } from "./errors.service";
 
 /** Scores one answer against its question choices. */
 const scoreExerciseAnswer = Effect.fn("exercises.scoreExerciseAnswer")(

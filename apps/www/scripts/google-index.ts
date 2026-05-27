@@ -16,7 +16,7 @@
  *   pnpm run google-index
  *
  * Requirements:
- * - google-key.json file with service account credentials
+ * - GOOGLE_INDEXING_CLIENT_EMAIL and GOOGLE_INDEXING_PRIVATE_KEY env values
  * - Service account must have Indexing API permissions
  * - URLs must be from verified Search Console property
  *
@@ -26,11 +26,10 @@
  * - Rate limiting recommended to avoid temporary blocks
  */
 
-// Environment variables loaded via Node.js --env-file flag
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Effect } from "effect";
+import { Config, Effect, Schema } from "effect";
 import { JWT } from "google-auth-library";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
 import { logger } from "@/scripts/utils";
@@ -59,7 +58,6 @@ const host = "https://nakafa.com";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_FOLDER = path.join(__dirname, "_data");
 const GOOGLE_INDEX_HISTORY_FILE = path.join(DATA_FOLDER, "google-index.json");
-const GOOGLE_KEY_FILE = path.join(__dirname, "google-key.json");
 
 // Ensure data folder exists
 if (!fs.existsSync(DATA_FOLDER)) {
@@ -72,16 +70,49 @@ const GOOGLE_INDEXING_SCOPE = "https://www.googleapis.com/auth/indexing";
 const GOOGLE_PUBLISH_ENDPOINT =
   "https://indexing.googleapis.com/v3/urlNotifications:publish";
 
-// Initialize Google Auth client
-function initializeGoogleAuth(): JWT {
-  // Load credentials from file
-  const keyFileContent = fs.readFileSync(GOOGLE_KEY_FILE, "utf8");
-  const credentials = JSON.parse(keyFileContent);
+class GoogleIndexConfigError extends Schema.TaggedError<GoogleIndexConfigError>()(
+  "GoogleIndexConfigError",
+  { message: Schema.String }
+) {}
 
-  // Use JWT constructor directly (recommended approach)
+/** Reads Google Indexing API credentials from the script config boundary. */
+const readGoogleIndexingCredentials = Effect.fn(
+  "scripts.googleIndex.readCredentials"
+)(function* () {
+  const clientEmail = yield* Config.nonEmptyString(
+    "GOOGLE_INDEXING_CLIENT_EMAIL"
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new GoogleIndexConfigError({
+          message: "Missing GOOGLE_INDEXING_CLIENT_EMAIL.",
+        })
+    )
+  );
+  const rawPrivateKey = yield* Config.nonEmptyString(
+    "GOOGLE_INDEXING_PRIVATE_KEY"
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new GoogleIndexConfigError({
+          message: "Missing GOOGLE_INDEXING_PRIVATE_KEY.",
+        })
+    )
+  );
+
+  return {
+    clientEmail,
+    privateKey: rawPrivateKey.replaceAll("\\n", "\n"),
+  };
+});
+
+// Initialize Google Auth client
+async function initializeGoogleAuth(): Promise<JWT> {
+  const credentials = await Effect.runPromise(readGoogleIndexingCredentials());
+
   return new JWT({
-    email: credentials.client_email,
-    key: credentials.private_key,
+    email: credentials.clientEmail,
+    key: credentials.privateKey,
     scopes: [GOOGLE_INDEXING_SCOPE],
   });
 }
@@ -321,7 +352,7 @@ async function runGoogleIndexing(): Promise<void> {
 
   try {
     // Initialize Google authentication
-    const auth = initializeGoogleAuth();
+    const auth = await initializeGoogleAuth();
     const accessToken = await getGoogleAccessToken(auth);
 
     logger.stats("Google service account", "Authenticated successfully");
@@ -414,7 +445,7 @@ async function runGoogleIndexing(): Promise<void> {
       error?.toString().includes("authentication")
     ) {
       logger.error(
-        "Authentication failed. Please check your google-key.json file."
+        "Authentication failed. Please check GOOGLE_INDEXING_CLIENT_EMAIL and GOOGLE_INDEXING_PRIVATE_KEY."
       );
     } else if (
       error?.toString().includes("quota") ||
