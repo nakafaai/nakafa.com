@@ -1,7 +1,7 @@
 "use client";
 
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { motion } from "motion/react";

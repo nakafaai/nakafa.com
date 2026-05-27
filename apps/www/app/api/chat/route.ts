@@ -6,7 +6,7 @@ import { hasEnoughCredits, MODEL_IDS } from "@repo/ai/config/models";
 import { compressMessages } from "@repo/ai/lib/message";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { captureServerException } from "@repo/analytics/posthog/server";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";

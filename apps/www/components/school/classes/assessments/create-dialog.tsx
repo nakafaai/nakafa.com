@@ -9,7 +9,7 @@ import {
   Time04Icon,
 } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Calendar } from "@repo/design-system/components/ui/calendar";
 import {
@@ -90,10 +90,10 @@ export function CreateAssessmentDialog({
   const schoolId = useClass((state) => state.class.schoolId);
   const classId = useClass((state) => state.class._id);
   const createAssessment = useMutation(
-    api.assessments.mutations.public.create.createAssessment
+    api.assessments.mutations.publicFunctions.create.createAssessment
   );
   const updateAssessment = useMutation(
-    api.assessments.mutations.public.update.updateAssessment
+    api.assessments.mutations.publicFunctions.update.updateAssessment
   );
 
   if (initialAssessment) {

@@ -1,4 +1,4 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 
 export type ConversationView =
   | { kind: "bottom" }

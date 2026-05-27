@@ -1,4 +1,4 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import { describe, expect, it } from "vitest";
 import {
   areConversationViewsEqual,

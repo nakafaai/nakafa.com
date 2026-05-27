@@ -1,4 +1,5 @@
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import refs from "@repo/backend/confect/_generated/refs";
+import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import {
   computeHash,
@@ -246,7 +247,7 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
     const result = yield* callConvex(
       config,
       "mutation",
-      "contentSync/mutations/exercises:bulkSyncExerciseSets",
+      refs.internal.contentSync.mutations.exercises.bulkSyncExerciseSets,
       { sets: batch },
       SyncResultSchema
     );
@@ -443,7 +444,7 @@ const processQuestionBatches = Effect.fn("sync.processQuestionBatches")(
       const result = yield* callConvex(
         config,
         "mutation",
-        "contentSync/mutations/exercises:bulkSyncExerciseQuestions",
+        refs.internal.contentSync.mutations.exercises.bulkSyncExerciseQuestions,
         { questions: batch },
         SyncResultSchema
       );

@@ -1,6 +1,6 @@
 import { WinkIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,

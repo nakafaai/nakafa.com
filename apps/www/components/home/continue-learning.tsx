@@ -1,7 +1,7 @@
 "use client";
 
 import { Progress03Icon, Search02Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { Button } from "@repo/design-system/components/ui/button";

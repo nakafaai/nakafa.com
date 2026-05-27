@@ -1,4 +1,4 @@
-import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
+import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { revalidatePath } from "next/cache";
 import type { Locale } from "next-intl";
 

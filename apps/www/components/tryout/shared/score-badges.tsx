@@ -7,10 +7,12 @@ import {
   Flag03Icon,
   MoonsetIcon,
 } from "@hugeicons/core-free-icons";
-import type { api } from "@repo/backend/convex/_generated/api";
+import type {
+  api,
+  FunctionReturnType,
+} from "@repo/backend/confect/_generated/functionReferences";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 
 type TryoutAttempt = NonNullable<

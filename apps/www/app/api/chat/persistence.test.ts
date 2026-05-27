@@ -20,11 +20,11 @@ vi.mock("convex/nextjs", () => ({
   fetchQuery: mocks.fetchQuery,
 }));
 
-vi.mock("@repo/backend/convex/chats/messageParts/uiToDb", () => ({
+vi.mock("@repo/backend/confect/modules/chat/messageParts/uiToDb", () => ({
   mapUIMessagePartsToDBParts: mocks.mapUIMessagePartsToDBParts,
 }));
 
-vi.mock("@repo/backend/convex/chats/utils", () => ({
+vi.mock("@repo/backend/confect/modules/chat/messages", () => ({
   mapDBMessagesToUIMessages: mocks.mapDBMessagesToUIMessages,
 }));
 

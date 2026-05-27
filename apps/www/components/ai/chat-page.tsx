@@ -2,7 +2,7 @@
 
 import { SquareLock01Icon } from "@hugeicons/core-free-icons";
 import { useDocumentTitle } from "@mantine/hooks";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import {
   Empty,
   EmptyDescription,

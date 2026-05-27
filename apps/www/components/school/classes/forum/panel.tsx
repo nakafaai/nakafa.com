@@ -1,7 +1,7 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useQuery } from "convex/react";

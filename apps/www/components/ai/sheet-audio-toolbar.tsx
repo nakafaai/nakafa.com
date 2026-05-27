@@ -1,7 +1,10 @@
 "use client";
 
 import { StarsIcon } from "@hugeicons/core-free-icons";
-import type { api } from "@repo/backend/convex/_generated/api";
+import type {
+  api,
+  FunctionReturnType,
+} from "@repo/backend/confect/_generated/functionReferences";
 import {
   AudioPlayerButton,
   AudioPlayerDuration,
@@ -17,13 +20,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import { useAi } from "@/components/ai/context/use-ai";
 import { usePageTitle } from "@/components/ai/context/use-page-title";
 
 type AudioStudy = NonNullable<
-  FunctionReturnType<typeof api.audioStudies.queries.public.getAudioBySlug>
+  FunctionReturnType<
+    typeof api.audioStudies.queries.publicFunctions.getAudioBySlug
+  >
 >;
 
 /** Renders the audio player toolbar with a Nina entry action. */

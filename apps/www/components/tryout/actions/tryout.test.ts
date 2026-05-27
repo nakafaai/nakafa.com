@@ -40,16 +40,13 @@ vi.mock("@/components/tryout/actions/revalidate", () => ({
   revalidateTryoutSet: mocks.revalidateTryoutSet,
 }));
 
-vi.mock("@repo/backend/convex/utils/polar/products", () => ({
-  products: {
-    pro: {
-      id: "pro-product-id",
-    },
-  },
+vi.mock("@repo/backend/confect/modules/commerce/polar/products", () => ({
+  getProductsForServer: () => ({ pro: { id: "pro-product-id" } }),
 }));
 
 vi.mock("@/env", () => ({
   env: {
+    NEXT_PUBLIC_POLAR_SERVER: "sandbox",
     SITE_URL: "https://nakafa.com",
   },
 }));

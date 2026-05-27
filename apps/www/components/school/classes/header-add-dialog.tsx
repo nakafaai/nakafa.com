@@ -10,7 +10,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import {
   Autocomplete,
   AutocompleteCollection,

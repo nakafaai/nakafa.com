@@ -1,7 +1,9 @@
 "use client";
 
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type {
+  api,
+  FunctionReturnType,
+} from "@repo/backend/confect/_generated/functionReferences";
 import { createContext, useContextSelector } from "use-context-selector";
 
 type ClassContextValue = Extract<

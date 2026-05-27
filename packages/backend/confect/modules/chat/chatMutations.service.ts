@@ -1,0 +1,298 @@
+import { getModelCreditCost } from "@repo/ai/config/models";
+import { DEFAULT_TITLE } from "@repo/ai/features/constants";
+import type { MyUIMessagePart } from "@repo/ai/types/message";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  deleteMessageBatchFromPoint,
+  getMessageByIdentifier,
+  insertParts,
+  verifyChatOwnership,
+} from "@repo/backend/confect/modules/chat/chatStore.service";
+import {
+  getCreditResetGrantTransaction,
+  resolveEffectiveCreditState,
+} from "@repo/backend/confect/modules/commerce/credits.policy";
+import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { Clock, Effect, Schema } from "effect";
+
+export class ChatMutationError extends Schema.TaggedError<ChatMutationError>()(
+  "ChatMutationError",
+  { message: Schema.String }
+) {}
+
+interface ChatMessageInput {
+  readonly chatId: Id<"chats">;
+  readonly credits?: number;
+  readonly identifier: string;
+  readonly inputTokens?: number;
+  readonly modelId?: "nakafa-lite" | "nakafa-pro";
+  readonly outputTokens?: number;
+  readonly role: "user" | "assistant" | "system";
+  readonly totalTokens?: number;
+}
+
+/** Creates a private chat owned by the current user. */
+export const createChat = Effect.fn("chatMutations.createChat")(
+  function* (args: { title?: string; type: "study" }) {
+    const ctx = yield* MutationCtx;
+    const user = yield* requireAppUser(ctx);
+    const updatedAt = yield* Clock.currentTimeMillis;
+
+    return yield* Effect.promise(() =>
+      ctx.db.insert("chats", {
+        title: args.title || DEFAULT_TITLE,
+        type: args.type,
+        updatedAt,
+        userId: user.appUser._id,
+        visibility: "private",
+      })
+    );
+  }
+);
+
+/** Updates the title for a chat owned by the current user. */
+export const updateChatTitle = Effect.fn("chatMutations.updateChatTitle")(
+  function* (args: { chatId: Id<"chats">; title: string }) {
+    const ctx = yield* MutationCtx;
+    const user = yield* requireAppUser(ctx);
+    const chat = yield* verifyChatOwnership({
+      chatId: args.chatId,
+      userId: user.appUser._id,
+    });
+
+    yield* Effect.promise(() => ctx.db.patch(chat._id, { title: args.title }));
+    return chat._id;
+  }
+);
+
+/** Updates the visibility for a chat owned by the current user. */
+export const updateChatVisibility = Effect.fn(
+  "chatMutations.updateChatVisibility"
+)(function* (args: { chatId: Id<"chats">; visibility: "private" | "public" }) {
+  const ctx = yield* MutationCtx;
+  const user = yield* requireAppUser(ctx);
+  const chat = yield* verifyChatOwnership({
+    chatId: args.chatId,
+    userId: user.appUser._id,
+  });
+
+  yield* Effect.promise(() =>
+    ctx.db.patch(chat._id, { visibility: args.visibility })
+  );
+  return chat._id;
+});
+
+/** Inserts one message and its persisted parts. */
+export const saveMessage = Effect.fn("chatMutations.saveMessage")(
+  function* (args: {
+    message: ChatMessageInput;
+    parts: readonly MyUIMessagePart[];
+  }) {
+    const ctx = yield* MutationCtx;
+    const user = yield* requireAppUser(ctx);
+
+    yield* verifyChatOwnership({
+      chatId: args.message.chatId,
+      userId: user.appUser._id,
+    });
+
+    const messageId = yield* Effect.promise(() =>
+      ctx.db.insert("messages", {
+        chatId: args.message.chatId,
+        identifier: args.message.identifier,
+        modelId: args.message.modelId,
+        role: args.message.role,
+      })
+    );
+    const partIds = yield* insertParts({ messageId, parts: args.parts });
+
+    return { messageId, partIds };
+  }
+);
+
+/** Deletes messages and parts from one transcript creation-time boundary. */
+export const deleteMessageBatch = Effect.fn("chatMutations.deleteMessageBatch")(
+  function* (args: { chatId: Id<"chats">; fromCreationTime: number }) {
+    const user = yield* requireAppUser(yield* MutationCtx);
+
+    yield* verifyChatOwnership({
+      chatId: args.chatId,
+      userId: user.appUser._id,
+    });
+
+    return yield* deleteMessageBatchFromPoint(args);
+  }
+);
+
+/** Creates a private chat and inserts its first message. */
+export const createChatWithMessage = Effect.fn(
+  "chatMutations.createChatWithMessage"
+)(function* (args: {
+  message: Omit<ChatMessageInput, "chatId">;
+  parts: readonly MyUIMessagePart[];
+  title?: string;
+  type: "study";
+}) {
+  const ctx = yield* MutationCtx;
+  const user = yield* requireAppUser(ctx);
+  const updatedAt = yield* Clock.currentTimeMillis;
+  const chatId = yield* Effect.promise(() =>
+    ctx.db.insert("chats", {
+      title: args.title || DEFAULT_TITLE,
+      type: args.type,
+      updatedAt,
+      userId: user.appUser._id,
+      visibility: "private",
+    })
+  );
+  const messageId = yield* Effect.promise(() =>
+    ctx.db.insert("messages", {
+      chatId,
+      identifier: args.message.identifier,
+      modelId: args.message.modelId,
+      role: args.message.role,
+    })
+  );
+  const partIds = yield* insertParts({ messageId, parts: args.parts });
+
+  return { chatId, messageId, partIds };
+});
+
+/** Deletes a chat owned by the current user. */
+export const deleteChat = Effect.fn("chatMutations.deleteChat")(
+  function* (args: { chatId: Id<"chats"> }) {
+    const ctx = yield* MutationCtx;
+    const user = yield* requireAppUser(ctx);
+    const chat = yield* verifyChatOwnership({
+      chatId: args.chatId,
+      userId: user.appUser._id,
+    });
+
+    yield* Effect.promise(() => ctx.db.delete(chat._id));
+    return null;
+  }
+);
+
+/** Saves an assistant message, rewrites duplicate identifiers, and charges credits. */
+export const saveAssistantResponse = Effect.fn(
+  "chatMutations.saveAssistantResponse"
+)(function* (args: {
+  message: ChatMessageInput;
+  parts: readonly MyUIMessagePart[];
+  userId: Id<"users">;
+}) {
+  const ctx = yield* MutationCtx;
+  const appUser = yield* Effect.promise(() => ctx.db.get(args.userId));
+
+  if (!appUser) {
+    return yield* Effect.fail(
+      new ChatMutationError({ message: "User not found." })
+    );
+  }
+
+  yield* verifyChatOwnership({
+    chatId: args.message.chatId,
+    userId: appUser._id,
+  });
+
+  if (args.message.identifier) {
+    const existingMessage = yield* Effect.promise(() =>
+      getMessageByIdentifier(ctx, args.message.chatId, args.message.identifier)
+    );
+
+    if (existingMessage) {
+      const deleteResult = yield* deleteMessageBatchFromPoint({
+        chatId: args.message.chatId,
+        fromCreationTime: existingMessage._creationTime,
+      });
+
+      if (deleteResult.hasMore) {
+        return yield* Effect.fail(
+          new ChatMutationError({
+            message:
+              "Assistant response rewrite exceeded the supported batch size.",
+          })
+        );
+      }
+    }
+  }
+
+  const now = yield* Clock.currentTimeMillis;
+  const effectiveCredits = args.message.modelId
+    ? yield* Effect.promise(() =>
+        resolveEffectiveCreditState(ctx.db, appUser, now)
+      )
+    : null;
+  const credits = args.message.modelId
+    ? getModelCreditCost(args.message.modelId)
+    : 0;
+  const newBalance = effectiveCredits
+    ? effectiveCredits.credits - credits
+    : appUser.credits;
+  const nextResetTimestamp =
+    effectiveCredits?.creditsResetAt ?? appUser.creditsResetAt;
+  const creditResetGrant = effectiveCredits
+    ? getCreditResetGrantTransaction(appUser, effectiveCredits)
+    : null;
+  const messageId = yield* Effect.promise(() =>
+    ctx.db.insert("messages", {
+      chatId: args.message.chatId,
+      credits: args.message.modelId ? credits : undefined,
+      identifier: args.message.identifier,
+      inputTokens: args.message.inputTokens,
+      modelId: args.message.modelId,
+      outputTokens: args.message.outputTokens,
+      role: args.message.role,
+      totalTokens: args.message.totalTokens,
+    })
+  );
+  const partIds = yield* insertParts({ messageId, parts: args.parts });
+
+  const modelId = args.message.modelId;
+
+  if (!modelId) {
+    return { credits, messageId, newBalance, partIds };
+  }
+
+  yield* Effect.promise(() =>
+    ctx.db.patch(appUser._id, {
+      credits: newBalance,
+      creditsResetAt: nextResetTimestamp,
+    })
+  );
+
+  if (creditResetGrant) {
+    yield* Effect.promise(() =>
+      ctx.db.insert("creditTransactions", {
+        userId: appUser._id,
+        ...creditResetGrant,
+      })
+    );
+  }
+
+  yield* Effect.promise(() =>
+    ctx.db.insert("creditTransactions", {
+      amount: -credits,
+      balanceAfter: newBalance,
+      metadata: {
+        chatId: args.message.chatId,
+        messageId,
+        modelId,
+        ...(args.message.inputTokens === undefined
+          ? {}
+          : { inputTokens: args.message.inputTokens }),
+        ...(args.message.outputTokens === undefined
+          ? {}
+          : { outputTokens: args.message.outputTokens }),
+        ...(args.message.totalTokens === undefined
+          ? {}
+          : { totalTokens: args.message.totalTokens }),
+      },
+      type: "usage",
+      userId: appUser._id,
+    })
+  );
+
+  return { credits, messageId, newBalance, partIds };
+});

@@ -1,4 +1,4 @@
-import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
+import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 
 /** Builds the relative href for the tryout hub. */
 export function getTryoutHubHref() {

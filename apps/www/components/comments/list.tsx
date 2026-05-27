@@ -7,7 +7,8 @@ import {
   ThumbsDownIcon,
   ThumbsUpIcon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionReturnType } from "@repo/backend/confect/_generated/functionReferences";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -26,7 +27,6 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation, usePaginatedQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState, useTransition } from "react";

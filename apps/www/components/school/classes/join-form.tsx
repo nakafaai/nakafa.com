@@ -2,9 +2,9 @@
 
 import { ArrowLeft02Icon, InLoveIcon } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import type { SchoolClassVisibility } from "@repo/backend/convex/classes/schema";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
+import type { SchoolClassVisibility } from "@repo/backend/confect/modules/school/classes.tables";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,

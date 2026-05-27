@@ -3,7 +3,7 @@
 import type {
   ContentViewRef,
   Locale,
-} from "@repo/backend/convex/lib/validators/contents";
+} from "@repo/backend/confect/modules/content/content.schemas";
 import type { PropsWithChildren } from "react";
 import { useRecordContentView } from "@/lib/hooks/use-record-content-view";
 

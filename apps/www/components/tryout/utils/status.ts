@@ -1,5 +1,7 @@
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type {
+  api,
+  FunctionReturnType,
+} from "@repo/backend/confect/_generated/functionReferences";
 
 type TryoutAttemptStatus = NonNullable<
   FunctionReturnType<typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt>

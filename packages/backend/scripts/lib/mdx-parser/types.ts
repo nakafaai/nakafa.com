@@ -1,4 +1,4 @@
-import type { Locale as ParsedLocale } from "@repo/backend/convex/lib/validators/contents";
+import type { Locale as ParsedLocale } from "@repo/backend/confect/modules/content/content.schemas";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import type { ContentMetadata } from "@repo/contents/_types/content";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";

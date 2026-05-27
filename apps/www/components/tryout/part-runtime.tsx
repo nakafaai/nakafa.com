@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, ReactNode } from "react";

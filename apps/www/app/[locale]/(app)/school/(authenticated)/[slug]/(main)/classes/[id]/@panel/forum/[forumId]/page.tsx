@@ -1,4 +1,4 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import { SchoolClassesForumPanelSlot } from "@/components/school/classes/forum/panel-slot";
 
 /** Render the active forum conversation as the optional class detail branch. */

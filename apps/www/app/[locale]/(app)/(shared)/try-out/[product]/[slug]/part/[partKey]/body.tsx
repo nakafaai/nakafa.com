@@ -1,8 +1,8 @@
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import {
   type TryoutProduct,
   tryoutProductPolicies,
-} from "@repo/backend/convex/tryouts/products";
+} from "@repo/backend/confect/modules/tryout/products";
 import { parseExercisesMaterial } from "@repo/contents/_lib/exercises/route";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { preloadedQueryResult, preloadQuery } from "convex/nextjs";

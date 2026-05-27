@@ -8,9 +8,9 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/convex/_generated/api";
-import { MIN_FORUM_THREAD_TEXT_LENGTH } from "@repo/backend/convex/classes/forums/utils/constants";
-import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
+import { MIN_FORUM_THREAD_TEXT_LENGTH } from "@repo/backend/confect/modules/school/forums/constants";
+import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {

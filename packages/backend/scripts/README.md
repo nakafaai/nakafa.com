@@ -278,8 +278,7 @@ Content hash unchanged. This is normal for `sync:incremental`.
 | `tryout/` | Tryout-specific maintenance scripts split by concern |
 | `tryout/access.ts` | Dev/prod integrity verification for campaigns, grants, entitlements, and competition overlap |
 | `irt-verify.ts` | Dev/prod integrity verification for IRT cache and scale state |
-| `../convex/contentSync/mutations/` | Convex sync mutations split by concern |
-| `../convex/contentSync/queries/` | Convex verification queries split by concern |
+| `../confect/modules/content/` | Confect content sync modules, specs, services, and verification queries |
 | `../.sync-state.json` | Dev incremental sync state (gitignored) |
 | `../.sync-state.prod.json` | Prod incremental sync state (gitignored) |
 

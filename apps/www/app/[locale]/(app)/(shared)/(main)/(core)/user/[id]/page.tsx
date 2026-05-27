@@ -1,4 +1,4 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { use } from "react";

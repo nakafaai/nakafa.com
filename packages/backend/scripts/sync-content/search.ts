@@ -1,4 +1,5 @@
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import refs from "@repo/backend/confect/_generated/refs";
+import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import { computeHash } from "@repo/backend/scripts/lib/mdx-parser/content";
 import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
@@ -78,7 +79,7 @@ export const syncQuranSearch = Effect.fn("sync.quranSearch")(function* (
     const result = yield* callConvex(
       config,
       "mutation",
-      "contents/mutations/search:bulkSyncQuranSearch",
+      refs.internal.contents.mutations.search.bulkSyncQuranSearch,
       { documents: batch },
       SyncResultSchema
     ).pipe(

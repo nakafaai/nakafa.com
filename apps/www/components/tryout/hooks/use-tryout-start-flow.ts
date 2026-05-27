@@ -1,13 +1,15 @@
 "use client";
 
 import { useDisclosure } from "@mantine/hooks";
-import type { api } from "@repo/backend/convex/_generated/api";
+import type {
+  api,
+  FunctionArgs,
+} from "@repo/backend/confect/_generated/functionReferences";
 import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useConvexAuth } from "convex/react";
-import type { FunctionArgs } from "convex/server";
 import { useTranslations } from "next-intl";
 import { useCallback, useLayoutEffect, useTransition } from "react";
 import { toast } from "sonner";

@@ -9,7 +9,7 @@ import {
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -139,10 +139,10 @@ function AssessmentActions({
   const [confirmDeleteOpen, confirmDeleteHandlers] = useDisclosure(false);
   const [editOpen, editHandlers] = useDisclosure(false);
   const reorderAssessment = useMutation(
-    api.assessments.mutations.public.reorder.reorderAssessment
+    api.assessments.mutations.publicFunctions.reorder.reorderAssessment
   );
   const deleteAssessment = useMutation(
-    api.assessments.mutations.public.delete.deleteAssessment
+    api.assessments.mutations.publicFunctions.deleteFunctions.deleteAssessment
   );
 
   function handleMoveUp() {

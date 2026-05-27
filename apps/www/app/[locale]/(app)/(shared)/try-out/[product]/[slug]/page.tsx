@@ -1,8 +1,8 @@
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import {
   isTryoutProduct,
   type TryoutProduct,
-} from "@repo/backend/convex/tryouts/products";
+} from "@repo/backend/confect/modules/tryout/products";
 import { parseExercisesMaterial } from "@repo/contents/_lib/exercises/route";
 import { fetchQuery, preloadQuery } from "convex/nextjs";
 import { notFound } from "next/navigation";

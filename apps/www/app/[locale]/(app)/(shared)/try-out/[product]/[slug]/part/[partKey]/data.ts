@@ -1,5 +1,5 @@
-import { api } from "@repo/backend/convex/_generated/api";
-import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
+import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { getRenderableExercisesContent } from "@repo/contents/_lib/exercises/renderable";
 import { fetchQuery } from "convex/nextjs";
 import { Effect } from "effect";

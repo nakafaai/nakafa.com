@@ -3,13 +3,13 @@
 import { Cancel01Icon, PaintBrush04Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { SchoolClassImage } from "@repo/backend/convex/classes/schema";
-import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
+import type { SchoolClassImage } from "@repo/backend/confect/modules/school/classes.tables";
 import {
   CLASS_IMAGES,
   getClassImageUrl,
-} from "@repo/backend/convex/lib/images";
+} from "@repo/backend/confect/modules/school/images";
+import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {

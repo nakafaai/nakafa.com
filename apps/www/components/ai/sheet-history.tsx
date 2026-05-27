@@ -6,7 +6,7 @@ import {
   SquareLock01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,

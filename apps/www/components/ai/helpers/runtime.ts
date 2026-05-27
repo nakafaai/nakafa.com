@@ -2,7 +2,7 @@
 
 import { Chat } from "@ai-sdk/react";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import { DefaultChatTransport } from "ai";
 import type { AiStore } from "@/components/ai/store/types";
 import { getLocale, getPathname } from "@/lib/utils/browser";

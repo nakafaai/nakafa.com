@@ -1,4 +1,4 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import type { ScrollToIndexOpts, VirtualizerHandle } from "virtua";
 import type { ConversationRow } from "@/components/school/classes/forum/conversation/data/pages";
 import {

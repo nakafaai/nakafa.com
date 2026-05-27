@@ -3,7 +3,7 @@
 import type { Chat } from "@ai-sdk/react";
 import type { ModelId } from "@repo/ai/config/models";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 
 export interface AiState {
   activeChatId: Id<"chats"> | null;

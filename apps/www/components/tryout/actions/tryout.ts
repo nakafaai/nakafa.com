@@ -4,10 +4,12 @@ import {
   captureServerException,
   extractDistinctIdFromPostHogCookie,
 } from "@repo/analytics/posthog/server";
-import { api } from "@repo/backend/convex/_generated/api";
-import { products } from "@repo/backend/convex/utils/polar/products";
+import type {
+  FunctionArgs,
+  FunctionReturnType,
+} from "@repo/backend/confect/_generated/functionReferences";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { getPathname } from "@repo/internationalization/src/navigation";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { cookies } from "next/headers";
 import { after } from "next/server";
 import {
@@ -18,6 +20,7 @@ import {
 import { env } from "@/env";
 import { fetchAuthAction, fetchAuthMutation } from "@/lib/auth/server";
 import { getSafeInternalRedirectPath } from "@/lib/auth/utils";
+import { products } from "@/lib/polar/products";
 
 type StartTryoutArgs = FunctionArgs<
   typeof api.tryouts.mutations.attempts.startTryout
@@ -82,7 +85,7 @@ async function getCheckoutUrl({
 
   try {
     const result = await fetchAuthAction(
-      api.customers.actions.public.generateCheckoutLink,
+      api.customers.actions.publicFunctions.generateCheckoutLink,
       {
         productIds: [products.pro.id],
         successUrl,

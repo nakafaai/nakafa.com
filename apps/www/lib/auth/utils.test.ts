@@ -1,4 +1,3 @@
-import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
 import {
   getAuthCallbackPath,
@@ -61,7 +60,7 @@ describe("lib/auth/utils", () => {
 
   describe("isAuthError", () => {
     it("detects auth-related Convex errors", () => {
-      expect(isAuthError(new ConvexError("auth token missing"))).toBe(true);
+      expect(isAuthError({ data: "auth token missing" })).toBe(true);
     });
 
     it("matches auth-related runtime errors", () => {
@@ -70,37 +69,37 @@ describe("lib/auth/utils", () => {
 
     it("detects structured Convex auth errors by code", () => {
       expect(
-        isAuthError(
-          new ConvexError({
+        isAuthError({
+          data: {
             code: "UNAUTHENTICATED",
             message: "Unauthenticated",
-          })
-        )
+          },
+        })
       ).toBe(true);
     });
 
     it("detects structured Convex auth errors by message", () => {
       expect(
-        isAuthError(
-          new ConvexError({
+        isAuthError({
+          data: {
             message: "auth session expired",
-          })
-        )
+          },
+        })
       ).toBe(true);
     });
 
     it("ignores structured Convex errors without auth-related code or message", () => {
       expect(
-        isAuthError(
-          new ConvexError({
+        isAuthError({
+          data: {
             reason: "network timeout",
-          })
-        )
+          },
+        })
       ).toBe(false);
     });
 
     it("ignores Convex errors with null data", () => {
-      expect(isAuthError(new ConvexError(null))).toBe(false);
+      expect(isAuthError({ data: null })).toBe(false);
     });
 
     it("ignores unrelated runtime errors", () => {

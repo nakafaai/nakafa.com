@@ -1,12 +1,12 @@
 import { ArrowUp01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure, useOs, useResizeObserver } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import {
   MAX_FORUM_ATTACHMENT_BYTES,
   MAX_FORUM_POST_ATTACHMENTS,
-} from "@repo/backend/convex/classes/forums/utils/constants";
+} from "@repo/backend/confect/modules/school/forums/constants";
 import {
   InputGroup,
   InputGroupAddon,

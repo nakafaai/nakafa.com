@@ -2,8 +2,7 @@
 
 import { Diamond02Icon } from "@hugeicons/core-free-icons";
 import { Dithering, type DitheringProps } from "@paper-design/shaders-react";
-import { api } from "@repo/backend/convex/_generated/api";
-import { products } from "@repo/backend/convex/utils/polar/products";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -14,6 +13,7 @@ import { useTransition } from "react";
 import { getColorFront } from "@/components/marketing/about/utils";
 import { authClient } from "@/lib/auth/client";
 import { useUser } from "@/lib/context/use-user";
+import { products } from "@/lib/polar/products";
 
 export function PricingDithering({ ...props }: DitheringProps) {
   const { resolvedTheme } = useTheme();
@@ -50,10 +50,10 @@ export function ProButton() {
     currentUser ? { productId: products.pro.id } : "skip"
   );
   const generateCheckoutLink = useAction(
-    api.customers.actions.public.generateCheckoutLink
+    api.customers.actions.publicFunctions.generateCheckoutLink
   );
   const generateCustomerPortalUrl = useAction(
-    api.customers.actions.public.generateCustomerPortalUrl
+    api.customers.actions.publicFunctions.generateCustomerPortalUrl
   );
 
   const handleCheckout = () => {

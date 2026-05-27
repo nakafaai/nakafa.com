@@ -1,5 +1,5 @@
 import { useInterval } from "@mantine/hooks";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc } from "@repo/backend/confect/_generated/dataModel";
 import { useEffect, useMemo, useState } from "react";
 
 export interface UseExerciseTimerProps {

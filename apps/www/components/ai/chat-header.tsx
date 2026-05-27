@@ -11,8 +11,8 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc } from "@repo/backend/confect/_generated/dataModel";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,

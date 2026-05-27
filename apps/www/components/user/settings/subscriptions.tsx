@@ -1,8 +1,7 @@
 "use client";
 
 import { PartyIcon, Settings01Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
-import { products } from "@repo/backend/convex/utils/polar/products";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
@@ -10,6 +9,7 @@ import { useAction } from "convex/react";
 import { useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
 import { FormBlock } from "@/components/shared/form-block";
+import { products } from "@/lib/polar/products";
 
 export function UserSettingsSubscriptions() {
   const t = useTranslations("Auth");
@@ -21,10 +21,10 @@ export function UserSettingsSubscriptions() {
     { productId: products.pro.id }
   );
   const generateCheckoutLink = useAction(
-    api.customers.actions.public.generateCheckoutLink
+    api.customers.actions.publicFunctions.generateCheckoutLink
   );
   const generateCustomerPortalUrl = useAction(
-    api.customers.actions.public.generateCustomerPortalUrl
+    api.customers.actions.publicFunctions.generateCustomerPortalUrl
   );
 
   const handleCheckout = () => {

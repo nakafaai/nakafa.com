@@ -1,3 +1,5 @@
+import type { Ref } from "@confect/core";
+import refs from "@repo/backend/confect/_generated/refs";
 import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
   ArticleReferenceIntegrityPageSchema,
@@ -28,8 +30,11 @@ interface PageResult<T> {
 
 const collectPages = Effect.fn("sync.collectPages")(function* <T>(
   config: ConvexConfig,
-  functionPath: string,
-  args: Record<string, unknown>,
+  ref: Ref.AnyQuery,
+  getArgs: (paginationOpts: {
+    cursor: string | null;
+    numItems: number;
+  }) => Ref.Args<typeof ref>,
   schema: Schema.Schema<PageResult<T>>
 ) {
   const rows: T[] = [];
@@ -41,14 +46,11 @@ const collectPages = Effect.fn("sync.collectPages")(function* <T>(
     ({ continueCursor, isDone, page } = yield* callConvex(
       config,
       "query",
-      functionPath,
-      {
-        ...args,
-        paginationOpts: {
-          cursor: continueCursor,
-          numItems: PAGE_SIZE,
-        },
-      },
+      ref,
+      getArgs({
+        cursor: continueCursor,
+        numItems: PAGE_SIZE,
+      }),
       schema
     ));
 
@@ -78,32 +80,32 @@ export const getStaleContent = Effect.fn("sync.getStaleContent")(function* (
   ] = yield* Effect.all([
     collectPages(
       config,
-      "contentSync/queries/stale:listStaleContentPage",
-      { tableName: "articleContents" },
+      refs.internal.contentSync.queries.stale.listStaleContentPage,
+      (paginationOpts) => ({ tableName: "articleContents", paginationOpts }),
       StaleContentPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/stale:listStaleContentPage",
-      { tableName: "subjectTopics" },
+      refs.internal.contentSync.queries.stale.listStaleContentPage,
+      (paginationOpts) => ({ tableName: "subjectTopics", paginationOpts }),
       StaleContentPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/stale:listStaleContentPage",
-      { tableName: "subjectSections" },
+      refs.internal.contentSync.queries.stale.listStaleContentPage,
+      (paginationOpts) => ({ tableName: "subjectSections", paginationOpts }),
       StaleContentPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/stale:listStaleContentPage",
-      { tableName: "exerciseSets" },
+      refs.internal.contentSync.queries.stale.listStaleContentPage,
+      (paginationOpts) => ({ tableName: "exerciseSets", paginationOpts }),
       StaleContentPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/stale:listStaleContentPage",
-      { tableName: "exerciseQuestions" },
+      refs.internal.contentSync.queries.stale.listStaleContentPage,
+      (paginationOpts) => ({ tableName: "exerciseQuestions", paginationOpts }),
       StaleContentPageSchema
     ),
   ]);
@@ -139,44 +141,49 @@ export const getDataIntegrity = Effect.fn("sync.getDataIntegrity")(function* (
   ] = yield* Effect.all([
     collectPages(
       config,
-      "contentSync/queries/integrity:listIntegrityExerciseQuestionsPage",
-      {},
+      refs.internal.contentSync.queries.integrity
+        .listIntegrityExerciseQuestionsPage,
+      (paginationOpts) => ({ paginationOpts }),
       ExerciseQuestionIntegrityPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/integrity:listIntegrityExerciseChoicesPage",
-      {},
+      refs.internal.contentSync.queries.integrity
+        .listIntegrityExerciseChoicesPage,
+      (paginationOpts) => ({ paginationOpts }),
       ExerciseChoiceIntegrityPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/integrity:listIntegrityContentAuthorsPage",
-      {},
+      refs.internal.contentSync.queries.integrity
+        .listIntegrityContentAuthorsPage,
+      (paginationOpts) => ({ paginationOpts }),
       ContentAuthorIntegrityPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/integrity:listIntegrityArticleReferencesPage",
-      {},
+      refs.internal.contentSync.queries.integrity
+        .listIntegrityArticleReferencesPage,
+      (paginationOpts) => ({ paginationOpts }),
       ArticleReferenceIntegrityPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/integrity:listIntegrityArticlesPage",
-      {},
+      refs.internal.contentSync.queries.integrity.listIntegrityArticlesPage,
+      (paginationOpts) => ({ paginationOpts }),
       StaleContentPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/integrity:listIntegritySubjectSectionsPage",
-      {},
+      refs.internal.contentSync.queries.integrity
+        .listIntegritySubjectSectionsPage,
+      (paginationOpts) => ({ paginationOpts }),
       SubjectSectionIntegrityPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/tryouts:getTryoutScaleIntegrity",
-      {},
+      refs.internal.contentSync.queries.tryouts.getTryoutScaleIntegrity,
+      (paginationOpts) => ({ paginationOpts }),
       TryoutScaleIntegritySchema
     ),
   ]);
@@ -220,14 +227,15 @@ export const getUnusedAuthors = Effect.fn("sync.getUnusedAuthors")(function* (
   const [authors, contentAuthors] = yield* Effect.all([
     collectPages(
       config,
-      "contentSync/queries/authors:listAuthorsPage",
-      {},
+      refs.internal.contentSync.queries.authors.listAuthorsPage,
+      (paginationOpts) => ({ paginationOpts }),
       AuthorPageSchema
     ),
     collectPages(
       config,
-      "contentSync/queries/integrity:listIntegrityContentAuthorsPage",
-      {},
+      refs.internal.contentSync.queries.integrity
+        .listIntegrityContentAuthorsPage,
+      (paginationOpts) => ({ paginationOpts }),
       ContentAuthorIntegrityPageSchema
     ),
   ]);

@@ -1,37 +1,10 @@
 import { routing } from "@repo/internationalization/src/routing";
-import { ConvexError } from "convex/values";
+import { getApplicationErrorText } from "@/lib/errors";
 
 const AUTH_ERROR_REGEX = /auth/i;
 const PATH_QUERY_MARKER_REGEX = /[?#]/;
 const APP_HOME_PATH = "/home";
 const ROOT_PATH = "/";
-
-/** Extract one lower-level auth error string from unknown Better Auth / Convex errors. */
-function getAuthErrorText(error: unknown) {
-  if (error instanceof ConvexError) {
-    const data = error.data;
-
-    if (typeof data === "string") {
-      return data;
-    }
-
-    if (typeof data === "object" && data !== null) {
-      if ("code" in data && typeof data.code === "string") {
-        return data.code;
-      }
-
-      if ("message" in data && typeof data.message === "string") {
-        return data.message;
-      }
-    }
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "";
-}
 
 /** Returns one safe internal app path that can be reused as a redirect target. */
 export function getSafeInternalRedirectPath(value: string | null | undefined) {
@@ -113,7 +86,7 @@ export function getAuthCallbackPath(
  * https://labs.convex.dev/better-auth/experimental#jwt-caching
  */
 export const isAuthError = (error: unknown) => {
-  const message = getAuthErrorText(error);
+  const message = getApplicationErrorText(error);
 
   return AUTH_ERROR_REGEX.test(message);
 };

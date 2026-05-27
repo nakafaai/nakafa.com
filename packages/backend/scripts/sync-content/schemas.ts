@@ -1,4 +1,4 @@
-import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
+import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/confect/modules/content/constants";
 import { locales } from "@repo/utilities/locales";
 import { Effect, Schema } from "effect";
 

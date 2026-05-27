@@ -18,10 +18,10 @@ import {
   researchToolInputSchema,
 } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { api as convexApi } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import { api as convexApi } from "@repo/backend/confect/_generated/functionReferences";
+import { mapUIMessagePartsToDBParts } from "@repo/backend/confect/modules/chat/messageParts/uiToDb";
+import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { cleanSlug } from "@repo/utilities/helper";
 import { logError } from "@repo/utilities/logging/effect";

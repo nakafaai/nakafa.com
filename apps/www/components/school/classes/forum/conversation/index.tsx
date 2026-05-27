@@ -1,6 +1,6 @@
 "use client";
 
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import { memo } from "react";
 import { ConversationProvider } from "@/components/school/classes/forum/conversation/context/provider";
 import type { Forum } from "@/components/school/classes/forum/conversation/data/entities";

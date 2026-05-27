@@ -1,7 +1,7 @@
 "use client";
 
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 import { Response } from "@repo/design-system/components/ai/response";
 import type { Button } from "@repo/design-system/components/ui/button";
@@ -10,12 +10,12 @@ import { Label } from "@repo/design-system/components/ui/label";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
-import { ConvexError } from "convex/values";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, useTransition } from "react";
 import { toast } from "sonner";
 import { useAttempt } from "@/lib/context/use-attempt";
 import { useExercise } from "@/lib/context/use-exercise";
+import { getApplicationErrorCode } from "@/lib/errors";
 
 /** Renders the selectable choices for one exercise and submits answers to Convex. */
 export function ExerciseChoices({
@@ -84,31 +84,7 @@ export function ExerciseChoices({
           timeSpent,
         });
       } catch (error) {
-        if (!(error instanceof ConvexError)) {
-          captureException(error, {
-            source: "exercise-submit-answer",
-          });
-
-          toast.error(t("submit-answer-error"), {
-            position: "bottom-center",
-          });
-          return;
-        }
-
-        const errorData = error.data;
-
-        if (!(typeof errorData === "object" && errorData !== null)) {
-          captureException(error, {
-            source: "exercise-submit-answer",
-          });
-
-          toast.error(t("submit-answer-error"), {
-            position: "bottom-center",
-          });
-          return;
-        }
-
-        const errorCode = "code" in errorData ? errorData.code : undefined;
+        const errorCode = getApplicationErrorCode(error);
 
         if (errorCode === "TIME_EXPIRED" || errorCode === "TRYOUT_EXPIRED") {
           toast.info(t("attempt-expiry-processing"), {
@@ -125,9 +101,7 @@ export function ExerciseChoices({
         }
 
         captureException(error, {
-          ...(typeof errorCode === "string"
-            ? { convex_error_code: errorCode }
-            : {}),
+          ...(errorCode ? { error_code: errorCode } : {}),
           source: "exercise-submit-answer",
         });
 

@@ -1,10 +1,10 @@
 "use client";
 
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/convex/chats/constants";
-import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
+import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
+import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/confect/modules/chat/constants";
+import { mapDBMessagesToUIMessages } from "@repo/backend/confect/modules/chat/messages";
 import {
   type UsePaginatedQueryReturnType,
   usePaginatedQuery,

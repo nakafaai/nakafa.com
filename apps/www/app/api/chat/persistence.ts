@@ -1,12 +1,12 @@
 import type { ModelId } from "@repo/ai/config/models";
 import { compressMessages } from "@repo/ai/lib/message";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { api as convexApi } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/convex/chats/constants";
-import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
-import type { MessageWithPartsDoc } from "@repo/backend/convex/chats/schema";
-import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import { api as convexApi } from "@repo/backend/confect/_generated/functionReferences";
+import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/confect/modules/chat/constants";
+import { mapUIMessagePartsToDBParts } from "@repo/backend/confect/modules/chat/messageParts/uiToDb";
+import type { MessageWithPartsDoc } from "@repo/backend/confect/modules/chat/messages";
+import { mapDBMessagesToUIMessages } from "@repo/backend/confect/modules/chat/messages";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { Effect } from "effect";
 

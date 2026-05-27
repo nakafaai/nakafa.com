@@ -2,7 +2,7 @@
 
 import { StudentIcon, TeacherIcon } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import {
   Avatar,
   AvatarFallback,

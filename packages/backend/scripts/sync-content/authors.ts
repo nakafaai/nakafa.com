@@ -1,3 +1,4 @@
+import refs from "@repo/backend/confect/_generated/refs";
 import { readMdxFile } from "@repo/backend/scripts/lib/mdx-parser/content";
 import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
@@ -103,7 +104,7 @@ export const syncAuthors = Effect.fn("sync.authors")(function* (
     const result = yield* callConvex(
       config,
       "mutation",
-      "contentSync/mutations/authors:bulkSyncAuthors",
+      refs.internal.contentSync.mutations.authors.bulkSyncAuthors,
       { authorNames: batch },
       AuthorSyncResultSchema
     );

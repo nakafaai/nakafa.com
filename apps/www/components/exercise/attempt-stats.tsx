@@ -1,7 +1,7 @@
 "use client";
 
 import { BookOpen02Icon, Timer02Icon } from "@hugeicons/core-free-icons";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc } from "@repo/backend/confect/_generated/dataModel";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {

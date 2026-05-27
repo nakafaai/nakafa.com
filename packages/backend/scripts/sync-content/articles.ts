@@ -1,4 +1,5 @@
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import refs from "@repo/backend/confect/_generated/refs";
+import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import {
   computeHash,
   parseDateToEpoch,
@@ -143,7 +144,7 @@ export const syncArticles = Effect.fn("sync.articles")(function* (
     const result = yield* callConvex(
       config,
       "mutation",
-      "contentSync/mutations/articles:bulkSyncArticles",
+      refs.internal.contentSync.mutations.articles.bulkSyncArticles,
       { articles: batch },
       SyncResultSchema
     );

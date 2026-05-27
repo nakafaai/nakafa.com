@@ -1,7 +1,7 @@
 import {
   type Permission,
-  ROLE_PERMISSIONS,
-} from "@repo/backend/convex/lib/helpers/permissions";
+  roleHasPermission,
+} from "@repo/backend/confect/modules/school/permissions";
 import { useClass } from "@/lib/context/use-class";
 
 export function useClassPermissions() {
@@ -12,23 +12,21 @@ export function useClassPermissions() {
   const teacherRole = classMembership?.teacherRole;
 
   const can = (permission: Permission) => {
-    const schoolPerms =
-      schoolRole === undefined ? [] : ROLE_PERMISSIONS[schoolRole];
-    if (schoolPerms.includes(permission)) {
+    if (roleHasPermission(schoolRole, permission)) {
       return true;
     }
 
     if (classRole !== undefined) {
-      const classPerms = ROLE_PERMISSIONS[classRole];
-      if (classPerms.includes(permission)) {
+      if (roleHasPermission(classRole, permission)) {
         return true;
       }
 
-      if (classRole === "teacher" && teacherRole !== undefined) {
-        const teacherPerms = ROLE_PERMISSIONS[teacherRole];
-        if (teacherPerms.includes(permission)) {
-          return true;
-        }
+      if (
+        classRole === "teacher" &&
+        teacherRole !== undefined &&
+        roleHasPermission(teacherRole, permission)
+      ) {
+        return true;
       }
     }
 

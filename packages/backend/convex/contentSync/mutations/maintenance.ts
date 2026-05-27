@@ -1,225 +1,37 @@
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { internalMutation } from "@repo/backend/convex/functions";
-import { ConvexError, v } from "convex/values";
+import registeredFunctions from "../../../confect/_generated/registeredFunctions";
 
-const RESET_BATCH_SIZE = 500;
-const EVENT_TRYOUT_ENTITLEMENT_BATCH_SIZE = 500;
-
-const batchDeleteResultValidator = v.object({
-  deleted: v.number(),
-  hasMore: v.boolean(),
-});
-
-type ResettableTableName =
-  | "articleContents"
-  | "articleReferences"
-  | "authors"
-  | "contentAuthors"
-  | "exerciseAnswers"
-  | "exerciseAttempts"
-  | "exerciseChoices"
-  | "exerciseItemParameters"
-  | "exerciseQuestions"
-  | "exerciseSets"
-  | "tryoutAccessCampaigns"
-  | "tryoutAccessCampaignProducts"
-  | "tryoutAccessGrants"
-  | "tryoutAccessLinks"
-  | "irtCalibrationAttempts"
-  | "irtCalibrationCacheStats"
-  | "irtCalibrationQueue"
-  | "irtCalibrationRuns"
-  | "irtScaleQualityChecks"
-  | "irtScaleQualityRefreshQueue"
-  | "irtScalePublicationQueue"
-  | "irtScaleVersionItems"
-  | "irtScaleVersions"
-  | "contentSearch"
-  | "subjectSections"
-  | "subjectTopics"
-  | "tryoutAttempts"
-  | "tryoutCatalogMeta"
-  | "tryoutLeaderboardEntries"
-  | "tryoutPartAttempts"
-  | "tryoutPartSets"
-  | "tryouts"
-  | "userTryoutStats";
-
-/** Delete one bounded batch from a content-derived table. */
-async function deleteBatchFromTable(
-  ctx: MutationCtx,
-  tableName: ResettableTableName
-) {
-  const docs = await ctx.db.query(tableName).take(RESET_BATCH_SIZE);
-  let deleted = 0;
-
-  for (const doc of docs) {
-    await ctx.db.delete(tableName, doc._id);
-    deleted++;
-  }
-
-  const hasMore = (await ctx.db.query(tableName).first()) !== null;
-
-  return { deleted, hasMore };
-}
-
-/**
- * Delete one bounded batch of tryout part attempts together with their linked
- * tryout-owned exercise attempts and exercise answers.
- *
- * This is intentionally narrower than the full content reset path so operators
- * can wipe tryout runtime data without touching standalone exercise history.
- */
-export const deleteTryoutRuntimeBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => {
-    const partAttempts = await ctx.db
-      .query("tryoutPartAttempts")
-      .take(RESET_BATCH_SIZE);
-    let deleted = 0;
-
-    for (const partAttempt of partAttempts) {
-      const exerciseAttempt = await ctx.db.get(
-        "exerciseAttempts",
-        partAttempt.setAttemptId
-      );
-
-      if (exerciseAttempt) {
-        const answers = await ctx.db
-          .query("exerciseAnswers")
-          .withIndex("by_attemptId_and_exerciseNumber", (q) =>
-            q.eq("attemptId", exerciseAttempt._id)
-          )
-          .take(exerciseAttempt.totalExercises + 1);
-
-        if (answers.length > exerciseAttempt.totalExercises) {
-          throw new ConvexError({
-            code: "TRYOUT_EXERCISE_ANSWER_COUNT_EXCEEDED",
-            message:
-              "Tryout exercise answer count exceeds the exercise attempt total exercises.",
-          });
-        }
-
-        for (const answer of answers) {
-          await ctx.db.delete("exerciseAnswers", answer._id);
-        }
-
-        await ctx.db.delete("exerciseAttempts", exerciseAttempt._id);
-      }
-
-      await ctx.db.delete("tryoutPartAttempts", partAttempt._id);
-      deleted += 1;
-    }
-
-    const hasMore = (await ctx.db.query("tryoutPartAttempts").first()) !== null;
-
-    return { deleted, hasMore };
-  },
-});
-
-/** Create one small internal mutation that deletes a single bounded batch. */
-function makeBatchDeleteMutation(tableName: ResettableTableName) {
-  return internalMutation({
-    args: {},
-    returns: batchDeleteResultValidator,
-    handler: async (ctx) => deleteBatchFromTable(ctx, tableName),
-  });
-}
-
-export const deleteContentAuthorsBatch =
-  makeBatchDeleteMutation("contentAuthors");
-export const deleteContentSearchBatch =
-  makeBatchDeleteMutation("contentSearch");
-export const deleteArticleReferencesBatch =
-  makeBatchDeleteMutation("articleReferences");
-export const deleteExerciseChoicesBatch =
-  makeBatchDeleteMutation("exerciseChoices");
-export const deleteExerciseAnswersBatch =
-  makeBatchDeleteMutation("exerciseAnswers");
-export const deleteTryoutPartAttemptsBatch =
-  makeBatchDeleteMutation("tryoutPartAttempts");
-export const deleteTryoutLeaderboardEntriesBatch = makeBatchDeleteMutation(
-  "tryoutLeaderboardEntries"
-);
-export const deleteUserTryoutStatsBatch =
-  makeBatchDeleteMutation("userTryoutStats");
-export const deleteIrtScalePublicationQueueBatch = makeBatchDeleteMutation(
-  "irtScalePublicationQueue"
-);
-export const deleteIrtScaleVersionItemsBatch = makeBatchDeleteMutation(
-  "irtScaleVersionItems"
-);
-export const deleteExerciseItemParametersBatch = makeBatchDeleteMutation(
-  "exerciseItemParameters"
-);
-export const deleteIrtCalibrationQueueBatch = makeBatchDeleteMutation(
-  "irtCalibrationQueue"
-);
-export const deleteIrtCalibrationAttemptsBatch = makeBatchDeleteMutation(
-  "irtCalibrationAttempts"
-);
-export const deleteIrtCalibrationCacheStatsBatch = makeBatchDeleteMutation(
-  "irtCalibrationCacheStats"
-);
-export const deleteIrtScaleQualityChecksBatch = makeBatchDeleteMutation(
-  "irtScaleQualityChecks"
-);
-export const deleteIrtScaleQualityRefreshQueueBatch = makeBatchDeleteMutation(
-  "irtScaleQualityRefreshQueue"
-);
-export const deleteExerciseAttemptsBatch =
-  makeBatchDeleteMutation("exerciseAttempts");
-export const deleteTryoutAttemptsBatch =
-  makeBatchDeleteMutation("tryoutAttempts");
-export const deleteTryoutAccessCampaignsBatch = makeBatchDeleteMutation(
-  "tryoutAccessCampaigns"
-);
-export const deleteTryoutAccessCampaignProductsBatch = makeBatchDeleteMutation(
-  "tryoutAccessCampaignProducts"
-);
-export const deleteTryoutAccessGrantsBatch =
-  makeBatchDeleteMutation("tryoutAccessGrants");
-export const deleteTryoutAccessLinksBatch =
-  makeBatchDeleteMutation("tryoutAccessLinks");
-export const deleteTryoutCatalogMetaBatch =
-  makeBatchDeleteMutation("tryoutCatalogMeta");
-export const deleteTryoutPartSetsBatch =
-  makeBatchDeleteMutation("tryoutPartSets");
-export const deleteIrtScaleVersionsBatch =
-  makeBatchDeleteMutation("irtScaleVersions");
-export const deleteIrtCalibrationRunsBatch =
-  makeBatchDeleteMutation("irtCalibrationRuns");
-export const deleteTryoutsBatch = makeBatchDeleteMutation("tryouts");
-export const deleteExerciseQuestionsBatch =
-  makeBatchDeleteMutation("exerciseQuestions");
-export const deleteExerciseSetsBatch = makeBatchDeleteMutation("exerciseSets");
-export const deleteSubjectSectionsBatch =
-  makeBatchDeleteMutation("subjectSections");
-export const deleteSubjectTopicsBatch =
-  makeBatchDeleteMutation("subjectTopics");
-export const deleteArticlesBatch = makeBatchDeleteMutation("articleContents");
-export const deleteAuthorsBatch = makeBatchDeleteMutation("authors");
-
-/** Delete one bounded batch of stored tryout entitlements. */
-export const deleteTryoutEntitlementsBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: async (ctx) => {
-    const entitlements = await ctx.db
-      .query("userTryoutEntitlements")
-      .take(EVENT_TRYOUT_ENTITLEMENT_BATCH_SIZE);
-
-    for (const entitlement of entitlements) {
-      await ctx.db.delete("userTryoutEntitlements", entitlement._id);
-    }
-
-    const hasMore =
-      (await ctx.db.query("userTryoutEntitlements").first()) !== null;
-
-    return {
-      deleted: entitlements.length,
-      hasMore,
-    };
-  },
-});
+export const deleteArticleReferencesBatch = registeredFunctions.contentSync.mutations.maintenance.deleteArticleReferencesBatch;
+export const deleteArticlesBatch = registeredFunctions.contentSync.mutations.maintenance.deleteArticlesBatch;
+export const deleteAuthorsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteAuthorsBatch;
+export const deleteContentAuthorsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteContentAuthorsBatch;
+export const deleteContentSearchBatch = registeredFunctions.contentSync.mutations.maintenance.deleteContentSearchBatch;
+export const deleteExerciseAnswersBatch = registeredFunctions.contentSync.mutations.maintenance.deleteExerciseAnswersBatch;
+export const deleteExerciseAttemptsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteExerciseAttemptsBatch;
+export const deleteExerciseChoicesBatch = registeredFunctions.contentSync.mutations.maintenance.deleteExerciseChoicesBatch;
+export const deleteExerciseItemParametersBatch = registeredFunctions.contentSync.mutations.maintenance.deleteExerciseItemParametersBatch;
+export const deleteExerciseQuestionsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteExerciseQuestionsBatch;
+export const deleteExerciseSetsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteExerciseSetsBatch;
+export const deleteIrtCalibrationAttemptsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteIrtCalibrationAttemptsBatch;
+export const deleteIrtCalibrationCacheStatsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteIrtCalibrationCacheStatsBatch;
+export const deleteIrtCalibrationQueueBatch = registeredFunctions.contentSync.mutations.maintenance.deleteIrtCalibrationQueueBatch;
+export const deleteIrtCalibrationRunsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteIrtCalibrationRunsBatch;
+export const deleteIrtScalePublicationQueueBatch = registeredFunctions.contentSync.mutations.maintenance.deleteIrtScalePublicationQueueBatch;
+export const deleteIrtScaleQualityChecksBatch = registeredFunctions.contentSync.mutations.maintenance.deleteIrtScaleQualityChecksBatch;
+export const deleteIrtScaleQualityRefreshQueueBatch = registeredFunctions.contentSync.mutations.maintenance.deleteIrtScaleQualityRefreshQueueBatch;
+export const deleteIrtScaleVersionItemsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteIrtScaleVersionItemsBatch;
+export const deleteIrtScaleVersionsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteIrtScaleVersionsBatch;
+export const deleteSubjectSectionsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteSubjectSectionsBatch;
+export const deleteSubjectTopicsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteSubjectTopicsBatch;
+export const deleteTryoutAccessCampaignProductsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteTryoutAccessCampaignProductsBatch;
+export const deleteTryoutAccessCampaignsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteTryoutAccessCampaignsBatch;
+export const deleteTryoutAccessGrantsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteTryoutAccessGrantsBatch;
+export const deleteTryoutAccessLinksBatch = registeredFunctions.contentSync.mutations.maintenance.deleteTryoutAccessLinksBatch;
+export const deleteTryoutAttemptsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteTryoutAttemptsBatch;
+export const deleteTryoutCatalogMetaBatch = registeredFunctions.contentSync.mutations.maintenance.deleteTryoutCatalogMetaBatch;
+export const deleteTryoutEntitlementsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteTryoutEntitlementsBatch;
+export const deleteTryoutLeaderboardEntriesBatch = registeredFunctions.contentSync.mutations.maintenance.deleteTryoutLeaderboardEntriesBatch;
+export const deleteTryoutPartAttemptsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteTryoutPartAttemptsBatch;
+export const deleteTryoutPartSetsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteTryoutPartSetsBatch;
+export const deleteTryoutRuntimeBatch = registeredFunctions.contentSync.mutations.maintenance.deleteTryoutRuntimeBatch;
+export const deleteTryoutsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteTryoutsBatch;
+export const deleteUserTryoutStatsBatch = registeredFunctions.contentSync.mutations.maintenance.deleteUserTryoutStatsBatch;

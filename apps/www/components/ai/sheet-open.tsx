@@ -1,10 +1,10 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import type {
   ContentType,
   Locale,
-} from "@repo/backend/convex/lib/validators/contents";
+} from "@repo/backend/confect/modules/content/content.schemas";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { AudioPlayerProvider } from "@repo/design-system/components/ui/audio-player";
 import { cleanSlug } from "@repo/utilities/helper";
@@ -25,7 +25,7 @@ interface Props {
 export function AiSheetOpen({ audio, contextTitle }: Props) {
   const sheetContextTitle = contextTitle?.trim() ?? "";
   const { data, isPending } = useQueryWithStatus(
-    api.audioStudies.queries.public.getAudioBySlug,
+    api.audioStudies.queries.publicFunctions.getAudioBySlug,
     audio
       ? {
           slug: cleanSlug(audio.slug),

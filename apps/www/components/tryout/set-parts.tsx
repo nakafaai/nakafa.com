@@ -1,7 +1,10 @@
 "use client";
 
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
-import type { api } from "@repo/backend/convex/_generated/api";
+import type {
+  api,
+  FunctionReturnType,
+} from "@repo/backend/confect/_generated/functionReferences";
 import { parseExercisesMaterial } from "@repo/contents/_lib/exercises/route";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
@@ -12,7 +15,6 @@ import {
   NumberFormatGroup,
 } from "@repo/design-system/components/ui/number-flow";
 import { cn } from "@repo/design-system/lib/utils";
-import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
 import type { ReactNode } from "react";

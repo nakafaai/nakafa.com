@@ -1,4 +1,4 @@
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { fetchAuthQuery, getToken } from "@/lib/auth/server";

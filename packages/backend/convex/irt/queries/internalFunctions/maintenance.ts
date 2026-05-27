@@ -1,0 +1,6 @@
+import registeredFunctions from "../../../../confect/_generated/registeredFunctions";
+
+export const getCalibrationCacheIntegrity = registeredFunctions.irt.queries.internalFunctions.maintenance.getCalibrationCacheIntegrity;
+export const getCalibrationQueueAttemptIntegrity = registeredFunctions.irt.queries.internalFunctions.maintenance.getCalibrationQueueAttemptIntegrity;
+export const getCalibrationQueueEntryIntegrity = registeredFunctions.irt.queries.internalFunctions.maintenance.getCalibrationQueueEntryIntegrity;
+export const getScaleQualityIntegrity = registeredFunctions.irt.queries.internalFunctions.maintenance.getScaleQualityIntegrity;

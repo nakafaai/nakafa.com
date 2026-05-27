@@ -1,10 +1,10 @@
 import { Certificate02Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import {
   isTryoutProduct,
   type TryoutProduct,
   tryoutProducts,
-} from "@repo/backend/convex/tryouts/products";
+} from "@repo/backend/confect/modules/tryout/products";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { fetchQuery } from "convex/nextjs";

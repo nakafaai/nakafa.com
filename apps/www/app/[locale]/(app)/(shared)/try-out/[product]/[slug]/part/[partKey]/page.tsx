@@ -1,4 +1,4 @@
-import { isTryoutProduct } from "@repo/backend/convex/tryouts/products";
+import { isTryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { notFound } from "next/navigation";
 import { TryoutPartBody } from "@/app/[locale]/(app)/(shared)/try-out/[product]/[slug]/part/[partKey]/body";
 import { getLocaleOrThrow } from "@/lib/i18n/params";

@@ -1,0 +1,6 @@
+import registeredFunctions from "../../../confect/_generated/registeredFunctions";
+
+export const cleanupStalePolarCustomer = registeredFunctions.customers.actions.internalFunctions.cleanupStalePolarCustomer;
+export const cleanupUserData = registeredFunctions.customers.actions.internalFunctions.cleanupUserData;
+export const repairCustomer = registeredFunctions.customers.actions.internalFunctions.repairCustomer;
+export const syncCustomer = registeredFunctions.customers.actions.internalFunctions.syncCustomer;

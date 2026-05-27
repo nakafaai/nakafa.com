@@ -1,8 +1,8 @@
 "use client";
 
 import { useDebouncedValue } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
-import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
+import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";

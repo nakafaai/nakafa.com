@@ -1,3 +1,5 @@
+import type { Ref } from "@confect/core";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   parseExerciseMaterialFile,
   parseSubjectMaterialFile,
@@ -34,8 +36,8 @@ import { Effect } from "effect";
 
 const deleteStaleItems = Effect.fn("sync.deleteStaleItems")(function* (
   config: ConvexConfig,
-  mutationPath: string,
-  paramName: string,
+  mutationRef: Ref.AnyMutation,
+  getArgs: (ids: readonly string[]) => Ref.Args<Ref.Any>,
   items: readonly StaleItem[],
   successLabel: string,
   batchSize = items.length
@@ -51,8 +53,8 @@ const deleteStaleItems = Effect.fn("sync.deleteStaleItems")(function* (
     const result = yield* callConvex(
       config,
       "mutation",
-      mutationPath,
-      { [paramName]: ids },
+      mutationRef,
+      getArgs(ids),
       DeleteResultSchema
     );
     deleted += result.deleted;
@@ -177,7 +179,7 @@ const cleanUnusedAuthors = Effect.fn("sync.cleanUnusedAuthors")(function* (
       const result = yield* callConvex(
         config,
         "mutation",
-        "contentSync/mutations/authors:deleteUnusedAuthors",
+        refs.internal.contentSync.mutations.authors.deleteUnusedAuthors,
         { authorIds: batch },
         DeleteResultSchema
       );
@@ -247,40 +249,41 @@ export const clean = Effect.fn("sync.clean")(function* (
 
       yield* deleteStaleItems(
         config,
-        "contentSync/mutations/articles:deleteStaleArticles",
-        "articleIds",
+        refs.internal.contentSync.mutations.articles.deleteStaleArticles,
+        (articleIds) => ({ articleIds }),
         stale.staleArticles,
         "stale articles",
         BATCH_SIZES.staleArticles
       );
       yield* deleteStaleItems(
         config,
-        "contentSync/mutations/subjects:deleteStaleSubjectTopics",
-        "topicIds",
+        refs.internal.contentSync.mutations.subjects.deleteStaleSubjectTopics,
+        (topicIds) => ({ topicIds }),
         stale.staleSubjectTopics,
         "stale subject topics (and their sections)",
         BATCH_SIZES.staleSubjectTopics
       );
       yield* deleteStaleItems(
         config,
-        "contentSync/mutations/subjects:deleteStaleSubjectSections",
-        "sectionIds",
+        refs.internal.contentSync.mutations.subjects.deleteStaleSubjectSections,
+        (sectionIds) => ({ sectionIds }),
         stale.staleSubjectSections,
         "stale subject sections",
         BATCH_SIZES.staleSubjectSections
       );
       yield* deleteStaleItems(
         config,
-        "contentSync/mutations/exercises:deleteStaleExerciseQuestions",
-        "questionIds",
+        refs.internal.contentSync.mutations.exercises
+          .deleteStaleExerciseQuestions,
+        (questionIds) => ({ questionIds }),
         stale.staleExerciseQuestions,
         "stale exercise questions",
         BATCH_SIZES.staleExerciseQuestions
       );
       yield* deleteStaleItems(
         config,
-        "contentSync/mutations/exercises:deleteStaleExerciseSets",
-        "setIds",
+        refs.internal.contentSync.mutations.exercises.deleteStaleExerciseSets,
+        (setIds) => ({ setIds }),
         stale.staleExerciseSets,
         "stale exercise sets",
         BATCH_SIZES.staleExerciseSets

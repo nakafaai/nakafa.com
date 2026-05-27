@@ -6,7 +6,8 @@ import {
   Tick01Icon,
   TransactionHistoryIcon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionReturnType } from "@repo/backend/confect/_generated/functionReferences";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import {
   Autocomplete,
   AutocompleteCollection,
@@ -27,7 +28,6 @@ import {
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useConvexAuth, usePaginatedQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";

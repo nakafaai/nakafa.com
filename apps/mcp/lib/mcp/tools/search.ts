@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { api as convexApi } from "@repo/backend/convex/_generated/api";
+import { api as convexApi } from "@repo/backend/confect/_generated/functionReferences";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,

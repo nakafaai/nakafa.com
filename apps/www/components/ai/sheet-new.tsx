@@ -2,7 +2,7 @@
 
 import { GeometricShapes01Icon } from "@hugeicons/core-free-icons";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import {
   Conversation,
   ConversationContent,

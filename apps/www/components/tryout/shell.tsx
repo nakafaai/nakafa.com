@@ -1,7 +1,7 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import { isTryoutProduct } from "@repo/backend/convex/tryouts/products";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
+import { isTryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { routing } from "@repo/internationalization/src/routing";
 import { useConvexAuth } from "convex/react";

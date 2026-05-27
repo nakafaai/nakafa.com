@@ -1,25 +1,10 @@
 import { captureServerException } from "@repo/analytics/posthog/server";
-import { api } from "@repo/backend/convex/_generated/api";
-import { ConvexError } from "convex/values";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { cache } from "react";
 import { fetchAuthQuery } from "@/lib/auth/server";
+import { hasApplicationErrorCode } from "@/lib/errors";
 
 const SCHOOL_SWITCHER_PAGE_SIZE = 20;
-
-/** Return whether an unknown error is one expected Convex application error. */
-function hasConvexErrorCode(error: unknown, allowedCodes: readonly string[]) {
-  if (!(error instanceof ConvexError)) {
-    return false;
-  }
-
-  const data = error.data;
-
-  if (typeof data !== "object" || data === null || !("code" in data)) {
-    return false;
-  }
-
-  return typeof data.code === "string" && allowedCodes.includes(data.code);
-}
 
 /**
  * Load the authenticated school route snapshot.
@@ -35,7 +20,10 @@ export const getSchoolRouteSnapshot = cache(
       });
     } catch (error) {
       if (
-        hasConvexErrorCode(error, ["SCHOOL_NOT_FOUND", "MEMBERSHIP_NOT_FOUND"])
+        hasApplicationErrorCode(error, [
+          "SCHOOL_NOT_FOUND",
+          "MEMBERSHIP_NOT_FOUND",
+        ])
       ) {
         return null;
       }
@@ -61,7 +49,7 @@ export async function getClassRouteSnapshot({ classId }: { classId: string }) {
     return await fetchAuthQuery(api.classes.queries.getClassRoute, { classId });
   } catch (error) {
     if (
-      hasConvexErrorCode(error, [
+      hasApplicationErrorCode(error, [
         "ACCESS_DENIED",
         "CLASS_ARCHIVED",
         "CLASS_NOT_FOUND",

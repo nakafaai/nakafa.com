@@ -1,4 +1,4 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { use } from "react";
 import { UserHeader } from "@/components/user/header";

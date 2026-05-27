@@ -1,4 +1,4 @@
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";

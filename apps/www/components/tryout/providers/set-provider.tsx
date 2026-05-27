@@ -1,9 +1,12 @@
 "use client";
 
-import type { api } from "@repo/backend/convex/_generated/api";
+import type {
+  api,
+  FunctionArgs,
+  FunctionReturnType,
+} from "@repo/backend/confect/_generated/functionReferences";
 import { preloadedQueryResult } from "convex/nextjs";
 import { type Preloaded, useConvexAuth, usePreloadedQuery } from "convex/react";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { type PropsWithChildren, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";

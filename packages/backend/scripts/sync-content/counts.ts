@@ -1,3 +1,4 @@
+import refs from "@repo/backend/confect/_generated/refs";
 import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
   ContentCountsSchema,
@@ -82,7 +83,7 @@ const countTableDocuments = Effect.fn("sync.countTableDocuments")(function* (
     ({ continueCursor, isDone, pageSize } = yield* callConvex(
       config,
       "query",
-      "contentSync/queries/counts:countTablePage",
+      refs.internal.contentSync.queries.counts.countTablePage,
       {
         tableName,
         paginationOpts: {

@@ -1,4 +1,4 @@
-import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
+import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { useTranslations } from "next-intl";
 

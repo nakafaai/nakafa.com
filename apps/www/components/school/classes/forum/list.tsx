@@ -5,9 +5,9 @@ import {
   MessageMultiple02Icon,
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import type { UserData } from "@repo/backend/convex/lib/helpers/user";
+import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
+import type { UserData } from "@repo/backend/confect/modules/identity/users.types";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";

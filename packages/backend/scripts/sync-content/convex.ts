@@ -2,6 +2,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import path from "node:path";
 
+import { Ref } from "@confect/core";
 import { logWarning } from "@repo/backend/scripts/sync-content/logging";
 import {
   ConvexAuthConfigSchema,
@@ -61,10 +62,7 @@ const missingConfigMessage = (options: SyncOptions) => {
 const formatParseError = (error: ParseResult.ParseError) =>
   ParseResult.TreeFormatter.formatErrorSync(error);
 
-const parseConvexResponse = <A, I>(
-  json: unknown,
-  valueSchema: Schema.Schema<A, I, never>
-) =>
+const parseConvexResponse = (json: unknown) =>
   Effect.gen(function* () {
     const response = yield* Schema.decodeUnknown(ConvexResponseSchema)(
       json
@@ -85,14 +83,7 @@ const parseConvexResponse = <A, I>(
       );
     }
 
-    return yield* Schema.decodeUnknown(valueSchema)(response.value).pipe(
-      Effect.mapError(
-        (error) =>
-          new ConvexResponseError({
-            message: `Invalid Convex value: ${formatParseError(error)}`,
-          })
-      )
-    );
+    return response.value;
   });
 
 /**
@@ -160,10 +151,18 @@ export const getConvexConfig = Effect.fn("scripts.getConvexConfig")(function* (
 export const callConvex = Effect.fn("scripts.callConvex")(function* <A, I>(
   config: ConvexConfig,
   endpoint: "action" | "mutation" | "query",
-  functionPath: string,
-  args: Record<string, unknown>,
+  ref: Ref.Any,
+  args: Ref.Args<Ref.Any>,
   schema: Schema.Schema<A, I, never>
 ) {
+  const encodedArgs = yield* Ref.encodeArgs(ref, args).pipe(
+    Effect.mapError(
+      (error) =>
+        new ConvexRequestError({
+          message: `Invalid Convex args: ${formatParseError(error)}`,
+        })
+    )
+  );
   const response = yield* Effect.tryPromise({
     try: () =>
       fetch(`${config.url}/api/${endpoint}`, {
@@ -173,8 +172,8 @@ export const callConvex = Effect.fn("scripts.callConvex")(function* <A, I>(
           Authorization: `Convex ${config.accessToken}`,
         },
         body: JSON.stringify({
-          path: functionPath,
-          args,
+          path: Ref.getConvexFunctionName(ref),
+          args: encodedArgs,
           format: "json",
         }),
       }),
@@ -187,5 +186,21 @@ export const callConvex = Effect.fn("scripts.callConvex")(function* <A, I>(
       new ConvexResponseError({ message: getUnknownMessage(error) }),
   });
 
-  return yield* parseConvexResponse(json, schema);
+  const value = yield* parseConvexResponse(json);
+  const decodedValue = yield* Ref.decodeReturns(ref, value).pipe(
+    Effect.mapError(
+      (error) =>
+        new ConvexResponseError({
+          message: `Invalid Convex value: ${formatParseError(error)}`,
+        })
+    )
+  );
+  return yield* Schema.decodeUnknown(schema)(decodedValue).pipe(
+    Effect.mapError(
+      (error) =>
+        new ConvexResponseError({
+          message: `Invalid Convex value: ${formatParseError(error)}`,
+        })
+    )
+  );
 });

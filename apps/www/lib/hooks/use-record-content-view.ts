@@ -6,11 +6,11 @@ import {
   useTimeout,
 } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import type {
   ContentViewRef,
   Locale,
-} from "@repo/backend/convex/lib/validators/contents";
+} from "@repo/backend/confect/modules/content/content.schemas";
 import { generateNanoId } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { Effect } from "effect";

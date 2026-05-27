@@ -4,8 +4,11 @@ import {
   captureServerException,
   extractDistinctIdFromPostHogCookie,
 } from "@repo/analytics/posthog/server";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import type {
+  FunctionArgs,
+  FunctionReturnType,
+} from "@repo/backend/confect/_generated/functionReferences";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { cookies } from "next/headers";
 import { after } from "next/server";
 import {

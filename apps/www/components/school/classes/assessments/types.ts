@@ -1,7 +1,9 @@
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type {
+  api,
+  FunctionReturnType,
+} from "@repo/backend/confect/_generated/functionReferences";
 
 /** One authored assessment row returned by the class assessments paginated query. */
 export type Assessment = FunctionReturnType<
-  typeof api.assessments.queries.public.list.listAssessments
+  typeof api.assessments.queries.publicFunctions.list.listAssessments
 >["page"][number];

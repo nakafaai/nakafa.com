@@ -5,8 +5,8 @@ import {
   Cancel01Icon,
   Login01Icon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc } from "@repo/backend/confect/_generated/dataModel";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import {
   Avatar,
   AvatarFallback,

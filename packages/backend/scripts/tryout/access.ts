@@ -1,4 +1,5 @@
-import { tryoutProducts } from "@repo/backend/convex/tryouts/products";
+import refs from "@repo/backend/confect/_generated/refs";
+import { tryoutProducts } from "@repo/backend/confect/modules/tryout/products";
 import { formatScriptCause } from "@repo/backend/scripts/lib/errors";
 import {
   callConvex,
@@ -6,7 +7,7 @@ import {
 } from "@repo/backend/scripts/sync-content/convex";
 import { logError } from "@repo/backend/scripts/sync-content/logging";
 import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
-import { Effect, Schema } from "effect";
+import { Clock, Effect, Schema } from "effect";
 
 const TRYOUT_ACCESS_PAGE_SIZE = 100;
 
@@ -60,7 +61,7 @@ const getTryoutAccessCampaignIntegrity = Effect.fn(
   "tryout.getTryoutAccessCampaignIntegrity"
 )(function* (prod: boolean) {
   const config = yield* getConvexConfig({ prod });
-  const nowMs = Date.now();
+  const nowMs = yield* Clock.currentTimeMillis;
   let continueCursor: string | null = null;
   let overdueActiveCampaignCount = 0;
   let overduePendingCompetitionCount = 0;
@@ -70,7 +71,8 @@ const getTryoutAccessCampaignIntegrity = Effect.fn(
     const page: TryoutAccessCampaignIntegrityPage = yield* callConvex(
       config,
       "query",
-      "tryoutAccess/queries/internal/maintenance:getTryoutAccessCampaignIntegrity",
+      refs.internal.tryoutAccess.queries.internalFunctions.maintenance
+        .getTryoutAccessCampaignIntegrity,
       {
         nowMs,
         paginationOpts: {
@@ -102,7 +104,7 @@ const getTryoutAccessGrantIntegrity = Effect.fn(
   "tryout.getTryoutAccessGrantIntegrity"
 )(function* (prod: boolean) {
   const config = yield* getConvexConfig({ prod });
-  const nowMs = Date.now();
+  const nowMs = yield* Clock.currentTimeMillis;
   let continueCursor: string | null = null;
   let overdueActiveGrantCount = 0;
 
@@ -110,7 +112,8 @@ const getTryoutAccessGrantIntegrity = Effect.fn(
     const page: TryoutAccessGrantIntegrityPage = yield* callConvex(
       config,
       "query",
-      "tryoutAccess/queries/internal/maintenance:getTryoutAccessGrantIntegrity",
+      refs.internal.tryoutAccess.queries.internalFunctions.maintenance
+        .getTryoutAccessGrantIntegrity,
       {
         nowMs,
         paginationOpts: {
@@ -138,7 +141,7 @@ const getTryoutAccessEntitlementIntegrity = Effect.fn(
   "tryout.getTryoutAccessEntitlementIntegrity"
 )(function* (prod: boolean) {
   const config = yield* getConvexConfig({ prod });
-  const nowMs = Date.now();
+  const nowMs = yield* Clock.currentTimeMillis;
   let continueCursor: string | null = null;
   let overdueEntitlementCount = 0;
 
@@ -146,7 +149,8 @@ const getTryoutAccessEntitlementIntegrity = Effect.fn(
     const page: TryoutAccessEntitlementIntegrityPage = yield* callConvex(
       config,
       "query",
-      "tryoutAccess/queries/internal/maintenance:getTryoutAccessEntitlementIntegrity",
+      refs.internal.tryoutAccess.queries.internalFunctions.maintenance
+        .getTryoutAccessEntitlementIntegrity,
       {
         nowMs,
         paginationOpts: {
@@ -185,7 +189,8 @@ const getCompetitionCampaignProductOverlapIntegrity = Effect.fn(
       const page: CompetitionCampaignProductPage = yield* callConvex(
         config,
         "query",
-        "tryoutAccess/queries/internal/maintenance:listCompetitionCampaignProductsByProduct",
+        refs.internal.tryoutAccess.queries.internalFunctions.maintenance
+          .listCompetitionCampaignProductsByProduct,
         {
           product,
           paginationOpts: {
@@ -217,10 +222,35 @@ const getCompetitionCampaignProductOverlapIntegrity = Effect.fn(
   };
 });
 
-/** Runs access-state verification for dev or prod. */
+/** Sweeps overdue access state transitions through the Confect ref. */
+const repairTryoutAccess = Effect.fn("tryout.repairAccess")(function* (
+  prod: boolean
+) {
+  const config = yield* getConvexConfig({ prod });
+
+  yield* callConvex(
+    config,
+    "mutation",
+    refs.internal.tryoutAccess.mutations.internalFunctions.status.sweepStates,
+    {},
+    Schema.Null
+  );
+
+  yield* Effect.sync(() => {
+    process.stdout.write(`${JSON.stringify({ repaired: true }, null, 2)}\n`);
+  });
+});
+
+/** Runs access-state verification or repair for dev or prod. */
 const main = Effect.fn("tryout.verifyAccess")(function* () {
   const flags = yield* Effect.sync(() => process.argv.slice(2));
   const prod = flags.includes("--prod");
+
+  if (flags.includes("--repair")) {
+    yield* repairTryoutAccess(prod);
+    return;
+  }
+
   const [campaigns, entitlements, grants, overlap] = yield* Effect.all([
     getTryoutAccessCampaignIntegrity(prod),
     getTryoutAccessEntitlementIntegrity(prod),

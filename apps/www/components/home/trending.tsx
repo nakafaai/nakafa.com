@@ -1,8 +1,8 @@
 "use client";
 
 import { ArrowDown02Icon, ViewIcon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
-import { getTrendingTimeRange } from "@repo/backend/convex/subjectSections/utils";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
+import { getTrendingTimeRange } from "@repo/backend/confect/modules/content/trending/time";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { Badge } from "@repo/design-system/components/ui/badge";

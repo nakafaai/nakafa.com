@@ -1,6 +1,6 @@
 "use client";
 
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import type { ReactNode } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import type { Forum } from "@/components/school/classes/forum/conversation/data/entities";

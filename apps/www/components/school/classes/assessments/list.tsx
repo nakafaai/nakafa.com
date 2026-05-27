@@ -1,7 +1,7 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
+import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
@@ -21,7 +21,7 @@ export function SchoolClassesAssessmentsList() {
   const canManage = can(PERMISSIONS.ASSESSMENT_UPDATE);
 
   const { results, status, loadMore } = usePaginatedQuery(
-    api.assessments.queries.public.list.listAssessments,
+    api.assessments.queries.publicFunctions.list.listAssessments,
     {
       schoolId,
       classId,

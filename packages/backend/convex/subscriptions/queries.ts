@@ -1,34 +1,3 @@
-import { query } from "@repo/backend/convex/_generated/server";
-import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
-import { v } from "convex/values";
+import registeredFunctions from "../../confect/_generated/registeredFunctions";
 
-export const hasActiveSubscription = query({
-  args: {
-    productId: v.string(),
-  },
-  returns: v.boolean(),
-  handler: async (ctx, args) => {
-    const { appUser } = await requireAuth(ctx);
-
-    const customer = await ctx.db
-      .query("customers")
-      .withIndex("by_userId", (q) => q.eq("userId", appUser._id))
-      .unique();
-
-    if (!customer) {
-      return false;
-    }
-
-    const subscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_customerId_and_status_and_productId", (q) =>
-        q
-          .eq("customerId", customer.id)
-          .eq("status", "active")
-          .eq("productId", args.productId)
-      )
-      .first();
-
-    return subscription !== null;
-  },
-});
+export const hasActiveSubscription = registeredFunctions.subscriptions.queries.hasActiveSubscription;

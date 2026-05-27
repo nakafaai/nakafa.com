@@ -1,4 +1,4 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import { memo, type ReactNode, useMemo, useRef } from "react";
 import { ControlsProvider } from "@/components/school/classes/forum/conversation/context/use-controls";
 import { DataProvider } from "@/components/school/classes/forum/conversation/context/use-data";

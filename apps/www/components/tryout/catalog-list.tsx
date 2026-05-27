@@ -1,10 +1,10 @@
 "use client";
 
-import { api } from "@repo/backend/convex/_generated/api";
-import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
+import type { FunctionReturnType } from "@repo/backend/confect/_generated/functionReferences";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
+import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { usePaginatedQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";

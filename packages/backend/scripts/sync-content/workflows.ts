@@ -1,3 +1,4 @@
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   getUnknownMessage,
   ScriptFailureError,
@@ -50,7 +51,7 @@ import type {
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
 import { verify } from "@repo/backend/scripts/sync-content/verify";
-import { Effect } from "effect";
+import { Clock, Effect } from "effect";
 
 const logSyncSummary = (
   authorResult: { created: number },
@@ -305,8 +306,9 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   if (!syncState?.lastSyncCommit) {
     log("No previous sync state found. Running full sync...\n");
     yield* syncAll(config, options);
+    const lastSyncTimestamp = yield* Clock.currentTimeMillis;
     yield* saveSyncState(
-      { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
+      { lastSyncTimestamp, lastSyncCommit: currentCommit },
       options.prod ?? false
     );
     return;
@@ -325,8 +327,9 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   const changedFiles = yield* getChangedFilesSince(syncState.lastSyncCommit);
   if (changedFiles.size === 0) {
     logSuccess("No tracked or untracked content files changed. Nothing to do!");
+    const lastSyncTimestamp = yield* Clock.currentTimeMillis;
     yield* saveSyncState(
-      { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
+      { lastSyncTimestamp, lastSyncCommit: currentCommit },
       options.prod ?? false
     );
     return;
@@ -354,7 +357,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
       const authorResult = yield* callConvex(
         config,
         "mutation",
-        "contentSync/mutations/authors:bulkSyncAuthors",
+        refs.internal.contentSync.mutations.authors.bulkSyncAuthors,
         { authorNames: batch },
         AuthorSyncResultSchema
       );
@@ -449,8 +452,9 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
   }
 
   logSyncMetrics(metrics);
+  const lastSyncTimestamp = yield* Clock.currentTimeMillis;
   yield* saveSyncState(
-    { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
+    { lastSyncTimestamp, lastSyncCommit: currentCommit },
     options.prod ?? false
   );
   log("\n=== INCREMENTAL SYNC COMPLETE ===");
@@ -484,8 +488,9 @@ export const syncFull = Effect.fn("sync.full")(function* (
 
       log("\n");
       yield* verify(config, options);
+      const lastSyncTimestamp = yield* Clock.currentTimeMillis;
       yield* saveSyncState(
-        { lastSyncTimestamp: Date.now(), lastSyncCommit: currentCommit },
+        { lastSyncTimestamp, lastSyncCommit: currentCommit },
         options.prod ?? false
       );
     })

@@ -1,11 +1,13 @@
 "use client";
 
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
+import type {
+  api,
+  FunctionReturnType,
+} from "@repo/backend/confect/_generated/functionReferences";
+import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { preloadedQueryResult } from "convex/nextjs";
 import { type Preloaded, useConvexAuth, usePreloadedQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";

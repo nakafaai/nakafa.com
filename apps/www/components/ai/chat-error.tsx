@@ -5,8 +5,7 @@ import {
   PartyIcon,
   Settings01Icon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
-import { products } from "@repo/backend/convex/utils/polar/products";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -22,6 +21,7 @@ import { useTranslations } from "next-intl";
 import { Activity, memo, useTransition } from "react";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
 import { useChat } from "@/components/ai/context/use-chat";
+import { products } from "@/lib/polar/products";
 
 export const AiChatError = memo(() => {
   const t = useTranslations("Ai");
@@ -65,10 +65,10 @@ const ButtonCheckout = memo(() => {
     { productId: products.pro.id }
   );
   const generateCheckoutLink = useAction(
-    api.customers.actions.public.generateCheckoutLink
+    api.customers.actions.publicFunctions.generateCheckoutLink
   );
   const generateCustomerPortalUrl = useAction(
-    api.customers.actions.public.generateCustomerPortalUrl
+    api.customers.actions.publicFunctions.generateCustomerPortalUrl
   );
 
   const handleCheckout = () => {

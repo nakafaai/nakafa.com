@@ -2,7 +2,7 @@
 
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { PERMISSIONS } from "@repo/backend/convex/lib/helpers/permissions";
+import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";

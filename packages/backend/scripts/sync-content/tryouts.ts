@@ -1,4 +1,5 @@
-import { tryoutProducts } from "@repo/backend/convex/tryouts/products";
+import refs from "@repo/backend/confect/_generated/refs";
+import { tryoutProducts } from "@repo/backend/confect/modules/tryout/products";
 import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
@@ -58,7 +59,7 @@ export const syncTryouts = Effect.fn("sync.tryouts")(function* (
       const result = yield* callConvex(
         config,
         "mutation",
-        "contentSync/mutations/tryouts:bulkSyncTryouts",
+        refs.internal.contentSync.mutations.tryouts.bulkSyncTryouts,
         {
           product,
           locale,

@@ -1,3 +1,4 @@
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   formatScriptCause,
   ScriptFailureError,
@@ -67,7 +68,8 @@ const getCalibrationCacheIntegrity = Effect.fn(
     const page: CalibrationCacheIntegrityPage = yield* callConvex(
       config,
       "query",
-      "irt/queries/internal/maintenance:getCalibrationCacheIntegrity",
+      refs.internal.irt.queries.internalFunctions.maintenance
+        .getCalibrationCacheIntegrity,
       {
         paginationOpts: {
           cursor: continueCursor,
@@ -103,7 +105,8 @@ const getScaleQualityIntegrity = Effect.fn("irt.getScaleQualityIntegrity")(
       const page: ScaleQualityIntegrityPage = yield* callConvex(
         config,
         "query",
-        "irt/queries/internal/maintenance:getScaleQualityIntegrity",
+        refs.internal.irt.queries.internalFunctions.maintenance
+          .getScaleQualityIntegrity,
         {
           paginationOpts: {
             cursor: continueCursor,
@@ -145,7 +148,8 @@ const getCalibrationQueueIntegrity = Effect.fn(
     const page: CalibrationQueueAttemptIntegrityPage = yield* callConvex(
       config,
       "query",
-      "irt/queries/internal/maintenance:getCalibrationQueueAttemptIntegrity",
+      refs.internal.irt.queries.internalFunctions.maintenance
+        .getCalibrationQueueAttemptIntegrity,
       {
         paginationOpts: {
           cursor: attemptCursor,
@@ -170,7 +174,8 @@ const getCalibrationQueueIntegrity = Effect.fn(
     const page: CalibrationQueueEntryIntegrityPage = yield* callConvex(
       config,
       "query",
-      "irt/queries/internal/maintenance:getCalibrationQueueEntryIntegrity",
+      refs.internal.irt.queries.internalFunctions.maintenance
+        .getCalibrationQueueEntryIntegrity,
       {
         paginationOpts: {
           cursor: entryCursor,

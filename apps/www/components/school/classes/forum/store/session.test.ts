@@ -1,4 +1,4 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import type { CacheSnapshot } from "virtua";
 import { beforeEach, describe, expect, it } from "vitest";
 import {

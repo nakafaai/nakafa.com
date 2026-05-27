@@ -8,7 +8,7 @@ import { model } from "@repo/ai/config/vercel";
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import {
   type ModelMessage,
   Output,

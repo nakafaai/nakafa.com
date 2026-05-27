@@ -2,7 +2,7 @@
 
 import { type UseChatHelpers, useChat as useAiChat } from "@ai-sdk/react";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import { useTranslations } from "next-intl";
 import { type PropsWithChildren, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";

@@ -1,18 +1,10 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import path from "node:path";
-import { Config, Effect } from "effect";
+import { Config, ConfigProvider, Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const originalConvexUrl = process.env.CONVEX_URL;
-
 afterEach(() => {
-  if (originalConvexUrl) {
-    process.env.CONVEX_URL = originalConvexUrl;
-  } else {
-    delete process.env.CONVEX_URL;
-  }
-
   vi.resetModules();
   vi.restoreAllMocks();
 });
@@ -37,12 +29,6 @@ describe("sync-content runtime", () => {
     fs.writeFileSync(envFile, content);
 
     try {
-      if (shell) {
-        process.env.CONVEX_URL = shell;
-      } else {
-        delete process.env.CONVEX_URL;
-      }
-
       vi.doMock("@repo/backend/scripts/sync-content/paths", async () => {
         const actual = await vi.importActual<
           typeof import("@repo/backend/scripts/sync-content/paths")
@@ -59,7 +45,13 @@ describe("sync-content runtime", () => {
       );
       const value = await Effect.runPromise(
         Effect.gen(function* () {
-          const provider = yield* loadEnvProvider();
+          const shellValues =
+            shell === null
+              ? new Map<string, string>()
+              : new Map([["CONVEX_URL", shell]]);
+          const provider = yield* loadEnvProvider(
+            ConfigProvider.fromMap(shellValues)
+          );
 
           return yield* Config.string("CONVEX_URL").pipe(
             Effect.withConfigProvider(provider)

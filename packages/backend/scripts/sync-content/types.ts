@@ -1,4 +1,4 @@
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 
 export interface SyncOptions {
   authors?: boolean;

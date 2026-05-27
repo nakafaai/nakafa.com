@@ -1,0 +1,6 @@
+import registeredFunctions from "../../../../confect/_generated/registeredFunctions";
+
+export const getTryoutAccessCampaignIntegrity = registeredFunctions.tryoutAccess.queries.internalFunctions.maintenance.getTryoutAccessCampaignIntegrity;
+export const getTryoutAccessEntitlementIntegrity = registeredFunctions.tryoutAccess.queries.internalFunctions.maintenance.getTryoutAccessEntitlementIntegrity;
+export const getTryoutAccessGrantIntegrity = registeredFunctions.tryoutAccess.queries.internalFunctions.maintenance.getTryoutAccessGrantIntegrity;
+export const listCompetitionCampaignProductsByProduct = registeredFunctions.tryoutAccess.queries.internalFunctions.maintenance.listCompetitionCampaignProductsByProduct;

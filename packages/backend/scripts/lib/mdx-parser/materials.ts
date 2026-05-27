@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import {
   BACKSLASH_REGEX,
   BASE_PATH_REGEX,

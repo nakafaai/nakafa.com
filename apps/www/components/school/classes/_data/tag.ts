@@ -5,9 +5,9 @@ import {
   InternetIcon,
   NewsIcon,
 } from "@hugeicons/core-free-icons";
-import { STUDENT_FORUM_TAGS } from "@repo/backend/convex/classes/forums/utils/constants";
-import type { SchoolClassMemberRole } from "@repo/backend/convex/classes/schema";
-import type { SchoolMemberRole } from "@repo/backend/convex/schools/schema";
+import type { SchoolClassMemberRole } from "@repo/backend/confect/modules/school/classes.tables";
+import { STUDENT_FORUM_TAGS } from "@repo/backend/confect/modules/school/forums/constants";
+import type { SchoolMemberRole } from "@repo/backend/confect/modules/school/schools.tables";
 
 export const tagList = [
   {

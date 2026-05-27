@@ -24,18 +24,17 @@ const getUnknownMessage = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
 
 /** Builds an Effect config provider from backend `.env.local` plus the shell. */
-export const loadEnvProvider = Effect.fn("scripts.loadEnvProvider")(
-  function* () {
-    const env = ConfigProvider.fromEnv();
-    const map = yield* readEnvFileMap;
+export const loadEnvProvider = Effect.fn("scripts.loadEnvProvider")(function* (
+  env = ConfigProvider.fromEnv()
+) {
+  const map = yield* readEnvFileMap;
 
-    if (map.size === 0) {
-      return env;
-    }
-
-    return ConfigProvider.orElse(env, () => ConfigProvider.fromMap(map));
+  if (map.size === 0) {
+    return env;
   }
-);
+
+  return ConfigProvider.orElse(env, () => ConfigProvider.fromMap(map));
+});
 
 const readEnvFileMap = Effect.gen(function* () {
   const envPath = getBackendEnvFilePath();

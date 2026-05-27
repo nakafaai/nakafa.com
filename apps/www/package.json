@@ -20,6 +20,8 @@
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.193",
+    "@confect/core": "8.0.0",
+    "@confect/react": "8.0.0",
     "@convex-dev/better-auth": "^0.12.2",
     "@hugeicons/core-free-icons": "^4.1.4",
     "@hugeicons/react": "^1.1.6",

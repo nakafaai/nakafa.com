@@ -1,9 +1,9 @@
 "use client";
 
 import { analytics } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionReturnType } from "@repo/backend/confect/_generated/functionReferences";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
-import type { FunctionReturnType } from "convex/server";
 import { useEffect } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 

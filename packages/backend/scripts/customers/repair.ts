@@ -1,3 +1,5 @@
+import type { Ref } from "@confect/core";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   formatScriptCause,
   getUnknownMessage,
@@ -126,7 +128,8 @@ const getOptionalStringFlag = Effect.fn("customers.getOptionalStringFlag")(
 const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
   function* <T>(
     prod: boolean,
-    functionPath: string,
+    ref: Ref.AnyQuery,
+    getArgs: (cursor: string | null) => Ref.Args<typeof ref>,
     schema: Schema.Schema<PageResult<T>>
   ) {
     const config = yield* getConvexConfig({ prod });
@@ -137,13 +140,8 @@ const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
       const result: PageResult<T> = yield* callConvex(
         config,
         "query",
-        functionPath,
-        {
-          paginationOpts: {
-            cursor: continueCursor,
-            numItems: CUSTOMER_PAGE_SIZE,
-          },
-        },
+        ref,
+        getArgs(continueCursor),
         schema
       );
 
@@ -165,17 +163,29 @@ const getCustomerIntegrityReport = Effect.fn(
   const [users, customers, subscriptions] = yield* Effect.all([
     collectIntegrityPages(
       prod,
-      "customers/queries/internal/maintenance:listUsersForCustomerIntegrity",
+      refs.internal.customers.queries.internalFunctions.maintenance
+        .listUsersForCustomerIntegrity,
+      (cursor) => ({
+        paginationOpts: { cursor, numItems: CUSTOMER_PAGE_SIZE },
+      }),
       customerIntegrityUserPageSchema
     ),
     collectIntegrityPages(
       prod,
-      "customers/queries/internal/maintenance:listCustomersForIntegrity",
+      refs.internal.customers.queries.internalFunctions.maintenance
+        .listCustomersForIntegrity,
+      (cursor) => ({
+        paginationOpts: { cursor, numItems: CUSTOMER_PAGE_SIZE },
+      }),
       customerIntegrityCustomerPageSchema
     ),
     collectIntegrityPages(
       prod,
-      "customers/queries/internal/maintenance:listActiveSubscriptionsForIntegrity",
+      refs.internal.customers.queries.internalFunctions.maintenance
+        .listActiveSubscriptionsForIntegrity,
+      (cursor) => ({
+        paginationOpts: { cursor, numItems: CUSTOMER_PAGE_SIZE },
+      }),
       customerIntegritySubscriptionPageSchema
     ),
   ]);
@@ -211,7 +221,7 @@ const repairCustomerForUser = Effect.fn("customers.repairCustomerForUser")(
     return yield* callConvex(
       config,
       "action",
-      "customers/actions/internal:repairCustomer",
+      refs.internal.customers.actions.internalFunctions.repairCustomer,
       { userId },
       repairCustomerResultSchema
     );
@@ -236,7 +246,7 @@ const cleanupStalePolarCustomer = Effect.fn(
   return yield* callConvex(
     config,
     "action",
-    "customers/actions/internal:cleanupStalePolarCustomer",
+    refs.internal.customers.actions.internalFunctions.cleanupStalePolarCustomer,
     { existingExternalId, polarCustomerId },
     Schema.Null
   );

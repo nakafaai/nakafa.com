@@ -1,6 +1,6 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/convex/_generated/api";
-import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
+import { api } from "@repo/backend/confect/_generated/functionReferences";
+import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
