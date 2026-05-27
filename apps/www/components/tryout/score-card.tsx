@@ -1,9 +1,7 @@
 "use client";
 
-import type {
-  api,
-  FunctionReturnType,
-} from "@repo/backend/confect/_generated/functionReferences";
+import type refs from "@repo/backend/confect/_generated/refs";
+import type { ConvexFunctionReturn } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   NumberFormat,
   NumberFormatGroup,
@@ -20,7 +18,9 @@ import {
 import { TryoutStartCountdown } from "@/components/tryout/shared/start-countdown";
 
 type TryoutAttempt = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt>
+  ConvexFunctionReturn<
+    typeof refs.public.tryouts.queries.me.attempt.getUserTryoutAttempt
+  >
 >["attempt"];
 type TryoutScoreCardAttempt = Pick<
   TryoutAttempt,

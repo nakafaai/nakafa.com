@@ -1,5 +1,5 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import {
   ArrowDown02Icon,
   ArrowTurnForwardIcon,
@@ -11,7 +11,7 @@ import {
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -31,7 +31,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { useMutation } from "convex/react";
+
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
@@ -167,10 +167,10 @@ function MaterialGroupActions({
   const [editOpen, editHandlers] = useDisclosure(false);
 
   const reorderGroup = useMutation(
-    api.classes.materials.mutations.reorderMaterialGroup
+    refs.public.classes.materials.mutations.reorderMaterialGroup
   );
   const deleteGroup = useMutation(
-    api.classes.materials.mutations.deleteMaterialGroup
+    refs.public.classes.materials.mutations.deleteMaterialGroup
   );
 
   function handleMoveUp() {

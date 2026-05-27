@@ -1,5 +1,5 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import {
   ArrowTurnBackwardIcon,
   ArrowTurnForwardIcon,
@@ -7,8 +7,9 @@ import {
   ThumbsDownIcon,
   ThumbsUpIcon,
 } from "@hugeicons/core-free-icons";
-import type { FunctionReturnType } from "@repo/backend/confect/_generated/functionReferences";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import type { ConvexFunctionReturn } from "@repo/backend/confect/modules/shared/convexReferences";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -26,7 +27,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
-import { useMutation, usePaginatedQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useState, useTransition } from "react";
@@ -35,8 +36,8 @@ import { useUser } from "@/lib/context/use-user";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
-type CommentWithUser = FunctionReturnType<
-  typeof api.comments.queries.getCommentsBySlug
+type CommentWithUser = ConvexFunctionReturn<
+  typeof refs.public.comments.queries.getCommentsBySlug
 >["page"][number];
 
 interface Props {
@@ -45,7 +46,7 @@ interface Props {
 
 export function CommentsList({ slug }: Props) {
   const { results, status, loadMore } = usePaginatedQuery(
-    api.comments.queries.getCommentsBySlug,
+    toConvexReference(refs.public.comments.queries.getCommentsBySlug),
     { slug },
     { initialNumItems: 25 }
   );
@@ -172,8 +173,12 @@ function CommentActions({
 
   const [isPending, startTransition] = useTransition();
 
-  const voteOnComment = useMutation(api.comments.mutations.voteOnComment);
-  const deleteComment = useMutation(api.comments.mutations.deleteComment);
+  const voteOnComment = useMutation(
+    refs.public.comments.mutations.voteOnComment
+  );
+  const deleteComment = useMutation(
+    refs.public.comments.mutations.deleteComment
+  );
 
   function handleVote(vote: -1 | 1) {
     if (!user) {

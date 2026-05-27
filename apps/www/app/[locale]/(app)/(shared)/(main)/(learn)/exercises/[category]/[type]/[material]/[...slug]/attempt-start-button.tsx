@@ -1,5 +1,5 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import {
   ArrowDown01Icon,
   BookOpen02Icon,
@@ -10,7 +10,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   ButtonGroup,
@@ -36,7 +36,7 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
+
 import { formatDuration } from "date-fns";
 import { Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
@@ -98,7 +98,9 @@ export function StartExerciseButton({
   const resetTimeSpent = useExercise((state) => state.resetTimeSpent);
 
   const user = useUser((state) => state.user);
-  const startAttempt = useMutation(api.exercises.mutations.startAttempt);
+  const startAttempt = useMutation(
+    refs.public.exercises.mutations.startAttempt
+  );
 
   const form = useForm({
     defaultValues: defaultValues({ timeLimit: totalExercises * 90 }),

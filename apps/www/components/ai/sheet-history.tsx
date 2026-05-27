@@ -6,7 +6,8 @@ import {
   SquareLock01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -59,7 +60,7 @@ const SheetHistoryContent = memo(() => {
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
   const { results, status } = usePaginatedQuery(
-    api.chats.queries.getOwnChats,
+    toConvexReference(refs.public.chats.queries.getOwnChats),
     { type: "study" },
     { initialNumItems: 50 }
   );

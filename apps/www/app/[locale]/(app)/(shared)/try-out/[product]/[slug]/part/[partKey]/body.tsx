@@ -1,4 +1,5 @@
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   type TryoutProduct,
   tryoutProductPolicies,
@@ -42,7 +43,9 @@ async function getTryoutRuntime(
   }
 
   const preloadedRuntime = await preloadQuery(
-    api.tryouts.queries.me.part.getUserTryoutPartAttempt,
+    toConvexReference(
+      refs.public.tryouts.queries.me.part.getUserTryoutPartAttempt
+    ),
     {
       attemptId: args.attempt ?? undefined,
       locale: args.locale,

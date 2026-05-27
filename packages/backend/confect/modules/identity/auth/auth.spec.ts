@@ -1,12 +1,32 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import type { createClient } from "@convex-dev/better-auth";
 import { jwksSchema } from "@repo/backend/confect/modules/identity/auth/auth.schemas";
-import type {
-  BetterAuthCreateTrigger,
-  BetterAuthDeleteTrigger,
-  BetterAuthUpdateTrigger,
-} from "@repo/backend/confect/modules/identity/auth.adapter-types";
 import { Users } from "@repo/backend/confect/modules/identity/users.tables";
+import type { GenericDataModel } from "convex/server";
 import { Schema } from "effect";
+
+/**
+ * Better Auth trigger functions are native Convex mutations. Deriving their
+ * type from the component client avoids a spec -> refs -> spec cycle.
+ */
+type BetterAuthTriggerFunctions = ReturnType<
+  ReturnType<typeof createClient<GenericDataModel>>["triggersApi"]
+>;
+
+export const authOnCreateSpec =
+  FunctionSpec.convexInternalMutation<BetterAuthTriggerFunctions["onCreate"]>()(
+    "onCreate"
+  );
+
+export const authOnDeleteSpec =
+  FunctionSpec.convexInternalMutation<BetterAuthTriggerFunctions["onDelete"]>()(
+    "onDelete"
+  );
+
+export const authOnUpdateSpec =
+  FunctionSpec.convexInternalMutation<BetterAuthTriggerFunctions["onUpdate"]>()(
+    "onUpdate"
+  );
 
 const authCleanupGroup = GroupSpec.make("cleanup").addFunction(
   FunctionSpec.internalMutation({
@@ -57,15 +77,9 @@ const authGroup = GroupSpec.make("auth")
       ),
     })
   )
-  .addFunction(
-    FunctionSpec.convexInternalMutation<BetterAuthCreateTrigger>()("onCreate")
-  )
-  .addFunction(
-    FunctionSpec.convexInternalMutation<BetterAuthDeleteTrigger>()("onDelete")
-  )
-  .addFunction(
-    FunctionSpec.convexInternalMutation<BetterAuthUpdateTrigger>()("onUpdate")
-  )
+  .addFunction(authOnCreateSpec)
+  .addFunction(authOnDeleteSpec)
+  .addFunction(authOnUpdateSpec)
   .addGroup(authCleanupGroup);
 
 export { authGroup };

@@ -1,8 +1,8 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import { GeometricShapes01Icon } from "@hugeicons/core-free-icons";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   Conversation,
   ConversationContent,
@@ -15,7 +15,7 @@ import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
-import { useMutation } from "convex/react";
+
 import { useTranslations } from "next-intl";
 import { memo, useTransition } from "react";
 import { useAi } from "@/components/ai/context/use-ai";
@@ -41,7 +41,7 @@ export const SheetNew = memo(() => {
     isPending: state.isPending,
     user: state.user,
   }));
-  const createChat = useMutation(api.chats.mutations.createChat);
+  const createChat = useMutation(refs.public.chats.mutations.createChat);
 
   const [isPending, startTransition] = useTransition();
 

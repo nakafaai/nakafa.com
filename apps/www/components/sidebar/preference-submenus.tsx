@@ -21,7 +21,6 @@ import { IconCircleFilled } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
-import { useParams } from "next/navigation";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type * as React from "react";
@@ -51,25 +50,16 @@ function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const pathname = usePathname();
-  const params = useParams();
   const currentLocale = useLocale();
   const queryClient = useQueryClient();
 
   function handlePrefetch(locale: Locale) {
-    router.prefetch(
-      // @ts-expect-error -- The current route pathname and params are paired by Next.
-      { pathname, params },
-      { locale }
-    );
+    router.prefetch(pathname, { locale });
   }
 
   function handleChangeLocale(locale: Locale) {
     startTransition(async () => {
-      router.replace(
-        // @ts-expect-error -- The current route pathname and params are paired by Next.
-        { pathname, params },
-        { locale }
-      );
+      router.replace(pathname, { locale });
 
       if (window?.pagefind) {
         await window.pagefind.destroy?.();

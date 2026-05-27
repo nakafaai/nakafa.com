@@ -1,4 +1,4 @@
-import registeredFunctions from "../../confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
 
 export const getMySchoolLandingState = registeredFunctions.schools.queries.getMySchoolLandingState;
 export const getMySchoolsPage = registeredFunctions.schools.queries.getMySchoolsPage;

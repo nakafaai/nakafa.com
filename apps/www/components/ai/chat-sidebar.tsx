@@ -7,7 +7,8 @@ import {
   SquareLock01Icon,
 } from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -130,7 +131,7 @@ function AiChatSidebarChats({ q }: { q?: string }) {
   const type = "study" as const;
   const queryArgs = searchQuery ? { q: searchQuery, type } : { type };
   const { results, status } = usePaginatedQuery(
-    api.chats.queries.getOwnChats,
+    toConvexReference(refs.public.chats.queries.getOwnChats),
     queryArgs,
     { initialNumItems: 50 }
   );

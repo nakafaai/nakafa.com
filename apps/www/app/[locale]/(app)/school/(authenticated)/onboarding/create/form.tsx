@@ -1,8 +1,8 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import { PartyIcon } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -22,7 +22,7 @@ import {
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
+
 import { Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -42,7 +42,7 @@ export function SchoolOnboardingCreateForm() {
 
   const router = useRouter();
 
-  const createSchool = useMutation(api.schools.mutations.createSchool);
+  const createSchool = useMutation(refs.public.schools.mutations.createSchool);
 
   const form = useForm({
     defaultValues: schoolCreateDefaultValues,

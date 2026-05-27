@@ -1,7 +1,7 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import { PartyIcon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Dialog,
@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useMutation } from "convex/react";
+
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -56,7 +56,9 @@ function OnboardingContent({ user }: { user: CurrentUser }) {
 
   const [selectedRole, setSelectedRole] = useState<Role | undefined>(undefined);
 
-  const updateUserRole = useMutation(api.users.mutations.updateUserRole);
+  const updateUserRole = useMutation(
+    refs.public.users.mutations.updateUserRole
+  );
 
   const [isPending, startTransition] = useTransition();
 

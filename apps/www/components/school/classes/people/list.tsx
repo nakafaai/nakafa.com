@@ -2,7 +2,8 @@
 
 import { StudentIcon, TeacherIcon } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   Avatar,
   AvatarFallback,
@@ -29,7 +30,7 @@ export function SchoolClassesPeopleList() {
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
 
   const { results, status } = usePaginatedQuery(
-    api.classes.queries.getPeople,
+    toConvexReference(refs.public.classes.queries.getPeople),
     {
       classId,
       q: debouncedQ,

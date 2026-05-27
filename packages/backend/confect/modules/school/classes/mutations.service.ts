@@ -14,8 +14,14 @@ import type {
 } from "@repo/backend/confect/modules/school/classes.tables";
 import { getRandomClassImage } from "@repo/backend/confect/modules/school/images";
 import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
+import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import { Clock, Effect } from "effect";
 import { nanoid } from "nanoid";
+
+type ClassMemberFields = Omit<
+  Doc<"schoolClassMembers">,
+  "_creationTime" | "_id"
+>;
 
 /** Fails when an invite code cannot currently be used. */
 function validateInviteCodeState(
@@ -63,6 +69,84 @@ function validateNotExistingClassMembership(
   );
 }
 
+/** Applies the denormalized class member count for one membership write. */
+const updateClassMemberCount = Effect.fn(
+  "school.classes.updateClassMemberCount"
+)(function* (
+  ctx: ConvexMutationCtx,
+  classId: Id<"schoolClasses">,
+  role: ClassMemberFields["role"],
+  delta: number
+) {
+  const classData = yield* Effect.promise(() => ctx.db.get(classId));
+
+  if (!classData) {
+    return null;
+  }
+
+  if (role === "teacher") {
+    yield* Effect.promise(() =>
+      ctx.db.patch(classId, {
+        teacherCount: Math.max(classData.teacherCount + delta, 0),
+      })
+    );
+    return null;
+  }
+
+  yield* Effect.promise(() =>
+    ctx.db.patch(classId, {
+      studentCount: Math.max(classData.studentCount + delta, 0),
+    })
+  );
+
+  return null;
+});
+
+/** Inserts a class member and applies the side effects previously hidden in triggers. */
+const insertClassMember = Effect.fn("school.classes.insertClassMember")(
+  function* (ctx: ConvexMutationCtx, member: ClassMemberFields) {
+    const memberId = yield* Effect.promise(() =>
+      ctx.db.insert("schoolClassMembers", member)
+    );
+    const now = yield* Clock.currentTimeMillis;
+
+    const inviteCodeId = member.inviteCodeId;
+
+    if (inviteCodeId) {
+      const inviteCode = yield* Effect.promise(() => ctx.db.get(inviteCodeId));
+
+      if (inviteCode) {
+        yield* Effect.promise(() =>
+          ctx.db.patch(inviteCodeId, {
+            currentUsage: inviteCode.currentUsage + 1,
+            updatedAt: now,
+          })
+        );
+      }
+    }
+
+    yield* updateClassMemberCount(ctx, member.classId, member.role, 1);
+    yield* Effect.promise(() =>
+      ctx.db.insert("schoolActivityLogs", {
+        action: "class_member_added",
+        entityId: memberId,
+        entityType: "schoolClassMembers",
+        metadata: {
+          addedUserId: member.userId,
+          classId: member.classId,
+          enrollMethod: member.enrollMethod,
+          role: member.role,
+          teacherRole: member.teacherRole,
+        },
+        schoolId: member.schoolId,
+        userId: member.addedBy ?? member.userId,
+      })
+    );
+
+    return memberId;
+  }
+);
+
 /** Creates a class and class invite codes for a school. */
 export const createClass = Effect.fn("school.classes.createClass")(
   function* (args: {
@@ -98,17 +182,15 @@ export const createClass = Effect.fn("school.classes.createClass")(
       })
     );
 
-    yield* Effect.promise(() =>
-      ctx.db.insert("schoolClassMembers", {
-        addedBy: userId,
-        classId,
-        role: "teacher",
-        schoolId: args.schoolId,
-        teacherRole: "primary",
-        updatedAt: now,
-        userId,
-      })
-    );
+    yield* insertClassMember(ctx, {
+      addedBy: userId,
+      classId,
+      role: "teacher",
+      schoolId: args.schoolId,
+      teacherRole: "primary",
+      updatedAt: now,
+      userId,
+    });
 
     for (const role of SCHOOL_CLASS_INVITE_CODE_ROLES) {
       yield* Effect.promise(() =>
@@ -178,32 +260,28 @@ export const joinClass = Effect.fn("school.classes.joinClass")(
     }
 
     if (inviteCode.role === "teacher") {
-      yield* Effect.promise(() =>
-        ctx.db.insert("schoolClassMembers", {
-          classId: classData._id,
-          inviteCodeId: inviteCode._id,
-          role: "teacher",
-          schoolId: classData.schoolId,
-          teacherRole: "co-teacher",
-          updatedAt: now,
-          userId,
-        })
-      );
+      yield* insertClassMember(ctx, {
+        classId: classData._id,
+        inviteCodeId: inviteCode._id,
+        role: "teacher",
+        schoolId: classData.schoolId,
+        teacherRole: "co-teacher",
+        updatedAt: now,
+        userId,
+      });
 
       return { classId: classData._id };
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.insert("schoolClassMembers", {
-        classId: classData._id,
-        enrollMethod: "by_code",
-        inviteCodeId: inviteCode._id,
-        role: "student",
-        schoolId: classData.schoolId,
-        updatedAt: now,
-        userId,
-      })
-    );
+    yield* insertClassMember(ctx, {
+      classId: classData._id,
+      enrollMethod: "by_code",
+      inviteCodeId: inviteCode._id,
+      role: "student",
+      schoolId: classData.schoolId,
+      updatedAt: now,
+      userId,
+    });
 
     return { classId: classData._id };
   }
@@ -251,16 +329,14 @@ export const joinPublicClass = Effect.fn("school.classes.joinPublicClass")(
       );
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.insert("schoolClassMembers", {
-        classId: classData._id,
-        enrollMethod: "public",
-        role: "student",
-        schoolId: classData.schoolId,
-        updatedAt: now,
-        userId,
-      })
-    );
+    yield* insertClassMember(ctx, {
+      classId: classData._id,
+      enrollMethod: "public",
+      role: "student",
+      schoolId: classData.schoolId,
+      updatedAt: now,
+      userId,
+    });
 
     return { classId: classData._id };
   }

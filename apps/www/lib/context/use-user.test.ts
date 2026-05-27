@@ -1,3 +1,4 @@
+import { QueryResult } from "@confect/react";
 import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -8,7 +9,7 @@ const mocks = vi.hoisted(() => ({
   identify: vi.fn(),
   reset: vi.fn(),
   setPersonProperties: vi.fn(),
-  useQueryWithStatus: vi.fn(),
+  useQuery: vi.fn(),
 }));
 
 const PROVIDER_ERROR = /useUser must be used within a UserContextProvider/;
@@ -24,9 +25,14 @@ vi.mock("@repo/analytics/posthog", () => ({
   },
 }));
 
-vi.mock("@repo/backend/helpers/react", () => ({
-  useQueryWithStatus: mocks.useQueryWithStatus,
-}));
+vi.mock("@confect/react", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@confect/react")>();
+
+  return {
+    ...actual,
+    useQuery: mocks.useQuery,
+  };
+});
 
 function UserName() {
   const name = useUser((state) => state.user?.authUser.name ?? "guest");
@@ -44,7 +50,7 @@ describe("lib/context/use-user", () => {
     document.body.append(container);
     const root = createRoot(container);
 
-    mocks.useQueryWithStatus.mockReturnValue({ data: null, isPending: true });
+    mocks.useQuery.mockReturnValue(QueryResult.load(false));
 
     act(() => {
       root.render(
@@ -69,8 +75,8 @@ describe("lib/context/use-user", () => {
     const root = createRoot(container);
 
     mocks.getProperty.mockReturnValue(undefined);
-    mocks.useQueryWithStatus.mockReturnValue({
-      data: {
+    mocks.useQuery.mockReturnValue(
+      QueryResult.succeed({
         appUser: {
           _id: "user_123",
           _creationTime: SIGNED_UP_AT_MS,
@@ -78,9 +84,8 @@ describe("lib/context/use-user", () => {
           role: "teacher",
         },
         authUser: { email: "nabil@nakafa.com", name: "Nabil" },
-      },
-      isPending: false,
-    });
+      })
+    );
 
     act(() => {
       root.render(
@@ -115,17 +120,16 @@ describe("lib/context/use-user", () => {
     const root = createRoot(container);
 
     mocks.getProperty.mockReturnValue(undefined);
-    mocks.useQueryWithStatus.mockReturnValue({
-      data: {
+    mocks.useQuery.mockReturnValue(
+      QueryResult.succeed({
         appUser: {
           _id: "user_123",
           _creationTime: SIGNED_UP_AT_MS,
           plan: "pro",
         },
         authUser: { email: null, name: "Nabil" },
-      },
-      isPending: false,
-    });
+      })
+    );
 
     act(() => {
       root.render(
@@ -149,17 +153,16 @@ describe("lib/context/use-user", () => {
     const root = createRoot(container);
 
     mocks.getProperty.mockReturnValue("user_123");
-    mocks.useQueryWithStatus.mockReturnValue({
-      data: {
+    mocks.useQuery.mockReturnValue(
+      QueryResult.succeed({
         appUser: {
           _id: "user_123",
           _creationTime: SIGNED_UP_AT_MS,
           plan: "free",
         },
         authUser: { email: "nabil@nakafa.com", name: "Nabil" },
-      },
-      isPending: false,
-    });
+      })
+    );
 
     act(() => {
       root.render(
@@ -192,7 +195,7 @@ describe("lib/context/use-user", () => {
     const root = createRoot(container);
 
     mocks.getProperty.mockReturnValue("user_123");
-    mocks.useQueryWithStatus.mockReturnValue({ data: null, isPending: false });
+    mocks.useQuery.mockReturnValue(QueryResult.succeed(null));
 
     act(() => {
       root.render(
@@ -216,7 +219,7 @@ describe("lib/context/use-user", () => {
     const root = createRoot(container);
 
     mocks.getProperty.mockReturnValue(undefined);
-    mocks.useQueryWithStatus.mockReturnValue({ data: null, isPending: false });
+    mocks.useQuery.mockReturnValue(QueryResult.succeed(null));
 
     act(() => {
       root.render(
@@ -239,17 +242,16 @@ describe("lib/context/use-user", () => {
     document.body.append(container);
     const root = createRoot(container);
 
-    mocks.useQueryWithStatus.mockReturnValue({
-      data: {
+    mocks.useQuery.mockReturnValue(
+      QueryResult.succeed({
         appUser: {
           _id: "user_123",
           _creationTime: SIGNED_UP_AT_MS,
           plan: "free",
         },
         authUser: { email: "nabil@nakafa.com", name: "Nabil" },
-      },
-      isPending: false,
-    });
+      })
+    );
 
     act(() => {
       root.render(

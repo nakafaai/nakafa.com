@@ -4,11 +4,12 @@ import {
   captureServerException,
   extractDistinctIdFromPostHogCookie,
 } from "@repo/analytics/posthog/server";
+import refs from "@repo/backend/confect/_generated/refs";
 import type {
-  FunctionArgs,
-  FunctionReturnType,
-} from "@repo/backend/confect/_generated/functionReferences";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+  ConvexFunctionArgs,
+  ConvexFunctionReturn,
+} from "@repo/backend/confect/modules/shared/convexReferences";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { cookies } from "next/headers";
 import { after } from "next/server";
 import {
@@ -18,17 +19,17 @@ import {
 } from "@/components/tryout/actions/revalidate";
 import { fetchAuthMutation } from "@/lib/auth/server";
 
-type StartPartArgs = FunctionArgs<
-  typeof api.tryouts.mutations.attempts.startPart
+type StartPartArgs = ConvexFunctionArgs<
+  typeof refs.public.tryouts.mutations.attempts.startPart
 >;
-type StartPartMutationResult = FunctionReturnType<
-  typeof api.tryouts.mutations.attempts.startPart
+type StartPartMutationResult = ConvexFunctionReturn<
+  typeof refs.public.tryouts.mutations.attempts.startPart
 >;
-type CompletePartArgs = FunctionArgs<
-  typeof api.tryouts.mutations.attempts.completePart
+type CompletePartArgs = ConvexFunctionArgs<
+  typeof refs.public.tryouts.mutations.attempts.completePart
 >;
-type CompletePartMutationResult = FunctionReturnType<
-  typeof api.tryouts.mutations.attempts.completePart
+type CompletePartMutationResult = ConvexFunctionReturn<
+  typeof refs.public.tryouts.mutations.attempts.completePart
 >;
 
 /** Input required to start one tryout part and refresh its route family. */
@@ -80,7 +81,7 @@ export async function startTryoutPart({
 }: StartTryoutPartInput): Promise<StartTryoutPartResult> {
   try {
     const result = await fetchAuthMutation(
-      api.tryouts.mutations.attempts.startPart,
+      toConvexReference(refs.public.tryouts.mutations.attempts.startPart),
       {
         partKey: args.partKey,
         tryoutAttemptId: args.tryoutAttemptId,
@@ -125,7 +126,7 @@ export async function completeTryoutPart({
 }: CompleteTryoutPartInput): Promise<CompleteTryoutPartResult> {
   try {
     const result = await fetchAuthMutation(
-      api.tryouts.mutations.attempts.completePart,
+      toConvexReference(refs.public.tryouts.mutations.attempts.completePart),
       {
         partKey: args.partKey,
         tryoutAttemptId: args.tryoutAttemptId,

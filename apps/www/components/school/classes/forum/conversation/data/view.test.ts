@@ -1,12 +1,15 @@
-import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import { describe, expect, it } from "vitest";
 import {
   areConversationViewsEqual,
   isConversationViewAtPost,
 } from "@/components/school/classes/forum/conversation/data/view";
+import {
+  conversationTestOtherPostId,
+  conversationTestPostId,
+} from "@/components/school/classes/forum/conversation/helpers/test";
 
-const postId = "post_1" as Id<"schoolClassForumPosts">;
-const otherPostId = "post_2" as Id<"schoolClassForumPosts">;
+const postId = conversationTestPostId;
+const otherPostId = conversationTestOtherPostId;
 
 describe("conversation/data/view", () => {
   it("compares bottom and post views semantically", () => {

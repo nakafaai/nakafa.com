@@ -1,5 +1,5 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import {
   Add01Icon,
   ArrowDown01Icon,
@@ -10,7 +10,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   Autocomplete,
   AutocompleteCollection,
@@ -48,7 +48,7 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
+
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { subjectList } from "@/components/school/classes/_data/subject";
@@ -72,7 +72,7 @@ export function CreateSchoolClassDialog({
   const router = useRouter();
   const pathname = usePathname();
   const schoolId = useSchool((state) => state.school._id);
-  const createClass = useMutation(api.classes.mutations.createClass);
+  const createClass = useMutation(refs.public.classes.mutations.createClass);
   const [subjectPopoverOpen, subjectPopoverHandlers] = useDisclosure(false);
   const subjectOptions = subjectList.map((subject) => ({
     label: t(subject),

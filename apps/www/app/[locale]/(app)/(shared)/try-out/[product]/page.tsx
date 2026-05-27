@@ -1,5 +1,6 @@
 import { Certificate02Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   isTryoutProduct,
   tryoutProducts,
@@ -50,12 +51,17 @@ export default async function Page(
   };
   const catalogSnapshot = token
     ? await fetchQuery(
-        api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
+        toConvexReference(
+          refs.public.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot
+        ),
         catalogSnapshotArgs,
         { token }
       )
     : await fetchQuery(
-        api.tryouts.queries.tryouts.getPublicActiveTryoutCatalogSnapshot,
+        toConvexReference(
+          refs.public.tryouts.queries.tryouts
+            .getPublicActiveTryoutCatalogSnapshot
+        ),
         catalogSnapshotArgs
       );
 

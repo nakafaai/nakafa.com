@@ -1,6 +1,6 @@
 import type { GenericId } from "@confect/core";
 import type { DataModel as ConfectDataModel } from "@confect/server";
-import type schema from "../schema";
+import type schema from "@repo/backend/confect/schema";
 
 type Mutable<T> = T extends string
   ? T

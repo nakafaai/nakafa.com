@@ -23,7 +23,6 @@ import { IconCircleFilled } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import GB from "country-flag-icons/react/3x2/GB";
 import ID from "country-flag-icons/react/3x2/ID";
-import { useParams } from "next/navigation";
 import { type Locale, useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { type ComponentProps, useTransition } from "react";
@@ -46,31 +45,18 @@ function Language() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const pathname = usePathname();
-  const params = useParams();
   const currentLocale = useLocale();
 
   const queryClient = useQueryClient();
   const t = useTranslations("Common");
 
   function handlePrefetch(locale: Locale) {
-    router.prefetch(
-      // @ts-expect-error -- TypeScript will validate that only known `params`
-      // are used in combination with a given `pathname`. Since the two will
-      // always match for the current route, we can skip runtime checks.
-      { pathname, params },
-      { locale }
-    );
+    router.prefetch(pathname, { locale });
   }
 
   function handleChangeLocale(locale: Locale) {
     startTransition(async () => {
-      router.replace(
-        // @ts-expect-error -- TypeScript will validate that only known `params`
-        // are used in combination with a given `pathname`. Since the two will
-        // always match for the current route, we can skip runtime checks.
-        { pathname, params },
-        { locale }
-      );
+      router.replace(pathname, { locale });
 
       // reboot the pagefind because of the language change
       if (window?.pagefind) {

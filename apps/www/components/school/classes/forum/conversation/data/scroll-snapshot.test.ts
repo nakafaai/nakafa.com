@@ -1,13 +1,15 @@
-import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import type { CacheSnapshot } from "virtua";
 import { describe, expect, it } from "vitest";
 import {
   createConversationScrollSnapshot,
   getInitialConversationRestoreTarget,
 } from "@/components/school/classes/forum/conversation/data/scroll-snapshot";
+import {
+  conversationTestPostId,
+  createConversationTestCache,
+} from "@/components/school/classes/forum/conversation/helpers/test";
 
-const postId = "post_1" as Id<"schoolClassForumPosts">;
-const cache = {} as CacheSnapshot;
+const postId = conversationTestPostId;
+const cache = createConversationTestCache();
 
 describe("conversation/data/scroll-snapshot", () => {
   it("reopens at bottom when the latest snapshot says the viewer was at bottom", () => {

@@ -1,9 +1,9 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import { ArrowDown01Icon, StopIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   ButtonGroup,
@@ -14,7 +14,7 @@ import { Progress } from "@repo/design-system/components/ui/progress";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
-import { useMutation } from "convex/react";
+
 import { useTranslations } from "next-intl";
 import { useLayoutEffect, useTransition } from "react";
 import { toast } from "sonner";
@@ -48,7 +48,9 @@ export function CompleteExerciseButton() {
   const user = useUser((state) => state.user);
   const attempt = useAttempt((state) => state.attempt);
   const answers = useAttempt((state) => state.answers);
-  const completeAttempt = useMutation(api.exercises.mutations.completeAttempt);
+  const completeAttempt = useMutation(
+    refs.public.exercises.mutations.completeAttempt
+  );
 
   const answeredCount = answers.filter(
     (a) => a.selectedOptionId !== undefined || a.textAnswer !== undefined

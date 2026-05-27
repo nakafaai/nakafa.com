@@ -1,8 +1,8 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import { InLoveIcon } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -13,7 +13,7 @@ import { Input } from "@repo/design-system/components/ui/input";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
+
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
@@ -26,7 +26,7 @@ export function SchoolOnboardingJoinForm() {
   const t = useTranslations("School.Onboarding");
 
   const router = useRouter();
-  const joinSchool = useMutation(api.schools.mutations.joinSchool);
+  const joinSchool = useMutation(refs.public.schools.mutations.joinSchool);
 
   const form = useForm({
     defaultValues: schoolJoinDefaultValues,

@@ -2,7 +2,7 @@ import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import type {
   GenerateAudioForQueueItemWorkflow,
   HandleAudioWorkflowComplete,
-} from "@repo/backend/confect/modules/content/audioStudies.workflow-types";
+} from "@repo/backend/confect/modules/content/audioStudies/workflows.validators";
 import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
 import { Schema } from "effect";
 

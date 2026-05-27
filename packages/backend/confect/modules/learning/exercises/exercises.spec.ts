@@ -1,5 +1,6 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import { ExerciseError } from "@repo/backend/confect/modules/learning/exercises/errors.service";
 import { Schema } from "effect";
 
 const exercisesMutationsGroup = GroupSpec.make("mutations")
@@ -50,6 +51,7 @@ const exercisesMutationsGroup = GroupSpec.make("mutations")
         selectedOptionId: Schema.String,
         timeSpent: Schema.Number,
       }),
+      error: ExerciseError,
       returns: Schema.Null,
     })
   );

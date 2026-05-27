@@ -1,8 +1,8 @@
 "use client";
 
+import { QueryResult, useQuery } from "@confect/react";
 import { Progress03Icon, Search02Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { Button } from "@repo/design-system/components/ui/button";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
@@ -15,13 +15,17 @@ export function HomeContinueLearning() {
   const t = useTranslations("Home");
   const locale = useLocale();
 
-  const { data, isPending } = useQueryWithStatus(
-    api.contents.queries.recent.getRecentlyViewed,
+  const recentlyViewedResult = useQuery(
+    refs.public.contents.queries.recent.getRecentlyViewed,
     {
       locale,
       limit: 5,
     }
   );
+  const data = QueryResult.isSuccess(recentlyViewedResult)
+    ? recentlyViewedResult.value
+    : undefined;
+  const isPending = QueryResult.isLoading(recentlyViewedResult);
 
   if (isPending) {
     return null;

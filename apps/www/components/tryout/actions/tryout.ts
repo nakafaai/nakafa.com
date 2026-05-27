@@ -4,11 +4,12 @@ import {
   captureServerException,
   extractDistinctIdFromPostHogCookie,
 } from "@repo/analytics/posthog/server";
+import refs from "@repo/backend/confect/_generated/refs";
 import type {
-  FunctionArgs,
-  FunctionReturnType,
-} from "@repo/backend/confect/_generated/functionReferences";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+  ConvexFunctionArgs,
+  ConvexFunctionReturn,
+} from "@repo/backend/confect/modules/shared/convexReferences";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { cookies } from "next/headers";
 import { after } from "next/server";
@@ -22,11 +23,11 @@ import { fetchAuthAction, fetchAuthMutation } from "@/lib/auth/server";
 import { getSafeInternalRedirectPath } from "@/lib/auth/utils";
 import { products } from "@/lib/polar/products";
 
-type StartTryoutArgs = FunctionArgs<
-  typeof api.tryouts.mutations.attempts.startTryout
+type StartTryoutArgs = ConvexFunctionArgs<
+  typeof refs.public.tryouts.mutations.attempts.startTryout
 >;
-type StartTryoutMutationResult = FunctionReturnType<
-  typeof api.tryouts.mutations.attempts.startTryout
+type StartTryoutMutationResult = ConvexFunctionReturn<
+  typeof refs.public.tryouts.mutations.attempts.startTryout
 >;
 
 /** Input required to start one tryout attempt and refresh its route family. */
@@ -85,7 +86,9 @@ async function getCheckoutUrl({
 
   try {
     const result = await fetchAuthAction(
-      api.customers.actions.publicFunctions.generateCheckoutLink,
+      toConvexReference(
+        refs.public.customers.actions.publicFunctions.generateCheckoutLink
+      ),
       {
         productIds: [products.pro.id],
         successUrl,
@@ -149,7 +152,7 @@ export async function startTryout({
 }: StartTryoutInput): Promise<StartTryoutResult> {
   try {
     const result = await fetchAuthMutation(
-      api.tryouts.mutations.attempts.startTryout,
+      toConvexReference(refs.public.tryouts.mutations.attempts.startTryout),
       args
     );
 

@@ -1,12 +1,11 @@
 "use client";
-
+import { QueryResult, useAction, useQuery } from "@confect/react";
 import { Diamond02Icon } from "@hugeicons/core-free-icons";
 import { Dithering, type DitheringProps } from "@paper-design/shaders-react";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useAction } from "convex/react";
+
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useTransition } from "react";
@@ -45,15 +44,17 @@ export function ProButton() {
 
   const currentUser = useUser((state) => state.user);
 
-  const { data: hasSubscription } = useQueryWithStatus(
-    api.subscriptions.queries.hasActiveSubscription,
+  const subscriptionResult = useQuery(
+    refs.public.subscriptions.queries.hasActiveSubscription,
     currentUser ? { productId: products.pro.id } : "skip"
   );
+  const hasSubscription =
+    QueryResult.isSuccess(subscriptionResult) && subscriptionResult.value;
   const generateCheckoutLink = useAction(
-    api.customers.actions.publicFunctions.generateCheckoutLink
+    refs.public.customers.actions.publicFunctions.generateCheckoutLink
   );
   const generateCustomerPortalUrl = useAction(
-    api.customers.actions.publicFunctions.generateCustomerPortalUrl
+    refs.public.customers.actions.publicFunctions.generateCustomerPortalUrl
   );
 
   const handleCheckout = () => {

@@ -6,8 +6,9 @@ import {
   Tick01Icon,
   TransactionHistoryIcon,
 } from "@hugeicons/core-free-icons";
-import type { FunctionReturnType } from "@repo/backend/confect/_generated/functionReferences";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import type { ConvexFunctionReturn } from "@repo/backend/confect/modules/shared/convexReferences";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   Autocomplete,
   AutocompleteCollection,
@@ -38,7 +39,9 @@ import { tryoutSearchParsers } from "@/components/tryout/utils/attempt-search";
 import { getLocale } from "@/lib/utils/date";
 
 type TryoutAttempt = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt>
+  ConvexFunctionReturn<
+    typeof refs.public.tryouts.queries.me.attempt.getUserTryoutAttempt
+  >
 >["attempt"];
 
 interface AttemptOption {
@@ -109,7 +112,9 @@ function TryoutAttemptHistoryControls({
     results: attemptHistory,
     status,
   } = usePaginatedQuery(
-    api.tryouts.queries.me.history.getUserTryoutAttemptHistory,
+    toConvexReference(
+      refs.public.tryouts.queries.me.history.getUserTryoutAttemptHistory
+    ),
     shouldLoadAttemptHistory
       ? {
           attemptId: fallbackAttempt._id,

@@ -1,5 +1,6 @@
 import { captureServerException } from "@repo/analytics/posthog/server";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { cache } from "react";
 import { fetchAuthQuery } from "@/lib/auth/server";
 import { hasApplicationErrorCode } from "@/lib/errors";
@@ -15,9 +16,10 @@ const SCHOOL_SWITCHER_PAGE_SIZE = 20;
 export const getSchoolRouteSnapshot = cache(
   async function getSchoolRouteSnapshot(slug: string) {
     try {
-      return await fetchAuthQuery(api.schools.queries.getSchoolBySlug, {
-        slug,
-      });
+      return await fetchAuthQuery(
+        toConvexReference(refs.public.schools.queries.getSchoolBySlug),
+        { slug }
+      );
     } catch (error) {
       if (
         hasApplicationErrorCode(error, [
@@ -46,7 +48,10 @@ export const getSchoolRouteSnapshot = cache(
  */
 export async function getClassRouteSnapshot({ classId }: { classId: string }) {
   try {
-    return await fetchAuthQuery(api.classes.queries.getClassRoute, { classId });
+    return await fetchAuthQuery(
+      toConvexReference(refs.public.classes.queries.getClassRoute),
+      { classId }
+    );
   } catch (error) {
     if (
       hasApplicationErrorCode(error, [
@@ -70,12 +75,15 @@ export async function getClassRouteSnapshot({ classId }: { classId: string }) {
 /** Load the first school-switcher page for the authenticated school shell. */
 export async function getSchoolSwitcherPage() {
   try {
-    return await fetchAuthQuery(api.schools.queries.getMySchoolsPage, {
-      paginationOpts: {
-        cursor: null,
-        numItems: SCHOOL_SWITCHER_PAGE_SIZE,
-      },
-    });
+    return await fetchAuthQuery(
+      toConvexReference(refs.public.schools.queries.getMySchoolsPage),
+      {
+        paginationOpts: {
+          cursor: null,
+          numItems: SCHOOL_SWITCHER_PAGE_SIZE,
+        },
+      }
+    );
   } catch (error) {
     await captureServerException(error, undefined, {
       source: "school-switcher-page",

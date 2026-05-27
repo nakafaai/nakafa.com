@@ -1,4 +1,4 @@
-import registeredFunctions from "../../confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
 
 export const getChat = registeredFunctions.chats.queries.getChat;
 export const getChatTitle = registeredFunctions.chats.queries.getChatTitle;

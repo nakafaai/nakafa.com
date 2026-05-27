@@ -1,18 +1,18 @@
 "use client";
 
-import type { FunctionReturnType } from "@repo/backend/confect/_generated/functionReferences";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import type { Ref } from "@confect/core";
+import { QueryResult, useQuery } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { Locale } from "next-intl";
 import { useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useUser } from "@/lib/context/use-user";
 
-type LatestAttemptResult = FunctionReturnType<
-  typeof api.exercises.queries.getLatestAttemptBySlug
+type LatestAttemptResult = Ref.Returns<
+  typeof refs.public.exercises.queries.getLatestAttemptBySlug
 >;
-type QuestionAnswerSheet = FunctionReturnType<
-  typeof api.exercises.queries.getQuestionAnswerSheetBySlug
+type QuestionAnswerSheet = Ref.Returns<
+  typeof refs.public.exercises.queries.getQuestionAnswerSheetBySlug
 >;
 type AttemptAnswer = NonNullable<LatestAttemptResult>["answers"][number];
 interface AttemptSourceValue {
@@ -93,14 +93,20 @@ export function AttemptContextProvider({
   slug: string;
 }) {
   const user = useUser((state) => state.user);
-  const { data: results } = useQueryWithStatus(
-    api.exercises.queries.getLatestAttemptBySlug,
+  const resultsQuery = useQuery(
+    refs.public.exercises.queries.getLatestAttemptBySlug,
     user ? { slug } : "skip"
   );
-  const { data: answerSheet } = useQueryWithStatus(
-    api.exercises.queries.getQuestionAnswerSheetBySlug,
+  const answerSheetQuery = useQuery(
+    refs.public.exercises.queries.getQuestionAnswerSheetBySlug,
     user ? { locale, slug } : "skip"
   );
+  const results = QueryResult.isSuccess(resultsQuery)
+    ? resultsQuery.value
+    : undefined;
+  const answerSheet = QueryResult.isSuccess(answerSheetQuery)
+    ? answerSheetQuery.value
+    : undefined;
 
   return (
     <AttemptProvider

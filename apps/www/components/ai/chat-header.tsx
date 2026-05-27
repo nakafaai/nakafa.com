@@ -1,3 +1,4 @@
+import { useMutation } from "@confect/react";
 import {
   Cancel01Icon,
   Copy01Icon,
@@ -12,7 +13,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
 import type { Doc } from "@repo/backend/confect/_generated/dataModel";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -29,7 +30,6 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { getAppUrl } from "@repo/next-config/app";
-import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import {
   Activity,
@@ -74,11 +74,13 @@ function AiChatHeaderContent({ chat }: { chat: Doc<"chats"> }) {
   const user = useUser((s) => s.user);
   const isOwner = user?.appUser._id === chat.userId;
 
-  const updateChatTitle = useMutation(api.chats.mutations.updateChatTitle);
-  const updateChatVisibility = useMutation(
-    api.chats.mutations.updateChatVisibility
+  const updateChatTitle = useMutation(
+    refs.public.chats.mutations.updateChatTitle
   );
-  const deleteChat = useMutation(api.chats.mutations.deleteChat);
+  const updateChatVisibility = useMutation(
+    refs.public.chats.mutations.updateChatVisibility
+  );
+  const deleteChat = useMutation(refs.public.chats.mutations.deleteChat);
 
   const [isPending, startTransition] = useTransition();
 

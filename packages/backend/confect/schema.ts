@@ -1,131 +1,251 @@
 import { DatabaseSchema } from "@confect/server";
-import { tables as modules_chat_chats_tables_ts } from "@repo/backend/confect/modules/chat/chats.tables";
-import { tables as modules_commerce_credits_tables_ts } from "@repo/backend/confect/modules/commerce/credits.tables";
-import { tables as modules_commerce_customers_tables_ts } from "@repo/backend/confect/modules/commerce/customers.tables";
-import { tables as modules_commerce_subscriptions_tables_ts } from "@repo/backend/confect/modules/commerce/subscriptions.tables";
-import { tables as modules_content_articleContents_tables_ts } from "@repo/backend/confect/modules/content/articleContents.tables";
-import { tables as modules_content_audioStudies_tables_ts } from "@repo/backend/confect/modules/content/audioStudies.tables";
-import { tables as modules_content_authors_tables_ts } from "@repo/backend/confect/modules/content/authors.tables";
-import { tables as modules_content_bookmarks_tables_ts } from "@repo/backend/confect/modules/content/bookmarks.tables";
-import { tables as modules_content_comments_tables_ts } from "@repo/backend/confect/modules/content/comments.tables";
-import { tables as modules_content_contents_tables_ts } from "@repo/backend/confect/modules/content/contents.tables";
-import { tables as modules_content_exerciseQuestions_tables_ts } from "@repo/backend/confect/modules/content/exerciseQuestions.tables";
-import { tables as modules_content_exerciseSets_tables_ts } from "@repo/backend/confect/modules/content/exerciseSets.tables";
-import { tables as modules_content_subjectSections_tables_ts } from "@repo/backend/confect/modules/content/subjectSections.tables";
-import { tables as modules_content_subjectTopics_tables_ts } from "@repo/backend/confect/modules/content/subjectTopics.tables";
-import { tables as modules_identity_users_tables_ts } from "@repo/backend/confect/modules/identity/users.tables";
-import { tables as modules_learning_exercises_tables_ts } from "@repo/backend/confect/modules/learning/exercises.tables";
-import { tables as modules_notifications_notifications_tables_ts } from "@repo/backend/confect/modules/notifications/notifications.tables";
-import { tables as modules_school_assessments_tables_ts } from "@repo/backend/confect/modules/school/assessments.tables";
-import { tables as modules_school_classes_tables_ts } from "@repo/backend/confect/modules/school/classes.tables";
-import { tables as modules_school_schools_tables_ts } from "@repo/backend/confect/modules/school/schools.tables";
-import { tables as modules_tryout_access_tables_ts } from "@repo/backend/confect/modules/tryout/access.tables";
-import { tables as modules_tryout_irt_tables_ts } from "@repo/backend/confect/modules/tryout/irt.tables";
-import { tables as modules_tryout_tryouts_tables_ts } from "@repo/backend/confect/modules/tryout/tryouts.tables";
+import {
+  Chats,
+  Messages,
+  Parts,
+} from "@repo/backend/confect/modules/chat/chats.tables";
+import {
+  CreditResetPeriods,
+  CreditTransactions,
+} from "@repo/backend/confect/modules/commerce/credits.tables";
+import { Customers } from "@repo/backend/confect/modules/commerce/customers.tables";
+import { Subscriptions } from "@repo/backend/confect/modules/commerce/subscriptions.tables";
+import {
+  ArticleContents,
+  ArticleReferences,
+} from "@repo/backend/confect/modules/content/articleContents.tables";
+import {
+  AudioGenerationQueue,
+  ContentAudios,
+} from "@repo/backend/confect/modules/content/audioStudies.tables";
+import {
+  Authors,
+  ContentAuthors,
+} from "@repo/backend/confect/modules/content/authors.tables";
+import {
+  BookmarkCollections,
+  Bookmarks,
+} from "@repo/backend/confect/modules/content/bookmarks.tables";
+import {
+  Comments,
+  CommentVotes,
+} from "@repo/backend/confect/modules/content/comments.tables";
+import {
+  ArticlePopularity,
+  ContentAnalyticsPartitions,
+  ContentSearch,
+  ContentViewAnalyticsQueue,
+  ContentViews,
+  ExercisePopularity,
+  SubjectPopularity,
+  SubjectTrendingBuckets,
+} from "@repo/backend/confect/modules/content/contents.tables";
+import {
+  ExerciseChoices,
+  ExerciseQuestions,
+} from "@repo/backend/confect/modules/content/exerciseQuestions.tables";
+import { ExerciseSets } from "@repo/backend/confect/modules/content/exerciseSets.tables";
+import { SubjectSections } from "@repo/backend/confect/modules/content/subjectSections.tables";
+import { SubjectTopics } from "@repo/backend/confect/modules/content/subjectTopics.tables";
+import { Users } from "@repo/backend/confect/modules/identity/users.tables";
+import {
+  ExerciseAnswers,
+  ExerciseAttempts,
+} from "@repo/backend/confect/modules/learning/exercises.tables";
+import {
+  NotificationCounts,
+  NotificationEntityMutes,
+  NotificationPreferences,
+  Notifications,
+} from "@repo/backend/confect/modules/notifications/notifications.tables";
+import {
+  SchoolAssessmentChoices,
+  SchoolAssessmentQuestionBankEntries,
+  SchoolAssessmentQuestionBanks,
+  SchoolAssessmentQuestions,
+  SchoolAssessmentRubricCriteria,
+  SchoolAssessmentSections,
+  SchoolAssessments,
+  SchoolAssessmentVersionChoices,
+  SchoolAssessmentVersionQuestions,
+  SchoolAssessmentVersionRubricCriteria,
+  SchoolAssessmentVersionSections,
+  SchoolAssessmentVersions,
+} from "@repo/backend/confect/modules/school/assessmentsTables/authoring";
+import {
+  SchoolAssessmentAssignments,
+  SchoolAssessmentAssignmentTargets,
+  SchoolAssessmentAttemptEvents,
+  SchoolAssessmentAttemptSessions,
+  SchoolAssessmentAttempts,
+  SchoolAssessmentClassStats,
+  SchoolAssessmentEssayGrades,
+  SchoolAssessmentFinalGrades,
+  SchoolAssessmentFlags,
+  SchoolAssessmentLeaderboardEntries,
+  SchoolAssessmentQuestionStats,
+  SchoolAssessmentResponses,
+  SchoolAssessmentSectionAttempts,
+  SchoolAssessmentStudentStats,
+} from "@repo/backend/confect/modules/school/assessmentsTables/delivery";
+import {
+  SchoolAssessmentImportDrafts,
+  SchoolAssessmentImportJobs,
+} from "@repo/backend/confect/modules/school/assessmentsTables/imports";
+import {
+  SchoolClasses,
+  SchoolClassForumPendingUploads,
+  SchoolClassForumPostAttachments,
+  SchoolClassForumPostReactions,
+  SchoolClassForumPosts,
+  SchoolClassForumReactions,
+  SchoolClassForumReadStates,
+  SchoolClassForums,
+  SchoolClassInviteCodes,
+  SchoolClassMaterialAttachments,
+  SchoolClassMaterialGroups,
+  SchoolClassMaterials,
+  SchoolClassMaterialViews,
+  SchoolClassMembers,
+} from "@repo/backend/confect/modules/school/classes.tables";
+import {
+  SchoolActivityLogs,
+  SchoolInviteCodes,
+  SchoolMembers,
+  Schools,
+} from "@repo/backend/confect/modules/school/schools.tables";
+import {
+  TryoutAccessCampaignProducts,
+  TryoutAccessCampaigns,
+  TryoutAccessGrants,
+  TryoutAccessLinks,
+  UserTryoutEntitlements,
+} from "@repo/backend/confect/modules/tryout/access.tables";
+import {
+  ExerciseItemParameters,
+  IrtCalibrationAttempts,
+  IrtCalibrationCacheStats,
+  IrtCalibrationQueue,
+  IrtCalibrationRuns,
+  IrtScalePublicationQueue,
+  IrtScaleQualityChecks,
+  IrtScaleQualityRefreshQueue,
+  IrtScaleVersionItems,
+  IrtScaleVersions,
+} from "@repo/backend/confect/modules/tryout/irt.tables";
+import {
+  TryoutAttempts,
+  TryoutCatalogMeta,
+  TryoutLeaderboardEntries,
+  TryoutPartAttempts,
+  TryoutPartSets,
+  Tryouts,
+  UserTryoutStats,
+} from "@repo/backend/confect/modules/tryout/tryouts.tables";
 
 export default DatabaseSchema.make()
-  .addTable(modules_identity_users_tables_ts[0])
-  .addTable(modules_commerce_customers_tables_ts[0])
-  .addTable(modules_commerce_subscriptions_tables_ts[0])
-  .addTable(modules_commerce_credits_tables_ts[0])
-  .addTable(modules_commerce_credits_tables_ts[1])
-  .addTable(modules_content_articleContents_tables_ts[0])
-  .addTable(modules_content_articleContents_tables_ts[1])
-  .addTable(modules_content_authors_tables_ts[0])
-  .addTable(modules_content_authors_tables_ts[1])
-  .addTable(modules_content_bookmarks_tables_ts[0])
-  .addTable(modules_content_bookmarks_tables_ts[1])
-  .addTable(modules_content_comments_tables_ts[0])
-  .addTable(modules_content_comments_tables_ts[1])
-  .addTable(modules_content_contents_tables_ts[0])
-  .addTable(modules_content_contents_tables_ts[1])
-  .addTable(modules_content_contents_tables_ts[2])
-  .addTable(modules_content_contents_tables_ts[3])
-  .addTable(modules_content_contents_tables_ts[4])
-  .addTable(modules_content_contents_tables_ts[5])
-  .addTable(modules_content_contents_tables_ts[6])
-  .addTable(modules_content_contents_tables_ts[7])
-  .addTable(modules_content_subjectTopics_tables_ts[0])
-  .addTable(modules_content_subjectSections_tables_ts[0])
-  .addTable(modules_content_exerciseSets_tables_ts[0])
-  .addTable(modules_content_exerciseQuestions_tables_ts[0])
-  .addTable(modules_content_exerciseQuestions_tables_ts[1])
-  .addTable(modules_content_audioStudies_tables_ts[0])
-  .addTable(modules_content_audioStudies_tables_ts[1])
-  .addTable(modules_learning_exercises_tables_ts[0])
-  .addTable(modules_learning_exercises_tables_ts[1])
-  .addTable(modules_school_assessments_tables_ts[0])
-  .addTable(modules_school_assessments_tables_ts[1])
-  .addTable(modules_school_assessments_tables_ts[2])
-  .addTable(modules_school_assessments_tables_ts[3])
-  .addTable(modules_school_assessments_tables_ts[4])
-  .addTable(modules_school_assessments_tables_ts[5])
-  .addTable(modules_school_assessments_tables_ts[6])
-  .addTable(modules_school_assessments_tables_ts[7])
-  .addTable(modules_school_assessments_tables_ts[8])
-  .addTable(modules_school_assessments_tables_ts[9])
-  .addTable(modules_school_assessments_tables_ts[10])
-  .addTable(modules_school_assessments_tables_ts[11])
-  .addTable(modules_school_assessments_tables_ts[12])
-  .addTable(modules_school_assessments_tables_ts[13])
-  .addTable(modules_school_assessments_tables_ts[14])
-  .addTable(modules_school_assessments_tables_ts[15])
-  .addTable(modules_school_assessments_tables_ts[16])
-  .addTable(modules_school_assessments_tables_ts[17])
-  .addTable(modules_school_assessments_tables_ts[18])
-  .addTable(modules_school_assessments_tables_ts[19])
-  .addTable(modules_school_assessments_tables_ts[20])
-  .addTable(modules_school_assessments_tables_ts[21])
-  .addTable(modules_school_assessments_tables_ts[22])
-  .addTable(modules_school_assessments_tables_ts[23])
-  .addTable(modules_school_assessments_tables_ts[24])
-  .addTable(modules_school_assessments_tables_ts[25])
-  .addTable(modules_school_assessments_tables_ts[26])
-  .addTable(modules_school_assessments_tables_ts[27])
-  .addTable(modules_school_schools_tables_ts[0])
-  .addTable(modules_school_schools_tables_ts[1])
-  .addTable(modules_school_schools_tables_ts[2])
-  .addTable(modules_school_schools_tables_ts[3])
-  .addTable(modules_school_classes_tables_ts[0])
-  .addTable(modules_school_classes_tables_ts[1])
-  .addTable(modules_school_classes_tables_ts[2])
-  .addTable(modules_school_classes_tables_ts[3])
-  .addTable(modules_school_classes_tables_ts[4])
-  .addTable(modules_school_classes_tables_ts[5])
-  .addTable(modules_school_classes_tables_ts[6])
-  .addTable(modules_school_classes_tables_ts[7])
-  .addTable(modules_school_classes_tables_ts[8])
-  .addTable(modules_school_classes_tables_ts[9])
-  .addTable(modules_school_classes_tables_ts[10])
-  .addTable(modules_school_classes_tables_ts[11])
-  .addTable(modules_school_classes_tables_ts[12])
-  .addTable(modules_school_classes_tables_ts[13])
-  .addTable(modules_chat_chats_tables_ts[0])
-  .addTable(modules_chat_chats_tables_ts[1])
-  .addTable(modules_chat_chats_tables_ts[2])
-  .addTable(modules_notifications_notifications_tables_ts[0])
-  .addTable(modules_notifications_notifications_tables_ts[1])
-  .addTable(modules_notifications_notifications_tables_ts[2])
-  .addTable(modules_notifications_notifications_tables_ts[3])
-  .addTable(modules_tryout_irt_tables_ts[0])
-  .addTable(modules_tryout_irt_tables_ts[1])
-  .addTable(modules_tryout_irt_tables_ts[2])
-  .addTable(modules_tryout_irt_tables_ts[3])
-  .addTable(modules_tryout_irt_tables_ts[4])
-  .addTable(modules_tryout_irt_tables_ts[5])
-  .addTable(modules_tryout_irt_tables_ts[6])
-  .addTable(modules_tryout_irt_tables_ts[7])
-  .addTable(modules_tryout_irt_tables_ts[8])
-  .addTable(modules_tryout_irt_tables_ts[9])
-  .addTable(modules_tryout_access_tables_ts[0])
-  .addTable(modules_tryout_access_tables_ts[1])
-  .addTable(modules_tryout_access_tables_ts[2])
-  .addTable(modules_tryout_access_tables_ts[3])
-  .addTable(modules_tryout_access_tables_ts[4])
-  .addTable(modules_tryout_tryouts_tables_ts[0])
-  .addTable(modules_tryout_tryouts_tables_ts[1])
-  .addTable(modules_tryout_tryouts_tables_ts[2])
-  .addTable(modules_tryout_tryouts_tables_ts[3])
-  .addTable(modules_tryout_tryouts_tables_ts[4])
-  .addTable(modules_tryout_tryouts_tables_ts[5])
-  .addTable(modules_tryout_tryouts_tables_ts[6]);
+  .addTable(Users)
+  .addTable(Customers)
+  .addTable(Subscriptions)
+  .addTable(CreditTransactions)
+  .addTable(CreditResetPeriods)
+  .addTable(ArticleContents)
+  .addTable(ArticleReferences)
+  .addTable(Authors)
+  .addTable(ContentAuthors)
+  .addTable(Bookmarks)
+  .addTable(BookmarkCollections)
+  .addTable(Comments)
+  .addTable(CommentVotes)
+  .addTable(ContentViews)
+  .addTable(ContentViewAnalyticsQueue)
+  .addTable(ContentAnalyticsPartitions)
+  .addTable(ArticlePopularity)
+  .addTable(SubjectPopularity)
+  .addTable(SubjectTrendingBuckets)
+  .addTable(ExercisePopularity)
+  .addTable(ContentSearch)
+  .addTable(SubjectTopics)
+  .addTable(SubjectSections)
+  .addTable(ExerciseSets)
+  .addTable(ExerciseQuestions)
+  .addTable(ExerciseChoices)
+  .addTable(ContentAudios)
+  .addTable(AudioGenerationQueue)
+  .addTable(ExerciseAttempts)
+  .addTable(ExerciseAnswers)
+  .addTable(SchoolAssessments)
+  .addTable(SchoolAssessmentVersions)
+  .addTable(SchoolAssessmentSections)
+  .addTable(SchoolAssessmentVersionSections)
+  .addTable(SchoolAssessmentQuestions)
+  .addTable(SchoolAssessmentVersionQuestions)
+  .addTable(SchoolAssessmentChoices)
+  .addTable(SchoolAssessmentVersionChoices)
+  .addTable(SchoolAssessmentRubricCriteria)
+  .addTable(SchoolAssessmentVersionRubricCriteria)
+  .addTable(SchoolAssessmentQuestionBanks)
+  .addTable(SchoolAssessmentQuestionBankEntries)
+  .addTable(SchoolAssessmentAssignments)
+  .addTable(SchoolAssessmentAssignmentTargets)
+  .addTable(SchoolAssessmentAttempts)
+  .addTable(SchoolAssessmentSectionAttempts)
+  .addTable(SchoolAssessmentResponses)
+  .addTable(SchoolAssessmentEssayGrades)
+  .addTable(SchoolAssessmentFinalGrades)
+  .addTable(SchoolAssessmentAttemptSessions)
+  .addTable(SchoolAssessmentAttemptEvents)
+  .addTable(SchoolAssessmentFlags)
+  .addTable(SchoolAssessmentStudentStats)
+  .addTable(SchoolAssessmentQuestionStats)
+  .addTable(SchoolAssessmentClassStats)
+  .addTable(SchoolAssessmentLeaderboardEntries)
+  .addTable(SchoolAssessmentImportJobs)
+  .addTable(SchoolAssessmentImportDrafts)
+  .addTable(Schools)
+  .addTable(SchoolMembers)
+  .addTable(SchoolInviteCodes)
+  .addTable(SchoolActivityLogs)
+  .addTable(SchoolClasses)
+  .addTable(SchoolClassMembers)
+  .addTable(SchoolClassInviteCodes)
+  .addTable(SchoolClassForums)
+  .addTable(SchoolClassForumReactions)
+  .addTable(SchoolClassForumPosts)
+  .addTable(SchoolClassForumPendingUploads)
+  .addTable(SchoolClassForumPostAttachments)
+  .addTable(SchoolClassForumPostReactions)
+  .addTable(SchoolClassForumReadStates)
+  .addTable(SchoolClassMaterialGroups)
+  .addTable(SchoolClassMaterials)
+  .addTable(SchoolClassMaterialAttachments)
+  .addTable(SchoolClassMaterialViews)
+  .addTable(Chats)
+  .addTable(Messages)
+  .addTable(Parts)
+  .addTable(Notifications)
+  .addTable(NotificationCounts)
+  .addTable(NotificationPreferences)
+  .addTable(NotificationEntityMutes)
+  .addTable(IrtCalibrationQueue)
+  .addTable(IrtCalibrationAttempts)
+  .addTable(IrtCalibrationCacheStats)
+  .addTable(IrtScaleQualityChecks)
+  .addTable(IrtScaleQualityRefreshQueue)
+  .addTable(IrtScalePublicationQueue)
+  .addTable(IrtScaleVersions)
+  .addTable(IrtScaleVersionItems)
+  .addTable(IrtCalibrationRuns)
+  .addTable(ExerciseItemParameters)
+  .addTable(TryoutAccessCampaigns)
+  .addTable(TryoutAccessCampaignProducts)
+  .addTable(TryoutAccessLinks)
+  .addTable(TryoutAccessGrants)
+  .addTable(UserTryoutEntitlements)
+  .addTable(Tryouts)
+  .addTable(TryoutCatalogMeta)
+  .addTable(TryoutPartSets)
+  .addTable(TryoutAttempts)
+  .addTable(TryoutPartAttempts)
+  .addTable(UserTryoutStats)
+  .addTable(TryoutLeaderboardEntries);

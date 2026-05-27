@@ -1,9 +1,9 @@
 "use client";
 
+import { QueryResult, useQuery } from "@confect/react";
 import { ArrowDown02Icon, ViewIcon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { getTrendingTimeRange } from "@repo/backend/confect/modules/content/trending/time";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
@@ -19,14 +19,18 @@ export function HomeTrending() {
 
   const timeRange = useMemo(() => getTrendingTimeRange(7, Date.now()), []);
 
-  const { data, isPending } = useQueryWithStatus(
-    api.subjectSections.queries.getTrendingSubjects,
+  const trendingResult = useQuery(
+    refs.public.subjectSections.queries.getTrendingSubjects,
     {
       locale,
       since: timeRange.since,
       until: timeRange.until,
     }
   );
+  const data = QueryResult.isSuccess(trendingResult)
+    ? trendingResult.value
+    : undefined;
+  const isPending = QueryResult.isLoading(trendingResult);
 
   if (isPending) {
     return null;

@@ -1,4 +1,4 @@
-import registeredFunctions from "../../../confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
 
 export const cleanupDeletedClass = registeredFunctions.triggers.schools.cleanup.cleanupDeletedClass;
 export const cleanupDeletedForum = registeredFunctions.triggers.schools.cleanup.cleanupDeletedForum;

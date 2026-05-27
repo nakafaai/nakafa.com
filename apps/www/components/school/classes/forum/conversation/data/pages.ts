@@ -25,7 +25,7 @@ export function createConversationRows({
   unreadCue,
 }: {
   forum: Forum | undefined;
-  posts: ForumPost[];
+  posts: readonly ForumPost[];
   unreadCue?: ConversationUnreadCue | null;
 }) {
   const rows: ConversationRow[] = forum ? [{ type: "header" }] : [];
@@ -52,7 +52,7 @@ export function createConversationRows({
 }
 
 /** Returns the final post id in one ordered transcript list. */
-export function getLastConversationPostId(posts: ForumPost[]) {
+export function getLastConversationPostId(posts: readonly ForumPost[]) {
   return posts.at(-1)?._id ?? null;
 }
 

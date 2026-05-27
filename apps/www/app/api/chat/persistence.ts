@@ -2,11 +2,12 @@ import type { ModelId } from "@repo/ai/config/models";
 import { compressMessages } from "@repo/ai/lib/message";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { api as convexApi } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/confect/modules/chat/constants";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/confect/modules/chat/messageParts/uiToDb";
 import type { MessageWithPartsDoc } from "@repo/backend/confect/modules/chat/messages";
 import { mapDBMessagesToUIMessages } from "@repo/backend/confect/modules/chat/messages";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { Effect } from "effect";
 
@@ -45,7 +46,7 @@ export const saveOrCreateChat = Effect.fn("chat.saveOrCreateChat")(function* ({
   if (chatId) {
     const existingMessage = yield* Effect.tryPromise(() =>
       fetchQuery(
-        convexApi.chats.queries.getMessageMatch,
+        toConvexReference(refs.public.chats.queries.getMessageMatch),
         {
           chatId,
           identifier: message.id,
@@ -60,7 +61,7 @@ export const saveOrCreateChat = Effect.fn("chat.saveOrCreateChat")(function* ({
       while (hasMore) {
         const result = yield* Effect.tryPromise(() =>
           fetchMutation(
-            convexApi.chats.mutations.deleteMessageBatch,
+            toConvexReference(refs.public.chats.mutations.deleteMessageBatch),
             {
               chatId,
               fromCreationTime: existingMessage.creationTime,
@@ -75,7 +76,7 @@ export const saveOrCreateChat = Effect.fn("chat.saveOrCreateChat")(function* ({
 
     yield* Effect.tryPromise(() =>
       fetchMutation(
-        convexApi.chats.mutations.saveMessage,
+        toConvexReference(refs.public.chats.mutations.saveMessage),
         {
           message: {
             chatId,
@@ -93,7 +94,7 @@ export const saveOrCreateChat = Effect.fn("chat.saveOrCreateChat")(function* ({
 
   const result = yield* Effect.tryPromise(() =>
     fetchMutation(
-      convexApi.chats.mutations.createChatWithMessage,
+      toConvexReference(refs.public.chats.mutations.createChatWithMessage),
       {
         type: "study",
         message: {
@@ -125,7 +126,7 @@ export const loadMessages = Effect.fn("chat.loadMessages")(function* ({
   while (true) {
     const page: ChatMessagesPage = yield* Effect.tryPromise(() =>
       fetchQuery(
-        convexApi.chats.queries.loadMessagesPage,
+        toConvexReference(refs.public.chats.queries.loadMessagesPage),
         {
           chatId,
           paginationOpts: {

@@ -1,20 +1,21 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import {
   ArrowTurnForwardIcon,
   MessageMultiple02Icon,
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { UserData } from "@repo/backend/confect/modules/identity/users.types";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link } from "@repo/internationalization/src/navigation";
-import { useMutation, usePaginatedQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { useParams, useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -55,7 +56,7 @@ export function SchoolClassesForumList() {
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
 
   const { results, status, loadMore } = usePaginatedQuery(
-    api.classes.forums.queries.forums.getForums,
+    toConvexReference(refs.public.classes.forums.queries.forums.getForums),
     {
       classId,
       q: debouncedQ,
@@ -186,7 +187,7 @@ export function SchoolClassesForumList() {
 function TopReaction({ forum }: { forum: ForumListItem }) {
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
-    api.classes.forums.mutations.reactions.toggleForumReaction
+    refs.public.classes.forums.mutations.reactions.toggleForumReaction
   );
   const firstReaction = forum.reactionCounts[0];
 

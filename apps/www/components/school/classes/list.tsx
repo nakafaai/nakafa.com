@@ -9,11 +9,12 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import type { Doc } from "@repo/backend/confect/_generated/dataModel";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   getClassImageUrl,
   getRandomClassImage,
 } from "@repo/backend/confect/modules/school/images";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -56,7 +57,7 @@ export function SchoolClassesList() {
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
 
   const { results, status, loadMore } = usePaginatedQuery(
-    api.classes.queries.getClasses,
+    toConvexReference(refs.public.classes.queries.getClasses),
     {
       schoolId,
       q: debouncedQ,

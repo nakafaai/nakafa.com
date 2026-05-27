@@ -7,16 +7,16 @@ import {
   Flag03Icon,
   MoonsetIcon,
 } from "@hugeicons/core-free-icons";
-import type {
-  api,
-  FunctionReturnType,
-} from "@repo/backend/confect/_generated/functionReferences";
+import type refs from "@repo/backend/confect/_generated/refs";
+import type { ConvexFunctionReturn } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 
 type TryoutAttempt = NonNullable<
-  FunctionReturnType<typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt>
+  ConvexFunctionReturn<
+    typeof refs.public.tryouts.queries.me.attempt.getUserTryoutAttempt
+  >
 >["attempt"];
 
 export function TryoutAttemptStatusBadge({

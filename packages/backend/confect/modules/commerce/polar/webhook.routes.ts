@@ -2,7 +2,7 @@ import {
   validateEvent,
   WebhookVerificationError,
 } from "@polar-sh/sdk/webhooks";
-import { internal } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { readPolarWebhookSecret } from "@repo/backend/confect/modules/commerce/polar/webhook.env";
 import { convertToDatabaseSubscription } from "@repo/backend/confect/modules/commerce/subscriptions.mapper";
 import {
@@ -12,6 +12,7 @@ import {
   HTTP_INTERNAL_ERROR,
 } from "@repo/backend/confect/modules/operations/http.constants";
 import type { ConvexActionCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
 import { Effect, Schema } from "effect";
 
@@ -64,8 +65,10 @@ const handleCustomerUpsert = Effect.fn("polar.handleCustomerUpsert")(function* (
       : undefined;
   const userId = yield* Effect.promise(() =>
     ctx.runQuery(
-      internal.customers.queries.internalFunctions.customer
-        .getUserIdByPolarCustomer,
+      toConvexReference(
+        refs.internal.customers.queries.internalFunctions.customer
+          .getUserIdByPolarCustomer
+      ),
       {
         externalId: customer.externalId ?? undefined,
         metadataUserId,
@@ -79,7 +82,9 @@ const handleCustomerUpsert = Effect.fn("polar.handleCustomerUpsert")(function* (
 
   yield* Effect.promise(() =>
     ctx.runMutation(
-      internal.customers.mutations.internalFunctions.upsertCustomer,
+      toConvexReference(
+        refs.internal.customers.mutations.internalFunctions.upsertCustomer
+      ),
       {
         customer: {
           externalId: customer.externalId ?? null,
@@ -109,16 +114,24 @@ const handlePolarEvent = Effect.fn("polar.handleWebhook")(function* (
     case "customer.deleted":
       yield* Effect.promise(() =>
         ctx.runMutation(
-          internal.customers.mutations.internalFunctions.deleteCustomerById,
+          toConvexReference(
+            refs.internal.customers.mutations.internalFunctions
+              .deleteCustomerById
+          ),
           { id: event.data.id }
         )
       );
       return true;
     case "subscription.created":
       yield* Effect.promise(() =>
-        ctx.runMutation(internal.subscriptions.mutations.createSubscription, {
-          subscription: convertToDatabaseSubscription(event.data),
-        })
+        ctx.runMutation(
+          toConvexReference(
+            refs.internal.subscriptions.mutations.createSubscription
+          ),
+          {
+            subscription: convertToDatabaseSubscription(event.data),
+          }
+        )
       );
       return true;
     case "subscription.active":
@@ -127,9 +140,14 @@ const handlePolarEvent = Effect.fn("polar.handleWebhook")(function* (
     case "subscription.uncanceled":
     case "subscription.updated":
       yield* Effect.promise(() =>
-        ctx.runMutation(internal.subscriptions.mutations.updateSubscription, {
-          subscription: convertToDatabaseSubscription(event.data),
-        })
+        ctx.runMutation(
+          toConvexReference(
+            refs.internal.subscriptions.mutations.updateSubscription
+          ),
+          {
+            subscription: convertToDatabaseSubscription(event.data),
+          }
+        )
       );
       return true;
     default:

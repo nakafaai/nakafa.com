@@ -1,7 +1,7 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   PromptInput,
   type PromptInputMessage,
@@ -11,7 +11,7 @@ import {
   PromptInputTools,
 } from "@repo/design-system/components/ai/input";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useMutation } from "convex/react";
+
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { AiChatModel } from "@/components/ai/chat-model";
@@ -35,7 +35,7 @@ export function ChatNew() {
     isPending: state.isPending,
     user: state.user,
   }));
-  const createChat = useMutation(api.chats.mutations.createChat);
+  const createChat = useMutation(refs.public.chats.mutations.createChat);
 
   const [isPending, startTransition] = useTransition();
 

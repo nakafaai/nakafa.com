@@ -1,11 +1,11 @@
 "use client";
 
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import { QueryResult, useQuery } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import type {
   ContentType,
   Locale,
 } from "@repo/backend/confect/modules/content/content.schemas";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { AudioPlayerProvider } from "@repo/design-system/components/ui/audio-player";
 import { cleanSlug } from "@repo/utilities/helper";
 import { PageTitleProvider } from "@/components/ai/context/use-page-title";
@@ -24,8 +24,8 @@ interface Props {
 /** Chooses the right Nina entry point for the current learning page. */
 export function AiSheetOpen({ audio, contextTitle }: Props) {
   const sheetContextTitle = contextTitle?.trim() ?? "";
-  const { data, isPending } = useQueryWithStatus(
-    api.audioStudies.queries.publicFunctions.getAudioBySlug,
+  const audioResult = useQuery(
+    refs.public.audioStudies.queries.publicFunctions.getAudioBySlug,
     audio
       ? {
           slug: cleanSlug(audio.slug),
@@ -34,6 +34,10 @@ export function AiSheetOpen({ audio, contextTitle }: Props) {
         }
       : "skip"
   );
+  const data = QueryResult.isSuccess(audioResult)
+    ? audioResult.value
+    : undefined;
+  const isPending = QueryResult.isLoading(audioResult);
 
   if (isPending) {
     return null;

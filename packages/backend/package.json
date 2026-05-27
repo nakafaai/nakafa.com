@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "confect dev",
     "dev:convex": "convex dev --tail-logs",
-    "codegen": "confect codegen",
-    "codegen:confect": "confect codegen",
+    "codegen": "confect codegen && tsx scripts/codegen/imports.ts",
+    "codegen:confect": "confect codegen && tsx scripts/codegen/imports.ts",
     "setup": "convex dev --once && convex env set VALIDATE_ENV=true",
     "seed": "convex dev --once && convex run init",
     "deploy": "convex deploy",

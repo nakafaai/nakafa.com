@@ -1,18 +1,18 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import {
   useDocumentVisibility,
   useLocalStorage,
   useTimeout,
 } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import type {
   ContentViewRef,
   Locale,
 } from "@repo/backend/confect/modules/content/content.schemas";
 import { generateNanoId } from "@repo/design-system/lib/utils";
-import { useMutation } from "convex/react";
+
 import { Effect } from "effect";
 import { useEffect, useMemo } from "react";
 import { useContentViews } from "@/lib/context/use-content-views";
@@ -38,7 +38,7 @@ export function useRecordContentView({
   delay = 3000,
 }: UseRecordContentViewOptions) {
   const recordView = useMutation(
-    api.contents.mutations.views.recordContentView
+    refs.public.contents.mutations.views.recordContentView
   );
 
   const markAsViewed = useContentViews((s) => s.markAsViewed);

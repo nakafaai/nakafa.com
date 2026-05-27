@@ -1,7 +1,7 @@
 "use client";
 
-import { api } from "@repo/backend/confect/_generated/functionReferences";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import { QueryResult, useQuery } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, ReactNode } from "react";
 import { useState } from "react";
@@ -62,13 +62,16 @@ function TryoutPartRuntimeBody({
   const tryout = useTryoutPart((state) => state.state.tryout);
   const isReviewMode = isTryoutFinished;
   const shouldRequestAnswerSheet = status === "in-progress" || isReviewMode;
-  const { data: answerSheet, isPending: isAnswerSheetPending } =
-    useQueryWithStatus(
-      api.exercises.queries.getQuestionAnswerSheetBySlug,
-      shouldRequestAnswerSheet
-        ? { locale: tryout.locale, slug: part.setSlug }
-        : "skip"
-    );
+  const answerSheetResult = useQuery(
+    refs.public.exercises.queries.getQuestionAnswerSheetBySlug,
+    shouldRequestAnswerSheet
+      ? { locale: tryout.locale, slug: part.setSlug }
+      : "skip"
+  );
+  const answerSheet = QueryResult.isSuccess(answerSheetResult)
+    ? answerSheetResult.value
+    : undefined;
+  const isAnswerSheetPending = QueryResult.isLoading(answerSheetResult);
   const shouldShowQuestions = shouldRequestAnswerSheet && !isAnswerSheetPending;
 
   return (

@@ -1,10 +1,8 @@
 "use client";
 
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
-import type {
-  api,
-  FunctionReturnType,
-} from "@repo/backend/confect/_generated/functionReferences";
+import type refs from "@repo/backend/confect/_generated/refs";
+import type { ConvexFunctionReturn } from "@repo/backend/confect/modules/shared/convexReferences";
 import { parseExercisesMaterial } from "@repo/contents/_lib/exercises/route";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
@@ -29,7 +27,9 @@ import {
 
 type TryoutSetPartItem = Pick<
   NonNullable<
-    FunctionReturnType<typeof api.tryouts.queries.tryouts.getTryoutDetails>
+    ConvexFunctionReturn<
+      typeof refs.public.tryouts.queries.tryouts.getTryoutDetails
+    >
   >["parts"][number],
   "material" | "partKey" | "questionCount"
 > & {

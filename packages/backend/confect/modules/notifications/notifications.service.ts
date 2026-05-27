@@ -10,6 +10,7 @@ import type {
   notificationEntityTypesSchema,
   notificationTypesSchema,
 } from "@repo/backend/confect/modules/notifications/notifications.tables";
+import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import type { PaginationOptions } from "convex/server";
 import { Clock, Effect, Schema } from "effect";
 
@@ -28,6 +29,93 @@ export class NotificationInvariantError extends Schema.TaggedError<NotificationI
   "NotificationInvariantError",
   { message: Schema.String }
 ) {}
+
+/** Creates one notification unless the recipient disabled or muted it. */
+export const createNotification = Effect.fn("notifications.createNotification")(
+  function* (
+    ctx: ConvexMutationCtx,
+    args: {
+      readonly actorId?: GenericId.GenericId<"users">;
+      readonly entityId?: NotificationEntityId;
+      readonly entityType: NotificationEntityType;
+      readonly previewBody?: string;
+      readonly previewTitle?: string;
+      readonly recipientId: GenericId.GenericId<"users">;
+      readonly type: NotificationType;
+    }
+  ) {
+    const preferences = yield* Effect.promise(() =>
+      ctx.db
+        .query("notificationPreferences")
+        .withIndex("by_userId", (query) => query.eq("userId", args.recipientId))
+        .unique()
+    );
+
+    if (preferences?.disabledTypes.includes(args.type)) {
+      return null;
+    }
+
+    const entityId = args.entityId;
+    const mutedEntity =
+      entityId && args.entityType !== "system"
+        ? yield* Effect.promise(() =>
+            ctx.db
+              .query("notificationEntityMutes")
+              .withIndex("by_userId_and_entityType_and_entityId", (query) =>
+                query
+                  .eq("userId", args.recipientId)
+                  .eq("entityType", args.entityType)
+                  .eq("entityId", entityId)
+              )
+              .unique()
+          )
+        : null;
+
+    if (mutedEntity) {
+      return null;
+    }
+
+    yield* Effect.promise(() =>
+      ctx.db.insert("notifications", {
+        actorId: args.actorId,
+        entityId: args.entityId,
+        entityType: args.entityType,
+        previewBody: args.previewBody,
+        previewTitle: args.previewTitle,
+        recipientId: args.recipientId,
+        type: args.type,
+      })
+    );
+
+    const existingCount = yield* Effect.promise(() =>
+      ctx.db
+        .query("notificationCounts")
+        .withIndex("by_userId", (query) => query.eq("userId", args.recipientId))
+        .unique()
+    );
+    const updatedAt = yield* Clock.currentTimeMillis;
+
+    if (!existingCount) {
+      yield* Effect.promise(() =>
+        ctx.db.insert("notificationCounts", {
+          unreadCount: 1,
+          updatedAt,
+          userId: args.recipientId,
+        })
+      );
+      return null;
+    }
+
+    yield* Effect.promise(() =>
+      ctx.db.patch(existingCount._id, {
+        unreadCount: existingCount.unreadCount + 1,
+        updatedAt,
+      })
+    );
+
+    return null;
+  }
+);
 
 /** Upserts notification preferences for a user. */
 const upsertNotificationPreferences = Effect.fn(

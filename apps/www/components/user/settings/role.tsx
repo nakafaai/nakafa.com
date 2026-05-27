@@ -1,6 +1,6 @@
 "use client";
-
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import { useMutation } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
+
 import { Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { FormBlock } from "@/components/shared/form-block";
@@ -39,7 +39,9 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
     value: role.value,
   }));
 
-  const updateUserRole = useMutation(api.users.mutations.updateUserRole);
+  const updateUserRole = useMutation(
+    refs.public.users.mutations.updateUserRole
+  );
   const initialRole = roles.find(
     (role) => role.value === user.appUser.role
   )?.value;

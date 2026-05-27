@@ -47,10 +47,8 @@ export const notificationEntityTypesSchema = Schema.Literal(
 /**
  * Type-safe entity ID union
  *
- * Using v.id() for compile-time validation
+ * Uses Confect generic IDs so every notification target stays tied to its table.
  * Extensible: Add new table IDs as features are added
- *
- * NOTE: Keep as v.union(v.id(...)) - these are polymorphic ID references, not string literals
  */
 export const notificationEntityIdSchema = Schema.Union(
   GenericId.GenericId("schoolClassForums"),

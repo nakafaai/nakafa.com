@@ -1,13 +1,11 @@
 "use client";
 
-import type {
-  api,
-  FunctionReturnType,
-} from "@repo/backend/confect/_generated/functionReferences";
+import type refs from "@repo/backend/confect/_generated/refs";
+import type { ConvexFunctionReturn } from "@repo/backend/confect/modules/shared/convexReferences";
 import { createContext, useContextSelector } from "use-context-selector";
 
 type ClassContextValue = Extract<
-  FunctionReturnType<typeof api.classes.queries.getClassRoute>,
+  ConvexFunctionReturn<typeof refs.public.classes.queries.getClassRoute>,
   { kind: "accessible" }
 >;
 

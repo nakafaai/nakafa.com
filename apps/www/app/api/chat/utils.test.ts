@@ -1,4 +1,5 @@
-import { api as convexApi } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { fetchMutation } from "convex/nextjs";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -44,7 +45,7 @@ describe("app/api/chat/utils", () => {
       userId: "user_123",
     });
     expect(fetchMutation).toHaveBeenCalledWith(
-      convexApi.users.mutations.syncUserInfoForChat,
+      toConvexReference(refs.public.users.mutations.syncUserInfoForChat),
       {},
       {
         token: "test-token",

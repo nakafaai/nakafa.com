@@ -1,11 +1,10 @@
 "use client";
-
+import { QueryResult, useAction, useQuery } from "@confect/react";
 import { PartyIcon, Settings01Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useAction } from "convex/react";
+
 import { useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
 import { FormBlock } from "@/components/shared/form-block";
@@ -16,15 +15,17 @@ export function UserSettingsSubscriptions() {
 
   const [isPending, startTransition] = useTransition();
 
-  const { data: hasSubscription } = useQueryWithStatus(
-    api.subscriptions.queries.hasActiveSubscription,
+  const subscriptionResult = useQuery(
+    refs.public.subscriptions.queries.hasActiveSubscription,
     { productId: products.pro.id }
   );
+  const hasSubscription =
+    QueryResult.isSuccess(subscriptionResult) && subscriptionResult.value;
   const generateCheckoutLink = useAction(
-    api.customers.actions.publicFunctions.generateCheckoutLink
+    refs.public.customers.actions.publicFunctions.generateCheckoutLink
   );
   const generateCustomerPortalUrl = useAction(
-    api.customers.actions.publicFunctions.generateCustomerPortalUrl
+    refs.public.customers.actions.publicFunctions.generateCustomerPortalUrl
   );
 
   const handleCheckout = () => {

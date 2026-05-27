@@ -1,4 +1,4 @@
-import registeredFunctions from "../../confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
 
 export const syncUserInfoForChat = registeredFunctions.users.mutations.syncUserInfoForChat;
 export const updateUserName = registeredFunctions.users.mutations.updateUserName;

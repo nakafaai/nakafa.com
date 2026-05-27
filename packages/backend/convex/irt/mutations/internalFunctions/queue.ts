@@ -1,4 +1,4 @@
-import registeredFunctions from "../../../../confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
 
 export const cleanupCalibrationQueueEntries = registeredFunctions.irt.mutations.internalFunctions.queue.cleanupCalibrationQueueEntries;
 export const cleanupScalePublicationQueueEntries = registeredFunctions.irt.mutations.internalFunctions.queue.cleanupScalePublicationQueueEntries;

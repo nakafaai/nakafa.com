@@ -1,9 +1,9 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import { Cancel01Icon, PaintBrush04Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { SchoolClassImage } from "@repo/backend/confect/modules/school/classes.tables";
 import {
   CLASS_IMAGES,
@@ -20,7 +20,7 @@ import {
   SheetTrigger,
 } from "@repo/design-system/components/ui/sheet";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useMutation } from "convex/react";
+
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -73,7 +73,9 @@ function InfoCustomizeButton() {
 
   const classId = useClass((state) => state.class._id);
 
-  const updateClassImage = useMutation(api.classes.mutations.updateClassImage);
+  const updateClassImage = useMutation(
+    refs.public.classes.mutations.updateClassImage
+  );
 
   const handleImageClick = (image: SchoolClassImage) => {
     startTransition(async () => {

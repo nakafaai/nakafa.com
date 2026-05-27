@@ -1,5 +1,5 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import {
   Add01Icon,
   ArrowDown01Icon,
@@ -9,7 +9,7 @@ import {
   Time04Icon,
 } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Calendar } from "@repo/design-system/components/ui/calendar";
 import {
@@ -35,7 +35,7 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
+
 import { startOfDay } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity } from "react";
@@ -84,7 +84,7 @@ export function CreateMaterialGroupDialog({
   const t = useTranslations("School.Classes");
   const classId = useClass((state) => state.class._id);
   const createMaterialGroup = useMutation(
-    api.classes.materials.mutations.createMaterialGroup
+    refs.public.classes.materials.mutations.createMaterialGroup
   );
 
   return (
@@ -128,7 +128,7 @@ export function EditMaterialGroupDialog({
 }) {
   const t = useTranslations("School.Classes");
   const updateMaterialGroup = useMutation(
-    api.classes.materials.mutations.updateMaterialGroup
+    refs.public.classes.materials.mutations.updateMaterialGroup
   );
 
   return (

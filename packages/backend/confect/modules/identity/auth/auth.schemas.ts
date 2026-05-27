@@ -1,19 +1,19 @@
 import { Schema } from "effect";
 
-const jwksKeyValueSchema = Schema.Union(
-  Schema.Null,
-  Schema.Boolean,
-  Schema.Number,
-  Schema.String,
-  Schema.Array(Schema.String)
-);
-
-const jwksKeySchema = Schema.Record({
-  key: Schema.String,
-  value: jwksKeyValueSchema,
+const jwksDocumentSchema = Schema.Struct({
+  alg: Schema.optional(Schema.String),
+  createdAt: Schema.Number,
+  expiresAt: Schema.optional(Schema.Union(Schema.Null, Schema.Number)),
+  id: Schema.String,
+  privateKey: Schema.String,
+  publicKey: Schema.String,
 });
 
-/** JSON Web Key Set payload returned by Better Auth. */
-export const jwksSchema = Schema.Struct({
-  keys: Schema.Array(jwksKeySchema),
-});
+/**
+ * Static JWKS document array returned by the Better Auth Convex plugin.
+ *
+ * References:
+ * - https://labs.convex.dev/better-auth/experimental#static-jwks
+ * - https://github.com/get-convex/better-auth/blob/main/src/plugins/convex/index.ts
+ */
+export const jwksSchema = Schema.Array(jwksDocumentSchema);

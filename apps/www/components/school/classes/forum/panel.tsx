@@ -1,10 +1,10 @@
 "use client";
 
+import { QueryResult, useQuery } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useQuery } from "convex/react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { SchoolClassesDetailPanel } from "@/components/school/classes/detail-panel";
@@ -26,9 +26,15 @@ export function SchoolClassesForumPanel({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { id, slug } = useParams<{ id: string; slug: string }>();
-  const forum = useQuery(api.classes.forums.queries.forums.getForum, {
-    forumId,
-  });
+  const forumResult = useQuery(
+    refs.public.classes.forums.queries.forums.getForum,
+    {
+      forumId,
+    }
+  );
+  const forum = QueryResult.isSuccess(forumResult)
+    ? forumResult.value
+    : undefined;
   const closeHref = getSchoolClassesForumHref({
     classRouteId: id,
     queryString: searchParams.toString(),

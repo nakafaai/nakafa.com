@@ -1,6 +1,7 @@
-import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { createNotification } from "@repo/backend/confect/modules/notifications/notifications.service";
 import {
   isAdmin,
   loadActiveClass,
@@ -12,6 +13,10 @@ import {
   loadActiveForumWithAccess,
   loadOpenForumWithAccess,
 } from "@repo/backend/confect/modules/school/forums/access.service";
+import {
+  forumPostsByAuthorSequence,
+  forumPostsBySequence,
+} from "@repo/backend/confect/modules/school/forums/aggregates";
 import { resolveForumAttachmentUploads } from "@repo/backend/confect/modules/school/forums/attachments.service";
 import {
   MAX_FORUM_POST_ATTACHMENTS,
@@ -26,6 +31,85 @@ import {
 } from "@repo/backend/confect/modules/school/forums/posts.service";
 import { validateForumReactionValue } from "@repo/backend/confect/modules/school/forums/reactions.service";
 import { Clock, Effect } from "effect";
+
+type ForumDoc = Doc<"schoolClassForums">;
+type ForumPostDoc = Doc<"schoolClassForumPosts">;
+type ForumReactionCounts = ForumDoc["reactionCounts"];
+
+/** Returns denormalized reaction counts after one insert/delete. */
+function applyReactionDelta(
+  reactionCounts: ForumReactionCounts,
+  emoji: string,
+  delta: number
+) {
+  const nextReactionCounts = [...reactionCounts];
+  const existingIndex = nextReactionCounts.findIndex(
+    (reactionCount) => reactionCount.emoji === emoji
+  );
+
+  if (existingIndex < 0 && delta <= 0) {
+    return nextReactionCounts;
+  }
+
+  if (existingIndex < 0) {
+    return [...nextReactionCounts, { count: delta, emoji }];
+  }
+
+  const nextCount = nextReactionCounts[existingIndex].count + delta;
+
+  if (nextCount <= 0) {
+    nextReactionCounts.splice(existingIndex, 1);
+    return nextReactionCounts;
+  }
+
+  nextReactionCounts[existingIndex] = { count: nextCount, emoji };
+  return nextReactionCounts;
+}
+
+/** Sends reply and mention notifications for a newly inserted forum post. */
+const notifyForumPostParticipants = Effect.fn(
+  "school.forums.notifyForumPostParticipants"
+)(function* (args: { forum: ForumDoc; post: ForumPostDoc }) {
+  const ctx = yield* MutationCtx;
+  const previewBody = truncateText({ text: args.post.body });
+
+  if (
+    args.post.parentId &&
+    args.post.replyToUserId &&
+    args.post.replyToUserId !== args.post.createdBy
+  ) {
+    yield* createNotification(ctx, {
+      actorId: args.post.createdBy,
+      entityId: args.post._id,
+      entityType: "schoolClassForumPosts",
+      previewBody,
+      previewTitle: args.forum.title,
+      recipientId: args.post.replyToUserId,
+      type: "post_reply",
+    });
+  }
+
+  for (const mentionedUserId of args.post.mentions) {
+    if (
+      mentionedUserId === args.post.createdBy ||
+      mentionedUserId === args.post.replyToUserId
+    ) {
+      continue;
+    }
+
+    yield* createNotification(ctx, {
+      actorId: args.post.createdBy,
+      entityId: args.post._id,
+      entityType: "schoolClassForumPosts",
+      previewBody,
+      previewTitle: args.forum.title,
+      recipientId: mentionedUserId,
+      type: "post_mention",
+    });
+  }
+
+  return null;
+});
 
 /** Creates a class forum thread. */
 export const createForum = Effect.fn("school.forums.createForum")(
@@ -184,6 +268,47 @@ export const createForumPost = Effect.fn("school.forums.createForumPost")(
         updatedAt: now,
       })
     );
+    const post = yield* Effect.promise(() => ctx.db.get(postId));
+
+    if (!post) {
+      return yield* Effect.fail(
+        new ClassActionError({ message: "Created forum post not found." })
+      );
+    }
+
+    yield* Effect.promise(() => forumPostsBySequence.insert(ctx, post));
+    yield* Effect.promise(() => forumPostsByAuthorSequence.insert(ctx, post));
+    yield* Effect.promise(() =>
+      ctx.db.patch(forum._id, {
+        lastPostAt: post._creationTime,
+        lastPostBy: userId,
+        postCount: forum.postCount + 1,
+        updatedAt: now,
+      })
+    );
+    yield* updateForumReadState(ctx, {
+      classId: forum.classId,
+      forumId: forum._id,
+      lastReadSequence: post.sequence,
+      userId,
+    });
+
+    const parentId = args.parentId;
+
+    if (parentId) {
+      const parentPost = yield* Effect.promise(() => ctx.db.get(parentId));
+
+      if (parentPost) {
+        yield* Effect.promise(() =>
+          ctx.db.patch(parentId, {
+            replyCount: parentPost.replyCount + 1,
+            updatedAt: now,
+          })
+        );
+      }
+    }
+
+    yield* notifyForumPostParticipants({ forum, post });
 
     for (const attachment of attachments) {
       yield* Effect.promise(() =>
@@ -228,6 +353,11 @@ export const toggleForumReaction = Effect.fn(
 
   if (existingReaction) {
     yield* Effect.promise(() => ctx.db.delete(existingReaction._id));
+    yield* Effect.promise(() =>
+      ctx.db.patch(forum._id, {
+        reactionCounts: applyReactionDelta(forum.reactionCounts, emoji, -1),
+      })
+    );
     return { added: false };
   }
 
@@ -251,6 +381,11 @@ export const toggleForumReaction = Effect.fn(
       emoji,
       forumId: args.forumId,
       userId,
+    })
+  );
+  yield* Effect.promise(() =>
+    ctx.db.patch(forum._id, {
+      reactionCounts: applyReactionDelta(forum.reactionCounts, emoji, 1),
     })
   );
 
@@ -287,6 +422,11 @@ export const togglePostReaction = Effect.fn("school.forums.togglePostReaction")(
 
     if (existingReaction) {
       yield* Effect.promise(() => ctx.db.delete(existingReaction._id));
+      yield* Effect.promise(() =>
+        ctx.db.patch(post._id, {
+          reactionCounts: applyReactionDelta(post.reactionCounts, emoji, -1),
+        })
+      );
       return { added: false };
     }
 
@@ -310,6 +450,11 @@ export const togglePostReaction = Effect.fn("school.forums.togglePostReaction")(
         emoji,
         postId: args.postId,
         userId,
+      })
+    );
+    yield* Effect.promise(() =>
+      ctx.db.patch(post._id, {
+        reactionCounts: applyReactionDelta(post.reactionCounts, emoji, 1),
       })
     );
 

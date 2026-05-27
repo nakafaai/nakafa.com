@@ -1,9 +1,9 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { cn } from "@repo/design-system/lib/utils";
-import { useMutation } from "convex/react";
+
 import { motion } from "motion/react";
 import { CompleteExerciseButton } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/attempt-complete-button";
 import { StartExerciseButton } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/attempt-start-button";
@@ -19,7 +19,9 @@ interface Props {
 
 export function ExerciseAttempt({ totalExercises }: Props) {
   const attempt = useAttempt((state) => state.attempt);
-  const completeAttempt = useMutation(api.exercises.mutations.completeAttempt);
+  const completeAttempt = useMutation(
+    refs.public.exercises.mutations.completeAttempt
+  );
   const { hidden } = useStickyVisibility();
 
   const timer = useExerciseTimer({

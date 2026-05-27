@@ -22,6 +22,7 @@ import {
   syncFull,
   syncIncremental,
 } from "@repo/backend/scripts/sync-content/workflows";
+import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
 /** Parses one sync-content CLI invocation into a command and option bag. */
@@ -34,8 +35,9 @@ const parseArgs = Effect.fn("sync.parseArgs")(function* () {
     const arg = args[index];
     if (arg === "--locale" && args[index + 1]) {
       const locale = args[index + 1];
-      if (locale === "en" || locale === "id") {
-        options.locale = locale;
+      const supportedLocale = locales.find((candidate) => candidate === locale);
+      if (supportedLocale) {
+        options.locale = supportedLocale;
         index++;
       }
     }
@@ -88,7 +90,7 @@ const printUsage = (): void => {
     "  sync:prod:reset:tryouts - Delete tryout content/read models, access rows, entitlements, and IRT scale data in production, then run a full sync"
   );
   log("\nOptions:");
-  log("  --locale en|id  - Sync specific locale only");
+  log(`  --locale ${locales.join("|")}  - Sync specific locale only`);
   log("  --force         - Actually delete content (for clean/reset)");
   log("  --authors       - Also delete authors (for clean/reset)");
   log("  --sequential    - Run sync phases sequentially (for debugging)");

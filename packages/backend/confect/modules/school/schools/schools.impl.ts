@@ -34,12 +34,9 @@ const schools_queries_getSchoolBySlugImpl = FunctionImpl.make(
   "schools.queries",
   "getSchoolBySlug",
   (args) =>
-    school_schools.getSchoolBySlug(args).pipe(
-      Effect.catchTags({
-        SchoolActionError: (error) => Effect.die(error),
-        UnauthorizedUser: (error) => Effect.die(error),
-      })
-    )
+    school_schools
+      .getSchoolBySlug(args)
+      .pipe(Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)))
 );
 
 const schools_queries_getMySchoolLandingStateImpl = FunctionImpl.make(

@@ -1,4 +1,5 @@
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -14,7 +15,10 @@ export default async function Page(
 
   const [t, landingState] = await Promise.all([
     getTranslations({ locale, namespace: "School.Onboarding" }),
-    fetchAuthQuery(api.schools.queries.getMySchoolLandingState, {}),
+    fetchAuthQuery(
+      toConvexReference(refs.public.schools.queries.getMySchoolLandingState),
+      {}
+    ),
   ]);
 
   if (landingState.kind === "none") {

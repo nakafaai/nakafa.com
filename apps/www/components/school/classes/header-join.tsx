@@ -1,9 +1,9 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import { InLoveIcon, Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -19,7 +19,7 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
+
 import { Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -42,7 +42,7 @@ export function SchoolClassesHeaderJoin() {
 
   const [open, openHandlers] = useDisclosure(false);
 
-  const joinClass = useMutation(api.classes.mutations.joinClass);
+  const joinClass = useMutation(refs.public.classes.mutations.joinClass);
 
   const form = useForm({
     defaultValues,

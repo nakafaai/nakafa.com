@@ -1,4 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { ClassActionError } from "@repo/backend/confect/modules/school/classErrors";
 import { Schema } from "effect";
 
 const classesQueriesGroup = GroupSpec.make("queries")
@@ -85,6 +86,7 @@ const classesQueriesGroup = GroupSpec.make("queries")
     FunctionSpec.publicQuery({
       name: "getClassRoute",
       args: Schema.Struct({ classId: Schema.String }),
+      error: ClassActionError,
       returns: Schema.Union(
         Schema.Struct({
           class: Schema.Struct({

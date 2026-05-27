@@ -4,16 +4,12 @@ import {
   QueryCtx,
 } from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { SchoolActionError } from "@repo/backend/confect/modules/school/schoolErrors";
 import type { PaginationOptions } from "convex/server";
-import { Clock, Effect, Schema } from "effect";
+import { Clock, Effect } from "effect";
 import { nanoid } from "nanoid";
 
 const SCHOOL_INVITE_ROLES = ["teacher", "student", "parent", "demo"] as const;
-
-export class SchoolActionError extends Schema.TaggedError<SchoolActionError>()(
-  "SchoolActionError",
-  { message: Schema.String }
-) {}
 
 /** Converts a school name into a URL-safe slug base. */
 function slugify(text: string) {
@@ -270,6 +266,7 @@ export const getSchoolBySlug = Effect.fn("schools.getSchoolBySlug")(
     if (!school) {
       return yield* Effect.fail(
         new SchoolActionError({
+          code: "SCHOOL_NOT_FOUND",
           message: `School not found for slug: ${args.slug}`,
         })
       );
@@ -282,6 +279,7 @@ export const getSchoolBySlug = Effect.fn("schools.getSchoolBySlug")(
     if (!membership) {
       return yield* Effect.fail(
         new SchoolActionError({
+          code: "MEMBERSHIP_NOT_FOUND",
           message: `Membership not found for schoolId: ${school._id} and userId: ${user.appUser._id}`,
         })
       );

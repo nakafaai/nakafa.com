@@ -1,10 +1,8 @@
 "use client";
 
 import { StarsIcon } from "@hugeicons/core-free-icons";
-import type {
-  api,
-  FunctionReturnType,
-} from "@repo/backend/confect/_generated/functionReferences";
+import type refs from "@repo/backend/confect/_generated/refs";
+import type { ConvexFunctionReturn } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   AudioPlayerButton,
   AudioPlayerDuration,
@@ -25,8 +23,8 @@ import { useAi } from "@/components/ai/context/use-ai";
 import { usePageTitle } from "@/components/ai/context/use-page-title";
 
 type AudioStudy = NonNullable<
-  FunctionReturnType<
-    typeof api.audioStudies.queries.publicFunctions.getAudioBySlug
+  ConvexFunctionReturn<
+    typeof refs.public.audioStudies.queries.publicFunctions.getAudioBySlug
   >
 >;
 

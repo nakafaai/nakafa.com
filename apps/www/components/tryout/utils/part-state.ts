@@ -1,18 +1,16 @@
-import type {
-  api,
-  FunctionReturnType,
-} from "@repo/backend/confect/_generated/functionReferences";
+import type refs from "@repo/backend/confect/_generated/refs";
+import type { ConvexFunctionReturn } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   getEffectivePartAttemptStatus,
   getEffectiveTryoutStatus,
 } from "@/components/tryout/utils/status";
 
-type TryoutAttemptData = FunctionReturnType<
-  typeof api.tryouts.queries.me.attempt.getUserTryoutAttempt
+type TryoutAttemptData = ConvexFunctionReturn<
+  typeof refs.public.tryouts.queries.me.attempt.getUserTryoutAttempt
 >;
 
-type TryoutPartRuntime = FunctionReturnType<
-  typeof api.tryouts.queries.me.part.getUserTryoutPartAttempt
+type TryoutPartRuntime = ConvexFunctionReturn<
+  typeof refs.public.tryouts.queries.me.part.getUserTryoutPartAttempt
 >;
 type TryoutAttemptStatus = NonNullable<TryoutAttemptData>["attempt"]["status"];
 

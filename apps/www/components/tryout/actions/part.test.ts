@@ -5,14 +5,13 @@ import {
   completeTryoutPart,
   startTryoutPart,
 } from "@/components/tryout/actions/part";
-
-type TryoutAttemptId = Parameters<typeof startTryoutPart>[0]["tryoutAttemptId"];
+import { decodeTryoutAttemptId } from "@/lib/data/convex-ids";
 
 const testLocale = locales[1];
 const tryoutPartKey = "mathematical-reasoning";
 const tryoutPartKeys = [tryoutPartKey] as const;
 const tryoutSlug = "2026-set-1";
-const tryoutAttemptId = "tryoutAttemptId" as TryoutAttemptId;
+const tryoutAttemptId = decodeTryoutAttemptId("tryoutAttemptId");
 
 const mocks = vi.hoisted(() => ({
   after: vi.fn(async (callback) => await callback()),

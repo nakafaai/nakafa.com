@@ -1,6 +1,7 @@
 import { execSync } from "node:child_process";
 import * as fs from "node:fs";
 import { parseEnv } from "node:util";
+import { getUnknownMessage } from "@repo/backend/scripts/lib/errors";
 import {
   CONTENTS_DIR,
   getBackendEnvFilePath,
@@ -19,9 +20,6 @@ class RuntimeFileError extends Schema.TaggedError<RuntimeFileError>()(
     message: Schema.String,
   }
 ) {}
-
-const getUnknownMessage = (error: unknown) =>
-  error instanceof Error ? error.message : String(error);
 
 /** Builds an Effect config provider from backend `.env.local` plus the shell. */
 export const loadEnvProvider = Effect.fn("scripts.loadEnvProvider")(function* (

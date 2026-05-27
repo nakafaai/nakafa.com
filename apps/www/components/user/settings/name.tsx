@@ -1,11 +1,11 @@
 "use client";
-
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import { useMutation } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
+
 import { Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { FormBlock } from "@/components/shared/form-block";
@@ -26,7 +26,9 @@ const formSchema = Schema.standardSchemaV1(
 export function UserSettingsName({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
 
-  const updateUserName = useMutation(api.users.mutations.updateUserName);
+  const updateUserName = useMutation(
+    refs.public.users.mutations.updateUserName
+  );
 
   const form = useForm({
     defaultValues: {

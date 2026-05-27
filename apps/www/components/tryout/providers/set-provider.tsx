@@ -1,10 +1,11 @@
 "use client";
 
+import type refs from "@repo/backend/confect/_generated/refs";
 import type {
-  api,
-  FunctionArgs,
-  FunctionReturnType,
-} from "@repo/backend/confect/_generated/functionReferences";
+  ConvexFunctionArgs,
+  ConvexFunctionReference,
+  ConvexFunctionReturn,
+} from "@repo/backend/confect/modules/shared/convexReferences";
 import { preloadedQueryResult } from "convex/nextjs";
 import { type Preloaded, useConvexAuth, usePreloadedQuery } from "convex/react";
 import { type PropsWithChildren, useMemo } from "react";
@@ -14,11 +15,13 @@ import { useTryoutStartFlow } from "@/components/tryout/hooks/use-tryout-start-f
 import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 import type { UseExerciseTimerReturn } from "@/lib/hooks/use-exercise-timer";
 
-type TryoutSetViewData = FunctionReturnType<
-  typeof api.tryouts.queries.me.setView.getUserTryoutSetView
+type TryoutSetViewData = ConvexFunctionReturn<
+  typeof refs.public.tryouts.queries.me.setView.getUserTryoutSetView
 >;
 type PreloadedTryoutSetView = Preloaded<
-  typeof api.tryouts.queries.me.setView.getUserTryoutSetView
+  ConvexFunctionReference<
+    typeof refs.public.tryouts.queries.me.setView.getUserTryoutSetView
+  >
 >;
 type TryoutSetAttemptData = NonNullable<TryoutSetViewData>["attemptData"];
 type TryoutRemainingTime = UseExerciseTimerReturn["formatted"];
@@ -26,8 +29,8 @@ type InitialTryoutAttemptHistory = NonNullable<
   NonNullable<TryoutSetViewData>["initialHistory"]["page"]
 >;
 
-export type TryoutSetParams = FunctionArgs<
-  typeof api.tryouts.mutations.attempts.startTryout
+export type TryoutSetParams = ConvexFunctionArgs<
+  typeof refs.public.tryouts.mutations.attempts.startTryout
 >;
 
 interface TryoutSetContextValue {

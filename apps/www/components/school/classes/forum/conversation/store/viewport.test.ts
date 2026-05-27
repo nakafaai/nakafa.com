@@ -1,9 +1,12 @@
-import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import { describe, expect, it } from "vitest";
+import {
+  conversationTestOtherPostId,
+  conversationTestPostId,
+} from "@/components/school/classes/forum/conversation/helpers/test";
 import { createViewportStore } from "@/components/school/classes/forum/conversation/store/viewport";
 
-const firstPostId = "post_1" as Id<"schoolClassForumPosts">;
-const secondPostId = "post_2" as Id<"schoolClassForumPosts">;
+const firstPostId = conversationTestPostId;
+const secondPostId = conversationTestOtherPostId;
 
 describe("conversation/store/viewport", () => {
   it("pushes and pops semantic back views in order", () => {

@@ -12,9 +12,9 @@ import type { ConversationUnreadCue } from "@/components/school/classes/forum/co
 
 export interface ActiveTranscriptModel {
   lastPostId: Id<"schoolClassForumPosts"> | null;
-  postIds: Id<"schoolClassForumPosts">[];
+  postIds: readonly Id<"schoolClassForumPosts">[];
   rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
-  rows: ConversationRow[];
+  rows: readonly ConversationRow[];
 }
 
 /** Builds the current loaded transcript model from one reactive post list. */
@@ -24,7 +24,7 @@ export function createActiveTranscriptModel({
   unreadCue,
 }: {
   forum: Forum | undefined;
-  posts: ForumPost[];
+  posts: readonly ForumPost[];
   unreadCue?: ConversationUnreadCue | null;
 }) {
   const rows = createConversationRows({

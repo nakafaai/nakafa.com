@@ -1,4 +1,4 @@
-import registeredFunctions from "../../../confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
 
 export const cleanup = registeredFunctions.audioStudies.mutations.queue.cleanup;
 export const lockQueueItem = registeredFunctions.audioStudies.mutations.queue.lockQueueItem;

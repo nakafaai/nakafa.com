@@ -12,6 +12,10 @@ const config = defineConfig({
       enabled: true,
       provider: "istanbul",
       reportsDirectory: "./coverage",
+      thresholds: {
+        100: true,
+        perFile: true,
+      },
     },
     setupFiles: ["./vitest.setup.ts"],
     projects: [

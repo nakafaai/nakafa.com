@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import {
   AccessIcon,
   EyeIcon,
@@ -8,14 +8,13 @@ import {
   UnavailableIcon,
 } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { useMutation } from "convex/react";
+
 import { format } from "date-fns";
 import type { Locale } from "next-intl";
 import { useLocale, useTranslations } from "next-intl";
@@ -51,14 +50,18 @@ export function EventAccessPage({ code }: Props) {
   const pathname = usePathname();
   const authHref = getAuthHref(pathname);
   const [isActionPending, startTransition] = useTransition();
-  const { data: pageState, isPending } = useQueryWithStatus(
-    api.tryoutAccess.queries.page.getEventPageState,
+  const pageStateResult = useQuery(
+    refs.public.tryoutAccess.queries.page.getEventPageState,
     {
       code,
     }
   );
+  const pageState = QueryResult.isSuccess(pageStateResult)
+    ? pageStateResult.value
+    : undefined;
+  const isPending = QueryResult.isLoading(pageStateResult);
   const redeemEventAccess = useMutation(
-    api.tryoutAccess.mutations.redeem.redeemEventAccess
+    refs.public.tryoutAccess.mutations.redeem.redeemEventAccess
   );
 
   /** Redeems the current event code and lets the live page state refresh the UI. */

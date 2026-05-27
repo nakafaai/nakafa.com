@@ -1,4 +1,5 @@
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   isTryoutProduct,
   type TryoutProduct,
@@ -37,11 +38,14 @@ export default async function Page(
       getTranslations({ locale, namespace: "Common" }),
       getTranslations({ locale, namespace: "Exercises" }),
       getTranslations({ locale, namespace: "Tryouts" }),
-      fetchQuery(api.tryouts.queries.tryouts.getTryoutDetails, {
-        locale,
-        product,
-        slug,
-      }),
+      fetchQuery(
+        toConvexReference(refs.public.tryouts.queries.tryouts.getTryoutDetails),
+        {
+          locale,
+          product,
+          slug,
+        }
+      ),
       getToken(),
     ]);
 
@@ -52,7 +56,9 @@ export default async function Page(
   const initialNowMs = Date.now();
   const preloadedSetView = token
     ? await preloadQuery(
-        api.tryouts.queries.me.setView.getUserTryoutSetView,
+        toConvexReference(
+          refs.public.tryouts.queries.me.setView.getUserTryoutSetView
+        ),
         {
           attemptId: attempt ?? undefined,
           locale,

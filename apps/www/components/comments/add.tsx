@@ -1,12 +1,12 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import {
   ArrowUp02Icon,
   Cancel01Icon,
   Login01Icon,
 } from "@hugeicons/core-free-icons";
 import type { Doc } from "@repo/backend/confect/_generated/dataModel";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   Avatar,
   AvatarFallback,
@@ -19,7 +19,7 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import { Link, usePathname } from "@repo/internationalization/src/navigation";
-import { useMutation } from "convex/react";
+
 import { useTranslations } from "next-intl";
 import { type SubmitEventHandler, useState, useTransition } from "react";
 import { useUser } from "@/lib/context/use-user";
@@ -41,7 +41,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
   const [commentText, setCommentText] = useState("");
 
   const user = useUser((s) => s.user);
-  const addComment = useMutation(api.comments.mutations.addComment);
+  const addComment = useMutation(refs.public.comments.mutations.addComment);
 
   const [isPending, startTransition] = useTransition();
 

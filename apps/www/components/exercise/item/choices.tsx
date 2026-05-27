@@ -1,7 +1,7 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 import { Response } from "@repo/design-system/components/ai/response";
 import type { Button } from "@repo/design-system/components/ui/button";
@@ -9,7 +9,8 @@ import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Label } from "@repo/design-system/components/ui/label";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
-import { useMutation } from "convex/react";
+
+import { Either } from "effect";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, useTransition } from "react";
 import { toast } from "sonner";
@@ -41,7 +42,9 @@ export function ExerciseChoices({
   );
   const isInputLocked = useAttempt((state) => state.isInputLocked);
   const isReviewMode = useAttempt((state) => state.isReviewMode);
-  const submitAttempt = useMutation(api.exercises.mutations.submitAnswer);
+  const submitAttempt = useMutation(
+    refs.public.exercises.mutations.submitAnswer
+  );
   const timeSpent = useExercise(
     (state) => state.timeSpent[exerciseNumber] ?? 0
   );
@@ -74,40 +77,47 @@ export function ExerciseChoices({
       return;
     }
 
+    const handleSubmitError = (errorCode: string | null, error: unknown) => {
+      if (errorCode === "TIME_EXPIRED" || errorCode === "TRYOUT_EXPIRED") {
+        toast.info(t("attempt-expiry-processing"), {
+          position: "bottom-center",
+        });
+        return;
+      }
+
+      if (errorCode === "INVALID_ATTEMPT_STATUS") {
+        toast.info(t("attempt-not-in-progress"), {
+          position: "bottom-center",
+        });
+        return;
+      }
+
+      captureException(error, {
+        ...(errorCode ? { error_code: errorCode } : {}),
+        source: "exercise-submit-answer",
+      });
+
+      toast.error(t("submit-answer-error"), {
+        position: "bottom-center",
+      });
+    };
+
     startTransition(async () => {
       try {
-        await submitAttempt({
+        const result = await submitAttempt({
           attemptId,
           exerciseNumber,
           questionId: answerSheetEntry.questionId,
           selectedOptionId: option.optionKey,
           timeSpent,
         });
+
+        if (Either.isLeft(result)) {
+          handleSubmitError(result.left.code, result.left);
+          return;
+        }
       } catch (error) {
-        const errorCode = getApplicationErrorCode(error);
-
-        if (errorCode === "TIME_EXPIRED" || errorCode === "TRYOUT_EXPIRED") {
-          toast.info(t("attempt-expiry-processing"), {
-            position: "bottom-center",
-          });
-          return;
-        }
-
-        if (errorCode === "INVALID_ATTEMPT_STATUS") {
-          toast.info(t("attempt-not-in-progress"), {
-            position: "bottom-center",
-          });
-          return;
-        }
-
-        captureException(error, {
-          ...(errorCode ? { error_code: errorCode } : {}),
-          source: "exercise-submit-answer",
-        });
-
-        toast.error(t("submit-answer-error"), {
-          position: "bottom-center",
-        });
+        handleSubmitError(getApplicationErrorCode(error), error);
       }
     });
   }

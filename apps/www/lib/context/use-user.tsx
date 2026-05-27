@@ -1,14 +1,14 @@
 "use client";
 
+import type { Ref } from "@confect/core";
+import { QueryResult, useQuery } from "@confect/react";
 import { analytics } from "@repo/analytics/posthog";
-import type { FunctionReturnType } from "@repo/backend/confect/_generated/functionReferences";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import { useEffect } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 export type CurrentUser = NonNullable<
-  FunctionReturnType<typeof api.auth.getCurrentUser>
+  Ref.Returns<typeof refs.public.auth.getCurrentUser>
 >;
 
 interface UserContextValue {
@@ -31,7 +31,9 @@ export function UserContextProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { data: user, isPending } = useQueryWithStatus(api.auth.getCurrentUser);
+  const userResult = useQuery(refs.public.auth.getCurrentUser, {});
+  const user = QueryResult.isSuccess(userResult) ? userResult.value : undefined;
+  const isPending = QueryResult.isLoading(userResult);
   const currentUser = user ?? null;
   const appUser = currentUser?.appUser ?? null;
   const userId = currentUser?.appUser._id ?? null;

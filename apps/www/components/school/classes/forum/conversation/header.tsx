@@ -1,6 +1,7 @@
+import { useMutation } from "@confect/react";
 import { WinkIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -30,7 +31,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { useMutation } from "convex/react";
 import { format } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { memo, useTransition } from "react";
@@ -94,7 +94,7 @@ const ForumReactions = memo(() => {
 
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
-    api.classes.forums.mutations.reactions.toggleForumReaction
+    refs.public.classes.forums.mutations.reactions.toggleForumReaction
   );
 
   if (!(forum && forum.reactionUsers.length > 0)) {
@@ -162,7 +162,7 @@ const ForumActions = memo(() => {
   const [isReactionPickerOpen, reactionPicker] = useDisclosure(false);
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
-    api.classes.forums.mutations.reactions.toggleForumReaction
+    refs.public.classes.forums.mutations.reactions.toggleForumReaction
   );
 
   if (!forum) {

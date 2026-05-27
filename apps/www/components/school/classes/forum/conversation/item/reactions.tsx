@@ -1,11 +1,11 @@
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import { useMutation } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@repo/design-system/components/ui/hover-card";
-import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { memo, useTransition } from "react";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
@@ -15,7 +15,7 @@ export const PostReactions = memo(({ post }: { post: ForumPost }) => {
   const t = useTranslations("Common");
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
-    api.classes.forums.mutations.reactions.togglePostReaction
+    refs.public.classes.forums.mutations.reactions.togglePostReaction
   );
 
   if (post.reactionUsers.length === 0) {

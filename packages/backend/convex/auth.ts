@@ -1,4 +1,4 @@
-import registeredFunctions from "../confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
 
 export const getCurrentUser = registeredFunctions.auth.getCurrentUser;
 export const getLatestJwks = registeredFunctions.auth.getLatestJwks;

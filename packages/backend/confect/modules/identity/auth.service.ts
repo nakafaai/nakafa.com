@@ -214,40 +214,30 @@ export const getCurrentUser = Effect.fn("identity.getCurrentUser")(
   }
 );
 
-/** Reads the latest Better Auth JWKS payload. */
+/**
+ * Reads the Better Auth static JWKS documents for `convex env set JWKS`.
+ *
+ * References:
+ * - https://labs.convex.dev/better-auth/experimental#static-jwks
+ * - https://github.com/get-convex/better-auth/blob/main/src/plugins/convex/index.ts
+ */
 export const getLatestJwks = Effect.fn("identity.getLatestJwks")(function* () {
   const ctx = yield* ActionCtx;
   const auth = createAuth(ctx);
-  const url = new URL("/api/auth/convex/latest-jwks", authEnvironment.siteUrl);
-  const response = yield* Effect.tryPromise({
-    try: () => auth.handler(new Request(url, { method: "POST" })),
+
+  const jwks = yield* Effect.tryPromise({
+    try: () => auth.api.getLatestJwks(),
     catch: () =>
       new AuthJwksRequestError({
-        message: "Unable to request the latest Better Auth JWKS.",
+        message: "Unable to read the latest Better Auth JWKS.",
       }),
   });
 
-  if (!response.ok) {
-    return yield* Effect.fail(
-      new AuthJwksRequestError({
-        message: `Better Auth JWKS request failed with status ${response.status}.`,
-      })
-    );
-  }
-
-  const body = yield* Effect.tryPromise({
-    try: () => response.text(),
-    catch: () =>
-      new AuthJwksRequestError({
-        message: "Unable to read the latest Better Auth JWKS response.",
-      }),
-  });
-
-  return yield* Schema.decodeUnknown(Schema.parseJson(jwksSchema))(body).pipe(
+  return yield* Schema.decodeUnknown(jwksSchema)(jwks).pipe(
     Effect.mapError(
       () =>
         new AuthJwksRequestError({
-          message: "Better Auth JWKS response was not valid JSON.",
+          message: "Better Auth JWKS response did not match static JWKS.",
         })
     )
   );

@@ -1,4 +1,5 @@
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { fetchAuthQuery, getToken } from "@/lib/auth/server";
@@ -15,7 +16,7 @@ export async function School({
 
   if (token) {
     const landingState = await fetchAuthQuery(
-      api.schools.queries.getMySchoolLandingState,
+      toConvexReference(refs.public.schools.queries.getMySchoolLandingState),
       {}
     );
 

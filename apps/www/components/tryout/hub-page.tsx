@@ -1,5 +1,6 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { primaryTryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -32,19 +33,28 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
   };
   const catalogSnapshot = token
     ? fetchQuery(
-        api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
+        toConvexReference(
+          refs.public.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot
+        ),
         catalogSnapshotArgs,
         { token }
       )
     : fetchQuery(
-        api.tryouts.queries.tryouts.getPublicActiveTryoutCatalogSnapshot,
+        toConvexReference(
+          refs.public.tryouts.queries.tryouts
+            .getPublicActiveTryoutCatalogSnapshot
+        ),
         catalogSnapshotArgs
       );
 
   const [catalogSnapshotResult, currentUser] = await Promise.all([
     catalogSnapshot,
     token
-      ? fetchQuery(api.auth.getCurrentUser, {}, { token })
+      ? fetchQuery(
+          toConvexReference(refs.public.auth.getCurrentUser),
+          {},
+          { token }
+        )
       : Promise.resolve(null),
   ]);
   const userName = currentUser?.appUser.name ?? tHome("guest");

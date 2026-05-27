@@ -1,16 +1,21 @@
-import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import type { CacheSnapshot } from "virtua";
 import { beforeEach, describe, expect, it } from "vitest";
+import {
+  conversationTestForumId,
+  conversationTestOtherForumId,
+  conversationTestOtherPostId,
+  conversationTestPostId,
+  createConversationTestCache,
+} from "@/components/school/classes/forum/conversation/helpers/test";
 import {
   canRestoreConversationScrollCache,
   createForumSessionStore,
 } from "@/components/school/classes/forum/store/session";
 
-const forumId = "forum_1" as Id<"schoolClassForums">;
-const otherForumId = "forum_2" as Id<"schoolClassForums">;
-const lastPostId = "post_1" as Id<"schoolClassForumPosts">;
-const otherPostId = "post_2" as Id<"schoolClassForumPosts">;
-const cache = {} as CacheSnapshot;
+const forumId = conversationTestForumId;
+const otherForumId = conversationTestOtherForumId;
+const lastPostId = conversationTestPostId;
+const otherPostId = conversationTestOtherPostId;
+const cache = createConversationTestCache();
 const replyTarget = {
   postId: lastPostId,
   userName: "Nabil",

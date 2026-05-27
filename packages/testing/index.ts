@@ -12,6 +12,10 @@ const config = defineConfig({
     coverage: {
       enabled: true,
       provider: "istanbul",
+      thresholds: {
+        100: true,
+        perFile: true,
+      },
     },
   },
   resolve: {

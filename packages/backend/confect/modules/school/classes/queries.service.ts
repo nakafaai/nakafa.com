@@ -153,6 +153,7 @@ export const getClassRoute = Effect.fn("school.classes.getClassRoute")(
     if (!classId) {
       return yield* Effect.fail(
         new ClassActionError({
+          code: "CLASS_NOT_FOUND",
           message: `Class not found for classId: ${args.classId}`,
         })
       );
@@ -169,6 +170,7 @@ export const getClassRoute = Effect.fn("school.classes.getClassRoute")(
     if (!access.schoolMembership) {
       return yield* Effect.fail(
         new ClassActionError({
+          code: "ACCESS_DENIED",
           message: "You must be a member of this school to access this class.",
         })
       );

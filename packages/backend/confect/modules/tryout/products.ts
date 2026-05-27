@@ -82,6 +82,15 @@ interface TryoutPolicy {
   readonly scaleThetaToScore: (theta: number) => number;
 }
 
+interface SnbtCandidateSet extends DetectableTryoutSet {
+  readonly cycleKey: string;
+}
+
+interface SnbtCandidateGroup {
+  readonly firstSet: SnbtCandidateSet;
+  readonly sets: SnbtCandidateSet[];
+}
+
 /** Checks whether a route/product string is one of the supported tryout products. */
 export const isTryoutProduct = Schema.is(tryoutProductSchema);
 
@@ -131,9 +140,6 @@ const snbtTryoutProductPolicy = {
   attemptWindowMs: SNBT_ATTEMPT_WINDOW_MS,
   compareTryouts: compareSnbtTryouts,
   detectTryouts: ({ locale, requiredPartKeys, sets }) => {
-    const partOrder = new Map(
-      requiredPartKeys.map((material, index) => [material, index])
-    );
     const candidateSets = sets.flatMap((set) => {
       if (set.type !== "snbt" || set.exerciseType !== "try-out") {
         return [];
@@ -146,22 +152,22 @@ const snbtTryoutProductPolicy = {
 
       return [{ ...set, cycleKey }];
     });
-    const setsByKey = new Map<string, typeof candidateSets>();
+    const setsByKey = new Map<string, SnbtCandidateGroup>();
 
     for (const set of candidateSets) {
       const key = `${set.cycleKey}:${set.setName}`;
-      const groupedSets = setsByKey.get(key) ?? [];
-      groupedSets.push(set);
-      setsByKey.set(key, groupedSets);
-    }
+      const group = setsByKey.get(key);
 
-    const detectedTryouts: DetectedTryout[] = [];
-    for (const groupedSets of setsByKey.values()) {
-      const firstSet = groupedSets[0];
-      if (!firstSet) {
+      if (!group) {
+        setsByKey.set(key, { firstSet: set, sets: [set] });
         continue;
       }
 
+      group.sets.push(set);
+    }
+
+    const detectedTryouts: DetectedTryout[] = [];
+    for (const { firstSet, sets: groupedSets } of setsByKey.values()) {
       const materials = new Set(groupedSets.map((set) => set.material));
       const hasAllRequiredParts = requiredPartKeys.every((material) =>
         materials.has(material)
@@ -184,8 +190,8 @@ const snbtTryoutProductPolicy = {
 
       const sortedSets = [...groupedSets].sort(
         (left, right) =>
-          (partOrder.get(left.material) ?? Number.MAX_SAFE_INTEGER) -
-          (partOrder.get(right.material) ?? Number.MAX_SAFE_INTEGER)
+          requiredPartKeys.indexOf(left.material) -
+          requiredPartKeys.indexOf(right.material)
       );
       const totalQuestionCount = sortedSets.reduce(
         (count, set) => count + set.questionCount,

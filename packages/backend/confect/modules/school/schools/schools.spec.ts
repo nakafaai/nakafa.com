@@ -1,4 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { SchoolActionError } from "@repo/backend/confect/modules/school/schoolErrors";
 import { Schema } from "effect";
 
 const schoolsMutationsGroup = GroupSpec.make("mutations")
@@ -45,6 +46,7 @@ const schoolsQueriesGroup = GroupSpec.make("queries")
     FunctionSpec.publicQuery({
       name: "getSchoolBySlug",
       args: Schema.Struct({ slug: Schema.String }),
+      error: SchoolActionError,
       returns: Schema.Struct({
         membership: Schema.Struct({
           _creationTime: Schema.Number,

@@ -1,14 +1,13 @@
 "use client";
-
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import {
   useDebouncedCallback,
   useReducedMotion,
   useTimeout,
 } from "@mantine/hooks";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
-import { useMutation } from "convex/react";
+import refs from "@repo/backend/confect/_generated/refs";
+
 import {
   memo,
   useCallback,
@@ -129,16 +128,18 @@ const HydratedTranscript = memo(
     const { registerControls } = useControls();
     const prefersReducedMotion = useReducedMotion();
     const markForumRead = useMutation(
-      api.classes.forums.mutations.readState.markForumRead
+      refs.public.classes.forums.mutations.readState.markForumRead
     );
-    const {
-      data: posts,
-      error,
-      isError,
-      isPending,
-    } = useQueryWithStatus(api.classes.forums.queries.pages.getForumPosts, {
-      forumId,
-    });
+    const postsResult = useQuery(
+      refs.public.classes.forums.queries.pages.getForumPosts,
+      {
+        forumId,
+      }
+    );
+    const posts = QueryResult.isSuccess(postsResult)
+      ? postsResult.value
+      : undefined;
+    const isPending = QueryResult.isLoading(postsResult);
 
     const transcriptPosts = posts ?? [];
     const { acknowledgeUnreadCue, unreadCue } = useConversationUnreadCue({
@@ -635,8 +636,8 @@ const HydratedTranscript = memo(
       []
     );
 
-    if (isError) {
-      throw error;
+    if (QueryResult.isFailure(postsResult)) {
+      throw postsResult.error;
     }
 
     if (isPending) {

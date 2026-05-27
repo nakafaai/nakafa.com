@@ -2,6 +2,7 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
 import * as exercise_answers from "@repo/backend/confect/modules/learning/exercises/answers.service";
 import * as exercise_attempts from "@repo/backend/confect/modules/learning/exercises/attempts.service";
+import { ExerciseError } from "@repo/backend/confect/modules/learning/exercises/errors.service";
 import * as exercise_queries from "@repo/backend/confect/modules/learning/exercises/queries.service";
 import { Effect, Layer } from "effect";
 
@@ -49,9 +50,15 @@ const exercises_mutations_submitAnswerImpl = FunctionImpl.make(
   "submitAnswer",
   (args) =>
     exercise_answers.submitAnswer(args).pipe(
+      Effect.catchTag("TryoutError", (error) =>
+        Effect.fail(
+          new ExerciseError({
+            code: error.code,
+            message: error.message,
+          })
+        )
+      ),
       Effect.catchTags({
-        ExerciseError: (error) => Effect.die(error),
-        TryoutError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
       })
     )

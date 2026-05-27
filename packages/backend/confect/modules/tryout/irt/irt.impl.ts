@@ -1,6 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import { calibrateSetTwoPL } from "@repo/backend/confect/modules/tryout/irt.workflows.adapters";
+import { calibrateSetTwoPL } from "@repo/backend/confect/modules/tryout/irt/workflows";
 import * as tryout_irt_cache from "@repo/backend/confect/modules/tryout/irtCache.service";
 import * as tryout_irt_calibration from "@repo/backend/confect/modules/tryout/irtCalibration.actions";
 import * as tryout_irt_queries from "@repo/backend/confect/modules/tryout/irtQueries.service";

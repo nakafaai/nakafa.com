@@ -1,9 +1,10 @@
 "use client";
 
+import type refs from "@repo/backend/confect/_generated/refs";
 import type {
-  api,
-  FunctionReturnType,
-} from "@repo/backend/confect/_generated/functionReferences";
+  ConvexFunctionReference,
+  ConvexFunctionReturn,
+} from "@repo/backend/confect/modules/shared/convexReferences";
 import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { preloadedQueryResult } from "convex/nextjs";
@@ -87,11 +88,13 @@ interface TryoutPartContextValue {
   };
 }
 
-type TryoutPartRuntime = FunctionReturnType<
-  typeof api.tryouts.queries.me.part.getUserTryoutPartAttempt
+type TryoutPartRuntime = ConvexFunctionReturn<
+  typeof refs.public.tryouts.queries.me.part.getUserTryoutPartAttempt
 >;
 type PreloadedTryoutPartRuntime = Preloaded<
-  typeof api.tryouts.queries.me.part.getUserTryoutPartAttempt
+  ConvexFunctionReference<
+    typeof refs.public.tryouts.queries.me.part.getUserTryoutPartAttempt
+  >
 >;
 
 const TryoutPartContext = createContext<TryoutPartContextValue | null>(null);

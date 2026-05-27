@@ -4,7 +4,7 @@ import {
   onCreate,
   onDelete,
   onUpdate,
-} from "@repo/backend/confect/modules/identity/auth.adapters";
+} from "@repo/backend/confect/modules/identity/auth/auth";
 import * as identity_auth from "@repo/backend/confect/modules/identity/auth.service";
 import * as identity_cleanup from "@repo/backend/confect/modules/identity/cleanup.service";
 import { Effect, Layer } from "effect";

@@ -1,4 +1,5 @@
-import { api as convexApi } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { fetchMutation } from "convex/nextjs";
 import { Effect } from "effect";
@@ -24,7 +25,7 @@ export const getUserInfo = Effect.fn("chat.getUserInfo")(function* (
 ) {
   return yield* Effect.tryPromise(() =>
     fetchMutation(
-      convexApi.users.mutations.syncUserInfoForChat,
+      toConvexReference(refs.public.users.mutations.syncUserInfoForChat),
       {},
       {
         token,

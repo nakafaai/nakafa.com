@@ -150,12 +150,9 @@ const classes_queries_getClassRouteImpl = FunctionImpl.make(
   "classes.queries",
   "getClassRoute",
   (args) =>
-    school_class_queries.getClassRoute(args).pipe(
-      Effect.catchTags({
-        ClassActionError: (error) => Effect.die(error),
-        UnauthorizedUser: (error) => Effect.die(error),
-      })
-    )
+    school_class_queries
+      .getClassRoute(args)
+      .pipe(Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)))
 );
 
 const classes_queries_getPeopleImpl = FunctionImpl.make(

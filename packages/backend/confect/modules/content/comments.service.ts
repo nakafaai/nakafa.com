@@ -1,12 +1,14 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
+import refs from "@repo/backend/confect/_generated/refs";
 import {
   MutationCtx,
   QueryCtx,
+  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { cleanSlug } from "@repo/utilities/helper";
 import type { PaginationOptions } from "convex/server";
-import { Effect, Schema } from "effect";
+import { Duration, Effect, Schema } from "effect";
 
 const DEFAULT_COMMENT_SNIPPET_LENGTH = 200;
 
@@ -32,6 +34,61 @@ function truncateText({
 
   return `${text.slice(0, maxLength).trim()}\u2026`;
 }
+
+/** Applies a bounded reply-count delta to a parent comment. */
+const updateParentReplyCount = Effect.fn("comments.updateParentReplyCount")(
+  function* (parentId: Id<"comments"> | undefined, delta: number) {
+    if (!parentId) {
+      return null;
+    }
+
+    const ctx = yield* MutationCtx;
+    const parent = yield* Effect.promise(() => ctx.db.get(parentId));
+
+    if (!parent) {
+      return null;
+    }
+
+    yield* Effect.promise(() =>
+      ctx.db.patch(parentId, {
+        replyCount: Math.max(parent.replyCount + delta, 0),
+      })
+    );
+
+    return null;
+  }
+);
+
+/** Applies a bounded vote-count delta to a comment. */
+const updateCommentVoteCount = Effect.fn("comments.updateVoteCount")(function* (
+  commentId: Id<"comments">,
+  vote: Exclude<VoteAction, 0>,
+  delta: number
+) {
+  const ctx = yield* MutationCtx;
+  const comment = yield* Effect.promise(() => ctx.db.get(commentId));
+
+  if (!comment) {
+    return null;
+  }
+
+  if (vote === 1) {
+    yield* Effect.promise(() =>
+      ctx.db.patch(commentId, {
+        upvoteCount: Math.max(comment.upvoteCount + delta, 0),
+      })
+    );
+    return null;
+  }
+
+  yield* Effect.promise(() =>
+    ctx.db.patch(commentId, {
+      downvoteCount: Math.max(comment.downvoteCount + delta, 0),
+    })
+  );
+
+  return null;
+});
 
 /** Reads public user data for a set of user ids. */
 const getUserMap = Effect.fn("comments.getUserMap")(function* (
@@ -88,7 +145,7 @@ export const addComment = Effect.fn("comments.addComment")(function* (args: {
     );
   }
 
-  return yield* Effect.promise(() =>
+  const commentId = yield* Effect.promise(() =>
     ctx.db.insert("comments", {
       downvoteCount: 0,
       parentId: args.parentId,
@@ -103,6 +160,9 @@ export const addComment = Effect.fn("comments.addComment")(function* (args: {
       userId: user.appUser._id,
     })
   );
+  yield* updateParentReplyCount(parentId, 1);
+
+  return commentId;
 });
 
 /** Creates, replaces, or removes the current user's vote on a comment. */
@@ -129,6 +189,7 @@ export const voteOnComment = Effect.fn("comments.voteOnComment")(
 
     if (existingVote) {
       yield* Effect.promise(() => ctx.db.delete(existingVote._id));
+      yield* updateCommentVoteCount(args.commentId, existingVote.vote, -1);
     }
 
     const vote = args.vote;
@@ -140,6 +201,7 @@ export const voteOnComment = Effect.fn("comments.voteOnComment")(
           vote,
         })
       );
+      yield* updateCommentVoteCount(args.commentId, vote, 1);
     }
 
     return null;
@@ -169,7 +231,16 @@ export const deleteComment = Effect.fn("comments.deleteComment")(
       );
     }
 
+    const scheduler = yield* Scheduler;
+
     yield* Effect.promise(() => ctx.db.delete(args.commentId));
+    yield* scheduler.runAfter(
+      Duration.zero,
+      refs.internal.triggers.comments.cleanup.cleanupDeletedComment,
+      { commentId: args.commentId }
+    );
+    yield* updateParentReplyCount(comment.parentId, -1);
+
     return null;
   }
 );

@@ -1,5 +1,5 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import {
   Add01Icon,
   ArrowDown01Icon,
@@ -8,7 +8,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { MIN_FORUM_THREAD_TEXT_LENGTH } from "@repo/backend/confect/modules/school/forums/constants";
 import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -32,7 +32,7 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
+
 import { Schema } from "effect";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -76,7 +76,7 @@ export function SchoolClassesForumNew() {
   const schoolMembership = useClass((c) => c.schoolMembership);
   const { can } = useClassPermissions();
   const createForum = useMutation(
-    api.classes.forums.mutations.forums.createForum
+    refs.public.classes.forums.mutations.forums.createForum
   );
 
   const canModerateForum = can(PERMISSIONS.FORUM_MODERATE);

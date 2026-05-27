@@ -1,4 +1,4 @@
 import { authComponent } from "@repo/backend/confect/modules/identity/auth.client";
 
-/** Better Auth create/update/delete trigger functions exposed through Confect plain Convex integration. */
+/** Native Better Auth triggers registered through Confect's plain Convex function boundary. */
 export const { onCreate, onUpdate, onDelete } = authComponent.triggersApi();

@@ -12,8 +12,9 @@ import {
   UniversityIcon,
 } from "@hugeicons/core-free-icons";
 import type { Doc } from "@repo/backend/confect/_generated/dataModel";
-import type { FunctionReturnType } from "@repo/backend/confect/_generated/functionReferences";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import type { ConvexFunctionReturn } from "@repo/backend/confect/modules/shared/convexReferences";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,8 +39,8 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useSchool } from "@/lib/context/use-school";
 
-type SchoolSwitcherPage = FunctionReturnType<
-  typeof api.schools.queries.getMySchoolsPage
+type SchoolSwitcherPage = ConvexFunctionReturn<
+  typeof refs.public.schools.queries.getMySchoolsPage
 >;
 
 /** Render the school switcher with a server-preloaded first page. */
@@ -55,7 +56,7 @@ export function SchoolSwitcher({
   const { isAuthenticated, isLoading } = useConvexAuth();
   const [open, setOpen] = useState(false);
   const { results, status, loadMore } = usePaginatedQuery(
-    api.schools.queries.getMySchoolsPage,
+    toConvexReference(refs.public.schools.queries.getMySchoolsPage),
     open && isAuthenticated && !isLoading ? {} : "skip",
     { initialNumItems: 20 }
   );

@@ -10,7 +10,7 @@ export interface ConversationUnreadCue {
 type InitialConversationUnreadCue = Omit<ConversationUnreadCue, "status">;
 
 /** Finds the initial unread backlog anchor from the current ascending posts. */
-export function getInitialConversationUnreadCue(posts: ForumPost[]) {
+export function getInitialConversationUnreadCue(posts: readonly ForumPost[]) {
   let count = 0;
   let postId: Id<"schoolClassForumPosts"> | null = null;
 

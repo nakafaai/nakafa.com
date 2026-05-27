@@ -1,4 +1,5 @@
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { getRenderableExercisesContent } from "@repo/contents/_lib/exercises/renderable";
 import { fetchQuery } from "convex/nextjs";
@@ -18,7 +19,7 @@ export async function getTryoutPartData(
   cacheLife("max");
 
   const details = await fetchQuery(
-    api.tryouts.queries.tryouts.getTryoutDetails,
+    toConvexReference(refs.public.tryouts.queries.tryouts.getTryoutDetails),
     {
       locale,
       product,

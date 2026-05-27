@@ -1,5 +1,5 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import {
   ArrowDown02Icon,
   ArrowTurnForwardIcon,
@@ -9,7 +9,7 @@ import {
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -22,7 +22,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import { useMutation } from "convex/react";
+
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
@@ -139,10 +139,11 @@ function AssessmentActions({
   const [confirmDeleteOpen, confirmDeleteHandlers] = useDisclosure(false);
   const [editOpen, editHandlers] = useDisclosure(false);
   const reorderAssessment = useMutation(
-    api.assessments.mutations.publicFunctions.reorder.reorderAssessment
+    refs.public.assessments.mutations.publicFunctions.reorder.reorderAssessment
   );
   const deleteAssessment = useMutation(
-    api.assessments.mutations.publicFunctions.deleteFunctions.deleteAssessment
+    refs.public.assessments.mutations.publicFunctions.deleteFunctions
+      .deleteAssessment
   );
 
   function handleMoveUp() {

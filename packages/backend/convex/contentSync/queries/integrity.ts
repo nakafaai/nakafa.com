@@ -1,4 +1,4 @@
-import registeredFunctions from "../../../confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
 
 export const listIntegrityArticleReferencesPage = registeredFunctions.contentSync.queries.integrity.listIntegrityArticleReferencesPage;
 export const listIntegrityArticlesPage = registeredFunctions.contentSync.queries.integrity.listIntegrityArticlesPage;

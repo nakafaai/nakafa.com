@@ -1,9 +1,9 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import { ArrowLeft02Icon, InLoveIcon } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import type { SchoolClassVisibility } from "@repo/backend/confect/modules/school/classes.tables";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -21,7 +21,7 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "convex/react";
+
 import { Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
@@ -51,8 +51,10 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
   const schoolSlug = useSchool((state) => state.school.slug);
 
   const [isPending, startTransition] = useTransition();
-  const joinClass = useMutation(api.classes.mutations.joinClass);
-  const joinPublicClass = useMutation(api.classes.mutations.joinPublicClass);
+  const joinClass = useMutation(refs.public.classes.mutations.joinClass);
+  const joinPublicClass = useMutation(
+    refs.public.classes.mutations.joinPublicClass
+  );
 
   const isPublic = visibility === "public";
 

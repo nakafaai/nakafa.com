@@ -1,11 +1,9 @@
-import type {
-  api,
-  FunctionReturnType,
-} from "@repo/backend/confect/_generated/functionReferences";
+import type refs from "@repo/backend/confect/_generated/refs";
+import type { ConvexFunctionReturn } from "@repo/backend/confect/modules/shared/convexReferences";
 import { getEffectiveTryoutStatus } from "@/components/tryout/utils/status";
 
-type ActiveTryoutCatalogPage = FunctionReturnType<
-  typeof api.tryouts.queries.tryouts.getActiveTryoutCatalogPage
+type ActiveTryoutCatalogPage = ConvexFunctionReturn<
+  typeof refs.public.tryouts.queries.tryouts.getActiveTryoutCatalogPage
 >;
 
 /** Keeps the first tryout catalog page size consistent across server and client. */

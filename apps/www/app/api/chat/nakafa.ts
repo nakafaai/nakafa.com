@@ -1,5 +1,6 @@
 import type { NakafaSearch } from "@repo/ai/agents/nakafa/search";
-import { api as convexApi } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
@@ -20,7 +21,11 @@ import { Effect } from "effect";
 export const search = {
   search: (input) =>
     Effect.tryPromise({
-      try: () => fetchQuery(convexApi.contents.queries.search.search, input),
+      try: () =>
+        fetchQuery(
+          toConvexReference(refs.public.contents.queries.search.search),
+          input
+        ),
       catch: (error) =>
         new NakafaAgentDataReadError({
           cause: getUnknownErrorMessage(error),

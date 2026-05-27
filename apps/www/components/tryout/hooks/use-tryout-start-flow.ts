@@ -1,10 +1,8 @@
 "use client";
 
 import { useDisclosure } from "@mantine/hooks";
-import type {
-  api,
-  FunctionArgs,
-} from "@repo/backend/confect/_generated/functionReferences";
+import type refs from "@repo/backend/confect/_generated/refs";
+import type { ConvexFunctionArgs } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   usePathname,
   useRouter,
@@ -17,8 +15,8 @@ import { startTryout } from "@/components/tryout/actions/tryout";
 import { getTryoutPartHref } from "@/components/tryout/utils/routes";
 import { getSafeInternalRedirectPath } from "@/lib/auth/utils";
 
-export type TryoutStartParams = FunctionArgs<
-  typeof api.tryouts.mutations.attempts.startTryout
+export type TryoutStartParams = ConvexFunctionArgs<
+  typeof refs.public.tryouts.mutations.attempts.startTryout
 >;
 
 export type TryoutRouteAccess = "anonymous" | "authenticated";

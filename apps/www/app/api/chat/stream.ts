@@ -19,9 +19,10 @@ import {
 } from "@repo/ai/schema/tools";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { api as convexApi } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/confect/modules/chat/messageParts/uiToDb";
 import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { cleanSlug } from "@repo/utilities/helper";
 import { logError } from "@repo/utilities/logging/effect";
@@ -130,7 +131,9 @@ export function streamChat({ chat, page, runtime, user }: Params) {
 
               yield* Effect.tryPromise(() =>
                 fetchMutation(
-                  convexApi.chats.mutations.updateChatTitle,
+                  toConvexReference(
+                    refs.public.chats.mutations.updateChatTitle
+                  ),
                   { chatId: chat.id, title },
                   { token: chat.token }
                 )
@@ -160,7 +163,9 @@ export function streamChat({ chat, page, runtime, user }: Params) {
         Effect.runPromise(
           Effect.tryPromise(() =>
             fetchAction(
-              convexApi.chats.actions.scheduleSaveAssistantResponse,
+              toConvexReference(
+                refs.public.chats.actions.scheduleSaveAssistantResponse
+              ),
               {
                 message: {
                   chatId: chat.id,

@@ -1,6 +1,7 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { internal } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { calibrateTwoPlItems } from "@repo/backend/confect/modules/tryout/irt.calibration";
 import { IrtError } from "@repo/backend/confect/modules/tryout/irt.errors";
 import {
@@ -17,8 +18,10 @@ export const calibrateSetTwoPL = Effect.fn("irt.actions.calibrateSetTwoPL")(
     const ctx = yield* ActionCtx;
     const { existingParams, questions } = yield* Effect.promise(() =>
       ctx.runQuery(
-        internal.irt.queries.internalFunctions.calibration
-          .getCalibrationQuestionsForSet,
+        toConvexReference(
+          refs.internal.irt.queries.internalFunctions.calibration
+            .getCalibrationQuestionsForSet
+        ),
         {
           setId: args.setId,
         }
@@ -49,8 +52,10 @@ export const calibrateSetTwoPL = Effect.fn("irt.actions.calibrateSetTwoPL")(
     let responseCount = 0;
     let responsePage = yield* Effect.promise(() =>
       ctx.runQuery(
-        internal.irt.queries.internalFunctions.calibration
-          .getCalibrationResponsesPageForSet,
+        toConvexReference(
+          refs.internal.irt.queries.internalFunctions.calibration
+            .getCalibrationResponsesPageForSet
+        ),
         {
           paginationOpts: {
             cursor: null,
@@ -121,8 +126,10 @@ export const calibrateSetTwoPL = Effect.fn("irt.actions.calibrateSetTwoPL")(
 
       responsePage = yield* Effect.promise(() =>
         ctx.runQuery(
-          internal.irt.queries.internalFunctions.calibration
-            .getCalibrationResponsesPageForSet,
+          toConvexReference(
+            refs.internal.irt.queries.internalFunctions.calibration
+              .getCalibrationResponsesPageForSet
+          ),
           {
             paginationOpts: {
               cursor: responsePage.continueCursor,

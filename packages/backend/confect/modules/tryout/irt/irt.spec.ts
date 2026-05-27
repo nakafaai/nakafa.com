@@ -1,5 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
-import type { CalibrateSetTwoPLWorkflow } from "@repo/backend/confect/modules/tryout/irt.workflow-types";
+import type { CalibrateSetTwoPLWorkflow } from "@repo/backend/confect/modules/tryout/irt/workflows.validators";
 import { Schema } from "effect";
 
 const irtWorkflowsGroup = GroupSpec.make("workflows").addFunction(

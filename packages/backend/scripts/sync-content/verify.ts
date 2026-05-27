@@ -14,6 +14,7 @@ import type {
   ConvexConfig,
   SyncOptions,
 } from "@repo/backend/scripts/sync-content/types";
+import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
 const logIntegrityList = (
@@ -63,43 +64,43 @@ export const verify = Effect.fn("sync.verify")(function* (
     globFiles("articles/**/ref.ts"),
   ]);
 
-  const articleFilesEn = articleFiles.filter((file) =>
-    file.endsWith("/en.mdx")
-  );
-  const articleFilesId = articleFiles.filter((file) =>
-    file.endsWith("/id.mdx")
-  );
-  const subjectFilesEn = subjectFiles.filter((file) =>
-    file.endsWith("/en.mdx")
-  );
-  const subjectFilesId = subjectFiles.filter((file) =>
-    file.endsWith("/id.mdx")
-  );
-  const questionFilesEn = questionFiles.filter((file) =>
-    file.endsWith("/en.mdx")
-  );
-  const questionFilesId = questionFiles.filter((file) =>
-    file.endsWith("/id.mdx")
-  );
+  const articleLocaleCounts = locales.map((locale) => ({
+    count: articleFiles.filter((file) => file.endsWith(`/${locale}.mdx`))
+      .length,
+    locale,
+  }));
+  const subjectLocaleCounts = locales.map((locale) => ({
+    count: subjectFiles.filter((file) => file.endsWith(`/${locale}.mdx`))
+      .length,
+    locale,
+  }));
+  const questionLocaleCounts = locales.map((locale) => ({
+    count: questionFiles.filter((file) => file.endsWith(`/${locale}.mdx`))
+      .length,
+    locale,
+  }));
 
   log("=== FILESYSTEM ===\n");
   log("Articles:");
   log(`  Total MDX files:     ${articleFiles.length}`);
-  log(`    - English (en):    ${articleFilesEn.length}`);
-  log(`    - Indonesian (id): ${articleFilesId.length}`);
+  for (const { count, locale } of articleLocaleCounts) {
+    log(`    - ${locale}: ${count}`);
+  }
   log(`  Reference files:     ${refFiles.length} (ref.ts)`);
 
   log("\nSubjects:");
   log(`  Material files:      ${subjectMaterialFiles.length} (*-material.ts)`);
   log(`  Total MDX files:     ${subjectFiles.length}`);
-  log(`    - English (en):    ${subjectFilesEn.length}`);
-  log(`    - Indonesian (id): ${subjectFilesId.length}`);
+  for (const { count, locale } of subjectLocaleCounts) {
+    log(`    - ${locale}: ${count}`);
+  }
 
   log("\nExercises:");
   log(`  Material files:      ${exerciseMaterialFiles.length} (*-material.ts)`);
   log(`  Question files:      ${questionFiles.length} (_question/*.mdx)`);
-  log(`    - English (en):    ${questionFilesEn.length}`);
-  log(`    - Indonesian (id): ${questionFilesId.length}`);
+  for (const { count, locale } of questionLocaleCounts) {
+    log(`    - ${locale}: ${count}`);
+  }
   log(`  Answer files:        ${answerFiles.length} (_answer/*.mdx)`);
   log(`  Choices files:       ${choicesFiles.length} (choices.ts)`);
 
@@ -170,7 +171,7 @@ export const verify = Effect.fn("sync.verify")(function* (
   }
 
   log(
-    `\nReferences: ${counts.articleReferences} in DB (from ${refFiles.length} ref.ts files x 2 locales)`
+    `\nReferences: ${counts.articleReferences} in DB (from ${refFiles.length} ref.ts files x ${locales.length} locales)`
   );
 
   const avgChoicesPerQuestion =

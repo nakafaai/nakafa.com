@@ -112,7 +112,7 @@ function StatsProgress({
   answers,
 }: {
   attempt: Doc<"exerciseAttempts">;
-  answers: Doc<"exerciseAnswers">[];
+  answers: readonly Doc<"exerciseAnswers">[];
 }) {
   const t = useTranslations("Exercises");
 

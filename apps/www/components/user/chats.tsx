@@ -1,5 +1,5 @@
 "use client";
-
+import { useMutation } from "@confect/react";
 import {
   ArrowDown02Icon,
   Delete02Icon,
@@ -8,7 +8,8 @@ import {
   SquareLock01Icon,
 } from "@hugeicons/core-free-icons";
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -19,11 +20,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import {
-  type PaginationStatus,
-  useMutation,
-  usePaginatedQuery,
-} from "convex/react";
+import { type PaginationStatus, usePaginatedQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
@@ -64,7 +61,7 @@ export function UserChatsList({
 
 function OwnChatsList() {
   const { results, status } = usePaginatedQuery(
-    api.chats.queries.getOwnChats,
+    toConvexReference(refs.public.chats.queries.getOwnChats),
     { type: "study" },
     { initialNumItems: 50 }
   );
@@ -84,7 +81,7 @@ function PublicChatsList({
     ? { type, userId, visibility }
     : { type, userId };
   const { results, status } = usePaginatedQuery(
-    api.chats.queries.getChats,
+    toConvexReference(refs.public.chats.queries.getChats),
     queryArgs,
     { initialNumItems: 50 }
   );
@@ -160,7 +157,7 @@ function ChatList({
 function UserChatsListActions({ chat }: { chat: Doc<"chats"> }) {
   const t = useTranslations("Common");
 
-  const deleteChat = useMutation(api.chats.mutations.deleteChat);
+  const deleteChat = useMutation(refs.public.chats.mutations.deleteChat);
 
   const [isPending, startTransition] = useTransition();
 

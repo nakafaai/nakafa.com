@@ -1,6 +1,7 @@
 "use client";
 
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useConvexAuth, usePaginatedQuery } from "convex/react";
@@ -11,7 +12,7 @@ export function SchoolSelectList() {
   const t = useTranslations("School.Onboarding");
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { results, status, loadMore } = usePaginatedQuery(
-    api.schools.queries.getMySchoolsPage,
+    toConvexReference(refs.public.schools.queries.getMySchoolsPage),
     isAuthenticated && !isLoading ? {} : "skip",
     { initialNumItems: 20 }
   );

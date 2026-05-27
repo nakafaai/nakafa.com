@@ -79,7 +79,7 @@ export interface ParsedSubjectTopic {
   topic: string;
 }
 
-export interface ExerciseChoicesByLocale {
-  en: Array<{ label: string; value: boolean }>;
-  id: Array<{ label: string; value: boolean }>;
-}
+export type ExerciseChoicesByLocale = Record<
+  ParsedLocale,
+  Array<{ label: string; value: boolean }>
+>;

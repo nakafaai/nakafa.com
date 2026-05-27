@@ -10,7 +10,7 @@ import { memo } from "react";
  * storage URLs that are temporarily unavailable.
  */
 export const PostAttachments = memo(
-  ({ attachments }: { attachments: PostAttachment[] }) => {
+  ({ attachments }: { attachments: readonly PostAttachment[] }) => {
     if (attachments.length === 0) {
       return null;
     }

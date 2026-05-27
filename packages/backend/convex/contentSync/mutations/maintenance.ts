@@ -1,4 +1,4 @@
-import registeredFunctions from "../../../confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
 
 export const deleteArticleReferencesBatch = registeredFunctions.contentSync.mutations.maintenance.deleteArticleReferencesBatch;
 export const deleteArticlesBatch = registeredFunctions.contentSync.mutations.maintenance.deleteArticlesBatch;

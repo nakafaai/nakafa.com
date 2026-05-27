@@ -1,6 +1,7 @@
+import { useMutation } from "@confect/react";
 import { ArrowTurnBackwardIcon, WinkIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
@@ -21,7 +22,6 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { cn } from "@repo/design-system/lib/utils";
-import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
 import { memo, useTransition } from "react";
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";
@@ -39,7 +39,7 @@ export const PostItemActions = memo(({ post }: { post: ForumPost }) => {
   const [isReactionPickerOpen, reactionPicker] = useDisclosure(false);
   const [isPending, startTransition] = useTransition();
   const toggleReaction = useMutation(
-    api.classes.forums.mutations.reactions.togglePostReaction
+    refs.public.classes.forums.mutations.reactions.togglePostReaction
   );
   const userName = post.user?.name ?? t("anonymous");
 

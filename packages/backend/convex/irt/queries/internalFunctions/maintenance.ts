@@ -1,4 +1,4 @@
-import registeredFunctions from "../../../../confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
 
 export const getCalibrationCacheIntegrity = registeredFunctions.irt.queries.internalFunctions.maintenance.getCalibrationCacheIntegrity;
 export const getCalibrationQueueAttemptIntegrity = registeredFunctions.irt.queries.internalFunctions.maintenance.getCalibrationQueueAttemptIntegrity;

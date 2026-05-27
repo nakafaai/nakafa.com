@@ -1,8 +1,8 @@
 "use client";
 
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import { QueryResult, useQuery } from "@confect/react";
+import refs from "@repo/backend/confect/_generated/refs";
 import { isTryoutProduct } from "@repo/backend/confect/modules/tryout/products";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { routing } from "@repo/internationalization/src/routing";
 import { useConvexAuth } from "convex/react";
 import { useParams } from "next/navigation";
@@ -33,8 +33,8 @@ export function TryoutShell({ children }: { children: React.ReactNode }) {
     slug !== null;
   const shouldLoadSession = isSessionRoute && !isLoading && isAuthenticated;
 
-  const { data: session } = useQueryWithStatus(
-    api.tryouts.queries.me.session.getUserTryoutSession,
+  const sessionResult = useQuery(
+    refs.public.tryouts.queries.me.session.getUserTryoutSession,
     shouldLoadSession
       ? {
           attemptId: selectedAttemptId ?? undefined,
@@ -44,6 +44,9 @@ export function TryoutShell({ children }: { children: React.ReactNode }) {
         }
       : "skip"
   );
+  const session = QueryResult.isSuccess(sessionResult)
+    ? sessionResult.value
+    : undefined;
   const nowMs = useTryoutClock(Boolean(session?.status === "in-progress"));
 
   const locked =

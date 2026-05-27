@@ -1,7 +1,8 @@
 "use client";
 
-import type { FunctionReturnType } from "@repo/backend/confect/_generated/functionReferences";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
+import refs from "@repo/backend/confect/_generated/refs";
+import type { ConvexFunctionReturn } from "@repo/backend/confect/modules/shared/convexReferences";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { usePaginatedQuery } from "convex/react";
@@ -25,8 +26,8 @@ import {
 } from "@/components/tryout/utils/catalog";
 import { getTryoutSetHref } from "@/components/tryout/utils/routes";
 
-type ActiveTryoutCatalogPage = FunctionReturnType<
-  typeof api.tryouts.queries.tryouts.getActiveTryoutCatalogPage
+type ActiveTryoutCatalogPage = ConvexFunctionReturn<
+  typeof refs.public.tryouts.queries.tryouts.getActiveTryoutCatalogPage
 >;
 type ActiveTryoutCatalogEntry = ActiveTryoutCatalogPage["page"][number];
 
@@ -73,7 +74,9 @@ export function TryoutCatalogList({
     results: catalogEntries,
     status: catalogStatus,
   } = usePaginatedQuery(
-    api.tryouts.queries.tryouts.getActiveTryoutCatalogPage,
+    toConvexReference(
+      refs.public.tryouts.queries.tryouts.getActiveTryoutCatalogPage
+    ),
     {
       locale,
       product,

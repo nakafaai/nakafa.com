@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import {
   ArrowTurnBackwardIcon,
   ArrowUpRight01Icon,
@@ -8,8 +8,8 @@ import {
   ThumbsUpIcon,
 } from "@hugeicons/core-free-icons";
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import { api } from "@repo/backend/confect/_generated/functionReferences";
-import { useQueryWithStatus } from "@repo/backend/helpers/react";
+import refs from "@repo/backend/confect/_generated/refs";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -26,7 +26,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
-import { useMutation, usePaginatedQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { useUser } from "@/lib/context/use-user";
@@ -37,7 +37,7 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Comments");
 
   const { results } = usePaginatedQuery(
-    api.comments.queries.getCommentsByUserId,
+    toConvexReference(refs.public.comments.queries.getCommentsByUserId),
     { userId },
     { initialNumItems: 25 }
   );
@@ -62,9 +62,10 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
 function CommentThread({ comment }: { comment: Doc<"comments"> }) {
   const t = useTranslations("Common");
 
-  const { data: user } = useQueryWithStatus(api.auth.getUserById, {
+  const userResult = useQuery(refs.public.auth.getUserById, {
     userId: comment.userId,
   });
+  const user = QueryResult.isSuccess(userResult) ? userResult.value : undefined;
   const currentUser = useUser((state) => state.user);
 
   const userName = user?.name ?? t("anonymous");
@@ -72,8 +73,12 @@ function CommentThread({ comment }: { comment: Doc<"comments"> }) {
 
   const [isPending, startTransition] = useTransition();
 
-  const voteOnComment = useMutation(api.comments.mutations.voteOnComment);
-  const deleteComment = useMutation(api.comments.mutations.deleteComment);
+  const voteOnComment = useMutation(
+    refs.public.comments.mutations.voteOnComment
+  );
+  const deleteComment = useMutation(
+    refs.public.comments.mutations.deleteComment
+  );
 
   function handleVote(vote: -1 | 1) {
     if (!currentUser) {

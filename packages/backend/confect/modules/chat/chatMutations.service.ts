@@ -2,7 +2,11 @@ import { getModelCreditCost } from "@repo/ai/config/models";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
 import type { MyUIMessagePart } from "@repo/ai/types/message";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import refs from "@repo/backend/confect/_generated/refs";
+import {
+  MutationCtx,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import {
   deleteMessageBatchFromPoint,
   getMessageByIdentifier,
@@ -14,7 +18,7 @@ import {
   resolveEffectiveCreditState,
 } from "@repo/backend/confect/modules/commerce/credits.policy";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
-import { Clock, Effect, Schema } from "effect";
+import { Clock, Duration, Effect, Schema } from "effect";
 
 export class ChatMutationError extends Schema.TaggedError<ChatMutationError>()(
   "ChatMutationError",
@@ -169,7 +173,15 @@ export const deleteChat = Effect.fn("chatMutations.deleteChat")(
       userId: user.appUser._id,
     });
 
+    const scheduler = yield* Scheduler;
+
     yield* Effect.promise(() => ctx.db.delete(chat._id));
+    yield* scheduler.runAfter(
+      Duration.zero,
+      refs.internal.triggers.chats.cleanup.cleanupDeletedChat,
+      { chatId: chat._id }
+    );
+
     return null;
   }
 );

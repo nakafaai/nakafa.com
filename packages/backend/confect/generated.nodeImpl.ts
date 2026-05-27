@@ -1,20 +1,23 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import nodeApi from "@repo/backend/confect/_generated/nodeApi";
+import {
+  generateScript,
+  generateSpeech,
+} from "@repo/backend/confect/modules/content/audioGeneration.actions";
 import { Layer } from "effect";
-import nodeApi from "./_generated/nodeApi";
-import * as audio_generation from "./modules/content/audioGeneration.actions";
 
 const audioStudies_actions_generateSpeechImpl = FunctionImpl.make(
   nodeApi,
   "audioStudies.actions",
   "generateSpeech",
-  (args) => audio_generation.generateSpeech(args)
+  generateSpeech
 );
 
 const audioStudies_actions_generateScriptImpl = FunctionImpl.make(
   nodeApi,
   "audioStudies.actions",
   "generateScript",
-  (args) => audio_generation.generateScript(args)
+  generateScript
 );
 
 const audioStudiesActionsImpl = GroupImpl.make(

@@ -6,7 +6,7 @@ import * as content_audio_queue from "@repo/backend/confect/modules/content/audi
 import {
   generateAudioForQueueItem,
   handleWorkflowComplete,
-} from "@repo/backend/confect/modules/content/audioStudies.workflows.adapters";
+} from "@repo/backend/confect/modules/content/audioStudies/workflows";
 import { Layer } from "effect";
 
 const audioStudies_mutations_contentAudios_claimScriptGenerationImpl =

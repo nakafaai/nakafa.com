@@ -1,11 +1,33 @@
-import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import { GenericId } from "@confect/core";
+import { Schema } from "effect";
+import type { CacheSnapshot } from "virtua";
 import { vi } from "vitest";
 import type {
   Forum,
   ForumPost,
 } from "@/components/school/classes/forum/conversation/data/entities";
 
-export const conversationTestForumId = "forum_1" as Id<"schoolClassForums">;
+const decodeClassId = Schema.decodeUnknownSync(
+  GenericId.GenericId("schoolClasses")
+);
+const decodeForumId = Schema.decodeUnknownSync(
+  GenericId.GenericId("schoolClassForums")
+);
+const decodePostId = Schema.decodeUnknownSync(
+  GenericId.GenericId("schoolClassForumPosts")
+);
+const decodeSchoolId = Schema.decodeUnknownSync(GenericId.GenericId("schools"));
+const decodeUserId = Schema.decodeUnknownSync(GenericId.GenericId("users"));
+
+export const conversationTestForumId = decodeForumId("forum_1");
+export const conversationTestOtherForumId = decodeForumId("forum_2");
+export const conversationTestPostId = decodePostId("post_1");
+export const conversationTestOtherPostId = decodePostId("post_2");
+
+/** Creates one opaque `virtua` cache fixture for tests that only need identity. */
+export function createConversationTestCache(): CacheSnapshot {
+  return Object.create(null);
+}
 
 /** Creates one readable forum-post fixture for conversation tests. */
 export function createConversationTestPost({
@@ -23,11 +45,11 @@ export function createConversationTestPost({
 
   return {
     _creationTime: resolvedCreatedAt,
-    _id: postId as Id<"schoolClassForumPosts">,
+    _id: decodePostId(postId),
     attachments: [],
     body: `post-${sequence}`,
-    classId: "class_1" as Id<"schoolClasses">,
-    createdBy: "user_1" as Id<"users">,
+    classId: decodeClassId("class_1"),
+    createdBy: decodeUserId("user_1"),
     forumId: conversationTestForumId,
     isUnread,
     mentions: [],
@@ -50,17 +72,17 @@ export function createConversationTestForum() {
     _creationTime: Date.UTC(2026, 3, 20, 7, 0, 0),
     _id: conversationTestForumId,
     body: "body",
-    classId: "class_1" as Id<"schoolClasses">,
-    createdBy: "user_1" as Id<"users">,
+    classId: decodeClassId("class_1"),
+    createdBy: decodeUserId("user_1"),
     isPinned: false,
     lastPostAt: Date.UTC(2026, 3, 21, 8, 0, 0),
-    lastPostBy: "user_1" as Id<"users">,
+    lastPostBy: decodeUserId("user_1"),
     myReactions: [],
     nextPostSequence: 4,
     postCount: 3,
     reactionCounts: [],
     reactionUsers: [],
-    schoolId: "school_1" as Id<"schools">,
+    schoolId: decodeSchoolId("school_1"),
     status: "open",
     tag: "general",
     title: "Forum",
@@ -91,7 +113,7 @@ export function createConversationTestHandle({
 
   return {
     handle: {
-      cache: {},
+      cache: createConversationTestCache(),
       findItemIndex,
       getItemOffset,
       getItemSize,
