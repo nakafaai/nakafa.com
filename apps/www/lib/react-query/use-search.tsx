@@ -1,25 +1,18 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 import { usePagefind } from "@/lib/context/use-pagefind";
 import { normalizePagefindResult } from "@/lib/utils/pagefind";
 import type { PagefindResult, PagefindSearchOptions } from "@/types/pagefind";
 
 const SEARCH_OPTIONS: PagefindSearchOptions = {};
 
-class PagefindNotReadyError extends Schema.TaggedError<PagefindNotReadyError>()(
-  "PagefindNotReadyError",
-  {
-    message: Schema.String,
-  }
-) {}
+class PagefindNotReadyError extends Error {
+  override name = "PagefindNotReadyError";
+}
 
-class PagefindSearchError extends Schema.TaggedError<PagefindSearchError>()(
-  "PagefindSearchError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
+class PagefindSearchError extends Error {
+  override name = "PagefindSearchError";
+}
 
 /** Query Pagefind and normalize the result payload for the search UI. */
 const searchPagefind = Effect.fn("www.search.pagefind")(function* (
@@ -29,18 +22,15 @@ const searchPagefind = Effect.fn("www.search.pagefind")(function* (
 
   if (!pagefind?.debouncedSearch) {
     return yield* Effect.fail(
-      new PagefindNotReadyError({
-        message: "Pagefind not initialized correctly.",
-      })
+      new PagefindNotReadyError("Pagefind not initialized correctly.")
     );
   }
 
   const response = yield* Effect.tryPromise({
     try: () => pagefind.debouncedSearch<PagefindResult>(query, SEARCH_OPTIONS),
     catch: (cause) =>
-      new PagefindSearchError({
+      new PagefindSearchError("Unable to search Pagefind.", {
         cause,
-        message: "Unable to search Pagefind.",
       }),
   });
 
@@ -52,9 +42,8 @@ const searchPagefind = Effect.fn("www.search.pagefind")(function* (
     Effect.tryPromise({
       try: () => result.data(),
       catch: (cause) =>
-        new PagefindSearchError({
+        new PagefindSearchError("Unable to load Pagefind search result.", {
           cause,
-          message: "Unable to load Pagefind search result.",
         }),
     })
   );
