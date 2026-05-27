@@ -16,7 +16,8 @@
  *   pnpm run google-index
  *
  * Requirements:
- * - GOOGLE_INDEXING_CLIENT_EMAIL and GOOGLE_INDEXING_PRIVATE_KEY env values
+ * - GOOGLE_INDEXING_CLIENT_EMAIL and GOOGLE_INDEXING_PRIVATE_KEY env values, or
+ * - Ignored local service account file at scripts/google-key.json
  * - Service account must have Indexing API permissions
  * - URLs must be from verified Search Console property
  *
@@ -29,7 +30,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Config, Effect, Schema } from "effect";
+import { Config, Effect, Option, Schema } from "effect";
 import { JWT } from "google-auth-library";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
 import { logger } from "@/scripts/utils";
@@ -58,6 +59,7 @@ const host = "https://nakafa.com";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_FOLDER = path.join(__dirname, "_data");
 const GOOGLE_INDEX_HISTORY_FILE = path.join(DATA_FOLDER, "google-index.json");
+const DEFAULT_GOOGLE_KEY_FILE = path.join(__dirname, "google-key.json");
 
 // Ensure data folder exists
 if (!fs.existsSync(DATA_FOLDER)) {
@@ -75,35 +77,108 @@ class GoogleIndexConfigError extends Schema.TaggedError<GoogleIndexConfigError>(
   { message: Schema.String }
 ) {}
 
-/** Reads Google Indexing API credentials from the script config boundary. */
-const readGoogleIndexingCredentials = Effect.fn(
-  "scripts.googleIndex.readCredentials"
-)(function* () {
-  const clientEmail = yield* Config.nonEmptyString(
-    "GOOGLE_INDEXING_CLIENT_EMAIL"
-  ).pipe(
+const googleServiceAccountKeySchema = Schema.Struct({
+  client_email: Schema.NonEmptyString,
+  private_key: Schema.NonEmptyString,
+});
+
+const decodeGoogleServiceAccountKey = Schema.decodeUnknown(
+  Schema.parseJson(googleServiceAccountKeySchema)
+);
+
+/** Reads an optional non-empty config value without treating blanks as real config. */
+const readOptionalConfigValue = Effect.fn(
+  "scripts.googleIndex.readOptionalConfig"
+)(function* (name: string) {
+  const value = yield* Config.option(Config.string(name));
+
+  if (Option.isNone(value)) {
+    return Option.none();
+  }
+
+  const trimmed = value.value.trim();
+
+  if (trimmed.length === 0) {
+    return Option.none();
+  }
+
+  return Option.some(trimmed);
+});
+
+/** Resolves key file paths from the package script working directory. */
+function resolveGoogleKeyFilePath(keyFilePath: string) {
+  if (path.isAbsolute(keyFilePath)) {
+    return keyFilePath;
+  }
+
+  return path.resolve(process.cwd(), keyFilePath);
+}
+
+/** Reads a service account key file through a schema-checked JSON boundary. */
+const readGoogleServiceAccountKeyFile = Effect.fn(
+  "scripts.googleIndex.readServiceAccountKeyFile"
+)(function* (keyFilePath: string) {
+  const keyFileJson = yield* Effect.try({
+    try: () => fs.readFileSync(keyFilePath, "utf8"),
+    catch: (error) =>
+      new GoogleIndexConfigError({
+        message: `Unable to read Google Indexing service account file at ${keyFilePath}: ${error}`,
+      }),
+  });
+
+  const credentials = yield* decodeGoogleServiceAccountKey(keyFileJson).pipe(
     Effect.mapError(
       () =>
         new GoogleIndexConfigError({
-          message: "Missing GOOGLE_INDEXING_CLIENT_EMAIL.",
-        })
-    )
-  );
-  const rawPrivateKey = yield* Config.nonEmptyString(
-    "GOOGLE_INDEXING_PRIVATE_KEY"
-  ).pipe(
-    Effect.mapError(
-      () =>
-        new GoogleIndexConfigError({
-          message: "Missing GOOGLE_INDEXING_PRIVATE_KEY.",
+          message: `Invalid Google Indexing service account file at ${keyFilePath}. Expected JSON with client_email and private_key.`,
         })
     )
   );
 
   return {
-    clientEmail,
-    privateKey: rawPrivateKey.replaceAll("\\n", "\n"),
+    clientEmail: credentials.client_email,
+    privateKey: credentials.private_key,
   };
+});
+
+/** Reads Google Indexing API credentials from the script config boundary. */
+const readGoogleIndexingCredentials = Effect.fn(
+  "scripts.googleIndex.readCredentials"
+)(function* () {
+  const clientEmail = yield* readOptionalConfigValue(
+    "GOOGLE_INDEXING_CLIENT_EMAIL"
+  );
+  const rawPrivateKey = yield* readOptionalConfigValue(
+    "GOOGLE_INDEXING_PRIVATE_KEY"
+  );
+
+  if (Option.isSome(clientEmail) && Option.isSome(rawPrivateKey)) {
+    return {
+      clientEmail: clientEmail.value,
+      privateKey: rawPrivateKey.value.replaceAll("\\n", "\n"),
+    };
+  }
+
+  if (Option.isSome(clientEmail) || Option.isSome(rawPrivateKey)) {
+    return yield* Effect.fail(
+      new GoogleIndexConfigError({
+        message:
+          "Set both GOOGLE_INDEXING_CLIENT_EMAIL and GOOGLE_INDEXING_PRIVATE_KEY, or remove both and use GOOGLE_INDEXING_KEY_FILE.",
+      })
+    );
+  }
+
+  const configuredKeyFile = yield* readOptionalConfigValue(
+    "GOOGLE_INDEXING_KEY_FILE"
+  );
+
+  if (Option.isSome(configuredKeyFile)) {
+    return yield* readGoogleServiceAccountKeyFile(
+      resolveGoogleKeyFilePath(configuredKeyFile.value)
+    );
+  }
+
+  return yield* readGoogleServiceAccountKeyFile(DEFAULT_GOOGLE_KEY_FILE);
 });
 
 // Initialize Google Auth client
@@ -445,7 +520,7 @@ async function runGoogleIndexing(): Promise<void> {
       error?.toString().includes("authentication")
     ) {
       logger.error(
-        "Authentication failed. Please check GOOGLE_INDEXING_CLIENT_EMAIL and GOOGLE_INDEXING_PRIVATE_KEY."
+        "Authentication failed. Set GOOGLE_INDEXING_CLIENT_EMAIL and GOOGLE_INDEXING_PRIVATE_KEY, or restore scripts/google-key.json / GOOGLE_INDEXING_KEY_FILE."
       );
     } else if (
       error?.toString().includes("quota") ||
