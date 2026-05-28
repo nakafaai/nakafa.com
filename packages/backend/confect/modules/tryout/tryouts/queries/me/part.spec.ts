@@ -1,5 +1,9 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
-import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import {
+  exercisesMaterialSchema,
+  localeSchema,
+} from "@repo/backend/confect/modules/content/content.schemas";
+import { attemptEndReasonSchema } from "@repo/backend/confect/modules/learning/attempts.schemas";
 import {
   ExerciseAnswers,
   ExerciseAttempts,
@@ -32,16 +36,7 @@ const tryoutsQueriesMePartGroup = GroupSpec.make("part").addFunction(
           Schema.Null,
           Schema.Struct({
             currentPartKey: Schema.String,
-            material: Schema.Literal(
-              "mathematics",
-              "quantitative-knowledge",
-              "mathematical-reasoning",
-              "general-reasoning",
-              "indonesian-language",
-              "english-language",
-              "general-knowledge",
-              "reading-and-writing-skills"
-            ),
+            material: exercisesMaterialSchema,
             questionCount: Schema.Number,
             setSlug: Schema.String,
           })
@@ -80,10 +75,7 @@ const tryoutsQueriesMePartGroup = GroupSpec.make("part").addFunction(
           completedAt: Schema.Union(Schema.Number, Schema.Null),
           completedPartIndices: Schema.Array(Schema.Number),
           countsForCompetition: Schema.optional(Schema.Boolean),
-          endReason: Schema.Union(
-            Schema.Literal("submitted", "time-expired"),
-            Schema.Null
-          ),
+          endReason: Schema.Union(attemptEndReasonSchema, Schema.Null),
           expiresAt: Schema.Number,
           irtScore: Schema.Number,
           lastActivityAt: Schema.Number,

@@ -12,10 +12,6 @@ export const selfSelectableUserRoleSchema = Schema.Literal(
   ...selfSelectableUserRoles
 );
 
-export type SelfSelectableUserRole = Schema.Schema.Type<
-  typeof selfSelectableUserRoleSchema
->;
-
 /**
  * User role validator (nullable) - for return types
  */

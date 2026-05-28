@@ -1,6 +1,7 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
 import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
+import { tryoutStatusSchema } from "@repo/backend/confect/modules/tryout/tryouts.tables";
 import { Schema } from "effect";
 
 const activeTryoutCatalogEntrySchema = Schema.Struct({
@@ -9,7 +10,7 @@ const activeTryoutCatalogEntrySchema = Schema.Struct({
   latestAttempt: Schema.Union(
     Schema.Struct({
       expiresAtMs: Schema.Number,
-      status: Schema.Literal("in-progress", "completed", "expired"),
+      status: tryoutStatusSchema,
       updatedAt: Schema.Number,
     }),
     Schema.Null

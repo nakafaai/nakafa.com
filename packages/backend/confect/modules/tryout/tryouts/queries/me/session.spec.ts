@@ -1,6 +1,7 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
 import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
+import { tryoutStatusSchema } from "@repo/backend/confect/modules/tryout/tryouts.tables";
 import { Schema } from "effect";
 
 const tryoutsQueriesMeSessionGroup = GroupSpec.make("session").addFunction(
@@ -17,7 +18,7 @@ const tryoutsQueriesMeSessionGroup = GroupSpec.make("session").addFunction(
       Schema.Struct({
         attemptId: GenericId.GenericId("tryoutAttempts"),
         expiresAtMs: Schema.Number,
-        status: Schema.Literal("in-progress", "completed", "expired"),
+        status: tryoutStatusSchema,
       })
     ),
   })

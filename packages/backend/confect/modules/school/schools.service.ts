@@ -5,6 +5,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { SchoolActionError } from "@repo/backend/confect/modules/school/schoolErrors";
+import type { SchoolType } from "@repo/backend/confect/modules/school/schools.tables";
 import type { PaginationOptions } from "convex/server";
 import { Clock, Effect, Option } from "effect";
 import { nanoid } from "nanoid";
@@ -123,13 +124,7 @@ export const createSchool = Effect.fn("schools.createSchool")(function* (args: {
   name: string;
   phone: string;
   province: string;
-  type:
-    | "elementary-school"
-    | "middle-school"
-    | "high-school"
-    | "vocational-school"
-    | "university"
-    | "other";
+  type: SchoolType;
 }) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;

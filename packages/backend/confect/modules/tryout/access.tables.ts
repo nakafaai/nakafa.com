@@ -18,6 +18,10 @@ export const tryoutAccessCampaignRedeemStatusSchema = Schema.Literal(
   "ended"
 );
 
+export type TryoutAccessCampaignRedeemStatus = Schema.Schema.Type<
+  typeof tryoutAccessCampaignRedeemStatusSchema
+>;
+
 export const tryoutAccessCampaignResultsStatusSchema = Schema.Literal(
   "pending",
   "finalized"

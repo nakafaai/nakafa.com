@@ -1,5 +1,18 @@
 import { GenericId } from "@confect/core";
 import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/confect/modules/content/constants";
+import { ARTICLE_CATEGORIES } from "@repo/contents/_types/articles/category";
+import { EXERCISES_CATEGORIES } from "@repo/contents/_types/exercises/category";
+import { EXERCISES_MATERIALS } from "@repo/contents/_types/exercises/material";
+import { EXERCISES_TYPES } from "@repo/contents/_types/exercises/type";
+import { SUBJECT_CATEGORIES } from "@repo/contents/_types/subject/category";
+import {
+  NON_NUMERIC_GRADES,
+  NUMERIC_GRADES,
+} from "@repo/contents/_types/subject/grade";
+import {
+  BACHELOR_MATERIALS,
+  HIGH_SCHOOL_MATERIALS,
+} from "@repo/contents/_types/subject/material";
 import { locales } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
@@ -55,84 +68,39 @@ export const contentViewRefSchema = Schema.Union(
 
 export type ContentViewRef = Schema.Schema.Type<typeof contentViewRefSchema>;
 
-export const articleCategorySchema = Schema.Literal("politics");
+export const articleCategorySchema = Schema.Literal(...ARTICLE_CATEGORIES);
 
 export type ArticleCategory = Schema.Schema.Type<typeof articleCategorySchema>;
 
-export const subjectCategorySchema = Schema.Literal(
-  "elementary-school",
-  "middle-school",
-  "high-school",
-  "university"
-);
+export const subjectCategorySchema = Schema.Literal(...SUBJECT_CATEGORIES);
 
 export type SubjectCategory = Schema.Schema.Type<typeof subjectCategorySchema>;
 
 export const gradeSchema = Schema.Literal(
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "11",
-  "12",
-  "bachelor",
-  "master",
-  "phd"
+  ...NUMERIC_GRADES,
+  ...NON_NUMERIC_GRADES
 );
 
 export type Grade = Schema.Schema.Type<typeof gradeSchema>;
 
 export const materialSchema = Schema.Literal(
-  "mathematics",
-  "physics",
-  "chemistry",
-  "biology",
-  "geography",
-  "economy",
-  "history",
-  "informatics",
-  "geospatial",
-  "sociology",
-  "ai-ds",
-  "game-engineering",
-  "computer-science",
-  "technology-electro-medical",
-  "political-science",
-  "informatics-engineering",
-  "international-relations"
+  ...HIGH_SCHOOL_MATERIALS,
+  ...BACHELOR_MATERIALS
 );
 
 export type Material = Schema.Schema.Type<typeof materialSchema>;
 
-export const exercisesCategorySchema = Schema.Literal(
-  "high-school",
-  "middle-school"
-);
+export const exercisesCategorySchema = Schema.Literal(...EXERCISES_CATEGORIES);
 
 export type ExercisesCategory = Schema.Schema.Type<
   typeof exercisesCategorySchema
 >;
 
-export const exercisesTypeSchema = Schema.Literal("grade-9", "tka", "snbt");
+export const exercisesTypeSchema = Schema.Literal(...EXERCISES_TYPES);
 
 export type ExercisesType = Schema.Schema.Type<typeof exercisesTypeSchema>;
 
-export const exercisesMaterialSchema = Schema.Literal(
-  "mathematics",
-  "quantitative-knowledge",
-  "mathematical-reasoning",
-  "general-reasoning",
-  "indonesian-language",
-  "english-language",
-  "general-knowledge",
-  "reading-and-writing-skills"
-);
+export const exercisesMaterialSchema = Schema.Literal(...EXERCISES_MATERIALS);
 
 export type ExercisesMaterial = Schema.Schema.Type<
   typeof exercisesMaterialSchema

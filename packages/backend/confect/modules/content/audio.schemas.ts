@@ -18,6 +18,11 @@ export const audioContentRefSchema = Schema.Union(
 
 export type AudioContentRef = Schema.Schema.Type<typeof audioContentRefSchema>;
 
+/** Audio-capable content kinds. */
+export const audioContentTypeSchema = Schema.Literal("article", "subject");
+
+export type AudioContentType = typeof audioContentTypeSchema.Type;
+
 /** Audio generation status values. */
 export const audioStatusSchema = Schema.Literal(
   "pending",

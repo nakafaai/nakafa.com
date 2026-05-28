@@ -9,7 +9,6 @@ import {
   logWarning,
 } from "@repo/backend/scripts/sync-content/logging";
 import { clearSyncState } from "@repo/backend/scripts/sync-content/runtime";
-import { BatchDeleteResultSchema } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
   SyncOptions,
@@ -259,13 +258,7 @@ const deleteAllBatched = Effect.fn("sync.reset.deleteAllBatched")(function* (
   let hasMore = true;
 
   while (hasMore) {
-    const result = yield* callConvex(
-      config,
-      "mutation",
-      mutationRef,
-      {},
-      BatchDeleteResultSchema
-    );
+    const result = yield* callConvex(config, "mutation", mutationRef, {});
     totalDeleted += result.deleted;
     hasMore = result.hasMore;
 

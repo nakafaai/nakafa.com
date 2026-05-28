@@ -1,19 +1,20 @@
+import type { Ref } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
 import { callConvex } from "@repo/backend/scripts/sync-content/convex";
-import {
-  ContentCountsSchema,
-  CountTablePageSchema,
-} from "@repo/backend/scripts/sync-content/schemas";
+import { ContentCountsSchema } from "@repo/backend/scripts/sync-content/schemas";
 import type { ConvexConfig } from "@repo/backend/scripts/sync-content/types";
 import { Effect, Schema } from "effect";
 
 const COUNT_PAGE_SIZE = 1000;
 
 type ContentCounts = Schema.Schema.Type<typeof ContentCountsSchema>;
+type CountTableName = Ref.Args<
+  typeof refs.internal.contentSync.queries.counts.countTablePage
+>["tableName"];
 
 const countTableSpecs: Array<{
   field: keyof ContentCounts;
-  tableName: string;
+  tableName: CountTableName;
 }> = [
   { field: "articles", tableName: "articleContents" },
   { field: "subjectTopics", tableName: "subjectTopics" },
@@ -72,7 +73,7 @@ const countTableSpecs: Array<{
 /** Counts every document in one Convex table through bounded paginated reads. */
 const countTableDocuments = Effect.fn("sync.countTableDocuments")(function* (
   config: ConvexConfig,
-  tableName: string
+  tableName: CountTableName
 ) {
   let count = 0;
   let continueCursor: string | null = null;
@@ -90,8 +91,7 @@ const countTableDocuments = Effect.fn("sync.countTableDocuments")(function* (
           cursor: continueCursor,
           numItems: COUNT_PAGE_SIZE,
         },
-      },
-      CountTablePageSchema
+      }
     ));
 
     count += pageSize;

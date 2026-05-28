@@ -1,5 +1,10 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
-import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import {
+  gradeSchema,
+  localeSchema,
+  materialSchema,
+  subjectCategorySchema,
+} from "@repo/backend/confect/modules/content/content.schemas";
 import { Schema } from "effect";
 
 const contentSyncMutationsSubjectsGroup = GroupSpec.make("subjects")
@@ -11,52 +16,13 @@ const contentSyncMutationsSubjectsGroup = GroupSpec.make("subjects")
           Schema.Struct({
             authors: Schema.Array(Schema.Struct({ name: Schema.String })),
             body: Schema.String,
-            category: Schema.Literal(
-              "elementary-school",
-              "middle-school",
-              "high-school",
-              "university"
-            ),
+            category: subjectCategorySchema,
             contentHash: Schema.String,
             date: Schema.Number,
             description: Schema.optional(Schema.String),
-            grade: Schema.Literal(
-              "1",
-              "2",
-              "3",
-              "4",
-              "5",
-              "6",
-              "7",
-              "8",
-              "9",
-              "10",
-              "11",
-              "12",
-              "bachelor",
-              "master",
-              "phd"
-            ),
+            grade: gradeSchema,
             locale: localeSchema,
-            material: Schema.Literal(
-              "mathematics",
-              "physics",
-              "chemistry",
-              "biology",
-              "geography",
-              "economy",
-              "history",
-              "informatics",
-              "geospatial",
-              "sociology",
-              "ai-ds",
-              "game-engineering",
-              "computer-science",
-              "technology-electro-medical",
-              "political-science",
-              "informatics-engineering",
-              "international-relations"
-            ),
+            material: materialSchema,
             section: Schema.String,
             slug: Schema.String,
             subject: Schema.optional(Schema.String),
@@ -82,50 +48,11 @@ const contentSyncMutationsSubjectsGroup = GroupSpec.make("subjects")
       args: Schema.Struct({
         topics: Schema.Array(
           Schema.Struct({
-            category: Schema.Literal(
-              "elementary-school",
-              "middle-school",
-              "high-school",
-              "university"
-            ),
+            category: subjectCategorySchema,
             description: Schema.optional(Schema.String),
-            grade: Schema.Literal(
-              "1",
-              "2",
-              "3",
-              "4",
-              "5",
-              "6",
-              "7",
-              "8",
-              "9",
-              "10",
-              "11",
-              "12",
-              "bachelor",
-              "master",
-              "phd"
-            ),
+            grade: gradeSchema,
             locale: localeSchema,
-            material: Schema.Literal(
-              "mathematics",
-              "physics",
-              "chemistry",
-              "biology",
-              "geography",
-              "economy",
-              "history",
-              "informatics",
-              "geospatial",
-              "sociology",
-              "ai-ds",
-              "game-engineering",
-              "computer-science",
-              "technology-electro-medical",
-              "political-science",
-              "informatics-engineering",
-              "international-relations"
-            ),
+            material: materialSchema,
             sectionCount: Schema.Number,
             slug: Schema.String,
             title: Schema.String,

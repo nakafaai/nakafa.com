@@ -1,4 +1,8 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import {
+  schoolClassForumStatusSchema,
+  schoolClassForumTagSchema,
+} from "@repo/backend/confect/modules/school/classes.tables";
 import { Schema } from "effect";
 
 const classesForumsQueriesForumsGroup = GroupSpec.make("forums")
@@ -37,14 +41,8 @@ const classesForumsQueriesForumsGroup = GroupSpec.make("forums")
               Schema.Struct({ count: Schema.Number, emoji: Schema.String })
             ),
             schoolId: GenericId.GenericId("schools"),
-            status: Schema.Literal("open", "locked", "archived"),
-            tag: Schema.Literal(
-              "general",
-              "question",
-              "announcement",
-              "assignment",
-              "resource"
-            ),
+            status: schoolClassForumStatusSchema,
+            tag: schoolClassForumTagSchema,
             title: Schema.String,
             unreadCount: Schema.Number,
             updatedAt: Schema.Number,
@@ -101,14 +99,8 @@ const classesForumsQueriesForumsGroup = GroupSpec.make("forums")
           })
         ),
         schoolId: GenericId.GenericId("schools"),
-        status: Schema.Literal("open", "locked", "archived"),
-        tag: Schema.Literal(
-          "general",
-          "question",
-          "announcement",
-          "assignment",
-          "resource"
-        ),
+        status: schoolClassForumStatusSchema,
+        tag: schoolClassForumTagSchema,
         title: Schema.String,
         updatedAt: Schema.Number,
         user: Schema.Union(

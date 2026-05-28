@@ -1,5 +1,6 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import { staleContentTableNameSchema } from "@repo/backend/confect/modules/content/contentSync.shared";
 import { Schema } from "effect";
 
 const contentSyncQueriesStaleGroup = GroupSpec.make("stale").addFunction(
@@ -14,13 +15,7 @@ const contentSyncQueriesStaleGroup = GroupSpec.make("stale").addFunction(
         maximumRowsRead: Schema.optional(Schema.Number),
         numItems: Schema.Number,
       }),
-      tableName: Schema.Literal(
-        "articleContents",
-        "subjectTopics",
-        "subjectSections",
-        "exerciseSets",
-        "exerciseQuestions"
-      ),
+      tableName: staleContentTableNameSchema,
     }),
     returns: Schema.Struct({
       continueCursor: Schema.String,

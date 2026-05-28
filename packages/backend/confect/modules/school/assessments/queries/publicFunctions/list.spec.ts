@@ -1,4 +1,10 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import {
+  assessmentModeSchema,
+  assessmentQuestionBankScopeSchema,
+  assessmentStatusSchema,
+  richContentSchema,
+} from "@repo/backend/confect/modules/school/assessmentsTables/shared";
 import { Schema } from "effect";
 
 const assessmentsQueriesPublicListGroup = GroupSpec.make("list").addFunction(
@@ -30,31 +36,19 @@ const assessmentsQueriesPublicListGroup = GroupSpec.make("list").addFunction(
           currentVersionId: Schema.optional(
             GenericId.GenericId("schoolAssessmentVersions")
           ),
-          description: Schema.optional(
-            Schema.Struct({
-              format: Schema.Literal("plate-v1"),
-              json: Schema.String,
-              text: Schema.String,
-            })
-          ),
-          mode: Schema.Literal(
-            "practice",
-            "assignment",
-            "quiz",
-            "exam",
-            "tryout"
-          ),
+          description: Schema.optional(richContentSchema),
+          mode: assessmentModeSchema,
           order: Schema.Number,
           publishedAt: Schema.optional(Schema.Number),
           publishedBy: Schema.optional(GenericId.GenericId("users")),
-          questionBankScope: Schema.Literal("class", "school"),
+          questionBankScope: assessmentQuestionBankScopeSchema,
           scheduledAt: Schema.optional(Schema.Number),
           scheduledJobId: Schema.optional(
             GenericId.GenericId("_scheduled_functions")
           ),
           schoolId: GenericId.GenericId("schools"),
           slug: Schema.String,
-          status: Schema.Literal("draft", "scheduled", "published", "archived"),
+          status: assessmentStatusSchema,
           title: Schema.String,
           updatedAt: Schema.Number,
           updatedBy: Schema.optional(GenericId.GenericId("users")),

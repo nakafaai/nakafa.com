@@ -5,19 +5,19 @@ import {
   schoolClassMemberRoleSchema,
   schoolClassTeacherRoleSchema,
 } from "@repo/backend/confect/modules/school/classes.tables";
+import { SUBJECT_CATEGORIES } from "@repo/contents/_types/subject/category";
 import { Schema } from "effect";
 
 /**
  * School type validator
  */
 export const schoolTypeSchema = Schema.Literal(
-  "elementary-school",
-  "middle-school",
-  "high-school",
+  ...SUBJECT_CATEGORIES,
   "vocational-school",
-  "university",
   "other"
 );
+
+export type SchoolType = Schema.Schema.Type<typeof schoolTypeSchema>;
 
 /**
  * School member role validator

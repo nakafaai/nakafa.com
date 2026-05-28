@@ -4,11 +4,11 @@ import type {
   ExercisesMaterial,
   ExercisesMaterialList,
 } from "@repo/contents/_types/exercises/material";
+import { TRY_OUT_SEGMENT } from "@repo/contents/_types/exercises/slug";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Option } from "effect";
 
-const TRY_OUT_SEGMENT = "try-out";
 const EXERCISE_YEAR_SEGMENT_REGEX = /^\d{4}$/;
 
 /**

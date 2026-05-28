@@ -1,5 +1,10 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
-import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import {
+  exercisesCategorySchema,
+  exercisesMaterialSchema,
+  exercisesTypeSchema,
+  localeSchema,
+} from "@repo/backend/confect/modules/content/content.schemas";
 import { Schema } from "effect";
 
 const contentSyncMutationsExercisesGroup = GroupSpec.make("exercises")
@@ -11,7 +16,7 @@ const contentSyncMutationsExercisesGroup = GroupSpec.make("exercises")
           Schema.Struct({
             answerBody: Schema.String,
             authors: Schema.Array(Schema.Struct({ name: Schema.String })),
-            category: Schema.Literal("high-school", "middle-school"),
+            category: exercisesCategorySchema,
             choices: Schema.Array(
               Schema.Struct({
                 isCorrect: Schema.Boolean,
@@ -25,16 +30,7 @@ const contentSyncMutationsExercisesGroup = GroupSpec.make("exercises")
             description: Schema.optional(Schema.String),
             exerciseType: Schema.String,
             locale: localeSchema,
-            material: Schema.Literal(
-              "mathematics",
-              "quantitative-knowledge",
-              "mathematical-reasoning",
-              "general-reasoning",
-              "indonesian-language",
-              "english-language",
-              "general-knowledge",
-              "reading-and-writing-skills"
-            ),
+            material: exercisesMaterialSchema,
             number: Schema.Number,
             questionBody: Schema.String,
             searchDescription: Schema.String,
@@ -44,7 +40,7 @@ const contentSyncMutationsExercisesGroup = GroupSpec.make("exercises")
             setSlug: Schema.String,
             slug: Schema.String,
             title: Schema.String,
-            type: Schema.Literal("grade-9", "tka", "snbt"),
+            type: exercisesTypeSchema,
           })
         ),
       }),
@@ -65,21 +61,12 @@ const contentSyncMutationsExercisesGroup = GroupSpec.make("exercises")
       args: Schema.Struct({
         sets: Schema.Array(
           Schema.Struct({
-            category: Schema.Literal("high-school", "middle-school"),
+            category: exercisesCategorySchema,
             contentHash: Schema.String,
             description: Schema.optional(Schema.String),
             exerciseType: Schema.String,
             locale: localeSchema,
-            material: Schema.Literal(
-              "mathematics",
-              "quantitative-knowledge",
-              "mathematical-reasoning",
-              "general-reasoning",
-              "indonesian-language",
-              "english-language",
-              "general-knowledge",
-              "reading-and-writing-skills"
-            ),
+            material: exercisesMaterialSchema,
             questionCount: Schema.Number,
             searchDescription: Schema.String,
             searchText: Schema.String,
@@ -87,7 +74,7 @@ const contentSyncMutationsExercisesGroup = GroupSpec.make("exercises")
             setName: Schema.String,
             slug: Schema.String,
             title: Schema.String,
-            type: Schema.Literal("grade-9", "tka", "snbt"),
+            type: exercisesTypeSchema,
           })
         ),
       }),

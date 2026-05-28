@@ -1,4 +1,3 @@
-import type { GenericId } from "@confect/core";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -10,47 +9,52 @@ import {
   getAppUserByAuthId,
   requireAppUser,
 } from "@repo/backend/confect/modules/identity/auth.service";
-import type { SelfSelectableUserRole } from "@repo/backend/confect/modules/identity/users.tables";
+import type {
+  GetUserByAuthIdArgs,
+  GetUserByIdArgs,
+  UpdateUserNameArgs,
+  UpdateUserRoleArgs,
+} from "@repo/backend/confect/modules/identity/users.schemas";
 import { components } from "@repo/backend/confect/modules/integrations/convexComponents";
 import { Clock, Effect } from "effect";
 
 /** Updates the current user's self-selected role. */
-export const updateUserRole = Effect.fn("identity.updateUserRole")(
-  function* (args: { role: SelfSelectableUserRole }) {
-    const writer = yield* DatabaseWriter;
-    const user = yield* requireAppUser();
+export const updateUserRole = Effect.fn("identity.updateUserRole")(function* (
+  args: UpdateUserRoleArgs
+) {
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
 
-    yield* writer.table("users").patch(user.appUser._id, {
-      role: args.role,
-    });
+  yield* writer.table("users").patch(user.appUser._id, {
+    role: args.role,
+  });
 
-    return null;
-  }
-);
+  return null;
+});
 
 /** Updates the current user's Better Auth and app profile name. */
-export const updateUserName = Effect.fn("identity.updateUserName")(
-  function* (args: { name: string }) {
-    const ctx = yield* MutationCtx;
-    const writer = yield* DatabaseWriter;
-    const user = yield* requireAppUser();
+export const updateUserName = Effect.fn("identity.updateUserName")(function* (
+  args: UpdateUserNameArgs
+) {
+  const ctx = yield* MutationCtx;
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
 
-    yield* Effect.promise(() =>
-      ctx.runMutation(components.betterAuth.adapter.updateOne, {
-        input: {
-          model: "user",
-          update: { name: args.name },
-          where: [{ field: "_id", value: user.authUser._id }],
-        },
-      })
-    );
-    yield* writer.table("users").patch(user.appUser._id, {
-      name: args.name,
-    });
+  yield* Effect.promise(() =>
+    ctx.runMutation(components.betterAuth.adapter.updateOne, {
+      input: {
+        model: "user",
+        update: { name: args.name },
+        where: [{ field: "_id", value: user.authUser._id }],
+      },
+    })
+  );
+  yield* writer.table("users").patch(user.appUser._id, {
+    name: args.name,
+  });
 
-    return null;
-  }
-);
+  return null;
+});
 
 /** Synchronizes user metadata needed before starting or continuing a chat. */
 export const syncUserInfoForChat = Effect.fn("identity.syncUserInfoForChat")(
@@ -99,9 +103,9 @@ export const syncUserInfoForChat = Effect.fn("identity.syncUserInfoForChat")(
 );
 
 /** Reads a user document by app user id for internal callers. */
-export const getUserById = Effect.fn("identity.getUserById")(function* (args: {
-  userId: GenericId.GenericId<"users">;
-}) {
+export const getUserById = Effect.fn("identity.getUserById")(function* (
+  args: GetUserByIdArgs
+) {
   const reader = yield* DatabaseReader;
   return yield* reader
     .table("users")
@@ -110,11 +114,11 @@ export const getUserById = Effect.fn("identity.getUserById")(function* (args: {
 });
 
 /** Reads a user document by Better Auth id for internal callers. */
-export const getUserByAuthId = Effect.fn("identity.getUserByAuthId")(
-  function* (args: { authId: string }) {
-    return yield* getAppUserByAuthId(args.authId);
-  }
-);
+export const getUserByAuthId = Effect.fn("identity.getUserByAuthId")(function* (
+  args: GetUserByAuthIdArgs
+) {
+  return yield* getAppUserByAuthId(args.authId);
+});
 
 /** User service accessors used by Confect function implementations. */
 export class Users extends Effect.Service<Users>()("Users", {

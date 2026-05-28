@@ -2,7 +2,10 @@ import {
   DatabaseReader,
   StorageReader,
 } from "@repo/backend/confect/_generated/services";
-import type { AudioContentRef } from "@repo/backend/confect/modules/content/audio.schemas";
+import type {
+  AudioContentRef,
+  AudioContentType,
+} from "@repo/backend/confect/modules/content/audio.schemas";
 import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import { Effect, Option } from "effect";
 
@@ -157,7 +160,7 @@ export const getContentHash = Effect.fn("audioContent.getContentHash")(
 /** Reads completed public audio for a localized article or subject slug. */
 export const getAudioBySlug = Effect.fn("audioContent.getAudioBySlug")(
   function* (args: {
-    contentType: "article" | "subject";
+    contentType: AudioContentType;
     locale: Locale;
     slug: string;
   }) {

@@ -1,4 +1,9 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import {
+  assessmentQuestionBankScopeSchema,
+  assessmentQuestionTypeSchema,
+  richContentSchema,
+} from "@repo/backend/confect/modules/school/assessmentsTables/shared";
 import { Schema } from "effect";
 
 const assessmentsMutationsPublicBankGroup = GroupSpec.make("bank")
@@ -7,15 +12,9 @@ const assessmentsMutationsPublicBankGroup = GroupSpec.make("bank")
       name: "createQuestionBank",
       args: Schema.Struct({
         classId: Schema.optional(GenericId.GenericId("schoolClasses")),
-        description: Schema.optional(
-          Schema.Struct({
-            format: Schema.Literal("plate-v1"),
-            json: Schema.String,
-            text: Schema.String,
-          })
-        ),
+        description: Schema.optional(richContentSchema),
         schoolId: GenericId.GenericId("schools"),
-        scope: Schema.Literal("class", "school"),
+        scope: assessmentQuestionBankScopeSchema,
         title: Schema.String,
       }),
       returns: GenericId.GenericId("schoolAssessmentQuestionBanks"),
@@ -27,23 +26,13 @@ const assessmentsMutationsPublicBankGroup = GroupSpec.make("bank")
       args: Schema.Struct({
         bankId: GenericId.GenericId("schoolAssessmentQuestionBanks"),
         classId: Schema.optional(GenericId.GenericId("schoolClasses")),
-        explanation: Schema.optional(
-          Schema.Struct({
-            format: Schema.Literal("plate-v1"),
-            json: Schema.String,
-            text: Schema.String,
-          })
-        ),
+        explanation: Schema.optional(richContentSchema),
         maxSelectionCount: Schema.optional(Schema.Number),
         points: Schema.Number,
-        questionType: Schema.Literal("mcq-single", "mcq-multi", "essay"),
+        questionType: assessmentQuestionTypeSchema,
         schoolId: GenericId.GenericId("schools"),
         shuffleChoices: Schema.Boolean,
-        stem: Schema.Struct({
-          format: Schema.Literal("plate-v1"),
-          json: Schema.String,
-          text: Schema.String,
-        }),
+        stem: richContentSchema,
       }),
       returns: GenericId.GenericId("schoolAssessmentQuestionBankEntries"),
     })

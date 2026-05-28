@@ -1,12 +1,14 @@
 import refs from "@repo/backend/confect/_generated/refs";
-import { tryoutProducts } from "@repo/backend/confect/modules/tryout/products";
+import {
+  tryoutContentSources,
+  tryoutProducts,
+} from "@repo/backend/confect/modules/tryout/products";
 import { ScriptFailureError } from "@repo/backend/scripts/lib/errors";
 import { callConvex } from "@repo/backend/scripts/sync-content/convex";
 import {
   formatDuration,
   log,
 } from "@repo/backend/scripts/sync-content/logging";
-import { SyncResultSchema } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
   SyncOptions,
@@ -16,19 +18,14 @@ import { getSubjects } from "@repo/contents/_lib/exercises/type";
 import { locales as contentLocales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
-const tryoutPartKeyReaders = {
-  snbt: () =>
-    getSubjects("high-school", "snbt").map((subject) => subject.label),
-} satisfies Record<
-  (typeof tryoutProducts)[number],
-  () => ReturnType<typeof getSubjects>[number]["label"][]
->;
-
 /** Returns product part keys from the same content folders used by web listings. */
 const getTryoutPartKeys = Effect.fn("sync.getTryoutPartKeys")(function* (
   product: (typeof tryoutProducts)[number]
 ) {
-  const partKeys = tryoutPartKeyReaders[product]();
+  const source = tryoutContentSources[product];
+  const partKeys = getSubjects(source.category, source.type).map(
+    (subject) => subject.label
+  );
 
   if (partKeys.length === 0) {
     return yield* Effect.fail(
@@ -64,8 +61,7 @@ export const syncTryouts = Effect.fn("sync.tryouts")(function* (
           product,
           locale,
           requiredPartKeys: yield* getTryoutPartKeys(product),
-        },
-        SyncResultSchema
+        }
       );
 
       totals.created += result.created;

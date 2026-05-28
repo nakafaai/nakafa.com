@@ -1,5 +1,8 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
-import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import {
+  contentTypeSchema,
+  localeSchema,
+} from "@repo/backend/confect/modules/content/content.schemas";
 import { Schema } from "effect";
 
 const contentSyncQueriesIntegrityGroup = GroupSpec.make("integrity")
@@ -93,7 +96,7 @@ const contentSyncQueriesIntegrityGroup = GroupSpec.make("integrity")
               GenericId.GenericId("subjectSections"),
               GenericId.GenericId("exerciseQuestions")
             ),
-            contentType: Schema.Literal("article", "subject", "exercise"),
+            contentType: contentTypeSchema,
           })
         ),
         pageStatus: Schema.optional(

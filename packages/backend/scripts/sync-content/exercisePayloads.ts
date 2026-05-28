@@ -1,51 +1,20 @@
-import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
+import type { Ref } from "@confect/core";
+import type refs from "@repo/backend/confect/_generated/refs";
 
-export interface ExerciseSetPayload {
-  category: string;
-  contentHash: string;
-  description?: string;
-  exerciseType: string;
-  locale: Locale;
-  material: string;
-  questionCount: number;
-  searchDescription: string;
-  searchText: string;
-  searchTitle: string;
-  setName: string;
-  slug: string;
-  title: string;
-  type: string;
-}
+type BulkSyncExerciseSetsArgs = Ref.Args<
+  typeof refs.internal.contentSync.mutations.exercises.bulkSyncExerciseSets
+>;
 
-export interface QuestionChoice {
-  isCorrect: boolean;
-  label: string;
-  optionKey: string;
-  order: number;
-}
+type BulkSyncExerciseQuestionsArgs = Ref.Args<
+  typeof refs.internal.contentSync.mutations.exercises.bulkSyncExerciseQuestions
+>;
 
-export interface ExerciseQuestionPayload {
-  answerBody: string;
-  authors: Array<{ name: string }>;
-  category: string;
-  choices: QuestionChoice[];
-  contentHash: string;
-  date: number;
-  description?: string;
-  exerciseType: string;
-  locale: Locale;
-  material: string;
-  number: number;
-  questionBody: string;
-  searchDescription: string;
-  searchText: string;
-  searchTitle: string;
-  setName: string;
-  setSlug: string;
-  slug: string;
-  title: string;
-  type: string;
-}
+export type ExerciseSetPayload = BulkSyncExerciseSetsArgs["sets"][number];
+
+export type ExerciseQuestionPayload =
+  BulkSyncExerciseQuestionsArgs["questions"][number];
+
+export type QuestionChoice = ExerciseQuestionPayload["choices"][number];
 
 export interface ExerciseSearchLabels {
   exerciseTypeTitle: string;

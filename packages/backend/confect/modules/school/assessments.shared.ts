@@ -1,14 +1,12 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AssessmentError } from "@repo/backend/confect/modules/school/assessments.errors";
+import type {
+  AssessmentStatus,
+  RichContent,
+} from "@repo/backend/confect/modules/school/assessmentsTables/shared";
 import { requireClassAccess } from "@repo/backend/confect/modules/school/classAccess.service";
 import { Effect, Option } from "effect";
-
-interface RichContent {
-  readonly format: "plate-v1";
-  readonly json: string;
-  readonly text: string;
-}
 
 /** Requires an assessment to exist inside a school. */
 export const requireAssessment = Effect.fn("assessments.requireAssessment")(
@@ -60,7 +58,7 @@ export function requireRichContentSize(
 
 /** Validates scheduled publication state against the current time. */
 export function validateScheduledStatus(
-  status: "archived" | "draft" | "published" | "scheduled",
+  status: AssessmentStatus,
   scheduledAt: number | undefined,
   now: number
 ) {

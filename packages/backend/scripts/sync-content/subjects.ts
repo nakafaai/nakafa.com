@@ -1,5 +1,5 @@
+import type { Ref } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
-import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import {
   computeHash,
   parseDateToEpoch,
@@ -24,7 +24,6 @@ import {
   BATCH_SIZES,
   LOCALE_SUBJECT_MATERIAL_FILE_REGEX,
   parseLocale,
-  SyncResultSchema,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
@@ -33,35 +32,13 @@ import type {
 } from "@repo/backend/scripts/sync-content/types";
 import { Effect } from "effect";
 
-interface SubjectTopicPayload {
-  category: string;
-  description?: string;
-  grade: string;
-  locale: Locale;
-  material: string;
-  sectionCount: number;
-  slug: string;
-  title: string;
-  topic: string;
-}
+type SubjectTopicPayload = Ref.Args<
+  typeof refs.internal.contentSync.mutations.subjects.bulkSyncSubjectTopics
+>["topics"][number];
 
-interface SubjectSectionPayload {
-  authors: Array<{ name: string }>;
-  body: string;
-  category: string;
-  contentHash: string;
-  date: number;
-  description?: string;
-  grade: string;
-  locale: Locale;
-  material: string;
-  section: string;
-  slug: string;
-  subject?: string;
-  title: string;
-  topic: string;
-  topicSlug: string;
-}
+type SubjectSectionPayload = Ref.Args<
+  typeof refs.internal.contentSync.mutations.subjects.bulkSyncSubjectSections
+>["sections"][number];
 
 /** Syncs subject topic metadata from material files into Convex. */
 export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (
@@ -160,8 +137,7 @@ export const syncSubjectTopics = Effect.fn("sync.subjectTopics")(function* (
       config,
       "mutation",
       refs.internal.contentSync.mutations.subjects.bulkSyncSubjectTopics,
-      { topics: batch },
-      SyncResultSchema
+      { topics: batch }
     );
 
     totals.created += result.created;
@@ -287,8 +263,7 @@ export const syncSubjectSections = Effect.fn("sync.subjectSections")(function* (
       config,
       "mutation",
       refs.internal.contentSync.mutations.subjects.bulkSyncSubjectSections,
-      { sections: batch },
-      SyncResultSchema
+      { sections: batch }
     );
 
     totals.created += result.created;

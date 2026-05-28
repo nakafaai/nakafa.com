@@ -1,49 +1,10 @@
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import type {
+  CountableTableName,
+  StaleContentTableName,
+} from "@repo/backend/confect/modules/content/contentSync.shared";
 import type { PaginationOptions } from "convex/server";
 import { Effect, Option } from "effect";
-
-type CountableTableName =
-  | "articleContents"
-  | "subjectTopics"
-  | "subjectSections"
-  | "exerciseSets"
-  | "exerciseQuestions"
-  | "exerciseAttempts"
-  | "exerciseAnswers"
-  | "tryoutAccessCampaigns"
-  | "tryoutAccessCampaignProducts"
-  | "tryoutAccessLinks"
-  | "tryoutAccessGrants"
-  | "tryouts"
-  | "tryoutCatalogMeta"
-  | "userTryoutEntitlements"
-  | "tryoutPartSets"
-  | "tryoutAttempts"
-  | "tryoutPartAttempts"
-  | "tryoutLeaderboardEntries"
-  | "userTryoutStats"
-  | "irtCalibrationQueue"
-  | "irtCalibrationAttempts"
-  | "irtCalibrationCacheStats"
-  | "irtScaleQualityChecks"
-  | "irtScaleQualityRefreshQueue"
-  | "irtCalibrationRuns"
-  | "exerciseItemParameters"
-  | "irtScalePublicationQueue"
-  | "irtScaleVersions"
-  | "irtScaleVersionItems"
-  | "contentSearch"
-  | "authors"
-  | "contentAuthors"
-  | "articleReferences"
-  | "exerciseChoices";
-
-type StaleContentTableName =
-  | "articleContents"
-  | "subjectTopics"
-  | "subjectSections"
-  | "exerciseSets"
-  | "exerciseQuestions";
 
 /** Counts one page from a sync-audited table. */
 export const countTablePage = Effect.fn("contentSync.queries.countTablePage")(

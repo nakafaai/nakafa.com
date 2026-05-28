@@ -1,6 +1,11 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
 import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
+import {
+  tryoutPublicResultStatusSchema,
+  tryoutScoreStatusSchema,
+  tryoutStatusSchema,
+} from "@repo/backend/confect/modules/tryout/tryouts.tables";
 import { Schema } from "effect";
 
 const tryoutsQueriesMeHistoryGroup = GroupSpec.make("history").addFunction(
@@ -32,14 +37,10 @@ const tryoutsQueriesMeHistoryGroup = GroupSpec.make("history").addFunction(
           expiresAt: Schema.Number,
           irtScore: Schema.Number,
           isLatest: Schema.Boolean,
-          publicResultStatus: Schema.Literal(
-            "estimated",
-            "verified-irt",
-            "final-event"
-          ),
-          scoreStatus: Schema.Literal("provisional", "official"),
+          publicResultStatus: tryoutPublicResultStatusSchema,
+          scoreStatus: tryoutScoreStatusSchema,
           startedAt: Schema.Number,
-          status: Schema.Literal("in-progress", "completed", "expired"),
+          status: tryoutStatusSchema,
           totalCorrect: Schema.Number,
           totalQuestions: Schema.Number,
         })

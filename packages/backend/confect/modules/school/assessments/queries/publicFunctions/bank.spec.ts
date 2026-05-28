@@ -1,4 +1,8 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import {
+  assessmentQuestionBankScopeSchema,
+  richContentSchema,
+} from "@repo/backend/confect/modules/school/assessmentsTables/shared";
 import { Schema } from "effect";
 
 const assessmentsQueriesPublicBankGroup = GroupSpec.make("bank").addFunction(
@@ -14,15 +18,9 @@ const assessmentsQueriesPublicBankGroup = GroupSpec.make("bank").addFunction(
         _id: GenericId.GenericId("schoolAssessmentQuestionBanks"),
         classId: Schema.optional(GenericId.GenericId("schoolClasses")),
         createdBy: GenericId.GenericId("users"),
-        description: Schema.optional(
-          Schema.Struct({
-            format: Schema.Literal("plate-v1"),
-            json: Schema.String,
-            text: Schema.String,
-          })
-        ),
+        description: Schema.optional(richContentSchema),
         schoolId: GenericId.GenericId("schools"),
-        scope: Schema.Literal("class", "school"),
+        scope: assessmentQuestionBankScopeSchema,
         title: Schema.String,
         updatedAt: Schema.Number,
         updatedBy: Schema.optional(GenericId.GenericId("users")),

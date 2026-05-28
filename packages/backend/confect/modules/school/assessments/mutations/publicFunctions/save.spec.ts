@@ -1,4 +1,8 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import {
+  assessmentQuestionTypeSchema,
+  richContentSchema,
+} from "@repo/backend/confect/modules/school/assessmentsTables/shared";
 import { Schema } from "effect";
 
 const assessmentsMutationsPublicSaveGroup = GroupSpec.make("save").addFunction(
@@ -9,16 +13,10 @@ const assessmentsMutationsPublicSaveGroup = GroupSpec.make("save").addFunction(
       essayAttachmentStorageIds: Schema.optional(
         Schema.Array(GenericId.GenericId("_storage"))
       ),
-      essayContent: Schema.optional(
-        Schema.Struct({
-          format: Schema.Literal("plate-v1"),
-          json: Schema.String,
-          text: Schema.String,
-        })
-      ),
+      essayContent: Schema.optional(richContentSchema),
       isFinal: Schema.Boolean,
       questionId: GenericId.GenericId("schoolAssessmentVersionQuestions"),
-      questionType: Schema.Literal("mcq-single", "mcq-multi", "essay"),
+      questionType: assessmentQuestionTypeSchema,
       selectedChoiceIds: Schema.optional(
         Schema.Array(GenericId.GenericId("schoolAssessmentVersionChoices"))
       ),

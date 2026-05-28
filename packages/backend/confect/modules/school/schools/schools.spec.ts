@@ -1,5 +1,10 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import { SchoolActionError } from "@repo/backend/confect/modules/school/schoolErrors";
+import {
+  schoolMemberRoleSchema,
+  schoolMemberStatusSchema,
+  schoolTypeSchema,
+} from "@repo/backend/confect/modules/school/schools.tables";
 import { Schema } from "effect";
 
 const schoolsMutationsGroup = GroupSpec.make("mutations")
@@ -13,14 +18,7 @@ const schoolsMutationsGroup = GroupSpec.make("mutations")
         name: Schema.String,
         phone: Schema.String,
         province: Schema.String,
-        type: Schema.Literal(
-          "elementary-school",
-          "middle-school",
-          "high-school",
-          "vocational-school",
-          "university",
-          "other"
-        ),
+        type: schoolTypeSchema,
       }),
       returns: Schema.Struct({
         schoolId: GenericId.GenericId("schools"),
@@ -60,9 +58,9 @@ const schoolsQueriesGroup = GroupSpec.make("queries")
           joinedAt: Schema.Number,
           removedAt: Schema.optional(Schema.Number),
           removedBy: Schema.optional(GenericId.GenericId("users")),
-          role: Schema.Literal("admin", "teacher", "student", "parent", "demo"),
+          role: schoolMemberRoleSchema,
           schoolId: GenericId.GenericId("schools"),
-          status: Schema.Literal("active", "invited", "removed"),
+          status: schoolMemberStatusSchema,
           updatedAt: Schema.Number,
           userId: GenericId.GenericId("users"),
         }),
@@ -79,14 +77,7 @@ const schoolsQueriesGroup = GroupSpec.make("queries")
           phone: Schema.optional(Schema.String),
           province: Schema.String,
           slug: Schema.String,
-          type: Schema.Literal(
-            "elementary-school",
-            "middle-school",
-            "high-school",
-            "vocational-school",
-            "university",
-            "other"
-          ),
+          type: schoolTypeSchema,
           updatedAt: Schema.Number,
           updatedBy: Schema.optional(GenericId.GenericId("users")),
         }),
@@ -125,14 +116,7 @@ const schoolsQueriesGroup = GroupSpec.make("queries")
             _id: GenericId.GenericId("schools"),
             name: Schema.String,
             slug: Schema.String,
-            type: Schema.Literal(
-              "elementary-school",
-              "middle-school",
-              "high-school",
-              "vocational-school",
-              "university",
-              "other"
-            ),
+            type: schoolTypeSchema,
           })
         ),
         pageStatus: Schema.optional(

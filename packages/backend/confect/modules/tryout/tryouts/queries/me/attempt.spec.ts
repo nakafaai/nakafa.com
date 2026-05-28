@@ -1,5 +1,6 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import { attemptEndReasonSchema } from "@repo/backend/confect/modules/learning/attempts.schemas";
 import { tryoutAccessCampaignKindSchema } from "@repo/backend/confect/modules/tryout/access.tables";
 import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
 import {
@@ -38,10 +39,7 @@ const tryoutsQueriesMeAttemptGroup = GroupSpec.make("attempt").addFunction(
           completedAt: Schema.Union(Schema.Number, Schema.Null),
           completedPartIndices: Schema.Array(Schema.Number),
           countsForCompetition: Schema.optional(Schema.Boolean),
-          endReason: Schema.Union(
-            Schema.Literal("submitted", "time-expired"),
-            Schema.Null
-          ),
+          endReason: Schema.Union(attemptEndReasonSchema, Schema.Null),
           expiresAt: Schema.Number,
           irtScore: Schema.Number,
           lastActivityAt: Schema.Number,

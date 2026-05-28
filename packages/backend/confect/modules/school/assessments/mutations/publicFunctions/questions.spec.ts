@@ -1,4 +1,9 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import {
+  assessmentQuestionSourceSchema,
+  assessmentQuestionTypeSchema,
+  richContentSchema,
+} from "@repo/backend/confect/modules/school/assessmentsTables/shared";
 import { Schema } from "effect";
 
 const assessmentsMutationsPublicQuestionsGroup = GroupSpec.make(
@@ -13,35 +18,19 @@ const assessmentsMutationsPublicQuestionsGroup = GroupSpec.make(
       ),
       choices: Schema.Array(
         Schema.Struct({
-          content: Schema.Struct({
-            format: Schema.Literal("plate-v1"),
-            json: Schema.String,
-            text: Schema.String,
-          }),
+          content: richContentSchema,
           isCorrect: Schema.Boolean,
           key: Schema.String,
         })
       ),
-      explanation: Schema.optional(
-        Schema.Struct({
-          format: Schema.Literal("plate-v1"),
-          json: Schema.String,
-          text: Schema.String,
-        })
-      ),
+      explanation: Schema.optional(richContentSchema),
       maxSelectionCount: Schema.optional(Schema.Number),
       points: Schema.Number,
-      questionType: Schema.Literal("mcq-single", "mcq-multi", "essay"),
+      questionType: assessmentQuestionTypeSchema,
       required: Schema.Boolean,
       rubricCriteria: Schema.Array(
         Schema.Struct({
-          description: Schema.optional(
-            Schema.Struct({
-              format: Schema.Literal("plate-v1"),
-              json: Schema.String,
-              text: Schema.String,
-            })
-          ),
+          description: Schema.optional(richContentSchema),
           label: Schema.String,
           maxScore: Schema.Number,
         })
@@ -49,12 +38,8 @@ const assessmentsMutationsPublicQuestionsGroup = GroupSpec.make(
       schoolId: GenericId.GenericId("schools"),
       sectionId: GenericId.GenericId("schoolAssessmentSections"),
       shuffleChoices: Schema.Boolean,
-      source: Schema.Literal("manual", "bank", "ai-import"),
-      stem: Schema.Struct({
-        format: Schema.Literal("plate-v1"),
-        json: Schema.String,
-        text: Schema.String,
-      }),
+      source: assessmentQuestionSourceSchema,
+      stem: richContentSchema,
     }),
     returns: GenericId.GenericId("schoolAssessmentQuestions"),
   })

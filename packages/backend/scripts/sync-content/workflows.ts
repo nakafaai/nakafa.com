@@ -35,10 +35,7 @@ import {
   loadSyncState,
   saveSyncState,
 } from "@repo/backend/scripts/sync-content/runtime";
-import {
-  AuthorSyncResultSchema,
-  BATCH_SIZES,
-} from "@repo/backend/scripts/sync-content/schemas";
+import { BATCH_SIZES } from "@repo/backend/scripts/sync-content/schemas";
 import { syncQuranSearch } from "@repo/backend/scripts/sync-content/search";
 import {
   syncSubjectSections,
@@ -269,8 +266,7 @@ export const syncIncremental = Effect.fn("sync.incremental")(function* (
         config,
         "mutation",
         refs.internal.contentSync.mutations.authors.bulkSyncAuthors,
-        { authorNames: batch },
-        AuthorSyncResultSchema
+        { authorNames: batch }
       );
 
       created += authorResult.created;

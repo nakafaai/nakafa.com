@@ -1,10 +1,9 @@
 "use client";
 
-import type { Ref } from "@confect/core";
-import {
-  type ConvexFunctionReference,
-  type ConvexFunctionReturn,
-  toConvexReference,
+import { Ref as ConfectRef, type Ref } from "@confect/core";
+import type {
+  ConvexFunctionReference,
+  ConvexFunctionReturn,
 } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   type PaginatedQueryArgs,
@@ -49,5 +48,9 @@ export function usePaginatedQuery<Query extends PaginatedRef>(
   args: PaginatedArgs<PaginatedQuery<Query>> | "skip",
   options: { initialNumItems: number }
 ): ConfectPaginatedQueryResult<PaginatedQuery<Query>> {
-  return useConvexPaginatedQuery(toConvexReference(ref), args, options);
+  return useConvexPaginatedQuery(
+    ConfectRef.getFunctionReference(ref),
+    args,
+    options
+  );
 }

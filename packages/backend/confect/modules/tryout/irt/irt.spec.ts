@@ -1,5 +1,9 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import type { CalibrateSetTwoPLWorkflow } from "@repo/backend/confect/modules/tryout/irt/workflows";
+import {
+  irtCalibrationStatusSchema,
+  irtOperationalModelSchema,
+} from "@repo/backend/confect/modules/tryout/irt.tables";
 import { Schema } from "effect";
 
 const irtWorkflowsGroup = GroupSpec.make("workflows").addFunction(
@@ -20,11 +24,7 @@ const irtActionsInternalCalibrationGroup = GroupSpec.make(
       attemptCount: Schema.Number,
       items: Schema.Array(
         Schema.Struct({
-          calibrationStatus: Schema.Literal(
-            "provisional",
-            "emerging",
-            "calibrated"
-          ),
+          calibrationStatus: irtCalibrationStatusSchema,
           correctRate: Schema.Number,
           difficulty: Schema.Number,
           discrimination: Schema.Number,
@@ -34,7 +34,7 @@ const irtActionsInternalCalibrationGroup = GroupSpec.make(
       ),
       iterationCount: Schema.Number,
       maxParameterDelta: Schema.Number,
-      model: Schema.Literal("2pl"),
+      model: irtOperationalModelSchema,
       questionCount: Schema.Number,
       responseCount: Schema.Number,
     }),
@@ -63,11 +63,7 @@ const irtQueriesInternalCalibrationGroup = GroupSpec.make("calibration")
       returns: Schema.Struct({
         existingParams: Schema.Array(
           Schema.Struct({
-            calibrationStatus: Schema.Literal(
-              "provisional",
-              "emerging",
-              "calibrated"
-            ),
+            calibrationStatus: irtCalibrationStatusSchema,
             correctRate: Schema.Number,
             difficulty: Schema.Number,
             discrimination: Schema.Number,
@@ -303,11 +299,7 @@ const irtMutationsInternalRunsGroup = GroupSpec.make("runs")
           attemptCount: Schema.Number,
           items: Schema.Array(
             Schema.Struct({
-              calibrationStatus: Schema.Literal(
-                "provisional",
-                "emerging",
-                "calibrated"
-              ),
+              calibrationStatus: irtCalibrationStatusSchema,
               correctRate: Schema.Number,
               difficulty: Schema.Number,
               discrimination: Schema.Number,
@@ -317,7 +309,7 @@ const irtMutationsInternalRunsGroup = GroupSpec.make("runs")
           ),
           iterationCount: Schema.Number,
           maxParameterDelta: Schema.Number,
-          model: Schema.Literal("2pl"),
+          model: irtOperationalModelSchema,
           questionCount: Schema.Number,
           responseCount: Schema.Number,
         }),

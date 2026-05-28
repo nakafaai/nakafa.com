@@ -22,7 +22,6 @@ import {
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
 import {
   BATCH_SIZES,
-  DeleteResultSchema,
   LOCALE_MATERIAL_FILE_REGEX,
   LOCALE_SUBJECT_MATERIAL_FILE_REGEX,
   parseLocale,
@@ -54,8 +53,7 @@ const deleteStaleItems = Effect.fn("sync.deleteStaleItems")(function* (
       config,
       "mutation",
       mutationRef,
-      getArgs(ids),
-      DeleteResultSchema
+      getArgs(ids)
     );
     deleted += result.deleted;
   }
@@ -180,8 +178,7 @@ const cleanUnusedAuthors = Effect.fn("sync.cleanUnusedAuthors")(function* (
         config,
         "mutation",
         refs.internal.contentSync.mutations.authors.deleteUnusedAuthors,
-        { authorIds: batch },
-        DeleteResultSchema
+        { authorIds: batch }
       );
 
       deleted += result.deleted;

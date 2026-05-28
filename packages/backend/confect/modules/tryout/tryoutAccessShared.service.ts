@@ -3,7 +3,10 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import type { TryoutAccessCampaignKind } from "@repo/backend/confect/modules/tryout/access.tables";
+import type {
+  TryoutAccessCampaignKind,
+  TryoutAccessCampaignRedeemStatus,
+} from "@repo/backend/confect/modules/tryout/access.tables";
 import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { TryoutAccessError } from "@repo/backend/confect/modules/tryout/tryoutAccess.errors";
 import { Effect, Option } from "effect";
@@ -68,7 +71,7 @@ export function getTryoutAccessCampaignRedeemStatus(
     | Doc<"tryoutAccessCampaigns">
     | { readonly startsAt: number; readonly endsAt: number },
   now: number
-): "active" | "ended" | "scheduled" {
+): TryoutAccessCampaignRedeemStatus {
   if (campaign.startsAt > now) {
     return "scheduled";
   }

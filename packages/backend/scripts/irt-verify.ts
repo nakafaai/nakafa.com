@@ -1,3 +1,4 @@
+import type { Ref } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
   formatScriptCause,
@@ -9,50 +10,24 @@ import {
 } from "@repo/backend/scripts/sync-content/convex";
 import { logError } from "@repo/backend/scripts/sync-content/logging";
 import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 
 const IRT_VERIFY_PAGE_SIZE = 500;
 
-const calibrationCacheIntegrityPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  missingStatsSetCount: Schema.Number,
-  oversizedSetCount: Schema.Number,
-});
-
-const scaleQualityIntegrityPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  missingQualityCheckTryoutCount: Schema.Number,
-  unstartableTryoutCount: Schema.Number,
-});
-
-const calibrationQueueAttemptIntegrityPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  duplicatePendingAttemptCount: Schema.Number,
-  isDone: Schema.Boolean,
-  missingPendingQueueAttemptCount: Schema.Number,
-  staleAttemptQueueSetCount: Schema.Number,
-});
-
-const calibrationQueueEntryIntegrityPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  orphanedQueueEntryCount: Schema.Number,
-  staleQueueEntryCount: Schema.Number,
-});
-
-type CalibrationCacheIntegrityPage = Schema.Schema.Type<
-  typeof calibrationCacheIntegrityPageSchema
+type CalibrationCacheIntegrityPage = Ref.Returns<
+  typeof refs.internal.irt.queries.internalFunctions.maintenance.getCalibrationCacheIntegrity
 >;
-type ScaleQualityIntegrityPage = Schema.Schema.Type<
-  typeof scaleQualityIntegrityPageSchema
+
+type ScaleQualityIntegrityPage = Ref.Returns<
+  typeof refs.internal.irt.queries.internalFunctions.maintenance.getScaleQualityIntegrity
 >;
-type CalibrationQueueAttemptIntegrityPage = Schema.Schema.Type<
-  typeof calibrationQueueAttemptIntegrityPageSchema
+
+type CalibrationQueueAttemptIntegrityPage = Ref.Returns<
+  typeof refs.internal.irt.queries.internalFunctions.maintenance.getCalibrationQueueAttemptIntegrity
 >;
-type CalibrationQueueEntryIntegrityPage = Schema.Schema.Type<
-  typeof calibrationQueueEntryIntegrityPageSchema
+
+type CalibrationQueueEntryIntegrityPage = Ref.Returns<
+  typeof refs.internal.irt.queries.internalFunctions.maintenance.getCalibrationQueueEntryIntegrity
 >;
 
 /** Aggregate paginated calibration-cache integrity totals for one deployment. */
@@ -75,8 +50,7 @@ const getCalibrationCacheIntegrity = Effect.fn(
           cursor: continueCursor,
           numItems: IRT_VERIFY_PAGE_SIZE,
         },
-      },
-      calibrationCacheIntegrityPageSchema
+      }
     );
 
     missingStatsSetCount += page.missingStatsSetCount;
@@ -112,8 +86,7 @@ const getScaleQualityIntegrity = Effect.fn("irt.getScaleQualityIntegrity")(
             cursor: continueCursor,
             numItems: IRT_VERIFY_PAGE_SIZE,
           },
-        },
-        scaleQualityIntegrityPageSchema
+        }
       );
 
       missingQualityCheckTryoutCount += page.missingQualityCheckTryoutCount;
@@ -155,8 +128,7 @@ const getCalibrationQueueIntegrity = Effect.fn(
           cursor: attemptCursor,
           numItems: IRT_VERIFY_PAGE_SIZE,
         },
-      },
-      calibrationQueueAttemptIntegrityPageSchema
+      }
     );
 
     duplicatePendingAttemptCount += page.duplicatePendingAttemptCount;
@@ -181,8 +153,7 @@ const getCalibrationQueueIntegrity = Effect.fn(
           cursor: entryCursor,
           numItems: IRT_VERIFY_PAGE_SIZE,
         },
-      },
-      calibrationQueueEntryIntegrityPageSchema
+      }
     );
 
     orphanedQueueEntryCount += page.orphanedQueueEntryCount;
@@ -216,16 +187,23 @@ const main = Effect.fn("irt.verify")(function* () {
     );
   }
 
-  let result: unknown;
-
   if (kind === "cache") {
-    result = yield* getCalibrationCacheIntegrity(prod);
-  } else if (kind === "queue") {
-    result = yield* getCalibrationQueueIntegrity(prod);
-  } else {
-    result = yield* getScaleQualityIntegrity(prod);
+    const result = yield* getCalibrationCacheIntegrity(prod);
+    yield* Effect.sync(() => {
+      process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+    });
+    return;
   }
 
+  if (kind === "queue") {
+    const result = yield* getCalibrationQueueIntegrity(prod);
+    yield* Effect.sync(() => {
+      process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+    });
+    return;
+  }
+
+  const result = yield* getScaleQualityIntegrity(prod);
   yield* Effect.sync(() => {
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   });

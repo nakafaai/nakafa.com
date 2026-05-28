@@ -1,5 +1,12 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
+import type {
+  ExercisesCategory,
+  ExercisesType,
+  Locale,
+} from "@repo/backend/confect/modules/content/content.schemas";
+import { HIGH_SCHOOL_EXERCISES_CATEGORY } from "@repo/contents/_types/exercises/category";
+import { TRY_OUT_SEGMENT } from "@repo/contents/_types/exercises/slug";
+import { SNBT_EXERCISES_TYPE } from "@repo/contents/_types/exercises/type";
 import { Effect, Schema } from "effect";
 
 const HOURS_PER_DAY = 24;
@@ -12,8 +19,9 @@ const SNBT_REPORT_SCORE_MIN = 0;
 const SNBT_REPORT_SCORE_MAX = 1e3;
 const SNBT_REPORT_THETA_MIN = -4;
 const SNBT_REPORT_THETA_MAX = 4;
-const YEARFUL_TRYOUT_SET_SLUG_REGEX =
-  /^exercises\/[^/]+\/[^/]+\/[^/]+\/try-out\/(\d{4})\/[^/]+$/;
+const YEARFUL_TRYOUT_SET_SLUG_REGEX = new RegExp(
+  `^exercises/[^/]+/[^/]+/[^/]+/${TRY_OUT_SEGMENT}/(\\d{4})/[^/]+$`
+);
 const SNBT_ATTEMPT_WINDOW_MS =
   SNBT_ATTEMPT_WINDOW_DAYS *
   HOURS_PER_DAY *
@@ -21,7 +29,7 @@ const SNBT_ATTEMPT_WINDOW_MS =
   SECONDS_PER_MINUTE *
   MILLISECONDS_PER_SECOND;
 
-export const tryoutProducts = ["snbt"] as const;
+export const tryoutProducts = [SNBT_EXERCISES_TYPE] as const;
 export const primaryTryoutProduct = tryoutProducts[0];
 
 /** Tryout products currently supported by persisted tryout tables. */
@@ -33,6 +41,20 @@ export class TryoutPolicyError extends Schema.TaggedError<TryoutPolicyError>()(
 ) {}
 
 export type TryoutProduct = Schema.Schema.Type<typeof tryoutProductSchema>;
+
+/** Maps each tryout product to the content taxonomy that owns its parts. */
+export const tryoutContentSources = {
+  [SNBT_EXERCISES_TYPE]: {
+    category: HIGH_SCHOOL_EXERCISES_CATEGORY,
+    type: primaryTryoutProduct,
+  },
+} satisfies Record<
+  TryoutProduct,
+  {
+    readonly category: ExercisesCategory;
+    readonly type: ExercisesType;
+  }
+>;
 
 interface DetectableTryoutSet {
   readonly _id: Id<"exerciseSets">;
@@ -141,7 +163,10 @@ const snbtTryoutProductPolicy = {
   compareTryouts: compareSnbtTryouts,
   detectTryouts: ({ locale, requiredPartKeys, sets }) => {
     const candidateSets = sets.flatMap((set) => {
-      if (set.type !== "snbt" || set.exerciseType !== "try-out") {
+      if (
+        set.type !== primaryTryoutProduct ||
+        set.exerciseType !== TRY_OUT_SEGMENT
+      ) {
         return [];
       }
 

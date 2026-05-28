@@ -7,6 +7,10 @@ import {
   readOwnedChat,
   validateChatAccess,
 } from "@repo/backend/confect/modules/chat/chatStore.service";
+import type {
+  ChatType,
+  ChatVisibility,
+} from "@repo/backend/confect/modules/chat/chats.tables";
 import {
   getOptionalAppUser,
   requireAppUser,
@@ -23,9 +27,9 @@ const emptyChatsPage = {
 interface ChatListArgs {
   readonly paginationOpts: PaginationOptions;
   readonly q?: string;
-  readonly type?: "study";
+  readonly type?: ChatType;
   readonly userId: Id<"users">;
-  readonly visibility?: "private" | "public";
+  readonly visibility?: ChatVisibility;
 }
 
 type OwnChatListArgs = Omit<ChatListArgs, "userId">;

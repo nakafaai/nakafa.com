@@ -1,7 +1,7 @@
+import { FunctionSpec, Ref } from "@confect/core";
 import { afterEach, describe, expect, it, vi } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { getUnknownMessage } from "@repo/backend/scripts/lib/errors";
-import { BatchDeleteResultSchema } from "@repo/backend/scripts/sync-content/schemas";
 import { Effect, Exit, Schema } from "effect";
 
 class ConvexTestError extends Schema.TaggedError<ConvexTestError>()(
@@ -19,8 +19,14 @@ const convexClientConfig = {
 const deleteArticlesBatch =
   refs.internal.contentSync.mutations.maintenance.deleteArticlesBatch;
 
-const bulkSyncArticles =
-  refs.internal.contentSync.mutations.articles.bulkSyncArticles;
+const integerArgsMutation = Ref.make(
+  "test/mutations",
+  FunctionSpec.internalMutation({
+    name: "integerArgs",
+    args: Schema.Struct({ value: Schema.Int }),
+    returns: Schema.Null,
+  })
+);
 
 /** Restores Convex client mocks between sync-content tests. */
 function resetConvexTestModules() {
@@ -52,8 +58,7 @@ describe("sync-content Convex client", () => {
           convexClientConfig,
           "mutation",
           deleteArticlesBatch,
-          {},
-          BatchDeleteResultSchema
+          {}
         );
 
         expect(result).toStrictEqual({ deleted: 2, hasMore: false });
@@ -85,13 +90,13 @@ describe("sync-content Convex client", () => {
               new ConvexTestError({ message: getUnknownMessage(error) }),
           });
 
-          return yield* callConvex(
+          yield* callConvex(
             convexClientConfig,
             "mutation",
-            bulkSyncArticles,
-            {},
-            BatchDeleteResultSchema
+            integerArgsMutation,
+            { value: 1.5 }
           );
+          return null;
         }),
       "Invalid Convex args",
     ],
@@ -105,13 +110,13 @@ describe("sync-content Convex client", () => {
               new ConvexTestError({ message: getUnknownMessage(error) }),
           });
 
-          return yield* callConvex(
+          yield* callConvex(
             convexClientConfig,
             "mutation",
             deleteArticlesBatch,
-            {},
-            BatchDeleteResultSchema
+            {}
           );
+          return null;
         });
       },
       "network failed",
@@ -131,13 +136,13 @@ describe("sync-content Convex client", () => {
               new ConvexTestError({ message: getUnknownMessage(error) }),
           });
 
-          return yield* callConvex(
+          yield* callConvex(
             convexClientConfig,
             "mutation",
             deleteArticlesBatch,
-            {},
-            BatchDeleteResultSchema
+            {}
           );
+          return null;
         });
       },
       "json failed",
@@ -158,13 +163,13 @@ describe("sync-content Convex client", () => {
               new ConvexTestError({ message: getUnknownMessage(error) }),
           });
 
-          return yield* callConvex(
+          yield* callConvex(
             convexClientConfig,
             "mutation",
             deleteArticlesBatch,
-            {},
-            BatchDeleteResultSchema
+            {}
           );
+          return null;
         });
       },
       "bad",
@@ -184,13 +189,13 @@ describe("sync-content Convex client", () => {
               new ConvexTestError({ message: getUnknownMessage(error) }),
           });
 
-          return yield* callConvex(
+          yield* callConvex(
             convexClientConfig,
             "mutation",
             deleteArticlesBatch,
-            {},
-            BatchDeleteResultSchema
+            {}
           );
+          return null;
         });
       },
       "Unknown Convex error",
@@ -210,13 +215,13 @@ describe("sync-content Convex client", () => {
               new ConvexTestError({ message: getUnknownMessage(error) }),
           });
 
-          return yield* callConvex(
+          yield* callConvex(
             convexClientConfig,
             "mutation",
             deleteArticlesBatch,
-            {},
-            BatchDeleteResultSchema
+            {}
           );
+          return null;
         });
       },
       "Invalid Convex response",
@@ -240,46 +245,13 @@ describe("sync-content Convex client", () => {
               new ConvexTestError({ message: getUnknownMessage(error) }),
           });
 
-          return yield* callConvex(
+          yield* callConvex(
             convexClientConfig,
             "mutation",
             deleteArticlesBatch,
-            {},
-            BatchDeleteResultSchema
+            {}
           );
-        });
-      },
-      "Invalid Convex value",
-    ],
-    [
-      () => {
-        vi.stubGlobal(
-          "fetch",
-          vi.fn().mockResolvedValue({
-            json: () =>
-              Promise.resolve({
-                status: "success",
-                value: { deleted: 2, hasMore: false },
-              }),
-          })
-        );
-        return Effect.gen(function* () {
-          const { callConvex } = yield* Effect.tryPromise({
-            try: () => import("@repo/backend/scripts/sync-content/convex"),
-            catch: (error) =>
-              new ConvexTestError({ message: getUnknownMessage(error) }),
-          });
-
-          return yield* callConvex(
-            convexClientConfig,
-            "mutation",
-            deleteArticlesBatch,
-            {},
-            Schema.Struct({
-              deleted: Schema.Literal(1),
-              hasMore: Schema.Boolean,
-            })
-          );
+          return null;
         });
       },
       "Invalid Convex value",

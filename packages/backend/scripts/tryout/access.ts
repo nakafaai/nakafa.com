@@ -1,3 +1,4 @@
+import type { Ref } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
 import { tryoutProducts } from "@repo/backend/confect/modules/tryout/products";
 import { formatScriptCause } from "@repo/backend/scripts/lib/errors";
@@ -7,53 +8,28 @@ import {
 } from "@repo/backend/scripts/sync-content/convex";
 import { logError } from "@repo/backend/scripts/sync-content/logging";
 import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
-import { Clock, Effect, Schema } from "effect";
+import { Clock, Effect } from "effect";
 
 const TRYOUT_ACCESS_PAGE_SIZE = 100;
 
-const tryoutAccessCampaignIntegrityPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  overdueActiveCampaignCount: Schema.Number,
-  overduePendingCompetitionCount: Schema.Number,
-  overdueScheduledCampaignCount: Schema.Number,
-});
+type CompetitionCampaignProduct = Ref.Returns<
+  typeof refs.internal.tryoutAccess.queries.internalFunctions.maintenance.listCompetitionCampaignProductsByProduct
+>["page"][number];
 
-const tryoutAccessGrantIntegrityPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  overdueActiveGrantCount: Schema.Number,
-});
-
-const tryoutAccessEntitlementIntegrityPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  overdueEntitlementCount: Schema.Number,
-});
-
-const competitionCampaignProductPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  page: Schema.Array(
-    Schema.Struct({
-      campaignId: Schema.String,
-      endsAt: Schema.Number,
-      startsAt: Schema.Number,
-    })
-  ),
-});
-
-type TryoutAccessCampaignIntegrityPage = Schema.Schema.Type<
-  typeof tryoutAccessCampaignIntegrityPageSchema
+type TryoutAccessCampaignIntegrityPage = Ref.Returns<
+  typeof refs.internal.tryoutAccess.queries.internalFunctions.maintenance.getTryoutAccessCampaignIntegrity
 >;
-type TryoutAccessGrantIntegrityPage = Schema.Schema.Type<
-  typeof tryoutAccessGrantIntegrityPageSchema
+
+type TryoutAccessGrantIntegrityPage = Ref.Returns<
+  typeof refs.internal.tryoutAccess.queries.internalFunctions.maintenance.getTryoutAccessGrantIntegrity
 >;
-type TryoutAccessEntitlementIntegrityPage = Schema.Schema.Type<
-  typeof tryoutAccessEntitlementIntegrityPageSchema
+
+type TryoutAccessEntitlementIntegrityPage = Ref.Returns<
+  typeof refs.internal.tryoutAccess.queries.internalFunctions.maintenance.getTryoutAccessEntitlementIntegrity
 >;
-type CompetitionCampaignProductPage = Schema.Schema.Type<
-  typeof competitionCampaignProductPageSchema
+
+type CompetitionCampaignProductPage = Ref.Returns<
+  typeof refs.internal.tryoutAccess.queries.internalFunctions.maintenance.listCompetitionCampaignProductsByProduct
 >;
 
 /** Reads the full access campaign integrity snapshot. */
@@ -79,8 +55,7 @@ const getTryoutAccessCampaignIntegrity = Effect.fn(
           cursor: continueCursor,
           numItems: TRYOUT_ACCESS_PAGE_SIZE,
         },
-      },
-      tryoutAccessCampaignIntegrityPageSchema
+      }
     );
 
     overdueActiveCampaignCount += page.overdueActiveCampaignCount;
@@ -120,8 +95,7 @@ const getTryoutAccessGrantIntegrity = Effect.fn(
           cursor: continueCursor,
           numItems: TRYOUT_ACCESS_PAGE_SIZE,
         },
-      },
-      tryoutAccessGrantIntegrityPageSchema
+      }
     );
 
     overdueActiveGrantCount += page.overdueActiveGrantCount;
@@ -157,8 +131,7 @@ const getTryoutAccessEntitlementIntegrity = Effect.fn(
           cursor: continueCursor,
           numItems: TRYOUT_ACCESS_PAGE_SIZE,
         },
-      },
-      tryoutAccessEntitlementIntegrityPageSchema
+      }
     );
 
     overdueEntitlementCount += page.overdueEntitlementCount;
@@ -182,8 +155,7 @@ const getCompetitionCampaignProductOverlapIntegrity = Effect.fn(
 
   for (const product of tryoutProducts) {
     let continueCursor: string | null = null;
-    let previousRow: CompetitionCampaignProductPage["page"][number] | null =
-      null;
+    let previousRow: CompetitionCampaignProduct | null = null;
 
     while (true) {
       const page: CompetitionCampaignProductPage = yield* callConvex(
@@ -197,8 +169,7 @@ const getCompetitionCampaignProductOverlapIntegrity = Effect.fn(
             cursor: continueCursor,
             numItems: TRYOUT_ACCESS_PAGE_SIZE,
           },
-        },
-        competitionCampaignProductPageSchema
+        }
       );
 
       for (const row of page.page) {
@@ -232,8 +203,7 @@ const repairTryoutAccess = Effect.fn("tryout.repairAccess")(function* (
     config,
     "mutation",
     refs.internal.tryoutAccess.mutations.internalFunctions.status.sweepStates,
-    {},
-    Schema.Null
+    {}
   );
 
   yield* Effect.sync(() => {

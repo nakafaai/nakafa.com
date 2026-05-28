@@ -1,6 +1,7 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import {
   audioContentRefSchema,
+  audioContentTypeSchema,
   audioModelSchema,
   audioStatusSchema,
   voiceSettingsSchema,
@@ -243,7 +244,7 @@ const audioStudiesQueriesPublicGroup = GroupSpec.make(
   FunctionSpec.publicQuery({
     name: "getAudioBySlug",
     args: Schema.Struct({
-      contentType: Schema.Literal("article", "subject"),
+      contentType: audioContentTypeSchema,
       locale: localeSchema,
       slug: Schema.String,
     }),
@@ -251,7 +252,7 @@ const audioStudiesQueriesPublicGroup = GroupSpec.make(
       Schema.Null,
       Schema.Struct({
         audioUrl: Schema.String,
-        contentType: Schema.Literal("article", "subject"),
+        contentType: audioContentTypeSchema,
         duration: Schema.Number,
         script: Schema.optional(Schema.String),
         status: audioStatusSchema,

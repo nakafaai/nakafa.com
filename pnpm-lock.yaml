@@ -613,6 +613,9 @@ importers:
       '@repo/ai':
         specifier: workspace:*
         version: link:../ai
+      '@repo/contents':
+        specifier: workspace:*
+        version: link:../contents
       '@repo/math':
         specifier: workspace:*
         version: link:../math
@@ -662,9 +665,6 @@ importers:
       '@effect/vitest':
         specifier: 0.29.0
         version: 0.29.0(effect@3.21.2)(vitest@4.1.7)
-      '@repo/contents':
-        specifier: workspace:*
-        version: link:../contents
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config

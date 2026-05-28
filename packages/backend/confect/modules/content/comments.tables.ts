@@ -5,6 +5,13 @@ import { Schema } from "effect";
 /** Vote values persisted for comment reactions. */
 export const commentVoteSchema = Schema.Literal(-1, 1);
 
+/** Vote actions accepted by the public mutation; zero clears the persisted vote. */
+export const commentVoteActionSchema = Schema.Literal(-1, 0, 1);
+
+export type CommentVoteAction = Schema.Schema.Type<
+  typeof commentVoteActionSchema
+>;
+
 /** User-authored comments attached to content slugs. */
 export const Comments = Table.make(
   "comments",

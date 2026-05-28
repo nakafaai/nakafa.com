@@ -1,4 +1,11 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import {
+  assessmentGradingModeSchema,
+  assessmentMonitoringModeSchema,
+  assessmentRankingScopeSchema,
+  assessmentReleaseModeSchema,
+  richContentSchema,
+} from "@repo/backend/confect/modules/school/assessmentsTables/shared";
 import { Schema } from "effect";
 
 const assessmentsMutationsPublicVersionGroup = GroupSpec.make(
@@ -8,17 +15,11 @@ const assessmentsMutationsPublicVersionGroup = GroupSpec.make(
     name: "createAssessmentVersion",
     args: Schema.Struct({
       assessmentId: GenericId.GenericId("schoolAssessments"),
-      gradingMode: Schema.Literal("auto", "manual", "hybrid"),
-      instructions: Schema.optional(
-        Schema.Struct({
-          format: Schema.Literal("plate-v1"),
-          json: Schema.String,
-          text: Schema.String,
-        })
-      ),
-      monitoringMode: Schema.Literal("off", "basic", "strict"),
-      rankingScope: Schema.Literal("none", "class", "school"),
-      releaseMode: Schema.Literal("instant", "manual", "scheduled"),
+      gradingMode: assessmentGradingModeSchema,
+      instructions: Schema.optional(richContentSchema),
+      monitoringMode: assessmentMonitoringModeSchema,
+      rankingScope: assessmentRankingScopeSchema,
+      releaseMode: assessmentReleaseModeSchema,
       retakePolicy: Schema.Struct({
         allowRetake: Schema.Boolean,
         maxAttempts: Schema.optional(Schema.Number),

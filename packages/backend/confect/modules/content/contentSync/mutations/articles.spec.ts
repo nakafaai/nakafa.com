@@ -1,5 +1,8 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
-import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import {
+  articleCategorySchema,
+  localeSchema,
+} from "@repo/backend/confect/modules/content/content.schemas";
 import { Schema } from "effect";
 
 const contentSyncMutationsArticlesGroup = GroupSpec.make("articles")
@@ -12,7 +15,7 @@ const contentSyncMutationsArticlesGroup = GroupSpec.make("articles")
             articleSlug: Schema.String,
             authors: Schema.Array(Schema.Struct({ name: Schema.String })),
             body: Schema.String,
-            category: Schema.Literal("politics"),
+            category: articleCategorySchema,
             contentHash: Schema.String,
             date: Schema.Number,
             description: Schema.optional(Schema.String),

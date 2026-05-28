@@ -6,10 +6,7 @@ import {
   log,
 } from "@repo/backend/scripts/sync-content/logging";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
-import {
-  AuthorSyncResultSchema,
-  BATCH_SIZES,
-} from "@repo/backend/scripts/sync-content/schemas";
+import { BATCH_SIZES } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
   SyncOptions,
@@ -105,8 +102,7 @@ export const syncAuthors = Effect.fn("sync.authors")(function* (
       config,
       "mutation",
       refs.internal.contentSync.mutations.authors.bulkSyncAuthors,
-      { authorNames: batch },
-      AuthorSyncResultSchema
+      { authorNames: batch }
     );
 
     created += result.created;

@@ -1,5 +1,5 @@
+import type { Ref } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
-import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import {
   computeHash,
   parseDateToEpoch,
@@ -23,10 +23,7 @@ import {
   updateBatchProgress,
 } from "@repo/backend/scripts/sync-content/metrics";
 import { globFiles } from "@repo/backend/scripts/sync-content/runtime";
-import {
-  BATCH_SIZES,
-  SyncResultSchema,
-} from "@repo/backend/scripts/sync-content/schemas";
+import { BATCH_SIZES } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
   SyncOptions,
@@ -34,27 +31,9 @@ import type {
 } from "@repo/backend/scripts/sync-content/types";
 import { Effect } from "effect";
 
-interface ArticlePayload {
-  articleSlug: string;
-  authors: Array<{ name: string }>;
-  body: string;
-  category: string;
-  contentHash: string;
-  date: number;
-  description?: string;
-  locale: Locale;
-  references: Array<{
-    authors: string;
-    citation?: string;
-    details?: string;
-    publication?: string;
-    title: string;
-    url?: string;
-    year: number;
-  }>;
-  slug: string;
-  title: string;
-}
+type ArticlePayload = Ref.Args<
+  typeof refs.internal.contentSync.mutations.articles.bulkSyncArticles
+>["articles"][number];
 
 /** Syncs article MDX files and their references into Convex. */
 export const syncArticles = Effect.fn("sync.articles")(function* (
@@ -145,8 +124,7 @@ export const syncArticles = Effect.fn("sync.articles")(function* (
       config,
       "mutation",
       refs.internal.contentSync.mutations.articles.bulkSyncArticles,
-      { articles: batch },
-      SyncResultSchema
+      { articles: batch }
     );
 
     totals.created += result.created;

@@ -42,6 +42,10 @@ class ConvexResponseError extends Schema.TaggedError<ConvexResponseError>()(
   }
 ) {}
 
+const ConvexEndpointSchema = Schema.Literal("action", "mutation", "query");
+
+type ConvexEndpoint = typeof ConvexEndpointSchema.Type;
+
 const getUnknownMessage = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
 
@@ -148,12 +152,13 @@ export const getConvexConfig = Effect.fn("scripts.getConvexConfig")(function* (
  * - Effect async errors: https://effect.website/docs/getting-started/running-effects/
  * - Convex function calls over HTTP: https://docs.convex.dev/http-api/
  */
-export const callConvex = Effect.fn("scripts.callConvex")(function* <A, I>(
+export const callConvex = Effect.fn("scripts.callConvex")(function* <
+  Reference extends Ref.Any,
+>(
   config: ConvexConfig,
-  endpoint: "action" | "mutation" | "query",
-  ref: Ref.Any,
-  args: Ref.Args<Ref.Any>,
-  schema: Schema.Schema<A, I, never>
+  endpoint: ConvexEndpoint,
+  ref: Reference,
+  args: Ref.Args<Reference>
 ) {
   const encodedArgs = yield* Ref.encodeArgs(ref, args).pipe(
     Effect.mapError(
@@ -195,12 +200,5 @@ export const callConvex = Effect.fn("scripts.callConvex")(function* <A, I>(
         })
     )
   );
-  return yield* Schema.decodeUnknown(schema)(decodedValue).pipe(
-    Effect.mapError(
-      (error) =>
-        new ConvexResponseError({
-          message: `Invalid Convex value: ${formatParseError(error)}`,
-        })
-    )
-  );
+  return decodedValue;
 });

@@ -1,6 +1,11 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import {
-  selfSelectableUserRoleSchema,
+  getUserByAuthIdArgsSchema,
+  getUserByIdArgsSchema,
+  updateUserNameArgsSchema,
+  updateUserRoleArgsSchema,
+} from "@repo/backend/confect/modules/identity/users.schemas";
+import {
   Users,
   userRoleSchema,
 } from "@repo/backend/confect/modules/identity/users.tables";
@@ -10,16 +15,14 @@ const usersMutationsGroup = GroupSpec.make("mutations")
   .addFunction(
     FunctionSpec.publicMutation({
       name: "updateUserRole",
-      args: Schema.Struct({
-        role: selfSelectableUserRoleSchema,
-      }),
+      args: updateUserRoleArgsSchema,
       returns: Schema.Null,
     })
   )
   .addFunction(
     FunctionSpec.publicMutation({
       name: "updateUserName",
-      args: Schema.Struct({ name: Schema.String }),
+      args: updateUserNameArgsSchema,
       returns: Schema.Null,
     })
   )
@@ -41,14 +44,14 @@ const usersQueriesGroup = GroupSpec.make("queries")
   .addFunction(
     FunctionSpec.internalQuery({
       name: "getUserById",
-      args: Schema.Struct({ userId: GenericId.GenericId("users") }),
+      args: getUserByIdArgsSchema,
       returns: Schema.NullOr(Users.Doc),
     })
   )
   .addFunction(
     FunctionSpec.internalQuery({
       name: "getUserByAuthId",
-      args: Schema.Struct({ authId: Schema.String }),
+      args: getUserByAuthIdArgsSchema,
       returns: Schema.NullOr(Users.Doc),
     })
   );

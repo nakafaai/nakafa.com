@@ -11,66 +11,19 @@ import {
 } from "@repo/backend/scripts/sync-content/convex";
 import { log, logError } from "@repo/backend/scripts/sync-content/logging";
 import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 
 const CUSTOMER_PAGE_SIZE = 100;
 const DEFAULT_REPAIR_LIMIT = 25;
 
-interface PageResult<T> {
-  continueCursor: string;
-  isDone: boolean;
-  page: readonly T[];
-}
+type PageItem<Query extends Ref.AnyQuery> =
+  Ref.Returns<Query> extends { readonly page: readonly (infer Item)[] }
+    ? Item
+    : never;
 
-const customerIntegrityUserPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  page: Schema.Array(
-    Schema.Struct({
-      authId: Schema.String,
-      email: Schema.String,
-      userId: Schema.String,
-    })
-  ),
-});
-
-const customerIntegrityCustomerPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  page: Schema.Array(
-    Schema.Struct({
-      externalId: Schema.NullOr(Schema.String),
-      localCustomerId: Schema.String,
-      polarCustomerId: Schema.String,
-      userId: Schema.String,
-    })
-  ),
-});
-
-const customerIntegritySubscriptionPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  page: Schema.Array(
-    Schema.Struct({
-      currentPeriodEnd: Schema.NullOr(Schema.String),
-      customerId: Schema.String,
-      status: Schema.String,
-      subscriptionId: Schema.String,
-    })
-  ),
-});
-
-const repairCustomerResultSchema = Schema.Union(
-  Schema.Struct({
-    localCustomerId: Schema.String,
-    status: Schema.Literal("synced"),
-  }),
-  Schema.Struct({
-    existingExternalId: Schema.NullOr(Schema.String),
-    polarCustomerId: Schema.String,
-    status: Schema.Literal("conflict"),
-  })
-);
+type RepairCustomerUserId = Ref.Args<
+  typeof refs.internal.customers.actions.internalFunctions.repairCustomer
+>["userId"];
 
 /** Parses one optional numeric CLI flag. */
 const getOptionalNumericFlag = Effect.fn("customers.getOptionalNumericFlag")(
@@ -126,23 +79,21 @@ const getOptionalStringFlag = Effect.fn("customers.getOptionalStringFlag")(
 
 /** Reads every page from one bounded internal customer-integrity query. */
 const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
-  function* <T>(
+  function* <Query extends Ref.AnyQuery>(
     prod: boolean,
-    ref: Ref.AnyQuery,
-    getArgs: (cursor: string | null) => Ref.Args<typeof ref>,
-    schema: Schema.Schema<PageResult<T>>
+    ref: Query,
+    getArgs: (cursor: string | null) => Ref.Args<Query>
   ) {
     const config = yield* getConvexConfig({ prod });
-    const rows: T[] = [];
+    const rows: PageItem<Query>[] = [];
     let continueCursor: string | null = null;
 
     while (true) {
-      const result: PageResult<T> = yield* callConvex(
+      const result: Ref.Returns<Query> = yield* callConvex(
         config,
         "query",
         ref,
-        getArgs(continueCursor),
-        schema
+        getArgs(continueCursor)
       );
 
       rows.push(...result.page);
@@ -167,8 +118,7 @@ const getCustomerIntegrityReport = Effect.fn(
         .listUsersForCustomerIntegrity,
       (cursor) => ({
         paginationOpts: { cursor, numItems: CUSTOMER_PAGE_SIZE },
-      }),
-      customerIntegrityUserPageSchema
+      })
     ),
     collectIntegrityPages(
       prod,
@@ -176,8 +126,7 @@ const getCustomerIntegrityReport = Effect.fn(
         .listCustomersForIntegrity,
       (cursor) => ({
         paginationOpts: { cursor, numItems: CUSTOMER_PAGE_SIZE },
-      }),
-      customerIntegrityCustomerPageSchema
+      })
     ),
     collectIntegrityPages(
       prod,
@@ -185,8 +134,7 @@ const getCustomerIntegrityReport = Effect.fn(
         .listActiveSubscriptionsForIntegrity,
       (cursor) => ({
         paginationOpts: { cursor, numItems: CUSTOMER_PAGE_SIZE },
-      }),
-      customerIntegritySubscriptionPageSchema
+      })
     ),
   ]);
   const usersById = new Map(users.map((user) => [user.userId, user]));
@@ -215,15 +163,14 @@ const getCustomerIntegrityReport = Effect.fn(
 
 /** Repairs one user by rerunning the backend-owned customer sync action. */
 const repairCustomerForUser = Effect.fn("customers.repairCustomerForUser")(
-  function* (prod: boolean, userId: string) {
+  function* (prod: boolean, userId: RepairCustomerUserId) {
     const config = yield* getConvexConfig({ prod });
 
     return yield* callConvex(
       config,
       "action",
       refs.internal.customers.actions.internalFunctions.repairCustomer,
-      { userId },
-      repairCustomerResultSchema
+      { userId }
     );
   }
 );
@@ -247,8 +194,7 @@ const cleanupStalePolarCustomer = Effect.fn(
     config,
     "action",
     refs.internal.customers.actions.internalFunctions.cleanupStalePolarCustomer,
-    { existingExternalId, polarCustomerId },
-    Schema.Null
+    { existingExternalId, polarCustomerId }
   );
 });
 

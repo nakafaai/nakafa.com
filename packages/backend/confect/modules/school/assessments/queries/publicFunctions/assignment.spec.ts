@@ -1,4 +1,11 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import {
+  assessmentAssignmentStatusSchema,
+  assessmentGradingModeSchema,
+  assessmentMonitoringModeSchema,
+  assessmentRankingScopeSchema,
+  assessmentReleaseModeSchema,
+} from "@repo/backend/confect/modules/school/assessmentsTables/shared";
 import { Schema } from "effect";
 
 const assessmentsQueriesPublicAssignmentGroup = GroupSpec.make(
@@ -18,25 +25,19 @@ const assessmentsQueriesPublicAssignmentGroup = GroupSpec.make(
         assessmentId: GenericId.GenericId("schoolAssessments"),
         closesAt: Schema.optional(Schema.Number),
         createdBy: GenericId.GenericId("users"),
-        gradingMode: Schema.Literal("auto", "manual", "hybrid"),
-        monitoringMode: Schema.Literal("off", "basic", "strict"),
+        gradingMode: assessmentGradingModeSchema,
+        monitoringMode: assessmentMonitoringModeSchema,
         opensAt: Schema.optional(Schema.Number),
         publishedAt: Schema.optional(Schema.Number),
-        rankingScope: Schema.Literal("none", "class", "school"),
-        releaseMode: Schema.Literal("instant", "manual", "scheduled"),
+        rankingScope: assessmentRankingScopeSchema,
+        releaseMode: assessmentReleaseModeSchema,
         releasesAt: Schema.optional(Schema.Number),
         retakePolicy: Schema.Struct({
           allowRetake: Schema.Boolean,
           maxAttempts: Schema.optional(Schema.Number),
         }),
         schoolId: GenericId.GenericId("schools"),
-        status: Schema.Literal(
-          "draft",
-          "scheduled",
-          "published",
-          "closed",
-          "archived"
-        ),
+        status: assessmentAssignmentStatusSchema,
         timingPolicy: Schema.Struct({
           durationMinutes: Schema.optional(Schema.Number),
           perSection: Schema.Boolean,

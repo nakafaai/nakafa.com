@@ -1,4 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { subscriptionRecurringIntervalSchema } from "@repo/backend/confect/modules/commerce/subscriptions.tables";
 import { Schema } from "effect";
 
 const subscriptionsMutationsGroup = GroupSpec.make("mutations")
@@ -30,10 +31,7 @@ const subscriptionsMutationsGroup = GroupSpec.make("mutations")
           modifiedAt: Schema.Union(Schema.Null, Schema.String),
           priceId: Schema.optional(Schema.String),
           productId: Schema.String,
-          recurringInterval: Schema.Union(
-            Schema.Null,
-            Schema.Literal("day", "week", "month", "year")
-          ),
+          recurringInterval: subscriptionRecurringIntervalSchema,
           schoolId: Schema.optional(Schema.String),
           startedAt: Schema.Union(Schema.Null, Schema.String),
           status: Schema.String,
@@ -70,10 +68,7 @@ const subscriptionsMutationsGroup = GroupSpec.make("mutations")
           modifiedAt: Schema.Union(Schema.Null, Schema.String),
           priceId: Schema.optional(Schema.String),
           productId: Schema.String,
-          recurringInterval: Schema.Union(
-            Schema.Null,
-            Schema.Literal("day", "week", "month", "year")
-          ),
+          recurringInterval: subscriptionRecurringIntervalSchema,
           schoolId: Schema.optional(Schema.String),
           startedAt: Schema.Union(Schema.Null, Schema.String),
           status: Schema.String,

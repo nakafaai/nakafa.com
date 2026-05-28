@@ -12,10 +12,7 @@ import {
   formatBatchProgress,
   updateBatchProgress,
 } from "@repo/backend/scripts/sync-content/metrics";
-import {
-  BATCH_SIZES,
-  SyncResultSchema,
-} from "@repo/backend/scripts/sync-content/schemas";
+import { BATCH_SIZES } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
   SyncOptions,
@@ -80,8 +77,7 @@ export const syncQuranSearch = Effect.fn("sync.quranSearch")(function* (
       config,
       "mutation",
       refs.internal.contents.mutations.search.bulkSyncQuranSearch,
-      { documents: batch },
-      SyncResultSchema
+      { documents: batch }
     ).pipe(
       Effect.mapError(
         (error) => new QuranSearchSyncError({ message: error.message })

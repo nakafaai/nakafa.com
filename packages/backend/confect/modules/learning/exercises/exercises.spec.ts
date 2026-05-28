@@ -1,5 +1,6 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import { finalizedAttemptStatusSchema } from "@repo/backend/confect/modules/learning/attempts.schemas";
 import { ExerciseError } from "@repo/backend/confect/modules/learning/exercises/errors.service";
 import {
   ExerciseAnswers,
@@ -18,7 +19,7 @@ const exercisesMutationsGroup = GroupSpec.make("mutations")
       }),
       returns: Schema.Struct({
         expiredAtMs: Schema.optional(Schema.Number),
-        status: Schema.Literal("completed", "expired"),
+        status: finalizedAttemptStatusSchema,
       }),
     })
   )

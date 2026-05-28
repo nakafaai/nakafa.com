@@ -4,6 +4,7 @@ import {
   DatabaseWriter,
   StorageWriter,
 } from "@repo/backend/confect/_generated/services";
+import type { AudioContentRef } from "@repo/backend/confect/modules/content/audio.schemas";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/confect/modules/content/constants";
 import type {
   ContentType,
@@ -315,12 +316,7 @@ export const deleteSubjectSection = Effect.fn(
 /** Updates audio content records after content hash changes. */
 export const resetAudioForContentHash = Effect.fn(
   "contentSync.helpers.resetAudioForContentHash"
-)(function* (args: {
-  contentRef:
-    | { readonly id: Id<"articleContents">; readonly type: "article" }
-    | { readonly id: Id<"subjectSections">; readonly type: "subject" };
-  newHash: string;
-}) {
+)(function* (args: { contentRef: AudioContentRef; newHash: string }) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const storage = yield* StorageWriter;

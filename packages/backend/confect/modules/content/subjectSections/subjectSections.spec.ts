@@ -1,5 +1,9 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
-import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import {
+  gradeSchema,
+  localeSchema,
+  materialSchema,
+} from "@repo/backend/confect/modules/content/content.schemas";
 import { Schema } from "effect";
 
 const subjectSectionsQueriesGroup = GroupSpec.make("queries").addFunction(
@@ -15,43 +19,9 @@ const subjectSectionsQueriesGroup = GroupSpec.make("queries").addFunction(
     returns: Schema.Array(
       Schema.Struct({
         description: Schema.optional(Schema.String),
-        grade: Schema.Literal(
-          "1",
-          "2",
-          "3",
-          "4",
-          "5",
-          "6",
-          "7",
-          "8",
-          "9",
-          "10",
-          "11",
-          "12",
-          "bachelor",
-          "master",
-          "phd"
-        ),
+        grade: gradeSchema,
         id: GenericId.GenericId("subjectSections"),
-        material: Schema.Literal(
-          "mathematics",
-          "physics",
-          "chemistry",
-          "biology",
-          "geography",
-          "economy",
-          "history",
-          "informatics",
-          "geospatial",
-          "sociology",
-          "ai-ds",
-          "game-engineering",
-          "computer-science",
-          "technology-electro-medical",
-          "political-science",
-          "informatics-engineering",
-          "international-relations"
-        ),
+        material: materialSchema,
         slug: Schema.String,
         title: Schema.String,
         viewCount: Schema.Number,

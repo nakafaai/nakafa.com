@@ -14,6 +14,7 @@ import {
   tryoutProductPolicies,
 } from "@repo/backend/confect/modules/tryout/products";
 import { syncTryoutPartSetMappings } from "@repo/backend/confect/modules/tryout/tryoutParts.service";
+import { TRY_OUT_SEGMENT } from "@repo/contents/_types/exercises/slug";
 import { Clock, Duration, Effect, Option } from "effect";
 
 const SCALE_QUALITY_QUEUE_DRAIN_DELAY_MS = 1;
@@ -40,7 +41,7 @@ export const bulkSyncTryouts = Effect.fn("contentSync.tryouts.bulkSyncTryouts")(
         query
           .eq("locale", args.locale)
           .eq("type", args.product)
-          .eq("exerciseType", "try-out")
+          .eq("exerciseType", TRY_OUT_SEGMENT)
       )
       .take(tryoutCandidateLimit + 1);
 

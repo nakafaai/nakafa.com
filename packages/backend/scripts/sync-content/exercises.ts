@@ -35,7 +35,6 @@ import {
   BATCH_SIZES,
   LOCALE_MATERIAL_FILE_REGEX,
   parseLocale,
-  SyncResultSchema,
 } from "@repo/backend/scripts/sync-content/schemas";
 import type {
   ConvexConfig,
@@ -201,8 +200,7 @@ export const syncExerciseSets = Effect.fn("sync.exerciseSets")(function* (
       config,
       "mutation",
       refs.internal.contentSync.mutations.exercises.bulkSyncExerciseSets,
-      { sets: batch },
-      SyncResultSchema
+      { sets: batch }
     );
 
     totals.created += result.created;
@@ -398,8 +396,7 @@ const processQuestionBatches = Effect.fn("sync.processQuestionBatches")(
         config,
         "mutation",
         refs.internal.contentSync.mutations.exercises.bulkSyncExerciseQuestions,
-        { questions: batch },
-        SyncResultSchema
+        { questions: batch }
       );
 
       totals.created += result.created;

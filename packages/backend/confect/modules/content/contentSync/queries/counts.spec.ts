@@ -1,4 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import { countableTableNameSchema } from "@repo/backend/confect/modules/content/contentSync.shared";
 import { Schema } from "effect";
 
 const contentSyncQueriesCountsGroup = GroupSpec.make("counts").addFunction(
@@ -13,42 +14,7 @@ const contentSyncQueriesCountsGroup = GroupSpec.make("counts").addFunction(
         maximumRowsRead: Schema.optional(Schema.Number),
         numItems: Schema.Number,
       }),
-      tableName: Schema.Literal(
-        "articleContents",
-        "subjectTopics",
-        "subjectSections",
-        "exerciseSets",
-        "exerciseQuestions",
-        "exerciseAttempts",
-        "exerciseAnswers",
-        "tryoutAccessCampaigns",
-        "tryoutAccessCampaignProducts",
-        "tryoutAccessLinks",
-        "tryoutAccessGrants",
-        "tryouts",
-        "tryoutCatalogMeta",
-        "userTryoutEntitlements",
-        "tryoutPartSets",
-        "tryoutAttempts",
-        "tryoutPartAttempts",
-        "tryoutLeaderboardEntries",
-        "userTryoutStats",
-        "irtCalibrationQueue",
-        "irtCalibrationAttempts",
-        "irtCalibrationCacheStats",
-        "irtScaleQualityChecks",
-        "irtScaleQualityRefreshQueue",
-        "irtCalibrationRuns",
-        "exerciseItemParameters",
-        "irtScalePublicationQueue",
-        "irtScaleVersions",
-        "irtScaleVersionItems",
-        "contentSearch",
-        "authors",
-        "contentAuthors",
-        "articleReferences",
-        "exerciseChoices"
-      ),
+      tableName: countableTableNameSchema,
     }),
     returns: Schema.Struct({
       continueCursor: Schema.String,

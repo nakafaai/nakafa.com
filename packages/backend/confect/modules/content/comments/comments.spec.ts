@@ -1,4 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { commentVoteActionSchema } from "@repo/backend/confect/modules/content/comments.tables";
 import { Schema } from "effect";
 
 const commentsMutationsGroup = GroupSpec.make("mutations")
@@ -25,7 +26,7 @@ const commentsMutationsGroup = GroupSpec.make("mutations")
       name: "voteOnComment",
       args: Schema.Struct({
         commentId: GenericId.GenericId("comments"),
-        vote: Schema.Literal(-1, 0, 1),
+        vote: commentVoteActionSchema,
       }),
       returns: Schema.Null,
     })

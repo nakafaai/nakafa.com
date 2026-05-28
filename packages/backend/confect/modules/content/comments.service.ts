@@ -5,6 +5,7 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import type { CommentVoteAction } from "@repo/backend/confect/modules/content/comments.tables";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { cleanSlug } from "@repo/utilities/helper";
 import type { PaginationOptions } from "convex/server";
@@ -12,7 +13,6 @@ import { Duration, Effect, Option, Schema } from "effect";
 
 const DEFAULT_COMMENT_SNIPPET_LENGTH = 200;
 
-type VoteAction = -1 | 0 | 1;
 type PublicCommentUser = Pick<Doc<"users">, "_id" | "image" | "name">;
 
 export class CommentActionError extends Schema.TaggedError<CommentActionError>()(
@@ -64,7 +64,7 @@ const updateParentReplyCount = Effect.fn("comments.updateParentReplyCount")(
 /** Applies a bounded vote-count delta to a comment. */
 const updateCommentVoteCount = Effect.fn("comments.updateVoteCount")(function* (
   commentId: Id<"comments">,
-  vote: Exclude<VoteAction, 0>,
+  vote: Exclude<CommentVoteAction, 0>,
   delta: number
 ) {
   const reader = yield* DatabaseReader;
@@ -174,7 +174,7 @@ export const addComment = Effect.fn("comments.addComment")(function* (args: {
 
 /** Creates, replaces, or removes the current user's vote on a comment. */
 export const voteOnComment = Effect.fn("comments.voteOnComment")(
-  function* (args: { commentId: Id<"comments">; vote: VoteAction }) {
+  function* (args: { commentId: Id<"comments">; vote: CommentVoteAction }) {
     const reader = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
     const user = yield* requireAppUser();

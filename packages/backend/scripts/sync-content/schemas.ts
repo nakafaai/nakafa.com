@@ -1,8 +1,9 @@
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/confect/modules/content/constants";
-import { locales } from "@repo/utilities/locales";
+import {
+  localeSchema,
+  SUPPORTED_CONTENT_LOCALES,
+} from "@repo/backend/confect/modules/content/content.schemas";
 import { Effect, Schema } from "effect";
-
-const SyncLocaleSchema = Schema.Literal(...locales);
 
 export const BATCH_SIZES = {
   articles: CONTENT_SYNC_BATCH_LIMITS.articles,
@@ -36,11 +37,11 @@ export const parseLocale = Effect.fn("sync.parseLocale")(function* (
   value: string,
   context: string
 ) {
-  return yield* Schema.decodeUnknown(SyncLocaleSchema)(value).pipe(
+  return yield* Schema.decodeUnknown(localeSchema)(value).pipe(
     Effect.mapError(
       () =>
         new SyncLocaleParseError({
-          message: `Invalid locale "${value}" in ${context}. Expected: ${locales.join(", ")}`,
+          message: `Invalid locale "${value}" in ${context}. Expected: ${SUPPORTED_CONTENT_LOCALES.join(", ")}`,
         })
     )
   );
@@ -60,22 +61,6 @@ export const ConvexResponseSchema = Schema.Struct({
   value: Schema.optional(Schema.Unknown),
   errorMessage: Schema.optional(Schema.String),
   logLines: Schema.optional(Schema.Array(Schema.String)),
-});
-
-export const SyncResultSchema = Schema.Struct({
-  created: Schema.Number,
-  updated: Schema.Number,
-  unchanged: Schema.Number,
-  referencesCreated: Schema.optional(Schema.Number),
-  choicesCreated: Schema.optional(Schema.Number),
-  authorLinksCreated: Schema.optional(Schema.Number),
-  skipped: Schema.optional(Schema.Number),
-  skippedSetSlugs: Schema.optional(Schema.Array(Schema.String)),
-});
-
-export const AuthorSyncResultSchema = Schema.Struct({
-  created: Schema.Number,
-  existing: Schema.Number,
 });
 
 export const ContentCountsSchema = Schema.Struct({
@@ -126,28 +111,10 @@ export const DataIntegritySchema = Schema.Struct({
   totalSections: Schema.Number,
 });
 
-export const TryoutScaleIntegritySchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  page: Schema.Array(
-    Schema.Struct({
-      cycleKey: Schema.String,
-      locale: SyncLocaleSchema,
-      product: Schema.String,
-      slug: Schema.String,
-    })
-  ),
-});
-
 const StaleItemSchema = Schema.Struct({
   id: Schema.String,
   slug: Schema.String,
-  locale: SyncLocaleSchema,
-});
-
-const PaginationPageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
+  locale: localeSchema,
 });
 
 export const StaleContentSchema = Schema.Struct({
@@ -156,104 +123,4 @@ export const StaleContentSchema = Schema.Struct({
   staleSubjectSections: Schema.Array(StaleItemSchema),
   staleExerciseSets: Schema.Array(StaleItemSchema),
   staleExerciseQuestions: Schema.Array(StaleItemSchema),
-});
-
-export const StaleContentPageSchema = Schema.extend(
-  PaginationPageSchema,
-  Schema.Struct({
-    page: Schema.Array(StaleItemSchema),
-  })
-);
-
-export const ExerciseQuestionIntegrityPageSchema = Schema.extend(
-  PaginationPageSchema,
-  Schema.Struct({
-    page: Schema.Array(StaleItemSchema),
-  })
-);
-
-export const ExerciseChoiceIntegrityPageSchema = Schema.extend(
-  PaginationPageSchema,
-  Schema.Struct({
-    page: Schema.Array(
-      Schema.Struct({
-        questionId: Schema.String,
-      })
-    ),
-  })
-);
-
-export const ContentAuthorIntegrityPageSchema = Schema.extend(
-  PaginationPageSchema,
-  Schema.Struct({
-    page: Schema.Array(
-      Schema.Struct({
-        authorId: Schema.String,
-        contentId: Schema.String,
-        contentType: Schema.Literal("article", "subject", "exercise"),
-      })
-    ),
-  })
-);
-
-export const ArticleReferenceIntegrityPageSchema = Schema.extend(
-  PaginationPageSchema,
-  Schema.Struct({
-    page: Schema.Array(
-      Schema.Struct({
-        articleId: Schema.String,
-      })
-    ),
-  })
-);
-
-export const SubjectSectionIntegrityPageSchema = Schema.extend(
-  PaginationPageSchema,
-  Schema.Struct({
-    page: Schema.Array(
-      Schema.Struct({
-        locale: SyncLocaleSchema,
-        slug: Schema.String,
-        topicId: Schema.optional(Schema.String),
-      })
-    ),
-  })
-);
-
-export const AuthorPageSchema = Schema.extend(
-  PaginationPageSchema,
-  Schema.Struct({
-    page: Schema.Array(
-      Schema.Struct({
-        id: Schema.String,
-        name: Schema.String,
-        username: Schema.String,
-      })
-    ),
-  })
-);
-
-export const UnusedAuthorsSchema = Schema.Struct({
-  unusedAuthors: Schema.Array(
-    Schema.Struct({
-      id: Schema.String,
-      name: Schema.String,
-      username: Schema.String,
-    })
-  ),
-});
-
-export const DeleteResultSchema = Schema.Struct({
-  deleted: Schema.Number,
-});
-
-export const BatchDeleteResultSchema = Schema.Struct({
-  deleted: Schema.Number,
-  hasMore: Schema.Boolean,
-});
-
-export const CountTablePageSchema = Schema.Struct({
-  continueCursor: Schema.String,
-  isDone: Schema.Boolean,
-  pageSize: Schema.Number,
 });
