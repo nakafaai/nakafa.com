@@ -1,6 +1,12 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
 import { ExerciseError } from "@repo/backend/confect/modules/learning/exercises/errors.service";
+import {
+  ExerciseAnswers,
+  ExerciseAttempts,
+  exerciseAttemptModeSchema,
+  exerciseAttemptScopeSchema,
+} from "@repo/backend/confect/modules/learning/exercises.tables";
 import { Schema } from "effect";
 
 const exercisesMutationsGroup = GroupSpec.make("mutations")
@@ -31,9 +37,9 @@ const exercisesMutationsGroup = GroupSpec.make("mutations")
       name: "startAttempt",
       args: Schema.Struct({
         exerciseNumber: Schema.optional(Schema.Number),
-        mode: Schema.Literal("practice", "simulation"),
+        mode: exerciseAttemptModeSchema,
         perQuestionTimeLimit: Schema.optional(Schema.Number),
-        scope: Schema.Literal("set", "single"),
+        scope: exerciseAttemptScopeSchema,
         slug: Schema.String,
         timeLimit: Schema.Number,
         totalExercises: Schema.Number,
@@ -66,52 +72,8 @@ const exercisesQueriesGroup = GroupSpec.make("queries")
       returns: Schema.Union(
         Schema.Null,
         Schema.Struct({
-          answers: Schema.Array(
-            Schema.Struct({
-              _creationTime: Schema.Number,
-              _id: GenericId.GenericId("exerciseAnswers"),
-              answeredAt: Schema.Number,
-              attemptId: GenericId.GenericId("exerciseAttempts"),
-              exerciseNumber: Schema.Number,
-              isCorrect: Schema.Boolean,
-              questionId: Schema.optional(
-                GenericId.GenericId("exerciseQuestions")
-              ),
-              selectedOptionId: Schema.optional(Schema.String),
-              textAnswer: Schema.optional(Schema.String),
-              timeSpent: Schema.Number,
-              updatedAt: Schema.Number,
-            })
-          ),
-          attempt: Schema.Struct({
-            _creationTime: Schema.Number,
-            _id: GenericId.GenericId("exerciseAttempts"),
-            answeredCount: Schema.Number,
-            completedAt: Schema.Union(Schema.Number, Schema.Null),
-            correctAnswers: Schema.Number,
-            endReason: Schema.Union(
-              Schema.Literal("submitted", "time-expired"),
-              Schema.Null
-            ),
-            exerciseNumber: Schema.optional(Schema.Number),
-            lastActivityAt: Schema.Number,
-            mode: Schema.Literal("practice", "simulation"),
-            origin: Schema.Literal("standalone", "tryout"),
-            perQuestionTimeLimit: Schema.optional(Schema.Number),
-            schedulerId: Schema.optional(
-              GenericId.GenericId("_scheduled_functions")
-            ),
-            scope: Schema.Literal("set", "single"),
-            scorePercentage: Schema.Number,
-            slug: Schema.String,
-            startedAt: Schema.Number,
-            status: Schema.Literal("in-progress", "completed", "expired"),
-            timeLimit: Schema.Number,
-            totalExercises: Schema.Number,
-            totalTime: Schema.Number,
-            updatedAt: Schema.Number,
-            userId: GenericId.GenericId("users"),
-          }),
+          answers: Schema.Array(ExerciseAnswers.Doc),
+          attempt: ExerciseAttempts.Doc,
         })
       ),
     })

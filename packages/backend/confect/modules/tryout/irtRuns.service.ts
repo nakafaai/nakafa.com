@@ -8,13 +8,17 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { IrtError } from "@repo/backend/confect/modules/tryout/irt.errors";
+import type {
+  IrtCalibrationStatus,
+  IrtOperationalModel,
+} from "@repo/backend/confect/modules/tryout/irt.tables";
 import { irtScalePublicationQueueWorkpool } from "@repo/backend/confect/modules/tryout/irtWorkpool";
 import { Clock, Duration, Effect } from "effect";
 
 const MAX_AFFECTED_TRYOUTS_PER_SET = 100;
 
 interface CalibrationItem {
-  readonly calibrationStatus: "calibrated" | "emerging" | "provisional";
+  readonly calibrationStatus: IrtCalibrationStatus;
   readonly correctRate: number;
   readonly difficulty: number;
   readonly discrimination: number;
@@ -27,7 +31,7 @@ interface CalibrationResult {
   readonly items: readonly CalibrationItem[];
   readonly iterationCount: number;
   readonly maxParameterDelta: number;
-  readonly model: "2pl";
+  readonly model: IrtOperationalModel;
   readonly questionCount: number;
   readonly responseCount: number;
 }

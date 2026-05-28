@@ -8,6 +8,10 @@ export const tryoutAccessCampaignKindSchema = Schema.Literal(
   "access-pass"
 );
 
+export type TryoutAccessCampaignKind = Schema.Schema.Type<
+  typeof tryoutAccessCampaignKindSchema
+>;
+
 export const tryoutAccessCampaignRedeemStatusSchema = Schema.Literal(
   "scheduled",
   "active",
@@ -23,6 +27,10 @@ export const tryoutAccessGrantStatusSchema = Schema.Literal(
   "active",
   "expired"
 );
+
+export type TryoutAccessGrantStatus = Schema.Schema.Type<
+  typeof tryoutAccessGrantStatusSchema
+>;
 
 export const userTryoutEntitlementSourceKindSchema = Schema.Literal(
   "competition",

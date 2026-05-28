@@ -1,4 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { orderDirectionSchema } from "@repo/backend/confect/modules/school/order.schemas";
 import { Schema } from "effect";
 
 const assessmentsMutationsPublicReorderGroup = GroupSpec.make(
@@ -8,7 +9,7 @@ const assessmentsMutationsPublicReorderGroup = GroupSpec.make(
     name: "reorderAssessment",
     args: Schema.Struct({
       assessmentId: GenericId.GenericId("schoolAssessments"),
-      direction: Schema.Literal("up", "down"),
+      direction: orderDirectionSchema,
       schoolId: GenericId.GenericId("schools"),
     }),
     returns: Schema.Null,

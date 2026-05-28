@@ -6,6 +6,7 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import type {
+  TryoutAccessCampaignKind,
   TryoutAccessCampaigns,
   TryoutAccessLinks,
 } from "@repo/backend/confect/modules/tryout/access.tables";
@@ -23,7 +24,7 @@ import { Clock, Duration, Effect, Option } from "effect";
 const COMPETITION_CAMPAIGN_CHECK_PAGE_SIZE = 100;
 
 interface CampaignInput {
-  readonly campaignKind: "access-pass" | "competition";
+  readonly campaignKind: TryoutAccessCampaignKind;
   readonly enabled: boolean;
   readonly endsAt: number;
   readonly grantDurationDays?: number;
@@ -211,7 +212,7 @@ function hasCampaignPolicyChange(args: {
 
 /** Validates whether an existing campaign can be updated. */
 function validateCampaignUpdate(args: {
-  readonly campaignKind: "access-pass" | "competition";
+  readonly campaignKind: TryoutAccessCampaignKind;
   readonly existingCampaign: typeof TryoutAccessCampaigns.Doc.Type;
   readonly existingLink: typeof TryoutAccessLinks.Doc.Type;
   readonly existingProducts: readonly TryoutProduct[];

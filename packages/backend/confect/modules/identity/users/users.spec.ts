@@ -1,4 +1,9 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import {
+  selfSelectableUserRoleSchema,
+  Users,
+  userRoleSchema,
+} from "@repo/backend/confect/modules/identity/users.tables";
 import { Schema } from "effect";
 
 const usersMutationsGroup = GroupSpec.make("mutations")
@@ -6,7 +11,7 @@ const usersMutationsGroup = GroupSpec.make("mutations")
     FunctionSpec.publicMutation({
       name: "updateUserRole",
       args: Schema.Struct({
-        role: Schema.Literal("teacher", "student", "parent"),
+        role: selfSelectableUserRoleSchema,
       }),
       returns: Schema.Null,
     })
@@ -24,13 +29,7 @@ const usersMutationsGroup = GroupSpec.make("mutations")
       args: Schema.Struct({}),
       returns: Schema.Struct({
         credits: Schema.Number,
-        role: Schema.Union(
-          Schema.Null,
-          Schema.Union(
-            Schema.Null,
-            Schema.Literal("teacher", "student", "parent", "administrator")
-          )
-        ),
+        role: userRoleSchema,
         userId: GenericId.GenericId("users"),
       }),
     })
@@ -43,46 +42,14 @@ const usersQueriesGroup = GroupSpec.make("queries")
     FunctionSpec.internalQuery({
       name: "getUserById",
       args: Schema.Struct({ userId: GenericId.GenericId("users") }),
-      returns: Schema.Union(
-        Schema.Null,
-        Schema.Struct({
-          _creationTime: Schema.Number,
-          _id: GenericId.GenericId("users"),
-          authId: Schema.String,
-          credits: Schema.Number,
-          creditsResetAt: Schema.Number,
-          email: Schema.String,
-          image: Schema.optional(Schema.String),
-          name: Schema.String,
-          plan: Schema.Literal("free", "pro"),
-          role: Schema.optional(
-            Schema.Literal("teacher", "student", "parent", "administrator")
-          ),
-        })
-      ),
+      returns: Schema.NullOr(Users.Doc),
     })
   )
   .addFunction(
     FunctionSpec.internalQuery({
       name: "getUserByAuthId",
       args: Schema.Struct({ authId: Schema.String }),
-      returns: Schema.Union(
-        Schema.Null,
-        Schema.Struct({
-          _creationTime: Schema.Number,
-          _id: GenericId.GenericId("users"),
-          authId: Schema.String,
-          credits: Schema.Number,
-          creditsResetAt: Schema.Number,
-          email: Schema.String,
-          image: Schema.optional(Schema.String),
-          name: Schema.String,
-          plan: Schema.Literal("free", "pro"),
-          role: Schema.optional(
-            Schema.Literal("teacher", "student", "parent", "administrator")
-          ),
-        })
-      ),
+      returns: Schema.NullOr(Users.Doc),
     })
   );
 

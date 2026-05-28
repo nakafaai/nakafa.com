@@ -1,4 +1,6 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { schoolClassMaterialStatusSchema } from "@repo/backend/confect/modules/school/classes.tables";
+import { orderDirectionSchema } from "@repo/backend/confect/modules/school/order.schemas";
 import { Schema } from "effect";
 
 const classesMaterialsMutationsGroup = GroupSpec.make("mutations")
@@ -10,7 +12,7 @@ const classesMaterialsMutationsGroup = GroupSpec.make("mutations")
         description: Schema.String,
         name: Schema.String,
         scheduledAt: Schema.optional(Schema.Number),
-        status: Schema.Literal("draft", "published", "scheduled", "archived"),
+        status: schoolClassMaterialStatusSchema,
       }),
       returns: GenericId.GenericId("schoolClassMaterialGroups"),
     })
@@ -38,7 +40,7 @@ const classesMaterialsMutationsGroup = GroupSpec.make("mutations")
     FunctionSpec.publicMutation({
       name: "reorderMaterialGroup",
       args: Schema.Struct({
-        direction: Schema.Literal("up", "down"),
+        direction: orderDirectionSchema,
         groupId: GenericId.GenericId("schoolClassMaterialGroups"),
       }),
       returns: Schema.Null,
@@ -52,9 +54,7 @@ const classesMaterialsMutationsGroup = GroupSpec.make("mutations")
         groupId: GenericId.GenericId("schoolClassMaterialGroups"),
         name: Schema.optional(Schema.String),
         scheduledAt: Schema.optional(Schema.Number),
-        status: Schema.optional(
-          Schema.Literal("draft", "published", "scheduled", "archived")
-        ),
+        status: Schema.optional(schoolClassMaterialStatusSchema),
       }),
       returns: GenericId.GenericId("schoolClassMaterialGroups"),
     })

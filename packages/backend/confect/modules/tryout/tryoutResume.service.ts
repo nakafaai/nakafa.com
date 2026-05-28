@@ -1,4 +1,5 @@
 import { getFirstIncompleteTryoutPartIndex } from "@repo/backend/confect/modules/tryout/tryoutMetrics.service";
+import type { TryoutStatus } from "@repo/backend/confect/modules/tryout/tryouts.tables";
 
 interface OrderedPart {
   readonly partIndex: number;
@@ -8,7 +9,7 @@ interface OrderedPart {
 type PartAttemptForResume = OrderedPart & {
   readonly setAttempt: {
     readonly lastActivityAt: number;
-    readonly status: "completed" | "expired" | "in-progress";
+    readonly status: TryoutStatus;
   } | null;
 };
 

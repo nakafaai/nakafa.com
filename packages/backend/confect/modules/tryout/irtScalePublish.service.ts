@@ -8,6 +8,7 @@ import {
 import { IrtError } from "@repo/backend/confect/modules/tryout/irt.errors";
 import { getProvisionalParams } from "@repo/backend/confect/modules/tryout/irt.estimation";
 import { IRT_OPERATIONAL_MODEL } from "@repo/backend/confect/modules/tryout/irt.policy";
+import type { IrtScaleVersionStatus } from "@repo/backend/confect/modules/tryout/irt.tables";
 import {
   loadValidatedScaleSetData,
   loadValidatedScaleTryoutSets,
@@ -37,7 +38,7 @@ const publishScaleVersion = Effect.fn("irt.scales.publishScaleVersion")(
     readonly items: readonly ScaleItem[];
     readonly publishedAt: number;
     readonly questionCount: number;
-    readonly status: "official" | "provisional";
+    readonly status: IrtScaleVersionStatus;
     readonly tryoutId: Id<"tryouts">;
   }) {
     const writer = yield* DatabaseWriter;

@@ -12,11 +12,19 @@ export const exerciseAttemptModeSchema = Schema.Literal(
   "simulation"
 );
 
+export type ExerciseAttemptMode = Schema.Schema.Type<
+  typeof exerciseAttemptModeSchema
+>;
+
 /**
  * Exercise attempt scope validator.
  * "set" = whole set attempt; "single" = one exercise inside a set.
  */
 export const exerciseAttemptScopeSchema = Schema.Literal("set", "single");
+
+export type ExerciseAttemptScope = Schema.Schema.Type<
+  typeof exerciseAttemptScopeSchema
+>;
 
 /**
  * Exercise attempt origin validator.
@@ -27,6 +35,10 @@ export const exerciseAttemptOriginSchema = Schema.Literal(
   "tryout"
 );
 
+export type ExerciseAttemptOrigin = Schema.Schema.Type<
+  typeof exerciseAttemptOriginSchema
+>;
+
 /**
  * Exercise attempt status validator.
  * Attempt lifecycle state.
@@ -36,6 +48,10 @@ export const exerciseAttemptStatusSchema = Schema.Literal(
   "completed",
   "expired"
 );
+
+export type ExerciseAttemptStatus = Schema.Schema.Type<
+  typeof exerciseAttemptStatusSchema
+>;
 
 /** exerciseAttempts table definition. */
 export const ExerciseAttempts = Table.make(

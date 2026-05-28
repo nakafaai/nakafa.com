@@ -9,6 +9,7 @@ import {
   IRT_MIN_ATTEMPTS_FOR_OFFICIAL_SCALE,
   IRT_MIN_RESPONSES_FOR_CALIBRATED,
 } from "@repo/backend/confect/modules/tryout/irt.policy";
+import type { IrtScaleQualityStatus } from "@repo/backend/confect/modules/tryout/irt.tables";
 import { Clock, Effect } from "effect";
 
 interface ScaleQualitySummary {
@@ -22,7 +23,7 @@ interface ScaleQualitySummary {
   readonly liveWindowStartAt: number;
   readonly minAttemptCount: number;
   readonly staleQuestionCount: number;
-  readonly status: "blocked" | "passed";
+  readonly status: IrtScaleQualityStatus;
   readonly totalQuestionCount: number;
   readonly tryoutId: Id<"tryouts">;
 }

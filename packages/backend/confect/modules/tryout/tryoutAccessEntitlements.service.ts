@@ -5,6 +5,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import type {
   TryoutAccessCampaigns,
+  TryoutAccessGrantStatus,
   TryoutAccessGrants,
   UserTryoutEntitlements,
 } from "@repo/backend/confect/modules/tryout/access.tables";
@@ -57,7 +58,7 @@ const syncGrantEntitlements = Effect.fn("tryoutAccess.syncGrantEntitlements")(
     readonly campaignProducts: readonly TryoutProduct[];
     readonly endsAt: number;
     readonly grant: TryoutAccessGrant;
-    readonly status: "active" | "expired";
+    readonly status: TryoutAccessGrantStatus;
   }) {
     const writer = yield* DatabaseWriter;
     const entitlements = yield* listGrantEntitlements(args.grant._id);

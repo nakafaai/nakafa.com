@@ -3,6 +3,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import type { FinalizedAttemptStatus } from "@repo/backend/confect/modules/learning/attempts.schemas";
 import {
   buildFinalizedExerciseAttemptPatch,
   computeAttemptDurationSeconds,
@@ -25,7 +26,7 @@ const finalizeExerciseSetAttemptIfNeeded = Effect.fn(
   readonly finishedAtMs: number;
   readonly now: number;
   readonly setAttempt: ExerciseAttemptDoc;
-  readonly status: "completed" | "expired";
+  readonly status: FinalizedAttemptStatus;
 }) {
   if (args.setAttempt.status !== "in-progress") {
     return args.setAttempt;
@@ -73,7 +74,7 @@ export const finalizeTryoutPartAttempt = Effect.fn(
   readonly finishedAtMs: number;
   readonly now: number;
   readonly partAttempt: TryoutPartAttemptDoc;
-  readonly status: "completed" | "expired";
+  readonly status: FinalizedAttemptStatus;
   readonly tryoutAttemptId: Id<"tryoutAttempts">;
 }) {
   const reader = yield* DatabaseReader;

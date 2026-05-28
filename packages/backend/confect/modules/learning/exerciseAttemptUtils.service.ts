@@ -1,5 +1,8 @@
 import type { Doc } from "@repo/backend/confect/_generated/dataModel";
-import { getAttemptEndReasonFromStatus } from "@repo/backend/confect/modules/learning/attempts.schemas";
+import {
+  type FinalizedAttemptStatus,
+  getAttemptEndReasonFromStatus,
+} from "@repo/backend/confect/modules/learning/attempts.schemas";
 
 /** Keeps a number within inclusive min/max bounds. */
 function clampNumber(args: {
@@ -65,7 +68,7 @@ export function computeAttemptDurationSeconds(args: {
 export function buildFinalizedExerciseAttemptPatch(args: {
   readonly completedAtMs: number;
   readonly now: number;
-  readonly status: "completed" | "expired";
+  readonly status: FinalizedAttemptStatus;
   readonly totalTime: number;
 }) {
   return {

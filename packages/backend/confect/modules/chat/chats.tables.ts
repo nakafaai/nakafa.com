@@ -26,6 +26,8 @@ export type ChatVisibility = Schema.Schema.Type<typeof chatVisibilitySchema>;
  */
 export const chatTypeSchema = Schema.Literal("study");
 
+export type ChatType = Schema.Schema.Type<typeof chatTypeSchema>;
+
 /**
  * Chat base validator (without system fields)
  */
@@ -42,6 +44,8 @@ export const chatSchema = Schema.Struct({
  */
 export const messageRoleSchema = Schema.Literal("user", "assistant", "system");
 
+export type MessageRole = Schema.Schema.Type<typeof messageRoleSchema>;
+
 /**
  * Message base validator (without system fields)
  */
@@ -49,7 +53,11 @@ export const messageRoleSchema = Schema.Literal("user", "assistant", "system");
  * Model ID validator using literals for type safety.
  * References MODEL_IDS from @repo/ai/config/models for single source of truth.
  */
-export const modelIdSchema = Schema.optional(Schema.Literal(...MODEL_IDS));
+export const modelIdValueSchema = Schema.Literal(...MODEL_IDS);
+
+export type ModelId = Schema.Schema.Type<typeof modelIdValueSchema>;
+
+export const modelIdSchema = Schema.optional(modelIdValueSchema);
 
 export const messageSchema = Schema.Struct({
   identifier: Schema.String,

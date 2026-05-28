@@ -6,6 +6,8 @@ import {
   HttpServerResponse,
   OpenApi,
 } from "@effect/platform";
+import type { WebhookCustomerCreatedPayload } from "@polar-sh/sdk/models/components/webhookcustomercreatedpayload";
+import type { WebhookCustomerUpdatedPayload } from "@polar-sh/sdk/models/components/webhookcustomerupdatedpayload";
 import {
   validateEvent,
   WebhookVerificationError,
@@ -35,11 +37,9 @@ export class PolarWebhookVerificationFailed extends Schema.TaggedError<PolarWebh
   { message: Schema.String }
 ) {}
 
-type PolarEvent = ReturnType<typeof validateEvent>;
-type PolarCustomerPayload = Extract<
-  PolarEvent,
-  { type: "customer.created" | "customer.updated" }
->["data"];
+type PolarCustomerPayload =
+  | WebhookCustomerCreatedPayload["data"]
+  | WebhookCustomerUpdatedPayload["data"];
 
 /** Verifies a raw Polar webhook request and returns the typed event payload. */
 const verifyPolarEvent = Effect.fn("polar.verifyWebhook")(function* (

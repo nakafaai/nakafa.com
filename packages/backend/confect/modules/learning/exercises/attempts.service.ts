@@ -13,6 +13,11 @@ import {
   computeAttemptDurationSeconds,
 } from "@repo/backend/confect/modules/learning/exerciseAttemptUtils.service";
 import { failExercise } from "@repo/backend/confect/modules/learning/exercises/errors.service";
+import type {
+  ExerciseAttemptMode,
+  ExerciseAttemptOrigin,
+  ExerciseAttemptScope,
+} from "@repo/backend/confect/modules/learning/exercises.tables";
 import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import { irtCalibrationSyncWorkpool } from "@repo/backend/confect/modules/tryout/irtWorkpool";
 import { finalizeTryoutAttempt } from "@repo/backend/confect/modules/tryout/tryoutFinalizeAttempt.service";
@@ -49,10 +54,10 @@ export const createExerciseAttempt = Effect.fn(
   "exercises.createExerciseAttempt"
 )(function* (args: {
   readonly exerciseNumber?: number;
-  readonly mode: "practice" | "simulation";
-  readonly origin: "standalone" | "tryout";
+  readonly mode: ExerciseAttemptMode;
+  readonly origin: ExerciseAttemptOrigin;
   readonly perQuestionTimeLimit?: number;
-  readonly scope: "set" | "single";
+  readonly scope: ExerciseAttemptScope;
   readonly slug: string;
   readonly startedAt: number;
   readonly timeLimit: number;
@@ -97,9 +102,9 @@ export const createExerciseAttempt = Effect.fn(
 export const startAttempt = Effect.fn("exercises.startAttempt")(
   function* (args: {
     readonly exerciseNumber?: number;
-    readonly mode: "practice" | "simulation";
+    readonly mode: ExerciseAttemptMode;
     readonly perQuestionTimeLimit?: number;
-    readonly scope: "set" | "single";
+    readonly scope: ExerciseAttemptScope;
     readonly slug: string;
     readonly timeLimit: number;
     readonly totalExercises: number;
@@ -122,7 +127,7 @@ export const startAttempt = Effect.fn("exercises.startAttempt")(
 function validateAttemptStartArgs(args: {
   readonly exerciseNumber?: number;
   readonly perQuestionTimeLimit?: number;
-  readonly scope: "set" | "single";
+  readonly scope: ExerciseAttemptScope;
   readonly timeLimit: number;
   readonly totalExercises: number;
 }) {

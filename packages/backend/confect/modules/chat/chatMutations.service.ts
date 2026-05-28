@@ -13,7 +13,13 @@ import {
   insertParts,
   verifyChatOwnership,
 } from "@repo/backend/confect/modules/chat/chatStore.service";
-import type { MessagePartInput } from "@repo/backend/confect/modules/chat/chats.tables";
+import type {
+  ChatType,
+  ChatVisibility,
+  MessagePartInput,
+  MessageRole,
+  ModelId,
+} from "@repo/backend/confect/modules/chat/chats.tables";
 import { getCreditResetGrantTransaction } from "@repo/backend/confect/modules/commerce/credits.policy";
 import { resolveUserCreditState } from "@repo/backend/confect/modules/commerce/credits.service";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
@@ -29,15 +35,15 @@ interface ChatMessageInput {
   readonly credits?: number;
   readonly identifier: string;
   readonly inputTokens?: number;
-  readonly modelId?: "nakafa-lite" | "nakafa-pro";
+  readonly modelId?: ModelId;
   readonly outputTokens?: number;
-  readonly role: "user" | "assistant" | "system";
+  readonly role: MessageRole;
   readonly totalTokens?: number;
 }
 
 /** Creates a private chat owned by the current user. */
 export const createChat = Effect.fn("chatMutations.createChat")(
-  function* (args: { title?: string; type: "study" }) {
+  function* (args: { title?: string; type: ChatType }) {
     const writer = yield* DatabaseWriter;
     const user = yield* requireAppUser();
     const updatedAt = yield* Clock.currentTimeMillis;
@@ -70,7 +76,7 @@ export const updateChatTitle = Effect.fn("chatMutations.updateChatTitle")(
 /** Updates the visibility for a chat owned by the current user. */
 export const updateChatVisibility = Effect.fn(
   "chatMutations.updateChatVisibility"
-)(function* (args: { chatId: Id<"chats">; visibility: "private" | "public" }) {
+)(function* (args: { chatId: Id<"chats">; visibility: ChatVisibility }) {
   const writer = yield* DatabaseWriter;
   const user = yield* requireAppUser();
   const chat = yield* verifyChatOwnership({
@@ -131,7 +137,7 @@ export const createChatWithMessage = Effect.fn(
   message: Omit<ChatMessageInput, "chatId">;
   parts: readonly MessagePartInput[];
   title?: string;
-  type: "study";
+  type: ChatType;
 }) {
   const writer = yield* DatabaseWriter;
   const user = yield* requireAppUser();

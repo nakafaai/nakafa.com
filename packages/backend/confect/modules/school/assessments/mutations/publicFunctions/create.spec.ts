@@ -1,4 +1,9 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import {
+  assessmentModeSchema,
+  assessmentStatusSchema,
+  richContentSchema,
+} from "@repo/backend/confect/modules/school/assessmentsTables/shared";
 import { Schema } from "effect";
 
 const assessmentsMutationsPublicCreateGroup = GroupSpec.make(
@@ -8,17 +13,11 @@ const assessmentsMutationsPublicCreateGroup = GroupSpec.make(
     name: "createAssessment",
     args: Schema.Struct({
       classId: Schema.optional(GenericId.GenericId("schoolClasses")),
-      description: Schema.optional(
-        Schema.Struct({
-          format: Schema.Literal("plate-v1"),
-          json: Schema.String,
-          text: Schema.String,
-        })
-      ),
-      mode: Schema.Literal("practice", "assignment", "quiz", "exam", "tryout"),
+      description: Schema.optional(richContentSchema),
+      mode: assessmentModeSchema,
       scheduledAt: Schema.optional(Schema.Number),
       schoolId: GenericId.GenericId("schools"),
-      status: Schema.Literal("draft", "published", "scheduled", "archived"),
+      status: assessmentStatusSchema,
       title: Schema.String,
     }),
     returns: GenericId.GenericId("schoolAssessments"),

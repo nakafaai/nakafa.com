@@ -1,7 +1,11 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Scheduler } from "@repo/backend/confect/_generated/services";
-import type { MessagePartInput } from "@repo/backend/confect/modules/chat/chats.tables";
+import type {
+  MessagePartInput,
+  MessageRole,
+  ModelId,
+} from "@repo/backend/confect/modules/chat/chats.tables";
 import { requireAppUserForAction } from "@repo/backend/confect/modules/identity/auth.service";
 import { Duration, Effect } from "effect";
 
@@ -10,9 +14,9 @@ interface ChatMessageInput {
   readonly credits?: number;
   readonly identifier: string;
   readonly inputTokens?: number;
-  readonly modelId?: "nakafa-lite" | "nakafa-pro";
+  readonly modelId?: ModelId;
   readonly outputTokens?: number;
-  readonly role: "user" | "assistant" | "system";
+  readonly role: MessageRole;
   readonly totalTokens?: number;
 }
 

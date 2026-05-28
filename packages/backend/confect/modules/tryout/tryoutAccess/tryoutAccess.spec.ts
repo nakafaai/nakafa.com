@@ -1,4 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import { tryoutAccessCampaignKindSchema } from "@repo/backend/confect/modules/tryout/access.tables";
 import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
 import { Schema } from "effect";
 
@@ -7,7 +8,7 @@ const tryoutAccessMutationsSetupGroup = GroupSpec.make("setup").addFunction(
     name: "upsertCampaignAndLink",
     args: Schema.Struct({
       campaign: Schema.Struct({
-        campaignKind: Schema.Literal("competition", "access-pass"),
+        campaignKind: tryoutAccessCampaignKindSchema,
         enabled: Schema.Boolean,
         endsAt: Schema.Number,
         grantDurationDays: Schema.optional(Schema.Number),

@@ -1,6 +1,13 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import { tryoutAccessCampaignKindSchema } from "@repo/backend/confect/modules/tryout/access.tables";
 import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
+import {
+  tryoutAccessKindSchema,
+  tryoutPublicResultStatusSchema,
+  tryoutScoreStatusSchema,
+  tryoutStatusSchema,
+} from "@repo/backend/confect/modules/tryout/tryouts.tables";
 import { Schema } from "effect";
 
 const tryoutsQueriesMeAttemptGroup = GroupSpec.make("attempt").addFunction(
@@ -21,14 +28,12 @@ const tryoutsQueriesMeAttemptGroup = GroupSpec.make("attempt").addFunction(
           accessCampaignId: Schema.optional(
             GenericId.GenericId("tryoutAccessCampaigns")
           ),
-          accessCampaignKind: Schema.optional(
-            Schema.Literal("competition", "access-pass")
-          ),
+          accessCampaignKind: Schema.optional(tryoutAccessCampaignKindSchema),
           accessEndsAt: Schema.optional(Schema.Number),
           accessGrantId: Schema.optional(
             GenericId.GenericId("tryoutAccessGrants")
           ),
-          accessKind: Schema.optional(Schema.Literal("event", "subscription")),
+          accessKind: Schema.optional(tryoutAccessKindSchema),
           attemptNumber: Schema.Number,
           completedAt: Schema.Union(Schema.Number, Schema.Null),
           completedPartIndices: Schema.Array(Schema.Number),
@@ -48,15 +53,11 @@ const tryoutsQueriesMeAttemptGroup = GroupSpec.make("attempt").addFunction(
               setId: GenericId.GenericId("exerciseSets"),
             })
           ),
-          publicResultStatus: Schema.Literal(
-            "estimated",
-            "verified-irt",
-            "final-event"
-          ),
+          publicResultStatus: tryoutPublicResultStatusSchema,
           scaleVersionId: GenericId.GenericId("irtScaleVersions"),
-          scoreStatus: Schema.Literal("provisional", "official"),
+          scoreStatus: tryoutScoreStatusSchema,
           startedAt: Schema.Number,
-          status: Schema.Literal("in-progress", "completed", "expired"),
+          status: tryoutStatusSchema,
           theta: Schema.Number,
           thetaSE: Schema.Number,
           totalCorrect: Schema.Number,
@@ -86,7 +87,7 @@ const tryoutsQueriesMeAttemptGroup = GroupSpec.make("attempt").addFunction(
               Schema.Struct({
                 lastActivityAt: Schema.Number,
                 startedAt: Schema.Number,
-                status: Schema.Literal("in-progress", "completed", "expired"),
+                status: tryoutStatusSchema,
                 timeLimit: Schema.Number,
               })
             ),

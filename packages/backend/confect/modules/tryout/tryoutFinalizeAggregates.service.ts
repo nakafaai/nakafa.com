@@ -3,10 +3,14 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { getAttemptEndReasonFromStatus } from "@repo/backend/confect/modules/learning/attempts.schemas";
+import {
+  type FinalizedAttemptStatus,
+  getAttemptEndReasonFromStatus,
+} from "@repo/backend/confect/modules/learning/attempts.schemas";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import { buildFinalizedTryoutSnapshot } from "@repo/backend/confect/modules/tryout/tryoutFinalizeSnapshot.service";
 import { computeTryoutRawScorePercentage } from "@repo/backend/confect/modules/tryout/tryoutMetrics.service";
+import type { TryoutScoreStatus } from "@repo/backend/confect/modules/tryout/tryouts.tables";
 import { Effect } from "effect";
 
 /** Synchronizes persisted aggregate score fields for a tryout attempt. */
@@ -15,8 +19,8 @@ export const syncTryoutAttemptAggregates = Effect.fn(
 )(function* (args: {
   readonly completedAtMs: number;
   readonly scaleVersionId?: Id<"irtScaleVersions">;
-  readonly scoreStatus?: "official" | "provisional";
-  readonly status: "completed" | "expired";
+  readonly scoreStatus?: TryoutScoreStatus;
+  readonly status: FinalizedAttemptStatus;
   readonly tryoutAttemptId: Id<"tryoutAttempts">;
   readonly now: number;
 }) {

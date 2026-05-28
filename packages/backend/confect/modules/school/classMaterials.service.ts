@@ -19,6 +19,7 @@ import type {
   SchoolClassMaterialGroups,
   SchoolClassMaterialStatus,
 } from "@repo/backend/confect/modules/school/classes.tables";
+import type { OrderDirection } from "@repo/backend/confect/modules/school/order.schemas";
 import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
 import type { PaginationOptions } from "convex/server";
 import { Clock, Duration, Effect, Option } from "effect";
@@ -289,7 +290,7 @@ export const deleteMaterialGroup = Effect.fn(
 export const reorderMaterialGroup = Effect.fn(
   "school.materials.reorderMaterialGroup"
 )(function* (args: {
-  direction: "up" | "down";
+  direction: OrderDirection;
   groupId: Id<"schoolClassMaterialGroups">;
 }) {
   const reader = yield* DatabaseReader;

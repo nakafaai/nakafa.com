@@ -10,12 +10,13 @@ import {
   getAppUserByAuthId,
   requireAppUser,
 } from "@repo/backend/confect/modules/identity/auth.service";
+import type { SelfSelectableUserRole } from "@repo/backend/confect/modules/identity/users.tables";
 import { components } from "@repo/backend/confect/modules/integrations/convexComponents";
 import { Clock, Effect } from "effect";
 
 /** Updates the current user's self-selected role. */
 export const updateUserRole = Effect.fn("identity.updateUserRole")(
-  function* (args: { role: "teacher" | "student" | "parent" }) {
+  function* (args: { role: SelfSelectableUserRole }) {
     const writer = yield* DatabaseWriter;
     const user = yield* requireAppUser();
 

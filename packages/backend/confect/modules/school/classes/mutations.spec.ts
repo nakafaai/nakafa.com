@@ -1,4 +1,8 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import {
+  schoolClassImageSchema,
+  schoolClassVisibilitySchema,
+} from "@repo/backend/confect/modules/school/classes.tables";
 import { Schema } from "effect";
 
 const classesMutationsGroup = GroupSpec.make("mutations")
@@ -9,7 +13,7 @@ const classesMutationsGroup = GroupSpec.make("mutations")
         name: Schema.String,
         schoolId: GenericId.GenericId("schools"),
         subject: Schema.String,
-        visibility: Schema.Literal("private", "public"),
+        visibility: schoolClassVisibilitySchema,
         year: Schema.String,
       }),
       returns: GenericId.GenericId("schoolClasses"),
@@ -34,35 +38,7 @@ const classesMutationsGroup = GroupSpec.make("mutations")
       name: "updateClassImage",
       args: Schema.Struct({
         classId: GenericId.GenericId("schoolClasses"),
-        image: Schema.Literal(
-          "retro",
-          "time",
-          "stars",
-          "chill",
-          "puzzle",
-          "line",
-          "shoot",
-          "virus",
-          "bacteria",
-          "cooking",
-          "disco",
-          "logic",
-          "ball",
-          "duck",
-          "music",
-          "nightly",
-          "writer",
-          "barbie",
-          "fun",
-          "lamp",
-          "lemon",
-          "nighty",
-          "rocket",
-          "sakura",
-          "sky",
-          "stamp",
-          "vintage"
-        ),
+        image: schoolClassImageSchema,
       }),
       returns: Schema.Null,
     })
@@ -72,7 +48,7 @@ const classesMutationsGroup = GroupSpec.make("mutations")
       name: "updateClassVisibility",
       args: Schema.Struct({
         classId: GenericId.GenericId("schoolClasses"),
-        visibility: Schema.Literal("private", "public"),
+        visibility: schoolClassVisibilitySchema,
       }),
       returns: Schema.Null,
     })

@@ -1,5 +1,16 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import { ClassActionError } from "@repo/backend/confect/modules/school/classErrors";
+import {
+  schoolClassEnrollMethodSchema,
+  schoolClassImageSchema,
+  schoolClassMemberRoleSchema,
+  schoolClassTeacherRoleSchema,
+  schoolClassVisibilitySchema,
+} from "@repo/backend/confect/modules/school/classes.tables";
+import {
+  schoolMemberRoleSchema,
+  schoolMemberStatusSchema,
+} from "@repo/backend/confect/modules/school/schools.tables";
 import { Schema } from "effect";
 
 const classesQueriesGroup = GroupSpec.make("queries")
@@ -18,7 +29,7 @@ const classesQueriesGroup = GroupSpec.make("queries")
         }),
         q: Schema.optional(Schema.String),
         schoolId: GenericId.GenericId("schools"),
-        visibility: Schema.optional(Schema.Literal("private", "public")),
+        visibility: Schema.optional(schoolClassVisibilitySchema),
       }),
       returns: Schema.Struct({
         continueCursor: Schema.String,
@@ -30,35 +41,7 @@ const classesQueriesGroup = GroupSpec.make("queries")
             archivedAt: Schema.optional(Schema.Number),
             archivedBy: Schema.optional(GenericId.GenericId("users")),
             createdBy: GenericId.GenericId("users"),
-            image: Schema.Literal(
-              "retro",
-              "time",
-              "stars",
-              "chill",
-              "puzzle",
-              "line",
-              "shoot",
-              "virus",
-              "bacteria",
-              "cooking",
-              "disco",
-              "logic",
-              "ball",
-              "duck",
-              "music",
-              "nightly",
-              "writer",
-              "barbie",
-              "fun",
-              "lamp",
-              "lemon",
-              "nighty",
-              "rocket",
-              "sakura",
-              "sky",
-              "stamp",
-              "vintage"
-            ),
+            image: schoolClassImageSchema,
             isArchived: Schema.Boolean,
             name: Schema.String,
             schoolId: GenericId.GenericId("schools"),
@@ -67,7 +50,7 @@ const classesQueriesGroup = GroupSpec.make("queries")
             teacherCount: Schema.Number,
             updatedAt: Schema.Number,
             updatedBy: Schema.optional(GenericId.GenericId("users")),
-            visibility: Schema.Literal("private", "public"),
+            visibility: schoolClassVisibilitySchema,
             year: Schema.String,
           })
         ),
@@ -95,35 +78,7 @@ const classesQueriesGroup = GroupSpec.make("queries")
             archivedAt: Schema.optional(Schema.Number),
             archivedBy: Schema.optional(GenericId.GenericId("users")),
             createdBy: GenericId.GenericId("users"),
-            image: Schema.Literal(
-              "retro",
-              "time",
-              "stars",
-              "chill",
-              "puzzle",
-              "line",
-              "shoot",
-              "virus",
-              "bacteria",
-              "cooking",
-              "disco",
-              "logic",
-              "ball",
-              "duck",
-              "music",
-              "nightly",
-              "writer",
-              "barbie",
-              "fun",
-              "lamp",
-              "lemon",
-              "nighty",
-              "rocket",
-              "sakura",
-              "sky",
-              "stamp",
-              "vintage"
-            ),
+            image: schoolClassImageSchema,
             isArchived: Schema.Boolean,
             name: Schema.String,
             schoolId: GenericId.GenericId("schools"),
@@ -132,7 +87,7 @@ const classesQueriesGroup = GroupSpec.make("queries")
             teacherCount: Schema.Number,
             updatedAt: Schema.Number,
             updatedBy: Schema.optional(GenericId.GenericId("users")),
-            visibility: Schema.Literal("private", "public"),
+            visibility: schoolClassVisibilitySchema,
             year: Schema.String,
           }),
           classMembership: Schema.Union(
@@ -142,25 +97,15 @@ const classesQueriesGroup = GroupSpec.make("queries")
               _id: GenericId.GenericId("schoolClassMembers"),
               addedBy: Schema.optional(GenericId.GenericId("users")),
               classId: GenericId.GenericId("schoolClasses"),
-              enrollMethod: Schema.optional(
-                Schema.Literal(
-                  "by_code",
-                  "teacher",
-                  "admin",
-                  "invite",
-                  "public"
-                )
-              ),
+              enrollMethod: schoolClassEnrollMethodSchema,
               inviteCodeId: Schema.optional(
                 GenericId.GenericId("schoolClassInviteCodes")
               ),
               removedAt: Schema.optional(Schema.Number),
               removedBy: Schema.optional(GenericId.GenericId("users")),
-              role: Schema.Literal("teacher", "student"),
+              role: schoolClassMemberRoleSchema,
               schoolId: GenericId.GenericId("schools"),
-              teacherRole: Schema.optional(
-                Schema.Literal("primary", "co-teacher", "assistant")
-              ),
+              teacherRole: schoolClassTeacherRoleSchema,
               updatedAt: Schema.Number,
               userId: GenericId.GenericId("users"),
             })
@@ -178,15 +123,9 @@ const classesQueriesGroup = GroupSpec.make("queries")
             joinedAt: Schema.Number,
             removedAt: Schema.optional(Schema.Number),
             removedBy: Schema.optional(GenericId.GenericId("users")),
-            role: Schema.Literal(
-              "admin",
-              "teacher",
-              "student",
-              "parent",
-              "demo"
-            ),
+            role: schoolMemberRoleSchema,
             schoolId: GenericId.GenericId("schools"),
-            status: Schema.Literal("active", "invited", "removed"),
+            status: schoolMemberStatusSchema,
             updatedAt: Schema.Number,
             userId: GenericId.GenericId("users"),
           }),
@@ -194,38 +133,10 @@ const classesQueriesGroup = GroupSpec.make("queries")
         Schema.Struct({
           class: Schema.Struct({
             _id: GenericId.GenericId("schoolClasses"),
-            image: Schema.Literal(
-              "retro",
-              "time",
-              "stars",
-              "chill",
-              "puzzle",
-              "line",
-              "shoot",
-              "virus",
-              "bacteria",
-              "cooking",
-              "disco",
-              "logic",
-              "ball",
-              "duck",
-              "music",
-              "nightly",
-              "writer",
-              "barbie",
-              "fun",
-              "lamp",
-              "lemon",
-              "nighty",
-              "rocket",
-              "sakura",
-              "sky",
-              "stamp",
-              "vintage"
-            ),
+            image: schoolClassImageSchema,
             name: Schema.String,
             subject: Schema.String,
-            visibility: Schema.Literal("private", "public"),
+            visibility: schoolClassVisibilitySchema,
             year: Schema.String,
           }),
           kind: Schema.Literal("joinRequired"),
@@ -241,15 +152,9 @@ const classesQueriesGroup = GroupSpec.make("queries")
             joinedAt: Schema.Number,
             removedAt: Schema.optional(Schema.Number),
             removedBy: Schema.optional(GenericId.GenericId("users")),
-            role: Schema.Literal(
-              "admin",
-              "teacher",
-              "student",
-              "parent",
-              "demo"
-            ),
+            role: schoolMemberRoleSchema,
             schoolId: GenericId.GenericId("schools"),
-            status: Schema.Literal("active", "invited", "removed"),
+            status: schoolMemberStatusSchema,
             updatedAt: Schema.Number,
             userId: GenericId.GenericId("users"),
           }),
@@ -281,19 +186,15 @@ const classesQueriesGroup = GroupSpec.make("queries")
             _id: GenericId.GenericId("schoolClassMembers"),
             addedBy: Schema.optional(GenericId.GenericId("users")),
             classId: GenericId.GenericId("schoolClasses"),
-            enrollMethod: Schema.optional(
-              Schema.Literal("by_code", "teacher", "admin", "invite", "public")
-            ),
+            enrollMethod: schoolClassEnrollMethodSchema,
             inviteCodeId: Schema.optional(
               GenericId.GenericId("schoolClassInviteCodes")
             ),
             removedAt: Schema.optional(Schema.Number),
             removedBy: Schema.optional(GenericId.GenericId("users")),
-            role: Schema.Literal("teacher", "student"),
+            role: schoolClassMemberRoleSchema,
             schoolId: GenericId.GenericId("schools"),
-            teacherRole: Schema.optional(
-              Schema.Literal("primary", "co-teacher", "assistant")
-            ),
+            teacherRole: schoolClassTeacherRoleSchema,
             updatedAt: Schema.Number,
             user: Schema.Struct({
               _id: GenericId.GenericId("users"),
@@ -331,7 +232,7 @@ const classesQueriesGroup = GroupSpec.make("queries")
           enabled: Schema.Boolean,
           expiresAt: Schema.optional(Schema.Number),
           maxUsage: Schema.optional(Schema.Number),
-          role: Schema.Literal("teacher", "student"),
+          role: schoolClassMemberRoleSchema,
           schoolId: GenericId.GenericId("schools"),
           updatedAt: Schema.Number,
           updatedBy: Schema.optional(GenericId.GenericId("users")),

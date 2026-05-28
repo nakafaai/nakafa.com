@@ -8,20 +8,40 @@ export const irtCalibrationStatusSchema = Schema.Literal(
   "calibrated"
 );
 
+export type IrtCalibrationStatus = Schema.Schema.Type<
+  typeof irtCalibrationStatusSchema
+>;
+
 export const irtCalibrationRunStatusSchema = Schema.Literal(
   "running",
   "completed",
   "failed"
 );
 
+export type IrtCalibrationRunStatus = Schema.Schema.Type<
+  typeof irtCalibrationRunStatusSchema
+>;
+
 export const irtScaleVersionStatusSchema = Schema.Literal(
   "provisional",
   "official"
 );
 
+export type IrtScaleVersionStatus = Schema.Schema.Type<
+  typeof irtScaleVersionStatusSchema
+>;
+
 export const irtScaleQualityStatusSchema = Schema.Literal("passed", "blocked");
 
+export type IrtScaleQualityStatus = Schema.Schema.Type<
+  typeof irtScaleQualityStatusSchema
+>;
+
 export const irtOperationalModelSchema = Schema.Literal("2pl");
+
+export type IrtOperationalModel = Schema.Schema.Type<
+  typeof irtOperationalModelSchema
+>;
 
 /** irtCalibrationQueue table definition. */
 export const IrtCalibrationQueue = Table.make(

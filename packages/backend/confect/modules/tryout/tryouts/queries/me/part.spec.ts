@@ -1,6 +1,17 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
+import {
+  ExerciseAnswers,
+  ExerciseAttempts,
+} from "@repo/backend/confect/modules/learning/exercises.tables";
+import { tryoutAccessCampaignKindSchema } from "@repo/backend/confect/modules/tryout/access.tables";
 import { tryoutProductSchema } from "@repo/backend/confect/modules/tryout/products";
+import {
+  tryoutAccessKindSchema,
+  tryoutPublicResultStatusSchema,
+  tryoutScoreStatusSchema,
+  tryoutStatusSchema,
+} from "@repo/backend/confect/modules/tryout/tryouts.tables";
 import { Schema } from "effect";
 
 const tryoutsQueriesMePartGroup = GroupSpec.make("part").addFunction(
@@ -38,54 +49,10 @@ const tryoutsQueriesMePartGroup = GroupSpec.make("part").addFunction(
         partAttempt: Schema.Union(
           Schema.Null,
           Schema.Struct({
-            answers: Schema.Array(
-              Schema.Struct({
-                _creationTime: Schema.Number,
-                _id: GenericId.GenericId("exerciseAnswers"),
-                answeredAt: Schema.Number,
-                attemptId: GenericId.GenericId("exerciseAttempts"),
-                exerciseNumber: Schema.Number,
-                isCorrect: Schema.Boolean,
-                questionId: Schema.optional(
-                  GenericId.GenericId("exerciseQuestions")
-                ),
-                selectedOptionId: Schema.optional(Schema.String),
-                textAnswer: Schema.optional(Schema.String),
-                timeSpent: Schema.Number,
-                updatedAt: Schema.Number,
-              })
-            ),
+            answers: Schema.Array(ExerciseAnswers.Doc),
             partIndex: Schema.Number,
             partKey: Schema.String,
-            setAttempt: Schema.Struct({
-              _creationTime: Schema.Number,
-              _id: GenericId.GenericId("exerciseAttempts"),
-              answeredCount: Schema.Number,
-              completedAt: Schema.Union(Schema.Number, Schema.Null),
-              correctAnswers: Schema.Number,
-              endReason: Schema.Union(
-                Schema.Literal("submitted", "time-expired"),
-                Schema.Null
-              ),
-              exerciseNumber: Schema.optional(Schema.Number),
-              lastActivityAt: Schema.Number,
-              mode: Schema.Literal("practice", "simulation"),
-              origin: Schema.Literal("standalone", "tryout"),
-              perQuestionTimeLimit: Schema.optional(Schema.Number),
-              schedulerId: Schema.optional(
-                GenericId.GenericId("_scheduled_functions")
-              ),
-              scope: Schema.Literal("set", "single"),
-              scorePercentage: Schema.Number,
-              slug: Schema.String,
-              startedAt: Schema.Number,
-              status: Schema.Literal("in-progress", "completed", "expired"),
-              timeLimit: Schema.Number,
-              totalExercises: Schema.Number,
-              totalTime: Schema.Number,
-              updatedAt: Schema.Number,
-              userId: GenericId.GenericId("users"),
-            }),
+            setAttempt: ExerciseAttempts.Doc,
           })
         ),
         partScore: Schema.Union(
@@ -103,14 +70,12 @@ const tryoutsQueriesMePartGroup = GroupSpec.make("part").addFunction(
           accessCampaignId: Schema.optional(
             GenericId.GenericId("tryoutAccessCampaigns")
           ),
-          accessCampaignKind: Schema.optional(
-            Schema.Literal("competition", "access-pass")
-          ),
+          accessCampaignKind: Schema.optional(tryoutAccessCampaignKindSchema),
           accessEndsAt: Schema.optional(Schema.Number),
           accessGrantId: Schema.optional(
             GenericId.GenericId("tryoutAccessGrants")
           ),
-          accessKind: Schema.optional(Schema.Literal("event", "subscription")),
+          accessKind: Schema.optional(tryoutAccessKindSchema),
           attemptNumber: Schema.Number,
           completedAt: Schema.Union(Schema.Number, Schema.Null),
           completedPartIndices: Schema.Array(Schema.Number),
@@ -130,15 +95,11 @@ const tryoutsQueriesMePartGroup = GroupSpec.make("part").addFunction(
               setId: GenericId.GenericId("exerciseSets"),
             })
           ),
-          publicResultStatus: Schema.Literal(
-            "estimated",
-            "verified-irt",
-            "final-event"
-          ),
+          publicResultStatus: tryoutPublicResultStatusSchema,
           scaleVersionId: GenericId.GenericId("irtScaleVersions"),
-          scoreStatus: Schema.Literal("provisional", "official"),
+          scoreStatus: tryoutScoreStatusSchema,
           startedAt: Schema.Number,
-          status: Schema.Literal("in-progress", "completed", "expired"),
+          status: tryoutStatusSchema,
           theta: Schema.Number,
           thetaSE: Schema.Number,
           totalCorrect: Schema.Number,

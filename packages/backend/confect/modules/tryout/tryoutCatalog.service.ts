@@ -5,7 +5,10 @@ import { getOptionalAppUser } from "@repo/backend/confect/modules/identity/auth.
 import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import { loadValidatedTryoutPartSets } from "@repo/backend/confect/modules/tryout/tryoutParts.service";
-import type { Tryouts } from "@repo/backend/confect/modules/tryout/tryouts.tables";
+import type {
+  TryoutStatus,
+  Tryouts,
+} from "@repo/backend/confect/modules/tryout/tryouts.tables";
 import { Effect, Option } from "effect";
 
 const MAX_TRYOUT_CATALOG_PAGE_SIZE = 25;
@@ -25,7 +28,7 @@ function buildActiveTryoutCatalogEntry(args: {
   readonly latestAttempt: {
     readonly expiresAt: number;
     readonly lastActivityAt: number;
-    readonly status: "completed" | "expired" | "in-progress";
+    readonly status: TryoutStatus;
   } | null;
 }) {
   return {

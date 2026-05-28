@@ -6,6 +6,7 @@ import {
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { requireAssessment } from "@repo/backend/confect/modules/school/assessments.shared";
 import { requirePermission } from "@repo/backend/confect/modules/school/classAccess.service";
+import type { OrderDirection } from "@repo/backend/confect/modules/school/order.schemas";
 import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
 import { Clock, Effect, Option } from "effect";
 
@@ -13,7 +14,7 @@ import { Clock, Effect, Option } from "effect";
 export const reorderAssessment = Effect.fn("assessments.reorderAssessment")(
   function* (args: {
     readonly assessmentId: Id<"schoolAssessments">;
-    readonly direction: "down" | "up";
+    readonly direction: OrderDirection;
     readonly schoolId: Id<"schools">;
   }) {
     const writer = yield* DatabaseWriter;
@@ -55,7 +56,7 @@ export const reorderAssessment = Effect.fn("assessments.reorderAssessment")(
 /** Finds the adjacent class assessment for reordering. */
 const findAdjacentClassAssessment = Effect.fn(
   "assessments.findAdjacentClassAssessment"
-)(function* (assessment: Doc<"schoolAssessments">, direction: "down" | "up") {
+)(function* (assessment: Doc<"schoolAssessments">, direction: OrderDirection) {
   if (!assessment.classId) {
     return null;
   }
@@ -93,7 +94,7 @@ const findAdjacentClassAssessment = Effect.fn(
 /** Finds the adjacent school assessment for reordering. */
 const findAdjacentSchoolAssessment = Effect.fn(
   "assessments.findAdjacentSchoolAssessment"
-)(function* (assessment: Doc<"schoolAssessments">, direction: "down" | "up") {
+)(function* (assessment: Doc<"schoolAssessments">, direction: OrderDirection) {
   const reader = yield* DatabaseReader;
 
   if (direction === "up") {
