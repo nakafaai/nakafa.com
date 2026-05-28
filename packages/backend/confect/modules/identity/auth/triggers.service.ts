@@ -1,4 +1,3 @@
-import { Ref } from "@confect/core";
 import type { createClient } from "@convex-dev/better-auth";
 import type { Doc } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
@@ -16,6 +15,7 @@ import type { authTriggerUserSchema } from "@repo/backend/confect/modules/identi
 import { captureProductEvent } from "@repo/backend/confect/modules/integrations/analytics";
 import { posthog } from "@repo/backend/confect/modules/integrations/posthog";
 import type { ConvexDataModel } from "@repo/backend/confect/modules/shared/convexContext";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Clock, Duration, Effect, Option } from "effect";
 
 type AuthClientConfig = Extract<
@@ -37,13 +37,13 @@ const cleanupCustomerRef =
   refs.internal.customers.actions.internalFunctions.cleanupUserData;
 const cleanupUserRef = refs.internal.auth.cleanup.cleanupDeletedUser;
 const sendWelcomeEmailRef = refs.internal.emails.mutations.sendWelcomeEmail;
-const createSyncedUserRef = Ref.getFunctionReference(
+const createSyncedUserRef = toConvexReference(
   refs.internal.auth.sync.createSyncedUser
 );
-const updateSyncedUserRef = Ref.getFunctionReference(
+const updateSyncedUserRef = toConvexReference(
   refs.internal.auth.sync.updateSyncedUser
 );
-const cleanupSyncedUserRef = Ref.getFunctionReference(
+const cleanupSyncedUserRef = toConvexReference(
   refs.internal.auth.sync.cleanupSyncedUser
 );
 

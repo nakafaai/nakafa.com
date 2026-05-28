@@ -1,5 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
-import type { CalibrateSetTwoPLWorkflow } from "@repo/backend/confect/modules/tryout/irt/workflows";
+import type { CalibrateSetTwoPLWorkflow } from "@repo/backend/confect/modules/tryout/irt/contracts";
 import {
   irtCalibrationStatusSchema,
   irtOperationalModelSchema,

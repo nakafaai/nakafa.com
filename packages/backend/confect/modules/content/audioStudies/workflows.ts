@@ -1,57 +1,20 @@
-import type { WorkflowArgs, WorkflowId } from "@convex-dev/workflow";
-import { vWorkflowId } from "@convex-dev/workflow";
-import { vResultValidator } from "@convex-dev/workpool";
 import refs from "@repo/backend/confect/_generated/refs";
+import {
+  generateAudioForQueueItemArgs,
+  handleWorkflowCompleteArgs,
+} from "@repo/backend/confect/modules/content/audioStudies/contracts";
 import { workflow } from "@repo/backend/confect/modules/operations/workflow";
 import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
-import type { RegisteredMutation } from "convex/server";
-import { type ObjectType, v } from "convex/values";
+import { v } from "convex/values";
 import { Effect } from "effect";
-
-/**
- * Workflow component validator for one queued audio generation job.
- *
- * @see https://confect.dev/server/plain-convex-functions
- * @see https://www.convex.dev/components/workflow
- */
-export const generateAudioForQueueItemWorkflowArgs = {
-  queueItemId: v.id("audioGenerationQueue"),
-};
-
-/** Workflow component return validator for one queued audio generation job. */
-export const generateAudioForQueueItemWorkflowReturns = v.null();
-
-/** Workflow completion callback args required by the Convex Workflow component. */
-export const handleWorkflowCompleteArgs = {
-  context: v.object({ queueItemId: v.id("audioGenerationQueue") }),
-  result: vResultValidator,
-  workflowId: vWorkflowId,
-};
-
-/** Workflow completion callback return validator. */
-export const handleWorkflowCompleteReturns = v.null();
-
-/** Registered native Workflow function type consumed by Confect refs. */
-export type GenerateAudioForQueueItemWorkflow = RegisteredMutation<
-  "internal",
-  WorkflowArgs<typeof generateAudioForQueueItemWorkflowArgs>,
-  WorkflowId
->;
-
-/** Registered native Workflow completion callback consumed by Confect refs. */
-export type HandleAudioWorkflowComplete = RegisteredMutation<
-  "internal",
-  ObjectType<typeof handleWorkflowCompleteArgs>,
-  null
->;
 
 /**
  * Generates audio for a queue item with idempotent workflow steps.
  */
 export const generateAudioForQueueItem = workflow.define({
-  args: generateAudioForQueueItemWorkflowArgs,
-  returns: generateAudioForQueueItemWorkflowReturns,
+  args: generateAudioForQueueItemArgs,
+  returns: v.null(),
   handler: async (step, args) => {
     await Effect.runPromise(
       Effect.logInfo("Audio workflow started", {
@@ -175,7 +138,7 @@ export const generateAudioForQueueItem = workflow.define({
  */
 export const handleWorkflowComplete = internalMutation({
   args: handleWorkflowCompleteArgs,
-  returns: handleWorkflowCompleteReturns,
+  returns: v.null(),
   handler: async (ctx, args) => {
     if (args.result.kind === "success") {
       await Effect.runPromise(

@@ -1,4 +1,3 @@
-import { Ref } from "@confect/core";
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -19,6 +18,7 @@ import type {
   ExerciseAttemptScope,
 } from "@repo/backend/confect/modules/learning/exercises.tables";
 import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { irtCalibrationSyncWorkpool } from "@repo/backend/confect/modules/tryout/irtWorkpool";
 import { finalizeTryoutAttempt } from "@repo/backend/confect/modules/tryout/tryoutFinalizeAttempt.service";
 import { finalizeTryoutPartAttempt } from "@repo/backend/confect/modules/tryout/tryoutFinalizePart.service";
@@ -40,7 +40,7 @@ function scheduleCalibrationSyncIfReady(
   return Effect.promise(() =>
     irtCalibrationSyncWorkpool.enqueueMutation(
       ctx,
-      Ref.getFunctionReference(
+      toConvexReference(
         refs.internal.irt.mutations.internalFunctions.responses
           .syncCalibrationResponsesForAttempt
       ),

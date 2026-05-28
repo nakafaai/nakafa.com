@@ -12,12 +12,13 @@ import {
 } from "@repo/backend/confect/modules/identity/auth/triggers.service";
 import { components } from "@repo/backend/confect/modules/integrations/convexComponents";
 import type { ConvexDataModel } from "@repo/backend/confect/modules/shared/convexContext";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Effect } from "effect";
 
 const authFunctions = {
-  onCreate: Ref.getFunctionReference(Ref.make("auth", authOnCreateSpec)),
-  onDelete: Ref.getFunctionReference(Ref.make("auth", authOnDeleteSpec)),
-  onUpdate: Ref.getFunctionReference(Ref.make("auth", authOnUpdateSpec)),
+  onCreate: toConvexReference(Ref.make("auth", authOnCreateSpec)),
+  onDelete: toConvexReference(Ref.make("auth", authOnDeleteSpec)),
+  onUpdate: toConvexReference(Ref.make("auth", authOnUpdateSpec)),
 };
 
 /** Better Auth component client with app-user synchronization triggers. */

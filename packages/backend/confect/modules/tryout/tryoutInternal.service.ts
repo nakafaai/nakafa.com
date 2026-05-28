@@ -1,4 +1,3 @@
-import { Ref } from "@confect/core";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -6,6 +5,7 @@ import {
   MutationCtx,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   expireTryoutAttempt,
   syncTryoutAttemptExpiry,
@@ -150,7 +150,7 @@ export const promoteProvisionalTryoutScores = Effect.fn(
     yield* Effect.promise(() =>
       tryoutLeaderboardWorkpool.enqueueMutation(
         ctx,
-        Ref.getFunctionReference(
+        toConvexReference(
           refs.internal.tryouts.mutations.internalFunctions.leaderboard
             .updateLeaderboard
         ),

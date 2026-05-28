@@ -1,8 +1,8 @@
-import { Ref } from "@confect/core";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import { syncTryoutAttemptExpiry } from "@repo/backend/confect/modules/tryout/tryoutExpiry.service";
 import { syncTryoutAttemptAggregates } from "@repo/backend/confect/modules/tryout/tryoutFinalizeAggregates.service";
@@ -172,7 +172,7 @@ export const finalizeTryoutAttempt = Effect.fn(
     yield* Effect.promise(() =>
       tryoutLeaderboardWorkpool.enqueueMutation(
         args.ctx,
-        Ref.getFunctionReference(
+        toConvexReference(
           refs.internal.tryouts.mutations.internalFunctions.leaderboard
             .updateLeaderboard
         ),

@@ -1,4 +1,3 @@
-import { Ref } from "@confect/core";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -7,6 +6,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { workflow } from "@repo/backend/confect/modules/operations/workflow";
 import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { IrtError } from "@repo/backend/confect/modules/tryout/irt.errors";
 import {
   IRT_OPERATIONAL_MODEL,
@@ -70,7 +70,7 @@ export const startCalibrationRunWorkflow = Effect.fn(
   yield* Effect.promise(() =>
     workflow.start(
       ctx,
-      Ref.getFunctionReference(refs.internal.irt.workflows.calibrateSetTwoPL),
+      toConvexReference(refs.internal.irt.workflows.calibrateSetTwoPL),
       {
         calibrationRunId,
         setId,

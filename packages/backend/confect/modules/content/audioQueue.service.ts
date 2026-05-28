@@ -1,4 +1,3 @@
-import { Ref } from "@confect/core";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -13,6 +12,8 @@ import {
 import { readAudioGenerationEnvironment } from "@repo/backend/confect/modules/content/audioGeneration.env";
 import { SUPPORTED_CONTENT_LOCALES } from "@repo/backend/confect/modules/content/content.schemas";
 import { workflow } from "@repo/backend/confect/modules/operations/workflow";
+import { toWorkflowCallbackReference } from "@repo/backend/confect/modules/operations/workflowReferences";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Clock, Effect, Option, Schema } from "effect";
 
 const AUDIO_QUEUE_PER_SLUG_LIMIT = SUPPORTED_CONTENT_LOCALES.length + 1;
@@ -203,17 +204,19 @@ export const startWorkflowsForPendingItems = Effect.fn(
 
   let started = 0;
   for (const item of contentItems) {
+    const workflowContext = { queueItemId: item._id };
     yield* Effect.promise(() =>
       workflow.start(
         ctx,
-        Ref.getFunctionReference(
+        toConvexReference(
           refs.internal.audioStudies.workflows.generateAudioForQueueItem
         ),
         { queueItemId: item._id },
         {
-          context: { queueItemId: item._id },
-          onComplete: Ref.getFunctionReference(
-            refs.internal.audioStudies.workflows.handleWorkflowComplete
+          context: workflowContext,
+          onComplete: toWorkflowCallbackReference(
+            refs.internal.audioStudies.workflows.handleWorkflowComplete,
+            workflowContext
           ),
         }
       )

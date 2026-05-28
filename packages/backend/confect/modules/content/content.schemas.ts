@@ -1,18 +1,12 @@
 import { GenericId } from "@confect/core";
 import { NAKAFA_CONTENT_SECTIONS } from "@repo/backend/confect/modules/content/constants";
-import { ARTICLE_CATEGORIES } from "@repo/contents/_types/articles/category";
-import { EXERCISES_CATEGORIES } from "@repo/contents/_types/exercises/category";
-import { EXERCISES_MATERIALS } from "@repo/contents/_types/exercises/material";
-import { EXERCISES_TYPES } from "@repo/contents/_types/exercises/type";
-import { SUBJECT_CATEGORIES } from "@repo/contents/_types/subject/category";
-import {
-  NON_NUMERIC_GRADES,
-  NUMERIC_GRADES,
-} from "@repo/contents/_types/subject/grade";
-import {
-  BACHELOR_MATERIALS,
-  HIGH_SCHOOL_MATERIALS,
-} from "@repo/contents/_types/subject/material";
+import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
+import { ExercisesCategorySchema } from "@repo/contents/_types/exercises/category";
+import { ExercisesMaterialSchema } from "@repo/contents/_types/exercises/material";
+import { ExercisesTypeSchema } from "@repo/contents/_types/exercises/type";
+import { SubjectCategorySchema } from "@repo/contents/_types/subject/category";
+import { GradeSchema } from "@repo/contents/_types/subject/grade";
+import { MaterialSchema } from "@repo/contents/_types/subject/material";
 import { locales } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
@@ -68,39 +62,33 @@ export const contentViewRefSchema = Schema.Union(
 
 export type ContentViewRef = Schema.Schema.Type<typeof contentViewRefSchema>;
 
-export const articleCategorySchema = Schema.Literal(...ARTICLE_CATEGORIES);
+export const articleCategorySchema = ArticleCategorySchema;
 
 export type ArticleCategory = Schema.Schema.Type<typeof articleCategorySchema>;
 
-export const subjectCategorySchema = Schema.Literal(...SUBJECT_CATEGORIES);
+export const subjectCategorySchema = SubjectCategorySchema;
 
 export type SubjectCategory = Schema.Schema.Type<typeof subjectCategorySchema>;
 
-export const gradeSchema = Schema.Literal(
-  ...NUMERIC_GRADES,
-  ...NON_NUMERIC_GRADES
-);
+export const gradeSchema = GradeSchema;
 
 export type Grade = Schema.Schema.Type<typeof gradeSchema>;
 
-export const materialSchema = Schema.Literal(
-  ...HIGH_SCHOOL_MATERIALS,
-  ...BACHELOR_MATERIALS
-);
+export const materialSchema = MaterialSchema;
 
 export type Material = Schema.Schema.Type<typeof materialSchema>;
 
-export const exercisesCategorySchema = Schema.Literal(...EXERCISES_CATEGORIES);
+export const exercisesCategorySchema = ExercisesCategorySchema;
 
 export type ExercisesCategory = Schema.Schema.Type<
   typeof exercisesCategorySchema
 >;
 
-export const exercisesTypeSchema = Schema.Literal(...EXERCISES_TYPES);
+export const exercisesTypeSchema = ExercisesTypeSchema;
 
 export type ExercisesType = Schema.Schema.Type<typeof exercisesTypeSchema>;
 
-export const exercisesMaterialSchema = Schema.Literal(...EXERCISES_MATERIALS);
+export const exercisesMaterialSchema = ExercisesMaterialSchema;
 
 export type ExercisesMaterial = Schema.Schema.Type<
   typeof exercisesMaterialSchema

@@ -1,4 +1,3 @@
-import { Ref } from "@confect/core";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -7,6 +6,7 @@ import {
   MutationCtx,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { IrtError } from "@repo/backend/confect/modules/tryout/irt.errors";
 import type {
   IrtCalibrationStatus,
@@ -222,7 +222,7 @@ export const completeCalibrationRun = Effect.fn(
     yield* Effect.promise(() =>
       irtScalePublicationQueueWorkpool.enqueueMutation(
         ctx,
-        Ref.getFunctionReference(
+        toConvexReference(
           refs.internal.irt.mutations.internalFunctions.queue
             .enqueueScalePublication
         ),

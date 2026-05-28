@@ -9,7 +9,7 @@ import {
 import type {
   GenerateAudioForQueueItemWorkflow,
   HandleAudioWorkflowComplete,
-} from "@repo/backend/confect/modules/content/audioStudies/workflows";
+} from "@repo/backend/confect/modules/content/audioStudies/contracts";
 import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
 import { Schema } from "effect";
 
