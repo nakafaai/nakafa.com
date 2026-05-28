@@ -1,11 +1,11 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
 import {
-  getUserByAuthId as identityUsers_getUserByAuthId,
-  getUserById as identityUsers_getUserById,
-  syncUserInfoForChat as identityUsers_syncUserInfoForChat,
-  updateUserName as identityUsers_updateUserName,
-  updateUserRole as identityUsers_updateUserRole,
+  getUserByAuthId,
+  getUserById,
+  syncUserInfoForChat,
+  updateUserName,
+  updateUserRole,
 } from "@repo/backend/confect/modules/identity/users.service";
 import { Effect, Layer } from "effect";
 
@@ -14,7 +14,7 @@ const users_mutations_updateUserRoleImpl = FunctionImpl.make(
   "users.mutations",
   "updateUserRole",
   (args) =>
-    identityUsers_updateUserRole(args).pipe(
+    updateUserRole(args).pipe(
       Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
       Effect.orDie
     )
@@ -25,7 +25,7 @@ const users_mutations_updateUserNameImpl = FunctionImpl.make(
   "users.mutations",
   "updateUserName",
   (args) =>
-    identityUsers_updateUserName(args).pipe(
+    updateUserName(args).pipe(
       Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
       Effect.orDie
     )
@@ -36,7 +36,7 @@ const users_mutations_syncUserInfoForChatImpl = FunctionImpl.make(
   "users.mutations",
   "syncUserInfoForChat",
   (_args) =>
-    identityUsers_syncUserInfoForChat().pipe(
+    syncUserInfoForChat().pipe(
       Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
       Effect.orDie
     )
@@ -46,14 +46,14 @@ const users_queries_getUserByIdImpl = FunctionImpl.make(
   api,
   "users.queries",
   "getUserById",
-  (args) => identityUsers_getUserById(args).pipe(Effect.orDie)
+  (args) => getUserById(args).pipe(Effect.orDie)
 );
 
 const users_queries_getUserByAuthIdImpl = FunctionImpl.make(
   api,
   "users.queries",
   "getUserByAuthId",
-  (args) => identityUsers_getUserByAuthId(args).pipe(Effect.orDie)
+  (args) => getUserByAuthId(args).pipe(Effect.orDie)
 );
 
 const usersMutationsImpl = GroupImpl.make(api, "users.mutations")

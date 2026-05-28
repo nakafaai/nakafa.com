@@ -1,35 +1,35 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import { calibrateSetTwoPL } from "@repo/backend/confect/modules/tryout/irt/workflows";
+import { calibrateSetTwoPLWorkflow } from "@repo/backend/confect/modules/tryout/irt/workflows";
 import {
-  rebuildCalibrationCacheStatsForSet as tryoutIrtCache_rebuildCalibrationCacheStatsForSet,
-  trimCalibrationCacheForSet as tryoutIrtCache_trimCalibrationCacheForSet,
+  rebuildCalibrationCacheStatsForSet,
+  trimCalibrationCacheForSet,
 } from "@repo/backend/confect/modules/tryout/irtCache.service";
-import { calibrateSetTwoPL as tryoutIrtCalibration_calibrateSetTwoPL } from "@repo/backend/confect/modules/tryout/irtCalibration.actions";
+import { calibrateSetTwoPL } from "@repo/backend/confect/modules/tryout/irtCalibration.actions";
 import {
-  getCalibrationCacheIntegrity as tryoutIrtQueries_getCalibrationCacheIntegrity,
-  getCalibrationQuestionsForSet as tryoutIrtQueries_getCalibrationQuestionsForSet,
-  getCalibrationQueueAttemptIntegrity as tryoutIrtQueries_getCalibrationQueueAttemptIntegrity,
-  getCalibrationQueueEntryIntegrity as tryoutIrtQueries_getCalibrationQueueEntryIntegrity,
-  getCalibrationResponsesPageForSet as tryoutIrtQueries_getCalibrationResponsesPageForSet,
-  getScaleQualityIntegrity as tryoutIrtQueries_getScaleQualityIntegrity,
+  getCalibrationCacheIntegrity,
+  getCalibrationQuestionsForSet,
+  getCalibrationQueueAttemptIntegrity,
+  getCalibrationQueueEntryIntegrity,
+  getCalibrationResponsesPageForSet,
+  getScaleQualityIntegrity,
 } from "@repo/backend/confect/modules/tryout/irtQueries.service";
 import {
-  cleanupCalibrationQueueEntries as tryoutIrtQueue_cleanupCalibrationQueueEntries,
-  cleanupScalePublicationQueueEntries as tryoutIrtQueue_cleanupScalePublicationQueueEntries,
-  drainCalibrationQueue as tryoutIrtQueue_drainCalibrationQueue,
-  enqueueScalePublication as tryoutIrtQueue_enqueueScalePublication,
+  cleanupCalibrationQueueEntries,
+  cleanupScalePublicationQueueEntries,
+  drainCalibrationQueue,
+  enqueueScalePublication,
 } from "@repo/backend/confect/modules/tryout/irtQueue.service";
-import { syncCalibrationResponsesForAttempt as tryoutIrtResponses_syncCalibrationResponsesForAttempt } from "@repo/backend/confect/modules/tryout/irtResponses.service";
+import { syncCalibrationResponsesForAttempt } from "@repo/backend/confect/modules/tryout/irtResponses.service";
 import {
-  completeCalibrationRun as tryoutIrtRuns_completeCalibrationRun,
-  failCalibrationRun as tryoutIrtRuns_failCalibrationRun,
+  completeCalibrationRun,
+  failCalibrationRun,
 } from "@repo/backend/confect/modules/tryout/irtRuns.service";
 import {
-  drainScalePublicationQueue as tryoutIrtScales_drainScalePublicationQueue,
-  drainScaleQualityRefreshQueue as tryoutIrtScales_drainScaleQualityRefreshQueue,
-  rebuildScaleQualityChecksPage as tryoutIrtScales_rebuildScaleQualityChecksPage,
-  refreshScaleQualityCheck as tryoutIrtScales_refreshScaleQualityCheck,
+  drainScalePublicationQueue,
+  drainScaleQualityRefreshQueue,
+  rebuildScaleQualityChecksPage,
+  refreshScaleQualityCheck,
 } from "@repo/backend/confect/modules/tryout/irtScales.service";
 import { Effect, Layer } from "effect";
 
@@ -37,7 +37,7 @@ const irt_workflows_calibrateSetTwoPLImpl = FunctionImpl.make(
   api,
   "irt.workflows",
   "calibrateSetTwoPL",
-  calibrateSetTwoPL
+  calibrateSetTwoPLWorkflow
 );
 
 const irt_actions_internal_calibration_calibrateSetTwoPLImpl =
@@ -46,7 +46,7 @@ const irt_actions_internal_calibration_calibrateSetTwoPLImpl =
     "irt.actions.internalFunctions.calibration",
     "calibrateSetTwoPL",
     (args) =>
-      tryoutIrtCalibration_calibrateSetTwoPL(args).pipe(
+      calibrateSetTwoPL(args).pipe(
         Effect.catchTag("IrtError", (error) => Effect.die(error)),
         Effect.orDie
       )
@@ -58,7 +58,7 @@ const irt_queries_internal_calibration_getCalibrationQuestionsForSetImpl =
     "irt.queries.internalFunctions.calibration",
     "getCalibrationQuestionsForSet",
     (args) =>
-      tryoutIrtQueries_getCalibrationQuestionsForSet(args).pipe(
+      getCalibrationQuestionsForSet(args).pipe(
         Effect.catchTag("IrtError", (error) => Effect.die(error)),
         Effect.orDie
       )
@@ -70,7 +70,7 @@ const irt_queries_internal_calibration_getCalibrationResponsesPageForSetImpl =
     "irt.queries.internalFunctions.calibration",
     "getCalibrationResponsesPageForSet",
     (args) =>
-      tryoutIrtQueries_getCalibrationResponsesPageForSet(args).pipe(
+      getCalibrationResponsesPageForSet(args).pipe(
         Effect.catchTag("IrtError", (error) => Effect.die(error)),
         Effect.orDie
       )
@@ -81,8 +81,7 @@ const irt_mutations_internal_cache_rebuildCalibrationCacheStatsForSetImpl =
     api,
     "irt.mutations.internalFunctions.cache",
     "rebuildCalibrationCacheStatsForSet",
-    (args) =>
-      tryoutIrtCache_rebuildCalibrationCacheStatsForSet(args).pipe(Effect.orDie)
+    (args) => rebuildCalibrationCacheStatsForSet(args).pipe(Effect.orDie)
   );
 
 const irt_mutations_internal_cache_trimCalibrationCacheForSetImpl =
@@ -90,7 +89,7 @@ const irt_mutations_internal_cache_trimCalibrationCacheForSetImpl =
     api,
     "irt.mutations.internalFunctions.cache",
     "trimCalibrationCacheForSet",
-    (args) => tryoutIrtCache_trimCalibrationCacheForSet(args).pipe(Effect.orDie)
+    (args) => trimCalibrationCacheForSet(args).pipe(Effect.orDie)
   );
 
 const irt_mutations_internal_responses_syncCalibrationResponsesForAttemptImpl =
@@ -99,7 +98,7 @@ const irt_mutations_internal_responses_syncCalibrationResponsesForAttemptImpl =
     "irt.mutations.internalFunctions.responses",
     "syncCalibrationResponsesForAttempt",
     (args) =>
-      tryoutIrtResponses_syncCalibrationResponsesForAttempt(args).pipe(
+      syncCalibrationResponsesForAttempt(args).pipe(
         Effect.catchTag("IrtError", (error) => Effect.die(error)),
         Effect.orDie
       )
@@ -110,8 +109,7 @@ const irt_mutations_internal_queue_cleanupCalibrationQueueEntriesImpl =
     api,
     "irt.mutations.internalFunctions.queue",
     "cleanupCalibrationQueueEntries",
-    (args) =>
-      tryoutIrtQueue_cleanupCalibrationQueueEntries(args).pipe(Effect.orDie)
+    (args) => cleanupCalibrationQueueEntries(args).pipe(Effect.orDie)
   );
 
 const irt_mutations_internal_queue_cleanupScalePublicationQueueEntriesImpl =
@@ -119,10 +117,7 @@ const irt_mutations_internal_queue_cleanupScalePublicationQueueEntriesImpl =
     api,
     "irt.mutations.internalFunctions.queue",
     "cleanupScalePublicationQueueEntries",
-    (args) =>
-      tryoutIrtQueue_cleanupScalePublicationQueueEntries(args).pipe(
-        Effect.orDie
-      )
+    (args) => cleanupScalePublicationQueueEntries(args).pipe(Effect.orDie)
   );
 
 const irt_mutations_internal_queue_drainCalibrationQueueImpl =
@@ -131,7 +126,7 @@ const irt_mutations_internal_queue_drainCalibrationQueueImpl =
     "irt.mutations.internalFunctions.queue",
     "drainCalibrationQueue",
     (_args) =>
-      tryoutIrtQueue_drainCalibrationQueue().pipe(
+      drainCalibrationQueue().pipe(
         Effect.catchTag("IrtError", (error) => Effect.die(error)),
         Effect.orDie
       )
@@ -142,7 +137,7 @@ const irt_mutations_internal_queue_enqueueScalePublicationImpl =
     api,
     "irt.mutations.internalFunctions.queue",
     "enqueueScalePublication",
-    (args) => tryoutIrtQueue_enqueueScalePublication(args).pipe(Effect.orDie)
+    (args) => enqueueScalePublication(args).pipe(Effect.orDie)
   );
 
 const irt_mutations_internal_runs_completeCalibrationRunImpl =
@@ -151,7 +146,7 @@ const irt_mutations_internal_runs_completeCalibrationRunImpl =
     "irt.mutations.internalFunctions.runs",
     "completeCalibrationRun",
     (args) =>
-      tryoutIrtRuns_completeCalibrationRun(args).pipe(
+      completeCalibrationRun(args).pipe(
         Effect.catchTag("IrtError", (error) => Effect.die(error)),
         Effect.orDie
       )
@@ -162,7 +157,7 @@ const irt_mutations_internal_runs_failCalibrationRunImpl = FunctionImpl.make(
   "irt.mutations.internalFunctions.runs",
   "failCalibrationRun",
   (args) =>
-    tryoutIrtRuns_failCalibrationRun(args).pipe(
+    failCalibrationRun(args).pipe(
       Effect.catchTag("IrtError", (error) => Effect.die(error)),
       Effect.orDie
     )
@@ -174,7 +169,7 @@ const irt_mutations_internal_scales_drainScalePublicationQueueImpl =
     "irt.mutations.internalFunctions.scales",
     "drainScalePublicationQueue",
     (_args) =>
-      tryoutIrtScales_drainScalePublicationQueue().pipe(
+      drainScalePublicationQueue().pipe(
         Effect.catchTag("IrtError", (error) => Effect.die(error)),
         Effect.orDie
       )
@@ -185,8 +180,7 @@ const irt_mutations_internal_scales_drainScaleQualityRefreshQueueImpl =
     api,
     "irt.mutations.internalFunctions.scales",
     "drainScaleQualityRefreshQueue",
-    (_args) =>
-      tryoutIrtScales_drainScaleQualityRefreshQueue().pipe(Effect.orDie)
+    (_args) => drainScaleQualityRefreshQueue().pipe(Effect.orDie)
   );
 
 const irt_mutations_internal_scales_rebuildScaleQualityChecksPageImpl =
@@ -194,8 +188,7 @@ const irt_mutations_internal_scales_rebuildScaleQualityChecksPageImpl =
     api,
     "irt.mutations.internalFunctions.scales",
     "rebuildScaleQualityChecksPage",
-    (args) =>
-      tryoutIrtScales_rebuildScaleQualityChecksPage(args).pipe(Effect.orDie)
+    (args) => rebuildScaleQualityChecksPage(args).pipe(Effect.orDie)
   );
 
 const irt_mutations_internal_scales_refreshScaleQualityCheckImpl =
@@ -203,7 +196,7 @@ const irt_mutations_internal_scales_refreshScaleQualityCheckImpl =
     api,
     "irt.mutations.internalFunctions.scales",
     "refreshScaleQualityCheck",
-    (args) => tryoutIrtScales_refreshScaleQualityCheck(args).pipe(Effect.orDie)
+    (args) => refreshScaleQualityCheck(args).pipe(Effect.orDie)
   );
 
 const irt_queries_internal_maintenance_getCalibrationCacheIntegrityImpl =
@@ -211,8 +204,7 @@ const irt_queries_internal_maintenance_getCalibrationCacheIntegrityImpl =
     api,
     "irt.queries.internalFunctions.maintenance",
     "getCalibrationCacheIntegrity",
-    (args) =>
-      tryoutIrtQueries_getCalibrationCacheIntegrity(args).pipe(Effect.orDie)
+    (args) => getCalibrationCacheIntegrity(args).pipe(Effect.orDie)
   );
 
 const irt_queries_internal_maintenance_getScaleQualityIntegrityImpl =
@@ -220,7 +212,7 @@ const irt_queries_internal_maintenance_getScaleQualityIntegrityImpl =
     api,
     "irt.queries.internalFunctions.maintenance",
     "getScaleQualityIntegrity",
-    (args) => tryoutIrtQueries_getScaleQualityIntegrity(args).pipe(Effect.orDie)
+    (args) => getScaleQualityIntegrity(args).pipe(Effect.orDie)
   );
 
 const irt_queries_internal_maintenance_getCalibrationQueueAttemptIntegrityImpl =
@@ -228,10 +220,7 @@ const irt_queries_internal_maintenance_getCalibrationQueueAttemptIntegrityImpl =
     api,
     "irt.queries.internalFunctions.maintenance",
     "getCalibrationQueueAttemptIntegrity",
-    (args) =>
-      tryoutIrtQueries_getCalibrationQueueAttemptIntegrity(args).pipe(
-        Effect.orDie
-      )
+    (args) => getCalibrationQueueAttemptIntegrity(args).pipe(Effect.orDie)
   );
 
 const irt_queries_internal_maintenance_getCalibrationQueueEntryIntegrityImpl =
@@ -239,10 +228,7 @@ const irt_queries_internal_maintenance_getCalibrationQueueEntryIntegrityImpl =
     api,
     "irt.queries.internalFunctions.maintenance",
     "getCalibrationQueueEntryIntegrity",
-    (args) =>
-      tryoutIrtQueries_getCalibrationQueueEntryIntegrity(args).pipe(
-        Effect.orDie
-      )
+    (args) => getCalibrationQueueEntryIntegrity(args).pipe(Effect.orDie)
   );
 
 const irtActionsInternalCalibrationImpl = GroupImpl.make(

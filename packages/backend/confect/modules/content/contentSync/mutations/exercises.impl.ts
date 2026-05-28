@@ -1,10 +1,10 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
 import {
-  bulkSyncExerciseQuestions as contentSyncExercises_bulkSyncExerciseQuestions,
-  bulkSyncExerciseSets as contentSyncExercises_bulkSyncExerciseSets,
-  deleteStaleExerciseQuestions as contentSyncExercises_deleteStaleExerciseQuestions,
-  deleteStaleExerciseSets as contentSyncExercises_deleteStaleExerciseSets,
+  bulkSyncExerciseQuestions,
+  bulkSyncExerciseSets,
+  deleteStaleExerciseQuestions,
+  deleteStaleExerciseSets,
 } from "@repo/backend/confect/modules/content/contentSyncExercises.service";
 import { Effect, Layer } from "effect";
 
@@ -14,7 +14,7 @@ const contentSync_mutations_exercises_bulkSyncExerciseQuestionsImpl =
     "contentSync.mutations.exercises",
     "bulkSyncExerciseQuestions",
     (args) =>
-      contentSyncExercises_bulkSyncExerciseQuestions(args).pipe(
+      bulkSyncExerciseQuestions(args).pipe(
         Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
         Effect.orDie
       )
@@ -26,7 +26,7 @@ const contentSync_mutations_exercises_bulkSyncExerciseSetsImpl =
     "contentSync.mutations.exercises",
     "bulkSyncExerciseSets",
     (args) =>
-      contentSyncExercises_bulkSyncExerciseSets(args).pipe(
+      bulkSyncExerciseSets(args).pipe(
         Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
         Effect.orDie
       )
@@ -38,7 +38,7 @@ const contentSync_mutations_exercises_deleteStaleExerciseQuestionsImpl =
     "contentSync.mutations.exercises",
     "deleteStaleExerciseQuestions",
     (args) =>
-      contentSyncExercises_deleteStaleExerciseQuestions(args).pipe(
+      deleteStaleExerciseQuestions(args).pipe(
         Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
         Effect.orDie
       )
@@ -50,7 +50,7 @@ const contentSync_mutations_exercises_deleteStaleExerciseSetsImpl =
     "contentSync.mutations.exercises",
     "deleteStaleExerciseSets",
     (args) =>
-      contentSyncExercises_deleteStaleExerciseSets(args).pipe(
+      deleteStaleExerciseSets(args).pipe(
         Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
         Effect.orDie
       )

@@ -19,10 +19,7 @@ import {
   pcmToWav,
 } from "@repo/backend/confect/modules/content/audioGeneration.constants";
 import { chunkScript, DEFAULT_CHUNK_CONFIG } from "@repo/backend/helpers/chunk";
-import {
-  experimental_generateSpeech as aiGenerateSpeech,
-  generateText,
-} from "ai";
+import { experimental_generateSpeech, generateText } from "ai";
 import { Effect, Schema } from "effect";
 
 export class AudioGenerationActionError extends Schema.TaggedError<AudioGenerationActionError>()(
@@ -235,7 +232,7 @@ export const generateSpeech = Effect.fn("audioGeneration.generateSpeech")(
         };
         const elevenlabs = createElevenLabsClient();
         const firstResult = yield* Effect.tryPromise(() =>
-          aiGenerateSpeech({
+          experimental_generateSpeech({
             model: elevenlabs.speech(audio.model),
             outputFormat: PCM_FORMAT.outputFormat,
             providerOptions: {
@@ -254,7 +251,7 @@ export const generateSpeech = Effect.fn("audioGeneration.generateSpeech")(
             totalChunks: chunks.length,
           });
           const result = yield* Effect.tryPromise(() =>
-            aiGenerateSpeech({
+            experimental_generateSpeech({
               model: elevenlabs.speech(audio.model),
               outputFormat: PCM_FORMAT.outputFormat,
               providerOptions: {

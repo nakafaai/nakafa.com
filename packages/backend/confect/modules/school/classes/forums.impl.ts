@@ -1,22 +1,22 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
 import {
-  createForum as schoolForumMutations_createForum,
-  createForumPost as schoolForumMutations_createForumPost,
-  markForumRead as schoolForumMutations_markForumRead,
-  toggleForumReaction as schoolForumMutations_toggleForumReaction,
-  togglePostReaction as schoolForumMutations_togglePostReaction,
+  createForum,
+  createForumPost,
+  markForumRead,
+  toggleForumReaction,
+  togglePostReaction,
 } from "@repo/backend/confect/modules/school/forums/mutations.service";
 import {
-  getForum as schoolForumQueries_getForum,
-  getForumPosts as schoolForumQueries_getForumPosts,
-  getForums as schoolForumQueries_getForums,
+  getForum,
+  getForumPosts,
+  getForums,
 } from "@repo/backend/confect/modules/school/forums/queries.service";
 import {
-  deleteExpiredPendingUpload as schoolForumUploads_deleteExpiredPendingUpload,
-  discardForumUploads as schoolForumUploads_discardForumUploads,
-  generateUploadUrl as schoolForumUploads_generateUploadUrl,
-  saveForumUpload as schoolForumUploads_saveForumUpload,
+  deleteExpiredPendingUpload,
+  discardForumUploads,
+  generateUploadUrl,
+  saveForumUpload,
 } from "@repo/backend/confect/modules/school/forums/uploads.service";
 import { Effect, Layer } from "effect";
 
@@ -25,7 +25,7 @@ const classes_forums_mutations_forums_createForumImpl = FunctionImpl.make(
   "classes.forums.mutations.forums",
   "createForum",
   (args) =>
-    schoolForumMutations_createForum(args).pipe(
+    createForum(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -39,7 +39,7 @@ const classes_forums_mutations_posts_createForumPostImpl = FunctionImpl.make(
   "classes.forums.mutations.posts",
   "createForumPost",
   (args) =>
-    schoolForumMutations_createForumPost(args).pipe(
+    createForumPost(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -54,7 +54,7 @@ const classes_forums_mutations_reactions_toggleForumReactionImpl =
     "classes.forums.mutations.reactions",
     "toggleForumReaction",
     (args) =>
-      schoolForumMutations_toggleForumReaction(args).pipe(
+      toggleForumReaction(args).pipe(
         Effect.catchTags({
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
@@ -69,7 +69,7 @@ const classes_forums_mutations_reactions_togglePostReactionImpl =
     "classes.forums.mutations.reactions",
     "togglePostReaction",
     (args) =>
-      schoolForumMutations_togglePostReaction(args).pipe(
+      togglePostReaction(args).pipe(
         Effect.catchTags({
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
@@ -83,7 +83,7 @@ const classes_forums_queries_forums_getForumsImpl = FunctionImpl.make(
   "classes.forums.queries.forums",
   "getForums",
   (args) =>
-    schoolForumQueries_getForums(args).pipe(
+    getForums(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -97,7 +97,7 @@ const classes_forums_queries_forums_getForumImpl = FunctionImpl.make(
   "classes.forums.queries.forums",
   "getForum",
   (args) =>
-    schoolForumQueries_getForum(args).pipe(
+    getForum(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -111,7 +111,7 @@ const classes_forums_mutations_readState_markForumReadImpl = FunctionImpl.make(
   "classes.forums.mutations.readState",
   "markForumRead",
   (args) =>
-    schoolForumMutations_markForumRead(args).pipe(
+    markForumRead(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -126,7 +126,7 @@ const classes_forums_mutations_uploads_discardForumUploadsImpl =
     "classes.forums.mutations.uploads",
     "discardForumUploads",
     (args) =>
-      schoolForumUploads_discardForumUploads(args).pipe(
+      discardForumUploads(args).pipe(
         Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
         Effect.orDie
       )
@@ -138,7 +138,7 @@ const classes_forums_mutations_uploads_generateUploadUrlImpl =
     "classes.forums.mutations.uploads",
     "generateUploadUrl",
     (args) =>
-      schoolForumUploads_generateUploadUrl(args).pipe(
+      generateUploadUrl(args).pipe(
         Effect.catchTags({
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
@@ -152,7 +152,7 @@ const classes_forums_mutations_uploads_saveForumUploadImpl = FunctionImpl.make(
   "classes.forums.mutations.uploads",
   "saveForumUpload",
   (args) =>
-    schoolForumUploads_saveForumUpload(args).pipe(
+    saveForumUpload(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -166,8 +166,7 @@ const classes_forums_internalMutations_deleteExpiredPendingUploadImpl =
     api,
     "classes.forums.internalMutations",
     "deleteExpiredPendingUpload",
-    (args) =>
-      schoolForumUploads_deleteExpiredPendingUpload(args).pipe(Effect.orDie)
+    (args) => deleteExpiredPendingUpload(args).pipe(Effect.orDie)
   );
 
 const classes_forums_queries_pages_getForumPostsImpl = FunctionImpl.make(
@@ -175,7 +174,7 @@ const classes_forums_queries_pages_getForumPostsImpl = FunctionImpl.make(
   "classes.forums.queries.pages",
   "getForumPosts",
   (args) =>
-    schoolForumQueries_getForumPosts(args).pipe(
+    getForumPosts(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),

@@ -1,17 +1,17 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
 import {
-  createClass as schoolClassMutations_createClass,
-  joinClass as schoolClassMutations_joinClass,
-  joinPublicClass as schoolClassMutations_joinPublicClass,
-  updateClassImage as schoolClassMutations_updateClassImage,
-  updateClassVisibility as schoolClassMutations_updateClassVisibility,
+  createClass,
+  joinClass,
+  joinPublicClass,
+  updateClassImage,
+  updateClassVisibility,
 } from "@repo/backend/confect/modules/school/classes/mutations.service";
 import {
-  getClasses as schoolClassQueries_getClasses,
-  getClassRoute as schoolClassQueries_getClassRoute,
-  getInviteCodes as schoolClassQueries_getInviteCodes,
-  getPeople as schoolClassQueries_getPeople,
+  getClasses,
+  getClassRoute,
+  getInviteCodes,
+  getPeople,
 } from "@repo/backend/confect/modules/school/classes/queries.service";
 import { Effect, Layer } from "effect";
 
@@ -20,7 +20,7 @@ const classes_mutations_createClassImpl = FunctionImpl.make(
   "classes.mutations",
   "createClass",
   (args) =>
-    schoolClassMutations_createClass(args).pipe(
+    createClass(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -34,7 +34,7 @@ const classes_mutations_joinClassImpl = FunctionImpl.make(
   "classes.mutations",
   "joinClass",
   (args) =>
-    schoolClassMutations_joinClass(args).pipe(
+    joinClass(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -48,7 +48,7 @@ const classes_mutations_joinPublicClassImpl = FunctionImpl.make(
   "classes.mutations",
   "joinPublicClass",
   (args) =>
-    schoolClassMutations_joinPublicClass(args).pipe(
+    joinPublicClass(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -62,7 +62,7 @@ const classes_mutations_updateClassImageImpl = FunctionImpl.make(
   "classes.mutations",
   "updateClassImage",
   (args) =>
-    schoolClassMutations_updateClassImage(args).pipe(
+    updateClassImage(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -76,7 +76,7 @@ const classes_mutations_updateClassVisibilityImpl = FunctionImpl.make(
   "classes.mutations",
   "updateClassVisibility",
   (args) =>
-    schoolClassMutations_updateClassVisibility(args).pipe(
+    updateClassVisibility(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -90,7 +90,7 @@ const classes_queries_getClassesImpl = FunctionImpl.make(
   "classes.queries",
   "getClasses",
   (args) =>
-    schoolClassQueries_getClasses(args).pipe(
+    getClasses(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -104,7 +104,7 @@ const classes_queries_getClassRouteImpl = FunctionImpl.make(
   "classes.queries",
   "getClassRoute",
   (args) =>
-    schoolClassQueries_getClassRoute(args).pipe(
+    getClassRoute(args).pipe(
       Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
       Effect.orDie
     )
@@ -115,7 +115,7 @@ const classes_queries_getPeopleImpl = FunctionImpl.make(
   "classes.queries",
   "getPeople",
   (args) =>
-    schoolClassQueries_getPeople(args).pipe(
+    getPeople(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -129,7 +129,7 @@ const classes_queries_getInviteCodesImpl = FunctionImpl.make(
   "classes.queries",
   "getInviteCodes",
   (args) =>
-    schoolClassQueries_getInviteCodes(args).pipe(
+    getInviteCodes(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),

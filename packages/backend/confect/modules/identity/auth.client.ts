@@ -10,9 +10,9 @@ import {
   createSyncedAuthUser,
   syncUpdatedAuthUser,
 } from "@repo/backend/confect/modules/identity/auth/triggers.service";
-import { components } from "@repo/backend/confect/modules/integrations/convexComponents";
 import type { ConvexDataModel } from "@repo/backend/confect/modules/shared/convexContext";
 import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
+import { components } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 
 const authFunctions = {

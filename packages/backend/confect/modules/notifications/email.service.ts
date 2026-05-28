@@ -1,6 +1,6 @@
 import { Resend } from "@convex-dev/resend";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
-import { components } from "@repo/backend/confect/modules/integrations/convexComponents";
+import { components } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 
 const WELCOME_TEMPLATE_ID = "welcome";

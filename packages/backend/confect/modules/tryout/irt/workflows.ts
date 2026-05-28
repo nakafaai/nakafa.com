@@ -17,7 +17,7 @@ function getCalibrationErrorMessage(error: unknown) {
 /**
  * Calibrates one exercise set and persists the resulting 2PL item parameters.
  */
-export const calibrateSetTwoPL = workflow.define({
+export const calibrateSetTwoPLWorkflow = workflow.define({
   args: calibrateSetTwoPLArgs,
   returns: v.null(),
   handler: async (step, args) =>

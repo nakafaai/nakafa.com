@@ -1,8 +1,8 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
 import {
-  bulkSyncAuthors as contentSyncAuthors_bulkSyncAuthors,
-  deleteUnusedAuthors as contentSyncAuthors_deleteUnusedAuthors,
+  bulkSyncAuthors,
+  deleteUnusedAuthors,
 } from "@repo/backend/confect/modules/content/contentSyncAuthors.service";
 import { Effect, Layer } from "effect";
 
@@ -11,7 +11,7 @@ const contentSync_mutations_authors_bulkSyncAuthorsImpl = FunctionImpl.make(
   "contentSync.mutations.authors",
   "bulkSyncAuthors",
   (args) =>
-    contentSyncAuthors_bulkSyncAuthors(args).pipe(
+    bulkSyncAuthors(args).pipe(
       Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
       Effect.orDie
     )
@@ -22,7 +22,7 @@ const contentSync_mutations_authors_deleteUnusedAuthorsImpl = FunctionImpl.make(
   "contentSync.mutations.authors",
   "deleteUnusedAuthors",
   (args) =>
-    contentSyncAuthors_deleteUnusedAuthors(args).pipe(
+    deleteUnusedAuthors(args).pipe(
       Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
       Effect.orDie
     )

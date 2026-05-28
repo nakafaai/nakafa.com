@@ -15,7 +15,7 @@ import type {
   UpdateUserNameArgs,
   UpdateUserRoleArgs,
 } from "@repo/backend/confect/modules/identity/users.schemas";
-import { components } from "@repo/backend/confect/modules/integrations/convexComponents";
+import { components } from "@repo/backend/convex/_generated/api";
 import { Clock, Effect } from "effect";
 
 /** Updates the current user's self-selected role. */

@@ -1,5 +1,5 @@
 import { TableAggregate } from "@convex-dev/aggregate";
-import { components } from "@repo/backend/confect/modules/integrations/convexComponents";
+import { components } from "@repo/backend/convex/_generated/api";
 
 export const forumPostsBySequence = new TableAggregate(
   components.forumPostsBySequence,

@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import type { QueryCtx as ConvexQueryCtx } from "@repo/backend/confect/_generated/services";
+import type { QueryCtx } from "@repo/backend/confect/_generated/services";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -22,7 +22,7 @@ import {
 } from "@repo/backend/confect/modules/school/forums/reactions.service";
 import { Effect, Option, type Schema } from "effect";
 
-type DatabaseCtx = ConvexQueryCtx;
+type DatabaseCtx = QueryCtx;
 type ForumDoc = Schema.Schema.Type<typeof SchoolClassForums.Doc>;
 type ForumPostDoc = Schema.Schema.Type<typeof SchoolClassForumPosts.Doc>;
 

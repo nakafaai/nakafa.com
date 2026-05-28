@@ -1,15 +1,15 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import { cleanupDeletedChat as chatCleanup_cleanupDeletedChat } from "@repo/backend/confect/modules/chat/chatCleanup.service";
-import { cleanupDeletedComment as contentCommentCleanup_cleanupDeletedComment } from "@repo/backend/confect/modules/content/commentCleanup.service";
+import { cleanupDeletedChat } from "@repo/backend/confect/modules/chat/chatCleanup.service";
+import { cleanupDeletedComment } from "@repo/backend/confect/modules/content/commentCleanup.service";
 import {
-  cleanupDeletedGroup as schoolMaterialCleanup_cleanupDeletedGroup,
-  cleanupDeletedMaterial as schoolMaterialCleanup_cleanupDeletedMaterial,
+  cleanupDeletedGroup,
+  cleanupDeletedMaterial,
 } from "@repo/backend/confect/modules/school/materialCleanup.service";
 import {
-  cleanupDeletedClass as schoolCleanup_cleanupDeletedClass,
-  cleanupDeletedForum as schoolCleanup_cleanupDeletedForum,
-  cleanupDeletedForumPost as schoolCleanup_cleanupDeletedForumPost,
+  cleanupDeletedClass,
+  cleanupDeletedForum,
+  cleanupDeletedForumPost,
 } from "@repo/backend/confect/modules/school/schoolCleanup.service";
 import { Effect, Layer } from "effect";
 
@@ -17,50 +17,49 @@ const triggers_comments_cleanup_cleanupDeletedCommentImpl = FunctionImpl.make(
   api,
   "triggers.comments.cleanup",
   "cleanupDeletedComment",
-  (args) => contentCommentCleanup_cleanupDeletedComment(args).pipe(Effect.orDie)
+  (args) => cleanupDeletedComment(args).pipe(Effect.orDie)
 );
 
 const triggers_materials_cleanup_cleanupDeletedGroupImpl = FunctionImpl.make(
   api,
   "triggers.materials.cleanup",
   "cleanupDeletedGroup",
-  (args) => schoolMaterialCleanup_cleanupDeletedGroup(args).pipe(Effect.orDie)
+  (args) => cleanupDeletedGroup(args).pipe(Effect.orDie)
 );
 
 const triggers_materials_cleanup_cleanupDeletedMaterialImpl = FunctionImpl.make(
   api,
   "triggers.materials.cleanup",
   "cleanupDeletedMaterial",
-  (args) =>
-    schoolMaterialCleanup_cleanupDeletedMaterial(args).pipe(Effect.orDie)
+  (args) => cleanupDeletedMaterial(args).pipe(Effect.orDie)
 );
 
 const triggers_chats_cleanup_cleanupDeletedChatImpl = FunctionImpl.make(
   api,
   "triggers.chats.cleanup",
   "cleanupDeletedChat",
-  (args) => chatCleanup_cleanupDeletedChat(args).pipe(Effect.orDie)
+  (args) => cleanupDeletedChat(args).pipe(Effect.orDie)
 );
 
 const triggers_schools_cleanup_cleanupDeletedClassImpl = FunctionImpl.make(
   api,
   "triggers.schools.cleanup",
   "cleanupDeletedClass",
-  (args) => schoolCleanup_cleanupDeletedClass(args).pipe(Effect.orDie)
+  (args) => cleanupDeletedClass(args).pipe(Effect.orDie)
 );
 
 const triggers_schools_cleanup_cleanupDeletedForumImpl = FunctionImpl.make(
   api,
   "triggers.schools.cleanup",
   "cleanupDeletedForum",
-  (args) => schoolCleanup_cleanupDeletedForum(args).pipe(Effect.orDie)
+  (args) => cleanupDeletedForum(args).pipe(Effect.orDie)
 );
 
 const triggers_schools_cleanup_cleanupDeletedForumPostImpl = FunctionImpl.make(
   api,
   "triggers.schools.cleanup",
   "cleanupDeletedForumPost",
-  (args) => schoolCleanup_cleanupDeletedForumPost(args).pipe(Effect.orDie)
+  (args) => cleanupDeletedForumPost(args).pipe(Effect.orDie)
 );
 
 const triggersChatsCleanupImpl = GroupImpl.make(

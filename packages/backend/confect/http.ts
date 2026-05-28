@@ -1,4 +1,4 @@
-import { HttpApi as ConfectHttpApi } from "@confect/server";
+import { HttpApi } from "@confect/server";
 import { PolarApiLive } from "@repo/backend/confect/modules/commerce/polar/webhook.http";
 import { createAuth } from "@repo/backend/confect/modules/identity/auth.service";
 import {
@@ -51,7 +51,7 @@ const v1Root = httpAction(() =>
  * - https://confect.dev/server/http-api
  * - https://confect.dev/server/plain-convex-functions
  */
-const http = ConfectHttpApi.make({
+const http = HttpApi.make({
   "/polar/": { apiLive: PolarApiLive },
   "/v1/": { apiLive: V1ApiLive },
 });

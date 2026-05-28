@@ -1,15 +1,15 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import { submitAnswer as exerciseAnswers_submitAnswer } from "@repo/backend/confect/modules/learning/exercises/answers.service";
+import { submitAnswer } from "@repo/backend/confect/modules/learning/exercises/answers.service";
 import {
-  completeAttempt as exerciseAttempts_completeAttempt,
-  expireAttemptInternal as exerciseAttempts_expireAttemptInternal,
-  startAttempt as exerciseAttempts_startAttempt,
+  completeAttempt,
+  expireAttemptInternal,
+  startAttempt,
 } from "@repo/backend/confect/modules/learning/exercises/attempts.service";
 import { ExerciseError } from "@repo/backend/confect/modules/learning/exercises/errors.service";
 import {
-  getLatestAttemptBySlug as exerciseQueries_getLatestAttemptBySlug,
-  getQuestionAnswerSheetBySlug as exerciseQueries_getQuestionAnswerSheetBySlug,
+  getLatestAttemptBySlug,
+  getQuestionAnswerSheetBySlug,
 } from "@repo/backend/confect/modules/learning/exercises/queries.service";
 import { Effect, Layer } from "effect";
 
@@ -18,7 +18,7 @@ const exercises_mutations_completeAttemptImpl = FunctionImpl.make(
   "exercises.mutations",
   "completeAttempt",
   (args) =>
-    exerciseAttempts_completeAttempt(args).pipe(
+    completeAttempt(args).pipe(
       Effect.catchTags({
         ExerciseError: (error) => Effect.die(error),
       }),
@@ -31,7 +31,7 @@ const exercises_mutations_expireAttemptInternalImpl = FunctionImpl.make(
   "exercises.mutations",
   "expireAttemptInternal",
   (args) =>
-    exerciseAttempts_expireAttemptInternal(args).pipe(
+    expireAttemptInternal(args).pipe(
       Effect.catchTags({
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
@@ -45,7 +45,7 @@ const exercises_mutations_startAttemptImpl = FunctionImpl.make(
   "exercises.mutations",
   "startAttempt",
   (args) =>
-    exerciseAttempts_startAttempt(args).pipe(
+    startAttempt(args).pipe(
       Effect.catchTags({
         ExerciseError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -59,7 +59,7 @@ const exercises_mutations_submitAnswerImpl = FunctionImpl.make(
   "exercises.mutations",
   "submitAnswer",
   (args) =>
-    exerciseAnswers_submitAnswer(args).pipe(
+    submitAnswer(args).pipe(
       Effect.catchTag("TryoutError", (error) =>
         Effect.fail(
           new ExerciseError({
@@ -80,7 +80,7 @@ const exercises_queries_getLatestAttemptBySlugImpl = FunctionImpl.make(
   "exercises.queries",
   "getLatestAttemptBySlug",
   (args) =>
-    exerciseQueries_getLatestAttemptBySlug(args).pipe(
+    getLatestAttemptBySlug(args).pipe(
       Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
       Effect.orDie
     )
@@ -91,7 +91,7 @@ const exercises_queries_getQuestionAnswerSheetBySlugImpl = FunctionImpl.make(
   "exercises.queries",
   "getQuestionAnswerSheetBySlug",
   (args) =>
-    exerciseQueries_getQuestionAnswerSheetBySlug(args).pipe(
+    getQuestionAnswerSheetBySlug(args).pipe(
       Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
       Effect.orDie
     )

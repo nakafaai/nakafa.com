@@ -1,5 +1,5 @@
 import { Workpool } from "@convex-dev/workpool";
-import { components } from "@repo/backend/confect/modules/integrations/convexComponents";
+import { components } from "@repo/backend/convex/_generated/api";
 
 /** Serializes calibration sync mutations to avoid duplicate cache writes. */
 export const irtCalibrationSyncWorkpool = new Workpool(

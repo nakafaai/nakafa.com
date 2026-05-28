@@ -6,7 +6,7 @@ import {
 import { getPlanCreditConfig } from "@repo/backend/confect/modules/commerce/credits.policy";
 import { resolveCreditResetTimestamp } from "@repo/backend/confect/modules/commerce/credits.service";
 import { getProductsForServer } from "@repo/backend/confect/modules/commerce/polar/products";
-import type { Subscriptions as SubscriptionsTable } from "@repo/backend/confect/modules/commerce/subscriptions.tables";
+import type { Subscriptions } from "@repo/backend/confect/modules/commerce/subscriptions.tables";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import type {
   UserPlan,
@@ -16,8 +16,8 @@ import { captureProductEvent } from "@repo/backend/confect/modules/integrations/
 import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import { Clock, Effect, Option } from "effect";
 
-type SubscriptionFields = typeof SubscriptionsTable.Fields.Type;
-type SubscriptionDoc = typeof SubscriptionsTable.Doc.Type;
+type SubscriptionFields = typeof Subscriptions.Fields.Type;
+type SubscriptionDoc = typeof Subscriptions.Doc.Type;
 const ACTIVE_SUBSCRIPTION_SYNC_LIMIT = 50;
 
 const proProductIds = [
@@ -307,16 +307,3 @@ export const hasActiveSubscription = Effect.fn(
 
   return Option.isSome(subscriptionOption);
 });
-
-/** Subscription service accessors used by Confect function implementations. */
-export class Subscriptions extends Effect.Service<Subscriptions>()(
-  "Subscriptions",
-  {
-    accessors: true,
-    succeed: {
-      createSubscription,
-      hasActiveSubscription,
-      updateSubscription,
-    },
-  }
-) {}

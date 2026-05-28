@@ -11,32 +11,32 @@ import {
   updateSyncedAuthUserRecord,
 } from "@repo/backend/confect/modules/identity/auth/triggers.service";
 import {
-  getCurrentUser as identityAuth_getCurrentUser,
-  getLatestJwks as identityAuth_getLatestJwks,
-  getPublicUserById as identityAuth_getPublicUserById,
+  getCurrentUser,
+  getLatestJwks,
+  getPublicUserById,
 } from "@repo/backend/confect/modules/identity/auth.service";
-import { cleanupDeletedUser as identityCleanup_cleanupDeletedUser } from "@repo/backend/confect/modules/identity/cleanup.service";
+import { cleanupDeletedUser } from "@repo/backend/confect/modules/identity/cleanup.service";
 import { Effect, Layer } from "effect";
 
 const auth_getCurrentUserImpl = FunctionImpl.make(
   api,
   "auth",
   "getCurrentUser",
-  (_args) => identityAuth_getCurrentUser().pipe(Effect.orDie)
+  (_args) => getCurrentUser().pipe(Effect.orDie)
 );
 
 const auth_getLatestJwksImpl = FunctionImpl.make(
   api,
   "auth",
   "getLatestJwks",
-  (_args) => identityAuth_getLatestJwks().pipe(Effect.orDie)
+  (_args) => getLatestJwks().pipe(Effect.orDie)
 );
 
 const auth_getUserByIdImpl = FunctionImpl.make(
   api,
   "auth",
   "getUserById",
-  (args) => identityAuth_getPublicUserById(args).pipe(Effect.orDie)
+  (args) => getPublicUserById(args).pipe(Effect.orDie)
 );
 
 const auth_onCreateImpl = FunctionImpl.make(api, "auth", "onCreate", onCreate);
@@ -71,7 +71,7 @@ const auth_cleanup_cleanupDeletedUserImpl = FunctionImpl.make(
   "auth.cleanup",
   "cleanupDeletedUser",
   (args) =>
-    identityCleanup_cleanupDeletedUser(args).pipe(
+    cleanupDeletedUser(args).pipe(
       Effect.catchTag("CleanupInvariantError", (error) => Effect.die(error)),
       Effect.orDie
     )

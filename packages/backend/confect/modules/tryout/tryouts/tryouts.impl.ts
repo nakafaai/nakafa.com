@@ -1,34 +1,34 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
 import {
-  completePart as tryoutAttempts_completePart,
-  startPart as tryoutAttempts_startPart,
-  startTryout as tryoutAttempts_startTryout,
+  completePart,
+  startPart,
+  startTryout,
 } from "@repo/backend/confect/modules/tryout/tryoutAttempts.service";
 import {
-  getActiveTryoutCatalogPage as tryoutCatalog_getActiveTryoutCatalogPage,
-  getActiveTryoutCatalogSnapshot as tryoutCatalog_getActiveTryoutCatalogSnapshot,
-  getPublicActiveTryoutCatalogSnapshot as tryoutCatalog_getPublicActiveTryoutCatalogSnapshot,
-  getTryoutDetails as tryoutCatalog_getTryoutDetails,
+  getActiveTryoutCatalogPage,
+  getActiveTryoutCatalogSnapshot,
+  getPublicActiveTryoutCatalogSnapshot,
+  getTryoutDetails,
 } from "@repo/backend/confect/modules/tryout/tryoutCatalog.service";
 import {
-  expireTryoutAttemptInternal as tryoutInternal_expireTryoutAttemptInternal,
-  promoteProvisionalTryoutScores as tryoutInternal_promoteProvisionalTryoutScores,
-  sweepExpiredTryoutAttempts as tryoutInternal_sweepExpiredTryoutAttempts,
+  expireTryoutAttemptInternal,
+  promoteProvisionalTryoutScores,
+  sweepExpiredTryoutAttempts,
 } from "@repo/backend/confect/modules/tryout/tryoutInternal.service";
 import {
-  getGlobalLeaderboard as tryoutLeaderboard_getGlobalLeaderboard,
-  getTryoutLeaderboard as tryoutLeaderboard_getTryoutLeaderboard,
-  updateLeaderboard as tryoutLeaderboard_updateLeaderboard,
+  getGlobalLeaderboard,
+  getTryoutLeaderboard,
+  updateLeaderboard,
 } from "@repo/backend/confect/modules/tryout/tryoutLeaderboard.service";
 import {
-  getUserTryoutAttempt as tryoutMe_getUserTryoutAttempt,
-  getUserTryoutAttemptHistory as tryoutMe_getUserTryoutAttemptHistory,
-  getUserTryoutPartAttempt as tryoutMe_getUserTryoutPartAttempt,
-  getUserTryoutSession as tryoutMe_getUserTryoutSession,
-  getUserTryoutSetView as tryoutMe_getUserTryoutSetView,
+  getUserTryoutAttempt,
+  getUserTryoutAttemptHistory,
+  getUserTryoutPartAttempt,
+  getUserTryoutSession,
+  getUserTryoutSetView,
 } from "@repo/backend/confect/modules/tryout/tryoutMeQueries.service";
-import { rebuildUserTryoutStats as tryoutStats_rebuildUserTryoutStats } from "@repo/backend/confect/modules/tryout/tryoutStats.service";
+import { rebuildUserTryoutStats } from "@repo/backend/confect/modules/tryout/tryoutStats.service";
 import { Effect, Layer } from "effect";
 
 const tryouts_queries_me_history_getUserTryoutAttemptHistoryImpl =
@@ -37,7 +37,7 @@ const tryouts_queries_me_history_getUserTryoutAttemptHistoryImpl =
     "tryouts.queries.me.history",
     "getUserTryoutAttemptHistory",
     (args) =>
-      tryoutMe_getUserTryoutAttemptHistory(args).pipe(
+      getUserTryoutAttemptHistory(args).pipe(
         Effect.catchTags({
           IrtError: (error) => Effect.die(error),
           TryoutError: (error) => Effect.die(error),
@@ -52,7 +52,7 @@ const tryouts_mutations_attempts_completePartImpl = FunctionImpl.make(
   "tryouts.mutations.attempts",
   "completePart",
   (args) =>
-    tryoutAttempts_completePart(args).pipe(
+    completePart(args).pipe(
       Effect.catchTags({
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
@@ -67,7 +67,7 @@ const tryouts_mutations_attempts_startPartImpl = FunctionImpl.make(
   "tryouts.mutations.attempts",
   "startPart",
   (args) =>
-    tryoutAttempts_startPart(args).pipe(
+    startPart(args).pipe(
       Effect.catchTags({
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
@@ -82,7 +82,7 @@ const tryouts_mutations_attempts_startTryoutImpl = FunctionImpl.make(
   "tryouts.mutations.attempts",
   "startTryout",
   (args) =>
-    tryoutAttempts_startTryout(args).pipe(
+    startTryout(args).pipe(
       Effect.catchTags({
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
@@ -97,7 +97,7 @@ const tryouts_queries_leaderboard_getTryoutLeaderboardImpl = FunctionImpl.make(
   "tryouts.queries.leaderboard",
   "getTryoutLeaderboard",
   (args) =>
-    tryoutLeaderboard_getTryoutLeaderboard(args).pipe(
+    getTryoutLeaderboard(args).pipe(
       Effect.catchTag("TryoutError", (error) => Effect.die(error)),
       Effect.orDie
     )
@@ -107,7 +107,7 @@ const tryouts_queries_leaderboard_getGlobalLeaderboardImpl = FunctionImpl.make(
   api,
   "tryouts.queries.leaderboard",
   "getGlobalLeaderboard",
-  (args) => tryoutLeaderboard_getGlobalLeaderboard(args).pipe(Effect.orDie)
+  (args) => getGlobalLeaderboard(args).pipe(Effect.orDie)
 );
 
 const tryouts_queries_tryouts_getActiveTryoutCatalogPageImpl =
@@ -115,7 +115,7 @@ const tryouts_queries_tryouts_getActiveTryoutCatalogPageImpl =
     api,
     "tryouts.queries.tryouts",
     "getActiveTryoutCatalogPage",
-    (args) => tryoutCatalog_getActiveTryoutCatalogPage(args).pipe(Effect.orDie)
+    (args) => getActiveTryoutCatalogPage(args).pipe(Effect.orDie)
   );
 
 const tryouts_queries_tryouts_getActiveTryoutCatalogSnapshotImpl =
@@ -123,8 +123,7 @@ const tryouts_queries_tryouts_getActiveTryoutCatalogSnapshotImpl =
     api,
     "tryouts.queries.tryouts",
     "getActiveTryoutCatalogSnapshot",
-    (args) =>
-      tryoutCatalog_getActiveTryoutCatalogSnapshot(args).pipe(Effect.orDie)
+    (args) => getActiveTryoutCatalogSnapshot(args).pipe(Effect.orDie)
   );
 
 const tryouts_queries_tryouts_getPublicActiveTryoutCatalogSnapshotImpl =
@@ -132,10 +131,7 @@ const tryouts_queries_tryouts_getPublicActiveTryoutCatalogSnapshotImpl =
     api,
     "tryouts.queries.tryouts",
     "getPublicActiveTryoutCatalogSnapshot",
-    (args) =>
-      tryoutCatalog_getPublicActiveTryoutCatalogSnapshot(args).pipe(
-        Effect.orDie
-      )
+    (args) => getPublicActiveTryoutCatalogSnapshot(args).pipe(Effect.orDie)
   );
 
 const tryouts_queries_tryouts_getTryoutDetailsImpl = FunctionImpl.make(
@@ -143,7 +139,7 @@ const tryouts_queries_tryouts_getTryoutDetailsImpl = FunctionImpl.make(
   "tryouts.queries.tryouts",
   "getTryoutDetails",
   (args) =>
-    tryoutCatalog_getTryoutDetails(args).pipe(
+    getTryoutDetails(args).pipe(
       Effect.catchTags({
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
@@ -157,7 +153,7 @@ const tryouts_queries_me_attempt_getUserTryoutAttemptImpl = FunctionImpl.make(
   "tryouts.queries.me.attempt",
   "getUserTryoutAttempt",
   (args) =>
-    tryoutMe_getUserTryoutAttempt(args).pipe(
+    getUserTryoutAttempt(args).pipe(
       Effect.catchTags({
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
@@ -172,7 +168,7 @@ const tryouts_queries_me_part_getUserTryoutPartAttemptImpl = FunctionImpl.make(
   "tryouts.queries.me.part",
   "getUserTryoutPartAttempt",
   (args) =>
-    tryoutMe_getUserTryoutPartAttempt(args).pipe(
+    getUserTryoutPartAttempt(args).pipe(
       Effect.catchTags({
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
@@ -188,7 +184,7 @@ const tryouts_mutations_internal_expiry_expireTryoutAttemptInternalImpl =
     "tryouts.mutations.internalFunctions.expiry",
     "expireTryoutAttemptInternal",
     (args) =>
-      tryoutInternal_expireTryoutAttemptInternal(args).pipe(
+      expireTryoutAttemptInternal(args).pipe(
         Effect.catchTags({
           IrtError: (error) => Effect.die(error),
           TryoutError: (error) => Effect.die(error),
@@ -203,7 +199,7 @@ const tryouts_mutations_internal_expiry_sweepExpiredTryoutAttemptsImpl =
     "tryouts.mutations.internalFunctions.expiry",
     "sweepExpiredTryoutAttempts",
     (_args) =>
-      tryoutInternal_sweepExpiredTryoutAttempts().pipe(
+      sweepExpiredTryoutAttempts().pipe(
         Effect.catchTags({
           IrtError: (error) => Effect.die(error),
           TryoutError: (error) => Effect.die(error),
@@ -218,7 +214,7 @@ const tryouts_mutations_internal_leaderboard_updateLeaderboardImpl =
     "tryouts.mutations.internalFunctions.leaderboard",
     "updateLeaderboard",
     (args) =>
-      tryoutLeaderboard_updateLeaderboard(args).pipe(
+      updateLeaderboard(args).pipe(
         Effect.catchTag("TryoutError", (error) => Effect.die(error)),
         Effect.orDie
       )
@@ -230,7 +226,7 @@ const tryouts_mutations_internal_scoring_promoteProvisionalTryoutScoresImpl =
     "tryouts.mutations.internalFunctions.scoring",
     "promoteProvisionalTryoutScores",
     (args) =>
-      tryoutInternal_promoteProvisionalTryoutScores(args).pipe(
+      promoteProvisionalTryoutScores(args).pipe(
         Effect.catchTag("TryoutError", (error) => Effect.die(error)),
         Effect.orDie
       )
@@ -241,7 +237,7 @@ const tryouts_mutations_internal_stats_rebuildUserTryoutStatsImpl =
     api,
     "tryouts.mutations.internalFunctions.stats",
     "rebuildUserTryoutStats",
-    (args) => tryoutStats_rebuildUserTryoutStats(args).pipe(Effect.orDie)
+    (args) => rebuildUserTryoutStats(args).pipe(Effect.orDie)
   );
 
 const tryouts_queries_me_setView_getUserTryoutSetViewImpl = FunctionImpl.make(
@@ -249,7 +245,7 @@ const tryouts_queries_me_setView_getUserTryoutSetViewImpl = FunctionImpl.make(
   "tryouts.queries.me.setView",
   "getUserTryoutSetView",
   (args) =>
-    tryoutMe_getUserTryoutSetView(args).pipe(
+    getUserTryoutSetView(args).pipe(
       Effect.catchTags({
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
@@ -264,7 +260,7 @@ const tryouts_queries_me_session_getUserTryoutSessionImpl = FunctionImpl.make(
   "tryouts.queries.me.session",
   "getUserTryoutSession",
   (args) =>
-    tryoutMe_getUserTryoutSession(args).pipe(
+    getUserTryoutSession(args).pipe(
       Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
       Effect.orDie
     )

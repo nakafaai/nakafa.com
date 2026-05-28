@@ -1,23 +1,23 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import { scheduleSaveAssistantResponse as chatActions_scheduleSaveAssistantResponse } from "@repo/backend/confect/modules/chat/chatActions.service";
+import { scheduleSaveAssistantResponse } from "@repo/backend/confect/modules/chat/chatActions.service";
 import {
-  createChat as chatMutations_createChat,
-  createChatWithMessage as chatMutations_createChatWithMessage,
-  deleteChat as chatMutations_deleteChat,
-  deleteMessageBatch as chatMutations_deleteMessageBatch,
-  saveAssistantResponse as chatMutations_saveAssistantResponse,
-  saveMessage as chatMutations_saveMessage,
-  updateChatTitle as chatMutations_updateChatTitle,
-  updateChatVisibility as chatMutations_updateChatVisibility,
+  createChat,
+  createChatWithMessage,
+  deleteChat,
+  deleteMessageBatch,
+  saveAssistantResponse,
+  saveMessage,
+  updateChatTitle,
+  updateChatVisibility,
 } from "@repo/backend/confect/modules/chat/chatMutations.service";
 import {
-  getChat as chatQueries_getChat,
-  getChats as chatQueries_getChats,
-  getChatTitle as chatQueries_getChatTitle,
-  getMessageMatch as chatQueries_getMessageMatch,
-  getOwnChats as chatQueries_getOwnChats,
-  loadMessagesPage as chatQueries_loadMessagesPage,
+  getChat,
+  getChats,
+  getChatTitle,
+  getMessageMatch,
+  getOwnChats,
+  loadMessagesPage,
 } from "@repo/backend/confect/modules/chat/chatQueries.service";
 import { Effect, Layer } from "effect";
 
@@ -25,105 +25,105 @@ const chats_mutations_createChatImpl = FunctionImpl.make(
   api,
   "chats.mutations",
   "createChat",
-  (args) => chatMutations_createChat(args).pipe(Effect.orDie)
+  (args) => createChat(args).pipe(Effect.orDie)
 );
 
 const chats_mutations_createChatWithMessageImpl = FunctionImpl.make(
   api,
   "chats.mutations",
   "createChatWithMessage",
-  (args) => chatMutations_createChatWithMessage(args).pipe(Effect.orDie)
+  (args) => createChatWithMessage(args).pipe(Effect.orDie)
 );
 
 const chats_mutations_deleteChatImpl = FunctionImpl.make(
   api,
   "chats.mutations",
   "deleteChat",
-  (args) => chatMutations_deleteChat(args).pipe(Effect.orDie)
+  (args) => deleteChat(args).pipe(Effect.orDie)
 );
 
 const chats_mutations_deleteMessageBatchImpl = FunctionImpl.make(
   api,
   "chats.mutations",
   "deleteMessageBatch",
-  (args) => chatMutations_deleteMessageBatch(args).pipe(Effect.orDie)
+  (args) => deleteMessageBatch(args).pipe(Effect.orDie)
 );
 
 const chats_mutations_saveAssistantResponseImpl = FunctionImpl.make(
   api,
   "chats.mutations",
   "saveAssistantResponse",
-  (args) => chatMutations_saveAssistantResponse(args).pipe(Effect.orDie)
+  (args) => saveAssistantResponse(args).pipe(Effect.orDie)
 );
 
 const chats_mutations_saveMessageImpl = FunctionImpl.make(
   api,
   "chats.mutations",
   "saveMessage",
-  (args) => chatMutations_saveMessage(args).pipe(Effect.orDie)
+  (args) => saveMessage(args).pipe(Effect.orDie)
 );
 
 const chats_mutations_updateChatTitleImpl = FunctionImpl.make(
   api,
   "chats.mutations",
   "updateChatTitle",
-  (args) => chatMutations_updateChatTitle(args).pipe(Effect.orDie)
+  (args) => updateChatTitle(args).pipe(Effect.orDie)
 );
 
 const chats_mutations_updateChatVisibilityImpl = FunctionImpl.make(
   api,
   "chats.mutations",
   "updateChatVisibility",
-  (args) => chatMutations_updateChatVisibility(args).pipe(Effect.orDie)
+  (args) => updateChatVisibility(args).pipe(Effect.orDie)
 );
 
 const chats_queries_getChatImpl = FunctionImpl.make(
   api,
   "chats.queries",
   "getChat",
-  (args) => chatQueries_getChat(args).pipe(Effect.orDie)
+  (args) => getChat(args).pipe(Effect.orDie)
 );
 
 const chats_queries_getChatsImpl = FunctionImpl.make(
   api,
   "chats.queries",
   "getChats",
-  (args) => chatQueries_getChats(args).pipe(Effect.orDie)
+  (args) => getChats(args).pipe(Effect.orDie)
 );
 
 const chats_queries_getOwnChatsImpl = FunctionImpl.make(
   api,
   "chats.queries",
   "getOwnChats",
-  (args) => chatQueries_getOwnChats(args).pipe(Effect.orDie)
+  (args) => getOwnChats(args).pipe(Effect.orDie)
 );
 
 const chats_queries_getChatTitleImpl = FunctionImpl.make(
   api,
   "chats.queries",
   "getChatTitle",
-  (args) => chatQueries_getChatTitle(args).pipe(Effect.orDie)
+  (args) => getChatTitle(args).pipe(Effect.orDie)
 );
 
 const chats_queries_loadMessagesPageImpl = FunctionImpl.make(
   api,
   "chats.queries",
   "loadMessagesPage",
-  (args) => chatQueries_loadMessagesPage(args).pipe(Effect.orDie)
+  (args) => loadMessagesPage(args).pipe(Effect.orDie)
 );
 
 const chats_queries_getMessageMatchImpl = FunctionImpl.make(
   api,
   "chats.queries",
   "getMessageMatch",
-  (args) => chatQueries_getMessageMatch(args).pipe(Effect.orDie)
+  (args) => getMessageMatch(args).pipe(Effect.orDie)
 );
 
 const chats_actions_scheduleSaveAssistantResponseImpl = FunctionImpl.make(
   api,
   "chats.actions",
   "scheduleSaveAssistantResponse",
-  (args) => chatActions_scheduleSaveAssistantResponse(args).pipe(Effect.orDie)
+  (args) => scheduleSaveAssistantResponse(args).pipe(Effect.orDie)
 );
 
 const chatsActionsImpl = GroupImpl.make(api, "chats.actions").pipe(

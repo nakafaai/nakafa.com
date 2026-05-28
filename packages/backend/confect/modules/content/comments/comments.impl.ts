@@ -1,11 +1,11 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
 import {
-  addComment as contentComments_addComment,
-  deleteComment as contentComments_deleteComment,
-  getCommentsBySlug as contentComments_getCommentsBySlug,
-  getCommentsByUserId as contentComments_getCommentsByUserId,
-  voteOnComment as contentComments_voteOnComment,
+  addComment,
+  deleteComment,
+  getCommentsBySlug,
+  getCommentsByUserId,
+  voteOnComment,
 } from "@repo/backend/confect/modules/content/comments.service";
 import { Effect, Layer } from "effect";
 
@@ -14,7 +14,7 @@ const comments_mutations_addCommentImpl = FunctionImpl.make(
   "comments.mutations",
   "addComment",
   (args) =>
-    contentComments_addComment(args).pipe(
+    addComment(args).pipe(
       Effect.catchTags({
         CommentActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -28,7 +28,7 @@ const comments_mutations_deleteCommentImpl = FunctionImpl.make(
   "comments.mutations",
   "deleteComment",
   (args) =>
-    contentComments_deleteComment(args).pipe(
+    deleteComment(args).pipe(
       Effect.catchTags({
         CommentActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -42,7 +42,7 @@ const comments_mutations_voteOnCommentImpl = FunctionImpl.make(
   "comments.mutations",
   "voteOnComment",
   (args) =>
-    contentComments_voteOnComment(args).pipe(
+    voteOnComment(args).pipe(
       Effect.catchTags({
         CommentActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -55,14 +55,14 @@ const comments_queries_getCommentsBySlugImpl = FunctionImpl.make(
   api,
   "comments.queries",
   "getCommentsBySlug",
-  (args) => contentComments_getCommentsBySlug(args).pipe(Effect.orDie)
+  (args) => getCommentsBySlug(args).pipe(Effect.orDie)
 );
 
 const comments_queries_getCommentsByUserIdImpl = FunctionImpl.make(
   api,
   "comments.queries",
   "getCommentsByUserId",
-  (args) => contentComments_getCommentsByUserId(args).pipe(Effect.orDie)
+  (args) => getCommentsByUserId(args).pipe(Effect.orDie)
 );
 
 const commentsMutationsImpl = GroupImpl.make(api, "comments.mutations")

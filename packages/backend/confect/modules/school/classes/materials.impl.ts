@@ -1,12 +1,12 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
 import {
-  createMaterialGroup as schoolMaterials_createMaterialGroup,
-  deleteMaterialGroup as schoolMaterials_deleteMaterialGroup,
-  getMaterialGroups as schoolMaterials_getMaterialGroups,
-  publishMaterialGroup as schoolMaterials_publishMaterialGroup,
-  reorderMaterialGroup as schoolMaterials_reorderMaterialGroup,
-  updateMaterialGroup as schoolMaterials_updateMaterialGroup,
+  createMaterialGroup,
+  deleteMaterialGroup,
+  getMaterialGroups,
+  publishMaterialGroup,
+  reorderMaterialGroup,
+  updateMaterialGroup,
 } from "@repo/backend/confect/modules/school/classMaterials.service";
 import { Effect, Layer } from "effect";
 
@@ -15,7 +15,7 @@ const classes_materials_mutations_createMaterialGroupImpl = FunctionImpl.make(
   "classes.materials.mutations",
   "createMaterialGroup",
   (args) =>
-    schoolMaterials_createMaterialGroup(args).pipe(
+    createMaterialGroup(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -29,7 +29,7 @@ const classes_materials_mutations_deleteMaterialGroupImpl = FunctionImpl.make(
   "classes.materials.mutations",
   "deleteMaterialGroup",
   (args) =>
-    schoolMaterials_deleteMaterialGroup(args).pipe(
+    deleteMaterialGroup(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -42,7 +42,7 @@ const classes_materials_mutations_publishMaterialGroupImpl = FunctionImpl.make(
   api,
   "classes.materials.mutations",
   "publishMaterialGroup",
-  (args) => schoolMaterials_publishMaterialGroup(args).pipe(Effect.orDie)
+  (args) => publishMaterialGroup(args).pipe(Effect.orDie)
 );
 
 const classes_materials_mutations_reorderMaterialGroupImpl = FunctionImpl.make(
@@ -50,7 +50,7 @@ const classes_materials_mutations_reorderMaterialGroupImpl = FunctionImpl.make(
   "classes.materials.mutations",
   "reorderMaterialGroup",
   (args) =>
-    schoolMaterials_reorderMaterialGroup(args).pipe(
+    reorderMaterialGroup(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -64,7 +64,7 @@ const classes_materials_mutations_updateMaterialGroupImpl = FunctionImpl.make(
   "classes.materials.mutations",
   "updateMaterialGroup",
   (args) =>
-    schoolMaterials_updateMaterialGroup(args).pipe(
+    updateMaterialGroup(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -78,7 +78,7 @@ const classes_materials_queries_getMaterialGroupsImpl = FunctionImpl.make(
   "classes.materials.queries",
   "getMaterialGroups",
   (args) =>
-    schoolMaterials_getMaterialGroups(args).pipe(
+    getMaterialGroups(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),

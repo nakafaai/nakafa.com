@@ -1,5 +1,5 @@
 import { TableAggregate } from "@convex-dev/aggregate";
-import { components } from "@repo/backend/confect/modules/integrations/convexComponents";
+import { components } from "@repo/backend/convex/_generated/api";
 
 /** Per-tryout leaderboard aggregate sorted by highest theta first. */
 export const tryoutLeaderboard = new TableAggregate(

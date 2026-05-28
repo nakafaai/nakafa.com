@@ -1,13 +1,13 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import { sendWelcomeEmail as notificationEmail_sendWelcomeEmail } from "@repo/backend/confect/modules/notifications/email.service";
+import { sendWelcomeEmail } from "@repo/backend/confect/modules/notifications/email.service";
 import { Effect, Layer } from "effect";
 
 const emails_mutations_sendWelcomeEmailImpl = FunctionImpl.make(
   api,
   "emails.mutations",
   "sendWelcomeEmail",
-  (args) => notificationEmail_sendWelcomeEmail(args).pipe(Effect.orDie)
+  (args) => sendWelcomeEmail(args).pipe(Effect.orDie)
 );
 
 const emailsMutationsImpl = GroupImpl.make(api, "emails.mutations").pipe(

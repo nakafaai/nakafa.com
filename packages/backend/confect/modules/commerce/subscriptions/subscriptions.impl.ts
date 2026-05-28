@@ -1,9 +1,9 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
 import {
-  createSubscription as commerceSubscriptions_createSubscription,
-  hasActiveSubscription as commerceSubscriptions_hasActiveSubscription,
-  updateSubscription as commerceSubscriptions_updateSubscription,
+  createSubscription,
+  hasActiveSubscription,
+  updateSubscription,
 } from "@repo/backend/confect/modules/commerce/subscriptions.service";
 import { Effect, Layer } from "effect";
 
@@ -11,14 +11,14 @@ const subscriptions_mutations_createSubscriptionImpl = FunctionImpl.make(
   api,
   "subscriptions.mutations",
   "createSubscription",
-  (args) => commerceSubscriptions_createSubscription(args).pipe(Effect.orDie)
+  (args) => createSubscription(args).pipe(Effect.orDie)
 );
 
 const subscriptions_mutations_updateSubscriptionImpl = FunctionImpl.make(
   api,
   "subscriptions.mutations",
   "updateSubscription",
-  (args) => commerceSubscriptions_updateSubscription(args).pipe(Effect.orDie)
+  (args) => updateSubscription(args).pipe(Effect.orDie)
 );
 
 const subscriptions_queries_hasActiveSubscriptionImpl = FunctionImpl.make(
@@ -26,7 +26,7 @@ const subscriptions_queries_hasActiveSubscriptionImpl = FunctionImpl.make(
   "subscriptions.queries",
   "hasActiveSubscription",
   (args) =>
-    commerceSubscriptions_hasActiveSubscription(args).pipe(
+    hasActiveSubscription(args).pipe(
       Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
       Effect.orDie
     )
