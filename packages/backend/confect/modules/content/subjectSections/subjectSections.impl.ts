@@ -9,7 +9,8 @@ const subjectSections_queries_getTrendingSubjectsImpl = FunctionImpl.make(
   "getTrendingSubjects",
   (args) =>
     contentSubjectSections_getTrendingSubjects(args).pipe(
-      Effect.catchTag("TrendingRangeError", (error) => Effect.die(error))
+      Effect.catchTag("TrendingRangeError", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 

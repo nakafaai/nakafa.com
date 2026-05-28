@@ -25,8 +25,19 @@ const gatewayProviderSchema = Schema.Struct({
   generationId: Schema.optional(Schema.NullOr(Schema.String)),
 });
 
+const azureProviderSchema = Schema.Struct({
+  itemId: Schema.String,
+  reasoningEncryptedContent: Schema.optional(Schema.String),
+});
+
+const anthropicProviderSchema = Schema.Struct({
+  signature: Schema.String,
+});
+
 /** AI SDK provider metadata persisted because the app consumes it. */
 export const providerMetadataSchema = Schema.Struct({
+  anthropic: Schema.optional(anthropicProviderSchema),
+  azure: Schema.optional(azureProviderSchema),
   gateway: Schema.optional(gatewayProviderSchema),
   google: Schema.optional(groundingProviderSchema),
   vertex: Schema.optional(groundingProviderSchema),

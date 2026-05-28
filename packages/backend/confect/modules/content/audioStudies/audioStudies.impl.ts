@@ -28,14 +28,14 @@ import {
   generateAudioForQueueItem,
   handleWorkflowComplete,
 } from "@repo/backend/confect/modules/content/audioStudies/workflows";
-import { Layer } from "effect";
+import { Effect, Layer } from "effect";
 
 const audioStudies_mutations_contentAudios_claimScriptGenerationImpl =
   FunctionImpl.make(
     api,
     "audioStudies.mutations.contentAudios",
     "claimScriptGeneration",
-    (args) => contentAudioRecords_claimScriptGeneration(args)
+    (args) => contentAudioRecords_claimScriptGeneration(args).pipe(Effect.orDie)
   );
 
 const audioStudies_mutations_contentAudios_claimSpeechGenerationImpl =
@@ -43,7 +43,7 @@ const audioStudies_mutations_contentAudios_claimSpeechGenerationImpl =
     api,
     "audioStudies.mutations.contentAudios",
     "claimSpeechGeneration",
-    (args) => contentAudioRecords_claimSpeechGeneration(args)
+    (args) => contentAudioRecords_claimSpeechGeneration(args).pipe(Effect.orDie)
   );
 
 const audioStudies_mutations_contentAudios_createOrGetAudioRecordImpl =
@@ -51,7 +51,8 @@ const audioStudies_mutations_contentAudios_createOrGetAudioRecordImpl =
     api,
     "audioStudies.mutations.contentAudios",
     "createOrGetAudioRecord",
-    (args) => contentAudioRecords_createOrGetAudioRecord(args)
+    (args) =>
+      contentAudioRecords_createOrGetAudioRecord(args).pipe(Effect.orDie)
   );
 
 const audioStudies_workflows_generateAudioForQueueItemImpl = FunctionImpl.make(
@@ -72,21 +73,21 @@ const audioStudies_mutations_contentAudios_markFailedImpl = FunctionImpl.make(
   api,
   "audioStudies.mutations.contentAudios",
   "markFailed",
-  (args) => contentAudioRecords_markFailed(args)
+  (args) => contentAudioRecords_markFailed(args).pipe(Effect.orDie)
 );
 
 const audioStudies_mutations_contentAudios_saveAudioImpl = FunctionImpl.make(
   api,
   "audioStudies.mutations.contentAudios",
   "saveAudio",
-  (args) => contentAudioRecords_saveAudio(args)
+  (args) => contentAudioRecords_saveAudio(args).pipe(Effect.orDie)
 );
 
 const audioStudies_mutations_contentAudios_saveScriptImpl = FunctionImpl.make(
   api,
   "audioStudies.mutations.contentAudios",
   "saveScript",
-  (args) => contentAudioRecords_saveScript(args)
+  (args) => contentAudioRecords_saveScript(args).pipe(Effect.orDie)
 );
 
 const audioStudies_mutations_contentAudios_updateContentHashImpl =
@@ -94,42 +95,43 @@ const audioStudies_mutations_contentAudios_updateContentHashImpl =
     api,
     "audioStudies.mutations.contentAudios",
     "updateContentHash",
-    (args) => contentAudioRecords_updateContentHash(args)
+    (args) => contentAudioRecords_updateContentHash(args).pipe(Effect.orDie)
   );
 
 const audioStudies_mutations_queue_cleanupImpl = FunctionImpl.make(
   api,
   "audioStudies.mutations.queue",
   "cleanup",
-  (_args) => contentAudioQueue_cleanup()
+  (_args) => contentAudioQueue_cleanup().pipe(Effect.orDie)
 );
 
 const audioStudies_mutations_queue_lockQueueItemImpl = FunctionImpl.make(
   api,
   "audioStudies.mutations.queue",
   "lockQueueItem",
-  (args) => contentAudioQueue_lockQueueItem(args)
+  (args) => contentAudioQueue_lockQueueItem(args).pipe(Effect.orDie)
 );
 
 const audioStudies_mutations_queue_markQueueFailedImpl = FunctionImpl.make(
   api,
   "audioStudies.mutations.queue",
   "markQueueFailed",
-  (args) => contentAudioQueue_markQueueFailed(args)
+  (args) => contentAudioQueue_markQueueFailed(args).pipe(Effect.orDie)
 );
 
 const audioStudies_mutations_queue_markQueueCompletedImpl = FunctionImpl.make(
   api,
   "audioStudies.mutations.queue",
   "markQueueCompleted",
-  (args) => contentAudioQueue_markQueueCompleted(args.queueItemId)
+  (args) =>
+    contentAudioQueue_markQueueCompleted(args.queueItemId).pipe(Effect.orDie)
 );
 
 const audioStudies_mutations_queue_resetStuckQueueItemsImpl = FunctionImpl.make(
   api,
   "audioStudies.mutations.queue",
   "resetStuckQueueItems",
-  (_args) => contentAudioQueue_resetStuckQueueItems()
+  (_args) => contentAudioQueue_resetStuckQueueItems().pipe(Effect.orDie)
 );
 
 const audioStudies_mutations_queue_startWorkflowsForPendingItemsImpl =
@@ -137,7 +139,8 @@ const audioStudies_mutations_queue_startWorkflowsForPendingItemsImpl =
     api,
     "audioStudies.mutations.queue",
     "startWorkflowsForPendingItems",
-    (_args) => contentAudioQueue_startWorkflowsForPendingItems()
+    (_args) =>
+      contentAudioQueue_startWorkflowsForPendingItems().pipe(Effect.orDie)
   );
 
 const audioStudies_queries_internal_getAudioAndContentForScriptGenerationImpl =
@@ -145,7 +148,10 @@ const audioStudies_queries_internal_getAudioAndContentForScriptGenerationImpl =
     api,
     "audioStudies.queries.internalFunctions",
     "getAudioAndContentForScriptGeneration",
-    (args) => contentAudioRecords_getAudioAndContentForScriptGeneration(args)
+    (args) =>
+      contentAudioRecords_getAudioAndContentForScriptGeneration(args).pipe(
+        Effect.orDie
+      )
   );
 
 const audioStudies_queries_internal_getAudioForSpeechGenerationImpl =
@@ -153,28 +159,29 @@ const audioStudies_queries_internal_getAudioForSpeechGenerationImpl =
     api,
     "audioStudies.queries.internalFunctions",
     "getAudioForSpeechGeneration",
-    (args) => contentAudioRecords_getAudioForSpeechGeneration(args)
+    (args) =>
+      contentAudioRecords_getAudioForSpeechGeneration(args).pipe(Effect.orDie)
   );
 
 const audioStudies_queries_internal_verifyContentHashImpl = FunctionImpl.make(
   api,
   "audioStudies.queries.internalFunctions",
   "verifyContentHash",
-  (args) => contentAudioRecords_verifyContentHash(args)
+  (args) => contentAudioRecords_verifyContentHash(args).pipe(Effect.orDie)
 );
 
 const audioStudies_queries_internal_getContentHashImpl = FunctionImpl.make(
   api,
   "audioStudies.queries.internalFunctions",
   "getContentHash",
-  (args) => contentAudioLookup_getContentHash(args)
+  (args) => contentAudioLookup_getContentHash(args).pipe(Effect.orDie)
 );
 
 const audioStudies_queries_public_getAudioBySlugImpl = FunctionImpl.make(
   api,
   "audioStudies.queries.publicFunctions",
   "getAudioBySlug",
-  (args) => contentAudioLookup_getAudioBySlug(args)
+  (args) => contentAudioLookup_getAudioBySlug(args).pipe(Effect.orDie)
 );
 
 const audioStudiesMutationsContentAudiosImpl = GroupImpl.make(

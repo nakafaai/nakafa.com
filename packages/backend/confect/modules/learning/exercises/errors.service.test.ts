@@ -1,48 +1,52 @@
+import { describe, expect, it } from "@effect/vitest";
 import { failExercise } from "@repo/backend/confect/modules/learning/exercises/errors.service";
 import { Cause, Effect, Exit, Option } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("failExercise", () => {
-  it("fails with the exercise error code and message", async () => {
-    const exit = await Effect.runPromiseExit(
-      failExercise("TIME_EXPIRED", "Time expired.")
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
+  it.effect("fails with the exercise error code and message", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        failExercise("TIME_EXPIRED", "Time expired.")
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
 
-    if (Exit.isSuccess(exit)) {
-      return;
-    }
+      if (Exit.isSuccess(exit)) {
+        return;
+      }
 
-    const error = Cause.failureOption(exit.cause);
+      const error = Cause.failureOption(exit.cause);
 
-    expect(Option.isSome(error)).toBe(true);
-    expect(Option.getOrThrow(error)).toMatchObject({
-      _tag: "ExerciseError",
-      code: "TIME_EXPIRED",
-      message: "Time expired.",
-    });
-  });
+      expect(Option.isSome(error)).toBe(true);
+      expect(Option.getOrThrow(error)).toMatchObject({
+        _tag: "ExerciseError",
+        code: "TIME_EXPIRED",
+        message: "Time expired.",
+      });
+    })
+  );
 
-  it("preserves the attempt expiry timestamp", async () => {
-    const expiresAtMs = 42;
-    const exit = await Effect.runPromiseExit(
-      failExercise("TRYOUT_EXPIRED", "Tryout expired.", expiresAtMs)
-    );
+  it.effect("preserves the attempt expiry timestamp", () =>
+    Effect.gen(function* () {
+      const expiresAtMs = 42;
+      const exit = yield* Effect.exit(
+        failExercise("TRYOUT_EXPIRED", "Tryout expired.", expiresAtMs)
+      );
 
-    expect(Exit.isFailure(exit)).toBe(true);
+      expect(Exit.isFailure(exit)).toBe(true);
 
-    if (Exit.isSuccess(exit)) {
-      return;
-    }
+      if (Exit.isSuccess(exit)) {
+        return;
+      }
 
-    const error = Cause.failureOption(exit.cause);
+      const error = Cause.failureOption(exit.cause);
 
-    expect(Option.isSome(error)).toBe(true);
-    expect(Option.getOrThrow(error)).toMatchObject({
-      _tag: "ExerciseError",
-      code: "TRYOUT_EXPIRED",
-      expiresAtMs,
-      message: "Tryout expired.",
-    });
-  });
+      expect(Option.isSome(error)).toBe(true);
+      expect(Option.getOrThrow(error)).toMatchObject({
+        _tag: "ExerciseError",
+        code: "TRYOUT_EXPIRED",
+        expiresAtMs,
+        message: "Tryout expired.",
+      });
+    })
+  );
 });

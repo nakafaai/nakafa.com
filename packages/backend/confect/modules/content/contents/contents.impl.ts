@@ -16,13 +16,13 @@ import {
   getPopularContentForAudioQueue as contentPopularAudio_getPopularContentForAudioQueue,
   populateAudioQueue as contentPopularAudio_populateAudioQueue,
 } from "@repo/backend/confect/modules/content/popularAudioQueue.service";
-import { Layer } from "effect";
+import { Effect, Layer } from "effect";
 
 const contents_mutations_views_recordContentViewImpl = FunctionImpl.make(
   api,
   "contents.mutations.views",
   "recordContentView",
-  (args) => contentViews_recordContentView(args)
+  (args) => contentViews_recordContentView(args).pipe(Effect.orDie)
 );
 
 const contents_mutations_audio_enqueuePopularContentForAudioImpl =
@@ -30,7 +30,8 @@ const contents_mutations_audio_enqueuePopularContentForAudioImpl =
     api,
     "contents.mutations.audio",
     "enqueuePopularContentForAudio",
-    (args) => contentPopularAudio_enqueuePopularContentForAudio(args)
+    (args) =>
+      contentPopularAudio_enqueuePopularContentForAudio(args).pipe(Effect.orDie)
   );
 
 const contents_queries_audio_getPopularContentForAudioQueueImpl =
@@ -38,35 +39,36 @@ const contents_queries_audio_getPopularContentForAudioQueueImpl =
     api,
     "contents.queries.audio",
     "getPopularContentForAudioQueue",
-    (_args) => contentPopularAudio_getPopularContentForAudioQueue()
+    (_args) =>
+      contentPopularAudio_getPopularContentForAudioQueue().pipe(Effect.orDie)
   );
 
 const contents_queries_recent_getRecentlyViewedImpl = FunctionImpl.make(
   api,
   "contents.queries.recent",
   "getRecentlyViewed",
-  (args) => contentViews_getRecentlyViewed(args)
+  (args) => contentViews_getRecentlyViewed(args).pipe(Effect.orDie)
 );
 
 const contents_actions_queue_populateAudioQueueImpl = FunctionImpl.make(
   api,
   "contents.actions.queue",
   "populateAudioQueue",
-  (_args) => contentPopularAudio_populateAudioQueue()
+  (_args) => contentPopularAudio_populateAudioQueue().pipe(Effect.orDie)
 );
 
 const contents_mutations_search_bulkSyncQuranSearchImpl = FunctionImpl.make(
   api,
   "contents.mutations.search",
   "bulkSyncQuranSearch",
-  (args) => contentSearchWrites_bulkSyncQuranSearch(args)
+  (args) => contentSearchWrites_bulkSyncQuranSearch(args).pipe(Effect.orDie)
 );
 
 const contents_queries_search_searchImpl = FunctionImpl.make(
   api,
   "contents.queries.search",
   "search",
-  (args) => contentSearchQueries_search(args)
+  (args) => contentSearchQueries_search(args).pipe(Effect.orDie)
 );
 
 const contentsActionsQueueImpl = GroupImpl.make(
@@ -79,7 +81,8 @@ const contents_mutations_analytics_processContentAnalyticsPartitionImpl =
     api,
     "contents.mutations.analytics",
     "processContentAnalyticsPartition",
-    (args) => contentAnalytics_processContentAnalyticsPartition(args)
+    (args) =>
+      contentAnalytics_processContentAnalyticsPartition(args).pipe(Effect.orDie)
   );
 
 const contents_mutations_analytics_scheduleContentAnalyticsPartitionImpl =
@@ -87,7 +90,10 @@ const contents_mutations_analytics_scheduleContentAnalyticsPartitionImpl =
     api,
     "contents.mutations.analytics",
     "scheduleContentAnalyticsPartition",
-    (args) => contentAnalytics_scheduleContentAnalyticsPartition(args)
+    (args) =>
+      contentAnalytics_scheduleContentAnalyticsPartition(args).pipe(
+        Effect.orDie
+      )
   );
 
 const contents_mutations_analytics_scheduleContentAnalyticsPartitionsImpl =
@@ -95,7 +101,8 @@ const contents_mutations_analytics_scheduleContentAnalyticsPartitionsImpl =
     api,
     "contents.mutations.analytics",
     "scheduleContentAnalyticsPartitions",
-    (_args) => contentAnalytics_scheduleContentAnalyticsPartitions()
+    (_args) =>
+      contentAnalytics_scheduleContentAnalyticsPartitions().pipe(Effect.orDie)
   );
 
 const contentsMutationsAnalyticsImpl = GroupImpl.make(

@@ -39,7 +39,8 @@ const assessments_mutations_public_save_saveResponseImpl = FunctionImpl.make(
       Effect.catchTags({
         AssessmentError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -53,7 +54,8 @@ const assessments_mutations_public_start_startAttemptImpl = FunctionImpl.make(
         AssessmentError: (error) => Effect.die(error),
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -66,7 +68,8 @@ const assessments_mutations_public_submit_submitAttemptImpl = FunctionImpl.make(
       Effect.catchTags({
         AssessmentError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -80,7 +83,8 @@ const assessments_queries_public_bank_listQuestionBanksImpl = FunctionImpl.make(
         AssessmentError: (error) => Effect.die(error),
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -94,7 +98,8 @@ const assessments_queries_public_list_listAssessmentsImpl = FunctionImpl.make(
         AssessmentError: (error) => Effect.die(error),
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -103,7 +108,8 @@ const assessments_mutations_internal_publishing_publishAssessmentImpl =
     api,
     "assessments.mutations.internalFunctions.publishing",
     "publishAssessment",
-    (args) => schoolAssessmentPublishing_publishAssessment(args)
+    (args) =>
+      schoolAssessmentPublishing_publishAssessment(args).pipe(Effect.orDie)
   );
 
 const assessmentsMutationsInternalPublishingImpl = GroupImpl.make(
@@ -124,7 +130,8 @@ const assessments_mutations_public_assign_createAssignmentImpl =
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -144,7 +151,8 @@ const assessments_mutations_public_bank_createQuestionBankImpl =
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -159,7 +167,8 @@ const assessments_mutations_public_bank_createQuestionBankEntryImpl =
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -183,7 +192,8 @@ const assessments_mutations_public_create_createAssessmentImpl =
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -203,7 +213,8 @@ const assessments_mutations_public_delete_deleteAssessmentImpl =
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -223,7 +234,8 @@ const assessments_mutations_public_questions_createQuestionImpl =
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -245,7 +257,8 @@ const assessments_mutations_public_reorder_reorderAssessmentImpl =
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -272,7 +285,8 @@ const assessments_mutations_public_sections_createSectionImpl =
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -302,7 +316,8 @@ const assessments_mutations_public_update_updateAssessmentImpl =
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -322,7 +337,8 @@ const assessments_mutations_public_version_createAssessmentVersionImpl =
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -346,7 +362,8 @@ const assessments_queries_public_assignment_getAssignmentImpl =
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -365,7 +382,8 @@ const assessments_queries_public_authoring_getAuthoredAssessmentImpl =
         Effect.catchTags({
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 

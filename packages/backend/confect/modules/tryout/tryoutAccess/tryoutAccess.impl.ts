@@ -22,7 +22,10 @@ const tryoutAccess_mutations_internal_competition_finalizeCompetitionCampaignRes
     api,
     "tryoutAccess.mutations.internalFunctions.competition",
     "finalizeCompetitionCampaignResults",
-    (args) => tryoutAccessStatus_finalizeCompetitionCampaignResults(args)
+    (args) =>
+      tryoutAccessStatus_finalizeCompetitionCampaignResults(args).pipe(
+        Effect.orDie
+      )
   );
 
 const tryoutAccess_queries_internal_maintenance_getTryoutAccessCampaignIntegrityImpl =
@@ -30,7 +33,10 @@ const tryoutAccess_queries_internal_maintenance_getTryoutAccessCampaignIntegrity
     api,
     "tryoutAccess.queries.internalFunctions.maintenance",
     "getTryoutAccessCampaignIntegrity",
-    (args) => tryoutAccessMaintenance_getTryoutAccessCampaignIntegrity(args)
+    (args) =>
+      tryoutAccessMaintenance_getTryoutAccessCampaignIntegrity(args).pipe(
+        Effect.orDie
+      )
   );
 
 const tryoutAccess_queries_internal_maintenance_getTryoutAccessGrantIntegrityImpl =
@@ -38,7 +44,10 @@ const tryoutAccess_queries_internal_maintenance_getTryoutAccessGrantIntegrityImp
     api,
     "tryoutAccess.queries.internalFunctions.maintenance",
     "getTryoutAccessGrantIntegrity",
-    (args) => tryoutAccessMaintenance_getTryoutAccessGrantIntegrity(args)
+    (args) =>
+      tryoutAccessMaintenance_getTryoutAccessGrantIntegrity(args).pipe(
+        Effect.orDie
+      )
   );
 
 const tryoutAccess_queries_internal_maintenance_getTryoutAccessEntitlementIntegrityImpl =
@@ -46,7 +55,10 @@ const tryoutAccess_queries_internal_maintenance_getTryoutAccessEntitlementIntegr
     api,
     "tryoutAccess.queries.internalFunctions.maintenance",
     "getTryoutAccessEntitlementIntegrity",
-    (args) => tryoutAccessMaintenance_getTryoutAccessEntitlementIntegrity(args)
+    (args) =>
+      tryoutAccessMaintenance_getTryoutAccessEntitlementIntegrity(args).pipe(
+        Effect.orDie
+      )
   );
 
 const tryoutAccess_queries_internal_maintenance_listCompetitionCampaignProductsByProductImpl =
@@ -55,7 +67,9 @@ const tryoutAccess_queries_internal_maintenance_listCompetitionCampaignProductsB
     "tryoutAccess.queries.internalFunctions.maintenance",
     "listCompetitionCampaignProductsByProduct",
     (args) =>
-      tryoutAccessMaintenance_listCompetitionCampaignProductsByProduct(args)
+      tryoutAccessMaintenance_listCompetitionCampaignProductsByProduct(
+        args
+      ).pipe(Effect.orDie)
   );
 
 const tryoutAccess_mutations_setup_upsertCampaignAndLinkImpl =
@@ -65,7 +79,8 @@ const tryoutAccess_mutations_setup_upsertCampaignAndLinkImpl =
     "upsertCampaignAndLink",
     (args) =>
       tryoutAccessSetup_upsertCampaignAndLink(args).pipe(
-        Effect.catchTag("TryoutAccessError", (error) => Effect.die(error))
+        Effect.catchTag("TryoutAccessError", (error) => Effect.die(error)),
+        Effect.orDie
       )
   );
 
@@ -74,7 +89,7 @@ const tryoutAccess_mutations_internal_status_expireGrantImpl =
     api,
     "tryoutAccess.mutations.internalFunctions.status",
     "expireGrant",
-    (args) => tryoutAccessStatus_expireGrant(args)
+    (args) => tryoutAccessStatus_expireGrant(args).pipe(Effect.orDie)
   );
 
 const tryoutAccess_mutations_internal_status_sweepStatesImpl =
@@ -82,7 +97,7 @@ const tryoutAccess_mutations_internal_status_sweepStatesImpl =
     api,
     "tryoutAccess.mutations.internalFunctions.status",
     "sweepStates",
-    (_args) => tryoutAccessStatus_sweepStates()
+    (_args) => tryoutAccessStatus_sweepStates().pipe(Effect.orDie)
   );
 
 const tryoutAccess_mutations_internal_status_syncCampaignRedeemStatusImpl =
@@ -90,7 +105,8 @@ const tryoutAccess_mutations_internal_status_syncCampaignRedeemStatusImpl =
     api,
     "tryoutAccess.mutations.internalFunctions.status",
     "syncCampaignRedeemStatus",
-    (args) => tryoutAccessStatus_syncCampaignRedeemStatus(args)
+    (args) =>
+      tryoutAccessStatus_syncCampaignRedeemStatus(args).pipe(Effect.orDie)
   );
 
 const tryoutAccess_mutations_redeem_redeemEventAccessImpl = FunctionImpl.make(
@@ -102,7 +118,8 @@ const tryoutAccess_mutations_redeem_redeemEventAccessImpl = FunctionImpl.make(
       Effect.catchTags({
         TryoutAccessError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -110,7 +127,7 @@ const tryoutAccess_queries_page_getEventPageStateImpl = FunctionImpl.make(
   api,
   "tryoutAccess.queries.page",
   "getEventPageState",
-  (args) => tryoutAccessPage_getEventPageState(args)
+  (args) => tryoutAccessPage_getEventPageState(args).pipe(Effect.orDie)
 );
 
 const tryoutAccessMutationsInternalCompetitionImpl = GroupImpl.make(

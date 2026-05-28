@@ -13,7 +13,7 @@ import { Effect, Option } from "effect";
 
 /** Upserts author rows by unique display name. */
 export const bulkSyncAuthors = Effect.fn("contentSync.authors.bulkSyncAuthors")(
-  function* (args: { authorNames: string[] }) {
+  function* (args: { readonly authorNames: readonly string[] }) {
     const reader = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
     yield* assertContentSyncBatchSize({
@@ -57,7 +57,7 @@ export const bulkSyncAuthors = Effect.fn("contentSync.authors.bulkSyncAuthors")(
 /** Deletes authors that are not referenced by content author links. */
 export const deleteUnusedAuthors = Effect.fn(
   "contentSync.authors.deleteUnusedAuthors"
-)(function* (args: { authorIds: Id<"authors">[] }) {
+)(function* (args: { readonly authorIds: readonly Id<"authors">[] }) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({

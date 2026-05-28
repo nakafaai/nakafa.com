@@ -26,7 +26,8 @@ const customers_queries_internal_maintenance_listUsersForCustomerIntegrityImpl =
     api,
     "customers.queries.internalFunctions.maintenance",
     "listUsersForCustomerIntegrity",
-    (args) => commerceCustomers_listUsersForCustomerIntegrity(args)
+    (args) =>
+      commerceCustomers_listUsersForCustomerIntegrity(args).pipe(Effect.orDie)
   );
 
 const customers_queries_internal_maintenance_listCustomersForIntegrityImpl =
@@ -34,7 +35,8 @@ const customers_queries_internal_maintenance_listCustomersForIntegrityImpl =
     api,
     "customers.queries.internalFunctions.maintenance",
     "listCustomersForIntegrity",
-    (args) => commerceCustomers_listCustomersForIntegrity(args)
+    (args) =>
+      commerceCustomers_listCustomersForIntegrity(args).pipe(Effect.orDie)
   );
 
 const customers_queries_internal_maintenance_listActiveSubscriptionsForIntegrityImpl =
@@ -42,7 +44,10 @@ const customers_queries_internal_maintenance_listActiveSubscriptionsForIntegrity
     api,
     "customers.queries.internalFunctions.maintenance",
     "listActiveSubscriptionsForIntegrity",
-    (args) => commerceCustomers_listActiveSubscriptionsForIntegrity(args)
+    (args) =>
+      commerceCustomers_listActiveSubscriptionsForIntegrity(args).pipe(
+        Effect.orDie
+      )
   );
 
 const customers_actions_internal_syncCustomerImpl = FunctionImpl.make(
@@ -54,7 +59,8 @@ const customers_actions_internal_syncCustomerImpl = FunctionImpl.make(
       Effect.catchTags({
         PolarCustomerError: (error) => Effect.die(error),
         PolarEnvironmentError: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -68,7 +74,8 @@ const customers_actions_internal_repairCustomerImpl = FunctionImpl.make(
         CustomerActionError: (error) => Effect.die(error),
         PolarCustomerError: (error) => Effect.die(error),
         PolarEnvironmentError: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -81,7 +88,8 @@ const customers_actions_internal_cleanupUserDataImpl = FunctionImpl.make(
       Effect.catchTags({
         PolarCustomerError: (error) => Effect.die(error),
         PolarEnvironmentError: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -96,7 +104,8 @@ const customers_actions_internal_cleanupStalePolarCustomerImpl =
           CustomerActionError: (error) => Effect.die(error),
           PolarCustomerError: (error) => Effect.die(error),
           PolarEnvironmentError: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -111,7 +120,8 @@ const customers_actions_public_generateCheckoutLinkImpl = FunctionImpl.make(
         PolarCustomerError: (error) => Effect.die(error),
         PolarEnvironmentError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -127,7 +137,8 @@ const customers_actions_public_generateCustomerPortalUrlImpl =
           PolarCustomerError: (error) => Effect.die(error),
           PolarEnvironmentError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -135,14 +146,14 @@ const customers_mutations_internal_deleteCustomerByIdImpl = FunctionImpl.make(
   api,
   "customers.mutations.internalFunctions",
   "deleteCustomerById",
-  (args) => commerceCustomers_deleteCustomerById(args)
+  (args) => commerceCustomers_deleteCustomerById(args).pipe(Effect.orDie)
 );
 
 const customers_mutations_internal_upsertCustomerImpl = FunctionImpl.make(
   api,
   "customers.mutations.internalFunctions",
   "upsertCustomer",
-  (args) => commerceCustomers_upsertCustomer(args)
+  (args) => commerceCustomers_upsertCustomer(args).pipe(Effect.orDie)
 );
 
 const customers_queries_internal_customer_getCustomerByUserIdImpl =
@@ -150,7 +161,7 @@ const customers_queries_internal_customer_getCustomerByUserIdImpl =
     api,
     "customers.queries.internalFunctions.customer",
     "getCustomerByUserId",
-    (args) => commerceCustomers_getCustomerByUserId(args)
+    (args) => commerceCustomers_getCustomerByUserId(args).pipe(Effect.orDie)
   );
 
 const customers_queries_internal_customer_getCustomerByPolarIdImpl =
@@ -158,7 +169,7 @@ const customers_queries_internal_customer_getCustomerByPolarIdImpl =
     api,
     "customers.queries.internalFunctions.customer",
     "getCustomerByPolarId",
-    (args) => commerceCustomers_getCustomerByPolarId(args)
+    (args) => commerceCustomers_getCustomerByPolarId(args).pipe(Effect.orDie)
   );
 
 const customers_queries_internal_customer_hasActiveSubscriptionByCustomerIdImpl =
@@ -166,7 +177,10 @@ const customers_queries_internal_customer_hasActiveSubscriptionByCustomerIdImpl 
     api,
     "customers.queries.internalFunctions.customer",
     "hasActiveSubscriptionByCustomerId",
-    (args) => commerceCustomers_hasActiveSubscriptionByCustomerId(args)
+    (args) =>
+      commerceCustomers_hasActiveSubscriptionByCustomerId(args).pipe(
+        Effect.orDie
+      )
   );
 
 const customers_queries_internal_customer_getUserIdByPolarCustomerImpl =
@@ -174,7 +188,8 @@ const customers_queries_internal_customer_getUserIdByPolarCustomerImpl =
     api,
     "customers.queries.internalFunctions.customer",
     "getUserIdByPolarCustomer",
-    (args) => commerceCustomers_getUserIdByPolarCustomer(args)
+    (args) =>
+      commerceCustomers_getUserIdByPolarCustomer(args).pipe(Effect.orDie)
   );
 
 const customersQueriesInternalCustomerImpl = GroupImpl.make(

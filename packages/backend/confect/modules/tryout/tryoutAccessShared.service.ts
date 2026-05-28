@@ -117,15 +117,15 @@ export function getTryoutAccessUnavailableReason(eventAccess: {
   readonly link: Doc<"tryoutAccessLinks">;
 }) {
   if (!(eventAccess.link.enabled && eventAccess.campaign.enabled)) {
-    return "disabled";
+    return "disabled" as const;
   }
 
   if (eventAccess.campaign.redeemStatus === "scheduled") {
-    return "not-started";
+    return "not-started" as const;
   }
 
   if (eventAccess.campaign.redeemStatus === "ended") {
-    return "ended";
+    return "ended" as const;
   }
 
   return null;

@@ -76,8 +76,12 @@ export const formatSyncResult = (result: SyncResult): string => {
 };
 
 export const logPhaseMetrics = (phase: PhaseMetrics): void => {
-  const duration = phase.durationMs ? formatDuration(phase.durationMs) : "N/A";
-  const rate = phase.itemsPerSecond ? phase.itemsPerSecond.toFixed(1) : "N/A";
+  const duration =
+    phase.durationMs === undefined ? "N/A" : formatDuration(phase.durationMs);
+  const rate =
+    phase.itemsPerSecond === undefined
+      ? "N/A"
+      : phase.itemsPerSecond.toFixed(1);
   log(
     `  ${phase.phase}: ${phase.itemCount} items in ${duration} (${rate}/sec)`
   );
@@ -89,7 +93,10 @@ export const logSyncMetrics = (metrics: SyncMetrics): void => {
     logPhaseMetrics(phase);
   }
 
-  if (metrics.totalDurationMs && metrics.totalItems !== undefined) {
+  if (
+    metrics.totalDurationMs !== undefined &&
+    metrics.totalItems !== undefined
+  ) {
     log("---");
     log(
       `  Total: ${metrics.totalItems} items in ${formatDuration(metrics.totalDurationMs)}`

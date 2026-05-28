@@ -56,7 +56,7 @@ interface SyncedSubjectSection {
 /** Upserts synced subject topic metadata. */
 export const bulkSyncSubjectTopics = Effect.fn(
   "contentSync.subjects.bulkSyncSubjectTopics"
-)(function* (args: { topics: SyncedSubjectTopic[] }) {
+)(function* (args: { readonly topics: readonly SyncedSubjectTopic[] }) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
@@ -127,7 +127,7 @@ export const bulkSyncSubjectTopics = Effect.fn(
 /** Upserts synced subject sections and linked author/search/audio rows. */
 export const bulkSyncSubjectSections = Effect.fn(
   "contentSync.subjects.bulkSyncSubjectSections"
-)(function* (args: { sections: SyncedSubjectSection[] }) {
+)(function* (args: { readonly sections: readonly SyncedSubjectSection[] }) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
@@ -260,7 +260,7 @@ export const bulkSyncSubjectSections = Effect.fn(
 /** Deletes stale subject topics and their bounded child sections. */
 export const deleteStaleSubjectTopics = Effect.fn(
   "contentSync.subjects.deleteStaleSubjectTopics"
-)(function* (args: { topicIds: Id<"subjectTopics">[] }) {
+)(function* (args: { readonly topicIds: readonly Id<"subjectTopics">[] }) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
@@ -309,7 +309,7 @@ export const deleteStaleSubjectTopics = Effect.fn(
 /** Deletes stale subject sections. */
 export const deleteStaleSubjectSections = Effect.fn(
   "contentSync.subjects.deleteStaleSubjectSections"
-)(function* (args: { sectionIds: Id<"subjectSections">[] }) {
+)(function* (args: { readonly sectionIds: readonly Id<"subjectSections">[] }) {
   const reader = yield* DatabaseReader;
   yield* assertContentSyncBatchSize({
     functionName: "deleteStaleSubjectSections",

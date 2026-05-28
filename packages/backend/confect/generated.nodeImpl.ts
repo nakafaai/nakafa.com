@@ -4,20 +4,20 @@ import {
   generateScript,
   generateSpeech,
 } from "@repo/backend/confect/modules/content/audioGeneration.actions";
-import { Layer } from "effect";
+import { Effect, Layer } from "effect";
 
 const audioStudies_actions_generateSpeechImpl = FunctionImpl.make(
   nodeApi,
   "audioStudies.actions",
   "generateSpeech",
-  generateSpeech
+  (args) => generateSpeech(args).pipe(Effect.orDie)
 );
 
 const audioStudies_actions_generateScriptImpl = FunctionImpl.make(
   nodeApi,
   "audioStudies.actions",
   "generateScript",
-  generateScript
+  (args) => generateScript(args).pipe(Effect.orDie)
 );
 
 const audioStudiesActionsImpl = GroupImpl.make(

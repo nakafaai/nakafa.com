@@ -162,7 +162,9 @@ export const saveForumUpload = Effect.fn("school.forums.saveForumUpload")(
 /** Discards pending forum uploads owned by the current user. */
 export const discardForumUploads = Effect.fn(
   "school.forums.discardForumUploads"
-)(function* (args: { uploadIds: Id<"schoolClassForumPendingUploads">[] }) {
+)(function* (args: {
+  readonly uploadIds: readonly Id<"schoolClassForumPendingUploads">[];
+}) {
   const reader = yield* DatabaseReader;
   const user = yield* requireAppUser();
   const userId = user.appUser._id;

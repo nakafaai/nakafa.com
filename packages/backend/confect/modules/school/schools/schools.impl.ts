@@ -18,7 +18,8 @@ const schools_mutations_createSchoolImpl = FunctionImpl.make(
       Effect.catchTags({
         SchoolActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -31,7 +32,8 @@ const schools_mutations_joinSchoolImpl = FunctionImpl.make(
       Effect.catchTags({
         SchoolActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -41,7 +43,8 @@ const schools_queries_getSchoolBySlugImpl = FunctionImpl.make(
   "getSchoolBySlug",
   (args) =>
     schoolSchools_getSchoolBySlug(args).pipe(
-      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 
@@ -54,7 +57,8 @@ const schools_queries_getMySchoolLandingStateImpl = FunctionImpl.make(
       Effect.catchTags({
         SchoolActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -64,7 +68,8 @@ const schools_queries_getMySchoolsPageImpl = FunctionImpl.make(
   "getMySchoolsPage",
   (args) =>
     schoolSchools_getMySchoolsPage(args).pipe(
-      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 

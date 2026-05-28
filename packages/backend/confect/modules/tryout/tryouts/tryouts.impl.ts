@@ -42,7 +42,8 @@ const tryouts_queries_me_history_getUserTryoutAttemptHistoryImpl =
           IrtError: (error) => Effect.die(error),
           TryoutError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -56,7 +57,8 @@ const tryouts_mutations_attempts_completePartImpl = FunctionImpl.make(
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -70,7 +72,8 @@ const tryouts_mutations_attempts_startPartImpl = FunctionImpl.make(
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -84,7 +87,8 @@ const tryouts_mutations_attempts_startTryoutImpl = FunctionImpl.make(
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -94,7 +98,8 @@ const tryouts_queries_leaderboard_getTryoutLeaderboardImpl = FunctionImpl.make(
   "getTryoutLeaderboard",
   (args) =>
     tryoutLeaderboard_getTryoutLeaderboard(args).pipe(
-      Effect.catchTag("TryoutError", (error) => Effect.die(error))
+      Effect.catchTag("TryoutError", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 
@@ -102,7 +107,7 @@ const tryouts_queries_leaderboard_getGlobalLeaderboardImpl = FunctionImpl.make(
   api,
   "tryouts.queries.leaderboard",
   "getGlobalLeaderboard",
-  (args) => tryoutLeaderboard_getGlobalLeaderboard(args)
+  (args) => tryoutLeaderboard_getGlobalLeaderboard(args).pipe(Effect.orDie)
 );
 
 const tryouts_queries_tryouts_getActiveTryoutCatalogPageImpl =
@@ -110,7 +115,7 @@ const tryouts_queries_tryouts_getActiveTryoutCatalogPageImpl =
     api,
     "tryouts.queries.tryouts",
     "getActiveTryoutCatalogPage",
-    (args) => tryoutCatalog_getActiveTryoutCatalogPage(args)
+    (args) => tryoutCatalog_getActiveTryoutCatalogPage(args).pipe(Effect.orDie)
   );
 
 const tryouts_queries_tryouts_getActiveTryoutCatalogSnapshotImpl =
@@ -118,7 +123,8 @@ const tryouts_queries_tryouts_getActiveTryoutCatalogSnapshotImpl =
     api,
     "tryouts.queries.tryouts",
     "getActiveTryoutCatalogSnapshot",
-    (args) => tryoutCatalog_getActiveTryoutCatalogSnapshot(args)
+    (args) =>
+      tryoutCatalog_getActiveTryoutCatalogSnapshot(args).pipe(Effect.orDie)
   );
 
 const tryouts_queries_tryouts_getPublicActiveTryoutCatalogSnapshotImpl =
@@ -126,7 +132,10 @@ const tryouts_queries_tryouts_getPublicActiveTryoutCatalogSnapshotImpl =
     api,
     "tryouts.queries.tryouts",
     "getPublicActiveTryoutCatalogSnapshot",
-    (args) => tryoutCatalog_getPublicActiveTryoutCatalogSnapshot(args)
+    (args) =>
+      tryoutCatalog_getPublicActiveTryoutCatalogSnapshot(args).pipe(
+        Effect.orDie
+      )
   );
 
 const tryouts_queries_tryouts_getTryoutDetailsImpl = FunctionImpl.make(
@@ -138,7 +147,8 @@ const tryouts_queries_tryouts_getTryoutDetailsImpl = FunctionImpl.make(
       Effect.catchTags({
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -152,7 +162,8 @@ const tryouts_queries_me_attempt_getUserTryoutAttemptImpl = FunctionImpl.make(
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -166,7 +177,8 @@ const tryouts_queries_me_part_getUserTryoutPartAttemptImpl = FunctionImpl.make(
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -180,7 +192,8 @@ const tryouts_mutations_internal_expiry_expireTryoutAttemptInternalImpl =
         Effect.catchTags({
           IrtError: (error) => Effect.die(error),
           TryoutError: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -194,7 +207,8 @@ const tryouts_mutations_internal_expiry_sweepExpiredTryoutAttemptsImpl =
         Effect.catchTags({
           IrtError: (error) => Effect.die(error),
           TryoutError: (error) => Effect.die(error),
-        })
+        }),
+        Effect.orDie
       )
   );
 
@@ -205,7 +219,8 @@ const tryouts_mutations_internal_leaderboard_updateLeaderboardImpl =
     "updateLeaderboard",
     (args) =>
       tryoutLeaderboard_updateLeaderboard(args).pipe(
-        Effect.catchTag("TryoutError", (error) => Effect.die(error))
+        Effect.catchTag("TryoutError", (error) => Effect.die(error)),
+        Effect.orDie
       )
   );
 
@@ -216,7 +231,8 @@ const tryouts_mutations_internal_scoring_promoteProvisionalTryoutScoresImpl =
     "promoteProvisionalTryoutScores",
     (args) =>
       tryoutInternal_promoteProvisionalTryoutScores(args).pipe(
-        Effect.catchTag("TryoutError", (error) => Effect.die(error))
+        Effect.catchTag("TryoutError", (error) => Effect.die(error)),
+        Effect.orDie
       )
   );
 
@@ -225,7 +241,7 @@ const tryouts_mutations_internal_stats_rebuildUserTryoutStatsImpl =
     api,
     "tryouts.mutations.internalFunctions.stats",
     "rebuildUserTryoutStats",
-    (args) => tryoutStats_rebuildUserTryoutStats(args)
+    (args) => tryoutStats_rebuildUserTryoutStats(args).pipe(Effect.orDie)
   );
 
 const tryouts_queries_me_setView_getUserTryoutSetViewImpl = FunctionImpl.make(
@@ -238,7 +254,8 @@ const tryouts_queries_me_setView_getUserTryoutSetViewImpl = FunctionImpl.make(
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -248,7 +265,8 @@ const tryouts_queries_me_session_getUserTryoutSessionImpl = FunctionImpl.make(
   "getUserTryoutSession",
   (args) =>
     tryoutMe_getUserTryoutSession(args).pipe(
-      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 

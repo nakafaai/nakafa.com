@@ -22,21 +22,21 @@ const auth_getCurrentUserImpl = FunctionImpl.make(
   api,
   "auth",
   "getCurrentUser",
-  (_args) => identityAuth_getCurrentUser()
+  (_args) => identityAuth_getCurrentUser().pipe(Effect.orDie)
 );
 
 const auth_getLatestJwksImpl = FunctionImpl.make(
   api,
   "auth",
   "getLatestJwks",
-  (_args) => identityAuth_getLatestJwks()
+  (_args) => identityAuth_getLatestJwks().pipe(Effect.orDie)
 );
 
 const auth_getUserByIdImpl = FunctionImpl.make(
   api,
   "auth",
   "getUserById",
-  (args) => identityAuth_getPublicUserById(args)
+  (args) => identityAuth_getPublicUserById(args).pipe(Effect.orDie)
 );
 
 const auth_onCreateImpl = FunctionImpl.make(api, "auth", "onCreate", onCreate);
@@ -49,21 +49,21 @@ const auth_sync_createSyncedUserImpl = FunctionImpl.make(
   api,
   "auth.sync",
   "createSyncedUser",
-  (args) => createSyncedAuthUserRecord(args)
+  (args) => createSyncedAuthUserRecord(args).pipe(Effect.orDie)
 );
 
 const auth_sync_updateSyncedUserImpl = FunctionImpl.make(
   api,
   "auth.sync",
   "updateSyncedUser",
-  (args) => updateSyncedAuthUserRecord(args)
+  (args) => updateSyncedAuthUserRecord(args).pipe(Effect.orDie)
 );
 
 const auth_sync_cleanupSyncedUserImpl = FunctionImpl.make(
   api,
   "auth.sync",
   "cleanupSyncedUser",
-  (args) => cleanupSyncedAuthUserRecord(args)
+  (args) => cleanupSyncedAuthUserRecord(args).pipe(Effect.orDie)
 );
 
 const auth_cleanup_cleanupDeletedUserImpl = FunctionImpl.make(
@@ -72,7 +72,8 @@ const auth_cleanup_cleanupDeletedUserImpl = FunctionImpl.make(
   "cleanupDeletedUser",
   (args) =>
     identityCleanup_cleanupDeletedUser(args).pipe(
-      Effect.catchTag("CleanupInvariantError", (error) => Effect.die(error))
+      Effect.catchTag("CleanupInvariantError", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 

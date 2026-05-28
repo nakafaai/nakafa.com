@@ -15,7 +15,8 @@ const contentSync_mutations_subjects_bulkSyncSubjectSectionsImpl =
     "bulkSyncSubjectSections",
     (args) =>
       contentSyncSubjects_bulkSyncSubjectSections(args).pipe(
-        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
+        Effect.orDie
       )
   );
 
@@ -26,7 +27,8 @@ const contentSync_mutations_subjects_bulkSyncSubjectTopicsImpl =
     "bulkSyncSubjectTopics",
     (args) =>
       contentSyncSubjects_bulkSyncSubjectTopics(args).pipe(
-        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
+        Effect.orDie
       )
   );
 
@@ -37,7 +39,8 @@ const contentSync_mutations_subjects_deleteStaleSubjectSectionsImpl =
     "deleteStaleSubjectSections",
     (args) =>
       contentSyncSubjects_deleteStaleSubjectSections(args).pipe(
-        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
+        Effect.orDie
       )
   );
 
@@ -48,7 +51,8 @@ const contentSync_mutations_subjects_deleteStaleSubjectTopicsImpl =
     "deleteStaleSubjectTopics",
     (args) =>
       contentSyncSubjects_deleteStaleSubjectTopics(args).pipe(
-        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
+        Effect.orDie
       )
   );
 

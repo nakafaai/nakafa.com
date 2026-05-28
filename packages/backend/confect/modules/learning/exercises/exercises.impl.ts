@@ -21,7 +21,8 @@ const exercises_mutations_completeAttemptImpl = FunctionImpl.make(
     exerciseAttempts_completeAttempt(args).pipe(
       Effect.catchTags({
         ExerciseError: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -34,7 +35,8 @@ const exercises_mutations_expireAttemptInternalImpl = FunctionImpl.make(
       Effect.catchTags({
         IrtError: (error) => Effect.die(error),
         TryoutError: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -47,7 +49,8 @@ const exercises_mutations_startAttemptImpl = FunctionImpl.make(
       Effect.catchTags({
         ExerciseError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -67,7 +70,8 @@ const exercises_mutations_submitAnswerImpl = FunctionImpl.make(
       ),
       Effect.catchTags({
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -77,7 +81,8 @@ const exercises_queries_getLatestAttemptBySlugImpl = FunctionImpl.make(
   "getLatestAttemptBySlug",
   (args) =>
     exerciseQueries_getLatestAttemptBySlug(args).pipe(
-      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 
@@ -87,7 +92,8 @@ const exercises_queries_getQuestionAnswerSheetBySlugImpl = FunctionImpl.make(
   "getQuestionAnswerSheetBySlug",
   (args) =>
     exerciseQueries_getQuestionAnswerSheetBySlug(args).pipe(
-      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 

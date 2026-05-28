@@ -5,18 +5,13 @@ import {
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
-import { createNotification } from "@repo/backend/confect/modules/notifications/notifications.service";
 import {
   isAdmin,
   loadActiveClass,
   requireClassAccess,
 } from "@repo/backend/confect/modules/school/classAccess.service";
 import { ClassActionError } from "@repo/backend/confect/modules/school/classErrors";
-import type {
-  SchoolClassForumPosts,
-  SchoolClassForums,
-  SchoolClassForumTag,
-} from "@repo/backend/confect/modules/school/classes.tables";
+import type { SchoolClassForumTag } from "@repo/backend/confect/modules/school/classes.tables";
 import {
   loadActiveForumWithAccess,
   loadOpenForumWithAccess,
@@ -33,90 +28,16 @@ import {
   STUDENT_FORUM_TAGS,
 } from "@repo/backend/confect/modules/school/forums/constants";
 import { validateForumMentions } from "@repo/backend/confect/modules/school/forums/mentions.service";
+import { notifyForumPostParticipants } from "@repo/backend/confect/modules/school/forums/postNotifications.service";
 import {
   truncateText,
   updateForumReadState,
 } from "@repo/backend/confect/modules/school/forums/posts.service";
-import { validateForumReactionValue } from "@repo/backend/confect/modules/school/forums/reactions.service";
-import { Clock, Effect, Option, type Schema } from "effect";
-
-type ForumDoc = Schema.Schema.Type<typeof SchoolClassForums.Doc>;
-type ForumPostDoc = Schema.Schema.Type<typeof SchoolClassForumPosts.Doc>;
-type ForumReactionCounts = ForumDoc["reactionCounts"];
-
-/** Returns denormalized reaction counts after one insert/delete. */
-function applyReactionDelta(
-  reactionCounts: ForumReactionCounts,
-  emoji: string,
-  delta: number
-) {
-  const nextReactionCounts = [...reactionCounts];
-  const existingIndex = nextReactionCounts.findIndex(
-    (reactionCount) => reactionCount.emoji === emoji
-  );
-
-  if (existingIndex < 0 && delta <= 0) {
-    return nextReactionCounts;
-  }
-
-  if (existingIndex < 0) {
-    return [...nextReactionCounts, { count: delta, emoji }];
-  }
-
-  const nextCount = nextReactionCounts[existingIndex].count + delta;
-
-  if (nextCount <= 0) {
-    nextReactionCounts.splice(existingIndex, 1);
-    return nextReactionCounts;
-  }
-
-  nextReactionCounts[existingIndex] = { count: nextCount, emoji };
-  return nextReactionCounts;
-}
-
-/** Sends reply and mention notifications for a newly inserted forum post. */
-const notifyForumPostParticipants = Effect.fn(
-  "school.forums.notifyForumPostParticipants"
-)(function* (args: { forum: ForumDoc; post: ForumPostDoc }) {
-  const previewBody = truncateText({ text: args.post.body });
-
-  if (
-    args.post.parentId &&
-    args.post.replyToUserId &&
-    args.post.replyToUserId !== args.post.createdBy
-  ) {
-    yield* createNotification({
-      actorId: args.post.createdBy,
-      entityId: args.post._id,
-      entityType: "schoolClassForumPosts",
-      previewBody,
-      previewTitle: args.forum.title,
-      recipientId: args.post.replyToUserId,
-      type: "post_reply",
-    });
-  }
-
-  for (const mentionedUserId of args.post.mentions) {
-    if (
-      mentionedUserId === args.post.createdBy ||
-      mentionedUserId === args.post.replyToUserId
-    ) {
-      continue;
-    }
-
-    yield* createNotification({
-      actorId: args.post.createdBy,
-      entityId: args.post._id,
-      entityType: "schoolClassForumPosts",
-      previewBody,
-      previewTitle: args.forum.title,
-      recipientId: mentionedUserId,
-      type: "post_mention",
-    });
-  }
-
-  return null;
-});
+import {
+  applyForumReactionDelta,
+  validateForumReactionValue,
+} from "@repo/backend/confect/modules/school/forums/reactions.service";
+import { Clock, Effect, Option } from "effect";
 
 /** Creates a class forum thread. */
 export const createForum = Effect.fn("school.forums.createForum")(
@@ -195,10 +116,10 @@ export const createForum = Effect.fn("school.forums.createForum")(
 /** Creates a forum post with optional attachments and mentions. */
 export const createForumPost = Effect.fn("school.forums.createForumPost")(
   function* (args: {
-    attachmentUploadIds?: Id<"schoolClassForumPendingUploads">[];
+    attachmentUploadIds?: readonly Id<"schoolClassForumPendingUploads">[];
     body: string;
     forumId: Id<"schoolClassForums">;
-    mentions?: Id<"users">[];
+    mentions?: readonly Id<"users">[];
     parentId?: Id<"schoolClassForumPosts">;
   }) {
     const ctx = yield* MutationCtx;
@@ -371,7 +292,7 @@ export const toggleForumReaction = Effect.fn(
       .table("schoolClassForumReactions")
       .delete(existingReaction._id);
     yield* writer.table("schoolClassForums").patch(forum._id, {
-      reactionCounts: applyReactionDelta(forum.reactionCounts, emoji, -1),
+      reactionCounts: applyForumReactionDelta(forum.reactionCounts, emoji, -1),
     });
     return { added: false };
   }
@@ -397,7 +318,7 @@ export const toggleForumReaction = Effect.fn(
     userId,
   });
   yield* writer.table("schoolClassForums").patch(forum._id, {
-    reactionCounts: applyReactionDelta(forum.reactionCounts, emoji, 1),
+    reactionCounts: applyForumReactionDelta(forum.reactionCounts, emoji, 1),
   });
 
   return { added: true };
@@ -434,7 +355,7 @@ export const togglePostReaction = Effect.fn("school.forums.togglePostReaction")(
         .table("schoolClassForumPostReactions")
         .delete(existingReaction._id);
       yield* writer.table("schoolClassForumPosts").patch(post._id, {
-        reactionCounts: applyReactionDelta(post.reactionCounts, emoji, -1),
+        reactionCounts: applyForumReactionDelta(post.reactionCounts, emoji, -1),
       });
       return { added: false };
     }
@@ -460,7 +381,7 @@ export const togglePostReaction = Effect.fn("school.forums.togglePostReaction")(
       userId,
     });
     yield* writer.table("schoolClassForumPosts").patch(post._id, {
-      reactionCounts: applyReactionDelta(post.reactionCounts, emoji, 1),
+      reactionCounts: applyForumReactionDelta(post.reactionCounts, emoji, 1),
     });
 
     return { added: true };

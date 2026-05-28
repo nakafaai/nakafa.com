@@ -1,309 +1,47 @@
-import { FunctionImpl, GroupImpl } from "@confect/server";
+import { GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
 import {
-  deleteBatchFromTable as contentSyncMaintenance_deleteBatchFromTable,
-  deleteTryoutEntitlementsBatch as contentSyncMaintenance_deleteTryoutEntitlementsBatch,
-  deleteTryoutRuntimeBatch as contentSyncMaintenance_deleteTryoutRuntimeBatch,
-} from "@repo/backend/confect/modules/content/contentSyncMaintenance.service";
-import { Effect, Layer } from "effect";
-
-const contentSync_mutations_maintenance_deleteArticleReferencesBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteArticleReferencesBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("articleReferences")
-  );
-
-const contentSync_mutations_maintenance_deleteArticlesBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteArticlesBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("articleContents")
-  );
-
-const contentSync_mutations_maintenance_deleteAuthorsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteAuthorsBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("authors")
-  );
-
-const contentSync_mutations_maintenance_deleteContentAuthorsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteContentAuthorsBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("contentAuthors")
-  );
-
-const contentSync_mutations_maintenance_deleteContentSearchBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteContentSearchBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("contentSearch")
-  );
-
-const contentSync_mutations_maintenance_deleteExerciseAnswersBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteExerciseAnswersBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("exerciseAnswers")
-  );
-
-const contentSync_mutations_maintenance_deleteExerciseAttemptsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteExerciseAttemptsBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("exerciseAttempts")
-  );
-
-const contentSync_mutations_maintenance_deleteExerciseChoicesBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteExerciseChoicesBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("exerciseChoices")
-  );
-
-const contentSync_mutations_maintenance_deleteExerciseItemParametersBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteExerciseItemParametersBatch",
-    (_args) =>
-      contentSyncMaintenance_deleteBatchFromTable("exerciseItemParameters")
-  );
-
-const contentSync_mutations_maintenance_deleteExerciseQuestionsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteExerciseQuestionsBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("exerciseQuestions")
-  );
-
-const contentSync_mutations_maintenance_deleteExerciseSetsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteExerciseSetsBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("exerciseSets")
-  );
-
-const contentSync_mutations_maintenance_deleteIrtCalibrationAttemptsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteIrtCalibrationAttemptsBatch",
-    (_args) =>
-      contentSyncMaintenance_deleteBatchFromTable("irtCalibrationAttempts")
-  );
-
-const contentSync_mutations_maintenance_deleteIrtCalibrationCacheStatsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteIrtCalibrationCacheStatsBatch",
-    (_args) =>
-      contentSyncMaintenance_deleteBatchFromTable("irtCalibrationCacheStats")
-  );
-
-const contentSync_mutations_maintenance_deleteIrtCalibrationQueueBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteIrtCalibrationQueueBatch",
-    (_args) =>
-      contentSyncMaintenance_deleteBatchFromTable("irtCalibrationQueue")
-  );
-
-const contentSync_mutations_maintenance_deleteIrtCalibrationRunsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteIrtCalibrationRunsBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("irtCalibrationRuns")
-  );
-
-const contentSync_mutations_maintenance_deleteIrtScalePublicationQueueBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteIrtScalePublicationQueueBatch",
-    (_args) =>
-      contentSyncMaintenance_deleteBatchFromTable("irtScalePublicationQueue")
-  );
-
-const contentSync_mutations_maintenance_deleteIrtScaleQualityChecksBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteIrtScaleQualityChecksBatch",
-    (_args) =>
-      contentSyncMaintenance_deleteBatchFromTable("irtScaleQualityChecks")
-  );
-
-const contentSync_mutations_maintenance_deleteIrtScaleQualityRefreshQueueBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteIrtScaleQualityRefreshQueueBatch",
-    (_args) =>
-      contentSyncMaintenance_deleteBatchFromTable("irtScaleQualityRefreshQueue")
-  );
-
-const contentSync_mutations_maintenance_deleteIrtScaleVersionItemsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteIrtScaleVersionItemsBatch",
-    (_args) =>
-      contentSyncMaintenance_deleteBatchFromTable("irtScaleVersionItems")
-  );
-
-const contentSync_mutations_maintenance_deleteIrtScaleVersionsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteIrtScaleVersionsBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("irtScaleVersions")
-  );
-
-const contentSync_mutations_maintenance_deleteSubjectSectionsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteSubjectSectionsBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("subjectSections")
-  );
-
-const contentSync_mutations_maintenance_deleteSubjectTopicsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteSubjectTopicsBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("subjectTopics")
-  );
-
-const contentSync_mutations_maintenance_deleteTryoutAccessCampaignProductsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteTryoutAccessCampaignProductsBatch",
-    (_args) =>
-      contentSyncMaintenance_deleteBatchFromTable(
-        "tryoutAccessCampaignProducts"
-      )
-  );
-
-const contentSync_mutations_maintenance_deleteTryoutAccessCampaignsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteTryoutAccessCampaignsBatch",
-    (_args) =>
-      contentSyncMaintenance_deleteBatchFromTable("tryoutAccessCampaigns")
-  );
-
-const contentSync_mutations_maintenance_deleteTryoutAccessGrantsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteTryoutAccessGrantsBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("tryoutAccessGrants")
-  );
-
-const contentSync_mutations_maintenance_deleteTryoutAccessLinksBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteTryoutAccessLinksBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("tryoutAccessLinks")
-  );
-
-const contentSync_mutations_maintenance_deleteTryoutAttemptsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteTryoutAttemptsBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("tryoutAttempts")
-  );
-
-const contentSync_mutations_maintenance_deleteTryoutCatalogMetaBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteTryoutCatalogMetaBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("tryoutCatalogMeta")
-  );
-
-const contentSync_mutations_maintenance_deleteTryoutEntitlementsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteTryoutEntitlementsBatch",
-    (_args) => contentSyncMaintenance_deleteTryoutEntitlementsBatch()
-  );
-
-const contentSync_mutations_maintenance_deleteTryoutLeaderboardEntriesBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteTryoutLeaderboardEntriesBatch",
-    (_args) =>
-      contentSyncMaintenance_deleteBatchFromTable("tryoutLeaderboardEntries")
-  );
-
-const contentSync_mutations_maintenance_deleteTryoutPartAttemptsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteTryoutPartAttemptsBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("tryoutPartAttempts")
-  );
-
-const contentSync_mutations_maintenance_deleteTryoutPartSetsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteTryoutPartSetsBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("tryoutPartSets")
-  );
-
-const contentSync_mutations_maintenance_deleteTryoutRuntimeBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteTryoutRuntimeBatch",
-    (_args) =>
-      contentSyncMaintenance_deleteTryoutRuntimeBatch().pipe(
-        Effect.catchTag("ContentSyncMaintenanceError", (error) =>
-          Effect.die(error)
-        )
-      )
-  );
-
-const contentSync_mutations_maintenance_deleteTryoutsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteTryoutsBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("tryouts")
-  );
-
-const contentSync_mutations_maintenance_deleteUserTryoutStatsBatchImpl =
-  FunctionImpl.make(
-    api,
-    "contentSync.mutations.maintenance",
-    "deleteUserTryoutStatsBatch",
-    (_args) => contentSyncMaintenance_deleteBatchFromTable("userTryoutStats")
-  );
+  contentSync_mutations_maintenance_deleteArticleReferencesBatchImpl,
+  contentSync_mutations_maintenance_deleteArticlesBatchImpl,
+  contentSync_mutations_maintenance_deleteAuthorsBatchImpl,
+  contentSync_mutations_maintenance_deleteContentAuthorsBatchImpl,
+  contentSync_mutations_maintenance_deleteContentSearchBatchImpl,
+  contentSync_mutations_maintenance_deleteExerciseAnswersBatchImpl,
+  contentSync_mutations_maintenance_deleteExerciseAttemptsBatchImpl,
+  contentSync_mutations_maintenance_deleteExerciseChoicesBatchImpl,
+  contentSync_mutations_maintenance_deleteExerciseItemParametersBatchImpl,
+  contentSync_mutations_maintenance_deleteExerciseQuestionsBatchImpl,
+  contentSync_mutations_maintenance_deleteExerciseSetsBatchImpl,
+  contentSync_mutations_maintenance_deleteSubjectSectionsBatchImpl,
+  contentSync_mutations_maintenance_deleteSubjectTopicsBatchImpl,
+} from "@repo/backend/confect/modules/content/contentSync/mutations/maintenance/content.impl";
+import {
+  contentSync_mutations_maintenance_deleteIrtCalibrationAttemptsBatchImpl,
+  contentSync_mutations_maintenance_deleteIrtCalibrationCacheStatsBatchImpl,
+  contentSync_mutations_maintenance_deleteIrtCalibrationQueueBatchImpl,
+  contentSync_mutations_maintenance_deleteIrtCalibrationRunsBatchImpl,
+  contentSync_mutations_maintenance_deleteIrtScalePublicationQueueBatchImpl,
+  contentSync_mutations_maintenance_deleteIrtScaleQualityChecksBatchImpl,
+  contentSync_mutations_maintenance_deleteIrtScaleQualityRefreshQueueBatchImpl,
+  contentSync_mutations_maintenance_deleteIrtScaleVersionItemsBatchImpl,
+  contentSync_mutations_maintenance_deleteIrtScaleVersionsBatchImpl,
+} from "@repo/backend/confect/modules/content/contentSync/mutations/maintenance/irt.impl";
+import {
+  contentSync_mutations_maintenance_deleteTryoutAccessCampaignProductsBatchImpl,
+  contentSync_mutations_maintenance_deleteTryoutAccessCampaignsBatchImpl,
+  contentSync_mutations_maintenance_deleteTryoutAccessGrantsBatchImpl,
+  contentSync_mutations_maintenance_deleteTryoutAccessLinksBatchImpl,
+  contentSync_mutations_maintenance_deleteTryoutAttemptsBatchImpl,
+  contentSync_mutations_maintenance_deleteTryoutCatalogMetaBatchImpl,
+  contentSync_mutations_maintenance_deleteTryoutEntitlementsBatchImpl,
+  contentSync_mutations_maintenance_deleteTryoutLeaderboardEntriesBatchImpl,
+  contentSync_mutations_maintenance_deleteTryoutPartAttemptsBatchImpl,
+  contentSync_mutations_maintenance_deleteTryoutPartSetsBatchImpl,
+  contentSync_mutations_maintenance_deleteTryoutRuntimeBatchImpl,
+  contentSync_mutations_maintenance_deleteTryoutsBatchImpl,
+  contentSync_mutations_maintenance_deleteUserTryoutStatsBatchImpl,
+} from "@repo/backend/confect/modules/content/contentSync/mutations/maintenance/tryout.impl";
+import { Layer } from "effect";
 
 const contentSyncMutationsMaintenanceImpl = GroupImpl.make(
   api,

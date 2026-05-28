@@ -12,6 +12,11 @@ interface PartFieldInput<Value> {
   readonly value: Value | undefined;
 }
 
+interface ToolStatePart {
+  readonly toolState?: Doc<"parts">["toolState"];
+  readonly type: Doc<"parts">["type"];
+}
+
 /** Fails a synchronous AI SDK conversion with a typed Effect error. */
 function failMessagePart(message: string) {
   return Effect.runSync(Effect.fail(new ChatMessagePartError({ message })));
@@ -32,7 +37,7 @@ function requirePartField<Value>({
 }
 
 /** Returns the persisted tool state for a stored chat message part. */
-function requireToolState(part: Doc<"parts">) {
+function requireToolState(part: ToolStatePart) {
   return requirePartField({
     value: part.toolState,
     fieldName: "toolState",

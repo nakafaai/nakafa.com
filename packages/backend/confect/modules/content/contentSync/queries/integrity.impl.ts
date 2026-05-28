@@ -8,14 +8,17 @@ import {
   listIntegrityExerciseQuestionsPage as contentSyncQueries_listIntegrityExerciseQuestionsPage,
   listIntegritySubjectSectionsPage as contentSyncQueries_listIntegritySubjectSectionsPage,
 } from "@repo/backend/confect/modules/content/contentSyncQueries.service";
-import { Layer } from "effect";
+import { Effect, Layer } from "effect";
 
 const contentSync_queries_integrity_listIntegrityExerciseQuestionsPageImpl =
   FunctionImpl.make(
     api,
     "contentSync.queries.integrity",
     "listIntegrityExerciseQuestionsPage",
-    (args) => contentSyncQueries_listIntegrityExerciseQuestionsPage(args)
+    (args) =>
+      contentSyncQueries_listIntegrityExerciseQuestionsPage(args).pipe(
+        Effect.orDie
+      )
   );
 
 const contentSync_queries_integrity_listIntegrityExerciseChoicesPageImpl =
@@ -23,7 +26,10 @@ const contentSync_queries_integrity_listIntegrityExerciseChoicesPageImpl =
     api,
     "contentSync.queries.integrity",
     "listIntegrityExerciseChoicesPage",
-    (args) => contentSyncQueries_listIntegrityExerciseChoicesPage(args)
+    (args) =>
+      contentSyncQueries_listIntegrityExerciseChoicesPage(args).pipe(
+        Effect.orDie
+      )
   );
 
 const contentSync_queries_integrity_listIntegrityContentAuthorsPageImpl =
@@ -31,7 +37,10 @@ const contentSync_queries_integrity_listIntegrityContentAuthorsPageImpl =
     api,
     "contentSync.queries.integrity",
     "listIntegrityContentAuthorsPage",
-    (args) => contentSyncQueries_listIntegrityContentAuthorsPage(args)
+    (args) =>
+      contentSyncQueries_listIntegrityContentAuthorsPage(args).pipe(
+        Effect.orDie
+      )
   );
 
 const contentSync_queries_integrity_listIntegrityArticleReferencesPageImpl =
@@ -39,7 +48,10 @@ const contentSync_queries_integrity_listIntegrityArticleReferencesPageImpl =
     api,
     "contentSync.queries.integrity",
     "listIntegrityArticleReferencesPage",
-    (args) => contentSyncQueries_listIntegrityArticleReferencesPage(args)
+    (args) =>
+      contentSyncQueries_listIntegrityArticleReferencesPage(args).pipe(
+        Effect.orDie
+      )
   );
 
 const contentSync_queries_integrity_listIntegrityArticlesPageImpl =
@@ -47,7 +59,8 @@ const contentSync_queries_integrity_listIntegrityArticlesPageImpl =
     api,
     "contentSync.queries.integrity",
     "listIntegrityArticlesPage",
-    (args) => contentSyncQueries_listIntegrityArticlesPage(args)
+    (args) =>
+      contentSyncQueries_listIntegrityArticlesPage(args).pipe(Effect.orDie)
   );
 
 const contentSync_queries_integrity_listIntegritySubjectSectionsPageImpl =
@@ -55,7 +68,10 @@ const contentSync_queries_integrity_listIntegritySubjectSectionsPageImpl =
     api,
     "contentSync.queries.integrity",
     "listIntegritySubjectSectionsPage",
-    (args) => contentSyncQueries_listIntegritySubjectSectionsPage(args)
+    (args) =>
+      contentSyncQueries_listIntegritySubjectSectionsPage(args).pipe(
+        Effect.orDie
+      )
   );
 
 const contentSyncQueriesIntegrityImpl = GroupImpl.make(

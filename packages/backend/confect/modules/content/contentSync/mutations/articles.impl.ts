@@ -12,7 +12,8 @@ const contentSync_mutations_articles_bulkSyncArticlesImpl = FunctionImpl.make(
   "bulkSyncArticles",
   (args) =>
     contentSyncArticles_bulkSyncArticles(args).pipe(
-      Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+      Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 
@@ -23,7 +24,8 @@ const contentSync_mutations_articles_deleteStaleArticlesImpl =
     "deleteStaleArticles",
     (args) =>
       contentSyncArticles_deleteStaleArticles(args).pipe(
-        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
+        Effect.orDie
       )
   );
 

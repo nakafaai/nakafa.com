@@ -15,7 +15,8 @@ const users_mutations_updateUserRoleImpl = FunctionImpl.make(
   "updateUserRole",
   (args) =>
     identityUsers_updateUserRole(args).pipe(
-      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 
@@ -25,7 +26,8 @@ const users_mutations_updateUserNameImpl = FunctionImpl.make(
   "updateUserName",
   (args) =>
     identityUsers_updateUserName(args).pipe(
-      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 
@@ -35,7 +37,8 @@ const users_mutations_syncUserInfoForChatImpl = FunctionImpl.make(
   "syncUserInfoForChat",
   (_args) =>
     identityUsers_syncUserInfoForChat().pipe(
-      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 
@@ -43,14 +46,14 @@ const users_queries_getUserByIdImpl = FunctionImpl.make(
   api,
   "users.queries",
   "getUserById",
-  (args) => identityUsers_getUserById(args)
+  (args) => identityUsers_getUserById(args).pipe(Effect.orDie)
 );
 
 const users_queries_getUserByAuthIdImpl = FunctionImpl.make(
   api,
   "users.queries",
   "getUserByAuthId",
-  (args) => identityUsers_getUserByAuthId(args)
+  (args) => identityUsers_getUserByAuthId(args).pipe(Effect.orDie)
 );
 
 const usersMutationsImpl = GroupImpl.make(api, "users.mutations")

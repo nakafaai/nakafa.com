@@ -11,14 +11,14 @@ const subscriptions_mutations_createSubscriptionImpl = FunctionImpl.make(
   api,
   "subscriptions.mutations",
   "createSubscription",
-  (args) => commerceSubscriptions_createSubscription(args)
+  (args) => commerceSubscriptions_createSubscription(args).pipe(Effect.orDie)
 );
 
 const subscriptions_mutations_updateSubscriptionImpl = FunctionImpl.make(
   api,
   "subscriptions.mutations",
   "updateSubscription",
-  (args) => commerceSubscriptions_updateSubscription(args)
+  (args) => commerceSubscriptions_updateSubscription(args).pipe(Effect.orDie)
 );
 
 const subscriptions_queries_hasActiveSubscriptionImpl = FunctionImpl.make(
@@ -27,7 +27,8 @@ const subscriptions_queries_hasActiveSubscriptionImpl = FunctionImpl.make(
   "hasActiveSubscription",
   (args) =>
     commerceSubscriptions_hasActiveSubscription(args).pipe(
-      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 

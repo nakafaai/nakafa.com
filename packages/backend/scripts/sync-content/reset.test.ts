@@ -1,34 +1,13 @@
-import { callConvex } from "@repo/backend/scripts/sync-content/convex";
-import { getContentCounts } from "@repo/backend/scripts/sync-content/counts";
-import {
-  log,
-  logSuccess,
-  logWarning,
-} from "@repo/backend/scripts/sync-content/logging";
-import { reset } from "@repo/backend/scripts/sync-content/reset";
-import { clearSyncState } from "@repo/backend/scripts/sync-content/runtime";
+import { beforeEach, describe, expect, it, vi } from "@effect/vitest";
 import type { ContentCountsSchema } from "@repo/backend/scripts/sync-content/schemas";
 import { Effect, type Schema } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@repo/backend/scripts/sync-content/counts", () => ({
-  getContentCounts: vi.fn(),
-}));
-
-vi.mock("@repo/backend/scripts/sync-content/convex", () => ({
-  callConvex: vi.fn(),
-}));
-
-vi.mock("@repo/backend/scripts/sync-content/logging", () => ({
-  formatDuration: vi.fn(() => "1ms"),
-  log: vi.fn(),
-  logSuccess: vi.fn(),
-  logWarning: vi.fn(),
-}));
-
-vi.mock("@repo/backend/scripts/sync-content/runtime", () => ({
-  clearSyncState: vi.fn(() => Effect.void),
-}));
+const callConvexMock = vi.fn();
+const clearSyncStateMock = vi.fn(() => Effect.void);
+const getContentCountsMock = vi.fn();
+const logMock = vi.fn();
+const logSuccessMock = vi.fn();
+const logWarningMock = vi.fn();
 
 const config = {
   accessToken: "test-token",
@@ -72,99 +51,150 @@ const emptyCounts = {
   userTryoutStats: 0,
 } satisfies Schema.Schema.Type<typeof ContentCountsSchema>;
 
+/** Loads the reset module after installing per-test module adapters. */
+const loadReset = Effect.fn("resetTest.loadReset")(function* () {
+  return yield* Effect.promise(
+    () => import("@repo/backend/scripts/sync-content/reset")
+  );
+});
+
 describe("sync-content reset", () => {
   beforeEach(() => {
+    vi.resetModules();
+    vi.restoreAllMocks();
     vi.clearAllMocks();
+
+    vi.doMock("@repo/backend/scripts/sync-content/counts", () => ({
+      getContentCounts: getContentCountsMock,
+    }));
+    vi.doMock("@repo/backend/scripts/sync-content/convex", () => ({
+      callConvex: callConvexMock,
+    }));
+    vi.doMock("@repo/backend/scripts/sync-content/logging", () => ({
+      formatDuration: vi.fn(() => "1ms"),
+      log: logMock,
+      logSuccess: logSuccessMock,
+      logWarning: logWarningMock,
+    }));
+    vi.doMock("@repo/backend/scripts/sync-content/runtime", () => ({
+      clearSyncState: clearSyncStateMock,
+    }));
   });
 
-  it("does not treat contentSearch-only data as an empty database", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({ ...emptyCounts, contentSearch: 1 })
-    );
+  it.effect("does not treat contentSearch-only data as an empty database", () =>
+    Effect.gen(function* () {
+      getContentCountsMock.mockReturnValue(
+        Effect.succeed({ ...emptyCounts, contentSearch: 1 })
+      );
 
-    await Effect.runPromise(reset(config, { force: false }));
+      const { reset } = yield* loadReset();
 
-    expect(log).toHaveBeenCalledWith("  Content Search:        1");
-    expect(log).toHaveBeenCalledWith("  Total derived items:  1");
-    expect(log).toHaveBeenCalledWith("\nTo delete all content, run:");
-    expect(logSuccess).not.toHaveBeenCalled();
-  });
+      yield* reset(config, { force: false });
 
-  it("prints the production force command during production dry runs", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({ ...emptyCounts, articles: 1 })
-    );
+      expect(logMock).toHaveBeenCalledWith("  Content Search:        1");
+      expect(logMock).toHaveBeenCalledWith("  Total derived items:  1");
+      expect(logMock).toHaveBeenCalledWith("\nTo delete all content, run:");
+      expect(logSuccessMock).not.toHaveBeenCalled();
+    })
+  );
 
-    await Effect.runPromise(
-      reset(config, { authors: true, force: false, prod: true })
-    );
+  it.effect(
+    "prints the production force command during production dry runs",
+    () =>
+      Effect.gen(function* () {
+        getContentCountsMock.mockReturnValue(
+          Effect.succeed({ ...emptyCounts, articles: 1 })
+        );
 
-    expect(logWarning).toHaveBeenCalledWith("PRODUCTION DATABASE SELECTED!");
-    expect(log).toHaveBeenCalledWith(
-      "  pnpm --filter @repo/backend sync:reset --prod --force"
-    );
-    expect(log).not.toHaveBeenCalledWith(
-      "\nTo also delete authors, add --authors flag"
-    );
-  });
+        const { reset } = yield* loadReset();
 
-  it("deletes all reset-managed rows and clears non-production sync state", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({ ...emptyCounts, articles: 1 })
-    );
-    vi.mocked(callConvex)
-      .mockReturnValueOnce(Effect.succeed({ deleted: 2, hasMore: true }))
-      .mockReturnValueOnce(Effect.succeed({ deleted: 3, hasMore: false }))
-      .mockReturnValue(Effect.succeed({ deleted: 0, hasMore: false }));
-    vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+        yield* reset(config, { authors: true, force: false, prod: true });
 
-    await Effect.runPromise(reset(config, { force: true }));
+        expect(logWarningMock).toHaveBeenCalledWith(
+          "PRODUCTION DATABASE SELECTED!"
+        );
+        expect(logMock).toHaveBeenCalledWith(
+          "  pnpm --filter @repo/backend sync:reset --prod --force"
+        );
+        expect(logMock).not.toHaveBeenCalledWith(
+          "\nTo also delete authors, add --authors flag"
+        );
+      })
+  );
 
-    expect(callConvex).toHaveBeenCalled();
-    expect(process.stdout.write).toHaveBeenCalledWith(
-      "\r  Batch 1: deleted 2 content search rows..."
-    );
-    expect(process.stdout.write).toHaveBeenCalledWith(
-      "\r  Batch 2: deleted 5 content search rows..."
-    );
-    expect(process.stdout.write).toHaveBeenCalledWith("\n");
-    expect(logSuccess).toHaveBeenCalledWith("  Deleted 5 content search rows");
-    expect(log).toHaveBeenCalledWith(
-      "Skipping authors (use --authors to include)"
-    );
-    expect(clearSyncState).toHaveBeenCalledWith(false);
-    expect(log).toHaveBeenCalledWith("  pnpm --filter @repo/backend sync");
-  });
+  it.effect("deletes all reset-managed rows and clears dev sync state", () =>
+    Effect.gen(function* () {
+      getContentCountsMock.mockReturnValue(
+        Effect.succeed({ ...emptyCounts, articles: 1 })
+      );
+      callConvexMock
+        .mockReturnValueOnce(Effect.succeed({ deleted: 2, hasMore: true }))
+        .mockReturnValueOnce(Effect.succeed({ deleted: 3, hasMore: false }))
+        .mockReturnValue(Effect.succeed({ deleted: 0, hasMore: false }));
+      vi.spyOn(process.stdout, "write").mockImplementation(() => true);
 
-  it("deletes authors and clears production sync state when explicitly requested", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(
-      Effect.succeed({ ...emptyCounts, articles: 1, authors: 1 })
-    );
-    vi.mocked(callConvex).mockReturnValue(
-      Effect.succeed({ deleted: 1, hasMore: false })
-    );
-    vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+      const { reset } = yield* loadReset();
 
-    await Effect.runPromise(
-      reset(config, { authors: true, force: true, prod: true })
-    );
+      yield* reset(config, { force: true });
 
-    expect(log).toHaveBeenCalledWith("Deleting authors...");
-    expect(logSuccess).toHaveBeenCalledWith("  Deleted 1 authors");
-    expect(clearSyncState).toHaveBeenCalledWith(true);
-    expect(log).toHaveBeenCalledWith("  pnpm --filter @repo/backend sync:prod");
-  });
+      expect(callConvexMock).toHaveBeenCalled();
+      expect(process.stdout.write).toHaveBeenCalledWith(
+        "\r  Batch 1: deleted 2 content search rows..."
+      );
+      expect(process.stdout.write).toHaveBeenCalledWith(
+        "\r  Batch 2: deleted 5 content search rows..."
+      );
+      expect(process.stdout.write).toHaveBeenCalledWith("\n");
+      expect(logSuccessMock).toHaveBeenCalledWith(
+        "  Deleted 5 content search rows"
+      );
+      expect(logMock).toHaveBeenCalledWith(
+        "Skipping authors (use --authors to include)"
+      );
+      expect(clearSyncStateMock).toHaveBeenCalledWith(false);
+      expect(logMock).toHaveBeenCalledWith(
+        "  pnpm --filter @repo/backend sync"
+      );
+    })
+  );
 
-  it("keeps the empty shortcut when every reset-managed count is zero", async () => {
-    vi.mocked(getContentCounts).mockReturnValue(Effect.succeed(emptyCounts));
+  it.effect("deletes authors and clears prod sync state when requested", () =>
+    Effect.gen(function* () {
+      getContentCountsMock.mockReturnValue(
+        Effect.succeed({ ...emptyCounts, articles: 1, authors: 1 })
+      );
+      callConvexMock.mockReturnValue(
+        Effect.succeed({ deleted: 1, hasMore: false })
+      );
+      vi.spyOn(process.stdout, "write").mockImplementation(() => true);
 
-    await Effect.runPromise(reset(config, { force: false }));
+      const { reset } = yield* loadReset();
 
-    expect(log).toHaveBeenCalledWith("  Content Search:        0");
-    expect(log).toHaveBeenCalledWith("  Total derived items:  0");
-    expect(logSuccess).toHaveBeenCalledWith(
-      "\nDatabase is already empty. Nothing to delete."
-    );
-    expect(log).not.toHaveBeenCalledWith("\nTo delete all content, run:");
-  });
+      yield* reset(config, { authors: true, force: true, prod: true });
+
+      expect(logMock).toHaveBeenCalledWith("Deleting authors...");
+      expect(logSuccessMock).toHaveBeenCalledWith("  Deleted 1 authors");
+      expect(clearSyncStateMock).toHaveBeenCalledWith(true);
+      expect(logMock).toHaveBeenCalledWith(
+        "  pnpm --filter @repo/backend sync:prod"
+      );
+    })
+  );
+
+  it.effect("keeps the empty shortcut when every reset count is zero", () =>
+    Effect.gen(function* () {
+      getContentCountsMock.mockReturnValue(Effect.succeed(emptyCounts));
+
+      const { reset } = yield* loadReset();
+
+      yield* reset(config, { force: false });
+
+      expect(logMock).toHaveBeenCalledWith("  Content Search:        0");
+      expect(logMock).toHaveBeenCalledWith("  Total derived items:  0");
+      expect(logSuccessMock).toHaveBeenCalledWith(
+        "\nDatabase is already empty. Nothing to delete."
+      );
+      expect(logMock).not.toHaveBeenCalledWith("\nTo delete all content, run:");
+    })
+  );
 });

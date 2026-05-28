@@ -18,7 +18,8 @@ const notifications_mutations_setNotificationEntityMuteImpl = FunctionImpl.make(
       Effect.catchTags({
         NotificationInvariantError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -28,7 +29,8 @@ const notifications_queries_getNotificationPreferencesImpl = FunctionImpl.make(
   "getNotificationPreferences",
   (_args) =>
     notificationsService_getNotificationPreferences().pipe(
-      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 
@@ -39,7 +41,8 @@ const notifications_queries_listMutedNotificationEntitiesImpl =
     "listMutedNotificationEntities",
     (args) =>
       notificationsService_listMutedNotificationEntities(args).pipe(
-        Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+        Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
+        Effect.orDie
       )
   );
 
@@ -50,7 +53,8 @@ const notifications_mutations_updateNotificationPreferencesImpl =
     "updateNotificationPreferences",
     (args) =>
       notificationsService_updateNotificationPreferences(args).pipe(
-        Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+        Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
+        Effect.orDie
       )
   );
 
@@ -61,7 +65,8 @@ const notifications_mutations_setDisabledNotificationTypesImpl =
     "setDisabledNotificationTypes",
     (args) =>
       notificationsService_setDisabledNotificationTypes(args).pipe(
-        Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+        Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)),
+        Effect.orDie
       )
   );
 

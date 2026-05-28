@@ -353,7 +353,7 @@ export const search = Effect.fn("contentSearch.search")(function* (args: {
   limit: number;
   locale: Locale;
   offset: number;
-  queries?: string[];
+  queries?: readonly string[];
   section?: NakafaSection;
 }) {
   const queryTexts = yield* validateContentSearchInput(args);

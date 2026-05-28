@@ -48,6 +48,22 @@ function sigmoid(value: number) {
   return 1 / (1 + Math.exp(-value));
 }
 
+/** Classifies a calibrated item from response coverage and convergence. */
+function getCalibrationStatus(args: {
+  readonly isCalibrated: boolean;
+  readonly responseCount: number;
+}) {
+  if (args.responseCount === 0) {
+    return "provisional" as const;
+  }
+
+  if (args.isCalibrated) {
+    return "calibrated" as const;
+  }
+
+  return "emerging" as const;
+}
+
 /** Creates item seed parameters from existing values or observed correct rate. */
 function createSeedParams(
   correctRate: number,
@@ -308,13 +324,10 @@ export function calibrateTwoPlItems(args: {
       itemResponseCount >= IRT_MIN_RESPONSES_FOR_CALIBRATED &&
       hasVariation &&
       maxParameterDelta <= IRT_CALIBRATION_CONVERGENCE_DELTA;
-    let calibrationStatus = "emerging";
-
-    if (itemResponseCount === 0) {
-      calibrationStatus = "provisional";
-    } else if (isCalibrated) {
-      calibrationStatus = "calibrated";
-    }
+    const calibrationStatus = getCalibrationStatus({
+      isCalibrated,
+      responseCount: itemResponseCount,
+    });
 
     return {
       calibrationStatus,

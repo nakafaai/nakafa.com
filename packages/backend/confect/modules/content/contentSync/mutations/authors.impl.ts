@@ -12,7 +12,8 @@ const contentSync_mutations_authors_bulkSyncAuthorsImpl = FunctionImpl.make(
   "bulkSyncAuthors",
   (args) =>
     contentSyncAuthors_bulkSyncAuthors(args).pipe(
-      Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+      Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 
@@ -22,7 +23,8 @@ const contentSync_mutations_authors_deleteUnusedAuthorsImpl = FunctionImpl.make(
   "deleteUnusedAuthors",
   (args) =>
     contentSyncAuthors_deleteUnusedAuthors(args).pipe(
-      Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+      Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
+      Effect.orDie
     )
 );
 

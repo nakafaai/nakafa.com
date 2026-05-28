@@ -15,6 +15,7 @@ import { Effect, type Schema } from "effect";
 
 type ForumDoc = Schema.Schema.Type<typeof SchoolClassForums.Doc>;
 type ForumPostDoc = Schema.Schema.Type<typeof SchoolClassForumPosts.Doc>;
+type ForumReactionCounts = ForumDoc["reactionCounts"];
 
 const FORUM_REACTION_VALUE_PATTERN =
   /^(?:\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3|(?:\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F))(?:\u200D(?:\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?|\p{Emoji_Presentation}|\p{Emoji}\uFE0F))*$/u;
@@ -34,6 +35,36 @@ export function validateForumReactionValue(emoji: string) {
       message: "Forum reaction must be a supported emoji.",
     })
   );
+}
+
+/** Returns denormalized reaction counts after one insert/delete. */
+export function applyForumReactionDelta(
+  reactionCounts: ForumReactionCounts,
+  emoji: string,
+  delta: number
+) {
+  const nextReactionCounts = [...reactionCounts];
+  const existingIndex = nextReactionCounts.findIndex(
+    (reactionCount) => reactionCount.emoji === emoji
+  );
+
+  if (existingIndex < 0 && delta <= 0) {
+    return nextReactionCounts;
+  }
+
+  if (existingIndex < 0) {
+    return [...nextReactionCounts, { count: delta, emoji }];
+  }
+
+  const nextCount = nextReactionCounts[existingIndex].count + delta;
+
+  if (nextCount <= 0) {
+    nextReactionCounts.splice(existingIndex, 1);
+    return nextReactionCounts;
+  }
+
+  nextReactionCounts[existingIndex] = { count: nextCount, emoji };
+  return nextReactionCounts;
 }
 
 /** Reads current user's forum reactions grouped by forum id. */

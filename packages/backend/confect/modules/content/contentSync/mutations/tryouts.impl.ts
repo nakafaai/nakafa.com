@@ -12,7 +12,8 @@ const contentSync_mutations_tryouts_bulkSyncTryoutsImpl = FunctionImpl.make(
       Effect.catchTags({
         ContentSyncError: (error) => Effect.die(error),
         IrtError: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 

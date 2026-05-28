@@ -6,7 +6,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const convexTestTimeout = 15_000;
 const confectTestTimeout = 20_000;
 const defaultExcludes = ["**/node_modules/**", "coverage/**"];
-const confectTests = ["confect/**/*.confect.test.ts"];
 
 const config = defineConfig({
   test: {
@@ -36,7 +35,7 @@ const config = defineConfig({
         test: {
           name: "backend",
           include: ["**/*.test.ts"],
-          exclude: ["convex/**", ...confectTests, ...defaultExcludes],
+          exclude: ["convex/**", "confect/integration/**", ...defaultExcludes],
           environment: "node",
         },
       },
@@ -44,7 +43,7 @@ const config = defineConfig({
         extends: true,
         test: {
           name: "confect",
-          include: confectTests,
+          include: ["confect/integration/**/*.test.ts"],
           environment: "node",
           testTimeout: confectTestTimeout,
         },

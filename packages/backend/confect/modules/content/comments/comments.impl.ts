@@ -18,7 +18,8 @@ const comments_mutations_addCommentImpl = FunctionImpl.make(
       Effect.catchTags({
         CommentActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -31,7 +32,8 @@ const comments_mutations_deleteCommentImpl = FunctionImpl.make(
       Effect.catchTags({
         CommentActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -44,7 +46,8 @@ const comments_mutations_voteOnCommentImpl = FunctionImpl.make(
       Effect.catchTags({
         CommentActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
-      })
+      }),
+      Effect.orDie
     )
 );
 
@@ -52,14 +55,14 @@ const comments_queries_getCommentsBySlugImpl = FunctionImpl.make(
   api,
   "comments.queries",
   "getCommentsBySlug",
-  (args) => contentComments_getCommentsBySlug(args)
+  (args) => contentComments_getCommentsBySlug(args).pipe(Effect.orDie)
 );
 
 const comments_queries_getCommentsByUserIdImpl = FunctionImpl.make(
   api,
   "comments.queries",
   "getCommentsByUserId",
-  (args) => contentComments_getCommentsByUserId(args)
+  (args) => contentComments_getCommentsByUserId(args).pipe(Effect.orDie)
 );
 
 const commentsMutationsImpl = GroupImpl.make(api, "comments.mutations")

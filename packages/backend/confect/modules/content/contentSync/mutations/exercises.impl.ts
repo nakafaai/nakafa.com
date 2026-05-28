@@ -15,7 +15,8 @@ const contentSync_mutations_exercises_bulkSyncExerciseQuestionsImpl =
     "bulkSyncExerciseQuestions",
     (args) =>
       contentSyncExercises_bulkSyncExerciseQuestions(args).pipe(
-        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
+        Effect.orDie
       )
   );
 
@@ -26,7 +27,8 @@ const contentSync_mutations_exercises_bulkSyncExerciseSetsImpl =
     "bulkSyncExerciseSets",
     (args) =>
       contentSyncExercises_bulkSyncExerciseSets(args).pipe(
-        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
+        Effect.orDie
       )
   );
 
@@ -37,7 +39,8 @@ const contentSync_mutations_exercises_deleteStaleExerciseQuestionsImpl =
     "deleteStaleExerciseQuestions",
     (args) =>
       contentSyncExercises_deleteStaleExerciseQuestions(args).pipe(
-        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
+        Effect.orDie
       )
   );
 
@@ -48,7 +51,8 @@ const contentSync_mutations_exercises_deleteStaleExerciseSetsImpl =
     "deleteStaleExerciseSets",
     (args) =>
       contentSyncExercises_deleteStaleExerciseSets(args).pipe(
-        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error)),
+        Effect.orDie
       )
   );
 

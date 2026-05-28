@@ -6,6 +6,10 @@ import { Option, Schema } from "effect";
 type PersistedProviderMetadata = Schema.Schema.Type<
   typeof providerMetadataSchema
 >;
+type PersistedAnthropicProvider = NonNullable<
+  PersistedProviderMetadata["anthropic"]
+>;
+type PersistedAzureProvider = NonNullable<PersistedProviderMetadata["azure"]>;
 type PersistedGroundingProvider = NonNullable<
   PersistedProviderMetadata["google"]
 >;
@@ -102,13 +106,44 @@ function copyGatewayProvider(provider: PersistedGatewayProvider | undefined) {
   return { generationId: provider.generationId };
 }
 
+/** Copies Azure response metadata into the persisted shape. */
+function copyAzureProvider(provider: PersistedAzureProvider | undefined) {
+  if (provider === undefined) {
+    return;
+  }
+
+  if (provider.reasoningEncryptedContent === undefined) {
+    return { itemId: provider.itemId };
+  }
+
+  return {
+    itemId: provider.itemId,
+    reasoningEncryptedContent: provider.reasoningEncryptedContent,
+  };
+}
+
+/** Copies Anthropic response metadata into the persisted shape. */
+function copyAnthropicProvider(
+  provider: PersistedAnthropicProvider | undefined
+) {
+  if (provider === undefined) {
+    return;
+  }
+
+  return { signature: provider.signature };
+}
+
 /** Copies provider metadata into a mutable persisted object. */
 function copyProviderMetadata(metadata: PersistedProviderMetadata) {
+  const anthropic = copyAnthropicProvider(metadata.anthropic);
+  const azure = copyAzureProvider(metadata.azure);
   const gateway = copyGatewayProvider(metadata.gateway);
   const google = copyGroundingProvider(metadata.google);
   const vertex = copyGroundingProvider(metadata.vertex);
 
   return {
+    ...(anthropic === undefined ? {} : { anthropic }),
+    ...(azure === undefined ? {} : { azure }),
     ...(gateway === undefined ? {} : { gateway }),
     ...(google === undefined ? {} : { google }),
     ...(vertex === undefined ? {} : { vertex }),
@@ -116,9 +151,7 @@ function copyProviderMetadata(metadata: PersistedProviderMetadata) {
 }
 
 /** Validates AI SDK provider metadata before storing it in Convex. */
-export function persistProviderMetadata(
-  metadata: ProviderMetadata | undefined
-) {
+export function persistProviderMetadata(metadata: unknown | undefined) {
   if (metadata === undefined) {
     return;
   }
@@ -144,6 +177,18 @@ export function restoreProviderMetadata(
 
   const copied = copyProviderMetadata(metadata);
   const restored: ProviderMetadata = {};
+
+  if (copied.anthropic) {
+    restored.anthropic = copied.anthropic;
+  }
+
+  if (copied.azure) {
+    restored.azure = copied.azure;
+  }
+
+  if (copied.gateway) {
+    restored.gateway = copied.gateway;
+  }
 
   if (copied.google) {
     restored.google = copied.google;

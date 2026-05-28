@@ -1,13 +1,13 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import path from "node:path";
+import { afterEach, describe, expect, it, vi } from "@effect/vitest";
 import { getUnknownMessage } from "@repo/backend/scripts/lib/errors";
 import {
   parseExerciseMaterialFile,
   parseSubjectMaterialFile,
 } from "@repo/backend/scripts/lib/mdx-parser/materials";
 import { Effect, Exit, Schema } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
 
 class MaterialTestError extends Schema.TaggedError<MaterialTestError>()(
   "MaterialTestError",
@@ -19,10 +19,6 @@ class MaterialTestError extends Schema.TaggedError<MaterialTestError>()(
 /** Resolves a test fixture path inside the shared contents package. */
 const getContentFile = (...segments: string[]) =>
   path.resolve(process.cwd(), "../contents", ...segments);
-
-/** Runs an invalid material effect without preserving its success type. */
-const runInvalidMaterial = <A, E>(effect: Effect.Effect<A, E, never>) =>
-  Effect.runPromiseExit(effect);
 
 /** Creates one temporary material file under a content-shaped directory. */
 const createTempMaterialFile = Effect.fn("materialTest.createTempMaterialFile")(
@@ -68,9 +64,9 @@ afterEach(() => {
 });
 
 describe("mdx material parser", () => {
-  it("parses current exercise material files that use path.ts and satisfies", async () => {
-    const sets = await Effect.runPromise(
-      parseExerciseMaterialFile(
+  it.effect("parses current exercise material files with path.ts", () =>
+    Effect.gen(function* () {
+      const sets = yield* parseExerciseMaterialFile(
         getContentFile(
           "exercises",
           "high-school",
@@ -80,20 +76,20 @@ describe("mdx material parser", () => {
           "id-material.ts"
         ),
         "id"
-      )
-    );
+      );
 
-    expect(sets).toHaveLength(10);
-    expect(sets[0]).toMatchObject({
-      locale: "id",
-      slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
-      title: "Set 1",
-    });
-  });
+      expect(sets).toHaveLength(10);
+      expect(sets[0]).toMatchObject({
+        locale: "id",
+        slug: "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1",
+        title: "Set 1",
+      });
+    })
+  );
 
-  it("parses current subject material files that use path.ts and satisfies", async () => {
-    const topics = await Effect.runPromise(
-      parseSubjectMaterialFile(
+  it.effect("parses current subject material files with path.ts", () =>
+    Effect.gen(function* () {
+      const topics = yield* parseSubjectMaterialFile(
         getContentFile(
           "subject",
           "high-school",
@@ -103,132 +99,137 @@ describe("mdx material parser", () => {
           "id-material.ts"
         ),
         "id"
-      )
-    );
+      );
 
-    expect(topics.length).toBeGreaterThan(0);
-    expect(topics[0]).toMatchObject({
-      locale: "id",
-      slug: "subject/high-school/10/mathematics/exponential-logarithm",
-      title: "Eksponen dan Logaritma",
-    });
-  });
+      expect(topics.length).toBeGreaterThan(0);
+      expect(topics[0]).toMatchObject({
+        locale: "id",
+        slug: "subject/high-school/10/mathematics/exponential-logarithm",
+        title: "Eksponen dan Logaritma",
+      });
+    })
+  );
 
-  it("uses the exercise fallback base path when path.ts is missing", async () => {
-    const sets = await Effect.runPromise(
-      Effect.acquireUseRelease(
-        createTempMaterialFile(
-          "exercises/high-school/snbt/mathematics/_data/id-material.ts",
-          `const mathematicsMaterials = [
+  it.effect(
+    "uses the exercise fallback base path when path.ts is missing",
+    () =>
+      Effect.gen(function* () {
+        const sets = yield* Effect.acquireUseRelease(
+          createTempMaterialFile(
+            "exercises/high-school/snbt/mathematics/_data/id-material.ts",
+            `const mathematicsMaterials = [
             {
               title: "Quiz",
               href: "\${BASE_PATH}/quiz",
               items: [{ title: "Set 1", href: "\${BASE_PATH}/quiz/set-1" }],
             },
           ] as const;`
-        ),
-        ({ filePath }) => parseExerciseMaterialFile(filePath, "id"),
-        ({ directory }) => removeTempMaterialDirectory(directory)
-      )
-    );
+          ),
+          ({ filePath }) => parseExerciseMaterialFile(filePath, "id"),
+          ({ directory }) => removeTempMaterialDirectory(directory)
+        );
 
-    expect(sets).toStrictEqual([
-      {
-        locale: "id",
-        slug: "exercises/high-school/snbt/mathematics/quiz/set-1",
-        category: "high-school",
-        type: "snbt",
-        material: "mathematics",
-        exerciseType: "quiz",
-        exerciseTypeTitle: "Quiz",
-        setName: "set-1",
-        title: "Set 1",
-        description: undefined,
-        year: undefined,
-      },
-    ]);
-  });
+        expect(sets).toStrictEqual([
+          {
+            category: "high-school",
+            description: undefined,
+            exerciseType: "quiz",
+            exerciseTypeTitle: "Quiz",
+            locale: "id",
+            material: "mathematics",
+            setName: "set-1",
+            slug: "exercises/high-school/snbt/mathematics/quiz/set-1",
+            title: "Set 1",
+            type: "snbt",
+            year: undefined,
+          },
+        ]);
+      })
+  );
 
-  it("uses the fallback base path when path.ts has no BASE_PATH export", async () => {
-    const sets = await Effect.runPromise(
-      Effect.acquireUseRelease(
-        createTempMaterialFile(
-          "exercises/high-school/snbt/mathematics/_data/id-material.ts",
-          `const mathematicsMaterials = [
+  it.effect(
+    "uses the fallback base path when path.ts has no BASE_PATH export",
+    () =>
+      Effect.gen(function* () {
+        const sets = yield* Effect.acquireUseRelease(
+          createTempMaterialFile(
+            "exercises/high-school/snbt/mathematics/_data/id-material.ts",
+            `const mathematicsMaterials = [
             {
               title: "Quiz",
               href: "\${BASE_PATH}/quiz",
               items: [{ title: "Set 1", href: "\${BASE_PATH}/quiz/set-1" }],
             },
           ] as const;`,
-          "export const OTHER_PATH = '/wrong';"
-        ),
-        ({ filePath }) => parseExerciseMaterialFile(filePath, "id"),
-        ({ directory }) => removeTempMaterialDirectory(directory)
-      )
-    );
+            "export const OTHER_PATH = '/wrong';"
+          ),
+          ({ filePath }) => parseExerciseMaterialFile(filePath, "id"),
+          ({ directory }) => removeTempMaterialDirectory(directory)
+        );
 
-    expect(sets[0]?.slug).toBe(
-      "exercises/high-school/snbt/mathematics/quiz/set-1"
-    );
-  });
+        expect(sets[0]?.slug).toBe(
+          "exercises/high-school/snbt/mathematics/quiz/set-1"
+        );
+      })
+  );
 
-  it("returns empty material results when the material const is absent", async () => {
-    const sets = await Effect.runPromise(
-      Effect.acquireUseRelease(
-        createTempMaterialFile(
-          "exercises/high-school/snbt/mathematics/_data/id-material.ts",
-          "export const unrelated = [];"
-        ),
-        ({ filePath }) => parseExerciseMaterialFile(filePath, "id"),
-        ({ directory }) => removeTempMaterialDirectory(directory)
-      )
-    );
+  it.effect(
+    "returns empty material results when the material const is absent",
+    () =>
+      Effect.gen(function* () {
+        const sets = yield* Effect.acquireUseRelease(
+          createTempMaterialFile(
+            "exercises/high-school/snbt/mathematics/_data/id-material.ts",
+            "export const unrelated = [];"
+          ),
+          ({ filePath }) => parseExerciseMaterialFile(filePath, "id"),
+          ({ directory }) => removeTempMaterialDirectory(directory)
+        );
 
-    expect(sets).toStrictEqual([]);
-  });
+        expect(sets).toStrictEqual([]);
+      })
+  );
 
-  it("parses subject topic hrefs without a slash as empty topic slugs", async () => {
-    const topics = await Effect.runPromise(
-      Effect.acquireUseRelease(
-        createTempMaterialFile(
-          "subject/high-school/10/mathematics/_data/id-material.ts",
-          `const mathematicsMaterials = [
+  it.effect(
+    "parses subject topic hrefs without a slash as empty topic slugs",
+    () =>
+      Effect.gen(function* () {
+        const topics = yield* Effect.acquireUseRelease(
+          createTempMaterialFile(
+            "subject/high-school/10/mathematics/_data/id-material.ts",
+            `const mathematicsMaterials = [
             { title: "Topic", href: "topic", items: [] },
           ];
           export default mathematicsMaterials;`
-        ),
-        ({ filePath }) => parseSubjectMaterialFile(filePath, "id"),
-        ({ directory }) => removeTempMaterialDirectory(directory)
-      )
-    );
+          ),
+          ({ filePath }) => parseSubjectMaterialFile(filePath, "id"),
+          ({ directory }) => removeTempMaterialDirectory(directory)
+        );
 
-    expect(topics).toStrictEqual([
-      {
-        locale: "id",
-        slug: "subject/high-school/10/mathematics/",
-        category: "high-school",
-        grade: "10",
-        material: "mathematics",
-        topic: "",
-        title: "Topic",
-        description: undefined,
-        sectionCount: 0,
-      },
-    ]);
-  });
+        expect(topics).toStrictEqual([
+          {
+            category: "high-school",
+            description: undefined,
+            grade: "10",
+            locale: "id",
+            material: "mathematics",
+            sectionCount: 0,
+            slug: "subject/high-school/10/mathematics/",
+            title: "Topic",
+            topic: "",
+          },
+        ]);
+      })
+  );
 
-  it.each([
+  it.effect.each([
     [
-      () =>
-        runInvalidMaterial(
-          parseExerciseMaterialFile("not-a-material.ts", "id")
-        ),
+      () => Effect.exit(parseExerciseMaterialFile("not-a-material.ts", "id")),
       "Invalid material file path",
     ],
     [
       () =>
-        runInvalidMaterial(
+        Effect.exit(
           Effect.acquireUseRelease(
             createTempMaterialFile(
               "exercises/high-school/snbt/mathematics/_data/id-material.ts",
@@ -242,7 +243,7 @@ describe("mdx material parser", () => {
     ],
     [
       () =>
-        runInvalidMaterial(
+        Effect.exit(
           Effect.acquireUseRelease(
             createTempMaterialFile(
               "exercises/high-school/snbt/mathematics/_data/id-material.ts",
@@ -258,7 +259,7 @@ describe("mdx material parser", () => {
     ],
     [
       () =>
-        runInvalidMaterial(
+        Effect.exit(
           Effect.acquireUseRelease(
             createTempMaterialFile(
               "exercises/high-school/snbt/mathematics/_data/id-material.ts",
@@ -278,7 +279,7 @@ describe("mdx material parser", () => {
     ],
     [
       () =>
-        runInvalidMaterial(
+        Effect.exit(
           Effect.acquireUseRelease(
             createTempMaterialFile(
               "exercises/high-school/snbt/mathematics/_data/id-material.ts",
@@ -298,7 +299,7 @@ describe("mdx material parser", () => {
     ],
     [
       () =>
-        runInvalidMaterial(
+        Effect.exit(
           Effect.acquireUseRelease(
             createTempMaterialFile(
               "exercises/high-school/snbt/mathematics/_data/id-material.ts",
@@ -318,7 +319,7 @@ describe("mdx material parser", () => {
     ],
     [
       () =>
-        runInvalidMaterial(
+        Effect.exit(
           Effect.acquireUseRelease(
             createTempMaterialFile(
               "exercises/high-school/snbt/mathematics/_data/id-material.ts",
@@ -338,14 +339,14 @@ describe("mdx material parser", () => {
     ],
     [
       () =>
-        runInvalidMaterial(
+        Effect.exit(
           parseSubjectMaterialFile("not-a-subject-material.ts", "id")
         ),
       "Invalid subject material file path",
     ],
     [
       () =>
-        runInvalidMaterial(
+        Effect.exit(
           parseSubjectMaterialFile(
             path.join(
               os.tmpdir(),
@@ -356,40 +357,47 @@ describe("mdx material parser", () => {
         ),
       "ENOENT",
     ],
-  ])("rejects invalid material inputs", async (run, message) => {
-    const exit = await run();
+  ] as const)("rejects invalid material inputs", ([run, message]) =>
+    Effect.gen(function* () {
+      const exit = yield* run();
 
-    expect(exit._tag).toBe("Failure");
-    if (exit._tag === "Failure") {
-      expect(exit.cause.toString()).toContain(message);
-    }
-  });
+      expect(exit._tag).toBe("Failure");
+      if (exit._tag === "Failure") {
+        expect(exit.cause.toString()).toContain(message);
+      }
+    })
+  );
 
-  it("reports non-Error filesystem failures from material reads", async () => {
-    vi.resetModules();
-    vi.doMock("node:fs/promises", () => ({
-      readFile: vi
-        .fn()
-        .mockRejectedValueOnce("missing path")
-        .mockRejectedValueOnce("missing material"),
-    }));
-    const { parseExerciseMaterialFile: parseWithMockedFs } = await import(
-      "@repo/backend/scripts/lib/mdx-parser/materials"
-    );
+  it.effect("reports non-Error filesystem failures from material reads", () =>
+    Effect.gen(function* () {
+      yield* Effect.sync(() => {
+        vi.resetModules();
+        vi.doMock("node:fs/promises", () => ({
+          readFile: vi
+            .fn()
+            .mockRejectedValueOnce("missing path")
+            .mockRejectedValueOnce("missing material"),
+        }));
+      });
+      const { parseExerciseMaterialFile: parseWithMockedFs } =
+        yield* Effect.promise(
+          () => import("@repo/backend/scripts/lib/mdx-parser/materials")
+        );
 
-    const exit = await Effect.runPromiseExit(
-      parseWithMockedFs(
-        path.join(
-          os.tmpdir(),
-          "exercises/high-school/snbt/mathematics/_data/id-material.ts"
-        ),
-        "id"
-      )
-    );
+      const exit = yield* Effect.exit(
+        parseWithMockedFs(
+          path.join(
+            os.tmpdir(),
+            "exercises/high-school/snbt/mathematics/_data/id-material.ts"
+          ),
+          "id"
+        )
+      );
 
-    expect(Exit.isFailure(exit)).toBe(true);
-    if (Exit.isFailure(exit)) {
-      expect(exit.cause.toString()).toContain("missing material");
-    }
-  });
+      expect(Exit.isFailure(exit)).toBe(true);
+      if (Exit.isFailure(exit)) {
+        expect(exit.cause.toString()).toContain("missing material");
+      }
+    })
+  );
 });

@@ -77,7 +77,7 @@ interface SyncedExerciseQuestion {
 /** Upserts exercise set rows and their search documents. */
 export const bulkSyncExerciseSets = Effect.fn(
   "contentSync.exercises.bulkSyncExerciseSets"
-)(function* (args: { sets: SyncedExerciseSet[] }) {
+)(function* (args: { readonly sets: readonly SyncedExerciseSet[] }) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
@@ -171,7 +171,7 @@ export const bulkSyncExerciseSets = Effect.fn(
 /** Upserts exercise questions and linked choices, authors, and search rows. */
 export const bulkSyncExerciseQuestions = Effect.fn(
   "contentSync.exercises.bulkSyncExerciseQuestions"
-)(function* (args: { questions: SyncedExerciseQuestion[] }) {
+)(function* (args: { readonly questions: readonly SyncedExerciseQuestion[] }) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
@@ -303,7 +303,7 @@ export const bulkSyncExerciseQuestions = Effect.fn(
 /** Deletes stale exercise sets and their bounded question children. */
 export const deleteStaleExerciseSets = Effect.fn(
   "contentSync.exercises.deleteStaleExerciseSets"
-)(function* (args: { setIds: Id<"exerciseSets">[] }) {
+)(function* (args: { readonly setIds: readonly Id<"exerciseSets">[] }) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
@@ -358,7 +358,9 @@ export const deleteStaleExerciseSets = Effect.fn(
 /** Deletes stale exercise questions. */
 export const deleteStaleExerciseQuestions = Effect.fn(
   "contentSync.exercises.deleteStaleExerciseQuestions"
-)(function* (args: { questionIds: Id<"exerciseQuestions">[] }) {
+)(function* (args: {
+  readonly questionIds: readonly Id<"exerciseQuestions">[];
+}) {
   const reader = yield* DatabaseReader;
   yield* assertContentSyncBatchSize({
     functionName: "deleteStaleExerciseQuestions",
