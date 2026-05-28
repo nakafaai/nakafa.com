@@ -19,7 +19,6 @@ const contentSync_mutations_subjects_bulkSyncSubjectSectionsImpl =
         Effect.orDie
       )
   );
-
 const contentSync_mutations_subjects_bulkSyncSubjectTopicsImpl =
   FunctionImpl.make(
     api,
@@ -31,7 +30,6 @@ const contentSync_mutations_subjects_bulkSyncSubjectTopicsImpl =
         Effect.orDie
       )
   );
-
 const contentSync_mutations_subjects_deleteStaleSubjectSectionsImpl =
   FunctionImpl.make(
     api,
@@ -43,7 +41,6 @@ const contentSync_mutations_subjects_deleteStaleSubjectSectionsImpl =
         Effect.orDie
       )
   );
-
 const contentSync_mutations_subjects_deleteStaleSubjectTopicsImpl =
   FunctionImpl.make(
     api,
@@ -55,7 +52,6 @@ const contentSync_mutations_subjects_deleteStaleSubjectTopicsImpl =
         Effect.orDie
       )
   );
-
 const contentSyncMutationsSubjectsImpl = GroupImpl.make(
   api,
   "contentSync.mutations.subjects"

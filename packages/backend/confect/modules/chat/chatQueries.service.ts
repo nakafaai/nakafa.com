@@ -14,7 +14,7 @@ import type {
 import {
   getOptionalAppUser,
   requireAppUser,
-} from "@repo/backend/confect/modules/identity/auth.service";
+} from "@repo/backend/confect/modules/identity/auth/session.service";
 import type { PaginationOptions } from "convex/server";
 import { Effect } from "effect";
 

@@ -4,7 +4,7 @@ import {
   DatabaseWriter,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
-import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { requireAppUser } from "@repo/backend/confect/modules/identity/auth/session.service";
 import {
   isAdmin,
   loadActiveClass,

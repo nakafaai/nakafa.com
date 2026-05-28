@@ -33,7 +33,6 @@ const classes_forums_mutations_forums_createForumImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_forums_mutations_posts_createForumPostImpl = FunctionImpl.make(
   api,
   "classes.forums.mutations.posts",
@@ -47,7 +46,6 @@ const classes_forums_mutations_posts_createForumPostImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_forums_mutations_reactions_toggleForumReactionImpl =
   FunctionImpl.make(
     api,
@@ -62,7 +60,6 @@ const classes_forums_mutations_reactions_toggleForumReactionImpl =
         Effect.orDie
       )
   );
-
 const classes_forums_mutations_reactions_togglePostReactionImpl =
   FunctionImpl.make(
     api,
@@ -77,7 +74,6 @@ const classes_forums_mutations_reactions_togglePostReactionImpl =
         Effect.orDie
       )
   );
-
 const classes_forums_queries_forums_getForumsImpl = FunctionImpl.make(
   api,
   "classes.forums.queries.forums",
@@ -91,7 +87,6 @@ const classes_forums_queries_forums_getForumsImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_forums_queries_forums_getForumImpl = FunctionImpl.make(
   api,
   "classes.forums.queries.forums",
@@ -105,7 +100,6 @@ const classes_forums_queries_forums_getForumImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_forums_mutations_readState_markForumReadImpl = FunctionImpl.make(
   api,
   "classes.forums.mutations.readState",
@@ -119,7 +113,6 @@ const classes_forums_mutations_readState_markForumReadImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_forums_mutations_uploads_discardForumUploadsImpl =
   FunctionImpl.make(
     api,
@@ -131,7 +124,6 @@ const classes_forums_mutations_uploads_discardForumUploadsImpl =
         Effect.orDie
       )
   );
-
 const classes_forums_mutations_uploads_generateUploadUrlImpl =
   FunctionImpl.make(
     api,
@@ -146,7 +138,6 @@ const classes_forums_mutations_uploads_generateUploadUrlImpl =
         Effect.orDie
       )
   );
-
 const classes_forums_mutations_uploads_saveForumUploadImpl = FunctionImpl.make(
   api,
   "classes.forums.mutations.uploads",
@@ -160,7 +151,6 @@ const classes_forums_mutations_uploads_saveForumUploadImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_forums_internalMutations_deleteExpiredPendingUploadImpl =
   FunctionImpl.make(
     api,
@@ -168,7 +158,6 @@ const classes_forums_internalMutations_deleteExpiredPendingUploadImpl =
     "deleteExpiredPendingUpload",
     (args) => deleteExpiredPendingUpload(args).pipe(Effect.orDie)
   );
-
 const classes_forums_queries_pages_getForumPostsImpl = FunctionImpl.make(
   api,
   "classes.forums.queries.pages",
@@ -182,17 +171,14 @@ const classes_forums_queries_pages_getForumPostsImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classesForumsMutationsForumsImpl = GroupImpl.make(
   api,
   "classes.forums.mutations.forums"
 ).pipe(Layer.provide(classes_forums_mutations_forums_createForumImpl));
-
 const classesForumsMutationsPostsImpl = GroupImpl.make(
   api,
   "classes.forums.mutations.posts"
 ).pipe(Layer.provide(classes_forums_mutations_posts_createForumPostImpl));
-
 const classesForumsMutationsReactionsImpl = GroupImpl.make(
   api,
   "classes.forums.mutations.reactions"
@@ -203,12 +189,10 @@ const classesForumsMutationsReactionsImpl = GroupImpl.make(
   .pipe(
     Layer.provide(classes_forums_mutations_reactions_togglePostReactionImpl)
   );
-
 const classesForumsMutationsReadStateImpl = GroupImpl.make(
   api,
   "classes.forums.mutations.readState"
 ).pipe(Layer.provide(classes_forums_mutations_readState_markForumReadImpl));
-
 const classesForumsMutationsUploadsImpl = GroupImpl.make(
   api,
   "classes.forums.mutations.uploads"
@@ -216,26 +200,22 @@ const classesForumsMutationsUploadsImpl = GroupImpl.make(
   .pipe(Layer.provide(classes_forums_mutations_uploads_discardForumUploadsImpl))
   .pipe(Layer.provide(classes_forums_mutations_uploads_generateUploadUrlImpl))
   .pipe(Layer.provide(classes_forums_mutations_uploads_saveForumUploadImpl));
-
 const classesForumsQueriesForumsImpl = GroupImpl.make(
   api,
   "classes.forums.queries.forums"
 )
   .pipe(Layer.provide(classes_forums_queries_forums_getForumsImpl))
   .pipe(Layer.provide(classes_forums_queries_forums_getForumImpl));
-
 const classesForumsQueriesPagesImpl = GroupImpl.make(
   api,
   "classes.forums.queries.pages"
 ).pipe(Layer.provide(classes_forums_queries_pages_getForumPostsImpl));
-
 const classesForumsInternalMutationsImpl = GroupImpl.make(
   api,
   "classes.forums.internalMutations"
 ).pipe(
   Layer.provide(classes_forums_internalMutations_deleteExpiredPendingUploadImpl)
 );
-
 const classesForumsMutationsImpl = GroupImpl.make(
   api,
   "classes.forums.mutations"
@@ -245,11 +225,9 @@ const classesForumsMutationsImpl = GroupImpl.make(
   .pipe(Layer.provide(classesForumsMutationsReactionsImpl))
   .pipe(Layer.provide(classesForumsMutationsReadStateImpl))
   .pipe(Layer.provide(classesForumsMutationsUploadsImpl));
-
 const classesForumsQueriesImpl = GroupImpl.make(api, "classes.forums.queries")
   .pipe(Layer.provide(classesForumsQueriesForumsImpl))
   .pipe(Layer.provide(classesForumsQueriesPagesImpl));
-
 export const classesForumsImpl = GroupImpl.make(api, "classes.forums")
   .pipe(Layer.provide(classesForumsInternalMutationsImpl))
   .pipe(Layer.provide(classesForumsMutationsImpl))

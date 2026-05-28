@@ -11,7 +11,7 @@ import type {
   ContentViewRef,
   Locale,
 } from "@repo/backend/confect/modules/content/content.schemas";
-import { getOptionalAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { getOptionalAppUser } from "@repo/backend/confect/modules/identity/auth/session.service";
 import { Clock, Duration, Effect, Option, Schema } from "effect";
 
 const DEFAULT_RECENTLY_VIEWED_LIMIT = 5;

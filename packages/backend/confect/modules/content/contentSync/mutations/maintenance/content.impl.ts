@@ -10,7 +10,6 @@ export const contentSync_mutations_maintenance_deleteArticleReferencesBatchImpl 
     "deleteArticleReferencesBatch",
     (_args) => deleteBatchFromTable("articleReferences").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteArticlesBatchImpl =
   FunctionImpl.make(
     api,
@@ -18,7 +17,6 @@ export const contentSync_mutations_maintenance_deleteArticlesBatchImpl =
     "deleteArticlesBatch",
     (_args) => deleteBatchFromTable("articleContents").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteAuthorsBatchImpl =
   FunctionImpl.make(
     api,
@@ -26,7 +24,6 @@ export const contentSync_mutations_maintenance_deleteAuthorsBatchImpl =
     "deleteAuthorsBatch",
     (_args) => deleteBatchFromTable("authors").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteContentAuthorsBatchImpl =
   FunctionImpl.make(
     api,
@@ -34,7 +31,6 @@ export const contentSync_mutations_maintenance_deleteContentAuthorsBatchImpl =
     "deleteContentAuthorsBatch",
     (_args) => deleteBatchFromTable("contentAuthors").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteContentSearchBatchImpl =
   FunctionImpl.make(
     api,
@@ -42,7 +38,6 @@ export const contentSync_mutations_maintenance_deleteContentSearchBatchImpl =
     "deleteContentSearchBatch",
     (_args) => deleteBatchFromTable("contentSearch").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteExerciseAnswersBatchImpl =
   FunctionImpl.make(
     api,
@@ -50,7 +45,6 @@ export const contentSync_mutations_maintenance_deleteExerciseAnswersBatchImpl =
     "deleteExerciseAnswersBatch",
     (_args) => deleteBatchFromTable("exerciseAnswers").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteExerciseAttemptsBatchImpl =
   FunctionImpl.make(
     api,
@@ -58,7 +52,6 @@ export const contentSync_mutations_maintenance_deleteExerciseAttemptsBatchImpl =
     "deleteExerciseAttemptsBatch",
     (_args) => deleteBatchFromTable("exerciseAttempts").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteExerciseChoicesBatchImpl =
   FunctionImpl.make(
     api,
@@ -66,7 +59,6 @@ export const contentSync_mutations_maintenance_deleteExerciseChoicesBatchImpl =
     "deleteExerciseChoicesBatch",
     (_args) => deleteBatchFromTable("exerciseChoices").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteExerciseItemParametersBatchImpl =
   FunctionImpl.make(
     api,
@@ -74,7 +66,6 @@ export const contentSync_mutations_maintenance_deleteExerciseItemParametersBatch
     "deleteExerciseItemParametersBatch",
     (_args) => deleteBatchFromTable("exerciseItemParameters").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteExerciseQuestionsBatchImpl =
   FunctionImpl.make(
     api,
@@ -82,7 +73,6 @@ export const contentSync_mutations_maintenance_deleteExerciseQuestionsBatchImpl 
     "deleteExerciseQuestionsBatch",
     (_args) => deleteBatchFromTable("exerciseQuestions").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteExerciseSetsBatchImpl =
   FunctionImpl.make(
     api,
@@ -90,7 +80,6 @@ export const contentSync_mutations_maintenance_deleteExerciseSetsBatchImpl =
     "deleteExerciseSetsBatch",
     (_args) => deleteBatchFromTable("exerciseSets").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteSubjectSectionsBatchImpl =
   FunctionImpl.make(
     api,
@@ -98,7 +87,6 @@ export const contentSync_mutations_maintenance_deleteSubjectSectionsBatchImpl =
     "deleteSubjectSectionsBatch",
     (_args) => deleteBatchFromTable("subjectSections").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteSubjectTopicsBatchImpl =
   FunctionImpl.make(
     api,

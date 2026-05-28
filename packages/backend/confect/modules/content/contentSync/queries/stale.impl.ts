@@ -9,7 +9,6 @@ const contentSync_queries_stale_listStaleContentPageImpl = FunctionImpl.make(
   "listStaleContentPage",
   (args) => listStaleContentPage(args).pipe(Effect.orDie)
 );
-
 const contentSyncQueriesStaleImpl = GroupImpl.make(
   api,
   "contentSync.queries.stale"

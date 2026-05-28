@@ -6,7 +6,7 @@ import {
   Scheduler,
   StorageWriter,
 } from "@repo/backend/confect/_generated/services";
-import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { requireAppUser } from "@repo/backend/confect/modules/identity/auth/session.service";
 import { ClassActionError } from "@repo/backend/confect/modules/school/classErrors";
 import { loadOpenForumWithAccess } from "@repo/backend/confect/modules/school/forums/access.service";
 import {

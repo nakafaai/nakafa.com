@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registered/classes";
 
 export const createMaterialGroup = registeredFunctions.classes.materials.mutations.createMaterialGroup;
 export const deleteMaterialGroup = registeredFunctions.classes.materials.mutations.deleteMaterialGroup;

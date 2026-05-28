@@ -8,6 +8,14 @@ export const authTriggerUserSchema = Schema.Struct({
   name: Schema.String,
 });
 
+/** Better Auth component user document fields consumed by trigger adapters. */
+export const betterAuthUserSchema = Schema.Struct({
+  _id: Schema.String,
+  email: Schema.String,
+  image: Schema.optional(Schema.Union(Schema.String, Schema.Null)),
+  name: Schema.String,
+});
+
 const jwksDocumentSchema = Schema.Struct({
   alg: Schema.optional(Schema.String),
   createdAt: Schema.Number,

@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registered/contentSync";
 
 export const bulkSyncExerciseQuestions = registeredFunctions.contentSync.mutations.exercises.bulkSyncExerciseQuestions;
 export const bulkSyncExerciseSets = registeredFunctions.contentSync.mutations.exercises.bulkSyncExerciseSets;

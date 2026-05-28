@@ -1,7 +1,7 @@
 import { GenericId } from "@confect/core";
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { requireAppUser } from "@repo/backend/confect/modules/identity/auth/session.service";
 import {
   checkClassAccess,
   getSchoolMembership,

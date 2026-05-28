@@ -19,7 +19,6 @@ const users_mutations_updateUserRoleImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const users_mutations_updateUserNameImpl = FunctionImpl.make(
   api,
   "users.mutations",
@@ -30,7 +29,6 @@ const users_mutations_updateUserNameImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const users_mutations_syncUserInfoForChatImpl = FunctionImpl.make(
   api,
   "users.mutations",
@@ -41,32 +39,26 @@ const users_mutations_syncUserInfoForChatImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const users_queries_getUserByIdImpl = FunctionImpl.make(
   api,
   "users.queries",
   "getUserById",
   (args) => getUserById(args).pipe(Effect.orDie)
 );
-
 const users_queries_getUserByAuthIdImpl = FunctionImpl.make(
   api,
   "users.queries",
   "getUserByAuthId",
   (args) => getUserByAuthId(args).pipe(Effect.orDie)
 );
-
 const usersMutationsImpl = GroupImpl.make(api, "users.mutations")
   .pipe(Layer.provide(users_mutations_updateUserRoleImpl))
   .pipe(Layer.provide(users_mutations_updateUserNameImpl))
   .pipe(Layer.provide(users_mutations_syncUserInfoForChatImpl));
-
 const usersQueriesImpl = GroupImpl.make(api, "users.queries")
   .pipe(Layer.provide(users_queries_getUserByIdImpl))
   .pipe(Layer.provide(users_queries_getUserByAuthIdImpl));
-
 const usersImpl = GroupImpl.make(api, "users")
   .pipe(Layer.provide(usersMutationsImpl))
   .pipe(Layer.provide(usersQueriesImpl));
-
 export const usersLayer = Layer.mergeAll(usersImpl);

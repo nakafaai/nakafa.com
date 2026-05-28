@@ -1,5 +1,5 @@
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { getOptionalAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { getOptionalAppUser } from "@repo/backend/confect/modules/identity/auth/session.service";
 import {
   getTryoutAccessEventByCode,
   getTryoutAccessUnavailableReason,

@@ -8,7 +8,7 @@ import { resolveUserCreditState } from "@repo/backend/confect/modules/commerce/c
 import {
   getAppUserByAuthId,
   requireAppUser,
-} from "@repo/backend/confect/modules/identity/auth.service";
+} from "@repo/backend/confect/modules/identity/auth/session.service";
 import type {
   GetUserByAuthIdArgs,
   GetUserByIdArgs,

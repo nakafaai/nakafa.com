@@ -9,7 +9,6 @@ const contentSync_queries_authors_listAuthorsPageImpl = FunctionImpl.make(
   "listAuthorsPage",
   (args) => listAuthorsPage(args).pipe(Effect.orDie)
 );
-
 const contentSyncQueriesAuthorsImpl = GroupImpl.make(
   api,
   "contentSync.queries.authors"

@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registered/contentSync";
 
 export const bulkSyncAuthors = registeredFunctions.contentSync.mutations.authors.bulkSyncAuthors;
 export const deleteUnusedAuthors = registeredFunctions.contentSync.mutations.authors.deleteUnusedAuthors;

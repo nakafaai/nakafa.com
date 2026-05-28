@@ -1,7 +1,7 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
 import { finalizedAttemptStatusSchema } from "@repo/backend/confect/modules/learning/attempts.schemas";
-import { ExerciseError } from "@repo/backend/confect/modules/learning/exercises/errors.service";
+import { ExerciseError } from "@repo/backend/confect/modules/learning/exercises/errors";
 import {
   ExerciseAnswers,
   ExerciseAttempts,

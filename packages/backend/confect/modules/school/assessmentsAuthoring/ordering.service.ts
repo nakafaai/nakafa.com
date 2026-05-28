@@ -3,7 +3,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { requireAppUser } from "@repo/backend/confect/modules/identity/auth/session.service";
 import { requireAssessment } from "@repo/backend/confect/modules/school/assessments.shared";
 import { requirePermission } from "@repo/backend/confect/modules/school/classAccess.service";
 import type { OrderDirection } from "@repo/backend/confect/modules/school/order.schemas";

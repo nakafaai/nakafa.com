@@ -39,7 +39,6 @@ const irt_workflows_calibrateSetTwoPLImpl = FunctionImpl.make(
   "calibrateSetTwoPL",
   calibrateSetTwoPLWorkflow
 );
-
 const irt_actions_internal_calibration_calibrateSetTwoPLImpl =
   FunctionImpl.make(
     api,
@@ -51,7 +50,6 @@ const irt_actions_internal_calibration_calibrateSetTwoPLImpl =
         Effect.orDie
       )
   );
-
 const irt_queries_internal_calibration_getCalibrationQuestionsForSetImpl =
   FunctionImpl.make(
     api,
@@ -63,7 +61,6 @@ const irt_queries_internal_calibration_getCalibrationQuestionsForSetImpl =
         Effect.orDie
       )
   );
-
 const irt_queries_internal_calibration_getCalibrationResponsesPageForSetImpl =
   FunctionImpl.make(
     api,
@@ -75,7 +72,6 @@ const irt_queries_internal_calibration_getCalibrationResponsesPageForSetImpl =
         Effect.orDie
       )
   );
-
 const irt_mutations_internal_cache_rebuildCalibrationCacheStatsForSetImpl =
   FunctionImpl.make(
     api,
@@ -83,7 +79,6 @@ const irt_mutations_internal_cache_rebuildCalibrationCacheStatsForSetImpl =
     "rebuildCalibrationCacheStatsForSet",
     (args) => rebuildCalibrationCacheStatsForSet(args).pipe(Effect.orDie)
   );
-
 const irt_mutations_internal_cache_trimCalibrationCacheForSetImpl =
   FunctionImpl.make(
     api,
@@ -91,7 +86,6 @@ const irt_mutations_internal_cache_trimCalibrationCacheForSetImpl =
     "trimCalibrationCacheForSet",
     (args) => trimCalibrationCacheForSet(args).pipe(Effect.orDie)
   );
-
 const irt_mutations_internal_responses_syncCalibrationResponsesForAttemptImpl =
   FunctionImpl.make(
     api,
@@ -103,7 +97,6 @@ const irt_mutations_internal_responses_syncCalibrationResponsesForAttemptImpl =
         Effect.orDie
       )
   );
-
 const irt_mutations_internal_queue_cleanupCalibrationQueueEntriesImpl =
   FunctionImpl.make(
     api,
@@ -111,7 +104,6 @@ const irt_mutations_internal_queue_cleanupCalibrationQueueEntriesImpl =
     "cleanupCalibrationQueueEntries",
     (args) => cleanupCalibrationQueueEntries(args).pipe(Effect.orDie)
   );
-
 const irt_mutations_internal_queue_cleanupScalePublicationQueueEntriesImpl =
   FunctionImpl.make(
     api,
@@ -119,7 +111,6 @@ const irt_mutations_internal_queue_cleanupScalePublicationQueueEntriesImpl =
     "cleanupScalePublicationQueueEntries",
     (args) => cleanupScalePublicationQueueEntries(args).pipe(Effect.orDie)
   );
-
 const irt_mutations_internal_queue_drainCalibrationQueueImpl =
   FunctionImpl.make(
     api,
@@ -131,7 +122,6 @@ const irt_mutations_internal_queue_drainCalibrationQueueImpl =
         Effect.orDie
       )
   );
-
 const irt_mutations_internal_queue_enqueueScalePublicationImpl =
   FunctionImpl.make(
     api,
@@ -139,7 +129,6 @@ const irt_mutations_internal_queue_enqueueScalePublicationImpl =
     "enqueueScalePublication",
     (args) => enqueueScalePublication(args).pipe(Effect.orDie)
   );
-
 const irt_mutations_internal_runs_completeCalibrationRunImpl =
   FunctionImpl.make(
     api,
@@ -151,7 +140,6 @@ const irt_mutations_internal_runs_completeCalibrationRunImpl =
         Effect.orDie
       )
   );
-
 const irt_mutations_internal_runs_failCalibrationRunImpl = FunctionImpl.make(
   api,
   "irt.mutations.internalFunctions.runs",
@@ -162,7 +150,6 @@ const irt_mutations_internal_runs_failCalibrationRunImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const irt_mutations_internal_scales_drainScalePublicationQueueImpl =
   FunctionImpl.make(
     api,
@@ -174,7 +161,6 @@ const irt_mutations_internal_scales_drainScalePublicationQueueImpl =
         Effect.orDie
       )
   );
-
 const irt_mutations_internal_scales_drainScaleQualityRefreshQueueImpl =
   FunctionImpl.make(
     api,
@@ -182,7 +168,6 @@ const irt_mutations_internal_scales_drainScaleQualityRefreshQueueImpl =
     "drainScaleQualityRefreshQueue",
     (_args) => drainScaleQualityRefreshQueue().pipe(Effect.orDie)
   );
-
 const irt_mutations_internal_scales_rebuildScaleQualityChecksPageImpl =
   FunctionImpl.make(
     api,
@@ -190,7 +175,6 @@ const irt_mutations_internal_scales_rebuildScaleQualityChecksPageImpl =
     "rebuildScaleQualityChecksPage",
     (args) => rebuildScaleQualityChecksPage(args).pipe(Effect.orDie)
   );
-
 const irt_mutations_internal_scales_refreshScaleQualityCheckImpl =
   FunctionImpl.make(
     api,
@@ -198,7 +182,6 @@ const irt_mutations_internal_scales_refreshScaleQualityCheckImpl =
     "refreshScaleQualityCheck",
     (args) => refreshScaleQualityCheck(args).pipe(Effect.orDie)
   );
-
 const irt_queries_internal_maintenance_getCalibrationCacheIntegrityImpl =
   FunctionImpl.make(
     api,
@@ -206,7 +189,6 @@ const irt_queries_internal_maintenance_getCalibrationCacheIntegrityImpl =
     "getCalibrationCacheIntegrity",
     (args) => getCalibrationCacheIntegrity(args).pipe(Effect.orDie)
   );
-
 const irt_queries_internal_maintenance_getScaleQualityIntegrityImpl =
   FunctionImpl.make(
     api,
@@ -214,7 +196,6 @@ const irt_queries_internal_maintenance_getScaleQualityIntegrityImpl =
     "getScaleQualityIntegrity",
     (args) => getScaleQualityIntegrity(args).pipe(Effect.orDie)
   );
-
 const irt_queries_internal_maintenance_getCalibrationQueueAttemptIntegrityImpl =
   FunctionImpl.make(
     api,
@@ -222,7 +203,6 @@ const irt_queries_internal_maintenance_getCalibrationQueueAttemptIntegrityImpl =
     "getCalibrationQueueAttemptIntegrity",
     (args) => getCalibrationQueueAttemptIntegrity(args).pipe(Effect.orDie)
   );
-
 const irt_queries_internal_maintenance_getCalibrationQueueEntryIntegrityImpl =
   FunctionImpl.make(
     api,
@@ -230,12 +210,10 @@ const irt_queries_internal_maintenance_getCalibrationQueueEntryIntegrityImpl =
     "getCalibrationQueueEntryIntegrity",
     (args) => getCalibrationQueueEntryIntegrity(args).pipe(Effect.orDie)
   );
-
 const irtActionsInternalCalibrationImpl = GroupImpl.make(
   api,
   "irt.actions.internalFunctions.calibration"
 ).pipe(Layer.provide(irt_actions_internal_calibration_calibrateSetTwoPLImpl));
-
 const irtMutationsInternalCacheImpl = GroupImpl.make(
   api,
   "irt.mutations.internalFunctions.cache"
@@ -248,7 +226,6 @@ const irtMutationsInternalCacheImpl = GroupImpl.make(
   .pipe(
     Layer.provide(irt_mutations_internal_cache_trimCalibrationCacheForSetImpl)
   );
-
 const irtMutationsInternalQueueImpl = GroupImpl.make(
   api,
   "irt.mutations.internalFunctions.queue"
@@ -267,7 +244,6 @@ const irtMutationsInternalQueueImpl = GroupImpl.make(
   .pipe(
     Layer.provide(irt_mutations_internal_queue_enqueueScalePublicationImpl)
   );
-
 const irtMutationsInternalResponsesImpl = GroupImpl.make(
   api,
   "irt.mutations.internalFunctions.responses"
@@ -276,14 +252,12 @@ const irtMutationsInternalResponsesImpl = GroupImpl.make(
     irt_mutations_internal_responses_syncCalibrationResponsesForAttemptImpl
   )
 );
-
 const irtMutationsInternalRunsImpl = GroupImpl.make(
   api,
   "irt.mutations.internalFunctions.runs"
 )
   .pipe(Layer.provide(irt_mutations_internal_runs_completeCalibrationRunImpl))
   .pipe(Layer.provide(irt_mutations_internal_runs_failCalibrationRunImpl));
-
 const irtMutationsInternalScalesImpl = GroupImpl.make(
   api,
   "irt.mutations.internalFunctions.scales"
@@ -304,7 +278,6 @@ const irtMutationsInternalScalesImpl = GroupImpl.make(
   .pipe(
     Layer.provide(irt_mutations_internal_scales_refreshScaleQualityCheckImpl)
   );
-
 const irtQueriesInternalCalibrationImpl = GroupImpl.make(
   api,
   "irt.queries.internalFunctions.calibration"
@@ -319,7 +292,6 @@ const irtQueriesInternalCalibrationImpl = GroupImpl.make(
       irt_queries_internal_calibration_getCalibrationResponsesPageForSetImpl
     )
   );
-
 const irtQueriesInternalMaintenanceImpl = GroupImpl.make(
   api,
   "irt.queries.internalFunctions.maintenance"
@@ -342,12 +314,10 @@ const irtQueriesInternalMaintenanceImpl = GroupImpl.make(
       irt_queries_internal_maintenance_getCalibrationQueueEntryIntegrityImpl
     )
   );
-
 const irtActionsInternalImpl = GroupImpl.make(
   api,
   "irt.actions.internalFunctions"
 ).pipe(Layer.provide(irtActionsInternalCalibrationImpl));
-
 const irtMutationsInternalImpl = GroupImpl.make(
   api,
   "irt.mutations.internalFunctions"
@@ -357,34 +327,27 @@ const irtMutationsInternalImpl = GroupImpl.make(
   .pipe(Layer.provide(irtMutationsInternalResponsesImpl))
   .pipe(Layer.provide(irtMutationsInternalRunsImpl))
   .pipe(Layer.provide(irtMutationsInternalScalesImpl));
-
 const irtQueriesInternalImpl = GroupImpl.make(
   api,
   "irt.queries.internalFunctions"
 )
   .pipe(Layer.provide(irtQueriesInternalCalibrationImpl))
   .pipe(Layer.provide(irtQueriesInternalMaintenanceImpl));
-
 const irtActionsImpl = GroupImpl.make(api, "irt.actions").pipe(
   Layer.provide(irtActionsInternalImpl)
 );
-
 const irtMutationsImpl = GroupImpl.make(api, "irt.mutations").pipe(
   Layer.provide(irtMutationsInternalImpl)
 );
-
 const irtQueriesImpl = GroupImpl.make(api, "irt.queries").pipe(
   Layer.provide(irtQueriesInternalImpl)
 );
-
 const irtWorkflowsImpl = GroupImpl.make(api, "irt.workflows").pipe(
   Layer.provide(irt_workflows_calibrateSetTwoPLImpl)
 );
-
 const irtImpl = GroupImpl.make(api, "irt")
   .pipe(Layer.provide(irtActionsImpl))
   .pipe(Layer.provide(irtMutationsImpl))
   .pipe(Layer.provide(irtQueriesImpl))
   .pipe(Layer.provide(irtWorkflowsImpl));
-
 export const irtLayer = Layer.mergeAll(irtImpl);

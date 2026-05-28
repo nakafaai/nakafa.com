@@ -6,7 +6,7 @@ import type {
   MessageRole,
   ModelId,
 } from "@repo/backend/confect/modules/chat/chats.tables";
-import { requireAppUserForAction } from "@repo/backend/confect/modules/identity/auth.service";
+import { requireAppUserForAction } from "@repo/backend/confect/modules/identity/auth/action.service";
 import { Duration, Effect } from "effect";
 
 interface ChatMessageInput {

@@ -7,7 +7,7 @@ import { getPlanCreditConfig } from "@repo/backend/confect/modules/commerce/cred
 import { resolveCreditResetTimestamp } from "@repo/backend/confect/modules/commerce/credits.service";
 import { getProductsForServer } from "@repo/backend/confect/modules/commerce/polar/products";
 import type { Subscriptions } from "@repo/backend/confect/modules/commerce/subscriptions.tables";
-import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { getOptionalAppUser } from "@repo/backend/confect/modules/identity/auth/session.service";
 import type {
   UserPlan,
   Users,
@@ -284,7 +284,12 @@ export const hasActiveSubscription = Effect.fn(
   "commerce.hasActiveSubscription"
 )(function* (args: { productId: string }) {
   const reader = yield* DatabaseReader;
-  const user = yield* requireAppUser();
+  const user = yield* getOptionalAppUser();
+
+  if (!user) {
+    return false;
+  }
+
   const customerOption = yield* reader
     .table("customers")
     .index("by_userId", (query) => query.eq("userId", user.appUser._id))

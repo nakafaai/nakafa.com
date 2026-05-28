@@ -1,4 +1,5 @@
 import { FunctionSpec, GenericId, GroupSpec, Spec } from "@confect/core";
+import { authNodeGroup } from "@repo/backend/confect/modules/identity/auth/auth.spec";
 import { Schema } from "effect";
 
 const audioStudiesActionsGroup = GroupSpec.makeNode("actions")
@@ -29,4 +30,4 @@ const audioStudiesGroup = GroupSpec.makeNode("audioStudies").addGroup(
 
 export { audioStudiesGroup };
 
-export default Spec.makeNode().add(audioStudiesGroup);
+export default Spec.makeNode().add(authNodeGroup).add(audioStudiesGroup);

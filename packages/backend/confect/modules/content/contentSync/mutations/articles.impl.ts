@@ -16,7 +16,6 @@ const contentSync_mutations_articles_bulkSyncArticlesImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const contentSync_mutations_articles_deleteStaleArticlesImpl =
   FunctionImpl.make(
     api,
@@ -28,7 +27,6 @@ const contentSync_mutations_articles_deleteStaleArticlesImpl =
         Effect.orDie
       )
   );
-
 const contentSyncMutationsArticlesImpl = GroupImpl.make(
   api,
   "contentSync.mutations.articles"

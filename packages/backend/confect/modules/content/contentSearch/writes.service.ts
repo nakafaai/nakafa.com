@@ -11,7 +11,7 @@ import {
   buildContentSearchDocument,
   isSameContentSearch,
 } from "@repo/backend/confect/modules/content/contentSearch/documents.service";
-import { ContentSyncBatchSizeError } from "@repo/backend/confect/modules/content/contentSearch/errors.service";
+import { ContentSyncBatchSizeError } from "@repo/backend/confect/modules/content/contentSearch/errors";
 import { Clock, Effect, Option } from "effect";
 
 /** Upserts one content search row and returns the write outcome. */

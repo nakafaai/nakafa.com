@@ -6,12 +6,12 @@ import {
   MutationCtx,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
-import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { requireAppUser } from "@repo/backend/confect/modules/identity/auth/session.service";
 import {
   buildFinalizedExerciseAttemptPatch,
   computeAttemptDurationSeconds,
 } from "@repo/backend/confect/modules/learning/exerciseAttemptUtils.service";
-import { failExercise } from "@repo/backend/confect/modules/learning/exercises/errors.service";
+import { failExercise } from "@repo/backend/confect/modules/learning/exercises/errors";
 import type {
   ExerciseAttemptMode,
   ExerciseAttemptOrigin,

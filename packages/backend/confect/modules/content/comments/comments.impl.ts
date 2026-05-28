@@ -22,7 +22,6 @@ const comments_mutations_addCommentImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const comments_mutations_deleteCommentImpl = FunctionImpl.make(
   api,
   "comments.mutations",
@@ -36,7 +35,6 @@ const comments_mutations_deleteCommentImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const comments_mutations_voteOnCommentImpl = FunctionImpl.make(
   api,
   "comments.mutations",
@@ -50,32 +48,26 @@ const comments_mutations_voteOnCommentImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const comments_queries_getCommentsBySlugImpl = FunctionImpl.make(
   api,
   "comments.queries",
   "getCommentsBySlug",
   (args) => getCommentsBySlug(args).pipe(Effect.orDie)
 );
-
 const comments_queries_getCommentsByUserIdImpl = FunctionImpl.make(
   api,
   "comments.queries",
   "getCommentsByUserId",
   (args) => getCommentsByUserId(args).pipe(Effect.orDie)
 );
-
 const commentsMutationsImpl = GroupImpl.make(api, "comments.mutations")
   .pipe(Layer.provide(comments_mutations_addCommentImpl))
   .pipe(Layer.provide(comments_mutations_deleteCommentImpl))
   .pipe(Layer.provide(comments_mutations_voteOnCommentImpl));
-
 const commentsQueriesImpl = GroupImpl.make(api, "comments.queries")
   .pipe(Layer.provide(comments_queries_getCommentsBySlugImpl))
   .pipe(Layer.provide(comments_queries_getCommentsByUserIdImpl));
-
 const commentsImpl = GroupImpl.make(api, "comments")
   .pipe(Layer.provide(commentsMutationsImpl))
   .pipe(Layer.provide(commentsQueriesImpl));
-
 export const commentsLayer = Layer.mergeAll(commentsImpl);

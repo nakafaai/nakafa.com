@@ -6,7 +6,7 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import type { CommentVoteAction } from "@repo/backend/confect/modules/content/comments.tables";
-import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { requireAppUser } from "@repo/backend/confect/modules/identity/auth/session.service";
 import { cleanSlug } from "@repo/utilities/helper";
 import type { PaginationOptions } from "convex/server";
 import { Duration, Effect, Option, Schema } from "effect";

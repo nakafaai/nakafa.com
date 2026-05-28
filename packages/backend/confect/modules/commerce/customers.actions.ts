@@ -17,8 +17,8 @@ import {
 } from "@repo/backend/confect/modules/commerce/polar/customers";
 import { readPolarServer } from "@repo/backend/confect/modules/commerce/polar/env";
 import { getProductsForServer } from "@repo/backend/confect/modules/commerce/polar/products";
+import { requireAppUserForAction } from "@repo/backend/confect/modules/identity/auth/action.service";
 import { authEnvironment } from "@repo/backend/confect/modules/identity/auth.env";
-import { requireAppUserForAction } from "@repo/backend/confect/modules/identity/auth.service";
 import { captureProductEvent } from "@repo/backend/confect/modules/integrations/analytics";
 import { Clock, Effect, Schema } from "effect";
 

@@ -16,7 +16,6 @@ const contentSync_mutations_tryouts_bulkSyncTryoutsImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const contentSyncMutationsTryoutsImpl = GroupImpl.make(
   api,
   "contentSync.mutations.tryouts"

@@ -90,6 +90,7 @@ import type * as irt_queries_internalFunctions_calibration from "../irt/queries/
 import type * as irt_queries_internalFunctions_maintenance from "../irt/queries/internalFunctions/maintenance.js";
 import type * as irt_workflows from "../irt/workflows.js";
 import type * as node_audioStudies_actions from "../node/audioStudies/actions.js";
+import type * as node_auth from "../node/auth.js";
 import type * as notifications_mutations from "../notifications/mutations.js";
 import type * as notifications_queries from "../notifications/queries.js";
 import type * as schools_mutations from "../schools/mutations.js";
@@ -211,6 +212,7 @@ declare const fullApi: ApiFromModules<{
   "irt/queries/internalFunctions/maintenance": typeof irt_queries_internalFunctions_maintenance;
   "irt/workflows": typeof irt_workflows;
   "node/audioStudies/actions": typeof node_audioStudies_actions;
+  "node/auth": typeof node_auth;
   "notifications/mutations": typeof notifications_mutations;
   "notifications/queries": typeof notifications_queries;
   "schools/mutations": typeof schools_mutations;

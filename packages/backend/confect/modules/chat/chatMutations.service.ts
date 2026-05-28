@@ -22,7 +22,7 @@ import type {
 } from "@repo/backend/confect/modules/chat/chats.tables";
 import { getCreditResetGrantTransaction } from "@repo/backend/confect/modules/commerce/credits.policy";
 import { resolveUserCreditState } from "@repo/backend/confect/modules/commerce/credits.service";
-import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { requireAppUser } from "@repo/backend/confect/modules/identity/auth/session.service";
 import { Clock, Duration, Effect, Schema } from "effect";
 
 export class ChatMutationError extends Schema.TaggedError<ChatMutationError>()(

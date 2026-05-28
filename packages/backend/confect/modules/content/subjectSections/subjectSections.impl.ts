@@ -13,14 +13,11 @@ const subjectSections_queries_getTrendingSubjectsImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const subjectSectionsQueriesImpl = GroupImpl.make(
   api,
   "subjectSections.queries"
 ).pipe(Layer.provide(subjectSections_queries_getTrendingSubjectsImpl));
-
 const subjectSectionsImpl = GroupImpl.make(api, "subjectSections").pipe(
   Layer.provide(subjectSectionsQueriesImpl)
 );
-
 export const subjectSectionsLayer = Layer.mergeAll(subjectSectionsImpl);

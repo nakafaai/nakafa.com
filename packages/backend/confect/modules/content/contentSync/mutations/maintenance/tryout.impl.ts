@@ -15,7 +15,6 @@ export const contentSync_mutations_maintenance_deleteTryoutAccessCampaignProduct
     (_args) =>
       deleteBatchFromTable("tryoutAccessCampaignProducts").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteTryoutAccessCampaignsBatchImpl =
   FunctionImpl.make(
     api,
@@ -23,7 +22,6 @@ export const contentSync_mutations_maintenance_deleteTryoutAccessCampaignsBatchI
     "deleteTryoutAccessCampaignsBatch",
     (_args) => deleteBatchFromTable("tryoutAccessCampaigns").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteTryoutAccessGrantsBatchImpl =
   FunctionImpl.make(
     api,
@@ -31,7 +29,6 @@ export const contentSync_mutations_maintenance_deleteTryoutAccessGrantsBatchImpl
     "deleteTryoutAccessGrantsBatch",
     (_args) => deleteBatchFromTable("tryoutAccessGrants").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteTryoutAccessLinksBatchImpl =
   FunctionImpl.make(
     api,
@@ -39,7 +36,6 @@ export const contentSync_mutations_maintenance_deleteTryoutAccessLinksBatchImpl 
     "deleteTryoutAccessLinksBatch",
     (_args) => deleteBatchFromTable("tryoutAccessLinks").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteTryoutAttemptsBatchImpl =
   FunctionImpl.make(
     api,
@@ -47,7 +43,6 @@ export const contentSync_mutations_maintenance_deleteTryoutAttemptsBatchImpl =
     "deleteTryoutAttemptsBatch",
     (_args) => deleteBatchFromTable("tryoutAttempts").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteTryoutCatalogMetaBatchImpl =
   FunctionImpl.make(
     api,
@@ -55,7 +50,6 @@ export const contentSync_mutations_maintenance_deleteTryoutCatalogMetaBatchImpl 
     "deleteTryoutCatalogMetaBatch",
     (_args) => deleteBatchFromTable("tryoutCatalogMeta").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteTryoutEntitlementsBatchImpl =
   FunctionImpl.make(
     api,
@@ -63,7 +57,6 @@ export const contentSync_mutations_maintenance_deleteTryoutEntitlementsBatchImpl
     "deleteTryoutEntitlementsBatch",
     (_args) => deleteTryoutEntitlementsBatch().pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteTryoutLeaderboardEntriesBatchImpl =
   FunctionImpl.make(
     api,
@@ -72,7 +65,6 @@ export const contentSync_mutations_maintenance_deleteTryoutLeaderboardEntriesBat
     (_args) =>
       deleteBatchFromTable("tryoutLeaderboardEntries").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteTryoutPartAttemptsBatchImpl =
   FunctionImpl.make(
     api,
@@ -80,7 +72,6 @@ export const contentSync_mutations_maintenance_deleteTryoutPartAttemptsBatchImpl
     "deleteTryoutPartAttemptsBatch",
     (_args) => deleteBatchFromTable("tryoutPartAttempts").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteTryoutPartSetsBatchImpl =
   FunctionImpl.make(
     api,
@@ -88,7 +79,6 @@ export const contentSync_mutations_maintenance_deleteTryoutPartSetsBatchImpl =
     "deleteTryoutPartSetsBatch",
     (_args) => deleteBatchFromTable("tryoutPartSets").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteTryoutRuntimeBatchImpl =
   FunctionImpl.make(
     api,
@@ -102,7 +92,6 @@ export const contentSync_mutations_maintenance_deleteTryoutRuntimeBatchImpl =
         Effect.orDie
       )
   );
-
 export const contentSync_mutations_maintenance_deleteTryoutsBatchImpl =
   FunctionImpl.make(
     api,
@@ -110,7 +99,6 @@ export const contentSync_mutations_maintenance_deleteTryoutsBatchImpl =
     "deleteTryoutsBatch",
     (_args) => deleteBatchFromTable("tryouts").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteUserTryoutStatsBatchImpl =
   FunctionImpl.make(
     api,

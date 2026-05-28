@@ -23,7 +23,6 @@ const classes_materials_mutations_createMaterialGroupImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_materials_mutations_deleteMaterialGroupImpl = FunctionImpl.make(
   api,
   "classes.materials.mutations",
@@ -37,14 +36,12 @@ const classes_materials_mutations_deleteMaterialGroupImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_materials_mutations_publishMaterialGroupImpl = FunctionImpl.make(
   api,
   "classes.materials.mutations",
   "publishMaterialGroup",
   (args) => publishMaterialGroup(args).pipe(Effect.orDie)
 );
-
 const classes_materials_mutations_reorderMaterialGroupImpl = FunctionImpl.make(
   api,
   "classes.materials.mutations",
@@ -58,7 +55,6 @@ const classes_materials_mutations_reorderMaterialGroupImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_materials_mutations_updateMaterialGroupImpl = FunctionImpl.make(
   api,
   "classes.materials.mutations",
@@ -72,7 +68,6 @@ const classes_materials_mutations_updateMaterialGroupImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_materials_queries_getMaterialGroupsImpl = FunctionImpl.make(
   api,
   "classes.materials.queries",
@@ -86,7 +81,6 @@ const classes_materials_queries_getMaterialGroupsImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classesMaterialsMutationsImpl = GroupImpl.make(
   api,
   "classes.materials.mutations"
@@ -96,12 +90,10 @@ const classesMaterialsMutationsImpl = GroupImpl.make(
   .pipe(Layer.provide(classes_materials_mutations_publishMaterialGroupImpl))
   .pipe(Layer.provide(classes_materials_mutations_reorderMaterialGroupImpl))
   .pipe(Layer.provide(classes_materials_mutations_updateMaterialGroupImpl));
-
 const classesMaterialsQueriesImpl = GroupImpl.make(
   api,
   "classes.materials.queries"
 ).pipe(Layer.provide(classes_materials_queries_getMaterialGroupsImpl));
-
 export const classesMaterialsImpl = GroupImpl.make(api, "classes.materials")
   .pipe(Layer.provide(classesMaterialsMutationsImpl))
   .pipe(Layer.provide(classesMaterialsQueriesImpl));

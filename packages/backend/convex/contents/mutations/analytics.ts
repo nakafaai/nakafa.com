@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registered/contents";
 
 export const processContentAnalyticsPartition = registeredFunctions.contents.mutations.analytics.processContentAnalyticsPartition;
 export const scheduleContentAnalyticsPartition = registeredFunctions.contents.mutations.analytics.scheduleContentAnalyticsPartition;

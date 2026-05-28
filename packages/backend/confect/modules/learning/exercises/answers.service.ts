@@ -3,9 +3,9 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { requireAppUser } from "@repo/backend/confect/modules/identity/auth/session.service";
 import { applyAttemptAggregatesDelta } from "@repo/backend/confect/modules/learning/exerciseAttemptUtils.service";
-import { failExercise } from "@repo/backend/confect/modules/learning/exercises/errors.service";
+import { failExercise } from "@repo/backend/confect/modules/learning/exercises/errors";
 import { syncTryoutExerciseAttemptExpiry } from "@repo/backend/confect/modules/tryout/tryoutExpiry.service";
 import { Clock, Effect, Option } from "effect";
 

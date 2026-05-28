@@ -28,7 +28,6 @@ const classes_mutations_createClassImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_mutations_joinClassImpl = FunctionImpl.make(
   api,
   "classes.mutations",
@@ -42,7 +41,6 @@ const classes_mutations_joinClassImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_mutations_joinPublicClassImpl = FunctionImpl.make(
   api,
   "classes.mutations",
@@ -56,7 +54,6 @@ const classes_mutations_joinPublicClassImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_mutations_updateClassImageImpl = FunctionImpl.make(
   api,
   "classes.mutations",
@@ -70,7 +67,6 @@ const classes_mutations_updateClassImageImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_mutations_updateClassVisibilityImpl = FunctionImpl.make(
   api,
   "classes.mutations",
@@ -84,7 +80,6 @@ const classes_mutations_updateClassVisibilityImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_queries_getClassesImpl = FunctionImpl.make(
   api,
   "classes.queries",
@@ -98,7 +93,6 @@ const classes_queries_getClassesImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_queries_getClassRouteImpl = FunctionImpl.make(
   api,
   "classes.queries",
@@ -109,7 +103,6 @@ const classes_queries_getClassRouteImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_queries_getPeopleImpl = FunctionImpl.make(
   api,
   "classes.queries",
@@ -123,7 +116,6 @@ const classes_queries_getPeopleImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const classes_queries_getInviteCodesImpl = FunctionImpl.make(
   api,
   "classes.queries",
@@ -137,14 +129,12 @@ const classes_queries_getInviteCodesImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 export const classesMutationsImpl = GroupImpl.make(api, "classes.mutations")
   .pipe(Layer.provide(classes_mutations_createClassImpl))
   .pipe(Layer.provide(classes_mutations_joinClassImpl))
   .pipe(Layer.provide(classes_mutations_joinPublicClassImpl))
   .pipe(Layer.provide(classes_mutations_updateClassImageImpl))
   .pipe(Layer.provide(classes_mutations_updateClassVisibilityImpl));
-
 export const classesQueriesImpl = GroupImpl.make(api, "classes.queries")
   .pipe(Layer.provide(classes_queries_getClassesImpl))
   .pipe(Layer.provide(classes_queries_getClassRouteImpl))

@@ -10,7 +10,6 @@ const contentSync_queries_tryouts_getTryoutScaleIntegrityImpl =
     "getTryoutScaleIntegrity",
     (args) => getTryoutScaleIntegrity(args).pipe(Effect.orDie)
   );
-
 const contentSyncQueriesTryoutsImpl = GroupImpl.make(
   api,
   "contentSync.queries.tryouts"

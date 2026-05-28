@@ -4,7 +4,7 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
-import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { requireAppUser } from "@repo/backend/confect/modules/identity/auth/session.service";
 import { TryoutAccessError } from "@repo/backend/confect/modules/tryout/tryoutAccess.errors";
 import { syncTryoutAccessGrantEntitlements } from "@repo/backend/confect/modules/tryout/tryoutAccessEntitlements.service";
 import {

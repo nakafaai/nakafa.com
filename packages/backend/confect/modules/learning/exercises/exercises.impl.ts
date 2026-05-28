@@ -6,7 +6,7 @@ import {
   expireAttemptInternal,
   startAttempt,
 } from "@repo/backend/confect/modules/learning/exercises/attempts.service";
-import { ExerciseError } from "@repo/backend/confect/modules/learning/exercises/errors.service";
+import { ExerciseError } from "@repo/backend/confect/modules/learning/exercises/errors";
 import {
   getLatestAttemptBySlug,
   getQuestionAnswerSheetBySlug,
@@ -25,7 +25,6 @@ const exercises_mutations_completeAttemptImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const exercises_mutations_expireAttemptInternalImpl = FunctionImpl.make(
   api,
   "exercises.mutations",
@@ -39,7 +38,6 @@ const exercises_mutations_expireAttemptInternalImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const exercises_mutations_startAttemptImpl = FunctionImpl.make(
   api,
   "exercises.mutations",
@@ -53,7 +51,6 @@ const exercises_mutations_startAttemptImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const exercises_mutations_submitAnswerImpl = FunctionImpl.make(
   api,
   "exercises.mutations",
@@ -74,7 +71,6 @@ const exercises_mutations_submitAnswerImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const exercises_queries_getLatestAttemptBySlugImpl = FunctionImpl.make(
   api,
   "exercises.queries",
@@ -85,7 +81,6 @@ const exercises_queries_getLatestAttemptBySlugImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const exercises_queries_getQuestionAnswerSheetBySlugImpl = FunctionImpl.make(
   api,
   "exercises.queries",
@@ -96,19 +91,15 @@ const exercises_queries_getQuestionAnswerSheetBySlugImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const exercisesMutationsImpl = GroupImpl.make(api, "exercises.mutations")
   .pipe(Layer.provide(exercises_mutations_completeAttemptImpl))
   .pipe(Layer.provide(exercises_mutations_expireAttemptInternalImpl))
   .pipe(Layer.provide(exercises_mutations_startAttemptImpl))
   .pipe(Layer.provide(exercises_mutations_submitAnswerImpl));
-
 const exercisesQueriesImpl = GroupImpl.make(api, "exercises.queries")
   .pipe(Layer.provide(exercises_queries_getLatestAttemptBySlugImpl))
   .pipe(Layer.provide(exercises_queries_getQuestionAnswerSheetBySlugImpl));
-
 const exercisesImpl = GroupImpl.make(api, "exercises")
   .pipe(Layer.provide(exercisesMutationsImpl))
   .pipe(Layer.provide(exercisesQueriesImpl));
-
 export const exercisesLayer = Layer.mergeAll(exercisesImpl);

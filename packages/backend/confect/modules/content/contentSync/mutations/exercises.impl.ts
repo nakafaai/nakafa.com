@@ -19,7 +19,6 @@ const contentSync_mutations_exercises_bulkSyncExerciseQuestionsImpl =
         Effect.orDie
       )
   );
-
 const contentSync_mutations_exercises_bulkSyncExerciseSetsImpl =
   FunctionImpl.make(
     api,
@@ -31,7 +30,6 @@ const contentSync_mutations_exercises_bulkSyncExerciseSetsImpl =
         Effect.orDie
       )
   );
-
 const contentSync_mutations_exercises_deleteStaleExerciseQuestionsImpl =
   FunctionImpl.make(
     api,
@@ -43,7 +41,6 @@ const contentSync_mutations_exercises_deleteStaleExerciseQuestionsImpl =
         Effect.orDie
       )
   );
-
 const contentSync_mutations_exercises_deleteStaleExerciseSetsImpl =
   FunctionImpl.make(
     api,
@@ -55,7 +52,6 @@ const contentSync_mutations_exercises_deleteStaleExerciseSetsImpl =
         Effect.orDie
       )
   );
-
 const contentSyncMutationsExercisesImpl = GroupImpl.make(
   api,
   "contentSync.mutations.exercises"

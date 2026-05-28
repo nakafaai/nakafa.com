@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { failExercise } from "@repo/backend/confect/modules/learning/exercises/errors.service";
+import { failExercise } from "@repo/backend/confect/modules/learning/exercises/errors";
 import { Cause, Effect, Exit, Option } from "effect";
 
 describe("failExercise", () => {

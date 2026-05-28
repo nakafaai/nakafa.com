@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registered/tryoutAccess";
 
 export const getTryoutAccessCampaignIntegrity = registeredFunctions.tryoutAccess.queries.internalFunctions.maintenance.getTryoutAccessCampaignIntegrity;
 export const getTryoutAccessEntitlementIntegrity = registeredFunctions.tryoutAccess.queries.internalFunctions.maintenance.getTryoutAccessEntitlementIntegrity;

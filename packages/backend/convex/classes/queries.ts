@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registered/classes";
 
 export const getClassRoute = registeredFunctions.classes.queries.getClassRoute;
 export const getClasses = registeredFunctions.classes.queries.getClasses;

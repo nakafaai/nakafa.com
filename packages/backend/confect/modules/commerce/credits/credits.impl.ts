@@ -12,20 +12,16 @@ const credits_mutations_syncAllCreditResetPeriodsImpl = FunctionImpl.make(
   "syncAllCreditResetPeriods",
   (_args) => syncAllCreditResetPeriods().pipe(Effect.orDie)
 );
-
 const credits_mutations_syncCreditResetPeriodImpl = FunctionImpl.make(
   api,
   "credits.mutations",
   "syncCreditResetPeriod",
   (args) => syncCreditResetPeriod(args).pipe(Effect.orDie)
 );
-
 const creditsMutationsImpl = GroupImpl.make(api, "credits.mutations")
   .pipe(Layer.provide(credits_mutations_syncAllCreditResetPeriodsImpl))
   .pipe(Layer.provide(credits_mutations_syncCreditResetPeriodImpl));
-
 const creditsImpl = GroupImpl.make(api, "credits").pipe(
   Layer.provide(creditsMutationsImpl)
 );
-
 export const creditsLayer = Layer.mergeAll(creditsImpl);

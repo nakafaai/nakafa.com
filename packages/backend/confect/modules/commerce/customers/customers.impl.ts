@@ -28,7 +28,6 @@ const customers_queries_internal_maintenance_listUsersForCustomerIntegrityImpl =
     "listUsersForCustomerIntegrity",
     (args) => listUsersForCustomerIntegrity(args).pipe(Effect.orDie)
   );
-
 const customers_queries_internal_maintenance_listCustomersForIntegrityImpl =
   FunctionImpl.make(
     api,
@@ -36,7 +35,6 @@ const customers_queries_internal_maintenance_listCustomersForIntegrityImpl =
     "listCustomersForIntegrity",
     (args) => listCustomersForIntegrity(args).pipe(Effect.orDie)
   );
-
 const customers_queries_internal_maintenance_listActiveSubscriptionsForIntegrityImpl =
   FunctionImpl.make(
     api,
@@ -44,7 +42,6 @@ const customers_queries_internal_maintenance_listActiveSubscriptionsForIntegrity
     "listActiveSubscriptionsForIntegrity",
     (args) => listActiveSubscriptionsForIntegrity(args).pipe(Effect.orDie)
   );
-
 const customers_actions_internal_syncCustomerImpl = FunctionImpl.make(
   api,
   "customers.actions.internalFunctions",
@@ -58,7 +55,6 @@ const customers_actions_internal_syncCustomerImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const customers_actions_internal_repairCustomerImpl = FunctionImpl.make(
   api,
   "customers.actions.internalFunctions",
@@ -73,7 +69,6 @@ const customers_actions_internal_repairCustomerImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const customers_actions_internal_cleanupUserDataImpl = FunctionImpl.make(
   api,
   "customers.actions.internalFunctions",
@@ -87,7 +82,6 @@ const customers_actions_internal_cleanupUserDataImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const customers_actions_internal_cleanupStalePolarCustomerImpl =
   FunctionImpl.make(
     api,
@@ -103,7 +97,6 @@ const customers_actions_internal_cleanupStalePolarCustomerImpl =
         Effect.orDie
       )
   );
-
 const customers_actions_public_generateCheckoutLinkImpl = FunctionImpl.make(
   api,
   "customers.actions.publicFunctions",
@@ -119,7 +112,6 @@ const customers_actions_public_generateCheckoutLinkImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const customers_actions_public_generateCustomerPortalUrlImpl =
   FunctionImpl.make(
     api,
@@ -136,21 +128,18 @@ const customers_actions_public_generateCustomerPortalUrlImpl =
         Effect.orDie
       )
   );
-
 const customers_mutations_internal_deleteCustomerByIdImpl = FunctionImpl.make(
   api,
   "customers.mutations.internalFunctions",
   "deleteCustomerById",
   (args) => deleteCustomerById(args).pipe(Effect.orDie)
 );
-
 const customers_mutations_internal_upsertCustomerImpl = FunctionImpl.make(
   api,
   "customers.mutations.internalFunctions",
   "upsertCustomer",
   (args) => upsertCustomer(args).pipe(Effect.orDie)
 );
-
 const customers_queries_internal_customer_getCustomerByUserIdImpl =
   FunctionImpl.make(
     api,
@@ -158,7 +147,6 @@ const customers_queries_internal_customer_getCustomerByUserIdImpl =
     "getCustomerByUserId",
     (args) => getCustomerByUserId(args).pipe(Effect.orDie)
   );
-
 const customers_queries_internal_customer_getCustomerByPolarIdImpl =
   FunctionImpl.make(
     api,
@@ -166,7 +154,6 @@ const customers_queries_internal_customer_getCustomerByPolarIdImpl =
     "getCustomerByPolarId",
     (args) => getCustomerByPolarId(args).pipe(Effect.orDie)
   );
-
 const customers_queries_internal_customer_hasActiveSubscriptionByCustomerIdImpl =
   FunctionImpl.make(
     api,
@@ -174,7 +161,6 @@ const customers_queries_internal_customer_hasActiveSubscriptionByCustomerIdImpl 
     "hasActiveSubscriptionByCustomerId",
     (args) => hasActiveSubscriptionByCustomerId(args).pipe(Effect.orDie)
   );
-
 const customers_queries_internal_customer_getUserIdByPolarCustomerImpl =
   FunctionImpl.make(
     api,
@@ -182,7 +168,6 @@ const customers_queries_internal_customer_getUserIdByPolarCustomerImpl =
     "getUserIdByPolarCustomer",
     (args) => getUserIdByPolarCustomer(args).pipe(Effect.orDie)
   );
-
 const customersQueriesInternalCustomerImpl = GroupImpl.make(
   api,
   "customers.queries.internalFunctions.customer"
@@ -203,7 +188,6 @@ const customersQueriesInternalCustomerImpl = GroupImpl.make(
       customers_queries_internal_customer_getUserIdByPolarCustomerImpl
     )
   );
-
 const customersQueriesInternalMaintenanceImpl = GroupImpl.make(
   api,
   "customers.queries.internalFunctions.maintenance"
@@ -223,7 +207,6 @@ const customersQueriesInternalMaintenanceImpl = GroupImpl.make(
       customers_queries_internal_maintenance_listActiveSubscriptionsForIntegrityImpl
     )
   );
-
 const customersActionsInternalImpl = GroupImpl.make(
   api,
   "customers.actions.internalFunctions"
@@ -234,43 +217,35 @@ const customersActionsInternalImpl = GroupImpl.make(
   .pipe(
     Layer.provide(customers_actions_internal_cleanupStalePolarCustomerImpl)
   );
-
 const customersActionsPublicImpl = GroupImpl.make(
   api,
   "customers.actions.publicFunctions"
 )
   .pipe(Layer.provide(customers_actions_public_generateCheckoutLinkImpl))
   .pipe(Layer.provide(customers_actions_public_generateCustomerPortalUrlImpl));
-
 const customersMutationsInternalImpl = GroupImpl.make(
   api,
   "customers.mutations.internalFunctions"
 )
   .pipe(Layer.provide(customers_mutations_internal_deleteCustomerByIdImpl))
   .pipe(Layer.provide(customers_mutations_internal_upsertCustomerImpl));
-
 const customersQueriesInternalImpl = GroupImpl.make(
   api,
   "customers.queries.internalFunctions"
 )
   .pipe(Layer.provide(customersQueriesInternalCustomerImpl))
   .pipe(Layer.provide(customersQueriesInternalMaintenanceImpl));
-
 const customersActionsImpl = GroupImpl.make(api, "customers.actions")
   .pipe(Layer.provide(customersActionsInternalImpl))
   .pipe(Layer.provide(customersActionsPublicImpl));
-
 const customersMutationsImpl = GroupImpl.make(api, "customers.mutations").pipe(
   Layer.provide(customersMutationsInternalImpl)
 );
-
 const customersQueriesImpl = GroupImpl.make(api, "customers.queries").pipe(
   Layer.provide(customersQueriesInternalImpl)
 );
-
 const customersImpl = GroupImpl.make(api, "customers")
   .pipe(Layer.provide(customersActionsImpl))
   .pipe(Layer.provide(customersMutationsImpl))
   .pipe(Layer.provide(customersQueriesImpl));
-
 export const customersLayer = Layer.mergeAll(customersImpl);

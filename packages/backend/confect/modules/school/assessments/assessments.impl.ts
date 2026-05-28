@@ -43,7 +43,6 @@ const assessments_mutations_public_save_saveResponseImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const assessments_mutations_public_start_startAttemptImpl = FunctionImpl.make(
   api,
   "assessments.mutations.publicFunctions.start",
@@ -58,7 +57,6 @@ const assessments_mutations_public_start_startAttemptImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const assessments_mutations_public_submit_submitAttemptImpl = FunctionImpl.make(
   api,
   "assessments.mutations.publicFunctions.submit",
@@ -72,7 +70,6 @@ const assessments_mutations_public_submit_submitAttemptImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const assessments_queries_public_bank_listQuestionBanksImpl = FunctionImpl.make(
   api,
   "assessments.queries.publicFunctions.bank",
@@ -87,7 +84,6 @@ const assessments_queries_public_bank_listQuestionBanksImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const assessments_queries_public_list_listAssessmentsImpl = FunctionImpl.make(
   api,
   "assessments.queries.publicFunctions.list",
@@ -102,7 +98,6 @@ const assessments_queries_public_list_listAssessmentsImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const assessments_mutations_internal_publishing_publishAssessmentImpl =
   FunctionImpl.make(
     api,
@@ -110,14 +105,12 @@ const assessments_mutations_internal_publishing_publishAssessmentImpl =
     "publishAssessment",
     (args) => publishAssessment(args).pipe(Effect.orDie)
   );
-
 const assessmentsMutationsInternalPublishingImpl = GroupImpl.make(
   api,
   "assessments.mutations.internalFunctions.publishing"
 ).pipe(
   Layer.provide(assessments_mutations_internal_publishing_publishAssessmentImpl)
 );
-
 const assessments_mutations_public_assign_createAssignmentImpl =
   FunctionImpl.make(
     api,
@@ -133,12 +126,10 @@ const assessments_mutations_public_assign_createAssignmentImpl =
         Effect.orDie
       )
   );
-
 const assessmentsMutationsPublicAssignImpl = GroupImpl.make(
   api,
   "assessments.mutations.publicFunctions.assign"
 ).pipe(Layer.provide(assessments_mutations_public_assign_createAssignmentImpl));
-
 const assessments_mutations_public_bank_createQuestionBankImpl =
   FunctionImpl.make(
     api,
@@ -154,7 +145,6 @@ const assessments_mutations_public_bank_createQuestionBankImpl =
         Effect.orDie
       )
   );
-
 const assessments_mutations_public_bank_createQuestionBankEntryImpl =
   FunctionImpl.make(
     api,
@@ -170,7 +160,6 @@ const assessments_mutations_public_bank_createQuestionBankEntryImpl =
         Effect.orDie
       )
   );
-
 const assessmentsMutationsPublicBankImpl = GroupImpl.make(
   api,
   "assessments.mutations.publicFunctions.bank"
@@ -179,7 +168,6 @@ const assessmentsMutationsPublicBankImpl = GroupImpl.make(
   .pipe(
     Layer.provide(assessments_mutations_public_bank_createQuestionBankEntryImpl)
   );
-
 const assessments_mutations_public_create_createAssessmentImpl =
   FunctionImpl.make(
     api,
@@ -195,12 +183,10 @@ const assessments_mutations_public_create_createAssessmentImpl =
         Effect.orDie
       )
   );
-
 const assessmentsMutationsPublicCreateImpl = GroupImpl.make(
   api,
   "assessments.mutations.publicFunctions.create"
 ).pipe(Layer.provide(assessments_mutations_public_create_createAssessmentImpl));
-
 const assessments_mutations_public_delete_deleteAssessmentImpl =
   FunctionImpl.make(
     api,
@@ -216,12 +202,10 @@ const assessments_mutations_public_delete_deleteAssessmentImpl =
         Effect.orDie
       )
   );
-
 const assessmentsMutationsPublicDeleteImpl = GroupImpl.make(
   api,
   "assessments.mutations.publicFunctions.deleteFunctions"
 ).pipe(Layer.provide(assessments_mutations_public_delete_deleteAssessmentImpl));
-
 const assessments_mutations_public_questions_createQuestionImpl =
   FunctionImpl.make(
     api,
@@ -237,14 +221,12 @@ const assessments_mutations_public_questions_createQuestionImpl =
         Effect.orDie
       )
   );
-
 const assessmentsMutationsPublicQuestionsImpl = GroupImpl.make(
   api,
   "assessments.mutations.publicFunctions.questions"
 ).pipe(
   Layer.provide(assessments_mutations_public_questions_createQuestionImpl)
 );
-
 const assessments_mutations_public_reorder_reorderAssessmentImpl =
   FunctionImpl.make(
     api,
@@ -260,19 +242,16 @@ const assessments_mutations_public_reorder_reorderAssessmentImpl =
         Effect.orDie
       )
   );
-
 const assessmentsMutationsPublicReorderImpl = GroupImpl.make(
   api,
   "assessments.mutations.publicFunctions.reorder"
 ).pipe(
   Layer.provide(assessments_mutations_public_reorder_reorderAssessmentImpl)
 );
-
 const assessmentsMutationsPublicSaveImpl = GroupImpl.make(
   api,
   "assessments.mutations.publicFunctions.save"
 ).pipe(Layer.provide(assessments_mutations_public_save_saveResponseImpl));
-
 const assessments_mutations_public_sections_createSectionImpl =
   FunctionImpl.make(
     api,
@@ -288,22 +267,18 @@ const assessments_mutations_public_sections_createSectionImpl =
         Effect.orDie
       )
   );
-
 const assessmentsMutationsPublicSectionsImpl = GroupImpl.make(
   api,
   "assessments.mutations.publicFunctions.sections"
 ).pipe(Layer.provide(assessments_mutations_public_sections_createSectionImpl));
-
 const assessmentsMutationsPublicStartImpl = GroupImpl.make(
   api,
   "assessments.mutations.publicFunctions.start"
 ).pipe(Layer.provide(assessments_mutations_public_start_startAttemptImpl));
-
 const assessmentsMutationsPublicSubmitImpl = GroupImpl.make(
   api,
   "assessments.mutations.publicFunctions.submit"
 ).pipe(Layer.provide(assessments_mutations_public_submit_submitAttemptImpl));
-
 const assessments_mutations_public_update_updateAssessmentImpl =
   FunctionImpl.make(
     api,
@@ -319,12 +294,10 @@ const assessments_mutations_public_update_updateAssessmentImpl =
         Effect.orDie
       )
   );
-
 const assessmentsMutationsPublicUpdateImpl = GroupImpl.make(
   api,
   "assessments.mutations.publicFunctions.update"
 ).pipe(Layer.provide(assessments_mutations_public_update_updateAssessmentImpl));
-
 const assessments_mutations_public_version_createAssessmentVersionImpl =
   FunctionImpl.make(
     api,
@@ -340,7 +313,6 @@ const assessments_mutations_public_version_createAssessmentVersionImpl =
         Effect.orDie
       )
   );
-
 const assessmentsMutationsPublicVersionImpl = GroupImpl.make(
   api,
   "assessments.mutations.publicFunctions.version"
@@ -349,7 +321,6 @@ const assessmentsMutationsPublicVersionImpl = GroupImpl.make(
     assessments_mutations_public_version_createAssessmentVersionImpl
   )
 );
-
 const assessments_queries_public_assignment_getAssignmentImpl =
   FunctionImpl.make(
     api,
@@ -365,12 +336,10 @@ const assessments_queries_public_assignment_getAssignmentImpl =
         Effect.orDie
       )
   );
-
 const assessmentsQueriesPublicAssignmentImpl = GroupImpl.make(
   api,
   "assessments.queries.publicFunctions.assignment"
 ).pipe(Layer.provide(assessments_queries_public_assignment_getAssignmentImpl));
-
 const assessments_queries_public_authoring_getAuthoredAssessmentImpl =
   FunctionImpl.make(
     api,
@@ -385,29 +354,24 @@ const assessments_queries_public_authoring_getAuthoredAssessmentImpl =
         Effect.orDie
       )
   );
-
 const assessmentsQueriesPublicAuthoringImpl = GroupImpl.make(
   api,
   "assessments.queries.publicFunctions.authoring"
 ).pipe(
   Layer.provide(assessments_queries_public_authoring_getAuthoredAssessmentImpl)
 );
-
 const assessmentsQueriesPublicBankImpl = GroupImpl.make(
   api,
   "assessments.queries.publicFunctions.bank"
 ).pipe(Layer.provide(assessments_queries_public_bank_listQuestionBanksImpl));
-
 const assessmentsQueriesPublicListImpl = GroupImpl.make(
   api,
   "assessments.queries.publicFunctions.list"
 ).pipe(Layer.provide(assessments_queries_public_list_listAssessmentsImpl));
-
 const assessmentsMutationsInternalImpl = GroupImpl.make(
   api,
   "assessments.mutations.internalFunctions"
 ).pipe(Layer.provide(assessmentsMutationsInternalPublishingImpl));
-
 const assessmentsMutationsPublicImpl = GroupImpl.make(
   api,
   "assessments.mutations.publicFunctions"
@@ -424,7 +388,6 @@ const assessmentsMutationsPublicImpl = GroupImpl.make(
   .pipe(Layer.provide(assessmentsMutationsPublicSubmitImpl))
   .pipe(Layer.provide(assessmentsMutationsPublicUpdateImpl))
   .pipe(Layer.provide(assessmentsMutationsPublicVersionImpl));
-
 const assessmentsQueriesPublicImpl = GroupImpl.make(
   api,
   "assessments.queries.publicFunctions"
@@ -433,17 +396,13 @@ const assessmentsQueriesPublicImpl = GroupImpl.make(
   .pipe(Layer.provide(assessmentsQueriesPublicAuthoringImpl))
   .pipe(Layer.provide(assessmentsQueriesPublicBankImpl))
   .pipe(Layer.provide(assessmentsQueriesPublicListImpl));
-
 const assessmentsMutationsImpl = GroupImpl.make(api, "assessments.mutations")
   .pipe(Layer.provide(assessmentsMutationsInternalImpl))
   .pipe(Layer.provide(assessmentsMutationsPublicImpl));
-
 const assessmentsQueriesImpl = GroupImpl.make(api, "assessments.queries").pipe(
   Layer.provide(assessmentsQueriesPublicImpl)
 );
-
 const assessmentsImpl = GroupImpl.make(api, "assessments")
   .pipe(Layer.provide(assessmentsMutationsImpl))
   .pipe(Layer.provide(assessmentsQueriesImpl));
-
 export const assessmentsLayer = Layer.mergeAll(assessmentsImpl);

@@ -1,6 +1,8 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { scopedRegistryGroups } from "@repo/backend/scripts/codegen/scopedRegistry.config";
+import { writeScopedRegisteredFunctions } from "@repo/backend/scripts/codegen/scopedRegistry.files";
 import {
   formatScriptCause,
   getUnknownMessage,
@@ -18,6 +20,7 @@ const normalizedSourceRoots = [
   path.resolve(BACKEND_DIR, "convex"),
   path.resolve(BACKEND_DIR, "confect/_generated"),
 ] as const;
+const convexDirectory = path.resolve(BACKEND_DIR, "convex");
 const aliasRoots = [
   {
     alias: "@repo/backend/confect",
@@ -32,6 +35,9 @@ const aliasRoots = [
     directory: path.resolve(BACKEND_DIR, "scripts"),
   },
 ] as const;
+const scopedRegisteredFunctionsImport =
+  "@repo/backend/confect/_generated/registeredFunctions";
+const sourceModuleExtensionPattern = /\.[cm]?tsx?$/;
 
 const importPatterns = [
   /(from\s*["'])(\.\.?\/[^"']+)(["'])/g,
@@ -41,6 +47,8 @@ const importPatterns = [
 
 /** Normalizes Confect-generated imports to backend package aliases. */
 const main = Effect.gen(function* () {
+  const changedScopedRegistryFileCount =
+    yield* writeScopedRegisteredFunctions();
   const files = yield* collectSourceFiles(normalizedSourceRoots);
   let changedFileCount = 0;
 
@@ -52,7 +60,7 @@ const main = Effect.gen(function* () {
     }
   }
 
-  if (changedFileCount === 0) {
+  if (changedFileCount === 0 && changedScopedRegistryFileCount === 0) {
     yield* Effect.sync(() =>
       log("Confect generated imports already use aliases.")
     );
@@ -60,7 +68,9 @@ const main = Effect.gen(function* () {
   }
 
   yield* Effect.sync(() =>
-    log(`Normalized generated imports in ${changedFileCount} files.`)
+    log(
+      `Normalized generated imports in ${changedFileCount} files and refreshed ${changedScopedRegistryFileCount} scoped registries.`
+    )
   );
 });
 
@@ -145,7 +155,23 @@ function normalizeSourceImports(file: string, source: string) {
     );
   }
 
+  normalized = normalizeRegisteredFunctionImport(file, normalized);
+
   return normalized;
+}
+
+/** Repoints generated Convex modules at scoped registries. */
+function normalizeRegisteredFunctionImport(file: string, source: string) {
+  const group = getConvexFunctionGroup(file);
+
+  if (!group) {
+    return source;
+  }
+
+  return source.replace(
+    scopedRegisteredFunctionsImport,
+    `@repo/backend/confect/_generated/registered/${group}`
+  );
 }
 
 /** Returns the alias import specifier for a relative import when one exists. */
@@ -172,6 +198,31 @@ function getAliasSpecifier(file: string, specifier: string) {
   }
 
   return null;
+}
+
+/** Returns the top-level Confect group for a generated Convex function file. */
+function getConvexFunctionGroup(file: string) {
+  if (!isInsideDirectory(convexDirectory, file)) {
+    return null;
+  }
+
+  const relativePath = toPosixPath(path.relative(convexDirectory, file));
+
+  if (
+    relativePath.startsWith("_generated/") ||
+    relativePath.startsWith("node/")
+  ) {
+    return null;
+  }
+
+  const [firstSegment] = relativePath.split("/");
+  const group = firstSegment?.replace(sourceModuleExtensionPattern, "");
+
+  if (group === undefined || !scopedRegistryGroups.has(group)) {
+    return null;
+  }
+
+  return group;
 }
 
 /** Checks whether a path points to a TypeScript source file. */

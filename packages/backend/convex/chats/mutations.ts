@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registered/chats";
 
 export const createChat = registeredFunctions.chats.mutations.createChat;
 export const createChatWithMessage = registeredFunctions.chats.mutations.createChatWithMessage;

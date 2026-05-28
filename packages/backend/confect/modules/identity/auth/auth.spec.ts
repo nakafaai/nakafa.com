@@ -1,35 +1,24 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
-import type { createClient } from "@convex-dev/better-auth";
+import type {
+  onCreate,
+  onDelete,
+  onUpdate,
+} from "@repo/backend/confect/modules/identity/auth/auth";
 import {
   authTriggerUserSchema,
   jwksSchema,
 } from "@repo/backend/confect/modules/identity/auth/auth.schemas";
 import { Users } from "@repo/backend/confect/modules/identity/users.tables";
-import type { GenericDataModel } from "convex/server";
 import { Schema } from "effect";
 
-/**
- * Better Auth trigger functions are native Convex mutations. Deriving their
- * type from the component client avoids a spec -> refs -> spec cycle.
- */
-type BetterAuthTriggerFunctions = ReturnType<
-  ReturnType<typeof createClient<GenericDataModel>>["triggersApi"]
->;
-
 export const authOnCreateSpec =
-  FunctionSpec.convexInternalMutation<BetterAuthTriggerFunctions["onCreate"]>()(
-    "onCreate"
-  );
+  FunctionSpec.convexInternalMutation<typeof onCreate>()("onCreate");
 
 export const authOnDeleteSpec =
-  FunctionSpec.convexInternalMutation<BetterAuthTriggerFunctions["onDelete"]>()(
-    "onDelete"
-  );
+  FunctionSpec.convexInternalMutation<typeof onDelete>()("onDelete");
 
 export const authOnUpdateSpec =
-  FunctionSpec.convexInternalMutation<BetterAuthTriggerFunctions["onUpdate"]>()(
-    "onUpdate"
-  );
+  FunctionSpec.convexInternalMutation<typeof onUpdate>()("onUpdate");
 
 const authCleanupGroup = GroupSpec.make("cleanup").addFunction(
   FunctionSpec.internalMutation({
@@ -66,6 +55,14 @@ const authSyncGroup = GroupSpec.make("sync")
 
 export { authSyncGroup };
 
+export const authNodeGroup = GroupSpec.makeNode("auth").addFunction(
+  FunctionSpec.internalNodeAction({
+    name: "getLatestJwks",
+    args: Schema.Struct({}),
+    returns: jwksSchema,
+  })
+);
+
 const authGroup = GroupSpec.make("auth")
   .addFunction(
     FunctionSpec.publicQuery({
@@ -83,13 +80,6 @@ const authGroup = GroupSpec.make("auth")
         }),
         Schema.Null
       ),
-    })
-  )
-  .addFunction(
-    FunctionSpec.internalAction({
-      name: "getLatestJwks",
-      args: Schema.Struct({}),
-      returns: jwksSchema,
     })
   )
   .addFunction(

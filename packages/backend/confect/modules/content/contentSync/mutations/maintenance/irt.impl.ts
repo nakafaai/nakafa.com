@@ -10,7 +10,6 @@ export const contentSync_mutations_maintenance_deleteIrtCalibrationAttemptsBatch
     "deleteIrtCalibrationAttemptsBatch",
     (_args) => deleteBatchFromTable("irtCalibrationAttempts").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteIrtCalibrationCacheStatsBatchImpl =
   FunctionImpl.make(
     api,
@@ -19,7 +18,6 @@ export const contentSync_mutations_maintenance_deleteIrtCalibrationCacheStatsBat
     (_args) =>
       deleteBatchFromTable("irtCalibrationCacheStats").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteIrtCalibrationQueueBatchImpl =
   FunctionImpl.make(
     api,
@@ -27,7 +25,6 @@ export const contentSync_mutations_maintenance_deleteIrtCalibrationQueueBatchImp
     "deleteIrtCalibrationQueueBatch",
     (_args) => deleteBatchFromTable("irtCalibrationQueue").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteIrtCalibrationRunsBatchImpl =
   FunctionImpl.make(
     api,
@@ -35,7 +32,6 @@ export const contentSync_mutations_maintenance_deleteIrtCalibrationRunsBatchImpl
     "deleteIrtCalibrationRunsBatch",
     (_args) => deleteBatchFromTable("irtCalibrationRuns").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteIrtScalePublicationQueueBatchImpl =
   FunctionImpl.make(
     api,
@@ -44,7 +40,6 @@ export const contentSync_mutations_maintenance_deleteIrtScalePublicationQueueBat
     (_args) =>
       deleteBatchFromTable("irtScalePublicationQueue").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteIrtScaleQualityChecksBatchImpl =
   FunctionImpl.make(
     api,
@@ -52,7 +47,6 @@ export const contentSync_mutations_maintenance_deleteIrtScaleQualityChecksBatchI
     "deleteIrtScaleQualityChecksBatch",
     (_args) => deleteBatchFromTable("irtScaleQualityChecks").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteIrtScaleQualityRefreshQueueBatchImpl =
   FunctionImpl.make(
     api,
@@ -61,7 +55,6 @@ export const contentSync_mutations_maintenance_deleteIrtScaleQualityRefreshQueue
     (_args) =>
       deleteBatchFromTable("irtScaleQualityRefreshQueue").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteIrtScaleVersionItemsBatchImpl =
   FunctionImpl.make(
     api,
@@ -69,7 +62,6 @@ export const contentSync_mutations_maintenance_deleteIrtScaleVersionItemsBatchIm
     "deleteIrtScaleVersionItemsBatch",
     (_args) => deleteBatchFromTable("irtScaleVersionItems").pipe(Effect.orDie)
   );
-
 export const contentSync_mutations_maintenance_deleteIrtScaleVersionsBatchImpl =
   FunctionImpl.make(
     api,

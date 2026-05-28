@@ -9,7 +9,6 @@ const contentSync_queries_counts_countTablePageImpl = FunctionImpl.make(
   "countTablePage",
   (args) => countTablePage(args).pipe(Effect.orDie)
 );
-
 const contentSyncQueriesCountsImpl = GroupImpl.make(
   api,
   "contentSync.queries.counts"

@@ -17,7 +17,6 @@ const contentSync_queries_integrity_listIntegrityExerciseQuestionsPageImpl =
     "listIntegrityExerciseQuestionsPage",
     (args) => listIntegrityExerciseQuestionsPage(args).pipe(Effect.orDie)
   );
-
 const contentSync_queries_integrity_listIntegrityExerciseChoicesPageImpl =
   FunctionImpl.make(
     api,
@@ -25,7 +24,6 @@ const contentSync_queries_integrity_listIntegrityExerciseChoicesPageImpl =
     "listIntegrityExerciseChoicesPage",
     (args) => listIntegrityExerciseChoicesPage(args).pipe(Effect.orDie)
   );
-
 const contentSync_queries_integrity_listIntegrityContentAuthorsPageImpl =
   FunctionImpl.make(
     api,
@@ -33,7 +31,6 @@ const contentSync_queries_integrity_listIntegrityContentAuthorsPageImpl =
     "listIntegrityContentAuthorsPage",
     (args) => listIntegrityContentAuthorsPage(args).pipe(Effect.orDie)
   );
-
 const contentSync_queries_integrity_listIntegrityArticleReferencesPageImpl =
   FunctionImpl.make(
     api,
@@ -41,7 +38,6 @@ const contentSync_queries_integrity_listIntegrityArticleReferencesPageImpl =
     "listIntegrityArticleReferencesPage",
     (args) => listIntegrityArticleReferencesPage(args).pipe(Effect.orDie)
   );
-
 const contentSync_queries_integrity_listIntegrityArticlesPageImpl =
   FunctionImpl.make(
     api,
@@ -49,7 +45,6 @@ const contentSync_queries_integrity_listIntegrityArticlesPageImpl =
     "listIntegrityArticlesPage",
     (args) => listIntegrityArticlesPage(args).pipe(Effect.orDie)
   );
-
 const contentSync_queries_integrity_listIntegritySubjectSectionsPageImpl =
   FunctionImpl.make(
     api,
@@ -57,7 +52,6 @@ const contentSync_queries_integrity_listIntegritySubjectSectionsPageImpl =
     "listIntegritySubjectSectionsPage",
     (args) => listIntegritySubjectSectionsPage(args).pipe(Effect.orDie)
   );
-
 const contentSyncQueriesIntegrityImpl = GroupImpl.make(
   api,
   "contentSync.queries.integrity"

@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registered/tryouts";
 
 export const getActiveTryoutCatalogPage = registeredFunctions.tryouts.queries.tryouts.getActiveTryoutCatalogPage;
 export const getActiveTryoutCatalogSnapshot = registeredFunctions.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot;

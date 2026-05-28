@@ -22,7 +22,6 @@ const notifications_mutations_setNotificationEntityMuteImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const notifications_queries_getNotificationPreferencesImpl = FunctionImpl.make(
   api,
   "notifications.queries",
@@ -33,7 +32,6 @@ const notifications_queries_getNotificationPreferencesImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const notifications_queries_listMutedNotificationEntitiesImpl =
   FunctionImpl.make(
     api,
@@ -45,7 +43,6 @@ const notifications_queries_listMutedNotificationEntitiesImpl =
         Effect.orDie
       )
   );
-
 const notifications_mutations_updateNotificationPreferencesImpl =
   FunctionImpl.make(
     api,
@@ -57,7 +54,6 @@ const notifications_mutations_updateNotificationPreferencesImpl =
         Effect.orDie
       )
   );
-
 const notifications_mutations_setDisabledNotificationTypesImpl =
   FunctionImpl.make(
     api,
@@ -69,7 +65,6 @@ const notifications_mutations_setDisabledNotificationTypesImpl =
         Effect.orDie
       )
   );
-
 const notificationsMutationsImpl = GroupImpl.make(
   api,
   "notifications.mutations"
@@ -79,13 +74,10 @@ const notificationsMutationsImpl = GroupImpl.make(
   )
   .pipe(Layer.provide(notifications_mutations_setDisabledNotificationTypesImpl))
   .pipe(Layer.provide(notifications_mutations_setNotificationEntityMuteImpl));
-
 const notificationsQueriesImpl = GroupImpl.make(api, "notifications.queries")
   .pipe(Layer.provide(notifications_queries_getNotificationPreferencesImpl))
   .pipe(Layer.provide(notifications_queries_listMutedNotificationEntitiesImpl));
-
 const notificationsImpl = GroupImpl.make(api, "notifications")
   .pipe(Layer.provide(notificationsMutationsImpl))
   .pipe(Layer.provide(notificationsQueriesImpl));
-
 export const notificationsLayer = Layer.mergeAll(notificationsImpl);

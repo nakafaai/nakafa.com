@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registered/customers";
 
 export const generateCheckoutLink = registeredFunctions.customers.actions.publicFunctions.generateCheckoutLink;
 export const generateCustomerPortalUrl = registeredFunctions.customers.actions.publicFunctions.generateCustomerPortalUrl;

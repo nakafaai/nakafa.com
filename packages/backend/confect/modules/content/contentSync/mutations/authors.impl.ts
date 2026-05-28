@@ -16,7 +16,6 @@ const contentSync_mutations_authors_bulkSyncAuthorsImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const contentSync_mutations_authors_deleteUnusedAuthorsImpl = FunctionImpl.make(
   api,
   "contentSync.mutations.authors",
@@ -27,7 +26,6 @@ const contentSync_mutations_authors_deleteUnusedAuthorsImpl = FunctionImpl.make(
       Effect.orDie
     )
 );
-
 const contentSyncMutationsAuthorsImpl = GroupImpl.make(
   api,
   "contentSync.mutations.authors"

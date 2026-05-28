@@ -9,13 +9,10 @@ const emails_mutations_sendWelcomeEmailImpl = FunctionImpl.make(
   "sendWelcomeEmail",
   (args) => sendWelcomeEmail(args).pipe(Effect.orDie)
 );
-
 const emailsMutationsImpl = GroupImpl.make(api, "emails.mutations").pipe(
   Layer.provide(emails_mutations_sendWelcomeEmailImpl)
 );
-
 const emailsImpl = GroupImpl.make(api, "emails").pipe(
   Layer.provide(emailsMutationsImpl)
 );
-
 export const emailsLayer = Layer.mergeAll(emailsImpl);

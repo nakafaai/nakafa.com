@@ -1,6 +1,6 @@
 import { HttpApi } from "@confect/server";
 import { PolarApiLive } from "@repo/backend/confect/modules/commerce/polar/webhook.http";
-import { createAuth } from "@repo/backend/confect/modules/identity/auth.service";
+import { createAuth } from "@repo/backend/confect/modules/identity/auth/runtime.service";
 import {
   HTTP_FOUND,
   HTTP_OK,

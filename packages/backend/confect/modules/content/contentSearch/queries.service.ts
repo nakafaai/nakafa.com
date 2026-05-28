@@ -9,7 +9,7 @@ import type {
   Locale,
   NakafaSection,
 } from "@repo/backend/confect/modules/content/content.schemas";
-import { ContentSearchInputError } from "@repo/backend/confect/modules/content/contentSearch/errors.service";
+import { ContentSearchInputError } from "@repo/backend/confect/modules/content/contentSearch/errors";
 import { Effect } from "effect";
 
 const SEARCH_TOKEN_PATTERN = /[\p{L}\p{N}]+/gu;

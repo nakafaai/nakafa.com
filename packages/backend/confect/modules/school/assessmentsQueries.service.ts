@@ -1,6 +1,6 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
+import { requireAppUser } from "@repo/backend/confect/modules/identity/auth/session.service";
 import { AssessmentError } from "@repo/backend/confect/modules/school/assessments.errors";
 import {
   listVisibleQuestionBanks,

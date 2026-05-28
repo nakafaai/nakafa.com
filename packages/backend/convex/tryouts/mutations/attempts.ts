@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registeredFunctions";
+import registeredFunctions from "@repo/backend/confect/_generated/registered/tryouts";
 
 export const completePart = registeredFunctions.tryouts.mutations.attempts.completePart;
 export const startPart = registeredFunctions.tryouts.mutations.attempts.startPart;
