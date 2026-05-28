@@ -1,14 +1,18 @@
 import { Ref } from "@confect/core";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  MutationCtx,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import {
   expireTryoutAttempt,
   syncTryoutAttemptExpiry,
 } from "@repo/backend/confect/modules/tryout/tryoutExpiry.service";
 import { syncTryoutAttemptAggregates } from "@repo/backend/confect/modules/tryout/tryoutFinalizeAggregates.service";
 import { tryoutLeaderboardWorkpool } from "@repo/backend/confect/modules/tryout/tryoutWorkpool";
-import { Clock, Effect } from "effect";
+import { Clock, Duration, Effect } from "effect";
 
 const TRYOUT_EXPIRY_SWEEP_BATCH_SIZE = 100;
 const TRYOUT_SCORE_PROMOTION_BATCH_SIZE = 100;
@@ -20,11 +24,12 @@ export const expireTryoutAttemptInternal = Effect.fn(
   readonly expiresAtMs: number;
   readonly tryoutAttemptId: Id<"tryoutAttempts">;
 }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
   const now = yield* Clock.currentTimeMillis;
-  const tryoutAttempt = yield* Effect.promise(() =>
-    ctx.db.get(args.tryoutAttemptId)
-  );
+  const tryoutAttempt = yield* reader
+    .table("tryoutAttempts")
+    .get(args.tryoutAttemptId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!tryoutAttempt || tryoutAttempt.status !== "in-progress") {
     return null;
@@ -37,7 +42,7 @@ export const expireTryoutAttemptInternal = Effect.fn(
     return null;
   }
 
-  yield* expireTryoutAttempt(ctx, tryoutAttempt, now);
+  yield* expireTryoutAttempt(tryoutAttempt, now);
   return null;
 });
 
@@ -45,34 +50,29 @@ export const expireTryoutAttemptInternal = Effect.fn(
 export const sweepExpiredTryoutAttempts = Effect.fn(
   "tryouts.internal.sweepExpiredTryoutAttempts"
 )(function* () {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const scheduler = yield* Scheduler;
   const now = yield* Clock.currentTimeMillis;
-  const inProgressAttempts = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryoutAttempts")
-      .withIndex("by_status_and_expiresAt", (query) =>
-        query.eq("status", "in-progress").lt("expiresAt", now + 1)
-      )
-      .take(TRYOUT_EXPIRY_SWEEP_BATCH_SIZE)
-  );
+  const inProgressAttempts = yield* reader
+    .table("tryoutAttempts")
+    .index("by_status_and_expiresAt", (query) =>
+      query.eq("status", "in-progress").lt("expiresAt", now + 1)
+    )
+    .take(TRYOUT_EXPIRY_SWEEP_BATCH_SIZE);
 
   for (const tryoutAttempt of inProgressAttempts) {
-    yield* syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
+    yield* syncTryoutAttemptExpiry(tryoutAttempt, now);
   }
 
   if (inProgressAttempts.length < TRYOUT_EXPIRY_SWEEP_BATCH_SIZE) {
     return null;
   }
 
-  yield* Effect.promise(() =>
-    ctx.scheduler.runAfter(
-      0,
-      Ref.getFunctionReference(
-        refs.internal.tryouts.mutations.internalFunctions.expiry
-          .sweepExpiredTryoutAttempts
-      ),
-      {}
-    )
+  yield* scheduler.runAfter(
+    Duration.millis(0),
+    refs.internal.tryouts.mutations.internalFunctions.expiry
+      .sweepExpiredTryoutAttempts,
+    {}
   );
 
   return null;
@@ -86,48 +86,42 @@ export const promoteProvisionalTryoutScores = Effect.fn(
   readonly tryoutId: Id<"tryouts">;
 }) {
   const ctx = yield* MutationCtx;
-  const scaleVersion = yield* Effect.promise(() =>
-    ctx.db.get(args.scaleVersionId)
-  );
+  const reader = yield* DatabaseReader;
+  const scheduler = yield* Scheduler;
+  const scaleVersion = yield* reader
+    .table("irtScaleVersions")
+    .get(args.scaleVersionId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!scaleVersion || scaleVersion.status !== "official") {
     return null;
   }
 
-  const completedAttempts = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryoutAttempts")
-      .withIndex(
-        "by_tryoutId_and_scoreStatus_and_status_and_startedAt",
-        (query) =>
-          query
-            .eq("tryoutId", args.tryoutId)
-            .eq("scoreStatus", "provisional")
-            .eq("status", "completed")
-      )
-      .order("asc")
-      .take(TRYOUT_SCORE_PROMOTION_BATCH_SIZE)
-  );
+  const completedAttempts = yield* reader
+    .table("tryoutAttempts")
+    .index("by_tryoutId_and_scoreStatus_and_status_and_startedAt", (query) =>
+      query
+        .eq("tryoutId", args.tryoutId)
+        .eq("scoreStatus", "provisional")
+        .eq("status", "completed")
+    )
+    .take(TRYOUT_SCORE_PROMOTION_BATCH_SIZE);
   const remainingSlots =
     TRYOUT_SCORE_PROMOTION_BATCH_SIZE - completedAttempts.length;
-  let expiredAttempts = completedAttempts.slice(0, 0);
-
-  if (remainingSlots > 0) {
-    expiredAttempts = yield* Effect.promise(() =>
-      ctx.db
-        .query("tryoutAttempts")
-        .withIndex(
-          "by_tryoutId_and_scoreStatus_and_status_and_startedAt",
-          (query) =>
-            query
-              .eq("tryoutId", args.tryoutId)
-              .eq("scoreStatus", "provisional")
-              .eq("status", "expired")
-        )
-        .order("asc")
-        .take(remainingSlots)
-    );
-  }
+  const expiredAttempts =
+    remainingSlots > 0
+      ? yield* reader
+          .table("tryoutAttempts")
+          .index(
+            "by_tryoutId_and_scoreStatus_and_status_and_startedAt",
+            (query) =>
+              query
+                .eq("tryoutId", args.tryoutId)
+                .eq("scoreStatus", "provisional")
+                .eq("status", "expired")
+          )
+          .take(remainingSlots)
+      : completedAttempts.slice(0, 0);
   const provisionalAttempts = [...completedAttempts, ...expiredAttempts];
 
   if (provisionalAttempts.length === 0) {
@@ -140,7 +134,7 @@ export const promoteProvisionalTryoutScores = Effect.fn(
     const finalizedStatus =
       tryoutAttempt.status === "completed" ? "completed" : "expired";
 
-    yield* syncTryoutAttemptAggregates(ctx, {
+    yield* syncTryoutAttemptAggregates({
       completedAtMs: tryoutAttempt.completedAt ?? now,
       now,
       scaleVersionId: scaleVersion._id,
@@ -169,15 +163,11 @@ export const promoteProvisionalTryoutScores = Effect.fn(
     return null;
   }
 
-  yield* Effect.promise(() =>
-    ctx.scheduler.runAfter(
-      0,
-      Ref.getFunctionReference(
-        refs.internal.tryouts.mutations.internalFunctions.scoring
-          .promoteProvisionalTryoutScores
-      ),
-      args
-    )
+  yield* scheduler.runAfter(
+    Duration.millis(0),
+    refs.internal.tryouts.mutations.internalFunctions.scoring
+      .promoteProvisionalTryoutScores,
+    args
   );
 
   return null;

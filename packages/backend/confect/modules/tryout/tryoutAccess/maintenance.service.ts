@@ -1,4 +1,4 @@
-import { QueryCtx } from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { Effect } from "effect";
 
@@ -18,10 +18,11 @@ export const getTryoutAccessCampaignIntegrity = Effect.fn(
   readonly nowMs: number;
   readonly paginationOpts: PaginationOpts;
 }) {
-  const ctx = yield* QueryCtx;
-  const campaigns = yield* Effect.promise(() =>
-    ctx.db.query("tryoutAccessCampaigns").paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const campaigns = yield* reader
+    .table("tryoutAccessCampaigns")
+    .index("by_creation_time")
+    .paginate(args.paginationOpts);
   let overdueActiveCampaignCount = 0;
   let overduePendingCompetitionCount = 0;
   let overdueScheduledCampaignCount = 0;
@@ -63,10 +64,11 @@ export const getTryoutAccessGrantIntegrity = Effect.fn(
   readonly nowMs: number;
   readonly paginationOpts: PaginationOpts;
 }) {
-  const ctx = yield* QueryCtx;
-  const grants = yield* Effect.promise(() =>
-    ctx.db.query("tryoutAccessGrants").paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const grants = yield* reader
+    .table("tryoutAccessGrants")
+    .index("by_creation_time")
+    .paginate(args.paginationOpts);
   const overdueActiveGrantCount = grants.page.filter(
     (grant) => grant.status === "active" && grant.endsAt <= args.nowMs
   ).length;
@@ -85,10 +87,11 @@ export const getTryoutAccessEntitlementIntegrity = Effect.fn(
   readonly nowMs: number;
   readonly paginationOpts: PaginationOpts;
 }) {
-  const ctx = yield* QueryCtx;
-  const entitlements = yield* Effect.promise(() =>
-    ctx.db.query("userTryoutEntitlements").paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const entitlements = yield* reader
+    .table("userTryoutEntitlements")
+    .index("by_creation_time")
+    .paginate(args.paginationOpts);
   const overdueEntitlementCount = entitlements.page.filter(
     (entitlement) => entitlement.endsAt <= args.nowMs
   ).length;
@@ -107,15 +110,13 @@ export const listCompetitionCampaignProductsByProduct = Effect.fn(
   readonly paginationOpts: PaginationOpts;
   readonly product: TryoutProduct;
 }) {
-  const ctx = yield* QueryCtx;
-  const rows = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryoutAccessCampaignProducts")
-      .withIndex("by_product_and_campaignKind_and_startsAt", (query) =>
-        query.eq("product", args.product).eq("campaignKind", "competition")
-      )
-      .paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const rows = yield* reader
+    .table("tryoutAccessCampaignProducts")
+    .index("by_product_and_campaignKind_and_startsAt", (query) =>
+      query.eq("product", args.product).eq("campaignKind", "competition")
+    )
+    .paginate(args.paginationOpts);
 
   return {
     continueCursor: rows.continueCursor,

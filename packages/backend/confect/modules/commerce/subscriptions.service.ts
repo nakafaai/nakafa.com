@@ -1,21 +1,23 @@
-import type { Doc } from "@repo/backend/confect/_generated/dataModel";
 import {
+  DatabaseReader,
+  DatabaseWriter,
   MutationCtx,
-  QueryCtx,
 } from "@repo/backend/confect/_generated/services";
-import {
-  getPlanCreditConfig,
-  resolveCurrentCreditResetTimestamp,
-} from "@repo/backend/confect/modules/commerce/credits.policy";
+import { getPlanCreditConfig } from "@repo/backend/confect/modules/commerce/credits.policy";
+import { resolveCreditResetTimestamp } from "@repo/backend/confect/modules/commerce/credits.service";
 import { getProductsForServer } from "@repo/backend/confect/modules/commerce/polar/products";
+import type { Subscriptions as SubscriptionsTable } from "@repo/backend/confect/modules/commerce/subscriptions.tables";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
-import type { UserPlan } from "@repo/backend/confect/modules/identity/users.tables";
+import type {
+  UserPlan,
+  Users,
+} from "@repo/backend/confect/modules/identity/users.tables";
 import { captureProductEvent } from "@repo/backend/confect/modules/integrations/analytics";
 import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option } from "effect";
 
-type SubscriptionFields = Omit<Doc<"subscriptions">, "_creationTime" | "_id">;
-type SubscriptionDoc = Doc<"subscriptions">;
+type SubscriptionFields = typeof SubscriptionsTable.Fields.Type;
+type SubscriptionDoc = typeof SubscriptionsTable.Doc.Type;
 const ACTIVE_SUBSCRIPTION_SYNC_LIMIT = 50;
 
 const proProductIds = [
@@ -47,37 +49,35 @@ const applyPlanChange = Effect.fn("commerce.applyPlanChange")(function* (
     newPlan: UserPlan;
     now: number;
     subscription: SubscriptionDoc;
-    user: Doc<"users">;
+    user: typeof Users.Doc.Type;
   }
 ) {
+  const writer = yield* DatabaseWriter;
   const previousPlan = args.user.plan;
   const newCreditConfig = getPlanCreditConfig(args.newPlan);
-  const nextResetTimestamp = yield* Effect.promise(() =>
-    resolveCurrentCreditResetTimestamp(ctx.db, args.newPlan, args.now)
-  );
+  const nextResetTimestamp = yield* resolveCreditResetTimestamp({
+    now: args.now,
+    plan: args.newPlan,
+  });
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(args.user._id, {
-      credits: newCreditConfig.amount,
-      creditsResetAt: nextResetTimestamp,
-      plan: args.newPlan,
-    })
-  );
+  yield* writer.table("users").patch(args.user._id, {
+    credits: newCreditConfig.amount,
+    creditsResetAt: nextResetTimestamp,
+    plan: args.newPlan,
+  });
 
-  yield* Effect.promise(() =>
-    ctx.db.insert("creditTransactions", {
-      amount: newCreditConfig.amount,
-      balanceAfter: newCreditConfig.amount,
-      metadata: {
-        "new-plan": args.newPlan,
-        "previous-plan": previousPlan,
-        reason: args.newPlan === "pro" ? "plan-upgrade" : "plan-downgrade",
-        "subscription-id": args.subscription.id,
-      },
-      type: args.newPlan === "pro" ? "purchase" : newCreditConfig.grantType,
-      userId: args.user._id,
-    })
-  );
+  yield* writer.table("creditTransactions").insert({
+    amount: newCreditConfig.amount,
+    balanceAfter: newCreditConfig.amount,
+    metadata: {
+      "new-plan": args.newPlan,
+      "previous-plan": previousPlan,
+      reason: args.newPlan === "pro" ? "plan-upgrade" : "plan-downgrade",
+      "subscription-id": args.subscription.id,
+    },
+    type: args.newPlan === "pro" ? "purchase" : newCreditConfig.grantType,
+    userId: args.user._id,
+  });
 
   const timestamp = new Date(args.now);
   const eventName =
@@ -123,14 +123,12 @@ const syncCustomerPlan = Effect.fn("commerce.syncCustomerPlan")(function* (
   ctx: ConvexMutationCtx,
   subscription: SubscriptionDoc
 ) {
-  const customer = yield* Effect.promise(() =>
-    ctx.db
-      .query("customers")
-      .withIndex("by_polarId", (query) =>
-        query.eq("id", subscription.customerId)
-      )
-      .unique()
-  );
+  const reader = yield* DatabaseReader;
+  const customerOption = yield* reader
+    .table("customers")
+    .index("by_polarId", (query) => query.eq("id", subscription.customerId))
+    .first();
+  const customer = Option.getOrNull(customerOption);
 
   if (!customer) {
     yield* Effect.logWarning("Subscription customer was not found.", {
@@ -140,7 +138,10 @@ const syncCustomerPlan = Effect.fn("commerce.syncCustomerPlan")(function* (
     return null;
   }
 
-  const user = yield* Effect.promise(() => ctx.db.get(customer.userId));
+  const user = yield* reader
+    .table("users")
+    .get(customer.userId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!user) {
     yield* Effect.logWarning("Subscription user was not found.", {
@@ -150,14 +151,12 @@ const syncCustomerPlan = Effect.fn("commerce.syncCustomerPlan")(function* (
     return null;
   }
 
-  const activeSubscriptions = yield* Effect.promise(() =>
-    ctx.db
-      .query("subscriptions")
-      .withIndex("by_customerId_and_status", (query) =>
-        query.eq("customerId", subscription.customerId).eq("status", "active")
-      )
-      .take(ACTIVE_SUBSCRIPTION_SYNC_LIMIT)
-  );
+  const activeSubscriptions = yield* reader
+    .table("subscriptions")
+    .index("by_customerId_and_status", (query) =>
+      query.eq("customerId", subscription.customerId).eq("status", "active")
+    )
+    .take(ACTIVE_SUBSCRIPTION_SYNC_LIMIT);
 
   if (activeSubscriptions.length === ACTIVE_SUBSCRIPTION_SYNC_LIMIT) {
     yield* Effect.logWarning(
@@ -203,26 +202,28 @@ const syncCustomerPlan = Effect.fn("commerce.syncCustomerPlan")(function* (
 export const createSubscription = Effect.fn("commerce.createSubscription")(
   function* (args: { subscription: SubscriptionFields }) {
     const ctx = yield* MutationCtx;
-    const existingSubscription = yield* Effect.promise(() =>
-      ctx.db
-        .query("subscriptions")
-        .withIndex("by_subscriptionId", (query) =>
-          query.eq("id", args.subscription.id)
-        )
-        .unique()
-    );
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const existingSubscriptionOption = yield* reader
+      .table("subscriptions")
+      .index("by_subscriptionId", (query) =>
+        query.eq("id", args.subscription.id)
+      )
+      .first();
+    const existingSubscription = Option.getOrNull(existingSubscriptionOption);
 
     if (existingSubscription) {
       yield* syncCustomerPlan(ctx, existingSubscription);
       return existingSubscription._id;
     }
 
-    const subscriptionId = yield* Effect.promise(() =>
-      ctx.db.insert("subscriptions", args.subscription)
-    );
-    const subscription = yield* Effect.promise(() =>
-      ctx.db.get(subscriptionId)
-    );
+    const subscriptionId = yield* writer
+      .table("subscriptions")
+      .insert(args.subscription);
+    const subscription = yield* reader
+      .table("subscriptions")
+      .get(subscriptionId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (subscription) {
       yield* syncCustomerPlan(ctx, subscription);
@@ -236,22 +237,24 @@ export const createSubscription = Effect.fn("commerce.createSubscription")(
 export const updateSubscription = Effect.fn("commerce.updateSubscription")(
   function* (args: { subscription: SubscriptionFields }) {
     const ctx = yield* MutationCtx;
-    const existingSubscription = yield* Effect.promise(() =>
-      ctx.db
-        .query("subscriptions")
-        .withIndex("by_subscriptionId", (query) =>
-          query.eq("id", args.subscription.id)
-        )
-        .unique()
-    );
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const existingSubscriptionOption = yield* reader
+      .table("subscriptions")
+      .index("by_subscriptionId", (query) =>
+        query.eq("id", args.subscription.id)
+      )
+      .first();
+    const existingSubscription = Option.getOrNull(existingSubscriptionOption);
 
     if (!existingSubscription) {
-      const subscriptionId = yield* Effect.promise(() =>
-        ctx.db.insert("subscriptions", args.subscription)
-      );
-      const subscription = yield* Effect.promise(() =>
-        ctx.db.get(subscriptionId)
-      );
+      const subscriptionId = yield* writer
+        .table("subscriptions")
+        .insert(args.subscription);
+      const subscription = yield* reader
+        .table("subscriptions")
+        .get(subscriptionId)
+        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
       if (subscription) {
         yield* syncCustomerPlan(ctx, subscription);
@@ -260,12 +263,13 @@ export const updateSubscription = Effect.fn("commerce.updateSubscription")(
       return null;
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.patch(existingSubscription._id, args.subscription)
-    );
-    const subscription = yield* Effect.promise(() =>
-      ctx.db.get(existingSubscription._id)
-    );
+    yield* writer
+      .table("subscriptions")
+      .patch(existingSubscription._id, args.subscription);
+    const subscription = yield* reader
+      .table("subscriptions")
+      .get(existingSubscription._id)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (subscription) {
       yield* syncCustomerPlan(ctx, subscription);
@@ -279,32 +283,29 @@ export const updateSubscription = Effect.fn("commerce.updateSubscription")(
 export const hasActiveSubscription = Effect.fn(
   "commerce.hasActiveSubscription"
 )(function* (args: { productId: string }) {
-  const ctx = yield* QueryCtx;
-  const user = yield* requireAppUser(ctx);
-  const customer = yield* Effect.promise(() =>
-    ctx.db
-      .query("customers")
-      .withIndex("by_userId", (query) => query.eq("userId", user.appUser._id))
-      .unique()
-  );
+  const reader = yield* DatabaseReader;
+  const user = yield* requireAppUser();
+  const customerOption = yield* reader
+    .table("customers")
+    .index("by_userId", (query) => query.eq("userId", user.appUser._id))
+    .first();
+  const customer = Option.getOrNull(customerOption);
 
   if (!customer) {
     return false;
   }
 
-  const subscription = yield* Effect.promise(() =>
-    ctx.db
-      .query("subscriptions")
-      .withIndex("by_customerId_and_status_and_productId", (query) =>
-        query
-          .eq("customerId", customer.id)
-          .eq("status", "active")
-          .eq("productId", args.productId)
-      )
-      .first()
-  );
+  const subscriptionOption = yield* reader
+    .table("subscriptions")
+    .index("by_customerId_and_status_and_productId", (query) =>
+      query
+        .eq("customerId", customer.id)
+        .eq("status", "active")
+        .eq("productId", args.productId)
+    )
+    .first();
 
-  return subscription !== null;
+  return Option.isSome(subscriptionOption);
 });
 
 /** Subscription service accessors used by Confect function implementations. */

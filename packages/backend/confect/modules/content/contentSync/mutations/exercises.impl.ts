@@ -1,6 +1,11 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import * as content_sync_exercises from "@repo/backend/confect/modules/content/contentSyncExercises.service";
+import {
+  bulkSyncExerciseQuestions as contentSyncExercises_bulkSyncExerciseQuestions,
+  bulkSyncExerciseSets as contentSyncExercises_bulkSyncExerciseSets,
+  deleteStaleExerciseQuestions as contentSyncExercises_deleteStaleExerciseQuestions,
+  deleteStaleExerciseSets as contentSyncExercises_deleteStaleExerciseSets,
+} from "@repo/backend/confect/modules/content/contentSyncExercises.service";
 import { Effect, Layer } from "effect";
 
 const contentSync_mutations_exercises_bulkSyncExerciseQuestionsImpl =
@@ -9,9 +14,9 @@ const contentSync_mutations_exercises_bulkSyncExerciseQuestionsImpl =
     "contentSync.mutations.exercises",
     "bulkSyncExerciseQuestions",
     (args) =>
-      content_sync_exercises
-        .bulkSyncExerciseQuestions(args)
-        .pipe(Effect.catchTag("ContentSyncError", (error) => Effect.die(error)))
+      contentSyncExercises_bulkSyncExerciseQuestions(args).pipe(
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+      )
   );
 
 const contentSync_mutations_exercises_bulkSyncExerciseSetsImpl =
@@ -20,9 +25,9 @@ const contentSync_mutations_exercises_bulkSyncExerciseSetsImpl =
     "contentSync.mutations.exercises",
     "bulkSyncExerciseSets",
     (args) =>
-      content_sync_exercises
-        .bulkSyncExerciseSets(args)
-        .pipe(Effect.catchTag("ContentSyncError", (error) => Effect.die(error)))
+      contentSyncExercises_bulkSyncExerciseSets(args).pipe(
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+      )
   );
 
 const contentSync_mutations_exercises_deleteStaleExerciseQuestionsImpl =
@@ -31,9 +36,9 @@ const contentSync_mutations_exercises_deleteStaleExerciseQuestionsImpl =
     "contentSync.mutations.exercises",
     "deleteStaleExerciseQuestions",
     (args) =>
-      content_sync_exercises
-        .deleteStaleExerciseQuestions(args)
-        .pipe(Effect.catchTag("ContentSyncError", (error) => Effect.die(error)))
+      contentSyncExercises_deleteStaleExerciseQuestions(args).pipe(
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+      )
   );
 
 const contentSync_mutations_exercises_deleteStaleExerciseSetsImpl =
@@ -42,9 +47,9 @@ const contentSync_mutations_exercises_deleteStaleExerciseSetsImpl =
     "contentSync.mutations.exercises",
     "deleteStaleExerciseSets",
     (args) =>
-      content_sync_exercises
-        .deleteStaleExerciseSets(args)
-        .pipe(Effect.catchTag("ContentSyncError", (error) => Effect.die(error)))
+      contentSyncExercises_deleteStaleExerciseSets(args).pipe(
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+      )
   );
 
 const contentSyncMutationsExercisesImpl = GroupImpl.make(

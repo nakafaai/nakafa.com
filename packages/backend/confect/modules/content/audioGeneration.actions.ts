@@ -1,7 +1,6 @@
 "use node";
 
-import { Ref } from "@confect/core";
-import { elevenlabs } from "@repo/ai/config/elevenlabs";
+import { createElevenLabsClient } from "@repo/ai/config/elevenlabs";
 import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
 import { getModelProviderOptions } from "@repo/ai/config/models";
 import { model } from "@repo/ai/config/vercel";
@@ -9,7 +8,11 @@ import { getDefaultVoiceSettings } from "@repo/ai/config/voices";
 import { podcastScriptPrompt } from "@repo/ai/prompt/audio-studies/v3";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { ActionCtx } from "@repo/backend/confect/_generated/services";
+import {
+  MutationRunner,
+  QueryRunner,
+  StorageActionWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   calculateDurationFromPCM,
   PCM_FORMAT,
@@ -45,17 +48,14 @@ function failContentChanged(message: string) {
 export const generateScript = Effect.fn("audioGeneration.generateScript")(
   (args: { contentAudioId: Id<"contentAudios"> }) =>
     Effect.gen(function* () {
-      const ctx = yield* ActionCtx;
+      const mutations = yield* MutationRunner;
+      const queries = yield* QueryRunner;
       yield* Effect.logInfo("Generating audio script.", args);
 
-      const claimed = yield* Effect.promise(() =>
-        ctx.runMutation(
-          Ref.getFunctionReference(
-            refs.internal.audioStudies.mutations.contentAudios
-              .claimScriptGeneration
-          ),
-          args
-        )
+      const claimed = yield* mutations(
+        refs.internal.audioStudies.mutations.contentAudios
+          .claimScriptGeneration,
+        args
       );
 
       if (!claimed) {
@@ -67,14 +67,10 @@ export const generateScript = Effect.fn("audioGeneration.generateScript")(
       }
 
       const program = Effect.gen(function* () {
-        const data = yield* Effect.promise(() =>
-          ctx.runQuery(
-            Ref.getFunctionReference(
-              refs.internal.audioStudies.queries.internalFunctions
-                .getAudioAndContentForScriptGeneration
-            ),
-            args
-          )
+        const data = yield* queries(
+          refs.internal.audioStudies.queries.internalFunctions
+            .getAudioAndContentForScriptGeneration,
+          args
         );
 
         if (!data) {
@@ -86,17 +82,13 @@ export const generateScript = Effect.fn("audioGeneration.generateScript")(
         }
 
         const { contentAudio, content } = data;
-        const hashValidBefore = yield* Effect.promise(() =>
-          ctx.runQuery(
-            Ref.getFunctionReference(
-              refs.internal.audioStudies.queries.internalFunctions
-                .verifyContentHash
-            ),
-            {
-              contentAudioId: args.contentAudioId,
-              expectedHash: contentAudio.contentHash,
-            }
-          )
+        const hashValidBefore = yield* queries(
+          refs.internal.audioStudies.queries.internalFunctions
+            .verifyContentHash,
+          {
+            contentAudioId: args.contentAudioId,
+            expectedHash: contentAudio.contentHash,
+          }
         );
 
         if (!hashValidBefore) {
@@ -121,17 +113,13 @@ export const generateScript = Effect.fn("audioGeneration.generateScript")(
             },
           })
         );
-        const hashValidAfter = yield* Effect.promise(() =>
-          ctx.runQuery(
-            Ref.getFunctionReference(
-              refs.internal.audioStudies.queries.internalFunctions
-                .verifyContentHash
-            ),
-            {
-              contentAudioId: args.contentAudioId,
-              expectedHash: contentAudio.contentHash,
-            }
-          )
+        const hashValidAfter = yield* queries(
+          refs.internal.audioStudies.queries.internalFunctions
+            .verifyContentHash,
+          {
+            contentAudioId: args.contentAudioId,
+            expectedHash: contentAudio.contentHash,
+          }
         );
 
         if (!hashValidAfter) {
@@ -140,16 +128,12 @@ export const generateScript = Effect.fn("audioGeneration.generateScript")(
           );
         }
 
-        yield* Effect.promise(() =>
-          ctx.runMutation(
-            Ref.getFunctionReference(
-              refs.internal.audioStudies.mutations.contentAudios.saveScript
-            ),
-            {
-              contentAudioId: args.contentAudioId,
-              script,
-            }
-          )
+        yield* mutations(
+          refs.internal.audioStudies.mutations.contentAudios.saveScript,
+          {
+            contentAudioId: args.contentAudioId,
+            script,
+          }
         );
 
         yield* Effect.logInfo("Audio script saved.", {
@@ -166,16 +150,12 @@ export const generateScript = Effect.fn("audioGeneration.generateScript")(
               contentAudioId: args.contentAudioId,
               error: getErrorMessage(error),
             });
-            yield* Effect.promise(() =>
-              ctx.runMutation(
-                Ref.getFunctionReference(
-                  refs.internal.audioStudies.mutations.contentAudios.markFailed
-                ),
-                {
-                  contentAudioId: args.contentAudioId,
-                  error: getErrorMessage(error),
-                }
-              )
+            yield* mutations(
+              refs.internal.audioStudies.mutations.contentAudios.markFailed,
+              {
+                contentAudioId: args.contentAudioId,
+                error: getErrorMessage(error),
+              }
             );
             return yield* Effect.fail(error);
           })
@@ -188,17 +168,15 @@ export const generateScript = Effect.fn("audioGeneration.generateScript")(
 export const generateSpeech = Effect.fn("audioGeneration.generateSpeech")(
   (args: { contentAudioId: Id<"contentAudios"> }) =>
     Effect.gen(function* () {
-      const ctx = yield* ActionCtx;
+      const mutations = yield* MutationRunner;
+      const queries = yield* QueryRunner;
+      const storage = yield* StorageActionWriter;
       yield* Effect.logInfo("Generating speech audio.", args);
 
-      const claimed = yield* Effect.promise(() =>
-        ctx.runMutation(
-          Ref.getFunctionReference(
-            refs.internal.audioStudies.mutations.contentAudios
-              .claimSpeechGeneration
-          ),
-          args
-        )
+      const claimed = yield* mutations(
+        refs.internal.audioStudies.mutations.contentAudios
+          .claimSpeechGeneration,
+        args
       );
 
       if (!claimed) {
@@ -207,14 +185,10 @@ export const generateSpeech = Effect.fn("audioGeneration.generateSpeech")(
       }
 
       const program = Effect.gen(function* () {
-        const audio = yield* Effect.promise(() =>
-          ctx.runQuery(
-            Ref.getFunctionReference(
-              refs.internal.audioStudies.queries.internalFunctions
-                .getAudioForSpeechGeneration
-            ),
-            args
-          )
+        const audio = yield* queries(
+          refs.internal.audioStudies.queries.internalFunctions
+            .getAudioForSpeechGeneration,
+          args
         );
 
         if (!audio) {
@@ -225,17 +199,13 @@ export const generateSpeech = Effect.fn("audioGeneration.generateSpeech")(
           );
         }
 
-        const hashStillValid = yield* Effect.promise(() =>
-          ctx.runQuery(
-            Ref.getFunctionReference(
-              refs.internal.audioStudies.queries.internalFunctions
-                .verifyContentHash
-            ),
-            {
-              contentAudioId: args.contentAudioId,
-              expectedHash: audio.contentHash,
-            }
-          )
+        const hashStillValid = yield* queries(
+          refs.internal.audioStudies.queries.internalFunctions
+            .verifyContentHash,
+          {
+            contentAudioId: args.contentAudioId,
+            expectedHash: audio.contentHash,
+          }
         );
 
         if (!hashStillValid) {
@@ -263,6 +233,7 @@ export const generateSpeech = Effect.fn("audioGeneration.generateSpeech")(
           style: voiceSettings.style,
           useSpeakerBoost: voiceSettings.useSpeakerBoost,
         };
+        const elevenlabs = createElevenLabsClient();
         const firstResult = yield* Effect.tryPromise(() =>
           aiGenerateSpeech({
             model: elevenlabs.speech(audio.model),
@@ -309,17 +280,13 @@ export const generateSpeech = Effect.fn("audioGeneration.generateSpeech")(
         }
 
         const duration = calculateDurationFromPCM(pcmBuffer.length);
-        const hashValidAfter = yield* Effect.promise(() =>
-          ctx.runQuery(
-            Ref.getFunctionReference(
-              refs.internal.audioStudies.queries.internalFunctions
-                .verifyContentHash
-            ),
-            {
-              contentAudioId: args.contentAudioId,
-              expectedHash: audio.contentHash,
-            }
-          )
+        const hashValidAfter = yield* queries(
+          refs.internal.audioStudies.queries.internalFunctions
+            .verifyContentHash,
+          {
+            contentAudioId: args.contentAudioId,
+            expectedHash: audio.contentHash,
+          }
         );
 
         if (!hashValidAfter) {
@@ -332,22 +299,16 @@ export const generateSpeech = Effect.fn("audioGeneration.generateSpeech")(
         const audioBlob = new Blob([Buffer.from(wavBuffer)], {
           type: "audio/wav",
         });
-        const storageId = yield* Effect.promise(() =>
-          ctx.storage.store(audioBlob)
-        );
+        const storageId = yield* storage.store(audioBlob);
 
-        yield* Effect.promise(() =>
-          ctx.runMutation(
-            Ref.getFunctionReference(
-              refs.internal.audioStudies.mutations.contentAudios.saveAudio
-            ),
-            {
-              contentAudioId: args.contentAudioId,
-              duration,
-              size: wavBuffer.byteLength,
-              storageId,
-            }
-          )
+        yield* mutations(
+          refs.internal.audioStudies.mutations.contentAudios.saveAudio,
+          {
+            contentAudioId: args.contentAudioId,
+            duration,
+            size: wavBuffer.byteLength,
+            storageId,
+          }
         );
 
         yield* Effect.logInfo("Speech audio saved.", {
@@ -366,16 +327,12 @@ export const generateSpeech = Effect.fn("audioGeneration.generateSpeech")(
               contentAudioId: args.contentAudioId,
               error: getErrorMessage(error),
             });
-            yield* Effect.promise(() =>
-              ctx.runMutation(
-                Ref.getFunctionReference(
-                  refs.internal.audioStudies.mutations.contentAudios.markFailed
-                ),
-                {
-                  contentAudioId: args.contentAudioId,
-                  error: getErrorMessage(error),
-                }
-              )
+            yield* mutations(
+              refs.internal.audioStudies.mutations.contentAudios.markFailed,
+              {
+                contentAudioId: args.contentAudioId,
+                error: getErrorMessage(error),
+              }
             );
             return yield* Effect.fail(error);
           })

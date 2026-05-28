@@ -9,7 +9,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -26,9 +25,9 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
-import { usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
+import { usePaginatedQuery } from "@/lib/confect/pagination";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
 import { getCleanHref } from "@/lib/utils/link";
@@ -37,7 +36,7 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Comments");
 
   const { results } = usePaginatedQuery(
-    toConvexReference(refs.public.comments.queries.getCommentsByUserId),
+    refs.public.comments.queries.getCommentsByUserId,
     { userId },
     { initialNumItems: 25 }
   );

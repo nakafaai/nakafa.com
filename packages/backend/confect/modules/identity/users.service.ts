@@ -1,12 +1,11 @@
 import type { GenericId } from "@confect/core";
 import {
+  DatabaseReader,
+  DatabaseWriter,
   MutationCtx,
-  QueryCtx,
 } from "@repo/backend/confect/_generated/services";
-import {
-  getCreditResetGrantTransaction,
-  resolveEffectiveCreditState,
-} from "@repo/backend/confect/modules/commerce/credits.policy";
+import { getCreditResetGrantTransaction } from "@repo/backend/confect/modules/commerce/credits.policy";
+import { resolveUserCreditState } from "@repo/backend/confect/modules/commerce/credits.service";
 import {
   getAppUserByAuthId,
   requireAppUser,
@@ -17,14 +16,12 @@ import { Clock, Effect } from "effect";
 /** Updates the current user's self-selected role. */
 export const updateUserRole = Effect.fn("identity.updateUserRole")(
   function* (args: { role: "teacher" | "student" | "parent" }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
 
-    yield* Effect.promise(() =>
-      ctx.db.patch(user.appUser._id, {
-        role: args.role,
-      })
-    );
+    yield* writer.table("users").patch(user.appUser._id, {
+      role: args.role,
+    });
 
     return null;
   }
@@ -34,7 +31,8 @@ export const updateUserRole = Effect.fn("identity.updateUserRole")(
 export const updateUserName = Effect.fn("identity.updateUserName")(
   function* (args: { name: string }) {
     const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
 
     yield* Effect.promise(() =>
       ctx.runMutation(components.betterAuth.adapter.updateOne, {
@@ -45,11 +43,9 @@ export const updateUserName = Effect.fn("identity.updateUserName")(
         },
       })
     );
-    yield* Effect.promise(() =>
-      ctx.db.patch(user.appUser._id, {
-        name: args.name,
-      })
-    );
+    yield* writer.table("users").patch(user.appUser._id, {
+      name: args.name,
+    });
 
     return null;
   }
@@ -58,12 +54,13 @@ export const updateUserName = Effect.fn("identity.updateUserName")(
 /** Synchronizes user metadata needed before starting or continuing a chat. */
 export const syncUserInfoForChat = Effect.fn("identity.syncUserInfoForChat")(
   function* () {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
     const now = yield* Clock.currentTimeMillis;
-    const effectiveCredits = yield* Effect.promise(() =>
-      resolveEffectiveCreditState(ctx.db, user.appUser, now)
-    );
+    const effectiveCredits = yield* resolveUserCreditState({
+      now,
+      user: user.appUser,
+    });
     const creditResetGrant = getCreditResetGrantTransaction(
       user.appUser,
       effectiveCredits
@@ -80,20 +77,16 @@ export const syncUserInfoForChat = Effect.fn("identity.syncUserInfoForChat")(
       };
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.patch(user.appUser._id, {
-        credits: effectiveCredits.credits,
-        creditsResetAt: effectiveCredits.creditsResetAt,
-      })
-    );
+    yield* writer.table("users").patch(user.appUser._id, {
+      credits: effectiveCredits.credits,
+      creditsResetAt: effectiveCredits.creditsResetAt,
+    });
 
     if (creditResetGrant) {
-      yield* Effect.promise(() =>
-        ctx.db.insert("creditTransactions", {
-          userId: user.appUser._id,
-          ...creditResetGrant,
-        })
-      );
+      yield* writer.table("creditTransactions").insert({
+        userId: user.appUser._id,
+        ...creditResetGrant,
+      });
     }
 
     return {
@@ -108,15 +101,17 @@ export const syncUserInfoForChat = Effect.fn("identity.syncUserInfoForChat")(
 export const getUserById = Effect.fn("identity.getUserById")(function* (args: {
   userId: GenericId.GenericId<"users">;
 }) {
-  const ctx = yield* QueryCtx;
-  return yield* Effect.promise(() => ctx.db.get(args.userId));
+  const reader = yield* DatabaseReader;
+  return yield* reader
+    .table("users")
+    .get(args.userId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 });
 
 /** Reads a user document by Better Auth id for internal callers. */
 export const getUserByAuthId = Effect.fn("identity.getUserByAuthId")(
   function* (args: { authId: string }) {
-    const ctx = yield* QueryCtx;
-    return yield* getAppUserByAuthId(ctx, args.authId);
+    return yield* getAppUserByAuthId(args.authId);
   }
 );
 

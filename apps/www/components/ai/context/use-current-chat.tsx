@@ -6,17 +6,15 @@ import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import { CHAT_MESSAGES_PAGE_SIZE } from "@repo/backend/confect/modules/chat/constants";
 import { mapDBMessagesToUIMessages } from "@repo/backend/confect/modules/chat/messages";
-import type { ConvexFunctionReference } from "@repo/backend/confect/modules/shared/convexReferences";
-import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
-import {
-  type UsePaginatedQueryReturnType,
-  usePaginatedQuery,
-} from "convex/react";
 import { type PropsWithChildren, useMemo } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
+import {
+  type ConfectPaginatedQueryResult,
+  usePaginatedQuery,
+} from "@/lib/confect/pagination";
 
-type ChatMessagesQueryResult = UsePaginatedQueryReturnType<
-  ConvexFunctionReference<typeof refs.public.chats.queries.loadMessagesPage>
+type ChatMessagesQueryResult = ConfectPaginatedQueryResult<
+  typeof refs.public.chats.queries.loadMessagesPage
 >;
 
 interface ChatContextValue {
@@ -38,7 +36,7 @@ export function CurrentChatProvider({
   });
   const chat = QueryResult.isSuccess(chatResult) ? chatResult.value : undefined;
   const { results, status, loadMore } = usePaginatedQuery(
-    toConvexReference(refs.public.chats.queries.loadMessagesPage),
+    refs.public.chats.queries.loadMessagesPage,
     { chatId },
     { initialNumItems: CHAT_MESSAGES_PAGE_SIZE }
   );

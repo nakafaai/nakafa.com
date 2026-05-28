@@ -1,6 +1,11 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import * as content_sync_subjects from "@repo/backend/confect/modules/content/contentSyncSubjects.service";
+import {
+  bulkSyncSubjectSections as contentSyncSubjects_bulkSyncSubjectSections,
+  bulkSyncSubjectTopics as contentSyncSubjects_bulkSyncSubjectTopics,
+  deleteStaleSubjectSections as contentSyncSubjects_deleteStaleSubjectSections,
+  deleteStaleSubjectTopics as contentSyncSubjects_deleteStaleSubjectTopics,
+} from "@repo/backend/confect/modules/content/contentSyncSubjects.service";
 import { Effect, Layer } from "effect";
 
 const contentSync_mutations_subjects_bulkSyncSubjectSectionsImpl =
@@ -9,9 +14,9 @@ const contentSync_mutations_subjects_bulkSyncSubjectSectionsImpl =
     "contentSync.mutations.subjects",
     "bulkSyncSubjectSections",
     (args) =>
-      content_sync_subjects
-        .bulkSyncSubjectSections(args)
-        .pipe(Effect.catchTag("ContentSyncError", (error) => Effect.die(error)))
+      contentSyncSubjects_bulkSyncSubjectSections(args).pipe(
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+      )
   );
 
 const contentSync_mutations_subjects_bulkSyncSubjectTopicsImpl =
@@ -20,9 +25,9 @@ const contentSync_mutations_subjects_bulkSyncSubjectTopicsImpl =
     "contentSync.mutations.subjects",
     "bulkSyncSubjectTopics",
     (args) =>
-      content_sync_subjects
-        .bulkSyncSubjectTopics(args)
-        .pipe(Effect.catchTag("ContentSyncError", (error) => Effect.die(error)))
+      contentSyncSubjects_bulkSyncSubjectTopics(args).pipe(
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+      )
   );
 
 const contentSync_mutations_subjects_deleteStaleSubjectSectionsImpl =
@@ -31,9 +36,9 @@ const contentSync_mutations_subjects_deleteStaleSubjectSectionsImpl =
     "contentSync.mutations.subjects",
     "deleteStaleSubjectSections",
     (args) =>
-      content_sync_subjects
-        .deleteStaleSubjectSections(args)
-        .pipe(Effect.catchTag("ContentSyncError", (error) => Effect.die(error)))
+      contentSyncSubjects_deleteStaleSubjectSections(args).pipe(
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+      )
   );
 
 const contentSync_mutations_subjects_deleteStaleSubjectTopicsImpl =
@@ -42,9 +47,9 @@ const contentSync_mutations_subjects_deleteStaleSubjectTopicsImpl =
     "contentSync.mutations.subjects",
     "deleteStaleSubjectTopics",
     (args) =>
-      content_sync_subjects
-        .deleteStaleSubjectTopics(args)
-        .pipe(Effect.catchTag("ContentSyncError", (error) => Effect.die(error)))
+      contentSyncSubjects_deleteStaleSubjectTopics(args).pipe(
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+      )
   );
 
 const contentSyncMutationsSubjectsImpl = GroupImpl.make(

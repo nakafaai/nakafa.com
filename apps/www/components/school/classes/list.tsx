@@ -14,7 +14,6 @@ import {
   getClassImageUrl,
   getRandomClassImage,
 } from "@repo/backend/confect/modules/school/images";
-import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -37,11 +36,11 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { usePaginatedQuery } from "convex/react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { useState } from "react";
+import { usePaginatedQuery } from "@/lib/confect/pagination";
 import { useSchool } from "@/lib/context/use-school";
 import { searchParsers } from "@/lib/nuqs/search";
 
@@ -57,7 +56,7 @@ export function SchoolClassesList() {
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
 
   const { results, status, loadMore } = usePaginatedQuery(
-    toConvexReference(refs.public.classes.queries.getClasses),
+    refs.public.classes.queries.getClasses,
     {
       schoolId,
       q: debouncedQ,

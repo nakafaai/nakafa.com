@@ -1,5 +1,5 @@
 import type { Doc } from "@repo/backend/confect/_generated/dataModel";
-import type { ConvexQueryCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getLatestScaleVersionForTryout } from "@repo/backend/confect/modules/tryout/irtScaleRead.service";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import { Effect } from "effect";
@@ -7,12 +7,17 @@ import { Effect } from "effect";
 /** Resolves the scoring scale that should be used for a tryout attempt. */
 export const getTryoutScoreTarget = Effect.fn(
   "tryouts.irt.getTryoutScoreTarget"
-)(function* (db: ConvexQueryCtx["db"], tryoutAttempt: Doc<"tryoutAttempts">) {
-  const currentScaleVersion = yield* Effect.promise(() =>
-    db.get(tryoutAttempt.scaleVersionId)
-  );
+)(function* (tryoutAttempt: {
+  readonly scaleVersionId: Doc<"tryoutAttempts">["scaleVersionId"];
+  readonly tryoutId: Doc<"tryoutAttempts">["tryoutId"];
+}) {
+  const reader = yield* DatabaseReader;
+  const currentScaleVersion = yield* reader
+    .table("irtScaleVersions")
+    .get(tryoutAttempt.scaleVersionId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+
   const latestScaleVersion = yield* getLatestScaleVersionForTryout(
-    db,
     tryoutAttempt.tryoutId
   );
 

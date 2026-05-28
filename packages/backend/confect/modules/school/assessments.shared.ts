@@ -1,13 +1,8 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import type {
-  MutationCtx as ConvexMutationCtx,
-  QueryCtx as ConvexQueryCtx,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AssessmentError } from "@repo/backend/confect/modules/school/assessments.errors";
 import { requireClassAccess } from "@repo/backend/confect/modules/school/classAccess.service";
-import { Effect } from "effect";
-
-type DatabaseCtx = ConvexMutationCtx | ConvexQueryCtx;
+import { Effect, Option } from "effect";
 
 interface RichContent {
   readonly format: "plate-v1";
@@ -17,12 +12,12 @@ interface RichContent {
 
 /** Requires an assessment to exist inside a school. */
 export const requireAssessment = Effect.fn("assessments.requireAssessment")(
-  function* (
-    ctx: DatabaseCtx,
-    schoolId: Id<"schools">,
-    assessmentId: Id<"schoolAssessments">
-  ) {
-    const assessment = yield* Effect.promise(() => ctx.db.get(assessmentId));
+  function* (schoolId: Id<"schools">, assessmentId: Id<"schoolAssessments">) {
+    const reader = yield* DatabaseReader;
+    const assessment = yield* reader
+      .table("schoolAssessments")
+      .get(assessmentId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (assessment?.schoolId === schoolId) {
       return assessment;
@@ -97,8 +92,12 @@ export function validateScheduledStatus(
 /** Loads all editable authoring rows for an assessment. */
 export const loadAuthoredAssessment = Effect.fn(
   "assessments.loadAuthoredAssessment"
-)(function* (ctx: DatabaseCtx, assessmentId: Id<"schoolAssessments">) {
-  const assessment = yield* Effect.promise(() => ctx.db.get(assessmentId));
+)(function* (assessmentId: Id<"schoolAssessments">) {
+  const reader = yield* DatabaseReader;
+  const assessment = yield* reader
+    .table("schoolAssessments")
+    .get(assessmentId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!assessment) {
     return null;
@@ -106,40 +105,37 @@ export const loadAuthoredAssessment = Effect.fn(
 
   const currentVersionId = assessment.currentVersionId;
   const currentVersion = currentVersionId
-    ? yield* Effect.promise(() => ctx.db.get(currentVersionId))
+    ? yield* reader
+        .table("schoolAssessmentVersions")
+        .get(currentVersionId)
+        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)))
     : null;
-  const sections = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentSections")
-      .withIndex("by_assessmentId_and_order", (query) =>
+  const [sections, questions, choices, rubricCriteria] = yield* Effect.all([
+    reader
+      .table("schoolAssessmentSections")
+      .index("by_assessmentId_and_order", (query) =>
         query.eq("assessmentId", assessmentId)
       )
-      .collect()
-  );
-  const questions = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentQuestions")
-      .withIndex("by_assessmentId_and_sectionId_and_order", (query) =>
+      .collect(),
+    reader
+      .table("schoolAssessmentQuestions")
+      .index("by_assessmentId_and_sectionId_and_order", (query) =>
         query.eq("assessmentId", assessmentId)
       )
-      .collect()
-  );
-  const choices = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentChoices")
-      .withIndex("by_assessmentId_and_questionId_and_order", (query) =>
+      .collect(),
+    reader
+      .table("schoolAssessmentChoices")
+      .index("by_assessmentId_and_questionId_and_order", (query) =>
         query.eq("assessmentId", assessmentId)
       )
-      .collect()
-  );
-  const rubricCriteria = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentRubricCriteria")
-      .withIndex("by_assessmentId_and_questionId_and_order", (query) =>
+      .collect(),
+    reader
+      .table("schoolAssessmentRubricCriteria")
+      .index("by_assessmentId_and_questionId_and_order", (query) =>
         query.eq("assessmentId", assessmentId)
       )
-      .collect()
-  );
+      .collect(),
+  ]);
 
   return {
     assessment,
@@ -154,16 +150,17 @@ export const loadAuthoredAssessment = Effect.fn(
 /** Computes the next immutable version number for an assessment. */
 export const getNextAssessmentVersionNumber = Effect.fn(
   "assessments.getNextVersionNumber"
-)(function* (ctx: DatabaseCtx, assessmentId: Id<"schoolAssessments">) {
-  const latestVersion = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentVersions")
-      .withIndex("by_assessmentId_and_versionNumber", (query) =>
-        query.eq("assessmentId", assessmentId)
-      )
-      .order("desc")
-      .first()
-  );
+)(function* (assessmentId: Id<"schoolAssessments">) {
+  const reader = yield* DatabaseReader;
+  const latestVersion = yield* reader
+    .table("schoolAssessmentVersions")
+    .index(
+      "by_assessmentId_and_versionNumber",
+      (query) => query.eq("assessmentId", assessmentId),
+      "desc"
+    )
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 
   return (latestVersion?.versionNumber ?? 0) + 1;
 });
@@ -178,32 +175,25 @@ export function getTotalVersionPoints(
 /** Lists question banks visible at school or class scope. */
 export const listVisibleQuestionBanks = Effect.fn(
   "assessments.listVisibleQuestionBanks"
-)(function* (
-  ctx: DatabaseCtx,
-  schoolId: Id<"schools">,
-  classId?: Id<"schoolClasses">
-) {
-  const schoolBanks = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentQuestionBanks")
-      .withIndex("by_schoolId_and_scope", (query) =>
-        query.eq("schoolId", schoolId).eq("scope", "school")
-      )
-      .collect()
-  );
+)(function* (schoolId: Id<"schools">, classId?: Id<"schoolClasses">) {
+  const reader = yield* DatabaseReader;
+  const schoolBanks = yield* reader
+    .table("schoolAssessmentQuestionBanks")
+    .index("by_schoolId_and_scope", (query) =>
+      query.eq("schoolId", schoolId).eq("scope", "school")
+    )
+    .collect();
 
   if (!classId) {
     return schoolBanks;
   }
 
-  const classBanks = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentQuestionBanks")
-      .withIndex("by_schoolId_and_classId", (query) =>
-        query.eq("schoolId", schoolId).eq("classId", classId)
-      )
-      .collect()
-  );
+  const classBanks = yield* reader
+    .table("schoolAssessmentQuestionBanks")
+    .index("by_schoolId_and_classId", (query) =>
+      query.eq("schoolId", schoolId).eq("classId", classId)
+    )
+    .collect();
 
   return [...schoolBanks, ...classBanks];
 });
@@ -212,18 +202,17 @@ export const listVisibleQuestionBanks = Effect.fn(
 export const requireAssignmentTarget = Effect.fn(
   "assessments.requireAssignmentTarget"
 )(function* (
-  ctx: DatabaseCtx,
   assignmentId: Id<"schoolAssessmentAssignments">,
   classId: Id<"schoolClasses">
 ) {
-  const target = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentAssignmentTargets")
-      .withIndex("by_assignmentId_and_classId", (query) =>
-        query.eq("assignmentId", assignmentId).eq("classId", classId)
-      )
-      .unique()
-  );
+  const reader = yield* DatabaseReader;
+  const target = yield* reader
+    .table("schoolAssessmentAssignmentTargets")
+    .index("by_assignmentId_and_classId", (query) =>
+      query.eq("assignmentId", assignmentId).eq("classId", classId)
+    )
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 
   if (target) {
     return target;
@@ -241,12 +230,15 @@ export const requireAssignmentTarget = Effect.fn(
 export const requireAccessibleAssignment = Effect.fn(
   "assessments.requireAccessibleAssignment"
 )(function* (
-  ctx: DatabaseCtx,
   assignmentId: Id<"schoolAssessmentAssignments">,
   classId: Id<"schoolClasses">,
   userId: Id<"users">
 ) {
-  const assignment = yield* Effect.promise(() => ctx.db.get(assignmentId));
+  const reader = yield* DatabaseReader;
+  const assignment = yield* reader
+    .table("schoolAssessmentAssignments")
+    .get(assignmentId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!assignment) {
     return yield* Effect.fail(
@@ -257,8 +249,8 @@ export const requireAccessibleAssignment = Effect.fn(
     );
   }
 
-  yield* requireClassAccess(ctx, classId, assignment.schoolId, userId);
-  const target = yield* requireAssignmentTarget(ctx, assignmentId, classId);
+  yield* requireClassAccess(classId, assignment.schoolId, userId);
+  const target = yield* requireAssignmentTarget(assignmentId, classId);
 
   return { assignment, target };
 });

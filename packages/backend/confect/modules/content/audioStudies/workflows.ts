@@ -1,14 +1,50 @@
+import type { WorkflowArgs, WorkflowId } from "@convex-dev/workflow";
+import { vWorkflowId } from "@convex-dev/workflow";
+import { vResultValidator } from "@convex-dev/workpool";
 import refs from "@repo/backend/confect/_generated/refs";
-import {
-  generateAudioForQueueItemWorkflowArgs,
-  generateAudioForQueueItemWorkflowReturns,
-  handleWorkflowCompleteArgs,
-  handleWorkflowCompleteReturns,
-} from "@repo/backend/confect/modules/content/audioStudies/workflows.validators";
 import { workflow } from "@repo/backend/confect/modules/operations/workflow";
 import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
-import { Clock, Effect } from "effect";
+import type { RegisteredMutation } from "convex/server";
+import { type ObjectType, v } from "convex/values";
+import { Effect } from "effect";
+
+/**
+ * Workflow component validator for one queued audio generation job.
+ *
+ * @see https://confect.dev/server/plain-convex-functions
+ * @see https://www.convex.dev/components/workflow
+ */
+export const generateAudioForQueueItemWorkflowArgs = {
+  queueItemId: v.id("audioGenerationQueue"),
+};
+
+/** Workflow component return validator for one queued audio generation job. */
+export const generateAudioForQueueItemWorkflowReturns = v.null();
+
+/** Workflow completion callback args required by the Convex Workflow component. */
+export const handleWorkflowCompleteArgs = {
+  context: v.object({ queueItemId: v.id("audioGenerationQueue") }),
+  result: vResultValidator,
+  workflowId: vWorkflowId,
+};
+
+/** Workflow completion callback return validator. */
+export const handleWorkflowCompleteReturns = v.null();
+
+/** Registered native Workflow function type consumed by Confect refs. */
+export type GenerateAudioForQueueItemWorkflow = RegisteredMutation<
+  "internal",
+  WorkflowArgs<typeof generateAudioForQueueItemWorkflowArgs>,
+  WorkflowId
+>;
+
+/** Registered native Workflow completion callback consumed by Confect refs. */
+export type HandleAudioWorkflowComplete = RegisteredMutation<
+  "internal",
+  ObjectType<typeof handleWorkflowCompleteArgs>,
+  null
+>;
 
 /**
  * Generates audio for a queue item with idempotent workflow steps.
@@ -148,16 +184,12 @@ export const handleWorkflowComplete = internalMutation({
           workflowId: args.workflowId,
         })
       );
-
-      const item = await ctx.db.get(args.context.queueItemId);
-      if (item && item.status !== "completed") {
-        const now = await Effect.runPromise(Clock.currentTimeMillis);
-        await ctx.db.patch(args.context.queueItemId, {
-          status: "completed",
-          completedAt: now,
-          updatedAt: now,
-        });
-      }
+      await ctx.runMutation(
+        toConvexReference(
+          refs.internal.audioStudies.mutations.queue.markQueueCompleted
+        ),
+        { queueItemId: args.context.queueItemId }
+      );
       return null;
     }
 
@@ -171,28 +203,15 @@ export const handleWorkflowComplete = internalMutation({
         })
       );
 
-      const item = await ctx.db.get(args.context.queueItemId);
-      if (item && item.status !== "completed" && item.status !== "failed") {
-        const now = await Effect.runPromise(Clock.currentTimeMillis);
-        const retryCount = item.retryCount + 1;
-        if (retryCount >= item.maxRetries) {
-          await ctx.db.patch(args.context.queueItemId, {
-            status: "failed",
-            errorMessage: `Max retries exceeded (${item.maxRetries}): ${errorMessage}`,
-            lastErrorAt: now,
-            retryCount,
-            updatedAt: now,
-          });
-        } else {
-          await ctx.db.patch(args.context.queueItemId, {
-            status: "pending",
-            errorMessage,
-            lastErrorAt: now,
-            retryCount,
-            updatedAt: now,
-          });
+      await ctx.runMutation(
+        toConvexReference(
+          refs.internal.audioStudies.mutations.queue.markQueueFailed
+        ),
+        {
+          queueItemId: args.context.queueItemId,
+          error: errorMessage,
         }
-      }
+      );
       return null;
     }
 

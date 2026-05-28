@@ -1,14 +1,14 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  MutationCtx,
-  QueryCtx,
+  DatabaseReader,
+  DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { cleanSlug } from "@repo/utilities/helper";
 import type { PaginationOptions } from "convex/server";
-import { Duration, Effect, Schema } from "effect";
+import { Duration, Effect, Option, Schema } from "effect";
 
 const DEFAULT_COMMENT_SNIPPET_LENGTH = 200;
 
@@ -42,18 +42,20 @@ const updateParentReplyCount = Effect.fn("comments.updateParentReplyCount")(
       return null;
     }
 
-    const ctx = yield* MutationCtx;
-    const parent = yield* Effect.promise(() => ctx.db.get(parentId));
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const parent = yield* reader
+      .table("comments")
+      .get(parentId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!parent) {
       return null;
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.patch(parentId, {
-        replyCount: Math.max(parent.replyCount + delta, 0),
-      })
-    );
+    yield* writer.table("comments").patch(parentId, {
+      replyCount: Math.max(parent.replyCount + delta, 0),
+    });
 
     return null;
   }
@@ -65,27 +67,27 @@ const updateCommentVoteCount = Effect.fn("comments.updateVoteCount")(function* (
   vote: Exclude<VoteAction, 0>,
   delta: number
 ) {
-  const ctx = yield* MutationCtx;
-  const comment = yield* Effect.promise(() => ctx.db.get(commentId));
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const comment = yield* reader
+    .table("comments")
+    .get(commentId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!comment) {
     return null;
   }
 
   if (vote === 1) {
-    yield* Effect.promise(() =>
-      ctx.db.patch(commentId, {
-        upvoteCount: Math.max(comment.upvoteCount + delta, 0),
-      })
-    );
+    yield* writer.table("comments").patch(commentId, {
+      upvoteCount: Math.max(comment.upvoteCount + delta, 0),
+    });
     return null;
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(commentId, {
-      downvoteCount: Math.max(comment.downvoteCount + delta, 0),
-    })
-  );
+  yield* writer.table("comments").patch(commentId, {
+    downvoteCount: Math.max(comment.downvoteCount + delta, 0),
+  });
 
   return null;
 });
@@ -94,12 +96,15 @@ const updateCommentVoteCount = Effect.fn("comments.updateVoteCount")(function* (
 const getUserMap = Effect.fn("comments.getUserMap")(function* (
   userIds: readonly Id<"users">[]
 ) {
-  const ctx = yield* QueryCtx;
+  const reader = yield* DatabaseReader;
   const uniqueUserIds = [...new Set(userIds)];
   const entries: [Id<"users">, PublicCommentUser][] = [];
 
   for (const userId of uniqueUserIds) {
-    const user = yield* Effect.promise(() => ctx.db.get(userId));
+    const user = yield* reader
+      .table("users")
+      .get(userId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
     if (!user) {
       continue;
     }
@@ -123,12 +128,16 @@ export const addComment = Effect.fn("comments.addComment")(function* (args: {
   slug: string;
   text: string;
 }) {
-  const ctx = yield* MutationCtx;
-  const user = yield* requireAppUser(ctx);
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
   const cleanedSlug = cleanSlug(args.slug);
   const parentId = args.parentId;
   const parentComment = parentId
-    ? yield* Effect.promise(() => ctx.db.get(parentId))
+    ? yield* reader
+        .table("comments")
+        .get(parentId)
+        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)))
     : null;
 
   if (args.parentId && !parentComment) {
@@ -145,21 +154,19 @@ export const addComment = Effect.fn("comments.addComment")(function* (args: {
     );
   }
 
-  const commentId = yield* Effect.promise(() =>
-    ctx.db.insert("comments", {
-      downvoteCount: 0,
-      parentId: args.parentId,
-      replyCount: 0,
-      replyToText: parentComment
-        ? truncateText({ text: parentComment.text })
-        : undefined,
-      replyToUserId: parentComment?.userId,
-      slug: cleanedSlug,
-      text: args.text,
-      upvoteCount: 0,
-      userId: user.appUser._id,
-    })
-  );
+  const commentId = yield* writer.table("comments").insert({
+    downvoteCount: 0,
+    parentId: args.parentId,
+    replyCount: 0,
+    replyToText: parentComment
+      ? truncateText({ text: parentComment.text })
+      : undefined,
+    replyToUserId: parentComment?.userId,
+    slug: cleanedSlug,
+    text: args.text,
+    upvoteCount: 0,
+    userId: user.appUser._id,
+  });
   yield* updateParentReplyCount(parentId, 1);
 
   return commentId;
@@ -168,9 +175,13 @@ export const addComment = Effect.fn("comments.addComment")(function* (args: {
 /** Creates, replaces, or removes the current user's vote on a comment. */
 export const voteOnComment = Effect.fn("comments.voteOnComment")(
   function* (args: { commentId: Id<"comments">; vote: VoteAction }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
-    const comment = yield* Effect.promise(() => ctx.db.get(args.commentId));
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
+    const comment = yield* reader
+      .table("comments")
+      .get(args.commentId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!comment) {
       return yield* Effect.fail(
@@ -178,29 +189,26 @@ export const voteOnComment = Effect.fn("comments.voteOnComment")(
       );
     }
 
-    const existingVote = yield* Effect.promise(() =>
-      ctx.db
-        .query("commentVotes")
-        .withIndex("by_commentId_and_userId", (query) =>
-          query.eq("commentId", args.commentId).eq("userId", user.appUser._id)
-        )
-        .unique()
-    );
+    const existingVoteOption = yield* reader
+      .table("commentVotes")
+      .index("by_commentId_and_userId", (query) =>
+        query.eq("commentId", args.commentId).eq("userId", user.appUser._id)
+      )
+      .first();
+    const existingVote = Option.getOrNull(existingVoteOption);
 
     if (existingVote) {
-      yield* Effect.promise(() => ctx.db.delete(existingVote._id));
+      yield* writer.table("commentVotes").delete(existingVote._id);
       yield* updateCommentVoteCount(args.commentId, existingVote.vote, -1);
     }
 
     const vote = args.vote;
     if (vote === 1 || vote === -1) {
-      yield* Effect.promise(() =>
-        ctx.db.insert("commentVotes", {
-          commentId: args.commentId,
-          userId: user.appUser._id,
-          vote,
-        })
-      );
+      yield* writer.table("commentVotes").insert({
+        commentId: args.commentId,
+        userId: user.appUser._id,
+        vote,
+      });
       yield* updateCommentVoteCount(args.commentId, vote, 1);
     }
 
@@ -211,9 +219,13 @@ export const voteOnComment = Effect.fn("comments.voteOnComment")(
 /** Deletes one of the current user's comments. */
 export const deleteComment = Effect.fn("comments.deleteComment")(
   function* (args: { commentId: Id<"comments"> }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
-    const comment = yield* Effect.promise(() => ctx.db.get(args.commentId));
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
+    const comment = yield* reader
+      .table("comments")
+      .get(args.commentId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!comment) {
       return yield* Effect.fail(
@@ -233,7 +245,7 @@ export const deleteComment = Effect.fn("comments.deleteComment")(
 
     const scheduler = yield* Scheduler;
 
-    yield* Effect.promise(() => ctx.db.delete(args.commentId));
+    yield* writer.table("comments").delete(args.commentId);
     yield* scheduler.runAfter(
       Duration.zero,
       refs.internal.triggers.comments.cleanup.cleanupDeletedComment,
@@ -248,14 +260,15 @@ export const deleteComment = Effect.fn("comments.deleteComment")(
 /** Lists comments for a content slug with public author data. */
 export const getCommentsBySlug = Effect.fn("comments.getBySlug")(
   function* (args: { paginationOpts: PaginationOptions; slug: string }) {
-    const ctx = yield* QueryCtx;
-    const comments = yield* Effect.promise(() =>
-      ctx.db
-        .query("comments")
-        .withIndex("by_slug", (query) => query.eq("slug", cleanSlug(args.slug)))
-        .order("desc")
-        .paginate(args.paginationOpts)
-    );
+    const reader = yield* DatabaseReader;
+    const comments = yield* reader
+      .table("comments")
+      .index(
+        "by_slug",
+        (query) => query.eq("slug", cleanSlug(args.slug)),
+        "desc"
+      )
+      .paginate(args.paginationOpts);
     const commentUserIds = comments.page.map((comment) => comment.userId);
     const replyToUserIds = comments.page.flatMap((comment) =>
       comment.replyToUserId ? [comment.replyToUserId] : []
@@ -296,14 +309,11 @@ export const getCommentsBySlug = Effect.fn("comments.getBySlug")(
 /** Lists comments authored by a user. */
 export const getCommentsByUserId = Effect.fn("comments.getByUserId")(
   function* (args: { paginationOpts: PaginationOptions; userId: Id<"users"> }) {
-    const ctx = yield* QueryCtx;
+    const reader = yield* DatabaseReader;
 
-    return yield* Effect.promise(() =>
-      ctx.db
-        .query("comments")
-        .withIndex("by_userId", (query) => query.eq("userId", args.userId))
-        .order("desc")
-        .paginate(args.paginationOpts)
-    );
+    return yield* reader
+      .table("comments")
+      .index("by_userId", (query) => query.eq("userId", args.userId), "desc")
+      .paginate(args.paginationOpts);
   }
 );

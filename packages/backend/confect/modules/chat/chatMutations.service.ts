@@ -1,10 +1,10 @@
 import { getModelCreditCost } from "@repo/ai/config/models";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
-import type { MyUIMessagePart } from "@repo/ai/types/message";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  MutationCtx,
+  DatabaseReader,
+  DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import {
@@ -13,10 +13,9 @@ import {
   insertParts,
   verifyChatOwnership,
 } from "@repo/backend/confect/modules/chat/chatStore.service";
-import {
-  getCreditResetGrantTransaction,
-  resolveEffectiveCreditState,
-} from "@repo/backend/confect/modules/commerce/credits.policy";
+import type { MessagePartInput } from "@repo/backend/confect/modules/chat/chats.tables";
+import { getCreditResetGrantTransaction } from "@repo/backend/confect/modules/commerce/credits.policy";
+import { resolveUserCreditState } from "@repo/backend/confect/modules/commerce/credits.service";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { Clock, Duration, Effect, Schema } from "effect";
 
@@ -39,33 +38,31 @@ interface ChatMessageInput {
 /** Creates a private chat owned by the current user. */
 export const createChat = Effect.fn("chatMutations.createChat")(
   function* (args: { title?: string; type: "study" }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
     const updatedAt = yield* Clock.currentTimeMillis;
 
-    return yield* Effect.promise(() =>
-      ctx.db.insert("chats", {
-        title: args.title || DEFAULT_TITLE,
-        type: args.type,
-        updatedAt,
-        userId: user.appUser._id,
-        visibility: "private",
-      })
-    );
+    return yield* writer.table("chats").insert({
+      title: args.title || DEFAULT_TITLE,
+      type: args.type,
+      updatedAt,
+      userId: user.appUser._id,
+      visibility: "private",
+    });
   }
 );
 
 /** Updates the title for a chat owned by the current user. */
 export const updateChatTitle = Effect.fn("chatMutations.updateChatTitle")(
   function* (args: { chatId: Id<"chats">; title: string }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
     const chat = yield* verifyChatOwnership({
       chatId: args.chatId,
       userId: user.appUser._id,
     });
 
-    yield* Effect.promise(() => ctx.db.patch(chat._id, { title: args.title }));
+    yield* writer.table("chats").patch(chat._id, { title: args.title });
     return chat._id;
   }
 );
@@ -74,16 +71,16 @@ export const updateChatTitle = Effect.fn("chatMutations.updateChatTitle")(
 export const updateChatVisibility = Effect.fn(
   "chatMutations.updateChatVisibility"
 )(function* (args: { chatId: Id<"chats">; visibility: "private" | "public" }) {
-  const ctx = yield* MutationCtx;
-  const user = yield* requireAppUser(ctx);
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
   const chat = yield* verifyChatOwnership({
     chatId: args.chatId,
     userId: user.appUser._id,
   });
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(chat._id, { visibility: args.visibility })
-  );
+  yield* writer.table("chats").patch(chat._id, {
+    visibility: args.visibility,
+  });
   return chat._id;
 });
 
@@ -91,24 +88,22 @@ export const updateChatVisibility = Effect.fn(
 export const saveMessage = Effect.fn("chatMutations.saveMessage")(
   function* (args: {
     message: ChatMessageInput;
-    parts: readonly MyUIMessagePart[];
+    parts: readonly MessagePartInput[];
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
 
     yield* verifyChatOwnership({
       chatId: args.message.chatId,
       userId: user.appUser._id,
     });
 
-    const messageId = yield* Effect.promise(() =>
-      ctx.db.insert("messages", {
-        chatId: args.message.chatId,
-        identifier: args.message.identifier,
-        modelId: args.message.modelId,
-        role: args.message.role,
-      })
-    );
+    const messageId = yield* writer.table("messages").insert({
+      chatId: args.message.chatId,
+      identifier: args.message.identifier,
+      modelId: args.message.modelId,
+      role: args.message.role,
+    });
     const partIds = yield* insertParts({ messageId, parts: args.parts });
 
     return { messageId, partIds };
@@ -118,7 +113,7 @@ export const saveMessage = Effect.fn("chatMutations.saveMessage")(
 /** Deletes messages and parts from one transcript creation-time boundary. */
 export const deleteMessageBatch = Effect.fn("chatMutations.deleteMessageBatch")(
   function* (args: { chatId: Id<"chats">; fromCreationTime: number }) {
-    const user = yield* requireAppUser(yield* MutationCtx);
+    const user = yield* requireAppUser();
 
     yield* verifyChatOwnership({
       chatId: args.chatId,
@@ -134,30 +129,26 @@ export const createChatWithMessage = Effect.fn(
   "chatMutations.createChatWithMessage"
 )(function* (args: {
   message: Omit<ChatMessageInput, "chatId">;
-  parts: readonly MyUIMessagePart[];
+  parts: readonly MessagePartInput[];
   title?: string;
   type: "study";
 }) {
-  const ctx = yield* MutationCtx;
-  const user = yield* requireAppUser(ctx);
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
   const updatedAt = yield* Clock.currentTimeMillis;
-  const chatId = yield* Effect.promise(() =>
-    ctx.db.insert("chats", {
-      title: args.title || DEFAULT_TITLE,
-      type: args.type,
-      updatedAt,
-      userId: user.appUser._id,
-      visibility: "private",
-    })
-  );
-  const messageId = yield* Effect.promise(() =>
-    ctx.db.insert("messages", {
-      chatId,
-      identifier: args.message.identifier,
-      modelId: args.message.modelId,
-      role: args.message.role,
-    })
-  );
+  const chatId = yield* writer.table("chats").insert({
+    title: args.title || DEFAULT_TITLE,
+    type: args.type,
+    updatedAt,
+    userId: user.appUser._id,
+    visibility: "private",
+  });
+  const messageId = yield* writer.table("messages").insert({
+    chatId,
+    identifier: args.message.identifier,
+    modelId: args.message.modelId,
+    role: args.message.role,
+  });
   const partIds = yield* insertParts({ messageId, parts: args.parts });
 
   return { chatId, messageId, partIds };
@@ -166,8 +157,8 @@ export const createChatWithMessage = Effect.fn(
 /** Deletes a chat owned by the current user. */
 export const deleteChat = Effect.fn("chatMutations.deleteChat")(
   function* (args: { chatId: Id<"chats"> }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
     const chat = yield* verifyChatOwnership({
       chatId: args.chatId,
       userId: user.appUser._id,
@@ -175,7 +166,7 @@ export const deleteChat = Effect.fn("chatMutations.deleteChat")(
 
     const scheduler = yield* Scheduler;
 
-    yield* Effect.promise(() => ctx.db.delete(chat._id));
+    yield* writer.table("chats").delete(chat._id);
     yield* scheduler.runAfter(
       Duration.zero,
       refs.internal.triggers.chats.cleanup.cleanupDeletedChat,
@@ -191,11 +182,15 @@ export const saveAssistantResponse = Effect.fn(
   "chatMutations.saveAssistantResponse"
 )(function* (args: {
   message: ChatMessageInput;
-  parts: readonly MyUIMessagePart[];
+  parts: readonly MessagePartInput[];
   userId: Id<"users">;
 }) {
-  const ctx = yield* MutationCtx;
-  const appUser = yield* Effect.promise(() => ctx.db.get(args.userId));
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const appUser = yield* reader
+    .table("users")
+    .get(args.userId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!appUser) {
     return yield* Effect.fail(
@@ -209,9 +204,10 @@ export const saveAssistantResponse = Effect.fn(
   });
 
   if (args.message.identifier) {
-    const existingMessage = yield* Effect.promise(() =>
-      getMessageByIdentifier(ctx, args.message.chatId, args.message.identifier)
-    );
+    const existingMessage = yield* getMessageByIdentifier({
+      chatId: args.message.chatId,
+      identifier: args.message.identifier,
+    });
 
     if (existingMessage) {
       const deleteResult = yield* deleteMessageBatchFromPoint({
@@ -232,9 +228,7 @@ export const saveAssistantResponse = Effect.fn(
 
   const now = yield* Clock.currentTimeMillis;
   const effectiveCredits = args.message.modelId
-    ? yield* Effect.promise(() =>
-        resolveEffectiveCreditState(ctx.db, appUser, now)
-      )
+    ? yield* resolveUserCreditState({ now, user: appUser })
     : null;
   const credits = args.message.modelId
     ? getModelCreditCost(args.message.modelId)
@@ -247,18 +241,16 @@ export const saveAssistantResponse = Effect.fn(
   const creditResetGrant = effectiveCredits
     ? getCreditResetGrantTransaction(appUser, effectiveCredits)
     : null;
-  const messageId = yield* Effect.promise(() =>
-    ctx.db.insert("messages", {
-      chatId: args.message.chatId,
-      credits: args.message.modelId ? credits : undefined,
-      identifier: args.message.identifier,
-      inputTokens: args.message.inputTokens,
-      modelId: args.message.modelId,
-      outputTokens: args.message.outputTokens,
-      role: args.message.role,
-      totalTokens: args.message.totalTokens,
-    })
-  );
+  const messageId = yield* writer.table("messages").insert({
+    chatId: args.message.chatId,
+    credits: args.message.modelId ? credits : undefined,
+    identifier: args.message.identifier,
+    inputTokens: args.message.inputTokens,
+    modelId: args.message.modelId,
+    outputTokens: args.message.outputTokens,
+    role: args.message.role,
+    totalTokens: args.message.totalTokens,
+  });
   const partIds = yield* insertParts({ messageId, parts: args.parts });
 
   const modelId = args.message.modelId;
@@ -267,44 +259,38 @@ export const saveAssistantResponse = Effect.fn(
     return { credits, messageId, newBalance, partIds };
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(appUser._id, {
-      credits: newBalance,
-      creditsResetAt: nextResetTimestamp,
-    })
-  );
+  yield* writer.table("users").patch(appUser._id, {
+    credits: newBalance,
+    creditsResetAt: nextResetTimestamp,
+  });
 
   if (creditResetGrant) {
-    yield* Effect.promise(() =>
-      ctx.db.insert("creditTransactions", {
-        userId: appUser._id,
-        ...creditResetGrant,
-      })
-    );
+    yield* writer.table("creditTransactions").insert({
+      userId: appUser._id,
+      ...creditResetGrant,
+    });
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.insert("creditTransactions", {
-      amount: -credits,
-      balanceAfter: newBalance,
-      metadata: {
-        chatId: args.message.chatId,
-        messageId,
-        modelId,
-        ...(args.message.inputTokens === undefined
-          ? {}
-          : { inputTokens: args.message.inputTokens }),
-        ...(args.message.outputTokens === undefined
-          ? {}
-          : { outputTokens: args.message.outputTokens }),
-        ...(args.message.totalTokens === undefined
-          ? {}
-          : { totalTokens: args.message.totalTokens }),
-      },
-      type: "usage",
-      userId: appUser._id,
-    })
-  );
+  yield* writer.table("creditTransactions").insert({
+    amount: -credits,
+    balanceAfter: newBalance,
+    metadata: {
+      chatId: args.message.chatId,
+      messageId,
+      modelId,
+      ...(args.message.inputTokens === undefined
+        ? {}
+        : { inputTokens: args.message.inputTokens }),
+      ...(args.message.outputTokens === undefined
+        ? {}
+        : { outputTokens: args.message.outputTokens }),
+      ...(args.message.totalTokens === undefined
+        ? {}
+        : { totalTokens: args.message.totalTokens }),
+    },
+    type: "usage",
+    userId: appUser._id,
+  });
 
   return { credits, messageId, newBalance, partIds };
 });

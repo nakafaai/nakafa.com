@@ -1,11 +1,13 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { AssessmentError } from "@repo/backend/confect/modules/school/assessments.errors";
 import { requireAssessment } from "@repo/backend/confect/modules/school/assessments.shared";
 import { requirePermission } from "@repo/backend/confect/modules/school/classAccess.service";
 import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import { Effect } from "effect";
 
 /** Deletes an unassigned assessment and all authoring/version rows. */
@@ -14,28 +16,26 @@ export const deleteAssessment = Effect.fn("assessments.deleteAssessment")(
     readonly assessmentId: Id<"schoolAssessments">;
     readonly schoolId: Id<"schools">;
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
     const assessment = yield* requireAssessment(
-      ctx,
       args.schoolId,
       args.assessmentId
     );
 
-    yield* requirePermission(ctx, PERMISSIONS.ASSESSMENT_DELETE, {
+    yield* requirePermission(PERMISSIONS.ASSESSMENT_DELETE, {
       classId: assessment.classId,
       schoolId: assessment.schoolId,
       userId: user.appUser._id,
     });
 
-    const assignments = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolAssessmentAssignments")
-        .withIndex("by_assessmentId_and_status", (query) =>
-          query.eq("assessmentId", args.assessmentId)
-        )
-        .collect()
-    );
+    const assignments = yield* reader
+      .table("schoolAssessmentAssignments")
+      .index("by_assessmentId_and_status", (query) =>
+        query.eq("assessmentId", args.assessmentId)
+      )
+      .collect();
 
     if (assignments.length > 0) {
       return yield* Effect.fail(
@@ -46,14 +46,8 @@ export const deleteAssessment = Effect.fn("assessments.deleteAssessment")(
       );
     }
 
-    const currentScheduledJobId = assessment.scheduledJobId;
-
-    if (assessment.status === "scheduled" && currentScheduledJobId) {
-      yield* Effect.promise(() => ctx.scheduler.cancel(currentScheduledJobId));
-    }
-
-    yield* deleteAssessmentTree(ctx, args.assessmentId);
-    yield* Effect.promise(() => ctx.db.delete(args.assessmentId));
+    yield* deleteAssessmentTree(args.assessmentId);
+    yield* writer.table("schoolAssessments").delete(args.assessmentId);
 
     return null;
   }
@@ -61,116 +55,102 @@ export const deleteAssessment = Effect.fn("assessments.deleteAssessment")(
 
 /** Deletes all nested rows that belong only to an assessment draft. */
 const deleteAssessmentTree = Effect.fn("assessments.deleteTree")(function* (
-  ctx: ConvexMutationCtx,
   assessmentId: Id<"schoolAssessments">
 ) {
-  const versions = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentVersions")
-      .withIndex("by_assessmentId_and_versionNumber", (query) =>
-        query.eq("assessmentId", assessmentId)
-      )
-      .collect()
-  );
-  const sections = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentSections")
-      .withIndex("by_assessmentId_and_order", (query) =>
-        query.eq("assessmentId", assessmentId)
-      )
-      .collect()
-  );
-  const questions = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentQuestions")
-      .withIndex("by_assessmentId_and_sectionId_and_order", (query) =>
-        query.eq("assessmentId", assessmentId)
-      )
-      .collect()
-  );
-  const versionSections = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentVersionSections")
-      .withIndex("by_assessmentId_and_versionId_and_order", (query) =>
-        query.eq("assessmentId", assessmentId)
-      )
-      .collect()
-  );
-  const versionQuestions = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentVersionQuestions")
-      .withIndex(
-        "by_assessmentId_and_versionId_and_sectionId_and_order",
-        (query) => query.eq("assessmentId", assessmentId)
-      )
-      .collect()
-  );
-  const choices = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentChoices")
-      .withIndex("by_assessmentId_and_questionId_and_order", (query) =>
-        query.eq("assessmentId", assessmentId)
-      )
-      .collect()
-  );
-  const versionChoices = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentVersionChoices")
-      .withIndex("by_assessmentId_and_questionId_and_order", (query) =>
-        query.eq("assessmentId", assessmentId)
-      )
-      .collect()
-  );
-  const rubricCriteria = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentRubricCriteria")
-      .withIndex("by_assessmentId_and_questionId_and_order", (query) =>
-        query.eq("assessmentId", assessmentId)
-      )
-      .collect()
-  );
-  const versionRubricCriteria = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentVersionRubricCriteria")
-      .withIndex("by_assessmentId_and_questionId_and_order", (query) =>
-        query.eq("assessmentId", assessmentId)
-      )
-      .collect()
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const versions = yield* reader
+    .table("schoolAssessmentVersions")
+    .index("by_assessmentId_and_versionNumber", (query) =>
+      query.eq("assessmentId", assessmentId)
+    )
+    .collect();
+  const sections = yield* reader
+    .table("schoolAssessmentSections")
+    .index("by_assessmentId_and_order", (query) =>
+      query.eq("assessmentId", assessmentId)
+    )
+    .collect();
+  const questions = yield* reader
+    .table("schoolAssessmentQuestions")
+    .index("by_assessmentId_and_sectionId_and_order", (query) =>
+      query.eq("assessmentId", assessmentId)
+    )
+    .collect();
+  const versionSections = yield* reader
+    .table("schoolAssessmentVersionSections")
+    .index("by_assessmentId_and_versionId_and_order", (query) =>
+      query.eq("assessmentId", assessmentId)
+    )
+    .collect();
+  const versionQuestions = yield* reader
+    .table("schoolAssessmentVersionQuestions")
+    .index("by_assessmentId_and_versionId_and_sectionId_and_order", (query) =>
+      query.eq("assessmentId", assessmentId)
+    )
+    .collect();
+  const choices = yield* reader
+    .table("schoolAssessmentChoices")
+    .index("by_assessmentId_and_questionId_and_order", (query) =>
+      query.eq("assessmentId", assessmentId)
+    )
+    .collect();
+  const versionChoices = yield* reader
+    .table("schoolAssessmentVersionChoices")
+    .index("by_assessmentId_and_questionId_and_order", (query) =>
+      query.eq("assessmentId", assessmentId)
+    )
+    .collect();
+  const rubricCriteria = yield* reader
+    .table("schoolAssessmentRubricCriteria")
+    .index("by_assessmentId_and_questionId_and_order", (query) =>
+      query.eq("assessmentId", assessmentId)
+    )
+    .collect();
+  const versionRubricCriteria = yield* reader
+    .table("schoolAssessmentVersionRubricCriteria")
+    .index("by_assessmentId_and_questionId_and_order", (query) =>
+      query.eq("assessmentId", assessmentId)
+    )
+    .collect();
 
   for (const choice of choices) {
-    yield* Effect.promise(() => ctx.db.delete(choice._id));
+    yield* writer.table("schoolAssessmentChoices").delete(choice._id);
   }
 
   for (const choice of versionChoices) {
-    yield* Effect.promise(() => ctx.db.delete(choice._id));
+    yield* writer.table("schoolAssessmentVersionChoices").delete(choice._id);
   }
 
   for (const criterion of rubricCriteria) {
-    yield* Effect.promise(() => ctx.db.delete(criterion._id));
+    yield* writer.table("schoolAssessmentRubricCriteria").delete(criterion._id);
   }
 
   for (const criterion of versionRubricCriteria) {
-    yield* Effect.promise(() => ctx.db.delete(criterion._id));
+    yield* writer
+      .table("schoolAssessmentVersionRubricCriteria")
+      .delete(criterion._id);
   }
 
   for (const question of questions) {
-    yield* Effect.promise(() => ctx.db.delete(question._id));
+    yield* writer.table("schoolAssessmentQuestions").delete(question._id);
   }
 
   for (const question of versionQuestions) {
-    yield* Effect.promise(() => ctx.db.delete(question._id));
+    yield* writer
+      .table("schoolAssessmentVersionQuestions")
+      .delete(question._id);
   }
 
   for (const section of sections) {
-    yield* Effect.promise(() => ctx.db.delete(section._id));
+    yield* writer.table("schoolAssessmentSections").delete(section._id);
   }
 
   for (const section of versionSections) {
-    yield* Effect.promise(() => ctx.db.delete(section._id));
+    yield* writer.table("schoolAssessmentVersionSections").delete(section._id);
   }
 
   for (const version of versions) {
-    yield* Effect.promise(() => ctx.db.delete(version._id));
+    yield* writer.table("schoolAssessmentVersions").delete(version._id);
   }
 });

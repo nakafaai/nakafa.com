@@ -1,17 +1,28 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import * as content_analytics from "@repo/backend/confect/modules/content/contentAnalytics.service";
-import * as content_search_queries from "@repo/backend/confect/modules/content/contentSearch/queries.service";
-import * as content_search_writes from "@repo/backend/confect/modules/content/contentSearch/writes.service";
-import * as content_views from "@repo/backend/confect/modules/content/contentViews.service";
-import * as content_popular_audio from "@repo/backend/confect/modules/content/popularAudioQueue.service";
+import {
+  processContentAnalyticsPartition as contentAnalytics_processContentAnalyticsPartition,
+  scheduleContentAnalyticsPartition as contentAnalytics_scheduleContentAnalyticsPartition,
+  scheduleContentAnalyticsPartitions as contentAnalytics_scheduleContentAnalyticsPartitions,
+} from "@repo/backend/confect/modules/content/contentAnalytics.service";
+import { search as contentSearchQueries_search } from "@repo/backend/confect/modules/content/contentSearch/queries.service";
+import { bulkSyncQuranSearch as contentSearchWrites_bulkSyncQuranSearch } from "@repo/backend/confect/modules/content/contentSearch/writes.service";
+import {
+  getRecentlyViewed as contentViews_getRecentlyViewed,
+  recordContentView as contentViews_recordContentView,
+} from "@repo/backend/confect/modules/content/contentViews.service";
+import {
+  enqueuePopularContentForAudio as contentPopularAudio_enqueuePopularContentForAudio,
+  getPopularContentForAudioQueue as contentPopularAudio_getPopularContentForAudioQueue,
+  populateAudioQueue as contentPopularAudio_populateAudioQueue,
+} from "@repo/backend/confect/modules/content/popularAudioQueue.service";
 import { Layer } from "effect";
 
 const contents_mutations_views_recordContentViewImpl = FunctionImpl.make(
   api,
   "contents.mutations.views",
   "recordContentView",
-  (args) => content_views.recordContentView(args)
+  (args) => contentViews_recordContentView(args)
 );
 
 const contents_mutations_audio_enqueuePopularContentForAudioImpl =
@@ -19,7 +30,7 @@ const contents_mutations_audio_enqueuePopularContentForAudioImpl =
     api,
     "contents.mutations.audio",
     "enqueuePopularContentForAudio",
-    (args) => content_popular_audio.enqueuePopularContentForAudio(args)
+    (args) => contentPopularAudio_enqueuePopularContentForAudio(args)
   );
 
 const contents_queries_audio_getPopularContentForAudioQueueImpl =
@@ -27,35 +38,35 @@ const contents_queries_audio_getPopularContentForAudioQueueImpl =
     api,
     "contents.queries.audio",
     "getPopularContentForAudioQueue",
-    (_args) => content_popular_audio.getPopularContentForAudioQueue()
+    (_args) => contentPopularAudio_getPopularContentForAudioQueue()
   );
 
 const contents_queries_recent_getRecentlyViewedImpl = FunctionImpl.make(
   api,
   "contents.queries.recent",
   "getRecentlyViewed",
-  (args) => content_views.getRecentlyViewed(args)
+  (args) => contentViews_getRecentlyViewed(args)
 );
 
 const contents_actions_queue_populateAudioQueueImpl = FunctionImpl.make(
   api,
   "contents.actions.queue",
   "populateAudioQueue",
-  (_args) => content_popular_audio.populateAudioQueue()
+  (_args) => contentPopularAudio_populateAudioQueue()
 );
 
 const contents_mutations_search_bulkSyncQuranSearchImpl = FunctionImpl.make(
   api,
   "contents.mutations.search",
   "bulkSyncQuranSearch",
-  (args) => content_search_writes.bulkSyncQuranSearch(args)
+  (args) => contentSearchWrites_bulkSyncQuranSearch(args)
 );
 
 const contents_queries_search_searchImpl = FunctionImpl.make(
   api,
   "contents.queries.search",
   "search",
-  (args) => content_search_queries.search(args)
+  (args) => contentSearchQueries_search(args)
 );
 
 const contentsActionsQueueImpl = GroupImpl.make(
@@ -68,7 +79,7 @@ const contents_mutations_analytics_processContentAnalyticsPartitionImpl =
     api,
     "contents.mutations.analytics",
     "processContentAnalyticsPartition",
-    (args) => content_analytics.processContentAnalyticsPartition(args)
+    (args) => contentAnalytics_processContentAnalyticsPartition(args)
   );
 
 const contents_mutations_analytics_scheduleContentAnalyticsPartitionImpl =
@@ -76,7 +87,7 @@ const contents_mutations_analytics_scheduleContentAnalyticsPartitionImpl =
     api,
     "contents.mutations.analytics",
     "scheduleContentAnalyticsPartition",
-    (args) => content_analytics.scheduleContentAnalyticsPartition(args)
+    (args) => contentAnalytics_scheduleContentAnalyticsPartition(args)
   );
 
 const contents_mutations_analytics_scheduleContentAnalyticsPartitionsImpl =
@@ -84,7 +95,7 @@ const contents_mutations_analytics_scheduleContentAnalyticsPartitionsImpl =
     api,
     "contents.mutations.analytics",
     "scheduleContentAnalyticsPartitions",
-    (_args) => content_analytics.scheduleContentAnalyticsPartitions()
+    (_args) => contentAnalytics_scheduleContentAnalyticsPartitions()
   );
 
 const contentsMutationsAnalyticsImpl = GroupImpl.make(

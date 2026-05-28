@@ -1,6 +1,10 @@
 import { Ref } from "@confect/core";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { workflow } from "@repo/backend/confect/modules/operations/workflow";
 import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import { IrtError } from "@repo/backend/confect/modules/tryout/irt.errors";
@@ -9,7 +13,7 @@ import {
   IRT_QUEUE_CLEANUP_BATCH_SIZE,
   IRT_SCALE_QUALITY_REFRESH_CLAIM_TIMEOUT_MS,
 } from "@repo/backend/confect/modules/tryout/irt.policy";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option } from "effect";
 
 const MAX_CALIBRATION_QUEUE_ROWS_PER_ATTEMPT = 2;
 
@@ -17,8 +21,13 @@ const MAX_CALIBRATION_QUEUE_ROWS_PER_ATTEMPT = 2;
 export const startCalibrationRunWorkflow = Effect.fn(
   "irt.queue.startCalibrationRunWorkflow"
 )(function* (ctx: ConvexMutationCtx, setId: Id<"exerciseSets">) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const now = yield* Clock.currentTimeMillis;
-  const set = yield* Effect.promise(() => ctx.db.get(setId));
+  const set = yield* reader
+    .table("exerciseSets")
+    .get(setId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!set) {
     return yield* Effect.fail(
@@ -29,33 +38,35 @@ export const startCalibrationRunWorkflow = Effect.fn(
     );
   }
 
-  const latestRun = yield* Effect.promise(() =>
-    ctx.db
-      .query("irtCalibrationRuns")
-      .withIndex("by_setId_and_startedAt", (query) => query.eq("setId", setId))
-      .order("desc")
-      .first()
-  );
+  const latestRun = yield* reader
+    .table("irtCalibrationRuns")
+    .index(
+      "by_setId_and_startedAt",
+      (query) => query.eq("setId", setId),
+      "desc"
+    )
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 
   if (latestRun?.status === "running") {
     return null;
   }
 
-  const calibrationRunId = yield* Effect.promise(() =>
-    ctx.db.insert("irtCalibrationRuns", {
-      attemptCount: 0,
-      iterationCount: 0,
-      maxParameterDelta: 0,
-      model: IRT_OPERATIONAL_MODEL,
-      questionCount: set.questionCount,
-      responseCount: 0,
-      setId,
-      startedAt: now,
-      status: "running",
-      updatedAt: now,
-    })
-  );
+  const calibrationRunId = yield* writer.table("irtCalibrationRuns").insert({
+    attemptCount: 0,
+    iterationCount: 0,
+    maxParameterDelta: 0,
+    model: IRT_OPERATIONAL_MODEL,
+    questionCount: set.questionCount,
+    responseCount: 0,
+    setId,
+    startedAt: now,
+    status: "running",
+    updatedAt: now,
+  });
 
+  // The Convex Workflow component starts with native ctx/function references.
+  // Reference: https://confect.dev/server/components
   yield* Effect.promise(() =>
     workflow.start(
       ctx,
@@ -73,15 +84,14 @@ export const startCalibrationRunWorkflow = Effect.fn(
 /** Finds the unique pending calibration queue row for one attempt. */
 export const getPendingCalibrationQueueEntryForAttempt = Effect.fn(
   "irt.queue.getPendingCalibrationQueueEntryForAttempt"
-)(function* (ctx: ConvexMutationCtx, attemptId: Id<"exerciseAttempts">) {
-  const queueEntries = yield* Effect.promise(() =>
-    ctx.db
-      .query("irtCalibrationQueue")
-      .withIndex("by_attemptId_and_enqueuedAt", (query) =>
-        query.eq("attemptId", attemptId)
-      )
-      .take(MAX_CALIBRATION_QUEUE_ROWS_PER_ATTEMPT)
-  );
+)(function* (attemptId: Id<"exerciseAttempts">) {
+  const reader = yield* DatabaseReader;
+  const queueEntries = yield* reader
+    .table("irtCalibrationQueue")
+    .index("by_attemptId_and_enqueuedAt", (query) =>
+      query.eq("attemptId", attemptId)
+    )
+    .take(MAX_CALIBRATION_QUEUE_ROWS_PER_ATTEMPT);
 
   if (queueEntries.length <= 1) {
     return queueEntries[0] ?? null;
@@ -98,27 +108,22 @@ export const getPendingCalibrationQueueEntryForAttempt = Effect.fn(
 /** Ensures one pending calibration queue row exists for the attempt. */
 export const ensurePendingCalibrationQueueEntry = Effect.fn(
   "irt.queue.ensurePendingCalibrationQueueEntry"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly attemptId: Id<"exerciseAttempts">;
-    readonly enqueuedAt: number;
-    readonly setId: Id<"exerciseSets">;
-  }
-) {
+)(function* (args: {
+  readonly attemptId: Id<"exerciseAttempts">;
+  readonly enqueuedAt: number;
+  readonly setId: Id<"exerciseSets">;
+}) {
+  const writer = yield* DatabaseWriter;
   const existingQueueEntry = yield* getPendingCalibrationQueueEntryForAttempt(
-    ctx,
     args.attemptId
   );
 
   if (!existingQueueEntry) {
-    yield* Effect.promise(() =>
-      ctx.db.insert("irtCalibrationQueue", {
-        attemptId: args.attemptId,
-        enqueuedAt: args.enqueuedAt,
-        setId: args.setId,
-      })
-    );
+    yield* writer.table("irtCalibrationQueue").insert({
+      attemptId: args.attemptId,
+      enqueuedAt: args.enqueuedAt,
+      setId: args.setId,
+    });
     return null;
   }
 
@@ -126,12 +131,10 @@ export const ensurePendingCalibrationQueueEntry = Effect.fn(
     return null;
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(existingQueueEntry._id, {
-      enqueuedAt: args.enqueuedAt,
-      setId: args.setId,
-    })
-  );
+  yield* writer.table("irtCalibrationQueue").patch(existingQueueEntry._id, {
+    enqueuedAt: args.enqueuedAt,
+    setId: args.setId,
+  });
 
   return null;
 });
@@ -139,59 +142,37 @@ export const ensurePendingCalibrationQueueEntry = Effect.fn(
 /** Removes one pending calibration queue row for an attempt. */
 export const removePendingCalibrationQueueEntry = Effect.fn(
   "irt.queue.removePendingCalibrationQueueEntry"
-)(function* (ctx: ConvexMutationCtx, attemptId: Id<"exerciseAttempts">) {
-  const existingQueueEntry = yield* getPendingCalibrationQueueEntryForAttempt(
-    ctx,
-    attemptId
-  );
+)(function* (attemptId: Id<"exerciseAttempts">) {
+  const writer = yield* DatabaseWriter;
+  const existingQueueEntry =
+    yield* getPendingCalibrationQueueEntryForAttempt(attemptId);
 
   if (!existingQueueEntry) {
     return null;
   }
 
-  yield* Effect.promise(() => ctx.db.delete(existingQueueEntry._id));
+  yield* writer.table("irtCalibrationQueue").delete(existingQueueEntry._id);
   return null;
 });
-
-/** Builds the pending queue query for one calibration set. */
-export function getPendingCalibrationQueueQuery(
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly lastSuccessfulRunStartedAt: number | undefined;
-    readonly setId: Id<"exerciseSets">;
-  }
-) {
-  return ctx.db
-    .query("irtCalibrationQueue")
-    .withIndex("by_setId_and_enqueuedAt", (query) => {
-      const setQuery = query.eq("setId", args.setId);
-
-      if (args.lastSuccessfulRunStartedAt === undefined) {
-        return setQuery;
-      }
-
-      return setQuery.gt("enqueuedAt", args.lastSuccessfulRunStartedAt);
-    });
-}
 
 /** Deletes stale calibration queue rows through a bounded batch. */
 export const cleanupCalibrationQueueEntriesBatch = Effect.fn(
   "irt.queue.cleanupCalibrationQueueEntriesBatch"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: { readonly setId: Id<"exerciseSets">; readonly throughAt: number }
-) {
-  const queueEntries = yield* Effect.promise(() =>
-    ctx.db
-      .query("irtCalibrationQueue")
-      .withIndex("by_setId_and_enqueuedAt", (query) =>
-        query.eq("setId", args.setId).lte("enqueuedAt", args.throughAt)
-      )
-      .take(IRT_QUEUE_CLEANUP_BATCH_SIZE)
-  );
+)(function* (args: {
+  readonly setId: Id<"exerciseSets">;
+  readonly throughAt: number;
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const queueEntries = yield* reader
+    .table("irtCalibrationQueue")
+    .index("by_setId_and_enqueuedAt", (query) =>
+      query.eq("setId", args.setId).lte("enqueuedAt", args.throughAt)
+    )
+    .take(IRT_QUEUE_CLEANUP_BATCH_SIZE);
 
   for (const entry of queueEntries) {
-    yield* Effect.promise(() => ctx.db.delete(entry._id));
+    yield* writer.table("irtCalibrationQueue").delete(entry._id);
   }
 
   return queueEntries.length;
@@ -200,18 +181,18 @@ export const cleanupCalibrationQueueEntriesBatch = Effect.fn(
 /** Deletes scale-publication queue rows for one tryout through a bounded batch. */
 export const cleanupScalePublicationQueueEntriesBatch = Effect.fn(
   "irt.queue.cleanupScalePublicationQueueEntriesBatch"
-)(function* (ctx: ConvexMutationCtx, tryoutId: Id<"tryouts">) {
-  const queueEntries = yield* Effect.promise(() =>
-    ctx.db
-      .query("irtScalePublicationQueue")
-      .withIndex("by_tryoutId_and_enqueuedAt", (query) =>
-        query.eq("tryoutId", tryoutId)
-      )
-      .take(IRT_QUEUE_CLEANUP_BATCH_SIZE)
-  );
+)(function* (tryoutId: Id<"tryouts">) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const queueEntries = yield* reader
+    .table("irtScalePublicationQueue")
+    .index("by_tryoutId_and_enqueuedAt", (query) =>
+      query.eq("tryoutId", tryoutId)
+    )
+    .take(IRT_QUEUE_CLEANUP_BATCH_SIZE);
 
   for (const entry of queueEntries) {
-    yield* Effect.promise(() => ctx.db.delete(entry._id));
+    yield* writer.table("irtScalePublicationQueue").delete(entry._id);
   }
 
   return queueEntries.length;
@@ -220,25 +201,24 @@ export const cleanupScalePublicationQueueEntriesBatch = Effect.fn(
 /** Enqueues or replaces a stale scale-quality refresh row. */
 export const enqueueScaleQualityRefresh = Effect.fn(
   "irt.queue.enqueueScaleQualityRefresh"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: { readonly enqueuedAt: number; readonly tryoutId: Id<"tryouts"> }
-) {
+)(function* (args: {
+  readonly enqueuedAt: number;
+  readonly tryoutId: Id<"tryouts">;
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const now = yield* Clock.currentTimeMillis;
-  const existingEntry = yield* Effect.promise(() =>
-    ctx.db
-      .query("irtScaleQualityRefreshQueue")
-      .withIndex("by_tryoutId", (query) => query.eq("tryoutId", args.tryoutId))
-      .first()
-  );
+  const existingEntry = yield* reader
+    .table("irtScaleQualityRefreshQueue")
+    .index("by_tryoutId", (query) => query.eq("tryoutId", args.tryoutId))
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 
   if (!existingEntry) {
-    yield* Effect.promise(() =>
-      ctx.db.insert("irtScaleQualityRefreshQueue", {
-        enqueuedAt: args.enqueuedAt,
-        tryoutId: args.tryoutId,
-      })
-    );
+    yield* writer.table("irtScaleQualityRefreshQueue").insert({
+      enqueuedAt: args.enqueuedAt,
+      tryoutId: args.tryoutId,
+    });
     return true;
   }
 
@@ -251,12 +231,12 @@ export const enqueueScaleQualityRefresh = Effect.fn(
     return false;
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.replace(existingEntry._id, {
+  yield* writer
+    .table("irtScaleQualityRefreshQueue")
+    .replace(existingEntry._id, {
       enqueuedAt: args.enqueuedAt,
       tryoutId: args.tryoutId,
-    })
-  );
+    });
 
   return true;
 });

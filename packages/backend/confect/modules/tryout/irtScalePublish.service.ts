@@ -1,7 +1,10 @@
-import { Ref } from "@confect/core";
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { IrtError } from "@repo/backend/confect/modules/tryout/irt.errors";
 import { getProvisionalParams } from "@repo/backend/confect/modules/tryout/irt.estimation";
 import { IRT_OPERATIONAL_MODEL } from "@repo/backend/confect/modules/tryout/irt.policy";
@@ -18,7 +21,7 @@ import {
   getPublishableScaleSnapshot,
   hasPublishedScaleChanged,
 } from "@repo/backend/confect/modules/tryout/irtScaleSnapshot.service";
-import { Clock, Effect } from "effect";
+import { Clock, Duration, Effect } from "effect";
 
 interface ScaleItem {
   readonly calibrationRunId: Id<"irtCalibrationRuns">;
@@ -30,16 +33,15 @@ interface ScaleItem {
 
 /** Persists one frozen IRT scale version and its item rows. */
 const publishScaleVersion = Effect.fn("irt.scales.publishScaleVersion")(
-  function* (
-    db: ConvexMutationCtx["db"],
-    args: {
-      readonly items: readonly ScaleItem[];
-      readonly publishedAt: number;
-      readonly questionCount: number;
-      readonly status: "official" | "provisional";
-      readonly tryoutId: Id<"tryouts">;
-    }
-  ) {
+  function* (args: {
+    readonly items: readonly ScaleItem[];
+    readonly publishedAt: number;
+    readonly questionCount: number;
+    readonly status: "official" | "provisional";
+    readonly tryoutId: Id<"tryouts">;
+  }) {
+    const writer = yield* DatabaseWriter;
+
     if (args.items.length !== args.questionCount) {
       return yield* Effect.fail(
         new IrtError({
@@ -61,27 +63,23 @@ const publishScaleVersion = Effect.fn("irt.scales.publishScaleVersion")(
       );
     }
 
-    const scaleVersionId = yield* Effect.promise(() =>
-      db.insert("irtScaleVersions", {
-        model: IRT_OPERATIONAL_MODEL,
-        publishedAt: args.publishedAt,
-        questionCount: args.questionCount,
-        status: args.status,
-        tryoutId: args.tryoutId,
-      })
-    );
+    const scaleVersionId = yield* writer.table("irtScaleVersions").insert({
+      model: IRT_OPERATIONAL_MODEL,
+      publishedAt: args.publishedAt,
+      questionCount: args.questionCount,
+      status: args.status,
+      tryoutId: args.tryoutId,
+    });
 
     for (const item of args.items) {
-      yield* Effect.promise(() =>
-        db.insert("irtScaleVersionItems", {
-          calibrationRunId: item.calibrationRunId,
-          difficulty: item.difficulty,
-          discrimination: item.discrimination,
-          questionId: item.questionId,
-          scaleVersionId,
-          setId: item.setId,
-        })
-      );
+      yield* writer.table("irtScaleVersionItems").insert({
+        calibrationRunId: item.calibrationRunId,
+        difficulty: item.difficulty,
+        discrimination: item.discrimination,
+        questionId: item.questionId,
+        scaleVersionId,
+        setId: item.setId,
+      });
     }
 
     return scaleVersionId;
@@ -91,17 +89,19 @@ const publishScaleVersion = Effect.fn("irt.scales.publishScaleVersion")(
 /** Creates bootstrap scale items from calibrated params or provisional defaults. */
 const buildBootstrapScaleItems = Effect.fn(
   "irt.scales.buildBootstrapScaleItems"
-)(function* (
-  db: ConvexMutationCtx["db"],
-  args: { readonly now: number; readonly tryoutId: Id<"tryouts"> }
-) {
-  const tryout = yield* Effect.promise(() => db.get(args.tryoutId));
+)(function* (args: { readonly now: number; readonly tryoutId: Id<"tryouts"> }) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const tryout = yield* reader
+    .table("tryouts")
+    .get(args.tryoutId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!tryout) {
     return null;
   }
 
-  const tryoutSets = yield* loadValidatedScaleTryoutSets(db, tryout);
+  const tryoutSets = yield* loadValidatedScaleTryoutSets(tryout);
 
   if (tryoutSets.length === 0) {
     return null;
@@ -111,10 +111,7 @@ const buildBootstrapScaleItems = Effect.fn(
     tryoutSets,
     ({ partSet, set }) =>
       Effect.gen(function* () {
-        const { itemParams, questions } = yield* loadValidatedScaleSetData(
-          db,
-          set
-        );
+        const { itemParams, questions } = yield* loadValidatedScaleSetData(set);
 
         if (questions.length === 0) {
           return null;
@@ -123,8 +120,9 @@ const buildBootstrapScaleItems = Effect.fn(
         const paramsByQuestionId = new Map(
           itemParams.map((params) => [params.questionId, params])
         );
-        const bootstrapRunId = yield* Effect.promise(() =>
-          db.insert("irtCalibrationRuns", {
+        const bootstrapRunId = yield* writer
+          .table("irtCalibrationRuns")
+          .insert({
             attemptCount: 0,
             completedAt: args.now,
             iterationCount: 0,
@@ -136,8 +134,7 @@ const buildBootstrapScaleItems = Effect.fn(
             startedAt: args.now,
             status: "completed",
             updatedAt: args.now,
-          })
-        );
+          });
 
         return questions.map((question) => {
           const params = paramsByQuestionId.get(question._id);
@@ -171,17 +168,15 @@ const buildBootstrapScaleItems = Effect.fn(
 /** Publishes a provisional scale version when a tryout has enough set data. */
 const publishBootstrapScaleVersion = Effect.fn(
   "irt.scales.publishBootstrapScaleVersion"
-)(function* (
-  db: ConvexMutationCtx["db"],
-  args: { readonly now: number; readonly tryoutId: Id<"tryouts"> }
-) {
-  const items = yield* buildBootstrapScaleItems(db, args);
+)(function* (args: { readonly now: number; readonly tryoutId: Id<"tryouts"> }) {
+  const reader = yield* DatabaseReader;
+  const items = yield* buildBootstrapScaleItems(args);
 
   if (!items) {
     return null;
   }
 
-  const scaleVersionId = yield* publishScaleVersion(db, {
+  const scaleVersionId = yield* publishScaleVersion({
     items,
     publishedAt: args.now,
     questionCount: items.length,
@@ -189,24 +184,25 @@ const publishBootstrapScaleVersion = Effect.fn(
     tryoutId: args.tryoutId,
   });
 
-  return yield* Effect.promise(() => db.get(scaleVersionId));
+  return yield* reader
+    .table("irtScaleVersions")
+    .get(scaleVersionId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 });
 
 /** Publishes an official scale version from a validated snapshot. */
 const publishOfficialScaleVersion = Effect.fn(
   "irt.scales.publishOfficialScaleVersion"
-)(function* (
-  db: ConvexMutationCtx["db"],
-  args: {
-    readonly now: number;
-    readonly snapshot: {
-      readonly items: readonly ScaleItem[];
-      readonly questionCount: number;
-    };
-    readonly tryoutId: Id<"tryouts">;
-  }
-) {
-  const scaleVersionId = yield* publishScaleVersion(db, {
+)(function* (args: {
+  readonly now: number;
+  readonly snapshot: {
+    readonly items: readonly ScaleItem[];
+    readonly questionCount: number;
+  };
+  readonly tryoutId: Id<"tryouts">;
+}) {
+  const reader = yield* DatabaseReader;
+  const scaleVersionId = yield* publishScaleVersion({
     items: args.snapshot.items,
     publishedAt: args.now,
     questionCount: args.snapshot.questionCount,
@@ -214,32 +210,29 @@ const publishOfficialScaleVersion = Effect.fn(
     tryoutId: args.tryoutId,
   });
 
-  return yield* Effect.promise(() => db.get(scaleVersionId));
+  return yield* reader
+    .table("irtScaleVersions")
+    .get(scaleVersionId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 });
 
 /** Reuses the latest official scale when the publishable snapshot is unchanged. */
 const getUnchangedOfficialScaleVersion = Effect.fn(
   "irt.scales.getUnchangedOfficialScaleVersion"
-)(function* (
-  db: ConvexMutationCtx["db"],
-  args: {
-    readonly latestScaleVersion: Doc<"irtScaleVersions"> | null;
-    readonly snapshot: {
-      readonly items: readonly ScaleItem[];
-      readonly questionCount: number;
-    };
-  }
-) {
+)(function* (args: {
+  readonly latestScaleVersion: Doc<"irtScaleVersions"> | null;
+  readonly snapshot: {
+    readonly items: readonly ScaleItem[];
+    readonly questionCount: number;
+  };
+}) {
   if (
     !(args.latestScaleVersion && args.latestScaleVersion.status === "official")
   ) {
     return null;
   }
 
-  const latestScaleItems = yield* getScaleVersionItems(
-    db,
-    args.latestScaleVersion
-  );
+  const latestScaleItems = yield* getScaleVersionItems(args.latestScaleVersion);
 
   if (
     hasPublishedScaleChanged({
@@ -256,21 +249,18 @@ const getUnchangedOfficialScaleVersion = Effect.fn(
 /** Resolves whether official scale publication is ready, unchanged, or published. */
 const resolveOfficialScaleDecision = Effect.fn(
   "irt.scales.resolveOfficialScaleDecision"
-)(function* (
-  db: ConvexMutationCtx["db"],
-  args: {
-    readonly latestScaleVersion: Doc<"irtScaleVersions"> | null;
-    readonly now: number;
-    readonly tryoutId: Id<"tryouts">;
-  }
-) {
-  const snapshot = yield* getPublishableScaleSnapshot(db, args.tryoutId);
+)(function* (args: {
+  readonly latestScaleVersion: Doc<"irtScaleVersions"> | null;
+  readonly now: number;
+  readonly tryoutId: Id<"tryouts">;
+}) {
+  const snapshot = yield* getPublishableScaleSnapshot(args.tryoutId);
 
   if (!snapshot) {
     return { kind: "not-ready" as const };
   }
 
-  const unchangedOfficialScale = yield* getUnchangedOfficialScaleVersion(db, {
+  const unchangedOfficialScale = yield* getUnchangedOfficialScaleVersion({
     latestScaleVersion: args.latestScaleVersion,
     snapshot,
   });
@@ -282,7 +272,7 @@ const resolveOfficialScaleDecision = Effect.fn(
     };
   }
 
-  const scaleVersion = yield* publishOfficialScaleVersion(db, {
+  const scaleVersion = yield* publishOfficialScaleVersion({
     now: args.now,
     snapshot,
     tryoutId: args.tryoutId,
@@ -306,13 +296,9 @@ const resolveOfficialScaleDecision = Effect.fn(
 /** Returns the latest usable scale version, publishing provisional or official when needed. */
 export const getOrPublishScaleVersionForTryout = Effect.fn(
   "irt.scales.getOrPublishScaleVersionForTryout"
-)(function* (
-  db: ConvexMutationCtx["db"],
-  args: { readonly now: number; readonly tryoutId: Id<"tryouts"> }
-) {
-  const scaleQuality = yield* evaluateTryoutScaleQuality(db, args);
+)(function* (args: { readonly now: number; readonly tryoutId: Id<"tryouts"> }) {
+  const scaleQuality = yield* evaluateTryoutScaleQuality(args);
   const latestScaleVersion = yield* getLatestScaleVersionForTryout(
-    db,
     args.tryoutId
   );
 
@@ -321,10 +307,10 @@ export const getOrPublishScaleVersionForTryout = Effect.fn(
       return latestScaleVersion;
     }
 
-    return yield* publishBootstrapScaleVersion(db, args);
+    return yield* publishBootstrapScaleVersion(args);
   }
 
-  const officialScaleDecision = yield* resolveOfficialScaleDecision(db, {
+  const officialScaleDecision = yield* resolveOfficialScaleDecision({
     latestScaleVersion,
     now: args.now,
     tryoutId: args.tryoutId,
@@ -335,7 +321,7 @@ export const getOrPublishScaleVersionForTryout = Effect.fn(
       return latestScaleVersion;
     }
 
-    return yield* publishBootstrapScaleVersion(db, args);
+    return yield* publishBootstrapScaleVersion(args);
   }
 
   return officialScaleDecision.scaleVersion;
@@ -344,8 +330,13 @@ export const getOrPublishScaleVersionForTryout = Effect.fn(
 /** Publishes an official scale if ready and schedules score promotion. */
 export const publishTryoutScaleVersionIfNeeded = Effect.fn(
   "irt.scales.publishTryoutScaleVersionIfNeeded"
-)(function* (ctx: ConvexMutationCtx, tryoutId: Id<"tryouts">) {
-  const tryout = yield* Effect.promise(() => ctx.db.get(tryoutId));
+)(function* (tryoutId: Id<"tryouts">) {
+  const reader = yield* DatabaseReader;
+  const scheduler = yield* Scheduler;
+  const tryout = yield* reader
+    .table("tryouts")
+    .get(tryoutId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!tryout) {
     return yield* Effect.fail(
@@ -357,7 +348,7 @@ export const publishTryoutScaleVersionIfNeeded = Effect.fn(
   }
 
   const now = yield* Clock.currentTimeMillis;
-  const scaleQuality = yield* evaluateTryoutScaleQuality(ctx.db, {
+  const scaleQuality = yield* evaluateTryoutScaleQuality({
     now,
     tryoutId: tryout._id,
   });
@@ -366,11 +357,8 @@ export const publishTryoutScaleVersionIfNeeded = Effect.fn(
     return { kind: "not-ready" as const };
   }
 
-  const latestScaleVersion = yield* getLatestScaleVersionForTryout(
-    ctx.db,
-    tryout._id
-  );
-  const officialScaleDecision = yield* resolveOfficialScaleDecision(ctx.db, {
+  const latestScaleVersion = yield* getLatestScaleVersionForTryout(tryout._id);
+  const officialScaleDecision = yield* resolveOfficialScaleDecision({
     latestScaleVersion,
     now,
     tryoutId: tryout._id,
@@ -388,18 +376,14 @@ export const publishTryoutScaleVersionIfNeeded = Effect.fn(
   }
 
   const scaleVersion = officialScaleDecision.scaleVersion;
-  yield* Effect.promise(() =>
-    ctx.scheduler.runAfter(
-      0,
-      Ref.getFunctionReference(
-        refs.internal.tryouts.mutations.internalFunctions.scoring
-          .promoteProvisionalTryoutScores
-      ),
-      {
-        scaleVersionId: scaleVersion._id,
-        tryoutId: tryout._id,
-      }
-    )
+  yield* scheduler.runAfter(
+    Duration.millis(0),
+    refs.internal.tryouts.mutations.internalFunctions.scoring
+      .promoteProvisionalTryoutScores,
+    {
+      scaleVersionId: scaleVersion._id,
+      tryoutId: tryout._id,
+    }
   );
 
   return { kind: "published" as const, scaleVersionId: scaleVersion._id };

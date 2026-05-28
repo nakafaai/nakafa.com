@@ -8,7 +8,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { ConvexFunctionReturn } from "@repo/backend/confect/modules/shared/convexReferences";
-import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   Autocomplete,
   AutocompleteCollection,
@@ -28,7 +27,7 @@ import {
 } from "@repo/design-system/components/ui/popover";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
-import { useConvexAuth, usePaginatedQuery } from "convex/react";
+import { useConvexAuth } from "convex/react";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
@@ -36,6 +35,7 @@ import { type ReactNode, useTransition } from "react";
 import { useTryoutSet } from "@/components/tryout/providers/set-provider";
 import { TryoutScoreCard } from "@/components/tryout/score-card";
 import { tryoutSearchParsers } from "@/components/tryout/utils/attempt-search";
+import { usePaginatedQuery } from "@/lib/confect/pagination";
 import { getLocale } from "@/lib/utils/date";
 
 type TryoutAttempt = NonNullable<
@@ -112,9 +112,7 @@ function TryoutAttemptHistoryControls({
     results: attemptHistory,
     status,
   } = usePaginatedQuery(
-    toConvexReference(
-      refs.public.tryouts.queries.me.history.getUserTryoutAttemptHistory
-    ),
+    refs.public.tryouts.queries.me.history.getUserTryoutAttemptHistory,
     shouldLoadAttemptHistory
       ? {
           attemptId: fallbackAttempt._id,

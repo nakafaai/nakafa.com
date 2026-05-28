@@ -8,7 +8,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -29,10 +28,10 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar";
-import { usePaginatedQuery } from "convex/react";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ComponentProps, useState } from "react";
+import { usePaginatedQuery } from "@/lib/confect/pagination";
 import { useUser } from "@/lib/context/use-user";
 
 type Props = ComponentProps<typeof Sidebar>;
@@ -131,7 +130,7 @@ function AiChatSidebarChats({ q }: { q?: string }) {
   const type = "study" as const;
   const queryArgs = searchQuery ? { q: searchQuery, type } : { type };
   const { results, status } = usePaginatedQuery(
-    toConvexReference(refs.public.chats.queries.getOwnChats),
+    refs.public.chats.queries.getOwnChats,
     queryArgs,
     { initialNumItems: 50 }
   );

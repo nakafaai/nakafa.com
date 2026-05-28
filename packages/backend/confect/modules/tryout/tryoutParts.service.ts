@@ -1,10 +1,9 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import type {
-  MutationCtx as ConvexMutationCtx,
-  QueryCtx as ConvexQueryCtx,
+import {
+  DatabaseReader,
+  DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { IrtError } from "@repo/backend/confect/modules/tryout/irt.errors";
-import { getAll } from "convex-helpers/server/relationships";
 import { Effect } from "effect";
 
 interface TryoutPartSnapshot {
@@ -94,18 +93,17 @@ export function buildTryoutPartRouteMappings(args: PartRouteMappingInput) {
 /** Loads the ordered tryout part mappings and validates their shape. */
 export const loadValidatedTryoutPartSets = Effect.fn(
   "tryouts.parts.loadValidatedTryoutPartSets"
-)(function* (
-  db: ConvexQueryCtx["db"],
-  args: { readonly partCount: number; readonly tryoutId: Id<"tryouts"> }
-) {
-  const tryoutPartSets = yield* Effect.promise(() =>
-    db
-      .query("tryoutPartSets")
-      .withIndex("by_tryoutId_and_partIndex", (query) =>
-        query.eq("tryoutId", args.tryoutId)
-      )
-      .take(args.partCount + 1)
-  );
+)(function* (args: {
+  readonly partCount: number;
+  readonly tryoutId: Id<"tryouts">;
+}) {
+  const reader = yield* DatabaseReader;
+  const tryoutPartSets = yield* reader
+    .table("tryoutPartSets")
+    .index("by_tryoutId_and_partIndex", (query) =>
+      query.eq("tryoutId", args.tryoutId)
+    )
+    .take(args.partCount + 1);
 
   if (tryoutPartSets.length !== args.partCount) {
     return yield* Effect.fail(
@@ -177,65 +175,64 @@ export function resolveRequestedTryoutPart(
 /** Loads stable tryout part snapshots from current part-set mappings. */
 export const loadTryoutPartSnapshots = Effect.fn(
   "tryouts.parts.loadTryoutPartSnapshots"
-)(function* (
-  db: ConvexQueryCtx["db"],
-  args: { readonly partCount: number; readonly tryoutId: Id<"tryouts"> }
-) {
-  const tryoutPartSets = yield* loadValidatedTryoutPartSets(db, args);
-  const sets = yield* Effect.promise(() =>
-    getAll(
-      db,
-      "exerciseSets",
-      tryoutPartSets.map((partSet) => partSet.setId)
-    )
-  );
+)(function* (args: {
+  readonly partCount: number;
+  readonly tryoutId: Id<"tryouts">;
+}) {
+  const reader = yield* DatabaseReader;
+  const tryoutPartSets = yield* loadValidatedTryoutPartSets(args);
 
   return yield* Effect.all(
-    tryoutPartSets.map((tryoutPartSet, index) => {
-      const set = sets[index];
+    tryoutPartSets.map((tryoutPartSet) =>
+      Effect.gen(function* () {
+        const set = yield* reader
+          .table("exerciseSets")
+          .get(tryoutPartSet.setId)
+          .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-      if (!set) {
-        return Effect.fail(
-          new IrtError({
-            code: "INVALID_TRYOUT_STATE",
-            message: "Tryout is missing one of its exercise sets.",
-          })
-        );
-      }
+        if (!set) {
+          return yield* Effect.fail(
+            new IrtError({
+              code: "INVALID_TRYOUT_STATE",
+              message: "Tryout is missing one of its exercise sets.",
+            })
+          );
+        }
 
-      return Effect.succeed({
-        partIndex: tryoutPartSet.partIndex,
-        partKey: tryoutPartSet.partKey,
-        questionCount: set.questionCount,
-        setId: tryoutPartSet.setId,
-      });
-    })
+        return {
+          partIndex: tryoutPartSet.partIndex,
+          partKey: tryoutPartSet.partKey,
+          questionCount: set.questionCount,
+          setId: tryoutPartSet.setId,
+        };
+      })
+    )
   );
 });
 
 /** Synchronizes tryout-to-set mappings after content sync detects a tryout. */
 export const syncTryoutPartSetMappings = Effect.fn(
   "tryouts.parts.syncTryoutPartSetMappings"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly parts: readonly {
-      readonly partKey: string;
-      readonly setId: Id<"exerciseSets">;
-    }[];
-    readonly tryoutId: Id<"tryouts">;
-  }
-) {
-  const tryout = yield* Effect.promise(() => ctx.db.get(args.tryoutId));
+)(function* (args: {
+  readonly parts: readonly {
+    readonly partKey: string;
+    readonly setId: Id<"exerciseSets">;
+  }[];
+  readonly tryoutId: Id<"tryouts">;
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const tryout = yield* reader
+    .table("tryouts")
+    .get(args.tryoutId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
   const expectedPartCount = Math.max(args.parts.length, tryout?.partCount ?? 0);
-  const existingMappings = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryoutPartSets")
-      .withIndex("by_tryoutId_and_partIndex", (query) =>
-        query.eq("tryoutId", args.tryoutId)
-      )
-      .take(expectedPartCount + 1)
-  );
+  const existingMappings = yield* reader
+    .table("tryoutPartSets")
+    .index("by_tryoutId_and_partIndex", (query) =>
+      query.eq("tryoutId", args.tryoutId)
+    )
+    .take(expectedPartCount + 1);
 
   if (existingMappings.length > expectedPartCount) {
     return yield* Effect.fail(
@@ -281,14 +278,12 @@ export const syncTryoutPartSetMappings = Effect.fn(
     const existingMapping = mappingsByPartIndex.get(partIndex);
 
     if (!existingMapping) {
-      yield* Effect.promise(() =>
-        ctx.db.insert("tryoutPartSets", {
-          partIndex,
-          partKey: part.partKey,
-          setId: part.setId,
-          tryoutId: args.tryoutId,
-        })
-      );
+      yield* writer.table("tryoutPartSets").insert({
+        partIndex,
+        partKey: part.partKey,
+        setId: part.setId,
+        tryoutId: args.tryoutId,
+      });
       continue;
     }
 
@@ -299,12 +294,10 @@ export const syncTryoutPartSetMappings = Effect.fn(
       continue;
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.patch(existingMapping._id, {
-        partKey: part.partKey,
-        setId: part.setId,
-      })
-    );
+    yield* writer.table("tryoutPartSets").patch(existingMapping._id, {
+      partKey: part.partKey,
+      setId: part.setId,
+    });
   }
 
   const validPartIndexes = new Set(args.parts.map((_, partIndex) => partIndex));
@@ -314,7 +307,7 @@ export const syncTryoutPartSetMappings = Effect.fn(
       continue;
     }
 
-    yield* Effect.promise(() => ctx.db.delete(existingMapping._id));
+    yield* writer.table("tryoutPartSets").delete(existingMapping._id);
   }
 
   return true;

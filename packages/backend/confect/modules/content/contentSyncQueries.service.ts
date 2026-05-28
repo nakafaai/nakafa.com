@@ -1,6 +1,6 @@
-import { QueryCtx } from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { PaginationOptions } from "convex/server";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 type CountableTableName =
   | "articleContents"
@@ -51,10 +51,11 @@ export const countTablePage = Effect.fn("contentSync.queries.countTablePage")(
     paginationOpts: PaginationOptions;
     tableName: CountableTableName;
   }) {
-    const ctx = yield* QueryCtx;
-    const page = yield* Effect.promise(() =>
-      ctx.db.query(args.tableName).paginate(args.paginationOpts)
-    );
+    const reader = yield* DatabaseReader;
+    const page = yield* reader
+      .table(args.tableName)
+      .index("by_creation_time")
+      .paginate(args.paginationOpts);
 
     return {
       continueCursor: page.continueCursor,
@@ -71,10 +72,11 @@ export const listStaleContentPage = Effect.fn(
   paginationOpts: PaginationOptions;
   tableName: StaleContentTableName;
 }) {
-  const ctx = yield* QueryCtx;
-  const page = yield* Effect.promise(() =>
-    ctx.db.query(args.tableName).paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const page = yield* reader
+    .table(args.tableName)
+    .index("by_creation_time")
+    .paginate(args.paginationOpts);
 
   return {
     ...page,
@@ -90,10 +92,11 @@ export const listStaleContentPage = Effect.fn(
 export const listIntegrityExerciseQuestionsPage = Effect.fn(
   "contentSync.queries.listIntegrityExerciseQuestionsPage"
 )(function* (args: { paginationOpts: PaginationOptions }) {
-  const ctx = yield* QueryCtx;
-  const page = yield* Effect.promise(() =>
-    ctx.db.query("exerciseQuestions").paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const page = yield* reader
+    .table("exerciseQuestions")
+    .index("by_creation_time")
+    .paginate(args.paginationOpts);
 
   return {
     ...page,
@@ -109,10 +112,11 @@ export const listIntegrityExerciseQuestionsPage = Effect.fn(
 export const listIntegrityExerciseChoicesPage = Effect.fn(
   "contentSync.queries.listIntegrityExerciseChoicesPage"
 )(function* (args: { paginationOpts: PaginationOptions }) {
-  const ctx = yield* QueryCtx;
-  const page = yield* Effect.promise(() =>
-    ctx.db.query("exerciseChoices").paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const page = yield* reader
+    .table("exerciseChoices")
+    .index("by_creation_time")
+    .paginate(args.paginationOpts);
 
   return {
     ...page,
@@ -126,10 +130,11 @@ export const listIntegrityExerciseChoicesPage = Effect.fn(
 export const listIntegrityContentAuthorsPage = Effect.fn(
   "contentSync.queries.listIntegrityContentAuthorsPage"
 )(function* (args: { paginationOpts: PaginationOptions }) {
-  const ctx = yield* QueryCtx;
-  const page = yield* Effect.promise(() =>
-    ctx.db.query("contentAuthors").paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const page = yield* reader
+    .table("contentAuthors")
+    .index("by_creation_time")
+    .paginate(args.paginationOpts);
 
   return {
     ...page,
@@ -145,10 +150,11 @@ export const listIntegrityContentAuthorsPage = Effect.fn(
 export const listIntegrityArticleReferencesPage = Effect.fn(
   "contentSync.queries.listIntegrityArticleReferencesPage"
 )(function* (args: { paginationOpts: PaginationOptions }) {
-  const ctx = yield* QueryCtx;
-  const page = yield* Effect.promise(() =>
-    ctx.db.query("articleReferences").paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const page = yield* reader
+    .table("articleReferences")
+    .index("by_creation_time")
+    .paginate(args.paginationOpts);
 
   return {
     ...page,
@@ -162,10 +168,11 @@ export const listIntegrityArticleReferencesPage = Effect.fn(
 export const listIntegrityArticlesPage = Effect.fn(
   "contentSync.queries.listIntegrityArticlesPage"
 )(function* (args: { paginationOpts: PaginationOptions }) {
-  const ctx = yield* QueryCtx;
-  const page = yield* Effect.promise(() =>
-    ctx.db.query("articleContents").paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const page = yield* reader
+    .table("articleContents")
+    .index("by_creation_time")
+    .paginate(args.paginationOpts);
 
   return {
     ...page,
@@ -181,10 +188,11 @@ export const listIntegrityArticlesPage = Effect.fn(
 export const listIntegritySubjectSectionsPage = Effect.fn(
   "contentSync.queries.listIntegritySubjectSectionsPage"
 )(function* (args: { paginationOpts: PaginationOptions }) {
-  const ctx = yield* QueryCtx;
-  const page = yield* Effect.promise(() =>
-    ctx.db.query("subjectSections").paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const page = yield* reader
+    .table("subjectSections")
+    .index("by_creation_time")
+    .paginate(args.paginationOpts);
 
   return {
     ...page,
@@ -200,26 +208,23 @@ export const listIntegritySubjectSectionsPage = Effect.fn(
 export const getTryoutScaleIntegrity = Effect.fn(
   "contentSync.queries.getTryoutScaleIntegrity"
 )(function* (args: { paginationOpts: PaginationOptions }) {
-  const ctx = yield* QueryCtx;
-  const tryoutPage = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryouts")
-      .withIndex("by_isActive", (query) => query.eq("isActive", true))
-      .paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const tryoutPage = yield* reader
+    .table("tryouts")
+    .index("by_isActive", (query) => query.eq("isActive", true))
+    .paginate(args.paginationOpts);
   const scaleCandidates = yield* Effect.forEach(tryoutPage.page, (tryout) =>
     Effect.gen(function* () {
-      const scaleVersion = yield* Effect.promise(() =>
-        ctx.db
-          .query("irtScaleVersions")
-          .withIndex("by_tryoutId_and_publishedAt", (query) =>
-            query.eq("tryoutId", tryout._id)
-          )
-          .order("desc")
-          .first()
-      );
+      const scaleVersion = yield* reader
+        .table("irtScaleVersions")
+        .index(
+          "by_tryoutId_and_publishedAt",
+          (query) => query.eq("tryoutId", tryout._id),
+          "desc"
+        )
+        .first();
 
-      if (scaleVersion) {
+      if (Option.isSome(scaleVersion)) {
         return null;
       }
 

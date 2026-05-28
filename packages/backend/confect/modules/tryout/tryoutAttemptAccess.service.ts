@@ -1,22 +1,24 @@
-import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import { syncTryoutAttemptExpiry } from "@repo/backend/confect/modules/tryout/tryoutExpiry.service";
+import type { TryoutAttempts } from "@repo/backend/confect/modules/tryout/tryouts.tables";
 import { Effect } from "effect";
+
+type TryoutAttemptDoc = typeof TryoutAttempts.Doc.Type;
 
 /** Loads a tryout attempt and verifies the current user owns it. */
 export const requireOwnedTryoutAttempt = Effect.fn(
   "tryouts.access.requireOwnedTryoutAttempt"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly tryoutAttemptId: Id<"tryoutAttempts">;
-    readonly userId: Id<"users">;
-  }
-) {
-  const tryoutAttempt = yield* Effect.promise(() =>
-    ctx.db.get(args.tryoutAttemptId)
-  );
+)(function* (args: {
+  readonly tryoutAttemptId: Id<"tryoutAttempts">;
+  readonly userId: Id<"users">;
+}) {
+  const reader = yield* DatabaseReader;
+  const tryoutAttempt = yield* reader
+    .table("tryoutAttempts")
+    .get(args.tryoutAttemptId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!tryoutAttempt) {
     return yield* Effect.fail(
@@ -42,15 +44,11 @@ export const requireOwnedTryoutAttempt = Effect.fn(
 /** Re-checks expiry and requires an in-progress tryout attempt. */
 export const requireActiveTryoutAttemptAfterExpirySync = Effect.fn(
   "tryouts.access.requireActiveAfterExpirySync"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly now: number;
-    readonly tryoutAttempt: Doc<"tryoutAttempts">;
-  }
-) {
+)(function* (args: {
+  readonly now: number;
+  readonly tryoutAttempt: TryoutAttemptDoc;
+}) {
   const tryoutExpiry = yield* syncTryoutAttemptExpiry(
-    ctx,
     args.tryoutAttempt,
     args.now
   );
@@ -64,9 +62,11 @@ export const requireActiveTryoutAttemptAfterExpirySync = Effect.fn(
     );
   }
 
-  const currentTryoutAttempt = yield* Effect.promise(() =>
-    ctx.db.get(args.tryoutAttempt._id)
-  );
+  const reader = yield* DatabaseReader;
+  const currentTryoutAttempt = yield* reader
+    .table("tryoutAttempts")
+    .get(args.tryoutAttempt._id)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!currentTryoutAttempt) {
     return yield* Effect.fail(

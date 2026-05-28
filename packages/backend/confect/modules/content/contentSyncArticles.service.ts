@@ -1,5 +1,8 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/confect/modules/content/constants";
 import type {
   ArticleCategory,
@@ -19,7 +22,7 @@ import {
   resetAudioForContentHash,
   syncContentAuthorsWithCache,
 } from "@repo/backend/confect/modules/content/contentSyncHelpers.service";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option } from "effect";
 
 interface SyncedArticleReference {
   readonly authors: string;
@@ -49,7 +52,8 @@ interface SyncedArticle {
 export const bulkSyncArticles = Effect.fn(
   "contentSync.articles.bulkSyncArticles"
 )(function* (args: { articles: SyncedArticle[] }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
     functionName: "bulkSyncArticles",
     limit: CONTENT_SYNC_BATCH_LIMITS.articles,
@@ -66,17 +70,16 @@ export const bulkSyncArticles = Effect.fn(
   const allAuthorNames = args.articles.flatMap((article) =>
     article.authors.map((author) => author.name)
   );
-  const authorCache = yield* buildAuthorCache(ctx, allAuthorNames);
+  const authorCache = yield* buildAuthorCache(allAuthorNames);
 
   for (const article of args.articles) {
-    const existingArticle = yield* Effect.promise(() =>
-      ctx.db
-        .query("articleContents")
-        .withIndex("by_locale_and_slug", (query) =>
-          query.eq("locale", article.locale).eq("slug", article.slug)
-        )
-        .unique()
-    );
+    const existingArticle = yield* reader
+      .table("articleContents")
+      .index("by_locale_and_slug", (query) =>
+        query.eq("locale", article.locale).eq("slug", article.slug)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
     yield* syncContentSearch({
       contentHash: article.contentHash,
       description: article.description,
@@ -94,31 +97,27 @@ export const bulkSyncArticles = Effect.fn(
     }
 
     if (existingArticle) {
-      yield* Effect.promise(() =>
-        ctx.db.patch(existingArticle._id, {
-          articleSlug: article.articleSlug,
-          body: article.body,
-          category: article.category,
-          contentHash: article.contentHash,
-          date: article.date,
-          description: article.description,
-          syncedAt: now,
-          title: article.title,
-        })
-      );
+      yield* writer.table("articleContents").patch(existingArticle._id, {
+        articleSlug: article.articleSlug,
+        body: article.body,
+        category: article.category,
+        contentHash: article.contentHash,
+        date: article.date,
+        description: article.description,
+        syncedAt: now,
+        title: article.title,
+      });
       yield* resetAudioForContentHash({
         contentRef: { id: existingArticle._id, type: "article" },
         newHash: article.contentHash,
       });
       authorLinksCreated += yield* syncContentAuthorsWithCache(
-        ctx,
         existingArticle._id,
         "article",
         article.authors,
         authorCache
       );
       referencesCreated += yield* replaceArticleReferences(
-        ctx,
         existingArticle._id,
         article.references
       );
@@ -126,29 +125,25 @@ export const bulkSyncArticles = Effect.fn(
       continue;
     }
 
-    const articleId = yield* Effect.promise(() =>
-      ctx.db.insert("articleContents", {
-        articleSlug: article.articleSlug,
-        body: article.body,
-        category: article.category,
-        contentHash: article.contentHash,
-        date: article.date,
-        description: article.description,
-        locale: article.locale,
-        slug: article.slug,
-        syncedAt: now,
-        title: article.title,
-      })
-    );
+    const articleId = yield* writer.table("articleContents").insert({
+      articleSlug: article.articleSlug,
+      body: article.body,
+      category: article.category,
+      contentHash: article.contentHash,
+      date: article.date,
+      description: article.description,
+      locale: article.locale,
+      slug: article.slug,
+      syncedAt: now,
+      title: article.title,
+    });
     authorLinksCreated += yield* syncContentAuthorsWithCache(
-      ctx,
       articleId,
       "article",
       article.authors,
       authorCache
     );
     referencesCreated += yield* replaceArticleReferences(
-      ctx,
       articleId,
       article.references
     );
@@ -162,7 +157,8 @@ export const bulkSyncArticles = Effect.fn(
 export const deleteStaleArticles = Effect.fn(
   "contentSync.articles.deleteStaleArticles"
 )(function* (args: { articleIds: Id<"articleContents">[] }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
     functionName: "deleteStaleArticles",
     limit: CONTENT_SYNC_BATCH_LIMITS.staleArticles,
@@ -177,7 +173,10 @@ export const deleteStaleArticles = Effect.fn(
   let deleted = 0;
 
   for (const articleId of args.articleIds) {
-    const article = yield* Effect.promise(() => ctx.db.get(articleId));
+    const article = yield* reader
+      .table("articleContents")
+      .get(articleId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!article) {
       continue;
@@ -188,10 +187,10 @@ export const deleteStaleArticles = Effect.fn(
       route: article.slug,
       section: "articles",
     });
-    yield* deleteContentAuthorLinks(ctx, articleId, "article");
-    yield* deleteArticleReferencesForArticle(ctx, articleId);
+    yield* deleteContentAuthorLinks(articleId, "article");
+    yield* deleteArticleReferencesForArticle(articleId);
     yield* deleteContentSearch(searchRef.content_id);
-    yield* Effect.promise(() => ctx.db.delete(articleId));
+    yield* writer.table("articleContents").delete(articleId);
     deleted += 1;
   }
 

@@ -2,10 +2,8 @@
 
 import refs from "@repo/backend/confect/_generated/refs";
 import type { ConvexFunctionReturn } from "@repo/backend/confect/modules/shared/convexReferences";
-import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { usePaginatedQuery } from "convex/react";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useTryoutClock } from "@/components/tryout/hooks/use-tryout-clock";
@@ -25,6 +23,7 @@ import {
   TRYOUT_CATALOG_PAGE_SIZE,
 } from "@/components/tryout/utils/catalog";
 import { getTryoutSetHref } from "@/components/tryout/utils/routes";
+import { usePaginatedQuery } from "@/lib/confect/pagination";
 
 type ActiveTryoutCatalogPage = ConvexFunctionReturn<
   typeof refs.public.tryouts.queries.tryouts.getActiveTryoutCatalogPage
@@ -74,9 +73,7 @@ export function TryoutCatalogList({
     results: catalogEntries,
     status: catalogStatus,
   } = usePaginatedQuery(
-    toConvexReference(
-      refs.public.tryouts.queries.tryouts.getActiveTryoutCatalogPage
-    ),
+    refs.public.tryouts.queries.tryouts.getActiveTryoutCatalogPage,
     {
       locale,
       product,

@@ -9,7 +9,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -20,10 +19,13 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import { type PaginationStatus, usePaginatedQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
+import {
+  type PaginationStatus,
+  usePaginatedQuery,
+} from "@/lib/confect/pagination";
 import { useUser } from "@/lib/context/use-user";
 import { getLocale } from "@/lib/utils/date";
 
@@ -61,7 +63,7 @@ export function UserChatsList({
 
 function OwnChatsList() {
   const { results, status } = usePaginatedQuery(
-    toConvexReference(refs.public.chats.queries.getOwnChats),
+    refs.public.chats.queries.getOwnChats,
     { type: "study" },
     { initialNumItems: 50 }
   );
@@ -81,7 +83,7 @@ function PublicChatsList({
     ? { type, userId, visibility }
     : { type, userId };
   const { results, status } = usePaginatedQuery(
-    toConvexReference(refs.public.chats.queries.getChats),
+    refs.public.chats.queries.getChats,
     queryArgs,
     { initialNumItems: 50 }
   );

@@ -1,6 +1,9 @@
-import { Ref } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { TryoutAccessError } from "@repo/backend/confect/modules/tryout/tryoutAccess.errors";
 import { syncTryoutAccessGrantEntitlements } from "@repo/backend/confect/modules/tryout/tryoutAccessEntitlements.service";
@@ -9,15 +12,17 @@ import {
   getTryoutAccessEventByCode,
   getTryoutAccessGrantEndsAt,
 } from "@repo/backend/confect/modules/tryout/tryoutAccessShared.service";
-import { Clock, Effect } from "effect";
+import { Clock, Duration, Effect, Option } from "effect";
 
 /** Redeems an event access code for the current user. */
 export const redeemEventAccess = Effect.fn("tryoutAccess.redeemEventAccess")(
   function* (args: { readonly code: string }) {
-    const ctx = yield* MutationCtx;
-    const { appUser } = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const scheduler = yield* Scheduler;
+    const { appUser } = yield* requireAppUser();
     const now = yield* Clock.currentTimeMillis;
-    const eventAccess = yield* getTryoutAccessEventByCode(ctx.db, args.code);
+    const eventAccess = yield* getTryoutAccessEventByCode(args.code);
 
     if (!eventAccess) {
       yield* Effect.logWarning("Event access redeem denied: code not found.", {
@@ -36,16 +41,15 @@ export const redeemEventAccess = Effect.fn("tryoutAccess.redeemEventAccess")(
       );
     }
 
-    const existingGrant = yield* Effect.promise(() =>
-      ctx.db
-        .query("tryoutAccessGrants")
-        .withIndex("by_userId_and_campaignId", (query) =>
-          query
-            .eq("userId", appUser._id)
-            .eq("campaignId", eventAccess.campaign._id)
-        )
-        .unique()
-    );
+    const existingGrant = yield* reader
+      .table("tryoutAccessGrants")
+      .index("by_userId_and_campaignId", (query) =>
+        query
+          .eq("userId", appUser._id)
+          .eq("campaignId", eventAccess.campaign._id)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (existingGrant?.status === "active") {
       return {
@@ -84,42 +88,29 @@ export const redeemEventAccess = Effect.fn("tryoutAccess.redeemEventAccess")(
       campaign: eventAccess.campaign,
       redeemedAt: now,
     });
-    const grantId = yield* Effect.promise(() =>
-      ctx.db.insert("tryoutAccessGrants", {
-        campaignId: eventAccess.campaign._id,
-        endsAt,
-        linkId: eventAccess.link._id,
-        redeemedAt: now,
-        status: "active",
-        userId: appUser._id,
-      })
-    );
+    const grantId = yield* writer.table("tryoutAccessGrants").insert({
+      campaignId: eventAccess.campaign._id,
+      endsAt,
+      linkId: eventAccess.link._id,
+      redeemedAt: now,
+      status: "active",
+      userId: appUser._id,
+    });
 
     if (eventAccess.campaign.firstRedeemedAt == null) {
-      yield* Effect.promise(() =>
-        ctx.db.patch(eventAccess.campaign._id, { firstRedeemedAt: now })
-      );
+      yield* writer
+        .table("tryoutAccessCampaigns")
+        .patch(eventAccess.campaign._id, { firstRedeemedAt: now });
     }
 
-    const grant = yield* Effect.promise(() => ctx.db.get(grantId));
+    const grant = yield* reader.table("tryoutAccessGrants").get(grantId);
 
-    if (grant) {
-      yield* syncTryoutAccessGrantEntitlements(
-        ctx.db,
-        grant,
-        eventAccess.campaign
-      );
-    }
+    yield* syncTryoutAccessGrantEntitlements(grant, eventAccess.campaign);
 
-    yield* Effect.promise(() =>
-      ctx.scheduler.runAfter(
-        Math.max(0, endsAt - now),
-        Ref.getFunctionReference(
-          refs.internal.tryoutAccess.mutations.internalFunctions.status
-            .expireGrant
-        ),
-        { grantId }
-      )
+    yield* scheduler.runAfter(
+      Duration.millis(Math.max(0, endsAt - now)),
+      refs.internal.tryoutAccess.mutations.internalFunctions.status.expireGrant,
+      { grantId }
     );
 
     yield* Effect.logInfo("Event access redeemed.", {

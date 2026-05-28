@@ -1,7 +1,7 @@
 import type { GenericId } from "@confect/core";
 import {
-  MutationCtx,
-  QueryCtx,
+  DatabaseReader,
+  DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import type {
@@ -10,9 +10,8 @@ import type {
   notificationEntityTypesSchema,
   notificationTypesSchema,
 } from "@repo/backend/confect/modules/notifications/notifications.tables";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import type { PaginationOptions } from "convex/server";
-import { Clock, Effect, Schema } from "effect";
+import { Clock, Effect, Option, Schema } from "effect";
 
 const NOTIFICATION_ENTITY_MUTE_DUPLICATE_LIMIT = 10;
 
@@ -32,24 +31,22 @@ export class NotificationInvariantError extends Schema.TaggedError<NotificationI
 
 /** Creates one notification unless the recipient disabled or muted it. */
 export const createNotification = Effect.fn("notifications.createNotification")(
-  function* (
-    ctx: ConvexMutationCtx,
-    args: {
-      readonly actorId?: GenericId.GenericId<"users">;
-      readonly entityId?: NotificationEntityId;
-      readonly entityType: NotificationEntityType;
-      readonly previewBody?: string;
-      readonly previewTitle?: string;
-      readonly recipientId: GenericId.GenericId<"users">;
-      readonly type: NotificationType;
-    }
-  ) {
-    const preferences = yield* Effect.promise(() =>
-      ctx.db
-        .query("notificationPreferences")
-        .withIndex("by_userId", (query) => query.eq("userId", args.recipientId))
-        .unique()
-    );
+  function* (args: {
+    readonly actorId?: GenericId.GenericId<"users">;
+    readonly entityId?: NotificationEntityId;
+    readonly entityType: NotificationEntityType;
+    readonly previewBody?: string;
+    readonly previewTitle?: string;
+    readonly recipientId: GenericId.GenericId<"users">;
+    readonly type: NotificationType;
+  }) {
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const preferences = yield* reader
+      .table("notificationPreferences")
+      .index("by_userId", (query) => query.eq("userId", args.recipientId))
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (preferences?.disabledTypes.includes(args.type)) {
       return null;
@@ -58,60 +55,52 @@ export const createNotification = Effect.fn("notifications.createNotification")(
     const entityId = args.entityId;
     const mutedEntity =
       entityId && args.entityType !== "system"
-        ? yield* Effect.promise(() =>
-            ctx.db
-              .query("notificationEntityMutes")
-              .withIndex("by_userId_and_entityType_and_entityId", (query) =>
-                query
-                  .eq("userId", args.recipientId)
-                  .eq("entityType", args.entityType)
-                  .eq("entityId", entityId)
-              )
-              .unique()
-          )
+        ? yield* reader
+            .table("notificationEntityMutes")
+            .index("by_userId_and_entityType_and_entityId", (query) =>
+              query
+                .eq("userId", args.recipientId)
+                .eq("entityType", args.entityType)
+                .eq("entityId", entityId)
+            )
+            .first()
+            .pipe(Effect.map(Option.getOrNull))
         : null;
 
     if (mutedEntity) {
       return null;
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.insert("notifications", {
-        actorId: args.actorId,
-        entityId: args.entityId,
-        entityType: args.entityType,
-        previewBody: args.previewBody,
-        previewTitle: args.previewTitle,
-        recipientId: args.recipientId,
-        type: args.type,
-      })
-    );
+    yield* writer.table("notifications").insert({
+      actorId: args.actorId,
+      entityId: args.entityId,
+      entityType: args.entityType,
+      previewBody: args.previewBody,
+      previewTitle: args.previewTitle,
+      recipientId: args.recipientId,
+      type: args.type,
+    });
 
-    const existingCount = yield* Effect.promise(() =>
-      ctx.db
-        .query("notificationCounts")
-        .withIndex("by_userId", (query) => query.eq("userId", args.recipientId))
-        .unique()
-    );
+    const existingCount = yield* reader
+      .table("notificationCounts")
+      .index("by_userId", (query) => query.eq("userId", args.recipientId))
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
     const updatedAt = yield* Clock.currentTimeMillis;
 
     if (!existingCount) {
-      yield* Effect.promise(() =>
-        ctx.db.insert("notificationCounts", {
-          unreadCount: 1,
-          updatedAt,
-          userId: args.recipientId,
-        })
-      );
+      yield* writer.table("notificationCounts").insert({
+        unreadCount: 1,
+        updatedAt,
+        userId: args.recipientId,
+      });
       return null;
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.patch(existingCount._id, {
-        unreadCount: existingCount.unreadCount + 1,
-        updatedAt,
-      })
-    );
+    yield* writer.table("notificationCounts").patch(existingCount._id, {
+      unreadCount: existingCount.unreadCount + 1,
+      updatedAt,
+    });
 
     return null;
   }
@@ -137,36 +126,32 @@ const upsertNotificationPreferences = Effect.fn(
   };
   readonly userId: GenericId.GenericId<"users">;
 }) {
-  const ctx = yield* MutationCtx;
-  const preferences = yield* Effect.promise(() =>
-    ctx.db
-      .query("notificationPreferences")
-      .withIndex("by_userId", (query) => query.eq("userId", userId))
-      .unique()
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const preferences = yield* reader
+    .table("notificationPreferences")
+    .index("by_userId", (query) => query.eq("userId", userId))
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
   const updatedAt = yield* Clock.currentTimeMillis;
 
   if (!preferences) {
-    yield* Effect.promise(() =>
-      ctx.db.insert("notificationPreferences", {
-        ...createDefaults,
-        disabledTypes: [...createDefaults.disabledTypes],
-        updatedAt,
-        userId,
-      })
-    );
+    yield* writer.table("notificationPreferences").insert({
+      ...createDefaults,
+      disabledTypes: [...createDefaults.disabledTypes],
+      updatedAt,
+      userId,
+    });
     return null;
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(preferences._id, {
-      ...patch,
-      disabledTypes: patch.disabledTypes
-        ? [...patch.disabledTypes]
-        : patch.disabledTypes,
-      updatedAt,
-    })
-  );
+  yield* writer.table("notificationPreferences").patch(preferences._id, {
+    ...patch,
+    disabledTypes: patch.disabledTypes
+      ? [...patch.disabledTypes]
+      : patch.disabledTypes,
+    updatedAt,
+  });
   return null;
 });
 
@@ -174,8 +159,7 @@ const upsertNotificationPreferences = Effect.fn(
 export const updateNotificationPreferences = Effect.fn(
   "notifications.updatePreferences"
 )(function* (args: { emailDigest: EmailDigest; emailEnabled: boolean }) {
-  const ctx = yield* MutationCtx;
-  const user = yield* requireAppUser(ctx);
+  const user = yield* requireAppUser();
 
   return yield* upsertNotificationPreferences({
     createDefaults: {
@@ -195,8 +179,7 @@ export const updateNotificationPreferences = Effect.fn(
 export const setDisabledNotificationTypes = Effect.fn(
   "notifications.setDisabledTypes"
 )(function* (args: { disabledTypes: readonly NotificationType[] }) {
-  const ctx = yield* MutationCtx;
-  const user = yield* requireAppUser(ctx);
+  const user = yield* requireAppUser();
 
   return yield* upsertNotificationPreferences({
     createDefaults: {
@@ -219,19 +202,18 @@ export const setNotificationEntityMute = Effect.fn(
   entityType: NotificationEntityType;
   muted: boolean;
 }) {
-  const ctx = yield* MutationCtx;
-  const user = yield* requireAppUser(ctx);
-  const existingRows = yield* Effect.promise(() =>
-    ctx.db
-      .query("notificationEntityMutes")
-      .withIndex("by_userId_and_entityType_and_entityId", (query) =>
-        query
-          .eq("userId", user.appUser._id)
-          .eq("entityType", args.entityType)
-          .eq("entityId", args.entityId)
-      )
-      .take(NOTIFICATION_ENTITY_MUTE_DUPLICATE_LIMIT)
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
+  const existingRows = yield* reader
+    .table("notificationEntityMutes")
+    .index("by_userId_and_entityType_and_entityId", (query) =>
+      query
+        .eq("userId", user.appUser._id)
+        .eq("entityType", args.entityType)
+        .eq("entityId", args.entityId)
+    )
+    .take(NOTIFICATION_ENTITY_MUTE_DUPLICATE_LIMIT);
 
   if (existingRows.length >= NOTIFICATION_ENTITY_MUTE_DUPLICATE_LIMIT) {
     return yield* Effect.fail(
@@ -243,27 +225,25 @@ export const setNotificationEntityMute = Effect.fn(
 
   if (!args.muted) {
     for (const row of existingRows) {
-      yield* Effect.promise(() => ctx.db.delete(row._id));
+      yield* writer.table("notificationEntityMutes").delete(row._id);
     }
     return null;
   }
 
   if (existingRows.length > 0) {
     for (const row of existingRows.slice(1)) {
-      yield* Effect.promise(() => ctx.db.delete(row._id));
+      yield* writer.table("notificationEntityMutes").delete(row._id);
     }
     return null;
   }
 
   const mutedAt = yield* Clock.currentTimeMillis;
-  yield* Effect.promise(() =>
-    ctx.db.insert("notificationEntityMutes", {
-      entityId: args.entityId,
-      entityType: args.entityType,
-      mutedAt,
-      userId: user.appUser._id,
-    })
-  );
+  yield* writer.table("notificationEntityMutes").insert({
+    entityId: args.entityId,
+    entityType: args.entityType,
+    mutedAt,
+    userId: user.appUser._id,
+  });
 
   return null;
 });
@@ -272,14 +252,13 @@ export const setNotificationEntityMute = Effect.fn(
 export const getNotificationPreferences = Effect.fn(
   "notifications.getPreferences"
 )(function* () {
-  const ctx = yield* QueryCtx;
-  const user = yield* requireAppUser(ctx);
-  const preferences = yield* Effect.promise(() =>
-    ctx.db
-      .query("notificationPreferences")
-      .withIndex("by_userId", (query) => query.eq("userId", user.appUser._id))
-      .unique()
-  );
+  const reader = yield* DatabaseReader;
+  const user = yield* requireAppUser();
+  const preferences = yield* reader
+    .table("notificationPreferences")
+    .index("by_userId", (query) => query.eq("userId", user.appUser._id))
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 
   return {
     disabledTypes: preferences?.disabledTypes ?? [],
@@ -292,15 +271,12 @@ export const getNotificationPreferences = Effect.fn(
 export const listMutedNotificationEntities = Effect.fn(
   "notifications.listMutedEntities"
 )(function* (args: { paginationOpts: PaginationOptions }) {
-  const ctx = yield* QueryCtx;
-  const user = yield* requireAppUser(ctx);
-  const result = yield* Effect.promise(() =>
-    ctx.db
-      .query("notificationEntityMutes")
-      .withIndex("by_userId", (query) => query.eq("userId", user.appUser._id))
-      .order("desc")
-      .paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const user = yield* requireAppUser();
+  const result = yield* reader
+    .table("notificationEntityMutes")
+    .index("by_userId", (query) => query.eq("userId", user.appUser._id), "desc")
+    .paginate(args.paginationOpts);
 
   return {
     ...result,

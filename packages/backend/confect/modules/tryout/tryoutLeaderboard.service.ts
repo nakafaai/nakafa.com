@@ -1,6 +1,8 @@
+import { GenericId } from "@confect/core";
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import {
-  MutationCtx,
+  DatabaseReader,
+  DatabaseWriter,
   QueryCtx,
 } from "@repo/backend/confect/_generated/services";
 import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
@@ -19,11 +21,16 @@ import {
 } from "@repo/backend/confect/modules/tryout/tryoutMetrics.service";
 import { getTryoutReportScore } from "@repo/backend/confect/modules/tryout/tryoutReporting.service";
 import { syncUserTryoutStats } from "@repo/backend/confect/modules/tryout/tryoutStats.service";
-import { getAll } from "convex-helpers/server/relationships";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 const DEFAULT_LEADERBOARD_LIMIT = 50;
 const MAX_LEADERBOARD_LIMIT = 100;
+const decodeTryoutLeaderboardEntryId = Schema.decodeUnknownOption(
+  GenericId.GenericId("tryoutLeaderboardEntries")
+);
+const decodeUserTryoutStatsId = Schema.decodeUnknownOption(
+  GenericId.GenericId("userTryoutStats")
+);
 
 /** Normalizes leaderboard limits to the supported public range. */
 function getLeaderboardLimit(limit?: number) {
@@ -36,10 +43,12 @@ function getLeaderboardLimit(limit?: number) {
 /** Updates the per-tryout leaderboard for a completed official attempt. */
 export const updateLeaderboard = Effect.fn("tryouts.leaderboard.update")(
   function* (args: { readonly tryoutAttemptId: Id<"tryoutAttempts"> }) {
-    const ctx = yield* MutationCtx;
-    const attempt = yield* Effect.promise(() =>
-      ctx.db.get(args.tryoutAttemptId)
-    );
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const attempt = yield* reader
+      .table("tryoutAttempts")
+      .get(args.tryoutAttemptId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (
       !attempt ||
@@ -49,7 +58,10 @@ export const updateLeaderboard = Effect.fn("tryouts.leaderboard.update")(
       return null;
     }
 
-    const tryout = yield* Effect.promise(() => ctx.db.get(attempt.tryoutId));
+    const tryout = yield* reader
+      .table("tryouts")
+      .get(attempt.tryoutId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!tryout) {
       return yield* Effect.fail(
@@ -76,14 +88,10 @@ export const updateLeaderboard = Effect.fn("tryouts.leaderboard.update")(
       locale: tryout.locale,
       product: tryout.product,
     });
-    const existingEntry = yield* Effect.promise(() =>
-      ctx.db
-        .query("tryoutLeaderboardEntries")
-        .withIndex("by_tryoutId_and_userId", (query) =>
-          query.eq("tryoutId", attempt.tryoutId).eq("userId", attempt.userId)
-        )
-        .unique()
-    );
+    const existingEntry = yield* reader
+      .table("tryoutLeaderboardEntries")
+      .get("by_tryoutId_and_userId", attempt.tryoutId, attempt.userId)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
     if (
       existingEntry &&
@@ -97,33 +105,28 @@ export const updateLeaderboard = Effect.fn("tryouts.leaderboard.update")(
     const rawScore = computeTryoutRawScorePercentage(attempt);
 
     if (existingEntry) {
-      yield* Effect.promise(() =>
-        ctx.db.patch(existingEntry._id, {
-          attemptId: attempt._id,
-          completedAt,
-          leaderboardNamespace,
-          rawScore,
-          theta: attempt.theta,
-          thetaSE: attempt.thetaSE,
-        })
-      );
+      yield* writer.table("tryoutLeaderboardEntries").patch(existingEntry._id, {
+        attemptId: attempt._id,
+        completedAt,
+        leaderboardNamespace,
+        rawScore,
+        theta: attempt.theta,
+        thetaSE: attempt.thetaSE,
+      });
     } else {
-      yield* Effect.promise(() =>
-        ctx.db.insert("tryoutLeaderboardEntries", {
-          attemptId: attempt._id,
-          completedAt,
-          leaderboardNamespace,
-          rawScore,
-          theta: attempt.theta,
-          thetaSE: attempt.thetaSE,
-          tryoutId: attempt.tryoutId,
-          userId: attempt.userId,
-        })
-      );
+      yield* writer.table("tryoutLeaderboardEntries").insert({
+        attemptId: attempt._id,
+        completedAt,
+        leaderboardNamespace,
+        rawScore,
+        theta: attempt.theta,
+        thetaSE: attempt.thetaSE,
+        tryoutId: attempt.tryoutId,
+        userId: attempt.userId,
+      });
     }
 
     yield* syncUserTryoutStats({
-      ctx,
       cycleKey: tryout.cycleKey,
       locale: tryout.locale,
       nextEntry: {
@@ -154,13 +157,17 @@ export const getTryoutLeaderboard = Effect.fn(
   readonly tryoutId: Id<"tryouts">;
 }) {
   const ctx = yield* QueryCtx;
+  const reader = yield* DatabaseReader;
   const limit = getLeaderboardLimit(args.limit);
 
   if (limit === 0) {
     return [];
   }
 
-  const tryout = yield* Effect.promise(() => ctx.db.get(args.tryoutId));
+  const tryout = yield* reader
+    .table("tryouts")
+    .get(args.tryoutId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!tryout) {
     return yield* Effect.fail(
@@ -183,27 +190,31 @@ export const getTryoutLeaderboard = Effect.fn(
     return [];
   }
 
-  const rowIds = aggregateItems.flatMap((item) => {
-    const rowId = ctx.db.normalizeId("tryoutLeaderboardEntries", item.id);
-    return rowId ? [rowId] : [];
-  });
+  const rowIds = aggregateItems.flatMap((item) =>
+    Option.match(decodeTryoutLeaderboardEntryId(item.id), {
+      onNone: () => [],
+      onSome: (rowId) => [rowId],
+    })
+  );
 
   if (rowIds.length === 0) {
     return [];
   }
 
-  const rows = yield* Effect.promise(() =>
-    getAll(ctx.db, "tryoutLeaderboardEntries", rowIds)
+  const rows = yield* Effect.forEach(rowIds, (rowId) =>
+    reader
+      .table("tryoutLeaderboardEntries")
+      .get(rowId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)))
   );
   const existingRows = rows.filter(
     (row): row is Doc<"tryoutLeaderboardEntries"> => row !== null
   );
-  const users = yield* Effect.promise(() =>
-    getAll(
-      ctx.db,
-      "users",
-      existingRows.map((row) => row.userId)
-    )
+  const users = yield* Effect.forEach(existingRows, (row) =>
+    reader
+      .table("users")
+      .get(row.userId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)))
   );
 
   return existingRows.map((row, index) => ({
@@ -227,6 +238,7 @@ export const getGlobalLeaderboard = Effect.fn(
   readonly product: TryoutProduct;
 }) {
   const ctx = yield* QueryCtx;
+  const reader = yield* DatabaseReader;
   const limit = getLeaderboardLimit(args.limit);
 
   if (limit === 0) {
@@ -247,27 +259,31 @@ export const getGlobalLeaderboard = Effect.fn(
     return [];
   }
 
-  const rowIds = aggregateItems.flatMap((item) => {
-    const rowId = ctx.db.normalizeId("userTryoutStats", item.id);
-    return rowId ? [rowId] : [];
-  });
+  const rowIds = aggregateItems.flatMap((item) =>
+    Option.match(decodeUserTryoutStatsId(item.id), {
+      onNone: () => [],
+      onSome: (rowId) => [rowId],
+    })
+  );
 
   if (rowIds.length === 0) {
     return [];
   }
 
-  const rows = yield* Effect.promise(() =>
-    getAll(ctx.db, "userTryoutStats", rowIds)
+  const rows = yield* Effect.forEach(rowIds, (rowId) =>
+    reader
+      .table("userTryoutStats")
+      .get(rowId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)))
   );
   const existingRows = rows.filter(
     (row): row is Doc<"userTryoutStats"> => row !== null
   );
-  const users = yield* Effect.promise(() =>
-    getAll(
-      ctx.db,
-      "users",
-      existingRows.map((row) => row.userId)
-    )
+  const users = yield* Effect.forEach(existingRows, (row) =>
+    reader
+      .table("users")
+      .get(row.userId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)))
   );
 
   return existingRows.map((row, index) => ({

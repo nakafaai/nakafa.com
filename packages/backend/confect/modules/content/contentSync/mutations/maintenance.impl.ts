@@ -1,6 +1,10 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import * as content_sync_maintenance from "@repo/backend/confect/modules/content/contentSyncMaintenance.service";
+import {
+  deleteBatchFromTable as contentSyncMaintenance_deleteBatchFromTable,
+  deleteTryoutEntitlementsBatch as contentSyncMaintenance_deleteTryoutEntitlementsBatch,
+  deleteTryoutRuntimeBatch as contentSyncMaintenance_deleteTryoutRuntimeBatch,
+} from "@repo/backend/confect/modules/content/contentSyncMaintenance.service";
 import { Effect, Layer } from "effect";
 
 const contentSync_mutations_maintenance_deleteArticleReferencesBatchImpl =
@@ -8,8 +12,7 @@ const contentSync_mutations_maintenance_deleteArticleReferencesBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteArticleReferencesBatch",
-    (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("articleReferences")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("articleReferences")
   );
 
 const contentSync_mutations_maintenance_deleteArticlesBatchImpl =
@@ -17,7 +20,7 @@ const contentSync_mutations_maintenance_deleteArticlesBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteArticlesBatch",
-    (_args) => content_sync_maintenance.deleteBatchFromTable("articleContents")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("articleContents")
   );
 
 const contentSync_mutations_maintenance_deleteAuthorsBatchImpl =
@@ -25,7 +28,7 @@ const contentSync_mutations_maintenance_deleteAuthorsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteAuthorsBatch",
-    (_args) => content_sync_maintenance.deleteBatchFromTable("authors")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("authors")
   );
 
 const contentSync_mutations_maintenance_deleteContentAuthorsBatchImpl =
@@ -33,7 +36,7 @@ const contentSync_mutations_maintenance_deleteContentAuthorsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteContentAuthorsBatch",
-    (_args) => content_sync_maintenance.deleteBatchFromTable("contentAuthors")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("contentAuthors")
   );
 
 const contentSync_mutations_maintenance_deleteContentSearchBatchImpl =
@@ -41,7 +44,7 @@ const contentSync_mutations_maintenance_deleteContentSearchBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteContentSearchBatch",
-    (_args) => content_sync_maintenance.deleteBatchFromTable("contentSearch")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("contentSearch")
   );
 
 const contentSync_mutations_maintenance_deleteExerciseAnswersBatchImpl =
@@ -49,7 +52,7 @@ const contentSync_mutations_maintenance_deleteExerciseAnswersBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteExerciseAnswersBatch",
-    (_args) => content_sync_maintenance.deleteBatchFromTable("exerciseAnswers")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("exerciseAnswers")
   );
 
 const contentSync_mutations_maintenance_deleteExerciseAttemptsBatchImpl =
@@ -57,7 +60,7 @@ const contentSync_mutations_maintenance_deleteExerciseAttemptsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteExerciseAttemptsBatch",
-    (_args) => content_sync_maintenance.deleteBatchFromTable("exerciseAttempts")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("exerciseAttempts")
   );
 
 const contentSync_mutations_maintenance_deleteExerciseChoicesBatchImpl =
@@ -65,7 +68,7 @@ const contentSync_mutations_maintenance_deleteExerciseChoicesBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteExerciseChoicesBatch",
-    (_args) => content_sync_maintenance.deleteBatchFromTable("exerciseChoices")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("exerciseChoices")
   );
 
 const contentSync_mutations_maintenance_deleteExerciseItemParametersBatchImpl =
@@ -74,7 +77,7 @@ const contentSync_mutations_maintenance_deleteExerciseItemParametersBatchImpl =
     "contentSync.mutations.maintenance",
     "deleteExerciseItemParametersBatch",
     (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("exerciseItemParameters")
+      contentSyncMaintenance_deleteBatchFromTable("exerciseItemParameters")
   );
 
 const contentSync_mutations_maintenance_deleteExerciseQuestionsBatchImpl =
@@ -82,8 +85,7 @@ const contentSync_mutations_maintenance_deleteExerciseQuestionsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteExerciseQuestionsBatch",
-    (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("exerciseQuestions")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("exerciseQuestions")
   );
 
 const contentSync_mutations_maintenance_deleteExerciseSetsBatchImpl =
@@ -91,7 +93,7 @@ const contentSync_mutations_maintenance_deleteExerciseSetsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteExerciseSetsBatch",
-    (_args) => content_sync_maintenance.deleteBatchFromTable("exerciseSets")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("exerciseSets")
   );
 
 const contentSync_mutations_maintenance_deleteIrtCalibrationAttemptsBatchImpl =
@@ -100,7 +102,7 @@ const contentSync_mutations_maintenance_deleteIrtCalibrationAttemptsBatchImpl =
     "contentSync.mutations.maintenance",
     "deleteIrtCalibrationAttemptsBatch",
     (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("irtCalibrationAttempts")
+      contentSyncMaintenance_deleteBatchFromTable("irtCalibrationAttempts")
   );
 
 const contentSync_mutations_maintenance_deleteIrtCalibrationCacheStatsBatchImpl =
@@ -109,7 +111,7 @@ const contentSync_mutations_maintenance_deleteIrtCalibrationCacheStatsBatchImpl 
     "contentSync.mutations.maintenance",
     "deleteIrtCalibrationCacheStatsBatch",
     (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("irtCalibrationCacheStats")
+      contentSyncMaintenance_deleteBatchFromTable("irtCalibrationCacheStats")
   );
 
 const contentSync_mutations_maintenance_deleteIrtCalibrationQueueBatchImpl =
@@ -118,7 +120,7 @@ const contentSync_mutations_maintenance_deleteIrtCalibrationQueueBatchImpl =
     "contentSync.mutations.maintenance",
     "deleteIrtCalibrationQueueBatch",
     (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("irtCalibrationQueue")
+      contentSyncMaintenance_deleteBatchFromTable("irtCalibrationQueue")
   );
 
 const contentSync_mutations_maintenance_deleteIrtCalibrationRunsBatchImpl =
@@ -126,8 +128,7 @@ const contentSync_mutations_maintenance_deleteIrtCalibrationRunsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteIrtCalibrationRunsBatch",
-    (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("irtCalibrationRuns")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("irtCalibrationRuns")
   );
 
 const contentSync_mutations_maintenance_deleteIrtScalePublicationQueueBatchImpl =
@@ -136,7 +137,7 @@ const contentSync_mutations_maintenance_deleteIrtScalePublicationQueueBatchImpl 
     "contentSync.mutations.maintenance",
     "deleteIrtScalePublicationQueueBatch",
     (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("irtScalePublicationQueue")
+      contentSyncMaintenance_deleteBatchFromTable("irtScalePublicationQueue")
   );
 
 const contentSync_mutations_maintenance_deleteIrtScaleQualityChecksBatchImpl =
@@ -145,7 +146,7 @@ const contentSync_mutations_maintenance_deleteIrtScaleQualityChecksBatchImpl =
     "contentSync.mutations.maintenance",
     "deleteIrtScaleQualityChecksBatch",
     (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("irtScaleQualityChecks")
+      contentSyncMaintenance_deleteBatchFromTable("irtScaleQualityChecks")
   );
 
 const contentSync_mutations_maintenance_deleteIrtScaleQualityRefreshQueueBatchImpl =
@@ -154,9 +155,7 @@ const contentSync_mutations_maintenance_deleteIrtScaleQualityRefreshQueueBatchIm
     "contentSync.mutations.maintenance",
     "deleteIrtScaleQualityRefreshQueueBatch",
     (_args) =>
-      content_sync_maintenance.deleteBatchFromTable(
-        "irtScaleQualityRefreshQueue"
-      )
+      contentSyncMaintenance_deleteBatchFromTable("irtScaleQualityRefreshQueue")
   );
 
 const contentSync_mutations_maintenance_deleteIrtScaleVersionItemsBatchImpl =
@@ -165,7 +164,7 @@ const contentSync_mutations_maintenance_deleteIrtScaleVersionItemsBatchImpl =
     "contentSync.mutations.maintenance",
     "deleteIrtScaleVersionItemsBatch",
     (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("irtScaleVersionItems")
+      contentSyncMaintenance_deleteBatchFromTable("irtScaleVersionItems")
   );
 
 const contentSync_mutations_maintenance_deleteIrtScaleVersionsBatchImpl =
@@ -173,7 +172,7 @@ const contentSync_mutations_maintenance_deleteIrtScaleVersionsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteIrtScaleVersionsBatch",
-    (_args) => content_sync_maintenance.deleteBatchFromTable("irtScaleVersions")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("irtScaleVersions")
   );
 
 const contentSync_mutations_maintenance_deleteSubjectSectionsBatchImpl =
@@ -181,7 +180,7 @@ const contentSync_mutations_maintenance_deleteSubjectSectionsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteSubjectSectionsBatch",
-    (_args) => content_sync_maintenance.deleteBatchFromTable("subjectSections")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("subjectSections")
   );
 
 const contentSync_mutations_maintenance_deleteSubjectTopicsBatchImpl =
@@ -189,7 +188,7 @@ const contentSync_mutations_maintenance_deleteSubjectTopicsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteSubjectTopicsBatch",
-    (_args) => content_sync_maintenance.deleteBatchFromTable("subjectTopics")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("subjectTopics")
   );
 
 const contentSync_mutations_maintenance_deleteTryoutAccessCampaignProductsBatchImpl =
@@ -198,7 +197,7 @@ const contentSync_mutations_maintenance_deleteTryoutAccessCampaignProductsBatchI
     "contentSync.mutations.maintenance",
     "deleteTryoutAccessCampaignProductsBatch",
     (_args) =>
-      content_sync_maintenance.deleteBatchFromTable(
+      contentSyncMaintenance_deleteBatchFromTable(
         "tryoutAccessCampaignProducts"
       )
   );
@@ -209,7 +208,7 @@ const contentSync_mutations_maintenance_deleteTryoutAccessCampaignsBatchImpl =
     "contentSync.mutations.maintenance",
     "deleteTryoutAccessCampaignsBatch",
     (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("tryoutAccessCampaigns")
+      contentSyncMaintenance_deleteBatchFromTable("tryoutAccessCampaigns")
   );
 
 const contentSync_mutations_maintenance_deleteTryoutAccessGrantsBatchImpl =
@@ -217,8 +216,7 @@ const contentSync_mutations_maintenance_deleteTryoutAccessGrantsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteTryoutAccessGrantsBatch",
-    (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("tryoutAccessGrants")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("tryoutAccessGrants")
   );
 
 const contentSync_mutations_maintenance_deleteTryoutAccessLinksBatchImpl =
@@ -226,8 +224,7 @@ const contentSync_mutations_maintenance_deleteTryoutAccessLinksBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteTryoutAccessLinksBatch",
-    (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("tryoutAccessLinks")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("tryoutAccessLinks")
   );
 
 const contentSync_mutations_maintenance_deleteTryoutAttemptsBatchImpl =
@@ -235,7 +232,7 @@ const contentSync_mutations_maintenance_deleteTryoutAttemptsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteTryoutAttemptsBatch",
-    (_args) => content_sync_maintenance.deleteBatchFromTable("tryoutAttempts")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("tryoutAttempts")
   );
 
 const contentSync_mutations_maintenance_deleteTryoutCatalogMetaBatchImpl =
@@ -243,8 +240,7 @@ const contentSync_mutations_maintenance_deleteTryoutCatalogMetaBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteTryoutCatalogMetaBatch",
-    (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("tryoutCatalogMeta")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("tryoutCatalogMeta")
   );
 
 const contentSync_mutations_maintenance_deleteTryoutEntitlementsBatchImpl =
@@ -252,7 +248,7 @@ const contentSync_mutations_maintenance_deleteTryoutEntitlementsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteTryoutEntitlementsBatch",
-    (_args) => content_sync_maintenance.deleteTryoutEntitlementsBatch()
+    (_args) => contentSyncMaintenance_deleteTryoutEntitlementsBatch()
   );
 
 const contentSync_mutations_maintenance_deleteTryoutLeaderboardEntriesBatchImpl =
@@ -261,7 +257,7 @@ const contentSync_mutations_maintenance_deleteTryoutLeaderboardEntriesBatchImpl 
     "contentSync.mutations.maintenance",
     "deleteTryoutLeaderboardEntriesBatch",
     (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("tryoutLeaderboardEntries")
+      contentSyncMaintenance_deleteBatchFromTable("tryoutLeaderboardEntries")
   );
 
 const contentSync_mutations_maintenance_deleteTryoutPartAttemptsBatchImpl =
@@ -269,8 +265,7 @@ const contentSync_mutations_maintenance_deleteTryoutPartAttemptsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteTryoutPartAttemptsBatch",
-    (_args) =>
-      content_sync_maintenance.deleteBatchFromTable("tryoutPartAttempts")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("tryoutPartAttempts")
   );
 
 const contentSync_mutations_maintenance_deleteTryoutPartSetsBatchImpl =
@@ -278,7 +273,7 @@ const contentSync_mutations_maintenance_deleteTryoutPartSetsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteTryoutPartSetsBatch",
-    (_args) => content_sync_maintenance.deleteBatchFromTable("tryoutPartSets")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("tryoutPartSets")
   );
 
 const contentSync_mutations_maintenance_deleteTryoutRuntimeBatchImpl =
@@ -287,13 +282,11 @@ const contentSync_mutations_maintenance_deleteTryoutRuntimeBatchImpl =
     "contentSync.mutations.maintenance",
     "deleteTryoutRuntimeBatch",
     (_args) =>
-      content_sync_maintenance
-        .deleteTryoutRuntimeBatch()
-        .pipe(
-          Effect.catchTag("ContentSyncMaintenanceError", (error) =>
-            Effect.die(error)
-          )
+      contentSyncMaintenance_deleteTryoutRuntimeBatch().pipe(
+        Effect.catchTag("ContentSyncMaintenanceError", (error) =>
+          Effect.die(error)
         )
+      )
   );
 
 const contentSync_mutations_maintenance_deleteTryoutsBatchImpl =
@@ -301,7 +294,7 @@ const contentSync_mutations_maintenance_deleteTryoutsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteTryoutsBatch",
-    (_args) => content_sync_maintenance.deleteBatchFromTable("tryouts")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("tryouts")
   );
 
 const contentSync_mutations_maintenance_deleteUserTryoutStatsBatchImpl =
@@ -309,7 +302,7 @@ const contentSync_mutations_maintenance_deleteUserTryoutStatsBatchImpl =
     api,
     "contentSync.mutations.maintenance",
     "deleteUserTryoutStatsBatch",
-    (_args) => content_sync_maintenance.deleteBatchFromTable("userTryoutStats")
+    (_args) => contentSyncMaintenance_deleteBatchFromTable("userTryoutStats")
   );
 
 const contentSyncMutationsMaintenanceImpl = GroupImpl.make(

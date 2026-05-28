@@ -1,6 +1,5 @@
 import type { Doc } from "@repo/backend/confect/_generated/dataModel";
 import type { UserPlan } from "@repo/backend/confect/modules/identity/users.tables";
-import type { ConvexDatabaseWriter } from "@repo/backend/confect/modules/shared/convexContext";
 
 type UserDoc = Doc<"users">;
 
@@ -78,79 +77,4 @@ export function getCreditResetGrantTransaction(
     },
     type: planCreditConfig.grantType,
   };
-}
-
-/** Reads the persisted reset timestamp for a user plan. */
-export async function getStoredCreditResetTimestamp(
-  db: ConvexDatabaseWriter,
-  plan: UserPlan
-) {
-  const period = await db
-    .query("creditResetPeriods")
-    .withIndex("by_plan", (query) => query.eq("plan", plan))
-    .unique();
-
-  return period?.resetAt ?? null;
-}
-
-/** Upserts the persisted reset timestamp for a user plan. */
-export async function upsertStoredCreditResetTimestamp(
-  db: ConvexDatabaseWriter,
-  plan: UserPlan,
-  resetAt: number
-) {
-  const existingPeriod = await db
-    .query("creditResetPeriods")
-    .withIndex("by_plan", (query) => query.eq("plan", plan))
-    .unique();
-
-  if (!existingPeriod) {
-    await db.insert("creditResetPeriods", {
-      plan,
-      resetAt,
-    });
-    return null;
-  }
-
-  if (existingPeriod.resetAt === resetAt) {
-    return null;
-  }
-
-  await db.patch(existingPeriod._id, { resetAt });
-  return null;
-}
-
-/** Resolves the reset timestamp that should apply to a user plan now. */
-export async function resolveCurrentCreditResetTimestamp(
-  db: ConvexDatabaseWriter,
-  plan: UserPlan,
-  now: number
-) {
-  const currentResetTimestamp = getCurrentCreditResetTimestamp(plan, now);
-  const storedResetTimestamp = await getStoredCreditResetTimestamp(db, plan);
-
-  if (
-    storedResetTimestamp !== null &&
-    storedResetTimestamp >= currentResetTimestamp
-  ) {
-    return storedResetTimestamp;
-  }
-
-  await upsertStoredCreditResetTimestamp(db, plan, currentResetTimestamp);
-  return currentResetTimestamp;
-}
-
-/** Resolves a user's effective credit balance and reset timestamp. */
-export async function resolveEffectiveCreditState(
-  db: ConvexDatabaseWriter,
-  user: UserDoc,
-  now: number
-) {
-  const resetTimestamp = await resolveCurrentCreditResetTimestamp(
-    db,
-    user.plan,
-    now
-  );
-
-  return getEffectiveCreditStateForResetTimestamp(user, resetTimestamp);
 }

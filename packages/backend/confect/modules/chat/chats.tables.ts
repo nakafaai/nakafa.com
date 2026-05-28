@@ -430,6 +430,13 @@ export const partSchema = Schema.Struct({
   providerMetadata: optionalProviderMetadataSchema,
 });
 
+/** Message part input accepted before message id and order are assigned. */
+export const messagePartInputSchema = partSchema.omit("messageId", "order");
+
+export type MessagePartInput = Schema.Schema.Type<
+  typeof messagePartInputSchema
+>;
+
 /** chats table definition. */
 export const Chats = Table.make("chats", chatSchema)
   .index("by_userId", ["userId"])

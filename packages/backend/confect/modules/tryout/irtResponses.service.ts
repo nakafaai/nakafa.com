@@ -1,5 +1,4 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import {
   buildCalibrationAttemptInsert,
   clearCalibrationResponsesForAttempt,
@@ -15,31 +14,29 @@ import { Clock, Effect } from "effect";
 export const syncCalibrationResponsesForAttempt = Effect.fn(
   "irt.responses.syncCalibrationResponsesForAttempt"
 )(function* (args: { readonly attemptId: Id<"exerciseAttempts"> }) {
-  const ctx = yield* MutationCtx;
   const now = yield* Clock.currentTimeMillis;
 
-  yield* clearCalibrationResponsesForAttempt(ctx, {
+  yield* clearCalibrationResponsesForAttempt({
     attemptId: args.attemptId,
     updatedAt: now,
   });
 
   const calibrationAttempt = yield* buildCalibrationAttemptInsert(
-    ctx,
     args.attemptId
   );
 
   if (!calibrationAttempt) {
-    yield* removePendingCalibrationQueueEntry(ctx, args.attemptId);
+    yield* removePendingCalibrationQueueEntry(args.attemptId);
     return null;
   }
 
-  yield* insertCalibrationAttempt(ctx, {
+  yield* insertCalibrationAttempt({
     attemptId: args.attemptId,
     responses: calibrationAttempt.responses,
     setId: calibrationAttempt.setId,
     updatedAt: now,
   });
-  yield* ensurePendingCalibrationQueueEntry(ctx, {
+  yield* ensurePendingCalibrationQueueEntry({
     attemptId: args.attemptId,
     enqueuedAt: now,
     setId: calibrationAttempt.setId,

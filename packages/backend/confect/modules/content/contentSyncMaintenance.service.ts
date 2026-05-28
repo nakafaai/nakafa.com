@@ -1,5 +1,8 @@
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
-import { Effect, Schema } from "effect";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
+import { Effect, Option, Schema } from "effect";
 
 const RESET_BATCH_SIZE = 500;
 const EVENT_TRYOUT_ENTITLEMENT_BATCH_SIZE = 500;
@@ -48,46 +51,52 @@ export type ResettableTableName =
 export const deleteBatchFromTable = Effect.fn(
   "contentSync.maintenance.deleteBatchFromTable"
 )(function* (tableName: ResettableTableName) {
-  const ctx = yield* MutationCtx;
-  const docs = yield* Effect.promise(() =>
-    ctx.db.query(tableName).take(RESET_BATCH_SIZE)
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const docs = yield* reader
+    .table(tableName)
+    .index("by_creation_time")
+    .take(RESET_BATCH_SIZE);
   let deleted = 0;
 
   for (const doc of docs) {
-    yield* Effect.promise(() => ctx.db.delete(doc._id));
+    yield* writer.table(tableName).delete(doc._id);
     deleted += 1;
   }
 
-  const nextDoc = yield* Effect.promise(() => ctx.db.query(tableName).first());
+  const nextDoc = yield* reader
+    .table(tableName)
+    .index("by_creation_time")
+    .first();
 
-  return { deleted, hasMore: nextDoc !== null };
+  return { deleted, hasMore: Option.isSome(nextDoc) };
 });
 
 /** Deletes tryout runtime attempts with their linked exercise attempts. */
 export const deleteTryoutRuntimeBatch = Effect.fn(
   "contentSync.maintenance.deleteTryoutRuntimeBatch"
 )(function* () {
-  const ctx = yield* MutationCtx;
-  const partAttempts = yield* Effect.promise(() =>
-    ctx.db.query("tryoutPartAttempts").take(RESET_BATCH_SIZE)
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const partAttempts = yield* reader
+    .table("tryoutPartAttempts")
+    .index("by_creation_time")
+    .take(RESET_BATCH_SIZE);
   let deleted = 0;
 
   for (const partAttempt of partAttempts) {
-    const exerciseAttempt = yield* Effect.promise(() =>
-      ctx.db.get(partAttempt.setAttemptId)
-    );
+    const exerciseAttempt = yield* reader
+      .table("exerciseAttempts")
+      .get(partAttempt.setAttemptId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (exerciseAttempt) {
-      const answers = yield* Effect.promise(() =>
-        ctx.db
-          .query("exerciseAnswers")
-          .withIndex("by_attemptId_and_exerciseNumber", (query) =>
-            query.eq("attemptId", exerciseAttempt._id)
-          )
-          .take(exerciseAttempt.totalExercises + 1)
-      );
+      const answers = yield* reader
+        .table("exerciseAnswers")
+        .index("by_attemptId_and_exerciseNumber", (query) =>
+          query.eq("attemptId", exerciseAttempt._id)
+        )
+        .take(exerciseAttempt.totalExercises + 1);
 
       if (answers.length > exerciseAttempt.totalExercises) {
         return yield* Effect.fail(
@@ -99,44 +108,46 @@ export const deleteTryoutRuntimeBatch = Effect.fn(
       }
 
       for (const answer of answers) {
-        yield* Effect.promise(() => ctx.db.delete(answer._id));
+        yield* writer.table("exerciseAnswers").delete(answer._id);
       }
 
-      yield* Effect.promise(() => ctx.db.delete(exerciseAttempt._id));
+      yield* writer.table("exerciseAttempts").delete(exerciseAttempt._id);
     }
 
-    yield* Effect.promise(() => ctx.db.delete(partAttempt._id));
+    yield* writer.table("tryoutPartAttempts").delete(partAttempt._id);
     deleted += 1;
   }
 
-  const nextPartAttempt = yield* Effect.promise(() =>
-    ctx.db.query("tryoutPartAttempts").first()
-  );
+  const nextPartAttempt = yield* reader
+    .table("tryoutPartAttempts")
+    .index("by_creation_time")
+    .first();
 
-  return { deleted, hasMore: nextPartAttempt !== null };
+  return { deleted, hasMore: Option.isSome(nextPartAttempt) };
 });
 
 /** Deletes event tryout entitlements with their larger reset batch size. */
 export const deleteTryoutEntitlementsBatch = Effect.fn(
   "contentSync.maintenance.deleteTryoutEntitlementsBatch"
 )(function* () {
-  const ctx = yield* MutationCtx;
-  const entitlements = yield* Effect.promise(() =>
-    ctx.db
-      .query("userTryoutEntitlements")
-      .take(EVENT_TRYOUT_ENTITLEMENT_BATCH_SIZE)
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const entitlements = yield* reader
+    .table("userTryoutEntitlements")
+    .index("by_creation_time")
+    .take(EVENT_TRYOUT_ENTITLEMENT_BATCH_SIZE);
 
   for (const entitlement of entitlements) {
-    yield* Effect.promise(() => ctx.db.delete(entitlement._id));
+    yield* writer.table("userTryoutEntitlements").delete(entitlement._id);
   }
 
-  const nextEntitlement = yield* Effect.promise(() =>
-    ctx.db.query("userTryoutEntitlements").first()
-  );
+  const nextEntitlement = yield* reader
+    .table("userTryoutEntitlements")
+    .index("by_creation_time")
+    .first();
 
   return {
     deleted: entitlements.length,
-    hasMore: nextEntitlement !== null,
+    hasMore: Option.isSome(nextEntitlement),
   };
 });

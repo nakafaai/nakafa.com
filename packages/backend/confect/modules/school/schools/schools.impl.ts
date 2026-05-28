@@ -1,6 +1,12 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import * as school_schools from "@repo/backend/confect/modules/school/schools.service";
+import {
+  createSchool as schoolSchools_createSchool,
+  getMySchoolLandingState as schoolSchools_getMySchoolLandingState,
+  getMySchoolsPage as schoolSchools_getMySchoolsPage,
+  getSchoolBySlug as schoolSchools_getSchoolBySlug,
+  joinSchool as schoolSchools_joinSchool,
+} from "@repo/backend/confect/modules/school/schools.service";
 import { Effect, Layer } from "effect";
 
 const schools_mutations_createSchoolImpl = FunctionImpl.make(
@@ -8,7 +14,7 @@ const schools_mutations_createSchoolImpl = FunctionImpl.make(
   "schools.mutations",
   "createSchool",
   (args) =>
-    school_schools.createSchool(args).pipe(
+    schoolSchools_createSchool(args).pipe(
       Effect.catchTags({
         SchoolActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -21,7 +27,7 @@ const schools_mutations_joinSchoolImpl = FunctionImpl.make(
   "schools.mutations",
   "joinSchool",
   (args) =>
-    school_schools.joinSchool(args).pipe(
+    schoolSchools_joinSchool(args).pipe(
       Effect.catchTags({
         SchoolActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -34,9 +40,9 @@ const schools_queries_getSchoolBySlugImpl = FunctionImpl.make(
   "schools.queries",
   "getSchoolBySlug",
   (args) =>
-    school_schools
-      .getSchoolBySlug(args)
-      .pipe(Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)))
+    schoolSchools_getSchoolBySlug(args).pipe(
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+    )
 );
 
 const schools_queries_getMySchoolLandingStateImpl = FunctionImpl.make(
@@ -44,7 +50,7 @@ const schools_queries_getMySchoolLandingStateImpl = FunctionImpl.make(
   "schools.queries",
   "getMySchoolLandingState",
   (_args) =>
-    school_schools.getMySchoolLandingState().pipe(
+    schoolSchools_getMySchoolLandingState().pipe(
       Effect.catchTags({
         SchoolActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -57,9 +63,9 @@ const schools_queries_getMySchoolsPageImpl = FunctionImpl.make(
   "schools.queries",
   "getMySchoolsPage",
   (args) =>
-    school_schools
-      .getMySchoolsPage(args)
-      .pipe(Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)))
+    schoolSchools_getMySchoolsPage(args).pipe(
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+    )
 );
 
 const schoolsMutationsImpl = GroupImpl.make(api, "schools.mutations")

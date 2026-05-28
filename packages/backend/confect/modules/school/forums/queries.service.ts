@@ -1,5 +1,8 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { QueryCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  QueryCtx,
+} from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import {
   getUserMap,
@@ -29,43 +32,31 @@ export const getForums = Effect.fn("school.forums.getForums")(function* (args: {
   q?: string;
 }) {
   const ctx = yield* QueryCtx;
-  const user = yield* requireAppUser(ctx);
-  const classData = yield* loadClass(ctx, args.classId);
-  yield* requireClassAccess(
-    ctx,
-    args.classId,
-    classData.schoolId,
-    user.appUser._id
-  );
+  const user = yield* requireAppUser();
+  const classData = yield* loadClass(args.classId);
+  yield* requireClassAccess(args.classId, classData.schoolId, user.appUser._id);
+  const reader = yield* DatabaseReader;
   const searchQuery = args.q?.trim();
   const forumsPage = searchQuery
-    ? yield* Effect.promise(() =>
-        ctx.db
-          .query("schoolClassForums")
-          .withSearchIndex("search_title", (query) =>
-            query.search("title", searchQuery).eq("classId", args.classId)
-          )
-          .paginate(args.paginationOpts)
-      )
-    : yield* Effect.promise(() =>
-        ctx.db
-          .query("schoolClassForums")
-          .withIndex("by_classId_and_lastPostAt", (query) =>
-            query.eq("classId", args.classId)
-          )
-          .order("desc")
-          .paginate(args.paginationOpts)
-      );
+    ? yield* reader
+        .table("schoolClassForums")
+        .search("search_title", (query) =>
+          query.search("title", searchQuery).eq("classId", args.classId)
+        )
+        .paginate(args.paginationOpts)
+    : yield* reader
+        .table("schoolClassForums")
+        .index(
+          "by_classId_and_lastPostAt",
+          (query) => query.eq("classId", args.classId),
+          "desc"
+        )
+        .paginate(args.paginationOpts);
   const forumIds = forumsPage.page.map((forum) => forum._id);
   const userMap = yield* getUserMap(
-    ctx,
     forumsPage.page.map((forum) => forum.createdBy)
   );
-  const myReactionsMap = yield* getMyForumReactions(
-    ctx,
-    forumIds,
-    user.appUser._id
-  );
+  const myReactionsMap = yield* getMyForumReactions(forumIds, user.appUser._id);
   const unreadCountMap = yield* getForumUnreadCounts(ctx, {
     forums: forumsPage.page,
     userId: user.appUser._id,
@@ -86,15 +77,13 @@ export const getForums = Effect.fn("school.forums.getForums")(function* (args: {
 export const getForum = Effect.fn("school.forums.getForum")(function* (args: {
   forumId: Id<"schoolClassForums">;
 }) {
-  const ctx = yield* QueryCtx;
-  const user = yield* requireAppUser(ctx);
+  const user = yield* requireAppUser();
   const currentUserId = user.appUser._id;
-  const forum = yield* loadForum(ctx, args.forumId);
-  yield* requireClassAccess(ctx, forum.classId, forum.schoolId, currentUserId);
-  const forumUserMap = yield* getUserMap(ctx, [forum.createdBy]);
-  const reactionPreviews = yield* getForumReactionPreviews(ctx, forum);
+  const forum = yield* loadForum(args.forumId);
+  yield* requireClassAccess(forum.classId, forum.schoolId, currentUserId);
+  const forumUserMap = yield* getUserMap([forum.createdBy]);
+  const reactionPreviews = yield* getForumReactionPreviews(forum);
   const myReactionsByForum = yield* getMyForumReactions(
-    ctx,
     [forum._id],
     currentUserId
   );
@@ -114,24 +103,23 @@ export const getForum = Effect.fn("school.forums.getForum")(function* (args: {
 /** Reads the bounded forum post transcript. */
 export const getForumPosts = Effect.fn("school.forums.getForumPosts")(
   function* (args: { forumId: Id<"schoolClassForums"> }) {
-    const ctx = yield* QueryCtx;
-    const user = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const user = yield* requireAppUser();
     const currentUserId = user.appUser._id;
-    yield* loadForumWithAccess(ctx, args.forumId, currentUserId);
-    const posts = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolClassForumPosts")
-        .withIndex("by_forumId_and_sequence", (query) =>
-          query.eq("forumId", args.forumId)
-        )
-        .order("desc")
-        .take(MAX_FORUM_TRANSCRIPT_POSTS)
-    );
+    yield* loadForumWithAccess(args.forumId, currentUserId);
+    const posts = yield* reader
+      .table("schoolClassForumPosts")
+      .index(
+        "by_forumId_and_sequence",
+        (query) => query.eq("forumId", args.forumId),
+        "desc"
+      )
+      .take(MAX_FORUM_TRANSCRIPT_POSTS);
 
-    return yield* createForumFeedPosts(ctx, {
+    return yield* createForumFeedPosts({
       currentUserId,
       forumId: args.forumId,
-      posts: posts.reverse(),
+      posts: [...posts].reverse(),
     });
   }
 );

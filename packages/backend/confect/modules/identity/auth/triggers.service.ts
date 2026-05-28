@@ -3,14 +3,20 @@ import type { createClient } from "@convex-dev/better-auth";
 import type { Doc } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
+import {
   DEFAULT_USER_CREDITS,
   DEFAULT_USER_PLAN,
   getCurrentCreditResetTimestamp,
 } from "@repo/backend/confect/modules/commerce/credits.policy";
+import type { authTriggerUserSchema } from "@repo/backend/confect/modules/identity/auth/auth.schemas";
 import { captureProductEvent } from "@repo/backend/confect/modules/integrations/analytics";
 import { posthog } from "@repo/backend/confect/modules/integrations/posthog";
 import type { ConvexDataModel } from "@repo/backend/confect/modules/shared/convexContext";
-import { Clock, Effect } from "effect";
+import { Clock, Duration, Effect, Option } from "effect";
 
 type AuthClientConfig = Extract<
   NonNullable<Parameters<typeof createClient<ConvexDataModel>>[1]>,
@@ -25,18 +31,114 @@ type LinkAuthUser = (
   userId: Doc<"users">["_id"]
 ) => Promise<void>;
 
-const syncCustomerRef = Ref.getFunctionReference(
-  refs.internal.customers.actions.internalFunctions.syncCustomer
+const syncCustomerRef =
+  refs.internal.customers.actions.internalFunctions.syncCustomer;
+const cleanupCustomerRef =
+  refs.internal.customers.actions.internalFunctions.cleanupUserData;
+const cleanupUserRef = refs.internal.auth.cleanup.cleanupDeletedUser;
+const sendWelcomeEmailRef = refs.internal.emails.mutations.sendWelcomeEmail;
+const createSyncedUserRef = Ref.getFunctionReference(
+  refs.internal.auth.sync.createSyncedUser
 );
-const cleanupCustomerRef = Ref.getFunctionReference(
-  refs.internal.customers.actions.internalFunctions.cleanupUserData
+const updateSyncedUserRef = Ref.getFunctionReference(
+  refs.internal.auth.sync.updateSyncedUser
 );
-const cleanupUserRef = Ref.getFunctionReference(
-  refs.internal.auth.cleanup.cleanupDeletedUser
+const cleanupSyncedUserRef = Ref.getFunctionReference(
+  refs.internal.auth.sync.cleanupSyncedUser
 );
-const sendWelcomeEmailRef = Ref.getFunctionReference(
-  refs.internal.emails.mutations.sendWelcomeEmail
-);
+
+/** Creates the app-side user rows for one Better Auth user. */
+export const createSyncedAuthUserRecord = Effect.fn(
+  "identity.createSyncedAuthUserRecord"
+)(function* (args: typeof authTriggerUserSchema.Type) {
+  const writer = yield* DatabaseWriter;
+  const scheduler = yield* Scheduler;
+  const now = yield* Clock.currentTimeMillis;
+  const userId = yield* writer.table("users").insert({
+    email: args.email,
+    authId: args.authId,
+    name: args.name,
+    image: args.image ?? undefined,
+    plan: DEFAULT_USER_PLAN,
+    credits: DEFAULT_USER_CREDITS,
+    creditsResetAt: getCurrentCreditResetTimestamp(DEFAULT_USER_PLAN, now),
+  });
+
+  yield* writer.table("notificationPreferences").insert({
+    disabledTypes: [],
+    userId,
+    emailEnabled: true,
+    emailDigest: "weekly",
+    updatedAt: now,
+  });
+  yield* writer.table("notificationCounts").insert({
+    userId,
+    unreadCount: 0,
+    updatedAt: now,
+  });
+  yield* scheduler.runAfter(Duration.millis(0), syncCustomerRef, { userId });
+  yield* scheduler.runAfter(Duration.millis(0), sendWelcomeEmailRef, {
+    name: args.name,
+    email: args.email,
+  });
+
+  return userId;
+});
+
+/** Mirrors Better Auth profile changes into the app user table. */
+export const updateSyncedAuthUserRecord = Effect.fn(
+  "identity.updateSyncedAuthUserRecord"
+)(function* (args: typeof authTriggerUserSchema.Type) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const scheduler = yield* Scheduler;
+  const appUser = yield* reader
+    .table("users")
+    .index("by_authId", (query) => query.eq("authId", args.authId))
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
+
+  if (!appUser) {
+    return null;
+  }
+
+  yield* writer.table("users").patch(appUser._id, {
+    email: args.email,
+    name: args.name,
+    image: args.image ?? undefined,
+  });
+  yield* scheduler.runAfter(Duration.millis(0), syncCustomerRef, {
+    userId: appUser._id,
+  });
+
+  return null;
+});
+
+/** Schedules app-side cleanup for one deleted Better Auth user. */
+export const cleanupSyncedAuthUserRecord = Effect.fn(
+  "identity.cleanupSyncedAuthUserRecord"
+)(function* (args: { readonly authId: string }) {
+  const reader = yield* DatabaseReader;
+  const scheduler = yield* Scheduler;
+  const appUser = yield* reader
+    .table("users")
+    .index("by_authId", (query) => query.eq("authId", args.authId))
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
+
+  if (!appUser) {
+    return null;
+  }
+
+  yield* scheduler.runAfter(Duration.millis(0), cleanupUserRef, {
+    userId: appUser._id,
+  });
+  yield* scheduler.runAfter(Duration.millis(0), cleanupCustomerRef, {
+    userId: appUser._id,
+  });
+
+  return null;
+});
 
 /** Creates the app-side user graph after Better Auth creates a user. */
 export const createSyncedAuthUser = Effect.fn("identity.createSyncedAuthUser")(
@@ -48,31 +150,11 @@ export const createSyncedAuthUser = Effect.fn("identity.createSyncedAuthUser")(
     const now = yield* Clock.currentTimeMillis;
     const signedUpAt = new Date(now).toISOString();
     const userId = yield* Effect.promise(() =>
-      ctx.db.insert("users", {
-        email: authUser.email,
+      ctx.runMutation(createSyncedUserRef, {
         authId: authUser._id,
+        email: authUser.email,
+        image: authUser.image ?? null,
         name: authUser.name,
-        image: authUser.image ?? undefined,
-        plan: DEFAULT_USER_PLAN,
-        credits: DEFAULT_USER_CREDITS,
-        creditsResetAt: getCurrentCreditResetTimestamp(DEFAULT_USER_PLAN, now),
-      })
-    );
-
-    yield* Effect.promise(() =>
-      ctx.db.insert("notificationPreferences", {
-        disabledTypes: [],
-        userId,
-        emailEnabled: true,
-        emailDigest: "weekly",
-        updatedAt: now,
-      })
-    );
-    yield* Effect.promise(() =>
-      ctx.db.insert("notificationCounts", {
-        userId,
-        unreadCount: 0,
-        updatedAt: now,
       })
     );
     yield* Effect.promise(() =>
@@ -104,15 +186,6 @@ export const createSyncedAuthUser = Effect.fn("identity.createSyncedAuthUser")(
       })
     );
     yield* Effect.promise(() => linkAuthUser(authUser._id, userId));
-    yield* Effect.promise(() =>
-      ctx.scheduler.runAfter(0, syncCustomerRef, { userId })
-    );
-    yield* Effect.promise(() =>
-      ctx.scheduler.runAfter(0, sendWelcomeEmailRef, {
-        name: authUser.name,
-        email: authUser.email,
-      })
-    );
 
     return null;
   }
@@ -133,25 +206,13 @@ export const syncUpdatedAuthUser = Effect.fn("identity.syncUpdatedAuthUser")(
       return null;
     }
 
-    const appUser = yield* Effect.promise(() =>
-      ctx.db
-        .query("users")
-        .withIndex("by_authId", (query) => query.eq("authId", newAuthUser._id))
-        .unique()
-    );
-    if (!appUser) {
-      return null;
-    }
-
     yield* Effect.promise(() =>
-      ctx.db.patch("users", appUser._id, {
+      ctx.runMutation(updateSyncedUserRef, {
+        authId: newAuthUser._id,
         email: newAuthUser.email,
-        name: newAuthUser.name,
         image: newAuthUser.image ?? undefined,
+        name: newAuthUser.name,
       })
-    );
-    yield* Effect.promise(() =>
-      ctx.scheduler.runAfter(0, syncCustomerRef, { userId: appUser._id })
     );
 
     return null;
@@ -162,21 +223,8 @@ export const syncUpdatedAuthUser = Effect.fn("identity.syncUpdatedAuthUser")(
 export const cleanupDeletedAuthUser = Effect.fn(
   "identity.cleanupDeletedAuthUser"
 )(function* (ctx: AuthDeleteArgs[0], authUser: AuthDeleteArgs[1]) {
-  const appUser = yield* Effect.promise(() =>
-    ctx.db
-      .query("users")
-      .withIndex("by_authId", (query) => query.eq("authId", authUser._id))
-      .unique()
-  );
-  if (!appUser) {
-    return null;
-  }
-
   yield* Effect.promise(() =>
-    ctx.scheduler.runAfter(0, cleanupUserRef, { userId: appUser._id })
-  );
-  yield* Effect.promise(() =>
-    ctx.scheduler.runAfter(0, cleanupCustomerRef, { userId: appUser._id })
+    ctx.runMutation(cleanupSyncedUserRef, { authId: authUser._id })
   );
 
   return null;

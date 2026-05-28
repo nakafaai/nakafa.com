@@ -1,5 +1,5 @@
 import type { Doc } from "@repo/backend/confect/_generated/dataModel";
-import { QueryCtx } from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   CONTENT_SEARCH_MAX_LIMIT,
   CONTENT_SEARCH_MAX_OFFSET,
@@ -219,92 +219,102 @@ function interleaveDocumentGroups(
 
 /** Reads browse-mode content search rows. */
 function browseContent(
-  ctx: QueryCtx,
   args: { locale: Locale; section?: NakafaSection },
   scanLimit: number
 ) {
-  if (!args.section) {
-    return ctx.db
-      .query("contentSearch")
-      .withIndex("by_locale_and_title", (query) =>
-        query.eq("locale", args.locale)
+  const effect = Effect.gen(function* () {
+    const reader = yield* DatabaseReader;
+
+    if (!args.section) {
+      return yield* reader
+        .table("contentSearch")
+        .index("by_locale_and_title", (query) =>
+          query.eq("locale", args.locale)
+        )
+        .take(scanLimit);
+    }
+
+    const section = args.section;
+
+    return yield* reader
+      .table("contentSearch")
+      .index("by_locale_and_section_and_title", (query) =>
+        query.eq("locale", args.locale).eq("section", section)
       )
       .take(scanLimit);
-  }
+  });
 
-  const section = args.section;
-
-  return ctx.db
-    .query("contentSearch")
-    .withIndex("by_locale_and_section_and_title", (query) =>
-      query.eq("locale", args.locale).eq("section", section)
-    )
-    .take(scanLimit);
+  return effect;
 }
 
 /** Runs one search query against title and body indexes. */
-async function searchContent(
-  ctx: QueryCtx,
+function searchContent(
   args: { locale: Locale; section?: NakafaSection },
   queryText: string,
   scanLimit: number
 ) {
-  const [titleDocuments, textDocuments] = await Promise.all([
-    ctx.db
-      .query("contentSearch")
-      .withSearchIndex("search_title", (query) => {
-        const builder = query
-          .search("title", queryText)
-          .eq("locale", args.locale);
-        if (!args.section) {
-          return builder;
-        }
+  const effect = Effect.gen(function* () {
+    const reader = yield* DatabaseReader;
+    const [titleDocuments, textDocuments] = yield* Effect.all(
+      [
+        reader
+          .table("contentSearch")
+          .search("search_title", (query) => {
+            const builder = query
+              .search("title", queryText)
+              .eq("locale", args.locale);
+            if (!args.section) {
+              return builder;
+            }
 
-        return builder.eq("section", args.section);
-      })
-      .take(scanLimit),
-    ctx.db
-      .query("contentSearch")
-      .withSearchIndex("search_text", (query) => {
-        const builder = query
-          .search("text", queryText)
-          .eq("locale", args.locale);
-        if (!args.section) {
-          return builder;
-        }
+            return builder.eq("section", args.section);
+          })
+          .take(scanLimit),
+        reader
+          .table("contentSearch")
+          .search("search_text", (query) => {
+            const builder = query
+              .search("text", queryText)
+              .eq("locale", args.locale);
+            if (!args.section) {
+              return builder;
+            }
 
-        return builder.eq("section", args.section);
-      })
-      .take(scanLimit),
-  ]);
-  const documents =
-    args.section === "exercises"
-      ? appendDocumentGroups([textDocuments, titleDocuments])
-      : appendDocumentGroups([titleDocuments, textDocuments]);
+            return builder.eq("section", args.section);
+          })
+          .take(scanLimit),
+      ],
+      { concurrency: "unbounded" }
+    );
+    const documents =
+      args.section === "exercises"
+        ? appendDocumentGroups([textDocuments, titleDocuments])
+        : appendDocumentGroups([titleDocuments, textDocuments]);
 
-  if (args.section === "exercises") {
-    return rankContentSearchDocuments(documents, queryText);
-  }
+    if (args.section === "exercises") {
+      return rankContentSearchDocuments(documents, queryText);
+    }
 
-  return documents;
+    return documents;
+  });
+
+  return effect;
 }
 
 /** Reads content search rows for query or browse mode. */
 function readContentSearchDocuments(
-  ctx: QueryCtx,
   args: { locale: Locale; section?: NakafaSection },
   queryTexts: readonly string[],
   scanLimit: number
 ) {
   if (queryTexts.length === 0) {
-    return browseContent(ctx, args, scanLimit);
+    return browseContent(args, scanLimit);
   }
 
-  return Promise.all(
-    queryTexts.map((queryText) =>
-      searchContent(ctx, args, queryText, scanLimit)
-    )
-  ).then(interleaveDocumentGroups);
+  return Effect.all(
+    queryTexts.map((queryText) => searchContent(args, queryText, scanLimit)),
+    { concurrency: "unbounded" }
+  ).pipe(Effect.map(interleaveDocumentGroups));
 }
 
 /** Builds the public paginated search result shape. */
@@ -346,11 +356,12 @@ export const search = Effect.fn("contentSearch.search")(function* (args: {
   queries?: string[];
   section?: NakafaSection;
 }) {
-  const ctx = yield* QueryCtx;
   const queryTexts = yield* validateContentSearchInput(args);
   const scanLimit = args.offset + args.limit + 1;
-  const documents = yield* Effect.promise(() =>
-    readContentSearchDocuments(ctx, args, queryTexts, scanLimit)
+  const documents = yield* readContentSearchDocuments(
+    args,
+    queryTexts,
+    scanLimit
   );
 
   return buildContentSearchResult(args, documents);

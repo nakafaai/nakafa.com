@@ -1,22 +1,26 @@
-import { Ref } from "@confect/core";
-import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import {
   CONTENT_ANALYTICS_BATCH_SIZE,
   CONTENT_ANALYTICS_LEASE_DURATION_MS,
   CONTENT_ANALYTICS_PARTITION_COUNT,
   CONTENT_ANALYTICS_PARTITIONS,
 } from "@repo/backend/confect/modules/content/constants";
+import type { ContentViewAnalyticsQueue } from "@repo/backend/confect/modules/content/contents.tables";
 import { getTrendingBucketStart } from "@repo/backend/confect/modules/content/trending/time";
-import { Clock, Effect, Schema } from "effect";
+import { Clock, Duration, Effect, Option, Schema } from "effect";
 
 export class InvalidContentAnalyticsPartition extends Schema.TaggedError<InvalidContentAnalyticsPartition>()(
   "InvalidContentAnalyticsPartition",
   { message: Schema.String }
 ) {}
 
-type QueueItem = Doc<"contentViewAnalyticsQueue">;
+type QueueItem = typeof ContentViewAnalyticsQueue.Doc.Type;
 
 /** Returns whether a content analytics partition is inside the configured range. */
 function isContentAnalyticsPartition(partition: number) {
@@ -101,27 +105,23 @@ const applyArticlePopularityDelta = Effect.fn(
   updatedAt: number;
   viewCount: number;
 }) {
-  const ctx = yield* MutationCtx;
-  const currentRow = yield* Effect.promise(() =>
-    ctx.db
-      .query("articlePopularity")
-      .withIndex("by_contentId", (query) =>
-        query.eq("contentId", args.contentId)
-      )
-      .unique()
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const currentRowOption = yield* reader
+    .table("articlePopularity")
+    .index("by_contentId", (query) => query.eq("contentId", args.contentId))
+    .first();
+  const currentRow = Option.getOrNull(currentRowOption);
 
   if (!currentRow) {
-    yield* Effect.promise(() => ctx.db.insert("articlePopularity", args));
+    yield* writer.table("articlePopularity").insert(args);
     return;
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(currentRow._id, {
-      updatedAt: args.updatedAt,
-      viewCount: currentRow.viewCount + args.viewCount,
-    })
-  );
+  yield* writer.table("articlePopularity").patch(currentRow._id, {
+    updatedAt: args.updatedAt,
+    viewCount: currentRow.viewCount + args.viewCount,
+  });
 });
 
 /** Applies one subject popularity delta. */
@@ -132,27 +132,23 @@ const applySubjectPopularityDelta = Effect.fn(
   updatedAt: number;
   viewCount: number;
 }) {
-  const ctx = yield* MutationCtx;
-  const currentRow = yield* Effect.promise(() =>
-    ctx.db
-      .query("subjectPopularity")
-      .withIndex("by_contentId", (query) =>
-        query.eq("contentId", args.contentId)
-      )
-      .unique()
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const currentRowOption = yield* reader
+    .table("subjectPopularity")
+    .index("by_contentId", (query) => query.eq("contentId", args.contentId))
+    .first();
+  const currentRow = Option.getOrNull(currentRowOption);
 
   if (!currentRow) {
-    yield* Effect.promise(() => ctx.db.insert("subjectPopularity", args));
+    yield* writer.table("subjectPopularity").insert(args);
     return;
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(currentRow._id, {
-      updatedAt: args.updatedAt,
-      viewCount: currentRow.viewCount + args.viewCount,
-    })
-  );
+  yield* writer.table("subjectPopularity").patch(currentRow._id, {
+    updatedAt: args.updatedAt,
+    viewCount: currentRow.viewCount + args.viewCount,
+  });
 });
 
 /** Applies one exercise popularity delta. */
@@ -163,27 +159,23 @@ const applyExercisePopularityDelta = Effect.fn(
   updatedAt: number;
   viewCount: number;
 }) {
-  const ctx = yield* MutationCtx;
-  const currentRow = yield* Effect.promise(() =>
-    ctx.db
-      .query("exercisePopularity")
-      .withIndex("by_contentId", (query) =>
-        query.eq("contentId", args.contentId)
-      )
-      .unique()
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const currentRowOption = yield* reader
+    .table("exercisePopularity")
+    .index("by_contentId", (query) => query.eq("contentId", args.contentId))
+    .first();
+  const currentRow = Option.getOrNull(currentRowOption);
 
   if (!currentRow) {
-    yield* Effect.promise(() => ctx.db.insert("exercisePopularity", args));
+    yield* writer.table("exercisePopularity").insert(args);
     return;
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(currentRow._id, {
-      updatedAt: args.updatedAt,
-      viewCount: currentRow.viewCount + args.viewCount,
-    })
-  );
+  yield* writer.table("exercisePopularity").patch(currentRow._id, {
+    updatedAt: args.updatedAt,
+    viewCount: currentRow.viewCount + args.viewCount,
+  });
 });
 
 /** Applies one subject trending bucket delta. */
@@ -196,38 +188,34 @@ const applySubjectTrendingBucketDelta = Effect.fn(
   updatedAt: number;
   viewCount: number;
 }) {
-  const ctx = yield* MutationCtx;
-  const currentRow = yield* Effect.promise(() =>
-    ctx.db
-      .query("subjectTrendingBuckets")
-      .withIndex("by_locale_and_bucketStart_and_contentId", (query) =>
-        query
-          .eq("locale", args.locale)
-          .eq("bucketStart", args.bucketStart)
-          .eq("contentId", args.contentId)
-      )
-      .unique()
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const currentRowOption = yield* reader
+    .table("subjectTrendingBuckets")
+    .index("by_locale_and_bucketStart_and_contentId", (query) =>
+      query
+        .eq("locale", args.locale)
+        .eq("bucketStart", args.bucketStart)
+        .eq("contentId", args.contentId)
+    )
+    .first();
+  const currentRow = Option.getOrNull(currentRowOption);
 
   if (!currentRow) {
-    yield* Effect.promise(() =>
-      ctx.db.insert("subjectTrendingBuckets", {
-        bucketStart: args.bucketStart,
-        contentId: args.contentId,
-        locale: args.locale,
-        updatedAt: args.updatedAt,
-        viewCount: args.viewCount,
-      })
-    );
+    yield* writer.table("subjectTrendingBuckets").insert({
+      bucketStart: args.bucketStart,
+      contentId: args.contentId,
+      locale: args.locale,
+      updatedAt: args.updatedAt,
+      viewCount: args.viewCount,
+    });
     return;
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(currentRow._id, {
-      updatedAt: args.updatedAt,
-      viewCount: currentRow.viewCount + args.viewCount,
-    })
-  );
+  yield* writer.table("subjectTrendingBuckets").patch(currentRow._id, {
+    updatedAt: args.updatedAt,
+    viewCount: currentRow.viewCount + args.viewCount,
+  });
 });
 
 /** Applies a queued content analytics batch to popularity read models. */
@@ -258,18 +246,14 @@ const applyContentAnalyticsBatch = Effect.fn(
 export const scheduleContentAnalyticsPartitions = Effect.fn(
   "contentAnalytics.scheduleContentAnalyticsPartitions"
 )(function* () {
-  const ctx = yield* MutationCtx;
+  const scheduler = yield* Scheduler;
 
   for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
-    yield* Effect.promise(() =>
-      ctx.scheduler.runAfter(
-        0,
-        Ref.getFunctionReference(
-          refs.internal.contents.mutations.analytics
-            .scheduleContentAnalyticsPartition
-        ),
-        { partition }
-      )
+    yield* scheduler.runAfter(
+      Duration.millis(0),
+      refs.internal.contents.mutations.analytics
+        .scheduleContentAnalyticsPartition,
+      { partition }
     );
   }
 
@@ -280,24 +264,23 @@ export const scheduleContentAnalyticsPartitions = Effect.fn(
 export const scheduleContentAnalyticsPartition = Effect.fn(
   "contentAnalytics.scheduleContentAnalyticsPartition"
 )(function* (args: { partition: number }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const scheduler = yield* Scheduler;
   const partition = yield* validateContentAnalyticsPartition(args.partition);
-  const partitionRow = yield* Effect.promise(() =>
-    ctx.db
-      .query("contentAnalyticsPartitions")
-      .withIndex("by_partition", (query) => query.eq("partition", partition))
-      .unique()
-  );
+  const partitionRowOption = yield* reader
+    .table("contentAnalyticsPartitions")
+    .index("by_partition", (query) => query.eq("partition", partition))
+    .first();
+  const partitionRow = Option.getOrNull(partitionRowOption);
   const now = yield* Clock.currentTimeMillis;
   const partitionRowId =
     partitionRow?._id ??
-    (yield* Effect.promise(() =>
-      ctx.db.insert("contentAnalyticsPartitions", {
-        leaseExpiresAt: 0,
-        leaseVersion: 0,
-        partition,
-      })
-    ));
+    (yield* writer.table("contentAnalyticsPartitions").insert({
+      leaseExpiresAt: 0,
+      leaseVersion: 0,
+      partition,
+    }));
   const leaseExpiresAt = partitionRow?.leaseExpiresAt ?? 0;
   let leaseVersion = partitionRow?.leaseVersion ?? 0;
 
@@ -306,21 +289,14 @@ export const scheduleContentAnalyticsPartition = Effect.fn(
   }
 
   leaseVersion += 1;
-  yield* Effect.promise(() =>
-    ctx.db.patch(partitionRowId, {
-      leaseExpiresAt: now + CONTENT_ANALYTICS_LEASE_DURATION_MS,
-      leaseVersion,
-    })
-  );
-  yield* Effect.promise(() =>
-    ctx.scheduler.runAfter(
-      0,
-      Ref.getFunctionReference(
-        refs.internal.contents.mutations.analytics
-          .processContentAnalyticsPartition
-      ),
-      { leaseVersion, partition }
-    )
+  yield* writer.table("contentAnalyticsPartitions").patch(partitionRowId, {
+    leaseExpiresAt: now + CONTENT_ANALYTICS_LEASE_DURATION_MS,
+    leaseVersion,
+  });
+  yield* scheduler.runAfter(
+    Duration.millis(0),
+    refs.internal.contents.mutations.analytics.processContentAnalyticsPartition,
+    { leaseVersion, partition }
   );
 
   return { createdPartition: !partitionRow, scheduled: true };
@@ -330,15 +306,16 @@ export const scheduleContentAnalyticsPartition = Effect.fn(
 export const processContentAnalyticsPartition = Effect.fn(
   "contentAnalytics.processContentAnalyticsPartition"
 )(function* (args: { leaseVersion: number; partition: number }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const scheduler = yield* Scheduler;
   const partition = yield* validateContentAnalyticsPartition(args.partition);
   const now = yield* Clock.currentTimeMillis;
-  const partitionRow = yield* Effect.promise(() =>
-    ctx.db
-      .query("contentAnalyticsPartitions")
-      .withIndex("by_partition", (query) => query.eq("partition", partition))
-      .unique()
-  );
+  const partitionRowOption = yield* reader
+    .table("contentAnalyticsPartitions")
+    .index("by_partition", (query) => query.eq("partition", partition))
+    .first();
+  const partitionRow = Option.getOrNull(partitionRowOption);
 
   if (
     !partitionRow ||
@@ -348,27 +325,23 @@ export const processContentAnalyticsPartition = Effect.fn(
     return { hasMore: false, partition, processed: 0, skipped: true };
   }
 
-  const queueItems = yield* Effect.promise(() =>
-    ctx.db
-      .query("contentViewAnalyticsQueue")
-      .withIndex("by_partition", (query) => query.eq("partition", partition))
-      .take(CONTENT_ANALYTICS_BATCH_SIZE)
-  );
+  const queueItems = yield* reader
+    .table("contentViewAnalyticsQueue")
+    .index("by_partition", (query) => query.eq("partition", partition))
+    .take(CONTENT_ANALYTICS_BATCH_SIZE);
 
   if (queueItems.length === 0) {
-    yield* Effect.promise(() =>
-      ctx.db.patch(partitionRow._id, {
-        lastProcessedAt: now,
-        leaseExpiresAt: 0,
-      })
-    );
+    yield* writer.table("contentAnalyticsPartitions").patch(partitionRow._id, {
+      lastProcessedAt: now,
+      leaseExpiresAt: 0,
+    });
     return { hasMore: false, partition, processed: 0, skipped: false };
   }
 
   yield* applyContentAnalyticsBatch(queueItems);
 
   for (const queueItem of queueItems) {
-    yield* Effect.promise(() => ctx.db.delete(queueItem._id));
+    yield* writer.table("contentViewAnalyticsQueue").delete(queueItem._id);
   }
 
   const hasMore = queueItems.length === CONTENT_ANALYTICS_BATCH_SIZE;
@@ -376,23 +349,17 @@ export const processContentAnalyticsPartition = Effect.fn(
     ? now + CONTENT_ANALYTICS_LEASE_DURATION_MS
     : 0;
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(partitionRow._id, {
-      lastProcessedAt: now,
-      leaseExpiresAt,
-    })
-  );
+  yield* writer.table("contentAnalyticsPartitions").patch(partitionRow._id, {
+    lastProcessedAt: now,
+    leaseExpiresAt,
+  });
 
   if (hasMore) {
-    yield* Effect.promise(() =>
-      ctx.scheduler.runAfter(
-        0,
-        Ref.getFunctionReference(
-          refs.internal.contents.mutations.analytics
-            .processContentAnalyticsPartition
-        ),
-        args
-      )
+    yield* scheduler.runAfter(
+      Duration.millis(0),
+      refs.internal.contents.mutations.analytics
+        .processContentAnalyticsPartition,
+      args
     );
   }
 

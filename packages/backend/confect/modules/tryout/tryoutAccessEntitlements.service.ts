@@ -1,36 +1,43 @@
-import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import type {
-  ConvexMutationCtx,
-  ConvexQueryCtx,
-} from "@repo/backend/confect/modules/shared/convexContext";
+  TryoutAccessCampaigns,
+  TryoutAccessGrants,
+  UserTryoutEntitlements,
+} from "@repo/backend/confect/modules/tryout/access.tables";
 import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import {
   getTryoutAccessGrantStatus,
   listTryoutAccessCampaignProducts,
 } from "@repo/backend/confect/modules/tryout/tryoutAccessShared.service";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
+
+type UserTryoutEntitlement = typeof UserTryoutEntitlements.Doc.Type;
+type TryoutAccessCampaign = typeof TryoutAccessCampaigns.Doc.Type;
+type TryoutAccessGrant = typeof TryoutAccessGrants.Doc.Type;
 
 /** Lists entitlement rows attached to one access grant. */
 const listGrantEntitlements = Effect.fn("tryoutAccess.listGrantEntitlements")(
-  function* (db: ConvexQueryCtx["db"], grantId: Id<"tryoutAccessGrants">) {
-    return yield* Effect.promise(() =>
-      db
-        .query("userTryoutEntitlements")
-        .withIndex("by_accessGrantId", (query) =>
-          query.eq("accessGrantId", grantId)
-        )
-        .collect()
-    );
+  function* (grantId: Id<"tryoutAccessGrants">) {
+    const reader = yield* DatabaseReader;
+
+    return yield* reader
+      .table("userTryoutEntitlements")
+      .index("by_accessGrantId", (query) => query.eq("accessGrantId", grantId))
+      .collect();
   }
 );
 
 /** Groups entitlement rows by product. */
 function groupEntitlementsByProduct(
-  entitlements: readonly Doc<"userTryoutEntitlements">[]
+  entitlements: readonly UserTryoutEntitlement[]
 ) {
   const entitlementsByProduct = new Map<
     TryoutProduct,
-    Doc<"userTryoutEntitlements">[]
+    UserTryoutEntitlement[]
   >();
 
   for (const entitlement of entitlements) {
@@ -45,22 +52,20 @@ function groupEntitlementsByProduct(
 
 /** Synchronizes entitlement rows for one grant and campaign state. */
 const syncGrantEntitlements = Effect.fn("tryoutAccess.syncGrantEntitlements")(
-  function* (
-    db: ConvexMutationCtx["db"],
-    args: {
-      readonly campaign: Doc<"tryoutAccessCampaigns"> | null;
-      readonly campaignProducts: readonly TryoutProduct[];
-      readonly endsAt: number;
-      readonly grant: Doc<"tryoutAccessGrants">;
-      readonly status: "active" | "expired";
-    }
-  ) {
-    const entitlements = yield* listGrantEntitlements(db, args.grant._id);
+  function* (args: {
+    readonly campaign: TryoutAccessCampaign | null;
+    readonly campaignProducts: readonly TryoutProduct[];
+    readonly endsAt: number;
+    readonly grant: TryoutAccessGrant;
+    readonly status: "active" | "expired";
+  }) {
+    const writer = yield* DatabaseWriter;
+    const entitlements = yield* listGrantEntitlements(args.grant._id);
     const entitlementsByProduct = groupEntitlementsByProduct(entitlements);
 
     if (!(args.campaign && args.status === "active")) {
       for (const entitlement of entitlements) {
-        yield* Effect.promise(() => db.delete(entitlement._id));
+        yield* writer.table("userTryoutEntitlements").delete(entitlement._id);
       }
 
       return null;
@@ -80,13 +85,13 @@ const syncGrantEntitlements = Effect.fn("tryoutAccess.syncGrantEntitlements")(
       };
 
       for (const duplicateEntitlement of productEntitlements.slice(1)) {
-        yield* Effect.promise(() => db.delete(duplicateEntitlement._id));
+        yield* writer
+          .table("userTryoutEntitlements")
+          .delete(duplicateEntitlement._id);
       }
 
       if (!currentEntitlement) {
-        yield* Effect.promise(() =>
-          db.insert("userTryoutEntitlements", nextEntitlement)
-        );
+        yield* writer.table("userTryoutEntitlements").insert(nextEntitlement);
         continue;
       }
 
@@ -105,14 +110,16 @@ const syncGrantEntitlements = Effect.fn("tryoutAccess.syncGrantEntitlements")(
         continue;
       }
 
-      yield* Effect.promise(() =>
-        db.patch(currentEntitlement._id, nextEntitlement)
-      );
+      yield* writer
+        .table("userTryoutEntitlements")
+        .patch(currentEntitlement._id, nextEntitlement);
     }
 
     for (const staleEntitlements of entitlementsByProduct.values()) {
       for (const staleEntitlement of staleEntitlements) {
-        yield* Effect.promise(() => db.delete(staleEntitlement._id));
+        yield* writer
+          .table("userTryoutEntitlements")
+          .delete(staleEntitlement._id);
       }
     }
 
@@ -123,21 +130,14 @@ const syncGrantEntitlements = Effect.fn("tryoutAccess.syncGrantEntitlements")(
 /** Synchronizes entitlement rows for a grant and optional campaign. */
 export const syncTryoutAccessGrantEntitlements = Effect.fn(
   "tryoutAccess.syncGrantEntitlementsForCampaign"
-)(function* (
-  db: ConvexMutationCtx["db"],
-  grant: Doc<"tryoutAccessGrants">,
-  campaign: Doc<"tryoutAccessCampaigns"> | null
-) {
+)(function* (grant: TryoutAccessGrant, campaign: TryoutAccessCampaign | null) {
   let campaignProducts: TryoutProduct[] = [];
 
   if (campaign) {
-    campaignProducts = yield* listTryoutAccessCampaignProducts(
-      db,
-      campaign._id
-    );
+    campaignProducts = yield* listTryoutAccessCampaignProducts(campaign._id);
   }
 
-  yield* syncGrantEntitlements(db, {
+  yield* syncGrantEntitlements({
     campaign,
     campaignProducts,
     endsAt: grant.endsAt,
@@ -149,19 +149,17 @@ export const syncTryoutAccessGrantEntitlements = Effect.fn(
 /** Updates grant status and mirrors entitlement rows. */
 export const syncTryoutAccessGrantStatus = Effect.fn(
   "tryoutAccess.syncGrantStatus"
-)(function* (
-  db: ConvexMutationCtx["db"],
-  grant: Doc<"tryoutAccessGrants">,
-  now: number
-) {
+)(function* (grant: TryoutAccessGrant, now: number) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const status = getTryoutAccessGrantStatus(grant.endsAt, now);
 
   if (grant.status !== status) {
-    yield* Effect.promise(() => db.patch(grant._id, { status }));
+    yield* writer.table("tryoutAccessGrants").patch(grant._id, { status });
   }
 
   if (status === "expired") {
-    yield* syncGrantEntitlements(db, {
+    yield* syncGrantEntitlements({
       campaign: null,
       campaignProducts: [],
       endsAt: grant.endsAt,
@@ -171,17 +169,17 @@ export const syncTryoutAccessGrantStatus = Effect.fn(
     return status;
   }
 
-  const campaign = yield* Effect.promise(() => db.get(grant.campaignId));
+  const campaign = yield* reader
+    .table("tryoutAccessCampaigns")
+    .get(grant.campaignId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
   let campaignProducts: TryoutProduct[] = [];
 
   if (campaign) {
-    campaignProducts = yield* listTryoutAccessCampaignProducts(
-      db,
-      campaign._id
-    );
+    campaignProducts = yield* listTryoutAccessCampaignProducts(campaign._id);
   }
 
-  yield* syncGrantEntitlements(db, {
+  yield* syncGrantEntitlements({
     campaign,
     campaignProducts,
     endsAt: grant.endsAt,
@@ -195,40 +193,40 @@ export const syncTryoutAccessGrantStatus = Effect.fn(
 /** Resolves active event entitlements for a product and user. */
 export const resolveActiveTryoutEventEntitlements = Effect.fn(
   "tryoutAccess.resolveActiveEntitlements"
-)(function* (
-  db: ConvexQueryCtx["db"],
-  args: {
-    readonly now: number;
-    readonly product: TryoutProduct;
-    readonly userId: Id<"users">;
-  }
-) {
-  const competitionEntitlement = yield* Effect.promise(() =>
-    db
-      .query("userTryoutEntitlements")
-      .withIndex("by_userId_and_product_and_sourceKind_and_endsAt", (query) =>
+)(function* (args: {
+  readonly now: number;
+  readonly product: TryoutProduct;
+  readonly userId: Id<"users">;
+}) {
+  const reader = yield* DatabaseReader;
+  const competitionEntitlementOption = yield* reader
+    .table("userTryoutEntitlements")
+    .index(
+      "by_userId_and_product_and_sourceKind_and_endsAt",
+      (query) =>
         query
           .eq("userId", args.userId)
           .eq("product", args.product)
           .eq("sourceKind", "competition")
-          .gt("endsAt", args.now)
-      )
-      .order("desc")
-      .first()
-  );
-  const accessPassEntitlement = yield* Effect.promise(() =>
-    db
-      .query("userTryoutEntitlements")
-      .withIndex("by_userId_and_product_and_sourceKind_and_endsAt", (query) =>
+          .gt("endsAt", args.now),
+      "desc"
+    )
+    .first();
+  const accessPassEntitlementOption = yield* reader
+    .table("userTryoutEntitlements")
+    .index(
+      "by_userId_and_product_and_sourceKind_and_endsAt",
+      (query) =>
         query
           .eq("userId", args.userId)
           .eq("product", args.product)
           .eq("sourceKind", "access-pass")
-          .gt("endsAt", args.now)
-      )
-      .order("desc")
-      .first()
-  );
+          .gt("endsAt", args.now),
+      "desc"
+    )
+    .first();
+  const accessPassEntitlement = Option.getOrNull(accessPassEntitlementOption);
+  const competitionEntitlement = Option.getOrNull(competitionEntitlementOption);
 
   return { accessPassEntitlement, competitionEntitlement };
 });

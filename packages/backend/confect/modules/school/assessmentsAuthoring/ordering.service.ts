@@ -1,11 +1,13 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { requireAssessment } from "@repo/backend/confect/modules/school/assessments.shared";
 import { requirePermission } from "@repo/backend/confect/modules/school/classAccess.service";
 import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option } from "effect";
 
 /** Reorders an assessment within its school or class list. */
 export const reorderAssessment = Effect.fn("assessments.reorderAssessment")(
@@ -14,23 +16,22 @@ export const reorderAssessment = Effect.fn("assessments.reorderAssessment")(
     readonly direction: "down" | "up";
     readonly schoolId: Id<"schools">;
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
     const assessment = yield* requireAssessment(
-      ctx,
       args.schoolId,
       args.assessmentId
     );
 
-    yield* requirePermission(ctx, PERMISSIONS.ASSESSMENT_UPDATE, {
+    yield* requirePermission(PERMISSIONS.ASSESSMENT_UPDATE, {
       classId: assessment.classId,
       schoolId: assessment.schoolId,
       userId: user.appUser._id,
     });
 
     const adjacentAssessment = assessment.classId
-      ? yield* findAdjacentClassAssessment(ctx, assessment, args.direction)
-      : yield* findAdjacentSchoolAssessment(ctx, assessment, args.direction);
+      ? yield* findAdjacentClassAssessment(assessment, args.direction)
+      : yield* findAdjacentSchoolAssessment(assessment, args.direction);
 
     if (!adjacentAssessment) {
       return null;
@@ -38,18 +39,14 @@ export const reorderAssessment = Effect.fn("assessments.reorderAssessment")(
 
     const now = yield* Clock.currentTimeMillis;
 
-    yield* Effect.promise(() =>
-      ctx.db.patch(assessment._id, {
-        order: adjacentAssessment.order,
-        updatedAt: now,
-      })
-    );
-    yield* Effect.promise(() =>
-      ctx.db.patch(adjacentAssessment._id, {
-        order: assessment.order,
-        updatedAt: now,
-      })
-    );
+    yield* writer.table("schoolAssessments").patch(assessment._id, {
+      order: adjacentAssessment.order,
+      updatedAt: now,
+    });
+    yield* writer.table("schoolAssessments").patch(adjacentAssessment._id, {
+      order: assessment.order,
+      updatedAt: now,
+    });
 
     return null;
   }
@@ -58,73 +55,67 @@ export const reorderAssessment = Effect.fn("assessments.reorderAssessment")(
 /** Finds the adjacent class assessment for reordering. */
 const findAdjacentClassAssessment = Effect.fn(
   "assessments.findAdjacentClassAssessment"
-)(function* (
-  ctx: ConvexMutationCtx,
-  assessment: Doc<"schoolAssessments">,
-  direction: "down" | "up"
-) {
+)(function* (assessment: Doc<"schoolAssessments">, direction: "down" | "up") {
   if (!assessment.classId) {
     return null;
   }
 
+  const reader = yield* DatabaseReader;
+
   if (direction === "up") {
-    return yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolAssessments")
-        .withIndex("by_schoolId_and_classId_and_order", (query) =>
+    return yield* reader
+      .table("schoolAssessments")
+      .index(
+        "by_schoolId_and_classId_and_order",
+        (query) =>
           query
             .eq("schoolId", assessment.schoolId)
             .eq("classId", assessment.classId)
-            .lt("order", assessment.order)
-        )
-        .order("desc")
-        .first()
-    );
+            .lt("order", assessment.order),
+        "desc"
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
   }
 
-  return yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessments")
-      .withIndex("by_schoolId_and_classId_and_order", (query) =>
-        query
-          .eq("schoolId", assessment.schoolId)
-          .eq("classId", assessment.classId)
-          .gt("order", assessment.order)
-      )
-      .order("asc")
-      .first()
-  );
+  return yield* reader
+    .table("schoolAssessments")
+    .index("by_schoolId_and_classId_and_order", (query) =>
+      query
+        .eq("schoolId", assessment.schoolId)
+        .eq("classId", assessment.classId)
+        .gt("order", assessment.order)
+    )
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 });
 
 /** Finds the adjacent school assessment for reordering. */
 const findAdjacentSchoolAssessment = Effect.fn(
   "assessments.findAdjacentSchoolAssessment"
-)(function* (
-  ctx: ConvexMutationCtx,
-  assessment: Doc<"schoolAssessments">,
-  direction: "down" | "up"
-) {
+)(function* (assessment: Doc<"schoolAssessments">, direction: "down" | "up") {
+  const reader = yield* DatabaseReader;
+
   if (direction === "up") {
-    return yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolAssessments")
-        .withIndex("by_schoolId_and_order", (query) =>
+    return yield* reader
+      .table("schoolAssessments")
+      .index(
+        "by_schoolId_and_order",
+        (query) =>
           query
             .eq("schoolId", assessment.schoolId)
-            .lt("order", assessment.order)
-        )
-        .order("desc")
-        .first()
-    );
+            .lt("order", assessment.order),
+        "desc"
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
   }
 
-  return yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessments")
-      .withIndex("by_schoolId_and_order", (query) =>
-        query.eq("schoolId", assessment.schoolId).gt("order", assessment.order)
-      )
-      .order("asc")
-      .first()
-  );
+  return yield* reader
+    .table("schoolAssessments")
+    .index("by_schoolId_and_order", (query) =>
+      query.eq("schoolId", assessment.schoolId).gt("order", assessment.order)
+    )
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 });

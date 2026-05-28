@@ -1,29 +1,23 @@
-import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import type {
-  MutationCtx as ConvexMutationCtx,
-  QueryCtx as ConvexQueryCtx,
-} from "@repo/backend/confect/_generated/services";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import {
   getClassMembership,
   getSchoolMembership,
   isAdmin,
 } from "@repo/backend/confect/modules/school/classAccess.service";
 import { ClassActionError } from "@repo/backend/confect/modules/school/classErrors";
+import type { SchoolClassForums } from "@repo/backend/confect/modules/school/classes.tables";
 import { MAX_FORUM_POST_MENTIONS } from "@repo/backend/confect/modules/school/forums/constants";
-import { Effect } from "effect";
+import { Effect, type Schema } from "effect";
 
-type DatabaseCtx = ConvexMutationCtx | ConvexQueryCtx;
+type ForumDoc = Schema.Schema.Type<typeof SchoolClassForums.Doc>;
 
 /** Validates that mentioned users can access the forum. */
 export const validateForumMentions = Effect.fn(
   "school.forums.validateForumMentions"
-)(function* (
-  ctx: DatabaseCtx,
-  args: {
-    readonly forum: Doc<"schoolClassForums">;
-    readonly mentionedUserIds: readonly Id<"users">[];
-  }
-) {
+)(function* (args: {
+  readonly forum: ForumDoc;
+  readonly mentionedUserIds: readonly Id<"users">[];
+}) {
   if (args.mentionedUserIds.length === 0) {
     return [];
   }
@@ -40,7 +34,6 @@ export const validateForumMentions = Effect.fn(
 
   for (const mentionedUserId of uniqueMentionedUserIds) {
     const classMember = yield* getClassMembership(
-      ctx,
       args.forum.classId,
       mentionedUserId
     );
@@ -50,7 +43,6 @@ export const validateForumMentions = Effect.fn(
     }
 
     const schoolMember = yield* getSchoolMembership(
-      ctx,
       args.forum.schoolId,
       mentionedUserId
     );

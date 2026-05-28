@@ -1,12 +1,12 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import {
-  MutationCtx,
-  QueryCtx,
+  DatabaseReader,
+  DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { SchoolActionError } from "@repo/backend/confect/modules/school/schoolErrors";
 import type { PaginationOptions } from "convex/server";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option } from "effect";
 import { nanoid } from "nanoid";
 
 const SCHOOL_INVITE_ROLES = ["teacher", "student", "parent", "demo"] as const;
@@ -30,19 +30,17 @@ function generateInviteCode() {
 const generateUniqueSlug = Effect.fn("schools.generateUniqueSlug")(function* (
   baseSlug: string
 ) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
   let slug = baseSlug;
   let counter = 1;
 
   while (true) {
-    const existing = yield* Effect.promise(() =>
-      ctx.db
-        .query("schools")
-        .withIndex("by_slug", (query) => query.eq("slug", slug))
-        .first()
-    );
+    const existing = yield* reader
+      .table("schools")
+      .index("by_slug", (query) => query.eq("slug", slug))
+      .first();
 
-    if (!existing) {
+    if (Option.isNone(existing)) {
       return slug;
     }
 
@@ -98,16 +96,23 @@ function validateNotExistingMembership(
 
 /** Reads the active membership for a school/user pair. */
 export function getSchoolMembership(
-  ctx: QueryCtx,
   schoolId: Id<"schools">,
   userId: Id<"users">
 ) {
-  return ctx.db
-    .query("schoolMembers")
-    .withIndex("by_schoolId_and_userId_and_status", (query) =>
-      query.eq("schoolId", schoolId).eq("userId", userId).eq("status", "active")
-    )
-    .unique();
+  return Effect.gen(function* () {
+    const reader = yield* DatabaseReader;
+
+    return yield* reader
+      .table("schoolMembers")
+      .index("by_schoolId_and_userId_and_status", (query) =>
+        query
+          .eq("schoolId", schoolId)
+          .eq("userId", userId)
+          .eq("status", "active")
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
+  });
 }
 
 /** Creates a school and admin membership for the current user. */
@@ -126,14 +131,13 @@ export const createSchool = Effect.fn("schools.createSchool")(function* (args: {
     | "university"
     | "other";
 }) {
-  const ctx = yield* MutationCtx;
-  const user = yield* requireAppUser(ctx);
-  const existingSchoolByEmail = yield* Effect.promise(() =>
-    ctx.db
-      .query("schools")
-      .withIndex("by_email", (query) => query.eq("email", args.email))
-      .unique()
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
+  const existingSchoolByEmail = yield* reader
+    .table("schools")
+    .get("by_email", args.email)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
   if (existingSchoolByEmail) {
     return yield* Effect.fail(
@@ -146,48 +150,42 @@ export const createSchool = Effect.fn("schools.createSchool")(function* (args: {
   const uniqueSlug = yield* generateUniqueSlug(slugify(args.name));
   const now = yield* Clock.currentTimeMillis;
   const userId = user.appUser._id;
-  const schoolId = yield* Effect.promise(() =>
-    ctx.db.insert("schools", {
-      address: args.address,
-      city: args.city,
-      createdBy: userId,
-      currentStudents: 0,
-      currentTeachers: 0,
-      email: args.email,
-      name: args.name,
-      phone: args.phone,
-      province: args.province,
-      slug: uniqueSlug,
-      type: args.type,
-      updatedAt: now,
-      updatedBy: userId,
-    })
-  );
+  const schoolId = yield* writer.table("schools").insert({
+    address: args.address,
+    city: args.city,
+    createdBy: userId,
+    currentStudents: 0,
+    currentTeachers: 0,
+    email: args.email,
+    name: args.name,
+    phone: args.phone,
+    province: args.province,
+    slug: uniqueSlug,
+    type: args.type,
+    updatedAt: now,
+    updatedBy: userId,
+  });
 
-  yield* Effect.promise(() =>
-    ctx.db.insert("schoolMembers", {
-      joinedAt: now,
-      role: "admin",
-      schoolId,
-      status: "active",
-      updatedAt: now,
-      userId,
-    })
-  );
+  yield* writer.table("schoolMembers").insert({
+    joinedAt: now,
+    role: "admin",
+    schoolId,
+    status: "active",
+    updatedAt: now,
+    userId,
+  });
 
   for (const role of SCHOOL_INVITE_ROLES) {
-    yield* Effect.promise(() =>
-      ctx.db.insert("schoolInviteCodes", {
-        code: generateInviteCode(),
-        createdBy: userId,
-        currentUsage: 0,
-        enabled: true,
-        role,
-        schoolId,
-        updatedAt: now,
-        updatedBy: userId,
-      })
-    );
+    yield* writer.table("schoolInviteCodes").insert({
+      code: generateInviteCode(),
+      createdBy: userId,
+      currentUsage: 0,
+      enabled: true,
+      role,
+      schoolId,
+      updatedAt: now,
+      updatedBy: userId,
+    });
   }
 
   return { schoolId, slug: uniqueSlug };
@@ -197,14 +195,13 @@ export const createSchool = Effect.fn("schools.createSchool")(function* (args: {
 export const joinSchool = Effect.fn("schools.joinSchool")(function* (args: {
   code: string;
 }) {
-  const ctx = yield* MutationCtx;
-  const user = yield* requireAppUser(ctx);
-  const inviteCode = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolInviteCodes")
-      .withIndex("by_code", (query) => query.eq("code", args.code))
-      .unique()
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
+  const inviteCode = yield* reader
+    .table("schoolInviteCodes")
+    .get("by_code", args.code)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
   if (!inviteCode) {
     return yield* Effect.fail(
@@ -215,7 +212,10 @@ export const joinSchool = Effect.fn("schools.joinSchool")(function* (args: {
   const now = yield* Clock.currentTimeMillis;
   yield* validateInviteCodeState(inviteCode, now);
 
-  const school = yield* Effect.promise(() => ctx.db.get(inviteCode.schoolId));
+  const school = yield* reader
+    .table("schools")
+    .get(inviteCode.schoolId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!school) {
     return yield* Effect.fail(
@@ -223,30 +223,21 @@ export const joinSchool = Effect.fn("schools.joinSchool")(function* (args: {
     );
   }
 
-  const existingMember = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolMembers")
-      .withIndex("by_schoolId_and_userId_and_status", (query) =>
-        query
-          .eq("schoolId", school._id)
-          .eq("userId", user.appUser._id)
-          .eq("status", "active")
-      )
-      .unique()
+  const existingMember = yield* getSchoolMembership(
+    school._id,
+    user.appUser._id
   );
   yield* validateNotExistingMembership(existingMember);
 
-  yield* Effect.promise(() =>
-    ctx.db.insert("schoolMembers", {
-      inviteCodeId: inviteCode._id,
-      joinedAt: now,
-      role: inviteCode.role,
-      schoolId: school._id,
-      status: "active",
-      updatedAt: now,
-      userId: user.appUser._id,
-    })
-  );
+  yield* writer.table("schoolMembers").insert({
+    inviteCodeId: inviteCode._id,
+    joinedAt: now,
+    role: inviteCode.role,
+    schoolId: school._id,
+    status: "active",
+    updatedAt: now,
+    userId: user.appUser._id,
+  });
 
   return { schoolId: school._id, slug: school.slug };
 });
@@ -254,14 +245,12 @@ export const joinSchool = Effect.fn("schools.joinSchool")(function* (args: {
 /** Reads a school and the current user's active membership by slug. */
 export const getSchoolBySlug = Effect.fn("schools.getSchoolBySlug")(
   function* (args: { slug: string }) {
-    const ctx = yield* QueryCtx;
-    const user = yield* requireAppUser(ctx);
-    const school = yield* Effect.promise(() =>
-      ctx.db
-        .query("schools")
-        .withIndex("by_slug", (query) => query.eq("slug", args.slug))
-        .unique()
-    );
+    const reader = yield* DatabaseReader;
+    const user = yield* requireAppUser();
+    const school = yield* reader
+      .table("schools")
+      .get("by_slug", args.slug)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
     if (!school) {
       return yield* Effect.fail(
@@ -272,9 +261,7 @@ export const getSchoolBySlug = Effect.fn("schools.getSchoolBySlug")(
       );
     }
 
-    const membership = yield* Effect.promise(() =>
-      getSchoolMembership(ctx, school._id, user.appUser._id)
-    );
+    const membership = yield* getSchoolMembership(school._id, user.appUser._id);
 
     if (!membership) {
       return yield* Effect.fail(
@@ -293,16 +280,14 @@ export const getSchoolBySlug = Effect.fn("schools.getSchoolBySlug")(
 export const getMySchoolLandingState = Effect.fn(
   "schools.getMySchoolLandingState"
 )(function* () {
-  const ctx = yield* QueryCtx;
-  const user = yield* requireAppUser(ctx);
-  const memberships = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolMembers")
-      .withIndex("by_userId_and_status", (query) =>
-        query.eq("userId", user.appUser._id).eq("status", "active")
-      )
-      .take(2)
-  );
+  const reader = yield* DatabaseReader;
+  const user = yield* requireAppUser();
+  const memberships = yield* reader
+    .table("schoolMembers")
+    .index("by_userId_and_status", (query) =>
+      query.eq("userId", user.appUser._id).eq("status", "active")
+    )
+    .take(2);
 
   if (memberships.length === 0) {
     return { kind: "none" as const };
@@ -313,7 +298,10 @@ export const getMySchoolLandingState = Effect.fn(
   }
 
   const membership = memberships[0];
-  const school = yield* Effect.promise(() => ctx.db.get(membership.schoolId));
+  const school = yield* reader
+    .table("schools")
+    .get(membership.schoolId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!school) {
     return yield* Effect.fail(
@@ -329,21 +317,20 @@ export const getMySchoolLandingState = Effect.fn(
 /** Lists the current user's active schools. */
 export const getMySchoolsPage = Effect.fn("schools.getMySchoolsPage")(
   function* (args: { paginationOpts: PaginationOptions }) {
-    const ctx = yield* QueryCtx;
-    const user = yield* requireAppUser(ctx);
-    const memberships = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolMembers")
-        .withIndex("by_userId_and_status", (query) =>
-          query.eq("userId", user.appUser._id).eq("status", "active")
-        )
-        .paginate(args.paginationOpts)
-    );
+    const reader = yield* DatabaseReader;
+    const user = yield* requireAppUser();
+    const memberships = yield* reader
+      .table("schoolMembers")
+      .index("by_userId_and_status", (query) =>
+        query.eq("userId", user.appUser._id).eq("status", "active")
+      )
+      .paginate(args.paginationOpts);
     const schoolPage = yield* Effect.forEach(memberships.page, (membership) =>
       Effect.gen(function* () {
-        const school = yield* Effect.promise(() =>
-          ctx.db.get(membership.schoolId)
-        );
+        const school = yield* reader
+          .table("schools")
+          .get(membership.schoolId)
+          .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
         if (!school) {
           return null;

@@ -1,7 +1,7 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import {
-  MutationCtx,
-  QueryCtx,
+  DatabaseReader,
+  DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { AssessmentError } from "@repo/backend/confect/modules/school/assessments.errors";
@@ -9,7 +9,8 @@ import {
   getAttemptExpiry,
   requireAccessibleAssignment,
 } from "@repo/backend/confect/modules/school/assessments.shared";
-import { Clock, Effect } from "effect";
+import type { SchoolAssessmentResponses } from "@repo/backend/confect/modules/school/assessmentsTables/delivery";
+import { Clock, Effect, Option } from "effect";
 
 /** Loads one assignment that is available to the current student/class. */
 export const getAssignment = Effect.fn("assessments.getAssignment")(
@@ -17,10 +18,8 @@ export const getAssignment = Effect.fn("assessments.getAssignment")(
     readonly assignmentId: Id<"schoolAssessmentAssignments">;
     readonly classId: Id<"schoolClasses">;
   }) {
-    const ctx = yield* QueryCtx;
-    const user = yield* requireAppUser(ctx);
+    const user = yield* requireAppUser();
     return yield* requireAccessibleAssignment(
-      ctx,
       args.assignmentId,
       args.classId,
       user.appUser._id
@@ -34,16 +33,17 @@ const getNextAttemptNumber = Effect.fn("assessments.getNextAttemptNumber")(
     assignmentId: Id<"schoolAssessmentAssignments">,
     studentId: Id<"users">
   ) {
-    const ctx = yield* MutationCtx;
-    const latestAttempt = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolAssessmentAttempts")
-        .withIndex("by_assignmentId_and_studentId_and_attemptNumber", (query) =>
-          query.eq("assignmentId", assignmentId).eq("studentId", studentId)
-        )
-        .order("desc")
-        .first()
-    );
+    const reader = yield* DatabaseReader;
+    const latestAttemptOption = yield* reader
+      .table("schoolAssessmentAttempts")
+      .index(
+        "by_assignmentId_and_studentId_and_attemptNumber",
+        (query) =>
+          query.eq("assignmentId", assignmentId).eq("studentId", studentId),
+        "desc"
+      )
+      .first();
+    const latestAttempt = Option.getOrNull(latestAttemptOption);
 
     return (latestAttempt?.attemptNumber ?? 0) + 1;
   }
@@ -55,10 +55,10 @@ export const startAttempt = Effect.fn("assessments.startAttempt")(
     readonly assignmentId: Id<"schoolAssessmentAssignments">;
     readonly classId: Id<"schoolClasses">;
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
     const { assignment, target } = yield* requireAccessibleAssignment(
-      ctx,
       args.assignmentId,
       args.classId,
       user.appUser._id
@@ -83,17 +83,15 @@ export const startAttempt = Effect.fn("assessments.startAttempt")(
       );
     }
 
-    const inProgressAttempt = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolAssessmentAttempts")
-        .withIndex("by_assignmentId_and_studentId_and_status", (query) =>
-          query
-            .eq("assignmentId", args.assignmentId)
-            .eq("studentId", user.appUser._id)
-            .eq("status", "in-progress")
-        )
-        .unique()
-    );
+    const inProgressAttempt = yield* reader
+      .table("schoolAssessmentAttempts")
+      .get(
+        "by_assignmentId_and_studentId_and_status",
+        args.assignmentId,
+        user.appUser._id,
+        "in-progress"
+      )
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
     if (inProgressAttempt) {
       return inProgressAttempt._id;
@@ -125,23 +123,21 @@ export const startAttempt = Effect.fn("assessments.startAttempt")(
       );
     }
 
-    return yield* Effect.promise(() =>
-      ctx.db.insert("schoolAssessmentAttempts", {
-        assessmentId: assignment.assessmentId,
-        assignmentId: assignment._id,
-        attemptNumber,
-        classId: args.classId,
-        expiresAt: getAttemptExpiry(assignment, now),
-        gradingStatus:
-          assignment.gradingMode === "auto" ? "auto-graded" : "pending",
-        schoolId: assignment.schoolId,
-        startedAt: now,
-        status: "in-progress",
-        studentId: user.appUser._id,
-        targetId: target._id,
-        versionId: assignment.versionId,
-      })
-    );
+    return yield* writer.table("schoolAssessmentAttempts").insert({
+      assessmentId: assignment.assessmentId,
+      assignmentId: assignment._id,
+      attemptNumber,
+      classId: args.classId,
+      expiresAt: getAttemptExpiry(assignment, now),
+      gradingStatus:
+        assignment.gradingMode === "auto" ? "auto-graded" : "pending",
+      schoolId: assignment.schoolId,
+      startedAt: now,
+      status: "in-progress",
+      studentId: user.appUser._id,
+      targetId: target._id,
+      versionId: assignment.versionId,
+    });
   }
 );
 
@@ -156,9 +152,13 @@ export const saveResponse = Effect.fn("assessments.saveResponse")(
     readonly questionType: Doc<"schoolAssessmentResponses">["questionType"];
     readonly selectedChoiceIds?: readonly Id<"schoolAssessmentVersionChoices">[];
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
-    const attempt = yield* Effect.promise(() => ctx.db.get(args.attemptId));
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
+    const attempt = yield* reader
+      .table("schoolAssessmentAttempts")
+      .get(args.attemptId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
     const now = yield* Clock.currentTimeMillis;
 
     if (!attempt || attempt.studentId !== user.appUser._id) {
@@ -179,63 +179,57 @@ export const saveResponse = Effect.fn("assessments.saveResponse")(
       );
     }
 
-    const existing = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolAssessmentResponses")
-        .withIndex("by_attemptId_and_questionId", (query) =>
-          query
-            .eq("attemptId", args.attemptId)
-            .eq("questionId", args.questionId)
-        )
-        .unique()
-    );
+    const existing = yield* reader
+      .table("schoolAssessmentResponses")
+      .get("by_attemptId_and_questionId", args.attemptId, args.questionId)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
     if (existing) {
-      yield* Effect.promise(() =>
-        ctx.db.patch(existing._id, {
-          essayAttachmentStorageIds: args.essayAttachmentStorageIds
-            ? [...args.essayAttachmentStorageIds]
-            : undefined,
-          essayContent: args.essayContent,
-          isFinal: args.isFinal,
-          questionType: args.questionType,
-          selectedChoiceIds: args.selectedChoiceIds
-            ? [...args.selectedChoiceIds]
-            : undefined,
-          submittedAt: now,
-        })
-      );
-      return existing._id;
-    }
-
-    return yield* Effect.promise(() =>
-      ctx.db.insert("schoolAssessmentResponses", {
-        assignmentId: attempt.assignmentId,
-        attemptId: attempt._id,
-        classId: attempt.classId,
+      yield* writer.table("schoolAssessmentResponses").patch(existing._id, {
         essayAttachmentStorageIds: args.essayAttachmentStorageIds
           ? [...args.essayAttachmentStorageIds]
           : undefined,
         essayContent: args.essayContent,
         isFinal: args.isFinal,
-        questionId: args.questionId,
         questionType: args.questionType,
-        schoolId: attempt.schoolId,
         selectedChoiceIds: args.selectedChoiceIds
           ? [...args.selectedChoiceIds]
           : undefined,
         submittedAt: now,
-      })
-    );
+      });
+      return existing._id;
+    }
+
+    return yield* writer.table("schoolAssessmentResponses").insert({
+      assignmentId: attempt.assignmentId,
+      attemptId: attempt._id,
+      classId: attempt.classId,
+      essayAttachmentStorageIds: args.essayAttachmentStorageIds
+        ? [...args.essayAttachmentStorageIds]
+        : undefined,
+      essayContent: args.essayContent,
+      isFinal: args.isFinal,
+      questionId: args.questionId,
+      questionType: args.questionType,
+      schoolId: attempt.schoolId,
+      selectedChoiceIds: args.selectedChoiceIds
+        ? [...args.selectedChoiceIds]
+        : undefined,
+      submittedAt: now,
+    });
   }
 );
 
 /** Submits an attempt and performs automatic scoring where possible. */
 export const submitAttempt = Effect.fn("assessments.submitAttempt")(
   function* (args: { readonly attemptId: Id<"schoolAssessmentAttempts"> }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
-    const attempt = yield* Effect.promise(() => ctx.db.get(args.attemptId));
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
+    const attempt = yield* reader
+      .table("schoolAssessmentAttempts")
+      .get(args.attemptId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!attempt || attempt.studentId !== user.appUser._id) {
       return yield* Effect.fail(
@@ -250,9 +244,10 @@ export const submitAttempt = Effect.fn("assessments.submitAttempt")(
       return null;
     }
 
-    const assignment = yield* Effect.promise(() =>
-      ctx.db.get(attempt.assignmentId)
-    );
+    const assignment = yield* reader
+      .table("schoolAssessmentAssignments")
+      .get(attempt.assignmentId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!assignment) {
       return yield* Effect.fail(
@@ -263,14 +258,12 @@ export const submitAttempt = Effect.fn("assessments.submitAttempt")(
       );
     }
 
-    const responses = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolAssessmentResponses")
-        .withIndex("by_attemptId_and_questionId", (query) =>
-          query.eq("attemptId", args.attemptId)
-        )
-        .collect()
-    );
+    const responses = yield* reader
+      .table("schoolAssessmentResponses")
+      .index("by_attemptId_and_questionId", (query) =>
+        query.eq("attemptId", args.attemptId)
+      )
+      .collect();
     let autoScore = 0;
 
     for (const response of responses) {
@@ -281,14 +274,12 @@ export const submitAttempt = Effect.fn("assessments.submitAttempt")(
     let hasEssayQuestions = false;
 
     if (assignment.gradingMode === "hybrid") {
-      const versionQuestions = yield* Effect.promise(() =>
-        ctx.db
-          .query("schoolAssessmentVersionQuestions")
-          .withIndex("by_versionId_and_sectionId_and_order", (query) =>
-            query.eq("versionId", attempt.versionId)
-          )
-          .collect()
-      );
+      const versionQuestions = yield* reader
+        .table("schoolAssessmentVersionQuestions")
+        .index("by_versionId_and_sectionId_and_order", (query) =>
+          query.eq("versionId", attempt.versionId)
+        )
+        .collect();
       hasEssayQuestions = versionQuestions.some(
         (question) => question.questionType === "essay"
       );
@@ -301,15 +292,13 @@ export const submitAttempt = Effect.fn("assessments.submitAttempt")(
         : "auto-graded";
     const submittedAt = yield* Clock.currentTimeMillis;
 
-    yield* Effect.promise(() =>
-      ctx.db.patch(args.attemptId, {
-        completedAt: submittedAt,
-        gradingStatus,
-        score: autoScore,
-        status: "submitted",
-        submittedAt,
-      })
-    );
+    yield* writer.table("schoolAssessmentAttempts").patch(args.attemptId, {
+      completedAt: submittedAt,
+      gradingStatus,
+      score: autoScore,
+      status: "submitted",
+      submittedAt,
+    });
 
     return null;
   }
@@ -317,9 +306,10 @@ export const submitAttempt = Effect.fn("assessments.submitAttempt")(
 
 /** Scores one non-essay response and patches its auto score. */
 const scoreAutoResponse = Effect.fn("assessments.scoreAutoResponse")(function* (
-  response: Doc<"schoolAssessmentResponses">
+  response: typeof SchoolAssessmentResponses.Doc.Type
 ) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
 
   if (
     response.questionType === "essay" ||
@@ -329,15 +319,16 @@ const scoreAutoResponse = Effect.fn("assessments.scoreAutoResponse")(function* (
     return 0;
   }
 
-  const question = yield* Effect.promise(() => ctx.db.get(response.questionId));
-  const choices = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolAssessmentVersionChoices")
-      .withIndex("by_questionId_and_order", (query) =>
-        query.eq("questionId", response.questionId)
-      )
-      .collect()
-  );
+  const question = yield* reader
+    .table("schoolAssessmentVersionQuestions")
+    .get(response.questionId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+  const choices = yield* reader
+    .table("schoolAssessmentVersionChoices")
+    .index("by_questionId_and_order", (query) =>
+      query.eq("questionId", response.questionId)
+    )
+    .collect();
 
   if (!question) {
     return 0;
@@ -355,7 +346,9 @@ const scoreAutoResponse = Effect.fn("assessments.scoreAutoResponse")(function* (
     );
   const autoScore = isCorrect ? question.points : 0;
 
-  yield* Effect.promise(() => ctx.db.patch(response._id, { autoScore }));
+  yield* writer
+    .table("schoolAssessmentResponses")
+    .patch(response._id, { autoScore });
 
   return autoScore;
 });

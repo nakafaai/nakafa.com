@@ -32,6 +32,7 @@ import type * as audioStudies_queries_publicFunctions from "../audioStudies/quer
 import type * as audioStudies_workflows from "../audioStudies/workflows.js";
 import type * as auth from "../auth.js";
 import type * as auth_cleanup from "../auth/cleanup.js";
+import type * as auth_sync from "../auth/sync.js";
 import type * as chats_actions from "../chats/actions.js";
 import type * as chats_mutations from "../chats/mutations.js";
 import type * as chats_queries from "../chats/queries.js";
@@ -152,6 +153,7 @@ declare const fullApi: ApiFromModules<{
   "audioStudies/workflows": typeof audioStudies_workflows;
   auth: typeof auth;
   "auth/cleanup": typeof auth_cleanup;
+  "auth/sync": typeof auth_sync;
   "chats/actions": typeof chats_actions;
   "chats/mutations": typeof chats_mutations;
   "chats/queries": typeof chats_queries;

@@ -1,47 +1,45 @@
-import type { GenericId } from "@confect/core";
+import { GenericId } from "@confect/core";
 import type { Doc } from "@repo/backend/confect/_generated/dataModel";
 import {
-  MutationCtx,
-  QueryCtx,
+  DatabaseReader,
+  DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import type { PaginationOptions } from "convex/server";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 type CustomerFields = Omit<Doc<"customers">, "_creationTime" | "_id">;
+const decodeUserId = Schema.decodeUnknownOption(GenericId.GenericId("users"));
 
 /** Patches an existing customer row with the latest Polar identity fields. */
 const patchCustomerRow = Effect.fn("commerce.patchCustomerRow")(function* (
   customer: Doc<"customers">,
   nextCustomer: CustomerFields
 ) {
-  const ctx = yield* MutationCtx;
+  const writer = yield* DatabaseWriter;
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(customer._id, {
-      externalId: nextCustomer.externalId,
-      id: nextCustomer.id,
-      metadata: nextCustomer.metadata,
-      userId: nextCustomer.userId,
-    })
-  );
+  yield* writer.table("customers").patch(customer._id, {
+    externalId: nextCustomer.externalId,
+    id: nextCustomer.id,
+    metadata: nextCustomer.metadata,
+    userId: nextCustomer.userId,
+  });
 });
 
 /** Deletes a customer row by Polar customer id. */
 export const deleteCustomerById = Effect.fn("commerce.deleteCustomerById")(
   function* (args: { id: string }) {
-    const ctx = yield* MutationCtx;
-    const customer = yield* Effect.promise(() =>
-      ctx.db
-        .query("customers")
-        .withIndex("by_polarId", (query) => query.eq("id", args.id))
-        .unique()
-    );
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const customer = yield* reader
+      .table("customers")
+      .get("by_polarId", args.id)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
     if (!customer) {
       return null;
     }
 
-    yield* Effect.promise(() => ctx.db.delete(customer._id));
+    yield* writer.table("customers").delete(customer._id);
     return null;
   }
 );
@@ -49,21 +47,16 @@ export const deleteCustomerById = Effect.fn("commerce.deleteCustomerById")(
 /** Upserts a customer row while merging possible user-id and Polar-id matches. */
 export const upsertCustomer = Effect.fn("commerce.upsertCustomer")(
   function* (args: { customer: CustomerFields }) {
-    const ctx = yield* MutationCtx;
-    const existingByUser = yield* Effect.promise(() =>
-      ctx.db
-        .query("customers")
-        .withIndex("by_userId", (query) =>
-          query.eq("userId", args.customer.userId)
-        )
-        .unique()
-    );
-    const existingByPolarId = yield* Effect.promise(() =>
-      ctx.db
-        .query("customers")
-        .withIndex("by_polarId", (query) => query.eq("id", args.customer.id))
-        .unique()
-    );
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const existingByUser = yield* reader
+      .table("customers")
+      .get("by_userId", args.customer.userId)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+    const existingByPolarId = yield* reader
+      .table("customers")
+      .get("by_polarId", args.customer.id)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
     if (existingByUser && existingByPolarId) {
       if (existingByUser._id === existingByPolarId._id) {
@@ -72,7 +65,7 @@ export const upsertCustomer = Effect.fn("commerce.upsertCustomer")(
       }
 
       yield* patchCustomerRow(existingByPolarId, args.customer);
-      yield* Effect.promise(() => ctx.db.delete(existingByUser._id));
+      yield* writer.table("customers").delete(existingByUser._id);
       return existingByPolarId._id;
     }
 
@@ -86,37 +79,29 @@ export const upsertCustomer = Effect.fn("commerce.upsertCustomer")(
       return existingByUser._id;
     }
 
-    return yield* Effect.promise(() =>
-      ctx.db.insert("customers", args.customer)
-    );
+    return yield* writer.table("customers").insert(args.customer);
   }
 );
 
 /** Reads a customer row by app user id. */
 export const getCustomerByUserId = Effect.fn("commerce.getCustomerByUserId")(
   function* (args: { userId: GenericId.GenericId<"users"> }) {
-    const ctx = yield* QueryCtx;
-    return yield* Effect.promise(() =>
-      ctx.db
-        .query("customers")
-        .withIndex("by_userId", (query) => query.eq("userId", args.userId))
-        .unique()
-    );
+    const reader = yield* DatabaseReader;
+    return yield* reader
+      .table("customers")
+      .get("by_userId", args.userId)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
   }
 );
 
 /** Reads a customer row by Polar customer id. */
 export const getCustomerByPolarId = Effect.fn("commerce.getCustomerByPolarId")(
   function* (args: { polarCustomerId: string }) {
-    const ctx = yield* QueryCtx;
-    return yield* Effect.promise(() =>
-      ctx.db
-        .query("customers")
-        .withIndex("by_polarId", (query) =>
-          query.eq("id", args.polarCustomerId)
-        )
-        .unique()
-    );
+    const reader = yield* DatabaseReader;
+    return yield* reader
+      .table("customers")
+      .get("by_polarId", args.polarCustomerId)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
   }
 );
 
@@ -124,31 +109,30 @@ export const getCustomerByPolarId = Effect.fn("commerce.getCustomerByPolarId")(
 export const hasActiveSubscriptionByCustomerId = Effect.fn(
   "commerce.hasActiveSubscriptionByCustomerId"
 )(function* (args: { customerId: string }) {
-  const ctx = yield* QueryCtx;
-  const subscription = yield* Effect.promise(() =>
-    ctx.db
-      .query("subscriptions")
-      .withIndex("by_customerId_and_status", (query) =>
-        query.eq("customerId", args.customerId).eq("status", "active")
-      )
-      .first()
-  );
+  const reader = yield* DatabaseReader;
+  const subscription = yield* reader
+    .table("subscriptions")
+    .index("by_customerId_and_status", (query) =>
+      query.eq("customerId", args.customerId).eq("status", "active")
+    )
+    .first();
 
-  return subscription !== null;
+  return Option.isSome(subscription);
 });
 
 /** Resolves an app user id from Polar metadata or external id. */
 export const getUserIdByPolarCustomer = Effect.fn(
   "commerce.getUserIdByPolarCustomer"
 )(function* (args: { externalId?: string; metadataUserId?: string }) {
-  const ctx = yield* QueryCtx;
+  const reader = yield* DatabaseReader;
 
   if (args.metadataUserId) {
-    const metadataUserId = ctx.db.normalizeId("users", args.metadataUserId);
+    const metadataUserId = Option.getOrNull(decodeUserId(args.metadataUserId));
     if (metadataUserId) {
-      const userByMetadataId = yield* Effect.promise(() =>
-        ctx.db.get(metadataUserId)
-      );
+      const userByMetadataId = yield* reader
+        .table("users")
+        .get(metadataUserId)
+        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
       if (userByMetadataId) {
         return userByMetadataId._id;
       }
@@ -160,12 +144,10 @@ export const getUserIdByPolarCustomer = Effect.fn(
   }
 
   const externalId = args.externalId;
-  const userByExternalId = yield* Effect.promise(() =>
-    ctx.db
-      .query("users")
-      .withIndex("by_authId", (query) => query.eq("authId", externalId))
-      .unique()
-  );
+  const userByExternalId = yield* reader
+    .table("users")
+    .get("by_authId", externalId)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
   return userByExternalId?._id ?? null;
 });
@@ -174,10 +156,11 @@ export const getUserIdByPolarCustomer = Effect.fn(
 export const listUsersForCustomerIntegrity = Effect.fn(
   "commerce.listUsersForCustomerIntegrity"
 )(function* (args: { paginationOpts: PaginationOptions }) {
-  const ctx = yield* QueryCtx;
-  const rows = yield* Effect.promise(() =>
-    ctx.db.query("users").paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const rows = yield* reader
+    .table("users")
+    .index("by_creation_time")
+    .paginate(args.paginationOpts);
 
   return {
     continueCursor: rows.continueCursor,
@@ -194,10 +177,11 @@ export const listUsersForCustomerIntegrity = Effect.fn(
 export const listCustomersForIntegrity = Effect.fn(
   "commerce.listCustomersForIntegrity"
 )(function* (args: { paginationOpts: PaginationOptions }) {
-  const ctx = yield* QueryCtx;
-  const rows = yield* Effect.promise(() =>
-    ctx.db.query("customers").paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const rows = yield* reader
+    .table("customers")
+    .index("by_creation_time")
+    .paginate(args.paginationOpts);
 
   return {
     continueCursor: rows.continueCursor,
@@ -215,10 +199,11 @@ export const listCustomersForIntegrity = Effect.fn(
 export const listActiveSubscriptionsForIntegrity = Effect.fn(
   "commerce.listActiveSubscriptionsForIntegrity"
 )(function* (args: { paginationOpts: PaginationOptions }) {
-  const ctx = yield* QueryCtx;
-  const rows = yield* Effect.promise(() =>
-    ctx.db.query("subscriptions").paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const rows = yield* reader
+    .table("subscriptions")
+    .index("by_creation_time")
+    .paginate(args.paginationOpts);
 
   return {
     continueCursor: rows.continueCursor,

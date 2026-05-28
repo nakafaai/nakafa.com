@@ -1,9 +1,9 @@
-import { Ref } from "@confect/core";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  MutationCtx,
-  QueryCtx,
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { CONTENT_ANALYTICS_PARTITION_COUNT } from "@repo/backend/confect/modules/content/constants";
 import type {
@@ -12,7 +12,7 @@ import type {
   Locale,
 } from "@repo/backend/confect/modules/content/content.schemas";
 import { getOptionalAppUser } from "@repo/backend/confect/modules/identity/auth.service";
-import { Clock, Effect, Schema } from "effect";
+import { Clock, Duration, Effect, Option, Schema } from "effect";
 
 const DEFAULT_RECENTLY_VIEWED_LIMIT = 5;
 
@@ -38,17 +38,16 @@ export function getContentAnalyticsPartition(contentRef: ContentRef) {
 /** Resolves a public content slug into its persisted content reference. */
 const loadContentRefBySlug = Effect.fn("contentViews.loadContentRefBySlug")(
   function* (args: { contentRef: ContentViewRef; locale: Locale }) {
-    const ctx = yield* MutationCtx;
+    const reader = yield* DatabaseReader;
 
     if (args.contentRef.type === "subject") {
-      const section = yield* Effect.promise(() =>
-        ctx.db
-          .query("subjectSections")
-          .withIndex("by_locale_and_slug", (query) =>
-            query.eq("locale", args.locale).eq("slug", args.contentRef.slug)
-          )
-          .first()
-      );
+      const sectionOption = yield* reader
+        .table("subjectSections")
+        .index("by_locale_and_slug", (query) =>
+          query.eq("locale", args.locale).eq("slug", args.contentRef.slug)
+        )
+        .first();
+      const section = Option.getOrNull(sectionOption);
 
       if (!section) {
         return yield* Effect.fail(
@@ -62,14 +61,13 @@ const loadContentRefBySlug = Effect.fn("contentViews.loadContentRefBySlug")(
     }
 
     if (args.contentRef.type === "exercise") {
-      const exerciseSet = yield* Effect.promise(() =>
-        ctx.db
-          .query("exerciseSets")
-          .withIndex("by_locale_and_slug", (query) =>
-            query.eq("locale", args.locale).eq("slug", args.contentRef.slug)
-          )
-          .first()
-      );
+      const exerciseSetOption = yield* reader
+        .table("exerciseSets")
+        .index("by_locale_and_slug", (query) =>
+          query.eq("locale", args.locale).eq("slug", args.contentRef.slug)
+        )
+        .first();
+      const exerciseSet = Option.getOrNull(exerciseSetOption);
 
       if (!exerciseSet) {
         return yield* Effect.fail(
@@ -82,14 +80,13 @@ const loadContentRefBySlug = Effect.fn("contentViews.loadContentRefBySlug")(
       return { id: exerciseSet._id, type: "exercise" as const };
     }
 
-    const article = yield* Effect.promise(() =>
-      ctx.db
-        .query("articleContents")
-        .withIndex("by_locale_and_slug", (query) =>
-          query.eq("locale", args.locale).eq("slug", args.contentRef.slug)
-        )
-        .first()
-    );
+    const articleOption = yield* reader
+      .table("articleContents")
+      .index("by_locale_and_slug", (query) =>
+        query.eq("locale", args.locale).eq("slug", args.contentRef.slug)
+      )
+      .first();
+    const article = Option.getOrNull(articleOption);
 
     if (!article) {
       return yield* Effect.fail(
@@ -112,23 +109,23 @@ const upsertContentView = Effect.fn("contentViews.upsertContentView")(
     slug: string;
     userId?: Id<"users">;
   }) {
-    const ctx = yield* MutationCtx;
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const now = yield* Clock.currentTimeMillis;
-    const existingByDevice = yield* Effect.promise(() =>
-      ctx.db
-        .query("contentViews")
-        .withIndex("by_deviceId_and_contentRefId", (query) =>
-          query
-            .eq("deviceId", args.deviceId)
-            .eq("contentRef.id", args.contentRef.id)
-        )
-        .first()
-    );
+    const existingByDeviceOption = yield* reader
+      .table("contentViews")
+      .index("by_deviceId_and_contentRefId", (query) =>
+        query
+          .eq("deviceId", args.deviceId)
+          .eq("contentRef.id", args.contentRef.id)
+      )
+      .first();
+    const existingByDevice = Option.getOrNull(existingByDeviceOption);
     const existingByUser = args.userId
-      ? yield* Effect.promise(() =>
-          ctx.db
-            .query("contentViews")
-            .withIndex("by_userId_and_contentRefId", (query) =>
+      ? Option.getOrNull(
+          yield* reader
+            .table("contentViews")
+            .index("by_userId_and_contentRefId", (query) =>
               query
                 .eq("userId", args.userId)
                 .eq("contentRef.id", args.contentRef.id)
@@ -139,36 +136,30 @@ const upsertContentView = Effect.fn("contentViews.upsertContentView")(
     const existingView = existingByDevice ?? existingByUser;
 
     if (existingView) {
-      yield* Effect.promise(() =>
-        ctx.db.patch(existingView._id, {
-          lastViewedAt: now,
-        })
-      );
+      yield* writer.table("contentViews").patch(existingView._id, {
+        lastViewedAt: now,
+      });
 
       return { success: true, isNewView: false, alreadyViewed: true };
     }
 
     const partition = getContentAnalyticsPartition(args.contentRef);
 
-    yield* Effect.promise(() =>
-      ctx.db.insert("contentViews", {
-        contentRef: args.contentRef,
-        deviceId: args.deviceId,
-        firstViewedAt: now,
-        lastViewedAt: now,
-        locale: args.locale,
-        slug: args.slug,
-        userId: args.userId,
-      })
-    );
-    yield* Effect.promise(() =>
-      ctx.db.insert("contentViewAnalyticsQueue", {
-        contentRef: args.contentRef,
-        locale: args.locale,
-        partition,
-        viewedAt: now,
-      })
-    );
+    yield* writer.table("contentViews").insert({
+      contentRef: args.contentRef,
+      deviceId: args.deviceId,
+      firstViewedAt: now,
+      lastViewedAt: now,
+      locale: args.locale,
+      slug: args.slug,
+      userId: args.userId,
+    });
+    yield* writer.table("contentViewAnalyticsQueue").insert({
+      contentRef: args.contentRef,
+      locale: args.locale,
+      partition,
+      viewedAt: now,
+    });
 
     return { success: true, isNewView: true, alreadyViewed: false };
   }
@@ -181,8 +172,8 @@ export const recordContentView = Effect.fn("contentViews.recordContentView")(
     deviceId: string;
     locale: Locale;
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* getOptionalAppUser(ctx);
+    const scheduler = yield* Scheduler;
+    const user = yield* getOptionalAppUser();
     const contentRef = yield* loadContentRefBySlug({
       contentRef: args.contentRef,
       locale: args.locale,
@@ -204,15 +195,11 @@ export const recordContentView = Effect.fn("contentViews.recordContentView")(
       return result;
     }
 
-    yield* Effect.promise(() =>
-      ctx.scheduler.runAfter(
-        0,
-        Ref.getFunctionReference(
-          refs.internal.contents.mutations.analytics
-            .scheduleContentAnalyticsPartition
-        ),
-        { partition: getContentAnalyticsPartition(contentRef) }
-      )
+    yield* scheduler.runAfter(
+      Duration.millis(0),
+      refs.internal.contents.mutations.analytics
+        .scheduleContentAnalyticsPartition,
+      { partition: getContentAnalyticsPartition(contentRef) }
     );
 
     return result;
@@ -222,28 +209,26 @@ export const recordContentView = Effect.fn("contentViews.recordContentView")(
 /** Returns recent subject-section views for the current user. */
 export const getRecentlyViewed = Effect.fn("contentViews.getRecentlyViewed")(
   function* (args: { limit?: number; locale: Locale }) {
-    const ctx = yield* QueryCtx;
-    const user = yield* getOptionalAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const user = yield* getOptionalAppUser();
 
     if (!user) {
       return [];
     }
 
     const limit = args.limit ?? DEFAULT_RECENTLY_VIEWED_LIMIT;
-    const recentViews = yield* Effect.promise(() =>
-      ctx.db
-        .query("contentViews")
-        .withIndex(
-          "by_userId_and_contentRefType_and_locale_and_lastViewedAt",
-          (query) =>
-            query
-              .eq("userId", user.appUser._id)
-              .eq("contentRef.type", "subject")
-              .eq("locale", args.locale)
-        )
-        .order("desc")
-        .take(limit)
-    );
+    const recentViews = yield* reader
+      .table("contentViews")
+      .index(
+        "by_userId_and_contentRefType_and_locale_and_lastViewedAt",
+        (query) =>
+          query
+            .eq("userId", user.appUser._id)
+            .eq("contentRef.type", "subject")
+            .eq("locale", args.locale),
+        "desc"
+      )
+      .take(limit);
 
     if (recentViews.length === 0) {
       return [];
@@ -264,7 +249,10 @@ export const getRecentlyViewed = Effect.fn("contentViews.getRecentlyViewed")(
     });
     const subjectResults = yield* Effect.forEach(subjectViews, (view) =>
       Effect.gen(function* () {
-        const subject = yield* Effect.promise(() => ctx.db.get(view.subjectId));
+        const subject = yield* reader
+          .table("subjectSections")
+          .get(view.subjectId)
+          .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
         if (!subject) {
           return null;

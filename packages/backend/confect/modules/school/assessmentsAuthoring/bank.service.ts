@@ -1,5 +1,8 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { AssessmentError } from "@repo/backend/confect/modules/school/assessments.errors";
 import { requireRichContentSize } from "@repo/backend/confect/modules/school/assessments.shared";
@@ -19,8 +22,8 @@ export const createQuestionBank = Effect.fn("assessments.createQuestionBank")(
     readonly scope: Doc<"schoolAssessmentQuestionBanks">["scope"];
     readonly title: string;
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
 
     if (args.scope === "class" && !args.classId) {
       return yield* Effect.fail(
@@ -41,7 +44,7 @@ export const createQuestionBank = Effect.fn("assessments.createQuestionBank")(
     }
 
     const classData = args.classId
-      ? yield* loadActiveClass(ctx, args.classId)
+      ? yield* loadActiveClass(args.classId)
       : null;
 
     if (classData && classData.schoolId !== args.schoolId) {
@@ -53,7 +56,7 @@ export const createQuestionBank = Effect.fn("assessments.createQuestionBank")(
       );
     }
 
-    yield* requirePermission(ctx, PERMISSIONS.ASSESSMENT_CREATE, {
+    yield* requirePermission(PERMISSIONS.ASSESSMENT_CREATE, {
       classId: classData?._id,
       schoolId: args.schoolId,
       userId: user.appUser._id,
@@ -68,18 +71,16 @@ export const createQuestionBank = Effect.fn("assessments.createQuestionBank")(
 
     const now = yield* Clock.currentTimeMillis;
 
-    return yield* Effect.promise(() =>
-      ctx.db.insert("schoolAssessmentQuestionBanks", {
-        classId: classData?._id,
-        createdBy: user.appUser._id,
-        description: args.description,
-        schoolId: args.schoolId,
-        scope: args.scope,
-        title: args.title,
-        updatedAt: now,
-        updatedBy: user.appUser._id,
-      })
-    );
+    return yield* writer.table("schoolAssessmentQuestionBanks").insert({
+      classId: classData?._id,
+      createdBy: user.appUser._id,
+      description: args.description,
+      schoolId: args.schoolId,
+      scope: args.scope,
+      title: args.title,
+      updatedAt: now,
+      updatedBy: user.appUser._id,
+    });
   }
 );
 
@@ -97,11 +98,10 @@ export const createQuestionBankEntry = Effect.fn(
   readonly shuffleChoices: boolean;
   readonly stem: Doc<"schoolAssessmentQuestionBankEntries">["stem"];
 }) {
-  const ctx = yield* MutationCtx;
-  const user = yield* requireAppUser(ctx);
-  const classData = args.classId
-    ? yield* loadActiveClass(ctx, args.classId)
-    : null;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
+  const classData = args.classId ? yield* loadActiveClass(args.classId) : null;
 
   if (classData && classData.schoolId !== args.schoolId) {
     return yield* Effect.fail(
@@ -112,7 +112,10 @@ export const createQuestionBankEntry = Effect.fn(
     );
   }
 
-  const bank = yield* Effect.promise(() => ctx.db.get(args.bankId));
+  const bank = yield* reader
+    .table("schoolAssessmentQuestionBanks")
+    .get(args.bankId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!bank || bank.schoolId !== args.schoolId) {
     return yield* Effect.fail(
@@ -132,7 +135,7 @@ export const createQuestionBankEntry = Effect.fn(
     );
   }
 
-  yield* requirePermission(ctx, PERMISSIONS.ASSESSMENT_CREATE, {
+  yield* requirePermission(PERMISSIONS.ASSESSMENT_CREATE, {
     classId: bank.classId,
     schoolId: bank.schoolId,
     userId: user.appUser._id,
@@ -148,21 +151,19 @@ export const createQuestionBankEntry = Effect.fn(
 
   const now = yield* Clock.currentTimeMillis;
 
-  return yield* Effect.promise(() =>
-    ctx.db.insert("schoolAssessmentQuestionBankEntries", {
-      bankId: bank._id,
-      classId: bank.classId,
-      createdBy: user.appUser._id,
-      explanation: args.explanation,
-      maxSelectionCount: args.maxSelectionCount,
-      points: args.points,
-      questionType: args.questionType,
-      schoolId: bank.schoolId,
-      shuffleChoices: args.shuffleChoices,
-      source: "manual",
-      stem: args.stem,
-      updatedAt: now,
-      updatedBy: user.appUser._id,
-    })
-  );
+  return yield* writer.table("schoolAssessmentQuestionBankEntries").insert({
+    bankId: bank._id,
+    classId: bank.classId,
+    createdBy: user.appUser._id,
+    explanation: args.explanation,
+    maxSelectionCount: args.maxSelectionCount,
+    points: args.points,
+    questionType: args.questionType,
+    schoolId: bank.schoolId,
+    shuffleChoices: args.shuffleChoices,
+    source: "manual",
+    stem: args.stem,
+    updatedAt: now,
+    updatedBy: user.appUser._id,
+  });
 });

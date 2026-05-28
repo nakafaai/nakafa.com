@@ -1,10 +1,9 @@
-import { Ref } from "@confect/core";
-import type { MyUIMessagePart } from "@repo/ai/types/message";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { ActionCtx } from "@repo/backend/confect/_generated/services";
+import { Scheduler } from "@repo/backend/confect/_generated/services";
+import type { MessagePartInput } from "@repo/backend/confect/modules/chat/chats.tables";
 import { requireAppUserForAction } from "@repo/backend/confect/modules/identity/auth.service";
-import { Effect } from "effect";
+import { Duration, Effect } from "effect";
 
 interface ChatMessageInput {
   readonly chatId: Id<"chats">;
@@ -22,19 +21,15 @@ export const scheduleSaveAssistantResponse = Effect.fn(
   "chatActions.scheduleSaveAssistantResponse"
 )(function* (args: {
   message: ChatMessageInput;
-  parts: readonly MyUIMessagePart[];
+  parts: readonly MessagePartInput[];
 }) {
-  const ctx = yield* ActionCtx;
-  const { appUser } = yield* requireAppUserForAction(ctx);
+  const scheduler = yield* Scheduler;
+  const { appUser } = yield* requireAppUserForAction();
 
-  yield* Effect.promise(() =>
-    ctx.scheduler.runAfter(
-      0,
-      Ref.getFunctionReference(
-        refs.internal.chats.mutations.saveAssistantResponse
-      ),
-      { userId: appUser._id, ...args }
-    )
+  yield* scheduler.runAfter(
+    Duration.millis(0),
+    refs.internal.chats.mutations.saveAssistantResponse,
+    { userId: appUser._id, ...args }
   );
 
   return null;

@@ -1,6 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import * as content_sync_queries from "@repo/backend/confect/modules/content/contentSyncQueries.service";
+import { getTryoutScaleIntegrity as contentSyncQueries_getTryoutScaleIntegrity } from "@repo/backend/confect/modules/content/contentSyncQueries.service";
 import { Layer } from "effect";
 
 const contentSync_queries_tryouts_getTryoutScaleIntegrityImpl =
@@ -8,7 +8,7 @@ const contentSync_queries_tryouts_getTryoutScaleIntegrityImpl =
     api,
     "contentSync.queries.tryouts",
     "getTryoutScaleIntegrity",
-    (args) => content_sync_queries.getTryoutScaleIntegrity(args)
+    (args) => contentSyncQueries_getTryoutScaleIntegrity(args)
   );
 
 const contentSyncQueriesTryoutsImpl = GroupImpl.make(

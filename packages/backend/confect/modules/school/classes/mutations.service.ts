@@ -1,5 +1,8 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import {
   getSchoolMembership,
@@ -10,18 +13,15 @@ import { ClassActionError } from "@repo/backend/confect/modules/school/classErro
 import { SCHOOL_CLASS_INVITE_CODE_ROLES } from "@repo/backend/confect/modules/school/classes/inviteCodes.service";
 import type {
   SchoolClassImage,
+  SchoolClassMembers,
   SchoolClassVisibility,
 } from "@repo/backend/confect/modules/school/classes.tables";
 import { getRandomClassImage } from "@repo/backend/confect/modules/school/images";
 import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import { Clock, Effect } from "effect";
 import { nanoid } from "nanoid";
 
-type ClassMemberFields = Omit<
-  Doc<"schoolClassMembers">,
-  "_creationTime" | "_id"
->;
+type ClassMemberFields = typeof SchoolClassMembers.Fields.Type;
 
 /** Fails when an invite code cannot currently be used. */
 function validateInviteCodeState(
@@ -73,75 +73,74 @@ function validateNotExistingClassMembership(
 const updateClassMemberCount = Effect.fn(
   "school.classes.updateClassMemberCount"
 )(function* (
-  ctx: ConvexMutationCtx,
   classId: Id<"schoolClasses">,
   role: ClassMemberFields["role"],
   delta: number
 ) {
-  const classData = yield* Effect.promise(() => ctx.db.get(classId));
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const classData = yield* reader
+    .table("schoolClasses")
+    .get(classId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!classData) {
     return null;
   }
 
   if (role === "teacher") {
-    yield* Effect.promise(() =>
-      ctx.db.patch(classId, {
-        teacherCount: Math.max(classData.teacherCount + delta, 0),
-      })
-    );
+    yield* writer.table("schoolClasses").patch(classId, {
+      teacherCount: Math.max(classData.teacherCount + delta, 0),
+    });
     return null;
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(classId, {
-      studentCount: Math.max(classData.studentCount + delta, 0),
-    })
-  );
+  yield* writer.table("schoolClasses").patch(classId, {
+    studentCount: Math.max(classData.studentCount + delta, 0),
+  });
 
   return null;
 });
 
 /** Inserts a class member and applies the side effects previously hidden in triggers. */
 const insertClassMember = Effect.fn("school.classes.insertClassMember")(
-  function* (ctx: ConvexMutationCtx, member: ClassMemberFields) {
-    const memberId = yield* Effect.promise(() =>
-      ctx.db.insert("schoolClassMembers", member)
-    );
+  function* (member: ClassMemberFields) {
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const memberId = yield* writer.table("schoolClassMembers").insert(member);
     const now = yield* Clock.currentTimeMillis;
 
     const inviteCodeId = member.inviteCodeId;
 
     if (inviteCodeId) {
-      const inviteCode = yield* Effect.promise(() => ctx.db.get(inviteCodeId));
+      const inviteCode = yield* reader
+        .table("schoolClassInviteCodes")
+        .get(inviteCodeId)
+        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
       if (inviteCode) {
-        yield* Effect.promise(() =>
-          ctx.db.patch(inviteCodeId, {
-            currentUsage: inviteCode.currentUsage + 1,
-            updatedAt: now,
-          })
-        );
+        yield* writer.table("schoolClassInviteCodes").patch(inviteCodeId, {
+          currentUsage: inviteCode.currentUsage + 1,
+          updatedAt: now,
+        });
       }
     }
 
-    yield* updateClassMemberCount(ctx, member.classId, member.role, 1);
-    yield* Effect.promise(() =>
-      ctx.db.insert("schoolActivityLogs", {
-        action: "class_member_added",
-        entityId: memberId,
-        entityType: "schoolClassMembers",
-        metadata: {
-          addedUserId: member.userId,
-          classId: member.classId,
-          enrollMethod: member.enrollMethod,
-          role: member.role,
-          teacherRole: member.teacherRole,
-        },
-        schoolId: member.schoolId,
-        userId: member.addedBy ?? member.userId,
-      })
-    );
+    yield* updateClassMemberCount(member.classId, member.role, 1);
+    yield* writer.table("schoolActivityLogs").insert({
+      action: "class_member_added",
+      entityId: memberId,
+      entityType: "schoolClassMembers",
+      metadata: {
+        addedUserId: member.userId,
+        classId: member.classId,
+        enrollMethod: member.enrollMethod,
+        role: member.role,
+        teacherRole: member.teacherRole,
+      },
+      schoolId: member.schoolId,
+      userId: member.addedBy ?? member.userId,
+    });
 
     return memberId;
   }
@@ -156,33 +155,31 @@ export const createClass = Effect.fn("school.classes.createClass")(
     visibility: SchoolClassVisibility;
     year: string;
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
     const userId = user.appUser._id;
-    yield* requirePermission(ctx, PERMISSIONS.CLASS_CREATE, {
+    yield* requirePermission(PERMISSIONS.CLASS_CREATE, {
       schoolId: args.schoolId,
       userId,
     });
 
     const now = yield* Clock.currentTimeMillis;
-    const classId = yield* Effect.promise(() =>
-      ctx.db.insert("schoolClasses", {
-        createdBy: userId,
-        image: getRandomClassImage(now.toString()),
-        isArchived: false,
-        name: args.name,
-        schoolId: args.schoolId,
-        studentCount: 0,
-        subject: args.subject,
-        teacherCount: 0,
-        updatedAt: now,
-        updatedBy: userId,
-        visibility: args.visibility,
-        year: args.year,
-      })
-    );
+    const classId = yield* writer.table("schoolClasses").insert({
+      createdBy: userId,
+      image: getRandomClassImage(now.toString()),
+      isArchived: false,
+      name: args.name,
+      schoolId: args.schoolId,
+      studentCount: 0,
+      subject: args.subject,
+      teacherCount: 0,
+      updatedAt: now,
+      updatedBy: userId,
+      visibility: args.visibility,
+      year: args.year,
+    });
 
-    yield* insertClassMember(ctx, {
+    yield* insertClassMember({
       addedBy: userId,
       classId,
       role: "teacher",
@@ -193,19 +190,17 @@ export const createClass = Effect.fn("school.classes.createClass")(
     });
 
     for (const role of SCHOOL_CLASS_INVITE_CODE_ROLES) {
-      yield* Effect.promise(() =>
-        ctx.db.insert("schoolClassInviteCodes", {
-          classId,
-          code: nanoid(10),
-          createdBy: userId,
-          currentUsage: 0,
-          enabled: true,
-          role,
-          schoolId: args.schoolId,
-          updatedAt: now,
-          updatedBy: userId,
-        })
-      );
+      yield* writer.table("schoolClassInviteCodes").insert({
+        classId,
+        code: nanoid(10),
+        createdBy: userId,
+        currentUsage: 0,
+        enabled: true,
+        role,
+        schoolId: args.schoolId,
+        updatedAt: now,
+        updatedBy: userId,
+      });
     }
 
     return classId;
@@ -215,15 +210,13 @@ export const createClass = Effect.fn("school.classes.createClass")(
 /** Joins the current user to a class with an invite code. */
 export const joinClass = Effect.fn("school.classes.joinClass")(
   function* (args: { code: string }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const user = yield* requireAppUser();
     const userId = user.appUser._id;
-    const inviteCode = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolClassInviteCodes")
-        .withIndex("by_code", (query) => query.eq("code", args.code))
-        .unique()
-    );
+    const inviteCode = yield* reader
+      .table("schoolClassInviteCodes")
+      .get("by_code", args.code)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
     if (!inviteCode) {
       return yield* Effect.fail(
@@ -234,22 +227,14 @@ export const joinClass = Effect.fn("school.classes.joinClass")(
     const now = yield* Clock.currentTimeMillis;
     yield* validateInviteCodeState(inviteCode, now);
 
-    const classData = yield* loadActiveClass(ctx, inviteCode.classId);
-    const existingMember = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolClassMembers")
-        .withIndex("by_classId_and_userId", (query) =>
-          query.eq("classId", classData._id).eq("userId", userId)
-        )
-        .unique()
-    );
+    const classData = yield* loadActiveClass(inviteCode.classId);
+    const existingMember = yield* reader
+      .table("schoolClassMembers")
+      .get("by_classId_and_userId", classData._id, userId)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
     yield* validateNotExistingClassMembership(existingMember);
 
-    const schoolMember = yield* getSchoolMembership(
-      ctx,
-      classData.schoolId,
-      userId
-    );
+    const schoolMember = yield* getSchoolMembership(classData.schoolId, userId);
 
     if (!schoolMember) {
       return yield* Effect.fail(
@@ -260,7 +245,7 @@ export const joinClass = Effect.fn("school.classes.joinClass")(
     }
 
     if (inviteCode.role === "teacher") {
-      yield* insertClassMember(ctx, {
+      yield* insertClassMember({
         classId: classData._id,
         inviteCodeId: inviteCode._id,
         role: "teacher",
@@ -273,7 +258,7 @@ export const joinClass = Effect.fn("school.classes.joinClass")(
       return { classId: classData._id };
     }
 
-    yield* insertClassMember(ctx, {
+    yield* insertClassMember({
       classId: classData._id,
       enrollMethod: "by_code",
       inviteCodeId: inviteCode._id,
@@ -290,10 +275,10 @@ export const joinClass = Effect.fn("school.classes.joinClass")(
 /** Joins the current user to a public class. */
 export const joinPublicClass = Effect.fn("school.classes.joinPublicClass")(
   function* (args: { classId: Id<"schoolClasses"> }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const user = yield* requireAppUser();
     const userId = user.appUser._id;
-    const classData = yield* loadActiveClass(ctx, args.classId);
+    const classData = yield* loadActiveClass(args.classId);
 
     if (classData.visibility !== "public") {
       return yield* Effect.fail(
@@ -305,21 +290,13 @@ export const joinPublicClass = Effect.fn("school.classes.joinPublicClass")(
     }
 
     const now = yield* Clock.currentTimeMillis;
-    const existingMember = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolClassMembers")
-        .withIndex("by_classId_and_userId", (query) =>
-          query.eq("classId", classData._id).eq("userId", userId)
-        )
-        .unique()
-    );
+    const existingMember = yield* reader
+      .table("schoolClassMembers")
+      .get("by_classId_and_userId", classData._id, userId)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
     yield* validateNotExistingClassMembership(existingMember);
 
-    const schoolMember = yield* getSchoolMembership(
-      ctx,
-      classData.schoolId,
-      userId
-    );
+    const schoolMember = yield* getSchoolMembership(classData.schoolId, userId);
 
     if (!schoolMember) {
       return yield* Effect.fail(
@@ -329,7 +306,7 @@ export const joinPublicClass = Effect.fn("school.classes.joinPublicClass")(
       );
     }
 
-    yield* insertClassMember(ctx, {
+    yield* insertClassMember({
       classId: classData._id,
       enrollMethod: "public",
       role: "student",
@@ -345,24 +322,22 @@ export const joinPublicClass = Effect.fn("school.classes.joinPublicClass")(
 /** Updates a class image. */
 export const updateClassImage = Effect.fn("school.classes.updateClassImage")(
   function* (args: { classId: Id<"schoolClasses">; image: SchoolClassImage }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
     const userId = user.appUser._id;
-    const classData = yield* loadActiveClass(ctx, args.classId);
-    yield* requirePermission(ctx, PERMISSIONS.CLASS_WRITE, {
+    const classData = yield* loadActiveClass(args.classId);
+    yield* requirePermission(PERMISSIONS.CLASS_WRITE, {
       classId: args.classId,
       schoolId: classData.schoolId,
       userId,
     });
     const now = yield* Clock.currentTimeMillis;
 
-    yield* Effect.promise(() =>
-      ctx.db.patch(args.classId, {
-        image: args.image,
-        updatedAt: now,
-        updatedBy: userId,
-      })
-    );
+    yield* writer.table("schoolClasses").patch(args.classId, {
+      image: args.image,
+      updatedAt: now,
+      updatedBy: userId,
+    });
 
     return null;
   }
@@ -375,24 +350,22 @@ export const updateClassVisibility = Effect.fn(
   classId: Id<"schoolClasses">;
   visibility: SchoolClassVisibility;
 }) {
-  const ctx = yield* MutationCtx;
-  const user = yield* requireAppUser(ctx);
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
   const userId = user.appUser._id;
-  const classData = yield* loadActiveClass(ctx, args.classId);
-  yield* requirePermission(ctx, PERMISSIONS.CLASS_WRITE, {
+  const classData = yield* loadActiveClass(args.classId);
+  yield* requirePermission(PERMISSIONS.CLASS_WRITE, {
     classId: args.classId,
     schoolId: classData.schoolId,
     userId,
   });
   const now = yield* Clock.currentTimeMillis;
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(args.classId, {
-      updatedAt: now,
-      updatedBy: userId,
-      visibility: args.visibility,
-    })
-  );
+  yield* writer.table("schoolClasses").patch(args.classId, {
+    updatedAt: now,
+    updatedBy: userId,
+    visibility: args.visibility,
+  });
 
   return null;
 });

@@ -1,5 +1,4 @@
-import type { GenericId } from "@confect/core";
-import { QueryCtx } from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import {
   getTrendingBucketStart,
@@ -40,33 +39,34 @@ export const getTrendingSubjects = Effect.fn("content.getTrendingSubjects")(
       );
     }
 
-    const ctx = yield* QueryCtx;
+    const reader = yield* DatabaseReader;
     const limit = args.limit ?? DEFAULT_TRENDING_LIMIT;
     const minViews = args.minViews ?? DEFAULT_TRENDING_MIN_VIEWS;
     const since = getTrendingBucketStart(args.since);
     const until =
       getTrendingBucketStart(Math.max(args.since, args.until - 1)) +
       TRENDING_BUCKET_MS;
-    const bucketsInRange = ctx.db
-      .query("subjectTrendingBuckets")
-      .withIndex("by_locale_and_bucketStart_and_contentId", (query) =>
+
+    const bucketsInRange = yield* reader
+      .table("subjectTrendingBuckets")
+      .index("by_locale_and_bucketStart_and_contentId", (query) =>
         query
           .eq("locale", args.locale)
           .gte("bucketStart", since)
           .lt("bucketStart", until)
+      )
+      .collect();
+    const zeroViews = Number(0);
+    const countBySubject = new Map(
+      bucketsInRange.map((bucket) => [bucket.contentId, zeroViews] as const)
+    );
+
+    for (const bucket of bucketsInRange) {
+      countBySubject.set(
+        bucket.contentId,
+        (countBySubject.get(bucket.contentId) ?? 0) + bucket.viewCount
       );
-    const countBySubject = yield* Effect.promise(async () => {
-      const counts = new Map<GenericId.GenericId<"subjectSections">, number>();
-
-      for await (const bucket of bucketsInRange) {
-        counts.set(
-          bucket.contentId,
-          (counts.get(bucket.contentId) ?? 0) + bucket.viewCount
-        );
-      }
-
-      return counts;
-    });
+    }
 
     const trendingEntries = Array.from(countBySubject.entries())
       .filter(([, count]) => count >= minViews)
@@ -81,7 +81,13 @@ export const getTrendingSubjects = Effect.fn("content.getTrendingSubjects")(
       trendingEntries,
       ([subjectId, viewCount]) =>
         Effect.gen(function* () {
-          const subject = yield* Effect.promise(() => ctx.db.get(subjectId));
+          const subject = yield* reader
+            .table("subjectSections")
+            .get(subjectId)
+            .pipe(
+              Effect.catchTag("GetByIdFailure", () => Effect.succeed(null))
+            );
+
           if (!subject) {
             return null;
           }

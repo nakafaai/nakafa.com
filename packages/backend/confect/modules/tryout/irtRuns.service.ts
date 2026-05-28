@@ -1,10 +1,15 @@
 import { Ref } from "@confect/core";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { IrtError } from "@repo/backend/confect/modules/tryout/irt.errors";
 import { irtScalePublicationQueueWorkpool } from "@repo/backend/confect/modules/tryout/irtWorkpool";
-import { Clock, Effect } from "effect";
+import { Clock, Duration, Effect } from "effect";
 
 const MAX_AFFECTED_TRYOUTS_PER_SET = 100;
 
@@ -35,8 +40,14 @@ export const completeCalibrationRun = Effect.fn(
   readonly result: CalibrationResult;
 }) {
   const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const scheduler = yield* Scheduler;
   const now = yield* Clock.currentTimeMillis;
-  const run = yield* Effect.promise(() => ctx.db.get(args.calibrationRunId));
+  const run = yield* reader
+    .table("irtCalibrationRuns")
+    .get(args.calibrationRunId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!run) {
     return yield* Effect.fail(
@@ -47,12 +58,10 @@ export const completeCalibrationRun = Effect.fn(
     );
   }
 
-  const questions = yield* Effect.promise(() =>
-    ctx.db
-      .query("exerciseQuestions")
-      .withIndex("by_setId", (query) => query.eq("setId", run.setId))
-      .take(run.questionCount + 1)
-  );
+  const questions = yield* reader
+    .table("exerciseQuestions")
+    .index("by_setId", (query) => query.eq("setId", run.setId))
+    .take(run.questionCount + 1);
 
   if (questions.length > run.questionCount) {
     return yield* Effect.fail(
@@ -132,12 +141,10 @@ export const completeCalibrationRun = Effect.fn(
     );
   }
 
-  const existingParams = yield* Effect.promise(() =>
-    ctx.db
-      .query("exerciseItemParameters")
-      .withIndex("by_setId", (query) => query.eq("setId", run.setId))
-      .take(run.questionCount + 1)
-  );
+  const existingParams = yield* reader
+    .table("exerciseItemParameters")
+    .index("by_setId", (query) => query.eq("setId", run.setId))
+    .take(run.questionCount + 1);
 
   if (existingParams.length > run.questionCount) {
     return yield* Effect.fail(
@@ -167,40 +174,34 @@ export const completeCalibrationRun = Effect.fn(
     };
 
     if (existingItemParams) {
-      yield* Effect.promise(() =>
-        ctx.db.patch(existingItemParams._id, nextValues)
-      );
+      yield* writer
+        .table("exerciseItemParameters")
+        .patch(existingItemParams._id, nextValues);
       continue;
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.insert("exerciseItemParameters", {
-        ...nextValues,
-        questionId: item.questionId,
-      })
-    );
+    yield* writer.table("exerciseItemParameters").insert({
+      ...nextValues,
+      questionId: item.questionId,
+    });
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(args.calibrationRunId, {
-      attemptCount: args.result.attemptCount,
-      completedAt: now,
-      error: undefined,
-      iterationCount: args.result.iterationCount,
-      maxParameterDelta: args.result.maxParameterDelta,
-      questionCount: args.result.questionCount,
-      responseCount: args.result.responseCount,
-      status: "completed",
-      updatedAt: now,
-    })
-  );
+  yield* writer.table("irtCalibrationRuns").patch(args.calibrationRunId, {
+    attemptCount: args.result.attemptCount,
+    completedAt: now,
+    error: undefined,
+    iterationCount: args.result.iterationCount,
+    maxParameterDelta: args.result.maxParameterDelta,
+    questionCount: args.result.questionCount,
+    responseCount: args.result.responseCount,
+    status: "completed",
+    updatedAt: now,
+  });
 
-  const affectedTryoutSets = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryoutPartSets")
-      .withIndex("by_setId", (query) => query.eq("setId", run.setId))
-      .take(MAX_AFFECTED_TRYOUTS_PER_SET + 1)
-  );
+  const affectedTryoutSets = yield* reader
+    .table("tryoutPartSets")
+    .index("by_setId", (query) => query.eq("setId", run.setId))
+    .take(MAX_AFFECTED_TRYOUTS_PER_SET + 1);
 
   if (affectedTryoutSets.length > MAX_AFFECTED_TRYOUTS_PER_SET) {
     return yield* Effect.fail(
@@ -226,18 +227,14 @@ export const completeCalibrationRun = Effect.fn(
     );
   }
 
-  yield* Effect.promise(() =>
-    ctx.scheduler.runAfter(
-      0,
-      Ref.getFunctionReference(
-        refs.internal.irt.mutations.internalFunctions.queue
-          .cleanupCalibrationQueueEntries
-      ),
-      {
-        setId: run.setId,
-        throughAt: run.startedAt,
-      }
-    )
+  yield* scheduler.runAfter(
+    Duration.millis(0),
+    refs.internal.irt.mutations.internalFunctions.queue
+      .cleanupCalibrationQueueEntries,
+    {
+      setId: run.setId,
+      throughAt: run.startedAt,
+    }
   );
 
   return null;
@@ -249,8 +246,12 @@ export const failCalibrationRun = Effect.fn("irt.runs.failCalibrationRun")(
     readonly calibrationRunId: Id<"irtCalibrationRuns">;
     readonly error: string;
   }) {
-    const ctx = yield* MutationCtx;
-    const run = yield* Effect.promise(() => ctx.db.get(args.calibrationRunId));
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const run = yield* reader
+      .table("irtCalibrationRuns")
+      .get(args.calibrationRunId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!run) {
       return yield* Effect.fail(
@@ -262,13 +263,11 @@ export const failCalibrationRun = Effect.fn("irt.runs.failCalibrationRun")(
     }
 
     const updatedAt = yield* Clock.currentTimeMillis;
-    yield* Effect.promise(() =>
-      ctx.db.patch(args.calibrationRunId, {
-        error: args.error,
-        status: "failed",
-        updatedAt,
-      })
-    );
+    yield* writer.table("irtCalibrationRuns").patch(args.calibrationRunId, {
+      error: args.error,
+      status: "failed",
+      updatedAt,
+    });
 
     return null;
   }

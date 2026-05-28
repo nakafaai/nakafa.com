@@ -1,6 +1,12 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import * as notifications_service from "@repo/backend/confect/modules/notifications/notifications.service";
+import {
+  getNotificationPreferences as notificationsService_getNotificationPreferences,
+  listMutedNotificationEntities as notificationsService_listMutedNotificationEntities,
+  setDisabledNotificationTypes as notificationsService_setDisabledNotificationTypes,
+  setNotificationEntityMute as notificationsService_setNotificationEntityMute,
+  updateNotificationPreferences as notificationsService_updateNotificationPreferences,
+} from "@repo/backend/confect/modules/notifications/notifications.service";
 import { Effect, Layer } from "effect";
 
 const notifications_mutations_setNotificationEntityMuteImpl = FunctionImpl.make(
@@ -8,7 +14,7 @@ const notifications_mutations_setNotificationEntityMuteImpl = FunctionImpl.make(
   "notifications.mutations",
   "setNotificationEntityMute",
   (args) =>
-    notifications_service.setNotificationEntityMute(args).pipe(
+    notificationsService_setNotificationEntityMute(args).pipe(
       Effect.catchTags({
         NotificationInvariantError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -21,9 +27,9 @@ const notifications_queries_getNotificationPreferencesImpl = FunctionImpl.make(
   "notifications.queries",
   "getNotificationPreferences",
   (_args) =>
-    notifications_service
-      .getNotificationPreferences()
-      .pipe(Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)))
+    notificationsService_getNotificationPreferences().pipe(
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+    )
 );
 
 const notifications_queries_listMutedNotificationEntitiesImpl =
@@ -32,9 +38,9 @@ const notifications_queries_listMutedNotificationEntitiesImpl =
     "notifications.queries",
     "listMutedNotificationEntities",
     (args) =>
-      notifications_service
-        .listMutedNotificationEntities(args)
-        .pipe(Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)))
+      notificationsService_listMutedNotificationEntities(args).pipe(
+        Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+      )
   );
 
 const notifications_mutations_updateNotificationPreferencesImpl =
@@ -43,9 +49,9 @@ const notifications_mutations_updateNotificationPreferencesImpl =
     "notifications.mutations",
     "updateNotificationPreferences",
     (args) =>
-      notifications_service
-        .updateNotificationPreferences(args)
-        .pipe(Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)))
+      notificationsService_updateNotificationPreferences(args).pipe(
+        Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+      )
   );
 
 const notifications_mutations_setDisabledNotificationTypesImpl =
@@ -54,9 +60,9 @@ const notifications_mutations_setDisabledNotificationTypesImpl =
     "notifications.mutations",
     "setDisabledNotificationTypes",
     (args) =>
-      notifications_service
-        .setDisabledNotificationTypes(args)
-        .pipe(Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)))
+      notificationsService_setDisabledNotificationTypes(args).pipe(
+        Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+      )
   );
 
 const notificationsMutationsImpl = GroupImpl.make(

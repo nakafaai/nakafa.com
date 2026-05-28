@@ -1,10 +1,16 @@
-import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import type {
-  MutationCtx as ConvexMutationCtx,
-  QueryCtx as ConvexQueryCtx,
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import type { QueryCtx as ConvexQueryCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  StorageReader,
 } from "@repo/backend/confect/_generated/services";
 import { getUserMap } from "@repo/backend/confect/modules/school/classAccess.service";
 import { ClassActionError } from "@repo/backend/confect/modules/school/classErrors";
+import type {
+  SchoolClassForumPosts,
+  SchoolClassForums,
+} from "@repo/backend/confect/modules/school/classes.tables";
 import {
   forumPostsByAuthorSequence,
   forumPostsBySequence,
@@ -14,10 +20,11 @@ import {
   getMyPostReactions,
   getPostReactionPreviews,
 } from "@repo/backend/confect/modules/school/forums/reactions.service";
-import { Effect } from "effect";
+import { Effect, Option, type Schema } from "effect";
 
-type DatabaseCtx = ConvexMutationCtx | ConvexQueryCtx;
-type WriteCtx = ConvexMutationCtx;
+type DatabaseCtx = ConvexQueryCtx;
+type ForumDoc = Schema.Schema.Type<typeof SchoolClassForums.Doc>;
+type ForumPostDoc = Schema.Schema.Type<typeof SchoolClassForumPosts.Doc>;
 
 /** Truncates forum reply preview text. */
 export function truncateText({
@@ -36,45 +43,38 @@ export function truncateText({
 
 /** Reads the current read state for a forum and user. */
 export const getForumReadState = Effect.fn("school.forums.getForumReadState")(
-  function* (
-    ctx: DatabaseCtx,
-    forumId: Id<"schoolClassForums">,
-    currentUserId: Id<"users">
-  ) {
-    return yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolClassForumReadStates")
-        .withIndex("by_forumId_and_userId", (query) =>
-          query.eq("forumId", forumId).eq("userId", currentUserId)
-        )
-        .unique()
-    );
+  function* (forumId: Id<"schoolClassForums">, currentUserId: Id<"users">) {
+    const reader = yield* DatabaseReader;
+
+    return yield* reader
+      .table("schoolClassForumReadStates")
+      .index("by_forumId_and_userId", (query) =>
+        query.eq("forumId", forumId).eq("userId", currentUserId)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
   }
 );
 
 /** Writes a read state only when the boundary moves forward. */
 export const updateForumReadState = Effect.fn(
   "school.forums.updateForumReadState"
-)(function* (
-  ctx: WriteCtx,
-  args: {
-    readonly classId: Id<"schoolClasses">;
-    readonly forumId: Id<"schoolClassForums">;
-    readonly lastReadSequence: number;
-    readonly userId: Id<"users">;
-  }
-) {
-  const existing = yield* getForumReadState(ctx, args.forumId, args.userId);
+)(function* (args: {
+  readonly classId: Id<"schoolClasses">;
+  readonly forumId: Id<"schoolClassForums">;
+  readonly lastReadSequence: number;
+  readonly userId: Id<"users">;
+}) {
+  const writer = yield* DatabaseWriter;
+  const existing = yield* getForumReadState(args.forumId, args.userId);
 
   if (!existing) {
-    yield* Effect.promise(() =>
-      ctx.db.insert("schoolClassForumReadStates", {
-        classId: args.classId,
-        forumId: args.forumId,
-        lastReadSequence: args.lastReadSequence,
-        userId: args.userId,
-      })
-    );
+    yield* writer.table("schoolClassForumReadStates").insert({
+      classId: args.classId,
+      forumId: args.forumId,
+      lastReadSequence: args.lastReadSequence,
+      userId: args.userId,
+    });
 
     return null;
   }
@@ -83,11 +83,9 @@ export const updateForumReadState = Effect.fn(
     return null;
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(existing._id, {
-      lastReadSequence: args.lastReadSequence,
-    })
-  );
+  yield* writer.table("schoolClassForumReadStates").patch(existing._id, {
+    lastReadSequence: args.lastReadSequence,
+  });
 
   return null;
 });
@@ -98,7 +96,7 @@ export const getForumUnreadCounts = Effect.fn(
 )(function* (
   ctx: DatabaseCtx,
   args: {
-    readonly forums: readonly Doc<"schoolClassForums">[];
+    readonly forums: readonly ForumDoc[];
     readonly userId: Id<"users">;
   }
 ) {
@@ -109,7 +107,7 @@ export const getForumUnreadCounts = Effect.fn(
   const readStateByForumId = new Map();
 
   for (const forum of args.forums) {
-    const readState = yield* getForumReadState(ctx, forum._id, args.userId);
+    const readState = yield* getForumReadState(forum._id, args.userId);
     readStateByForumId.set(forum._id, readState);
   }
 
@@ -179,35 +177,27 @@ export const getForumUnreadCounts = Effect.fn(
 
 /** Adds users, attachments, and reaction previews to forum posts. */
 export const enrichForumPosts = Effect.fn("school.forums.enrichForumPosts")(
-  function* (
-    ctx: DatabaseCtx,
-    posts: readonly Doc<"schoolClassForumPosts">[],
-    currentUserId: Id<"users">
-  ) {
+  function* (posts: readonly ForumPostDoc[], currentUserId: Id<"users">) {
     if (posts.length === 0) {
       return [];
     }
 
+    const reader = yield* DatabaseReader;
+    const storage = yield* StorageReader;
     const postIds = posts.map((post) => post._id);
     const postUserIds = posts.flatMap((post) =>
       post.replyToUserId
         ? [post.createdBy, post.replyToUserId]
         : [post.createdBy]
     );
-    const reactionPreviews = yield* getPostReactionPreviews(ctx, posts);
-    const myReactionsMap = yield* getMyPostReactions(
-      ctx,
-      postIds,
-      currentUserId
-    );
+    const reactionPreviews = yield* getPostReactionPreviews(posts);
+    const myReactionsMap = yield* getMyPostReactions(postIds, currentUserId);
     const allAttachments = yield* Effect.forEach(postIds, (postId) =>
       Effect.gen(function* () {
-        const attachments = yield* Effect.promise(() =>
-          ctx.db
-            .query("schoolClassForumPostAttachments")
-            .withIndex("by_postId", (query) => query.eq("postId", postId))
-            .take(MAX_FORUM_POST_ATTACHMENTS + 1)
-        );
+        const attachments = yield* reader
+          .table("schoolClassForumPostAttachments")
+          .index("by_postId", (query) => query.eq("postId", postId))
+          .take(MAX_FORUM_POST_ATTACHMENTS + 1);
 
         if (attachments.length > MAX_FORUM_POST_ATTACHMENTS) {
           return yield* Effect.fail(
@@ -225,12 +215,14 @@ export const enrichForumPosts = Effect.fn("school.forums.enrichForumPosts")(
     const flatAttachments = allAttachments.flatMap(
       ([, attachments]) => attachments
     );
-    const userMap = yield* getUserMap(ctx, postUserIds);
+    const userMap = yield* getUserMap(postUserIds);
     const urlEntries = yield* Effect.forEach(flatAttachments, (attachment) =>
       Effect.gen(function* () {
-        const url = yield* Effect.promise(() =>
-          ctx.storage.getUrl(attachment.fileId)
-        );
+        const url = yield* storage
+          .getUrl(attachment.fileId)
+          .pipe(
+            Effect.catchTag("BlobNotFoundError", () => Effect.succeed(null))
+          );
         return [attachment._id, url] as const;
       })
     );
@@ -244,7 +236,7 @@ export const enrichForumPosts = Effect.fn("school.forums.enrichForumPosts")(
           mimeType: attachment.mimeType,
           name: attachment.name,
           size: attachment.size,
-          url: urlMap.get(attachment._id) ?? null,
+          url: urlMap.get(attachment._id)?.toString() ?? null,
         })),
       ])
     );
@@ -269,24 +261,13 @@ export const enrichForumPosts = Effect.fn("school.forums.enrichForumPosts")(
 /** Builds the bounded forum post transcript for a user. */
 export const createForumFeedPosts = Effect.fn(
   "school.forums.createForumFeedPosts"
-)(function* (
-  ctx: DatabaseCtx,
-  args: {
-    readonly currentUserId: Id<"users">;
-    readonly forumId: Id<"schoolClassForums">;
-    readonly posts: readonly Doc<"schoolClassForumPosts">[];
-  }
-) {
-  const enrichedPosts = yield* enrichForumPosts(
-    ctx,
-    args.posts,
-    args.currentUserId
-  );
-  const readState = yield* getForumReadState(
-    ctx,
-    args.forumId,
-    args.currentUserId
-  );
+)(function* (args: {
+  readonly currentUserId: Id<"users">;
+  readonly forumId: Id<"schoolClassForums">;
+  readonly posts: readonly ForumPostDoc[];
+}) {
+  const enrichedPosts = yield* enrichForumPosts(args.posts, args.currentUserId);
+  const readState = yield* getForumReadState(args.forumId, args.currentUserId);
   const lastReadSequence = readState?.lastReadSequence ?? 0;
 
   return enrichedPosts.map((post) => ({

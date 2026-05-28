@@ -1,12 +1,12 @@
-import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import { QueryCtx } from "@repo/backend/confect/_generated/services";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import { getOptionalAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import { loadValidatedTryoutPartSets } from "@repo/backend/confect/modules/tryout/tryoutParts.service";
-import { getAll } from "convex-helpers/server/relationships";
-import { Effect } from "effect";
+import type { Tryouts } from "@repo/backend/confect/modules/tryout/tryouts.tables";
+import { Effect, Option } from "effect";
 
 const MAX_TRYOUT_CATALOG_PAGE_SIZE = 25;
 
@@ -21,7 +21,7 @@ interface PaginationOpts {
 
 /** Builds one public tryout catalog row. */
 function buildActiveTryoutCatalogEntry(args: {
-  readonly entry: Doc<"tryouts">;
+  readonly entry: typeof Tryouts.Doc.Type;
   readonly latestAttempt: {
     readonly expiresAt: number;
     readonly lastActivityAt: number;
@@ -48,26 +48,28 @@ function buildActiveTryoutCatalogEntry(args: {
 /** Loads catalog rows with current user's latest attempt state when available. */
 const loadActiveTryoutCatalogEntries = Effect.fn(
   "tryouts.catalog.loadActiveEntries"
-)(function* (entries: readonly Doc<"tryouts">[], userId: Id<"users"> | null) {
-  const ctx = yield* QueryCtx;
-
+)(function* (
+  entries: readonly (typeof Tryouts.Doc.Type)[],
+  userId: Id<"users"> | null
+) {
   if (!userId) {
     return entries.map((entry) =>
       buildActiveTryoutCatalogEntry({ entry, latestAttempt: null })
     );
   }
 
+  const reader = yield* DatabaseReader;
   const latestAttempts = yield* Effect.all(
     entries.map((entry) =>
-      Effect.promise(() =>
-        ctx.db
-          .query("tryoutAttempts")
-          .withIndex("by_userId_and_tryoutId_and_startedAt", (query) =>
-            query.eq("userId", userId).eq("tryoutId", entry._id)
-          )
-          .order("desc")
-          .first()
-      )
+      reader
+        .table("tryoutAttempts")
+        .index(
+          "by_userId_and_tryoutId_and_startedAt",
+          (query) => query.eq("userId", userId).eq("tryoutId", entry._id),
+          "desc"
+        )
+        .first()
+        .pipe(Effect.map(Option.getOrNull))
     )
   );
 
@@ -87,7 +89,7 @@ export const getActiveTryoutCatalogPage = Effect.fn(
   readonly paginationOpts: PaginationOpts;
   readonly product: TryoutProduct;
 }) {
-  const ctx = yield* QueryCtx;
+  const reader = yield* DatabaseReader;
   const paginationOpts = {
     ...args.paginationOpts,
     numItems: Math.min(
@@ -95,20 +97,16 @@ export const getActiveTryoutCatalogPage = Effect.fn(
       MAX_TRYOUT_CATALOG_PAGE_SIZE
     ),
   };
-  const catalogPage = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryouts")
-      .withIndex(
-        "by_product_and_locale_and_isActive_and_catalogPosition",
-        (query) =>
-          query
-            .eq("product", args.product)
-            .eq("locale", args.locale)
-            .eq("isActive", true)
-      )
-      .paginate(paginationOpts)
-  );
-  const user = yield* getOptionalAppUser(ctx);
+  const catalogPage = yield* reader
+    .table("tryouts")
+    .index("by_product_and_locale_and_isActive_and_catalogPosition", (query) =>
+      query
+        .eq("product", args.product)
+        .eq("locale", args.locale)
+        .eq("isActive", true)
+    )
+    .paginate(paginationOpts);
+  const user = yield* getOptionalAppUser();
   const page = yield* loadActiveTryoutCatalogEntries(
     catalogPage.page,
     user?.appUser._id ?? null
@@ -128,7 +126,7 @@ const loadActiveTryoutCatalogSnapshot = Effect.fn(
   },
   userId: Id<"users"> | null
 ) {
-  const ctx = yield* QueryCtx;
+  const reader = yield* DatabaseReader;
   const pageSize = Math.max(
     0,
     Math.min(
@@ -136,27 +134,22 @@ const loadActiveTryoutCatalogSnapshot = Effect.fn(
       MAX_TRYOUT_CATALOG_PAGE_SIZE
     )
   );
-  const catalogEntries = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryouts")
-      .withIndex(
-        "by_product_and_locale_and_isActive_and_catalogPosition",
-        (query) =>
-          query
-            .eq("product", args.product)
-            .eq("locale", args.locale)
-            .eq("isActive", true)
-      )
-      .take(pageSize)
-  );
-  const catalogMeta = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryoutCatalogMeta")
-      .withIndex("by_product_and_locale", (query) =>
-        query.eq("product", args.product).eq("locale", args.locale)
-      )
-      .unique()
-  );
+  const catalogEntries = yield* reader
+    .table("tryouts")
+    .index("by_product_and_locale_and_isActive_and_catalogPosition", (query) =>
+      query
+        .eq("product", args.product)
+        .eq("locale", args.locale)
+        .eq("isActive", true)
+    )
+    .take(pageSize);
+  const catalogMeta = yield* reader
+    .table("tryoutCatalogMeta")
+    .index("by_product_and_locale", (query) =>
+      query.eq("product", args.product).eq("locale", args.locale)
+    )
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
   const initialPage = yield* loadActiveTryoutCatalogEntries(
     catalogEntries,
     userId
@@ -176,8 +169,7 @@ export const getActiveTryoutCatalogSnapshot = Effect.fn(
   readonly pageSize?: number;
   readonly product: TryoutProduct;
 }) {
-  const ctx = yield* QueryCtx;
-  const user = yield* getOptionalAppUser(ctx);
+  const user = yield* getOptionalAppUser();
   return yield* loadActiveTryoutCatalogSnapshot(
     args,
     user?.appUser._id ?? null
@@ -202,33 +194,31 @@ export const getTryoutDetails = Effect.fn("tryouts.catalog.getTryoutDetails")(
     readonly product: TryoutProduct;
     readonly slug: string;
   }) {
-    const ctx = yield* QueryCtx;
-    const tryout = yield* Effect.promise(() =>
-      ctx.db
-        .query("tryouts")
-        .withIndex("by_product_and_locale_and_slug", (query) =>
-          query
-            .eq("product", args.product)
-            .eq("locale", args.locale)
-            .eq("slug", args.slug)
-        )
-        .unique()
-    );
+    const reader = yield* DatabaseReader;
+    const tryout = yield* reader
+      .table("tryouts")
+      .index("by_product_and_locale_and_slug", (query) =>
+        query
+          .eq("product", args.product)
+          .eq("locale", args.locale)
+          .eq("slug", args.slug)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (!tryout) {
       return null;
     }
 
-    const tryoutPartSets = yield* loadValidatedTryoutPartSets(ctx.db, {
+    const tryoutPartSets = yield* loadValidatedTryoutPartSets({
       partCount: tryout.partCount,
       tryoutId: tryout._id,
     });
-    const sets = yield* Effect.promise(() =>
-      getAll(
-        ctx.db,
-        "exerciseSets",
-        tryoutPartSets.map((partSet) => partSet.setId)
-      )
+    const sets = yield* Effect.forEach(tryoutPartSets, (partSet) =>
+      reader
+        .table("exerciseSets")
+        .get(partSet.setId)
+        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)))
     );
     const parts = yield* Effect.all(
       tryoutPartSets.map((partSet, index) => {

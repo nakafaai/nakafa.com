@@ -4,10 +4,10 @@ import {
   chatTypeSchema,
   chatVisibilitySchema,
   Messages,
+  messagePartInputSchema,
   messageRoleSchema,
   modelIdSchema,
   Parts,
-  partSchema,
 } from "@repo/backend/confect/modules/chat/chats.tables";
 import { Schema } from "effect";
 
@@ -58,9 +58,6 @@ const firstChatMessageInputSchema = Schema.Struct({
   role: messageRoleSchema,
   totalTokens: Schema.optional(Schema.Number),
 });
-
-/** AI message part fields accepted before a message id and order are assigned. */
-const messagePartInputSchema = partSchema.omit("messageId", "order");
 
 /** Persisted message row with its ordered part rows. */
 const messageWithPartsSchema = Schema.extend(

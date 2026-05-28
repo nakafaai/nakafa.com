@@ -1,11 +1,31 @@
+import type { WorkflowArgs, WorkflowId } from "@convex-dev/workflow";
 import refs from "@repo/backend/confect/_generated/refs";
 import { workflow } from "@repo/backend/confect/modules/operations/workflow";
 import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
-import {
-  calibrateSetTwoPLWorkflowArgs,
-  calibrateSetTwoPLWorkflowReturns,
-} from "@repo/backend/confect/modules/tryout/irt/workflows.validators";
+import type { RegisteredMutation } from "convex/server";
+import { v } from "convex/values";
 import { Effect } from "effect";
+
+/**
+ * Workflow component validator for the 2PL calibration job.
+ *
+ * @see https://confect.dev/server/plain-convex-functions
+ * @see https://www.convex.dev/components/workflow
+ */
+export const calibrateSetTwoPLWorkflowArgs = {
+  calibrationRunId: v.id("irtCalibrationRuns"),
+  setId: v.id("exerciseSets"),
+};
+
+/** Workflow component return validator for the 2PL calibration job. */
+export const calibrateSetTwoPLWorkflowReturns = v.null();
+
+/** Registered native Workflow function type consumed by Confect refs. */
+export type CalibrateSetTwoPLWorkflow = RegisteredMutation<
+  "internal",
+  WorkflowArgs<typeof calibrateSetTwoPLWorkflowArgs>,
+  WorkflowId
+>;
 
 /** Converts an unknown workflow failure into a stable persisted error message. */
 function getCalibrationErrorMessage(error: unknown) {

@@ -1,7 +1,8 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import type {
-  MutationCtx as ConvexMutationCtx,
-  QueryCtx as ConvexQueryCtx,
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  StorageWriter,
 } from "@repo/backend/confect/_generated/services";
 import { ClassActionError } from "@repo/backend/confect/modules/school/classErrors";
 import {
@@ -9,10 +10,8 @@ import {
   FORUM_ATTACHMENT_ALLOWED_MIME_TYPES,
   MAX_FORUM_ATTACHMENT_BYTES,
 } from "@repo/backend/confect/modules/school/forums/constants";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
-type DatabaseCtx = ConvexMutationCtx | ConvexQueryCtx;
-type WriteCtx = ConvexMutationCtx;
 type FinalizedPendingUpload = Doc<"schoolClassForumPendingUploads"> & {
   readonly mimeType: string;
   readonly name: string;
@@ -97,17 +96,16 @@ function ensureDistinctUploadIds(
 /** Verifies that Convex storage metadata still matches saved upload metadata. */
 export const validateStoredForumAttachmentMetadata = Effect.fn(
   "school.forums.validateStoredForumAttachmentMetadata"
-)(function* (
-  ctx: DatabaseCtx,
-  args: {
-    readonly mimeType: string;
-    readonly size: number;
-    readonly storageId: Id<"_storage">;
-  }
-) {
-  const metadata = yield* Effect.promise(() =>
-    ctx.db.system.get("_storage", args.storageId)
-  );
+)(function* (args: {
+  readonly mimeType: string;
+  readonly size: number;
+  readonly storageId: Id<"_storage">;
+}) {
+  const reader = yield* DatabaseReader;
+  const metadata = yield* reader
+    .table("_storage")
+    .get(args.storageId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!metadata) {
     return yield* Effect.fail(
@@ -142,18 +140,20 @@ function isForumAttachmentUpload(
 /** Loads and validates pending uploads referenced by a post. */
 export const resolveForumAttachmentUploads = Effect.fn(
   "school.forums.resolveForumAttachmentUploads"
-)(function* (
-  ctx: DatabaseCtx,
-  args: {
-    readonly forumId: Id<"schoolClassForums">;
-    readonly uploadIds: readonly Id<"schoolClassForumPendingUploads">[];
-    readonly userId: Id<"users">;
-  }
-) {
+)(function* (args: {
+  readonly forumId: Id<"schoolClassForums">;
+  readonly uploadIds: readonly Id<"schoolClassForumPendingUploads">[];
+  readonly userId: Id<"users">;
+}) {
+  const reader = yield* DatabaseReader;
+
   yield* ensureDistinctUploadIds(args.uploadIds);
   return yield* Effect.forEach(args.uploadIds, (uploadId) =>
     Effect.gen(function* () {
-      const upload = yield* Effect.promise(() => ctx.db.get(uploadId));
+      const upload = yield* reader
+        .table("schoolClassForumPendingUploads")
+        .get(uploadId)
+        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
       if (
         !upload ||
@@ -176,7 +176,7 @@ export const resolveForumAttachmentUploads = Effect.fn(
       }
 
       yield* validateForumAttachmentPolicy(upload);
-      yield* validateStoredForumAttachmentMetadata(ctx, upload);
+      yield* validateStoredForumAttachmentMetadata(upload);
       return upload;
     })
   );
@@ -185,25 +185,30 @@ export const resolveForumAttachmentUploads = Effect.fn(
 /** Removes a pending upload and its orphaned storage file when needed. */
 export const deleteForumPendingUpload = Effect.fn(
   "school.forums.deleteForumPendingUpload"
-)(function* (ctx: WriteCtx, upload: Doc<"schoolClassForumPendingUploads">) {
+)(function* (upload: Doc<"schoolClassForumPendingUploads">) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const storage = yield* StorageWriter;
   const storageId = upload.storageId;
 
   if (storageId) {
-    const existingAttachment = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolClassForumPostAttachments")
-        .withIndex("by_fileId", (query) => query.eq("fileId", storageId))
-        .first()
-    );
-    const metadata = yield* Effect.promise(() =>
-      ctx.db.system.get("_storage", storageId)
-    );
+    const existingAttachment = yield* reader
+      .table("schoolClassForumPostAttachments")
+      .index("by_fileId", (query) => query.eq("fileId", storageId))
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
+    const metadata = yield* reader
+      .table("_storage")
+      .get(storageId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!(existingAttachment || !metadata)) {
-      yield* Effect.promise(() => ctx.storage.delete(storageId));
+      yield* storage
+        .delete(storageId)
+        .pipe(Effect.catchTag("BlobNotFoundError", () => Effect.succeed(null)));
     }
   }
 
-  yield* Effect.promise(() => ctx.db.delete(upload._id));
+  yield* writer.table("schoolClassForumPendingUploads").delete(upload._id);
   return null;
 });

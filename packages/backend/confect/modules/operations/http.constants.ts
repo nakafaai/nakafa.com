@@ -1,6 +1,9 @@
 /** Successful request response. */
 export const HTTP_OK = 200;
 
+/** Temporary redirect response. */
+export const HTTP_FOUND = 302;
+
 /** Accepted async work response. */
 export const HTTP_ACCEPTED = 202;
 

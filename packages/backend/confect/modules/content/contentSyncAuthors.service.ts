@@ -1,7 +1,7 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import {
-  MutationCtx,
-  QueryCtx,
+  DatabaseReader,
+  DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/confect/modules/content/constants";
 import {
@@ -9,12 +9,13 @@ import {
   slugify,
 } from "@repo/backend/confect/modules/content/contentSync.shared";
 import type { PaginationOptions } from "convex/server";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 /** Upserts author rows by unique display name. */
 export const bulkSyncAuthors = Effect.fn("contentSync.authors.bulkSyncAuthors")(
   function* (args: { authorNames: string[] }) {
-    const ctx = yield* MutationCtx;
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     yield* assertContentSyncBatchSize({
       functionName: "bulkSyncAuthors",
       limit: CONTENT_SYNC_BATCH_LIMITS.authors,
@@ -25,12 +26,12 @@ export const bulkSyncAuthors = Effect.fn("contentSync.authors.bulkSyncAuthors")(
     const uniqueNames = [...new Set(args.authorNames)];
     const authorLookups = yield* Effect.forEach(uniqueNames, (name) =>
       Effect.gen(function* () {
-        const author = yield* Effect.promise(() =>
-          ctx.db
-            .query("authors")
-            .withIndex("by_name", (query) => query.eq("name", name))
-            .unique()
-        );
+        const author = yield* reader
+          .table("authors")
+          .get("by_name", name)
+          .pipe(
+            Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null))
+          );
 
         return { author, name };
       })
@@ -40,12 +41,10 @@ export const bulkSyncAuthors = Effect.fn("contentSync.authors.bulkSyncAuthors")(
     );
 
     for (const name of newAuthorNames) {
-      yield* Effect.promise(() =>
-        ctx.db.insert("authors", {
-          name,
-          username: slugify(name),
-        })
-      );
+      yield* writer.table("authors").insert({
+        name,
+        username: slugify(name),
+      });
     }
 
     return {
@@ -59,7 +58,8 @@ export const bulkSyncAuthors = Effect.fn("contentSync.authors.bulkSyncAuthors")(
 export const deleteUnusedAuthors = Effect.fn(
   "contentSync.authors.deleteUnusedAuthors"
 )(function* (args: { authorIds: Id<"authors">[] }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
     functionName: "deleteUnusedAuthors",
     limit: CONTENT_SYNC_BATCH_LIMITS.unusedAuthors,
@@ -74,24 +74,25 @@ export const deleteUnusedAuthors = Effect.fn(
   let deleted = 0;
 
   for (const authorId of args.authorIds) {
-    const author = yield* Effect.promise(() => ctx.db.get(authorId));
+    const author = yield* reader
+      .table("authors")
+      .get(authorId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!author) {
       continue;
     }
 
-    const linkedContent = yield* Effect.promise(() =>
-      ctx.db
-        .query("contentAuthors")
-        .withIndex("by_authorId", (query) => query.eq("authorId", authorId))
-        .first()
-    );
+    const linkedContent = yield* reader
+      .table("contentAuthors")
+      .index("by_authorId", (query) => query.eq("authorId", authorId))
+      .first();
 
-    if (linkedContent) {
+    if (Option.isSome(linkedContent)) {
       continue;
     }
 
-    yield* Effect.promise(() => ctx.db.delete(authorId));
+    yield* writer.table("authors").delete(authorId);
     deleted += 1;
   }
 
@@ -101,10 +102,11 @@ export const deleteUnusedAuthors = Effect.fn(
 /** Lists author summaries for sync tooling. */
 export const listAuthorsPage = Effect.fn("contentSync.authors.listAuthorsPage")(
   function* (args: { paginationOpts: PaginationOptions }) {
-    const ctx = yield* QueryCtx;
-    const page = yield* Effect.promise(() =>
-      ctx.db.query("authors").paginate(args.paginationOpts)
-    );
+    const reader = yield* DatabaseReader;
+    const page = yield* reader
+      .table("authors")
+      .index("by_creation_time")
+      .paginate(args.paginationOpts);
 
     return {
       ...page,

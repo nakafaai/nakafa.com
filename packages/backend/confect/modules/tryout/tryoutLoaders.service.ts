@@ -1,26 +1,22 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import type { ConvexQueryCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import { Effect } from "effect";
 
 /** Loads bounded part attempts for a tryout attempt. */
 export const loadBoundedTryoutPartAttempts = Effect.fn(
   "tryouts.loaders.loadBoundedTryoutPartAttempts"
-)(function* (
-  db: ConvexQueryCtx["db"],
-  args: {
-    readonly partCount: number;
-    readonly tryoutAttemptId: Id<"tryoutAttempts">;
-  }
-) {
-  const partAttempts = yield* Effect.promise(() =>
-    db
-      .query("tryoutPartAttempts")
-      .withIndex("by_tryoutAttemptId_and_partIndex", (query) =>
-        query.eq("tryoutAttemptId", args.tryoutAttemptId)
-      )
-      .take(args.partCount + 1)
-  );
+)(function* (args: {
+  readonly partCount: number;
+  readonly tryoutAttemptId: Id<"tryoutAttempts">;
+}) {
+  const reader = yield* DatabaseReader;
+  const partAttempts = yield* reader
+    .table("tryoutPartAttempts")
+    .index("by_tryoutAttemptId_and_partIndex", (query) =>
+      query.eq("tryoutAttemptId", args.tryoutAttemptId)
+    )
+    .take(args.partCount + 1);
 
   if (partAttempts.length <= args.partCount) {
     return partAttempts;
@@ -37,21 +33,17 @@ export const loadBoundedTryoutPartAttempts = Effect.fn(
 /** Loads bounded answers for one exercise attempt. */
 export const getBoundedExerciseAnswers = Effect.fn(
   "tryouts.loaders.getBoundedExerciseAnswers"
-)(function* (
-  db: ConvexQueryCtx["db"],
-  args: {
-    readonly attemptId: Id<"exerciseAttempts">;
-    readonly totalExercises: number;
-  }
-) {
-  const answers = yield* Effect.promise(() =>
-    db
-      .query("exerciseAnswers")
-      .withIndex("by_attemptId_and_exerciseNumber", (query) =>
-        query.eq("attemptId", args.attemptId)
-      )
-      .take(args.totalExercises + 1)
-  );
+)(function* (args: {
+  readonly attemptId: Id<"exerciseAttempts">;
+  readonly totalExercises: number;
+}) {
+  const reader = yield* DatabaseReader;
+  const answers = yield* reader
+    .table("exerciseAnswers")
+    .index("by_attemptId_and_exerciseNumber", (query) =>
+      query.eq("attemptId", args.attemptId)
+    )
+    .take(args.totalExercises + 1);
 
   if (answers.length <= args.totalExercises) {
     return answers;

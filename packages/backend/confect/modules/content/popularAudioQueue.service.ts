@@ -1,16 +1,15 @@
-import { Ref } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  ActionCtx,
-  MutationCtx,
-  QueryCtx,
+  DatabaseReader,
+  DatabaseWriter,
+  MutationRunner,
+  QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import type { AudioContentRef } from "@repo/backend/confect/modules/content/audio.schemas";
 import {
   type AudioContentLookup,
   getAudioContentLookup,
-  readAudioContentLookup,
-  readLocalizedAudioContentLookup,
+  getLocalizedAudioContentLookup,
 } from "@repo/backend/confect/modules/content/audioContentLookup.service";
 import {
   AUDIO_RETRY_CONFIG,
@@ -18,7 +17,7 @@ import {
   MIN_AUDIO_VIEW_THRESHOLD,
 } from "@repo/backend/confect/modules/content/audioGeneration.constants";
 import { SUPPORTED_CONTENT_LOCALES } from "@repo/backend/confect/modules/content/content.schemas";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option } from "effect";
 
 interface PopularAudioItem {
   readonly ref: AudioContentRef;
@@ -51,20 +50,19 @@ function mergePopularAudioContentItems(items: readonly PopularAudioItem[]) {
 export const getPopularContentForAudioQueue = Effect.fn(
   "popularAudio.getPopularContentForAudioQueue"
 )(function* () {
-  const ctx = yield* QueryCtx;
-  const [articleRows, subjectRows] = yield* Effect.promise(() =>
-    Promise.all([
-      ctx.db
-        .query("articlePopularity")
-        .withIndex("by_viewCount_and_contentId")
-        .order("desc")
+  const reader = yield* DatabaseReader;
+  const [articleRows, subjectRows] = yield* Effect.all(
+    [
+      reader
+        .table("articlePopularity")
+        .index("by_viewCount_and_contentId", "desc")
         .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
-      ctx.db
-        .query("subjectPopularity")
-        .withIndex("by_viewCount_and_contentId")
-        .order("desc")
+      reader
+        .table("subjectPopularity")
+        .index("by_viewCount_and_contentId", "desc")
         .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
-    ])
+    ],
+    { concurrency: "unbounded" }
   );
   const articleItems = yield* Effect.forEach(articleRows, (row) =>
     Effect.gen(function* () {
@@ -117,7 +115,8 @@ export const enqueuePopularContentForAudio = Effect.fn(
     return { processed: 0, queued: 0 };
   }
 
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const sortedItems = [...args.items].sort(
     (left, right) => right.viewCount - left.viewCount
   );
@@ -130,8 +129,7 @@ export const enqueuePopularContentForAudio = Effect.fn(
     }
 
     const sourceContent =
-      item.sourceContent ??
-      (yield* Effect.promise(() => readAudioContentLookup(ctx, item.ref)));
+      item.sourceContent ?? (yield* getAudioContentLookup(item.ref));
 
     if (!sourceContent) {
       yield* Effect.logWarning("Content slug not found for audio queue.", {
@@ -142,8 +140,9 @@ export const enqueuePopularContentForAudio = Effect.fn(
     }
 
     for (const locale of SUPPORTED_CONTENT_LOCALES) {
-      const localizedContent = yield* Effect.promise(() =>
-        readLocalizedAudioContentLookup(ctx, sourceContent, locale)
+      const localizedContent = yield* getLocalizedAudioContentLookup(
+        sourceContent,
+        locale
       );
 
       if (!localizedContent) {
@@ -155,17 +154,16 @@ export const enqueuePopularContentForAudio = Effect.fn(
         continue;
       }
 
-      const existingQueueItem = yield* Effect.promise(() =>
-        ctx.db
-          .query("audioGenerationQueue")
-          .withIndex("by_contentRefType_and_contentRefId_and_locale", (query) =>
-            query
-              .eq("contentRef.type", localizedContent.ref.type)
-              .eq("contentRef.id", localizedContent.ref.id)
-              .eq("locale", locale)
-          )
-          .first()
-      );
+      const existingQueueItem = yield* reader
+        .table("audioGenerationQueue")
+        .index("by_contentRefType_and_contentRefId_and_locale", (query) =>
+          query
+            .eq("contentRef.type", localizedContent.ref.type)
+            .eq("contentRef.id", localizedContent.ref.id)
+            .eq("locale", locale)
+        )
+        .first()
+        .pipe(Effect.map(Option.getOrNull));
 
       if (
         existingQueueItem &&
@@ -175,20 +173,21 @@ export const enqueuePopularContentForAudio = Effect.fn(
       }
 
       if (existingQueueItem) {
-        yield* Effect.promise(() => ctx.db.delete(existingQueueItem._id));
+        yield* writer
+          .table("audioGenerationQueue")
+          .delete(existingQueueItem._id);
       }
 
-      const existingAudio = yield* Effect.promise(() =>
-        ctx.db
-          .query("contentAudios")
-          .withIndex("by_contentRefType_and_contentRefId_and_locale", (query) =>
-            query
-              .eq("contentRef.type", localizedContent.ref.type)
-              .eq("contentRef.id", localizedContent.ref.id)
-              .eq("locale", locale)
-          )
-          .first()
-      );
+      const existingAudio = yield* reader
+        .table("contentAudios")
+        .index("by_contentRefType_and_contentRefId_and_locale", (query) =>
+          query
+            .eq("contentRef.type", localizedContent.ref.type)
+            .eq("contentRef.id", localizedContent.ref.id)
+            .eq("locale", locale)
+        )
+        .first()
+        .pipe(Effect.map(Option.getOrNull));
 
       if (
         existingAudio?.status === "completed" &&
@@ -197,19 +196,17 @@ export const enqueuePopularContentForAudio = Effect.fn(
         continue;
       }
 
-      yield* Effect.promise(() =>
-        ctx.db.insert("audioGenerationQueue", {
-          contentRef: localizedContent.ref,
-          locale,
-          maxRetries: AUDIO_RETRY_CONFIG.maxRetries,
-          priorityScore: item.viewCount * 10,
-          requestedAt: now,
-          retryCount: 0,
-          slug: sourceContent.slug,
-          status: "pending",
-          updatedAt: now,
-        })
-      );
+      yield* writer.table("audioGenerationQueue").insert({
+        contentRef: localizedContent.ref,
+        locale,
+        maxRetries: AUDIO_RETRY_CONFIG.maxRetries,
+        priorityScore: item.viewCount * 10,
+        requestedAt: now,
+        retryCount: 0,
+        slug: sourceContent.slug,
+        status: "pending",
+        updatedAt: now,
+      });
       totalQueued += 1;
     }
   }
@@ -220,16 +217,13 @@ export const enqueuePopularContentForAudio = Effect.fn(
 /** Populates the audio queue from current popularity read models. */
 export const populateAudioQueue = Effect.fn("popularAudio.populateAudioQueue")(
   function* () {
-    const ctx = yield* ActionCtx;
+    const runQuery = yield* QueryRunner;
+    const runMutation = yield* MutationRunner;
     yield* Effect.logInfo("Populating audio queue started.");
 
-    const items = yield* Effect.promise(() =>
-      ctx.runQuery(
-        Ref.getFunctionReference(
-          refs.internal.contents.queries.audio.getPopularContentForAudioQueue
-        ),
-        {}
-      )
+    const items = yield* runQuery(
+      refs.internal.contents.queries.audio.getPopularContentForAudioQueue,
+      {}
     );
 
     if (items.length === 0) {
@@ -237,13 +231,9 @@ export const populateAudioQueue = Effect.fn("popularAudio.populateAudioQueue")(
       return null;
     }
 
-    const result = yield* Effect.promise(() =>
-      ctx.runMutation(
-        Ref.getFunctionReference(
-          refs.internal.contents.mutations.audio.enqueuePopularContentForAudio
-        ),
-        { items }
-      )
+    const result = yield* runMutation(
+      refs.internal.contents.mutations.audio.enqueuePopularContentForAudio,
+      { items }
     );
 
     yield* Effect.logInfo("Populated audio queue completed.", result);

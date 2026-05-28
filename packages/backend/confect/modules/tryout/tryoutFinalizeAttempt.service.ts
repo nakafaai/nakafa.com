@@ -1,6 +1,7 @@
 import { Ref } from "@confect/core";
-import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import { syncTryoutAttemptExpiry } from "@repo/backend/confect/modules/tryout/tryoutExpiry.service";
@@ -11,8 +12,11 @@ import {
   isBetterLeaderboardScore,
 } from "@repo/backend/confect/modules/tryout/tryoutMetrics.service";
 import { getTryoutReportScore } from "@repo/backend/confect/modules/tryout/tryoutReporting.service";
+import type { TryoutAttempts } from "@repo/backend/confect/modules/tryout/tryouts.tables";
 import { tryoutLeaderboardWorkpool } from "@repo/backend/confect/modules/tryout/tryoutWorkpool";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
+
+type TryoutAttemptDoc = typeof TryoutAttempts.Doc.Type;
 
 /** Finalizes a whole tryout attempt once all required parts are completed. */
 export const finalizeTryoutAttempt = Effect.fn(
@@ -21,12 +25,14 @@ export const finalizeTryoutAttempt = Effect.fn(
   readonly completedAtMs?: number;
   readonly ctx: ConvexMutationCtx;
   readonly now: number;
-  readonly tryoutAttempt: Doc<"tryoutAttempts">;
+  readonly tryoutAttempt: TryoutAttemptDoc;
   readonly userId: Id<"users">;
 }) {
-  const tryout = yield* Effect.promise(() =>
-    args.ctx.db.get(args.tryoutAttempt.tryoutId)
-  );
+  const reader = yield* DatabaseReader;
+  const tryout = yield* reader
+    .table("tryouts")
+    .get(args.tryoutAttempt.tryoutId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!tryout) {
     return yield* Effect.fail(
@@ -41,16 +47,15 @@ export const finalizeTryoutAttempt = Effect.fn(
     const rawScorePercentage = computeTryoutRawScorePercentage(
       args.tryoutAttempt
     );
-    const leaderboardEntry = yield* Effect.promise(() =>
-      args.ctx.db
-        .query("tryoutLeaderboardEntries")
-        .withIndex("by_tryoutId_and_userId", (query) =>
-          query
-            .eq("tryoutId", args.tryoutAttempt.tryoutId)
-            .eq("userId", args.userId)
-        )
-        .unique()
-    );
+    const leaderboardEntry = yield* reader
+      .table("tryoutLeaderboardEntries")
+      .index("by_tryoutId_and_userId", (query) =>
+        query
+          .eq("tryoutId", args.tryoutAttempt.tryoutId)
+          .eq("userId", args.userId)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     return {
       irtScore: getTryoutReportScore(tryout.product, args.tryoutAttempt.theta),
@@ -84,15 +89,15 @@ export const finalizeTryoutAttempt = Effect.fn(
   }
 
   const tryoutExpiry = yield* syncTryoutAttemptExpiry(
-    args.ctx,
     args.tryoutAttempt,
     args.now
   );
 
   if (tryoutExpiry.expired) {
-    const expiredAttempt = yield* Effect.promise(() =>
-      args.ctx.db.get(args.tryoutAttempt._id)
-    );
+    const expiredAttempt = yield* reader
+      .table("tryoutAttempts")
+      .get(args.tryoutAttempt._id)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!expiredAttempt) {
       return yield* Effect.fail(
@@ -112,10 +117,7 @@ export const finalizeTryoutAttempt = Effect.fn(
     };
   }
 
-  const scoreTarget = yield* getTryoutScoreTarget(
-    args.ctx.db,
-    args.tryoutAttempt
-  );
+  const scoreTarget = yield* getTryoutScoreTarget(args.tryoutAttempt);
 
   if (
     args.tryoutAttempt.completedPartIndices.length <
@@ -131,7 +133,7 @@ export const finalizeTryoutAttempt = Effect.fn(
   }
 
   const completedAtMs = args.completedAtMs ?? args.now;
-  const completedAttempt = yield* syncTryoutAttemptAggregates(args.ctx, {
+  const completedAttempt = yield* syncTryoutAttemptAggregates({
     completedAtMs,
     now: args.now,
     scaleVersionId: scoreTarget.scaleVersionId,
@@ -141,16 +143,15 @@ export const finalizeTryoutAttempt = Effect.fn(
   });
   const leaderboardLookup =
     scoreTarget.scoreStatus === "official"
-      ? Effect.promise(() =>
-          args.ctx.db
-            .query("tryoutLeaderboardEntries")
-            .withIndex("by_tryoutId_and_userId", (query) =>
-              query
-                .eq("tryoutId", args.tryoutAttempt.tryoutId)
-                .eq("userId", args.userId)
-            )
-            .unique()
-        )
+      ? reader
+          .table("tryoutLeaderboardEntries")
+          .index("by_tryoutId_and_userId", (query) =>
+            query
+              .eq("tryoutId", args.tryoutAttempt.tryoutId)
+              .eq("userId", args.userId)
+          )
+          .first()
+          .pipe(Effect.map(Option.getOrNull))
       : Effect.succeed(null);
   const leaderboardEntry = yield* leaderboardLookup;
 

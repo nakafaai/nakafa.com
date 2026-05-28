@@ -1,19 +1,19 @@
-import { type GenericId, Ref } from "@confect/core";
+import type { GenericId } from "@confect/core";
 import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import type { Doc } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { ActionCtx, QueryCtx } from "@repo/backend/confect/_generated/services";
+import {
+  ActionCtx,
+  Auth,
+  DatabaseReader,
+  QueryRunner,
+} from "@repo/backend/confect/_generated/services";
 import { jwksSchema } from "@repo/backend/confect/modules/identity/auth/auth.schemas";
 import { authComponent } from "@repo/backend/confect/modules/identity/auth.client";
 import authConfig from "@repo/backend/confect/modules/identity/auth.config";
 import { authEnvironment } from "@repo/backend/confect/modules/identity/auth.env";
-import type {
-  ConvexActionCtx,
-  ConvexDataModel,
-  ConvexMutationCtx,
-  ConvexQueryCtx,
-} from "@repo/backend/confect/modules/shared/convexContext";
+import type { ConvexDataModel } from "@repo/backend/confect/modules/shared/convexContext";
 import { betterAuth } from "better-auth/minimal";
 import {
   anonymous,
@@ -21,7 +21,7 @@ import {
   organization,
   username,
 } from "better-auth/plugins";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 const AUTH_JWT_EXPIRATION_SECONDS = 5 * 60;
 const authIdentitySchema = Schema.Struct({ subject: Schema.String });
@@ -60,10 +60,11 @@ function mapAppUserToAuthUser(appUser: Doc<"users">) {
 }
 
 /** Reads the Convex JWT identity issued by Better Auth. */
-const readAuthIdentity = Effect.fn("identity.readAuthIdentity")(function* (
-  ctx: ConvexActionCtx | ConvexMutationCtx | ConvexQueryCtx
-) {
-  const identity = yield* Effect.promise(() => ctx.auth.getUserIdentity());
+const readAuthIdentity = Effect.fn("identity.readAuthIdentity")(function* () {
+  const auth = yield* Auth;
+  const identity = yield* auth.getUserIdentity.pipe(
+    Effect.catchTag("NoUserIdentityFoundError", () => Effect.succeed(null))
+  );
 
   if (!identity) {
     return null;
@@ -76,27 +77,25 @@ const readAuthIdentity = Effect.fn("identity.readAuthIdentity")(function* (
 
 /** Returns the app user mapped to a Better Auth user id. */
 export const getAppUserByAuthId = Effect.fn("identity.getAppUserByAuthId")(
-  function* (ctx: ConvexQueryCtx | ConvexMutationCtx, authId: string) {
-    return yield* Effect.promise(() =>
-      ctx.db
-        .query("users")
-        .withIndex("by_authId", (query) => query.eq("authId", authId))
-        .unique()
-    );
+  function* (authId: string) {
+    const reader = yield* DatabaseReader;
+    return yield* reader
+      .table("users")
+      .index("by_authId", (query) => query.eq("authId", authId))
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
   }
 );
 
 /** Resolves the current valid Better Auth session to the synced app user. */
-const getSessionAppUser = Effect.fn("identity.getSessionAppUser")(function* (
-  ctx: ConvexMutationCtx | ConvexQueryCtx
-) {
-  const identity = yield* readAuthIdentity(ctx);
+const getSessionAppUser = Effect.fn("identity.getSessionAppUser")(function* () {
+  const identity = yield* readAuthIdentity();
 
   if (!identity) {
     return null;
   }
 
-  const appUser = yield* getAppUserByAuthId(ctx, identity.subject);
+  const appUser = yield* getAppUserByAuthId(identity.subject);
 
   if (!appUser) {
     return null;
@@ -110,31 +109,32 @@ const getSessionAppUser = Effect.fn("identity.getSessionAppUser")(function* (
 
 /** Returns the current Better Auth user and app user when both exist. */
 export const getOptionalAppUser = Effect.fn("identity.getOptionalAppUser")(
-  function* (ctx: ConvexQueryCtx | ConvexMutationCtx) {
-    return yield* getSessionAppUser(ctx);
+  function* () {
+    return yield* getSessionAppUser();
   }
 );
 
 /** Requires the current request to resolve to a mapped app user. */
-export const requireAppUser = Effect.fn("identity.requireAppUser")(function* (
-  ctx: ConvexQueryCtx | ConvexMutationCtx
-) {
-  const user = yield* getSessionAppUser(ctx);
+export const requireAppUser = Effect.fn("identity.requireAppUser")(
+  function* () {
+    const user = yield* getSessionAppUser();
 
-  if (!user) {
-    return yield* Effect.fail(
-      new UnauthorizedUser({ message: "User not found." })
-    );
+    if (!user) {
+      return yield* Effect.fail(
+        new UnauthorizedUser({ message: "User not found." })
+      );
+    }
+
+    return user;
   }
-
-  return user;
-});
+);
 
 /** Requires the current action request to resolve to a mapped app user. */
 export const requireAppUserForAction = Effect.fn(
   "identity.requireAppUserForAction"
-)(function* (ctx: ConvexActionCtx) {
-  const identity = yield* readAuthIdentity(ctx);
+)(function* () {
+  const runQuery = yield* QueryRunner;
+  const identity = yield* readAuthIdentity();
 
   if (!identity) {
     return yield* Effect.fail(
@@ -142,12 +142,9 @@ export const requireAppUserForAction = Effect.fn(
     );
   }
 
-  const appUser = yield* Effect.promise(() =>
-    ctx.runQuery(
-      Ref.getFunctionReference(refs.internal.users.queries.getUserByAuthId),
-      { authId: identity.subject }
-    )
-  );
+  const appUser = yield* runQuery(refs.internal.users.queries.getUserByAuthId, {
+    authId: identity.subject,
+  });
 
   if (!appUser) {
     return yield* Effect.fail(
@@ -209,8 +206,7 @@ export const createAuth = (ctx: GenericCtx<ConvexDataModel>) =>
 /** Reads the current mapped app user for public queries. */
 export const getCurrentUser = Effect.fn("identity.getCurrentUser")(
   function* () {
-    const ctx = yield* QueryCtx;
-    return yield* getOptionalAppUser(ctx);
+    return yield* getOptionalAppUser();
   }
 );
 
@@ -246,8 +242,11 @@ export const getLatestJwks = Effect.fn("identity.getLatestJwks")(function* () {
 /** Reads the public profile fields for an app user id. */
 export const getPublicUserById = Effect.fn("identity.getPublicUserById")(
   function* (args: { userId: GenericId.GenericId<"users"> }) {
-    const ctx = yield* QueryCtx;
-    const user = yield* Effect.promise(() => ctx.db.get(args.userId));
+    const reader = yield* DatabaseReader;
+    const user = yield* reader
+      .table("users")
+      .get(args.userId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!user) {
       return null;

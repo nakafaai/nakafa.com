@@ -1,12 +1,14 @@
-import { Ref } from "@confect/core";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { tryoutProductPolicies } from "@repo/backend/confect/modules/tryout/products";
-import { Effect } from "effect";
+import { Duration, Effect, Option } from "effect";
 
 const TRYOUT_STATS_REBUILD_BATCH_SIZE = 100;
 
@@ -34,22 +36,20 @@ export const rebuildUserTryoutStats = Effect.fn(
   readonly progress?: TryoutStatsProgress;
   readonly userId: Id<"users">;
 }) {
-  const ctx = yield* MutationCtx;
-  const page = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryoutLeaderboardEntries")
-      .withIndex(
-        "by_userId_and_leaderboardNamespace_and_completedAt",
-        (query) =>
-          query
-            .eq("userId", args.userId)
-            .eq("leaderboardNamespace", args.leaderboardNamespace)
-      )
-      .paginate({
-        cursor: args.cursor ?? null,
-        numItems: TRYOUT_STATS_REBUILD_BATCH_SIZE,
-      })
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const scheduler = yield* Scheduler;
+  const page = yield* reader
+    .table("tryoutLeaderboardEntries")
+    .index("by_userId_and_leaderboardNamespace_and_completedAt", (query) =>
+      query
+        .eq("userId", args.userId)
+        .eq("leaderboardNamespace", args.leaderboardNamespace)
+    )
+    .paginate({
+      cursor: args.cursor ?? null,
+      numItems: TRYOUT_STATS_REBUILD_BATCH_SIZE,
+    });
   const progress = args.progress ?? {
     bestTheta: undefined,
     lastTryoutAt: 0,
@@ -70,43 +70,38 @@ export const rebuildUserTryoutStats = Effect.fn(
   }
 
   if (!page.isDone) {
-    yield* Effect.promise(() =>
-      ctx.scheduler.runAfter(
-        0,
-        Ref.getFunctionReference(
-          refs.internal.tryouts.mutations.internalFunctions.stats
-            .rebuildUserTryoutStats
-        ),
-        {
-          cursor: page.continueCursor,
-          leaderboardNamespace: args.leaderboardNamespace,
-          product: args.product,
-          progress,
-          userId: args.userId,
-        }
-      )
+    yield* scheduler.runAfter(
+      Duration.millis(0),
+      refs.internal.tryouts.mutations.internalFunctions.stats
+        .rebuildUserTryoutStats,
+      {
+        cursor: page.continueCursor,
+        leaderboardNamespace: args.leaderboardNamespace,
+        product: args.product,
+        progress,
+        userId: args.userId,
+      }
     );
     return null;
   }
 
-  const statsRecord = yield* Effect.promise(() =>
-    ctx.db
-      .query("userTryoutStats")
-      .withIndex("by_userId_and_product_and_leaderboardNamespace", (query) =>
-        query
-          .eq("userId", args.userId)
-          .eq("product", args.product)
-          .eq("leaderboardNamespace", args.leaderboardNamespace)
-      )
-      .unique()
-  );
+  const statsRecord = yield* reader
+    .table("userTryoutStats")
+    .index("by_userId_and_product_and_leaderboardNamespace", (query) =>
+      query
+        .eq("userId", args.userId)
+        .eq("product", args.product)
+        .eq("leaderboardNamespace", args.leaderboardNamespace)
+    )
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 
   if (
     progress.totalTryoutsCompleted === 0 ||
     progress.bestTheta === undefined
   ) {
     if (statsRecord) {
-      yield* Effect.promise(() => ctx.db.delete(statsRecord._id));
+      yield* writer.table("userTryoutStats").delete(statsRecord._id);
     }
 
     return null;
@@ -121,24 +116,20 @@ export const rebuildUserTryoutStats = Effect.fn(
   };
 
   if (statsRecord) {
-    yield* Effect.promise(() =>
-      ctx.db.patch(statsRecord._id, {
-        ...nextStats,
-        updatedAt: progress.lastTryoutAt,
-      })
-    );
+    yield* writer.table("userTryoutStats").patch(statsRecord._id, {
+      ...nextStats,
+      updatedAt: progress.lastTryoutAt,
+    });
     return null;
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.insert("userTryoutStats", {
-      ...nextStats,
-      leaderboardNamespace: args.leaderboardNamespace,
-      product: args.product,
-      updatedAt: progress.lastTryoutAt,
-      userId: args.userId,
-    })
-  );
+  yield* writer.table("userTryoutStats").insert({
+    ...nextStats,
+    leaderboardNamespace: args.leaderboardNamespace,
+    product: args.product,
+    updatedAt: progress.lastTryoutAt,
+    userId: args.userId,
+  });
 
   return null;
 });
@@ -147,7 +138,6 @@ export const rebuildUserTryoutStats = Effect.fn(
 export const syncUserTryoutStats = Effect.fn(
   "tryouts.stats.syncUserTryoutStats"
 )(function* (args: {
-  readonly ctx: ConvexMutationCtx;
   readonly cycleKey: string;
   readonly locale: Locale;
   readonly nextEntry: TryoutStatsEntry;
@@ -155,6 +145,9 @@ export const syncUserTryoutStats = Effect.fn(
   readonly product: TryoutProduct;
   readonly userId: Id<"users">;
 }) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const scheduler = yield* Scheduler;
   const leaderboardNamespace = tryoutProductPolicies[
     args.product
   ].getLeaderboardNamespace({
@@ -162,17 +155,16 @@ export const syncUserTryoutStats = Effect.fn(
     locale: args.locale,
     product: args.product,
   });
-  const statsRecord = yield* Effect.promise(() =>
-    args.ctx.db
-      .query("userTryoutStats")
-      .withIndex("by_userId_and_product_and_leaderboardNamespace", (query) =>
-        query
-          .eq("userId", args.userId)
-          .eq("product", args.product)
-          .eq("leaderboardNamespace", leaderboardNamespace)
-      )
-      .unique()
-  );
+  const statsRecord = yield* reader
+    .table("userTryoutStats")
+    .index("by_userId_and_product_and_leaderboardNamespace", (query) =>
+      query
+        .eq("userId", args.userId)
+        .eq("product", args.product)
+        .eq("leaderboardNamespace", leaderboardNamespace)
+    )
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
   const rebuildJob = {
     leaderboardNamespace,
     product: args.product,
@@ -181,31 +173,25 @@ export const syncUserTryoutStats = Effect.fn(
 
   if (!statsRecord) {
     if (args.previousEntry === null) {
-      yield* Effect.promise(() =>
-        args.ctx.db.insert("userTryoutStats", {
-          averageRawScore: args.nextEntry.rawScore,
-          averageTheta: args.nextEntry.theta,
-          bestTheta: args.nextEntry.theta,
-          lastTryoutAt: args.nextEntry.completedAt,
-          leaderboardNamespace,
-          product: args.product,
-          totalTryoutsCompleted: 1,
-          updatedAt: args.nextEntry.completedAt,
-          userId: args.userId,
-        })
-      );
+      yield* writer.table("userTryoutStats").insert({
+        averageRawScore: args.nextEntry.rawScore,
+        averageTheta: args.nextEntry.theta,
+        bestTheta: args.nextEntry.theta,
+        lastTryoutAt: args.nextEntry.completedAt,
+        leaderboardNamespace,
+        product: args.product,
+        totalTryoutsCompleted: 1,
+        updatedAt: args.nextEntry.completedAt,
+        userId: args.userId,
+      });
       return null;
     }
 
-    yield* Effect.promise(() =>
-      args.ctx.scheduler.runAfter(
-        0,
-        Ref.getFunctionReference(
-          refs.internal.tryouts.mutations.internalFunctions.stats
-            .rebuildUserTryoutStats
-        ),
-        rebuildJob
-      )
+    yield* scheduler.runAfter(
+      Duration.millis(0),
+      refs.internal.tryouts.mutations.internalFunctions.stats
+        .rebuildUserTryoutStats,
+      rebuildJob
     );
     return null;
   }
@@ -237,32 +223,32 @@ export const syncUserTryoutStats = Effect.fn(
     args.nextEntry.completedAt
   );
   const nextBestEntry = bestThetaWouldDrop
-    ? yield* Effect.promise(() =>
-        args.ctx.db
-          .query("tryoutLeaderboardEntries")
-          .withIndex("by_userId_and_leaderboardNamespace_and_theta", (query) =>
+    ? yield* reader
+        .table("tryoutLeaderboardEntries")
+        .index(
+          "by_userId_and_leaderboardNamespace_and_theta",
+          (query) =>
             query
               .eq("userId", args.userId)
-              .eq("leaderboardNamespace", leaderboardNamespace)
-          )
-          .order("desc")
-          .first()
-      )
+              .eq("leaderboardNamespace", leaderboardNamespace),
+          "desc"
+        )
+        .first()
+        .pipe(Effect.map(Option.getOrNull))
     : null;
   const latestEntry = lastTryoutAtWouldDrop
-    ? yield* Effect.promise(() =>
-        args.ctx.db
-          .query("tryoutLeaderboardEntries")
-          .withIndex(
-            "by_userId_and_leaderboardNamespace_and_completedAt",
-            (query) =>
-              query
-                .eq("userId", args.userId)
-                .eq("leaderboardNamespace", leaderboardNamespace)
-          )
-          .order("desc")
-          .first()
-      )
+    ? yield* reader
+        .table("tryoutLeaderboardEntries")
+        .index(
+          "by_userId_and_leaderboardNamespace_and_completedAt",
+          (query) =>
+            query
+              .eq("userId", args.userId)
+              .eq("leaderboardNamespace", leaderboardNamespace),
+          "desc"
+        )
+        .first()
+        .pipe(Effect.map(Option.getOrNull))
     : null;
 
   if (bestThetaWouldDrop && nextBestEntry) {
@@ -277,29 +263,23 @@ export const syncUserTryoutStats = Effect.fn(
     (bestThetaWouldDrop && !nextBestEntry) ||
     (lastTryoutAtWouldDrop && !latestEntry)
   ) {
-    yield* Effect.promise(() =>
-      args.ctx.scheduler.runAfter(
-        0,
-        Ref.getFunctionReference(
-          refs.internal.tryouts.mutations.internalFunctions.stats
-            .rebuildUserTryoutStats
-        ),
-        rebuildJob
-      )
+    yield* scheduler.runAfter(
+      Duration.millis(0),
+      refs.internal.tryouts.mutations.internalFunctions.stats
+        .rebuildUserTryoutStats,
+      rebuildJob
     );
     return null;
   }
 
-  yield* Effect.promise(() =>
-    args.ctx.db.patch(currentStats._id, {
-      averageRawScore: totalRawScore / totalTryoutsCompleted,
-      averageTheta: totalTheta / totalTryoutsCompleted,
-      bestTheta,
-      lastTryoutAt,
-      totalTryoutsCompleted,
-      updatedAt: args.nextEntry.completedAt,
-    })
-  );
+  yield* writer.table("userTryoutStats").patch(currentStats._id, {
+    averageRawScore: totalRawScore / totalTryoutsCompleted,
+    averageTheta: totalTheta / totalTryoutsCompleted,
+    bestTheta,
+    lastTryoutAt,
+    totalTryoutsCompleted,
+    updatedAt: args.nextEntry.completedAt,
+  });
 
   return null;
 });

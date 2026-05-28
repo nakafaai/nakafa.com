@@ -1,5 +1,8 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/confect/modules/content/constants";
 import type {
   Grade,
@@ -18,7 +21,7 @@ import {
   resetAudioForContentHash,
   syncContentAuthorsWithCache,
 } from "@repo/backend/confect/modules/content/contentSyncHelpers.service";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option } from "effect";
 
 interface SyncedSubjectTopic {
   readonly category: SubjectCategory;
@@ -54,7 +57,8 @@ interface SyncedSubjectSection {
 export const bulkSyncSubjectTopics = Effect.fn(
   "contentSync.subjects.bulkSyncSubjectTopics"
 )(function* (args: { topics: SyncedSubjectTopic[] }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
     functionName: "bulkSyncSubjectTopics",
     limit: CONTENT_SYNC_BATCH_LIMITS.subjectTopics,
@@ -77,14 +81,13 @@ export const bulkSyncSubjectTopics = Effect.fn(
       title: topic.title,
       topic: topic.topic,
     };
-    const existingTopic = yield* Effect.promise(() =>
-      ctx.db
-        .query("subjectTopics")
-        .withIndex("by_locale_and_slug", (query) =>
-          query.eq("locale", topic.locale).eq("slug", topic.slug)
-        )
-        .unique()
-    );
+    const existingTopic = yield* reader
+      .table("subjectTopics")
+      .index("by_locale_and_slug", (query) =>
+        query.eq("locale", topic.locale).eq("slug", topic.slug)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (
       existingTopic &&
@@ -101,24 +104,20 @@ export const bulkSyncSubjectTopics = Effect.fn(
     }
 
     if (existingTopic) {
-      yield* Effect.promise(() =>
-        ctx.db.patch(existingTopic._id, {
-          ...nextValues,
-          syncedAt: now,
-        })
-      );
+      yield* writer.table("subjectTopics").patch(existingTopic._id, {
+        ...nextValues,
+        syncedAt: now,
+      });
       updated += 1;
       continue;
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.insert("subjectTopics", {
-        ...nextValues,
-        locale: topic.locale,
-        slug: topic.slug,
-        syncedAt: now,
-      })
-    );
+    yield* writer.table("subjectTopics").insert({
+      ...nextValues,
+      locale: topic.locale,
+      slug: topic.slug,
+      syncedAt: now,
+    });
     created += 1;
   }
 
@@ -129,7 +128,8 @@ export const bulkSyncSubjectTopics = Effect.fn(
 export const bulkSyncSubjectSections = Effect.fn(
   "contentSync.subjects.bulkSyncSubjectSections"
 )(function* (args: { sections: SyncedSubjectSection[] }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
     functionName: "bulkSyncSubjectSections",
     limit: CONTENT_SYNC_BATCH_LIMITS.subjectSections,
@@ -147,17 +147,16 @@ export const bulkSyncSubjectSections = Effect.fn(
   const allAuthorNames = args.sections.flatMap((section) =>
     section.authors.map((author) => author.name)
   );
-  const authorCache = yield* buildAuthorCache(ctx, allAuthorNames);
+  const authorCache = yield* buildAuthorCache(allAuthorNames);
 
   for (const section of args.sections) {
-    const topic = yield* Effect.promise(() =>
-      ctx.db
-        .query("subjectTopics")
-        .withIndex("by_locale_and_slug", (query) =>
-          query.eq("locale", section.locale).eq("slug", section.topicSlug)
-        )
-        .unique()
-    );
+    const topic = yield* reader
+      .table("subjectTopics")
+      .index("by_locale_and_slug", (query) =>
+        query.eq("locale", section.locale).eq("slug", section.topicSlug)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (!topic) {
       skipped += 1;
@@ -166,14 +165,13 @@ export const bulkSyncSubjectSections = Effect.fn(
       continue;
     }
 
-    const existingSection = yield* Effect.promise(() =>
-      ctx.db
-        .query("subjectSections")
-        .withIndex("by_locale_and_slug", (query) =>
-          query.eq("locale", section.locale).eq("slug", section.slug)
-        )
-        .unique()
-    );
+    const existingSection = yield* reader
+      .table("subjectSections")
+      .index("by_locale_and_slug", (query) =>
+        query.eq("locale", section.locale).eq("slug", section.slug)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
     yield* syncContentSearch({
       contentHash: section.contentHash,
       description: section.description,
@@ -216,18 +214,15 @@ export const bulkSyncSubjectSections = Effect.fn(
     };
 
     if (existingSection) {
-      yield* Effect.promise(() =>
-        ctx.db.patch(existingSection._id, {
-          ...nextValues,
-          syncedAt: now,
-        })
-      );
+      yield* writer.table("subjectSections").patch(existingSection._id, {
+        ...nextValues,
+        syncedAt: now,
+      });
       yield* resetAudioForContentHash({
         contentRef: { id: existingSection._id, type: "subject" },
         newHash: section.contentHash,
       });
       authorLinksCreated += yield* syncContentAuthorsWithCache(
-        ctx,
         existingSection._id,
         "subject",
         section.authors,
@@ -237,16 +232,13 @@ export const bulkSyncSubjectSections = Effect.fn(
       continue;
     }
 
-    const sectionId = yield* Effect.promise(() =>
-      ctx.db.insert("subjectSections", {
-        ...nextValues,
-        locale: section.locale,
-        slug: section.slug,
-        syncedAt: now,
-      })
-    );
+    const sectionId = yield* writer.table("subjectSections").insert({
+      ...nextValues,
+      locale: section.locale,
+      slug: section.slug,
+      syncedAt: now,
+    });
     authorLinksCreated += yield* syncContentAuthorsWithCache(
-      ctx,
       sectionId,
       "subject",
       section.authors,
@@ -269,7 +261,8 @@ export const bulkSyncSubjectSections = Effect.fn(
 export const deleteStaleSubjectTopics = Effect.fn(
   "contentSync.subjects.deleteStaleSubjectTopics"
 )(function* (args: { topicIds: Id<"subjectTopics">[] }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
     functionName: "deleteStaleSubjectTopics",
     limit: CONTENT_SYNC_BATCH_LIMITS.staleSubjectTopics,
@@ -280,18 +273,19 @@ export const deleteStaleSubjectTopics = Effect.fn(
   let deleted = 0;
 
   for (const topicId of args.topicIds) {
-    const topic = yield* Effect.promise(() => ctx.db.get(topicId));
+    const topic = yield* reader
+      .table("subjectTopics")
+      .get(topicId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!topic) {
       continue;
     }
 
-    const sections = yield* Effect.promise(() =>
-      ctx.db
-        .query("subjectSections")
-        .withIndex("by_topicId", (query) => query.eq("topicId", topicId))
-        .take(topic.sectionCount + 1)
-    );
+    const sections = yield* reader
+      .table("subjectSections")
+      .index("by_topicId", (query) => query.eq("topicId", topicId))
+      .take(topic.sectionCount + 1);
 
     if (sections.length > topic.sectionCount) {
       return yield* Effect.fail(
@@ -302,10 +296,10 @@ export const deleteStaleSubjectTopics = Effect.fn(
     }
 
     for (const section of sections) {
-      yield* deleteSubjectSection(ctx, section._id);
+      yield* deleteSubjectSection(section._id);
     }
 
-    yield* Effect.promise(() => ctx.db.delete(topicId));
+    yield* writer.table("subjectTopics").delete(topicId);
     deleted += 1;
   }
 
@@ -316,7 +310,7 @@ export const deleteStaleSubjectTopics = Effect.fn(
 export const deleteStaleSubjectSections = Effect.fn(
   "contentSync.subjects.deleteStaleSubjectSections"
 )(function* (args: { sectionIds: Id<"subjectSections">[] }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
   yield* assertContentSyncBatchSize({
     functionName: "deleteStaleSubjectSections",
     limit: CONTENT_SYNC_BATCH_LIMITS.staleSubjectSections,
@@ -327,13 +321,16 @@ export const deleteStaleSubjectSections = Effect.fn(
   let deleted = 0;
 
   for (const sectionId of args.sectionIds) {
-    const section = yield* Effect.promise(() => ctx.db.get(sectionId));
+    const section = yield* reader
+      .table("subjectSections")
+      .get(sectionId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!section) {
       continue;
     }
 
-    yield* deleteSubjectSection(ctx, sectionId);
+    yield* deleteSubjectSection(sectionId);
     deleted += 1;
   }
 

@@ -1,11 +1,11 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import type {
-  ConvexMutationCtx,
-  ConvexQueryCtx,
-} from "@repo/backend/confect/modules/shared/convexContext";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
 import { TryoutAccessError } from "@repo/backend/confect/modules/tryout/tryoutAccess.errors";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1e3;
 
@@ -17,47 +17,47 @@ export function normalizeTryoutAccessCode(value: string) {
 /** Lists products attached to one access campaign. */
 export const listTryoutAccessCampaignProducts = Effect.fn(
   "tryoutAccess.listCampaignProducts"
-)(function* (
-  db: ConvexQueryCtx["db"],
-  campaignId: Id<"tryoutAccessCampaigns">
-) {
-  const rows = yield* Effect.promise(() =>
-    db
-      .query("tryoutAccessCampaignProducts")
-      .withIndex("by_campaignId", (query) => query.eq("campaignId", campaignId))
-      .collect()
-  );
+)(function* (campaignId: Id<"tryoutAccessCampaigns">) {
+  const reader = yield* DatabaseReader;
+  const rows = yield* reader
+    .table("tryoutAccessCampaignProducts")
+    .index("by_campaignId", (query) => query.eq("campaignId", campaignId))
+    .collect();
+
   return rows.map((row) => row.product);
 });
 
 /** Loads a full event access bundle by code. */
 export const getTryoutAccessEventByCode = Effect.fn(
   "tryoutAccess.getEventByCode"
-)(function* (db: ConvexQueryCtx["db"], code: string) {
+)(function* (code: string) {
+  const reader = yield* DatabaseReader;
   const normalizedCode = normalizeTryoutAccessCode(code);
 
   if (normalizedCode.length === 0) {
     return null;
   }
 
-  const link = yield* Effect.promise(() =>
-    db
-      .query("tryoutAccessLinks")
-      .withIndex("by_code", (query) => query.eq("code", normalizedCode))
-      .unique()
-  );
+  const link = yield* reader
+    .table("tryoutAccessLinks")
+    .index("by_code", (query) => query.eq("code", normalizedCode))
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 
   if (!link) {
     return null;
   }
 
-  const campaign = yield* Effect.promise(() => db.get(link.campaignId));
+  const campaign = yield* reader
+    .table("tryoutAccessCampaigns")
+    .get(link.campaignId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!campaign) {
     return null;
   }
 
-  const products = yield* listTryoutAccessCampaignProducts(db, campaign._id);
+  const products = yield* listTryoutAccessCampaignProducts(campaign._id);
   return { campaign, link, products };
 });
 
@@ -155,24 +155,19 @@ export function haveSameCampaignProducts(args: {
 /** Synchronizes campaign product rows to match the setup input. */
 export const syncTryoutAccessCampaignProducts = Effect.fn(
   "tryoutAccess.syncCampaignProducts"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly campaignId: Id<"tryoutAccessCampaigns">;
-    readonly campaignKind: "access-pass" | "competition";
-    readonly endsAt: number;
-    readonly startsAt: number;
-    readonly targetProducts: readonly TryoutProduct[];
-  }
-) {
-  const existingRows = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryoutAccessCampaignProducts")
-      .withIndex("by_campaignId", (query) =>
-        query.eq("campaignId", args.campaignId)
-      )
-      .collect()
-  );
+)(function* (args: {
+  readonly campaignId: Id<"tryoutAccessCampaigns">;
+  readonly campaignKind: "access-pass" | "competition";
+  readonly endsAt: number;
+  readonly startsAt: number;
+  readonly targetProducts: readonly TryoutProduct[];
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const existingRows = yield* reader
+    .table("tryoutAccessCampaignProducts")
+    .index("by_campaignId", (query) => query.eq("campaignId", args.campaignId))
+    .collect();
   const rowsByProduct = new Map<
     TryoutProduct,
     Doc<"tryoutAccessCampaignProducts">[]
@@ -189,21 +184,21 @@ export const syncTryoutAccessCampaignProducts = Effect.fn(
     const currentRow = existingRowsForProduct[0] ?? null;
 
     for (const duplicateRow of existingRowsForProduct.slice(1)) {
-      yield* Effect.promise(() => ctx.db.delete(duplicateRow._id));
+      yield* writer
+        .table("tryoutAccessCampaignProducts")
+        .delete(duplicateRow._id);
     }
 
     rowsByProduct.delete(product);
 
     if (!currentRow) {
-      yield* Effect.promise(() =>
-        ctx.db.insert("tryoutAccessCampaignProducts", {
-          campaignId: args.campaignId,
-          campaignKind: args.campaignKind,
-          endsAt: args.endsAt,
-          product,
-          startsAt: args.startsAt,
-        })
-      );
+      yield* writer.table("tryoutAccessCampaignProducts").insert({
+        campaignId: args.campaignId,
+        campaignKind: args.campaignKind,
+        endsAt: args.endsAt,
+        product,
+        startsAt: args.startsAt,
+      });
       continue;
     }
 
@@ -215,18 +210,16 @@ export const syncTryoutAccessCampaignProducts = Effect.fn(
       continue;
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.patch(currentRow._id, {
-        campaignKind: args.campaignKind,
-        endsAt: args.endsAt,
-        startsAt: args.startsAt,
-      })
-    );
+    yield* writer.table("tryoutAccessCampaignProducts").patch(currentRow._id, {
+      campaignKind: args.campaignKind,
+      endsAt: args.endsAt,
+      startsAt: args.startsAt,
+    });
   }
 
   for (const staleRows of rowsByProduct.values()) {
     for (const staleRow of staleRows) {
-      yield* Effect.promise(() => ctx.db.delete(staleRow._id));
+      yield* writer.table("tryoutAccessCampaignProducts").delete(staleRow._id);
     }
   }
 });

@@ -1,7 +1,10 @@
-import { Ref } from "@confect/core";
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { slugify } from "@repo/backend/confect/modules/content/contentSync.shared";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { AssessmentError } from "@repo/backend/confect/modules/school/assessments.errors";
@@ -15,31 +18,26 @@ import {
   requirePermission,
 } from "@repo/backend/confect/modules/school/classAccess.service";
 import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
-import { Clock, Effect } from "effect";
+import { Clock, Duration, Effect, Option } from "effect";
 
 /** Generates a unique assessment slug for a school. */
 const generateUniqueAssessmentSlug = Effect.fn(
   "assessments.generateUniqueAssessmentSlug"
-)(function* (
-  ctx: ConvexMutationCtx,
-  schoolId: Id<"schools">,
-  baseSlug: string
-) {
+)(function* (schoolId: Id<"schools">, baseSlug: string) {
+  const reader = yield* DatabaseReader;
   const safeBaseSlug = baseSlug || "assessment";
   let suffix = 0;
 
   while (true) {
     const candidateSlug =
       suffix === 0 ? safeBaseSlug : `${safeBaseSlug}-${suffix}`;
-    const existing = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolAssessments")
-        .withIndex("by_schoolId_and_slug", (query) =>
-          query.eq("schoolId", schoolId).eq("slug", candidateSlug)
-        )
-        .unique()
-    );
+    const existing = yield* reader
+      .table("schoolAssessments")
+      .index("by_schoolId_and_slug", (query) =>
+        query.eq("schoolId", schoolId).eq("slug", candidateSlug)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (!existing) {
       return candidateSlug;
@@ -51,29 +49,29 @@ const generateUniqueAssessmentSlug = Effect.fn(
 
 /** Computes the next order value for a school or class assessment list. */
 const getNextAssessmentOrder = Effect.fn("assessments.getNextOrder")(function* (
-  ctx: ConvexMutationCtx,
   schoolId: Id<"schools">,
   classId: Id<"schoolClasses"> | undefined
 ) {
+  const reader = yield* DatabaseReader;
   const lastAssessment = classId
-    ? yield* Effect.promise(() =>
-        ctx.db
-          .query("schoolAssessments")
-          .withIndex("by_schoolId_and_classId_and_order", (query) =>
-            query.eq("schoolId", schoolId).eq("classId", classId)
-          )
-          .order("desc")
-          .first()
-      )
-    : yield* Effect.promise(() =>
-        ctx.db
-          .query("schoolAssessments")
-          .withIndex("by_schoolId_and_order", (query) =>
-            query.eq("schoolId", schoolId)
-          )
-          .order("desc")
-          .first()
-      );
+    ? yield* reader
+        .table("schoolAssessments")
+        .index(
+          "by_schoolId_and_classId_and_order",
+          (query) => query.eq("schoolId", schoolId).eq("classId", classId),
+          "desc"
+        )
+        .first()
+        .pipe(Effect.map(Option.getOrNull))
+    : yield* reader
+        .table("schoolAssessments")
+        .index(
+          "by_schoolId_and_order",
+          (query) => query.eq("schoolId", schoolId),
+          "desc"
+        )
+        .first()
+        .pipe(Effect.map(Option.getOrNull));
 
   return (lastAssessment?.order ?? -1) + 1;
 });
@@ -89,11 +87,12 @@ export const createAssessment = Effect.fn("assessments.createAssessment")(
     readonly status: Doc<"schoolAssessments">["status"];
     readonly title: string;
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const writer = yield* DatabaseWriter;
+    const scheduler = yield* Scheduler;
+    const user = yield* requireAppUser();
     const now = yield* Clock.currentTimeMillis;
     const classData = args.classId
-      ? yield* loadActiveClass(ctx, args.classId)
+      ? yield* loadActiveClass(args.classId)
       : null;
 
     if (classData && classData.schoolId !== args.schoolId) {
@@ -105,7 +104,7 @@ export const createAssessment = Effect.fn("assessments.createAssessment")(
       );
     }
 
-    yield* requirePermission(ctx, PERMISSIONS.ASSESSMENT_CREATE, {
+    yield* requirePermission(PERMISSIONS.ASSESSMENT_CREATE, {
       classId: classData?._id,
       schoolId: args.schoolId,
       userId: user.appUser._id,
@@ -118,53 +117,42 @@ export const createAssessment = Effect.fn("assessments.createAssessment")(
     yield* validateScheduledStatus(args.status, args.scheduledAt, now);
 
     const slug = yield* generateUniqueAssessmentSlug(
-      ctx,
       args.schoolId,
       slugify(args.title)
     );
     const isPublished = args.status === "published";
     const isScheduled = args.status === "scheduled";
-    const order = yield* getNextAssessmentOrder(
-      ctx,
-      args.schoolId,
-      classData?._id
-    );
-    const assessmentId = yield* Effect.promise(() =>
-      ctx.db.insert("schoolAssessments", {
-        classId: classData?._id,
-        createdBy: user.appUser._id,
-        description: args.description,
-        mode: args.mode,
-        order,
-        publishedAt: isPublished ? now : undefined,
-        publishedBy: isPublished ? user.appUser._id : undefined,
-        questionBankScope: classData ? "class" : "school",
-        scheduledAt: isScheduled ? args.scheduledAt : undefined,
-        schoolId: args.schoolId,
-        slug,
-        status: args.status,
-        title: args.title,
-        updatedAt: now,
-        updatedBy: user.appUser._id,
-      })
-    );
+    const order = yield* getNextAssessmentOrder(args.schoolId, classData?._id);
+    const assessmentId = yield* writer.table("schoolAssessments").insert({
+      classId: classData?._id,
+      createdBy: user.appUser._id,
+      description: args.description,
+      mode: args.mode,
+      order,
+      publishedAt: isPublished ? now : undefined,
+      publishedBy: isPublished ? user.appUser._id : undefined,
+      questionBankScope: classData ? "class" : "school",
+      scheduledAt: isScheduled ? args.scheduledAt : undefined,
+      schoolId: args.schoolId,
+      slug,
+      status: args.status,
+      title: args.title,
+      updatedAt: now,
+      updatedBy: user.appUser._id,
+    });
 
     const scheduledAt = args.scheduledAt;
 
     if (isScheduled && scheduledAt) {
-      const scheduledJobId = yield* Effect.promise(() =>
-        ctx.scheduler.runAfter(
-          Math.max(scheduledAt - now, 0),
-          Ref.getFunctionReference(
-            refs.internal.assessments.mutations.internalFunctions.publishing
-              .publishAssessment
-          ),
-          { assessmentId, publishedBy: user.appUser._id }
-        )
+      const scheduledJobId = yield* scheduler.runAfter(
+        Duration.millis(Math.max(scheduledAt - now, 0)),
+        refs.internal.assessments.mutations.internalFunctions.publishing
+          .publishAssessment,
+        { assessmentId, publishedBy: user.appUser._id }
       );
-      yield* Effect.promise(() =>
-        ctx.db.patch(assessmentId, { scheduledJobId })
-      );
+      yield* writer.table("schoolAssessments").patch(assessmentId, {
+        scheduledJobId,
+      });
     }
 
     return assessmentId;
@@ -182,16 +170,16 @@ export const updateAssessment = Effect.fn("assessments.updateAssessment")(
     readonly status?: Doc<"schoolAssessments">["status"];
     readonly title?: string;
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const writer = yield* DatabaseWriter;
+    const scheduler = yield* Scheduler;
+    const user = yield* requireAppUser();
     const assessment = yield* requireAssessment(
-      ctx,
       args.schoolId,
       args.assessmentId
     );
     const now = yield* Clock.currentTimeMillis;
 
-    yield* requirePermission(ctx, PERMISSIONS.ASSESSMENT_UPDATE, {
+    yield* requirePermission(PERMISSIONS.ASSESSMENT_UPDATE, {
       classId: assessment.classId,
       schoolId: assessment.schoolId,
       userId: user.appUser._id,
@@ -214,42 +202,31 @@ export const updateAssessment = Effect.fn("assessments.updateAssessment")(
       nextStatus === "published" && assessment.status !== "published";
     let scheduledJobId = assessment.scheduledJobId;
 
-    const currentScheduledJobId = assessment.scheduledJobId;
-
-    if (needsCancel && currentScheduledJobId) {
-      yield* Effect.promise(() => ctx.scheduler.cancel(currentScheduledJobId));
+    if (needsCancel) {
       scheduledJobId = undefined;
     }
 
     if (needsSchedule && nextScheduledAt) {
-      scheduledJobId = yield* Effect.promise(() =>
-        ctx.scheduler.runAfter(
-          Math.max(nextScheduledAt - now, 0),
-          Ref.getFunctionReference(
-            refs.internal.assessments.mutations.internalFunctions.publishing
-              .publishAssessment
-          ),
-          { assessmentId: args.assessmentId, publishedBy: user.appUser._id }
-        )
+      scheduledJobId = yield* scheduler.runAfter(
+        Duration.millis(Math.max(nextScheduledAt - now, 0)),
+        refs.internal.assessments.mutations.internalFunctions.publishing
+          .publishAssessment,
+        { assessmentId: args.assessmentId, publishedBy: user.appUser._id }
       );
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.patch(args.assessmentId, {
-        description: args.description ?? assessment.description,
-        mode: args.mode ?? assessment.mode,
-        publishedAt: isNewlyPublished ? now : assessment.publishedAt,
-        publishedBy: isNewlyPublished
-          ? user.appUser._id
-          : assessment.publishedBy,
-        scheduledAt: willBeScheduled ? nextScheduledAt : undefined,
-        scheduledJobId: willBeScheduled ? scheduledJobId : undefined,
-        status: nextStatus,
-        title: args.title ?? assessment.title,
-        updatedAt: now,
-        updatedBy: user.appUser._id,
-      })
-    );
+    yield* writer.table("schoolAssessments").patch(args.assessmentId, {
+      description: args.description ?? assessment.description,
+      mode: args.mode ?? assessment.mode,
+      publishedAt: isNewlyPublished ? now : assessment.publishedAt,
+      publishedBy: isNewlyPublished ? user.appUser._id : assessment.publishedBy,
+      scheduledAt: willBeScheduled ? nextScheduledAt : undefined,
+      scheduledJobId: willBeScheduled ? scheduledJobId : undefined,
+      status: nextStatus,
+      title: args.title ?? assessment.title,
+      updatedAt: now,
+      updatedBy: user.appUser._id,
+    });
 
     return null;
   }

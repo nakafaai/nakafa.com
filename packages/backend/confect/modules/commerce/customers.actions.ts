@@ -1,7 +1,11 @@
-import { type GenericId, Ref } from "@confect/core";
+import type { GenericId } from "@confect/core";
 import type { Doc } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { ActionCtx } from "@repo/backend/confect/_generated/services";
+import {
+  ActionCtx,
+  MutationRunner,
+  QueryRunner,
+} from "@repo/backend/confect/_generated/services";
 import {
   createPolarCheckoutSession,
   createPolarCustomerPortalSession,
@@ -16,7 +20,6 @@ import { getProductsForServer } from "@repo/backend/confect/modules/commerce/pol
 import { authEnvironment } from "@repo/backend/confect/modules/identity/auth.env";
 import { requireAppUserForAction } from "@repo/backend/confect/modules/identity/auth.service";
 import { captureProductEvent } from "@repo/backend/confect/modules/integrations/analytics";
-import type { ConvexActionCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import { Clock, Effect, Schema } from "effect";
 
 const siteOrigin = new URL(authEnvironment.siteUrl).origin;
@@ -49,13 +52,11 @@ function convertToDatabaseCustomer(
 
 /** Ensures a local user has matching Polar and local customer records. */
 const syncCustomerForUser = Effect.fn("commerce.syncCustomerForUser")(
-  function* (
-    ctx: ConvexActionCtx,
-    args: {
-      readonly localCustomerId?: string;
-      readonly user: Doc<"users">;
-    }
-  ) {
+  function* (args: {
+    readonly localCustomerId?: string;
+    readonly user: Doc<"users">;
+  }) {
+    const runMutation = yield* MutationRunner;
     const polarCustomer = yield* ensurePolarCustomer({
       email: args.user.email,
       externalId: args.user.authId,
@@ -74,13 +75,9 @@ const syncCustomerForUser = Effect.fn("commerce.syncCustomerForUser")(
       ...syncedPolarCustomer,
       userId: args.user._id,
     });
-    const localCustomerId = yield* Effect.promise(() =>
-      ctx.runMutation(
-        Ref.getFunctionReference(
-          refs.internal.customers.mutations.internalFunctions.upsertCustomer
-        ),
-        { customer }
-      )
+    const localCustomerId = yield* runMutation(
+      refs.internal.customers.mutations.internalFunctions.upsertCustomer,
+      { customer }
     );
 
     return { ...customer, localCustomerId };
@@ -89,25 +86,16 @@ const syncCustomerForUser = Effect.fn("commerce.syncCustomerForUser")(
 
 /** Requires a user and returns its synchronized customer row. */
 const requireCustomer = Effect.fn("commerce.requireCustomer")(function* (
-  ctx: ConvexActionCtx,
   userId: GenericId.GenericId<"users">
 ) {
-  const user = yield* Effect.promise(() =>
-    ctx.runQuery(
-      Ref.getFunctionReference(refs.internal.users.queries.getUserById),
-      {
-        userId,
-      }
-    )
-  );
-  const localCustomer = yield* Effect.promise(() =>
-    ctx.runQuery(
-      Ref.getFunctionReference(
-        refs.internal.customers.queries.internalFunctions.customer
-          .getCustomerByUserId
-      ),
-      { userId }
-    )
+  const runQuery = yield* QueryRunner;
+  const user = yield* runQuery(refs.internal.users.queries.getUserById, {
+    userId,
+  });
+  const localCustomer = yield* runQuery(
+    refs.internal.customers.queries.internalFunctions.customer
+      .getCustomerByUserId,
+    { userId }
   );
 
   if (!user) {
@@ -118,7 +106,7 @@ const requireCustomer = Effect.fn("commerce.requireCustomer")(function* (
     );
   }
 
-  return yield* syncCustomerForUser(ctx, {
+  return yield* syncCustomerForUser({
     localCustomerId: localCustomer?.id,
     user,
   });
@@ -127,30 +115,21 @@ const requireCustomer = Effect.fn("commerce.requireCustomer")(function* (
 /** Synchronizes the Polar customer for a user if the user still exists. */
 export const syncCustomer = Effect.fn("commerce.syncCustomer")(
   function* (args: { userId: GenericId.GenericId<"users"> }) {
-    const ctx = yield* ActionCtx;
-    const user = yield* Effect.promise(() =>
-      ctx.runQuery(
-        Ref.getFunctionReference(refs.internal.users.queries.getUserById),
-        {
-          userId: args.userId,
-        }
-      )
-    );
-    const localCustomer = yield* Effect.promise(() =>
-      ctx.runQuery(
-        Ref.getFunctionReference(
-          refs.internal.customers.queries.internalFunctions.customer
-            .getCustomerByUserId
-        ),
-        { userId: args.userId }
-      )
+    const runQuery = yield* QueryRunner;
+    const user = yield* runQuery(refs.internal.users.queries.getUserById, {
+      userId: args.userId,
+    });
+    const localCustomer = yield* runQuery(
+      refs.internal.customers.queries.internalFunctions.customer
+        .getCustomerByUserId,
+      { userId: args.userId }
     );
 
     if (!user) {
       return null;
     }
 
-    const customer = yield* syncCustomerForUser(ctx, {
+    const customer = yield* syncCustomerForUser({
       localCustomerId: localCustomer?.id,
       user,
     });
@@ -162,23 +141,14 @@ export const syncCustomer = Effect.fn("commerce.syncCustomer")(
 /** Repairs a user's Polar customer and reports email conflicts without deleting data. */
 export const repairCustomer = Effect.fn("commerce.repairCustomer")(
   function* (args: { userId: GenericId.GenericId<"users"> }) {
-    const ctx = yield* ActionCtx;
-    const user = yield* Effect.promise(() =>
-      ctx.runQuery(
-        Ref.getFunctionReference(refs.internal.users.queries.getUserById),
-        {
-          userId: args.userId,
-        }
-      )
-    );
-    const localCustomer = yield* Effect.promise(() =>
-      ctx.runQuery(
-        Ref.getFunctionReference(
-          refs.internal.customers.queries.internalFunctions.customer
-            .getCustomerByUserId
-        ),
-        { userId: args.userId }
-      )
+    const runQuery = yield* QueryRunner;
+    const user = yield* runQuery(refs.internal.users.queries.getUserById, {
+      userId: args.userId,
+    });
+    const localCustomer = yield* runQuery(
+      refs.internal.customers.queries.internalFunctions.customer
+        .getCustomerByUserId,
+      { userId: args.userId }
     );
 
     if (!user) {
@@ -190,7 +160,7 @@ export const repairCustomer = Effect.fn("commerce.repairCustomer")(
     }
 
     const result = yield* Effect.either(
-      syncCustomerForUser(ctx, {
+      syncCustomerForUser({
         localCustomerId: localCustomer?.id,
         user,
       })
@@ -218,27 +188,19 @@ export const repairCustomer = Effect.fn("commerce.repairCustomer")(
 /** Deletes Polar and local customer data for a deleted app user. */
 export const cleanupUserData = Effect.fn("commerce.cleanupUserData")(
   function* (args: { userId: GenericId.GenericId<"users"> }) {
-    const ctx = yield* ActionCtx;
-    const customer = yield* Effect.promise(() =>
-      ctx.runQuery(
-        Ref.getFunctionReference(
-          refs.internal.customers.queries.internalFunctions.customer
-            .getCustomerByUserId
-        ),
-        { userId: args.userId }
-      )
+    const runQuery = yield* QueryRunner;
+    const runMutation = yield* MutationRunner;
+    const customer = yield* runQuery(
+      refs.internal.customers.queries.internalFunctions.customer
+        .getCustomerByUserId,
+      { userId: args.userId }
     );
 
     if (customer?.id) {
       yield* deletePolarCustomer(customer.id);
-      yield* Effect.promise(() =>
-        ctx.runMutation(
-          Ref.getFunctionReference(
-            refs.internal.customers.mutations.internalFunctions
-              .deleteCustomerById
-          ),
-          { id: customer.id }
-        )
+      yield* runMutation(
+        refs.internal.customers.mutations.internalFunctions.deleteCustomerById,
+        { id: customer.id }
       );
     }
 
@@ -253,29 +215,21 @@ export const cleanupStalePolarCustomer = Effect.fn(
   existingExternalId: string | null;
   polarCustomerId: string;
 }) {
-  const ctx = yield* ActionCtx;
-  const customer = yield* Effect.promise(() =>
-    ctx.runQuery(
-      Ref.getFunctionReference(
-        refs.internal.customers.queries.internalFunctions.customer
-          .getCustomerByPolarId
-      ),
-      { polarCustomerId: args.polarCustomerId }
-    )
+  const runQuery = yield* QueryRunner;
+  const runMutation = yield* MutationRunner;
+  const customer = yield* runQuery(
+    refs.internal.customers.queries.internalFunctions.customer
+      .getCustomerByPolarId,
+    { polarCustomerId: args.polarCustomerId }
   );
 
   if (!customer) {
     return null;
   }
 
-  const user = yield* Effect.promise(() =>
-    ctx.runQuery(
-      Ref.getFunctionReference(refs.internal.users.queries.getUserById),
-      {
-        userId: customer.userId,
-      }
-    )
-  );
+  const user = yield* runQuery(refs.internal.users.queries.getUserById, {
+    userId: customer.userId,
+  });
   if (user) {
     return yield* Effect.fail(
       new CustomerActionError({
@@ -285,14 +239,10 @@ export const cleanupStalePolarCustomer = Effect.fn(
     );
   }
 
-  const hasActiveSubscription = yield* Effect.promise(() =>
-    ctx.runQuery(
-      Ref.getFunctionReference(
-        refs.internal.customers.queries.internalFunctions.customer
-          .hasActiveSubscriptionByCustomerId
-      ),
-      { customerId: args.polarCustomerId }
-    )
+  const hasActiveSubscription = yield* runQuery(
+    refs.internal.customers.queries.internalFunctions.customer
+      .hasActiveSubscriptionByCustomerId,
+    { customerId: args.polarCustomerId }
   );
   if (hasActiveSubscription) {
     return yield* Effect.fail(
@@ -304,11 +254,9 @@ export const cleanupStalePolarCustomer = Effect.fn(
   }
 
   if (args.existingExternalId) {
-    const authUser = yield* Effect.promise(() =>
-      ctx.runQuery(
-        Ref.getFunctionReference(refs.internal.users.queries.getUserByAuthId),
-        { authId: args.existingExternalId }
-      )
+    const authUser = yield* runQuery(
+      refs.internal.users.queries.getUserByAuthId,
+      { authId: args.existingExternalId }
     );
     if (authUser) {
       return yield* Effect.fail(
@@ -321,13 +269,9 @@ export const cleanupStalePolarCustomer = Effect.fn(
   }
 
   yield* deletePolarCustomer(args.polarCustomerId);
-  yield* Effect.promise(() =>
-    ctx.runMutation(
-      Ref.getFunctionReference(
-        refs.internal.customers.mutations.internalFunctions.deleteCustomerById
-      ),
-      { id: customer.id }
-    )
+  yield* runMutation(
+    refs.internal.customers.mutations.internalFunctions.deleteCustomerById,
+    { id: customer.id }
   );
 
   return null;
@@ -394,8 +338,8 @@ const requireAllowedCheckoutProducts = Effect.fn(
 export const generateCheckoutLink = Effect.fn("commerce.generateCheckoutLink")(
   function* (args: { productIds: readonly string[]; successUrl: string }) {
     const ctx = yield* ActionCtx;
-    const { appUser } = yield* requireAppUserForAction(ctx);
-    const customer = yield* requireCustomer(ctx, appUser._id);
+    const { appUser } = yield* requireAppUserForAction();
+    const customer = yield* requireCustomer(appUser._id);
     const { primaryProductId, productIds } =
       yield* requireAllowedCheckoutProducts(args.productIds);
     const successUrl = yield* requireAllowedSuccessUrl(args.successUrl);
@@ -428,9 +372,8 @@ export const generateCheckoutLink = Effect.fn("commerce.generateCheckoutLink")(
 export const generateCustomerPortalUrl = Effect.fn(
   "commerce.generateCustomerPortalUrl"
 )(function* () {
-  const ctx = yield* ActionCtx;
-  const { appUser } = yield* requireAppUserForAction(ctx);
-  const customer = yield* requireCustomer(ctx, appUser._id);
+  const { appUser } = yield* requireAppUserForAction();
+  const customer = yield* requireCustomer(appUser._id);
 
   return yield* createPolarCustomerPortalSession({ customerId: customer.id });
 });

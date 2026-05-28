@@ -1,5 +1,8 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { AssessmentError } from "@repo/backend/confect/modules/school/assessments.errors";
 import {
@@ -8,7 +11,7 @@ import {
 } from "@repo/backend/confect/modules/school/assessments.shared";
 import { requirePermission } from "@repo/backend/confect/modules/school/classAccess.service";
 import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 /** Creates a section within an editable assessment. */
 export const createSection = Effect.fn("assessments.createSection")(
@@ -19,15 +22,15 @@ export const createSection = Effect.fn("assessments.createSection")(
     readonly schoolId: Id<"schools">;
     readonly title: string;
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
     const assessment = yield* requireAssessment(
-      ctx,
       args.schoolId,
       args.assessmentId
     );
 
-    yield* requirePermission(ctx, PERMISSIONS.ASSESSMENT_UPDATE, {
+    yield* requirePermission(PERMISSIONS.ASSESSMENT_UPDATE, {
       classId: assessment.classId,
       schoolId: assessment.schoolId,
       userId: user.appUser._id,
@@ -37,26 +40,24 @@ export const createSection = Effect.fn("assessments.createSection")(
       yield* requireRichContentSize(args.description, "Section description");
     }
 
-    const lastSection = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolAssessmentSections")
-        .withIndex("by_assessmentId_and_order", (query) =>
-          query.eq("assessmentId", args.assessmentId)
-        )
-        .order("desc")
-        .first()
-    );
+    const lastSection = yield* reader
+      .table("schoolAssessmentSections")
+      .index(
+        "by_assessmentId_and_order",
+        (query) => query.eq("assessmentId", args.assessmentId),
+        "desc"
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
-    return yield* Effect.promise(() =>
-      ctx.db.insert("schoolAssessmentSections", {
-        assessmentId: args.assessmentId,
-        description: args.description,
-        durationMinutes: args.durationMinutes,
-        order: (lastSection?.order ?? -1) + 1,
-        schoolId: args.schoolId,
-        title: args.title,
-      })
-    );
+    return yield* writer.table("schoolAssessmentSections").insert({
+      assessmentId: args.assessmentId,
+      description: args.description,
+      durationMinutes: args.durationMinutes,
+      order: (lastSection?.order ?? -1) + 1,
+      schoolId: args.schoolId,
+      title: args.title,
+    });
   }
 );
 
@@ -86,21 +87,24 @@ export const createQuestion = Effect.fn("assessments.createQuestion")(
     readonly source: Doc<"schoolAssessmentQuestions">["source"];
     readonly stem: Doc<"schoolAssessmentQuestions">["stem"];
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
     const assessment = yield* requireAssessment(
-      ctx,
       args.schoolId,
       args.assessmentId
     );
 
-    yield* requirePermission(ctx, PERMISSIONS.ASSESSMENT_UPDATE, {
+    yield* requirePermission(PERMISSIONS.ASSESSMENT_UPDATE, {
       classId: assessment.classId,
       schoolId: assessment.schoolId,
       userId: user.appUser._id,
     });
 
-    const section = yield* Effect.promise(() => ctx.db.get(args.sectionId));
+    const section = yield* reader
+      .table("schoolAssessmentSections")
+      .get(args.sectionId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (
       !section ||
@@ -139,50 +143,47 @@ export const createQuestion = Effect.fn("assessments.createQuestion")(
       );
     }
 
-    const lastQuestion = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolAssessmentQuestions")
-        .withIndex("by_assessmentId_and_sectionId_and_order", (query) =>
+    const lastQuestion = yield* reader
+      .table("schoolAssessmentQuestions")
+      .index(
+        "by_assessmentId_and_sectionId_and_order",
+        (query) =>
           query
             .eq("assessmentId", args.assessmentId)
-            .eq("sectionId", section._id)
-        )
-        .order("desc")
-        .first()
-    );
-    const questionId = yield* Effect.promise(() =>
-      ctx.db.insert("schoolAssessmentQuestions", {
-        assessmentId: args.assessmentId,
-        bankEntryId: args.bankEntryId,
-        choiceCount: args.choices.length,
-        explanation: args.explanation,
-        maxSelectionCount: args.maxSelectionCount,
-        order: (lastQuestion?.order ?? -1) + 1,
-        points: args.points,
-        questionType: args.questionType,
-        required: args.required,
-        rubricCriterionCount: args.rubricCriteria.length,
-        schoolId: args.schoolId,
-        sectionId: section._id,
-        shuffleChoices: args.shuffleChoices,
-        source: args.source,
-        stem: args.stem,
-      })
-    );
+            .eq("sectionId", section._id),
+        "desc"
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
+    const questionId = yield* writer.table("schoolAssessmentQuestions").insert({
+      assessmentId: args.assessmentId,
+      bankEntryId: args.bankEntryId,
+      choiceCount: args.choices.length,
+      explanation: args.explanation,
+      maxSelectionCount: args.maxSelectionCount,
+      order: (lastQuestion?.order ?? -1) + 1,
+      points: args.points,
+      questionType: args.questionType,
+      required: args.required,
+      rubricCriterionCount: args.rubricCriteria.length,
+      schoolId: args.schoolId,
+      sectionId: section._id,
+      shuffleChoices: args.shuffleChoices,
+      source: args.source,
+      stem: args.stem,
+    });
 
     for (const [choiceOrder, choice] of args.choices.entries()) {
       yield* requireRichContentSize(choice.content, `Choice ${choice.key}`);
-      yield* Effect.promise(() =>
-        ctx.db.insert("schoolAssessmentChoices", {
-          assessmentId: args.assessmentId,
-          content: choice.content,
-          isCorrect: choice.isCorrect,
-          key: choice.key,
-          order: choiceOrder,
-          questionId,
-          schoolId: args.schoolId,
-        })
-      );
+      yield* writer.table("schoolAssessmentChoices").insert({
+        assessmentId: args.assessmentId,
+        content: choice.content,
+        isCorrect: choice.isCorrect,
+        key: choice.key,
+        order: choiceOrder,
+        questionId,
+        schoolId: args.schoolId,
+      });
     }
 
     for (const [criterionOrder, criterion] of args.rubricCriteria.entries()) {
@@ -193,17 +194,15 @@ export const createQuestion = Effect.fn("assessments.createQuestion")(
         );
       }
 
-      yield* Effect.promise(() =>
-        ctx.db.insert("schoolAssessmentRubricCriteria", {
-          assessmentId: args.assessmentId,
-          description: criterion.description,
-          label: criterion.label,
-          maxScore: criterion.maxScore,
-          order: criterionOrder,
-          questionId,
-          schoolId: args.schoolId,
-        })
-      );
+      yield* writer.table("schoolAssessmentRubricCriteria").insert({
+        assessmentId: args.assessmentId,
+        description: criterion.description,
+        label: criterion.label,
+        maxScore: criterion.maxScore,
+        order: criterionOrder,
+        questionId,
+        schoolId: args.schoolId,
+      });
     }
 
     return questionId;

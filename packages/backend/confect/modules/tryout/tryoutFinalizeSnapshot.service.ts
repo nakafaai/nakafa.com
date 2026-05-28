@@ -1,5 +1,6 @@
-import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import type { ConvexQueryCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import type { ExerciseAttempts } from "@repo/backend/confect/modules/learning/exercises.tables";
 import { estimateThetaEap } from "@repo/backend/confect/modules/tryout/irt.estimation";
 import { getScaleVersionItemsForSet } from "@repo/backend/confect/modules/tryout/irtScaleRead.service";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
@@ -9,35 +10,42 @@ import {
   loadBoundedTryoutPartAttempts,
 } from "@repo/backend/confect/modules/tryout/tryoutLoaders.service";
 import { getTryoutReportScore } from "@repo/backend/confect/modules/tryout/tryoutReporting.service";
-import { getAll } from "convex-helpers/server/relationships";
+import type {
+  TryoutAttempts,
+  TryoutPartAttempts,
+  Tryouts,
+} from "@repo/backend/confect/modules/tryout/tryouts.tables";
 import { Effect } from "effect";
 
 /** Builds the final scoring snapshot for a tryout attempt. */
 export const buildFinalizedTryoutSnapshot = Effect.fn(
   "tryouts.finalize.buildFinalizedTryoutSnapshot"
-)(function* (
-  db: ConvexQueryCtx["db"],
-  args: {
-    readonly scaleVersionId: Id<"irtScaleVersions">;
-    readonly tryout: Doc<"tryouts">;
-    readonly tryoutAttempt: Doc<"tryoutAttempts">;
-  }
-) {
+)(function* (args: {
+  readonly scaleVersionId: Id<"irtScaleVersions">;
+  readonly tryout: typeof Tryouts.Doc.Type;
+  readonly tryoutAttempt: typeof TryoutAttempts.Doc.Type;
+}) {
+  const reader = yield* DatabaseReader;
   const completedPartIndices = new Set(args.tryoutAttempt.completedPartIndices);
   const partSetSnapshots = args.tryoutAttempt.partSetSnapshots;
-  const partAttempts = yield* loadBoundedTryoutPartAttempts(db, {
+  const partAttempts = yield* loadBoundedTryoutPartAttempts({
     partCount: partSetSnapshots.length,
     tryoutAttemptId: args.tryoutAttempt._id,
   });
-  const setAttempts = yield* Effect.promise(() =>
-    getAll(
-      db,
-      "exerciseAttempts",
-      partAttempts.map((partAttempt) => partAttempt.setAttemptId)
-    )
+  const setAttempts = yield* Effect.forEach(partAttempts, (partAttempt) =>
+    reader
+      .table("exerciseAttempts")
+      .get(partAttempt.setAttemptId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)))
   );
-  const setAttemptsByPartIndex = new Map<number, Doc<"exerciseAttempts">>();
-  const partAttemptsByPartIndex = new Map<number, Doc<"tryoutPartAttempts">>();
+  const setAttemptsByPartIndex = new Map<
+    number,
+    typeof ExerciseAttempts.Doc.Type
+  >();
+  const partAttemptsByPartIndex = new Map<
+    number,
+    typeof TryoutPartAttempts.Doc.Type
+  >();
 
   for (const [index, partAttempt] of partAttempts.entries()) {
     const setAttempt = setAttempts[index];
@@ -79,12 +87,12 @@ export const buildFinalizedTryoutSnapshot = Effect.fn(
         const effectiveSetId = partAttempt?.setId ?? partSetSnapshot.setId;
         const answers =
           partAttempt && setAttempt
-            ? yield* getBoundedExerciseAnswers(db, {
+            ? yield* getBoundedExerciseAnswers({
                 attemptId: partAttempt.setAttemptId,
                 totalExercises: setAttempt.totalExercises,
               })
             : [];
-        const itemParamsRecords = yield* getScaleVersionItemsForSet(db, {
+        const itemParamsRecords = yield* getScaleVersionItemsForSet({
           questionCount:
             setAttempt?.totalExercises ?? partSetSnapshot.questionCount,
           scaleVersionId: args.scaleVersionId,

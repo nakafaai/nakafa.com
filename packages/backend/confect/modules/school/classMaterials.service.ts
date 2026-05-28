@@ -1,9 +1,9 @@
-import { Ref } from "@confect/core";
-import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
-  MutationCtx,
-  QueryCtx,
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import {
@@ -15,10 +15,15 @@ import {
   requirePermission,
 } from "@repo/backend/confect/modules/school/classAccess.service";
 import { ClassActionError } from "@repo/backend/confect/modules/school/classErrors";
-import type { SchoolClassMaterialStatus } from "@repo/backend/confect/modules/school/classes.tables";
+import type {
+  SchoolClassMaterialGroups,
+  SchoolClassMaterialStatus,
+} from "@repo/backend/confect/modules/school/classes.tables";
 import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
 import type { PaginationOptions } from "convex/server";
-import { Clock, Effect } from "effect";
+import { Clock, Duration, Effect, Option } from "effect";
+
+type MaterialGroup = typeof SchoolClassMaterialGroups.Doc.Type;
 
 /** Fails when scheduled material status is missing a future timestamp. */
 function validateScheduledStatus(
@@ -50,8 +55,11 @@ function validateScheduledStatus(
 /** Loads a material group or fails with the domain class error. */
 const loadMaterialGroup = Effect.fn("school.materials.loadMaterialGroup")(
   function* (groupId: Id<"schoolClassMaterialGroups">) {
-    const ctx = yield* MutationCtx;
-    const group = yield* Effect.promise(() => ctx.db.get(groupId));
+    const reader = yield* DatabaseReader;
+    const group = yield* reader
+      .table("schoolClassMaterialGroups")
+      .get(groupId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!group) {
       return yield* Effect.fail(
@@ -65,9 +73,7 @@ const loadMaterialGroup = Effect.fn("school.materials.loadMaterialGroup")(
 
 /** Adds creator and publisher user summaries to material groups. */
 const enrichMaterialGroups = Effect.fn("school.materials.enrichMaterialGroups")(
-  function* (groups: Doc<"schoolClassMaterialGroups">[]) {
-    const ctx = yield* QueryCtx;
-
+  function* (groups: readonly MaterialGroup[]) {
     if (groups.length === 0) {
       return [];
     }
@@ -77,7 +83,7 @@ const enrichMaterialGroups = Effect.fn("school.materials.enrichMaterialGroups")(
         ? [group.createdBy, group.publishedBy]
         : [group.createdBy]
     );
-    const userMap = yield* getUserMap(ctx, userIds);
+    const userMap = yield* getUserMap(userIds);
 
     return groups.map((group) => ({
       ...group,
@@ -99,64 +105,58 @@ export const createMaterialGroup = Effect.fn(
   scheduledAt?: number;
   status: SchoolClassMaterialStatus;
 }) {
-  const ctx = yield* MutationCtx;
-  const user = yield* requireAppUser(ctx);
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const scheduler = yield* Scheduler;
+  const user = yield* requireAppUser();
   const userId = user.appUser._id;
   const now = yield* Clock.currentTimeMillis;
   yield* validateScheduledStatus(args.status, args.scheduledAt, now);
 
-  const classData = yield* loadActiveClass(ctx, args.classId);
-  yield* requirePermission(ctx, PERMISSIONS.CONTENT_CREATE, {
+  const classData = yield* loadActiveClass(args.classId);
+  yield* requirePermission(PERMISSIONS.CONTENT_CREATE, {
     classId: args.classId,
     schoolId: classData.schoolId,
     userId,
   });
 
-  const lastGroup = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolClassMaterialGroups")
-      .withIndex("by_classId_and_parentId_and_order", (query) =>
-        query.eq("classId", args.classId).eq("parentId", undefined)
-      )
-      .order("desc")
-      .first()
-  );
+  const lastGroupOption = yield* reader
+    .table("schoolClassMaterialGroups")
+    .index(
+      "by_classId_and_parentId_and_order",
+      (query) => query.eq("classId", args.classId).eq("parentId", undefined),
+      "desc"
+    )
+    .first();
+  const lastGroup = Option.getOrNull(lastGroupOption);
   const isScheduled = args.status === "scheduled";
   const isPublished = args.status === "published";
-  const groupId = yield* Effect.promise(() =>
-    ctx.db.insert("schoolClassMaterialGroups", {
-      childGroupCount: 0,
-      classId: args.classId,
-      createdBy: userId,
-      description: args.description,
-      materialCount: 0,
-      name: args.name,
-      order: (lastGroup?.order ?? -1) + 1,
-      publishedAt: isPublished ? now : undefined,
-      publishedBy: isPublished ? userId : undefined,
-      scheduledAt: isScheduled ? args.scheduledAt : undefined,
-      schoolId: classData.schoolId,
-      status: args.status,
-      updatedAt: now,
-    })
-  );
+  const groupId = yield* writer.table("schoolClassMaterialGroups").insert({
+    childGroupCount: 0,
+    classId: args.classId,
+    createdBy: userId,
+    description: args.description,
+    materialCount: 0,
+    name: args.name,
+    order: (lastGroup?.order ?? -1) + 1,
+    publishedAt: isPublished ? now : undefined,
+    publishedBy: isPublished ? userId : undefined,
+    scheduledAt: isScheduled ? args.scheduledAt : undefined,
+    schoolId: classData.schoolId,
+    status: args.status,
+    updatedAt: now,
+  });
 
   if (isScheduled && args.scheduledAt !== undefined) {
     const scheduledAt = args.scheduledAt;
-    const scheduledJobId = yield* Effect.promise(() =>
-      ctx.scheduler.runAfter(
-        Math.max(scheduledAt - now, 0),
-        Ref.getFunctionReference(
-          refs.internal.classes.materials.mutations.publishMaterialGroup
-        ),
-        { groupId, publishedBy: userId }
-      )
+    const scheduledJobId = yield* scheduler.runAfter(
+      Duration.millis(Math.max(scheduledAt - now, 0)),
+      refs.internal.classes.materials.mutations.publishMaterialGroup,
+      { groupId, publishedBy: userId }
     );
-    yield* Effect.promise(() =>
-      ctx.db.patch(groupId, {
-        scheduledJobId,
-      })
-    );
+    yield* writer.table("schoolClassMaterialGroups").patch(groupId, {
+      scheduledJobId,
+    });
   }
 
   return groupId;
@@ -172,8 +172,9 @@ export const updateMaterialGroup = Effect.fn(
   scheduledAt?: number;
   status?: SchoolClassMaterialStatus;
 }) {
-  const ctx = yield* MutationCtx;
-  const user = yield* requireAppUser(ctx);
+  const writer = yield* DatabaseWriter;
+  const scheduler = yield* Scheduler;
+  const user = yield* requireAppUser();
   const userId = user.appUser._id;
   const group = yield* loadMaterialGroup(args.groupId);
   const nextStatus = args.status ?? group.status;
@@ -181,8 +182,8 @@ export const updateMaterialGroup = Effect.fn(
   const now = yield* Clock.currentTimeMillis;
   yield* validateScheduledStatus(nextStatus, nextScheduledAt, now);
 
-  const classData = yield* loadActiveClass(ctx, group.classId);
-  yield* requirePermission(ctx, PERMISSIONS.CONTENT_EDIT, {
+  const classData = yield* loadActiveClass(group.classId);
+  yield* requirePermission(PERMISSIONS.CONTENT_EDIT, {
     classId: group.classId,
     schoolId: classData.schoolId,
     userId,
@@ -197,66 +198,70 @@ export const updateMaterialGroup = Effect.fn(
   const needsSchedule = willBeScheduled && (!wasScheduled || timeChanged);
   let scheduledJobId = group.scheduledJobId;
 
-  if (needsCancel && group.scheduledJobId) {
-    const cancelledJobId = group.scheduledJobId;
-    yield* Effect.promise(() => ctx.scheduler.cancel(cancelledJobId));
+  if (needsCancel) {
     scheduledJobId = undefined;
   }
 
   if (needsSchedule && nextScheduledAt !== undefined) {
-    scheduledJobId = yield* Effect.promise(() =>
-      ctx.scheduler.runAfter(
-        Math.max(nextScheduledAt - now, 0),
-        Ref.getFunctionReference(
-          refs.internal.classes.materials.mutations.publishMaterialGroup
-        ),
-        { groupId: args.groupId, publishedBy: userId }
-      )
+    scheduledJobId = yield* scheduler.runAfter(
+      Duration.millis(Math.max(nextScheduledAt - now, 0)),
+      refs.internal.classes.materials.mutations.publishMaterialGroup,
+      { groupId: args.groupId, publishedBy: userId }
     );
   }
 
   const isNewlyPublished = willBePublished && !wasPublished;
-  yield* Effect.promise(() =>
-    ctx.db.patch(args.groupId, {
-      description: args.description ?? group.description,
-      name: args.name ?? group.name,
-      publishedAt: isNewlyPublished ? now : group.publishedAt,
-      publishedBy: isNewlyPublished ? userId : group.publishedBy,
-      scheduledAt: willBeScheduled ? nextScheduledAt : undefined,
-      scheduledJobId: willBeScheduled ? scheduledJobId : undefined,
-      status: nextStatus,
-      updatedAt: now,
-    })
-  );
+  yield* writer.table("schoolClassMaterialGroups").patch(args.groupId, {
+    description: args.description ?? group.description,
+    name: args.name ?? group.name,
+    publishedAt: isNewlyPublished ? now : group.publishedAt,
+    publishedBy: isNewlyPublished ? userId : group.publishedBy,
+    scheduledAt: willBeScheduled ? nextScheduledAt : undefined,
+    scheduledJobId: willBeScheduled ? scheduledJobId : undefined,
+    status: nextStatus,
+    updatedAt: now,
+  });
 
   return args.groupId;
 });
 
-/** Publishes a scheduled material group. */
+/**
+ * Publishes a scheduled material group only when the current schedule is due.
+ *
+ * @see https://confect.dev/server/scheduling
+ */
 export const publishMaterialGroup = Effect.fn(
   "school.materials.publishMaterialGroup"
 )(function* (args: {
   groupId: Id<"schoolClassMaterialGroups">;
   publishedBy: Id<"users">;
 }) {
-  const ctx = yield* MutationCtx;
-  const group = yield* Effect.promise(() => ctx.db.get(args.groupId));
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const group = yield* reader
+    .table("schoolClassMaterialGroups")
+    .get(args.groupId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-  if (!group || group.status !== "scheduled") {
+  const now = yield* Clock.currentTimeMillis;
+
+  if (
+    !group ||
+    group.status !== "scheduled" ||
+    !group.scheduledAt ||
+    group.scheduledAt > now
+  ) {
     return null;
   }
 
-  const now = yield* Clock.currentTimeMillis;
-  yield* Effect.promise(() =>
-    ctx.db.patch(args.groupId, {
-      publishedAt: now,
-      publishedBy: args.publishedBy,
-      scheduledAt: undefined,
-      scheduledJobId: undefined,
-      status: "published",
-      updatedAt: now,
-    })
-  );
+  yield* writer.table("schoolClassMaterialGroups").patch(args.groupId, {
+    publishedAt: now,
+    publishedBy: args.publishedBy,
+    scheduledAt: undefined,
+    scheduledJobId: undefined,
+    status: "published",
+    updatedAt: now,
+  });
 
   return null;
 });
@@ -265,23 +270,18 @@ export const publishMaterialGroup = Effect.fn(
 export const deleteMaterialGroup = Effect.fn(
   "school.materials.deleteMaterialGroup"
 )(function* (args: { groupId: Id<"schoolClassMaterialGroups"> }) {
-  const ctx = yield* MutationCtx;
-  const user = yield* requireAppUser(ctx);
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
   const userId = user.appUser._id;
   const group = yield* loadMaterialGroup(args.groupId);
-  const classData = yield* loadActiveClass(ctx, group.classId);
-  yield* requirePermission(ctx, PERMISSIONS.CONTENT_DELETE, {
+  const classData = yield* loadActiveClass(group.classId);
+  yield* requirePermission(PERMISSIONS.CONTENT_DELETE, {
     classId: group.classId,
     schoolId: classData.schoolId,
     userId,
   });
 
-  if (group.status === "scheduled" && group.scheduledJobId) {
-    const scheduledJobId = group.scheduledJobId;
-    yield* Effect.promise(() => ctx.scheduler.cancel(scheduledJobId));
-  }
-
-  yield* Effect.promise(() => ctx.db.delete(args.groupId));
+  yield* writer.table("schoolClassMaterialGroups").delete(args.groupId);
   return null;
 });
 
@@ -292,43 +292,42 @@ export const reorderMaterialGroup = Effect.fn(
   direction: "up" | "down";
   groupId: Id<"schoolClassMaterialGroups">;
 }) {
-  const ctx = yield* MutationCtx;
-  const user = yield* requireAppUser(ctx);
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
   const userId = user.appUser._id;
   const group = yield* loadMaterialGroup(args.groupId);
-  const classData = yield* loadActiveClass(ctx, group.classId);
-  yield* requirePermission(ctx, PERMISSIONS.CONTENT_EDIT, {
+  const classData = yield* loadActiveClass(group.classId);
+  yield* requirePermission(PERMISSIONS.CONTENT_EDIT, {
     classId: group.classId,
     schoolId: classData.schoolId,
     userId,
   });
 
-  const adjacentGroup =
+  const adjacentGroupOption =
     args.direction === "up"
-      ? yield* Effect.promise(() =>
-          ctx.db
-            .query("schoolClassMaterialGroups")
-            .withIndex("by_classId_and_parentId_and_order", (query) =>
+      ? yield* reader
+          .table("schoolClassMaterialGroups")
+          .index(
+            "by_classId_and_parentId_and_order",
+            (query) =>
               query
                 .eq("classId", group.classId)
                 .eq("parentId", group.parentId)
-                .lt("order", group.order)
-            )
-            .order("desc")
-            .first()
-        )
-      : yield* Effect.promise(() =>
-          ctx.db
-            .query("schoolClassMaterialGroups")
-            .withIndex("by_classId_and_parentId_and_order", (query) =>
-              query
-                .eq("classId", group.classId)
-                .eq("parentId", group.parentId)
-                .gt("order", group.order)
-            )
-            .order("asc")
-            .first()
-        );
+                .lt("order", group.order),
+            "desc"
+          )
+          .first()
+      : yield* reader
+          .table("schoolClassMaterialGroups")
+          .index("by_classId_and_parentId_and_order", (query) =>
+            query
+              .eq("classId", group.classId)
+              .eq("parentId", group.parentId)
+              .gt("order", group.order)
+          )
+          .first();
+  const adjacentGroup = Option.getOrNull(adjacentGroupOption);
 
   if (!adjacentGroup) {
     return null;
@@ -336,18 +335,14 @@ export const reorderMaterialGroup = Effect.fn(
 
   const now = yield* Clock.currentTimeMillis;
   yield* Effect.all([
-    Effect.promise(() =>
-      ctx.db.patch(group._id, {
-        order: adjacentGroup.order,
-        updatedAt: now,
-      })
-    ),
-    Effect.promise(() =>
-      ctx.db.patch(adjacentGroup._id, {
-        order: group.order,
-        updatedAt: now,
-      })
-    ),
+    writer.table("schoolClassMaterialGroups").patch(group._id, {
+      order: adjacentGroup.order,
+      updatedAt: now,
+    }),
+    writer.table("schoolClassMaterialGroups").patch(adjacentGroup._id, {
+      order: group.order,
+      updatedAt: now,
+    }),
   ]);
 
   return null;
@@ -362,11 +357,10 @@ export const getMaterialGroups = Effect.fn(
   parentId?: Id<"schoolClassMaterialGroups">;
   q?: string;
 }) {
-  const ctx = yield* QueryCtx;
-  const user = yield* requireAppUser(ctx);
-  const classData = yield* loadClass(ctx, args.classId);
+  const reader = yield* DatabaseReader;
+  const user = yield* requireAppUser();
+  const classData = yield* loadClass(args.classId);
   const access = yield* requireClassAccess(
-    ctx,
     args.classId,
     classData.schoolId,
     user.appUser._id
@@ -378,55 +372,47 @@ export const getMaterialGroups = Effect.fn(
   const parentId = args.parentId;
 
   if (searchQuery) {
-    const groupsPage = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolClassMaterialGroups")
-        .withSearchIndex("search_name", (query) => {
-          const builder = query
-            .search("name", searchQuery)
-            .eq("classId", args.classId)
-            .eq("parentId", parentId);
+    const groupsPage = yield* reader
+      .table("schoolClassMaterialGroups")
+      .search("search_name", (query) => {
+        const builder = query
+          .search("name", searchQuery)
+          .eq("classId", args.classId)
+          .eq("parentId", parentId);
 
-          if (canSeeAllStatuses) {
-            return builder;
-          }
+        if (canSeeAllStatuses) {
+          return builder;
+        }
 
-          return builder.eq("status", "published");
-        })
-        .paginate(args.paginationOpts)
-    );
+        return builder.eq("status", "published");
+      })
+      .paginate(args.paginationOpts);
     const page = yield* enrichMaterialGroups(groupsPage.page);
 
     return { ...groupsPage, page };
   }
 
   if (canSeeAllStatuses) {
-    const groupsPage = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolClassMaterialGroups")
-        .withIndex("by_classId_and_parentId_and_order", (query) =>
-          query.eq("classId", args.classId).eq("parentId", parentId)
-        )
-        .order("asc")
-        .paginate(args.paginationOpts)
-    );
+    const groupsPage = yield* reader
+      .table("schoolClassMaterialGroups")
+      .index("by_classId_and_parentId_and_order", (query) =>
+        query.eq("classId", args.classId).eq("parentId", parentId)
+      )
+      .paginate(args.paginationOpts);
     const page = yield* enrichMaterialGroups(groupsPage.page);
 
     return { ...groupsPage, page };
   }
 
-  const groupsPage = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolClassMaterialGroups")
-      .withIndex("by_classId_and_parentId_and_status_and_order", (query) =>
-        query
-          .eq("classId", args.classId)
-          .eq("parentId", parentId)
-          .eq("status", "published")
-      )
-      .order("asc")
-      .paginate(args.paginationOpts)
-  );
+  const groupsPage = yield* reader
+    .table("schoolClassMaterialGroups")
+    .index("by_classId_and_parentId_and_status_and_order", (query) =>
+      query
+        .eq("classId", args.classId)
+        .eq("parentId", parentId)
+        .eq("status", "published")
+    )
+    .paginate(args.paginationOpts);
   const page = yield* enrichMaterialGroups(groupsPage.page);
 
   return { ...groupsPage, page };

@@ -1,6 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import * as content_subjectSections from "@repo/backend/confect/modules/content/subjectSections.service";
+import { getTrendingSubjects as contentSubjectSections_getTrendingSubjects } from "@repo/backend/confect/modules/content/subjectSections.service";
 import { Effect, Layer } from "effect";
 
 const subjectSections_queries_getTrendingSubjectsImpl = FunctionImpl.make(
@@ -8,9 +8,9 @@ const subjectSections_queries_getTrendingSubjectsImpl = FunctionImpl.make(
   "subjectSections.queries",
   "getTrendingSubjects",
   (args) =>
-    content_subjectSections
-      .getTrendingSubjects(args)
-      .pipe(Effect.catchTag("TrendingRangeError", (error) => Effect.die(error)))
+    contentSubjectSections_getTrendingSubjects(args).pipe(
+      Effect.catchTag("TrendingRangeError", (error) => Effect.die(error))
+    )
 );
 
 const subjectSectionsQueriesImpl = GroupImpl.make(

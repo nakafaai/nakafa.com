@@ -1,15 +1,33 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import * as school_assessment_attempts from "@repo/backend/confect/modules/school/assessmentsAttempts.service";
-import * as school_assessment_assignments from "@repo/backend/confect/modules/school/assessmentsAuthoring/assignments.service";
-import * as school_assessment_bank from "@repo/backend/confect/modules/school/assessmentsAuthoring/bank.service";
-import * as school_assessment_delete from "@repo/backend/confect/modules/school/assessmentsAuthoring/delete.service";
-import * as school_assessment_drafts from "@repo/backend/confect/modules/school/assessmentsAuthoring/drafts.service";
-import * as school_assessment_ordering from "@repo/backend/confect/modules/school/assessmentsAuthoring/ordering.service";
-import * as school_assessment_publishing from "@repo/backend/confect/modules/school/assessmentsAuthoring/publishing.service";
-import * as school_assessment_questions from "@repo/backend/confect/modules/school/assessmentsAuthoring/questions.service";
-import * as school_assessment_versions from "@repo/backend/confect/modules/school/assessmentsAuthoring/versions.service";
-import * as school_assessment_queries from "@repo/backend/confect/modules/school/assessmentsQueries.service";
+import {
+  getAssignment as schoolAssessmentAttempts_getAssignment,
+  saveResponse as schoolAssessmentAttempts_saveResponse,
+  startAttempt as schoolAssessmentAttempts_startAttempt,
+  submitAttempt as schoolAssessmentAttempts_submitAttempt,
+} from "@repo/backend/confect/modules/school/assessmentsAttempts.service";
+import { createAssignment as schoolAssessmentAssignments_createAssignment } from "@repo/backend/confect/modules/school/assessmentsAuthoring/assignments.service";
+import {
+  createQuestionBank as schoolAssessmentBank_createQuestionBank,
+  createQuestionBankEntry as schoolAssessmentBank_createQuestionBankEntry,
+} from "@repo/backend/confect/modules/school/assessmentsAuthoring/bank.service";
+import { deleteAssessment as schoolAssessmentDelete_deleteAssessment } from "@repo/backend/confect/modules/school/assessmentsAuthoring/delete.service";
+import {
+  createAssessment as schoolAssessmentDrafts_createAssessment,
+  updateAssessment as schoolAssessmentDrafts_updateAssessment,
+} from "@repo/backend/confect/modules/school/assessmentsAuthoring/drafts.service";
+import { reorderAssessment as schoolAssessmentOrdering_reorderAssessment } from "@repo/backend/confect/modules/school/assessmentsAuthoring/ordering.service";
+import { publishAssessment as schoolAssessmentPublishing_publishAssessment } from "@repo/backend/confect/modules/school/assessmentsAuthoring/publishing.service";
+import {
+  createQuestion as schoolAssessmentQuestions_createQuestion,
+  createSection as schoolAssessmentQuestions_createSection,
+} from "@repo/backend/confect/modules/school/assessmentsAuthoring/questions.service";
+import { createAssessmentVersion as schoolAssessmentVersions_createAssessmentVersion } from "@repo/backend/confect/modules/school/assessmentsAuthoring/versions.service";
+import {
+  getAuthoredAssessment as schoolAssessmentQueries_getAuthoredAssessment,
+  listAssessments as schoolAssessmentQueries_listAssessments,
+  listQuestionBanks as schoolAssessmentQueries_listQuestionBanks,
+} from "@repo/backend/confect/modules/school/assessmentsQueries.service";
 import { Effect, Layer } from "effect";
 
 const assessments_mutations_public_save_saveResponseImpl = FunctionImpl.make(
@@ -17,7 +35,7 @@ const assessments_mutations_public_save_saveResponseImpl = FunctionImpl.make(
   "assessments.mutations.publicFunctions.save",
   "saveResponse",
   (args) =>
-    school_assessment_attempts.saveResponse(args).pipe(
+    schoolAssessmentAttempts_saveResponse(args).pipe(
       Effect.catchTags({
         AssessmentError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -30,7 +48,7 @@ const assessments_mutations_public_start_startAttemptImpl = FunctionImpl.make(
   "assessments.mutations.publicFunctions.start",
   "startAttempt",
   (args) =>
-    school_assessment_attempts.startAttempt(args).pipe(
+    schoolAssessmentAttempts_startAttempt(args).pipe(
       Effect.catchTags({
         AssessmentError: (error) => Effect.die(error),
         ClassActionError: (error) => Effect.die(error),
@@ -44,7 +62,7 @@ const assessments_mutations_public_submit_submitAttemptImpl = FunctionImpl.make(
   "assessments.mutations.publicFunctions.submit",
   "submitAttempt",
   (args) =>
-    school_assessment_attempts.submitAttempt(args).pipe(
+    schoolAssessmentAttempts_submitAttempt(args).pipe(
       Effect.catchTags({
         AssessmentError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -57,7 +75,7 @@ const assessments_queries_public_bank_listQuestionBanksImpl = FunctionImpl.make(
   "assessments.queries.publicFunctions.bank",
   "listQuestionBanks",
   (args) =>
-    school_assessment_queries.listQuestionBanks(args).pipe(
+    schoolAssessmentQueries_listQuestionBanks(args).pipe(
       Effect.catchTags({
         AssessmentError: (error) => Effect.die(error),
         ClassActionError: (error) => Effect.die(error),
@@ -71,7 +89,7 @@ const assessments_queries_public_list_listAssessmentsImpl = FunctionImpl.make(
   "assessments.queries.publicFunctions.list",
   "listAssessments",
   (args) =>
-    school_assessment_queries.listAssessments(args).pipe(
+    schoolAssessmentQueries_listAssessments(args).pipe(
       Effect.catchTags({
         AssessmentError: (error) => Effect.die(error),
         ClassActionError: (error) => Effect.die(error),
@@ -85,7 +103,7 @@ const assessments_mutations_internal_publishing_publishAssessmentImpl =
     api,
     "assessments.mutations.internalFunctions.publishing",
     "publishAssessment",
-    (args) => school_assessment_publishing.publishAssessment(args)
+    (args) => schoolAssessmentPublishing_publishAssessment(args)
   );
 
 const assessmentsMutationsInternalPublishingImpl = GroupImpl.make(
@@ -101,7 +119,7 @@ const assessments_mutations_public_assign_createAssignmentImpl =
     "assessments.mutations.publicFunctions.assign",
     "createAssignment",
     (args) =>
-      school_assessment_assignments.createAssignment(args).pipe(
+      schoolAssessmentAssignments_createAssignment(args).pipe(
         Effect.catchTags({
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
@@ -121,7 +139,7 @@ const assessments_mutations_public_bank_createQuestionBankImpl =
     "assessments.mutations.publicFunctions.bank",
     "createQuestionBank",
     (args) =>
-      school_assessment_bank.createQuestionBank(args).pipe(
+      schoolAssessmentBank_createQuestionBank(args).pipe(
         Effect.catchTags({
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
@@ -136,7 +154,7 @@ const assessments_mutations_public_bank_createQuestionBankEntryImpl =
     "assessments.mutations.publicFunctions.bank",
     "createQuestionBankEntry",
     (args) =>
-      school_assessment_bank.createQuestionBankEntry(args).pipe(
+      schoolAssessmentBank_createQuestionBankEntry(args).pipe(
         Effect.catchTags({
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
@@ -160,7 +178,7 @@ const assessments_mutations_public_create_createAssessmentImpl =
     "assessments.mutations.publicFunctions.create",
     "createAssessment",
     (args) =>
-      school_assessment_drafts.createAssessment(args).pipe(
+      schoolAssessmentDrafts_createAssessment(args).pipe(
         Effect.catchTags({
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
@@ -180,7 +198,7 @@ const assessments_mutations_public_delete_deleteAssessmentImpl =
     "assessments.mutations.publicFunctions.deleteFunctions",
     "deleteAssessment",
     (args) =>
-      school_assessment_delete.deleteAssessment(args).pipe(
+      schoolAssessmentDelete_deleteAssessment(args).pipe(
         Effect.catchTags({
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
@@ -200,7 +218,7 @@ const assessments_mutations_public_questions_createQuestionImpl =
     "assessments.mutations.publicFunctions.questions",
     "createQuestion",
     (args) =>
-      school_assessment_questions.createQuestion(args).pipe(
+      schoolAssessmentQuestions_createQuestion(args).pipe(
         Effect.catchTags({
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
@@ -222,7 +240,7 @@ const assessments_mutations_public_reorder_reorderAssessmentImpl =
     "assessments.mutations.publicFunctions.reorder",
     "reorderAssessment",
     (args) =>
-      school_assessment_ordering.reorderAssessment(args).pipe(
+      schoolAssessmentOrdering_reorderAssessment(args).pipe(
         Effect.catchTags({
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
@@ -249,7 +267,7 @@ const assessments_mutations_public_sections_createSectionImpl =
     "assessments.mutations.publicFunctions.sections",
     "createSection",
     (args) =>
-      school_assessment_questions.createSection(args).pipe(
+      schoolAssessmentQuestions_createSection(args).pipe(
         Effect.catchTags({
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
@@ -279,7 +297,7 @@ const assessments_mutations_public_update_updateAssessmentImpl =
     "assessments.mutations.publicFunctions.update",
     "updateAssessment",
     (args) =>
-      school_assessment_drafts.updateAssessment(args).pipe(
+      schoolAssessmentDrafts_updateAssessment(args).pipe(
         Effect.catchTags({
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
@@ -299,7 +317,7 @@ const assessments_mutations_public_version_createAssessmentVersionImpl =
     "assessments.mutations.publicFunctions.version",
     "createAssessmentVersion",
     (args) =>
-      school_assessment_versions.createAssessmentVersion(args).pipe(
+      schoolAssessmentVersions_createAssessmentVersion(args).pipe(
         Effect.catchTags({
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
@@ -323,7 +341,7 @@ const assessments_queries_public_assignment_getAssignmentImpl =
     "assessments.queries.publicFunctions.assignment",
     "getAssignment",
     (args) =>
-      school_assessment_attempts.getAssignment(args).pipe(
+      schoolAssessmentAttempts_getAssignment(args).pipe(
         Effect.catchTags({
           AssessmentError: (error) => Effect.die(error),
           ClassActionError: (error) => Effect.die(error),
@@ -343,7 +361,7 @@ const assessments_queries_public_authoring_getAuthoredAssessmentImpl =
     "assessments.queries.publicFunctions.authoring",
     "getAuthoredAssessment",
     (args) =>
-      school_assessment_queries.getAuthoredAssessment(args).pipe(
+      schoolAssessmentQueries_getAuthoredAssessment(args).pipe(
         Effect.catchTags({
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),

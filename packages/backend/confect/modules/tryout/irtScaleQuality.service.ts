@@ -1,12 +1,14 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { IrtError } from "@repo/backend/confect/modules/tryout/irt.errors";
 import {
   getCalibrationWindowStartAt,
   IRT_MIN_ATTEMPTS_FOR_OFFICIAL_SCALE,
   IRT_MIN_RESPONSES_FOR_CALIBRATED,
 } from "@repo/backend/confect/modules/tryout/irt.policy";
-import { getAll } from "convex-helpers/server/relationships";
 import { Clock, Effect } from "effect";
 
 interface ScaleQualitySummary {
@@ -50,24 +52,23 @@ function getBlockingReason(args: {
 /** Evaluates whether a tryout has enough fresh calibrated items for official scale publication. */
 export const evaluateTryoutScaleQuality = Effect.fn(
   "irt.scales.evaluateTryoutScaleQuality"
-)(function* (
-  db: ConvexMutationCtx["db"],
-  args: { readonly now: number; readonly tryoutId: Id<"tryouts"> }
-) {
-  const tryout = yield* Effect.promise(() => db.get(args.tryoutId));
+)(function* (args: { readonly now: number; readonly tryoutId: Id<"tryouts"> }) {
+  const reader = yield* DatabaseReader;
+  const tryout = yield* reader
+    .table("tryouts")
+    .get(args.tryoutId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!tryout) {
     return null;
   }
 
-  const tryoutPartSets = yield* Effect.promise(() =>
-    db
-      .query("tryoutPartSets")
-      .withIndex("by_tryoutId_and_partIndex", (query) =>
-        query.eq("tryoutId", args.tryoutId)
-      )
-      .take(tryout.partCount + 1)
-  );
+  const tryoutPartSets = yield* reader
+    .table("tryoutPartSets")
+    .index("by_tryoutId_and_partIndex", (query) =>
+      query.eq("tryoutId", args.tryoutId)
+    )
+    .take(tryout.partCount + 1);
 
   if (tryoutPartSets.length !== tryout.partCount) {
     return yield* Effect.fail(
@@ -78,12 +79,14 @@ export const evaluateTryoutScaleQuality = Effect.fn(
     );
   }
 
-  const sets = yield* Effect.promise(() =>
-    getAll(
-      db,
-      "exerciseSets",
-      tryoutPartSets.map((partSet) => partSet.setId)
-    )
+  const sets = yield* Effect.forEach(
+    tryoutPartSets,
+    (partSet) =>
+      reader
+        .table("exerciseSets")
+        .get(partSet.setId)
+        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null))),
+    { concurrency: "unbounded" }
   );
   const liveWindowStartAt = getCalibrationWindowStartAt(args.now);
   let calibratedQuestionCount = 0;
@@ -99,21 +102,24 @@ export const evaluateTryoutScaleQuality = Effect.fn(
       continue;
     }
 
-    const [cacheStats, itemParams, questions] = yield* Effect.promise(() =>
-      Promise.all([
-        db
-          .query("irtCalibrationCacheStats")
-          .withIndex("by_setId", (query) => query.eq("setId", set._id))
-          .unique(),
-        db
-          .query("exerciseItemParameters")
-          .withIndex("by_setId", (query) => query.eq("setId", set._id))
+    const [cacheStats, itemParams, questions] = yield* Effect.all(
+      [
+        reader
+          .table("irtCalibrationCacheStats")
+          .get("by_setId", set._id)
+          .pipe(
+            Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null))
+          ),
+        reader
+          .table("exerciseItemParameters")
+          .index("by_setId", (query) => query.eq("setId", set._id))
           .take(set.questionCount + 1),
-        db
-          .query("exerciseQuestions")
-          .withIndex("by_setId", (query) => query.eq("setId", set._id))
+        reader
+          .table("exerciseQuestions")
+          .index("by_setId", (query) => query.eq("setId", set._id))
           .take(set.questionCount + 1),
-      ])
+      ],
+      { concurrency: "unbounded" }
     );
 
     if (itemParams.length > set.questionCount) {
@@ -189,15 +195,13 @@ export const evaluateTryoutScaleQuality = Effect.fn(
 /** Upserts the persisted scale-quality summary for one tryout. */
 export const upsertTryoutScaleQualityCheck = Effect.fn(
   "irt.scales.upsertTryoutScaleQualityCheck"
-)(function* (db: ConvexMutationCtx["db"], summary: ScaleQualitySummary) {
-  const existingCheck = yield* Effect.promise(() =>
-    db
-      .query("irtScaleQualityChecks")
-      .withIndex("by_tryoutId", (query) =>
-        query.eq("tryoutId", summary.tryoutId)
-      )
-      .unique()
-  );
+)(function* (summary: ScaleQualitySummary) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const existingCheck = yield* reader
+    .table("irtScaleQualityChecks")
+    .get("by_tryoutId", summary.tryoutId)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
   const values = {
     blockingReason: summary.blockingReason,
     calibratedQuestionCount: summary.calibratedQuestionCount,
@@ -210,16 +214,16 @@ export const upsertTryoutScaleQualityCheck = Effect.fn(
   };
 
   if (existingCheck) {
-    yield* Effect.promise(() => db.patch(existingCheck._id, values));
+    yield* writer
+      .table("irtScaleQualityChecks")
+      .patch(existingCheck._id, values);
     return summary;
   }
 
-  yield* Effect.promise(() =>
-    db.insert("irtScaleQualityChecks", {
-      ...values,
-      tryoutId: summary.tryoutId,
-    })
-  );
+  yield* writer.table("irtScaleQualityChecks").insert({
+    ...values,
+    tryoutId: summary.tryoutId,
+  });
 
   return summary;
 });
@@ -227,14 +231,14 @@ export const upsertTryoutScaleQualityCheck = Effect.fn(
 /** Refreshes scale quality and reports whether the tryout still exists. */
 export const refreshTryoutScaleQualityCheck = Effect.fn(
   "irt.scales.refreshTryoutScaleQualityCheck"
-)(function* (db: ConvexMutationCtx["db"], tryoutId: Id<"tryouts">) {
+)(function* (tryoutId: Id<"tryouts">) {
   const now = yield* Clock.currentTimeMillis;
-  const summary = yield* evaluateTryoutScaleQuality(db, { now, tryoutId });
+  const summary = yield* evaluateTryoutScaleQuality({ now, tryoutId });
 
   if (!summary) {
     return false;
   }
 
-  yield* upsertTryoutScaleQualityCheck(db, summary);
+  yield* upsertTryoutScaleQualityCheck(summary);
   return true;
 });

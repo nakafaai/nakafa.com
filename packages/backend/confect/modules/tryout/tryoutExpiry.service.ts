@@ -1,25 +1,27 @@
-import type { Doc } from "@repo/backend/confect/_generated/dataModel";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import type { ExerciseAttempts } from "@repo/backend/confect/modules/learning/exercises.tables";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import { syncTryoutAttemptAggregates } from "@repo/backend/confect/modules/tryout/tryoutFinalizeAggregates.service";
 import { finalizeTryoutPartAttempt } from "@repo/backend/confect/modules/tryout/tryoutFinalizePart.service";
 import { getTryoutScoreTarget } from "@repo/backend/confect/modules/tryout/tryoutIrt.service";
 import { loadBoundedTryoutPartAttempts } from "@repo/backend/confect/modules/tryout/tryoutLoaders.service";
-import { Effect } from "effect";
+import type { TryoutAttempts } from "@repo/backend/confect/modules/tryout/tryouts.tables";
+import { Effect, Option } from "effect";
+
+type ExerciseAttemptDoc = typeof ExerciseAttempts.Doc.Type;
+type TryoutAttemptDoc = typeof TryoutAttempts.Doc.Type;
 
 /** Expires a tryout attempt and finalizes every unfinished part. */
 export const expireTryoutAttempt = Effect.fn(
   "tryouts.expiry.expireTryoutAttempt"
-)(function* (
-  ctx: ConvexMutationCtx,
-  tryoutAttempt: Doc<"tryoutAttempts">,
-  now: number
-) {
+)(function* (tryoutAttempt: TryoutAttemptDoc, now: number) {
+  const reader = yield* DatabaseReader;
   const expiredAtMs = tryoutAttempt.expiresAt;
-  const scoreTarget = yield* getTryoutScoreTarget(ctx.db, tryoutAttempt);
-  const tryout = yield* Effect.promise(() =>
-    ctx.db.get(tryoutAttempt.tryoutId)
-  );
+  const scoreTarget = yield* getTryoutScoreTarget(tryoutAttempt);
+  const tryout = yield* reader
+    .table("tryouts")
+    .get(tryoutAttempt.tryoutId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!tryout) {
     return yield* Effect.fail(
@@ -30,7 +32,7 @@ export const expireTryoutAttempt = Effect.fn(
     );
   }
 
-  const partAttempts = yield* loadBoundedTryoutPartAttempts(ctx.db, {
+  const partAttempts = yield* loadBoundedTryoutPartAttempts({
     partCount: tryoutAttempt.partSetSnapshots.length,
     tryoutAttemptId: tryoutAttempt._id,
   });
@@ -41,7 +43,6 @@ export const expireTryoutAttempt = Effect.fn(
     }
 
     yield* finalizeTryoutPartAttempt({
-      ctx,
       finishedAtMs: expiredAtMs,
       now,
       partAttempt,
@@ -50,7 +51,7 @@ export const expireTryoutAttempt = Effect.fn(
     });
   }
 
-  yield* syncTryoutAttemptAggregates(ctx, {
+  yield* syncTryoutAttemptAggregates({
     completedAtMs: expiredAtMs,
     now,
     scaleVersionId: scoreTarget.scaleVersionId,
@@ -65,11 +66,7 @@ export const expireTryoutAttempt = Effect.fn(
 /** Synchronizes the persisted expired state when the tryout deadline has passed. */
 export const syncTryoutAttemptExpiry = Effect.fn(
   "tryouts.expiry.syncTryoutAttemptExpiry"
-)(function* (
-  ctx: ConvexMutationCtx,
-  tryoutAttempt: Doc<"tryoutAttempts">,
-  now: number
-) {
+)(function* (tryoutAttempt: TryoutAttemptDoc, now: number) {
   const expiredAtMs = tryoutAttempt.expiresAt;
 
   if (tryoutAttempt.status === "expired") {
@@ -77,7 +74,7 @@ export const syncTryoutAttemptExpiry = Effect.fn(
   }
 
   if (tryoutAttempt.status === "in-progress" && now >= expiredAtMs) {
-    yield* expireTryoutAttempt(ctx, tryoutAttempt, now);
+    yield* expireTryoutAttempt(tryoutAttempt, now);
     return { expired: true, expiredAtMs };
   }
 
@@ -87,23 +84,17 @@ export const syncTryoutAttemptExpiry = Effect.fn(
 /** Synchronizes tryout expiry for an exercise attempt owned by a tryout part. */
 export const syncTryoutExerciseAttemptExpiry = Effect.fn(
   "tryouts.expiry.syncTryoutExerciseAttemptExpiry"
-)(function* (
-  ctx: ConvexMutationCtx,
-  attempt: Doc<"exerciseAttempts">,
-  now: number
-) {
+)(function* (attempt: ExerciseAttemptDoc, now: number) {
   if (attempt.origin !== "tryout") {
     return { expired: false, expiredAtMs: undefined };
   }
 
-  const partAttempt = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryoutPartAttempts")
-      .withIndex("by_setAttemptId", (query) =>
-        query.eq("setAttemptId", attempt._id)
-      )
-      .unique()
-  );
+  const reader = yield* DatabaseReader;
+  const partAttempt = yield* reader
+    .table("tryoutPartAttempts")
+    .index("by_setAttemptId", (query) => query.eq("setAttemptId", attempt._id))
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 
   if (!partAttempt) {
     return yield* Effect.fail(
@@ -114,9 +105,10 @@ export const syncTryoutExerciseAttemptExpiry = Effect.fn(
     );
   }
 
-  const tryoutAttempt = yield* Effect.promise(() =>
-    ctx.db.get(partAttempt.tryoutAttemptId)
-  );
+  const tryoutAttempt = yield* reader
+    .table("tryoutAttempts")
+    .get(partAttempt.tryoutAttemptId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!tryoutAttempt) {
     return yield* Effect.fail(
@@ -128,5 +120,5 @@ export const syncTryoutExerciseAttemptExpiry = Effect.fn(
     );
   }
 
-  return yield* syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
+  return yield* syncTryoutAttemptExpiry(tryoutAttempt, now);
 });

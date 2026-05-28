@@ -1,37 +1,37 @@
-import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import {
   buildFinalizedExerciseAttemptPatch,
   computeAttemptDurationSeconds,
 } from "@repo/backend/confect/modules/learning/exerciseAttemptUtils.service";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import type { ExerciseAttempts } from "@repo/backend/confect/modules/learning/exercises.tables";
 import { getScaleVersionItemsForSet } from "@repo/backend/confect/modules/tryout/irtScaleRead.service";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import { scoreFinalizedTryoutPart } from "@repo/backend/confect/modules/tryout/tryoutFinalizeScore.service";
 import { getBoundedExerciseAnswers } from "@repo/backend/confect/modules/tryout/tryoutLoaders.service";
+import type { TryoutPartAttempts } from "@repo/backend/confect/modules/tryout/tryouts.tables";
 import { Effect } from "effect";
+
+type ExerciseAttemptDoc = typeof ExerciseAttempts.Doc.Type;
+type TryoutPartAttemptDoc = typeof TryoutPartAttempts.Doc.Type;
 
 /** Finalizes the linked exercise attempt for a tryout part when needed. */
 const finalizeExerciseSetAttemptIfNeeded = Effect.fn(
   "tryouts.finalize.finalizeExerciseSetAttemptIfNeeded"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly finishedAtMs: number;
-    readonly now: number;
-    readonly setAttempt: Doc<"exerciseAttempts">;
-    readonly status: "completed" | "expired";
-  }
-) {
+)(function* (args: {
+  readonly finishedAtMs: number;
+  readonly now: number;
+  readonly setAttempt: ExerciseAttemptDoc;
+  readonly status: "completed" | "expired";
+}) {
   if (args.setAttempt.status !== "in-progress") {
     return args.setAttempt;
   }
 
-  const schedulerId = args.setAttempt.schedulerId;
-
-  if (schedulerId) {
-    yield* Effect.promise(() => ctx.scheduler.cancel(schedulerId));
-  }
-
+  const writer = yield* DatabaseWriter;
   const setExpiresAtMs =
     args.setAttempt.startedAt + args.setAttempt.timeLimit * 1e3;
   const completedAt = Math.min(args.finishedAtMs, setExpiresAtMs);
@@ -53,16 +53,14 @@ const finalizeExerciseSetAttemptIfNeeded = Effect.fn(
     }),
   };
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(
-      args.setAttempt._id,
-      buildFinalizedExerciseAttemptPatch({
-        completedAtMs: completedAt,
-        now: args.now,
-        status: finalStatus,
-        totalTime,
-      })
-    )
+  yield* writer.table("exerciseAttempts").patch(
+    args.setAttempt._id,
+    buildFinalizedExerciseAttemptPatch({
+      completedAtMs: completedAt,
+      now: args.now,
+      status: finalStatus,
+      totalTime,
+    })
   );
 
   return finalizedSetAttempt;
@@ -72,19 +70,24 @@ const finalizeExerciseSetAttemptIfNeeded = Effect.fn(
 export const finalizeTryoutPartAttempt = Effect.fn(
   "tryouts.finalize.finalizeTryoutPartAttempt"
 )(function* (args: {
-  readonly ctx: ConvexMutationCtx;
   readonly finishedAtMs: number;
   readonly now: number;
-  readonly partAttempt: Doc<"tryoutPartAttempts">;
+  readonly partAttempt: TryoutPartAttemptDoc;
   readonly status: "completed" | "expired";
   readonly tryoutAttemptId: Id<"tryoutAttempts">;
 }) {
-  const [setAttempt, tryoutAttempt] = yield* Effect.promise(() =>
-    Promise.all([
-      args.ctx.db.get(args.partAttempt.setAttemptId),
-      args.ctx.db.get(args.tryoutAttemptId),
-    ])
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const [setAttempt, tryoutAttempt] = yield* Effect.all([
+    reader
+      .table("exerciseAttempts")
+      .get(args.partAttempt.setAttemptId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null))),
+    reader
+      .table("tryoutAttempts")
+      .get(args.tryoutAttemptId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null))),
+  ]);
 
   if (!setAttempt) {
     return yield* Effect.fail(
@@ -107,15 +110,12 @@ export const finalizeTryoutPartAttempt = Effect.fn(
   const isAlreadyFinalized = tryoutAttempt.completedPartIndices.includes(
     args.partAttempt.partIndex
   );
-  const currentSetAttempt = yield* finalizeExerciseSetAttemptIfNeeded(
-    args.ctx,
-    {
-      finishedAtMs: args.finishedAtMs,
-      now: args.now,
-      setAttempt,
-      status: args.status,
-    }
-  );
+  const currentSetAttempt = yield* finalizeExerciseSetAttemptIfNeeded({
+    finishedAtMs: args.finishedAtMs,
+    now: args.now,
+    setAttempt,
+    status: args.status,
+  });
 
   if (isAlreadyFinalized) {
     return {
@@ -126,11 +126,11 @@ export const finalizeTryoutPartAttempt = Effect.fn(
     };
   }
 
-  const answers = yield* getBoundedExerciseAnswers(args.ctx.db, {
+  const answers = yield* getBoundedExerciseAnswers({
     attemptId: args.partAttempt.setAttemptId,
     totalExercises: currentSetAttempt.totalExercises,
   });
-  const itemParamsRecords = yield* getScaleVersionItemsForSet(args.ctx.db, {
+  const itemParamsRecords = yield* getScaleVersionItemsForSet({
     questionCount: currentSetAttempt.totalExercises,
     scaleVersionId: tryoutAttempt.scaleVersionId,
     setId: args.partAttempt.setId,
@@ -147,18 +147,16 @@ export const finalizeTryoutPartAttempt = Effect.fn(
     completedPartIndices.sort((left, right) => left - right);
   }
 
-  yield* Effect.promise(() =>
-    Promise.all([
-      args.ctx.db.patch(args.partAttempt._id, {
-        theta: partScore.theta,
-        thetaSE: partScore.thetaSE,
-      }),
-      args.ctx.db.patch(tryoutAttempt._id, {
-        completedPartIndices,
-        lastActivityAt: args.now,
-      }),
-    ])
-  );
+  yield* Effect.all([
+    writer.table("tryoutPartAttempts").patch(args.partAttempt._id, {
+      theta: partScore.theta,
+      thetaSE: partScore.thetaSE,
+    }),
+    writer.table("tryoutAttempts").patch(tryoutAttempt._id, {
+      completedPartIndices,
+      lastActivityAt: args.now,
+    }),
+  ]);
 
   return {
     rawScore: partScore.rawScore,

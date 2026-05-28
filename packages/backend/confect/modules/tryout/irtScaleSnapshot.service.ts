@@ -1,5 +1,5 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import {
   loadValidatedScaleSetData,
   loadValidatedScaleTryoutSets,
@@ -45,21 +45,22 @@ export function hasPublishedScaleChanged(args: {
 /** Builds a publishable official scale snapshot when all items are calibrated. */
 export const getPublishableScaleSnapshot = Effect.fn(
   "irt.scales.getPublishableScaleSnapshot"
-)(function* (db: ConvexMutationCtx["db"], tryoutId: Id<"tryouts">) {
-  const tryout = yield* Effect.promise(() => db.get(tryoutId));
+)(function* (tryoutId: Id<"tryouts">) {
+  const reader = yield* DatabaseReader;
+  const tryout = yield* reader
+    .table("tryouts")
+    .get(tryoutId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!tryout) {
     return null;
   }
 
-  const tryoutSets = yield* loadValidatedScaleTryoutSets(db, tryout);
+  const tryoutSets = yield* loadValidatedScaleTryoutSets(tryout);
   const perSetData = yield* Effect.all(
     tryoutSets.map(({ set }) =>
       Effect.gen(function* () {
-        const { itemParams, questions } = yield* loadValidatedScaleSetData(
-          db,
-          set
-        );
+        const { itemParams, questions } = yield* loadValidatedScaleSetData(set);
         const paramsByQuestionId = new Map(
           itemParams.map((params) => [params.questionId, params])
         );

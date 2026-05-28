@@ -1,5 +1,9 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  StorageWriter,
+} from "@repo/backend/confect/_generated/services";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/confect/modules/content/constants";
 import type {
   ContentType,
@@ -11,8 +15,7 @@ import {
   assertContentSyncBatchSize,
   ContentSyncError,
 } from "@repo/backend/confect/modules/content/contentSync.shared";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option } from "effect";
 
 type ContentId =
   | Id<"articleContents">
@@ -22,17 +25,17 @@ type ContentId =
 /** Builds a name to author-id cache for sync batches. */
 export const buildAuthorCache = Effect.fn(
   "contentSync.helpers.buildAuthorCache"
-)(function* (ctx: ConvexMutationCtx, authorNames: readonly string[]) {
+)(function* (authorNames: readonly string[]) {
+  const reader = yield* DatabaseReader;
   const cache = new Map<string, Id<"authors">>();
   const uniqueNames = [...new Set(authorNames)];
 
   for (const name of uniqueNames) {
-    const author = yield* Effect.promise(() =>
-      ctx.db
-        .query("authors")
-        .withIndex("by_name", (query) => query.eq("name", name))
-        .unique()
-    );
+    const author = yield* reader
+      .table("authors")
+      .index("by_name", (query) => query.eq("name", name))
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (author) {
       cache.set(name, author._id);
@@ -45,19 +48,15 @@ export const buildAuthorCache = Effect.fn(
 /** Deletes content-author links for one synced content row. */
 export const deleteContentAuthorLinks = Effect.fn(
   "contentSync.helpers.deleteContentAuthorLinks"
-)(function* (
-  ctx: ConvexMutationCtx,
-  contentId: ContentId,
-  contentType: ContentType
-) {
-  const existingLinks = yield* Effect.promise(() =>
-    ctx.db
-      .query("contentAuthors")
-      .withIndex("by_contentId_and_contentType_and_authorId", (query) =>
-        query.eq("contentId", contentId).eq("contentType", contentType)
-      )
-      .take(CONTENT_SYNC_BATCH_LIMITS.authors + 1)
-  );
+)(function* (contentId: ContentId, contentType: ContentType) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const existingLinks = yield* reader
+    .table("contentAuthors")
+    .index("by_contentId_and_contentType_and_authorId", (query) =>
+      query.eq("contentId", contentId).eq("contentType", contentType)
+    )
+    .take(CONTENT_SYNC_BATCH_LIMITS.authors + 1);
 
   if (existingLinks.length > CONTENT_SYNC_BATCH_LIMITS.authors) {
     return yield* Effect.fail(
@@ -69,7 +68,7 @@ export const deleteContentAuthorLinks = Effect.fn(
   }
 
   for (const link of existingLinks) {
-    yield* Effect.promise(() => ctx.db.delete(link._id));
+    yield* writer.table("contentAuthors").delete(link._id);
   }
 });
 
@@ -77,12 +76,12 @@ export const deleteContentAuthorLinks = Effect.fn(
 export const syncContentAuthorsWithCache = Effect.fn(
   "contentSync.helpers.syncContentAuthorsWithCache"
 )(function* (
-  ctx: ConvexMutationCtx,
   contentId: ContentId,
   contentType: ContentType,
   authors: readonly { readonly name: string }[],
   authorCache: Map<string, Id<"authors">>
 ) {
+  const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
     functionName: "syncContentAuthorsWithCache",
     limit: CONTENT_SYNC_BATCH_LIMITS.authors,
@@ -106,7 +105,7 @@ export const syncContentAuthorsWithCache = Effect.fn(
     );
   }
 
-  yield* deleteContentAuthorLinks(ctx, contentId, contentType);
+  yield* deleteContentAuthorLinks(contentId, contentType);
   let linksCreated = 0;
 
   for (const [order, author] of authors.entries()) {
@@ -120,14 +119,12 @@ export const syncContentAuthorsWithCache = Effect.fn(
       );
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.insert("contentAuthors", {
-        authorId,
-        contentId,
-        contentType,
-        order,
-      })
-    );
+    yield* writer.table("contentAuthors").insert({
+      authorId,
+      contentId,
+      contentType,
+      order,
+    });
     linksCreated += 1;
   }
 
@@ -137,13 +134,13 @@ export const syncContentAuthorsWithCache = Effect.fn(
 /** Deletes article references for one article. */
 export const deleteArticleReferencesForArticle = Effect.fn(
   "contentSync.helpers.deleteArticleReferencesForArticle"
-)(function* (ctx: ConvexMutationCtx, articleId: Id<"articleContents">) {
-  const existingReferences = yield* Effect.promise(() =>
-    ctx.db
-      .query("articleReferences")
-      .withIndex("by_articleId", (query) => query.eq("articleId", articleId))
-      .take(CONTENT_SYNC_BATCH_LIMITS.articleReferences + 1)
-  );
+)(function* (articleId: Id<"articleContents">) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const existingReferences = yield* reader
+    .table("articleReferences")
+    .index("by_articleId", (query) => query.eq("articleId", articleId))
+    .take(CONTENT_SYNC_BATCH_LIMITS.articleReferences + 1);
 
   if (existingReferences.length > CONTENT_SYNC_BATCH_LIMITS.articleReferences) {
     return yield* Effect.fail(
@@ -155,7 +152,7 @@ export const deleteArticleReferencesForArticle = Effect.fn(
   }
 
   for (const reference of existingReferences) {
-    yield* Effect.promise(() => ctx.db.delete(reference._id));
+    yield* writer.table("articleReferences").delete(reference._id);
   }
 });
 
@@ -163,7 +160,6 @@ export const deleteArticleReferencesForArticle = Effect.fn(
 export const replaceArticleReferences = Effect.fn(
   "contentSync.helpers.replaceArticleReferences"
 )(function* (
-  ctx: ConvexMutationCtx,
   articleId: Id<"articleContents">,
   references: readonly {
     readonly authors: string;
@@ -181,23 +177,22 @@ export const replaceArticleReferences = Effect.fn(
     received: references.length,
     unit: "article references",
   });
-  yield* deleteArticleReferencesForArticle(ctx, articleId);
+  const writer = yield* DatabaseWriter;
+  yield* deleteArticleReferencesForArticle(articleId);
   let created = 0;
 
   for (const [order, reference] of references.entries()) {
-    yield* Effect.promise(() =>
-      ctx.db.insert("articleReferences", {
-        articleId,
-        authors: reference.authors,
-        citation: reference.citation,
-        details: reference.details,
-        order,
-        publication: reference.publication,
-        title: reference.title,
-        url: reference.url,
-        year: reference.year,
-      })
-    );
+    yield* writer.table("articleReferences").insert({
+      articleId,
+      authors: reference.authors,
+      citation: reference.citation,
+      details: reference.details,
+      order,
+      publication: reference.publication,
+      title: reference.title,
+      url: reference.url,
+      year: reference.year,
+    });
     created += 1;
   }
 
@@ -207,15 +202,15 @@ export const replaceArticleReferences = Effect.fn(
 /** Deletes choices for one exercise question. */
 export const deleteExerciseChoicesForQuestion = Effect.fn(
   "contentSync.helpers.deleteExerciseChoicesForQuestion"
-)(function* (ctx: ConvexMutationCtx, questionId: Id<"exerciseQuestions">) {
-  const existingChoices = yield* Effect.promise(() =>
-    ctx.db
-      .query("exerciseChoices")
-      .withIndex("by_questionId_and_locale", (query) =>
-        query.eq("questionId", questionId)
-      )
-      .take(CONTENT_SYNC_BATCH_LIMITS.exerciseChoices + 1)
-  );
+)(function* (questionId: Id<"exerciseQuestions">) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const existingChoices = yield* reader
+    .table("exerciseChoices")
+    .index("by_questionId_and_locale", (query) =>
+      query.eq("questionId", questionId)
+    )
+    .take(CONTENT_SYNC_BATCH_LIMITS.exerciseChoices + 1);
 
   if (existingChoices.length > CONTENT_SYNC_BATCH_LIMITS.exerciseChoices) {
     return yield* Effect.fail(
@@ -226,46 +221,42 @@ export const deleteExerciseChoicesForQuestion = Effect.fn(
   }
 
   for (const choice of existingChoices) {
-    yield* Effect.promise(() => ctx.db.delete(choice._id));
+    yield* writer.table("exerciseChoices").delete(choice._id);
   }
 });
 
 /** Replaces choices for one exercise question. */
 export const replaceExerciseChoices = Effect.fn(
   "contentSync.helpers.replaceExerciseChoices"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly choices: readonly {
-      readonly isCorrect: boolean;
-      readonly label: string;
-      readonly optionKey: string;
-      readonly order: number;
-    }[];
-    readonly locale: Locale;
-    readonly questionId: Id<"exerciseQuestions">;
-  }
-) {
+)(function* (args: {
+  readonly choices: readonly {
+    readonly isCorrect: boolean;
+    readonly label: string;
+    readonly optionKey: string;
+    readonly order: number;
+  }[];
+  readonly locale: Locale;
+  readonly questionId: Id<"exerciseQuestions">;
+}) {
+  const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
     functionName: "replaceExerciseChoices",
     limit: CONTENT_SYNC_BATCH_LIMITS.exerciseChoices,
     received: args.choices.length,
     unit: "exercise choices",
   });
-  yield* deleteExerciseChoicesForQuestion(ctx, args.questionId);
+  yield* deleteExerciseChoicesForQuestion(args.questionId);
   let created = 0;
 
   for (const choice of args.choices) {
-    yield* Effect.promise(() =>
-      ctx.db.insert("exerciseChoices", {
-        isCorrect: choice.isCorrect,
-        label: choice.label,
-        locale: args.locale,
-        optionKey: choice.optionKey,
-        order: choice.order,
-        questionId: args.questionId,
-      })
-    );
+    yield* writer.table("exerciseChoices").insert({
+      isCorrect: choice.isCorrect,
+      label: choice.label,
+      locale: args.locale,
+      optionKey: choice.optionKey,
+      order: choice.order,
+      questionId: args.questionId,
+    });
     created += 1;
   }
 
@@ -275,8 +266,13 @@ export const replaceExerciseChoices = Effect.fn(
 /** Deletes one exercise question and linked search/authors/choices. */
 export const deleteExerciseQuestion = Effect.fn(
   "contentSync.helpers.deleteExerciseQuestion"
-)(function* (ctx: ConvexMutationCtx, questionId: Id<"exerciseQuestions">) {
-  const question = yield* Effect.promise(() => ctx.db.get(questionId));
+)(function* (questionId: Id<"exerciseQuestions">) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const question = yield* reader
+    .table("exerciseQuestions")
+    .get(questionId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (question) {
     const searchRef = buildContentSearchRef({
@@ -287,16 +283,21 @@ export const deleteExerciseQuestion = Effect.fn(
     yield* deleteContentSearch(searchRef.content_id);
   }
 
-  yield* deleteContentAuthorLinks(ctx, questionId, "exercise");
-  yield* deleteExerciseChoicesForQuestion(ctx, questionId);
-  yield* Effect.promise(() => ctx.db.delete(questionId));
+  yield* deleteContentAuthorLinks(questionId, "exercise");
+  yield* deleteExerciseChoicesForQuestion(questionId);
+  yield* writer.table("exerciseQuestions").delete(questionId);
 });
 
 /** Deletes a subject section and its linked read models. */
 export const deleteSubjectSection = Effect.fn(
   "contentSync.helpers.deleteSubjectSection"
-)(function* (ctx: ConvexMutationCtx, sectionId: Id<"subjectSections">) {
-  const section = yield* Effect.promise(() => ctx.db.get(sectionId));
+)(function* (sectionId: Id<"subjectSections">) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const section = yield* reader
+    .table("subjectSections")
+    .get(sectionId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (section) {
     const searchRef = buildContentSearchRef({
@@ -307,8 +308,8 @@ export const deleteSubjectSection = Effect.fn(
     yield* deleteContentSearch(searchRef.content_id);
   }
 
-  yield* deleteContentAuthorLinks(ctx, sectionId, "subject");
-  yield* Effect.promise(() => ctx.db.delete(sectionId));
+  yield* deleteContentAuthorLinks(sectionId, "subject");
+  yield* writer.table("subjectSections").delete(sectionId);
 });
 
 /** Updates audio content records after content hash changes. */
@@ -320,17 +321,17 @@ export const resetAudioForContentHash = Effect.fn(
     | { readonly id: Id<"subjectSections">; readonly type: "subject" };
   newHash: string;
 }) {
-  const ctx = yield* MutationCtx;
-  const audios = yield* Effect.promise(() =>
-    ctx.db
-      .query("contentAudios")
-      .withIndex("by_contentRefType_and_contentRefId_and_locale", (query) =>
-        query
-          .eq("contentRef.type", args.contentRef.type)
-          .eq("contentRef.id", args.contentRef.id)
-      )
-      .take(10)
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const storage = yield* StorageWriter;
+  const audios = yield* reader
+    .table("contentAudios")
+    .index("by_contentRefType_and_contentRefId_and_locale", (query) =>
+      query
+        .eq("contentRef.type", args.contentRef.type)
+        .eq("contentRef.id", args.contentRef.id)
+    )
+    .take(10);
   const now = yield* Clock.currentTimeMillis;
 
   for (const audio of audios) {
@@ -340,22 +341,22 @@ export const resetAudioForContentHash = Effect.fn(
 
     if (audio.audioStorageId) {
       const audioStorageId = audio.audioStorageId;
-      yield* Effect.promise(() => ctx.storage.delete(audioStorageId));
+      yield* storage
+        .delete(audioStorageId)
+        .pipe(Effect.catchTag("BlobNotFoundError", () => Effect.succeed(null)));
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.patch(audio._id, {
-        audioDuration: undefined,
-        audioSize: undefined,
-        audioStorageId: undefined,
-        contentHash: args.newHash,
-        errorMessage: undefined,
-        failedAt: undefined,
-        generationAttempts: 0,
-        script: undefined,
-        status: "pending",
-        updatedAt: now,
-      })
-    );
+    yield* writer.table("contentAudios").patch(audio._id, {
+      audioDuration: undefined,
+      audioSize: undefined,
+      audioStorageId: undefined,
+      contentHash: args.newHash,
+      errorMessage: undefined,
+      failedAt: undefined,
+      generationAttempts: 0,
+      script: undefined,
+      status: "pending",
+      updatedAt: now,
+    });
   }
 });

@@ -1,11 +1,44 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import * as school_class_mutations from "@repo/backend/confect/modules/school/classes/mutations.service";
-import * as school_class_queries from "@repo/backend/confect/modules/school/classes/queries.service";
-import * as school_materials from "@repo/backend/confect/modules/school/classMaterials.service";
-import * as school_forum_mutations from "@repo/backend/confect/modules/school/forums/mutations.service";
-import * as school_forum_queries from "@repo/backend/confect/modules/school/forums/queries.service";
-import * as school_forum_uploads from "@repo/backend/confect/modules/school/forums/uploads.service";
+import {
+  createClass as schoolClassMutations_createClass,
+  joinClass as schoolClassMutations_joinClass,
+  joinPublicClass as schoolClassMutations_joinPublicClass,
+  updateClassImage as schoolClassMutations_updateClassImage,
+  updateClassVisibility as schoolClassMutations_updateClassVisibility,
+} from "@repo/backend/confect/modules/school/classes/mutations.service";
+import {
+  getClasses as schoolClassQueries_getClasses,
+  getClassRoute as schoolClassQueries_getClassRoute,
+  getInviteCodes as schoolClassQueries_getInviteCodes,
+  getPeople as schoolClassQueries_getPeople,
+} from "@repo/backend/confect/modules/school/classes/queries.service";
+import {
+  createMaterialGroup as schoolMaterials_createMaterialGroup,
+  deleteMaterialGroup as schoolMaterials_deleteMaterialGroup,
+  getMaterialGroups as schoolMaterials_getMaterialGroups,
+  publishMaterialGroup as schoolMaterials_publishMaterialGroup,
+  reorderMaterialGroup as schoolMaterials_reorderMaterialGroup,
+  updateMaterialGroup as schoolMaterials_updateMaterialGroup,
+} from "@repo/backend/confect/modules/school/classMaterials.service";
+import {
+  createForum as schoolForumMutations_createForum,
+  createForumPost as schoolForumMutations_createForumPost,
+  markForumRead as schoolForumMutations_markForumRead,
+  toggleForumReaction as schoolForumMutations_toggleForumReaction,
+  togglePostReaction as schoolForumMutations_togglePostReaction,
+} from "@repo/backend/confect/modules/school/forums/mutations.service";
+import {
+  getForum as schoolForumQueries_getForum,
+  getForumPosts as schoolForumQueries_getForumPosts,
+  getForums as schoolForumQueries_getForums,
+} from "@repo/backend/confect/modules/school/forums/queries.service";
+import {
+  deleteExpiredPendingUpload as schoolForumUploads_deleteExpiredPendingUpload,
+  discardForumUploads as schoolForumUploads_discardForumUploads,
+  generateUploadUrl as schoolForumUploads_generateUploadUrl,
+  saveForumUpload as schoolForumUploads_saveForumUpload,
+} from "@repo/backend/confect/modules/school/forums/uploads.service";
 import { Effect, Layer } from "effect";
 
 const classes_materials_mutations_createMaterialGroupImpl = FunctionImpl.make(
@@ -13,7 +46,7 @@ const classes_materials_mutations_createMaterialGroupImpl = FunctionImpl.make(
   "classes.materials.mutations",
   "createMaterialGroup",
   (args) =>
-    school_materials.createMaterialGroup(args).pipe(
+    schoolMaterials_createMaterialGroup(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -26,7 +59,7 @@ const classes_materials_mutations_deleteMaterialGroupImpl = FunctionImpl.make(
   "classes.materials.mutations",
   "deleteMaterialGroup",
   (args) =>
-    school_materials.deleteMaterialGroup(args).pipe(
+    schoolMaterials_deleteMaterialGroup(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -38,7 +71,7 @@ const classes_materials_mutations_publishMaterialGroupImpl = FunctionImpl.make(
   api,
   "classes.materials.mutations",
   "publishMaterialGroup",
-  (args) => school_materials.publishMaterialGroup(args)
+  (args) => schoolMaterials_publishMaterialGroup(args)
 );
 
 const classes_materials_mutations_reorderMaterialGroupImpl = FunctionImpl.make(
@@ -46,7 +79,7 @@ const classes_materials_mutations_reorderMaterialGroupImpl = FunctionImpl.make(
   "classes.materials.mutations",
   "reorderMaterialGroup",
   (args) =>
-    school_materials.reorderMaterialGroup(args).pipe(
+    schoolMaterials_reorderMaterialGroup(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -59,7 +92,7 @@ const classes_materials_mutations_updateMaterialGroupImpl = FunctionImpl.make(
   "classes.materials.mutations",
   "updateMaterialGroup",
   (args) =>
-    school_materials.updateMaterialGroup(args).pipe(
+    schoolMaterials_updateMaterialGroup(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -72,7 +105,7 @@ const classes_mutations_createClassImpl = FunctionImpl.make(
   "classes.mutations",
   "createClass",
   (args) =>
-    school_class_mutations.createClass(args).pipe(
+    schoolClassMutations_createClass(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -85,7 +118,7 @@ const classes_mutations_joinClassImpl = FunctionImpl.make(
   "classes.mutations",
   "joinClass",
   (args) =>
-    school_class_mutations.joinClass(args).pipe(
+    schoolClassMutations_joinClass(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -98,7 +131,7 @@ const classes_mutations_joinPublicClassImpl = FunctionImpl.make(
   "classes.mutations",
   "joinPublicClass",
   (args) =>
-    school_class_mutations.joinPublicClass(args).pipe(
+    schoolClassMutations_joinPublicClass(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -111,7 +144,7 @@ const classes_mutations_updateClassImageImpl = FunctionImpl.make(
   "classes.mutations",
   "updateClassImage",
   (args) =>
-    school_class_mutations.updateClassImage(args).pipe(
+    schoolClassMutations_updateClassImage(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -124,7 +157,7 @@ const classes_mutations_updateClassVisibilityImpl = FunctionImpl.make(
   "classes.mutations",
   "updateClassVisibility",
   (args) =>
-    school_class_mutations.updateClassVisibility(args).pipe(
+    schoolClassMutations_updateClassVisibility(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -137,7 +170,7 @@ const classes_queries_getClassesImpl = FunctionImpl.make(
   "classes.queries",
   "getClasses",
   (args) =>
-    school_class_queries.getClasses(args).pipe(
+    schoolClassQueries_getClasses(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -150,9 +183,9 @@ const classes_queries_getClassRouteImpl = FunctionImpl.make(
   "classes.queries",
   "getClassRoute",
   (args) =>
-    school_class_queries
-      .getClassRoute(args)
-      .pipe(Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)))
+    schoolClassQueries_getClassRoute(args).pipe(
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+    )
 );
 
 const classes_queries_getPeopleImpl = FunctionImpl.make(
@@ -160,7 +193,7 @@ const classes_queries_getPeopleImpl = FunctionImpl.make(
   "classes.queries",
   "getPeople",
   (args) =>
-    school_class_queries.getPeople(args).pipe(
+    schoolClassQueries_getPeople(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -173,7 +206,7 @@ const classes_queries_getInviteCodesImpl = FunctionImpl.make(
   "classes.queries",
   "getInviteCodes",
   (args) =>
-    school_class_queries.getInviteCodes(args).pipe(
+    schoolClassQueries_getInviteCodes(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -186,7 +219,7 @@ const classes_materials_queries_getMaterialGroupsImpl = FunctionImpl.make(
   "classes.materials.queries",
   "getMaterialGroups",
   (args) =>
-    school_materials.getMaterialGroups(args).pipe(
+    schoolMaterials_getMaterialGroups(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -199,7 +232,7 @@ const classes_forums_mutations_forums_createForumImpl = FunctionImpl.make(
   "classes.forums.mutations.forums",
   "createForum",
   (args) =>
-    school_forum_mutations.createForum(args).pipe(
+    schoolForumMutations_createForum(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -212,7 +245,7 @@ const classes_forums_mutations_posts_createForumPostImpl = FunctionImpl.make(
   "classes.forums.mutations.posts",
   "createForumPost",
   (args) =>
-    school_forum_mutations.createForumPost(args).pipe(
+    schoolForumMutations_createForumPost(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -226,7 +259,7 @@ const classes_forums_mutations_reactions_toggleForumReactionImpl =
     "classes.forums.mutations.reactions",
     "toggleForumReaction",
     (args) =>
-      school_forum_mutations.toggleForumReaction(args).pipe(
+      schoolForumMutations_toggleForumReaction(args).pipe(
         Effect.catchTags({
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
@@ -240,7 +273,7 @@ const classes_forums_mutations_reactions_togglePostReactionImpl =
     "classes.forums.mutations.reactions",
     "togglePostReaction",
     (args) =>
-      school_forum_mutations.togglePostReaction(args).pipe(
+      schoolForumMutations_togglePostReaction(args).pipe(
         Effect.catchTags({
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
@@ -253,7 +286,7 @@ const classes_forums_queries_forums_getForumsImpl = FunctionImpl.make(
   "classes.forums.queries.forums",
   "getForums",
   (args) =>
-    school_forum_queries.getForums(args).pipe(
+    schoolForumQueries_getForums(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -266,7 +299,7 @@ const classes_forums_queries_forums_getForumImpl = FunctionImpl.make(
   "classes.forums.queries.forums",
   "getForum",
   (args) =>
-    school_forum_queries.getForum(args).pipe(
+    schoolForumQueries_getForum(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -279,7 +312,7 @@ const classes_forums_mutations_readState_markForumReadImpl = FunctionImpl.make(
   "classes.forums.mutations.readState",
   "markForumRead",
   (args) =>
-    school_forum_mutations.markForumRead(args).pipe(
+    schoolForumMutations_markForumRead(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -293,9 +326,9 @@ const classes_forums_mutations_uploads_discardForumUploadsImpl =
     "classes.forums.mutations.uploads",
     "discardForumUploads",
     (args) =>
-      school_forum_uploads
-        .discardForumUploads(args)
-        .pipe(Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)))
+      schoolForumUploads_discardForumUploads(args).pipe(
+        Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+      )
   );
 
 const classes_forums_mutations_uploads_generateUploadUrlImpl =
@@ -304,7 +337,7 @@ const classes_forums_mutations_uploads_generateUploadUrlImpl =
     "classes.forums.mutations.uploads",
     "generateUploadUrl",
     (args) =>
-      school_forum_uploads.generateUploadUrl(args).pipe(
+      schoolForumUploads_generateUploadUrl(args).pipe(
         Effect.catchTags({
           ClassActionError: (error) => Effect.die(error),
           UnauthorizedUser: (error) => Effect.die(error),
@@ -317,7 +350,7 @@ const classes_forums_mutations_uploads_saveForumUploadImpl = FunctionImpl.make(
   "classes.forums.mutations.uploads",
   "saveForumUpload",
   (args) =>
-    school_forum_uploads.saveForumUpload(args).pipe(
+    schoolForumUploads_saveForumUpload(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),
@@ -330,7 +363,7 @@ const classes_forums_internalMutations_deleteExpiredPendingUploadImpl =
     api,
     "classes.forums.internalMutations",
     "deleteExpiredPendingUpload",
-    (args) => school_forum_uploads.deleteExpiredPendingUpload(args)
+    (args) => schoolForumUploads_deleteExpiredPendingUpload(args)
   );
 
 const classes_forums_queries_pages_getForumPostsImpl = FunctionImpl.make(
@@ -338,7 +371,7 @@ const classes_forums_queries_pages_getForumPostsImpl = FunctionImpl.make(
   "classes.forums.queries.pages",
   "getForumPosts",
   (args) =>
-    school_forum_queries.getForumPosts(args).pipe(
+    schoolForumQueries_getForumPosts(args).pipe(
       Effect.catchTags({
         ClassActionError: (error) => Effect.die(error),
         UnauthorizedUser: (error) => Effect.die(error),

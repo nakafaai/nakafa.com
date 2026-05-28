@@ -3,7 +3,6 @@
 import { StudentIcon, TeacherIcon } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import refs from "@repo/backend/confect/_generated/refs";
-import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   Avatar,
   AvatarFallback,
@@ -11,9 +10,9 @@ import {
 } from "@repo/design-system/components/ui/avatar";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
+import { usePaginatedQuery } from "@/lib/confect/pagination";
 import { useClass } from "@/lib/context/use-class";
 import { searchParsers } from "@/lib/nuqs/search";
 import { getInitialName } from "@/lib/utils/helper";
@@ -30,7 +29,7 @@ export function SchoolClassesPeopleList() {
   const [debouncedQ] = useDebouncedValue(q, DEBOUNCE_TIME);
 
   const { results, status } = usePaginatedQuery(
-    toConvexReference(refs.public.classes.queries.getPeople),
+    refs.public.classes.queries.getPeople,
     {
       classId,
       q: debouncedQ,

@@ -24,6 +24,7 @@ export const ExerciseSets = Table.make(
     syncedAt: Schema.Number,
   })
 )
+  .index("by_syncedAt", ["syncedAt"])
   .index("by_locale_and_slug", ["locale", "slug"])
   .index("by_locale_and_type_and_exerciseType", [
     "locale",

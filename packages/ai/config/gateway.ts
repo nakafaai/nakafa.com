@@ -1,20 +1,21 @@
 import { devToolsMiddleware } from "@ai-sdk/devtools";
-import { createGateway } from "@ai-sdk/gateway";
+import { createGateway, type GatewayModelId } from "@ai-sdk/gateway";
 import { keys } from "@repo/ai/keys";
 import { wrapLanguageModel } from "ai";
 
-export const gateway = createGateway({
-  apiKey: keys().AI_GATEWAY_API_KEY,
-  headers: {
-    "http-referer": "https://nakafa.com",
-    "x-title": "nakafa.com",
-  },
-});
+/** Creates an AI Gateway client after the caller enters an AI effect. */
+function createNakafaGateway() {
+  return createGateway({
+    apiKey: keys().AI_GATEWAY_API_KEY,
+    headers: {
+      "http-referer": "https://nakafa.com",
+      "x-title": "nakafa.com",
+    },
+  });
+}
 
 /** Enables AI SDK DevTools only for local development workflows. */
-function shouldUseDevTools() {
-  const env = keys();
-
+function shouldUseDevTools(env: ReturnType<typeof keys>) {
   if (env.AI_SDK_DEVTOOLS !== "true") {
     return false;
   }
@@ -35,12 +36,12 @@ function shouldUseDevTools() {
  * AI SDK DevTools is intentionally local development-only because it stores
  * prompts, tool inputs, and outputs in plain text under `.devtools`.
  */
-export function createWrappedLanguageModel(
-  modelId: Parameters<typeof gateway>[number]
-) {
+export function createWrappedLanguageModel(modelId: GatewayModelId) {
+  const env = keys();
+  const gateway = createNakafaGateway();
   const model = gateway(modelId);
 
-  if (shouldUseDevTools()) {
+  if (shouldUseDevTools(env)) {
     return wrapLanguageModel({
       model,
       middleware: devToolsMiddleware(),

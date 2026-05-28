@@ -1,10 +1,8 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { QueryCtx } from "@repo/backend/confect/_generated/services";
-import type { ConvexQueryCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { IrtError } from "@repo/backend/confect/modules/tryout/irt.errors";
 import { getCalibrationAttemptCacheLimit } from "@repo/backend/confect/modules/tryout/irt.policy";
-import { getLatestScaleVersionForTryout } from "@repo/backend/confect/modules/tryout/irtScaleRead.service";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 interface PaginationOpts {
   readonly cursor: string | null;
@@ -19,8 +17,11 @@ interface PaginationOpts {
 export const getCalibrationQuestionsForSet = Effect.fn(
   "irt.queries.getCalibrationQuestionsForSet"
 )(function* (args: { readonly setId: Id<"exerciseSets"> }) {
-  const ctx = yield* QueryCtx;
-  const set = yield* Effect.promise(() => ctx.db.get(args.setId));
+  const reader = yield* DatabaseReader;
+  const set = yield* reader
+    .table("exerciseSets")
+    .get(args.setId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!set) {
     return yield* Effect.fail(
@@ -31,17 +32,18 @@ export const getCalibrationQuestionsForSet = Effect.fn(
     );
   }
 
-  const [questions, existingParams] = yield* Effect.promise(() =>
-    Promise.all([
-      ctx.db
-        .query("exerciseQuestions")
-        .withIndex("by_setId", (query) => query.eq("setId", args.setId))
+  const [questions, existingParams] = yield* Effect.all(
+    [
+      reader
+        .table("exerciseQuestions")
+        .index("by_setId", (query) => query.eq("setId", args.setId))
         .take(set.questionCount + 1),
-      ctx.db
-        .query("exerciseItemParameters")
-        .withIndex("by_setId", (query) => query.eq("setId", args.setId))
+      reader
+        .table("exerciseItemParameters")
+        .index("by_setId", (query) => query.eq("setId", args.setId))
         .take(set.questionCount + 1),
-    ])
+    ],
+    { concurrency: "unbounded" }
   );
 
   if (questions.length > set.questionCount) {
@@ -87,8 +89,11 @@ export const getCalibrationResponsesPageForSet = Effect.fn(
   readonly paginationOpts: PaginationOpts;
   readonly setId: Id<"exerciseSets">;
 }) {
-  const ctx = yield* QueryCtx;
-  const set = yield* Effect.promise(() => ctx.db.get(args.setId));
+  const reader = yield* DatabaseReader;
+  const set = yield* reader
+    .table("exerciseSets")
+    .get(args.setId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!set) {
     return yield* Effect.fail(
@@ -99,14 +104,10 @@ export const getCalibrationResponsesPageForSet = Effect.fn(
     );
   }
 
-  const responsePage = yield* Effect.promise(() =>
-    ctx.db
-      .query("irtCalibrationAttempts")
-      .withIndex("by_setId_and_attemptId", (query) =>
-        query.eq("setId", args.setId)
-      )
-      .paginate(args.paginationOpts)
-  );
+  const responsePage = yield* reader
+    .table("irtCalibrationAttempts")
+    .index("by_setId_and_attemptId", (query) => query.eq("setId", args.setId))
+    .paginate(args.paginationOpts);
 
   for (const attempt of responsePage.page) {
     if (attempt.responses.length <= set.questionCount) {
@@ -139,7 +140,6 @@ export const getCalibrationResponsesPageForSet = Effect.fn(
 const getLatestCompletedCalibrationRunStartedAt = Effect.fn(
   "irt.queries.getLatestCompletedCalibrationRunStartedAt"
 )(function* (
-  ctx: ConvexQueryCtx,
   cache: Map<Id<"exerciseSets">, number | undefined>,
   setId: Id<"exerciseSets">
 ) {
@@ -147,16 +147,16 @@ const getLatestCompletedCalibrationRunStartedAt = Effect.fn(
     return cache.get(setId);
   }
 
-  const latestCompletedRun = yield* Effect.promise(() =>
-    ctx.db
-      .query("irtCalibrationRuns")
-      .withIndex("by_setId_and_status_and_startedAt", (query) =>
-        query.eq("setId", setId).eq("status", "completed")
-      )
-      .order("desc")
-      .first()
-  );
-  const startedAt = latestCompletedRun?.startedAt;
+  const reader = yield* DatabaseReader;
+  const latestCompletedRun = yield* reader
+    .table("irtCalibrationRuns")
+    .index(
+      "by_setId_and_status_and_startedAt",
+      (query) => query.eq("setId", setId).eq("status", "completed"),
+      "desc"
+    )
+    .first();
+  const startedAt = Option.getOrUndefined(latestCompletedRun)?.startedAt;
   cache.set(setId, startedAt);
   return startedAt;
 });
@@ -165,30 +165,27 @@ const getLatestCompletedCalibrationRunStartedAt = Effect.fn(
 export const getCalibrationCacheIntegrity = Effect.fn(
   "irt.queries.getCalibrationCacheIntegrity"
 )(function* (args: { readonly paginationOpts: PaginationOpts }) {
-  const ctx = yield* QueryCtx;
-  const sets = yield* Effect.promise(() =>
-    ctx.db.query("exerciseSets").paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const sets = yield* reader
+    .table("exerciseSets")
+    .index("by_syncedAt")
+    .paginate(args.paginationOpts);
   let missingStatsSetCount = 0;
   let oversizedSetCount = 0;
 
   for (const set of sets.page) {
-    const cacheStats = yield* Effect.promise(() =>
-      ctx.db
-        .query("irtCalibrationCacheStats")
-        .withIndex("by_setId", (query) => query.eq("setId", set._id))
-        .unique()
-    );
+    const cacheStats = yield* reader
+      .table("irtCalibrationCacheStats")
+      .get("by_setId", set._id)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
     if (!cacheStats) {
-      const cachedAttempt = yield* Effect.promise(() =>
-        ctx.db
-          .query("irtCalibrationAttempts")
-          .withIndex("by_setId", (query) => query.eq("setId", set._id))
-          .first()
-      );
+      const cachedAttempt = yield* reader
+        .table("irtCalibrationAttempts")
+        .index("by_setId", (query) => query.eq("setId", set._id))
+        .first();
 
-      if (cachedAttempt) {
+      if (Option.isSome(cachedAttempt)) {
         missingStatsSetCount += 1;
       }
 
@@ -217,33 +214,33 @@ export const getCalibrationCacheIntegrity = Effect.fn(
 export const getScaleQualityIntegrity = Effect.fn(
   "irt.queries.getScaleQualityIntegrity"
 )(function* (args: { readonly paginationOpts: PaginationOpts }) {
-  const ctx = yield* QueryCtx;
-  const tryouts = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryouts")
-      .withIndex("by_isActive", (query) => query.eq("isActive", true))
-      .paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const tryouts = yield* reader
+    .table("tryouts")
+    .index("by_isActive", (query) => query.eq("isActive", true))
+    .paginate(args.paginationOpts);
   let missingQualityCheckTryoutCount = 0;
   let unstartableTryoutCount = 0;
 
   for (const tryout of tryouts.page) {
-    const qualityCheck = yield* Effect.promise(() =>
-      ctx.db
-        .query("irtScaleQualityChecks")
-        .withIndex("by_tryoutId", (query) => query.eq("tryoutId", tryout._id))
-        .unique()
-    );
-    const latestScaleVersion = yield* getLatestScaleVersionForTryout(
-      ctx.db,
-      tryout._id
-    );
+    const qualityCheck = yield* reader
+      .table("irtScaleQualityChecks")
+      .get("by_tryoutId", tryout._id)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+    const latestScaleVersion = yield* reader
+      .table("irtScaleVersions")
+      .index(
+        "by_tryoutId_and_publishedAt",
+        (query) => query.eq("tryoutId", tryout._id),
+        "desc"
+      )
+      .first();
 
     if (!qualityCheck) {
       missingQualityCheckTryoutCount += 1;
     }
 
-    if (!latestScaleVersion) {
+    if (Option.isNone(latestScaleVersion)) {
       unstartableTryoutCount += 1;
     }
   }
@@ -260,10 +257,11 @@ export const getScaleQualityIntegrity = Effect.fn(
 export const getCalibrationQueueAttemptIntegrity = Effect.fn(
   "irt.queries.getCalibrationQueueAttemptIntegrity"
 )(function* (args: { readonly paginationOpts: PaginationOpts }) {
-  const ctx = yield* QueryCtx;
-  const attempts = yield* Effect.promise(() =>
-    ctx.db.query("irtCalibrationAttempts").paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const attempts = yield* reader
+    .table("irtCalibrationAttempts")
+    .index("by_setId")
+    .paginate(args.paginationOpts);
   const latestCompletedRunStartedAtBySetId = new Map<
     Id<"exerciseSets">,
     number | undefined
@@ -275,7 +273,6 @@ export const getCalibrationQueueAttemptIntegrity = Effect.fn(
   for (const attempt of attempts.page) {
     const latestCompletedRunStartedAt =
       yield* getLatestCompletedCalibrationRunStartedAt(
-        ctx,
         latestCompletedRunStartedAtBySetId,
         attempt.setId
       );
@@ -287,14 +284,12 @@ export const getCalibrationQueueAttemptIntegrity = Effect.fn(
       continue;
     }
 
-    const queueEntries = yield* Effect.promise(() =>
-      ctx.db
-        .query("irtCalibrationQueue")
-        .withIndex("by_attemptId_and_enqueuedAt", (query) =>
-          query.eq("attemptId", attempt.attemptId)
-        )
-        .take(2)
-    );
+    const queueEntries = yield* reader
+      .table("irtCalibrationQueue")
+      .index("by_attemptId_and_enqueuedAt", (query) =>
+        query.eq("attemptId", attempt.attemptId)
+      )
+      .take(2);
 
     if (queueEntries.length === 0) {
       missingPendingQueueAttemptCount += 1;
@@ -324,13 +319,11 @@ export const getCalibrationQueueAttemptIntegrity = Effect.fn(
 export const getCalibrationQueueEntryIntegrity = Effect.fn(
   "irt.queries.getCalibrationQueueEntryIntegrity"
 )(function* (args: { readonly paginationOpts: PaginationOpts }) {
-  const ctx = yield* QueryCtx;
-  const queueEntries = yield* Effect.promise(() =>
-    ctx.db
-      .query("irtCalibrationQueue")
-      .withIndex("by_enqueuedAt")
-      .paginate(args.paginationOpts)
-  );
+  const reader = yield* DatabaseReader;
+  const queueEntries = yield* reader
+    .table("irtCalibrationQueue")
+    .index("by_enqueuedAt")
+    .paginate(args.paginationOpts);
   const latestCompletedRunStartedAtBySetId = new Map<
     Id<"exerciseSets">,
     number | undefined
@@ -339,14 +332,10 @@ export const getCalibrationQueueEntryIntegrity = Effect.fn(
   let staleQueueEntryCount = 0;
 
   for (const queueEntry of queueEntries.page) {
-    const attempt = yield* Effect.promise(() =>
-      ctx.db
-        .query("irtCalibrationAttempts")
-        .withIndex("by_attemptId", (query) =>
-          query.eq("attemptId", queueEntry.attemptId)
-        )
-        .unique()
-    );
+    const attempt = yield* reader
+      .table("irtCalibrationAttempts")
+      .get("by_attemptId", queueEntry.attemptId)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
     if (!attempt || attempt.setId !== queueEntry.setId) {
       orphanedQueueEntryCount += 1;
@@ -355,7 +344,6 @@ export const getCalibrationQueueEntryIntegrity = Effect.fn(
 
     const latestCompletedRunStartedAt =
       yield* getLatestCompletedCalibrationRunStartedAt(
-        ctx,
         latestCompletedRunStartedAtBySetId,
         queueEntry.setId
       );

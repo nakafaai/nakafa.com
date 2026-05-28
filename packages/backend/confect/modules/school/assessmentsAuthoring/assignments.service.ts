@@ -1,5 +1,8 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { AssessmentError } from "@repo/backend/confect/modules/school/assessments.errors";
 import { requireAssessment } from "@repo/backend/confect/modules/school/assessments.shared";
@@ -28,8 +31,9 @@ export const createAssignment = Effect.fn("assessments.createAssignment")(
     readonly title: string;
     readonly versionId: Id<"schoolAssessmentVersions">;
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
 
     if (args.classIds.length === 0) {
       return yield* Effect.fail(
@@ -41,18 +45,20 @@ export const createAssignment = Effect.fn("assessments.createAssignment")(
     }
 
     const assessment = yield* requireAssessment(
-      ctx,
       args.schoolId,
       args.assessmentId
     );
 
-    yield* requirePermission(ctx, PERMISSIONS.ASSESSMENT_PUBLISH, {
+    yield* requirePermission(PERMISSIONS.ASSESSMENT_PUBLISH, {
       classId: assessment.classId,
       schoolId: assessment.schoolId,
       userId: user.appUser._id,
     });
 
-    const version = yield* Effect.promise(() => ctx.db.get(args.versionId));
+    const version = yield* reader
+      .table("schoolAssessmentVersions")
+      .get(args.versionId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (
       !version ||
@@ -79,7 +85,7 @@ export const createAssignment = Effect.fn("assessments.createAssignment")(
     }
 
     const targetClasses = yield* Effect.all(
-      args.classIds.map((classId) => loadActiveClass(ctx, classId))
+      args.classIds.map((classId) => loadActiveClass(classId))
     );
 
     if (
@@ -96,8 +102,9 @@ export const createAssignment = Effect.fn("assessments.createAssignment")(
     }
 
     const now = yield* Clock.currentTimeMillis;
-    const assignmentId = yield* Effect.promise(() =>
-      ctx.db.insert("schoolAssessmentAssignments", {
+    const assignmentId = yield* writer
+      .table("schoolAssessmentAssignments")
+      .insert({
         assessmentId: args.assessmentId,
         closesAt: args.closesAt,
         createdBy: user.appUser._id,
@@ -116,17 +123,14 @@ export const createAssignment = Effect.fn("assessments.createAssignment")(
         updatedAt: now,
         updatedBy: user.appUser._id,
         versionId: version._id,
-      })
-    );
+      });
 
     for (const classId of args.classIds) {
-      yield* Effect.promise(() =>
-        ctx.db.insert("schoolAssessmentAssignmentTargets", {
-          assignmentId,
-          classId,
-          schoolId: args.schoolId,
-        })
-      );
+      yield* writer.table("schoolAssessmentAssignmentTargets").insert({
+        assignmentId,
+        classId,
+        schoolId: args.schoolId,
+      });
     }
 
     return assignmentId;

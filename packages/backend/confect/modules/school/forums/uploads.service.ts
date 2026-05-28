@@ -1,7 +1,11 @@
-import { Ref } from "@confect/core";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+  StorageWriter,
+} from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { ClassActionError } from "@repo/backend/confect/modules/school/classErrors";
 import { loadOpenForumWithAccess } from "@repo/backend/confect/modules/school/forums/access.service";
@@ -11,25 +15,26 @@ import {
   validateStoredForumAttachmentMetadata,
 } from "@repo/backend/confect/modules/school/forums/attachments.service";
 import { MAX_FORUM_POST_ATTACHMENTS } from "@repo/backend/confect/modules/school/forums/constants";
-import { Effect } from "effect";
+import { Duration, Effect, Option } from "effect";
 
 const STALE_FORUM_PENDING_UPLOAD_MAX_AGE_MS = 2 * 60 * 60 * 1000;
 
 /** Generates a pending forum attachment upload URL. */
 export const generateUploadUrl = Effect.fn("school.forums.generateUploadUrl")(
   function* (args: { forumId: Id<"schoolClassForums"> }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const scheduler = yield* Scheduler;
+    const storage = yield* StorageWriter;
+    const user = yield* requireAppUser();
     const userId = user.appUser._id;
-    const { forum } = yield* loadOpenForumWithAccess(ctx, args.forumId, userId);
-    const activePendingUploads = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolClassForumPendingUploads")
-        .withIndex("by_forumId_and_uploadedBy", (query) =>
-          query.eq("forumId", forum._id).eq("uploadedBy", userId)
-        )
-        .take(MAX_FORUM_POST_ATTACHMENTS)
-    );
+    const { forum } = yield* loadOpenForumWithAccess(args.forumId, userId);
+    const activePendingUploads = yield* reader
+      .table("schoolClassForumPendingUploads")
+      .index("by_forumId_and_uploadedBy", (query) =>
+        query.eq("forumId", forum._id).eq("uploadedBy", userId)
+      )
+      .take(MAX_FORUM_POST_ATTACHMENTS);
 
     if (activePendingUploads.length >= MAX_FORUM_POST_ATTACHMENTS) {
       return yield* Effect.fail(
@@ -39,28 +44,21 @@ export const generateUploadUrl = Effect.fn("school.forums.generateUploadUrl")(
       );
     }
 
-    const uploadUrl = yield* Effect.promise(() =>
-      ctx.storage.generateUploadUrl()
-    );
-    const uploadId = yield* Effect.promise(() =>
-      ctx.db.insert("schoolClassForumPendingUploads", {
+    const uploadUrl = yield* storage.generateUploadUrl();
+    const uploadId = yield* writer
+      .table("schoolClassForumPendingUploads")
+      .insert({
         classId: forum.classId,
         forumId: forum._id,
         uploadedBy: userId,
-      })
-    );
-    yield* Effect.promise(() =>
-      ctx.scheduler.runAfter(
-        STALE_FORUM_PENDING_UPLOAD_MAX_AGE_MS,
-        Ref.getFunctionReference(
-          refs.internal.classes.forums.internalMutations
-            .deleteExpiredPendingUpload
-        ),
-        { uploadId }
-      )
+      });
+    yield* scheduler.runAfter(
+      Duration.millis(STALE_FORUM_PENDING_UPLOAD_MAX_AGE_MS),
+      refs.internal.classes.forums.internalMutations.deleteExpiredPendingUpload,
+      { uploadId }
     );
 
-    return { uploadId, uploadUrl };
+    return { uploadId, uploadUrl: uploadUrl.toString() };
   }
 );
 
@@ -73,10 +71,14 @@ export const saveForumUpload = Effect.fn("school.forums.saveForumUpload")(
     type: string;
     uploadId: Id<"schoolClassForumPendingUploads">;
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
     const userId = user.appUser._id;
-    const upload = yield* Effect.promise(() => ctx.db.get(args.uploadId));
+    const upload = yield* reader
+      .table("schoolClassForumPendingUploads")
+      .get(args.uploadId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!upload || upload.uploadedBy !== userId) {
       return yield* Effect.fail(
@@ -86,7 +88,7 @@ export const saveForumUpload = Effect.fn("school.forums.saveForumUpload")(
       );
     }
 
-    yield* loadOpenForumWithAccess(ctx, upload.forumId, userId);
+    yield* loadOpenForumWithAccess(upload.forumId, userId);
 
     if (
       upload.storageId === args.storageId &&
@@ -110,20 +112,16 @@ export const saveForumUpload = Effect.fn("school.forums.saveForumUpload")(
       name: args.name,
       size: args.size,
     });
-    yield* validateStoredForumAttachmentMetadata(ctx, {
+    yield* validateStoredForumAttachmentMetadata({
       mimeType: args.type,
       size: args.size,
       storageId: args.storageId,
     });
 
-    const matchingPendingUploads = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolClassForumPendingUploads")
-        .withIndex("by_storageId", (query) =>
-          query.eq("storageId", args.storageId)
-        )
-        .take(2)
-    );
+    const matchingPendingUploads = yield* reader
+      .table("schoolClassForumPendingUploads")
+      .index("by_storageId", (query) => query.eq("storageId", args.storageId))
+      .take(2);
     const conflictingPendingUpload = matchingPendingUploads.find(
       (pendingUpload) => pendingUpload._id !== args.uploadId
     );
@@ -136,12 +134,11 @@ export const saveForumUpload = Effect.fn("school.forums.saveForumUpload")(
       );
     }
 
-    const existingAttachment = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolClassForumPostAttachments")
-        .withIndex("by_fileId", (query) => query.eq("fileId", args.storageId))
-        .first()
-    );
+    const existingAttachment = yield* reader
+      .table("schoolClassForumPostAttachments")
+      .index("by_fileId", (query) => query.eq("fileId", args.storageId))
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (existingAttachment) {
       return yield* Effect.fail(
@@ -151,14 +148,12 @@ export const saveForumUpload = Effect.fn("school.forums.saveForumUpload")(
       );
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.patch(args.uploadId, {
-        mimeType: args.type,
-        name: args.name,
-        size: args.size,
-        storageId: args.storageId,
-      })
-    );
+    yield* writer.table("schoolClassForumPendingUploads").patch(args.uploadId, {
+      mimeType: args.type,
+      name: args.name,
+      size: args.size,
+      storageId: args.storageId,
+    });
 
     return args.uploadId;
   }
@@ -168,18 +163,21 @@ export const saveForumUpload = Effect.fn("school.forums.saveForumUpload")(
 export const discardForumUploads = Effect.fn(
   "school.forums.discardForumUploads"
 )(function* (args: { uploadIds: Id<"schoolClassForumPendingUploads">[] }) {
-  const ctx = yield* MutationCtx;
-  const user = yield* requireAppUser(ctx);
+  const reader = yield* DatabaseReader;
+  const user = yield* requireAppUser();
   const userId = user.appUser._id;
 
   for (const uploadId of args.uploadIds) {
-    const upload = yield* Effect.promise(() => ctx.db.get(uploadId));
+    const upload = yield* reader
+      .table("schoolClassForumPendingUploads")
+      .get(uploadId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!upload || upload.uploadedBy !== userId) {
       continue;
     }
 
-    yield* deleteForumPendingUpload(ctx, upload);
+    yield* deleteForumPendingUpload(upload);
   }
 
   return null;
@@ -189,13 +187,16 @@ export const discardForumUploads = Effect.fn(
 export const deleteExpiredPendingUpload = Effect.fn(
   "school.forums.deleteExpiredPendingUpload"
 )(function* (args: { uploadId: Id<"schoolClassForumPendingUploads"> }) {
-  const ctx = yield* MutationCtx;
-  const upload = yield* Effect.promise(() => ctx.db.get(args.uploadId));
+  const reader = yield* DatabaseReader;
+  const upload = yield* reader
+    .table("schoolClassForumPendingUploads")
+    .get(args.uploadId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!upload) {
     return null;
   }
 
-  yield* deleteForumPendingUpload(ctx, upload);
+  yield* deleteForumPendingUpload(upload);
   return null;
 });

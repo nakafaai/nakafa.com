@@ -1,31 +1,36 @@
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { applyAttemptAggregatesDelta } from "@repo/backend/confect/modules/learning/exerciseAttemptUtils.service";
 import { failExercise } from "@repo/backend/confect/modules/learning/exercises/errors.service";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import { syncTryoutExerciseAttemptExpiry } from "@repo/backend/confect/modules/tryout/tryoutExpiry.service";
-import { getManyFrom } from "convex-helpers/server/relationships";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option } from "effect";
 
 /** Scores one answer against its question choices. */
 const scoreExerciseAnswer = Effect.fn("exercises.scoreExerciseAnswer")(
-  function* (
-    db: ConvexMutationCtx["db"],
-    args: {
-      readonly attempt: Doc<"exerciseAttempts">;
-      readonly exerciseNumber: number;
-      readonly questionId: Id<"exerciseQuestions">;
-      readonly selectedOptionId: string;
-    }
-  ) {
-    const question = yield* Effect.promise(() => db.get(args.questionId));
+  function* (args: {
+    readonly attempt: Doc<"exerciseAttempts">;
+    readonly exerciseNumber: number;
+    readonly questionId: Id<"exerciseQuestions">;
+    readonly selectedOptionId: string;
+  }) {
+    const reader = yield* DatabaseReader;
+    const question = yield* reader
+      .table("exerciseQuestions")
+      .get(args.questionId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!question) {
       return yield* failExercise("QUESTION_NOT_FOUND", "Question not found.");
     }
 
-    const set = yield* Effect.promise(() => db.get(question.setId));
+    const set = yield* reader
+      .table("exerciseSets")
+      .get(question.setId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!set || set.slug !== args.attempt.slug) {
       return yield* failExercise(
@@ -51,15 +56,12 @@ const scoreExerciseAnswer = Effect.fn("exercises.scoreExerciseAnswer")(
       );
     }
 
-    const choices = yield* Effect.promise(() =>
-      getManyFrom(
-        db,
-        "exerciseChoices",
-        "by_questionId_and_locale",
-        args.questionId,
-        "questionId"
+    const choices = yield* reader
+      .table("exerciseChoices")
+      .index("by_questionId_and_locale", (query) =>
+        query.eq("questionId", args.questionId)
       )
-    );
+      .collect();
     const selectedChoice =
       choices.find((choice) => choice.optionKey === args.selectedOptionId) ??
       null;
@@ -89,8 +91,9 @@ export const submitAnswer = Effect.fn("exercises.submitAnswer")(
     readonly selectedOptionId: string;
     readonly timeSpent: number;
   }) {
-    const ctx = yield* MutationCtx;
-    const { appUser } = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const { appUser } = yield* requireAppUser();
     const now = yield* Clock.currentTimeMillis;
 
     if (args.exerciseNumber < 1) {
@@ -107,16 +110,12 @@ export const submitAnswer = Effect.fn("exercises.submitAnswer")(
       );
     }
 
-    const attempt = yield* loadOwnedInProgressAttempt(ctx, {
+    const attempt = yield* loadOwnedInProgressAttempt({
       attemptId: args.attemptId,
       userId: appUser._id,
     });
     const expiresAtMs = attempt.startedAt + attempt.timeLimit * 1e3;
-    const tryoutExpiry = yield* syncTryoutExerciseAttemptExpiry(
-      ctx,
-      attempt,
-      now
-    );
+    const tryoutExpiry = yield* syncTryoutExerciseAttemptExpiry(attempt, now);
 
     if (tryoutExpiry.expired) {
       return yield* failExercise(
@@ -134,17 +133,16 @@ export const submitAnswer = Effect.fn("exercises.submitAnswer")(
       );
     }
 
-    const existingAnswer = yield* Effect.promise(() =>
-      ctx.db
-        .query("exerciseAnswers")
-        .withIndex("by_attemptId_and_exerciseNumber", (query) =>
-          query
-            .eq("attemptId", args.attemptId)
-            .eq("exerciseNumber", args.exerciseNumber)
-        )
-        .first()
-    );
-    const scoredAnswer = yield* scoreExerciseAnswer(ctx.db, {
+    const existingAnswer = yield* reader
+      .table("exerciseAnswers")
+      .index("by_attemptId_and_exerciseNumber", (query) =>
+        query
+          .eq("attemptId", args.attemptId)
+          .eq("exerciseNumber", args.exerciseNumber)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
+    const scoredAnswer = yield* scoreExerciseAnswer({
       attempt,
       exerciseNumber: args.exerciseNumber,
       questionId: args.questionId,
@@ -152,17 +150,15 @@ export const submitAnswer = Effect.fn("exercises.submitAnswer")(
     });
 
     if (existingAnswer) {
-      yield* Effect.promise(() =>
-        ctx.db.patch(existingAnswer._id, {
-          isCorrect: scoredAnswer.isCorrect,
-          questionId: scoredAnswer.questionId,
-          selectedOptionId: scoredAnswer.selectedOptionId,
-          textAnswer: scoredAnswer.textAnswer,
-          timeSpent: args.timeSpent,
-          updatedAt: now,
-        })
-      );
-      yield* applyAnswerAggregateDelta(ctx, attempt, {
+      yield* writer.table("exerciseAnswers").patch(existingAnswer._id, {
+        isCorrect: scoredAnswer.isCorrect,
+        questionId: scoredAnswer.questionId,
+        selectedOptionId: scoredAnswer.selectedOptionId,
+        textAnswer: scoredAnswer.textAnswer,
+        timeSpent: args.timeSpent,
+        updatedAt: now,
+      });
+      yield* applyAnswerAggregateDelta(attempt, {
         deltaAnsweredCount: 0,
         deltaCorrectAnswers:
           (scoredAnswer.isCorrect ? 1 : 0) - (existingAnswer.isCorrect ? 1 : 0),
@@ -172,20 +168,18 @@ export const submitAnswer = Effect.fn("exercises.submitAnswer")(
       return null;
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.insert("exerciseAnswers", {
-        answeredAt: now,
-        attemptId: args.attemptId,
-        exerciseNumber: args.exerciseNumber,
-        isCorrect: scoredAnswer.isCorrect,
-        questionId: scoredAnswer.questionId,
-        selectedOptionId: scoredAnswer.selectedOptionId,
-        textAnswer: scoredAnswer.textAnswer,
-        timeSpent: args.timeSpent,
-        updatedAt: now,
-      })
-    );
-    yield* applyAnswerAggregateDelta(ctx, attempt, {
+    yield* writer.table("exerciseAnswers").insert({
+      answeredAt: now,
+      attemptId: args.attemptId,
+      exerciseNumber: args.exerciseNumber,
+      isCorrect: scoredAnswer.isCorrect,
+      questionId: scoredAnswer.questionId,
+      selectedOptionId: scoredAnswer.selectedOptionId,
+      textAnswer: scoredAnswer.textAnswer,
+      timeSpent: args.timeSpent,
+      updatedAt: now,
+    });
+    yield* applyAnswerAggregateDelta(attempt, {
       deltaAnsweredCount: 1,
       deltaCorrectAnswers: scoredAnswer.isCorrect ? 1 : 0,
       deltaTotalTime: args.timeSpent,
@@ -199,14 +193,15 @@ export const submitAnswer = Effect.fn("exercises.submitAnswer")(
 /** Loads an owned attempt that can still accept answers. */
 const loadOwnedInProgressAttempt = Effect.fn(
   "exercises.loadOwnedInProgressAttempt"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly attemptId: Id<"exerciseAttempts">;
-    readonly userId: Id<"users">;
-  }
-) {
-  const attempt = yield* Effect.promise(() => ctx.db.get(args.attemptId));
+)(function* (args: {
+  readonly attemptId: Id<"exerciseAttempts">;
+  readonly userId: Id<"users">;
+}) {
+  const reader = yield* DatabaseReader;
+  const attempt = yield* reader
+    .table("exerciseAttempts")
+    .get(args.attemptId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!attempt) {
     return yield* failExercise("ATTEMPT_NOT_FOUND", "Attempt not found.");
@@ -233,7 +228,6 @@ const loadOwnedInProgressAttempt = Effect.fn(
 const applyAnswerAggregateDelta = Effect.fn(
   "exercises.applyAnswerAggregateDelta"
 )(function* (
-  ctx: ConvexMutationCtx,
   attempt: Doc<"exerciseAttempts">,
   args: {
     readonly deltaAnsweredCount: number;
@@ -242,6 +236,7 @@ const applyAnswerAggregateDelta = Effect.fn(
     readonly now: number;
   }
 ) {
+  const writer = yield* DatabaseWriter;
   const next = applyAttemptAggregatesDelta({
     attempt,
     deltaAnsweredCount: args.deltaAnsweredCount,
@@ -249,11 +244,9 @@ const applyAnswerAggregateDelta = Effect.fn(
     deltaTotalTime: args.deltaTotalTime,
   });
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(attempt._id, {
-      ...next,
-      lastActivityAt: args.now,
-      updatedAt: args.now,
-    })
-  );
+  yield* writer.table("exerciseAttempts").patch(attempt._id, {
+    ...next,
+    lastActivityAt: args.now,
+    updatedAt: args.now,
+  });
 });

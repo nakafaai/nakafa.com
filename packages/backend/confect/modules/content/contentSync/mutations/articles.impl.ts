@@ -1,6 +1,9 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import * as content_sync_articles from "@repo/backend/confect/modules/content/contentSyncArticles.service";
+import {
+  bulkSyncArticles as contentSyncArticles_bulkSyncArticles,
+  deleteStaleArticles as contentSyncArticles_deleteStaleArticles,
+} from "@repo/backend/confect/modules/content/contentSyncArticles.service";
 import { Effect, Layer } from "effect";
 
 const contentSync_mutations_articles_bulkSyncArticlesImpl = FunctionImpl.make(
@@ -8,9 +11,9 @@ const contentSync_mutations_articles_bulkSyncArticlesImpl = FunctionImpl.make(
   "contentSync.mutations.articles",
   "bulkSyncArticles",
   (args) =>
-    content_sync_articles
-      .bulkSyncArticles(args)
-      .pipe(Effect.catchTag("ContentSyncError", (error) => Effect.die(error)))
+    contentSyncArticles_bulkSyncArticles(args).pipe(
+      Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+    )
 );
 
 const contentSync_mutations_articles_deleteStaleArticlesImpl =
@@ -19,9 +22,9 @@ const contentSync_mutations_articles_deleteStaleArticlesImpl =
     "contentSync.mutations.articles",
     "deleteStaleArticles",
     (args) =>
-      content_sync_articles
-        .deleteStaleArticles(args)
-        .pipe(Effect.catchTag("ContentSyncError", (error) => Effect.die(error)))
+      contentSyncArticles_deleteStaleArticles(args).pipe(
+        Effect.catchTag("ContentSyncError", (error) => Effect.die(error))
+      )
   );
 
 const contentSyncMutationsArticlesImpl = GroupImpl.make(

@@ -1,6 +1,9 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
 import type { createClient } from "@convex-dev/better-auth";
-import { jwksSchema } from "@repo/backend/confect/modules/identity/auth/auth.schemas";
+import {
+  authTriggerUserSchema,
+  jwksSchema,
+} from "@repo/backend/confect/modules/identity/auth/auth.schemas";
 import { Users } from "@repo/backend/confect/modules/identity/users.tables";
 import type { GenericDataModel } from "convex/server";
 import { Schema } from "effect";
@@ -37,6 +40,31 @@ const authCleanupGroup = GroupSpec.make("cleanup").addFunction(
 );
 
 export { authCleanupGroup };
+
+const authSyncGroup = GroupSpec.make("sync")
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "createSyncedUser",
+      args: authTriggerUserSchema,
+      returns: GenericId.GenericId("users"),
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "updateSyncedUser",
+      args: authTriggerUserSchema,
+      returns: Schema.Null,
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "cleanupSyncedUser",
+      args: Schema.Struct({ authId: Schema.String }),
+      returns: Schema.Null,
+    })
+  );
+
+export { authSyncGroup };
 
 const authGroup = GroupSpec.make("auth")
   .addFunction(
@@ -80,6 +108,7 @@ const authGroup = GroupSpec.make("auth")
   .addFunction(authOnCreateSpec)
   .addFunction(authOnDeleteSpec)
   .addFunction(authOnUpdateSpec)
-  .addGroup(authCleanupGroup);
+  .addGroup(authCleanupGroup)
+  .addGroup(authSyncGroup);
 
 export { authGroup };

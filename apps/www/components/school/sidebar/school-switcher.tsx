@@ -14,7 +14,6 @@ import {
 import type { Doc } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { ConvexFunctionReturn } from "@repo/backend/confect/modules/shared/convexReferences";
-import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,9 +33,10 @@ import {
 } from "@repo/design-system/components/ui/sidebar";
 import { cn } from "@repo/design-system/lib/utils";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { useConvexAuth, usePaginatedQuery } from "convex/react";
+import { useConvexAuth } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { usePaginatedQuery } from "@/lib/confect/pagination";
 import { useSchool } from "@/lib/context/use-school";
 
 type SchoolSwitcherPage = ConvexFunctionReturn<
@@ -56,7 +56,7 @@ export function SchoolSwitcher({
   const { isAuthenticated, isLoading } = useConvexAuth();
   const [open, setOpen] = useState(false);
   const { results, status, loadMore } = usePaginatedQuery(
-    toConvexReference(refs.public.schools.queries.getMySchoolsPage),
+    refs.public.schools.queries.getMySchoolsPage,
     open && isAuthenticated && !isLoading ? {} : "skip",
     { initialNumItems: 20 }
   );

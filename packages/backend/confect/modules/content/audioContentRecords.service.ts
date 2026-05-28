@@ -1,19 +1,22 @@
 import { ACTIVE_MODEL } from "@repo/ai/config/elevenlabs";
 import { DEFAULT_VOICE_KEY, getVoiceConfig } from "@repo/ai/config/voices";
-import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import {
-  MutationCtx,
-  QueryCtx,
+  DatabaseReader,
+  DatabaseWriter,
+  StorageWriter,
 } from "@repo/backend/confect/_generated/services";
 import type {
   AudioContentRef,
   AudioStatus,
 } from "@repo/backend/confect/modules/content/audio.schemas";
 import { fetchContentForAudio } from "@repo/backend/confect/modules/content/audioContentLookup.service";
+import type { ContentAudios } from "@repo/backend/confect/modules/content/audioStudies.tables";
 import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import { Clock, Effect, Schema } from "effect";
 
 const CONTENT_AUDIO_DUPLICATE_LIMIT = 3;
+type ContentAudioDoc = Schema.Schema.Type<typeof ContentAudios.Doc>;
 
 export class ContentAudioError extends Schema.TaggedError<ContentAudioError>()(
   "ContentAudioError",
@@ -39,8 +42,11 @@ function getResetAudioFields(contentHash: string, updatedAt: number) {
 /** Requires an audio record to exist. */
 const requireContentAudio = Effect.fn("audioContent.requireContentAudio")(
   function* (contentAudioId: Id<"contentAudios">) {
-    const ctx = yield* MutationCtx;
-    const audio = yield* Effect.promise(() => ctx.db.get(contentAudioId));
+    const reader = yield* DatabaseReader;
+    const audio = yield* reader
+      .table("contentAudios")
+      .get(contentAudioId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (audio) {
       return audio;
@@ -56,18 +62,16 @@ const requireContentAudio = Effect.fn("audioContent.requireContentAudio")(
 const loadContentAudioRecords = Effect.fn(
   "audioContent.loadContentAudioRecords"
 )(function* (args: { contentRef: AudioContentRef; locale: Locale }) {
-  const ctx = yield* MutationCtx;
-  const records = yield* Effect.promise(() =>
-    ctx.db
-      .query("contentAudios")
-      .withIndex("by_contentRefType_and_contentRefId_and_locale", (query) =>
-        query
-          .eq("contentRef.type", args.contentRef.type)
-          .eq("contentRef.id", args.contentRef.id)
-          .eq("locale", args.locale)
-      )
-      .take(CONTENT_AUDIO_DUPLICATE_LIMIT)
-  );
+  const reader = yield* DatabaseReader;
+  const records = yield* reader
+    .table("contentAudios")
+    .index("by_contentRefType_and_contentRefId_and_locale", (query) =>
+      query
+        .eq("contentRef.type", args.contentRef.type)
+        .eq("contentRef.id", args.contentRef.id)
+        .eq("locale", args.locale)
+    )
+    .take(CONTENT_AUDIO_DUPLICATE_LIMIT);
 
   if (records.length < CONTENT_AUDIO_DUPLICATE_LIMIT) {
     return records;
@@ -83,8 +87,8 @@ const loadContentAudioRecords = Effect.fn(
 /** Keeps the first audio record and removes duplicate rows. */
 const collapseDuplicateContentAudioRecords = Effect.fn(
   "audioContent.collapseDuplicateContentAudioRecords"
-)(function* (records: readonly Doc<"contentAudios">[]) {
-  const ctx = yield* MutationCtx;
+)(function* (records: readonly ContentAudioDoc[]) {
+  const writer = yield* DatabaseWriter;
   const [keeper, ...duplicates] = records;
 
   if (!keeper) {
@@ -94,7 +98,7 @@ const collapseDuplicateContentAudioRecords = Effect.fn(
   }
 
   for (const duplicate of duplicates) {
-    yield* Effect.promise(() => ctx.db.delete(duplicate._id));
+    yield* writer.table("contentAudios").delete(duplicate._id);
   }
 
   return keeper;
@@ -108,7 +112,7 @@ const claimContentAudioGeneration = Effect.fn(
   contentAudioId: Id<"contentAudios">;
   nextStatus: AudioStatus;
 }) {
-  const ctx = yield* MutationCtx;
+  const writer = yield* DatabaseWriter;
   const audio = yield* requireContentAudio(args.contentAudioId);
 
   if (!args.allowedStatuses.includes(audio.status)) {
@@ -116,12 +120,10 @@ const claimContentAudioGeneration = Effect.fn(
   }
 
   const updatedAt = yield* Clock.currentTimeMillis;
-  yield* Effect.promise(() =>
-    ctx.db.patch(args.contentAudioId, {
-      status: args.nextStatus,
-      updatedAt,
-    })
-  );
+  yield* writer.table("contentAudios").patch(args.contentAudioId, {
+    status: args.nextStatus,
+    updatedAt,
+  });
 
   return true;
 });
@@ -151,7 +153,7 @@ export const claimSpeechGeneration = Effect.fn(
 /** Saves a generated script for an audio record. */
 export const saveScript = Effect.fn("audioContent.saveScript")(
   function* (args: { contentAudioId: Id<"contentAudios">; script: string }) {
-    const ctx = yield* MutationCtx;
+    const writer = yield* DatabaseWriter;
     const audio = yield* requireContentAudio(args.contentAudioId);
 
     if (audio.script === args.script && audio.status === "script-generated") {
@@ -159,13 +161,11 @@ export const saveScript = Effect.fn("audioContent.saveScript")(
     }
 
     const updatedAt = yield* Clock.currentTimeMillis;
-    yield* Effect.promise(() =>
-      ctx.db.patch(args.contentAudioId, {
-        script: args.script,
-        status: "script-generated",
-        updatedAt,
-      })
-    );
+    yield* writer.table("contentAudios").patch(args.contentAudioId, {
+      script: args.script,
+      status: "script-generated",
+      updatedAt,
+    });
 
     return null;
   }
@@ -178,7 +178,8 @@ export const saveAudio = Effect.fn("audioContent.saveAudio")(function* (args: {
   size: number;
   storageId: Id<"_storage">;
 }) {
-  const ctx = yield* MutationCtx;
+  const writer = yield* DatabaseWriter;
+  const storage = yield* StorageWriter;
   const audio = yield* requireContentAudio(args.contentAudioId);
 
   if (audio.status === "completed" && audio.audioStorageId === args.storageId) {
@@ -187,19 +188,19 @@ export const saveAudio = Effect.fn("audioContent.saveAudio")(function* (args: {
 
   if (audio.audioStorageId && audio.audioStorageId !== args.storageId) {
     const audioStorageId = audio.audioStorageId;
-    yield* Effect.promise(() => ctx.storage.delete(audioStorageId));
+    yield* storage
+      .delete(audioStorageId)
+      .pipe(Effect.catchTag("BlobNotFoundError", () => Effect.succeed(null)));
   }
 
   const updatedAt = yield* Clock.currentTimeMillis;
-  yield* Effect.promise(() =>
-    ctx.db.patch(args.contentAudioId, {
-      audioDuration: args.duration,
-      audioSize: args.size,
-      audioStorageId: args.storageId,
-      status: "completed",
-      updatedAt,
-    })
-  );
+  yield* writer.table("contentAudios").patch(args.contentAudioId, {
+    audioDuration: args.duration,
+    audioSize: args.size,
+    audioStorageId: args.storageId,
+    status: "completed",
+    updatedAt,
+  });
 
   return null;
 });
@@ -207,7 +208,7 @@ export const saveAudio = Effect.fn("audioContent.saveAudio")(function* (args: {
 /** Marks an in-flight audio generation attempt as failed or retryable. */
 export const markFailed = Effect.fn("audioContent.markFailed")(
   function* (args: { contentAudioId: Id<"contentAudios">; error: string }) {
-    const ctx = yield* MutationCtx;
+    const writer = yield* DatabaseWriter;
     const audio = yield* requireContentAudio(args.contentAudioId);
 
     if (audio.status === "pending") {
@@ -225,15 +226,13 @@ export const markFailed = Effect.fn("audioContent.markFailed")(
     const status =
       audio.status === "generating-script" ? "pending" : "script-generated";
 
-    yield* Effect.promise(() =>
-      ctx.db.patch(args.contentAudioId, {
-        errorMessage: args.error,
-        failedAt: now,
-        generationAttempts: audio.generationAttempts + 1,
-        status,
-        updatedAt: now,
-      })
-    );
+    yield* writer.table("contentAudios").patch(args.contentAudioId, {
+      errorMessage: args.error,
+      failedAt: now,
+      generationAttempts: audio.generationAttempts + 1,
+      status,
+      updatedAt: now,
+    });
 
     return null;
   }
@@ -242,17 +241,17 @@ export const markFailed = Effect.fn("audioContent.markFailed")(
 /** Updates stored content audio hashes and resets stale audio records. */
 export const updateContentHash = Effect.fn("audioContent.updateContentHash")(
   function* (args: { contentRef: AudioContentRef; newHash: string }) {
-    const ctx = yield* MutationCtx;
-    const audios = yield* Effect.promise(() =>
-      ctx.db
-        .query("contentAudios")
-        .withIndex("by_contentRefType_and_contentRefId_and_locale", (query) =>
-          query
-            .eq("contentRef.type", args.contentRef.type)
-            .eq("contentRef.id", args.contentRef.id)
-        )
-        .take(10)
-    );
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const storage = yield* StorageWriter;
+    const audios = yield* reader
+      .table("contentAudios")
+      .index("by_contentRefType_and_contentRefId_and_locale", (query) =>
+        query
+          .eq("contentRef.type", args.contentRef.type)
+          .eq("contentRef.id", args.contentRef.id)
+      )
+      .take(10);
     const updatedAt = yield* Clock.currentTimeMillis;
     let updatedCount = 0;
 
@@ -263,12 +262,16 @@ export const updateContentHash = Effect.fn("audioContent.updateContentHash")(
 
       if (audio.audioStorageId) {
         const audioStorageId = audio.audioStorageId;
-        yield* Effect.promise(() => ctx.storage.delete(audioStorageId));
+        yield* storage
+          .delete(audioStorageId)
+          .pipe(
+            Effect.catchTag("BlobNotFoundError", () => Effect.succeed(null))
+          );
       }
 
-      yield* Effect.promise(() =>
-        ctx.db.patch(audio._id, getResetAudioFields(args.newHash, updatedAt))
-      );
+      yield* writer
+        .table("contentAudios")
+        .patch(audio._id, getResetAudioFields(args.newHash, updatedAt));
       updatedCount += 1;
     }
 
@@ -284,7 +287,7 @@ export const createOrGetAudioRecord = Effect.fn(
   contentRef: AudioContentRef;
   locale: Locale;
 }) {
-  const ctx = yield* MutationCtx;
+  const writer = yield* DatabaseWriter;
   const existingRecords = yield* loadContentAudioRecords(args);
   const existing =
     existingRecords.length <= 1
@@ -294,40 +297,35 @@ export const createOrGetAudioRecord = Effect.fn(
 
   if (existing) {
     if (existing.contentHash !== args.contentHash) {
-      yield* Effect.promise(() =>
-        ctx.db.patch(
-          existing._id,
-          getResetAudioFields(args.contentHash, updatedAt)
-        )
-      );
+      yield* writer
+        .table("contentAudios")
+        .patch(existing._id, getResetAudioFields(args.contentHash, updatedAt));
     }
 
     return existing._id;
   }
 
   const voiceConfig = getVoiceConfig(DEFAULT_VOICE_KEY);
-  yield* Effect.promise(() =>
-    ctx.db.insert("contentAudios", {
-      contentHash: args.contentHash,
-      contentRef: args.contentRef,
-      generationAttempts: 0,
-      locale: args.locale,
-      model: ACTIVE_MODEL,
-      status: "pending",
-      updatedAt,
-      voiceId: voiceConfig.id,
-      voiceSettings: voiceConfig.settings,
-    })
-  );
+  yield* writer.table("contentAudios").insert({
+    contentHash: args.contentHash,
+    contentRef: args.contentRef,
+    generationAttempts: 0,
+    locale: args.locale,
+    model: ACTIVE_MODEL,
+    status: "pending",
+    updatedAt,
+    voiceId: voiceConfig.id,
+    voiceSettings: voiceConfig.settings,
+  });
 
   const keeper = yield* collapseDuplicateContentAudioRecords(
     yield* loadContentAudioRecords(args)
   );
 
   if (keeper.contentHash !== args.contentHash) {
-    yield* Effect.promise(() =>
-      ctx.db.patch(keeper._id, getResetAudioFields(args.contentHash, updatedAt))
-    );
+    yield* writer
+      .table("contentAudios")
+      .patch(keeper._id, getResetAudioFields(args.contentHash, updatedAt));
   }
 
   return keeper._id;
@@ -337,8 +335,11 @@ export const createOrGetAudioRecord = Effect.fn(
 export const getAudioAndContentForScriptGeneration = Effect.fn(
   "audioContent.getAudioAndContentForScriptGeneration"
 )(function* (args: { contentAudioId: Id<"contentAudios"> }) {
-  const ctx = yield* QueryCtx;
-  const audio = yield* Effect.promise(() => ctx.db.get(args.contentAudioId));
+  const reader = yield* DatabaseReader;
+  const audio = yield* reader
+    .table("contentAudios")
+    .get(args.contentAudioId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!audio) {
     return null;
@@ -366,8 +367,11 @@ export const getAudioAndContentForScriptGeneration = Effect.fn(
 export const getAudioForSpeechGeneration = Effect.fn(
   "audioContent.getAudioForSpeechGeneration"
 )(function* (args: { contentAudioId: Id<"contentAudios"> }) {
-  const ctx = yield* QueryCtx;
-  const audio = yield* Effect.promise(() => ctx.db.get(args.contentAudioId));
+  const reader = yield* DatabaseReader;
+  const audio = yield* reader
+    .table("contentAudios")
+    .get(args.contentAudioId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!audio?.script) {
     return null;
@@ -388,8 +392,11 @@ export const verifyContentHash = Effect.fn("audioContent.verifyContentHash")(
     contentAudioId: Id<"contentAudios">;
     expectedHash: string;
   }) {
-    const ctx = yield* QueryCtx;
-    const audio = yield* Effect.promise(() => ctx.db.get(args.contentAudioId));
+    const reader = yield* DatabaseReader;
+    const audio = yield* reader
+      .table("contentAudios")
+      .get(args.contentAudioId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
     return audio?.contentHash === args.expectedHash;
   }
 );

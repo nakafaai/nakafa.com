@@ -1,5 +1,9 @@
-import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx,
+} from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { createNotification } from "@repo/backend/confect/modules/notifications/notifications.service";
 import {
@@ -8,7 +12,11 @@ import {
   requireClassAccess,
 } from "@repo/backend/confect/modules/school/classAccess.service";
 import { ClassActionError } from "@repo/backend/confect/modules/school/classErrors";
-import type { SchoolClassForumTag } from "@repo/backend/confect/modules/school/classes.tables";
+import type {
+  SchoolClassForumPosts,
+  SchoolClassForums,
+  SchoolClassForumTag,
+} from "@repo/backend/confect/modules/school/classes.tables";
 import {
   loadActiveForumWithAccess,
   loadOpenForumWithAccess,
@@ -30,10 +38,10 @@ import {
   updateForumReadState,
 } from "@repo/backend/confect/modules/school/forums/posts.service";
 import { validateForumReactionValue } from "@repo/backend/confect/modules/school/forums/reactions.service";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option, type Schema } from "effect";
 
-type ForumDoc = Doc<"schoolClassForums">;
-type ForumPostDoc = Doc<"schoolClassForumPosts">;
+type ForumDoc = Schema.Schema.Type<typeof SchoolClassForums.Doc>;
+type ForumPostDoc = Schema.Schema.Type<typeof SchoolClassForumPosts.Doc>;
 type ForumReactionCounts = ForumDoc["reactionCounts"];
 
 /** Returns denormalized reaction counts after one insert/delete. */
@@ -70,7 +78,6 @@ function applyReactionDelta(
 const notifyForumPostParticipants = Effect.fn(
   "school.forums.notifyForumPostParticipants"
 )(function* (args: { forum: ForumDoc; post: ForumPostDoc }) {
-  const ctx = yield* MutationCtx;
   const previewBody = truncateText({ text: args.post.body });
 
   if (
@@ -78,7 +85,7 @@ const notifyForumPostParticipants = Effect.fn(
     args.post.replyToUserId &&
     args.post.replyToUserId !== args.post.createdBy
   ) {
-    yield* createNotification(ctx, {
+    yield* createNotification({
       actorId: args.post.createdBy,
       entityId: args.post._id,
       entityType: "schoolClassForumPosts",
@@ -97,7 +104,7 @@ const notifyForumPostParticipants = Effect.fn(
       continue;
     }
 
-    yield* createNotification(ctx, {
+    yield* createNotification({
       actorId: args.post.createdBy,
       entityId: args.post._id,
       entityType: "schoolClassForumPosts",
@@ -119,10 +126,10 @@ export const createForum = Effect.fn("school.forums.createForum")(
     tag: SchoolClassForumTag;
     title: string;
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
     const userId = user.appUser._id;
-    const classData = yield* loadActiveClass(ctx, args.classId);
+    const classData = yield* loadActiveClass(args.classId);
     const title = args.title.trim();
     const body = args.body.trim();
 
@@ -143,7 +150,6 @@ export const createForum = Effect.fn("school.forums.createForum")(
     }
 
     const access = yield* requireClassAccess(
-      ctx,
       args.classId,
       classData.schoolId,
       userId
@@ -167,24 +173,22 @@ export const createForum = Effect.fn("school.forums.createForum")(
 
     const now = yield* Clock.currentTimeMillis;
 
-    return yield* Effect.promise(() =>
-      ctx.db.insert("schoolClassForums", {
-        body,
-        classId: args.classId,
-        createdBy: userId,
-        isPinned: false,
-        lastPostAt: now,
-        lastPostBy: userId,
-        nextPostSequence: 1,
-        postCount: 0,
-        reactionCounts: [],
-        schoolId: classData.schoolId,
-        status: "open",
-        tag: args.tag,
-        title,
-        updatedAt: now,
-      })
-    );
+    return yield* writer.table("schoolClassForums").insert({
+      body,
+      classId: args.classId,
+      createdBy: userId,
+      isPinned: false,
+      lastPostAt: now,
+      lastPostBy: userId,
+      nextPostSequence: 1,
+      postCount: 0,
+      reactionCounts: [],
+      schoolId: classData.schoolId,
+      status: "open",
+      tag: args.tag,
+      title,
+      updatedAt: now,
+    });
   }
 );
 
@@ -198,7 +202,9 @@ export const createForumPost = Effect.fn("school.forums.createForumPost")(
     parentId?: Id<"schoolClassForumPosts">;
   }) {
     const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const user = yield* requireAppUser();
     const userId = user.appUser._id;
     const attachmentUploadIds = args.attachmentUploadIds ?? [];
 
@@ -218,13 +224,13 @@ export const createForumPost = Effect.fn("school.forums.createForumPost")(
       );
     }
 
-    const { forum } = yield* loadOpenForumWithAccess(ctx, args.forumId, userId);
-    const attachments = yield* resolveForumAttachmentUploads(ctx, {
+    const { forum } = yield* loadOpenForumWithAccess(args.forumId, userId);
+    const attachments = yield* resolveForumAttachmentUploads({
       forumId: args.forumId,
       uploadIds: attachmentUploadIds,
       userId,
     });
-    const mentions = yield* validateForumMentions(ctx, {
+    const mentions = yield* validateForumMentions({
       forum,
       mentionedUserIds: args.mentions ?? [],
     });
@@ -233,7 +239,10 @@ export const createForumPost = Effect.fn("school.forums.createForumPost")(
 
     if (args.parentId) {
       const parentId = args.parentId;
-      const parentPost = yield* Effect.promise(() => ctx.db.get(parentId));
+      const parentPost = yield* reader
+        .table("schoolClassForumPosts")
+        .get(parentId)
+        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
       if (!parentPost || parentPost.forumId !== args.forumId) {
         return yield* Effect.fail(
@@ -247,28 +256,27 @@ export const createForumPost = Effect.fn("school.forums.createForumPost")(
 
     const now = yield* Clock.currentTimeMillis;
     const sequence = forum.nextPostSequence;
-    yield* Effect.promise(() =>
-      ctx.db.patch(forum._id, {
-        nextPostSequence: sequence + 1,
-      })
-    );
-    const postId = yield* Effect.promise(() =>
-      ctx.db.insert("schoolClassForumPosts", {
-        body: args.body,
-        classId: forum.classId,
-        createdBy: userId,
-        forumId: args.forumId,
-        mentions,
-        parentId: args.parentId,
-        reactionCounts: [],
-        replyCount: 0,
-        replyToBody,
-        replyToUserId,
-        sequence,
-        updatedAt: now,
-      })
-    );
-    const post = yield* Effect.promise(() => ctx.db.get(postId));
+    yield* writer.table("schoolClassForums").patch(forum._id, {
+      nextPostSequence: sequence + 1,
+    });
+    const postId = yield* writer.table("schoolClassForumPosts").insert({
+      body: args.body,
+      classId: forum.classId,
+      createdBy: userId,
+      forumId: args.forumId,
+      mentions,
+      parentId: args.parentId,
+      reactionCounts: [],
+      replyCount: 0,
+      replyToBody,
+      replyToUserId,
+      sequence,
+      updatedAt: now,
+    });
+    const post = yield* reader
+      .table("schoolClassForumPosts")
+      .get(postId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!post) {
       return yield* Effect.fail(
@@ -276,17 +284,26 @@ export const createForumPost = Effect.fn("school.forums.createForumPost")(
       );
     }
 
-    yield* Effect.promise(() => forumPostsBySequence.insert(ctx, post));
-    yield* Effect.promise(() => forumPostsByAuthorSequence.insert(ctx, post));
+    const aggregatePost = {
+      _creationTime: post._creationTime,
+      _id: post._id,
+      createdBy: post.createdBy,
+      forumId: post.forumId,
+      sequence: post.sequence,
+    };
     yield* Effect.promise(() =>
-      ctx.db.patch(forum._id, {
-        lastPostAt: post._creationTime,
-        lastPostBy: userId,
-        postCount: forum.postCount + 1,
-        updatedAt: now,
-      })
+      forumPostsBySequence.insert(ctx, aggregatePost)
     );
-    yield* updateForumReadState(ctx, {
+    yield* Effect.promise(() =>
+      forumPostsByAuthorSequence.insert(ctx, aggregatePost)
+    );
+    yield* writer.table("schoolClassForums").patch(forum._id, {
+      lastPostAt: post._creationTime,
+      lastPostBy: userId,
+      postCount: forum.postCount + 1,
+      updatedAt: now,
+    });
+    yield* updateForumReadState({
       classId: forum.classId,
       forumId: forum._id,
       lastReadSequence: post.sequence,
@@ -296,34 +313,35 @@ export const createForumPost = Effect.fn("school.forums.createForumPost")(
     const parentId = args.parentId;
 
     if (parentId) {
-      const parentPost = yield* Effect.promise(() => ctx.db.get(parentId));
+      const parentPost = yield* reader
+        .table("schoolClassForumPosts")
+        .get(parentId)
+        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
       if (parentPost) {
-        yield* Effect.promise(() =>
-          ctx.db.patch(parentId, {
-            replyCount: parentPost.replyCount + 1,
-            updatedAt: now,
-          })
-        );
+        yield* writer.table("schoolClassForumPosts").patch(parentId, {
+          replyCount: parentPost.replyCount + 1,
+          updatedAt: now,
+        });
       }
     }
 
     yield* notifyForumPostParticipants({ forum, post });
 
     for (const attachment of attachments) {
-      yield* Effect.promise(() =>
-        ctx.db.insert("schoolClassForumPostAttachments", {
-          classId: forum.classId,
-          createdBy: userId,
-          fileId: attachment.storageId,
-          forumId: args.forumId,
-          mimeType: attachment.mimeType,
-          name: attachment.name,
-          postId,
-          size: attachment.size,
-        })
-      );
-      yield* Effect.promise(() => ctx.db.delete(attachment._id));
+      yield* writer.table("schoolClassForumPostAttachments").insert({
+        classId: forum.classId,
+        createdBy: userId,
+        fileId: attachment.storageId,
+        forumId: args.forumId,
+        mimeType: attachment.mimeType,
+        name: attachment.name,
+        postId,
+        size: attachment.size,
+      });
+      yield* writer
+        .table("schoolClassForumPendingUploads")
+        .delete(attachment._id);
     }
 
     return postId;
@@ -334,30 +352,27 @@ export const createForumPost = Effect.fn("school.forums.createForumPost")(
 export const toggleForumReaction = Effect.fn(
   "school.forums.toggleForumReaction"
 )(function* (args: { emoji: string; forumId: Id<"schoolClassForums"> }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const emoji = yield* validateForumReactionValue(args.emoji);
-  const user = yield* requireAppUser(ctx);
+  const user = yield* requireAppUser();
   const userId = user.appUser._id;
-  const { forum } = yield* loadActiveForumWithAccess(ctx, args.forumId, userId);
-  const existingReaction = yield* Effect.promise(() =>
-    ctx.db
-      .query("schoolClassForumReactions")
-      .withIndex("by_forumId_and_userId_and_emoji", (query) =>
-        query
-          .eq("forumId", args.forumId)
-          .eq("userId", userId)
-          .eq("emoji", emoji)
-      )
-      .unique()
-  );
+  const { forum } = yield* loadActiveForumWithAccess(args.forumId, userId);
+  const existingReaction = yield* reader
+    .table("schoolClassForumReactions")
+    .index("by_forumId_and_userId_and_emoji", (query) =>
+      query.eq("forumId", args.forumId).eq("userId", userId).eq("emoji", emoji)
+    )
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 
   if (existingReaction) {
-    yield* Effect.promise(() => ctx.db.delete(existingReaction._id));
-    yield* Effect.promise(() =>
-      ctx.db.patch(forum._id, {
-        reactionCounts: applyReactionDelta(forum.reactionCounts, emoji, -1),
-      })
-    );
+    yield* writer
+      .table("schoolClassForumReactions")
+      .delete(existingReaction._id);
+    yield* writer.table("schoolClassForums").patch(forum._id, {
+      reactionCounts: applyReactionDelta(forum.reactionCounts, emoji, -1),
+    });
     return { added: false };
   }
 
@@ -376,18 +391,14 @@ export const toggleForumReaction = Effect.fn(
     );
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.insert("schoolClassForumReactions", {
-      emoji,
-      forumId: args.forumId,
-      userId,
-    })
-  );
-  yield* Effect.promise(() =>
-    ctx.db.patch(forum._id, {
-      reactionCounts: applyReactionDelta(forum.reactionCounts, emoji, 1),
-    })
-  );
+  yield* writer.table("schoolClassForumReactions").insert({
+    emoji,
+    forumId: args.forumId,
+    userId,
+  });
+  yield* writer.table("schoolClassForums").patch(forum._id, {
+    reactionCounts: applyReactionDelta(forum.reactionCounts, emoji, 1),
+  });
 
   return { added: true };
 });
@@ -395,38 +406,36 @@ export const toggleForumReaction = Effect.fn(
 /** Toggles a reaction on a forum post. */
 export const togglePostReaction = Effect.fn("school.forums.togglePostReaction")(
   function* (args: { emoji: string; postId: Id<"schoolClassForumPosts"> }) {
-    const ctx = yield* MutationCtx;
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const emoji = yield* validateForumReactionValue(args.emoji);
-    const user = yield* requireAppUser(ctx);
+    const user = yield* requireAppUser();
     const userId = user.appUser._id;
-    const post = yield* Effect.promise(() => ctx.db.get(args.postId));
-
-    if (!post) {
-      return yield* Effect.fail(
-        new ClassActionError({ message: "Post not found." })
-      );
-    }
-
-    yield* loadActiveForumWithAccess(ctx, post.forumId, userId);
-    const existingReaction = yield* Effect.promise(() =>
-      ctx.db
-        .query("schoolClassForumPostReactions")
-        .withIndex("by_postId_and_userId_and_emoji", (query) =>
-          query
-            .eq("postId", args.postId)
-            .eq("userId", userId)
-            .eq("emoji", emoji)
+    const post = yield* reader
+      .table("schoolClassForumPosts")
+      .get(args.postId)
+      .pipe(
+        Effect.catchTag("GetByIdFailure", () =>
+          Effect.fail(new ClassActionError({ message: "Post not found." }))
         )
-        .unique()
-    );
+      );
+
+    yield* loadActiveForumWithAccess(post.forumId, userId);
+    const existingReaction = yield* reader
+      .table("schoolClassForumPostReactions")
+      .index("by_postId_and_userId_and_emoji", (query) =>
+        query.eq("postId", args.postId).eq("userId", userId).eq("emoji", emoji)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (existingReaction) {
-      yield* Effect.promise(() => ctx.db.delete(existingReaction._id));
-      yield* Effect.promise(() =>
-        ctx.db.patch(post._id, {
-          reactionCounts: applyReactionDelta(post.reactionCounts, emoji, -1),
-        })
-      );
+      yield* writer
+        .table("schoolClassForumPostReactions")
+        .delete(existingReaction._id);
+      yield* writer.table("schoolClassForumPosts").patch(post._id, {
+        reactionCounts: applyReactionDelta(post.reactionCounts, emoji, -1),
+      });
       return { added: false };
     }
 
@@ -445,18 +454,14 @@ export const togglePostReaction = Effect.fn("school.forums.togglePostReaction")(
       );
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.insert("schoolClassForumPostReactions", {
-        emoji,
-        postId: args.postId,
-        userId,
-      })
-    );
-    yield* Effect.promise(() =>
-      ctx.db.patch(post._id, {
-        reactionCounts: applyReactionDelta(post.reactionCounts, emoji, 1),
-      })
-    );
+    yield* writer.table("schoolClassForumPostReactions").insert({
+      emoji,
+      postId: args.postId,
+      userId,
+    });
+    yield* writer.table("schoolClassForumPosts").patch(post._id, {
+      reactionCounts: applyReactionDelta(post.reactionCounts, emoji, 1),
+    });
 
     return { added: true };
   }
@@ -468,17 +473,14 @@ export const markForumRead = Effect.fn("school.forums.markForumRead")(
     forumId: Id<"schoolClassForums">;
     lastReadPostId: Id<"schoolClassForumPosts">;
   }) {
-    const ctx = yield* MutationCtx;
-    const user = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const user = yield* requireAppUser();
     const userId = user.appUser._id;
-    const { forum } = yield* loadActiveForumWithAccess(
-      ctx,
-      args.forumId,
-      userId
-    );
-    const lastReadPost = yield* Effect.promise(() =>
-      ctx.db.get(args.lastReadPostId)
-    );
+    const { forum } = yield* loadActiveForumWithAccess(args.forumId, userId);
+    const lastReadPost = yield* reader
+      .table("schoolClassForumPosts")
+      .get(args.lastReadPostId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!lastReadPost || lastReadPost.forumId !== args.forumId) {
       return yield* Effect.fail(
@@ -486,7 +488,7 @@ export const markForumRead = Effect.fn("school.forums.markForumRead")(
       );
     }
 
-    yield* updateForumReadState(ctx, {
+    yield* updateForumReadState({
       classId: forum.classId,
       forumId: args.forumId,
       lastReadSequence: lastReadPost.sequence,

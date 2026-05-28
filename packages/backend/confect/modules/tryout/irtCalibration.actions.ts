@@ -1,7 +1,6 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { ActionCtx } from "@repo/backend/confect/_generated/services";
-import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
+import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { calibrateTwoPlItems } from "@repo/backend/confect/modules/tryout/irt.calibration";
 import { IrtError } from "@repo/backend/confect/modules/tryout/irt.errors";
 import {
@@ -15,17 +14,13 @@ const CALIBRATION_RESPONSE_PAGE_SIZE = 100;
 /** Runs the CPU-bound two-parameter logistic calibration for one exercise set. */
 export const calibrateSetTwoPL = Effect.fn("irt.actions.calibrateSetTwoPL")(
   function* (args: { readonly setId: Id<"exerciseSets"> }) {
-    const ctx = yield* ActionCtx;
-    const { existingParams, questions } = yield* Effect.promise(() =>
-      ctx.runQuery(
-        toConvexReference(
-          refs.internal.irt.queries.internalFunctions.calibration
-            .getCalibrationQuestionsForSet
-        ),
-        {
-          setId: args.setId,
-        }
-      )
+    const runQuery = yield* QueryRunner;
+    const { existingParams, questions } = yield* runQuery(
+      refs.internal.irt.queries.internalFunctions.calibration
+        .getCalibrationQuestionsForSet,
+      {
+        setId: args.setId,
+      }
     );
     const questionIds = questions.map((question) => question.questionId);
     const responsesPerAttemptLimit = Math.max(questionIds.length, 1);
@@ -50,20 +45,16 @@ export const calibrateSetTwoPL = Effect.fn("irt.actions.calibrateSetTwoPL")(
       }[]
     >(questionIds.map((questionId) => [questionId, []]));
     let responseCount = 0;
-    let responsePage = yield* Effect.promise(() =>
-      ctx.runQuery(
-        toConvexReference(
-          refs.internal.irt.queries.internalFunctions.calibration
-            .getCalibrationResponsesPageForSet
-        ),
-        {
-          paginationOpts: {
-            cursor: null,
-            numItems: attemptPageSize,
-          },
-          setId: args.setId,
-        }
-      )
+    let responsePage = yield* runQuery(
+      refs.internal.irt.queries.internalFunctions.calibration
+        .getCalibrationResponsesPageForSet,
+      {
+        paginationOpts: {
+          cursor: null,
+          numItems: attemptPageSize,
+        },
+        setId: args.setId,
+      }
     );
 
     while (true) {
@@ -124,20 +115,16 @@ export const calibrateSetTwoPL = Effect.fn("irt.actions.calibrateSetTwoPL")(
         break;
       }
 
-      responsePage = yield* Effect.promise(() =>
-        ctx.runQuery(
-          toConvexReference(
-            refs.internal.irt.queries.internalFunctions.calibration
-              .getCalibrationResponsesPageForSet
-          ),
-          {
-            paginationOpts: {
-              cursor: responsePage.continueCursor,
-              numItems: attemptPageSize,
-            },
-            setId: args.setId,
-          }
-        )
+      responsePage = yield* runQuery(
+        refs.internal.irt.queries.internalFunctions.calibration
+          .getCalibrationResponsesPageForSet,
+        {
+          paginationOpts: {
+            cursor: responsePage.continueCursor,
+            numItems: attemptPageSize,
+          },
+          setId: args.setId,
+        }
       );
     }
 

@@ -1,5 +1,13 @@
 import { Schema } from "effect";
 
+/** Better Auth user fields consumed by app-user synchronization. */
+export const authTriggerUserSchema = Schema.Struct({
+  authId: Schema.String,
+  email: Schema.String,
+  image: Schema.optional(Schema.Union(Schema.String, Schema.Null)),
+  name: Schema.String,
+});
+
 const jwksDocumentSchema = Schema.Struct({
   alg: Schema.optional(Schema.String),
   createdAt: Schema.Number,

@@ -1,8 +1,10 @@
-import { Ref } from "@confect/core";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { IrtError } from "@repo/backend/confect/modules/tryout/irt.errors";
 import {
   getCalibrationAttemptCacheLimit,
@@ -10,48 +12,66 @@ import {
   IRT_CALIBRATION_CACHE_STATS_REBUILD_BATCH_SIZE,
   IRT_CALIBRATION_CACHE_TRIM_BATCH_SIZE,
 } from "@repo/backend/confect/modules/tryout/irt.policy";
-import { Clock, Effect } from "effect";
+import { Clock, Duration, Effect, Option } from "effect";
 
 /** Schedules a calibration cache stats rebuild for one exercise set. */
 export function scheduleCalibrationCacheStatsRebuild(
-  ctx: ConvexMutationCtx,
   setId: Id<"exerciseSets">
 ) {
-  return Effect.promise(() =>
-    ctx.scheduler.runAfter(
-      0,
-      Ref.getFunctionReference(
-        refs.internal.irt.mutations.internalFunctions.cache
-          .rebuildCalibrationCacheStatsForSet
-      ),
+  return Effect.gen(function* () {
+    const scheduler = yield* Scheduler;
+
+    return yield* scheduler.runAfter(
+      Duration.millis(0),
+      refs.internal.irt.mutations.internalFunctions.cache
+        .rebuildCalibrationCacheStatsForSet,
       { setId }
-    )
-  );
+    );
+  });
 }
 
 /** Schedules calibration cache trimming for one exercise set. */
-export function scheduleCalibrationCacheTrim(
-  ctx: ConvexMutationCtx,
-  setId: Id<"exerciseSets">
-) {
-  return Effect.promise(() =>
-    ctx.scheduler.runAfter(
-      0,
-      Ref.getFunctionReference(
-        refs.internal.irt.mutations.internalFunctions.cache
-          .trimCalibrationCacheForSet
-      ),
+export function scheduleCalibrationCacheTrim(setId: Id<"exerciseSets">) {
+  return Effect.gen(function* () {
+    const scheduler = yield* Scheduler;
+
+    return yield* scheduler.runAfter(
+      Duration.millis(0),
+      refs.internal.irt.mutations.internalFunctions.cache
+        .trimCalibrationCacheForSet,
       { setId }
-    )
-  );
+    );
+  });
+}
+
+/** Reschedules calibration cache stats rebuilding with accumulated progress. */
+function scheduleCalibrationCacheStatsRebuildPage(args: {
+  readonly cursor: string;
+  readonly progress: { readonly attemptCount: number };
+  readonly setId: Id<"exerciseSets">;
+}) {
+  return Effect.gen(function* () {
+    const scheduler = yield* Scheduler;
+
+    return yield* scheduler.runAfter(
+      Duration.millis(0),
+      refs.internal.irt.mutations.internalFunctions.cache
+        .rebuildCalibrationCacheStatsForSet,
+      args
+    );
+  });
 }
 
 /** Ensures a set's calibration cache is within bounded processing limits. */
 export const prepareCalibrationCacheForSet = Effect.fn(
   "irt.cache.prepareCalibrationCacheForSet"
-)(function* (ctx: ConvexMutationCtx, setId: Id<"exerciseSets">) {
+)(function* (setId: Id<"exerciseSets">) {
+  const reader = yield* DatabaseReader;
   const now = yield* Clock.currentTimeMillis;
-  const set = yield* Effect.promise(() => ctx.db.get(setId));
+  const set = yield* reader
+    .table("exerciseSets")
+    .get(setId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!set) {
     return yield* Effect.fail(
@@ -62,15 +82,13 @@ export const prepareCalibrationCacheForSet = Effect.fn(
     );
   }
 
-  const cacheStats = yield* Effect.promise(() =>
-    ctx.db
-      .query("irtCalibrationCacheStats")
-      .withIndex("by_setId", (query) => query.eq("setId", setId))
-      .unique()
-  );
+  const cacheStats = yield* reader
+    .table("irtCalibrationCacheStats")
+    .get("by_setId", setId)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
   if (!cacheStats) {
-    yield* scheduleCalibrationCacheStatsRebuild(ctx, setId);
+    yield* scheduleCalibrationCacheStatsRebuild(setId);
     return false;
   }
 
@@ -78,12 +96,11 @@ export const prepareCalibrationCacheForSet = Effect.fn(
     cacheStats.attemptCount <=
     getCalibrationAttemptCacheLimit(set.questionCount)
   ) {
-    const oldestCachedAttempt = yield* Effect.promise(() =>
-      ctx.db
-        .query("irtCalibrationAttempts")
-        .withIndex("by_setId", (query) => query.eq("setId", setId))
-        .first()
-    );
+    const oldestCachedAttempt = yield* reader
+      .table("irtCalibrationAttempts")
+      .index("by_setId", (query) => query.eq("setId", setId))
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (
       !oldestCachedAttempt ||
@@ -93,31 +110,28 @@ export const prepareCalibrationCacheForSet = Effect.fn(
     }
   }
 
-  yield* scheduleCalibrationCacheTrim(ctx, setId);
+  yield* scheduleCalibrationCacheTrim(setId);
   return false;
 });
 
 /** Adjusts cached attempt stats after cache row insertion or deletion. */
 export const adjustCalibrationCacheAttemptCount = Effect.fn(
   "irt.cache.adjustCalibrationCacheAttemptCount"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly delta: number;
-    readonly setId: Id<"exerciseSets">;
-    readonly updatedAt: number;
-  }
-) {
+)(function* (args: {
+  readonly delta: number;
+  readonly setId: Id<"exerciseSets">;
+  readonly updatedAt: number;
+}) {
   if (args.delta === 0) {
     return false;
   }
 
-  const cacheStats = yield* Effect.promise(() =>
-    ctx.db
-      .query("irtCalibrationCacheStats")
-      .withIndex("by_setId", (query) => query.eq("setId", args.setId))
-      .unique()
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const cacheStats = yield* reader
+    .table("irtCalibrationCacheStats")
+    .get("by_setId", args.setId)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
   if (!cacheStats) {
     return false;
@@ -126,16 +140,14 @@ export const adjustCalibrationCacheAttemptCount = Effect.fn(
   const nextAttemptCount = Math.max(0, cacheStats.attemptCount + args.delta);
 
   if (nextAttemptCount === 0) {
-    yield* Effect.promise(() => ctx.db.delete(cacheStats._id));
+    yield* writer.table("irtCalibrationCacheStats").delete(cacheStats._id);
     return true;
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(cacheStats._id, {
-      attemptCount: nextAttemptCount,
-      updatedAt: args.updatedAt,
-    })
-  );
+  yield* writer.table("irtCalibrationCacheStats").patch(cacheStats._id, {
+    attemptCount: nextAttemptCount,
+    updatedAt: args.updatedAt,
+  });
 
   return true;
 });
@@ -148,54 +160,45 @@ export const rebuildCalibrationCacheStatsForSet = Effect.fn(
   readonly progress?: { readonly attemptCount: number };
   readonly setId: Id<"exerciseSets">;
 }) {
-  const ctx = yield* MutationCtx;
-  const set = yield* Effect.promise(() => ctx.db.get(args.setId));
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const set = yield* reader
+    .table("exerciseSets")
+    .get(args.setId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!set) {
     return null;
   }
 
-  const page = yield* Effect.promise(() =>
-    ctx.db
-      .query("irtCalibrationAttempts")
-      .withIndex("by_setId", (query) => query.eq("setId", args.setId))
-      .paginate({
-        cursor: args.cursor ?? null,
-        numItems: IRT_CALIBRATION_CACHE_STATS_REBUILD_BATCH_SIZE,
-      })
-  );
+  const page = yield* reader
+    .table("irtCalibrationAttempts")
+    .index("by_setId", (query) => query.eq("setId", args.setId))
+    .paginate({
+      cursor: args.cursor ?? null,
+      numItems: IRT_CALIBRATION_CACHE_STATS_REBUILD_BATCH_SIZE,
+    });
   const progress = {
     attemptCount: (args.progress?.attemptCount ?? 0) + page.page.length,
   };
 
   if (!page.isDone) {
-    yield* Effect.promise(() =>
-      ctx.scheduler.runAfter(
-        0,
-        Ref.getFunctionReference(
-          refs.internal.irt.mutations.internalFunctions.cache
-            .rebuildCalibrationCacheStatsForSet
-        ),
-        {
-          cursor: page.continueCursor,
-          progress,
-          setId: args.setId,
-        }
-      )
-    );
+    yield* scheduleCalibrationCacheStatsRebuildPage({
+      cursor: page.continueCursor,
+      progress,
+      setId: args.setId,
+    });
     return null;
   }
 
-  const cacheStats = yield* Effect.promise(() =>
-    ctx.db
-      .query("irtCalibrationCacheStats")
-      .withIndex("by_setId", (query) => query.eq("setId", args.setId))
-      .unique()
-  );
+  const cacheStats = yield* reader
+    .table("irtCalibrationCacheStats")
+    .get("by_setId", args.setId)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
   if (progress.attemptCount === 0) {
     if (cacheStats) {
-      yield* Effect.promise(() => ctx.db.delete(cacheStats._id));
+      yield* writer.table("irtCalibrationCacheStats").delete(cacheStats._id);
     }
 
     return null;
@@ -204,20 +207,16 @@ export const rebuildCalibrationCacheStatsForSet = Effect.fn(
   const now = yield* Clock.currentTimeMillis;
 
   if (cacheStats) {
-    yield* Effect.promise(() =>
-      ctx.db.patch(cacheStats._id, {
-        attemptCount: progress.attemptCount,
-        updatedAt: now,
-      })
-    );
+    yield* writer.table("irtCalibrationCacheStats").patch(cacheStats._id, {
+      attemptCount: progress.attemptCount,
+      updatedAt: now,
+    });
   } else {
-    yield* Effect.promise(() =>
-      ctx.db.insert("irtCalibrationCacheStats", {
-        attemptCount: progress.attemptCount,
-        setId: args.setId,
-        updatedAt: now,
-      })
-    );
+    yield* writer.table("irtCalibrationCacheStats").insert({
+      attemptCount: progress.attemptCount,
+      setId: args.setId,
+      updatedAt: now,
+    });
   }
 
   if (
@@ -226,7 +225,7 @@ export const rebuildCalibrationCacheStatsForSet = Effect.fn(
     return null;
   }
 
-  yield* scheduleCalibrationCacheTrim(ctx, args.setId);
+  yield* scheduleCalibrationCacheTrim(args.setId);
   return null;
 });
 
@@ -234,36 +233,36 @@ export const rebuildCalibrationCacheStatsForSet = Effect.fn(
 export const trimCalibrationCacheForSet = Effect.fn(
   "irt.cache.trimCalibrationCacheForSet"
 )(function* (args: { readonly setId: Id<"exerciseSets"> }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const now = yield* Clock.currentTimeMillis;
-  const set = yield* Effect.promise(() => ctx.db.get(args.setId));
+  const set = yield* reader
+    .table("exerciseSets")
+    .get(args.setId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!set) {
     return null;
   }
 
-  const cacheStats = yield* Effect.promise(() =>
-    ctx.db
-      .query("irtCalibrationCacheStats")
-      .withIndex("by_setId", (query) => query.eq("setId", args.setId))
-      .unique()
-  );
+  const cacheStats = yield* reader
+    .table("irtCalibrationCacheStats")
+    .get("by_setId", args.setId)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
   if (!cacheStats) {
-    yield* scheduleCalibrationCacheStatsRebuild(ctx, args.setId);
+    yield* scheduleCalibrationCacheStatsRebuild(args.setId);
     return null;
   }
 
   const cacheLimit = getCalibrationAttemptCacheLimit(set.questionCount);
-  const oldestAttempts = yield* Effect.promise(() =>
-    ctx.db
-      .query("irtCalibrationAttempts")
-      .withIndex("by_setId", (query) => query.eq("setId", args.setId))
-      .take(IRT_CALIBRATION_CACHE_TRIM_BATCH_SIZE)
-  );
+  const oldestAttempts = yield* reader
+    .table("irtCalibrationAttempts")
+    .index("by_setId", (query) => query.eq("setId", args.setId))
+    .take(IRT_CALIBRATION_CACHE_TRIM_BATCH_SIZE);
 
   if (oldestAttempts.length === 0) {
-    yield* Effect.promise(() => ctx.db.delete(cacheStats._id));
+    yield* writer.table("irtCalibrationCacheStats").delete(cacheStats._id);
     return null;
   }
 
@@ -286,7 +285,9 @@ export const trimCalibrationCacheForSet = Effect.fn(
   }
 
   for (const calibrationAttempt of attemptsToDelete) {
-    yield* Effect.promise(() => ctx.db.delete(calibrationAttempt._id));
+    yield* writer
+      .table("irtCalibrationAttempts")
+      .delete(calibrationAttempt._id);
   }
 
   const nextAttemptCount = Math.max(
@@ -295,22 +296,20 @@ export const trimCalibrationCacheForSet = Effect.fn(
   );
 
   if (nextAttemptCount === 0) {
-    yield* Effect.promise(() => ctx.db.delete(cacheStats._id));
+    yield* writer.table("irtCalibrationCacheStats").delete(cacheStats._id);
     return null;
   }
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(cacheStats._id, {
-      attemptCount: nextAttemptCount,
-      updatedAt: now,
-    })
-  );
+  yield* writer.table("irtCalibrationCacheStats").patch(cacheStats._id, {
+    attemptCount: nextAttemptCount,
+    updatedAt: now,
+  });
 
   if (
     attemptsToDelete.length === IRT_CALIBRATION_CACHE_TRIM_BATCH_SIZE ||
     nextAttemptCount > cacheLimit
   ) {
-    yield* scheduleCalibrationCacheTrim(ctx, args.setId);
+    yield* scheduleCalibrationCacheTrim(args.setId);
   }
 
   return null;

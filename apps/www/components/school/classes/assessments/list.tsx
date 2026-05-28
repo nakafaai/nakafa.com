@@ -2,12 +2,11 @@
 
 import refs from "@repo/backend/confect/_generated/refs";
 import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
-import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { AssessmentCard } from "@/components/school/classes/assessments/item";
+import { usePaginatedQuery } from "@/lib/confect/pagination";
 import { useClass } from "@/lib/context/use-class";
 import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 import { searchParsers } from "@/lib/nuqs/search";
@@ -22,9 +21,7 @@ export function SchoolClassesAssessmentsList() {
   const canManage = can(PERMISSIONS.ASSESSMENT_UPDATE);
 
   const { results, status, loadMore } = usePaginatedQuery(
-    toConvexReference(
-      refs.public.assessments.queries.publicFunctions.list.listAssessments
-    ),
+    refs.public.assessments.queries.publicFunctions.list.listAssessments,
     {
       schoolId,
       classId,

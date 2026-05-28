@@ -1,4 +1,4 @@
-import { QueryCtx } from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
@@ -15,7 +15,7 @@ import {
 } from "@repo/backend/confect/modules/tryout/tryoutParts.service";
 import { getTryoutReportScore } from "@repo/backend/confect/modules/tryout/tryoutReporting.service";
 import { getTryoutPublicResultStatus } from "@repo/backend/confect/modules/tryout/tryoutResultStatus.service";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 const INITIAL_TRYOUT_HISTORY_PAGE_SIZE = 25;
 
@@ -39,9 +39,8 @@ interface UserTryoutRouteArgs {
 export const getUserTryoutAttempt = Effect.fn(
   "tryouts.me.getUserTryoutAttempt"
 )(function* (args: UserTryoutRouteArgs) {
-  const ctx = yield* QueryCtx;
-  const { appUser } = yield* requireAppUser(ctx);
-  const context = yield* loadResolvedUserTryoutContext(ctx, {
+  const { appUser } = yield* requireAppUser();
+  const context = yield* loadResolvedUserTryoutContext({
     ...args,
     userId: appUser._id,
   });
@@ -50,7 +49,7 @@ export const getUserTryoutAttempt = Effect.fn(
     return null;
   }
 
-  return yield* buildUserTryoutAttemptResult(ctx, context);
+  return yield* buildUserTryoutAttemptResult(context);
 });
 
 /** Returns a page of the current user's tryout history. */
@@ -59,9 +58,8 @@ export const getUserTryoutAttemptHistory = Effect.fn(
 )(function* (
   args: UserTryoutRouteArgs & { readonly paginationOpts: PaginationOpts }
 ) {
-  const ctx = yield* QueryCtx;
-  const { appUser } = yield* requireAppUser(ctx);
-  const context = yield* loadResolvedUserTryoutContext(ctx, {
+  const { appUser } = yield* requireAppUser();
+  const context = yield* loadResolvedUserTryoutContext({
     ...args,
     userId: appUser._id,
   });
@@ -74,7 +72,7 @@ export const getUserTryoutAttemptHistory = Effect.fn(
     };
   }
 
-  return yield* loadUserTryoutAttemptHistoryPage(ctx, {
+  return yield* loadUserTryoutAttemptHistoryPage({
     paginationOpts: args.paginationOpts,
     tryout: context.tryout,
     userId: appUser._id,
@@ -85,9 +83,8 @@ export const getUserTryoutAttemptHistory = Effect.fn(
 export const getUserTryoutSession = Effect.fn(
   "tryouts.me.getUserTryoutSession"
 )(function* (args: UserTryoutRouteArgs) {
-  const ctx = yield* QueryCtx;
-  const { appUser } = yield* requireAppUser(ctx);
-  const context = yield* loadResolvedUserTryoutContext(ctx, {
+  const { appUser } = yield* requireAppUser();
+  const context = yield* loadResolvedUserTryoutContext({
     ...args,
     userId: appUser._id,
   });
@@ -107,9 +104,8 @@ export const getUserTryoutSession = Effect.fn(
 export const getUserTryoutSetView = Effect.fn(
   "tryouts.me.getUserTryoutSetView"
 )(function* (args: UserTryoutRouteArgs) {
-  const ctx = yield* QueryCtx;
-  const { appUser } = yield* requireAppUser(ctx);
-  const context = yield* loadResolvedUserTryoutContext(ctx, {
+  const { appUser } = yield* requireAppUser();
+  const context = yield* loadResolvedUserTryoutContext({
     ...args,
     userId: appUser._id,
   });
@@ -118,8 +114,8 @@ export const getUserTryoutSetView = Effect.fn(
     return null;
   }
 
-  const attemptData = yield* buildUserTryoutAttemptResult(ctx, context);
-  const initialHistory = yield* loadUserTryoutAttemptHistoryPage(ctx, {
+  const attemptData = yield* buildUserTryoutAttemptResult(context);
+  const initialHistory = yield* loadUserTryoutAttemptHistoryPage({
     paginationOpts: {
       cursor: null,
       numItems: INITIAL_TRYOUT_HISTORY_PAGE_SIZE,
@@ -138,9 +134,8 @@ export const getUserTryoutSetView = Effect.fn(
 export const getUserTryoutPartAttempt = Effect.fn(
   "tryouts.me.getUserTryoutPartAttempt"
 )(function* (args: UserTryoutRouteArgs & { readonly partKey: string }) {
-  const ctx = yield* QueryCtx;
-  const { appUser } = yield* requireAppUser(ctx);
-  const context = yield* loadResolvedUserTryoutContext(ctx, {
+  const { appUser } = yield* requireAppUser();
+  const context = yield* loadResolvedUserTryoutContext({
     ...args,
     userId: appUser._id,
   });
@@ -151,7 +146,6 @@ export const getUserTryoutPartAttempt = Effect.fn(
 
   const { attempt: tryoutAttempt, tryout } = context;
   const accessCampaign = yield* getTryoutAccessCampaignByOptionalId(
-    ctx,
     tryoutAttempt.accessCampaignId
   );
   const scoredTryoutAttempt = {
@@ -167,7 +161,7 @@ export const getUserTryoutPartAttempt = Effect.fn(
     tryoutAttempt.completedPartIndices.length <
       tryoutAttempt.partSetSnapshots.length;
   const finalizedSnapshot = endedAttemptHasUntouchedParts
-    ? yield* buildFinalizedTryoutSnapshot(ctx.db, {
+    ? yield* buildFinalizedTryoutSnapshot({
         scaleVersionId: tryoutAttempt.scaleVersionId,
         tryout,
         tryoutAttempt,
@@ -183,7 +177,7 @@ export const getUserTryoutPartAttempt = Effect.fn(
         totalQuestions: finalizedSnapshot.totalQuestions,
       }
     : scoredTryoutAttempt;
-  const currentPartSets = yield* loadValidatedTryoutPartSets(ctx.db, {
+  const currentPartSets = yield* loadValidatedTryoutPartSets({
     partCount: tryout.partCount,
     tryoutId: tryout._id,
   });
@@ -203,9 +197,11 @@ export const getUserTryoutPartAttempt = Effect.fn(
     };
   }
 
-  const set = yield* Effect.promise(() =>
-    ctx.db.get(resolvedPart.snapshot.setId)
-  );
+  const reader = yield* DatabaseReader;
+  const set = yield* reader
+    .table("exerciseSets")
+    .get(resolvedPart.snapshot.setId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!set) {
     return yield* Effect.fail(
@@ -222,16 +218,15 @@ export const getUserTryoutPartAttempt = Effect.fn(
     questionCount: resolvedPart.snapshot.questionCount,
     setSlug: set.slug,
   };
-  const currentPartAttempt = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryoutPartAttempts")
-      .withIndex("by_tryoutAttemptId_and_partIndex", (query) =>
-        query
-          .eq("tryoutAttemptId", tryoutAttempt._id)
-          .eq("partIndex", resolvedPart.snapshot.partIndex)
-      )
-      .unique()
-  );
+  const currentPartAttempt = yield* reader
+    .table("tryoutPartAttempts")
+    .index("by_tryoutAttemptId_and_partIndex", (query) =>
+      query
+        .eq("tryoutAttemptId", tryoutAttempt._id)
+        .eq("partIndex", resolvedPart.snapshot.partIndex)
+    )
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 
   if (!currentPartAttempt) {
     if (finalizedSnapshot) {
@@ -266,9 +261,10 @@ export const getUserTryoutPartAttempt = Effect.fn(
     };
   }
 
-  const setAttempt = yield* Effect.promise(() =>
-    ctx.db.get(currentPartAttempt.setAttemptId)
-  );
+  const setAttempt = yield* reader
+    .table("exerciseAttempts")
+    .get(currentPartAttempt.setAttemptId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!setAttempt) {
     return yield* Effect.fail(
@@ -279,7 +275,7 @@ export const getUserTryoutPartAttempt = Effect.fn(
     );
   }
 
-  const answers = yield* getBoundedExerciseAnswers(ctx.db, {
+  const answers = yield* getBoundedExerciseAnswers({
     attemptId: currentPartAttempt.setAttemptId,
     totalExercises: setAttempt.totalExercises,
   });

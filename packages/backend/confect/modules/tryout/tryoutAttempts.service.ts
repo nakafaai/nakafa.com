@@ -1,7 +1,11 @@
-import { Ref } from "@confect/core";
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import { createExerciseAttempt } from "@repo/backend/confect/modules/learning/exercises/attempts.service";
@@ -30,7 +34,7 @@ import {
   resolveRequestedTryoutPart,
 } from "@repo/backend/confect/modules/tryout/tryoutParts.service";
 import { getActiveTryoutSubscriptionForUserProduct } from "@repo/backend/confect/modules/tryout/tryoutSubscriptions.service";
-import { Clock, Effect, Either } from "effect";
+import { Clock, Duration, Effect, Either, Option } from "effect";
 
 /** Starts or resumes the current user's tryout attempt. */
 export const startTryout = Effect.fn("tryouts.attempts.startTryout")(
@@ -40,11 +44,14 @@ export const startTryout = Effect.fn("tryouts.attempts.startTryout")(
     readonly tryoutSlug: string;
   }) {
     const ctx = yield* MutationCtx;
-    const { appUser } = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const scheduler = yield* Scheduler;
+    const { appUser } = yield* requireAppUser();
     const userId = appUser._id;
     const now = yield* Clock.currentTimeMillis;
     const startableTryoutResult = yield* Effect.either(
-      loadStartableTryout(ctx, args)
+      loadStartableTryout(args)
     );
 
     if (Either.isLeft(startableTryoutResult)) {
@@ -69,19 +76,16 @@ export const startTryout = Effect.fn("tryouts.attempts.startTryout")(
     }
 
     const tryout = startableTryoutResult.right;
-    const scaleVersion = yield* getLatestScaleVersionForTryout(
-      ctx.db,
-      tryout._id
-    );
-    const existingAttempt = yield* Effect.promise(() =>
-      ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_userId_and_tryoutId_and_startedAt", (query) =>
-          query.eq("userId", userId).eq("tryoutId", tryout._id)
-        )
-        .order("desc")
-        .first()
-    );
+    const scaleVersion = yield* getLatestScaleVersionForTryout(tryout._id);
+    const existingAttempt = yield* reader
+      .table("tryoutAttempts")
+      .index(
+        "by_userId_and_tryoutId_and_startedAt",
+        (query) => query.eq("userId", userId).eq("tryoutId", tryout._id),
+        "desc"
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (!scaleVersion) {
       yield* Effect.logWarning(
@@ -109,16 +113,12 @@ export const startTryout = Effect.fn("tryouts.attempts.startTryout")(
       }
     }
 
-    const eventEntitlements = yield* resolveActiveTryoutEventEntitlements(
-      ctx.db,
-      {
-        now,
-        product: tryout.product,
-        userId,
-      }
-    );
+    const eventEntitlements = yield* resolveActiveTryoutEventEntitlements({
+      now,
+      product: tryout.product,
+      userId,
+    });
     const activeSubscription = yield* getActiveTryoutSubscriptionForUserProduct(
-      ctx.db,
       {
         now,
         product: tryout.product,
@@ -135,20 +135,19 @@ export const startTryout = Effect.fn("tryouts.attempts.startTryout")(
     const activeCompetitionGrantId =
       activeCompetitionEntitlement?.accessGrantId ?? null;
     const competitionAttempt = activeCompetitionCampaignId
-      ? yield* Effect.promise(() =>
-          ctx.db
-            .query("tryoutAttempts")
-            .withIndex(
-              "by_userId_and_tryoutId_and_accessCampaignId_and_startedAt",
-              (query) =>
-                query
-                  .eq("userId", userId)
-                  .eq("tryoutId", tryout._id)
-                  .eq("accessCampaignId", activeCompetitionCampaignId)
-            )
-            .order("desc")
-            .first()
-        )
+      ? yield* reader
+          .table("tryoutAttempts")
+          .index(
+            "by_userId_and_tryoutId_and_accessCampaignId_and_startedAt",
+            (query) =>
+              query
+                .eq("userId", userId)
+                .eq("tryoutId", tryout._id)
+                .eq("accessCampaignId", activeCompetitionCampaignId),
+            "desc"
+          )
+          .first()
+          .pipe(Effect.map(Option.getOrNull))
       : null;
     const competitionStartSource =
       activeCompetitionEntitlement &&
@@ -202,7 +201,7 @@ export const startTryout = Effect.fn("tryouts.attempts.startTryout")(
       return { kind: "requires-access" as const };
     }
 
-    const partSetSnapshots = yield* loadTryoutPartSnapshots(ctx.db, {
+    const partSetSnapshots = yield* loadTryoutPartSnapshots({
       partCount: tryout.partCount,
       tryoutId: tryout._id,
     });
@@ -216,55 +215,49 @@ export const startTryout = Effect.fn("tryouts.attempts.startTryout")(
       accessSource.accessCampaignKind === "competition"
         ? Math.min(attemptWindowEndsAt, accessSource.accessEndsAt)
         : attemptWindowEndsAt;
-    const tryoutAttemptId = yield* Effect.promise(() =>
-      ctx.db.insert("tryoutAttempts", {
-        accessCampaignId:
-          accessSource.accessKind === "event"
-            ? accessSource.accessCampaignId
-            : undefined,
-        accessCampaignKind:
-          accessSource.accessKind === "event"
-            ? accessSource.accessCampaignKind
-            : undefined,
-        accessEndsAt:
-          accessSource.accessKind === "event"
-            ? accessSource.accessEndsAt
-            : undefined,
-        accessGrantId:
-          accessSource.accessKind === "event"
-            ? accessSource.accessGrantId
-            : undefined,
-        accessKind: accessSource.accessKind,
-        attemptNumber,
-        completedAt: null,
-        completedPartIndices: [],
-        countsForCompetition: accessSource.countsForCompetition,
-        endReason: null,
-        expiresAt,
-        lastActivityAt: now,
-        partSetSnapshots,
-        scaleVersionId: scaleVersion._id,
-        scoreStatus: scaleVersion.status,
-        startedAt: now,
-        status: "in-progress",
-        theta: 0,
-        thetaSE: 1,
-        totalCorrect: 0,
-        totalQuestions: 0,
-        tryoutId: tryout._id,
-        userId,
-      })
-    );
+    const tryoutAttemptId = yield* writer.table("tryoutAttempts").insert({
+      accessCampaignId:
+        accessSource.accessKind === "event"
+          ? accessSource.accessCampaignId
+          : undefined,
+      accessCampaignKind:
+        accessSource.accessKind === "event"
+          ? accessSource.accessCampaignKind
+          : undefined,
+      accessEndsAt:
+        accessSource.accessKind === "event"
+          ? accessSource.accessEndsAt
+          : undefined,
+      accessGrantId:
+        accessSource.accessKind === "event"
+          ? accessSource.accessGrantId
+          : undefined,
+      accessKind: accessSource.accessKind,
+      attemptNumber,
+      completedAt: null,
+      completedPartIndices: [],
+      countsForCompetition: accessSource.countsForCompetition,
+      endReason: null,
+      expiresAt,
+      lastActivityAt: now,
+      partSetSnapshots,
+      scaleVersionId: scaleVersion._id,
+      scoreStatus: scaleVersion.status,
+      startedAt: now,
+      status: "in-progress",
+      theta: 0,
+      thetaSE: 1,
+      totalCorrect: 0,
+      totalQuestions: 0,
+      tryoutId: tryout._id,
+      userId,
+    });
 
-    yield* Effect.promise(() =>
-      ctx.scheduler.runAfter(
-        Math.max(0, expiresAt - now),
-        Ref.getFunctionReference(
-          refs.internal.tryouts.mutations.internalFunctions.expiry
-            .expireTryoutAttemptInternal
-        ),
-        { expiresAtMs: expiresAt, tryoutAttemptId }
-      )
+    yield* scheduler.runAfter(
+      Duration.millis(Math.max(0, expiresAt - now)),
+      refs.internal.tryouts.mutations.internalFunctions.expiry
+        .expireTryoutAttemptInternal,
+      { expiresAtMs: expiresAt, tryoutAttemptId }
     );
 
     return { kind: "started" as const };
@@ -277,11 +270,12 @@ export const startPart = Effect.fn("tryouts.attempts.startPart")(
     readonly partKey: string;
     readonly tryoutAttemptId: Id<"tryoutAttempts">;
   }) {
-    const ctx = yield* MutationCtx;
-    const { appUser } = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const { appUser } = yield* requireAppUser();
     const userId = appUser._id;
     const now = yield* Clock.currentTimeMillis;
-    const partStartContext = yield* loadPartStartContext(ctx, {
+    const partStartContext = yield* loadPartStartContext({
       now,
       partKey: args.partKey,
       tryoutAttemptId: args.tryoutAttemptId,
@@ -301,7 +295,7 @@ export const startPart = Effect.fn("tryouts.attempts.startPart")(
     }
 
     const { tryout, tryoutPartSnapshot } = partStartContext;
-    const existingPartAttempt = yield* reuseExistingPartAttempt(ctx, {
+    const existingPartAttempt = yield* reuseExistingPartAttempt({
       now,
       partIndex: tryoutPartSnapshot.partIndex,
       tryoutAttemptId: args.tryoutAttemptId,
@@ -323,9 +317,10 @@ export const startPart = Effect.fn("tryouts.attempts.startPart")(
       return { kind: "started" as const };
     }
 
-    const set = yield* Effect.promise(() =>
-      ctx.db.get(tryoutPartSnapshot.setId)
-    );
+    const set = yield* reader
+      .table("exerciseSets")
+      .get(tryoutPartSnapshot.setId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!set) {
       return yield* Effect.fail(
@@ -339,7 +334,7 @@ export const startPart = Effect.fn("tryouts.attempts.startPart")(
     const timeLimit = tryoutProductPolicies[
       tryout.product
     ].getPartTimeLimitSeconds(tryoutPartSnapshot.questionCount);
-    const setAttemptId = yield* createExerciseAttempt(ctx, {
+    const setAttemptId = yield* createExerciseAttempt({
       mode: "simulation",
       origin: "tryout",
       scope: "set",
@@ -350,20 +345,18 @@ export const startPart = Effect.fn("tryouts.attempts.startPart")(
       userId,
     });
 
-    yield* Effect.promise(() =>
-      ctx.db.insert("tryoutPartAttempts", {
-        partIndex: tryoutPartSnapshot.partIndex,
-        partKey: tryoutPartSnapshot.partKey,
-        setAttemptId,
-        setId: tryoutPartSnapshot.setId,
-        theta: 0,
-        thetaSE: 1,
-        tryoutAttemptId: args.tryoutAttemptId,
-      })
-    );
-    yield* Effect.promise(() =>
-      ctx.db.patch(args.tryoutAttemptId, { lastActivityAt: now })
-    );
+    yield* writer.table("tryoutPartAttempts").insert({
+      partIndex: tryoutPartSnapshot.partIndex,
+      partKey: tryoutPartSnapshot.partKey,
+      setAttemptId,
+      setId: tryoutPartSnapshot.setId,
+      theta: 0,
+      thetaSE: 1,
+      tryoutAttemptId: args.tryoutAttemptId,
+    });
+    yield* writer.table("tryoutAttempts").patch(args.tryoutAttemptId, {
+      lastActivityAt: now,
+    });
 
     return { kind: "started" as const };
   }
@@ -376,15 +369,16 @@ export const completePart = Effect.fn("tryouts.attempts.completePart")(
     readonly tryoutAttemptId: Id<"tryoutAttempts">;
   }) {
     const ctx = yield* MutationCtx;
-    const { appUser } = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const { appUser } = yield* requireAppUser();
     const userId = appUser._id;
     const now = yield* Clock.currentTimeMillis;
     const currentTryoutAttempt = yield* Effect.gen(function* () {
-      const ownedAttempt = yield* requireOwnedTryoutAttempt(ctx, {
+      const ownedAttempt = yield* requireOwnedTryoutAttempt({
         tryoutAttemptId: args.tryoutAttemptId,
         userId,
       });
-      return yield* requireActiveTryoutAttemptAfterExpirySync(ctx, {
+      return yield* requireActiveTryoutAttemptAfterExpirySync({
         now,
         tryoutAttempt: ownedAttempt,
       });
@@ -402,9 +396,10 @@ export const completePart = Effect.fn("tryouts.attempts.completePart")(
       return { kind: "tryout-expired" as const };
     }
 
-    const tryout = yield* Effect.promise(() =>
-      ctx.db.get(currentTryoutAttempt.tryoutId)
-    );
+    const tryout = yield* reader
+      .table("tryouts")
+      .get(currentTryoutAttempt.tryoutId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!tryout) {
       return yield* Effect.fail(
@@ -415,7 +410,7 @@ export const completePart = Effect.fn("tryouts.attempts.completePart")(
       );
     }
 
-    const currentPartSets = yield* loadValidatedTryoutPartSets(ctx.db, {
+    const currentPartSets = yield* loadValidatedTryoutPartSets({
       partCount: tryout.partCount,
       tryoutId: tryout._id,
     });
@@ -434,16 +429,15 @@ export const completePart = Effect.fn("tryouts.attempts.completePart")(
       );
     }
 
-    const partAttempt = yield* Effect.promise(() =>
-      ctx.db
-        .query("tryoutPartAttempts")
-        .withIndex("by_tryoutAttemptId_and_partIndex", (query) =>
-          query
-            .eq("tryoutAttemptId", args.tryoutAttemptId)
-            .eq("partIndex", resolvedPart.snapshot.partIndex)
-        )
-        .unique()
-    );
+    const partAttempt = yield* reader
+      .table("tryoutPartAttempts")
+      .index("by_tryoutAttemptId_and_partIndex", (query) =>
+        query
+          .eq("tryoutAttemptId", args.tryoutAttemptId)
+          .eq("partIndex", resolvedPart.snapshot.partIndex)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (!partAttempt) {
       return yield* Effect.fail(
@@ -461,7 +455,6 @@ export const completePart = Effect.fn("tryouts.attempts.completePart")(
     }
 
     yield* finalizeTryoutPartAttempt({
-      ctx,
       finishedAtMs: now,
       now,
       partAttempt,
@@ -469,9 +462,10 @@ export const completePart = Effect.fn("tryouts.attempts.completePart")(
       tryoutAttemptId: args.tryoutAttemptId,
     });
 
-    const refreshedTryoutAttempt = yield* Effect.promise(() =>
-      ctx.db.get(args.tryoutAttemptId)
-    );
+    const refreshedTryoutAttempt = yield* reader
+      .table("tryoutAttempts")
+      .get(args.tryoutAttemptId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!refreshedTryoutAttempt) {
       return yield* Effect.fail(

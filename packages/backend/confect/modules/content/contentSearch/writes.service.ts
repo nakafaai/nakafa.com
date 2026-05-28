@@ -1,4 +1,7 @@
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/confect/modules/content/constants";
 import type {
   Locale,
@@ -9,7 +12,7 @@ import {
   isSameContentSearch,
 } from "@repo/backend/confect/modules/content/contentSearch/documents.service";
 import { ContentSyncBatchSizeError } from "@repo/backend/confect/modules/content/contentSearch/errors.service";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option } from "effect";
 
 /** Upserts one content search row and returns the write outcome. */
 export const syncContentSearch = Effect.fn("contentSearch.syncContentSearch")(
@@ -23,27 +26,27 @@ export const syncContentSearch = Effect.fn("contentSearch.syncContentSearch")(
     text: string;
     title: string;
   }) {
-    const ctx = yield* MutationCtx;
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
     const nextValues = buildContentSearchDocument(source);
-    const existing = yield* Effect.promise(() =>
-      ctx.db
-        .query("contentSearch")
-        .withIndex("by_content_id", (query) =>
-          query.eq("content_id", nextValues.content_id)
-        )
-        .unique()
-    );
+    const existing = yield* reader
+      .table("contentSearch")
+      .index("by_content_id", (query) =>
+        query.eq("content_id", nextValues.content_id)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (isSameContentSearch(existing, nextValues)) {
       return "unchanged";
     }
 
     if (existing) {
-      yield* Effect.promise(() => ctx.db.patch(existing._id, nextValues));
+      yield* writer.table("contentSearch").patch(existing._id, nextValues);
       return "updated";
     }
 
-    yield* Effect.promise(() => ctx.db.insert("contentSearch", nextValues));
+    yield* writer.table("contentSearch").insert(nextValues);
     return "created";
   }
 );
@@ -52,19 +55,19 @@ export const syncContentSearch = Effect.fn("contentSearch.syncContentSearch")(
 export const deleteContentSearch = Effect.fn(
   "contentSearch.deleteContentSearch"
 )(function* (contentId: string) {
-  const ctx = yield* MutationCtx;
-  const existing = yield* Effect.promise(() =>
-    ctx.db
-      .query("contentSearch")
-      .withIndex("by_content_id", (query) => query.eq("content_id", contentId))
-      .unique()
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const existing = yield* reader
+    .table("contentSearch")
+    .index("by_content_id", (query) => query.eq("content_id", contentId))
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 
   if (!existing) {
     return null;
   }
 
-  yield* Effect.promise(() => ctx.db.delete(existing._id));
+  yield* writer.table("contentSearch").delete(existing._id);
   return null;
 });
 

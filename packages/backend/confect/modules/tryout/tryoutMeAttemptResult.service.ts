@@ -1,4 +1,4 @@
-import type { ConvexQueryCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import { getTryoutAccessCampaignByOptionalId } from "@repo/backend/confect/modules/tryout/tryoutAccessCampaignRead.service";
 import { buildFinalizedTryoutSnapshot } from "@repo/backend/confect/modules/tryout/tryoutFinalizeSnapshot.service";
@@ -11,19 +11,18 @@ import {
 import { getTryoutReportScore } from "@repo/backend/confect/modules/tryout/tryoutReporting.service";
 import { getTryoutPublicResultStatus } from "@repo/backend/confect/modules/tryout/tryoutResultStatus.service";
 import { resolveResumePartKey } from "@repo/backend/confect/modules/tryout/tryoutResume.service";
-import { getAll } from "convex-helpers/server/relationships";
 import { Effect } from "effect";
 
 /** Builds the full public attempt result for the current user. */
 export const buildUserTryoutAttemptResult = Effect.fn(
   "tryouts.me.buildUserTryoutAttemptResult"
-)(function* (ctx: ConvexQueryCtx, context: UserTryoutContext) {
+)(function* (context: UserTryoutContext) {
+  const reader = yield* DatabaseReader;
   const { attempt, tryout } = context;
   const accessCampaign = yield* getTryoutAccessCampaignByOptionalId(
-    ctx,
     attempt.accessCampaignId
   );
-  const currentPartSets = yield* loadValidatedTryoutPartSets(ctx.db, {
+  const currentPartSets = yield* loadValidatedTryoutPartSets({
     partCount: tryout.partCount,
     tryoutId: tryout._id,
   });
@@ -42,7 +41,7 @@ export const buildUserTryoutAttemptResult = Effect.fn(
     attempt.completedPartIndices.length < attempt.partSetSnapshots.length;
 
   if (endedAttemptHasUntouchedParts) {
-    const finalizedSnapshot = yield* buildFinalizedTryoutSnapshot(ctx.db, {
+    const finalizedSnapshot = yield* buildFinalizedTryoutSnapshot({
       scaleVersionId: attempt.scaleVersionId,
       tryout,
       tryoutAttempt: attempt,
@@ -78,16 +77,15 @@ export const buildUserTryoutAttemptResult = Effect.fn(
     };
   }
 
-  const tryoutPartAttempts = yield* loadBoundedTryoutPartAttempts(ctx.db, {
+  const tryoutPartAttempts = yield* loadBoundedTryoutPartAttempts({
     partCount: attempt.partSetSnapshots.length,
     tryoutAttemptId: attempt._id,
   });
-  const setAttempts = yield* Effect.promise(() =>
-    getAll(
-      ctx.db,
-      "exerciseAttempts",
-      tryoutPartAttempts.map((partAttempt) => partAttempt.setAttemptId)
-    )
+  const setAttempts = yield* Effect.forEach(tryoutPartAttempts, (partAttempt) =>
+    reader
+      .table("exerciseAttempts")
+      .get(partAttempt.setAttemptId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)))
   );
   const partAttemptsByPartIndex = new Map();
 

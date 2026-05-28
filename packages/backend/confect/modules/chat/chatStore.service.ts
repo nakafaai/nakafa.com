@@ -1,18 +1,13 @@
-import type { MyUIMessagePart } from "@repo/ai/types/message";
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
-import type {
-  MutationCtx as ConvexMutationCtx,
-  QueryCtx as ConvexQueryCtx,
-} from "@repo/backend/confect/_generated/services";
 import {
-  MutationCtx,
-  QueryCtx,
+  DatabaseReader,
+  DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import type { MessagePartInput } from "@repo/backend/confect/modules/chat/chats.tables";
 import {
   CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE,
   MAX_CHAT_MESSAGE_PARTS,
 } from "@repo/backend/confect/modules/chat/constants";
-import { mapUIMessagePartsToDBParts } from "@repo/backend/confect/modules/chat/messageParts/uiToDb";
 import { Effect, Schema } from "effect";
 
 export class ChatStoreError extends Schema.TaggedError<ChatStoreError>()(
@@ -21,25 +16,31 @@ export class ChatStoreError extends Schema.TaggedError<ChatStoreError>()(
 ) {}
 
 /** Requires a chat to belong to the given user id. */
-export async function readOwnedChat(
-  ctx: ConvexMutationCtx | ConvexQueryCtx,
-  chatId: Id<"chats">,
-  userId: Id<"users">
-) {
-  const chat = await ctx.db.get(chatId);
+export const readOwnedChat = Effect.fn("chatStore.readOwnedChat")(
+  function* (args: { chatId: Id<"chats">; userId: Id<"users"> }) {
+    const reader = yield* DatabaseReader;
+    const chat = yield* reader
+      .table("chats")
+      .get(args.chatId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-  if (!chat) {
-    return new ChatStoreError({ message: `Chat not found: ${chatId}` });
+    if (!chat) {
+      return yield* Effect.fail(
+        new ChatStoreError({ message: `Chat not found: ${args.chatId}` })
+      );
+    }
+
+    if (chat.userId !== args.userId) {
+      return yield* Effect.fail(
+        new ChatStoreError({
+          message: "You do not have permission to modify this chat.",
+        })
+      );
+    }
+
+    return chat;
   }
-
-  if (chat.userId !== userId) {
-    return new ChatStoreError({
-      message: "You do not have permission to modify this chat.",
-    });
-  }
-
-  return chat;
-}
+);
 
 /** Fails when a chat is unavailable to the current viewer. */
 export function validateChatAccess(
@@ -58,39 +59,28 @@ export function validateChatAccess(
 /** Requires a chat to belong to the given user id. */
 export const verifyChatOwnership = Effect.fn("chatStore.verifyChatOwnership")(
   function* (args: { chatId: Id<"chats">; userId: Id<"users"> }) {
-    const ctx = yield* MutationCtx;
-    const result = yield* Effect.promise(() =>
-      readOwnedChat(ctx, args.chatId, args.userId)
-    );
-
-    if (result instanceof ChatStoreError) {
-      return yield* Effect.fail(result);
-    }
-
-    return result;
+    return yield* readOwnedChat(args);
   }
 );
 
 /** Reads one message by stable client identifier. */
-export function getMessageByIdentifier(
-  ctx: ConvexMutationCtx | ConvexQueryCtx,
-  chatId: Id<"chats">,
-  identifier: string
-) {
-  return ctx.db
-    .query("messages")
-    .withIndex("by_chatId_and_identifier", (query) =>
-      query.eq("chatId", chatId).eq("identifier", identifier)
-    )
-    .unique();
-}
+export const getMessageByIdentifier = Effect.fn(
+  "chatStore.getMessageByIdentifier"
+)(function* (args: { chatId: Id<"chats">; identifier: string }) {
+  const reader = yield* DatabaseReader;
+
+  return yield* reader
+    .table("messages")
+    .get("by_chatId_and_identifier", args.chatId, args.identifier)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+});
 
 /** Inserts AI SDK message parts for a persisted message. */
 export const insertParts = Effect.fn("chatStore.insertParts")(function* (args: {
   messageId: Id<"messages">;
-  parts: readonly MyUIMessagePart[];
+  parts: readonly MessagePartInput[];
 }) {
-  const ctx = yield* MutationCtx;
+  const writer = yield* DatabaseWriter;
 
   if (args.parts.length > MAX_CHAT_MESSAGE_PARTS) {
     return yield* Effect.fail(
@@ -100,15 +90,12 @@ export const insertParts = Effect.fn("chatStore.insertParts")(function* (args: {
     );
   }
 
-  return yield* Effect.forEach(
-    mapUIMessagePartsToDBParts({ messageParts: args.parts }),
-    (part) =>
-      Effect.promise(() =>
-        ctx.db.insert("parts", {
-          ...part,
-          messageId: args.messageId,
-        })
-      )
+  return yield* Effect.forEach(args.parts, (part, order) =>
+    writer.table("parts").insert({
+      ...part,
+      messageId: args.messageId,
+      order,
+    })
   );
 });
 
@@ -116,18 +103,17 @@ export const insertParts = Effect.fn("chatStore.insertParts")(function* (args: {
 const deletePartsForMessageBatch = Effect.fn(
   "chatStore.deletePartsForMessageBatch"
 )(function* (messageId: Id<"messages">) {
-  const ctx = yield* MutationCtx;
-  const parts = yield* Effect.promise(() =>
-    ctx.db
-      .query("parts")
-      .withIndex("by_messageId_and_order", (query) =>
-        query.eq("messageId", messageId)
-      )
-      .take(MAX_CHAT_MESSAGE_PARTS + 1)
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const parts = yield* reader
+    .table("parts")
+    .index("by_messageId_and_order", (query) =>
+      query.eq("messageId", messageId)
+    )
+    .take(MAX_CHAT_MESSAGE_PARTS + 1);
 
   for (const part of parts.slice(0, MAX_CHAT_MESSAGE_PARTS)) {
-    yield* Effect.promise(() => ctx.db.delete(part._id));
+    yield* writer.table("parts").delete(part._id);
   }
 
   return { hasMore: parts.length > MAX_CHAT_MESSAGE_PARTS };
@@ -137,17 +123,16 @@ const deletePartsForMessageBatch = Effect.fn(
 export const deleteMessageBatchFromPoint = Effect.fn(
   "chatStore.deleteMessageBatchFromPoint"
 )(function* (args: { chatId: Id<"chats">; fromCreationTime: number }) {
-  const ctx = yield* MutationCtx;
-  const messages = yield* Effect.promise(() =>
-    ctx.db
-      .query("messages")
-      .withIndex("by_chatId", (query) =>
-        query
-          .eq("chatId", args.chatId)
-          .gte("_creationTime", args.fromCreationTime)
-      )
-      .take(CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE)
-  );
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const messages = yield* reader
+    .table("messages")
+    .index("by_chatId", (query) =>
+      query
+        .eq("chatId", args.chatId)
+        .gte("_creationTime", args.fromCreationTime)
+    )
+    .take(CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE);
 
   if (messages.length === 0) {
     return { hasMore: false };
@@ -160,7 +145,7 @@ export const deleteMessageBatchFromPoint = Effect.fn(
       return { hasMore: true };
     }
 
-    yield* Effect.promise(() => ctx.db.delete(message._id));
+    yield* writer.table("messages").delete(message._id);
   }
 
   return {
@@ -171,18 +156,15 @@ export const deleteMessageBatchFromPoint = Effect.fn(
 /** Loads one message page and attaches its ordered parts. */
 export const hydrateMessagePage = Effect.fn("chatStore.hydrateMessagePage")(
   function* (messages: readonly Doc<"messages">[]) {
-    const ctx = yield* QueryCtx;
+    const reader = yield* DatabaseReader;
     return yield* Effect.forEach(messages, (message) =>
       Effect.gen(function* () {
-        const parts = yield* Effect.promise(() =>
-          ctx.db
-            .query("parts")
-            .withIndex("by_messageId_and_order", (query) =>
-              query.eq("messageId", message._id)
-            )
-            .order("asc")
-            .take(MAX_CHAT_MESSAGE_PARTS + 1)
-        );
+        const parts = yield* reader
+          .table("parts")
+          .index("by_messageId_and_order", (query) =>
+            query.eq("messageId", message._id)
+          )
+          .take(MAX_CHAT_MESSAGE_PARTS + 1);
 
         if (parts.length > MAX_CHAT_MESSAGE_PARTS) {
           return yield* Effect.fail(

@@ -1,34 +1,83 @@
-import { registerPolarRoutes } from "@repo/backend/confect/modules/commerce/polar/webhook.routes";
+import { HttpApi as ConfectHttpApi } from "@confect/server";
+import { PolarApiLive } from "@repo/backend/confect/modules/commerce/polar/webhook.http";
 import { createAuth } from "@repo/backend/confect/modules/identity/auth.service";
-import { v1Routes } from "@repo/backend/confect/modules/operations/httpV1.routes";
-import { requestId } from "@repo/backend/confect/modules/operations/requestId.middleware";
-import type { ConvexActionCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import {
-  type HonoWithConvex,
-  HttpRouterWithHono,
-} from "convex-helpers/server/hono";
-import { Hono } from "hono";
+  HTTP_FOUND,
+  HTTP_OK,
+} from "@repo/backend/confect/modules/operations/http.constants";
+import {
+  V1ApiLive,
+  v1Metadata,
+} from "@repo/backend/confect/modules/operations/v1.api";
+import { httpAction } from "@repo/backend/convex/_generated/server";
 
-const app: HonoWithConvex<
-  ConvexActionCtx,
-  {
-    requestId: string;
-  }
-> = new Hono();
+const OPENID_CONFIGURATION_PATH =
+  "/api/auth/convex/.well-known/openid-configuration";
 
-app.use("*", requestId);
-
-app.get("/.well-known/openid-configuration", (context) =>
-  context.redirect("/api/auth/convex/.well-known/openid-configuration")
+/** Redirects Convex auth discovery to the Better Auth OpenID configuration route. */
+const openIdConfigurationRedirect = httpAction(() =>
+  Promise.resolve(
+    new Response(null, {
+      headers: { Location: OPENID_CONFIGURATION_PATH },
+      status: HTTP_FOUND,
+    })
+  )
 );
 
-app.on(["GET", "POST"], "/api/auth/*", (context) => {
-  const auth = createAuth(context.env);
-  return auth.handler(context.req.raw);
+/** Delegates Better Auth HTTP requests at the documented native Convex boundary. */
+const authHandler = httpAction((ctx, request) => {
+  const auth = createAuth(ctx);
+  return auth.handler(request);
 });
 
-app.route("/v1", v1Routes);
+/**
+ * Preserves the exact `/v1` route because Convex path prefixes only match
+ * slash-suffixed paths.
+ */
+const v1Root = httpAction(() =>
+  Promise.resolve(
+    new Response(JSON.stringify(v1Metadata), {
+      headers: { "Content-Type": "application/json" },
+      status: HTTP_OK,
+    })
+  )
+);
 
-registerPolarRoutes(app);
+/**
+ * Root HTTP router source generated into `convex/http.ts` by Confect.
+ *
+ * References:
+ * - https://confect.dev/concepts/project-structure#rules
+ * - https://confect.dev/server/http-api
+ * - https://confect.dev/server/plain-convex-functions
+ */
+const http = ConfectHttpApi.make({
+  "/polar/": { apiLive: PolarApiLive },
+  "/v1/": { apiLive: V1ApiLive },
+});
 
-export default new HttpRouterWithHono(app);
+http.route({
+  handler: openIdConfigurationRedirect,
+  method: "GET",
+  path: "/.well-known/openid-configuration",
+});
+
+http.route({
+  handler: authHandler,
+  method: "GET",
+  pathPrefix: "/api/auth/",
+});
+
+http.route({
+  handler: authHandler,
+  method: "POST",
+  pathPrefix: "/api/auth/",
+});
+
+http.route({
+  handler: v1Root,
+  method: "GET",
+  path: "/v1",
+});
+
+export default http;

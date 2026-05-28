@@ -1,11 +1,10 @@
-import type {
-  MutationCtx as ConvexMutationCtx,
-  QueryCtx as ConvexQueryCtx,
+import {
+  DatabaseReader,
+  StorageReader,
 } from "@repo/backend/confect/_generated/services";
-import { QueryCtx } from "@repo/backend/confect/_generated/services";
 import type { AudioContentRef } from "@repo/backend/confect/modules/content/audio.schemas";
 import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 export interface AudioContentLookup {
   readonly contentHash: string;
@@ -18,10 +17,13 @@ export interface AudioContentLookup {
 export const fetchContentForAudio = Effect.fn(
   "audioContent.fetchContentForAudio"
 )(function* (contentRef: AudioContentRef) {
-  const ctx = yield* QueryCtx;
+  const reader = yield* DatabaseReader;
 
   if (contentRef.type === "article") {
-    const article = yield* Effect.promise(() => ctx.db.get(contentRef.id));
+    const article = yield* reader
+      .table("articleContents")
+      .get(contentRef.id)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!article) {
       return null;
@@ -35,7 +37,10 @@ export const fetchContentForAudio = Effect.fn(
     };
   }
 
-  const section = yield* Effect.promise(() => ctx.db.get(contentRef.id));
+  const section = yield* reader
+    .table("subjectSections")
+    .get(contentRef.id)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!section) {
     return null;
@@ -50,64 +55,16 @@ export const fetchContentForAudio = Effect.fn(
 });
 
 /** Reads slug, locale, hash, and reference data for audio-capable content. */
-export async function readAudioContentLookup(
-  ctx: ConvexQueryCtx | ConvexMutationCtx,
-  contentRef: AudioContentRef
-) {
-  if (contentRef.type === "article") {
-    const article = await ctx.db.get(contentRef.id);
-
-    if (!article) {
-      return null;
-    }
-
-    return {
-      contentHash: article.contentHash,
-      locale: article.locale,
-      ref: { id: article._id, type: "article" as const },
-      slug: article.slug,
-    };
-  }
-
-  const section = await ctx.db.get(contentRef.id);
-
-  if (!section) {
-    return null;
-  }
-
-  return {
-    contentHash: section.contentHash,
-    locale: section.locale,
-    ref: { id: section._id, type: "subject" as const },
-    slug: section.slug,
-  };
-}
-
-/** Reads slug, locale, hash, and reference data for audio-capable content. */
 export const getAudioContentLookup = Effect.fn(
   "audioContent.getAudioContentLookup"
 )(function* (contentRef: AudioContentRef) {
-  const ctx = yield* QueryCtx;
-  return yield* Effect.promise(() => readAudioContentLookup(ctx, contentRef));
-});
+  const reader = yield* DatabaseReader;
 
-/** Finds the localized sibling for an audio-capable content slug. */
-export async function readLocalizedAudioContentLookup(
-  ctx: ConvexQueryCtx | ConvexMutationCtx,
-  sourceContent: AudioContentLookup,
-  locale: Locale
-) {
-  if (sourceContent.locale === locale) {
-    return sourceContent;
-  }
-
-  if (sourceContent.ref.type === "article") {
-    const article = await ctx.db
-      .query("articleContents")
-      .withIndex("by_locale_and_slug", (query) =>
-        query.eq("locale", locale).eq("slug", sourceContent.slug)
-      )
-      .first();
+  if (contentRef.type === "article") {
+    const article = yield* reader
+      .table("articleContents")
+      .get(contentRef.id)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!article) {
       return null;
@@ -121,12 +78,10 @@ export async function readLocalizedAudioContentLookup(
     };
   }
 
-  const section = await ctx.db
-    .query("subjectSections")
-    .withIndex("by_locale_and_slug", (query) =>
-      query.eq("locale", locale).eq("slug", sourceContent.slug)
-    )
-    .first();
+  const section = yield* reader
+    .table("subjectSections")
+    .get(contentRef.id)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!section) {
     return null;
@@ -138,16 +93,57 @@ export async function readLocalizedAudioContentLookup(
     ref: { id: section._id, type: "subject" as const },
     slug: section.slug,
   };
-}
+});
 
 /** Finds the localized sibling for an audio-capable content slug. */
 export const getLocalizedAudioContentLookup = Effect.fn(
   "audioContent.getLocalizedAudioContentLookup"
 )(function* (sourceContent: AudioContentLookup, locale: Locale) {
-  const ctx = yield* QueryCtx;
-  return yield* Effect.promise(() =>
-    readLocalizedAudioContentLookup(ctx, sourceContent, locale)
-  );
+  const reader = yield* DatabaseReader;
+
+  if (sourceContent.locale === locale) {
+    return sourceContent;
+  }
+
+  if (sourceContent.ref.type === "article") {
+    const article = yield* reader
+      .table("articleContents")
+      .index("by_locale_and_slug", (query) =>
+        query.eq("locale", locale).eq("slug", sourceContent.slug)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
+
+    if (!article) {
+      return null;
+    }
+
+    return {
+      contentHash: article.contentHash,
+      locale: article.locale,
+      ref: { id: article._id, type: "article" as const },
+      slug: article.slug,
+    };
+  }
+
+  const section = yield* reader
+    .table("subjectSections")
+    .index("by_locale_and_slug", (query) =>
+      query.eq("locale", locale).eq("slug", sourceContent.slug)
+    )
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
+
+  if (!section) {
+    return null;
+  }
+
+  return {
+    contentHash: section.contentHash,
+    locale: section.locale,
+    ref: { id: section._id, type: "subject" as const },
+    slug: section.slug,
+  };
 });
 
 /** Reads the current content hash for an audio-capable content reference. */
@@ -165,57 +161,55 @@ export const getAudioBySlug = Effect.fn("audioContent.getAudioBySlug")(
     locale: Locale;
     slug: string;
   }) {
-    const ctx = yield* QueryCtx;
+    const reader = yield* DatabaseReader;
+    const storage = yield* StorageReader;
     const content =
       args.contentType === "article"
-        ? yield* Effect.promise(() =>
-            ctx.db
-              .query("articleContents")
-              .withIndex("by_locale_and_slug", (query) =>
-                query.eq("locale", args.locale).eq("slug", args.slug)
-              )
-              .first()
-          )
-        : yield* Effect.promise(() =>
-            ctx.db
-              .query("subjectSections")
-              .withIndex("by_locale_and_slug", (query) =>
-                query.eq("locale", args.locale).eq("slug", args.slug)
-              )
-              .first()
-          );
+        ? yield* reader
+            .table("articleContents")
+            .index("by_locale_and_slug", (query) =>
+              query.eq("locale", args.locale).eq("slug", args.slug)
+            )
+            .first()
+            .pipe(Effect.map(Option.getOrNull))
+        : yield* reader
+            .table("subjectSections")
+            .index("by_locale_and_slug", (query) =>
+              query.eq("locale", args.locale).eq("slug", args.slug)
+            )
+            .first()
+            .pipe(Effect.map(Option.getOrNull));
 
     if (!content) {
       return null;
     }
 
-    const audio = yield* Effect.promise(() =>
-      ctx.db
-        .query("contentAudios")
-        .withIndex("by_contentRefType_and_contentRefId_and_locale", (query) =>
-          query
-            .eq("contentRef.type", args.contentType)
-            .eq("contentRef.id", content._id)
-            .eq("locale", args.locale)
-        )
-        .first()
-    );
+    const audio = yield* reader
+      .table("contentAudios")
+      .index("by_contentRefType_and_contentRefId_and_locale", (query) =>
+        query
+          .eq("contentRef.type", args.contentType)
+          .eq("contentRef.id", content._id)
+          .eq("locale", args.locale)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (!audio || audio.status !== "completed" || !audio.audioStorageId) {
       return null;
     }
 
     const audioStorageId = audio.audioStorageId;
-    const audioUrl = yield* Effect.promise(() =>
-      ctx.storage.getUrl(audioStorageId)
-    );
+    const audioUrl = yield* storage
+      .getUrl(audioStorageId)
+      .pipe(Effect.catchTag("BlobNotFoundError", () => Effect.succeed(null)));
 
     if (!audioUrl) {
       return null;
     }
 
     return {
-      audioUrl,
+      audioUrl: audioUrl.toString(),
       contentType: args.contentType,
       duration: audio.audioDuration ? audio.audioDuration / 1000 : 0,
       script: audio.script,

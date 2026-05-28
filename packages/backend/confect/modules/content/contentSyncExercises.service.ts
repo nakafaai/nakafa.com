@@ -1,5 +1,8 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/confect/modules/content/constants";
 import type {
   ExercisesCategory,
@@ -22,7 +25,7 @@ import {
   replaceExerciseChoices,
   syncContentAuthorsWithCache,
 } from "@repo/backend/confect/modules/content/contentSyncHelpers.service";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option } from "effect";
 
 interface SyncedExerciseSet {
   readonly category: ExercisesCategory;
@@ -75,7 +78,8 @@ interface SyncedExerciseQuestion {
 export const bulkSyncExerciseSets = Effect.fn(
   "contentSync.exercises.bulkSyncExerciseSets"
 )(function* (args: { sets: SyncedExerciseSet[] }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
     functionName: "bulkSyncExerciseSets",
     limit: CONTENT_SYNC_BATCH_LIMITS.exerciseSets,
@@ -120,14 +124,13 @@ export const bulkSyncExerciseSets = Effect.fn(
       title: set.title,
       type: set.type,
     };
-    const existingSet = yield* Effect.promise(() =>
-      ctx.db
-        .query("exerciseSets")
-        .withIndex("by_locale_and_slug", (query) =>
-          query.eq("locale", set.locale).eq("slug", set.slug)
-        )
-        .unique()
-    );
+    const existingSet = yield* reader
+      .table("exerciseSets")
+      .index("by_locale_and_slug", (query) =>
+        query.eq("locale", set.locale).eq("slug", set.slug)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (
       existingSet &&
@@ -145,24 +148,20 @@ export const bulkSyncExerciseSets = Effect.fn(
     }
 
     if (existingSet) {
-      yield* Effect.promise(() =>
-        ctx.db.patch(existingSet._id, {
-          ...nextValues,
-          syncedAt: now,
-        })
-      );
+      yield* writer.table("exerciseSets").patch(existingSet._id, {
+        ...nextValues,
+        syncedAt: now,
+      });
       updated += 1;
       continue;
     }
 
-    yield* Effect.promise(() =>
-      ctx.db.insert("exerciseSets", {
-        ...nextValues,
-        locale: set.locale,
-        slug: set.slug,
-        syncedAt: now,
-      })
-    );
+    yield* writer.table("exerciseSets").insert({
+      ...nextValues,
+      locale: set.locale,
+      slug: set.slug,
+      syncedAt: now,
+    });
     created += 1;
   }
 
@@ -173,7 +172,8 @@ export const bulkSyncExerciseSets = Effect.fn(
 export const bulkSyncExerciseQuestions = Effect.fn(
   "contentSync.exercises.bulkSyncExerciseQuestions"
 )(function* (args: { questions: SyncedExerciseQuestion[] }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
     functionName: "bulkSyncExerciseQuestions",
     limit: CONTENT_SYNC_BATCH_LIMITS.exerciseQuestions,
@@ -192,17 +192,16 @@ export const bulkSyncExerciseQuestions = Effect.fn(
   const allAuthorNames = args.questions.flatMap((question) =>
     question.authors.map((author) => author.name)
   );
-  const authorCache = yield* buildAuthorCache(ctx, allAuthorNames);
+  const authorCache = yield* buildAuthorCache(allAuthorNames);
 
   for (const question of args.questions) {
-    const exerciseSet = yield* Effect.promise(() =>
-      ctx.db
-        .query("exerciseSets")
-        .withIndex("by_locale_and_slug", (query) =>
-          query.eq("locale", question.locale).eq("slug", question.setSlug)
-        )
-        .unique()
-    );
+    const exerciseSet = yield* reader
+      .table("exerciseSets")
+      .index("by_locale_and_slug", (query) =>
+        query.eq("locale", question.locale).eq("slug", question.setSlug)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
     if (!exerciseSet) {
       skipped += 1;
@@ -211,14 +210,13 @@ export const bulkSyncExerciseQuestions = Effect.fn(
       continue;
     }
 
-    const existingQuestion = yield* Effect.promise(() =>
-      ctx.db
-        .query("exerciseQuestions")
-        .withIndex("by_locale_and_slug", (query) =>
-          query.eq("locale", question.locale).eq("slug", question.slug)
-        )
-        .unique()
-    );
+    const existingQuestion = yield* reader
+      .table("exerciseQuestions")
+      .index("by_locale_and_slug", (query) =>
+        query.eq("locale", question.locale).eq("slug", question.slug)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
     yield* syncContentSearch({
       contentHash: question.contentHash,
       description: question.searchDescription,
@@ -252,20 +250,17 @@ export const bulkSyncExerciseQuestions = Effect.fn(
     };
 
     if (existingQuestion) {
-      yield* Effect.promise(() =>
-        ctx.db.patch(existingQuestion._id, {
-          ...nextValues,
-          syncedAt: now,
-        })
-      );
+      yield* writer.table("exerciseQuestions").patch(existingQuestion._id, {
+        ...nextValues,
+        syncedAt: now,
+      });
       authorLinksCreated += yield* syncContentAuthorsWithCache(
-        ctx,
         existingQuestion._id,
         "exercise",
         question.authors,
         authorCache
       );
-      choicesCreated += yield* replaceExerciseChoices(ctx, {
+      choicesCreated += yield* replaceExerciseChoices({
         choices: question.choices,
         locale: question.locale,
         questionId: existingQuestion._id,
@@ -274,22 +269,19 @@ export const bulkSyncExerciseQuestions = Effect.fn(
       continue;
     }
 
-    const questionId = yield* Effect.promise(() =>
-      ctx.db.insert("exerciseQuestions", {
-        ...nextValues,
-        locale: question.locale,
-        slug: question.slug,
-        syncedAt: now,
-      })
-    );
+    const questionId = yield* writer.table("exerciseQuestions").insert({
+      ...nextValues,
+      locale: question.locale,
+      slug: question.slug,
+      syncedAt: now,
+    });
     authorLinksCreated += yield* syncContentAuthorsWithCache(
-      ctx,
       questionId,
       "exercise",
       question.authors,
       authorCache
     );
-    choicesCreated += yield* replaceExerciseChoices(ctx, {
+    choicesCreated += yield* replaceExerciseChoices({
       choices: question.choices,
       locale: question.locale,
       questionId,
@@ -312,7 +304,8 @@ export const bulkSyncExerciseQuestions = Effect.fn(
 export const deleteStaleExerciseSets = Effect.fn(
   "contentSync.exercises.deleteStaleExerciseSets"
 )(function* (args: { setIds: Id<"exerciseSets">[] }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
     functionName: "deleteStaleExerciseSets",
     limit: CONTENT_SYNC_BATCH_LIMITS.staleExerciseSets,
@@ -323,18 +316,19 @@ export const deleteStaleExerciseSets = Effect.fn(
   let deleted = 0;
 
   for (const setId of args.setIds) {
-    const exerciseSet = yield* Effect.promise(() => ctx.db.get(setId));
+    const exerciseSet = yield* reader
+      .table("exerciseSets")
+      .get(setId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!exerciseSet) {
       continue;
     }
 
-    const questions = yield* Effect.promise(() =>
-      ctx.db
-        .query("exerciseQuestions")
-        .withIndex("by_setId", (query) => query.eq("setId", setId))
-        .take(exerciseSet.questionCount + 1)
-    );
+    const questions = yield* reader
+      .table("exerciseQuestions")
+      .index("by_setId", (query) => query.eq("setId", setId))
+      .take(exerciseSet.questionCount + 1);
 
     if (questions.length > exerciseSet.questionCount) {
       return yield* Effect.fail(
@@ -345,7 +339,7 @@ export const deleteStaleExerciseSets = Effect.fn(
     }
 
     for (const question of questions) {
-      yield* deleteExerciseQuestion(ctx, question._id);
+      yield* deleteExerciseQuestion(question._id);
     }
 
     const searchRef = buildContentSearchRef({
@@ -354,7 +348,7 @@ export const deleteStaleExerciseSets = Effect.fn(
       section: "exercises",
     });
     yield* deleteContentSearch(searchRef.content_id);
-    yield* Effect.promise(() => ctx.db.delete(setId));
+    yield* writer.table("exerciseSets").delete(setId);
     deleted += 1;
   }
 
@@ -365,7 +359,7 @@ export const deleteStaleExerciseSets = Effect.fn(
 export const deleteStaleExerciseQuestions = Effect.fn(
   "contentSync.exercises.deleteStaleExerciseQuestions"
 )(function* (args: { questionIds: Id<"exerciseQuestions">[] }) {
-  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
   yield* assertContentSyncBatchSize({
     functionName: "deleteStaleExerciseQuestions",
     limit: CONTENT_SYNC_BATCH_LIMITS.staleExerciseQuestions,
@@ -376,13 +370,16 @@ export const deleteStaleExerciseQuestions = Effect.fn(
   let deleted = 0;
 
   for (const questionId of args.questionIds) {
-    const question = yield* Effect.promise(() => ctx.db.get(questionId));
+    const question = yield* reader
+      .table("exerciseQuestions")
+      .get(questionId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!question) {
       continue;
     }
 
-    yield* deleteExerciseQuestion(ctx, questionId);
+    yield* deleteExerciseQuestion(questionId);
     deleted += 1;
   }
 

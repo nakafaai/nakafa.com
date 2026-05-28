@@ -1,11 +1,13 @@
 import type { Id } from "@repo/backend/confect/_generated/dataModel";
-import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { IrtError } from "@repo/backend/confect/modules/tryout/irt.errors";
 import {
   adjustCalibrationCacheAttemptCount,
   scheduleCalibrationCacheStatsRebuild,
 } from "@repo/backend/confect/modules/tryout/irtCache.service";
-import { getAll } from "convex-helpers/server/relationships";
 import { Effect } from "effect";
 
 const MAX_CALIBRATION_ATTEMPT_DUPLICATES = 100;
@@ -13,21 +15,16 @@ const MAX_CALIBRATION_ATTEMPT_DUPLICATES = 100;
 /** Deletes cached calibration rows for one exercise attempt. */
 export const clearCalibrationResponsesForAttempt = Effect.fn(
   "irt.attempts.clearCalibrationResponsesForAttempt"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly attemptId: Id<"exerciseAttempts">;
-    readonly updatedAt: number;
-  }
-) {
-  const existingAttempts = yield* Effect.promise(() =>
-    ctx.db
-      .query("irtCalibrationAttempts")
-      .withIndex("by_attemptId", (query) =>
-        query.eq("attemptId", args.attemptId)
-      )
-      .take(MAX_CALIBRATION_ATTEMPT_DUPLICATES + 1)
-  );
+)(function* (args: {
+  readonly attemptId: Id<"exerciseAttempts">;
+  readonly updatedAt: number;
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const existingAttempts = yield* reader
+    .table("irtCalibrationAttempts")
+    .index("by_attemptId", (query) => query.eq("attemptId", args.attemptId))
+    .take(MAX_CALIBRATION_ATTEMPT_DUPLICATES + 1);
 
   if (existingAttempts.length > MAX_CALIBRATION_ATTEMPT_DUPLICATES) {
     return yield* Effect.fail(
@@ -47,11 +44,13 @@ export const clearCalibrationResponsesForAttempt = Effect.fn(
   }
 
   for (const calibrationAttempt of existingAttempts) {
-    yield* Effect.promise(() => ctx.db.delete(calibrationAttempt._id));
+    yield* writer
+      .table("irtCalibrationAttempts")
+      .delete(calibrationAttempt._id);
   }
 
   for (const [setId, removedCount] of removedAttemptCounts) {
-    const didAdjustStats = yield* adjustCalibrationCacheAttemptCount(ctx, {
+    const didAdjustStats = yield* adjustCalibrationCacheAttemptCount({
       delta: -removedCount,
       setId,
       updatedAt: args.updatedAt,
@@ -61,7 +60,7 @@ export const clearCalibrationResponsesForAttempt = Effect.fn(
       continue;
     }
 
-    yield* scheduleCalibrationCacheStatsRebuild(ctx, setId);
+    yield* scheduleCalibrationCacheStatsRebuild(setId);
   }
 
   return null;
@@ -70,8 +69,12 @@ export const clearCalibrationResponsesForAttempt = Effect.fn(
 /** Builds a calibration cache insert from a completed simulation attempt. */
 export const buildCalibrationAttemptInsert = Effect.fn(
   "irt.attempts.buildCalibrationAttemptInsert"
-)(function* (ctx: ConvexMutationCtx, attemptId: Id<"exerciseAttempts">) {
-  const attempt = yield* Effect.promise(() => ctx.db.get(attemptId));
+)(function* (attemptId: Id<"exerciseAttempts">) {
+  const reader = yield* DatabaseReader;
+  const attempt = yield* reader
+    .table("exerciseAttempts")
+    .get(attemptId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (
     !attempt ||
@@ -82,14 +85,12 @@ export const buildCalibrationAttemptInsert = Effect.fn(
     return null;
   }
 
-  const answers = yield* Effect.promise(() =>
-    ctx.db
-      .query("exerciseAnswers")
-      .withIndex("by_attemptId_and_exerciseNumber", (query) =>
-        query.eq("attemptId", attemptId)
-      )
-      .take(attempt.totalExercises + 1)
-  );
+  const answers = yield* reader
+    .table("exerciseAnswers")
+    .index("by_attemptId_and_exerciseNumber", (query) =>
+      query.eq("attemptId", attemptId)
+    )
+    .take(attempt.totalExercises + 1);
 
   if (answers.length > attempt.totalExercises) {
     return yield* Effect.fail(
@@ -117,12 +118,14 @@ export const buildCalibrationAttemptInsert = Effect.fn(
     return null;
   }
 
-  const questions = yield* Effect.promise(() =>
-    getAll(
-      ctx.db,
-      "exerciseQuestions",
-      scoredAnswers.map((answer) => answer.questionId)
-    )
+  const questions = yield* Effect.forEach(
+    scoredAnswers,
+    (answer) =>
+      reader
+        .table("exerciseQuestions")
+        .get(answer.questionId)
+        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null))),
+    { concurrency: "unbounded" }
   );
   const firstQuestion = questions[0];
 
@@ -174,34 +177,30 @@ export const buildCalibrationAttemptInsert = Effect.fn(
 /** Inserts one calibration cache row and updates cache stats. */
 export const insertCalibrationAttempt = Effect.fn(
   "irt.attempts.insertCalibrationAttempt"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly attemptId: Id<"exerciseAttempts">;
-    readonly responses: readonly {
-      readonly isCorrect: boolean;
-      readonly questionId: Id<"exerciseQuestions">;
-    }[];
-    readonly setId: Id<"exerciseSets">;
-    readonly updatedAt: number;
-  }
-) {
-  yield* Effect.promise(() =>
-    ctx.db.insert("irtCalibrationAttempts", {
-      attemptId: args.attemptId,
-      responses: [...args.responses],
-      setId: args.setId,
-    })
-  );
+)(function* (args: {
+  readonly attemptId: Id<"exerciseAttempts">;
+  readonly responses: readonly {
+    readonly isCorrect: boolean;
+    readonly questionId: Id<"exerciseQuestions">;
+  }[];
+  readonly setId: Id<"exerciseSets">;
+  readonly updatedAt: number;
+}) {
+  const writer = yield* DatabaseWriter;
+  yield* writer.table("irtCalibrationAttempts").insert({
+    attemptId: args.attemptId,
+    responses: [...args.responses],
+    setId: args.setId,
+  });
 
-  const didAdjustStats = yield* adjustCalibrationCacheAttemptCount(ctx, {
+  const didAdjustStats = yield* adjustCalibrationCacheAttemptCount({
     delta: 1,
     setId: args.setId,
     updatedAt: args.updatedAt,
   });
 
   if (!didAdjustStats) {
-    yield* scheduleCalibrationCacheStatsRebuild(ctx, args.setId);
+    yield* scheduleCalibrationCacheStatsRebuild(args.setId);
   }
 
   return null;

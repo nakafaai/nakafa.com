@@ -1,20 +1,23 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import * as commerce_credits from "@repo/backend/confect/modules/commerce/credits.service";
+import {
+  syncAllCreditResetPeriods as commerceCredits_syncAllCreditResetPeriods,
+  syncCreditResetPeriod as commerceCredits_syncCreditResetPeriod,
+} from "@repo/backend/confect/modules/commerce/credits.service";
 import { Layer } from "effect";
 
 const credits_mutations_syncAllCreditResetPeriodsImpl = FunctionImpl.make(
   api,
   "credits.mutations",
   "syncAllCreditResetPeriods",
-  (_args) => commerce_credits.syncAllCreditResetPeriods()
+  (_args) => commerceCredits_syncAllCreditResetPeriods()
 );
 
 const credits_mutations_syncCreditResetPeriodImpl = FunctionImpl.make(
   api,
   "credits.mutations",
   "syncCreditResetPeriod",
-  (args) => commerce_credits.syncCreditResetPeriod(args)
+  (args) => commerceCredits_syncCreditResetPeriod(args)
 );
 
 const creditsMutationsImpl = GroupImpl.make(api, "credits.mutations")

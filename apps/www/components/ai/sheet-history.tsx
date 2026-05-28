@@ -7,7 +7,6 @@ import {
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import refs from "@repo/backend/confect/_generated/refs";
-import { toConvexReference } from "@repo/backend/confect/modules/shared/convexReferences";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -20,10 +19,11 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import { Authenticated, usePaginatedQuery } from "convex/react";
+import { Authenticated } from "convex/react";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
 import { useAi } from "@/components/ai/context/use-ai";
+import { usePaginatedQuery } from "@/lib/confect/pagination";
 import { useUser } from "@/lib/context/use-user";
 
 /** Opens the recent Nina chat list when a user is signed in. */
@@ -60,7 +60,7 @@ const SheetHistoryContent = memo(() => {
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
   const { results, status } = usePaginatedQuery(
-    toConvexReference(refs.public.chats.queries.getOwnChats),
+    refs.public.chats.queries.getOwnChats,
     { type: "study" },
     { initialNumItems: 50 }
   );

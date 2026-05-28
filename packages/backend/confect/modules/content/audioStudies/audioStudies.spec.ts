@@ -1,8 +1,14 @@
 import { FunctionSpec, GenericId, GroupSpec } from "@confect/core";
+import {
+  audioContentRefSchema,
+  audioModelSchema,
+  audioStatusSchema,
+  voiceSettingsSchema,
+} from "@repo/backend/confect/modules/content/audio.schemas";
 import type {
   GenerateAudioForQueueItemWorkflow,
   HandleAudioWorkflowComplete,
-} from "@repo/backend/confect/modules/content/audioStudies/workflows.validators";
+} from "@repo/backend/confect/modules/content/audioStudies/workflows";
 import { localeSchema } from "@repo/backend/confect/modules/content/content.schemas";
 import { Schema } from "effect";
 
@@ -44,16 +50,7 @@ const audioStudiesMutationsContentAudiosGroup = GroupSpec.make("contentAudios")
       name: "createOrGetAudioRecord",
       args: Schema.Struct({
         contentHash: Schema.String,
-        contentRef: Schema.Union(
-          Schema.Struct({
-            id: GenericId.GenericId("articleContents"),
-            type: Schema.Literal("article"),
-          }),
-          Schema.Struct({
-            id: GenericId.GenericId("subjectSections"),
-            type: Schema.Literal("subject"),
-          })
-        ),
+        contentRef: audioContentRefSchema,
         locale: localeSchema,
       }),
       returns: GenericId.GenericId("contentAudios"),
@@ -95,16 +92,7 @@ const audioStudiesMutationsContentAudiosGroup = GroupSpec.make("contentAudios")
     FunctionSpec.internalMutation({
       name: "updateContentHash",
       args: Schema.Struct({
-        contentRef: Schema.Union(
-          Schema.Struct({
-            id: GenericId.GenericId("articleContents"),
-            type: Schema.Literal("article"),
-          }),
-          Schema.Struct({
-            id: GenericId.GenericId("subjectSections"),
-            type: Schema.Literal("subject"),
-          })
-        ),
+        contentRef: audioContentRefSchema,
         newHash: Schema.String,
       }),
       returns: Schema.Struct({ updatedCount: Schema.Number }),
@@ -130,16 +118,7 @@ const audioStudiesMutationsQueueGroup = GroupSpec.make("queue")
       returns: Schema.Union(
         Schema.Null,
         Schema.Struct({
-          contentRef: Schema.Union(
-            Schema.Struct({
-              id: GenericId.GenericId("articleContents"),
-              type: Schema.Literal("article"),
-            }),
-            Schema.Struct({
-              id: GenericId.GenericId("subjectSections"),
-              type: Schema.Literal("subject"),
-            })
-          ),
+          contentRef: audioContentRefSchema,
           locale: localeSchema,
         })
       ),
@@ -157,6 +136,15 @@ const audioStudiesMutationsQueueGroup = GroupSpec.make("queue")
   )
   .addFunction(
     FunctionSpec.internalMutation({
+      name: "markQueueCompleted",
+      args: Schema.Struct({
+        queueItemId: GenericId.GenericId("audioGenerationQueue"),
+      }),
+      returns: Schema.Null,
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
       name: "resetStuckQueueItems",
       args: Schema.Struct({}),
       returns: Schema.Struct({ reset: Schema.Number }),
@@ -167,18 +155,7 @@ const audioStudiesMutationsQueueGroup = GroupSpec.make("queue")
       name: "startWorkflowsForPendingItems",
       args: Schema.Struct({}),
       returns: Schema.Struct({
-        contentRef: Schema.optional(
-          Schema.Union(
-            Schema.Struct({
-              id: GenericId.GenericId("articleContents"),
-              type: Schema.Literal("article"),
-            }),
-            Schema.Struct({
-              id: GenericId.GenericId("subjectSections"),
-              type: Schema.Literal("subject"),
-            })
-          )
-        ),
+        contentRef: Schema.optional(audioContentRefSchema),
         skipped: Schema.Number,
         started: Schema.Number,
       }),
@@ -206,38 +183,15 @@ const audioStudiesQueriesInternalGroup = GroupSpec.make("internalFunctions")
           content: Schema.Struct({
             body: Schema.String,
             description: Schema.optional(Schema.String),
-            locale: Schema.String,
+            locale: localeSchema,
             title: Schema.String,
           }),
           contentAudio: Schema.Struct({
             contentHash: Schema.String,
-            contentRef: Schema.Union(
-              Schema.Struct({
-                id: GenericId.GenericId("articleContents"),
-                type: Schema.Literal("article"),
-              }),
-              Schema.Struct({
-                id: GenericId.GenericId("subjectSections"),
-                type: Schema.Literal("subject"),
-              })
-            ),
-            status: Schema.Literal(
-              "pending",
-              "generating-script",
-              "script-generated",
-              "generating-speech",
-              "completed",
-              "failed"
-            ),
+            contentRef: audioContentRefSchema,
+            status: audioStatusSchema,
             voiceId: Schema.String,
-            voiceSettings: Schema.optional(
-              Schema.Struct({
-                similarityBoost: Schema.optional(Schema.Number),
-                stability: Schema.optional(Schema.Number),
-                style: Schema.optional(Schema.Number),
-                useSpeakerBoost: Schema.optional(Schema.Boolean),
-              })
-            ),
+            voiceSettings: Schema.optional(voiceSettingsSchema),
           }),
         })
       ),
@@ -253,17 +207,10 @@ const audioStudiesQueriesInternalGroup = GroupSpec.make("internalFunctions")
         Schema.Null,
         Schema.Struct({
           contentHash: Schema.String,
-          model: Schema.Literal("eleven_v3"),
+          model: audioModelSchema,
           script: Schema.String,
           voiceId: Schema.String,
-          voiceSettings: Schema.optional(
-            Schema.Struct({
-              similarityBoost: Schema.optional(Schema.Number),
-              stability: Schema.optional(Schema.Number),
-              style: Schema.optional(Schema.Number),
-              useSpeakerBoost: Schema.optional(Schema.Boolean),
-            })
-          ),
+          voiceSettings: Schema.optional(voiceSettingsSchema),
         })
       ),
     })
@@ -282,16 +229,7 @@ const audioStudiesQueriesInternalGroup = GroupSpec.make("internalFunctions")
     FunctionSpec.internalQuery({
       name: "getContentHash",
       args: Schema.Struct({
-        contentRef: Schema.Union(
-          Schema.Struct({
-            id: GenericId.GenericId("articleContents"),
-            type: Schema.Literal("article"),
-          }),
-          Schema.Struct({
-            id: GenericId.GenericId("subjectSections"),
-            type: Schema.Literal("subject"),
-          })
-        ),
+        contentRef: audioContentRefSchema,
       }),
       returns: Schema.Union(Schema.Null, Schema.String),
     })
@@ -316,14 +254,7 @@ const audioStudiesQueriesPublicGroup = GroupSpec.make(
         contentType: Schema.Literal("article", "subject"),
         duration: Schema.Number,
         script: Schema.optional(Schema.String),
-        status: Schema.Literal(
-          "pending",
-          "generating-script",
-          "script-generated",
-          "generating-speech",
-          "completed",
-          "failed"
-        ),
+        status: audioStatusSchema,
       })
     ),
   })

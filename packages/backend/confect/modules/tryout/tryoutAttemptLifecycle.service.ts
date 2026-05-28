@@ -1,4 +1,5 @@
-import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
+import type { Id } from "@repo/backend/confect/_generated/dataModel";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import type { Locale } from "@repo/backend/confect/modules/content/content.schemas";
 import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/convexContext";
 import type { TryoutProduct } from "@repo/backend/confect/modules/tryout/products";
@@ -14,30 +15,40 @@ import {
   loadValidatedTryoutPartSets,
   resolveRequestedTryoutPart,
 } from "@repo/backend/confect/modules/tryout/tryoutParts.service";
-import { Effect } from "effect";
+import type { TryoutAttempts } from "@repo/backend/confect/modules/tryout/tryouts.tables";
+import { Effect, Option } from "effect";
+
+type TryoutAttemptDoc = typeof TryoutAttempts.Doc.Type;
 
 /** Loads an active tryout by public route parameters. */
 export const loadStartableTryout = Effect.fn(
   "tryouts.lifecycle.loadStartableTryout"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly locale: Locale;
-    readonly product: TryoutProduct;
-    readonly tryoutSlug: string;
-  }
-) {
-  const tryout = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryouts")
-      .withIndex("by_product_and_locale_and_slug", (query) =>
-        query
-          .eq("product", args.product)
-          .eq("locale", args.locale)
-          .eq("slug", args.tryoutSlug)
+)(function* (args: {
+  readonly locale: Locale;
+  readonly product: TryoutProduct;
+  readonly tryoutSlug: string;
+}) {
+  const reader = yield* DatabaseReader;
+  const tryout = yield* reader
+    .table("tryouts")
+    .index("by_product_and_locale_and_slug", (query) =>
+      query
+        .eq("product", args.product)
+        .eq("locale", args.locale)
+        .eq("slug", args.tryoutSlug)
+    )
+    .first()
+    .pipe(
+      Effect.map(Option.getOrNull),
+      Effect.catchTag("DocumentDecodeError", () =>
+        Effect.fail(
+          new TryoutError({
+            code: "INVALID_TRYOUT_STATE",
+            message: "Tryout data could not be decoded.",
+          })
+        )
       )
-      .unique()
-  );
+    );
 
   if (!tryout) {
     return yield* Effect.fail(
@@ -67,17 +78,14 @@ export const reuseExistingTryoutAttempt = Effect.fn(
   ctx: ConvexMutationCtx,
   args: {
     readonly now: number;
-    readonly tryoutAttempt: Doc<"tryoutAttempts">;
+    readonly tryoutAttempt: TryoutAttemptDoc;
     readonly userId: Id<"users">;
   }
 ) {
-  const activeTryoutAttempt = yield* requireActiveTryoutAttemptAfterExpirySync(
-    ctx,
-    {
-      now: args.now,
-      tryoutAttempt: args.tryoutAttempt,
-    }
-  ).pipe(
+  const activeTryoutAttempt = yield* requireActiveTryoutAttemptAfterExpirySync({
+    now: args.now,
+    tryoutAttempt: args.tryoutAttempt,
+  }).pipe(
     Effect.catchTag("TryoutError", (error) => {
       if (error.code === "TRYOUT_EXPIRED") {
         return Effect.succeed(null);
@@ -122,29 +130,25 @@ export const reuseExistingTryoutAttempt = Effect.fn(
 /** Loads the context required to start a tryout part. */
 export const loadPartStartContext = Effect.fn(
   "tryouts.lifecycle.loadPartStartContext"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly now: number;
-    readonly partKey: string;
-    readonly tryoutAttemptId: Id<"tryoutAttempts">;
-    readonly userId: Id<"users">;
-  }
-) {
-  const tryoutAttempt = yield* requireOwnedTryoutAttempt(ctx, {
+)(function* (args: {
+  readonly now: number;
+  readonly partKey: string;
+  readonly tryoutAttemptId: Id<"tryoutAttempts">;
+  readonly userId: Id<"users">;
+}) {
+  const tryoutAttempt = yield* requireOwnedTryoutAttempt({
     tryoutAttemptId: args.tryoutAttemptId,
     userId: args.userId,
   });
-  const activeTryoutAttempt = yield* requireActiveTryoutAttemptAfterExpirySync(
-    ctx,
-    {
-      now: args.now,
-      tryoutAttempt,
-    }
-  );
-  const tryout = yield* Effect.promise(() =>
-    ctx.db.get(activeTryoutAttempt.tryoutId)
-  );
+  const activeTryoutAttempt = yield* requireActiveTryoutAttemptAfterExpirySync({
+    now: args.now,
+    tryoutAttempt,
+  });
+  const reader = yield* DatabaseReader;
+  const tryout = yield* reader
+    .table("tryouts")
+    .get(activeTryoutAttempt.tryoutId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!tryout) {
     return yield* Effect.fail(
@@ -155,7 +159,7 @@ export const loadPartStartContext = Effect.fn(
     );
   }
 
-  const currentPartSets = yield* loadValidatedTryoutPartSets(ctx.db, {
+  const currentPartSets = yield* loadValidatedTryoutPartSets({
     partCount: tryout.partCount,
     tryoutId: tryout._id,
   });
@@ -194,32 +198,30 @@ export const loadPartStartContext = Effect.fn(
 /** Reuses an active part attempt or expires the stale one. */
 export const reuseExistingPartAttempt = Effect.fn(
   "tryouts.lifecycle.reuseExistingPartAttempt"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly now: number;
-    readonly partIndex: number;
-    readonly tryoutAttemptId: Id<"tryoutAttempts">;
-  }
-) {
-  const existingPartAttempt = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryoutPartAttempts")
-      .withIndex("by_tryoutAttemptId_and_partIndex", (query) =>
-        query
-          .eq("tryoutAttemptId", args.tryoutAttemptId)
-          .eq("partIndex", args.partIndex)
-      )
-      .unique()
-  );
+)(function* (args: {
+  readonly now: number;
+  readonly partIndex: number;
+  readonly tryoutAttemptId: Id<"tryoutAttempts">;
+}) {
+  const reader = yield* DatabaseReader;
+  const existingPartAttempt = yield* reader
+    .table("tryoutPartAttempts")
+    .index("by_tryoutAttemptId_and_partIndex", (query) =>
+      query
+        .eq("tryoutAttemptId", args.tryoutAttemptId)
+        .eq("partIndex", args.partIndex)
+    )
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 
   if (!existingPartAttempt) {
     return false;
   }
 
-  const existingSetAttempt = yield* Effect.promise(() =>
-    ctx.db.get(existingPartAttempt.setAttemptId)
-  );
+  const existingSetAttempt = yield* reader
+    .table("exerciseAttempts")
+    .get(existingPartAttempt.setAttemptId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!existingSetAttempt) {
     return yield* Effect.fail(
@@ -247,7 +249,6 @@ export const reuseExistingPartAttempt = Effect.fn(
   }
 
   yield* finalizeTryoutPartAttempt({
-    ctx,
     finishedAtMs: expiresAtMs,
     now: args.now,
     partAttempt: existingPartAttempt,

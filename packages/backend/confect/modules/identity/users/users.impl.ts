@@ -1,6 +1,12 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import api from "@repo/backend/confect/_generated/api";
-import * as identity_users from "@repo/backend/confect/modules/identity/users.service";
+import {
+  getUserByAuthId as identityUsers_getUserByAuthId,
+  getUserById as identityUsers_getUserById,
+  syncUserInfoForChat as identityUsers_syncUserInfoForChat,
+  updateUserName as identityUsers_updateUserName,
+  updateUserRole as identityUsers_updateUserRole,
+} from "@repo/backend/confect/modules/identity/users.service";
 import { Effect, Layer } from "effect";
 
 const users_mutations_updateUserRoleImpl = FunctionImpl.make(
@@ -8,9 +14,9 @@ const users_mutations_updateUserRoleImpl = FunctionImpl.make(
   "users.mutations",
   "updateUserRole",
   (args) =>
-    identity_users
-      .updateUserRole(args)
-      .pipe(Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)))
+    identityUsers_updateUserRole(args).pipe(
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+    )
 );
 
 const users_mutations_updateUserNameImpl = FunctionImpl.make(
@@ -18,9 +24,9 @@ const users_mutations_updateUserNameImpl = FunctionImpl.make(
   "users.mutations",
   "updateUserName",
   (args) =>
-    identity_users
-      .updateUserName(args)
-      .pipe(Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)))
+    identityUsers_updateUserName(args).pipe(
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+    )
 );
 
 const users_mutations_syncUserInfoForChatImpl = FunctionImpl.make(
@@ -28,23 +34,23 @@ const users_mutations_syncUserInfoForChatImpl = FunctionImpl.make(
   "users.mutations",
   "syncUserInfoForChat",
   (_args) =>
-    identity_users
-      .syncUserInfoForChat()
-      .pipe(Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error)))
+    identityUsers_syncUserInfoForChat().pipe(
+      Effect.catchTag("UnauthorizedUser", (error) => Effect.die(error))
+    )
 );
 
 const users_queries_getUserByIdImpl = FunctionImpl.make(
   api,
   "users.queries",
   "getUserById",
-  (args) => identity_users.getUserById(args)
+  (args) => identityUsers_getUserById(args)
 );
 
 const users_queries_getUserByAuthIdImpl = FunctionImpl.make(
   api,
   "users.queries",
   "getUserByAuthId",
-  (args) => identity_users.getUserByAuthId(args)
+  (args) => identityUsers_getUserByAuthId(args)
 );
 
 const usersMutationsImpl = GroupImpl.make(api, "users.mutations")

@@ -4,7 +4,9 @@ import { defineConfig } from "vitest/config";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const convexTestTimeout = 15_000;
+const confectTestTimeout = 20_000;
 const defaultExcludes = ["**/node_modules/**", "coverage/**"];
+const confectTests = ["confect/**/*.confect.test.ts"];
 
 const config = defineConfig({
   test: {
@@ -34,8 +36,17 @@ const config = defineConfig({
         test: {
           name: "backend",
           include: ["**/*.test.ts"],
-          exclude: ["convex/**", ...defaultExcludes],
+          exclude: ["convex/**", ...confectTests, ...defaultExcludes],
           environment: "node",
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "confect",
+          include: confectTests,
+          environment: "node",
+          testTimeout: confectTestTimeout,
         },
       },
     ],

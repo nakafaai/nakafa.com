@@ -72,6 +72,7 @@ export const Tryouts = Table.make(
   })
 )
   .index("by_isActive", ["isActive"])
+  .index("by_syncedAt", ["syncedAt"])
   .index("by_product_and_isActive", ["product", "isActive"])
   .index("by_product_and_locale_and_slug", ["product", "locale", "slug"])
   .index("by_product_and_locale_and_cycleKey_and_slug", [

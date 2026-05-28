@@ -1,7 +1,12 @@
 import { Ref } from "@confect/core";
 import type { Doc, Id } from "@repo/backend/confect/_generated/dataModel";
 import refs from "@repo/backend/confect/_generated/refs";
-import { MutationCtx } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  MutationCtx,
+  Scheduler,
+} from "@repo/backend/confect/_generated/services";
 import { requireAppUser } from "@repo/backend/confect/modules/identity/auth.service";
 import {
   buildFinalizedExerciseAttemptPatch,
@@ -12,7 +17,7 @@ import type { ConvexMutationCtx } from "@repo/backend/confect/modules/shared/con
 import { irtCalibrationSyncWorkpool } from "@repo/backend/confect/modules/tryout/irtWorkpool";
 import { finalizeTryoutAttempt } from "@repo/backend/confect/modules/tryout/tryoutFinalizeAttempt.service";
 import { finalizeTryoutPartAttempt } from "@repo/backend/confect/modules/tryout/tryoutFinalizePart.service";
-import { Clock, Effect } from "effect";
+import { Clock, Duration, Effect, Option } from "effect";
 
 /** Schedules IRT calibration sync for a completed simulation set attempt. */
 function scheduleCalibrationSyncIfReady(
@@ -42,56 +47,49 @@ function scheduleCalibrationSyncIfReady(
 /** Creates and schedules one exercise attempt. */
 export const createExerciseAttempt = Effect.fn(
   "exercises.createExerciseAttempt"
-)(function* (
-  ctx: ConvexMutationCtx,
-  args: {
-    readonly exerciseNumber?: number;
-    readonly mode: "practice" | "simulation";
-    readonly origin: "standalone" | "tryout";
-    readonly perQuestionTimeLimit?: number;
-    readonly scope: "set" | "single";
-    readonly slug: string;
-    readonly startedAt: number;
-    readonly timeLimit: number;
-    readonly totalExercises: number;
-    readonly userId: Id<"users">;
-  }
-) {
-  const attemptId = yield* Effect.promise(() =>
-    ctx.db.insert("exerciseAttempts", {
-      answeredCount: 0,
-      completedAt: null,
-      correctAnswers: 0,
-      endReason: null,
-      exerciseNumber: args.scope === "single" ? args.exerciseNumber : undefined,
-      lastActivityAt: args.startedAt,
-      mode: args.mode,
-      origin: args.origin,
-      perQuestionTimeLimit: args.perQuestionTimeLimit,
-      scope: args.scope,
-      scorePercentage: 0,
-      slug: args.slug,
-      startedAt: args.startedAt,
-      status: "in-progress",
-      timeLimit: args.timeLimit,
-      totalExercises: args.totalExercises,
-      totalTime: 0,
-      updatedAt: args.startedAt,
-      userId: args.userId,
-    })
-  );
+)(function* (args: {
+  readonly exerciseNumber?: number;
+  readonly mode: "practice" | "simulation";
+  readonly origin: "standalone" | "tryout";
+  readonly perQuestionTimeLimit?: number;
+  readonly scope: "set" | "single";
+  readonly slug: string;
+  readonly startedAt: number;
+  readonly timeLimit: number;
+  readonly totalExercises: number;
+  readonly userId: Id<"users">;
+}) {
+  const writer = yield* DatabaseWriter;
+  const scheduler = yield* Scheduler;
+  const attemptId = yield* writer.table("exerciseAttempts").insert({
+    answeredCount: 0,
+    completedAt: null,
+    correctAnswers: 0,
+    endReason: null,
+    exerciseNumber: args.scope === "single" ? args.exerciseNumber : undefined,
+    lastActivityAt: args.startedAt,
+    mode: args.mode,
+    origin: args.origin,
+    perQuestionTimeLimit: args.perQuestionTimeLimit,
+    scope: args.scope,
+    scorePercentage: 0,
+    slug: args.slug,
+    startedAt: args.startedAt,
+    status: "in-progress",
+    timeLimit: args.timeLimit,
+    totalExercises: args.totalExercises,
+    totalTime: 0,
+    updatedAt: args.startedAt,
+    userId: args.userId,
+  });
   const expiresAtMs = args.startedAt + args.timeLimit * 1e3;
-  const schedulerId = yield* Effect.promise(() =>
-    ctx.scheduler.runAfter(
-      args.timeLimit * 1e3,
-      Ref.getFunctionReference(
-        refs.internal.exercises.mutations.expireAttemptInternal
-      ),
-      { attemptId, expiresAtMs }
-    )
+  const schedulerId = yield* scheduler.runAfter(
+    Duration.millis(args.timeLimit * 1e3),
+    refs.internal.exercises.mutations.expireAttemptInternal,
+    { attemptId, expiresAtMs }
   );
 
-  yield* Effect.promise(() => ctx.db.patch(attemptId, { schedulerId }));
+  yield* writer.table("exerciseAttempts").patch(attemptId, { schedulerId });
   return attemptId;
 });
 
@@ -106,13 +104,12 @@ export const startAttempt = Effect.fn("exercises.startAttempt")(
     readonly timeLimit: number;
     readonly totalExercises: number;
   }) {
-    const ctx = yield* MutationCtx;
-    const { appUser } = yield* requireAppUser(ctx);
+    const { appUser } = yield* requireAppUser();
     const now = yield* Clock.currentTimeMillis;
 
     yield* validateAttemptStartArgs(args);
 
-    return yield* createExerciseAttempt(ctx, {
+    return yield* createExerciseAttempt({
       ...args,
       origin: "standalone",
       startedAt: now,
@@ -180,9 +177,14 @@ function validateAttemptStartArgs(args: {
 export const completeAttempt = Effect.fn("exercises.completeAttempt")(
   function* (args: { readonly attemptId: Id<"exerciseAttempts"> }) {
     const ctx = yield* MutationCtx;
-    const { appUser } = yield* requireAppUser(ctx);
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const { appUser } = yield* requireAppUser();
     const now = yield* Clock.currentTimeMillis;
-    const attempt = yield* Effect.promise(() => ctx.db.get(args.attemptId));
+    const attempt = yield* reader
+      .table("exerciseAttempts")
+      .get(args.attemptId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
     if (!attempt) {
       return yield* failExercise("ATTEMPT_NOT_FOUND", "Attempt not found.");
@@ -217,12 +219,6 @@ export const completeAttempt = Effect.fn("exercises.completeAttempt")(
       );
     }
 
-    const schedulerId = attempt.schedulerId;
-
-    if (schedulerId) {
-      yield* Effect.promise(() => ctx.scheduler.cancel(schedulerId));
-    }
-
     const expiresAtMs = attempt.startedAt + attempt.timeLimit * 1e3;
 
     if (now >= expiresAtMs) {
@@ -231,16 +227,14 @@ export const completeAttempt = Effect.fn("exercises.completeAttempt")(
         startedAtMs: attempt.startedAt,
       });
 
-      yield* Effect.promise(() =>
-        ctx.db.patch(
-          args.attemptId,
-          buildFinalizedExerciseAttemptPatch({
-            completedAtMs: expiresAtMs,
-            now,
-            status: "expired",
-            totalTime,
-          })
-        )
+      yield* writer.table("exerciseAttempts").patch(
+        args.attemptId,
+        buildFinalizedExerciseAttemptPatch({
+          completedAtMs: expiresAtMs,
+          now,
+          status: "expired",
+          totalTime,
+        })
       );
 
       return { expiredAtMs: expiresAtMs, status: "expired" as const };
@@ -260,16 +254,14 @@ export const completeAttempt = Effect.fn("exercises.completeAttempt")(
       }),
     };
 
-    yield* Effect.promise(() =>
-      ctx.db.patch(
-        args.attemptId,
-        buildFinalizedExerciseAttemptPatch({
-          completedAtMs: now,
-          now,
-          status: "completed",
-          totalTime,
-        })
-      )
+    yield* writer.table("exerciseAttempts").patch(
+      args.attemptId,
+      buildFinalizedExerciseAttemptPatch({
+        completedAtMs: now,
+        now,
+        status: "completed",
+        totalTime,
+      })
     );
     yield* scheduleCalibrationSyncIfReady(ctx, finalizedAttempt);
 
@@ -285,8 +277,13 @@ export const expireAttemptInternal = Effect.fn(
   readonly expiresAtMs: number;
 }) {
   const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
   const now = yield* Clock.currentTimeMillis;
-  const attempt = yield* Effect.promise(() => ctx.db.get(args.attemptId));
+  const attempt = yield* reader
+    .table("exerciseAttempts")
+    .get(args.attemptId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!attempt || attempt.status !== "in-progress") {
     return null;
@@ -304,37 +301,31 @@ export const expireAttemptInternal = Effect.fn(
     startedAtMs: attempt.startedAt,
   });
 
-  yield* Effect.promise(() =>
-    ctx.db.patch(
-      args.attemptId,
-      buildFinalizedExerciseAttemptPatch({
-        completedAtMs: expiresAtMs,
-        now,
-        status: "expired",
-        totalTime: finalTotalTime,
-      })
-    )
+  yield* writer.table("exerciseAttempts").patch(
+    args.attemptId,
+    buildFinalizedExerciseAttemptPatch({
+      completedAtMs: expiresAtMs,
+      now,
+      status: "expired",
+      totalTime: finalTotalTime,
+    })
   );
 
   if (attempt.origin !== "tryout") {
     return null;
   }
 
-  const partAttempt = yield* Effect.promise(() =>
-    ctx.db
-      .query("tryoutPartAttempts")
-      .withIndex("by_setAttemptId", (query) =>
-        query.eq("setAttemptId", attempt._id)
-      )
-      .unique()
-  );
+  const partAttempt = yield* reader
+    .table("tryoutPartAttempts")
+    .index("by_setAttemptId", (query) => query.eq("setAttemptId", attempt._id))
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 
   if (!partAttempt) {
     return null;
   }
 
   yield* finalizeTryoutPartAttempt({
-    ctx,
     finishedAtMs: expiresAtMs,
     now,
     partAttempt,
@@ -342,9 +333,10 @@ export const expireAttemptInternal = Effect.fn(
     tryoutAttemptId: partAttempt.tryoutAttemptId,
   });
 
-  const tryoutAttempt = yield* Effect.promise(() =>
-    ctx.db.get(partAttempt.tryoutAttemptId)
-  );
+  const tryoutAttempt = yield* reader
+    .table("tryoutAttempts")
+    .get(partAttempt.tryoutAttemptId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!tryoutAttempt) {
     return null;
