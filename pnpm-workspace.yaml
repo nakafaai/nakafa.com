@@ -48,3 +48,6 @@ minimumReleaseAgeExclude:
   - react-email@6.3.3
   - resend@6.12.4
   - ultracite@7.8.0
+
+patchedDependencies:
+  '@confect/server@8.0.0': patches/@confect__server@8.0.0.patch

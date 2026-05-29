@@ -1,0 +1,121 @@
+diff --git a/dist/RegisteredConvexFunction.js b/dist/RegisteredConvexFunction.js
+index 246a354f6a654ce956d527f461010c1d694cd2ba..63ad2240802dab961ac6b396741eac62926a1303 100644
+--- a/dist/RegisteredConvexFunction.js
++++ b/dist/RegisteredConvexFunction.js
+@@ -59,7 +59,7 @@ const make = (api, { functionSpec, handler }) => Match.value(functionSpec.functi
+ * Clock whose user-facing Effects call realDateNow (Convex's tracker) directly,
+ * making Clock an explicit opt-in to cache invalidation. The unsafe methods
+ * used internally by Effect (logging, span events, scheduler) return constants
+-* so they never touch the tracker—caching is not broken by default.
++* so they never touch the tracker, so caching is not broken by default.
+ */
+ const unpatchedClock = (realDateNow) => {
+ 	return {
+@@ -70,16 +70,17 @@ const unpatchedClock = (realDateNow) => {
+ 		currentTimeNanos: Effect.sync(() => BigInt(realDateNow()) * 1000000n)
+ 	};
+ };
+-const withStubbedDateNow = async (queryHandler) => {
++const withStubbedDateNow = async (handler) => {
+ 	const realDateNow = Date.now;
+ 	const clock = unpatchedClock(realDateNow);
+ 	Date.now = () => 0;
+ 	try {
+-		return await queryHandler(clock);
++		return await handler(clock);
+ 	} finally {
+ 		Date.now = realDateNow;
+ 	}
+ };
++const withSafeEffectClock = (handler) => handler(unpatchedClock(Date.now));
+ const queryFunction = ({ databaseSchema, args, returns, error, handler }) => ({
+ 	args: compileArgsSchema(args),
+ 	returns: compileReturnsSchema(returns),
+@@ -91,9 +92,9 @@ const mutationLayer = (schema, ctx) => Layer.mergeAll(layer$1(schema, ctx.db), l
+ const mutationFunction = ({ databaseSchema, args, returns, error, handler }) => ({
+ 	args: compileArgsSchema(args),
+ 	returns: compileReturnsSchema(returns),
+-	handler: (ctx, actualArgs) => Effect.gen(function* () {
++	handler: (ctx, actualArgs) => withSafeEffectClock((clock) => Effect.gen(function* () {
+ 		return yield* pipe(yield* handler(yield* pipe(actualArgs, Schema.decode(args), Effect.orDie)).pipe(Effect.provide(mutationLayer(databaseSchema, ctx))), Schema.encode(returns), Effect.orDie);
+-	}).pipe(runHandlerPromise(error))
++	}).pipe(Effect.withClock(clock), runHandlerPromise(error)))
+ });
+ const convexActionFunction = (schema, { args, returns, error, handler }) => actionFunctionBase({
+ 	args,
+diff --git a/src/RegisteredConvexFunction.ts b/src/RegisteredConvexFunction.ts
+index 576a6951b9304b1c1417c7f619e092295df9f790..078655023babf096f90059c78acb52d973a86461 100644
+--- a/src/RegisteredConvexFunction.ts
++++ b/src/RegisteredConvexFunction.ts
+@@ -110,7 +110,7 @@ export const make = <Api_ extends Api.AnyWithPropsWithRuntime<"Convex">>(
+  * Clock whose user-facing Effects call realDateNow (Convex's tracker) directly,
+  * making Clock an explicit opt-in to cache invalidation. The unsafe methods
+  * used internally by Effect (logging, span events, scheduler) return constants
+- * so they never touch the tracker—caching is not broken by default.
++ * so they never touch the tracker, so caching is not broken by default.
+  */
+ const unpatchedClock = (realDateNow: () => number): Clock.Clock => {
+   const defaultClock = Clock.make();
+@@ -124,18 +124,22 @@ const unpatchedClock = (realDateNow: () => number): Clock.Clock => {
+ };
+ 
+ const withStubbedDateNow = async <T>(
+-  queryHandler: (clock: Clock.Clock) => Promise<T>,
++  handler: (clock: Clock.Clock) => Promise<T>,
+ ): Promise<T> => {
+   const realDateNow = Date.now;
+   const clock = unpatchedClock(realDateNow);
+   Date.now = () => 0;
+   try {
+-    return await queryHandler(clock);
++    return await handler(clock);
+   } finally {
+     Date.now = realDateNow;
+   }
+ };
+ 
++const withSafeEffectClock = <T>(
++  handler: (clock: Clock.Clock) => Promise<T>,
++): Promise<T> => handler(unpatchedClock(Date.now));
++
+ const queryFunction = <
+   DatabaseSchema_ extends DatabaseSchema.AnyWithProps,
+   Args,
+@@ -275,17 +279,26 @@ const mutationFunction = <
+     >,
+     actualArgs: ConvexArgs,
+   ): Promise<ConvexReturns> =>
+-    Effect.gen(function* () {
+-      const decodedArgs = yield* pipe(
+-        actualArgs,
+-        Schema.decode(args),
+-        Effect.orDie,
+-      );
+-      const decodedReturns = yield* handler(decodedArgs).pipe(
+-        Effect.provide(mutationLayer(databaseSchema, ctx)),
+-      );
+-      return yield* pipe(decodedReturns, Schema.encode(returns), Effect.orDie);
+-    }).pipe(RegisteredFunction.runHandlerPromise(error)),
++    withSafeEffectClock((clock) =>
++      Effect.gen(function* () {
++        const decodedArgs = yield* pipe(
++          actualArgs,
++          Schema.decode(args),
++          Effect.orDie,
++        );
++        const decodedReturns = yield* handler(decodedArgs).pipe(
++          Effect.provide(mutationLayer(databaseSchema, ctx)),
++        );
++        return yield* pipe(
++          decodedReturns,
++          Schema.encode(returns),
++          Effect.orDie,
++        );
++      }).pipe(
++        Effect.withClock(clock),
++        RegisteredFunction.runHandlerPromise(error),
++      ),
++    ),
+ });
+ 
+ const convexActionFunction = <
