@@ -1,11 +1,11 @@
 import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
-import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
+import { provider } from "@repo/ai/config/app";
 import {
   defaultModel,
   getFastModelProviderOptions,
-} from "@repo/ai/config/models";
+} from "@repo/ai/config/model";
+import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { backgroundGenerationTimeout } from "@repo/ai/config/timeouts";
-import { model } from "@repo/ai/config/vercel";
 import { logError } from "@repo/utilities/logging/effect";
 import type { LogContext } from "@repo/utilities/logging/types";
 import {
@@ -91,7 +91,7 @@ export const repairChatToolCall = Effect.fn("chat.repairChatToolCall")(
     const schema = yield* Effect.tryPromise(() => inputSchema(toolCall));
     const { output: repairedArgs } = yield* Effect.tryPromise(() =>
       generateText({
-        model: model.languageModel(defaultModel),
+        model: provider.languageModel(defaultModel),
         output: Output.object({ schema: tool.inputSchema }),
         prompt: [
           `The model tried to call the tool "${toolCall.toolName}"` +

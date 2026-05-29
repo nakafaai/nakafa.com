@@ -1,7 +1,7 @@
 "use client";
 
 import type { Chat } from "@ai-sdk/react";
-import type { ModelId } from "@repo/ai/config/models";
+import type { ModelId } from "@repo/ai/config/model";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 

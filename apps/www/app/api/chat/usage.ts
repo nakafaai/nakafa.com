@@ -1,4 +1,4 @@
-import { getModelCreditCost, type ModelId } from "@repo/ai/config/models";
+import { getModelCreditCost, type ModelId } from "@repo/ai/config/model";
 import type { ComponentUsage } from "@repo/ai/schema/metadata";
 import type { ToolName } from "@repo/ai/schema/tools";
 import type { LanguageModelUsage } from "ai";

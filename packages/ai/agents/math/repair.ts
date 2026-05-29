@@ -1,10 +1,10 @@
-import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
+import { provider } from "@repo/ai/config/app";
 import {
   getFastModelProviderOptions,
   type ModelId,
-} from "@repo/ai/config/models";
+} from "@repo/ai/config/model";
+import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { backgroundGenerationTimeout } from "@repo/ai/config/timeouts";
-import { model } from "@repo/ai/config/vercel";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import {
   generateText,
@@ -81,7 +81,7 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
 
   const repaired = yield* Effect.tryPromise(() =>
     generateText({
-      model: model.languageModel(modelId),
+      model: provider.languageModel(modelId),
       output: Output.object({ schema: tool.inputSchema }),
       prompt: createPrompt({
         taskContext: `

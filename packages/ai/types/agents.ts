@@ -1,4 +1,4 @@
-import type { ModelId } from "@repo/ai/config/models";
+import type { ModelId } from "@repo/ai/config/model";
 import type { SourceReference } from "@repo/ai/lib/source";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Locale } from "@repo/utilities/locales";

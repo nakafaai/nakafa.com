@@ -1,4 +1,4 @@
-import { defaultModel, getModelCreditCost } from "@repo/ai/config/models";
+import { defaultModel, getModelCreditCost } from "@repo/ai/config/model";
 import type { LanguageModelUsage } from "ai";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";

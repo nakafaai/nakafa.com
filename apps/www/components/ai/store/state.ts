@@ -1,6 +1,6 @@
 "use client";
 
-import { defaultModel } from "@repo/ai/config/models";
+import { defaultModel } from "@repo/ai/config/model";
 import type { AiState } from "@/components/ai/store/types";
 
 export const initialState = {
