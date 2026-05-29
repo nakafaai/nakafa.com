@@ -29,11 +29,11 @@ const MAX_CONTENT_PER_DAY_LIMIT = 10;
 
 /**
  * Maximum popular content candidates to inspect per type when filling the queue.
- * This keeps the queue population cron bounded while still looking far enough
- * beyond the daily generation limit to keep the backlog healthy.
+ * Four daily limits per type keeps the cron bounded while leaving room for
+ * already-completed, already-queued, or missing-locale candidates.
  */
 export const MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE =
-  MAX_CONTENT_PER_DAY_LIMIT * 20;
+  MAX_CONTENT_PER_DAY_LIMIT * 4;
 
 /**
  * Get the maximum content pieces to generate per day.

@@ -10,6 +10,27 @@ import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 const tables = {
+  /**
+   * Compact audio source metadata for queue population.
+   * Avoids reading large article/subject body documents in cron queries.
+   */
+  audioContentSources: defineTable({
+    contentRef: audioContentRefValidator,
+    locale: localeValidator,
+    slug: v.string(),
+    contentHash: v.string(),
+    syncedAt: v.number(),
+  })
+    .index("by_contentRefType_and_contentRefId", [
+      "contentRef.type",
+      "contentRef.id",
+    ])
+    .index("by_contentRefType_and_slug_and_locale", [
+      "contentRef.type",
+      "slug",
+      "locale",
+    ]),
+
   /** Audio files for articles and subjects (exercises excluded). */
   contentAudios: defineTable({
     contentRef: audioContentRefValidator,

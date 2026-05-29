@@ -1,4 +1,4 @@
-import { defaultModel } from "@repo/ai/config/models";
+import { defaultModel } from "@repo/ai/config/model";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/messageParts/dbToUi";

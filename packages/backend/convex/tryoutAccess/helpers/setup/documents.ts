@@ -4,6 +4,7 @@ import type {
   TryoutAccessLinkInput,
 } from "@repo/backend/convex/tryoutAccess/helpers/setup/validators";
 import { getTryoutAccessCampaignRedeemStatus } from "@repo/backend/convex/tryoutAccess/helpers/status";
+import { tryoutAccessCampaignResultsStatusPending } from "@repo/backend/convex/tryoutAccess/schema";
 import type { WithoutSystemFields } from "convex/server";
 
 type TryoutAccessCampaignDocument = WithoutSystemFields<
@@ -29,7 +30,9 @@ export function buildTryoutAccessCampaignDocument({
     name: campaign.name,
     resultsFinalizedAt: existingCampaign?.resultsFinalizedAt ?? null,
     firstRedeemedAt: existingCampaign?.firstRedeemedAt ?? null,
-    resultsStatus: existingCampaign?.resultsStatus ?? "pending",
+    resultsStatus:
+      existingCampaign?.resultsStatus ??
+      tryoutAccessCampaignResultsStatusPending,
     redeemStatus: getTryoutAccessCampaignRedeemStatus(campaign, now),
     slug: campaign.slug,
     startsAt: campaign.startsAt,

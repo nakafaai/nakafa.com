@@ -1,4 +1,4 @@
-import { getModelCreditCost } from "@repo/ai/config/models";
+import { getModelCreditCost } from "@repo/ai/config/model";
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
 import {
   deleteMessageBatchFromPoint,
@@ -14,6 +14,7 @@ import {
   getCreditResetGrantTransaction,
   resolveEffectiveCreditState,
 } from "@repo/backend/convex/credits/helpers/state";
+import type { CreditTransactionMetadata } from "@repo/backend/convex/credits/schema";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
@@ -341,19 +342,30 @@ export const saveAssistantResponse = internalMutation({
       });
     }
 
+    const usageMetadata: CreditTransactionMetadata = {
+      chatId: message.chatId,
+      messageId,
+      modelId: message.modelId,
+    };
+
+    if (message.inputTokens !== undefined) {
+      usageMetadata.inputTokens = message.inputTokens;
+    }
+
+    if (message.outputTokens !== undefined) {
+      usageMetadata.outputTokens = message.outputTokens;
+    }
+
+    if (message.totalTokens !== undefined) {
+      usageMetadata.totalTokens = message.totalTokens;
+    }
+
     await ctx.db.insert("creditTransactions", {
       userId: appUser._id,
       amount: -credits,
       type: "usage",
       balanceAfter: newBalance,
-      metadata: {
-        chatId: message.chatId,
-        messageId,
-        modelId: message.modelId,
-        inputTokens: message.inputTokens,
-        outputTokens: message.outputTokens,
-        totalTokens: message.totalTokens,
-      },
+      metadata: usageMetadata,
     });
 
     return { messageId, partIds, credits, newBalance };

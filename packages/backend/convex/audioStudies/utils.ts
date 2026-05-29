@@ -2,6 +2,10 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import {
+  getAudioContentSourceByLocale,
+  getAudioContentSourceByRef,
+} from "@repo/backend/convex/audioStudies/helpers/sources";
 import type { AudioContentLookup } from "@repo/backend/convex/contents/validators";
 import type { AudioContentRef } from "@repo/backend/convex/lib/validators/audio";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
@@ -72,6 +76,12 @@ export async function getAudioContentLookup(
   ctx: AudioContentReaderCtx,
   contentRef: AudioContentRef
 ): Promise<AudioContentLookup | null> {
+  const source = await getAudioContentSourceByRef(ctx, contentRef);
+
+  if (source) {
+    return source;
+  }
+
   if (contentRef.type === "article") {
     const article = await ctx.db.get("articleContents", contentRef.id);
 
@@ -152,6 +162,16 @@ export async function getLocalizedAudioContentLookup(
 ): Promise<AudioContentLookup | null> {
   if (sourceContent.locale === locale) {
     return sourceContent;
+  }
+
+  const source = await getAudioContentSourceByLocale(
+    ctx,
+    sourceContent,
+    locale
+  );
+
+  if (source) {
+    return source;
   }
 
   if (sourceContent.ref.type === "article") {

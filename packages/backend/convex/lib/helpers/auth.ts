@@ -9,21 +9,31 @@
  */
 
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   ActionCtx,
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { authComponent } from "@repo/backend/convex/auth/client";
+import { authReader } from "@repo/backend/convex/auth/reader";
 import { getAppUserByAuthId } from "@repo/backend/convex/lib/helpers/user";
 import { ConvexError } from "convex/values";
+
+type AuthUser = Awaited<ReturnType<typeof authReader.getAuthUser>>;
+
+interface AuthContext {
+  readonly appUser: Doc<"users">;
+  readonly authUser: AuthUser;
+}
 
 /**
  * Resolve the current app user without enforcing auth.
  * Returns null when no valid Better Auth user or matching app user exists.
  */
-export async function getOptionalAppUser(ctx: QueryCtx | MutationCtx) {
-  const authUser = await authComponent.safeGetAuthUser(ctx);
+export async function getOptionalAppUser(
+  ctx: QueryCtx | MutationCtx
+): Promise<AuthContext | null> {
+  const authUser = await authReader.safeGetAuthUser(ctx);
 
   if (!authUser) {
     return null;
@@ -42,8 +52,10 @@ export async function getOptionalAppUser(ctx: QueryCtx | MutationCtx) {
 }
 
 /** Required query/mutation authentication with Better Auth session validation. */
-export async function requireAuth(ctx: QueryCtx | MutationCtx) {
-  const authUser = await authComponent.getAuthUser(ctx);
+export async function requireAuth(
+  ctx: QueryCtx | MutationCtx
+): Promise<AuthContext> {
+  const authUser = await authReader.getAuthUser(ctx);
   const appUser = await getAppUserByAuthId(ctx, authUser._id);
 
   if (!appUser) {
@@ -57,12 +69,17 @@ export async function requireAuth(ctx: QueryCtx | MutationCtx) {
 }
 
 /** Session-validated authentication for actions. */
-export async function requireAuthForAction(ctx: ActionCtx) {
-  const authUser = await authComponent.getAuthUser(ctx);
+export async function requireAuthForAction(
+  ctx: ActionCtx
+): Promise<AuthContext> {
+  const authUser = await authReader.getAuthUser(ctx);
 
-  const appUser = await ctx.runQuery(internal.users.queries.getUserByAuthId, {
-    authId: authUser._id,
-  });
+  const appUser: Doc<"users"> | null = await ctx.runQuery(
+    internal.users.queries.getUserByAuthId,
+    {
+      authId: authUser._id,
+    }
+  );
 
   if (!appUser) {
     throw new ConvexError({

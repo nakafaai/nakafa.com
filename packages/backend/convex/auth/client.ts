@@ -10,7 +10,7 @@ import {
 import { getCurrentCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
 import { posthog } from "@repo/backend/convex/posthog";
 
-const authFunctions: AuthFunctions = internal.auth;
+const authFunctions: AuthFunctions = internal.auth.lifecycle;
 
 export const authComponent = createClient<DataModel, typeof authSchema>(
   components.betterAuth,

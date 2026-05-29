@@ -1,5 +1,9 @@
 /**
- * Central trigger registration for Convex database.
+ * Central trigger registration for Convex database writes.
+ *
+ * Use these native Convex mutation builders for mutations that write registered
+ * app tables so convex-helpers can run the trigger graph atomically.
+ * @see https://github.com/get-convex/convex-helpers/blob/main/packages/convex-helpers/README.md#triggers
  */
 
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
@@ -20,7 +24,6 @@ import { forumPostsHandler } from "@repo/backend/convex/triggers/forums/posts";
 import { forumReactionsHandler } from "@repo/backend/convex/triggers/forums/reactions";
 import { materialGroupsHandler } from "@repo/backend/convex/triggers/materials/groups";
 import { materialsHandler } from "@repo/backend/convex/triggers/materials/materials";
-import { noopHandler } from "@repo/backend/convex/triggers/noop";
 import { notificationsHandler } from "@repo/backend/convex/triggers/notifications/notifications";
 import { schoolClassesHandler } from "@repo/backend/convex/triggers/schools/classes";
 import { schoolClassMembersHandler } from "@repo/backend/convex/triggers/schools/classMembers";
@@ -46,38 +49,9 @@ export const internalMutation = customMutation(
   customCtx(triggers.wrapDB)
 );
 
-// No-op triggers: tables modified by triggers but don't need custom logic
-triggers.register("parts", noopHandler);
-triggers.register("schoolInviteCodes", noopHandler);
-triggers.register("schoolClassInviteCodes", noopHandler);
-triggers.register("schoolClassForums", noopHandler);
-triggers.register("schoolClassForumPendingUploads", noopHandler);
-triggers.register("schoolClassForumReadStates", noopHandler);
-triggers.register("schoolActivityLogs", noopHandler);
-triggers.register("notifications", notificationsHandler);
-triggers.register("notificationCounts", noopHandler);
-triggers.register("notificationEntityMutes", noopHandler);
-triggers.register("notificationPreferences", noopHandler);
-triggers.register("schoolClassMaterialAttachments", noopHandler);
-triggers.register("schoolClassMaterialViews", noopHandler);
-triggers.register("contentAudios", noopHandler);
-triggers.register("audioGenerationQueue", noopHandler);
-triggers.register("contentViewAnalyticsQueue", noopHandler);
-triggers.register("contentAnalyticsPartitions", noopHandler);
-triggers.register("articlePopularity", noopHandler);
-triggers.register("subjectPopularity", noopHandler);
-triggers.register("exercisePopularity", noopHandler);
-triggers.register("creditResetPeriods", noopHandler);
-triggers.register("creditTransactions", noopHandler);
-triggers.register("subjectTrendingBuckets", noopHandler);
-triggers.register("tryoutAccessCampaigns", noopHandler);
-triggers.register("tryoutAccessLinks", noopHandler);
-triggers.register("tryoutAccessGrants", noopHandler);
-triggers.register("userTryoutEntitlements", noopHandler);
-triggers.register("users", noopHandler);
-triggers.register("subscriptions", subscriptionsHandler);
-
 // Active triggers with custom logic
+triggers.register("notifications", notificationsHandler);
+triggers.register("subscriptions", subscriptionsHandler);
 triggers.register("messages", messagesHandler);
 triggers.register("contentViews", contentViewsHandler);
 triggers.register("exerciseAttempts", exerciseAttemptsHandler);

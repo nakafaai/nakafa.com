@@ -1,3 +1,7 @@
+import {
+  deleteAudioContentSource,
+  syncAudioContentSource,
+} from "@repo/backend/convex/audioStudies/helpers/sources";
 import { updateContentHash } from "@repo/backend/convex/audioStudies/utils";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
@@ -101,6 +105,16 @@ export const bulkSyncArticles = internalMutation({
         title: article.title,
       });
 
+      if (existingArticle) {
+        await syncAudioContentSource(ctx, {
+          contentHash: article.contentHash,
+          locale: article.locale,
+          ref: { id: existingArticle._id, type: "article" },
+          slug: article.slug,
+          syncedAt: now,
+        });
+      }
+
       if (existingArticle?.contentHash === article.contentHash) {
         unchanged++;
         continue;
@@ -152,6 +166,14 @@ export const bulkSyncArticles = internalMutation({
         slug: article.slug,
         syncedAt: now,
         title: article.title,
+      });
+
+      await syncAudioContentSource(ctx, {
+        contentHash: article.contentHash,
+        locale: article.locale,
+        ref: { id: articleId, type: "article" },
+        slug: article.slug,
+        syncedAt: now,
       });
 
       authorLinksCreated += await syncContentAuthorsWithCache(
@@ -215,6 +237,7 @@ export const deleteStaleArticles = internalMutation({
       await deleteContentAuthorLinks(ctx, articleId, "article");
       await deleteArticleReferencesForArticle(ctx, articleId);
       await deleteContentSearch(ctx, searchRef.content_id);
+      await deleteAudioContentSource(ctx, { id: articleId, type: "article" });
       await ctx.db.delete("articleContents", articleId);
       deleted++;
     }

@@ -1,6 +1,6 @@
 import "@repo/backend/convex/polyfills";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import { createAuth } from "@repo/backend/convex/auth";
+import { createAuth } from "@repo/backend/convex/auth/runtime";
 import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
 import { registerPolarRoutes } from "@repo/backend/convex/routes/polar";
 import v1 from "@repo/backend/convex/routes/v1";

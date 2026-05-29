@@ -931,8 +931,8 @@ describe("tryouts/mutations/attempts", () => {
         suffix: "many-access-pass-grants",
       });
       const tryout = await insertTryoutSkeleton(ctx, "many-access-pass-grants");
-      let longestCampaignId = "" as Id<"tryoutAccessCampaigns">;
-      let longestGrantId = "" as Id<"tryoutAccessGrants">;
+      let longestCampaignId: Id<"tryoutAccessCampaigns"> | null = null;
+      let longestGrantId: Id<"tryoutAccessGrants"> | null = null;
       let longestEndsAt = NOW;
 
       for (let index = 0; index < 55; index += 1) {
@@ -968,6 +968,10 @@ describe("tryouts/mutations/attempts", () => {
         longestCampaignId = campaignId;
         longestGrantId = grantId;
         longestEndsAt = endsAt;
+      }
+
+      if (!(longestCampaignId && longestGrantId)) {
+        throw new Error("Expected access-pass grants to be seeded.");
       }
 
       return {

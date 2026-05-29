@@ -1,9 +1,10 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { resolveForumAttachmentUploads } from "@repo/backend/convex/classes/forums/attachments/impl";
 import { loadOpenForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
-import { resolveForumAttachmentUploads } from "@repo/backend/convex/classes/forums/utils/attachments";
 import { MAX_FORUM_POST_ATTACHMENTS } from "@repo/backend/convex/classes/forums/utils/constants";
 import { validateForumMentions } from "@repo/backend/convex/classes/forums/utils/mentions";
 import { mutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { truncateText } from "@repo/backend/convex/utils/text";
@@ -43,11 +44,13 @@ export const createForumPost = mutation({
     }
 
     const { forum } = await loadOpenForumWithAccess(ctx, args.forumId, userId);
-    const attachments = await resolveForumAttachmentUploads(ctx, {
-      forumId: args.forumId,
-      uploadIds: attachmentUploadIds,
-      userId,
-    });
+    const attachments = await runConvexProgram(
+      resolveForumAttachmentUploads(ctx, {
+        forumId: args.forumId,
+        uploadIds: attachmentUploadIds,
+        userId,
+      })
+    );
 
     const mentions = await validateForumMentions(ctx, {
       forum,

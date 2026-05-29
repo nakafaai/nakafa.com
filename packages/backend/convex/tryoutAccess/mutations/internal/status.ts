@@ -4,6 +4,13 @@ import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { syncTryoutAccessGrantStatus } from "@repo/backend/convex/tryoutAccess/helpers/entitlements";
 import { getTryoutAccessCampaignRedeemStatus } from "@repo/backend/convex/tryoutAccess/helpers/status";
 import { finalizeCompetitionCampaignResultsIfNeeded } from "@repo/backend/convex/tryoutAccess/mutations/internal/competition";
+import {
+  tryoutAccessCampaignKindCompetition,
+  tryoutAccessCampaignRedeemStatusActive,
+  tryoutAccessCampaignRedeemStatusScheduled,
+  tryoutAccessCampaignResultsStatusPending,
+  tryoutAccessGrantStatusActive,
+} from "@repo/backend/convex/tryoutAccess/schema";
 import { v } from "convex/values";
 
 const TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE = 100;
@@ -65,27 +72,31 @@ export const sweepStates = internalMutation({
     const scheduledCampaigns = await ctx.db
       .query("tryoutAccessCampaigns")
       .withIndex("by_redeemStatus_and_startsAt", (q) =>
-        q.eq("redeemStatus", "scheduled").lt("startsAt", now + 1)
+        q
+          .eq("redeemStatus", tryoutAccessCampaignRedeemStatusScheduled)
+          .lt("startsAt", now + 1)
       )
       .take(TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE);
     const activeCampaigns = await ctx.db
       .query("tryoutAccessCampaigns")
       .withIndex("by_redeemStatus_and_endsAt", (q) =>
-        q.eq("redeemStatus", "active").lt("endsAt", now + 1)
+        q
+          .eq("redeemStatus", tryoutAccessCampaignRedeemStatusActive)
+          .lt("endsAt", now + 1)
       )
       .take(TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE);
     const overdueGrants = await ctx.db
       .query("tryoutAccessGrants")
       .withIndex("by_status_and_endsAt", (q) =>
-        q.eq("status", "active").lt("endsAt", now + 1)
+        q.eq("status", tryoutAccessGrantStatusActive).lt("endsAt", now + 1)
       )
       .take(TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE);
     const pendingCompetitions = await ctx.db
       .query("tryoutAccessCampaigns")
       .withIndex("by_campaignKind_and_resultsStatus_and_endsAt", (q) =>
         q
-          .eq("campaignKind", "competition")
-          .eq("resultsStatus", "pending")
+          .eq("campaignKind", tryoutAccessCampaignKindCompetition)
+          .eq("resultsStatus", tryoutAccessCampaignResultsStatusPending)
           .lt("endsAt", now + 1)
       )
       .take(TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE);

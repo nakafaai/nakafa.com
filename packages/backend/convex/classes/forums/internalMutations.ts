@@ -1,5 +1,6 @@
-import { deleteForumPendingUpload } from "@repo/backend/convex/classes/forums/utils/attachments";
+import { deleteForumPendingUpload } from "@repo/backend/convex/classes/forums/attachments/impl";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 
@@ -24,7 +25,7 @@ export const deleteExpiredPendingUpload = internalMutation({
       return null;
     }
 
-    await deleteForumPendingUpload(ctx, upload);
+    await runConvexProgram(deleteForumPendingUpload(ctx, upload));
     return null;
   },
 });

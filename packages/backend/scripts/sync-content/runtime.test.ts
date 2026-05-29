@@ -1,6 +1,6 @@
-import * as fs from "node:fs";
-import * as os from "node:os";
-import path from "node:path";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { Config, Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -32,9 +32,9 @@ describe("sync-content runtime", () => {
       shell: null,
     },
   ])("$name", async ({ content, expected, shell }) => {
-    const directory = fs.mkdtempSync(path.join(os.tmpdir(), "nakafa-sync-"));
-    const envFile = path.join(directory, ".env.local");
-    fs.writeFileSync(envFile, content);
+    const directory = mkdtempSync(join(tmpdir(), "nakafa-sync-"));
+    const envFile = join(directory, ".env.local");
+    writeFileSync(envFile, content);
 
     try {
       if (shell) {
@@ -69,7 +69,7 @@ describe("sync-content runtime", () => {
 
       expect(value).toBe(expected);
     } finally {
-      fs.rmSync(directory, { force: true, recursive: true });
+      rmSync(directory, { force: true, recursive: true });
     }
   });
 });

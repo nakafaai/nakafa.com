@@ -1,5 +1,5 @@
 import posthogTest from "@posthog/convex/test";
-import { getModelCreditCost } from "@repo/ai/config/models";
+import { getModelCreditCost } from "@repo/ai/config/model";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import {

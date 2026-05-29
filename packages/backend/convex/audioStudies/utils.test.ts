@@ -533,6 +533,119 @@ describe("audioStudies/utils", () => {
     });
   });
 
+  it("prefers compact audio source rows for localized lookup metadata", async () => {
+    const t = convexTest(schema, convexModules);
+
+    const englishSubjectId = await t.mutation(async (ctx) => {
+      const englishSubjectId = await ctx.db.insert("subjectSections", {
+        topicId: await ctx.db.insert("subjectTopics", {
+          category: "high-school",
+          grade: "10",
+          material: "mathematics",
+          topic: REAL_VECTOR_ADDITION_EN.topic,
+          title: REAL_VECTOR_ADDITION_EN.topicTitle,
+          locale: REAL_VECTOR_ADDITION_EN.locale,
+          slug: REAL_VECTOR_TOPIC_SLUG,
+          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
+          syncedAt: 1,
+        }),
+        locale: REAL_VECTOR_ADDITION_EN.locale,
+        slug: REAL_VECTOR_SECTION_SLUG,
+        category: "high-school",
+        grade: "10",
+        material: "mathematics",
+        topic: REAL_VECTOR_ADDITION_EN.topic,
+        section: REAL_VECTOR_ADDITION_EN.section,
+        title: REAL_VECTOR_ADDITION_EN.title,
+        description: REAL_VECTOR_ADDITION_EN.description,
+        date: REAL_VECTOR_PUBLISHED_AT,
+        subject: REAL_VECTOR_ADDITION_EN.subject,
+        body: REAL_VECTOR_ADDITION_EN.body,
+        contentHash: "full-english-hash",
+        syncedAt: 1,
+      });
+      const indonesianSubjectId = await ctx.db.insert("subjectSections", {
+        topicId: await ctx.db.insert("subjectTopics", {
+          category: "high-school",
+          grade: "10",
+          material: "mathematics",
+          topic: REAL_VECTOR_ADDITION_ID.topic,
+          title: REAL_VECTOR_ADDITION_ID.topicTitle,
+          locale: REAL_VECTOR_ADDITION_ID.locale,
+          slug: REAL_VECTOR_TOPIC_SLUG,
+          sectionCount: REAL_VECTOR_TOPIC_SECTION_COUNT,
+          syncedAt: 1,
+        }),
+        locale: REAL_VECTOR_ADDITION_ID.locale,
+        slug: REAL_VECTOR_SECTION_SLUG,
+        category: "high-school",
+        grade: "10",
+        material: "mathematics",
+        topic: REAL_VECTOR_ADDITION_ID.topic,
+        section: REAL_VECTOR_ADDITION_ID.section,
+        title: REAL_VECTOR_ADDITION_ID.title,
+        description: REAL_VECTOR_ADDITION_ID.description,
+        date: REAL_VECTOR_PUBLISHED_AT,
+        subject: REAL_VECTOR_ADDITION_ID.subject,
+        body: REAL_VECTOR_ADDITION_ID.body,
+        contentHash: "full-indonesian-hash",
+        syncedAt: 1,
+      });
+
+      await ctx.db.insert("audioContentSources", {
+        contentHash: "compact-english-hash",
+        contentRef: { type: "subject", id: englishSubjectId },
+        locale: "en",
+        slug: REAL_VECTOR_SECTION_SLUG,
+        syncedAt: 2,
+      });
+      await ctx.db.insert("audioContentSources", {
+        contentHash: "compact-indonesian-hash",
+        contentRef: { type: "subject", id: indonesianSubjectId },
+        locale: "id",
+        slug: REAL_VECTOR_SECTION_SLUG,
+        syncedAt: 2,
+      });
+
+      return englishSubjectId;
+    });
+
+    const result = await t.query(async (ctx) => {
+      const englishLookup = await getAudioContentLookup(ctx, {
+        type: "subject",
+        id: englishSubjectId,
+      });
+
+      if (!englishLookup) {
+        return null;
+      }
+
+      return {
+        englishLookup,
+        indonesianLookup: await getLocalizedAudioContentLookup(
+          ctx,
+          englishLookup,
+          "id"
+        ),
+      };
+    });
+
+    expect(result).toMatchObject({
+      englishLookup: {
+        contentHash: "compact-english-hash",
+        locale: "en",
+        ref: { type: "subject", id: englishSubjectId },
+        slug: REAL_VECTOR_SECTION_SLUG,
+      },
+      indonesianLookup: {
+        contentHash: "compact-indonesian-hash",
+        locale: "id",
+        ref: { type: "subject" },
+        slug: REAL_VECTOR_SECTION_SLUG,
+      },
+    });
+  });
+
   it("returns reset fields with a fresh pending state", () => {
     const nowSpy = vi.spyOn(Date, "now").mockReturnValue(123_456_789);
 

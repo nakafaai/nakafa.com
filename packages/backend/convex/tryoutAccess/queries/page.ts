@@ -5,6 +5,7 @@ import {
   getTryoutAccessUnavailableReason,
   tryoutAccessUnavailableReasonValidator,
 } from "@repo/backend/convex/tryoutAccess/helpers/status";
+import { tryoutAccessGrantStatusActive } from "@repo/backend/convex/tryoutAccess/schema";
 import { v } from "convex/values";
 
 const pageStateValidator = v.union(
@@ -70,7 +71,10 @@ export const getEventPageState = query({
           )
           .first();
 
-        if (existingGrant.status === "active" && activeEntitlement) {
+        if (
+          existingGrant.status === tryoutAccessGrantStatusActive &&
+          activeEntitlement
+        ) {
           return {
             kind: "active" as const,
             endsAt: activeEntitlement.endsAt,

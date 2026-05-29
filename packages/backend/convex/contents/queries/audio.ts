@@ -1,5 +1,8 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import { MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE } from "@repo/backend/convex/audioStudies/constants";
+import {
+  MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
+  MIN_VIEW_THRESHOLD,
+} from "@repo/backend/convex/audioStudies/constants";
 import { getAudioContentLookup } from "@repo/backend/convex/audioStudies/utils";
 import { mergePopularAudioContentItems } from "@repo/backend/convex/contents/helpers/popularity";
 import {
@@ -21,12 +24,16 @@ export const getPopularContentForAudioQueue = internalQuery({
     const [articleRows, subjectRows] = await Promise.all([
       ctx.db
         .query("articlePopularity")
-        .withIndex("by_viewCount_and_contentId")
+        .withIndex("by_viewCount_and_contentId", (q) =>
+          q.gte("viewCount", MIN_VIEW_THRESHOLD)
+        )
         .order("desc")
         .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
       ctx.db
         .query("subjectPopularity")
-        .withIndex("by_viewCount_and_contentId")
+        .withIndex("by_viewCount_and_contentId", (q) =>
+          q.gte("viewCount", MIN_VIEW_THRESHOLD)
+        )
         .order("desc")
         .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
     ]);

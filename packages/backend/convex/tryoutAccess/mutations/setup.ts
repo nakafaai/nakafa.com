@@ -23,6 +23,7 @@ import {
   tryoutAccessCampaignInputValidator,
   tryoutAccessLinkInputValidator,
 } from "@repo/backend/convex/tryoutAccess/helpers/setup/validators";
+import { tryoutAccessCampaignKindCompetition } from "@repo/backend/convex/tryoutAccess/schema";
 import { ConvexError, v } from "convex/values";
 
 /** Upserts one event access campaign and one redeem link for ops setup. */
@@ -69,7 +70,7 @@ export const upsertCampaignAndLink = internalMutation({
       now,
     });
 
-    if (args.campaign.campaignKind === "competition") {
+    if (args.campaign.campaignKind === tryoutAccessCampaignKindCompetition) {
       await assertNoOverlappingCompetitionCampaign(ctx, {
         endsAt: args.campaign.endsAt,
         existingCampaignId: existingCampaign?._id,

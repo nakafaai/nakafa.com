@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import * as fs from "node:fs";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { parseEnv } from "node:util";
 import {
   CONTENTS_DIR,
@@ -40,12 +40,12 @@ export const loadEnvProvider = Effect.fn("scripts.loadEnvProvider")(
 const readEnvFileMap = Effect.gen(function* () {
   const envPath = getBackendEnvFilePath();
 
-  if (!fs.existsSync(envPath)) {
+  if (!existsSync(envPath)) {
     return new Map<string, string>();
   }
 
   const content = yield* Effect.try({
-    try: () => fs.readFileSync(envPath, "utf8"),
+    try: () => readFileSync(envPath, "utf8"),
     catch: (error) =>
       new RuntimeFileError({ message: getUnknownMessage(error) }),
   });
@@ -74,12 +74,12 @@ export const loadSyncState = Effect.fn("scripts.loadSyncState")(function* (
     Effect.gen(function* () {
       const stateFile = getSyncStateFile(isProd);
 
-      if (!fs.existsSync(stateFile)) {
+      if (!existsSync(stateFile)) {
         return null;
       }
 
       const content = yield* Effect.try({
-        try: () => fs.readFileSync(stateFile, "utf8"),
+        try: () => readFileSync(stateFile, "utf8"),
         catch: (error) =>
           new RuntimeFileError({ message: getUnknownMessage(error) }),
       });
@@ -109,7 +109,7 @@ export const saveSyncState = Effect.fn("scripts.saveSyncState")(function* (
   const stateFile = getSyncStateFile(isProd);
 
   yield* Effect.try({
-    try: () => fs.writeFileSync(stateFile, JSON.stringify(state, null, 2)),
+    try: () => writeFileSync(stateFile, JSON.stringify(state, null, 2)),
     catch: (error) =>
       new RuntimeFileError({ message: getUnknownMessage(error) }),
   });
@@ -121,9 +121,9 @@ export const clearSyncState = Effect.fn("scripts.clearSyncState")(function* (
 ) {
   const stateFile = getSyncStateFile(isProd);
 
-  if (fs.existsSync(stateFile)) {
+  if (existsSync(stateFile)) {
     yield* Effect.try({
-      try: () => fs.unlinkSync(stateFile),
+      try: () => unlinkSync(stateFile),
       catch: (error) =>
         new RuntimeFileError({ message: getUnknownMessage(error) }),
     });
