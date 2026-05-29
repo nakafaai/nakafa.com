@@ -1,3 +1,3 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registered/subscriptions";
+import registeredFunctions from "../../confect/_generated/registeredFunctions";
 
 export const hasActiveSubscription = registeredFunctions.subscriptions.queries.hasActiveSubscription;

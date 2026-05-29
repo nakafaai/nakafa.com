@@ -12,23 +12,24 @@ export const resend = new Resend(components.resend, {
 });
 
 /** Sends the welcome email after a Better Auth signup creates an app user. */
-export const sendWelcomeEmail = Effect.fn("notifications.sendWelcomeEmail")(
-  function* (args: { email: string; name: string }) {
-    const ctx = yield* MutationCtx;
+export const sendWelcomeEmail = Effect.fnUntraced(function* (args: {
+  email: string;
+  name: string;
+}) {
+  const ctx = yield* MutationCtx;
 
-    yield* Effect.promise(() =>
-      resend.sendEmail(ctx, {
-        from: NAKAFA_NOTIFICATION_SENDER,
-        template: {
-          id: WELCOME_TEMPLATE_ID,
-          variables: {
-            name: args.name,
-          },
+  yield* Effect.promise(() =>
+    resend.sendEmail(ctx, {
+      from: NAKAFA_NOTIFICATION_SENDER,
+      template: {
+        id: WELCOME_TEMPLATE_ID,
+        variables: {
+          name: args.name,
         },
-        to: args.email,
-      })
-    );
+      },
+      to: args.email,
+    })
+  );
 
-    return null;
-  }
-);
+  return null;
+});

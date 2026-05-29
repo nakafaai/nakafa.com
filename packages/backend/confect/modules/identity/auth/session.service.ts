@@ -29,7 +29,7 @@ function mapAppUserToAuthUser(appUser: Doc<"users">) {
 }
 
 /** Reads the Convex JWT identity issued by Better Auth. */
-const readAuthIdentity = Effect.fn("identity.readAuthIdentity")(function* () {
+const readAuthIdentity = Effect.fnUntraced(function* () {
   const auth = yield* Auth;
   const identity = yield* auth.getUserIdentity.pipe(
     Effect.catchTag("NoUserIdentityFoundError", () => Effect.succeed(null))
@@ -45,19 +45,17 @@ const readAuthIdentity = Effect.fn("identity.readAuthIdentity")(function* () {
 });
 
 /** Returns the app user mapped to a Better Auth user id. */
-export const getAppUserByAuthId = Effect.fn("identity.getAppUserByAuthId")(
-  function* (authId: string) {
-    const reader = yield* DatabaseReader;
-    return yield* reader
-      .table("users")
-      .index("by_authId", (query) => query.eq("authId", authId))
-      .first()
-      .pipe(Effect.map(Option.getOrNull));
-  }
-);
+export const getAppUserByAuthId = Effect.fnUntraced(function* (authId: string) {
+  const reader = yield* DatabaseReader;
+  return yield* reader
+    .table("users")
+    .index("by_authId", (query) => query.eq("authId", authId))
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
+});
 
 /** Resolves the current valid Better Auth session to the synced app user. */
-const getSessionAppUser = Effect.fn("identity.getSessionAppUser")(function* () {
+const getSessionAppUser = Effect.fnUntraced(function* () {
   const identity = yield* readAuthIdentity();
 
   if (!identity) {
@@ -77,51 +75,45 @@ const getSessionAppUser = Effect.fn("identity.getSessionAppUser")(function* () {
 });
 
 /** Returns the current Better Auth user and app user when both exist. */
-export const getOptionalAppUser = Effect.fn("identity.getOptionalAppUser")(
-  function* () {
-    return yield* getSessionAppUser();
-  }
-);
+export const getOptionalAppUser = Effect.fnUntraced(function* () {
+  return yield* getSessionAppUser();
+});
 
 /** Requires the current request to resolve to a mapped app user. */
-export const requireAppUser = Effect.fn("identity.requireAppUser")(
-  function* () {
-    const user = yield* getSessionAppUser();
+export const requireAppUser = Effect.fnUntraced(function* () {
+  const user = yield* getSessionAppUser();
 
-    if (!user) {
-      return yield* Effect.fail(
-        new UnauthorizedUser({ message: "User not found." })
-      );
-    }
-
-    return user;
+  if (!user) {
+    return yield* Effect.fail(
+      new UnauthorizedUser({ message: "User not found." })
+    );
   }
-);
+
+  return user;
+});
 
 /** Reads the current mapped app user for public queries. */
-export const getCurrentUser = Effect.fn("identity.getCurrentUser")(
-  function* () {
-    return yield* getOptionalAppUser();
-  }
-);
+export const getCurrentUser = Effect.fnUntraced(function* () {
+  return yield* getOptionalAppUser();
+});
 
 /** Reads the public profile fields for an app user id. */
-export const getPublicUserById = Effect.fn("identity.getPublicUserById")(
-  function* (args: { userId: GenericId.GenericId<"users"> }) {
-    const reader = yield* DatabaseReader;
-    const user = yield* reader
-      .table("users")
-      .get(args.userId)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+export const getPublicUserById = Effect.fnUntraced(function* (args: {
+  userId: GenericId.GenericId<"users">;
+}) {
+  const reader = yield* DatabaseReader;
+  const user = yield* reader
+    .table("users")
+    .get(args.userId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-    if (!user) {
-      return null;
-    }
-
-    if (user.image === undefined) {
-      return { name: user.name };
-    }
-
-    return { image: user.image, name: user.name };
+  if (!user) {
+    return null;
   }
-);
+
+  if (user.image === undefined) {
+    return { name: user.name };
+  }
+
+  return { image: user.image, name: user.name };
+});

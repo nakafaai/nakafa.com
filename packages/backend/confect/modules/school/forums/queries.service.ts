@@ -26,7 +26,7 @@ import type { PaginationOptions } from "convex/server";
 import { Effect } from "effect";
 
 /** Lists forum threads for a class. */
-export const getForums = Effect.fn("school.forums.getForums")(function* (args: {
+export const getForums = Effect.fnUntraced(function* (args: {
   classId: Id<"schoolClasses">;
   paginationOpts: PaginationOptions;
   q?: string;
@@ -74,7 +74,7 @@ export const getForums = Effect.fn("school.forums.getForums")(function* (args: {
 });
 
 /** Reads one forum with reaction previews. */
-export const getForum = Effect.fn("school.forums.getForum")(function* (args: {
+export const getForum = Effect.fnUntraced(function* (args: {
   forumId: Id<"schoolClassForums">;
 }) {
   const user = yield* requireAppUser();
@@ -101,25 +101,25 @@ export const getForum = Effect.fn("school.forums.getForum")(function* (args: {
 });
 
 /** Reads the bounded forum post transcript. */
-export const getForumPosts = Effect.fn("school.forums.getForumPosts")(
-  function* (args: { forumId: Id<"schoolClassForums"> }) {
-    const reader = yield* DatabaseReader;
-    const user = yield* requireAppUser();
-    const currentUserId = user.appUser._id;
-    yield* loadForumWithAccess(args.forumId, currentUserId);
-    const posts = yield* reader
-      .table("schoolClassForumPosts")
-      .index(
-        "by_forumId_and_sequence",
-        (query) => query.eq("forumId", args.forumId),
-        "desc"
-      )
-      .take(MAX_FORUM_TRANSCRIPT_POSTS);
+export const getForumPosts = Effect.fnUntraced(function* (args: {
+  forumId: Id<"schoolClassForums">;
+}) {
+  const reader = yield* DatabaseReader;
+  const user = yield* requireAppUser();
+  const currentUserId = user.appUser._id;
+  yield* loadForumWithAccess(args.forumId, currentUserId);
+  const posts = yield* reader
+    .table("schoolClassForumPosts")
+    .index(
+      "by_forumId_and_sequence",
+      (query) => query.eq("forumId", args.forumId),
+      "desc"
+    )
+    .take(MAX_FORUM_TRANSCRIPT_POSTS);
 
-    return yield* createForumFeedPosts({
-      currentUserId,
-      forumId: args.forumId,
-      posts: [...posts].reverse(),
-    });
-  }
-);
+  return yield* createForumFeedPosts({
+    currentUserId,
+    forumId: args.forumId,
+    posts: [...posts].reverse(),
+  });
+});

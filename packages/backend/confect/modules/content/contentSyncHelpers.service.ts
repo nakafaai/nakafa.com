@@ -24,9 +24,9 @@ type ContentId =
   | Id<"exerciseQuestions">;
 
 /** Builds a name to author-id cache for sync batches. */
-export const buildAuthorCache = Effect.fn(
-  "contentSync.helpers.buildAuthorCache"
-)(function* (authorNames: readonly string[]) {
+export const buildAuthorCache = Effect.fnUntraced(function* (
+  authorNames: readonly string[]
+) {
   const reader = yield* DatabaseReader;
   const cache = new Map<string, Id<"authors">>();
   const uniqueNames = [...new Set(authorNames)];
@@ -47,9 +47,10 @@ export const buildAuthorCache = Effect.fn(
 });
 
 /** Deletes content-author links for one synced content row. */
-export const deleteContentAuthorLinks = Effect.fn(
-  "contentSync.helpers.deleteContentAuthorLinks"
-)(function* (contentId: ContentId, contentType: ContentType) {
+export const deleteContentAuthorLinks = Effect.fnUntraced(function* (
+  contentId: ContentId,
+  contentType: ContentType
+) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const existingLinks = yield* reader
@@ -74,9 +75,7 @@ export const deleteContentAuthorLinks = Effect.fn(
 });
 
 /** Replaces content-author links using a preloaded author cache. */
-export const syncContentAuthorsWithCache = Effect.fn(
-  "contentSync.helpers.syncContentAuthorsWithCache"
-)(function* (
+export const syncContentAuthorsWithCache = Effect.fnUntraced(function* (
   contentId: ContentId,
   contentType: ContentType,
   authors: readonly { readonly name: string }[],
@@ -133,9 +132,9 @@ export const syncContentAuthorsWithCache = Effect.fn(
 });
 
 /** Deletes article references for one article. */
-export const deleteArticleReferencesForArticle = Effect.fn(
-  "contentSync.helpers.deleteArticleReferencesForArticle"
-)(function* (articleId: Id<"articleContents">) {
+export const deleteArticleReferencesForArticle = Effect.fnUntraced(function* (
+  articleId: Id<"articleContents">
+) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const existingReferences = yield* reader
@@ -158,9 +157,7 @@ export const deleteArticleReferencesForArticle = Effect.fn(
 });
 
 /** Replaces article references for one article. */
-export const replaceArticleReferences = Effect.fn(
-  "contentSync.helpers.replaceArticleReferences"
-)(function* (
+export const replaceArticleReferences = Effect.fnUntraced(function* (
   articleId: Id<"articleContents">,
   references: readonly {
     readonly authors: string;
@@ -201,9 +198,9 @@ export const replaceArticleReferences = Effect.fn(
 });
 
 /** Deletes choices for one exercise question. */
-export const deleteExerciseChoicesForQuestion = Effect.fn(
-  "contentSync.helpers.deleteExerciseChoicesForQuestion"
-)(function* (questionId: Id<"exerciseQuestions">) {
+export const deleteExerciseChoicesForQuestion = Effect.fnUntraced(function* (
+  questionId: Id<"exerciseQuestions">
+) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const existingChoices = yield* reader
@@ -227,9 +224,7 @@ export const deleteExerciseChoicesForQuestion = Effect.fn(
 });
 
 /** Replaces choices for one exercise question. */
-export const replaceExerciseChoices = Effect.fn(
-  "contentSync.helpers.replaceExerciseChoices"
-)(function* (args: {
+export const replaceExerciseChoices = Effect.fnUntraced(function* (args: {
   readonly choices: readonly {
     readonly isCorrect: boolean;
     readonly label: string;
@@ -265,9 +260,9 @@ export const replaceExerciseChoices = Effect.fn(
 });
 
 /** Deletes one exercise question and linked search/authors/choices. */
-export const deleteExerciseQuestion = Effect.fn(
-  "contentSync.helpers.deleteExerciseQuestion"
-)(function* (questionId: Id<"exerciseQuestions">) {
+export const deleteExerciseQuestion = Effect.fnUntraced(function* (
+  questionId: Id<"exerciseQuestions">
+) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const question = yield* reader
@@ -290,9 +285,9 @@ export const deleteExerciseQuestion = Effect.fn(
 });
 
 /** Deletes a subject section and its linked read models. */
-export const deleteSubjectSection = Effect.fn(
-  "contentSync.helpers.deleteSubjectSection"
-)(function* (sectionId: Id<"subjectSections">) {
+export const deleteSubjectSection = Effect.fnUntraced(function* (
+  sectionId: Id<"subjectSections">
+) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const section = yield* reader
@@ -314,9 +309,10 @@ export const deleteSubjectSection = Effect.fn(
 });
 
 /** Updates audio content records after content hash changes. */
-export const resetAudioForContentHash = Effect.fn(
-  "contentSync.helpers.resetAudioForContentHash"
-)(function* (args: { contentRef: AudioContentRef; newHash: string }) {
+export const resetAudioForContentHash = Effect.fnUntraced(function* (args: {
+  contentRef: AudioContentRef;
+  newHash: string;
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const storage = yield* StorageWriter;

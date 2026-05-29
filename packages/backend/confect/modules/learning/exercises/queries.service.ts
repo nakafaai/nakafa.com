@@ -4,9 +4,9 @@ import { requireAppUser } from "@repo/backend/confect/modules/identity/auth/sess
 import { Effect, Option } from "effect";
 
 /** Loads the latest standalone set attempt and its answers for the current user. */
-export const getLatestAttemptBySlug = Effect.fn(
-  "exercises.getLatestAttemptBySlug"
-)(function* (args: { readonly slug: string }) {
+export const getLatestAttemptBySlug = Effect.fnUntraced(function* (args: {
+  readonly slug: string;
+}) {
   const reader = yield* DatabaseReader;
   const { appUser } = yield* requireAppUser();
   const attempt = yield* reader
@@ -39,9 +39,10 @@ export const getLatestAttemptBySlug = Effect.fn(
 });
 
 /** Loads the answer sheet for a synced exercise set. */
-export const getQuestionAnswerSheetBySlug = Effect.fn(
-  "exercises.getQuestionAnswerSheetBySlug"
-)(function* (args: { readonly locale: Locale; readonly slug: string }) {
+export const getQuestionAnswerSheetBySlug = Effect.fnUntraced(function* (args: {
+  readonly locale: Locale;
+  readonly slug: string;
+}) {
   const reader = yield* DatabaseReader;
   yield* requireAppUser();
 

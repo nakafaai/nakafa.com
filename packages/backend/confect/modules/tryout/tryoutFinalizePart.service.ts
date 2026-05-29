@@ -20,9 +20,7 @@ type ExerciseAttemptDoc = typeof ExerciseAttempts.Doc.Type;
 type TryoutPartAttemptDoc = typeof TryoutPartAttempts.Doc.Type;
 
 /** Finalizes the linked exercise attempt for a tryout part when needed. */
-const finalizeExerciseSetAttemptIfNeeded = Effect.fn(
-  "tryouts.finalize.finalizeExerciseSetAttemptIfNeeded"
-)(function* (args: {
+const finalizeExerciseSetAttemptIfNeeded = Effect.fnUntraced(function* (args: {
   readonly finishedAtMs: number;
   readonly now: number;
   readonly setAttempt: ExerciseAttemptDoc;
@@ -68,9 +66,7 @@ const finalizeExerciseSetAttemptIfNeeded = Effect.fn(
 });
 
 /** Finalizes one tryout part attempt and records its IRT score. */
-export const finalizeTryoutPartAttempt = Effect.fn(
-  "tryouts.finalize.finalizeTryoutPartAttempt"
-)(function* (args: {
+export const finalizeTryoutPartAttempt = Effect.fnUntraced(function* (args: {
   readonly finishedAtMs: number;
   readonly now: number;
   readonly partAttempt: TryoutPartAttemptDoc;

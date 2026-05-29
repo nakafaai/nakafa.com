@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registered/classes";
+import registeredFunctions from "../../../../confect/_generated/registeredFunctions";
 
 export const discardForumUploads = registeredFunctions.classes.forums.mutations.uploads.discardForumUploads;
 export const generateUploadUrl = registeredFunctions.classes.forums.mutations.uploads.generateUploadUrl;

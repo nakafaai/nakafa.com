@@ -1,3 +1,3 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registered/chats";
+import registeredFunctions from "../../confect/_generated/registeredFunctions";
 
 export const scheduleSaveAssistantResponse = registeredFunctions.chats.actions.scheduleSaveAssistantResponse;

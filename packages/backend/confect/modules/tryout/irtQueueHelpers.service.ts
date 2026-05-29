@@ -18,9 +18,10 @@ import { Clock, Effect, Option } from "effect";
 const MAX_CALIBRATION_QUEUE_ROWS_PER_ATTEMPT = 2;
 
 /** Starts a calibration workflow when no run is already running for the set. */
-export const startCalibrationRunWorkflow = Effect.fn(
-  "irt.queue.startCalibrationRunWorkflow"
-)(function* (ctx: ConvexMutationCtx, setId: Id<"exerciseSets">) {
+export const startCalibrationRunWorkflow = Effect.fnUntraced(function* (
+  ctx: ConvexMutationCtx,
+  setId: Id<"exerciseSets">
+) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const now = yield* Clock.currentTimeMillis;
@@ -82,67 +83,68 @@ export const startCalibrationRunWorkflow = Effect.fn(
 });
 
 /** Finds the unique pending calibration queue row for one attempt. */
-export const getPendingCalibrationQueueEntryForAttempt = Effect.fn(
-  "irt.queue.getPendingCalibrationQueueEntryForAttempt"
-)(function* (attemptId: Id<"exerciseAttempts">) {
-  const reader = yield* DatabaseReader;
-  const queueEntries = yield* reader
-    .table("irtCalibrationQueue")
-    .index("by_attemptId_and_enqueuedAt", (query) =>
-      query.eq("attemptId", attemptId)
-    )
-    .take(MAX_CALIBRATION_QUEUE_ROWS_PER_ATTEMPT);
+export const getPendingCalibrationQueueEntryForAttempt = Effect.fnUntraced(
+  function* (attemptId: Id<"exerciseAttempts">) {
+    const reader = yield* DatabaseReader;
+    const queueEntries = yield* reader
+      .table("irtCalibrationQueue")
+      .index("by_attemptId_and_enqueuedAt", (query) =>
+        query.eq("attemptId", attemptId)
+      )
+      .take(MAX_CALIBRATION_QUEUE_ROWS_PER_ATTEMPT);
 
-  if (queueEntries.length <= 1) {
-    return queueEntries[0] ?? null;
+    if (queueEntries.length <= 1) {
+      return queueEntries[0] ?? null;
+    }
+
+    return yield* Effect.fail(
+      new IrtError({
+        code: "IRT_CALIBRATION_QUEUE_DUPLICATE_ATTEMPT",
+        message:
+          "Multiple pending calibration queue rows exist for one attempt.",
+      })
+    );
   }
-
-  return yield* Effect.fail(
-    new IrtError({
-      code: "IRT_CALIBRATION_QUEUE_DUPLICATE_ATTEMPT",
-      message: "Multiple pending calibration queue rows exist for one attempt.",
-    })
-  );
-});
+);
 
 /** Ensures one pending calibration queue row exists for the attempt. */
-export const ensurePendingCalibrationQueueEntry = Effect.fn(
-  "irt.queue.ensurePendingCalibrationQueueEntry"
-)(function* (args: {
-  readonly attemptId: Id<"exerciseAttempts">;
-  readonly enqueuedAt: number;
-  readonly setId: Id<"exerciseSets">;
-}) {
-  const writer = yield* DatabaseWriter;
-  const existingQueueEntry = yield* getPendingCalibrationQueueEntryForAttempt(
-    args.attemptId
-  );
+export const ensurePendingCalibrationQueueEntry = Effect.fnUntraced(
+  function* (args: {
+    readonly attemptId: Id<"exerciseAttempts">;
+    readonly enqueuedAt: number;
+    readonly setId: Id<"exerciseSets">;
+  }) {
+    const writer = yield* DatabaseWriter;
+    const existingQueueEntry = yield* getPendingCalibrationQueueEntryForAttempt(
+      args.attemptId
+    );
 
-  if (!existingQueueEntry) {
-    yield* writer.table("irtCalibrationQueue").insert({
-      attemptId: args.attemptId,
+    if (!existingQueueEntry) {
+      yield* writer.table("irtCalibrationQueue").insert({
+        attemptId: args.attemptId,
+        enqueuedAt: args.enqueuedAt,
+        setId: args.setId,
+      });
+      return null;
+    }
+
+    if (existingQueueEntry.setId === args.setId) {
+      return null;
+    }
+
+    yield* writer.table("irtCalibrationQueue").patch(existingQueueEntry._id, {
       enqueuedAt: args.enqueuedAt,
       setId: args.setId,
     });
+
     return null;
   }
-
-  if (existingQueueEntry.setId === args.setId) {
-    return null;
-  }
-
-  yield* writer.table("irtCalibrationQueue").patch(existingQueueEntry._id, {
-    enqueuedAt: args.enqueuedAt,
-    setId: args.setId,
-  });
-
-  return null;
-});
+);
 
 /** Removes one pending calibration queue row for an attempt. */
-export const removePendingCalibrationQueueEntry = Effect.fn(
-  "irt.queue.removePendingCalibrationQueueEntry"
-)(function* (attemptId: Id<"exerciseAttempts">) {
+export const removePendingCalibrationQueueEntry = Effect.fnUntraced(function* (
+  attemptId: Id<"exerciseAttempts">
+) {
   const writer = yield* DatabaseWriter;
   const existingQueueEntry =
     yield* getPendingCalibrationQueueEntryForAttempt(attemptId);
@@ -156,52 +158,50 @@ export const removePendingCalibrationQueueEntry = Effect.fn(
 });
 
 /** Deletes stale calibration queue rows through a bounded batch. */
-export const cleanupCalibrationQueueEntriesBatch = Effect.fn(
-  "irt.queue.cleanupCalibrationQueueEntriesBatch"
-)(function* (args: {
-  readonly setId: Id<"exerciseSets">;
-  readonly throughAt: number;
-}) {
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  const queueEntries = yield* reader
-    .table("irtCalibrationQueue")
-    .index("by_setId_and_enqueuedAt", (query) =>
-      query.eq("setId", args.setId).lte("enqueuedAt", args.throughAt)
-    )
-    .take(IRT_QUEUE_CLEANUP_BATCH_SIZE);
+export const cleanupCalibrationQueueEntriesBatch = Effect.fnUntraced(
+  function* (args: {
+    readonly setId: Id<"exerciseSets">;
+    readonly throughAt: number;
+  }) {
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const queueEntries = yield* reader
+      .table("irtCalibrationQueue")
+      .index("by_setId_and_enqueuedAt", (query) =>
+        query.eq("setId", args.setId).lte("enqueuedAt", args.throughAt)
+      )
+      .take(IRT_QUEUE_CLEANUP_BATCH_SIZE);
 
-  for (const entry of queueEntries) {
-    yield* writer.table("irtCalibrationQueue").delete(entry._id);
+    for (const entry of queueEntries) {
+      yield* writer.table("irtCalibrationQueue").delete(entry._id);
+    }
+
+    return queueEntries.length;
   }
-
-  return queueEntries.length;
-});
+);
 
 /** Deletes scale-publication queue rows for one tryout through a bounded batch. */
-export const cleanupScalePublicationQueueEntriesBatch = Effect.fn(
-  "irt.queue.cleanupScalePublicationQueueEntriesBatch"
-)(function* (tryoutId: Id<"tryouts">) {
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  const queueEntries = yield* reader
-    .table("irtScalePublicationQueue")
-    .index("by_tryoutId_and_enqueuedAt", (query) =>
-      query.eq("tryoutId", tryoutId)
-    )
-    .take(IRT_QUEUE_CLEANUP_BATCH_SIZE);
+export const cleanupScalePublicationQueueEntriesBatch = Effect.fnUntraced(
+  function* (tryoutId: Id<"tryouts">) {
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const queueEntries = yield* reader
+      .table("irtScalePublicationQueue")
+      .index("by_tryoutId_and_enqueuedAt", (query) =>
+        query.eq("tryoutId", tryoutId)
+      )
+      .take(IRT_QUEUE_CLEANUP_BATCH_SIZE);
 
-  for (const entry of queueEntries) {
-    yield* writer.table("irtScalePublicationQueue").delete(entry._id);
+    for (const entry of queueEntries) {
+      yield* writer.table("irtScalePublicationQueue").delete(entry._id);
+    }
+
+    return queueEntries.length;
   }
-
-  return queueEntries.length;
-});
+);
 
 /** Enqueues or replaces a stale scale-quality refresh row. */
-export const enqueueScaleQualityRefresh = Effect.fn(
-  "irt.queue.enqueueScaleQualityRefresh"
-)(function* (args: {
+export const enqueueScaleQualityRefresh = Effect.fnUntraced(function* (args: {
   readonly enqueuedAt: number;
   readonly tryoutId: Id<"tryouts">;
 }) {

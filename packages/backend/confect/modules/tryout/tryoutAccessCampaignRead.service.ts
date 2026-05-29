@@ -3,9 +3,9 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Effect } from "effect";
 
 /** Loads an access campaign when an attempt has one attached. */
-export const getTryoutAccessCampaignByOptionalId = Effect.fn(
-  "tryouts.accessCampaigns.getByOptionalId"
-)(function* (campaignId: Id<"tryoutAccessCampaigns"> | null | undefined) {
+export const getTryoutAccessCampaignByOptionalId = Effect.fnUntraced(function* (
+  campaignId: Id<"tryoutAccessCampaigns"> | null | undefined
+) {
   if (!campaignId) {
     return null;
   }

@@ -51,9 +51,10 @@ function getBlockingReason(args: {
 }
 
 /** Evaluates whether a tryout has enough fresh calibrated items for official scale publication. */
-export const evaluateTryoutScaleQuality = Effect.fn(
-  "irt.scales.evaluateTryoutScaleQuality"
-)(function* (args: { readonly now: number; readonly tryoutId: Id<"tryouts"> }) {
+export const evaluateTryoutScaleQuality = Effect.fnUntraced(function* (args: {
+  readonly now: number;
+  readonly tryoutId: Id<"tryouts">;
+}) {
   const reader = yield* DatabaseReader;
   const tryout = yield* reader
     .table("tryouts")
@@ -194,9 +195,9 @@ export const evaluateTryoutScaleQuality = Effect.fn(
 });
 
 /** Upserts the persisted scale-quality summary for one tryout. */
-export const upsertTryoutScaleQualityCheck = Effect.fn(
-  "irt.scales.upsertTryoutScaleQualityCheck"
-)(function* (summary: ScaleQualitySummary) {
+export const upsertTryoutScaleQualityCheck = Effect.fnUntraced(function* (
+  summary: ScaleQualitySummary
+) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const existingCheck = yield* reader
@@ -230,9 +231,9 @@ export const upsertTryoutScaleQualityCheck = Effect.fn(
 });
 
 /** Refreshes scale quality and reports whether the tryout still exists. */
-export const refreshTryoutScaleQualityCheck = Effect.fn(
-  "irt.scales.refreshTryoutScaleQualityCheck"
-)(function* (tryoutId: Id<"tryouts">) {
+export const refreshTryoutScaleQualityCheck = Effect.fnUntraced(function* (
+  tryoutId: Id<"tryouts">
+) {
   const now = yield* Clock.currentTimeMillis;
   const summary = yield* evaluateTryoutScaleQuality({ now, tryoutId });
 

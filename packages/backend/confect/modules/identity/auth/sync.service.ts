@@ -20,9 +20,9 @@ const cleanupUserRef = refs.internal.auth.cleanup.cleanupDeletedUser;
 const sendWelcomeEmailRef = refs.internal.emails.mutations.sendWelcomeEmail;
 
 /** Creates the app-side user rows for one Better Auth user. */
-export const createSyncedAuthUserRecord = Effect.fn(
-  "identity.createSyncedAuthUserRecord"
-)(function* (args: typeof authTriggerUserSchema.Type) {
+export const createSyncedAuthUserRecord = Effect.fnUntraced(function* (
+  args: typeof authTriggerUserSchema.Type
+) {
   const writer = yield* DatabaseWriter;
   const scheduler = yield* Scheduler;
   const now = yield* Clock.currentTimeMillis;
@@ -58,9 +58,9 @@ export const createSyncedAuthUserRecord = Effect.fn(
 });
 
 /** Mirrors Better Auth profile changes into the app user table. */
-export const updateSyncedAuthUserRecord = Effect.fn(
-  "identity.updateSyncedAuthUserRecord"
-)(function* (args: typeof authTriggerUserSchema.Type) {
+export const updateSyncedAuthUserRecord = Effect.fnUntraced(function* (
+  args: typeof authTriggerUserSchema.Type
+) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const scheduler = yield* Scheduler;
@@ -87,9 +87,9 @@ export const updateSyncedAuthUserRecord = Effect.fn(
 });
 
 /** Schedules app-side cleanup for one deleted Better Auth user. */
-export const cleanupSyncedAuthUserRecord = Effect.fn(
-  "identity.cleanupSyncedAuthUserRecord"
-)(function* (args: { readonly authId: string }) {
+export const cleanupSyncedAuthUserRecord = Effect.fnUntraced(function* (args: {
+  readonly authId: string;
+}) {
   const reader = yield* DatabaseReader;
   const scheduler = yield* Scheduler;
   const appUser = yield* reader

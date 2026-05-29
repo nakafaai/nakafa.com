@@ -115,60 +115,60 @@ function validateTryoutAccessCode(code: string) {
 }
 
 /** Ensures no competition campaign overlaps for the same product. */
-const assertNoOverlappingCompetitionCampaign = Effect.fn(
-  "tryoutAccess.assertNoOverlappingCompetitionCampaign"
-)(function* (args: {
-  readonly endsAt: number;
-  readonly existingCampaignId?: Id<"tryoutAccessCampaigns">;
-  readonly startsAt: number;
-  readonly targetProducts: readonly TryoutProduct[];
-}) {
-  const reader = yield* DatabaseReader;
+const assertNoOverlappingCompetitionCampaign = Effect.fnUntraced(
+  function* (args: {
+    readonly endsAt: number;
+    readonly existingCampaignId?: Id<"tryoutAccessCampaigns">;
+    readonly startsAt: number;
+    readonly targetProducts: readonly TryoutProduct[];
+  }) {
+    const reader = yield* DatabaseReader;
 
-  for (const product of args.targetProducts) {
-    let cursor: string | null = null;
+    for (const product of args.targetProducts) {
+      let cursor: string | null = null;
 
-    while (true) {
-      const pageEffect = reader
-        .table("tryoutAccessCampaignProducts")
-        .index("by_product_and_campaignKind_and_startsAt", (query) =>
-          query
-            .eq("product", product)
-            .eq("campaignKind", "competition")
-            .lt("startsAt", args.endsAt)
-        )
-        .paginate({
-          cursor,
-          numItems: COMPETITION_CAMPAIGN_CHECK_PAGE_SIZE,
-        });
-      const page = yield* pageEffect;
+      while (true) {
+        const pageEffect = reader
+          .table("tryoutAccessCampaignProducts")
+          .index("by_product_and_campaignKind_and_startsAt", (query) =>
+            query
+              .eq("product", product)
+              .eq("campaignKind", "competition")
+              .lt("startsAt", args.endsAt)
+          )
+          .paginate({
+            cursor,
+            numItems: COMPETITION_CAMPAIGN_CHECK_PAGE_SIZE,
+          });
+        const page = yield* pageEffect;
 
-      for (const candidate of page.page) {
-        if (candidate.campaignId === args.existingCampaignId) {
-          continue;
+        for (const candidate of page.page) {
+          if (candidate.campaignId === args.existingCampaignId) {
+            continue;
+          }
+
+          if (candidate.endsAt <= args.startsAt) {
+            continue;
+          }
+
+          return yield* Effect.fail(
+            new TryoutAccessError({
+              code: "OVERLAPPING_COMPETITION_CAMPAIGN",
+              message:
+                "Competition campaigns cannot overlap for the same tryout product.",
+            })
+          );
         }
 
-        if (candidate.endsAt <= args.startsAt) {
-          continue;
+        if (page.isDone) {
+          break;
         }
 
-        return yield* Effect.fail(
-          new TryoutAccessError({
-            code: "OVERLAPPING_COMPETITION_CAMPAIGN",
-            message:
-              "Competition campaigns cannot overlap for the same tryout product.",
-          })
-        );
+        cursor = page.continueCursor;
       }
-
-      if (page.isDone) {
-        break;
-      }
-
-      cursor = page.continueCursor;
     }
   }
-});
+);
 
 /** Builds a persisted campaign document from setup input. */
 function buildCampaignDocument(args: {
@@ -308,9 +308,7 @@ function scheduleCampaignStateTransitions(args: {
 }
 
 /** Upserts an event access campaign and its public link. */
-export const upsertCampaignAndLink = Effect.fn(
-  "tryoutAccess.upsertCampaignAndLink"
-)(function* (args: {
+export const upsertCampaignAndLink = Effect.fnUntraced(function* (args: {
   readonly campaign: CampaignInput;
   readonly link: LinkInput;
 }) {

@@ -12,9 +12,10 @@ type ExerciseAttemptDoc = typeof ExerciseAttempts.Doc.Type;
 type TryoutAttemptDoc = typeof TryoutAttempts.Doc.Type;
 
 /** Expires a tryout attempt and finalizes every unfinished part. */
-export const expireTryoutAttempt = Effect.fn(
-  "tryouts.expiry.expireTryoutAttempt"
-)(function* (tryoutAttempt: TryoutAttemptDoc, now: number) {
+export const expireTryoutAttempt = Effect.fnUntraced(function* (
+  tryoutAttempt: TryoutAttemptDoc,
+  now: number
+) {
   const reader = yield* DatabaseReader;
   const expiredAtMs = tryoutAttempt.expiresAt;
   const scoreTarget = yield* getTryoutScoreTarget(tryoutAttempt);
@@ -64,9 +65,10 @@ export const expireTryoutAttempt = Effect.fn(
 });
 
 /** Synchronizes the persisted expired state when the tryout deadline has passed. */
-export const syncTryoutAttemptExpiry = Effect.fn(
-  "tryouts.expiry.syncTryoutAttemptExpiry"
-)(function* (tryoutAttempt: TryoutAttemptDoc, now: number) {
+export const syncTryoutAttemptExpiry = Effect.fnUntraced(function* (
+  tryoutAttempt: TryoutAttemptDoc,
+  now: number
+) {
   const expiredAtMs = tryoutAttempt.expiresAt;
 
   if (tryoutAttempt.status === "expired") {
@@ -82,9 +84,10 @@ export const syncTryoutAttemptExpiry = Effect.fn(
 });
 
 /** Synchronizes tryout expiry for an exercise attempt owned by a tryout part. */
-export const syncTryoutExerciseAttemptExpiry = Effect.fn(
-  "tryouts.expiry.syncTryoutExerciseAttemptExpiry"
-)(function* (attempt: ExerciseAttemptDoc, now: number) {
+export const syncTryoutExerciseAttemptExpiry = Effect.fnUntraced(function* (
+  attempt: ExerciseAttemptDoc,
+  now: number
+) {
   if (attempt.origin !== "tryout") {
     return { expired: false, expiredAtMs: undefined };
   }

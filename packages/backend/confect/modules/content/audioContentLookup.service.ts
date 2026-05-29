@@ -17,9 +17,9 @@ export interface AudioContentLookup {
 }
 
 /** Reads article or subject body fields used for audio script generation. */
-export const fetchContentForAudio = Effect.fn(
-  "audioContent.fetchContentForAudio"
-)(function* (contentRef: AudioContentRef) {
+export const fetchContentForAudio = Effect.fnUntraced(function* (
+  contentRef: AudioContentRef
+) {
   const reader = yield* DatabaseReader;
 
   if (contentRef.type === "article") {
@@ -58,9 +58,9 @@ export const fetchContentForAudio = Effect.fn(
 });
 
 /** Reads slug, locale, hash, and reference data for audio-capable content. */
-export const getAudioContentLookup = Effect.fn(
-  "audioContent.getAudioContentLookup"
-)(function* (contentRef: AudioContentRef) {
+export const getAudioContentLookup = Effect.fnUntraced(function* (
+  contentRef: AudioContentRef
+) {
   const reader = yield* DatabaseReader;
 
   if (contentRef.type === "article") {
@@ -99,9 +99,10 @@ export const getAudioContentLookup = Effect.fn(
 });
 
 /** Finds the localized sibling for an audio-capable content slug. */
-export const getLocalizedAudioContentLookup = Effect.fn(
-  "audioContent.getLocalizedAudioContentLookup"
-)(function* (sourceContent: AudioContentLookup, locale: Locale) {
+export const getLocalizedAudioContentLookup = Effect.fnUntraced(function* (
+  sourceContent: AudioContentLookup,
+  locale: Locale
+) {
   const reader = yield* DatabaseReader;
 
   if (sourceContent.locale === locale) {
@@ -150,73 +151,71 @@ export const getLocalizedAudioContentLookup = Effect.fn(
 });
 
 /** Reads the current content hash for an audio-capable content reference. */
-export const getContentHash = Effect.fn("audioContent.getContentHash")(
-  function* (args: { contentRef: AudioContentRef }) {
-    const content = yield* getAudioContentLookup(args.contentRef);
-    return content?.contentHash ?? null;
-  }
-);
+export const getContentHash = Effect.fnUntraced(function* (args: {
+  contentRef: AudioContentRef;
+}) {
+  const content = yield* getAudioContentLookup(args.contentRef);
+  return content?.contentHash ?? null;
+});
 
 /** Reads completed public audio for a localized article or subject slug. */
-export const getAudioBySlug = Effect.fn("audioContent.getAudioBySlug")(
-  function* (args: {
-    contentType: AudioContentType;
-    locale: Locale;
-    slug: string;
-  }) {
-    const reader = yield* DatabaseReader;
-    const storage = yield* StorageReader;
-    const content =
-      args.contentType === "article"
-        ? yield* reader
-            .table("articleContents")
-            .index("by_locale_and_slug", (query) =>
-              query.eq("locale", args.locale).eq("slug", args.slug)
-            )
-            .first()
-            .pipe(Effect.map(Option.getOrNull))
-        : yield* reader
-            .table("subjectSections")
-            .index("by_locale_and_slug", (query) =>
-              query.eq("locale", args.locale).eq("slug", args.slug)
-            )
-            .first()
-            .pipe(Effect.map(Option.getOrNull));
+export const getAudioBySlug = Effect.fnUntraced(function* (args: {
+  contentType: AudioContentType;
+  locale: Locale;
+  slug: string;
+}) {
+  const reader = yield* DatabaseReader;
+  const storage = yield* StorageReader;
+  const content =
+    args.contentType === "article"
+      ? yield* reader
+          .table("articleContents")
+          .index("by_locale_and_slug", (query) =>
+            query.eq("locale", args.locale).eq("slug", args.slug)
+          )
+          .first()
+          .pipe(Effect.map(Option.getOrNull))
+      : yield* reader
+          .table("subjectSections")
+          .index("by_locale_and_slug", (query) =>
+            query.eq("locale", args.locale).eq("slug", args.slug)
+          )
+          .first()
+          .pipe(Effect.map(Option.getOrNull));
 
-    if (!content) {
-      return null;
-    }
-
-    const audio = yield* reader
-      .table("contentAudios")
-      .index("by_contentRefType_and_contentRefId_and_locale", (query) =>
-        query
-          .eq("contentRef.type", args.contentType)
-          .eq("contentRef.id", content._id)
-          .eq("locale", args.locale)
-      )
-      .first()
-      .pipe(Effect.map(Option.getOrNull));
-
-    if (!audio || audio.status !== "completed" || !audio.audioStorageId) {
-      return null;
-    }
-
-    const audioStorageId = audio.audioStorageId;
-    const audioUrl = yield* storage
-      .getUrl(audioStorageId)
-      .pipe(Effect.catchTag("BlobNotFoundError", () => Effect.succeed(null)));
-
-    if (!audioUrl) {
-      return null;
-    }
-
-    return {
-      audioUrl: audioUrl.toString(),
-      contentType: args.contentType,
-      duration: audio.audioDuration ? audio.audioDuration / 1000 : 0,
-      script: audio.script,
-      status: audio.status,
-    };
+  if (!content) {
+    return null;
   }
-);
+
+  const audio = yield* reader
+    .table("contentAudios")
+    .index("by_contentRefType_and_contentRefId_and_locale", (query) =>
+      query
+        .eq("contentRef.type", args.contentType)
+        .eq("contentRef.id", content._id)
+        .eq("locale", args.locale)
+    )
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
+
+  if (!audio || audio.status !== "completed" || !audio.audioStorageId) {
+    return null;
+  }
+
+  const audioStorageId = audio.audioStorageId;
+  const audioUrl = yield* storage
+    .getUrl(audioStorageId)
+    .pipe(Effect.catchTag("BlobNotFoundError", () => Effect.succeed(null)));
+
+  if (!audioUrl) {
+    return null;
+  }
+
+  return {
+    audioUrl: audioUrl.toString(),
+    contentType: args.contentType,
+    duration: audio.audioDuration ? audio.audioDuration / 1000 : 0,
+    script: audio.script,
+    status: audio.status,
+  };
+});

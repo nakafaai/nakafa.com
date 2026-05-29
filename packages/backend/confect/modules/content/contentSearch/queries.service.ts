@@ -349,7 +349,7 @@ function buildContentSearchResult(
 }
 
 /** Searches the content search read model. */
-export const search = Effect.fn("contentSearch.search")(function* (args: {
+export const search = Effect.fnUntraced(function* (args: {
   limit: number;
   locale: Locale;
   offset: number;

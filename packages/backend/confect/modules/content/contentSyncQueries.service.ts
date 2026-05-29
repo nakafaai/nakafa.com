@@ -7,29 +7,25 @@ import type { PaginationOptions } from "convex/server";
 import { Effect, Option } from "effect";
 
 /** Counts one page from a sync-audited table. */
-export const countTablePage = Effect.fn("contentSync.queries.countTablePage")(
-  function* (args: {
-    paginationOpts: PaginationOptions;
-    tableName: CountableTableName;
-  }) {
-    const reader = yield* DatabaseReader;
-    const page = yield* reader
-      .table(args.tableName)
-      .index("by_creation_time")
-      .paginate(args.paginationOpts);
+export const countTablePage = Effect.fnUntraced(function* (args: {
+  paginationOpts: PaginationOptions;
+  tableName: CountableTableName;
+}) {
+  const reader = yield* DatabaseReader;
+  const page = yield* reader
+    .table(args.tableName)
+    .index("by_creation_time")
+    .paginate(args.paginationOpts);
 
-    return {
-      continueCursor: page.continueCursor,
-      isDone: page.isDone,
-      pageSize: page.page.length,
-    };
-  }
-);
+  return {
+    continueCursor: page.continueCursor,
+    isDone: page.isDone,
+    pageSize: page.page.length,
+  };
+});
 
 /** Lists stale content rows by table for cleanup tooling. */
-export const listStaleContentPage = Effect.fn(
-  "contentSync.queries.listStaleContentPage"
-)(function* (args: {
+export const listStaleContentPage = Effect.fnUntraced(function* (args: {
   paginationOpts: PaginationOptions;
   tableName: StaleContentTableName;
 }) {
@@ -50,85 +46,85 @@ export const listStaleContentPage = Effect.fn(
 });
 
 /** Lists exercise questions for sync integrity checks. */
-export const listIntegrityExerciseQuestionsPage = Effect.fn(
-  "contentSync.queries.listIntegrityExerciseQuestionsPage"
-)(function* (args: { paginationOpts: PaginationOptions }) {
-  const reader = yield* DatabaseReader;
-  const page = yield* reader
-    .table("exerciseQuestions")
-    .index("by_creation_time")
-    .paginate(args.paginationOpts);
+export const listIntegrityExerciseQuestionsPage = Effect.fnUntraced(
+  function* (args: { paginationOpts: PaginationOptions }) {
+    const reader = yield* DatabaseReader;
+    const page = yield* reader
+      .table("exerciseQuestions")
+      .index("by_creation_time")
+      .paginate(args.paginationOpts);
 
-  return {
-    ...page,
-    page: page.page.map((question) => ({
-      id: question._id,
-      locale: question.locale,
-      slug: question.slug,
-    })),
-  };
-});
+    return {
+      ...page,
+      page: page.page.map((question) => ({
+        id: question._id,
+        locale: question.locale,
+        slug: question.slug,
+      })),
+    };
+  }
+);
 
 /** Lists exercise choices for sync integrity checks. */
-export const listIntegrityExerciseChoicesPage = Effect.fn(
-  "contentSync.queries.listIntegrityExerciseChoicesPage"
-)(function* (args: { paginationOpts: PaginationOptions }) {
-  const reader = yield* DatabaseReader;
-  const page = yield* reader
-    .table("exerciseChoices")
-    .index("by_creation_time")
-    .paginate(args.paginationOpts);
+export const listIntegrityExerciseChoicesPage = Effect.fnUntraced(
+  function* (args: { paginationOpts: PaginationOptions }) {
+    const reader = yield* DatabaseReader;
+    const page = yield* reader
+      .table("exerciseChoices")
+      .index("by_creation_time")
+      .paginate(args.paginationOpts);
 
-  return {
-    ...page,
-    page: page.page.map((choice) => ({
-      questionId: choice.questionId,
-    })),
-  };
-});
+    return {
+      ...page,
+      page: page.page.map((choice) => ({
+        questionId: choice.questionId,
+      })),
+    };
+  }
+);
 
 /** Lists content-author links for sync integrity checks. */
-export const listIntegrityContentAuthorsPage = Effect.fn(
-  "contentSync.queries.listIntegrityContentAuthorsPage"
-)(function* (args: { paginationOpts: PaginationOptions }) {
-  const reader = yield* DatabaseReader;
-  const page = yield* reader
-    .table("contentAuthors")
-    .index("by_creation_time")
-    .paginate(args.paginationOpts);
+export const listIntegrityContentAuthorsPage = Effect.fnUntraced(
+  function* (args: { paginationOpts: PaginationOptions }) {
+    const reader = yield* DatabaseReader;
+    const page = yield* reader
+      .table("contentAuthors")
+      .index("by_creation_time")
+      .paginate(args.paginationOpts);
 
-  return {
-    ...page,
-    page: page.page.map((contentAuthor) => ({
-      authorId: contentAuthor.authorId,
-      contentId: contentAuthor.contentId,
-      contentType: contentAuthor.contentType,
-    })),
-  };
-});
+    return {
+      ...page,
+      page: page.page.map((contentAuthor) => ({
+        authorId: contentAuthor.authorId,
+        contentId: contentAuthor.contentId,
+        contentType: contentAuthor.contentType,
+      })),
+    };
+  }
+);
 
 /** Lists article-reference links for sync integrity checks. */
-export const listIntegrityArticleReferencesPage = Effect.fn(
-  "contentSync.queries.listIntegrityArticleReferencesPage"
-)(function* (args: { paginationOpts: PaginationOptions }) {
-  const reader = yield* DatabaseReader;
-  const page = yield* reader
-    .table("articleReferences")
-    .index("by_creation_time")
-    .paginate(args.paginationOpts);
+export const listIntegrityArticleReferencesPage = Effect.fnUntraced(
+  function* (args: { paginationOpts: PaginationOptions }) {
+    const reader = yield* DatabaseReader;
+    const page = yield* reader
+      .table("articleReferences")
+      .index("by_creation_time")
+      .paginate(args.paginationOpts);
 
-  return {
-    ...page,
-    page: page.page.map((reference) => ({
-      articleId: reference.articleId,
-    })),
-  };
-});
+    return {
+      ...page,
+      page: page.page.map((reference) => ({
+        articleId: reference.articleId,
+      })),
+    };
+  }
+);
 
 /** Lists articles for sync integrity checks. */
-export const listIntegrityArticlesPage = Effect.fn(
-  "contentSync.queries.listIntegrityArticlesPage"
-)(function* (args: { paginationOpts: PaginationOptions }) {
+export const listIntegrityArticlesPage = Effect.fnUntraced(function* (args: {
+  paginationOpts: PaginationOptions;
+}) {
   const reader = yield* DatabaseReader;
   const page = yield* reader
     .table("articleContents")
@@ -146,29 +142,29 @@ export const listIntegrityArticlesPage = Effect.fn(
 });
 
 /** Lists subject sections for sync integrity checks. */
-export const listIntegritySubjectSectionsPage = Effect.fn(
-  "contentSync.queries.listIntegritySubjectSectionsPage"
-)(function* (args: { paginationOpts: PaginationOptions }) {
-  const reader = yield* DatabaseReader;
-  const page = yield* reader
-    .table("subjectSections")
-    .index("by_creation_time")
-    .paginate(args.paginationOpts);
+export const listIntegritySubjectSectionsPage = Effect.fnUntraced(
+  function* (args: { paginationOpts: PaginationOptions }) {
+    const reader = yield* DatabaseReader;
+    const page = yield* reader
+      .table("subjectSections")
+      .index("by_creation_time")
+      .paginate(args.paginationOpts);
 
-  return {
-    ...page,
-    page: page.page.map((section) => ({
-      locale: section.locale,
-      slug: section.slug,
-      topicId: section.topicId,
-    })),
-  };
-});
+    return {
+      ...page,
+      page: page.page.map((section) => ({
+        locale: section.locale,
+        slug: section.slug,
+        topicId: section.topicId,
+      })),
+    };
+  }
+);
 
 /** Lists active tryouts that do not yet have a published IRT scale. */
-export const getTryoutScaleIntegrity = Effect.fn(
-  "contentSync.queries.getTryoutScaleIntegrity"
-)(function* (args: { paginationOpts: PaginationOptions }) {
+export const getTryoutScaleIntegrity = Effect.fnUntraced(function* (args: {
+  paginationOpts: PaginationOptions;
+}) {
   const reader = yield* DatabaseReader;
   const tryoutPage = yield* reader
     .table("tryouts")

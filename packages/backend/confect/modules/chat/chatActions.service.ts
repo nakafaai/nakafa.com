@@ -21,20 +21,20 @@ interface ChatMessageInput {
 }
 
 /** Schedules assistant response persistence for the current user. */
-export const scheduleSaveAssistantResponse = Effect.fn(
-  "chatActions.scheduleSaveAssistantResponse"
-)(function* (args: {
-  message: ChatMessageInput;
-  parts: readonly MessagePartInput[];
-}) {
-  const scheduler = yield* Scheduler;
-  const { appUser } = yield* requireAppUserForAction();
+export const scheduleSaveAssistantResponse = Effect.fnUntraced(
+  function* (args: {
+    message: ChatMessageInput;
+    parts: readonly MessagePartInput[];
+  }) {
+    const scheduler = yield* Scheduler;
+    const { appUser } = yield* requireAppUserForAction();
 
-  yield* scheduler.runAfter(
-    Duration.millis(0),
-    refs.internal.chats.mutations.saveAssistantResponse,
-    { userId: appUser._id, ...args }
-  );
+    yield* scheduler.runAfter(
+      Duration.millis(0),
+      refs.internal.chats.mutations.saveAssistantResponse,
+      { userId: appUser._id, ...args }
+    );
 
-  return null;
-});
+    return null;
+  }
+);

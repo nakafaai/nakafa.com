@@ -50,9 +50,7 @@ function scheduleCalibrationSyncIfReady(
 }
 
 /** Creates and schedules one exercise attempt. */
-export const createExerciseAttempt = Effect.fn(
-  "exercises.createExerciseAttempt"
-)(function* (args: {
+export const createExerciseAttempt = Effect.fnUntraced(function* (args: {
   readonly exerciseNumber?: number;
   readonly mode: ExerciseAttemptMode;
   readonly origin: ExerciseAttemptOrigin;
@@ -99,29 +97,27 @@ export const createExerciseAttempt = Effect.fn(
 });
 
 /** Starts a standalone exercise attempt for the current user. */
-export const startAttempt = Effect.fn("exercises.startAttempt")(
-  function* (args: {
-    readonly exerciseNumber?: number;
-    readonly mode: ExerciseAttemptMode;
-    readonly perQuestionTimeLimit?: number;
-    readonly scope: ExerciseAttemptScope;
-    readonly slug: string;
-    readonly timeLimit: number;
-    readonly totalExercises: number;
-  }) {
-    const { appUser } = yield* requireAppUser();
-    const now = yield* Clock.currentTimeMillis;
+export const startAttempt = Effect.fnUntraced(function* (args: {
+  readonly exerciseNumber?: number;
+  readonly mode: ExerciseAttemptMode;
+  readonly perQuestionTimeLimit?: number;
+  readonly scope: ExerciseAttemptScope;
+  readonly slug: string;
+  readonly timeLimit: number;
+  readonly totalExercises: number;
+}) {
+  const { appUser } = yield* requireAppUser();
+  const now = yield* Clock.currentTimeMillis;
 
-    yield* validateAttemptStartArgs(args);
+  yield* validateAttemptStartArgs(args);
 
-    return yield* createExerciseAttempt({
-      ...args,
-      origin: "standalone",
-      startedAt: now,
-      userId: appUser._id,
-    });
-  }
-);
+  return yield* createExerciseAttempt({
+    ...args,
+    origin: "standalone",
+    startedAt: now,
+    userId: appUser._id,
+  });
+});
 
 /** Validates start-attempt input before writing attempt rows. */
 function validateAttemptStartArgs(args: {
@@ -179,105 +175,103 @@ function validateAttemptStartArgs(args: {
 }
 
 /** Completes a standalone attempt for the current user. */
-export const completeAttempt = Effect.fn("exercises.completeAttempt")(
-  function* (args: { readonly attemptId: Id<"exerciseAttempts"> }) {
-    const ctx = yield* MutationCtx;
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const { appUser } = yield* requireAppUser();
-    const now = yield* Clock.currentTimeMillis;
-    const attempt = yield* reader
-      .table("exerciseAttempts")
-      .get(args.attemptId)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+export const completeAttempt = Effect.fnUntraced(function* (args: {
+  readonly attemptId: Id<"exerciseAttempts">;
+}) {
+  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const { appUser } = yield* requireAppUser();
+  const now = yield* Clock.currentTimeMillis;
+  const attempt = yield* reader
+    .table("exerciseAttempts")
+    .get(args.attemptId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-    if (!attempt) {
-      return yield* failExercise("ATTEMPT_NOT_FOUND", "Attempt not found.");
-    }
+  if (!attempt) {
+    return yield* failExercise("ATTEMPT_NOT_FOUND", "Attempt not found.");
+  }
 
-    if (attempt.userId !== appUser._id) {
-      return yield* failExercise(
-        "FORBIDDEN",
-        "You do not have access to this attempt."
-      );
-    }
+  if (attempt.userId !== appUser._id) {
+    return yield* failExercise(
+      "FORBIDDEN",
+      "You do not have access to this attempt."
+    );
+  }
 
-    if (attempt.origin === "tryout") {
-      return yield* failExercise(
-        "INVALID_ATTEMPT_STATE",
-        "Tryout attempts must be completed from the tryout flow."
-      );
-    }
+  if (attempt.origin === "tryout") {
+    return yield* failExercise(
+      "INVALID_ATTEMPT_STATE",
+      "Tryout attempts must be completed from the tryout flow."
+    );
+  }
 
-    if (attempt.status === "completed") {
-      return { status: "completed" as const };
-    }
+  if (attempt.status === "completed") {
+    return { status: "completed" as const };
+  }
 
-    if (attempt.status === "expired") {
-      return { status: "expired" as const };
-    }
+  if (attempt.status === "expired") {
+    return { status: "expired" as const };
+  }
 
-    if (attempt.status !== "in-progress") {
-      return yield* failExercise(
-        "INVALID_ATTEMPT_STATUS",
-        "Attempt is not in progress."
-      );
-    }
+  if (attempt.status !== "in-progress") {
+    return yield* failExercise(
+      "INVALID_ATTEMPT_STATUS",
+      "Attempt is not in progress."
+    );
+  }
 
-    const expiresAtMs = attempt.startedAt + attempt.timeLimit * 1e3;
+  const expiresAtMs = attempt.startedAt + attempt.timeLimit * 1e3;
 
-    if (now >= expiresAtMs) {
-      const totalTime = computeAttemptDurationSeconds({
-        completedAtMs: expiresAtMs,
-        startedAtMs: attempt.startedAt,
-      });
-
-      yield* writer.table("exerciseAttempts").patch(
-        args.attemptId,
-        buildFinalizedExerciseAttemptPatch({
-          completedAtMs: expiresAtMs,
-          now,
-          status: "expired",
-          totalTime,
-        })
-      );
-
-      return { expiredAtMs: expiresAtMs, status: "expired" as const };
-    }
-
+  if (now >= expiresAtMs) {
     const totalTime = computeAttemptDurationSeconds({
-      completedAtMs: now,
+      completedAtMs: expiresAtMs,
       startedAtMs: attempt.startedAt,
     });
-    const finalizedAttempt = {
-      ...attempt,
-      ...buildFinalizedExerciseAttemptPatch({
-        completedAtMs: now,
-        now,
-        status: "completed" as const,
-        totalTime,
-      }),
-    };
 
     yield* writer.table("exerciseAttempts").patch(
       args.attemptId,
       buildFinalizedExerciseAttemptPatch({
-        completedAtMs: now,
+        completedAtMs: expiresAtMs,
         now,
-        status: "completed",
+        status: "expired",
         totalTime,
       })
     );
-    yield* scheduleCalibrationSyncIfReady(ctx, finalizedAttempt);
 
-    return { status: "completed" as const };
+    return { expiredAtMs: expiresAtMs, status: "expired" as const };
   }
-);
+
+  const totalTime = computeAttemptDurationSeconds({
+    completedAtMs: now,
+    startedAtMs: attempt.startedAt,
+  });
+  const finalizedAttempt = {
+    ...attempt,
+    ...buildFinalizedExerciseAttemptPatch({
+      completedAtMs: now,
+      now,
+      status: "completed" as const,
+      totalTime,
+    }),
+  };
+
+  yield* writer.table("exerciseAttempts").patch(
+    args.attemptId,
+    buildFinalizedExerciseAttemptPatch({
+      completedAtMs: now,
+      now,
+      status: "completed",
+      totalTime,
+    })
+  );
+  yield* scheduleCalibrationSyncIfReady(ctx, finalizedAttempt);
+
+  return { status: "completed" as const };
+});
 
 /** Expires an attempt from its scheduled internal mutation. */
-export const expireAttemptInternal = Effect.fn(
-  "exercises.expireAttemptInternal"
-)(function* (args: {
+export const expireAttemptInternal = Effect.fnUntraced(function* (args: {
   readonly attemptId: Id<"exerciseAttempts">;
   readonly expiresAtMs: number;
 }) {

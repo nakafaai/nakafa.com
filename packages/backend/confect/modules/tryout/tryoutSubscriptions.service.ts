@@ -9,16 +9,14 @@ import {
 import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors";
 import { Effect, Option } from "effect";
 
-const getTryoutPaidProductIds = Effect.fn("tryouts.subscriptions.productIds")(
-  function* () {
-    const server = yield* readPolarServer();
-    const products = getProductsForServer(server);
+const getTryoutPaidProductIds = Effect.fnUntraced(function* () {
+  const server = yield* readPolarServer();
+  const products = getProductsForServer(server);
 
-    return {
-      snbt: products.pro.id,
-    } as const;
-  }
-);
+  return {
+    snbt: products.pro.id,
+  } as const;
+});
 
 /** Parses an optional ISO subscription timestamp. */
 function parseSubscriptionTimestamp(value: string | null, fieldName: string) {
@@ -41,127 +39,127 @@ function parseSubscriptionTimestamp(value: string | null, fieldName: string) {
 }
 
 /** Loads the perpetual active subscription for one Polar product. */
-const getPerpetualActiveSubscriptionForProduct = Effect.fn(
-  "tryouts.subscriptions.getPerpetualActiveSubscriptionForProduct"
-)(function* (args: {
-  readonly customerId: string;
-  readonly productId: string;
-}) {
-  const reader = yield* DatabaseReader;
+const getPerpetualActiveSubscriptionForProduct = Effect.fnUntraced(
+  function* (args: {
+    readonly customerId: string;
+    readonly productId: string;
+  }) {
+    const reader = yield* DatabaseReader;
 
-  return yield* reader
-    .table("subscriptions")
-    .index(
-      "by_customerId_and_status_and_productId_and_currentPeriodEnd",
-      (query) =>
-        query
-          .eq("customerId", args.customerId)
-          .eq("status", "active")
-          .eq("productId", args.productId)
-          .eq("currentPeriodEnd", null)
-    )
-    .first()
-    .pipe(Effect.map(Option.getOrNull));
-});
+    return yield* reader
+      .table("subscriptions")
+      .index(
+        "by_customerId_and_status_and_productId_and_currentPeriodEnd",
+        (query) =>
+          query
+            .eq("customerId", args.customerId)
+            .eq("status", "active")
+            .eq("productId", args.productId)
+            .eq("currentPeriodEnd", null)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
+  }
+);
 
 /** Loads the latest active subscription for one Polar product. */
-export const getLatestActiveSubscriptionForProduct = Effect.fn(
-  "tryouts.subscriptions.getLatestActiveSubscriptionForProduct"
-)(function* (args: {
-  readonly customerId: string;
-  readonly productId: string;
-}) {
-  const perpetualSubscription =
-    yield* getPerpetualActiveSubscriptionForProduct(args);
+export const getLatestActiveSubscriptionForProduct = Effect.fnUntraced(
+  function* (args: {
+    readonly customerId: string;
+    readonly productId: string;
+  }) {
+    const perpetualSubscription =
+      yield* getPerpetualActiveSubscriptionForProduct(args);
 
-  if (perpetualSubscription) {
-    return perpetualSubscription;
+    if (perpetualSubscription) {
+      return perpetualSubscription;
+    }
+
+    const reader = yield* DatabaseReader;
+
+    return yield* reader
+      .table("subscriptions")
+      .index(
+        "by_customerId_and_status_and_productId_and_currentPeriodEnd",
+        (query) =>
+          query
+            .eq("customerId", args.customerId)
+            .eq("status", "active")
+            .eq("productId", args.productId)
+      )
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
   }
-
-  const reader = yield* DatabaseReader;
-
-  return yield* reader
-    .table("subscriptions")
-    .index(
-      "by_customerId_and_status_and_productId_and_currentPeriodEnd",
-      (query) =>
-        query
-          .eq("customerId", args.customerId)
-          .eq("status", "active")
-          .eq("productId", args.productId)
-    )
-    .first()
-    .pipe(Effect.map(Option.getOrNull));
-});
+);
 
 /** Lists canonical active tryout subscriptions for a Polar customer. */
-export const listCanonicalActiveTryoutSubscriptions = Effect.fn(
-  "tryouts.subscriptions.listCanonicalActiveTryoutSubscriptions"
-)(function* (args: { readonly customerId: string }) {
-  const tryoutPaidProductIds = yield* getTryoutPaidProductIds();
-  const subscriptions = yield* Effect.all(
-    tryoutProducts.map((product) =>
-      getLatestActiveSubscriptionForProduct({
-        customerId: args.customerId,
-        productId: tryoutPaidProductIds[product],
-      })
-    )
-  );
+export const listCanonicalActiveTryoutSubscriptions = Effect.fnUntraced(
+  function* (args: { readonly customerId: string }) {
+    const tryoutPaidProductIds = yield* getTryoutPaidProductIds();
+    const subscriptions = yield* Effect.all(
+      tryoutProducts.map((product) =>
+        getLatestActiveSubscriptionForProduct({
+          customerId: args.customerId,
+          productId: tryoutPaidProductIds[product],
+        })
+      )
+    );
 
-  return subscriptions.filter((subscription) => subscription !== null);
-});
+    return subscriptions.filter((subscription) => subscription !== null);
+  }
+);
 
 /** Resolves an active paid subscription for a tryout user/product pair. */
-export const getActiveTryoutSubscriptionForUserProduct = Effect.fn(
-  "tryouts.subscriptions.getActiveTryoutSubscriptionForUserProduct"
-)(function* (args: {
-  readonly now: number;
-  readonly product: TryoutProduct;
-  readonly userId: Id<"users">;
-}) {
-  const reader = yield* DatabaseReader;
-  const customer = yield* reader
-    .table("customers")
-    .index("by_userId", (query) => query.eq("userId", args.userId))
-    .first()
-    .pipe(Effect.map(Option.getOrNull));
+export const getActiveTryoutSubscriptionForUserProduct = Effect.fnUntraced(
+  function* (args: {
+    readonly now: number;
+    readonly product: TryoutProduct;
+    readonly userId: Id<"users">;
+  }) {
+    const reader = yield* DatabaseReader;
+    const customer = yield* reader
+      .table("customers")
+      .index("by_userId", (query) => query.eq("userId", args.userId))
+      .first()
+      .pipe(Effect.map(Option.getOrNull));
 
-  if (!customer) {
-    return null;
+    if (!customer) {
+      return null;
+    }
+
+    const tryoutPaidProductIds = yield* getTryoutPaidProductIds();
+    const subscription = yield* getLatestActiveSubscriptionForProduct({
+      customerId: customer.id,
+      productId: tryoutPaidProductIds[args.product],
+    });
+
+    if (!subscription) {
+      return null;
+    }
+
+    const startsAt = yield* parseSubscriptionTimestamp(
+      subscription.currentPeriodStart,
+      "currentPeriodStart"
+    );
+
+    if (startsAt === null || startsAt > args.now) {
+      return null;
+    }
+
+    const parsedEndsAt = yield* parseSubscriptionTimestamp(
+      subscription.currentPeriodEnd,
+      "currentPeriodEnd"
+    );
+    const endsAt = parsedEndsAt ?? Number.MAX_SAFE_INTEGER;
+
+    if (endsAt <= args.now) {
+      return null;
+    }
+
+    return {
+      endsAt,
+      startsAt,
+      subscriptionId: subscription._id,
+    };
   }
-
-  const tryoutPaidProductIds = yield* getTryoutPaidProductIds();
-  const subscription = yield* getLatestActiveSubscriptionForProduct({
-    customerId: customer.id,
-    productId: tryoutPaidProductIds[args.product],
-  });
-
-  if (!subscription) {
-    return null;
-  }
-
-  const startsAt = yield* parseSubscriptionTimestamp(
-    subscription.currentPeriodStart,
-    "currentPeriodStart"
-  );
-
-  if (startsAt === null || startsAt > args.now) {
-    return null;
-  }
-
-  const parsedEndsAt = yield* parseSubscriptionTimestamp(
-    subscription.currentPeriodEnd,
-    "currentPeriodEnd"
-  );
-  const endsAt = parsedEndsAt ?? Number.MAX_SAFE_INTEGER;
-
-  if (endsAt <= args.now) {
-    return null;
-  }
-
-  return {
-    endsAt,
-    startsAt,
-    subscriptionId: subscription._id,
-  };
-});
+);

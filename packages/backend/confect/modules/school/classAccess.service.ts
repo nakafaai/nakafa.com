@@ -14,9 +14,10 @@ export function isAdmin(membership: SchoolMembership) {
 }
 
 /** Reads an active school membership for a user. */
-export const getSchoolMembership = Effect.fn(
-  "school.classAccess.getSchoolMembership"
-)(function* (schoolId: Id<"schools">, userId: Id<"users">) {
+export const getSchoolMembership = Effect.fnUntraced(function* (
+  schoolId: Id<"schools">,
+  userId: Id<"users">
+) {
   const reader = yield* DatabaseReader;
 
   return yield* reader
@@ -29,9 +30,10 @@ export const getSchoolMembership = Effect.fn(
 });
 
 /** Reads class membership for a user. */
-export const getClassMembership = Effect.fn(
-  "school.classAccess.getClassMembership"
-)(function* (classId: Id<"schoolClasses">, userId: Id<"users">) {
+export const getClassMembership = Effect.fnUntraced(function* (
+  classId: Id<"schoolClasses">,
+  userId: Id<"users">
+) {
   const reader = yield* DatabaseReader;
 
   return yield* reader
@@ -44,7 +46,7 @@ export const getClassMembership = Effect.fn(
 });
 
 /** Loads a class or fails with the domain class error. */
-export const loadClass = Effect.fn("school.classAccess.loadClass")(function* (
+export const loadClass = Effect.fnUntraced(function* (
   classId: Id<"schoolClasses">
 ) {
   const reader = yield* DatabaseReader;
@@ -66,27 +68,25 @@ export const loadClass = Effect.fn("school.classAccess.loadClass")(function* (
 });
 
 /** Loads a class that can still be modified. */
-export const loadActiveClass = Effect.fn("school.classAccess.loadActiveClass")(
-  function* (classId: Id<"schoolClasses">) {
-    const classData = yield* loadClass(classId);
+export const loadActiveClass = Effect.fnUntraced(function* (
+  classId: Id<"schoolClasses">
+) {
+  const classData = yield* loadClass(classId);
 
-    if (classData.isArchived) {
-      return yield* Effect.fail(
-        new ClassActionError({
-          code: "CLASS_ARCHIVED",
-          message: "Cannot modify an archived class.",
-        })
-      );
-    }
-
-    return classData;
+  if (classData.isArchived) {
+    return yield* Effect.fail(
+      new ClassActionError({
+        code: "CLASS_ARCHIVED",
+        message: "Cannot modify an archived class.",
+      })
+    );
   }
-);
+
+  return classData;
+});
 
 /** Checks both school and class access for a user. */
-export const checkClassAccess = Effect.fn(
-  "school.classAccess.checkClassAccess"
-)(function* (
+export const checkClassAccess = Effect.fnUntraced(function* (
   classId: Id<"schoolClasses">,
   schoolId: Id<"schools">,
   userId: Id<"users">
@@ -99,9 +99,7 @@ export const checkClassAccess = Effect.fn(
 });
 
 /** Requires the current user to be a school member with class access. */
-export const requireClassAccess = Effect.fn(
-  "school.classAccess.requireClassAccess"
-)(function* (
+export const requireClassAccess = Effect.fnUntraced(function* (
   classId: Id<"schoolClasses">,
   schoolId: Id<"schools">,
   userId: Id<"users">
@@ -133,45 +131,41 @@ export const requireClassAccess = Effect.fn(
 });
 
 /** Checks whether school or class roles grant a permission. */
-export const checkPermission = Effect.fn("school.classAccess.checkPermission")(
-  function* (
-    permission: Permission,
-    scope: {
-      readonly classId?: Id<"schoolClasses">;
-      readonly schoolId?: Id<"schools">;
-      readonly userId: Id<"users">;
-    }
-  ) {
-    const schoolId = scope.schoolId;
-    if (schoolId) {
-      const schoolMember = yield* getSchoolMembership(schoolId, scope.userId);
-
-      if (roleHasPermission(schoolMember?.role, permission)) {
-        return true;
-      }
-    }
-
-    const classId = scope.classId;
-    if (classId) {
-      const classMember = yield* getClassMembership(classId, scope.userId);
-
-      if (roleHasPermission(classMember?.role, permission)) {
-        return true;
-      }
-
-      if (roleHasPermission(classMember?.teacherRole, permission)) {
-        return true;
-      }
-    }
-
-    return false;
+export const checkPermission = Effect.fnUntraced(function* (
+  permission: Permission,
+  scope: {
+    readonly classId?: Id<"schoolClasses">;
+    readonly schoolId?: Id<"schools">;
+    readonly userId: Id<"users">;
   }
-);
+) {
+  const schoolId = scope.schoolId;
+  if (schoolId) {
+    const schoolMember = yield* getSchoolMembership(schoolId, scope.userId);
+
+    if (roleHasPermission(schoolMember?.role, permission)) {
+      return true;
+    }
+  }
+
+  const classId = scope.classId;
+  if (classId) {
+    const classMember = yield* getClassMembership(classId, scope.userId);
+
+    if (roleHasPermission(classMember?.role, permission)) {
+      return true;
+    }
+
+    if (roleHasPermission(classMember?.teacherRole, permission)) {
+      return true;
+    }
+  }
+
+  return false;
+});
 
 /** Fails when a user does not have the required permission. */
-export const requirePermission = Effect.fn(
-  "school.classAccess.requirePermission"
-)(function* (
+export const requirePermission = Effect.fnUntraced(function* (
   permission: Permission,
   scope: {
     readonly classId?: Id<"schoolClasses">;
@@ -189,7 +183,7 @@ export const requirePermission = Effect.fn(
 });
 
 /** Reads public user details for joined class member rows. */
-export const getUserMap = Effect.fn("school.classAccess.getUserMap")(function* (
+export const getUserMap = Effect.fnUntraced(function* (
   userIds: readonly Id<"users">[]
 ) {
   const reader = yield* DatabaseReader;

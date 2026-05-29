@@ -1,3 +1,3 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registered/contentSync";
+import registeredFunctions from "../../../confect/_generated/registeredFunctions";
 
 export const listAuthorsPage = registeredFunctions.contentSync.queries.authors.listAuthorsPage;

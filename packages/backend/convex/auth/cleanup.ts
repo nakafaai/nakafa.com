@@ -1,3 +1,3 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registered/auth";
+import registeredFunctions from "../../confect/_generated/registeredFunctions";
 
 export const cleanupDeletedUser = registeredFunctions.auth.cleanup.cleanupDeletedUser;

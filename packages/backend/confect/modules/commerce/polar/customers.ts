@@ -100,29 +100,29 @@ function isNormalizedPolarCustomer(
 }
 
 /** Normalizes Polar customer variants to the fields stored by this backend. */
-const normalizeStoredPolarCustomer = Effect.fn("polar.normalizeStoredCustomer")(
-  function* (customer: Customer) {
-    if (typeof customer.email !== "string") {
-      return yield* Effect.fail(
-        new PolarCustomerError({
-          detail: JSON.stringify({ polarCustomerId: customer.id }),
-          message: "Polar customer is missing a valid email address.",
-        })
-      );
-    }
-
-    return {
-      email: customer.email,
-      externalId: customer.externalId ?? null,
-      id: customer.id,
-      metadata: normalizePolarMetadata(customer.metadata),
-      name: customer.name ?? null,
-    };
+const normalizeStoredPolarCustomer = Effect.fnUntraced(function* (
+  customer: Customer
+) {
+  if (typeof customer.email !== "string") {
+    return yield* Effect.fail(
+      new PolarCustomerError({
+        detail: JSON.stringify({ polarCustomerId: customer.id }),
+        message: "Polar customer is missing a valid email address.",
+      })
+    );
   }
-);
+
+  return {
+    email: customer.email,
+    externalId: customer.externalId ?? null,
+    id: customer.id,
+    metadata: normalizePolarMetadata(customer.metadata),
+    name: customer.name ?? null,
+  };
+});
 
 /** Unwraps a Polar SDK result while keeping errors typed. */
-const readPolarResult = Effect.fn("polar.readResult")(function* <Value, Error_>(
+const readPolarResult = Effect.fnUntraced(function* <Value, Error_>(
   result: Result<Value, Error_>,
   message: string
 ) {
@@ -139,33 +139,31 @@ const readPolarResult = Effect.fn("polar.readResult")(function* <Value, Error_>(
 });
 
 /** Finds a Polar customer by email for duplicate-email recovery. */
-const findPolarCustomerByEmail = Effect.fn("polar.findCustomerByEmail")(
-  function* (email: string) {
-    const polarClient = yield* makePolarClient();
-    const page = yield* Effect.tryPromise({
-      try: () => customersList(polarClient, { email, limit: 1 }),
-      catch: (error) =>
-        new PolarCustomerError({
-          detail: getPolarErrorMessage(error),
-          message: "Failed to list Polar customers by email.",
-        }),
-    });
-    const value = yield* readPolarResult(
-      page,
-      "Failed to list Polar customers by email."
-    );
-    const customer = value.result.items[0] ?? null;
+const findPolarCustomerByEmail = Effect.fnUntraced(function* (email: string) {
+  const polarClient = yield* makePolarClient();
+  const page = yield* Effect.tryPromise({
+    try: () => customersList(polarClient, { email, limit: 1 }),
+    catch: (error) =>
+      new PolarCustomerError({
+        detail: getPolarErrorMessage(error),
+        message: "Failed to list Polar customers by email.",
+      }),
+  });
+  const value = yield* readPolarResult(
+    page,
+    "Failed to list Polar customers by email."
+  );
+  const customer = value.result.items[0] ?? null;
 
-    if (!customer) {
-      return null;
-    }
-
-    return yield* normalizeStoredPolarCustomer(customer);
+  if (!customer) {
+    return null;
   }
-);
+
+  return yield* normalizeStoredPolarCustomer(customer);
+});
 
 /** Updates an existing Polar customer when local identity fields changed. */
-const syncExistingCustomer = Effect.fn("polar.syncExistingCustomer")(function* (
+const syncExistingCustomer = Effect.fnUntraced(function* (
   customer: Customer | NormalizedPolarCustomer,
   args: EnsurePolarCustomerArgs
 ) {
@@ -223,7 +221,7 @@ const syncExistingCustomer = Effect.fn("polar.syncExistingCustomer")(function* (
 });
 
 /** Ensures Polar has a customer matching the local app user identity. */
-export const ensurePolarCustomer = Effect.fn("polar.ensureCustomer")(function* (
+export const ensurePolarCustomer = Effect.fnUntraced(function* (
   args: EnsurePolarCustomerArgs
 ) {
   const polarClient = yield* makePolarClient();
@@ -337,9 +335,10 @@ export const ensurePolarCustomer = Effect.fn("polar.ensureCustomer")(function* (
 });
 
 /** Updates only the metadata for a Polar customer. */
-export const updatePolarCustomerMetadata = Effect.fn(
-  "polar.updateCustomerMetadata"
-)(function* (args: { id: string; metadata: PolarMetadata }) {
+export const updatePolarCustomerMetadata = Effect.fnUntraced(function* (args: {
+  id: string;
+  metadata: PolarMetadata;
+}) {
   const polarClient = yield* makePolarClient();
   const result = yield* Effect.tryPromise({
     try: () =>
@@ -362,9 +361,7 @@ export const updatePolarCustomerMetadata = Effect.fn(
 });
 
 /** Creates a Polar checkout session and returns the hosted checkout URL. */
-export const createPolarCheckoutSession = Effect.fn(
-  "polar.createCheckoutSession"
-)(function* (args: {
+export const createPolarCheckoutSession = Effect.fnUntraced(function* (args: {
   customerId: string;
   productIds: readonly string[];
   subscriptionId?: string;
@@ -395,31 +392,29 @@ export const createPolarCheckoutSession = Effect.fn(
 });
 
 /** Creates a Polar customer portal session and returns the hosted portal URL. */
-export const createPolarCustomerPortalSession = Effect.fn(
-  "polar.createCustomerPortalSession"
-)(function* (args: { customerId: string }) {
-  const polarClient = yield* makePolarClient();
-  const result = yield* Effect.tryPromise({
-    try: () =>
-      customerSessionsCreate(polarClient, { customerId: args.customerId }),
-    catch: (error) =>
-      new PolarCustomerError({
-        detail: getPolarErrorMessage(error),
-        message: "Failed to create customer portal session.",
-      }),
-  });
-  const session = yield* readPolarResult(
-    result,
-    "Failed to create customer portal session."
-  );
+export const createPolarCustomerPortalSession = Effect.fnUntraced(
+  function* (args: { customerId: string }) {
+    const polarClient = yield* makePolarClient();
+    const result = yield* Effect.tryPromise({
+      try: () =>
+        customerSessionsCreate(polarClient, { customerId: args.customerId }),
+      catch: (error) =>
+        new PolarCustomerError({
+          detail: getPolarErrorMessage(error),
+          message: "Failed to create customer portal session.",
+        }),
+    });
+    const session = yield* readPolarResult(
+      result,
+      "Failed to create customer portal session."
+    );
 
-  return { url: session.customerPortalUrl };
-});
+    return { url: session.customerPortalUrl };
+  }
+);
 
 /** Deletes a Polar customer, ignoring customers already missing from Polar. */
-export const deletePolarCustomer = Effect.fn("polar.deleteCustomer")(function* (
-  id: string
-) {
+export const deletePolarCustomer = Effect.fnUntraced(function* (id: string) {
   const polarClient = yield* makePolarClient();
   const result = yield* Effect.tryPromise({
     try: () => customersDelete(polarClient, { anonymize: true, id }),

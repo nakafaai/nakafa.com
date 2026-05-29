@@ -12,9 +12,7 @@ import { Effect, type Schema } from "effect";
 type ForumDoc = Schema.Schema.Type<typeof SchoolClassForums.Doc>;
 
 /** Validates that mentioned users can access the forum. */
-export const validateForumMentions = Effect.fn(
-  "school.forums.validateForumMentions"
-)(function* (args: {
+export const validateForumMentions = Effect.fnUntraced(function* (args: {
   readonly forum: ForumDoc;
   readonly mentionedUserIds: readonly Id<"users">[];
 }) {

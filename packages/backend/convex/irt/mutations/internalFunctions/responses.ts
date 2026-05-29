@@ -1,3 +1,3 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registered/irt";
+import registeredFunctions from "../../../../confect/_generated/registeredFunctions";
 
 export const syncCalibrationResponsesForAttempt = registeredFunctions.irt.mutations.internalFunctions.responses.syncCalibrationResponsesForAttempt;

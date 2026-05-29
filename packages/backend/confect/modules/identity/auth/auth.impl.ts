@@ -5,6 +5,7 @@ import {
   onDelete,
   onUpdate,
 } from "@repo/backend/confect/modules/identity/auth/auth";
+import { getLatestJwks } from "@repo/backend/confect/modules/identity/auth/runtime.service";
 import {
   getCurrentUser,
   getPublicUserById,
@@ -28,6 +29,12 @@ const auth_getUserByIdImpl = FunctionImpl.make(
   "auth",
   "getUserById",
   (args) => getPublicUserById(args).pipe(Effect.orDie)
+);
+const auth_getLatestJwksImpl = FunctionImpl.make(
+  api,
+  "auth",
+  "getLatestJwks",
+  (_args) => getLatestJwks().pipe(Effect.orDie)
 );
 const auth_onCreateImpl = FunctionImpl.make(api, "auth", "onCreate", onCreate);
 const auth_onDeleteImpl = FunctionImpl.make(api, "auth", "onDelete", onDelete);
@@ -72,6 +79,7 @@ const authImpl = GroupImpl.make(api, "auth")
   .pipe(Layer.provide(authSyncImpl))
   .pipe(Layer.provide(auth_getCurrentUserImpl))
   .pipe(Layer.provide(auth_getUserByIdImpl))
+  .pipe(Layer.provide(auth_getLatestJwksImpl))
   .pipe(Layer.provide(auth_onCreateImpl))
   .pipe(Layer.provide(auth_onDeleteImpl))
   .pipe(Layer.provide(auth_onUpdateImpl));

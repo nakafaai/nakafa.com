@@ -11,7 +11,7 @@ type CustomerFields = Omit<Doc<"customers">, "_creationTime" | "_id">;
 const decodeUserId = Schema.decodeUnknownOption(GenericId.GenericId("users"));
 
 /** Patches an existing customer row with the latest Polar identity fields. */
-const patchCustomerRow = Effect.fn("commerce.patchCustomerRow")(function* (
+const patchCustomerRow = Effect.fnUntraced(function* (
   customer: Doc<"customers">,
   nextCustomer: CustomerFields
 ) {
@@ -26,104 +26,105 @@ const patchCustomerRow = Effect.fn("commerce.patchCustomerRow")(function* (
 });
 
 /** Deletes a customer row by Polar customer id. */
-export const deleteCustomerById = Effect.fn("commerce.deleteCustomerById")(
-  function* (args: { id: string }) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const customer = yield* reader
-      .table("customers")
-      .get("by_polarId", args.id)
-      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+export const deleteCustomerById = Effect.fnUntraced(function* (args: {
+  id: string;
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const customer = yield* reader
+    .table("customers")
+    .get("by_polarId", args.id)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
-    if (!customer) {
-      return null;
-    }
-
-    yield* writer.table("customers").delete(customer._id);
+  if (!customer) {
     return null;
   }
-);
+
+  yield* writer.table("customers").delete(customer._id);
+  return null;
+});
 
 /** Upserts a customer row while merging possible user-id and Polar-id matches. */
-export const upsertCustomer = Effect.fn("commerce.upsertCustomer")(
-  function* (args: { customer: CustomerFields }) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const existingByUser = yield* reader
-      .table("customers")
-      .get("by_userId", args.customer.userId)
-      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
-    const existingByPolarId = yield* reader
-      .table("customers")
-      .get("by_polarId", args.customer.id)
-      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+export const upsertCustomer = Effect.fnUntraced(function* (args: {
+  customer: CustomerFields;
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const existingByUser = yield* reader
+    .table("customers")
+    .get("by_userId", args.customer.userId)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+  const existingByPolarId = yield* reader
+    .table("customers")
+    .get("by_polarId", args.customer.id)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
-    if (existingByUser && existingByPolarId) {
-      if (existingByUser._id === existingByPolarId._id) {
-        yield* patchCustomerRow(existingByUser, args.customer);
-        return existingByUser._id;
-      }
-
-      yield* patchCustomerRow(existingByPolarId, args.customer);
-      yield* writer.table("customers").delete(existingByUser._id);
-      return existingByPolarId._id;
-    }
-
-    if (existingByPolarId) {
-      yield* patchCustomerRow(existingByPolarId, args.customer);
-      return existingByPolarId._id;
-    }
-
-    if (existingByUser) {
+  if (existingByUser && existingByPolarId) {
+    if (existingByUser._id === existingByPolarId._id) {
       yield* patchCustomerRow(existingByUser, args.customer);
       return existingByUser._id;
     }
 
-    return yield* writer.table("customers").insert(args.customer);
+    yield* patchCustomerRow(existingByPolarId, args.customer);
+    yield* writer.table("customers").delete(existingByUser._id);
+    return existingByPolarId._id;
   }
-);
 
-/** Reads a customer row by app user id. */
-export const getCustomerByUserId = Effect.fn("commerce.getCustomerByUserId")(
-  function* (args: { userId: GenericId.GenericId<"users"> }) {
-    const reader = yield* DatabaseReader;
-    return yield* reader
-      .table("customers")
-      .get("by_userId", args.userId)
-      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+  if (existingByPolarId) {
+    yield* patchCustomerRow(existingByPolarId, args.customer);
+    return existingByPolarId._id;
   }
-);
 
-/** Reads a customer row by Polar customer id. */
-export const getCustomerByPolarId = Effect.fn("commerce.getCustomerByPolarId")(
-  function* (args: { polarCustomerId: string }) {
-    const reader = yield* DatabaseReader;
-    return yield* reader
-      .table("customers")
-      .get("by_polarId", args.polarCustomerId)
-      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+  if (existingByUser) {
+    yield* patchCustomerRow(existingByUser, args.customer);
+    return existingByUser._id;
   }
-);
 
-/** Returns whether a Polar customer currently has an active subscription. */
-export const hasActiveSubscriptionByCustomerId = Effect.fn(
-  "commerce.hasActiveSubscriptionByCustomerId"
-)(function* (args: { customerId: string }) {
-  const reader = yield* DatabaseReader;
-  const subscription = yield* reader
-    .table("subscriptions")
-    .index("by_customerId_and_status", (query) =>
-      query.eq("customerId", args.customerId).eq("status", "active")
-    )
-    .first();
-
-  return Option.isSome(subscription);
+  return yield* writer.table("customers").insert(args.customer);
 });
 
+/** Reads a customer row by app user id. */
+export const getCustomerByUserId = Effect.fnUntraced(function* (args: {
+  userId: GenericId.GenericId<"users">;
+}) {
+  const reader = yield* DatabaseReader;
+  return yield* reader
+    .table("customers")
+    .get("by_userId", args.userId)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+});
+
+/** Reads a customer row by Polar customer id. */
+export const getCustomerByPolarId = Effect.fnUntraced(function* (args: {
+  polarCustomerId: string;
+}) {
+  const reader = yield* DatabaseReader;
+  return yield* reader
+    .table("customers")
+    .get("by_polarId", args.polarCustomerId)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+});
+
+/** Returns whether a Polar customer currently has an active subscription. */
+export const hasActiveSubscriptionByCustomerId = Effect.fnUntraced(
+  function* (args: { customerId: string }) {
+    const reader = yield* DatabaseReader;
+    const subscription = yield* reader
+      .table("subscriptions")
+      .index("by_customerId_and_status", (query) =>
+        query.eq("customerId", args.customerId).eq("status", "active")
+      )
+      .first();
+
+    return Option.isSome(subscription);
+  }
+);
+
 /** Resolves an app user id from Polar metadata or external id. */
-export const getUserIdByPolarCustomer = Effect.fn(
-  "commerce.getUserIdByPolarCustomer"
-)(function* (args: { externalId?: string; metadataUserId?: string }) {
+export const getUserIdByPolarCustomer = Effect.fnUntraced(function* (args: {
+  externalId?: string;
+  metadataUserId?: string;
+}) {
   const reader = yield* DatabaseReader;
 
   if (args.metadataUserId) {
@@ -153,30 +154,30 @@ export const getUserIdByPolarCustomer = Effect.fn(
 });
 
 /** Lists users for customer integrity verification scripts. */
-export const listUsersForCustomerIntegrity = Effect.fn(
-  "commerce.listUsersForCustomerIntegrity"
-)(function* (args: { paginationOpts: PaginationOptions }) {
-  const reader = yield* DatabaseReader;
-  const rows = yield* reader
-    .table("users")
-    .index("by_creation_time")
-    .paginate(args.paginationOpts);
+export const listUsersForCustomerIntegrity = Effect.fnUntraced(
+  function* (args: { paginationOpts: PaginationOptions }) {
+    const reader = yield* DatabaseReader;
+    const rows = yield* reader
+      .table("users")
+      .index("by_creation_time")
+      .paginate(args.paginationOpts);
 
-  return {
-    continueCursor: rows.continueCursor,
-    isDone: rows.isDone,
-    page: rows.page.map((row) => ({
-      authId: row.authId,
-      email: row.email,
-      userId: row._id,
-    })),
-  };
-});
+    return {
+      continueCursor: rows.continueCursor,
+      isDone: rows.isDone,
+      page: rows.page.map((row) => ({
+        authId: row.authId,
+        email: row.email,
+        userId: row._id,
+      })),
+    };
+  }
+);
 
 /** Lists local customers for customer integrity verification scripts. */
-export const listCustomersForIntegrity = Effect.fn(
-  "commerce.listCustomersForIntegrity"
-)(function* (args: { paginationOpts: PaginationOptions }) {
+export const listCustomersForIntegrity = Effect.fnUntraced(function* (args: {
+  paginationOpts: PaginationOptions;
+}) {
   const reader = yield* DatabaseReader;
   const rows = yield* reader
     .table("customers")
@@ -196,25 +197,25 @@ export const listCustomersForIntegrity = Effect.fn(
 });
 
 /** Lists active subscriptions for customer integrity verification scripts. */
-export const listActiveSubscriptionsForIntegrity = Effect.fn(
-  "commerce.listActiveSubscriptionsForIntegrity"
-)(function* (args: { paginationOpts: PaginationOptions }) {
-  const reader = yield* DatabaseReader;
-  const rows = yield* reader
-    .table("subscriptions")
-    .index("by_creation_time")
-    .paginate(args.paginationOpts);
+export const listActiveSubscriptionsForIntegrity = Effect.fnUntraced(
+  function* (args: { paginationOpts: PaginationOptions }) {
+    const reader = yield* DatabaseReader;
+    const rows = yield* reader
+      .table("subscriptions")
+      .index("by_creation_time")
+      .paginate(args.paginationOpts);
 
-  return {
-    continueCursor: rows.continueCursor,
-    isDone: rows.isDone,
-    page: rows.page
-      .filter((row) => row.status === "active")
-      .map((row) => ({
-        currentPeriodEnd: row.currentPeriodEnd,
-        customerId: row.customerId,
-        status: row.status,
-        subscriptionId: row.id,
-      })),
-  };
-});
+    return {
+      continueCursor: rows.continueCursor,
+      isDone: rows.isDone,
+      page: rows.page
+        .filter((row) => row.status === "active")
+        .map((row) => ({
+          currentPeriodEnd: row.currentPeriodEnd,
+          customerId: row.customerId,
+          status: row.status,
+          subscriptionId: row.id,
+        })),
+    };
+  }
+);

@@ -19,9 +19,7 @@ import { Effect, Option } from "effect";
 type TryoutAttemptDoc = typeof TryoutAttempts.Doc.Type;
 
 /** Finalizes a whole tryout attempt once all required parts are completed. */
-export const finalizeTryoutAttempt = Effect.fn(
-  "tryouts.finalize.finalizeTryoutAttempt"
-)(function* (args: {
+export const finalizeTryoutAttempt = Effect.fnUntraced(function* (args: {
   readonly completedAtMs?: number;
   readonly ctx: ConvexMutationCtx;
   readonly now: number;

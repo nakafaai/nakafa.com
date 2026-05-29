@@ -5,9 +5,9 @@ import { loadValidatedTryoutPartSets } from "@repo/backend/confect/modules/tryou
 import { Effect } from "effect";
 
 /** Loads the validated exercise sets that make up a tryout scale. */
-export const loadValidatedScaleTryoutSets = Effect.fn(
-  "irt.scales.loadValidatedScaleTryoutSets"
-)(function* (tryout: Doc<"tryouts">) {
+export const loadValidatedScaleTryoutSets = Effect.fnUntraced(function* (
+  tryout: Doc<"tryouts">
+) {
   const reader = yield* DatabaseReader;
   const tryoutPartSets = yield* loadValidatedTryoutPartSets({
     partCount: tryout.partCount,
@@ -36,9 +36,9 @@ export const loadValidatedScaleTryoutSets = Effect.fn(
 });
 
 /** Loads and validates the questions and item params for one scale set. */
-export const loadValidatedScaleSetData = Effect.fn(
-  "irt.scales.loadValidatedScaleSetData"
-)(function* (set: Doc<"exerciseSets">) {
+export const loadValidatedScaleSetData = Effect.fnUntraced(function* (
+  set: Doc<"exerciseSets">
+) {
   const reader = yield* DatabaseReader;
   const [questions, itemParams] = yield* Effect.all([
     reader

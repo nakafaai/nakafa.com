@@ -25,6 +25,7 @@ import type * as assessments_queries_publicFunctions_assignment from "../assessm
 import type * as assessments_queries_publicFunctions_authoring from "../assessments/queries/publicFunctions/authoring.js";
 import type * as assessments_queries_publicFunctions_bank from "../assessments/queries/publicFunctions/bank.js";
 import type * as assessments_queries_publicFunctions_list from "../assessments/queries/publicFunctions/list.js";
+import type * as audioStudies_actions from "../audioStudies/actions.js";
 import type * as audioStudies_mutations_contentAudios from "../audioStudies/mutations/contentAudios.js";
 import type * as audioStudies_mutations_queue from "../audioStudies/mutations/queue.js";
 import type * as audioStudies_queries_internalFunctions from "../audioStudies/queries/internalFunctions.js";
@@ -90,7 +91,6 @@ import type * as irt_queries_internalFunctions_calibration from "../irt/queries/
 import type * as irt_queries_internalFunctions_maintenance from "../irt/queries/internalFunctions/maintenance.js";
 import type * as irt_workflows from "../irt/workflows.js";
 import type * as node_audioStudies_actions from "../node/audioStudies/actions.js";
-import type * as node_auth from "../node/auth.js";
 import type * as notifications_mutations from "../notifications/mutations.js";
 import type * as notifications_queries from "../notifications/queries.js";
 import type * as schools_mutations from "../schools/mutations.js";
@@ -147,6 +147,7 @@ declare const fullApi: ApiFromModules<{
   "assessments/queries/publicFunctions/authoring": typeof assessments_queries_publicFunctions_authoring;
   "assessments/queries/publicFunctions/bank": typeof assessments_queries_publicFunctions_bank;
   "assessments/queries/publicFunctions/list": typeof assessments_queries_publicFunctions_list;
+  "audioStudies/actions": typeof audioStudies_actions;
   "audioStudies/mutations/contentAudios": typeof audioStudies_mutations_contentAudios;
   "audioStudies/mutations/queue": typeof audioStudies_mutations_queue;
   "audioStudies/queries/internalFunctions": typeof audioStudies_queries_internalFunctions;
@@ -212,7 +213,6 @@ declare const fullApi: ApiFromModules<{
   "irt/queries/internalFunctions/maintenance": typeof irt_queries_internalFunctions_maintenance;
   "irt/workflows": typeof irt_workflows;
   "node/audioStudies/actions": typeof node_audioStudies_actions;
-  "node/auth": typeof node_auth;
   "notifications/mutations": typeof notifications_mutations;
   "notifications/queries": typeof notifications_queries;
   "schools/mutations": typeof schools_mutations;

@@ -4,36 +4,34 @@ import { TryoutError } from "@repo/backend/confect/modules/tryout/tryout.errors"
 import { Effect } from "effect";
 
 /** Loads bounded part attempts for a tryout attempt. */
-export const loadBoundedTryoutPartAttempts = Effect.fn(
-  "tryouts.loaders.loadBoundedTryoutPartAttempts"
-)(function* (args: {
-  readonly partCount: number;
-  readonly tryoutAttemptId: Id<"tryoutAttempts">;
-}) {
-  const reader = yield* DatabaseReader;
-  const partAttempts = yield* reader
-    .table("tryoutPartAttempts")
-    .index("by_tryoutAttemptId_and_partIndex", (query) =>
-      query.eq("tryoutAttemptId", args.tryoutAttemptId)
-    )
-    .take(args.partCount + 1);
+export const loadBoundedTryoutPartAttempts = Effect.fnUntraced(
+  function* (args: {
+    readonly partCount: number;
+    readonly tryoutAttemptId: Id<"tryoutAttempts">;
+  }) {
+    const reader = yield* DatabaseReader;
+    const partAttempts = yield* reader
+      .table("tryoutPartAttempts")
+      .index("by_tryoutAttemptId_and_partIndex", (query) =>
+        query.eq("tryoutAttemptId", args.tryoutAttemptId)
+      )
+      .take(args.partCount + 1);
 
-  if (partAttempts.length <= args.partCount) {
-    return partAttempts;
+    if (partAttempts.length <= args.partCount) {
+      return partAttempts;
+    }
+
+    return yield* Effect.fail(
+      new TryoutError({
+        code: "INVALID_ATTEMPT_STATE",
+        message: "Tryout attempt has more part attempts than expected.",
+      })
+    );
   }
-
-  return yield* Effect.fail(
-    new TryoutError({
-      code: "INVALID_ATTEMPT_STATE",
-      message: "Tryout attempt has more part attempts than expected.",
-    })
-  );
-});
+);
 
 /** Loads bounded answers for one exercise attempt. */
-export const getBoundedExerciseAnswers = Effect.fn(
-  "tryouts.loaders.getBoundedExerciseAnswers"
-)(function* (args: {
+export const getBoundedExerciseAnswers = Effect.fnUntraced(function* (args: {
   readonly attemptId: Id<"exerciseAttempts">;
   readonly totalExercises: number;
 }) {

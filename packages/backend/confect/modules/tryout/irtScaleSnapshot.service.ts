@@ -43,9 +43,9 @@ export function hasPublishedScaleChanged(args: {
 }
 
 /** Builds a publishable official scale snapshot when all items are calibrated. */
-export const getPublishableScaleSnapshot = Effect.fn(
-  "irt.scales.getPublishableScaleSnapshot"
-)(function* (tryoutId: Id<"tryouts">) {
+export const getPublishableScaleSnapshot = Effect.fnUntraced(function* (
+  tryoutId: Id<"tryouts">
+) {
   const reader = yield* DatabaseReader;
   const tryout = yield* reader
     .table("tryouts")

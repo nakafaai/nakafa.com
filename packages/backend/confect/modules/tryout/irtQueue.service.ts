@@ -21,9 +21,9 @@ import {
 import { Clock, Duration, Effect, Option } from "effect";
 
 /** Enqueues one tryout for serialized scale publication. */
-export const enqueueScalePublication = Effect.fn(
-  "irt.queue.enqueueScalePublication"
-)(function* (args: { readonly tryoutId: Id<"tryouts"> }) {
+export const enqueueScalePublication = Effect.fnUntraced(function* (args: {
+  readonly tryoutId: Id<"tryouts">;
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const existingEntry = yield* reader
@@ -48,9 +48,7 @@ export const enqueueScalePublication = Effect.fn(
 });
 
 /** Drains pending calibration queue entries and starts eligible calibration workflows. */
-export const drainCalibrationQueue = Effect.fn(
-  "irt.queue.drainCalibrationQueue"
-)(function* () {
+export const drainCalibrationQueue = Effect.fnUntraced(function* () {
   const ctx = yield* MutationCtx;
   const reader = yield* DatabaseReader;
   const scheduler = yield* Scheduler;
@@ -155,48 +153,48 @@ export const drainCalibrationQueue = Effect.fn(
 });
 
 /** Deletes stale calibration queue entries and reschedules when more rows remain. */
-export const cleanupCalibrationQueueEntries = Effect.fn(
-  "irt.queue.cleanupCalibrationQueueEntries"
-)(function* (args: {
-  readonly setId: Id<"exerciseSets">;
-  readonly throughAt: number;
-}) {
-  const scheduler = yield* Scheduler;
-  const deletedCount = yield* cleanupCalibrationQueueEntriesBatch(args);
+export const cleanupCalibrationQueueEntries = Effect.fnUntraced(
+  function* (args: {
+    readonly setId: Id<"exerciseSets">;
+    readonly throughAt: number;
+  }) {
+    const scheduler = yield* Scheduler;
+    const deletedCount = yield* cleanupCalibrationQueueEntriesBatch(args);
 
-  if (deletedCount < IRT_QUEUE_CLEANUP_BATCH_SIZE) {
+    if (deletedCount < IRT_QUEUE_CLEANUP_BATCH_SIZE) {
+      return null;
+    }
+
+    yield* scheduler.runAfter(
+      Duration.millis(0),
+      refs.internal.irt.mutations.internalFunctions.queue
+        .cleanupCalibrationQueueEntries,
+      args
+    );
+
     return null;
   }
-
-  yield* scheduler.runAfter(
-    Duration.millis(0),
-    refs.internal.irt.mutations.internalFunctions.queue
-      .cleanupCalibrationQueueEntries,
-    args
-  );
-
-  return null;
-});
+);
 
 /** Deletes scale publication queue entries and reschedules when more rows remain. */
-export const cleanupScalePublicationQueueEntries = Effect.fn(
-  "irt.queue.cleanupScalePublicationQueueEntries"
-)(function* (args: { readonly tryoutId: Id<"tryouts"> }) {
-  const scheduler = yield* Scheduler;
-  const deletedCount = yield* cleanupScalePublicationQueueEntriesBatch(
-    args.tryoutId
-  );
+export const cleanupScalePublicationQueueEntries = Effect.fnUntraced(
+  function* (args: { readonly tryoutId: Id<"tryouts"> }) {
+    const scheduler = yield* Scheduler;
+    const deletedCount = yield* cleanupScalePublicationQueueEntriesBatch(
+      args.tryoutId
+    );
 
-  if (deletedCount < IRT_QUEUE_CLEANUP_BATCH_SIZE) {
+    if (deletedCount < IRT_QUEUE_CLEANUP_BATCH_SIZE) {
+      return null;
+    }
+
+    yield* scheduler.runAfter(
+      Duration.millis(0),
+      refs.internal.irt.mutations.internalFunctions.queue
+        .cleanupScalePublicationQueueEntries,
+      args
+    );
+
     return null;
   }
-
-  yield* scheduler.runAfter(
-    Duration.millis(0),
-    refs.internal.irt.mutations.internalFunctions.queue
-      .cleanupScalePublicationQueueEntries,
-    args
-  );
-
-  return null;
-});
+);

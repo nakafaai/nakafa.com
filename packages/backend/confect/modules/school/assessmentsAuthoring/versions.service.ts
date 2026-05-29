@@ -13,9 +13,7 @@ import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
 import { Clock, Effect } from "effect";
 
 /** Creates an immutable assessment version from current authoring rows. */
-export const createAssessmentVersion = Effect.fn(
-  "assessments.createAssessmentVersion"
-)(function* (args: {
+export const createAssessmentVersion = Effect.fnUntraced(function* (args: {
   readonly assessmentId: Id<"schoolAssessments">;
   readonly gradingMode: Doc<"schoolAssessmentVersions">["gradingMode"];
   readonly instructions?: Doc<"schoolAssessmentVersions">["instructions"];

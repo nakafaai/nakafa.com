@@ -11,50 +11,45 @@ import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
 import { Effect } from "effect";
 
 /** Deletes an unassigned assessment and all authoring/version rows. */
-export const deleteAssessment = Effect.fn("assessments.deleteAssessment")(
-  function* (args: {
-    readonly assessmentId: Id<"schoolAssessments">;
-    readonly schoolId: Id<"schools">;
-  }) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const user = yield* requireAppUser();
-    const assessment = yield* requireAssessment(
-      args.schoolId,
-      args.assessmentId
+export const deleteAssessment = Effect.fnUntraced(function* (args: {
+  readonly assessmentId: Id<"schoolAssessments">;
+  readonly schoolId: Id<"schools">;
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
+  const assessment = yield* requireAssessment(args.schoolId, args.assessmentId);
+
+  yield* requirePermission(PERMISSIONS.ASSESSMENT_DELETE, {
+    classId: assessment.classId,
+    schoolId: assessment.schoolId,
+    userId: user.appUser._id,
+  });
+
+  const assignments = yield* reader
+    .table("schoolAssessmentAssignments")
+    .index("by_assessmentId_and_status", (query) =>
+      query.eq("assessmentId", args.assessmentId)
+    )
+    .collect();
+
+  if (assignments.length > 0) {
+    return yield* Effect.fail(
+      new AssessmentError({
+        code: "ASSESSMENT_DELETE_BLOCKED",
+        message: "Assigned assessments must be archived instead of deleted.",
+      })
     );
-
-    yield* requirePermission(PERMISSIONS.ASSESSMENT_DELETE, {
-      classId: assessment.classId,
-      schoolId: assessment.schoolId,
-      userId: user.appUser._id,
-    });
-
-    const assignments = yield* reader
-      .table("schoolAssessmentAssignments")
-      .index("by_assessmentId_and_status", (query) =>
-        query.eq("assessmentId", args.assessmentId)
-      )
-      .collect();
-
-    if (assignments.length > 0) {
-      return yield* Effect.fail(
-        new AssessmentError({
-          code: "ASSESSMENT_DELETE_BLOCKED",
-          message: "Assigned assessments must be archived instead of deleted.",
-        })
-      );
-    }
-
-    yield* deleteAssessmentTree(args.assessmentId);
-    yield* writer.table("schoolAssessments").delete(args.assessmentId);
-
-    return null;
   }
-);
+
+  yield* deleteAssessmentTree(args.assessmentId);
+  yield* writer.table("schoolAssessments").delete(args.assessmentId);
+
+  return null;
+});
 
 /** Deletes all nested rows that belong only to an assessment draft. */
-const deleteAssessmentTree = Effect.fn("assessments.deleteTree")(function* (
+const deleteAssessmentTree = Effect.fnUntraced(function* (
   assessmentId: Id<"schoolAssessments">
 ) {
   const reader = yield* DatabaseReader;

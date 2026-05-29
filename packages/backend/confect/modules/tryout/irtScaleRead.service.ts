@@ -4,9 +4,9 @@ import { IrtError } from "@repo/backend/confect/modules/tryout/irt.errors";
 import { Effect, Option } from "effect";
 
 /** Loads the newest scale version for one tryout. */
-export const getLatestScaleVersionForTryout = Effect.fn(
-  "irt.scales.read.getLatestScaleVersionForTryout"
-)(function* (tryoutId: Id<"tryouts">) {
+export const getLatestScaleVersionForTryout = Effect.fnUntraced(function* (
+  tryoutId: Id<"tryouts">
+) {
   const reader = yield* DatabaseReader;
   return yield* reader
     .table("irtScaleVersions")
@@ -20,9 +20,9 @@ export const getLatestScaleVersionForTryout = Effect.fn(
 });
 
 /** Loads all frozen scale items for a scale version. */
-export const getScaleVersionItems = Effect.fn(
-  "irt.scales.read.getScaleVersionItems"
-)(function* (scaleVersion: Doc<"irtScaleVersions">) {
+export const getScaleVersionItems = Effect.fnUntraced(function* (
+  scaleVersion: Doc<"irtScaleVersions">
+) {
   const reader = yield* DatabaseReader;
   const scaleItems = yield* reader
     .table("irtScaleVersionItems")
@@ -45,9 +45,7 @@ export const getScaleVersionItems = Effect.fn(
 });
 
 /** Loads scale items for one scale version and exercise set. */
-export const getScaleVersionItemsForSet = Effect.fn(
-  "irt.scales.read.getScaleVersionItemsForSet"
-)(function* (args: {
+export const getScaleVersionItemsForSet = Effect.fnUntraced(function* (args: {
   readonly questionCount: number;
   readonly scaleVersionId: Id<"irtScaleVersions">;
   readonly setId: Id<"exerciseSets">;

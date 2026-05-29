@@ -54,9 +54,9 @@ interface SyncedSubjectSection {
 }
 
 /** Upserts synced subject topic metadata. */
-export const bulkSyncSubjectTopics = Effect.fn(
-  "contentSync.subjects.bulkSyncSubjectTopics"
-)(function* (args: { readonly topics: readonly SyncedSubjectTopic[] }) {
+export const bulkSyncSubjectTopics = Effect.fnUntraced(function* (args: {
+  readonly topics: readonly SyncedSubjectTopic[];
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
@@ -125,9 +125,9 @@ export const bulkSyncSubjectTopics = Effect.fn(
 });
 
 /** Upserts synced subject sections and linked author/search/audio rows. */
-export const bulkSyncSubjectSections = Effect.fn(
-  "contentSync.subjects.bulkSyncSubjectSections"
-)(function* (args: { readonly sections: readonly SyncedSubjectSection[] }) {
+export const bulkSyncSubjectSections = Effect.fnUntraced(function* (args: {
+  readonly sections: readonly SyncedSubjectSection[];
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
@@ -161,7 +161,6 @@ export const bulkSyncSubjectSections = Effect.fn(
     if (!topic) {
       skipped += 1;
       skippedTopicSlugs.add(section.topicSlug);
-      yield* Effect.logWarning(`Topic not found for section: ${section.slug}`);
       continue;
     }
 
@@ -258,9 +257,9 @@ export const bulkSyncSubjectSections = Effect.fn(
 });
 
 /** Deletes stale subject topics and their bounded child sections. */
-export const deleteStaleSubjectTopics = Effect.fn(
-  "contentSync.subjects.deleteStaleSubjectTopics"
-)(function* (args: { readonly topicIds: readonly Id<"subjectTopics">[] }) {
+export const deleteStaleSubjectTopics = Effect.fnUntraced(function* (args: {
+  readonly topicIds: readonly Id<"subjectTopics">[];
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
@@ -307,9 +306,9 @@ export const deleteStaleSubjectTopics = Effect.fn(
 });
 
 /** Deletes stale subject sections. */
-export const deleteStaleSubjectSections = Effect.fn(
-  "contentSync.subjects.deleteStaleSubjectSections"
-)(function* (args: { readonly sectionIds: readonly Id<"subjectSections">[] }) {
+export const deleteStaleSubjectSections = Effect.fnUntraced(function* (args: {
+  readonly sectionIds: readonly Id<"subjectSections">[];
+}) {
   const reader = yield* DatabaseReader;
   yield* assertContentSyncBatchSize({
     functionName: "deleteStaleSubjectSections",

@@ -11,9 +11,9 @@ const COMMENT_VOTE_CLEANUP_BATCH_SIZE = 100;
 const COMMENT_REPLY_CLEANUP_BATCH_SIZE = 100;
 
 /** Removes votes and replies after a comment row has been deleted. */
-export const cleanupDeletedComment = Effect.fn(
-  "commentCleanup.cleanupDeletedComment"
-)(function* (args: { commentId: Id<"comments"> }) {
+export const cleanupDeletedComment = Effect.fnUntraced(function* (args: {
+  commentId: Id<"comments">;
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const scheduler = yield* Scheduler;

@@ -27,6 +27,18 @@ const audioStudiesWorkflowsGroup = GroupSpec.make("workflows")
 
 export { audioStudiesWorkflowsGroup };
 
+const audioStudiesActionsGroup = GroupSpec.make("actions").addFunction(
+  FunctionSpec.internalAction({
+    name: "generateScript",
+    args: Schema.Struct({
+      contentAudioId: GenericId.GenericId("contentAudios"),
+    }),
+    returns: Schema.Null,
+  })
+);
+
+export { audioStudiesActionsGroup };
+
 const audioStudiesMutationsContentAudiosGroup = GroupSpec.make("contentAudios")
   .addFunction(
     FunctionSpec.internalMutation({
@@ -270,6 +282,7 @@ const audioStudiesQueriesGroup = GroupSpec.make("queries")
 export { audioStudiesQueriesGroup };
 
 const audioStudiesGroup = GroupSpec.make("audioStudies")
+  .addGroup(audioStudiesActionsGroup)
   .addGroup(audioStudiesWorkflowsGroup)
   .addGroup(audioStudiesMutationsGroup)
   .addGroup(audioStudiesQueriesGroup);

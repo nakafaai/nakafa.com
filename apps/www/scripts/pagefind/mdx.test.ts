@@ -1,37 +1,13 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   countWords,
   escapeHtml,
+  extractMdxAstText,
   extractMdxText,
   normalizeText,
+  renderMdxAstHtml,
   renderMdxHtml,
 } from "@/scripts/pagefind/mdx";
-
-async function loadMdxModuleWithAst(ast: unknown) {
-  vi.resetModules();
-
-  vi.doMock("remark", () => {
-    const parser = {
-      parse: () => ast,
-      use: () => parser,
-    };
-
-    return {
-      remark: () => parser,
-    };
-  });
-  vi.doMock("remark-mdx", () => ({
-    default: () => undefined,
-  }));
-
-  return await import("@/scripts/pagefind/mdx");
-}
-
-afterEach(() => {
-  vi.doUnmock("remark");
-  vi.doUnmock("remark-mdx");
-  vi.resetModules();
-});
 
 describe("Pagefind MDX rendering", () => {
   it("normalizes text and escapes HTML entities for generated records", () => {
@@ -119,17 +95,14 @@ describe("Pagefind MDX rendering", () => {
     );
   });
 
-  it("handles malformed parser output defensively", async () => {
-    const nullRoot = await loadMdxModuleWithAst(null);
-    expect(nullRoot.renderMdxHtml("ignored")).toBe("");
-    expect(nullRoot.extractMdxText("ignored")).toBe("");
-
-    const objectWithoutChildren = await loadMdxModuleWithAst({});
-    expect(objectWithoutChildren.renderMdxHtml("ignored")).toBe("");
+  it("handles malformed parser output defensively", () => {
+    expect(renderMdxAstHtml(null)).toBe("");
+    expect(extractMdxAstText(null)).toBe("");
+    expect(renderMdxAstHtml({})).toBe("");
   });
 
-  it("renders edge-case markdown AST nodes without leaking hidden context", async () => {
-    const mdx = await loadMdxModuleWithAst({
+  it("renders edge-case markdown AST nodes without leaking hidden context", () => {
+    const ast = {
       children: [
         null,
         {},
@@ -199,9 +172,9 @@ describe("Pagefind MDX rendering", () => {
           type: "paragraph",
         },
       ],
-    });
+    };
 
-    expect(mdx.renderMdxHtml("ignored")).toBe(
+    expect(renderMdxAstHtml(ast)).toBe(
       [
         '<h2 id="top-heading">Top Heading</h2>',
         '<h6 id="deep-heading">Deep Heading</h6>',
@@ -210,7 +183,7 @@ describe("Pagefind MDX rendering", () => {
         "<p><code>a &lt; b</code><strong>bold</strong><em>em</em><s>deleted</s>https://example.test?a=1&amp;b=2<br />Alt textfallback</p>",
       ].join("")
     );
-    expect(mdx.extractMdxText("ignored")).toBe(
+    expect(extractMdxAstText(ast)).toBe(
       [
         "Top Heading",
         "Deep Heading",

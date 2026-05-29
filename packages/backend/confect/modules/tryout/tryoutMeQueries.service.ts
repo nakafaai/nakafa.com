@@ -36,9 +36,9 @@ interface UserTryoutRouteArgs {
 }
 
 /** Returns the current user's tryout attempt state. */
-export const getUserTryoutAttempt = Effect.fn(
-  "tryouts.me.getUserTryoutAttempt"
-)(function* (args: UserTryoutRouteArgs) {
+export const getUserTryoutAttempt = Effect.fnUntraced(function* (
+  args: UserTryoutRouteArgs
+) {
   const { appUser } = yield* requireAppUser();
   const context = yield* loadResolvedUserTryoutContext({
     ...args,
@@ -53,9 +53,7 @@ export const getUserTryoutAttempt = Effect.fn(
 });
 
 /** Returns a page of the current user's tryout history. */
-export const getUserTryoutAttemptHistory = Effect.fn(
-  "tryouts.me.getUserTryoutAttemptHistory"
-)(function* (
+export const getUserTryoutAttemptHistory = Effect.fnUntraced(function* (
   args: UserTryoutRouteArgs & { readonly paginationOpts: PaginationOpts }
 ) {
   const { appUser } = yield* requireAppUser();
@@ -80,9 +78,9 @@ export const getUserTryoutAttemptHistory = Effect.fn(
 });
 
 /** Returns session status for the current user's visible tryout attempt. */
-export const getUserTryoutSession = Effect.fn(
-  "tryouts.me.getUserTryoutSession"
-)(function* (args: UserTryoutRouteArgs) {
+export const getUserTryoutSession = Effect.fnUntraced(function* (
+  args: UserTryoutRouteArgs
+) {
   const { appUser } = yield* requireAppUser();
   const context = yield* loadResolvedUserTryoutContext({
     ...args,
@@ -101,9 +99,9 @@ export const getUserTryoutSession = Effect.fn(
 });
 
 /** Returns the attempt and initial history used by the set-level tryout view. */
-export const getUserTryoutSetView = Effect.fn(
-  "tryouts.me.getUserTryoutSetView"
-)(function* (args: UserTryoutRouteArgs) {
+export const getUserTryoutSetView = Effect.fnUntraced(function* (
+  args: UserTryoutRouteArgs
+) {
   const { appUser } = yield* requireAppUser();
   const context = yield* loadResolvedUserTryoutContext({
     ...args,
@@ -131,9 +129,9 @@ export const getUserTryoutSetView = Effect.fn(
 });
 
 /** Returns one tryout part attempt and its answers for the current user. */
-export const getUserTryoutPartAttempt = Effect.fn(
-  "tryouts.me.getUserTryoutPartAttempt"
-)(function* (args: UserTryoutRouteArgs & { readonly partKey: string }) {
+export const getUserTryoutPartAttempt = Effect.fnUntraced(function* (
+  args: UserTryoutRouteArgs & { readonly partKey: string }
+) {
   const { appUser } = yield* requireAppUser();
   const context = yield* loadResolvedUserTryoutContext({
     ...args,

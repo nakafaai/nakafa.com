@@ -21,9 +21,7 @@ import { Effect, Option } from "effect";
 type TryoutAttemptDoc = typeof TryoutAttempts.Doc.Type;
 
 /** Loads an active tryout by public route parameters. */
-export const loadStartableTryout = Effect.fn(
-  "tryouts.lifecycle.loadStartableTryout"
-)(function* (args: {
+export const loadStartableTryout = Effect.fnUntraced(function* (args: {
   readonly locale: Locale;
   readonly product: TryoutProduct;
   readonly tryoutSlug: string;
@@ -72,9 +70,7 @@ export const loadStartableTryout = Effect.fn(
 });
 
 /** Reuses a currently active attempt when it can still be resumed. */
-export const reuseExistingTryoutAttempt = Effect.fn(
-  "tryouts.lifecycle.reuseExistingTryoutAttempt"
-)(function* (
+export const reuseExistingTryoutAttempt = Effect.fnUntraced(function* (
   ctx: ConvexMutationCtx,
   args: {
     readonly now: number;
@@ -128,9 +124,7 @@ export const reuseExistingTryoutAttempt = Effect.fn(
 });
 
 /** Loads the context required to start a tryout part. */
-export const loadPartStartContext = Effect.fn(
-  "tryouts.lifecycle.loadPartStartContext"
-)(function* (args: {
+export const loadPartStartContext = Effect.fnUntraced(function* (args: {
   readonly now: number;
   readonly partKey: string;
   readonly tryoutAttemptId: Id<"tryoutAttempts">;
@@ -196,9 +190,7 @@ export const loadPartStartContext = Effect.fn(
 });
 
 /** Reuses an active part attempt or expires the stale one. */
-export const reuseExistingPartAttempt = Effect.fn(
-  "tryouts.lifecycle.reuseExistingPartAttempt"
-)(function* (args: {
+export const reuseExistingPartAttempt = Effect.fnUntraced(function* (args: {
   readonly now: number;
   readonly partIndex: number;
   readonly tryoutAttemptId: Id<"tryoutAttempts">;

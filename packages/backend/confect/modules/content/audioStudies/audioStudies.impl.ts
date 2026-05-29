@@ -24,6 +24,7 @@ import {
   resetStuckQueueItems,
   startWorkflowsForPendingItems,
 } from "@repo/backend/confect/modules/content/audioQueue.service";
+import { generateScript } from "@repo/backend/confect/modules/content/audioScript.actions";
 import {
   generateAudioForQueueItem,
   handleWorkflowComplete,
@@ -62,6 +63,12 @@ const audioStudies_workflows_handleWorkflowCompleteImpl = FunctionImpl.make(
   "audioStudies.workflows",
   "handleWorkflowComplete",
   handleWorkflowComplete
+);
+const audioStudies_actions_generateScriptImpl = FunctionImpl.make(
+  api,
+  "audioStudies.actions",
+  "generateScript",
+  (args) => generateScript(args).pipe(Effect.orDie)
 );
 const audioStudies_mutations_contentAudios_markFailedImpl = FunctionImpl.make(
   api,
@@ -223,7 +230,12 @@ const audioStudiesQueriesImpl = GroupImpl.make(api, "audioStudies.queries")
 const audioStudiesWorkflowsImpl = GroupImpl.make(api, "audioStudies.workflows")
   .pipe(Layer.provide(audioStudies_workflows_generateAudioForQueueItemImpl))
   .pipe(Layer.provide(audioStudies_workflows_handleWorkflowCompleteImpl));
+const audioStudiesActionsImpl = GroupImpl.make(
+  api,
+  "audioStudies.actions"
+).pipe(Layer.provide(audioStudies_actions_generateScriptImpl));
 const audioStudiesImpl = GroupImpl.make(api, "audioStudies")
+  .pipe(Layer.provide(audioStudiesActionsImpl))
   .pipe(Layer.provide(audioStudiesMutationsImpl))
   .pipe(Layer.provide(audioStudiesQueriesImpl))
   .pipe(Layer.provide(audioStudiesWorkflowsImpl));

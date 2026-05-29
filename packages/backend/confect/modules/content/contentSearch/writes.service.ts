@@ -15,46 +15,44 @@ import { ContentSyncBatchSizeError } from "@repo/backend/confect/modules/content
 import { Clock, Effect, Option } from "effect";
 
 /** Upserts one content search row and returns the write outcome. */
-export const syncContentSearch = Effect.fn("contentSearch.syncContentSearch")(
-  function* (source: {
-    contentHash: string;
-    description?: string;
-    locale: Locale;
-    route: string;
-    section: NakafaSection;
-    syncedAt: number;
-    text: string;
-    title: string;
-  }) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const nextValues = buildContentSearchDocument(source);
-    const existing = yield* reader
-      .table("contentSearch")
-      .index("by_content_id", (query) =>
-        query.eq("content_id", nextValues.content_id)
-      )
-      .first()
-      .pipe(Effect.map(Option.getOrNull));
+export const syncContentSearch = Effect.fnUntraced(function* (source: {
+  contentHash: string;
+  description?: string;
+  locale: Locale;
+  route: string;
+  section: NakafaSection;
+  syncedAt: number;
+  text: string;
+  title: string;
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const nextValues = buildContentSearchDocument(source);
+  const existing = yield* reader
+    .table("contentSearch")
+    .index("by_content_id", (query) =>
+      query.eq("content_id", nextValues.content_id)
+    )
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
 
-    if (isSameContentSearch(existing, nextValues)) {
-      return "unchanged";
-    }
-
-    if (existing) {
-      yield* writer.table("contentSearch").patch(existing._id, nextValues);
-      return "updated";
-    }
-
-    yield* writer.table("contentSearch").insert(nextValues);
-    return "created";
+  if (isSameContentSearch(existing, nextValues)) {
+    return "unchanged";
   }
-);
+
+  if (existing) {
+    yield* writer.table("contentSearch").patch(existing._id, nextValues);
+    return "updated";
+  }
+
+  yield* writer.table("contentSearch").insert(nextValues);
+  return "created";
+});
 
 /** Deletes one content search row by stable content id. */
-export const deleteContentSearch = Effect.fn(
-  "contentSearch.deleteContentSearch"
-)(function* (contentId: string) {
+export const deleteContentSearch = Effect.fnUntraced(function* (
+  contentId: string
+) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const existing = yield* reader
@@ -72,9 +70,7 @@ export const deleteContentSearch = Effect.fn(
 });
 
 /** Bulk syncs Quran search documents into the shared content search table. */
-export const bulkSyncQuranSearch = Effect.fn(
-  "contentSearch.bulkSyncQuranSearch"
-)(function* (args: {
+export const bulkSyncQuranSearch = Effect.fnUntraced(function* (args: {
   documents: readonly {
     contentHash: string;
     description: string;

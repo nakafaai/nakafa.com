@@ -91,9 +91,7 @@ export function buildTryoutPartRouteMappings(args: PartRouteMappingInput) {
 }
 
 /** Loads the ordered tryout part mappings and validates their shape. */
-export const loadValidatedTryoutPartSets = Effect.fn(
-  "tryouts.parts.loadValidatedTryoutPartSets"
-)(function* (args: {
+export const loadValidatedTryoutPartSets = Effect.fnUntraced(function* (args: {
   readonly partCount: number;
   readonly tryoutId: Id<"tryouts">;
 }) {
@@ -173,9 +171,7 @@ export function resolveRequestedTryoutPart(
 }
 
 /** Loads stable tryout part snapshots from current part-set mappings. */
-export const loadTryoutPartSnapshots = Effect.fn(
-  "tryouts.parts.loadTryoutPartSnapshots"
-)(function* (args: {
+export const loadTryoutPartSnapshots = Effect.fnUntraced(function* (args: {
   readonly partCount: number;
   readonly tryoutId: Id<"tryouts">;
 }) {
@@ -211,9 +207,7 @@ export const loadTryoutPartSnapshots = Effect.fn(
 });
 
 /** Synchronizes tryout-to-set mappings after content sync detects a tryout. */
-export const syncTryoutPartSetMappings = Effect.fn(
-  "tryouts.parts.syncTryoutPartSetMappings"
-)(function* (args: {
+export const syncTryoutPartSetMappings = Effect.fnUntraced(function* (args: {
   readonly parts: readonly {
     readonly partKey: string;
     readonly setId: Id<"exerciseSets">;

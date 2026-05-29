@@ -1,3 +1,3 @@
-import auth from "@repo/backend/confect/auth";
+import auth from "../confect/auth";
 
 export default auth;

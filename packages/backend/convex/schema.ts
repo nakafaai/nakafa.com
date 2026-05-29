@@ -1,3 +1,3 @@
-import schemaDefinition from "@repo/backend/confect/schema";
+import schemaDefinition from "../confect/schema";
 
 export default schemaDefinition.convexSchemaDefinition;

@@ -31,9 +31,9 @@ function scheduleScaleQualityDrain() {
 }
 
 /** Refreshes one tryout quality check and requeues rows when the refresh fails. */
-export const refreshScaleQualityCheck = Effect.fn(
-  "irt.scales.refreshScaleQualityCheck"
-)(function* (args: { readonly tryoutId: Id<"tryouts"> }) {
+export const refreshScaleQualityCheck = Effect.fnUntraced(function* (args: {
+  readonly tryoutId: Id<"tryouts">;
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const queueEntries = yield* reader
@@ -53,7 +53,7 @@ export const refreshScaleQualityCheck = Effect.fn(
         return null;
       })
     ),
-    Effect.catchAllCause((cause) =>
+    Effect.catchAllCause(() =>
       Effect.gen(function* () {
         const requeuedAt = yield* Clock.currentTimeMillis;
 
@@ -66,7 +66,6 @@ export const refreshScaleQualityCheck = Effect.fn(
             });
         }
 
-        yield* Effect.logError("Scale quality refresh failed", cause);
         return null;
       })
     )
@@ -76,63 +75,61 @@ export const refreshScaleQualityCheck = Effect.fn(
 });
 
 /** Enqueues scale-quality refresh rows for every tryout through paginated batches. */
-export const rebuildScaleQualityChecksPage = Effect.fn(
-  "irt.scales.rebuildScaleQualityChecksPage"
-)(function* (args: { readonly cursor?: string }) {
-  const reader = yield* DatabaseReader;
-  const scheduler = yield* Scheduler;
-  const enqueuedAt = yield* Clock.currentTimeMillis;
-  let enqueuedAny = false;
-  const page = yield* reader
-    .table("tryouts")
-    .index("by_syncedAt")
-    .paginate({
-      cursor: args.cursor ?? null,
-      numItems: SCALE_QUALITY_REBUILD_BATCH_SIZE,
-    });
+export const rebuildScaleQualityChecksPage = Effect.fnUntraced(
+  function* (args: { readonly cursor?: string }) {
+    const reader = yield* DatabaseReader;
+    const scheduler = yield* Scheduler;
+    const enqueuedAt = yield* Clock.currentTimeMillis;
+    let enqueuedAny = false;
+    const page = yield* reader
+      .table("tryouts")
+      .index("by_syncedAt")
+      .paginate({
+        cursor: args.cursor ?? null,
+        numItems: SCALE_QUALITY_REBUILD_BATCH_SIZE,
+      });
 
-  for (const tryout of page.page) {
-    const pendingScalePublication = yield* reader
-      .table("irtScalePublicationQueue")
-      .index("by_tryoutId_and_enqueuedAt", (query) =>
-        query.eq("tryoutId", tryout._id)
-      )
-      .first();
+    for (const tryout of page.page) {
+      const pendingScalePublication = yield* reader
+        .table("irtScalePublicationQueue")
+        .index("by_tryoutId_and_enqueuedAt", (query) =>
+          query.eq("tryoutId", tryout._id)
+        )
+        .first();
 
-    if (Option.isSome(pendingScalePublication)) {
-      continue;
+      if (Option.isSome(pendingScalePublication)) {
+        continue;
+      }
+
+      const enqueued = yield* enqueueScaleQualityRefresh({
+        enqueuedAt,
+        tryoutId: tryout._id,
+      });
+      enqueuedAny = enqueuedAny || enqueued;
     }
 
-    const enqueued = yield* enqueueScaleQualityRefresh({
-      enqueuedAt,
-      tryoutId: tryout._id,
-    });
-    enqueuedAny = enqueuedAny || enqueued;
-  }
+    if (!page.isDone) {
+      yield* scheduler.runAfter(
+        Duration.millis(0),
+        refs.internal.irt.mutations.internalFunctions.scales
+          .rebuildScaleQualityChecksPage,
+        { cursor: page.continueCursor }
+      );
+    }
 
-  if (!page.isDone) {
-    yield* scheduler.runAfter(
-      Duration.millis(0),
-      refs.internal.irt.mutations.internalFunctions.scales
-        .rebuildScaleQualityChecksPage,
-      { cursor: page.continueCursor }
-    );
-  }
+    if (page.isDone && (args.cursor !== undefined || enqueuedAny)) {
+      yield* scheduleScaleQualityDrain();
+    }
 
-  if (page.isDone && (args.cursor !== undefined || enqueuedAny)) {
-    yield* scheduleScaleQualityDrain();
+    return {
+      isDone: page.isDone,
+      processedCount: page.page.length,
+    };
   }
-
-  return {
-    isDone: page.isDone,
-    processedCount: page.page.length,
-  };
-});
+);
 
 /** Claims scale-quality refresh rows and schedules per-tryout refresh mutations. */
-export const drainScaleQualityRefreshQueue = Effect.fn(
-  "irt.scales.drainScaleQualityRefreshQueue"
-)(function* () {
+export const drainScaleQualityRefreshQueue = Effect.fnUntraced(function* () {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const scheduler = yield* Scheduler;
@@ -179,9 +176,7 @@ export const drainScaleQualityRefreshQueue = Effect.fn(
 });
 
 /** Publishes pending scales and schedules quality refresh cleanup. */
-export const drainScalePublicationQueue = Effect.fn(
-  "irt.scales.drainScalePublicationQueue"
-)(function* () {
+export const drainScalePublicationQueue = Effect.fnUntraced(function* () {
   const reader = yield* DatabaseReader;
   const scheduler = yield* Scheduler;
   const enqueuedAt = yield* Clock.currentTimeMillis;

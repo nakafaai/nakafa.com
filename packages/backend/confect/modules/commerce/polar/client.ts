@@ -6,7 +6,7 @@ import {
 import { Effect } from "effect";
 
 /** Creates a Polar SDK client from the backend config boundary. */
-export const makePolarClient = Effect.fn("polar.makeClient")(function* () {
+export const makePolarClient = Effect.fnUntraced(function* () {
   const accessToken = yield* readPolarAccessToken();
   const server = yield* readPolarServer();
 

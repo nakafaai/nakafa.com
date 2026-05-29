@@ -6,7 +6,7 @@ export const MAX_AUDIO_CONTENT_PER_DAY_LIMIT = 10;
 
 /** Popularity rows scanned per content type when filling the audio queue. */
 export const MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE =
-  MAX_AUDIO_CONTENT_PER_DAY_LIMIT * 20;
+  MAX_AUDIO_CONTENT_PER_DAY_LIMIT * 3;
 
 /** Minimum view count before content becomes eligible for audio generation. */
 export const MIN_AUDIO_VIEW_THRESHOLD = 10;

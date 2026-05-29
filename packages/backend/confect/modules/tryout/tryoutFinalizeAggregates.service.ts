@@ -14,9 +14,7 @@ import type { TryoutScoreStatus } from "@repo/backend/confect/modules/tryout/try
 import { Effect } from "effect";
 
 /** Synchronizes persisted aggregate score fields for a tryout attempt. */
-export const syncTryoutAttemptAggregates = Effect.fn(
-  "tryouts.finalize.syncTryoutAttemptAggregates"
-)(function* (args: {
+export const syncTryoutAttemptAggregates = Effect.fnUntraced(function* (args: {
   readonly completedAtMs: number;
   readonly scaleVersionId?: Id<"irtScaleVersions">;
   readonly scoreStatus?: TryoutScoreStatus;

@@ -55,14 +55,6 @@ const authSyncGroup = GroupSpec.make("sync")
 
 export { authSyncGroup };
 
-export const authNodeGroup = GroupSpec.makeNode("auth").addFunction(
-  FunctionSpec.internalNodeAction({
-    name: "getLatestJwks",
-    args: Schema.Struct({}),
-    returns: jwksSchema,
-  })
-);
-
 const authGroup = GroupSpec.make("auth")
   .addFunction(
     FunctionSpec.publicQuery({
@@ -93,6 +85,13 @@ const authGroup = GroupSpec.make("auth")
         }),
         Schema.Null
       ),
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalAction({
+      name: "getLatestJwks",
+      args: Schema.Struct({}),
+      returns: jwksSchema,
     })
   )
   .addFunction(authOnCreateSpec)

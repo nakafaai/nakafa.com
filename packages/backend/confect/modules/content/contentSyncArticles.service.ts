@@ -49,9 +49,9 @@ interface SyncedArticle {
 }
 
 /** Upserts article content, references, authors, search, and audio invalidation. */
-export const bulkSyncArticles = Effect.fn(
-  "contentSync.articles.bulkSyncArticles"
-)(function* (args: { readonly articles: readonly SyncedArticle[] }) {
+export const bulkSyncArticles = Effect.fnUntraced(function* (args: {
+  readonly articles: readonly SyncedArticle[];
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
@@ -154,9 +154,9 @@ export const bulkSyncArticles = Effect.fn(
 });
 
 /** Deletes stale articles and their linked read models. */
-export const deleteStaleArticles = Effect.fn(
-  "contentSync.articles.deleteStaleArticles"
-)(function* (args: { readonly articleIds: readonly Id<"articleContents">[] }) {
+export const deleteStaleArticles = Effect.fnUntraced(function* (args: {
+  readonly articleIds: readonly Id<"articleContents">[];
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({

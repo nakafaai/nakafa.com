@@ -68,9 +68,7 @@ export function applyForumReactionDelta(
 }
 
 /** Reads current user's forum reactions grouped by forum id. */
-export const getMyForumReactions = Effect.fn(
-  "school.forums.getMyForumReactions"
-)(function* (
+export const getMyForumReactions = Effect.fnUntraced(function* (
   forumIds: readonly Id<"schoolClassForums">[],
   userId: Id<"users">
 ) {
@@ -91,32 +89,30 @@ export const getMyForumReactions = Effect.fn(
 });
 
 /** Reads current user's post reactions grouped by post id. */
-export const getMyPostReactions = Effect.fn("school.forums.getMyPostReactions")(
-  function* (
-    postIds: readonly Id<"schoolClassForumPosts">[],
-    userId: Id<"users">
-  ) {
-    const reader = yield* DatabaseReader;
-    const entries = yield* Effect.forEach(postIds, (postId) =>
-      Effect.gen(function* () {
-        const reactions = yield* reader
-          .table("schoolClassForumPostReactions")
-          .index("by_postId_and_userId_and_emoji", (query) =>
-            query.eq("postId", postId).eq("userId", userId)
-          )
-          .take(FORUM_REACTION_PREVIEW_BATCH_LIMIT);
-        return [postId, reactions.map((reaction) => reaction.emoji)] as const;
-      })
-    );
+export const getMyPostReactions = Effect.fnUntraced(function* (
+  postIds: readonly Id<"schoolClassForumPosts">[],
+  userId: Id<"users">
+) {
+  const reader = yield* DatabaseReader;
+  const entries = yield* Effect.forEach(postIds, (postId) =>
+    Effect.gen(function* () {
+      const reactions = yield* reader
+        .table("schoolClassForumPostReactions")
+        .index("by_postId_and_userId_and_emoji", (query) =>
+          query.eq("postId", postId).eq("userId", userId)
+        )
+        .take(FORUM_REACTION_PREVIEW_BATCH_LIMIT);
+      return [postId, reactions.map((reaction) => reaction.emoji)] as const;
+    })
+  );
 
-    return new Map(entries);
-  }
-);
+  return new Map(entries);
+});
 
 /** Builds forum reaction preview names keyed by emoji. */
-export const getForumReactionPreviews = Effect.fn(
-  "school.forums.getForumReactionPreviews"
-)(function* (forum: ForumDoc) {
+export const getForumReactionPreviews = Effect.fnUntraced(function* (
+  forum: ForumDoc
+) {
   const reader = yield* DatabaseReader;
   const reactionsByEmoji = yield* Effect.forEach(
     forum.reactionCounts,
@@ -153,9 +149,9 @@ export const getForumReactionPreviews = Effect.fn(
 });
 
 /** Builds post reaction preview names keyed by post id and emoji. */
-export const getPostReactionPreviews = Effect.fn(
-  "school.forums.getPostReactionPreviews"
-)(function* (posts: readonly ForumPostDoc[]) {
+export const getPostReactionPreviews = Effect.fnUntraced(function* (
+  posts: readonly ForumPostDoc[]
+) {
   const reader = yield* DatabaseReader;
   const reactionsByPost = yield* Effect.forEach(posts, (post) =>
     Effect.gen(function* () {

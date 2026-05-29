@@ -63,9 +63,9 @@ function scheduleCalibrationCacheStatsRebuildPage(args: {
 }
 
 /** Ensures a set's calibration cache is within bounded processing limits. */
-export const prepareCalibrationCacheForSet = Effect.fn(
-  "irt.cache.prepareCalibrationCacheForSet"
-)(function* (setId: Id<"exerciseSets">) {
+export const prepareCalibrationCacheForSet = Effect.fnUntraced(function* (
+  setId: Id<"exerciseSets">
+) {
   const reader = yield* DatabaseReader;
   const now = yield* Clock.currentTimeMillis;
   const set = yield* reader
@@ -115,124 +115,125 @@ export const prepareCalibrationCacheForSet = Effect.fn(
 });
 
 /** Adjusts cached attempt stats after cache row insertion or deletion. */
-export const adjustCalibrationCacheAttemptCount = Effect.fn(
-  "irt.cache.adjustCalibrationCacheAttemptCount"
-)(function* (args: {
-  readonly delta: number;
-  readonly setId: Id<"exerciseSets">;
-  readonly updatedAt: number;
-}) {
-  if (args.delta === 0) {
-    return false;
-  }
-
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  const cacheStats = yield* reader
-    .table("irtCalibrationCacheStats")
-    .get("by_setId", args.setId)
-    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
-
-  if (!cacheStats) {
-    return false;
-  }
-
-  const nextAttemptCount = Math.max(0, cacheStats.attemptCount + args.delta);
-
-  if (nextAttemptCount === 0) {
-    yield* writer.table("irtCalibrationCacheStats").delete(cacheStats._id);
-    return true;
-  }
-
-  yield* writer.table("irtCalibrationCacheStats").patch(cacheStats._id, {
-    attemptCount: nextAttemptCount,
-    updatedAt: args.updatedAt,
-  });
-
-  return true;
-});
-
-/** Rebuilds cache stats for one set through paginated mutation batches. */
-export const rebuildCalibrationCacheStatsForSet = Effect.fn(
-  "irt.cache.rebuildCalibrationCacheStatsForSet"
-)(function* (args: {
-  readonly cursor?: string;
-  readonly progress?: { readonly attemptCount: number };
-  readonly setId: Id<"exerciseSets">;
-}) {
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  const set = yield* reader
-    .table("exerciseSets")
-    .get(args.setId)
-    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
-
-  if (!set) {
-    return null;
-  }
-
-  const page = yield* reader
-    .table("irtCalibrationAttempts")
-    .index("by_setId", (query) => query.eq("setId", args.setId))
-    .paginate({
-      cursor: args.cursor ?? null,
-      numItems: IRT_CALIBRATION_CACHE_STATS_REBUILD_BATCH_SIZE,
-    });
-  const progress = {
-    attemptCount: (args.progress?.attemptCount ?? 0) + page.page.length,
-  };
-
-  if (!page.isDone) {
-    yield* scheduleCalibrationCacheStatsRebuildPage({
-      cursor: page.continueCursor,
-      progress,
-      setId: args.setId,
-    });
-    return null;
-  }
-
-  const cacheStats = yield* reader
-    .table("irtCalibrationCacheStats")
-    .get("by_setId", args.setId)
-    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
-
-  if (progress.attemptCount === 0) {
-    if (cacheStats) {
-      yield* writer.table("irtCalibrationCacheStats").delete(cacheStats._id);
+export const adjustCalibrationCacheAttemptCount = Effect.fnUntraced(
+  function* (args: {
+    readonly delta: number;
+    readonly setId: Id<"exerciseSets">;
+    readonly updatedAt: number;
+  }) {
+    if (args.delta === 0) {
+      return false;
     }
 
-    return null;
-  }
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const cacheStats = yield* reader
+      .table("irtCalibrationCacheStats")
+      .get("by_setId", args.setId)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
-  const now = yield* Clock.currentTimeMillis;
+    if (!cacheStats) {
+      return false;
+    }
 
-  if (cacheStats) {
+    const nextAttemptCount = Math.max(0, cacheStats.attemptCount + args.delta);
+
+    if (nextAttemptCount === 0) {
+      yield* writer.table("irtCalibrationCacheStats").delete(cacheStats._id);
+      return true;
+    }
+
     yield* writer.table("irtCalibrationCacheStats").patch(cacheStats._id, {
-      attemptCount: progress.attemptCount,
-      updatedAt: now,
+      attemptCount: nextAttemptCount,
+      updatedAt: args.updatedAt,
     });
-  } else {
-    yield* writer.table("irtCalibrationCacheStats").insert({
-      attemptCount: progress.attemptCount,
-      setId: args.setId,
-      updatedAt: now,
-    });
-  }
 
-  if (
-    progress.attemptCount <= getCalibrationAttemptCacheLimit(set.questionCount)
-  ) {
+    return true;
+  }
+);
+
+/** Rebuilds cache stats for one set through paginated mutation batches. */
+export const rebuildCalibrationCacheStatsForSet = Effect.fnUntraced(
+  function* (args: {
+    readonly cursor?: string;
+    readonly progress?: { readonly attemptCount: number };
+    readonly setId: Id<"exerciseSets">;
+  }) {
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const set = yield* reader
+      .table("exerciseSets")
+      .get(args.setId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+
+    if (!set) {
+      return null;
+    }
+
+    const page = yield* reader
+      .table("irtCalibrationAttempts")
+      .index("by_setId", (query) => query.eq("setId", args.setId))
+      .paginate({
+        cursor: args.cursor ?? null,
+        numItems: IRT_CALIBRATION_CACHE_STATS_REBUILD_BATCH_SIZE,
+      });
+    const progress = {
+      attemptCount: (args.progress?.attemptCount ?? 0) + page.page.length,
+    };
+
+    if (!page.isDone) {
+      yield* scheduleCalibrationCacheStatsRebuildPage({
+        cursor: page.continueCursor,
+        progress,
+        setId: args.setId,
+      });
+      return null;
+    }
+
+    const cacheStats = yield* reader
+      .table("irtCalibrationCacheStats")
+      .get("by_setId", args.setId)
+      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+
+    if (progress.attemptCount === 0) {
+      if (cacheStats) {
+        yield* writer.table("irtCalibrationCacheStats").delete(cacheStats._id);
+      }
+
+      return null;
+    }
+
+    const now = yield* Clock.currentTimeMillis;
+
+    if (cacheStats) {
+      yield* writer.table("irtCalibrationCacheStats").patch(cacheStats._id, {
+        attemptCount: progress.attemptCount,
+        updatedAt: now,
+      });
+    } else {
+      yield* writer.table("irtCalibrationCacheStats").insert({
+        attemptCount: progress.attemptCount,
+        setId: args.setId,
+        updatedAt: now,
+      });
+    }
+
+    if (
+      progress.attemptCount <=
+      getCalibrationAttemptCacheLimit(set.questionCount)
+    ) {
+      return null;
+    }
+
+    yield* scheduleCalibrationCacheTrim(args.setId);
     return null;
   }
-
-  yield* scheduleCalibrationCacheTrim(args.setId);
-  return null;
-});
+);
 
 /** Trims stale or overflow calibration cache rows for one set. */
-export const trimCalibrationCacheForSet = Effect.fn(
-  "irt.cache.trimCalibrationCacheForSet"
-)(function* (args: { readonly setId: Id<"exerciseSets"> }) {
+export const trimCalibrationCacheForSet = Effect.fnUntraced(function* (args: {
+  readonly setId: Id<"exerciseSets">;
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const now = yield* Clock.currentTimeMillis;

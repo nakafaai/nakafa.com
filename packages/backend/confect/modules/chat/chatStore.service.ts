@@ -16,31 +16,32 @@ export class ChatStoreError extends Schema.TaggedError<ChatStoreError>()(
 ) {}
 
 /** Requires a chat to belong to the given user id. */
-export const readOwnedChat = Effect.fn("chatStore.readOwnedChat")(
-  function* (args: { chatId: Id<"chats">; userId: Id<"users"> }) {
-    const reader = yield* DatabaseReader;
-    const chat = yield* reader
-      .table("chats")
-      .get(args.chatId)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+export const readOwnedChat = Effect.fnUntraced(function* (args: {
+  chatId: Id<"chats">;
+  userId: Id<"users">;
+}) {
+  const reader = yield* DatabaseReader;
+  const chat = yield* reader
+    .table("chats")
+    .get(args.chatId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-    if (!chat) {
-      return yield* Effect.fail(
-        new ChatStoreError({ message: `Chat not found: ${args.chatId}` })
-      );
-    }
-
-    if (chat.userId !== args.userId) {
-      return yield* Effect.fail(
-        new ChatStoreError({
-          message: "You do not have permission to modify this chat.",
-        })
-      );
-    }
-
-    return chat;
+  if (!chat) {
+    return yield* Effect.fail(
+      new ChatStoreError({ message: `Chat not found: ${args.chatId}` })
+    );
   }
-);
+
+  if (chat.userId !== args.userId) {
+    return yield* Effect.fail(
+      new ChatStoreError({
+        message: "You do not have permission to modify this chat.",
+      })
+    );
+  }
+
+  return chat;
+});
 
 /** Fails when a chat is unavailable to the current viewer. */
 export function validateChatAccess(
@@ -57,16 +58,18 @@ export function validateChatAccess(
 }
 
 /** Requires a chat to belong to the given user id. */
-export const verifyChatOwnership = Effect.fn("chatStore.verifyChatOwnership")(
-  function* (args: { chatId: Id<"chats">; userId: Id<"users"> }) {
-    return yield* readOwnedChat(args);
-  }
-);
+export const verifyChatOwnership = Effect.fnUntraced(function* (args: {
+  chatId: Id<"chats">;
+  userId: Id<"users">;
+}) {
+  return yield* readOwnedChat(args);
+});
 
 /** Reads one message by stable client identifier. */
-export const getMessageByIdentifier = Effect.fn(
-  "chatStore.getMessageByIdentifier"
-)(function* (args: { chatId: Id<"chats">; identifier: string }) {
+export const getMessageByIdentifier = Effect.fnUntraced(function* (args: {
+  chatId: Id<"chats">;
+  identifier: string;
+}) {
   const reader = yield* DatabaseReader;
 
   return yield* reader
@@ -76,7 +79,7 @@ export const getMessageByIdentifier = Effect.fn(
 });
 
 /** Inserts AI SDK message parts for a persisted message. */
-export const insertParts = Effect.fn("chatStore.insertParts")(function* (args: {
+export const insertParts = Effect.fnUntraced(function* (args: {
   messageId: Id<"messages">;
   parts: readonly MessagePartInput[];
 }) {
@@ -100,9 +103,9 @@ export const insertParts = Effect.fn("chatStore.insertParts")(function* (args: {
 });
 
 /** Deletes all parts for a message within the bounded chat rewrite batch. */
-const deletePartsForMessageBatch = Effect.fn(
-  "chatStore.deletePartsForMessageBatch"
-)(function* (messageId: Id<"messages">) {
+const deletePartsForMessageBatch = Effect.fnUntraced(function* (
+  messageId: Id<"messages">
+) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const parts = yield* reader
@@ -120,9 +123,10 @@ const deletePartsForMessageBatch = Effect.fn(
 });
 
 /** Deletes messages and parts from a chat transcript creation-time boundary. */
-export const deleteMessageBatchFromPoint = Effect.fn(
-  "chatStore.deleteMessageBatchFromPoint"
-)(function* (args: { chatId: Id<"chats">; fromCreationTime: number }) {
+export const deleteMessageBatchFromPoint = Effect.fnUntraced(function* (args: {
+  chatId: Id<"chats">;
+  fromCreationTime: number;
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const messages = yield* reader
@@ -154,29 +158,29 @@ export const deleteMessageBatchFromPoint = Effect.fn(
 });
 
 /** Loads one message page and attaches its ordered parts. */
-export const hydrateMessagePage = Effect.fn("chatStore.hydrateMessagePage")(
-  function* (messages: readonly Doc<"messages">[]) {
-    const reader = yield* DatabaseReader;
-    return yield* Effect.forEach(messages, (message) =>
-      Effect.gen(function* () {
-        const parts = yield* reader
-          .table("parts")
-          .index("by_messageId_and_order", (query) =>
-            query.eq("messageId", message._id)
-          )
-          .take(MAX_CHAT_MESSAGE_PARTS + 1);
+export const hydrateMessagePage = Effect.fnUntraced(function* (
+  messages: readonly Doc<"messages">[]
+) {
+  const reader = yield* DatabaseReader;
+  return yield* Effect.forEach(messages, (message) =>
+    Effect.gen(function* () {
+      const parts = yield* reader
+        .table("parts")
+        .index("by_messageId_and_order", (query) =>
+          query.eq("messageId", message._id)
+        )
+        .take(MAX_CHAT_MESSAGE_PARTS + 1);
 
-        if (parts.length > MAX_CHAT_MESSAGE_PARTS) {
-          return yield* Effect.fail(
-            new ChatStoreError({
-              message:
-                "Chat message part count exceeds the supported load limit.",
-            })
-          );
-        }
+      if (parts.length > MAX_CHAT_MESSAGE_PARTS) {
+        return yield* Effect.fail(
+          new ChatStoreError({
+            message:
+              "Chat message part count exceeds the supported load limit.",
+          })
+        );
+      }
 
-        return { ...message, parts };
-      })
-    );
-  }
-);
+      return { ...message, parts };
+    })
+  );
+});

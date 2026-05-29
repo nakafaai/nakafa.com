@@ -82,7 +82,7 @@ export const createAuth = (ctx: GenericCtx<ConvexDataModel>) =>
  * - https://labs.convex.dev/better-auth/experimental#static-jwks
  * - https://github.com/get-convex/better-auth/blob/main/src/plugins/convex/index.ts
  */
-export const getLatestJwks = Effect.fn("identity.getLatestJwks")(function* () {
+export const getLatestJwks = Effect.fnUntraced(function* () {
   const ctx = yield* ActionCtx;
   const auth = createAuth(ctx);
 

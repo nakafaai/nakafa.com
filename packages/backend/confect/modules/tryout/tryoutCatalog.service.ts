@@ -49,9 +49,7 @@ function buildActiveTryoutCatalogEntry(args: {
 }
 
 /** Loads catalog rows with current user's latest attempt state when available. */
-const loadActiveTryoutCatalogEntries = Effect.fn(
-  "tryouts.catalog.loadActiveEntries"
-)(function* (
+const loadActiveTryoutCatalogEntries = Effect.fnUntraced(function* (
   entries: readonly (typeof Tryouts.Doc.Type)[],
   userId: Id<"users"> | null
 ) {
@@ -85,9 +83,7 @@ const loadActiveTryoutCatalogEntries = Effect.fn(
 });
 
 /** Returns one paginated page of active tryout catalog rows. */
-export const getActiveTryoutCatalogPage = Effect.fn(
-  "tryouts.catalog.getActiveTryoutCatalogPage"
-)(function* (args: {
+export const getActiveTryoutCatalogPage = Effect.fnUntraced(function* (args: {
   readonly locale: Locale;
   readonly paginationOpts: PaginationOpts;
   readonly product: TryoutProduct;
@@ -119,9 +115,7 @@ export const getActiveTryoutCatalogPage = Effect.fn(
 });
 
 /** Loads active catalog rows and count with optional user attempt state. */
-const loadActiveTryoutCatalogSnapshot = Effect.fn(
-  "tryouts.catalog.loadActiveTryoutCatalogSnapshot"
-)(function* (
+const loadActiveTryoutCatalogSnapshot = Effect.fnUntraced(function* (
   args: {
     readonly locale: Locale;
     readonly pageSize?: number;
@@ -165,88 +159,86 @@ const loadActiveTryoutCatalogSnapshot = Effect.fn(
 });
 
 /** Returns the active tryout catalog count and initial rows. */
-export const getActiveTryoutCatalogSnapshot = Effect.fn(
-  "tryouts.catalog.getActiveTryoutCatalogSnapshot"
-)(function* (args: {
-  readonly locale: Locale;
-  readonly pageSize?: number;
-  readonly product: TryoutProduct;
-}) {
-  const user = yield* getOptionalAppUser();
-  return yield* loadActiveTryoutCatalogSnapshot(
-    args,
-    user?.appUser._id ?? null
-  );
-});
-
-/** Returns the non-personalized active tryout catalog snapshot. */
-export const getPublicActiveTryoutCatalogSnapshot = Effect.fn(
-  "tryouts.catalog.getPublicActiveTryoutCatalogSnapshot"
-)(function* (args: {
-  readonly locale: Locale;
-  readonly pageSize?: number;
-  readonly product: TryoutProduct;
-}) {
-  return yield* loadActiveTryoutCatalogSnapshot(args, null);
-});
-
-/** Returns details and part metadata for one tryout. */
-export const getTryoutDetails = Effect.fn("tryouts.catalog.getTryoutDetails")(
+export const getActiveTryoutCatalogSnapshot = Effect.fnUntraced(
   function* (args: {
     readonly locale: Locale;
+    readonly pageSize?: number;
     readonly product: TryoutProduct;
-    readonly slug: string;
   }) {
-    const reader = yield* DatabaseReader;
-    const tryout = yield* reader
-      .table("tryouts")
-      .index("by_product_and_locale_and_slug", (query) =>
-        query
-          .eq("product", args.product)
-          .eq("locale", args.locale)
-          .eq("slug", args.slug)
-      )
-      .first()
-      .pipe(Effect.map(Option.getOrNull));
-
-    if (!tryout) {
-      return null;
-    }
-
-    const tryoutPartSets = yield* loadValidatedTryoutPartSets({
-      partCount: tryout.partCount,
-      tryoutId: tryout._id,
-    });
-    const sets = yield* Effect.forEach(tryoutPartSets, (partSet) =>
-      reader
-        .table("exerciseSets")
-        .get(partSet.setId)
-        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)))
+    const user = yield* getOptionalAppUser();
+    return yield* loadActiveTryoutCatalogSnapshot(
+      args,
+      user?.appUser._id ?? null
     );
-    const parts = yield* Effect.all(
-      tryoutPartSets.map((partSet, index) => {
-        const set = sets[index];
-
-        if (!set) {
-          return Effect.fail(
-            new TryoutError({
-              code: "INVALID_TRYOUT_STATE",
-              message: "Tryout is missing one of its part sets.",
-            })
-          );
-        }
-
-        return Effect.succeed({
-          material: set.material,
-          partIndex: partSet.partIndex,
-          partKey: partSet.partKey,
-          questionCount: set.questionCount,
-          setId: partSet.setId,
-          setSlug: set.slug,
-        });
-      })
-    );
-
-    return { parts, tryout };
   }
 );
+
+/** Returns the non-personalized active tryout catalog snapshot. */
+export const getPublicActiveTryoutCatalogSnapshot = Effect.fnUntraced(
+  function* (args: {
+    readonly locale: Locale;
+    readonly pageSize?: number;
+    readonly product: TryoutProduct;
+  }) {
+    return yield* loadActiveTryoutCatalogSnapshot(args, null);
+  }
+);
+
+/** Returns details and part metadata for one tryout. */
+export const getTryoutDetails = Effect.fnUntraced(function* (args: {
+  readonly locale: Locale;
+  readonly product: TryoutProduct;
+  readonly slug: string;
+}) {
+  const reader = yield* DatabaseReader;
+  const tryout = yield* reader
+    .table("tryouts")
+    .index("by_product_and_locale_and_slug", (query) =>
+      query
+        .eq("product", args.product)
+        .eq("locale", args.locale)
+        .eq("slug", args.slug)
+    )
+    .first()
+    .pipe(Effect.map(Option.getOrNull));
+
+  if (!tryout) {
+    return null;
+  }
+
+  const tryoutPartSets = yield* loadValidatedTryoutPartSets({
+    partCount: tryout.partCount,
+    tryoutId: tryout._id,
+  });
+  const sets = yield* Effect.forEach(tryoutPartSets, (partSet) =>
+    reader
+      .table("exerciseSets")
+      .get(partSet.setId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)))
+  );
+  const parts = yield* Effect.all(
+    tryoutPartSets.map((partSet, index) => {
+      const set = sets[index];
+
+      if (!set) {
+        return Effect.fail(
+          new TryoutError({
+            code: "INVALID_TRYOUT_STATE",
+            message: "Tryout is missing one of its part sets.",
+          })
+        );
+      }
+
+      return Effect.succeed({
+        material: set.material,
+        partIndex: partSet.partIndex,
+        partKey: partSet.partKey,
+        questionCount: set.questionCount,
+        setId: partSet.setId,
+        setSlug: set.slug,
+      });
+    })
+  );
+
+  return { parts, tryout };
+});

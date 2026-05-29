@@ -48,9 +48,9 @@ export type ResettableTableName =
   | "userTryoutStats";
 
 /** Deletes one bounded batch from a resettable sync table. */
-export const deleteBatchFromTable = Effect.fn(
-  "contentSync.maintenance.deleteBatchFromTable"
-)(function* (tableName: ResettableTableName) {
+export const deleteBatchFromTable = Effect.fnUntraced(function* (
+  tableName: ResettableTableName
+) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const docs = yield* reader
@@ -73,9 +73,7 @@ export const deleteBatchFromTable = Effect.fn(
 });
 
 /** Deletes tryout runtime attempts with their linked exercise attempts. */
-export const deleteTryoutRuntimeBatch = Effect.fn(
-  "contentSync.maintenance.deleteTryoutRuntimeBatch"
-)(function* () {
+export const deleteTryoutRuntimeBatch = Effect.fnUntraced(function* () {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const partAttempts = yield* reader
@@ -127,9 +125,7 @@ export const deleteTryoutRuntimeBatch = Effect.fn(
 });
 
 /** Deletes event tryout entitlements with their larger reset batch size. */
-export const deleteTryoutEntitlementsBatch = Effect.fn(
-  "contentSync.maintenance.deleteTryoutEntitlementsBatch"
-)(function* () {
+export const deleteTryoutEntitlementsBatch = Effect.fnUntraced(function* () {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const entitlements = yield* reader

@@ -9,26 +9,27 @@ import { requireClassAccess } from "@repo/backend/confect/modules/school/classAc
 import { Effect, Option } from "effect";
 
 /** Requires an assessment to exist inside a school. */
-export const requireAssessment = Effect.fn("assessments.requireAssessment")(
-  function* (schoolId: Id<"schools">, assessmentId: Id<"schoolAssessments">) {
-    const reader = yield* DatabaseReader;
-    const assessment = yield* reader
-      .table("schoolAssessments")
-      .get(assessmentId)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+export const requireAssessment = Effect.fnUntraced(function* (
+  schoolId: Id<"schools">,
+  assessmentId: Id<"schoolAssessments">
+) {
+  const reader = yield* DatabaseReader;
+  const assessment = yield* reader
+    .table("schoolAssessments")
+    .get(assessmentId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-    if (assessment?.schoolId === schoolId) {
-      return assessment;
-    }
-
-    return yield* Effect.fail(
-      new AssessmentError({
-        code: "ASSESSMENT_NOT_FOUND",
-        message: `Assessment not found for assessmentId: ${assessmentId}`,
-      })
-    );
+  if (assessment?.schoolId === schoolId) {
+    return assessment;
   }
-);
+
+  return yield* Effect.fail(
+    new AssessmentError({
+      code: "ASSESSMENT_NOT_FOUND",
+      message: `Assessment not found for assessmentId: ${assessmentId}`,
+    })
+  );
+});
 
 /** Validates rich content size before persisting it. */
 export function requireRichContentSize(
@@ -88,9 +89,9 @@ export function validateScheduledStatus(
 }
 
 /** Loads all editable authoring rows for an assessment. */
-export const loadAuthoredAssessment = Effect.fn(
-  "assessments.loadAuthoredAssessment"
-)(function* (assessmentId: Id<"schoolAssessments">) {
+export const loadAuthoredAssessment = Effect.fnUntraced(function* (
+  assessmentId: Id<"schoolAssessments">
+) {
   const reader = yield* DatabaseReader;
   const assessment = yield* reader
     .table("schoolAssessments")
@@ -146,9 +147,9 @@ export const loadAuthoredAssessment = Effect.fn(
 });
 
 /** Computes the next immutable version number for an assessment. */
-export const getNextAssessmentVersionNumber = Effect.fn(
-  "assessments.getNextVersionNumber"
-)(function* (assessmentId: Id<"schoolAssessments">) {
+export const getNextAssessmentVersionNumber = Effect.fnUntraced(function* (
+  assessmentId: Id<"schoolAssessments">
+) {
   const reader = yield* DatabaseReader;
   const latestVersion = yield* reader
     .table("schoolAssessmentVersions")
@@ -171,9 +172,10 @@ export function getTotalVersionPoints(
 }
 
 /** Lists question banks visible at school or class scope. */
-export const listVisibleQuestionBanks = Effect.fn(
-  "assessments.listVisibleQuestionBanks"
-)(function* (schoolId: Id<"schools">, classId?: Id<"schoolClasses">) {
+export const listVisibleQuestionBanks = Effect.fnUntraced(function* (
+  schoolId: Id<"schools">,
+  classId?: Id<"schoolClasses">
+) {
   const reader = yield* DatabaseReader;
   const schoolBanks = yield* reader
     .table("schoolAssessmentQuestionBanks")
@@ -197,9 +199,7 @@ export const listVisibleQuestionBanks = Effect.fn(
 });
 
 /** Requires an assignment target row for a class. */
-export const requireAssignmentTarget = Effect.fn(
-  "assessments.requireAssignmentTarget"
-)(function* (
+export const requireAssignmentTarget = Effect.fnUntraced(function* (
   assignmentId: Id<"schoolAssessmentAssignments">,
   classId: Id<"schoolClasses">
 ) {
@@ -225,9 +225,7 @@ export const requireAssignmentTarget = Effect.fn(
 });
 
 /** Loads an assignment and verifies class access. */
-export const requireAccessibleAssignment = Effect.fn(
-  "assessments.requireAccessibleAssignment"
-)(function* (
+export const requireAccessibleAssignment = Effect.fnUntraced(function* (
   assignmentId: Id<"schoolAssessmentAssignments">,
   classId: Id<"schoolClasses">,
   userId: Id<"users">

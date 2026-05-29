@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registered/audioStudies";
+import registeredFunctions from "../../confect/_generated/registeredFunctions";
 
 export const generateAudioForQueueItem = registeredFunctions.audioStudies.workflows.generateAudioForQueueItem;
 export const handleWorkflowComplete = registeredFunctions.audioStudies.workflows.handleWorkflowComplete;

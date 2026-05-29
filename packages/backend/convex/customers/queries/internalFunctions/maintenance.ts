@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registered/customers";
+import registeredFunctions from "../../../../confect/_generated/registeredFunctions";
 
 export const listActiveSubscriptionsForIntegrity = registeredFunctions.customers.queries.internalFunctions.maintenance.listActiveSubscriptionsForIntegrity;
 export const listCustomersForIntegrity = registeredFunctions.customers.queries.internalFunctions.maintenance.listCustomersForIntegrity;

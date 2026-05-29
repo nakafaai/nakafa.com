@@ -19,9 +19,9 @@ export function normalizeTryoutAccessCode(value: string) {
 }
 
 /** Lists products attached to one access campaign. */
-export const listTryoutAccessCampaignProducts = Effect.fn(
-  "tryoutAccess.listCampaignProducts"
-)(function* (campaignId: Id<"tryoutAccessCampaigns">) {
+export const listTryoutAccessCampaignProducts = Effect.fnUntraced(function* (
+  campaignId: Id<"tryoutAccessCampaigns">
+) {
   const reader = yield* DatabaseReader;
   const rows = yield* reader
     .table("tryoutAccessCampaignProducts")
@@ -32,9 +32,9 @@ export const listTryoutAccessCampaignProducts = Effect.fn(
 });
 
 /** Loads a full event access bundle by code. */
-export const getTryoutAccessEventByCode = Effect.fn(
-  "tryoutAccess.getEventByCode"
-)(function* (code: string) {
+export const getTryoutAccessEventByCode = Effect.fnUntraced(function* (
+  code: string
+) {
   const reader = yield* DatabaseReader;
   const normalizedCode = normalizeTryoutAccessCode(code);
 
@@ -84,9 +84,7 @@ export function getTryoutAccessCampaignRedeemStatus(
 }
 
 /** Computes when a grant should stop being active. */
-export const getTryoutAccessGrantEndsAt = Effect.fn(
-  "tryoutAccess.getGrantEndsAt"
-)(function* (args: {
+export const getTryoutAccessGrantEndsAt = Effect.fnUntraced(function* (args: {
   readonly campaign: Doc<"tryoutAccessCampaigns">;
   readonly redeemedAt: number;
 }) {
@@ -157,73 +155,79 @@ export function haveSameCampaignProducts(args: {
 }
 
 /** Synchronizes campaign product rows to match the setup input. */
-export const syncTryoutAccessCampaignProducts = Effect.fn(
-  "tryoutAccess.syncCampaignProducts"
-)(function* (args: {
-  readonly campaignId: Id<"tryoutAccessCampaigns">;
-  readonly campaignKind: TryoutAccessCampaignKind;
-  readonly endsAt: number;
-  readonly startsAt: number;
-  readonly targetProducts: readonly TryoutProduct[];
-}) {
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  const existingRows = yield* reader
-    .table("tryoutAccessCampaignProducts")
-    .index("by_campaignId", (query) => query.eq("campaignId", args.campaignId))
-    .collect();
-  const rowsByProduct = new Map<
-    TryoutProduct,
-    Doc<"tryoutAccessCampaignProducts">[]
-  >();
+export const syncTryoutAccessCampaignProducts = Effect.fnUntraced(
+  function* (args: {
+    readonly campaignId: Id<"tryoutAccessCampaigns">;
+    readonly campaignKind: TryoutAccessCampaignKind;
+    readonly endsAt: number;
+    readonly startsAt: number;
+    readonly targetProducts: readonly TryoutProduct[];
+  }) {
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const existingRows = yield* reader
+      .table("tryoutAccessCampaignProducts")
+      .index("by_campaignId", (query) =>
+        query.eq("campaignId", args.campaignId)
+      )
+      .collect();
+    const rowsByProduct = new Map<
+      TryoutProduct,
+      Doc<"tryoutAccessCampaignProducts">[]
+    >();
 
-  for (const row of existingRows) {
-    const rowsForProduct = rowsByProduct.get(row.product) ?? [];
-    rowsForProduct.push(row);
-    rowsByProduct.set(row.product, rowsForProduct);
-  }
+    for (const row of existingRows) {
+      const rowsForProduct = rowsByProduct.get(row.product) ?? [];
+      rowsForProduct.push(row);
+      rowsByProduct.set(row.product, rowsForProduct);
+    }
 
-  for (const product of args.targetProducts) {
-    const existingRowsForProduct = rowsByProduct.get(product) ?? [];
-    const currentRow = existingRowsForProduct[0] ?? null;
+    for (const product of args.targetProducts) {
+      const existingRowsForProduct = rowsByProduct.get(product) ?? [];
+      const currentRow = existingRowsForProduct[0] ?? null;
 
-    for (const duplicateRow of existingRowsForProduct.slice(1)) {
+      for (const duplicateRow of existingRowsForProduct.slice(1)) {
+        yield* writer
+          .table("tryoutAccessCampaignProducts")
+          .delete(duplicateRow._id);
+      }
+
+      rowsByProduct.delete(product);
+
+      if (!currentRow) {
+        yield* writer.table("tryoutAccessCampaignProducts").insert({
+          campaignId: args.campaignId,
+          campaignKind: args.campaignKind,
+          endsAt: args.endsAt,
+          product,
+          startsAt: args.startsAt,
+        });
+        continue;
+      }
+
+      if (
+        currentRow.campaignKind === args.campaignKind &&
+        currentRow.startsAt === args.startsAt &&
+        currentRow.endsAt === args.endsAt
+      ) {
+        continue;
+      }
+
       yield* writer
         .table("tryoutAccessCampaignProducts")
-        .delete(duplicateRow._id);
+        .patch(currentRow._id, {
+          campaignKind: args.campaignKind,
+          endsAt: args.endsAt,
+          startsAt: args.startsAt,
+        });
     }
 
-    rowsByProduct.delete(product);
-
-    if (!currentRow) {
-      yield* writer.table("tryoutAccessCampaignProducts").insert({
-        campaignId: args.campaignId,
-        campaignKind: args.campaignKind,
-        endsAt: args.endsAt,
-        product,
-        startsAt: args.startsAt,
-      });
-      continue;
-    }
-
-    if (
-      currentRow.campaignKind === args.campaignKind &&
-      currentRow.startsAt === args.startsAt &&
-      currentRow.endsAt === args.endsAt
-    ) {
-      continue;
-    }
-
-    yield* writer.table("tryoutAccessCampaignProducts").patch(currentRow._id, {
-      campaignKind: args.campaignKind,
-      endsAt: args.endsAt,
-      startsAt: args.startsAt,
-    });
-  }
-
-  for (const staleRows of rowsByProduct.values()) {
-    for (const staleRow of staleRows) {
-      yield* writer.table("tryoutAccessCampaignProducts").delete(staleRow._id);
+    for (const staleRows of rowsByProduct.values()) {
+      for (const staleRow of staleRows) {
+        yield* writer
+          .table("tryoutAccessCampaignProducts")
+          .delete(staleRow._id);
+      }
     }
   }
-});
+);

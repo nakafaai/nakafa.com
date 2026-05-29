@@ -19,7 +19,7 @@ import { components } from "@repo/backend/convex/_generated/api";
 import { Clock, Effect } from "effect";
 
 /** Updates the current user's self-selected role. */
-export const updateUserRole = Effect.fn("identity.updateUserRole")(function* (
+export const updateUserRole = Effect.fnUntraced(function* (
   args: UpdateUserRoleArgs
 ) {
   const writer = yield* DatabaseWriter;
@@ -33,7 +33,7 @@ export const updateUserRole = Effect.fn("identity.updateUserRole")(function* (
 });
 
 /** Updates the current user's Better Auth and app profile name. */
-export const updateUserName = Effect.fn("identity.updateUserName")(function* (
+export const updateUserName = Effect.fnUntraced(function* (
   args: UpdateUserNameArgs
 ) {
   const ctx = yield* MutationCtx;
@@ -57,55 +57,51 @@ export const updateUserName = Effect.fn("identity.updateUserName")(function* (
 });
 
 /** Synchronizes user metadata needed before starting or continuing a chat. */
-export const syncUserInfoForChat = Effect.fn("identity.syncUserInfoForChat")(
-  function* () {
-    const writer = yield* DatabaseWriter;
-    const user = yield* requireAppUser();
-    const now = yield* Clock.currentTimeMillis;
-    const effectiveCredits = yield* resolveUserCreditState({
-      now,
-      user: user.appUser,
-    });
-    const creditResetGrant = getCreditResetGrantTransaction(
-      user.appUser,
-      effectiveCredits
-    );
+export const syncUserInfoForChat = Effect.fnUntraced(function* () {
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
+  const now = yield* Clock.currentTimeMillis;
+  const effectiveCredits = yield* resolveUserCreditState({
+    now,
+    user: user.appUser,
+  });
+  const creditResetGrant = getCreditResetGrantTransaction(
+    user.appUser,
+    effectiveCredits
+  );
 
-    if (
-      effectiveCredits.credits === user.appUser.credits &&
-      effectiveCredits.creditsResetAt === user.appUser.creditsResetAt
-    ) {
-      return {
-        credits: effectiveCredits.credits,
-        role: user.appUser.role ?? null,
-        userId: user.appUser._id,
-      };
-    }
-
-    yield* writer.table("users").patch(user.appUser._id, {
-      credits: effectiveCredits.credits,
-      creditsResetAt: effectiveCredits.creditsResetAt,
-    });
-
-    if (creditResetGrant) {
-      yield* writer.table("creditTransactions").insert({
-        userId: user.appUser._id,
-        ...creditResetGrant,
-      });
-    }
-
+  if (
+    effectiveCredits.credits === user.appUser.credits &&
+    effectiveCredits.creditsResetAt === user.appUser.creditsResetAt
+  ) {
     return {
       credits: effectiveCredits.credits,
       role: user.appUser.role ?? null,
       userId: user.appUser._id,
     };
   }
-);
+
+  yield* writer.table("users").patch(user.appUser._id, {
+    credits: effectiveCredits.credits,
+    creditsResetAt: effectiveCredits.creditsResetAt,
+  });
+
+  if (creditResetGrant) {
+    yield* writer.table("creditTransactions").insert({
+      userId: user.appUser._id,
+      ...creditResetGrant,
+    });
+  }
+
+  return {
+    credits: effectiveCredits.credits,
+    role: user.appUser.role ?? null,
+    userId: user.appUser._id,
+  };
+});
 
 /** Reads a user document by app user id for internal callers. */
-export const getUserById = Effect.fn("identity.getUserById")(function* (
-  args: GetUserByIdArgs
-) {
+export const getUserById = Effect.fnUntraced(function* (args: GetUserByIdArgs) {
   const reader = yield* DatabaseReader;
   return yield* reader
     .table("users")
@@ -114,7 +110,7 @@ export const getUserById = Effect.fn("identity.getUserById")(function* (
 });
 
 /** Reads a user document by Better Auth id for internal callers. */
-export const getUserByAuthId = Effect.fn("identity.getUserByAuthId")(function* (
+export const getUserByAuthId = Effect.fnUntraced(function* (
   args: GetUserByAuthIdArgs
 ) {
   return yield* getAppUserByAuthId(args.authId);

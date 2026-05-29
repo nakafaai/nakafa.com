@@ -18,9 +18,7 @@ import type {
 import { Effect } from "effect";
 
 /** Builds the final scoring snapshot for a tryout attempt. */
-export const buildFinalizedTryoutSnapshot = Effect.fn(
-  "tryouts.finalize.buildFinalizedTryoutSnapshot"
-)(function* (args: {
+export const buildFinalizedTryoutSnapshot = Effect.fnUntraced(function* (args: {
   readonly scaleVersionId: Id<"irtScaleVersions">;
   readonly tryout: typeof Tryouts.Doc.Type;
   readonly tryoutAttempt: typeof TryoutAttempts.Doc.Type;

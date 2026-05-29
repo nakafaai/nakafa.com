@@ -33,64 +33,63 @@ interface ScaleItem {
 }
 
 /** Persists one frozen IRT scale version and its item rows. */
-const publishScaleVersion = Effect.fn("irt.scales.publishScaleVersion")(
-  function* (args: {
-    readonly items: readonly ScaleItem[];
-    readonly publishedAt: number;
-    readonly questionCount: number;
-    readonly status: IrtScaleVersionStatus;
-    readonly tryoutId: Id<"tryouts">;
-  }) {
-    const writer = yield* DatabaseWriter;
+const publishScaleVersion = Effect.fnUntraced(function* (args: {
+  readonly items: readonly ScaleItem[];
+  readonly publishedAt: number;
+  readonly questionCount: number;
+  readonly status: IrtScaleVersionStatus;
+  readonly tryoutId: Id<"tryouts">;
+}) {
+  const writer = yield* DatabaseWriter;
 
-    if (args.items.length !== args.questionCount) {
-      return yield* Effect.fail(
-        new IrtError({
-          code: "IRT_SCALE_ITEM_COUNT_MISMATCH",
-          message:
-            "Frozen scale item count does not match the scale version question count.",
-        })
-      );
-    }
-
-    const questionIds = new Set(args.items.map((item) => item.questionId));
-
-    if (questionIds.size !== args.items.length) {
-      return yield* Effect.fail(
-        new IrtError({
-          code: "IRT_SCALE_ITEM_DUPLICATE_QUESTION",
-          message: "Frozen scale items contain duplicate questions.",
-        })
-      );
-    }
-
-    const scaleVersionId = yield* writer.table("irtScaleVersions").insert({
-      model: IRT_OPERATIONAL_MODEL,
-      publishedAt: args.publishedAt,
-      questionCount: args.questionCount,
-      status: args.status,
-      tryoutId: args.tryoutId,
-    });
-
-    for (const item of args.items) {
-      yield* writer.table("irtScaleVersionItems").insert({
-        calibrationRunId: item.calibrationRunId,
-        difficulty: item.difficulty,
-        discrimination: item.discrimination,
-        questionId: item.questionId,
-        scaleVersionId,
-        setId: item.setId,
-      });
-    }
-
-    return scaleVersionId;
+  if (args.items.length !== args.questionCount) {
+    return yield* Effect.fail(
+      new IrtError({
+        code: "IRT_SCALE_ITEM_COUNT_MISMATCH",
+        message:
+          "Frozen scale item count does not match the scale version question count.",
+      })
+    );
   }
-);
+
+  const questionIds = new Set(args.items.map((item) => item.questionId));
+
+  if (questionIds.size !== args.items.length) {
+    return yield* Effect.fail(
+      new IrtError({
+        code: "IRT_SCALE_ITEM_DUPLICATE_QUESTION",
+        message: "Frozen scale items contain duplicate questions.",
+      })
+    );
+  }
+
+  const scaleVersionId = yield* writer.table("irtScaleVersions").insert({
+    model: IRT_OPERATIONAL_MODEL,
+    publishedAt: args.publishedAt,
+    questionCount: args.questionCount,
+    status: args.status,
+    tryoutId: args.tryoutId,
+  });
+
+  for (const item of args.items) {
+    yield* writer.table("irtScaleVersionItems").insert({
+      calibrationRunId: item.calibrationRunId,
+      difficulty: item.difficulty,
+      discrimination: item.discrimination,
+      questionId: item.questionId,
+      scaleVersionId,
+      setId: item.setId,
+    });
+  }
+
+  return scaleVersionId;
+});
 
 /** Creates bootstrap scale items from calibrated params or provisional defaults. */
-const buildBootstrapScaleItems = Effect.fn(
-  "irt.scales.buildBootstrapScaleItems"
-)(function* (args: { readonly now: number; readonly tryoutId: Id<"tryouts"> }) {
+const buildBootstrapScaleItems = Effect.fnUntraced(function* (args: {
+  readonly now: number;
+  readonly tryoutId: Id<"tryouts">;
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const tryout = yield* reader
@@ -167,9 +166,10 @@ const buildBootstrapScaleItems = Effect.fn(
 });
 
 /** Publishes a provisional scale version when a tryout has enough set data. */
-const publishBootstrapScaleVersion = Effect.fn(
-  "irt.scales.publishBootstrapScaleVersion"
-)(function* (args: { readonly now: number; readonly tryoutId: Id<"tryouts"> }) {
+const publishBootstrapScaleVersion = Effect.fnUntraced(function* (args: {
+  readonly now: number;
+  readonly tryoutId: Id<"tryouts">;
+}) {
   const reader = yield* DatabaseReader;
   const items = yield* buildBootstrapScaleItems(args);
 
@@ -192,9 +192,7 @@ const publishBootstrapScaleVersion = Effect.fn(
 });
 
 /** Publishes an official scale version from a validated snapshot. */
-const publishOfficialScaleVersion = Effect.fn(
-  "irt.scales.publishOfficialScaleVersion"
-)(function* (args: {
+const publishOfficialScaleVersion = Effect.fnUntraced(function* (args: {
   readonly now: number;
   readonly snapshot: {
     readonly items: readonly ScaleItem[];
@@ -218,9 +216,7 @@ const publishOfficialScaleVersion = Effect.fn(
 });
 
 /** Reuses the latest official scale when the publishable snapshot is unchanged. */
-const getUnchangedOfficialScaleVersion = Effect.fn(
-  "irt.scales.getUnchangedOfficialScaleVersion"
-)(function* (args: {
+const getUnchangedOfficialScaleVersion = Effect.fnUntraced(function* (args: {
   readonly latestScaleVersion: Doc<"irtScaleVersions"> | null;
   readonly snapshot: {
     readonly items: readonly ScaleItem[];
@@ -248,9 +244,7 @@ const getUnchangedOfficialScaleVersion = Effect.fn(
 });
 
 /** Resolves whether official scale publication is ready, unchanged, or published. */
-const resolveOfficialScaleDecision = Effect.fn(
-  "irt.scales.resolveOfficialScaleDecision"
-)(function* (args: {
+const resolveOfficialScaleDecision = Effect.fnUntraced(function* (args: {
   readonly latestScaleVersion: Doc<"irtScaleVersions"> | null;
   readonly now: number;
   readonly tryoutId: Id<"tryouts">;
@@ -295,43 +289,43 @@ const resolveOfficialScaleDecision = Effect.fn(
 });
 
 /** Returns the latest usable scale version, publishing provisional or official when needed. */
-export const getOrPublishScaleVersionForTryout = Effect.fn(
-  "irt.scales.getOrPublishScaleVersionForTryout"
-)(function* (args: { readonly now: number; readonly tryoutId: Id<"tryouts"> }) {
-  const scaleQuality = yield* evaluateTryoutScaleQuality(args);
-  const latestScaleVersion = yield* getLatestScaleVersionForTryout(
-    args.tryoutId
-  );
+export const getOrPublishScaleVersionForTryout = Effect.fnUntraced(
+  function* (args: { readonly now: number; readonly tryoutId: Id<"tryouts"> }) {
+    const scaleQuality = yield* evaluateTryoutScaleQuality(args);
+    const latestScaleVersion = yield* getLatestScaleVersionForTryout(
+      args.tryoutId
+    );
 
-  if (!scaleQuality || scaleQuality.status === "blocked") {
-    if (latestScaleVersion) {
-      return latestScaleVersion;
+    if (!scaleQuality || scaleQuality.status === "blocked") {
+      if (latestScaleVersion) {
+        return latestScaleVersion;
+      }
+
+      return yield* publishBootstrapScaleVersion(args);
     }
 
-    return yield* publishBootstrapScaleVersion(args);
-  }
+    const officialScaleDecision = yield* resolveOfficialScaleDecision({
+      latestScaleVersion,
+      now: args.now,
+      tryoutId: args.tryoutId,
+    });
 
-  const officialScaleDecision = yield* resolveOfficialScaleDecision({
-    latestScaleVersion,
-    now: args.now,
-    tryoutId: args.tryoutId,
-  });
+    if (officialScaleDecision.kind === "not-ready") {
+      if (latestScaleVersion) {
+        return latestScaleVersion;
+      }
 
-  if (officialScaleDecision.kind === "not-ready") {
-    if (latestScaleVersion) {
-      return latestScaleVersion;
+      return yield* publishBootstrapScaleVersion(args);
     }
 
-    return yield* publishBootstrapScaleVersion(args);
+    return officialScaleDecision.scaleVersion;
   }
-
-  return officialScaleDecision.scaleVersion;
-});
+);
 
 /** Publishes an official scale if ready and schedules score promotion. */
-export const publishTryoutScaleVersionIfNeeded = Effect.fn(
-  "irt.scales.publishTryoutScaleVersionIfNeeded"
-)(function* (tryoutId: Id<"tryouts">) {
+export const publishTryoutScaleVersionIfNeeded = Effect.fnUntraced(function* (
+  tryoutId: Id<"tryouts">
+) {
   const reader = yield* DatabaseReader;
   const scheduler = yield* Scheduler;
   const tryout = yield* reader

@@ -47,19 +47,25 @@ function mergePopularAudioContentItems(items: readonly PopularAudioItem[]) {
 }
 
 /** Reads popular article and subject rows eligible for audio queueing. */
-export const getPopularContentForAudioQueue = Effect.fn(
-  "popularAudio.getPopularContentForAudioQueue"
-)(function* () {
+export const getPopularContentForAudioQueue = Effect.fnUntraced(function* () {
   const reader = yield* DatabaseReader;
   const [articleRows, subjectRows] = yield* Effect.all(
     [
       reader
         .table("articlePopularity")
-        .index("by_viewCount_and_contentId", "desc")
+        .index(
+          "by_viewCount_and_contentId",
+          (query) => query.gte("viewCount", MIN_AUDIO_VIEW_THRESHOLD),
+          "desc"
+        )
         .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
       reader
         .table("subjectPopularity")
-        .index("by_viewCount_and_contentId", "desc")
+        .index(
+          "by_viewCount_and_contentId",
+          (query) => query.gte("viewCount", MIN_AUDIO_VIEW_THRESHOLD),
+          "desc"
+        )
         .take(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE),
     ],
     { concurrency: "unbounded" }
@@ -108,135 +114,124 @@ export const getPopularContentForAudioQueue = Effect.fn(
 });
 
 /** Inserts pending audio queue rows for popular content. */
-export const enqueuePopularContentForAudio = Effect.fn(
-  "popularAudio.enqueuePopularContentForAudio"
-)(function* (args: { items: readonly PopularAudioItem[] }) {
-  if (args.items.length === 0) {
-    return { processed: 0, queued: 0 };
-  }
-
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  const sortedItems = [...args.items].sort(
-    (left, right) => right.viewCount - left.viewCount
-  );
-  const now = yield* Clock.currentTimeMillis;
-  let totalQueued = 0;
-
-  for (const item of sortedItems) {
-    if (item.viewCount < MIN_AUDIO_VIEW_THRESHOLD) {
-      break;
+export const enqueuePopularContentForAudio = Effect.fnUntraced(
+  function* (args: { items: readonly PopularAudioItem[] }) {
+    if (args.items.length === 0) {
+      return { processed: 0, queued: 0 };
     }
 
-    const sourceContent =
-      item.sourceContent ?? (yield* getAudioContentLookup(item.ref));
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const sortedItems = [...args.items].sort(
+      (left, right) => right.viewCount - left.viewCount
+    );
+    const now = yield* Clock.currentTimeMillis;
+    let totalQueued = 0;
 
-    if (!sourceContent) {
-      yield* Effect.logWarning("Content slug not found for audio queue.", {
-        contentId: item.ref.id,
-        contentType: item.ref.type,
-      });
-      continue;
-    }
+    for (const item of sortedItems) {
+      if (item.viewCount < MIN_AUDIO_VIEW_THRESHOLD) {
+        break;
+      }
 
-    for (const locale of SUPPORTED_CONTENT_LOCALES) {
-      const localizedContent = yield* getLocalizedAudioContentLookup(
-        sourceContent,
-        locale
-      );
+      const sourceContent =
+        item.sourceContent ?? (yield* getAudioContentLookup(item.ref));
 
-      if (!localizedContent) {
-        yield* Effect.logDebug("Localized content not found for audio queue.", {
-          contentId: item.ref.id,
-          contentType: item.ref.type,
-          locale,
-        });
+      if (!sourceContent) {
         continue;
       }
 
-      const existingQueueItem = yield* reader
-        .table("audioGenerationQueue")
-        .index("by_contentRefType_and_contentRefId_and_locale", (query) =>
-          query
-            .eq("contentRef.type", localizedContent.ref.type)
-            .eq("contentRef.id", localizedContent.ref.id)
-            .eq("locale", locale)
-        )
-        .first()
-        .pipe(Effect.map(Option.getOrNull));
+      for (const locale of SUPPORTED_CONTENT_LOCALES) {
+        const localizedContent = yield* getLocalizedAudioContentLookup(
+          sourceContent,
+          locale
+        );
 
-      if (
-        existingQueueItem &&
-        ["pending", "processing", "failed"].includes(existingQueueItem.status)
-      ) {
-        continue;
-      }
+        if (!localizedContent) {
+          continue;
+        }
 
-      if (existingQueueItem) {
-        yield* writer
+        const existingQueueItem = yield* reader
           .table("audioGenerationQueue")
-          .delete(existingQueueItem._id);
+          .index("by_contentRefType_and_contentRefId_and_locale", (query) =>
+            query
+              .eq("contentRef.type", localizedContent.ref.type)
+              .eq("contentRef.id", localizedContent.ref.id)
+              .eq("locale", locale)
+          )
+          .first()
+          .pipe(Effect.map(Option.getOrNull));
+
+        if (
+          existingQueueItem &&
+          ["pending", "processing", "failed"].includes(existingQueueItem.status)
+        ) {
+          continue;
+        }
+
+        if (existingQueueItem) {
+          yield* writer
+            .table("audioGenerationQueue")
+            .delete(existingQueueItem._id);
+        }
+
+        const existingAudio = yield* reader
+          .table("contentAudios")
+          .index("by_contentRefType_and_contentRefId_and_locale", (query) =>
+            query
+              .eq("contentRef.type", localizedContent.ref.type)
+              .eq("contentRef.id", localizedContent.ref.id)
+              .eq("locale", locale)
+          )
+          .first()
+          .pipe(Effect.map(Option.getOrNull));
+
+        if (
+          existingAudio?.status === "completed" &&
+          existingAudio.contentHash === localizedContent.contentHash
+        ) {
+          continue;
+        }
+
+        yield* writer.table("audioGenerationQueue").insert({
+          contentRef: localizedContent.ref,
+          locale,
+          maxRetries: AUDIO_RETRY_CONFIG.maxRetries,
+          priorityScore: item.viewCount * 10,
+          requestedAt: now,
+          retryCount: 0,
+          slug: sourceContent.slug,
+          status: "pending",
+          updatedAt: now,
+        });
+        totalQueued += 1;
       }
-
-      const existingAudio = yield* reader
-        .table("contentAudios")
-        .index("by_contentRefType_and_contentRefId_and_locale", (query) =>
-          query
-            .eq("contentRef.type", localizedContent.ref.type)
-            .eq("contentRef.id", localizedContent.ref.id)
-            .eq("locale", locale)
-        )
-        .first()
-        .pipe(Effect.map(Option.getOrNull));
-
-      if (
-        existingAudio?.status === "completed" &&
-        existingAudio.contentHash === localizedContent.contentHash
-      ) {
-        continue;
-      }
-
-      yield* writer.table("audioGenerationQueue").insert({
-        contentRef: localizedContent.ref,
-        locale,
-        maxRetries: AUDIO_RETRY_CONFIG.maxRetries,
-        priorityScore: item.viewCount * 10,
-        requestedAt: now,
-        retryCount: 0,
-        slug: sourceContent.slug,
-        status: "pending",
-        updatedAt: now,
-      });
-      totalQueued += 1;
-    }
-  }
-
-  return { processed: sortedItems.length, queued: totalQueued };
-});
-
-/** Populates the audio queue from current popularity read models. */
-export const populateAudioQueue = Effect.fn("popularAudio.populateAudioQueue")(
-  function* () {
-    const runQuery = yield* QueryRunner;
-    const runMutation = yield* MutationRunner;
-    yield* Effect.logInfo("Populating audio queue started.");
-
-    const items = yield* runQuery(
-      refs.internal.contents.queries.audio.getPopularContentForAudioQueue,
-      {}
-    );
-
-    if (items.length === 0) {
-      yield* Effect.logInfo("No popular content found for audio queue.");
-      return null;
     }
 
-    const result = yield* runMutation(
-      refs.internal.contents.mutations.audio.enqueuePopularContentForAudio,
-      { items }
-    );
-
-    yield* Effect.logInfo("Populated audio queue completed.", result);
-    return null;
+    return { processed: sortedItems.length, queued: totalQueued };
   }
 );
+
+/** Populates the audio queue from current popularity read models. */
+export const populateAudioQueue = Effect.fnUntraced(function* () {
+  const runQuery = yield* QueryRunner;
+  const runMutation = yield* MutationRunner;
+  yield* Effect.logInfo("Populating audio queue started.");
+
+  const items = yield* runQuery(
+    refs.internal.contents.queries.audio.getPopularContentForAudioQueue,
+    {}
+  );
+
+  if (items.length === 0) {
+    yield* Effect.logInfo("No popular content found for audio queue.");
+    return null;
+  }
+
+  const result = yield* runMutation(
+    refs.internal.contents.mutations.audio.enqueuePopularContentForAudio,
+    { items }
+  );
+
+  yield* Effect.logInfo("Populated audio queue completed.", result);
+  return null;
+});

@@ -22,9 +22,7 @@ function getMaxContentPerDay(envValue: string) {
 }
 
 /** Environment values used by audio generation queue scheduling. */
-export const readAudioGenerationEnvironment = Effect.fn(
-  "audioGeneration.readEnvironment"
-)(function* () {
+export const readAudioGenerationEnvironment = Effect.fnUntraced(function* () {
   const enabled = yield* Config.string("ENABLE_AUDIO_GENERATION").pipe(
     Config.withDefault("false"),
     Effect.map((value) => value === "true")

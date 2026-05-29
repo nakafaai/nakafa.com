@@ -43,7 +43,7 @@ function getHigherPlan(currentPlan: UserPlan, nextPlan: UserPlan) {
 }
 
 /** Applies the persisted plan and credit state for one subscription transition. */
-const applyPlanChange = Effect.fn("commerce.applyPlanChange")(function* (
+const applyPlanChange = Effect.fnUntraced(function* (
   ctx: ConvexMutationCtx,
   args: {
     newPlan: UserPlan;
@@ -119,7 +119,7 @@ const applyPlanChange = Effect.fn("commerce.applyPlanChange")(function* (
 });
 
 /** Recomputes the effective user plan after a subscription write. */
-const syncCustomerPlan = Effect.fn("commerce.syncCustomerPlan")(function* (
+const syncCustomerPlan = Effect.fnUntraced(function* (
   ctx: ConvexMutationCtx,
   subscription: SubscriptionDoc
 ) {
@@ -131,10 +131,6 @@ const syncCustomerPlan = Effect.fn("commerce.syncCustomerPlan")(function* (
   const customer = Option.getOrNull(customerOption);
 
   if (!customer) {
-    yield* Effect.logWarning("Subscription customer was not found.", {
-      customerId: subscription.customerId,
-      subscriptionId: subscription.id,
-    });
     return null;
   }
 
@@ -144,10 +140,6 @@ const syncCustomerPlan = Effect.fn("commerce.syncCustomerPlan")(function* (
     .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
   if (!user) {
-    yield* Effect.logWarning("Subscription user was not found.", {
-      subscriptionId: subscription.id,
-      userId: customer.userId,
-    });
     return null;
   }
 
@@ -157,16 +149,6 @@ const syncCustomerPlan = Effect.fn("commerce.syncCustomerPlan")(function* (
       query.eq("customerId", subscription.customerId).eq("status", "active")
     )
     .take(ACTIVE_SUBSCRIPTION_SYNC_LIMIT);
-
-  if (activeSubscriptions.length === ACTIVE_SUBSCRIPTION_SYNC_LIMIT) {
-    yield* Effect.logWarning(
-      "Subscription sync reached the active row limit.",
-      {
-        customerId: subscription.customerId,
-        limit: ACTIVE_SUBSCRIPTION_SYNC_LIMIT,
-      }
-    );
-  }
 
   let newPlan: UserPlan = "free";
   let planChangeSubscription = subscription;
@@ -199,24 +181,52 @@ const syncCustomerPlan = Effect.fn("commerce.syncCustomerPlan")(function* (
 });
 
 /** Creates a subscription unless the Polar subscription id already exists. */
-export const createSubscription = Effect.fn("commerce.createSubscription")(
-  function* (args: { subscription: SubscriptionFields }) {
-    const ctx = yield* MutationCtx;
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const existingSubscriptionOption = yield* reader
-      .table("subscriptions")
-      .index("by_subscriptionId", (query) =>
-        query.eq("id", args.subscription.id)
-      )
-      .first();
-    const existingSubscription = Option.getOrNull(existingSubscriptionOption);
+export const createSubscription = Effect.fnUntraced(function* (args: {
+  subscription: SubscriptionFields;
+}) {
+  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const existingSubscriptionOption = yield* reader
+    .table("subscriptions")
+    .index("by_subscriptionId", (query) => query.eq("id", args.subscription.id))
+    .first();
+  const existingSubscription = Option.getOrNull(existingSubscriptionOption);
 
-    if (existingSubscription) {
-      yield* syncCustomerPlan(ctx, existingSubscription);
-      return existingSubscription._id;
-    }
+  if (existingSubscription) {
+    yield* syncCustomerPlan(ctx, existingSubscription);
+    return existingSubscription._id;
+  }
 
+  const subscriptionId = yield* writer
+    .table("subscriptions")
+    .insert(args.subscription);
+  const subscription = yield* reader
+    .table("subscriptions")
+    .get(subscriptionId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+
+  if (subscription) {
+    yield* syncCustomerPlan(ctx, subscription);
+  }
+
+  return subscriptionId;
+});
+
+/** Upserts a subscription by Polar subscription id. */
+export const updateSubscription = Effect.fnUntraced(function* (args: {
+  subscription: SubscriptionFields;
+}) {
+  const ctx = yield* MutationCtx;
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const existingSubscriptionOption = yield* reader
+    .table("subscriptions")
+    .index("by_subscriptionId", (query) => query.eq("id", args.subscription.id))
+    .first();
+  const existingSubscription = Option.getOrNull(existingSubscriptionOption);
+
+  if (!existingSubscription) {
     const subscriptionId = yield* writer
       .table("subscriptions")
       .insert(args.subscription);
@@ -229,60 +239,28 @@ export const createSubscription = Effect.fn("commerce.createSubscription")(
       yield* syncCustomerPlan(ctx, subscription);
     }
 
-    return subscriptionId;
-  }
-);
-
-/** Upserts a subscription by Polar subscription id. */
-export const updateSubscription = Effect.fn("commerce.updateSubscription")(
-  function* (args: { subscription: SubscriptionFields }) {
-    const ctx = yield* MutationCtx;
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const existingSubscriptionOption = yield* reader
-      .table("subscriptions")
-      .index("by_subscriptionId", (query) =>
-        query.eq("id", args.subscription.id)
-      )
-      .first();
-    const existingSubscription = Option.getOrNull(existingSubscriptionOption);
-
-    if (!existingSubscription) {
-      const subscriptionId = yield* writer
-        .table("subscriptions")
-        .insert(args.subscription);
-      const subscription = yield* reader
-        .table("subscriptions")
-        .get(subscriptionId)
-        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
-
-      if (subscription) {
-        yield* syncCustomerPlan(ctx, subscription);
-      }
-
-      return null;
-    }
-
-    yield* writer
-      .table("subscriptions")
-      .patch(existingSubscription._id, args.subscription);
-    const subscription = yield* reader
-      .table("subscriptions")
-      .get(existingSubscription._id)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
-
-    if (subscription) {
-      yield* syncCustomerPlan(ctx, subscription);
-    }
-
     return null;
   }
-);
+
+  yield* writer
+    .table("subscriptions")
+    .patch(existingSubscription._id, args.subscription);
+  const subscription = yield* reader
+    .table("subscriptions")
+    .get(existingSubscription._id)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+
+  if (subscription) {
+    yield* syncCustomerPlan(ctx, subscription);
+  }
+
+  return null;
+});
 
 /** Returns whether the current user has an active subscription for a product. */
-export const hasActiveSubscription = Effect.fn(
-  "commerce.hasActiveSubscription"
-)(function* (args: { productId: string }) {
+export const hasActiveSubscription = Effect.fnUntraced(function* (args: {
+  productId: string;
+}) {
   const reader = yield* DatabaseReader;
   const user = yield* getOptionalAppUser();
 

@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registered/comments";
+import registeredFunctions from "../../confect/_generated/registeredFunctions";
 
 export const addComment = registeredFunctions.comments.mutations.addComment;
 export const deleteComment = registeredFunctions.comments.mutations.deleteComment;

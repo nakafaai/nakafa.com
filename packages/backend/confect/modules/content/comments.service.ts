@@ -36,33 +36,34 @@ function truncateText({
 }
 
 /** Applies a bounded reply-count delta to a parent comment. */
-const updateParentReplyCount = Effect.fn("comments.updateParentReplyCount")(
-  function* (parentId: Id<"comments"> | undefined, delta: number) {
-    if (!parentId) {
-      return null;
-    }
-
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const parent = yield* reader
-      .table("comments")
-      .get(parentId)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
-
-    if (!parent) {
-      return null;
-    }
-
-    yield* writer.table("comments").patch(parentId, {
-      replyCount: Math.max(parent.replyCount + delta, 0),
-    });
-
+const updateParentReplyCount = Effect.fnUntraced(function* (
+  parentId: Id<"comments"> | undefined,
+  delta: number
+) {
+  if (!parentId) {
     return null;
   }
-);
+
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const parent = yield* reader
+    .table("comments")
+    .get(parentId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+
+  if (!parent) {
+    return null;
+  }
+
+  yield* writer.table("comments").patch(parentId, {
+    replyCount: Math.max(parent.replyCount + delta, 0),
+  });
+
+  return null;
+});
 
 /** Applies a bounded vote-count delta to a comment. */
-const updateCommentVoteCount = Effect.fn("comments.updateVoteCount")(function* (
+const updateCommentVoteCount = Effect.fnUntraced(function* (
   commentId: Id<"comments">,
   vote: Exclude<CommentVoteAction, 0>,
   delta: number
@@ -93,7 +94,7 @@ const updateCommentVoteCount = Effect.fn("comments.updateVoteCount")(function* (
 });
 
 /** Reads public user data for a set of user ids. */
-const getUserMap = Effect.fn("comments.getUserMap")(function* (
+const getUserMap = Effect.fnUntraced(function* (
   userIds: readonly Id<"users">[]
 ) {
   const reader = yield* DatabaseReader;
@@ -123,7 +124,7 @@ const getUserMap = Effect.fn("comments.getUserMap")(function* (
 });
 
 /** Adds a comment or reply to a content slug. */
-export const addComment = Effect.fn("comments.addComment")(function* (args: {
+export const addComment = Effect.fnUntraced(function* (args: {
   parentId?: Id<"comments">;
   slug: string;
   text: string;
@@ -173,147 +174,146 @@ export const addComment = Effect.fn("comments.addComment")(function* (args: {
 });
 
 /** Creates, replaces, or removes the current user's vote on a comment. */
-export const voteOnComment = Effect.fn("comments.voteOnComment")(
-  function* (args: { commentId: Id<"comments">; vote: CommentVoteAction }) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const user = yield* requireAppUser();
-    const comment = yield* reader
-      .table("comments")
-      .get(args.commentId)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+export const voteOnComment = Effect.fnUntraced(function* (args: {
+  commentId: Id<"comments">;
+  vote: CommentVoteAction;
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
+  const comment = yield* reader
+    .table("comments")
+    .get(args.commentId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-    if (!comment) {
-      return yield* Effect.fail(
-        new CommentActionError({ message: "Comment not found." })
-      );
-    }
-
-    const existingVoteOption = yield* reader
-      .table("commentVotes")
-      .index("by_commentId_and_userId", (query) =>
-        query.eq("commentId", args.commentId).eq("userId", user.appUser._id)
-      )
-      .first();
-    const existingVote = Option.getOrNull(existingVoteOption);
-
-    if (existingVote) {
-      yield* writer.table("commentVotes").delete(existingVote._id);
-      yield* updateCommentVoteCount(args.commentId, existingVote.vote, -1);
-    }
-
-    const vote = args.vote;
-    if (vote === 1 || vote === -1) {
-      yield* writer.table("commentVotes").insert({
-        commentId: args.commentId,
-        userId: user.appUser._id,
-        vote,
-      });
-      yield* updateCommentVoteCount(args.commentId, vote, 1);
-    }
-
-    return null;
+  if (!comment) {
+    return yield* Effect.fail(
+      new CommentActionError({ message: "Comment not found." })
+    );
   }
-);
+
+  const existingVoteOption = yield* reader
+    .table("commentVotes")
+    .index("by_commentId_and_userId", (query) =>
+      query.eq("commentId", args.commentId).eq("userId", user.appUser._id)
+    )
+    .first();
+  const existingVote = Option.getOrNull(existingVoteOption);
+
+  if (existingVote) {
+    yield* writer.table("commentVotes").delete(existingVote._id);
+    yield* updateCommentVoteCount(args.commentId, existingVote.vote, -1);
+  }
+
+  const vote = args.vote;
+  if (vote === 1 || vote === -1) {
+    yield* writer.table("commentVotes").insert({
+      commentId: args.commentId,
+      userId: user.appUser._id,
+      vote,
+    });
+    yield* updateCommentVoteCount(args.commentId, vote, 1);
+  }
+
+  return null;
+});
 
 /** Deletes one of the current user's comments. */
-export const deleteComment = Effect.fn("comments.deleteComment")(
-  function* (args: { commentId: Id<"comments"> }) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const user = yield* requireAppUser();
-    const comment = yield* reader
-      .table("comments")
-      .get(args.commentId)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+export const deleteComment = Effect.fnUntraced(function* (args: {
+  commentId: Id<"comments">;
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
+  const comment = yield* reader
+    .table("comments")
+    .get(args.commentId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-    if (!comment) {
-      return yield* Effect.fail(
-        new CommentActionError({
-          message: `Comment not found for commentId: ${args.commentId}`,
-        })
-      );
-    }
-
-    if (comment.userId !== user.appUser._id) {
-      return yield* Effect.fail(
-        new CommentActionError({
-          message: "You can only delete your own comments.",
-        })
-      );
-    }
-
-    const scheduler = yield* Scheduler;
-
-    yield* writer.table("comments").delete(args.commentId);
-    yield* scheduler.runAfter(
-      Duration.zero,
-      refs.internal.triggers.comments.cleanup.cleanupDeletedComment,
-      { commentId: args.commentId }
+  if (!comment) {
+    return yield* Effect.fail(
+      new CommentActionError({
+        message: `Comment not found for commentId: ${args.commentId}`,
+      })
     );
-    yield* updateParentReplyCount(comment.parentId, -1);
-
-    return null;
   }
-);
+
+  if (comment.userId !== user.appUser._id) {
+    return yield* Effect.fail(
+      new CommentActionError({
+        message: "You can only delete your own comments.",
+      })
+    );
+  }
+
+  const scheduler = yield* Scheduler;
+
+  yield* writer.table("comments").delete(args.commentId);
+  yield* scheduler.runAfter(
+    Duration.zero,
+    refs.internal.triggers.comments.cleanup.cleanupDeletedComment,
+    { commentId: args.commentId }
+  );
+  yield* updateParentReplyCount(comment.parentId, -1);
+
+  return null;
+});
 
 /** Lists comments for a content slug with public author data. */
-export const getCommentsBySlug = Effect.fn("comments.getBySlug")(
-  function* (args: { paginationOpts: PaginationOptions; slug: string }) {
-    const reader = yield* DatabaseReader;
-    const comments = yield* reader
-      .table("comments")
-      .index(
-        "by_slug",
-        (query) => query.eq("slug", cleanSlug(args.slug)),
-        "desc"
-      )
-      .paginate(args.paginationOpts);
-    const commentUserIds = comments.page.map((comment) => comment.userId);
-    const replyToUserIds = comments.page.flatMap((comment) =>
-      comment.replyToUserId ? [comment.replyToUserId] : []
-    );
-    const userMap = yield* getUserMap(commentUserIds);
-    const replyToUserMap = yield* getUserMap(replyToUserIds);
+export const getCommentsBySlug = Effect.fnUntraced(function* (args: {
+  paginationOpts: PaginationOptions;
+  slug: string;
+}) {
+  const reader = yield* DatabaseReader;
+  const comments = yield* reader
+    .table("comments")
+    .index("by_slug", (query) => query.eq("slug", cleanSlug(args.slug)), "desc")
+    .paginate(args.paginationOpts);
+  const commentUserIds = comments.page.map((comment) => comment.userId);
+  const replyToUserIds = comments.page.flatMap((comment) =>
+    comment.replyToUserId ? [comment.replyToUserId] : []
+  );
+  const userMap = yield* getUserMap(commentUserIds);
+  const replyToUserMap = yield* getUserMap(replyToUserIds);
 
-    return {
-      ...comments,
-      page: comments.page.map((comment) => {
-        const user = userMap.get(comment.userId);
-        const replyToUser = comment.replyToUserId
-          ? replyToUserMap.get(comment.replyToUserId)
-          : undefined;
+  return {
+    ...comments,
+    page: comments.page.map((comment) => {
+      const user = userMap.get(comment.userId);
+      const replyToUser = comment.replyToUserId
+        ? replyToUserMap.get(comment.replyToUserId)
+        : undefined;
 
-        return {
-          ...comment,
-          replyToUser: replyToUser
-            ? {
-                _id: replyToUser._id,
-                image: replyToUser.image,
-                name: replyToUser.name,
-              }
-            : null,
-          user: user
-            ? {
-                _id: user._id,
-                image: user.image,
-                name: user.name,
-              }
-            : null,
-        };
-      }),
-    };
-  }
-);
+      return {
+        ...comment,
+        replyToUser: replyToUser
+          ? {
+              _id: replyToUser._id,
+              image: replyToUser.image,
+              name: replyToUser.name,
+            }
+          : null,
+        user: user
+          ? {
+              _id: user._id,
+              image: user.image,
+              name: user.name,
+            }
+          : null,
+      };
+    }),
+  };
+});
 
 /** Lists comments authored by a user. */
-export const getCommentsByUserId = Effect.fn("comments.getByUserId")(
-  function* (args: { paginationOpts: PaginationOptions; userId: Id<"users"> }) {
-    const reader = yield* DatabaseReader;
+export const getCommentsByUserId = Effect.fnUntraced(function* (args: {
+  paginationOpts: PaginationOptions;
+  userId: Id<"users">;
+}) {
+  const reader = yield* DatabaseReader;
 
-    return yield* reader
-      .table("comments")
-      .index("by_userId", (query) => query.eq("userId", args.userId), "desc")
-      .paginate(args.paginationOpts);
-  }
-);
+  return yield* reader
+    .table("comments")
+    .index("by_userId", (query) => query.eq("userId", args.userId), "desc")
+    .paginate(args.paginationOpts);
+});

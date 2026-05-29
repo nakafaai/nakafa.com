@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registered/irt";
+import registeredFunctions from "../../../../confect/_generated/registeredFunctions";
 
 export const drainScalePublicationQueue = registeredFunctions.irt.mutations.internalFunctions.scales.drainScalePublicationQueue;
 export const drainScaleQualityRefreshQueue = registeredFunctions.irt.mutations.internalFunctions.scales.drainScaleQualityRefreshQueue;

@@ -37,9 +37,7 @@ interface CalibrationResult {
 }
 
 /** Completes a calibration run and writes item parameters atomically. */
-export const completeCalibrationRun = Effect.fn(
-  "irt.runs.completeCalibrationRun"
-)(function* (args: {
+export const completeCalibrationRun = Effect.fnUntraced(function* (args: {
   readonly calibrationRunId: Id<"irtCalibrationRuns">;
   readonly result: CalibrationResult;
 }) {
@@ -245,34 +243,32 @@ export const completeCalibrationRun = Effect.fn(
 });
 
 /** Marks a calibration run as failed with a captured error message. */
-export const failCalibrationRun = Effect.fn("irt.runs.failCalibrationRun")(
-  function* (args: {
-    readonly calibrationRunId: Id<"irtCalibrationRuns">;
-    readonly error: string;
-  }) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const run = yield* reader
-      .table("irtCalibrationRuns")
-      .get(args.calibrationRunId)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+export const failCalibrationRun = Effect.fnUntraced(function* (args: {
+  readonly calibrationRunId: Id<"irtCalibrationRuns">;
+  readonly error: string;
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const run = yield* reader
+    .table("irtCalibrationRuns")
+    .get(args.calibrationRunId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-    if (!run) {
-      return yield* Effect.fail(
-        new IrtError({
-          code: "IRT_CALIBRATION_RUN_NOT_FOUND",
-          message: "Calibration run not found.",
-        })
-      );
-    }
-
-    const updatedAt = yield* Clock.currentTimeMillis;
-    yield* writer.table("irtCalibrationRuns").patch(args.calibrationRunId, {
-      error: args.error,
-      status: "failed",
-      updatedAt,
-    });
-
-    return null;
+  if (!run) {
+    return yield* Effect.fail(
+      new IrtError({
+        code: "IRT_CALIBRATION_RUN_NOT_FOUND",
+        message: "Calibration run not found.",
+      })
+    );
   }
-);
+
+  const updatedAt = yield* Clock.currentTimeMillis;
+  yield* writer.table("irtCalibrationRuns").patch(args.calibrationRunId, {
+    error: args.error,
+    status: "failed",
+    updatedAt,
+  });
+
+  return null;
+});

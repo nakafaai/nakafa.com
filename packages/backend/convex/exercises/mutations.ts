@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registered/exercises";
+import registeredFunctions from "../../confect/_generated/registeredFunctions";
 
 export const completeAttempt = registeredFunctions.exercises.mutations.completeAttempt;
 export const expireAttemptInternal = registeredFunctions.exercises.mutations.expireAttemptInternal;

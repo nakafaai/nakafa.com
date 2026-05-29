@@ -14,9 +14,9 @@ const MATERIAL_GROUP_CHILD_CLEANUP_BATCH_SIZE = 25;
 const MATERIAL_GROUP_MATERIAL_CLEANUP_BATCH_SIZE = 25;
 
 /** Removes attachments and views after a material row has been deleted. */
-export const cleanupDeletedMaterial = Effect.fn(
-  "materialCleanup.cleanupDeletedMaterial"
-)(function* (args: { materialId: Id<"schoolClassMaterials"> }) {
+export const cleanupDeletedMaterial = Effect.fnUntraced(function* (args: {
+  materialId: Id<"schoolClassMaterials">;
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const storage = yield* StorageWriter;
@@ -67,9 +67,7 @@ export const cleanupDeletedMaterial = Effect.fn(
 });
 
 /** Removes child groups and materials after a material group row has been deleted. */
-export const cleanupDeletedGroup = Effect.fn(
-  "materialCleanup.cleanupDeletedGroup"
-)(function* (args: {
+export const cleanupDeletedGroup = Effect.fnUntraced(function* (args: {
   classId: Id<"schoolClasses">;
   groupId: Id<"schoolClassMaterialGroups">;
 }) {

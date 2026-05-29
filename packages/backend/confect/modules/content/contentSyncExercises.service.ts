@@ -75,9 +75,9 @@ interface SyncedExerciseQuestion {
 }
 
 /** Upserts exercise set rows and their search documents. */
-export const bulkSyncExerciseSets = Effect.fn(
-  "contentSync.exercises.bulkSyncExerciseSets"
-)(function* (args: { readonly sets: readonly SyncedExerciseSet[] }) {
+export const bulkSyncExerciseSets = Effect.fnUntraced(function* (args: {
+  readonly sets: readonly SyncedExerciseSet[];
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
@@ -169,9 +169,9 @@ export const bulkSyncExerciseSets = Effect.fn(
 });
 
 /** Upserts exercise questions and linked choices, authors, and search rows. */
-export const bulkSyncExerciseQuestions = Effect.fn(
-  "contentSync.exercises.bulkSyncExerciseQuestions"
-)(function* (args: { readonly questions: readonly SyncedExerciseQuestion[] }) {
+export const bulkSyncExerciseQuestions = Effect.fnUntraced(function* (args: {
+  readonly questions: readonly SyncedExerciseQuestion[];
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
@@ -206,7 +206,6 @@ export const bulkSyncExerciseQuestions = Effect.fn(
     if (!exerciseSet) {
       skipped += 1;
       skippedSetSlugs.add(question.setSlug);
-      yield* Effect.logWarning(`Set not found for question: ${question.slug}`);
       continue;
     }
 
@@ -301,9 +300,9 @@ export const bulkSyncExerciseQuestions = Effect.fn(
 });
 
 /** Deletes stale exercise sets and their bounded question children. */
-export const deleteStaleExerciseSets = Effect.fn(
-  "contentSync.exercises.deleteStaleExerciseSets"
-)(function* (args: { readonly setIds: readonly Id<"exerciseSets">[] }) {
+export const deleteStaleExerciseSets = Effect.fnUntraced(function* (args: {
+  readonly setIds: readonly Id<"exerciseSets">[];
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   yield* assertContentSyncBatchSize({
@@ -356,9 +355,7 @@ export const deleteStaleExerciseSets = Effect.fn(
 });
 
 /** Deletes stale exercise questions. */
-export const deleteStaleExerciseQuestions = Effect.fn(
-  "contentSync.exercises.deleteStaleExerciseQuestions"
-)(function* (args: {
+export const deleteStaleExerciseQuestions = Effect.fnUntraced(function* (args: {
   readonly questionIds: readonly Id<"exerciseQuestions">[];
 }) {
   const reader = yield* DatabaseReader;

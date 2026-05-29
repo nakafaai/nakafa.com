@@ -28,9 +28,7 @@ function generateInviteCode() {
 }
 
 /** Finds a unique school slug for a desired base slug. */
-const generateUniqueSlug = Effect.fn("schools.generateUniqueSlug")(function* (
-  baseSlug: string
-) {
+const generateUniqueSlug = Effect.fnUntraced(function* (baseSlug: string) {
   const reader = yield* DatabaseReader;
   let slug = baseSlug;
   let counter = 1;
@@ -117,7 +115,7 @@ export function getSchoolMembership(
 }
 
 /** Creates a school and admin membership for the current user. */
-export const createSchool = Effect.fn("schools.createSchool")(function* (args: {
+export const createSchool = Effect.fnUntraced(function* (args: {
   address: string;
   city: string;
   email: string;
@@ -187,9 +185,7 @@ export const createSchool = Effect.fn("schools.createSchool")(function* (args: {
 });
 
 /** Joins the current user to a school via invite code. */
-export const joinSchool = Effect.fn("schools.joinSchool")(function* (args: {
-  code: string;
-}) {
+export const joinSchool = Effect.fnUntraced(function* (args: { code: string }) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const user = yield* requireAppUser();
@@ -238,43 +234,41 @@ export const joinSchool = Effect.fn("schools.joinSchool")(function* (args: {
 });
 
 /** Reads a school and the current user's active membership by slug. */
-export const getSchoolBySlug = Effect.fn("schools.getSchoolBySlug")(
-  function* (args: { slug: string }) {
-    const reader = yield* DatabaseReader;
-    const user = yield* requireAppUser();
-    const school = yield* reader
-      .table("schools")
-      .get("by_slug", args.slug)
-      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+export const getSchoolBySlug = Effect.fnUntraced(function* (args: {
+  slug: string;
+}) {
+  const reader = yield* DatabaseReader;
+  const user = yield* requireAppUser();
+  const school = yield* reader
+    .table("schools")
+    .get("by_slug", args.slug)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
-    if (!school) {
-      return yield* Effect.fail(
-        new SchoolActionError({
-          code: "SCHOOL_NOT_FOUND",
-          message: `School not found for slug: ${args.slug}`,
-        })
-      );
-    }
-
-    const membership = yield* getSchoolMembership(school._id, user.appUser._id);
-
-    if (!membership) {
-      return yield* Effect.fail(
-        new SchoolActionError({
-          code: "MEMBERSHIP_NOT_FOUND",
-          message: `Membership not found for schoolId: ${school._id} and userId: ${user.appUser._id}`,
-        })
-      );
-    }
-
-    return { membership, school };
+  if (!school) {
+    return yield* Effect.fail(
+      new SchoolActionError({
+        code: "SCHOOL_NOT_FOUND",
+        message: `School not found for slug: ${args.slug}`,
+      })
+    );
   }
-);
+
+  const membership = yield* getSchoolMembership(school._id, user.appUser._id);
+
+  if (!membership) {
+    return yield* Effect.fail(
+      new SchoolActionError({
+        code: "MEMBERSHIP_NOT_FOUND",
+        message: `Membership not found for schoolId: ${school._id} and userId: ${user.appUser._id}`,
+      })
+    );
+  }
+
+  return { membership, school };
+});
 
 /** Returns the current user's school landing routing state. */
-export const getMySchoolLandingState = Effect.fn(
-  "schools.getMySchoolLandingState"
-)(function* () {
+export const getMySchoolLandingState = Effect.fnUntraced(function* () {
   const reader = yield* DatabaseReader;
   const user = yield* requireAppUser();
   const memberships = yield* reader
@@ -310,37 +304,37 @@ export const getMySchoolLandingState = Effect.fn(
 });
 
 /** Lists the current user's active schools. */
-export const getMySchoolsPage = Effect.fn("schools.getMySchoolsPage")(
-  function* (args: { paginationOpts: PaginationOptions }) {
-    const reader = yield* DatabaseReader;
-    const user = yield* requireAppUser();
-    const memberships = yield* reader
-      .table("schoolMembers")
-      .index("by_userId_and_status", (query) =>
-        query.eq("userId", user.appUser._id).eq("status", "active")
-      )
-      .paginate(args.paginationOpts);
-    const schoolPage = yield* Effect.forEach(memberships.page, (membership) =>
-      Effect.gen(function* () {
-        const school = yield* reader
-          .table("schools")
-          .get(membership.schoolId)
-          .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+export const getMySchoolsPage = Effect.fnUntraced(function* (args: {
+  paginationOpts: PaginationOptions;
+}) {
+  const reader = yield* DatabaseReader;
+  const user = yield* requireAppUser();
+  const memberships = yield* reader
+    .table("schoolMembers")
+    .index("by_userId_and_status", (query) =>
+      query.eq("userId", user.appUser._id).eq("status", "active")
+    )
+    .paginate(args.paginationOpts);
+  const schoolPage = yield* Effect.forEach(memberships.page, (membership) =>
+    Effect.gen(function* () {
+      const school = yield* reader
+        .table("schools")
+        .get(membership.schoolId)
+        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-        if (!school) {
-          return null;
-        }
+      if (!school) {
+        return null;
+      }
 
-        return {
-          _id: school._id,
-          name: school.name,
-          slug: school.slug,
-          type: school.type,
-        };
-      })
-    );
-    const page = schoolPage.filter((school) => school !== null);
+      return {
+        _id: school._id,
+        name: school.name,
+        slug: school.slug,
+        type: school.type,
+      };
+    })
+  );
+  const page = schoolPage.filter((school) => school !== null);
 
-    return { ...memberships, page };
-  }
-);
+  return { ...memberships, page };
+});

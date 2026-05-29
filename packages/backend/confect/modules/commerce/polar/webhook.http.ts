@@ -42,7 +42,7 @@ type PolarCustomerPayload =
   | WebhookCustomerUpdatedPayload["data"];
 
 /** Verifies a raw Polar webhook request and returns the typed event payload. */
-const verifyPolarEvent = Effect.fn("polar.verifyWebhook")(function* (
+const verifyPolarEvent = Effect.fnUntraced(function* (
   body: string,
   headers: Headers
 ) {
@@ -64,7 +64,7 @@ const verifyPolarEvent = Effect.fn("polar.verifyWebhook")(function* (
 });
 
 /** Upserts a local customer row when the webhook can be mapped to an app user. */
-const handleCustomerUpsert = Effect.fn("polar.handleCustomerUpsert")(function* (
+const handleCustomerUpsert = Effect.fnUntraced(function* (
   customer: PolarCustomerPayload
 ) {
   const runQuery = yield* QueryRunner;
@@ -102,7 +102,7 @@ const handleCustomerUpsert = Effect.fn("polar.handleCustomerUpsert")(function* (
 });
 
 /** Dispatches a verified Polar webhook to the matching Confect mutation. */
-const handlePolarEvent = Effect.fn("polar.handleWebhook")(function* ({
+const handlePolarEvent = Effect.fnUntraced(function* ({
   body,
   headers,
 }: {

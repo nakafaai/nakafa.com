@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registered/audioStudies";
+import registeredFunctions from "../../../confect/_generated/registeredFunctions";
 
 export const claimScriptGeneration = registeredFunctions.audioStudies.mutations.contentAudios.claimScriptGeneration;
 export const claimSpeechGeneration = registeredFunctions.audioStudies.mutations.contentAudios.claimSpeechGeneration;

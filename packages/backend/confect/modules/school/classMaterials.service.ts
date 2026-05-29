@@ -54,52 +54,48 @@ function validateScheduledStatus(
 }
 
 /** Loads a material group or fails with the domain class error. */
-const loadMaterialGroup = Effect.fn("school.materials.loadMaterialGroup")(
-  function* (groupId: Id<"schoolClassMaterialGroups">) {
-    const reader = yield* DatabaseReader;
-    const group = yield* reader
-      .table("schoolClassMaterialGroups")
-      .get(groupId)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+const loadMaterialGroup = Effect.fnUntraced(function* (
+  groupId: Id<"schoolClassMaterialGroups">
+) {
+  const reader = yield* DatabaseReader;
+  const group = yield* reader
+    .table("schoolClassMaterialGroups")
+    .get(groupId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-    if (!group) {
-      return yield* Effect.fail(
-        new ClassActionError({ message: "Material group not found." })
-      );
-    }
-
-    return group;
+  if (!group) {
+    return yield* Effect.fail(
+      new ClassActionError({ message: "Material group not found." })
+    );
   }
-);
+
+  return group;
+});
 
 /** Adds creator and publisher user summaries to material groups. */
-const enrichMaterialGroups = Effect.fn("school.materials.enrichMaterialGroups")(
-  function* (groups: readonly MaterialGroup[]) {
-    if (groups.length === 0) {
-      return [];
-    }
-
-    const userIds = groups.flatMap((group) =>
-      group.publishedBy
-        ? [group.createdBy, group.publishedBy]
-        : [group.createdBy]
-    );
-    const userMap = yield* getUserMap(userIds);
-
-    return groups.map((group) => ({
-      ...group,
-      publishedByUser: group.publishedBy
-        ? (userMap.get(group.publishedBy) ?? null)
-        : null,
-      user: userMap.get(group.createdBy) ?? null,
-    }));
+const enrichMaterialGroups = Effect.fnUntraced(function* (
+  groups: readonly MaterialGroup[]
+) {
+  if (groups.length === 0) {
+    return [];
   }
-);
+
+  const userIds = groups.flatMap((group) =>
+    group.publishedBy ? [group.createdBy, group.publishedBy] : [group.createdBy]
+  );
+  const userMap = yield* getUserMap(userIds);
+
+  return groups.map((group) => ({
+    ...group,
+    publishedByUser: group.publishedBy
+      ? (userMap.get(group.publishedBy) ?? null)
+      : null,
+    user: userMap.get(group.createdBy) ?? null,
+  }));
+});
 
 /** Creates a material group and optionally schedules publication. */
-export const createMaterialGroup = Effect.fn(
-  "school.materials.createMaterialGroup"
-)(function* (args: {
+export const createMaterialGroup = Effect.fnUntraced(function* (args: {
   classId: Id<"schoolClasses">;
   description: string;
   name: string;
@@ -164,9 +160,7 @@ export const createMaterialGroup = Effect.fn(
 });
 
 /** Updates material group metadata, status, and scheduled publication. */
-export const updateMaterialGroup = Effect.fn(
-  "school.materials.updateMaterialGroup"
-)(function* (args: {
+export const updateMaterialGroup = Effect.fnUntraced(function* (args: {
   description?: string;
   groupId: Id<"schoolClassMaterialGroups">;
   name?: string;
@@ -231,9 +225,7 @@ export const updateMaterialGroup = Effect.fn(
  *
  * @see https://confect.dev/server/scheduling
  */
-export const publishMaterialGroup = Effect.fn(
-  "school.materials.publishMaterialGroup"
-)(function* (args: {
+export const publishMaterialGroup = Effect.fnUntraced(function* (args: {
   groupId: Id<"schoolClassMaterialGroups">;
   publishedBy: Id<"users">;
 }) {
@@ -268,9 +260,9 @@ export const publishMaterialGroup = Effect.fn(
 });
 
 /** Deletes a material group after permission checks. */
-export const deleteMaterialGroup = Effect.fn(
-  "school.materials.deleteMaterialGroup"
-)(function* (args: { groupId: Id<"schoolClassMaterialGroups"> }) {
+export const deleteMaterialGroup = Effect.fnUntraced(function* (args: {
+  groupId: Id<"schoolClassMaterialGroups">;
+}) {
   const writer = yield* DatabaseWriter;
   const user = yield* requireAppUser();
   const userId = user.appUser._id;
@@ -287,9 +279,7 @@ export const deleteMaterialGroup = Effect.fn(
 });
 
 /** Swaps a material group order with the nearest adjacent group. */
-export const reorderMaterialGroup = Effect.fn(
-  "school.materials.reorderMaterialGroup"
-)(function* (args: {
+export const reorderMaterialGroup = Effect.fnUntraced(function* (args: {
   direction: OrderDirection;
   groupId: Id<"schoolClassMaterialGroups">;
 }) {
@@ -350,9 +340,7 @@ export const reorderMaterialGroup = Effect.fn(
 });
 
 /** Lists material groups visible to the current class user. */
-export const getMaterialGroups = Effect.fn(
-  "school.materials.getMaterialGroups"
-)(function* (args: {
+export const getMaterialGroups = Effect.fnUntraced(function* (args: {
   classId: Id<"schoolClasses">;
   paginationOpts: PaginationOptions;
   parentId?: Id<"schoolClassMaterialGroups">;

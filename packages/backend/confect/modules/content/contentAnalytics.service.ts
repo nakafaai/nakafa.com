@@ -98,9 +98,7 @@ function buildContentAnalyticsBatch(queueItems: readonly QueueItem[]) {
 }
 
 /** Applies one article popularity delta. */
-const applyArticlePopularityDelta = Effect.fn(
-  "contentAnalytics.applyArticlePopularityDelta"
-)(function* (args: {
+const applyArticlePopularityDelta = Effect.fnUntraced(function* (args: {
   contentId: Id<"articleContents">;
   updatedAt: number;
   viewCount: number;
@@ -125,9 +123,7 @@ const applyArticlePopularityDelta = Effect.fn(
 });
 
 /** Applies one subject popularity delta. */
-const applySubjectPopularityDelta = Effect.fn(
-  "contentAnalytics.applySubjectPopularityDelta"
-)(function* (args: {
+const applySubjectPopularityDelta = Effect.fnUntraced(function* (args: {
   contentId: Id<"subjectSections">;
   updatedAt: number;
   viewCount: number;
@@ -152,9 +148,7 @@ const applySubjectPopularityDelta = Effect.fn(
 });
 
 /** Applies one exercise popularity delta. */
-const applyExercisePopularityDelta = Effect.fn(
-  "contentAnalytics.applyExercisePopularityDelta"
-)(function* (args: {
+const applyExercisePopularityDelta = Effect.fnUntraced(function* (args: {
   contentId: Id<"exerciseSets">;
   updatedAt: number;
   viewCount: number;
@@ -179,9 +173,7 @@ const applyExercisePopularityDelta = Effect.fn(
 });
 
 /** Applies one subject trending bucket delta. */
-const applySubjectTrendingBucketDelta = Effect.fn(
-  "contentAnalytics.applySubjectTrendingBucketDelta"
-)(function* (args: {
+const applySubjectTrendingBucketDelta = Effect.fnUntraced(function* (args: {
   bucketStart: number;
   contentId: Id<"subjectSections">;
   locale: QueueItem["locale"];
@@ -219,9 +211,9 @@ const applySubjectTrendingBucketDelta = Effect.fn(
 });
 
 /** Applies a queued content analytics batch to popularity read models. */
-const applyContentAnalyticsBatch = Effect.fn(
-  "contentAnalytics.applyContentAnalyticsBatch"
-)(function* (queueItems: readonly QueueItem[]) {
+const applyContentAnalyticsBatch = Effect.fnUntraced(function* (
+  queueItems: readonly QueueItem[]
+) {
   const analyticsBatch = buildContentAnalyticsBatch(queueItems);
   const updatedAt = yield* Clock.currentTimeMillis;
 
@@ -243,136 +235,155 @@ const applyContentAnalyticsBatch = Effect.fn(
 });
 
 /** Schedules processing for every content analytics partition. */
-export const scheduleContentAnalyticsPartitions = Effect.fn(
-  "contentAnalytics.scheduleContentAnalyticsPartitions"
-)(function* () {
-  const scheduler = yield* Scheduler;
+export const scheduleContentAnalyticsPartitions = Effect.fnUntraced(
+  function* () {
+    const reader = yield* DatabaseReader;
+    const scheduler = yield* Scheduler;
+    let enqueuedPartitions = 0;
 
-  for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
-    yield* scheduler.runAfter(
-      Duration.millis(0),
-      refs.internal.contents.mutations.analytics
-        .scheduleContentAnalyticsPartition,
-      { partition }
-    );
+    for (const partition of CONTENT_ANALYTICS_PARTITIONS) {
+      const queueItemOption = yield* reader
+        .table("contentViewAnalyticsQueue")
+        .index("by_partition", (query) => query.eq("partition", partition))
+        .first();
+
+      if (!Option.getOrNull(queueItemOption)) {
+        continue;
+      }
+
+      yield* scheduler.runAfter(
+        Duration.millis(0),
+        refs.internal.contents.mutations.analytics
+          .scheduleContentAnalyticsPartition,
+        { partition }
+      );
+      enqueuedPartitions += 1;
+    }
+
+    return { enqueuedPartitions };
   }
-
-  return { enqueuedPartitions: CONTENT_ANALYTICS_PARTITIONS.length };
-});
+);
 
 /** Acquires a partition lease and schedules batch processing. */
-export const scheduleContentAnalyticsPartition = Effect.fn(
-  "contentAnalytics.scheduleContentAnalyticsPartition"
-)(function* (args: { partition: number }) {
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  const scheduler = yield* Scheduler;
-  const partition = yield* validateContentAnalyticsPartition(args.partition);
-  const partitionRowOption = yield* reader
-    .table("contentAnalyticsPartitions")
-    .index("by_partition", (query) => query.eq("partition", partition))
-    .first();
-  const partitionRow = Option.getOrNull(partitionRowOption);
-  const now = yield* Clock.currentTimeMillis;
-  const partitionRowId =
-    partitionRow?._id ??
-    (yield* writer.table("contentAnalyticsPartitions").insert({
-      leaseExpiresAt: 0,
-      leaseVersion: 0,
-      partition,
-    }));
-  const leaseExpiresAt = partitionRow?.leaseExpiresAt ?? 0;
-  let leaseVersion = partitionRow?.leaseVersion ?? 0;
+export const scheduleContentAnalyticsPartition = Effect.fnUntraced(
+  function* (args: { partition: number }) {
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const scheduler = yield* Scheduler;
+    const partition = yield* validateContentAnalyticsPartition(args.partition);
+    const partitionRowOption = yield* reader
+      .table("contentAnalyticsPartitions")
+      .index("by_partition", (query) => query.eq("partition", partition))
+      .first();
+    const partitionRow = Option.getOrNull(partitionRowOption);
+    const now = yield* Clock.currentTimeMillis;
+    const leaseExpiresAt = partitionRow?.leaseExpiresAt ?? 0;
+    let leaseVersion = partitionRow?.leaseVersion ?? 0;
 
-  if (leaseExpiresAt > now) {
-    return { createdPartition: !partitionRow, scheduled: false };
-  }
+    if (leaseExpiresAt > now) {
+      return { createdPartition: !partitionRow, scheduled: false };
+    }
 
-  leaseVersion += 1;
-  yield* writer.table("contentAnalyticsPartitions").patch(partitionRowId, {
-    leaseExpiresAt: now + CONTENT_ANALYTICS_LEASE_DURATION_MS,
-    leaseVersion,
-  });
-  yield* scheduler.runAfter(
-    Duration.millis(0),
-    refs.internal.contents.mutations.analytics.processContentAnalyticsPartition,
-    { leaseVersion, partition }
-  );
+    const queueItemOption = yield* reader
+      .table("contentViewAnalyticsQueue")
+      .index("by_partition", (query) => query.eq("partition", partition))
+      .first();
 
-  return { createdPartition: !partitionRow, scheduled: true };
-});
+    if (!Option.getOrNull(queueItemOption)) {
+      return { createdPartition: false, scheduled: false };
+    }
 
-/** Processes one leased partition batch and reschedules when more rows remain. */
-export const processContentAnalyticsPartition = Effect.fn(
-  "contentAnalytics.processContentAnalyticsPartition"
-)(function* (args: { leaseVersion: number; partition: number }) {
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  const scheduler = yield* Scheduler;
-  const partition = yield* validateContentAnalyticsPartition(args.partition);
-  const now = yield* Clock.currentTimeMillis;
-  const partitionRowOption = yield* reader
-    .table("contentAnalyticsPartitions")
-    .index("by_partition", (query) => query.eq("partition", partition))
-    .first();
-  const partitionRow = Option.getOrNull(partitionRowOption);
+    const partitionRowId =
+      partitionRow?._id ??
+      (yield* writer.table("contentAnalyticsPartitions").insert({
+        leaseExpiresAt: 0,
+        leaseVersion: 0,
+        partition,
+      }));
 
-  if (
-    !partitionRow ||
-    partitionRow.leaseVersion !== args.leaseVersion ||
-    partitionRow.leaseExpiresAt < now
-  ) {
-    return { hasMore: false, partition, processed: 0, skipped: true };
-  }
-
-  const queueItems = yield* reader
-    .table("contentViewAnalyticsQueue")
-    .index("by_partition", (query) => query.eq("partition", partition))
-    .take(CONTENT_ANALYTICS_BATCH_SIZE);
-
-  if (queueItems.length === 0) {
-    yield* writer.table("contentAnalyticsPartitions").patch(partitionRow._id, {
-      lastProcessedAt: now,
-      leaseExpiresAt: 0,
+    leaseVersion += 1;
+    yield* writer.table("contentAnalyticsPartitions").patch(partitionRowId, {
+      leaseExpiresAt: now + CONTENT_ANALYTICS_LEASE_DURATION_MS,
+      leaseVersion,
     });
-    return { hasMore: false, partition, processed: 0, skipped: false };
-  }
-
-  yield* applyContentAnalyticsBatch(queueItems);
-
-  for (const queueItem of queueItems) {
-    yield* writer.table("contentViewAnalyticsQueue").delete(queueItem._id);
-  }
-
-  const hasMore = queueItems.length === CONTENT_ANALYTICS_BATCH_SIZE;
-  const leaseExpiresAt = hasMore
-    ? now + CONTENT_ANALYTICS_LEASE_DURATION_MS
-    : 0;
-
-  yield* writer.table("contentAnalyticsPartitions").patch(partitionRow._id, {
-    lastProcessedAt: now,
-    leaseExpiresAt,
-  });
-
-  if (hasMore) {
     yield* scheduler.runAfter(
       Duration.millis(0),
       refs.internal.contents.mutations.analytics
         .processContentAnalyticsPartition,
-      args
+      { leaseVersion, partition }
     );
+
+    return { createdPartition: !partitionRow, scheduled: true };
   }
+);
 
-  yield* Effect.logInfo("Processed content analytics partition batch", {
-    hasMore,
-    partition,
-    processed: queueItems.length,
-  });
+/** Processes one leased partition batch and reschedules when more rows remain. */
+export const processContentAnalyticsPartition = Effect.fnUntraced(
+  function* (args: { leaseVersion: number; partition: number }) {
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const scheduler = yield* Scheduler;
+    const partition = yield* validateContentAnalyticsPartition(args.partition);
+    const now = yield* Clock.currentTimeMillis;
+    const partitionRowOption = yield* reader
+      .table("contentAnalyticsPartitions")
+      .index("by_partition", (query) => query.eq("partition", partition))
+      .first();
+    const partitionRow = Option.getOrNull(partitionRowOption);
 
-  return {
-    hasMore,
-    partition,
-    processed: queueItems.length,
-    skipped: false,
-  };
-});
+    if (
+      !partitionRow ||
+      partitionRow.leaseVersion !== args.leaseVersion ||
+      partitionRow.leaseExpiresAt < now
+    ) {
+      return { hasMore: false, partition, processed: 0, skipped: true };
+    }
+
+    const queueItems = yield* reader
+      .table("contentViewAnalyticsQueue")
+      .index("by_partition", (query) => query.eq("partition", partition))
+      .take(CONTENT_ANALYTICS_BATCH_SIZE);
+
+    if (queueItems.length === 0) {
+      yield* writer
+        .table("contentAnalyticsPartitions")
+        .patch(partitionRow._id, {
+          lastProcessedAt: now,
+          leaseExpiresAt: 0,
+        });
+      return { hasMore: false, partition, processed: 0, skipped: false };
+    }
+
+    yield* applyContentAnalyticsBatch(queueItems);
+
+    for (const queueItem of queueItems) {
+      yield* writer.table("contentViewAnalyticsQueue").delete(queueItem._id);
+    }
+
+    const hasMore = queueItems.length === CONTENT_ANALYTICS_BATCH_SIZE;
+    const leaseExpiresAt = hasMore
+      ? now + CONTENT_ANALYTICS_LEASE_DURATION_MS
+      : 0;
+
+    yield* writer.table("contentAnalyticsPartitions").patch(partitionRow._id, {
+      lastProcessedAt: now,
+      leaseExpiresAt,
+    });
+
+    if (hasMore) {
+      yield* scheduler.runAfter(
+        Duration.millis(0),
+        refs.internal.contents.mutations.analytics
+          .processContentAnalyticsPartition,
+        args
+      );
+    }
+
+    return {
+      hasMore,
+      partition,
+      processed: queueItems.length,
+      skipped: false,
+    };
+  }
+);

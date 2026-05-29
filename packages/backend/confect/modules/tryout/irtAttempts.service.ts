@@ -13,63 +13,63 @@ import { Effect } from "effect";
 const MAX_CALIBRATION_ATTEMPT_DUPLICATES = 100;
 
 /** Deletes cached calibration rows for one exercise attempt. */
-export const clearCalibrationResponsesForAttempt = Effect.fn(
-  "irt.attempts.clearCalibrationResponsesForAttempt"
-)(function* (args: {
-  readonly attemptId: Id<"exerciseAttempts">;
-  readonly updatedAt: number;
-}) {
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  const existingAttempts = yield* reader
-    .table("irtCalibrationAttempts")
-    .index("by_attemptId", (query) => query.eq("attemptId", args.attemptId))
-    .take(MAX_CALIBRATION_ATTEMPT_DUPLICATES + 1);
-
-  if (existingAttempts.length > MAX_CALIBRATION_ATTEMPT_DUPLICATES) {
-    return yield* Effect.fail(
-      new IrtError({
-        code: "IRT_CALIBRATION_ATTEMPT_DUPLICATE_LIMIT_EXCEEDED",
-        message: "Too many cached calibration rows exist for one attempt.",
-      })
-    );
-  }
-
-  const removedAttemptCounts = new Map<Id<"exerciseSets">, number>();
-
-  for (const calibrationAttempt of existingAttempts) {
-    const nextCount =
-      (removedAttemptCounts.get(calibrationAttempt.setId) ?? 0) + 1;
-    removedAttemptCounts.set(calibrationAttempt.setId, nextCount);
-  }
-
-  for (const calibrationAttempt of existingAttempts) {
-    yield* writer
+export const clearCalibrationResponsesForAttempt = Effect.fnUntraced(
+  function* (args: {
+    readonly attemptId: Id<"exerciseAttempts">;
+    readonly updatedAt: number;
+  }) {
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const existingAttempts = yield* reader
       .table("irtCalibrationAttempts")
-      .delete(calibrationAttempt._id);
-  }
+      .index("by_attemptId", (query) => query.eq("attemptId", args.attemptId))
+      .take(MAX_CALIBRATION_ATTEMPT_DUPLICATES + 1);
 
-  for (const [setId, removedCount] of removedAttemptCounts) {
-    const didAdjustStats = yield* adjustCalibrationCacheAttemptCount({
-      delta: -removedCount,
-      setId,
-      updatedAt: args.updatedAt,
-    });
-
-    if (didAdjustStats) {
-      continue;
+    if (existingAttempts.length > MAX_CALIBRATION_ATTEMPT_DUPLICATES) {
+      return yield* Effect.fail(
+        new IrtError({
+          code: "IRT_CALIBRATION_ATTEMPT_DUPLICATE_LIMIT_EXCEEDED",
+          message: "Too many cached calibration rows exist for one attempt.",
+        })
+      );
     }
 
-    yield* scheduleCalibrationCacheStatsRebuild(setId);
-  }
+    const removedAttemptCounts = new Map<Id<"exerciseSets">, number>();
 
-  return null;
-});
+    for (const calibrationAttempt of existingAttempts) {
+      const nextCount =
+        (removedAttemptCounts.get(calibrationAttempt.setId) ?? 0) + 1;
+      removedAttemptCounts.set(calibrationAttempt.setId, nextCount);
+    }
+
+    for (const calibrationAttempt of existingAttempts) {
+      yield* writer
+        .table("irtCalibrationAttempts")
+        .delete(calibrationAttempt._id);
+    }
+
+    for (const [setId, removedCount] of removedAttemptCounts) {
+      const didAdjustStats = yield* adjustCalibrationCacheAttemptCount({
+        delta: -removedCount,
+        setId,
+        updatedAt: args.updatedAt,
+      });
+
+      if (didAdjustStats) {
+        continue;
+      }
+
+      yield* scheduleCalibrationCacheStatsRebuild(setId);
+    }
+
+    return null;
+  }
+);
 
 /** Builds a calibration cache insert from a completed simulation attempt. */
-export const buildCalibrationAttemptInsert = Effect.fn(
-  "irt.attempts.buildCalibrationAttemptInsert"
-)(function* (attemptId: Id<"exerciseAttempts">) {
+export const buildCalibrationAttemptInsert = Effect.fnUntraced(function* (
+  attemptId: Id<"exerciseAttempts">
+) {
   const reader = yield* DatabaseReader;
   const attempt = yield* reader
     .table("exerciseAttempts")
@@ -175,9 +175,7 @@ export const buildCalibrationAttemptInsert = Effect.fn(
 });
 
 /** Inserts one calibration cache row and updates cache stats. */
-export const insertCalibrationAttempt = Effect.fn(
-  "irt.attempts.insertCalibrationAttempt"
-)(function* (args: {
+export const insertCalibrationAttempt = Effect.fnUntraced(function* (args: {
   readonly attemptId: Id<"exerciseAttempts">;
   readonly responses: readonly {
     readonly isCorrect: boolean;

@@ -16,7 +16,14 @@ const mdxParser = remark().use(remarkMdx);
  *   https://mdxjs.com/packages/remark-mdx/
  */
 export function renderMdxHtml(source: string) {
-  const root = readRecord(mdxParser.parse(source));
+  return renderMdxAstHtml(mdxParser.parse(source));
+}
+
+/**
+ * Converts a parsed MDX AST into semantic HTML.
+ */
+export function renderMdxAstHtml(ast: unknown) {
+  const root = readRecord(ast);
 
   if (!root) {
     return "";
@@ -33,7 +40,14 @@ export function renderMdxHtml(source: string) {
  * Extracts plain searchable text from markdown or MDX source.
  */
 export function extractMdxText(source: string) {
-  return normalizeText(readNode(mdxParser.parse(source)));
+  return extractMdxAstText(mdxParser.parse(source));
+}
+
+/**
+ * Extracts plain searchable text from a parsed markdown or MDX AST.
+ */
+export function extractMdxAstText(ast: unknown) {
+  return normalizeText(readNode(ast));
 }
 
 /**

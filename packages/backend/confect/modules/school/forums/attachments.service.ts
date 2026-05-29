@@ -94,36 +94,36 @@ function ensureDistinctUploadIds(
 }
 
 /** Verifies that Convex storage metadata still matches saved upload metadata. */
-export const validateStoredForumAttachmentMetadata = Effect.fn(
-  "school.forums.validateStoredForumAttachmentMetadata"
-)(function* (args: {
-  readonly mimeType: string;
-  readonly size: number;
-  readonly storageId: Id<"_storage">;
-}) {
-  const reader = yield* DatabaseReader;
-  const metadata = yield* reader
-    .table("_storage")
-    .get(args.storageId)
-    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+export const validateStoredForumAttachmentMetadata = Effect.fnUntraced(
+  function* (args: {
+    readonly mimeType: string;
+    readonly size: number;
+    readonly storageId: Id<"_storage">;
+  }) {
+    const reader = yield* DatabaseReader;
+    const metadata = yield* reader
+      .table("_storage")
+      .get(args.storageId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-  if (!metadata) {
+    if (!metadata) {
+      return yield* Effect.fail(
+        new ClassActionError({ message: "Forum post attachment not found." })
+      );
+    }
+
+    const contentType = metadata.contentType ?? "";
+    if (metadata.size === args.size && contentType === args.mimeType) {
+      return null;
+    }
+
     return yield* Effect.fail(
-      new ClassActionError({ message: "Forum post attachment not found." })
+      new ClassActionError({
+        message: "Forum post attachment metadata no longer matches the upload.",
+      })
     );
   }
-
-  const contentType = metadata.contentType ?? "";
-  if (metadata.size === args.size && contentType === args.mimeType) {
-    return null;
-  }
-
-  return yield* Effect.fail(
-    new ClassActionError({
-      message: "Forum post attachment metadata no longer matches the upload.",
-    })
-  );
-});
+);
 
 /** Checks whether a pending upload has all finalized metadata. */
 function isForumAttachmentUpload(
@@ -138,54 +138,54 @@ function isForumAttachmentUpload(
 }
 
 /** Loads and validates pending uploads referenced by a post. */
-export const resolveForumAttachmentUploads = Effect.fn(
-  "school.forums.resolveForumAttachmentUploads"
-)(function* (args: {
-  readonly forumId: Id<"schoolClassForums">;
-  readonly uploadIds: readonly Id<"schoolClassForumPendingUploads">[];
-  readonly userId: Id<"users">;
-}) {
-  const reader = yield* DatabaseReader;
+export const resolveForumAttachmentUploads = Effect.fnUntraced(
+  function* (args: {
+    readonly forumId: Id<"schoolClassForums">;
+    readonly uploadIds: readonly Id<"schoolClassForumPendingUploads">[];
+    readonly userId: Id<"users">;
+  }) {
+    const reader = yield* DatabaseReader;
 
-  yield* ensureDistinctUploadIds(args.uploadIds);
-  return yield* Effect.forEach(args.uploadIds, (uploadId) =>
-    Effect.gen(function* () {
-      const upload = yield* reader
-        .table("schoolClassForumPendingUploads")
-        .get(uploadId)
-        .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+    yield* ensureDistinctUploadIds(args.uploadIds);
+    return yield* Effect.forEach(args.uploadIds, (uploadId) =>
+      Effect.gen(function* () {
+        const upload = yield* reader
+          .table("schoolClassForumPendingUploads")
+          .get(uploadId)
+          .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-      if (
-        !upload ||
-        upload.uploadedBy !== args.userId ||
-        upload.forumId !== args.forumId
-      ) {
-        return yield* Effect.fail(
-          new ClassActionError({
-            message: "Forum post attachment upload not found.",
-          })
-        );
-      }
+        if (
+          !upload ||
+          upload.uploadedBy !== args.userId ||
+          upload.forumId !== args.forumId
+        ) {
+          return yield* Effect.fail(
+            new ClassActionError({
+              message: "Forum post attachment upload not found.",
+            })
+          );
+        }
 
-      if (!isForumAttachmentUpload(upload)) {
-        return yield* Effect.fail(
-          new ClassActionError({
-            message: "Forum post attachment upload has not finished yet.",
-          })
-        );
-      }
+        if (!isForumAttachmentUpload(upload)) {
+          return yield* Effect.fail(
+            new ClassActionError({
+              message: "Forum post attachment upload has not finished yet.",
+            })
+          );
+        }
 
-      yield* validateForumAttachmentPolicy(upload);
-      yield* validateStoredForumAttachmentMetadata(upload);
-      return upload;
-    })
-  );
-});
+        yield* validateForumAttachmentPolicy(upload);
+        yield* validateStoredForumAttachmentMetadata(upload);
+        return upload;
+      })
+    );
+  }
+);
 
 /** Removes a pending upload and its orphaned storage file when needed. */
-export const deleteForumPendingUpload = Effect.fn(
-  "school.forums.deleteForumPendingUpload"
-)(function* (upload: Doc<"schoolClassForumPendingUploads">) {
+export const deleteForumPendingUpload = Effect.fnUntraced(function* (
+  upload: Doc<"schoolClassForumPendingUploads">
+) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const storage = yield* StorageWriter;

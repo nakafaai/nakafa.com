@@ -10,9 +10,10 @@ type ForumDoc = Schema.Schema.Type<typeof SchoolClassForums.Doc>;
 type ForumPostDoc = Schema.Schema.Type<typeof SchoolClassForumPosts.Doc>;
 
 /** Sends reply and mention notifications for a newly inserted forum post. */
-export const notifyForumPostParticipants = Effect.fn(
-  "school.forums.notifyForumPostParticipants"
-)(function* (args: { forum: ForumDoc; post: ForumPostDoc }) {
+export const notifyForumPostParticipants = Effect.fnUntraced(function* (args: {
+  forum: ForumDoc;
+  post: ForumPostDoc;
+}) {
   const previewBody = truncateText({ text: args.post.body });
 
   if (

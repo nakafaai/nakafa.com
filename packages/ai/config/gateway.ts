@@ -1,18 +1,8 @@
 import { devToolsMiddleware } from "@ai-sdk/devtools";
-import { createGateway, type GatewayModelId } from "@ai-sdk/gateway";
+import type { GatewayModelId } from "@ai-sdk/gateway";
+import { createGatewayLanguageModel } from "@repo/ai/config/gateway-core";
 import { keys } from "@repo/ai/keys";
 import { wrapLanguageModel } from "ai";
-
-/** Creates an AI Gateway client after the caller enters an AI effect. */
-function createNakafaGateway() {
-  return createGateway({
-    apiKey: keys().AI_GATEWAY_API_KEY,
-    headers: {
-      "http-referer": "https://nakafa.com",
-      "x-title": "nakafa.com",
-    },
-  });
-}
 
 /** Enables AI SDK DevTools only for local development workflows. */
 function shouldUseDevTools(env: ReturnType<typeof keys>) {
@@ -38,8 +28,7 @@ function shouldUseDevTools(env: ReturnType<typeof keys>) {
  */
 export function createWrappedLanguageModel(modelId: GatewayModelId) {
   const env = keys();
-  const gateway = createNakafaGateway();
-  const model = gateway(modelId);
+  const model = createGatewayLanguageModel(modelId);
 
   if (shouldUseDevTools(env)) {
     return wrapLanguageModel({

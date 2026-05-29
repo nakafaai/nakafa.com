@@ -11,9 +11,9 @@ import type { UserPlan } from "@repo/backend/confect/modules/identity/users.tabl
 import { Clock, Effect } from "effect";
 
 /** Synchronizes a single plan's credit reset period with the current clock. */
-export const syncCreditResetPeriod = Effect.fn(
-  "commerce.syncCreditResetPeriod"
-)(function* (args: { plan: UserPlan }) {
+export const syncCreditResetPeriod = Effect.fnUntraced(function* (args: {
+  plan: UserPlan;
+}) {
   const now = yield* Clock.currentTimeMillis;
 
   yield* upsertCreditResetPeriod({
@@ -25,9 +25,7 @@ export const syncCreditResetPeriod = Effect.fn(
 });
 
 /** Synchronizes all credit reset periods with the current clock. */
-export const syncAllCreditResetPeriods = Effect.fn(
-  "commerce.syncAllCreditResetPeriods"
-)(function* () {
+export const syncAllCreditResetPeriods = Effect.fnUntraced(function* () {
   const now = yield* Clock.currentTimeMillis;
 
   yield* upsertCreditResetPeriod({
@@ -43,9 +41,10 @@ export const syncAllCreditResetPeriods = Effect.fn(
 });
 
 /** Resolves the persisted reset timestamp that should apply to a plan. */
-export const resolveCreditResetTimestamp = Effect.fn(
-  "commerce.resolveCreditResetTimestamp"
-)(function* (args: { now: number; plan: UserPlan }) {
+export const resolveCreditResetTimestamp = Effect.fnUntraced(function* (args: {
+  now: number;
+  plan: UserPlan;
+}) {
   const reader = yield* DatabaseReader;
   const currentResetTimestamp = getCurrentCreditResetTimestamp(
     args.plan,
@@ -69,9 +68,10 @@ export const resolveCreditResetTimestamp = Effect.fn(
 });
 
 /** Resolves a user's effective credits through Confect database services. */
-export const resolveUserCreditState = Effect.fn(
-  "commerce.resolveUserCreditState"
-)(function* (args: { now: number; user: Doc<"users"> }) {
+export const resolveUserCreditState = Effect.fnUntraced(function* (args: {
+  now: number;
+  user: Doc<"users">;
+}) {
   const resetTimestamp = yield* resolveCreditResetTimestamp({
     now: args.now,
     plan: args.user.plan,
@@ -81,31 +81,32 @@ export const resolveUserCreditState = Effect.fn(
 });
 
 /** Upserts the persisted reset timestamp for a plan through Confect services. */
-const upsertCreditResetPeriod = Effect.fn("commerce.upsertCreditResetPeriod")(
-  function* (args: { plan: UserPlan; resetAt: number }) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const existingPeriod = yield* reader
-      .table("creditResetPeriods")
-      .get("by_plan", args.plan)
-      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+const upsertCreditResetPeriod = Effect.fnUntraced(function* (args: {
+  plan: UserPlan;
+  resetAt: number;
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const existingPeriod = yield* reader
+    .table("creditResetPeriods")
+    .get("by_plan", args.plan)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
 
-    if (!existingPeriod) {
-      yield* writer.table("creditResetPeriods").insert({
-        plan: args.plan,
-        resetAt: args.resetAt,
-      });
-      return null;
-    }
-
-    if (existingPeriod.resetAt === args.resetAt) {
-      return null;
-    }
-
-    yield* writer.table("creditResetPeriods").patch(existingPeriod._id, {
+  if (!existingPeriod) {
+    yield* writer.table("creditResetPeriods").insert({
+      plan: args.plan,
       resetAt: args.resetAt,
     });
-
     return null;
   }
-);
+
+  if (existingPeriod.resetAt === args.resetAt) {
+    return null;
+  }
+
+  yield* writer.table("creditResetPeriods").patch(existingPeriod._id, {
+    resetAt: args.resetAt,
+  });
+
+  return null;
+});

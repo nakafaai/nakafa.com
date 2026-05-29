@@ -11,36 +11,36 @@ import {
 import { Clock, Effect } from "effect";
 
 /** Rebuilds cached IRT responses for one completed exercise attempt. */
-export const syncCalibrationResponsesForAttempt = Effect.fn(
-  "irt.responses.syncCalibrationResponsesForAttempt"
-)(function* (args: { readonly attemptId: Id<"exerciseAttempts"> }) {
-  const now = yield* Clock.currentTimeMillis;
+export const syncCalibrationResponsesForAttempt = Effect.fnUntraced(
+  function* (args: { readonly attemptId: Id<"exerciseAttempts"> }) {
+    const now = yield* Clock.currentTimeMillis;
 
-  yield* clearCalibrationResponsesForAttempt({
-    attemptId: args.attemptId,
-    updatedAt: now,
-  });
+    yield* clearCalibrationResponsesForAttempt({
+      attemptId: args.attemptId,
+      updatedAt: now,
+    });
 
-  const calibrationAttempt = yield* buildCalibrationAttemptInsert(
-    args.attemptId
-  );
+    const calibrationAttempt = yield* buildCalibrationAttemptInsert(
+      args.attemptId
+    );
 
-  if (!calibrationAttempt) {
-    yield* removePendingCalibrationQueueEntry(args.attemptId);
+    if (!calibrationAttempt) {
+      yield* removePendingCalibrationQueueEntry(args.attemptId);
+      return null;
+    }
+
+    yield* insertCalibrationAttempt({
+      attemptId: args.attemptId,
+      responses: calibrationAttempt.responses,
+      setId: calibrationAttempt.setId,
+      updatedAt: now,
+    });
+    yield* ensurePendingCalibrationQueueEntry({
+      attemptId: args.attemptId,
+      enqueuedAt: now,
+      setId: calibrationAttempt.setId,
+    });
+
     return null;
   }
-
-  yield* insertCalibrationAttempt({
-    attemptId: args.attemptId,
-    responses: calibrationAttempt.responses,
-    setId: calibrationAttempt.setId,
-    updatedAt: now,
-  });
-  yield* ensurePendingCalibrationQueueEntry({
-    attemptId: args.attemptId,
-    enqueuedAt: now,
-    setId: calibrationAttempt.setId,
-  });
-
-  return null;
-});
+);

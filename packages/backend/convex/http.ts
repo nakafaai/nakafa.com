@@ -1,3 +1,3 @@
-import http from "@repo/backend/confect/http";
+import http from "../confect/http";
 
 export default http;

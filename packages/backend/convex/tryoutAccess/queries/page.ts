@@ -1,3 +1,3 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registered/tryoutAccess";
+import registeredFunctions from "../../../confect/_generated/registeredFunctions";
 
 export const getEventPageState = registeredFunctions.tryoutAccess.queries.page.getEventPageState;

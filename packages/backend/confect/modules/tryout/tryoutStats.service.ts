@@ -27,9 +27,7 @@ interface TryoutStatsProgress {
 }
 
 /** Rebuilds one user's aggregate stats from leaderboard entries. */
-export const rebuildUserTryoutStats = Effect.fn(
-  "tryouts.stats.rebuildUserTryoutStats"
-)(function* (args: {
+export const rebuildUserTryoutStats = Effect.fnUntraced(function* (args: {
   readonly cursor?: string;
   readonly leaderboardNamespace: string;
   readonly product: TryoutProduct;
@@ -135,9 +133,7 @@ export const rebuildUserTryoutStats = Effect.fn(
 });
 
 /** Synchronizes one user's global tryout stats after a leaderboard change. */
-export const syncUserTryoutStats = Effect.fn(
-  "tryouts.stats.syncUserTryoutStats"
-)(function* (args: {
+export const syncUserTryoutStats = Effect.fnUntraced(function* (args: {
   readonly cycleKey: string;
   readonly locale: Locale;
   readonly nextEntry: TryoutStatsEntry;

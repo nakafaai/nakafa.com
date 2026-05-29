@@ -14,9 +14,9 @@ import { resolveResumePartKey } from "@repo/backend/confect/modules/tryout/tryou
 import { Effect } from "effect";
 
 /** Builds the full public attempt result for the current user. */
-export const buildUserTryoutAttemptResult = Effect.fn(
-  "tryouts.me.buildUserTryoutAttemptResult"
-)(function* (context: UserTryoutContext) {
+export const buildUserTryoutAttemptResult = Effect.fnUntraced(function* (
+  context: UserTryoutContext
+) {
   const reader = yield* DatabaseReader;
   const { attempt, tryout } = context;
   const accessCampaign = yield* getTryoutAccessCampaignByOptionalId(

@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registered/customers";
+import registeredFunctions from "../../../../confect/_generated/registeredFunctions";
 
 export const getCustomerByPolarId = registeredFunctions.customers.queries.internalFunctions.customer.getCustomerByPolarId;
 export const getCustomerByUserId = registeredFunctions.customers.queries.internalFunctions.customer.getCustomerByUserId;

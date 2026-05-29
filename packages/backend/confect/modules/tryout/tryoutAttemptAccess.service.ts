@@ -8,9 +8,7 @@ import { Effect } from "effect";
 type TryoutAttemptDoc = typeof TryoutAttempts.Doc.Type;
 
 /** Loads a tryout attempt and verifies the current user owns it. */
-export const requireOwnedTryoutAttempt = Effect.fn(
-  "tryouts.access.requireOwnedTryoutAttempt"
-)(function* (args: {
+export const requireOwnedTryoutAttempt = Effect.fnUntraced(function* (args: {
   readonly tryoutAttemptId: Id<"tryoutAttempts">;
   readonly userId: Id<"users">;
 }) {
@@ -42,49 +40,49 @@ export const requireOwnedTryoutAttempt = Effect.fn(
 });
 
 /** Re-checks expiry and requires an in-progress tryout attempt. */
-export const requireActiveTryoutAttemptAfterExpirySync = Effect.fn(
-  "tryouts.access.requireActiveAfterExpirySync"
-)(function* (args: {
-  readonly now: number;
-  readonly tryoutAttempt: TryoutAttemptDoc;
-}) {
-  const tryoutExpiry = yield* syncTryoutAttemptExpiry(
-    args.tryoutAttempt,
-    args.now
-  );
+export const requireActiveTryoutAttemptAfterExpirySync = Effect.fnUntraced(
+  function* (args: {
+    readonly now: number;
+    readonly tryoutAttempt: TryoutAttemptDoc;
+  }) {
+    const tryoutExpiry = yield* syncTryoutAttemptExpiry(
+      args.tryoutAttempt,
+      args.now
+    );
 
-  if (tryoutExpiry.expired) {
+    if (tryoutExpiry.expired) {
+      return yield* Effect.fail(
+        new TryoutError({
+          code: "TRYOUT_EXPIRED",
+          message: "This tryout has expired.",
+        })
+      );
+    }
+
+    const reader = yield* DatabaseReader;
+    const currentTryoutAttempt = yield* reader
+      .table("tryoutAttempts")
+      .get(args.tryoutAttempt._id)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+
+    if (!currentTryoutAttempt) {
+      return yield* Effect.fail(
+        new TryoutError({
+          code: "ATTEMPT_NOT_FOUND",
+          message: "Tryout attempt not found.",
+        })
+      );
+    }
+
+    if (currentTryoutAttempt.status === "in-progress") {
+      return currentTryoutAttempt;
+    }
+
     return yield* Effect.fail(
       new TryoutError({
-        code: "TRYOUT_EXPIRED",
-        message: "This tryout has expired.",
+        code: "INVALID_ATTEMPT_STATUS",
+        message: "Tryout attempt is not in progress.",
       })
     );
   }
-
-  const reader = yield* DatabaseReader;
-  const currentTryoutAttempt = yield* reader
-    .table("tryoutAttempts")
-    .get(args.tryoutAttempt._id)
-    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
-
-  if (!currentTryoutAttempt) {
-    return yield* Effect.fail(
-      new TryoutError({
-        code: "ATTEMPT_NOT_FOUND",
-        message: "Tryout attempt not found.",
-      })
-    );
-  }
-
-  if (currentTryoutAttempt.status === "in-progress") {
-    return currentTryoutAttempt;
-  }
-
-  return yield* Effect.fail(
-    new TryoutError({
-      code: "INVALID_ATTEMPT_STATUS",
-      message: "Tryout attempt is not in progress.",
-    })
-  );
-});
+);

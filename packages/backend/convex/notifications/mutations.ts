@@ -1,4 +1,4 @@
-import registeredFunctions from "@repo/backend/confect/_generated/registered/notifications";
+import registeredFunctions from "../../confect/_generated/registeredFunctions";
 
 export const setDisabledNotificationTypes = registeredFunctions.notifications.mutations.setDisabledNotificationTypes;
 export const setNotificationEntityMute = registeredFunctions.notifications.mutations.setNotificationEntityMute;

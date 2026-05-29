@@ -14,44 +14,44 @@ const TRYOUT_ACCESS_STATUS_SWEEP_BATCH_SIZE = 100;
 type TryoutAccessCampaign = typeof TryoutAccessCampaigns.Doc.Type;
 
 /** Finalizes a competition campaign once its event window has ended. */
-export const finalizeCompetitionCampaignResultsIfNeeded = Effect.fn(
-  "tryoutAccess.finalizeCompetitionCampaignResultsIfNeeded"
-)(function* (campaign: TryoutAccessCampaign | null, now: number) {
-  const writer = yield* DatabaseWriter;
+export const finalizeCompetitionCampaignResultsIfNeeded = Effect.fnUntraced(
+  function* (campaign: TryoutAccessCampaign | null, now: number) {
+    const writer = yield* DatabaseWriter;
 
-  if (
-    !campaign ||
-    campaign.campaignKind !== "competition" ||
-    campaign.resultsStatus !== "pending" ||
-    campaign.endsAt > now
-  ) {
-    return null;
+    if (
+      !campaign ||
+      campaign.campaignKind !== "competition" ||
+      campaign.resultsStatus !== "pending" ||
+      campaign.endsAt > now
+    ) {
+      return null;
+    }
+
+    yield* writer.table("tryoutAccessCampaigns").patch(campaign._id, {
+      resultsFinalizedAt: now,
+      resultsStatus: "finalized",
+    });
   }
-
-  yield* writer.table("tryoutAccessCampaigns").patch(campaign._id, {
-    resultsFinalizedAt: now,
-    resultsStatus: "finalized",
-  });
-});
+);
 
 /** Internal mutation wrapper for competition finalization. */
-export const finalizeCompetitionCampaignResults = Effect.fn(
-  "tryoutAccess.finalizeCompetitionCampaignResults"
-)(function* (args: { readonly campaignId: Id<"tryoutAccessCampaigns"> }) {
-  const reader = yield* DatabaseReader;
-  const now = yield* Clock.currentTimeMillis;
-  const campaign = yield* reader
-    .table("tryoutAccessCampaigns")
-    .get(args.campaignId)
-    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
-  yield* finalizeCompetitionCampaignResultsIfNeeded(campaign, now);
-  return null;
-});
+export const finalizeCompetitionCampaignResults = Effect.fnUntraced(
+  function* (args: { readonly campaignId: Id<"tryoutAccessCampaigns"> }) {
+    const reader = yield* DatabaseReader;
+    const now = yield* Clock.currentTimeMillis;
+    const campaign = yield* reader
+      .table("tryoutAccessCampaigns")
+      .get(args.campaignId)
+      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+    yield* finalizeCompetitionCampaignResultsIfNeeded(campaign, now);
+    return null;
+  }
+);
 
 /** Synchronizes one campaign redeem status. */
-export const syncCampaignRedeemStatus = Effect.fn(
-  "tryoutAccess.syncCampaignRedeemStatus"
-)(function* (args: { readonly campaignId: Id<"tryoutAccessCampaigns"> }) {
+export const syncCampaignRedeemStatus = Effect.fnUntraced(function* (args: {
+  readonly campaignId: Id<"tryoutAccessCampaigns">;
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const now = yield* Clock.currentTimeMillis;
@@ -77,26 +77,26 @@ export const syncCampaignRedeemStatus = Effect.fn(
 });
 
 /** Expires one grant and mirrors entitlement rows. */
-export const expireGrant = Effect.fn("tryoutAccess.expireGrant")(
-  function* (args: { readonly grantId: Id<"tryoutAccessGrants"> }) {
-    const reader = yield* DatabaseReader;
-    const now = yield* Clock.currentTimeMillis;
-    const grant = yield* reader
-      .table("tryoutAccessGrants")
-      .get(args.grantId)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+export const expireGrant = Effect.fnUntraced(function* (args: {
+  readonly grantId: Id<"tryoutAccessGrants">;
+}) {
+  const reader = yield* DatabaseReader;
+  const now = yield* Clock.currentTimeMillis;
+  const grant = yield* reader
+    .table("tryoutAccessGrants")
+    .get(args.grantId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-    if (!grant) {
-      return null;
-    }
-
-    yield* syncTryoutAccessGrantStatus(grant, now);
+  if (!grant) {
     return null;
   }
-);
+
+  yield* syncTryoutAccessGrantStatus(grant, now);
+  return null;
+});
 
 /** Sweeps overdue campaign, grant, entitlement, and competition states. */
-export const sweepStates = Effect.fn("tryoutAccess.sweepStates")(function* () {
+export const sweepStates = Effect.fnUntraced(function* () {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const scheduler = yield* Scheduler;

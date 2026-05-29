@@ -14,80 +14,74 @@ import { PERMISSIONS } from "@repo/backend/confect/modules/school/permissions";
 import { Clock, Effect } from "effect";
 
 /** Creates a question bank. */
-export const createQuestionBank = Effect.fn("assessments.createQuestionBank")(
-  function* (args: {
-    readonly classId?: Id<"schoolClasses">;
-    readonly description?: Doc<"schoolAssessmentQuestionBanks">["description"];
-    readonly schoolId: Id<"schools">;
-    readonly scope: Doc<"schoolAssessmentQuestionBanks">["scope"];
-    readonly title: string;
-  }) {
-    const writer = yield* DatabaseWriter;
-    const user = yield* requireAppUser();
+export const createQuestionBank = Effect.fnUntraced(function* (args: {
+  readonly classId?: Id<"schoolClasses">;
+  readonly description?: Doc<"schoolAssessmentQuestionBanks">["description"];
+  readonly schoolId: Id<"schools">;
+  readonly scope: Doc<"schoolAssessmentQuestionBanks">["scope"];
+  readonly title: string;
+}) {
+  const writer = yield* DatabaseWriter;
+  const user = yield* requireAppUser();
 
-    if (args.scope === "class" && !args.classId) {
-      return yield* Effect.fail(
-        new AssessmentError({
-          code: "CLASS_NOT_FOUND",
-          message: "Class banks require a class.",
-        })
-      );
-    }
-
-    if (args.scope === "school" && args.classId) {
-      return yield* Effect.fail(
-        new AssessmentError({
-          code: "INVALID_QUESTION_BANK_SCOPE",
-          message: "School banks cannot be scoped to a class.",
-        })
-      );
-    }
-
-    const classData = args.classId
-      ? yield* loadActiveClass(args.classId)
-      : null;
-
-    if (classData && classData.schoolId !== args.schoolId) {
-      return yield* Effect.fail(
-        new AssessmentError({
-          code: "CLASS_NOT_FOUND",
-          message: "Class not found in this school.",
-        })
-      );
-    }
-
-    yield* requirePermission(PERMISSIONS.ASSESSMENT_CREATE, {
-      classId: classData?._id,
-      schoolId: args.schoolId,
-      userId: user.appUser._id,
-    });
-
-    if (args.description) {
-      yield* requireRichContentSize(
-        args.description,
-        "Question bank description"
-      );
-    }
-
-    const now = yield* Clock.currentTimeMillis;
-
-    return yield* writer.table("schoolAssessmentQuestionBanks").insert({
-      classId: classData?._id,
-      createdBy: user.appUser._id,
-      description: args.description,
-      schoolId: args.schoolId,
-      scope: args.scope,
-      title: args.title,
-      updatedAt: now,
-      updatedBy: user.appUser._id,
-    });
+  if (args.scope === "class" && !args.classId) {
+    return yield* Effect.fail(
+      new AssessmentError({
+        code: "CLASS_NOT_FOUND",
+        message: "Class banks require a class.",
+      })
+    );
   }
-);
+
+  if (args.scope === "school" && args.classId) {
+    return yield* Effect.fail(
+      new AssessmentError({
+        code: "INVALID_QUESTION_BANK_SCOPE",
+        message: "School banks cannot be scoped to a class.",
+      })
+    );
+  }
+
+  const classData = args.classId ? yield* loadActiveClass(args.classId) : null;
+
+  if (classData && classData.schoolId !== args.schoolId) {
+    return yield* Effect.fail(
+      new AssessmentError({
+        code: "CLASS_NOT_FOUND",
+        message: "Class not found in this school.",
+      })
+    );
+  }
+
+  yield* requirePermission(PERMISSIONS.ASSESSMENT_CREATE, {
+    classId: classData?._id,
+    schoolId: args.schoolId,
+    userId: user.appUser._id,
+  });
+
+  if (args.description) {
+    yield* requireRichContentSize(
+      args.description,
+      "Question bank description"
+    );
+  }
+
+  const now = yield* Clock.currentTimeMillis;
+
+  return yield* writer.table("schoolAssessmentQuestionBanks").insert({
+    classId: classData?._id,
+    createdBy: user.appUser._id,
+    description: args.description,
+    schoolId: args.schoolId,
+    scope: args.scope,
+    title: args.title,
+    updatedAt: now,
+    updatedBy: user.appUser._id,
+  });
+});
 
 /** Creates a reusable question bank entry. */
-export const createQuestionBankEntry = Effect.fn(
-  "assessments.createQuestionBankEntry"
-)(function* (args: {
+export const createQuestionBankEntry = Effect.fnUntraced(function* (args: {
   readonly bankId: Id<"schoolAssessmentQuestionBanks">;
   readonly classId?: Id<"schoolClasses">;
   readonly explanation?: Doc<"schoolAssessmentQuestionBankEntries">["explanation"];

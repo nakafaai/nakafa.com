@@ -29,9 +29,7 @@ type SchoolCleanupEntity =
 const CLEANUP_DELAY = Duration.millis(0);
 
 /** Deletes notification rows for one deleted entity batch. */
-const deleteEntityNotifications = Effect.fn(
-  "schoolCleanup.deleteEntityNotifications"
-)(function* (
+const deleteEntityNotifications = Effect.fnUntraced(function* (
   entityType: SchoolCleanupEntity,
   entityId:
     | Id<"schoolClasses">
@@ -55,35 +53,33 @@ const deleteEntityNotifications = Effect.fn(
 });
 
 /** Deletes notification mute rows for one deleted entity batch. */
-const deleteEntityMutes = Effect.fn("schoolCleanup.deleteEntityMutes")(
-  function* (
-    entityType: SchoolCleanupEntity,
-    entityId:
-      | Id<"schoolClasses">
-      | Id<"schoolClassForums">
-      | Id<"schoolClassForumPosts">
-  ) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const mutes = yield* reader
-      .table("notificationEntityMutes")
-      .index("by_entityType_and_entityId", (query) =>
-        query.eq("entityType", entityType).eq("entityId", entityId)
-      )
-      .take(ENTITY_MUTE_CLEANUP_BATCH_SIZE);
+const deleteEntityMutes = Effect.fnUntraced(function* (
+  entityType: SchoolCleanupEntity,
+  entityId:
+    | Id<"schoolClasses">
+    | Id<"schoolClassForums">
+    | Id<"schoolClassForumPosts">
+) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const mutes = yield* reader
+    .table("notificationEntityMutes")
+    .index("by_entityType_and_entityId", (query) =>
+      query.eq("entityType", entityType).eq("entityId", entityId)
+    )
+    .take(ENTITY_MUTE_CLEANUP_BATCH_SIZE);
 
-    for (const mute of mutes) {
-      yield* writer.table("notificationEntityMutes").delete(mute._id);
-    }
-
-    return mutes.length;
+  for (const mute of mutes) {
+    yield* writer.table("notificationEntityMutes").delete(mute._id);
   }
-);
+
+  return mutes.length;
+});
 
 /** Removes dependent rows after a class row has been deleted. */
-export const cleanupDeletedClass = Effect.fn(
-  "schoolCleanup.cleanupDeletedClass"
-)(function* (args: { classId: Id<"schoolClasses"> }) {
+export const cleanupDeletedClass = Effect.fnUntraced(function* (args: {
+  classId: Id<"schoolClasses">;
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const scheduler = yield* Scheduler;
@@ -181,9 +177,9 @@ export const cleanupDeletedClass = Effect.fn(
 });
 
 /** Removes dependent rows after a forum row has been deleted. */
-export const cleanupDeletedForum = Effect.fn(
-  "schoolCleanup.cleanupDeletedForum"
-)(function* (args: { forumId: Id<"schoolClassForums"> }) {
+export const cleanupDeletedForum = Effect.fnUntraced(function* (args: {
+  forumId: Id<"schoolClassForums">;
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const scheduler = yield* Scheduler;
@@ -295,9 +291,9 @@ export const cleanupDeletedForum = Effect.fn(
 });
 
 /** Removes dependent rows after a forum post row has been deleted. */
-export const cleanupDeletedForumPost = Effect.fn(
-  "schoolCleanup.cleanupDeletedForumPost"
-)(function* (args: { postId: Id<"schoolClassForumPosts"> }) {
+export const cleanupDeletedForumPost = Effect.fnUntraced(function* (args: {
+  postId: Id<"schoolClassForumPosts">;
+}) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const scheduler = yield* Scheduler;

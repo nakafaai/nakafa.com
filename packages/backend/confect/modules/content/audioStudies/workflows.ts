@@ -96,7 +96,7 @@ export const generateAudioForQueueItem = workflow.define({
     );
 
     await step.runAction(
-      toConvexReference(refs.internal.node.audioStudies.actions.generateScript),
+      toConvexReference(refs.internal.audioStudies.actions.generateScript),
       {
         contentAudioId: audioRecordId,
       },

@@ -23,9 +23,7 @@ interface PaginationOpts {
 }
 
 /** Loads a bounded raw history page for one user and tryout. */
-const loadRawUserTryoutAttemptHistoryPage = Effect.fn(
-  "tryouts.me.loadRawUserTryoutAttemptHistoryPage"
-)(function* (args: {
+const loadRawUserTryoutAttemptHistoryPage = Effect.fnUntraced(function* (args: {
   readonly paginationOpts: PaginationOpts;
   readonly tryout: typeof Tryouts.Doc.Type;
   readonly userId: Id<"users">;
@@ -49,9 +47,9 @@ const loadRawUserTryoutAttemptHistoryPage = Effect.fn(
 });
 
 /** Loads access campaigns referenced by history rows. */
-const loadTryoutAccessCampaignsById = Effect.fn(
-  "tryouts.me.loadTryoutAccessCampaignsById"
-)(function* (attempts: readonly (typeof TryoutAttempts.Doc.Type)[]) {
+const loadTryoutAccessCampaignsById = Effect.fnUntraced(function* (
+  attempts: readonly (typeof TryoutAttempts.Doc.Type)[]
+) {
   const reader = yield* DatabaseReader;
   const campaignIds = new Set<Id<"tryoutAccessCampaigns">>();
 
@@ -87,9 +85,7 @@ const loadTryoutAccessCampaignsById = Effect.fn(
 });
 
 /** Builds one public tryout history row. */
-const buildTryoutAttemptHistoryRow = Effect.fn(
-  "tryouts.me.buildTryoutAttemptHistoryRow"
-)(function* (args: {
+const buildTryoutAttemptHistoryRow = Effect.fnUntraced(function* (args: {
   readonly attempt: typeof TryoutAttempts.Doc.Type;
   readonly campaignsById: ReadonlyMap<
     Id<"tryoutAccessCampaigns">,
@@ -139,9 +135,7 @@ const buildTryoutAttemptHistoryRow = Effect.fn(
 });
 
 /** Converts raw history attempts into public rows. */
-const buildTryoutAttemptHistoryRows = Effect.fn(
-  "tryouts.me.buildTryoutAttemptHistoryRows"
-)(function* (args: {
+const buildTryoutAttemptHistoryRows = Effect.fnUntraced(function* (args: {
   readonly attempts: readonly (typeof TryoutAttempts.Doc.Type)[];
   readonly latestAttemptId: Id<"tryoutAttempts">;
   readonly tryout: typeof Tryouts.Doc.Type;
@@ -165,29 +159,29 @@ const buildTryoutAttemptHistoryRows = Effect.fn(
 });
 
 /** Loads a public tryout history page for one user. */
-export const loadUserTryoutAttemptHistoryPage = Effect.fn(
-  "tryouts.me.loadUserTryoutAttemptHistoryPage"
-)(function* (args: {
-  readonly paginationOpts: PaginationOpts;
-  readonly tryout: typeof Tryouts.Doc.Type;
-  readonly userId: Id<"users">;
-}) {
-  const latestAttempt = yield* loadLatestUserTryoutAttempt({
-    tryoutId: args.tryout._id,
-    userId: args.userId,
-  });
-  const rawHistoryPage = yield* loadRawUserTryoutAttemptHistoryPage(args);
+export const loadUserTryoutAttemptHistoryPage = Effect.fnUntraced(
+  function* (args: {
+    readonly paginationOpts: PaginationOpts;
+    readonly tryout: typeof Tryouts.Doc.Type;
+    readonly userId: Id<"users">;
+  }) {
+    const latestAttempt = yield* loadLatestUserTryoutAttempt({
+      tryoutId: args.tryout._id,
+      userId: args.userId,
+    });
+    const rawHistoryPage = yield* loadRawUserTryoutAttemptHistoryPage(args);
 
-  if (rawHistoryPage.page.length === 0) {
-    return { ...rawHistoryPage, page: [] };
+    if (rawHistoryPage.page.length === 0) {
+      return { ...rawHistoryPage, page: [] };
+    }
+
+    const latestAttemptId = latestAttempt?._id ?? rawHistoryPage.page[0]._id;
+    const page = yield* buildTryoutAttemptHistoryRows({
+      attempts: rawHistoryPage.page,
+      latestAttemptId,
+      tryout: args.tryout,
+    });
+
+    return { ...rawHistoryPage, page };
   }
-
-  const latestAttemptId = latestAttempt?._id ?? rawHistoryPage.page[0]._id;
-  const page = yield* buildTryoutAttemptHistoryRows({
-    attempts: rawHistoryPage.page,
-    latestAttemptId,
-    tryout: args.tryout,
-  });
-
-  return { ...rawHistoryPage, page };
-});
+);

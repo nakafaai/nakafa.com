@@ -41,118 +41,116 @@ function getLeaderboardLimit(limit?: number) {
 }
 
 /** Updates the per-tryout leaderboard for a completed official attempt. */
-export const updateLeaderboard = Effect.fn("tryouts.leaderboard.update")(
-  function* (args: { readonly tryoutAttemptId: Id<"tryoutAttempts"> }) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const attempt = yield* reader
-      .table("tryoutAttempts")
-      .get(args.tryoutAttemptId)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+export const updateLeaderboard = Effect.fnUntraced(function* (args: {
+  readonly tryoutAttemptId: Id<"tryoutAttempts">;
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const attempt = yield* reader
+    .table("tryoutAttempts")
+    .get(args.tryoutAttemptId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-    if (
-      !attempt ||
-      attempt.status !== "completed" ||
-      attempt.scoreStatus !== "official"
-    ) {
-      return null;
-    }
-
-    const tryout = yield* reader
-      .table("tryouts")
-      .get(attempt.tryoutId)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
-
-    if (!tryout) {
-      return yield* Effect.fail(
-        new TryoutError({
-          code: "TRYOUT_NOT_FOUND",
-          message: "Completed tryout attempt is missing its tryout.",
-        })
-      );
-    }
-
-    if (attempt.completedAt === null) {
-      return yield* Effect.fail(
-        new TryoutError({
-          code: "TRYOUT_COMPLETED_AT_MISSING",
-          message: "Completed tryout attempt is missing completedAt.",
-        })
-      );
-    }
-
-    const leaderboardNamespace = tryoutProductPolicies[
-      tryout.product
-    ].getLeaderboardNamespace({
-      cycleKey: tryout.cycleKey,
-      locale: tryout.locale,
-      product: tryout.product,
-    });
-    const existingEntry = yield* reader
-      .table("tryoutLeaderboardEntries")
-      .get("by_tryoutId_and_userId", attempt.tryoutId, attempt.userId)
-      .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
-
-    if (
-      existingEntry &&
-      existingEntry.attemptId !== attempt._id &&
-      !isBetterLeaderboardScore(attempt, existingEntry)
-    ) {
-      return null;
-    }
-
-    const completedAt = attempt.completedAt;
-    const rawScore = computeTryoutRawScorePercentage(attempt);
-
-    if (existingEntry) {
-      yield* writer.table("tryoutLeaderboardEntries").patch(existingEntry._id, {
-        attemptId: attempt._id,
-        completedAt,
-        leaderboardNamespace,
-        rawScore,
-        theta: attempt.theta,
-        thetaSE: attempt.thetaSE,
-      });
-    } else {
-      yield* writer.table("tryoutLeaderboardEntries").insert({
-        attemptId: attempt._id,
-        completedAt,
-        leaderboardNamespace,
-        rawScore,
-        theta: attempt.theta,
-        thetaSE: attempt.thetaSE,
-        tryoutId: attempt.tryoutId,
-        userId: attempt.userId,
-      });
-    }
-
-    yield* syncUserTryoutStats({
-      cycleKey: tryout.cycleKey,
-      locale: tryout.locale,
-      nextEntry: {
-        completedAt,
-        rawScore,
-        theta: attempt.theta,
-      },
-      previousEntry: existingEntry
-        ? {
-            completedAt: existingEntry.completedAt,
-            rawScore: existingEntry.rawScore,
-            theta: existingEntry.theta,
-          }
-        : null,
-      product: tryout.product,
-      userId: attempt.userId,
-    });
-
+  if (
+    !attempt ||
+    attempt.status !== "completed" ||
+    attempt.scoreStatus !== "official"
+  ) {
     return null;
   }
-);
+
+  const tryout = yield* reader
+    .table("tryouts")
+    .get(attempt.tryoutId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+
+  if (!tryout) {
+    return yield* Effect.fail(
+      new TryoutError({
+        code: "TRYOUT_NOT_FOUND",
+        message: "Completed tryout attempt is missing its tryout.",
+      })
+    );
+  }
+
+  if (attempt.completedAt === null) {
+    return yield* Effect.fail(
+      new TryoutError({
+        code: "TRYOUT_COMPLETED_AT_MISSING",
+        message: "Completed tryout attempt is missing completedAt.",
+      })
+    );
+  }
+
+  const leaderboardNamespace = tryoutProductPolicies[
+    tryout.product
+  ].getLeaderboardNamespace({
+    cycleKey: tryout.cycleKey,
+    locale: tryout.locale,
+    product: tryout.product,
+  });
+  const existingEntry = yield* reader
+    .table("tryoutLeaderboardEntries")
+    .get("by_tryoutId_and_userId", attempt.tryoutId, attempt.userId)
+    .pipe(Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)));
+
+  if (
+    existingEntry &&
+    existingEntry.attemptId !== attempt._id &&
+    !isBetterLeaderboardScore(attempt, existingEntry)
+  ) {
+    return null;
+  }
+
+  const completedAt = attempt.completedAt;
+  const rawScore = computeTryoutRawScorePercentage(attempt);
+
+  if (existingEntry) {
+    yield* writer.table("tryoutLeaderboardEntries").patch(existingEntry._id, {
+      attemptId: attempt._id,
+      completedAt,
+      leaderboardNamespace,
+      rawScore,
+      theta: attempt.theta,
+      thetaSE: attempt.thetaSE,
+    });
+  } else {
+    yield* writer.table("tryoutLeaderboardEntries").insert({
+      attemptId: attempt._id,
+      completedAt,
+      leaderboardNamespace,
+      rawScore,
+      theta: attempt.theta,
+      thetaSE: attempt.thetaSE,
+      tryoutId: attempt.tryoutId,
+      userId: attempt.userId,
+    });
+  }
+
+  yield* syncUserTryoutStats({
+    cycleKey: tryout.cycleKey,
+    locale: tryout.locale,
+    nextEntry: {
+      completedAt,
+      rawScore,
+      theta: attempt.theta,
+    },
+    previousEntry: existingEntry
+      ? {
+          completedAt: existingEntry.completedAt,
+          rawScore: existingEntry.rawScore,
+          theta: existingEntry.theta,
+        }
+      : null,
+    product: tryout.product,
+    userId: attempt.userId,
+  });
+
+  return null;
+});
 
 /** Reads the best scores for one tryout. */
-export const getTryoutLeaderboard = Effect.fn(
-  "tryouts.leaderboard.getTryoutLeaderboard"
-)(function* (args: {
+export const getTryoutLeaderboard = Effect.fnUntraced(function* (args: {
   readonly limit?: number;
   readonly tryoutId: Id<"tryouts">;
 }) {
@@ -229,9 +227,7 @@ export const getTryoutLeaderboard = Effect.fn(
 });
 
 /** Reads the global leaderboard for a product/cycle namespace. */
-export const getGlobalLeaderboard = Effect.fn(
-  "tryouts.leaderboard.getGlobalLeaderboard"
-)(function* (args: {
+export const getGlobalLeaderboard = Effect.fnUntraced(function* (args: {
   readonly cycleKey: string;
   readonly limit?: number;
   readonly locale: Locale;

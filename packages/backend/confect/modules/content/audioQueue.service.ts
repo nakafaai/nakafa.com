@@ -24,131 +24,130 @@ export class AudioQueueError extends Schema.TaggedError<AudioQueueError>()(
 ) {}
 
 /** Marks one audio queue item as completed. */
-export const markQueueCompleted = Effect.fn("audioQueue.markQueueCompleted")(
-  function* (queueItemId: Id<"audioGenerationQueue">) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const item = yield* reader
-      .table("audioGenerationQueue")
-      .get(queueItemId)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+export const markQueueCompleted = Effect.fnUntraced(function* (
+  queueItemId: Id<"audioGenerationQueue">
+) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const item = yield* reader
+    .table("audioGenerationQueue")
+    .get(queueItemId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-    if (!item || item.status === "completed") {
-      return null;
-    }
-
-    const now = yield* Clock.currentTimeMillis;
-    yield* writer.table("audioGenerationQueue").patch(queueItemId, {
-      completedAt: now,
-      status: "completed",
-      updatedAt: now,
-    });
-
+  if (!item || item.status === "completed") {
     return null;
   }
-);
+
+  const now = yield* Clock.currentTimeMillis;
+  yield* writer.table("audioGenerationQueue").patch(queueItemId, {
+    completedAt: now,
+    status: "completed",
+    updatedAt: now,
+  });
+
+  return null;
+});
 
 /** Marks one audio queue item failed or retryable. */
-const setQueueItemFailed = Effect.fn("audioQueue.setQueueItemFailed")(
-  function* (args: { error: string; queueItemId: Id<"audioGenerationQueue"> }) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const item = yield* reader
-      .table("audioGenerationQueue")
-      .get(args.queueItemId)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+const setQueueItemFailed = Effect.fnUntraced(function* (args: {
+  error: string;
+  queueItemId: Id<"audioGenerationQueue">;
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const item = yield* reader
+    .table("audioGenerationQueue")
+    .get(args.queueItemId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
 
-    if (!item || item.status === "completed" || item.status === "failed") {
-      return null;
-    }
-
-    const now = yield* Clock.currentTimeMillis;
-    const retryCount = item.retryCount + 1;
-
-    if (retryCount >= item.maxRetries) {
-      yield* writer.table("audioGenerationQueue").patch(args.queueItemId, {
-        errorMessage: `Max retries exceeded (${item.maxRetries}): ${args.error}`,
-        lastErrorAt: now,
-        retryCount,
-        status: "failed",
-        updatedAt: now,
-      });
-      return null;
-    }
-
-    yield* writer.table("audioGenerationQueue").patch(args.queueItemId, {
-      errorMessage: args.error,
-      lastErrorAt: now,
-      retryCount,
-      status: "pending",
-      updatedAt: now,
-    });
-
+  if (!item || item.status === "completed" || item.status === "failed") {
     return null;
   }
-);
 
-/** Locks one pending queue item for workflow processing. */
-export const lockQueueItem = Effect.fn("audioQueue.lockQueueItem")(
-  function* (args: { queueItemId: Id<"audioGenerationQueue"> }) {
-    const reader = yield* DatabaseReader;
-    const writer = yield* DatabaseWriter;
-    const item = yield* reader
-      .table("audioGenerationQueue")
-      .get(args.queueItemId)
-      .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+  const now = yield* Clock.currentTimeMillis;
+  const retryCount = item.retryCount + 1;
 
-    if (!item) {
-      return yield* Effect.fail(
-        new AudioQueueError({ message: "Queue item not found." })
-      );
-    }
-
-    if (item.status !== "pending") {
-      return null;
-    }
-
-    const now = yield* Clock.currentTimeMillis;
-
-    if (item.retryCount >= item.maxRetries) {
-      yield* writer.table("audioGenerationQueue").patch(args.queueItemId, {
-        errorMessage: `Exceeded maximum retry attempts (${item.maxRetries})`,
-        status: "failed",
-        updatedAt: now,
-      });
-      return null;
-    }
-
+  if (retryCount >= item.maxRetries) {
     yield* writer.table("audioGenerationQueue").patch(args.queueItemId, {
-      processingStartedAt: now,
-      status: "processing",
+      errorMessage: `Max retries exceeded (${item.maxRetries}): ${args.error}`,
+      lastErrorAt: now,
+      retryCount,
+      status: "failed",
       updatedAt: now,
     });
-
-    return {
-      contentRef: item.contentRef,
-      locale: item.locale,
-    };
+    return null;
   }
-);
+
+  yield* writer.table("audioGenerationQueue").patch(args.queueItemId, {
+    errorMessage: args.error,
+    lastErrorAt: now,
+    retryCount,
+    status: "pending",
+    updatedAt: now,
+  });
+
+  return null;
+});
+
+/** Locks one pending queue item for workflow processing. */
+export const lockQueueItem = Effect.fnUntraced(function* (args: {
+  queueItemId: Id<"audioGenerationQueue">;
+}) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const item = yield* reader
+    .table("audioGenerationQueue")
+    .get(args.queueItemId)
+    .pipe(Effect.catchTag("GetByIdFailure", () => Effect.succeed(null)));
+
+  if (!item) {
+    return yield* Effect.fail(
+      new AudioQueueError({ message: "Queue item not found." })
+    );
+  }
+
+  if (item.status !== "pending") {
+    return null;
+  }
+
+  const now = yield* Clock.currentTimeMillis;
+
+  if (item.retryCount >= item.maxRetries) {
+    yield* writer.table("audioGenerationQueue").patch(args.queueItemId, {
+      errorMessage: `Exceeded maximum retry attempts (${item.maxRetries})`,
+      status: "failed",
+      updatedAt: now,
+    });
+    return null;
+  }
+
+  yield* writer.table("audioGenerationQueue").patch(args.queueItemId, {
+    processingStartedAt: now,
+    status: "processing",
+    updatedAt: now,
+  });
+
+  return {
+    contentRef: item.contentRef,
+    locale: item.locale,
+  };
+});
 
 /** Marks a queue item failed from a workflow step. */
-export const markQueueFailed = Effect.fn("audioQueue.markQueueFailed")(
-  function* (args: { error: string; queueItemId: Id<"audioGenerationQueue"> }) {
-    return yield* setQueueItemFailed(args);
-  }
-);
+export const markQueueFailed = Effect.fnUntraced(function* (args: {
+  error: string;
+  queueItemId: Id<"audioGenerationQueue">;
+}) {
+  return yield* setQueueItemFailed(args);
+});
 
 /** Starts workflows for the highest-priority pending content slug. */
-export const startWorkflowsForPendingItems = Effect.fn(
-  "audioQueue.startWorkflowsForPendingItems"
-)(function* () {
+export const startWorkflowsForPendingItems = Effect.fnUntraced(function* () {
   const ctx = yield* MutationCtx;
   const reader = yield* DatabaseReader;
   const audioGeneration = yield* readAudioGenerationEnvironment();
 
   if (!audioGeneration.enabled) {
-    yield* Effect.logInfo("Audio generation skipped because it is disabled.");
     return { started: 0, skipped: 0 };
   }
 
@@ -165,10 +164,6 @@ export const startWorkflowsForPendingItems = Effect.fn(
   const completedSlugs = new Set(completedToday.map((item) => item.slug));
 
   if (completedSlugs.size >= audioGeneration.maxContentPerDay) {
-    yield* Effect.logInfo("Daily audio generation limit reached.", {
-      completed: completedSlugs.size,
-      limit: audioGeneration.maxContentPerDay,
-    });
     return { started: 0, skipped: 0 };
   }
 
@@ -183,7 +178,6 @@ export const startWorkflowsForPendingItems = Effect.fn(
   const topItem = Option.getOrNull(topItemOption);
 
   if (!topItem) {
-    yield* Effect.logInfo("No pending audio queue items.");
     return { started: 0, skipped: 0 };
   }
 
@@ -224,16 +218,11 @@ export const startWorkflowsForPendingItems = Effect.fn(
     started += 1;
   }
 
-  yield* Effect.logInfo("Started audio workflows for content slug.", {
-    slug: topItem.slug,
-    started,
-  });
-
   return { contentRef: topItem.contentRef, skipped: 0, started };
 });
 
 /** Deletes old completed and failed queue rows. */
-export const cleanup = Effect.fn("audioQueue.cleanup")(function* () {
+export const cleanup = Effect.fnUntraced(function* () {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const now = yield* Clock.currentTimeMillis;
@@ -263,17 +252,11 @@ export const cleanup = Effect.fn("audioQueue.cleanup")(function* () {
     deleted += 1;
   }
 
-  if (deleted > 0) {
-    yield* Effect.logInfo("Cleaned up old audio queue items.", { deleted });
-  }
-
   return { deleted };
 });
 
 /** Resets timed-out processing items back to pending when retries remain. */
-export const resetStuckQueueItems = Effect.fn(
-  "audioQueue.resetStuckQueueItems"
-)(function* () {
+export const resetStuckQueueItems = Effect.fnUntraced(function* () {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
   const now = yield* Clock.currentTimeMillis;
@@ -297,10 +280,6 @@ export const resetStuckQueueItems = Effect.fn(
       updatedAt: now,
     });
     reset += 1;
-  }
-
-  if (reset > 0) {
-    yield* Effect.logInfo("Reset stuck audio queue items.", { reset });
   }
 
   return { reset };
