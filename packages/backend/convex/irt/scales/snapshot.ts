@@ -69,8 +69,7 @@ export async function getPublishableScaleSnapshot(
         const params = paramsByQuestionId.get(question._id);
 
         if (
-          !params ||
-          params.calibrationStatus !== "calibrated" ||
+          params?.calibrationStatus !== "calibrated" ||
           params.calibrationRunId === undefined
         ) {
           return [];

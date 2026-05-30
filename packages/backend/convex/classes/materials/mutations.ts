@@ -171,7 +171,7 @@ export const publishMaterialGroup = internalMutation({
   handler: async (ctx, args) => {
     const group = await ctx.db.get("schoolClassMaterialGroups", args.groupId);
 
-    if (!group || group.status !== "scheduled") {
+    if (group?.status !== "scheduled") {
       return;
     }
 

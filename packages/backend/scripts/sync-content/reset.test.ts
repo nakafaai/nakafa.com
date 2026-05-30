@@ -28,8 +28,11 @@ const config = {
 const emptyCounts = {
   articleReferences: 0,
   articles: 0,
+  audioContentSources: 0,
+  audioGenerationQueue: 0,
   authors: 0,
   contentAuthors: 0,
+  contentAudios: 0,
   contentSearch: 0,
   exerciseAnswers: 0,
   exerciseAttempts: 0,

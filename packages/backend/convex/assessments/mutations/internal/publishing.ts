@@ -12,7 +12,7 @@ export const publishAssessment = internalMutation({
   handler: async (ctx, args) => {
     const assessment = await ctx.db.get("schoolAssessments", args.assessmentId);
 
-    if (!assessment || assessment.status !== "scheduled") {
+    if (assessment?.status !== "scheduled") {
       return null;
     }
 

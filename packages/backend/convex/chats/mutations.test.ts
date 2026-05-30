@@ -101,7 +101,6 @@ describe("chats/mutations", () => {
             disableGeoip: true,
             distinctId: userId,
             event: "chat response completed",
-            host: "https://eu.i.posthog.com",
             properties: JSON.stringify({
               chat_type: "study",
               credits: liteCreditCost,

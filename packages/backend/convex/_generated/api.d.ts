@@ -110,6 +110,7 @@ import type * as contentSync_queries_counts from "../contentSync/queries/counts.
 import type * as contentSync_queries_integrity from "../contentSync/queries/integrity.js";
 import type * as contentSync_queries_stale from "../contentSync/queries/stale.js";
 import type * as contentSync_queries_tryouts from "../contentSync/queries/tryouts.js";
+import type * as contentSync_tables from "../contentSync/tables.js";
 import type * as contents_actions_queue from "../contents/actions/queue.js";
 import type * as contents_analytics_impl from "../contents/analytics/impl.js";
 import type * as contents_analytics_spec from "../contents/analytics/spec.js";
@@ -435,6 +436,7 @@ declare const fullApi: ApiFromModules<{
   "contentSync/queries/integrity": typeof contentSync_queries_integrity;
   "contentSync/queries/stale": typeof contentSync_queries_stale;
   "contentSync/queries/tryouts": typeof contentSync_queries_tryouts;
+  "contentSync/tables": typeof contentSync_tables;
   "contents/actions/queue": typeof contents_actions_queue;
   "contents/analytics/impl": typeof contents_analytics_impl;
   "contents/analytics/spec": typeof contents_analytics_spec;

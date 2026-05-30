@@ -27,7 +27,7 @@
     "convex": "^1.39.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "redis": "^5.12.1",
+    "redis": "^6.0.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

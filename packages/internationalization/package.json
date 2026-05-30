@@ -9,7 +9,7 @@
   "dependencies": {
     "@repo/utilities": "workspace:*",
     "next": "16.2.6",
-    "next-intl": "^4.12.0"
+    "next-intl": "^4.13.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*"

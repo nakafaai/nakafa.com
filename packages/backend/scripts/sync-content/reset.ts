@@ -50,6 +50,23 @@ const RESET_STEPS: ResetStep[] = [
     resultLabel: "exercise answers",
   },
   {
+    label: "Deleting audio generation queue...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteAudioGenerationQueueBatch",
+    resultLabel: "audio generation queue entries",
+  },
+  {
+    label: "Deleting generated content audio...",
+    mutationPath: "contentSync/mutations/maintenance:deleteContentAudiosBatch",
+    resultLabel: "generated content audio rows",
+  },
+  {
+    label: "Deleting audio content sources...",
+    mutationPath:
+      "contentSync/mutations/maintenance:deleteAudioContentSourcesBatch",
+    resultLabel: "audio content sources",
+  },
+  {
     label: "Deleting tryout part attempts...",
     mutationPath:
       "contentSync/mutations/maintenance:deleteTryoutPartAttemptsBatch",
@@ -275,6 +292,9 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Content Authors:       ${counts.contentAuthors}`);
   log(`  Article References:    ${counts.articleReferences}`);
   log(`  Exercise Choices:      ${counts.exerciseChoices}`);
+  log(`  Audio Content Sources: ${counts.audioContentSources}`);
+  log(`  Content Audios:        ${counts.contentAudios}`);
+  log(`  Audio Queue:           ${counts.audioGenerationQueue}`);
   log(`  Exercise Answers:      ${counts.exerciseAnswers}`);
   log(`  Exercise Questions:    ${counts.exerciseQuestions}`);
   log(`  Exercise Attempts:     ${counts.exerciseAttempts}`);
@@ -319,6 +339,7 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.exerciseAnswers;
   const totalRuntime =
     counts.exerciseAttempts +
+    counts.audioGenerationQueue +
     counts.tryoutAccessCampaigns +
     counts.tryoutAccessCampaignProducts +
     counts.tryoutAccessLinks +
@@ -341,7 +362,8 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.irtScalePublicationQueue +
     counts.irtScaleVersions +
     counts.irtScaleVersionItems;
-  const totalDerived = counts.contentSearch;
+  const totalDerived =
+    counts.contentSearch + counts.audioContentSources + counts.contentAudios;
 
   log(`\n  Total content items:  ${totalContent}`);
   log(`  Total related items:  ${totalRelated}`);

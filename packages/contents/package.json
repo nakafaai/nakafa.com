@@ -10,9 +10,9 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@hugeicons/core-free-icons": "^4.1.4",
+    "@hugeicons/core-free-icons": "^4.2.0",
     "@hugeicons/react": "^1.1.6",
-    "@mantine/hooks": "^9.2.1",
+    "@mantine/hooks": "^9.2.2",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/utilities": "workspace:*",
@@ -20,9 +20,9 @@
     "effect": "^3.21.2",
     "ky": "^2.0.2",
     "motion": "^12.40.0",
-    "next-intl": "^4.12.0",
+    "next-intl": "^4.13.0",
     "react": "19.2.6",
-    "react-aria-components": "^1.17.0",
+    "react-aria-components": "^1.18.0",
     "recharts": "^2.15.4"
   },
   "devDependencies": {

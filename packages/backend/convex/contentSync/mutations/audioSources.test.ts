@@ -43,7 +43,7 @@ describe("contentSync audio sources", () => {
         )
         .unique();
 
-      if (!source || source.contentRef.type !== "article") {
+      if (source?.contentRef.type !== "article") {
         throw new Error("Expected synced article audio source.");
       }
 
@@ -139,7 +139,7 @@ describe("contentSync audio sources", () => {
         )
         .unique();
 
-      if (!source || source.contentRef.type !== "subject") {
+      if (source?.contentRef.type !== "subject") {
         throw new Error("Expected synced subject audio source.");
       }
 

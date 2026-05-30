@@ -58,7 +58,7 @@ export const getAudioPlaybackBySlug = Effect.fn(
     catch: toAudioPlaybackIoError,
   });
 
-  if (!audio || audio.status !== "completed" || !audio.audioStorageId) {
+  if (audio?.status !== "completed" || !audio.audioStorageId) {
     return null;
   }
 

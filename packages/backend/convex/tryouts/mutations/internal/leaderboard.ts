@@ -21,8 +21,7 @@ export const updateLeaderboard = internalMutation({
     );
 
     if (
-      !tryoutAttempt ||
-      tryoutAttempt.status !== "completed" ||
+      tryoutAttempt?.status !== "completed" ||
       tryoutAttempt.scoreStatus !== "official"
     ) {
       return null;

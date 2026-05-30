@@ -20,7 +20,7 @@ export const expireTryoutAttemptInternal = internalMutation({
       args.tryoutAttemptId
     );
 
-    if (!tryoutAttempt || tryoutAttempt.status !== "in-progress") {
+    if (tryoutAttempt?.status !== "in-progress") {
       return null;
     }
 
