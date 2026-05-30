@@ -37,7 +37,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
       token ? { token } : undefined
     ),
     token
-      ? fetchQuery(api.auth.getCurrentUser, {}, { token })
+      ? fetchQuery(api.auth.queries.getCurrentUser, {}, { token })
       : Promise.resolve(null),
   ]);
   const userName = currentUser?.appUser.name ?? tHome("guest");

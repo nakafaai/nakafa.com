@@ -48,10 +48,11 @@ import type * as audioStudies_queries_internal from "../audioStudies/queries/int
 import type * as audioStudies_queries_public from "../audioStudies/queries/public.js";
 import type * as audioStudies_utils from "../audioStudies/utils.js";
 import type * as audioStudies_workflows from "../audioStudies/workflows.js";
-import type * as auth from "../auth.js";
+import type * as auth_actions from "../auth/actions.js";
 import type * as auth_cleanup from "../auth/cleanup.js";
 import type * as auth_client from "../auth/client.js";
 import type * as auth_lifecycle from "../auth/lifecycle.js";
+import type * as auth_queries from "../auth/queries.js";
 import type * as auth_reader from "../auth/reader.js";
 import type * as auth_runtime from "../auth/runtime.js";
 import type * as chats_actions from "../chats/actions.js";
@@ -374,10 +375,11 @@ declare const fullApi: ApiFromModules<{
   "audioStudies/queries/public": typeof audioStudies_queries_public;
   "audioStudies/utils": typeof audioStudies_utils;
   "audioStudies/workflows": typeof audioStudies_workflows;
-  auth: typeof auth;
+  "auth/actions": typeof auth_actions;
   "auth/cleanup": typeof auth_cleanup;
   "auth/client": typeof auth_client;
   "auth/lifecycle": typeof auth_lifecycle;
+  "auth/queries": typeof auth_queries;
   "auth/reader": typeof auth_reader;
   "auth/runtime": typeof auth_runtime;
   "chats/actions": typeof chats_actions;

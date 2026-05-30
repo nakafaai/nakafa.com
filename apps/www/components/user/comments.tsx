@@ -62,7 +62,7 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
 function CommentThread({ comment }: { comment: Doc<"comments"> }) {
   const t = useTranslations("Common");
 
-  const { data: user } = useQueryWithStatus(api.auth.getUserById, {
+  const { data: user } = useQueryWithStatus(api.auth.queries.getUserById, {
     userId: comment.userId,
   });
   const currentUser = useUser((state) => state.user);
