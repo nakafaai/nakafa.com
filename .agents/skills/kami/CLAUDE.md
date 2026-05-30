@@ -1,105 +1,33 @@
 # Kami
 
-Kami is one project in the Kaku (write code), Waza (practice craft), and Kami (ship documents) trilogy.
-Warm parchment canvas, ink-blue accent, serif-led hierarchy, and editorial whitespace across six document templates.
+Document-generation skill and template system. Editorial HTML templates + PDF/PPTX/PNG build pipeline.
 
-## Structure
+## 启动前
 
-| Path | Purpose | Change frequency |
-|---|---|---|
-| `SKILL.md` | Claude routing and operating rules | Low |
-| `CHEATSHEET.md` | Quick design reference, English-only source | Low |
-| `references/design.md` | Design system spec, English-only source | Low |
-| `references/writing.md` | Content strategy spec, English-only source | Low |
-| `references/production.md` | WeasyPrint build and troubleshooting runbook, English-only source | Medium |
-| `assets/templates/` | 6 document templates in 2 base language families, plus Japanese best-effort mapping | Medium |
-| `assets/demos/` | README showcase demos, regenerate after visual changes | Medium |
-| `scripts/build.py` | PDF / PNG / PPTX build and verification script | Low |
-| `scripts/package-skill.sh` | Claude Desktop ZIP packager, excluding large fonts | Low |
-| `dist/kami.zip` | Claude Desktop ZIP artifact, updated from main | Medium |
+- 个人/全局规则可放在仓库外；本文件只记录 Kami 项目内的 Claude Code 入口和维护规则。
+- 仓库地图、Working Rules、Current Risk Areas、Verification Details、Release Flow、Fonts 全在 `AGENTS.md`。
+- 模板设计规范看 `references/design.md`，写作规范看 `references/writing.md`，反模式 checklist 看 `references/anti-patterns.md`。
 
-Reference docs are English-only. Do not recreate `*.en.md` duplicates. Chinese / English output differences belong in the templates. Japanese currently uses a best-effort CJK mapping with JP Mincho-first font stacks, no dedicated `-ja` templates yet, and requires visual QA before shipping.
-Do not use graphic emoticons in docs, template comments, or script output. Use `OK:` / `ERROR:` for status and `Use` / `Avoid` for comparisons.
-
-## Verification
+## 常用命令
 
 ```bash
-python3 scripts/build.py          # build all outputs
-python3 scripts/build.py --check  # scan CSS invariants and token drift
-python3 scripts/build.py --verify # verify templates, page counts, fonts, and slides
-python3 scripts/build.py --check-placeholders path/to/filled.html
+python3 scripts/build.py                   # 构建所有目标
+python3 scripts/build.py --check           # 快速校验
+python3 scripts/build.py --verify          # 完整验证
+python3 scripts/stabilize.py all --report  # HTML 模板标准化
+python3 scripts/tests/test_build.py        # 测试套件
+bash scripts/ensure-fonts.sh               # 字体恢复（缺字体或字体被截断时）
+bash scripts/package-skill.sh              # 构建 release 压缩包
 ```
 
-Expected page counts: one-pager 1 / letter 1 / resume 2 strict / long-doc 7 +/- 2 / portfolio 6 +/- 2 / slides 7 +/- 3
+## 项目独有硬规则
 
-**PDF metadata**: `build.py` automatically sets `/Author` from `git config user.name` (or `KAMI_AUTHOR` env var) when the HTML template contains a placeholder like `{{作者}}` or `{{AUTHOR}}`. `/Producer` and `/Creator` are always set to `"Kami"`.
-
-## Demo Screenshots
-
-All demo PNG files use **1241x1754px** (first A4 portrait page at 150dpi).
-
-For one-page and multi-page documents (one-pager / letter / resume / portfolio / long-doc), capture page 1:
-```bash
-pdftoppm -r 150 -f 1 -l 1 -png <pdf> /tmp/p && cp /tmp/p-1.png <target>.png
-```
-
-For landscape slides, capture the first 2 pages, resize each to 867px high, add a 20px gap, then extend to 1241px wide:
-```bash
-pdftoppm -r 150 -f 1 -l 2 -png <pdf> /tmp/sl
-magick /tmp/sl-1.png -resize x867 /tmp/sl1.png
-magick /tmp/sl-2.png -resize x867 /tmp/sl2.png
-magick -size $(identify -format '%w' /tmp/sl1.png)x20 xc:'#f5f4ed' /tmp/gap.png
-magick /tmp/sl1.png /tmp/gap.png /tmp/sl2.png -append /tmp/stacked.png
-magick /tmp/stacked.png -gravity Center -background '#f5f4ed' -extent 1241x1754 <target>.png
-```
-
-## Change Rules
-
-- Style changes: update `references/design.md` and the matching template `<style>` tokens, then run `build.py` and confirm page counts stay stable.
-- Content changes: keep CSS unchanged, edit only the body, then run `build.py`.
-- New templates: copy the nearest existing template, keep it aligned with `design.md`, add routing to `SKILL.md`, and add demos.
-
-## High-Risk Pitfalls
-
-See `references/production.md` Part 4.
-
-1. Tag rgba double rectangle: use solid hex backgrounds.
-2. Thin border plus border radius double ring: border < 1pt with border-radius can trigger it.
-3. Resume 2-page overflow: tiny font, fallback, line-height, or margin changes can break it.
-4. `break-inside` fails inside flex: wrap content in a block wrapper.
-5. `height: 100vh` is unreliable under `@page`: use explicit mm values.
-6. SVG marker `orient="auto"` does not rotate in WeasyPrint: draw arrowheads manually.
-7. Section body text should not use `max-width`: `.manifesto`, `.section-lede`, and similar text should fill the `.page` container. Exceptions: `.type-sample` and `.footer .colophon`.
-
-## Release Flow
-
-Run this before publishing or refreshing the latest release:
-
-```bash
-bash scripts/package-skill.sh        # writes dist/kami.zip (<5MB, excludes TsangerJinKai TTF)
-python3 scripts/build.py --verify
-git push origin main
-LATEST_TAG="$(gh release list -R tw93/kami --limit 1 --json tagName -q '.[0].tagName')"
-gh release upload "$LATEST_TAG" dist/kami.zip --clobber -R tw93/kami
-```
-
-`dist/kami.zip` is a tracked artifact and should be committed with the release changes. README and website download links use `https://cdn.jsdelivr.net/gh/tw93/kami@main/dist/kami.zip`, so users can update from the current `main` branch. For small packaging or documentation fixes, refresh the latest release asset with `--clobber` instead of creating a new version tag. Create a new tag only when the user explicitly wants a versioned release.
-
-Release notes must follow the tw93/Mole format:
-
-1. Centered logo, release title, and one-line tagline.
-2. `### Changelog` with an English numbered list.
-3. `### 更新日志` with the matching Chinese numbered list.
-4. Optional special-thanks paragraph when contributors need credit.
-5. Final blockquote with one concise project description sentence and the repository URL.
-
-Do not mix English and Chinese inside the same numbered item. Keep both lists aligned by number, use 5-8 items, and write one concise sentence per item. Do not use graphic emoticons in the release title or body unless the user explicitly asks for them.
-
-## Fonts
-
-`TsangerJinKai02-W04.ttf` is a commercial font. Commercial use requires a license from tsanger.cn.
-Fallback without TsangerJinKai: Source Han Serif SC -> Noto Serif CJK SC -> Songti SC -> Georgia.
-English templates use Newsreader serif.
-Japanese output currently uses the CJK template path with a JP Mincho-first fallback chain: Hiragino Mincho ProN -> Yu Mincho / YuMincho -> Noto Serif CJK JP -> Source Han Serif JP -> TsangerJinKai02 -> serif. Treat it as best-effort and verify rendering before delivery.
-
-The Claude Desktop ZIP does not bundle TsangerJinKai TTF files. They are about 19MB each and can make upload or execution time out. Before building Chinese documents, the skill checks for missing fonts and downloads them from jsDelivr into `assets/fonts/`. WeasyPrint then uses the existing relative `@font-face` paths without changing HTML.
+- 改 style 时同步更新 `references/design.md` 和模板 tokens，不要只改单点。
+- 加新模板：从最近的模板复制，对齐 `references/design.md`，加 demo 覆盖。
+- 不要在 docs / template 注释 / 脚本输出里用图形 emoji。脚本状态用 `OK:` / `ERROR:`。
+- 模板**内联** CSS，不抽公共 partial。修 CSS 漂移时跨模板同步改，不要引入 build-time include。
+- `HTML_TEMPLATES` 注册表在 `scripts/shared.py`，加删模板改这一处，不要分别改 build.py / stabilize.py。
+- 不打包大体积商业字体到 `dist/kami.zip`，但模板要保留稳定的本机预览路径。
+- `dist/kami.zip` 是 tracked release 制品。小修通常刷 latest release 资源即可，不必新 tag。
+- 改 build / stabilize / packaging 相关代码后，刷新并检查 `dist/kami.zip`；新增 helper/module/reference JSON 后，确认文件已被 Git 跟踪并进入 package。
+- 不提交一次性的 review 报告或诊断快照；只把稳定规则沉淀到 `AGENTS.md`、`SKILL.md` 或 `references/`。

@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<!-- ==================================================================
+     이력서 데모 (KO) · resume-ko.html 템플릿 기반
+     가상의 인디 개발자 / AI 에이전트 엔지니어 샘플 (Kami showcase)
+     ================================================================== -->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>김도현 · 이력서</title>
+<meta name="author" content="김도현">
+<meta name="description" content="AI 에이전트 엔지니어 겸 인디 개발자 이력서 샘플 · Kami resume-ko 데모">
+<meta name="keywords" content="이력서, AI 에이전트, 오픈소스, 인디 개발자, 한국어">
+<meta name="generator" content="Kami">
+<style>
+  /* Regular weight */
+  @font-face {
+    font-family: "Source Han Serif K";
+    src: url("../fonts/SourceHanSerifKR-Regular.otf") format("opentype"),
+       url("https://cdn.jsdelivr.net/gh/tw93/Kami@main/assets/fonts/SourceHanSerifKR-Regular.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  /* Medium weight */
+  @font-face {
+    font-family: "Source Han Serif K";
+    src: url("../fonts/SourceHanSerifKR-Medium.otf") format("opentype"),
+       url("https://cdn.jsdelivr.net/gh/tw93/Kami@main/assets/fonts/SourceHanSerifKR-Medium.otf") format("opentype");
+    font-weight: 500;
+    font-style: normal;
+  }
+
+@page {
+    size: A4;
+    margin: 11mm 13mm 11mm 13mm;
+    background: #f5f4ed;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --parchment: #f5f4ed;
+    --ivory:     #faf9f5;
+    --border:    #e8e6dc;
+    --border-soft: #e5e3d8;
+    --near-black: #141413;
+    --dark-warm: #3d3d3a;
+    --olive:     #504e49;
+    --stone:     #6b6a64;
+    --brand:     #1B365D;
+    --brand-tint: #EEF2F7;
+    --serif: "Source Han Serif K", "Noto Serif KR", "Apple SD Gothic Neo", "AppleMyungjo", Charter, Georgia, serif;
+    --sans: var(--serif);
+  }
+
+  html, body { background: var(--parchment); }
+
+  @media screen {
+    body { max-width: 210mm; margin: 0 auto; padding: 11mm 13mm; }
+  }
+
+  body {
+    color: var(--near-black);
+    font-family: var(--serif);
+    font-size: 9.2pt;
+    line-height: 1.42;
+    letter-spacing: 0.3pt;
+    widows: 3;
+    orphans: 3;
+    font-synthesis: none;
+  }
+
+  .serif {
+    font-family: var(--serif);
+  }
+
+  a { color: var(--brand); text-decoration: none; }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 5.5mm;
+    border-left: 2.5pt solid var(--brand);
+    border-radius: 1.5pt;
+    padding-left: 8pt;
+  }
+  .header > div:first-child { flex-shrink: 0; }
+  .name {
+    font-family: var(--serif);
+    font-size: 26.5pt;
+    font-weight: 500;
+    letter-spacing: 0.5pt;
+    color: var(--near-black);
+    line-height: 1;
+    margin-bottom: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 2.2mm;
+    white-space: nowrap;
+  }
+  .alias {
+    font-size: 12.5pt;
+    font-weight: 400;
+    color: var(--stone);
+    letter-spacing: 0.2pt;
+  }
+  .alias::before {
+    content: "";
+  }
+  .tagline { font-size: 9.5pt; color: var(--olive); line-height: 1.3; }
+  .tagline .accent { color: var(--brand); font-weight: 500; }
+
+  .contact {
+    text-align: right;
+    font-size: 9pt;
+    color: var(--stone);
+    line-height: 1.5;
+    margin-bottom: -0.5mm;
+  }
+  .contact a { color: var(--dark-warm); }
+  .contact .loc { color: var(--olive); font-weight: 500; }
+  .contact .role { color: var(--brand); font-size: 10.5pt; font-weight: 500; }
+  .contact .sep { color: var(--border); margin: 0 0.4em; }
+
+  /* METRICS */
+  .metrics { display: flex; gap: 6mm; margin-bottom: 5.5mm; margin-left: 0; margin-right: 0; }
+  .metric {
+    flex: 1;
+    background: transparent;
+    padding: 1mm 0;
+    display: flex;
+    align-items: baseline;
+    gap: 1.8mm;
+    break-inside: avoid;
+  }
+  .metric-value {
+    font-family: var(--serif);
+    font-size: 13pt;
+    font-weight: 500;
+    color: var(--brand);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .metric-label { font-size: 9pt; color: var(--olive); line-height: 1.2; }
+
+  .metric-value .unit {
+    font-size: 10.5pt;
+    margin-left: 0.3mm;
+    font-weight: 500;
+    color: var(--brand);
+  }
+
+  .metrics--stack .metric {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5mm;
+    padding-bottom: 2mm;
+    border-bottom: 0.3pt dotted var(--border);
+  }
+
+  /* SECTION */
+  .section-title {
+    font-family: var(--serif);
+    font-size: 12.5pt;
+    font-weight: 500;
+    color: var(--near-black);
+    border-left: 2.5pt solid var(--brand);
+    border-radius: 1.5pt;
+    padding: 0 0 0 8pt;
+    margin: 6.5mm 0 2.6mm 0;
+    display: flex;
+    align-items: baseline;
+    gap: 2mm;
+  }
+  .section-title .sub {
+    margin-left: auto;
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 9pt;
+    color: var(--stone);
+    letter-spacing: 0.3pt;
+  }
+
+  section:first-of-type .section-title { margin-top: 0; }
+  .page-break > .section-title { margin-top: 0; }
+
+  .section-title + .skill-row { padding-top: 1.2mm; }
+  .section-title + .edu-row { padding-top: 1.2mm; }
+
+  /* SUMMARY */
+  .summary { font-size: 9.2pt; line-height: 1.55; color: var(--near-black); }
+  .summary .em-brand { color: var(--brand); }
+  .summary .hl { color: var(--brand); }
+
+  /* TIMELINE */
+  .timeline { display: flex; gap: 6mm; margin-bottom: 4mm; margin-left: 0; margin-right: 0; }
+  .tl-step {
+    flex: 1; background: transparent;
+    padding: 1.4mm 0;
+    break-inside: avoid;
+  }
+  .tl-top {
+    display: flex; align-items: baseline; gap: 1.5mm;
+    margin-bottom: 0.5mm;
+  }
+  .tl-year {
+    font-family: var(--serif);
+    font-size: 11pt; font-weight: 500;
+    color: var(--brand); line-height: 1;
+  }
+  .tl-head {
+    font-size: 11pt; font-weight: 500;
+    color: var(--near-black);
+  }
+  .tl-body { font-size: 9pt; color: var(--olive); line-height: 1.40; letter-spacing: 0.3pt; }
+
+  /* PROJECTS */
+  .project {
+    padding: 2.4mm 0 2.4mm 0;
+    border-top: 0.4pt solid var(--border-soft);
+    break-inside: avoid;
+  }
+  .project:first-of-type { border-top: 0.4pt solid var(--border); padding-top: 2.4mm; }
+  .proj-head {
+    display: flex; align-items: baseline;
+    gap: 2mm; margin-bottom: 0.75mm;
+  }
+  .proj-name {
+    font-family: var(--serif);
+    font-size: 11pt; font-weight: 500; color: var(--near-black);
+  }
+  .proj-kind { font-size: 11pt; color: var(--olive); }
+  .proj-role {
+    font-size: 9pt; color: var(--brand); font-weight: 500;
+    margin-left: auto; background: #EEF2F7;
+    padding: 0.4mm 1.2mm; border-radius: 2pt; letter-spacing: 0.05pt;
+  }
+  .proj-lines { display: table; width: 100%; }
+  .proj-row { display: table-row; }
+  .proj-label {
+    display: table-cell; width: 11mm;
+    font-size: 9pt; color: var(--brand);
+    font-weight: 500; letter-spacing: 0.2pt;
+    padding: 0.2mm 0 0.4mm 0; vertical-align: top;
+  }
+  .proj-text {
+    display: table-cell; font-size: 9pt;
+    color: var(--near-black); line-height: 1.5; letter-spacing: 0.3pt;
+    padding: 0 0 0.9mm 0.5mm;
+  }
+  .proj-text .hl { color: var(--brand); }
+
+  .team-culture {
+    margin-top: 2mm; padding: 1.5mm 2.5mm;
+    background: transparent;
+    border-left: 1.4pt solid var(--brand);
+    border-radius: 2pt;
+    font-size: 9pt; color: var(--olive); line-height: 1.40;
+    break-inside: avoid;
+  }
+  .team-culture .hl { color: var(--brand); }
+
+  /* PAGE 2 FORCE BREAK */
+  .page-break { break-before: page; }
+
+  /* OPEN SOURCE */
+  .os-intro {
+    font-size: 9.2pt; line-height: 1.40; letter-spacing: 0.3pt;
+    color: var(--near-black);
+    padding: 0; margin: 1.2mm 0 2mm 0;
+    background: transparent;
+    break-inside: avoid;
+  }
+  .os-intro .hl { color: var(--brand); }
+  .os-intro .strong { color: var(--near-black); }
+
+  .os-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 8mm; row-gap: 1mm;
+  }
+  .os-item {
+    display: flex; align-items: baseline;
+    gap: 2mm; padding: 1mm 0 1mm 0;
+    border-bottom: 0.3pt dotted var(--border);
+    break-inside: avoid;
+  }
+  .os-item:last-child,
+  .os-item:nth-last-child(2):nth-child(odd) { border-bottom: none; }
+  .os-name {
+    font-family: var(--serif);
+    font-size: 10pt; font-weight: 500;
+    flex-shrink: 0; min-width: 14mm;
+  }
+  .os-name a { color: var(--brand); }
+  .os-desc { font-size: 9pt; color: var(--olive); line-height: 1.40; flex: 1; }
+  .os-star {
+    font-size: 9pt; color: var(--dark-warm);
+    font-weight: 500; white-space: nowrap; flex-shrink: 0; min-width: 7.5mm; text-align: right;
+  }
+  .os-star.big { color: var(--brand); font-size: 9.2pt; }
+
+  .os-highlight {
+    margin-top: 2.5mm;
+    padding: 1.8mm 2.8mm;
+    background: var(--brand-tint);
+    border-left: 1.4pt solid var(--brand);
+    font-size: 9pt; line-height: 1.40;
+    color: var(--near-black);
+    letter-spacing: 0.3pt;
+    break-inside: avoid;
+  }
+  .os-highlight .hl { color: var(--brand); }
+  .os-highlight .tag {
+    display: inline-block;
+    background: var(--brand); color: var(--ivory);
+    font-size: 9pt; font-weight: 500;
+    padding: 0.2mm 1.5mm; border-radius: 2pt;
+    margin-right: 1.2mm; letter-spacing: 0.2pt;
+    transform: translateY(-0.2mm);
+  }
+
+  /* AI CONVICTION */
+  .convictions {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2.5mm;
+    margin-top: 1.2mm;
+  }
+  .conv-card {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0 2mm 0 0;
+    break-inside: avoid;
+  }
+  .conv-head, .ai-card-head {
+    font-family: var(--serif);
+    font-size: 9.8pt; font-weight: 500;
+    color: var(--near-black); margin-bottom: 0.9mm;
+    display: flex; align-items: baseline; gap: 1.5mm;
+  }
+  .conv-head .year, .ai-card-head .year {
+    color: var(--brand); font-weight: 500;
+    font-size: 9pt;
+  }
+  .conv-body, .ai-card-body {
+    font-size: 9pt; color: var(--olive);
+    line-height: 1.40; letter-spacing: 0.3pt;
+  }
+  .conv-body .hl, .ai-card-body .hl { color: var(--brand); }
+  .conv-body .em-brand, .ai-card-body .em-brand { color: var(--brand); }
+
+  /* INFLUENCE */
+  .handle-strip {
+    background: transparent;
+    padding: 0; margin: 1.2mm 0 2mm 0;
+    display: flex; align-items: baseline; gap: 3mm;
+    break-inside: avoid;
+  }
+  .handle-strip .handle {
+    font-family: var(--serif);
+    font-size: 9.8pt; font-weight: 500; color: var(--brand);
+    flex-shrink: 0;
+  }
+  .handle-strip .follower { font-size: 9pt; color: var(--stone); flex-shrink: 0; }
+  .handle-strip .desc { font-size: 9pt; color: var(--olive); line-height: 1.40; letter-spacing: 0.3pt; flex: 1; }
+
+  .impact-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 5.5mm; }
+  .inf-block-title {
+    margin-top: 2.5mm;
+    font-family: var(--serif);
+    font-size: 9.8pt; font-weight: 500;
+    color: var(--near-black);
+    margin-bottom: 1.5mm; padding-bottom: 0.5mm;
+    border-bottom: 0.3pt dotted var(--border);
+    display: flex; align-items: baseline; gap: 2mm;
+  }
+  .inf-block-title .small {
+    font-family: var(--serif);
+    font-size: 9pt; color: var(--stone);
+    font-weight: 400; margin-left: 0; letter-spacing: 0.2pt;
+  }
+  .art-row {
+    padding: 1.6mm 0;
+    border-bottom: 0.3pt dotted var(--border-soft);
+  }
+  .talk-row {
+    display: flex; justify-content: space-between;
+    align-items: flex-start;
+    gap: 2mm; padding: 1.6mm 0;
+    border-bottom: 0.3pt dotted var(--border-soft);
+  }
+  .art-row:last-of-type, .talk-row:last-of-type { border-bottom: none; }
+  .art-header {
+    display: flex; align-items: baseline;
+    justify-content: space-between;
+    gap: 2mm; padding-right: 3mm;
+  }
+  .art-title, .talk-title {
+    font-size: 9pt; color: var(--near-black);
+    font-weight: 500; line-height: 1.40;
+    flex: 1 1 auto; min-width: 0;
+  }
+  .art-stats, .talk-venue {
+    font-size: 9pt; color: var(--stone);
+    line-height: 1.40; margin-top: 0.5mm; padding-left: 0; letter-spacing: 0.3pt;
+    white-space: nowrap;
+  }
+  .art-stats .em-brand {
+    color: var(--brand);
+  }
+  .art-date {
+    font-size: 9pt; color: var(--stone);
+    font-variant-numeric: tabular-nums;
+    font-weight: 400;
+  }
+  .talk-date {
+    font-size: 9pt; color: var(--stone); font-weight: 500;
+    white-space: nowrap; font-variant-numeric: tabular-nums;
+    padding-top: 0.3mm;
+  }
+
+  /* SKILLS */
+  .skill-row {
+    display: flex; gap: 2.5mm; padding: 1.7mm 0;
+    border-bottom: 0.3pt dotted var(--border);
+    align-items: baseline;
+  }
+  .skill-row:last-of-type { border-bottom: none; }
+  .skill-label {
+    font-size: 9pt; font-weight: 500;
+    color: var(--brand); letter-spacing: 0.3pt;
+    width: 22mm; flex-shrink: 0;
+    line-height: 1.36;
+  }
+  .skill-body { font-size: 9pt; color: var(--near-black); line-height: 1.40; letter-spacing: 0.3pt; flex: 1; }
+  .skill-body .em-brand { color: var(--brand); }
+
+  .no-break { break-inside: avoid; }
+
+  /* EDUCATION */
+  .edu-row {
+    display: flex; justify-content: space-between;
+    align-items: baseline; font-size: 9.5pt; padding: 1.7mm 0;
+  }
+  .edu-row .school {
+    font-family: var(--serif);
+    font-weight: 500; font-size: 10.7pt;
+  }
+  .edu-row .major { color: var(--olive); font-size: 9.5pt; }
+  .edu-row .date { color: var(--stone); font-variant-numeric: tabular-nums; font-size: 9pt; }
+
+  /* TABLE (kami-table) */
+  table, .kami-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+    margin: 6pt 0;
+    break-inside: avoid;
+  }
+  table th, .kami-table th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--dark-warm);
+    padding: 3pt 6pt;
+    border-bottom: 1pt solid var(--border);
+    background: transparent;
+  }
+  table td, .kami-table td {
+    padding: 2pt 6pt;
+    border-bottom: 0.3pt solid var(--border-soft);
+    vertical-align: top;
+  }
+  table.compact th, .kami-table.compact th { padding: 2pt 4pt; font-size: 8pt; }
+  table.compact td, .kami-table.compact td { padding: 1pt 4pt; font-size: 8pt; line-height: 1.4; }
+  table.financial td:not(:first-child), .kami-table.financial td:not(:first-child) {
+    text-align: right; font-variant-numeric: tabular-nums;
+  }
+  table.financial th:not(:first-child), .kami-table.financial th:not(:first-child) { text-align: right; }
+  table.striped tbody tr:nth-child(even) td, .kami-table.striped tbody tr:nth-child(even) td {
+    background: var(--ivory);
+  }
+  table .total td, .kami-table .total td {
+    font-weight: 500; border-top: 1pt solid var(--brand); border-bottom: none; color: var(--near-black);
+  }
+
+  /* DENSE VARIANT: add class="resume--dense" to <body> when 5+ projects overflow */
+  body.resume--dense { font-size: 9pt; }
+  body.resume--dense .proj-text { line-height: 1.38; }
+  body.resume--dense .tl-body { font-size: 8.5pt; }
+  body.resume--dense .section-title { margin-top: 3.5mm; margin-bottom: 1.2mm; }
+</style>
+</head>
+<body>
+
+<!-- ========== 1페이지 ========== -->
+
+<div class="header">
+  <div>
+    <div class="name serif">김도현<span class="alias">Dohyun Kim</span></div>
+  </div>
+  <div class="contact">
+    <span class="role">AI 에이전트 엔지니어 · 창업자</span>
+    <br>
+    <a href="https://github.com/dohyun">GitHub @dohyun</a>
+    <span class="sep">·</span>
+    <a href="mailto:dohyun@example.com">dohyun@example.com</a>
+    <span class="sep">·</span>
+    <span class="loc">31세, 서울</span>
+  </div>
+</div>
+
+<!-- 핵심 수치 4개 -->
+<div class="metrics">
+  <div class="metric"><span class="metric-value serif">9<span class="unit">년</span></span><span class="metric-label">엔지니어링 경력</span></div>
+  <div class="metric"><span class="metric-value serif">28K</span><span class="metric-label">GitHub stars</span></div>
+  <div class="metric"><span class="metric-value serif">5</span><span class="metric-label">출시 제품</span></div>
+  <div class="metric"><span class="metric-value serif">12<span class="unit">개국</span></span><span class="metric-label">사용자 분포</span></div>
+</div>
+
+<section>
+  <div class="section-title">자기 소개</div>
+  <div class="summary">
+    현재 AI 에이전트 스타트업 <span class="em-brand">Aru</span>의 공동창업자 겸 엔지니어링 리드로, 6인 팀을 이끌며 LLM 기반 업무 자동화 런타임을 설계한다. 백엔드 엔지니어로 출발해 기획부터 배포·운영까지 제품을 혼자 끝까지 만드는 사이클을 여러 번 돌렸고, 그 과정에서 <span class="em-brand">에이전트 런타임</span>, <span class="em-brand">디자인 시스템</span>, <span class="em-brand">한국어 조판</span>, 다국어 제품화에 강점을 쌓았다. 오픈소스로 누적 28K stars를 모으며, 작은 도구를 사용자 손에 닿는 완성품까지 끌고 가는 일을 가장 즐긴다.
+  </div>
+</section>
+
+<section>
+  <div class="section-title">경력<span class="sub">2016 - 현재 (백엔드에서 AI 에이전트까지)</span></div>
+
+  <!-- 타임라인 3단계: 장기 성장 신호 -->
+  <div class="timeline">
+    <div class="tl-step">
+      <div class="tl-top"><div class="tl-year serif">2016</div><div class="tl-head">백엔드 엔지니어</div></div>
+      <div class="tl-body">대형 커머스의 서버 인프라와 결제 시스템을 맡아 트래픽과 데이터 정합성 문제를 다뤘다.</div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-top"><div class="tl-year serif">2020</div><div class="tl-head">풀스택 · 제품</div></div>
+      <div class="tl-body">기획·디자인·배포까지 혼자 책임지는 사이클을 익히고 첫 오픈소스 도구를 출시했다.</div>
+    </div>
+    <div class="tl-step">
+      <div class="tl-top"><div class="tl-year serif">2023</div><div class="tl-head">AI 에이전트 창업</div></div>
+      <div class="tl-body">LLM을 실무 워크플로에 연결하는 데 집중해 에이전트 런타임 스타트업을 시작했다.</div>
+    </div>
+  </div>
+
+  <!-- 프로젝트 항목 -->
+  <div class="project">
+    <div class="proj-head">
+      <span class="proj-name serif">Aru</span>
+      <span class="proj-kind">· AI 에이전트 플랫폼</span>
+      <span class="proj-role">방향 주도</span>
+    </div>
+    <div class="proj-lines">
+      <div class="proj-row">
+        <div class="proj-label">역할</div>
+        <div class="proj-text">2023년 공동창업. 반복 업무를 자동화하는 에이전트 런타임을 0에서 설계하고, 6인 엔지니어링 팀을 꾸려 제품 방향을 직접 이끌었다.</div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-label">행동</div>
+        <div class="proj-text">도구 호출·장기 메모리·자동 평가 루프를 하나의 런타임으로 묶고, 12개 언어 UI와 온프레미스 배포를 지원해 보안에 민감한 팀까지 끌어들였다.</div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-label">결과</div>
+        <div class="proj-text">출시 8개월 만에 유료 팀 <span class="hl">320곳</span>, 월 처리 작업 <span class="hl">140만 건</span>을 넘겼고 재계약률 <span class="hl">92%</span>를 기록했다.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="project">
+    <div class="proj-head">
+      <span class="proj-name serif">Nori</span>
+      <span class="proj-kind">· 오픈소스 문서 생성기</span>
+      <span class="proj-role">단독 개발</span>
+    </div>
+    <div class="proj-lines">
+      <div class="proj-row">
+        <div class="proj-label">역할</div>
+        <div class="proj-text">마크다운을 편집 품질의 PDF로 바꾸는 오픈소스 도구. 디자인 제약을 코드로 고정한다는 단순한 아이디어에서 시작했다.</div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-label">행동</div>
+        <div class="proj-text">타이포그래피와 여백 규칙을 토큰으로 정의하고, 한국어 본문용 세리프 조판과 다국어 폰트 폴백을 직접 튜닝해 어떤 언어에서도 깨지지 않게 만들었다.</div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-label">결과</div>
+        <div class="proj-text">GitHub <span class="hl">14K stars</span>, 누적 다운로드 <span class="hl">21만</span>. 콘퍼런스 3곳에서 소개됐고 6개 언어 현지화 PR을 커뮤니티가 자발적으로 기여했다.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="project">
+    <div class="proj-head">
+      <span class="proj-name serif">Mokpo</span>
+      <span class="proj-kind">· 셀프호스팅 메모 앱</span>
+      <span class="proj-role">단독 개발</span>
+    </div>
+    <div class="proj-lines">
+      <div class="proj-row">
+        <div class="proj-label">역할</div>
+        <div class="proj-text">로컬 우선 셀프호스팅 메모 앱. 데이터 주권과 즉각적인 입력 속도를 동시에 만족시키는 것을 목표로 삼았다.</div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-label">행동</div>
+        <div class="proj-text">오프라인 우선 동기화와 충돌 해결(CRDT)을 직접 구현하고, 1년간 매주 릴리스를 거르지 않으며 사용자 요청을 빠르게 반영했다.</div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-label">결과</div>
+        <div class="proj-text">월 활성 사용자 <span class="hl">4만 명</span>, 12개국에서 사용 중. 유료 전환율 <span class="hl">6%</span>로 1인 운영만으로 흑자를 유지한다.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="project">
+    <div class="proj-head">
+      <span class="proj-name serif">Gose</span>
+      <span class="proj-kind">· 정적 사이트 빌더</span>
+      <span class="proj-role">단독 개발</span>
+    </div>
+    <div class="proj-lines">
+      <div class="proj-row">
+        <div class="proj-label">역할</div>
+        <div class="proj-text">Go로 만든 정적 사이트 빌더. 제작자가 설정 없이 바로 글쓰기에 집중하도록 돕는 것이 목표였다.</div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-label">행동</div>
+        <div class="proj-text">증분 빌드와 핫 리로드를 직접 구현해 수천 페이지도 1초 내 갱신되게 했고, 별도 설정 없이 바로 쓸 수 있는 기본 테마를 함께 제공했다.</div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-label">결과</div>
+        <div class="proj-text">GitHub <span class="hl">1.1K stars</span>, 개인 블로그와 문서 사이트 다수가 채택. 빌드 속도 벤치마크에서 동급 도구 대비 <span class="hl">3배</span> 빨랐다.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="project">
+    <div class="proj-head">
+      <span class="proj-name serif">Baram</span>
+      <span class="proj-kind">· macOS 메뉴바 유틸리티</span>
+      <span class="proj-role">단독 개발</span>
+    </div>
+    <div class="proj-lines">
+      <div class="proj-row">
+        <div class="proj-label">역할</div>
+        <div class="proj-text">메뉴바에서 시스템 상태와 자주 쓰는 작업을 한눈에 다루는 macOS 유틸리티. 작은 화면에서의 정보 밀도를 고민했다.</div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-label">행동</div>
+        <div class="proj-text">SwiftUI로 가벼운 메뉴바 앱을 만들고, 배터리·네트워크·단축키를 한 패널에 묶어 클릭 한 번으로 끝나도록 설계했다.</div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-label">결과</div>
+        <div class="proj-text">GitHub <span class="hl">480 stars</span>, 사용자 요청으로 위젯을 12종까지 확장. 디자인 중심 개발자 사이에서 입소문으로 퍼졌다.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ========== 2페이지 ========== -->
+
+<section class="page-break">
+  <div class="section-title">오픈소스 &amp; 독립 개발<span class="sub">2018 - 현재 · 작게 시작해 끝까지 혼자 출시</span></div>
+
+  <div class="os-intro">
+    <span class="hl">디자인 감각을 갖춘 풀스택 개발자.</span> 작은 도구를 공개로 만들고, 사용자 피드백으로 다듬어 완성까지 끌고 간다. GitHub 누적 <span class="strong">28K stars · 3.1K forks · 1.9K followers</span>.
+  </div>
+
+  <div class="os-grid">
+    <div class="os-item">
+      <span class="os-name serif"><a href="https://github.com/dohyun/aru">Aru</a></span>
+      <span class="os-desc">Python · 에이전트 런타임 · 다국어 지원</span>
+      <span class="os-star big">★ 9.8K</span>
+    </div>
+    <div class="os-item">
+      <span class="os-name serif"><a href="https://github.com/dohyun/nori">Nori</a></span>
+      <span class="os-desc">Rust · 문서 생성기 · PDF 출력</span>
+      <span class="os-star big">★ 14K</span>
+    </div>
+    <div class="os-item">
+      <span class="os-name serif"><a href="https://github.com/dohyun/mokpo">Mokpo</a></span>
+      <span class="os-desc">TypeScript · 로컬 우선 메모 앱</span>
+      <span class="os-star">★ 2.4K</span>
+    </div>
+    <div class="os-item">
+      <span class="os-name serif"><a href="https://github.com/dohyun/gose">Gose</a></span>
+      <span class="os-desc">Go · 정적 사이트 빌더</span>
+      <span class="os-star">★ 1.1K</span>
+    </div>
+    <div class="os-item">
+      <span class="os-name serif"><a href="https://github.com/dohyun/baram">Baram</a></span>
+      <span class="os-desc">Swift · macOS 메뉴바 유틸리티</span>
+      <span class="os-star">★ 480</span>
+    </div>
+    <div class="os-item">
+      <span class="os-name serif"><a href="https://github.com/dohyun/saebyeok">Saebyeok</a></span>
+      <span class="os-desc">CSS · 따뜻한 다크 테마 모음</span>
+      <span class="os-star">★ 320</span>
+    </div>
+  </div>
+
+  <div class="os-highlight">
+    <span class="tag">전파</span>Nori는 출시 첫 주에 Hacker News 1면에 올랐고, 일본과 독일 개발자들이 자발적으로 현지화 PR을 보내며 6개 언어로 확장됐다.
+  </div>
+</section>
+
+<section>
+  <div class="section-title">AI 판단과 행동</div>
+  <div class="convictions">
+    <div class="conv-card">
+      <div class="conv-head"><span class="year">2019</span>회사를 떠나 단독 개발</div>
+      <div class="conv-body">
+        안정적인 시니어 자리를 정리하고 1년간 직접 만든 도구의 사용자 반응만으로 다음을 결정했다. 그해 Nori가 손익분기를 넘겼다.
+      </div>
+    </div>
+    <div class="conv-card">
+      <div class="conv-head"><span class="year">2021</span>한국어 조판에 집중</div>
+      <div class="conv-body">
+        영어 우선 도구들이 한국어를 후순위로 둘 때 한국어 본문 가독성을 1순위로 잡았다. 국내 제작자 커뮤니티의 표준 도구가 됐다.
+      </div>
+    </div>
+    <div class="conv-card">
+      <div class="conv-head"><span class="year">2023</span>모델보다 워크플로</div>
+      <div class="conv-body">
+        모델 경쟁이 과열될 때 자체 모델 대신 워크플로 연결에 베팅했다. 18개월 만에 유료 팀 <span class="hl">300곳</span>을 확보했다.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">외부 영향력</div>
+
+  <div class="handle-strip">
+    <span class="handle serif">블로그 · <a href="https://dohyun.dev">@dohyun.dev</a></span>
+    <span class="follower">2.1만 구독</span>
+    <span class="desc">에이전트 설계와 한국어 조판을 다루는 주간 뉴스레터.</span>
+  </div>
+
+  <div class="impact-grid">
+    <div>
+      <div class="inf-block-title">대표 기술 장문<span class="small">에이전트 · 조판</span></div>
+      <div class="art-row">
+        <div class="art-header">
+          <a class="art-title" href="https://dohyun.dev/agent-runtime">《에이전트 런타임을 0에서 만들기》</a>
+          <span class="art-date">2024.03</span>
+        </div>
+        <div class="art-stats">조회 <span class="em-brand">38만</span>, 국내 기술 블로그 연간 인기글</div>
+      </div>
+      <div class="art-row">
+        <div class="art-header">
+          <a class="art-title" href="https://dohyun.dev/ko-typography">《한국어 본문 조판의 디테일》</a>
+          <span class="art-date">2022.09</span>
+        </div>
+        <div class="art-stats">조회 12만, 디자인 커뮤니티 추천</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="inf-block-title">초청 강연<span class="small">콘퍼런스</span></div>
+      <div class="talk-row">
+        <div>
+          <div class="talk-title">《작은 팀을 위한 에이전트 설계》</div>
+          <div class="talk-venue">PyCon Korea</div>
+        </div>
+        <div class="talk-date">2024.10</div>
+      </div>
+      <div class="talk-row">
+        <div>
+          <div class="talk-title">《제약이 디자인을 만든다》</div>
+          <div class="talk-venue">FEConf</div>
+        </div>
+        <div class="talk-date">2023.11</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">핵심 역량</div>
+  <div class="skill-row">
+    <div class="skill-label">에이전트 설계</div>
+    <div class="skill-body">LLM 도구 호출, 메모리, 평가 루프 설계. <span class="em-brand">프로덕션 에이전트 런타임</span>을 직접 구축.</div>
+  </div>
+  <div class="skill-row">
+    <div class="skill-label">백엔드</div>
+    <div class="skill-body">Python · Go · Rust. 대규모 작업 큐와 <span class="em-brand">분산 처리</span> 경험.</div>
+  </div>
+  <div class="skill-row">
+    <div class="skill-label">프론트 ·<br>디자인 시스템</div>
+    <div class="skill-body">TypeScript · React. <span class="em-brand">토큰 기반 디자인 시스템</span>으로 일관된 제품 UI.</div>
+  </div>
+  <div class="skill-row">
+    <div class="skill-label">한국어 조판</div>
+    <div class="skill-body">세리프 본문 가독성, 자간 · 행간 튜닝. <span class="em-brand">다국어 폰트 폴백</span> 설계.</div>
+  </div>
+  <div class="skill-row">
+    <div class="skill-label">제품 · 출시</div>
+    <div class="skill-body">기획부터 배포 · 마케팅까지 단독 사이클. <span class="em-brand">3개 제품</span> 흑자 전환.</div>
+  </div>
+</section>
+
+<section class="no-break">
+  <div class="section-title">학력</div>
+  <div class="edu-row">
+    <div>
+      <span class="school serif">한국과학기술원 (KAIST)</span>
+      <span class="major">　· 전산학부 · 컴퓨터공학 · 대학원 대신 바로 창업 전선으로</span>
+    </div>
+    <div class="date">2012 - 2016</div>
+  </div>
+</section>
+
+</body>
+</html>

@@ -4,48 +4,7 @@
 <meta charset="UTF-8">
 <title>Elon Musk · Resume</title>
 <style>
-  @font-face {
-    font-family: "Newsreader";
-    src: url("../fonts/Newsreader.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: "Newsreader";
-    src: url("../fonts/Newsreader.woff2") format("woff2");
-    font-weight: 500;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: "Inter";
-    src: url("../fonts/Inter.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: "Inter";
-    src: url("../fonts/Inter-500.woff2") format("woff2");
-    font-weight: 500;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: "Inter";
-    src: url("../fonts/Inter-600.woff2") format("woff2");
-    font-weight: 600;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: "JetBrains Mono";
-    src: url("../fonts/JetBrainsMono.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: "JetBrains Mono";
-    src: url("../fonts/JetBrainsMono.woff2") format("woff2");
-    font-weight: 500;
-    font-style: normal;
-  }
+  /* Palatino is a system font, no @font-face needed */
 
   @page {
     size: A4;
@@ -58,21 +17,18 @@
   :root {
     --parchment: #f5f4ed;
     --ivory:     #faf9f5;
-    --sand:      #e8e6dc;
     --border:    #e8e6dc;
     --border-soft: #e5e3d8;
     --near-black: #141413;
     --dark-warm: #3d3d3a;
-    --olive:     #5e5d59;
-    --stone:     #87867f;
+    --olive:     #504e49;
+    --stone:     #6b6a64;
     --brand:     #1B365D;
     --brand-tint: #EEF2F7;
-    --brand-tint-strong: #E4ECF5;
 
-    --serif: "Newsreader", "Source Serif 4", "Source Serif Pro", "Charter",
-             Georgia, "Times New Roman", serif;
-    --sans:  "Inter", -apple-system, BlinkMacSystemFont,
-             "Helvetica Neue", Arial, sans-serif;
+    --serif: Charter, Georgia,
+             Palatino, "Times New Roman", serif;
+    --sans: var(--serif);
     --mono:  "JetBrains Mono", "SF Mono", "Fira Code",
              Consolas, Monaco, monospace;
   }
@@ -83,7 +39,7 @@
     color: var(--near-black);
     font-family: var(--serif);
     font-size: 9.4pt;
-    line-height: 1.42;
+    line-height: 1.48;
     letter-spacing: 0;
   }
 
@@ -136,7 +92,7 @@
   .contact .loc { color: var(--olive); font-weight: 500; }
 
   /* METRICS */
-  .metrics { display: flex; gap: 7mm; margin-bottom: 3mm; }
+  .metrics { display: flex; gap: 7mm; margin-bottom: 6.5mm; }
   .metric {
     flex: 1;
     padding: 1mm 0;
@@ -159,7 +115,7 @@
     font-weight: 500;
     color: var(--brand);
   }
-  .metric-label { font-size: 8.8pt; color: var(--olive); line-height: 1.2; }
+  .metric-label { font-size: 9pt; color: var(--olive); line-height: 1.2; }
 
   /* SECTION TITLE */
   .section-title {
@@ -169,7 +125,7 @@
     color: var(--near-black);
     border-bottom: 0.5pt solid var(--border);
     padding: 0 0 3pt 0;
-    margin: 5mm 0 2mm 0;
+    margin: 7.5mm 0 3mm 0;
     display: flex;
     align-items: baseline;
     gap: 2.5mm;
@@ -186,11 +142,11 @@
   .page-break > .section-title { margin-top: 0; }
 
   /* SUMMARY */
-  .summary { font-size: 9.4pt; line-height: 1.48; color: var(--near-black); }
+  .summary { font-size: 9.4pt; line-height: 1.50; color: var(--near-black); }
   .summary .hl { color: var(--brand); }
 
   /* TIMELINE */
-  .timeline { display: flex; gap: 7mm; margin-bottom: 2.5mm; }
+  .timeline { display: flex; gap: 7mm; margin-bottom: 6.5mm; }
   .tl-step { flex: 1; padding: 0.8mm 0; break-inside: avoid; }
   .tl-top {
     display: flex; align-items: baseline; gap: 2mm;
@@ -205,17 +161,17 @@
     font-size: 11pt; font-weight: 500;
     color: var(--near-black);
   }
-  .tl-body { font-size: 8.8pt; color: var(--olive); line-height: 1.45; }
+  .tl-body { font-size: 9pt; color: var(--olive); line-height: 1.45; }
 
   /* PROJECTS */
   .project {
-    padding: 1.6mm 0;
+    padding: 2.5mm 0;
     border-top: 0.4pt solid var(--border-soft);
     break-inside: avoid;
   }
   .project:first-of-type {
     border-top: 0.4pt solid var(--border);
-    padding-top: 1.6mm;
+    padding-top: 2.5mm;
   }
   .proj-head {
     display: flex; align-items: baseline;
@@ -227,7 +183,7 @@
   }
   .proj-kind { font-size: 11pt; color: var(--olive); }
   .proj-role {
-    font-size: 8.4pt; color: var(--brand); font-weight: 600;
+    font-size: 9pt; color: var(--brand); font-weight: 500;
     margin-left: auto; background: #EEF2F7;
     padding: 0.4mm 1.6mm; border-radius: 2pt; letter-spacing: 0.3pt;
     text-transform: uppercase;
@@ -236,8 +192,8 @@
   .proj-row { display: table-row; }
   .proj-label {
     display: table-cell; width: 16mm;
-    font-size: 8.5pt; color: var(--brand);
-    font-weight: 600; letter-spacing: 0.4pt;
+    font-size: 9pt; color: var(--brand);
+    font-weight: 500; letter-spacing: 0.4pt;
     text-transform: uppercase;
     padding: 0.4mm 0 0.4mm 0; vertical-align: top;
   }
@@ -280,8 +236,8 @@
   .os-name a { color: var(--brand); }
   .os-desc { font-size: 9pt; color: var(--olive); line-height: 1.4; flex: 1; }
   .os-star {
-    font-size: 8.8pt; color: var(--dark-warm);
-    font-weight: 600; white-space: nowrap;
+    font-size: 9pt; color: var(--dark-warm);
+    font-weight: 500; white-space: nowrap;
     flex-shrink: 0; min-width: 10mm; text-align: right;
     font-variant-numeric: tabular-nums;
   }
@@ -301,7 +257,7 @@
   .os-highlight .tag {
     display: inline-block;
     background: var(--brand); color: var(--ivory);
-    font-size: 7.6pt; font-weight: 600;
+    font-size: 9pt; font-weight: 500;
     padding: 0.2mm 1.6mm; border-radius: 2pt;
     margin-right: 1.5mm; letter-spacing: 0.5pt;
     text-transform: uppercase;
@@ -323,7 +279,7 @@
     display: flex; align-items: baseline; gap: 2mm;
   }
   .conv-head .year {
-    color: var(--brand); font-weight: 600;
+    color: var(--brand); font-weight: 500;
     font-size: 9pt;
     font-variant-numeric: tabular-nums;
   }
@@ -344,8 +300,8 @@
     font-size: 10pt; font-weight: 500; color: var(--brand);
     flex-shrink: 0;
   }
-  .handle-strip .follower { font-size: 8.8pt; color: var(--stone); flex-shrink: 0; font-variant-numeric: tabular-nums; }
-  .handle-strip .desc { font-size: 8.8pt; color: var(--olive); line-height: 1.45; flex: 1; }
+  .handle-strip .follower { font-size: 9pt; color: var(--stone); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .handle-strip .desc { font-size: 9pt; color: var(--olive); line-height: 1.45; flex: 1; }
 
   .impact-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 6mm; }
   .inf-block-title {
@@ -359,7 +315,7 @@
   }
   .inf-block-title .small {
     font-family: var(--sans);
-    font-size: 8.5pt; color: var(--stone);
+    font-size: 9pt; color: var(--stone);
     font-weight: 400;
   }
   .art-row {
@@ -384,12 +340,12 @@
     flex: 1 1 auto; min-width: 0;
   }
   .art-stats, .talk-venue {
-    font-size: 8.8pt; color: var(--stone);
+    font-size: 9pt; color: var(--stone);
     line-height: 1.4; margin-top: 0.6mm;
   }
   .art-stats .em-brand { color: var(--brand); }
   .art-date, .talk-date {
-    font-size: 8.8pt; color: var(--stone);
+    font-size: 9pt; color: var(--stone);
     font-variant-numeric: tabular-nums;
     font-weight: 400;
     white-space: nowrap;
@@ -403,7 +359,7 @@
   }
   .skill-row:last-of-type { border-bottom: none; }
   .skill-label {
-    font-size: 8.6pt; font-weight: 600;
+    font-size: 9pt; font-weight: 500;
     color: var(--brand); letter-spacing: 0.5pt;
     text-transform: uppercase;
     width: 32mm; flex-shrink: 0;
@@ -459,8 +415,8 @@
 <div class="metrics">
   <div class="metric"><span class="metric-value serif">30<span class="unit">yrs</span></span><span class="metric-label">building hard tech</span></div>
   <div class="metric"><span class="metric-value serif">6<span class="unit">cos</span></span><span class="metric-label">founded / co-founded</span></div>
-  <div class="metric"><span class="metric-value serif">400<span class="unit">+</span></span><span class="metric-label">Falcon launches, lifetime</span></div>
-  <div class="metric"><span class="metric-value serif">7M<span class="unit">+</span></span><span class="metric-label">Tesla vehicles delivered</span></div>
+  <div class="metric"><span class="metric-value serif">400<span class="unit">+</span></span><span class="metric-label">Falcon launches</span></div>
+  <div class="metric"><span class="metric-value serif">7M<span class="unit">+</span></span><span class="metric-label">Tesla vehicles</span></div>
 </div>
 
 <section>
@@ -485,7 +441,7 @@
     </div>
     <div class="tl-step">
       <div class="tl-top"><div class="tl-year serif">2023</div><div class="tl-head">AI era</div></div>
-      <div class="tl-body">xAI, Neuralink scaling, X platform ownership. New bet on general intelligence and BCI.</div>
+      <div class="tl-body">xAI, Neuralink scaling, X platform ownership. Bet on AGI and BCI.</div>
     </div>
   </div>
 
@@ -499,15 +455,15 @@
     <div class="proj-lines">
       <div class="proj-row">
         <div class="proj-label">Role</div>
-        <div class="proj-text">Founded SpaceX in 2002 to make humanity multi-planetary. First private company to reach orbit (2008), dock with ISS (2012), land and reuse an orbital-class booster (2015), and fly crew (2020). CEO and Chief Engineer from day one.</div>
+        <div class="proj-text">Founded 2002. CEO and Chief Engineer from day one. First private company to orbit (2008), dock ISS (2012), land a booster (2015), and fly crew (2020).</div>
       </div>
       <div class="proj-row">
         <div class="proj-label">Actions</div>
-        <div class="proj-text">Vertical integration from propellant to avionics. Merlin and Raptor engines designed in-house. Reusable-booster thesis pursued through 12 failed landings before success. Starship developed publicly with high-cadence prototype testing. Launch cadence scaled from 1 flight per year (2008) to one every 2-3 days (2024).</div>
+        <div class="proj-text">Full vertical integration from propellant to avionics. Merlin and Raptor engines in-house. Reusable-booster thesis pursued through 12 failed landings. Launch cadence: 1/year (2008) to every 2-3 days (2024).</div>
       </div>
       <div class="proj-row">
         <div class="proj-label">Impact</div>
-        <div class="proj-text">Falcon 9: <span class="hl">400+ successful launches</span>, 95%+ reuse rate, cost-per-kg to orbit reduced by a factor of 10 versus legacy providers. Starlink: <span class="hl">7,000+ satellites</span> in orbit, largest constellation ever deployed. SpaceX valued at $350B (2024 secondary round), now responsible for the majority of US orbital mass launched.</div>
+        <div class="proj-text">Falcon 9: <span class="hl">400+ launches</span>, 95%+ reuse, 10x cost reduction. Starlink: <span class="hl">7,000+ satellites</span>, largest constellation ever. Valued at $350B (2024).</div>
       </div>
     </div>
   </div>
@@ -521,15 +477,15 @@
     <div class="proj-lines">
       <div class="proj-row">
         <div class="proj-label">Role</div>
-        <div class="proj-text">Joined Tesla as lead investor and chairman in 2004; took over as CEO in 2008 during near-bankruptcy. Built it from a two-car roadster project into the world's most valuable automaker by a factor of two.</div>
+        <div class="proj-text">Lead investor 2004, CEO from 2008 during near-bankruptcy. Built from a two-car project into the world's most valuable automaker.</div>
       </div>
       <div class="proj-row">
         <div class="proj-label">Actions</div>
-        <div class="proj-text">Scaled Model S -> 3 -> Y via the Master Plan framework, treating each model as capital to fund the next. Built four Gigafactories on three continents. Shipped FSD as a continuously improving software product, not a fixed-version feature. Vertically integrated batteries, motors, silicon, and charging.</div>
+        <div class="proj-text">Master Plan framework: each model funds the next. Four Gigafactories on three continents. FSD shipped as continuous software, not fixed release. Vertically integrated batteries, motors, silicon, charging.</div>
       </div>
       <div class="proj-row">
         <div class="proj-label">Impact</div>
-        <div class="proj-text">Tesla: <span class="hl">7M+ vehicles delivered</span> lifetime (1.8M in 2023 alone), first EV to cross 20% gross margin, first automaker to cross $1T market cap. Reshaped the industry such that every major incumbent announced an EV transition strategy within 5 years of Model 3 launch.</div>
+        <div class="proj-text"><span class="hl">7M+ vehicles delivered</span> (1.8M in 2023), first EV to cross 20% gross margin, first automaker past $1T. Every major OEM announced EV transition within 5 years of Model 3.</div>
       </div>
     </div>
   </div>
@@ -543,15 +499,15 @@
     <div class="proj-lines">
       <div class="proj-row">
         <div class="proj-label">Role</div>
-        <div class="proj-text">Founded xAI in 2023 with a focus on understanding the true nature of the universe. Shipped Grok within 6 months of incorporation, one of the fastest foundation-model companies to production.</div>
+        <div class="proj-text">Founded 2023 to understand the true nature of the universe. Shipped Grok within 6 months, one of the fastest foundation-model companies to production.</div>
       </div>
       <div class="proj-row">
         <div class="proj-label">Actions</div>
-        <div class="proj-text">Built Colossus, a 100,000-H100 GPU supercluster, in 122 days from concept to training start. Integrated Grok directly into X to give the model unique real-time data access and the product a real user base from day one.</div>
+        <div class="proj-text">Built Colossus (100K H100 GPUs) in 122 days from concept to training start. Integrated Grok directly into X for real-time data access and instant distribution to 500M+ users.</div>
       </div>
       <div class="proj-row">
         <div class="proj-label">Impact</div>
-        <div class="proj-text">Colossus stood up in <span class="hl">122 days</span>, a pace treated as implausible inside the industry. Grok reached ChatGPT-comparable benchmarks within 18 months of company founding, with xAI valued at $50B in 2024 funding.</div>
+        <div class="proj-text">Colossus in <span class="hl">122 days</span>, a pace the industry called implausible. Grok reached ChatGPT-level benchmarks within 18 months. xAI valued at $50B (2024).</div>
       </div>
     </div>
   </div>
@@ -564,12 +520,16 @@
     </div>
     <div class="proj-lines">
       <div class="proj-row">
+        <div class="proj-label">Role</div>
+        <div class="proj-text">Founded 2016 to build high-bandwidth brain-computer interfaces. Co-leads engineering on the N1 implant, surgical robot, and electrode array design.</div>
+      </div>
+      <div class="proj-row">
         <div class="proj-label">Actions</div>
-        <div class="proj-text">Founded 2016 to build high-bandwidth BCI. Shipped the N1 chip with <span class="hl">1,024 electrodes</span> and a precision surgical robot. Secured FDA Breakthrough Device designation and IDE approval (2023) after five years of primate trials.</div>
+        <div class="proj-text">Shipped N1 chip with <span class="hl">1,024 electrodes</span> and precision surgical robot. FDA Breakthrough Device designation and IDE approval (2023) after five years of primate trials.</div>
       </div>
       <div class="proj-row">
         <div class="proj-label">Impact</div>
-        <div class="proj-text">First human implanted January 2024; cursor control in 30 days. <span class="hl">Second patient mid-2024</span>, expanding to speech restoration. Valued at $5B (2023).</div>
+        <div class="proj-text">First human implanted January 2024; full cursor control in 30 days. <span class="hl">Second patient mid-2024</span>, expanding to speech restoration. Valued at $5B (2023). Long-term goal: high-bandwidth symbiosis between human cognition and AI.</div>
       </div>
     </div>
   </div>
@@ -589,12 +549,12 @@
     <div class="os-item">
       <span class="os-name serif"><a href="https://spacex.com">SpaceX</a></span>
       <span class="os-desc">Launch · Starlink · Starship</span>
-      <span class="os-star big">★ $350B</span>
+      <span class="os-star big">* $350B</span>
     </div>
     <div class="os-item">
       <span class="os-name serif"><a href="https://tesla.com">Tesla</a></span>
       <span class="os-desc">EVs · energy · FSD</span>
-      <span class="os-star big">★ $900B</span>
+      <span class="os-star big">* $900B</span>
     </div>
   </div>
 
@@ -609,19 +569,19 @@
     <div class="conv-card">
       <div class="conv-head"><span class="year">1999</span>Bet on online banking</div>
       <div class="conv-body">
-        Founded X.com while consumer online banking was niche; merger with Confinity became PayPal. Sold to eBay for $1.5B, with most of the proceeds recycled into SpaceX and Tesla within 24 months.
+        Founded X.com while consumer online banking was niche; merger with Confinity became PayPal. Sold to eBay for $1.5B, with proceeds recycled into SpaceX and Tesla within two years.
       </div>
     </div>
     <div class="conv-card">
       <div class="conv-head"><span class="year">2008</span>CEO during near-bankruptcy</div>
       <div class="conv-body">
-        Took Tesla CEO during the 2008 crisis, three weeks from insolvency. Closed a Mercedes partnership that funded Model S development, a decision that made every subsequent Tesla product possible.
+        Took Tesla CEO during the 2008 crisis, three weeks from insolvency. Closed a Mercedes partnership that funded Model S, enabling every subsequent Tesla product.
       </div>
     </div>
     <div class="conv-card">
       <div class="conv-head"><span class="year">2015</span>Committed to reusable boosters</div>
       <div class="conv-body">
-        Pushed Falcon 9 reusability after <span class="hl">12 consecutive landing failures</span> when board and industry said stop. Succeeded on attempt 13. Reusability is now the assumed baseline across every launch provider.
+        Pushed Falcon 9 reusability after <span class="hl">12 consecutive landing failures</span> when board and industry said stop. Succeeded on attempt 13; reusability is now the industry baseline.
       </div>
     </div>
   </div>
@@ -638,13 +598,13 @@
 
   <div class="impact-grid">
     <div>
-      <div class="inf-block-title">Selected writing<span class="small">Founder-engineer across six hard-tech companies</span></div>
+      <div class="inf-block-title">Selected writing</div>
       <div class="art-row">
         <div class="art-header">
           <a class="art-title" href="https://youtube.com/ted" style="text-decoration: none;">Master Plan Part Deux</a>
           <span class="art-date">2016.07</span>
         </div>
-        <div class="art-stats">Tesla blog, <span class="em-brand">40M+</span> combined reads; reframed EV strategy for the industry</div>
+        <div class="art-stats">Tesla blog, <span class="em-brand">40M+</span> reads; reframed EV strategy across the industry</div>
       </div>
       <div class="art-row">
         <div class="art-header">
@@ -656,7 +616,7 @@
     </div>
 
     <div>
-      <div class="inf-block-title">Invited talks<span class="small">Founder-engineer across six hard-tech companies</span></div>
+      <div class="inf-block-title">Invited talks</div>
       <div class="talk-row">
         <div>
           <div class="talk-title">Making Humans Multi-Planetary</div>
@@ -684,7 +644,7 @@
   </div>
   <div class="skill-row">
     <div class="skill-label">Manufacturing · Scale</div>
-    <div class="skill-body">Built Tesla Fremont, Shanghai, Berlin, Austin; SpaceX vehicle assembly from 0 to <span class="em-brand">100+ launches per year</span>.</div>
+    <div class="skill-body">Built Tesla Fremont, Shanghai, Berlin, Austin; SpaceX assembly scaled from 0 to <span class="em-brand">100+ launches/year</span>.</div>
   </div>
   <div class="skill-row">
     <div class="skill-label">Capital · Crisis Mgmt</div>
@@ -692,7 +652,7 @@
   </div>
   <div class="skill-row">
     <div class="skill-label">Public Communication</div>
-    <div class="skill-body">214M followers on X; product announcements routinely move the <span class="em-brand">S&amp;P 500 component</span> price of his companies.</div>
+    <div class="skill-body">214M followers on X; announcements routinely move the <span class="em-brand">S&amp;P 500 component</span> price of his companies.</div>
   </div>
   <div class="skill-row">
     <div class="skill-label">First Principles · Cost</div>
@@ -705,7 +665,7 @@
   <div class="edu-row">
     <div>
       <span class="school serif">University of Pennsylvania</span>
-      <span class="major"> · Wharton · College of Arts &amp; Sciences · B.S. Economics · B.A. Physics · transferred from Queen's University; enrolled in Stanford physics PhD, left after two days</span>
+      <span class="major"> · Wharton, B.S. Economics · B.A. Physics</span>
     </div>
     <div class="date">1992 - 1997</div>
   </div>

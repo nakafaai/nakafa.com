@@ -36,16 +36,25 @@
     margin: 20mm 22mm 22mm 22mm;
     background: #f5f4ed;
 
+    @top-right {
+      content: string(section-title);
+      font-family: "TsangerJinKai02", "Source Han Serif SC",
+                   "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+      font-size: 8pt;
+      color: #6b6a64;
+    }
+
     @bottom-center {
       content: counter(page) "  ·  {{文档标题}}";
       font-family: "TsangerJinKai02", "Source Han Serif SC",
                    "Noto Serif CJK SC", "Songti SC", Georgia, serif;
       font-size: 9pt;
-      color: #87867f;
+      color: #6b6a64;
     }
   }
 
   @page:first {
+    @top-right { content: ""; }
     @bottom-center { content: ""; }
   }
 
@@ -56,13 +65,17 @@
     --ivory:     #faf9f5;
     --near-black:#141413;
     --dark-warm: #3d3d3a;
-    --charcoal:  #4d4c48;
-    --olive:     #5e5d59;
-    --stone:     #87867f;
+    --olive:     #504e49;
+    --stone:     #6b6a64;
     --brand:     #1B365D;
     --border:    #e8e6dc;
     --border-soft:#e5e3d8;
     --tag-bg:    #E4ECF5;
+    --serif: "TsangerJinKai02", "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", Georgia, serif;
+    --sans: var(--serif);
+
+    --rhythm-module:  14pt;
+    --rhythm-section: 18pt;
   }
 
   html, body { background: var(--parchment); }
@@ -73,15 +86,16 @@
 
   body {
     color: var(--near-black);
-    font-family: "TsangerJinKai02", "Source Han Serif SC",
-                 "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    font-family: var(--serif);
     font-size: 10.5pt;
     line-height: 1.55;
+    letter-spacing: 0.3pt;
+    widows: 3;
+    orphans: 3;
   }
 
   .sans {
-    font-family: "Source Han Sans SC", "Noto Sans CJK SC",
-                 -apple-system, "PingFang SC", Arial, sans-serif;
+    font-family: var(--sans);
   }
 
   /* ========== COVER ========== */
@@ -94,7 +108,7 @@
     break-after: page;
   }
   .cover-eyebrow {
-    font-family: "Source Han Sans SC", sans-serif;
+    font-family: var(--sans);
     font-size: 10pt;
     color: var(--brand);
     letter-spacing: 1pt;
@@ -106,11 +120,11 @@
     font-weight: 500;
     color: var(--near-black);
     line-height: 1.15;
-    letter-spacing: 0.5pt;
+    letter-spacing: 0.3pt;
     margin-bottom: 16pt;
   }
   .cover-sub {
-    font-family: "Source Han Sans SC", sans-serif;
+    font-family: var(--sans);
     font-size: 14pt;
     color: var(--olive);
     line-height: 1.5;
@@ -118,7 +132,7 @@
     margin-bottom: 30pt;
   }
   .cover-meta {
-    font-family: "Source Han Sans SC", sans-serif;
+    font-family: var(--sans);
     font-size: 10pt;
     color: var(--stone);
     line-height: 1.5;
@@ -133,7 +147,7 @@
   .toc h2 {
     font-size: 22pt;
     font-weight: 500;
-    margin-bottom: 14pt;
+    margin-bottom: var(--rhythm-module);
     border-left: 2.5pt solid var(--brand);
     border-radius: 1.5pt;
     padding-left: 8pt;
@@ -146,6 +160,7 @@
     border-bottom: 0.3pt dotted var(--border);
     font-size: 11pt;
   }
+  .toc-item:last-of-type { border-bottom: none; }
   .toc-num {
     color: var(--brand);
     font-weight: 500;
@@ -175,25 +190,26 @@
   }
 
   h2 {
-    font-size: 15pt;
+    font-size: 16pt;
     font-weight: 500;
-    line-height: 1.3;
-    margin: 24pt 0 6pt 0;
+    line-height: 1.25;
+    margin: 24pt 0 8pt 0;
     color: var(--near-black);
     break-after: avoid;
+    string-set: section-title content();
   }
 
   h3 {
-    font-size: 12pt;
+    font-size: 13pt;
     font-weight: 500;
     line-height: 1.3;
-    margin: 18pt 0 4pt 0;
+    margin: 18pt 0 6pt 0;
     color: var(--dark-warm);
     break-after: avoid;
   }
 
   .chapter-num {
-    font-family: "Source Han Sans SC", sans-serif;
+    font-family: var(--sans);
     font-size: 10pt;
     color: var(--brand);
     letter-spacing: 1pt;
@@ -206,16 +222,19 @@
     margin: 0 0 10pt 0;
     line-height: 1.55;
     color: var(--near-black);
+    widows: 2;
+    orphans: 2;
   }
 
   .lead {
     font-size: 12pt;
     line-height: 1.55;
     color: var(--dark-warm);
-    margin-bottom: 14pt;
+    margin-bottom: var(--rhythm-module);
   }
 
   .hl { color: var(--brand); font-weight: 500; }
+  strong { font-weight: 500; }
 
   /* ========== LISTS ========== */
   ul, ol {
@@ -264,7 +283,6 @@
     font-size: 9pt;
     line-height: 1.5;
     background: var(--ivory);
-    border: 0.5pt solid var(--border-soft);
     border-radius: 4pt;
     padding: 10pt 14pt;
     margin: 10pt 0;
@@ -274,26 +292,38 @@
   }
   pre code { background: transparent; padding: 0; font-size: inherit; }
 
-  /* ========== TABLE ========== */
-  table {
+  /* ========== TABLE (kami-table) ========== */
+  table, .kami-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 9.5pt;
     margin: 12pt 0;
     break-inside: avoid;
   }
-  table th {
+  table th, .kami-table th {
     text-align: left;
     font-weight: 500;
-    color: var(--charcoal);
+    color: var(--dark-warm);
     padding: 6pt 8pt;
-    border-bottom: 1pt solid var(--brand);
+    border-bottom: 1pt solid var(--border);
     background: transparent;
   }
-  table td {
+  table td, .kami-table td {
     padding: 5pt 8pt;
     border-bottom: 0.3pt solid var(--border-soft);
     vertical-align: top;
+  }
+  table.compact th, .kami-table.compact th { padding: 3pt 6pt; font-size: 8pt; }
+  table.compact td, .kami-table.compact td { padding: 2pt 6pt; font-size: 8pt; line-height: 1.4; }
+  table.financial td:not(:first-child), .kami-table.financial td:not(:first-child) {
+    text-align: right; font-variant-numeric: tabular-nums;
+  }
+  table.financial th:not(:first-child), .kami-table.financial th:not(:first-child) { text-align: right; }
+  table.striped tbody tr:nth-child(even) td, .kami-table.striped tbody tr:nth-child(even) td {
+    background: var(--ivory);
+  }
+  table .total td, .kami-table .total td {
+    font-weight: 500; border-top: 1pt solid var(--brand); border-bottom: none; color: var(--near-black);
   }
 
   /* ========== CALLOUT ========== */
@@ -306,17 +336,27 @@
     line-height: 1.55;
     break-inside: avoid;
   }
+  .callout blockquote,
+  .callout .quote {
+    border-left: none;
+    padding-left: 0;
+    margin: 6pt 0;
+    color: var(--olive);
+  }
+  .callout blockquote:first-child,
+  .callout .quote:first-child { margin-top: 0; }
+  .callout blockquote:last-child,
+  .callout .quote:last-child  { margin-bottom: 0; }
 
   .takeaway {
     background: var(--ivory);
-    border: 0.5pt solid var(--border);
     border-radius: 4pt;
     padding: 10pt 14pt;
     margin: 14pt 0;
     break-inside: avoid;
   }
   .takeaway-label {
-    font-family: "Source Han Sans SC", sans-serif;
+    font-family: var(--sans);
     font-size: 9pt;
     color: var(--brand);
     letter-spacing: 0.5pt;
@@ -329,7 +369,7 @@
     display: inline-block;
     background: var(--tag-bg);
     color: var(--brand);
-    font-family: "Source Han Sans SC", sans-serif;
+    font-family: var(--sans);
     font-size: 9pt;
     font-weight: 500;
     padding: 1pt 6pt;
@@ -347,7 +387,7 @@
     border-radius: 4pt;
   }
   figcaption {
-    font-family: "Source Han Sans SC", sans-serif;
+    font-family: var(--sans);
     font-size: 9pt;
     color: var(--stone);
     margin-top: 6pt;
@@ -357,7 +397,7 @@
   /* ========== EXECUTIVE SUMMARY ========== */
   .exec-summary {
     background: var(--ivory);
-    border: 0.5pt solid var(--border);
+    border-left: 1.4pt solid var(--brand);
     border-radius: 6pt;
     padding: 16pt 20pt;
     margin: 14pt 0;
@@ -419,7 +459,7 @@
 </section>
 
 <!-- ═════════════ Chapter 01：执行摘要 ═════════════ -->
-<section>
+<section class="chapter">
   <div class="chapter-num">01 · Executive Summary</div>
   <h1>执行摘要</h1>
 
@@ -497,8 +537,8 @@
   <h2>研究方法</h2>
   <p>{{描述方法论。可以用代码 / 公式示例：}}</p>
 
-  <pre><code>示例代码块
-def analyze(data):
+  <pre><code class="language-python">def analyze(data):
+    """Transform raw data."""
     return transform(data)</code></pre>
 
   <h2>关键发现</h2>

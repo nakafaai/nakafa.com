@@ -30,21 +30,19 @@ BRAND_DEEP  = RGBColor(0x1B, 0x36, 0x5D)
 NEAR_BLACK  = RGBColor(0x14, 0x14, 0x13)
 DARK_WARM   = RGBColor(0x3d, 0x3d, 0x3a)
 CHARCOAL    = RGBColor(0x4d, 0x4c, 0x48)
-OLIVE       = RGBColor(0x5e, 0x5d, 0x59)
-STONE       = RGBColor(0x87, 0x86, 0x7f)
+OLIVE       = RGBColor(0x50, 0x4e, 0x49)
+STONE       = RGBColor(0x6b, 0x6a, 0x64)
 BORDER      = RGBColor(0xe8, 0xe6, 0xdc)
 WHITE       = RGBColor(0xff, 0xff, 0xff)
 
-# Fonts. PPT accepts one requested face and falls back on the viewer's system.
+# Fonts. Single serif per page. PPT falls back on the viewer's system.
 # For Japanese best-effort output, set LANG = "ja" before generating.
 LANG = "zh"
 CN_SERIF = "Source Han Serif SC"
-CN_SANS  = "Source Han Sans SC"
-JA_SERIF = "Hiragino Mincho ProN"  # Windows fallback: YuMincho; Linux: Noto Serif CJK JP
-JA_SANS  = "Hiragino Sans"         # Windows fallback: Yu Gothic; Linux: Noto Sans CJK JP
+JA_SERIF = "YuMincho"  # Windows: Yu Mincho; Linux: Noto Serif CJK JP
 
 SERIF = JA_SERIF if LANG == "ja" else CN_SERIF
-SANS  = JA_SANS if LANG == "ja" else CN_SANS
+SANS  = SERIF
 
 # 16:9 宽屏
 SLIDE_W = Inches(13.33)
@@ -244,6 +242,85 @@ def quote_slide(prs, quote, source):
     return s
 
 
+def comparison_slide(prs, eyebrow, left_title, left_items, right_title, right_items, page_num=None):
+    """对比页：左右两栏，竖线分隔，左侧降调，右侧全色
+    left_items / right_items: list of str (最多 4 条)
+    """
+    s = blank_slide(prs)
+    add_text(s, eyebrow,
+             Inches(1.2), Inches(0.6), Inches(10), Inches(0.4),
+             font=SANS, size=12, color=STONE)
+    # 分隔竖线（居中）
+    divider = s.shapes.add_connector(1,
+        Inches(6.67), Inches(1.0),
+        Inches(6.67), Inches(6.8))
+    divider.line.color.rgb = BORDER
+    divider.line.width = Pt(1)
+    # 左栏标题（降调）
+    add_text(s, left_title,
+             Inches(1.2), Inches(1.2), Inches(5), Inches(0.8),
+             font=SERIF, size=22, color=OLIVE)
+    # 右栏标题（全色）
+    add_text(s, right_title,
+             Inches(7.0), Inches(1.2), Inches(5), Inches(0.8),
+             font=SERIF, size=22, color=NEAR_BLACK)
+    # 分隔线
+    add_line(s, Inches(1.2), Inches(2.2), Inches(11.5), weight_pt=0.5)
+    # 左栏条目（降调）
+    for i, item in enumerate(left_items[:4]):
+        add_text(s, item,
+                 Inches(1.2), Inches(2.6 + i * 0.9), Inches(4.9), Inches(0.7),
+                 font=SANS, size=17, color=STONE)
+    # 右栏条目（全色）
+    for i, item in enumerate(right_items[:4]):
+        add_text(s, item,
+                 Inches(7.0), Inches(2.6 + i * 0.9), Inches(5.2), Inches(0.7),
+                 font=SANS, size=17, color=DARK_WARM)
+    if page_num is not None:
+        add_text(s, f" - {page_num:02d}",
+                 Inches(11.5), Inches(6.9), Inches(1.5), Inches(0.3),
+                 font=SANS, size=11, color=STONE,
+                 align=PP_ALIGN.RIGHT)
+    return s
+
+
+def pipeline_slide(prs, eyebrow, title, steps, page_num=None):
+    """流程步骤页：01/02/03 序号 + 步骤标题 + 步骤描述
+    steps: list of (step_title, step_desc)，最多 4 步
+    """
+    s = blank_slide(prs)
+    add_text(s, eyebrow,
+             Inches(1.2), Inches(0.6), Inches(10), Inches(0.4),
+             font=SANS, size=12, color=STONE)
+    add_text(s, title,
+             Inches(1.2), Inches(1.1), Inches(11), Inches(0.9),
+             font=SERIF, size=30, color=NEAR_BLACK)
+    add_line(s, Inches(1.2), Inches(2.15), Inches(11), weight_pt=0.5)
+
+    n = len(steps[:4])
+    step_w = Inches(11.5 / n)
+    for i, (step_title, step_desc) in enumerate(steps[:4]):
+        x = Inches(1.0) + step_w * i
+        # 序号
+        add_text(s, f"0{i+1}",
+                 x, Inches(2.5), step_w, Inches(0.8),
+                 font=SERIF, size=40, color=BRAND)
+        # 步骤标题
+        add_text(s, step_title,
+                 x, Inches(3.45), step_w - Inches(0.2), Inches(0.6),
+                 font=SERIF, size=19, color=NEAR_BLACK)
+        # 步骤描述
+        add_text(s, step_desc,
+                 x, Inches(4.15), step_w - Inches(0.2), Inches(2.2),
+                 font=SANS, size=15, color=OLIVE)
+    if page_num is not None:
+        add_text(s, f" - {page_num:02d}",
+                 Inches(11.5), Inches(6.9), Inches(1.5), Inches(0.3),
+                 font=SANS, size=11, color=STONE,
+                 align=PP_ALIGN.RIGHT)
+    return s
+
+
 def ending_slide(prs, message, contact):
     """结束页"""
     s = blank_slide(prs)
@@ -264,6 +341,12 @@ def ending_slide(prs, message, contact):
 # ═══════════════════════════════════════════════════════════
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--out", default="output.pptx",
+                        help="Output PPTX path (default: output.pptx in cwd)")
+    args = parser.parse_args()
+
     prs = Presentation()
     prs.slide_width  = SLIDE_W
     prs.slide_height = SLIDE_H
@@ -308,13 +391,33 @@ def main():
         quote="好的设计是尽可能少的设计。",
         source="Dieter Rams")
 
+    # 8. 对比页
+    comparison_slide(prs,
+        eyebrow="{{章节 · 对比}}",
+        left_title="{{旧方案}}",
+        left_items=["{{对比点 A}}", "{{对比点 B}}", "{{对比点 C}}"],
+        right_title="{{新方案}}",
+        right_items=["{{改善点 A}}", "{{改善点 B}}", "{{改善点 C}}"],
+        page_num=8)
+
+    # 9. 流程步骤页
+    pipeline_slide(prs,
+        eyebrow="{{章节 · 流程}}",
+        title="{{核心流程标题}}",
+        steps=[
+            ("{{步骤 1}}", "{{步骤 1 的说明文字，控制在两行内。}}"),
+            ("{{步骤 2}}", "{{步骤 2 的说明文字，控制在两行内。}}"),
+            ("{{步骤 3}}", "{{步骤 3 的说明文字，控制在两行内。}}"),
+        ],
+        page_num=9)
+
     # 7. 结束
     ending_slide(prs,
         message="Thank you",
         contact="{{邮箱}}　·　{{网站}}")
 
-    prs.save('output.pptx')
-    print("OK: Saved output.pptx")
+    prs.save(args.out)
+    print(f"OK: Saved {args.out}")
 
 
 if __name__ == '__main__':

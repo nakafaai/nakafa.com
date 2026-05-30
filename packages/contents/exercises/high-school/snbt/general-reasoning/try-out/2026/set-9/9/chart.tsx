@@ -66,11 +66,11 @@ export function GraduationChart({ lang = "en" }: Props) {
   const chartConfig = {
     passed: {
       label: t.passed,
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     failed: {
       label: t.failed,
-      color: "var(--chart-2)",
+      colors: { light: ["var(--chart-2)"] },
     },
   } satisfies ChartConfig;
 
@@ -95,12 +95,12 @@ export function GraduationChart({ lang = "en" }: Props) {
             <ChartLegend content={<ChartLegendContent />} />
             <RechartsBar
               dataKey="passed"
-              fill="var(--color-passed)"
+              fill="var(--color-passed-0)"
               radius={[4, 4, 0, 0]}
             />
             <RechartsBar
               dataKey="failed"
-              fill="var(--color-failed)"
+              fill="var(--color-failed-0)"
               radius={[4, 4, 0, 0]}
             />
           </RechartsBarChart>

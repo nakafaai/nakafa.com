@@ -27,11 +27,11 @@
  */
 
 // Environment variables loaded via Node.js --env-file flag
+import { webcrypto } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Effect } from "effect";
-import { JWT } from "google-auth-library";
+import { Effect, Schema } from "effect";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
 import { logger } from "@/scripts/utils";
 
@@ -71,36 +71,94 @@ if (!fs.existsSync(DATA_FOLDER)) {
 const GOOGLE_INDEXING_SCOPE = "https://www.googleapis.com/auth/indexing";
 const GOOGLE_PUBLISH_ENDPOINT =
   "https://indexing.googleapis.com/v3/urlNotifications:publish";
+const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
+const GOOGLE_JWT_AUDIENCE = GOOGLE_TOKEN_ENDPOINT;
+const GOOGLE_JWT_ALGORITHM = "RS256";
+const GOOGLE_JWT_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
+const GOOGLE_JWT_TOKEN_LIFETIME_SECONDS = 3600;
 
-// Initialize Google Auth client
-function initializeGoogleAuth(): JWT {
-  // Load credentials from file
+const GoogleServiceAccountSchema = Schema.Struct({
+  client_email: Schema.NonEmptyTrimmedString,
+  private_key: Schema.NonEmptyTrimmedString,
+});
+const GoogleTokenResponseSchema = Schema.Struct({
+  access_token: Schema.NonEmptyTrimmedString,
+});
+
+/** Loads and validates the Google service-account credentials used for indexing. */
+function loadGoogleServiceAccount() {
   const keyFileContent = fs.readFileSync(GOOGLE_KEY_FILE, "utf8");
-  const credentials = JSON.parse(keyFileContent);
 
-  // Use JWT constructor directly (recommended approach)
-  return new JWT({
-    email: credentials.client_email,
-    key: credentials.private_key,
-    scopes: [GOOGLE_INDEXING_SCOPE],
-  });
+  return Schema.decodeUnknownSync(Schema.parseJson(GoogleServiceAccountSchema))(
+    keyFileContent
+  );
 }
 
-// Get access token for Google API
-async function getGoogleAccessToken(auth: JWT): Promise<string> {
-  try {
-    const accessTokenResponse = await auth.getAccessToken();
-    const accessToken = accessTokenResponse.token;
+/** Signs a service-account assertion for Google's OAuth token endpoint. */
+async function signGoogleAccessTokenAssertion() {
+  const credentials = loadGoogleServiceAccount();
+  const now = Math.floor(Date.now() / 1000);
+  const encoder = new TextEncoder();
+  const key = await webcrypto.subtle.importKey(
+    "pkcs8",
+    Buffer.from(
+      credentials.private_key
+        .replace("-----BEGIN PRIVATE KEY-----", "")
+        .replace("-----END PRIVATE KEY-----", "")
+        .replaceAll(/\s/g, ""),
+      "base64"
+    ),
+    {
+      hash: "SHA-256",
+      name: "RSASSA-PKCS1-v1_5",
+    },
+    false,
+    ["sign"]
+  );
+  const encodedHeader = Buffer.from(
+    JSON.stringify({
+      alg: GOOGLE_JWT_ALGORITHM,
+      typ: "JWT",
+    })
+  ).toString("base64url");
+  const encodedPayload = Buffer.from(
+    JSON.stringify({
+      aud: GOOGLE_JWT_AUDIENCE,
+      exp: now + GOOGLE_JWT_TOKEN_LIFETIME_SECONDS,
+      iat: now,
+      iss: credentials.client_email,
+      scope: GOOGLE_INDEXING_SCOPE,
+    })
+  ).toString("base64url");
+  const signatureInput = `${encodedHeader}.${encodedPayload}`;
+  const signature = await webcrypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    key,
+    encoder.encode(signatureInput)
+  );
 
-    if (!accessToken) {
-      throw new Error("Failed to obtain access token");
-    }
+  return `${signatureInput}.${Buffer.from(signature).toString("base64url")}`;
+}
 
-    return accessToken;
-  } catch (error) {
-    logger.error(`Error obtaining Google access token: ${error}`);
-    throw error;
+/** Exchanges a signed service-account assertion for a Google API access token. */
+async function getGoogleAccessToken() {
+  const assertion = await signGoogleAccessTokenAssertion();
+  const response = await fetch(GOOGLE_TOKEN_ENDPOINT, {
+    body: new URLSearchParams({
+      assertion,
+      grant_type: GOOGLE_JWT_GRANT_TYPE,
+    }),
+    method: "POST",
+  });
+  const responseText = await response.text();
+
+  if (!response.ok) {
+    throw new Error(`Google token request failed: ${responseText}`);
   }
+
+  return Schema.decodeUnknownSync(Schema.parseJson(GoogleTokenResponseSchema))(
+    responseText
+  ).access_token;
 }
 
 // Load Google indexing history
@@ -321,8 +379,7 @@ async function runGoogleIndexing(): Promise<void> {
 
   try {
     // Initialize Google authentication
-    const auth = initializeGoogleAuth();
-    const accessToken = await getGoogleAccessToken(auth);
+    const accessToken = await getGoogleAccessToken();
 
     logger.stats("Google service account", "Authenticated successfully");
     logger.stats("Website URL", host);

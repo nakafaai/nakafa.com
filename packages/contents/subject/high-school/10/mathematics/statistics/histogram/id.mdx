@@ -28,11 +28,11 @@ Diagram batang digunakan untuk data kategori (seperti merek HP atau jenis olahra
   ]}
   chartConfig={{
     value: { label: "Jumlah Siswa" },
-    Apple: { label: "Apple", color: "var(--chart-1)" },
-    Samsung: { label: "Samsung", color: "var(--chart-2)" },
-    Xiaomi: { label: "Xiaomi", color: "var(--chart-3)" },
-    Oppo: { label: "Oppo", color: "var(--chart-4)" },
-    Lenovo: { label: "Lenovo", color: "var(--chart-5)" },
+    Apple: { label: "Apple", colors: { light: ["var(--chart-1)"] } },
+    Samsung: { label: "Samsung", colors: { light: ["var(--chart-2)"] } },
+    Xiaomi: { label: "Xiaomi", colors: { light: ["var(--chart-3)"] } },
+    Oppo: { label: "Oppo", colors: { light: ["var(--chart-4)"] } },
+    Lenovo: { label: "Lenovo", colors: { light: ["var(--chart-5)"] } },
   }}
   yAxisLabel="Jumlah Siswa"
 />
@@ -64,23 +64,23 @@ Histogram, di sisi lain, digunakan untuk data angka yang dikelompokkan dalam int
     },
     "0-2": {
       label: "0-2 jam",
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     "2-4": {
       label: "2-4 jam",
-      color: "var(--chart-2)",
+      colors: { light: ["var(--chart-2)"] },
     },
     "4-6": {
       label: "4-6 jam",
-      color: "var(--chart-3)",
+      colors: { light: ["var(--chart-3)"] },
     },
     "6-8": {
       label: "6-8 jam",
-      color: "var(--chart-4)",
+      colors: { light: ["var(--chart-4)"] },
     },
     "8-10": {
       label: "8-10 jam",
-      color: "var(--chart-5)",
+      colors: { light: ["var(--chart-5)"] },
     },
   }}
   yAxisLabel="Frekuensi"

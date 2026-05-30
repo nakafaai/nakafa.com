@@ -74,10 +74,10 @@ export function CabinetChart({
   const chartConfig = {
     cabinet: {
       label: labels.cabinet,
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     label: {
-      color: "var(--foreground)",
+      colors: { light: ["var(--foreground)"] },
     },
   } satisfies ChartConfig;
 
@@ -112,12 +112,7 @@ export function CabinetChart({
               content={<ChartTooltipContent indicator="line" />}
               cursor={false}
             />
-            <Bar
-              dataKey="cabinet"
-              fill="var(--color-cabinet)"
-              layout="vertical"
-              radius={8}
-            >
+            <Bar dataKey="cabinet" fill="var(--color-cabinet-0)" radius={8}>
               <LabelList
                 className="fill-(--color-label)"
                 dataKey="name"
@@ -163,30 +158,30 @@ export function CompositionChart({
   const chartConfig = {
     new: {
       label: labels.new,
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     incumbent: {
       label: labels.incumbent,
-      color: "var(--chart-2)",
+      colors: { light: ["var(--chart-2)"] },
     },
     male: {
       label: labels.male,
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     female: {
       label: labels.female,
-      color: "var(--chart-2)",
+      colors: { light: ["var(--chart-2)"] },
     },
     politician: {
       label: labels.politicians,
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     non_politician: {
       label: labels.nonPoliticians,
-      color: "var(--chart-2)",
+      colors: { light: ["var(--chart-2)"] },
     },
     label: {
-      color: "var(--foreground)",
+      colors: { light: ["var(--foreground)"] },
     },
   } satisfies ChartConfig;
 
@@ -214,10 +209,10 @@ export function CompositionChart({
                 content={<ChartTooltipContent indicator="line" />}
                 cursor={false}
               />
-              <Bar dataKey="new" fill="var(--color-new)" radius={8} />
+              <Bar dataKey="new" fill="var(--color-new-0)" radius={8} />
               <Bar
                 dataKey="incumbent"
-                fill="var(--color-incumbent)"
+                fill="var(--color-incumbent-0)"
                 radius={8}
               />
               <ChartLegend content={<ChartLegendContent />} />
@@ -240,8 +235,8 @@ export function CompositionChart({
                 content={<ChartTooltipContent indicator="line" />}
                 cursor={false}
               />
-              <Bar dataKey="male" fill="var(--color-male)" radius={8} />
-              <Bar dataKey="female" fill="var(--color-female)" radius={8} />
+              <Bar dataKey="male" fill="var(--color-male-0)" radius={8} />
+              <Bar dataKey="female" fill="var(--color-female-0)" radius={8} />
               <ChartLegend content={<ChartLegendContent />} />
             </BarChart>
           </ChartContainer>
@@ -264,12 +259,12 @@ export function CompositionChart({
               />
               <Bar
                 dataKey="politician"
-                fill="var(--color-politician)"
+                fill="var(--color-politician-0)"
                 radius={8}
               />
               <Bar
                 dataKey="non_politician"
-                fill="var(--color-non_politician)"
+                fill="var(--color-non_politician-0)"
                 radius={8}
               />
               <ChartLegend content={<ChartLegendContent />} />

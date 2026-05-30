@@ -1,6 +1,6 @@
 # Diagrams
 
-kami's drawing capability. **12 diagram types** covering structural, process, and data chart scenarios. All wear kami's skin (parchment + ink-blue + warm grays). No second design system.
+kami's drawing capability. **14 diagram types** covering structural, process, and data chart scenarios. All wear kami's skin (parchment + ink-blue + warm grays). No second design system.
 
 Every diagram is a **self-contained HTML + inline SVG**. No Mermaid, no JS, no build step. Browse them as standalone pages, or copy the `<svg>...</svg>` block into a long-doc `<figure>` to embed.
 
@@ -22,6 +22,8 @@ Every diagram is a **self-contained HTML + inline SVG**. No Mermaid, no JS, no b
 | Hierarchical relationships (org chart, module deps, directory tree) | **Tree** | `assets/diagrams/tree.html` |
 | Vertically stacked system layers (OSI, application stack) | **Layer Stack** | `assets/diagrams/layer-stack.html` |
 | Set intersections (feature overlap, audience comparison, capability map) | **Venn** | `assets/diagrams/venn.html` |
+| OHLC price action (stock price, trading days, up/down candles) | **Candlestick** | `assets/diagrams/candlestick.html` |
+| Revenue bridge, valuation decomposition, cash flow breakdown | **Waterfall** | `assets/diagrams/waterfall.html` |
 
 Not on the list:
 - **Compare two things**: use a table. A three-column table beats any diagram of a binary contrast.
@@ -85,32 +87,120 @@ Edit the `<text>` and `<rect>` values directly. Rules:
 
 ### Color token map
 
-Shared tokens across the three diagrams, mapping directly to kami's design system:
+Shared tokens across kami's diagram set, mapping directly to the design system. All fills are solid hex values pre-blended on parchment; never use `rgba()` in SVG fills or strokes (it disagrees with the warm-tone palette and complicates WeasyPrint output).
 
 | SVG role | kami token | Value |
 |---|---|---|
 | Canvas | `--parchment` | `#f5f4ed` |
-| Standard node fill | (white) | `#ffffff` |
+| Standard node fill | `--ivory` | `#faf9f5` |
 | Standard node stroke | `--near-black` | `#141413` |
-| Store node fill | near-black 5% | `rgba(20,20,19,0.05)` |
-| Store node stroke | `--olive` | `#5e5d59` |
-| Cloud node fill | near-black 3% | `rgba(20,20,19,0.03)` |
-| Cloud node stroke | near-black 30% | `rgba(20,20,19,0.30)` |
-| External node fill | olive 8% | `rgba(94,93,89,0.08)` |
-| External node stroke | `--stone` | `#87867f` |
+| Store node fill | near-black 5% (solid) | `#EAE9E2` |
+| Store node stroke | `--olive` | `#504e49` |
+| Cloud node fill | near-black 3% (solid) | `#EEEDE6` |
+| Cloud node stroke | near-black 30% (solid) | `#B2B1AC` |
+| External node fill | olive 8% (solid) | `#E9E8E1` |
+| External node stroke | `--stone` | `#6b6a64` |
 | **Focal fill** | `--brand-tint` | `#EEF2F7` |
 | **Focal stroke** | `--brand` | `#1B365D` |
-| Standard arrow | `--olive` | `#5e5d59` |
+| Standard arrow | `--olive` | `#504e49` |
 | Focal arrow | `--brand` | `#1B365D` |
 | Primary text | `--near-black` | `#141413` |
-| Secondary text | `--olive` | `#5e5d59` |
-| Tertiary text / small mono label | `--stone` | `#87867f` |
+| Secondary text | `--olive` | `#504e49` |
+| Tertiary text / small mono label | `--stone` | `#6b6a64` |
 
 Don't add a fourth state ("warning amber", "success green"). kami has one accent.
 
+### Shared `<defs>` fragment
+
+Every diagram opens with the same parchment + dotted-noise overlay. Copy this block verbatim into new diagrams so the texture stays uniform:
+
+```html
+<defs>
+  <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+    <circle cx="1" cy="1" r="0.9" fill="#E3E2DC"/>
+  </pattern>
+</defs>
+
+<rect width="100%" height="100%" fill="#f5f4ed"/>
+<rect width="100%" height="100%" fill="url(#dots)" opacity="0.55"/>
+```
+
+`#E3E2DC` is the parchment-blended solid for `rgba(20,20,19,0.08)`; the `opacity="0.55"` on the overlay rect is a deliberate decoration, not a violation of the no-rgba-on-tag-backgrounds rule (which targets CSS tag fills, not SVG dot textures).
+
+### Embedded font calibration (override standalone sizes)
+
+Standalone diagram sizes (`7 / 9 / 12`) are too small once embedded in A4 long-doc / portfolio. The render width drops to about 470pt while the viewBox stays at 1000, so the scale factor is roughly `0.47`. To keep diagram text aligned with the 11pt body baseline, raise the SVG `font-size` values when embedding:
+
+| Visual target | Visual weight | SVG `font-size` |
+|---|---|---|
+| Same as h2 / focal node name | 11pt | **24** |
+| Same as body | 11pt | **22-24** |
+| Same as h3 / sub-label | 9-10pt | **18-20** |
+| Same as caption | 8pt | **15-16** |
+| Mono uppercase tag (letter-spacing 2.5) | 7pt | **14** |
+
+Compensation factor is roughly `1.8-2.0x` over standalone. `font-size: 24` with `font-weight: 600` and the body serif renders at about 1.05x the body, which reads as h2-equivalent without dominating the page.
+
+For tall diagrams (e.g. 5-layer stack), a working layout is `viewBox: 0 0 1000 560`, layer height `88`, gap `8`, and inside each layer:
+
+- Tag baseline `y+24`, font-size `14`, mono, letter-spacing `2.5`
+- Name baseline `y+54`, font-size `24`, serif weight `600`
+- Description baseline `y+76`, font-size `14`, mono, normal
+- Right-side role tag `x=900`, `text-anchor=end`, font-size `13`
+
+### In-SVG header line (figure number + title)
+
+For embedded diagrams, put the "FIGURE N · TITLE" header inside the SVG instead of using `<figcaption>`. The diagram becomes a self-contained editorial unit, and the brand-colored header doubles as a section anchor.
+
+```svg
+<text x="80" y="38" fill="#1B365D" font-size="13" font-weight="600"
+      font-family="mono" letter-spacing="3">FIGURE  1</text>
+<text x="195" y="38" fill="#504e49" font-size="13"
+      font-family="mono" letter-spacing="3">DIAGRAM TITLE GOES HERE</text>
+<line x1="80" y1="52" x2="920" y2="52"
+      stroke="#1B365D" stroke-width="0.8"/>
+```
+
+Two spaces between `FIGURE` and the number. With `letter-spacing: 3`, a single space lets the digit collide with the preceding letter.
+
 ---
 
-## 4. AI-slop anti-patterns
+## 4. Icon style
+
+Icons live inside `<svg>` blocks alongside diagram nodes. Draw them with the same primitives (`rect`, `circle`, `line`, `path`) used for nodes - no imported icon fonts, no SVG sprites.
+
+**Rules**:
+- Single line, stroke 1pt-1.5pt, no fill
+- Stroke weight stays consistent within one diagram. Never mix 1pt and 1.5pt icons in the same figure
+- No drop shadow, gradient, 3D, or glassmorphism
+- No emoji-style faces, mascots, or expressive characters - this is editorial schematic, not playful
+- Focal icons may use `--brand` stroke or fill, but the figure's total ink-blue area still respects the 5% cap
+
+### Canonical shapes
+
+When an icon represents a recurring concept, use the canonical form rather than inventing a new one:
+
+| Concept | Shape |
+|---|---|
+| Terminal / CLI | rounded rectangle, three dots top-left |
+| Document / spec | rectangle, three short horizontal lines |
+| Checklist / verification | rectangle, two check marks |
+| Gear / system | 8-tooth gear outline |
+| Magnifier / inspect | circle with 45° handle |
+| Shield / safety | shield silhouette |
+| Cloud / hosted service | three-arc cloud outline |
+| Chip / hardware | square with leg lines on four sides |
+| GPU / compute rack | rectangular stack with port indicators |
+
+### Human and robot figures
+
+Avoid human figures and anthropomorphic AI in editorial diagrams. If a person must appear, use a minimal line drawing without facial detail. Industrial robots may be line-art mechanical structures, but stop short of patent-illustration density.
+
+When in doubt, omit the icon entirely. A clean text label beats a cute icon in editorial schematic style. Add an icon only when it carries information the label cannot (e.g. distinguishing "cloud service" from "on-device compute" at a glance).
+
+---
+
+## 5. AI-slop anti-patterns
 
 Scan for these when drawing or reviewing:
 
@@ -138,7 +228,7 @@ Scan for these when drawing or reviewing:
 
 ---
 
-## 5. Common pairings
+## 6. Common pairings
 
 ### Technical white paper
 - Architecture (system overview) + built-in timeline (from long-doc)
@@ -156,21 +246,22 @@ Scan for these when drawing or reviewing:
 - **No diagrams.** Resume real-estate costs more than diagrams. Rare exception: a URL to a portfolio diagram when showing system-level capability.
 
 ### Slides
-- One diagram per slide, max. The diagram is the body. Text is caption, not a sidebar.
+- One diagram per slide, max. The diagram is the body. Text is caption, not a sidebar. At slide scale (1920x1080), scale the SVG to fill >=65% of the slide area; print-sized diagram on screen slide leaves ~35% dead space.
+- **Alternative when the diagram cannot grow** (already at semantic max width, e.g. flow charts or quadrant maps): insert a 70-100 char olive paragraph (`color: var(--olive)`, `font-size: 28px`, `line-height: 1.55`) between figure and caption. The paragraph carries the editorial reading; the caption stays one line as the takeaway. Keeps vertical fill above 60% without forcing the SVG larger than its information density supports.
 
 ---
 
-## 6. Data charts (bar / line / donut)
+## 7. Data charts (bar / line / donut)
 
-Three data-driven chart types for investment reports, financial comparisons, and market-share breakdowns. Like the first three diagram types, all are self-contained HTML + inline SVG, embeddable in any kami document.
+Five data-driven chart types for investment reports, financial comparisons, and market-share breakdowns. Like the first three diagram types, all are self-contained HTML + inline SVG, embeddable in any kami document.
 
 ### Color palette (derived from kami warm palette)
 
 | Role | Value | Use |
 |---|---|---|
 | Primary series | `#1B365D` ink-blue | First group / focal data |
-| Series 2 | `#5e5d59` olive | Second group |
-| Series 3 | `#87867f` stone | Third group |
+| Series 2 | `#504e49` olive | Second group |
+| Series 3 | `#6b6a64` stone | Third group |
 | Series 4 | `#b8b7b0` light-stone | Fourth group |
 | Series 5 | `#d4d3cd` mist | Fifth group |
 | Series 6 | `#EEF2F7` brand-tint | Sixth group |
@@ -184,6 +275,8 @@ Three data-driven chart types for investment reports, financial comparisons, and
 | Bar chart | 8 groups | 3 series | `assets/diagrams/bar-chart.html` |
 | Line chart | 12 points | 3 lines | `assets/diagrams/line-chart.html` |
 | Donut chart | 6 segments | n/a | `assets/diagrams/donut-chart.html` |
+| Candlestick | 30 days | n/a | `assets/diagrams/candlestick.html` |
+| Waterfall | 8 segments | n/a | `assets/diagrams/waterfall.html` |
 
 ### Editing data
 
@@ -212,9 +305,25 @@ inner_x = 300 + 76  × cos(angle_deg × π/180)
 inner_y = 200 + 76  × sin(angle_deg × π/180)
 ```
 
+**Candlestick Y-axis formula** (default: price range 100-160, chart-height=280, scale=4.67):
+```
+candle_y = 320 - (price - 100) * 4.67
+Up candle: fill=#1B365D (close > open), body from open_y to close_y
+Down candle: fill=#6b6a64 (close < open), body from close_y to open_y
+Wick: 1.2px stroke from high_y to low_y, centered on candle
+```
+
+**Waterfall formula** (default: max=200, chart-height=280, scale=1.4):
+```
+bar_y = 320 - value * 1.4
+Floating bars: top = running_total_y, height = abs(delta) * 1.4
+Positive: fill=#1B365D · Negative: fill=#6b6a64 · Total: fill=#4d4c48
+Connector: dashed 0.8px #b8b7b0 between adjacent bar edges
+```
+
 ---
 
-## 7. Build / preview
+## 8. Build / preview
 
 ```bash
 python3 scripts/build.py diagram-architecture
@@ -229,6 +338,8 @@ python3 scripts/build.py diagram-swimlane
 python3 scripts/build.py diagram-tree
 python3 scripts/build.py diagram-layer-stack
 python3 scripts/build.py diagram-venn
+python3 scripts/build.py diagram-candlestick
+python3 scripts/build.py diagram-waterfall
 
 # or all
 python3 scripts/build.py
@@ -238,6 +349,6 @@ Or just open `assets/diagrams/*.html` in a browser.
 
 ---
 
-## 8. Credit
+## 9. Credit
 
 This capability is inspired by Cathryn Lavery's [diagram-design](https://github.com/cathrynlavery/diagram-design) (a Claude Code skill with 13 editorial diagram types). kami borrowed the **approach** (inline SVG, semantic tokens, complexity budget, anti-slop table). Not the full catalog.

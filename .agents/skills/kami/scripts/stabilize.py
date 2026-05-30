@@ -21,25 +21,27 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parent.parent
-TEMPLATES = ROOT / "assets" / "templates"
+from optional_deps import (
+    MissingDepError,
+    require_pypdf_reader,
+    require_weasyprint_html,
+)
+from shared import (
+    COOL_GRAY_BLOCKLIST,
+    PARCHMENT_RGB as SHARED_PARCHMENT_RGB,
+    ROOT,
+    TEMPLATES,
+    TOKENS_FILE,
+    load_cool_gray_buckets,
+    stabilize_targets,
+)
+
 PROFILES_FILE = ROOT / "references" / "stabilizer_profiles.json"
-TOKENS_FILE = ROOT / "references" / "tokens.json"
 DEFAULT_OUT_DIR = ROOT / "dist" / "stabilized"
 
 # HTML targets only. Diagrams/slides are intentionally excluded from stabilize v0.
-HTML_TARGETS: dict[str, tuple[str, int]] = {
-    "one-pager": ("one-pager.html", 1),
-    "letter": ("letter.html", 1),
-    "long-doc": ("long-doc.html", 0),
-    "portfolio": ("portfolio.html", 0),
-    "resume": ("resume.html", 2),
-    "one-pager-en": ("one-pager-en.html", 1),
-    "letter-en": ("letter-en.html", 1),
-    "long-doc-en": ("long-doc-en.html", 0),
-    "portfolio-en": ("portfolio-en.html", 0),
-    "resume-en": ("resume-en.html", 2),
-}
+# Sourced from shared.HTML_TEMPLATES so build.py and stabilize.py never drift.
+HTML_TARGETS: dict[str, tuple[str, int]] = stabilize_targets()
 
 STYLE_BLOCK_RE = re.compile(r"(<style>\s*)(?P<css>.*?)(\s*</style>)", re.DOTALL | re.IGNORECASE)
 ROOT_BLOCK_RE = re.compile(r"(^[ \t]*:root[ \t]*\{)(?P<body>.*?)(^[ \t]*\})", re.DOTALL | re.MULTILINE)
@@ -61,56 +63,7 @@ PAGE_MARGIN_MM_RE = re.compile(
     re.IGNORECASE,
 )
 
-COOL_GRAY_BLOCKLIST = {
-    "#888",
-    "#888888",
-    "#666",
-    "#666666",
-    "#999",
-    "#999999",
-    "#ccc",
-    "#cccccc",
-    "#ddd",
-    "#dddddd",
-    "#eee",
-    "#eeeeee",
-    "#111",
-    "#111111",
-    "#222",
-    "#222222",
-    "#333",
-    "#333333",
-    "#444",
-    "#444444",
-    "#555",
-    "#555555",
-    "#777",
-    "#777777",
-    "#aaa",
-    "#aaaaaa",
-    "#bbb",
-    "#bbbbbb",
-    "#6b7280",
-    "#9ca3af",
-    "#d1d5db",
-    "#e5e7eb",
-    "#f3f4f6",
-    "#4b5563",
-    "#374151",
-    "#1f2937",
-    "#111827",
-    "#f8f9fa",
-    "#e9ecef",
-    "#dee2e6",
-    "#ced4da",
-    "#adb5bd",
-    "#6c757d",
-    "#495057",
-    "#343a40",
-    "#212529",
-}
-
-PARCHMENT_RGB = (245, 244, 237)
+PARCHMENT_RGB = SHARED_PARCHMENT_RGB
 
 
 @dataclass
@@ -265,6 +218,14 @@ def luminance(rgb: tuple[int, int, int]) -> float:
 
 def normalize_cool_grays(css: str) -> tuple[str, int]:
     changed = 0
+    # Buckets are sorted by ascending lum_max in references/cool_gray_buckets.json.
+    buckets = load_cool_gray_buckets()
+
+    def pick_replacement(lum: float) -> str:
+        for bucket in buckets:
+            if lum < float(bucket["lum_max"]):
+                return str(bucket["replacement"])
+        return str(buckets[-1]["replacement"])
 
     def repl(m: re.Match[str]) -> str:
         nonlocal changed
@@ -274,13 +235,7 @@ def normalize_cool_grays(css: str) -> tuple[str, int]:
             normalized = "#" + "".join(ch * 2 for ch in normalized[1:])
         if normalized not in COOL_GRAY_BLOCKLIST:
             return raw
-        lum = luminance(parse_hex(normalized))
-        if lum < 0.35:
-            replacement = "#4D4C48"
-        elif lum < 0.72:
-            replacement = "#87867F"
-        else:
-            replacement = "#E8E6DC"
+        replacement = pick_replacement(luminance(parse_hex(normalized)))
         if replacement.lower() == normalized:
             return raw
         changed += 1
@@ -445,10 +400,10 @@ def tighten_page_margin(
 
 def count_pages(html: str, base_dir: Path) -> int:
     try:
-        from weasyprint import HTML
-        from pypdf import PdfReader
-    except ImportError as exc:
-        raise RuntimeError("missing deps: pip install weasyprint pypdf --break-system-packages") from exc
+        HTML = require_weasyprint_html()
+        PdfReader = require_pypdf_reader()
+    except MissingDepError as exc:
+        raise RuntimeError(str(exc)) from exc
 
     tmp_pdf: Path | None = None
     try:
@@ -541,10 +496,11 @@ def run_for_target(
     write_in_place: bool,
     out_dir: Path,
     strict: bool,
+    templates_dir: Path = TEMPLATES,
 ) -> TargetResult:
     validate_profile(profile, target)
 
-    source_path = TEMPLATES / source_file
+    source_path = templates_dir / source_file
     html = source_path.read_text(encoding="utf-8")
     css, style_match = extract_css(html)
 
@@ -715,7 +671,7 @@ def run_for_target(
 
     result = TargetResult(
         target=target,
-        source=str(source_path.relative_to(ROOT)),
+        source=str(source_path.relative_to(ROOT) if source_path.is_relative_to(ROOT) else source_path),
         output=str(output_path.relative_to(ROOT) if output_path.is_relative_to(ROOT) else output_path),
         changed=changed,
         max_pages=max_pages,

@@ -63,15 +63,15 @@ export function VirusChart({
   const chartConfig = {
     exponential: {
       label: labels.exponential,
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     linear: {
       label: labels.linear,
-      color: "var(--chart-2)",
+      colors: { light: ["var(--chart-2)"] },
     },
     logarithmic: {
       label: labels.logarithmic,
-      color: "var(--chart-3)",
+      colors: { light: ["var(--chart-3)"] },
     },
   } satisfies ChartConfig;
 
@@ -124,7 +124,7 @@ export function VirusChart({
               dataKey="exponential"
               dot
               name="exponential"
-              stroke={chartConfig.exponential.color}
+              stroke="var(--color-exponential-0)"
               strokeWidth={2}
               type="monotone"
             />
@@ -132,7 +132,7 @@ export function VirusChart({
               dataKey="linear"
               dot
               name="linear"
-              stroke={chartConfig.linear.color}
+              stroke="var(--color-linear-0)"
               strokeWidth={2}
               type="monotone"
             />
@@ -140,7 +140,7 @@ export function VirusChart({
               dataKey="logarithmic"
               dot
               name="logarithmic"
-              stroke={chartConfig.logarithmic.color}
+              stroke="var(--color-logarithmic-0)"
               strokeWidth={2}
               type="monotone"
             />

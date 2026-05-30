@@ -79,10 +79,10 @@ export function BudgetChart({
   const chartConfig = {
     budget: {
       label: labels.budget,
-      color: "var(--chart-4)",
+      colors: { light: ["var(--chart-4)"] },
     },
     label: {
-      color: "var(--foreground)",
+      colors: { light: ["var(--foreground)"] },
     },
   } satisfies ChartConfig;
 
@@ -122,7 +122,7 @@ export function BudgetChart({
               content={<ChartTooltipContent indicator="line" />}
               cursor={false}
             />
-            <Bar dataKey="budget" fill="var(--color-budget)" radius={8}>
+            <Bar dataKey="budget" fill="var(--color-budget-0)" radius={8}>
               <LabelList
                 className="fill-foreground"
                 dataKey="budget"
@@ -171,10 +171,10 @@ export function FundChart({
   const chartConfig = {
     fund: {
       label: labels.fund,
-      color: "var(--chart-5)",
+      colors: { light: ["var(--chart-5)"] },
     },
     label: {
-      color: "var(--foreground)",
+      colors: { light: ["var(--foreground)"] },
     },
   } satisfies ChartConfig;
 
@@ -214,7 +214,7 @@ export function FundChart({
               content={<ChartTooltipContent indicator="line" />}
               cursor={false}
             />
-            <Bar dataKey="fund" fill="var(--color-fund)" radius={8}>
+            <Bar dataKey="fund" fill="var(--color-fund-0)" radius={8}>
               <LabelList
                 className="fill-foreground"
                 dataKey="fund"
@@ -324,15 +324,15 @@ const ElectabilityChartData = [
 const chartConfig = {
   anies_muhaimin: {
     label: "Anies Baswedan-Muhaimin Iskandar",
-    color: "var(--chart-1)",
+    colors: { light: ["var(--chart-1)"] },
   },
   prabowo_gibran: {
     label: "Prabowo Subianto-Gibran Rakabuming",
-    color: "var(--chart-2)",
+    colors: { light: ["var(--chart-2)"] },
   },
   ganjar_mahfud: {
     label: "Ganjar Pranowo-Mahfud MD",
-    color: "var(--chart-3)",
+    colors: { light: ["var(--chart-3)"] },
   },
 } satisfies ChartConfig;
 
@@ -377,7 +377,7 @@ export function ElectabilityChart({
                 <ChartTooltipContent
                   indicator="line"
                   labelFormatter={(value) =>
-                    format(new Date(value), "MMMM yyyy")
+                    format(new Date(String(value)), "MMMM yyyy")
                   }
                 />
               }
@@ -386,21 +386,21 @@ export function ElectabilityChart({
             <Line
               dataKey="anies_muhaimin"
               dot={false}
-              stroke="var(--color-anies_muhaimin)"
+              stroke="var(--color-anies_muhaimin-0)"
               strokeWidth={2}
               type="natural"
             />
             <Line
               dataKey="prabowo_gibran"
               dot={false}
-              stroke="var(--color-prabowo_gibran)"
+              stroke="var(--color-prabowo_gibran-0)"
               strokeWidth={2}
               type="natural"
             />
             <Line
               dataKey="ganjar_mahfud"
               dot={false}
-              stroke="var(--color-ganjar_mahfud)"
+              stroke="var(--color-ganjar_mahfud-0)"
               strokeWidth={2}
               type="natural"
             />

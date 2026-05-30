@@ -69,7 +69,7 @@ export function ScatterDiagram({
     (acc, dataset) => {
       acc[dataset.name] = {
         label: dataset.name,
-        color: dataset.color,
+        colors: { light: [dataset.color] },
       };
       return acc;
     },
@@ -134,7 +134,11 @@ export function ScatterDiagram({
               tickMargin={8}
               type="number"
             />
-            <ChartTooltip content={<ChartTooltipContent hideLabel={true} />} />
+            <ChartTooltip
+              content={<ChartTooltipContent hideLabel={true} />}
+              shared={false}
+              wrapperStyle={{ visibility: "hidden" }}
+            />
             {datasets.map((dataset) => (
               <Scatter
                 data={dataset.points}
@@ -184,6 +188,7 @@ export function ScatterDiagram({
   );
 }
 
+/** Calculates the least-squares line for one set of scatter points. */
 function calculateLeastSquares(
   points: Point[]
 ): { m: number; b: number } | null {

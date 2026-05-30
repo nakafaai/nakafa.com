@@ -54,7 +54,7 @@ export function GrowthChart({ lang = "en" }: Props) {
   const chartConfig = {
     growth: {
       label: t.yAxisLabel,
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
   } satisfies ChartConfig;
 
