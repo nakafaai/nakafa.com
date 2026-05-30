@@ -10,48 +10,9 @@
 <meta charset="UTF-8">
 <title>Things You Don't Know About Agents · Slides</title>
 <style>
-  @font-face {
-    font-family: "Newsreader";
-    src: url("../fonts/Newsreader.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: "Newsreader";
-    src: url("../fonts/Newsreader.woff2") format("woff2");
-    font-weight: 500;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: "Inter";
-    src: url("../fonts/Inter.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: "Inter";
-    src: url("../fonts/Inter-500.woff2") format("woff2");
-    font-weight: 500;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: "Inter";
-    src: url("../fonts/Inter-600.woff2") format("woff2");
-    font-weight: 600;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: "JetBrains Mono";
-    src: url("../fonts/JetBrainsMono.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: "JetBrains Mono";
-    src: url("../fonts/JetBrainsMono.woff2") format("woff2");
-    font-weight: 500;
-    font-style: normal;
-  }
+  /* Palatino is a system font; JetBrains Mono kept for code blocks */
+  @font-face { font-family: "JetBrains Mono"; src: url("../fonts/JetBrainsMono.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+  @font-face { font-family: "JetBrains Mono"; src: url("../fonts/JetBrainsMono.woff2") format("woff2"); font-weight: 500; font-style: normal; }
 
   @page {
     size: A4 landscape;
@@ -66,14 +27,14 @@
     --ivory:      #faf9f5;
     --near-black: #141413;
     --dark-warm:  #3d3d3a;
-    --olive:      #5e5d59;
-    --stone:      #87867f;
+    --olive:      #504e49;
+    --stone:      #6b6a64;
     --brand:      #1B365D;
     --brand-tint: #EEF2F7;
     --border:     #e8e6dc;
 
-    --serif: "Newsreader", "Source Serif 4", "Charter", Georgia, serif;
-    --sans:  "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    --serif: Charter, Georgia, Palatino, serif;
+    --sans: var(--serif);
     --mono:  "JetBrains Mono", "SF Mono", Consolas, monospace;
   }
 
@@ -107,7 +68,7 @@
     bottom: 10mm;
     right: 22mm;
     font-family: var(--mono);
-    font-size: 8.5pt;
+    font-size: 9pt;
     color: var(--stone);
     letter-spacing: 0.5pt;
     font-variant-numeric: tabular-nums;
@@ -118,7 +79,7 @@
     bottom: 10mm;
     left: 22mm;
     font-family: var(--mono);
-    font-size: 8.5pt;
+    font-size: 9pt;
     color: var(--stone);
     letter-spacing: 1.5pt;
     text-transform: uppercase;
@@ -210,21 +171,25 @@
 
   ul.pts {
     list-style: none;
+    counter-reset: pts;
   }
   ul.pts li {
+    counter-increment: pts;
     font-family: var(--sans);
     font-size: 12.5pt;
     line-height: 1.5;
     color: var(--dark-warm);
-    padding-left: 14pt;
+    padding-left: 18pt;
     position: relative;
     margin-bottom: 9pt;
   }
   ul.pts li::before {
-    content: "\2013";
+    content: counter(pts) ".";
     position: absolute;
     left: 0;
     color: var(--brand);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
   }
   ul.pts li .hl { color: var(--brand); font-weight: 500; }
 
@@ -241,7 +206,9 @@
   }
   .callout .hl { color: var(--brand); }
 
-  /* kami-native metrics: transparent baseline flex row */
+  /* kami-native metrics: vertical stack, number above label.
+     Stacked layout keeps all 3 numbers on one baseline regardless of label
+     length; horizontal baseline-align breaks visually when labels wrap. */
   .metrics {
     display: flex;
     gap: 20pt;
@@ -252,8 +219,8 @@
   .metric {
     flex: 1;
     display: flex;
-    align-items: baseline;
-    gap: 8pt;
+    flex-direction: column;
+    gap: 6pt;
   }
   .metric .v {
     font-family: var(--serif);
@@ -318,7 +285,7 @@
     overflow: hidden;
   }
   .code-card .k { color: var(--brand); }
-  .code-card .c { color: #87867f; }
+  .code-card .c { color: #6b6a64; }
 </style>
 </head>
 <body>
@@ -340,11 +307,11 @@
       <circle cx="130" cy="130" r="44" fill="#EEF2F7" stroke="#1B365D" stroke-width="1.2"/>
       <!-- arc segments on outer ring to suggest cycle -->
       <path d="M 130 30 A 100 100 0 0 1 230 130" fill="none" stroke="#1B365D" stroke-width="2.2" stroke-linecap="round"/>
-      <path d="M 230 130 A 100 100 0 0 1 130 230" fill="none" stroke="#87867f" stroke-width="1.2" stroke-linecap="round"/>
-      <path d="M 130 230 A 100 100 0 0 1 30 130" fill="none" stroke="#87867f" stroke-width="1.2" stroke-linecap="round"/>
-      <path d="M 30 130 A 100 100 0 0 1 130 30" fill="none" stroke="#87867f" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M 230 130 A 100 100 0 0 1 130 230" fill="none" stroke="#6b6a64" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M 130 230 A 100 100 0 0 1 30 130" fill="none" stroke="#6b6a64" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M 30 130 A 100 100 0 0 1 130 30" fill="none" stroke="#6b6a64" stroke-width="1.2" stroke-linecap="round"/>
       <!-- center label -->
-      <text x="130" y="125" text-anchor="middle" font-size="10" font-weight="600" fill="#141413" font-family="'Inter', sans-serif">Agent</text>
+      <text x="130" y="125" text-anchor="middle" font-size="10" font-weight="500" fill="#141413" font-family="Charter, Georgia, serif">Agent</text>
       <text x="130" y="141" text-anchor="middle" font-size="8" fill="#1B365D" font-family="'JetBrains Mono', monospace" letter-spacing="2">LOOP</text>
     </svg>
   </div>
@@ -361,7 +328,7 @@
 
   <div class="body-grid">
     <div>
-      <p class="claim">The loop is small. The <span class="hl">infrastructure around it</span> is what keeps it stable across feature growth.</p>
+      <p class="claim">The loop is small. The <span class="hl">infrastructure around it</span> is what keeps it stable as features grow.</p>
       <ul class="pts">
         <li>A working Agent loop fits in about <span class="hl">20 lines</span> of code.</li>
         <li>Control flow lives in the tools, not in branchy internal state.</li>
@@ -379,52 +346,52 @@
            Chevron marker (open path, not filled polygon). Core is the only focal element. -->
       <svg viewBox="0 0 680 560" xmlns="http://www.w3.org/2000/svg">
         <!-- surroundings label -->
-        <text x="340" y="12" text-anchor="middle" font-size="9" fill="#87867f" font-family="'JetBrains Mono', monospace" letter-spacing="1.5">TOOLS · HARNESS · EVALS · MEMORY</text>
+        <text x="340" y="12" text-anchor="middle" font-size="9" fill="#6b6a64" font-family="'JetBrains Mono', monospace" letter-spacing="1.5">TOOLS · HARNESS · EVALS · MEMORY</text>
 
         <!-- dashed ink-blue ring -->
         <circle cx="340" cy="280" r="192" fill="none" stroke="#1B365D" stroke-width="1" stroke-dasharray="4 3"/>
 
         <!-- PLAN: x=240 y=16 w=200 h=72 rx=8, center (340, 52) -->
         <rect x="240" y="16" width="200" height="72" rx="8" fill="#ffffff" stroke="#141413" stroke-width="0.8"/>
-        <text x="340" y="52" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#141413" font-family="'Inter', sans-serif">PLAN</text>
+        <text x="340" y="52" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#141413" font-family="Charter, Georgia, serif">PLAN</text>
 
         <!-- ACT: x=468 y=244 w=200 h=72 rx=8, center (568, 280) -->
         <rect x="468" y="244" width="200" height="72" rx="8" fill="#ffffff" stroke="#141413" stroke-width="0.8"/>
-        <text x="568" y="280" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#141413" font-family="'Inter', sans-serif">ACT</text>
+        <text x="568" y="280" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#141413" font-family="Charter, Georgia, serif">ACT</text>
 
         <!-- OBSERVE: x=240 y=472 w=200 h=72 rx=8, center (340, 508) -->
         <rect x="240" y="472" width="200" height="72" rx="8" fill="#ffffff" stroke="#141413" stroke-width="0.8"/>
-        <text x="340" y="508" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#141413" font-family="'Inter', sans-serif">OBSERVE</text>
+        <text x="340" y="508" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#141413" font-family="Charter, Georgia, serif">OBSERVE</text>
 
         <!-- REFLECT: x=12 y=244 w=200 h=72 rx=8, center (112, 280) -->
         <rect x="12" y="244" width="200" height="72" rx="8" fill="#ffffff" stroke="#141413" stroke-width="0.8"/>
-        <text x="112" y="280" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#141413" font-family="'Inter', sans-serif">REFLECT</text>
+        <text x="112" y="280" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#141413" font-family="Charter, Georgia, serif">REFLECT</text>
 
         <!-- center: focal CORE text -->
-        <text x="340" y="268" text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="600" fill="#141413" font-family="'Inter', sans-serif">20 LOC</text>
+        <text x="340" y="268" text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="500" fill="#141413" font-family="Charter, Georgia, serif">20 LOC</text>
         <text x="340" y="292" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#1B365D" font-family="'JetBrains Mono', monospace" letter-spacing="1.5">CORE</text>
 
         <!-- clockwise arcs (no marker-end; WeasyPrint ignores orient="auto").
              Arrowheads drawn manually as chevron paths below each arc. -->
         <!-- PLAN right-mid (440,52) → ACT top-mid (568,244) via (568,52) -->
-        <path d="M 440 52 Q 568 52 568 244" fill="none" stroke="#5e5d59" stroke-width="1.5"/>
+        <path d="M 440 52 Q 568 52 568 244" fill="none" stroke="#504e49" stroke-width="1.5"/>
         <!-- chevron ↓ at (568, 244) -->
-        <path d="M 560 236 L 568 244 L 576 236" fill="none" stroke="#5e5d59" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 560 236 L 568 244 L 576 236" fill="none" stroke="#504e49" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 
         <!-- ACT bottom-mid (568,316) → OBSERVE right-mid (440,508) via (568,508) -->
-        <path d="M 568 316 Q 568 508 440 508" fill="none" stroke="#5e5d59" stroke-width="1.5"/>
+        <path d="M 568 316 Q 568 508 440 508" fill="none" stroke="#504e49" stroke-width="1.5"/>
         <!-- chevron ← at (440, 508) -->
-        <path d="M 448 500 L 440 508 L 448 516" fill="none" stroke="#5e5d59" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 448 500 L 440 508 L 448 516" fill="none" stroke="#504e49" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 
         <!-- OBSERVE left-mid (240,508) → REFLECT bottom-mid (112,316) via (112,508) -->
-        <path d="M 240 508 Q 112 508 112 316" fill="none" stroke="#5e5d59" stroke-width="1.5"/>
+        <path d="M 240 508 Q 112 508 112 316" fill="none" stroke="#504e49" stroke-width="1.5"/>
         <!-- chevron ↑ at (112, 316) -->
-        <path d="M 104 324 L 112 316 L 120 324" fill="none" stroke="#5e5d59" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 104 324 L 112 316 L 120 324" fill="none" stroke="#504e49" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 
         <!-- REFLECT top-mid (112,244) → PLAN left-mid (240,52) via (112,52) -->
-        <path d="M 112 244 Q 112 52 240 52" fill="none" stroke="#5e5d59" stroke-width="1.5"/>
+        <path d="M 112 244 Q 112 52 240 52" fill="none" stroke="#504e49" stroke-width="1.5"/>
         <!-- chevron → at (240, 52) -->
-        <path d="M 232 44 L 240 52 L 232 60" fill="none" stroke="#5e5d59" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 232 44 L 240 52 L 232 60" fill="none" stroke="#504e49" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
   </div>
@@ -490,27 +457,27 @@
         <!-- Background -->
         <rect width="280" height="230" fill="#f5f4ed"/>
         <!-- Title -->
-        <text x="140" y="18" text-anchor="middle" font-size="8.5" fill="#87867f" font-family="'JetBrains Mono', monospace" letter-spacing="1.5">LOADING STRATEGY vs ACCURACY</text>
+        <text x="140" y="18" text-anchor="middle" font-size="8.5" fill="#6b6a64" font-family="'JetBrains Mono', monospace" letter-spacing="1.5">LOADING STRATEGY vs ACCURACY</text>
         <!-- Y axis label -->
-        <text x="14" y="130" text-anchor="middle" font-size="8" fill="#5e5d59" font-family="'Inter', sans-serif" transform="rotate(-90 14 130)">Accuracy</text>
+        <text x="14" y="130" text-anchor="middle" font-size="8" fill="#504e49" font-family="Charter, Georgia, serif" transform="rotate(-90 14 130)">Accuracy</text>
         <!-- Y axis line -->
-        <line x1="36" y1="30" x2="36" y2="180" stroke="#5e5d59" stroke-width="0.8"/>
+        <line x1="36" y1="30" x2="36" y2="180" stroke="#504e49" stroke-width="0.8"/>
         <!-- Y axis ticks -->
-        <line x1="30" y1="56" x2="36" y2="56" stroke="#5e5d59" stroke-width="0.8"/>
-        <text x="26" y="59" text-anchor="end" font-size="8" fill="#87867f" font-family="'Inter', sans-serif">85%</text>
-        <line x1="30" y1="120" x2="36" y2="120" stroke="#5e5d59" stroke-width="0.8"/>
-        <text x="26" y="123" text-anchor="end" font-size="8" fill="#87867f" font-family="'Inter', sans-serif">53%</text>
+        <line x1="30" y1="56" x2="36" y2="56" stroke="#504e49" stroke-width="0.8"/>
+        <text x="26" y="59" text-anchor="end" font-size="8" fill="#6b6a64" font-family="Charter, Georgia, serif">85%</text>
+        <line x1="30" y1="120" x2="36" y2="120" stroke="#504e49" stroke-width="0.8"/>
+        <text x="26" y="123" text-anchor="end" font-size="8" fill="#6b6a64" font-family="Charter, Georgia, serif">53%</text>
         <!-- X axis -->
-        <line x1="36" y1="180" x2="256" y2="180" stroke="#5e5d59" stroke-width="0.8"/>
+        <line x1="36" y1="180" x2="256" y2="180" stroke="#504e49" stroke-width="0.8"/>
         <!-- bar 1: flat loading -->
         <rect x="56" y="120" width="68" height="60" fill="#e8e6dc" stroke="none"/>
-        <text x="90" y="112" text-anchor="middle" font-size="8" fill="#87867f" font-family="'Inter', sans-serif">53%</text>
-        <text x="90" y="198" text-anchor="middle" font-size="8.5" fill="#5e5d59" font-family="'Inter', sans-serif">Flat</text>
-        <text x="90" y="209" text-anchor="middle" font-size="7.5" fill="#87867f" font-family="'JetBrains Mono', monospace">loading</text>
+        <text x="90" y="112" text-anchor="middle" font-size="8" fill="#6b6a64" font-family="Charter, Georgia, serif">53%</text>
+        <text x="90" y="198" text-anchor="middle" font-size="8.5" fill="#504e49" font-family="Charter, Georgia, serif">Flat</text>
+        <text x="90" y="209" text-anchor="middle" font-size="7.5" fill="#6b6a64" font-family="'JetBrains Mono', monospace">loading</text>
         <!-- bar 2: layered loading (brand) -->
         <rect x="156" y="56" width="68" height="124" fill="#EEF2F7" stroke="#1B365D" stroke-width="1"/>
-        <text x="190" y="48" text-anchor="middle" font-size="8" fill="#1B365D" font-family="'Inter', sans-serif" font-weight="600">85%</text>
-        <text x="190" y="198" text-anchor="middle" font-size="8.5" fill="#1B365D" font-family="'Inter', sans-serif" font-weight="600">Layered</text>
+        <text x="190" y="48" text-anchor="middle" font-size="8" fill="#1B365D" font-family="Charter, Georgia, serif" font-weight="500">85%</text>
+        <text x="190" y="198" text-anchor="middle" font-size="8.5" fill="#1B365D" font-family="Charter, Georgia, serif" font-weight="500">Layered</text>
         <text x="190" y="209" text-anchor="middle" font-size="7.5" fill="#1B365D" font-family="'JetBrains Mono', monospace">loading</text>
         <!-- dotted line at 85 -->
         <line x1="36" y1="56" x2="256" y2="56" stroke="#1B365D" stroke-width="0.6" stroke-dasharray="3 3"/>

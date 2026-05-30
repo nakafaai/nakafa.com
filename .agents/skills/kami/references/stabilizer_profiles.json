@@ -139,22 +139,26 @@
     },
     "long-doc": {
       "overflow_solver": {
-        "enabled": false
+        "enabled": true,
+        "max_iterations": 50
       }
     },
     "long-doc-en": {
       "overflow_solver": {
-        "enabled": false
+        "enabled": true,
+        "max_iterations": 50
       }
     },
     "portfolio": {
       "overflow_solver": {
-        "enabled": false
+        "enabled": true,
+        "max_iterations": 50
       }
     },
     "portfolio-en": {
       "overflow_solver": {
-        "enabled": false
+        "enabled": true,
+        "max_iterations": 50
       }
     }
   }

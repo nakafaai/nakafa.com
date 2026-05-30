@@ -142,7 +142,8 @@
     "kami": {
       "source": "tw93/kami",
       "sourceType": "github",
-      "computedHash": "b65b0f3ff3d8d0ffef2472240a5c0ee249e7eb4623264ad46ae45199645b1ac5"
+      "skillPath": "SKILL.md",
+      "computedHash": "80cfb2989af3f840b649a721f63fdc7a6f89b22684c71a2c509a0d787392cb94"
     },
     "marketing-psychology": {
       "source": "coreyhaines31/marketingskills",

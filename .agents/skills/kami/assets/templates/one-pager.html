@@ -42,16 +42,16 @@
   :root {
     --parchment: #f5f4ed;
     --ivory:     #faf9f5;
-    --sand:      #e8e6dc;
     --near-black:#141413;
     --dark-warm: #3d3d3a;
-    --charcoal:  #4d4c48;
-    --olive:     #5e5d59;
-    --stone:     #87867f;
+    --olive:     #504e49;
+    --stone:     #6b6a64;
     --brand:     #1B365D;
     --border:    #e8e6dc;
     --border-soft:#e5e3d8;
     --tag-bg:    #E4ECF5;
+    --serif: "TsangerJinKai02", "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", Georgia, serif;
+    --sans: var(--serif);
   }
 
   html, body { background: var(--parchment); }
@@ -62,15 +62,14 @@
 
   body {
     color: var(--near-black);
-    font-family: "TsangerJinKai02", "Source Han Serif SC",
-                 "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    font-family: var(--serif);
     font-size: 10pt;
     line-height: 1.45;
+    letter-spacing: 0.3pt;
   }
 
   .serif {
-    font-family: "TsangerJinKai02", "Source Han Serif SC",
-                 "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    font-family: var(--serif);
   }
 
   /* ========== HEADER ========== */
@@ -90,13 +89,15 @@
   .eyebrow {
     font-size: 9pt;
     color: var(--brand);
-    letter-spacing: 0.5pt;
+    letter-spacing: 1pt;
     text-transform: uppercase;
     margin-bottom: 4pt;
   }
+  /* CN locale tuning: TsangerJinKai glyphs are wider per character, so H1 sits
+     slightly smaller (24pt vs EN 26pt) with looser leading (1.15 vs EN 1.12)
+     to keep optical density aligned across the two locales. */
   h1 {
-    font-family: "TsangerJinKai02", "Source Han Serif SC",
-                 "Noto Serif CJK SC", Georgia, serif;
+    font-family: var(--serif);
     font-size: 24pt;
     font-weight: 500;
     color: var(--near-black);
@@ -114,6 +115,14 @@
     text-align: right;
     line-height: 1.45;
     white-space: nowrap;
+  }
+  /* 品牌 logo 槽(可选,来自 brand profile;默认无 logo,样式仅在取消注释后生效)。 */
+  .brand-logo {
+    height: 44px;
+    width: auto;
+    max-width: 160px;
+    object-fit: contain;
+    align-self: flex-start;
   }
 
   /* ========== METRICS ========== */
@@ -136,12 +145,13 @@
     break-inside: avoid;
   }
   .metric-value {
-    font-family: "TsangerJinKai02", "Source Han Serif SC", Georgia, serif;
+    font-family: var(--serif);
     font-size: 20pt;
     font-weight: 500;
     color: var(--brand);
     line-height: 1;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
     letter-spacing: -0.2pt;
   }
   .metric-label {
@@ -155,8 +165,8 @@
   section:last-of-type { margin-bottom: 0; }
 
   h2 {
-    font-family: "TsangerJinKai02", "Source Han Serif SC", Georgia, serif;
-    font-size: 15pt;
+    font-family: var(--serif);
+    font-size: 16pt;
     font-weight: 500;
     color: var(--near-black);
     margin-bottom: 6pt;
@@ -217,7 +227,7 @@
     break-inside: avoid;
   }
   .tl-year {
-    font-family: "TsangerJinKai02", "Source Han Serif SC", Georgia, serif;
+    font-family: var(--serif);
     font-size: 11pt;
     font-weight: 500;
     color: var(--brand);
@@ -244,7 +254,7 @@
     font-weight: 500;
     padding: 1pt 5pt;
     border-radius: 3pt;
-    letter-spacing: 0.1pt;
+    letter-spacing: 0.3pt;
     margin-right: 3pt;
   }
 
@@ -262,6 +272,40 @@
     break-inside: avoid;
   }
   .callout .hl, .callout .em-brand { color: var(--brand); }
+
+  /* ========== TABLE (kami-table) ========== */
+  table, .kami-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+    margin: 8pt 0;
+    break-inside: avoid;
+  }
+  table th, .kami-table th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--dark-warm);
+    padding: 4pt 6pt;
+    border-bottom: 1pt solid var(--border);
+    background: transparent;
+  }
+  table td, .kami-table td {
+    padding: 3pt 6pt;
+    border-bottom: 0.3pt solid var(--border-soft);
+    vertical-align: top;
+  }
+  table.compact th, .kami-table.compact th { padding: 2pt 5pt; font-size: 8pt; }
+  table.compact td, .kami-table.compact td { padding: 1pt 5pt; font-size: 8pt; line-height: 1.4; }
+  table.financial td:not(:first-child), .kami-table.financial td:not(:first-child) {
+    text-align: right; font-variant-numeric: tabular-nums;
+  }
+  table.financial th:not(:first-child), .kami-table.financial th:not(:first-child) { text-align: right; }
+  table.striped tbody tr:nth-child(even) td, .kami-table.striped tbody tr:nth-child(even) td {
+    background: var(--ivory);
+  }
+  table .total td, .kami-table .total td {
+    font-weight: 500; border-top: 1pt solid var(--brand); border-bottom: none; color: var(--near-black);
+  }
 
   /* ========== FOOTER ========== */
   .footer {
@@ -290,6 +334,9 @@
     {{日期 YYYY.MM.DD}}<br>
     {{版本号 / 状态}}
   </div>
+  <!-- 品牌 logo 槽(可选,来自 brand profile 的 logo 字段)。无 logo 时保持注释,勿插破图。
+       有 logo 时取消注释,把 src 换成已展开的本地绝对路径:
+  <img class="brand-logo" src="/absolute/path/to/logo.svg" alt=""> -->
 </div>
 
 <!-- ========== METRICS（可选，3-4 卡最佳） ========== -->

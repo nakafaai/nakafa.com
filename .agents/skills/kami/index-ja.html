@@ -2,21 +2,99 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <title>Kami · Design System</title>
+  <title>Kami 紙：AIエージェント向けドキュメントデザインシステム</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Kami（紙）は、AI時代の文書制作に向けた、あたたかな紙面デザインシステムです。単一アクセントカラー、serif中心の階層、編集的な余白で一貫した可読性をつくります。">
   <link rel="icon" href="https://gw.alipayobjects.com/zos/k/vl/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./styles.css">
+  <link rel="canonical" href="https://kami.tw93.fun/index-ja.html">
+  <link rel="alternate" hreflang="en" href="https://kami.tw93.fun/">
+  <link rel="alternate" hreflang="zh-CN" href="https://kami.tw93.fun/index-zh.html">
+  <link rel="alternate" hreflang="ja" href="https://kami.tw93.fun/index-ja.html">
+  <link rel="alternate" hreflang="zh-Hant" href="https://kami.tw93.fun/index-tw.html">
+  <link rel="alternate" hreflang="ko" href="https://kami.tw93.fun/index-ko.html">
+  <link rel="alternate" hreflang="x-default" href="https://kami.tw93.fun/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Kami 紙：AIエージェント向けドキュメントデザインシステム">
+  <meta property="og:description" content="Kami（紙）は、AI時代の文書制作に向けた、あたたかな紙面デザインシステムです。単一アクセントカラー、serif中心の階層、編集的な余白で一貫した可読性をつくります。">
+  <meta property="og:url" content="https://kami.tw93.fun/index-ja.html">
+  <meta property="og:image" content="https://kami.tw93.fun/assets/showcase/kami-landing.png">
+  <meta property="og:image:width" content="3110">
+  <meta property="og:image:height" content="2392">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Kami 紙：AIエージェント向けドキュメントデザインシステム">
+  <meta name="twitter:description" content="Kami（紙）は、AI時代の文書制作に向けた、あたたかな紙面デザインシステムです。単一アクセントカラー、serif中心の階層、編集的な余白で一貫した可読性をつくります。">
+  <meta name="twitter:image" content="https://kami.tw93.fun/assets/showcase/kami-landing.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Kami",
+    "description": "AI時代の文書制作に向けた、あたたかな紙面デザインシステム。",
+    "url": "https://kami.tw93.fun/index-ja.html",
+    "applicationCategory": "DesignApplication",
+    "operatingSystem": "Any",
+    "author": {
+      "@type": "Person",
+      "name": "Tw93",
+      "url": "https://tw93.fun",
+      "sameAs": ["https://github.com/tw93", "https://twitter.com/HiTw93", "https://tw93.fun", "https://weekly.tw93.fun", "https://yobi.tw93.fun"]
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Kamiとは？",
+        "acceptedAnswer": { "@type": "Answer", "text": "AIエージェント向けのドキュメントデザインシステムです。単一アクセントカラー、serif階層、あたたかなパーチメントキャンバスで安定したレイアウトを出力します。" }
+      },
+      {
+        "@type": "Question",
+        "name": "どんなドキュメントを作れますか？",
+        "acceptedAnswer": { "@type": "Answer", "text": "10種類：ワンページャー、長文ドキュメント、レター、ポートフォリオ、履歴書、スライド、個別株レポート、変更履歴、ランディングページ（EN + CN + KO）。加えて14種のインラインSVG図表。HTML出力でPDF、PNG、編集可能なPPTXスライドに変換可能です。" }
+      },
+      {
+        "@type": "Question",
+        "name": "セットアップ方法は？",
+        "acceptedAnswer": { "@type": "Answer", "text": "Claude Code: npx skills add tw93/kami -a claude-code -g -y。Claude Code プラグインマーケットプレイス（v2.1.142+）：/plugin marketplace add tw93/kami && /plugin install kami@kami。汎用エージェント：npx skills add tw93/kami -a '*' -g -y。Claude Desktop：GitHub Releases から kami.zip をダウンロードし、Skills 設定でアップロード。" }
+      },
+      {
+        "@type": "Question",
+        "name": "対応言語は？",
+        "acceptedAnswer": { "@type": "Answer", "text": "英語、中国語、日本語、韓国語。各言語に専用のserifフォント：英語はCharter、中国語はTsangerJinKai02、日本語はYuMincho、韓国語はSource Han Serif Kを使用します。" }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
-<nav class="lang-switch"><a href="./index.html">EN</a><a href="./index-zh.html">中</a><a href="./index-ja.html" class="active">日</a></nav>
 <main class="page">
 
   <!-- ============ HERO ============ -->
   <header class="hero">
     <div class="eyebrow">
-      <span>Design System · v1.1.0<span class="eyebrow-date"> · 2026.04</span></span>
+      <span>Design System · v1.5.0<span class="eyebrow-date"> · 2026.05</span></span>
       <span class="hero-links">
+        <nav class="lang-switch" aria-label="Language" data-lang-switch>
+          <button class="lang-trigger" type="button" aria-expanded="false" data-lang-trigger>日本語</button>
+          <div class="lang-menu" data-lang-menu>
+            <a href="./index.html" data-lang="en">English</a>
+            <a href="./index-zh.html" data-lang="zh">简体中文</a>
+            <a href="./index-tw.html" data-lang="tw">繁體中文</a>
+            <a href="./index-ja.html" class="active" data-lang="ja">日本語</a>
+            <a href="./index-ko.html" data-lang="ko">한국어</a>
+          </div>
+        </nav>
         <a href="https://github.com/tw93/kami" target="_blank" rel="noopener" aria-label="GitHub">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/>
@@ -35,7 +113,7 @@
       <span><b>Canvas</b>#f5f4ed</span>
       <span><b>Accent</b>#1B365D</span>
       <span><b>Serif</b>JP Mincho / Tsanger fallback</span>
-      <span><b>Sans</b>Inter / JP Gothic</span>
+      <span><b>Sans</b>= Serif (一頁一書体)</span>
     </div>
   </header>
 
@@ -45,27 +123,54 @@
       <p class="section-num">00 · See it</p>
       <h2 class="section-title">出力サンプル</h2>
       <p class="section-lede section-lede-nowrap">Claude に要件を渡すだけで、一枚資料、長文、正式書簡、ポートフォリオ、履歴書、スライドまで、少数の明確なルールで整った版面に仕上がります。</p>
+      <p class="section-lede" style="margin-top:6px;">同じ brief は <a href="https://github.com/tw93/kami#travel" style="color:var(--brand); text-decoration:none; font-weight:500;">画像生成モデル</a> にも渡せます。サンプル画像とコピペできるプロンプトは README に置いています。</p>
     </div>
     <div class="demo-grid">
       <div class="demo-card">
-        <a href="assets/demos/demo-tesla.pdf" target="_blank"><img src="assets/demos/demo-tesla.png" alt="Tesla company one-pager"></a>
-        <p class="demo-title">One-Pager</p>
-        <p class="demo-desc">Tesla 企業紹介、A4 1ページ</p>
+        <a href="assets/demos/demo-tesla.pdf" target="_blank"><img src="assets/demos/demo-tesla.png" alt="Tesla Q1 2026 個別株レポート" loading="lazy" decoding="async"></a>
+        <p class="demo-title">Equity Report</p>
+        <p class="demo-desc">Tesla Q1 2026 決算レポート</p>
       </div>
       <div class="demo-card">
-        <a href="assets/demos/demo-musk-resume.pdf" target="_blank"><img src="assets/demos/demo-musk-resume.png" alt="Musk resume"></a>
+        <a href="assets/demos/demo-musk-resume.pdf" target="_blank"><img src="assets/demos/demo-musk-resume.png" alt="Musk resume" loading="lazy" decoding="async"></a>
         <p class="demo-title">Resume</p>
         <p class="demo-desc">創業者 CV、2ページ</p>
       </div>
       <div class="demo-card">
-        <a href="assets/demos/demo-kaku.pdf" target="_blank"><img src="assets/demos/demo-kaku.png" alt="Kaku portfolio"></a>
+        <a href="assets/demos/demo-kaku.pdf" target="_blank"><img src="assets/demos/demo-kaku.png" alt="Kaku portfolio" loading="lazy" decoding="async"></a>
         <p class="demo-title">Portfolio</p>
         <p class="demo-desc demo-desc-nowrap">Kaku ターミナル作品集、7ページ</p>
       </div>
       <div class="demo-card">
-        <a href="assets/demos/demo-agent-slides.pdf" target="_blank"><img src="assets/demos/demo-agent-slides.png" alt="Agent slides"></a>
+        <a href="assets/demos/demo-agent-slides.pdf" target="_blank"><img src="assets/demos/demo-agent-slides.png" alt="Agent slides" loading="lazy" decoding="async"></a>
         <p class="demo-title">Slides</p>
         <p class="demo-desc">Agent キーノート、6枚</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LANDING PAGES ============ -->
+  <section>
+    <div class="section-head">
+      <p class="section-num">Landing Pages</p>
+      <h2 class="section-title">Kami で構築</h2>
+      <p class="section-lede">同じランディングページテンプレートを 3 つの異なるプロダクトに適用。ひとつの制約セットから、3 つの異なる目的に。</p>
+    </div>
+    <div class="landing-grid">
+      <div class="landing-card">
+        <a href="https://kami.tw93.fun" target="_blank" rel="noopener"><img src="assets/showcase/kami-landing.png" alt="Kami ランディングページ" loading="lazy" decoding="async"></a>
+        <p class="demo-title">Kami</p>
+        <p class="demo-desc">デザインシステム ホームページ</p>
+      </div>
+      <div class="landing-card">
+        <a href="https://luo.tw93.fun" target="_blank" rel="noopener"><img src="assets/showcase/luo-landing.png" alt="Luo ランディングページ" loading="lazy" decoding="async"></a>
+        <p class="demo-title">Luo 落文</p>
+        <p class="demo-desc">CJK リーディングフォント</p>
+      </div>
+      <div class="landing-card">
+        <a href="https://mole.fit" target="_blank" rel="noopener"><img src="assets/showcase/mole-landing.png" alt="Mole ランディングページ" loading="lazy" decoding="async"></a>
+        <p class="demo-title">Mole 鼹</p>
+        <p class="demo-desc">macOS システムユーティリティ</p>
       </div>
     </div>
   </section>
@@ -82,7 +187,8 @@ npx skills add tw93/kami -a claude-code -g -y
 
 <span class="c"># Codex</span>
 npx skills add tw93/kami -a codex -g -y</pre>
-    <p class="section-lede" style="font-size:14px;">Claude Desktop の場合は <a href="https://cdn.jsdelivr.net/gh/tw93/kami@main/dist/kami.zip" style="color:var(--brand); text-decoration:none; font-weight:500;">kami.zip</a> をダウンロードし、Customize &gt; Skills &gt; "+" &gt; Create skill からそのままアップロードします。</p>
+    <p class="section-lede" style="font-size:14px;">Claude Code プラグインマーケットプレイスは v2.1.142+ で利用できます：<code>/plugin marketplace add tw93/kami</code> の後に <code>/plugin install kami@kami</code> を実行してください。</p>
+    <p class="section-lede" style="font-size:14px;">Claude Desktop の場合は <a href="https://github.com/tw93/kami/releases/latest/download/kami.zip" style="color:var(--brand); text-decoration:none; font-weight:500;">kami.zip</a> をダウンロードし、Customize &gt; Skills &gt; "+" &gt; Create skill からそのままアップロードします。</p>
   </section>
 
   <!-- ============ 02 MANIFESTO ============ -->
@@ -129,13 +235,11 @@ npx skills add tw93/kami -a codex -g -y</pre>
     </div>
 
     <h3 class="subhead">Warm Neutrals</h3>
-    <div class="swatches" style="grid-template-columns: repeat(6, 1fr);">
+    <div class="swatches" style="grid-template-columns: repeat(4, 1fr);">
       <div class="swatch"><div class="chip" style="background:#141413"></div><div class="info"><p class="name">Near Black</p><span class="hex">#141413</span></div></div>
       <div class="swatch"><div class="chip" style="background:#3d3d3a"></div><div class="info"><p class="name">Dark Warm</p><span class="hex">#3D3D3A</span></div></div>
-      <div class="swatch"><div class="chip" style="background:#4d4c48"></div><div class="info"><p class="name">Charcoal</p><span class="hex">#4D4C48</span></div></div>
-      <div class="swatch"><div class="chip" style="background:#5e5d59"></div><div class="info"><p class="name">Olive</p><span class="hex">#5E5D59</span></div></div>
-      <div class="swatch"><div class="chip" style="background:#87867f"></div><div class="info"><p class="name">Stone</p><span class="hex">#87867F</span></div></div>
-      <div class="swatch"><div class="chip" style="background:#b0aea5"></div><div class="info"><p class="name">Warm Silver</p><span class="hex">#B0AEA5</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#504e49"></div><div class="info"><p class="name">Olive</p><span class="hex">#504e49</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#6b6a64"></div><div class="info"><p class="name">Stone</p><span class="hex">#6b6a64</span></div></div>
     </div>
 
     <h3 class="subhead">Tag Tints: rgba から実色 hex へ</h3>
@@ -163,12 +267,6 @@ npx skills add tw93/kami -a codex -g -y</pre>
         <p class="role">Serif · 見出し + 本文</p>
         <p class="name">JP Mincho / TsangerJinKai02</p>
         <p class="use">見出し、本文、引用、数値強調に使用。日本語は明朝体を優先し、TsangerJinKai02 は CJK fallback として扱います。</p>
-      </div>
-      <div class="family sans">
-        <p class="glyph">Aa</p>
-        <p class="role">Sans · UI</p>
-        <p class="name">Inter / Source Han Sans</p>
-        <p class="use">ラベル、ボタン、メタ情報、eyebrow に使用。標準は 400、ラベルは 500-600。中国語本文も sans を使用。</p>
       </div>
       <div class="family mono">
         <p class="glyph">&lt;/&gt;</p>
@@ -212,7 +310,7 @@ npx skills add tw93/kami -a codex -g -y</pre>
       </div>
       <div class="type-row">
         <div class="type-label">Label</div>
-        <div class="type-sample label">Design System · v1.1.0</div>
+        <div class="type-sample label">Design System · v1.5.0</div>
         <div class="type-specs"><b>7.5-8 pt</b><br>weight 600<br>line 1.35</div>
       </div>
     </div>
@@ -353,29 +451,29 @@ beauty   = constraints × <span class="k">intention</span> ÷ noise</pre>
     <div class="section-head">
       <p class="section-num">07 · Diagrams</p>
       <h2 class="section-title">インライン図表</h2>
-      <p class="section-lede">アーキテクチャ、フロー、データ可視化をカバーする 12 種の SVG 図表を用意。必要な種類を Claude に伝えると、Kami の色と書体規則に沿って文書へ直接埋め込みます。</p>
+      <p class="section-lede">アーキテクチャ、フロー、データ可視化をカバーする 14 種の SVG 図表を用意。必要な種類を Claude に伝えると、Kami の色と書体規則に沿って文書へ直接埋め込みます。</p>
     </div>
     <div class="chart-showcase">
       <!-- Architecture mini -->
       <div class="chart-card">
         <div class="chart-label">アーキテクチャ図 · Architecture</div>
-        <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg" style="font-family:'Inter','TsangerJinKai02',sans-serif">
+        <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg" style="font-family:inherit">
           <rect width="280" height="160" fill="#f5f4ed"/>
           <!-- Browser → API -->
-          <path d="M 84,79.5 L 103,79.5 L 103,78 L 107,80 L 103,82 L 103,80.5 L 84,80.5 Z" fill="#87867f"/>
+          <path d="M 84,79.5 L 103,79.5 L 103,78 L 107,80 L 103,82 L 103,80.5 L 84,80.5 Z" fill="#6b6a64"/>
           <!-- API → Database -->
-          <path d="M 172,79.5 L 191,79.5 L 191,78 L 195,80 L 191,82 L 191,80.5 L 172,80.5 Z" fill="#5e5d59"/>
+          <path d="M 172,79.5 L 191,79.5 L 191,78 L 195,80 L 191,82 L 191,80.5 L 172,80.5 Z" fill="#504e49"/>
           <!-- Node: Client -->
-          <rect x="20" y="58" width="64" height="44" rx="3" fill="#f5f4ed" stroke="#87867f" stroke-width="0.8"/>
-          <text x="52" y="76" text-anchor="middle" font-size="7" letter-spacing="0.5" fill="#87867f">CLIENT</text>
+          <rect x="20" y="58" width="64" height="44" rx="3" fill="#f5f4ed" stroke="#6b6a64" stroke-width="0.8"/>
+          <text x="52" y="76" text-anchor="middle" font-size="7" letter-spacing="0.5" fill="#6b6a64">CLIENT</text>
           <text x="52" y="91" text-anchor="middle" font-size="9" font-weight="600" fill="#141413">Browser</text>
           <!-- Node: API (focal) -->
           <rect x="108" y="58" width="64" height="44" rx="3" fill="#EEF2F7" stroke="#1B365D" stroke-width="1"/>
           <text x="140" y="76" text-anchor="middle" font-size="7" letter-spacing="0.5" fill="#1B365D">SERVICE</text>
           <text x="140" y="91" text-anchor="middle" font-size="9" font-weight="600" fill="#141413">API</text>
           <!-- Node: Database -->
-          <rect x="196" y="58" width="64" height="44" rx="3" fill="#f5f4ed" stroke="#5e5d59" stroke-width="0.8"/>
-          <text x="228" y="76" text-anchor="middle" font-size="7" letter-spacing="0.5" fill="#87867f">DATA</text>
+          <rect x="196" y="58" width="64" height="44" rx="3" fill="#f5f4ed" stroke="#504e49" stroke-width="0.8"/>
+          <text x="228" y="76" text-anchor="middle" font-size="7" letter-spacing="0.5" fill="#6b6a64">DATA</text>
           <text x="228" y="91" text-anchor="middle" font-size="9" font-weight="600" fill="#141413">Database</text>
         </svg>
         <p class="chart-caption">システム構成と接続関係、焦点ノードを 1 つに絞る</p>
@@ -383,42 +481,42 @@ beauty   = constraints × <span class="k">intention</span> ÷ noise</pre>
       <!-- Flowchart mini -->
       <div class="chart-card">
         <div class="chart-label">フローチャート · Flowchart</div>
-        <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg" style="font-family:'Inter','TsangerJinKai02',sans-serif">
+        <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg" style="font-family:inherit">
           <rect width="280" height="160" fill="#f5f4ed"/>
           <rect x="100" y="8" width="80" height="28" rx="14" fill="#141413"/>
-          <text x="140" y="27" text-anchor="middle" font-size="9" font-weight="600" fill="#f5f4ed">Start</text>
+          <text x="140" y="25" text-anchor="middle" font-size="9" fill="#f5f4ed">Start</text>
           <!-- Start → diamond -->
-          <path d="M 139.5,36 L 139.5,48 L 138,48 L 140,52 L 142,48 L 140.5,48 L 140.5,36 Z" fill="#5e5d59"/>
+          <path d="M 139.5,36 L 139.5,48 L 138,48 L 140,52 L 142,48 L 140.5,48 L 140.5,36 Z" fill="#504e49"/>
           <polygon points="140,52 172,72 140,92 108,72" fill="#f5f4ed" stroke="#141413" stroke-width="1"/>
           <text x="140" y="76" text-anchor="middle" font-size="8" fill="#141413">Valid?</text>
           <!-- Yes right -->
           <path d="M 172,71.5 L 204,71.5 L 204,70 L 208,72 L 204,74 L 204,72.5 L 172,72.5 Z" fill="#1B365D"/>
           <text x="186" y="68" text-anchor="middle" font-size="8" fill="#1B365D">Yes</text>
           <rect x="208" y="56" width="64" height="32" rx="4" fill="#EEF2F7" stroke="#1B365D" stroke-width="1"/>
-          <text x="240" y="77" text-anchor="middle" font-size="9" font-weight="600" fill="#141413">Process</text>
+          <text x="240" y="75" text-anchor="middle" font-size="9" fill="#141413">Process</text>
           <!-- No down -->
-          <path d="M 139.5,92 L 139.5,112 L 138,112 L 140,116 L 142,112 L 140.5,112 L 140.5,92 Z" fill="#5e5d59"/>
-          <text x="151" y="106" font-size="8" fill="#5e5d59">No</text>
-          <rect x="96" y="116" width="88" height="32" rx="4" fill="#f5f4ed" stroke="#87867f" stroke-width="0.8"/>
-          <text x="140" y="136" text-anchor="middle" font-size="9" font-weight="600" fill="#5e5d59">Reject</text>
+          <path d="M 139.5,92 L 139.5,112 L 138,112 L 140,116 L 142,112 L 140.5,112 L 140.5,92 Z" fill="#504e49"/>
+          <text x="151" y="106" font-size="8" fill="#504e49">No</text>
+          <rect x="96" y="116" width="88" height="32" rx="4" fill="#f5f4ed" stroke="#6b6a64" stroke-width="0.8"/>
+          <text x="140" y="134" text-anchor="middle" font-size="9" fill="#504e49">Reject</text>
         </svg>
         <p class="chart-caption">分岐と yes/no の流れ、成功側を主軸に配置</p>
       </div>
       <!-- Bar chart (shifted left) -->
       <div class="chart-card">
         <div class="chart-label">棒グラフ · Bar Chart</div>
-        <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg" style="font-family:'Inter','TsangerJinKai02',sans-serif">
+        <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg" style="font-family:inherit">
           <rect width="280" height="160" fill="#f5f4ed"/>
-          <rect x="18" y="78" width="42" height="50" rx="3" fill="#87867f"/>
-          <rect x="78" y="62" width="42" height="66" rx="3" fill="#5e5d59"/>
+          <rect x="18" y="78" width="42" height="50" rx="3" fill="#6b6a64"/>
+          <rect x="78" y="62" width="42" height="66" rx="3" fill="#504e49"/>
           <rect x="138" y="44" width="42" height="84" rx="3" fill="#2d4e7a"/>
           <rect x="198" y="30" width="42" height="98" rx="3" fill="#1B365D"/>
-          <text x="39" y="145" text-anchor="middle" font-size="10" fill="#87867f">Q1</text>
-          <text x="99" y="145" text-anchor="middle" font-size="10" fill="#5e5d59">Q2</text>
+          <text x="39" y="145" text-anchor="middle" font-size="10" fill="#6b6a64">Q1</text>
+          <text x="99" y="145" text-anchor="middle" font-size="10" fill="#504e49">Q2</text>
           <text x="159" y="145" text-anchor="middle" font-size="10" fill="#4d4c48">Q3</text>
           <text x="219" y="145" text-anchor="middle" font-size="10" fill="#4d4c48">Q4</text>
-          <text x="39" y="73" text-anchor="middle" font-size="9" font-weight="600" fill="#87867f">180</text>
-          <text x="99" y="57" text-anchor="middle" font-size="9" font-weight="600" fill="#5e5d59">220</text>
+          <text x="39" y="73" text-anchor="middle" font-size="9" font-weight="600" fill="#6b6a64">180</text>
+          <text x="99" y="57" text-anchor="middle" font-size="9" font-weight="600" fill="#504e49">220</text>
           <text x="159" y="39" text-anchor="middle" font-size="9" font-weight="600" fill="#2d4e7a">195</text>
           <text x="219" y="25" text-anchor="middle" font-size="9" font-weight="600" fill="#1B365D">240</text>
         </svg>
@@ -427,18 +525,18 @@ beauty   = constraints × <span class="k">intention</span> ÷ noise</pre>
       <!-- Donut chart -->
       <div class="chart-card">
         <div class="chart-label">ドーナツチャート · Donut Chart</div>
-        <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg" style="font-family:'Inter','TsangerJinKai02',sans-serif">
+        <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg" style="font-family:inherit">
           <rect width="280" height="160" fill="#f5f4ed"/>
           <path d="M 80,25 A 55,55 0 1,1 47.7,124.5 L 62.4,104.3 A 30,30 0 1,0 80,50 Z" fill="#1B365D" stroke="white" stroke-width="1.5"/>
-          <path d="M 47.7,124.5 A 55,55 0 0,1 35.5,47.7 L 55.7,62.4 A 30,30 0 0,0 62.4,104.3 Z" fill="#5e5d59" stroke="white" stroke-width="1.5"/>
-          <path d="M 35.5,47.7 A 55,55 0 0,1 80,25 L 80,50 A 30,30 0 0,0 55.7,62.4 Z" fill="#87867f" stroke="white" stroke-width="1.5"/>
+          <path d="M 47.7,124.5 A 55,55 0 0,1 35.5,47.7 L 55.7,62.4 A 30,30 0 0,0 62.4,104.3 Z" fill="#504e49" stroke="white" stroke-width="1.5"/>
+          <path d="M 35.5,47.7 A 55,55 0 0,1 80,25 L 80,50 A 30,30 0 0,0 55.7,62.4 Z" fill="#6b6a64" stroke="white" stroke-width="1.5"/>
           <text x="80" y="77" text-anchor="middle" font-size="13" font-weight="600" fill="#1B365D">60%</text>
-          <text x="80" y="92" text-anchor="middle" font-size="10" fill="#5e5d59">Primary</text>
+          <text x="80" y="92" text-anchor="middle" font-size="10" fill="#504e49">Primary</text>
           <rect x="150" y="46" width="10" height="10" rx="2" fill="#1B365D"/>
           <text x="165" y="55" font-size="11" fill="#4d4c48">Core revenue · 60%</text>
-          <rect x="150" y="72" width="10" height="10" rx="2" fill="#5e5d59"/>
+          <rect x="150" y="72" width="10" height="10" rx="2" fill="#504e49"/>
           <text x="165" y="81" font-size="11" fill="#4d4c48">Services · 25%</text>
-          <rect x="150" y="98" width="10" height="10" rx="2" fill="#87867f"/>
+          <rect x="150" y="98" width="10" height="10" rx="2" fill="#6b6a64"/>
           <text x="165" y="107" font-size="11" fill="#4d4c48">Other · 15%</text>
         </svg>
         <p class="chart-caption">売上構成の内訳、3-6 セグメントに対応</p>
@@ -469,10 +567,10 @@ beauty   = constraints × <span class="k">intention</span> ÷ noise</pre>
     </table>
   </section>
 
-  <!-- ============ 08 ANTI ============ -->
+  <!-- ============ 09 ANTI ============ -->
   <section>
     <div class="section-head">
-      <p class="section-num">08 · Anti-Patterns</p>
+      <p class="section-num">09 · Anti-Patterns</p>
       <h2 class="section-title">避けるべきこと</h2>
       <p class="section-lede">例外は許容できますが、理由を明示できる場合に限ります。</p>
     </div>
@@ -513,16 +611,42 @@ beauty   = constraints × <span class="k">intention</span> ÷ noise</pre>
     </div>
   </section>
 
-  <!-- ============ 09 BACKGROUND ============ -->
+  <!-- ============ 10 BACKGROUND ============ -->
   <section>
     <div class="section-head">
-      <p class="section-num">09 · Background</p>
+      <p class="section-num">10 · Background</p>
       <h2 class="section-title">設計の背景</h2>
     </div>
     <div class="background-text">
-      <p>私は米国株投資をしており、AI に分析レポートを作らせることが多くあります。初期の出力は既定の Google Docs のように平板で、統一感がなく、記憶にも残りませんでした。文書ごとに顔が変わる状態を避けるため、書体、配色、余白を繰り返し調整し、読み続けたくなる紙面へ寄せていきました。</p>
-      <p>その後、登壇の機会で同じ視覚基準のスライドが必要になり、設計をさらに前進させました。inline SVG 図表、暖色パレットの統一、編集リズムの引き締めです。使う文書形式を横断して再利用できるようになり、Kami は安心して使い続けられる視覚言語になりました。</p>
+      <p>米国株投資が好きで、Claude にリサーチレポートを書かせる場面が多いです。出力はいつも既定のドキュメント風で、灰色で平板、セッションごとにレイアウトが変わる。構成は追いづらく書式は古臭く、読み続ける気になれませんでした。書体、配色、余白をひとつずつ直していき、読んでいて心地よいページに仕上げました。</p>
+      <p>その後「あなたの知らない Agent：原理、アーキテクチャとエンジニアリング実践」の発表をすることになりました。すでに原稿があったのでスライドを一から作る気にならず、Claude Design で自分のスタイルのまま組版し、何度も調整を繰り返して、ようやく納得のいく仕上がりになりました。inline SVG 図表、暖色パレットの統一、編集リズムの引き締めを加え、よく使う文書形式をすべてカバーするまで育ったので、このプロセスをさらに抽象化して kami にしました。どのエージェントに渡しても安心して出せる、静かなデザインシステムです。</p>
     </div>
+  </section>
+
+  <!-- ============ 11 FAQ ============ -->
+  <section>
+    <div class="section-head">
+      <p class="section-num">11 · よくある質問</p>
+      <h2 class="section-title">FAQ</h2>
+    </div>
+    <dl class="faq">
+      <div class="faq-pair">
+        <dt>Kamiとは？</dt>
+        <dd>AIエージェント向けのドキュメントデザインシステムです。単一アクセントカラー、serif階層、あたたかなパーチメントキャンバス。LLMエージェントに指示を出すだけで安定したレイアウトが返ってきます。Claude DesignやGPT Canvasなどの画像レンダラーへのビジュアルブリーフとしても使えます。</dd>
+      </div>
+      <div class="faq-pair">
+        <dt>どんなドキュメントを作れますか？</dt>
+        <dd>10種類のテンプレート：ワンページャー、長文ドキュメント、レター、ポートフォリオ、履歴書、スライド、個別株レポート、変更履歴、ランディングページ（EN + CN + KO）。加えて14種のインラインSVG図表で視覚的な説明も可能です。出力はHTMLで、PDF、PNG、編集可能なPPTXスライドに変換できます。</dd>
+      </div>
+      <div class="faq-pair">
+        <dt>セットアップ方法は？</dt>
+        <dd>Claude Code：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">npx skills add tw93/kami -a claude-code -g -y</code>。Claude Code v2.1.142+ ではプラグインマーケットプレイスも使えます：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">/plugin marketplace add tw93/kami</code> の後に <code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">/plugin install kami@kami</code>。汎用エージェント：<code style="font-family:var(--mono); font-size:0.9em; color:var(--brand);">npx skills add tw93/kami -a '*' -g -y</code>。Claude Desktop：GitHub Releasesからkami.zipをダウンロードし、カスタマイズ &gt; スキルでアップロード。</dd>
+      </div>
+      <div class="faq-pair">
+        <dt>対応言語は？</dt>
+        <dd>英語、中国語、日本語、韓国語。各言語に専用のserifフォントを使用：英語はCharter、中国語はTsangerJinKai02、日本語はYuMincho、韓国語はSource Han Serif K。字間、行高、フォントサイズは言語ごとに印刷品質レベルで調整されています。</dd>
+      </div>
+    </dl>
   </section>
 
   <!-- ============ FOOTER ============ -->
@@ -549,13 +673,28 @@ beauty   = constraints × <span class="k">intention</span> ÷ noise</pre>
 </main>
 <script>
 (function(){
-  var sw=document.querySelector('.lang-switch'),last=0;
-  window.addEventListener('scroll',function(){
-    var y=window.scrollY;
-    if(y>80&&y>last)sw.classList.add('hidden');
-    else sw.classList.remove('hidden');
-    last=y;
-  },{passive:true});
+  var sw=document.querySelector('[data-lang-switch]');
+  if(!sw)return;
+  var trigger=sw.querySelector('[data-lang-trigger]');
+  function setOpen(open){
+    sw.classList.toggle('is-open',open);
+    trigger.setAttribute('aria-expanded',open);
+  }
+  trigger.addEventListener('click',function(e){
+    e.stopPropagation();
+    setOpen(!sw.classList.contains('is-open'));
+  });
+  sw.querySelectorAll('[data-lang-menu] a').forEach(function(a){
+    a.addEventListener('click',function(){
+      localStorage.setItem('kami-lang',a.getAttribute('data-lang'));
+    });
+  });
+  document.addEventListener('click',function(e){
+    if(!sw.contains(e.target))setOpen(false);
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape')setOpen(false);
+  });
 })();
 </script>
 </body>
