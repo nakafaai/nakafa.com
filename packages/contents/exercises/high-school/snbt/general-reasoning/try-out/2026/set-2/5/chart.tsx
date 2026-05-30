@@ -64,15 +64,15 @@ export function SalesChart({ lang = "en" }: Props) {
   const chartConfig = {
     shirts: {
       label: t.labels.shirts,
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     pants: {
       label: t.labels.pants,
-      color: "var(--chart-2)",
+      colors: { light: ["var(--chart-2)"] },
     },
     suits: {
       label: t.labels.suits,
-      color: "var(--chart-3)",
+      colors: { light: ["var(--chart-3)"] },
     },
   } satisfies ChartConfig;
 
@@ -104,10 +104,10 @@ export function SalesChart({ lang = "en" }: Props) {
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
-            {Object.entries(chartConfig).map(([key, config]) => (
+            {Object.keys(chartConfig).map((key) => (
               <RechartsBar
                 dataKey={key}
-                fill={config.color}
+                fill={`var(--color-${key}-0)`}
                 key={key}
                 radius={[4, 4, 0, 0]}
               />

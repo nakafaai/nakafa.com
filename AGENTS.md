@@ -17,8 +17,8 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 
 ## Stack And Layout
 
-- Package manager: `pnpm@10.33.0`
-- Runtime: Node `>=22`
+- Package manager: `pnpm@10.34.1`
+- Runtime: Node `22.x` through pnpm `devEngines.runtime`
 - Monorepo: Turborepo
 - Frontend: Next.js 16, React 19, TypeScript 6
 - Backend: Convex

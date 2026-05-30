@@ -1,33 +1,52 @@
 "use client";
 
 import { cn } from "@repo/design-system/lib/utils";
-import { createContext, useContext, useId, useMemo } from "react";
 import {
+  type ComponentProps,
+  type ComponentType,
+  createContext,
+  type ReactNode,
+  useContext,
+  useId,
+  useMemo,
+} from "react";
+import {
+  type DefaultLegendContentProps,
+  type DefaultTooltipContentProps,
   Legend,
-  type LegendProps,
   ResponsiveContainer,
   Tooltip,
+  type TooltipContentProps,
+  type TooltipPayload,
+  type TooltipPayloadEntry,
 } from "recharts";
 
-// Format: { THEME_NAME: CSS_SELECTOR }
-const THEMES = { light: "", dark: ".dark" } as const;
+const CHART_THEMES = [
+  { name: "light", selector: "" },
+  { name: "dark", selector: ".dark" },
+] as const;
 
-export type ChartConfig = {
-  [k in string]: {
-    label?: React.ReactNode;
-    icon?: React.ComponentType;
-  } & (
-    | { color?: string; theme?: never }
-    | { color?: never; theme: Record<keyof typeof THEMES, string> }
-  );
-};
+const CHART_INITIAL_DIMENSION = { width: 320, height: 200 };
 
-interface ChartContextProps {
-  config: ChartConfig;
-}
+type ChartTheme = (typeof CHART_THEMES)[number]["name"];
+type ThemeColors = Partial<Record<ChartTheme, readonly string[]>>;
+type ChartColors = {
+  [Theme in ChartTheme]: Required<Pick<ThemeColors, Theme>> &
+    Partial<Omit<ThemeColors, Theme>>;
+}[ChartTheme];
 
-const ChartContext = createContext<ChartContextProps | null>(null);
+export type ChartConfig = Record<
+  string,
+  {
+    label?: ReactNode;
+    icon?: ComponentType;
+    colors?: ChartColors;
+  }
+>;
 
+const ChartContext = createContext<{ config: ChartConfig } | null>(null);
+
+/** Reads the nearest chart config from the EvilCharts container. */
 function useChart() {
   const context = useContext(ChartContext);
 
@@ -38,24 +57,32 @@ function useChart() {
   return context;
 }
 
+/**
+ * Renders the shared EvilCharts/Recharts container and theme-scoped CSS vars.
+ *
+ * @see https://evilcharts.com/docs/installation
+ * @see https://evilcharts.com/docs/chart-config
+ */
 function ChartContainer({
   id,
   className,
   children,
   config,
   ...props
-}: React.ComponentProps<"div"> & {
+}: ComponentProps<"div"> & {
   config: ChartConfig;
-  children: React.ComponentProps<typeof ResponsiveContainer>["children"];
+  children: ComponentProps<typeof ResponsiveContainer>["children"];
 }) {
   const uniqueId = useId();
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
+
+  validateChartConfig(config);
 
   return (
     <ChartContext.Provider value={{ config }}>
       <div
         className={cn(
-          "flex aspect-square justify-center text-xs sm:aspect-video [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-hidden [&_.recharts-surface]:outline-hidden",
+          "flex aspect-square min-h-0 w-full justify-center text-xs sm:aspect-video [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-hidden [&_.recharts-surface]:outline-hidden",
           className
         )}
         data-chart={chartId}
@@ -63,44 +90,55 @@ function ChartContainer({
         {...props}
       >
         <ChartStyle config={config} id={chartId} />
-        <ResponsiveContainer>{children}</ResponsiveContainer>
+        <ResponsiveContainer
+          className="min-h-0 w-full"
+          initialDimension={CHART_INITIAL_DIMENSION}
+        >
+          {children}
+        </ResponsiveContainer>
       </div>
     </ChartContext.Provider>
   );
 }
 
-const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
+/** Emits chart-scoped CSS color variables from EvilCharts chart config. */
+function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
   const colorConfig = Object.entries(config).filter(
-    ([, itemConfig]) => itemConfig.theme || itemConfig.color
+    ([, itemConfig]) => itemConfig.colors
   );
 
   if (!colorConfig.length) {
     return null;
   }
 
-  const styleContent = Object.entries(THEMES)
-    .map(
-      ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-      itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+  const styleContent = CHART_THEMES.map(({ name, selector }) => {
+    const tokens = colorConfig.flatMap(([key, itemConfig]) => {
+      const colors = itemConfig.colors?.[name];
+
+      if (!colors?.length) {
+        return [];
+      }
+
+      return distributeColors(colors, getColorsCount(itemConfig)).map(
+        (color, index) => `  --color-${key}-${index}: ${color};`
+      );
+    });
+
+    if (!tokens.length) {
+      return "";
+    }
+
+    return `${selector} [data-chart=${id}] {\n${tokens.join("\n")}\n}`;
   })
-  .filter(Boolean)
-  .join("\n")}
-}
-`
-    )
+    .filter(Boolean)
     .join("\n");
 
   return <style>{styleContent}</style>;
-};
+}
 
 const ChartTooltip = Tooltip;
 
+/** Renders the shared EvilCharts tooltip content for Recharts payloads. */
 function ChartTooltipContent({
   active,
   payload,
@@ -115,13 +153,22 @@ function ChartTooltipContent({
   color,
   nameKey,
   labelKey,
-}: React.ComponentProps<typeof Tooltip> &
-  React.ComponentProps<"div"> & {
+}: Partial<
+  Omit<
+    TooltipContentProps,
+    "formatter" | "label" | "labelFormatter" | "payload"
+  >
+> &
+  ComponentProps<"div"> & {
     hideLabel?: boolean;
     hideIndicator?: boolean;
     indicator?: "line" | "dot" | "dashed";
     nameKey?: string;
     labelKey?: string;
+    label?: DefaultTooltipContentProps["label"];
+    labelFormatter?: DefaultTooltipContentProps["labelFormatter"];
+    formatter?: TooltipContentProps["formatter"];
+    payload?: TooltipPayload;
   }) {
   const { config } = useChart();
 
@@ -135,7 +182,7 @@ function ChartTooltipContent({
     const itemConfig = getPayloadConfigFromPayload(config, item, key);
     const value =
       !labelKey && typeof label === "string"
-        ? config[label as keyof typeof config]?.label || label
+        ? config[label]?.label || label
         : itemConfig?.label;
 
     if (labelFormatter) {
@@ -179,7 +226,11 @@ function ChartTooltipContent({
         {payload.map((item, index) => {
           const key = `${nameKey || item.name || item.dataKey || "value"}`;
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
-          const indicatorColor = color || item.payload.fill || item.color;
+          const colorsCount = itemConfig ? getColorsCount(itemConfig) : 1;
+          const tooltipKey = `${key}-${item.graphicalItemId}`;
+          const indicatorStyle = color
+            ? { background: color, borderColor: color }
+            : getIndicatorStyle(key, colorsCount);
 
           return (
             <div
@@ -187,10 +238,10 @@ function ChartTooltipContent({
                 "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
                 indicator === "dot" && "items-center"
               )}
-              key={item.dataKey}
+              key={tooltipKey}
             >
               {formatter && item?.value !== undefined && item.name ? (
-                formatter(item.value, item.name, item, index, item.payload)
+                formatter(item.value, item.name, item, index, payload)
               ) : (
                 <>
                   {itemConfig?.icon ? (
@@ -198,22 +249,14 @@ function ChartTooltipContent({
                   ) : (
                     !hideIndicator && (
                       <div
-                        className={cn(
-                          "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
-                          {
-                            "h-2.5 w-2.5": indicator === "dot",
-                            "w-1": indicator === "line",
-                            "w-0 border-[1.5px] border-dashed bg-transparent":
-                              indicator === "dashed",
-                            "my-0.5": !!nestLabel && indicator === "dashed",
-                          }
-                        )}
-                        style={
-                          {
-                            "--color-bg": indicatorColor,
-                            "--color-border": indicatorColor,
-                          } as React.CSSProperties
-                        }
+                        className={cn("shrink-0 rounded-[2px]", {
+                          "h-2.5 w-2.5": indicator === "dot",
+                          "w-1": indicator === "line",
+                          "w-0 border-[1.5px] border-dashed bg-transparent":
+                            indicator === "dashed",
+                          "my-0.5": !!nestLabel && indicator === "dashed",
+                        })}
+                        style={indicatorStyle}
                       />
                     )
                   )}
@@ -229,9 +272,11 @@ function ChartTooltipContent({
                         {itemConfig?.label || item.name}
                       </span>
                     </div>
-                    {!!item.value && (
+                    {item.value != null && (
                       <span className="font-medium font-mono text-foreground tabular-nums">
-                        {item.value.toLocaleString()}
+                        {typeof item.value === "number"
+                          ? item.value.toLocaleString()
+                          : String(item.value)}
                       </span>
                     )}
                   </div>
@@ -247,14 +292,15 @@ function ChartTooltipContent({
 
 const ChartLegend = Legend;
 
+/** Renders the shared EvilCharts legend content for Recharts payloads. */
 function ChartLegendContent({
   className,
   hideIcon = false,
   payload,
   verticalAlign = "bottom",
   nameKey,
-}: React.ComponentProps<"div"> &
-  Pick<LegendProps, "payload" | "verticalAlign"> & {
+}: ComponentProps<"div"> &
+  DefaultLegendContentProps & {
     hideIcon?: boolean;
     nameKey?: string;
   }) {
@@ -273,24 +319,23 @@ function ChartLegendContent({
       )}
     >
       {payload.map((item) => {
-        const key = `${nameKey || item.dataKey || "value"}`;
+        const key = `${nameKey || item.value || item.dataKey || "value"}`;
         const itemConfig = getPayloadConfigFromPayload(config, item, key);
+        const colorsCount = itemConfig ? getColorsCount(itemConfig) : 1;
 
         return (
           <div
             className={cn(
               "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground"
             )}
-            key={item.value}
+            key={key}
           >
             {itemConfig?.icon && !hideIcon ? (
               <itemConfig.icon />
             ) : (
               <div
                 className="h-2 w-2 shrink-0 rounded-[2px]"
-                style={{
-                  backgroundColor: item.color,
-                }}
+                style={getIndicatorStyle(key, colorsCount)}
               />
             )}
             {itemConfig?.label}
@@ -301,43 +346,112 @@ function ChartLegendContent({
   );
 }
 
-// Helper to extract item config from a payload.
+/** Finds the chart config entry that matches a Recharts payload item. */
 function getPayloadConfigFromPayload(
   config: ChartConfig,
-  payload: unknown,
+  payload:
+    | TooltipPayloadEntry
+    | NonNullable<DefaultLegendContentProps["payload"]>[number],
   key: string
 ) {
-  if (typeof payload !== "object" || payload === null) {
+  const payloadPayload = getObject(Reflect.get(payload, "payload"));
+
+  let configLabelKey: string = key;
+  const payloadValue = Reflect.get(payload, key);
+  const nestedPayloadValue = payloadPayload
+    ? Reflect.get(payloadPayload, key)
+    : undefined;
+
+  if (typeof payloadValue === "string") {
+    configLabelKey = payloadValue;
+  } else if (typeof nestedPayloadValue === "string") {
+    configLabelKey = nestedPayloadValue;
+  }
+
+  return configLabelKey in config ? config[configLabelKey] : config[key];
+}
+
+/** Returns object-shaped unknown values for Recharts payload boundaries. */
+function getObject(value: unknown) {
+  if (typeof value !== "object" || value === null) {
     return;
   }
 
-  const payloadPayload =
-    "payload" in payload &&
-    typeof payload.payload === "object" &&
-    payload.payload !== null
-      ? payload.payload
-      : undefined;
+  return value;
+}
 
-  let configLabelKey: string = key;
+/** Validates chart configs early so a malformed colors object fails locally. */
+function validateChartConfig(config: ChartConfig) {
+  for (const [key, value] of Object.entries(config)) {
+    if (!value.colors) {
+      continue;
+    }
 
-  if (
-    key in payload &&
-    typeof payload[key as keyof typeof payload] === "string"
-  ) {
-    configLabelKey = payload[key as keyof typeof payload] as string;
-  } else if (
-    payloadPayload &&
-    key in payloadPayload &&
-    typeof payloadPayload[key as keyof typeof payloadPayload] === "string"
-  ) {
-    configLabelKey = payloadPayload[
-      key as keyof typeof payloadPayload
-    ] as string;
+    const hasTheme = CHART_THEMES.some(
+      ({ name }) => value.colors?.[name]?.length
+    );
+
+    if (!hasTheme) {
+      throw new Error(
+        `[EvilCharts] Chart config "${key}" needs at least one theme color.`
+      );
+    }
+  }
+}
+
+/** Counts the color slots needed for one chart config entry. */
+function getColorsCount(config: ChartConfig[string]) {
+  if (!config.colors) {
+    return 1;
   }
 
-  return configLabelKey in config
-    ? config[configLabelKey]
-    : config[key as keyof typeof config];
+  const counts = CHART_THEMES.map(
+    ({ name }) => config.colors?.[name]?.length ?? 0
+  );
+
+  return Math.max(...counts, 1);
+}
+
+/** Distributes short color palettes across the longest theme palette. */
+function distributeColors(colors: readonly string[], maxCount: number) {
+  if (colors.length >= maxCount) {
+    return colors.slice(0, maxCount);
+  }
+
+  const result: string[] = [];
+  const baseSlots = Math.floor(maxCount / colors.length);
+  const extraSlots = maxCount % colors.length;
+
+  for (let colorIndex = 0; colorIndex < colors.length; colorIndex++) {
+    const isExtraColor = colorIndex >= colors.length - extraSlots;
+    const slotsForColor = baseSlots + (isExtraColor ? 1 : 0);
+
+    for (let slot = 0; slot < slotsForColor; slot++) {
+      result.push(colors[colorIndex]);
+    }
+  }
+
+  return result;
+}
+
+/** Builds a solid or gradient indicator style from EvilCharts color slots. */
+function getIndicatorStyle(dataKey: string, colorsCount: number) {
+  if (colorsCount <= 1) {
+    return {
+      background: `var(--color-${dataKey}-0)`,
+      borderColor: `var(--color-${dataKey}-0)`,
+    };
+  }
+
+  const stops = Array.from({ length: colorsCount }, (_, index) => {
+    const offset = (index / (colorsCount - 1)) * 100;
+    return `var(--color-${dataKey}-${index}) ${offset}%`;
+  }).join(", ");
+
+  return {
+    background: `linear-gradient(to right, ${stops})`,
+    borderColor: `var(--color-${dataKey}-0)`,
+  };
 }
 
 export {
@@ -347,4 +461,6 @@ export {
   ChartStyle,
   ChartTooltip,
   ChartTooltipContent,
+  getColorsCount,
+  useChart,
 };

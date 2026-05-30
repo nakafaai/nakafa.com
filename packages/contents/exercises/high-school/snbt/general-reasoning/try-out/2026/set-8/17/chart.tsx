@@ -58,11 +58,11 @@ export function ProfitChart({ lang = "en" }: Props) {
   const chartConfig = {
     capital: {
       label: t.capital,
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     revenue: {
       label: t.revenue,
-      color: "var(--chart-2)",
+      colors: { light: ["var(--chart-2)"] },
     },
   } satisfies ChartConfig;
 
@@ -96,17 +96,21 @@ export function ProfitChart({ lang = "en" }: Props) {
             />
             <YAxis axisLine={false} tickLine={false} tickMargin={10} />
             <ChartTooltip
-              content={<ChartTooltipContent labelFormatter={formatYear} />}
+              content={
+                <ChartTooltipContent
+                  labelFormatter={(value) => formatYear(String(value))}
+                />
+              }
             />
             <ChartLegend content={<ChartLegendContent />} />
             <RechartsBar
               dataKey="capital"
-              fill={chartConfig.capital.color}
+              fill="var(--color-capital-0)"
               radius={[4, 4, 0, 0]}
             />
             <RechartsBar
               dataKey="revenue"
-              fill={chartConfig.revenue.color}
+              fill="var(--color-revenue-0)"
               radius={[4, 4, 0, 0]}
             />
           </RechartsBarChart>

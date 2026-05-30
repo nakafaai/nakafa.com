@@ -60,11 +60,11 @@ export function VisitorChart({ lang = "id" }: Props) {
   const chartConfig = {
     library: {
       label: t.library,
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     laboratory: {
       label: t.laboratory,
-      color: "var(--chart-2)",
+      colors: { light: ["var(--chart-2)"] },
     },
   } satisfies ChartConfig;
 
@@ -101,13 +101,13 @@ export function VisitorChart({ lang = "id" }: Props) {
             <RechartsLine
               dataKey="library"
               dot={{ r: 4 }}
-              stroke="var(--color-library)"
+              stroke="var(--color-library-0)"
               strokeWidth={2}
             />
             <RechartsLine
               dataKey="laboratory"
               dot={{ r: 4 }}
-              stroke="var(--color-laboratory)"
+              stroke="var(--color-laboratory-0)"
               strokeWidth={2}
             />
           </RechartsLineChart>

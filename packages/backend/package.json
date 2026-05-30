@@ -57,7 +57,7 @@
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "ai": "^6.0.193",
-    "better-auth": "~1.6.9",
+    "better-auth": "~1.6.12",
     "buffer": "^6.0.3",
     "convex": "^1.39.1",
     "convex-helpers": "^0.1.118",

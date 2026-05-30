@@ -56,15 +56,15 @@ export function SalesChart({ lang = "en" }: Props) {
   const chartConfig = {
     A: {
       label: "A",
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     B: {
       label: "B",
-      color: "var(--chart-2)",
+      colors: { light: ["var(--chart-2)"] },
     },
     C: {
       label: "C",
-      color: "var(--chart-3)",
+      colors: { light: ["var(--chart-3)"] },
     },
   } satisfies ChartConfig;
 
@@ -109,13 +109,17 @@ export function SalesChart({ lang = "en" }: Props) {
               tickMargin={10}
             />
             <ChartTooltip
-              content={<ChartTooltipContent labelFormatter={formatYear} />}
+              content={
+                <ChartTooltipContent
+                  labelFormatter={(value) => formatYear(String(value))}
+                />
+              }
             />
             <ChartLegend content={<ChartLegendContent />} />
-            {Object.entries(chartConfig).map(([key, config]) => (
+            {Object.keys(chartConfig).map((key) => (
               <RechartsBar
                 dataKey={key}
-                fill={config.color}
+                fill={`var(--color-${key}-0)`}
                 key={key}
                 radius={[4, 4, 0, 0]}
               />

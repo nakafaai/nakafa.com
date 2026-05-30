@@ -16,14 +16,14 @@
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/utilities": "workspace:*",
-    "date-fns": "4.1.0",
+    "date-fns": "4.4.0",
     "effect": "^3.21.2",
     "ky": "^2.0.2",
     "motion": "^12.40.0",
     "next-intl": "^4.13.0",
     "react": "19.2.6",
     "react-aria-components": "^1.18.0",
-    "recharts": "^2.15.4"
+    "recharts": "^3.8.1"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

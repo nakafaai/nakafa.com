@@ -49,7 +49,7 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
   const chartConfig = {
     y: {
       label: "f(x)",
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
   } satisfies ChartConfig;
 
@@ -115,7 +115,7 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
               dataKey="y"
               dot
               name="y"
-              stroke={chartConfig.y.color}
+              stroke="var(--color-y-0)"
               strokeWidth={2}
               type="monotone"
             />

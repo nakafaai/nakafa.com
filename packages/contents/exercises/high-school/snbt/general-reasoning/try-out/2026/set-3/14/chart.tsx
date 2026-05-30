@@ -66,15 +66,15 @@ export function SpiceSalesChart({ lang = "en" }: Props) {
   const chartConfig = {
     garlic: {
       label: t.labels.garlic,
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     shallot: {
       label: t.labels.shallot,
-      color: "var(--chart-2)",
+      colors: { light: ["var(--chart-2)"] },
     },
     chili: {
       label: t.labels.chili,
-      color: "var(--chart-3)",
+      colors: { light: ["var(--chart-3)"] },
     },
   } satisfies ChartConfig;
 
@@ -106,10 +106,10 @@ export function SpiceSalesChart({ lang = "en" }: Props) {
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
-            {Object.entries(chartConfig).map(([key, config]) => (
+            {Object.keys(chartConfig).map((key) => (
               <RechartsBar
                 dataKey={key}
-                fill={config.color}
+                fill={`var(--color-${key}-0)`}
                 key={key}
                 radius={[4, 4, 0, 0]}
               />
