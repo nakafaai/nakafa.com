@@ -1,4 +1,5 @@
-import { updateContentHash } from "@repo/backend/convex/audioStudies/utils";
+import { updateContentAudioHash } from "@repo/backend/convex/audioStudies/contentAudios/impl";
+import { syncAudioContentSource } from "@repo/backend/convex/audioStudies/helpers/sources";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import {
@@ -8,6 +9,7 @@ import {
 } from "@repo/backend/convex/contentSync/lib/syncHelpers";
 import { syncContentSearch } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
   gradeValidator,
   localeValidator,
@@ -210,6 +212,16 @@ export const bulkSyncSubjectSections = internalMutation({
         title: section.title,
       });
 
+      if (existingSection) {
+        await syncAudioContentSource(ctx, {
+          contentHash: section.contentHash,
+          locale: section.locale,
+          ref: { id: existingSection._id, type: "subject" },
+          slug: section.slug,
+          syncedAt: now,
+        });
+      }
+
       if (existingSection?.contentHash === section.contentHash) {
         unchanged++;
         continue;
@@ -236,10 +248,11 @@ export const bulkSyncSubjectSections = internalMutation({
           syncedAt: now,
         });
 
-        await updateContentHash(
-          ctx,
-          { id: existingSection._id, type: "subject" },
-          section.contentHash
+        await runConvexProgram(
+          updateContentAudioHash(ctx, {
+            contentRef: { id: existingSection._id, type: "subject" },
+            newHash: section.contentHash,
+          })
         );
 
         authorLinksCreated += await syncContentAuthorsWithCache(
@@ -257,6 +270,14 @@ export const bulkSyncSubjectSections = internalMutation({
       const sectionId = await ctx.db.insert("subjectSections", {
         ...nextValues,
         locale: section.locale,
+        slug: section.slug,
+        syncedAt: now,
+      });
+
+      await syncAudioContentSource(ctx, {
+        contentHash: section.contentHash,
+        locale: section.locale,
+        ref: { id: sectionId, type: "subject" },
         slug: section.slug,
         syncedAt: now,
       });

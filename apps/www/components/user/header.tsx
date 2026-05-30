@@ -21,7 +21,9 @@ export function UserHeader({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Auth");
   const tCommon = useTranslations("Common");
 
-  const { data: user } = useQueryWithStatus(api.auth.getUserById, { userId });
+  const { data: user } = useQueryWithStatus(api.auth.queries.getUserById, {
+    userId,
+  });
   const currentUser = useUser((state) => state.user);
   const isCurrentUser = currentUser?.appUser._id === userId;
   const userEmail = isCurrentUser ? currentUser.authUser.email : null;

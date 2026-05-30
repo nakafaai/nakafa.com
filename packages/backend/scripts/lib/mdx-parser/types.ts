@@ -1,4 +1,4 @@
-import type { Locale as ParsedLocale } from "@repo/backend/convex/lib/validators/contents";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import type { ContentMetadata } from "@repo/contents/_types/content";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
@@ -19,7 +19,7 @@ export interface ParsedMdx {
 export interface ArticleParsedPath {
   articleSlug: string;
   category: ArticleCategory;
-  locale: ParsedLocale;
+  locale: Locale;
   slug: string;
   type: "article";
 }
@@ -28,7 +28,7 @@ export interface ArticleParsedPath {
 export interface SubjectParsedPath {
   category: SubjectCategory;
   grade: Grade;
-  locale: ParsedLocale;
+  locale: Locale;
   material: Material;
   section: string;
   slug: string;
@@ -42,7 +42,7 @@ export interface ExerciseParsedPath {
   examType: ExercisesType;
   exerciseType: string;
   isQuestion: boolean;
-  locale: ParsedLocale;
+  locale: Locale;
   material: ExercisesMaterial;
   number: number;
   setName: string;
@@ -57,7 +57,7 @@ export interface ParsedExerciseSet {
   description?: string;
   exerciseType: string;
   exerciseTypeTitle: string;
-  locale: ParsedLocale;
+  locale: Locale;
   material: ExercisesMaterial;
   setName: string;
   slug: string;
@@ -71,7 +71,7 @@ export interface ParsedSubjectTopic {
   category: SubjectCategory;
   description?: string;
   grade: Grade;
-  locale: ParsedLocale;
+  locale: Locale;
   material: Material;
   sectionCount: number;
   slug: string;

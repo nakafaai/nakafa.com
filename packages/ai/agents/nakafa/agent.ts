@@ -20,10 +20,10 @@ import { quran } from "@repo/ai/agents/nakafa/tools/quran";
 import { read } from "@repo/ai/agents/nakafa/tools/read";
 import { search } from "@repo/ai/agents/nakafa/tools/search";
 import { taxonomy } from "@repo/ai/agents/nakafa/tools/taxonomy";
-import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
-import { getFastModelProviderOptions } from "@repo/ai/config/models";
+import { provider } from "@repo/ai/config/app";
+import { getFastModelProviderOptions } from "@repo/ai/config/model";
+import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { subAgentGenerationTimeout } from "@repo/ai/config/timeouts";
-import { model } from "@repo/ai/config/vercel";
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { NakafaAgentParams } from "@repo/ai/types/agents";
@@ -63,7 +63,7 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   let hasPendingContentRead = false;
   const result = yield* Effect.tryPromise(() =>
     generateText({
-      model: model.languageModel(modelId),
+      model: provider.languageModel(modelId),
       providerOptions: {
         gateway: gatewayProviderOptions,
         google: getFastModelProviderOptions(modelId),

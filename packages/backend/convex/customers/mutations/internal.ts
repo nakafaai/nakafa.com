@@ -1,7 +1,7 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { internalMutation } from "@repo/backend/convex/_generated/server";
 import tables from "@repo/backend/convex/customers/schema";
+import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import type { WithoutSystemFields } from "convex/server";
 import { v } from "convex/values";

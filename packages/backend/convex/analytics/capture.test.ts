@@ -1,5 +1,5 @@
 import posthogTest from "@posthog/convex/test";
-import { getModelCreditCost } from "@repo/ai/config/models";
+import { getModelCreditCost } from "@repo/ai/config/model";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import { productAnalyticsEventValidator } from "@repo/backend/convex/analytics/events";
 import schema from "@repo/backend/convex/schema";
@@ -9,8 +9,6 @@ import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
-const posthogHost =
-  process.env.POSTHOG_HOST?.trim() || "https://eu.i.posthog.com";
 
 describe("analytics/capture", () => {
   beforeEach(() => {
@@ -201,7 +199,6 @@ describe("analytics/capture", () => {
           expect.objectContaining({
             disableGeoip: true,
             event: "content viewed",
-            host: posthogHost,
             properties: JSON.stringify({
               content_type: "article",
               is_new_view: true,

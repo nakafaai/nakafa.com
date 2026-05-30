@@ -1,5 +1,5 @@
 import posthogTest from "@posthog/convex/test";
-import { getModelCreditCost } from "@repo/ai/config/models";
+import { getModelCreditCost } from "@repo/ai/config/model";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import {
@@ -101,7 +101,6 @@ describe("chats/mutations", () => {
             disableGeoip: true,
             distinctId: userId,
             event: "chat response completed",
-            host: "https://eu.i.posthog.com",
             properties: JSON.stringify({
               chat_type: "study",
               credits: liteCreditCost,

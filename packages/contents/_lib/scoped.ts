@@ -80,7 +80,7 @@ export function getRawContent(
 
   return validatePath(filePath, contentsDir).pipe(
     Effect.flatMap((fullPath) => {
-      const readFileEffect = Effect.tryPromise({
+      const readLocalFile = Effect.tryPromise({
         try: () => fsPromises.readFile(fullPath, "utf8"),
         catch: (error: unknown) =>
           new FileReadError({
@@ -101,7 +101,7 @@ export function getRawContent(
           }),
       });
 
-      return readFileEffect.pipe(
+      return readLocalFile.pipe(
         Effect.catchTag("FileReadError", () => fetchFromGitHub)
       );
     })

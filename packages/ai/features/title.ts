@@ -1,10 +1,10 @@
-import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
+import { provider } from "@repo/ai/config/app";
 import {
   defaultModel,
   getFastModelProviderOptions,
-} from "@repo/ai/config/models";
+} from "@repo/ai/config/model";
+import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { backgroundGenerationTimeout } from "@repo/ai/config/timeouts";
-import { model } from "@repo/ai/config/vercel";
 import {
   DEFAULT_TITLE,
   MAX_TITLE_LENGTH,
@@ -41,7 +41,7 @@ export const generateTitle = Effect.fn("features.generateTitle")(function* ({
   const { text } = yield* Effect.tryPromise({
     try: () =>
       generateText({
-        model: model.languageModel(defaultModel),
+        model: provider.languageModel(defaultModel),
         prompt: titleSourceText,
         providerOptions: {
           gateway: gatewayProviderOptions,

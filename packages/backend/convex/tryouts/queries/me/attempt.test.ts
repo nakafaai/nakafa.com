@@ -36,7 +36,7 @@ describe("tryouts/queries/me/attempt", () => {
     expect(result).toBeNull();
   });
 
-  it("derives the latest tryout score from theta instead of a stored legacy score", async () => {
+  it("derives the latest tryout score from theta instead of a stored score", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {

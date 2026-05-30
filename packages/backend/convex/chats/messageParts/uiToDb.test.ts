@@ -1,6 +1,7 @@
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
+import type { ProviderMetadata } from "ai";
 import { describe, expect, it } from "vitest";
 
 const ref = {
@@ -215,6 +216,37 @@ describe("mapUIMessagePartsToDBParts", () => {
         dataScrapeUrlStatus: "done",
         dataScrapeUrlTitle: "AI SDK Core: DevTools",
         dataScrapeUrlUrl: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
+      }),
+    ]);
+  });
+
+  it("persists only string provider metadata needed for replay", () => {
+    const providerMetadata = {
+      anthropic: {
+        cacheControl: { type: "ephemeral" },
+        signature: "reasoning-signature",
+      },
+      gateway: {
+        generationId: "gen_123",
+        usage: { inputTokens: 120 },
+      },
+    } satisfies ProviderMetadata;
+    const parts = [
+      {
+        type: "reasoning",
+        text: "private reasoning",
+        state: "done",
+        providerMetadata,
+      },
+    ] satisfies MyUIMessage["parts"];
+
+    expect(mapUIMessagePartsToDBParts({ messageParts: parts })).toEqual([
+      expect.objectContaining({
+        type: "reasoning",
+        providerMetadata: {
+          anthropic: { signature: "reasoning-signature" },
+          gateway: { generationId: "gen_123" },
+        },
       }),
     ]);
   });

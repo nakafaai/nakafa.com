@@ -1,17 +1,18 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type {
-  tryoutAccessCampaignRedeemStatusValidator,
-  tryoutAccessGrantStatusValidator,
+import {
+  tryoutAccessCampaignKindCompetition,
+  tryoutAccessCampaignRedeemStatusActive,
+  tryoutAccessCampaignRedeemStatusEnded,
+  tryoutAccessCampaignRedeemStatusScheduled,
+  type tryoutAccessCampaignRedeemStatusValidator,
+  tryoutAccessGrantStatusActive,
+  tryoutAccessGrantStatusExpired,
+  type tryoutAccessGrantStatusValidator,
 } from "@repo/backend/convex/tryoutAccess/schema";
 import { ConvexError, type Infer } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
-const ACCESS_STATUS_ACTIVE = "active";
-const ACCESS_STATUS_ENDED = "ended";
-const ACCESS_STATUS_SCHEDULED = "scheduled";
-const GRANT_STATUS_ACTIVE = "active";
-const GRANT_STATUS_EXPIRED = "expired";
 const UNAVAILABLE_REASON_DISABLED = "disabled";
 const UNAVAILABLE_REASON_ENDED = "ended";
 const UNAVAILABLE_REASON_NOT_STARTED = "not-started";
@@ -42,7 +43,7 @@ export function getTryoutAccessGrantEndsAt({
   >;
   redeemedAt: number;
 }) {
-  if (campaign.campaignKind === "competition") {
+  if (campaign.campaignKind === tryoutAccessCampaignKindCompetition) {
     return campaign.endsAt;
   }
 
@@ -62,14 +63,14 @@ export function getTryoutAccessCampaignRedeemStatus(
   now: number
 ): TryoutAccessCampaignRedeemStatus {
   if (campaign.startsAt > now) {
-    return ACCESS_STATUS_SCHEDULED;
+    return tryoutAccessCampaignRedeemStatusScheduled;
   }
 
   if (campaign.endsAt <= now) {
-    return ACCESS_STATUS_ENDED;
+    return tryoutAccessCampaignRedeemStatusEnded;
   }
 
-  return ACCESS_STATUS_ACTIVE;
+  return tryoutAccessCampaignRedeemStatusActive;
 }
 
 /** Resolves the stored status for one grant end timestamp. */
@@ -78,10 +79,10 @@ export function getTryoutAccessGrantStatus(
   now: number
 ): TryoutAccessGrantStatus {
   if (endsAt <= now) {
-    return GRANT_STATUS_EXPIRED;
+    return tryoutAccessGrantStatusExpired;
   }
 
-  return GRANT_STATUS_ACTIVE;
+  return tryoutAccessGrantStatusActive;
 }
 
 /** Explains why a campaign link cannot currently be redeemed. */
@@ -93,11 +94,16 @@ export function getTryoutAccessUnavailableReason(eventAccess: {
     return UNAVAILABLE_REASON_DISABLED;
   }
 
-  if (eventAccess.campaign.redeemStatus === "scheduled") {
+  if (
+    eventAccess.campaign.redeemStatus ===
+    tryoutAccessCampaignRedeemStatusScheduled
+  ) {
     return UNAVAILABLE_REASON_NOT_STARTED;
   }
 
-  if (eventAccess.campaign.redeemStatus === "ended") {
+  if (
+    eventAccess.campaign.redeemStatus === tryoutAccessCampaignRedeemStatusEnded
+  ) {
     return UNAVAILABLE_REASON_ENDED;
   }
 

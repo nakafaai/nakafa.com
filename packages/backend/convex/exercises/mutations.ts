@@ -1,4 +1,4 @@
-import { scoreExerciseAnswer } from "@repo/backend/convex/exercises/answerScoring";
+import { scoreExerciseAnswer } from "@repo/backend/convex/exercises/answerScoring/impl";
 import { createExerciseAttempt } from "@repo/backend/convex/exercises/helpers";
 import {
   exerciseAttemptModeValidator,
@@ -9,16 +9,17 @@ import {
   computeAttemptDurationSeconds,
 } from "@repo/backend/convex/exercises/utils";
 import { internalMutation, mutation } from "@repo/backend/convex/functions";
+import { finalizedAttemptStatusValidator } from "@repo/backend/convex/lib/attempts";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { syncTryoutExerciseAttemptExpiry } from "@repo/backend/convex/tryouts/helpers/expiry";
 import { finalizeTryoutAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/attempt";
 import { finalizeTryoutPartAttempt } from "@repo/backend/convex/tryouts/helpers/finalize/part";
 import { ConvexError, type Infer, v } from "convex/values";
-import { literals } from "convex-helpers/validators";
 
 const completeAttemptResultValidator = v.object({
-  status: literals("completed", "expired"),
+  status: finalizedAttemptStatusValidator,
   expiredAtMs: v.optional(v.number()),
 });
 
@@ -204,12 +205,14 @@ export const submitAnswer = mutation({
       )
       .first();
 
-    const scoredAnswer = await scoreExerciseAnswer(ctx.db, {
-      attempt,
-      exerciseNumber: args.exerciseNumber,
-      questionId: args.questionId,
-      selectedOptionId: args.selectedOptionId,
-    });
+    const scoredAnswer = await runConvexProgram(
+      scoreExerciseAnswer(ctx.db, {
+        attempt,
+        exerciseNumber: args.exerciseNumber,
+        questionId: args.questionId,
+        selectedOptionId: args.selectedOptionId,
+      })
+    );
 
     if (existingAnswer) {
       await ctx.db.patch("exerciseAnswers", existingAnswer._id, {

@@ -13,6 +13,8 @@ const batchDeleteResultValidator = v.object({
 type ResettableTableName =
   | "articleContents"
   | "articleReferences"
+  | "audioContentSources"
+  | "audioGenerationQueue"
   | "authors"
   | "contentAuthors"
   | "exerciseAnswers"
@@ -137,6 +139,46 @@ export const deleteExerciseChoicesBatch =
   makeBatchDeleteMutation("exerciseChoices");
 export const deleteExerciseAnswersBatch =
   makeBatchDeleteMutation("exerciseAnswers");
+export const deleteAudioGenerationQueueBatch = makeBatchDeleteMutation(
+  "audioGenerationQueue"
+);
+export const deleteAudioContentSourcesBatch = makeBatchDeleteMutation(
+  "audioContentSources"
+);
+
+/**
+ * Deletes generated audio rows with their Convex storage blobs.
+ *
+ * @see https://docs.convex.dev/file-storage/delete-files
+ */
+export const deleteContentAudiosBatch = internalMutation({
+  args: {},
+  returns: batchDeleteResultValidator,
+  handler: async (ctx) => {
+    const audios = await ctx.db.query("contentAudios").take(RESET_BATCH_SIZE);
+    let deleted = 0;
+
+    for (const audio of audios) {
+      if (audio.audioStorageId) {
+        const metadata = await ctx.db.system.get(
+          "_storage",
+          audio.audioStorageId
+        );
+
+        if (metadata) {
+          await ctx.storage.delete(audio.audioStorageId);
+        }
+      }
+
+      await ctx.db.delete("contentAudios", audio._id);
+      deleted += 1;
+    }
+
+    const hasMore = (await ctx.db.query("contentAudios").first()) !== null;
+
+    return { deleted, hasMore };
+  },
+});
 export const deleteTryoutPartAttemptsBatch =
   makeBatchDeleteMutation("tryoutPartAttempts");
 export const deleteTryoutLeaderboardEntriesBatch = makeBatchDeleteMutation(

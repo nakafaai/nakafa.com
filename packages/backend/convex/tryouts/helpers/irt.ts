@@ -44,7 +44,7 @@ export async function getTryoutScoreTarget(
     });
   }
 
-  if (!latestScaleVersion || latestScaleVersion.status !== "official") {
+  if (latestScaleVersion?.status !== "official") {
     return {
       scaleVersionId: currentScaleVersion._id,
       scoreStatus: currentScaleVersion.status,

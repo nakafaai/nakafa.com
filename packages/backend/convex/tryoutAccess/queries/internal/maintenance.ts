@@ -1,4 +1,11 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
+import {
+  tryoutAccessCampaignKindCompetition,
+  tryoutAccessCampaignRedeemStatusActive,
+  tryoutAccessCampaignRedeemStatusScheduled,
+  tryoutAccessCampaignResultsStatusPending,
+  tryoutAccessGrantStatusActive,
+} from "@repo/backend/convex/tryoutAccess/schema";
 import { tryoutProductValidator } from "@repo/backend/convex/tryouts/products";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
@@ -57,20 +64,23 @@ export const getTryoutAccessCampaignIntegrity = internalQuery({
 
     for (const campaign of campaigns.page) {
       if (
-        campaign.redeemStatus === "scheduled" &&
+        campaign.redeemStatus === tryoutAccessCampaignRedeemStatusScheduled &&
         campaign.startsAt <= args.nowMs
       ) {
         overdueScheduledCampaignCount += 1;
       }
 
-      if (campaign.redeemStatus === "active" && campaign.endsAt <= args.nowMs) {
+      if (
+        campaign.redeemStatus === tryoutAccessCampaignRedeemStatusActive &&
+        campaign.endsAt <= args.nowMs
+      ) {
         overdueActiveCampaignCount += 1;
       }
 
       if (
-        campaign.campaignKind === "competition" &&
+        campaign.campaignKind === tryoutAccessCampaignKindCompetition &&
         campaign.endsAt <= args.nowMs &&
-        campaign.resultsStatus === "pending"
+        campaign.resultsStatus === tryoutAccessCampaignResultsStatusPending
       ) {
         overduePendingCompetitionCount += 1;
       }
@@ -105,7 +115,10 @@ export const getTryoutAccessGrantIntegrity = internalQuery({
     let overdueActiveGrantCount = 0;
 
     for (const grant of grants.page) {
-      if (grant.status === "active" && grant.endsAt <= args.nowMs) {
+      if (
+        grant.status === tryoutAccessGrantStatusActive &&
+        grant.endsAt <= args.nowMs
+      ) {
         overdueActiveGrantCount += 1;
       }
     }
@@ -165,7 +178,9 @@ export const listCompetitionCampaignProductsByProduct = internalQuery({
     const rows = await ctx.db
       .query("tryoutAccessCampaignProducts")
       .withIndex("by_product_and_campaignKind_and_startsAt", (q) =>
-        q.eq("product", args.product).eq("campaignKind", "competition")
+        q
+          .eq("product", args.product)
+          .eq("campaignKind", tryoutAccessCampaignKindCompetition)
       )
       .paginate(args.paginationOpts);
 

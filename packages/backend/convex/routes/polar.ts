@@ -4,7 +4,7 @@ import {
 } from "@polar-sh/sdk/webhooks";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import { convertToDatabaseCustomer } from "@repo/backend/convex/customers/utils";
+import { convertToDatabaseCustomer } from "@repo/backend/convex/customers/records";
 import {
   HTTP_ACCEPTED,
   HTTP_BAD_REQUEST,

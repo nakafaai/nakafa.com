@@ -74,8 +74,7 @@ export async function buildCalibrationAttemptInsert(
   const attempt = await ctx.db.get("exerciseAttempts", attemptId);
 
   if (
-    !attempt ||
-    attempt.scope !== "set" ||
+    attempt?.scope !== "set" ||
     attempt.mode !== "simulation" ||
     attempt.status !== "completed"
   ) {

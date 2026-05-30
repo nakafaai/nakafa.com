@@ -133,8 +133,7 @@ export async function evaluateTryoutScaleQuality(
       const params = itemParamsByQuestionId.get(question._id);
 
       if (
-        !params ||
-        params.calibrationStatus !== "calibrated" ||
+        params?.calibrationStatus !== "calibrated" ||
         params.calibrationRunId === undefined ||
         params.responseCount < IRT_MIN_RESPONSES_FOR_CALIBRATED
       ) {

@@ -1,4 +1,8 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import {
+  MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
+  MIN_VIEW_THRESHOLD,
+} from "@repo/backend/convex/audioStudies/constants";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
@@ -91,6 +95,28 @@ describe("contents/queries/audio", () => {
         syncedAt: 1,
       });
 
+      await ctx.db.insert("audioContentSources", {
+        contentHash: "source-article-en-hash",
+        contentRef: { type: "article", id: articleId },
+        locale: "en",
+        slug: REAL_DYNASTIC_ARTICLE_SLUG,
+        syncedAt: 2,
+      });
+      await ctx.db.insert("audioContentSources", {
+        contentHash: "source-subject-en-hash",
+        contentRef: { type: "subject", id: englishSubjectId },
+        locale: "en",
+        slug: REAL_VECTOR_SECTION_SLUG,
+        syncedAt: 2,
+      });
+      await ctx.db.insert("audioContentSources", {
+        contentHash: "source-subject-id-hash",
+        contentRef: { type: "subject", id: indonesianSubjectId },
+        locale: "id",
+        slug: REAL_VECTOR_SECTION_SLUG,
+        syncedAt: 2,
+      });
+
       await ctx.db.insert("articlePopularity", {
         contentId: articleId,
         updatedAt: 1,
@@ -117,7 +143,7 @@ describe("contents/queries/audio", () => {
       {
         ref: expect.objectContaining({ type: "article" }),
         sourceContent: {
-          contentHash: "article-en-hash",
+          contentHash: "source-article-en-hash",
           locale: "en",
           ref: expect.objectContaining({ type: "article" }),
           slug: REAL_DYNASTIC_ARTICLE_SLUG,
@@ -127,7 +153,7 @@ describe("contents/queries/audio", () => {
       {
         ref: expect.objectContaining({ type: "subject" }),
         sourceContent: {
-          contentHash: "subject-en-hash",
+          contentHash: "source-subject-en-hash",
           locale: "en",
           ref: expect.objectContaining({ type: "subject" }),
           slug: REAL_VECTOR_SECTION_SLUG,
@@ -204,5 +230,96 @@ describe("contents/queries/audio", () => {
     );
 
     expect(result).toEqual([]);
+  });
+
+  it("ignores popularity rows below the queue threshold before source lookup", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      const articleId = await ctx.db.insert("articleContents", {
+        locale: "en",
+        slug: REAL_DYNASTIC_ARTICLE_SLUG,
+        category: "politics",
+        articleSlug: REAL_DYNASTIC_ARTICLE_ID,
+        title:
+          "Framing Dynastic Politics in Local Elections within Asian Values",
+        description:
+          "Power is passed down under the guise of practicing asian values.",
+        date: REAL_DYNASTIC_ARTICLE_PUBLISHED_AT,
+        body: "Article body",
+        contentHash: "article-en-hash",
+        syncedAt: 1,
+      });
+
+      await ctx.db.insert("audioContentSources", {
+        contentHash: "source-article-en-hash",
+        contentRef: { type: "article", id: articleId },
+        locale: "en",
+        slug: REAL_DYNASTIC_ARTICLE_SLUG,
+        syncedAt: 2,
+      });
+      await ctx.db.insert("articlePopularity", {
+        contentId: articleId,
+        updatedAt: 1,
+        viewCount: MIN_VIEW_THRESHOLD - 1,
+      });
+    });
+
+    const result = await t.query(
+      internal.contents.queries.audio.getPopularContentForAudioQueue,
+      {}
+    );
+
+    expect(result).toEqual([]);
+  });
+
+  it("bounds source lookups to the audio queue candidate window", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await t.mutation(async (ctx) => {
+      for (
+        let index = 0;
+        index < MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE + 5;
+        index++
+      ) {
+        const slug = `articles/politics/audio-candidate-${index}`;
+        const articleId = await ctx.db.insert("articleContents", {
+          locale: "en",
+          slug,
+          category: "politics",
+          articleSlug: `audio-candidate-${index}`,
+          title: `Audio Candidate ${index}`,
+          description: "Article description",
+          date: REAL_DYNASTIC_ARTICLE_PUBLISHED_AT + index,
+          body: "Article body",
+          contentHash: `article-${index}-hash`,
+          syncedAt: 1,
+        });
+
+        await ctx.db.insert("audioContentSources", {
+          contentHash: `source-article-${index}-hash`,
+          contentRef: { type: "article", id: articleId },
+          locale: "en",
+          slug,
+          syncedAt: 2,
+        });
+        await ctx.db.insert("articlePopularity", {
+          contentId: articleId,
+          updatedAt: 1,
+          viewCount: 1000 - index,
+        });
+      }
+    });
+
+    const result = await t.query(
+      internal.contents.queries.audio.getPopularContentForAudioQueue,
+      {}
+    );
+
+    expect(result).toHaveLength(MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE);
+    expect(result.at(0)?.viewCount).toBe(1000);
+    expect(result.at(-1)?.viewCount).toBe(
+      1000 - (MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE - 1)
+    );
   });
 });

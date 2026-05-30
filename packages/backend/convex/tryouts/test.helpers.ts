@@ -1,5 +1,5 @@
-import { register as registerAggregate } from "@convex-dev/aggregate/test";
-import { register as registerWorkpool } from "@convex-dev/workpool/test";
+import aggregateTest from "@convex-dev/aggregate/test";
+import workpoolTest from "@convex-dev/workpool/test";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -41,11 +41,11 @@ async function getNextTryoutAttemptNumber(
 export function createTryoutTestConvex() {
   const t = createConvexTestWithBetterAuth();
 
-  registerAggregate(t, "globalLeaderboard");
-  registerAggregate(t, "tryoutLeaderboard");
-  registerWorkpool(t, "irtCalibrationSyncWorkpool");
-  registerWorkpool(t, "irtScalePublicationQueueWorkpool");
-  registerWorkpool(t, "tryoutLeaderboardWorkpool");
+  aggregateTest.register(t, "globalLeaderboard");
+  aggregateTest.register(t, "tryoutLeaderboard");
+  workpoolTest.register(t, "irtCalibrationSyncWorkpool");
+  workpoolTest.register(t, "irtScalePublicationQueueWorkpool");
+  workpoolTest.register(t, "tryoutLeaderboardWorkpool");
 
   return t;
 }

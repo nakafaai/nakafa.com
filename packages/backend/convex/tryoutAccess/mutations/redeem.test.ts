@@ -1,10 +1,77 @@
 import { api, internal } from "@repo/backend/convex/_generated/api";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { seedAuthenticatedUser } from "@repo/backend/convex/test.helpers";
+import { insertTryoutAccessCampaign } from "@repo/backend/convex/tryoutAccess/test.helpers";
 import {
   createTryoutTestConvex,
   NOW,
 } from "@repo/backend/convex/tryouts/test.helpers";
 import { describe, expect, it } from "vitest";
+
+const dayMs = 24 * 60 * 60 * 1000;
+const minuteMs = 60 * 1000;
+
+interface SeedAccessEventOptions {
+  campaignEnabled?: boolean;
+  campaignKind?: Doc<"tryoutAccessCampaigns">["campaignKind"];
+  endsAt?: number;
+  firstRedeemedAt?: number | null;
+  grantDurationDays?: number;
+  linkEnabled?: boolean;
+  redeemStatus?: Doc<"tryoutAccessCampaigns">["redeemStatus"];
+  startsAt?: number;
+  suffix: string;
+  targetProducts?: Doc<"tryoutAccessCampaignProducts">["product"][];
+}
+
+/** Seeds one authenticated user and one event access campaign/link pair. */
+async function seedAccessEvent(
+  ctx: MutationCtx,
+  {
+    campaignEnabled = true,
+    campaignKind = "competition",
+    endsAt = NOW + dayMs,
+    firstRedeemedAt = null,
+    grantDurationDays,
+    linkEnabled = true,
+    redeemStatus = "active",
+    startsAt = NOW - minuteMs,
+    suffix,
+    targetProducts = ["snbt"],
+  }: SeedAccessEventOptions
+) {
+  const identity = await seedAuthenticatedUser(ctx, {
+    now: NOW,
+    suffix,
+  });
+  const campaignId = await insertTryoutAccessCampaign(ctx, {
+    campaignKind,
+    enabled: campaignEnabled,
+    endsAt,
+    firstRedeemedAt,
+    grantDurationDays,
+    name: `Redeem ${suffix}`,
+    redeemStatus,
+    resultsFinalizedAt: null,
+    resultsStatus: "pending",
+    slug: suffix,
+    startsAt,
+    targetProducts,
+  });
+  const linkId = await ctx.db.insert("tryoutAccessLinks", {
+    campaignId,
+    code: suffix,
+    label: `Redeem ${suffix}`,
+    enabled: linkEnabled,
+  });
+
+  return {
+    ...identity,
+    campaignId,
+    linkId,
+  };
+}
 
 describe("tryoutAccess/mutations/redeem", () => {
   it("redeems competition access until the campaign end", async () => {
@@ -50,7 +117,10 @@ describe("tryoutAccess/mutations/redeem", () => {
         code: "redeem-competition",
       });
 
-    expect(result.kind).toBe("active");
+    if (result.kind !== "active") {
+      throw new Error(`Expected active redemption, got ${result.kind}.`);
+    }
+
     expect(result.endsAt).toBe(identity.expectedEndsAt);
   });
 
@@ -100,7 +170,10 @@ describe("tryoutAccess/mutations/redeem", () => {
       });
     const redeemFinishedAt = Date.now();
 
-    expect(result.kind).toBe("active");
+    if (result.kind !== "active") {
+      throw new Error(`Expected active redemption, got ${result.kind}.`);
+    }
+
     expect(result.endsAt).toBeGreaterThanOrEqual(
       redeemStartedAt + grantDurationMs
     );
@@ -159,6 +232,208 @@ describe("tryoutAccess/mutations/redeem", () => {
       });
 
     expect(result.kind).toBe("already-active");
+  });
+
+  it("fails when a redeemable campaign has no products", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation(async (ctx) => {
+      const state = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "redeem-empty-products",
+      });
+      const campaignId = await ctx.db.insert("tryoutAccessCampaigns", {
+        slug: "redeem-empty-products",
+        name: "Redeem Empty Products",
+        campaignKind: "competition",
+        enabled: true,
+        redeemStatus: "active",
+        resultsStatus: "pending",
+        resultsFinalizedAt: null,
+        firstRedeemedAt: null,
+        startsAt: NOW - 60 * 1000,
+        endsAt: NOW + 24 * 60 * 60 * 1000,
+      });
+
+      await ctx.db.insert("tryoutAccessLinks", {
+        campaignId,
+        code: "redeem-empty-products",
+        label: "Redeem Empty Products",
+        enabled: true,
+      });
+
+      return state;
+    });
+
+    await expect(
+      t
+        .withIdentity({
+          subject: identity.authUserId,
+          sessionId: identity.sessionId,
+        })
+        .mutation(api.tryoutAccess.mutations.redeem.redeemEventAccess, {
+          code: "redeem-empty-products",
+        })
+    ).rejects.toThrow("EVENT_PRODUCTS_REQUIRED");
+  });
+
+  it("returns not-found when the code does not exist", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation(async (ctx) =>
+      seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "redeem-not-found",
+      })
+    );
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .mutation(api.tryoutAccess.mutations.redeem.redeemEventAccess, {
+        code: "missing-redeem-code",
+      });
+
+    expect(result).toEqual({ kind: "not-found" });
+  });
+
+  it("returns disabled when the link is disabled", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation((ctx) =>
+      seedAccessEvent(ctx, {
+        linkEnabled: false,
+        suffix: "redeem-disabled-link",
+      })
+    );
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .mutation(api.tryoutAccess.mutations.redeem.redeemEventAccess, {
+        code: "redeem-disabled-link",
+      });
+
+    expect(result).toEqual({
+      kind: "disabled",
+      name: "Redeem redeem-disabled-link",
+    });
+  });
+
+  it("returns not-started before the real campaign window opens", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation((ctx) =>
+      seedAccessEvent(ctx, {
+        endsAt: NOW + 2 * dayMs,
+        redeemStatus: "scheduled",
+        startsAt: NOW + dayMs,
+        suffix: "redeem-not-started",
+      })
+    );
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .mutation(api.tryoutAccess.mutations.redeem.redeemEventAccess, {
+        code: "redeem-not-started",
+      });
+
+    expect(result).toEqual({
+      kind: "not-started",
+      name: "Redeem redeem-not-started",
+    });
+  });
+
+  it("returns used when the current user already has an expired grant", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation(async (ctx) => {
+      const state = await seedAccessEvent(ctx, {
+        suffix: "redeem-used-expired",
+      });
+      const endsAt = NOW - minuteMs;
+
+      await ctx.db.insert("tryoutAccessGrants", {
+        campaignId: state.campaignId,
+        endsAt,
+        linkId: state.linkId,
+        redeemedAt: NOW - 2 * minuteMs,
+        status: "expired",
+        userId: state.userId,
+      });
+
+      return {
+        ...state,
+        endsAt,
+      };
+    });
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .mutation(api.tryoutAccess.mutations.redeem.redeemEventAccess, {
+        code: "redeem-used-expired",
+      });
+
+    expect(result).toEqual({
+      kind: "used",
+      endsAt: identity.endsAt,
+      name: "Redeem redeem-used-expired",
+    });
+  });
+
+  it("fails when an access-pass campaign has no grant duration", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation((ctx) =>
+      seedAccessEvent(ctx, {
+        campaignKind: "access-pass",
+        suffix: "redeem-access-pass-no-duration",
+      })
+    );
+
+    await expect(
+      t
+        .withIdentity({
+          subject: identity.authUserId,
+          sessionId: identity.sessionId,
+        })
+        .mutation(api.tryoutAccess.mutations.redeem.redeemEventAccess, {
+          code: "redeem-access-pass-no-duration",
+        })
+    ).rejects.toThrow("INVALID_CAMPAIGN_WINDOW");
+  });
+
+  it("redeems without rewriting the campaign first redemption marker", async () => {
+    const t = createTryoutTestConvex();
+    const identity = await t.mutation((ctx) =>
+      seedAccessEvent(ctx, {
+        firstRedeemedAt: NOW - dayMs,
+        suffix: "redeem-first-marker-set",
+      })
+    );
+
+    const result = await t
+      .withIdentity({
+        subject: identity.authUserId,
+        sessionId: identity.sessionId,
+      })
+      .mutation(api.tryoutAccess.mutations.redeem.redeemEventAccess, {
+        code: "redeem-first-marker-set",
+      });
+
+    if (result.kind !== "active") {
+      throw new Error(`Expected active redemption, got ${result.kind}.`);
+    }
+
+    const campaign = await t.run(async (ctx) =>
+      ctx.db.get(identity.campaignId)
+    );
+
+    expect(campaign?.firstRedeemedAt).toBe(NOW - dayMs);
   });
 
   it("redeems once the real campaign window has started even if stored redeemStatus is still scheduled", async () => {

@@ -1,12 +1,13 @@
 import { DEFAULT_TITLE, MAX_TITLE_LENGTH } from "@repo/ai/features/constants";
 import { generateTitle } from "@repo/ai/features/title";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { generateText } from "ai";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@repo/ai/config/vercel", () => ({
-  model: {
+const generateText = vi.hoisted(() => vi.fn());
+
+vi.mock("@repo/ai/config/app", () => ({
+  provider: {
     languageModel: (modelId: string) => modelId,
   },
 }));
@@ -16,21 +17,19 @@ vi.mock("ai", async (importOriginal) => {
 
   return {
     ...actual,
-    generateText: vi.fn(),
+    generateText,
   };
 });
 
-const mockedGenerateText = vi.mocked(generateText);
-
 afterEach(() => {
-  mockedGenerateText.mockReset();
+  generateText.mockReset();
 });
 
 describe("generateTitle", () => {
   it("summarizes the first user message without assistant internals", async () => {
-    mockedGenerateText.mockResolvedValue({
+    generateText.mockResolvedValue({
       text: "Latihan Matriks Eigen",
-    } as Awaited<ReturnType<typeof generateText>>);
+    });
 
     await Effect.runPromise(
       generateTitle({
@@ -61,12 +60,12 @@ describe("generateTitle", () => {
       })
     );
 
-    expect(mockedGenerateText).toHaveBeenCalledWith(
+    expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({
         prompt: "Cek apakah matriks ini bisa didiagonalkan.",
       })
     );
-    expect(mockedGenerateText).not.toHaveBeenCalledWith(
+    expect(generateText).not.toHaveBeenCalledWith(
       expect.objectContaining({
         prompt: expect.stringContaining("Internal reasoning"),
       })
@@ -74,9 +73,9 @@ describe("generateTitle", () => {
   });
 
   it("removes surrounding title quotes", async () => {
-    mockedGenerateText.mockResolvedValue({
+    generateText.mockResolvedValue({
       text: '"Belajar Fungsi Kuadrat"',
-    } as Awaited<ReturnType<typeof generateText>>);
+    });
 
     const title = await Effect.runPromise(
       generateTitle({
@@ -100,9 +99,9 @@ describe("generateTitle", () => {
   });
 
   it("truncates long generated titles", async () => {
-    mockedGenerateText.mockResolvedValue({
+    generateText.mockResolvedValue({
       text: "Analisis Persamaan Diferensial Linear Orde Dua Homogen dengan Koefisien Variabel dan Kondisi Awal",
-    } as Awaited<ReturnType<typeof generateText>>);
+    });
 
     const title = await Effect.runPromise(
       generateTitle({
@@ -127,7 +126,7 @@ describe("generateTitle", () => {
   });
 
   it("falls back when generation fails", async () => {
-    mockedGenerateText.mockRejectedValue(new Error("model unavailable"));
+    generateText.mockRejectedValue(new Error("model unavailable"));
 
     const title = await Effect.runPromise(
       generateTitle({
@@ -151,9 +150,9 @@ describe("generateTitle", () => {
   });
 
   it("uses an empty title prompt when no user text exists", async () => {
-    mockedGenerateText.mockResolvedValue({
+    generateText.mockResolvedValue({
       text: "Obrolan Baru",
-    } as Awaited<ReturnType<typeof generateText>>);
+    });
 
     await Effect.runPromise(
       generateTitle({
@@ -173,7 +172,7 @@ describe("generateTitle", () => {
       })
     );
 
-    expect(mockedGenerateText).toHaveBeenCalledWith(
+    expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({
         prompt: "",
       })
@@ -181,9 +180,9 @@ describe("generateTitle", () => {
   });
 
   it("ignores non-text user parts when building the title prompt", async () => {
-    mockedGenerateText.mockResolvedValue({
+    generateText.mockResolvedValue({
       text: "Latihan Kombinatorika",
-    } as Awaited<ReturnType<typeof generateText>>);
+    });
 
     await Effect.runPromise(
       generateTitle({
@@ -208,7 +207,7 @@ describe("generateTitle", () => {
       })
     );
 
-    expect(mockedGenerateText).toHaveBeenCalledWith(
+    expect(generateText).toHaveBeenCalledWith(
       expect.objectContaining({
         prompt: "Bantu cek kombinatorika ini.",
       })

@@ -113,6 +113,9 @@ export const ContentCountsSchema = Schema.Struct({
   contentAuthors: Schema.Number,
   articleReferences: Schema.Number,
   exerciseChoices: Schema.Number,
+  audioContentSources: Schema.Number,
+  contentAudios: Schema.Number,
+  audioGenerationQueue: Schema.Number,
 });
 
 export const DataIntegritySchema = Schema.Struct({

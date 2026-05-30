@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
-import { isModelId, type ModelId } from "@repo/ai/config/models";
+import { isModelId, type ModelId } from "@repo/ai/config/model";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
