@@ -12,7 +12,6 @@ import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
-  ChartTooltip,
 } from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
 import {
@@ -21,7 +20,6 @@ import {
   Line,
   ReferenceLine,
   Scatter,
-  type TooltipContentProps,
   XAxis,
   YAxis,
 } from "recharts";
@@ -134,14 +132,6 @@ export function ScatterDiagram({
               tickMargin={8}
               type="number"
             />
-            <ChartTooltip
-              content={
-                <ScatterTooltipContent
-                  xAxisLabel={xAxisLabel || "X"}
-                  yAxisLabel={yAxisLabel || "Y"}
-                />
-              }
-            />
             {datasets.map((dataset) => (
               <Scatter
                 data={dataset.points}
@@ -191,63 +181,7 @@ export function ScatterDiagram({
   );
 }
 
-/** Renders one scatter point as a coordinate pair instead of generic series rows. */
-function ScatterTooltipContent({
-  active,
-  payload,
-  xAxisLabel,
-  yAxisLabel,
-}: Partial<TooltipContentProps> & {
-  xAxisLabel: string;
-  yAxisLabel: string;
-}) {
-  if (!(active && payload?.length)) {
-    return null;
-  }
-
-  const point = payload[0]?.payload;
-  const x = getNumberProperty(point, "x");
-  const y = getNumberProperty(point, "y");
-
-  if (x === undefined || y === undefined) {
-    return null;
-  }
-
-  return (
-    <div className="grid min-w-40 gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
-      <TooltipRow label={xAxisLabel} value={x} />
-      <TooltipRow label={yAxisLabel} value={y} />
-    </div>
-  );
-}
-
-/** Renders one value row inside the scatter tooltip. */
-function TooltipRow({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="grid grid-cols-[1fr_auto] items-center gap-4">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium font-mono text-foreground tabular-nums">
-        {value.toLocaleString()}
-      </span>
-    </div>
-  );
-}
-
-/** Safely reads numeric coordinates from a Recharts tooltip payload. */
-function getNumberProperty(value: unknown, key: string) {
-  if (typeof value !== "object" || value === null) {
-    return;
-  }
-
-  const property = Reflect.get(value, key);
-
-  if (typeof property !== "number") {
-    return;
-  }
-
-  return property;
-}
-
+/** Calculates the least-squares line for one set of scatter points. */
 function calculateLeastSquares(
   points: Point[]
 ): { m: number; b: number } | null {
