@@ -12,6 +12,8 @@ import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
 } from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
 import {
@@ -131,6 +133,11 @@ export function ScatterDiagram({
               }}
               tickMargin={8}
               type="number"
+            />
+            <ChartTooltip
+              content={<ChartTooltipContent hideLabel={true} />}
+              shared={false}
+              wrapperStyle={{ visibility: "hidden" }}
             />
             {datasets.map((dataset) => (
               <Scatter

@@ -27,6 +27,7 @@ const CHART_THEMES = [
 ] as const;
 
 const CHART_INITIAL_DIMENSION = { width: 320, height: 200 };
+const CHART_COLOR_VARIABLE_CHARACTER = /^[a-zA-Z0-9_-]$/;
 
 type ChartTheme = (typeof CHART_THEMES)[number]["name"];
 type ThemeColors = Partial<Record<ChartTheme, readonly string[]>>;
@@ -34,6 +35,10 @@ type ChartColors = {
   [Theme in ChartTheme]: Required<Pick<ThemeColors, Theme>> &
     Partial<Omit<ThemeColors, Theme>>;
 }[ChartTheme];
+type LegendPayloadEntry = NonNullable<
+  DefaultLegendContentProps["payload"]
+>[number];
+type PayloadEntry = LegendPayloadEntry | TooltipPayloadEntry;
 
 export type ChartConfig = Record<
   string,
@@ -45,6 +50,31 @@ export type ChartConfig = Record<
 >;
 
 const ChartContext = createContext<{ config: ChartConfig } | null>(null);
+
+/** Returns the scoped EvilCharts color variable for one config color slot. */
+function getColorVariable(key: string, index: number) {
+  return `var(${getColorVariableName(key, index)})`;
+}
+
+/** Builds safe CSS custom property names from arbitrary chart config keys. */
+function getColorVariableName(key: string, index: number) {
+  const safeKey = Array.from(key, getColorVariableSegment).join("");
+  return `--color-${safeKey}-${index}`;
+}
+
+/** Keeps readable keys readable while escaping spaces and punctuation. */
+function getColorVariableSegment(character: string) {
+  if (CHART_COLOR_VARIABLE_CHARACTER.test(character)) {
+    return character;
+  }
+
+  const codePoint = character.codePointAt(0);
+  if (codePoint === undefined) {
+    return "_";
+  }
+
+  return `_${codePoint.toString(16)}_`;
+}
 
 /** Reads the nearest chart config from the EvilCharts container. */
 function useChart() {
@@ -120,7 +150,7 @@ function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
       }
 
       return distributeColors(colors, getColorsCount(itemConfig)).map(
-        (color, index) => `  --color-${key}-${index}: ${color};`
+        (color, index) => `  ${getColorVariableName(key, index)}: ${color};`
       );
     });
 
@@ -225,11 +255,12 @@ function ChartTooltipContent({
       <div className="grid gap-1.5">
         {payload.map((item, index) => {
           const key = `${nameKey || item.name || item.dataKey || "value"}`;
-          const itemConfig = getPayloadConfigFromPayload(config, item, key);
+          const configKey = getPayloadConfigKey(config, item, key);
+          const itemConfig = configKey ? config[configKey] : undefined;
           const tooltipKey = `${key}-${item.graphicalItemId}`;
           const indicatorStyle = color
             ? { background: color, borderColor: color }
-            : getTooltipIndicatorStyle(item, key, itemConfig);
+            : getTooltipIndicatorStyle(item, configKey || key, itemConfig);
 
           return (
             <div
@@ -319,8 +350,13 @@ function ChartLegendContent({
     >
       {payload.map((item) => {
         const key = `${nameKey || item.value || item.dataKey || "value"}`;
-        const itemConfig = getPayloadConfigFromPayload(config, item, key);
-        const colorsCount = itemConfig ? getColorsCount(itemConfig) : 1;
+        const configKey = getPayloadConfigKey(config, item, key);
+        const itemConfig = configKey ? config[configKey] : undefined;
+        const indicatorStyle = getLegendIndicatorStyle(
+          item,
+          configKey || key,
+          itemConfig
+        );
 
         return (
           <div
@@ -334,10 +370,10 @@ function ChartLegendContent({
             ) : (
               <div
                 className="h-2 w-2 shrink-0 rounded-[2px]"
-                style={getIndicatorStyle(key, colorsCount)}
+                style={indicatorStyle}
               />
             )}
-            {itemConfig?.label}
+            {itemConfig?.label || item.value}
           </div>
         );
       })}
@@ -348,26 +384,47 @@ function ChartLegendContent({
 /** Finds the chart config entry that matches a Recharts payload item. */
 function getPayloadConfigFromPayload(
   config: ChartConfig,
-  payload:
-    | TooltipPayloadEntry
-    | NonNullable<DefaultLegendContentProps["payload"]>[number],
+  payload: PayloadEntry,
+  key: string
+) {
+  const configKey = getPayloadConfigKey(config, payload, key);
+  return configKey ? config[configKey] : undefined;
+}
+
+/** Returns the config key that matches Recharts' data key before display names. */
+function getPayloadConfigKey(
+  config: ChartConfig,
+  payload: PayloadEntry,
   key: string
 ) {
   const payloadPayload = getObject(Reflect.get(payload, "payload"));
+  const dataKey = getString(Reflect.get(payload, "dataKey"));
+  const name = getString(Reflect.get(payload, "name"));
 
-  let configLabelKey: string = key;
-  const payloadValue = Reflect.get(payload, key);
-  const nestedPayloadValue = payloadPayload
-    ? Reflect.get(payloadPayload, key)
-    : undefined;
-
-  if (typeof payloadValue === "string") {
-    configLabelKey = payloadValue;
-  } else if (typeof nestedPayloadValue === "string") {
-    configLabelKey = nestedPayloadValue;
+  if (dataKey && dataKey in config) {
+    return dataKey;
   }
 
-  return configLabelKey in config ? config[configLabelKey] : config[key];
+  if (name && name in config) {
+    return name;
+  }
+
+  const payloadValue = getString(Reflect.get(payload, key));
+  const nestedPayloadValue = payloadPayload
+    ? getString(Reflect.get(payloadPayload, key))
+    : undefined;
+
+  if (payloadValue && payloadValue in config) {
+    return payloadValue;
+  }
+
+  if (nestedPayloadValue && nestedPayloadValue in config) {
+    return nestedPayloadValue;
+  }
+
+  if (key in config) {
+    return key;
+  }
 }
 
 /** Returns object-shaped unknown values for Recharts payload boundaries. */
@@ -380,7 +437,7 @@ function getObject(value: unknown) {
 }
 
 /** Reads Recharts row-level color payloads for data-driven bar colors. */
-function getPayloadColor(payload: TooltipPayloadEntry) {
+function getPayloadColor(payload: PayloadEntry) {
   const nestedPayload = getObject(Reflect.get(payload, "payload"));
   const nestedFill = nestedPayload
     ? getString(Reflect.get(nestedPayload, "fill"))
@@ -463,20 +520,40 @@ function distributeColors(colors: readonly string[], maxCount: number) {
 /** Builds a solid or gradient indicator style from EvilCharts color slots. */
 function getIndicatorStyle(dataKey: string, colorsCount: number) {
   if (colorsCount <= 1) {
+    const color = getColorVariable(dataKey, 0);
+
     return {
-      background: `var(--color-${dataKey}-0)`,
-      borderColor: `var(--color-${dataKey}-0)`,
+      background: color,
+      borderColor: color,
     };
   }
 
   const stops = Array.from({ length: colorsCount }, (_, index) => {
     const offset = (index / (colorsCount - 1)) * 100;
-    return `var(--color-${dataKey}-${index}) ${offset}%`;
+    return `${getColorVariable(dataKey, index)} ${offset}%`;
   }).join(", ");
 
   return {
     background: `linear-gradient(to right, ${stops})`,
-    borderColor: `var(--color-${dataKey}-0)`,
+    borderColor: getColorVariable(dataKey, 0),
+  };
+}
+
+/** Uses config color slots when available, otherwise Recharts legend color. */
+function getLegendIndicatorStyle(
+  payload: LegendPayloadEntry,
+  dataKey: string,
+  config: ChartConfig[string] | undefined
+) {
+  if (config?.colors) {
+    return getIndicatorStyle(dataKey, getColorsCount(config));
+  }
+
+  const color = getPayloadColor(payload);
+
+  return {
+    background: color,
+    borderColor: color,
   };
 }
 
@@ -506,5 +583,6 @@ export {
   ChartTooltip,
   ChartTooltipContent,
   getColorsCount,
+  getColorVariable,
   useChart,
 };

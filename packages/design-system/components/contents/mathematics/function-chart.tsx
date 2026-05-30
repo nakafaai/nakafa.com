@@ -14,6 +14,7 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  getColorVariable,
 } from "@repo/design-system/components/ui/chart";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
@@ -115,7 +116,7 @@ export function FunctionChart({ p, a, title, description, n = 11 }: Props) {
               dataKey="y"
               dot
               name="y"
-              stroke="var(--color-y-0)"
+              stroke={getColorVariable("y", 0)}
               strokeWidth={2}
               type="monotone"
             />

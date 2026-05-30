@@ -13,6 +13,7 @@ import {
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
+  getColorVariable,
 } from "@repo/design-system/components/ui/chart";
 import { Fragment, type ReactNode, useMemo } from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
@@ -200,7 +201,7 @@ export function VectorChart({
             <defs>
               {/* Vector arrows for both directions */}
               {processedVectors.map((vector) => {
-                const color = `var(--color-${vector.id}-0)`;
+                const color = getColorVariable(vector.id, 0);
                 return (
                   <Fragment key={`arrows-${vector.id}`}>
                     {/* Forward arrow marker (end of line) */}
@@ -301,7 +302,7 @@ export function VectorChart({
             />
 
             {processedVectors.map((vector) => {
-              const color = `var(--color-${vector.id}-0)`;
+              const color = getColorVariable(vector.id, 0);
 
               // Set marker properties based on direction
               const markerProps: Record<string, string> = {};
