@@ -1,7 +1,6 @@
 import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import { internalAction } from "@repo/backend/convex/_generated/server";
 import { authComponent } from "@repo/backend/convex/auth/client";
 import authConfig from "@repo/backend/convex/auth.config";
 import { siteUrl } from "@repo/backend/convex/utils/site";
@@ -60,16 +59,3 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
 /** Creates one Better Auth instance for a Convex HTTP/action context. */
 export const createAuth = (ctx: GenericCtx<DataModel>) =>
   betterAuth(createAuthOptions(ctx));
-
-/**
- * Returns the latest static JWKS managed by the Better Auth Convex plugin.
- *
- * @see https://labs.convex.dev/better-auth/experimental#static-jwks
- */
-export const getLatestJwks = internalAction({
-  args: {},
-  handler: (ctx) => {
-    const auth = createAuth(ctx);
-    return auth.api.getLatestJwks();
-  },
-});
