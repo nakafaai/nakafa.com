@@ -4,7 +4,6 @@ import {
   speechGenerationDataValidator,
 } from "@repo/backend/convex/audioStudies/generation/spec";
 import { getAudioContentSourceByRef } from "@repo/backend/convex/audioStudies/helpers/sources";
-import { fetchContentForAudio } from "@repo/backend/convex/audioStudies/utils";
 import { audioContentRefValidator } from "@repo/backend/convex/lib/validators/audio";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
@@ -26,21 +25,46 @@ export const getAudioAndContentForScriptGeneration = internalQuery({
       return null;
     }
 
-    const content = await fetchContentForAudio(ctx, audio.contentRef);
+    const contentAudio = {
+      contentRef: audio.contentRef,
+      contentHash: audio.contentHash,
+      voiceId: audio.voiceId,
+      voiceSettings: audio.voiceSettings,
+      status: audio.status,
+    };
 
-    if (!content) {
+    if (audio.contentRef.type === "article") {
+      const article = await ctx.db.get("articleContents", audio.contentRef.id);
+
+      if (!article) {
+        return null;
+      }
+
+      return {
+        contentAudio,
+        content: {
+          title: article.title,
+          description: article.description,
+          body: article.body,
+          locale: article.locale,
+        },
+      };
+    }
+
+    const section = await ctx.db.get("subjectSections", audio.contentRef.id);
+
+    if (!section) {
       return null;
     }
 
     return {
-      contentAudio: {
-        contentRef: audio.contentRef,
-        contentHash: audio.contentHash,
-        voiceId: audio.voiceId,
-        voiceSettings: audio.voiceSettings,
-        status: audio.status,
+      contentAudio,
+      content: {
+        title: section.title,
+        description: section.description,
+        body: section.body,
+        locale: section.locale,
       },
-      content,
     };
   },
 });

@@ -1,8 +1,8 @@
+import { updateContentAudioHash } from "@repo/backend/convex/audioStudies/contentAudios/impl";
 import {
   deleteAudioContentSource,
   syncAudioContentSource,
 } from "@repo/backend/convex/audioStudies/helpers/sources";
-import { updateContentHash } from "@repo/backend/convex/audioStudies/utils";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
 import {
@@ -18,6 +18,7 @@ import {
   syncContentSearch,
 } from "@repo/backend/convex/contents/helpers/search/write";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
   articleCategoryValidator,
   localeValidator,
@@ -132,10 +133,11 @@ export const bulkSyncArticles = internalMutation({
           title: article.title,
         });
 
-        await updateContentHash(
-          ctx,
-          { id: existingArticle._id, type: "article" },
-          article.contentHash
+        await runConvexProgram(
+          updateContentAudioHash(ctx, {
+            contentRef: { id: existingArticle._id, type: "article" },
+            newHash: article.contentHash,
+          })
         );
 
         authorLinksCreated += await syncContentAuthorsWithCache(

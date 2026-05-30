@@ -57,10 +57,6 @@ export const createOrGetContentAudioArgsValidator = v.object(
   createOrGetContentAudioArgs
 );
 
-export const updateContentAudioHashResultValidator = v.object({
-  updatedCount: v.number(),
-});
-
 export type ContentAudioRecord = Doc<"contentAudios">;
 export type ContentAudioIdArgs = Infer<typeof contentAudioIdArgsValidator>;
 export type SaveAudioScriptArgs = Infer<typeof saveAudioScriptArgsValidator>;
@@ -75,9 +71,6 @@ export type UpdateContentAudioHashArgs = Infer<
 >;
 export type CreateOrGetContentAudioArgs = Infer<
   typeof createOrGetContentAudioArgsValidator
->;
-export type UpdateContentAudioHashResult = Infer<
-  typeof updateContentAudioHashResultValidator
 >;
 
 /** Raised when a content-audio row cannot be found for a workflow step. */

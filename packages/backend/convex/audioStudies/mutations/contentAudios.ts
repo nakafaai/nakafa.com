@@ -5,7 +5,6 @@ import {
   markContentAudioGenerationFailed,
   saveAudioScript,
   saveGeneratedAudio,
-  updateContentAudioHash,
 } from "@repo/backend/convex/audioStudies/contentAudios/impl";
 import {
   contentAudioIdArgs,
@@ -13,8 +12,6 @@ import {
   markContentAudioFailedArgs,
   saveAudioScriptArgs,
   saveGeneratedAudioArgs,
-  updateContentAudioHashArgs,
-  updateContentAudioHashResultValidator,
 } from "@repo/backend/convex/audioStudies/contentAudios/spec";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -61,14 +58,6 @@ export const markFailed = internalMutation({
   returns: v.null(),
   handler: async (ctx, args) =>
     await runConvexProgram(markContentAudioGenerationFailed(ctx, args)),
-});
-
-/** Update one content hash and clear outdated generated audio data. */
-export const updateContentHash = internalMutation({
-  args: updateContentAudioHashArgs,
-  returns: updateContentAudioHashResultValidator,
-  handler: async (ctx, args) =>
-    await runConvexProgram(updateContentAudioHash(ctx, args)),
 });
 
 /** Create or reuse the locale-specific audio record behind one queue item. */
