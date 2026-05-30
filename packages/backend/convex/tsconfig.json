@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["ES2023", "dom"],
+    "target": "ESNext"
+  },
+  "include": ["./**/*"],
+  "exclude": ["**/*.spec.ts", "**/*.test.ts", "**/_generated"]
+}
