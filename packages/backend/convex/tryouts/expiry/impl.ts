@@ -71,10 +71,4 @@ export const scheduleExpiredTryoutAttempts = Effect.fn(
       catch: toTryoutExpirySweepIoError,
     });
   }
-
-  if (overdueAttempts.length < tryoutExpirySweepBatchSize) {
-    return false;
-  }
-
-  return true;
 });

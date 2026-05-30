@@ -47,22 +47,12 @@ export const sweepExpiredTryoutAttempts = internalMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx): Promise<null> => {
-    const shouldContinue = await runConvexProgram(
+    await runConvexProgram(
       scheduleExpiredTryoutAttempts(ctx, {
         expireTryoutAttempt:
           internal.tryouts.mutations.internal.expiry
             .expireTryoutAttemptInternal,
       })
-    );
-
-    if (!shouldContinue) {
-      return null;
-    }
-
-    await ctx.scheduler.runAfter(
-      0,
-      internal.tryouts.mutations.internal.expiry.sweepExpiredTryoutAttempts,
-      {}
     );
 
     return null;

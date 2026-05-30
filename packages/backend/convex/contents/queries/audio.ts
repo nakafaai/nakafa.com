@@ -3,7 +3,7 @@ import {
   MAX_AUDIO_QUEUE_POPULAR_ITEMS_PER_TYPE,
   MIN_VIEW_THRESHOLD,
 } from "@repo/backend/convex/audioStudies/constants";
-import { getAudioContentLookup } from "@repo/backend/convex/audioStudies/utils";
+import { getAudioContentSourceByRef } from "@repo/backend/convex/audioStudies/helpers/sources";
 import { mergePopularAudioContentItems } from "@repo/backend/convex/contents/helpers/popularity";
 import {
   type PopularAudioContentItem,
@@ -40,7 +40,7 @@ export const getPopularContentForAudioQueue = internalQuery({
     const sourceItems: PopularAudioContentItem[] = [];
 
     for (const row of articleRows) {
-      const sourceContent = await getAudioContentLookup(ctx, {
+      const sourceContent = await getAudioContentSourceByRef(ctx, {
         type: "article",
         id: row.contentId,
       });
@@ -57,7 +57,7 @@ export const getPopularContentForAudioQueue = internalQuery({
     }
 
     for (const row of subjectRows) {
-      const sourceContent = await getAudioContentLookup(ctx, {
+      const sourceContent = await getAudioContentSourceByRef(ctx, {
         type: "subject",
         id: row.contentId,
       });

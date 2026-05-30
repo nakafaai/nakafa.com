@@ -20,6 +20,14 @@ import { ConvexError, v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
 
 const AUDIO_QUEUE_PER_SLUG_LIMIT = SUPPORTED_CONTENT_LOCALES.length + 1;
+const AUDIO_QUEUE_CLEANUP_BATCH_SIZE = 100;
+const incompleteAudioStatuses = [
+  "pending",
+  "generating-script",
+  "script-generated",
+  "generating-speech",
+  "failed",
+] as const;
 
 /** Mark one queue item completed unless it is already terminal. */
 export async function markQueueCompleted(
@@ -255,13 +263,13 @@ export const cleanup = internalMutation({
       .withIndex("by_status_and_updatedAt", (q) =>
         q.eq("status", "completed").lt("updatedAt", cutoffDate)
       )
-      .take(100);
+      .take(AUDIO_QUEUE_CLEANUP_BATCH_SIZE);
     const failedOldItems = await ctx.db
       .query("audioGenerationQueue")
       .withIndex("by_status_and_updatedAt", (q) =>
         q.eq("status", "failed").lt("updatedAt", cutoffDate)
       )
-      .take(100);
+      .take(AUDIO_QUEUE_CLEANUP_BATCH_SIZE);
 
     let deleted = 0;
 
@@ -273,6 +281,55 @@ export const cleanup = internalMutation({
     for (const item of failedOldItems) {
       await ctx.db.delete("audioGenerationQueue", item._id);
       deleted += 1;
+    }
+
+    if (!isAudioGenerationEnabled()) {
+      const pendingItems = await ctx.db
+        .query("audioGenerationQueue")
+        .withIndex("by_status_and_priorityScore", (q) =>
+          q.eq("status", "pending")
+        )
+        .take(AUDIO_QUEUE_CLEANUP_BATCH_SIZE);
+      const processingItems = await ctx.db
+        .query("audioGenerationQueue")
+        .withIndex("by_status_and_updatedAt", (q) =>
+          q.eq("status", "processing")
+        )
+        .take(AUDIO_QUEUE_CLEANUP_BATCH_SIZE);
+      const failedItems = await ctx.db
+        .query("audioGenerationQueue")
+        .withIndex("by_status_and_updatedAt", (q) => q.eq("status", "failed"))
+        .take(AUDIO_QUEUE_CLEANUP_BATCH_SIZE);
+      for (const item of pendingItems) {
+        await ctx.db.delete("audioGenerationQueue", item._id);
+        deleted += 1;
+      }
+
+      for (const item of processingItems) {
+        await ctx.db.delete("audioGenerationQueue", item._id);
+        deleted += 1;
+      }
+
+      for (const item of failedItems) {
+        await ctx.db.delete("audioGenerationQueue", item._id);
+        deleted += 1;
+      }
+
+      for (const status of incompleteAudioStatuses) {
+        const incompleteAudioRows = await ctx.db
+          .query("contentAudios")
+          .withIndex("by_status_and_updatedAt", (q) => q.eq("status", status))
+          .take(AUDIO_QUEUE_CLEANUP_BATCH_SIZE);
+
+        for (const item of incompleteAudioRows) {
+          if (item.audioStorageId) {
+            continue;
+          }
+
+          await ctx.db.delete("contentAudios", item._id);
+          deleted += 1;
+        }
+      }
     }
 
     if (deleted > 0) {

@@ -130,7 +130,7 @@ describe("tryouts/mutations/internal/expiry", () => {
     ]);
   });
 
-  it("schedules a continuation when the overdue page is full", async () => {
+  it("does not immediately reschedule the same overdue page", async () => {
     const t = createTryoutTestConvex();
 
     await t.mutation(async (ctx) => {
@@ -155,11 +155,12 @@ describe("tryouts/mutations/internal/expiry", () => {
     const expiryJobs = scheduledJobs.filter((job) =>
       job.name.includes("expireTryoutAttemptInternal")
     );
-    const continuationJobs = scheduledJobs.filter((job) =>
-      job.name.includes("sweepExpiredTryoutAttempts")
-    );
 
     expect(expiryJobs).toHaveLength(tryoutExpirySweepBatchSize);
-    expect(continuationJobs).toHaveLength(1);
+    expect(
+      scheduledJobs.some((job) =>
+        job.name.includes("sweepExpiredTryoutAttempts")
+      )
+    ).toBe(false);
   });
 });

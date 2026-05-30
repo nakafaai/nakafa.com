@@ -306,7 +306,7 @@ describe("tryouts/mutations/attempts", () => {
     });
   });
 
-  it("starts new tryout attempts without persisting a legacy irtScore field", async () => {
+  it("starts new tryout attempts without persisting an irtScore field", async () => {
     const t = createTryoutTestConvex();
     const identity = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {

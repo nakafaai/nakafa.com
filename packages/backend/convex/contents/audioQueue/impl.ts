@@ -3,13 +3,14 @@ import type {
   MutationCtx,
 } from "@repo/backend/convex/_generated/server";
 import {
+  isAudioGenerationEnabled,
   MIN_VIEW_THRESHOLD,
   RETRY_CONFIG,
 } from "@repo/backend/convex/audioStudies/constants";
 import {
-  getAudioContentLookup,
-  getLocalizedAudioContentLookup,
-} from "@repo/backend/convex/audioStudies/utils";
+  getAudioContentSourceByLocale,
+  getAudioContentSourceByRef,
+} from "@repo/backend/convex/audioStudies/helpers/sources";
 import {
   AudioQueuePopulationError,
   audioQueuePopulationFailedCode,
@@ -106,7 +107,7 @@ export const enqueuePopularAudioContent: (
     const sourceContent =
       item.sourceContent ??
       (yield* Effect.tryPromise({
-        try: () => getAudioContentLookup(ctx, item.ref),
+        try: () => getAudioContentSourceByRef(ctx, item.ref),
         catch: toAudioQueuePopulationError,
       }));
 
@@ -122,7 +123,7 @@ export const enqueuePopularAudioContent: (
 
     for (const locale of SUPPORTED_CONTENT_LOCALES) {
       const localizedContent = yield* Effect.tryPromise({
-        try: () => getLocalizedAudioContentLookup(ctx, sourceContent, locale),
+        try: () => getAudioContentSourceByLocale(ctx, sourceContent, locale),
         catch: toAudioQueuePopulationError,
       });
 
@@ -249,6 +250,15 @@ export const populateAudioGenerationQueue: (
     ctx: AudioQueueActionCtx,
     targets: AudioQueuePopulationTargets
   ) {
+    if (!isAudioGenerationEnabled()) {
+      yield* Effect.sync(() =>
+        logger.info(
+          "Audio queue population skipped - ENABLE_AUDIO_GENERATION not set"
+        )
+      );
+      return null;
+    }
+
     yield* Effect.sync(() => logger.info("Populating audio queue started"));
 
     const items = yield* Effect.tryPromise({

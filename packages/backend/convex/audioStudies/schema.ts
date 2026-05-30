@@ -70,7 +70,9 @@ const tables = {
       "contentRef.type",
       "contentRef.id",
       "locale",
-    ]),
+    ])
+    /** Bounded maintenance for incomplete audio records. */
+    .index("by_status_and_updatedAt", ["status", "updatedAt"]),
 
   /** Queue for audio generation jobs. */
   audioGenerationQueue: defineTable({

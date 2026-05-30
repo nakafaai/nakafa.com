@@ -3,10 +3,8 @@ import {
   scriptGenerationDataValidator,
   speechGenerationDataValidator,
 } from "@repo/backend/convex/audioStudies/generation/spec";
-import {
-  fetchContentForAudio,
-  getAudioContentLookup,
-} from "@repo/backend/convex/audioStudies/utils";
+import { getAudioContentSourceByRef } from "@repo/backend/convex/audioStudies/helpers/sources";
+import { fetchContentForAudio } from "@repo/backend/convex/audioStudies/utils";
 import { audioContentRefValidator } from "@repo/backend/convex/lib/validators/audio";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
@@ -98,5 +96,6 @@ export const getContentHash = internalQuery({
   },
   returns: nullable(v.string()),
   handler: async (ctx, args) =>
-    (await getAudioContentLookup(ctx, args.contentRef))?.contentHash ?? null,
+    (await getAudioContentSourceByRef(ctx, args.contentRef))?.contentHash ??
+    null,
 });

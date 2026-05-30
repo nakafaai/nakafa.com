@@ -42,6 +42,10 @@ export async function getAudioContentSourceByLocale(
   sourceContent: AudioContentLookup,
   locale: AudioContentLookup["locale"]
 ) {
+  if (sourceContent.locale === locale) {
+    return sourceContent;
+  }
+
   const source = await ctx.db
     .query("audioContentSources")
     .withIndex("by_contentRefType_and_slug_and_locale", (q) =>

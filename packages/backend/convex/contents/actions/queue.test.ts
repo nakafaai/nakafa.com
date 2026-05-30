@@ -20,6 +20,7 @@ describe("contents/actions/queue", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
+    vi.stubEnv("ENABLE_AUDIO_GENERATION", "true");
     vi.spyOn(logger, "debug").mockImplementation(() => undefined);
     vi.spyOn(logger, "info").mockImplementation(() => undefined);
     vi.spyOn(logger, "warn").mockImplementation(() => undefined);
@@ -27,6 +28,7 @@ describe("contents/actions/queue", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
 
@@ -81,6 +83,30 @@ describe("contents/actions/queue", () => {
     );
   });
 
+  it("skips queue population when audio generation is disabled", async () => {
+    vi.stubEnv("ENABLE_AUDIO_GENERATION", "false");
+    const ctx = {
+      runMutation: () =>
+        Promise.reject(new Error("Queue mutation should not run.")),
+      runQuery: () =>
+        Promise.reject(new Error("Popularity read should not run.")),
+    } satisfies Pick<ActionCtx, "runMutation" | "runQuery">;
+
+    const result = await Effect.runPromise(
+      populateAudioGenerationQueue(ctx, {
+        enqueuePopularContent:
+          internal.contents.mutations.audio.enqueuePopularContentForAudio,
+        readPopularContent:
+          internal.contents.queries.audio.getPopularContentForAudioQueue,
+      })
+    );
+
+    expect(result).toBeNull();
+    expect(logger.info).toHaveBeenCalledWith(
+      "Audio queue population skipped - ENABLE_AUDIO_GENERATION not set"
+    );
+  });
+
   it("maps popularity read failures to the typed queue population error", async () => {
     const readFailure = new Error("popular content read failed");
     const ctx = {
@@ -130,6 +156,13 @@ describe("contents/actions/queue", () => {
         contentId: articleId,
         updatedAt: NOW,
         viewCount: MIN_VIEW_THRESHOLD,
+      });
+      await ctx.db.insert("audioContentSources", {
+        contentHash: "article-hash",
+        contentRef: { type: "article", id: articleId },
+        locale: "en",
+        slug: "articles/politics/dynastic-politics-asian-values",
+        syncedAt: NOW,
       });
 
       return articleId;

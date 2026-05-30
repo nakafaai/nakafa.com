@@ -3,8 +3,8 @@
  * Centralized configuration for cron jobs and rate limiting.
  *
  * Environment-based behavior:
- * - aggregatePopularity: Always runs (builds statistics for trending)
- * - processQueue: Only executes audio generation if ENABLE_AUDIO_GENERATION env var is set
+ * - populateQueue: Only queues generation work if ENABLE_AUDIO_GENERATION is set
+ * - processQueue: Only executes audio generation if ENABLE_AUDIO_GENERATION is set
  * - cleanup: Always runs (maintenance)
  *
  * To enable audio generation in production:
