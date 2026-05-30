@@ -226,11 +226,10 @@ function ChartTooltipContent({
         {payload.map((item, index) => {
           const key = `${nameKey || item.name || item.dataKey || "value"}`;
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
-          const colorsCount = itemConfig ? getColorsCount(itemConfig) : 1;
           const tooltipKey = `${key}-${item.graphicalItemId}`;
           const indicatorStyle = color
             ? { background: color, borderColor: color }
-            : getIndicatorStyle(key, colorsCount);
+            : getTooltipIndicatorStyle(item, key, itemConfig);
 
           return (
             <div
@@ -380,6 +379,33 @@ function getObject(value: unknown) {
   return value;
 }
 
+/** Reads Recharts row-level color payloads for data-driven bar colors. */
+function getPayloadColor(payload: TooltipPayloadEntry) {
+  const nestedPayload = getObject(Reflect.get(payload, "payload"));
+  const nestedFill = nestedPayload
+    ? getString(Reflect.get(nestedPayload, "fill"))
+    : undefined;
+
+  if (nestedFill) {
+    return nestedFill;
+  }
+
+  return (
+    getString(Reflect.get(payload, "fill")) ||
+    getString(Reflect.get(payload, "color")) ||
+    getString(Reflect.get(payload, "stroke"))
+  );
+}
+
+/** Returns string values from Recharts' loose payload boundary. */
+function getString(value: unknown) {
+  if (typeof value !== "string" || !value) {
+    return;
+  }
+
+  return value;
+}
+
 /** Validates chart configs early so a malformed colors object fails locally. */
 function validateChartConfig(config: ChartConfig) {
   for (const [key, value] of Object.entries(config)) {
@@ -451,6 +477,24 @@ function getIndicatorStyle(dataKey: string, colorsCount: number) {
   return {
     background: `linear-gradient(to right, ${stops})`,
     borderColor: `var(--color-${dataKey}-0)`,
+  };
+}
+
+/** Uses config color slots when available, otherwise Recharts payload color. */
+function getTooltipIndicatorStyle(
+  payload: TooltipPayloadEntry,
+  dataKey: string,
+  config: ChartConfig[string] | undefined
+) {
+  if (config?.colors) {
+    return getIndicatorStyle(dataKey, getColorsCount(config));
+  }
+
+  const color = getPayloadColor(payload);
+
+  return {
+    background: color,
+    borderColor: color,
   };
 }
 
