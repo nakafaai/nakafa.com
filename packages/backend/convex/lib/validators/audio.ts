@@ -18,19 +18,28 @@ export const audioContentRefValidator = v.union(
 
 export type AudioContentRef = Infer<typeof audioContentRefValidator>;
 
+export const audioStatusPending = "pending";
+export const audioStatusGeneratingScript = "generating-script";
+export const audioStatusScriptGenerated = "script-generated";
+export const audioStatusGeneratingSpeech = "generating-speech";
+export const audioStatusCompleted = "completed";
+export const audioStatusFailed = "failed";
+
 /** Audio generation status values. */
 export const audioStatusValidator = literals(
-  "pending",
-  "generating-script",
-  "script-generated",
-  "generating-speech",
-  "completed",
-  "failed"
+  audioStatusPending,
+  audioStatusGeneratingScript,
+  audioStatusScriptGenerated,
+  audioStatusGeneratingSpeech,
+  audioStatusCompleted,
+  audioStatusFailed
 );
 export type AudioStatus = Infer<typeof audioStatusValidator>;
 
+export const audioModelElevenV3 = "eleven_v3";
+
 /** Supported audio model versions. */
-export const audioModelValidator = literals("eleven_v3");
+export const audioModelValidator = literals(audioModelElevenV3);
 export type AudioModel = Infer<typeof audioModelValidator>;
 
 /** Voice settings for audio generation. */

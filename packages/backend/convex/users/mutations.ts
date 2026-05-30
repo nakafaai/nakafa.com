@@ -1,9 +1,9 @@
 import { components } from "@repo/backend/convex/_generated/api";
-import { mutation } from "@repo/backend/convex/_generated/server";
 import {
   getCreditResetGrantTransaction,
   resolveEffectiveCreditState,
 } from "@repo/backend/convex/credits/helpers/state";
+import { mutation } from "@repo/backend/convex/functions";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import {
   selfSelectableUserRoleValidator,

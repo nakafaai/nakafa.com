@@ -1,13 +1,10 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import {
-  expireTryoutAttempt,
-  syncTryoutAttemptExpiry,
-} from "@repo/backend/convex/tryouts/helpers/expiry";
+import { scheduleExpiredTryoutAttempts } from "@repo/backend/convex/tryouts/expiry/impl";
+import { expireTryoutAttempt } from "@repo/backend/convex/tryouts/helpers/expiry";
 import { v } from "convex/values";
-
-const TRYOUT_EXPIRY_SWEEP_BATCH_SIZE = 100;
 
 /** Scheduler-safe expiry for one in-progress tryout attempt. */
 export const expireTryoutAttemptInternal = internalMutation({
@@ -42,34 +39,20 @@ export const expireTryoutAttemptInternal = internalMutation({
 /**
  * Repair overdue in-progress tryouts in bounded batches.
  *
- * The exact expiry still comes from the per-attempt scheduled mutation. This
- * sweep only cleans up any overdue attempts whose scheduled expiration was
- * delayed or missed.
+ * This sweep only schedules overdue attempts. The actual finalization runs in
+ * one transaction per attempt to keep OCC conflict scope small.
+ * @see https://docs.convex.dev/database/advanced/occ
  */
 export const sweepExpiredTryoutAttempts = internalMutation({
   args: {},
   returns: v.null(),
-  handler: async (ctx) => {
-    const now = Date.now();
-    const inProgressAttempts = await ctx.db
-      .query("tryoutAttempts")
-      .withIndex("by_status_and_expiresAt", (q) =>
-        q.eq("status", "in-progress").lt("expiresAt", now + 1)
-      )
-      .take(TRYOUT_EXPIRY_SWEEP_BATCH_SIZE);
-
-    for (const tryoutAttempt of inProgressAttempts) {
-      await syncTryoutAttemptExpiry(ctx, tryoutAttempt, now);
-    }
-
-    if (inProgressAttempts.length < TRYOUT_EXPIRY_SWEEP_BATCH_SIZE) {
-      return null;
-    }
-
-    await ctx.scheduler.runAfter(
-      0,
-      internal.tryouts.mutations.internal.expiry.sweepExpiredTryoutAttempts,
-      {}
+  handler: async (ctx): Promise<null> => {
+    await runConvexProgram(
+      scheduleExpiredTryoutAttempts(ctx, {
+        expireTryoutAttempt:
+          internal.tryouts.mutations.internal.expiry
+            .expireTryoutAttemptInternal,
+      })
     );
 
     return null;

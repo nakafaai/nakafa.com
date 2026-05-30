@@ -1,56 +1,35 @@
 import { internalMutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import tables from "@repo/backend/convex/subscriptions/schema";
+import {
+  createSubscriptionRecord,
+  updateSubscriptionRecord,
+} from "@repo/backend/convex/subscriptions/records/impl";
+import { subscriptionRecordArgs } from "@repo/backend/convex/subscriptions/records/spec";
+import { v } from "convex/values";
 
 /**
  * Create a new subscription record.
  * Internal function - called by Polar webhooks only.
  * Idempotent - safe to call multiple times with same subscription.
+ * @see https://github.com/get-convex/convex-helpers/blob/main/packages/convex-helpers/README.md#triggers
  */
 export const createSubscription = internalMutation({
-  args: {
-    subscription: tables.subscriptions.validator,
-  },
+  args: subscriptionRecordArgs,
   returns: vv.id("subscriptions"),
-  handler: async (ctx, args) => {
-    const existingSubscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_subscriptionId", (q) => q.eq("id", args.subscription.id))
-      .unique();
-
-    if (existingSubscription) {
-      return existingSubscription._id;
-    }
-
-    return ctx.db.insert("subscriptions", args.subscription);
-  },
+  handler: async (ctx, args) =>
+    await runConvexProgram(createSubscriptionRecord(ctx, args.subscription)),
 });
 
 /**
  * Update an existing subscription record.
  * Internal function - called by Polar webhooks only.
  * Creates subscription if not found (handles out-of-order webhooks).
+ * @see https://docs.convex.dev/understanding/best-practices/
  */
 export const updateSubscription = internalMutation({
-  args: {
-    subscription: tables.subscriptions.validator,
-  },
-  handler: async (ctx, args) => {
-    const existingSubscription = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_subscriptionId", (q) => q.eq("id", args.subscription.id))
-      .unique();
-
-    if (!existingSubscription) {
-      // If not found, create (handles out-of-order webhooks)
-      await ctx.db.insert("subscriptions", args.subscription);
-      return;
-    }
-
-    await ctx.db.patch(
-      "subscriptions",
-      existingSubscription._id,
-      args.subscription
-    );
-  },
+  args: subscriptionRecordArgs,
+  returns: v.null(),
+  handler: async (ctx, args) =>
+    await runConvexProgram(updateSubscriptionRecord(ctx, args.subscription)),
 });

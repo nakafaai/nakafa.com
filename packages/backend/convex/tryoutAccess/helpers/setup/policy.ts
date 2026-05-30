@@ -5,6 +5,11 @@ import type {
   TryoutAccessCampaignInput,
   TryoutAccessTargetProduct,
 } from "@repo/backend/convex/tryoutAccess/helpers/setup/validators";
+import {
+  tryoutAccessCampaignKindAccessPass,
+  tryoutAccessCampaignKindCompetition,
+  tryoutAccessCampaignResultsStatusPending,
+} from "@repo/backend/convex/tryoutAccess/schema";
 import { ConvexError } from "convex/values";
 
 const COMPETITION_CAMPAIGN_CHECK_PAGE_SIZE = 100;
@@ -22,7 +27,7 @@ export function assertValidCampaignInput(
   }
 
   if (
-    campaign.campaignKind === "competition" &&
+    campaign.campaignKind === tryoutAccessCampaignKindCompetition &&
     campaign.grantDurationDays !== undefined
   ) {
     throw new ConvexError({
@@ -32,7 +37,7 @@ export function assertValidCampaignInput(
   }
 
   if (
-    campaign.campaignKind === "access-pass" &&
+    campaign.campaignKind === tryoutAccessCampaignKindAccessPass &&
     (!campaign.grantDurationDays || campaign.grantDurationDays <= 0)
   ) {
     throw new ConvexError({
@@ -83,7 +88,7 @@ export async function assertNoOverlappingCompetitionCampaign(
         .withIndex("by_product_and_campaignKind_and_startsAt", (q) =>
           q
             .eq("product", product)
-            .eq("campaignKind", "competition")
+            .eq("campaignKind", tryoutAccessCampaignKindCompetition)
             .lt("startsAt", endsAt)
         )
         .paginate({
@@ -167,7 +172,9 @@ function assertCampaignLifecycleCanBeReused({
   >;
   nextTargetProducts: TryoutAccessTargetProduct[];
 }) {
-  if (existingCampaign.resultsStatus === "pending") {
+  if (
+    existingCampaign.resultsStatus === tryoutAccessCampaignResultsStatusPending
+  ) {
     return;
   }
 

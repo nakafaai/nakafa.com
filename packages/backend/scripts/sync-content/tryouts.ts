@@ -12,7 +12,7 @@ import type {
   SyncResult,
 } from "@repo/backend/scripts/sync-content/types";
 import { getSubjects } from "@repo/contents/_lib/exercises/type";
-import { locales as contentLocales } from "@repo/utilities/locales";
+import { locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
 
 const tryoutPartKeyReaders = {
@@ -50,11 +50,11 @@ export const syncTryouts = Effect.fn("sync.tryouts")(function* (
     log("\n--- TRYOUTS ---\n");
   }
 
-  const locales = options.locale ? [options.locale] : contentLocales;
+  const selectedLocales = options.locale ? [options.locale] : locales;
   const totals: SyncResult = { created: 0, updated: 0, unchanged: 0 };
 
   for (const product of tryoutProducts) {
-    for (const locale of locales) {
+    for (const locale of selectedLocales) {
       const result = yield* callConvex(
         config,
         "mutation",

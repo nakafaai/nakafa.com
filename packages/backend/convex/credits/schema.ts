@@ -18,12 +18,30 @@ export type CreditTransactionType = Infer<
   typeof creditTransactionTypeValidator
 >;
 
+/** Scalar audit values allowed on credit transaction metadata. */
+export const creditTransactionMetadataValueValidator = v.union(
+  v.string(),
+  v.number(),
+  v.boolean(),
+  v.null()
+);
+
+/** Bounded metadata record for credit audit events. */
+export const creditTransactionMetadataValidator = v.record(
+  v.string(),
+  creditTransactionMetadataValueValidator
+);
+
+export type CreditTransactionMetadata = Infer<
+  typeof creditTransactionMetadataValidator
+>;
+
 export const creditTransactionValidator = v.object({
   userId: v.id("users"),
   amount: v.number(),
   type: creditTransactionTypeValidator,
   balanceAfter: v.number(),
-  metadata: v.optional(v.record(v.string(), v.any())),
+  metadata: v.optional(creditTransactionMetadataValidator),
 });
 
 export const creditResetPeriodValidator = v.object({

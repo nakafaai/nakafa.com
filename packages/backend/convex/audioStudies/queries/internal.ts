@@ -1,14 +1,11 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import {
-  fetchContentForAudio,
-  getAudioContentLookup,
-} from "@repo/backend/convex/audioStudies/utils";
-import {
-  audioContentRefValidator,
-  audioModelValidator,
-  audioStatusValidator,
-  voiceSettingsValidator,
-} from "@repo/backend/convex/lib/validators/audio";
+  scriptGenerationDataValidator,
+  speechGenerationDataValidator,
+} from "@repo/backend/convex/audioStudies/generation/spec";
+import { getAudioContentSourceByRef } from "@repo/backend/convex/audioStudies/helpers/sources";
+import { fetchContentForAudio } from "@repo/backend/convex/audioStudies/utils";
+import { audioContentRefValidator } from "@repo/backend/convex/lib/validators/audio";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { v } from "convex/values";
 import { nullable } from "convex-helpers/validators";
@@ -21,23 +18,7 @@ export const getAudioAndContentForScriptGeneration = internalQuery({
   args: {
     contentAudioId: vv.id("contentAudios"),
   },
-  returns: nullable(
-    v.object({
-      contentAudio: v.object({
-        contentRef: audioContentRefValidator,
-        contentHash: v.string(),
-        voiceId: v.string(),
-        voiceSettings: v.optional(voiceSettingsValidator),
-        status: audioStatusValidator,
-      }),
-      content: v.object({
-        title: v.string(),
-        description: v.optional(v.string()),
-        body: v.string(),
-        locale: v.string(),
-      }),
-    })
-  ),
+  returns: scriptGenerationDataValidator,
   handler: async (ctx, args) => {
     const audio = await ctx.db.get("contentAudios", args.contentAudioId);
 
@@ -72,15 +53,7 @@ export const getAudioForSpeechGeneration = internalQuery({
   args: {
     contentAudioId: vv.id("contentAudios"),
   },
-  returns: nullable(
-    v.object({
-      script: v.string(),
-      voiceId: v.string(),
-      voiceSettings: v.optional(voiceSettingsValidator),
-      contentHash: v.string(),
-      model: audioModelValidator,
-    })
-  ),
+  returns: speechGenerationDataValidator,
   handler: async (ctx, args) => {
     const audio = await ctx.db.get("contentAudios", args.contentAudioId);
 
@@ -123,5 +96,6 @@ export const getContentHash = internalQuery({
   },
   returns: nullable(v.string()),
   handler: async (ctx, args) =>
-    (await getAudioContentLookup(ctx, args.contentRef))?.contentHash ?? null,
+    (await getAudioContentSourceByRef(ctx, args.contentRef))?.contentHash ??
+    null,
 });

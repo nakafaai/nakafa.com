@@ -1,11 +1,11 @@
 import { vWorkflowId } from "@convex-dev/workflow";
 import { vResultValidator } from "@convex-dev/workpool";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { internalMutation } from "@repo/backend/convex/_generated/server";
 import {
   markQueueCompleted,
   setQueueItemFailed,
 } from "@repo/backend/convex/audioStudies/mutations/queue";
+import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { getErrorMessage } from "@repo/backend/convex/utils/error";
 import { logger } from "@repo/backend/convex/utils/logger";

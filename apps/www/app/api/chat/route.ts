@@ -2,7 +2,7 @@ import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
 } from "@repo/ai/clients/weather/client";
-import { hasEnoughCredits, MODEL_IDS } from "@repo/ai/config/models";
+import { hasEnoughCredits, ModelIdSchema } from "@repo/ai/config/model";
 import { compressMessages } from "@repo/ai/lib/message";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { captureServerException } from "@repo/analytics/posthog/server";
@@ -25,8 +25,6 @@ import { loadMessages, saveOrCreateChat } from "@/app/api/chat/persistence";
 import { streamChat } from "@/app/api/chat/stream";
 import { getUserInfo, getVerified } from "@/app/api/chat/utils";
 import { getToken } from "@/lib/auth/server";
-
-const ModelIdSchema = Schema.Literal(...MODEL_IDS);
 
 const corsValidator = new CorsValidator();
 

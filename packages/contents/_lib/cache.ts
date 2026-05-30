@@ -41,11 +41,11 @@ class MDXCacheRegistry {
   }
 
   build(): MDXCache {
-    return Effect.runSync(this.buildEffect());
+    return Effect.runSync(this.program());
   }
 
   /** Builds the MDX cache with Effect-managed state cleanup. */
-  private buildEffect(): Effect.Effect<MDXCache, CacheBuildError> {
+  private program(): Effect.Effect<MDXCache, CacheBuildError> {
     if (this.cache !== null) {
       return Effect.succeed(this.cache);
     }

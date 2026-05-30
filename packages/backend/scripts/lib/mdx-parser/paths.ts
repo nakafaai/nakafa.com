@@ -1,4 +1,4 @@
-import * as path from "node:path";
+import { dirname, posix } from "node:path";
 import {
   ARTICLE_PATH_REGEX,
   BACKSLASH_REGEX,
@@ -226,7 +226,7 @@ export const getExerciseDir = Effect.fn("mdx.getExerciseDir")(function* (
   filePath: string
 ) {
   const normalized = filePath.replace(BACKSLASH_REGEX, "/");
-  const exerciseDir = path.posix.dirname(path.posix.dirname(normalized));
+  const exerciseDir = posix.dirname(posix.dirname(normalized));
 
   if (exerciseDir === "." || exerciseDir === "/") {
     return yield* Effect.fail(
@@ -240,7 +240,7 @@ export const getExerciseDir = Effect.fn("mdx.getExerciseDir")(function* (
 });
 
 /** Returns the directory that contains one localized article MDX file. */
-export const getArticleDir = (filePath: string) => path.dirname(filePath);
+export const getArticleDir = (filePath: string) => dirname(filePath);
 
 /** Converts a material href into path segments relative to its base path. */
 export const getRelativeExercisePathSegments = Effect.fn(

@@ -2,11 +2,7 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import type { AudioContentLookup } from "@repo/backend/convex/contents/validators";
 import type { AudioContentRef } from "@repo/backend/convex/lib/validators/audio";
-import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-
-type AudioContentReaderCtx = Pick<QueryCtx, "db">;
 
 /**
  * Fetches content data for audio generation.
@@ -65,43 +61,6 @@ export function getResetAudioFields(contentHash: string) {
 }
 
 /**
- * Loads the minimal audio-related metadata for one content reference.
- * This keeps hot queueing paths from rereading the same large content row.
- */
-export async function getAudioContentLookup(
-  ctx: AudioContentReaderCtx,
-  contentRef: AudioContentRef
-): Promise<AudioContentLookup | null> {
-  if (contentRef.type === "article") {
-    const article = await ctx.db.get("articleContents", contentRef.id);
-
-    if (!article) {
-      return null;
-    }
-
-    return {
-      contentHash: article.contentHash,
-      locale: article.locale,
-      ref: { type: "article", id: article._id },
-      slug: article.slug,
-    };
-  }
-
-  const section = await ctx.db.get("subjectSections", contentRef.id);
-
-  if (!section) {
-    return null;
-  }
-
-  return {
-    contentHash: section.contentHash,
-    locale: section.locale,
-    ref: { type: "subject", id: section._id },
-    slug: section.slug,
-  };
-}
-
-/**
  * Update every locale-specific audio row for one content ref when the content
  * hash changes, clearing any stale generated file.
  */
@@ -139,56 +98,4 @@ export async function updateContentHash(
   }
 
   return updatedCount;
-}
-
-/**
- * Resolves one locale-specific content row while reusing the already loaded
- * source row whenever the requested locale already matches.
- */
-export async function getLocalizedAudioContentLookup(
-  ctx: AudioContentReaderCtx,
-  sourceContent: AudioContentLookup,
-  locale: Locale
-): Promise<AudioContentLookup | null> {
-  if (sourceContent.locale === locale) {
-    return sourceContent;
-  }
-
-  if (sourceContent.ref.type === "article") {
-    const article = await ctx.db
-      .query("articleContents")
-      .withIndex("by_locale_and_slug", (q) =>
-        q.eq("locale", locale).eq("slug", sourceContent.slug)
-      )
-      .first();
-
-    if (!article) {
-      return null;
-    }
-
-    return {
-      contentHash: article.contentHash,
-      locale: article.locale,
-      ref: { type: "article", id: article._id },
-      slug: article.slug,
-    };
-  }
-
-  const section = await ctx.db
-    .query("subjectSections")
-    .withIndex("by_locale_and_slug", (q) =>
-      q.eq("locale", locale).eq("slug", sourceContent.slug)
-    )
-    .first();
-
-  if (!section) {
-    return null;
-  }
-
-  return {
-    contentHash: section.contentHash,
-    locale: section.locale,
-    ref: { type: "subject", id: section._id },
-    slug: section.slug,
-  };
 }

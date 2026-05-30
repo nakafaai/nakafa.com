@@ -2,6 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { TryoutAccessCampaignInput } from "@repo/backend/convex/tryoutAccess/helpers/setup/validators";
+import { tryoutAccessCampaignKindCompetition } from "@repo/backend/convex/tryoutAccess/schema";
 
 /** Schedules the future redeem/finalization transitions for one campaign. */
 export async function scheduleCampaignStateTransitions(
@@ -36,7 +37,7 @@ export async function scheduleCampaignStateTransitions(
     );
   }
 
-  if (campaign.campaignKind !== "competition") {
+  if (campaign.campaignKind !== tryoutAccessCampaignKindCompetition) {
     return;
   }
 

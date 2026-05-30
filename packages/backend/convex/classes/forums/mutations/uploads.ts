@@ -1,14 +1,16 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import { STALE_FORUM_PENDING_UPLOAD_MAX_AGE_MS } from "@repo/backend/convex/classes/forums/internalMutations";
-import { loadOpenForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
 import {
   deleteForumPendingUpload,
   validateForumAttachmentPolicy,
+  validateForumAttachmentStorageClaim,
   validateStoredForumAttachmentMetadata,
-} from "@repo/backend/convex/classes/forums/utils/attachments";
+} from "@repo/backend/convex/classes/forums/attachments/impl";
+import { STALE_FORUM_PENDING_UPLOAD_MAX_AGE_MS } from "@repo/backend/convex/classes/forums/internalMutations";
+import { loadOpenForumWithAccess } from "@repo/backend/convex/classes/forums/utils/access";
 import { MAX_FORUM_POST_ATTACHMENTS } from "@repo/backend/convex/classes/forums/utils/constants";
 import { forumUploadUrlResultValidator } from "@repo/backend/convex/classes/forums/validators";
 import { mutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { ConvexError, v } from "convex/values";
@@ -104,43 +106,27 @@ export const saveForumUpload = mutation({
       });
     }
 
-    validateForumAttachmentPolicy({
-      mimeType: args.type,
-      name: args.name,
-      size: args.size,
-    });
-    await validateStoredForumAttachmentMetadata(ctx, {
-      mimeType: args.type,
-      size: args.size,
-      storageId: args.storageId,
-    });
-
-    const matchingPendingUploads = await ctx.db
-      .query("schoolClassForumPendingUploads")
-      .withIndex("by_storageId", (q) => q.eq("storageId", args.storageId))
-      .take(2);
-    const conflictingPendingUpload = matchingPendingUploads.find(
-      (pendingUpload) => pendingUpload._id !== args.uploadId
+    await runConvexProgram(
+      validateForumAttachmentPolicy({
+        mimeType: args.type,
+        name: args.name,
+        size: args.size,
+      })
+    );
+    await runConvexProgram(
+      validateStoredForumAttachmentMetadata(ctx, {
+        mimeType: args.type,
+        size: args.size,
+        storageId: args.storageId,
+      })
     );
 
-    if (conflictingPendingUpload) {
-      throw new ConvexError({
-        code: "FORUM_ATTACHMENT_UPLOAD_ALREADY_CLAIMED",
-        message: "Forum post attachment upload has already been claimed.",
-      });
-    }
-
-    const existingAttachment = await ctx.db
-      .query("schoolClassForumPostAttachments")
-      .withIndex("by_fileId", (q) => q.eq("fileId", args.storageId))
-      .first();
-
-    if (existingAttachment) {
-      throw new ConvexError({
-        code: "FORUM_ATTACHMENT_ALREADY_ATTACHED",
-        message: "Forum post attachment has already been used.",
-      });
-    }
+    await runConvexProgram(
+      validateForumAttachmentStorageClaim(ctx, {
+        storageId: args.storageId,
+        uploadId: args.uploadId,
+      })
+    );
 
     await ctx.db.patch("schoolClassForumPendingUploads", args.uploadId, {
       mimeType: args.type,
@@ -175,7 +161,7 @@ export const discardForumUploads = mutation({
         continue;
       }
 
-      await deleteForumPendingUpload(ctx, upload);
+      await runConvexProgram(deleteForumPendingUpload(ctx, upload));
     }
 
     return null;

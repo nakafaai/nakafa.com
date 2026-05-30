@@ -1,5 +1,5 @@
-import * as fs from "node:fs/promises";
-import * as path from "node:path";
+import { readFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import {
   BACKSLASH_REGEX,
@@ -44,10 +44,10 @@ const readBasePath = Effect.fn("mdx.readBasePath")(function* (
   materialFilePath: string,
   fallbackBasePath: string
 ) {
-  const pathFile = path.join(path.dirname(materialFilePath), "path.ts");
+  const pathFile = join(dirname(materialFilePath), "path.ts");
   const file = yield* Effect.either(
     Effect.tryPromise({
-      try: () => fs.readFile(pathFile, "utf8"),
+      try: () => readFile(pathFile, "utf8"),
       catch: (error) =>
         new MaterialReadError({ message: getUnknownMessage(error) }),
     })
@@ -132,7 +132,7 @@ export const parseExerciseMaterialFile = Effect.fn(
   const fallbackBasePath = `exercises/${category}/${type}/${material}`;
   const basePath = yield* readBasePath(materialFilePath, fallbackBasePath);
   const content = yield* Effect.tryPromise({
-    try: () => fs.readFile(materialFilePath, "utf8"),
+    try: () => readFile(materialFilePath, "utf8"),
     catch: (error) =>
       new MaterialReadError({ message: getUnknownMessage(error) }),
   });
@@ -257,7 +257,7 @@ export const parseSubjectMaterialFile = Effect.fn(
   const fallbackBasePath = `subject/${category}/${grade}/${material}`;
   const basePath = yield* readBasePath(materialFilePath, fallbackBasePath);
   const content = yield* Effect.tryPromise({
-    try: () => fs.readFile(materialFilePath, "utf8"),
+    try: () => readFile(materialFilePath, "utf8"),
     catch: (error) =>
       new MaterialReadError({ message: getUnknownMessage(error) }),
   });

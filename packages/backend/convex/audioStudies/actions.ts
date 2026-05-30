@@ -1,27 +1,138 @@
-"use node";
-
 import { elevenlabs } from "@repo/ai/config/elevenlabs";
-import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
-import { getModelProviderOptions } from "@repo/ai/config/models";
-import { model } from "@repo/ai/config/vercel";
+import {
+  getModelGatewayId,
+  getModelProviderOptions,
+} from "@repo/ai/config/model";
+import { gateway } from "@repo/ai/config/provider";
+import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { getDefaultVoiceSettings } from "@repo/ai/config/voices";
 import { podcastScriptPrompt } from "@repo/ai/prompt/audio-studies/v3";
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { internalAction } from "@repo/backend/convex/_generated/server";
+import { PCM_FORMAT } from "@repo/backend/convex/audioStudies/constants";
 import {
-  calculateDurationFromPCM,
-  PCM_FORMAT,
-  pcmToWav,
-} from "@repo/backend/convex/audioStudies/constants";
-import { vv } from "@repo/backend/convex/lib/validators/vv";
-import { getErrorMessage } from "@repo/backend/convex/utils/error";
-import { logger } from "@repo/backend/convex/utils/logger";
-import { chunkScript, DEFAULT_CHUNK_CONFIG } from "@repo/backend/helpers/chunk";
+  generateAudioScript,
+  generateAudioSpeech,
+} from "@repo/backend/convex/audioStudies/generation/impl";
 import {
-  experimental_generateSpeech as aiGenerateSpeech,
-  generateText,
-} from "ai";
-import { ConvexError, v } from "convex/values";
+  type AudioGenerationProviders,
+  type AudioGenerationStore,
+  audioGenerationArgs,
+} from "@repo/backend/convex/audioStudies/generation/spec";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { experimental_generateSpeech, generateText } from "ai";
+import { v } from "convex/values";
+
+/**
+ * Native Convex adapter for audio-generation business logic.
+ *
+ * The action file keeps external provider and storage calls behind this seam
+ * so queries/mutations never import AI SDK provider code.
+ *
+ * @see https://docs.convex.dev/functions/actions
+ */
+function createAudioGenerationAdapters(ctx: ActionCtx): {
+  providers: AudioGenerationProviders;
+  store: AudioGenerationStore;
+} {
+  return {
+    providers: {
+      defaultVoiceSettings: getDefaultVoiceSettings(),
+      generateScriptText: async (content) => {
+        const languageModel = gateway(getModelGatewayId("nakafa-pro"));
+        const prompt = podcastScriptPrompt({
+          title: content.title,
+          description: content.description,
+          body: content.body,
+          locale: content.locale,
+        });
+
+        const { text } = await generateText({
+          model: languageModel,
+          prompt,
+          providerOptions: {
+            gateway: gatewayProviderOptions,
+            google: getModelProviderOptions("nakafa-pro"),
+          },
+        });
+
+        return text;
+      },
+      generateSpeechChunk: async (input) => {
+        const result = await experimental_generateSpeech({
+          model: elevenlabs.speech(input.model),
+          text: input.text,
+          voice: input.voiceId,
+          outputFormat: PCM_FORMAT.outputFormat,
+          providerOptions: {
+            elevenlabs: {
+              voiceSettings: {
+                similarityBoost: input.voiceSettings.similarityBoost,
+                stability: input.voiceSettings.stability,
+                style: input.voiceSettings.style,
+                useSpeakerBoost: input.voiceSettings.useSpeakerBoost,
+              },
+            },
+          },
+        });
+
+        return new Uint8Array(result.audio.uint8Array);
+      },
+      storeAudio: async ({ wavBuffer }) => {
+        const audioBytes = new Uint8Array(wavBuffer);
+        const audioBlob = new Blob([audioBytes], {
+          type: "audio/wav",
+        });
+
+        return await ctx.storage.store(audioBlob);
+      },
+    },
+    store: {
+      claimScriptGeneration: (contentAudioId) =>
+        ctx.runMutation(
+          internal.audioStudies.mutations.contentAudios.claimScriptGeneration,
+          { contentAudioId }
+        ),
+      claimSpeechGeneration: (contentAudioId) =>
+        ctx.runMutation(
+          internal.audioStudies.mutations.contentAudios.claimSpeechGeneration,
+          { contentAudioId }
+        ),
+      markFailed: (input) =>
+        ctx.runMutation(
+          internal.audioStudies.mutations.contentAudios.markFailed,
+          input
+        ),
+      readScriptGenerationData: (contentAudioId) =>
+        ctx.runQuery(
+          internal.audioStudies.queries.internal
+            .getAudioAndContentForScriptGeneration,
+          { contentAudioId }
+        ),
+      readSpeechGenerationData: (contentAudioId) =>
+        ctx.runQuery(
+          internal.audioStudies.queries.internal.getAudioForSpeechGeneration,
+          { contentAudioId }
+        ),
+      saveAudio: (input) =>
+        ctx.runMutation(
+          internal.audioStudies.mutations.contentAudios.saveAudio,
+          input
+        ),
+      saveScript: (input) =>
+        ctx.runMutation(
+          internal.audioStudies.mutations.contentAudios.saveScript,
+          input
+        ),
+      verifyContentHash: (input) =>
+        ctx.runQuery(
+          internal.audioStudies.queries.internal.verifyContentHash,
+          input
+        ),
+    },
+  };
+}
 
 /**
  * Generate a podcast script for content audio.
@@ -31,134 +142,11 @@ import { ConvexError, v } from "convex/values";
  * Cost protection: Validates content hash before and after generation.
  */
 export const generateScript = internalAction({
-  args: { contentAudioId: vv.id("contentAudios") },
+  args: audioGenerationArgs,
   returns: v.null(),
   handler: async (ctx, args) => {
-    logger.info("Generating script", { contentAudioId: args.contentAudioId });
-
-    const claimed = await ctx.runMutation(
-      internal.audioStudies.mutations.contentAudios.claimScriptGeneration,
-      { contentAudioId: args.contentAudioId }
-    );
-
-    if (!claimed) {
-      logger.info("Script already claimed or generated", {
-        contentAudioId: args.contentAudioId,
-      });
-      return null;
-    }
-
-    logger.info("Script generation claimed", {
-      contentAudioId: args.contentAudioId,
-    });
-
-    try {
-      const data = await ctx.runQuery(
-        internal.audioStudies.queries.internal
-          .getAudioAndContentForScriptGeneration,
-        { contentAudioId: args.contentAudioId }
-      );
-
-      if (!data) {
-        throw new ConvexError({
-          code: "NOT_FOUND",
-          message: "Audio or content not found",
-        });
-      }
-
-      const { contentAudio, content } = data;
-
-      const hashValidBefore = await ctx.runQuery(
-        internal.audioStudies.queries.internal.verifyContentHash,
-        {
-          contentAudioId: args.contentAudioId,
-          expectedHash: contentAudio.contentHash,
-        }
-      );
-
-      if (!hashValidBefore) {
-        logger.warn("Content changed before script generation", {
-          contentAudioId: args.contentAudioId,
-          contentHash: contentAudio.contentHash,
-        });
-        throw new ConvexError({
-          code: "CONTENT_CHANGED",
-          message: "Content changed during generation, aborting to save costs",
-        });
-      }
-
-      logger.info("Generating script with AI", {
-        contentAudioId: args.contentAudioId,
-        contentType: contentAudio.contentRef.type,
-      });
-
-      const prompt = podcastScriptPrompt({
-        title: content.title,
-        description: content.description,
-        body: content.body,
-        locale: content.locale,
-      });
-
-      const { text: script } = await generateText({
-        model: model.languageModel("nakafa-pro"),
-        prompt,
-        providerOptions: {
-          gateway: gatewayProviderOptions,
-          google: getModelProviderOptions("nakafa-pro"),
-        },
-      });
-
-      logger.info("Script generated", {
-        contentAudioId: args.contentAudioId,
-        scriptLength: script.length,
-      });
-
-      const hashValidAfter = await ctx.runQuery(
-        internal.audioStudies.queries.internal.verifyContentHash,
-        {
-          contentAudioId: args.contentAudioId,
-          expectedHash: contentAudio.contentHash,
-        }
-      );
-
-      if (!hashValidAfter) {
-        logger.warn("Content changed after script generation", {
-          contentAudioId: args.contentAudioId,
-          contentHash: contentAudio.contentHash,
-        });
-        throw new ConvexError({
-          code: "CONTENT_CHANGED",
-          message:
-            "Content changed after generation, discarding result to save costs",
-        });
-      }
-
-      await ctx.runMutation(
-        internal.audioStudies.mutations.contentAudios.saveScript,
-        {
-          contentAudioId: args.contentAudioId,
-          script,
-        }
-      );
-
-      logger.info("Script saved", { contentAudioId: args.contentAudioId });
-    } catch (error) {
-      logger.error(
-        "Script generation failed",
-        { contentAudioId: args.contentAudioId },
-        error
-      );
-      await ctx.runMutation(
-        internal.audioStudies.mutations.contentAudios.markFailed,
-        {
-          contentAudioId: args.contentAudioId,
-          error: getErrorMessage(error),
-        }
-      );
-      throw error;
-    }
-
-    return null;
+    const { providers, store } = createAudioGenerationAdapters(ctx);
+    return await runConvexProgram(generateAudioScript(store, providers, args));
   },
 });
 
@@ -194,215 +182,10 @@ export const generateScript = internalAction({
  * @see https://elevenlabs.io/docs/api-reference/text-to-speech/convert#query-parameters
  */
 export const generateSpeech = internalAction({
-  args: { contentAudioId: vv.id("contentAudios") },
+  args: audioGenerationArgs,
   returns: v.null(),
   handler: async (ctx, args) => {
-    logger.info("Generating speech", { contentAudioId: args.contentAudioId });
-
-    const claimed = await ctx.runMutation(
-      internal.audioStudies.mutations.contentAudios.claimSpeechGeneration,
-      { contentAudioId: args.contentAudioId }
-    );
-
-    if (!claimed) {
-      logger.info("Speech already claimed or generated", {
-        contentAudioId: args.contentAudioId,
-      });
-      return null;
-    }
-
-    logger.info("Speech generation claimed", {
-      contentAudioId: args.contentAudioId,
-    });
-
-    try {
-      const audio = await ctx.runQuery(
-        internal.audioStudies.queries.internal.getAudioForSpeechGeneration,
-        { contentAudioId: args.contentAudioId }
-      );
-
-      if (!audio) {
-        throw new ConvexError({
-          code: "NOT_FOUND",
-          message: "No script found for audio generation",
-        });
-      }
-
-      const hashStillValid = await ctx.runQuery(
-        internal.audioStudies.queries.internal.verifyContentHash,
-        {
-          contentAudioId: args.contentAudioId,
-          expectedHash: audio.contentHash,
-        }
-      );
-
-      if (!hashStillValid) {
-        logger.warn("Content changed before speech generation", {
-          contentAudioId: args.contentAudioId,
-          contentHash: audio.contentHash,
-        });
-        throw new ConvexError({
-          code: "CONTENT_CHANGED",
-          message:
-            "Content changed before speech generation, aborting to save costs",
-        });
-      }
-
-      const chunks = chunkScript(audio.script, DEFAULT_CHUNK_CONFIG);
-
-      logger.info("Generating speech with ElevenLabs", {
-        contentAudioId: args.contentAudioId,
-        chunkCount: chunks.length,
-        scriptLength: audio.script.length,
-      });
-
-      const voiceSettings = audio.voiceSettings ?? getDefaultVoiceSettings();
-      const providerVoiceSettings = {
-        similarityBoost: voiceSettings.similarityBoost,
-        stability: voiceSettings.stability,
-        style: voiceSettings.style,
-        useSpeakerBoost: voiceSettings.useSpeakerBoost,
-      };
-
-      if (chunks.length === 0) {
-        throw new ConvexError({
-          code: "AUDIO_SCRIPT_EMPTY",
-          message: "Script chunking returned no content for speech generation.",
-        });
-      }
-
-      const [firstChunk, ...remainingChunks] = chunks;
-
-      logger.info(`Generating speech chunk 1/${chunks.length}`, {
-        contentAudioId: args.contentAudioId,
-        chunkIndex: 1,
-        totalChunks: chunks.length,
-      });
-
-      const firstResult = await aiGenerateSpeech({
-        model: elevenlabs.speech(audio.model),
-        text: firstChunk.text,
-        voice: audio.voiceId,
-        outputFormat: PCM_FORMAT.outputFormat,
-        providerOptions: {
-          elevenlabs: {
-            voiceSettings: providerVoiceSettings,
-          },
-        },
-      });
-
-      const audioBuffers = [new Uint8Array(firstResult.audio.uint8Array)];
-
-      for (const [index, chunk] of remainingChunks.entries()) {
-        logger.info(`Generating speech chunk ${index + 2}/${chunks.length}`, {
-          contentAudioId: args.contentAudioId,
-          chunkIndex: index + 2,
-          totalChunks: chunks.length,
-        });
-
-        const result = await aiGenerateSpeech({
-          model: elevenlabs.speech(audio.model),
-          text: chunk.text,
-          voice: audio.voiceId,
-          outputFormat: PCM_FORMAT.outputFormat,
-          providerOptions: {
-            elevenlabs: {
-              voiceSettings: providerVoiceSettings,
-            },
-          },
-        });
-
-        audioBuffers.push(new Uint8Array(result.audio.uint8Array));
-      }
-
-      logger.info("All speech chunks generated", {
-        contentAudioId: args.contentAudioId,
-        chunkCount: chunks.length,
-      });
-
-      // Concatenate PCM buffers (PCM has no metadata headers, just raw samples)
-      const totalLength = audioBuffers.reduce(
-        (sum, buf) => sum + buf.length,
-        0
-      );
-      const pcmBuffer = new Uint8Array(totalLength);
-      let offset = 0;
-      for (const buffer of audioBuffers) {
-        pcmBuffer.set(buffer, offset);
-        offset += buffer.length;
-      }
-
-      // Calculate exact duration from PCM buffer size
-      // Returns milliseconds as integer for maximum precision
-      const duration = calculateDurationFromPCM(pcmBuffer.length);
-
-      logger.info("PCM audio concatenated", {
-        contentAudioId: args.contentAudioId,
-        pcmBufferLength: pcmBuffer.length,
-        calculatedDurationMs: duration,
-        calculatedDurationSec: (duration / 1000).toFixed(3),
-      });
-
-      const hashValidAfter = await ctx.runQuery(
-        internal.audioStudies.queries.internal.verifyContentHash,
-        {
-          contentAudioId: args.contentAudioId,
-          expectedHash: audio.contentHash,
-        }
-      );
-
-      if (!hashValidAfter) {
-        logger.warn("Content changed after speech generation", {
-          contentAudioId: args.contentAudioId,
-          contentHash: audio.contentHash,
-        });
-        throw new ConvexError({
-          code: "CONTENT_CHANGED",
-          message:
-            "Content changed after speech generation, discarding to save costs",
-        });
-      }
-
-      // Convert PCM to WAV format with proper duration metadata
-      const wavBuffer = pcmToWav(pcmBuffer);
-      const audioBlob = new Blob([Buffer.from(wavBuffer)], {
-        type: "audio/wav",
-      });
-      const storageId = await ctx.storage.store(audioBlob);
-
-      await ctx.runMutation(
-        internal.audioStudies.mutations.contentAudios.saveAudio,
-        {
-          contentAudioId: args.contentAudioId,
-          storageId,
-          duration,
-          size: wavBuffer.byteLength,
-        }
-      );
-
-      logger.info("Speech saved", {
-        contentAudioId: args.contentAudioId,
-        storageId,
-        durationMs: duration,
-        durationSec: (duration / 1000).toFixed(3),
-        size: wavBuffer.byteLength,
-      });
-    } catch (error) {
-      logger.error(
-        "Speech generation failed",
-        { contentAudioId: args.contentAudioId },
-        error
-      );
-      await ctx.runMutation(
-        internal.audioStudies.mutations.contentAudios.markFailed,
-        {
-          contentAudioId: args.contentAudioId,
-          error: getErrorMessage(error),
-        }
-      );
-      throw error;
-    }
-
-    return null;
+    const { providers, store } = createAudioGenerationAdapters(ctx);
+    return await runConvexProgram(generateAudioSpeech(store, providers, args));
   },
 });

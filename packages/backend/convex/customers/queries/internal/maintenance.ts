@@ -93,19 +93,18 @@ export const listActiveSubscriptionsForIntegrity = internalQuery({
   handler: async (ctx, args) => {
     const rows = await ctx.db
       .query("subscriptions")
+      .withIndex("by_status", (q) => q.eq("status", "active"))
       .paginate(args.paginationOpts);
 
     return {
       continueCursor: rows.continueCursor,
       isDone: rows.isDone,
-      page: rows.page
-        .filter((row) => row.status === "active")
-        .map((row) => ({
-          currentPeriodEnd: row.currentPeriodEnd,
-          customerId: row.customerId,
-          status: row.status,
-          subscriptionId: row.id,
-        })),
+      page: rows.page.map((row) => ({
+        currentPeriodEnd: row.currentPeriodEnd,
+        customerId: row.customerId,
+        status: row.status,
+        subscriptionId: row.id,
+      })),
     };
   },
 });

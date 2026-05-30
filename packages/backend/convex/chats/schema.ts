@@ -1,4 +1,4 @@
-import { MODEL_IDS } from "@repo/ai/config/models";
+import { MODEL_IDS } from "@repo/ai/config/model";
 import {
   contentSearchInputValidator,
   contentSearchRefValidator,
@@ -65,7 +65,7 @@ export const messageRoleValidator = literals("user", "assistant", "system");
  */
 /**
  * Model ID validator using literals for type safety.
- * References MODEL_IDS from @repo/ai/config/models for single source of truth.
+ * References MODEL_IDS from @repo/ai/config/model for single source of truth.
  */
 export const modelIdValidator = v.optional(literals(...MODEL_IDS));
 
@@ -390,13 +390,20 @@ const currentMathDataValidator = v.union(
 export const mathDataValidator = currentMathDataValidator;
 
 /**
- * Provider metadata validator.
- * Uses v.any() for the innermost value because this comes from AI SDK
- * and the shape is defined externally by the active provider SDK.
+ * Provider metadata persisted with chat parts.
+ * AI SDK provider metadata can contain arbitrary JSON, but the chat transcript
+ * only needs string continuation tokens and provider identifiers.
  */
-export const providerMetadataValidator = v.optional(
-  v.record(v.string(), v.record(v.string(), v.any()))
+export const providerMetadataObjectValidator = v.record(
+  v.string(),
+  v.record(v.string(), v.string())
 );
+export const providerMetadataValidator = v.optional(
+  providerMetadataObjectValidator
+);
+export type PersistedProviderMetadata = Infer<
+  typeof providerMetadataObjectValidator
+>;
 
 const specialistToolInputFields = {
   objective: v.string(),

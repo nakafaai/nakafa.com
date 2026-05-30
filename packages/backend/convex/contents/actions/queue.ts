@@ -1,7 +1,21 @@
 import { internal } from "@repo/backend/convex/_generated/api";
 import { internalAction } from "@repo/backend/convex/_generated/server";
-import { logger } from "@repo/backend/convex/utils/logger";
-import { v } from "convex/values";
+import {
+  type AudioQueuePopulationTargets,
+  populateAudioGenerationQueue,
+} from "@repo/backend/convex/contents/audioQueue/impl";
+import {
+  type PopulateAudioQueueResult,
+  populateAudioQueueResultValidator,
+} from "@repo/backend/convex/contents/audioQueue/spec";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+
+const queueTargets: AudioQueuePopulationTargets = {
+  enqueuePopularContent:
+    internal.contents.mutations.audio.enqueuePopularContentForAudio,
+  readPopularContent:
+    internal.contents.queries.audio.getPopularContentForAudioQueue,
+};
 
 /**
  * Reads popularity in a query, then enqueues audio work in a separate mutation.
@@ -9,29 +23,7 @@ import { v } from "convex/values";
  */
 export const populateAudioQueue = internalAction({
   args: {},
-  returns: v.null(),
-  handler: async (ctx) => {
-    logger.info("Populating audio queue started");
-
-    const items = await ctx.runQuery(
-      internal.contents.queries.audio.getPopularContentForAudioQueue,
-      {}
-    );
-
-    if (items.length === 0) {
-      logger.info("No popular content found for audio queue population");
-      return null;
-    }
-
-    const result = await ctx.runMutation(
-      internal.contents.mutations.audio.enqueuePopularContentForAudio,
-      {
-        items,
-      }
-    );
-
-    logger.info("Populated audio queue completed", result);
-
-    return null;
-  },
+  returns: populateAudioQueueResultValidator,
+  handler: async (ctx): Promise<PopulateAudioQueueResult> =>
+    await runConvexProgram(populateAudioGenerationQueue(ctx, queueTargets)),
 });

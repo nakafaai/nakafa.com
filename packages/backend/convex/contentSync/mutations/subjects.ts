@@ -1,3 +1,4 @@
+import { syncAudioContentSource } from "@repo/backend/convex/audioStudies/helpers/sources";
 import { updateContentHash } from "@repo/backend/convex/audioStudies/utils";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
@@ -210,6 +211,16 @@ export const bulkSyncSubjectSections = internalMutation({
         title: section.title,
       });
 
+      if (existingSection) {
+        await syncAudioContentSource(ctx, {
+          contentHash: section.contentHash,
+          locale: section.locale,
+          ref: { id: existingSection._id, type: "subject" },
+          slug: section.slug,
+          syncedAt: now,
+        });
+      }
+
       if (existingSection?.contentHash === section.contentHash) {
         unchanged++;
         continue;
@@ -257,6 +268,14 @@ export const bulkSyncSubjectSections = internalMutation({
       const sectionId = await ctx.db.insert("subjectSections", {
         ...nextValues,
         locale: section.locale,
+        slug: section.slug,
+        syncedAt: now,
+      });
+
+      await syncAudioContentSource(ctx, {
+        contentHash: section.contentHash,
+        locale: section.locale,
+        ref: { id: sectionId, type: "subject" },
         slug: section.slug,
         syncedAt: now,
       });

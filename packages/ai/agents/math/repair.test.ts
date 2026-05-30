@@ -10,9 +10,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const generateText = vi.hoisted(() => vi.fn());
 
-vi.mock("@repo/ai/config/vercel", () => ({
-  gatewayProviderOptions: { sort: "ttft" },
-  model: {
+vi.mock("@repo/ai/config/app", () => ({
+  provider: {
     languageModel: (modelId: string) => modelId,
   },
 }));

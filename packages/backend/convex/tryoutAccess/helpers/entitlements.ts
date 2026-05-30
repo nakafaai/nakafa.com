@@ -5,6 +5,12 @@ import type {
   TryoutAccessDbReader,
   TryoutAccessDbWriter,
 } from "@repo/backend/convex/tryoutAccess/helpers/types";
+import {
+  tryoutAccessGrantStatusActive,
+  tryoutAccessGrantStatusExpired,
+  userTryoutEntitlementSourceKindAccessPass,
+  userTryoutEntitlementSourceKindCompetition,
+} from "@repo/backend/convex/tryoutAccess/schema";
 import type { TryoutProduct } from "@repo/backend/convex/tryouts/products";
 
 /** Loads every entitlement row currently linked to one access grant. */
@@ -69,7 +75,7 @@ async function syncGrantEntitlements(
   const entitlements = await listGrantEntitlements(db, grant._id);
   const entitlementsByProduct = groupEntitlementsByProduct(entitlements);
 
-  if (!(campaign && status === "active")) {
+  if (!(campaign && status === tryoutAccessGrantStatusActive)) {
     for (const entitlement of entitlements) {
       await db.delete("userTryoutEntitlements", entitlement._id);
     }
@@ -173,7 +179,7 @@ export async function syncTryoutAccessGrantStatus(
     });
   }
 
-  if (status === "expired") {
+  if (status === tryoutAccessGrantStatusExpired) {
     await syncGrantEntitlements(db, {
       campaign: null,
       campaignProducts: [],
@@ -246,13 +252,13 @@ export async function resolveActiveTryoutEventEntitlements(
     getLatestActiveEventEntitlement(db, {
       now,
       product,
-      sourceKind: "competition",
+      sourceKind: userTryoutEntitlementSourceKindCompetition,
       userId,
     }),
     getLatestActiveEventEntitlement(db, {
       now,
       product,
-      sourceKind: "access-pass",
+      sourceKind: userTryoutEntitlementSourceKindAccessPass,
       userId,
     }),
   ]);

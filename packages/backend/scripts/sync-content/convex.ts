@@ -1,6 +1,6 @@
-import * as fs from "node:fs";
-import * as os from "node:os";
-import path from "node:path";
+import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 import { logWarning } from "@repo/backend/scripts/sync-content/logging";
 import {
@@ -111,9 +111,9 @@ export const getConvexConfig = Effect.fn("scripts.getConvexConfig")(function* (
       () => new ConvexConfigError({ message: missingConfigMessage(options) })
     )
   );
-  const configPath = path.join(os.homedir(), ".convex", "config.json");
+  const configPath = join(homedir(), ".convex", "config.json");
   const content = yield* Effect.try({
-    try: () => fs.readFileSync(configPath, "utf8"),
+    try: () => readFileSync(configPath, "utf8"),
     catch: () =>
       new ConvexAuthError({
         message: "Not authenticated. Run: npx convex dev",

@@ -9,7 +9,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("tryouts/mutations/internal/leaderboard", () => {
-  it("stores leaderboard entries without persisting a legacy irtScore field", async () => {
+  it("stores leaderboard entries without persisting an irtScore field", async () => {
     const t = createTryoutTestConvex();
     const state = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
