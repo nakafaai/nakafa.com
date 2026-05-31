@@ -48,27 +48,27 @@ Bayangkan tali menarik kotak dengan gaya <InlineMath math="\vec{F}" /> miring ke
         to: resultant,
         color: getColor("VIOLET"),
         label: "F",
-        labelPosition: "end",
-        labelOffset: [0.25, 0.45, 0.2],
-        labelSize: "reading",
+        labelAnchorX: "center",
+        labelProgress: 3 / 5,
+        labelOffset: [0.25, 0.5, 0.2],
       },
       {
         from: [0, 0, 0],
         to: fx,
         color: getColor("TEAL"),
         label: "Fx",
-        labelPosition: "end",
-        labelOffset: [0.35, -0.4, 0],
-        labelSize: "reading",
+        labelAnchorX: "center",
+        labelProgress: 1 / 2,
+        labelOffset: [0, -0.45, 0],
       },
       {
         from: fx,
         to: resultant,
         color: getColor("AMBER"),
         label: "Fy",
-        labelPosition: "end",
-        labelOffset: [0.35, 0.1, 0.15],
-        labelSize: "reading",
+        labelAnchorX: "center",
+        labelProgress: 1 / 2,
+        labelOffset: [0.55, 0, 0.2],
       },
     ];
   })()}
@@ -82,17 +82,19 @@ Pada gambar, ujung komponen <InlineMath math="F_x" /> lalu <InlineMath math="F_y
 
 Sebuah gaya <InlineMath math="50\text{ N}" /> bekerja <InlineMath math="37^\circ" /> di atas arah horizontal. Gunakan pendekatan <InlineMath math="\cos37^\circ\approx0{,}8" /> dan <InlineMath math="\sin37^\circ\approx0{,}6" />.
 
-<BlockMath math="\begin{aligned}
-F_x&=F\cos\theta \\
-&=50(0{,}8) \\
-&=40\text{ N}
-\end{aligned}" />
+<MathContainer>
+  <BlockMath math="\begin{aligned}
+  F_x&=F\cos\theta \\
+  &=50(0{,}8) \\
+  &=40\text{ N}
+  \end{aligned}" />
 
-<BlockMath math="\begin{aligned}
-F_y&=F\sin\theta \\
-&=50(0{,}6) \\
-&=30\text{ N}
-\end{aligned}" />
+  <BlockMath math="\begin{aligned}
+  F_y&=F\sin\theta \\
+  &=50(0{,}6) \\
+  &=30\text{ N}
+  \end{aligned}" />
+</MathContainer>
 
 Artinya, gaya miring <InlineMath math="50\text{ N}" /> itu setara dengan tarikan <InlineMath math="40\text{ N}" /> ke kanan dan <InlineMath math="30\text{ N}" /> ke atas.
 

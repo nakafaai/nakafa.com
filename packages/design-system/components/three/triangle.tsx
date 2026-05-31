@@ -1,6 +1,6 @@
 "use client";
 
-import { Instance, Instances, Line, Text } from "@react-three/drei";
+import { Instance, Instances, Line } from "@react-three/drei";
 import {
   FONT_PATH,
   MONO_FONT_PATH,
@@ -12,6 +12,7 @@ import {
   GRAPH_ANGLE_ARC_SEGMENTS,
   GRAPH_POINT_SEGMENTS,
 } from "@repo/design-system/components/three/helpers/quality";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
 import { useTheme } from "next-themes";
 import { useMemo } from "react";
@@ -290,14 +291,11 @@ export function Triangle({
       />
 
       {/* Angle label */}
-      <Text
+      <ThreeLabel
         anchorX="center"
-        anchorY="middle"
         color={COLORS.VIOLET}
         font={fontPath}
         fontSize={BASE_FONT_SIZE}
-        frustumCulled={false}
-        material-depthTest={false}
         position={[
           Math.cos(angleInRadians / 2) * angleLabelDistance +
             (angle > DEGREES_IN_HALF_CIRCLE ? -1 : 1) *
@@ -306,52 +304,40 @@ export function Triangle({
           Math.sin(angleInRadians / 2) * angleLabelDistance,
           0,
         ]}
-        renderOrder={10}
       >
         {`${angle}°`}
-      </Text>
+      </ThreeLabel>
 
       {/* Side labels */}
-      <Text
+      <ThreeLabel
         anchorX="center"
         color={COLORS.CYAN}
         font={fontPath}
         fontSize={BASE_FONT_SIZE}
-        frustumCulled={false}
-        material-depthTest={false}
         position={labelPositions.adjacentLabelPos}
-        renderOrder={10}
       >
         {labels.adjacent}
-      </Text>
+      </ThreeLabel>
 
-      <Text
-        anchorY="middle"
+      <ThreeLabel
         color={COLORS.ORANGE}
         font={fontPath}
         fontSize={BASE_FONT_SIZE}
-        frustumCulled={false}
-        material-depthTest={false}
         position={labelPositions.oppositeLabelPos}
-        renderOrder={10}
       >
         {labels.opposite}
-      </Text>
+      </ThreeLabel>
 
-      <Text
+      <ThreeLabel
         anchorX="center"
-        anchorY="middle"
         color={COLORS.ROSE}
         font={fontPath}
         fontSize={BASE_FONT_SIZE}
-        frustumCulled={false}
-        material-depthTest={false}
         position={labelPositions.hypotenuseLabelPos}
-        renderOrder={10}
         rotation={[0, 0, hypotenuseLabelRotation]}
       >
         {labels.hypotenuse}
-      </Text>
+      </ThreeLabel>
 
       {/* Points at vertices - using instanced rendering */}
       <Instances

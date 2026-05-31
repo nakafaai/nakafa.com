@@ -1,6 +1,6 @@
 "use client";
 
-import { Line, Text } from "@react-three/drei";
+import { Line } from "@react-three/drei";
 import {
   FONT_PATH,
   MONO_FONT_PATH,
@@ -13,6 +13,7 @@ import {
   GRAPH_FULL_CIRCLE_SEGMENTS,
   GRAPH_POINT_SEGMENTS,
 } from "@repo/design-system/components/three/helpers/quality";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
 import {
   getCos,
@@ -242,24 +243,20 @@ export function UnitCircle({
         />
 
         {/* Angle label */}
-        <Text
+        <ThreeLabel
           anchorX="center"
-          anchorY="middle"
           color={COLORS.VIOLET}
           font={fontPath}
           fontSize={LABEL_FONT_SIZE}
-          frustumCulled={false}
-          material-depthTest={false}
           position={[
             Math.cos(angleInRadians / 2) * ANGLE_LABEL_X_FACTOR,
             Math.sin(angleInRadians / 2) * ANGLE_LABEL_Y_FACTOR,
             0,
           ]}
-          renderOrder={10}
           visible={showLabels}
         >
           {`${angle}°`}
-        </Text>
+        </ThreeLabel>
 
         {/* Point on circle - using shared geometry */}
         <mesh
@@ -296,42 +293,32 @@ export function UnitCircle({
         {/* Trig value labels - only render if visible */}
         {!!showLabels && (
           <>
-            <Text
+            <ThreeLabel
               anchorX="center"
               color={COLORS.CYAN}
               font={fontPath}
               fontSize={LABEL_FONT_SIZE}
-              frustumCulled={false}
-              material-depthTest={false}
               position={[cos / 2, COS_LABEL_Y_OFFSET, 0]}
-              renderOrder={10}
             >
               {labels.cos}
-            </Text>
-            <Text
+            </ThreeLabel>
+            <ThreeLabel
               anchorX="left"
-              anchorY="middle"
               color={COLORS.ORANGE}
               font={fontPath}
               fontSize={LABEL_FONT_SIZE}
-              frustumCulled={false}
-              material-depthTest={false}
               position={[cos + SIN_LABEL_X_OFFSET, sin / 2, 0]}
-              renderOrder={10}
             >
               {labels.sin}
-            </Text>
-            <Text
+            </ThreeLabel>
+            <ThreeLabel
               color={COLORS.ROSE}
               font={fontPath}
               fontSize={LABEL_FONT_SIZE}
-              frustumCulled={false}
-              material-depthTest={false}
               position={[TAN_LABEL_POSITION, TAN_LABEL_POSITION, 0]}
-              renderOrder={10}
             >
               {labels.tan}
-            </Text>
+            </ThreeLabel>
           </>
         )}
       </group>

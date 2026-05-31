@@ -48,27 +48,27 @@ Imagine a rope pulling a box with force <InlineMath math="\vec{F}" /> up and to 
         to: resultant,
         color: getColor("VIOLET"),
         label: "F",
-        labelPosition: "end",
-        labelOffset: [0.25, 0.45, 0.2],
-        labelSize: "reading",
+        labelAnchorX: "center",
+        labelProgress: 3 / 5,
+        labelOffset: [0.25, 0.5, 0.2],
       },
       {
         from: [0, 0, 0],
         to: fx,
         color: getColor("TEAL"),
         label: "Fx",
-        labelPosition: "end",
-        labelOffset: [0.35, -0.4, 0],
-        labelSize: "reading",
+        labelAnchorX: "center",
+        labelProgress: 1 / 2,
+        labelOffset: [0, -0.45, 0],
       },
       {
         from: fx,
         to: resultant,
         color: getColor("AMBER"),
         label: "Fy",
-        labelPosition: "end",
-        labelOffset: [0.35, 0.1, 0.15],
-        labelSize: "reading",
+        labelAnchorX: "center",
+        labelProgress: 1 / 2,
+        labelOffset: [0.55, 0, 0.2],
       },
     ];
   })()}
@@ -82,17 +82,19 @@ The endpoint of <InlineMath math="F_x" /> followed by <InlineMath math="F_y" /> 
 
 A <InlineMath math="50\text{ N}" /> force acts <InlineMath math="37^\circ" /> above the horizontal. Use <InlineMath math="\cos37^\circ\approx0.8" /> and <InlineMath math="\sin37^\circ\approx0.6" />.
 
-<BlockMath math="\begin{aligned}
-F_x&=F\cos\theta \\
-&=50(0.8) \\
-&=40\text{ N}
-\end{aligned}" />
+<MathContainer>
+  <BlockMath math="\begin{aligned}
+  F_x&=F\cos\theta \\
+  &=50(0.8) \\
+  &=40\text{ N}
+  \end{aligned}" />
 
-<BlockMath math="\begin{aligned}
-F_y&=F\sin\theta \\
-&=50(0.6) \\
-&=30\text{ N}
-\end{aligned}" />
+  <BlockMath math="\begin{aligned}
+  F_y&=F\sin\theta \\
+  &=50(0.6) \\
+  &=30\text{ N}
+  \end{aligned}" />
+</MathContainer>
 
 So the slanted <InlineMath math="50\text{ N}" /> force is equivalent to a <InlineMath math="40\text{ N}" /> pull to the right and a <InlineMath math="30\text{ N}" /> pull upward.
 

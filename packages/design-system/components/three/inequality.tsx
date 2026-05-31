@@ -1,6 +1,6 @@
 "use client";
 
-import { Line, Text } from "@react-three/drei";
+import { Line } from "@react-three/drei";
 import {
   FONT_PATH,
   MONO_FONT_PATH,
@@ -9,6 +9,7 @@ import {
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
 import { GRAPH_BOUNDARY_SEGMENTS } from "@repo/design-system/components/three/helpers/quality";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
 import { isMobileDevice } from "@repo/design-system/lib/device";
 import { useMemo } from "react";
@@ -501,21 +502,17 @@ export function Inequality({
 
       {/* Render label if provided */}
       {!!label && (
-        <Text
+        <ThreeLabel
           anchorX="center"
-          anchorY="middle"
           color={label.color || finalBoundaryColor}
           font={fontPath}
           fontSize={resolveThreeFontSize(
             label.fontSize ?? DEFAULT_LABEL_FONT_SIZE
           )}
-          frustumCulled={false}
-          material-depthTest={false}
           position={label.position}
-          renderOrder={10}
         >
           {label.text}
-        </Text>
+        </ThreeLabel>
       )}
     </group>
   );
