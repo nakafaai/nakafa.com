@@ -1,3 +1,4 @@
+import { SarsCov2VirionLab } from "@repo/design-system/components/contents/biology/sars-cov-2-virion";
 import {
   VirusMorphologyLab,
   VirusStructureLab,
@@ -69,6 +70,37 @@ In real research, viruses are not read only from disease symptoms. A virology re
         caption: <>Some viruses have a lipid envelope with surface proteins that help them recognize target cells.</>,
         focus: <>The envelope is transparent because it surrounds the capsid rather than replacing it.</>,
         takeaway: <>The envelope and surface proteins help decide whether a virus can attach to a specific cell.</>,
+      },
+    ],
+  }}
+/>
+
+The next model is different from the general-parts model above. It uses a **SARS-CoV-2** surface model from [NIH 3D/NIAID](https://3d.nih.gov/entries/3DPX-013323/2.01), built from Protein Data Bank data and NIAID imaging studies. In the source notes, orange spikes represent the open or active form, while beige spikes represent the closed or inactive form. Use it as a real enveloped-virus example, not as the shape of every virus.
+
+<SarsCov2VirionLab
+  title={<>SARS-CoV-2 surface from research data</>}
+  description={
+    <>
+      Compare open spikes, closed spikes, and the outer envelope on one real
+      virion.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose a surface part",
+    focusLabel: "What to read",
+    takeawayLabel: "Biological meaning",
+    viewLabel: "3D SARS-CoV-2 surface model from NIH 3D",
+    items: [
+      {
+        tab: "Surface",
+        caption: <>The spike colors help separate open and closed forms on the virion surface.</>,
+        focus: <>Notice that surface proteins appear as many separate structures projecting from the envelope.</>,
+        takeaway: <>In an enveloped virus, the surface helps decide how a virion is recognized and approached by a target cell.</>,
+        callouts: [
+          { id: "open-spike", label: "open spike" },
+          { id: "closed-spike", label: "closed spike" },
+          { id: "envelope", label: "envelope" },
+        ],
       },
     ],
   }}

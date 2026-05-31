@@ -1,3 +1,5 @@
+import { FungiMyceliumLab } from "@repo/design-system/components/contents/biology/fungi";
+
 export const metadata = {
   title: "Fungi",
   description:
@@ -24,6 +26,36 @@ Fungal traits such as hyphae, mycelium, heterotrophic nutrition, and spores are 
 This distinction matters because fungi do not live like plants. They do not photosynthesize, but build absorbing networks that take nutrients from organic material.
 
 > Quick check: when you see a fine thread network that absorbs nutrients from organic material, think hyphae and mycelium before thinking plant roots.
+
+<FungiMyceliumLab
+  title={<>Fungal hyphae and mycelium model</>}
+  description={
+    <>
+      Observe how hyphae branch into mycelium, release enzymes around organic
+      material, and spread spores from an aerial hypha.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose a fungal part",
+    focusLabel: "Part to observe",
+    takeawayLabel: "Biological meaning",
+    viewLabel: "3D model of hyphae, mycelium, and spores",
+    items: [
+      {
+        tab: "Mycelium",
+        caption: <>The hyphal network spreads across food material and expands the absorbing surface of the fungus.</>,
+        focus: <>Branching hyphae form mycelium, not plant roots.</>,
+        takeaway: <>Fungi digest outside the body, then absorb the breakdown products through the hyphal network.</>,
+        callouts: [
+          { id: "hypha", label: "hypha" },
+          { id: "mycelium", label: "mycelium" },
+          { id: "spore", label: "spores" },
+          { id: "enzyme", label: "external enzymes" },
+        ],
+      },
+    ],
+  }}
+/>
 
 | Fungal feature | Simple meaning | Why it matters |
 | --- | --- | --- |
