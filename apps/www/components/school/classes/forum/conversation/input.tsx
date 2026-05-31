@@ -78,6 +78,7 @@ export const ForumPostInput = () => {
     }
   }, [replyTarget]);
 
+  /** Uploads one attachment and removes its pending record if the upload fails. */
   const uploadFile = async (file: File) => {
     const { uploadId, uploadUrl } = await generateUploadUrl({ forumId });
 
@@ -139,9 +140,26 @@ export const ForumPostInput = () => {
           }
         }
 
-        attachmentUploadIds.push(
-          ...(await Promise.all(uploadableFiles.map(uploadFile)))
+        const uploadResults = await Promise.allSettled(
+          uploadableFiles.map(uploadFile)
         );
+
+        for (const result of uploadResults) {
+          if (result.status === "fulfilled") {
+            attachmentUploadIds.push(result.value);
+          }
+        }
+
+        const failedUpload = uploadResults.find(
+          (result) => result.status === "rejected"
+        );
+
+        if (failedUpload) {
+          const reason = failedUpload.reason;
+          throw reason instanceof Error
+            ? reason
+            : new Error("Forum attachment upload failed.", { cause: reason });
+        }
 
         await createPost({
           attachmentUploadIds:

@@ -1,6 +1,21 @@
 import { useMemo, useSyncExternalStore } from "react";
 
+const ANCHOR_WATCH_KEY_SEPARATOR = "\n";
 const SCROLL_BOTTOM_TOLERANCE = 6;
+
+/** Builds a primitive key for equivalent heading-id watch lists. */
+function getAnchorWatchKey(watch: string[]) {
+  return watch.join(ANCHOR_WATCH_KEY_SEPARATOR);
+}
+
+/** Restores heading ids from a watch-list key. */
+function getAnchorWatchFromKey(watchKey: string) {
+  if (watchKey.length === 0) {
+    return [];
+  }
+
+  return watchKey.split(ANCHOR_WATCH_KEY_SEPARATOR);
+}
 
 function getNormalizedAnchor(
   activeAnchor: string[],
@@ -140,9 +155,10 @@ function createAnchorStore(watch: string[], single: boolean) {
  * @returns Active anchor
  */
 export function useAnchorObserver(watch: string[], single: boolean): string[] {
+  const watchKey = getAnchorWatchKey(watch);
   const store = useMemo(
-    () => createAnchorStore(watch, single),
-    [watch, single]
+    () => createAnchorStore(getAnchorWatchFromKey(watchKey), single),
+    [watchKey, single]
   );
 
   return useSyncExternalStore(
