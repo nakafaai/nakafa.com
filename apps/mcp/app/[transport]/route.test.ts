@@ -249,12 +249,14 @@ describe("Nakafa MCP route", () => {
     expect(legacyContent.result?.isError).toBe(true);
     expect(legacyExercise.result?.isError).toBe(true);
     expect(mixedLegacyContent.result?.isError).toBe(true);
-    expect(JSON.stringify(legacyContent.result)).toContain("Invalid arguments");
+    expect(JSON.stringify(legacyContent.result)).toContain(
+      "Invalid Nakafa content read options"
+    );
     expect(JSON.stringify(legacyExercise.result)).toContain(
-      "Invalid arguments"
+      "Invalid Nakafa exercise read options"
     );
     expect(JSON.stringify(mixedLegacyContent.result)).toContain(
-      "Invalid arguments"
+      "Invalid Nakafa content read options"
     );
   });
 
@@ -355,6 +357,32 @@ describe("Nakafa MCP route", () => {
       },
       name: "nakafa_quran_reference",
     });
+    const defaultFindPrompt = await postMcp("prompts/get", {
+      arguments: {
+        topic: "integral",
+      },
+      name: "nakafa_find_lesson",
+    });
+    const defaultQuranPrompt = await postMcp("prompts/get", {
+      arguments: {
+        surah: "1",
+      },
+      name: "nakafa_quran_reference",
+    });
+    const missingPrompt = await postMcp("prompts/get", {
+      arguments: {},
+      name: "nakafa_missing",
+    });
+    const invalidPrompt = await postMcp("prompts/get", {
+      arguments: {
+        legacy: "true",
+        topic: "integral",
+      },
+      name: "nakafa_find_lesson",
+    });
+    const missingPromptArguments = await postMcp("prompts/get", {
+      name: "nakafa_find_lesson",
+    });
 
     expect(
       Schema.decodeUnknownSync(
@@ -387,6 +415,17 @@ describe("Nakafa MCP route", () => {
     expect(JSON.stringify(quranPrompt.result)).toContain(
       "Summarize the returned reference briefly."
     );
+    expect(JSON.stringify(defaultFindPrompt.result)).toContain(
+      "Preferred locale: en"
+    );
+    expect(JSON.stringify(defaultQuranPrompt.result)).toContain(
+      "Surah 1, verses 1"
+    );
+    expect(missingPrompt.error?.message).toContain("not found");
+    expect(invalidPrompt.error?.message).toContain(
+      "Invalid arguments for prompt nakafa_find_lesson"
+    );
+    expect(missingPromptArguments.error?.message).toContain("topic");
   });
 
   it("guards browser origins while allowing desktop clients without Origin", async () => {

@@ -41,7 +41,7 @@ describe("nakafa_search_content", () => {
     ).toStrictEqual({
       message: "Invalid Nakafa content search options.",
       suggestions: [
-        expect.stringContaining("Too big: expected number to be <=50"),
+        expect.stringContaining("Expected a number between 1 and 50"),
       ],
     });
   });

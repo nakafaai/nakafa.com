@@ -15,7 +15,9 @@ const ToolErrorResultSchema = Schema.Struct({
 describe("nakafa_get_exercise", () => {
   it("returns structured not-found errors", async () => {
     const result = await Effect.runPromise(
-      getNakafaExerciseToolResult("en/quran/1")
+      getNakafaExerciseToolResult({
+        content_ref: "en/exercises/high-school/snbt/general-reasoning/missing",
+      })
     );
 
     expect(
