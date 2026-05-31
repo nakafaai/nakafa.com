@@ -6,7 +6,7 @@ import { toggleVariants } from "@repo/design-system/components/ui/toggle";
 import { cn } from "@repo/design-system/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
-import { createContext, useContext } from "react";
+import { createContext, use, useMemo } from "react";
 
 type ToggleGroupLayout = "default" | "grid";
 
@@ -103,6 +103,10 @@ function SingleToggleGroup({
     defaultValue === undefined ? undefined : toSingleValueArray(defaultValue);
   const groupValue =
     value === undefined ? undefined : toSingleValueArray(value);
+  const contextValue = useMemo(
+    () => ({ layout, variant, size }),
+    [layout, variant, size]
+  );
 
   /**
    * Publishes only the selected item instead of Base UI's single-item array.
@@ -126,7 +130,7 @@ function SingleToggleGroup({
       value={groupValue}
       {...props}
     >
-      <ToggleGroupContext.Provider value={{ layout, variant, size }}>
+      <ToggleGroupContext.Provider value={contextValue}>
         {children}
       </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive>
@@ -146,6 +150,11 @@ function MultipleToggleGroup({
   type,
   ...props
 }: ToggleGroupMultipleProps) {
+  const contextValue = useMemo(
+    () => ({ layout, variant, size }),
+    [layout, variant, size]
+  );
+
   return (
     <ToggleGroupPrimitive
       className={cn(toggleGroupRootVariants({ layout }), className)}
@@ -159,7 +168,7 @@ function MultipleToggleGroup({
       orientation={orientation}
       {...props}
     >
-      <ToggleGroupContext.Provider value={{ layout, variant, size }}>
+      <ToggleGroupContext.Provider value={contextValue}>
         {children}
       </ToggleGroupContext.Provider>
     </ToggleGroupPrimitive>
@@ -197,7 +206,7 @@ function ToggleGroupItem({
   ...props
 }: React.ComponentProps<typeof TogglePrimitive> &
   VariantProps<typeof toggleVariants>) {
-  const context = useContext(ToggleGroupContext);
+  const context = use(ToggleGroupContext);
   const itemSize = context.size || size;
   const itemVariant = context.variant || variant;
 

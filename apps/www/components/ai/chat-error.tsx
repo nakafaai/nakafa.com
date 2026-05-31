@@ -19,11 +19,11 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useAction } from "convex/react";
 import { useTranslations } from "next-intl";
-import { Activity, memo, useTransition } from "react";
+import { Activity, useTransition } from "react";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
 import { useChat } from "@/components/ai/context/use-chat";
 
-export const AiChatError = memo(() => {
+export const AiChatError = () => {
   const t = useTranslations("Ai");
 
   const error = useChat((state) => state.chat.error);
@@ -52,10 +52,10 @@ export const AiChatError = memo(() => {
       {isInsufficientCredits ? <ButtonCheckout /> : <ButtonRegenerate />}
     </Empty>
   );
-});
+};
 AiChatError.displayName = "AiChatError";
 
-const ButtonCheckout = memo(() => {
+const ButtonCheckout = () => {
   const t = useTranslations("Auth");
 
   const [isPending, startTransition] = useTransition();
@@ -112,10 +112,10 @@ const ButtonCheckout = memo(() => {
       </Activity>
     </div>
   );
-});
+};
 ButtonCheckout.displayName = "ButtonCheckout";
 
-const ButtonRegenerate = memo(() => {
+const ButtonRegenerate = () => {
   const t = useTranslations("Ai");
 
   const regenerate = useChat((state) => state.chat.regenerate);
@@ -125,5 +125,5 @@ const ButtonRegenerate = memo(() => {
       {t("retry")}
     </Button>
   );
-});
+};
 ButtonRegenerate.displayName = "ButtonRegenerate";

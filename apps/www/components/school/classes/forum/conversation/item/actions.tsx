@@ -23,7 +23,7 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
-import { memo, useTransition } from "react";
+import { useTransition } from "react";
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";
 import type { ForumPost } from "@/components/school/classes/forum/conversation/data/entities";
 
@@ -31,7 +31,7 @@ import type { ForumPost } from "@/components/school/classes/forum/conversation/d
  * Keeps post-level quick actions grouped together so reply and reaction updates
  * stay close to the post they mutate.
  */
-export const PostItemActions = memo(({ post }: { post: ForumPost }) => {
+export const PostItemActions = ({ post }: { post: ForumPost }) => {
   const t = useTranslations("Common");
   const setForumReplyTarget = useForumSession(
     (state) => state.setForumReplyTarget
@@ -114,5 +114,5 @@ export const PostItemActions = memo(({ post }: { post: ForumPost }) => {
       </Tooltip>
     </ButtonGroup>
   );
-});
+};
 PostItemActions.displayName = "PostItemActions";

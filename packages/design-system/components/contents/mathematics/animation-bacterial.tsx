@@ -123,7 +123,8 @@ export function BacterialGrowth({
 
   const isInView = entry?.isIntersecting ?? false;
   // Viewport visibility gates work without overriding the user's Play/Pause intent.
-  const isAnimating = isPlaying && isInView;
+  const isEffectivelyPlaying = isPlaying && generation < maxGenerations;
+  const isAnimating = isEffectivelyPlaying && isInView;
   const deferredAnimating = useDeferredValue(isAnimating);
   const deferredGeneration = useDeferredValue(generation);
   const pulseRepeat = deferredAnimating ? Number.POSITIVE_INFINITY : 0;
@@ -172,13 +173,7 @@ export function BacterialGrowth({
   );
 
   useEffect(() => {
-    // Stop playing when maximum generation is reached
-    if (deferredGeneration >= maxGenerations) {
-      setIsPlaying(false);
-      return;
-    }
-
-    if (!deferredAnimating) {
+    if (!deferredAnimating || deferredGeneration >= maxGenerations) {
       return;
     }
 
@@ -200,15 +195,15 @@ export function BacterialGrowth({
   }, []);
 
   const togglePlayPause = useCallback(() => {
-    if (!isPlaying && generation >= maxGenerations) {
+    if (!isEffectivelyPlaying && generation >= maxGenerations) {
       // If at max generation and trying to play, restart from beginning
       setGeneration(0);
       setIsPlaying(true);
       return;
     }
 
-    setIsPlaying(!isPlaying);
-  }, [isPlaying, generation, maxGenerations]);
+    setIsPlaying((value) => !value);
+  }, [isEffectivelyPlaying, generation, maxGenerations]);
 
   // Generate time buttons
   const timeButtons = useMemo(
@@ -261,8 +256,8 @@ export function BacterialGrowth({
                           opacity: 1,
                         }}
                         className="relative flex items-center justify-center"
-                        exit={{ scale: 0, opacity: 0 }}
-                        initial={{ scale: 0, opacity: 0 }}
+                        exit={{ scale: 0.95, opacity: 0 }}
+                        initial={{ scale: 0.95, opacity: 0 }}
                         key={id}
                         layout
                         transition={{
@@ -311,13 +306,15 @@ export function BacterialGrowth({
               <span className="sr-only">Reset</span>
             </Button>
             <Button
-              aria-label={isPlaying ? "Pause" : "Play"}
+              aria-label={isEffectivelyPlaying ? "Pause" : "Play"}
               onClick={togglePlayPause}
               size="icon"
-              variant={isPlaying ? "outline" : "default"}
+              variant={isEffectivelyPlaying ? "outline" : "default"}
             >
-              <HugeIcons icon={isPlaying ? PauseIcon : PlayIcon} />
-              <span className="sr-only">{isPlaying ? "Pause" : "Play"}</span>
+              <HugeIcons icon={isEffectivelyPlaying ? PauseIcon : PlayIcon} />
+              <span className="sr-only">
+                {isEffectivelyPlaying ? "Pause" : "Play"}
+              </span>
             </Button>
           </div>
 

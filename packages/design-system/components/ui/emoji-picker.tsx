@@ -60,6 +60,7 @@ function EmojiPickerRow({ children, ...props }: EmojiPickerListRowProps) {
   );
 }
 
+/** Renders one selectable emoji option inside the picker grid. */
 function EmojiPickerEmoji({
   emoji,
   className,
@@ -73,6 +74,7 @@ function EmojiPickerEmoji({
         className
       )}
       data-slot="emoji-picker-emoji"
+      type="button"
     >
       {emoji.emoji}
     </button>

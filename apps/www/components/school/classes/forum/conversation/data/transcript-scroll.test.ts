@@ -67,12 +67,10 @@ function createController({
   rowsOverride?: readonly ConversationRow[];
 } = {}) {
   return createConversationScrollController({
+    handle: handle?.handle ?? null,
     prefersReducedMotion,
     rowIndexByPostId: rowIndexByPostIdOverride,
     rows: rowsOverride,
-    virtualizerRef: {
-      current: handle?.handle ?? null,
-    },
   });
 }
 

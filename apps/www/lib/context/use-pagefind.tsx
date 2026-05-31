@@ -9,10 +9,10 @@ import {
   type ReactNode,
   type SetStateAction,
   useEffect,
-  useMemo,
   useState,
 } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
+import { getErrorMessage } from "@/lib/utils/error";
 
 const PAGEFIND_SCRIPT_PATH = "/_pagefind/pagefind.js";
 
@@ -49,7 +49,7 @@ export function PagefindProvider({ children }: { children: ReactNode }) {
     Effect.runFork(initializePagefind({ setError, setReady }));
   }, []);
 
-  const values = useMemo(() => ({ ready, error }), [ready, error]);
+  const values = { ready, error };
 
   return (
     <PagefindContext.Provider value={values}>
@@ -69,17 +69,6 @@ export function usePagefind<T>(selector: (context: PagefindContextType) => T) {
   }
 
   return selector(context);
-}
-
-/**
- * Format one unknown Pagefind error into a user-facing string.
- */
-export function getErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    return `${error.constructor.name}: ${error.message}`;
-  }
-
-  return String(error);
 }
 
 const DEV_SEARCH_NOTICE = (
@@ -177,6 +166,7 @@ function hasMissingDevelopmentPagefindBundle() {
 const importPagefind = Effect.fn("www.pagefind.import")(function* () {
   const pagefind = yield* Effect.tryPromise({
     try: () =>
+      // react-doctor-disable-next-line react-doctor/no-dynamic-import-path
       import(/* webpackIgnore: true */ addBasePath(PAGEFIND_SCRIPT_PATH)),
     catch: (error) => error,
   });

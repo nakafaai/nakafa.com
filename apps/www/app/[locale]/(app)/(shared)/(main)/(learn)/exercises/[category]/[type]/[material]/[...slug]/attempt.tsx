@@ -4,7 +4,7 @@ import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { cn } from "@repo/design-system/lib/utils";
 import { useMutation } from "convex/react";
-import { motion } from "motion/react";
+import { domAnimation, LazyMotion, m } from "motion/react";
 import { CompleteExerciseButton } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/attempt-complete-button";
 import { StartExerciseButton } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/attempt-start-button";
 import { Countdown } from "@/components/exercise/attempt-countdown";
@@ -44,27 +44,29 @@ export function ExerciseAttempt({ totalExercises }: Props) {
         hidden && "pointer-events-none"
       )}
     >
-      <motion.div
-        animate={hidden ? "hidden" : "visible"}
-        className="flex flex-col rounded-xl border bg-card p-2 shadow-sm"
-        transition={{ ease: "easeOut" }}
-        variants={{
-          visible: { y: 0, opacity: 1 },
-          hidden: { y: "-120%", opacity: 0 },
-        }}
-      >
-        <div className="flex items-center justify-between">
-          <Countdown timer={timer} />
+      <LazyMotion features={domAnimation} strict>
+        <m.div
+          animate={hidden ? "hidden" : "visible"}
+          className="flex flex-col rounded-xl border bg-card p-2 shadow-sm"
+          transition={{ ease: "easeOut" }}
+          variants={{
+            visible: { y: 0, opacity: 1 },
+            hidden: { y: "-120%", opacity: 0 },
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <Countdown timer={timer} />
 
-          {timer.isActive ? (
-            <CompleteExerciseButton />
-          ) : (
-            <StartExerciseButton totalExercises={totalExercises} />
-          )}
-        </div>
+            {timer.isActive ? (
+              <CompleteExerciseButton />
+            ) : (
+              <StartExerciseButton totalExercises={totalExercises} />
+            )}
+          </div>
 
-        <ExerciseStats />
-      </motion.div>
+          <ExerciseStats />
+        </m.div>
+      </LazyMotion>
     </div>
   );
 }

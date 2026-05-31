@@ -106,11 +106,8 @@ export function CoordinateSystem({
     }
   }, [resolvedTheme]);
 
-  // Origin point color based on theme
-  const originColor = useMemo(
-    () => (resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK),
-    [resolvedTheme]
-  );
+  const originColor =
+    resolvedTheme === "dark" ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK;
 
   // Handle button clicks with proper invalidation for on-demand rendering
   const handleGridToggle = useCallback(() => {

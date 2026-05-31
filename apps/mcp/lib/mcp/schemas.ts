@@ -37,7 +37,7 @@ export const NakafaMcpContentRefInputSchema = z
   );
 
 /** Shared tool-error schema used in `structuredContent` for failed calls. */
-export const NakafaMcpToolErrorSchema = z
+const NakafaMcpToolErrorSchema = z
   .object({
     error: z
       .object({
@@ -53,7 +53,7 @@ export const NakafaMcpToolErrorSchema = z
 
 /** Input schema for `nakafa_search_content`. */
 export const NakafaSearchContentInputSchema = z
-  .object({
+  .strictObject({
     limit: z
       .number()
       .int()
@@ -82,7 +82,6 @@ export const NakafaSearchContentInputSchema = z
       "Optional top-level content section filter."
     ),
   })
-  .strict()
   .describe("Nakafa content search options.");
 
 /** Output schema for `nakafa_search_content` success and error results. */
@@ -108,10 +107,9 @@ export const NakafaSearchContentOutputSchema = z
 
 /** Input schema for `nakafa_get_content`. */
 export const NakafaGetContentInputSchema = z
-  .object({
+  .strictObject({
     content_ref: NakafaMcpContentRefInputSchema,
   })
-  .strict()
   .describe("Nakafa content read options.");
 
 /** Output schema for `nakafa_get_content` success and error results. */
@@ -128,17 +126,16 @@ export const NakafaGetContentOutputSchema = z
 
 /** Input schema for `nakafa_get_taxonomy`. */
 export const NakafaGetTaxonomyInputSchema = z
-  .object({
+  .strictObject({
     locale: LocaleSchema.default(routing.defaultLocale).describe(
       "Locale used for localized labels and content counts."
     ),
   })
-  .strict()
   .describe("Nakafa taxonomy options.");
 
 /** Output schema for `nakafa_get_taxonomy` success and error results. */
 export const NakafaGetTaxonomyOutputSchema = z
-  .object({
+  .looseObject({
     content_counts: z.array(
       z.object({
         count: z.number().int().min(0),
@@ -151,16 +148,14 @@ export const NakafaGetTaxonomyOutputSchema = z
     ...NakafaMcpToolErrorSchema.shape,
   })
   .partial()
-  .passthrough()
   .describe("Nakafa taxonomy output.");
 
 /** Input schema for `nakafa_get_exercise`. */
 export const NakafaGetExerciseInputSchema = z
-  .object({
+  .strictObject({
     content_ref: NakafaMcpContentRefInputSchema,
     exercise_number: z.number().int().min(1).optional(),
   })
-  .strict()
   .describe("Nakafa exercise read options.");
 
 const NakafaExerciseContentSchema = z.object({
@@ -194,14 +189,13 @@ export const NakafaGetExerciseOutputSchema = z
 
 /** Input schema for `nakafa_get_quran_reference`. */
 export const NakafaGetQuranReferenceInputSchema = z
-  .object({
+  .strictObject({
     from_verse: z.number().int().min(1).default(1),
     include_tafsir: z.boolean().default(false),
     locale: LocaleSchema.default(routing.defaultLocale),
     surah: z.number().int().min(1).max(114),
     to_verse: z.number().int().min(1).optional(),
   })
-  .strict()
   .describe("Nakafa Quran reference options.");
 
 /** Output schema for `nakafa_get_quran_reference` success and error results. */

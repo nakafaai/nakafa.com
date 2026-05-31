@@ -12,7 +12,7 @@ import {
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
-import { useCallback } from "react";
+
 import { useSearch } from "@/lib/context/use-search";
 import { searchParsers } from "@/lib/nuqs/search";
 
@@ -22,13 +22,10 @@ export function InputSearch() {
 
   const [{ q }, setSearch] = useQueryStates(searchParsers);
 
-  const setValue = useCallback(
-    (value: string) => {
-      setSearch({ q: value });
-      setQuery(value);
-    },
-    [setSearch, setQuery]
-  );
+  const setValue = (value: string) => {
+    setSearch({ q: value });
+    setQuery(value);
+  };
 
   return (
     <div className="sticky top-20 lg:top-4">

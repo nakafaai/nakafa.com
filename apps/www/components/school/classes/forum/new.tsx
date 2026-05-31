@@ -36,6 +36,7 @@ import { useMutation } from "convex/react";
 import { Schema } from "effect";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Suspense } from "react";
 import { toast } from "sonner";
 import { getTag, getTagsByRole } from "@/components/school/classes/_data/tag";
 import { getSchoolClassesForumHref } from "@/components/school/classes/forum/helpers/routes";
@@ -64,6 +65,14 @@ const defaultValues: Schema.Schema.Encoded<typeof form> = {
 
 /** Render the create-forum dialog and submit it through the class forum API. */
 export function SchoolClassesForumNew() {
+  return (
+    <Suspense fallback={null}>
+      <SchoolClassesForumNewContent />
+    </Suspense>
+  );
+}
+
+function SchoolClassesForumNewContent() {
   const t = useTranslations("School.Classes");
   const router = useRouter();
   const routeParams = useParams<{ id: string; slug: string }>();
@@ -117,13 +126,7 @@ export function SchoolClassesForumNew() {
   });
 
   return (
-    <form
-      id="school-classes-forum-new-form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        form.handleSubmit();
-      }}
-    >
+    <form action={() => form.handleSubmit()} id="school-classes-forum-new-form">
       <ButtonGroup>
         <Button onClick={dialog.open} type="button">
           <HugeIcons icon={ChatAdd01Icon} />

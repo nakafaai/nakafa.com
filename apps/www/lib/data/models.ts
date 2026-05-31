@@ -20,7 +20,7 @@ const modelSubtitleKeys = {
   "nakafa-pro": "model-subtitle-nakafa-pro",
 } as const satisfies Record<ModelId, string>;
 
-export const aiModelsById = {
+const aiModelsById = {
   "nakafa-lite": {
     icon: modelIcons["nakafa-lite"],
     label: modelLabels["nakafa-lite"],

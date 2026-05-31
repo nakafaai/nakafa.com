@@ -112,11 +112,8 @@ export function CreateSchoolClassDialog({
 
   return (
     <form
+      action={() => form.handleSubmit()}
       id="school-classes-header-add-form"
-      onSubmit={(event) => {
-        event.preventDefault();
-        form.handleSubmit();
-      }}
     >
       <ResponsiveDialog
         description={t("create-class-description")}

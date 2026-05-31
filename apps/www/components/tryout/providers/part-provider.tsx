@@ -9,12 +9,7 @@ import type { FunctionReturnType } from "convex/server";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
-import {
-  type PropsWithChildren,
-  useCallback,
-  useMemo,
-  useTransition,
-} from "react";
+import { type PropsWithChildren, useTransition } from "react";
 import { toast } from "sonner";
 import { createContext, useContextSelector } from "use-context-selector";
 import {
@@ -159,9 +154,9 @@ function useResolvedTryoutPartValue({
   );
 
   /** Returns to the set page while preserving the selected attempt in search. */
-  const goToSet = useCallback(() => {
+  const goToSet = () => {
     router.push(setHref);
-  }, [router, setHref]);
+  };
 
   const timer = useExerciseTimer({
     attempt,
@@ -182,7 +177,7 @@ function useResolvedTryoutPartValue({
   );
 
   /** Starts or resumes the current part through the server action contract. */
-  const startPartAction = useCallback(() => {
+  const startPartAction = () => {
     if (!runtime) {
       return;
     }
@@ -215,18 +210,10 @@ function useResolvedTryoutPartValue({
         position: "bottom-center",
       });
     });
-  }, [
-    part.key,
-    partKeys,
-    runtime,
-    tTryouts,
-    tryout.locale,
-    tryout.product,
-    tryout.slug,
-  ]);
+  };
 
   /** Completes the current part and routes back to the set when it succeeds. */
-  const completePartAction = useCallback(() => {
+  const completePartAction = () => {
     startTransition(async () => {
       if (!(runtime && attempt)) {
         return;
@@ -260,78 +247,40 @@ function useResolvedTryoutPartValue({
         position: "bottom-center",
       });
     });
-  }, [
-    attempt,
-    goToSet,
-    part.key,
-    partKeys,
-    runtime,
-    tTryouts,
-    tryout.locale,
-    tryout.product,
-    tryout.slug,
-  ]);
+  };
 
-  return useMemo(
-    () => ({
-      actions: {
-        clickTryoutStartAction: clickStartAction,
-        completePart: completePartAction,
-        confirmTryoutStartAction: confirmStartAction,
-        goToSet,
-        setTryoutStartDialogOpenAction: setDialogOpenAction,
-        startPart: startPartAction,
-      },
-      meta: {
-        isActionPending,
-        isStartBlocked,
-        isTryoutStartDialogOpen: isDialogOpen,
-      },
-      state: {
-        answers,
-        attempt,
-        canStartPart,
-        isAwaitingExpiry,
-        isTryoutActive,
-        isTryoutFinished,
-        part,
-        partEndReason,
-        score,
-        shouldShowTryoutStartControls,
-        status,
-        timer,
-        tryout,
-        tryoutAttemptStatus,
-        tryoutPublicResultStatus,
-      },
-    }),
-    [
+  return {
+    actions: {
+      clickTryoutStartAction: clickStartAction,
+      completePart: completePartAction,
+      confirmTryoutStartAction: confirmStartAction,
+      goToSet,
+      setTryoutStartDialogOpenAction: setDialogOpenAction,
+      startPart: startPartAction,
+    },
+    meta: {
+      isActionPending,
+      isStartBlocked,
+      isTryoutStartDialogOpen: isDialogOpen,
+    },
+    state: {
       answers,
       attempt,
       canStartPart,
-      clickStartAction,
-      completePartAction,
-      confirmStartAction,
-      goToSet,
-      isActionPending,
       isAwaitingExpiry,
-      isDialogOpen,
-      isStartBlocked,
       isTryoutActive,
       isTryoutFinished,
       part,
       partEndReason,
       score,
-      setDialogOpenAction,
       shouldShowTryoutStartControls,
-      startPartAction,
       status,
       timer,
       tryout,
       tryoutAttemptStatus,
       tryoutPublicResultStatus,
-    ]
-  );
+    },
+  };
 }
 
 /** Resolves one part-route context from already available route state. */
@@ -414,10 +363,7 @@ function PreloadedTryoutPartProvider({
   tryout: TryoutValue;
 }>) {
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const initialRuntime = useMemo(
-    () => preloadedQueryResult(preloadedRuntime),
-    [preloadedRuntime]
-  );
+  const initialRuntime = preloadedQueryResult(preloadedRuntime);
 
   /**
    * Keep the protected tryout runtime on vanilla Convex preloading.

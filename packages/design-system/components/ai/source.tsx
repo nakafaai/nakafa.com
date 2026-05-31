@@ -7,7 +7,7 @@ import {
 } from "@repo/design-system/components/ui/hover-card";
 import { cn } from "@repo/design-system/lib/utils";
 import Image from "next/image";
-import { createContext, useContext, useState } from "react";
+import { createContext, use, useMemo, useState } from "react";
 
 const SourceContext = createContext<{
   href: string;
@@ -41,8 +41,9 @@ function getDomainLabel(domain: string) {
   return domain.replace("www.", "");
 }
 
+/** Reads source link data from the nearest Source provider. */
 function useSourceContext() {
-  const ctx = useContext(SourceContext);
+  const ctx = use(SourceContext);
   if (!ctx) {
     throw new Error("Source.* must be used inside <Source>");
   }
@@ -56,9 +57,10 @@ export interface SourceProps {
 
 export function Source({ href, children }: SourceProps) {
   const domain = getSourceDomain(href);
+  const contextValue = useMemo(() => ({ href, domain }), [href, domain]);
 
   return (
-    <SourceContext.Provider value={{ href, domain }}>
+    <SourceContext.Provider value={contextValue}>
       <HoverCard>{children}</HoverCard>
     </SourceContext.Provider>
   );

@@ -3,7 +3,7 @@
 import { extractAllHeadingIds } from "@repo/contents/_lib/toc";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { useAnchorObserver } from "@repo/design-system/hooks/use-anchor-observer";
-import { type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 interface TocContextType {
@@ -21,12 +21,9 @@ export function TocProvider({
 }) {
   const activeHeadings = useAnchorObserver(extractAllHeadingIds(toc), false);
 
-  const value = useMemo(
-    () => ({
-      activeHeadings,
-    }),
-    [activeHeadings]
-  );
+  const value = {
+    activeHeadings,
+  };
 
   return <TocContext.Provider value={value}>{children}</TocContext.Provider>;
 }

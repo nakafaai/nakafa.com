@@ -17,7 +17,7 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { useMutation } from "convex/react";
 import { useTranslations } from "next-intl";
-import { memo, useTransition } from "react";
+import { useTransition } from "react";
 import { useAi } from "@/components/ai/context/use-ai";
 import { createChatRuntime } from "@/components/ai/helpers/runtime";
 import { reportChatRuntimeError } from "@/components/ai/helpers/runtime-error";
@@ -25,7 +25,7 @@ import { SheetInput } from "@/components/ai/sheet-input";
 import { useUser } from "@/lib/context/use-user";
 
 /** Renders Nina's empty state and starts a new study chat. */
-export const SheetNew = memo(() => {
+export const SheetNew = () => {
   const t = useTranslations("Ai");
 
   const router = useRouter();
@@ -109,4 +109,4 @@ export const SheetNew = memo(() => {
       />
     </div>
   );
-});
+};

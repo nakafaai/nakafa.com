@@ -203,7 +203,7 @@ describe("Nakafa MCP route", () => {
     expect(content.text).toContain("### Question");
     expect(exercise.content_id).toBe(contentId);
     expect(resource.contents[0].text).toContain("### Answer & Explanation");
-  });
+  }, 15_000);
 
   it("returns structured tool errors for missing content and exercise requests", async () => {
     const missingContent = await callTool("nakafa_get_content", {

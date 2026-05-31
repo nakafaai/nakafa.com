@@ -9,9 +9,11 @@ import useEmblaCarousel, {
 } from "embla-carousel-react";
 import {
   createContext,
+  use,
   useCallback,
-  useContext,
   useEffect,
+  useEffectEvent,
+  useMemo,
   useState,
 } from "react";
 
@@ -38,8 +40,9 @@ interface CarouselContextProps extends CarouselProps {
 
 const CarouselContext = createContext<CarouselContextProps | null>(null);
 
+/** Reads carousel controls from the nearest carousel provider. */
 function useCarousel() {
-  const context = useContext(CarouselContext);
+  const context = use(CarouselContext);
 
   if (!context) {
     throw new Error("useCarousel must be used within a <Carousel />");
@@ -48,6 +51,7 @@ function useCarousel() {
   return context;
 }
 
+/** Renders an Embla carousel and exposes navigation state through context. */
 function Carousel({
   orientation = "horizontal",
   opts,
@@ -67,13 +71,14 @@ function Carousel({
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
 
-  const onSelect = useCallback((carouselApi: CarouselApi) => {
+  const handleSelect = useEffectEvent((carouselApi: CarouselApi) => {
     if (!carouselApi) {
       return;
     }
+
     setCanScrollPrev(carouselApi.canScrollPrev());
     setCanScrollNext(carouselApi.canScrollNext());
-  }, []);
+  });
 
   const scrollPrev = useCallback(() => {
     api?.scrollPrev();
@@ -107,29 +112,43 @@ function Carousel({
     if (!api) {
       return;
     }
-    onSelect(api);
+    const onSelect = () => handleSelect(api);
+
+    handleSelect(api);
     api.on("reInit", onSelect);
     api.on("select", onSelect);
 
     return () => {
-      api?.off("select", onSelect);
+      api.off("reInit", onSelect);
+      api.off("select", onSelect);
     };
-  }, [api, onSelect]);
+  }, [api]);
+  const contextValue = useMemo(
+    () => ({
+      carouselRef,
+      api,
+      opts,
+      orientation:
+        orientation || (opts?.axis === "y" ? "vertical" : "horizontal"),
+      scrollPrev,
+      scrollNext,
+      canScrollPrev,
+      canScrollNext,
+    }),
+    [
+      carouselRef,
+      api,
+      opts,
+      orientation,
+      scrollPrev,
+      scrollNext,
+      canScrollPrev,
+      canScrollNext,
+    ]
+  );
 
   return (
-    <CarouselContext.Provider
-      value={{
-        carouselRef,
-        api,
-        opts,
-        orientation:
-          orientation || (opts?.axis === "y" ? "vertical" : "horizontal"),
-        scrollPrev,
-        scrollNext,
-        canScrollPrev,
-        canScrollNext,
-      }}
-    >
+    <CarouselContext.Provider value={contextValue}>
       <section
         aria-label="Carousel"
         aria-roledescription="carousel"

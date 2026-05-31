@@ -1,17 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { startTryout } from "@/components/tryout/actions/tryout";
 
-const mocks = vi.hoisted(() => ({
-  after: vi.fn(async (callback) => await callback()),
-  captureServerException: vi.fn(),
-  cookies: vi.fn(),
-  extractDistinctIdFromPostHogCookie: vi.fn(),
-  fetchAuthAction: vi.fn(),
-  fetchAuthMutation: vi.fn(),
-  getPathname: vi.fn(),
-  revalidateTryoutOverview: vi.fn(),
-  revalidateTryoutSet: vi.fn(),
-}));
+const mocks = vi.hoisted(() => {
+  /** Test double for unauthenticated server-action calls. */
+  class MockAuthenticationRequiredError extends Error {}
+
+  return {
+    after: vi.fn(async (callback) => await callback()),
+    AuthenticationRequiredError: MockAuthenticationRequiredError,
+    captureServerException: vi.fn(),
+    cookies: vi.fn(),
+    extractDistinctIdFromPostHogCookie: vi.fn(),
+    fetchAuthAction: vi.fn(),
+    fetchAuthMutation: vi.fn(),
+    getPathname: vi.fn(),
+    requireAuth: vi.fn(),
+    revalidateTryoutOverview: vi.fn(),
+    revalidateTryoutSet: vi.fn(),
+  };
+});
 
 vi.mock("@repo/analytics/posthog/server", () => ({
   captureServerException: mocks.captureServerException,
@@ -27,8 +34,10 @@ vi.mock("next/headers", () => ({
 }));
 
 vi.mock("@/lib/auth/server", () => ({
+  AuthenticationRequiredError: mocks.AuthenticationRequiredError,
   fetchAuthAction: mocks.fetchAuthAction,
   fetchAuthMutation: mocks.fetchAuthMutation,
+  requireAuth: mocks.requireAuth,
 }));
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
@@ -62,6 +71,25 @@ describe("components/tryout/actions/tryout", () => {
     });
     mocks.extractDistinctIdFromPostHogCookie.mockReturnValue("user_123");
     mocks.getPathname.mockImplementation((args) => args.href);
+    mocks.requireAuth.mockResolvedValue(undefined);
+  });
+
+  it("returns unknown without touching Convex when auth is missing", async () => {
+    mocks.requireAuth.mockRejectedValue(
+      new mocks.AuthenticationRequiredError()
+    );
+
+    const result = await startTryout({
+      locale: "id",
+      partKeys: ["quantitative-knowledge"],
+      product: "snbt",
+      returnPath: "/id/try-out/snbt/2026-set-1",
+      tryoutSlug: "2026-set-1",
+    });
+
+    expect(result).toEqual({ kind: "unknown" });
+    expect(mocks.fetchAuthMutation).not.toHaveBeenCalled();
+    expect(mocks.captureServerException).not.toHaveBeenCalled();
   });
 
   it("revalidates tryout routes after a successful start", async () => {

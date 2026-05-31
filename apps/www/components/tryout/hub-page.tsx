@@ -24,8 +24,6 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
     getToken(),
   ]);
 
-  const initialNowMs = Date.now();
-
   const [catalogSnapshot, currentUser] = await Promise.all([
     fetchQuery(
       api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
@@ -72,7 +70,6 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
         >
           <TryoutCatalogList
             initialEntries={catalogSnapshot.initialPage}
-            initialNowMs={initialNowMs}
             locale={locale}
             product={product}
           />

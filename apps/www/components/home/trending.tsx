@@ -11,13 +11,13 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { cleanSlug } from "@repo/utilities/helper";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { useState } from "react";
 
 export function HomeTrending() {
   const t = useTranslations("Home");
   const locale = useLocale();
 
-  const timeRange = useMemo(() => getTrendingTimeRange(7, Date.now()), []);
+  const [timeRange] = useState(() => getTrendingTimeRange(7, Date.now()));
 
   const { data, isPending } = useQueryWithStatus(
     api.subjectSections.queries.getTrendingSubjects,

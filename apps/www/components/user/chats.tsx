@@ -46,7 +46,7 @@ export function UserChats({ userId }: { userId: Id<"users"> }) {
   );
 }
 
-export function UserChatsList({
+function UserChatsList({
   canDelete,
   userId,
   visibility,

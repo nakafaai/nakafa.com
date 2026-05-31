@@ -21,14 +21,7 @@ import { useMutation } from "convex/react";
 import { Schema } from "effect";
 import ky from "ky";
 import { useTranslations } from "next-intl";
-import {
-  Activity,
-  type ComponentRef,
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-} from "react";
+import { Activity, type ComponentRef, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";
 import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
@@ -39,7 +32,7 @@ import { EmojiButton } from "@/components/school/classes/forum/conversation/inpu
 import { ReplyIndicator } from "@/components/school/classes/forum/conversation/input/reply-indicator";
 
 /** Handles forum post submission, uploads, and reply cleanup for the transcript. */
-export const ForumPostInput = memo(() => {
+export const ForumPostInput = () => {
   const t = useTranslations("School.Classes");
   const { acknowledgeUnreadCue, goToLatest } = useControls();
   const forumId = useData((state) => state.forumId);
@@ -85,41 +78,38 @@ export const ForumPostInput = memo(() => {
     }
   }, [replyTarget]);
 
-  const uploadFile = useCallback(
-    async (file: File) => {
-      const { uploadId, uploadUrl } = await generateUploadUrl({ forumId });
+  const uploadFile = async (file: File) => {
+    const { uploadId, uploadUrl } = await generateUploadUrl({ forumId });
 
-      try {
-        const { storageId } = await ky
-          .post(uploadUrl, {
-            headers: { "Content-Type": file.type },
-            body: file,
-          })
-          .json<{ storageId: Id<"_storage"> }>();
+    try {
+      const { storageId } = await ky
+        .post(uploadUrl, {
+          headers: { "Content-Type": file.type },
+          body: file,
+        })
+        .json<{ storageId: Id<"_storage"> }>();
 
-        await saveForumUpload({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          storageId,
-          uploadId,
-        });
+      await saveForumUpload({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        storageId,
+        uploadId,
+      });
 
-        return uploadId;
-      } catch (error) {
-        await discardForumUploads({ uploadIds: [uploadId] }).catch(
-          (cleanupError) => {
-            captureException(cleanupError, {
-              source: "forum-upload-discard-single",
-            });
-            return null;
-          }
-        );
-        throw error;
-      }
-    },
-    [discardForumUploads, forumId, generateUploadUrl, saveForumUpload]
-  );
+      return uploadId;
+    } catch (error) {
+      await discardForumUploads({ uploadIds: [uploadId] }).catch(
+        (cleanupError) => {
+          captureException(cleanupError, {
+            source: "forum-upload-discard-single",
+          });
+          return null;
+        }
+      );
+      throw error;
+    }
+  };
 
   const form = useForm({
     defaultValues: { body: "" },
@@ -141,13 +131,17 @@ export const ForumPostInput = memo(() => {
       const attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] = [];
 
       try {
-        for (const fileWithPreview of files) {
-          if (!(fileWithPreview.file instanceof File)) {
-            continue;
-          }
+        const uploadableFiles: File[] = [];
 
-          attachmentUploadIds.push(await uploadFile(fileWithPreview.file));
+        for (const fileWithPreview of files) {
+          if (fileWithPreview.file instanceof File) {
+            uploadableFiles.push(fileWithPreview.file);
+          }
         }
+
+        attachmentUploadIds.push(
+          ...(await Promise.all(uploadableFiles.map(uploadFile)))
+        );
 
         await createPost({
           attachmentUploadIds:
@@ -192,11 +186,8 @@ export const ForumPostInput = memo(() => {
 
   return (
     <form
+      action={() => form.handleSubmit()}
       className="grid shrink-0 px-2 pb-2"
-      onSubmit={(event) => {
-        event.preventDefault();
-        form.handleSubmit();
-      }}
       ref={composerRef}
     >
       {/*
@@ -319,5 +310,4 @@ export const ForumPostInput = memo(() => {
       </form.Field>
     </form>
   );
-});
-ForumPostInput.displayName = "ForumPostInput";
+};

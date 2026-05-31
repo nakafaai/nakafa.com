@@ -16,7 +16,7 @@ import {
 import { Message } from "@repo/design-system/components/ai/message";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
-import { memo } from "react";
+
 import { AiChatError } from "@/components/ai/chat-error";
 import { AiChatHeader } from "@/components/ai/chat-header";
 import { AiChatMessage } from "@/components/ai/chat-message";
@@ -41,7 +41,7 @@ export function AiChat() {
   );
 }
 
-const AiChatConversation = memo(() => {
+const AiChatConversation = () => {
   const messages = useChat((state) => state.chat.messages);
 
   return (
@@ -66,10 +66,10 @@ const AiChatConversation = memo(() => {
       <ConversationScrollButton />
     </Conversation>
   );
-});
+};
 AiChatConversation.displayName = "AiChatConversation";
 
-const AiChatToolbar = memo(() => {
+const AiChatToolbar = () => {
   const t = useTranslations("Ai");
 
   const router = useRouter();
@@ -141,5 +141,5 @@ const AiChatToolbar = memo(() => {
       </PromptInput>
     </div>
   );
-});
+};
 AiChatToolbar.displayName = "AIChatToolbar";

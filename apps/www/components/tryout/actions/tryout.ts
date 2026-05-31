@@ -16,7 +16,12 @@ import {
   type TryoutSetRouteInput,
 } from "@/components/tryout/actions/revalidate";
 import { env } from "@/env";
-import { fetchAuthAction, fetchAuthMutation } from "@/lib/auth/server";
+import {
+  AuthenticationRequiredError,
+  fetchAuthAction,
+  fetchAuthMutation,
+  requireAuth,
+} from "@/lib/auth/server";
 import { getSafeInternalRedirectPath } from "@/lib/auth/utils";
 
 type StartTryoutArgs = FunctionArgs<
@@ -145,6 +150,8 @@ export async function startTryout({
   ...args
 }: StartTryoutInput): Promise<StartTryoutResult> {
   try {
+    await requireAuth();
+
     const result = await fetchAuthMutation(
       api.tryouts.mutations.attempts.startTryout,
       args
@@ -171,6 +178,10 @@ export async function startTryout({
 
     return result;
   } catch (error) {
+    if (error instanceof AuthenticationRequiredError) {
+      return { kind: "unknown" };
+    }
+
     after(async () => {
       await captureServerException(
         error,

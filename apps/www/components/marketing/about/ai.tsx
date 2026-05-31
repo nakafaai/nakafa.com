@@ -26,7 +26,7 @@ function AudienceCard({
 }: AudienceCardProps) {
   return (
     <div className="flex flex-col gap-4 p-6 first:pt-18 last:pb-18 lg:py-18">
-      <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10">
+      <div className="flex size-10 items-center justify-center rounded-md bg-primary/10">
         <HugeIcons className="text-primary" icon={icon} />
       </div>
       <div className="grid gap-2">

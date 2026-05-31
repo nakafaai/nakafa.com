@@ -167,11 +167,11 @@ async function PageContent({
   const typePath = getExercisesPath(category, type);
   const FilePath = getMaterialPath(category, type, material);
 
-  const [t, tCommon] = await Promise.all([
+  const [t, tCommon, materials] = await Promise.all([
     getTranslations({ locale, namespace: "Exercises" }),
     getTranslations({ locale, namespace: "Common" }),
+    Effect.runPromise(getMaterials(FilePath, locale)),
   ]);
-  const materials = await Effect.runPromise(getMaterials(FilePath, locale));
 
   const chapters: ParsedHeading[] = materials.map((mat) => ({
     label: mat.title,

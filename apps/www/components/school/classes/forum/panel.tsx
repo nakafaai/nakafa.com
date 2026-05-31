@@ -7,6 +7,7 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { useQuery } from "convex/react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Suspense } from "react";
 import { SchoolClassesDetailPanel } from "@/components/school/classes/detail-panel";
 import { getSchoolClassesForumHref } from "@/components/school/classes/forum/helpers/routes";
 import { SchoolClassesForumPanelContent } from "@/components/school/classes/forum/panel-content";
@@ -18,6 +19,18 @@ import { SchoolClassesForumPanelInfo } from "@/components/school/classes/forum/p
  * routing back to the forum feed when the panel closes.
  */
 export function SchoolClassesForumPanel({
+  forumId,
+}: {
+  forumId: Id<"schoolClassForums">;
+}) {
+  return (
+    <Suspense fallback={null}>
+      <SchoolClassesForumPanelContentWithSearchParams forumId={forumId} />
+    </Suspense>
+  );
+}
+
+function SchoolClassesForumPanelContentWithSearchParams({
   forumId,
 }: {
   forumId: Id<"schoolClassForums">;

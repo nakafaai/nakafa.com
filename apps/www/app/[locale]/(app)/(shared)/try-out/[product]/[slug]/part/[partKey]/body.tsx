@@ -86,7 +86,6 @@ export async function TryoutPartBody({
     loadTryoutSearchParams(searchParams),
     getToken(),
   ]);
-  const initialNowMs = Date.now();
   const { preloadedRuntime, runtime } = await getTryoutRuntime(token, {
     attempt,
     locale,
@@ -133,7 +132,6 @@ export async function TryoutPartBody({
 
   return (
     <TryoutPartProvider
-      initialNowMs={initialNowMs}
       part={{
         key: contentPart.partKey,
         label: partLabel,

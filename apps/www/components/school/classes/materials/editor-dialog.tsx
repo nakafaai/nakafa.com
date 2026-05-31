@@ -38,7 +38,7 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { startOfDay } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
-import { Activity } from "react";
+import { Activity, useState } from "react";
 import { toast } from "sonner";
 import {
   getMaterialStatus,
@@ -179,6 +179,7 @@ function MaterialGroupDialogShell({
   submitLabel,
   title,
 }: MaterialGroupDialogShellProps) {
+  const [minimumDate] = useState(() => startOfDay(new Date()));
   const t = useTranslations("School.Classes");
   const locale = useLocale();
 
@@ -200,13 +201,7 @@ function MaterialGroupDialogShell({
   });
 
   return (
-    <form
-      id={formId}
-      onSubmit={(event) => {
-        event.preventDefault();
-        form.handleSubmit();
-      }}
-    >
+    <form action={() => form.handleSubmit()} id={formId}>
       <ResponsiveDialog
         description={description}
         footer={
@@ -383,7 +378,7 @@ function MaterialGroupDialogShell({
                             className="w-auto overflow-hidden p-0"
                           >
                             <Calendar
-                              disabled={{ before: startOfDay(new Date()) }}
+                              disabled={{ before: minimumDate }}
                               mode="single"
                               onSelect={(date) => {
                                 if (!date) {

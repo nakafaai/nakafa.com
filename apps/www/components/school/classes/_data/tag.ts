@@ -9,7 +9,7 @@ import { STUDENT_FORUM_TAGS } from "@repo/backend/convex/classes/forums/utils/co
 import type { SchoolClassMemberRole } from "@repo/backend/convex/classes/schema";
 import type { SchoolMemberRole } from "@repo/backend/convex/schools/schema";
 
-export const tagList = [
+const tagList = [
   {
     icon: ChatIcon,
     value: "general",

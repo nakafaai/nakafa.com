@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-export const PagefindResultSchema = Schema.Struct({
+const PagefindResultSchema = Schema.Struct({
   excerpt: Schema.String,
   meta: Schema.Struct({
     title: Schema.String,
@@ -26,7 +26,7 @@ export const PagefindResultSchema = Schema.Struct({
 export type PagefindResult = Schema.Schema.Type<typeof PagefindResultSchema>;
 
 /** Options that can be passed to pagefind.search() */
-export const PagefindSearchOptionsSchema = Schema.Struct({
+const PagefindSearchOptionsSchema = Schema.Struct({
   /** If set, this call will load all assets but return before searching. Prefer using pagefind.preload() instead */
   preload: Schema.optional(Schema.Boolean),
   /** Add more verbose console logging for this search query */

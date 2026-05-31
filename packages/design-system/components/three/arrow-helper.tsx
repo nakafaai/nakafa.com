@@ -187,11 +187,7 @@ export function ArrowHelper({
     return { position, quaternion };
   }, [showArrow, vectors, arrowSize]);
 
-  // Memoize font path
-  const fontPath = useMemo(
-    () => (useMonoFont ? MONO_FONT_PATH : FONT_PATH),
-    [useMonoFont]
-  );
+  const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
   const resolvedLabelSize = resolveThreeFontSize(labelSize);
 
   return (

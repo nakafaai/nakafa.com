@@ -42,8 +42,6 @@ export default async function Page(
     getToken(),
   ]);
 
-  const initialNowMs = Date.now();
-
   const catalogSnapshot = await fetchQuery(
     api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
     {
@@ -91,7 +89,6 @@ export default async function Page(
         >
           <TryoutCatalogList
             initialEntries={catalogSnapshot.initialPage}
-            initialNowMs={initialNowMs}
             locale={locale}
             product={product}
           />

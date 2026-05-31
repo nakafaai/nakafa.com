@@ -1,6 +1,10 @@
 import { promises as fsPromises } from "node:fs";
 import path from "node:path";
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
+import {
+  extractObjectLiteralAfterDeclaration,
+  parseObjectLiteral,
+} from "@repo/contents/_lib/literal";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
   FileReadError,
@@ -13,10 +17,10 @@ import {
   ContentMetadataSchema,
 } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Either, Option, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 const contentsDir = resolveContentsDir(import.meta.url);
-const METADATA_REGEX = /export const metadata\s*=\s*({[\s\S]*?});/;
+const METADATA_DECLARATION_REGEX = /export const metadata\s*=/;
 
 /**
  * Metadata summary for a content entry without loading its MDX component.
@@ -45,24 +49,22 @@ export interface ContentMetadataWithRaw {
 export function extractMetadata(
   rawContent: string
 ): Option.Option<ContentMetadata> {
-  const metadataMatch = rawContent.match(METADATA_REGEX);
-
-  if (!metadataMatch?.[1]) {
-    return Option.none();
-  }
-
-  const metadataObject = Either.try({
-    try: () => new Function(`return ${metadataMatch[1]}`)(),
-    catch: () => null,
-  });
-
-  if (Either.isLeft(metadataObject)) {
-    return Option.none();
-  }
-
-  return Schema.decodeUnknownOption(ContentMetadataSchema)(
-    metadataObject.right
+  const metadataLiteral = extractObjectLiteralAfterDeclaration(
+    rawContent,
+    METADATA_DECLARATION_REGEX
   );
+
+  if (metadataLiteral === null) {
+    return Option.none();
+  }
+
+  const metadataObject = parseObjectLiteral(metadataLiteral);
+
+  if (metadataObject === null) {
+    return Option.none();
+  }
+
+  return Schema.decodeUnknownOption(ContentMetadataSchema)(metadataObject);
 }
 
 /**

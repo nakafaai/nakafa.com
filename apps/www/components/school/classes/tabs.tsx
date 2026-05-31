@@ -12,7 +12,6 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
 
 export function SchoolClassesTabs() {
   const params = useParams<{ slug: string; id: string }>();
@@ -21,39 +20,33 @@ export function SchoolClassesTabs() {
 
   const t = useTranslations("School.Classes");
 
-  const tabs = useMemo(
-    () => [
-      {
-        icon: MessageMultiple02Icon,
-        label: t("forum"),
-        href: `/school/${slug}/classes/${id}/forum`,
-      },
-      {
-        icon: BookOpen02Icon,
-        label: t("materials"),
-        href: `/school/${slug}/classes/${id}/materials`,
-      },
-      {
-        icon: AssignmentsIcon,
-        label: t("assessments"),
-        href: `/school/${slug}/classes/${id}/assessments`,
-      },
-      {
-        icon: UserMultipleIcon,
-        label: t("people"),
-        href: `/school/${slug}/classes/${id}/people`,
-      },
-    ],
-    [slug, id, t]
-  );
+  const tabs = [
+    {
+      icon: MessageMultiple02Icon,
+      label: t("forum"),
+      href: `/school/${slug}/classes/${id}/forum`,
+    },
+    {
+      icon: BookOpen02Icon,
+      label: t("materials"),
+      href: `/school/${slug}/classes/${id}/materials`,
+    },
+    {
+      icon: AssignmentsIcon,
+      label: t("assessments"),
+      href: `/school/${slug}/classes/${id}/assessments`,
+    },
+    {
+      icon: UserMultipleIcon,
+      label: t("people"),
+      href: `/school/${slug}/classes/${id}/people`,
+    },
+  ];
 
-  const defaultValue = useMemo(
-    () =>
-      tabs.find(
-        (tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`)
-      )?.href || tabs[0]?.href,
-    [pathname, tabs]
-  );
+  const defaultValue =
+    tabs.find(
+      (tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`)
+    )?.href || tabs[0]?.href;
 
   return (
     <div className="sticky top-0 z-10 -mt-2 flex h-12 w-full shrink-0 border-b bg-background">

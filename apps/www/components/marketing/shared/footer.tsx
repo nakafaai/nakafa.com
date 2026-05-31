@@ -148,7 +148,7 @@ export function Footer() {
       </NavigationLink>
 
       <section className="w-full border-t">
-        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 px-6 py-6 lg:flex-row">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 p-6 lg:flex-row">
           <p className="text-center text-sm">
             {tCommon("copyright", { year: "2025" })}
           </p>

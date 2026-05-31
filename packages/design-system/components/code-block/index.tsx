@@ -27,7 +27,7 @@ import {
 import { cva } from "class-variance-authority";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   type BundledLanguage,
   type CodeOptionsMultipleThemes,
@@ -127,6 +127,7 @@ export type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   data: CodeBlockData[];
 };
 
+/** Provides code-block tab state and source data to child controls. */
 export const CodeBlock = ({
   value: controlledValue,
   onValueChange: controlledOnValueChange,
@@ -140,9 +141,13 @@ export const CodeBlock = ({
     prop: controlledValue,
     onChange: controlledOnValueChange,
   });
+  const contextValue = useMemo(
+    () => ({ value, onValueChange, data }),
+    [value, onValueChange, data]
+  );
 
   return (
-    <CodeBlockContext.Provider value={{ value, onValueChange, data }}>
+    <CodeBlockContext.Provider value={contextValue}>
       <div
         className={cn(
           "grid size-full grid-cols-1 overflow-hidden rounded-xl border shadow-sm",

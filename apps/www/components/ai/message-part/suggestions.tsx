@@ -4,14 +4,14 @@ import { Add01Icon, QuoteDownIcon } from "@hugeicons/core-free-icons";
 import type { DataPart } from "@repo/ai/schema/data";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
-import { memo } from "react";
+
 import { useChat } from "@/components/ai/context/use-chat";
 
 interface Props {
   message: DataPart["suggestions"];
 }
 
-export const SuggestionsPart = memo(({ message }: Props) => {
+export const SuggestionsPart = ({ message }: Props) => {
   const t = useTranslations("Ai");
   const suggestions = message.data;
 
@@ -28,31 +28,31 @@ export const SuggestionsPart = memo(({ message }: Props) => {
       </div>
     </div>
   );
-});
+};
 SuggestionsPart.displayName = "SuggestionsPart";
 
-const SuggestionsPartButton = memo(
-  ({ suggestion }: { suggestion: DataPart["suggestions"]["data"][number] }) => {
-    const { sendMessage, status } = useChat((state) => state.chat);
+const SuggestionsPartButton = ({
+  suggestion,
+}: {
+  suggestion: DataPart["suggestions"]["data"][number];
+}) => {
+  const { sendMessage, status } = useChat((state) => state.chat);
 
-    const disabled = status === "submitted" || status === "streaming";
+  const disabled = status === "submitted" || status === "streaming";
 
-    return (
-      <button
-        className="flex w-full cursor-pointer items-center justify-between gap-6 border-t py-2 text-start transition-colors ease-out hover:text-primary"
-        disabled={disabled}
-        onClick={() => sendMessage({ text: suggestion })}
-        type="button"
-      >
-        <SuggestionsPartContent content={suggestion} />
-        <HugeIcons className="size-4 text-primary" icon={Add01Icon} />
-      </button>
-    );
-  }
-);
+  return (
+    <button
+      className="flex w-full cursor-pointer items-center justify-between gap-6 border-t py-2 text-start transition-colors ease-out hover:text-primary"
+      disabled={disabled}
+      onClick={() => sendMessage({ text: suggestion })}
+      type="button"
+    >
+      <SuggestionsPartContent content={suggestion} />
+      <HugeIcons className="size-4 text-primary" icon={Add01Icon} />
+    </button>
+  );
+};
 SuggestionsPartButton.displayName = "SuggestionsPartButton";
 
-const SuggestionsPartContent = memo(
-  ({ content }: { content: string }) => content
-);
+const SuggestionsPartContent = ({ content }: { content: string }) => content;
 SuggestionsPartContent.displayName = "SuggestionsPartContent";

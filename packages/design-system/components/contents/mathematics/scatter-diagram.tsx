@@ -161,14 +161,13 @@ export function ScatterDiagram({
             {!!showResiduals &&
               !!regressionParams &&
               datasets.flatMap((dataset) =>
-                dataset.points.map((point, index) => {
+                dataset.points.map((point) => {
                   const yPredicted =
                     regressionParams.m * point.x + regressionParams.b;
                   return (
                     <ReferenceLine
                       ifOverflow="visible"
-                      // biome-ignore lint/suspicious/noArrayIndexKey: Points with same coordinates need index for uniqueness
-                      key={`${dataset.name}-residual-${index}`}
+                      key={`${dataset.name}-residual-${point.x}-${point.y}-${yPredicted}`}
                       segment={[
                         { x: point.x, y: point.y },
                         { x: point.x, y: yPredicted },

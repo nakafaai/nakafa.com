@@ -67,11 +67,8 @@ export function SchoolClassesHeaderJoin() {
 
   return (
     <form
+      action={() => form.handleSubmit()}
       id="school-classes-header-join-form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        form.handleSubmit();
-      }}
     >
       <Button onClick={openHandlers.open} type="button">
         <HugeIcons icon={Rocket01Icon} />

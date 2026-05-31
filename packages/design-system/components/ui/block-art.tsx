@@ -1,6 +1,7 @@
 "use client";
 
 import { useMediaQuery } from "@mantine/hooks";
+import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { cn } from "@repo/design-system/lib/utils";
@@ -48,6 +49,9 @@ const MAX_CONCURRENT_RIPPLES = 3;
 const RIPPLE_RADIUS_MULTIPLIER = 1.5;
 const RIPPLE_WAVE_WIDTH = 2;
 
+/**
+ * Renders one animated grid cell and reports hover transitions to the grid.
+ */
 const MotionBlockCell = memo(function MotionBlockCell({
   index,
   row,
@@ -78,6 +82,9 @@ const MotionBlockCell = memo(function MotionBlockCell({
   );
 });
 
+/**
+ * Renders an interactive animated block grid with idle and click ripple effects.
+ */
 export function BlockArt({
   gridCols,
   gridRows,
@@ -91,42 +98,40 @@ export function BlockArt({
   const isLaptop = useMediaQuery(TAILWIND_MEDIA_QUERIES.lgAndUp);
   const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.xlAndUp);
 
-  const getDefaultCols = () => {
-    if (isDesktop) {
-      return 18;
-    }
-    if (isLaptop) {
-      return 16;
-    }
-    return 8;
-  };
+  let defaultCols = 8;
+  if (isDesktop) {
+    defaultCols = 18;
+  } else if (isLaptop) {
+    defaultCols = 16;
+  }
 
-  const getDefaultRows = () => {
-    if (isDesktop) {
-      return 8;
-    }
-    if (isLaptop) {
-      return 7;
-    }
-    return 4;
-  };
+  let defaultRows = 4;
+  if (isDesktop) {
+    defaultRows = 8;
+  } else if (isLaptop) {
+    defaultRows = 7;
+  }
 
-  const Cols = Math.max(1, Math.floor(gridCols ?? getDefaultCols()));
-  const Rows = Math.max(1, Math.floor(gridRows ?? getDefaultRows()));
+  const Cols = Math.max(1, Math.floor(gridCols ?? defaultCols));
+  const Rows = Math.max(1, Math.floor(gridRows ?? defaultRows));
   const totalCells = Cols * Rows;
 
   const [containerRef, animate] = useAnimate<HTMLButtonElement>();
   const animationFrameRef = useRef<number>(0);
   const isAnimatingRef = useRef(false);
   const rippleIdRef = useRef(0);
-  const rngRef = useRef(createSeededRandom(Cols, Rows, animatedCellCount));
+  const rng = useStableMutableValue(() =>
+    createSeededRandom(Cols, Rows, animatedCellCount)
+  );
   const ripplesRef = useRef<Ripple[]>([]);
   const isThrottledRef = useRef(false);
-  const lastAffectedCellsRef = useRef<Set<number>>(new Set());
+  const lastAffectedCells = useStableMutableValue(() => new Set<number>());
   const idleIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const idleAnimatedIndicesRef = useRef<Set<number>>(new Set());
-  const hoveredCellsRef = useRef<Set<number>>(new Set());
-  const timeoutIdsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+  const idleAnimatedIndices = useStableMutableValue(() => new Set<number>());
+  const hoveredCells = useStableMutableValue(() => new Set<number>());
+  const timeoutIds = useStableMutableValue(
+    () => new Set<ReturnType<typeof setTimeout>>()
+  );
 
   const cellData = useMemo(
     () =>
@@ -141,7 +146,7 @@ export function BlockArt({
   // Handle hover start with instant color change
   const handleHoverStart = useCallback(
     (index: number) => {
-      hoveredCellsRef.current.add(index);
+      hoveredCells.add(index);
       const selector = `[data-cell-index="${index}"]`;
 
       // Check if element exists before animating
@@ -159,13 +164,13 @@ export function BlockArt({
         { duration: 0 }
       );
     },
-    [animate, containerRef]
+    [animate, containerRef, hoveredCells]
   );
 
   // Handle hover end with trail effect
   const handleHoverEnd = useCallback(
     (index: number) => {
-      hoveredCellsRef.current.delete(index);
+      hoveredCells.delete(index);
       const selector = `[data-cell-index="${index}"]`;
 
       // Check if element exists before animating
@@ -175,7 +180,7 @@ export function BlockArt({
       }
 
       // If cell is in idle animation, restore to secondary color
-      if (idleAnimatedIndicesRef.current.has(index)) {
+      if (idleAnimatedIndices.has(index)) {
         animate(
           selector,
           {
@@ -196,7 +201,7 @@ export function BlockArt({
         { duration: 0.8, ease: "easeOut" }
       );
     },
-    [animate, containerRef]
+    [animate, containerRef, hoveredCells, idleAnimatedIndices]
   );
 
   // Staggered idle animation with wave pattern from center
@@ -209,8 +214,8 @@ export function BlockArt({
     if (idleIntervalRef.current) {
       clearInterval(idleIntervalRef.current);
     }
-    idleAnimatedIndicesRef.current.clear();
-    hoveredCellsRef.current.clear();
+    idleAnimatedIndices.clear();
+    hoveredCells.clear();
 
     const effectiveAnimatedCellCount = Math.max(
       3,
@@ -222,16 +227,16 @@ export function BlockArt({
 
     const updateIdleAnimation = () => {
       // Clear any pending timeouts from previous animation cycle
-      for (const timeoutId of timeoutIdsRef.current) {
+      for (const timeoutId of timeoutIds) {
         clearTimeout(timeoutId);
       }
-      timeoutIdsRef.current.clear();
+      timeoutIds.clear();
 
       // Fade out previous animations with stagger
-      const prevIndices = Array.from(idleAnimatedIndicesRef.current);
+      const prevIndices = Array.from(idleAnimatedIndices);
       for (const index of prevIndices) {
         // Skip if currently hovered
-        if (hoveredCellsRef.current.has(index)) {
+        if (hoveredCells.has(index)) {
           continue;
         }
 
@@ -249,7 +254,7 @@ export function BlockArt({
 
         const timeoutId = setTimeout(() => {
           // Re-check hover state before animating
-          if (hoveredCellsRef.current.has(index)) {
+          if (hoveredCells.has(index)) {
             return;
           }
 
@@ -267,13 +272,13 @@ export function BlockArt({
             { duration: 0.4, ease: "easeOut" }
           );
         }, distanceFromCenter * 40);
-        timeoutIdsRef.current.add(timeoutId);
+        timeoutIds.add(timeoutId);
       }
-      idleAnimatedIndicesRef.current.clear();
+      idleAnimatedIndices.clear();
 
       // Select new cells and animate with stagger from center
       const availableIndices = Array.from({ length: totalCells }, (_, i) => i);
-      const shuffledIndices = rngRef.current.shuffle(availableIndices);
+      const shuffledIndices = rng.shuffle(availableIndices);
       const selectedIndices = shuffledIndices.slice(
         0,
         effectiveAnimatedCellCount
@@ -294,7 +299,7 @@ export function BlockArt({
 
       sortedByDistance.forEach((index, i) => {
         // Skip if currently hovered
-        if (hoveredCellsRef.current.has(index)) {
+        if (hoveredCells.has(index)) {
           return;
         }
 
@@ -303,14 +308,14 @@ export function BlockArt({
           (cell.col - centerCol) ** 2 + (cell.row - centerRow) ** 2
         );
 
-        idleAnimatedIndicesRef.current.add(index);
+        idleAnimatedIndices.add(index);
         const selector = `[data-cell-index="${index}"]`;
 
         // Stagger delay based on distance from center
         const timeoutId = setTimeout(
           () => {
             // Re-check hover state before animating
-            if (hoveredCellsRef.current.has(index)) {
+            if (hoveredCells.has(index)) {
               return;
             }
 
@@ -333,7 +338,7 @@ export function BlockArt({
           },
           distanceFromCenter * 50 + i * 25
         );
-        timeoutIdsRef.current.add(timeoutId);
+        timeoutIds.add(timeoutId);
       });
     };
 
@@ -349,13 +354,13 @@ export function BlockArt({
         clearInterval(idleIntervalRef.current);
       }
       // Clear all pending timeouts
-      for (const timeoutId of timeoutIdsRef.current) {
+      for (const timeoutId of timeoutIds) {
         clearTimeout(timeoutId);
       }
-      timeoutIdsRef.current.clear();
+      timeoutIds.clear();
       // Reset all idle animated cells
-      for (const index of idleAnimatedIndicesRef.current) {
-        if (hoveredCellsRef.current.has(index)) {
+      for (const index of idleAnimatedIndices) {
+        if (hoveredCells.has(index)) {
           continue;
         }
         const selector = `[data-cell-index="${index}"]`;
@@ -374,7 +379,7 @@ export function BlockArt({
           { duration: 0.4, ease: "easeOut" }
         );
       }
-      idleAnimatedIndicesRef.current.clear();
+      idleAnimatedIndices.clear();
     };
   }, [
     totalCells,
@@ -385,6 +390,10 @@ export function BlockArt({
     Cols,
     Rows,
     containerRef,
+    hoveredCells,
+    idleAnimatedIndices,
+    rng,
+    timeoutIds,
   ]);
 
   const getWaveIntensity = useCallback(
@@ -431,7 +440,7 @@ export function BlockArt({
           },
           { duration: 0 }
         );
-      } else if (hoveredCellsRef.current.has(cellIndex)) {
+      } else if (hoveredCells.has(cellIndex)) {
         // Restore hover state after ripple passes
         animate(
           selector,
@@ -443,7 +452,7 @@ export function BlockArt({
           },
           { duration: 0 }
         );
-      } else if (idleAnimatedIndicesRef.current.has(cellIndex)) {
+      } else if (idleAnimatedIndices.has(cellIndex)) {
         // Restore idle state after ripple passes
         animate(
           selector,
@@ -474,7 +483,7 @@ export function BlockArt({
         );
       }
     },
-    [animate, containerRef]
+    [animate, containerRef, hoveredCells, idleAnimatedIndices]
   );
 
   const animateRipples = useCallback(() => {
@@ -526,25 +535,35 @@ export function BlockArt({
       updateCellRippleStyle(cellIndex, intensity);
     }
 
-    for (const cellIndex of lastAffectedCellsRef.current) {
+    for (const cellIndex of lastAffectedCells) {
       if (!affectedCells.has(cellIndex)) {
         updateCellRippleStyle(cellIndex, 0);
       }
     }
 
-    lastAffectedCellsRef.current = new Set(affectedCells.keys());
+    lastAffectedCells.clear();
+    for (const cellIndex of affectedCells.keys()) {
+      lastAffectedCells.add(cellIndex);
+    }
 
     if (limitedRipples.length > 0) {
       animationFrameRef.current = requestAnimationFrame(animateRipples);
     } else {
       isAnimatingRef.current = false;
-      lastAffectedCellsRef.current.clear();
+      lastAffectedCells.clear();
     }
 
     if (hasExpiredRipples) {
       ripplesRef.current = activeRipples;
     }
-  }, [Cols, Rows, waveDuration, getWaveIntensity, updateCellRippleStyle]);
+  }, [
+    Cols,
+    Rows,
+    waveDuration,
+    getWaveIntensity,
+    lastAffectedCells,
+    updateCellRippleStyle,
+  ]);
 
   const startAnimation = useCallback(() => {
     isAnimatingRef.current = true;
@@ -611,7 +630,7 @@ export function BlockArt({
     [handleRipple, onCellClick]
   );
 
-  const handleClick = useCallback(
+  const triggerGridRippleFromClick = useCallback(
     (e: MouseEvent<HTMLButtonElement>) => {
       if (!containerRef.current) {
         return;
@@ -663,7 +682,7 @@ export function BlockArt({
         <button
           aria-label="Interactive grid art with wave effect"
           className="size-full cursor-pointer"
-          onClick={handleClick}
+          onClick={triggerGridRippleFromClick}
           onKeyDown={handleKeyDown}
           ref={containerRef}
           style={{

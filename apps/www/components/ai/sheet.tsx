@@ -6,7 +6,7 @@ import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "@repo/design-system/lib/utils";
 import { Authenticated, Unauthenticated } from "convex/react";
-import { Activity, memo } from "react";
+import { Activity } from "react";
 import { useAi } from "@/components/ai/context/use-ai";
 import { CurrentChatProvider } from "@/components/ai/context/use-current-chat";
 import { AiSheetHeader } from "@/components/ai/sheet-header";
@@ -58,6 +58,7 @@ export function AiSheet() {
         style={{ width: isMobile ? "100%" : `${width}px` }}
       >
         <button
+          aria-label="Resize chat sheet"
           className={cn(
             "absolute top-0 bottom-0 left-0 z-10 w-1 cursor-col-resize outline-0 ring-0 transition-colors hover:bg-accent",
             !!isResizing && "bg-accent",
@@ -98,4 +99,4 @@ export function AiSheet() {
 }
 
 /** Keeps private-chat errors visually empty while the sheet resets. */
-const SheetError = memo(() => null);
+const SheetError = () => null;

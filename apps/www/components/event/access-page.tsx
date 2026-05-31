@@ -128,9 +128,14 @@ export function EventAccessPage({ code }: Props) {
           default: {
             const unhandledResult: never = result;
 
-            throw new Error(
-              `Unhandled event redeem result: ${JSON.stringify(unhandledResult)}`
-            );
+            captureException(new Error("Unhandled event redeem result"), {
+              result: unhandledResult,
+              source: "event-access-redeem",
+            });
+            toast.error(tEvent("redeem-error"), {
+              position: "bottom-center",
+            });
+            return;
           }
         }
       } catch (error) {

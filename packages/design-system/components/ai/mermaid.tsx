@@ -5,7 +5,7 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import type { MermaidConfig } from "mermaid";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const ALPHANUMERIC_BASE = 36;
 const MAGIC_NUMBER = 0;
@@ -42,15 +42,18 @@ interface MermaidProps {
   label: string;
 }
 
+/**
+ * Renders Mermaid chart markup with a cached last-good SVG fallback.
+ */
 export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [svgContent, setSvgContent] = useState<string>("");
   const [lastValidSvg, setLastValidSvg] = useState<string>("");
+  const svgCacheRef = useRef({ current: "", lastValid: "" });
 
   const { resolvedTheme } = useTheme();
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: "Required for Mermaid"
   useEffect(() => {
     async function renderChart() {
       try {
@@ -74,11 +77,16 @@ export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
         const { svg } = await mermaid.render(uniqueId, chart);
 
         // Update both current and last valid SVG
+        svgCacheRef.current = { current: svg, lastValid: svg };
         setSvgContent(svg);
         setLastValidSvg(svg);
       } catch (err) {
+        const hasCachedSvg = Boolean(
+          svgCacheRef.current.current || svgCacheRef.current.lastValid
+        );
+
         captureException(err, {
-          has_cached_svg: Boolean(lastValidSvg || svgContent),
+          has_cached_svg: hasCachedSvg,
           source: "mermaid-render",
         });
 
@@ -86,7 +94,7 @@ export const Mermaid = ({ chart, className, config, label }: MermaidProps) => {
         // Don't update svgContent here - just keep what we have
 
         // Only set error if we don't have any valid SVG
-        if (!(lastValidSvg || svgContent)) {
+        if (!hasCachedSvg) {
           const errorMessage =
             err instanceof Error
               ? err.message

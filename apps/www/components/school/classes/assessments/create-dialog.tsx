@@ -38,7 +38,7 @@ import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { startOfDay } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
-import { Activity } from "react";
+import { Activity, useState } from "react";
 import { toast } from "sonner";
 import {
   assessmentModeList,
@@ -193,6 +193,7 @@ function AssessmentDialogShell({
   submitLabel,
   title,
 }: AssessmentDialogShellProps) {
+  const [minimumDate] = useState(() => startOfDay(new Date()));
   const t = useTranslations("School.Classes");
   const locale = useLocale();
 
@@ -220,13 +221,7 @@ function AssessmentDialogShell({
       selector={(state) => [state.isSubmitting, state.values.status]}
     >
       {([isSubmitting, status]) => (
-        <form
-          id={formId}
-          onSubmit={(event) => {
-            event.preventDefault();
-            form.handleSubmit();
-          }}
-        >
+        <form action={() => form.handleSubmit()} id={formId}>
           <ResponsiveDialog
             description={description}
             footer={
@@ -472,7 +467,7 @@ function AssessmentDialogShell({
                             className="w-auto overflow-hidden p-0"
                           >
                             <Calendar
-                              disabled={{ before: startOfDay(new Date()) }}
+                              disabled={{ before: minimumDate }}
                               mode="single"
                               onSelect={(date) => {
                                 if (!date) {

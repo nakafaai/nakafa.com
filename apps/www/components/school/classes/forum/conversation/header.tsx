@@ -33,13 +33,13 @@ import {
 import { useMutation } from "convex/react";
 import { format } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
-import { memo, useTransition } from "react";
+import { useTransition } from "react";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 import { getLocale } from "@/lib/utils/date";
 import { getInitialName } from "@/lib/utils/helper";
 
 /** Renders the forum starter card at the top of the transcript. */
-export const ForumHeader = memo(() => {
+export const ForumHeader = () => {
   const t = useTranslations("Common");
   const locale = useLocale();
   const forum = useData((state) => state.forum);
@@ -85,10 +85,10 @@ export const ForumHeader = memo(() => {
       </div>
     </div>
   );
-});
+};
 ForumHeader.displayName = "ForumHeader";
 
-const ForumReactions = memo(() => {
+const ForumReactions = () => {
   const t = useTranslations("Common");
   const forum = useData((state) => state.forum);
 
@@ -152,10 +152,10 @@ const ForumReactions = memo(() => {
       })}
     </div>
   );
-});
+};
 ForumReactions.displayName = "ForumReactions";
 
-const ForumActions = memo(() => {
+const ForumActions = () => {
   const t = useTranslations("Common");
   const forum = useData((state) => state.forum);
 
@@ -217,5 +217,5 @@ const ForumActions = memo(() => {
       </PopoverContent>
     </Popover>
   );
-});
+};
 ForumActions.displayName = "ForumActions";

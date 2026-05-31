@@ -194,18 +194,19 @@ async function CachedSurahShell({
 
   cacheLife("max");
 
-  const t = await getTranslations({ locale, namespace: "Holy" });
-
-  const result = await Effect.runPromise(
-    Effect.match(fetchSurahContext({ surah: surahNumber }), {
-      onFailure: () => ({
-        surahData: null,
-        prevSurah: null,
-        nextSurah: null,
-      }),
-      onSuccess: (data) => data,
-    })
-  );
+  const [t, result] = await Promise.all([
+    getTranslations({ locale, namespace: "Holy" }),
+    Effect.runPromise(
+      Effect.match(fetchSurahContext({ surah: surahNumber }), {
+        onFailure: () => ({
+          surahData: null,
+          prevSurah: null,
+          nextSurah: null,
+        }),
+        onSuccess: (data) => data,
+      })
+    ),
+  ]);
 
   const { surahData, prevSurah, nextSurah } = result;
 

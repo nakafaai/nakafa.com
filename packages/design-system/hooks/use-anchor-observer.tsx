@@ -1,33 +1,71 @@
-import { useEffect, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 
 const SCROLL_BOTTOM_TOLERANCE = 6;
 
-/**
- * Find the active heading of page
- *
- * It selects the top heading by default, and the last item when reached the bottom of page.
- *
- * @param watch - An array of element ids to watch
- * @param single - only one active item at most
- * @returns Active anchor
- */
-export function useAnchorObserver(watch: string[], single: boolean): string[] {
-  const [activeAnchor, setActiveAnchor] = useState<string[]>([]);
+function getNormalizedAnchor(
+  activeAnchor: string[],
+  watch: string[],
+  single: boolean
+) {
+  const watchSet = new Set(watch);
+  const currentActiveAnchor = activeAnchor.filter((id) => watchSet.has(id));
 
-  useEffect(() => {
+  if (currentActiveAnchor.length === 0 && single) {
+    return watch.slice(0, 1);
+  }
+
+  return single ? currentActiveAnchor.slice(0, 1) : currentActiveAnchor;
+}
+
+function areAnchorsEqual(left: string[], right: string[]) {
+  return (
+    left.length === right.length &&
+    left.every((id, index) => id === right[index])
+  );
+}
+
+function createAnchorStore(watch: string[], single: boolean) {
+  const listeners = new Set<() => void>();
+  let snapshot = getNormalizedAnchor([], watch, single);
+
+  function emit(nextAnchor: string[]) {
+    const nextSnapshot = getNormalizedAnchor(nextAnchor, watch, single);
+
+    if (areAnchorsEqual(snapshot, nextSnapshot)) {
+      return;
+    }
+
+    snapshot = nextSnapshot;
+
+    for (const listener of listeners) {
+      listener();
+    }
+  }
+
+  function getSnapshot() {
+    return snapshot;
+  }
+
+  function subscribe(listener: () => void) {
+    listeners.add(listener);
+
+    if (typeof window === "undefined") {
+      return () => listeners.delete(listener);
+    }
+
     const visible: Set<Element> = new Set();
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting && !visible.has(entry.target)) {
+          if (entry.isIntersecting) {
             visible.add(entry.target);
-          } else if (!entry.isIntersecting && visible.has(entry.target)) {
+          } else {
             visible.delete(entry.target);
           }
         }
 
         if (visible.size > 0) {
-          setActiveAnchor(Array.from(visible).map((el) => el.id));
+          emit(Array.from(visible, (element) => element.id));
         }
       },
       {
@@ -36,30 +74,36 @@ export function useAnchorObserver(watch: string[], single: boolean): string[] {
       }
     );
 
-    function onScroll(): void {
+    function onScroll() {
       const element = document.scrollingElement;
       if (!element) {
         return;
       }
-      const top = element.scrollTop;
 
-      if (top <= 0 && single) {
-        setActiveAnchor(watch.slice(0, 1));
-      } else if (
-        top + element.clientHeight >=
-        element.scrollHeight - SCROLL_BOTTOM_TOLERANCE
-      ) {
-        const visibleIds = new Set(Array.from(visible, (el) => el.id));
-        const orderedVisible = watch.filter((id) => visibleIds.has(id));
+      if (element.scrollTop <= 0 && single) {
+        emit(watch.slice(0, 1));
+        return;
+      }
 
-        if (orderedVisible.length > 0) {
-          setActiveAnchor(single ? orderedVisible.slice(0, 1) : orderedVisible);
-        } else {
-          const lastId = watch.at(-1);
-          if (lastId) {
-            setActiveAnchor([lastId]);
-          }
-        }
+      const isAtBottom =
+        element.scrollTop + element.clientHeight >=
+        element.scrollHeight - SCROLL_BOTTOM_TOLERANCE;
+
+      if (!isAtBottom) {
+        return;
+      }
+
+      const visibleIds = new Set(Array.from(visible, (item) => item.id));
+      const orderedVisible = watch.filter((id) => visibleIds.has(id));
+
+      if (orderedVisible.length > 0) {
+        emit(orderedVisible);
+        return;
+      }
+
+      const lastId = watch.at(-1);
+      if (lastId) {
+        emit([lastId]);
       }
     }
 
@@ -71,13 +115,39 @@ export function useAnchorObserver(watch: string[], single: boolean): string[] {
       }
     }
 
-    onScroll();
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
+
     return () => {
+      listeners.delete(listener);
       window.removeEventListener("scroll", onScroll);
       observer.disconnect();
     };
-  }, [single, watch]);
+  }
 
-  return single ? activeAnchor.slice(0, 1) : activeAnchor;
+  return {
+    getSnapshot,
+    subscribe,
+  };
+}
+
+/**
+ * Find the active heading of page.
+ *
+ * It selects the top heading by default, and the last item when reached the bottom of page.
+ *
+ * @param watch - An array of element ids to watch
+ * @param single - only one active item at most
+ * @returns Active anchor
+ */
+export function useAnchorObserver(watch: string[], single: boolean): string[] {
+  const store = useMemo(
+    () => createAnchorStore(watch, single),
+    [watch, single]
+  );
+
+  return useSyncExternalStore(
+    store.subscribe,
+    store.getSnapshot,
+    store.getSnapshot
+  );
 }

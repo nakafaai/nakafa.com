@@ -49,7 +49,6 @@ export default async function Page(
     notFound();
   }
 
-  const initialNowMs = Date.now();
   const preloadedSetView = token
     ? await preloadQuery(
         api.tryouts.queries.me.setView.getUserTryoutSetView,
@@ -68,7 +67,6 @@ export default async function Page(
 
   return (
     <TryoutSetProvider
-      initialNowMs={initialNowMs}
       params={{
         locale,
         product,

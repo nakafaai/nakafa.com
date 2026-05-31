@@ -5,12 +5,12 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
-import { memo } from "react";
+
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";
 import { useData } from "@/components/school/classes/forum/conversation/context/use-data";
 
 /** Renders the active reply target bar above the forum input. */
-export const ReplyIndicator = memo(() => {
+export const ReplyIndicator = () => {
   const t = useTranslations("Common");
   const forumId = useData((state) => state.forumId);
   const replyTarget = useForumSession(
@@ -50,5 +50,5 @@ export const ReplyIndicator = memo(() => {
       </Button>
     </div>
   );
-});
+};
 ReplyIndicator.displayName = "ReplyIndicator";
