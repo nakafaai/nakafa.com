@@ -1,3 +1,5 @@
+import { ClimateObservationLab } from "@repo/design-system/components/contents/biology/climate-observation";
+
 export const metadata = {
   title: "Gejala Perubahan Iklim",
   description:
@@ -24,6 +26,36 @@ Gejala perubahan iklim dibaca seperti dokter membaca tanda tubuh. Satu tanda bis
 [NOAA Climate.gov](https://www.climate.gov/news-features/understanding-climate/climate-change-ocean-heat-content) menjelaskan panas laut sebagai indikator penting karena laut menyimpan banyak energi panas. Ini membantu kita memahami mengapa gejala iklim tidak hanya dilihat dari udara di darat.
 
 Karena itu gejala iklim sebaiknya dibaca dari banyak alat ukur. Satelit, pengukuran laut, catatan suhu, dan pengamatan es saling melengkapi. Yang penting bukan menghafal semua angkanya, melainkan memahami bahwa klaim iklim kuat karena banyak indikator bergerak searah.
+
+<ClimateObservationLab
+  title={<>Satelit membantu membaca banyak indikator</>}
+  description={
+    <>
+      Amati bagaimana satu satelit pengamat Bumi dapat mengarahkan perhatian ke
+      laut, es, daratan, dan pola data yang perlu dibandingkan.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih indikator iklim",
+    focusLabel: "Yang harus dibaca",
+    takeawayLabel: "Makna iklim",
+    viewLabel: "Model 3D satelit pengamat Bumi",
+    items: [
+      {
+        tab: "Indikator",
+        caption: <>Satelit bukan satu-satunya bukti, tetapi membantu melihat pola luas yang kemudian dibandingkan dengan pengukuran lain.</>,
+        focus: <>Ikuti garis pengamatan menuju laut, es, dan daratan. Ketiganya memberi tanda berbeda tentang perubahan panas dan air.</>,
+        takeaway: <>Klaim perubahan iklim menjadi lebih kuat saat banyak indikator yang berbeda menunjukkan arah perubahan yang sama.</>,
+        callouts: [
+          { id: "satellite", label: "satelit" },
+          { id: "ocean", label: "laut" },
+          { id: "ice", label: "es" },
+          { id: "land", label: "daratan" },
+        ],
+      },
+    ],
+  }}
+/>
 
 | Indikator | Yang sedang dibaca | Kesalahan yang dihindari |
 | --- | --- | --- |

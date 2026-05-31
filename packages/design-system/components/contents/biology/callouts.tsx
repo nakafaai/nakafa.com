@@ -6,12 +6,14 @@ import type {
 } from "@repo/design-system/components/contents/biology/data";
 import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
+import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 
-const BIOLOGY_CALLOUT_ARROW_SIZE = 0.045;
+const BIOLOGY_CALLOUT_ARROW_SIZE = 0.055;
 const BIOLOGY_CALLOUT_LABEL_CLEARANCE = 0.18;
 const BIOLOGY_CALLOUT_TARGET_CLEARANCE = BIOLOGY_CALLOUT_ARROW_SIZE;
 
 export interface BiologyCalloutTarget {
+  fontSize?: ThreeFontSize | number;
   id: string;
   labelPosition: BiologyScenePoint;
   target?: BiologyScenePoint;
@@ -46,6 +48,7 @@ export function BiologyCallouts({
         return (
           <BiologyCallout
             color={color}
+            fontSize={target.fontSize}
             key={target.id}
             label={callout.label}
             labelPosition={target.labelPosition}
@@ -63,18 +66,25 @@ export function BiologyCallouts({
  */
 function BiologyCallout({
   color,
+  fontSize = "compact",
   label,
   labelPosition,
   target,
 }: {
   color: string;
+  fontSize?: ThreeFontSize | number;
   label: string;
   labelPosition: BiologyScenePoint;
   target?: BiologyScenePoint;
 }) {
   if (!target) {
     return (
-      <SceneLabel color={color} fontSize="marker" position={labelPosition}>
+      <SceneLabel
+        alwaysOnTop
+        color={color}
+        fontSize={fontSize}
+        position={labelPosition}
+      >
         {label}
       </SceneLabel>
     );
@@ -85,14 +95,19 @@ function BiologyCallout({
 
   return (
     <group>
-      <SceneLabel color={color} fontSize="marker" position={labelPosition}>
+      <SceneLabel
+        alwaysOnTop
+        color={color}
+        fontSize={fontSize}
+        position={labelPosition}
+      >
         {label}
       </SceneLabel>
       <ArrowHelper
         arrowSize={BIOLOGY_CALLOUT_ARROW_SIZE}
         color={color}
         from={arrowStart}
-        lineWidth={1}
+        lineWidth={1.5}
         to={arrowEnd}
       />
     </group>

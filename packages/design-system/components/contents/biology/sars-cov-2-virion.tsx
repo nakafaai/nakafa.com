@@ -41,7 +41,7 @@ const SARS_COV_2_CALLOUTS = [
 ] as const;
 
 /**
- * Shows an NIH-derived SARS-CoV-2 surface model for real virion inspection.
+ * Shows a SARS-CoV-2 surface model for real virion inspection.
  */
 export function SarsCov2VirionLab(props: BiologyLabProps) {
   return (
