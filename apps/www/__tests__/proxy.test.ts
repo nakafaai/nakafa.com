@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { proxy } from "@/proxy";
+import { config, proxy } from "@/proxy";
 
 const mockLocaleRouting = vi.hoisted(() => ({
   localeMiddleware: vi.fn(
@@ -108,6 +108,12 @@ describe("proxy", () => {
     }
 
     expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+  });
+
+  it("keeps binary 3D model assets out of the locale proxy matcher", () => {
+    expect(config.matcher[0]).toContain("glb");
+    expect(config.matcher[0]).toContain("gltf");
+    expect(config.matcher[0]).toContain("bin");
   });
 
   it("delegates regular routes to the locale middleware", () => {

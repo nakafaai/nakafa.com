@@ -1,3 +1,4 @@
+import { SarsCov2VirionLab } from "@repo/design-system/components/contents/biology/sars-cov-2-virion";
 import {
   VirusMorphologyLab,
   VirusStructureLab,
@@ -68,6 +69,37 @@ Dalam riset nyata, virus tidak dibaca dari gejala penyakit saja. Ulasan virologi
         caption: <>Sebagian virus memiliki selubung lipid dengan protein permukaan yang membantu pengenalan sel target.</>,
         focus: <>Selubung dibuat transparan karena lapisan ini membungkus kapsid, bukan menggantikan kapsid.</>,
         takeaway: <>Selubung dan protein permukaan ikut menentukan apakah virus dapat menempel pada sel tertentu.</>,
+      },
+    ],
+  }}
+/>
+
+Model berikut berbeda dari model bagian umum di atas. Ini memakai model permukaan **SARS-CoV-2** dari [NIH 3D/NIAID](https://3d.nih.gov/entries/3DPX-013323/2.01), yang dibuat dari data Protein Data Bank dan studi pencitraan NIAID. Pada keterangan sumber, spike jingga menunjukkan bentuk terbuka atau aktif, sedangkan spike krem menunjukkan bentuk tertutup atau tidak aktif. Jadi model ini dipakai sebagai contoh nyata virus berselubung, bukan bentuk semua virus.
+
+<SarsCov2VirionLab
+  title={<>Permukaan SARS-CoV-2 dari data riset</>}
+  description={
+    <>
+      Bandingkan spike terbuka, spike tertutup, dan selubung luar pada satu
+      virion nyata.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih bagian permukaan",
+    focusLabel: "Yang harus dibaca",
+    takeawayLabel: "Makna biologis",
+    viewLabel: "Model 3D permukaan SARS-CoV-2 dari NIH 3D",
+    items: [
+      {
+        tab: "Permukaan",
+        caption: <>Warna spike membantu membedakan bentuk terbuka dan tertutup pada permukaan virion.</>,
+        focus: <>Perhatikan bahwa protein permukaan muncul sebagai banyak struktur terpisah yang menonjol dari selubung.</>,
+        takeaway: <>Pada virus berselubung, bagian permukaan menentukan bagaimana virion dikenali dan didekati oleh sel target.</>,
+        callouts: [
+          { id: "open-spike", label: "spike terbuka" },
+          { id: "closed-spike", label: "spike tertutup" },
+          { id: "envelope", label: "selubung" },
+        ],
       },
     ],
   }}
