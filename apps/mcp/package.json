@@ -32,6 +32,7 @@
     "@repo/typescript-config": "workspace:*",
     "@types/node": "25.9.1",
     "@types/react": "19.2.15",
+    "@vercel/config": "^0.5.1",
     "@vitest/coverage-istanbul": "^4.1.7",
     "@vitest/ui": "^4.1.7",
     "jsdom": "^29.1.1",

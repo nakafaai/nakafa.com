@@ -3,6 +3,7 @@ import {
   getNakafaContentResourceUri,
   parseNakafaContentRef,
 } from "@repo/contents/_lib/agent/refs";
+import { NakafaAgentContentIdSchema } from "@repo/contents/_lib/agent/schema/ref";
 import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -13,7 +14,9 @@ describe("Nakafa agent references", () => {
     const urlRef = parseNakafaContentRef(
       "https://www.nakafa.com/en/quran/1.md"
     );
-    const resourceUri = getNakafaContentResourceUri("en/quran/1");
+    const resourceUri = getNakafaContentResourceUri(
+      NakafaAgentContentIdSchema.make("en/quran/1")
+    );
     const resourceRef = parseNakafaContentRef(resourceUri);
     const directRef = buildNakafaContentRef("en", "quran/1", "quran");
 

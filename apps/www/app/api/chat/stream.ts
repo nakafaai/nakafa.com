@@ -22,6 +22,7 @@ import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { cleanSlug } from "@repo/utilities/helper";
 import { logError } from "@repo/utilities/logging/effect";
@@ -242,7 +243,11 @@ export function streamChat({ chat, page, runtime, user }: Params) {
                     Effect.gen(function* () {
                       if (needsPageFetch) {
                         return yield* readNakafa({
-                          input: { content_ref: context.url },
+                          input: {
+                            content_ref: NakafaAgentContentRefInputSchema.make(
+                              context.url
+                            ),
+                          },
                           toolCallId,
                           writer,
                         }).pipe(Effect.provide(Nakafa.Default));

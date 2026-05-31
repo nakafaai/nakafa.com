@@ -1,3 +1,4 @@
+import { ModelIdSchema } from "@repo/ai/config/model";
 import { DEFAULT_TITLE, MAX_TITLE_LENGTH } from "@repo/ai/features/constants";
 import { generateTitle } from "@repo/ai/features/title";
 import type { MyUIMessage } from "@repo/ai/types/message";
@@ -5,6 +6,7 @@ import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const generateText = vi.hoisted(() => vi.fn());
+const modelId = ModelIdSchema.make("nakafa-lite");
 
 vi.mock("@repo/ai/config/app", () => ({
   provider: {
@@ -36,7 +38,7 @@ describe("generateTitle", () => {
         messages: [
           {
             id: "user-1",
-            metadata: { model: "nakafa-lite" },
+            metadata: { model: modelId },
             parts: [
               {
                 text: "Cek apakah matriks ini bisa didiagonalkan.",
@@ -47,7 +49,7 @@ describe("generateTitle", () => {
           },
           {
             id: "assistant-1",
-            metadata: { model: "nakafa-lite" },
+            metadata: { model: modelId },
             parts: [
               {
                 text: "Internal reasoning that should not title the chat.",
@@ -82,7 +84,7 @@ describe("generateTitle", () => {
         messages: [
           {
             id: "user-1",
-            metadata: { model: "nakafa-lite" },
+            metadata: { model: modelId },
             parts: [
               {
                 text: "Jelaskan fungsi kuadrat.",
@@ -108,7 +110,7 @@ describe("generateTitle", () => {
         messages: [
           {
             id: "user-1",
-            metadata: { model: "nakafa-lite" },
+            metadata: { model: modelId },
             parts: [
               {
                 text: "Bantu analisis persamaan diferensial ini.",
@@ -133,7 +135,7 @@ describe("generateTitle", () => {
         messages: [
           {
             id: "user-1",
-            metadata: { model: "nakafa-lite" },
+            metadata: { model: modelId },
             parts: [
               {
                 text: "Buatkan latihan peluang.",
@@ -159,7 +161,7 @@ describe("generateTitle", () => {
         messages: [
           {
             id: "assistant-1",
-            metadata: { model: "nakafa-lite" },
+            metadata: { model: modelId },
             parts: [
               {
                 text: "Assistant-only content.",
@@ -189,7 +191,7 @@ describe("generateTitle", () => {
         messages: [
           {
             id: "user-1",
-            metadata: { model: "nakafa-lite" },
+            metadata: { model: modelId },
             parts: [
               {
                 mediaType: "image/png",

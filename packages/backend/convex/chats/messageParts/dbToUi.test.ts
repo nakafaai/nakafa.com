@@ -1,20 +1,17 @@
 import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/messageParts/dbToUi";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
+import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const now = Date.UTC(2026, 4, 8, 0, 0, 0);
-const ref = {
-  content_id: "en/articles/politics/dynastic-politics-asian-values",
-  locale: "en",
-  markdown_url:
-    "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
-  route: "articles/politics/dynastic-politics-asian-values",
-  section: "articles",
-  url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
-} satisfies NakafaAgentContentRef;
+const ref = buildNakafaContentRef(
+  "en",
+  "articles/politics/dynastic-politics-asian-values",
+  "articles"
+);
 
 const toolCallProviderMetadata = {
   google: { thoughtSignature: "call-signature" },
@@ -157,7 +154,9 @@ describe("mapDBPartToUIMessagePart", () => {
         dataNakafaData: {
           kind: "content",
           status: "done",
-          input: { content_ref: ref.url },
+          input: {
+            content_ref: NakafaAgentContentRefInputSchema.make(ref.url),
+          },
           result: {
             ...ref,
             description: "Article summary",

@@ -2,6 +2,7 @@ import { elevenlabs } from "@repo/ai/config/elevenlabs";
 import {
   getModelGatewayId,
   getModelProviderOptions,
+  ModelIdSchema,
 } from "@repo/ai/config/model";
 import { gateway } from "@repo/ai/config/provider";
 import { gatewayProviderOptions } from "@repo/ai/config/routing";
@@ -24,6 +25,8 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { experimental_generateSpeech, generateText } from "ai";
 import { v } from "convex/values";
 
+const audioGenerationModel = ModelIdSchema.make("nakafa-pro");
+
 /**
  * Native Convex adapter for audio-generation business logic.
  *
@@ -40,7 +43,7 @@ function createAudioGenerationAdapters(ctx: ActionCtx): {
     providers: {
       defaultVoiceSettings: getDefaultVoiceSettings(),
       generateScriptText: async (content) => {
-        const languageModel = gateway(getModelGatewayId("nakafa-pro"));
+        const languageModel = gateway(getModelGatewayId(audioGenerationModel));
         const prompt = podcastScriptPrompt({
           title: content.title,
           description: content.description,
@@ -53,7 +56,7 @@ function createAudioGenerationAdapters(ctx: ActionCtx): {
           prompt,
           providerOptions: {
             gateway: gatewayProviderOptions,
-            google: getModelProviderOptions("nakafa-pro"),
+            google: getModelProviderOptions(audioGenerationModel),
           },
         });
 
