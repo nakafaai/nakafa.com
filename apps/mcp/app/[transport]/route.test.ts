@@ -81,11 +81,10 @@ async function postMcp(method: string, params: Record<string, unknown> = {}) {
 }
 
 /** Calls one MCP tool through JSON-RPC. */
-function callTool(name: string, args: Record<string, unknown>) {
-  return postMcp("tools/call", {
-    arguments: args,
-    name,
-  });
+function callTool(name: string, args?: Record<string, unknown>) {
+  const params = args === undefined ? { name } : { arguments: args, name };
+
+  return postMcp("tools/call", params);
 }
 
 /** Parses JSON responses and Streamable HTTP SSE response bodies. */
@@ -163,6 +162,24 @@ describe("Nakafa MCP route", () => {
       )
     ).toContain("content_id");
   }, 15_000);
+
+  it("applies defaults when clients omit optional tool arguments", async () => {
+    const taxonomyResponse = await callTool("nakafa_get_taxonomy");
+    const searchResponse = await callTool("nakafa_search_content");
+    const taxonomy = Schema.decodeUnknownSync(
+      Schema.Struct({
+        tools: Schema.Array(Schema.String),
+      })
+    )(taxonomyResponse.result?.structuredContent);
+    const search = Schema.decodeUnknownSync(NakafaAgentSearchResultSchema)(
+      searchResponse.result?.structuredContent
+    );
+
+    expect(taxonomyResponse.result?.isError).not.toBe(true);
+    expect(searchResponse.result?.isError).not.toBe(true);
+    expect(taxonomy.tools).toContain("nakafa_search_content");
+    expect(search.items).toHaveLength(1);
+  });
 
   it("uses search content IDs immediately with content, resource, and exercise retrieval", async () => {
     const searchResponse = await callTool("nakafa_search_content", {

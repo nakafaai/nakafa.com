@@ -128,7 +128,9 @@ export function registerNakafaMcpTools(server: McpServer) {
       );
     }
 
-    const result = await Effect.runPromise(tool.run(request.params.arguments));
+    const result = await Effect.runPromise(
+      tool.run(request.params.arguments ?? {})
+    );
 
     return validateNakafaMcpToolResult(result, tool.outputSchema, tool.name);
   });
