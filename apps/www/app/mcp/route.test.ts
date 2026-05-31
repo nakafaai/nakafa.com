@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GET, HEAD, OPTIONS, POST } from "@/app/mcp/route";
 

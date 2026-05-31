@@ -1,3 +1,4 @@
+// @vitest-environment node
 import type { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";

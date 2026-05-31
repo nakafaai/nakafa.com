@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import { fetchMutation } from "convex/nextjs";
 import { Effect } from "effect";

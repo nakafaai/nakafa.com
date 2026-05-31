@@ -1,3 +1,4 @@
+// @vitest-environment node
 import type { NakafaDataPart } from "@repo/ai/schema/data";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { Effect } from "effect";

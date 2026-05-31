@@ -1,3 +1,4 @@
+// @vitest-environment node
 import type { ModelMessage } from "ai";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";

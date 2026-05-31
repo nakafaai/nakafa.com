@@ -1,3 +1,4 @@
+// @vitest-environment node
 import type { Surah } from "@repo/contents/_types/quran";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
