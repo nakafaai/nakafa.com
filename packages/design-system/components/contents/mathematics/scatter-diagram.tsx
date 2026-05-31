@@ -136,7 +136,6 @@ export function ScatterDiagram({
             />
             <ChartTooltip
               content={<ChartTooltipContent hideLabel={true} />}
-              shared={false}
               wrapperStyle={{ visibility: "hidden" }}
             />
             {datasets.map((dataset) => (
@@ -180,7 +179,9 @@ export function ScatterDiagram({
                   );
                 })
               )}
-            <ChartLegend content={<ChartLegendContent className="mt-6" />} />
+            <ChartLegend
+              content={<ChartLegendContent className="mt-6" variant="circle" />}
+            />
           </ComposedChart>
         </ChartContainer>
       </CardContent>

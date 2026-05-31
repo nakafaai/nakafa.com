@@ -38,6 +38,14 @@ type ChartColors = {
 type LegendPayloadEntry = NonNullable<
   DefaultLegendContentProps["payload"]
 >[number];
+type ChartLegendVariant =
+  | "circle"
+  | "circle-outline"
+  | "horizontal-bar"
+  | "rounded-square"
+  | "rounded-square-outline"
+  | "square"
+  | "vertical-bar";
 type PayloadEntry = LegendPayloadEntry | TooltipPayloadEntry;
 
 export type ChartConfig = Record<
@@ -329,10 +337,12 @@ function ChartLegendContent({
   payload,
   verticalAlign = "bottom",
   nameKey,
+  variant = "rounded-square",
 }: ComponentProps<"div"> &
   DefaultLegendContentProps & {
     hideIcon?: boolean;
     nameKey?: string;
+    variant?: ChartLegendVariant;
   }) {
   const { config } = useChart();
 
@@ -348,37 +358,76 @@ function ChartLegendContent({
         className
       )}
     >
-      {payload.map((item) => {
-        const key = `${nameKey || item.value || item.dataKey || "value"}`;
-        const configKey = getPayloadConfigKey(config, item, key);
-        const itemConfig = configKey ? config[configKey] : undefined;
-        const indicatorStyle = getLegendIndicatorStyle(
-          item,
-          configKey || key,
-          itemConfig
-        );
+      {payload
+        .filter((item) => item.type !== "none")
+        .map((item) => {
+          const key = `${nameKey || item.value || item.dataKey || "value"}`;
+          const configKey = getPayloadConfigKey(config, item, key);
+          const itemConfig = configKey ? config[configKey] : undefined;
+          const dataKey = configKey || key;
+          let indicatorStyle = getLegendIndicatorStyle(
+            item,
+            dataKey,
+            itemConfig
+          );
 
-        return (
-          <div
-            className={cn(
-              "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground"
-            )}
-            key={key}
-          >
-            {itemConfig?.icon && !hideIcon ? (
-              <itemConfig.icon />
-            ) : (
-              <div
-                className="h-2 w-2 shrink-0 rounded-[2px]"
-                style={indicatorStyle}
-              />
-            )}
-            {itemConfig?.label || item.value}
-          </div>
-        );
-      })}
+          if (
+            variant === "circle-outline" ||
+            variant === "rounded-square-outline"
+          ) {
+            indicatorStyle = getLegendOutlineStyle(item, dataKey, itemConfig);
+          }
+
+          return (
+            <div
+              className={cn(
+                "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground"
+              )}
+              key={key}
+            >
+              {itemConfig?.icon && !hideIcon ? (
+                <itemConfig.icon />
+              ) : (
+                <div
+                  className={getLegendIndicatorClassName(variant)}
+                  style={indicatorStyle}
+                />
+              )}
+              {itemConfig?.label || item.value}
+            </div>
+          );
+        })}
     </div>
   );
+}
+
+/** Matches EvilCharts legend variants while keeping Recharts payload support. */
+function getLegendIndicatorClassName(variant: ChartLegendVariant) {
+  if (variant === "circle") {
+    return "h-2 w-2 shrink-0 rounded-full";
+  }
+
+  if (variant === "circle-outline") {
+    return "h-2.5 w-2.5 shrink-0 rounded-full p-[1.5px]";
+  }
+
+  if (variant === "horizontal-bar") {
+    return "h-1 w-3 shrink-0 rounded-[2px]";
+  }
+
+  if (variant === "square") {
+    return "h-2 w-2 shrink-0 rounded-none";
+  }
+
+  if (variant === "vertical-bar") {
+    return "h-3 w-1 shrink-0 rounded-[2px]";
+  }
+
+  if (variant === "rounded-square-outline") {
+    return "h-2.5 w-2.5 shrink-0 rounded-[3px] p-[1.5px]";
+  }
+
+  return "h-2 w-2 shrink-0 rounded-[2px]";
 }
 
 /** Finds the chart config entry that matches a Recharts payload item. */
@@ -554,6 +603,36 @@ function getLegendIndicatorStyle(
   return {
     background: color,
     borderColor: color,
+  };
+}
+
+/** Uses the EvilCharts mask approach so outline legend variants can show gradients. */
+function getLegendOutlineStyle(
+  payload: LegendPayloadEntry,
+  dataKey: string,
+  config: ChartConfig[string] | undefined
+) {
+  const maskStyle = {
+    WebkitMask:
+      "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+    WebkitMaskComposite: "xor",
+    mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+    maskComposite: "exclude",
+  };
+
+  if (config?.colors) {
+    return {
+      ...getIndicatorStyle(dataKey, getColorsCount(config)),
+      ...maskStyle,
+    };
+  }
+
+  const color = getPayloadColor(payload);
+
+  return {
+    background: color,
+    borderColor: color,
+    ...maskStyle,
   };
 }
 
