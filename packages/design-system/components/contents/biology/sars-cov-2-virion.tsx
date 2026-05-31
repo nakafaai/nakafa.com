@@ -9,34 +9,29 @@ import type {
   BiologySceneView,
 } from "@repo/design-system/components/contents/biology/data";
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
-import {
-  PulsingGroup,
-  RotatingGroup,
-} from "@repo/design-system/components/contents/biology/parts";
 import { useMemo } from "react";
 import { Box3, type Group, Mesh, MeshStandardMaterial, Vector3 } from "three";
 
 const SARS_COV_2_VIEW = {
   cameraPosition: [2.2, 1.34, 2.72],
   cameraTarget: [0, 0.04, 0],
+  maxAzimuthAngle: Math.PI / 16,
+  maxPolarAngle: Math.PI / 2.42,
+  minAzimuthAngle: -Math.PI / 16,
+  minPolarAngle: Math.PI / 3.15,
   narrowCameraPosition: [2.52, 1.66, 3.18],
 } satisfies BiologySceneView;
 
 const SARS_COV_2_CALLOUTS = [
   {
-    id: "open-spike",
-    labelPosition: [1.0, 1.02, 0.72],
+    id: "surface-protein",
+    labelPosition: [1.02, 1.02, 0.72],
     target: [0.44, 0.74, 0.48],
   },
   {
-    id: "closed-spike",
-    labelPosition: [-1.2, 0.82, 0.72],
-    target: [-0.62, 0.48, 0.46],
-  },
-  {
     id: "envelope",
-    labelPosition: [-1.1, -0.72, 0.6],
-    target: [-0.5, -0.34, 0.64],
+    labelPosition: [-1.08, -0.82, 0.62],
+    target: [-0.02, -0.2, 0.82],
   },
 ] as const;
 
@@ -56,21 +51,7 @@ export function SarsCov2VirionLab(props: BiologyLabProps) {
 function SarsCov2VirionScene({ colors, item }: BiologySceneProps) {
   return (
     <group rotation={[-0.08, -0.22, 0.02]}>
-      <RotatingGroup speed={0.035}>
-        <SarsCov2VirionModel />
-      </RotatingGroup>
-
-      <PulsingGroup speed={1.5} strength={0.06}>
-        <mesh position={[0.44, 0.74, 0.48]} rotation={[0.58, -0.48, 0.18]}>
-          <torusGeometry args={[0.18, 0.009, 10, 42]} />
-          <meshStandardMaterial
-            color={colors.warning}
-            emissive={colors.warning}
-            emissiveIntensity={0.22}
-            roughness={0.42}
-          />
-        </mesh>
-      </PulsingGroup>
+      <SarsCov2VirionModel />
 
       <BiologyCallouts
         callouts={item.callouts}

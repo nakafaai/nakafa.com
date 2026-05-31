@@ -19,6 +19,10 @@ import { CatmullRomCurve3, type Mesh, Vector3 } from "three";
 const FUNGI_VIEW = {
   cameraPosition: [2.25, 1.7, 3.05],
   cameraTarget: [0.02, 0.18, 0.02],
+  maxAzimuthAngle: Math.PI / 16,
+  maxPolarAngle: Math.PI / 2.4,
+  minAzimuthAngle: -Math.PI / 16,
+  minPolarAngle: Math.PI / 3.1,
   narrowCameraPosition: [2.78, 2.1, 3.85],
 } satisfies BiologySceneView;
 
@@ -102,7 +106,11 @@ const CALLOUT_TARGETS = [
     labelPosition: [1.32, 0.64, -0.44],
     target: [0.3, 0.12, 0.18],
   },
-  { id: "spore", labelPosition: [0.7, 1.36, 0.38], target: [0.22, 1.12, 0.24] },
+  {
+    id: "spore",
+    labelPosition: [0.7, 1.36, 0.38],
+    target: [0.22, 1.12, 0.24],
+  },
   {
     id: "enzyme",
     labelPosition: [-0.92, 0.24, -0.62],

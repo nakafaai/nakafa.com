@@ -1,3 +1,5 @@
+import { MethaneCombustionEquationLab } from "@repo/design-system/components/contents/chemistry/methane-combustion-equation/lab";
+
 export const metadata = {
   title: "Cara Menuliskan Reaksi Kimia",
   description:
@@ -36,6 +38,26 @@ Rumus awal belum setara karena jumlah atom oksigen di kiri hanya <InlineMath mat
 | <InlineMath math="\mathrm{O}" /> | <InlineMath math="4" /> | <InlineMath math="4" /> |
 
 Koefisiennya terbaca sebagai perbandingan <InlineMath math="1:2:1:2" />. Artinya, <InlineMath math="1" /> partikel metana bereaksi dengan <InlineMath math="2" /> partikel oksigen menghasilkan <InlineMath math="1" /> partikel karbon dioksida dan <InlineMath math="2" /> partikel air.
+
+<MethaneCombustionEquationLab
+  title={<>Koefisien menunjukkan jumlah molekul</>}
+  description={
+    <>
+      Bandingkan satu molekul metana, dua molekul oksigen, satu molekul karbon
+      dioksida, dan dua molekul air pada persamaan setara.
+    </>
+  }
+  labels={{
+    moleculeView: "Model 3D persamaan pembakaran metana",
+    reactants: "reaktan (awal)",
+    products: "produk (hasil)",
+    equation: (
+      <>
+        <InlineMath math="\mathrm{CH_4} + 2\mathrm{O_2} \rightarrow \mathrm{CO_2} + 2\mathrm{H_2O}" />. Jumlah atom <InlineMath math="\mathrm{C}" />, <InlineMath math="\mathrm{H}" />, dan <InlineMath math="\mathrm{O}" /> tetap sama di kedua sisi.
+      </>
+    ),
+  }}
+/>
 
 ## Koefisien Tidak Mengubah Rumus
 

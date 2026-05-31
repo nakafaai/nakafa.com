@@ -32,6 +32,10 @@ import {
 const CLIMATE_OBSERVATION_VIEW = {
   cameraPosition: [2.55, 1.82, 3.45],
   cameraTarget: [0, 0.28, 0],
+  maxAzimuthAngle: Math.PI / 18,
+  maxPolarAngle: Math.PI / 2.45,
+  minAzimuthAngle: -Math.PI / 18,
+  minPolarAngle: Math.PI / 3.05,
   narrowCameraPosition: [3.05, 2.28, 4.35],
 } satisfies BiologySceneView;
 
@@ -46,19 +50,19 @@ const CALLOUT_TARGETS = [
     fontSize: 0.13,
     id: "ocean",
     labelPosition: [-1.42, -0.28, 1.1],
-    target: [-0.78, -0.36, 0.58],
+    target: [-0.5, -0.28, 0.86],
   },
   {
     fontSize: 0.11,
     id: "ice",
-    labelPosition: [-1.26, 0.72, 1.08],
-    target: [-0.02, 0.86, 0.5],
+    labelPosition: [-1.24, 0.78, 1.08],
+    target: [-0.08, 0.78, 0.58],
   },
   {
     fontSize: 0.11,
     id: "land",
-    labelPosition: [1.38, -0.38, 1.08],
-    target: [0.18, -0.28, 0.78],
+    labelPosition: [1.38, -0.18, 1.08],
+    target: [0.28, 0.08, 0.86],
   },
 ] as const;
 
