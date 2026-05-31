@@ -1,0 +1,121 @@
+import { Vector3d } from "@repo/design-system/components/contents/mathematics/vector-3d";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Vector Decomposition Using Trigonometry Rules",
+  description:
+    "Learn how to resolve a slanted vector into horizontal and vertical components using sine and cosine.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/31/2026",
+  subject: "Vector",
+};
+
+## The Angle Determines the Components
+
+When a vector forms an angle with an axis, its components can be found using trigonometry. The idea is simple: the slanted vector becomes the hypotenuse of a right triangle, while its components become the horizontal and vertical sides.
+
+If angle <InlineMath math="\theta" /> is measured from the positive <InlineMath math="x" /> axis, the horizontal component is adjacent to the angle, while the vertical component is opposite the angle.
+
+<MathContainer>
+  <BlockMath math="F_x=F\cos\theta" />
+  <BlockMath math="F_y=F\sin\theta" />
+</MathContainer>
+
+> Do not memorize where <InlineMath math="\sin" /> and <InlineMath math="\cos" /> go without checking the reference angle.
+
+## A Slanted Force on Coordinate Axes
+
+Imagine a rope pulling a box with force <InlineMath math="\vec{F}" /> up and to the right. The pull has a horizontal part that pulls the box rightward and a vertical part that lifts slightly upward.
+
+<Vector3d
+  title={<>Resolving a Slanted Force</>}
+  description={
+    <>
+      Force <InlineMath math="\vec{F}=50\text{ N}" /> forms a{" "}
+      <InlineMath math="37^\circ" /> angle above the horizontal, so its
+      components can be estimated from <InlineMath math="\cos37^\circ" /> and{" "}
+      <InlineMath math="\sin37^\circ" />.
+    </>
+  }
+  vectors={(() => {
+    const fx = [4, 0, 0];
+    const fy = [0, 3, 0];
+    const resultant = fx.map((component, index) => component + fy[index]);
+
+    return [
+      {
+        from: [0, 0, 0],
+        to: resultant,
+        color: getColor("VIOLET"),
+        label: "F",
+        labelPosition: "end",
+        labelOffset: [0.25, 0.45, 0.2],
+        labelSize: "reading",
+      },
+      {
+        from: [0, 0, 0],
+        to: fx,
+        color: getColor("TEAL"),
+        label: "Fx",
+        labelPosition: "end",
+        labelOffset: [0.35, -0.4, 0],
+        labelSize: "reading",
+      },
+      {
+        from: fx,
+        to: resultant,
+        color: getColor("AMBER"),
+        label: "Fy",
+        labelPosition: "end",
+        labelOffset: [0.35, 0.1, 0.15],
+        labelSize: "reading",
+      },
+    ];
+  })()}
+  cameraPosition={[7, 5, 8]}
+  cameraTarget={[2, -0.8, 0]}
+/>
+
+The endpoint of <InlineMath math="F_x" /> followed by <InlineMath math="F_y" /> matches the endpoint of vector <InlineMath math="\vec{F}" />. The components are not extra forces. They are another way to describe the same force.
+
+## Worked Calculation
+
+A <InlineMath math="50\text{ N}" /> force acts <InlineMath math="37^\circ" /> above the horizontal. Use <InlineMath math="\cos37^\circ\approx0.8" /> and <InlineMath math="\sin37^\circ\approx0.6" />.
+
+<BlockMath math="\begin{aligned}
+F_x&=F\cos\theta \\
+&=50(0.8) \\
+&=40\text{ N}
+\end{aligned}" />
+
+<BlockMath math="\begin{aligned}
+F_y&=F\sin\theta \\
+&=50(0.6) \\
+&=30\text{ N}
+\end{aligned}" />
+
+So the slanted <InlineMath math="50\text{ N}" /> force is equivalent to a <InlineMath math="40\text{ N}" /> pull to the right and a <InlineMath math="30\text{ N}" /> pull upward.
+
+## If the Angle Is Measured from the Vertical Axis
+
+The formulas change when the reference angle changes. If angle <InlineMath math="\theta" /> is measured from the <InlineMath math="y" /> axis, the component adjacent to the angle is <InlineMath math="F_y" />.
+
+<MathContainer>
+  <BlockMath math="F_y=F\cos\theta" />
+  <BlockMath math="F_x=F\sin\theta" />
+</MathContainer>
+
+Before using a formula, always ask: from which axis is the angle measured? This small check prevents a common error when resolving vectors.
+
+## Component Signs Follow the Quadrant
+
+The values of <InlineMath math="\sin" /> and <InlineMath math="\cos" /> give component sizes, but positive or negative signs come from the vector direction on the coordinate axes.
+
+| Vector direction | Sign of <InlineMath math="F_x" /> | Sign of <InlineMath math="F_y" /> |
+| :--------------- | :------------------------------- | :------------------------------- |
+| up and right | positive | positive |
+| up and left | negative | positive |
+| down and left | negative | negative |
+| down and right | positive | negative |
+
+If a force points up and to the left, its horizontal component is negative because it opposes the positive <InlineMath math="x" /> axis, while its vertical component remains positive.

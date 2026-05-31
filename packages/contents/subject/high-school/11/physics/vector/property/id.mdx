@@ -1,0 +1,105 @@
+import { Vector3d } from "@repo/design-system/components/contents/mathematics/vector-3d";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Sifat-sifat Vektor",
+  description:
+    "Pelajari sifat vektor yang sama, vektor negatif, vektor nol, dan pengaruh perkalian skalar terhadap besar serta arah vektor.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/31/2026",
+  subject: "Vektor",
+};
+
+## Vektor Sama Tidak Bergantung pada Tempat
+
+Dua vektor dikatakan sama jika besar dan arahnya sama. Letaknya di gambar boleh berbeda. Ini penting karena gaya, perpindahan, atau kecepatan sering digambar di tempat yang berbeda, tetapi masih dapat mewakili vektor yang sama.
+
+> Dua vektor sama bukan karena pangkalnya berada di tempat yang sama, tetapi karena panjang dan arahnya sama.
+
+<Vector3d
+  title={<>Vektor Sama dan Vektor Berlawanan</>}
+  description={
+    <>
+      Vektor <InlineMath math="\vec{a}" /> dan <InlineMath math="\vec{b}" /> sama
+      karena sejajar, searah, dan sama panjang. Vektor{" "}
+      <InlineMath math="-\vec{a}" /> berlawanan arah.
+    </>
+  }
+  vectors={(() => {
+    const a = [4, 2, 0];
+    const bShift = [0, 0, 2];
+    const negativeShift = [0, 0, -2];
+    const b = a.map((component, index) => component + bShift[index]);
+    const negativeA = a.map(
+      (component, index) => -component + negativeShift[index]
+    );
+
+    return [
+      {
+        from: [0, 0, 0],
+        to: a,
+        color: getColor("TEAL"),
+        label: "a",
+        labelPosition: "end",
+        labelOffset: [0.2, 0.5, 0],
+        labelSize: "reading",
+      },
+      {
+        from: bShift,
+        to: b,
+        color: getColor("TEAL"),
+        label: "b",
+        labelPosition: "end",
+        labelOffset: [0.2, 0.5, 0],
+        labelSize: "reading",
+      },
+      {
+        from: negativeShift,
+        to: negativeA,
+        color: getColor("VIOLET"),
+        label: "-a",
+        labelPosition: "end",
+        labelOffset: [-0.8, 0.2, 0],
+        labelSize: "reading",
+      },
+    ];
+  })()}
+  cameraPosition={[8, 6, 10]}
+  cameraTarget={[0, -1.8, 0]}
+/>
+
+Pada visual tersebut, <InlineMath math="\vec{a}" /> dan <InlineMath math="\vec{b}" /> tidak berada pada garis yang sama, tetapi keduanya tetap sama sebagai vektor. Perpindahan posisi gambar tidak mengubah besar dan arah vektor.
+
+## Vektor Negatif Membalik Arah
+
+Vektor negatif dari <InlineMath math="\vec{a}" /> ditulis sebagai <InlineMath math="-\vec{a}" />. Besarnya sama dengan <InlineMath math="\vec{a}" />, tetapi arahnya berlawanan.
+
+<MathContainer>
+  <BlockMath math="\lvert-\vec{a}\rvert=\lvert\vec{a}\rvert" />
+  <BlockMath math="\vec{a}+(-\vec{a})=\vec{0}" />
+</MathContainer>
+
+Contohnya, gaya <InlineMath math="12\text{ N}" /> ke kanan dan gaya <InlineMath math="12\text{ N}" /> ke kiri adalah pasangan vektor yang saling berlawanan. Jika keduanya bekerja pada benda yang sama sepanjang garis yang sama, resultannya dapat menjadi vektor nol.
+
+## Perkalian Skalar Mengubah Panjang
+
+Skalar adalah bilangan biasa yang tidak memiliki arah. Ketika vektor dikalikan dengan skalar <InlineMath math="k" />, panjang vektor berubah sebesar <InlineMath math="\lvert k\rvert" /> kali.
+
+| Bentuk | Besar hasil | Arah hasil |
+| :----- | :---------- | :--------- |
+| <InlineMath math="2\vec{a}" /> | dua kali <InlineMath math="\vec{a}" /> | searah <InlineMath math="\vec{a}" /> |
+| <InlineMath math="\frac{1}{2}\vec{a}" /> | setengah dari <InlineMath math="\vec{a}" /> | searah <InlineMath math="\vec{a}" /> |
+| <InlineMath math="-3\vec{a}" /> | tiga kali <InlineMath math="\vec{a}" /> | berlawanan arah dengan <InlineMath math="\vec{a}" /> |
+| <InlineMath math="0\vec{a}" /> | <InlineMath math="0" /> | menjadi vektor nol |
+
+Tanda negatif pada skalar tidak membuat besar vektor menjadi negatif. Tanda itu membalik arah vektor.
+
+## Vektor Nol sebagai Hasil Saling Meniadakan
+
+Vektor nol ditulis sebagai <InlineMath math="\vec{0}" />. Besarnya <InlineMath math="0" /> dan arahnya tidak tertentu karena pangkal dan ujungnya berhimpit.
+
+Vektor nol sering muncul dari penjumlahan vektor yang saling meniadakan. Misalnya dua siswa menarik kotak dengan gaya sama besar pada arah berlawanan. Jika gaya-gaya itu tepat segaris, gabungannya tidak menghasilkan percepatan ke kanan atau ke kiri.
+
+<BlockMath math="\vec{F}_1+\vec{F}_2=\vec{0}" />
+
+Sifat ini menjadi dasar saat kita membahas keseimbangan benda: benda dapat tetap diam bukan karena tidak ada gaya, tetapi karena resultan semua gaya bernilai nol.

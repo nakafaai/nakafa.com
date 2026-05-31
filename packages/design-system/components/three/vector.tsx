@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
+import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 import type * as Three from "three";
 
 interface VectorProps {
@@ -12,8 +13,15 @@ interface VectorProps {
   from?: [number, number, number];
   /** Label for the vector */
   label?: string;
+  /**
+   * Visual-only label offset in Three.js world units.
+   * This moves text away from arrowheads without changing vector coordinates.
+   */
+  labelOffset?: [number, number, number];
   /** Position of the label */
   labelPosition?: "start" | "middle" | "end";
+  /** Font size of the label text */
+  labelSize?: ThreeFontSize | number;
   /** Width of the vector line */
   lineWidth?: number;
   /** Show arrowhead */

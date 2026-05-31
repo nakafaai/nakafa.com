@@ -39,6 +39,8 @@ interface Props {
   backgroundColor?: CSSProperties["backgroundColor"];
   /** Custom camera position */
   cameraPosition?: [number, number, number];
+  /** Custom point the camera looks at in Three.js world coordinates */
+  cameraTarget?: [number, number, number];
   /** Children elements to render inside the coordinate system */
   children?: ReactNode;
   /** Additional class name */
@@ -80,6 +82,7 @@ export function CoordinateSystem({
   size = 30,
   backgroundColor = "transparent",
   cameraPosition = [CAMERA_POSITION_X, CAMERA_POSITION_Y, CAMERA_POSITION_Z],
+  cameraTarget,
   font = "mono",
   children,
   className,
@@ -161,7 +164,11 @@ export function CoordinateSystem({
       >
         <Suspense>
           {/* Camera Controls */}
-          <CameraControls autoRotate={play} cameraPosition={cameraPosition} />
+          <CameraControls
+            autoRotate={play}
+            cameraPosition={cameraPosition}
+            cameraTarget={cameraTarget}
+          />
 
           {/* Lighting */}
           <ambientLight intensity={0.5} />

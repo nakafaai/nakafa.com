@@ -1,0 +1,136 @@
+import { Vector3d } from "@repo/design-system/components/contents/mathematics/vector-3d";
+import { getColor } from "@repo/design-system/lib/color";
+
+export const metadata = {
+  title: "Vector Components",
+  description:
+    "Learn how to express a vector as components along the x, y, and z axes using unit vectors.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/31/2026",
+  subject: "Vector",
+};
+
+## Why Vectors Are Split into Components
+
+A slanted vector is difficult to calculate with if we only see it as one arrow. To make calculations easier, the vector is split into parts parallel to the coordinate axes. These parts are called **vector components**.
+
+The horizontal component shows how much of the vector lies along the <InlineMath math="x" /> axis. The vertical component shows how much lies along the <InlineMath math="y" /> axis. In three-dimensional space, there is also a component along the <InlineMath math="z" /> axis.
+
+> Vector components turn one slanted arrow into parts that follow the axes.
+
+## Reading Components in a Plane
+
+In a plane, vector <InlineMath math="\vec{A}" /> can be written as the combination of its <InlineMath math="x" /> and <InlineMath math="y" /> components.
+
+<BlockMath math="\vec{A}=A_x\hat{i}+A_y\hat{j}" />
+
+The notation <InlineMath math="\hat{i}" /> is the unit vector in the <InlineMath math="x" /> direction, while <InlineMath math="\hat{j}" /> is the unit vector in the <InlineMath math="y" /> direction. The numbers <InlineMath math="A_x" /> and <InlineMath math="A_y" /> give the component sizes along each direction.
+
+For example, <InlineMath math="\vec{A}=6\hat{i}+8\hat{j}" /> means the vector moves <InlineMath math="6" /> units in the positive <InlineMath math="x" /> direction and <InlineMath math="8" /> units in the positive <InlineMath math="y" /> direction.
+
+<BlockMath math="\lvert\vec{A}\rvert=\sqrt{6^2+8^2}=10" />
+
+The vector length comes from the Pythagorean theorem because the <InlineMath math="x" /> and <InlineMath math="y" /> components are perpendicular.
+
+## Components in Three-Dimensional Space
+
+In three-dimensional space, a vector needs three components. The general form is:
+
+<BlockMath math="\vec{A}=A_x\hat{i}+A_y\hat{j}+A_z\hat{k}" />
+
+The unit vector <InlineMath math="\hat{k}" /> points along the <InlineMath math="z" /> axis. This component is needed when motion or force is not limited to a flat plane, such as a drone moving east, north, and upward at the same time.
+
+<Vector3d
+  title={<>Components of <InlineMath math="\vec{A}" /></>}
+  description={
+    <>
+      Vector <InlineMath math="\vec{A}=4\hat{i}+3\hat{j}+2\hat{k}" /> is split
+      into three perpendicular components.
+    </>
+  }
+  vectors={(() => {
+    const components = [
+      [4, 0, 0],
+      [0, 3, 0],
+      [0, 0, 2],
+    ];
+    const points = components.reduce(
+      (path, component) => [
+        ...path,
+        path.at(-1).map((value, index) => value + component[index]),
+      ],
+      [[0, 0, 0]]
+    );
+    const resultant = components.reduce(
+      (sum, component) =>
+        sum.map((value, index) => value + component[index]),
+      [0, 0, 0]
+    );
+
+    return [
+      {
+        from: [0, 0, 0],
+        to: resultant,
+        color: getColor("VIOLET"),
+        label: "A",
+        labelPosition: "end",
+        labelOffset: [0.3, 0.45, 0.25],
+        labelSize: "reading",
+      },
+      {
+        from: points[0],
+        to: points[1],
+        color: getColor("TEAL"),
+        label: "Ax",
+        labelPosition: "end",
+        labelOffset: [0.3, -0.45, 0],
+        labelSize: "reading",
+      },
+      {
+        from: points[1],
+        to: points[2],
+        color: getColor("AMBER"),
+        label: "Ay",
+        labelPosition: "end",
+        labelOffset: [0.35, 0.2, 0.15],
+        labelSize: "reading",
+      },
+      {
+        from: points[2],
+        to: points[3],
+        color: getColor("CYAN"),
+        label: "Az",
+        labelPosition: "end",
+        labelOffset: [0.3, 0.3, 0.45],
+        labelSize: "reading",
+      },
+    ];
+  })()}
+  cameraPosition={[8, 6, 9]}
+  cameraTarget={[2, -0.5, 1]}
+/>
+
+The visual uses component steps in order: move along the <InlineMath math="x" /> axis, then the <InlineMath math="y" /> axis, then the <InlineMath math="z" /> axis. The final endpoint is the same as the endpoint of vector <InlineMath math="\vec{A}" />.
+
+## Positive and Negative Component Signs
+
+Components can be positive or negative. The sign shows direction relative to the reference axis, not a negative vector magnitude.
+
+| Component | Positive sign means | Negative sign means |
+| :-------- | :------------------ | :------------------ |
+| <InlineMath math="A_x" /> | toward positive <InlineMath math="x" /> | toward negative <InlineMath math="x" /> |
+| <InlineMath math="A_y" /> | toward positive <InlineMath math="y" /> | toward negative <InlineMath math="y" /> |
+| <InlineMath math="A_z" /> | toward positive <InlineMath math="z" /> | toward negative <InlineMath math="z" /> |
+
+If <InlineMath math="\vec{B}=-5\hat{i}+2\hat{j}" />, the vector has a <InlineMath math="5" /> unit component toward negative <InlineMath math="x" /> and a <InlineMath math="2" /> unit component toward positive <InlineMath math="y" />.
+
+## Example: Writing a Vector from Displacement
+
+A student walks <InlineMath math="3\text{ m}" /> east, then <InlineMath math="4\text{ m}" /> north. If east is the positive <InlineMath math="x" /> direction and north is the positive <InlineMath math="y" /> direction, the displacement is:
+
+<MathContainer>
+  <BlockMath math="\vec{s}=3\hat{i}+4\hat{j}" />
+  <BlockMath math="\lvert\vec{s}\rvert=\sqrt{3^2+4^2}=5\text{ m}" />
+</MathContainer>
+
+Components keep the calculation organized because each direction is handled on its own axis.

@@ -75,6 +75,11 @@ interface Props {
   from?: readonly [number, number, number];
   /** Label for the vector */
   label?: string;
+  /**
+   * Visual-only label offset in Three.js world units.
+   * This moves text away from arrowheads without changing vector coordinates.
+   */
+  labelOffset?: readonly [number, number, number];
   /** Position of the label */
   labelPosition?: "start" | "middle" | "end";
   /** Font size of the label text */
@@ -102,6 +107,7 @@ export function ArrowHelper({
   showArrow = true,
   arrowSize = 0.5,
   label,
+  labelOffset = [0, 0, 0],
   labelPosition = "end",
   labelSize = "diagram",
   useMonoFont = true,
@@ -124,14 +130,18 @@ export function ArrowHelper({
     );
     const endPoint = new Vector3().copy(vectors.toVec);
 
+    let position: Vector3;
+
     switch (labelPosition) {
       case "start":
-        return vectors.fromVec.clone();
+        position = vectors.fromVec.clone();
+        break;
       case "middle":
-        return midPoint;
+        position = midPoint;
+        break;
       default:
         // Add slight offset for end position
-        return endPoint
+        position = endPoint
           .clone()
           .add(
             new Vector3(
@@ -141,7 +151,9 @@ export function ArrowHelper({
             )
           );
     }
-  }, [vectors, labelPosition]);
+
+    return position.add(new Vector3(...labelOffset));
+  }, [vectors, labelPosition, labelOffset]);
 
   // Use shared geometry and material
   const coneGeometry = useMemo(
