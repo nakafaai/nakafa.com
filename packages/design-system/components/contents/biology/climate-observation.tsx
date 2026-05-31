@@ -30,35 +30,35 @@ import {
 } from "three";
 
 const CLIMATE_OBSERVATION_VIEW = {
-  cameraPosition: [2.45, 1.78, 3.25],
+  cameraPosition: [2.55, 1.82, 3.45],
   cameraTarget: [0, 0.28, 0],
-  narrowCameraPosition: [2.95, 2.24, 4.1],
+  narrowCameraPosition: [3.05, 2.28, 4.35],
 } satisfies BiologySceneView;
 
 const CALLOUT_TARGETS = [
   {
-    fontSize: 0.15,
+    fontSize: 0.12,
     id: "satellite",
-    labelPosition: [-1.55, 1.35, 1.05],
-    target: [-0.36, 1.18, 0.22],
+    labelPosition: [-1.42, 1.38, 1.12],
+    target: [-0.18, 1.18, 0.24],
   },
   {
-    fontSize: 0.15,
+    fontSize: 0.13,
     id: "ocean",
-    labelPosition: [-1.48, -0.3, 1.14],
-    target: [-0.62, -0.2, 0.66],
+    labelPosition: [-1.42, -0.28, 1.1],
+    target: [-0.78, -0.36, 0.58],
   },
   {
-    fontSize: 0.15,
+    fontSize: 0.11,
     id: "ice",
-    labelPosition: [-1.55, 0.6, 1.12],
-    target: [-0.22, 0.72, 0.64],
+    labelPosition: [-1.26, 0.72, 1.08],
+    target: [-0.02, 0.86, 0.5],
   },
   {
-    fontSize: 0.15,
+    fontSize: 0.11,
     id: "land",
-    labelPosition: [1.95, 0.55, 0.22],
-    target: [0.12, -0.08, 0.78],
+    labelPosition: [1.38, -0.38, 1.08],
+    target: [0.18, -0.28, 0.78],
   },
 ] as const;
 
