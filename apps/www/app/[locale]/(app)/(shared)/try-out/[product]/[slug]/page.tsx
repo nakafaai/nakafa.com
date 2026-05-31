@@ -62,11 +62,13 @@ export default async function Page(
       )
     : undefined;
 
+  const initialNowMs = Date.now();
   const tryoutLabel = details.tryout.label;
   const partKeys = details.parts.map((part) => part.partKey);
 
   return (
     <TryoutSetProvider
+      initialNowMs={initialNowMs}
       params={{
         locale,
         product,

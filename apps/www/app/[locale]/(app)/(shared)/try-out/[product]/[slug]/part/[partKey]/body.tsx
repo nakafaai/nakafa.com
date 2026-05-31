@@ -129,9 +129,11 @@ export async function TryoutPartBody({
   const timeLimitSeconds = tryoutProductPolicies[
     product
   ].getPartTimeLimitSeconds(contentPart.questionCount);
+  const initialNowMs = Date.now();
 
   return (
     <TryoutPartProvider
+      initialNowMs={initialNowMs}
       part={{
         key: contentPart.partKey,
         label: partLabel,

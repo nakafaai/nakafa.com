@@ -51,6 +51,7 @@ export default async function Page(
     },
     token ? { token } : undefined
   );
+  const initialNowMs = Date.now();
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
@@ -89,6 +90,7 @@ export default async function Page(
         >
           <TryoutCatalogList
             initialEntries={catalogSnapshot.initialPage}
+            initialNowMs={initialNowMs}
             locale={locale}
             product={product}
           />

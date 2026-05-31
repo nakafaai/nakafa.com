@@ -39,6 +39,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
       : Promise.resolve(null),
   ]);
   const userName = currentUser?.appUser.name ?? tHome("guest");
+  const initialNowMs = Date.now();
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
@@ -70,6 +71,7 @@ export async function TryoutHubPage({ locale }: { locale: Locale }) {
         >
           <TryoutCatalogList
             initialEntries={catalogSnapshot.initialPage}
+            initialNowMs={initialNowMs}
             locale={locale}
             product={product}
           />
