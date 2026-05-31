@@ -1,0 +1,98 @@
+import { VectorConceptLab } from "@repo/design-system/components/contents/physics/vector/concept/lab";
+
+export const metadata = {
+  title: "Vector Concept",
+  description:
+    "Learn vectors as quantities with magnitude and direction, how they differ from scalars, and how to read vectors from real situations.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/31/2026",
+  subject: "Vectors",
+};
+
+## A Number Alone Is Not Enough
+
+Imagine telling a friend, "walk <InlineMath math="5 \text{ m}" />." Your friend will probably ask, "which way?" Forward, right, or up the stairs?
+
+In physics, some quantities cannot be explained by a number alone. They need both **magnitude** and **direction**. This kind of quantity is called a **vector**.
+
+<BlockMath math="\text{vector} = \text{magnitude} + \text{direction}" />
+
+Examples include a displacement of <InlineMath math="5 \text{ m}" /> east, a force of <InlineMath math="20 \text{ N}" /> upward, or a velocity of <InlineMath math="12 \text{ m s}^{-1}" /> to the right. If the direction is missing, the physical information is incomplete.
+
+## Seeing Vectors on a Bridge
+
+In this model, a small load moves along a bridge deck. Two cables pull the load toward the towers. Each cable pull is a vector because it has a force magnitude and a pulling direction. Move the load and notice how the arrow length and direction change together.
+
+<VectorConceptLab
+  title={<>Cable Tension as a Vector</>}
+  description={
+    <>
+      Move the load along the bridge. The arrows show the cable tension forces
+      acting on the load.
+    </>
+  }
+  labels={{
+    bridgeView: "Cable bridge model",
+    chooseLoadPosition: "Move the load position",
+    direction: "Direction",
+    directionValue: "shown by the arrow tilt",
+    leftCable: "Left T",
+    magnitude: "Magnitude",
+    magnitudeValue: "shown by the arrow length",
+    netIdea: "Resultant",
+    netIdeaValue: "the combined effect of several vectors",
+    rightCable: "Right T",
+  }}
+/>
+
+Here is the important point: when the load is not exactly in the middle, the two cables no longer pull with the same tension. The cable directions change, so the required tension magnitudes also change to keep the load supported. In physics, direction is not decoration. Direction changes the calculation.
+
+## Vectors and Scalars
+
+Not every quantity needs direction. A **scalar** is described well enough by a value and a unit. A **vector** needs a value, a unit, and a direction.
+
+| Situation | Quantity | Type |
+| :-------- | :------- | :--- |
+| Water with mass <InlineMath math="2 \text{ kg}" /> | mass | scalar |
+| Room temperature <InlineMath math="27^\circ\text{C}" /> | temperature | scalar |
+| A car travels a distance of <InlineMath math="80 \text{ km}" /> | distance | scalar |
+| A car is displaced <InlineMath math="80 \text{ km}" /> north | displacement | vector |
+| A student pushes a table with <InlineMath math="30 \text{ N}" /> to the right | force | vector |
+| Wind moves at <InlineMath math="6 \text{ m s}^{-1}" /> west | velocity | vector |
+
+A quick way to decide is this: if the question "which way?" matters for understanding the quantity, you are probably looking at a vector.
+
+## Reading a Vector Arrow
+
+Vectors are often drawn as arrows. The tail shows where the vector starts, the head shows the direction, and the length represents the vector magnitude.
+
+For example, a force can be written as <InlineMath math="\vec{F} = 20 \text{ N}" /> to the right. The symbol <InlineMath math="\vec{F}" /> shows that force is a vector. The number <InlineMath math="20 \text{ N}" /> is its magnitude. The phrase "to the right" is its direction.
+
+A vector can also be written from one point to another, such as <InlineMath math="\overrightarrow{AB}" />. This means the vector starts at point <InlineMath math="A" /> and ends at point <InlineMath math="B" />.
+
+<BlockMath math="\left|\overrightarrow{AB}\right| = \text{the vector length from } A \text{ to } B" />
+
+The absolute value bars around a vector mean we are talking only about its magnitude, not its direction.
+
+## Equal Vectors Do Not Need the Same Place
+
+Two vectors are equal if they have the same magnitude and the same direction. Their locations may be different.
+
+Imagine two students pushing two different tables. Both push with a force of <InlineMath math="15 \text{ N}" /> to the right. Even though the tables are in different places, the force vectors can be considered equal because their magnitude and direction are the same.
+
+By contrast, a force of <InlineMath math="15 \text{ N}" /> to the right and a force of <InlineMath math="15 \text{ N}" /> to the left are not equal vectors. Their magnitudes are equal, but their directions are opposite.
+
+## Quick Example
+
+A student walks <InlineMath math="4 \text{ m}" /> east, then <InlineMath math="3 \text{ m}" /> north. The distance traveled is the total path length:
+
+<BlockMath math="4 \text{ m} + 3 \text{ m} = 7 \text{ m}" />
+
+Displacement is different. Displacement is the vector from the starting position directly to the final position.
+
+<BlockMath math="\begin{aligned}
+s &= \sqrt{4^2 + 3^2} \\
+&= 5 \text{ m}
+\end{aligned}" />
+
+So, the distance is <InlineMath math="7 \text{ m}" />, while the displacement magnitude is <InlineMath math="5 \text{ m}" /> directed diagonally northeast. That is why vectors help: they tell us not only "how much", but also "which way".
