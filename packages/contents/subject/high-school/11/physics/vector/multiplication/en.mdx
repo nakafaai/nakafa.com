@@ -1,3 +1,6 @@
+import { Vector3d } from "@repo/design-system/components/contents/mathematics/vector-3d";
+import { getColor } from "@repo/design-system/lib/color";
+
 export const metadata = {
   title: "Vector Multiplication",
   description:
@@ -54,6 +57,59 @@ The cross product of <InlineMath math="\vec{A}" /> and <InlineMath math="\vec{B}
 <BlockMath math="\lvert\vec{A}\times\vec{B}\rvert=AB\sin\theta" />
 
 The result is a vector perpendicular to the plane containing <InlineMath math="\vec{A}" /> and <InlineMath math="\vec{B}" />. Its direction is determined by the right-hand rule.
+
+<Vector3d
+  title={<>Direction of <InlineMath math="\vec{A}\times\vec{B}" /></>}
+  description={
+    <>
+      Vectors <InlineMath math="\vec{A}" /> and <InlineMath math="\vec{B}" /> lie in
+      one plane. Their cross product points perpendicular to that plane.
+    </>
+  }
+  cameraPosition={[8, 7, 9]}
+  cameraTarget={[1.6, 1.4, 1.2]}
+  vectors={(() => {
+    const a = [4, 0, 0];
+    const b = [0, 3, 0];
+    const cross = [
+      a[1] * b[2] - a[2] * b[1],
+      a[2] * b[0] - a[0] * b[2],
+      a[0] * b[1] - a[1] * b[0],
+    ];
+    const displayScale = 4;
+    const crossDirection = cross.map((component) => component / displayScale);
+
+    return [
+      {
+        color: getColor("red"),
+        from: [0, 0, 0],
+        label: "A",
+        labelOffset: [0.25, 0.15, 0],
+        labelPosition: "end",
+        to: a,
+      },
+      {
+        color: getColor("green"),
+        from: [0, 0, 0],
+        label: "B",
+        labelOffset: [0.1, 0.35, 0.15],
+        labelPosition: "end",
+        to: b,
+      },
+      {
+        color: getColor("blue"),
+        from: [0, 0, 0],
+        label: "A x B",
+        labelOffset: [0.15, 0.25, 0.35],
+        labelPosition: "end",
+        lineWidth: 4,
+        to: crossDirection,
+      },
+    ];
+  })()}
+/>
+
+In this visual, <InlineMath math="\vec{A}" /> points along the positive <InlineMath math="x" /> axis and <InlineMath math="\vec{B}" /> points along the positive <InlineMath math="y" /> axis. The cross-product formula gives the positive <InlineMath math="z" /> direction for <InlineMath math="\vec{A}\times\vec{B}" />. The blue arrow is scaled down to fit the scene, but its direction still comes from the calculation.
 
 For torque, the cross product is written:
 

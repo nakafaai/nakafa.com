@@ -1,3 +1,6 @@
+import { Vector3d } from "@repo/design-system/components/contents/mathematics/vector-3d";
+import { getColor } from "@repo/design-system/lib/color";
+
 export const metadata = {
   title: "Perkalian Vektor",
   description:
@@ -54,6 +57,59 @@ Perkalian silang antara <InlineMath math="\vec{A}" /> dan <InlineMath math="\vec
 <BlockMath math="\lvert\vec{A}\times\vec{B}\rvert=AB\sin\theta" />
 
 Hasilnya berupa vektor yang arahnya tegak lurus terhadap bidang yang memuat <InlineMath math="\vec{A}" /> dan <InlineMath math="\vec{B}" />. Arah ini ditentukan dengan aturan tangan kanan.
+
+<Vector3d
+  title={<>Arah <InlineMath math="\vec{A}\times\vec{B}" /></>}
+  description={
+    <>
+      Vektor <InlineMath math="\vec{A}" /> dan <InlineMath math="\vec{B}" /> berada
+      pada satu bidang. Hasil kali silangnya keluar tegak lurus dari bidang itu.
+    </>
+  }
+  cameraPosition={[8, 7, 9]}
+  cameraTarget={[1.6, 1.4, 1.2]}
+  vectors={(() => {
+    const a = [4, 0, 0];
+    const b = [0, 3, 0];
+    const cross = [
+      a[1] * b[2] - a[2] * b[1],
+      a[2] * b[0] - a[0] * b[2],
+      a[0] * b[1] - a[1] * b[0],
+    ];
+    const displayScale = 4;
+    const crossDirection = cross.map((component) => component / displayScale);
+
+    return [
+      {
+        color: getColor("red"),
+        from: [0, 0, 0],
+        label: "A",
+        labelOffset: [0.25, 0.15, 0],
+        labelPosition: "end",
+        to: a,
+      },
+      {
+        color: getColor("green"),
+        from: [0, 0, 0],
+        label: "B",
+        labelOffset: [0.1, 0.35, 0.15],
+        labelPosition: "end",
+        to: b,
+      },
+      {
+        color: getColor("blue"),
+        from: [0, 0, 0],
+        label: "A x B",
+        labelOffset: [0.15, 0.25, 0.35],
+        labelPosition: "end",
+        lineWidth: 4,
+        to: crossDirection,
+      },
+    ];
+  })()}
+/>
+
+Pada visual ini, <InlineMath math="\vec{A}" /> mengarah ke sumbu <InlineMath math="x" /> positif dan <InlineMath math="\vec{B}" /> mengarah ke sumbu <InlineMath math="y" /> positif. Rumus perkalian silang memberi arah <InlineMath math="z" /> positif untuk <InlineMath math="\vec{A}\times\vec{B}" />. Panah biru diperkecil agar muat di layar, tetapi arahnya tetap mengikuti hasil perhitungan.
 
 Dalam momen gaya, perkalian silang ditulis:
 
