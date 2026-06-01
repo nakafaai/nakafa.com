@@ -1,3 +1,5 @@
+import { FungiMyceliumLab } from "@repo/design-system/components/contents/biology/fungi";
+
 export const metadata = {
   title: "Fungi",
   description:
@@ -24,6 +26,35 @@ Ciri fungi sebagai eukariot heterotrof yang memiliki hifa, miselium, dan spora j
 Perbedaan ini penting karena cara hidup fungi tidak mengikuti pola tumbuhan. Fungi tidak berfotosintesis, tetapi membangun jaringan penyerap yang mengambil nutrien dari bahan organik.
 
 > Cara cepatnya: kalau ada jaringan benang halus yang menyerap bahan organik, pikirkan hifa dan miselium dulu, bukan akar tumbuhan.
+
+<FungiMyceliumLab
+  title={<>Model hifa dan miselium fungi</>}
+  description={
+    <>
+      Amati bagaimana hifa bercabang menjadi miselium, mengeluarkan enzim di
+      sekitar bahan organik, lalu menyebarkan spora dari hifa udara.
+    </>
+  }
+  labels={{
+    chooseMode: "Pilih bagian fungi",
+    focusLabel: "Bagian yang diamati",
+    takeawayLabel: "Makna biologis",
+    viewLabel: "Model 3D hifa, miselium, dan spora",
+    items: [
+      {
+        tab: "Miselium",
+        caption: <>Jaringan hifa menyebar di permukaan makanan dan memperluas bidang serap fungi.</>,
+        focus: <>Hifa bercabang membentuk miselium, bukan akar tumbuhan.</>,
+        takeaway: <>Fungi mencerna di luar tubuh, lalu menyerap hasil penguraian melalui jaringan hifa.</>,
+        callouts: [
+          { id: "hypha", label: "Hifa" },
+          { id: "spore", label: "Spora" },
+          { id: "enzyme", label: "Enzim luar" },
+        ],
+      },
+    ],
+  }}
+/>
 
 ## Cara Makan Fungi Berbeda dari Hewan
 

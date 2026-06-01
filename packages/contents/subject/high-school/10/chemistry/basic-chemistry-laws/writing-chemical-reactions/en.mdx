@@ -1,3 +1,5 @@
+import { MethaneCombustionEquationLab } from "@repo/design-system/components/contents/chemistry/methane-combustion-equation/lab";
+
 export const metadata = {
   title: "Writing Chemical Reactions",
   description:
@@ -13,7 +15,7 @@ A chemical reaction equation is a compact way to record starting substances, pro
 
 The basic pattern looks like this.
 
-<BlockMath math="\text{reactants} \rightarrow \text{products}" />
+<BlockMath math="\text{Reactants} \rightarrow \text{Products}" />
 
 Read the arrow as "yields". A plus sign means there is more than one substance on the same side.
 
@@ -36,6 +38,26 @@ The starting formulas are not balanced because the left side has only <InlineMat
 | <InlineMath math="\mathrm{O}" /> | <InlineMath math="4" /> | <InlineMath math="4" /> |
 
 The coefficients read as the ratio <InlineMath math="1:2:1:2" />. That means <InlineMath math="1" /> methane particle reacts with <InlineMath math="2" /> oxygen particles to produce <InlineMath math="1" /> carbon dioxide particle and <InlineMath math="2" /> water particles.
+
+<MethaneCombustionEquationLab
+  title={<>Coefficients show molecule counts</>}
+  description={
+    <>
+      In the starting view, the left side shows reactants and the right side
+      shows products in the balanced equation.
+    </>
+  }
+  labels={{
+    moleculeView: "3D model of the methane combustion equation",
+    reactants: "Reactants",
+    products: "Products",
+    equation: (
+      <>
+        Reactants: <InlineMath math="\mathrm{CH_4} + 2\mathrm{O_2}" />. Products: <InlineMath math="\mathrm{CO_2} + 2\mathrm{H_2O}" />. The <InlineMath math="\mathrm{C}" />, <InlineMath math="\mathrm{H}" />, and <InlineMath math="\mathrm{O}" /> atom counts stay the same on both sides.
+      </>
+    ),
+  }}
+/>
 
 ## Coefficients Do Not Change Formulas
 

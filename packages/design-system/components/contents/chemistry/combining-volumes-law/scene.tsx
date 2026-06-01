@@ -17,7 +17,6 @@ import {
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
 import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
-import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 import { useRef } from "react";
 import { DoubleSide, type Group } from "three";
 
@@ -89,34 +88,30 @@ export function CombiningVolumesScene({
   modeId,
 }: {
   colors: CombiningVolumesSceneColors;
-  labels: Pick<CombiningVolumesLabLabels, "volumeUnit">;
+  labels: CombiningVolumesLabLabels;
   modeId: CombiningVolumesModeId;
 }) {
   const model = COMBINING_VOLUMES_MODELS[modeId];
 
   return (
     <group position={[0, 0.12, 0]} scale={SCENE_SCALE}>
-      <GasSet
-        colors={colors}
-        gases={model.reactants}
-        unitLabel={labels.volumeUnit}
-        x={REACTANTS_X}
-      />
+      <SceneLabel
+        color={colors.text}
+        fontSize="compact"
+        position={[REACTANTS_X, 0.94, 0.16]}
+      >
+        {labels.reactants}
+      </SceneLabel>
+      <SceneLabel
+        color={colors.text}
+        fontSize="compact"
+        position={[PRODUCTS_X, 0.94, 0.16]}
+      >
+        {labels.products}
+      </SceneLabel>
+      <GasSet colors={colors} gases={model.reactants} x={REACTANTS_X} />
 
-      <ArrowHelper
-        arrowSize={0.13}
-        color={colors.arrow}
-        from={[-0.34, -0.04, 0.04]}
-        lineWidth={3}
-        to={[0.34, -0.04, 0.04]}
-      />
-
-      <GasSet
-        colors={colors}
-        gases={model.products}
-        unitLabel={labels.volumeUnit}
-        x={PRODUCTS_X}
-      />
+      <GasSet colors={colors} gases={model.products} x={PRODUCTS_X} />
     </group>
   );
 }
@@ -124,12 +119,10 @@ export function CombiningVolumesScene({
 function GasSet({
   colors,
   gases,
-  unitLabel,
   x,
 }: {
   colors: CombiningVolumesSceneColors;
   gases: readonly CombiningVolumesGasModel[];
-  unitLabel: string;
   x: number;
 }) {
   const centerOffset = ((gases.length - 1) * COLUMN_GAP) / 2;
@@ -141,7 +134,6 @@ function GasSet({
           colors={colors}
           gas={gas}
           key={gas.id}
-          unitLabel={unitLabel}
           x={index * COLUMN_GAP - centerOffset}
         />
       ))}
@@ -152,12 +144,10 @@ function GasSet({
 function GasColumn({
   colors,
   gas,
-  unitLabel,
   x,
 }: {
   colors: CombiningVolumesSceneColors;
   gas: CombiningVolumesGasModel;
-  unitLabel: string;
   x: number;
 }) {
   const height = gas.volumeUnits * VOLUME_UNIT_HEIGHT;
@@ -172,14 +162,6 @@ function GasColumn({
 
   return (
     <group position={[x, 0, 0]}>
-      <SceneLabel
-        color={colors.text}
-        fontSize="marker"
-        position={[0, height / 2 + 0.22, 0.28]}
-      >
-        {gas.formulaLabel}
-      </SceneLabel>
-
       <VolumeTube colors={colors} height={height} />
 
       {volumeUnits.map((unit) => (
@@ -192,14 +174,6 @@ function GasColumn({
           />
         </group>
       ))}
-
-      <SceneLabel
-        color={colors.text}
-        fontSize="marker"
-        position={[0, -height / 2 - 0.2, 0.34]}
-      >
-        {`${gas.volumeUnits} ${unitLabel}`}
-      </SceneLabel>
     </group>
   );
 }

@@ -44,10 +44,6 @@ function isSafeNakafaContentId(value: string) {
  * Checks whether a URL points at Nakafa's public content origin.
  */
 function isNakafaContentUrl(value: string) {
-  if (!URL.canParse(value)) {
-    return false;
-  }
-
   const url = new URL(value);
 
   return (

@@ -213,6 +213,6 @@ function getLegacyTryOutRedirectPath(
 
 export const config: ProxyConfig = {
   matcher: [
-    "/((?!_next/static|_pagefind|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|js|css|xml|webmanifest|txt)$).*)",
+    "/((?!_next/static|_pagefind|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$).*)",
   ],
 };

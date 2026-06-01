@@ -28,39 +28,38 @@ Penempelan virus pada reseptor sel inang menjadi awal yang penting sebelum infek
 Urutan replikasi juga dipakai dalam mikrobiologi untuk membedakan fag virulen dan fag temperate. Fag temperate adalah bakteriofag yang tidak selalu langsung menghancurkan sel. [OpenStax Microbiology](https://openstax.org/books/microbiology/pages/6-2-the-viral-life-cycle) menjelaskan bahwa fag temperate dapat menjadi bagian dari kromosom inang dan ikut tersalin sebelum aktif lagi. Dari sini terlihat mengapa siklus lisogenik bukan jeda kosong.
 
 <VirusReplicationLab
-  title={<>Dua nasib genom virus di sel inang</>}
+  title={<>Dua Jalur Replikasi Virus</>}
   description={
     <>
-      Bandingkan siklus litik yang langsung menghasilkan virion baru dengan
-      siklus lisogenik yang menyimpan genom virus lebih dulu.
+      Bandingkan siklus litik yang segera mengarahkan sel membuat virion baru
+      dengan siklus lisogenik yang menyimpan genom virus lebih dulu.
     </>
   }
   labels={{
-    chooseMode: "Pilih siklus replikasi",
+    chooseMode: "Pilih jalur replikasi",
     focusLabel: "Peristiwa kunci",
     takeawayLabel: "Cara membacanya",
     viewLabel: "Model 3D replikasi virus",
     items: [
       {
         tab: "Litik",
-        caption: <>Fag menempel, genom masuk, komponen virus dibuat, virion dirakit, lalu sel pecah melepas virion.</>,
+        caption: <>Fag menempel di permukaan sel inang. Jalur merah menunjukkan genom virus yang sedang masuk, lalu sel mulai diarahkan untuk membuat virion baru.</>,
+        focus: <>Perhatikan bahwa bagian penting yang masuk lebih dulu adalah genom virus, bukan seluruh badan fag.</>,
+        takeaway: <>Pada siklus litik, genom virus mengambil alih kerja sel inang sampai komponen virus baru dapat dirakit.</>,
         callouts: [
-          { id: "genome-entry", label: "genom virus" },
-          { id: "new-virion", label: "virion baru" },
+          { id: "host-cell", label: "Sel inang" },
+          { id: "viral-genome", label: "Genom virus" },
         ],
-        focus: <>Perhatikan bahwa virus baru tidak muncul dari pembelahan satu virus menjadi dua.</>,
-        takeaway: <>Pada siklus litik, sel inang dipakai untuk membuat banyak komponen virus sampai virion baru dilepas.</>,
       },
       {
         tab: "Lisogenik",
-        caption: <>DNA inang membawa segmen genom virus. Dua sel anak memperlihatkan salinan itu ikut terbawa saat sel membelah.</>,
-        callouts: [
-          { id: "host-dna", label: "DNA inang" },
-          { id: "viral-genome", label: "genom virus" },
-          { id: "daughter-cells", label: "sel anak" },
-        ],
+        caption: <>DNA inang tampak sebagai untai oranye di dalam sel. Segmen merah menunjukkan bagian genom virus yang tersisip dan ikut disalin bersama DNA inang.</>,
         focus: <>Tahap ini tidak langsung menghasilkan banyak virion baru.</>,
         takeaway: <>Pada siklus lisogenik, informasi virus dapat bertahan di dalam sel inang lalu berubah ke arah litik ketika terpicu.</>,
+        callouts: [
+          { id: "host-dna", label: "DNA inang" },
+          { id: "viral-genome", label: "Genom virus" },
+        ],
       },
     ],
   }}
