@@ -163,12 +163,8 @@ function ResponsiveBiologyCamera({ view }: { view: BiologySceneView }) {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={view.cameraTarget}
-      maxAzimuthAngle={view.maxAzimuthAngle}
       maxDistance={7.4}
-      maxPolarAngle={view.maxPolarAngle}
-      minAzimuthAngle={view.minAzimuthAngle}
       minDistance={1.8}
-      minPolarAngle={view.minPolarAngle}
     />
   );
 }

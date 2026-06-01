@@ -7,14 +7,12 @@ import {
   OPEN_SYSTEM_MODE_ID,
 } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/data";
 import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
-import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 import { useRef } from "react";
 import { DoubleSide, type Mesh, type MeshStandardMaterial } from "three";
 
 const BEFORE_X = -1.08;
 const AFTER_X = 1.08;
-const STAGE_LABEL_Y = 1.2;
-const READOUT_Y = -0.98;
+const READOUT_Y = -0.94;
 const SCENE_SCALE = 1.32;
 const VESSEL_HEIGHT = 1.22;
 const VESSEL_RADIUS = 0.48;
@@ -116,7 +114,7 @@ export function MassConservationScene({
   modeId,
 }: {
   colors: MassConservationSceneColors;
-  labels: Pick<MassConservationLabLabels, "after" | "before" | "modes">;
+  labels: MassConservationLabLabels;
   modeId: MassConservationModeId;
 }) {
   const modeLabels = labels.modes[modeId];
@@ -124,31 +122,42 @@ export function MassConservationScene({
 
   return (
     <group position={[0, -0.03, 0]} scale={SCENE_SCALE}>
+      <SceneLabel
+        color={colors.text}
+        fontSize="compact"
+        position={[BEFORE_X, 1.1, 0.16]}
+      >
+        {labels.before}
+      </SceneLabel>
+      <SceneLabel
+        color={colors.text}
+        fontSize="compact"
+        position={[AFTER_X, 1.1, 0.16]}
+      >
+        {labels.after}
+      </SceneLabel>
+      <SceneLabel
+        color={colors.text}
+        fontSize="compact"
+        position={[BEFORE_X, READOUT_Y, 0.22]}
+      >
+        {modeLabels.readoutBefore}
+      </SceneLabel>
+      <SceneLabel
+        color={colors.text}
+        fontSize="compact"
+        position={[AFTER_X, READOUT_Y, 0.22]}
+      >
+        {modeLabels.readoutAfter}
+      </SceneLabel>
       <BalanceStage
         colors={colors}
         isOpen={isOpen}
         phase="before"
-        readout={modeLabels.readoutBefore}
-        title={labels.before}
         x={BEFORE_X}
       />
 
-      <ArrowHelper
-        arrowSize={0.13}
-        color={colors.arrow}
-        from={[-0.38, 0.04, 0.05]}
-        lineWidth={3}
-        to={[0.38, 0.04, 0.05]}
-      />
-
-      <BalanceStage
-        colors={colors}
-        isOpen={isOpen}
-        phase="after"
-        readout={modeLabels.readoutAfter}
-        title={labels.after}
-        x={AFTER_X}
-      />
+      <BalanceStage colors={colors} isOpen={isOpen} phase="after" x={AFTER_X} />
     </group>
   );
 }
@@ -157,43 +166,21 @@ function BalanceStage({
   colors,
   isOpen,
   phase,
-  readout,
-  title,
   x,
 }: {
   colors: MassConservationSceneColors;
   isOpen: boolean;
   phase: ReactionPhase;
-  readout: string;
-  title: string;
   x: number;
 }) {
   const hasEscapedGas = isOpen && phase === "after";
 
   return (
     <group position={[x, 0, 0]}>
-      <SceneLabel
-        alwaysOnTop
-        color={colors.text}
-        fontSize="compact"
-        position={[0, STAGE_LABEL_Y, 0.28]}
-      >
-        {title}
-      </SceneLabel>
-
       <Vessel closed={!isOpen} colors={colors} />
       <Particles colors={colors} phase={phase} />
       {hasEscapedGas && <EscapedGas colors={colors} />}
       <BalanceBase color={colors.balance} />
-
-      <SceneLabel
-        alwaysOnTop
-        color={colors.text}
-        fontSize="compact"
-        position={[0, READOUT_Y, 0.5]}
-      >
-        {readout}
-      </SceneLabel>
     </group>
   );
 }

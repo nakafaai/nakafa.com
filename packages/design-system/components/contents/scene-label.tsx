@@ -13,13 +13,11 @@ type SceneLabelPosition = readonly [number, number, number];
  * Renders camera-facing text so labels remain readable after the scene rotates.
  */
 export function SceneLabel({
-  alwaysOnTop = false,
   children,
   color,
   fontSize = "annotation",
   position,
 }: {
-  alwaysOnTop?: boolean;
   children: string;
   color: string;
   fontSize?: ThreeFontSize | number;
@@ -36,16 +34,8 @@ export function SceneLabel({
           color={color}
           font={MONO_FONT_PATH}
           fontSize={resolvedFontSize}
-          renderOrder={alwaysOnTop ? 10 : undefined}
         >
           {children}
-          {alwaysOnTop && (
-            <meshBasicMaterial
-              color={color}
-              depthTest={false}
-              toneMapped={false}
-            />
-          )}
         </Text>
       </Suspense>
     </Billboard>

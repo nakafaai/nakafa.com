@@ -63,12 +63,14 @@ export interface MethaneCombustionEquationLabProps {
 }
 
 const VIEW = {
-  cameraPosition: [0, 2, 5.05],
-  cameraTarget: [0, 0.04, 0],
-  narrowCameraPosition: [0, 2.6, 6.1],
+  cameraPosition: [0, 0.62, 5.45],
+  cameraTarget: [0, 0.08, 0],
+  narrowCameraPosition: [0, 0.72, 6.2],
 } satisfies Record<string, Point>;
 
-const MOLECULE_SCALE = 0.36;
+const SCENE_POSITION = [0, 0.42, 0] satisfies Point;
+const SCENE_SCALE = 0.95;
+const MOLECULE_SCALE = 0.39;
 const DOUBLE_BOND_OFFSET = 0.035;
 const BOND_LINE_WIDTH = 2.8;
 const NARROW_CANVAS_ASPECT_RATIO = 1.22;
@@ -111,12 +113,24 @@ const MODELS = {
 } satisfies Record<MoleculeId, MoleculeModel>;
 
 const INSTANCES = [
-  instance("methane-1", "methane", [-2.05, 0.1, 0]),
-  instance("oxygen-1", "oxygen", [-1.05, 0.44, 0.03], [0.08, 0.2, -0.18]),
-  instance("oxygen-2", "oxygen", [-1.05, -0.28, -0.03], [-0.08, -0.15, 0.18]),
-  instance("carbon-dioxide-1", "carbonDioxide", [1.12, 0.1, 0], [0, 0.18, 0]),
-  instance("water-1", "water", [2.12, 0.44, 0.06], [0.18, -0.18, 0.2]),
-  instance("water-2", "water", [2.12, -0.28, -0.06], [-0.12, 0.2, -0.24]),
+  instance("methane-1", "methane", [-2.28, 0.06, 0]),
+  instance("oxygen-1", "oxygen", [-1.15, 0.44, 0.03], [0.08, 0.2, -0.18]),
+  instance("oxygen-2", "oxygen", [-1.15, -0.32, -0.03], [-0.08, -0.15, 0.18]),
+  instance("carbon-dioxide-1", "carbonDioxide", [1.12, 0.06, 0], [0, 0.18, 0]),
+  instance("water-1", "water", [2.36, 0.44, 0.06], [0.18, -0.18, 0.2]),
+  instance("water-2", "water", [2.36, -0.32, -0.06], [-0.12, 0.2, -0.24]),
+] as const;
+
+const FORMULA_LABELS = [
+  { id: "methane", text: "CH\u2084", position: [-2.28, -0.92, 0.36] },
+  { id: "oxygen", text: "2O\u2082", position: [-1.15, -0.92, 0.36] },
+  { id: "carbon-dioxide", text: "CO\u2082", position: [1.12, -0.92, 0.36] },
+  { id: "water", text: "2H\u2082O", position: [2.36, -0.92, 0.36] },
+] as const;
+
+const OPERATOR_LABELS = [
+  { id: "reactant-plus", text: "+", position: [-1.72, -0.92, 0.36] },
+  { id: "product-plus", text: "+", position: [1.74, -0.92, 0.36] },
 ] as const;
 
 export function MethaneCombustionEquationLab({
@@ -167,76 +181,45 @@ function CombustionScene({
   labels: MethaneCombustionEquationLabProps["labels"];
 }) {
   return (
-    <group position={[0, -0.02, 0]} scale={1.1}>
+    <group position={SCENE_POSITION} scale={SCENE_SCALE}>
       <SceneLabel
         color={colors.text}
-        fontSize="compact"
-        position={[-1.58, 1.04, 0.2]}
+        fontSize="reading"
+        position={[-1.72, 0.92, 0.36]}
       >
         {labels.reactants}
       </SceneLabel>
       <SceneLabel
         color={colors.text}
-        fontSize="compact"
-        position={[1.58, 1.04, 0.2]}
+        fontSize="reading"
+        position={[1.72, 0.92, 0.36]}
       >
         {labels.products}
-      </SceneLabel>
-      <ReactionArrow color={colors.text} />
-      <SceneLabel
-        color={colors.text}
-        fontSize={0.14}
-        position={[-1.55, -0.82, 0.3]}
-      >
-        +
-      </SceneLabel>
-      <SceneLabel
-        color={colors.text}
-        fontSize={0.14}
-        position={[1.55, -0.82, 0.3]}
-      >
-        +
-      </SceneLabel>
-      <SceneLabel
-        color={colors.text}
-        fontSize="compact"
-        position={[-2.05, -0.68, 0.3]}
-      >
-        CH₄
-      </SceneLabel>
-      <SceneLabel
-        color={colors.text}
-        fontSize="compact"
-        position={[-1.05, -0.68, 0.3]}
-      >
-        2O₂
-      </SceneLabel>
-      <SceneLabel
-        color={colors.text}
-        fontSize="compact"
-        position={[1.12, -0.68, 0.3]}
-      >
-        CO₂
-      </SceneLabel>
-      <SceneLabel
-        color={colors.text}
-        fontSize="compact"
-        position={[2.12, -0.68, 0.3]}
-      >
-        2H₂O
       </SceneLabel>
       {INSTANCES.map((item) => (
         <Molecule colors={colors} instance={item} key={item.id} />
       ))}
+      {OPERATOR_LABELS.map((label) => (
+        <SceneLabel
+          color={colors.text}
+          fontSize="reading"
+          key={label.id}
+          position={label.position}
+        >
+          {label.text}
+        </SceneLabel>
+      ))}
+      {FORMULA_LABELS.map((label) => (
+        <SceneLabel
+          color={colors.text}
+          fontSize="reading"
+          key={label.id}
+          position={label.position}
+        >
+          {label.text}
+        </SceneLabel>
+      ))}
     </group>
-  );
-}
-
-function ReactionArrow({ color }: { color: string }) {
-  return (
-    <SceneLabel color={color} fontSize={0.26} position={[0, 0.62, 0.32]}>
-      ⟶
-    </SceneLabel>
   );
 }
 
@@ -343,12 +326,8 @@ function CombustionCamera() {
       autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={VIEW.cameraTarget}
-      maxAzimuthAngle={Math.PI / 18}
       maxDistance={8.6}
-      maxPolarAngle={Math.PI / 2.45}
-      minAzimuthAngle={-Math.PI / 18}
       minDistance={3.1}
-      minPolarAngle={Math.PI / 2.95}
     />
   );
 }

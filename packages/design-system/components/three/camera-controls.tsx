@@ -42,27 +42,30 @@ const DEFAULT_CAMERA_TARGET = [
  * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance
  * @see https://drei.docs.pmnd.rs/controls/orbit-controls
  */
-export function CameraControls({
-  cameraPosition = DEFAULT_CAMERA_POSITION,
-  cameraTarget = DEFAULT_CAMERA_TARGET,
-  autoRotate = true,
-  maxAzimuthAngle,
-  maxDistance = 100,
-  maxPolarAngle,
-  minAzimuthAngle,
-  minDistance = 1,
-  minPolarAngle,
-}: {
+interface CameraControlsProps {
+  autoRotate?: boolean;
   cameraPosition?: readonly [number, number, number];
   cameraTarget?: readonly [number, number, number];
-  autoRotate?: boolean;
   maxAzimuthAngle?: number;
   maxDistance?: number;
   maxPolarAngle?: number;
   minAzimuthAngle?: number;
   minDistance?: number;
   minPolarAngle?: number;
-}) {
+}
+
+export function CameraControls(props: CameraControlsProps) {
+  const {
+    cameraPosition = DEFAULT_CAMERA_POSITION,
+    cameraTarget = DEFAULT_CAMERA_TARGET,
+    autoRotate = true,
+    maxAzimuthAngle,
+    maxDistance = 100,
+    maxPolarAngle,
+    minAzimuthAngle,
+    minDistance = 1,
+    minPolarAngle,
+  } = props;
   const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
   const domElement = useThree((state) => state.gl.domElement);
   const invalidate = useThree((state) => state.invalidate);

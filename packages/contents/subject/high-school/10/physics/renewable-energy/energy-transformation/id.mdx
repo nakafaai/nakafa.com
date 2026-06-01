@@ -1,3 +1,5 @@
+import { WindEnergyConversionLab } from "@repo/design-system/components/contents/physics/renewable-energy/wind-conversion/lab";
+
 export const metadata = {
   title: "Konversi Energi",
   description:
@@ -35,6 +37,25 @@ Diagram berikut membantu kita membaca satu pertanyaan sederhana: energi dari ala
 Pada pembangkit listrik tenaga air, U.S. Department of Energy (DOE) menjelaskan bahwa air mengalir melalui penstock, memutar turbin, lalu turbin memutar generator untuk menghasilkan listrik. Penjelasan DOE tentang cara kerja tenaga air bisa dibuka di [tautan sumber](https://www.energy.gov/cmei/water/how-hydropower-works).
 
 Pada pembangkit listrik tenaga angin, DOE menjelaskan bahwa angin memutar bilah turbin, rotor memutar generator, lalu generator menghasilkan listrik. Halaman DOE tentang cara kerja turbin angin bisa dibuka di [tautan sumber](https://www.energy.gov/cmei/systems/how-do-wind-turbines-work).
+
+<WindEnergyConversionLab
+  title={<>Konversi Energi pada Turbin Angin</>}
+  description={
+    <>
+      Ubah kelajuan angin untuk melihat rotor berputar lebih cepat dan membaca
+      jalur dari gerak udara menuju listrik.
+    </>
+  }
+  labels={{
+    flow: <>Angin memutar rotor, rotor memutar generator, lalu listrik dialirkan keluar.</>,
+    flowLabel: "Jalur konversi",
+    meaning: <>Kelajuan angin yang lebih besar membuat rotor berputar lebih cepat, tetapi keluaran nyata tetap bergantung pada batas alat dan kondisi lokasi.</>,
+    meaningLabel: "Makna fisika",
+    speedControl: "Kelajuan angin",
+    speedUnit: "m/s",
+    viewLabel: "Model 3D konversi energi angin",
+  }}
+/>
 
 Pada panel surya fotovoltaik, EIA menjelaskan bahwa sel fotovoltaik mengubah cahaya Matahari langsung menjadi listrik. Namun, hanya foton yang diserap oleh bahan semikonduktor yang memberi energi untuk menghasilkan listrik. Halaman EIA tentang photovoltaic and electricity bisa dibuka di [tautan sumber](https://www.eia.gov/energyexplained/solar/photovoltaics-and-electricity.php).
 

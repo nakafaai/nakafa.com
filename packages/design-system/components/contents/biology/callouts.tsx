@@ -79,12 +79,7 @@ function BiologyCallout({
 }) {
   if (!target) {
     return (
-      <SceneLabel
-        alwaysOnTop
-        color={color}
-        fontSize={fontSize}
-        position={labelPosition}
-      >
+      <SceneLabel color={color} fontSize={fontSize} position={labelPosition}>
         {label}
       </SceneLabel>
     );
@@ -95,12 +90,7 @@ function BiologyCallout({
 
   return (
     <group>
-      <SceneLabel
-        alwaysOnTop
-        color={color}
-        fontSize={fontSize}
-        position={labelPosition}
-      >
+      <SceneLabel color={color} fontSize={fontSize} position={labelPosition}>
         {label}
       </SceneLabel>
       <ArrowHelper
@@ -116,7 +106,7 @@ function BiologyCallout({
 
 /**
  * Starts the arrow slightly away from the label so text and arrowheads do not
- * collide even when the camera orbit changes within the scene limits.
+ * collide as students orbit the scene.
  */
 function getBiologyCalloutArrowStart(
   labelPosition: BiologyScenePoint,

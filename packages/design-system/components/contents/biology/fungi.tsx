@@ -1,6 +1,5 @@
 "use client";
 
-import { useFrame } from "@react-three/fiber";
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
 import type {
   BiologyLabProps,
@@ -13,16 +12,10 @@ import {
   BiologyTube,
   FloatingGroup,
 } from "@repo/design-system/components/contents/biology/parts";
-import { useMemo, useRef } from "react";
-import { CatmullRomCurve3, type Mesh, Vector3 } from "three";
 
 const FUNGI_VIEW = {
   cameraPosition: [2.25, 1.7, 3.05],
   cameraTarget: [0.02, 0.18, 0.02],
-  maxAzimuthAngle: Math.PI / 16,
-  maxPolarAngle: Math.PI / 2.4,
-  minAzimuthAngle: -Math.PI / 16,
-  minPolarAngle: Math.PI / 3.1,
   narrowCameraPosition: [2.78, 2.1, 3.85],
 } satisfies BiologySceneView;
 
@@ -97,24 +90,22 @@ const SPORE_POINTS = [
 
 const CALLOUT_TARGETS = [
   {
+    fontSize: "marker",
     id: "hypha",
-    labelPosition: [-1.18, 0.52, 0.58],
-    target: [-0.8, 0.04, 0.04],
+    labelPosition: [-1.18, 0.48, 0.56],
+    target: [-0.76, 0.04, 0.04],
   },
   {
-    id: "mycelium",
-    labelPosition: [1.32, 0.64, -0.44],
-    target: [0.3, 0.12, 0.18],
-  },
-  {
+    fontSize: "marker",
     id: "spore",
-    labelPosition: [0.7, 1.36, 0.38],
-    target: [0.22, 1.12, 0.24],
+    labelPosition: [0.58, 1.36, 0.52],
+    target: [0.16, 1.18, 0.28],
   },
   {
+    fontSize: "marker",
     id: "enzyme",
-    labelPosition: [-0.92, 0.24, -0.62],
-    target: [-0.34, -0.02, -0.12],
+    labelPosition: [-0.78, 0.22, -0.6],
+    target: [-0.36, -0.08, -0.18],
   },
 ] as const;
 
@@ -127,13 +118,9 @@ export function FungiMyceliumLab(props: BiologyLabProps) {
 function FungiMyceliumScene({ colors, item }: BiologySceneProps) {
   return (
     <group rotation={[-0.1, -0.34, 0.04]} scale={1.25}>
-      <Substrate color={colors.grain} detailColor={colors.wood} />
-      <EnzymeHalo color={colors.decomposer} />
-      <HyphaNetwork
-        coreColor={colors.decomposer}
-        pulseColor={colors.spore}
-        wallColor={colors.skyLight}
-      />
+      <Substrate color={colors.grain} />
+      <EnzymeDroplets color={colors.decomposer} />
+      <HyphaNetwork coreColor={colors.decomposer} wallColor={colors.skyLight} />
       <SporeHead color={colors.spore} stemColor={colors.decomposer} />
       <BiologyCallouts
         callouts={item.callouts}
@@ -144,28 +131,9 @@ function FungiMyceliumScene({ colors, item }: BiologySceneProps) {
   );
 }
 
-function Substrate({
-  color,
-  detailColor,
-}: {
-  color: string;
-  detailColor: string;
-}) {
+function Substrate({ color }: { color: string }) {
   return (
     <group>
-      <mesh
-        position={[0, -0.34, 0]}
-        rotation={[0, 0.08, 0]}
-        scale={[1.76, 0.1, 0.7]}
-      >
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial
-          color={detailColor}
-          opacity={0.2}
-          roughness={0.96}
-          transparent
-        />
-      </mesh>
       {SUBSTRATE_GRAINS.map((grain) => (
         <mesh key={grain.id} position={grain.position} scale={grain.scale}>
           <sphereGeometry args={[1, 28, 18]} />
@@ -178,11 +146,9 @@ function Substrate({
 
 function HyphaNetwork({
   coreColor,
-  pulseColor,
   wallColor,
 }: {
   coreColor: string;
-  pulseColor: string;
   wallColor: string;
 }) {
   return (
@@ -216,67 +182,33 @@ function HyphaNetwork({
           />
         </mesh>
       ))}
-      {HYPHA_PATHS.slice(0, 4).map(([id, points], index) => (
-        <NutrientPulse
-          color={pulseColor}
-          delay={index * 0.14}
-          key={id}
-          points={points}
-        />
-      ))}
     </group>
   );
 }
 
-function NutrientPulse({
-  color,
-  delay,
-  points,
-}: {
-  color: string;
-  delay: number;
-  points: readonly BiologyScenePoint[];
-}) {
-  const ref = useRef<Mesh>(null);
-  const curve = useMemo(
-    () => new CatmullRomCurve3(points.map((point) => new Vector3(...point))),
-    [points]
-  );
+const ENZYME_DROPLETS = [
+  [-0.46, -0.09, -0.22],
+  [-0.36, -0.08, -0.18],
+  [-0.22, -0.08, -0.12],
+  [0.04, -0.08, 0.16],
+  [0.22, -0.08, 0.22],
+] satisfies BiologyScenePoint[];
 
-  useFrame(({ clock }) => {
-    if (!ref.current) {
-      return;
-    }
-
-    ref.current.position.copy(
-      curve.getPoint((clock.elapsedTime * 0.1 + delay) % 1)
-    );
-  });
-
+function EnzymeDroplets({ color }: { color: string }) {
   return (
-    <mesh ref={ref}>
-      <sphereGeometry args={[0.044, 16, 12]} />
-      <meshStandardMaterial
-        color={color}
-        emissive={color}
-        emissiveIntensity={0.28}
-        roughness={0.48}
-      />
-    </mesh>
-  );
-}
-
-function EnzymeHalo({ color }: { color: string }) {
-  return (
-    <mesh position={[-0.16, -0.08, -0.04]} scale={[1.12, 0.055, 0.58]}>
-      <sphereGeometry args={[1, 32, 12]} />
-      <meshStandardMaterial
-        color={color}
-        opacity={0.14}
-        roughness={0.9}
-        transparent
-      />
-    </mesh>
+    <group>
+      {ENZYME_DROPLETS.map((position) => (
+        <mesh key={position.join("-")} position={position}>
+          <sphereGeometry args={[0.026, 12, 8]} />
+          <meshStandardMaterial
+            color={color}
+            emissive={color}
+            emissiveIntensity={0.18}
+            roughness={0.54}
+          />
+        </mesh>
+      ))}
+    </group>
   );
 }
 

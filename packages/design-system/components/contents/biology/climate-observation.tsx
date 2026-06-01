@@ -5,7 +5,6 @@ import {
   BLUE_MARBLE_EARTH_TEXTURE_ASSET,
   TERRA_SATELLITE_ASSET,
 } from "@repo/design-system/components/contents/biology/assets";
-import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
 import type {
   BiologyLabProps,
   BiologySceneColors,
@@ -16,7 +15,6 @@ import { BiologyLabFrame } from "@repo/design-system/components/contents/biology
 import {
   BiologyLine,
   FloatingGroup,
-  RotatingGroup,
 } from "@repo/design-system/components/contents/biology/parts";
 import { useMemo } from "react";
 import {
@@ -30,65 +28,10 @@ import {
 } from "three";
 
 const CLIMATE_OBSERVATION_VIEW = {
-  cameraPosition: [2.55, 1.82, 3.45],
-  cameraTarget: [0, 0.28, 0],
-  maxAzimuthAngle: Math.PI / 18,
-  maxPolarAngle: Math.PI / 2.45,
-  minAzimuthAngle: -Math.PI / 18,
-  minPolarAngle: Math.PI / 3.05,
-  narrowCameraPosition: [3.05, 2.28, 4.35],
+  cameraPosition: [2.55, 1.58, 3.48],
+  cameraTarget: [0.02, 0.12, 0.02],
+  narrowCameraPosition: [3.18, 2.02, 4.2],
 } satisfies BiologySceneView;
-
-const CALLOUT_TARGETS = [
-  {
-    fontSize: 0.12,
-    id: "satellite",
-    labelPosition: [-1.42, 1.38, 1.12],
-    target: [-0.18, 1.18, 0.24],
-  },
-  {
-    fontSize: 0.13,
-    id: "ocean",
-    labelPosition: [-1.42, -0.28, 1.1],
-    target: [-0.5, -0.28, 0.86],
-  },
-  {
-    fontSize: 0.11,
-    id: "ice",
-    labelPosition: [-1.24, 0.78, 1.08],
-    target: [-0.08, 0.78, 0.58],
-  },
-  {
-    fontSize: 0.11,
-    id: "land",
-    labelPosition: [1.38, -0.18, 1.08],
-    target: [0.28, 0.08, 0.86],
-  },
-] as const;
-
-const SENSOR_LINES = [
-  {
-    id: "ocean",
-    points: [
-      [0, 1.07, 0],
-      [-0.62, -0.2, 0.66],
-    ],
-  },
-  {
-    id: "ice",
-    points: [
-      [0, 1.07, 0],
-      [-0.22, 0.72, 0.64],
-    ],
-  },
-  {
-    id: "land",
-    points: [
-      [0, 1.07, 0],
-      [0.12, -0.08, 0.78],
-    ],
-  },
-] as const;
 
 export function ClimateObservationLab(props: BiologyLabProps) {
   return (
@@ -100,30 +43,22 @@ export function ClimateObservationLab(props: BiologyLabProps) {
   );
 }
 
-function ClimateObservationScene({ colors, item }: BiologySceneProps) {
+function ClimateObservationScene({ colors }: BiologySceneProps) {
   return (
-    <group position={[0, 0.2, 0]} rotation={[-0.08, -0.3, 0.02]} scale={1.08}>
-      <EarthIndicators colors={colors} />
+    <group position={[0, -0.04, 0]} rotation={[-0.08, -0.3, 0.02]} scale={1.2}>
+      <EarthIndicators />
       <SensorSwath color={colors.ice} />
 
       <FloatingGroup speed={0.72} travel={0.035}>
-        <group position={[0, 1.18, 0]} rotation={[0.12, -0.38, 0.08]}>
-          <RotatingGroup speed={0.08}>
-            <TerraSatelliteModel colors={colors} />
-          </RotatingGroup>
+        <group position={[0.96, 1.18, 0.58]} rotation={[0.12, -0.58, 0.08]}>
+          <TerraSatelliteModel colors={colors} />
         </group>
       </FloatingGroup>
-
-      <BiologyCallouts
-        callouts={item.callouts}
-        color={colors.text}
-        targets={CALLOUT_TARGETS}
-      />
     </group>
   );
 }
 
-function EarthIndicators({ colors }: { colors: BiologySceneColors }) {
+function EarthIndicators() {
   const earthTexture = useTexture(BLUE_MARBLE_EARTH_TEXTURE_ASSET.path);
   earthTexture.colorSpace = SRGBColorSpace;
 
@@ -133,10 +68,6 @@ function EarthIndicators({ colors }: { colors: BiologySceneColors }) {
         <sphereGeometry args={[1, 96, 48]} />
         <meshBasicMaterial map={earthTexture} />
       </mesh>
-      <mesh rotation={[Math.PI / 2, 0, 0]} scale={[1, 1, 0.05]}>
-        <torusGeometry args={[1.12, 0.005, 8, 96]} />
-        <meshStandardMaterial color={colors.text} opacity={0.26} transparent />
-      </mesh>
     </group>
   );
 }
@@ -144,14 +75,22 @@ function EarthIndicators({ colors }: { colors: BiologySceneColors }) {
 function SensorSwath({ color }: { color: string }) {
   return (
     <group>
-      {SENSOR_LINES.map((line) => (
-        <BiologyLine
-          color={color}
-          key={line.id}
-          lineWidth={1}
-          points={line.points}
-        />
-      ))}
+      <BiologyLine
+        color={color}
+        lineWidth={1}
+        points={[
+          [0.82, 1.02, 0.48],
+          [0.26, 0.3, 0.9],
+        ]}
+      />
+      <BiologyLine
+        color={color}
+        lineWidth={1}
+        points={[
+          [0.82, 1.02, 0.48],
+          [-0.18, 0.58, 0.78],
+        ]}
+      />
     </group>
   );
 }
