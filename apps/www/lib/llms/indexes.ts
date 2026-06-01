@@ -208,7 +208,17 @@ function entryBelongsToPrefix(entry: LlmsEntry, prefixParts: string[]) {
     return false;
   }
 
-  return prefixParts.every((part, index) => entry.segments[index] === part);
+  if (prefixParts.length > entry.segments.length) {
+    return false;
+  }
+
+  for (const [index, part] of prefixParts.entries()) {
+    if (entry.segments[index] !== part) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /** Checks whether an entry is exactly the current prefix page. */

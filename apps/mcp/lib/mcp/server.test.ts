@@ -45,9 +45,10 @@ describe("registerNakafaMcpServer", () => {
       },
       name: "nakafa_get_content",
     });
-
-    await client.close();
-    await server.close();
+    const missingTool = client.callTool({
+      arguments: {},
+      name: "nakafa_missing",
+    });
 
     expect(tools.tools.every((tool) => Boolean(tool.outputSchema))).toBe(true);
     expect(quranReference.structuredContent).toMatchObject({
@@ -72,6 +73,12 @@ describe("registerNakafaMcpServer", () => {
     expect(legacyContent).toMatchObject({
       isError: true,
     });
-    expect(JSON.stringify(legacyContent)).toContain("Invalid arguments");
+    expect(JSON.stringify(legacyContent)).toContain(
+      "Invalid Nakafa content read options"
+    );
+    await expect(missingTool).rejects.toThrow("Tool nakafa_missing not found");
+
+    await client.close();
+    await server.close();
   });
 });

@@ -57,6 +57,7 @@ function SidebarTreeItem({
               render={
                 hasIndex ? (
                   <button
+                    aria-label={heading.label}
                     onClick={() => {
                       if (heading.index !== undefined) {
                         scrollToIndex(heading.index);

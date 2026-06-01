@@ -11,6 +11,7 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
 import { Fragment, type ReactElement } from "react";
+import { PagefindExcerpt } from "@/components/shared/pagefind-excerpt";
 import {
   getPagefindSectionResults,
   hasPagefindExcerpt,
@@ -111,13 +112,10 @@ function ResultGroup({ result }: { result: PagefindResult }) {
               />
               <span className="line-clamp-1">{subResult.title}</span>
             </div>
-            <p
-              className={cn(
-                "line-clamp-3 text-muted-foreground text-sm group-hover:text-accent-foreground",
-                !hasPagefindExcerpt(subResult.excerpt) && "hidden"
-              )}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: Pagefind returns highlighted HTML excerpts
-              dangerouslySetInnerHTML={{ __html: subResult.excerpt }}
+            <PagefindExcerpt
+              className="line-clamp-3 text-muted-foreground text-sm group-hover:text-accent-foreground"
+              excerpt={subResult.excerpt}
+              hidden={!hasPagefindExcerpt(subResult.excerpt)}
             />
           </NavigationLink>
         ))}

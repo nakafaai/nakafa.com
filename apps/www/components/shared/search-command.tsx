@@ -31,12 +31,14 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { Fragment, useLayoutEffect, useTransition } from "react";
+import { PagefindExcerpt } from "@/components/shared/pagefind-excerpt";
 import { articlesMenu } from "@/components/sidebar/_data/articles";
 import { holyMenu } from "@/components/sidebar/_data/holy";
 import { subjectMenu } from "@/components/sidebar/_data/subject";
-import { getErrorMessage, usePagefind } from "@/lib/context/use-pagefind";
+import { usePagefind } from "@/lib/context/use-pagefind";
 import { useSearch } from "@/lib/context/use-search";
 import { useSearchQuery } from "@/lib/react-query/use-search";
+import { getErrorMessage } from "@/lib/utils/error";
 import {
   getPagefindSectionResults,
   hasPagefindExcerpt,
@@ -264,13 +266,10 @@ function SearchListItem({
           <HugeIcons icon={FileIcon} />
           <span className="line-clamp-1">{item.label}</span>
         </div>
-        <p
-          className={cn(
-            "line-clamp-3 text-muted-foreground text-xs group-data-highlighted:text-accent-foreground",
-            !hasPagefindExcerpt(item.excerpt) && "hidden"
-          )}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: Pagefind returns highlighted HTML excerpts
-          dangerouslySetInnerHTML={{ __html: item.excerpt }}
+        <PagefindExcerpt
+          className="line-clamp-3 text-muted-foreground text-xs group-data-highlighted:text-accent-foreground"
+          excerpt={item.excerpt}
+          hidden={!hasPagefindExcerpt(item.excerpt)}
         />
       </CommandItem>
     );

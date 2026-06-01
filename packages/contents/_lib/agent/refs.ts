@@ -3,10 +3,17 @@ import {
   NAKAFA_MCP_INFORMATIONAL_ROOT,
 } from "@repo/contents/_lib/agent/constants";
 import type {
+  NakafaAgentContentId,
   NakafaAgentContentRef,
   NakafaAgentSection,
 } from "@repo/contents/_lib/agent/schema/ref";
-import { NakafaAgentSectionSchema } from "@repo/contents/_lib/agent/schema/ref";
+import {
+  NakafaAgentContentIdSchema,
+  NakafaAgentContentRouteSchema,
+  NakafaAgentContentUrlSchema,
+  NakafaAgentMarkdownUrlSchema,
+  NakafaAgentSectionSchema,
+} from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/contents/_types/content";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
@@ -39,11 +46,14 @@ export function parseNakafaContentRef(
     ? segments.slice(1)
     : segments;
   const route = routeSegments.join("/");
+  const parsedRoute = Schema.decodeUnknownOption(NakafaAgentContentRouteSchema)(
+    route
+  );
   const parsedSection = Schema.decodeUnknownOption(NakafaAgentSectionSchema)(
     routeSegments.at(0)
   );
 
-  if (!isSafeNakafaRoute(route)) {
+  if (Option.isNone(parsedRoute)) {
     return Option.none<NakafaAgentContentRef>();
   }
 
@@ -51,7 +61,9 @@ export function parseNakafaContentRef(
     return Option.none<NakafaAgentContentRef>();
   }
 
-  return Option.some(buildNakafaContentRef(locale, route, parsedSection.value));
+  return Option.some(
+    buildNakafaContentRef(locale, parsedRoute.value, parsedSection.value)
+  );
 }
 
 /** Builds a canonical content reference from already-normalized route parts. */
@@ -60,21 +72,26 @@ export function buildNakafaContentRef(
   route: string,
   section: NakafaAgentSection
 ) {
-  const contentId = `${locale}/${route}`;
+  const contentRoute = NakafaAgentContentRouteSchema.make(route);
+  const contentId = NakafaAgentContentIdSchema.make(
+    `${locale}/${contentRoute}`
+  );
   const contentRef = {
     content_id: contentId,
     locale,
-    markdown_url: `${NAKAFA_BASE_URL}/${contentId}.md`,
-    route,
+    markdown_url: NakafaAgentMarkdownUrlSchema.make(
+      `${NAKAFA_BASE_URL}/${contentId}.md`
+    ),
+    route: contentRoute,
     section,
-    url: `${NAKAFA_BASE_URL}/${contentId}`,
+    url: NakafaAgentContentUrlSchema.make(`${NAKAFA_BASE_URL}/${contentId}`),
   };
 
   return contentRef;
 }
 
 /** Builds the MCP resource URI for a canonical Nakafa content reference. */
-export function getNakafaContentResourceUri(contentId: string) {
+export function getNakafaContentResourceUri(contentId: NakafaAgentContentId) {
   return `${CONTENT_RESOURCE_PREFIX}${contentId.replaceAll("/", "%2F")}`;
 }
 
@@ -103,17 +120,4 @@ function normalizeNakafaContentInput(input: string) {
   }
 
   return trimmed;
-}
-
-/** Rejects empty or path-traversal content routes before filesystem access. */
-function isSafeNakafaRoute(route: string) {
-  if (route.length === 0) {
-    return false;
-  }
-
-  return route
-    .split("/")
-    .every(
-      (segment) => segment.length > 0 && segment !== "." && segment !== ".."
-    );
 }

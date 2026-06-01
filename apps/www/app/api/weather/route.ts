@@ -14,13 +14,13 @@ import { Cause, Effect } from "effect";
 import { after, NextResponse } from "next/server";
 
 const corsValidator = new CorsValidator();
+const logContext = {
+  service: "weather-api",
+  endpoint: "/api/weather",
+};
 
 export function POST(req: Request) {
   const startedAt = performance.now();
-  const context = {
-    service: "weather-api",
-    endpoint: "/api/weather",
-  };
 
   return Effect.runPromise(
     Effect.gen(function* () {
@@ -40,7 +40,7 @@ export function POST(req: Request) {
           "Geolocation unavailable, using default coordinates."
         ).pipe(
           Effect.annotateLogs({
-            ...context,
+            ...logContext,
             latitude,
             longitude,
           })
@@ -49,7 +49,7 @@ export function POST(req: Request) {
 
       yield* Effect.logInfo("Processing weather request").pipe(
         Effect.annotateLogs({
-          ...context,
+          ...logContext,
           latitude,
           longitude,
         })
@@ -65,7 +65,7 @@ export function POST(req: Request) {
           statusCode: 200,
           duration,
         },
-        context
+        logContext
       );
 
       return NextResponse.json(weather);
@@ -86,7 +86,7 @@ export function POST(req: Request) {
             );
           });
 
-          yield* logError(err, context);
+          yield* logError(err, logContext);
           yield* logHttpRequest(
             {
               method: "POST",
@@ -94,7 +94,7 @@ export function POST(req: Request) {
               statusCode: 500,
               duration,
             },
-            context
+            logContext
           );
 
           return NextResponse.json(

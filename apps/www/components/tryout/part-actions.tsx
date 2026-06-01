@@ -10,7 +10,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
-import { motion } from "motion/react";
+import { domAnimation, LazyMotion, m } from "motion/react";
 import { useTranslations } from "next-intl";
 import type { Dispatch, SetStateAction } from "react";
 import { Countdown } from "@/components/exercise/attempt-countdown";
@@ -48,42 +48,44 @@ export function TryoutPartSticky({
         hidden && "pointer-events-none"
       )}
     >
-      <motion.div
-        animate={hidden ? "hidden" : "visible"}
-        className="flex flex-col rounded-xl border bg-card p-2 shadow-sm"
-        transition={{ ease: "easeOut" }}
-        variants={{
-          visible: { y: 0, opacity: 1 },
-          hidden: { y: "-120%", opacity: 0 },
-        }}
-      >
-        <div className="flex items-center justify-between">
-          <Countdown timer={timer} />
+      <LazyMotion features={domAnimation} strict>
+        <m.div
+          animate={hidden ? "hidden" : "visible"}
+          className="flex flex-col rounded-xl border bg-card p-2 shadow-sm"
+          transition={{ ease: "easeOut" }}
+          variants={{
+            visible: { y: 0, opacity: 1 },
+            hidden: { y: "-120%", opacity: 0 },
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <Countdown timer={timer} />
 
-          <Button
-            disabled={isAwaitingExpiry || isActionPending}
-            onClick={() => setCompleteDialogOpenAction(true)}
-            type="button"
-            variant="destructive"
-          >
-            <Spinner
-              icon={StopIcon}
-              isLoading={isAwaitingExpiry || isActionPending}
-            />
-            {isAwaitingExpiry
-              ? tTryouts("part-processing-expiry-cta")
-              : tTryouts("complete-part-cta")}
-          </Button>
-        </div>
+            <Button
+              disabled={isAwaitingExpiry || isActionPending}
+              onClick={() => setCompleteDialogOpenAction(true)}
+              type="button"
+              variant="destructive"
+            >
+              <Spinner
+                icon={StopIcon}
+                isLoading={isAwaitingExpiry || isActionPending}
+              />
+              {isAwaitingExpiry
+                ? tTryouts("part-processing-expiry-cta")
+                : tTryouts("complete-part-cta")}
+            </Button>
+          </div>
 
-        <ExerciseStats />
+          <ExerciseStats />
 
-        {isAwaitingExpiry ? (
-          <p className="px-2 pt-2 text-muted-foreground text-sm">
-            {tTryouts("part-head-processing-expiry")}
-          </p>
-        ) : null}
-      </motion.div>
+          {isAwaitingExpiry ? (
+            <p className="px-2 pt-2 text-muted-foreground text-sm">
+              {tTryouts("part-head-processing-expiry")}
+            </p>
+          ) : null}
+        </m.div>
+      </LazyMotion>
     </div>
   );
 }

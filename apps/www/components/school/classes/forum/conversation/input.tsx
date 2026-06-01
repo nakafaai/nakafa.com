@@ -2,7 +2,6 @@ import { ArrowUp01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure, useOs, useResizeObserver } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   MAX_FORUM_ATTACHMENT_BYTES,
   MAX_FORUM_POST_ATTACHMENTS,
@@ -18,17 +17,9 @@ import { useFileUpload } from "@repo/design-system/hooks/use-file-upload";
 import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { Schema } from "effect";
-import ky from "ky";
+import { Effect, Either, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import {
-  Activity,
-  type ComponentRef,
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-} from "react";
+import { Activity, type ComponentRef, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useForumSession } from "@/components/school/classes/forum/context/use-session";
 import { useControls } from "@/components/school/classes/forum/conversation/context/use-controls";
@@ -37,9 +28,10 @@ import { AttachmentPreviews } from "@/components/school/classes/forum/conversati
 import { InputAttachments } from "@/components/school/classes/forum/conversation/input/attachments-trigger";
 import { EmojiButton } from "@/components/school/classes/forum/conversation/input/emoji-button";
 import { ReplyIndicator } from "@/components/school/classes/forum/conversation/input/reply-indicator";
+import { submitForumPost } from "@/components/school/classes/forum/conversation/input/submit";
 
 /** Handles forum post submission, uploads, and reply cleanup for the transcript. */
-export const ForumPostInput = memo(() => {
+export const ForumPostInput = () => {
   const t = useTranslations("School.Classes");
   const { acknowledgeUnreadCue, goToLatest } = useControls();
   const forumId = useData((state) => state.forumId);
@@ -85,42 +77,6 @@ export const ForumPostInput = memo(() => {
     }
   }, [replyTarget]);
 
-  const uploadFile = useCallback(
-    async (file: File) => {
-      const { uploadId, uploadUrl } = await generateUploadUrl({ forumId });
-
-      try {
-        const { storageId } = await ky
-          .post(uploadUrl, {
-            headers: { "Content-Type": file.type },
-            body: file,
-          })
-          .json<{ storageId: Id<"_storage"> }>();
-
-        await saveForumUpload({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          storageId,
-          uploadId,
-        });
-
-        return uploadId;
-      } catch (error) {
-        await discardForumUploads({ uploadIds: [uploadId] }).catch(
-          (cleanupError) => {
-            captureException(cleanupError, {
-              source: "forum-upload-discard-single",
-            });
-            return null;
-          }
-        );
-        throw error;
-      }
-    },
-    [discardForumUploads, forumId, generateUploadUrl, saveForumUpload]
-  );
-
   const form = useForm({
     defaultValues: { body: "" },
     validators: {
@@ -138,47 +94,27 @@ export const ForumPostInput = memo(() => {
         return;
       }
 
-      const attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] = [];
+      const result = await Effect.runPromise(
+        Effect.either(
+          submitForumPost({
+            files,
+            mutations: {
+              createPost,
+              discardForumUploads,
+              generateUploadUrl,
+              saveForumUpload,
+            },
+            post: {
+              body: value.body,
+              forumId,
+              parentId: replyTarget?.postId,
+            },
+          })
+        )
+      );
 
-      try {
-        for (const fileWithPreview of files) {
-          if (!(fileWithPreview.file instanceof File)) {
-            continue;
-          }
-
-          attachmentUploadIds.push(await uploadFile(fileWithPreview.file));
-        }
-
-        await createPost({
-          attachmentUploadIds:
-            attachmentUploadIds.length > 0 ? attachmentUploadIds : undefined,
-          forumId,
-          body: value.body,
-          parentId: replyTarget?.postId,
-        });
-
-        form.reset();
-        clearFiles();
-        setForumReplyTarget(forumId, null);
-        acknowledgeUnreadCue();
-
-        requestAnimationFrame(() => {
-          textareaRef.current?.focus();
-          goToLatest();
-        });
-      } catch (error) {
-        if (attachmentUploadIds.length > 0) {
-          await discardForumUploads({ uploadIds: attachmentUploadIds }).catch(
-            (cleanupError) => {
-              captureException(cleanupError, {
-                source: "forum-upload-discard-batch",
-              });
-              return null;
-            }
-          );
-        }
-
-        captureException(error, {
+      if (Either.isLeft(result)) {
+        captureException(result.left, {
           source: "forum-post-submit",
         });
         toast.error(t("create-post-failed"));
@@ -186,17 +122,26 @@ export const ForumPostInput = memo(() => {
         requestAnimationFrame(() => {
           textareaRef.current?.focus();
         });
+
+        return;
       }
+
+      form.reset();
+      clearFiles();
+      setForumReplyTarget(forumId, null);
+      acknowledgeUnreadCue();
+
+      requestAnimationFrame(() => {
+        textareaRef.current?.focus();
+        goToLatest();
+      });
     },
   });
 
   return (
     <form
+      action={() => form.handleSubmit()}
       className="grid shrink-0 px-2 pb-2"
-      onSubmit={(event) => {
-        event.preventDefault();
-        form.handleSubmit();
-      }}
       ref={composerRef}
     >
       {/*
@@ -319,5 +264,4 @@ export const ForumPostInput = memo(() => {
       </form.Field>
     </form>
   );
-});
-ForumPostInput.displayName = "ForumPostInput";
+};

@@ -49,13 +49,14 @@ import {
   type PropsWithChildren,
   type ReactNode,
   type RefObject,
+  use,
   useCallback,
-  useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 // ============================================================================
 // Provider Context & Types
@@ -92,7 +93,7 @@ const ProviderAttachmentsContext = createContext<AttachmentsContext | null>(
 );
 
 export const usePromptInputController = () => {
-  const ctx = useContext(PromptInputContext);
+  const ctx = use(PromptInputContext);
   if (!ctx) {
     throw new Error(
       "Wrap your component inside <PromptInputProvider> to use usePromptInputController()."
@@ -103,11 +104,11 @@ export const usePromptInputController = () => {
 
 // Optional variants (do NOT throw). Useful for dual-mode components.
 function useOptionalPromptInputController() {
-  return useContext(PromptInputContext);
+  return use(PromptInputContext);
 }
 
 export function useProviderAttachments() {
-  const ctx = useContext(ProviderAttachmentsContext);
+  const ctx = use(ProviderAttachmentsContext);
   if (!ctx) {
     throw new Error(
       "Wrap your component inside <PromptInputProvider> to use useProviderAttachments()."
@@ -117,7 +118,7 @@ export function useProviderAttachments() {
 }
 
 function useOptionalProviderAttachments() {
-  return useContext(ProviderAttachmentsContext);
+  return use(ProviderAttachmentsContext);
 }
 
 export type PromptInputProviderProps = PropsWithChildren<{
@@ -240,7 +241,7 @@ const LocalAttachmentsContext = createContext<AttachmentsContext | null>(null);
 export function usePromptInputAttachments() {
   // Dual-mode: prefer provider if present, otherwise use local
   const provider = useOptionalProviderAttachments();
-  const local = useContext(LocalAttachmentsContext);
+  const local = use(LocalAttachmentsContext);
   const context = provider ?? local;
   if (!context) {
     throw new Error(
@@ -665,7 +666,7 @@ export const PromptInput = ({
     [usingProvider, files]
   );
 
-  const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
+  const addSelectedFiles: ChangeEventHandler<HTMLInputElement> = (event) => {
     if (event.currentTarget.files) {
       add(event.currentTarget.files);
     }
@@ -774,7 +775,7 @@ export const PromptInput = ({
         aria-label="Upload files"
         className="hidden"
         multiple={multiple}
-        onChange={handleChange}
+        onChange={addSelectedFiles}
         ref={inputRef}
         title="Upload files"
         type="file"
@@ -1069,6 +1070,34 @@ export type PromptInputSpeechButtonProps = ComponentProps<
   onTranscriptionChange?: (text: string) => void;
 };
 
+function getSpeechRecognitionApi() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  if (!("SpeechRecognition" in window || "webkitSpeechRecognition" in window)) {
+    return null;
+  }
+
+  return window.SpeechRecognition || window.webkitSpeechRecognition;
+}
+
+function getSpeechRecognitionSnapshot() {
+  return getSpeechRecognitionApi() !== null;
+}
+
+function getServerSpeechRecognitionSnapshot() {
+  return false;
+}
+
+function unsubscribeSpeechRecognitionAvailability() {
+  return;
+}
+
+function subscribeSpeechRecognitionAvailability(_listener: () => void) {
+  return unsubscribeSpeechRecognitionAvailability;
+}
+
 export const PromptInputSpeechButton = ({
   className,
   textareaRef,
@@ -1076,69 +1105,80 @@ export const PromptInputSpeechButton = ({
   ...props
 }: PromptInputSpeechButtonProps) => {
   const [isListening, setIsListening] = useState(false);
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(
-    null
+  const hasRecognition = useSyncExternalStore(
+    subscribeSpeechRecognitionAvailability,
+    getSpeechRecognitionSnapshot,
+    getServerSpeechRecognitionSnapshot
   );
+  const onTranscriptionChangeRef = useRef(onTranscriptionChange);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const textareaRefRef = useRef(textareaRef);
 
   useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      ("SpeechRecognition" in window || "webkitSpeechRecognition" in window)
-    ) {
-      const SpeechRecognitionAPI =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
-      const speechRecognition = new SpeechRecognitionAPI();
+    onTranscriptionChangeRef.current = onTranscriptionChange;
+  }, [onTranscriptionChange]);
 
-      speechRecognition.continuous = true;
-      speechRecognition.interimResults = true;
-      speechRecognition.lang = "en-US";
+  useEffect(() => {
+    textareaRefRef.current = textareaRef;
+  }, [textareaRef]);
 
-      speechRecognition.onstart = () => {
-        setIsListening(true);
-      };
+  useEffect(() => {
+    const SpeechRecognitionAPI = getSpeechRecognitionApi();
 
-      speechRecognition.onend = () => {
-        setIsListening(false);
-      };
-
-      speechRecognition.onresult = (event) => {
-        let finalTranscript = "";
-
-        for (const result of Array.from(event.results)) {
-          if (result.isFinal) {
-            finalTranscript += result[0].transcript;
-          }
-        }
-
-        if (finalTranscript && textareaRef?.current) {
-          const textarea = textareaRef.current;
-          const currentValue = textarea.value;
-          const newValue =
-            currentValue + (currentValue ? " " : "") + finalTranscript;
-
-          textarea.value = newValue;
-          textarea.dispatchEvent(new Event("input", { bubbles: true }));
-          onTranscriptionChange?.(newValue);
-        }
-      };
-
-      speechRecognition.onerror = () => {
-        setIsListening(false);
-      };
-
-      recognitionRef.current = speechRecognition;
-      setRecognition(speechRecognition);
+    if (!SpeechRecognitionAPI) {
+      return;
     }
 
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
+    const speechRecognition = new SpeechRecognitionAPI();
+
+    speechRecognition.continuous = true;
+    speechRecognition.interimResults = true;
+    speechRecognition.lang = "en-US";
+
+    speechRecognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    speechRecognition.onend = () => {
+      setIsListening(false);
+    };
+
+    speechRecognition.onresult = (event) => {
+      let finalTranscript = "";
+
+      for (const result of Array.from(event.results)) {
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript;
+        }
+      }
+
+      const textarea = textareaRefRef.current?.current;
+      if (finalTranscript && textarea) {
+        const currentValue = textarea.value;
+        const newValue =
+          currentValue + (currentValue ? " " : "") + finalTranscript;
+
+        textarea.value = newValue;
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+        onTranscriptionChangeRef.current?.(newValue);
       }
     };
-  }, [textareaRef, onTranscriptionChange]);
+
+    speechRecognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = speechRecognition;
+
+    return () => {
+      speechRecognition.stop();
+      recognitionRef.current = null;
+    };
+  }, []);
 
   const toggleListening = useCallback(() => {
+    const recognition = recognitionRef.current;
+
     if (!recognition) {
       return;
     }
@@ -1148,7 +1188,7 @@ export const PromptInputSpeechButton = ({
     } else {
       recognition.start();
     }
-  }, [recognition, isListening]);
+  }, [isListening]);
 
   return (
     <PromptInputButton
@@ -1157,7 +1197,7 @@ export const PromptInputSpeechButton = ({
         !!isListening && "animate-pulse bg-accent text-accent-foreground",
         className
       )}
-      disabled={!recognition}
+      disabled={!hasRecognition}
       onClick={toggleListening}
       {...props}
     >

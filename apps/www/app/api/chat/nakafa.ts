@@ -4,9 +4,10 @@ import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
 } from "@repo/contents/_lib/agent/errors";
+import { NakafaAgentSearchResultSchema } from "@repo/contents/_lib/agent/schema/search";
 import { fetchQuery } from "convex/nextjs";
 import type { Context } from "effect";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 /**
  * Convex-backed Nakafa search adapter for Nina.
@@ -26,5 +27,17 @@ export const search = {
           cause: getUnknownErrorMessage(error),
           message: "Unable to search Nakafa content.",
         }),
-    }),
+    }).pipe(
+      Effect.flatMap((result) =>
+        Schema.decodeUnknown(NakafaAgentSearchResultSchema)(result).pipe(
+          Effect.mapError(
+            (error) =>
+              new NakafaAgentDataReadError({
+                cause: getUnknownErrorMessage(error),
+                message: "Unable to validate Nakafa search results.",
+              })
+          )
+        )
+      )
+    ),
 } satisfies Context.Tag.Service<typeof NakafaSearch>;

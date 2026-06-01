@@ -81,11 +81,10 @@ async function postMcp(method: string, params: Record<string, unknown> = {}) {
 }
 
 /** Calls one MCP tool through JSON-RPC. */
-function callTool(name: string, args: Record<string, unknown>) {
-  return postMcp("tools/call", {
-    arguments: args,
-    name,
-  });
+function callTool(name: string, args?: Record<string, unknown>) {
+  const params = args === undefined ? { name } : { arguments: args, name };
+
+  return postMcp("tools/call", params);
 }
 
 /** Parses JSON responses and Streamable HTTP SSE response bodies. */
@@ -164,6 +163,24 @@ describe("Nakafa MCP route", () => {
     ).toContain("content_id");
   }, 15_000);
 
+  it("applies defaults when clients omit optional tool arguments", async () => {
+    const taxonomyResponse = await callTool("nakafa_get_taxonomy");
+    const searchResponse = await callTool("nakafa_search_content");
+    const taxonomy = Schema.decodeUnknownSync(
+      Schema.Struct({
+        tools: Schema.Array(Schema.String),
+      })
+    )(taxonomyResponse.result?.structuredContent);
+    const search = Schema.decodeUnknownSync(NakafaAgentSearchResultSchema)(
+      searchResponse.result?.structuredContent
+    );
+
+    expect(taxonomyResponse.result?.isError).not.toBe(true);
+    expect(searchResponse.result?.isError).not.toBe(true);
+    expect(taxonomy.tools).toContain("nakafa_search_content");
+    expect(search.items).toHaveLength(1);
+  });
+
   it("uses search content IDs immediately with content, resource, and exercise retrieval", async () => {
     const searchResponse = await callTool("nakafa_search_content", {
       limit: 1,
@@ -203,7 +220,7 @@ describe("Nakafa MCP route", () => {
     expect(content.text).toContain("### Question");
     expect(exercise.content_id).toBe(contentId);
     expect(resource.contents[0].text).toContain("### Answer & Explanation");
-  });
+  }, 15_000);
 
   it("returns structured tool errors for missing content and exercise requests", async () => {
     const missingContent = await callTool("nakafa_get_content", {
@@ -249,12 +266,14 @@ describe("Nakafa MCP route", () => {
     expect(legacyContent.result?.isError).toBe(true);
     expect(legacyExercise.result?.isError).toBe(true);
     expect(mixedLegacyContent.result?.isError).toBe(true);
-    expect(JSON.stringify(legacyContent.result)).toContain("Invalid arguments");
+    expect(JSON.stringify(legacyContent.result)).toContain(
+      "Invalid Nakafa content read options"
+    );
     expect(JSON.stringify(legacyExercise.result)).toContain(
-      "Invalid arguments"
+      "Invalid Nakafa exercise read options"
     );
     expect(JSON.stringify(mixedLegacyContent.result)).toContain(
-      "Invalid arguments"
+      "Invalid Nakafa content read options"
     );
   });
 
@@ -355,6 +374,32 @@ describe("Nakafa MCP route", () => {
       },
       name: "nakafa_quran_reference",
     });
+    const defaultFindPrompt = await postMcp("prompts/get", {
+      arguments: {
+        topic: "integral",
+      },
+      name: "nakafa_find_lesson",
+    });
+    const defaultQuranPrompt = await postMcp("prompts/get", {
+      arguments: {
+        surah: "1",
+      },
+      name: "nakafa_quran_reference",
+    });
+    const missingPrompt = await postMcp("prompts/get", {
+      arguments: {},
+      name: "nakafa_missing",
+    });
+    const invalidPrompt = await postMcp("prompts/get", {
+      arguments: {
+        legacy: "true",
+        topic: "integral",
+      },
+      name: "nakafa_find_lesson",
+    });
+    const missingPromptArguments = await postMcp("prompts/get", {
+      name: "nakafa_find_lesson",
+    });
 
     expect(
       Schema.decodeUnknownSync(
@@ -387,6 +432,17 @@ describe("Nakafa MCP route", () => {
     expect(JSON.stringify(quranPrompt.result)).toContain(
       "Summarize the returned reference briefly."
     );
+    expect(JSON.stringify(defaultFindPrompt.result)).toContain(
+      "Preferred locale: en"
+    );
+    expect(JSON.stringify(defaultQuranPrompt.result)).toContain(
+      "Surah 1, verses 1"
+    );
+    expect(missingPrompt.error?.message).toContain("not found");
+    expect(invalidPrompt.error?.message).toContain(
+      "Invalid arguments for prompt nakafa_find_lesson"
+    );
+    expect(missingPromptArguments.error?.message).toContain("topic");
   });
 
   it("guards browser origins while allowing desktop clients without Origin", async () => {

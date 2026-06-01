@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { SchoolClassesForumHeader } from "@/components/school/classes/forum/header";
 import { SchoolClassesForumList } from "@/components/school/classes/forum/list";
 import { SchoolLayoutContent } from "@/components/school/layout-content";
@@ -6,8 +7,12 @@ import { SchoolLayoutContent } from "@/components/school/layout-content";
 export function SchoolClassesForumPageContent() {
   return (
     <SchoolLayoutContent>
-      <SchoolClassesForumHeader />
-      <SchoolClassesForumList />
+      <Suspense fallback={null}>
+        <SchoolClassesForumHeader />
+      </Suspense>
+      <Suspense fallback={null}>
+        <SchoolClassesForumList />
+      </Suspense>
     </SchoolLayoutContent>
   );
 }

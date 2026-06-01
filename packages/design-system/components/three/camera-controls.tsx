@@ -120,7 +120,7 @@ export function CameraControls({
   /**
    * Re-renders demand-driven canvases when the user interacts with controls.
    */
-  const handleChange = useCallback(() => {
+  const invalidateCameraControls = useCallback(() => {
     regress();
     invalidate();
   }, [invalidate, regress]);
@@ -154,7 +154,7 @@ export function CameraControls({
         minAzimuthAngle={minAzimuthAngle}
         minDistance={minDistance}
         minPolarAngle={minPolarAngle}
-        onChange={handleChange}
+        onChange={invalidateCameraControls}
         onEnd={handleEnd}
         onStart={handleStart}
         ref={controlsRef}

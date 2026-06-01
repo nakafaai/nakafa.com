@@ -15,7 +15,9 @@ const ToolErrorResultSchema = Schema.Struct({
 describe("nakafa_get_content", () => {
   it("returns structured not-found errors", async () => {
     const result = await Effect.runPromise(
-      getNakafaContentToolResult("en/articles/missing")
+      getNakafaContentToolResult({
+        content_ref: "en/articles/missing",
+      })
     );
 
     expect(

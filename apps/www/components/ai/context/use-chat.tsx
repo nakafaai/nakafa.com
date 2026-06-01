@@ -4,7 +4,7 @@ import { type UseChatHelpers, useChat as useAiChat } from "@ai-sdk/react";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useTranslations } from "next-intl";
-import { type PropsWithChildren, useMemo } from "react";
+import type { PropsWithChildren } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 import { useAi } from "@/components/ai/context/use-ai";
 import { createChatTransport } from "@/components/ai/helpers/runtime";
@@ -64,12 +64,9 @@ export function ChatProvider({
         }
   );
 
-  const value = useMemo(
-    () => ({
-      chat,
-    }),
-    [chat]
-  );
+  const value = {
+    chat,
+  };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }

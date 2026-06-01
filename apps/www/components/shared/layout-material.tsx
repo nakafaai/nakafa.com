@@ -8,6 +8,27 @@ import { PaginationContent } from "@/components/shared/pagination-content";
 import { SidebarRight } from "@/components/shared/sidebar-right";
 import { SidebarTree } from "@/components/shared/sidebar-tree";
 
+interface LayoutMaterialTocProps {
+  chapters: {
+    label: string;
+    data: ParsedHeading[];
+  };
+  githubUrl?: ComponentProps<typeof SidebarRight>["githubUrl"];
+  header?: ComponentProps<typeof SidebarRight>["header"];
+  references?: ComponentProps<typeof SidebarRight>["references"];
+  showComments?: ComponentProps<typeof SidebarRight>["showComments"];
+}
+
+/**
+ * Renders the flex shell shared by article, subject, exercise, and Quran pages.
+ */
+export function LayoutMaterial({ className, ...props }: ComponentProps<"div">) {
+  return <div className={cn("flex", className)} {...props} />;
+}
+
+/**
+ * Renders the material page header through the shared header adapter.
+ */
 export function LayoutMaterialHeader({
   ...props
 }: ComponentProps<typeof HeaderContent>) {
@@ -32,6 +53,9 @@ export function LayoutMaterialContent({
   return <div className={cn("min-w-0 flex-1", className)}>{children}</div>;
 }
 
+/**
+ * Renders the primary readable content area for material pages.
+ */
 export function LayoutMaterialMain({
   children,
   className,
@@ -47,34 +71,34 @@ export function LayoutMaterialMain({
   );
 }
 
+/**
+ * Renders previous and next material navigation.
+ */
 export function LayoutMaterialPagination({
   ...props
 }: ComponentProps<typeof PaginationContent>) {
   return <PaginationContent {...props} />;
 }
 
+/**
+ * Renders the material page footer through the shared footer adapter.
+ */
 export function LayoutMaterialFooter({
   ...props
 }: ComponentProps<typeof FooterContent>) {
   return <FooterContent {...props} />;
 }
 
+/**
+ * Renders the right-hand table of contents and material page actions.
+ */
 export function LayoutMaterialToc({
   chapters,
   header,
   githubUrl,
   references,
   showComments,
-}: {
-  chapters: {
-    label: string;
-    data: ParsedHeading[];
-  };
-  header?: ComponentProps<typeof SidebarRight>["header"];
-  githubUrl?: ComponentProps<typeof SidebarRight>["githubUrl"];
-  references?: ComponentProps<typeof SidebarRight>["references"];
-  showComments?: ComponentProps<typeof SidebarRight>["showComments"];
-}) {
+}: LayoutMaterialTocProps) {
   return (
     <SidebarRight
       githubUrl={githubUrl}
@@ -85,8 +109,4 @@ export function LayoutMaterialToc({
       <SidebarTree data={chapters.data} title={chapters.label} />
     </SidebarRight>
   );
-}
-
-export function LayoutMaterial({ className, ...props }: ComponentProps<"div">) {
-  return <div className={cn("flex", className)} {...props} />;
 }

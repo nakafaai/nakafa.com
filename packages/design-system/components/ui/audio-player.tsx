@@ -22,8 +22,8 @@ import {
   type HTMLProps,
   type ReactNode,
   type RefObject,
+  use,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -82,8 +82,9 @@ interface AudioPlayerApi<TData = unknown> {
 
 const AudioPlayerContext = createContext<AudioPlayerApi<unknown> | null>(null);
 
+/** Reads the audio player API from the nearest AudioPlayerProvider. */
 export function useAudioPlayer<TData = unknown>(): AudioPlayerApi<TData> {
-  const api = useContext(AudioPlayerContext) as AudioPlayerApi<TData> | null;
+  const api = use(AudioPlayerContext) as AudioPlayerApi<TData> | null;
   if (!api) {
     throw new Error(
       "useAudioPlayer cannot be called outside of AudioPlayerProvider"
@@ -94,8 +95,9 @@ export function useAudioPlayer<TData = unknown>(): AudioPlayerApi<TData> {
 
 const AudioPlayerTimeContext = createContext<number | null>(null);
 
+/** Reads the current audio time from the nearest AudioPlayerProvider. */
 export const useAudioPlayerTime = () => {
-  const time = useContext(AudioPlayerTimeContext);
+  const time = use(AudioPlayerTimeContext);
   if (time === null) {
     throw new Error(
       "useAudioPlayerTime cannot be called outside of AudioPlayerProvider"
@@ -269,8 +271,6 @@ export function AudioPlayerProvider<TData = unknown>({
     const audio = audioRef.current;
 
     return () => {
-      playPromiseRef.current = null;
-
       if (!audio) {
         return;
       }

@@ -1,18 +1,16 @@
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { mapUIMessagePartsToDBParts } from "@repo/backend/convex/chats/messageParts/uiToDb";
-import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
+import { buildNakafaContentRef } from "@repo/contents/_lib/agent/refs";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import type { ProviderMetadata } from "ai";
 import { describe, expect, it } from "vitest";
 
-const ref = {
-  content_id: "en/articles/politics/dynastic-politics-asian-values",
-  locale: "en",
-  markdown_url:
-    "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
-  route: "articles/politics/dynastic-politics-asian-values",
-  section: "articles",
-  url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
-} satisfies NakafaAgentContentRef;
+const ref = buildNakafaContentRef(
+  "en",
+  "articles/politics/dynastic-politics-asian-values",
+  "articles"
+);
+const quranRef = buildNakafaContentRef("en", "quran/1", "quran");
 
 const toolCallProviderMetadata = {
   google: { thoughtSignature: "call-signature" },
@@ -116,7 +114,9 @@ describe("mapUIMessagePartsToDBParts", () => {
         data: {
           kind: "content",
           status: "done",
-          input: { content_ref: ref.url },
+          input: {
+            content_ref: NakafaAgentContentRefInputSchema.make(ref.url),
+          },
           result: {
             ...ref,
             description: "Article summary",
@@ -138,16 +138,12 @@ describe("mapUIMessagePartsToDBParts", () => {
             to_verse: 1,
           },
           result: {
-            ...ref,
-            content_id: "en/quran/1",
+            ...quranRef,
             from_verse: 1,
             name: "Al-Fatihah",
             revelation: "Mecca",
-            route: "quran/1",
-            section: "quran",
             to_verse: 1,
             translation: "The Opening",
-            url: "https://nakafa.com/en/quran/1",
             verse_count: 1,
           },
         },

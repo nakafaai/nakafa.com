@@ -16,8 +16,9 @@ import {
   createContext,
   type HTMLAttributes,
   startTransition,
-  useContext,
+  use,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -202,6 +203,7 @@ function removePreBackground(html: string) {
   );
 }
 
+/** Renders highlighted code with paired light and dark Shiki themes. */
 export const CodeBlock = ({
   code,
   language,
@@ -213,7 +215,8 @@ export const CodeBlock = ({
   const [html, setHtml] = useState<string>("");
   const [darkHtml, setDarkHtml] = useState<string>("");
   const mounted = useRef(false);
-  const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
+  const [lightTheme, darkTheme] = use(ShikiThemeContext);
+  const codeContextValue = useMemo(() => ({ code }), [code]);
 
   const Icon =
     languageIconMap[language as keyof typeof languageIconMap] ??
@@ -252,7 +255,7 @@ export const CodeBlock = ({
   }, [code, language, lightTheme, darkTheme, preClassName]);
 
   return (
-    <CodeBlockContext.Provider value={{ code }}>
+    <CodeBlockContext.Provider value={codeContextValue}>
       <div
         className="my-4 w-full overflow-hidden rounded-xl border"
         data-code-block-container
@@ -652,7 +655,7 @@ export const CodeBlockDownloadButton = ({
   code?: string;
   language?: BundledLanguage;
 }) => {
-  const contextCode = useContext(CodeBlockContext).code;
+  const contextCode = use(CodeBlockContext).code;
   const code = propCode ?? contextCode;
   const extension =
     language && language in languageExtensionMap
@@ -701,7 +704,7 @@ export const CodeBlockCopyButton = ({
 }: CodeBlockCopyButtonProps & { code?: string }) => {
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef(0);
-  const contextCode = useContext(CodeBlockContext).code;
+  const contextCode = use(CodeBlockContext).code;
   const code = propCode ?? contextCode;
 
   async function copyToClipboard() {

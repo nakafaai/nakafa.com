@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useState } from "react";
 
 interface UseResizableOptions {
   initialWidth: number;
@@ -9,6 +9,9 @@ interface UseResizableOptions {
   onResize?: (width: number) => void;
 }
 
+/**
+ * Manages horizontal drag and keyboard resizing state for resizable panels.
+ */
 export function useResizable({
   initialWidth,
   minWidth,
@@ -23,26 +26,23 @@ export function useResizable({
     setIsResizing(true);
   };
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = useEffectEvent(() => {
     setIsResizing(false);
-  }, []);
+  });
 
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      let newWidth = window.innerWidth - e.clientX;
+  const handleMouseMove = useEffectEvent((e: MouseEvent) => {
+    let newWidth = window.innerWidth - e.clientX;
 
-      if (newWidth < minWidth) {
-        newWidth = minWidth;
-      }
+    if (newWidth < minWidth) {
+      newWidth = minWidth;
+    }
 
-      if (newWidth > maxWidth) {
-        newWidth = maxWidth;
-      }
+    if (newWidth > maxWidth) {
+      newWidth = maxWidth;
+    }
 
-      setWidth(newWidth);
-    },
-    [minWidth, maxWidth]
-  );
+    setWidth(newWidth);
+  });
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -68,19 +68,21 @@ export function useResizable({
   );
 
   useEffect(() => {
-    if (isResizing) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-    } else {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
+    if (!isResizing) {
+      return;
     }
 
+    const onMouseMove = (event: MouseEvent) => handleMouseMove(event);
+    const onMouseUp = () => handleMouseUp();
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+
     return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
     };
-  }, [isResizing, handleMouseMove, handleMouseUp]);
+  }, [isResizing]);
 
   return {
     width,

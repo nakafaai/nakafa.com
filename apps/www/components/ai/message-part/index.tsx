@@ -7,7 +7,7 @@ import {
   ReasoningTrigger,
 } from "@repo/design-system/components/ai/reasoning";
 import { Response } from "@repo/design-system/components/ai/response";
-import { memo } from "react";
+
 import { useMessage } from "@/components/ai/context/use-message";
 import { MathPart } from "@/components/ai/message-part/math";
 import { NakafaPart } from "@/components/ai/message-part/nakafa";
@@ -19,7 +19,7 @@ interface Props {
   partIndex: number;
 }
 
-export const AiMessagePart = memo(({ part, partIndex }: Props) => {
+export const AiMessagePart = ({ part, partIndex }: Props) => {
   const messageId = useMessage((state) => state.message.id);
 
   switch (part.type) {
@@ -53,5 +53,5 @@ export const AiMessagePart = memo(({ part, partIndex }: Props) => {
     default:
       return null;
   }
-});
+};
 AiMessagePart.displayName = "AiMessagePart";

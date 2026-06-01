@@ -1,7 +1,7 @@
 "use client";
 
-import { useThrottledCallback } from "@repo/design-system/hooks/use-throttled-callback";
-import { useEffect, useState } from "react";
+import throttle from "lodash.throttle";
+import { useEffect, useEffectEvent, useState } from "react";
 
 export interface WindowSizeState {
   /**
@@ -47,7 +47,7 @@ export function useWindowSize(): WindowSizeState {
     scale: 0,
   });
 
-  const handleViewportChange = useThrottledCallback(() => {
+  const updateWindowSize = useEffectEvent(() => {
     if (typeof window === "undefined") {
       return;
     }
@@ -78,7 +78,7 @@ export function useWindowSize(): WindowSizeState {
 
       return { width, height, offsetTop, offsetLeft, scale };
     });
-  }, 200);
+  });
 
   useEffect(() => {
     const visualViewport = window.visualViewport;
@@ -86,14 +86,16 @@ export function useWindowSize(): WindowSizeState {
       return;
     }
 
-    visualViewport.addEventListener("resize", handleViewportChange);
+    const handleViewportChange = throttle(() => updateWindowSize(), 200);
 
-    handleViewportChange();
+    visualViewport.addEventListener("resize", handleViewportChange);
+    updateWindowSize();
 
     return () => {
       visualViewport.removeEventListener("resize", handleViewportChange);
+      handleViewportChange.cancel();
     };
-  }, [handleViewportChange]);
+  }, []);
 
   return windowSize;
 }

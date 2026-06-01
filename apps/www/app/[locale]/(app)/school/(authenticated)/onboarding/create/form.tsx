@@ -65,12 +65,9 @@ export function SchoolOnboardingCreateForm() {
 
   return (
     <form
+      action={() => form.handleSubmit()}
       className="flex flex-col gap-6"
       id="school-onboarding-create-form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        form.handleSubmit();
-      }}
     >
       <FieldGroup>
         <form.Field name="name">

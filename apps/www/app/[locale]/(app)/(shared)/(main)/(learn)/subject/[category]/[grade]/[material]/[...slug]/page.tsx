@@ -92,15 +92,16 @@ export async function generateMetadata({
     redirect(getSlugPath(category, grade, material, []));
   }
 
-  const t = await getTranslations("Subject");
-
-  const { chapter, filePath, metadata, path } = await getSubjectMetadataData({
-    locale,
-    category,
-    grade,
-    material,
-    slug,
-  });
+  const [t, { chapter, filePath, metadata, path }] = await Promise.all([
+    getTranslations("Subject"),
+    getSubjectMetadataData({
+      locale,
+      category,
+      grade,
+      material,
+      slug,
+    }),
+  ]);
 
   if (!metadata) {
     notFound();
@@ -349,9 +350,8 @@ async function CachedSubjectShell({
 
   cacheLife("max");
 
-  const tCommon = await getTranslations("Common");
-
-  const [content, materials] = await Promise.all([
+  const [tCommon, content, materials] = await Promise.all([
+    getTranslations("Common"),
     Effect.runPromise(
       Effect.match(
         getContentMetadataContext({ locale, category, grade, material, slug }),

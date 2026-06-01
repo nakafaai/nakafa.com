@@ -21,12 +21,12 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { Authenticated, usePaginatedQuery } from "convex/react";
 import { useTranslations } from "next-intl";
-import { memo } from "react";
+
 import { useAi } from "@/components/ai/context/use-ai";
 import { useUser } from "@/lib/context/use-user";
 
 /** Opens the recent Nina chat list when a user is signed in. */
-export const SheetHistory = memo(() => {
+export const SheetHistory = () => {
   const { isPending, user } = useUser((state) => ({
     isPending: state.isPending,
     user: state.user,
@@ -51,10 +51,10 @@ export const SheetHistory = memo(() => {
       </Authenticated>
     </DropdownMenu>
   );
-});
+};
 
 /** Renders recent Nina chats in the header menu. */
-const SheetHistoryContent = memo(() => {
+const SheetHistoryContent = () => {
   const t = useTranslations("Ai");
   const activeChatId = useAi((state) => state.activeChatId);
   const setActiveChatId = useAi((state) => state.setActiveChatId);
@@ -99,4 +99,4 @@ const SheetHistoryContent = memo(() => {
       </DropdownMenuGroup>
     </DropdownMenuContent>
   );
-});
+};

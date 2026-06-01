@@ -6,7 +6,7 @@ import {
   type ComponentType,
   createContext,
   type ReactNode,
-  useContext,
+  use,
   useId,
   useMemo,
 } from "react";
@@ -86,7 +86,7 @@ function getColorVariableSegment(character: string) {
 
 /** Reads the nearest chart config from the EvilCharts container. */
 function useChart() {
-  const context = useContext(ChartContext);
+  const context = use(ChartContext);
 
   if (!context) {
     throw new Error("useChart must be used within a <ChartContainer />");
@@ -113,11 +113,12 @@ function ChartContainer({
 }) {
   const uniqueId = useId();
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
+  const contextValue = useMemo(() => ({ config }), [config]);
 
   validateChartConfig(config);
 
   return (
-    <ChartContext.Provider value={{ config }}>
+    <ChartContext.Provider value={contextValue}>
       <div
         className={cn(
           "flex aspect-square min-h-0 w-full justify-center text-xs sm:aspect-video [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-hidden [&_.recharts-surface]:outline-hidden",

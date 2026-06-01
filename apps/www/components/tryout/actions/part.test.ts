@@ -8,15 +8,22 @@ type TryoutAttemptId = Parameters<typeof startTryoutPart>[0]["tryoutAttemptId"];
 
 const tryoutAttemptId = "tryoutAttemptId" as TryoutAttemptId;
 
-const mocks = vi.hoisted(() => ({
-  after: vi.fn(async (callback) => await callback()),
-  captureServerException: vi.fn(),
-  cookies: vi.fn(),
-  extractDistinctIdFromPostHogCookie: vi.fn(),
-  fetchAuthMutation: vi.fn(),
-  revalidateTryoutOverview: vi.fn(),
-  revalidateTryoutSet: vi.fn(),
-}));
+const mocks = vi.hoisted(() => {
+  /** Test double for unauthenticated server-action calls. */
+  class MockAuthenticationRequiredError extends Error {}
+
+  return {
+    after: vi.fn(async (callback) => await callback()),
+    AuthenticationRequiredError: MockAuthenticationRequiredError,
+    captureServerException: vi.fn(),
+    cookies: vi.fn(),
+    extractDistinctIdFromPostHogCookie: vi.fn(),
+    fetchAuthMutation: vi.fn(),
+    requireAuth: vi.fn(),
+    revalidateTryoutOverview: vi.fn(),
+    revalidateTryoutSet: vi.fn(),
+  };
+});
 
 vi.mock("@repo/analytics/posthog/server", () => ({
   captureServerException: mocks.captureServerException,
@@ -32,7 +39,9 @@ vi.mock("next/headers", () => ({
 }));
 
 vi.mock("@/lib/auth/server", () => ({
+  AuthenticationRequiredError: mocks.AuthenticationRequiredError,
   fetchAuthMutation: mocks.fetchAuthMutation,
+  requireAuth: mocks.requireAuth,
 }));
 
 vi.mock("@/components/tryout/actions/revalidate", () => ({
@@ -47,6 +56,45 @@ describe("components/tryout/actions/part", () => {
       toString: () => "ph_cookie=user_123",
     });
     mocks.extractDistinctIdFromPostHogCookie.mockReturnValue("user_123");
+    mocks.requireAuth.mockResolvedValue(undefined);
+  });
+
+  it("returns unknown without touching Convex when start auth is missing", async () => {
+    mocks.requireAuth.mockRejectedValue(
+      new mocks.AuthenticationRequiredError()
+    );
+
+    const result = await startTryoutPart({
+      locale: "id",
+      partKey: "mathematical-reasoning",
+      partKeys: ["mathematical-reasoning"],
+      product: "snbt",
+      tryoutAttemptId,
+      tryoutSlug: "2026-set-1",
+    });
+
+    expect(result).toEqual({ kind: "unknown" });
+    expect(mocks.fetchAuthMutation).not.toHaveBeenCalled();
+    expect(mocks.captureServerException).not.toHaveBeenCalled();
+  });
+
+  it("returns unknown without touching Convex when completion auth is missing", async () => {
+    mocks.requireAuth.mockRejectedValue(
+      new mocks.AuthenticationRequiredError()
+    );
+
+    const result = await completeTryoutPart({
+      locale: "id",
+      partKey: "mathematical-reasoning",
+      partKeys: ["mathematical-reasoning"],
+      product: "snbt",
+      tryoutAttemptId,
+      tryoutSlug: "2026-set-1",
+    });
+
+    expect(result).toEqual({ kind: "unknown" });
+    expect(mocks.fetchAuthMutation).not.toHaveBeenCalled();
+    expect(mocks.captureServerException).not.toHaveBeenCalled();
   });
 
   it("revalidates routes after starting a part", async () => {

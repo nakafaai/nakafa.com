@@ -56,20 +56,18 @@ function resolveScrollMode({
  * controller aligned with the official `virtua` chat and scrolling examples.
  */
 export function createConversationScrollController({
+  handle,
   prefersReducedMotion,
   rowIndexByPostId,
   rows,
-  virtualizerRef,
 }: {
+  handle: ConversationScrollHandle | null;
   prefersReducedMotion: boolean;
   rowIndexByPostId: ReadonlyMap<Id<"schoolClassForumPosts">, number>;
   rows: readonly ConversationRow[];
-  virtualizerRef: { current: ConversationScrollHandle | null };
 }) {
   return {
     captureView: () => {
-      const handle = virtualizerRef.current;
-
       if (!handle) {
         return null;
       }
@@ -81,8 +79,6 @@ export function createConversationScrollController({
     },
 
     isViewReached: (view) => {
-      const handle = virtualizerRef.current;
-
       if (!handle) {
         return false;
       }
@@ -95,8 +91,6 @@ export function createConversationScrollController({
     },
 
     isViewSettled: (view) => {
-      const handle = virtualizerRef.current;
-
       if (!handle) {
         return false;
       }
@@ -109,7 +103,6 @@ export function createConversationScrollController({
     },
 
     scrollToLatest: (options?: ScrollTargetOptions) => {
-      const handle = virtualizerRef.current;
       const lastRowIndex = rows.length - 1;
 
       if (!handle) {
@@ -135,8 +128,6 @@ export function createConversationScrollController({
       postId: Id<"schoolClassForumPosts">,
       options?: ScrollTargetOptions
     ) => {
-      const handle = virtualizerRef.current;
-
       if (!handle) {
         return false;
       }

@@ -1,5 +1,9 @@
 import { promises as fsPromises } from "node:fs";
 import nodePath from "node:path";
+import {
+  extractObjectLiteralAfterDeclaration,
+  parseObjectLiteral,
+} from "@repo/contents/_lib/literal";
 import { extractMetadata } from "@repo/contents/_lib/metadata";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
 import {
@@ -131,88 +135,6 @@ function getRawGitHubUrl(filePath: string) {
  * @param source - Raw `choices.ts` source text
  * @returns Object-literal start index, or `null` when no choices declaration exists
  */
-function getChoicesObjectStart(source: string) {
-  const declaration = source.match(CHOICES_DECLARATION_REGEX);
-
-  if (!declaration || declaration.index === undefined) {
-    return null;
-  }
-
-  const declarationEnd = declaration.index + declaration[0].length;
-  const objectStart = source.indexOf("{", declarationEnd);
-
-  return objectStart === -1 ? null : objectStart;
-}
-
-/**
- * Skips a quoted JavaScript string while preserving escaped delimiters.
- *
- * @param source - Raw JavaScript source text
- * @param startIndex - Index of the opening quote
- * @returns Index of the closing quote, or the last source index when unterminated
- */
-function skipQuotedString(source: string, startIndex: number) {
-  const quote = source[startIndex];
-
-  for (let index = startIndex + 1; index < source.length; index += 1) {
-    const char = source[index];
-
-    if (char === "\\") {
-      index += 1;
-      continue;
-    }
-
-    if (char === quote) {
-      return index;
-    }
-  }
-
-  return source.length - 1;
-}
-
-/**
- * Extracts the complete `choices` object literal without being confused by
- * math labels that contain braces or semicolons inside strings.
- *
- * @param source - Raw `choices.ts` source text
- * @returns Complete object-literal source, or `null` when it is incomplete
- */
-function extractChoicesObjectLiteral(source: string) {
-  const objectStart = getChoicesObjectStart(source);
-
-  if (objectStart === null) {
-    return null;
-  }
-
-  let depth = 0;
-
-  for (let index = objectStart; index < source.length; index += 1) {
-    const char = source[index];
-
-    if (char === '"' || char === "'" || char === "`") {
-      index = skipQuotedString(source, index);
-      continue;
-    }
-
-    if (char === "{") {
-      depth += 1;
-      continue;
-    }
-
-    if (char !== "}") {
-      continue;
-    }
-
-    depth -= 1;
-
-    if (depth === 0) {
-      return source.slice(objectStart, index + 1);
-    }
-  }
-
-  return null;
-}
-
 /**
  * Reads one text file from the contents workspace.
  *
@@ -282,25 +204,22 @@ function readContentsTextWithGitHubFallback(filePath: string) {
 export function readExerciseChoices(choicesPath: string) {
   return Effect.gen(function* () {
     const raw = yield* readContentsTextWithGitHubFallback(choicesPath);
-    const choicesLiteral = extractChoicesObjectLiteral(raw);
+    const choicesLiteral = extractObjectLiteralAfterDeclaration(
+      raw,
+      CHOICES_DECLARATION_REGEX
+    );
 
     if (choicesLiteral === null) {
       return null;
     }
 
-    const choicesObject = yield* Effect.option(
-      Effect.try({
-        try: () => new Function(`return ${choicesLiteral}`)(),
-        catch: () => null,
-      })
-    );
-
-    if (Option.isNone(choicesObject)) {
+    const choicesObject = parseObjectLiteral(choicesLiteral);
+    if (choicesObject === null) {
       return null;
     }
 
     const parsed = Schema.decodeUnknownOption(ExercisesChoicesSchema)(
-      choicesObject.value
+      choicesObject
     );
     return Option.isSome(parsed) ? parsed.value : null;
   });

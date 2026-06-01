@@ -41,8 +41,9 @@ const HighlightContext = React.createContext<
   HighlightContextType<string> | undefined
 >(undefined);
 
+/** Reads highlight state from the nearest Highlight provider. */
 function useHighlight<T extends string>(): HighlightContextType<T> {
-  const context = React.useContext(HighlightContext);
+  const context = React.use(HighlightContext);
   if (!context) {
     throw new Error("useHighlight must be used within a HighlightProvider");
   }
@@ -233,6 +234,8 @@ function Highlight<T extends React.ElementType = "div">({
 
   const containerClassName = (props as ParentModeHighlightProps)
     ?.containerClassName;
+  const forceUpdateBounds = (props as ParentModeHighlightProps)
+    ?.forceUpdateBounds;
 
   const render = React.useCallback(
     (renderChildren: React.ReactNode) => {
@@ -297,30 +300,48 @@ function Highlight<T extends React.ElementType = "div">({
       activeClassNameState,
     ]
   );
+  const contextValue = React.useMemo(
+    () => ({
+      mode,
+      activeValue,
+      setActiveValue: safeSetActiveValue,
+      id,
+      hover,
+      click,
+      className,
+      style,
+      transition,
+      disabled,
+      enabled,
+      exitDelay,
+      setBounds: safeSetBounds,
+      clearBounds,
+      activeClassName: activeClassNameState,
+      setActiveClassName: setActiveClassNameState,
+      forceUpdateBounds,
+    }),
+    [
+      mode,
+      activeValue,
+      safeSetActiveValue,
+      id,
+      hover,
+      click,
+      className,
+      style,
+      transition,
+      disabled,
+      enabled,
+      exitDelay,
+      safeSetBounds,
+      clearBounds,
+      activeClassNameState,
+      forceUpdateBounds,
+    ]
+  );
 
   return (
-    <HighlightContext.Provider
-      value={{
-        mode,
-        activeValue,
-        setActiveValue: safeSetActiveValue,
-        id,
-        hover,
-        click,
-        className,
-        style,
-        transition,
-        disabled,
-        enabled,
-        exitDelay,
-        setBounds: safeSetBounds,
-        clearBounds,
-        activeClassName: activeClassNameState,
-        setActiveClassName: setActiveClassNameState,
-        forceUpdateBounds: (props as ParentModeHighlightProps)
-          ?.forceUpdateBounds,
-      }}
-    >
+    <HighlightContext.Provider value={contextValue}>
       {(() => {
         if (!enabled) {
           return children;

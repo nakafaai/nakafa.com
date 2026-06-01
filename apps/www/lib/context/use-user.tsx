@@ -4,7 +4,7 @@ import { analytics } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import type { FunctionReturnType } from "convex/server";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 export type CurrentUser = NonNullable<
@@ -88,8 +88,22 @@ export function UserContextProvider({
     analytics.setPersonProperties(personProperties, setOnceProperties);
   }, [isPending, signedUpAt, userEmail, userId, userName, userPlan, userRole]);
 
+  const [contextValue, setContextValue] = useState({
+    user: currentUser,
+    isPending,
+  });
+  let currentContextValue = contextValue;
+
+  if (
+    contextValue.user !== currentUser ||
+    contextValue.isPending !== isPending
+  ) {
+    currentContextValue = { user: currentUser, isPending };
+    setContextValue(currentContextValue);
+  }
+
   return (
-    <UserContext.Provider value={{ user: currentUser, isPending }}>
+    <UserContext.Provider value={currentContextValue}>
       {children}
     </UserContext.Provider>
   );

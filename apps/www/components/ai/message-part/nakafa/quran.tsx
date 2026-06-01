@@ -6,14 +6,13 @@ import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
-import { memo } from "react";
 
 interface Props {
   message: Extract<NakafaDataPart, { kind: "quran"; status: "done" }>;
 }
 
 /** Renders a compact Quran reference preview. */
-export const QuranPart = memo(({ message }: Props) => {
+export const QuranPart = ({ message }: Props) => {
   const t = useTranslations("Ai");
 
   return (
@@ -54,5 +53,5 @@ export const QuranPart = memo(({ message }: Props) => {
       />
     </div>
   );
-});
+};
 QuranPart.displayName = "QuranPart";

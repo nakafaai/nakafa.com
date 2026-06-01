@@ -58,13 +58,14 @@ export async function generateMetadata({
   params: PageProps<"/[locale]/articles/[category]/[slug]">["params"];
 }): Promise<Metadata> {
   const { locale, category, slug } = await getResolvedParams(params);
-  const t = await getTranslations({ locale, namespace: "Articles" });
-
-  const { content, filePath } = await getArticleMetadataData({
-    locale,
-    category,
-    slug,
-  });
+  const [t, { content, filePath }] = await Promise.all([
+    getTranslations({ locale, namespace: "Articles" }),
+    getArticleMetadataData({
+      locale,
+      category,
+      slug,
+    }),
+  ]);
 
   if (!content) {
     notFound();
@@ -262,12 +263,9 @@ async function CachedArticleShell({
 
   cacheLife("max");
 
-  const [tCommon, tArticles] = await Promise.all([
+  const [tCommon, tArticles, content, references] = await Promise.all([
     getTranslations("Common"),
     getTranslations("Articles"),
-  ]);
-
-  const [content, references] = await Promise.all([
     Effect.runPromise(
       Effect.match(fetchArticleMetadataContext({ locale, category, slug }), {
         onFailure: () => ({ content: null, FilePath: filePath }),

@@ -9,7 +9,7 @@ import {
 import { useConvexAuth } from "convex/react";
 import type { FunctionArgs } from "convex/server";
 import { useTranslations } from "next-intl";
-import { useCallback, useLayoutEffect, useTransition } from "react";
+import { useLayoutEffect, useTransition } from "react";
 import { toast } from "sonner";
 import { startTryout } from "@/components/tryout/actions/tryout";
 import { getTryoutPartHref } from "@/components/tryout/utils/routes";
@@ -58,20 +58,17 @@ export function useTryoutStartFlow({
   );
 
   /** Keeps the dialog state aligned with route preservation and unmounts. */
-  const setDialogOpenAction = useCallback(
-    (open: boolean) => {
-      if (open) {
-        openDialog();
-        return;
-      }
+  const setDialogOpenAction = (open: boolean) => {
+    if (open) {
+      openDialog();
+      return;
+    }
 
-      closeDialog();
-    },
-    [closeDialog, openDialog]
-  );
+    closeDialog();
+  };
 
   /** Opens auth, resumes an attempt, or opens the start dialog based on state. */
-  const clickStartAction = useCallback(() => {
+  const clickStartAction = () => {
     if (isAuthPending) {
       return;
     }
@@ -95,20 +92,10 @@ export function useTryoutStartFlow({
     }
 
     openDialog();
-  }, [
-    authHref,
-    closeDialog,
-    isAuthenticated,
-    isAuthPending,
-    openDialog,
-    params.product,
-    params.tryoutSlug,
-    resumePartKey,
-    router,
-  ]);
+  };
 
   /** Prefetches the auth route for anonymous users when the CTA becomes relevant. */
-  const prefetchAuthAction = useCallback(() => {
+  const prefetchAuthAction = () => {
     if (isAuthPending) {
       return;
     }
@@ -118,10 +105,10 @@ export function useTryoutStartFlow({
     }
 
     router.prefetch(authHref);
-  }, [authHref, isAuthenticated, isAuthPending, router]);
+  };
 
   /** Starts the tryout and maps the server result into the route-level UX. */
-  const confirmStartAction = useCallback(() => {
+  const confirmStartAction = () => {
     if (isAuthPending) {
       return;
     }
@@ -180,17 +167,7 @@ export function useTryoutStartFlow({
         position: "bottom-center",
       });
     });
-  }, [
-    closeDialog,
-    isAuthenticated,
-    isAuthPending,
-    partKeys,
-    params,
-    pathname,
-    authHref,
-    router,
-    tTryouts,
-  ]);
+  };
 
   return {
     clickStartAction,

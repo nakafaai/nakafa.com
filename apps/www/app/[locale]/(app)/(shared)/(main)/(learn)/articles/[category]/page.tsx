@@ -129,8 +129,8 @@ async function PageArticles({
   FilePath: string;
   header: React.ReactNode;
 }) {
-  const articles = await getCategoryArticles(category, locale);
-  const [t, tCommon] = await Promise.all([
+  const [articles, t, tCommon] = await Promise.all([
+    getCategoryArticles(category, locale),
     getTranslations({ locale, namespace: "Articles" }),
     getTranslations({ locale, namespace: "Common" }),
   ]);

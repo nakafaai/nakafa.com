@@ -102,10 +102,7 @@ export default function TableChairsAnimation({
   const maxTables = isMobile ? MAX_TABLES_MOBILE : MAX_TABLES_DESKTOP;
 
   // Calculate chair count based on the formula U_n = 2n + 2
-  const chairCount = useMemo(
-    () => 2 * deferredTableCount + 2,
-    [deferredTableCount]
-  );
+  const chairCount = 2 * deferredTableCount + 2;
 
   useEffect(() => {
     // Stop playing when maximum table count is reached

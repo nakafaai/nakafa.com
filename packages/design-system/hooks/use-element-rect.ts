@@ -36,6 +36,11 @@ const initialRect: RectState = {
   left: 0,
 };
 
+const rectUpdateThrottleOptions = {
+  leading: true,
+  trailing: true,
+};
+
 const isSSR = typeof window === "undefined";
 const hasResizeObserver = !isSSR && typeof ResizeObserver !== "undefined";
 
@@ -79,7 +84,7 @@ export function useElementRect({
   }, [element, enabled]);
 
   const updateRect = useThrottledCallback(
-    () => {
+    useCallback(() => {
       if (!(enabled && isClientSide())) {
         return;
       }
@@ -101,33 +106,37 @@ export function useElementRect({
         bottom: newRect.bottom,
         left: newRect.left,
       });
-    },
+    }, [enabled, getTargetElement]),
     throttleMs,
-    [enabled, getTargetElement],
-    { leading: true, trailing: true }
+    rectUpdateThrottleOptions
   );
 
   useEffect(() => {
     if (!(enabled && isClientSide())) {
-      setRect(initialRect);
-      return;
+      return () => updateRect.cancel();
     }
 
     const targetElement = getTargetElement();
     if (!targetElement) {
-      return;
+      return () => updateRect.cancel();
     }
 
+    let animationFrame: number | null = null;
+    let resizeObserver: ResizeObserver | null = null;
     updateRect();
 
-    const cleanup: (() => void)[] = [];
-
     if (useResizeObserver && hasResizeObserver) {
-      const resizeObserver = new ResizeObserver(() => {
-        window.requestAnimationFrame(updateRect);
+      resizeObserver = new ResizeObserver(() => {
+        if (animationFrame !== null) {
+          window.cancelAnimationFrame(animationFrame);
+        }
+
+        animationFrame = window.requestAnimationFrame(() => {
+          animationFrame = null;
+          updateRect();
+        });
       });
       resizeObserver.observe(targetElement);
-      cleanup.push(() => resizeObserver.disconnect());
     }
 
     const handleUpdate = () => updateRect();
@@ -135,20 +144,19 @@ export function useElementRect({
     window.addEventListener("scroll", handleUpdate, true);
     window.addEventListener("resize", handleUpdate, true);
 
-    cleanup.push(() => {
-      window.removeEventListener("scroll", handleUpdate);
-      window.removeEventListener("resize", handleUpdate);
-    });
-
     return () => {
-      for (const fn of cleanup) {
-        fn();
+      if (animationFrame !== null) {
+        window.cancelAnimationFrame(animationFrame);
       }
-      setRect(initialRect);
+
+      resizeObserver?.disconnect();
+      window.removeEventListener("scroll", handleUpdate, true);
+      window.removeEventListener("resize", handleUpdate, true);
+      updateRect.cancel();
     };
   }, [enabled, getTargetElement, updateRect, useResizeObserver]);
 
-  return rect;
+  return enabled ? rect : initialRect;
 }
 
 /**

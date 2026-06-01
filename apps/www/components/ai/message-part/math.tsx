@@ -11,7 +11,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTranslations } from "next-intl";
-import { memo } from "react";
+
 import { MathEvidence } from "@/components/ai/message-part/math/evidence";
 import { getMathIcon } from "@/components/ai/message-part/math/icons";
 
@@ -20,7 +20,7 @@ interface Props {
 }
 
 /** Renders one deterministic math evidence part in the chat transcript. */
-export const MathPart = memo(({ message }: Props) => {
+export const MathPart = ({ message }: Props) => {
   const t = useTranslations("Ai");
   const [expanded, { set }] = useDisclosure(false);
 
@@ -52,5 +52,5 @@ export const MathPart = memo(({ message }: Props) => {
       </CollapsibleContent>
     </Collapsible>
   );
-});
+};
 MathPart.displayName = "MathPart";

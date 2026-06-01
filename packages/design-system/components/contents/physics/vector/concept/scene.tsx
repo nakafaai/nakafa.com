@@ -58,14 +58,14 @@ export function VectorConceptScene({
 
       <SceneLabel
         color={colors.leftVector}
-        fontSize={THREE_FONT_SIZE.annotation}
+        fontSize={THREE_FONT_SIZE.reading}
         position={left.labelPoint}
       >
         {`${labels.leftCable} ${Math.round(left.tension)} N`}
       </SceneLabel>
       <SceneLabel
         color={colors.rightVector}
-        fontSize={THREE_FONT_SIZE.annotation}
+        fontSize={THREE_FONT_SIZE.reading}
         position={right.labelPoint}
       >
         {`${labels.rightCable} ${Math.round(right.tension)} N`}

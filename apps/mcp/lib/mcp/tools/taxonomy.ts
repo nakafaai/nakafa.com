@@ -1,31 +1,36 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+  NakafaAgentTaxonomyOptionsSchema,
+  NakafaAgentTaxonomySchema,
+} from "@repo/contents/_lib/agent/schema/taxonomy";
 import { Nakafa } from "@repo/contents/_lib/agent/service";
 import { Effect } from "effect";
-import { toMcpStructuredResult } from "@/lib/mcp/result";
+import { decodeNakafaMcpToolInput } from "@/lib/mcp/effect";
 import {
-  NakafaGetTaxonomyInputSchema,
-  NakafaGetTaxonomyOutputSchema,
-} from "@/lib/mcp/schemas";
-import { NAKAFA_READ_ONLY_TOOL_ANNOTATIONS } from "@/lib/mcp/tool-config";
+  succeedMcpReadModelError,
+  toMcpStructuredResult,
+} from "@/lib/mcp/result";
 
-/** Registers the taxonomy and endpoint guidance tool. */
-export function registerNakafaGetTaxonomyTool(server: McpServer) {
-  server.registerTool(
-    "nakafa_get_taxonomy",
-    {
-      annotations: NAKAFA_READ_ONLY_TOOL_ANNOTATIONS,
-      description:
-        "Return supported Nakafa locales, sections, categories, grades, materials, exercise types, counts, and MCP endpoint guidance.",
-      inputSchema: NakafaGetTaxonomyInputSchema,
-      outputSchema: NakafaGetTaxonomyOutputSchema,
-      title: "Get Nakafa Taxonomy",
-    },
-    ({ locale }) =>
-      Effect.runPromise(
-        Nakafa.taxonomy(locale).pipe(
-          Effect.provide(Nakafa.Default),
-          Effect.map(toMcpStructuredResult)
-        )
-      )
+export const NakafaGetTaxonomyToolInputSchema =
+  NakafaAgentTaxonomyOptionsSchema;
+export const NakafaGetTaxonomyToolOutputSchema = NakafaAgentTaxonomySchema;
+
+/** Builds the taxonomy and endpoint guidance tool result. */
+export function getNakafaTaxonomyToolResult(args: unknown) {
+  return Effect.gen(function* () {
+    const input = yield* decodeNakafaMcpToolInput(
+      NakafaGetTaxonomyToolInputSchema,
+      args,
+      "Invalid Nakafa taxonomy options."
+    );
+    const taxonomy = yield* Nakafa.taxonomy(input.locale).pipe(
+      Effect.provide(Nakafa.Default)
+    );
+
+    return toMcpStructuredResult(taxonomy);
+  }).pipe(
+    Effect.catchTags({
+      NakafaAgentDataReadError: succeedMcpReadModelError,
+      NakafaAgentInputError: succeedMcpReadModelError,
+    })
   );
 }

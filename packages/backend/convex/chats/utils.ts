@@ -1,4 +1,4 @@
-import { defaultModel } from "@repo/ai/config/model";
+import { defaultModel, ModelIdSchema } from "@repo/ai/config/model";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/messageParts/dbToUi";
@@ -15,7 +15,9 @@ export function mapDBMessagesToUIMessages(
     role: message.role,
     parts: message.parts.map((part) => mapDBPartToUIMessagePart({ part })),
     metadata: {
-      model: message.modelId ?? defaultModel,
+      model: message.modelId
+        ? ModelIdSchema.make(message.modelId)
+        : defaultModel,
       credits: message.credits,
       tokens:
         message.inputTokens != null ||

@@ -11,13 +11,12 @@ import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
-import { memo } from "react";
 
 interface Props {
   message: DataPart["web-search"];
 }
 
-export const WebSearchPart = memo(({ message }: Props) => {
+export const WebSearchPart = ({ message }: Props) => {
   const t = useTranslations("Ai");
 
   const isLoading = message.status === "loading";
@@ -70,10 +69,10 @@ export const WebSearchPart = memo(({ message }: Props) => {
       />
     </div>
   );
-});
+};
 WebSearchPart.displayName = "WebSearchPart";
 
-const WebSearchPartQueries = memo(({ queries }: { queries: string[] }) => {
+const WebSearchPartQueries = ({ queries }: { queries: string[] }) => {
   if (queries.length === 0) {
     return null;
   }
@@ -85,35 +84,33 @@ const WebSearchPartQueries = memo(({ queries }: { queries: string[] }) => {
       ))}
     </div>
   );
-});
+};
 WebSearchPartQueries.displayName = "WebSearchPartQueries";
 
 function WebSearchQueryText({ query }: { query: string }) {
   return <p className="text-muted-foreground text-sm">{`"${query}"`}</p>;
 }
 
-const WebSearchPartPreview = memo(
-  ({
-    emptyLabel,
-    results,
-  }: {
-    emptyLabel: string;
-    results: DataPart["web-search"]["sources"];
-  }) => {
-    if (results.length === 0) {
-      return <p className="text-muted-foreground text-sm">{emptyLabel}</p>;
-    }
-
-    return (
-      <div className="flex flex-wrap items-center gap-2">
-        {results.map((item) => (
-          <Source href={item.url} key={item.url}>
-            <SourceTrigger showFavicon />
-            <SourceContent description={item.description} title={item.title} />
-          </Source>
-        ))}
-      </div>
-    );
+const WebSearchPartPreview = ({
+  emptyLabel,
+  results,
+}: {
+  emptyLabel: string;
+  results: DataPart["web-search"]["sources"];
+}) => {
+  if (results.length === 0) {
+    return <p className="text-muted-foreground text-sm">{emptyLabel}</p>;
   }
-);
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {results.map((item) => (
+        <Source href={item.url} key={item.url}>
+          <SourceTrigger showFavicon />
+          <SourceContent description={item.description} title={item.title} />
+        </Source>
+      ))}
+    </div>
+  );
+};
 WebSearchPartPreview.displayName = "WebSearchPartPreview";

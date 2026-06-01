@@ -17,7 +17,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   Button,
   Group,
@@ -33,6 +33,9 @@ interface Props {
   title: string;
 }
 
+/**
+ * Renders the function-machine lesson card.
+ */
 export function FunctionMachine({ title, description }: Props) {
   return (
     <Card className="content-auto-card">
@@ -45,13 +48,14 @@ export function FunctionMachine({ title, description }: Props) {
   );
 }
 
+/**
+ * Provides the interactive linear-function input/output controls.
+ */
 function Machine() {
   const [input, setInput] = useState<number>(DEFAULT_INPUT);
 
-  const output = useMemo(() => {
-    // y = 2x + 1
-    return 2 * input + 1;
-  }, [input]);
+  // y = 2x + 1
+  const output = 2 * input + 1;
 
   return (
     <>

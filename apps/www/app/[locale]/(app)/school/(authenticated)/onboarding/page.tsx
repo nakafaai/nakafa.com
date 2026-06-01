@@ -11,7 +11,7 @@ export default function Page() {
   const t = useTranslations("School.Onboarding");
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col items-center justify-center space-y-8 px-6 py-12">
+    <div className="mx-auto flex w-full max-w-xl flex-col items-center justify-center gap-y-8 px-6 py-12">
       <header className="space-y-4 text-center">
         <h1 className="text-pretty font-medium text-2xl tracking-tighter sm:text-3xl">
           {t("title")}

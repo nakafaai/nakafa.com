@@ -13,7 +13,11 @@ import {
   revalidateTryoutSet,
   type TryoutSetRouteInput,
 } from "@/components/tryout/actions/revalidate";
-import { fetchAuthMutation } from "@/lib/auth/server";
+import {
+  AuthenticationRequiredError,
+  fetchAuthMutation,
+  requireAuth,
+} from "@/lib/auth/server";
 
 type StartPartArgs = FunctionArgs<
   typeof api.tryouts.mutations.attempts.startPart
@@ -76,6 +80,8 @@ export async function startTryoutPart({
   ...args
 }: StartTryoutPartInput): Promise<StartTryoutPartResult> {
   try {
+    await requireAuth();
+
     const result = await fetchAuthMutation(
       api.tryouts.mutations.attempts.startPart,
       {
@@ -93,6 +99,10 @@ export async function startTryoutPart({
 
     return result;
   } catch (error) {
+    if (error instanceof AuthenticationRequiredError) {
+      return { kind: "unknown" };
+    }
+
     after(async () => {
       await captureServerException(
         error,
@@ -121,6 +131,8 @@ export async function completeTryoutPart({
   ...args
 }: CompleteTryoutPartInput): Promise<CompleteTryoutPartResult> {
   try {
+    await requireAuth();
+
     const result = await fetchAuthMutation(
       api.tryouts.mutations.attempts.completePart,
       {
@@ -138,6 +150,10 @@ export async function completeTryoutPart({
 
     return result;
   } catch (error) {
+    if (error instanceof AuthenticationRequiredError) {
+      return { kind: "unknown" };
+    }
+
     after(async () => {
       await captureServerException(
         error,

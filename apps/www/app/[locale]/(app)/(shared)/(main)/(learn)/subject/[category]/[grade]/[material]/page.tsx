@@ -174,11 +174,11 @@ async function PageContent({
   const gradePath = getGradePath(category, grade);
   const FilePath = getMaterialPath(category, grade, material);
 
-  const [t, tCommon] = await Promise.all([
+  const [t, tCommon, materials] = await Promise.all([
     getTranslations({ locale, namespace: "Subject" }),
     getTranslations({ locale, namespace: "Common" }),
+    Effect.runPromise(getMaterials(FilePath, locale)),
   ]);
-  const materials = await Effect.runPromise(getMaterials(FilePath, locale));
 
   const chapters: ParsedHeading[] = materials.map((mat) => ({
     label: mat.title,

@@ -1,82 +1,56 @@
-import { NAKAFA_AGENT_SECTIONS } from "@repo/contents/_lib/agent/constants";
+import { NakafaAgentExerciseOptionsSchema } from "@repo/contents/_lib/agent/schema/exercise";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
+import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/read";
+import {
+  NakafaAgentContentRefSchema,
+  NakafaAgentContentSummarySchema,
+  NakafaAgentSectionSchema,
+} from "@repo/contents/_lib/agent/schema/ref";
+import {
+  NakafaAgentSearchOptionsSchema,
+  NakafaAgentSearchResultSchema,
+} from "@repo/contents/_lib/agent/schema/search";
+import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
 import { MathDataSchema } from "@repo/math/schema/data";
 import { locales } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
 const LocaleSchema = Schema.Literal(...locales);
-const NakafaSectionSchema = Schema.Literal(...NAKAFA_AGENT_SECTIONS);
 const StatusSchema = Schema.Literal("loading", "done", "error");
 
-const contentRefFields = {
-  content_id: Schema.String,
-  locale: LocaleSchema,
-  markdown_url: Schema.String,
-  route: Schema.String,
-  section: NakafaSectionSchema,
-  url: Schema.String,
-};
+const ContentSummarySchema = NakafaAgentContentSummarySchema;
+const SearchInputSchema = NakafaAgentSearchOptionsSchema;
+const SearchResultSchema = NakafaAgentSearchResultSchema;
+const ReadInputSchema = NakafaAgentReadOptionsSchema;
+const ExerciseInputSchema = NakafaAgentExerciseOptionsSchema;
+const QuranInputSchema = NakafaAgentQuranReferenceOptionsSchema;
+const TaxonomyInputSchema = NakafaAgentTaxonomyOptionsSchema;
 
-const ContentSummarySchema = Schema.Struct({
-  ...contentRefFields,
-  description: Schema.String,
-  title: Schema.String,
-}).pipe(Schema.mutable);
+const ExercisePreviewSchema = NakafaAgentContentRefSchema.pipe(
+  Schema.extend(
+    Schema.Struct({
+      count: Schema.Number,
+      exercise_number: Schema.NullOr(Schema.Number),
+      numbers: Schema.Array(Schema.Number).pipe(Schema.mutable),
+      title: Schema.String,
+    })
+  ),
+  Schema.mutable
+);
 
-const SearchInputSchema = Schema.Struct({
-  limit: Schema.Number,
-  locale: LocaleSchema,
-  offset: Schema.Number,
-  queries: Schema.optional(Schema.Array(Schema.String).pipe(Schema.mutable)),
-  section: Schema.optional(NakafaSectionSchema),
-}).pipe(Schema.mutable);
-
-const SearchResultSchema = Schema.Struct({
-  count: Schema.Number,
-  has_more: Schema.Boolean,
-  items: Schema.Array(ContentSummarySchema).pipe(Schema.mutable),
-  limit: Schema.Number,
-  next_offset: Schema.NullOr(Schema.Number),
-  offset: Schema.Number,
-}).pipe(Schema.mutable);
-
-const ReadInputSchema = Schema.Struct({
-  content_ref: Schema.String,
-}).pipe(Schema.mutable);
-
-const ExerciseInputSchema = Schema.Struct({
-  content_ref: Schema.String,
-  exercise_number: Schema.optional(Schema.Number),
-}).pipe(Schema.mutable);
-
-const ExercisePreviewSchema = Schema.Struct({
-  ...contentRefFields,
-  count: Schema.Number,
-  exercise_number: Schema.NullOr(Schema.Number),
-  numbers: Schema.Array(Schema.Number).pipe(Schema.mutable),
-  title: Schema.String,
-}).pipe(Schema.mutable);
-
-const QuranInputSchema = Schema.Struct({
-  from_verse: Schema.Number,
-  include_tafsir: Schema.Boolean,
-  locale: LocaleSchema,
-  surah: Schema.Number,
-  to_verse: Schema.optional(Schema.Number),
-}).pipe(Schema.mutable);
-
-const QuranPreviewSchema = Schema.Struct({
-  ...contentRefFields,
-  from_verse: Schema.Number,
-  name: Schema.String,
-  revelation: Schema.String,
-  to_verse: Schema.Number,
-  translation: Schema.String,
-  verse_count: Schema.Number,
-}).pipe(Schema.mutable);
-
-const TaxonomyInputSchema = Schema.Struct({
-  locale: LocaleSchema,
-}).pipe(Schema.mutable);
+const QuranPreviewSchema = NakafaAgentContentRefSchema.pipe(
+  Schema.extend(
+    Schema.Struct({
+      from_verse: Schema.Number,
+      name: Schema.String,
+      revelation: Schema.String,
+      to_verse: Schema.Number,
+      translation: Schema.String,
+      verse_count: Schema.Number,
+    })
+  ),
+  Schema.mutable
+);
 
 const TaxonomyPreviewSchema = Schema.Struct({
   content_counts: Schema.Array(
@@ -86,7 +60,7 @@ const TaxonomyPreviewSchema = Schema.Struct({
     }).pipe(Schema.mutable)
   ).pipe(Schema.mutable),
   locale: LocaleSchema,
-  sections: Schema.Array(NakafaSectionSchema).pipe(Schema.mutable),
+  sections: Schema.Array(NakafaAgentSectionSchema).pipe(Schema.mutable),
   tools: Schema.Array(Schema.String).pipe(Schema.mutable),
 }).pipe(Schema.mutable);
 

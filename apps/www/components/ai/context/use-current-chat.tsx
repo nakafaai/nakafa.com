@@ -10,7 +10,7 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "convex/react";
-import { type PropsWithChildren, useMemo } from "react";
+import type { PropsWithChildren } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 type ChatMessagesQueryResult = UsePaginatedQueryReturnType<
@@ -40,22 +40,16 @@ export function CurrentChatProvider({
     { initialNumItems: CHAT_MESSAGES_PAGE_SIZE }
   );
 
-  const messages = useMemo(() => {
-    if (status === "LoadingFirstPage" && results.length === 0) {
-      return;
-    }
-
-    return mapDBMessagesToUIMessages([...results].reverse());
-  }, [results, status]);
-  const value = useMemo(
-    () => ({
-      chat,
-      loadMoreMessages: loadMore,
-      messages,
-      messageStatus: status,
-    }),
-    [chat, loadMore, messages, status]
-  );
+  const messages =
+    status === "LoadingFirstPage" && results.length === 0
+      ? undefined
+      : mapDBMessagesToUIMessages([...results].reverse());
+  const value = {
+    chat,
+    loadMoreMessages: loadMore,
+    messages,
+    messageStatus: status,
+  };
 
   return (
     <CurrentChatContext.Provider value={value}>

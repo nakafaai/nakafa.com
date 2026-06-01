@@ -119,12 +119,9 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
           </Activity>
           <Activity mode={isPublic ? "hidden" : "visible"}>
             <form
+              action={() => form.handleSubmit()}
               className="flex flex-col gap-6"
               id="school-classes-join-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                form.handleSubmit();
-              }}
             >
               <FieldGroup>
                 <form.Field name="code">

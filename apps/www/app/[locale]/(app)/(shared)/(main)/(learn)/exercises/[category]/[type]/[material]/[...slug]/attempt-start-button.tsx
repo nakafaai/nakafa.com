@@ -143,13 +143,7 @@ export function StartExerciseButton({
   });
 
   return (
-    <form
-      id="exercise-attempt-form"
-      onSubmit={(e) => {
-        e.preventDefault();
-        form.handleSubmit();
-      }}
-    >
+    <form action={() => form.handleSubmit()} id="exercise-attempt-form">
       <ButtonGroup>
         <Button onClick={openDialog} type="button">
           <HugeIcons icon={Rocket01Icon} />
@@ -316,7 +310,7 @@ export function StartExerciseButton({
   );
 }
 
-export function getTimeLimitList(): number[] {
+function getTimeLimitList(): number[] {
   const result: number[] = [];
   for (let i = 30; i <= 360; i += 15) {
     result.push(i * 60);
