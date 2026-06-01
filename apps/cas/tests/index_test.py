@@ -66,6 +66,29 @@ def test_api_accepts_auth(monkeypatch) -> None:
     assert payload["secondary"]["expression"] == "4"
 
 
+def test_api_serializes_step_reasons(monkeypatch) -> None:
+    monkeypatch.setenv("MATH_CAS_API_KEY", "secret")
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/math",
+        headers={"Authorization": "Bearer secret"},
+        json={
+            "kind": "math",
+            "modulus": "30",
+            "n": "84",
+            "operation": "modular",
+        },
+    )
+    payload = response.json()
+
+    assert response.status_code == 200
+    assert payload["steps"][0]["reason"] == (
+        "Use the division algorithm; the remainder is the value modulo the modulus."
+    )
+    assert payload["steps"][0]["items"][0]["value"] == "84 = 2*30 + 24"
+
+
 def test_api_health_and_validation_error(monkeypatch) -> None:
     monkeypatch.setenv("MATH_CAS_API_KEY", "secret")
     client = TestClient(app, raise_server_exceptions=False)

@@ -70,6 +70,100 @@ def test_discrete_steps_include_reasons(math_request: MathRequest) -> None:
     assert all(step.reason for step in result.steps)
 
 
+@pytest.mark.parametrize(
+    ("math_request", "expected_reasons"),
+    [
+        (
+            MathRequest(kind="math", k="2", n="5", operation="combination"),
+            [
+                (
+                    "combination",
+                    "Use the combination formula because order does not matter.",
+                ),
+                ("evaluate", "Evaluate the factorials and simplify exactly."),
+            ],
+        ),
+        (
+            MathRequest(kind="math", k="2", n="5", operation="permutation"),
+            [
+                ("permutation", "Use the permutation formula because order matters."),
+                ("evaluate", "Evaluate the factorials and simplify exactly."),
+            ],
+        ),
+        (
+            MathRequest(kind="math", modulus="30", n="84", operation="modular"),
+            [
+                (
+                    "modular",
+                    (
+                        "Use the division algorithm; the remainder is the value "
+                        "modulo the modulus."
+                    ),
+                )
+            ],
+        ),
+        (
+            MathRequest(kind="math", operation="gcd", values=["18", "24"]),
+            [
+                (
+                    "gcd",
+                    (
+                        "Use Euclidean division; replacing the larger number by "
+                        "the remainder preserves the gcd."
+                    ),
+                ),
+                (
+                    "gcd",
+                    (
+                        "Use Euclidean division; replacing the larger number by "
+                        "the remainder preserves the gcd."
+                    ),
+                ),
+                (
+                    "gcd",
+                    "When the remainder is 0, the last nonzero divisor is the gcd.",
+                ),
+            ],
+        ),
+        (
+            MathRequest(kind="math", operation="lcm", values=["6", "8"]),
+            [
+                (
+                    "lcm",
+                    (
+                        "Use the identity lcm(a, b) = |a*b| / gcd(a, b) for "
+                        "two integers."
+                    ),
+                )
+            ],
+        ),
+        (
+            MathRequest(kind="math", n="21", operation="is_prime"),
+            [("is_prime", "3 divides 21, so 21 is not prime.")],
+        ),
+        (
+            MathRequest(kind="math", n="84", operation="prime_factorization"),
+            [
+                (
+                    "prime_factorization",
+                    (
+                        "Break the integer into prime factors and combine repeated "
+                        "primes as powers."
+                    ),
+                )
+            ],
+        ),
+    ],
+)
+def test_discrete_step_reasons_match_operation_flow(
+    math_request: MathRequest,
+    expected_reasons: list[tuple[str, str]],
+) -> None:
+    result = run(math_request)
+
+    assert [(step.action, step.reason) for step in result.steps] == expected_reasons
+
+
 def test_combination_and_permutation_show_formula_substitution() -> None:
     combination = run(MathRequest(kind="math", k="2", n="5", operation="combination"))
     permutation = run(MathRequest(kind="math", k="2", n="5", operation="permutation"))
@@ -87,6 +181,25 @@ def test_modular_step_keeps_division_algorithm_context() -> None:
 
     assert result.steps[0].items[0].label == "division"
     assert result.steps[0].items[0].value == "84 = 2*30 + 24"
+
+
+def test_lcm_step_keeps_identity_context() -> None:
+    result = run(MathRequest(kind="math", operation="lcm", values=["6", "8"]))
+
+    assert [(entry.label, entry.value) for entry in result.steps[0].items] == [
+        ("gcd", "2"),
+        ("identity", "|6*8|/gcd(6, 8)"),
+    ]
+
+
+def test_prime_reason_keeps_checked_divisors() -> None:
+    result = run(MathRequest(kind="math", n="17", operation="is_prime"))
+
+    assert result.steps[0].reason == (
+        "No prime divisor up to sqrt(17) divides 17, so it is prime."
+    )
+    assert result.steps[0].items[0].label == "checked_divisors"
+    assert result.steps[0].items[0].value == "2, 3"
 
 
 def test_prime_factorization() -> None:
