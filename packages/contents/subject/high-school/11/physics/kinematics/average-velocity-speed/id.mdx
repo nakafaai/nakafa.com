@@ -1,0 +1,73 @@
+export const metadata = {
+  title: "Kecepatan dan Kelajuan Rata-Rata",
+  description:
+    "Pelajari cara menghitung kecepatan rata-rata dan kelajuan rata-rata dari perpindahan, jarak, dan selang waktu.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/31/2026",
+  subject: "Kinematika",
+};
+
+## Rata-Rata Dibaca dari Satu Selang Waktu
+
+Saat kita membahas nilai rata-rata, kita tidak sedang membaca satu momen kecil seperti speedometer. Kita mengambil keadaan awal, keadaan akhir, dan seluruh waktu pengamatan, lalu menanyakan, "secara keseluruhan, geraknya setara dengan apa?"
+
+Kecepatan rata-rata memakai perpindahan. Karena perpindahan punya arah, kecepatan rata-rata juga menyimpan arah. Kelajuan rata-rata memakai jarak total yang benar-benar ditempuh, sehingga nilainya hanya menyatakan seberapa cepat lintasan ditempuh tanpa arah.
+
+> Kalau lintasannya berbelok atau kembali, jarak dan perpindahan tidak lagi bercerita hal yang sama.
+
+<MathContainer>
+  <BlockMath math="\bar{v}=\frac{\Delta x}{\Delta t}" />
+  <BlockMath math="\text{kelajuan rata-rata}=\frac{s_{\text{total}}}{\Delta t}" />
+</MathContainer>
+
+Simbol <InlineMath math="\Delta x" /> atau <InlineMath math="\Delta \vec{r}" /> menyatakan perubahan posisi dari awal ke akhir. Simbol <InlineMath math="s_{\text{total}}" /> menyatakan panjang lintasan yang ditempuh selama perjalanan.
+
+## Selang Waktu Sama Belum Tentu Cerita Geraknya Sama
+
+Misalkan dua perjalanan sama-sama berlangsung <InlineMath math="3 \text{ s}" />. Perjalanan pertama lurus <InlineMath math="6 \text{ m}" /> ke kanan. Perjalanan kedua bergerak <InlineMath math="6 \text{ m}" /> ke kanan lalu <InlineMath math="3 \text{ m}" /> ke kiri. Waktunya sama, tetapi jarak dan perpindahannya berbeda.
+
+| Perjalanan | Jarak Total | Perpindahan | Makna Rata-Rata |
+| --- | --- | --- | --- |
+| Lurus ke kanan | <InlineMath math="6 \text{ m}" /> | <InlineMath math="6 \text{ m}" /> ke kanan | Kelajuan dan kecepatan rata-rata sama besar |
+| Ke kanan lalu kembali | <InlineMath math="9 \text{ m}" /> | <InlineMath math="3 \text{ m}" /> ke kanan | Kelajuan rata-rata lebih besar daripada kecepatan rata-rata |
+
+Tabel ini membantu kita melihat sumber perbedaannya. Waktu tidak berubah, tetapi pembilang pada rumusnya berbeda.
+
+## Rute Balik Membuat Angka Terlihat Berpisah
+
+Pada rute balik, benda bergerak <InlineMath math="6 \text{ m}" /> ke kanan lalu <InlineMath math="3 \text{ m}" /> ke kiri dalam <InlineMath math="3 \text{ s}" />.
+
+Jarak totalnya <InlineMath math="9 \text{ m}" />, tetapi perpindahannya hanya <InlineMath math="3 \text{ m}" /> ke kanan.
+
+<MathContainer>
+  <BlockMath math="\text{kelajuan rata-rata}=\frac{9}{3}=3\text{ m/s}" />
+  <BlockMath math="\bar{v}=\frac{3}{3}=1\text{ m/s ke kanan}" />
+</MathContainer>
+
+Perhatikan bahwa kedua perhitungan memakai waktu yang sama. Perbedaannya muncul karena pembilangnya berbeda: kelajuan rata-rata memakai seluruh lintasan, sedangkan kecepatan rata-rata memakai perubahan posisi.
+
+## Tanda Menunjukkan Arah Kecepatan Rata-Rata
+
+Kalau arah kanan kita pilih sebagai positif, maka perpindahan ke kanan bernilai positif dan perpindahan ke kiri bernilai negatif. Tanda ini ikut terbawa ke kecepatan rata-rata.
+
+Misalnya benda mulai dari <InlineMath math="x=8 \text{ m}" /> dan berakhir di <InlineMath math="x=2 \text{ m}" /> selama <InlineMath math="2 \text{ s}" />.
+
+<MathContainer>
+  <BlockMath math="\Delta x=2-8=-6\text{ m}" />
+  <BlockMath math="\bar{v}=\frac{-6}{2}=-3\text{ m/s}" />
+</MathContainer>
+
+Nilai negatif bukan berarti geraknya "lebih lambat dari nol". Nilai negatif berarti kecepatan rata-ratanya mengarah ke kiri terhadap sumbu yang kita pilih.
+
+## Rute Putaran Bisa Punya Kecepatan Rata-Rata Nol
+
+Jika benda kembali ke titik awal, perpindahannya <InlineMath math="0 \text{ m}" />. Akibatnya, kecepatan rata-ratanya <InlineMath math="0 \text{ m/s}" /> walaupun kelajuan rata-ratanya masih bisa lebih dari nol.
+
+Pada perjalanan putaran, lintasannya tetap memiliki panjang. Namun perubahan posisi awal-ke-akhir menjadi nol karena titik awal dan titik akhirnya sama.
+
+| Pertanyaan | Besaran yang Dipakai | Jawaban yang Dicari |
+| --- | --- | --- |
+| Seberapa panjang lintasan ditempuh tiap detik? | Jarak total | Kelajuan rata-rata |
+| Seberapa besar perubahan posisi tiap detik? | Perpindahan | Kecepatan rata-rata |
+
+Jadi, sebelum memakai rumus, pastikan dulu pertanyaannya meminta jarak atau perpindahan. Itulah cara tercepat menghindari tertukar antara kelajuan rata-rata dan kecepatan rata-rata.

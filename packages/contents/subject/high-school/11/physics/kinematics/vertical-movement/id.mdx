@@ -1,0 +1,84 @@
+export const metadata = {
+  title: "Gerak Vertikal",
+  description:
+    "Pelajari gerak vertikal sebagai GLBB satu dimensi dengan percepatan gravitasi yang selalu mengarah ke bawah.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/01/2026",
+  subject: "Kinematika",
+};
+
+## Sumbu Vertikal Perlu Arah Positif
+
+Gerak vertikal adalah gerak naik atau turun yang lintasannya satu garis tegak. Supaya tandanya jelas, kita pilih arah ke atas sebagai positif dan arah ke bawah sebagai negatif.
+
+Dengan pilihan itu, percepatan gravitasi ditulis <InlineMath math="-g" /> karena gravitasi selalu menarik benda ke bawah.
+
+<MathContainer>
+  <BlockMath math="y=y_0+v_0t-\frac{1}{2}gt^2" />
+  <BlockMath math="v_y=v_0-gt" />
+  <BlockMath math="v_y^2=v_0^2-2g(y-y_0)" />
+</MathContainer>
+
+## Gravitasi Tetap Bekerja Saat Benda Naik
+
+Ketika benda dilempar ke atas, kecepatan awalnya positif. Setelah itu, gravitasi mengurangi kecepatan vertikalnya sedikit demi sedikit sampai benda berhenti sesaat di titik tertinggi.
+
+> Di titik tertinggi, kecepatan vertikal sesaat nol, tetapi percepatan gravitasi tetap ke bawah.
+
+Kalimat ini penting karena banyak siswa mengira gaya gravitasi hilang di puncak. Yang hilang sesaat hanya kecepatannya, bukan percepatannya.
+
+## Lemparan ke Atas Berhenti Sesaat
+
+Misalkan bola dilempar ke atas dengan kecepatan awal <InlineMath math="20\text{ m/s}" /> dari posisi <InlineMath math="y_0=0" />. Ambil <InlineMath math="g=10\text{ m/s}^2" />. Di titik tertinggi, kecepatan vertikalnya <InlineMath math="v_y=0" />.
+
+<MathContainer>
+  <BlockMath math="v_y=v_0-gt" />
+  <BlockMath math="0=20-10t" />
+  <BlockMath math="t=2\text{ s}" />
+</MathContainer>
+
+Tinggi maksimum terhadap titik lempar dapat dihitung dari persamaan posisi.
+
+<BlockMath math="\begin{aligned}
+y-y_0&=v_0t-\frac{1}{2}gt^2\\
+&=20(2)-\frac{1}{2}(10)(2^2)\\
+&=20\text{ m}
+\end{aligned}" />
+
+Jadi, bola membutuhkan <InlineMath math="2\text{ s}" /> untuk mencapai puncak dan naik setinggi <InlineMath math="20\text{ m}" /> dari titik awal.
+
+## Membaca Tanda Kecepatan
+
+Tanda pada <InlineMath math="v_y" /> memberi tahu arah gerak saat itu. Nilai positif berarti benda sedang bergerak ke atas, nilai negatif berarti benda sedang bergerak ke bawah, dan nol berarti benda berhenti sesaat.
+
+Perhatikan bahwa tinggi <InlineMath math="y" /> tidak otomatis menentukan arah gerak. Benda bisa berada di ketinggian yang sama saat naik dan saat turun, tetapi tanda kecepatannya berbeda.
+
+| Nilai <InlineMath math="v_y" /> | Arah Gerak | Contoh Situasi |
+| --- | --- | --- |
+| Positif | Ke atas | Bola baru dilempar ke atas |
+| Nol | Berhenti sesaat | Bola berada di titik tertinggi |
+| Negatif | Ke bawah | Bola turun kembali atau jatuh |
+
+## Bola Dijatuhkan dari Ketinggian
+
+Misalkan bola dijatuhkan dari ketinggian <InlineMath math="20\text{ m}" /> tanpa kecepatan awal. Dengan <InlineMath math="g=10\text{ m/s}^2" />, waktu sampai tanah diperoleh dari:
+
+<BlockMath math="\begin{aligned}
+0&=20-\frac{1}{2}(10)t^2\\
+5t^2&=20\\
+t&=2\text{ s}
+\end{aligned}" />
+
+Kecepatan sesaat sebelum menyentuh tanah:
+
+<BlockMath math="v_y=0-10(2)=-20\text{ m/s}" />
+
+Tanda negatif menunjukkan arah ke bawah. Jadi, besar kecepatannya <InlineMath math="20\text{ m/s}" />, tetapi arah geraknya turun.
+
+Contoh ini menunjukkan mengapa tanda pada gerak vertikal tidak boleh diabaikan. Besar kecepatan menjawab seberapa cepat bola bergerak, sedangkan tanda menjawab arah geraknya.
+
+## Terhubung ke Parabola
+
+Gerak vertikal juga muncul pada gerak parabola. Nanti, saat benda bergerak miring, bagian horizontalnya dibaca sebagai gerak mendatar, sedangkan bagian vertikalnya tetap mengikuti persamaan gravitasi seperti di halaman ini.
+
+Karena itu, pemahaman gerak jatuh bebas menjadi bekal untuk membaca lintasan peluru, bola yang dilempar, atau air yang keluar dari selang. Bagian vertikalnya tetap dipengaruhi percepatan gravitasi.

@@ -53,7 +53,7 @@ const idMaterials = [
   {
     title: "Kinematika",
     description:
-      "Seni memprediksi gerak benda dari peluru hingga satelit tanpa mempedulikan penyebabnya.",
+      "Pelajari cara menjelaskan gerak benda dari posisi, kecepatan, percepatan, sampai bentuk lintasannya.",
     href: `${BASE_PATH}/kinematics`,
     items: [
       {

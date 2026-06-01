@@ -6,12 +6,13 @@ export const LOAD_MIN_X = -1.2;
 export const LOAD_MAX_X = 1.2;
 export const LOAD_STEP = 0.1;
 export const CAMERA_POSITION = [0, 2.35, 5.5] satisfies ScenePoint;
-export const NARROW_CAMERA_POSITION = [0, 2.65, 6.5] satisfies ScenePoint;
+export const NARROW_CAMERA_POSITION = [0, 2.75, 7.8] satisfies ScenePoint;
 export const CAMERA_TARGET = [0, 0.8, 0] satisfies ScenePoint;
 
 const LOAD_WEIGHT_NEWTON = 120;
-const LABEL_OFFSET = 0.44;
-const LABEL_VECTOR_RATIO = 0.56;
+const LABEL_INNER_OFFSET = 0.28;
+const LABEL_TOWER_LIFT = 0.28;
+const LABEL_Z_OFFSET = 0.34;
 
 export type ScenePoint = readonly [number, number, number];
 export type VectorConceptSceneColors = ReturnType<typeof getSceneColors>;
@@ -71,11 +72,11 @@ export function getSceneColors(resolvedTheme: string | undefined) {
     groundLight: isDarkTheme ? getColor("SLATE") : getColor("STONE"),
     leftVector: getColor("TEAL"),
     load: getColor("AMBER"),
+    loadDetail: getColor("ORANGE"),
     rightVector: getColor("VIOLET"),
     skyLight: "#f4f4f5",
     text: isDarkTheme ? "#f4f4f5" : "#18181b",
     tower: isDarkTheme ? getColor("GRAY") : getColor("SLATE"),
-    water: getColor("CYAN"),
     wheel: isDarkTheme ? "#09090b" : "#18181b",
   };
 }
@@ -111,26 +112,17 @@ function getCableDisplay(
       start[1] + arrowEndVector.y,
       start[2] + arrowEndVector.z,
     ] satisfies ScenePoint,
-    labelPoint: getCableLabelPoint(start, arrowEndVector, cable.direction),
+    labelPoint: getCableLabelPoint(anchor),
     tension,
   };
 }
 
-function getCableLabelPoint(
-  start: ScenePoint,
-  arrowEndVector: Vector3,
-  direction: Vector3
-) {
-  const basePoint = new Vector3(...start).add(
-    arrowEndVector.clone().multiplyScalar(LABEL_VECTOR_RATIO)
-  );
-  const perpendicular = new Vector3(-direction.y, direction.x, 0).normalize();
+function getCableLabelPoint(anchor: ScenePoint) {
+  const side = Math.sign(anchor[0]) || 1;
 
-  if (direction.x > 0) {
-    perpendicular.multiplyScalar(-1);
-  }
-
-  const labelPoint = basePoint.add(perpendicular.multiplyScalar(LABEL_OFFSET));
-
-  return [labelPoint.x, labelPoint.y, labelPoint.z] satisfies ScenePoint;
+  return [
+    anchor[0] - side * LABEL_INNER_OFFSET,
+    anchor[1] + LABEL_TOWER_LIFT,
+    anchor[2] + LABEL_Z_OFFSET,
+  ] satisfies ScenePoint;
 }

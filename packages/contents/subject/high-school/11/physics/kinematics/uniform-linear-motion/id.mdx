@@ -1,0 +1,79 @@
+export const metadata = {
+  title: "Gerak Lurus Beraturan",
+  description:
+    "Pelajari gerak lurus beraturan sebagai gerak pada lintasan lurus dengan kecepatan tetap melalui jejak posisi, grafik, dan perhitungan.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/31/2026",
+  subject: "Kinematika",
+};
+
+## Gerak yang Tidak Mengubah Kecepatan
+
+Gerak lurus beraturan, disingkat GLB, adalah gerak pada lintasan lurus dengan kecepatan tetap. Tetap berarti besar kecepatannya sama dan arahnya juga tidak berubah.
+
+Bayangkan kereta kecil yang bergerak di rel lurus. Jika setiap <InlineMath math="1\text{ s}" /> kereta berpindah <InlineMath math="2\text{ m}" />, lalu detik berikutnya juga <InlineMath math="2\text{ m}" />, geraknya termasuk GLB.
+
+> Pada GLB, benda boleh terus bergerak. Yang tidak berubah adalah kecepatannya.
+
+<BlockMath math="\begin{aligned}
+\Delta x &= vt \\
+x_t &= x_0+vt
+\end{aligned}" />
+
+Simbol <InlineMath math="x_0" /> menyatakan posisi awal, <InlineMath math="x_t" /> posisi setelah waktu <InlineMath math="t" />, <InlineMath math="v" /> kecepatan, dan <InlineMath math="\Delta x" /> perpindahan.
+
+## Jejak Posisi yang Jaraknya Sama
+
+Jika posisi benda dicatat setiap selang waktu yang sama, GLB menghasilkan jarak antartitik yang sama. Ini mirip pita ticker timer: tanda dibuat berkala, sehingga jarak tanda menunjukkan seberapa jauh benda bergerak pada setiap selang waktu.
+
+Misalkan posisi awal benda <InlineMath math="x_0=1\text{ m}" /> dan kecepatannya <InlineMath math="+2\text{ m/s}" />. Artinya, setiap detik posisi bertambah <InlineMath math="2\text{ m}" />.
+
+| Waktu | Posisi |
+| --- | --- |
+| <InlineMath math="0\text{ s}" /> | <InlineMath math="1\text{ m}" /> |
+| <InlineMath math="1\text{ s}" /> | <InlineMath math="3\text{ m}" /> |
+| <InlineMath math="2\text{ s}" /> | <InlineMath math="5\text{ m}" /> |
+| <InlineMath math="3\text{ s}" /> | <InlineMath math="7\text{ m}" /> |
+| <InlineMath math="4\text{ s}" /> | <InlineMath math="9\text{ m}" /> |
+| <InlineMath math="5\text{ s}" /> | <InlineMath math="11\text{ m}" /> |
+
+Yang sama adalah selisih antarposisinya, bukan angka posisinya. Dari <InlineMath math="1" /> ke <InlineMath math="3" />, dari <InlineMath math="3" /> ke <InlineMath math="5" />, dan seterusnya, selisihnya selalu <InlineMath math="2\text{ m}" />.
+
+## Menghitung Posisi Akhir Tanpa Menebak
+
+Misalkan benda mulai dari <InlineMath math="x_0=1\text{ m}" /> dan bergerak ke kanan dengan kecepatan tetap <InlineMath math="v=2\text{ m/s}" /> selama <InlineMath math="5\text{ s}" />. Perpindahannya:
+
+<BlockMath math="\begin{aligned}
+\Delta x &= vt \\
+&= 2(5) \\
+&= 10\text{ m}
+\end{aligned}" />
+
+Posisi akhirnya:
+
+<BlockMath math="\begin{aligned}
+x_t &= x_0+\Delta x \\
+&= 1+10 \\
+&= 11\text{ m}
+\end{aligned}" />
+
+Perhitungan ini bekerja karena kecepatan tidak berubah. Jika kecepatannya berubah, kita tidak boleh langsung memakai satu nilai <InlineMath math="v" /> tetap untuk seluruh gerak.
+
+## Membaca GLB dari Grafik
+
+GLB mudah dikenali dari dua grafik dasar. Grafik kecepatan-waktu menunjukkan apakah kecepatan berubah, sedangkan grafik posisi-waktu menunjukkan bagaimana posisi bertambah.
+
+| Grafik | Bentuk pada GLB | Maknanya |
+| --- | --- | --- |
+| Kecepatan terhadap waktu | Garis horizontal | Kecepatan tetap |
+| Posisi terhadap waktu | Garis lurus miring | Posisi berubah teratur |
+
+Luas daerah di bawah grafik kecepatan-waktu sama dengan perpindahan. Untuk GLB, luasnya berbentuk persegi panjang, sehingga <InlineMath math="\Delta x=vt" />.
+
+Pada grafik posisi-waktu, kemiringan garis menyatakan kecepatan. Garis yang makin curam berarti kecepatannya lebih besar. Untuk GLB, garisnya tetap lurus karena kemiringannya tidak berubah dari awal sampai akhir.
+
+## Kelajuan Tetap Belum Tentu Kecepatan Tetap
+
+GLB membutuhkan kecepatan tetap, bukan hanya kelajuan tetap. Kelajuan hanya memperhatikan besar, sedangkan kecepatan memperhatikan besar dan arah.
+
+Mobil yang bergerak dengan kelajuan tetap di lintasan melingkar tidak termasuk GLB, karena arah kecepatannya terus berubah. Sebaliknya, kereta yang bergerak lurus dengan besar dan arah kecepatan tetap termasuk GLB.

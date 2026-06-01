@@ -53,7 +53,7 @@ const enMaterials = [
   {
     title: "Kinematics",
     description:
-      "The art of predicting motion from bullets to satellites without caring about the cause.",
+      "Learn how to describe motion through position, velocity, acceleration, and the shape of its path.",
     href: `${BASE_PATH}/kinematics`,
     items: [
       {

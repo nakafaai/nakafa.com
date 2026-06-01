@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "Jarak Henti",
+  description:
+    "Pelajari jarak henti sebagai gabungan jarak reaksi dan jarak pengereman pada gerak lurus berubah beraturan.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/31/2026",
+  subject: "Kinematika",
+};
+
+## Jarak Henti Bukan Hanya Jarak Rem
+
+Jarak henti adalah jarak total yang dibutuhkan benda bergerak sampai benar-benar berhenti. Pada kendaraan, jarak ini tidak hanya terjadi saat rem bekerja.
+
+Sebelum pengereman dimulai, pengemudi masih membutuhkan waktu reaksi. Selama waktu itu kendaraan tetap maju dengan kecepatan awalnya.
+
+<MathContainer>
+  <BlockMath math="d_{\text{henti}}=d_{\text{reaksi}}+d_{\text{rem}}" />
+  <BlockMath math="d_{\text{reaksi}}=vt_r" />
+</MathContainer>
+
+Jadi, jarak henti terdiri dari dua tahap. Tahap pertama terjadi ketika pengemudi menyadari bahaya tetapi kendaraan belum direm. Tahap kedua terjadi ketika rem sudah bekerja dan kendaraan melambat sampai berhenti.
+
+| Bagian | Apa yang Terjadi | Besaran yang Menentukan |
+| --- | --- | --- |
+| Jarak reaksi | Kendaraan masih bergerak dengan kecepatan awal | Kecepatan dan waktu reaksi |
+| Jarak pengereman | Kendaraan melambat sampai berhenti | Kecepatan awal dan besar perlambatan |
+
+## Jarak Pengereman Dibaca dari GLBB
+
+Saat rem bekerja, kendaraan mengalami perlambatan. Jika perlambatan dianggap tetap dan kecepatan akhirnya nol, persamaan GLBB dapat dipakai untuk mencari jarak pengereman.
+
+<MathContainer>
+  <BlockMath math="v_t^2=v_0^2+2a\Delta x" />
+  <BlockMath math="0=v^2-2b\,d_{\text{rem}}" />
+  <BlockMath math="d_{\text{rem}}=\frac{v^2}{2b}" />
+</MathContainer>
+
+Besaran <InlineMath math="b" /> adalah besar perlambatan, sehingga nilainya ditulis positif.
+
+Rumus ini memakai asumsi sederhana: lintasannya lurus, perlambatan rem dianggap tetap, dan kendaraan tidak tergelincir. Kalau kondisi jalan berubah, nilai <InlineMath math="b" /> juga bisa berubah.
+
+## Kecepatan Membuat Jarak Henti Cepat Membesar
+
+Jarak reaksi berbanding lurus dengan kecepatan. Jika kecepatan dua kali lebih besar, jarak reaksi juga menjadi dua kali lebih besar untuk waktu reaksi yang sama.
+
+Jarak pengereman lebih sensitif karena mengandung <InlineMath math="v^2" />. Ketika kecepatan naik, energi gerak yang perlu dikurangi oleh rem bertambah jauh lebih besar.
+
+Misalkan waktu reaksi <InlineMath math="1\text{ s}" /> dan besar perlambatan rem <InlineMath math="5\text{ m/s}^2" />.
+
+| Kecepatan | Jarak Reaksi | Jarak Pengereman | Jarak Henti |
+| --- | --- | --- | --- |
+| <InlineMath math="10\text{ m/s}" /> | <InlineMath math="10\text{ m}" /> | <InlineMath math="10\text{ m}" /> | <InlineMath math="20\text{ m}" /> |
+| <InlineMath math="20\text{ m/s}" /> | <InlineMath math="20\text{ m}" /> | <InlineMath math="40\text{ m}" /> | <InlineMath math="60\text{ m}" /> |
+| <InlineMath math="30\text{ m/s}" /> | <InlineMath math="30\text{ m}" /> | <InlineMath math="90\text{ m}" /> | <InlineMath math="120\text{ m}" /> |
+
+Saat kecepatan naik dari <InlineMath math="10" /> ke <InlineMath math="20\text{ m/s}" />, jarak henti naik dari <InlineMath math="20" /> ke <InlineMath math="60\text{ m}" />. Kenaikannya bukan sekadar dua kali karena bagian pengereman mengikuti kuadrat kecepatan.
+
+## Jarak Aman Sebelum Kendaraan Berhenti
+
+Sebuah kendaraan bergerak dengan kecepatan <InlineMath math="20\text{ m/s}" />. Waktu reaksi pengemudi <InlineMath math="1\text{ s}" /> dan besar perlambatan saat pengereman <InlineMath math="5\text{ m/s}^2" />.
+
+<MathContainer>
+  <BlockMath math="d_{\text{reaksi}}=20(1)=20\text{ m}" />
+  <BlockMath math="d_{\text{rem}}=\frac{20^2}{2(5)}=40\text{ m}" />
+  <BlockMath math="d_{\text{henti}}=20+40=60\text{ m}" />
+</MathContainer>
+
+Jadi, kendaraan membutuhkan jarak <InlineMath math="60\text{ m}" /> untuk berhenti dalam kondisi tersebut.
+
+Angka <InlineMath math="60\text{ m}" /> ini bukan hanya "jarak saat rem ditekan". Sebanyak <InlineMath math="20\text{ m}" /> terjadi sebelum rem mulai bekerja, lalu <InlineMath math="40\text{ m}" /> terjadi selama kendaraan direm.

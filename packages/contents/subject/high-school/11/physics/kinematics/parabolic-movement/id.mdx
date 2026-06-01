@@ -1,0 +1,67 @@
+export const metadata = {
+  title: "Gerak Parabola",
+  description:
+    "Pelajari gerak parabola sebagai gabungan gerak mendatar berkecepatan tetap dan gerak vertikal yang dipercepat gravitasi.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/01/2026",
+  subject: "Kinematika",
+};
+
+## Satu Bola dengan Dua Gerak Sekaligus
+
+Gerak parabola adalah gerak benda yang lintasannya melengkung karena benda bergerak mendatar sambil jatuh atau naik-turun secara vertikal. Dalam pembahasan kelas ini, hambatan udara diabaikan, sehingga satu-satunya percepatan yang bekerja adalah gravitasi ke bawah.
+
+Cara paling mudah membacanya adalah memecah gerak menjadi dua arah. Arah horizontal mengikuti gerak lurus beraturan karena kecepatannya tetap. Arah vertikal mengikuti gerak lurus berubah beraturan karena gravitasi terus mengubah kecepatan vertikalnya.
+
+<MathContainer>
+  <BlockMath math="x=v_0\cos\theta\ t" />
+  <BlockMath math="y=v_0\sin\theta\ t-\frac{1}{2}gt^2" />
+  <BlockMath math="v_x=v_0\cos\theta,\qquad v_y=v_0\sin\theta-gt" />
+</MathContainer>
+
+Di sini, <InlineMath math="v_0" /> adalah kelajuan awal, <InlineMath math="\theta" /> sudut tembak terhadap horizontal, <InlineMath math="g" /> percepatan gravitasi, <InlineMath math="x" /> posisi mendatar, dan <InlineMath math="y" /> ketinggian.
+
+## Gravitasi Mengubah Arah Vertikal Saja
+
+Bayangkan bola meninggalkan ujung lintasan dengan arah miring. Bagian mendatarnya terus maju dengan kecepatan yang sama, sedangkan bagian vertikalnya melambat saat naik lalu makin cepat saat turun.
+
+> Pada gerak parabola tanpa hambatan udara, <InlineMath math="v_x" /> tetap, tetapi <InlineMath math="v_y" /> berubah setiap saat.
+
+Kalimat itu membantu kita menghindari kesalahan umum. Benda tidak kehilangan gerak mendatarnya saat mencapai puncak. Yang menjadi nol di puncak hanya kecepatan vertikalnya.
+
+## Puncak Lintasan Tidak Menghentikan Gerak
+
+Di puncak lintasan, <InlineMath math="v_y=0" /> karena bola berhenti sesaat untuk gerak naik-turunnya. Namun, <InlineMath math="v_x" /> tetap ada, sehingga bola masih bergerak ke depan.
+
+Itulah sebabnya lintasan tidak berhenti di atas. Setelah puncak, gravitasi membuat <InlineMath math="v_y" /> bernilai negatif, artinya bola mulai turun. Sementara itu, <InlineMath math="v_x" /> tetap membawa bola maju.
+
+| Bagian gerak | Yang terjadi | Jenis gerak |
+| --- | --- | --- |
+| Horizontal | Kecepatan tetap | GLB |
+| Vertikal saat naik | Kecepatan vertikal makin kecil | GLBB diperlambat |
+| Vertikal saat turun | Kecepatan vertikal makin besar ke bawah | GLBB dipercepat |
+
+## Jangkauan Ditentukan oleh Waktu di Udara
+
+Jangkauan mendatar, biasanya ditulis <InlineMath math="R" />, adalah jarak horizontal dari titik awal sampai titik jatuh. Karena gerak horizontalnya berkecepatan tetap, jangkauan dihitung dari kecepatan horizontal dikali waktu di udara.
+
+<BlockMath math="R=v_x t_{\text{udara}}" />
+
+Jika dua bola memiliki <InlineMath math="v_x" /> yang sama, bola yang bertahan lebih lama di udara akan mendarat lebih jauh. Sebaliknya, jika waktu udaranya sama, bola dengan <InlineMath math="v_x" /> lebih besar akan punya jangkauan lebih jauh.
+
+## Bola Keluar Mendatar dari Meja
+
+Misalkan bola keluar mendatar dari tepi meja dengan <InlineMath math="v_x=4\text{ m/s}" /> dan tinggi meja <InlineMath math="1{,}25\text{ m}" />. Dengan <InlineMath math="g=10\text{ m/s}^2" />, waktu jatuhnya diperoleh dari gerak vertikal:
+
+<BlockMath math="\begin{aligned}
+y&=\frac{1}{2}gt^2\\
+1{,}25&=\frac{1}{2}(10)t^2\\
+t^2&=0{,}25\\
+t&=0{,}5\text{ s}
+\end{aligned}" />
+
+Jangkauan mendatarnya:
+
+<BlockMath math="R=v_x t=4(0{,}5)=2\text{ m}" />
+
+Jadi, bola mendarat sejauh <InlineMath math="2\text{ m}" /> dari kaki meja. Perhatikan bahwa waktu jatuh ditentukan oleh gerak vertikal, sedangkan jarak mendatar ditentukan oleh gerak horizontal selama waktu itu.

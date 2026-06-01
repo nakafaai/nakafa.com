@@ -55,6 +55,7 @@ export function ThreeLabel({
         frustumCulled={false}
         material={material}
         material-depthTest={false}
+        raycast={() => null}
         renderOrder={renderOrder}
         rotation={rotation}
       >

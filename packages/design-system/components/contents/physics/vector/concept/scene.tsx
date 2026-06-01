@@ -35,6 +35,8 @@ export function VectorConceptScene({
       />
       <LoadCart
         color={colors.load}
+        detailColor={colors.loadDetail}
+        hubColor={colors.tower}
         position={loadPoint}
         wheelColor={colors.wheel}
       />
@@ -55,7 +57,6 @@ export function VectorConceptScene({
       />
 
       <SceneLabel
-        alwaysOnTop
         color={colors.leftVector}
         fontSize={THREE_FONT_SIZE.annotation}
         position={left.labelPoint}
@@ -63,7 +64,6 @@ export function VectorConceptScene({
         {`${labels.leftCable} ${Math.round(left.tension)} N`}
       </SceneLabel>
       <SceneLabel
-        alwaysOnTop
         color={colors.rightVector}
         fontSize={THREE_FONT_SIZE.annotation}
         position={right.labelPoint}
@@ -96,42 +96,88 @@ function BridgeStructure({ colors }: { colors: VectorConceptSceneColors }) {
           </mesh>
         </group>
       ))}
-      <mesh
-        position={[0, -0.16, 0]}
-        receiveShadow
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <planeGeometry args={[6.2, 2.2]} />
-        <meshStandardMaterial color={colors.water} opacity={0.24} transparent />
-      </mesh>
     </group>
   );
 }
 
 function LoadCart({
   color,
+  detailColor,
+  hubColor,
   position,
   wheelColor,
 }: {
   color: string;
+  detailColor: string;
+  hubColor: string;
   position: ScenePoint;
   wheelColor: string;
 }) {
+  const wheelPositions = [-0.22, 0.22].flatMap((x) =>
+    [-0.32, 0.32].map((z) => [x, z] as const)
+  );
+
   return (
     <group position={[position[0], position[1] + 0.03, position[2]]}>
-      <RoundedBox args={[0.52, 0.24, 0.42]} radius={0.05} smoothness={4}>
+      <RoundedBox
+        args={[0.66, 0.28, 0.52]}
+        castShadow
+        radius={0.05}
+        smoothness={4}
+      >
         <meshStandardMaterial color={color} roughness={0.5} />
       </RoundedBox>
-      {[-0.16, 0.16].map((x) => (
+      <RoundedBox
+        args={[0.54, 0.08, 0.42]}
+        castShadow
+        position={[0, 0.17, 0]}
+        radius={0.04}
+        smoothness={3}
+      >
+        <meshStandardMaterial color={detailColor} roughness={0.55} />
+      </RoundedBox>
+      {[-0.22, 0.22].map((x) => (
         <mesh
-          key={`wheel-${x}`}
-          position={[x, -0.17, 0.24]}
+          castShadow
+          key={`axle-${x}`}
+          position={[x, -0.18, 0]}
           rotation={[Math.PI / 2, 0, 0]}
         >
-          <cylinderGeometry args={[0.07, 0.07, 0.05, 24]} />
-          <meshStandardMaterial color={wheelColor} roughness={0.52} />
+          <cylinderGeometry args={[0.024, 0.024, 0.76, 16]} />
+          <meshStandardMaterial color={wheelColor} roughness={0.58} />
         </mesh>
       ))}
+      {wheelPositions.map(([x, z]) => (
+        <LoadCartWheel
+          color={wheelColor}
+          hubColor={hubColor}
+          key={`wheel-${x}-${z}`}
+          position={[x, -0.18, z] satisfies ScenePoint}
+        />
+      ))}
+    </group>
+  );
+}
+
+function LoadCartWheel({
+  color,
+  hubColor,
+  position,
+}: {
+  color: string;
+  hubColor: string;
+  position: ScenePoint;
+}) {
+  return (
+    <group position={position} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh castShadow>
+        <cylinderGeometry args={[0.09, 0.09, 0.07, 28]} />
+        <meshStandardMaterial color={color} roughness={0.54} />
+      </mesh>
+      <mesh position={[0, 0, 0.038]}>
+        <cylinderGeometry args={[0.038, 0.038, 0.01, 20]} />
+        <meshStandardMaterial color={hubColor} roughness={0.48} />
+      </mesh>
     </group>
   );
 }

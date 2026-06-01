@@ -1,0 +1,73 @@
+export const metadata = {
+  title: "Average Velocity and Average Speed",
+  description:
+    "Learn how to calculate average velocity and average speed from displacement, distance, and elapsed time.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/31/2026",
+  subject: "Kinematics",
+};
+
+## An Average Is Read from One Time Interval
+
+When we talk about an average value, we are not reading one small moment like a speedometer. We take the starting state, the ending state, and the whole observation time, then ask, "overall, what motion would this trip be equivalent to?"
+
+Average velocity uses displacement. Since displacement has direction, average velocity keeps direction too. Average speed uses the total distance actually traveled, so it only tells how quickly the path was covered without direction.
+
+> If the path bends or comes back, distance and displacement no longer tell the same story.
+
+<MathContainer>
+  <BlockMath math="\bar{v}=\frac{\Delta x}{\Delta t}" />
+  <BlockMath math="\text{average speed}=\frac{s_{\text{total}}}{\Delta t}" />
+</MathContainer>
+
+The symbol <InlineMath math="\Delta x" /> or <InlineMath math="\Delta \vec{r}" /> means the change in position from start to finish. The symbol <InlineMath math="s_{\text{total}}" /> means the length of the path traveled during the trip.
+
+## The Same Time Interval Can Describe Different Trips
+
+Suppose two trips both take <InlineMath math="3 \text{ s}" />. The first trip goes straight <InlineMath math="6 \text{ m}" /> to the right. The second trip goes <InlineMath math="6 \text{ m}" /> to the right and then <InlineMath math="3 \text{ m}" /> back to the left. The time is the same, but the distance and displacement are different.
+
+| Trip | Total Distance | Displacement | What the Average Tells Us |
+| --- | --- | --- | --- |
+| Straight to the right | <InlineMath math="6 \text{ m}" /> | <InlineMath math="6 \text{ m}" /> to the right | Average speed and average velocity have the same magnitude |
+| Right then back | <InlineMath math="9 \text{ m}" /> | <InlineMath math="3 \text{ m}" /> to the right | Average speed is larger than average velocity magnitude |
+
+This table shows where the difference comes from. The time does not change, but the numerator in the formula changes.
+
+## A Return Route Separates the Numbers
+
+On the return route, the object moves <InlineMath math="6 \text{ m}" /> to the right and then <InlineMath math="3 \text{ m}" /> to the left in <InlineMath math="3 \text{ s}" />.
+
+The total distance is <InlineMath math="9 \text{ m}" />, but the displacement is only <InlineMath math="3 \text{ m}" /> to the right.
+
+<MathContainer>
+  <BlockMath math="\text{average speed}=\frac{9}{3}=3\text{ m/s}" />
+  <BlockMath math="\bar{v}=\frac{3}{3}=1\text{ m/s to the right}" />
+</MathContainer>
+
+Notice that both calculations use the same time interval. The difference appears because the numerator is different: average speed uses the whole path, while average velocity uses the change in position.
+
+## The Sign Shows the Direction of Average Velocity
+
+If we choose the rightward direction as positive, displacement to the right is positive and displacement to the left is negative. That sign carries into average velocity.
+
+For example, an object starts at <InlineMath math="x=8 \text{ m}" /> and ends at <InlineMath math="x=2 \text{ m}" /> in <InlineMath math="2 \text{ s}" />.
+
+<MathContainer>
+  <BlockMath math="\Delta x=2-8=-6\text{ m}" />
+  <BlockMath math="\bar{v}=\frac{-6}{2}=-3\text{ m/s}" />
+</MathContainer>
+
+A negative value does not mean the motion is "slower than zero." It means the average velocity points to the left relative to the axis we chose.
+
+## A Loop Can Have Zero Average Velocity
+
+If an object returns to its starting point, its displacement is <InlineMath math="0 \text{ m}" />. As a result, its average velocity is <InlineMath math="0 \text{ m/s}" /> even though its average speed can still be greater than zero.
+
+For a loop trip, the path still has length. But the start-to-finish change in position becomes zero because the starting point and ending point are the same.
+
+| Question | Quantity Used | Value Being Asked |
+| --- | --- | --- |
+| How much path is covered each second? | Total distance | Average speed |
+| How much does position change each second? | Displacement | Average velocity |
+
+So, before using a formula, first check whether the question asks for distance or displacement. That is the fastest way to avoid mixing up average speed and average velocity.

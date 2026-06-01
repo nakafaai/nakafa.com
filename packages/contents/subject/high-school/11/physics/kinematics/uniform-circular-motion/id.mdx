@@ -1,0 +1,87 @@
+export const metadata = {
+  title: "Gerak Melingkar Beraturan",
+  description:
+    "Pelajari gerak melingkar beraturan dari sudut tempuh, periode, frekuensi, kecepatan linear, dan percepatan sentripetal.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "06/01/2026",
+  subject: "Kinematika",
+};
+
+## Kelajuan Tetap Tetapi Arah Terus Berubah
+
+Gerak melingkar beraturan adalah gerak benda pada lintasan berbentuk lingkaran dengan kelajuan tetap. Kata "beraturan" di sini bukan berarti semua hal tetap. Yang tetap adalah besar kelajuannya, sedangkan arah geraknya berubah terus karena benda selalu mengikuti lengkungan lintasan.
+
+Bayangkan mobil kecil yang bergerak mengelilingi lintasan bundar. Dalam setiap detik, mobil dapat menempuh panjang lintasan yang sama. Namun, arah kecepatan mobil di sisi kanan lintasan berbeda dari arah kecepatan mobil di sisi atas lintasan.
+
+> Pada gerak melingkar beraturan, kelajuan tetap, tetapi kecepatan tetap berubah karena arahnya berubah.
+
+Inilah perbedaan penting antara kelajuan dan kecepatan. Kelajuan hanya melihat seberapa cepat benda menempuh lintasan. Kecepatan melihat kelajuan sekaligus arah gerak.
+
+## Sudut Tempuh Membaca Posisi di Lingkaran
+
+Pada gerak lurus, posisi sering dibaca dengan jarak dari titik nol. Pada gerak melingkar, posisi lebih enak dibaca dengan sudut. Sudut yang sudah dilalui benda disebut sudut tempuh.
+
+Jika benda bergerak dari garis acuan lalu menyapu sudut <InlineMath math="\Delta\theta" /> dalam waktu <InlineMath math="\Delta t" />, kecepatan sudutnya adalah:
+
+<BlockMath math="\omega=\frac{\Delta\theta}{\Delta t}" />
+
+Simbol <InlineMath math="\omega" /> dibaca omega. Satuannya radian per sekon, ditulis <InlineMath math="\text{rad/s}" />. Radian dipakai karena satu putaran penuh sama dengan <InlineMath math="2\pi" /> radian.
+
+## Periode dan Frekuensi Membaca Putaran yang Sama
+
+Satu putaran penuh dapat dibaca dengan dua cara. Periode, ditulis <InlineMath math="T" />, adalah waktu yang dibutuhkan untuk satu putaran. Frekuensi, ditulis <InlineMath math="f" />, adalah banyak putaran tiap sekon.
+
+Keduanya saling berkebalikan:
+
+<MathContainer>
+  <BlockMath math="f=\frac{1}{T}" />
+  <BlockMath math="\omega=\frac{2\pi}{T}=2\pi f" />
+</MathContainer>
+
+Jika periode lebih kecil, benda menyelesaikan satu putaran lebih cepat. Akibatnya, frekuensi dan kecepatan sudutnya lebih besar.
+
+## Arah di Lingkaran
+
+Pada setiap titik lintasan melingkar, arah kecepatan selalu menyinggung lingkaran. Arah percepatan sentripetal selalu menuju pusat lingkaran. Dua arah ini saling tegak lurus, sehingga benda dapat memiliki kelajuan tetap tetapi tetap mengalami percepatan.
+
+Bayangkan benda kecil sedang berada di sisi kanan lingkaran dan bergerak berlawanan arah jarum jam. Kecepatannya menunjuk ke atas mengikuti arah lintasan, sedangkan percepatannya menunjuk ke kiri menuju pusat. Arah inilah yang membuat gerak melingkar tidak sama dengan gerak lurus biasa.
+
+## Kecepatan Linear Terhubung dengan Kecepatan Sudut
+
+Kecepatan linear adalah kelajuan benda di sepanjang lintasan lingkaran. Jika jari-jari lintasan <InlineMath math="r" />, maka keliling satu putaran adalah <InlineMath math="2\pi r" />. Karena satu putaran ditempuh dalam waktu <InlineMath math="T" />, kecepatan linearnya menjadi:
+
+<MathContainer>
+  <BlockMath math="v=\frac{2\pi r}{T}" />
+  <BlockMath math="v=\omega r" />
+</MathContainer>
+
+Rumus <InlineMath math="v=\omega r" /> berarti dua benda yang punya kecepatan sudut sama belum tentu punya kecepatan linear sama. Benda yang lebih jauh dari pusat memiliki lintasan lebih panjang, sehingga kecepatan linearnya lebih besar.
+
+## Percepatan Sentripetal Selalu Menuju Pusat
+
+Walaupun kelajuan tetap, arah kecepatan terus berbelok. Perubahan arah kecepatan ini membutuhkan percepatan. Pada gerak melingkar beraturan, percepatan tersebut disebut percepatan sentripetal.
+
+<MathContainer>
+  <BlockMath math="a_s=\frac{v^2}{r}" />
+  <BlockMath math="a_s=\omega^2 r" />
+</MathContainer>
+
+Arah percepatan sentripetal selalu menuju pusat lingkaran. Jadi, jangan bayangkan percepatan ini searah gerak benda. Kecepatan menyinggung lintasan, sedangkan percepatan sentripetal menunjuk ke dalam.
+
+## Perhitungan Satu Putaran Mobil Kecil
+
+Misalkan sebuah mobil kecil bergerak pada lintasan berjari-jari <InlineMath math="4\text{ m}" /> dan menyelesaikan satu putaran dalam <InlineMath math="6\text{ s}" />.
+
+Kecepatan sudutnya:
+
+<BlockMath math="\omega=\frac{2\pi}{T}=\frac{2\pi}{6}=\frac{\pi}{3}\text{ rad/s}" />
+
+Kecepatan linearnya:
+
+<BlockMath math="v=\omega r=\frac{\pi}{3}(4)=\frac{4\pi}{3}\text{ m/s}\approx4{,}19\text{ m/s}" />
+
+Percepatan sentripetalnya:
+
+<BlockMath math="a_s=\frac{v^2}{r}=\frac{(4{,}19)^2}{4}\approx4{,}39\text{ m/s}^2" />
+
+Jadi, mobil itu bergerak dengan kelajuan tetap sekitar <InlineMath math="4{,}19\text{ m/s}" />, tetapi tetap memiliki percepatan sekitar <InlineMath math="4{,}39\text{ m/s}^2" /> karena arah kecepatannya terus berubah.

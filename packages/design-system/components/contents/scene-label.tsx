@@ -36,6 +36,7 @@ export function SceneLabel({
           color={color}
           font={MONO_FONT_PATH}
           fontSize={resolvedFontSize}
+          raycast={() => null}
           renderOrder={alwaysOnTop ? 10 : undefined}
         >
           {children}
