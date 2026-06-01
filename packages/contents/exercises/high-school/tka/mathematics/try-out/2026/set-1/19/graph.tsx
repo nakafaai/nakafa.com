@@ -36,7 +36,7 @@ export function Graph({ title, description }: Props) {
   const chartConfig = {
     y: {
       label: "y",
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
   };
 
@@ -104,7 +104,7 @@ export function Graph({ title, description }: Props) {
             <Line
               dataKey="y"
               dot={false}
-              stroke="var(--color-y)"
+              stroke="var(--color-y-0)"
               strokeWidth={2}
               type="monotone"
             />

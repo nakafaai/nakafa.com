@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 export type CurrentUser = NonNullable<
-  FunctionReturnType<typeof api.auth.getCurrentUser>
+  FunctionReturnType<typeof api.auth.queries.getCurrentUser>
 >;
 
 interface UserContextValue {
@@ -31,7 +31,9 @@ export function UserContextProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { data: user, isPending } = useQueryWithStatus(api.auth.getCurrentUser);
+  const { data: user, isPending } = useQueryWithStatus(
+    api.auth.queries.getCurrentUser
+  );
   const currentUser = user ?? null;
   const appUser = currentUser?.appUser ?? null;
   const userId = currentUser?.appUser._id ?? null;

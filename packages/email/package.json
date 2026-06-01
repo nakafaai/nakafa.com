@@ -7,14 +7,13 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@react-email/components": "1.0.12",
     "@t3-oss/env-nextjs": "^0.13.11",
     "class-variance-authority": "^0.7.1",
     "effect": "^3.21.2",
     "react": "19.2.6",
     "react-dom": "19.2.6",
-    "react-email": "6.1.5",
-    "resend": "^6.12.3"
+    "react-email": "6.5.0",
+    "resend": "^6.12.4"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

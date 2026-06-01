@@ -1,6 +1,6 @@
-import { Section, Text } from "@react-email/components";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ReactNode } from "react";
+import { Section, Text } from "react-email";
 
 const alertVariants = cva(
   "relative flex w-full flex-col gap-1 rounded-lg border px-4 py-3 text-sm",

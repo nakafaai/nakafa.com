@@ -85,7 +85,7 @@ const enMaterials = [
   {
     title: "Accounting",
     description:
-      "How accounting records financial activity and supports business decisions.",
+      "How transactions are recorded, financial position is read, and reports support business decisions.",
     href: `${BASE_PATH}/accounting`,
     items: [
       {

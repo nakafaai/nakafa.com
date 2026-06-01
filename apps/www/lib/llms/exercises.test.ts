@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCachedLlmsExerciseText } from "@/lib/llms/exercises";

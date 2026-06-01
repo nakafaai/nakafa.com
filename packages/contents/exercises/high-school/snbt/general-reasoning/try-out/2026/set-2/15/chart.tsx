@@ -75,11 +75,11 @@ export function SalesChart({ lang = "en" }: Props) {
   const chartConfig = {
     grainPrice: {
       label: t.labels.grainPrice,
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     governmentPrice: {
       label: t.labels.governmentPrice,
-      color: "var(--chart-2)",
+      colors: { light: ["var(--chart-2)"] },
     },
   } satisfies ChartConfig;
 
@@ -122,14 +122,14 @@ export function SalesChart({ lang = "en" }: Props) {
             <RechartsLine
               dataKey="grainPrice"
               dot={{ r: 4 }}
-              stroke={chartConfig.grainPrice.color}
+              stroke="var(--color-grainPrice-0)"
               strokeWidth={2}
               type="monotone"
             />
             <RechartsLine
               dataKey="governmentPrice"
               dot={{ r: 4 }}
-              stroke={chartConfig.governmentPrice.color}
+              stroke="var(--color-governmentPrice-0)"
               strokeWidth={2}
               type="monotone"
             />

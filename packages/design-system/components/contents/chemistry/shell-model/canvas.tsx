@@ -60,7 +60,15 @@ export function ShellModelCanvas({
             groundColor={sceneColors.groundLight}
             intensity={0.62}
           />
-          <directionalLight intensity={1.3} position={[4, 6, 5]} />
+          <directionalLight
+            castShadow
+            intensity={1.3}
+            position={[4, 6, 5]}
+            shadow-bias={-0.0006}
+            shadow-mapSize-height={1024}
+            shadow-mapSize-width={1024}
+            shadow-normalBias={0.02}
+          />
           <ShellModelScene
             colors={sceneColors}
             outerShellKey={outerShellKey}

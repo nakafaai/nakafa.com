@@ -189,15 +189,17 @@ print(f"Hasil fungsi cetak_pesan: {hasil}")  # Output: Hasil fungsi cetak_pesan:
 Variabel dalam Python memiliki lingkup (scope) yang menentukan di mana variabel dapat diakses. Pemahaman tentang lingkup variabel penting untuk menghindari kesalahan dalam program.
 
 <Mermaid
+  title="Di Mana Variabel Fungsi Bisa Dibaca"
+  description="Ikuti pencarian nama dari ruang lokal ke luar fungsi agar aturan scope mudah dilacak."
   chart={`
     flowchart TD
         A[Built-in Scope] --> B[Global Scope]
         B --> C[Enclosing Scope]
         C --> D[Local Scope]
-        A1[Fungsi built-in Python print, len, range] --> A
-        B1[Variabel di luar fungsi dapat diakses di mana saja] --> B
-        C1[Variabel di fungsi luar untuk nested functions] --> C
-        D1[Variabel di dalam fungsi hanya dapat diakses lokal] --> D
+        A1[Fungsi bawaan] --> A
+        B1[Variabel global] --> B
+        C1[Variabel enclosing] --> C
+        D1[Variabel lokal] --> D
   `}
 />
 

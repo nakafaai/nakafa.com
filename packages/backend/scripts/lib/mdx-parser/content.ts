@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import * as fs from "node:fs/promises";
-import * as path from "node:path";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import {
   CONST_CHOICES_REGEX,
   DEFAULT_EXPORT_REGEX,
@@ -88,7 +88,7 @@ export const readMdxFile = Effect.fn("mdx.readMdxFile")(function* (
   filePath: string
 ) {
   const content = yield* Effect.tryPromise({
-    try: () => fs.readFile(filePath, "utf8"),
+    try: () => readFile(filePath, "utf8"),
     catch: (error) =>
       new MdxReadError({
         message: error instanceof Error ? error.message : String(error),
@@ -105,10 +105,10 @@ export const readMdxFile = Effect.fn("mdx.readMdxFile")(function* (
 /** Reads optional exercise choices, returning null when no valid choices exist. */
 export const readExerciseChoices = Effect.fn("mdx.readExerciseChoices")(
   function* (exerciseDir: string) {
-    const choicesPath = path.join(exerciseDir, "choices.ts");
+    const choicesPath = join(exerciseDir, "choices.ts");
     const file = yield* Effect.either(
       Effect.tryPromise({
-        try: () => fs.readFile(choicesPath, "utf8"),
+        try: () => readFile(choicesPath, "utf8"),
         catch: (error) =>
           new MdxReadError({
             message: error instanceof Error ? error.message : String(error),
@@ -157,10 +157,10 @@ export const readExerciseChoices = Effect.fn("mdx.readExerciseChoices")(
 /** Reads optional article references, dropping invalid entries instead of failing sync. */
 export const readArticleReferences = Effect.fn("mdx.readArticleReferences")(
   function* (articleDir: string) {
-    const refPath = path.join(articleDir, "ref.ts");
+    const refPath = join(articleDir, "ref.ts");
     const file = yield* Effect.either(
       Effect.tryPromise({
-        try: () => fs.readFile(refPath, "utf8"),
+        try: () => readFile(refPath, "utf8"),
         catch: (error) =>
           new MdxReadError({
             message: error instanceof Error ? error.message : String(error),

@@ -28,7 +28,7 @@ export function SchoolClassesDeleteDialog({
     <ResponsiveDialog
       description={description}
       footer={
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <>
           <Button
             disabled={isPending}
             onClick={() => setOpenAction(false)}
@@ -46,7 +46,7 @@ export function SchoolClassesDeleteDialog({
             <Spinner icon={Delete02Icon} isLoading={isPending} />
             {t("delete")}
           </Button>
-        </div>
+        </>
       }
       open={open}
       setOpen={setOpenAction}

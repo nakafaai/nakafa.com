@@ -1,3 +1,3 @@
-import { Buffer as BufferPolyfill } from "buffer";
+import { Buffer } from "buffer";
 
-globalThis.Buffer = BufferPolyfill;
+globalThis.Buffer = Buffer;

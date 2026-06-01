@@ -52,7 +52,7 @@ export function TryoutStartConfirmDialog({
     <ResponsiveDialog
       description={description}
       footer={
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <>
           <Button
             onClick={() => setOpenAction(false)}
             type="button"
@@ -68,7 +68,7 @@ export function TryoutStartConfirmDialog({
           >
             {confirmLabel}
           </TryoutStartActionButton>
-        </div>
+        </>
       }
       open={isOpen}
       setOpen={setOpenAction}

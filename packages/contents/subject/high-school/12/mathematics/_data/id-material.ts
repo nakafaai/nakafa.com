@@ -93,7 +93,7 @@ const idMaterials = [
   {
     title: "Kombinatorik",
     description:
-      "Menggabungkan elemen dengan cara yang unik untuk memecahkan masalah kompleks.",
+      "Aturan pengisian tempat, permutasi, dan kombinasi untuk menghitung banyak susunan tanpa mendata satu per satu.",
     href: `${BASE_PATH}/combinatorics`,
     items: [
       {

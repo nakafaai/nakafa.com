@@ -1,6 +1,6 @@
 {
   "name": "nakafa",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "license": "SEE LICENSE IN LICENSE",
   "bin": {
@@ -31,32 +31,39 @@
     "boundaries": "turbo boundaries",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "bump-deps": "pnpm dlx npm-check-updates --deep -u -x recharts,better-auth,@modelcontextprotocol/sdk,date-fns && turbo run bump-deps --filter=cas",
+    "bump-deps": "pnpm dlx npm-check-updates --deep -u -x pnpm,better-auth && turbo run bump-deps --filter=cas",
     "bump-ui": "pnpm dlx shadcn@latest add --all --overwrite -c packages/design-system",
-    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/*/.cache packages/*/.cache apps/*/.turbo packages/*/.turbo apps/*/.ruff_cache apps/*/.pytest_cache apps/*/.venv .turbo .next apps/*/.next apps/*/.react-email packages/*/.react-email coverage apps/*/coverage packages/*/coverage && find apps packages -name __pycache__ -type d -prune -exec rm -rf {} +",
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules .cache apps/*/.cache packages/*/.cache .pnpm-store apps/*/.turbo packages/*/.turbo apps/*/.ruff_cache apps/*/.pytest_cache apps/*/.venv apps/*/.coverage .turbo .next apps/*/.next apps/*/.react-email packages/*/.react-email .vercel/output apps/*/.vercel/output coverage apps/*/coverage packages/*/coverage && find apps packages -name __pycache__ -type d -prune -exec rm -rf {} +",
     "clean:ts": "find . -name '*.tsbuildinfo' -type f -delete && find . -name 'tsconfig.tsbuildinfo' -type f -delete",
     "deps-check-www": "cd apps/www && depcheck --ignore-dirs=node_modules || true",
     "deps-check-api": "cd apps/api && depcheck --ignore-dirs=node_modules || true",
     "deps-check-mcp": "cd apps/mcp && depcheck --ignore-dirs=node_modules || true"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.15",
+    "@biomejs/biome": "2.4.16",
     "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.31.0",
     "@effect/language-service": "^0.86.2",
     "@repo/typescript-config": "workspace:*",
-    "@turbo/gen": "^2.9.14",
+    "@turbo/gen": "^2.9.16",
     "@types/node": "^25.9.1",
-    "@vercel/config": "^0.5.0",
+    "@vercel/config": "^0.5.1",
     "depcheck": "^1.4.7",
     "tsup": "^8.5.1",
-    "turbo": "^2.9.14",
+    "turbo": "^2.9.16",
     "typescript": "^6.0.3",
-    "ultracite": "^7.7.0"
+    "ultracite": "^7.8.0"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "^22.22.0",
+      "onFail": "download"
+    }
   },
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@11.1.3",
+  "packageManager": "pnpm@10.34.1",
   "type": "module"
 }

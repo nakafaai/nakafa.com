@@ -8,7 +8,7 @@
 <meta name="keywords" content="{{关键词}}">
 <meta name="generator" content="Kami">
 <style>
-  /* Regular weight */
+  /* W04 / regular face for body text */
   @font-face {
     font-family: "TsangerJinKai02";
     src: url("../fonts/TsangerJinKai02-W04.ttf") format("truetype"),
@@ -17,7 +17,7 @@
     font-style: normal;
   }
 
-  /* Bold weight - W05 for all bold variants */
+  /* W05 / medium face for headings (no synthetic bold) */
   @font-face {
     font-family: "TsangerJinKai02";
     src: url("../fonts/TsangerJinKai02-W05.ttf") format("truetype"),
@@ -28,7 +28,7 @@
 
 @page {
     size: A4;
-    margin: 9mm 13mm 9mm 13mm;
+    margin: 11mm 13mm 11mm 13mm;
     background: #f5f4ed;
   }
 
@@ -37,34 +37,36 @@
   :root {
     --parchment: #f5f4ed;
     --ivory:     #faf9f5;
-    --sand:      #e8e6dc;
     --border:    #e8e6dc;
     --border-soft: #e5e3d8;
     --near-black: #141413;
     --dark-warm: #3d3d3a;
-    --olive:     #5e5d59;
-    --stone:     #87867f;
+    --olive:     #504e49;
+    --stone:     #6b6a64;
     --brand:     #1B365D;
     --brand-tint: #EEF2F7;          /* solid equivalent of rgba(1B365D, 0.08), avoids tag double-rectangle bug */
-    --brand-tint-strong: #E4ECF5;   /* solid equivalent of rgba(1B365D, 0.14) */
+    --serif: "TsangerJinKai02", "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", Georgia, serif;
+    --sans: var(--serif);
   }
 
   html, body { background: var(--parchment); }
 
   @media screen {
-    body { max-width: 210mm; margin: 0 auto; padding: 9mm 13mm; }
+    body { max-width: 210mm; margin: 0 auto; padding: 11mm 13mm; }
   }
 
   body {
     color: var(--near-black);
-    font-family: "TsangerJinKai02", "Noto Serif CJK SC", "DejaVu Serif", "PingFang SC", Georgia, serif;
+    font-family: var(--serif);
     font-size: 9.2pt;
-    line-height: 1.38;
-    letter-spacing: 0.15pt;
+    line-height: 1.42;
+    letter-spacing: 0.3pt;
+    widows: 3;
+    orphans: 3;
   }
 
   .serif {
-    font-family: "TsangerJinKai02", "DejaVu Serif", "Noto Serif CJK SC", Georgia, serif;
+    font-family: var(--serif);
   }
 
   a { color: var(--brand); text-decoration: none; }
@@ -74,16 +76,17 @@
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    padding-bottom: 3mm;
     margin-bottom: 3mm;
-    border-bottom: 0.5pt solid #e3baa9;
+    border-left: 2.5pt solid var(--brand);
+    border-radius: 1.5pt;
+    padding-left: 8pt;
   }
   .header > div:first-child { flex-shrink: 0; }
   .name {
-    font-family: "TsangerJinKai02", "DejaVu Serif", "Noto Serif CJK SC", Georgia, serif;
+    font-family: var(--serif);
     font-size: 26.5pt;
     font-weight: 500;
-    letter-spacing: 1pt;
+    letter-spacing: 0.5pt;
     color: var(--near-black);
     line-height: 1;
     margin-bottom: 0;
@@ -113,6 +116,8 @@
   }
   .contact a { color: var(--dark-warm); }
   .contact .loc { color: var(--olive); font-weight: 500; }
+  .contact .role { color: var(--brand); font-size: 10.5pt; font-weight: 500; }
+  .contact .sep { color: var(--border); margin: 0 0.4em; }
 
   /* METRICS */
   .metrics { display: flex; gap: 6mm; margin-bottom: 3mm; margin-left: 0; margin-right: 0; }
@@ -126,12 +131,13 @@
     break-inside: avoid;
   }
   .metric-value {
-    font-family: "TsangerJinKai02", "DejaVu Serif", Georgia, serif;
+    font-family: var(--serif);
     font-size: 13pt;
     font-weight: 500;
     color: var(--brand);
     line-height: 1;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
   .metric-label { font-size: 9pt; color: var(--olive); line-height: 1.2; }
 
@@ -142,9 +148,17 @@
     color: var(--brand);
   }
 
+  .metrics--stack .metric {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5mm;
+    padding-bottom: 2mm;
+    border-bottom: 0.3pt dotted var(--border);
+  }
+
   /* SECTION */
   .section-title {
-    font-family: "TsangerJinKai02", "DejaVu Serif", "Noto Serif CJK SC", Georgia, serif;
+    font-family: var(--serif);
     font-size: 12.5pt;
     font-weight: 500;
     color: var(--near-black);
@@ -158,7 +172,7 @@
   }
   .section-title .sub {
     margin-left: auto;
-    font-family: "TsangerJinKai02", "Noto Serif CJK SC", Georgia, serif;
+    font-family: var(--serif);
     font-weight: 400;
     font-size: 9pt;
     color: var(--stone);
@@ -174,7 +188,7 @@
   .section-title + .edu-row { padding-top: 1.2mm; }
 
   /* SUMMARY */
-  .summary { font-size: 9.2pt; line-height: 1.40; color: var(--near-black); }
+  .summary { font-size: 9.2pt; line-height: 1.42; color: var(--near-black); }
   .summary .em-brand { color: var(--brand); }
   .summary .hl { color: var(--brand); }
 
@@ -190,7 +204,7 @@
     margin-bottom: 0.5mm;
   }
   .tl-year {
-    font-family: "TsangerJinKai02", "DejaVu Serif", Georgia, serif;
+    font-family: var(--serif);
     font-size: 11pt; font-weight: 500;
     color: var(--brand); line-height: 1;
   }
@@ -198,7 +212,7 @@
     font-size: 11pt; font-weight: 500;
     color: var(--near-black);
   }
-  .tl-body { font-size: 9pt; color: var(--olive); line-height: 1.40; letter-spacing: 0; }
+  .tl-body { font-size: 9pt; color: var(--olive); line-height: 1.40; letter-spacing: 0.3pt; }
 
   /* PROJECTS */
   .project {
@@ -212,7 +226,7 @@
     gap: 2mm; margin-bottom: 0.75mm;
   }
   .proj-name {
-    font-family: "TsangerJinKai02", "DejaVu Serif", "Noto Serif CJK SC", Georgia, serif;
+    font-family: var(--serif);
     font-size: 11pt; font-weight: 500; color: var(--near-black);
   }
   .proj-kind { font-size: 11pt; color: var(--olive); }
@@ -231,7 +245,7 @@
   }
   .proj-text {
     display: table-cell; font-size: 9pt;
-    color: var(--near-black); line-height: 1.40; letter-spacing: 0;
+    color: var(--near-black); line-height: 1.40; letter-spacing: 0.3pt;
     padding: 0 0 0.4mm 0.5mm;
   }
   .proj-text .hl { color: var(--brand); }
@@ -251,7 +265,7 @@
 
   /* OPEN SOURCE - NEW ENHANCED LAYOUT */
   .os-intro {
-    font-size: 9.2pt; line-height: 1.40; letter-spacing: 0;
+    font-size: 9.2pt; line-height: 1.40; letter-spacing: 0.3pt;
     color: var(--near-black);
     padding: 0; margin: 1.2mm 0 2mm 0;
     background: transparent;
@@ -271,8 +285,10 @@
     border-bottom: 0.3pt dotted var(--border);
     break-inside: avoid;
   }
+  .os-item:last-child,
+  .os-item:nth-last-child(2):nth-child(odd) { border-bottom: none; }
   .os-name {
-    font-family: "TsangerJinKai02", "DejaVu Serif", Georgia, serif;
+    font-family: var(--serif);
     font-size: 10pt; font-weight: 500;
     flex-shrink: 0; min-width: 14mm;
   }
@@ -288,11 +304,10 @@
     margin-top: 2.5mm;
     padding: 1.8mm 2.8mm;
     background: var(--brand-tint);
-    border: 0.4pt solid #D6E1EE;
-    border-radius: 2pt;
+    border-left: 1.4pt solid var(--brand);
     font-size: 9pt; line-height: 1.40;
     color: var(--near-black);
-    letter-spacing: 0;
+    letter-spacing: 0.3pt;
     break-inside: avoid;
   }
   .os-highlight .hl { color: var(--brand); }
@@ -306,55 +321,55 @@
   }
 
   /* AI CONVICTION - NEW SECTION */
-  .ai-conviction {
+  .convictions {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 2.5mm;
     margin-top: 1.2mm;
   }
-  .ai-card {
+  .conv-card {
     background: transparent;
     border: none;
     border-radius: 0;
     padding: 0 2mm 0 0;
     break-inside: avoid;
   }
-  .ai-card-head {
-    font-family: "TsangerJinKai02", "DejaVu Serif", "Noto Serif CJK SC", Georgia, serif;
+  .conv-head, .ai-card-head {
+    font-family: var(--serif);
     font-size: 9.8pt; font-weight: 500;
     color: var(--near-black); margin-bottom: 0.9mm;
     display: flex; align-items: baseline; gap: 1.5mm;
   }
-  .ai-card-head .year {
+  .conv-head .year, .ai-card-head .year {
     color: var(--brand); font-weight: 500;
     font-size: 9pt;
   }
-  .ai-card-body {
+  .conv-body, .ai-card-body {
     font-size: 9pt; color: var(--olive);
-    line-height: 1.40; letter-spacing: 0;
+    line-height: 1.40; letter-spacing: 0.3pt;
   }
-  .ai-card-body .hl { color: var(--brand); }
-  .ai-card-body .em-brand { color: var(--brand); }
+  .conv-body .hl, .ai-card-body .hl { color: var(--brand); }
+  .conv-body .em-brand, .ai-card-body .em-brand { color: var(--brand); }
 
   /* INFLUENCE */
-  .twitter-strip {
+  .handle-strip {
     background: transparent;
     padding: 0; margin: 1.2mm 0 2mm 0;
     display: flex; align-items: baseline; gap: 3mm;
     break-inside: avoid;
   }
-  .twitter-strip .handle {
-    font-family: "TsangerJinKai02", "DejaVu Serif", Georgia, serif;
+  .handle-strip .handle {
+    font-family: var(--serif);
     font-size: 9.8pt; font-weight: 500; color: var(--brand);
     flex-shrink: 0;
   }
-  .twitter-strip .follower { font-size: 9pt; color: var(--stone); flex-shrink: 0; }
-  .twitter-strip .desc { font-size: 9pt; color: var(--olive); line-height: 1.40; letter-spacing: 0; flex: 1; }
+  .handle-strip .follower { font-size: 9pt; color: var(--stone); flex-shrink: 0; }
+  .handle-strip .desc { font-size: 9pt; color: var(--olive); line-height: 1.40; letter-spacing: 0.3pt; flex: 1; }
 
-  .influence-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 5.5mm; }
+  .impact-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 5.5mm; }
   .inf-block-title {
     margin-top: 2.5mm;
-    font-family: "TsangerJinKai02", "DejaVu Serif", "Noto Serif CJK SC", Georgia, serif;
+    font-family: var(--serif);
     font-size: 9.8pt; font-weight: 500;
     color: var(--near-black);
     margin-bottom: 1.5mm; padding-bottom: 0.5mm;
@@ -362,7 +377,7 @@
     display: flex; align-items: baseline; gap: 2mm;
   }
   .inf-block-title .small {
-    font-family: "TsangerJinKai02", "Noto Serif CJK SC", Georgia, serif;
+    font-family: var(--serif);
     font-size: 9pt; color: var(--stone);
     font-weight: 400; margin-left: 0; letter-spacing: 0.2pt;
   }
@@ -389,7 +404,8 @@
   }
   .art-stats, .talk-venue {
     font-size: 9pt; color: var(--stone);
-    line-height: 1.40; margin-top: 0.5mm; padding-left: 0; letter-spacing: 0;
+    line-height: 1.40; margin-top: 0.5mm; padding-left: 0; letter-spacing: 0.3pt;
+    white-space: nowrap;
   }
   .art-stats .em-brand {
     color: var(--brand);
@@ -425,8 +441,10 @@
     width: 22mm; flex-shrink: 0;
     line-height: 1.36;
   }
-  .skill-body { font-size: 9pt; color: var(--near-black); line-height: 1.40; letter-spacing: 0; flex: 1; }
+  .skill-body { font-size: 9pt; color: var(--near-black); line-height: 1.40; letter-spacing: 0.3pt; flex: 1; }
   .skill-body .em-brand { color: var(--brand); }
+
+  .no-break { break-inside: avoid; }
 
   /* EDUCATION */
   .edu-row {
@@ -434,11 +452,51 @@
     align-items: baseline; font-size: 9.5pt; padding: 1.7mm 0;
   }
   .edu-row .school {
-    font-family: "TsangerJinKai02", "DejaVu Serif", "Noto Serif CJK SC", Georgia, serif;
+    font-family: var(--serif);
     font-weight: 500; font-size: 10.7pt;
   }
   .edu-row .major { color: var(--olive); font-size: 9.5pt; }
   .edu-row .date { color: var(--stone); font-variant-numeric: tabular-nums; font-size: 9pt; }
+
+  /* TABLE (kami-table) */
+  table, .kami-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+    margin: 6pt 0;
+    break-inside: avoid;
+  }
+  table th, .kami-table th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--dark-warm);
+    padding: 3pt 6pt;
+    border-bottom: 1pt solid var(--border);
+    background: transparent;
+  }
+  table td, .kami-table td {
+    padding: 2pt 6pt;
+    border-bottom: 0.3pt solid var(--border-soft);
+    vertical-align: top;
+  }
+  table.compact th, .kami-table.compact th { padding: 2pt 4pt; font-size: 8pt; }
+  table.compact td, .kami-table.compact td { padding: 1pt 4pt; font-size: 8pt; line-height: 1.4; }
+  table.financial td:not(:first-child), .kami-table.financial td:not(:first-child) {
+    text-align: right; font-variant-numeric: tabular-nums;
+  }
+  table.financial th:not(:first-child), .kami-table.financial th:not(:first-child) { text-align: right; }
+  table.striped tbody tr:nth-child(even) td, .kami-table.striped tbody tr:nth-child(even) td {
+    background: var(--ivory);
+  }
+  table .total td, .kami-table .total td {
+    font-weight: 500; border-top: 1pt solid var(--brand); border-bottom: none; color: var(--near-black);
+  }
+
+  /* DENSE VARIANT: add class="resume--dense" to <body> when 5+ projects overflow */
+  body.resume--dense { font-size: 9pt; }
+  body.resume--dense .proj-text { line-height: 1.38; }
+  body.resume--dense .tl-body { font-size: 8.5pt; }
+  body.resume--dense .section-title { margin-top: 3.5mm; margin-bottom: 1.2mm; }
 </style>
 </head>
 <body>
@@ -461,7 +519,17 @@
     <div class="name serif">{{姓名}}<span class="alias">{{别名/英文名}}</span></div>
   </div>
   <div class="contact">
-    <span style="color: var(--brand); font-size: 10.5pt; font-weight: 500;">{{岗位定位，如"AI / Agent 工程"}}</span>　·　<a href="{{GITHUB_URL}}">GitHub @{{GITHUB_ID}}</a>　·　<a href="{{X_URL}}">X @{{X_ID}}</a>　·　<a href="tel:{{PHONE}}">{{PHONE}}</a>　·　<a href="mailto:{{EMAIL}}">{{EMAIL}}</a>　·　{{年龄}} 岁在{{城市}}
+    <span class="role">{{岗位定位，如"AI / Agent 工程"}}</span>
+    <br>
+    <a href="{{GITHUB_URL}}">GitHub @{{GITHUB_ID}}</a>
+    <span class="sep">·</span>
+    <a href="{{X_URL}}">X @{{X_ID}}</a>
+    <span class="sep">·</span>
+    <a href="tel:{{PHONE}}">{{PHONE}}</a>
+    <span class="sep">·</span>
+    <a href="mailto:{{EMAIL}}">{{EMAIL}}</a>
+    <span class="sep">·</span>
+    <span class="loc">{{年龄}} 岁在{{城市}}</span>
   </div>
 </div>
 
@@ -617,22 +685,22 @@
 
 <section>
   <div class="section-title">AI 判断与行动</div>
-  <div class="ai-conviction">
-    <div class="ai-card">
-      <div class="ai-card-head"><span class="year">{{时间}}</span>{{事件标题}}</div>
-      <div class="ai-card-body">
+  <div class="convictions">
+    <div class="conv-card">
+      <div class="conv-head"><span class="year">{{时间}}</span>{{事件标题}}</div>
+      <div class="conv-body">
         {{具体做了什么判断或行动，为什么证明判断力}}
       </div>
     </div>
-    <div class="ai-card">
-      <div class="ai-card-head"><span class="year">{{时间}}</span>{{事件标题}}</div>
-      <div class="ai-card-body">
+    <div class="conv-card">
+      <div class="conv-head"><span class="year">{{时间}}</span>{{事件标题}}</div>
+      <div class="conv-body">
         {{具体做了什么判断或行动}}
       </div>
     </div>
-    <div class="ai-card">
-      <div class="ai-card-head"><span class="year">{{时间}}</span>{{事件标题}}</div>
-      <div class="ai-card-body">
+    <div class="conv-card">
+      <div class="conv-head"><span class="year">{{时间}}</span>{{事件标题}}</div>
+      <div class="conv-body">
         {{具体做了什么判断或行动}}
       </div>
     </div>
@@ -642,25 +710,25 @@
 <section>
   <div class="section-title">对外影响力</div>
 
-  <div class="twitter-strip">
-    <span class="handle serif">{{平台}} · <a href="{{URL}}" style="color: var(--brand); border-bottom: none;">@{{HANDLE}}</a></span>
+  <div class="handle-strip">
+    <span class="handle serif">{{平台}} · <a href="{{URL}}">@{{HANDLE}}</a></span>
     <span class="follower">{{粉丝数}} 粉丝</span>
     <span class="desc">{{博客 / 周刊 / 其他内容产品简介}}</span>
   </div>
 
-  <div class="influence-grid">
+  <div class="impact-grid">
     <div>
       <div class="inf-block-title">代表性技术长文<span class="small">{{副标题}}</span></div>
       <div class="art-row">
         <div class="art-header">
-          <a class="art-title" href="{{URL}}" style="text-decoration: none;">《{{文章标题}}》</a>
+          <a class="art-title" href="{{URL}}">《{{文章标题}}》</a>
           <span class="art-date">{{日期}}</span>
         </div>
         <div class="art-stats">{{浏览量 / 赞数 / 影响力指标}}</div>
       </div>
       <div class="art-row">
         <div class="art-header">
-          <a class="art-title" href="{{URL}}" style="text-decoration: none;">《{{文章标题}}》</a>
+          <a class="art-title" href="{{URL}}">《{{文章标题}}》</a>
           <span class="art-date">{{日期}}</span>
         </div>
         <div class="art-stats">{{浏览量 / 赞数}}</div>
@@ -712,7 +780,7 @@
   </div>
 </section>
 
-<section style="break-inside: avoid;">
+<section class="no-break">
   <div class="section-title">教育背景</div>
   <div class="edu-row">
     <div>

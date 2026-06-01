@@ -4,7 +4,8 @@ import { BASE_PATH } from "@repo/contents/subject/middle-school/9/mathematics/_d
 const enMaterials = [
   {
     title: "System of Linear Equations in Two Variables",
-    description: "Solving problems with two related variables.",
+    description:
+      "Model two variables, then solve with graphs, substitution, elimination, and combined methods.",
     href: `${BASE_PATH}/linear-equations-two-variables`,
     items: [
       {
@@ -43,7 +44,8 @@ const enMaterials = [
   },
   {
     title: "Solid Geometry",
-    description: "Exploring volume and surface area of 3D objects.",
+    description:
+      "Read nets, surface area, volume, circles, and curved-sided solids in one geometry path.",
     href: `${BASE_PATH}/solid-geometry`,
     items: [
       {
@@ -170,7 +172,8 @@ const enMaterials = [
   },
   {
     title: "Geometric Transformation",
-    description: "Moving and changing geometric shapes.",
+    description:
+      "Translate, reflect, rotate, and enlarge shapes while tracking their coordinates.",
     href: `${BASE_PATH}/geometric-transformation`,
     items: [
       {
@@ -289,7 +292,8 @@ const enMaterials = [
   },
   {
     title: "Probability and Sampling",
-    description: "Predicting likelihood and understanding sampling.",
+    description:
+      "Read sample spaces, event probability, expected frequency, and sampling decisions.",
     href: `${BASE_PATH}/probability-sampling`,
     items: [
       {

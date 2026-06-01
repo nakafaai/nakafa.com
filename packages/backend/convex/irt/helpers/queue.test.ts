@@ -1,3 +1,4 @@
+import type { WorkflowId } from "@convex-dev/workflow";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -18,6 +19,12 @@ import { convexTest } from "convex-test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 16, 0, 0);
+const WORKFLOW_ID_BRAND = { __isWorkflowId: true } satisfies {
+  __isWorkflowId: true;
+};
+const WORKFLOW_ID: WorkflowId = Object.assign("workflow-id", {
+  ...WORKFLOW_ID_BRAND,
+});
 
 /** Insert one exercise set for queue helper tests. */
 async function insertExerciseSet(
@@ -130,9 +137,7 @@ describe("irt/helpers/queue", () => {
 
   it("returns null when a calibration run is already active", async () => {
     const t = convexTest(schema, convexModules);
-    const startSpy = vi
-      .spyOn(workflow, "start")
-      .mockResolvedValue(undefined as never);
+    const startSpy = vi.spyOn(workflow, "start").mockResolvedValue(WORKFLOW_ID);
 
     const result = await t.mutation(async (ctx) => {
       const setId = await insertExerciseSet(ctx, "running");
@@ -161,9 +166,7 @@ describe("irt/helpers/queue", () => {
     vi.setSystemTime(new Date(NOW));
 
     const t = convexTest(schema, convexModules);
-    const startSpy = vi
-      .spyOn(workflow, "start")
-      .mockResolvedValue(undefined as never);
+    const startSpy = vi.spyOn(workflow, "start").mockResolvedValue(WORKFLOW_ID);
 
     const result = await t.mutation(async (ctx) => {
       const setId = await insertExerciseSet(ctx, "fresh", 30);
@@ -522,7 +525,7 @@ describe("irt/helpers/queue", () => {
         reclaimed,
         queueEntry: await ctx.db.get(
           "irtScaleQualityRefreshQueue",
-          queueEntryId as Id<"irtScaleQualityRefreshQueue">
+          queueEntryId
         ),
       };
     });

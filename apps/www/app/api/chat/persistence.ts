@@ -1,4 +1,4 @@
-import type { ModelId } from "@repo/ai/config/models";
+import type { ModelId } from "@repo/ai/config/model";
 import { compressMessages } from "@repo/ai/lib/message";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";

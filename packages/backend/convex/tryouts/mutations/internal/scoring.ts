@@ -20,7 +20,7 @@ export const promoteProvisionalTryoutScores = internalMutation({
       args.scaleVersionId
     );
 
-    if (!scaleVersion || scaleVersion.status !== "official") {
+    if (scaleVersion?.status !== "official") {
       return null;
     }
 

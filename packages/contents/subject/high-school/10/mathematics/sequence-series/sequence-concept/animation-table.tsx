@@ -19,7 +19,7 @@ import {
   LazyMotion,
   MotionConfig,
 } from "motion/react";
-import * as m from "motion/react-m";
+import { div as MotionDiv } from "motion/react-m";
 import {
   useCallback,
   useDeferredValue,
@@ -280,7 +280,7 @@ export default function TableChairsAnimation({
                       {/* Tables */}
                       <AnimatePresence mode="popLayout">
                         {arrangement.tables.map((table) => (
-                          <m.div
+                          <MotionDiv
                             animate={{ opacity: 1, scale: 1 }}
                             className="absolute rounded-md bg-teal-300 shadow-sm transition-colors hover:bg-teal-400 dark:bg-teal-500"
                             exit={{ opacity: 0, scale: 0 }}
@@ -307,7 +307,7 @@ export default function TableChairsAnimation({
                       {/* Chairs */}
                       <AnimatePresence mode="popLayout">
                         {arrangement.chairs.map((chair) => (
-                          <m.div
+                          <MotionDiv
                             animate={{ opacity: 1, scale: 1 }}
                             className="absolute rounded-full bg-cyan-300 shadow-sm transition-colors hover:bg-cyan-400 dark:bg-cyan-500"
                             exit={{ opacity: 0, scale: 0 }}

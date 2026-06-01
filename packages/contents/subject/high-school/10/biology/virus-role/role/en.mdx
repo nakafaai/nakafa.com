@@ -1,0 +1,112 @@
+import { VirusRoleLab } from "@repo/design-system/components/contents/biology/virus-role";
+
+export const metadata = {
+  title: "Role of Viruses",
+  description:
+    "Distinguish viruses as disease agents, microbial population controls, and biotechnology tools by reading the virus-host relationship.",
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "05/22/2026",
+  subject: "Viruses and Their Role",
+};
+
+## A Viral Role Depends on the Host Relationship
+
+A virus cannot be judged only by its shape. Its effect depends on the host, the setting, and whether the process is uncontrolled infection or a carefully managed biological tool.
+
+### The Host Relationship Decides the Outcome
+
+Viruses are often introduced as causes of disease, but disease is not the only context. A viral role depends on the relationship between the virus and its **host**, the organism or cell the virus uses to reproduce.
+
+If viral replication damages cells, the body may develop disease. If a virus infects bacteria in the environment, microbial populations can shift. If a viral property is controlled in a laboratory, a virus can be used as a **vector**, a carrier of genetic material into target cells.
+
+The idea that viruses can cause disease, infect many host types, and be used in modern biology is discussed further in [OpenStax Biology 2e](https://openstax.org/books/biology-2e/pages/21-2-virus-infections-and-hosts).
+
+### The Same Ability Can Change Value
+
+A virus can attach to cells and carry genetic material. That ability is not automatically good or bad. Its value changes when the target, risk, and control change. Wild infection can damage tissue, while a modified viral vector can deliver a chosen gene into a target cell.
+
+| Context | What to read | How to judge the role |
+| --- | --- | --- |
+| Disease | Host cells are damaged or body responses are disrupted | The effect depends on the tissue affected and the route of infection |
+| Ecology | Microbial populations change | Viruses can shape relationships among microscopic organisms |
+| Biotechnology | Genetic delivery is controlled | Benefit appears only when target and risk are limited |
+
+<VirusRoleLab
+  title={<>One viral property, three outcomes</>}
+  description={
+    <>
+      Compare tissue infection, interaction with bacteria, and genetic delivery.
+      Read each relationship from the virus and its target cell arrangement.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose a viral role",
+    focusLabel: "Relationship to observe",
+    takeawayLabel: "Role direction",
+    viewLabel: "3D viral role model",
+    items: [
+      {
+        tab: "Disease",
+        caption: <>Virus particles surround a cell to show infection disrupting cell function.</>,
+        callouts: [
+          { id: "host-cell", label: "host cell" },
+          { id: "virus-particle", label: "virus particle" },
+        ],
+        focus: <>Damage appears because replication happens inside host cells, not because the virus only touches the outside.</>,
+        takeaway: <>Disease is the result of a harmful virus-host relationship that damages tissue or triggers body responses.</>,
+      },
+      {
+        tab: "Ecology",
+        caption: <>A bacteriophage is shown near bacteria because some viruses infect microorganisms.</>,
+        callouts: [
+          { id: "bacteriophage", label: "bacteriophage" },
+          { id: "target-bacteria", label: "target bacterium" },
+        ],
+        focus: <>Viruses can shape microbial populations in ecosystems.</>,
+        takeaway: <>In nature, viruses interact not only with humans, but also with bacteria, animals, plants, and other microbes.</>,
+      },
+      {
+        tab: "Biotech",
+        caption: <>A viral vector carries genetic material near a target cell to emphasize controlled delivery.</>,
+        callouts: [
+          { id: "gene-cargo", label: "carried gene" },
+          { id: "target-cell", label: "target cell" },
+        ],
+        focus: <>A property that is dangerous in wild infection can become useful when risk and target are controlled.</>,
+        takeaway: <>Biotechnology uses the viral ability to carry genetic information, not uncontrolled viral spread.</>,
+      },
+    ],
+  }}
+/>
+
+## Viral Diseases Do Not Share One Route
+
+Disease names are often easier to remember than transmission routes. The route matters because influenza, dengue, and rabies do not spread through the same biological pathway.
+
+### A Disease Name Does Not Explain the Route
+
+Viral diseases can affect humans, animals, and plants. In humans, viruses can be involved in flu, polio, hepatitis, or dengue fever. In animals, viruses can cause rabies or certain poultry diseases. In plants, viruses may cause mosaic leaves, stunted growth, or reduced harvest.
+
+The important reading is not just the disease name, but the entry route and the tissue affected. Dengue virus is connected with mosquito bites. Respiratory viruses are connected with droplets and air near the face. Plant viruses can move through insect vectors, plant wounds, or infected planting material.
+
+### Entry Route Makes Prevention Specific
+
+If a virus enters through air near the face, the explanation differs from a virus carried by mosquitoes or moved through specific body fluids. That is why one prevention list cannot fit every virus. We need to know the route, target cells, and conditions that make transfer easier.
+
+## Viruses Can Be Useful When Controlled
+
+Viruses have a strong ability to recognize cells and carry genetic material. During wild infection, that ability can be harmful. Under controlled conditions, the same property can be useful.
+
+Some viruses are used in genetic research, gene therapy, vaccine development, or targeted pest control. For example, baculoviruses can be used against certain insect pests in a way that differs from ordinary chemical pesticides.
+
+In gene therapy, viruses are not used by letting them behave wildly. They are changed into delivery tools. [NIH/NHLBI](https://www.nhlbi.nih.gov/health/genetic-therapies/types) explains that vectors are often made from viruses modified to remove disease-causing viral genes and carry a treatment gene instead.
+
+The key word is control. A useful virus must be designed, tested, and limited to its target. Without control, the ability to reproduce and move between cells becomes a risk.
+
+> The word "virus" is not enough to judge good or bad. Check the host, the level of control, and the effect being discussed.
+
+## One Word Is Not Enough to Judge a Virus
+
+Name the relationship between the virus and its host first. A virus that damages tissue is discussed as a disease agent. A virus that affects microbes is discussed in ecology. A virus that carries genes under control is discussed in biotechnology.
+
+This habit prevents us from reducing viruses to "always bad" or "always useful". In biology, a role comes from context, target, and control.

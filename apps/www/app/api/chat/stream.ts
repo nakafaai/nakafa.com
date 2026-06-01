@@ -5,10 +5,10 @@ import { read as readNakafa } from "@repo/ai/agents/nakafa/tools/read";
 import { TOOL_NAMES } from "@repo/ai/agents/orchestrator/names";
 import { nakafaPrompt } from "@repo/ai/agents/orchestrator/prompt";
 import { runResearchAgent } from "@repo/ai/agents/research/agent";
-import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
-import { getModelProviderOptions, type ModelId } from "@repo/ai/config/models";
+import { provider } from "@repo/ai/config/app";
+import { getModelProviderOptions, type ModelId } from "@repo/ai/config/model";
+import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { chatStreamTimeout } from "@repo/ai/config/timeouts";
-import { model } from "@repo/ai/config/vercel";
 import { generateTitle } from "@repo/ai/features/title";
 import { getSourceReferencesFromMessages } from "@repo/ai/lib/source";
 import {
@@ -222,7 +222,7 @@ export function streamChat({ chat, page, runtime, user }: Params) {
           });
 
           const streamTextResult = streamText({
-            model: model.languageModel(runtime.modelId),
+            model: provider.languageModel(runtime.modelId),
             system,
             messages: chat.finalMessages,
             stopWhen: stepCountIs(MAX_ORCHESTRATOR_STEPS),

@@ -4,7 +4,8 @@ import { BASE_PATH } from "@repo/contents/subject/middle-school/8/mathematics/_d
 const enMaterials = [
   {
     title: "Exponents",
-    description: "The power of repeated multiplication in math.",
+    description:
+      "Read powers, radicals, scientific notation, and exponent rules from repeated multiplication.",
     href: `${BASE_PATH}/exponents`,
     items: [
       {
@@ -59,7 +60,8 @@ const enMaterials = [
   },
   {
     title: "Pythagorean Theorem",
-    description: "Legendary formula for right-angled triangles.",
+    description:
+      "Connect right-triangle side lengths, the converse theorem, distance, and applications.",
     href: `${BASE_PATH}/pythagorean-theorem`,
     items: [
       {
@@ -94,7 +96,8 @@ const enMaterials = [
   },
   {
     title: "Linear Equations and Inequalities of One Variable",
-    description: "Finding hidden values in equations.",
+    description:
+      "Build open sentences, equations, and one-variable inequalities through complete solving steps.",
     href: `${BASE_PATH}/linear-equations-inequalities`,
     items: [
       {
@@ -125,7 +128,8 @@ const enMaterials = [
   },
   {
     title: "Relations and Functions",
-    description: "Special connections between two sets.",
+    description:
+      "Distinguish sets, relations, functions, one-to-one correspondences, and their representations.",
     href: `${BASE_PATH}/relations-functions`,
     items: [
       {
@@ -176,7 +180,8 @@ const enMaterials = [
   },
   {
     title: "Straight Line Equations",
-    description: "Drawing linear paths in coordinates.",
+    description:
+      "Read line graphs, slopes, points, and line equations on the coordinate plane.",
     href: `${BASE_PATH}/straight-line-equations`,
     items: [
       {
@@ -199,7 +204,8 @@ const enMaterials = [
   },
   {
     title: "Statistics",
-    description: "Analyzing data to draw conclusions.",
+    description:
+      "Read center, range, quartiles, and data spread before drawing conclusions.",
     href: `${BASE_PATH}/statistics`,
     items: [
       {

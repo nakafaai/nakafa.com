@@ -1,6 +1,6 @@
-import { Button as ButtonType } from "@react-email/components";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ReactNode } from "react";
+import { Button as ButtonType } from "react-email";
 
 const buttonVariants = cva(
   "whitespace-nowrap rounded-md text-center text-sm outline-none",

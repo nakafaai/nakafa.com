@@ -63,15 +63,15 @@ export function PriceChart({ lang = "en" }: Props) {
   const chartConfig = {
     mieA: {
       label: t.labels.mieA,
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     mieB: {
       label: t.labels.mieB,
-      color: "var(--chart-2)",
+      colors: { light: ["var(--chart-2)"] },
     },
     mieC: {
       label: t.labels.mieC,
-      color: "var(--chart-3)",
+      colors: { light: ["var(--chart-3)"] },
     },
   } satisfies ChartConfig;
 
@@ -104,10 +104,10 @@ export function PriceChart({ lang = "en" }: Props) {
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
-            {Object.entries(chartConfig).map(([key, config]) => (
+            {Object.keys(chartConfig).map((key) => (
               <RechartsBar
                 dataKey={key}
-                fill={config.color}
+                fill={`var(--color-${key}-0)`}
                 key={key}
                 radius={[4, 4, 0, 0]}
               />

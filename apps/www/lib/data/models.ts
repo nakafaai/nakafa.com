@@ -3,7 +3,7 @@ import {
   LaurelWreathRight03Icon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
-import { MODEL_IDS, type ModelId } from "@repo/ai/config/models";
+import { MODEL_IDS, type ModelId } from "@repo/ai/config/model";
 
 const modelIcons = {
   "nakafa-lite": LaurelWreathRight03Icon,

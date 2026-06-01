@@ -1,3 +1,12 @@
+import { Button } from "@repo/email/components/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@repo/email/components/card";
+import { WrapperIcon } from "@repo/email/components/wrapper";
+import { Tailwind } from "@repo/email/tailwind";
 import {
   Body,
   Column,
@@ -11,16 +20,7 @@ import {
   Row,
   Section,
   Text,
-} from "@react-email/components";
-import { Button } from "@repo/email/components/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@repo/email/components/card";
-import { WrapperIcon } from "@repo/email/components/wrapper";
-import { Tailwind } from "@repo/email/tailwind";
+} from "react-email";
 
 interface WelcomeProps {
   readonly name: string;

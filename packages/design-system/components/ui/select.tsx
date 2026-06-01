@@ -135,12 +135,16 @@ function SelectItem({
       data-slot="select-item"
       {...props}
     >
-      <span className="absolute right-2 flex size-3.5 items-center justify-center">
-        <SelectPrimitive.ItemIndicator>
-          <HugeIcons className="size-4" icon={Tick01Icon} />
-        </SelectPrimitive.ItemIndicator>
-      </span>
-      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemText className="flex flex-1 shrink-0 items-center gap-2 whitespace-nowrap">
+        {children}
+      </SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemIndicator
+        render={
+          <span className="pointer-events-none absolute right-2 flex size-3.5 items-center justify-center" />
+        }
+      >
+        <HugeIcons className="size-4" icon={Tick01Icon} />
+      </SelectPrimitive.ItemIndicator>
     </SelectPrimitive.Item>
   );
 }

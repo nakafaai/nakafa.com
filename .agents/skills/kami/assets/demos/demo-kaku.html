@@ -41,13 +41,13 @@
     --near-black:#141413;
     --dark-warm: #3d3d3a;
     --charcoal:  #4d4c48;
-    --olive:     #5e5d59;
-    --stone:     #87867f;
+    --olive:     #504e49;
+    --stone:     #6b6a64;
     --brand:     #1B365D;
     --border:    #e8e6dc;
     --border-soft:#e5e3d8;
     --tag-bg:    #E4ECF5;
-    --jp-serif:  "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif CJK JP", "Source Han Serif JP", "TsangerJinKai02", Georgia, serif;
+    --jp-serif:  "YuMincho", "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "Source Han Serif JP", "TsangerJinKai02", Georgia, serif;
   }
 
   html, body { background: var(--parchment); }
@@ -56,11 +56,21 @@
     color: var(--near-black);
     font-family: var(--jp-serif);
     font-size: 10pt;
-    line-height: 1.5;
+    line-height: 1.6;
+    letter-spacing: 0.3pt;
   }
 
   .serif {
     font-family: var(--jp-serif);
+  }
+
+  code {
+    font-family: var(--jp-serif);
+    font-size: 9pt;
+    background: var(--tag-bg);
+    color: var(--brand);
+    padding: 1pt 4pt;
+    border-radius: 2pt;
   }
 
   /* ════════════ COVER ════════════ */
@@ -77,7 +87,7 @@
     font-family: var(--jp-serif);
     font-size: 10pt;
     color: var(--brand);
-    letter-spacing: 2pt;
+    letter-spacing: 1pt;
   }
   .cover-center {
     display: flex;
@@ -90,7 +100,7 @@
     font-weight: 500;
     line-height: 1.05;
     color: var(--near-black);
-    letter-spacing: 2pt;
+    letter-spacing: 1pt;
   }
   .cover-tagline {
     font-size: 16pt;
@@ -143,11 +153,11 @@
 
   /* ════════════ ABOUT ════════════ */
   .about-body {
-    line-height: 1.6;
+    line-height: 1.5;
     font-size: 10pt;
   }
   .about-body p {
-    margin-bottom: 9pt;
+    margin-bottom: 6pt;
     color: var(--dark-warm);
   }
   .about-body p:last-child {
@@ -351,14 +361,14 @@
   .about-metrics {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12pt;
-    margin-bottom: 20pt;
+    gap: 10pt;
+    margin-bottom: 14pt;
   }
   .about-metric {
     background: var(--ivory);
     border: 0.5pt solid var(--border);
     border-radius: 8pt;
-    padding: 12pt 14pt;
+    padding: 10pt 14pt;
     text-align: center;
   }
   .about-metric-value {
@@ -455,7 +465,7 @@
   .opt-card p { font-size: 9pt; line-height: 1.45; color: var(--charcoal); }
 
   .contact-screenshot {
-    margin-top: 28pt;
+    margin-top: 16pt;
     border-radius: 8pt;
     overflow: hidden;
     border: 0.5pt solid var(--border);
@@ -537,7 +547,7 @@
       <p>WezTerm は強力なエンジンです。Kaku ではその上で 2 点に集中しました。不要な重量の削減と、AI ワークフローの直接統合です。設定は WezTerm Lua API と互換で、既存設定を移行せず再利用できます。Starship、Delta、Lazygit、Yazi も最初から連携済みです。macOS では、Traffic Light のタブバー統合、システム外観への追従、ネイティブフォント描画、Apple notarization まで含めて、導入直後から実用状態になります。</p>
   </div>
   <div class="contact-screenshot">
-    <img src="../../../kaku/website/public/shots/kaku-light.webp" alt="Kaku terminal interface">
+    <img src="images/kaku-hero.jpg" alt="Kaku terminal interface">
   </div>
 </section>
 
@@ -779,7 +789,7 @@
   </div>
 
   <div class="contact-screenshot">
-    <img src="../../../kaku/assets/kaku.jpg" alt="Kaku terminal in action">
+    <img src="images/kaku-action.jpg" alt="Kaku terminal in action">
   </div>
 </section>
 </html>

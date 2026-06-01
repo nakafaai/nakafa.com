@@ -38,10 +38,10 @@ import {
   scrapeUrl,
 } from "@repo/ai/agents/research/tools/scrape";
 import { searchWeb } from "@repo/ai/agents/research/tools/search";
-import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
-import { getFastModelProviderOptions } from "@repo/ai/config/models";
+import { provider } from "@repo/ai/config/app";
+import { getFastModelProviderOptions } from "@repo/ai/config/model";
+import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { subAgentGenerationTimeout } from "@repo/ai/config/timeouts";
-import { model } from "@repo/ai/config/vercel";
 import { getSourceReferences } from "@repo/ai/lib/source";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import { textOutputSchema } from "@repo/ai/schema/tools";
@@ -96,7 +96,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     const evidenceResult = yield* Effect.tryPromise({
       try: () =>
         generateText({
-          model: model.languageModel(modelId),
+          model: provider.languageModel(modelId),
           system: researchEvidencePrompt({ locale, context }),
           messages: createResearchMessages(task, collectedEvidence),
           tools: {
@@ -237,7 +237,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
         generateText({
           model: wrapLanguageModel({
             middleware: extractJsonMiddleware(),
-            model: model.languageModel(modelId),
+            model: provider.languageModel(modelId),
           }),
           system: researchPrompt({ locale, context }),
           messages: createResearchSynthesisMessages({

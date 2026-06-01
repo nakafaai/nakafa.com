@@ -1,6 +1,6 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
 import { getAllSurah, getSurahName } from "@repo/contents/_lib/quran";
-import { cn, slugify } from "@repo/design-system/lib/utils";
+import { slugify } from "@repo/design-system/lib/utils";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { Effect } from "effect";
@@ -20,9 +20,9 @@ import {
   LayoutMaterialPagination,
   LayoutMaterialToc,
 } from "@/components/shared/layout-material";
-import { QuranAudio } from "@/components/shared/quran-audio";
-import { QuranInterpretation } from "@/components/shared/quran-interpretation";
+import { QuranPageControls } from "@/components/shared/quran-controls";
 import { QuranText } from "@/components/shared/quran-text";
+import { QuranVerse } from "@/components/shared/quran-verse";
 import { RefContent } from "@/components/shared/ref-content";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
 import { VirtualProvider } from "@/lib/context/use-virtual";
@@ -219,12 +219,16 @@ async function CachedSurahShell({
 
   const title = getSurahName({ locale, name: surahData.name });
 
-  const headings = surahData.verses.map((verse, index) => ({
-    label: t("verse-count", { count: verse.number.inSurah }),
-    index,
-    href: `/quran/${surah}#${slugify(t("verse-count", { count: verse.number.inSurah }))}`,
-    children: [],
-  }));
+  const headings = surahData.verses.map((verse, index) => {
+    const label = t("verse-count", { count: verse.number.inSurah });
+
+    return {
+      label,
+      index,
+      href: `/quran/${surah}#${slugify(label)}`,
+      children: [],
+    };
+  });
 
   const pagination = getQuranPagination({
     prevSurah,
@@ -248,6 +252,22 @@ async function CachedSurahShell({
       title: nextTitle,
     },
   };
+
+  const controlLabels = {
+    interpretation: t("interpretation"),
+    playAudio: t("play-audio"),
+    stopAudio: t("stop-audio"),
+  };
+
+  const audioSources = surahData.verses.map((verse) => [
+    verse.audio.primary,
+    ...verse.audio.secondary,
+  ]);
+
+  const interpretations =
+    locale === "id"
+      ? surahData.verses.map((verse) => verse.tafsir.id.short)
+      : undefined;
 
   return (
     <VirtualProvider>
@@ -275,58 +295,21 @@ async function CachedSurahShell({
 
             <WindowVirtualized ssrCount={surahData.verses.length}>
               {surahData.verses.map((verse, index) => {
-                const transliteration = verse.text.transliteration.en;
-                const translate =
-                  verse.translation[locale] ?? verse.translation.en;
-
-                const id = slugify(
-                  t("verse-count", { count: verse.number.inSurah })
-                );
+                const verseLabel = t("verse-count", {
+                  count: verse.number.inSurah,
+                });
 
                 return (
-                  <div
-                    className={cn(
-                      "mb-6 space-y-6 border-b pb-6",
-                      index === surahData.verses.length - 1 &&
-                        "mb-0 border-b-0 pb-0"
-                    )}
+                  <QuranVerse
+                    id={slugify(verseLabel)}
+                    index={index}
+                    isLast={index === surahData.verses.length - 1}
                     key={verse.number.inQuran}
-                  >
-                    <div className="flex items-center gap-4">
-                      <a
-                        className="flex w-full flex-1 shrink-0 scroll-mt-44 outline-none ring-0"
-                        href={`#${id}`}
-                        id={id}
-                      >
-                        <div className="flex size-9 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
-                          <span className="font-mono text-xs tracking-tighter">
-                            {verse.number.inSurah}
-                          </span>
-                          <h2 className="sr-only">
-                            {t("verse-count", {
-                              count: verse.number.inSurah,
-                            })}
-                          </h2>
-                        </div>
-                      </a>
-
-                      <div className="flex items-center gap-2">
-                        <QuranAudio audio={verse.audio} />
-                        {locale === "id" && (
-                          <QuranInterpretation
-                            interpretation={verse.tafsir.id.short}
-                          />
-                        )}
-                      </div>
-                    </div>
-                    <QuranText>{verse.text.arab}</QuranText>
-                    <div className="flex flex-col gap-2">
-                      <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
-                        {transliteration}
-                      </p>
-                      <p className="text-pretty leading-relaxed">{translate}</p>
-                    </div>
-                  </div>
+                    labels={controlLabels}
+                    locale={locale}
+                    verse={verse}
+                    verseLabel={verseLabel}
+                  />
                 );
               })}
             </WindowVirtualized>
@@ -335,6 +318,11 @@ async function CachedSurahShell({
             pagination={paginationWithLocalizedTitles}
           />
           <LayoutMaterialFooter>{footer}</LayoutMaterialFooter>
+          <QuranPageControls
+            audioSources={audioSources}
+            interpretations={interpretations}
+            labels={controlLabels}
+          />
           {toolbar}
         </LayoutMaterialContent>
         <LayoutMaterialToc

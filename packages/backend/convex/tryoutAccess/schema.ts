@@ -3,25 +3,40 @@ import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
+export const tryoutAccessCampaignKindCompetition = "competition";
+export const tryoutAccessCampaignKindAccessPass = "access-pass";
+export const tryoutAccessCampaignRedeemStatusScheduled = "scheduled";
+export const tryoutAccessCampaignRedeemStatusActive = "active";
+export const tryoutAccessCampaignRedeemStatusEnded = "ended";
+export const tryoutAccessCampaignResultsStatusPending = "pending";
+export const tryoutAccessCampaignResultsStatusFinalized = "finalized";
+export const tryoutAccessGrantStatusActive = "active";
+export const tryoutAccessGrantStatusExpired = "expired";
+export const userTryoutEntitlementSourceKindCompetition = "competition";
+export const userTryoutEntitlementSourceKindAccessPass = "access-pass";
+
 export const tryoutAccessCampaignKindValidator = literals(
-  "competition",
-  "access-pass"
+  tryoutAccessCampaignKindCompetition,
+  tryoutAccessCampaignKindAccessPass
 );
 export const tryoutAccessCampaignRedeemStatusValidator = literals(
-  "scheduled",
-  "active",
-  "ended"
+  tryoutAccessCampaignRedeemStatusScheduled,
+  tryoutAccessCampaignRedeemStatusActive,
+  tryoutAccessCampaignRedeemStatusEnded
 );
 export const tryoutAccessCampaignResultsStatusValidator = literals(
-  "pending",
-  "finalized"
+  tryoutAccessCampaignResultsStatusPending,
+  tryoutAccessCampaignResultsStatusFinalized
 );
 
-export const tryoutAccessGrantStatusValidator = literals("active", "expired");
+export const tryoutAccessGrantStatusValidator = literals(
+  tryoutAccessGrantStatusActive,
+  tryoutAccessGrantStatusExpired
+);
 
 export const userTryoutEntitlementSourceKindValidator = literals(
-  "competition",
-  "access-pass"
+  userTryoutEntitlementSourceKindCompetition,
+  userTryoutEntitlementSourceKindAccessPass
 );
 
 export const tryoutAccessCampaignValidator = v.object({

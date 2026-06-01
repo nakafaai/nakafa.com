@@ -2,6 +2,11 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import {
+  tryoutAccessCampaignKindCompetition,
+  tryoutAccessCampaignResultsStatusFinalized,
+  tryoutAccessCampaignResultsStatusPending,
+} from "@repo/backend/convex/tryoutAccess/schema";
 import { v } from "convex/values";
 
 /** Finalizes one ended competition campaign if it is still pending. */
@@ -12,8 +17,8 @@ export async function finalizeCompetitionCampaignResultsIfNeeded(
 ) {
   if (
     !campaign ||
-    campaign.campaignKind !== "competition" ||
-    campaign.resultsStatus !== "pending"
+    campaign.campaignKind !== tryoutAccessCampaignKindCompetition ||
+    campaign.resultsStatus !== tryoutAccessCampaignResultsStatusPending
   ) {
     return;
   }
@@ -24,7 +29,7 @@ export async function finalizeCompetitionCampaignResultsIfNeeded(
 
   await db.patch("tryoutAccessCampaigns", campaign._id, {
     resultsFinalizedAt: now,
-    resultsStatus: "finalized",
+    resultsStatus: tryoutAccessCampaignResultsStatusFinalized,
   });
 }
 

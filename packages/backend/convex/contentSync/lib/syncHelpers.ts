@@ -1,5 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { deleteAudioContentSource } from "@repo/backend/convex/audioStudies/helpers/sources";
 import type { ContentAuthorContentId } from "@repo/backend/convex/authors/schema";
 import { CONTENT_SYNC_BATCH_LIMITS } from "@repo/backend/convex/contentSync/constants";
 import { assertContentSyncBatchSize } from "@repo/backend/convex/contentSync/lib/errors";
@@ -299,5 +300,6 @@ export async function deleteSubjectSection(
   }
 
   await deleteContentAuthorLinks(ctx, sectionId, "subject");
+  await deleteAudioContentSource(ctx, { id: sectionId, type: "subject" });
   await ctx.db.delete("subjectSections", sectionId);
 }

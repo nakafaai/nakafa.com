@@ -66,11 +66,11 @@ export function RecruitmentChart({ lang = "en" }: Props) {
   const chartConfig = {
     rejected: {
       label: t.rejected,
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     accepted: {
       label: t.accepted,
-      color: "var(--chart-2)",
+      colors: { light: ["var(--chart-2)"] },
     },
   } satisfies ChartConfig;
 
@@ -95,12 +95,12 @@ export function RecruitmentChart({ lang = "en" }: Props) {
             <ChartLegend content={<ChartLegendContent />} />
             <RechartsBar
               dataKey="rejected"
-              fill="var(--color-rejected)"
+              fill="var(--color-rejected-0)"
               radius={[4, 4, 0, 0]}
             />
             <RechartsBar
               dataKey="accepted"
-              fill="var(--color-accepted)"
+              fill="var(--color-accepted-0)"
               radius={[4, 4, 0, 0]}
             />
           </RechartsBarChart>

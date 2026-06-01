@@ -1,4 +1,5 @@
 import type { MyUIMessage, MyUIMessagePart } from "@repo/ai/types/message";
+import { toPersistedProviderMetadata } from "@repo/backend/convex/chats/messageParts/providerMetadata";
 import type { DBPart } from "@repo/backend/convex/chats/messageParts/shared";
 import type { ToolState } from "@repo/backend/convex/chats/schema";
 import { ConvexError } from "convex/values";
@@ -32,12 +33,13 @@ function getToolResultProviderMetadata(part: MyUIMessagePart) {
   switch (part.state) {
     case "output-available":
     case "output-error":
-      return part.resultProviderMetadata;
+      return toPersistedProviderMetadata(part.resultProviderMetadata);
     default:
       return;
   }
 }
 
+/** Maps one AI SDK UI message part into the flattened Convex chat part row. */
 function mapUIMessagePartToDBPart(
   part: MyUIMessagePart,
   order: number
@@ -58,7 +60,7 @@ function mapUIMessagePartToDBPart(
         type: part.type,
         reasoningText: part.text,
         reasoningState: part.state,
-        providerMetadata: part.providerMetadata,
+        providerMetadata: toPersistedProviderMetadata(part.providerMetadata),
       };
     case "file":
       return {
@@ -79,7 +81,9 @@ function mapUIMessagePartToDBPart(
         type: part.type,
         toolToolCallId: part.toolCallId,
         toolState: requirePersistableToolState(part.state),
-        toolCallProviderMetadata: part.callProviderMetadata,
+        toolCallProviderMetadata: toPersistedProviderMetadata(
+          part.callProviderMetadata
+        ),
         toolResultProviderMetadata: getToolResultProviderMetadata(part),
         toolNakafaInput:
           part.state === "input-streaming" ? undefined : part.input,
@@ -92,7 +96,9 @@ function mapUIMessagePartToDBPart(
         type: part.type,
         toolToolCallId: part.toolCallId,
         toolState: requirePersistableToolState(part.state),
-        toolCallProviderMetadata: part.callProviderMetadata,
+        toolCallProviderMetadata: toPersistedProviderMetadata(
+          part.callProviderMetadata
+        ),
         toolResultProviderMetadata: getToolResultProviderMetadata(part),
         toolDeepResearchInput:
           part.state === "input-streaming" ? undefined : part.input,
@@ -105,7 +111,9 @@ function mapUIMessagePartToDBPart(
         type: part.type,
         toolToolCallId: part.toolCallId,
         toolState: requirePersistableToolState(part.state),
-        toolCallProviderMetadata: part.callProviderMetadata,
+        toolCallProviderMetadata: toPersistedProviderMetadata(
+          part.callProviderMetadata
+        ),
         toolResultProviderMetadata: getToolResultProviderMetadata(part),
         toolMathInput:
           part.state === "input-streaming" ? undefined : part.input,

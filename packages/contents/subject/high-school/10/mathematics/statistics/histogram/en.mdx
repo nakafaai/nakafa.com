@@ -28,11 +28,11 @@ Bar charts are used for categorical data (such as phone brands or favorite sport
   ]}
   chartConfig={{
     value: { label: "Number of Students" },
-    Apple: { label: "Apple", color: "var(--chart-1)" },
-    Samsung: { label: "Samsung", color: "var(--chart-2)" },
-    Xiaomi: { label: "Xiaomi", color: "var(--chart-3)" },
-    Oppo: { label: "Oppo", color: "var(--chart-4)" },
-    Lenovo: { label: "Lenovo", color: "var(--chart-5)" },
+    Apple: { label: "Apple", colors: { light: ["var(--chart-1)"] } },
+    Samsung: { label: "Samsung", colors: { light: ["var(--chart-2)"] } },
+    Xiaomi: { label: "Xiaomi", colors: { light: ["var(--chart-3)"] } },
+    Oppo: { label: "Oppo", colors: { light: ["var(--chart-4)"] } },
+    Lenovo: { label: "Lenovo", colors: { light: ["var(--chart-5)"] } },
   }}
   yAxisLabel="Number of Students"
 />
@@ -64,23 +64,23 @@ Histograms, on the other hand, are used for numerical data grouped into interval
     },
     "0-2": {
       label: "0-2 hours",
-      color: "var(--chart-1)",
+      colors: { light: ["var(--chart-1)"] },
     },
     "2-4": {
       label: "2-4 hours",
-      color: "var(--chart-2)",
+      colors: { light: ["var(--chart-2)"] },
     },
     "4-6": {
       label: "4-6 hours",
-      color: "var(--chart-3)",
+      colors: { light: ["var(--chart-3)"] },
     },
     "6-8": {
       label: "6-8 hours",
-      color: "var(--chart-4)",
+      colors: { light: ["var(--chart-4)"] },
     },
     "8-10": {
       label: "8-10 hours",
-      color: "var(--chart-5)",
+      colors: { light: ["var(--chart-5)"] },
     },
   }}
   yAxisLabel="Frequency"

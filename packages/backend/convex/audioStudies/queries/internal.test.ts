@@ -1,4 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import { syncAudioContentSource } from "@repo/backend/convex/audioStudies/helpers/sources";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
@@ -455,6 +456,14 @@ describe("audioStudies/queries/internal", () => {
         subject: REAL_VECTOR_ADDITION_EN.subject,
         body: REAL_VECTOR_ADDITION_EN.body,
         contentHash: REAL_VECTOR_ADDITION_EN.hash,
+        syncedAt: 1,
+      });
+
+      await syncAudioContentSource(ctx, {
+        contentHash: REAL_VECTOR_ADDITION_EN.hash,
+        locale: REAL_VECTOR_ADDITION_EN.locale,
+        ref: { type: "subject", id: existingId },
+        slug: REAL_VECTOR_SECTION_SLUG,
         syncedAt: 1,
       });
 

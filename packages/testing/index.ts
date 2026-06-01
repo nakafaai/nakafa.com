@@ -6,6 +6,12 @@ import { defineConfig } from "vitest/config";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const config = defineConfig({
+  css: {
+    postcss: {
+      /** Vitest stubs CSS imports; unit tests should not load app Tailwind. */
+      plugins: [],
+    },
+  },
   plugins: [react()],
   test: {
     environment: "jsdom",

@@ -11,7 +11,6 @@ import packageJson from "@/package.json";
 vi.mock("@/env", () => ({
   env: {
     MCP_ALLOWED_ORIGINS: "https://agent.example.com",
-    REDIS_URL: "redis://localhost:6379",
   },
 }));
 
@@ -392,6 +391,7 @@ describe("Nakafa MCP route", () => {
 
   it("guards browser origins while allowing desktop clients without Origin", async () => {
     const noOrigin = await GET(new Request("https://mcp.nakafa.com/mcp"));
+    const missingRoute = await GET(new Request("https://mcp.nakafa.com/other"));
     const allowedOptions = await OPTIONS(
       new Request("https://mcp.nakafa.com/mcp", {
         headers: {
@@ -428,6 +428,7 @@ describe("Nakafa MCP route", () => {
     );
 
     expect(noOrigin.status).toBe(405);
+    expect(missingRoute.status).toBe(404);
     expect(allowedOptions.status).toBe(204);
     expect(allowedOptions.headers.get("access-control-allow-origin")).toBe(
       "https://agent.example.com"

@@ -1,44 +1,10 @@
 import { internalQuery } from "@repo/backend/convex/_generated/server";
+import { contentCountTableNames } from "@repo/backend/convex/contentSync/tables";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
-const countableTableNameValidator = literals(
-  "articleContents",
-  "subjectTopics",
-  "subjectSections",
-  "exerciseSets",
-  "exerciseQuestions",
-  "exerciseAttempts",
-  "exerciseAnswers",
-  "tryoutAccessCampaigns",
-  "tryoutAccessCampaignProducts",
-  "tryoutAccessLinks",
-  "tryoutAccessGrants",
-  "tryouts",
-  "tryoutCatalogMeta",
-  "userTryoutEntitlements",
-  "tryoutPartSets",
-  "tryoutAttempts",
-  "tryoutPartAttempts",
-  "tryoutLeaderboardEntries",
-  "userTryoutStats",
-  "irtCalibrationQueue",
-  "irtCalibrationAttempts",
-  "irtCalibrationCacheStats",
-  "irtScaleQualityChecks",
-  "irtScaleQualityRefreshQueue",
-  "irtCalibrationRuns",
-  "exerciseItemParameters",
-  "irtScalePublicationQueue",
-  "irtScaleVersions",
-  "irtScaleVersionItems",
-  "contentSearch",
-  "authors",
-  "contentAuthors",
-  "articleReferences",
-  "exerciseChoices"
-);
+const countableTableNameValidator = literals(...contentCountTableNames);
 
 const countTablePageResultValidator = v.object({
   continueCursor: v.string(),

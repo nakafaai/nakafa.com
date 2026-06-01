@@ -26,10 +26,10 @@ import {
 } from "@repo/ai/agents/math/schema";
 import { prepareMathStep } from "@repo/ai/agents/math/step";
 import { compute } from "@repo/ai/agents/math/tools/compute";
-import { gatewayProviderOptions } from "@repo/ai/config/gateway-options";
-import { getFastModelProviderOptions } from "@repo/ai/config/models";
+import { provider } from "@repo/ai/config/app";
+import { getFastModelProviderOptions } from "@repo/ai/config/model";
+import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { subAgentGenerationTimeout } from "@repo/ai/config/timeouts";
-import { model } from "@repo/ai/config/vercel";
 import { textOutputSchema } from "@repo/ai/schema/tools";
 import type { MathAgentParams } from "@repo/ai/types/agents";
 import { mathOperations } from "@repo/math/schema/operations";
@@ -56,7 +56,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
   const result = yield* Effect.tryPromise(() =>
     generateText({
       messages: [{ role: "user", content: task }],
-      model: model.languageModel(modelId),
+      model: provider.languageModel(modelId),
       providerOptions: {
         gateway: gatewayProviderOptions,
         google: getFastModelProviderOptions(modelId),

@@ -431,7 +431,7 @@ function DrawerFooter({
 }) {
   const defaultProps = {
     className: cn(
-      "flex flex-col-reverse gap-2 px-6 pb-(--safe-area-inset-bottom,0px) sm:flex-row sm:justify-end",
+      "flex flex-col-reverse gap-2 px-6 pb-(--safe-area-inset-bottom,0px) md:flex-row md:justify-end max-md:[&>[data-slot=button]]:w-full",
       !allowSelection && "cursor-default",
       variant === "default" &&
         "border-t bg-muted/72 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(4))]",

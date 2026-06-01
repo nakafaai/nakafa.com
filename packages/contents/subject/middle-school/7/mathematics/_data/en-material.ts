@@ -4,7 +4,8 @@ import { BASE_PATH } from "@repo/contents/subject/middle-school/7/mathematics/_d
 const enMaterials = [
   {
     title: "Integers",
-    description: "Calculation basis for everything in the world.",
+    description:
+      "Read positive and negative numbers, factors, GCD, and LCM for everyday calculations.",
     href: `${BASE_PATH}/integers`,
     items: [
       {
@@ -39,7 +40,8 @@ const enMaterials = [
   },
   {
     title: "Rational Numbers",
-    description: "Number precision in fractions and decimals.",
+    description:
+      "Convert, compare, and calculate with fractions and decimals in one connected path.",
     href: `${BASE_PATH}/rational-numbers`,
     items: [
       {
@@ -82,7 +84,8 @@ const enMaterials = [
   },
   {
     title: "Ratio",
-    description: "Understanding proportion and value comparison.",
+    description:
+      "Read comparisons, equivalent ratios, scale, and unit rates step by step.",
     href: `${BASE_PATH}/ratio`,
     items: [
       {
@@ -105,7 +108,8 @@ const enMaterials = [
   },
   {
     title: "Algebraic Forms",
-    description: "Symbolic language for complex problem solving.",
+    description:
+      "Turn situations into variables, terms, operations, and simple algebraic models.",
     href: `${BASE_PATH}/algebraic-forms`,
     items: [
       {
@@ -128,7 +132,8 @@ const enMaterials = [
   },
   {
     title: "Similarity",
-    description: "Scale geometry in maps and design.",
+    description:
+      "Reading angles, side ratios, and scale factors in shapes, maps, and design.",
     href: `${BASE_PATH}/similarity`,
     items: [
       {
@@ -159,7 +164,8 @@ const enMaterials = [
   },
   {
     title: "Data and Diagrams",
-    description: "Turning numbers into visual stories.",
+    description:
+      "Collect, choose, read, and interpret diagrams so data becomes easier to reason about.",
     href: `${BASE_PATH}/data-diagrams`,
     items: [
       {

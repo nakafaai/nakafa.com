@@ -1,6 +1,6 @@
-import { Section, Text } from "@react-email/components";
 import { cva } from "class-variance-authority";
 import type { CSSProperties, ReactNode } from "react";
+import { Section, Text } from "react-email";
 
 interface CardProps {
   children: ReactNode;

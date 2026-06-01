@@ -3,7 +3,6 @@ import type {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/convex/_generated/server";
-import { shouldAdvanceForumReadBoundary } from "@repo/backend/convex/classes/forums/utils/readBoundary";
 
 /**
  * Move a user's forum read boundary forward when the next boundary is newer.
@@ -35,12 +34,7 @@ export async function updateForumReadState(
     return;
   }
 
-  if (
-    !shouldAdvanceForumReadBoundary({
-      existingLastReadSequence: existing.lastReadSequence,
-      nextLastReadSequence: args.lastReadSequence,
-    })
-  ) {
+  if (args.lastReadSequence <= existing.lastReadSequence) {
     return;
   }
 

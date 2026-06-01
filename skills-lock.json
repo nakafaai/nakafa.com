@@ -2,7 +2,7 @@
   "version": 1,
   "skills": {
     "ai-sdk": {
-      "source": "vercel-labs/ai",
+      "source": "vercel/ai",
       "sourceType": "github",
       "skillPath": "skills/use-ai-sdk/SKILL.md",
       "computedHash": "2249889eb47ef0f61c4dba4cf2afe01c1c8dd793bb4c24230347c1ab909bb7dd"
@@ -11,7 +11,7 @@
       "source": "coreyhaines31/marketingskills",
       "sourceType": "github",
       "skillPath": "skills/ai-seo/SKILL.md",
-      "computedHash": "a10d405f47756007af00d3c36c514271d0521cf483f467673abc0062980ead6e"
+      "computedHash": "a6befed362ed7127d051db085bc8be9470abbe87f70a40ee9a05e201dd8c693f"
     },
     "analytics": {
       "source": "coreyhaines31/marketingskills",
@@ -66,7 +66,7 @@
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex-migration-helper/SKILL.md",
-      "computedHash": "8da4dee6f36c71b5d899b90ad7bd1d3730cf4dd35118f9ea856075df29809c04"
+      "computedHash": "47ad936c1977eecca736211fe4efb171b53c412b49cffc42267095276a8df36d"
     },
     "convex-migrations": {
       "source": "waynesutton/convexskills",
@@ -83,7 +83,7 @@
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex-quickstart/SKILL.md",
-      "computedHash": "8735052585ff81bb6ad4b362a7bb599413288e55d071c8ddf4f798b6d989ebac"
+      "computedHash": "54e5271d5d613cc4c0068baa250613b5abb6e4533df1e67adc26d2e0c7d68ded"
     },
     "convex-realtime": {
       "source": "waynesutton/convexskills",
@@ -137,12 +137,13 @@
       "source": "mattpocock/skills",
       "sourceType": "github",
       "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
-      "computedHash": "c77b86b4332919499608f9af1880074e1fec65a59b95c70c27a9f39cd137865e"
+      "computedHash": "ef32aea0a8fab9b365ff9e08a95f8d353e20ca21ea46ec2e73587c86dd341351"
     },
     "kami": {
       "source": "tw93/kami",
       "sourceType": "github",
-      "computedHash": "b65b0f3ff3d8d0ffef2472240a5c0ee249e7eb4623264ad46ae45199645b1ac5"
+      "skillPath": "SKILL.md",
+      "computedHash": "80cfb2989af3f840b649a721f63fdc7a6f89b22684c71a2c509a0d787392cb94"
     },
     "marketing-psychology": {
       "source": "coreyhaines31/marketingskills",
@@ -153,7 +154,7 @@
       "source": "mcp-use/mcp-use",
       "sourceType": "github",
       "skillPath": "skills/mcp-apps-builder/SKILL.md",
-      "computedHash": "1ec6f723a71085572364a11fc2932c908754c6849594a310d2cb0661d44df8c0"
+      "computedHash": "935809ff8d3a12d0ce7a0bc1353f63d10391260b56c600db0aa6e081ef618e67"
     },
     "mcp-builder": {
       "source": "anthropics/skills",

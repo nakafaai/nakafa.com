@@ -80,10 +80,10 @@ export function ElectabilityChart({
   const chartConfig = {
     value: {
       label: labels.electability,
-      color: "var(--chart-3)",
+      colors: { light: ["var(--chart-3)"] },
     },
     label: {
-      color: "var(--background)",
+      colors: { light: ["var(--background)"] },
     },
   } satisfies ChartConfig;
 
@@ -118,12 +118,7 @@ export function ElectabilityChart({
               content={<ChartTooltipContent indicator="line" />}
               cursor={false}
             />
-            <Bar
-              dataKey="value"
-              fill="var(--color-value)"
-              layout="vertical"
-              radius={8}
-            >
+            <Bar dataKey="value" fill="var(--color-value-0)" radius={8}>
               <LabelList
                 className="fill-foreground"
                 dataKey="name"

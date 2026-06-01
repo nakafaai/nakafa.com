@@ -9,6 +9,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogPanel,
   DialogTitle,
 } from "@repo/design-system/components/ui/dialog";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -83,7 +84,7 @@ function OnboardingContent({ user }: { user: CurrentUser }) {
 
   return (
     <Dialog open={open}>
-      <DialogContent className="gap-0 p-0" showCloseButton={false}>
+      <DialogContent className="p-0" showCloseButton={false}>
         <div className="p-2">
           <Image
             alt="Nakafa"
@@ -96,12 +97,12 @@ function OnboardingContent({ user }: { user: CurrentUser }) {
             width={382}
           />
         </div>
-        <div className="space-y-6 px-6 pt-3 pb-6">
-          <DialogHeader>
-            <DialogTitle>{t("title")}</DialogTitle>
-            <DialogDescription>{t("description")}</DialogDescription>
-          </DialogHeader>
+        <DialogHeader>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("description")}</DialogDescription>
+        </DialogHeader>
 
+        <DialogPanel scrollFade={false}>
           <Select
             disabled={isPending}
             items={roleItems}
@@ -121,17 +122,17 @@ function OnboardingContent({ user }: { user: CurrentUser }) {
               </SelectGroup>
             </SelectContent>
           </Select>
+        </DialogPanel>
 
-          <DialogFooter>
-            <Button
-              disabled={!selectedRole || isPending}
-              onClick={handleStartLearning}
-            >
-              <Spinner icon={PartyIcon} isLoading={isPending} />
-              {t("button")}
-            </Button>
-          </DialogFooter>
-        </div>
+        <DialogFooter>
+          <Button
+            disabled={!selectedRole || isPending}
+            onClick={handleStartLearning}
+          >
+            <Spinner icon={PartyIcon} isLoading={isPending} />
+            {t("button")}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

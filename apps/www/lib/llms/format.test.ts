@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
 import { ENGLISH_LANGUAGE_NAMES } from "@/lib/llms/constants";
 import {

@@ -58,15 +58,23 @@ describe("users/mutations", () => {
         name: "Nabil Akbarazzima Fatih",
       });
 
-    const result = await t.query(async (ctx) => ({
-      authUser: (await ctx.runQuery(components.betterAuth.adapter.findOne, {
-        model: "user",
-        where: [{ field: "_id", value: identity.authUserId }],
-      })) as { name: string } | null,
-      appUser: await ctx.db.get("users", identity.userId),
-    }));
+    const result = await t.query(async (ctx) => {
+      const authUser = await ctx.runQuery(
+        components.betterAuth.adapter.findOne,
+        {
+          model: "user",
+          where: [{ field: "_id", value: identity.authUserId }],
+        }
+      );
 
-    expect(result.authUser?.name).toBe("Nabil Akbarazzima Fatih");
+      return {
+        authUserName:
+          authUser && typeof authUser.name === "string" ? authUser.name : null,
+        appUser: await ctx.db.get("users", identity.userId),
+      };
+    });
+
+    expect(result.authUserName).toBe("Nabil Akbarazzima Fatih");
     expect(result.appUser?.name).toBe("Nabil Akbarazzima Fatih");
   });
 

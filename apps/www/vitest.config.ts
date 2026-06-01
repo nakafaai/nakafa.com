@@ -7,7 +7,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * Keep this config aligned with the shared frontend Vitest baseline.
- * Do not weaken coverage or add app-local execution overrides here.
+ * Browser-like tests use the shared jsdom default. Node-only tests declare
+ * `// @vitest-environment node` in the test file so ownership stays local.
+ *
+ * @see https://vitest.dev/guide/environment
+ * @see https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility
  */
 export default mergeConfig(config, {
   resolve: {
