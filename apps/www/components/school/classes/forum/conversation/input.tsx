@@ -2,7 +2,6 @@ import { ArrowUp01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure, useOs, useResizeObserver } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   MAX_FORUM_ATTACHMENT_BYTES,
   MAX_FORUM_POST_ATTACHMENTS,
@@ -18,8 +17,7 @@ import { useFileUpload } from "@repo/design-system/hooks/use-file-upload";
 import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
-import { Schema } from "effect";
-import ky from "ky";
+import { Effect, Either, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { Activity, type ComponentRef, useEffect, useRef } from "react";
 import { toast } from "sonner";
@@ -30,6 +28,7 @@ import { AttachmentPreviews } from "@/components/school/classes/forum/conversati
 import { InputAttachments } from "@/components/school/classes/forum/conversation/input/attachments-trigger";
 import { EmojiButton } from "@/components/school/classes/forum/conversation/input/emoji-button";
 import { ReplyIndicator } from "@/components/school/classes/forum/conversation/input/reply-indicator";
+import { submitForumPost } from "@/components/school/classes/forum/conversation/input/submit";
 
 /** Handles forum post submission, uploads, and reply cleanup for the transcript. */
 export const ForumPostInput = () => {
@@ -78,40 +77,6 @@ export const ForumPostInput = () => {
     }
   }, [replyTarget]);
 
-  /** Uploads one attachment and removes its pending record if the upload fails. */
-  const uploadFile = async (file: File) => {
-    const { uploadId, uploadUrl } = await generateUploadUrl({ forumId });
-
-    try {
-      const { storageId } = await ky
-        .post(uploadUrl, {
-          headers: { "Content-Type": file.type },
-          body: file,
-        })
-        .json<{ storageId: Id<"_storage"> }>();
-
-      await saveForumUpload({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        storageId,
-        uploadId,
-      });
-
-      return uploadId;
-    } catch (error) {
-      await discardForumUploads({ uploadIds: [uploadId] }).catch(
-        (cleanupError) => {
-          captureException(cleanupError, {
-            source: "forum-upload-discard-single",
-          });
-          return null;
-        }
-      );
-      throw error;
-    }
-  };
-
   const form = useForm({
     defaultValues: { body: "" },
     validators: {
@@ -129,68 +94,27 @@ export const ForumPostInput = () => {
         return;
       }
 
-      const attachmentUploadIds: Id<"schoolClassForumPendingUploads">[] = [];
+      const result = await Effect.runPromise(
+        Effect.either(
+          submitForumPost({
+            files,
+            mutations: {
+              createPost,
+              discardForumUploads,
+              generateUploadUrl,
+              saveForumUpload,
+            },
+            post: {
+              body: value.body,
+              forumId,
+              parentId: replyTarget?.postId,
+            },
+          })
+        )
+      );
 
-      try {
-        const uploadableFiles: File[] = [];
-
-        for (const fileWithPreview of files) {
-          if (fileWithPreview.file instanceof File) {
-            uploadableFiles.push(fileWithPreview.file);
-          }
-        }
-
-        const uploadResults = await Promise.allSettled(
-          uploadableFiles.map(uploadFile)
-        );
-
-        for (const result of uploadResults) {
-          if (result.status === "fulfilled") {
-            attachmentUploadIds.push(result.value);
-          }
-        }
-
-        const failedUpload = uploadResults.find(
-          (result) => result.status === "rejected"
-        );
-
-        if (failedUpload) {
-          const reason = failedUpload.reason;
-          throw reason instanceof Error
-            ? reason
-            : new Error("Forum attachment upload failed.", { cause: reason });
-        }
-
-        await createPost({
-          attachmentUploadIds:
-            attachmentUploadIds.length > 0 ? attachmentUploadIds : undefined,
-          forumId,
-          body: value.body,
-          parentId: replyTarget?.postId,
-        });
-
-        form.reset();
-        clearFiles();
-        setForumReplyTarget(forumId, null);
-        acknowledgeUnreadCue();
-
-        requestAnimationFrame(() => {
-          textareaRef.current?.focus();
-          goToLatest();
-        });
-      } catch (error) {
-        if (attachmentUploadIds.length > 0) {
-          await discardForumUploads({ uploadIds: attachmentUploadIds }).catch(
-            (cleanupError) => {
-              captureException(cleanupError, {
-                source: "forum-upload-discard-batch",
-              });
-              return null;
-            }
-          );
-        }
-
-        captureException(error, {
+      if (Either.isLeft(result)) {
+        captureException(result.left, {
           source: "forum-post-submit",
         });
         toast.error(t("create-post-failed"));
@@ -198,7 +122,19 @@ export const ForumPostInput = () => {
         requestAnimationFrame(() => {
           textareaRef.current?.focus();
         });
+
+        return;
       }
+
+      form.reset();
+      clearFiles();
+      setForumReplyTarget(forumId, null);
+      acknowledgeUnreadCue();
+
+      requestAnimationFrame(() => {
+        textareaRef.current?.focus();
+        goToLatest();
+      });
     },
   });
 

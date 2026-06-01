@@ -8,6 +8,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { fetchQuery } from "convex/nextjs";
+import { Clock, Effect } from "effect";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { TryoutCatalogCard } from "@/components/tryout/catalog-card";
@@ -42,16 +43,18 @@ export default async function Page(
     getToken(),
   ]);
 
-  const catalogSnapshot = await fetchQuery(
-    api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
-    {
-      locale,
-      pageSize: TRYOUT_CATALOG_PAGE_SIZE,
-      product,
-    },
-    token ? { token } : undefined
-  );
-  const initialNowMs = Date.now();
+  const [catalogSnapshot, initialNowMs] = await Promise.all([
+    fetchQuery(
+      api.tryouts.queries.tryouts.getActiveTryoutCatalogSnapshot,
+      {
+        locale,
+        pageSize: TRYOUT_CATALOG_PAGE_SIZE,
+        product,
+      },
+      token ? { token } : undefined
+    ),
+    Effect.runPromise(Clock.currentTimeMillis),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-20 sm:py-24">
