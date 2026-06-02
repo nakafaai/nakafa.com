@@ -2,9 +2,8 @@ import { teams } from "@repo/contents/_data/team";
 import { getContentsMetadata } from "@repo/contents/_lib/metadata";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
-import type { Article } from "@repo/contents/_types/content";
+import type { Article, Locale } from "@repo/contents/_types/content";
 import { Effect } from "effect";
-import type { Locale } from "next-intl";
 
 /**
  * Builds the public URL path for an article detail page.

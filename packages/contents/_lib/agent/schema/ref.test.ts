@@ -19,7 +19,9 @@ describe("NakafaAgentContentIdSchema", () => {
   it("rejects content IDs without a supported locale or safe route", () => {
     expect(() =>
       Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("xx/quran/1")
-    ).toThrow("Expected a locale-prefixed Nakafa content ID");
+    ).toThrow(
+      "Expected a locale-prefixed Nakafa content ID with a safe route."
+    );
 
     expect(() =>
       Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("quran/1")
@@ -31,7 +33,15 @@ describe("NakafaAgentContentIdSchema", () => {
 
     expect(() =>
       Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("en/quran/../1")
-    ).toThrow("Expected a locale-prefixed Nakafa content ID");
+    ).toThrow(
+      "Expected a locale-prefixed Nakafa content ID with a safe route."
+    );
+
+    expect(() =>
+      Schema.decodeUnknownSync(NakafaAgentContentIdSchema)("en")
+    ).toThrow(
+      "Expected a locale-prefixed Nakafa content ID with a safe route."
+    );
   });
 });
 

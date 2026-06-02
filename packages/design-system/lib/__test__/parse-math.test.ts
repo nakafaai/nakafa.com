@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { preprocessLaTeX } from "@repo/design-system/lib/parse-math";
 import { Lexer } from "marked";
 import { describe, expect, it } from "vitest";
