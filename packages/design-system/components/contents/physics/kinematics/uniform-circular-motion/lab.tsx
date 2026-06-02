@@ -181,7 +181,7 @@ function CircularMotionScene({
   return (
     <group>
       <CircularTrack />
-      <CircularCar key={motion.period} motion={motion} />
+      <CircularCar motion={motion} />
     </group>
   );
 }
@@ -225,13 +225,18 @@ function CircularTrack() {
 function CircularCar({ motion }: { motion: UniformCircularMotionState }) {
   const groupRef = useRef<Group>(null);
   const animationStartRef = useRef<number | null>(null);
+  const animationPeriodRef = useRef<UniformCircularMotionPeriod | null>(null);
 
   useFrame((state) => {
     if (!groupRef.current) {
       return;
     }
 
-    if (animationStartRef.current === null) {
+    if (
+      animationStartRef.current === null ||
+      animationPeriodRef.current !== motion.period
+    ) {
+      animationPeriodRef.current = motion.period;
       animationStartRef.current = state.clock.elapsedTime;
     }
 

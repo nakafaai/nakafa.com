@@ -28,7 +28,7 @@ const BALL_RADIUS = 0.24;
 const PAUSE_SECONDS = 0.9;
 const CAMERA_POSITION = [2.8, 2.6, 4.6] as const;
 const CAMERA_TARGET = [0, 1.22, 0] as const;
-const TRAIL_STEPS = [0, 1, 2, 3, 4, 5, 6, 7] as const;
+const TRAIL_POINT_COUNT = 8;
 const TRAILING_ZERO_PATTERN = /\.0$/;
 
 type Mode = (typeof MODES)[number];
@@ -38,18 +38,28 @@ const COPY = {
   id: {
     condition: "Kondisi awal",
     description:
-      "Bandingkan bola yang dilempar ke atas dan bola yang dijatuhkan untuk melihat pengaruh gravitasi.",
+      "Pilih cara bola mulai bergerak untuk melihat gravitasi mengubah tinggi dan kecepatannya.",
     finalVelocity: "Kecepatan akhir",
+    initialCondition: "Kondisi awal",
     maxHeight: "Tinggi tertinggi",
+    modeLabels: {
+      drop: "Dijatuhkan",
+      throw: "Dilempar ke Atas",
+    },
     time: "Waktu gerak",
     title: "Bola pada Gerak Vertikal",
   },
   en: {
     condition: "Initial condition",
     description:
-      "Compare an upward throw and a dropped ball to see how gravity shapes vertical motion.",
+      "Choose how the ball starts moving to see how gravity changes its height and velocity.",
     finalVelocity: "Final velocity",
+    initialCondition: "Initial condition",
     maxHeight: "Highest point",
+    modeLabels: {
+      drop: "Dropped",
+      throw: "Thrown Upward",
+    },
     time: "Motion time",
     title: "Ball in Vertical Motion",
   },
@@ -91,7 +101,7 @@ export function VerticalMovementLab({ locale }: VerticalMovementLabProps) {
         >
           {MODES.map((modeOption) => (
             <ToggleGroupItem key={modeOption} value={modeOption}>
-              <InlineMath math={formatConditionMath(modeOption)} />
+              {labels.modeLabels[modeOption]}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
@@ -128,14 +138,18 @@ export function VerticalMovementLab({ locale }: VerticalMovementLabProps) {
                 enableZoom
                 minDistance={2.4}
               />
-              <VerticalMotionScene key={mode} motion={motion} />
+              <VerticalMotionScene motion={motion} />
             </Suspense>
           </ThreeCanvas>
         </section>
       </CardContent>
 
       <CardFooter className="border-t">
-        <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-3">
+        <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
+          <LabFact
+            label={labels.initialCondition}
+            value={<InlineMath math={formatInitialConditionMath(motion)} />}
+          />
           <LabFact
             label={labels.maxHeight}
             value={<InlineMath math={formatMeter(motion.maxHeight, locale)} />}
@@ -172,17 +186,17 @@ function VerticalMotionScene({ motion }: { motion: MotionState }) {
 function VerticalTrail({ motion }: { motion: MotionState }) {
   return (
     <group>
-      {TRAIL_STEPS.map((step) => {
-        const progress = step / (TRAIL_STEPS.length - 1);
+      {Array.from({ length: TRAIL_POINT_COUNT }, (_, index) => {
+        const progress = index / (TRAIL_POINT_COUNT - 1);
         const height =
           getHeight(motion, motion.motionTime * progress) * WORLD_SCALE +
           BALL_RADIUS;
 
         return (
           <mesh
-            key={step}
+            key={`trail-${progress}`}
             position={[0, height, -0.26]}
-            scale={1 - step * 0.055}
+            scale={1 - index * 0.055}
           >
             <sphereGeometry args={[0.045, 12, 8]} />
             <meshBasicMaterial color="#93c5fd" opacity={0.42} transparent />
@@ -197,17 +211,30 @@ function AnimatedBall({ motion }: { motion: MotionState }) {
   const ballRef = useRef<Group>(null);
   const shadowRef = useRef<Group>(null);
   const shadowMaterialRef = useRef<MeshBasicMaterial>(null);
+  const animationStartRef = useRef<number | null>(null);
+  const animationConditionRef = useRef<string | null>(null);
 
   useFrame((state) => {
     if (!(ballRef.current && shadowRef.current && shadowMaterialRef.current)) {
       return;
     }
 
+    const animationCondition = getInitialConditionKey(motion);
+
+    if (
+      animationStartRef.current === null ||
+      animationConditionRef.current !== animationCondition
+    ) {
+      animationConditionRef.current = animationCondition;
+      animationStartRef.current = state.clock.elapsedTime;
+    }
+
     const loopSeconds = motion.motionTime + PAUSE_SECONDS;
-    const elapsed = state.clock.elapsedTime % loopSeconds;
+    const elapsed =
+      (state.clock.elapsedTime - animationStartRef.current) % loopSeconds;
     const time = Math.min(elapsed, motion.motionTime);
     const height = getHeight(motion, time);
-    const heightRatio = height / motion.maxHeight;
+    const heightRatio = motion.maxHeight === 0 ? 0 : height / motion.maxHeight;
 
     ballRef.current.position.y = height * WORLD_SCALE + BALL_RADIUS;
     ballRef.current.rotation.x = -elapsed * 2.3;
@@ -291,12 +318,12 @@ function isMode(value: string): value is Mode {
   return MODES.some((mode) => mode === value);
 }
 
-function formatConditionMath(mode: Mode) {
-  if (mode === "throw") {
-    return "v_0=20\\text{ m/s}";
-  }
+function formatInitialConditionMath(motion: MotionState) {
+  return `v_0=${Math.round(motion.startVelocity)}\\text{ m/s}\\quad y_0=${Math.round(motion.startHeight)}\\text{ m}`;
+}
 
-  return "y_0=20\\text{ m}";
+function getInitialConditionKey(motion: MotionState) {
+  return `${motion.startVelocity}-${motion.startHeight}`;
 }
 
 function formatMeter(value: number, locale: Locale) {

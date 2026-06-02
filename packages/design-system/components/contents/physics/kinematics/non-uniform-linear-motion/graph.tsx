@@ -16,8 +16,8 @@ import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 const MAX_TIME = 6;
 const MAX_VELOCITY = 12;
-const TIME_TICKS = [0, 1, 2, 3, 4, 5, 6] as const;
-const VELOCITY_TICKS = [0, 2, 4, 6, 8, 10, 12] as const;
+const TIME_TICKS = getTicks(MAX_TIME, 1);
+const VELOCITY_TICKS = getTicks(MAX_VELOCITY, 2);
 
 export function VelocityTimeGraph({
   labels,
@@ -119,4 +119,10 @@ function formatTooltipTime(
   }
 
   return `t = ${time} s`;
+}
+
+function getTicks(maxValue: number, step: number) {
+  const tickCount = Math.floor(maxValue / step) + 1;
+
+  return Array.from({ length: tickCount }, (_, index) => index * step);
 }

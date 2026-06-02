@@ -39,6 +39,7 @@ import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 const PAUSE_SECONDS = 1;
+const BRAKE_DUST_PUFF_COUNT = 5;
 const REACTION_DISTANCE_COLOR = "#0f9f95";
 const BRAKING_DISTANCE_COLOR = "#e97723";
 
@@ -189,7 +190,7 @@ function StoppingDistanceScene({ motion }: { motion: StoppingDistanceState }) {
         z={0.72}
       />
       <StopCone x={motion.stopX} />
-      <AnimatedCar key={motion.speed} motion={motion} sceneRef={sceneRef} />
+      <AnimatedCar motion={motion} sceneRef={sceneRef} />
     </group>
   );
 }
@@ -204,13 +205,18 @@ function AnimatedCar({
   const groupRef = useRef<Group>(null);
   const brakeDustRef = useRef<Group>(null);
   const animationStartRef = useRef<number | null>(null);
+  const animationSpeedRef = useRef<StoppingDistanceSpeed | null>(null);
 
   useFrame((state) => {
     if (!groupRef.current) {
       return;
     }
 
-    if (animationStartRef.current === null) {
+    if (
+      animationStartRef.current === null ||
+      animationSpeedRef.current !== motion.speed
+    ) {
+      animationSpeedRef.current = motion.speed;
       animationStartRef.current = state.clock.elapsedTime;
     }
 
@@ -270,18 +276,12 @@ function CarContactShadow() {
 }
 
 function BrakeDust({ dustRef }: { dustRef: RefObject<Group | null> }) {
-  const puffPositions = [
-    [-0.42, 0.2, -0.46],
-    [-0.18, 0.3, -0.58],
-    [-0.42, 0.2, 0.46],
-    [-0.18, 0.3, 0.58],
-    [-0.68, 0.34, 0],
-  ] satisfies Array<readonly [number, number, number]>;
+  const puffPositions = getBrakeDustPuffPositions();
 
   return (
     <group ref={dustRef} visible={false}>
-      {puffPositions.map(([x, y, z]) => (
-        <mesh key={`${x}-${y}-${z}`} position={[x, y, z]}>
+      {puffPositions.map((position) => (
+        <mesh key={position.join("-")} position={position}>
           <sphereGeometry args={[0.3, 12, 8]} />
           <meshBasicMaterial
             color="#e5e7eb"
@@ -293,6 +293,26 @@ function BrakeDust({ dustRef }: { dustRef: RefObject<Group | null> }) {
       ))}
     </group>
   );
+}
+
+function getBrakeDustPuffPositions() {
+  const centerIndex = Math.floor(BRAKE_DUST_PUFF_COUNT / 2);
+
+  return Array.from({ length: BRAKE_DUST_PUFF_COUNT }, (_, index) => {
+    const offset = index - centerIndex;
+
+    if (offset === 0) {
+      return [-0.68, 0.34, 0] satisfies [number, number, number];
+    }
+
+    const ring = Math.abs(offset);
+    const side = Math.sign(offset);
+    const x = -0.18 - (ring - 1) * 0.24;
+    const y = 0.3 - (ring - 1) * 0.1;
+    const z = side * (0.58 - (ring - 1) * 0.12);
+
+    return [x, y, z] satisfies [number, number, number];
+  });
 }
 
 function Road() {

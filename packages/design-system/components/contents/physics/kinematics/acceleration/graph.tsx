@@ -2,7 +2,7 @@ import {
   type AccelerationCase,
   type AccelerationLabels,
   getDeltaVelocity,
-  MOTION_POINTS,
+  getMotionPoints,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import type { ChartConfig } from "@repo/design-system/components/ui/chart";
 import {
@@ -29,15 +29,8 @@ interface AccelerationGraphProps {
 
 const MAX_TIME = 12;
 const MAX_VELOCITY = 12;
-const TIME_TICKS = [0, 2, 4, 6, 8, 10, 12] as const;
-const VELOCITY_TICKS = [0, 2, 4, 6, 8, 10, 12] as const;
-const MOTION_SEGMENTS = MOTION_POINTS.slice(0, -1).map(
-  (point, index) =>
-    [
-      { x: point[0], y: point[1] },
-      { x: MOTION_POINTS[index + 1][0], y: MOTION_POINTS[index + 1][1] },
-    ] as const
-);
+const TIME_TICKS = getTicks(MAX_TIME, 2);
+const VELOCITY_TICKS = getTicks(MAX_VELOCITY, 2);
 
 interface GuideSegment {
   points: readonly [GuidePoint, GuidePoint];
@@ -62,9 +55,10 @@ export function AccelerationGraph({
     },
   } satisfies ChartConfig;
 
-  const motionData = MOTION_POINTS.map(([time, velocity]) => ({
-    time,
-    motion: velocity,
+  const motionPoints = getMotionPoints();
+  const motionData = motionPoints.map((point) => ({
+    time: point.time,
+    motion: point.velocity,
   }));
   const selectedData = [
     { time: selectedCase.t0, selected: selectedCase.v0 },
@@ -107,7 +101,7 @@ export function AccelerationGraph({
         <ChartTooltip
           content={<ChartTooltipContent labelFormatter={formatTooltipTime} />}
         />
-        {MOTION_SEGMENTS.map((segment) => (
+        {getMotionSegments(motionPoints).map((segment) => (
           <ReferenceLine
             ifOverflow="visible"
             key={`${segment[0].x}-${segment[0].y}-${segment[1].x}-${segment[1].y}`}
@@ -143,6 +137,32 @@ export function AccelerationGraph({
       </LineChart>
     </ChartContainer>
   );
+}
+
+function getMotionSegments(points: ReturnType<typeof getMotionPoints>) {
+  const segments: Array<readonly [GuidePoint, GuidePoint]> = [];
+
+  for (let index = 1; index < points.length; index += 1) {
+    const previousPoint = points[index - 1];
+    const currentPoint = points[index];
+
+    if (!(previousPoint && currentPoint)) {
+      continue;
+    }
+
+    segments.push([
+      { x: previousPoint.time, y: previousPoint.velocity },
+      { x: currentPoint.time, y: currentPoint.velocity },
+    ]);
+  }
+
+  return segments;
+}
+
+function getTicks(maxValue: number, step: number) {
+  const tickCount = Math.floor(maxValue / step) + 1;
+
+  return Array.from({ length: tickCount }, (_, index) => index * step);
 }
 
 const CHART_MARGIN = {

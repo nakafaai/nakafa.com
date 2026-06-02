@@ -1,7 +1,7 @@
 "use client";
 
 import { useGLTF } from "@react-three/drei";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { Box3, Mesh, Vector3 } from "three";
 
 interface PhysicsCarModelProps {
@@ -15,11 +15,7 @@ export function PhysicsCarModel({ modelPath }: PhysicsCarModelProps) {
     const box = new Box3().setFromObject(clone);
     clone.position.copy(new Vector3(0, -box.min.y, 0));
 
-    return clone;
-  }, [scene]);
-
-  useEffect(() => {
-    car.traverse((child) => {
+    clone.traverse((child) => {
       if (!(child instanceof Mesh)) {
         return;
       }
@@ -27,7 +23,9 @@ export function PhysicsCarModel({ modelPath }: PhysicsCarModelProps) {
       child.castShadow = true;
       child.receiveShadow = true;
     });
-  }, [car]);
+
+    return clone;
+  }, [scene]);
 
   return <primitive object={car} />;
 }

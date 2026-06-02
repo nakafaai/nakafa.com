@@ -48,13 +48,6 @@ export const ACCELERATION_CASES: AccelerationCase[] = [
   },
 ];
 
-export const MOTION_POINTS = [
-  [0, 2],
-  [4, 10],
-  [8, 10],
-  [12, 2],
-] as const;
-
 export function getAccelerationCaseById(id: AccelerationCaseId) {
   return (
     ACCELERATION_CASES.find((item) => item.id === id) ?? ACCELERATION_CASES[0]
@@ -69,4 +62,16 @@ export function isAccelerationCaseId(
 
 export function getDeltaVelocity(item: AccelerationCase) {
   return item.v1 - item.v0;
+}
+
+export function getMotionPoints() {
+  const firstCase = ACCELERATION_CASES[0];
+
+  return [
+    { time: firstCase.t0, velocity: firstCase.v0 },
+    ...ACCELERATION_CASES.map((item) => ({
+      time: item.t1,
+      velocity: item.v1,
+    })),
+  ];
 }

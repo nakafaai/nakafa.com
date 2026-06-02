@@ -180,7 +180,7 @@ function ParabolicScene({ motion }: { motion: MotionState }) {
         <torusGeometry args={[0.24, 0.025, 12, 40]} />
         <meshStandardMaterial color="#0f9f95" roughness={0.55} />
       </mesh>
-      <ProjectileBall key={motion.angle} motion={motion} />
+      <ProjectileBall motion={motion} />
     </group>
   );
 }
@@ -207,14 +207,25 @@ function Trajectory({ motion }: { motion: MotionState }) {
 
 function ProjectileBall({ motion }: { motion: MotionState }) {
   const groupRef = useRef<Group>(null);
+  const animationStartRef = useRef<number | null>(null);
+  const animationAngleRef = useRef<LaunchAngle | null>(null);
 
   useFrame((state) => {
     if (!groupRef.current) {
       return;
     }
 
+    if (
+      animationStartRef.current === null ||
+      animationAngleRef.current !== motion.angle
+    ) {
+      animationAngleRef.current = motion.angle;
+      animationStartRef.current = state.clock.elapsedTime;
+    }
+
     const loopSeconds = motion.flightTime + PAUSE_SECONDS;
-    const elapsed = state.clock.elapsedTime % loopSeconds;
+    const elapsed =
+      (state.clock.elapsedTime - animationStartRef.current) % loopSeconds;
     const progress = Math.min(elapsed / motion.flightTime, 1);
     const point = getProjectilePoint(motion, progress);
 
