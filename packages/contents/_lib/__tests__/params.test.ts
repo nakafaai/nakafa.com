@@ -2,8 +2,8 @@ import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import {
   getFolderChildNames,
   getFolderChildNamesCacheVersion,
-  getNestedSlugs,
-} from "@repo/contents/_lib/fs";
+} from "@repo/contents/_lib/fs/cache";
+import { getNestedSlugs } from "@repo/contents/_lib/fs/nested-slugs";
 import {
   generateContentParams,
   generateLocaleParams,
@@ -16,7 +16,8 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@repo/contents/_lib/cache");
-vi.mock("@repo/contents/_lib/fs");
+vi.mock("@repo/contents/_lib/fs/cache");
+vi.mock("@repo/contents/_lib/fs/nested-slugs");
 vi.mock("@repo/internationalization/src/routing", () => ({
   routing: {
     locales: ["en", "id"],
@@ -29,8 +30,8 @@ beforeEach(() => {
   folderCacheVersion = 0;
   resetStaticParamCaches();
   vi.clearAllMocks();
-  vi.mocked(getFolderChildNamesCacheVersion).mockImplementation(
-    () => folderCacheVersion
+  vi.mocked(getFolderChildNamesCacheVersion).mockImplementation(() =>
+    Effect.succeed(folderCacheVersion)
   );
 });
 
@@ -110,8 +111,10 @@ describe("getExerciseNumberPaths", () => {
 
 describe("generateContentParams", () => {
   it("should generate params with locale as separate param", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["folder"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getFolderChildNames).mockReturnValue(
+      Effect.succeed(["articles"])
+    );
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([["folder"]]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
     const result = generateContentParams({ basePath: "articles" });
@@ -123,7 +126,7 @@ describe("generateContentParams", () => {
 
   it("should include exercise set paths for exercises basePath", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["math"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([
       "exercises/math/set-1/1/_question",
     ]);
@@ -135,8 +138,10 @@ describe("generateContentParams", () => {
   });
 
   it("should handle custom locales", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["folder"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getFolderChildNames).mockReturnValue(
+      Effect.succeed(["articles"])
+    );
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([["folder"]]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
     const result = generateContentParams({
@@ -152,7 +157,7 @@ describe("generateContentParams", () => {
 
   it("should include MDX paths not in folder paths", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["folder1"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([
       "articles/folder1",
       "articles/mdx-only-path",
@@ -171,8 +176,10 @@ describe("generateContentParams", () => {
   });
 
   it("should include exercise set paths not in folder paths for exercises basePath", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["math"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getFolderChildNames).mockReturnValue(
+      Effect.succeed(["exercises"])
+    );
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([["math"]]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([
       "exercises/math/algebra/set-1/1/_question",
       "exercises/math/algebra/set-2/1/_question",
@@ -191,7 +198,9 @@ describe("generateContentParams", () => {
 
   it("should not duplicate exercise set paths that match folder paths", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["math"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([["algebra", "set-1"]]);
+    vi.mocked(getNestedSlugs).mockReturnValue(
+      Effect.succeed([["algebra", "set-1"]])
+    );
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([
       "exercises/math/algebra/set-1/1/_question",
     ]);
@@ -209,11 +218,16 @@ describe("generateContentParams", () => {
   });
 
   it("should include nested folder paths", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["parent"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([
-      ["child"],
-      ["child", "grandchild"],
-    ]);
+    vi.mocked(getFolderChildNames).mockReturnValue(
+      Effect.succeed(["articles"])
+    );
+    vi.mocked(getNestedSlugs).mockReturnValue(
+      Effect.succeed([
+        ["parent"],
+        ["parent", "child"],
+        ["parent", "child", "grandchild"],
+      ])
+    );
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
     const result = generateContentParams({
@@ -245,7 +259,7 @@ describe("generateContentParams", () => {
 
   it("should handle empty locales array", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["folder"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
     const result = generateContentParams({
@@ -258,7 +272,7 @@ describe("generateContentParams", () => {
 
   it("reuses folder discovery for repeated base paths", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["folder"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
     generateContentParams({ basePath: "articles", locales: ["en"] });
@@ -272,8 +286,10 @@ describe("generateContentParams", () => {
   });
 
   it("refreshes folder discovery after folder cache invalidation", () => {
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["old"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getFolderChildNames).mockReturnValue(
+      Effect.succeed(["articles"])
+    );
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([["old"]]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
     const firstResult = generateContentParams({
@@ -283,7 +299,7 @@ describe("generateContentParams", () => {
     const folderCalls = vi.mocked(getFolderChildNames).mock.calls.length;
 
     folderCacheVersion += 1;
-    vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["new"]));
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([["new"]]));
 
     const secondResult = generateContentParams({
       basePath: "articles",
@@ -302,7 +318,7 @@ describe("generateContentParams", () => {
 describe("generateLocaleParams", () => {
   it("should work when called without arguments", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
     const result = generateLocaleParams();
@@ -313,7 +329,7 @@ describe("generateLocaleParams", () => {
 
   it("should return params with locale as separate param", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
     const result = generateLocaleParams({});
@@ -325,7 +341,7 @@ describe("generateLocaleParams", () => {
 
   it("should handle multiple locales", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
     const result = generateLocaleParams({});
@@ -339,7 +355,7 @@ describe("generateLocaleParams", () => {
 
   it("should handle custom locales", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
     const result = generateLocaleParams({
@@ -356,7 +372,7 @@ describe("generateLocaleParams", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(
       Effect.succeed(["subject", "articles"])
     );
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
     const result = generateLocaleParams({ locales: ["en"] });
@@ -370,7 +386,7 @@ describe("generateLocaleParams", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(
       Effect.succeed(["subject", "articles"])
     );
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
     const result = generateLocaleParams({ locales: ["en"] });
@@ -382,7 +398,9 @@ describe("generateLocaleParams", () => {
 
   it("should include nested paths that exist in MDX cache", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([["math"], ["math", "calculus"]]);
+    vi.mocked(getNestedSlugs).mockReturnValue(
+      Effect.succeed([["math"], ["math", "calculus"]])
+    );
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([
       "subject",
       "subject/math",
@@ -399,7 +417,9 @@ describe("generateLocaleParams", () => {
 
   it("should skip nested paths not in MDX cache", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([["math"], ["biology"]]);
+    vi.mocked(getNestedSlugs).mockReturnValue(
+      Effect.succeed([["math"], ["biology"]])
+    );
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([
       "subject",
       "subject/math",
@@ -431,7 +451,7 @@ describe("generateLocaleParams", () => {
 
   it("should handle empty locales array", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
     const result = generateLocaleParams({ locales: [] });
@@ -444,14 +464,14 @@ describe("generateLocaleParams", () => {
     );
     vi.mocked(getNestedSlugs).mockImplementation((folder) => {
       if (folder === "subject") {
-        return [["math"]];
+        return Effect.succeed([["math"]]);
       }
 
       if (folder === "articles") {
-        return [["politics"]];
+        return Effect.succeed([["politics"]]);
       }
 
-      return [];
+      return Effect.succeed([]);
     });
     vi.mocked(getMDXSlugsForLocale).mockImplementation((locale) =>
       locale === "en"
@@ -470,7 +490,7 @@ describe("generateLocaleParams", () => {
 
   it("reuses content path discovery across repeated calls", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([["math"]]);
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([["math"]]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([
       "subject",
       "subject/math",
@@ -488,7 +508,7 @@ describe("generateLocaleParams", () => {
 
   it("refreshes content path discovery after folder cache invalidation", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["subject"]));
-    vi.mocked(getNestedSlugs).mockReturnValue([]);
+    vi.mocked(getNestedSlugs).mockReturnValue(Effect.succeed([]));
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
     const firstResult = generateLocaleParams({ locales: ["en"] });

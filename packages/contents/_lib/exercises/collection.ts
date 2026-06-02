@@ -1,5 +1,5 @@
 import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
-import { getFolderChildNames } from "@repo/contents/_lib/fs";
+import { getFolderChildNames } from "@repo/contents/_lib/fs/cache";
 import type { Locale } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect } from "effect";

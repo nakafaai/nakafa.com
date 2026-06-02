@@ -9,7 +9,9 @@ import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { Effect } from "effect";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -99,6 +101,17 @@ export function generateStaticParams() {
   });
 }
 
+/** Reads exercise subjects inside a Next Cache Components boundary. */
+async function getCachedSubjects(
+  category: ExercisesCategory,
+  type: ExercisesType
+) {
+  "use cache";
+  cacheLife("max");
+
+  return Effect.runSync(getSubjects(category, type));
+}
+
 export default function Page(
   props: PageProps<"/[locale]/exercises/[category]/[type]">
 ) {
@@ -130,7 +143,7 @@ async function PageContent({
 }) {
   const FilePath = getExercisesPath(category, type);
 
-  const subjects = getSubjects(category, type);
+  const subjects = await getCachedSubjects(category, type);
   const [t, tCommon] = await Promise.all([
     getTranslations({ locale, namespace: "Exercises" }),
     getTranslations({ locale, namespace: "Common" }),

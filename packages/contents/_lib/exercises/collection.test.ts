@@ -12,7 +12,7 @@ vi.mock("@repo/contents/_lib/cache", () => ({
   getMDXSlugsForLocale: mockGetMDXSlugsForLocale,
 }));
 
-vi.mock("@repo/contents/_lib/fs", () => ({
+vi.mock("@repo/contents/_lib/fs/cache", () => ({
   getFolderChildNames: mockGetFolderChildNames,
 }));
 

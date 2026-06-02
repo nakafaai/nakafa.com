@@ -125,13 +125,15 @@ export async function generateMetadata({
 }
 
 /** Enumerates the prerenderable learn-exercises paths. */
-export function generateStaticParams() {
-  return getStaticParams({
+export async function generateStaticParams() {
+  const staticParams = await getStaticParams({
     basePath: "exercises",
     paramNames: ["category", "type", "material", "slug"],
     slugParam: "slug",
     isDeep: true,
-  }).filter((params) => {
+  });
+
+  return staticParams.filter((params) => {
     const slug = params.slug;
     return (
       Array.isArray(slug) &&

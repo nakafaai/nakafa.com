@@ -19,6 +19,6 @@ export const buildContentStaticParamManifest = Effect.fn(
   return {
     version,
     localeParams: getLocaleParams(localeSlugs, contentRouteCandidates),
-    staticParams: yield* getStaticParams(source, localeSlugs),
+    staticParams: getStaticParams(localeSlugs, contentRouteCandidates),
   };
 });

@@ -12,7 +12,9 @@ import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { Effect } from "effect";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -105,6 +107,14 @@ export function generateStaticParams() {
   });
 }
 
+/** Reads grade subjects inside a Next Cache Components boundary. */
+async function getCachedGradeSubjects(category: SubjectCategory, grade: Grade) {
+  "use cache";
+  cacheLife("max");
+
+  return Effect.runSync(getGradeSubjects(category, grade));
+}
+
 export default function Page(
   props: PageProps<"/[locale]/subject/[category]/[grade]">
 ) {
@@ -136,8 +146,8 @@ async function PageContent({
 }) {
   const FilePath = getGradePath(category, grade);
 
-  const [subjects, tCommon, tSubject] = await Promise.all([
-    getGradeSubjects(category, grade),
+  const subjects = await getCachedGradeSubjects(category, grade);
+  const [tCommon, tSubject] = await Promise.all([
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Subject" }),
   ]);

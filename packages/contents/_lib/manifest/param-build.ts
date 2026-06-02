@@ -21,7 +21,7 @@ export const buildContentRouteParamManifest = Effect.fn(
   const version = yield* source.getFolderCacheVersion;
   const localeSlugs = yield* getLocaleSlugs(source, locales);
   const contentRouteCandidates = yield* getContentPathCandidates(source);
-  const staticParams = yield* getStaticParams(source, localeSlugs);
+  const staticParams = getStaticParams(localeSlugs, contentRouteCandidates);
   const localeParams = getLocaleParams(localeSlugs, contentRouteCandidates);
 
   return {

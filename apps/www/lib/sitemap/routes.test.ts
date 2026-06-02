@@ -32,12 +32,27 @@ vi.mock("@repo/contents/_lib/cache", () => ({
   getMDXSlugsForLocale: mockContentCache.getMDXSlugsForLocale,
 }));
 
-vi.mock("@repo/contents/_lib/fs", () => ({
-  clearFolderChildNamesCache: mockContentFolders.clearFolderChildNamesCache,
-  getFolderChildNames: mockContentFolders.getFolderChildNames,
-  getFolderChildNamesCacheVersion: vi.fn(() => 0),
-  getNestedSlugs: mockContentFolders.getNestedSlugs,
-}));
+vi.mock("@repo/contents/_lib/fs/cache", async () => {
+  const { Effect: EffectModule } = await import("effect");
+
+  return {
+    clearFolderChildNamesCache: () => {
+      mockContentFolders.clearFolderChildNamesCache();
+      return EffectModule.void;
+    },
+    getFolderChildNames: mockContentFolders.getFolderChildNames,
+    getFolderChildNamesCacheVersion: vi.fn(() => EffectModule.succeed(0)),
+  };
+});
+
+vi.mock("@repo/contents/_lib/fs/nested-slugs", async () => {
+  const { Effect: EffectModule } = await import("effect");
+
+  return {
+    getNestedSlugs: (folder: string) =>
+      EffectModule.succeed(mockContentFolders.getNestedSlugs(folder)),
+  };
+});
 
 vi.mock("@repo/internationalization/src/routing", () => ({
   routing: {

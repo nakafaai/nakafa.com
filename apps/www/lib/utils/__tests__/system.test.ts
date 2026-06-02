@@ -23,10 +23,18 @@ vi.mock("next/cache", () => ({
   cacheLife: mockCacheLife,
 }));
 
-vi.mock("@repo/contents/_lib/fs", () => ({
+vi.mock("@repo/contents/_lib/fs/cache", () => ({
   getFolderChildNames: mockGetFolderChildNames,
-  getNestedSlugs: mockGetNestedSlugs,
 }));
+
+vi.mock("@repo/contents/_lib/fs/nested-slugs", async () => {
+  const { Effect: EffectModule } = await import("effect");
+
+  return {
+    getNestedSlugs: (path: string) =>
+      EffectModule.succeed(mockGetNestedSlugs(path)),
+  };
+});
 
 vi.mock("@repo/contents/_lib/metadata", () => ({
   getContentMetadata: mockGetContentMetadata,
@@ -94,8 +102,8 @@ afterEach(() => {
 
 describe("getStaticParams", () => {
   describe("empty paramNames", () => {
-    it("returns empty array for no params", () => {
-      const result = getStaticParams({
+    it("returns empty array for no params", async () => {
+      const result = await getStaticParams({
         basePath: "articles",
         paramNames: [],
       });
@@ -104,12 +112,12 @@ describe("getStaticParams", () => {
   });
 
   describe("error handling", () => {
-    it("returns empty array when getFolderChildNames fails for basePath", () => {
+    it("returns empty array when getFolderChildNames fails for basePath", async () => {
       mockGetFolderChildNames.mockReturnValue(
         Effect.fail(new Error("Failed to read"))
       );
 
-      const result = getStaticParams({
+      const result = await getStaticParams({
         basePath: "articles",
         paramNames: ["category"],
       });
@@ -117,7 +125,7 @@ describe("getStaticParams", () => {
       expect(result).toEqual([]);
     });
 
-    it("returns empty array when getFolderChildNames fails for nested path", () => {
+    it("returns empty array when getFolderChildNames fails for nested path", async () => {
       mockGetFolderChildNames.mockImplementation((path: string) => {
         if (path === "articles") {
           return Effect.succeed(["politics"]);
@@ -125,7 +133,7 @@ describe("getStaticParams", () => {
         return Effect.fail(new Error("Failed to read nested"));
       });
 
-      const result = getStaticParams({
+      const result = await getStaticParams({
         basePath: "articles",
         paramNames: ["category", "slug"],
       });
@@ -155,8 +163,8 @@ describe("getStaticParams", () => {
       });
     });
 
-    it("generates article params matching production structure", () => {
-      const result = getStaticParams({
+    it("generates article params matching production structure", async () => {
+      const result = await getStaticParams({
         basePath: "articles",
         paramNames: ["category", "slug"],
       });
@@ -228,8 +236,8 @@ describe("getStaticParams", () => {
       });
     });
 
-    it("generates exercise params matching production structure", () => {
-      const result = getStaticParams({
+    it("generates exercise params matching production structure", async () => {
+      const result = await getStaticParams({
         basePath: "exercises",
         paramNames: ["category", "type", "material", "slug"],
         slugParam: "slug",
@@ -282,8 +290,8 @@ describe("getStaticParams", () => {
       });
     });
 
-    it("generates all 120 exercise items across 3 sets", () => {
-      const result = getStaticParams({
+    it("generates all 120 exercise items across 3 sets", async () => {
+      const result = await getStaticParams({
         basePath: "exercises",
         paramNames: ["category", "type", "material", "slug"],
         slugParam: "slug",
@@ -326,8 +334,8 @@ describe("getStaticParams", () => {
       });
     });
 
-    it("generates SNBT exercise params matching production structure", () => {
-      const result = getStaticParams({
+    it("generates SNBT exercise params matching production structure", async () => {
+      const result = await getStaticParams({
         basePath: "exercises",
         paramNames: ["category", "type", "material"],
       });
@@ -535,8 +543,8 @@ describe("getStaticParams", () => {
       });
     });
 
-    it("generates subject params matching production structure", () => {
-      const result = getStaticParams({
+    it("generates subject params matching production structure", async () => {
+      const result = await getStaticParams({
         basePath: "subject",
         paramNames: ["category", "grade", "material", "slug"],
         slugParam: "slug",
@@ -579,8 +587,8 @@ describe("getStaticParams", () => {
       });
     });
 
-    it("generates all mathematics topics for grade 10", () => {
-      const result = getStaticParams({
+    it("generates all mathematics topics for grade 10", async () => {
+      const result = await getStaticParams({
         basePath: "subject",
         paramNames: ["category", "grade", "material", "slug"],
         slugParam: "slug",
@@ -598,8 +606,8 @@ describe("getStaticParams", () => {
       expect(mathTopics.length).toBe(8);
     });
 
-    it("generates all exponential-logarithm subtopics", () => {
-      const result = getStaticParams({
+    it("generates all exponential-logarithm subtopics", async () => {
+      const result = await getStaticParams({
         basePath: "subject",
         paramNames: ["category", "grade", "material", "slug"],
         slugParam: "slug",
@@ -620,7 +628,7 @@ describe("getStaticParams", () => {
   });
 
   describe("production edge cases", () => {
-    it("handles exercises with deep nesting (5 levels)", () => {
+    it("handles exercises with deep nesting (5 levels)", async () => {
       mockGetFolderChildNames.mockImplementation((path: string) => {
         if (path === "exercises") {
           return Effect.succeed(["high-school"]);
@@ -641,7 +649,7 @@ describe("getStaticParams", () => {
         ["2026", "set-1", "advanced", "section-1", "chapter-1", "lesson-1"],
       ]);
 
-      const result = getStaticParams({
+      const result = await getStaticParams({
         basePath: "exercises",
         paramNames: ["category", "type", "material", "slug"],
         slugParam: "slug",
@@ -669,7 +677,7 @@ describe("getStaticParams", () => {
       });
     });
 
-    it("handles mixed empty and non-empty nested paths", () => {
+    it("handles mixed empty and non-empty nested paths", async () => {
       mockGetFolderChildNames.mockImplementation((path: string) => {
         if (path === "exercises") {
           return Effect.succeed(["high-school"]);
@@ -699,7 +707,7 @@ describe("getStaticParams", () => {
         return [];
       });
 
-      const result = getStaticParams({
+      const result = await getStaticParams({
         basePath: "exercises",
         paramNames: ["category", "type", "material", "slug"],
         slugParam: "slug",
@@ -728,7 +736,7 @@ describe("getStaticParams", () => {
       });
     });
 
-    it("handles very wide branching (many materials)", () => {
+    it("handles very wide branching (many materials)", async () => {
       mockGetFolderChildNames.mockImplementation((path: string) => {
         if (path === "exercises") {
           return Effect.succeed(["high-school"]);
@@ -744,7 +752,7 @@ describe("getStaticParams", () => {
         return Effect.succeed([]);
       });
 
-      const result = getStaticParams({
+      const result = await getStaticParams({
         basePath: "exercises",
         paramNames: ["category", "type", "material"],
       });
@@ -757,7 +765,7 @@ describe("getStaticParams", () => {
       });
     });
 
-    it("handles large number of exercise items (50 items per set)", () => {
+    it("handles large number of exercise items (50 items per set)", async () => {
       mockGetFolderChildNames.mockImplementation((path: string) => {
         if (path === "exercises") {
           return Effect.succeed(["high-school"]);
@@ -780,7 +788,7 @@ describe("getStaticParams", () => {
       ]);
       mockGetNestedSlugs.mockReturnValue(manyItems);
 
-      const result = getStaticParams({
+      const result = await getStaticParams({
         basePath: "exercises",
         paramNames: ["category", "type", "material", "slug"],
         slugParam: "slug",
@@ -893,7 +901,7 @@ describe("getMetadataFromSlug", () => {
   });
 
   describe("single parameter case", () => {
-    it("handles single parameter (no nesting)", () => {
+    it("handles single parameter (no nesting)", async () => {
       mockGetFolderChildNames.mockImplementation((path: string) => {
         if (path === "categories") {
           return Effect.succeed(["politics", "economy", "sports"]);
@@ -901,7 +909,7 @@ describe("getMetadataFromSlug", () => {
         return Effect.succeed([]);
       });
 
-      const result = getStaticParams({
+      const result = await getStaticParams({
         basePath: "categories",
         paramNames: ["category"],
       });
