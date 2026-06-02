@@ -323,6 +323,7 @@ export function AudioPlayerProvider<TData = unknown>({
     <AudioPlayerContext.Provider value={api as AudioPlayerApi<unknown>}>
       <AudioPlayerTimeContext.Provider value={time}>
         <audio
+          aria-label="Audio player"
           className="hidden"
           crossOrigin="anonymous"
           preload="metadata"
@@ -393,7 +394,7 @@ export const AudioPlayerProgress = ({
           <SliderPrimitive.Indicator className="h-full bg-primary" />
         </SliderPrimitive.Track>
         <SliderPrimitive.Thumb
-          className="relative flex h-0 w-0 items-center justify-center opacity-0 focus-visible:opacity-100 focus-visible:outline-none group-hover/player:opacity-100 data-disabled:pointer-events-none data-disabled:opacity-50"
+          className="relative flex size-0 items-center justify-center opacity-0 focus-visible:opacity-100 focus-visible:outline-none group-hover/player:opacity-100 data-disabled:pointer-events-none data-disabled:opacity-50"
           data-slot="slider-thumb"
         >
           <div className="absolute size-3 rounded-full bg-foreground" />
@@ -450,7 +451,7 @@ function Spinner({ className }: SpinnerProps) {
         className
       )}
     >
-      <span className="sr-only">Loading...</span>
+      <span className="sr-only">Loading&hellip;</span>
     </output>
   );
 }
