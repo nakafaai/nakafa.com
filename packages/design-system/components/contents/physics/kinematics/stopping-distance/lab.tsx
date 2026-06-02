@@ -40,8 +40,10 @@ import type { Group } from "three";
 
 const PAUSE_SECONDS = 1;
 const BRAKE_DUST_PUFF_COUNT = 5;
+const ROAD_STRIPE_SPACING = 1.6;
 const REACTION_DISTANCE_COLOR = "#0f9f95";
 const BRAKING_DISTANCE_COLOR = "#e97723";
+const DISTANCE_MARKER_Z = STOPPING_DISTANCE_SCENE.roadWidth * 0.2;
 
 interface StoppingDistanceLabProps {
   locale: StoppingDistanceLocale;
@@ -181,13 +183,13 @@ function StoppingDistanceScene({ motion }: { motion: StoppingDistanceState }) {
         color={REACTION_DISTANCE_COLOR}
         endX={motion.reactionEndX}
         startX={motion.startX}
-        z={0.72}
+        z={DISTANCE_MARKER_Z}
       />
       <DistanceStrip
         color={BRAKING_DISTANCE_COLOR}
         endX={motion.stopX}
         startX={motion.reactionEndX}
-        z={0.72}
+        z={DISTANCE_MARKER_Z}
       />
       <StopCone x={motion.stopX} />
       <AnimatedCar motion={motion} sceneRef={sceneRef} />
@@ -316,9 +318,9 @@ function getBrakeDustPuffPositions() {
 }
 
 function Road() {
-  const laneCount = 12;
   const roadCenterX = STOPPING_DISTANCE_SCENE.roadCenterX;
   const roadLength = STOPPING_DISTANCE_SCENE.roadLength;
+  const laneCount = Math.ceil(roadLength / ROAD_STRIPE_SPACING);
   const stripePositions = Array.from({ length: laneCount }, (_, index) => {
     const spacing = roadLength / laneCount;
     return roadCenterX - roadLength / 2 + spacing * index + spacing * 0.5;
@@ -367,7 +369,7 @@ function DistanceStrip({
 
 function StopCone({ x }: { x: number }) {
   return (
-    <group position={[x, 0.08, 0.72]}>
+    <group position={[x, 0.08, DISTANCE_MARKER_Z]}>
       <mesh castShadow rotation={[0, 0, Math.PI]}>
         <coneGeometry args={[0.17, 0.38, 24]} />
         <meshStandardMaterial color="#f97316" roughness={0.5} />
