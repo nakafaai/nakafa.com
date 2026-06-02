@@ -1,4 +1,5 @@
 import { parseExercisesCategory } from "@repo/contents/_lib/exercises/route";
+import { Option } from "effect";
 import { notFound } from "next/navigation";
 
 import { use } from "react";
@@ -18,7 +19,7 @@ export default function Page(
   const { category: rawCategory } = use(params);
   const category = parseExercisesCategory(rawCategory);
 
-  if (!category) {
+  if (Option.isNone(category)) {
     notFound();
   }
 

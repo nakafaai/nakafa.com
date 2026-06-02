@@ -29,35 +29,40 @@ function routeToPath(route: ContentManifestRoute) {
 }
 
 /** Builds relative Quran routes from validated Quran data. */
-export function getQuranRoutes() {
-  return getContentPublicRouteManifest().quranRoutes.map(routeToPath);
+export async function getQuranRoutes() {
+  return (await getContentPublicRouteManifest()).quranRoutes.map(routeToPath);
 }
 
 /** Builds public educational routes that are backed by content or Quran data. */
-export function getPublicContentRoutes() {
-  return getContentPublicRouteManifest().contentRoutes.map(routeToPath);
+export async function getPublicContentRoutes() {
+  return (await getContentPublicRouteManifest()).contentRoutes.map(routeToPath);
 }
 
 /** Builds public educational request routes, including redirect-only URLs. */
-export function getPublicContentRequestRoutes() {
-  return getContentPublicRouteManifest().publicRequestRoutes.map(routeToPath);
+export async function getPublicContentRequestRoutes() {
+  return (await getContentPublicRouteManifest()).publicRequestRoutes.map(
+    routeToPath
+  );
 }
 
 /** Builds redirect-only public content routes with their canonical targets. */
-export function getPublicContentRedirects() {
-  return getContentPublicRouteManifest().redirects.map(
+export async function getPublicContentRedirects() {
+  return (await getContentPublicRouteManifest()).redirects.map(
     ([source, target]) => [routeToPath(source), routeToPath(target)] as const
   );
 }
 
 /** Builds the deduplicated route list used by `/sitemap.xml` and indexing. */
-export function getSitemapRoutes() {
-  const allRoutes = new Set([...baseRoutes, ...getPublicContentRoutes()]);
+export async function getSitemapRoutes() {
+  const allRoutes = new Set([
+    ...baseRoutes,
+    ...(await getPublicContentRoutes()),
+  ]);
 
   return Array.from(allRoutes);
 }
 
 /** Returns route roots that are backed by educational content pages. */
-export function getPublicContentRouteRoots() {
-  return getContentPublicRouteManifest().routeRoots.map(routeToPath);
+export async function getPublicContentRouteRoots() {
+  return (await getContentPublicRouteManifest()).routeRoots.map(routeToPath);
 }

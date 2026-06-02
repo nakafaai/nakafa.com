@@ -44,9 +44,9 @@ export const getLlmsExerciseText = Effect.fn("www.llms.exercises.text")(
 
     let targetExercises = exercises;
 
-    if (exerciseNumber !== null) {
+    if (Option.isSome(exerciseNumber)) {
       targetExercises = exercises.filter(
-        (exercise) => exercise.number === exerciseNumber
+        (exercise) => exercise.number === exerciseNumber.value
       );
     }
 
@@ -106,13 +106,13 @@ function getExerciseMarkdownTarget(cleanSlug: string) {
 
   if (!(lastPart && NUMBER_SEGMENT.test(lastPart))) {
     return {
-      exerciseNumber: null,
+      exerciseNumber: Option.none(),
       path: cleanSlug,
     };
   }
 
   return {
-    exerciseNumber: Number.parseInt(lastPart, 10),
+    exerciseNumber: Option.some(Number.parseInt(lastPart, 10)),
     path: parts.slice(0, -1).join("/"),
   };
 }
@@ -138,14 +138,14 @@ const getExerciseDescription = Effect.fn("www.llms.exercises.description")(
     path,
     targetExercises,
   }: {
-    exerciseNumber: number | null;
+    exerciseNumber: Option.Option<number>;
     locale: Locale;
     path: string;
     targetExercises: ExerciseRows;
   }) {
     const description = yield* getExerciseSetDescription({ locale, path });
 
-    if (exerciseNumber === null) {
+    if (Option.isNone(exerciseNumber)) {
       return description;
     }
 
@@ -155,7 +155,7 @@ const getExerciseDescription = Effect.fn("www.llms.exercises.description")(
       return `${description} - ${exerciseTitle}`;
     }
 
-    return `${description} - Question ${exerciseNumber}`;
+    return `${description} - Question ${exerciseNumber.value}`;
   }
 );
 
@@ -194,13 +194,13 @@ const getExerciseSetDescription = Effect.fn(
     materialsList
   );
 
-  if (!(currentMaterial && currentMaterialItem)) {
+  if (Option.isNone(currentMaterial) || Option.isNone(currentMaterialItem)) {
     return "Exercises Content";
   }
 
-  if (currentMaterial.description) {
-    return `Exercises: ${currentMaterial.title} - ${currentMaterialItem.title}: ${currentMaterial.description}`;
+  if (currentMaterial.value.description) {
+    return `Exercises: ${currentMaterial.value.title} - ${currentMaterialItem.value.title}: ${currentMaterial.value.description}`;
   }
 
-  return `Exercises: ${currentMaterial.title} - ${currentMaterialItem.title}`;
+  return `Exercises: ${currentMaterial.value.title} - ${currentMaterialItem.value.title}`;
 });

@@ -18,13 +18,17 @@ import { Effect } from "effect";
 export function getContentRouteManifest(
   locales: readonly string[] = routing.locales
 ) {
-  const manifest = Effect.runSync(
-    contentRouteManifestCache.get(getContentManifestCacheKey(locales))
+  return Effect.runPromise(
+    Effect.gen(function* () {
+      const manifest = yield* contentRouteManifestCache.get(
+        getContentManifestCacheKey(locales)
+      );
+
+      yield* primeContentRouteManifestCaches(manifest, locales);
+
+      return manifest;
+    })
   );
-
-  primeContentRouteManifestCaches(manifest, locales);
-
-  return manifest;
 }
 
 /** Shares full-manifest results with narrower native Effect caches. */
@@ -34,23 +38,21 @@ function primeContentRouteManifestCaches(
 ) {
   const cacheKey = getContentManifestCacheKey(locales, manifest.version);
 
-  Effect.runSync(
-    Effect.all(
-      [
-        contentRouteParamManifestCache.set(
-          cacheKey,
-          getParamManifestFromRouteManifest(manifest)
-        ),
-        contentStaticParamManifestCache.set(
-          cacheKey,
-          getStaticParamManifestFromRouteManifest(manifest)
-        ),
-        contentPublicRouteManifestCache.set(
-          cacheKey,
-          getPublicRouteManifestFromRouteManifest(manifest)
-        ),
-      ],
-      { discard: true }
-    )
+  return Effect.all(
+    [
+      contentRouteParamManifestCache.set(
+        cacheKey,
+        getParamManifestFromRouteManifest(manifest)
+      ),
+      contentStaticParamManifestCache.set(
+        cacheKey,
+        getStaticParamManifestFromRouteManifest(manifest)
+      ),
+      contentPublicRouteManifestCache.set(
+        cacheKey,
+        getPublicRouteManifestFromRouteManifest(manifest)
+      ),
+    ],
+    { discard: true }
   );
 }

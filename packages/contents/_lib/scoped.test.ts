@@ -15,35 +15,39 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
   mockGetMDXSlugsForLocale,
   mockImportContentModule,
-  mockKyGet,
+  mockFetchText,
   mockReadFile,
 } = vi.hoisted(() => ({
   mockGetMDXSlugsForLocale: vi.fn(),
   mockImportContentModule: vi.fn(),
-  mockKyGet: vi.fn(),
+  mockFetchText: vi.fn(),
   mockReadFile: vi.fn(),
 }));
 
-vi.mock("@repo/contents/_lib/cache", () => ({
-  getMDXSlugsForLocale: mockGetMDXSlugsForLocale,
+vi.mock("@repo/contents/_lib/mdx-slugs/cache", () => ({
+  getMdxSlugsForLocale: (locale: string) =>
+    Effect.succeed(mockGetMDXSlugsForLocale(locale)),
 }));
 
-vi.mock("node:fs", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("node:fs")>();
+vi.mock("@repo/contents/_lib/io/content-io", async () => {
+  const { Effect, Layer } = await import("effect");
+
   return {
-    ...actual,
-    promises: {
-      ...actual.promises,
-      readFile: mockReadFile,
+    ContentIO: {
+      Default: Layer.empty,
+      fetchText: (url: string) =>
+        Effect.tryPromise({
+          catch: (cause) => cause,
+          try: async () => await mockFetchText(url),
+        }),
+      readFileString: (filePath: string) =>
+        Effect.tryPromise({
+          catch: (cause) => cause,
+          try: async () => await mockReadFile(filePath, "utf8"),
+        }),
     },
   };
 });
-
-vi.mock("ky", () => ({
-  default: {
-    get: mockKyGet,
-  },
-}));
 
 vi.mock("@repo/contents/_lib/module", () => ({
   importContentModule: mockImportContentModule,
@@ -63,11 +67,11 @@ describe("scoped content helpers", () => {
     mockGetMDXSlugsForLocale.mockReset();
     mockImportContentModule.mockReset();
     mockReadFile.mockReset();
-    mockKyGet.mockReset();
+    mockFetchText.mockReset();
     mockGetMDXSlugsForLocale.mockReturnValue([]);
     mockImportContentModule.mockRejectedValue(new Error("Module not found"));
     mockReadFile.mockResolvedValue(rawMetadataSource);
-    mockKyGet.mockImplementation(() => {
+    mockFetchText.mockImplementation(() => {
       throw new Error("Unexpected GitHub fetch");
     });
   });
@@ -85,9 +89,7 @@ describe("scoped content helpers", () => {
 
   it("falls back to GitHub when the local raw content read fails", async () => {
     mockReadFile.mockRejectedValue(new Error("missing file"));
-    mockKyGet.mockReturnValue({
-      text: () => Promise.resolve(rawMetadataSource),
-    });
+    mockFetchText.mockResolvedValue(rawMetadataSource);
 
     const result = await Effect.runPromise(
       getScopedContent(
@@ -99,12 +101,12 @@ describe("scoped content helpers", () => {
     );
 
     expect(result.metadata.title).toBe("Raw Title");
-    expect(mockKyGet).toHaveBeenCalledTimes(1);
+    expect(mockFetchText).toHaveBeenCalledTimes(1);
   });
 
   it("fails with GitHubFetchError when both local and GitHub reads fail", async () => {
     mockReadFile.mockRejectedValue(new Error("missing file"));
-    mockKyGet.mockImplementation(() => {
+    mockFetchText.mockImplementation(() => {
       throw new Error("network down");
     });
 

@@ -6,6 +6,7 @@ import {
   parseExercisesMaterial,
   parseExercisesType,
 } from "@repo/contents/_lib/exercises/route";
+import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("exercises route helpers", () => {
@@ -23,11 +24,17 @@ describe("exercises route helpers", () => {
   });
 
   it("parses valid route segments and rejects invalid ones", () => {
-    expect(parseExercisesCategory("high-school")).toBe("high-school");
-    expect(parseExercisesCategory("not-a-category")).toBeNull();
-    expect(parseExercisesType("grade-9")).toBe("grade-9");
-    expect(parseExercisesType("not-a-type")).toBeNull();
-    expect(parseExercisesMaterial("mathematics")).toBe("mathematics");
-    expect(parseExercisesMaterial("not-a-material")).toBeNull();
+    expect(Option.getOrUndefined(parseExercisesCategory("high-school"))).toBe(
+      "high-school"
+    );
+    expect(Option.isNone(parseExercisesCategory("not-a-category"))).toBe(true);
+    expect(Option.getOrUndefined(parseExercisesType("grade-9"))).toBe(
+      "grade-9"
+    );
+    expect(Option.isNone(parseExercisesType("not-a-type"))).toBe(true);
+    expect(Option.getOrUndefined(parseExercisesMaterial("mathematics"))).toBe(
+      "mathematics"
+    );
+    expect(Option.isNone(parseExercisesMaterial("not-a-material"))).toBe(true);
   });
 });

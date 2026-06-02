@@ -12,7 +12,7 @@ import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
@@ -45,11 +45,11 @@ async function getResolvedParams(
   const category = parseSubjectCategory(rawCategory);
   const grade = parseGrade(rawGrade);
 
-  if (!(category && grade)) {
+  if (Option.isNone(category) || Option.isNone(grade)) {
     notFound();
   }
 
-  return { category, grade, locale };
+  return { category: category.value, grade: grade.value, locale };
 }
 
 export async function generateMetadata({
@@ -61,11 +61,14 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "Subject" });
 
   const FilePath = getGradePath(category, grade);
+  const gradeLabel = t(
+    Option.getOrElse(getGradeNonNumeric(grade), () => "grade"),
+    {
+      grade,
+    }
+  );
 
-  const title = createSEOTitle([
-    t(getGradeNonNumeric(grade) ?? "grade", { grade }),
-    t(category),
-  ]);
+  const title = createSEOTitle([gradeLabel, t(category)]);
   const path = `/${locale}${FilePath}`;
 
   let ogUrl: string = getOgUrl(locale, FilePath);
@@ -112,7 +115,7 @@ async function getCachedGradeSubjects(category: SubjectCategory, grade: Grade) {
   "use cache";
   cacheLife("max");
 
-  return Effect.runSync(getGradeSubjects(category, grade));
+  return Effect.runPromise(getGradeSubjects(category, grade));
 }
 
 export default function Page(
@@ -128,11 +131,17 @@ export default function Page(
   const category = parseSubjectCategory(rawCategory);
   const grade = parseGrade(rawGrade);
 
-  if (!(category && grade)) {
+  if (Option.isNone(category) || Option.isNone(grade)) {
     notFound();
   }
 
-  return <PageContent category={category} grade={grade} locale={locale} />;
+  return (
+    <PageContent
+      category={category.value}
+      grade={grade.value}
+      locale={locale}
+    />
+  );
 }
 
 async function PageContent({
@@ -151,6 +160,10 @@ async function PageContent({
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "Subject" }),
   ]);
+  const gradeLabel = tSubject(
+    Option.getOrElse(getGradeNonNumeric(grade), () => "grade"),
+    { grade }
+  );
 
   return (
     <>
@@ -159,7 +172,7 @@ async function PageContent({
           { name: tCommon("home"), path: "" },
           { name: tCommon("subject"), path: "/subject" },
           {
-            name: tSubject(getGradeNonNumeric(grade) ?? "grade", { grade }),
+            name: gradeLabel,
             path: FilePath,
           },
         ])}
@@ -171,7 +184,7 @@ async function PageContent({
           href: "/subject",
           label: tCommon("explore-grades"),
         }}
-        title={tSubject(getGradeNonNumeric(grade) ?? "grade", { grade })}
+        title={gradeLabel}
       />
       <LayoutContent>
         {subjects.length === 0 ? (

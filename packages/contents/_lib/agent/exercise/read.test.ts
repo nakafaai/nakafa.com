@@ -92,7 +92,6 @@ describe("Nakafa agent exercises", () => {
         decodeNakafaAgentExerciseResult({
           ...buildNakafaContentRef("en", EXERCISE_ROUTE, "exercises"),
           count: 1,
-          exercise_number: null,
           exercises: [
             {
               answer: {

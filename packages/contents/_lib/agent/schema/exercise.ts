@@ -77,12 +77,11 @@ export const NakafaAgentExerciseResultSchema = NakafaAgentContentRefSchema.pipe(
       count: Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
         description: "Number of returned exercises.",
       }),
-      exercise_number: Schema.NullOr(
-        Schema.Number.pipe(Schema.int(), Schema.positive())
-      ).annotations({
-        description:
-          "Requested exercise number, or null when returning a whole set.",
-      }),
+      exercise_number: Schema.optional(
+        Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
+          description: "Requested exercise number inside the set.",
+        })
+      ),
       exercises: Schema.Array(NakafaAgentExerciseItemSchema)
         .pipe(Schema.minItems(1), Schema.mutable)
         .annotations({ description: "Structured exercises." }),

@@ -37,10 +37,18 @@ describe("Nakafa exercise refs", () => {
   });
 
   it("reads route-level exercise numbers without user-language parsing", () => {
-    expect(getNakafaExerciseRouteNumber(`${exerciseSetRoute}/11`)).toBe(11);
-    expect(getNakafaExerciseRouteNumber(exerciseSetRoute)).toBeNull();
-    expect(getNakafaExerciseRouteNumber("")).toBeNull();
-    expect(getNakafaExerciseRouteNumber(`${exerciseSetRoute}/01`)).toBeNull();
+    expect(
+      Option.getOrUndefined(
+        getNakafaExerciseRouteNumber(`${exerciseSetRoute}/11`)
+      )
+    ).toBe(11);
+    expect(Option.isNone(getNakafaExerciseRouteNumber(exerciseSetRoute))).toBe(
+      true
+    );
+    expect(Option.isNone(getNakafaExerciseRouteNumber(""))).toBe(true);
+    expect(
+      Option.isNone(getNakafaExerciseRouteNumber(`${exerciseSetRoute}/01`))
+    ).toBe(true);
     expect(getNakafaExerciseSetRoute(`${exerciseSetRoute}/11`)).toBe(
       exerciseSetRoute
     );

@@ -19,19 +19,24 @@ const { mockReadFile, mockGetMDXSlugsForLocale } = vi.hoisted(() => ({
   mockGetMDXSlugsForLocale: vi.fn(),
 }));
 
-vi.mock("node:fs", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("node:fs")>();
+vi.mock("@repo/contents/_lib/io/content-io", async () => {
+  const { Effect, Layer } = await import("effect");
+
   return {
-    ...actual,
-    promises: {
-      ...actual.promises,
-      readFile: mockReadFile,
+    ContentIO: {
+      Default: Layer.empty,
+      readFileString: (filePath: string) =>
+        Effect.tryPromise({
+          catch: (cause) => cause,
+          try: async () => await mockReadFile(filePath, "utf8"),
+        }),
     },
   };
 });
 
-vi.mock("@repo/contents/_lib/cache", () => ({
-  getMDXSlugsForLocale: mockGetMDXSlugsForLocale,
+vi.mock("@repo/contents/_lib/mdx-slugs/cache", () => ({
+  getMdxSlugsForLocale: (locale: string) =>
+    Effect.succeed(mockGetMDXSlugsForLocale(locale)),
 }));
 
 const createRawMetadata = (title: string) => `
@@ -232,6 +237,20 @@ describe("getContentMetadataWithRaw", () => {
     expect(result).toBeInstanceOf(InvalidPathError);
   });
 
+  it("fails with InvalidPathError for sibling-prefix traversal attempts", async () => {
+    const result = await Effect.runPromise(
+      Effect.match(
+        getContentMetadataWithRaw("en", "../contents-malicious/secret"),
+        {
+          onSuccess: () => null,
+          onFailure: (error) => error,
+        }
+      )
+    );
+
+    expect(result).toBeInstanceOf(InvalidPathError);
+  });
+
   it("fails with FileReadError when file reading fails", async () => {
     mockReadFile.mockRejectedValue(new Error("missing file"));
 
@@ -263,6 +282,17 @@ describe("getContentMetadata", () => {
   it("fails with InvalidPathError for traversal attempts", async () => {
     const result = await Effect.runPromise(
       Effect.match(getContentMetadata("../etc/passwd", "en"), {
+        onSuccess: () => null,
+        onFailure: (error) => error,
+      })
+    );
+
+    expect(result).toBeInstanceOf(InvalidPathError);
+  });
+
+  it("fails with InvalidPathError for sibling-prefix traversal attempts", async () => {
+    const result = await Effect.runPromise(
+      Effect.match(getContentMetadata("../contents-malicious/secret", "en"), {
         onSuccess: () => null,
         onFailure: (error) => error,
       })

@@ -112,7 +112,7 @@ describe("llms indexes", () => {
 
 describe("llms sitemap alignment", () => {
   it("covers sitemap routes without stale same-origin links", async () => {
-    const sitemapRoutes = new Set(getSitemapRoutes());
+    const sitemapRoutes = new Set(await getSitemapRoutes());
 
     for (const locale of routing.locales) {
       const entries = await Effect.runPromise(getLocalizedLlmsEntries(locale));

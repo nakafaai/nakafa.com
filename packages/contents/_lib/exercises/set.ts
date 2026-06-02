@@ -1,9 +1,9 @@
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getExerciseQuestionNumbers } from "@repo/contents/_lib/exercises/collection";
 import {
   loadExerciseEntry,
   readExerciseChoices,
 } from "@repo/contents/_lib/exercises/source";
+import { getMdxSlugsForLocale } from "@repo/contents/_lib/mdx-slugs/cache";
 import { getScopedContent } from "@repo/contents/_lib/scoped";
 import { ExerciseLoadError } from "@repo/contents/_shared/error";
 import type { Locale } from "@repo/contents/_types/content";
@@ -37,6 +37,7 @@ function loadExercise(
   return loadExerciseEntry(cleanPath, exerciseNumberSegment, {
     loadQuestion: (questionPath) =>
       getScopedContent("exercises", locale, questionPath, { includeMDX }).pipe(
+        Effect.map(Option.some),
         Effect.mapError(
           () =>
             new ExerciseLoadError({
@@ -48,6 +49,7 @@ function loadExercise(
       ),
     loadAnswer: (answerPath) =>
       getScopedContent("exercises", locale, answerPath, { includeMDX }).pipe(
+        Effect.map(Option.some),
         Effect.mapError(
           () =>
             new ExerciseLoadError({
@@ -75,20 +77,22 @@ function loadExercise(
       }
 
       const { answer, choices, number, question } = exercise.value;
+      const answerContent = {
+        metadata: answer.metadata,
+        raw: answer.raw,
+        ...("default" in answer ? { default: answer.default } : {}),
+      };
+      const questionContent = {
+        metadata: question.metadata,
+        raw: question.raw,
+        ...("default" in question ? { default: question.default } : {}),
+      };
 
       return Option.some({
-        answer: {
-          metadata: answer.metadata,
-          default: "default" in answer ? answer.default : undefined,
-          raw: answer.raw,
-        },
+        answer: answerContent,
         choices,
         number,
-        question: {
-          metadata: question.metadata,
-          default: "default" in question ? question.default : undefined,
-          raw: question.raw,
-        },
+        question: questionContent,
       });
     })
   );
@@ -104,10 +108,8 @@ export function getExercisesContent(options: ExerciseContentOptions) {
   return Effect.gen(function* () {
     const { includeMDX = true, locale, filePath } = options;
     const cleanPath = cleanSlug(filePath);
-    const sortedQuestionNumbers = getExerciseQuestionNumbers(
-      getMDXSlugsForLocale(locale),
-      cleanPath
-    );
+    const slugs = yield* getMdxSlugsForLocale(locale);
+    const sortedQuestionNumbers = getExerciseQuestionNumbers(slugs, cleanPath);
 
     if (sortedQuestionNumbers.length === 0) {
       return [];
@@ -143,8 +145,9 @@ export function getExerciseByNumber(
 ) {
   return Effect.gen(function* () {
     const cleanPath = cleanSlug(filePath);
+    const slugs = yield* getMdxSlugsForLocale(locale);
     const exerciseNumberSegment = getExerciseQuestionNumbers(
-      getMDXSlugsForLocale(locale),
+      slugs,
       cleanPath
     ).find(
       (numberSegment) => Number.parseInt(numberSegment, 10) === exerciseNumber

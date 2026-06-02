@@ -2,6 +2,7 @@ import {
   extractObjectLiteralAfterDeclaration,
   parseObjectLiteral,
 } from "@repo/contents/_lib/literal";
+import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 const METADATA_DECLARATION_REGEX = /export const metadata\s*=/;
@@ -16,12 +17,24 @@ function describeContentLiteralParsing() {
     "extracts object literals with braces inside strings",
     extractBracedStringLiteral
   );
-  it("returns null for invalid object syntax", rejectInvalidObjectSyntax);
+  it(
+    "returns Option.none for invalid object syntax",
+    rejectInvalidObjectSyntax
+  );
   it("skips escaped quotes while matching strings", extractEscapedQuoteString);
-  it("returns null for unterminated strings", rejectUnterminatedStringLiteral);
-  it("returns null when the declaration is absent", rejectMissingDeclaration);
-  it("returns null when the declaration has no object", rejectMissingObject);
-  it("returns null when the object is not closed", rejectUnclosedObject);
+  it(
+    "returns Option.none for unterminated strings",
+    rejectUnterminatedStringLiteral
+  );
+  it(
+    "returns Option.none when the declaration is absent",
+    rejectMissingDeclaration
+  );
+  it(
+    "returns Option.none when the declaration has no object",
+    rejectMissingObject
+  );
+  it("returns Option.none when the object is not closed", rejectUnclosedObject);
   it("extracts nested object literals", extractNestedObjectLiteral);
 }
 
@@ -33,7 +46,7 @@ function parseJson5ObjectLiteral() {
       date: "01/01/2024",
     }`);
 
-  expect(result).toStrictEqual({
+  expect(Option.getOrUndefined(result)).toStrictEqual({
     title: "Valid",
     authors: [{ name: "Author" }],
     date: "01/01/2024",
@@ -42,7 +55,7 @@ function parseJson5ObjectLiteral() {
 
 /** Verifies array and primitive literals are rejected at the content boundary. */
 function rejectNonObjectLiteral() {
-  expect(parseObjectLiteral("[]")).toBeNull();
+  expect(Option.isNone(parseObjectLiteral("[]"))).toBe(true);
 }
 
 /** Verifies brace matching ignores braces that belong to quoted strings. */
@@ -52,12 +65,12 @@ function extractBracedStringLiteral() {
     METADATA_DECLARATION_REGEX
   );
 
-  expect(result).toBe('{ title: "A {nested} title" }');
+  expect(Option.getOrUndefined(result)).toBe('{ title: "A {nested} title" }');
 }
 
 /** Verifies malformed JSON5 object syntax is treated as a data miss. */
 function rejectInvalidObjectSyntax() {
-  expect(parseObjectLiteral("{ title: ")).toBeNull();
+  expect(Option.isNone(parseObjectLiteral("{ title: "))).toBe(true);
 }
 
 /** Verifies escaped quotes do not terminate the string matcher early. */
@@ -67,7 +80,9 @@ function extractEscapedQuoteString() {
     METADATA_DECLARATION_REGEX
   );
 
-  expect(result).toBe(String.raw`{ title: "A \"quoted\" {title}" }`);
+  expect(Option.getOrUndefined(result)).toBe(
+    String.raw`{ title: "A \"quoted\" {title}" }`
+  );
 }
 
 /** Verifies a malformed quoted string prevents partial literal extraction. */
@@ -77,7 +92,7 @@ function rejectUnterminatedStringLiteral() {
     METADATA_DECLARATION_REGEX
   );
 
-  expect(result).toBeNull();
+  expect(Option.isNone(result)).toBe(true);
 }
 
 /** Verifies extraction requires the requested declaration before scanning. */
@@ -87,7 +102,7 @@ function rejectMissingDeclaration() {
     METADATA_DECLARATION_REGEX
   );
 
-  expect(result).toBeNull();
+  expect(Option.isNone(result)).toBe(true);
 }
 
 /** Verifies extraction does not invent an object when no opening brace exists. */
@@ -97,7 +112,7 @@ function rejectMissingObject() {
     METADATA_DECLARATION_REGEX
   );
 
-  expect(result).toBeNull();
+  expect(Option.isNone(result)).toBe(true);
 }
 
 /** Verifies extraction requires the object braces to balance. */
@@ -107,7 +122,7 @@ function rejectUnclosedObject() {
     METADATA_DECLARATION_REGEX
   );
 
-  expect(result).toBeNull();
+  expect(Option.isNone(result)).toBe(true);
 }
 
 /** Verifies nested object braces keep the scanner open until the outer close. */
@@ -117,5 +132,7 @@ function extractNestedObjectLiteral() {
     METADATA_DECLARATION_REGEX
   );
 
-  expect(result).toBe("{ title: 'Parent', nested: { title: 'Child' } }");
+  expect(Option.getOrUndefined(result)).toBe(
+    "{ title: 'Parent', nested: { title: 'Child' } }"
+  );
 }

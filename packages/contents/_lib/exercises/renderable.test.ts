@@ -2,46 +2,50 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
   mockGetMDXSlugsForLocale,
-  mockKyGet,
+  mockFetchText,
   mockReadFile,
   mockResolveContentsDir,
 } = vi.hoisted(() => ({
   mockGetMDXSlugsForLocale: vi.fn(),
-  mockKyGet: vi.fn(),
+  mockFetchText: vi.fn(),
   mockReadFile: vi.fn(),
   mockResolveContentsDir: vi.fn(() => "/virtual/contents"),
 }));
 
-vi.mock("node:fs", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("node:fs")>();
+vi.mock("@repo/contents/_lib/io/content-io", async () => {
+  const { Effect, Layer } = await import("effect");
+
   return {
-    ...actual,
-    promises: {
-      ...actual.promises,
-      readFile: mockReadFile,
+    ContentIO: {
+      Default: Layer.empty,
+      fetchText: (url: string) =>
+        Effect.tryPromise({
+          catch: (cause) => cause,
+          try: async () => await mockFetchText(url),
+        }),
+      readFileString: (filePath: string) =>
+        Effect.tryPromise({
+          catch: (cause) => cause,
+          try: async () => await mockReadFile(filePath, "utf8"),
+        }),
     },
   };
 });
 
-vi.mock("@repo/contents/_lib/cache", () => ({
-  getMDXSlugsForLocale: mockGetMDXSlugsForLocale,
+vi.mock("@repo/contents/_lib/mdx-slugs/cache", () => ({
+  getMdxSlugsForLocale: (locale: string) =>
+    Effect.succeed(mockGetMDXSlugsForLocale(locale)),
 }));
 
 vi.mock("@repo/contents/_lib/root", () => ({
   resolveContentsDir: mockResolveContentsDir,
 }));
 
-vi.mock("ky", () => ({
-  default: {
-    get: mockKyGet,
-  },
-}));
-
 import {
   getRenderableExerciseByNumber,
   getRenderableExercisesContent,
 } from "@repo/contents/_lib/exercises/renderable";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 const exerciseBasePath =
   "exercises/high-school/snbt/quantitative-knowledge/try-out/2026/set-1";
@@ -57,7 +61,7 @@ beforeEach(() => {
   mockResolveContentsDir.mockReturnValue("/virtual/contents");
   mockGetMDXSlugsForLocale.mockReturnValue([]);
   mockReadFile.mockReset();
-  mockKyGet.mockReset();
+  mockFetchText.mockReset();
 });
 
 afterEach(() => {
@@ -134,9 +138,7 @@ describe("getRenderableExercisesContent", () => {
         'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Answer 1'
       );
     });
-    mockKyGet.mockReturnValue({
-      text: () => Promise.resolve(createChoicesSource("Remote")),
-    });
+    mockFetchText.mockResolvedValue(createChoicesSource("Remote"));
 
     const result = await Effect.runPromise(
       getRenderableExercisesContent("en", exerciseBasePath)
@@ -144,7 +146,7 @@ describe("getRenderableExercisesContent", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0]?.choices.en[0]?.label).toBe("Remote EN");
-    expect(mockKyGet).toHaveBeenCalledTimes(1);
+    expect(mockFetchText).toHaveBeenCalledTimes(1);
   });
 
   it("skips exercises when local and remote choices are unavailable", async () => {
@@ -167,16 +169,14 @@ describe("getRenderableExercisesContent", () => {
         'export const metadata = { title: "Answer 1", description: "A1", authors: [{ name: "Author" }], date: "01/01/2024" };\n\n## Answer 1'
       );
     });
-    mockKyGet.mockReturnValue({
-      text: () => Promise.reject(new Error("remote choices unavailable")),
-    });
+    mockFetchText.mockRejectedValue(new Error("remote choices unavailable"));
 
     const result = await Effect.runPromise(
       getRenderableExercisesContent("en", exerciseBasePath)
     );
 
     expect(result).toStrictEqual([]);
-    expect(mockKyGet).toHaveBeenCalledTimes(1);
+    expect(mockFetchText).toHaveBeenCalledTimes(1);
   });
 
   it("skips incomplete exercises when metadata or choices are missing", async () => {
@@ -245,11 +245,14 @@ describe("getRenderableExerciseByNumber", () => {
       getRenderableExerciseByNumber("id", exerciseBasePath, 3)
     );
 
-    expect(result?.number).toBe(3);
-    expect(result?.choices.id[0]?.label).toBe("Three ID");
+    expect(Option.isSome(result)).toBe(true);
+    expect(Option.getOrUndefined(result)?.number).toBe(3);
+    expect(Option.getOrUndefined(result)?.choices.id[0]?.label).toBe(
+      "Three ID"
+    );
   });
 
-  it("returns null when the requested number is not present", async () => {
+  it("returns none when the requested number is not present", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
@@ -259,10 +262,10 @@ describe("getRenderableExerciseByNumber", () => {
       getRenderableExerciseByNumber("en", exerciseBasePath, 9)
     );
 
-    expect(result).toBeNull();
+    expect(Option.isNone(result)).toBe(true);
   });
 
-  it("returns null when the choices source cannot be evaluated", async () => {
+  it("returns none when the choices source cannot be evaluated", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
@@ -287,10 +290,10 @@ describe("getRenderableExerciseByNumber", () => {
       getRenderableExerciseByNumber("en", exerciseBasePath, 1)
     );
 
-    expect(result).toBeNull();
+    expect(Option.isNone(result)).toBe(true);
   });
 
-  it("returns null when the choices expression throws during evaluation", async () => {
+  it("returns none when the choices expression throws during evaluation", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
@@ -315,10 +318,10 @@ describe("getRenderableExerciseByNumber", () => {
       getRenderableExerciseByNumber("en", exerciseBasePath, 1)
     );
 
-    expect(result).toBeNull();
+    expect(Option.isNone(result)).toBe(true);
   });
 
-  it("returns null when the choices expression shape fails schema validation", async () => {
+  it("returns none when the choices expression shape fails schema validation", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
@@ -343,10 +346,10 @@ describe("getRenderableExerciseByNumber", () => {
       getRenderableExerciseByNumber("en", exerciseBasePath, 1)
     );
 
-    expect(result).toBeNull();
+    expect(Option.isNone(result)).toBe(true);
   });
 
-  it("returns null when a renderable exercise path escapes the contents root", async () => {
+  it("returns none when a renderable exercise path escapes the contents root", async () => {
     const unsafePath = "../outside";
     mockGetMDXSlugsForLocale.mockReturnValue([
       `${unsafePath}/1/_question`,
@@ -357,11 +360,11 @@ describe("getRenderableExerciseByNumber", () => {
       getRenderableExerciseByNumber("en", unsafePath, 1)
     );
 
-    expect(result).toBeNull();
+    expect(Option.isNone(result)).toBe(true);
     expect(mockReadFile).not.toHaveBeenCalled();
   });
 
-  it("returns null when a renderable exercise mdx file cannot be read", async () => {
+  it("returns none when a renderable exercise mdx file cannot be read", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
       `${exerciseBasePath}/1/_question`,
       `${exerciseBasePath}/1/_answer`,
@@ -384,7 +387,7 @@ describe("getRenderableExerciseByNumber", () => {
       getRenderableExerciseByNumber("id", exerciseBasePath, 1)
     );
 
-    expect(result).toBeNull();
+    expect(Option.isNone(result)).toBe(true);
   });
 });
 

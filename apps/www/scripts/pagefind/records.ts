@@ -20,9 +20,10 @@ import {
 export async function addArticleRecords(
   index: Pick<PagefindIndex, "addHTMLFile">
 ) {
+  const manifest = await getContentIndexManifest();
   const entries = (
     await Promise.all(
-      getContentIndexManifest().indexedArticleEntries.map(
+      manifest.indexedArticleEntries.map(
         async ({ locale: rawLocale, slug }) => {
           const locale = Schema.decodeUnknownSync(LocaleSchema)(rawLocale);
           const content = await Effect.runPromise(
@@ -58,9 +59,10 @@ export async function addArticleRecords(
 export async function addSubjectRecords(
   index: Pick<PagefindIndex, "addHTMLFile">
 ) {
+  const manifest = await getContentIndexManifest();
   const entries = (
     await Promise.all(
-      getContentIndexManifest().indexedSubjectEntries.map(
+      manifest.indexedSubjectEntries.map(
         async ({ locale: rawLocale, slug }) => {
           const locale = Schema.decodeUnknownSync(LocaleSchema)(rawLocale);
           const content = await Effect.runPromise(
@@ -106,8 +108,9 @@ export async function addSubjectRecords(
 export async function addExerciseRecords(
   index: Pick<PagefindIndex, "addCustomRecord">
 ) {
+  const manifest = await getContentIndexManifest();
   const recordOptions = await Promise.all(
-    getContentIndexManifest().indexedExerciseSetEntries.map(
+    manifest.indexedExerciseSetEntries.map(
       async ({ locale: rawLocale, slug: setPath }) => {
         const locale = Schema.decodeUnknownSync(LocaleSchema)(rawLocale);
         const exercises = await Effect.runPromise(

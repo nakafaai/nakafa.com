@@ -40,13 +40,14 @@ vi.mock("@/lib/sitemap/routes", () => ({
     "/privacy-policy",
     "/security-policy",
   ],
-  getSitemapRoutes: () => [
-    "/",
-    "/search",
-    "/articles/politics/dynastic-politics-asian-values",
-    "/quran/1",
-    "/subject/high-school/10",
-  ],
+  getSitemapRoutes: () =>
+    Promise.resolve([
+      "/",
+      "/search",
+      "/articles/politics/dynastic-politics-asian-values",
+      "/quran/1",
+      "/subject/high-school/10",
+    ]),
 }));
 
 beforeEach(() => {

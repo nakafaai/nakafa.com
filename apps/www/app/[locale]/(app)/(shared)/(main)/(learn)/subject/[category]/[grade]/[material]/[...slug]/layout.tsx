@@ -3,6 +3,7 @@ import { parseGrade } from "@repo/contents/_lib/subject/grade";
 import { parseMaterial } from "@repo/contents/_lib/subject/route";
 import { getSlugPath } from "@repo/contents/_lib/subject/slug";
 import { cleanSlug } from "@repo/utilities/helper";
+import { Option } from "effect";
 import { notFound } from "next/navigation";
 
 import { use } from "react";
@@ -25,11 +26,20 @@ export default function Layout(
   const grade = parseGrade(rawGrade);
   const material = parseMaterial(rawMaterial);
 
-  if (!(category && grade && material)) {
+  if (
+    Option.isNone(category) ||
+    Option.isNone(grade) ||
+    Option.isNone(material)
+  ) {
     notFound();
   }
 
-  const filePath = getSlugPath(category, grade, material, slug);
+  const filePath = getSlugPath(
+    category.value,
+    grade.value,
+    material.value,
+    slug
+  );
   const cleanedSlug = cleanSlug(filePath);
 
   return (

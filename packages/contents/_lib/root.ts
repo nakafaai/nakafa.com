@@ -1,24 +1,11 @@
-import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Effect } from "effect";
+import { Option } from "effect";
 
 const CONTENTS_LIB_SEGMENT = `${path.sep}_lib${path.sep}`;
-const CONTENTS_SENTINELS = ["articles", "exercises", "subject"];
-
-/**
- * Checks whether a directory looks like the `packages/contents` root.
- *
- * @param directory - Absolute directory candidate to validate
- * @returns True when the directory contains the expected contents structure
- */
-function isContentsDirectory(directory: string) {
-  return Effect.runSync(
-    Effect.forEach(CONTENTS_SENTINELS, (entry) =>
-      Effect.sync(() => fs.existsSync(path.join(directory, entry)))
-    ).pipe(Effect.map((exists) => exists.every(Boolean)))
-  );
-}
+const APPS_WORKSPACE_SEGMENT = "apps";
+const PACKAGES_WORKSPACE_SEGMENT = "packages";
+const CONTENTS_PACKAGE_SEGMENT = "contents";
 
 /**
  * Finds the `packages/contents` root boundary from a source file path.
@@ -30,29 +17,54 @@ function getContentsRootFromLibPath(filePath: string) {
   const boundaryIndex = filePath.lastIndexOf(CONTENTS_LIB_SEGMENT);
 
   if (boundaryIndex === -1) {
-    return null;
+    return Option.none();
   }
 
-  return filePath.slice(0, boundaryIndex);
+  return Option.some(filePath.slice(0, boundaryIndex));
 }
 
 /**
- * Builds runtime root candidates for bundled server environments.
+ * Joins absolute path segments after workspace boundary detection.
  *
- * @param filePath - Absolute file path from `import.meta.url`
- * @returns Ordered contents root candidates
+ * @param segments - Absolute path segments split on the current platform separator
+ * @returns Absolute path rebuilt from the provided segments
  */
-function getContentsRootCandidates(filePath: string) {
-  const currentWorkingDirectory = process.cwd();
-  const fallbackDirectory = path.resolve(path.dirname(filePath), "..");
+function joinAbsoluteSegments(segments: string[]) {
+  return path.resolve(path.sep, ...segments.filter(Boolean));
+}
 
-  return [
-    currentWorkingDirectory,
-    path.resolve(currentWorkingDirectory, "packages/contents"),
-    path.resolve(currentWorkingDirectory, "../packages/contents"),
-    path.resolve(currentWorkingDirectory, "../../packages/contents"),
-    fallbackDirectory,
-  ];
+/**
+ * Derives the monorepo contents package path from a known workspace path.
+ *
+ * @param workspacePath - Absolute path inside the monorepo
+ * @returns Contents package path when the workspace boundary is recognizable
+ */
+function getContentsRootFromWorkspacePath(workspacePath: string) {
+  const segments = workspacePath.split(path.sep);
+  const packagesIndex = segments.lastIndexOf(PACKAGES_WORKSPACE_SEGMENT);
+
+  if (packagesIndex !== -1) {
+    return Option.some(
+      joinAbsoluteSegments([
+        ...segments.slice(0, packagesIndex + 1),
+        CONTENTS_PACKAGE_SEGMENT,
+      ])
+    );
+  }
+
+  const appsIndex = segments.lastIndexOf(APPS_WORKSPACE_SEGMENT);
+
+  if (appsIndex !== -1) {
+    return Option.some(
+      joinAbsoluteSegments([
+        ...segments.slice(0, appsIndex),
+        PACKAGES_WORKSPACE_SEGMENT,
+        CONTENTS_PACKAGE_SEGMENT,
+      ])
+    );
+  }
+
+  return Option.none();
 }
 
 /**
@@ -63,9 +75,8 @@ function getContentsRootCandidates(filePath: string) {
  * `packages/contents/_lib`, so the package root can be derived directly from
  * the source path without probing parent folders at build time.
  *
- * When a runtime only exposes generated chunk paths, probe the current working
- * directory and nearby monorepo locations before falling back to the chunk
- * parent directory.
+ * When a runtime only exposes generated chunk paths, derive the contents root
+ * from the workspace path shape instead of probing the filesystem.
  *
  * @param metaUrl - The current module `import.meta.url`
  * @returns Absolute path to the contents package root directory
@@ -74,17 +85,21 @@ export function resolveContentsDir(metaUrl: string) {
   const filePath = fileURLToPath(metaUrl);
   const contentsRoot = getContentsRootFromLibPath(filePath);
 
-  if (contentsRoot) {
-    return contentsRoot;
+  if (Option.isSome(contentsRoot)) {
+    return contentsRoot.value;
   }
 
-  const candidates = getContentsRootCandidates(filePath);
+  const cwdContentsRoot = getContentsRootFromWorkspacePath(process.cwd());
 
-  for (const candidate of new Set(candidates)) {
-    if (isContentsDirectory(candidate)) {
-      return candidate;
-    }
+  if (Option.isSome(cwdContentsRoot)) {
+    return cwdContentsRoot.value;
   }
 
-  return path.resolve(path.dirname(filePath), "..");
+  const fileContentsRoot = getContentsRootFromWorkspacePath(filePath);
+
+  if (Option.isSome(fileContentsRoot)) {
+    return fileContentsRoot.value;
+  }
+
+  return path.resolve(process.cwd(), "packages/contents");
 }

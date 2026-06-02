@@ -40,7 +40,6 @@ describe("exercise slug helpers", () => {
     ["01", false],
     ["10a", false],
     ["", false],
-    [undefined, false],
   ] as const)("checks exercise number segment %s", (value, expected) => {
     expect(isExerciseNumberSegment(value)).toBe(expected);
   });

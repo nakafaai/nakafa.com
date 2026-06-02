@@ -15,40 +15,39 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
   mockReadFile,
-  mockFsAccess,
-  mockKyGet,
+  mockFetchText,
   mockGetMDXSlugsForLocale,
   mockImportContentModule,
 } = vi.hoisted(() => ({
   mockReadFile: vi.fn(),
-  mockFsAccess: vi.fn(),
-  mockKyGet: vi.fn(),
+  mockFetchText: vi.fn(),
   mockGetMDXSlugsForLocale: vi.fn(),
   mockImportContentModule: vi.fn(),
 }));
 
-vi.mock("node:fs", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("node:fs")>();
+vi.mock("@repo/contents/_lib/io/content-io", async () => {
+  const { Effect, Layer } = await import("effect");
+
   return {
-    ...actual,
-    readdirSync: vi.fn(() => []),
-    existsSync: vi.fn(() => true),
-    constants: { F_OK: 0 },
-    promises: {
-      readFile: mockReadFile,
-      access: mockFsAccess,
+    ContentIO: {
+      Default: Layer.empty,
+      fetchText: (url: string) =>
+        Effect.tryPromise({
+          catch: (cause) => cause,
+          try: async () => await mockFetchText(url),
+        }),
+      readFileString: (filePath: string) =>
+        Effect.tryPromise({
+          catch: (cause) => cause,
+          try: async () => await mockReadFile(filePath, "utf8"),
+        }),
     },
   };
 });
 
-vi.mock("ky", () => ({
-  default: {
-    get: mockKyGet,
-  },
-}));
-
-vi.mock("@repo/contents/_lib/cache", () => ({
-  getMDXSlugsForLocale: mockGetMDXSlugsForLocale,
+vi.mock("@repo/contents/_lib/mdx-slugs/cache", () => ({
+  getMdxSlugsForLocale: (locale: string) =>
+    Effect.succeed(mockGetMDXSlugsForLocale(locale)),
 }));
 
 vi.mock("@repo/contents/_lib/module", () => ({
@@ -94,8 +93,7 @@ vi.mock("@repo/contents/test-invalid-module/en.mdx", () => ({
 
 beforeEach(() => {
   mockReadFile.mockResolvedValue("");
-  mockFsAccess.mockResolvedValue(undefined);
-  mockKyGet.mockRejectedValue(new Error("Network error"));
+  mockFetchText.mockRejectedValue(new Error("Network error"));
   mockGetMDXSlugsForLocale.mockReturnValue([]);
   mockImportContentModule.mockRejectedValue(new Error("Module not found"));
 });
@@ -270,7 +268,7 @@ export const metadata = {
 });
 
 describe("validatePath", () => {
-  describe("path traversal security (line 50)", () => {
+  describe("path traversal security", () => {
     it("should reject paths with .. segments that escape base directory", async () => {
       const result = await Effect.runPromise(
         Effect.match(validatePath("../../../etc/passwd", "/base/dir"), {
@@ -325,6 +323,17 @@ describe("validatePath", () => {
           onFailure: (error) => error,
         })
       );
+      expect(result).toBeInstanceOf(InvalidPathError);
+    });
+
+    it("should reject sibling paths that share the base directory prefix", async () => {
+      const result = await Effect.runPromise(
+        Effect.match(validatePath("../dir-malicious/secret", "/base/dir"), {
+          onSuccess: (data) => data,
+          onFailure: (error) => error,
+        })
+      );
+
       expect(result).toBeInstanceOf(InvalidPathError);
     });
   });
@@ -384,7 +393,6 @@ export const metadata = {
 
 # Content
 `;
-    mockFsAccess.mockResolvedValue(undefined);
     mockReadFile.mockResolvedValue(rawContent);
 
     const content = await Effect.runPromise(
@@ -407,11 +415,8 @@ export const metadata = {
 
 # GitHub Content
 `;
-    mockFsAccess.mockRejectedValue(new Error("File not found"));
     mockReadFile.mockRejectedValue(new Error("File not found"));
-    mockKyGet.mockImplementation((_url, _options) => ({
-      text: () => Promise.resolve(githubContent),
-    }));
+    mockFetchText.mockResolvedValue(githubContent);
 
     const content = await Effect.runPromise(
       getContent("en", "test/path", { includeMDX: false })
@@ -419,15 +424,14 @@ export const metadata = {
     expect(content).not.toBeNull();
     expect(content?.raw).toBe(githubContent);
     expect(content?.metadata.title).toBe("GitHub Content");
-    expect(mockKyGet).toHaveBeenCalledWith(
-      "https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/test/path/en.mdx",
-      { cache: "force-cache" }
+    expect(mockFetchText).toHaveBeenCalledWith(
+      "https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/test/path/en.mdx"
     );
   });
 
   it("should return null when both local and GitHub fail", async () => {
-    mockFsAccess.mockRejectedValue(new Error("File not found"));
-    mockKyGet.mockRejectedValue(new Error("Network error"));
+    mockReadFile.mockRejectedValue(new Error("File not found"));
+    mockFetchText.mockRejectedValue(new Error("Network error"));
 
     const content = await Effect.runPromise(
       Effect.match(getContent("en", "test/path", { includeMDX: false }), {
@@ -439,8 +443,8 @@ export const metadata = {
   });
 
   it("should return null when raw content is empty", async () => {
-    mockFsAccess.mockRejectedValue(new Error("File not found"));
-    mockKyGet.mockResolvedValue({ text: () => Promise.resolve("") });
+    mockReadFile.mockRejectedValue(new Error("File not found"));
+    mockFetchText.mockResolvedValue("");
 
     const content = await Effect.runPromise(
       Effect.match(getContent("en", "test/path"), {
@@ -528,8 +532,8 @@ export const metadata = {
   });
 
   it("should return null when GitHub fetch fails", async () => {
-    mockFsAccess.mockRejectedValue(new Error("File not found"));
-    mockKyGet.mockRejectedValue(new Error("Network error"));
+    mockReadFile.mockRejectedValue(new Error("File not found"));
+    mockFetchText.mockRejectedValue(new Error("Network error"));
 
     const content = await Effect.runPromise(
       Effect.match(getContent("en", "nonexistent/path"), {
@@ -541,8 +545,8 @@ export const metadata = {
   });
 
   it("should return null when GitHub fetch throws error", async () => {
-    mockFsAccess.mockRejectedValue(new Error("File not found"));
-    mockKyGet.mockImplementation(() => {
+    mockReadFile.mockRejectedValue(new Error("File not found"));
+    mockFetchText.mockImplementation(() => {
       throw new Error("GitHub fetch failed");
     });
 
@@ -555,11 +559,9 @@ export const metadata = {
     expect(content).toBeNull();
   });
 
-  it("should return empty string when GitHub fetch succeeds but text() fails", async () => {
-    mockFsAccess.mockRejectedValue(new Error("File not found"));
-    mockKyGet.mockImplementation(() => ({
-      text: () => Promise.reject(new Error("Failed to read response text")),
-    }));
+  it("should return null when GitHub text fetch fails", async () => {
+    mockReadFile.mockRejectedValue(new Error("File not found"));
+    mockFetchText.mockRejectedValue(new Error("Failed to read response text"));
 
     const content = await Effect.runPromise(
       Effect.match(getContent("en", "test/path", { includeMDX: false }), {
@@ -571,7 +573,6 @@ export const metadata = {
   });
 
   it("should return null when file exists but read fails", async () => {
-    mockFsAccess.mockResolvedValue(undefined);
     mockReadFile.mockRejectedValue(new Error("Read failed"));
 
     const content = await Effect.runPromise(
@@ -584,8 +585,8 @@ export const metadata = {
   });
 
   it("should handle path that bypasses initial checks but fails second check", async () => {
-    mockFsAccess.mockRejectedValue(new Error("File not found"));
-    mockKyGet.mockResolvedValue({ text: () => Promise.resolve("") });
+    mockReadFile.mockRejectedValue(new Error("File not found"));
+    mockFetchText.mockResolvedValue("");
 
     const content = await Effect.runPromise(
       Effect.match(
@@ -790,8 +791,6 @@ export const metadata = {
 describe("getContents", () => {
   it("should return array of contents for nested paths", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue(["test/sub1", "test/sub2"]);
-
-    mockFsAccess.mockResolvedValue(undefined);
     mockReadFile.mockResolvedValue(`
 export const metadata = {
   title: "Test Title",
@@ -814,8 +813,6 @@ export const metadata = {
 
   it("should filter out null contents", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue(["test/valid", "test/invalid"]);
-
-    mockFsAccess.mockResolvedValue(undefined);
     mockReadFile
       .mockResolvedValueOnce(`
 export const metadata = {
@@ -843,8 +840,6 @@ export const metadata = {
       "test/valid",
       "test/invalid-schema",
     ]);
-
-    mockFsAccess.mockResolvedValue(undefined);
     mockReadFile
       .mockResolvedValueOnce(`
 export const metadata = {
@@ -876,8 +871,6 @@ export const metadata = {
 
   it("should filter out contents with missing date field", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue(["test/no-date"]);
-
-    mockFsAccess.mockResolvedValue(undefined);
     mockReadFile.mockResolvedValue(`
 export const metadata = {
   title: "No Date",
@@ -901,8 +894,6 @@ export const metadata = {
       "test/valid",
       "test/invalid-schema",
     ]);
-
-    mockFsAccess.mockResolvedValue(undefined);
     mockReadFile
       .mockResolvedValueOnce(`
 export const metadata = {
@@ -934,8 +925,6 @@ export const metadata = {
 
   it("should use default locale when not specified", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue(["test/some-content"]);
-
-    mockFsAccess.mockResolvedValue(undefined);
     mockReadFile.mockResolvedValue(`
 export const metadata = {
   title: "Test",
@@ -985,8 +974,6 @@ export const metadata = {
 
   it("should handle empty nested paths", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([]);
-
-    mockFsAccess.mockResolvedValue(undefined);
     mockReadFile.mockResolvedValue(`
 export const metadata = {
   title: "Test",
@@ -1007,8 +994,6 @@ export const metadata = {
 
   it("should handle ContentSchema parse errors by filtering out invalid content", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue(["test/parse-error"]);
-
-    mockFsAccess.mockResolvedValue(undefined);
     mockReadFile.mockResolvedValue(`
 export const metadata = {
   title: "Parse Error",
@@ -1032,8 +1017,6 @@ export const metadata = {
 
   it("should handle content that fails to construct URL by filtering out", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue(["test/invalid-content"]);
-
-    mockFsAccess.mockResolvedValue(undefined);
     mockReadFile.mockResolvedValue(`
 export const metadata = {
   title: "Invalid Content",
@@ -1056,8 +1039,6 @@ export const metadata = {
 
   it("should filter out content when ContentSchema.parse throws error", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue(["test/parse-fail"]);
-
-    mockFsAccess.mockResolvedValue(undefined);
     mockReadFile.mockResolvedValue(`
 export const metadata = "not an object";
 
@@ -1077,8 +1058,6 @@ export const metadata = "not an object";
 
   it("should filter out content when parsedData returns undefined", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue(["test/undefined-result"]);
-
-    mockFsAccess.mockResolvedValue(undefined);
     mockReadFile.mockResolvedValue(`
 export const metadata = {
   title: "Undefined Result",
@@ -1105,8 +1084,6 @@ export const metadata = {
       "test/fail2",
       "test/fail3",
     ]);
-
-    mockFsAccess.mockRejectedValue(new Error("File not found"));
     mockReadFile.mockRejectedValue(new Error("Read error"));
 
     const contents = await Effect.runPromise(

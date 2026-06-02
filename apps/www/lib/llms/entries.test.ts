@@ -11,15 +11,16 @@ import {
 const mockGetContentMetadata = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/sitemap/routes", () => ({
-  getSitemapRoutes: () => [
-    "/",
-    "/articles/politics",
-    "/articles/politics/dynastic-politics-asian-values",
-    "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
-    "/quran",
-    "/subject/high-school/10",
-    "/subject/high-school/10/chemistry/green-chemistry/definition",
-  ],
+  getSitemapRoutes: () =>
+    Promise.resolve([
+      "/",
+      "/articles/politics",
+      "/articles/politics/dynastic-politics-asian-values",
+      "/exercises/high-school/snbt/quantitative-knowledge/try-out/2026",
+      "/quran",
+      "/subject/high-school/10",
+      "/subject/high-school/10/chemistry/green-chemistry/definition",
+    ]),
 }));
 
 vi.mock("@/lib/llms/quran", () => ({

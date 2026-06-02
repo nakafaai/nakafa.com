@@ -9,7 +9,7 @@ import { Effect } from "effect";
 export function getContentPublicRouteManifest(
   locales: readonly string[] = routing.locales
 ) {
-  return Effect.runSync(
+  return Effect.runPromise(
     contentPublicRouteManifestCache.get(getContentManifestCacheKey(locales))
   );
 }

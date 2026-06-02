@@ -9,7 +9,7 @@ import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { ExercisesCategory } from "@repo/contents/_types/exercises/category";
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
@@ -40,12 +40,15 @@ async function getResolvedParams(
     type: rawType,
   } = await params;
   const locale = getLocaleOrThrow(rawLocale);
-  const category = parseExercisesCategory(rawCategory);
-  const type = parseExercisesType(rawType);
+  const parsedCategory = parseExercisesCategory(rawCategory);
+  const parsedType = parseExercisesType(rawType);
 
-  if (!(category && type)) {
+  if (Option.isNone(parsedCategory) || Option.isNone(parsedType)) {
     notFound();
   }
+
+  const category = parsedCategory.value;
+  const type = parsedType.value;
 
   return { category, locale, type };
 }
@@ -109,7 +112,7 @@ async function getCachedSubjects(
   "use cache";
   cacheLife("max");
 
-  return Effect.runSync(getSubjects(category, type));
+  return Effect.runPromise(getSubjects(category, type));
 }
 
 export default function Page(
@@ -122,12 +125,15 @@ export default function Page(
     type: rawType,
   } = use(params);
   const locale = getLocaleOrThrow(rawLocale);
-  const category = parseExercisesCategory(rawCategory);
-  const type = parseExercisesType(rawType);
+  const parsedCategory = parseExercisesCategory(rawCategory);
+  const parsedType = parseExercisesType(rawType);
 
-  if (!(category && type)) {
+  if (Option.isNone(parsedCategory) || Option.isNone(parsedType)) {
     notFound();
   }
+
+  const category = parsedCategory.value;
+  const type = parsedType.value;
 
   return <PageContent category={category} locale={locale} type={type} />;
 }

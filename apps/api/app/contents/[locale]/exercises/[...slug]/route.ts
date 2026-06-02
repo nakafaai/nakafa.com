@@ -86,7 +86,7 @@ export async function GET(
     );
   }
 
-  let exerciseNumber: number | null = null;
+  let exerciseNumber = Option.none<number>();
   let rest = [...slug];
   let isQuestionOrAnswer = false;
 
@@ -106,7 +106,7 @@ export async function GET(
       const parsedNumber = Number.parseInt(lastSegment, 10);
       const isNumber = !Number.isNaN(parsedNumber);
       if (isNumber) {
-        exerciseNumber = parsedNumber;
+        exerciseNumber = Option.some(parsedNumber);
         rest = rest.slice(0, -1);
       }
     }
@@ -115,8 +115,8 @@ export async function GET(
   const basePath = rest.join("/");
 
   // If requesting _question or _answer MDX content directly
-  if (isQuestionOrAnswer && exerciseNumber !== null) {
-    const mdxPath = `exercises/${basePath}/${exerciseNumber}/${slug.at(-1)}`;
+  if (isQuestionOrAnswer && Option.isSome(exerciseNumber)) {
+    const mdxPath = `exercises/${basePath}/${exerciseNumber.value}/${slug.at(-1)}`;
 
     const program = getScopedContent(
       "exercises",
@@ -208,12 +208,13 @@ export async function GET(
           );
         }
 
-        const result =
-          exerciseNumber === null
-            ? content
-            : content.filter((exercise) => exercise.number === exerciseNumber);
+        const result = Option.isNone(exerciseNumber)
+          ? content
+          : content.filter(
+              (exercise) => exercise.number === exerciseNumber.value
+            );
 
-        if (exerciseNumber !== null && result.length === 0) {
+        if (Option.isSome(exerciseNumber) && result.length === 0) {
           return Effect.succeed<Response>(
             NextResponse.json({ error: "Exercise not found." }, { status: 404 })
           );

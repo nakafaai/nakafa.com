@@ -1,7 +1,7 @@
 import { EvilIcon } from "@hugeicons/core-free-icons";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
-import { Option, Schema } from "effect";
+import { Schema } from "effect";
 
 /**
  * Resolves the icon used for an article category.
@@ -29,13 +29,5 @@ export function getCategoryPath(category: ArticleCategory) {
 
 /** Narrows one article category route segment to the supported category union. */
 export function parseArticleCategory(value: string) {
-  const parsedCategory = Schema.decodeUnknownOption(ArticleCategorySchema)(
-    value
-  );
-
-  if (Option.isNone(parsedCategory)) {
-    return null;
-  }
-
-  return parsedCategory.value;
+  return Schema.decodeUnknownOption(ArticleCategorySchema)(value);
 }

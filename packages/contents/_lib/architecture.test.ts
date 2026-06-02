@@ -9,9 +9,20 @@ const REMOVED_WRAPPER_MODULES = [
   "_lib/exercises/content.ts",
   "_lib/subject/content.ts",
 ] as const;
+const REMOVED_ROOT_FACADE_MODULES = [
+  "_lib/cache.ts",
+  "_lib/params.ts",
+] as const;
 const RELATIVE_IMPORT_PATTERN = /from\s+["']\.{1,2}\//g;
 const IMPLICIT_DATA_IMPORT_PATTERN =
   /from\s+["']@repo\/contents\/[^"']+\/_data["']/g;
+const LEGACY_ROOT_FACADE_IMPORT_PATTERN =
+  /from\s+["']@repo\/contents\/_lib\/(?:cache|params)["']/g;
+const INDEX_SOURCE_FILE_PATTERN = /^index\.tsx?$/;
+const TEST_FOLDER_PATTERNS = [
+  `${path.sep}__test__${path.sep}`,
+  `${path.sep}__tests__${path.sep}`,
+] as const;
 const RAW_EFFECT_BOUNDARY_PATTERNS = [
   /\basync\b/,
   /\btry\s*\{/,
@@ -124,6 +135,41 @@ describe("contents architecture", () => {
     );
 
     expect(existingWrapperModules).toStrictEqual([]);
+  });
+
+  it("does not keep root cache or params facade modules", () => {
+    const existingRootFacades = REMOVED_ROOT_FACADE_MODULES.filter((filePath) =>
+      fs.existsSync(path.join(contentsDirectory, filePath))
+    );
+
+    expect(existingRootFacades).toStrictEqual([]);
+  });
+
+  it("uses direct modules instead of restored root facade imports", () => {
+    const legacyFacadeImports = productionSourceFiles.flatMap((filePath) => {
+      const source = readSourceFile(filePath);
+      const matches = source.matchAll(LEGACY_ROOT_FACADE_IMPORT_PATTERN);
+
+      return Array.from(matches, () => toContentsPath(filePath));
+    });
+
+    expect(legacyFacadeImports).toStrictEqual([]);
+  });
+
+  it("does not use index source modules", () => {
+    const indexSourceFiles = sourceFiles.filter((filePath) =>
+      INDEX_SOURCE_FILE_PATTERN.test(path.basename(filePath))
+    );
+
+    expect(indexSourceFiles.map(toContentsPath)).toStrictEqual([]);
+  });
+
+  it("keeps tests colocated beside the module under test", () => {
+    const nestedTestFiles = sourceFiles.filter((filePath) =>
+      TEST_FOLDER_PATTERNS.some((pattern) => filePath.includes(pattern))
+    );
+
+    expect(nestedTestFiles.map(toContentsPath)).toStrictEqual([]);
   });
 
   it("keeps production library failures inside Effect boundaries", () => {

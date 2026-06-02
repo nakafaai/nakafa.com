@@ -17,7 +17,7 @@ import {
   getSlugPath,
   isTryOutCollectionSlug,
 } from "@repo/contents/_lib/exercises/slug";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -37,13 +37,21 @@ export async function getResolvedParams(
     slug,
   } = await params;
   const locale = getLocaleOrThrow(rawLocale);
-  const category = parseExercisesCategory(rawCategory);
-  const type = parseExercisesType(rawType);
-  const material = parseExercisesMaterial(rawMaterial);
+  const parsedCategory = parseExercisesCategory(rawCategory);
+  const parsedType = parseExercisesType(rawType);
+  const parsedMaterial = parseExercisesMaterial(rawMaterial);
 
-  if (!(category && type && material)) {
+  if (
+    Option.isNone(parsedCategory) ||
+    Option.isNone(parsedType) ||
+    Option.isNone(parsedMaterial)
+  ) {
     notFound();
   }
+
+  const category = parsedCategory.value;
+  const type = parsedType.value;
+  const material = parsedMaterial.value;
 
   return { category, locale, material, slug, type };
 }
@@ -97,11 +105,13 @@ export async function getExerciseRouteData(
       materials
     );
 
-    if (!(exercise && currentMaterial && currentMaterialItem)) {
+    if (
+      Option.isNone(exercise) ||
+      Option.isNone(currentMaterial) ||
+      Option.isNone(currentMaterialItem)
+    ) {
       return {
         kind: "missing" as const,
-        currentMaterial,
-        currentMaterialItem,
         materialPath,
         pagePath,
       };
@@ -109,9 +119,9 @@ export async function getExerciseRouteData(
 
     return {
       kind: "single" as const,
-      currentMaterial,
-      currentMaterialItem,
-      exercise,
+      currentMaterial: currentMaterial.value,
+      currentMaterialItem: currentMaterialItem.value,
+      exercise: exercise.value,
       exerciseCount,
       exerciseFilePath: pagePath,
       materialPath,
@@ -126,21 +136,18 @@ export async function getExerciseRouteData(
     materials
   );
 
-  if (currentMaterial && !currentMaterialItem) {
+  if (Option.isSome(currentMaterial) && Option.isNone(currentMaterialItem)) {
     return {
       kind: "year-group" as const,
-      currentMaterial,
-      currentMaterialItem,
+      currentMaterial: currentMaterial.value,
       materialPath,
       pagePath,
     };
   }
 
-  if (!(currentMaterial && currentMaterialItem)) {
+  if (Option.isNone(currentMaterial) || Option.isNone(currentMaterialItem)) {
     return {
       kind: "missing" as const,
-      currentMaterial,
-      currentMaterialItem,
       materialPath,
       pagePath,
     };
@@ -153,8 +160,6 @@ export async function getExerciseRouteData(
   if (exercises.length === 0) {
     return {
       kind: "missing" as const,
-      currentMaterial,
-      currentMaterialItem,
       materialPath,
       pagePath,
     };
@@ -162,8 +167,8 @@ export async function getExerciseRouteData(
 
   return {
     kind: "set" as const,
-    currentMaterial,
-    currentMaterialItem,
+    currentMaterial: currentMaterial.value,
+    currentMaterialItem: currentMaterialItem.value,
     exercises,
     materialPath,
     materials,

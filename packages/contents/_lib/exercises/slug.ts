@@ -44,8 +44,11 @@ export function getSlugPath(
  * try-out helpers can distinguish yearly try-out slugs from regular collection
  * names like `semester-1`.
  */
-function isExerciseYearSegment(value: string | undefined) {
-  return value !== undefined && EXERCISE_YEAR_SEGMENT_REGEX.test(value);
+function isExerciseYearSegment(value: Option.Option<string>) {
+  return Option.match(value, {
+    onNone: () => false,
+    onSome: (segment) => EXERCISE_YEAR_SEGMENT_REGEX.test(segment),
+  });
 }
 
 /**
@@ -75,7 +78,7 @@ export function isTryOutCollectionSlug(slug: readonly string[]) {
     isYearlessTryOutCollectionSlug(slug) ||
     (slug.length === 2 &&
       slug[0] === TRY_OUT_SEGMENT &&
-      isExerciseYearSegment(slug[1]))
+      isExerciseYearSegment(Option.fromNullable(slug.at(1))))
   );
 }
 
@@ -89,17 +92,16 @@ export function isTryOutCollectionSlug(slug: readonly string[]) {
  * - `["try-out", "2026"]` => false
  */
 export function hasInvalidTryOutYearSlug(slug: readonly string[]) {
-  return slug[0] === TRY_OUT_SEGMENT && !isExerciseYearSegment(slug[1]);
+  return (
+    slug[0] === TRY_OUT_SEGMENT &&
+    !isExerciseYearSegment(Option.fromNullable(slug.at(1)))
+  );
 }
 
 /**
  * Checks whether one route segment is exactly a positive exercise number.
  */
-export function isExerciseNumberSegment(value: string | undefined) {
-  if (value === undefined) {
-    return false;
-  }
-
+export function isExerciseNumberSegment(value: string) {
   const trimmedValue = value.trim();
 
   if (trimmedValue === "") {
@@ -119,16 +121,19 @@ export function isExerciseNumberSegment(value: string | undefined) {
  */
 export function getExerciseSetTarget(filePath: string) {
   const segments = cleanSlug(filePath).split("/").filter(Boolean);
-  const lastSegment = segments.at(-1);
+  const lastSegment = Option.fromNullable(segments.at(-1));
 
-  if (lastSegment === undefined || !isExerciseNumberSegment(lastSegment)) {
+  if (
+    Option.isNone(lastSegment) ||
+    !isExerciseNumberSegment(lastSegment.value)
+  ) {
     return {
       exerciseNumber: Option.none(),
       filePath: segments.join("/"),
     };
   }
 
-  const exerciseNumber = Number.parseInt(lastSegment, 10);
+  const exerciseNumber = Number.parseInt(lastSegment.value, 10);
 
   return {
     exerciseNumber: Option.some(exerciseNumber),
@@ -163,13 +168,22 @@ export function getExercisesPagination(
     return { prev: emptyItem, next: emptyItem };
   }
 
-  function getItemData(item: (typeof allItems)[number] | null) {
-    return item ? { href: item.href, title: item.title } : emptyItem;
+  function getItemData(item: Option.Option<(typeof allItems)[number]>) {
+    if (Option.isNone(item)) {
+      return emptyItem;
+    }
+
+    return { href: item.value.href, title: item.value.title };
   }
 
-  const prevItem = currentIndex > 0 ? allItems[currentIndex - 1] : null;
+  const prevItem =
+    currentIndex > 0
+      ? Option.some(allItems[currentIndex - 1])
+      : Option.none<(typeof allItems)[number]>();
   const nextItem =
-    currentIndex < allItems.length - 1 ? allItems[currentIndex + 1] : null;
+    currentIndex < allItems.length - 1
+      ? Option.some(allItems[currentIndex + 1])
+      : Option.none<(typeof allItems)[number]>();
 
   return {
     prev: getItemData(prevItem),
@@ -194,16 +208,21 @@ export function getExerciseNumberPagination(
 ): ContentPagination {
   const emptyItem = { href: "", title: "" };
 
-  const prevNumber = currentNumber > 1 ? currentNumber - 1 : null;
-  const nextNumber = currentNumber < totalExercises ? currentNumber + 1 : null;
+  const prevNumber =
+    currentNumber > 1 ? Option.some(currentNumber - 1) : Option.none<number>();
+  const nextNumber =
+    currentNumber < totalExercises
+      ? Option.some(currentNumber + 1)
+      : Option.none<number>();
 
-  function getNumberData(number: number | null) {
-    if (!number) {
+  function getNumberData(number: Option.Option<number>) {
+    if (Option.isNone(number)) {
       return emptyItem;
     }
+
     return {
-      href: `${basePath}/${number}`,
-      title: titleFormatter(number),
+      href: `${basePath}/${number.value}`,
+      title: titleFormatter(number.value),
     };
   }
 

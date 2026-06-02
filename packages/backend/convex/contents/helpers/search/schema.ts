@@ -32,7 +32,7 @@ export const contentSearchResultValidator = v.object({
   has_more: v.boolean(),
   items: v.array(contentSearchSummaryValidator),
   limit: v.number(),
-  next_offset: v.union(v.number(), v.null()),
+  next_offset: v.optional(v.number()),
   offset: v.number(),
 });
 

@@ -43,11 +43,13 @@ async function getResolvedParams(
 ) {
   const { locale: rawLocale, category: rawCategory, slug } = await params;
   const locale = getLocaleOrThrow(rawLocale);
-  const category = parseArticleCategory(rawCategory);
+  const parsedCategory = parseArticleCategory(rawCategory);
 
-  if (!category) {
+  if (Option.isNone(parsedCategory)) {
     notFound();
   }
+
+  const category = parsedCategory.value;
 
   return { category, locale, slug };
 }
@@ -183,8 +185,10 @@ export default async function Page({
     getTranslations("Common"),
     getTranslations("Articles"),
   ]);
-  const publishedAt =
-    formatContentDateISO(contentMetadata.date) ?? contentMetadata.date;
+  const publishedAt = Option.getOrElse(
+    formatContentDateISO(contentMetadata.date),
+    () => contentMetadata.date
+  );
   const authorJsonLd = contentMetadata.authors.map((author) => ({
     "@type": "Person" as const,
     name: author.name,

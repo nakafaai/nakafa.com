@@ -5,7 +5,7 @@ import {
 } from "@repo/backend/convex/tryouts/products";
 import { parseExercisesMaterial } from "@repo/contents/_lib/exercises/route";
 import { fetchQuery, preloadQuery } from "convex/nextjs";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option } from "effect";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { TryoutSetProvider } from "@/components/tryout/providers/set-provider";
@@ -111,7 +111,9 @@ export default async function Page(
                 return {
                   partIndex: part.partIndex,
                   partKey: part.partKey,
-                  label: material ? tExercises(material) : part.partKey,
+                  label: Option.isSome(material)
+                    ? tExercises(material.value)
+                    : part.partKey,
                   material: part.material,
                   questionCount: part.questionCount,
                 };

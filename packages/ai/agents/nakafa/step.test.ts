@@ -51,7 +51,6 @@ const exerciseResult = {
     }),
   ],
   limit: 1,
-  next_offset: null,
   offset: 0,
 } satisfies NakafaAgentSearchResult;
 
@@ -77,7 +76,6 @@ const subjectResult = {
     }),
   ],
   limit: 1,
-  next_offset: null,
   offset: 0,
 } satisfies NakafaAgentSearchResult;
 

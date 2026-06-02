@@ -7,7 +7,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
@@ -64,7 +64,7 @@ async function getCachedGradesWithSubjects() {
   "use cache";
   cacheLife("max");
 
-  return Effect.runSync(getAllGradesWithSubjects());
+  return Effect.runPromise(getAllGradesWithSubjects());
 }
 
 async function PageContent({ locale }: { locale: Locale }) {
@@ -117,7 +117,10 @@ async function PageContent({ locale }: { locale: Locale }) {
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                   {grades.map((grade) => {
                     const gradeLabel = tSubject(
-                      getGradeNonNumeric(grade.grade) ?? "grade",
+                      Option.getOrElse(
+                        getGradeNonNumeric(grade.grade),
+                        () => "grade"
+                      ),
                       { grade: grade.grade }
                     );
 

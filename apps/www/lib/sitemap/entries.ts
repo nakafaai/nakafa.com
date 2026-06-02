@@ -3,7 +3,7 @@ import { parseContentDate } from "@repo/contents/_shared/date";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import { baseRoutes, getSitemapRoutes } from "@/lib/sitemap/routes";
 
@@ -84,8 +84,9 @@ export function getUrl(href: Href, locale: Locale, domain?: string): string {
 /** Generates sitemap entries ready for Next metadata output or URL submission. */
 export const getSitemapEntries = Effect.fn("www.sitemap.entries.all")(
   function* (options: SitemapEntryOptions = {}) {
+    const routes = yield* Effect.promise(() => getSitemapRoutes());
     const routeArrays = yield* Effect.forEach(
-      getSitemapRoutes(),
+      routes,
       (route) => getEntries(route, options),
       {
         concurrency: "unbounded",
@@ -128,8 +129,8 @@ const getContentLastModified = Effect.fn("www.sitemap.contentLastModified")(
     if (metadata?.date) {
       const metadataDate = parseContentDate(metadata.date);
 
-      if (metadataDate && metadataDate.getTime() > 0) {
-        return metadataDate;
+      if (Option.isSome(metadataDate) && metadataDate.value.getTime() > 0) {
+        return metadataDate.value;
       }
     }
 

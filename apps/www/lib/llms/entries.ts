@@ -14,7 +14,9 @@ import { getSitemapRoutes } from "@/lib/sitemap/routes";
 const buildLocalizedLlmsEntries = Effect.fn("www.llms.entries")(function* (
   locale: Locale
 ) {
-  const routes = getSitemapRoutes().sort((a, b) => a.localeCompare(b));
+  const routes = (yield* Effect.promise(() => getSitemapRoutes())).sort(
+    (a, b) => a.localeCompare(b)
+  );
 
   return yield* Effect.forEach(
     routes,

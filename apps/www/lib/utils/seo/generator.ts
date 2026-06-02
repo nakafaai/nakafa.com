@@ -4,7 +4,7 @@ import type { ExercisesMaterial } from "@repo/contents/_types/exercises/material
 import type { ExercisesType } from "@repo/contents/_types/exercises/type";
 import type { Grade } from "@repo/contents/_types/subject/grade";
 import type { Material } from "@repo/contents/_types/subject/material";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -138,8 +138,8 @@ const formatGradeForDisplay = Effect.fn("SEO.formatGradeForDisplay")(
 
       const nonNumericGrade = getGradeNonNumeric(grade);
 
-      if (nonNumericGrade) {
-        return tSubject(nonNumericGrade);
+      if (Option.isSome(nonNumericGrade)) {
+        return tSubject(nonNumericGrade.value);
       }
 
       return tSubject("grade", { grade });

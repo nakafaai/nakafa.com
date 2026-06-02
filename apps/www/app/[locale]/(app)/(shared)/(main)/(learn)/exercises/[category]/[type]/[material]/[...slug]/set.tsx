@@ -10,6 +10,7 @@ import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { FOUNDER } from "@repo/seo/json-ld/constants";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
+import { Option } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { ExerciseAttempt } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/exercises/[category]/[type]/[material]/[...slug]/attempt";
@@ -56,9 +57,10 @@ export async function ExerciseSetPage({
   }));
   const description = `${t("exercises")} - ${data.currentMaterialItem.title} - ${data.currentMaterial.title}`;
   const educationalLevel = `${t(type)} - ${t(category)}`;
-  const publishedAt =
-    formatContentDateISO(data.exercises[0].question.metadata.date) ??
-    data.exercises[0].question.metadata.date;
+  const publishedAt = Option.getOrElse(
+    formatContentDateISO(data.exercises[0].question.metadata.date),
+    () => data.exercises[0].question.metadata.date
+  );
 
   return (
     <>

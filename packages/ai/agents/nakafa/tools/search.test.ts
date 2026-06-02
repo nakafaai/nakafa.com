@@ -57,7 +57,6 @@ describe("nakafa search tool", () => {
                   },
                 ],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             ),
@@ -140,7 +139,6 @@ describe("nakafa search tool", () => {
                 has_more: false,
                 items: [],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             ),
@@ -183,7 +181,6 @@ describe("nakafa search tool", () => {
                   },
                 ],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             ),
@@ -239,7 +236,6 @@ describe("nakafa search tool", () => {
                   },
                 ],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             ),
@@ -297,7 +293,6 @@ describe("nakafa search tool", () => {
                   },
                 ],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             ),
@@ -352,7 +347,6 @@ describe("nakafa search tool", () => {
                   },
                 ],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             ),
@@ -425,7 +419,6 @@ describe("nakafa search tool", () => {
                   },
                 ],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             );
@@ -472,7 +465,6 @@ describe("nakafa search tool", () => {
                 has_more: false,
                 items: [],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             );
@@ -511,7 +503,6 @@ describe("nakafa search tool", () => {
                 has_more: false,
                 items: [],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             );
@@ -549,7 +540,6 @@ describe("nakafa search tool", () => {
                 has_more: false,
                 items: [],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             );
@@ -600,7 +590,6 @@ describe("nakafa search tool", () => {
                     },
                   ],
                   limit: input.limit,
-                  next_offset: null,
                   offset: input.offset,
                 })
               );
@@ -627,7 +616,6 @@ describe("nakafa search tool", () => {
                   },
                 ],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             );
@@ -745,7 +733,6 @@ describe("nakafa search tool", () => {
                   },
                 ],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             ),
@@ -797,7 +784,6 @@ describe("nakafa search tool", () => {
                     },
                   ],
                   limit: input.limit,
-                  next_offset: null,
                   offset: input.offset,
                 })
               );
@@ -823,7 +809,6 @@ describe("nakafa search tool", () => {
                   },
                 ],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             );
@@ -864,7 +849,6 @@ describe("nakafa search tool", () => {
                 has_more: false,
                 items: [],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             );
@@ -927,7 +911,6 @@ describe("nakafa search tool", () => {
                   },
                 ],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             ),
@@ -990,7 +973,6 @@ describe("nakafa search tool", () => {
                   has_more: false,
                   items: [],
                   limit: input.limit,
-                  next_offset: null,
                   offset: input.offset,
                 })
               );
@@ -1023,7 +1005,6 @@ describe("nakafa search tool", () => {
                   },
                 ],
                 limit: input.limit,
-                next_offset: null,
                 offset: input.offset,
               })
             );

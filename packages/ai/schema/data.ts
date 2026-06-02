@@ -30,7 +30,7 @@ const ExercisePreviewSchema = NakafaAgentContentRefSchema.pipe(
   Schema.extend(
     Schema.Struct({
       count: Schema.Number,
-      exercise_number: Schema.NullOr(Schema.Number),
+      exercise_number: Schema.optional(Schema.Number),
       numbers: Schema.Array(Schema.Number).pipe(Schema.mutable),
       title: Schema.String,
     })
