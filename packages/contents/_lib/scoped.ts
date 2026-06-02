@@ -1,5 +1,5 @@
 import { resolveSafeContentPath } from "@repo/contents/_lib/fs/path";
-import { ContentIO } from "@repo/contents/_lib/io/content-io";
+import { ContentIO } from "@repo/contents/_lib/io/content";
 import { getMdxSlugsForLocale } from "@repo/contents/_lib/mdx-slugs/cache";
 import { extractMetadata } from "@repo/contents/_lib/metadata";
 import { importContentModule } from "@repo/contents/_lib/module";

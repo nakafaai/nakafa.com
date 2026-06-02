@@ -11,7 +11,7 @@ const { directoryEntriesByPath, mockReadDirSync } = vi.hoisted(() => ({
   mockReadDirSync: vi.fn(),
 }));
 
-vi.mock("@repo/contents/_lib/io/content-io", async () => {
+vi.mock("@repo/contents/_lib/io/content", async () => {
   const { Effect, Layer } = await import("effect");
   const isDirectoryEntry = (
     entry: unknown

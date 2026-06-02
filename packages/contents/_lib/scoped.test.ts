@@ -1,13 +1,18 @@
 import {
+  extractReferences,
   getScopedContent,
   getScopedContents,
   getScopedReferences,
+  parseModuleMetadata,
+  parseReferences,
+  validatePath,
 } from "@repo/contents/_lib/scoped";
 import {
   GitHubFetchError,
   InvalidPathError,
   MetadataParseError,
   ModuleLoadError,
+  ReferenceParseError,
 } from "@repo/contents/_shared/error";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -29,7 +34,7 @@ vi.mock("@repo/contents/_lib/mdx-slugs/cache", () => ({
     Effect.succeed(mockGetMDXSlugsForLocale(locale)),
 }));
 
-vi.mock("@repo/contents/_lib/io/content-io", async () => {
+vi.mock("@repo/contents/_lib/io/content", async () => {
   const { Effect, Layer } = await import("effect");
 
   return {
@@ -423,5 +428,97 @@ describe("scoped content helpers", () => {
     );
 
     expect(result).toStrictEqual([]);
+  });
+});
+
+describe("scoped exported primitives", () => {
+  it("validates safe content-relative paths and rejects traversal", async () => {
+    const validPath = await Effect.runPromise(
+      validatePath("articles/politics/test-article/en.mdx", "/content/root")
+    );
+    const failure = await Effect.runPromise(
+      Effect.flip(validatePath("../secret", "/content/root"))
+    );
+
+    expect(validPath).toBe(
+      "/content/root/articles/politics/test-article/en.mdx"
+    );
+    expect(failure).toBeInstanceOf(InvalidPathError);
+  });
+
+  it("parses imported module metadata with optional fields", async () => {
+    const result = await Effect.runPromise(
+      parseModuleMetadata({
+        metadata: {
+          title: "Imported Article",
+          description: "Imported Description",
+          authors: [{ name: "Author" }],
+          date: "01/01/2024",
+          subject: "Politics",
+        },
+      })
+    );
+
+    expect(result).toStrictEqual({
+      title: "Imported Article",
+      description: "Imported Description",
+      authors: [{ name: "Author" }],
+      date: "01/01/2024",
+      subject: "Politics",
+    });
+  });
+
+  it("fails imported module metadata with a tagged metadata error", async () => {
+    const failure = await Effect.runPromise(
+      Effect.flip(
+        parseModuleMetadata(
+          {
+            metadata: {
+              title: "Broken",
+            },
+          },
+          "@repo/contents/articles/politics/broken/en.mdx"
+        )
+      )
+    );
+
+    expect(failure).toBeInstanceOf(MetadataParseError);
+    expect(failure).toMatchObject({
+      path: "@repo/contents/articles/politics/broken/en.mdx",
+    });
+  });
+
+  it("extracts reference arrays and ignores missing or malformed exports", () => {
+    expect(
+      extractReferences({
+        references: [{ title: "Reference", authors: "Author", year: 2024 }],
+      })
+    ).toStrictEqual([{ title: "Reference", authors: "Author", year: 2024 }]);
+    expect(extractReferences({ references: "not an array" })).toStrictEqual([]);
+    expect(extractReferences(null)).toStrictEqual([]);
+  });
+
+  it("parses valid references and fails invalid reference payloads", async () => {
+    const valid = await Effect.runPromise(
+      parseReferences([
+        {
+          title: "Reference",
+          authors: "Author",
+          year: 2024,
+        },
+      ])
+    );
+    const failure = await Effect.runPromise(
+      Effect.flip(parseReferences([{ title: "Missing author and year" }]))
+    );
+
+    expect(valid).toStrictEqual([
+      {
+        title: "Reference",
+        authors: "Author",
+        year: 2024,
+      },
+    ]);
+    expect(failure).toBeInstanceOf(ReferenceParseError);
   });
 });

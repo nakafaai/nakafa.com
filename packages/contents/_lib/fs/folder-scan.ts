@@ -5,7 +5,7 @@ import {
   resolveContentFolderPath,
   validateContentFolderPath,
 } from "@repo/contents/_lib/fs/path";
-import { ContentIO } from "@repo/contents/_lib/io/content-io";
+import { ContentIO } from "@repo/contents/_lib/io/content";
 import { DirectoryReadError } from "@repo/contents/_shared/error";
 import { Effect } from "effect";
 

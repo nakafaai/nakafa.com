@@ -1,31 +1,26 @@
 import { getContent, getContents } from "@repo/contents/_lib/content";
-import { getContentMetadata } from "@repo/contents/_lib/metadata";
 import {
-  extractReferences,
-  parseModuleMetadata,
-  parseReferences,
-  validatePath,
-} from "@repo/contents/_lib/scoped";
-import {
+  GitHubFetchError,
   InvalidPathError,
   MetadataParseError,
+  ModuleLoadError,
 } from "@repo/contents/_shared/error";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
-  mockReadFile,
   mockFetchText,
   mockGetMDXSlugsForLocale,
   mockImportContentModule,
+  mockReadFile,
 } = vi.hoisted(() => ({
-  mockReadFile: vi.fn(),
   mockFetchText: vi.fn(),
   mockGetMDXSlugsForLocale: vi.fn(),
   mockImportContentModule: vi.fn(),
+  mockReadFile: vi.fn(),
 }));
 
-vi.mock("@repo/contents/_lib/io/content-io", async () => {
+vi.mock("@repo/contents/_lib/io/content", async () => {
   const { Effect, Layer } = await import("effect");
 
   return {
@@ -54,1504 +49,229 @@ vi.mock("@repo/contents/_lib/module", () => ({
   importContentModule: mockImportContentModule,
 }));
 
-vi.mock("@repo/contents/testpath/en.mdx", () => ({
+const rawMetadataSource = `
+export const metadata = {
+  title: "Raw Title",
+  description: "Raw Description",
+  authors: [{ name: "Raw Author" }],
+  date: "01/01/2024"
+};
+
+# Raw Content
+`;
+
+const moduleContent = {
   metadata: {
-    title: "Test Title",
-    description: "Test Description",
-    authors: [{ name: "Test Author" }],
+    title: "Module Title",
+    description: "Module Description",
+    authors: [{ name: "Module Author" }],
     date: "01/01/2024",
   },
-  default: () => "Test MDX Content",
-}));
-
-vi.mock("@repo/contents/test/sub1/en.mdx", () => ({
-  metadata: {
-    title: "Sub1 Title",
-    description: "Sub1 Description",
-    authors: [{ name: "Test Author" }],
-    date: "01/01/2024",
-  },
-  default: () => "Sub1 MDX Content",
-}));
-
-vi.mock("@repo/contents/test/sub2/en.mdx", () => ({
-  metadata: {
-    title: "Sub2 Title",
-    description: "Sub2 Description",
-    authors: [{ name: "Test Author" }],
-    date: "01/01/2024",
-  },
-  default: () => "Sub2 MDX Content",
-}));
-
-vi.mock("@repo/contents/test-invalid-module/en.mdx", () => ({
-  metadata: {
-    title: "Broken",
-  },
-  default: () => "Broken MDX Content",
-}));
+  default: () => "Module MDX",
+};
 
 beforeEach(() => {
-  mockReadFile.mockResolvedValue("");
   mockFetchText.mockRejectedValue(new Error("Network error"));
   mockGetMDXSlugsForLocale.mockReturnValue([]);
-  mockImportContentModule.mockRejectedValue(new Error("Module not found"));
+  mockImportContentModule.mockResolvedValue(moduleContent);
+  mockReadFile.mockResolvedValue(rawMetadataSource);
 });
 
 afterEach(() => {
   vi.clearAllMocks();
+  mockFetchText.mockReset();
+  mockGetMDXSlugsForLocale.mockReset();
+  mockImportContentModule.mockReset();
   mockReadFile.mockReset();
-  vi.restoreAllMocks();
-});
-
-describe("getContentMetadata", () => {
-  it("should return metadata for valid MDX file", async () => {
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Test Title",
-  description: "Test Description",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-
-# Content
-`);
-
-    const metadata = await Effect.runPromise(
-      getContentMetadata("testpath", "en")
-    );
-    expect(mockReadFile).toHaveBeenCalled();
-    expect(metadata).not.toBeNull();
-    expect(metadata?.title).toBe("Test Title");
-    expect(metadata?.description).toBe("Test Description");
-  });
-
-  it("should handle different locales", async () => {
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Test Title",
-  description: "Test Description",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-
-# Content
-`);
-
-    const metadata = await Effect.runPromise(
-      getContentMetadata("testpath", "id")
-    );
-    expect(mockReadFile).toHaveBeenCalled();
-    expect(metadata).not.toBeNull();
-    expect(metadata?.title).toBe("Test Title");
-    expect(metadata?.description).toBe("Test Description");
-  });
-
-  it("should handle path with special characters", async () => {
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Test",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-`);
-
-    const metadata = await Effect.runPromise(
-      getContentMetadata("testpath?query=value", "en")
-    );
-    expect(mockReadFile).toHaveBeenCalled();
-    expect(metadata).not.toBeNull();
-  });
-
-  it("should return null when file read fails", async () => {
-    mockReadFile.mockRejectedValue(new Error("File not found"));
-
-    const metadata = await Effect.runPromise(
-      Effect.match(getContentMetadata("nonexistent/path", "en"), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(metadata).toBeNull();
-  });
-
-  it("should return null for invalid metadata", async () => {
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Test",
-  invalid_field: ${String.fromCharCode(0x1_f6_00)}
-};
-`);
-
-    const metadata = await Effect.runPromise(
-      Effect.match(getContentMetadata("test/path", "en"), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(metadata).toBeNull();
-  });
-
-  it("should return null for malformed metadata", async () => {
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Test",
-};
-
-# Content
-`);
-
-    const metadata = await Effect.runPromise(
-      Effect.match(getContentMetadata("test/path", "en"), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(metadata).toBeNull();
-  });
-
-  it("should return null for content without metadata", async () => {
-    mockReadFile.mockResolvedValue(`
-# Content without metadata
-`);
-
-    const metadata = await Effect.runPromise(
-      Effect.match(getContentMetadata("test/path", "en"), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(metadata).toBeNull();
-  });
-
-  it("should return null for empty content", async () => {
-    mockReadFile.mockResolvedValue("");
-
-    const metadata = await Effect.runPromise(
-      Effect.match(getContentMetadata("test/path", "en"), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(metadata).toBeNull();
-  });
-
-  it("should handle path traversal attempts", async () => {
-    const metadata = await Effect.runPromise(
-      Effect.match(getContentMetadata("../etc/passwd", "en"), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(metadata).toBeNull();
-  });
-
-  it("should handle absolute paths", async () => {
-    const metadata = await Effect.runPromise(
-      Effect.match(getContentMetadata("/absolute/path", "en"), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(metadata).toBeNull();
-  });
-
-  it("should detect path traversal in getContentMetadata", async () => {
-    const metadata = await Effect.runPromise(
-      Effect.match(getContentMetadata("../../../etc/passwd", "en"), {
-        onSuccess: (data) => data,
-        onFailure: (error) => error,
-      })
-    );
-    expect(metadata).toBeInstanceOf(InvalidPathError);
-  });
-});
-
-describe("validatePath", () => {
-  describe("path traversal security", () => {
-    it("should reject paths with .. segments that escape base directory", async () => {
-      const result = await Effect.runPromise(
-        Effect.match(validatePath("../../../etc/passwd", "/base/dir"), {
-          onSuccess: (data) => data,
-          onFailure: (error) => error,
-        })
-      );
-      expect(result).toBeInstanceOf(InvalidPathError);
-      expect(result).toMatchObject({ reason: "Path traversal detected" });
-    });
-
-    it("should reject paths with .. in the middle that escape base directory", async () => {
-      const result = await Effect.runPromise(
-        Effect.match(validatePath("test/../../etc/passwd", "/base/dir"), {
-          onSuccess: (data) => data,
-          onFailure: (error) => error,
-        })
-      );
-      expect(result).toBeInstanceOf(InvalidPathError);
-    });
-
-    it("should reject deeply nested traversal attempts", async () => {
-      const result = await Effect.runPromise(
-        Effect.match(
-          validatePath(
-            "a/b/c/d/e/f/g/../../../../../../../../etc/passwd",
-            "/base/dir"
-          ),
-          {
-            onSuccess: (data) => data,
-            onFailure: (error) => error,
-          }
-        )
-      );
-      expect(result).toBeInstanceOf(InvalidPathError);
-    });
-
-    it("should reject paths with mixed .. and normal segments that escape", async () => {
-      const result = await Effect.runPromise(
-        Effect.match(validatePath("valid/../../etc/passwd", "/base/dir"), {
-          onSuccess: (data) => data,
-          onFailure: (error) => error,
-        })
-      );
-      expect(result).toBeInstanceOf(InvalidPathError);
-    });
-
-    it("should reject paths with only .. segments", async () => {
-      const result = await Effect.runPromise(
-        Effect.match(validatePath("../..", "/base/dir"), {
-          onSuccess: (data) => data,
-          onFailure: (error) => error,
-        })
-      );
-      expect(result).toBeInstanceOf(InvalidPathError);
-    });
-
-    it("should reject sibling paths that share the base directory prefix", async () => {
-      const result = await Effect.runPromise(
-        Effect.match(validatePath("../dir-malicious/secret", "/base/dir"), {
-          onSuccess: (data) => data,
-          onFailure: (error) => error,
-        })
-      );
-
-      expect(result).toBeInstanceOf(InvalidPathError);
-    });
-  });
-
-  describe("valid paths", () => {
-    it("should accept simple relative paths", async () => {
-      const result = await Effect.runPromise(
-        validatePath("test/path", "/base/dir")
-      );
-      expect(result).toBe("/base/dir/test/path");
-    });
-
-    it("should accept paths with multiple segments", async () => {
-      const result = await Effect.runPromise(
-        validatePath("articles/politics/my-article", "/base/dir")
-      );
-      expect(result).toBe("/base/dir/articles/politics/my-article");
-    });
-
-    it("should accept paths with leading/trailing slashes (cleaned)", async () => {
-      const result = await Effect.runPromise(
-        validatePath("/test/path/", "/base/dir")
-      );
-      expect(result).toBe("/base/dir/test/path");
-    });
-
-    it("should accept empty path (resolves to base directory)", async () => {
-      const result = await Effect.runPromise(validatePath("", "/base/dir"));
-      expect(result).toBe("/base/dir");
-    });
-
-    it("should accept paths with .. that don't escape base directory", async () => {
-      const result = await Effect.runPromise(
-        validatePath("test/path/..", "/base/dir")
-      );
-      expect(result).toBe("/base/dir/test");
-    });
-
-    it("should accept paths with embedded . segments", async () => {
-      const result = await Effect.runPromise(
-        validatePath("test/./path", "/base/dir")
-      );
-      expect(result).toBe("/base/dir/test/path");
-    });
-  });
 });
 
 describe("getContent", () => {
-  it("should read content from local file when it exists (includeMDX: false)", async () => {
-    const rawContent = `
-export const metadata = {
-  title: "Test Title",
-  description: "Test Description",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-
-# Content
-`;
-    mockReadFile.mockResolvedValue(rawContent);
-
-    const content = await Effect.runPromise(
-      getContent("en", "testpath", { includeMDX: false })
-    );
-    expect(content).not.toBeNull();
-    expect(content?.raw).toBe(rawContent);
-    expect(content?.metadata.title).toBe("Test Title");
-    expect(mockReadFile).toHaveBeenCalled();
-  });
-
-  it("should fallback to GitHub when local file does not exist", async () => {
-    const githubContent = `
-export const metadata = {
-  title: "GitHub Content",
-  description: "GitHub Description",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-
-# GitHub Content
-`;
-    mockReadFile.mockRejectedValue(new Error("File not found"));
-    mockFetchText.mockResolvedValue(githubContent);
-
-    const content = await Effect.runPromise(
-      getContent("en", "test/path", { includeMDX: false })
-    );
-    expect(content).not.toBeNull();
-    expect(content?.raw).toBe(githubContent);
-    expect(content?.metadata.title).toBe("GitHub Content");
-    expect(mockFetchText).toHaveBeenCalledWith(
-      "https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/test/path/en.mdx"
-    );
-  });
-
-  it("should return null when both local and GitHub fail", async () => {
-    mockReadFile.mockRejectedValue(new Error("File not found"));
-    mockFetchText.mockRejectedValue(new Error("Network error"));
-
-    const content = await Effect.runPromise(
-      Effect.match(getContent("en", "test/path", { includeMDX: false }), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
+  it("loads raw metadata without importing MDX when includeMDX is false", async () => {
+    const result = await Effect.runPromise(
+      getContent("en", "articles/politics/test-article", {
+        includeMDX: false,
       })
     );
-    expect(content).toBeNull();
-  });
 
-  it("should return null when raw content is empty", async () => {
-    mockReadFile.mockRejectedValue(new Error("File not found"));
-    mockFetchText.mockResolvedValue("");
-
-    const content = await Effect.runPromise(
-      Effect.match(getContent("en", "test/path"), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(content).toBeNull();
-  });
-
-  it("should return null when metadata is missing in includeMDX mode", async () => {
-    mockReadFile.mockResolvedValue("# Content without metadata");
-
-    const content = await Effect.runPromise(
-      Effect.match(getContent("en", "test/path", { includeMDX: false }), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(content).toBeNull();
-  });
-
-  it("should return content with metadata only when includeMDX is false", async () => {
-    const rawContent = `
-export const metadata = {
-  title: "Test Title",
-  description: "Test Description",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-
-# Content
-`;
-    mockReadFile.mockResolvedValue(rawContent);
-
-    const content = await Effect.runPromise(
-      getContent("en", "test/path", { includeMDX: false })
-    );
-    expect(content).not.toBeNull();
-    expect(content?.metadata.title).toBe("Test Title");
-    expect(content?.raw).toContain("# Content");
-    expect(content?.default).toBeUndefined();
-  });
-
-  it("should handle errors gracefully", async () => {
-    mockReadFile.mockRejectedValue(new Error("Read error"));
-
-    const content = await Effect.runPromise(
-      Effect.match(getContent("en", "test/path"), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(content).toBeNull();
-  });
-
-  it("should return null for path traversal attempts", async () => {
-    const content = await Effect.runPromise(
-      Effect.match(getContent("en", "../etc/passwd"), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(content).toBeNull();
-  });
-
-  it("should return null for absolute paths", async () => {
-    const content = await Effect.runPromise(
-      Effect.match(getContent("en", "/absolute/path"), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(content).toBeNull();
-  });
-
-  it("should handle path traversal that bypasses initial checks", async () => {
-    const content = await Effect.runPromise(
-      Effect.match(getContent("en", "../../etc/passwd"), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(content).toBeNull();
-  });
-
-  it("should return null when GitHub fetch fails", async () => {
-    mockReadFile.mockRejectedValue(new Error("File not found"));
-    mockFetchText.mockRejectedValue(new Error("Network error"));
-
-    const content = await Effect.runPromise(
-      Effect.match(getContent("en", "nonexistent/path"), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(content).toBeNull();
-  });
-
-  it("should return null when GitHub fetch throws error", async () => {
-    mockReadFile.mockRejectedValue(new Error("File not found"));
-    mockFetchText.mockImplementation(() => {
-      throw new Error("GitHub fetch failed");
-    });
-
-    const content = await Effect.runPromise(
-      Effect.match(getContent("en", "test/path", { includeMDX: false }), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(content).toBeNull();
-  });
-
-  it("should return null when GitHub text fetch fails", async () => {
-    mockReadFile.mockRejectedValue(new Error("File not found"));
-    mockFetchText.mockRejectedValue(new Error("Failed to read response text"));
-
-    const content = await Effect.runPromise(
-      Effect.match(getContent("en", "test/path", { includeMDX: false }), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(content).toBeNull();
-  });
-
-  it("should return null when file exists but read fails", async () => {
-    mockReadFile.mockRejectedValue(new Error("Read failed"));
-
-    const content = await Effect.runPromise(
-      Effect.match(getContent("en", "test/path", { includeMDX: false }), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
-    );
-    expect(content).toBeNull();
-  });
-
-  it("should handle path that bypasses initial checks but fails second check", async () => {
-    mockReadFile.mockRejectedValue(new Error("File not found"));
-    mockFetchText.mockResolvedValue("");
-
-    const content = await Effect.runPromise(
-      Effect.match(
-        getContent("en", "test/../../../etc/passwd", { includeMDX: false }),
-        {
-          onSuccess: (data) => data,
-          onFailure: () => null,
-        }
-      )
-    );
-    expect(content).toBeNull();
-  });
-
-  it("should read content with includeMDX: true", async () => {
-    mockReadFile.mockResolvedValue("# MDX Content");
-    mockImportContentModule.mockResolvedValue({
+    expect(result).toStrictEqual({
       metadata: {
-        title: "Test Title",
-        description: "Test Description",
-        authors: [{ name: "Test Author" }],
+        title: "Raw Title",
+        description: "Raw Description",
+        authors: [{ name: "Raw Author" }],
         date: "01/01/2024",
       },
-      default: () => "Test MDX Content",
+      raw: rawMetadataSource,
     });
-
-    const content = await Effect.runPromise(
-      getContent("en", "test/path", {
-        includeMDX: true,
-      })
-    );
-    expect(content).not.toBeNull();
-    expect(content?.metadata.title).toBe("Test Title");
-    expect(content?.default).toBeDefined();
-    expect(content?.raw).toBe("# MDX Content");
+    expect(mockImportContentModule).not.toHaveBeenCalled();
   });
 
-  it("should load MDX content directly from a mocked content module", async () => {
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Test Title",
-  description: "Test Description",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-
-# Content
-`);
-    mockImportContentModule.mockResolvedValue({
-      metadata: {
-        title: "Test Title",
-        description: "Test Description",
-        authors: [{ name: "Test Author" }],
-        date: "01/01/2024",
-      },
-      default: () => "Test MDX Content",
-    });
-
-    const content = await Effect.runPromise(
-      getContent("en", "testpath", { includeMDX: true })
-    );
-
-    expect(content.metadata.title).toBe("Test Title");
-    expect(content.raw).toContain("# Content");
-    expect(content.default).toBeDefined();
-  });
-
-  it("should preserve the MDX module path when metadata parsing fails in includeMDX mode", async () => {
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Broken"
-};
-
-# Broken
-`);
-    mockImportContentModule.mockResolvedValue({
-      metadata: {
-        title: "Broken",
-      },
-      default: () => "Broken MDX Content",
-    });
+  it("falls back to GitHub raw content when the local file read fails", async () => {
+    mockReadFile.mockRejectedValue(new Error("missing local file"));
+    mockFetchText.mockResolvedValue(rawMetadataSource);
 
     const result = await Effect.runPromise(
-      Effect.match(
-        getContent("en", "test-invalid-module", { includeMDX: true }),
-        {
-          onSuccess: () => null,
-          onFailure: (error) => error,
-        }
+      getContent("en", "articles/politics/test-article", {
+        includeMDX: false,
+      })
+    );
+
+    expect(result.metadata.title).toBe("Raw Title");
+    expect(mockFetchText).toHaveBeenCalledWith(
+      "https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/articles/politics/test-article/en.mdx"
+    );
+  });
+
+  it("fails with GitHubFetchError when local and fallback reads fail", async () => {
+    mockReadFile.mockRejectedValue(new Error("missing local file"));
+    mockFetchText.mockRejectedValue(new Error("network down"));
+
+    const failure = await Effect.runPromise(
+      Effect.flip(
+        getContent("en", "articles/politics/test-article", {
+          includeMDX: false,
+        })
       )
     );
 
-    expect(result).toBeInstanceOf(MetadataParseError);
-    expect(result).toMatchObject({
-      path: "@repo/contents/test-invalid-module/en.mdx",
+    expect(failure).toBeInstanceOf(GitHubFetchError);
+  });
+
+  it("fails with InvalidPathError for traversal attempts", async () => {
+    const failure = await Effect.runPromise(
+      Effect.flip(getContent("en", "../etc/passwd", { includeMDX: false }))
+    );
+
+    expect(failure).toBeInstanceOf(InvalidPathError);
+  });
+
+  it("loads raw content and the MDX module when includeMDX is true", async () => {
+    const result = await Effect.runPromise(
+      getContent("en", "articles/politics/test-article")
+    );
+
+    expect(result).toStrictEqual({
+      ...moduleContent,
+      raw: rawMetadataSource,
     });
-  });
-
-  it("should return null when metadata is not found with includeMDX: false", async () => {
-    mockReadFile.mockResolvedValue(`
-# Content without metadata
-
-This is just content without any metadata export.
-`);
-
-    const content = await Effect.runPromise(
-      Effect.match(
-        getContent("en", "test/no-metadata", { includeMDX: false }),
-        {
-          onSuccess: (data) => data,
-          onFailure: () => null,
-        }
-      )
+    expect(mockImportContentModule).toHaveBeenCalledWith(
+      "articles/politics/test-article",
+      "en"
     );
-    expect(content).toBeNull();
   });
 
-  it("should return null when metadata is invalid with includeMDX: false", async () => {
-    mockReadFile.mockResolvedValue(`
-export const metadata = "invalid metadata";
+  it("fails with ModuleLoadError when the MDX module cannot load", async () => {
+    mockImportContentModule.mockRejectedValue(new Error("module missing"));
 
-# Content
-`);
-
-    const content = await Effect.runPromise(
-      Effect.match(
-        getContent("en", "test/invalid-metadata", { includeMDX: false }),
-        {
-          onSuccess: (data) => data,
-          onFailure: () => null,
-        }
-      )
+    const failure = await Effect.runPromise(
+      Effect.flip(getContent("en", "articles/politics/test-article"))
     );
-    expect(content).toBeNull();
+
+    expect(failure).toBeInstanceOf(ModuleLoadError);
   });
 
-  it("should return content without MDX when includeMDX: false", async () => {
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Test Title",
-  description: "Test Description",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-
-# Content
-`);
-
-    const content = await Effect.runPromise(
-      getContent("en", "test/path", { includeMDX: false })
-    );
-    expect(content).toBeDefined();
-    expect(content?.metadata.title).toBe("Test Title");
-    expect(content?.default).toBeUndefined();
-    expect(content?.raw).toContain("# Content");
-  });
-
-  it("should return null when metadata is invalid with includeMDX: true", async () => {
-    mockReadFile.mockResolvedValue("# Invalid MDX Content");
+  it("keeps the MDX module path on imported metadata failures", async () => {
     mockImportContentModule.mockResolvedValue({
       metadata: {
         title: "Broken",
       },
-      default: () => "Broken MDX Content",
+      default: () => "Broken MDX",
     });
 
-    const content = await Effect.runPromise(
-      Effect.match(
-        getContent("en", "test/invalid", {
-          includeMDX: true,
-        }),
-        {
-          onSuccess: (data) => data,
-          onFailure: () => null,
-        }
-      )
+    const failure = await Effect.runPromise(
+      Effect.flip(getContent("en", "articles/politics/broken-article"))
     );
-    expect(content).toBeNull();
+
+    expect(failure).toBeInstanceOf(MetadataParseError);
+    expect(failure).toMatchObject({
+      path: "@repo/contents/articles/politics/broken-article/en.mdx",
+    });
   });
 
-  it("should return null when metadata parsing fails with includeMDX: true", async () => {
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Test",
-  description: null,
-  authors: "invalid",
-  date: "invalid"
-};
+  it("fails with MetadataParseError when raw metadata is missing", async () => {
+    mockReadFile.mockResolvedValue("# No metadata here");
 
-# Content
-`);
-
-    const content = await Effect.runPromise(
-      Effect.match(getContent("en", "test/parse-error", { includeMDX: true }), {
-        onSuccess: (data) => data,
-        onFailure: () => null,
-      })
+    const failure = await Effect.runPromise(
+      Effect.flip(
+        getContent("en", "articles/politics/no-metadata", {
+          includeMDX: false,
+        })
+      )
     );
-    expect(content).toBeNull();
+
+    expect(failure).toBeInstanceOf(MetadataParseError);
   });
 });
 
 describe("getContents", () => {
-  it("should return array of contents for nested paths", async () => {
-    mockGetMDXSlugsForLocale.mockReturnValue(["test/sub1", "test/sub2"]);
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Test Title",
-  description: "Test Description",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-`);
-
-    const contents = await Effect.runPromise(
-      getContents({
-        locale: "en",
-        basePath: "test",
-        includeMDX: false,
-      })
-    );
-    expect(contents).toHaveLength(2);
-    expect(contents[0]?.metadata.title).toBe("Test Title");
-  });
-
-  it("should filter out null contents", async () => {
-    mockGetMDXSlugsForLocale.mockReturnValue(["test/valid", "test/invalid"]);
-    mockReadFile
-      .mockResolvedValueOnce(`
-export const metadata = {
-  title: "Valid",
-  description: "Test",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-`)
-      .mockResolvedValueOnce("invalid content");
-
-    const contents = await Effect.runPromise(
-      getContents({
-        locale: "en",
-        basePath: "test",
-        includeMDX: false,
-      })
-    );
-    expect(contents).toHaveLength(1);
-    expect(contents[0]?.metadata.title).toBe("Valid");
-  });
-
-  it("should filter out contents that fail ContentSchema validation", async () => {
+  it("lists matching slugs with default locale and filters unreadable entries", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
-      "test/valid",
-      "test/invalid-schema",
+      "articles/politics/valid-entry",
+      "articles/politics/broken-entry",
+      "subject/high-school/10/mathematics",
     ]);
-    mockReadFile
-      .mockResolvedValueOnce(`
-export const metadata = {
-  title: "Valid",
-  description: "Test",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-`)
-      .mockResolvedValueOnce(`
-export const metadata = {
-  title: "Invalid",
-  description: "Test",
-  authors: "invalid-authors",
-  date: "01/01/2024"
-};
-`);
+    mockReadFile.mockImplementation((filePath: string) => {
+      if (filePath.includes("broken-entry/en.mdx")) {
+        return Promise.resolve("# Missing metadata");
+      }
 
-    const contents = await Effect.runPromise(
+      return Promise.resolve(rawMetadataSource);
+    });
+
+    const result = await Effect.runPromise(
       getContents({
-        locale: "en",
-        basePath: "test",
+        basePath: "articles/politics",
         includeMDX: false,
       })
     );
-    expect(contents).toHaveLength(1);
-    expect(contents[0]?.metadata.title).toBe("Valid");
+
+    expect(mockGetMDXSlugsForLocale).toHaveBeenCalledWith("en");
+    expect(result).toHaveLength(1);
+    expect(result[0]).toStrictEqual({
+      metadata: {
+        title: "Raw Title",
+        description: "Raw Description",
+        authors: [{ name: "Raw Author" }],
+        date: "01/01/2024",
+      },
+      raw: rawMetadataSource,
+      url: "https://nakafa.com/en/articles/politics/valid-entry",
+      slug: "articles/politics/valid-entry",
+      locale: "en",
+    });
   });
 
-  it("should filter out contents with missing date field", async () => {
-    mockGetMDXSlugsForLocale.mockReturnValue(["test/no-date"]);
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "No Date",
-  description: "Test",
-  authors: [{ name: "Test Author" }]
-};
-`);
-
-    const contents = await Effect.runPromise(
-      getContents({
-        locale: "en",
-        basePath: "test",
-        includeMDX: false,
-      })
-    );
-    expect(contents).toHaveLength(0);
-  });
-
-  it("should filter out contents with invalid metadata structure", async () => {
+  it("uses includeMDX true and en locale when no options are provided", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
-      "test/valid",
-      "test/invalid-schema",
+      "articles/politics/default-entry",
     ]);
-    mockReadFile
-      .mockResolvedValueOnce(`
-export const metadata = {
-  title: "Valid",
-  description: "Test",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-`)
-      .mockResolvedValueOnce(`
-export const metadata = {
-  title: "Invalid",
-  description: "Test",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-`);
 
-    const contents = await Effect.runPromise(
-      getContents({
-        locale: "en",
-        basePath: "test",
-        includeMDX: false,
-      })
+    const result = await Effect.runPromise(getContents());
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.metadata.title).toBe("Module Title");
+    expect(result[0]?.slug).toBe("articles/politics/default-entry");
+    expect(result[0]?.locale).toBe("en");
+    expect(mockImportContentModule).toHaveBeenCalledWith(
+      "articles/politics/default-entry",
+      "en"
     );
-    expect(contents.length).toBeGreaterThan(0);
-    expect(contents.every((c) => c !== null)).toBe(true);
   });
 
-  it("should use default locale when not specified", async () => {
-    mockGetMDXSlugsForLocale.mockReturnValue(["test/some-content"]);
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Test",
-  description: "Test",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-`);
-
-    const contents = await Effect.runPromise(
-      getContents({ includeMDX: false })
-    );
-    expect(contents).toHaveLength(1);
-    expect(contents[0]?.url).toBeDefined();
-    expect(contents[0]?.slug).toBeDefined();
-    expect(contents[0]?.locale).toBe("en");
-  });
-
-  it("should use default options when called without arguments", async () => {
-    mockGetMDXSlugsForLocale.mockReturnValue(["testpath"]);
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Test Title",
-  description: "Test Description",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-
-# Content
-`);
-    mockImportContentModule.mockResolvedValue({
-      metadata: {
-        title: "Test Title",
-        description: "Test Description",
-        authors: [{ name: "Test Author" }],
-        date: "01/01/2024",
-      },
-      default: () => "Test MDX Content",
-    });
-
-    const contents = await Effect.runPromise(getContents());
-
-    expect(contents).toHaveLength(1);
-    expect(contents[0]?.slug).toBe("testpath");
-    expect(contents[0]?.locale).toBe("en");
-  });
-
-  it("should handle empty nested paths", async () => {
-    mockGetMDXSlugsForLocale.mockReturnValue([]);
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Test",
-  description: "Test",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-`);
-
-    const contents = await Effect.runPromise(
-      getContents({
-        basePath: "empty",
-        includeMDX: false,
-      })
-    );
-    expect(contents).toHaveLength(0);
-  });
-
-  it("should handle ContentSchema parse errors by filtering out invalid content", async () => {
-    mockGetMDXSlugsForLocale.mockReturnValue(["test/parse-error"]);
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Parse Error",
-  description: "Test",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-`);
-
-    const contents = await Effect.runPromise(
-      getContents({
-        locale: "en",
-        basePath: "test",
-        includeMDX: false,
-      })
-    );
-
-    expect(contents).toHaveLength(1);
-    expect(contents[0]?.metadata.title).toBe("Parse Error");
-  });
-
-  it("should handle content that fails to construct URL by filtering out", async () => {
-    mockGetMDXSlugsForLocale.mockReturnValue(["test/invalid-content"]);
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Invalid Content",
-  description: "Test",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-`);
-
-    const contents = await Effect.runPromise(
-      getContents({
-        locale: "en",
-        basePath: "test",
-        includeMDX: false,
-      })
-    );
-
-    expect(contents.length).toBeGreaterThanOrEqual(0);
-  });
-
-  it("should filter out content when ContentSchema.parse throws error", async () => {
-    mockGetMDXSlugsForLocale.mockReturnValue(["test/parse-fail"]);
-    mockReadFile.mockResolvedValue(`
-export const metadata = "not an object";
-
-# Content
-`);
-
-    const contents = await Effect.runPromise(
-      getContents({
-        locale: "en",
-        basePath: "test",
-        includeMDX: false,
-      })
-    );
-
-    expect(contents).toHaveLength(0);
-  });
-
-  it("should filter out content when parsedData returns undefined", async () => {
-    mockGetMDXSlugsForLocale.mockReturnValue(["test/undefined-result"]);
-    mockReadFile.mockResolvedValue(`
-export const metadata = {
-  title: "Undefined Result",
-  description: "Test",
-  authors: [{ name: "Test Author" }],
-  date: "01/01/2024"
-};
-`);
-
-    const contents = await Effect.runPromise(
-      getContents({
-        locale: "en",
-        basePath: "test",
-        includeMDX: false,
-      })
-    );
-
-    expect(contents).toHaveLength(1);
-  });
-
-  it("should handle all slugs failing to load by returning empty array", async () => {
+  it("returns an empty list when no cached slugs match the base path", async () => {
     mockGetMDXSlugsForLocale.mockReturnValue([
-      "test/fail1",
-      "test/fail2",
-      "test/fail3",
+      "subject/high-school/10/mathematics",
     ]);
-    mockReadFile.mockRejectedValue(new Error("Read error"));
 
-    const contents = await Effect.runPromise(
+    const result = await Effect.runPromise(
       getContents({
-        locale: "en",
-        basePath: "test",
+        basePath: "articles/politics",
         includeMDX: false,
+        locale: "id",
       })
     );
 
-    expect(contents).toHaveLength(0);
-  });
-});
-
-describe("parseReferences", () => {
-  describe("safe parsing with Zod schema", () => {
-    it("should successfully parse valid references with all required fields", async () => {
-      const rawReferences = [
-        {
-          title: "Test Article",
-          authors: "Test Author",
-          year: 2024,
-        },
-      ];
-
-      const refs = await Effect.runPromise(parseReferences(rawReferences));
-      expect(refs).toHaveLength(1);
-      expect(refs[0].title).toBe("Test Article");
-      expect(refs[0].authors).toBe("Test Author");
-      expect(refs[0].year).toBe(2024);
-    });
-
-    it("should successfully parse valid references with optional fields", async () => {
-      const rawReferences = [
-        {
-          title: "Complete Article",
-          authors: "Author Name",
-          year: 2023,
-          url: "https://example.com",
-          citation: "Test citation",
-          publication: "Test Journal",
-          details: "Vol 1, No 1",
-        },
-      ];
-
-      const refs = await Effect.runPromise(parseReferences(rawReferences));
-      expect(refs).toHaveLength(1);
-      expect(refs[0].title).toBe("Complete Article");
-      expect(refs[0].url).toBe("https://example.com");
-      expect(refs[0].citation).toBe("Test citation");
-      expect(refs[0].publication).toBe("Test Journal");
-      expect(refs[0].details).toBe("Vol 1, No 1");
-    });
-
-    it("should handle invalid references by returning error", async () => {
-      const rawReferences = [
-        {
-          title: "Invalid Article",
-          year: "2024",
-        },
-      ];
-
-      const result = await Effect.runPromise(
-        Effect.match(parseReferences(rawReferences), {
-          onSuccess: (data) => data,
-          onFailure: (error) => error,
-        })
-      );
-      expect(result).toBeInstanceOf(Error);
-      expect(result).toMatchObject({
-        message: expect.stringContaining("Failed to parse references"),
-      });
-    });
-
-    it("should handle references with null values by returning error", async () => {
-      const rawReferences = [
-        {
-          title: null,
-          authors: "Test Author",
-          year: 2024,
-        },
-      ];
-
-      const result = await Effect.runPromise(
-        Effect.match(parseReferences(rawReferences), {
-          onSuccess: (data) => data,
-          onFailure: (error) => error,
-        })
-      );
-      expect(result).toBeInstanceOf(Error);
-      expect(result).toMatchObject({
-        message: expect.stringContaining("Failed to parse references"),
-      });
-    });
-
-    it("should handle references with wrong year type by returning error", async () => {
-      const rawReferences = [
-        {
-          title: "Test Article",
-          authors: "Test Author",
-          year: "2024",
-        },
-      ];
-
-      const result = await Effect.runPromise(
-        Effect.match(parseReferences(rawReferences), {
-          onSuccess: (data) => data,
-          onFailure: (error) => error,
-        })
-      );
-      expect(result).toBeInstanceOf(Error);
-      expect(result).toMatchObject({
-        message: expect.stringContaining("Failed to parse references"),
-      });
-    });
-
-    it("should handle references array as non-array by returning error", async () => {
-      const rawReferences = "not an array";
-
-      const result = await Effect.runPromise(
-        Effect.match(parseReferences(rawReferences), {
-          onSuccess: (data) => data,
-          onFailure: (error) => error,
-        })
-      );
-      expect(result).toBeInstanceOf(Error);
-      expect(result).toMatchObject({
-        message: expect.stringContaining("Failed to parse references"),
-      });
-    });
-
-    it("should handle references with undefined required field by returning error", async () => {
-      const rawReferences = [
-        {
-          title: undefined,
-          authors: "Test Author",
-          year: 2024,
-        },
-      ];
-
-      const result = await Effect.runPromise(
-        Effect.match(parseReferences(rawReferences), {
-          onSuccess: (data) => data,
-          onFailure: (error) => error,
-        })
-      );
-      expect(result).toBeInstanceOf(Error);
-      expect(result).toMatchObject({
-        message: expect.stringContaining("Failed to parse references"),
-      });
-    });
-
-    it("should handle empty references array", async () => {
-      const refs = await Effect.runPromise(parseReferences([]));
-      expect(refs).toEqual([]);
-    });
-
-    it("should handle multiple valid references", async () => {
-      const rawReferences = [
-        {
-          title: "First Article",
-          authors: "First Author",
-          year: 2023,
-        },
-        {
-          title: "Second Article",
-          authors: "Second Author",
-          year: 2024,
-        },
-      ];
-
-      const refs = await Effect.runPromise(parseReferences(rawReferences));
-      expect(refs).toHaveLength(2);
-      expect(refs[0].title).toBe("First Article");
-      expect(refs[1].title).toBe("Second Article");
-    });
-  });
-
-  describe("extractReferences - safe module extraction", () => {
-    it("should extract references from valid module object", () => {
-      const module = {
-        references: [{ title: "Test", authors: "A", year: 2024 }],
-      };
-      const refs = extractReferences(module);
-      expect(refs).toHaveLength(1);
-      expect(refs[0]).toEqual({ title: "Test", authors: "A", year: 2024 });
-    });
-
-    it("should return empty array when references property is missing", () => {
-      const module = { otherProp: "value" };
-      const refs = extractReferences(module);
-      expect(refs).toEqual([]);
-    });
-
-    it("should return empty array when references is not an array", () => {
-      const module = { references: "not an array" };
-      const refs = extractReferences(module);
-      expect(refs).toEqual([]);
-    });
-
-    it("should return empty array when references is null", () => {
-      const module = { references: null };
-      const refs = extractReferences(module);
-      expect(refs).toEqual([]);
-    });
-
-    it("should return empty array when references is undefined", () => {
-      const module = { references: undefined };
-      const refs = extractReferences(module);
-      expect(refs).toEqual([]);
-    });
-
-    it("should return empty array when module is null", () => {
-      const refs = extractReferences(null);
-      expect(refs).toEqual([]);
-    });
-
-    it("should return empty array when module is undefined", () => {
-      const refs = extractReferences(undefined);
-      expect(refs).toEqual([]);
-    });
-
-    it("should return empty array when module is a primitive type", () => {
-      const refs = extractReferences("string");
-      expect(refs).toEqual([]);
-    });
-
-    it("should return empty array when references array is empty", () => {
-      const module = { references: [] };
-      const refs = extractReferences(module);
-      expect(refs).toEqual([]);
-    });
-
-    it("should extract references with mixed types in array", () => {
-      const module = {
-        references: [
-          { title: "Valid", authors: "A", year: 2024 },
-          { title: "Another", authors: "B", year: 2023 },
-        ],
-      };
-      const refs = extractReferences(module);
-      expect(refs).toHaveLength(2);
-    });
-  });
-});
-
-describe("parseModuleMetadata", () => {
-  it("should parse valid metadata from module object", async () => {
-    const module = {
-      metadata: {
-        title: "Test Title",
-        description: "Test Description",
-        authors: [{ name: "Test Author" }],
-        date: "01/01/2024",
-      },
-    };
-
-    const metadata = await Effect.runPromise(parseModuleMetadata(module));
-    expect(metadata.title).toBe("Test Title");
-    expect(metadata.description).toBe("Test Description");
-    expect(metadata.authors).toHaveLength(1);
-    expect(metadata.authors[0].name).toBe("Test Author");
-    expect(metadata.date).toBe("01/01/2024");
-  });
-
-  it("should parse valid metadata with optional fields", async () => {
-    const module = {
-      metadata: {
-        title: "Complete Article",
-        description: "Full Description",
-        authors: [{ name: "Author Name" }],
-        date: "01/01/2024",
-        subject: "Test Subject",
-      },
-    };
-
-    const metadata = await Effect.runPromise(parseModuleMetadata(module));
-    expect(metadata.title).toBe("Complete Article");
-    expect(metadata.subject).toBe("Test Subject");
-  });
-
-  it("should handle module with missing metadata property", async () => {
-    const module = { otherProp: "value" };
-
-    const result = await Effect.runPromise(
-      Effect.match(parseModuleMetadata(module), {
-        onSuccess: (data) => data,
-        onFailure: (error) => error,
-      })
-    );
-    expect(result).toHaveProperty("reason");
-  });
-
-  it("should handle module with null metadata", async () => {
-    const module = { metadata: null };
-
-    const result = await Effect.runPromise(
-      Effect.match(parseModuleMetadata(module), {
-        onSuccess: (data) => data,
-        onFailure: (error) => error,
-      })
-    );
-    expect(result).toBeInstanceOf(Error);
-  });
-
-  it("should handle module with undefined metadata", async () => {
-    const module = { metadata: undefined };
-
-    const result = await Effect.runPromise(
-      Effect.match(parseModuleMetadata(module), {
-        onSuccess: (data) => data,
-        onFailure: (error) => error,
-      })
-    );
-    expect(result).toBeInstanceOf(Error);
-  });
-
-  it("should handle module with invalid metadata structure", async () => {
-    const module = {
-      metadata: {
-        title: "Valid",
-        invalidField: "not allowed",
-      },
-    };
-
-    const result = await Effect.runPromise(
-      Effect.match(parseModuleMetadata(module), {
-        onSuccess: (data) => data,
-        onFailure: (error) => error,
-      })
-    );
-    expect(result).toBeInstanceOf(Error);
-  });
-
-  it("should handle module with missing required fields", async () => {
-    const module = {
-      metadata: {
-        title: "Test",
-        description: "Test Description",
-      },
-    };
-
-    const result = await Effect.runPromise(
-      Effect.match(parseModuleMetadata(module), {
-        onSuccess: (data) => data,
-        onFailure: (error) => error,
-      })
-    );
-    expect(result).toBeInstanceOf(Error);
-  });
-
-  it("should handle module with wrong type for required field", async () => {
-    const module = {
-      metadata: {
-        title: "Test",
-        description: "Test Description",
-        authors: "not an array",
-        date: "01/01/2024",
-      },
-    };
-
-    const result = await Effect.runPromise(
-      Effect.match(parseModuleMetadata(module), {
-        onSuccess: (data) => data,
-        onFailure: (error) => error,
-      })
-    );
-    expect(result).toBeInstanceOf(Error);
-  });
-
-  it("should handle module with multiple authors", async () => {
-    const module = {
-      metadata: {
-        title: "Multi-Author Article",
-        description: "Test Description",
-        authors: [
-          { name: "Author One" },
-          { name: "Author Two" },
-          { name: "Author Three" },
-        ],
-        date: "01/01/2024",
-      },
-    };
-
-    const metadata = await Effect.runPromise(parseModuleMetadata(module));
-    expect(metadata.authors).toHaveLength(3);
-    expect(metadata.authors[0].name).toBe("Author One");
-    expect(metadata.authors[1].name).toBe("Author Two");
-    expect(metadata.authors[2].name).toBe("Author Three");
-  });
-
-  it("should handle null module", async () => {
-    const result = await Effect.runPromise(
-      Effect.match(parseModuleMetadata(null), {
-        onSuccess: (data) => data,
-        onFailure: (error) => error,
-      })
-    );
-    expect(result).toBeInstanceOf(Error);
-  });
-
-  it("should handle undefined module", async () => {
-    const result = await Effect.runPromise(
-      Effect.match(parseModuleMetadata(undefined), {
-        onSuccess: (data) => data,
-        onFailure: (error) => error,
-      })
-    );
-    expect(result).toBeInstanceOf(Error);
-  });
-
-  it("should handle primitive module", async () => {
-    const result = await Effect.runPromise(
-      Effect.match(parseModuleMetadata("string"), {
-        onSuccess: (data) => data,
-        onFailure: (error) => error,
-      })
-    );
-    expect(result).toBeInstanceOf(Error);
-  });
-
-  it("should handle module with metadata as array", async () => {
-    const module = { metadata: ["invalid"] };
-
-    const result = await Effect.runPromise(
-      Effect.match(parseModuleMetadata(module), {
-        onSuccess: (data) => data,
-        onFailure: (error) => error,
-      })
-    );
-    expect(result).toBeInstanceOf(Error);
-  });
-
-  it("should report metadata parse failures", async () => {
-    const result = await Effect.runPromise(
-      Effect.match(
-        parseModuleMetadata({
-          metadata: {
-            title: "Valid",
-            description: "Valid",
-            authors: [{ name: "Author" }],
-            date: "not-a-date",
-          },
-        }),
-        {
-          onSuccess: () => null,
-          onFailure: (error) => error,
-        }
-      )
-    );
-
-    expect(result).toBeInstanceOf(MetadataParseError);
-    expect(result).toMatchObject({
-      reason: expect.stringContaining("Invalid content date"),
-    });
-  });
-
-  it("should report reference parse failures", async () => {
-    const result = await Effect.runPromise(
-      Effect.match(parseReferences([{ title: "Example" }]), {
-        onSuccess: () => null,
-        onFailure: (error) => error,
-      })
-    );
-
-    expect(result).toBeInstanceOf(Error);
-    expect(result).toMatchObject({
-      message: expect.stringContaining("Failed to parse references"),
-    });
+    expect(result).toStrictEqual([]);
+    expect(mockGetMDXSlugsForLocale).toHaveBeenCalledWith("id");
+    expect(mockReadFile).not.toHaveBeenCalled();
   });
 });

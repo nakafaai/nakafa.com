@@ -1,5 +1,5 @@
 import nodePath from "node:path";
-import { ContentIO } from "@repo/contents/_lib/io/content-io";
+import { ContentIO } from "@repo/contents/_lib/io/content";
 import {
   extractObjectLiteralAfterDeclaration,
   parseObjectLiteral,

@@ -17,7 +17,7 @@ const {
   mockResolveContentsDir: vi.fn(() => "/virtual/contents"),
 }));
 
-vi.mock("@repo/contents/_lib/io/content-io", async () => {
+vi.mock("@repo/contents/_lib/io/content", async () => {
   const { Effect, Layer } = await import("effect");
 
   return {

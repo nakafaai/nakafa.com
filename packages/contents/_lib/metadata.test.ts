@@ -19,7 +19,7 @@ const { mockReadFile, mockGetMDXSlugsForLocale } = vi.hoisted(() => ({
   mockGetMDXSlugsForLocale: vi.fn(),
 }));
 
-vi.mock("@repo/contents/_lib/io/content-io", async () => {
+vi.mock("@repo/contents/_lib/io/content", async () => {
   const { Effect, Layer } = await import("effect");
 
   return {
@@ -120,6 +120,18 @@ export const metadata = {
   title: "Broken",
   authors: [{ name: "Author" }],
   date: "01/01/2024",
+`);
+
+    expect(Option.isNone(result)).toBe(true);
+  });
+
+  it("returns none when metadata literal syntax cannot be parsed", () => {
+    const result = extractMetadata(`
+export const metadata = {
+  title: Broken,
+  authors: [{ name: "Author" }],
+  date: "01/01/2024"
+};
 `);
 
     expect(Option.isNone(result)).toBe(true);
