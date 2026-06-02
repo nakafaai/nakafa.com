@@ -3,7 +3,7 @@ import type { ExercisesChoices } from "@repo/contents/_types/exercises/choices";
 const choices: ExercisesChoices = {
   id: [
     {
-      label: "$$x - y = 0$$",
+      label: "$$x - y + 4 = 0$$",
       value: false,
     },
     {
@@ -25,7 +25,7 @@ const choices: ExercisesChoices = {
   ],
   en: [
     {
-      label: "$$x - y = 0$$",
+      label: "$$x - y + 4 = 0$$",
       value: false,
     },
     {
