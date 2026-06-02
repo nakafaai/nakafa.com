@@ -16,7 +16,7 @@ const WORLD_START_X = 0;
 const WORLD_SCALE = WORLD_TRACK_LENGTH / MAX_STOPPING_DISTANCE;
 
 export const STOPPING_DISTANCE_CAMERA = {
-  cameraPosition: [4.6, 3.8, 10.8],
+  cameraPosition: [4.1, 3.4, 9.2],
   cameraTarget: [0, 0.08, 0],
 } satisfies Record<string, readonly [number, number, number]>;
 
@@ -38,7 +38,7 @@ export const STOPPING_DISTANCE_COPY = {
     speed: "Kecepatan awal",
     stoppingDistance: "Jarak henti",
     title: "Jarak Henti Mobil",
-    viewLabel: "Simulasi 3D jarak henti mobil",
+    viewLabel: "Tampilan 3D jarak henti mobil",
   },
   en: {
     brakingDistance: "Braking distance",
@@ -49,7 +49,7 @@ export const STOPPING_DISTANCE_COPY = {
     speed: "Initial speed",
     stoppingDistance: "Stopping distance",
     title: "Car Stopping Distance",
-    viewLabel: "3D car stopping distance simulation",
+    viewLabel: "3D car stopping distance view",
   },
 } as const;
 

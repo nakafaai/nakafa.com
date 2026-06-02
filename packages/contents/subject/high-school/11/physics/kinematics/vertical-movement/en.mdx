@@ -7,6 +7,8 @@ export const metadata = {
   subject: "Kinematics",
 };
 
+import { VerticalMovementLab } from "@repo/design-system/components/contents/physics/kinematics/vertical-movement/lab";
+
 ## A Vertical Axis Needs a Positive Direction
 
 Vertical motion is upward or downward motion along one straight line. To keep the signs clear, we choose upward as positive and downward as negative.
@@ -18,6 +20,8 @@ With that choice, gravitational acceleration is written as <InlineMath math="-g"
   <BlockMath math="v_y=v_0-gt" />
   <BlockMath math="v_y^2=v_0^2-2g(y-y_0)" />
 </MathContainer>
+
+<VerticalMovementLab locale="en" />
 
 ## Gravity Still Acts While the Object Rises
 
@@ -75,6 +79,8 @@ The velocity just before reaching the ground is:
 
 The negative sign shows the downward direction. So the speed is <InlineMath math="20\text{ m/s}" />, but the motion direction is downward.
 
-## Bridge to Projectile Motion
+## From Vertical Motion to Projectile Motion
 
 Vertical motion also appears in projectile motion. Later, when an object moves at an angle, the horizontal part is read as sideways motion, while the vertical part still follows the gravity equations from this lesson.
+
+That is why free-fall motion is useful beyond this page. The vertical part of a thrown ball, a projectile, or water leaving a hose is still shaped by gravitational acceleration.

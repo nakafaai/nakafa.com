@@ -7,7 +7,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const config = defineConfig({
   test: {
     environment: "node",
-    fileParallelism: false,
     coverage: {
       enabled: true,
       provider: "istanbul",

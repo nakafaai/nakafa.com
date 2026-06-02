@@ -1,7 +1,7 @@
 "use client";
 
-import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
 import {
   formatMeterMath,
   formatSpeedMath,
@@ -34,13 +34,15 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
-import type { ReactNode } from "react";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { type Group, Mesh } from "three";
+import type { ReactNode, RefObject } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
+import type { Group } from "three";
 
 const PAUSE_SECONDS = 1;
 const REACTION_DISTANCE_COLOR = "#0f9f95";
 const BRAKING_DISTANCE_COLOR = "#e97723";
+const LONG_PATH_VISIBLE_WIDTH = 6;
+const LONG_PATH_LEFT_OFFSET_RATIO = 0.82;
 
 interface StoppingDistanceLabProps {
   locale: StoppingDistanceLocale;
@@ -161,16 +163,17 @@ function StoppingDistanceCamera() {
       autoRotate={false}
       cameraPosition={STOPPING_DISTANCE_CAMERA.cameraPosition}
       cameraTarget={STOPPING_DISTANCE_CAMERA.cameraTarget}
+      enablePan
+      enableRotate
+      enableZoom
       maxDistance={20}
-      maxPolarAngle={Math.PI / 2.12}
       minDistance={3.1}
-      minPolarAngle={Math.PI / 8}
     />
   );
 }
 
 function StoppingDistanceScene({ motion }: { motion: StoppingDistanceState }) {
-  const pathOffsetX = -getMotionCenterX(motion);
+  const pathOffsetX = -getMotionCenterX(motion) - getLongPathOffsetX(motion);
 
   return (
     <group>
@@ -205,6 +208,7 @@ function AnimatedCar({
   pathOffsetX: number;
 }) {
   const groupRef = useRef<Group>(null);
+  const brakeDustRef = useRef<Group>(null);
   const animationStartRef = useRef<number | null>(null);
 
   useFrame((state) => {
@@ -220,32 +224,77 @@ function AnimatedCar({
       (state.clock.elapsedTime - animationStartRef.current) %
       getLoopSeconds(motion);
     const carX = getAnimatedCarX(motion, elapsed) + pathOffsetX;
-    groupRef.current.position.set(carX, 0.06, 0);
+    groupRef.current.position.set(carX, 0.025, 0);
+
+    if (!brakeDustRef.current) {
+      return;
+    }
+
+    const brakingProgress = getBrakingProgress(motion, elapsed);
+    brakeDustRef.current.visible = brakingProgress > 0;
+    brakeDustRef.current.position.set(carX - 0.76, 0.16, 0);
+    const pulse = Math.sin(state.clock.elapsedTime * 9) * 0.1;
+    const size = 1 + brakingProgress * 0.42 + pulse;
+    brakeDustRef.current.scale.set(size, size, size);
   });
 
   return (
-    <group ref={groupRef} rotation={[0, Math.PI / 2, 0]} scale={0.58}>
-      <CarModel />
-    </group>
+    <>
+      <group ref={groupRef} rotation={[0, Math.PI / 2, 0]} scale={0.66}>
+        <CarContactShadow />
+        <CarModel />
+      </group>
+      <BrakeDust dustRef={brakeDustRef} />
+    </>
   );
 }
 
 function CarModel() {
-  const { scene } = useGLTF(STOPPING_DISTANCE_CAR_MODEL_PATH);
-  const car = useMemo(() => scene.clone(true), [scene]);
+  return <PhysicsCarModel modelPath={STOPPING_DISTANCE_CAR_MODEL_PATH} />;
+}
 
-  useEffect(() => {
-    car.traverse((child) => {
-      if (!(child instanceof Mesh)) {
-        return;
-      }
+function CarContactShadow() {
+  return (
+    <mesh
+      position={[0, 0.012, 0]}
+      rotation={[-Math.PI / 2, 0, 0]}
+      scale={[1.45, 0.52, 1]}
+    >
+      <circleGeometry args={[0.72, 32]} />
+      <meshBasicMaterial
+        color="#0f172a"
+        depthWrite={false}
+        opacity={0.16}
+        transparent
+      />
+    </mesh>
+  );
+}
 
-      child.castShadow = true;
-      child.receiveShadow = true;
-    });
-  }, [car]);
+function BrakeDust({ dustRef }: { dustRef: RefObject<Group | null> }) {
+  const puffPositions = [
+    [-0.42, 0.2, -0.46],
+    [-0.18, 0.3, -0.58],
+    [-0.42, 0.2, 0.46],
+    [-0.18, 0.3, 0.58],
+    [-0.68, 0.34, 0],
+  ] satisfies Array<readonly [number, number, number]>;
 
-  return <primitive object={car} />;
+  return (
+    <group ref={dustRef} visible={false}>
+      {puffPositions.map(([x, y, z]) => (
+        <mesh key={`${x}-${y}-${z}`} position={[x, y, z]}>
+          <sphereGeometry args={[0.3, 12, 8]} />
+          <meshBasicMaterial
+            color="#e5e7eb"
+            depthWrite={false}
+            opacity={0.78}
+            transparent
+          />
+        </mesh>
+      ))}
+    </group>
+  );
 }
 
 function Road() {
@@ -375,6 +424,23 @@ function getBrakingSeconds(motion: StoppingDistanceState) {
   return motion.speed / STOPPING_DISTANCE_BRAKING_DECELERATION;
 }
 
+function getBrakingProgress(
+  motion: StoppingDistanceState,
+  elapsedSeconds: number
+) {
+  const brakingSeconds = getBrakingSeconds(motion);
+  const brakingEnd = STOPPING_DISTANCE_REACTION_TIME + brakingSeconds;
+
+  if (
+    elapsedSeconds <= STOPPING_DISTANCE_REACTION_TIME ||
+    elapsedSeconds > brakingEnd
+  ) {
+    return 0;
+  }
+
+  return (elapsedSeconds - STOPPING_DISTANCE_REACTION_TIME) / brakingSeconds;
+}
+
 function lerp(start: number, end: number, progress: number) {
   return start + (end - start) * progress;
 }
@@ -383,4 +449,8 @@ function getMotionCenterX(motion: StoppingDistanceState) {
   return motion.startX + (motion.stopX - motion.startX) / 2;
 }
 
-useGLTF.preload(STOPPING_DISTANCE_CAR_MODEL_PATH);
+function getLongPathOffsetX(motion: StoppingDistanceState) {
+  const pathLength = motion.stopX - motion.startX;
+  const extraLength = Math.max(0, pathLength - LONG_PATH_VISIBLE_WIDTH);
+  return extraLength * LONG_PATH_LEFT_OFFSET_RATIO;
+}
