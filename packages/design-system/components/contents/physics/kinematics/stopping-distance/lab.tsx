@@ -1,0 +1,386 @@
+"use client";
+
+import { useGLTF } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
+import {
+  formatMeterMath,
+  formatSpeedMath,
+  getStoppingDistanceState,
+  isStoppingDistanceSpeed,
+  STOPPING_DISTANCE_BRAKING_DECELERATION,
+  STOPPING_DISTANCE_CAMERA,
+  STOPPING_DISTANCE_CAR_MODEL_PATH,
+  STOPPING_DISTANCE_COPY,
+  STOPPING_DISTANCE_REACTION_TIME,
+  STOPPING_DISTANCE_SCENE,
+  STOPPING_DISTANCE_SPEEDS,
+  type StoppingDistanceLocale,
+  type StoppingDistanceSpeed,
+  type StoppingDistanceState,
+} from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/data";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraControls } from "@repo/design-system/components/three/camera-controls";
+import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@repo/design-system/components/ui/toggle-group";
+import type { ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { type Group, Mesh } from "three";
+
+const PAUSE_SECONDS = 1;
+const REACTION_DISTANCE_COLOR = "#0f9f95";
+const BRAKING_DISTANCE_COLOR = "#e97723";
+
+interface StoppingDistanceLabProps {
+  locale: StoppingDistanceLocale;
+}
+
+export function StoppingDistanceLab({ locale }: StoppingDistanceLabProps) {
+  const [speed, setSpeed] = useState<StoppingDistanceSpeed>(20);
+  const labels = STOPPING_DISTANCE_COPY[locale];
+  const motion = useMemo(() => getStoppingDistanceState(speed), [speed]);
+
+  function handleSpeedChange(value: string) {
+    if (!value) {
+      return;
+    }
+
+    const nextSpeed = Number(value);
+
+    if (!isStoppingDistanceSpeed(nextSpeed)) {
+      return;
+    }
+
+    setSpeed(nextSpeed);
+  }
+
+  return (
+    <Card className="overflow-hidden content-auto-card">
+      <CardHeader>
+        <CardTitle>{labels.title}</CardTitle>
+        <CardDescription>{labels.description}</CardDescription>
+      </CardHeader>
+
+      <CardContent className="flex flex-col gap-4">
+        <ToggleGroup
+          aria-label={labels.chooseSpeed}
+          className="grid w-full grid-cols-3"
+          layout="grid"
+          onValueChange={handleSpeedChange}
+          type="single"
+          value={String(speed)}
+          variant="outline"
+        >
+          {STOPPING_DISTANCE_SPEEDS.map((speedOption) => (
+            <ToggleGroupItem key={speedOption} value={String(speedOption)}>
+              <InlineMath math={formatSpeedMath(speedOption)} />
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+
+        <section
+          aria-label={labels.viewLabel}
+          className={threeSceneFrameVariants()}
+        >
+          <ThreeCanvas
+            camera={{
+              fov: 44,
+              position: STOPPING_DISTANCE_CAMERA.cameraPosition,
+            }}
+            frameloop="always"
+          >
+            <Suspense>
+              <ambientLight intensity={0.7} />
+              <hemisphereLight
+                color="#f8fafc"
+                groundColor="#64748b"
+                intensity={0.62}
+              />
+              <directionalLight
+                castShadow
+                intensity={1.35}
+                position={[3.5, 5.8, 4.5]}
+                shadow-bias={-0.0006}
+                shadow-mapSize-height={1024}
+                shadow-mapSize-width={1024}
+                shadow-normalBias={0.02}
+              />
+              <StoppingDistanceCamera />
+              <StoppingDistanceScene motion={motion} />
+            </Suspense>
+          </ThreeCanvas>
+        </section>
+      </CardContent>
+
+      <CardFooter className="border-t">
+        <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
+          <LabFact
+            label={labels.speed}
+            value={<InlineMath math={formatSpeedMath(motion.speed)} />}
+          />
+          <LabFact
+            indicatorColor={REACTION_DISTANCE_COLOR}
+            label={labels.reactionDistance}
+            value={
+              <InlineMath math={formatMeterMath(motion.reactionDistance)} />
+            }
+          />
+          <LabFact
+            indicatorColor={BRAKING_DISTANCE_COLOR}
+            label={labels.brakingDistance}
+            value={
+              <InlineMath math={formatMeterMath(motion.brakingDistance)} />
+            }
+          />
+          <LabFact
+            label={labels.stoppingDistance}
+            value={
+              <InlineMath math={formatMeterMath(motion.stoppingDistance)} />
+            }
+          />
+        </dl>
+      </CardFooter>
+    </Card>
+  );
+}
+
+function StoppingDistanceCamera() {
+  return (
+    <CameraControls
+      autoRotate={false}
+      cameraPosition={STOPPING_DISTANCE_CAMERA.cameraPosition}
+      cameraTarget={STOPPING_DISTANCE_CAMERA.cameraTarget}
+      maxDistance={20}
+      maxPolarAngle={Math.PI / 2.12}
+      minDistance={3.1}
+      minPolarAngle={Math.PI / 8}
+    />
+  );
+}
+
+function StoppingDistanceScene({ motion }: { motion: StoppingDistanceState }) {
+  const pathOffsetX = -getMotionCenterX(motion);
+
+  return (
+    <group>
+      <Road />
+      <DistanceStrip
+        color={REACTION_DISTANCE_COLOR}
+        endX={motion.reactionEndX + pathOffsetX}
+        startX={motion.startX + pathOffsetX}
+        z={0.72}
+      />
+      <DistanceStrip
+        color={BRAKING_DISTANCE_COLOR}
+        endX={motion.stopX + pathOffsetX}
+        startX={motion.reactionEndX + pathOffsetX}
+        z={0.72}
+      />
+      <StopCone x={motion.stopX + pathOffsetX} />
+      <AnimatedCar
+        key={motion.speed}
+        motion={motion}
+        pathOffsetX={pathOffsetX}
+      />
+    </group>
+  );
+}
+
+function AnimatedCar({
+  motion,
+  pathOffsetX,
+}: {
+  motion: StoppingDistanceState;
+  pathOffsetX: number;
+}) {
+  const groupRef = useRef<Group>(null);
+  const animationStartRef = useRef<number | null>(null);
+
+  useFrame((state) => {
+    if (!groupRef.current) {
+      return;
+    }
+
+    if (animationStartRef.current === null) {
+      animationStartRef.current = state.clock.elapsedTime;
+    }
+
+    const elapsed =
+      (state.clock.elapsedTime - animationStartRef.current) %
+      getLoopSeconds(motion);
+    const carX = getAnimatedCarX(motion, elapsed) + pathOffsetX;
+    groupRef.current.position.set(carX, 0.06, 0);
+  });
+
+  return (
+    <group ref={groupRef} rotation={[0, Math.PI / 2, 0]} scale={0.58}>
+      <CarModel />
+    </group>
+  );
+}
+
+function CarModel() {
+  const { scene } = useGLTF(STOPPING_DISTANCE_CAR_MODEL_PATH);
+  const car = useMemo(() => scene.clone(true), [scene]);
+
+  useEffect(() => {
+    car.traverse((child) => {
+      if (!(child instanceof Mesh)) {
+        return;
+      }
+
+      child.castShadow = true;
+      child.receiveShadow = true;
+    });
+  }, [car]);
+
+  return <primitive object={car} />;
+}
+
+function Road() {
+  const laneCount = 12;
+  const roadCenterX = STOPPING_DISTANCE_SCENE.roadCenterX;
+  const roadLength = STOPPING_DISTANCE_SCENE.roadLength;
+  const stripePositions = Array.from({ length: laneCount }, (_, index) => {
+    const spacing = roadLength / laneCount;
+    return roadCenterX - roadLength / 2 + spacing * index + spacing * 0.5;
+  });
+
+  return (
+    <group>
+      <mesh position={[roadCenterX, -0.02, 0]} receiveShadow>
+        <boxGeometry
+          args={[roadLength, 0.08, STOPPING_DISTANCE_SCENE.roadWidth]}
+        />
+        <meshStandardMaterial color="#374151" roughness={0.72} />
+      </mesh>
+
+      {stripePositions.map((x) => (
+        <mesh key={x} position={[x, 0.035, 0]}>
+          <boxGeometry args={[0.42, 0.018, 0.06]} />
+          <meshStandardMaterial color="#f8fafc" roughness={0.58} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function DistanceStrip({
+  color,
+  endX,
+  startX,
+  z,
+}: {
+  color: string;
+  endX: number;
+  startX: number;
+  z: number;
+}) {
+  const length = Math.max(0.02, endX - startX);
+  const centerX = startX + length / 2;
+
+  return (
+    <mesh position={[centerX, 0.045, z]}>
+      <boxGeometry args={[length, 0.03, 0.08]} />
+      <meshStandardMaterial color={color} roughness={0.44} />
+    </mesh>
+  );
+}
+
+function StopCone({ x }: { x: number }) {
+  return (
+    <group position={[x, 0.08, 0.72]}>
+      <mesh castShadow rotation={[0, 0, Math.PI]}>
+        <coneGeometry args={[0.17, 0.38, 24]} />
+        <meshStandardMaterial color="#f97316" roughness={0.5} />
+      </mesh>
+      <mesh position={[0, -0.2, 0]} receiveShadow>
+        <cylinderGeometry args={[0.2, 0.2, 0.04, 24]} />
+        <meshStandardMaterial color="#1f2937" roughness={0.65} />
+      </mesh>
+    </group>
+  );
+}
+
+function LabFact({
+  indicatorColor,
+  label,
+  value,
+}: {
+  indicatorColor?: string;
+  label: string;
+  value: ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <dt className="flex items-center gap-2 text-muted-foreground">
+        {indicatorColor ? (
+          <span
+            aria-hidden="true"
+            className="size-2 rounded-full"
+            style={{ backgroundColor: indicatorColor }}
+          />
+        ) : null}
+        {label}
+      </dt>
+      <dd className="wrap-break-word text-foreground tabular-nums">{value}</dd>
+    </div>
+  );
+}
+
+function getAnimatedCarX(
+  motion: StoppingDistanceState,
+  elapsedSeconds: number
+) {
+  if (elapsedSeconds <= STOPPING_DISTANCE_REACTION_TIME) {
+    const progress = elapsedSeconds / STOPPING_DISTANCE_REACTION_TIME;
+    return lerp(motion.startX, motion.reactionEndX, progress);
+  }
+
+  const brakingSeconds = getBrakingSeconds(motion);
+  const brakingEnd = STOPPING_DISTANCE_REACTION_TIME + brakingSeconds;
+
+  if (elapsedSeconds <= brakingEnd) {
+    const progress =
+      (elapsedSeconds - STOPPING_DISTANCE_REACTION_TIME) / brakingSeconds;
+    const deceleratingProgress = 2 * progress - progress ** 2;
+    return lerp(motion.reactionEndX, motion.stopX, deceleratingProgress);
+  }
+
+  if (elapsedSeconds <= brakingEnd + PAUSE_SECONDS) {
+    return motion.stopX;
+  }
+
+  return motion.startX;
+}
+
+function getLoopSeconds(motion: StoppingDistanceState) {
+  return (
+    STOPPING_DISTANCE_REACTION_TIME + getBrakingSeconds(motion) + PAUSE_SECONDS
+  );
+}
+
+function getBrakingSeconds(motion: StoppingDistanceState) {
+  return motion.speed / STOPPING_DISTANCE_BRAKING_DECELERATION;
+}
+
+function lerp(start: number, end: number, progress: number) {
+  return start + (end - start) * progress;
+}
+
+function getMotionCenterX(motion: StoppingDistanceState) {
+  return motion.startX + (motion.stopX - motion.startX) / 2;
+}
+
+useGLTF.preload(STOPPING_DISTANCE_CAR_MODEL_PATH);
