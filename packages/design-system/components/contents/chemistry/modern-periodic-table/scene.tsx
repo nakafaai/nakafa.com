@@ -31,7 +31,7 @@ const MAIN_LABEL_Z = -2.35;
 const SERIES_START_GROUP = 4;
 const SERIES_LANTHANIDE_Z = 2.22;
 const SERIES_ACTINIDE_Z = 2.76;
-const PERIOD_AXIS_LABEL_OFFSET = TILE_GAP * 1.8;
+const PERIOD_AXIS_LABEL_OFFSET = TILE_GAP * 2.45;
 const TILE_LABEL_Y_OFFSET = 0.16;
 const TILE_LABEL_RENDER_ORDER = 10;
 const TILE_LABEL_OUTLINE_WIDTH = 0.018;
@@ -97,7 +97,6 @@ function GuideLabels({
   return (
     <>
       <SceneLabel
-        alwaysOnTop
         color={colors.text}
         fontSize={THREE_FONT_SIZE.diagram}
         position={[0, 0.62, MAIN_LABEL_Z - 0.34]}
@@ -106,7 +105,6 @@ function GuideLabels({
       </SceneLabel>
 
       <SceneLabel
-        alwaysOnTop
         color={colors.text}
         fontSize={THREE_FONT_SIZE.reading}
         position={[getMainX(1) - PERIOD_AXIS_LABEL_OFFSET, 0.42, 0]}
@@ -116,7 +114,6 @@ function GuideLabels({
 
       {PERIODIC_SERIES_ROWS.map((row, rowIndex) => (
         <SceneLabel
-          alwaysOnTop
           color={colors.text}
           fontSize={THREE_FONT_SIZE.reading}
           key={row.key}

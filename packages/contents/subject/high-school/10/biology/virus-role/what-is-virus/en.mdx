@@ -1,3 +1,4 @@
+import { SarsCov2VirionLab } from "@repo/design-system/components/contents/biology/sars-cov-2-virion";
 import {
   VirusMorphologyLab,
   VirusStructureLab,
@@ -74,6 +75,31 @@ In real research, viruses are not read only from disease symptoms. A virology re
   }}
 />
 
+The next model is different from the general-parts model above. It shows a more realistic **SARS-CoV-2** surface example. Use it to read the shape of an enveloped virion with many surface projections, not as the shape of every virus.
+
+<SarsCov2VirionLab
+  title={<>SARS-CoV-2 surface shape</>}
+  description={
+    <>
+      Observe an enveloped virion with many protein projections on its surface.
+    </>
+  }
+  labels={{
+    chooseMode: "Choose a surface part",
+    focusLabel: "What to read",
+    takeawayLabel: "Biological meaning",
+    viewLabel: "3D SARS-CoV-2 surface model",
+    items: [
+      {
+        tab: "Surface",
+        caption: <>SARS-CoV-2 appears as an enveloped virion with a rough surface and many protein projections.</>,
+        focus: <>Notice the overall shape: the outside is rounded, while surface projections are distributed across many points.</>,
+        takeaway: <>Surface shape helps explain how a virion can be recognized and approached by particular target cells.</>,
+      },
+    ],
+  }}
+/>
+
 ## Why a Virus Is Not Called a Cell
 
 Living cells usually have a cell membrane, cytoplasm, ribosomes, and a metabolic system. **Metabolism** is the set of chemical reactions that lets a cell obtain energy and build its own parts. Viruses do not have that complete equipment.
@@ -112,10 +138,10 @@ Viral shapes differ because capsomeres and outer layers are arranged in differen
         focus: <>Notice whether the genome is held by repeated capsid units, a faceted capsid, a lipid envelope, or a special attachment structure.</>,
         takeaway: <>Shape helps explain how a virus protects its genome and approaches a target cell.</>,
         callouts: [
-          { id: "helical", label: "helical" },
-          { id: "polyhedral", label: "polyhedral" },
-          { id: "enveloped", label: "enveloped" },
-          { id: "complex", label: "complex" },
+          { id: "helical", label: "Helical" },
+          { id: "polyhedral", label: "Polyhedral" },
+          { id: "enveloped", label: "Enveloped" },
+          { id: "complex", label: "Complex" },
         ],
       },
     ],

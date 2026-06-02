@@ -1,3 +1,5 @@
+import { MethaneCombustionEquationLab } from "@repo/design-system/components/contents/chemistry/methane-combustion-equation/lab";
+
 export const metadata = {
   title: "Cara Menuliskan Reaksi Kimia",
   description:
@@ -13,7 +15,7 @@ Persamaan reaksi kimia adalah cara ringkas untuk mencatat zat awal, zat hasil, d
 
 Pola dasarnya seperti ini.
 
-<BlockMath math="\text{reaktan} \rightarrow \text{produk}" />
+<BlockMath math="\text{Reaktan} \rightarrow \text{Produk}" />
 
 Tanda panah dibaca "menghasilkan". Tanda tambah berarti ada lebih dari satu zat di sisi yang sama.
 
@@ -36,6 +38,26 @@ Rumus awal belum setara karena jumlah atom oksigen di kiri hanya <InlineMath mat
 | <InlineMath math="\mathrm{O}" /> | <InlineMath math="4" /> | <InlineMath math="4" /> |
 
 Koefisiennya terbaca sebagai perbandingan <InlineMath math="1:2:1:2" />. Artinya, <InlineMath math="1" /> partikel metana bereaksi dengan <InlineMath math="2" /> partikel oksigen menghasilkan <InlineMath math="1" /> partikel karbon dioksida dan <InlineMath math="2" /> partikel air.
+
+<MethaneCombustionEquationLab
+  title={<>Koefisien menunjukkan jumlah molekul</>}
+  description={
+    <>
+      Pada tampilan awal, sisi kiri menunjukkan reaktan dan sisi kanan
+      menunjukkan produk pada persamaan setara.
+    </>
+  }
+  labels={{
+    moleculeView: "Model 3D persamaan pembakaran metana",
+    reactants: "Reaktan",
+    products: "Produk",
+    equation: (
+      <>
+        Reaktan: <InlineMath math="\mathrm{CH_4} + 2\mathrm{O_2}" />. Produk: <InlineMath math="\mathrm{CO_2} + 2\mathrm{H_2O}" />. Jumlah atom <InlineMath math="\mathrm{C}" />, <InlineMath math="\mathrm{H}" />, dan <InlineMath math="\mathrm{O}" /> tetap sama di kedua sisi.
+      </>
+    ),
+  }}
+/>
 
 ## Koefisien Tidak Mengubah Rumus
 

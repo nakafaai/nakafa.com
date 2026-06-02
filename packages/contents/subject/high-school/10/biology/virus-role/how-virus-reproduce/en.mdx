@@ -26,39 +26,38 @@ Attachment to a matching host-cell receptor is an important starting point befor
 Replication order is also used in microbiology to distinguish virulent phages from temperate phages. A temperate phage is a bacteriophage that does not always destroy the cell right away. [OpenStax Microbiology](https://openstax.org/books/microbiology/pages/6-2-the-viral-life-cycle) explains that a temperate phage can become part of the host chromosome and be copied before becoming active again. This is why lysogeny is not an empty pause.
 
 <VirusReplicationLab
-  title={<>Two fates for a viral genome</>}
+  title={<>Two Viral Replication Paths</>}
   description={
     <>
-      Compare the lytic cycle, which quickly makes new virions, with the
-      lysogenic cycle, which stores the viral genome first.
+      Compare the lytic cycle that quickly redirects a cell to make new virions
+      with the lysogenic cycle that stores viral genome first.
     </>
   }
   labels={{
-    chooseMode: "Choose a replication cycle",
+    chooseMode: "Choose a replication path",
     focusLabel: "Key event",
     takeawayLabel: "How to read it",
     viewLabel: "3D viral replication model",
     items: [
       {
         tab: "Lytic",
-        caption: <>A phage attaches, the genome enters, viral parts are made, virions assemble, and the cell breaks to release them.</>,
+        caption: <>The phage is attached to the host-cell surface. The red path shows viral genome entering, after which the cell can be redirected to make new virions.</>,
+        focus: <>Notice that the key material entering first is the viral genome, not the whole phage body.</>,
+        takeaway: <>In the lytic cycle, the viral genome takes over host-cell work until new viral components can be assembled.</>,
         callouts: [
-          { id: "genome-entry", label: "viral genome" },
-          { id: "new-virion", label: "new virion" },
+          { id: "host-cell", label: "Host cell" },
+          { id: "viral-genome", label: "Viral genome" },
         ],
-        focus: <>Notice that new viruses do not appear by one virus splitting into two.</>,
-        takeaway: <>In the lytic cycle, the host cell is used to make many viral parts before new virions are released.</>,
       },
       {
         tab: "Lysogenic",
-        caption: <>Host DNA carries the viral genome segment. The two daughter cells show that the copied segment travels with cell division.</>,
-        callouts: [
-          { id: "host-dna", label: "host DNA" },
-          { id: "viral-genome", label: "viral genome" },
-          { id: "daughter-cells", label: "daughter cells" },
-        ],
+        caption: <>Host DNA is shown as the orange strand inside the cell. The red segment marks viral genome inserted into the host DNA and copied with it.</>,
         focus: <>This stage does not immediately produce many new virions.</>,
         takeaway: <>In lysogeny, viral information can persist inside the host cell and later shift toward the lytic cycle.</>,
+        callouts: [
+          { id: "host-dna", label: "Host DNA" },
+          { id: "viral-genome", label: "Viral genome" },
+        ],
       },
     ],
   }}

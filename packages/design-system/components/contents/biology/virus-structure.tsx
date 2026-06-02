@@ -37,13 +37,9 @@ const VIRION_VIEW = {
   narrowCameraPosition: [2.25, 1.72, 3.15],
 } satisfies BiologySceneView;
 const MORPHOLOGY_VIEW = {
-  cameraPosition: [0, 1.08, 5.25],
+  cameraPosition: [0, 1.04, 4.72],
   cameraTarget: [0, -0.02, 0],
-  maxAzimuthAngle: Math.PI / 4.8,
-  maxPolarAngle: Math.PI / 1.8,
-  minAzimuthAngle: -Math.PI / 4.8,
-  minPolarAngle: Math.PI / 4.2,
-  narrowCameraPosition: [0, 1.32, 6.25],
+  narrowCameraPosition: [0, 1.28, 5.55],
 } satisfies BiologySceneView;
 const MORPHOLOGY_LABEL_TARGETS = [
   { id: "helical", labelPosition: [-2.2, -0.86, -0.52] },
