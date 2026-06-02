@@ -145,7 +145,7 @@ export function VerticalMovementLab({ locale }: VerticalMovementLabProps) {
       </CardContent>
 
       <CardFooter className="border-t">
-        <dl className="grid w-full grid-cols-2 gap-4 text-sm lg:grid-cols-4">
+        <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           <LabFact
             label={labels.initialCondition}
             value={<InlineMath math={formatInitialConditionMath(motion)} />}
@@ -319,7 +319,7 @@ function isMode(value: string): value is Mode {
 }
 
 function formatInitialConditionMath(motion: MotionState) {
-  return `v_0=${Math.round(motion.startVelocity)}\\text{ m/s}\\quad y_0=${Math.round(motion.startHeight)}\\text{ m}`;
+  return `v_0=${Math.round(motion.startVelocity)}\\text{ m/s},\\quad y_0=${Math.round(motion.startHeight)}\\text{ m}`;
 }
 
 function getInitialConditionKey(motion: MotionState) {
