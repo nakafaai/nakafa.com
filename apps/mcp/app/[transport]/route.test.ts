@@ -178,7 +178,7 @@ describe("Nakafa MCP route", () => {
     expect(searchResponse.result?.isError).not.toBe(true);
     expect(taxonomy.tools).toContain("nakafa_search_content");
     expect(search.items).toHaveLength(1);
-  }, 15_000);
+  });
 
   it("uses search content IDs immediately with content, resource, and exercise retrieval", async () => {
     const searchResponse = await callTool("nakafa_search_content", {
