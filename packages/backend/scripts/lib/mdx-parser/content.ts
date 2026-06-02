@@ -15,7 +15,7 @@ import {
   ReferenceSchema,
 } from "@repo/contents/_types/content";
 import { ExercisesChoicesSchema } from "@repo/contents/_types/exercises/choices";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 class MdxReadError extends Schema.TaggedError<MdxReadError>()("MdxReadError", {
   message: Schema.String,
@@ -35,7 +35,7 @@ export const parseDateToEpoch = Effect.fn("mdx.parseDateToEpoch")(function* (
 ) {
   const date = parseContentDate(dateStr);
 
-  if (!date) {
+  if (Option.isNone(date)) {
     return yield* Effect.fail(
       new MdxReadError({
         message: `Invalid date format: ${dateStr}. Expected MM/DD/YYYY`,
@@ -43,7 +43,7 @@ export const parseDateToEpoch = Effect.fn("mdx.parseDateToEpoch")(function* (
     );
   }
 
-  return date.getTime();
+  return date.value.getTime();
 });
 
 /** Parses one MDX source string into metadata, normalized body, and body hash. */

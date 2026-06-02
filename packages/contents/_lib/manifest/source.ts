@@ -1,4 +1,3 @@
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import {
   clearFolderChildNamesCache,
   getFolderChildNames,
@@ -6,6 +5,10 @@ import {
 } from "@repo/contents/_lib/fs/cache";
 import { getNestedSlugs } from "@repo/contents/_lib/fs/nested-slugs";
 import { QURAN_ROOT } from "@repo/contents/_lib/manifest/constants";
+import {
+  clearMdxSlugCache,
+  getMdxSlugsForLocale,
+} from "@repo/contents/_lib/mdx-slugs/cache";
 import { getAllSurah } from "@repo/contents/_lib/quran";
 import { Effect } from "effect";
 
@@ -15,11 +18,16 @@ export class ContentRouteSource extends Effect.Service<ContentRouteSource>()(
   {
     accessors: true,
     succeed: {
-      clearFolderCache: Effect.suspend(clearFolderChildNamesCache),
+      clearFolderCache: Effect.all(
+        [
+          Effect.suspend(clearFolderChildNamesCache),
+          Effect.suspend(clearMdxSlugCache),
+        ],
+        { discard: true }
+      ),
       getFolderCacheVersion: Effect.suspend(getFolderChildNamesCacheVersion),
       getFolderNames: (folder: string) => getFolderChildNames(folder),
-      getMdxSlugs: (locale: string) =>
-        Effect.sync(() => getMDXSlugsForLocale(locale)),
+      getMdxSlugs: (locale: string) => getMdxSlugsForLocale(locale),
       getNestedSlugParts: (folder: string) => getNestedSlugs(folder),
       getQuranRoutes: Effect.sync(() =>
         getAllSurah().map((surah) => `/${QURAN_ROOT}/${surah.number}`)

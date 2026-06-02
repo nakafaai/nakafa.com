@@ -21,7 +21,7 @@ import type { ParsedHeading } from "@repo/contents/_types/toc";
 import { slugify } from "@repo/design-system/lib/utils";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
@@ -63,11 +63,20 @@ async function getResolvedParams(
   const grade = parseGrade(rawGrade);
   const material = parseMaterial(rawMaterial);
 
-  if (!(category && grade && material)) {
+  if (
+    Option.isNone(category) ||
+    Option.isNone(grade) ||
+    Option.isNone(material)
+  ) {
     notFound();
   }
 
-  return { category, grade, locale, material };
+  return {
+    category: category.value,
+    grade: grade.value,
+    locale,
+    material: material.value,
+  };
 }
 
 export async function generateMetadata({
@@ -90,15 +99,17 @@ export async function generateMetadata({
     ogUrl = publicPath;
   }
 
-  const title = createSEOTitle([
-    t(material),
-    t(getGradeNonNumeric(grade) ?? "grade", { grade }),
-    t(category),
-  ]);
+  const gradeLabel = t(
+    Option.getOrElse(getGradeNonNumeric(grade), () => "grade"),
+    {
+      grade,
+    }
+  );
+  const title = createSEOTitle([t(material), gradeLabel, t(category)]);
   const urlPath = `/${locale}${FilePath}`;
   const description = createSEODescription([
     t(material),
-    t(getGradeNonNumeric(grade) ?? "grade", { grade }),
+    gradeLabel,
     t(category),
     t("grade-description"),
   ]);
@@ -142,16 +153,20 @@ export default function Page(
   const grade = parseGrade(rawGrade);
   const material = parseMaterial(rawMaterial);
 
-  if (!(category && grade && material)) {
+  if (
+    Option.isNone(category) ||
+    Option.isNone(grade) ||
+    Option.isNone(material)
+  ) {
     notFound();
   }
 
   return (
     <PageContent
-      category={category}
-      grade={grade}
+      category={category.value}
+      grade={grade.value}
       locale={locale}
-      material={material}
+      material={material.value}
     />
   );
 }
@@ -179,6 +194,12 @@ async function PageContent({
     getTranslations({ locale, namespace: "Common" }),
     Effect.runPromise(getMaterials(FilePath, locale)),
   ]);
+  const gradeLabel = t(
+    Option.getOrElse(getGradeNonNumeric(grade), () => "grade"),
+    {
+      grade,
+    }
+  );
 
   const chapters: ParsedHeading[] = materials.map((mat) => ({
     label: mat.title,
@@ -193,19 +214,19 @@ async function PageContent({
           { name: tCommon("home"), path: "" },
           { name: tCommon("subject"), path: "/subject" },
           {
-            name: t(getGradeNonNumeric(grade) ?? "grade", { grade }),
+            name: gradeLabel,
             path: gradePath,
           },
           { name: t(material), path: FilePath },
         ])}
       />
       <CollectionPageJsonLd
-        description={t(getGradeNonNumeric(grade) ?? "grade", { grade })}
+        description={gradeLabel}
         items={materials.map((mat) => ({
           url: `https://nakafa.com/${locale}${mat.href}`,
           name: mat.title,
         }))}
-        name={`${t(material)} - ${t(getGradeNonNumeric(grade) ?? "grade", { grade })}`}
+        name={`${t(material)} - ${gradeLabel}`}
         url={`https://nakafa.com/${locale}${FilePath}`}
       />
       <LayoutMaterial>
@@ -214,7 +235,7 @@ async function PageContent({
             icon={getMaterialIcon(material)}
             link={{
               href: gradePath,
-              label: t(getGradeNonNumeric(grade) ?? "grade", { grade }),
+              label: gradeLabel,
             }}
             title={t(material)}
           />
@@ -245,7 +266,7 @@ async function PageContent({
           header={{
             title: t(material),
             href: FilePath,
-            description: t(getGradeNonNumeric(grade) ?? "grade", { grade }),
+            description: gradeLabel,
           }}
         />
       </LayoutMaterial>

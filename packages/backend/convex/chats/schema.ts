@@ -151,7 +151,7 @@ export const nakafaContentPreviewValidator = v.object({
 export const nakafaExercisePreviewValidator = v.object({
   ...contentSearchRefValidator.fields,
   count: v.number(),
-  exercise_number: v.union(v.number(), v.null()),
+  exercise_number: v.optional(v.number()),
   numbers: v.array(v.number()),
   title: v.string(),
 });

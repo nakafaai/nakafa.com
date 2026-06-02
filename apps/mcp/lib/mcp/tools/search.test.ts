@@ -10,7 +10,6 @@ vi.mock("convex/nextjs", () => ({
       has_more: false,
       items: [],
       limit: 10,
-      next_offset: null,
       offset: 0,
     })
   ),

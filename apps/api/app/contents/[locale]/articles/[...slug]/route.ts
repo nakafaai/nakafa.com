@@ -1,4 +1,4 @@
-import { generateContentParams } from "@repo/contents/_lib/params";
+import { getContentStaticParams } from "@repo/contents/_lib/manifest/cache/static-params";
 import { getScopedContents } from "@repo/contents/_lib/scoped";
 import {
   FileReadError,
@@ -17,7 +17,7 @@ export const revalidate = false;
  * Generates all locale-aware article API paths under `/contents/:locale/articles/*`.
  */
 export function generateStaticParams() {
-  return generateContentParams({
+  return getContentStaticParams({
     basePath: "articles",
   });
 }

@@ -4,6 +4,7 @@ import {
   getCategoryPath,
   parseArticleCategory,
 } from "@repo/contents/_lib/articles/category";
+import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("article category routes", () => {
@@ -16,7 +17,9 @@ describe("article category routes", () => {
   });
 
   it("parses supported categories and rejects unknown segments", () => {
-    expect(parseArticleCategory("politics")).toBe("politics");
-    expect(parseArticleCategory("unknown")).toBeNull();
+    expect(Option.getOrUndefined(parseArticleCategory("politics"))).toBe(
+      "politics"
+    );
+    expect(Option.isNone(parseArticleCategory("unknown"))).toBe(true);
   });
 });

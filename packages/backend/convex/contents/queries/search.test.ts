@@ -586,12 +586,10 @@ describe("contents/queries/search:search", () => {
     expect(browseResult).toMatchObject({
       count: 20,
       has_more: false,
-      next_offset: null,
     });
     expect(queryResult).toMatchObject({
       count: 20,
       has_more: false,
-      next_offset: null,
     });
   });
 

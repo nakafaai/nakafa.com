@@ -6,30 +6,40 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const {
   mockGetScopedContent,
   mockGetMDXSlugsForLocale,
-  mockKyGet,
+  mockFetchText,
   mockReadFile,
   mockResolveContentsDir,
 } = vi.hoisted(() => ({
   mockGetScopedContent: vi.fn(),
   mockGetMDXSlugsForLocale: vi.fn(),
-  mockKyGet: vi.fn(),
+  mockFetchText: vi.fn(),
   mockReadFile: vi.fn(),
   mockResolveContentsDir: vi.fn(() => "/virtual/contents"),
 }));
 
-vi.mock("node:fs", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("node:fs")>();
+vi.mock("@repo/contents/_lib/io/content", async () => {
+  const { Effect, Layer } = await import("effect");
+
   return {
-    ...actual,
-    promises: {
-      ...actual.promises,
-      readFile: mockReadFile,
+    ContentIO: {
+      Default: Layer.empty,
+      fetchText: (url: string) =>
+        Effect.tryPromise({
+          catch: (cause) => cause,
+          try: async () => await mockFetchText(url),
+        }),
+      readFileString: (filePath: string) =>
+        Effect.tryPromise({
+          catch: (cause) => cause,
+          try: async () => await mockReadFile(filePath, "utf8"),
+        }),
     },
   };
 });
 
-vi.mock("@repo/contents/_lib/cache", () => ({
-  getMDXSlugsForLocale: mockGetMDXSlugsForLocale,
+vi.mock("@repo/contents/_lib/mdx-slugs/cache", () => ({
+  getMdxSlugsForLocale: (locale: string) =>
+    Effect.succeed(mockGetMDXSlugsForLocale(locale)),
 }));
 
 vi.mock("@repo/contents/_lib/scoped", () => ({
@@ -38,12 +48,6 @@ vi.mock("@repo/contents/_lib/scoped", () => ({
 
 vi.mock("@repo/contents/_lib/root", () => ({
   resolveContentsDir: mockResolveContentsDir,
-}));
-
-vi.mock("ky", () => ({
-  default: {
-    get: mockKyGet,
-  },
 }));
 
 import {
@@ -100,7 +104,7 @@ beforeEach(() => {
   mockGetMDXSlugsForLocale.mockReturnValue([]);
   mockGetScopedContent.mockReset();
   mockReadFile.mockReset();
-  mockKyGet.mockReset();
+  mockFetchText.mockReset();
 });
 
 afterEach(() => {
@@ -187,9 +191,7 @@ describe("getExercisesContent", () => {
       }
     );
     mockReadFile.mockRejectedValue(new Error("missing choices file"));
-    mockKyGet.mockReturnValue({
-      text: () => Promise.resolve(createChoicesSource("Remote")),
-    });
+    mockFetchText.mockResolvedValue(createChoicesSource("Remote"));
 
     const result = await Effect.runPromise(
       getExercisesContent({ filePath: exerciseBasePath, locale: "en" })
@@ -198,7 +200,7 @@ describe("getExercisesContent", () => {
     expect(result).toHaveLength(1);
     expect(result[0]?.question.default).toBeDefined();
     expect(result[0]?.choices.en[0]?.label).toBe("Remote EN");
-    expect(mockKyGet).toHaveBeenCalledTimes(1);
+    expect(mockFetchText).toHaveBeenCalledTimes(1);
   });
 
   it("preserves zero-padded exercise folder names when loading files", async () => {
@@ -418,7 +420,7 @@ describe("getExercisesContent", () => {
       }
     );
     mockReadFile.mockRejectedValue(new Error("missing choices file"));
-    mockKyGet.mockImplementation(() => {
+    mockFetchText.mockImplementation(() => {
       throw new Error("GitHub unavailable");
     });
 

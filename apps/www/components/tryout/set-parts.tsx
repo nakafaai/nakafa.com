@@ -13,6 +13,7 @@ import {
 } from "@repo/design-system/components/ui/number-flow";
 import { cn } from "@repo/design-system/lib/utils";
 import type { FunctionReturnType } from "convex/server";
+import { Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
 import type { ReactNode } from "react";
@@ -258,9 +259,9 @@ function TryoutSetPartScoreFraction({
 function getTryoutPartIcon(material: string) {
   const parsedMaterial = parseExercisesMaterial(material);
 
-  if (!parsedMaterial) {
+  if (Option.isNone(parsedMaterial)) {
     return null;
   }
 
-  return getMaterialIcon(parsedMaterial);
+  return getMaterialIcon(parsedMaterial.value);
 }

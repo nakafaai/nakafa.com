@@ -5,6 +5,7 @@ import {
 } from "@repo/contents/_lib/exercises/route";
 import { getSlugPath } from "@repo/contents/_lib/exercises/slug";
 import { cleanSlug } from "@repo/utilities/helper";
+import { Option } from "effect";
 import { notFound } from "next/navigation";
 
 import { use } from "react";
@@ -26,13 +27,21 @@ export default function Layout(
     slug,
   } = use(params);
   const locale = getLocaleOrThrow(rawLocale);
-  const category = parseExercisesCategory(rawCategory);
-  const type = parseExercisesType(rawType);
-  const material = parseExercisesMaterial(rawMaterial);
+  const parsedCategory = parseExercisesCategory(rawCategory);
+  const parsedType = parseExercisesType(rawType);
+  const parsedMaterial = parseExercisesMaterial(rawMaterial);
 
-  if (!(category && type && material)) {
+  if (
+    Option.isNone(parsedCategory) ||
+    Option.isNone(parsedType) ||
+    Option.isNone(parsedMaterial)
+  ) {
     notFound();
   }
+
+  const category = parsedCategory.value;
+  const type = parsedType.value;
+  const material = parsedMaterial.value;
 
   const lastSlug = slug.at(-1);
   const baseSlug = lastSlug && isNumber(lastSlug) ? slug.slice(0, -1) : slug;

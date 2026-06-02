@@ -1,4 +1,3 @@
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import {
   clearFolderChildNamesCache,
   getFolderChildNames,
@@ -10,17 +9,23 @@ import { getContentPublicRouteManifest } from "@repo/contents/_lib/manifest/cach
 import { getContentRouteManifest } from "@repo/contents/_lib/manifest/cache/route";
 import {
   getContentIndexManifest,
+  getContentRouteParamManifest,
   getExerciseApiParamsForLocales,
 } from "@repo/contents/_lib/manifest/cache/route-params";
 import {
   getContentLocaleParams,
+  getContentStaticParamManifest,
   getContentStaticParams,
 } from "@repo/contents/_lib/manifest/cache/static-params";
+import {
+  clearMdxSlugCache,
+  getMdxSlugsForLocale,
+} from "@repo/contents/_lib/mdx-slugs/cache";
 import { getAllSurah } from "@repo/contents/_lib/quran";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@repo/contents/_lib/cache");
+vi.mock("@repo/contents/_lib/mdx-slugs/cache");
 vi.mock("@repo/contents/_lib/fs/cache");
 vi.mock("@repo/contents/_lib/fs/nested-slugs");
 vi.mock("@repo/contents/_lib/quran");
@@ -96,10 +101,12 @@ function mockManifestSource() {
   vi.mocked(getNestedSlugs).mockImplementation((folder) =>
     Effect.succeed(nestedTree.get(folder) ?? [])
   );
-  vi.mocked(getMDXSlugsForLocale).mockImplementation((locale) =>
-    locale === "en"
-      ? slugs
-      : ["articles/politics", "articles/politics/id-article"]
+  vi.mocked(getMdxSlugsForLocale).mockImplementation((locale) =>
+    Effect.succeed(
+      locale === "en"
+        ? slugs
+        : ["articles/politics", "articles/politics/id-article"]
+    )
   );
   vi.mocked(getAllSurah).mockReturnValue([
     {
@@ -120,6 +127,7 @@ function mockManifestSource() {
 beforeEach(() => {
   folderCacheVersion = 0;
   vi.clearAllMocks();
+  vi.mocked(clearMdxSlugCache).mockReturnValue(Effect.void);
   vi.mocked(clearFolderChildNamesCache).mockReturnValue(Effect.void);
   vi.mocked(getFolderChildNamesCacheVersion).mockImplementation(() =>
     Effect.succeed(folderCacheVersion)
@@ -127,11 +135,12 @@ beforeEach(() => {
   mockManifestSource();
   clearContentRouteManifestCache();
   vi.mocked(clearFolderChildNamesCache).mockClear();
+  vi.mocked(clearMdxSlugCache).mockClear();
 });
 
 describe("content route manifest", () => {
-  it("builds routes, redirects, index entries, and params from one source module", () => {
-    const manifest = getContentRouteManifest();
+  it("builds routes, redirects, index entries, and params from one source module", async () => {
+    const manifest = await getContentRouteManifest();
 
     expect(manifest.quranRoutes).toEqual(["/quran/1"]);
     expect(manifest.routeRoots).toEqual(
@@ -189,32 +198,33 @@ describe("content route manifest", () => {
     });
   });
 
-  it("caches manifest scans and refreshes after folder cache invalidation", () => {
-    getContentRouteManifest();
+  it("caches manifest scans and refreshes after folder cache invalidation", async () => {
+    await getContentRouteManifest();
     const firstFolderReads = vi.mocked(getFolderChildNames).mock.calls.length;
 
-    getContentRouteManifest();
-    getExerciseApiParamsForLocales(["en"]);
+    await getContentRouteManifest();
+    await getExerciseApiParamsForLocales(["en"]);
 
     expect(getFolderChildNames).toHaveBeenCalledTimes(firstFolderReads);
 
     folderCacheVersion += 1;
-    getContentRouteManifest();
+    await getContentRouteManifest();
 
     expect(vi.mocked(getFolderChildNames).mock.calls.length).toBeGreaterThan(
       firstFolderReads
     );
   });
 
-  it("clears source and derived caches together", () => {
-    getContentRouteManifest();
+  it("clears source and derived caches together", async () => {
+    await getContentRouteManifest();
     clearContentRouteManifestCache();
 
     expect(clearFolderChildNamesCache).toHaveBeenCalledOnce();
+    expect(clearMdxSlugCache).toHaveBeenCalledOnce();
   });
 
-  it("builds public route fields through the route-only adapter", () => {
-    const manifest = getContentPublicRouteManifest();
+  it("builds public route fields through the route-only adapter", async () => {
+    const manifest = await getContentPublicRouteManifest();
 
     expect(manifest.contentRoutes).toContain("/articles/politics/article");
     expect(manifest.publicRequestRoutes).toContain("/articles");
@@ -228,25 +238,39 @@ describe("content route manifest", () => {
     expect(manifest.routeRoots).toContain("/subject");
   });
 
-  it("caches route-only adapter scans", () => {
-    getContentPublicRouteManifest();
+  it("caches route-only adapter scans", async () => {
+    await getContentPublicRouteManifest();
     const firstFolderReads = vi.mocked(getFolderChildNames).mock.calls.length;
 
-    getContentPublicRouteManifest();
+    await getContentPublicRouteManifest();
 
     expect(getFolderChildNames).toHaveBeenCalledTimes(firstFolderReads);
   });
 
-  it("filters params through the manifest adapters", () => {
-    expect(getContentStaticParams({ basePath: "articles" })).toContainEqual({
+  it("filters params through the manifest adapters", async () => {
+    expect(
+      (await getContentRouteParamManifest()).staticParams.articles
+    ).toContainEqual({
       locale: "en",
       slug: ["politics"],
     });
-    expect(getContentLocaleParams()).toContainEqual({
+    expect(
+      (await getContentStaticParamManifest()).staticParams.articles
+    ).toContainEqual({
+      locale: "en",
+      slug: ["politics"],
+    });
+    expect(
+      await getContentStaticParams({ basePath: "articles" })
+    ).toContainEqual({
+      locale: "en",
+      slug: ["politics"],
+    });
+    expect(await getContentLocaleParams()).toContainEqual({
       locale: "id",
       slug: ["articles", "politics"],
     });
-    expect(getExerciseApiParamsForLocales()).toContainEqual({
+    expect(await getExerciseApiParamsForLocales()).toContainEqual({
       locale: "en",
       slug: "high-school/snbt/quantitative-knowledge/try-out/2026/set-1".split(
         "/"
@@ -254,8 +278,8 @@ describe("content route manifest", () => {
     });
   });
 
-  it("builds a separate manifest for non-routing locale adapters", () => {
-    const params = getContentStaticParams({
+  it("builds a separate manifest for non-routing locale adapters", async () => {
+    const params = await getContentStaticParams({
       basePath: "articles",
       locales: ["de"],
     });
@@ -264,13 +288,15 @@ describe("content route manifest", () => {
     expect(params).not.toContainEqual({ locale: "en", slug: ["politics"] });
   });
 
-  it("builds a separate index manifest for non-routing locale adapters", () => {
-    expect(getContentIndexManifest().indexedArticleEntries).toContainEqual({
+  it("builds a separate index manifest for non-routing locale adapters", async () => {
+    expect(
+      (await getContentIndexManifest()).indexedArticleEntries
+    ).toContainEqual({
       locale: "en",
       slug: "articles/politics/article",
     });
 
-    const manifest = getContentIndexManifest(["de"]);
+    const manifest = await getContentIndexManifest(["de"]);
 
     expect(manifest.indexedArticleEntries).toContainEqual({
       locale: "de",
@@ -282,8 +308,8 @@ describe("content route manifest", () => {
     });
   });
 
-  it("returns concrete exercise API params through the manifest adapter", () => {
-    const params = getExerciseApiParamsForLocales(["en"]);
+  it("returns concrete exercise API params through the manifest adapter", async () => {
+    const params = await getExerciseApiParamsForLocales(["en"]);
 
     expect(params).toContainEqual({
       locale: "en",

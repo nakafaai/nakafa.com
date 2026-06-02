@@ -5,7 +5,7 @@ import {
 import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
 import { ExercisesMaterialListSchema } from "@repo/contents/_types/exercises/material";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 
 /**
@@ -63,17 +63,15 @@ export function getCurrentMaterial(
   path: string,
   materials: ExercisesMaterialList
 ) {
-  let currentMaterial: (typeof materials)[number] | undefined;
-  let currentMaterialItem:
-    | (typeof materials)[number]["items"][number]
-    | undefined;
-
   const normalizedPath = cleanSlug(path);
 
   for (const mat of materials) {
     if (cleanSlug(mat.href) === normalizedPath) {
-      currentMaterial = mat;
-      break;
+      return {
+        currentMaterial: Option.some(mat),
+        currentMaterialItem:
+          Option.none<(typeof materials)[number]["items"][number]>(),
+      };
     }
 
     const foundItem = mat.items.find(
@@ -81,11 +79,16 @@ export function getCurrentMaterial(
     );
 
     if (foundItem) {
-      currentMaterial = mat;
-      currentMaterialItem = foundItem;
-      break;
+      return {
+        currentMaterial: Option.some(mat),
+        currentMaterialItem: Option.some(foundItem),
+      };
     }
   }
 
-  return { currentMaterial, currentMaterialItem };
+  return {
+    currentMaterial: Option.none<(typeof materials)[number]>(),
+    currentMaterialItem:
+      Option.none<(typeof materials)[number]["items"][number]>(),
+  };
 }

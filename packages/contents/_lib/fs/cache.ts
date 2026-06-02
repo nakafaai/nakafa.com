@@ -1,5 +1,5 @@
+import { readFolderChildNamesForCacheKey } from "@repo/contents/_lib/fs/folder-scan";
 import { getFolderChildNamesCacheKey } from "@repo/contents/_lib/fs/path";
-import { readFolderChildNamesForCacheKey } from "@repo/contents/_lib/fs/sync-scan";
 import { Cache, Duration, Effect, Ref } from "effect";
 
 const folderChildNamesCacheCapacity = 8192;

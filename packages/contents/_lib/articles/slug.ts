@@ -3,7 +3,7 @@ import { getContentsMetadata } from "@repo/contents/_lib/metadata";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import type { Article, Locale } from "@repo/contents/_types/content";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 /**
  * Builds the public URL path for an article detail page.
@@ -65,7 +65,7 @@ export const getArticleSummaries = Effect.fn("Contents.Articles.getSummaries")(
       }
 
       const publishedAt = formatContentDateISO(entry.metadata.date);
-      if (!publishedAt) {
+      if (Option.isNone(publishedAt)) {
         continue;
       }
 
@@ -74,7 +74,7 @@ export const getArticleSummaries = Effect.fn("Contents.Articles.getSummaries")(
       articlesBySlug.set(slug, {
         title: entry.metadata.title,
         description: entry.metadata.description ?? "",
-        date: publishedAt,
+        date: publishedAt.value,
         slug,
         official: authors.some((author) => teams.has(author)),
       });

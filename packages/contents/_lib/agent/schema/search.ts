@@ -60,11 +60,11 @@ export const NakafaAgentSearchResultSchema = Schema.Struct({
   limit: Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
     description: "Requested page size.",
   }),
-  next_offset: Schema.NullOr(
-    Schema.Number.pipe(Schema.int(), Schema.nonNegative())
-  ).annotations({
-    description: "Next offset, or null when there is no next page.",
-  }),
+  next_offset: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.nonNegative()).annotations({
+      description: "Next page offset when another page is available.",
+    })
+  ),
   offset: Schema.Number.pipe(Schema.int(), Schema.nonNegative()).annotations({
     description: "Current result offset.",
   }),

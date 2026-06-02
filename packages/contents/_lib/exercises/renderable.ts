@@ -1,10 +1,10 @@
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getExerciseQuestionNumbers } from "@repo/contents/_lib/exercises/collection";
 import {
   loadExerciseEntry,
   readExerciseChoices,
   readExerciseContentData,
 } from "@repo/contents/_lib/exercises/source";
+import { getMdxSlugsForLocale } from "@repo/contents/_lib/mdx-slugs/cache";
 import type { Locale } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option } from "effect";
@@ -15,7 +15,7 @@ import { Effect, Option } from "effect";
  * @param exerciseNumberSegment - Numbered folder name inside the exercise set
  * @param cleanPath - Normalized exercise-set path relative to `packages/contents`
  * @param locale - Locale used to resolve the exercise content files
- * @returns Plain exercise row, or `null` when any required source is missing
+ * @returns Plain exercise row when every required source is present
  */
 function loadRenderableExercise(
   exerciseNumberSegment: string,
@@ -29,17 +29,17 @@ function loadRenderableExercise(
     loadChoices: (choicesPath) =>
       readExerciseChoices(choicesPath).pipe(
         Effect.catchTags({
-          GitHubFetchError: () => Effect.succeed(null),
-          InvalidPathError: () => Effect.succeed(null),
+          GitHubFetchError: () => Effect.succeed(Option.none()),
+          InvalidPathError: () => Effect.succeed(Option.none()),
         })
       ),
   }).pipe(
     Effect.map((exercise) => {
       if (Option.isNone(exercise)) {
-        return null;
+        return Option.none();
       }
 
-      return exercise.value;
+      return Option.some(exercise.value);
     })
   );
 }
@@ -56,10 +56,8 @@ export const getRenderableExercisesContent = Effect.fn(
   "Contents.Exercises.getRenderableExercisesContent"
 )(function* (locale: Locale, filePath: string) {
   const cleanPath = cleanSlug(filePath);
-  const exerciseNumbers = getExerciseQuestionNumbers(
-    getMDXSlugsForLocale(locale),
-    cleanPath
-  );
+  const slugs = yield* getMdxSlugsForLocale(locale);
+  const exerciseNumbers = getExerciseQuestionNumbers(slugs, cleanPath);
 
   if (exerciseNumbers.length === 0) {
     return [];
@@ -71,7 +69,9 @@ export const getRenderableExercisesContent = Effect.fn(
     ),
     { concurrency: "unbounded" }
   ).pipe(
-    Effect.map((exercises) => exercises.filter((exercise) => exercise !== null))
+    Effect.map((exercises) =>
+      exercises.filter(Option.isSome).map((exercise) => exercise.value)
+    )
   );
 });
 
@@ -81,19 +81,19 @@ export const getRenderableExercisesContent = Effect.fn(
  * @param locale - Locale whose exercise set should be loaded
  * @param filePath - Exercise-set path relative to `packages/contents`
  * @param exerciseNumber - Exercise number to look up
- * @returns Matching plain exercise row, or `null` when it is unavailable
+ * @returns Matching plain exercise row when it is available
  */
 export const getRenderableExerciseByNumber = Effect.fn(
   "Contents.Exercises.getRenderableExerciseByNumber"
 )(function* (locale: Locale, filePath: string, exerciseNumber: number) {
   const cleanPath = cleanSlug(filePath);
-  const numberSegment = getExerciseQuestionNumbers(
-    getMDXSlugsForLocale(locale),
-    cleanPath
-  ).find((segment) => Number.parseInt(segment, 10) === exerciseNumber);
+  const slugs = yield* getMdxSlugsForLocale(locale);
+  const numberSegment = getExerciseQuestionNumbers(slugs, cleanPath).find(
+    (segment) => Number.parseInt(segment, 10) === exerciseNumber
+  );
 
   if (!numberSegment) {
-    return null;
+    return Option.none();
   }
 
   return yield* loadRenderableExercise(numberSegment, cleanPath, locale);

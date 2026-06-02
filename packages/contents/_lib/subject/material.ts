@@ -32,7 +32,7 @@ import {
 import type { MaterialList } from "@repo/contents/_types/subject/material";
 import { MaterialListSchema } from "@repo/contents/_types/subject/material";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 
 /**
@@ -147,26 +147,29 @@ export function getMaterialIcon(material: string) {
  * @returns Matching chapter and item when either is found
  */
 export function getCurrentMaterial(path: string, materials: MaterialList) {
-  let currentChapter: (typeof materials)[number] | undefined;
-  let currentItem: (typeof materials)[number]["items"][number] | undefined;
+  const normalizedPath = cleanSlug(path);
 
   for (const chapter of materials) {
-    // Check if path matches chapter href
-    if (cleanSlug(chapter.href) === cleanSlug(path)) {
-      currentChapter = chapter;
-      break;
+    if (cleanSlug(chapter.href) === normalizedPath) {
+      return {
+        currentChapter: Option.some(chapter),
+        currentItem: Option.none<(typeof materials)[number]["items"][number]>(),
+      };
     }
 
-    // Check items within the chapter
     const foundItem = chapter.items.find(
-      (item) => cleanSlug(item.href) === cleanSlug(path)
+      (item) => cleanSlug(item.href) === normalizedPath
     );
     if (foundItem) {
-      currentChapter = chapter;
-      currentItem = foundItem;
-      break;
+      return {
+        currentChapter: Option.some(chapter),
+        currentItem: Option.some(foundItem),
+      };
     }
   }
 
-  return { currentChapter, currentItem };
+  return {
+    currentChapter: Option.none<(typeof materials)[number]>(),
+    currentItem: Option.none<(typeof materials)[number]["items"][number]>(),
+  };
 }

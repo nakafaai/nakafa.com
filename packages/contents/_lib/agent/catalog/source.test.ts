@@ -2,12 +2,13 @@ import { getNakafaAgentContentIndex } from "@repo/contents/_lib/agent/catalog/so
 import { Effect } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@repo/contents/_lib/cache", () => ({
-  getMDXSlugsForLocale: () => [
-    "broken/1/_question",
-    "exercises/high-school/snbt/general-reasoning/try-out/1/_question",
-    "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1/1/_question",
-  ],
+vi.mock("@repo/contents/_lib/mdx-slugs/cache", () => ({
+  getMdxSlugsForLocale: () =>
+    Effect.succeed([
+      "broken/1/_question",
+      "exercises/high-school/snbt/general-reasoning/try-out/1/_question",
+      "exercises/high-school/snbt/general-reasoning/try-out/2026/set-1/1/_question",
+    ]),
 }));
 
 vi.mock("@repo/contents/_lib/metadata", () => ({

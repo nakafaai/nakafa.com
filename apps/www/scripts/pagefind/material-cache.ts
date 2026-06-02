@@ -37,16 +37,21 @@ export const getPagefindExerciseMaterialContext = Effect.fn(
     `/${setPath}`,
     materials
   );
-  const title =
-    currentMaterialItem?.title ??
-    currentMaterial?.title ??
-    getExerciseSetFallbackTitle(setPath);
 
-  if (!title) {
+  if (Option.isSome(currentMaterialItem)) {
+    return Option.some({ title: currentMaterialItem.value.title });
+  }
+
+  if (Option.isSome(currentMaterial)) {
+    return Option.some({ title: currentMaterial.value.title });
+  }
+
+  const fallbackTitle = getExerciseSetFallbackTitle(setPath);
+  if (!fallbackTitle) {
     return Option.none();
   }
 
-  return Option.some({ title });
+  return Option.some({ title: fallbackTitle });
 });
 
 /** Builds the material-list root path for an exercise set route. */

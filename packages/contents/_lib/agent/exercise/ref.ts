@@ -25,7 +25,7 @@ export function getNakafaExerciseSetRef(input: string) {
 export function getNakafaExerciseSetRoute(route: string) {
   const parts = route.split("/");
 
-  if (getNakafaExerciseRouteNumber(route) === null) {
+  if (Option.isNone(getNakafaExerciseRouteNumber(route))) {
     return route;
   }
 
@@ -37,14 +37,14 @@ export function getNakafaExerciseRouteNumber(route: string) {
   const lastPart = route.split("/").at(-1);
 
   if (!lastPart) {
-    return null;
+    return Option.none();
   }
 
   const number = Number.parseInt(lastPart, 10);
 
   if (!(Number.isSafeInteger(number) && `${number}` === lastPart)) {
-    return null;
+    return Option.none();
   }
 
-  return number;
+  return Option.some(number);
 }

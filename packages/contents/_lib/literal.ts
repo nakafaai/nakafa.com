@@ -1,7 +1,8 @@
-import { Effect, Either } from "effect";
+import { Effect, Either, Option } from "effect";
 import JSON5 from "json5";
 
 type LiteralObject = Record<string, unknown>;
+const literalParseError = "invalid literal parse";
 
 /**
  * Extracts an object literal after a known declaration without executing code.
@@ -10,17 +11,18 @@ export function extractObjectLiteralAfterDeclaration(
   source: string,
   declarationRegex: RegExp
 ) {
-  const declaration = source.match(declarationRegex);
+  const declaration = Option.fromNullable(source.match(declarationRegex));
 
-  if (!declaration || declaration.index === undefined) {
-    return null;
+  if (Option.isNone(declaration)) {
+    return Option.none();
   }
 
-  const declarationEnd = declaration.index + declaration[0].length;
+  const declarationEnd =
+    source.search(declarationRegex) + declaration.value[0].length;
   const objectStart = source.indexOf("{", declarationEnd);
 
   if (objectStart === -1) {
-    return null;
+    return Option.none();
   }
 
   let depth = 0;
@@ -31,11 +33,11 @@ export function extractObjectLiteralAfterDeclaration(
     if (char === '"' || char === "'" || char === "`") {
       const stringEnd = skipQuotedString(source, index);
 
-      if (stringEnd === null) {
-        return null;
+      if (Option.isNone(stringEnd)) {
+        return Option.none();
       }
 
-      index = stringEnd;
+      index = stringEnd.value;
       continue;
     }
 
@@ -51,11 +53,11 @@ export function extractObjectLiteralAfterDeclaration(
     depth -= 1;
 
     if (depth === 0) {
-      return source.slice(objectStart, index + 1);
+      return Option.some(source.slice(objectStart, index + 1));
     }
   }
 
-  return null;
+  return Option.none();
 }
 
 /**
@@ -66,29 +68,29 @@ export function extractObjectLiteralAfterDeclaration(
 export function parseObjectLiteral(source: string) {
   const parsed = parseJson5LiteralSafely(source);
 
-  if (parsed === null) {
-    return null;
+  if (Option.isNone(parsed)) {
+    return Option.none();
   }
 
-  return isRecord(parsed) ? parsed : null;
+  return isRecord(parsed.value) ? Option.some(parsed.value) : Option.none();
 }
 
-/** Parses one JSON5 literal and converts syntax failures into `null`. */
+/** Parses one JSON5 literal and converts syntax failures into `Option.none()`. */
 function parseJson5LiteralSafely(source: string) {
   const parsed = Effect.runSync(
     Effect.either(
       Effect.try({
-        try: parseJson5Literal.bind(null, source),
-        catch: ignoreLiteralParseError,
+        try: () => parseJson5Literal(source),
+        catch: () => literalParseError,
       })
     )
   );
 
   if (Either.isLeft(parsed)) {
-    return null;
+    return Option.none();
   }
 
-  return parsed.right;
+  return Option.some(parsed.right);
 }
 
 /** Parses one JSON5 literal string into an unknown data value. */
@@ -96,14 +98,15 @@ function parseJson5Literal(source: string) {
   return JSON5.parse(source);
 }
 
-/** Keeps parse failures as data misses instead of throwing during content scans. */
-function ignoreLiteralParseError() {
-  return null;
-}
-
 /** Returns whether a parsed literal is a plain object record. */
 function isRecord(value: unknown): value is LiteralObject {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+  const valueOption = Option.fromNullable(value);
+
+  return (
+    Option.isSome(valueOption) &&
+    typeof valueOption.value === "object" &&
+    !Array.isArray(valueOption.value)
+  );
 }
 
 /**
@@ -121,9 +124,9 @@ function skipQuotedString(source: string, startIndex: number) {
     }
 
     if (char === quote) {
-      return index;
+      return Option.some(index);
     }
   }
 
-  return null;
+  return Option.none();
 }

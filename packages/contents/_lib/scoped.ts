@@ -1,6 +1,6 @@
-import { promises as fsPromises } from "node:fs";
-import path from "node:path";
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
+import { resolveSafeContentPath } from "@repo/contents/_lib/fs/path";
+import { ContentIO } from "@repo/contents/_lib/io/content";
+import { getMdxSlugsForLocale } from "@repo/contents/_lib/mdx-slugs/cache";
 import { extractMetadata } from "@repo/contents/_lib/metadata";
 import { importContentModule } from "@repo/contents/_lib/module";
 import { resolveContentsDir } from "@repo/contents/_lib/root";
@@ -24,7 +24,6 @@ import {
 } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Effect, Option, Schema } from "effect";
-import ky from "ky";
 
 const contentsDir = resolveContentsDir(import.meta.url);
 
@@ -45,6 +44,12 @@ type ScopedReferencesImporter = (
   relativePath: string
 ) => Effect.Effect<ScopedReferencesModule, ModuleLoadError>;
 
+function isModuleNamespace(value: unknown): value is Record<string, unknown> {
+  const valueOption = Option.fromNullable(value);
+
+  return Option.isSome(valueOption) && typeof valueOption.value === "object";
+}
+
 /**
  * Validates a content-relative path against the contents root to block path
  * traversal before any filesystem read happens.
@@ -53,20 +58,11 @@ export function validatePath(
   filePath: string,
   basePath: string
 ): Effect.Effect<string, InvalidPathError> {
-  const cleanPath = cleanSlug(filePath);
-  const fullPath = path.join(basePath, cleanPath);
-
-  if (!fullPath.startsWith(basePath)) {
-    return Effect.fail(
-      new InvalidPathError({
-        message: "Path traversal detected while resolving content.",
-        path: filePath,
-        reason: "Path traversal detected",
-      })
-    );
-  }
-
-  return Effect.succeed(fullPath);
+  return resolveSafeContentPath(
+    filePath,
+    basePath,
+    "Path traversal detected while resolving content."
+  );
 }
 
 /**
@@ -80,26 +76,30 @@ export function getRawContent(
 
   return validatePath(filePath, contentsDir).pipe(
     Effect.flatMap((fullPath) => {
-      const readLocalFile = Effect.tryPromise({
-        try: () => fsPromises.readFile(fullPath, "utf8"),
-        catch: (error: unknown) =>
-          new FileReadError({
-            cause: error,
-            message: "Unable to read local content file.",
-            path: fullPath,
-          }),
-      });
+      const readLocalFile = ContentIO.readFileString(fullPath).pipe(
+        Effect.provide(ContentIO.Default),
+        Effect.mapError(
+          (error) =>
+            new FileReadError({
+              cause: error,
+              message: "Unable to read local content file.",
+              path: fullPath,
+            })
+        )
+      );
 
       const githubUrl = `https://raw.githubusercontent.com/nakafaai/nakafa.com/refs/heads/main/packages/contents/${cleanPath}`;
-      const fetchFromGitHub = Effect.tryPromise({
-        try: () => ky.get(githubUrl, { cache: "force-cache" }).text(),
-        catch: (error: unknown) =>
-          new GitHubFetchError({
-            cause: error,
-            message: "Unable to fetch content from GitHub fallback.",
-            url: githubUrl,
-          }),
-      });
+      const fetchFromGitHub = ContentIO.fetchText(githubUrl).pipe(
+        Effect.provide(ContentIO.Default),
+        Effect.mapError(
+          (error) =>
+            new GitHubFetchError({
+              cause: error,
+              message: "Unable to fetch content from GitHub fallback.",
+              url: githubUrl,
+            })
+        )
+      );
 
       return readLocalFile.pipe(
         Effect.catchTag("FileReadError", () => fetchFromGitHub)
@@ -171,11 +171,7 @@ export function parseModuleMetadata(
   modulePath = ""
 ): Effect.Effect<ContentMetadata, MetadataParseError> {
   return Effect.gen(function* () {
-    if (
-      typeof module !== "object" ||
-      module === null ||
-      !("metadata" in module)
-    ) {
+    if (!(isModuleNamespace(module) && "metadata" in module)) {
       return yield* Effect.fail(
         new MetadataParseError({
           message: "Imported content module is missing metadata.",
@@ -203,7 +199,7 @@ export function parseModuleMetadata(
  * array when the export is absent or not an array.
  */
 export function extractReferences(module: unknown): unknown[] {
-  if (typeof module === "object" && module !== null && "references" in module) {
+  if (isModuleNamespace(module) && "references" in module) {
     const refs = module.references;
     if (Array.isArray(refs)) {
       return refs;
@@ -314,10 +310,6 @@ export function getScopedContents(
 ): Effect.Effect<ContentListWithMDX[], never, never> {
   const { includeMDX = true, locale = "en", basePath = root } = options;
 
-  const slugs = getMDXSlugsForLocale(locale).filter((slug) =>
-    slug.startsWith(basePath)
-  );
-
   /**
    * Loads one scoped slug into the normalized list response shape.
    */
@@ -330,7 +322,7 @@ export function getScopedContents(
       );
 
       if (content._tag === "Left") {
-        return;
+        return Option.none();
       }
 
       const url = new URL(`/${contentLocale}/${slug}`, "https://nakafa.com");
@@ -343,13 +335,23 @@ export function getScopedContents(
         locale: contentLocale,
       };
 
-      return result;
+      return Option.some(result);
     });
   }
 
-  return Effect.forEach(slugs, (slug) => processSlug(slug, locale), {
-    concurrency: "unbounded",
-  }).pipe(Effect.map((items) => items.filter((item) => item !== undefined)));
+  return Effect.gen(function* () {
+    const slugs = (yield* getMdxSlugsForLocale(locale)).filter((slug) =>
+      slug.startsWith(basePath)
+    );
+
+    return yield* Effect.forEach(slugs, (slug) => processSlug(slug, locale), {
+      concurrency: "unbounded",
+    }).pipe(
+      Effect.map((items) =>
+        items.flatMap((item) => (Option.isSome(item) ? [item.value] : []))
+      )
+    );
+  });
 }
 
 /**

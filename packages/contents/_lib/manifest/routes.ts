@@ -32,7 +32,7 @@ import {
 } from "@repo/contents/_lib/subject/route";
 import { getSlugPath as getSubjectSlugPath } from "@repo/contents/_lib/subject/slug";
 import { CONTENT_ROOT_VALUES } from "@repo/contents/_types/content";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 /** Builds route paths from localized content entries and listing folders. */
 export function getContentRouteSets(
@@ -88,34 +88,40 @@ function addExerciseListingRoutes(
     for (const rawCategory of categories) {
       const category = parseExercisesCategory(rawCategory);
 
-      if (!category) {
+      if (Option.isNone(category)) {
         continue;
       }
 
       const types = yield* getFolderNamesOrEmpty(
         source,
-        `${CONTENT_ROOT_VALUES.exercises}/${category}`
+        `${CONTENT_ROOT_VALUES.exercises}/${category.value}`
       );
 
       for (const rawType of types) {
         const type = parseExercisesType(rawType);
 
-        if (!type) {
+        if (Option.isNone(type)) {
           continue;
         }
 
-        routes.add(getExercisesPath(category, type));
+        routes.add(getExercisesPath(category.value, type.value));
 
         const materials = yield* getFolderNamesOrEmpty(
           source,
-          `${CONTENT_ROOT_VALUES.exercises}/${category}/${type}`
+          `${CONTENT_ROOT_VALUES.exercises}/${category.value}/${type.value}`
         );
 
         for (const rawMaterial of materials) {
           const material = parseExercisesMaterial(rawMaterial);
 
-          if (material) {
-            routes.add(getExerciseMaterialPath(category, type, material));
+          if (Option.isSome(material)) {
+            routes.add(
+              getExerciseMaterialPath(
+                category.value,
+                type.value,
+                material.value
+              )
+            );
           }
         }
       }
@@ -137,34 +143,40 @@ function addSubjectListingRoutes(
     for (const rawCategory of categories) {
       const category = parseSubjectCategory(rawCategory);
 
-      if (!category) {
+      if (Option.isNone(category)) {
         continue;
       }
 
       const grades = yield* getFolderNamesOrEmpty(
         source,
-        `${CONTENT_ROOT_VALUES.subject}/${category}`
+        `${CONTENT_ROOT_VALUES.subject}/${category.value}`
       );
 
       for (const rawGrade of grades) {
         const grade = parseGrade(rawGrade);
 
-        if (!grade) {
+        if (Option.isNone(grade)) {
           continue;
         }
 
-        routes.add(getGradePath(category, grade));
+        routes.add(getGradePath(category.value, grade.value));
 
         const materials = yield* getFolderNamesOrEmpty(
           source,
-          `${CONTENT_ROOT_VALUES.subject}/${category}/${grade}`
+          `${CONTENT_ROOT_VALUES.subject}/${category.value}/${grade.value}`
         );
 
         for (const rawMaterial of materials) {
           const material = parseMaterial(rawMaterial);
 
-          if (material) {
-            routes.add(getSubjectMaterialPath(category, grade, material));
+          if (Option.isSome(material)) {
+            routes.add(
+              getSubjectMaterialPath(
+                category.value,
+                grade.value,
+                material.value
+              )
+            );
           }
         }
       }
@@ -182,12 +194,12 @@ function addArticleRoutes(routes: Set<string>, slug: string) {
 
   const category = parseArticleCategory(rawCategory);
 
-  if (!category) {
+  if (Option.isNone(category)) {
     return;
   }
 
-  routes.add(getArticleCategoryPath(category));
-  routes.add(getArticleSlugPath(category, articleSlug));
+  routes.add(getArticleCategoryPath(category.value));
+  routes.add(getArticleSlugPath(category.value, articleSlug));
 }
 
 /** Adds subject grade, material, and lesson pages backed by MDX content. */
@@ -212,16 +224,24 @@ function addSubjectRoutes(
   const grade = parseGrade(rawGrade);
   const material = parseMaterial(rawMaterial);
 
-  if (!(category && grade && material)) {
+  if (
+    Option.isNone(category) ||
+    Option.isNone(grade) ||
+    Option.isNone(material)
+  ) {
     return;
   }
 
-  routes.add(getGradePath(category, grade));
-  const materialRoute = getSubjectMaterialPath(category, grade, material);
+  routes.add(getGradePath(category.value, grade.value));
+  const materialRoute = getSubjectMaterialPath(
+    category.value,
+    grade.value,
+    material.value
+  );
   const chapterRoute = getSubjectSlugPath(
-    category,
-    grade,
-    material,
+    category.value,
+    grade.value,
+    material.value,
     lessonSlug.slice(0, 1)
   );
 
@@ -232,7 +252,9 @@ function addSubjectRoutes(
     return;
   }
 
-  routes.add(getSubjectSlugPath(category, grade, material, lessonSlug));
+  routes.add(
+    getSubjectSlugPath(category.value, grade.value, material.value, lessonSlug)
+  );
 }
 
 /** Adds exercises listing, group, set, and question pages from entries. */
@@ -249,24 +271,43 @@ function addExerciseRoutes(routes: Set<string>, slugs: readonly string[]) {
     const type = parseExercisesType(rawType);
     const material = parseExercisesMaterial(rawMaterial);
 
-    if (!(category && type && material) || isLegacyExerciseSlug(setSlug)) {
+    if (
+      Option.isNone(category) ||
+      Option.isNone(type) ||
+      Option.isNone(material) ||
+      isLegacyExerciseSlug(setSlug)
+    ) {
       continue;
     }
 
-    routes.add(getExercisesPath(category, type));
-    routes.add(getExerciseMaterialPath(category, type, material));
+    routes.add(getExercisesPath(category.value, type.value));
+    routes.add(
+      getExerciseMaterialPath(category.value, type.value, material.value)
+    );
 
     for (const parentSlug of getParentSlugs(setSlug)) {
       if (!isLegacyExerciseSlug(parentSlug)) {
-        routes.add(getExerciseSlugPath(category, type, material, parentSlug));
+        routes.add(
+          getExerciseSlugPath(
+            category.value,
+            type.value,
+            material.value,
+            parentSlug
+          )
+        );
       }
     }
 
-    routes.add(getExerciseSlugPath(category, type, material, setSlug));
+    routes.add(
+      getExerciseSlugPath(category.value, type.value, material.value, setSlug)
+    );
 
     for (const number of getExerciseQuestionNumbers(slugs, setPath)) {
       routes.add(
-        getExerciseSlugPath(category, type, material, [...setSlug, number])
+        getExerciseSlugPath(category.value, type.value, material.value, [
+          ...setSlug,
+          number,
+        ])
       );
     }
   }
@@ -274,8 +315,7 @@ function addExerciseRoutes(routes: Set<string>, slugs: readonly string[]) {
 
 /** Returns whether one subject slug is a redirect-only chapter route. */
 function isSubjectChapterRedirectSlug(slug: string[]) {
-  const [chapter, lesson] = slug;
-  return chapter !== undefined && lesson === undefined;
+  return slug.length === 1;
 }
 
 /** Returns every non-empty parent slug from the current nested slug. */

@@ -9,7 +9,10 @@ import {
   ContentRouteSource,
   getFolderNamesOrEmpty,
 } from "@repo/contents/_lib/manifest/source";
-import { InvalidPathError } from "@repo/contents/_shared/error";
+import {
+  DirectoryReadError,
+  InvalidPathError,
+} from "@repo/contents/_shared/error";
 import { Effect, Either, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -51,6 +54,28 @@ describe("content manifest support modules", () => {
     });
 
     const folders = Effect.runSync(getFolderNamesOrEmpty(source, "../bad"));
+
+    expect(folders).toEqual([]);
+  });
+
+  it("treats unreadable folders as empty route groups", () => {
+    const source = ContentRouteSource.make({
+      clearFolderCache: Effect.void,
+      getFolderCacheVersion: Effect.succeed(1),
+      getFolderNames: () =>
+        Effect.fail(
+          new DirectoryReadError({
+            cause: new Error("missing"),
+            message: "Unable to read test directory.",
+            path: "missing-folder",
+          })
+        ),
+      getMdxSlugs: () => Effect.succeed([]),
+      getNestedSlugParts: () => Effect.succeed([]),
+      getQuranRoutes: Effect.succeed([]),
+    });
+
+    const folders = Effect.runSync(getFolderNamesOrEmpty(source, "missing"));
 
     expect(folders).toEqual([]);
   });

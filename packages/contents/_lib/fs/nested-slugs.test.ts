@@ -3,28 +3,60 @@ import { getNestedSlugs } from "@repo/contents/_lib/fs/nested-slugs";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockReadDirSync } = vi.hoisted(() => ({
+const { directoryEntriesByPath, mockReadDirSync } = vi.hoisted(() => ({
+  directoryEntriesByPath: new Map<
+    string,
+    { isDirectory: () => boolean; name: string }[]
+  >(),
   mockReadDirSync: vi.fn(),
 }));
 
-vi.mock("node:fs", () => ({
-  default: {
-    constants: { F_OK: 0 },
-    existsSync: vi.fn(() => true),
-    promises: {
-      access: vi.fn(),
-      readFile: vi.fn(),
-    },
-    readdirSync: mockReadDirSync,
-  },
-  promises: {
-    access: vi.fn(),
-    readFile: vi.fn(),
-  },
-}));
+vi.mock("@repo/contents/_lib/io/content", async () => {
+  const { Effect, Layer } = await import("effect");
+  const isDirectoryEntry = (
+    entry: unknown
+  ): entry is { isDirectory: () => boolean; name: string } =>
+    typeof entry === "object" &&
+    entry !== null &&
+    "isDirectory" in entry &&
+    "name" in entry &&
+    typeof entry.isDirectory === "function" &&
+    typeof entry.name === "string";
 
-beforeEach(() => {
-  Effect.runSync(clearFolderChildNamesCache());
+  return {
+    ContentIO: {
+      Default: Layer.empty,
+      readDirectory: (directoryPath: string) =>
+        Effect.try({
+          try: () => {
+            const rawEntries = mockReadDirSync(directoryPath);
+            const entries = Array.isArray(rawEntries)
+              ? rawEntries.filter(isDirectoryEntry)
+              : [];
+            directoryEntriesByPath.set(directoryPath, entries);
+
+            return entries.map((entry) => entry.name);
+          },
+          catch: (cause) => cause,
+        }),
+      stat: (filePath: string) =>
+        Effect.sync(() => {
+          const separatorIndex = filePath.lastIndexOf("/");
+          const directoryPath = filePath.slice(0, separatorIndex);
+          const name = filePath.slice(separatorIndex + 1);
+          const entry = directoryEntriesByPath
+            .get(directoryPath)
+            ?.find((candidate) => candidate.name === name);
+
+          return { type: entry?.isDirectory() ? "Directory" : "File" };
+        }),
+    },
+  };
+});
+
+beforeEach(async () => {
+  await Effect.runPromise(clearFolderChildNamesCache());
+  directoryEntriesByPath.clear();
   mockReadDirSync.mockReturnValue([]);
 });
 
@@ -34,11 +66,11 @@ afterEach(() => {
 });
 
 describe("getNestedSlugs", () => {
-  it("returns an empty array for empty base paths with no children", () => {
-    expect(Effect.runSync(getNestedSlugs(""))).toEqual([]);
+  it("returns an empty array for empty base paths with no children", async () => {
+    expect(await Effect.runPromise(getNestedSlugs(""))).toEqual([]);
   });
 
-  it("returns nested slugs for a simple structure", () => {
+  it("returns nested slugs for a simple structure", async () => {
     let callCount = 0;
     mockReadDirSync.mockImplementation(() => {
       callCount += 1;
@@ -50,10 +82,12 @@ describe("getNestedSlugs", () => {
       return [];
     });
 
-    expect(Effect.runSync(getNestedSlugs(""))).toContainEqual(["folder1"]);
+    expect(await Effect.runPromise(getNestedSlugs(""))).toContainEqual([
+      "folder1",
+    ]);
   });
 
-  it("returns nested slugs for multiple levels", () => {
+  it("returns nested slugs for multiple levels", async () => {
     let callCount = 0;
     mockReadDirSync.mockImplementation(() => {
       callCount += 1;
@@ -69,34 +103,34 @@ describe("getNestedSlugs", () => {
       return [];
     });
 
-    const result = Effect.runSync(getNestedSlugs(""));
+    const result = await Effect.runPromise(getNestedSlugs(""));
 
     expect(result).toContainEqual(["parent"]);
     expect(result).toContainEqual(["parent", "child"]);
   });
 
-  it("reuses nested slug scans for the same folder cache version", () => {
+  it("reuses nested slug scans for the same folder cache version", async () => {
     mockReadDirSync
       .mockImplementationOnce(() => [
         { name: "cached", isDirectory: () => true },
       ])
       .mockImplementation(() => []);
 
-    expect(Effect.runSync(getNestedSlugs(""))).toEqual([["cached"]]);
-    expect(Effect.runSync(getNestedSlugs(""))).toEqual([["cached"]]);
+    expect(await Effect.runPromise(getNestedSlugs(""))).toEqual([["cached"]]);
+    expect(await Effect.runPromise(getNestedSlugs(""))).toEqual([["cached"]]);
     expect(mockReadDirSync).toHaveBeenCalledTimes(2);
   });
 
-  it("refreshes nested slug scans after the folder cache is cleared", () => {
+  it("refreshes nested slug scans after the folder cache is cleared", async () => {
     mockReadDirSync
       .mockImplementationOnce(() => [
         { name: "first", isDirectory: () => true },
       ])
       .mockImplementationOnce(() => []);
 
-    expect(Effect.runSync(getNestedSlugs(""))).toEqual([["first"]]);
+    expect(await Effect.runPromise(getNestedSlugs(""))).toEqual([["first"]]);
 
-    Effect.runSync(clearFolderChildNamesCache());
+    await Effect.runPromise(clearFolderChildNamesCache());
     mockReadDirSync.mockClear();
     mockReadDirSync
       .mockImplementationOnce(() => [
@@ -104,48 +138,57 @@ describe("getNestedSlugs", () => {
       ])
       .mockImplementationOnce(() => []);
 
-    expect(Effect.runSync(getNestedSlugs(""))).toEqual([["second"]]);
+    expect(await Effect.runPromise(getNestedSlugs(""))).toEqual([["second"]]);
     expect(mockReadDirSync).toHaveBeenCalledTimes(2);
   });
 
-  it("preserves top-level directory order", () => {
+  it("preserves top-level directory order", async () => {
     mockReadDirSync.mockImplementationOnce(() => [
       { name: "a", isDirectory: () => true },
       { name: "b", isDirectory: () => true },
       { name: "c", isDirectory: () => true },
     ]);
 
-    expect(Effect.runSync(getNestedSlugs(""))).toEqual([["a"], ["b"], ["c"]]);
+    expect(await Effect.runPromise(getNestedSlugs(""))).toEqual([
+      ["a"],
+      ["b"],
+      ["c"],
+    ]);
   });
 
-  it("handles non-empty base paths", () => {
+  it("handles non-empty base paths", async () => {
     mockReadDirSync.mockImplementationOnce(() => [
       { name: "child", isDirectory: () => true },
     ]);
 
-    expect(Effect.runSync(getNestedSlugs("parent"))).toContainEqual(["child"]);
-  });
-
-  it("normalizes base paths before scanning", () => {
-    mockReadDirSync.mockImplementationOnce(() => [
-      { name: "child", isDirectory: () => true },
-    ]);
-
-    expect(Effect.runSync(getNestedSlugs("parent///"))).toContainEqual([
+    expect(await Effect.runPromise(getNestedSlugs("parent"))).toContainEqual([
       "child",
     ]);
   });
 
-  it("handles structures with only leaf directories", () => {
+  it("normalizes base paths before scanning", async () => {
+    mockReadDirSync.mockImplementationOnce(() => [
+      { name: "child", isDirectory: () => true },
+    ]);
+
+    expect(await Effect.runPromise(getNestedSlugs("parent///"))).toContainEqual(
+      ["child"]
+    );
+  });
+
+  it("handles structures with only leaf directories", async () => {
     mockReadDirSync.mockImplementationOnce(() => [
       { name: "leaf1", isDirectory: () => true },
       { name: "leaf2", isDirectory: () => true },
     ]);
 
-    expect(Effect.runSync(getNestedSlugs(""))).toEqual([["leaf1"], ["leaf2"]]);
+    expect(await Effect.runPromise(getNestedSlugs(""))).toEqual([
+      ["leaf1"],
+      ["leaf2"],
+    ]);
   });
 
-  it("handles deep nesting", () => {
+  it("handles deep nesting", async () => {
     let callCount = 0;
     mockReadDirSync.mockImplementation(() => {
       callCount += 1;
@@ -157,25 +200,25 @@ describe("getNestedSlugs", () => {
       return [];
     });
 
-    const deepest = Effect.runSync(getNestedSlugs("")).at(-1);
+    const deepest = (await Effect.runPromise(getNestedSlugs(""))).at(-1);
 
     expect(deepest?.length).toBeGreaterThan(1);
   });
 
-  it("returns an empty array when directory reads fail", () => {
+  it("returns an empty array when directory reads fail", async () => {
     mockReadDirSync.mockImplementation(() => {
       throw new Error("Directory not found");
     });
 
-    expect(Effect.runSync(getNestedSlugs(""))).toEqual([]);
+    expect(await Effect.runPromise(getNestedSlugs(""))).toEqual([]);
   });
 
-  it("treats invalid nested base paths as leaf nodes", () => {
-    expect(Effect.runSync(getNestedSlugs("../subject"))).toEqual([]);
+  it("treats invalid nested base paths as leaf nodes", async () => {
+    expect(await Effect.runPromise(getNestedSlugs("../subject"))).toEqual([]);
     expect(mockReadDirSync).not.toHaveBeenCalled();
   });
 
-  it("handles large directory trees", () => {
+  it("handles large directory trees", async () => {
     const dirCount = 100;
     mockReadDirSync.mockImplementationOnce(() =>
       Array.from({ length: dirCount }, (_, index) => ({
@@ -184,6 +227,6 @@ describe("getNestedSlugs", () => {
       }))
     );
 
-    expect(Effect.runSync(getNestedSlugs(""))).toHaveLength(dirCount);
+    expect(await Effect.runPromise(getNestedSlugs(""))).toHaveLength(dirCount);
   });
 });

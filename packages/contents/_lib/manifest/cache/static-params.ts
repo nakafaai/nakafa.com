@@ -12,7 +12,7 @@ import { Effect } from "effect";
 export function getContentStaticParamManifest(
   locales: readonly string[] = routing.locales
 ) {
-  return Effect.runSync(
+  return Effect.runPromise(
     contentStaticParamManifestCache.get(getContentManifestCacheKey(locales))
   );
 }
@@ -25,9 +25,10 @@ export function getContentStaticParams({
   basePath: ContentRoot;
   locales?: readonly string[];
 }) {
-  return filterParamsByLocales(
-    getContentStaticParamManifestForParams(locales).staticParams[basePath],
-    locales
+  return Effect.runPromise(
+    Effect.map(getContentStaticParamManifestForParams(locales), (manifest) =>
+      filterParamsByLocales(manifest.staticParams[basePath], locales)
+    )
   );
 }
 
@@ -37,17 +38,22 @@ export function getContentLocaleParams({
 }: {
   locales?: readonly string[];
 } = {}) {
-  return filterParamsByLocales(
-    getContentStaticParamManifestForParams(locales).localeParams,
-    locales
+  return Effect.runPromise(
+    Effect.map(getContentStaticParamManifestForParams(locales), (manifest) =>
+      filterParamsByLocales(manifest.localeParams, locales)
+    )
   );
 }
 
 /** Returns the static-param cache source used by locale-filterable adapters. */
 function getContentStaticParamManifestForParams(locales: readonly string[]) {
   if (isRoutingLocaleSubset(locales)) {
-    return getContentStaticParamManifest();
+    return contentStaticParamManifestCache.get(
+      getContentManifestCacheKey(routing.locales)
+    );
   }
 
-  return getContentStaticParamManifest(locales);
+  return contentStaticParamManifestCache.get(
+    getContentManifestCacheKey(locales)
+  );
 }

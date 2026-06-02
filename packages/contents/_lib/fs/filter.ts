@@ -1,6 +1,9 @@
-import type fs from "node:fs";
-
 const defaultExclude = ["_", "node_modules", ".", "coverage"] as const;
+
+interface ContentDirectoryEntry {
+  isDirectory: () => boolean;
+  name: string;
+}
 
 /** Returns whether a directory name matches an exclusion pattern. */
 export function shouldExclude(name: string, excludeItems: readonly string[]) {
@@ -15,7 +18,7 @@ export function shouldExclude(name: string, excludeItems: readonly string[]) {
 
 /** Returns child directory names after applying default and custom exclusions. */
 export function filterDirectoryNames(
-  files: fs.Dirent[],
+  files: ContentDirectoryEntry[],
   customExclude?: string[]
 ) {
   const dirNames: string[] = [];

@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCachedLlmsExerciseText } from "@/lib/llms/exercises";
 
@@ -73,15 +73,15 @@ beforeEach(() => {
   );
   mockGetMaterials.mockReturnValue(Effect.succeed([]));
   mockGetCurrentMaterial.mockReturnValue({
-    currentMaterial: {
+    currentMaterial: Option.some({
       description: "Practice with quantitative reasoning.",
       items: [],
       title: "Quantitative Knowledge",
-    },
-    currentMaterialItem: {
+    }),
+    currentMaterialItem: Option.some({
       href: `/${validSetPath}`,
       title: "Set 1",
-    },
+    }),
   });
   mockGetRenderableExercisesContent.mockReturnValue(
     Effect.succeed([exerciseWithLocalizedChoices, exerciseWithoutChoices])
@@ -144,14 +144,14 @@ describe("llms exercise markdown", () => {
       ])
     );
     mockGetCurrentMaterial.mockReturnValue({
-      currentMaterial: {
+      currentMaterial: Option.some({
         items: [],
         title: "Quantitative Knowledge",
-      },
-      currentMaterialItem: {
+      }),
+      currentMaterialItem: Option.some({
         href: `/${validSetPath}`,
         title: "Set 1",
-      },
+      }),
     });
 
     const text = await getCachedLlmsExerciseText({
@@ -194,8 +194,8 @@ describe("llms exercise markdown", () => {
     ).resolves.toContain("Exercises Content");
 
     mockGetCurrentMaterial.mockReturnValue({
-      currentMaterial: undefined,
-      currentMaterialItem: undefined,
+      currentMaterial: Option.none(),
+      currentMaterialItem: Option.none(),
     });
 
     await expect(

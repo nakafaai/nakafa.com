@@ -35,7 +35,6 @@ vi.mock("convex/nextjs", () => ({
         },
       ],
       limit: 1,
-      next_offset: null,
       offset: 0,
     })
   ),

@@ -34,16 +34,10 @@ export function getGradePath(category: SubjectCategory, grade: Grade) {
  * Narrows a grade value to a non-numeric grade when applicable.
  *
  * @param grade - Grade value to inspect
- * @returns Non-numeric grade label, or `undefined` for numeric grades
+ * @returns Non-numeric grade label when applicable
  */
 export function getGradeNonNumeric(grade: Grade) {
-  const parsedGrade = Schema.decodeUnknownOption(NonNumericGradeSchema)(grade);
-
-  if (Option.isNone(parsedGrade)) {
-    return;
-  }
-
-  return parsedGrade.value;
+  return Schema.decodeUnknownOption(NonNumericGradeSchema)(grade);
 }
 
 /**
@@ -61,7 +55,8 @@ export const getCategoryGrades = Effect.fn(
       Effect.orElse(() => Effect.succeed([]))
     ))
       .map(parseGrade)
-      .filter((grade) => grade !== null)
+      .filter(Option.isSome)
+      .map((grade) => grade.value)
   );
 
   return orderedGrades.filter((grade) => gradeFolders.has(grade));
@@ -124,7 +119,7 @@ export const getAllGradesWithSubjects = Effect.fn(
         Effect.map((subjects) => ({
           category,
           grade,
-          label: getGradeNonNumeric(grade) ?? grade,
+          label: Option.getOrElse(getGradeNonNumeric(grade), () => grade),
           href: getGradePath(category, grade),
           subjects,
         }))
@@ -136,11 +131,5 @@ export const getAllGradesWithSubjects = Effect.fn(
 
 /** Narrows one subject grade route segment to the supported grade union. */
 export function parseGrade(value: string) {
-  const parsedGrade = Schema.decodeUnknownOption(GradeSchema)(value);
-
-  if (Option.isNone(parsedGrade)) {
-    return null;
-  }
-
-  return parsedGrade.value;
+  return Schema.decodeUnknownOption(GradeSchema)(value);
 }

@@ -73,11 +73,21 @@ async function getResolvedParams(
   const grade = parseGrade(rawGrade);
   const material = parseMaterial(rawMaterial);
 
-  if (!(category && grade && material)) {
+  if (
+    Option.isNone(category) ||
+    Option.isNone(grade) ||
+    Option.isNone(material)
+  ) {
     notFound();
   }
 
-  return { category, grade, locale, material, slug };
+  return {
+    category: category.value,
+    grade: grade.value,
+    locale,
+    material: material.value,
+    slug,
+  };
 }
 
 export async function generateMetadata({
@@ -202,9 +212,14 @@ export default async function Page({
     getTranslations("Subject"),
   ]);
   const materialPath = getMaterialPath(category, grade, material);
-  const gradeLabel = tSubject(getGradeNonNumeric(grade) ?? "grade", { grade });
-  const publishedAt =
-    formatContentDateISO(contentMetadata.date) ?? contentMetadata.date;
+  const gradeLabel = tSubject(
+    Option.getOrElse(getGradeNonNumeric(grade), () => "grade"),
+    { grade }
+  );
+  const publishedAt = Option.getOrElse(
+    formatContentDateISO(contentMetadata.date),
+    () => contentMetadata.date
+  );
   const authorJsonLd = contentMetadata.authors.map((author) => ({
     "@type": "Person" as const,
     name: author.name,
@@ -310,9 +325,13 @@ async function getSubjectMetadataData({
   const chapterPath = getSlugPath(category, grade, material, [
     slug.at(0) ?? "",
   ]);
+  const currentMaterial = getCurrentMaterial(chapterPath, materials);
   const chapter =
     slug.length > 0 && materials.length > 0
-      ? getCurrentMaterial(chapterPath, materials).currentChapter?.title
+      ? Option.match(currentMaterial.currentChapter, {
+          onNone: () => undefined,
+          onSome: (chapter) => chapter.title,
+        })
       : undefined;
 
   return {

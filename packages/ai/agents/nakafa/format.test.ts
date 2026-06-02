@@ -22,7 +22,6 @@ describe("Nakafa formatter", () => {
         },
       ],
       limit: 1,
-      next_offset: null,
       offset: 0,
     });
 
@@ -74,9 +73,8 @@ describe("Nakafa formatter", () => {
     expect(text).toContain("Exercise number: 2");
     expect(text).toContain("Correct: Yes");
     expect(text).toContain("Correct: No");
-    expect(formatExercise({ ...result, exercise_number: null })).toContain(
-      "Exercise number: all"
-    );
+    const { exercise_number, ...wholeSetResult } = result;
+    expect(formatExercise(wholeSetResult)).toContain("Exercise number: all");
   });
 
   it("formats Quran references with and without tafsir", () => {

@@ -1,32 +1,37 @@
 import { InvalidPathError } from "@repo/contents/_shared/error";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockKyGet, mockReadFile, mockResolveContentsDir } = vi.hoisted(() => ({
-  mockKyGet: vi.fn(),
-  mockReadFile: vi.fn(),
-  mockResolveContentsDir: vi.fn(() => "/virtual/contents"),
-}));
+const { mockFetchText, mockReadFile, mockResolveContentsDir } = vi.hoisted(
+  () => ({
+    mockFetchText: vi.fn(),
+    mockReadFile: vi.fn(),
+    mockResolveContentsDir: vi.fn(() => "/virtual/contents"),
+  })
+);
 
-vi.mock("node:fs", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("node:fs")>();
+vi.mock("@repo/contents/_lib/io/content", async () => {
+  const { Effect, Layer } = await import("effect");
+
   return {
-    ...actual,
-    promises: {
-      ...actual.promises,
-      readFile: mockReadFile,
+    ContentIO: {
+      Default: Layer.empty,
+      fetchText: (url: string) =>
+        Effect.tryPromise({
+          catch: (cause) => cause,
+          try: async () => await mockFetchText(url),
+        }),
+      readFileString: (filePath: string) =>
+        Effect.tryPromise({
+          catch: (cause) => cause,
+          try: async () => await mockReadFile(filePath, "utf8"),
+        }),
     },
   };
 });
 
 vi.mock("@repo/contents/_lib/root", () => ({
   resolveContentsDir: mockResolveContentsDir,
-}));
-
-vi.mock("ky", () => ({
-  default: {
-    get: mockKyGet,
-  },
 }));
 
 import { readExerciseChoices } from "@repo/contents/_lib/exercises/source";
@@ -48,7 +53,7 @@ async function captureFailure<TSuccess, TError>(
 beforeEach(() => {
   mockResolveContentsDir.mockReturnValue("/virtual/contents");
   mockReadFile.mockReset();
-  mockKyGet.mockReset();
+  mockFetchText.mockReset();
 });
 
 afterEach(() => {
@@ -80,10 +85,12 @@ export default choices;`);
       readExerciseChoices("exercises/high-school/snbt/example/choices.ts")
     );
 
-    expect(result?.en[0]?.label).toBe("$$1\\frac{1}{8}; 0.875; \\frac{3}{4}$$");
+    expect(Option.getOrUndefined(result)?.en[0]?.label).toBe(
+      "$$1\\frac{1}{8}; 0.875; \\frac{3}{4}$$"
+    );
   });
 
-  it("returns null when a choices string is unterminated", async () => {
+  it("returns Option.none when a choices string is unterminated", async () => {
     mockReadFile.mockResolvedValue(
       'const choices = { id: [{ label: "broken, value: true }], en: [] };'
     );
@@ -92,7 +99,7 @@ export default choices;`);
       readExerciseChoices("exercises/high-school/snbt/example/choices.ts")
     );
 
-    expect(result).toBeNull();
+    expect(Option.isNone(result)).toBe(true);
   });
 
   it("fails with InvalidPathError for absolute choices paths", async () => {

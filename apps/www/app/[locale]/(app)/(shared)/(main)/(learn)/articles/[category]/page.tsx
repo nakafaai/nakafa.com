@@ -7,7 +7,7 @@ import { getArticleSummaries } from "@repo/contents/_lib/articles/slug";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
@@ -32,11 +32,13 @@ async function getResolvedParams(
 ) {
   const { locale: rawLocale, category: rawCategory } = await params;
   const locale = getLocaleOrThrow(rawLocale);
-  const category = parseArticleCategory(rawCategory);
+  const parsedCategory = parseArticleCategory(rawCategory);
 
-  if (!category) {
+  if (Option.isNone(parsedCategory)) {
     notFound();
   }
+
+  const category = parsedCategory.value;
 
   return { category, locale };
 }
@@ -92,12 +94,13 @@ export default function Page(
   const { params } = props;
   const { locale: rawLocale, category: rawCategory } = use(params);
   const locale = getLocaleOrThrow(rawLocale);
-  const category = parseArticleCategory(rawCategory);
+  const parsedCategory = parseArticleCategory(rawCategory);
 
-  if (!category) {
+  if (Option.isNone(parsedCategory)) {
     notFound();
   }
 
+  const category = parsedCategory.value;
   const FilePath = getCategoryPath(category);
 
   return (

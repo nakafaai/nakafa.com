@@ -3,7 +3,7 @@ import {
   getSlugPath,
 } from "@repo/contents/_lib/articles/slug";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockGetContentsMetadata } = vi.hoisted(() => ({
@@ -70,18 +70,26 @@ describe("getArticleSummaries", () => {
       locale: "en",
       basePath: "articles/politics/",
     });
+    const newerDate = Option.getOrElse(
+      formatContentDateISO("02/02/2024"),
+      () => ""
+    );
+    const olderDate = Option.getOrElse(
+      formatContentDateISO("01/02/2024"),
+      () => ""
+    );
     expect(articles).toStrictEqual([
       {
         title: "Newer Article",
         description: "Newer description",
-        date: formatContentDateISO("02/02/2024"),
+        date: newerDate,
         slug: "newer-article",
         official: true,
       },
       {
         title: "Older Article",
         description: "Older description",
-        date: formatContentDateISO("01/02/2024"),
+        date: olderDate,
         slug: "older-article",
         official: false,
       },
