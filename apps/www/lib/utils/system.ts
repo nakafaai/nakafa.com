@@ -1,4 +1,5 @@
-import { getFolderChildNames, getNestedSlugs } from "@repo/contents/_lib/fs";
+import { getFolderChildNames } from "@repo/contents/_lib/fs/cache";
+import { getNestedSlugs } from "@repo/contents/_lib/fs/nested-slugs";
 import { getContentMetadata } from "@repo/contents/_lib/metadata";
 import type { ContentMetadata } from "@repo/contents/_types/content";
 import { Data, Effect, Option } from "effect";
@@ -22,75 +23,70 @@ interface ParamConfig {
   slugParam?: string;
 }
 
+type StaticParam = Record<string, string | string[]>;
+
 /**
  * Generates static params for Next.js pages based on folder structure
  * @param config - Configuration for generating static params
  * @returns Array of parameter objects for generateStaticParams
  */
-export function getStaticParams(
+export function getStaticParams(config: ParamConfig): Promise<StaticParam[]> {
+  return Effect.runPromise(getStaticParamsEffect(config));
+}
+
+/** Builds static params from content folders as a native Effect program. */
+function getStaticParamsEffect(
   config: ParamConfig
-): Record<string, string | string[]>[] {
+): Effect.Effect<StaticParam[]> {
   const { basePath, paramNames, slugParam, isDeep = false } = config;
 
   if (paramNames.length === 0) {
-    return [];
+    return Effect.succeed([]);
   }
 
-  // Get first level folders
-  const firstParam = paramNames[0];
-  const firstLevelFolders = Effect.runSync(
-    Effect.match(getFolderChildNames(basePath), {
-      onFailure: () => [],
-      onSuccess: (names) => names,
-    })
-  );
+  return Effect.gen(function* () {
+    const firstParam = paramNames[0];
+    const firstLevelFolders = yield* Effect.match(
+      getFolderChildNames(basePath),
+      {
+        onFailure: () => [],
+        onSuccess: (names) => names,
+      }
+    );
 
-  if (paramNames.length === 1) {
-    // Simple case: just return the first level folder names
-    return firstLevelFolders.map((folder) => ({ [firstParam]: folder }));
-  }
+    if (paramNames.length === 1) {
+      return firstLevelFolders.map((folder) => ({ [firstParam]: folder }));
+    }
 
-  // For nested structures, process recursively
-  return firstLevelFolders.flatMap((firstFolder) => {
-    // Handle the rest of the params
-    const restParams = paramNames.slice(1);
-    const nextBasePath = `${basePath}/${firstFolder}`;
+    const params: StaticParam[] = [];
 
-    // For the last param level
-    if (restParams.length === 1) {
-      const lastParam = restParams[0];
-      const folders = Effect.runSync(
-        Effect.match(getFolderChildNames(nextBasePath), {
+    for (const firstFolder of firstLevelFolders) {
+      const restParams = paramNames.slice(1);
+      const nextBasePath = `${basePath}/${firstFolder}`;
+
+      if (restParams.length === 1) {
+        const lastParam = restParams[0];
+        const folders = yield* Effect.match(getFolderChildNames(nextBasePath), {
           onFailure: () => [],
           onSuccess: (names) => names,
-        })
-      );
+        });
 
-      // If this is a catch-all slug parameter with deep nesting
-      if (slugParam === lastParam && isDeep) {
-        // For each entry at this level, we need to explore all possible nested paths
-        const result: Record<string, string | string[]>[] = [];
+        if (slugParam === lastParam && isDeep) {
+          const result: StaticParam[] = [];
 
-        for (const folder of folders) {
-          const slugBasePath = `${nextBasePath}/${folder}`;
+          for (const folder of folders) {
+            const slugBasePath = `${nextBasePath}/${folder}`;
+            const nestedPaths = yield* getNestedSlugs(slugBasePath);
 
-          // Get all nested paths starting from this folder
-          const nestedPaths = getNestedSlugs(slugBasePath);
-
-          if (nestedPaths.length === 0) {
-            // If no nested paths, include the folder itself as a valid path
-            result.push({
-              [firstParam]: firstFolder,
-              [lastParam]: [folder],
-            });
-          } else {
-            // Include the folder itself as a valid path
             result.push({
               [firstParam]: firstFolder,
               [lastParam]: [folder],
             });
 
-            // Include nested paths with the folder as the first element
+            if (nestedPaths.length === 0) {
+              continue;
+            }
+
             for (const nestedPath of nestedPaths) {
               result.push({
                 [firstParam]: firstFolder,
@@ -98,34 +94,37 @@ export function getStaticParams(
               });
             }
           }
+
+          params.push(...result);
+          continue;
         }
 
-        return result;
+        params.push(
+          ...folders.map((folder) => ({
+            [firstParam]: firstFolder,
+            [lastParam]: folder,
+          }))
+        );
+        continue;
       }
 
-      // Standard case
-      return folders.map((folder) => ({
-        [firstParam]: firstFolder,
-        [lastParam]: folder,
-      }));
+      const nestedParams = yield* getStaticParamsEffect({
+        basePath: nextBasePath,
+        paramNames: restParams,
+        slugParam,
+        isDeep,
+      });
+
+      params.push(
+        ...nestedParams.map((nestedParam) => ({
+          [firstParam]: firstFolder,
+          ...nestedParam,
+        }))
+      );
     }
 
-    // Recursive case - need to go deeper
-    const nestedConfig: ParamConfig = {
-      basePath: nextBasePath,
-      paramNames: restParams,
-      slugParam,
-      isDeep,
-    };
-
-    const nestedParams = getStaticParams(nestedConfig);
-
-    // Combine the current param with nested params
-    return nestedParams.map((nestedParam) => ({
-      [firstParam]: firstFolder,
-      ...nestedParam,
-    }));
-  });
+    return params;
+  }).pipe(Effect.withSpan("www.system.getStaticParams"));
 }
 
 /**

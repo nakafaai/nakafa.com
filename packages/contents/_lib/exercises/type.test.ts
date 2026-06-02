@@ -1,9 +1,10 @@
 import { getSubjects } from "@repo/contents/_lib/exercises/type";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("getSubjects", () => {
   it("derives SNBT materials from existing material folders", () => {
-    expect(getSubjects("high-school", "snbt")).toEqual([
+    expect(Effect.runSync(getSubjects("high-school", "snbt"))).toEqual([
       {
         href: "/exercises/high-school/snbt/quantitative-knowledge",
         label: "quantitative-knowledge",
@@ -36,7 +37,7 @@ describe("getSubjects", () => {
   });
 
   it("derives middle-school materials from existing material folders", () => {
-    expect(getSubjects("middle-school", "grade-9")).toEqual([
+    expect(Effect.runSync(getSubjects("middle-school", "grade-9"))).toEqual([
       {
         href: "/exercises/middle-school/grade-9/mathematics",
         label: "mathematics",
@@ -45,6 +46,6 @@ describe("getSubjects", () => {
   });
 
   it("returns no subjects when a type has no material folders", () => {
-    expect(getSubjects("middle-school", "snbt")).toEqual([]);
+    expect(Effect.runSync(getSubjects("middle-school", "snbt"))).toEqual([]);
   });
 });

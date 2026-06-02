@@ -46,31 +46,6 @@ export function getLocaleSlugs(
   });
 }
 
-/** Returns every folder path under one content root. */
-export function getFolderPaths(
-  source: ContentRouteSource,
-  basePath: ContentRoot
-) {
-  return Effect.gen(function* () {
-    const topDirs = yield* getFolderNamesOrEmpty(source, basePath);
-    const paths = new Set<string>();
-
-    for (const topDir of topDirs) {
-      paths.add(topDir);
-
-      const nestedPaths = yield* source.getNestedSlugParts(
-        `${basePath}/${topDir}`
-      );
-
-      for (const pathParts of nestedPaths) {
-        paths.add(`${topDir}/${pathParts.join("/")}`);
-      }
-    }
-
-    return paths;
-  });
-}
-
 /** Returns all route candidates rooted at the content package. */
 export function getContentPathCandidates(source: ContentRouteSource) {
   return Effect.gen(function* () {
@@ -99,28 +74,26 @@ export function getContentPathCandidates(source: ContentRouteSource) {
 
 /** Builds every broad static-param group from one manifest source scan. */
 export function getStaticParams(
-  source: ContentRouteSource,
-  localeSlugs: readonly LocaleSlugEntry[]
+  localeSlugs: readonly LocaleSlugEntry[],
+  candidates: readonly ContentPathCandidate[]
 ) {
-  return Effect.gen(function* () {
-    return {
-      articles: yield* getStaticParamsForRoot(
-        source,
-        localeSlugs,
-        CONTENT_ROOT_VALUES.articles
-      ),
-      exercises: yield* getStaticParamsForRoot(
-        source,
-        localeSlugs,
-        CONTENT_ROOT_VALUES.exercises
-      ),
-      subject: yield* getStaticParamsForRoot(
-        source,
-        localeSlugs,
-        CONTENT_ROOT_VALUES.subject
-      ),
-    };
-  });
+  return {
+    articles: getStaticParamsForRoot(
+      localeSlugs,
+      candidates,
+      CONTENT_ROOT_VALUES.articles
+    ),
+    exercises: getStaticParamsForRoot(
+      localeSlugs,
+      candidates,
+      CONTENT_ROOT_VALUES.exercises
+    ),
+    subject: getStaticParamsForRoot(
+      localeSlugs,
+      candidates,
+      CONTENT_ROOT_VALUES.subject
+    ),
+  };
 }
 
 /** Builds static params for locale-aware catch-all routes. */
@@ -166,50 +139,68 @@ export function getExerciseApiParams(localeSlugs: readonly LocaleSlugEntry[]) {
 
 /** Builds broad static params for one content root. */
 function getStaticParamsForRoot(
-  source: ContentRouteSource,
   localeSlugs: readonly LocaleSlugEntry[],
+  candidates: readonly ContentPathCandidate[],
   root: ContentRoot
 ) {
-  return Effect.gen(function* () {
-    const folderPaths = yield* getFolderPaths(source, root);
-    const result: ContentManifestStaticParam[] = [];
+  const folderPaths = getFolderPathsForRoot(candidates, root);
+  const result: ContentManifestStaticParam[] = [];
 
-    for (const { locale, slugs } of localeSlugs) {
-      const mdxPaths = getMdxPathsForRoot(slugs, root);
+  for (const { locale, slugs } of localeSlugs) {
+    const mdxPaths = getMdxPathsForRoot(slugs, root);
 
-      for (const folderPath of folderPaths) {
+    for (const folderPath of folderPaths) {
+      result.push({
+        locale,
+        slug: folderPath.split("/"),
+      });
+    }
+
+    for (const mdxPath of mdxPaths) {
+      if (!folderPaths.has(mdxPath)) {
         result.push({
           locale,
-          slug: folderPath.split("/"),
+          slug: mdxPath.split("/"),
         });
-      }
-
-      for (const mdxPath of mdxPaths) {
-        if (!folderPaths.has(mdxPath)) {
-          result.push({
-            locale,
-            slug: mdxPath.split("/"),
-          });
-        }
-      }
-
-      if (root !== CONTENT_ROOT_VALUES.exercises) {
-        continue;
-      }
-
-      for (const exercisePath of getExerciseSetPaths(slugs)) {
-        const relativePath = exercisePath.slice("exercises/".length);
-        if (!folderPaths.has(relativePath)) {
-          result.push({
-            locale,
-            slug: relativePath.split("/"),
-          });
-        }
       }
     }
 
-    return result;
-  });
+    if (root !== CONTENT_ROOT_VALUES.exercises) {
+      continue;
+    }
+
+    for (const exercisePath of getExerciseSetPaths(slugs)) {
+      const relativePath = exercisePath.slice("exercises/".length);
+      if (!folderPaths.has(relativePath)) {
+        result.push({
+          locale,
+          slug: relativePath.split("/"),
+        });
+      }
+    }
+  }
+
+  return result;
+}
+
+/** Returns content-root-relative folder paths from the shared route candidates. */
+function getFolderPathsForRoot(
+  candidates: readonly ContentPathCandidate[],
+  root: ContentRoot
+) {
+  const paths = new Set<string>();
+
+  for (const candidate of candidates) {
+    const [candidateRoot, ...pathParts] = candidate.slugParts;
+
+    if (candidateRoot !== root || pathParts.length === 0) {
+      continue;
+    }
+
+    paths.add(pathParts.join("/"));
+  }
+
+  return paths;
 }
 
 /** Returns MDX paths below one content root without the root segment. */

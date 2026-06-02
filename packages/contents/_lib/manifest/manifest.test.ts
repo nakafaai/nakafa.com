@@ -3,8 +3,8 @@ import {
   clearFolderChildNamesCache,
   getFolderChildNames,
   getFolderChildNamesCacheVersion,
-  getNestedSlugs,
-} from "@repo/contents/_lib/fs";
+} from "@repo/contents/_lib/fs/cache";
+import { getNestedSlugs } from "@repo/contents/_lib/fs/nested-slugs";
 import { clearContentRouteManifestCache } from "@repo/contents/_lib/manifest/cache/lifecycle";
 import { getContentPublicRouteManifest } from "@repo/contents/_lib/manifest/cache/public-routes";
 import { getContentRouteManifest } from "@repo/contents/_lib/manifest/cache/route";
@@ -21,7 +21,8 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@repo/contents/_lib/cache");
-vi.mock("@repo/contents/_lib/fs");
+vi.mock("@repo/contents/_lib/fs/cache");
+vi.mock("@repo/contents/_lib/fs/nested-slugs");
 vi.mock("@repo/contents/_lib/quran");
 vi.mock("@repo/internationalization/src/routing", () => ({
   routing: {
@@ -92,8 +93,8 @@ function mockManifestSource() {
   vi.mocked(getFolderChildNames).mockImplementation((folder) =>
     Effect.succeed(folderTree.get(folder) ?? [])
   );
-  vi.mocked(getNestedSlugs).mockImplementation(
-    (folder) => nestedTree.get(folder) ?? []
+  vi.mocked(getNestedSlugs).mockImplementation((folder) =>
+    Effect.succeed(nestedTree.get(folder) ?? [])
   );
   vi.mocked(getMDXSlugsForLocale).mockImplementation((locale) =>
     locale === "en"
@@ -119,8 +120,9 @@ function mockManifestSource() {
 beforeEach(() => {
   folderCacheVersion = 0;
   vi.clearAllMocks();
-  vi.mocked(getFolderChildNamesCacheVersion).mockImplementation(
-    () => folderCacheVersion
+  vi.mocked(clearFolderChildNamesCache).mockReturnValue(Effect.void);
+  vi.mocked(getFolderChildNamesCacheVersion).mockImplementation(() =>
+    Effect.succeed(folderCacheVersion)
   );
   mockManifestSource();
   clearContentRouteManifestCache();

@@ -7,7 +7,9 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
+import { Effect } from "effect";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { use } from "react";
@@ -57,8 +59,16 @@ export default function Page(props: PageProps<"/[locale]/subject">) {
   return <PageContent locale={locale} />;
 }
 
+/** Reads subject grade listings inside a Next Cache Components boundary. */
+async function getCachedGradesWithSubjects() {
+  "use cache";
+  cacheLife("max");
+
+  return Effect.runSync(getAllGradesWithSubjects());
+}
+
 async function PageContent({ locale }: { locale: Locale }) {
-  const allGrades = getAllGradesWithSubjects();
+  const allGrades = await getCachedGradesWithSubjects();
   const categoryOrder = Array.from(
     new Set(allGrades.map((grade) => grade.category))
   );
