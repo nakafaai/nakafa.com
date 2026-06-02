@@ -41,8 +41,6 @@ import type { Group } from "three";
 const PAUSE_SECONDS = 1;
 const REACTION_DISTANCE_COLOR = "#0f9f95";
 const BRAKING_DISTANCE_COLOR = "#e97723";
-const LONG_PATH_VISIBLE_WIDTH = 6;
-const LONG_PATH_LEFT_OFFSET_RATIO = 0.82;
 
 interface StoppingDistanceLabProps {
   locale: StoppingDistanceLocale;
@@ -173,39 +171,35 @@ function StoppingDistanceCamera() {
 }
 
 function StoppingDistanceScene({ motion }: { motion: StoppingDistanceState }) {
-  const pathOffsetX = -getMotionCenterX(motion) - getLongPathOffsetX(motion);
+  const sceneRef = useRef<Group>(null);
 
   return (
-    <group>
+    <group ref={sceneRef}>
       <Road />
       <DistanceStrip
         color={REACTION_DISTANCE_COLOR}
-        endX={motion.reactionEndX + pathOffsetX}
-        startX={motion.startX + pathOffsetX}
+        endX={motion.reactionEndX}
+        startX={motion.startX}
         z={0.72}
       />
       <DistanceStrip
         color={BRAKING_DISTANCE_COLOR}
-        endX={motion.stopX + pathOffsetX}
-        startX={motion.reactionEndX + pathOffsetX}
+        endX={motion.stopX}
+        startX={motion.reactionEndX}
         z={0.72}
       />
-      <StopCone x={motion.stopX + pathOffsetX} />
-      <AnimatedCar
-        key={motion.speed}
-        motion={motion}
-        pathOffsetX={pathOffsetX}
-      />
+      <StopCone x={motion.stopX} />
+      <AnimatedCar key={motion.speed} motion={motion} sceneRef={sceneRef} />
     </group>
   );
 }
 
 function AnimatedCar({
   motion,
-  pathOffsetX,
+  sceneRef,
 }: {
   motion: StoppingDistanceState;
-  pathOffsetX: number;
+  sceneRef: RefObject<Group | null>;
 }) {
   const groupRef = useRef<Group>(null);
   const brakeDustRef = useRef<Group>(null);
@@ -223,8 +217,12 @@ function AnimatedCar({
     const elapsed =
       (state.clock.elapsedTime - animationStartRef.current) %
       getLoopSeconds(motion);
-    const carX = getAnimatedCarX(motion, elapsed) + pathOffsetX;
+    const carX = getAnimatedCarX(motion, elapsed);
     groupRef.current.position.set(carX, 0.025, 0);
+
+    if (sceneRef.current) {
+      sceneRef.current.position.x = -carX;
+    }
 
     if (!brakeDustRef.current) {
       return;
@@ -443,14 +441,4 @@ function getBrakingProgress(
 
 function lerp(start: number, end: number, progress: number) {
   return start + (end - start) * progress;
-}
-
-function getMotionCenterX(motion: StoppingDistanceState) {
-  return motion.startX + (motion.stopX - motion.startX) / 2;
-}
-
-function getLongPathOffsetX(motion: StoppingDistanceState) {
-  const pathLength = motion.stopX - motion.startX;
-  const extraLength = Math.max(0, pathLength - LONG_PATH_VISIBLE_WIDTH);
-  return extraLength * LONG_PATH_LEFT_OFFSET_RATIO;
 }

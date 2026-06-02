@@ -14,6 +14,8 @@ const MAX_STOPPING_DISTANCE = 120;
 const WORLD_TRACK_LENGTH = 11.2;
 const WORLD_START_X = 0;
 const WORLD_SCALE = WORLD_TRACK_LENGTH / MAX_STOPPING_DISTANCE;
+const WORLD_ROAD_MARGIN = WORLD_TRACK_LENGTH * 0.65;
+const WORLD_MAX_STOP_X = WORLD_START_X + MAX_STOPPING_DISTANCE * WORLD_SCALE;
 
 export const STOPPING_DISTANCE_CAMERA = {
   cameraPosition: [4.1, 3.4, 9.2],
@@ -22,8 +24,8 @@ export const STOPPING_DISTANCE_CAMERA = {
 
 export const STOPPING_DISTANCE_SCENE = {
   startX: WORLD_START_X,
-  roadCenterX: -3,
-  roadLength: 26,
+  roadCenterX: (WORLD_START_X + WORLD_MAX_STOP_X) / 2,
+  roadLength: WORLD_MAX_STOP_X - WORLD_START_X + WORLD_ROAD_MARGIN * 2,
   roadWidth: 1.9,
   worldScale: WORLD_SCALE,
 } as const;
