@@ -4,7 +4,6 @@ import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car-model";
 import {
-  DISPLACEMENT_DISTANCE_CAMERA,
   DISPLACEMENT_DISTANCE_CAR_MODEL_PATH,
   DISPLACEMENT_DISTANCE_CASE_IDS,
   DISPLACEMENT_DISTANCE_COPY,
@@ -15,6 +14,7 @@ import {
   formatMeterMath,
   formatVectorMath,
   getDisplacementDistanceState,
+  getDisplacementDistanceView,
   getRouteSampleAtProgress,
   isDisplacementDistanceCaseId,
   type RouteSegment,
@@ -56,6 +56,7 @@ export function DisplacementDistanceLab({
   const [caseId, setCaseId] = useState<DisplacementDistanceCaseId>("turn");
   const labels = DISPLACEMENT_DISTANCE_COPY[locale];
   const motion = useMemo(() => getDisplacementDistanceState(caseId), [caseId]);
+  const view = useMemo(() => getDisplacementDistanceView(motion), [motion]);
 
   function handleCaseChange(value: string) {
     if (!isDisplacementDistanceCaseId(value)) {
@@ -96,7 +97,7 @@ export function DisplacementDistanceLab({
           <ThreeCanvas
             camera={{
               fov: 43,
-              position: DISPLACEMENT_DISTANCE_CAMERA.cameraPosition,
+              position: view.cameraPosition,
             }}
             frameloop="always"
           >
@@ -116,7 +117,7 @@ export function DisplacementDistanceLab({
                 shadow-mapSize-width={1024}
                 shadow-normalBias={0.02}
               />
-              <DisplacementDistanceCamera />
+              <DisplacementDistanceCamera view={view} />
               <DisplacementDistanceScene motion={motion} />
             </Suspense>
           </ThreeCanvas>
@@ -159,17 +160,21 @@ export function DisplacementDistanceLab({
   );
 }
 
-function DisplacementDistanceCamera() {
+function DisplacementDistanceCamera({
+  view,
+}: {
+  view: ReturnType<typeof getDisplacementDistanceView>;
+}) {
   return (
     <CameraControls
       autoRotate={false}
-      cameraPosition={DISPLACEMENT_DISTANCE_CAMERA.cameraPosition}
-      cameraTarget={DISPLACEMENT_DISTANCE_CAMERA.cameraTarget}
+      cameraPosition={view.cameraPosition}
+      cameraTarget={view.cameraTarget}
       enablePan
       enableRotate
       enableZoom
-      maxDistance={14}
-      minDistance={3}
+      maxDistance={12}
+      minDistance={2.8}
     />
   );
 }

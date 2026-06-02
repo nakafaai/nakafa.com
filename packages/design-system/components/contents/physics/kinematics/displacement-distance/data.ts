@@ -24,13 +24,11 @@ export interface RouteSegment {
   start: RoutePoint;
 }
 
-export const DISPLACEMENT_DISTANCE_CAMERA = {
-  cameraPosition: [4.5, 3.6, 6.4],
-  cameraTarget: [0, 0.08, 0],
-} satisfies Record<string, readonly [number, number, number]>;
-
 export const DISPLACEMENT_DISTANCE_SCENE = {
   carScale: 0.52,
+  cameraDistanceScale: 0.72,
+  cameraMinimumDistance: 4.3,
+  cameraTargetY: 0.12,
   displacementLineY: 0.12,
   roadOverhang: 0.74,
   roadWidth: 1.26,
@@ -124,6 +122,32 @@ export function getDisplacementDistanceState(
     route,
     segments,
     start,
+  };
+}
+
+export function getDisplacementDistanceView(state: DisplacementDistanceState) {
+  const center = getRouteWeightedCenter(state.segments);
+  const span = getRouteSpan(state.route);
+  const distance = Math.max(
+    DISPLACEMENT_DISTANCE_SCENE.cameraMinimumDistance,
+    span * DISPLACEMENT_DISTANCE_SCENE.cameraDistanceScale
+  );
+  const direction = normalizePoint({ x: 0.52, z: 0.74 });
+  const height = distance * 0.42;
+  const target = [
+    center.x,
+    DISPLACEMENT_DISTANCE_SCENE.cameraTargetY,
+    center.z,
+  ] as const;
+  const position = [
+    center.x + direction.x * distance,
+    DISPLACEMENT_DISTANCE_SCENE.cameraTargetY + height,
+    center.z + direction.z * distance,
+  ] as const;
+
+  return {
+    cameraPosition: position,
+    cameraTarget: target,
   };
 }
 
@@ -228,6 +252,38 @@ function getRouteSegments(route: RoutePoint[]): RouteSegment[] {
   });
 }
 
+function getRouteWeightedCenter(segments: RouteSegment[]) {
+  const totalLength = segments.reduce(
+    (total, segment) => total + segment.length,
+    0
+  );
+
+  if (totalLength === 0) {
+    return { x: 0, z: 0 };
+  }
+
+  return segments.reduce(
+    (center, segment) => ({
+      x: center.x + (segment.center.x * segment.length) / totalLength,
+      z: center.z + (segment.center.z * segment.length) / totalLength,
+    }),
+    { x: 0, z: 0 }
+  );
+}
+
+function getRouteSpan(route: RoutePoint[]) {
+  const xValues = route.map((point) => point.x);
+  const zValues = route.map((point) => point.z);
+  const xSpan = Math.max(...xValues) - Math.min(...xValues);
+  const zSpan = Math.max(...zValues) - Math.min(...zValues);
+
+  return (
+    Math.max(xSpan, zSpan) +
+    DISPLACEMENT_DISTANCE_SCENE.roadWidth +
+    DISPLACEMENT_DISTANCE_SCENE.roadOverhang * 2
+  );
+}
+
 function getPointDistance(start: RoutePoint, end: RoutePoint) {
   return Math.hypot(end.x - start.x, end.z - start.z);
 }
@@ -238,6 +294,19 @@ function lerp(start: number, end: number, progress: number) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
+}
+
+function normalizePoint(point: RoutePoint) {
+  const length = Math.hypot(point.x, point.z);
+
+  if (length === 0) {
+    return point;
+  }
+
+  return {
+    x: point.x / length,
+    z: point.z / length,
+  };
 }
 
 function formatNumber(value: number) {
