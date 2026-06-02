@@ -1,4 +1,6 @@
 // @vitest-environment node
+
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearSitemapRouteCache,
@@ -22,7 +24,8 @@ const mockContentCache = vi.hoisted(() => ({
 
 const mockContentFolders = vi.hoisted(() => ({
   clearFolderChildNamesCache: vi.fn(),
-  getFolderChildNamesSync: vi.fn(),
+  getFolderChildNames: vi.fn(),
+  getNestedSlugs: vi.fn(),
 }));
 
 vi.mock("@repo/contents/_lib/cache", () => ({
@@ -31,7 +34,9 @@ vi.mock("@repo/contents/_lib/cache", () => ({
 
 vi.mock("@repo/contents/_lib/fs", () => ({
   clearFolderChildNamesCache: mockContentFolders.clearFolderChildNamesCache,
-  getFolderChildNamesSync: mockContentFolders.getFolderChildNamesSync,
+  getFolderChildNames: mockContentFolders.getFolderChildNames,
+  getFolderChildNamesCacheVersion: vi.fn(() => 0),
+  getNestedSlugs: mockContentFolders.getNestedSlugs,
 }));
 
 vi.mock("@repo/internationalization/src/routing", () => ({
@@ -42,8 +47,8 @@ vi.mock("@repo/internationalization/src/routing", () => ({
 }));
 
 function mockContentFolderTree(tree: Record<string, string[]>) {
-  mockContentFolders.getFolderChildNamesSync.mockImplementation(
-    (folder) => tree[folder] ?? []
+  mockContentFolders.getFolderChildNames.mockImplementation((folder) =>
+    Effect.succeed(tree[folder] ?? [])
   );
 }
 
@@ -53,7 +58,9 @@ beforeEach(() => {
   mockContentFolders.clearFolderChildNamesCache.mockClear();
   mockContentCache.getMDXSlugsForLocale.mockReset();
   mockContentCache.getMDXSlugsForLocale.mockReturnValue(mockContentCache.slugs);
-  mockContentFolders.getFolderChildNamesSync.mockReset();
+  mockContentFolders.getFolderChildNames.mockReset();
+  mockContentFolders.getNestedSlugs.mockReset();
+  mockContentFolders.getNestedSlugs.mockReturnValue([]);
   mockContentFolderTree({
     exercises: ["middle-school", "high-school"],
     "exercises/high-school": ["snbt"],
@@ -201,7 +208,7 @@ describe("sitemap route discovery", () => {
   });
 
   it("keeps sitemap discovery working when subject folders cannot be read", () => {
-    mockContentFolders.getFolderChildNamesSync.mockReturnValue([]);
+    mockContentFolders.getFolderChildNames.mockReturnValue(Effect.succeed([]));
 
     const routes = getSitemapRoutes();
 

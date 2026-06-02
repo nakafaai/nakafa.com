@@ -25,6 +25,13 @@ export function getFolderChildNamesCacheVersion() {
   return folderChildNamesCacheVersion;
 }
 
+/** Builds a stable cache key for one child-folder scan. */
+function getFolderChildNamesCacheKey(folder: string, exclude?: string[]) {
+  return exclude && exclude.length > 0
+    ? `${folder}\0${exclude.join("\0")}`
+    : folder;
+}
+
 /**
  * Validates that a folder path is safe for use within the contents directory.
  *
@@ -33,12 +40,6 @@ export function getFolderChildNamesCacheVersion() {
  *
  * @param folder - The folder path to validate
  * @returns Effect that succeeds if path is valid, fails with InvalidPathError otherwise
- *
- * @example
- * ```ts
- * const result = Effect.runSync(validatePath("subject/math"));
- * // Returns: undefined (success)
- * ```
  */
 function validatePath(folder: string): Effect.Effect<void, InvalidPathError> {
   if (folder.includes("..")) {
@@ -177,8 +178,7 @@ export function getFolderChildNamesSync(
   folder: string,
   exclude?: string[]
 ): string[] {
-  const cacheKey =
-    exclude && exclude.length > 0 ? `${folder}\0${exclude.join("\0")}` : folder;
+  const cacheKey = getFolderChildNamesCacheKey(folder, exclude);
   const cachedNames = folderChildNamesCache.get(cacheKey);
 
   if (cachedNames) {
@@ -227,10 +227,20 @@ export function getFolderChildNames(
   return Effect.gen(function* () {
     yield* validatePath(folder);
 
+    const cacheKey = getFolderChildNamesCacheKey(folder, exclude);
+    const cachedNames = folderChildNamesCache.get(cacheKey);
+
+    if (cachedNames) {
+      return cachedNames;
+    }
+
     const contentDir = path.join(contentsDir, folder);
     const files = yield* readDirectorySync(contentDir);
 
-    return filterDirectoryNames(files, DEFAULT_EXCLUDE, exclude);
+    const names = filterDirectoryNames(files, DEFAULT_EXCLUDE, exclude);
+    folderChildNamesCache.set(cacheKey, names);
+
+    return names;
   });
 }
 

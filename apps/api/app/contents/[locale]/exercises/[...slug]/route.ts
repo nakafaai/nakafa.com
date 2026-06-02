@@ -1,14 +1,10 @@
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getExercisesContent } from "@repo/contents/_lib/exercises/set";
 import {
   hasInvalidTryOutYearSlug,
   isTryOutCollectionSlug,
   LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
 } from "@repo/contents/_lib/exercises/slug";
-import {
-  getExerciseNumberPaths,
-  getExerciseSetPaths,
-} from "@repo/contents/_lib/params";
+import { getExerciseApiParamsForLocales } from "@repo/contents/_lib/manifest/cache/route-params";
 import { getScopedContent } from "@repo/contents/_lib/scoped";
 import {
   FileReadError,
@@ -17,7 +13,6 @@ import {
   MetadataParseError,
 } from "@repo/contents/_shared/error";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { routing } from "@repo/internationalization/src/routing";
 import { logError } from "@repo/utilities/logging/effect";
 import { Effect, Option, Schema } from "effect";
 import { NextResponse } from "next/server";
@@ -34,18 +29,7 @@ const LEGACY_TRY_OUT_SUFFIX_INDEX = 1;
  * large amount of pointless build work.
  */
 export function generateStaticParams() {
-  return routing.locales.flatMap((locale) => {
-    const mdxSlugs = getMDXSlugsForLocale(locale);
-    const exercisePaths = [
-      ...getExerciseSetPaths(mdxSlugs),
-      ...getExerciseNumberPaths(mdxSlugs),
-    ];
-
-    return exercisePaths.map((exercisePath) => ({
-      locale,
-      slug: exercisePath.slice("exercises/".length).split("/"),
-    }));
-  });
+  return getExerciseApiParamsForLocales();
 }
 
 /**

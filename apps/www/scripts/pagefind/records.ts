@@ -1,16 +1,15 @@
-import { getMDXSlugsForLocale } from "@repo/contents/_lib/cache";
 import { getContent } from "@repo/contents/_lib/content";
-import { getExerciseSetPaths } from "@repo/contents/_lib/exercises/collection";
 import {
   getCurrentMaterial,
   getMaterials as getExerciseMaterials,
 } from "@repo/contents/_lib/exercises/material";
 import { getExercisesContent } from "@repo/contents/_lib/exercises/set";
+import { getContentIndexManifest } from "@repo/contents/_lib/manifest/cache/route-params";
 import { getAllSurah, getSurah, getSurahName } from "@repo/contents/_lib/quran";
-import { CONTENT_ROOT_VALUES } from "@repo/contents/_types/content";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import type { ExercisesMaterialList } from "@repo/contents/_types/exercises/material";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { CustomRecord, HTMLFile, PagefindIndex } from "pagefind";
 import {
   countWords,
@@ -25,41 +24,32 @@ import {
 export async function addArticleRecords(index: PagefindIndex) {
   const entries = (
     await Promise.all(
-      routing.locales.map((locale) => {
-        const slugs = getMDXSlugsForLocale(locale).filter((slug) => {
-          const parts = slug.split("/");
-
-          return (
-            isIndexedMdxRoot(parts) && parts[0] === CONTENT_ROOT_VALUES.articles
+      getContentIndexManifest().indexedArticleEntries.map(
+        async ({ locale: rawLocale, slug }) => {
+          const locale = Schema.decodeUnknownSync(LocaleSchema)(rawLocale);
+          const content = await Effect.runPromise(
+            getContent(locale, slug, { includeMDX: false })
           );
-        });
+          const recordContent = [
+            content.metadata.title,
+            content.metadata.description ?? "",
+            extractMdxText(content.raw),
+          ].join("\n\n");
 
-        return Promise.all(
-          slugs.map(async (slug) => {
-            const content = await Effect.runPromise(
-              getContent(locale, slug, { includeMDX: false })
-            );
-            const recordContent = [
-              content.metadata.title,
-              content.metadata.description ?? "",
-              extractMdxText(content.raw),
-            ].join("\n\n");
-
-            return {
-              file: buildHtmlFile({
-                url: `/${locale}/${slug}`,
-                locale,
-                title: content.metadata.title,
-                description: content.metadata.description,
-                body: renderMdxHtml(content.raw),
-              }),
-              words: countWords(recordContent),
-            };
-          })
-        );
-      })
+          return {
+            file: buildHtmlFile({
+              url: `/${locale}/${slug}`,
+              locale,
+              title: content.metadata.title,
+              description: content.metadata.description,
+              body: renderMdxHtml(content.raw),
+            }),
+            words: countWords(recordContent),
+          };
+        }
+      )
     )
-  ).flat(2);
+  ).flat();
 
   return addHtmlFiles(index, entries);
 }
@@ -70,43 +60,34 @@ export async function addArticleRecords(index: PagefindIndex) {
 export async function addSubjectRecords(index: PagefindIndex) {
   const entries = (
     await Promise.all(
-      routing.locales.map((locale) => {
-        const slugs = getMDXSlugsForLocale(locale).filter((slug) => {
-          const parts = slug.split("/");
-
-          return (
-            isIndexedMdxRoot(parts) && parts[0] === CONTENT_ROOT_VALUES.subject
+      getContentIndexManifest().indexedSubjectEntries.map(
+        async ({ locale: rawLocale, slug }) => {
+          const locale = Schema.decodeUnknownSync(LocaleSchema)(rawLocale);
+          const content = await Effect.runPromise(
+            getContent(locale, slug, { includeMDX: false })
           );
-        });
+          const recordContent = [
+            content.metadata.title,
+            content.metadata.subject ?? "",
+            content.metadata.description ?? "",
+            extractMdxText(content.raw),
+          ].join("\n\n");
 
-        return Promise.all(
-          slugs.map(async (slug) => {
-            const content = await Effect.runPromise(
-              getContent(locale, slug, { includeMDX: false })
-            );
-            const recordContent = [
-              content.metadata.title,
-              content.metadata.subject ?? "",
-              content.metadata.description ?? "",
-              extractMdxText(content.raw),
-            ].join("\n\n");
-
-            return {
-              file: buildHtmlFile({
-                url: `/${locale}/${slug}`,
-                locale,
-                title: content.metadata.title,
-                description:
-                  content.metadata.description ?? content.metadata.subject,
-                body: renderMdxHtml(content.raw),
-              }),
-              words: countWords(recordContent),
-            };
-          })
-        );
-      })
+          return {
+            file: buildHtmlFile({
+              url: `/${locale}/${slug}`,
+              locale,
+              title: content.metadata.title,
+              description:
+                content.metadata.description ?? content.metadata.subject,
+              body: renderMdxHtml(content.raw),
+            }),
+            words: countWords(recordContent),
+          };
+        }
+      )
     )
-  ).flat(2);
+  ).flat();
 
   return addHtmlFiles(index, entries);
 }
@@ -127,67 +108,64 @@ export async function addExerciseRecords(index: PagefindIndex) {
 
   const records = (
     await Promise.all(
-      routing.locales.map((locale) =>
-        Promise.all(
-          getExerciseSetPaths(locale).map(async (setPath) => {
-            const exercises = await Effect.runPromise(
-              getExercisesContent({
-                filePath: setPath,
-                includeMDX: false,
-                locale,
-              })
+      getContentIndexManifest().indexedExerciseSetEntries.map(
+        async ({ locale: rawLocale, slug: setPath }) => {
+          const locale = Schema.decodeUnknownSync(LocaleSchema)(rawLocale);
+          const exercises = await Effect.runPromise(
+            getExercisesContent({
+              filePath: setPath,
+              includeMDX: false,
+              locale,
+            })
+          );
+
+          if (exercises.length === 0) {
+            return null;
+          }
+
+          const segments = setPath.split("/");
+          const materialPath = `/${segments.slice(0, 4).join("/")}`;
+          const materialCacheKey = `${locale}:${materialPath}`;
+          let materialList = materialListCache.get(materialCacheKey);
+
+          if (!materialList) {
+            materialList = Effect.runPromise(
+              getExerciseMaterials(materialPath, locale)
             );
+            materialListCache.set(materialCacheKey, materialList);
+          }
 
-            if (exercises.length === 0) {
-              return null;
-            }
+          const materials = await materialList;
+          const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
+            `/${setPath}`,
+            materials
+          );
+          const title =
+            currentMaterialItem?.title ??
+            currentMaterial?.title ??
+            segments.at(-1);
 
-            const segments = setPath.split("/");
-            const materialPath = `/${segments.slice(0, 4).join("/")}`;
-            const materialCacheKey = `${locale}:${materialPath}`;
-            let materialList = materialListCache.get(materialCacheKey);
+          if (!title) {
+            return null;
+          }
 
-            if (!materialList) {
-              materialList = Effect.runPromise(
-                getExerciseMaterials(materialPath, locale)
-              );
-              materialListCache.set(materialCacheKey, materialList);
-            }
-
-            const materials = await materialList;
-            const { currentMaterial, currentMaterialItem } = getCurrentMaterial(
-              `/${setPath}`,
-              materials
-            );
-            const title =
-              currentMaterialItem?.title ??
-              currentMaterial?.title ??
-              segments.at(-1);
-
-            if (!title) {
-              return null;
-            }
-
-            return {
-              url: `/${locale}/${setPath}`,
-              language: locale,
-              meta: { title },
-              content: [
-                title,
-                ...exercises.flatMap((exercise) => [
-                  exercise.question.metadata.title,
-                  extractMdxText(exercise.question.raw),
-                  extractMdxText(exercise.answer.raw),
-                ]),
-              ].join("\n\n"),
-            };
-          })
-        )
+          return {
+            url: `/${locale}/${setPath}`,
+            language: locale,
+            meta: { title },
+            content: [
+              title,
+              ...exercises.flatMap((exercise) => [
+                exercise.question.metadata.title,
+                extractMdxText(exercise.question.raw),
+                extractMdxText(exercise.answer.raw),
+              ]),
+            ].join("\n\n"),
+          };
+        }
       )
     )
-  )
-    .flat(2)
-    .filter((record) => record !== null);
+  ).filter((record) => record !== null);
 
   return addRecords(index, records);
 }
@@ -313,16 +291,4 @@ function buildHtmlFile({
       "</html>",
     ].join(""),
   };
-}
-
-/**
- * Checks whether a slug belongs to one of the MDX roots we index directly.
- */
-function isIndexedMdxRoot(parts: string[]) {
-  const [root] = parts;
-
-  return (
-    root === CONTENT_ROOT_VALUES.articles ||
-    root === CONTENT_ROOT_VALUES.subject
-  );
 }

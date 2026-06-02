@@ -262,10 +262,13 @@ describe("generateContentParams", () => {
     vi.mocked(getMDXSlugsForLocale).mockReturnValue([]);
 
     generateContentParams({ basePath: "articles", locales: ["en"] });
+    const folderCalls = vi.mocked(getFolderChildNames).mock.calls.length;
+    const nestedCalls = vi.mocked(getNestedSlugs).mock.calls.length;
+
     generateContentParams({ basePath: "articles", locales: ["id"] });
 
-    expect(getFolderChildNames).toHaveBeenCalledTimes(1);
-    expect(getNestedSlugs).toHaveBeenCalledTimes(1);
+    expect(getFolderChildNames).toHaveBeenCalledTimes(folderCalls);
+    expect(getNestedSlugs).toHaveBeenCalledTimes(nestedCalls);
   });
 
   it("refreshes folder discovery after folder cache invalidation", () => {
@@ -277,6 +280,7 @@ describe("generateContentParams", () => {
       basePath: "articles",
       locales: ["en"],
     });
+    const folderCalls = vi.mocked(getFolderChildNames).mock.calls.length;
 
     folderCacheVersion += 1;
     vi.mocked(getFolderChildNames).mockReturnValue(Effect.succeed(["new"]));
@@ -289,7 +293,9 @@ describe("generateContentParams", () => {
     expect(firstResult).toContainEqual({ locale: "en", slug: ["old"] });
     expect(secondResult).toContainEqual({ locale: "en", slug: ["new"] });
     expect(secondResult).not.toContainEqual({ locale: "en", slug: ["old"] });
-    expect(getFolderChildNames).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(getFolderChildNames).mock.calls.length).toBeGreaterThan(
+      folderCalls
+    );
   });
 });
 
@@ -436,9 +442,17 @@ describe("generateLocaleParams", () => {
     vi.mocked(getFolderChildNames).mockReturnValue(
       Effect.succeed(["subject", "articles"])
     );
-    vi.mocked(getNestedSlugs)
-      .mockReturnValueOnce([["math"]])
-      .mockReturnValueOnce([["politics"]]);
+    vi.mocked(getNestedSlugs).mockImplementation((folder) => {
+      if (folder === "subject") {
+        return [["math"]];
+      }
+
+      if (folder === "articles") {
+        return [["politics"]];
+      }
+
+      return [];
+    });
     vi.mocked(getMDXSlugsForLocale).mockImplementation((locale) =>
       locale === "en"
         ? ["subject", "subject/math", "articles/politics"]
@@ -447,7 +461,6 @@ describe("generateLocaleParams", () => {
 
     const result = generateLocaleParams({ locales: ["en", "id"] });
 
-    expect(getNestedSlugs).toHaveBeenCalledTimes(2);
     expect(result).toContainEqual({ locale: "en", slug: ["subject", "math"] });
     expect(result).toContainEqual({
       locale: "id",
@@ -464,10 +477,13 @@ describe("generateLocaleParams", () => {
     ]);
 
     generateLocaleParams({ locales: ["en"] });
+    const folderCalls = vi.mocked(getFolderChildNames).mock.calls.length;
+    const nestedCalls = vi.mocked(getNestedSlugs).mock.calls.length;
+
     generateLocaleParams({ locales: ["en"] });
 
-    expect(getFolderChildNames).toHaveBeenCalledTimes(1);
-    expect(getNestedSlugs).toHaveBeenCalledTimes(1);
+    expect(getFolderChildNames).toHaveBeenCalledTimes(folderCalls);
+    expect(getNestedSlugs).toHaveBeenCalledTimes(nestedCalls);
   });
 
   it("refreshes content path discovery after folder cache invalidation", () => {
@@ -476,6 +492,7 @@ describe("generateLocaleParams", () => {
     vi.mocked(getMDXSlugsForLocale).mockReturnValue(["subject"]);
 
     const firstResult = generateLocaleParams({ locales: ["en"] });
+    const folderCalls = vi.mocked(getFolderChildNames).mock.calls.length;
 
     folderCacheVersion += 1;
     vi.mocked(getFolderChildNames).mockReturnValue(
@@ -491,6 +508,8 @@ describe("generateLocaleParams", () => {
       locale: "en",
       slug: ["subject"],
     });
-    expect(getFolderChildNames).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(getFolderChildNames).mock.calls.length).toBeGreaterThan(
+      folderCalls
+    );
   });
 });

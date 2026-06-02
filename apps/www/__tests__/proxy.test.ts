@@ -111,9 +111,11 @@ describe("proxy", () => {
   });
 
   it("keeps binary 3D model assets out of the locale proxy matcher", () => {
-    expect(config.matcher[0]).toContain("glb");
-    expect(config.matcher[0]).toContain("gltf");
-    expect(config.matcher[0]).toContain("bin");
+    const matcher = config.matcher ?? [];
+
+    expect(matcher[0]).toContain("glb");
+    expect(matcher[0]).toContain("gltf");
+    expect(matcher[0]).toContain("bin");
   });
 
   it("delegates regular routes to the locale middleware", () => {

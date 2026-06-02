@@ -1,4 +1,4 @@
-import { EvilIcon, News01Icon } from "@hugeicons/core-free-icons";
+import { EvilIcon } from "@hugeicons/core-free-icons";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { ArticleCategorySchema } from "@repo/contents/_types/articles/category";
 import { Option, Schema } from "effect";
@@ -10,12 +10,11 @@ import { Option, Schema } from "effect";
  * @returns Hugeicons icon for the category
  */
 export function getCategoryIcon(category: ArticleCategory) {
-  switch (category) {
-    case "politics":
-      return EvilIcon;
-    default:
-      return News01Icon;
-  }
+  const icons = {
+    politics: EvilIcon,
+  } satisfies Record<ArticleCategory, typeof EvilIcon>;
+
+  return icons[category];
 }
 
 /**
