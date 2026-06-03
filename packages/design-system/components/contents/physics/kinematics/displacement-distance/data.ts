@@ -1,5 +1,5 @@
 export const DISPLACEMENT_DISTANCE_CAR_MODEL_PATH =
-  "/models/physics/kinematics/kenney-car-kit/sedan-sports.glb";
+  "/models/physics/kinematics/kenney-car-kit/taxi.glb";
 
 export const DISPLACEMENT_DISTANCE_CASE_IDS = [
   "straight",

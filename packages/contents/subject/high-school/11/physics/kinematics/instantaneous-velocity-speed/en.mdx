@@ -1,3 +1,5 @@
+import { InstantaneousVelocitySpeedLab } from "@repo/design-system/components/contents/physics/kinematics/instantaneous-velocity-speed/lab";
+
 export const metadata = {
   title: "Instantaneous Velocity and Speed",
   description:
@@ -25,20 +27,22 @@ If motion is recorded as position data over time, the instantaneous value can be
 
 The smaller the time interval, the closer the reading is to the value at that exact instant. That is why an instantaneous value does not need to wait until the whole trip is over.
 
-## Reading a Speedometer
+<InstantaneousVelocitySpeedLab locale="en" />
 
-A speedometer reads speed at one snapshot in time. The direction of motion must still be stated separately so the speed reading becomes an instantaneous velocity.
+## Reading Instant Motion
 
-At <InlineMath math="t=6 \text{ s}" />, the instantaneous speed is <InlineMath math="20 \text{ m/s}" />. If the direction is rightward, the instantaneous velocity is <InlineMath math="+20 \text{ m/s}" />.
+The measuring point in the simulation represents the place where motion is read at one instant. The speed gives the magnitude of the reading, while the car's direction as it passes the measuring point sets the sign of its velocity.
 
-At <InlineMath math="t=9 \text{ s}" />, the instantaneous speed is <InlineMath math="8 \text{ m/s}" />, but the velocity is <InlineMath math="-8 \text{ m/s}" /> because the direction is leftward.
+At <InlineMath math="t=6 \text{ s}" />, the car moves rightward with an instantaneous speed of <InlineMath math="20 \text{ m/s}" />. Because rightward is chosen as the positive direction, the instantaneous velocity is <InlineMath math="+20 \text{ m/s}" />.
+
+At <InlineMath math="t=9 \text{ s}" />, the car moves leftward with an instantaneous speed of <InlineMath math="8 \text{ m/s}" />. Because leftward is opposite the positive direction, the instantaneous velocity is <InlineMath math="-8 \text{ m/s}" />.
 
 | Time | Speed reading | Direction of motion | Instantaneous velocity |
 | :--- | :------------ | :------------------ | :--------------------- |
 | <InlineMath math="6 \text{ s}" /> | <InlineMath math="20 \text{ m/s}" /> | rightward | <InlineMath math="+20 \text{ m/s}" /> |
 | <InlineMath math="9 \text{ s}" /> | <InlineMath math="8 \text{ m/s}" /> | leftward | <InlineMath math="-8 \text{ m/s}" /> |
 
-So two speedometer readings can both be written as speeds, but instantaneous velocity still needs direction.
+So instantaneous speed is always written as an unsigned magnitude, while instantaneous velocity uses a sign to show direction.
 
 ## Not the Trip Average
 

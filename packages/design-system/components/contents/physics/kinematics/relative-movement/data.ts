@@ -1,5 +1,8 @@
-export const RELATIVE_MOVEMENT_CAR_MODEL_PATH =
-  "/models/physics/kinematics/kenney-car-kit/sedan-sports.glb";
+export const RELATIVE_MOVEMENT_OBSERVER_CAR_MODEL_PATH =
+  "/models/physics/kinematics/kenney-car-kit/hatchback-sports.glb";
+
+export const RELATIVE_MOVEMENT_TARGET_CAR_MODEL_PATH =
+  "/models/physics/kinematics/kenney-car-kit/race.glb";
 
 export const RELATIVE_MOVEMENT_CASE_IDS = [
   "same-direction",

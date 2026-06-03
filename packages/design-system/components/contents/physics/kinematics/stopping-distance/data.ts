@@ -1,5 +1,5 @@
 export const STOPPING_DISTANCE_CAR_MODEL_PATH =
-  "/models/physics/kinematics/kenney-car-kit/sedan-sports.glb";
+  "/models/physics/kinematics/kenney-car-kit/suv.glb";
 
 export const STOPPING_DISTANCE_SPEEDS = [10, 20, 30] as const;
 

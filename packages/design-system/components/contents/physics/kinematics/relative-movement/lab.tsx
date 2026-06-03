@@ -7,10 +7,11 @@ import {
   getRelativeMovementState,
   isRelativeMovementCaseId,
   RELATIVE_MOVEMENT_CAMERA,
-  RELATIVE_MOVEMENT_CAR_MODEL_PATH,
   RELATIVE_MOVEMENT_CASE_IDS,
   RELATIVE_MOVEMENT_COPY,
+  RELATIVE_MOVEMENT_OBSERVER_CAR_MODEL_PATH,
   RELATIVE_MOVEMENT_SCENE,
+  RELATIVE_MOVEMENT_TARGET_CAR_MODEL_PATH,
   type RelativeMovementCaseId,
   type RelativeMovementLocale,
   type RelativeMovementState,
@@ -210,13 +211,21 @@ function AnimatedCarPair({ motion }: { motion: RelativeMovementState }) {
         position={[0, 0.025, RELATIVE_MOVEMENT_SCENE.laneOffset]}
         ref={observerRef}
       >
-        <Car accentColor={OBSERVER_COLOR} heading="right" />
+        <Car
+          accentColor={OBSERVER_COLOR}
+          heading="right"
+          modelPath={RELATIVE_MOVEMENT_OBSERVER_CAR_MODEL_PATH}
+        />
       </group>
       <group
         position={[0, 0.025, -RELATIVE_MOVEMENT_SCENE.laneOffset]}
         ref={targetRef}
       >
-        <Car accentColor={TARGET_COLOR} heading={motion.targetHeading} />
+        <Car
+          accentColor={TARGET_COLOR}
+          heading={motion.targetHeading}
+          modelPath={RELATIVE_MOVEMENT_TARGET_CAR_MODEL_PATH}
+        />
       </group>
     </>
   );
@@ -225,10 +234,12 @@ function AnimatedCarPair({ motion }: { motion: RelativeMovementState }) {
 function Car({
   accentColor,
   heading,
+  modelPath,
   position,
 }: {
   accentColor: string;
   heading: "left" | "right";
+  modelPath: string;
   position?: [number, number, number];
 }) {
   const yRotation = heading === "right" ? Math.PI / 2 : -Math.PI / 2;
@@ -236,10 +247,7 @@ function Car({
   return (
     <group position={position} rotation={[0, yRotation, 0]} scale={CAR_SCALE}>
       <CarContactShadow />
-      <PhysicsCarModel
-        bodyColor={accentColor}
-        modelPath={RELATIVE_MOVEMENT_CAR_MODEL_PATH}
-      />
+      <PhysicsCarModel bodyColor={accentColor} modelPath={modelPath} />
     </group>
   );
 }

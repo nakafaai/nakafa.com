@@ -1,3 +1,5 @@
+import { InstantaneousVelocitySpeedLab } from "@repo/design-system/components/contents/physics/kinematics/instantaneous-velocity-speed/lab";
+
 export const metadata = {
   title: "Kecepatan dan Kelajuan Sesaat",
   description:
@@ -25,20 +27,22 @@ Jika gerak direkam sebagai data posisi terhadap waktu, nilai sesaat dapat dibaya
 
 Semakin kecil selang waktu yang dipakai, semakin dekat bacaan itu ke nilai tepat pada saat tersebut. Itulah mengapa nilai sesaat tidak perlu menunggu perjalanan selesai.
 
-## Membaca Speedometer
+<InstantaneousVelocitySpeedLab locale="id" />
 
-Speedometer membaca kelajuan pada satu cuplikan waktu. Arah gerak tetap perlu disebut terpisah agar bacaan kelajuan berubah menjadi kecepatan sesaat.
+## Membaca Gerak Sesaat
 
-Pada <InlineMath math="t=6 \text{ s}" />, kelajuan sesaatnya <InlineMath math="20 \text{ m/s}" />. Jika arah geraknya ke kanan, kecepatan sesaatnya <InlineMath math="+20 \text{ m/s}" />.
+Titik ukur pada simulasi mewakili tempat gerak dibaca pada satu momen. Angka kelajuan memberi besar bacaan, sedangkan arah mobil saat melewati titik ukur menentukan tanda kecepatannya.
 
-Pada <InlineMath math="t=9 \text{ s}" />, kelajuan sesaatnya <InlineMath math="8 \text{ m/s}" />, tetapi kecepatannya <InlineMath math="-8 \text{ m/s}" /> karena arah geraknya ke kiri.
+Pada <InlineMath math="t=6 \text{ s}" />, mobil bergerak ke kanan dengan kelajuan sesaat <InlineMath math="20 \text{ m/s}" />. Karena arah kanan dipilih sebagai arah positif, kecepatan sesaatnya <InlineMath math="+20 \text{ m/s}" />.
+
+Pada <InlineMath math="t=9 \text{ s}" />, mobil bergerak ke kiri dengan kelajuan sesaat <InlineMath math="8 \text{ m/s}" />. Karena arah kiri berlawanan dengan arah positif, kecepatan sesaatnya <InlineMath math="-8 \text{ m/s}" />.
 
 | Waktu | Bacaan kelajuan | Arah gerak | Kecepatan sesaat |
 | :---- | :-------------- | :--------- | :---------------- |
 | <InlineMath math="6 \text{ s}" /> | <InlineMath math="20 \text{ m/s}" /> | ke kanan | <InlineMath math="+20 \text{ m/s}" /> |
 | <InlineMath math="9 \text{ s}" /> | <InlineMath math="8 \text{ m/s}" /> | ke kiri | <InlineMath math="-8 \text{ m/s}" /> |
 
-Jadi, dua bacaan speedometer sama-sama bisa ditulis sebagai kelajuan, tetapi kecepatan sesaatnya tetap membutuhkan arah.
+Jadi, kelajuan sesaat selalu ditulis sebagai besar yang tidak bertanda, sedangkan kecepatan sesaat memakai tanda untuk menunjukkan arah gerak.
 
 ## Bukan Rata-Rata Perjalanan
 

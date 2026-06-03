@@ -1,5 +1,5 @@
 export const UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH =
-  "/models/physics/kinematics/kenney-car-kit/sedan-sports.glb";
+  "/models/physics/kinematics/kenney-car-kit/kart-oobi.glb";
 
 export const UNIFORM_CIRCULAR_MOTION_PERIODS = [8, 6, 4] as const;
 
