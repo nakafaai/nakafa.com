@@ -43,8 +43,18 @@ vi.mock("@repo/contents/_lib/metadata", () => ({
 }));
 
 vi.mock("@repo/contents/_lib/quran", () => ({
-  getAllSurah: () => [],
-  getSurahName: () => "",
+  getAllSurah: () => [
+    {
+      name: {
+        translation: {
+          en: "Opening",
+          id: "Pembuka",
+        },
+      },
+      number: 1,
+    },
+  ],
+  getSurahName: () => "Opening",
 }));
 
 describe("Nakafa agent content index", () => {
@@ -70,6 +80,10 @@ describe("Nakafa agent content index", () => {
         expect.objectContaining({
           description: "",
           route: "subject/empty",
+        }),
+        expect.objectContaining({
+          description: "Opening",
+          route: "quran/1",
         }),
       ])
     );

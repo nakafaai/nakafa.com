@@ -10,6 +10,8 @@ import { formatRouteTitle } from "@/lib/llms/format";
 import { getQuranRouteMetadata } from "@/lib/llms/quran";
 import { getSitemapRoutes } from "@/lib/sitemap/routes";
 
+const LLMS_ENTRY_BUILD_CONCURRENCY = 16;
+
 /** Builds sitemap-aligned llms entries for one locale. */
 const buildLocalizedLlmsEntries = Effect.fn("www.llms.entries")(function* (
   locale: Locale
@@ -22,7 +24,7 @@ const buildLocalizedLlmsEntries = Effect.fn("www.llms.entries")(function* (
     routes,
     (route) => buildLocalizedLlmsEntry({ locale, route }),
     {
-      concurrency: "unbounded",
+      concurrency: LLMS_ENTRY_BUILD_CONCURRENCY,
     }
   );
 });

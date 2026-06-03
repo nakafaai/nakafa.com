@@ -1,12 +1,68 @@
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { Nakafa, verifyNakafaContent } from "@repo/contents/_lib/agent/service";
 import { Effect, Option } from "effect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const ARTICLE_CONTENT_ID =
   "en/articles/politics/dynastic-politics-asian-values";
 const EXERCISE_CONTENT_ID =
   "en/exercises/high-school/snbt/general-knowledge/try-out/2026/set-2";
+
+vi.mock("@repo/contents/_lib/agent/taxonomy/read", async () => {
+  const { Effect } = await import("effect");
+
+  return {
+    getNakafaAgentTaxonomy: () =>
+      Effect.succeed({
+        sections: ["articles"],
+      }),
+  };
+});
+
+vi.mock("@repo/contents/_lib/agent/read/markdown", async () => {
+  const { Effect, Option } = await import("effect");
+
+  return {
+    getNakafaAgentMarkdown: (contentRef: string) => {
+      if (contentRef.includes("/missing")) {
+        return Effect.succeed(Option.none());
+      }
+
+      return Effect.succeed(Option.some({ contentRef }));
+    },
+  };
+});
+
+vi.mock("@repo/contents/_lib/agent/exercise/read", async () => {
+  const { Effect, Option } = await import("effect");
+
+  return {
+    getNakafaAgentExercise: (contentRef: string) => {
+      if (contentRef.includes("/missing")) {
+        return Effect.succeed(Option.none());
+      }
+
+      return Effect.succeed(Option.some({ contentRef }));
+    },
+  };
+});
+
+vi.mock("@repo/contents/_lib/agent/quran/read", async () => {
+  const { Effect, Option } = await import("effect");
+
+  return {
+    getNakafaAgentQuranReference: () =>
+      Effect.succeed(Option.some({ name: "Al-Fatihah" })),
+  };
+});
+
+vi.mock("@repo/contents/_lib/quran", async () => {
+  const { Effect } = await import("effect");
+
+  return {
+    getSurah: () => Effect.succeed({ number: 1, numberOfVerses: 1 }),
+  };
+});
 
 describe("Nakafa service", () => {
   it("exposes the shared read, exercise, Quran, taxonomy, and verify contract", async () => {
