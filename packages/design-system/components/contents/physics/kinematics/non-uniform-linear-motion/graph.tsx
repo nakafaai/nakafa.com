@@ -1,4 +1,5 @@
 import {
+  GLBB_SCENARIOS,
   type GlbbLabels,
   type GlbbScenario,
   getFinalVelocity,
@@ -6,18 +7,26 @@ import {
 import type { ChartConfig } from "@repo/design-system/components/ui/chart";
 import {
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   getColorVariable,
 } from "@repo/design-system/components/ui/chart";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
-const MAX_TIME = 6;
-const MAX_VELOCITY = 12;
+const MAX_TIME = getAxisMaximum(
+  Math.max(...GLBB_SCENARIOS.map((scenario) => scenario.duration)),
+  1
+);
+const MAX_OBSERVED_VELOCITY = Math.max(
+  ...GLBB_SCENARIOS.flatMap((scenario) => [
+    scenario.initialVelocity,
+    getFinalVelocity(scenario),
+  ])
+);
+const VELOCITY_TICK_STEP = getNiceTickStep(MAX_OBSERVED_VELOCITY);
+const MAX_VELOCITY = getAxisMaximum(MAX_OBSERVED_VELOCITY, VELOCITY_TICK_STEP);
 const TIME_TICKS = getTicks(MAX_TIME, 1);
-const VELOCITY_TICKS = getTicks(MAX_VELOCITY, 2);
+const VELOCITY_TICKS = getTicks(MAX_VELOCITY, VELOCITY_TICK_STEP);
 
 export function VelocityTimeGraph({
   labels,
@@ -89,7 +98,6 @@ export function VelocityTimeGraph({
           strokeWidth={2}
           type="linear"
         />
-        <ChartLegend content={<ChartLegendContent verticalAlign="bottom" />} />
       </AreaChart>
     </ChartContainer>
   );
@@ -98,7 +106,7 @@ export function VelocityTimeGraph({
 const CHART_MARGIN = {
   top: 20,
   right: 24,
-  bottom: 36,
+  bottom: 8,
   left: 8,
 };
 
@@ -125,4 +133,29 @@ function getTicks(maxValue: number, step: number) {
   const tickCount = Math.floor(maxValue / step) + 1;
 
   return Array.from({ length: tickCount }, (_, index) => index * step);
+}
+
+function getAxisMaximum(maxValue: number, step: number) {
+  return Math.ceil(maxValue / step) * step;
+}
+
+function getNiceTickStep(maxValue: number) {
+  const targetTickCount = 6;
+  const rawStep = maxValue / (targetTickCount - 1);
+  const magnitude = 10 ** Math.floor(Math.log10(rawStep));
+  const normalizedStep = rawStep / magnitude;
+
+  if (normalizedStep <= 1) {
+    return magnitude;
+  }
+
+  if (normalizedStep <= 2) {
+    return 2 * magnitude;
+  }
+
+  if (normalizedStep <= 5) {
+    return 5 * magnitude;
+  }
+
+  return 10 * magnitude;
 }

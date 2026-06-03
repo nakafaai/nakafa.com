@@ -7,8 +7,6 @@ import {
 import type { ChartConfig } from "@repo/design-system/components/ui/chart";
 import {
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   getColorVariable,
@@ -133,7 +131,6 @@ export function AccelerationGraph({
           strokeWidth={2}
           type="linear"
         />
-        <ChartLegend content={<ChartLegendContent verticalAlign="bottom" />} />
       </LineChart>
     </ChartContainer>
   );
@@ -168,7 +165,7 @@ function getTicks(maxValue: number, step: number) {
 const CHART_MARGIN = {
   top: 20,
   right: 24,
-  bottom: 36,
+  bottom: 8,
   left: 8,
 };
 
