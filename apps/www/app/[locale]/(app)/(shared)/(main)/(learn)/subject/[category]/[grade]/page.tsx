@@ -1,13 +1,11 @@
-import {
-  getCategoryIcon,
-  parseSubjectCategory,
-} from "@repo/contents/_lib/subject/category";
+import { parseSubjectCategory } from "@repo/contents/_lib/subject/category";
 import {
   getGradeNonNumeric,
   getGradePath,
   getGradeSubjects,
   parseGrade,
 } from "@repo/contents/_lib/subject/grade";
+import { getCategoryIcon } from "@repo/contents/_lib/subject/icons";
 import { getMaterialIcon } from "@repo/contents/_lib/subject/material";
 import type { SubjectCategory } from "@repo/contents/_types/subject/category";
 import type { Grade } from "@repo/contents/_types/subject/grade";

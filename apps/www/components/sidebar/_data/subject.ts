@@ -1,4 +1,4 @@
-import { getCategoryIcon } from "@repo/contents/_lib/subject/category";
+import { getCategoryIcon } from "@repo/contents/_lib/subject/icons";
 
 const data = [
   {

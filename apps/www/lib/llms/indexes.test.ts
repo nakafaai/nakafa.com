@@ -68,7 +68,7 @@ describe("llms indexes", () => {
       expect(text?.length).toBeLessThan(AF_DOCS_LLMS_SIZE_LIMIT);
       expect(text).toMatch(LLMS_TITLE_WITH_SUMMARY_PATTERN);
     }
-  }, 30_000);
+  });
 
   it("does not generate indexes for unknown llms paths", async () => {
     await expect(
@@ -135,7 +135,7 @@ describe("llms sitemap alignment", () => {
         expect(sitemapRoutes.has(route)).toBe(true);
       }
     }
-  }, 30_000);
+  });
 
   it("uses markdown URLs for sitemap pages with markdown variants", async () => {
     const entries = await Effect.runPromise(getLocalizedLlmsEntries("en"));
@@ -150,5 +150,5 @@ describe("llms sitemap alignment", () => {
         true
       );
     }
-  }, 30_000);
+  });
 });
