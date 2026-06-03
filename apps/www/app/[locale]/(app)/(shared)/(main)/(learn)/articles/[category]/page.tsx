@@ -1,8 +1,8 @@
 import {
-  getCategoryIcon,
   getCategoryPath,
   parseArticleCategory,
 } from "@repo/contents/_lib/articles/category";
+import { getCategoryIcon } from "@repo/contents/_lib/articles/icons";
 import { getArticleSummaries } from "@repo/contents/_lib/articles/slug";
 import type { ArticleCategory } from "@repo/contents/_types/articles/category";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";

@@ -7,7 +7,6 @@ import {
   isExerciseNumberSegment,
   isTryOutCollectionSlug,
   isYearlessTryOutCollectionSlug,
-  LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR,
 } from "@repo/contents/_lib/exercises/slug";
 import { Option } from "effect";
 import { describe, expect, it } from "vitest";
@@ -21,7 +20,6 @@ describe("exercise slug helpers", () => {
         "set-1",
       ])
     ).toBe("/exercises/high-school/snbt/general-reasoning/try-out/2026/set-1");
-    expect(LEGACY_YEARLESS_TRY_OUT_REDIRECT_YEAR).toBe("2026");
     expect(isYearlessTryOutCollectionSlug(["try-out"])).toBe(true);
     expect(isYearlessTryOutCollectionSlug(["try-out", "2026"])).toBe(false);
     expect(isTryOutCollectionSlug(["try-out"])).toBe(true);
