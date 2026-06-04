@@ -32,12 +32,13 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
-const OBSERVER_COLOR = "#0f9f95";
-const TARGET_COLOR = "#f97316";
+const OBSERVER_COLOR = getColor("TEAL");
+const TARGET_COLOR = getColor("ORANGE", 500);
 const CAR_SCALE = 0.58;
 const MIN_LOOP_SECONDS = 6.5;
 const MAX_LOOP_SECONDS = 10.5;
@@ -99,8 +100,8 @@ export function RelativeMovementLab({ locale }: RelativeMovementLabProps) {
             <Suspense>
               <ambientLight intensity={0.7} />
               <hemisphereLight
-                color="#f8fafc"
-                groundColor="#64748b"
+                color={getColor("SLATE", 50)}
+                groundColor={getColor("SLATE")}
                 intensity={0.6}
               />
               <directionalLight
@@ -261,7 +262,7 @@ function CarContactShadow() {
     >
       <circleGeometry args={[0.72, 32]} />
       <meshBasicMaterial
-        color="#0f172a"
+        color={getColor("SLATE", 900)}
         depthWrite={false}
         opacity={0.14}
         transparent
@@ -291,13 +292,16 @@ function Road() {
             RELATIVE_MOVEMENT_SCENE.roadWidth,
           ]}
         />
-        <meshStandardMaterial color="#334155" roughness={0.74} />
+        <meshStandardMaterial color={getColor("SLATE", 700)} roughness={0.74} />
       </mesh>
 
       {stripePositions.map((x) => (
         <mesh key={x} position={[x, 0.035, 0]}>
           <boxGeometry args={[0.38, 0.018, 0.06]} />
-          <meshStandardMaterial color="#f8fafc" roughness={0.58} />
+          <meshStandardMaterial
+            color={getColor("SLATE", 50)}
+            roughness={0.58}
+          />
         </mesh>
       ))}
     </group>

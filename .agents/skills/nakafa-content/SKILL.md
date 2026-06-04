@@ -48,7 +48,9 @@ Use this skill when creating or editing:
 - Prefer show-over-tell visuals: avoid oversized explanatory scene titles or dense overlays when the model, interaction, and short captions can carry the concept.
 - Treat 3D and custom visuals as premium optional teaching aids, not a coverage quota. Do not add or keep a visual unless it clearly improves the lesson and can meet the quality bar for that domain.
 - Remove weak, unfinished, generic, or forced visuals instead of patching around them. Use prose, a compact table, Mermaid, or no visual when a custom visual would be ambiguous, broken, symbolic, or lower quality than the lesson around it.
+- Use `getColor()` from `packages/design-system/lib/color.ts` as the source of truth for visualization colors. Do not hard-code hex color literals in 3D or custom visual components; add the needed Tailwind palette shade to `getColor()` instead.
 - Use shared 3D typography helpers and tokens instead of hard-coded WebGL font sizes; keep labels subordinate to the visual.
+- For 3D scenes, fix composition through the default camera position, target, field of view, and object scale. Use `minDistance` and `maxDistance` when they keep inspection usable, but never use zoom bounds as a substitute for a good default camera.
 - Keep text-heavy lab footers readable instead of dense; prefer one or two columns unless each fact is very short.
 - Derive chart points, 3D coordinates, animation positions, ticks, repeated particles, and visual markers from formulas or structured scenario data. Do not hand-code coordinate lists or sampled data points when a mathematical generator can produce them.
 - Use `InlineMath`, `BlockMath`, and `MathContainer` consistently for math. If notation appears once, keep it consistent everywhere.

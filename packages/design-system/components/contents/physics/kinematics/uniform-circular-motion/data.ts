@@ -1,5 +1,11 @@
+import { getColor } from "@repo/design-system/lib/color";
+
 export const UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH =
   "/models/physics/kinematics/kenney-car-kit/kart-oobi.glb";
+
+export const UNIFORM_CIRCULAR_MOTION_COLORS = {
+  carBody: getColor("ORANGE"),
+} as const;
 
 export const UNIFORM_CIRCULAR_MOTION_PERIODS = [8, 6, 4] as const;
 

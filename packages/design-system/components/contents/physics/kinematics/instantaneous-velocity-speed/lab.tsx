@@ -35,6 +35,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import { getColor } from "@repo/design-system/lib/color";
 import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
@@ -112,8 +113,8 @@ export function InstantaneousVelocitySpeedLab({
             <Suspense>
               <ambientLight intensity={0.72} />
               <hemisphereLight
-                color="#f8fafc"
-                groundColor="#64748b"
+                color={getColor("SLATE", 50)}
+                groundColor={getColor("SLATE")}
                 intensity={0.64}
               />
               <directionalLight

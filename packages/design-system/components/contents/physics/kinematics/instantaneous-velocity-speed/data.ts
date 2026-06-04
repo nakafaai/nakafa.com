@@ -55,9 +55,9 @@ export const INSTANTANEOUS_SPEED_CAMERA = {
 export const INSTANTANEOUS_SPEED_COLORS = {
   car: getColor("BLUE"),
   detector: getColor("TEAL"),
-  detectorBase: "#0f766e",
-  road: "#1f2937",
-  stripe: "#f8fafc",
+  detectorBase: getColor("TEAL", 700),
+  road: getColor("GRAY", 800),
+  stripe: getColor("SLATE", 50),
 } as const;
 
 export const INSTANTANEOUS_SPEED_COPY = {

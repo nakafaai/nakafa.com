@@ -15,7 +15,7 @@ import { Origin } from "@repo/design-system/components/three/origin";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { COLORS } from "@repo/design-system/lib/color";
+import { COLORS, getColor } from "@repo/design-system/lib/color";
 import { cn } from "@repo/design-system/lib/utils";
 import { useTheme } from "next-themes";
 import {
@@ -98,13 +98,13 @@ export function CoordinateSystem({
     switch (resolvedTheme) {
       case "dark":
         return {
-          main: "#404040",
-          secondary: "#262626",
+          main: getColor("NEUTRAL", 700),
+          secondary: getColor("NEUTRAL", 800),
         };
       default:
         return {
-          main: "#d4d4d4",
-          secondary: "#e5e5e5",
+          main: getColor("NEUTRAL", 300),
+          secondary: getColor("NEUTRAL", 200),
         };
     }
   }, [resolvedTheme]);

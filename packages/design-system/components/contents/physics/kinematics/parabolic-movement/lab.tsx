@@ -17,6 +17,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import { CatmullRomCurve3, type Group, Vector3 } from "three";
@@ -112,8 +113,8 @@ export function ParabolicMovementLab({ locale }: ParabolicMovementLabProps) {
             <Suspense>
               <ambientLight intensity={0.72} />
               <hemisphereLight
-                color="#f8fafc"
-                groundColor="#475569"
+                color={getColor("SLATE", 50)}
+                groundColor={getColor("SLATE", 600)}
                 intensity={0.62}
               />
               <directionalLight
@@ -170,7 +171,10 @@ function ParabolicScene({ motion }: { motion: MotionState }) {
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[landingSurfaceWidth, 1.6]} />
-        <meshStandardMaterial color="#e2efe8" roughness={0.8} />
+        <meshStandardMaterial
+          color={getColor("EMERALD", 100)}
+          roughness={0.8}
+        />
       </mesh>
       <Trajectory motion={motion} />
       <mesh
@@ -178,7 +182,7 @@ function ParabolicScene({ motion }: { motion: MotionState }) {
         rotation={[-Math.PI / 2, 0, 0]}
       >
         <torusGeometry args={[0.24, 0.025, 12, 40]} />
-        <meshStandardMaterial color="#0f9f95" roughness={0.55} />
+        <meshStandardMaterial color={getColor("TEAL")} roughness={0.55} />
       </mesh>
       <ProjectileBall motion={motion} />
     </group>
@@ -200,7 +204,7 @@ function Trajectory({ motion }: { motion: MotionState }) {
   return (
     <mesh>
       <tubeGeometry args={[curve, 48, 0.018, 8, false]} />
-      <meshStandardMaterial color="#f97316" roughness={0.48} />
+      <meshStandardMaterial color={getColor("ORANGE", 500)} roughness={0.48} />
     </mesh>
   );
 }
@@ -237,11 +241,11 @@ function ProjectileBall({ motion }: { motion: MotionState }) {
     <group ref={groupRef}>
       <mesh castShadow>
         <sphereGeometry args={[0.18, 32, 32]} />
-        <meshStandardMaterial color="#2563eb" roughness={0.36} />
+        <meshStandardMaterial color={getColor("BLUE")} roughness={0.36} />
       </mesh>
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.183, 0.008, 8, 32]} />
-        <meshStandardMaterial color="#bfdbfe" roughness={0.42} />
+        <meshStandardMaterial color={getColor("BLUE", 200)} roughness={0.42} />
       </mesh>
     </group>
   );

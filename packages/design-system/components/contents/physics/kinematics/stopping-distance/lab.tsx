@@ -10,6 +10,7 @@ import {
   STOPPING_DISTANCE_BRAKING_DECELERATION,
   STOPPING_DISTANCE_CAMERA,
   STOPPING_DISTANCE_CAR_MODEL_PATH,
+  STOPPING_DISTANCE_COLORS,
   STOPPING_DISTANCE_COPY,
   STOPPING_DISTANCE_REACTION_TIME,
   STOPPING_DISTANCE_SCENE,
@@ -34,6 +35,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode, RefObject } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
@@ -41,8 +43,8 @@ import type { Group } from "three";
 const PAUSE_SECONDS = 1;
 const BRAKE_DUST_PUFF_COUNT = 5;
 const ROAD_STRIPE_SPACING = 1.6;
-const REACTION_DISTANCE_COLOR = "#0f9f95";
-const BRAKING_DISTANCE_COLOR = "#e97723";
+const REACTION_DISTANCE_COLOR = getColor("TEAL");
+const BRAKING_DISTANCE_COLOR = getColor("ORANGE", 500);
 const DISTANCE_MARKER_Z = STOPPING_DISTANCE_SCENE.roadWidth * 0.2;
 
 interface StoppingDistanceLabProps {
@@ -106,8 +108,8 @@ export function StoppingDistanceLab({ locale }: StoppingDistanceLabProps) {
             <Suspense>
               <ambientLight intensity={0.7} />
               <hemisphereLight
-                color="#f8fafc"
-                groundColor="#64748b"
+                color={getColor("SLATE", 50)}
+                groundColor={getColor("SLATE")}
                 intensity={0.62}
               />
               <directionalLight
@@ -256,7 +258,12 @@ function AnimatedCar({
 }
 
 function CarModel() {
-  return <PhysicsCarModel modelPath={STOPPING_DISTANCE_CAR_MODEL_PATH} />;
+  return (
+    <PhysicsCarModel
+      bodyColor={STOPPING_DISTANCE_COLORS.carBody}
+      modelPath={STOPPING_DISTANCE_CAR_MODEL_PATH}
+    />
+  );
 }
 
 function CarContactShadow() {
@@ -268,7 +275,7 @@ function CarContactShadow() {
     >
       <circleGeometry args={[0.72, 32]} />
       <meshBasicMaterial
-        color="#0f172a"
+        color={getColor("SLATE", 900)}
         depthWrite={false}
         opacity={0.16}
         transparent
@@ -286,7 +293,7 @@ function BrakeDust({ dustRef }: { dustRef: RefObject<Group | null> }) {
         <mesh key={position.join("-")} position={position}>
           <sphereGeometry args={[0.3, 12, 8]} />
           <meshBasicMaterial
-            color="#e5e7eb"
+            color={getColor("GRAY", 200)}
             depthWrite={false}
             opacity={0.78}
             transparent
@@ -332,13 +339,16 @@ function Road() {
         <boxGeometry
           args={[roadLength, 0.08, STOPPING_DISTANCE_SCENE.roadWidth]}
         />
-        <meshStandardMaterial color="#374151" roughness={0.72} />
+        <meshStandardMaterial color={getColor("GRAY", 700)} roughness={0.72} />
       </mesh>
 
       {stripePositions.map((x) => (
         <mesh key={x} position={[x, 0.035, 0]}>
           <boxGeometry args={[0.42, 0.018, 0.06]} />
-          <meshStandardMaterial color="#f8fafc" roughness={0.58} />
+          <meshStandardMaterial
+            color={getColor("SLATE", 50)}
+            roughness={0.58}
+          />
         </mesh>
       ))}
     </group>
@@ -372,11 +382,11 @@ function StopCone({ x }: { x: number }) {
     <group position={[x, 0.08, DISTANCE_MARKER_Z]}>
       <mesh castShadow rotation={[0, 0, Math.PI]}>
         <coneGeometry args={[0.17, 0.38, 24]} />
-        <meshStandardMaterial color="#f97316" roughness={0.5} />
+        <meshStandardMaterial color={getColor("ORANGE", 500)} roughness={0.5} />
       </mesh>
       <mesh position={[0, -0.2, 0]} receiveShadow>
         <cylinderGeometry args={[0.2, 0.2, 0.04, 24]} />
-        <meshStandardMaterial color="#1f2937" roughness={0.65} />
+        <meshStandardMaterial color={getColor("GRAY", 800)} roughness={0.65} />
       </mesh>
     </group>
   );

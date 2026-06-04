@@ -1,44 +1,171 @@
-/**
- * COLORS constant
- *
- * All colors are taken from Tailwind CSS's palette at the -500 shade.
- * For example, RED is tailwind's red-500, BLUE is blue-500, etc.
- */
+/** Default visualization accents from the Tailwind CSS palette. */
+const COLOR_KEYS = [
+  "AMBER",
+  "BLUE",
+  "CYAN",
+  "EMERALD",
+  "FUCHSIA",
+  "GRAY",
+  "GREEN",
+  "INDIGO",
+  "LIME",
+  "NEUTRAL",
+  "ORANGE",
+  "PINK",
+  "PURPLE",
+  "RED",
+  "ROSE",
+  "SKY",
+  "SLATE",
+  "STONE",
+  "TEAL",
+  "VIOLET",
+  "YELLOW",
+  "ZINC",
+] as const;
+
+export type ColorName = (typeof COLOR_KEYS)[number];
+
 export const COLORS = {
-  RED: "#dc2626", // tailwind red-500
-  ORANGE: "#ea580c", // tailwind orange-500
-  AMBER: "#d97706", // tailwind amber-500
-  YELLOW: "#ca8a04", // tailwind yellow-500
-  LIME: "#65a30d", // tailwind lime-500
-  GREEN: "#16a34a", // tailwind green-500
-  EMERALD: "#059669", // tailwind emerald-500
-  TEAL: "#0d9488", // tailwind teal-500
-  CYAN: "#0891b2", // tailwind cyan-500
-  SKY: "#0284c7", // tailwind sky-500
-  BLUE: "#2563eb", // tailwind blue-500
-  INDIGO: "#4f46e5", // tailwind indigo-500
-  VIOLET: "#7c3aed", // tailwind violet-500
-  PURPLE: "#9333ea", // tailwind purple-500
-  FUCHSIA: "#c026d3", // tailwind fuchsia-500
-  PINK: "#db2777", // tailwind pink-500
-  ROSE: "#e11d48", // tailwind rose-500
-  SLATE: "#64748b", // tailwind slate-500
-  GRAY: "#6b7280", // tailwind gray-500
-  ZINC: "#71717a", // tailwind zinc-500
-  NEUTRAL: "#737373", // tailwind neutral-500
-  STONE: "#78716c", // tailwind stone-500
-};
+  AMBER: "#d97706",
+  BLUE: "#2563eb",
+  CYAN: "#0891b2",
+  EMERALD: "#059669",
+  FUCHSIA: "#c026d3",
+  GRAY: "#6b7280",
+  GREEN: "#16a34a",
+  INDIGO: "#4f46e5",
+  LIME: "#65a30d",
+  NEUTRAL: "#737373",
+  ORANGE: "#ea580c",
+  PINK: "#db2777",
+  PURPLE: "#9333ea",
+  RED: "#dc2626",
+  ROSE: "#e11d48",
+  SKY: "#0284c7",
+  SLATE: "#64748b",
+  STONE: "#78716c",
+  TEAL: "#0d9488",
+  VIOLET: "#7c3aed",
+  YELLOW: "#ca8a04",
+  ZINC: "#71717a",
+} as const satisfies Record<ColorName, string>;
 
-// Define a constant array of color keys at module level
-const COLOR_KEYS = Object.keys(COLORS) as Array<keyof typeof COLORS>;
+const COLOR_SHADES = {
+  BLUE: {
+    100: "#dbeafe",
+    200: "#bfdbfe",
+    300: "#93c5fd",
+  },
+  EMERALD: {
+    100: "#d1fae5",
+  },
+  GRAY: {
+    200: "#e5e7eb",
+    300: "#d1d5db",
+    700: "#374151",
+    800: "#1f2937",
+  },
+  NEUTRAL: {
+    200: "#e5e5e5",
+    300: "#d4d4d4",
+    700: "#404040",
+    800: "#262626",
+  },
+  ORANGE: {
+    500: "#f97316",
+  },
+  RED: {
+    500: "#ef4444",
+  },
+  SKY: {
+    400: "#38bdf8",
+  },
+  SLATE: {
+    50: "#f8fafc",
+    200: "#e2e8f0",
+    300: "#cbd5e1",
+    400: "#94a3b8",
+    600: "#475569",
+    700: "#334155",
+    800: "#1e293b",
+    900: "#0f172a",
+  },
+  STONE: {
+    600: "#57534e",
+  },
+  TEAL: {
+    500: "#14b8a6",
+    700: "#0f766e",
+  },
+  VIOLET: {
+    500: "#8b5cf6",
+  },
+  ZINC: {
+    100: "#f4f4f5",
+    900: "#18181b",
+    950: "#09090b",
+  },
+} as const;
+
+export const FIXED_COLORS = {
+  BLACK: "#000000",
+  WHITE: "#ffffff",
+} as const;
+
+type ShadeColorName = keyof typeof COLOR_SHADES;
+type ColorShade<Color extends ShadeColorName> =
+  keyof (typeof COLOR_SHADES)[Color];
+export type FixedColorName = keyof typeof FIXED_COLORS;
+export type ColorInput = ColorName | FixedColorName;
+const COLOR_VALUES = {
+  ...COLORS,
+  ...FIXED_COLORS,
+} as const satisfies Record<ColorInput, string>;
+type ShadeColorArgs = {
+  [Color in ShadeColorName]: [color: Color, shade: ColorShade<Color>];
+}[ShadeColorName];
+type ColorArgs = [color: ColorInput] | ShadeColorArgs;
 
 /**
- * Get a color from the COLORS object
+ * Get a color from the shared Tailwind palette.
  * @param color - The key of the color to get
+ * @param shade - Optional Tailwind shade
  * @returns The color value
  */
-export function getColor(color: keyof typeof COLORS) {
-  return COLORS[color.toUpperCase() as keyof typeof COLORS];
+export function getColor(...args: ColorArgs) {
+  if (args.length === 1) {
+    return COLOR_VALUES[args[0]];
+  }
+
+  switch (args[0]) {
+    case "BLUE":
+      return COLOR_SHADES.BLUE[args[1]];
+    case "EMERALD":
+      return COLOR_SHADES.EMERALD[args[1]];
+    case "GRAY":
+      return COLOR_SHADES.GRAY[args[1]];
+    case "NEUTRAL":
+      return COLOR_SHADES.NEUTRAL[args[1]];
+    case "ORANGE":
+      return COLOR_SHADES.ORANGE[args[1]];
+    case "RED":
+      return COLOR_SHADES.RED[args[1]];
+    case "SKY":
+      return COLOR_SHADES.SKY[args[1]];
+    case "SLATE":
+      return COLOR_SHADES.SLATE[args[1]];
+    case "STONE":
+      return COLOR_SHADES.STONE[args[1]];
+    case "TEAL":
+      return COLOR_SHADES.TEAL[args[1]];
+    case "VIOLET":
+      return COLOR_SHADES.VIOLET[args[1]];
+    case "ZINC":
+      return COLOR_SHADES.ZINC[args[1]];
+    default:
+      throw new Error(`Unknown shaded color: ${args[0]}`);
+  }
 }
 
 /**
@@ -47,10 +174,7 @@ export function getColor(color: keyof typeof COLORS) {
  * @param seed - A seed for deterministic selection
  * @returns The random color value
  */
-export function randomColor(
-  exclude?: (keyof typeof COLORS)[],
-  seed?: string | number
-) {
+export function randomColor(exclude?: ColorName[], seed?: string | number) {
   const availableKeys = COLOR_KEYS.filter(
     (key) => !exclude?.some((excludeKey) => excludeKey === key)
   );

@@ -35,13 +35,14 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
-import type { Group } from "three";
+import { type Group, Vector3 } from "three";
 
-const ROUTE_COLOR = "#0f9f95";
-const DISPLACEMENT_COLOR = "#8b5cf6";
-const CAR_COLOR = "#f97316";
+const ROUTE_COLOR = getColor("TEAL");
+const DISPLACEMENT_COLOR = getColor("VIOLET", 500);
+const CAR_COLOR = getColor("ORANGE", 500);
 const END_PAUSE_SECONDS = 0.9;
 const MIN_TRAVEL_SECONDS = 4.8;
 const TRAVEL_SECONDS_PER_METER = 0.56;
@@ -104,8 +105,8 @@ export function DisplacementDistanceLab({
             <Suspense>
               <ambientLight intensity={0.72} />
               <hemisphereLight
-                color="#f8fafc"
-                groundColor="#64748b"
+                color={getColor("SLATE", 50)}
+                groundColor={getColor("SLATE")}
                 intensity={0.62}
               />
               <directionalLight
@@ -266,7 +267,7 @@ function RoadSegment({ segment }: { segment: RouteSegment }) {
         <boxGeometry
           args={[roadLength, 0.08, DISPLACEMENT_DISTANCE_SCENE.roadWidth]}
         />
-        <meshStandardMaterial color="#334155" roughness={0.74} />
+        <meshStandardMaterial color={getColor("SLATE", 700)} roughness={0.74} />
       </mesh>
 
       {stripePositions.map((x) => (
@@ -278,7 +279,10 @@ function RoadSegment({ segment }: { segment: RouteSegment }) {
               DISPLACEMENT_DISTANCE_SCENE.stripeWidth,
             ]}
           />
-          <meshStandardMaterial color="#f8fafc" roughness={0.58} />
+          <meshStandardMaterial
+            color={getColor("SLATE", 50)}
+            roughness={0.58}
+          />
         </mesh>
       ))}
     </group>
@@ -288,20 +292,20 @@ function RoadSegment({ segment }: { segment: RouteSegment }) {
 function RouteLines({ motion }: { motion: DisplacementDistanceState }) {
   const routePoints = motion.route.map(
     (point) =>
-      [point.x, DISPLACEMENT_DISTANCE_SCENE.routeLineY, point.z] as [
-        number,
-        number,
-        number,
-      ]
+      new Vector3(point.x, DISPLACEMENT_DISTANCE_SCENE.routeLineY, point.z)
   );
   const displacementPoints = [
-    [
+    new Vector3(
       motion.start.x,
       DISPLACEMENT_DISTANCE_SCENE.displacementLineY,
-      motion.start.z,
-    ],
-    [motion.end.x, DISPLACEMENT_DISTANCE_SCENE.displacementLineY, motion.end.z],
-  ] as [number, number, number][];
+      motion.start.z
+    ),
+    new Vector3(
+      motion.end.x,
+      DISPLACEMENT_DISTANCE_SCENE.displacementLineY,
+      motion.end.z
+    ),
+  ];
 
   return (
     <>
@@ -341,7 +345,7 @@ function CarContactShadow() {
     >
       <circleGeometry args={[0.72, 32]} />
       <meshBasicMaterial
-        color="#0f172a"
+        color={getColor("SLATE", 900)}
         depthWrite={false}
         opacity={0.14}
         transparent

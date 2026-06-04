@@ -10,6 +10,7 @@ import {
   isUniformCircularMotionPeriod,
   UNIFORM_CIRCULAR_MOTION_CAMERA,
   UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH,
+  UNIFORM_CIRCULAR_MOTION_COLORS,
   UNIFORM_CIRCULAR_MOTION_COPY,
   UNIFORM_CIRCULAR_MOTION_PERIODS,
   UNIFORM_CIRCULAR_MOTION_SCENE,
@@ -33,6 +34,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import { DoubleSide, type Group } from "three";
@@ -100,8 +102,8 @@ export function UniformCircularMotionLab({
             <Suspense>
               <ambientLight intensity={0.75} />
               <hemisphereLight
-                color="#f8fafc"
-                groundColor="#64748b"
+                color={getColor("SLATE", 50)}
+                groundColor={getColor("SLATE")}
                 intensity={0.6}
               />
               <directionalLight
@@ -202,7 +204,7 @@ function CircularTrack() {
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[innerRadius, outerRadius, 128]} />
         <meshStandardMaterial
-          color="#334155"
+          color={getColor("SLATE", 700)}
           roughness={0.74}
           side={DoubleSide}
         />
@@ -215,7 +217,10 @@ function CircularTrack() {
           rotation={[0, -angle - Math.PI / 2, 0]}
         >
           <boxGeometry args={[0.46, 0.018, 0.07]} />
-          <meshStandardMaterial color="#f8fafc" roughness={0.58} />
+          <meshStandardMaterial
+            color={getColor("SLATE", 50)}
+            roughness={0.58}
+          />
         </mesh>
       ))}
     </group>
@@ -260,7 +265,12 @@ function CircularCar({ motion }: { motion: UniformCircularMotionState }) {
 }
 
 function CarModel() {
-  return <PhysicsCarModel modelPath={UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH} />;
+  return (
+    <PhysicsCarModel
+      bodyColor={UNIFORM_CIRCULAR_MOTION_COLORS.carBody}
+      modelPath={UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH}
+    />
+  );
 }
 
 function CarContactShadow() {
@@ -272,7 +282,7 @@ function CarContactShadow() {
     >
       <circleGeometry args={[0.7, 32]} />
       <meshBasicMaterial
-        color="#0f172a"
+        color={getColor("SLATE", 900)}
         depthWrite={false}
         opacity={0.16}
         transparent

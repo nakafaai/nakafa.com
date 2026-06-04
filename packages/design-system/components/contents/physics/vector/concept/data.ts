@@ -74,10 +74,10 @@ export function getSceneColors(resolvedTheme: string | undefined) {
     load: getColor("AMBER"),
     loadDetail: getColor("ORANGE"),
     rightVector: getColor("VIOLET"),
-    skyLight: "#f4f4f5",
-    text: isDarkTheme ? "#f4f4f5" : "#18181b",
+    skyLight: getColor("ZINC", 100),
+    text: isDarkTheme ? getColor("ZINC", 100) : getColor("ZINC", 900),
     tower: isDarkTheme ? getColor("GRAY") : getColor("SLATE"),
-    wheel: isDarkTheme ? "#09090b" : "#18181b",
+    wheel: isDarkTheme ? getColor("ZINC", 950) : getColor("ZINC", 900),
   };
 }
 

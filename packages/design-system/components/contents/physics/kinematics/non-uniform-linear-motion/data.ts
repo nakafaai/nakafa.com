@@ -21,6 +21,10 @@ export interface GlbbLabels {
 export const GLBB_TRAIN_MODEL_PATH =
   "/models/physics/kinematics/kenney-train-kit/train-electric-bullet-a.glb";
 
+export const GLBB_COLORS = {
+  trainBody: getColor("ROSE"),
+} as const;
+
 export const DEFAULT_GLBB_SCENARIO_ID = "from-rest" satisfies GlbbScenarioId;
 
 export const GLBB_SCENE = {

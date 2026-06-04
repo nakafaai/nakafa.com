@@ -17,6 +17,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group, MeshBasicMaterial } from "three";
@@ -117,8 +118,8 @@ export function VerticalMovementLab({ locale }: VerticalMovementLabProps) {
             <Suspense>
               <ambientLight intensity={0.72} />
               <hemisphereLight
-                color="#f8fafc"
-                groundColor="#64748b"
+                color={getColor("SLATE", 50)}
+                groundColor={getColor("SLATE")}
                 intensity={0.62}
               />
               <directionalLight
@@ -175,7 +176,10 @@ function VerticalMotionScene({ motion }: { motion: MotionState }) {
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.82, 48]} />
-        <meshStandardMaterial color="#e2efe8" roughness={0.8} />
+        <meshStandardMaterial
+          color={getColor("EMERALD", 100)}
+          roughness={0.8}
+        />
       </mesh>
       <VerticalTrail motion={motion} />
       <AnimatedBall motion={motion} />
@@ -199,7 +203,11 @@ function VerticalTrail({ motion }: { motion: MotionState }) {
             scale={1 - index * 0.055}
           >
             <sphereGeometry args={[0.045, 12, 8]} />
-            <meshBasicMaterial color="#93c5fd" opacity={0.42} transparent />
+            <meshBasicMaterial
+              color={getColor("BLUE", 300)}
+              opacity={0.42}
+              transparent
+            />
           </mesh>
         );
       })}
@@ -248,7 +256,7 @@ function AnimatedBall({ motion }: { motion: MotionState }) {
         <mesh position={[0, 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[0.36, 32]} />
           <meshBasicMaterial
-            color="#0f172a"
+            color={getColor("SLATE", 900)}
             depthWrite={false}
             opacity={0.28}
             ref={shadowMaterialRef}
@@ -259,11 +267,14 @@ function AnimatedBall({ motion }: { motion: MotionState }) {
       <group ref={ballRef}>
         <mesh castShadow>
           <sphereGeometry args={[BALL_RADIUS, 32, 32]} />
-          <meshStandardMaterial color="#2563eb" roughness={0.34} />
+          <meshStandardMaterial color={getColor("BLUE")} roughness={0.34} />
         </mesh>
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[BALL_RADIUS + 0.004, 0.008, 8, 32]} />
-          <meshStandardMaterial color="#bfdbfe" roughness={0.42} />
+          <meshStandardMaterial
+            color={getColor("BLUE", 200)}
+            roughness={0.42}
+          />
         </mesh>
       </group>
     </>

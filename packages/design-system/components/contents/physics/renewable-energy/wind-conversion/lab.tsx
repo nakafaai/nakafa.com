@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { Slider } from "@repo/design-system/components/ui/slider";
+import { getColor } from "@repo/design-system/lib/color";
 import { useTheme } from "next-themes";
 import type { ReactNode, RefObject } from "react";
 import { Suspense, useMemo, useRef, useState } from "react";
@@ -343,13 +344,13 @@ function getWindSceneColors(theme: string | undefined) {
   const dark = theme === "dark";
 
   return {
-    blade: dark ? "#e5e7eb" : "#f8fafc",
-    foundation: dark ? "#475569" : "#cbd5e1",
-    groundLight: dark ? "#1f2937" : "#d7e8df",
-    hub: dark ? "#cbd5e1" : "#64748b",
-    nacelle: dark ? "#cbd5e1" : "#e2e8f0",
-    skyLight: dark ? "#93c5fd" : "#dbeafe",
-    tower: dark ? "#cbd5e1" : "#d1d5db",
-    wind: dark ? "#38bdf8" : "#0284c7",
+    blade: dark ? getColor("GRAY", 200) : getColor("SLATE", 50),
+    foundation: dark ? getColor("SLATE", 600) : getColor("SLATE", 300),
+    groundLight: dark ? getColor("GRAY", 800) : getColor("EMERALD", 100),
+    hub: dark ? getColor("SLATE", 300) : getColor("SLATE"),
+    nacelle: dark ? getColor("SLATE", 300) : getColor("SLATE", 200),
+    skyLight: dark ? getColor("BLUE", 300) : getColor("BLUE", 100),
+    tower: dark ? getColor("SLATE", 300) : getColor("GRAY", 300),
+    wind: dark ? getColor("SKY", 400) : getColor("SKY"),
   };
 }

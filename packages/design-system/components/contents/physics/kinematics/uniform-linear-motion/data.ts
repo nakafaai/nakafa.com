@@ -31,8 +31,8 @@ export const UNIFORM_LINEAR_MOTION_CAMERA = {
 export const UNIFORM_LINEAR_MOTION_COLORS = {
   car: getColor("ORANGE"),
   positionMark: getColor("TEAL"),
-  road: "#1f2937",
-  stripe: "#f8fafc",
+  road: getColor("GRAY", 800),
+  stripe: getColor("SLATE", 50),
   track: getColor("TEAL"),
 } as const;
 

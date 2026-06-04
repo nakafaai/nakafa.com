@@ -6,6 +6,7 @@ import {
   formatAccelerationMath,
   formatMeterMath,
   formatVelocityMath,
+  GLBB_COLORS,
   GLBB_LAB_COPY,
   GLBB_SCENARIOS,
   GLBB_SCENE,
@@ -35,13 +36,14 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import { getColor } from "@repo/design-system/lib/color";
 import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
-const TRACK_COLOR = "#334155";
-const RAIL_COLOR = "#94a3b8";
-const SLEEPER_COLOR = "#7c5f48";
-const SHADOW_COLOR = "#0f172a";
+const TRACK_COLOR = getColor("SLATE", 700);
+const RAIL_COLOR = getColor("SLATE", 400);
+const SLEEPER_COLOR = getColor("STONE", 600);
+const SHADOW_COLOR = getColor("SLATE", 900);
 
 interface NonUniformLinearMotionLabProps {
   locale: GlbbLocale;
@@ -96,8 +98,8 @@ export function NonUniformLinearMotionLab({
             <Suspense>
               <ambientLight intensity={0.72} />
               <hemisphereLight
-                color="#f8fafc"
-                groundColor="#64748b"
+                color={getColor("SLATE", 50)}
+                groundColor={getColor("SLATE")}
                 intensity={0.65}
               />
               <directionalLight
@@ -217,7 +219,10 @@ function AnimatedTrain({ motion }: { motion: GlbbMotionState }) {
       scale={GLBB_SCENE.trainScale}
     >
       <TrainContactShadow />
-      <PhysicsTrainModel modelPath={GLBB_TRAIN_MODEL_PATH} />
+      <PhysicsTrainModel
+        bodyColor={GLBB_COLORS.trainBody}
+        modelPath={GLBB_TRAIN_MODEL_PATH}
+      />
     </group>
   );
 }
