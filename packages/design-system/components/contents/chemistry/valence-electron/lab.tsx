@@ -62,8 +62,7 @@ export function ValenceElectronLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseAtom}
-          className="grid w-full grid-cols-2 sm:grid-cols-4"
-          layout="grid"
+          gridColumns="4"
           onValueChange={handleSampleChange}
           type="single"
           value={selectedSampleId}

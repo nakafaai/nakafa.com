@@ -74,8 +74,7 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseIsotope}
-          className="grid w-full grid-cols-2 sm:grid-cols-3"
-          layout="grid"
+          gridColumns="3"
           onValueChange={handleSampleChange}
           type="single"
           value={selectedSampleId}

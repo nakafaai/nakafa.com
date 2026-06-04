@@ -95,8 +95,7 @@ export function UniformLinearMotionLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseSpeed}
-          className="grid w-full grid-cols-3"
-          layout="grid"
+          gridColumns="3"
           onValueChange={handleSpeedChange}
           type="single"
           value={String(speed)}

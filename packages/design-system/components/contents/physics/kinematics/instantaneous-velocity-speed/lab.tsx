@@ -85,8 +85,7 @@ export function InstantaneousVelocitySpeedLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseMoment}
-          className="grid w-full grid-cols-2"
-          layout="grid"
+          gridColumns="2"
           onValueChange={handleCaseChange}
           type="single"
           value={caseId}

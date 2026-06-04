@@ -75,8 +75,7 @@ function AccelerationCaseToggle({
   return (
     <ToggleGroup
       aria-label={labels.chooseCase}
-      className="grid w-full grid-cols-3"
-      layout="grid"
+      gridColumns="3"
       onValueChange={onCaseChange}
       type="single"
       value={caseId}

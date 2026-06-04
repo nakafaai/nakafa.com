@@ -76,8 +76,7 @@ export function NonUniformLinearMotionLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseScenario}
-          className="grid w-full grid-cols-3"
-          layout="grid"
+          gridColumns="3"
           onValueChange={handleScenarioChange}
           type="single"
           value={scenarioId}

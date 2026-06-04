@@ -74,8 +74,7 @@ export function UniformCircularMotionLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.choosePeriod}
-          className="grid w-full grid-cols-3"
-          layout="grid"
+          gridColumns="3"
           onValueChange={handlePeriodChange}
           type="single"
           value={String(period)}

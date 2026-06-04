@@ -61,8 +61,7 @@ export function PeriodicPropertiesLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseTrend}
-          className="grid w-full grid-cols-2 lg:grid-cols-4"
-          layout="grid"
+          gridColumns="4-lg"
           onValueChange={handleModeChange}
           type="single"
           value={selectedModeId}

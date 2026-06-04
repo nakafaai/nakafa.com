@@ -75,8 +75,7 @@ function GlbbScenarioToggle({
   return (
     <ToggleGroup
       aria-label={labels.chooseScenario}
-      className="grid w-full grid-cols-3"
-      layout="grid"
+      gridColumns="3"
       onValueChange={onScenarioChange}
       type="single"
       value={scenarioId}

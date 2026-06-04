@@ -69,8 +69,7 @@ export function MassConservationLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseMode}
-          className="grid w-full grid-cols-2"
-          layout="grid"
+          gridColumns="2"
           onValueChange={handleModeChange}
           type="single"
           value={selectedModeId}

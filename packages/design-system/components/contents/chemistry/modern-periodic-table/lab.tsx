@@ -69,8 +69,7 @@ export function ModernPeriodicTableLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseFocus}
-          className="grid w-full grid-cols-2 lg:grid-cols-3"
-          layout="grid"
+          gridColumns="3"
           onValueChange={handleFocusChange}
           type="single"
           value={selectedFocusId}

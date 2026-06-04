@@ -72,8 +72,7 @@ export function RelativeMovementLab({ locale }: RelativeMovementLabProps) {
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseCase}
-          className="grid w-full grid-cols-2"
-          layout="grid"
+          gridColumns="2"
           onValueChange={handleCaseChange}
           type="single"
           value={caseId}

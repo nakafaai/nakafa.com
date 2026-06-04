@@ -77,8 +77,7 @@ export function DisplacementDistanceLab({
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.chooseCase}
-          className="grid w-full grid-cols-3"
-          layout="grid"
+          gridColumns="3"
           onValueChange={handleCaseChange}
           type="single"
           value={caseId}

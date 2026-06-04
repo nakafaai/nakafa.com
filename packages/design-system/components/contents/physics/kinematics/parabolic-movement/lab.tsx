@@ -88,8 +88,7 @@ export function ParabolicMovementLab({ locale }: ParabolicMovementLabProps) {
       <CardContent className="flex flex-col gap-4">
         <ToggleGroup
           aria-label={labels.angle}
-          className="grid w-full grid-cols-3"
-          layout="grid"
+          gridColumns="3"
           onValueChange={handleAngleChange}
           type="single"
           value={String(angle)}
