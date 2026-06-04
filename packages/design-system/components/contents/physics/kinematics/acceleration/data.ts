@@ -1,6 +1,7 @@
 import { getColor } from "@repo/design-system/lib/color";
 
 export type AccelerationCaseId = "speed-up" | "steady" | "slow-down";
+export type AccelerationLocale = "id" | "en";
 
 export interface AccelerationCase {
   color: string;
@@ -18,6 +19,22 @@ export interface AccelerationLabels {
   velocityAxis: string;
 }
 
+export const ACCELERATION_ROCKET_MODEL_PATH =
+  "/models/physics/kinematics/nasa-pegasus-xl/pegasus-xl-textureless.glb";
+
+export const ACCELERATION_LAB_SCENE = {
+  animationSeconds: 3.2,
+  cameraFov: 42,
+  cameraPosition: [-4.8, 2.6, 3.55],
+  cameraTarget: [0.95, 0.22, 0],
+  gateRadius: 0.52,
+  minSceneLength: 13.2,
+  rocketPosition: [1.05, 0, 0],
+  rocketScale: 0.24,
+  scenePadding: 6,
+  worldScale: 0.18,
+} as const;
+
 export const DEFAULT_ACCELERATION_CASE_ID =
   "speed-up" satisfies AccelerationCaseId;
 
@@ -28,7 +45,7 @@ export const ACCELERATION_CASES: AccelerationCase[] = [
     t0: 0,
     t1: 4,
     v0: 2,
-    v1: 10,
+    v1: 18,
   },
   {
     id: "steady",
@@ -43,10 +60,49 @@ export const ACCELERATION_CASES: AccelerationCase[] = [
     color: getColor("VIOLET"),
     t0: 8,
     t1: 12,
-    v0: 10,
+    v0: 18,
     v1: 2,
   },
 ];
+
+export const ACCELERATION_LAB_COPY = {
+  en: {
+    chooseCase: "Choose motion",
+    description:
+      "A chase camera follows the rocket while equal-time gates spread out, stay even, or bunch together.",
+    factLabels: {
+      acceleration: "Acceleration",
+      finalVelocity: "Final velocity",
+      initialVelocity: "Initial velocity",
+      timeStep: "Ghost interval",
+    },
+    scenarioNames: {
+      "slow-down": "Slowing Down",
+      "speed-up": "Speeding Up",
+      steady: "Constant",
+    },
+    title: "Rocket Acceleration Through Space",
+    viewLabel: "3D rocket acceleration through space view",
+  },
+  id: {
+    chooseCase: "Pilih gerak",
+    description:
+      "Kamera mengikuti roket saat gerbang waktu yang berjarak 1 s makin renggang, tetap, atau makin rapat.",
+    factLabels: {
+      acceleration: "Percepatan",
+      finalVelocity: "Kecepatan akhir",
+      initialVelocity: "Kecepatan awal",
+      timeStep: "Selang bayangan",
+    },
+    scenarioNames: {
+      "slow-down": "Melambat",
+      "speed-up": "Makin Cepat",
+      steady: "Tetap",
+    },
+    title: "Percepatan Roket di Luar Angkasa",
+    viewLabel: "Tampilan 3D percepatan roket di luar angkasa",
+  },
+} as const;
 
 export function getAccelerationCaseById(id: AccelerationCaseId) {
   return (
@@ -64,6 +120,81 @@ export function getDeltaVelocity(item: AccelerationCase) {
   return item.v1 - item.v0;
 }
 
+export type AccelerationMotionState = ReturnType<
+  typeof getAccelerationMotionState
+>;
+
+export function getAccelerationMotionState(id: AccelerationCaseId) {
+  const scenario = getAccelerationCaseById(id);
+  const duration = getAccelerationDuration(scenario);
+  const displacement = getAccelerationDisplacementAt(scenario, duration);
+  const worldDisplacement = displacement * ACCELERATION_LAB_SCENE.worldScale;
+  const startX = -worldDisplacement / 2;
+  const sceneLength = Math.max(
+    worldDisplacement + ACCELERATION_LAB_SCENE.scenePadding,
+    ACCELERATION_LAB_SCENE.minSceneLength
+  );
+  const samples = getTimeSamples(duration).map((time) =>
+    getAccelerationPositionSample(scenario, time, startX)
+  );
+
+  return {
+    acceleration: getAccelerationValue(scenario),
+    displacement,
+    duration,
+    samples,
+    scenario,
+    sceneLength,
+    startX,
+    worldDisplacement,
+  };
+}
+
+export function getAccelerationLoopTime(
+  state: AccelerationMotionState,
+  elapsed: number
+) {
+  const cycleSeconds = ACCELERATION_LAB_SCENE.animationSeconds + 0.8;
+  const cycleTime = elapsed % cycleSeconds;
+  const progress = Math.min(
+    cycleTime / ACCELERATION_LAB_SCENE.animationSeconds,
+    1
+  );
+
+  return progress * state.duration;
+}
+
+export function getAccelerationPositionSample(
+  scenario: AccelerationCase,
+  time: number,
+  startX: number
+) {
+  const safeTime = clamp(time, 0, getAccelerationDuration(scenario));
+  const displacement = getAccelerationDisplacementAt(scenario, safeTime);
+
+  return {
+    displacement,
+    time: safeTime,
+    velocity: getAccelerationVelocityAt(scenario, safeTime),
+    x: startX + displacement * ACCELERATION_LAB_SCENE.worldScale,
+  };
+}
+
+export function getAccelerationValue(item: AccelerationCase) {
+  return getDeltaVelocity(item) / getAccelerationDuration(item);
+}
+
+export function getAccelerationDuration(item: AccelerationCase) {
+  return item.t1 - item.t0;
+}
+
+export function getAccelerationVelocityAt(
+  item: AccelerationCase,
+  time: number
+) {
+  return item.v0 + getAccelerationValue(item) * time;
+}
+
 export function getMotionPoints() {
   const firstCase = ACCELERATION_CASES[0];
 
@@ -74,4 +205,52 @@ export function getMotionPoints() {
       velocity: item.v1,
     })),
   ];
+}
+
+export function formatAccelerationMath(value: number) {
+  return `${formatSignedNumber(value)}\\text{ m/s}^2`;
+}
+
+export function formatMeterPerSecondMath(value: number) {
+  return `${formatNumber(value)}\\text{ m/s}`;
+}
+
+export function formatSecondMath(value: number) {
+  return `${formatNumber(value)}\\text{ s}`;
+}
+
+function getAccelerationDisplacementAt(item: AccelerationCase, time: number) {
+  return item.v0 * time + (getAccelerationValue(item) * time ** 2) / 2;
+}
+
+function getTimeSamples(duration: number) {
+  const sampleCount = Math.floor(duration) + 1;
+
+  return Array.from({ length: sampleCount }, (_, index) => index);
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+const TRAILING_ZERO_DECIMAL_REGEX = /\.0$/;
+
+function formatNumber(value: number) {
+  if (Number.isInteger(value)) {
+    return value.toString();
+  }
+
+  return value.toFixed(1).replace(TRAILING_ZERO_DECIMAL_REGEX, "");
+}
+
+function formatSignedNumber(value: number) {
+  if (value === 0) {
+    return "0";
+  }
+
+  if (value > 0) {
+    return `+${formatNumber(value)}`;
+  }
+
+  return formatNumber(value);
 }

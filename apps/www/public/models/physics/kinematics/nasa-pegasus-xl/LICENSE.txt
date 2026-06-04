@@ -1,0 +1,24 @@
+Pegasus XL 3D Model
+
+Source page:
+https://science.nasa.gov/resource/pegasus-xl-3d-model/
+
+Downloaded GLB:
+https://assets.science.nasa.gov/content/dam/science/psd/solar/2023/09/p/e/Pegasus_XL.glb
+
+Credit:
+NASA Visualization Technology Applications and Development (VTAD)
+
+Usage guidance:
+https://www.nasa.gov/nasa-brand-center/images-and-media/
+
+NASA media guidance says NASA content, including media files used in 3D models,
+is generally not subject to copyright in the United States and may be used for
+educational or informational purposes. NASA should be acknowledged as the
+source, and use must not imply NASA endorsement.
+
+Repo note:
+The checked-in GLB keeps the Pegasus XL geometry but removes embedded texture
+references because those blob texture loads fail in the production browser
+runtime. The lesson component applies shared getColor() materials at render
+time.

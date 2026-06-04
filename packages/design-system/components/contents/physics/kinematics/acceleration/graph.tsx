@@ -25,10 +25,17 @@ interface AccelerationGraphProps {
   selectedCase: AccelerationCase;
 }
 
-const MAX_TIME = 12;
-const MAX_VELOCITY = 12;
-const TIME_TICKS = getTicks(MAX_TIME, 2);
-const VELOCITY_TICKS = getTicks(MAX_VELOCITY, 2);
+const MOTION_POINTS = getMotionPoints();
+const MAX_OBSERVED_TIME = Math.max(...MOTION_POINTS.map((point) => point.time));
+const MAX_OBSERVED_VELOCITY = Math.max(
+  ...MOTION_POINTS.map((point) => point.velocity)
+);
+const TIME_TICK_STEP = getNiceTickStep(MAX_OBSERVED_TIME, 7);
+const VELOCITY_TICK_STEP = getNiceTickStep(MAX_OBSERVED_VELOCITY, 6);
+const MAX_TIME = getAxisMaximum(MAX_OBSERVED_TIME, TIME_TICK_STEP);
+const MAX_VELOCITY = getAxisMaximum(MAX_OBSERVED_VELOCITY, VELOCITY_TICK_STEP);
+const TIME_TICKS = getTicks(MAX_TIME, TIME_TICK_STEP);
+const VELOCITY_TICKS = getTicks(MAX_VELOCITY, VELOCITY_TICK_STEP);
 
 interface GuideSegment {
   points: readonly [GuidePoint, GuidePoint];
@@ -53,8 +60,7 @@ export function AccelerationGraph({
     },
   } satisfies ChartConfig;
 
-  const motionPoints = getMotionPoints();
-  const motionData = motionPoints.map((point) => ({
+  const motionData = MOTION_POINTS.map((point) => ({
     time: point.time,
     motion: point.velocity,
   }));
@@ -99,9 +105,8 @@ export function AccelerationGraph({
         <ChartTooltip
           content={<ChartTooltipContent labelFormatter={formatTooltipTime} />}
         />
-        {getMotionSegments(motionPoints).map((segment) => (
+        {getMotionSegments(MOTION_POINTS).map((segment) => (
           <ReferenceLine
-            ifOverflow="visible"
             key={`${segment[0].x}-${segment[0].y}-${segment[1].x}-${segment[1].y}`}
             segment={segment}
             stroke="var(--muted-foreground)"
@@ -112,7 +117,6 @@ export function AccelerationGraph({
         ))}
         {guideSegments.map((segment) => (
           <ReferenceLine
-            ifOverflow="visible"
             key={`${segment.points[0].x}-${segment.points[0].y}-${segment.points[1].x}-${segment.points[1].y}`}
             segment={segment.points}
             stroke="var(--muted-foreground)"
@@ -125,6 +129,7 @@ export function AccelerationGraph({
           data={selectedData}
           dataKey="selected"
           dot={{ r: 3.5 }}
+          isAnimationActive={false}
           name={labels.scenarioNames[selectedCase.id]}
           stroke={getColorVariable("selected", 0)}
           strokeLinecap="round"
@@ -160,6 +165,34 @@ function getTicks(maxValue: number, step: number) {
   const tickCount = Math.floor(maxValue / step) + 1;
 
   return Array.from({ length: tickCount }, (_, index) => index * step);
+}
+
+function getAxisMaximum(maxValue: number, step: number) {
+  return Math.ceil(maxValue / step) * step;
+}
+
+function getNiceTickStep(maxValue: number, targetTickCount: number) {
+  if (maxValue <= 0) {
+    return 1;
+  }
+
+  const rawStep = maxValue / (targetTickCount - 1);
+  const magnitude = 10 ** Math.floor(Math.log10(rawStep));
+  const normalizedStep = rawStep / magnitude;
+
+  if (normalizedStep <= 1) {
+    return magnitude;
+  }
+
+  if (normalizedStep <= 2) {
+    return 2 * magnitude;
+  }
+
+  if (normalizedStep <= 5) {
+    return 5 * magnitude;
+  }
+
+  return 10 * magnitude;
 }
 
 const CHART_MARGIN = {
