@@ -7,6 +7,8 @@ export const metadata = {
   subject: "Kinematika",
 };
 
+import { ParabolicMovementAnalysisLab } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/lab";
+
 ## Mulai dari Kecepatan Awal yang Dipecah
 
 Analisis gerak parabola hampir selalu dimulai dari satu pertanyaan sederhana: berapa bagian kecepatan yang mendatar dan berapa bagian yang tegak? Jika kelajuan awalnya <InlineMath math="v_0" /> dan sudutnya <InlineMath math="\theta" />, komponen awalnya adalah:
@@ -19,6 +21,23 @@ Analisis gerak parabola hampir selalu dimulai dari satu pertanyaan sederhana: be
 Setelah itu, arah mendatar dan arah vertikal dihitung dengan aturan yang berbeda. Arah mendatar memakai GLB karena tidak ada percepatan mendatar. Arah vertikal memakai GLBB karena gravitasi terus bekerja ke bawah.
 
 > Kunci analisis gerak parabola adalah memakai waktu yang sama untuk dua arah yang berbeda.
+
+<ParabolicMovementAnalysisLab locale="id" />
+
+Lengkung dan bola bayangan menunjukkan posisi pada selang waktu yang sama, bukan lintasan mendatar dan vertikal yang terpisah. Angka di bawah adegan berasal dari pemecahan yang sama: <InlineMath math="v_{0x}" /> tetap, sedangkan <InlineMath math="v_y=v_{0y}-gt" /> berubah karena gravitasi menarik ke bawah.
+
+Cara membaca angkanya lebih enak kalau dilihat sebagai urutan rumus yang sama:
+
+<BlockMath math="\begin{aligned}
+v_{0x}&=v_0\cos\theta\\
+v_{0y}&=v_0\sin\theta\\
+t_{\text{puncak}}&=\frac{v_{0y}}{g}\\
+T&=2t_{\text{puncak}}\\
+R&=v_{0x}T\\
+\vec{v}(2)&=\langle v_{0x},v_{0y}-g(2)\rangle,\quad g=10\text{ m/s}^2
+\end{aligned}" />
+
+Jadi angka di bawah adegan bukan angka yang dipilih manual. Semuanya dihitung dari pilihan tembakan, lalu disajikan sebagai komponen, waktu, jangkauan, dan kecepatan sesaat.
 
 ## Puncak Ditemukan Saat Kecepatan Vertikal Nol
 

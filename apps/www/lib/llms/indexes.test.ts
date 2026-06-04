@@ -3,7 +3,7 @@ import type { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { getLocalizedLlmsEntries } from "@/lib/llms/entries";
+import type { getLocalizedLlmsEntries, LlmsEntry } from "@/lib/llms/entries";
 import {
   buildLlmsSectionIndexTextFromEntries,
   buildRootLlmsIndexText,
@@ -248,7 +248,7 @@ function createFixtureEntry({
   locale: (typeof routing.locales)[number];
   route: string;
   title: string;
-}) {
+}): LlmsEntry {
   const routeSegments = route.split("/").filter(Boolean);
   const section = getFixtureRouteSection(route);
   const segments =
@@ -265,7 +265,7 @@ function createFixtureEntry({
 }
 
 /** Mirrors route section ownership for fixture routes. */
-function getFixtureRouteSection(route: string) {
+function getFixtureRouteSection(route: string): LlmsEntry["section"] {
   const firstSegment = route.split("/").filter(Boolean)[0];
 
   if (firstSegment === "articles") {

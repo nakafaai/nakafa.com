@@ -7,6 +7,8 @@ export const metadata = {
   subject: "Kinematics",
 };
 
+import { ParabolicMovementAnalysisLab } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/lab";
+
 ## Start by Splitting the Initial Velocity
 
 Projectile analysis almost always starts with one simple question: how much of the velocity is horizontal, and how much is vertical? If the initial speed is <InlineMath math="v_0" /> and the launch angle is <InlineMath math="\theta" />, the initial components are:
@@ -19,6 +21,23 @@ Projectile analysis almost always starts with one simple question: how much of t
 After that, the horizontal and vertical directions are calculated with different rules. The horizontal direction uses uniform motion because there is no horizontal acceleration. The vertical direction uses uniformly accelerated motion because gravity keeps acting downward.
 
 > The key to projectile analysis is using the same time for two different directions.
+
+<ParabolicMovementAnalysisLab locale="en" />
+
+The arc and ghost balls show positions at equal time intervals, not separate horizontal and vertical paths. The values below the scene come from the same split: <InlineMath math="v_{0x}" /> stays constant, while <InlineMath math="v_y=v_{0y}-gt" /> changes because gravity acts downward.
+
+The number flow is easier to read as one connected formula sequence:
+
+<BlockMath math="\begin{aligned}
+v_{0x}&=v_0\cos\theta\\
+v_{0y}&=v_0\sin\theta\\
+t_{\text{peak}}&=\frac{v_{0y}}{g}\\
+T&=2t_{\text{peak}}\\
+R&=v_{0x}T\\
+\vec{v}(2)&=\langle v_{0x},v_{0y}-g(2)\rangle,\quad g=10\text{ m/s}^2
+\end{aligned}" />
+
+So the values below the scene are not manually chosen numbers. They are calculated from the selected launch, then shown as components, time, range, and instantaneous velocity.
 
 ## The Peak Happens When Vertical Velocity Is Zero
 
