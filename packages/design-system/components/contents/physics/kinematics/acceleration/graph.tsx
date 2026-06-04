@@ -126,10 +126,12 @@ export function AccelerationGraph({
           />
         ))}
         <Line
+          animationDuration={360}
+          animationEasing="ease-out"
           data={selectedData}
           dataKey="selected"
           dot={{ r: 3.5 }}
-          isAnimationActive={false}
+          key={selectedCase.id}
           name={labels.scenarioNames[selectedCase.id]}
           stroke={getColorVariable("selected", 0)}
           strokeLinecap="round"
